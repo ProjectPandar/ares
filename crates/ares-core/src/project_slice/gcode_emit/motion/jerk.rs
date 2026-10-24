@@ -18,36 +18,31 @@ pub(super) fn set(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
     };
     let x = limit(jerk, state.options.max_jerk_x);
     let y = limit(jerk, state.options.max_jerk_y);
-    match state.options.gcode_flavor {
-        crate::GCodeFlavor::Klipper => output.extend_from_slice(
-            format!(
-                "SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY={}\n",
-                format::ostream(clamp_xy(state, jerk))
-            )
-            .as_bytes(),
+    let mut command = match state.options.gcode_flavor {
+        crate::GCodeFlavor::Klipper => format!(
+            "SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY={}",
+            format::ostream(clamp_xy(state, jerk))
         ),
-        crate::GCodeFlavor::Repetier => {
-            output.extend_from_slice(format!("M207 X{}\n", format::ostream(x)).as_bytes());
-        }
+        crate::GCodeFlavor::Repetier => format!("M207 X{}", format::ostream(x)),
         _ => {
             // `GCodeWriter::set_jerk_xy` (`GCodeWriter.cpp:295`) writes
             // `M205 X.. Y..` with the stream-default 6-significant-digit
             // format, not the 3-decimal axis quantizer (`1.9624`, not `1.962`).
-            let mut command = format!("M205 X{} Y{}", format::ostream(x), format::ostream(y));
-            if state.tags.is_bbl() {
-                command.push_str(&format!(
-                    " Z{} E{}",
-                    format::ostream_with_precision(state.options.max_jerk_z, 2),
-                    format::ostream_with_precision(state.options.max_jerk_e, 2)
-                ));
-            }
-            if state.options.gcode_comments {
-                command.push_str(" ; adjust jerk");
-            }
-            command.push('\n');
-            output.extend_from_slice(command.as_bytes());
+            format!("M205 X{} Y{}", format::ostream(x), format::ostream(y))
         }
+    };
+    if state.tags.is_bbl() {
+        command.push_str(&format!(
+            " Z{} E{}",
+            format::ostream_with_precision(state.options.max_jerk_z, 2),
+            format::ostream_with_precision(state.options.max_jerk_e, 2)
+        ));
     }
+    if state.options.gcode_comments {
+        command.push_str(" ; adjust jerk");
+    }
+    command.push('\n');
+    output.extend_from_slice(command.as_bytes());
 }
 
 /// Klipper clamps the jerk by both the X and the Y machine limits
