@@ -23,3 +23,6 @@ mod spiral_hole_projected_split;
 
 #[path = "support_base_extension_priority.rs"]
 mod support_base_extension_priority;
+
+#[path = "sequential_origin_label_flush.rs"]
+mod sequential_origin_label_flush;
