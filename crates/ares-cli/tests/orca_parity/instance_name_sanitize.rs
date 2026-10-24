@@ -12,7 +12,7 @@ fn leading_special_instance_name_matches_native() {
             "../../../../tests/parity/instance-name-sanitize/leading-special-target.3mf"
         ),
         "72ffb0bf2f159c54f21577abe5ccb650521f191f3bcea3fd5e514879ab27fc67",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -26,6 +26,6 @@ fn plain_instance_name_sole_key_control() {
         "plain-name-control",
         include_bytes!("../../../../tests/parity/instance-name-sanitize/plain-name-control.3mf"),
         "b28411348c6bd4dc30c5ec412403f389697fd8362026a64472b4926ec4a635b9",
-        false,
+        (false, |_, _| {}),
     );
 }

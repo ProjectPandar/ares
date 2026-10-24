@@ -13,7 +13,7 @@ fn model_volume_double_affine_matches_native() {
         "beam1-target",
         include_bytes!("../../../../tests/parity/occlusion-volume-affine/beam1-target.3mf"),
         "ad35795f29e68c292d644a0c8019dd96fb1dac2736adfc651692c2d3a14173f1",
-        true,
+        (true, |_, _| {}),
     );
 }
 
@@ -30,6 +30,6 @@ fn disabled_interlocking_sole_key_control() {
         "beam0-control",
         include_bytes!("../../../../tests/parity/occlusion-volume-affine/beam0-control.3mf"),
         "171ce0b6e5160bbe697212fd548beaa5228fd91cd741fb456ddcdf596feebabd",
-        true,
+        (true, |_, _| {}),
     );
 }

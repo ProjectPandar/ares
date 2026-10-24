@@ -16,7 +16,7 @@ fn fuzzy_external_zero_area_orientation_matches_native() {
         "fuzzy-external-target",
         include_bytes!("../../../../tests/parity/zero-area-orientation/fuzzy-external-target.3mf"),
         "b71a3657d0fe805993e39c680c10310583446f67e94b7a671fc9ec4332900659",
-        false,
+        (false, |_, _| {}),
     );
 }
 
@@ -36,6 +36,6 @@ fn fuzzy_none_sole_key_control() {
         "fuzzy-none-control",
         include_bytes!("../../../../tests/parity/zero-area-orientation/fuzzy-none-control.3mf"),
         "06693138931240d74774230ef570d19d65a02afe9ded7d0da97648693a67822a",
-        false,
+        (false, |_, _| {}),
     );
 }

@@ -13,7 +13,7 @@ fn check(label: &str, project: &[u8], sha: &str) {
         label,
         project,
         sha,
-        false,
+        (false, |_, _| {}),
     );
 }
 
