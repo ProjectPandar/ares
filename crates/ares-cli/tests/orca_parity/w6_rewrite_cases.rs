@@ -1,5 +1,8 @@
 //! W6 source-cited rewrite parity cases, grouped without changing case bodies.
 
+#[path = "direct_coints_placeholder.rs"]
+mod direct_coints_placeholder;
+
 #[path = "front_edge_numeric_cursor.rs"]
 mod front_edge_numeric_cursor;
 
