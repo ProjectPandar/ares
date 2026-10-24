@@ -28,7 +28,7 @@ fn within_native_tolerance_suppresses_merged_jerk() {
                 !values.is_empty(),
                 "Native must exercise square-corner velocity"
             );
-            assert_eq!(values.windows(2).any(|pair| pair[0] != pair[1]), false);
+            assert!(!values.windows(2).any(|pair| pair[0] != pair[1]));
         }),
     );
 }
@@ -59,7 +59,7 @@ fn equal_control_stays_byte_equal() {
                 !values.is_empty(),
                 "Native must exercise square-corner velocity"
             );
-            assert_eq!(values.windows(2).any(|pair| pair[0] != pair[1]), false);
+            assert!(!values.windows(2).any(|pair| pair[0] != pair[1]));
         }),
     );
 }
@@ -90,7 +90,7 @@ fn within_both_control_stays_byte_equal() {
                 !values.is_empty(),
                 "Native must exercise square-corner velocity"
             );
-            assert_eq!(values.windows(2).any(|pair| pair[0] != pair[1]), false);
+            assert!(!values.windows(2).any(|pair| pair[0] != pair[1]));
         }),
     );
 }
@@ -123,7 +123,7 @@ fn above_native_tolerance_admits_merged_jerk() {
                 !values.is_empty(),
                 "Native must exercise square-corner velocity"
             );
-            assert_eq!(values.windows(2).any(|pair| pair[0] != pair[1]), true);
+            assert!(values.windows(2).any(|pair| pair[0] != pair[1]));
         }),
     );
 }
