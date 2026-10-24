@@ -29,3 +29,6 @@ mod merged_jerk_tolerance;
 
 #[path = "merged_jerk_precision.rs"]
 mod merged_jerk_precision;
+
+#[path = "accel_to_decel_precision.rs"]
+mod accel_to_decel_precision;
