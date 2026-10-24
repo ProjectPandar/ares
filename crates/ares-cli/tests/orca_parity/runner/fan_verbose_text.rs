@@ -1,5 +1,5 @@
 //! FanMover-generated fan comments and raw split-line separator preservation.
-use super::native_stream_case::check;
+use crate::runner::native_stream_case::check;
 
 const SOURCE: (&str, &[&str]) = (
     "fan-verbose-text",

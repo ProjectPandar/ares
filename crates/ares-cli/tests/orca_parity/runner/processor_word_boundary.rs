@@ -1,5 +1,5 @@
 //! GCodeReader.cpp:29-84 numeric-word acceptance before processor motion input.
-use super::native_stream_case::check;
+use crate::runner::native_stream_case::check;
 
 const SOURCE: (&str, &[&str]) = (
     "processor-word-boundary",
