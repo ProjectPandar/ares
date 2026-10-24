@@ -33,5 +33,8 @@ mod overall_chamber_placeholder;
 #[path = "placeholder_double_render.rs"]
 mod placeholder_double_render;
 
+#[path = "rear_seam_visibility.rs"]
+mod rear_seam_visibility;
+
 #[path = "zero_area_orientation.rs"]
 mod zero_area_orientation;
