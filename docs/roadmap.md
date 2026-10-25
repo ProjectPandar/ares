@@ -7,6 +7,32 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Spiral vase object-start Z-only line: approved SPEC → tests-only RED → bounded GREEN
+
+Owner upstream8500fcdcc `SpiralVase.cpp:131–141` (every Z-only G1 of a
+spiral-enabled layer is kept and rewritten to the ramp base z with the
+3-decimal `GCodeLine::set` splice, `GCodeReader.cpp:323–357`; base z =
+first-Z − Σ dist_Z, `SpiralVase.cpp:86–121`) plus its producer:
+`GCode.cpp:5708` (`change_layer` arms `m_need_change_layer_lift_z` every
+layer) and `GCode.cpp:6367–6385` (`_extrude`'s guard fires on the flag
+alone — upstream's comment names the equal-first-point case — and emits a
+forced `travel_to_z(m_nominal_z, comment, true)` bypassing `will_move_z`,
+`GCodeWriter.cpp:811–929`; zero-length `travel_to` only flushes the M624
+labels). Destination: remove the `already_emitted` dedup in
+`ares-core gcode_spiral_vase/project.rs::append_layer_z` (literal
+rewrite-all port); `start_travel.rs:148–157` only if RED bytes prove the
+writer-side branch also wrong, aligned to `GCode.cpp:5708/6367–6385`
+semantics. RED on the W1 chain at `2a20c7dff`: witness
+`single-object-by-layer` (A1 spiral; comparator first difference byte
+81880 — 47 Native-only bare `G1 Z<z>` lines after M624 markers) plus the
+`z_hop=0` variant (byte 81702), complete unweakened comparator, official
++ seeded runtime Native; native preflight passes on RED. GREEN gate: all
+`spiral_*` parity cases stay green in both modes — regressions are
+root-caused, the dedup is never restored. Deferred: by-object-apart layer
+number 83-vs-82 class, smooth-XY extras.
+[SPEC](architecture/spiral-vase-object-start-z-spec.md),
+[ARD](architecture/ard-spiral-vase-object-start-z.md).
+
 ### Spiral vase multi-copy by-layer admission: approved SPEC → tests-only RED → bounded GREEN
 
 Owner upstream8500fcdcc `Print.cpp:1334–1341` (`Print::validate`: with
