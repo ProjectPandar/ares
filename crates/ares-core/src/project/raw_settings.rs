@@ -66,6 +66,24 @@ impl ProjectSettingsRaw {
         crate::options::json_deserialize::normalize_unknown_wire_substitutions(&mut self.0);
     }
 
+    /// `DynamicPrintConfig::load_from_json` (`Config.cpp:905-990`) hands
+    /// only JSON strings (`:927-929`) and arrays to `set_deserialize`;
+    /// every other scalar JSON type hits the `invalid json type`
+    /// else-branch and the key is never set, so the option keeps its
+    /// default. Applied at the project settings load boundary before any
+    /// per-key deserialization, so dropped keys fall back to defaults
+    /// exactly like upstream (bools then resolve through
+    /// `ConfigOptionBool::deserialize`, `Config.hpp:1828-1848`, with the
+    /// `enum_looks_like_true_value` retry, `Config.hpp:96-99`).
+    pub(crate) fn drop_invalid_wire_scalars(&mut self) {
+        self.0.retain(|_, value| {
+            !matches!(
+                value,
+                RawConfigValue::Number(_) | RawConfigValue::Flag(_) | RawConfigValue::Null
+            )
+        });
+    }
+
     /// The vector-shape normalizations without the wire substitutions,
     /// for a raw that already carries override values on top of the
     /// normalized embedded config.

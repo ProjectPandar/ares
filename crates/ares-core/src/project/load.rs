@@ -120,6 +120,10 @@ pub(crate) fn load_project_with_preparation(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
+    // `load_from_json`'s type dispatch runs before any per-key
+    // deserialization: non-string/non-array JSON scalars never reach
+    // `set_deserialize` and the key keeps its default (`Config.cpp:905-990`).
+    project_settings_raw.drop_invalid_wire_scalars();
     // The EnableSilent 3MF load rule (Model.cpp:259) substitutes unknown
     // enum/bool wires on the EMBEDDED config before anything else consumes
     // it; CLI overrides below merge through their own deserialization rule
