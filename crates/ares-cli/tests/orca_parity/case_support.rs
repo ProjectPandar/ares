@@ -38,3 +38,6 @@ mod unknown_key_config_block;
 
 #[path = "extruded_weight_totals.rs"]
 mod extruded_weight_totals;
+
+#[path = "spiral_vase_admission.rs"]
+mod spiral_vase_admission;
