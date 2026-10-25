@@ -1,34 +1,44 @@
 use crate::{
     SliceError,
-    geometry::{Coord, CoordinateScale, ThickPolyline},
+    geometry::{Coord, CoordinateScale},
 };
 
 use super::{
     super::{
-        entity_collections::{ExtrusionEntity, loop_endpoints},
+        entity_collections::ExtrusionEntity,
         gap_extrusion::variable_width::convert_entities,
         shortest_path::{
-            chain_extrusion_entities, chain_extrusion_paths, chain_loops_by_first_points,
+            chain_and_reorder_extrusion_paths, chain_extrusion_entities,
+            chain_loops_by_first_points,
         },
         traversal::{
-            ClassicTraversalRecord, PendingPathBranch, PostClassicTraversalPrintObject,
-            PreparedTraversalSurface, TraversalSeed,
+            PendingPathBranch, PostClassicTraversalPrintObject, PreparedTraversalSurface,
+            TraversalSeed,
         },
     },
     path::materialize_seed,
     types::{ExtrusionPath, ExtrusionRole, PreparedRawPathSurface, RawPathNode},
 };
 
+/// A finished child level returned to its parent frame: the wrapped nodes
+/// plus the chain computed for that level (`PerimeterGenerator.cpp:238`).
+struct RebuiltLevel {
+    nodes: Vec<RawPathNode>,
+    chain: Vec<(usize, bool)>,
+}
+
 /// One `traverse_loops` recursion level (`PerimeterGenerator.cpp:142-151`
 /// flat pass + `:254-255` child descent). The upstream flat pass fuzzifies
 /// every same-level sibling in `loops` order before any child recursion, so
 /// the shared seeded stream is consumed sibling-first while the emitted
 /// `RawPathNode` tree keeps the children-first structure the emission
-/// traversal (`:274-278`) expects.
+/// traversal (`:274-278`) expects. The level chain (`:238`) is computed here
+/// once and stored on the tree for the emission traversal to consume.
 struct LevelFrame<'a> {
     seeds: &'a [TraversalSeed],
-    /// Thin walls chain with the root level only (`PerimeterGenerator.cpp:230-233`).
-    thin_walls: Option<&'a [ThickPolyline]>,
+    /// Thin-wall entities chain with the root level only
+    /// (`PerimeterGenerator.cpp:230-233`); child levels pass `None`.
+    thin_entities: Option<&'a [ExtrusionEntity]>,
     flat_done: bool,
     paths: Vec<Vec<ExtrusionPath>>,
     /// Child visit order: chain-ordered loop slots, then the compacted-out
@@ -37,19 +47,26 @@ struct LevelFrame<'a> {
     next_visit: usize,
     pending_slot: Option<usize>,
     children: Vec<Vec<RawPathNode>>,
+    /// Each slot's children-level chain, captured on completion for the
+    /// assembled node's `child_order`.
+    chains: Vec<Vec<(usize, bool)>>,
+    /// This level's own chain, held from the flat pass until assembly.
+    chain: Vec<(usize, bool)>,
 }
 
 impl<'a> LevelFrame<'a> {
-    fn new(seeds: &'a [TraversalSeed], thin_walls: Option<&'a [ThickPolyline]>) -> Self {
+    fn new(seeds: &'a [TraversalSeed], thin_entities: Option<&'a [ExtrusionEntity]>) -> Self {
         Self {
             seeds,
-            thin_walls,
+            thin_entities,
             flat_done: false,
             paths: Vec::with_capacity(seeds.len()),
             visits: Vec::new(),
             next_visit: 0,
             pending_slot: None,
             children: std::iter::repeat_with(Vec::new).take(seeds.len()).collect(),
+            chains: std::iter::repeat_with(Vec::new).take(seeds.len()).collect(),
+            chain: Vec::new(),
         }
     }
 }
@@ -62,16 +79,28 @@ pub(super) fn materialize_surface(
     context: &mut crate::SlicerContext,
 ) -> Result<PreparedRawPathSurface, SliceError> {
     let record = record_context.record;
-    let mut frames = vec![LevelFrame::new(&surface.roots, Some(&surface.thin_walls))];
-    let mut completed: Option<Vec<RawPathNode>> = None;
+    // `variable_width(thin_walls, erExternalPerimeter, ext_perimeter_flow,
+    // coll.entities)` (`PerimeterGenerator.cpp:231`) — materialized once here
+    // because the root chain interleaves the entities; the emission traversal
+    // consumes them verbatim.
+    let thin_entities = convert_entities(
+        &surface.thin_walls,
+        record.ext_perimeter_flow,
+        record.scale,
+        ExtrusionRole::ExternalPerimeter,
+    )
+    .unwrap_or_default();
+    let mut frames = vec![LevelFrame::new(&surface.roots, Some(&thin_entities))];
+    let mut completed: Option<RebuiltLevel> = None;
     loop {
-        if let Some(nodes) = completed.take() {
+        if let Some(rebuilt) = completed.take() {
             let parent = frames.last_mut().expect("a child level has a parent frame");
             let slot = parent
                 .pending_slot
                 .take()
                 .expect("a completed level has a pending slot");
-            parent.children[slot] = nodes;
+            parent.children[slot] = rebuilt.nodes;
+            parent.chains[slot] = rebuilt.chain;
             continue;
         }
 
@@ -93,25 +122,40 @@ pub(super) fn materialize_surface(
                     return Err(error);
                 }
             };
-            frame.visits = visit_order(&frame.paths, frame.thin_walls, record);
+            let chain = level_chain(&frame.paths, frame.thin_entities);
+            let loop_count = frame.paths.iter().filter(|paths| !paths.is_empty()).count();
+            frame.visits = chain
+                .iter()
+                .filter(|&&(index, _)| index < loop_count)
+                .map(|&(index, _)| index)
+                .collect();
+            frame.visits.extend(loop_count..frame.paths.len());
+            frame.chain = chain;
             continue;
         }
         let Some(&slot) = frame.visits.get(frame.next_visit) else {
-            let frame = frames.pop().expect("the root level remains until return");
+            let mut frame = frames.pop().expect("the root level remains until return");
+            let chain = std::mem::take(&mut frame.chain);
             let nodes = frame
                 .paths
                 .into_iter()
                 .zip(frame.children)
-                .map(|(paths, children)| RawPathNode { paths, children })
+                .zip(frame.chains)
+                .map(|((paths, children), child_order)| RawPathNode {
+                    paths,
+                    children,
+                    child_order,
+                })
                 .collect();
             if frames.is_empty() {
                 return Ok(PreparedRawPathSurface {
                     source_index: surface.source_index,
                     roots: nodes,
-                    thin_walls: surface.thin_walls.clone(),
+                    root_order: chain,
+                    thin_entities,
                 });
             }
-            completed = Some(nodes);
+            completed = Some(RebuiltLevel { nodes, chain });
             continue;
         };
         frame.next_visit += 1;
@@ -122,7 +166,10 @@ pub(super) fn materialize_surface(
 }
 
 /// The `traverse_loops` flat pass for one level — every same-level sibling
-/// materialized (and fuzzified) in `loops` vector order.
+/// materialized (and fuzzified) in `loops` vector order. The overhang branch
+/// re-chains its paths from the first point (`PerimeterGenerator.cpp:207`)
+/// here in the flat pass, so the stored paths and the level chain read the
+/// same final path order.
 fn materialize_flat_level(
     object: &PostClassicTraversalPrintObject,
     record_context: &super::RecordContext<'_>,
@@ -130,6 +177,10 @@ fn materialize_flat_level(
     scale: CoordinateScale,
     context: &mut crate::SlicerContext,
 ) -> Result<Vec<Vec<ExtrusionPath>>, SliceError> {
+    let overhang = matches!(
+        record_context.record.branch,
+        PendingPathBranch::OverhangClipping { .. }
+    );
     let mut paths = Vec::with_capacity(seeds.len());
     for seed in seeds {
         match materialize_seed(
@@ -142,7 +193,13 @@ fn materialize_flat_level(
             scale,
             context,
         ) {
-            Ok(paths_for_seed) => paths.push(paths_for_seed),
+            Ok(mut paths_for_seed) => {
+                if overhang && !paths_for_seed.is_empty() {
+                    let first = paths_for_seed[0].polyline.points[0];
+                    chain_and_reorder_extrusion_paths(&mut paths_for_seed, [first.x, first.y]);
+                }
+                paths.push(paths_for_seed);
+            }
             Err(error) => {
                 for level_paths in paths {
                     consume_paths(level_paths);
@@ -154,94 +211,82 @@ fn materialize_flat_level(
     Ok(paths)
 }
 
-/// Child-descent order of one materialized level — the chain the emission
-/// traversal computes over the same loops (`PerimeterGenerator.cpp:238`,
-/// mirrored by `entity_collections::traverse`), which also orders upstream's
-/// `:254-255` child recursion. Slots compacted out of the chain (empty-path
-/// loops, `PerimeterGenerator.cpp:208`) keep their subtrees materialized
-/// afterwards in vector order.
-fn visit_order(
+/// The level chain (`PerimeterGenerator.cpp:238`) over the compacted
+/// non-empty loops, mixed with the root level's thin-wall entities. Loop
+/// entries carry `reverse == false` (loop chain semantics); thin entries may
+/// reverse. Indices are compacted loop slots, and the emission traversal maps
+/// them onto the uncompacted seeds with the upstream slot-sliding quirk.
+fn level_chain(
     paths: &[Vec<ExtrusionPath>],
-    thin_walls: Option<&[ThickPolyline]>,
-    record: &ClassicTraversalRecord,
-) -> Vec<usize> {
+    thin_entities: Option<&[ExtrusionEntity]>,
+) -> Vec<(usize, bool)> {
     let loop_count = paths.iter().filter(|paths| !paths.is_empty()).count();
-    let overhang = matches!(record.branch, PendingPathBranch::OverhangClipping { .. });
-    let thin_entities = match thin_walls {
-        Some(thin_walls) if !thin_walls.is_empty() => convert_entities(
-            thin_walls,
-            record.ext_perimeter_flow,
-            record.scale,
-            ExtrusionRole::ExternalPerimeter,
-        )
-        .unwrap_or_default(),
-        _ => Vec::new(),
-    };
-    let mut visits = if thin_entities.is_empty() {
-        let first_points = paths
-            .iter()
-            .filter(|paths| !paths.is_empty())
-            .map(|paths| {
-                let [front, _] = loop_endpoints_after_reorder(paths, overhang);
-                [front[0] as f64, front[1] as f64]
-            })
-            .collect::<Vec<_>>();
-        chain_loops_by_first_points(&first_points)
-    } else {
-        let mut endpoints = Vec::with_capacity(loop_count + thin_entities.len());
-        let mut is_loop = Vec::with_capacity(loop_count + thin_entities.len());
-        for paths in paths.iter().filter(|paths| !paths.is_empty()) {
-            endpoints.push(loop_endpoints_after_reorder(paths, overhang));
-            is_loop.push(true);
+    match thin_entities {
+        None | Some([]) => {
+            let first_points = paths
+                .iter()
+                .filter(|paths| !paths.is_empty())
+                .map(|paths| {
+                    let first = paths[0].polyline.points[0];
+                    [first.x as f64, first.y as f64]
+                })
+                .collect::<Vec<_>>();
+            chain_loops_by_first_points(&first_points)
+                .into_iter()
+                .map(|index| (index, false))
+                .collect()
         }
-        for entity in &thin_entities {
-            endpoints.push(loop_endpoints(entity));
-            is_loop.push(matches!(entity, ExtrusionEntity::Loop(_)));
+        Some(thin_entities) => {
+            let mut endpoints = Vec::with_capacity(loop_count + thin_entities.len());
+            let mut is_loop = Vec::with_capacity(loop_count + thin_entities.len());
+            for paths in paths.iter().filter(|paths| !paths.is_empty()) {
+                let first = paths[0].polyline.points[0];
+                let last = paths
+                    .last()
+                    .and_then(|path| path.polyline.points.last())
+                    .copied()
+                    .unwrap_or(first);
+                endpoints.push([[first.x, first.y], [last.x, last.y]]);
+                is_loop.push(true);
+            }
+            for entity in thin_entities {
+                endpoints.push(entity_endpoints(entity));
+                is_loop.push(matches!(entity, ExtrusionEntity::Loop(_)));
+            }
+            chain_extrusion_entities(&endpoints, &is_loop, [0, 0])
         }
-        chain_extrusion_entities(&endpoints, &is_loop, [0, 0])
-            .into_iter()
-            .filter(|&(index, _)| index < loop_count)
-            .map(|(index, _)| index)
-            .collect()
-    };
-    visits.extend(loop_count..paths.len());
-    visits
-}
-
-/// `[first, last]` endpoints of a materialized loop as the emission chain
-/// reads them. `chained_loops::build_loop` reorders `OverhangClipping` paths
-/// from the first point (`PerimeterGenerator.cpp:207`) before
-/// `entity_collections` chains the loops, so replay that chain on a borrow to
-/// read the post-reorder endpoints without mutating the stored paths.
-fn loop_endpoints_after_reorder(paths: &[ExtrusionPath], overhang: bool) -> [[Coord; 2]; 2] {
-    let front = paths[0].polyline.points[0];
-    if !overhang {
-        let back = paths
-            .last()
-            .and_then(|path| path.polyline.points.last())
-            .copied()
-            .unwrap_or(front);
-        return [[front.x, front.y], [back.x, back.y]];
     }
-    let chain = chain_extrusion_paths(paths, Some([front.x, front.y]));
-    let front_entry = chain[0];
-    let back_entry = *chain
-        .last()
-        .expect("a non-empty path set chains to a non-empty order");
-    [
-        chain_endpoint(paths, front_entry, false),
-        chain_endpoint(paths, back_entry, true),
-    ]
 }
 
-fn chain_endpoint(paths: &[ExtrusionPath], entry: (usize, bool), last: bool) -> [Coord; 2] {
-    let points = &paths[entry.0].polyline.points;
-    let point = if last != entry.1 {
-        points[points.len() - 1]
-    } else {
-        points[0]
-    };
-    [point.x, point.y]
+fn entity_endpoints(entity: &ExtrusionEntity) -> [[Coord; 2]; 2] {
+    match entity {
+        ExtrusionEntity::Loop(ordered) => {
+            let first = ordered.extrusion_loop.paths[0].polyline.points[0];
+            let last = ordered
+                .extrusion_loop
+                .paths
+                .last()
+                .and_then(|p| p.polyline.points.last())
+                .copied()
+                .unwrap_or(first);
+            [[first.x, first.y], [last.x, last.y]]
+        }
+        ExtrusionEntity::Path(path) => {
+            let first = path.polyline.points[0];
+            let last = path.polyline.points.last().copied().unwrap_or(first);
+            [[first.x, first.y], [last.x, last.y]]
+        }
+        ExtrusionEntity::MultiPath(multi) => {
+            let first = multi.paths[0].polyline.points[0];
+            let last = multi
+                .paths
+                .last()
+                .and_then(|p| p.polyline.points.last())
+                .copied()
+                .unwrap_or(first);
+            [[first.x, first.y], [last.x, last.y]]
+        }
+    }
 }
 
 fn consume_frames(frames: Vec<LevelFrame<'_>>) {

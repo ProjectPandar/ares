@@ -6,9 +6,9 @@ pub(in crate::project_slice) use reorder::chain_and_reorder_extrusion_paths;
 pub(in crate::project_slice) use reorder::reorder_extrusion_paths;
 
 use super::{kd_tree::KdTree, priority_queue::MutablePriorityQueue};
-use crate::project_slice::perimeters::classic::{
-    chained_loops::ExtrusionLoop, materialize::ExtrusionPath,
-};
+#[cfg(test)]
+use crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop;
+use crate::project_slice::perimeters::classic::materialize::ExtrusionPath;
 use search::CandidateSearch;
 
 pub(super) struct EndPoint {
@@ -95,6 +95,7 @@ pub(in crate::project_slice) fn chain_extrusion_paths(
     }
 }
 
+#[cfg(test)]
 pub(in crate::project_slice) fn chain_extrusion_loops(
     loops: &[ExtrusionLoop],
 ) -> Vec<(usize, bool)> {

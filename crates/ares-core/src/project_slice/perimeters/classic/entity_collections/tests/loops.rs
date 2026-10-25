@@ -105,27 +105,29 @@ fn task22o9_preserves_source_compact_entity_against_original_loop_indexing() {
             children: vec![ChainedLoopNode {
                 extrusion_loop: Some(square_loop(20, 0, ExtrusionLoopRole::Hole)),
                 children: Vec::new(),
+                child_order: Vec::new(),
             }],
+            // Root chain over the single compacted loop descends slot 0.
+            child_order: vec![(0, false)],
         },
         ChainedLoopNode {
             extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Internal)),
             children: Vec::new(),
+            child_order: Vec::new(),
         },
     ];
     let seeds = vec![
         seed(false, 7, vec![seed(false, 8, Vec::new())]),
         seed(true, 2, Vec::new()),
     ];
+    let order = root_thin_entities_and_order(&nodes, &[]).1;
     let collection = traverse_loops(
-nodes,
-&seeds,
-ProcessWallDirection::CounterClockwise,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &[],
-ext_perimeter_flow: test_flow(),
- },
-TEST_SCALE,
-);
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        Vec::new(),
+        order,
+    );
     assert_eq!(collection.entities.len(), 2);
     let [ExtrusionEntity::Loop(first), ExtrusionEntity::Loop(second)] = &collection.entities[..]
     else {
@@ -146,24 +148,25 @@ fn task22o9_contours_emit_children_first_and_holes_emit_parent_first() {
             children: vec![ChainedLoopNode {
                 extrusion_loop: Some(square_loop(20, 0, ExtrusionLoopRole::Internal)),
                 children: Vec::new(),
+                child_order: Vec::new(),
             }],
+            child_order: vec![(0, false)],
         }],
+        child_order: vec![(0, false)],
     }];
     let seeds = vec![seed(
         true,
         0,
         vec![seed(false, 1, vec![seed(true, 2, Vec::new())])],
     )];
+    let order = root_thin_entities_and_order(&nodes, &[]).1;
     let collection = traverse_loops(
-nodes,
-&seeds,
-ProcessWallDirection::CounterClockwise,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &[],
-ext_perimeter_flow: test_flow(),
- },
-TEST_SCALE,
-);
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        Vec::new(),
+        order,
+    );
     assert_eq!(
         collection
             .entities
@@ -180,32 +183,30 @@ fn task22o9_deep_traversal_and_cleanup_fit_a_constrained_stack() {
         .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(|| {
             let (node, root_seed) = deep_pair(2_000);
+            let nodes = vec![node];
+            let order = root_thin_entities_and_order(&nodes, &[]).1;
             let collection = traverse_loops(
-vec![node],
-std::slice::from_ref(&root_seed),
-ProcessWallDirection::CounterClockwise,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &[],
-ext_perimeter_flow: test_flow(),
- },
-TEST_SCALE,
-);
+                nodes,
+                std::slice::from_ref(&root_seed),
+                ProcessWallDirection::CounterClockwise,
+                Vec::new(),
+                order,
+            );
             assert_eq!(collection.entities.len(), 2_000);
             drain_seeds(vec![root_seed]);
             drop(collection);
 
             let (mut skipped, skipped_seed) = deep_pair(2_000);
             skipped.extrusion_loop = None;
+            let nodes = vec![skipped];
+            let order = root_thin_entities_and_order(&nodes, &[]).1;
             let collection = traverse_loops(
-vec![skipped],
-std::slice::from_ref(&skipped_seed),
-ProcessWallDirection::CounterClockwise,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &[],
-ext_perimeter_flow: test_flow(),
- },
-TEST_SCALE,
-);
+                nodes,
+                std::slice::from_ref(&skipped_seed),
+                ProcessWallDirection::CounterClockwise,
+                Vec::new(),
+                order,
+            );
             assert!(collection.entities.is_empty());
             drain_seeds(vec![skipped_seed]);
         })

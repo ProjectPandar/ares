@@ -21,14 +21,26 @@ pub(in crate::project_slice) struct PreparedRawPathRecord {
 pub(in crate::project_slice) struct PreparedRawPathSurface {
     pub(in crate::project_slice) source_index: usize,
     pub(in crate::project_slice) roots: Vec<RawPathNode>,
-    /// `thin_walls` — `detect_thin_wall` extractions for `traverse_loops`.
-    pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
+    /// Root-level chain over the compacted loops plus `thin_entities`
+    /// (`PerimeterGenerator.cpp:238`), computed once during materialization
+    /// and consumed verbatim by the emission traversal — the single chain
+    /// computation for the surface level.
+    pub(in crate::project_slice) root_order: Vec<(usize, bool)>,
+    /// `variable_width` thin-wall entities (`PerimeterGenerator.cpp:231`),
+    /// materialized once here because the root chain interleaves them.
+    pub(in crate::project_slice) thin_entities:
+        Vec<crate::project_slice::perimeters::classic::entity_collections::ExtrusionEntity>,
 }
 
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct RawPathNode {
     pub(in crate::project_slice) paths: Vec<ExtrusionPath>,
     pub(in crate::project_slice) children: Vec<RawPathNode>,
+    /// Chain over this node's children level (`PerimeterGenerator.cpp:238`),
+    /// computed once during materialization and consumed verbatim by the
+    /// emission traversal's child descent and ordering. Loop-only level:
+    /// reverse flags stay `false` (chain-extrusion loop semantics).
+    pub(in crate::project_slice) child_order: Vec<(usize, bool)>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
