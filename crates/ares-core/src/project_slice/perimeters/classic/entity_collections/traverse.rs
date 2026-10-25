@@ -55,7 +55,9 @@ struct GroupFrame<'a> {
     output: ExtrusionEntityCollection,
 }
 
-fn loop_endpoints(entity: &ExtrusionEntity) -> [[crate::geometry::Coord; 2]; 2] {
+pub(in crate::project_slice) fn loop_endpoints(
+    entity: &ExtrusionEntity,
+) -> [[crate::geometry::Coord; 2]; 2] {
     match entity {
         ExtrusionEntity::Loop(ordered) => {
             let first = ordered.extrusion_loop.paths[0].polyline.points[0];

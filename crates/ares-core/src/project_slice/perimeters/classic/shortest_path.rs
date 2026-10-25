@@ -10,12 +10,13 @@ mod priority_queue;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+pub(in crate::project_slice) use chain::reorder_extrusion_paths;
 pub(in crate::project_slice) use chain::{
     chain_and_reorder_extrusion_paths, chain_extrusion_entities, chain_extrusion_loops,
+    chain_extrusion_paths, chain_loops_by_first_points,
     chain_segments_constrained_with_optional_start,
 };
-#[cfg(test)]
-pub(in crate::project_slice) use chain::{chain_extrusion_paths, reorder_extrusion_paths};
 #[cfg(test)]
 pub(in crate::project_slice) use entity_chain::chain_and_reorder_entities;
 pub(in crate::project_slice) use entity_chain::{

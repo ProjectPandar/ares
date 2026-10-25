@@ -98,22 +98,38 @@ pub(in crate::project_slice) fn chain_extrusion_paths(
 pub(in crate::project_slice) fn chain_extrusion_loops(
     loops: &[ExtrusionLoop],
 ) -> Vec<(usize, bool)> {
-    match loops.len() {
+    let first_points: Vec<_> = loops
+        .iter()
+        .map(|loop_| {
+            let first = &loop_.paths[0].polyline.points[0];
+            [first.x as f64, first.y as f64]
+        })
+        .collect();
+    chain_loops_by_first_points(&first_points)
+        .into_iter()
+        .map(|index| (index, false))
+        .collect()
+}
+
+/// First-point loop chaining shared by `chain_extrusion_loops` and the
+/// classic materialization child-descent order (`PerimeterGenerator.cpp:238`
+/// chains the just-materialized level before recursing into children at
+/// `:254-255`).
+pub(in crate::project_slice) fn chain_loops_by_first_points(
+    first_points: &[[f64; 2]],
+) -> Vec<usize> {
+    match first_points.len() {
         0 => return Vec::new(),
-        1 => return vec![(0, false)],
+        1 => return vec![0],
         _ => {}
     }
-    let positions = loops
+    let positions = first_points
         .iter()
-        .flat_map(|loop_| {
-            let first = &loop_.paths[0].polyline.points[0];
-            let point = [first.x as f64, first.y as f64];
-            [point, point]
-        })
+        .flat_map(|point| [*point, *point])
         .collect::<Vec<_>>();
     chain_multiple(&positions, Some([0.0, 0.0]))
         .into_iter()
-        .map(|(index, _)| (index, false))
+        .map(|(index, _)| index)
         .collect()
 }
 pub(super) fn chain_points(points: &[crate::geometry::Point]) -> Vec<usize> {
