@@ -7,6 +7,24 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Spiral vase multi-copy by-layer admission: approved SPEC → tests-only RED → bounded GREEN
+
+Owner upstream8500fcdcc `Print.cpp:1334–1341` (`Print::validate`: with
+`spiral_mode`, `total_copies_count = Σ instances > 1` and a non-by-object
+sequence rejects with the `spiral vase mode` diagnostic; CLI
+`CLI_VALIDATE_ERROR` −51 → 205 with the validate `result.json` fields).
+Destination: only `ares-core print/validate.rs::validate_print` gains the
+instance-count check on the existing `SliceError::Validate` path; typed reads,
+no new exit plumbing; file stays ≤400 LOC. RED = three cases on the W1 chain
+at `a62041e78`: witness `two-object-by-layer` (A1, `spiral_mode=1`, by layer;
+Native −51/205 + diagnostic, Ares currently exit 0) plus acceptance guards
+`single-object-by-layer` and `two-object-by-object-apart` (both accepted by
+Native and Ares; byte parity deferred — BBL spiral emission divergences are
+recorded findings). Official+seeded, runtime Native, no Native artifacts.
+Deferred: `Print.cpp:1342–1353` regions check, spiral emission parity.
+[SPEC](architecture/spiral-vase-admission-spec.md),
+[ARD](architecture/ard-spiral-vase-admission.md).
+
 ### Extruded weight/volume template totals: approved SPEC → formal RED → bounded GREEN
 
 Owner upstream8500fcdcc `GCode.cpp:1675–1690` (per-extruder `w = v ×
