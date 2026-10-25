@@ -168,15 +168,23 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_object_stop_label: Option<u32>,
     pub(in crate::project_slice::gcode_emit) tags: super::super::tags::Tags,
-    /// The one-shot routing disable armed after the first-layer skirt
-    // (`disable_once`, `GCode.cpp:4448-4450`: a straight travel to the
-    // first object point).
+    /// The one-shot routing disable armed at the END of the first-layer
+    // skirt emission (`disable_once`, `GCode.cpp:4448-4450`) and of the
+    // brim emission (`GCode.cpp:4498-4500`): a straight travel to the
+    // first object point. Consumed right after the first planning slot
+    // (`reset_once_modifiers`, `GCode.cpp:7429-7431`).
     pub(in crate::project_slice::gcode_emit) avoid_crossing_disabled_once: bool,
     /// `use_external_mp_once` (`AvoidCrossingPerimeters.hpp:21`): armed
     /// when a new object copy starts (`GCode.cpp:5380-5384`), the first
     /// travel routes along the chunk-wide hole boundary; cleared with the
-    /// other once-modifiers after the emitted travel (`GCode.cpp:7431`).
+    /// other once-modifiers right after the first planning slot
+    /// (`GCode.cpp:7429-7431`) and re-armed around the post-wipe re-plan
+    /// (`GCode.cpp:7446-7451`).
     pub(in crate::project_slice::gcode_emit) use_external_mp_once: bool,
+    /// `use_external_mp` (`AvoidCrossingPerimeters.hpp:19`): the
+    /// skirt/brim emission windows plan every travel against the external
+    /// boundary (`GCode.cpp:4413/:4448`, `:4496/:4498`).
+    pub(in crate::project_slice::gcode_emit) use_external_mp: bool,
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
     pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,

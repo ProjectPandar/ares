@@ -60,6 +60,11 @@ pub(super) fn emit(
     let geometry = entry_builder.geometry(object_index, layer_index, chunk_perimeter_spacing);
     let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
+    // `GCode.cpp:4496/:4498-4500`: brim emission plans travels against
+    // the external boundary; the window closes after the entities and
+    // the one-shot disable is armed for the straight travel to the first
+    // object point.
+    state.use_external_mp = true;
     plan.emit(
         output,
         geometry.view(
@@ -70,5 +75,7 @@ pub(super) fn emit(
         ),
         state,
     )?;
+    state.use_external_mp = false;
+    state.avoid_crossing_disabled_once = true;
     Ok(())
 }

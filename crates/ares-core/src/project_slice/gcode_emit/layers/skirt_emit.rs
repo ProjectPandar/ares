@@ -97,6 +97,14 @@ pub(super) fn emit(
         } else {
             geometry.view_raft(traversal.scale)
         };
+        // `GCode.cpp:4413/:4448`: the whole skirt emission plans travels
+        // against the external boundary; the window closes after the
+        // loops, then `:4449-4450` arms the one-shot disable (straight
+        // travel to the first object point) at emission END on the first
+        // layer (upstream `loops.first == 0` loop-0 extruder condition;
+        // multi-extruder loop ranges deferred).
+        state.use_external_mp = true;
+        let first_layer = skirt_layer == 0;
         plan.emit(
             output,
             skirt::SkirtLayer {
@@ -106,6 +114,10 @@ pub(super) fn emit(
             motion_geometry,
             state,
         )?;
+        state.use_external_mp = false;
+        if first_layer {
+            state.avoid_crossing_disabled_once = true;
+        }
     }
     Ok(())
 }

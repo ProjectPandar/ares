@@ -67,7 +67,16 @@ pub(super) fn emit_needs_travel(
     // `avoid_crossing_perimeters.travel_to`), so route first and then
     // decide; a wiping retract moves the head and the route is planned
     // again from the new position (`GCode.cpp:7436-7443`).
-    let mut route = plan_route(state, &geometry, feature, first_x, first_y)?;
+    // `GCode.cpp:7350` captures `used_external_mp_once` at travel_to
+    // entry, before the first planning slot consumes it.
+    let used_external_mp_once = state.use_external_mp_once;
+    let mut route = plan_route(state, &geometry, first_x, first_y)?;
+    // `reset_once_modifiers` (`GCode.cpp:7429-7431`) clears both
+    // once-modifiers immediately after the first planning slot, before
+    // the retraction branch — the post-wipe re-plan (`:7444-7452`)
+    // therefore routes with the disable already cleared.
+    state.avoid_crossing_disabled_once = false;
+    state.use_external_mp_once = false;
     let inside_internal_surface = {
         // `GCode.cpp:7424`: `travel_inside_internal_regions(travel)`. Once
         // avoid-crossing routing has replaced `travel` with the detour, the
@@ -167,7 +176,16 @@ pub(super) fn emit_needs_travel(
                 destination_feature: feature,
             },
             &mut |state| {
-                route = plan_route(state, &geometry_ref, feature, first_x, first_y)?;
+                // `GCode.cpp:7446-7451`: restore `use_external_mp_once`
+                // for the re-plan call when the first slot used it, and
+                // clear it again right after.
+                if used_external_mp_once {
+                    state.use_external_mp_once = true;
+                }
+                route = plan_route(state, &geometry_ref, first_x, first_y)?;
+                if used_external_mp_once {
+                    state.use_external_mp_once = false;
+                }
                 Ok(())
             },
         )?;
@@ -178,13 +196,6 @@ pub(super) fn emit_needs_travel(
     let first_travel = route[0];
     let (travel_x, travel_y) = (first_travel.x, first_travel.y);
     append_object_start(output, state);
-    // Consume the one-shot disable after the travel is planned
-    // (`reset_once_modifiers`, `GCode.cpp:7431`) — only routed
-    // travels consume it; the skirt's own travels keep it armed.
-    if !matches!(feature, "Skirt" | "Brim") {
-        state.avoid_crossing_disabled_once = false;
-        state.use_external_mp_once = false;
-    }
     // Upstream never schedules a layer-start lift without a retraction
     // (`GCode.cpp:5692-5698`: `change_layer`'s own retract — gated on
     // `retract_when_changing_layer` — is the only deferral source; with

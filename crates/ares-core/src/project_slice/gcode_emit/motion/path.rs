@@ -264,11 +264,6 @@ fn emit_inner(
         let feature = state.tags.feature(properties.feature) + "\n";
         output.extend_from_slice(feature.as_bytes());
         state.last_feature = Some(properties.feature);
-        // Arm the one-shot routing disable after the first-layer skirt
-        // (`disable_once`, `GCode.cpp:4448-4450`).
-        if properties.feature == "Skirt" && state.layer_index == 0 {
-            state.avoid_crossing_disabled_once = true;
-        }
     }
     if last_was_tower || state.last_width != Some(properties.width) {
         output.extend_from_slice(

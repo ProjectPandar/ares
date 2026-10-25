@@ -10,18 +10,18 @@ use crate::{
 pub(super) fn plan_route(
     state: &mut EmitState,
     geometry: &LayerGeometry<'_>,
-    feature: &str,
     first_x: f64,
     first_y: f64,
 ) -> Result<Vec<arc::Point>, SliceError> {
     // Upstream gates routing on `is_current_position_clear()`
     // (`GCode.cpp:7420`).
     let route_gate = state.positioned;
-    // Upstream disables the avoid-crossing once after the first-layer
-    // skirt (`disable_once`, `GCode.cpp:4448-4450`) so the travel to the
-    // first object point is straight. The flag survives the wipe
-    // re-plan within one travel (upstream resets it only after the
-    // emitted travel, `reset_once_modifiers` `GCode.cpp:7431`).
+    // The one-shot disable is armed at the END of the skirt/brim emission
+    // (`GCode.cpp:4448-4450`, `:4498-4500`) and cleared immediately after
+    // the first planning slot (`reset_once_modifiers`,
+    // `GCode.cpp:7429-7431`) — BEFORE the retraction branch, so the
+    // post-wipe re-plan (`GCode.cpp:7444-7452`) routes with the disable
+    // already cleared.
     let avoid_disabled = state.avoid_crossing_disabled_once;
     // `GCode::travel_to` starts its polyline at last_pos(), not the writer's
     // inward-move endpoint (GCode.cpp:7356–7362).
@@ -30,11 +30,7 @@ pub(super) fn plan_route(
         x: geometry.scale.unscale(cursor.x()) + state.offset.0,
         y: geometry.scale.unscale(cursor.y()) + state.offset.1,
     };
-    let mut route = if state.options.reduce_crossing_wall
-        && route_gate
-        && !avoid_disabled
-        && !matches!(feature, "Skirt" | "Brim")
-    {
+    let mut route = if state.options.reduce_crossing_wall && route_gate && !avoid_disabled {
         if state.avoid_boundary.is_none() {
             state.avoid_boundary = Some(std::rc::Rc::new(
                 avoid_crossing::build_boundary(geometry).map_err(|error| {
@@ -51,7 +47,9 @@ pub(super) fn plan_route(
                 },
                 geometry: *geometry,
                 offset: state.offset,
-                use_external: state.use_external_mp_once,
+                // `AvoidCrossingPerimeters.cpp:1237`:
+                // `m_use_external_mp || m_use_external_mp_once`.
+                use_external: state.use_external_mp || state.use_external_mp_once,
                 max_detour: state.options.max_travel_detour_distance,
             },
             std::rc::Rc::make_mut(
