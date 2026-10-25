@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use crate::{
     ProcessSeamPosition,
     geometry::CoordinateScale,
@@ -56,7 +58,7 @@ pub(in crate::project_slice::seam_placement) fn prepare(
     let (planned_object, _, _) = post_region.as_parts();
     context::populate(
         &mut plans,
-        &embedding_layers(traversal, object_index, layers.len()),
+        &embedding_layers(layers),
         layer_slices,
         &planned_object.layers,
         traversal.scale,
@@ -76,32 +78,19 @@ pub(in crate::project_slice::seam_placement) fn prepare(
     plans
 }
 
-fn embedding_layers(
-    traversal: &PreparedPostClassicTraversal,
-    object_index: usize,
-    layer_count: usize,
-) -> Vec<bool> {
-    let object = &traversal.objects[object_index];
-    let input = &object
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .object;
-    let mut region_counts = vec![0_u16; layer_count];
-    for (input, perimeters) in input.records.iter().zip(&object.records) {
-        let (Some(input), Some(perimeters)) = (input, perimeters) else {
-            continue;
-        };
-        if perimeters
-            .surfaces
-            .iter()
-            .any(|surface| !surface.roots.is_empty())
-        {
-            region_counts[input.planned_layer_index] += 1;
-        }
-    }
-    region_counts.into_iter().map(|count| count > 1).collect()
+fn embedding_layers(layers: &[OrderedExtrusionLayer]) -> Vec<bool> {
+    layers
+        .iter()
+        .map(|layer| {
+            layer
+                .islands
+                .iter()
+                .flat_map(|island| island.perimeter_regions.iter().copied())
+                .collect::<BTreeSet<_>>()
+                .len()
+                > 1
+        })
+        .collect()
 }
 
 fn layer_regions<'a>(
