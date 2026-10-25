@@ -4,6 +4,8 @@
 mod bbl_layer_object_labels;
 #[path = "byobject_transition_lift_gate.rs"]
 mod byobject_transition_lift_gate;
+#[path = "mm_flush_into_infill_labels.rs"]
+mod mm_flush_into_infill_labels;
 #[path = "p1s_bylayer_brim.rs"]
 mod p1s_bylayer_brim;
 #[path = "print_order_as_obj_list.rs"]
