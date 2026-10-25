@@ -242,6 +242,27 @@ No production/tests/FULL/rebase/merge/push here; beam integration window separat
 [SPEC](architecture/painted-fuzzy-skin-spec.md),
 [ARD](architecture/ard-painted-fuzzy-skin.md).
 
+### W5 MM flush_into_infill object-label envelope: SPEC+RED / HOLD
+
+Discovery on main `78d642702` (worker W5; evidence dir
+`/home/indexyz/ares-coord/evidence/w6-mm-toolchange-discovery/`, name
+historical): stock P1S AMS two-filament witness, single knob
+`flush_into_infill` 0→1. Stable dual-mode residual, zero motion bytes:
+84 extra `; stop printing object, unique label id`/M625 pairs plus 2
+stale layer-end stop ids (Native 142/142 envelope balance vs Ares 142/205).
+Upstream pin8500fcdcc boundary: `GCode.cpp:5482-5493` — an unflushed
+`set_object_start_str` is dropped and the M625 end label is NOT armed;
+Ares `object.rs::queue_stop` BBL branch arms unconditionally and
+`motion/state/object_labels.rs::queue_object_stop_label` lacks the
+`queue_exclude_end` drop guard. Fix lands in those two files only;
+`ToolOrdering.cpp:1593,1672-1690,1785` wipe selection is context (motion
+already byte-identical) and deferred. Tests-only RED
+`test(mm_flush_into_infill_labels)`: target FAIL / base control PASS
+per mode, Native required, inputs committed, no Native output committed.
+Exit after approval: same selector green in official+seeded, fresh caches,
+CPU11/threads1; any other residual including M73 → STOP.
+[ARD/SPEC](architecture/ard-mm-flush-into-infill-labels.md).
+
 ### W5 P1S ByLayer brim: area-boundary SPEC revision / HOLD
 
 Frozen rib3 `a96cf4d03` → docs `f4c714372` → approved RED `61b15c6a8`.
