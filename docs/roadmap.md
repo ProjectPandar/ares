@@ -243,6 +243,28 @@ wire classification) and FULL separately authorized. Defer JSON number scalars
 grammar, vector-bool options.
 [ARD / SPEC](architecture/ard-project-settings-bool-wire.md).
 
+### Avoid-crossing disable_once ordering: SPEC → tests-only RED
+
+Port the exact upstream one-shot ordering on pinned8500fcdcc: arm at skirt
+emission END (`GCode.cpp:4448-4450`, loop-0 extruder) and brim emission END
+(`generate_object_brim:4498-4500`); consume via `reset_once_modifiers`
+(`:7429-7431`) immediately after the first planning slot and BEFORE the
+retraction branch, so the post-wipe re-plan (`:7444-7452`) routes with the flag
+clear. Destination: existing `motion/path/start_travel/{route,approach}.rs`,
+`motion/path.rs`, skirt/brim emission sites — no new pipeline. The SPEC audits
+the current `!matches!(feature, "Skirt" | "Brim")` gate/consumption exceptions
+line by line against upstream and finds no basis (the gate at `:7417-7420` is
+feature-less; Ares arms at the Skirt tag instead of skirt end, never arms for
+brim, and lacks the `use_external_mp` emission windows). Exit for this
+assignment: docs SPEC then shared `native_stream_case` tests-only RED on the
+Native-runtime stock Anker M5 fixture (matrix5 discovery residual, bilateral
+gdb pinpoint published), grouped registration in an existing case file, dual
+mode CPU13 threads1, REVIEW/HOLD; GREEN only the upstream literal ordering
+above with identical tests; FULL separately authorized. Defer detour shape
+internals (W4 path_shape lane), boundary construction internals, multi-extruder
+loop ranges, wipe tower, cooling, other flavors.
+[ARD / SPEC](architecture/ard-avoid-once-arm-consumption.md).
+
 ### GUI painted fuzzy skin: discovery rejection, SPEC review pending (#126)
 
 Frozen beam92ce9b02c is unchanged; this separate docs slice owns upstream8500fcdcc
