@@ -1,7 +1,8 @@
 # Spec: curl-annotation point pipeline for long walls — XL block-hole witness
 
-Status: tests-only RED frozen for coordinator review (witness + two
-controls, runtime Native dual mode). No production changes in this slice.
+Status: GREEN implemented on branch `w6/xl-curl-annotation-red-4af042def`
+(RED frozen at `f33e5ab6c`, coordinator-approved scope; witness,
+controls and the C1 Sermoon regression pass in both modes).
 Provenance: machine-matrix discovery at main `4af042def` (Prusa XL, 2nd
 machine), two-sided GDB localization in
 `/home/indexyz/ares-evidence/w6-machine-matrix-blockhole-p8n4d/`

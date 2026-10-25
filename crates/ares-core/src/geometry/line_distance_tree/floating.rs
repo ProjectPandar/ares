@@ -3,6 +3,7 @@
 use super::NodeKind;
 
 mod build;
+mod intersections;
 mod query;
 mod scalar;
 
@@ -44,5 +45,9 @@ impl<F: NativeFloat> FloatLineDistanceTree<F> {
         squared_limit: F,
     ) -> Option<FloatLineHit<F>> {
         query::nearest(self, point, squared_limit)
+    }
+
+    pub(crate) fn intersections_sorted(&self, line: [[F; 2]; 2]) -> Vec<([F; 2], usize)> {
+        intersections::sorted(self, line)
     }
 }
