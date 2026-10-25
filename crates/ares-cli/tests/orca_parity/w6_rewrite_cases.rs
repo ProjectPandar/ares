@@ -39,5 +39,8 @@ mod rear_seam_visibility;
 #[path = "xl_curl_segmentation.rs"]
 mod xl_curl_segmentation;
 
+#[path = "kobra_wipe_before_external.rs"]
+mod kobra_wipe_before_external;
+
 #[path = "zero_area_orientation.rs"]
 mod zero_area_orientation;
