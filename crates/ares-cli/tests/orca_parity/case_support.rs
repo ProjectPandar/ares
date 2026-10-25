@@ -44,3 +44,6 @@ mod spiral_vase_admission;
 
 #[path = "spiral_vase_object_start_z.rs"]
 mod spiral_vase_object_start_z;
+
+#[path = "spiral_byobject_transition.rs"]
+mod spiral_byobject_transition;
