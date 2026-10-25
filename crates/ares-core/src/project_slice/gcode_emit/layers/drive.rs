@@ -312,7 +312,6 @@
                         layer_z,
                         layer_height,
                         object_layer_counts: &object_layer_counts,
-                        last_entry,
                         layer_output_start,
                     },
                 )?;

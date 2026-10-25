@@ -25,7 +25,6 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
     pub(in crate::project_slice::gcode_emit) label_inventory: super::super::object::LabelInventory,
     pub(super) labels: Vec<Vec<Option<ObjectLabels>>>,
     pub(super) object_layer_counts: Vec<usize>,
-    pub(super) last_entry: Option<(usize, usize)>,
     pub(super) layer_count: usize,
     pub(super) skirt_schedule: super::skirt_schedule::SkirtSchedule,
 }
@@ -282,9 +281,6 @@ pub(in crate::project_slice::gcode_emit) fn build(
         })
         .collect();
     let object_layer_counts = objects.iter().map(Vec::len).collect();
-    let last_entry = merged
-        .last()
-        .and_then(|(_, entry)| entry.object_layer.map(|layer| (entry.object_index, layer)));
     let max_layer_height = super::super::tool_ordering::max_layer_height(
         settings,
         object_options
@@ -326,7 +322,6 @@ pub(in crate::project_slice::gcode_emit) fn build(
         label_inventory,
         labels,
         object_layer_counts,
-        last_entry,
         layer_count,
         skirt_schedule,
     })

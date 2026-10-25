@@ -131,7 +131,6 @@ pub(super) fn append(
         label_inventory,
         labels,
         object_layer_counts,
-        last_entry,
         mut skirt_schedule,
         tool_ordering,
         layer_count,

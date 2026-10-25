@@ -33,7 +33,6 @@ pub(super) fn emit(
     layer_z: f64,
     layer_height: f64,
     object_layer_counts: &[usize],
-    last_entry: Option<(usize, usize)>,
     is_group_end: bool,
     layer_output_start: usize,
 ) -> Result<(), SliceError> {
@@ -122,7 +121,6 @@ pub(super) fn emit(
             )
         },
     )?;
-    let is_last_entry = Some((object_index, layer_index)) == last_entry;
     if let Some(labels) = labels {
         labels.queue_stop(output, state, emit_labels);
     }
@@ -151,7 +149,12 @@ pub(super) fn emit(
                 entry_output_start
             },
             enabled: spiral_body_layer,
-            final_layer: is_last_entry && layer_index + 1 == object_layer_counts[object_index],
+            // `GCode.cpp:3805-3806`: `last_layer` is per object batch
+            // under the single-object (by-object) pipeline, and the
+            // by-layer batch degenerates to the same expression because
+            // spiral by-layer prints are admission-limited to one copy
+            // (`Print.cpp:1334-1341`).
+            final_layer: layer_index + 1 == object_layer_counts[object_index],
             z: layer_z + state.options.z_offset,
             height: layer_height,
         },

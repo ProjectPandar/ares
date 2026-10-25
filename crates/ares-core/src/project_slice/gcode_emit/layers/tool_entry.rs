@@ -37,7 +37,6 @@ pub(super) struct Input<'a, 'b> {
     pub(super) layer_z: f64,
     pub(super) layer_height: f64,
     pub(super) object_layer_counts: &'a [usize],
-    pub(super) last_entry: Option<(usize, usize)>,
     pub(super) layer_output_start: usize,
 }
 
@@ -70,7 +69,6 @@ pub(super) fn emit(
         layer_z,
         layer_height,
         object_layer_counts,
-        last_entry,
         layer_output_start,
     } = input;
     if purging_finished {
@@ -284,7 +282,6 @@ pub(super) fn emit(
         layer_z,
         layer_height,
         object_layer_counts,
-        last_entry,
         is_group_end,
         layer_output_start,
     )?;
