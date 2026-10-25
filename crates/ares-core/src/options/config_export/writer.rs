@@ -165,6 +165,18 @@ pub(crate) fn write_canonical_entries(
         }) {
             continue;
         }
+        // Unknown keys never enter the config upstream: `set_deserialize_raw`
+        // accepts a key only when the definition table has a definition or an
+        // alias for it (`Config.cpp:608-629`), so a key outside the registry
+        // tables cannot be re-serialized into the full-config block
+        // (`GCode.cpp:5591-5646`).
+        if crate::options::registry::option_definition(key).is_none()
+            && !crate::options::registry::option_metadata_table()
+                .iter()
+                .any(|meta| meta.aliases.contains(&key))
+        {
+            continue;
+        }
         if entries.iter().any(|entry| entry.key == key && entry.is_nil) {
             // GCode.cpp:5632-5633: nil canonical options cannot be reinserted
             // by retained raw input after the type-owned echo filter.
