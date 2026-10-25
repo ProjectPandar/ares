@@ -7,6 +7,34 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### By-object spiral per-object transition_out: approved SPEC → side-branch tests-only RED → bounded GREEN
+
+Owner upstream8500fcdcc `SpiralVase.cpp:120–121,154–165,205–216` (the
+last layer of EVERY object batch emits a flat taper pass cloned from
+the ramp lines, E × finishing factor; `transition_out = last_layer &&
+relative_e`) with `GCode.cpp:3805–3806` (single-object pipeline:
+`last_layer` is per-object-batch under by-object printing;
+`:3698–3705` degenerates to plate-final under by-layer spiral via the
+`Print.cpp:1334–1341` admission). Destination: `ares-core
+project_slice/gcode_emit/layers/object_entry.rs` — `final_layer`
+drops the `is_last_entry` conjunct, becoming per-object
+(`layer_index+1 == object_layer_counts[object_index]`); the spec's
+consumer table proves `is_last_entry`/`last_entry` plumbing
+(`schedule.rs:285–287,329`, `layers.rs:134`, `tool_entry.rs:40,73,287`,
+`drive.rs:315`, `object_entry.rs:36,125`) has no other consumer and is
+removed. RED on the side branch `spiral-byobject-transition` from the
+W1 tip `a1a72362a` (not merged into the frozen window tip; append is a
+COORD decision after the RR): witness = the committed
+`two-object-by-object-apart.3mf` (A1 by-object spiral; first
+difference line 5 — `; total layer number: 83` vs `82`; Native prints
+`overhang.obj`'s top-layer flat taper pass, Ares drops it plus the
+end-of-object sequence and travel Z; filament totals follow). Complete
+unweakened comparator, official + seeded runtime Native, `case_support`
+registration. Deferred: M73 P-progress placement (4 sites), final-layer
+ramp feed `F3713` vs `F1857` (overhang slow-down classification).
+[SPEC](architecture/spiral-byobject-transition-spec.md),
+[ARD](architecture/ard-spiral-byobject-transition.md).
+
 ### Spiral vase object-start Z-only line: approved SPEC → tests-only RED → bounded GREEN
 
 Owner upstream8500fcdcc `SpiralVase.cpp:131–141` (every Z-only G1 of a
