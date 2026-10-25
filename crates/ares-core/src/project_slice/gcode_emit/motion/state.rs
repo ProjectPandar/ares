@@ -263,8 +263,14 @@ impl EmitState {
             self.extruder.filament_used + self.extruder.retracted_amount
         };
         crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
-            diameter: 1.75,
-            density: 1.24,
+            // GCode.cpp:1675-1690: the template totals use the typed
+            // per-extruder filament values (`Extruder::filament_crossection`
+            // / `filament_density`). MotionOptions carries the typed
+            // cross-section (`filament_diameter*diameter*0.25*PI`,
+            // Extruder.hpp:61); the diameter is recovered from it for the
+            // consumers' literal cross-section recomputation.
+            diameter: (self.options.filament_area * 4.0 / std::f64::consts::PI).sqrt(),
+            density: self.options.filament_density,
             used_filament,
         }
     }

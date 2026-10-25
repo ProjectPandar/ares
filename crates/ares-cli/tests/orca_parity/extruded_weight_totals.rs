@@ -97,8 +97,10 @@ fn orca_parity_extruded_weight_totals_diameter185_mk4() {
         DIAMETER_SHA,
         (false, |reference, replay| {
             for native in [&reference.native, &replay.native] {
-                // Typed diameter 1.85: smaller cross-section volume, stock
-                // density 1.24.
+                // Typed diameter 1.85: the printed volume is geometry-determined
+                // (the E length shrinks with the wider cross-section), so the
+                // weight matches stock; the hard-coded 1.75 cross-section
+                // underestimates it by (1.75/1.85)^2.
                 assert_native_template_witness(
                     native,
                     "M201 X3999.92 Y3999.92\n",
