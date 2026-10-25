@@ -48,17 +48,25 @@ the raw loop has no definition-table gate.
 ## GREEN contract (single bounded edit)
 
 In the raw-echo loop only, drop raw keys that the upstream definition table
-does not know. The judgment must be a literal port of upstream's def lookup:
+does not store under that name. The judgment must be a literal port of
+upstream's def lookup:
 
-- a raw key is known iff `options::registry::option_definition(key)` returns a
-  definition, or it appears in some definition's `aliases` list
-  (`OptionMetadata::aliases`, registry data populated from the upstream
-  PrintConfigDef), mapping the alias to its canonical key exactly as
-  `Config.cpp:608–629` scans `def->options` aliases before throwing;
+- a raw key is echoed iff `options::registry::option_definition(key)`
+  returns a definition; keys that are only aliases of a definition are
+  dropped too, because `Config.cpp:608-629` stores an alias under its
+  canonical key (`opt_key = opt.first`) — the alias name itself is never
+  serialized, and the canonical key echoes via its own raw entry;
 - no new hand-written white/black list; the registry tables are the only key
   authority;
 - the `handle_legacy` cleared-key path keeps the existing `EXPLICIT_RULES`
-  behavior byte-for-byte (Config.cpp:576–590 maps onto those rules today).
+  behavior byte-for-byte (Config.cpp:576-590 maps onto those rules today).
+
+Alias-value attribution observed on the official Native probe (input sha
+`e345c077…`, `perimeter_feed_rate=123` appended after canonical
+`inner_wall_speed=300`): Native omits the alias name and keeps
+`; inner_wall_speed = 300`, i.e. the canonical typed value wins; Ares
+behaves the same once the alias name is dropped. Deeper alias ordering
+semantics (alias before/after canonical, multiple aliases) remain deferred.
 
 ## Included / deferred
 
