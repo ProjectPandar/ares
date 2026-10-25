@@ -220,6 +220,29 @@ multiline algorithm changes, support/raft, travel, seam/rear, brim, scan,
 cooling and processor/M73 behavior. No golden output or comparator weakening.
 [ARD / SPEC](architecture/ard-grid-surface-collections.md).
 
+### Project_settings boolean wire forms: SPEC → tests-only RED
+
+Port the upstream boolean wire classification for `Metadata/project_settings.config`
+on main5948c9347: `bbs_3mf.cpp:_extract_project_config_from_archive` →
+`Config.cpp:DynamicPrintConfig::load_from_json:905-990` only deserializes JSON
+strings (`:927-929`) and arrays — every other scalar JSON type (boolean, number)
+hits the `invalid json type` else-branch and the key is DROPPED, keeping the
+option default. `Config.hpp:1828-1848` accepts exact `"1"`/`"0"` strings only;
+the EnableSilent 3MF rule retries via `enum_looks_like_true_value`
+(`Config.hpp:96-99`, `enabled`/`on`). Ares main already matches every string
+form (including `""`/`"on"` substitution) but `OrcaBool::visit_bool` accepts a
+JSON boolean as the option value. Exit for this assignment: docs SPEC
+(`architecture/ard-project-settings-bool-wire.md`, itemized wire-form audit)
+plus shared `native_stream_case` tests-only RED on the Native-runtime K1 stock
+bridge project with `staggered_inner_seams` rewired to unquoted JSON `true`
+(seam-scan patch artifact; Native unstaggered `X130.857` vs Ares staggered
+`X131.357`), frozen input SHA, native double replay, dual mode CPU13 threads1,
+registration in the parity suite group file, then REVIEW/HOLD. GREEN (loader
+wire classification) and FULL separately authorized. Defer JSON number scalars
+(same else-branch family, no witness), embedded preset documents, CLI override
+grammar, vector-bool options.
+[ARD / SPEC](architecture/ard-project-settings-bool-wire.md).
+
 ### GUI painted fuzzy skin: discovery rejection, SPEC review pending (#126)
 
 Frozen beam92ce9b02c is unchanged; this separate docs slice owns upstream8500fcdcc
