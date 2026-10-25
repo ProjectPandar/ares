@@ -65,3 +65,6 @@ mod bbl_jerk_tail_signed_zero;
 
 #[path = "scan_unretract_comment.rs"]
 mod scan_unretract_comment;
+
+#[path = "thin_gap_seam_embedding.rs"]
+mod thin_gap_seam_embedding;
