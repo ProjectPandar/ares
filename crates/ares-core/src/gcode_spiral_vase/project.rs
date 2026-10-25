@@ -76,7 +76,6 @@ impl ProjectSpiralVaseRunState {
         let mut last_emitted = self.previous_layer.last().copied();
         let mut transformed = String::new();
         let mut transition = String::new();
-        let mut emitted_layer_z = false;
 
         for line in input.lines() {
             let parsed = ParsedLine::parse(line);
@@ -93,7 +92,9 @@ impl ProjectSpiralVaseRunState {
                 continue;
             }
             if parsed.z.is_some() && !parsed.has_xy() {
-                emitted_layer_z = append_layer_z(&mut transformed, line, base_z, emitted_layer_z);
+                // `SpiralVase.cpp:136-141`: every remaining Z-only G1 is kept
+                // and rewritten to the layer base z (`line.set(Z, z)`).
+                push_line(&mut transformed, &set_word(line, 'Z', format_z(base_z)));
                 continue;
             }
             if !parsed.has_xy() {
@@ -317,13 +318,6 @@ fn word_value(line: &str, letter: char) -> Option<f64> {
 fn push_line(output: &mut String, line: &str) {
     output.push_str(line);
     output.push('\n');
-}
-
-fn append_layer_z(output: &mut String, line: &str, base_z: f64, already_emitted: bool) -> bool {
-    if !already_emitted {
-        push_line(output, &set_word(line, 'Z', format_z(base_z)));
-    }
-    true
 }
 
 fn push_passthrough(
