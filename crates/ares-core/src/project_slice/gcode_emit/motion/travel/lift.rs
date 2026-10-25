@@ -48,7 +48,24 @@ pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f
 /// schedules the deferred hop when a retraction is configured and the
 /// writer sits inside the lift band, evaluated at the live writer z.
 /// Shares `schedule`'s `m_lifted == 0 && m_to_lift == 0` gate.
-pub(in crate::project_slice::gcode_emit) fn schedule_retract_tail(state: &mut EmitState) {
+/// `GCodeWriter::lazy_lift`'s spiral-vase branch (`GCodeWriter.cpp:
+/// 637-643`) materializes the hop instantly inside the retract —
+/// `m_lifted = target_lift` plus `_travel_to_z(m_pos(2) + target_lift,
+/// "lift Z")` — before any label flush or travel move consumes the
+/// deferred slot; the same `m_spiral_vase != nullptr` source the
+/// upstream retract call passes (`GCode.cpp:7704`).
+pub(in crate::project_slice::gcode_emit) fn schedule_retract_tail(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if state.spiral_vase
+        && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
+        && state.lifted_amount <= 0.0
+        && state.pending_lift.is_none()
+    {
+        append_spiral_vase(output, state);
+        return;
+    }
     schedule_at(state, false, state.writer_z.unwrap_or(state.layer_z));
 }
 

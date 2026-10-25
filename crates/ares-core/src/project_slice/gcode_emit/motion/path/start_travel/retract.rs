@@ -86,7 +86,7 @@ pub(super) fn decide(
             // The suppressed tail still runs `reset_e` and the lazy lift
             // (`GCode.cpp:7674-7681`).
             travel::reset_e(output, state);
-            travel::schedule_retract_tail(state);
+            travel::schedule_retract_tail(output, state);
         } else if hilbert_suppressed {
             // `GCode.cpp:7667-7672` suppresses ONLY `m_writer.retract()`;
             // `reset_e` (`GCode.cpp:7674`) and the lazy lift still run.
@@ -97,7 +97,7 @@ pub(super) fn decide(
             // `needs_lift` (`GCode.cpp:7678-7681`): configured length OR
             // firmware retraction allows the deferred hop; upstream
             // `lazy_lift` reads the CURRENT writer Z.
-            travel::schedule_retract_tail(state);
+            travel::schedule_retract_tail(output, state);
         } else {
             wipe_then_replan(output, state, travel::retract_and_lift)?;
         }
@@ -130,7 +130,7 @@ pub(super) fn decide(
         // `schedule_retract_tail` re-checks the shared needs_lift band
         // (`GCode.cpp:7678-7681`).
         if defer_lift_for_retracted_travel {
-            travel::schedule_retract_tail(state);
+            travel::schedule_retract_tail(output, state);
         }
     }
     Ok(())
