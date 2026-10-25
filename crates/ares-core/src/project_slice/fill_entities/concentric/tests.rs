@@ -30,7 +30,7 @@ fn task22o200_concentric_internal_generates_positive_variable_width_loops() {
     let output = generate_thick_polylines(expolygon, scaled(0.4), 0.2, 0.4, scale).unwrap();
 
     assert!(output.len() > 1);
-    assert!(output.iter().all(|line| {
+    assert!(output.iter().all(|(line, _)| {
         line.points.len() >= 2
             && line.width.len() == 2 * (line.points.len() - 1)
             && line.width.iter().all(|width| *width > 0.0)
@@ -39,18 +39,24 @@ fn task22o200_concentric_internal_generates_positive_variable_width_loops() {
 
 #[test]
 fn task22o201_concentric_finalization_rotates_then_clips_closed_loop() {
-    let mut polylines = vec![ThickPolyline {
-        points: vec![
-            Point::new(10, 10),
-            Point::new(0, 0),
-            Point::new(10, 0),
-            Point::new(10, 10),
-        ],
-        width: vec![1.0; 6],
-        endpoints: (false, false),
-    }];
-
-    finalize_polylines(&mut polylines, 0, 5.0);
+    let mut polylines = Vec::new();
+    finalize_polylines(
+        &mut polylines,
+        vec![(
+            ThickPolyline {
+                points: vec![
+                    Point::new(10, 10),
+                    Point::new(0, 0),
+                    Point::new(10, 0),
+                    Point::new(10, 10),
+                ],
+                width: vec![1.0; 6],
+                endpoints: (false, false),
+            },
+            true,
+        )],
+        5.0,
+    );
 
     assert_eq!(polylines.len(), 1);
     assert_eq!(polylines[0].points[0], Point::new(0, 0));
@@ -59,18 +65,24 @@ fn task22o201_concentric_finalization_rotates_then_clips_closed_loop() {
 
 #[test]
 fn concentric_rotation_uses_last_equidistant_point_like_upstream() {
-    let mut polylines = vec![ThickPolyline {
-        points: vec![
-            Point::new(10, 10),
-            Point::new(10, 0),
-            Point::new(0, 10),
-            Point::new(10, 10),
-        ],
-        width: vec![1.0; 6],
-        endpoints: (false, false),
-    }];
-
-    finalize_polylines(&mut polylines, 0, 1.0);
+    let mut polylines = Vec::new();
+    finalize_polylines(
+        &mut polylines,
+        vec![(
+            ThickPolyline {
+                points: vec![
+                    Point::new(10, 10),
+                    Point::new(10, 0),
+                    Point::new(0, 10),
+                    Point::new(10, 10),
+                ],
+                width: vec![1.0; 6],
+                endpoints: (false, false),
+            },
+            true,
+        )],
+        1.0,
+    );
 
     assert_eq!(polylines[0].points[0], Point::new(0, 10));
 }
@@ -114,9 +126,10 @@ fn task22o203_concentric_arachne_matches_source_narrow_branch() {
         ]),
         Vec::new(),
     );
-    let mut output =
+    let generated =
         generate_thick_polylines(domain, 377_079, 0.2, 0.4, CoordinateScale::Normal).unwrap();
-    finalize_polylines(&mut output, 0, 40_000.0);
+    let mut output = Vec::new();
+    finalize_polylines(&mut output, generated, 40_000.0);
     assert!(output.iter().any(|line| {
         line.points.windows(3).any(|points| {
             points
@@ -186,7 +199,7 @@ fn task22o205_concentric_arachne_matches_source_fractional_vertex() {
     let target = Point::new(-3_822_737, -17_415_945);
     let (line, index) = output
         .iter()
-        .find_map(|line| {
+        .find_map(|(line, _)| {
             line.points
                 .iter()
                 .position(|point| *point == target)
@@ -313,9 +326,10 @@ fn concentric_arachne_matches_source_single_bead_peak_filtering() {
         ]),
         Vec::new(),
     );
-    let mut output =
+    let generated =
         generate_thick_polylines(domain, 377_079, 0.2, 0.4, CoordinateScale::Normal).unwrap();
-    finalize_polylines(&mut output, 0, 40_000.0);
+    let mut output = Vec::new();
+    finalize_polylines(&mut output, generated, 40_000.0);
 
     let actual = output
         .iter()

@@ -7,26 +7,34 @@ use crate::geometry::{Point, ThickPolyline};
 
 use crate::project_slice::perimeters::classic::shortest_path::reorder_thick_polylines;
 
-pub(super) fn finalize_standard_polylines(polylines: &mut Vec<ThickPolyline>, loop_clipping: f64) {
+pub(super) fn finalize_standard_polylines(
+    polylines: Vec<(ThickPolyline, bool)>,
+    loop_clipping: f64,
+) -> Vec<ThickPolyline> {
+    // `FillConcentric.cpp:110-121`: rotate closed rings to the junction
+    // nearest the previous end; open rings keep the raw walk start.
     let mut last = Point::new(0, 0);
-    for polyline in &mut *polylines {
-        if polyline.points.first() == polyline.points.last()
-            && polyline.width.first() == polyline.width.last()
-        {
-            polyline.start_at_index(crate::fill::concentric_sparse::nearest_point_index(
-                last,
-                &polyline.points,
-            ));
-        }
-        if let Some(point) = polyline.points.last() {
-            last = *point;
-        }
-    }
-    for polyline in &mut *polylines {
+    let mut polylines = polylines
+        .into_iter()
+        .map(|(mut polyline, is_closed)| {
+            if is_closed {
+                polyline.start_at_index(crate::fill::concentric_sparse::nearest_point_index(
+                    last,
+                    &polyline.points,
+                ));
+            }
+            if let Some(point) = polyline.points.last() {
+                last = *point;
+            }
+            polyline
+        })
+        .collect::<Vec<_>>();
+    for polyline in &mut polylines {
         polyline.clip_end(loop_clipping);
     }
     polylines.retain(|polyline| polyline.points.len() >= 2);
-    reorder_thick_polylines(polylines);
+    reorder_thick_polylines(&mut polylines);
+    polylines
 }
 
 pub(super) fn nearest_to_origin(points: &[Point]) -> usize {

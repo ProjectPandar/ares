@@ -44,7 +44,6 @@ pub(super) fn append(
     for expolygon in fill.expolygons {
         let mut polylines = Vec::new();
         for domain in intersect_no_overlap_domains(&fill.no_overlap_expolygons, &expolygon)? {
-            let first_polyline = polylines.len();
             let generated = generate_thick_polylines(
                 domain,
                 spacing,
@@ -52,12 +51,7 @@ pub(super) fn append(
                 minimum_nozzle_diameter,
                 scale,
             )?;
-            polylines.extend(generated);
-            finalize_polylines(
-                &mut polylines,
-                first_polyline,
-                fill.params.loop_clipping as f64,
-            );
+            finalize_polylines(&mut polylines, generated, fill.params.loop_clipping as f64);
         }
         let entities = variable_width::convert_with_role(
             &polylines,
@@ -162,9 +156,9 @@ pub(super) fn append_configured(
             3.0,
         )
         .map_err(geometry_error)?;
-        let mut polylines = Vec::new();
+        let mut generated = Vec::new();
         for domain in generation_domains {
-            polylines.extend(generate_standard_thick_polylines(
+            generated.extend(generate_standard_thick_polylines(
                 domain,
                 spacing,
                 layer_height,
@@ -172,7 +166,7 @@ pub(super) fn append_configured(
                 scale,
             )?);
         }
-        finalize_standard_polylines(&mut polylines, params.loop_clipping as f64);
+        let polylines = finalize_standard_polylines(generated, params.loop_clipping as f64);
         let materialized_role = match params.extrusion_role {
             crate::ExtrusionRole::TopSolidInfill => MaterializedRole::TopSolidInfill,
             crate::ExtrusionRole::BottomSurface => MaterializedRole::BottomSurface,
@@ -235,11 +229,15 @@ fn intersect_no_overlap_domains(
 
 fn finalize_polylines(
     polylines: &mut Vec<ThickPolyline>,
-    first_polyline: usize,
+    generated: Vec<(ThickPolyline, bool)>,
     loop_clipping: f64,
 ) {
-    for polyline in &mut polylines[first_polyline..] {
-        if polyline.points.first() == polyline.points.last()
+    let first_polyline = polylines.len();
+    for (mut polyline, is_closed) in generated {
+        // `FillConcentricInternal.cpp:55`: gate on ExtrusionLine::is_closed
+        // before the closed-shape checks.
+        if is_closed
+            && polyline.points.first() == polyline.points.last()
             && polyline.width.first() == polyline.width.last()
         {
             polyline.points.pop();
@@ -247,6 +245,7 @@ fn finalize_polylines(
             polyline.points.push(polyline.points[0]);
             polyline.start_at_index(start);
         }
+        polylines.push(polyline);
     }
     let mut write_index = first_polyline;
     for read_index in first_polyline..polylines.len() {

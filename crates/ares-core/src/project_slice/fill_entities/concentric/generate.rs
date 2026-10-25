@@ -16,7 +16,7 @@ pub(super) fn generate_thick_polylines(
     layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
-) -> Result<Vec<ThickPolyline>, SliceError> {
+) -> Result<Vec<(ThickPolyline, bool)>, SliceError> {
     generate_with_mode(
         expolygon,
         spacing,
@@ -33,7 +33,7 @@ pub(super) fn generate_standard_thick_polylines(
     layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
-) -> Result<Vec<ThickPolyline>, SliceError> {
+) -> Result<Vec<(ThickPolyline, bool)>, SliceError> {
     generate_with_mode(
         expolygon,
         spacing,
@@ -55,7 +55,7 @@ fn generate_with_mode(
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
     standard: bool,
-) -> Result<Vec<ThickPolyline>, SliceError> {
+) -> Result<Vec<(ThickPolyline, bool)>, SliceError> {
     let (contour, holes) = expolygon.into_parts();
     let (minimum_x, maximum_x, minimum_y, maximum_y) = contour.points().iter().fold(
         (i64::MAX, i64::MIN, i64::MAX, i64::MIN),
@@ -120,6 +120,6 @@ fn generate_with_mode(
         .into_iter()
         .flatten()
         .filter(|line| line.junctions.len() >= 2)
-        .map(|line| line.to_thick_polyline())
+        .map(|line| (line.to_thick_polyline(), line.is_closed))
         .collect())
 }
