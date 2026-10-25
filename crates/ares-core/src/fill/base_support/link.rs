@@ -174,7 +174,7 @@ impl<'a> LinkPhases<'a> {
             }
         }
         // Take the longest arch first.
-        selected.sort_by(|left, right| right.0.partial_cmp(&left.0).expect("finite costs"));
+        crate::geometry::fixed_gcc_sort_by(&mut selected, |left, right| left.0 > right.0);
         for (_, index, prev) in selected {
             if self.intersections[index].consumed {
                 continue;
