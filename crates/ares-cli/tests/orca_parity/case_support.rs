@@ -41,3 +41,6 @@ mod extruded_weight_totals;
 
 #[path = "spiral_vase_admission.rs"]
 mod spiral_vase_admission;
+
+#[path = "spiral_vase_object_start_z.rs"]
+mod spiral_vase_object_start_z;
