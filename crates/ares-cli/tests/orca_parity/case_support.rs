@@ -32,3 +32,6 @@ mod auto_lift_query_frame;
 
 #[path = "sequential_template_layer_count.rs"]
 mod sequential_template_layer_count;
+
+#[path = "unknown_key_config_block.rs"]
+mod unknown_key_config_block;
