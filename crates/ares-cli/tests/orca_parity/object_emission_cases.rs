@@ -25,6 +25,9 @@ mod pa_signed_zero;
 #[path = "runner/custom_temperature_command_scan.rs"]
 mod custom_temperature_command_scan;
 
+#[path = "avoid_once_ankermake5.rs"]
+mod avoid_once_ankermake5;
+
 #[path = "velocity_limit_comments.rs"]
 mod velocity_limit_comments;
 
