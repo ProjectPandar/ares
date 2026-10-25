@@ -81,13 +81,19 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     //   cancels the lift (the native `G1 Z7 F42000` / `G1 X50 Y40 Z6.2
     //   F42000`), so the incoming instance's first-path travel performs
     //   its own entry hop pair.
-    // * otherwise the lift stays deferred (`m_to_lift`) and flushes with
-    //   the labels ahead of it: `travel_to_xyz` branch 1
-    //   (GCodeWriter.cpp:700-737) raises the destination to
+    // * otherwise the lift defers once inside the block's own retract
+    //   (`GCode.cpp:3308` `transition_retract` → `lazy_lift`,
+    //   GCodeWriter.cpp:626-648, band checked at that moment's
+    //   `m_pos.z()`); the travel never re-evaluates the band — it only
+    //   consumes `m_to_lift`. With a deferral queued, `travel_to_xyz`
+    //   branch 1 (GCodeWriter.cpp:700-737) raises the destination to
     //   `m_pos(2) + m_to_lift`, materializes the slop `G1 Z4.8 F9000 ;
     //   normal lift Z` and travels there — the arrival keeps the nozzle
     //   lifted (`m_lifted = z_hop`), so the incoming instance's first
-    //   travel descends in the combined move without a new hop.
+    //   travel descends in the combined move without a new hop. With
+    //   none queued (e.g. the retract's `m_pos.z()` sat outside the
+    //   `retract_lift_above/below` band), the travel takes the
+    //   nominal-Z destination like the vase branch.
     let hop_z = lift_z + state.options.z_hop;
     // `GCode.cpp:3322`: forward the sequential origin travel description.
     let comment = if state.options.gcode_comments {
@@ -109,14 +115,27 @@ pub(in crate::project_slice::gcode_emit) fn emit(
         state.lifted_amount = 0.0;
     } else {
         // GCode.cpp:7466-7467 consumes pending labels before the
-        // deferred lift materializes in the travel's branch 1.
+        // deferred lift materializes in the travel's branch 1. The defer
+        // decision itself happened once inside the block's retract
+        // (`transition_retract` → `schedule_normal`, gated by
+        // `is_allowed_at` at that writer z) — the travel only consumes
+        // `m_to_lift`: queued → branch 1 hop, absent → nominal Z.
         motion::append_object_start(output, state);
-        motion::tower::writer_z(output, state, hop_z, "normal lift Z", true);
-        destination_z = hop_z;
-        // Branch 1 keeps the arrival lifted (`m_lifted = z_hop`,
-        // GCodeWriter.cpp:701-710).
-        state.lifted = true;
-        state.lifted_amount = state.options.z_hop;
+        if state.pending_lift.is_some() {
+            motion::tower::writer_z(output, state, hop_z, "normal lift Z", true);
+            destination_z = hop_z;
+            // Branch 1 keeps the arrival lifted (`m_lifted = z_hop`,
+            // GCodeWriter.cpp:701-710).
+            state.lifted = true;
+            state.lifted_amount = state.options.z_hop;
+        } else {
+            // No deferred lift: `travel_to_xyz` keeps the finished
+            // object's nominal Z (`z == DBL_MAX ? m_nominal_z`,
+            // GCode.cpp:7483) and the arrival cancels the lift.
+            destination_z = state.layer_z;
+            state.lifted = false;
+            state.lifted_amount = 0.0;
+        }
     }
     output.extend_from_slice(
         format!(
