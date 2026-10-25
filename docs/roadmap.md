@@ -7,6 +7,26 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Extruded weight/volume template totals: approved SPEC → formal RED → bounded GREEN
+
+Owner upstream8500fcdcc `GCode.cpp:1675–1690` (per-extruder `w = v ×
+filament_density × 0.001`, volume via typed filament_diameter cross-section),
+`:1648–1652` placeholder registration, `:4638–4641` before-layer template
+render, `PrintConfig.cpp:11188` definition. Destination: `ares-core
+project_slice/gcode_emit/motion/state.rs::EmitState::extrusion_totals()`
+replaces hard-coded diameter 1.75 / density 1.24 with typed per-extruder
+values; consumers `layer_gcode.rs:113-119/218-224` unchanged semantics. RED =
+three `native_stream_case::check` cases on the W1 branch chain at `d340f9c84`:
+MK4 stock control + targets `filament_density=2.0` (first diff byte 11090,
+line 459, M74 W ratio 2.0/1.24) and `filament_diameter=1.85` (byte 11103,
+ratio (1.75/1.85)²); official+seeded, runtime Native, no silent pass. M73
+transpositions in the density witness are downstream STOP-check effects.
+Deferred: vector weight/volume placeholders, interpolate_table engine,
+statistics footer, M201 consumer, queued files. CPU18 serial/threads1; no
+FULL/rebase/merge/push.
+[SPEC](architecture/extruded-weight-totals-spec.md),
+[ARD](architecture/ard-extruded-weight-totals.md).
+
 ### Unknown-key CONFIG_BLOCK echo: approved SPEC → formal RED → bounded GREEN
 
 Owner upstream8500fcdcc `Config.cpp::set_deserialize_nothrow:576–590` (cleared
