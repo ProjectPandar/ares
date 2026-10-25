@@ -179,3 +179,48 @@ GREEN (later chain): minimal change at the §3a re-authorized site (flag
 propagation to the standard-variant finalize gate, not `stitch.rs`) making
 the gate consume `is_closed` as upstream does; target flips to PASS with
 control still PASS; no perimeter output change.
+
+## 7. GREEN implementation record (commit 4c3f2437f)
+
+Re-authorized boundary executed literally:
+
+- `concentric/generate.rs`: `generate_with_mode` returns
+  `Vec<(ThickPolyline, bool)>` — `to_thick_polyline` result paired with the
+  source `ExtrusionLine::is_closed`, mirroring upstream iterating
+  `all_extrusions` and gating before conversion-side processing.
+- `concentric/finalize.rs::finalize_standard_polylines`: gate is `is_closed`
+  only (`FillConcentric.cpp:113`); the `first == last && width equal` shape
+  inference is deleted with no fallback.
+- `concentric.rs::finalize_polylines` (internal variant): gate is
+  `is_closed && points.front()==points.back() && width.front()==width.back()`
+  (`FillConcentricInternal.cpp:55`, flag first); signature now appends the
+  per-domain generated pairs into the cumulative polyline vector before the
+  per-domain clip/compact/reorder pass.
+- Caller audit: `finalize_standard_polylines` has exactly one caller — the
+  standard full-density `Configured(Concentric)` path (upstream Arachne
+  branch of `FillConcentric.cpp:105-145`). `finalize_polylines`'s only caller
+  is the `ConcentricInternal` variant whose upstream also gates on
+  `is_closed`, so it was ported in the same commit. The sparse fallback
+  (upstream `FillConcentric.cpp:132-138` non-Arachne branch) performs no
+  rotation and has no gate to port; it is unchanged and stays deferred.
+  `stitch.rs` untouched, as ordered.
+- Upstream `FillConcentricInternal.cpp` declares `last_pos(0,0)` and never
+  reassigns it, so the Rust fixed `nearest_to_origin` anchor is equivalent;
+  recorded to preempt a future chained-anchor "fix".
+
+Directed acceptance (CPU12 taskset, threads 1, runtime Native, exit codes in
+`green-exit-codes.txt`):
+
+- unit: `-p ares-core -E 'test(concentric)'` 38/38 PASS.
+- official mode: selector
+  `test(concentric) | test(arachne_alternate_extra_wall) | test(arachne_extra_overhang_call) | test(arachne_fuzzy_f1)`
+  = 58 tests, 58/58 PASS, exit 0 — includes the witnessed target PASS
+  (previously failing at line 743) and monotonic control PASS.
+- seeded mode: same selector, 58/58 PASS, exit 0.
+- Neighbor counts: concentric family 13 (top-concentric smoke, ironing ring
+  order, sparse multiline ×4, solid clearance, support ironing, SAFC, tree
+  support retraction, plus the two witnessed cases); Arachne wall/perimeter
+  families 45 (`arachne_alternate_extra_wall` 10, `arachne_extra_overhang_call`
+  5, `arachne_fuzzy_f1` 30).
+- `cargo fmt --all --check` clean; workspace
+  `cargo clippy --all-targets -- -D warnings` clean (`green-clippy.log`).
