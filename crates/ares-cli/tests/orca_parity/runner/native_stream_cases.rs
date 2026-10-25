@@ -1,5 +1,13 @@
+#[path = "bbl_type1_categories.rs"]
+mod bbl_type1_categories;
+#[path = "bbl_type1_tower.rs"]
+mod bbl_type1_tower;
+
 #[path = "concentric_internal_start.rs"]
 mod concentric_internal_start;
+
+#[path = "crosshatch_dont_connect.rs"]
+mod crosshatch_dont_connect;
 
 #[path = "fan_layer_tag.rs"]
 mod fan_layer_tag;

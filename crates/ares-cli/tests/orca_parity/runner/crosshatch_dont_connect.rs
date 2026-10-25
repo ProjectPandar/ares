@@ -1,7 +1,7 @@
 //! FillCrossHatch.cpp:225 -> FillBase.hpp:52 / FillBase.cpp:1820-1828: dont_connect.
 //! Authored STL inputs; Native streams/exported projects are runtime-only.
-use super::{CaseInputs, OrcaRunner, ParityCase, application, repo_root};
 use crate::option_coverage::multiline_union::observation;
+use crate::runner::{CaseInputs, OrcaRunner, ParityCase, application, repo_root};
 use crate::{presets::VendorProfiles, runner};
 use serde_json::json;
 use std::{fs, process::Command};
