@@ -72,3 +72,6 @@ mod scan_unretract_comment;
 
 #[path = "thin_gap_seam_embedding.rs"]
 mod thin_gap_seam_embedding;
+
+#[path = "fuzzy_allwalls_rng_order.rs"]
+mod fuzzy_allwalls_rng_order;
