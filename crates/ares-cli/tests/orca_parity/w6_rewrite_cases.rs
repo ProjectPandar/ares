@@ -36,5 +36,8 @@ mod placeholder_double_render;
 #[path = "rear_seam_visibility.rs"]
 mod rear_seam_visibility;
 
+#[path = "xl_curl_segmentation.rs"]
+mod xl_curl_segmentation;
+
 #[path = "zero_area_orientation.rs"]
 mod zero_area_orientation;
