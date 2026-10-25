@@ -1,5 +1,5 @@
 //! GCode.cpp per-layer FanMover filter and processor reserved layer-tag handoff.
-use super::native_stream_case::check;
+use crate::runner::native_stream_case::check;
 
 const SOURCE: (&str, &[&str]) = (
     "fan-layer-tag",
