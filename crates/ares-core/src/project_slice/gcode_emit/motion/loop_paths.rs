@@ -225,8 +225,15 @@ fn append_wipe_before_external(
     if length == 0.0 {
         return Ok(());
     }
-    let maximum =
-        0.5 * state.options.nozzle_diameter.min(f64::from(first.width)) / geometry.scale.factor();
+    // `GCode.cpp:5859`: `dist = std::min(scaled(nozzle_diam) * 0.5,
+    // scaled(paths.front().width) * 0.5)` — `scaled<coord_t>`
+    // (`Point.hpp:662-668`) divides in the operand's own float domain
+    // (the f32 width by f32(SCALING_FACTOR), the f64 nozzle by
+    // f64(SCALING_FACTOR)) and truncates each to coord_t before the
+    // min; only then is the result halved.
+    let scaled_nozzle = (state.options.nozzle_diameter / geometry.scale.factor()) as i64;
+    let scaled_width = (first.width / (geometry.scale.factor() as f32)) as i64;
+    let maximum = scaled_nozzle.min(scaled_width) as f64 * 0.5;
     let base_x = (current.x as f64 + dx * (2.0 * maximum / length)) as i64 as f64;
     let base_y = (current.y as f64 + dy * (2.0 * maximum / length)) as i64 as f64;
     let (sine, cosine) = angle.sin_cos();
