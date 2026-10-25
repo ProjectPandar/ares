@@ -7,6 +7,26 @@ This applies to every later milestone: the default design target is an upstream 
 
 ## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
 
+### Unknown-key CONFIG_BLOCK echo: approved SPEC → formal RED → bounded GREEN
+
+Owner upstream8500fcdcc `Config.cpp::set_deserialize_nothrow:576–590` (cleared
+keys recorded, never stored), `Config.cpp::set_deserialize_raw:608–629` (no
+def/alias → `UnknownOptionException`), `GCode.cpp::append_full_config:5591–5646`
+(only defined non-banned non-nil keys reach the CONFIG_BLOCK). Destination is
+only the `ares-core options/config_export/writer.rs` raw-echo loop: gate raw
+project-settings keys on the existing registry definition table incl.
+`OptionMetadata::aliases` (literal alias→canonical port), no hand-written key
+lists; `config_export/value.rs` stays with the queued W6 window;
+`EXPLICIT_RULES` (handle_legacy port) stays byte-for-byte. RED = two
+`native_stream_case::check` cases: P1S ByLayer target with the single unknown
+key `first_layer_size_compensation=0.2` (comparator FAIL today: Ares emits
+`; first_layer_size_compensation = 0.2`, byte 12675) plus the keyless control;
+Native runtime-generated, never committed, no silent pass. GREEN flips the
+target to PASS with controls and the complete comparator unchanged.
+CPU18 serial/threads1; no FULL/rebase/merge/push.
+[SPEC](architecture/unknown-key-config-block-spec.md),
+[ARD](architecture/ard-unknown-key-config-block.md).
+
 ### Sequential template total: approved SPEC → formal RED → bounded GREEN
 
 Owner upstream8500fcdcc `GCode.cpp::_do_export:2484–2528` mode-dependent
