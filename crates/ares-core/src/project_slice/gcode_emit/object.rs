@@ -110,7 +110,10 @@ impl ObjectLabels {
     }
 
     /// Arms the in-print object-end marker after instance content
-    /// (`GCode.cpp:5478-5494`); BBL writes its M625 tail directly.
+    /// (`GCode.cpp:5478-5494`); the end label is only armed when the
+    /// instance's start label was actually flushed — an unflushed start
+    /// (empty wiping/normal half-pass, `GCode.cpp:5326-5329`) is dropped
+    /// without arming the end. BBL writes its M625 tail directly.
     pub(super) fn queue_stop(
         &self,
         output: &mut Vec<u8>,

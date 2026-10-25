@@ -23,11 +23,16 @@ pub(in crate::project_slice::gcode_emit) fn queue_exclude_end(state: &mut EmitSt
     }
 }
 
+/// Mirrors `GCode.cpp:5478-5494` for the BBL label: an unflushed start
+/// label is dropped (empty instance) and only then does the end label
+/// get armed.
 pub(in crate::project_slice::gcode_emit) fn queue_object_stop_label(
     state: &mut EmitState,
     label_id: u32,
 ) {
-    state.pending_object_stop_label = Some(label_id);
+    if state.pending_object_start.take().is_none() {
+        state.pending_object_stop_label = Some(label_id);
+    }
 }
 
 pub(in crate::project_slice::gcode_emit) fn append_exclude_end(

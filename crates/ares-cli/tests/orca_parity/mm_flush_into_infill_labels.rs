@@ -1,4 +1,4 @@
-//! GCode.cpp:5326–5493 wiping two-pass object-label RED; GREEN is not authorized.
+//! GCode.cpp:5326–5493 wiping two-pass object-label parity.
 use crate::runner::native_stream_case;
 
 const UPSTREAM: (&str, &[&str]) = (
