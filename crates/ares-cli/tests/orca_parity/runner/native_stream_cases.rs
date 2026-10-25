@@ -1,3 +1,5 @@
+#[path = "concentric_internal_start.rs"]
+mod concentric_internal_start;
 #[path = "fan_reader_xyz.rs"]
 mod fan_reader_xyz;
 #[path = "fan_verbose_text.rs"]
