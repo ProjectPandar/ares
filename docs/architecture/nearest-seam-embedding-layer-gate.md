@@ -1,9 +1,10 @@
 # Nearest-seam embedded-distance layer gate — source rewrite SPEC
 
 Status: bounded read-only causality confirmed; docs then tests-only public RED.
-Base `4af042def` (W6 seam window merged) branch `worker3/seam-embedding-gate-4af042def`.
+Base `4af042def` (seam visibility mode gating already merged at that
+commit).
 Post-merge re-verification done: `alignment::prepare` keeps its `layers` argument
-(W6 only widened `visibility` to `Option<&GlobalVisibility>`), the wrong
+(that base commit only widened `visibility` to `Option<&GlobalVisibility>`), the wrong
 predicate still sits at `preparation.rs` `embedding_layers`, and
 `OrderedExtrusionIsland.perimeter_regions` remains populated at seam-prepare
 time (`island_print_order.rs:26,164,188`) and is only later taken by
@@ -55,7 +56,8 @@ seeding would make always-true). `perimeter_regions` is fed by
 port of the upstream append boundary, so per-region collection non-emptiness
 matches `entities.size() > 0` including thin-wall-only regions and excluding
 gap fill. Included: this predicate swap only. Deferred: everything else
-(formula, comparator, walk, split, alignment, W6 visibility mode gating).
+(formula, comparator, walk, split, alignment, the visibility mode gating
+landed at 4af042def).
 
 No writer/time/M73, travel/origin/lift, processor/fan/tokenizer, brim, seam
 config, formatter or geometry changes. No fallback, feature flag or hardcoded
@@ -63,7 +65,7 @@ Native seam index.
 
 ## Frozen real Native witness
 
-Original lane3 thin-gap-j1 Snapmaker J1 IDEX stock inputs, not regenerated:
+Original thin-gap-j1 Snapmaker J1 IDEX stock inputs, not regenerated:
 
 - `wall-arachne.3mf` SHA256
   `5f822b0761a325deb15795f82dedb9a7d03a8c40304ed389edaf4e4543b351c7`
@@ -91,7 +93,8 @@ hidden-point interval is [88,108)).
 Public-RED diagnostics (saved artifacts
 `/home/indexyz/ares-evidence/w3-arachne-thinwall-5e8be001f/parity-artifacts/thin-gap-j1-seam-embedding-wall-arachne-SFXtn8/`):
 strict first difference at byte 2150 line 150 is an M73/G0 ordering flip —
-early propagation, not repaired and not ignored (W6 rear precedent; the
+early propagation, not repaired and not ignored (same early-propagation
+shape as the frozen rear-seam visibility pair at 89a18865e; the
 dual-mode control passing byte-equal on the same printer/M73 logic rules
 out a general M73 residual). First non-M73 physical difference: line 5833,
 `G1 Z9.2` (layer 45, print_z 9.2 mm), `F2472` vs `F2474` followed by the
@@ -115,7 +118,7 @@ tolerances, frozen reference text or expected seam index in public tests.
 Run gates: CPU12 taskset, jobs 1, threads 1, CARGO_INCREMENTAL=0. Official
 Native sliced twice FIRST (replay determinism enforced by the unchanged
 harness), then validated byte API and real CLI. Existing orca_parity
-neighbors (including the W6 rear pair) must stay PASS. Because the canonical
+neighbors (including the rear-seam visibility pair) must stay PASS. Because the canonical
 target assertion panics before the final raw helper update, independently
 confirm the saved API/CLI raw equality; never claim later assertions ran on
 RED.
