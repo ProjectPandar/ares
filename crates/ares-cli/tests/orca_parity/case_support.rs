@@ -35,3 +35,6 @@ mod sequential_template_layer_count;
 
 #[path = "unknown_key_config_block.rs"]
 mod unknown_key_config_block;
+
+#[path = "extruded_weight_totals.rs"]
+mod extruded_weight_totals;
