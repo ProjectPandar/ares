@@ -47,12 +47,14 @@ MK4 stock `before_layer_change_gcode` renders
 
 - `crates/ares-core/src/project_slice/gcode_emit/motion/state.rs::
   EmitState::extrusion_totals()` — replace the hard-coded `diameter: 1.75`
-  and `density: 1.24` with the typed per-extruder `filament_diameter` /
+  and `density: 1.24` with the typed per-extruder cross-section (the typed
+  `MotionOptions::filament_area`, `Extruder::filament_crossection`) and
   `filament_density` (active-extruder semantics following upstream
   `Extruder`).
-- Consumers `gcode_emit/layer_gcode.rs:113-119` and `:218-224` keep their
-  existing volume semantics (writer cumulative filament × cross-section),
-  now with the typed cross-section/density.
+- Consumers `gcode_emit/layer_gcode.rs:113-119` and `:218-224` compute
+  `volume = used_filament * crossection` (`Extruder::extruded_volume()`)
+  and `weight = volume * density * 0.001` (`GCode.cpp:1686`) — upstream's
+  shape, no diameter field or recomputation round-trip.
 
 Not the queued `motion/scan.rs`, `format.rs`, brim/*, jerk,
 seam_placement/alignment, config value.rs, fill_entities/grid.rs, or
@@ -60,20 +62,25 @@ seam_placement/alignment, config value.rs, fill_entities/grid.rs, or
 
 ## GREEN contract (single bounded edit)
 
-Only the `extrusion_totals` construction (and nothing else) changes: the two
-hard-coded literals become typed reads. No template-engine, statistics
-footer, M201 consumer, or queued-file changes.
+Only the `extrusion_totals` construction (and the two `layer_gcode.rs`
+consumer lines) changes: `ExtrusionTotals` carries `crossection` instead
+of `diameter`, the values come from the typed `MotionOptions` fields. No
+template-engine, statistics footer, M201 consumer, or queued-file changes.
 
 ## Included / deferred
 
 Included: typed diameter/density in `extrusion_totals`; RED witnesses below.
 
 Deferred: `extruded_weight`/`extruded_volume` vector placeholders (already
-per-extruder in `writer_state.rs`; frozen unless a witness shows a gap), the
-`interpolate_table`/`{if}` expression engine (parses identically), the
-statistics footer (already parity), M201 clamp consumer semantics (inherits
-the fixed value), multi-extruder accumulation beyond the active-extruder
-path unless witnessed.
+per-extruder in `writer_state.rs`; frozen unless a witness shows a gap),
+multi-extruder summation — upstream `GCode.cpp:1679-1690` loops **all**
+extruders into `total_weight`/`total_volume`, while the typed read here
+takes the active/first extruder's cross-section and density only — the
+multi-extruder accumulation is deferred, the `interpolate_table`/`{if}`
+expression engine (parses identically), the statistics footer (already
+parity), M201 clamp consumer semantics (inherits the fixed value), and
+multi-extruder accumulation beyond the active-extruder path unless
+witnessed.
 
 ## RED contract
 
