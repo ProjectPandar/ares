@@ -102,6 +102,7 @@ pub(crate) fn shrink_expolygon_with_contour_idx(
     join_type: JoinType,
     miter_limit: f64,
 ) -> Result<Vec<ZTaggedPath>, ClipperError> {
+    let shortest_edge_length = f64::from(delta) * 0.005;
     let offset = |polygon: &Polygon, delta: f32| {
         let mut co = ClipperOffset::default();
         if join_type == JoinType::Round {
@@ -109,7 +110,7 @@ pub(crate) fn shrink_expolygon_with_contour_idx(
         } else {
             co.set_miter_limit(miter_limit);
         }
-        co.set_shortest_edge_length(f64::from(delta * 0.005));
+        co.set_shortest_edge_length(shortest_edge_length);
         co.add_closed_path(polygon, join_type);
         co.execute_paths(f64::from(delta))
     };
