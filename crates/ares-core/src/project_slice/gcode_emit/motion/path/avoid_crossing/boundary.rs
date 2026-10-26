@@ -171,7 +171,8 @@ impl Boundary {
         let mut boundary = inner_offset(geometry.layer_slices, offset_dis, scale)?;
         if !geometry.top_surfaces.is_empty() {
             // perimeter_offset = spacing / 2; the diff insets the top
-            // surfaces by 1.2 * perimeter_offset.
+            // surfaces by 1.2 * perimeter_offset. `offset_ex` defaults:
+            // jtMiter / DefaultMiterLimit 3.0 (ClipperUtils.hpp:19,27).
             let inset_by = 0.6 * f64::from(scaled_spacing);
             let inset = offset_expolygons(
                 &geometry
@@ -180,8 +181,8 @@ impl Boundary {
                     .map(|expolygon| (*expolygon).clone())
                     .collect::<Vec<_>>(),
                 -(inset_by as f32),
-                JoinType::Round,
-                MITER_LIMIT,
+                JoinType::Miter,
+                3.0,
             )?;
             boundary = difference_ex(&boundary, &inset)?;
         }
