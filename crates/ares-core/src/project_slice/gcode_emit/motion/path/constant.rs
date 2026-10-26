@@ -46,7 +46,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
         // Upstream replays the precomputed fitting result at export time
         // (`GCode.cpp:6992`); paths with no fitting (brim, skirt, clipped
         // tails) emit straight segments and are never fitted here.
-        arc::from_fitting(&arc_points, fitting, state.offset)
+        arc::from_fitting(&arc_points, fitting, state.origin, state.extruder_offset)
     } else {
         points
             .windows(2)
