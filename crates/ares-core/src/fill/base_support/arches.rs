@@ -96,19 +96,29 @@ fn evaluate_support_arch_cost(points: &[Point]) -> f64 {
     }
     let (ax, ay) = (front.x() as f64, front.y() as f64);
     let (bx, by) = (back.x() as f64, back.y() as f64);
-    let (dx, dy) = (bx - ax, by - ay);
-    let length_squared = dx * dx + dy * dy;
+    // `line_alg::distance_to_squared` (`Line.hpp:43-71`), literally: v/va/l2,
+    // `l2 == 0.0 -> va.squaredNorm()`, `t = va.dot(v)/l2`, `t <= 0.0 ->
+    // va.squaredNorm()`, `t >= 1.0 -> (p-b).squaredNorm()`, otherwise
+    // `(t*v - va).squaredNorm()`; plain `x*x + y*y` norms, no fma, no clamp.
+    let (vx, vy) = (bx - ax, by - ay);
+    let l2 = vx * vx + vy * vy;
     let mut dmax = 0f64;
     for point in points {
         let (px, py) = (point.x() as f64, point.y() as f64);
-        let line_distance = if length_squared == 0.0 {
-            ((px - ax).mul_add(px - ax, (py - ay) * (py - ay))).sqrt()
+        let (vax, vay) = (px - ax, py - ay);
+        let line_distance = if l2 == 0.0 {
+            (vax * vax + vay * vay).sqrt()
         } else {
-            let t = ((px - ax) * dx + (py - ay) * dy / length_squared * length_squared)
-                / length_squared;
-            let t = t.clamp(0.0, 1.0);
-            let (ex, ey) = (px - (ax + t * dx), py - (ay + t * dy));
-            (ex * ex + ey * ey).sqrt()
+            let t = (vax * vx + vay * vy) / l2;
+            if t <= 0.0 {
+                (vax * vax + vay * vay).sqrt()
+            } else if t >= 1.0 {
+                let (ex, ey) = (px - bx, py - by);
+                (ex * ex + ey * ey).sqrt()
+            } else {
+                let (ex, ey) = (t * vx - vax, t * vy - vay);
+                (ex * ex + ey * ey).sqrt()
+            }
         };
         dmax = dmax
             .max(line_distance)
