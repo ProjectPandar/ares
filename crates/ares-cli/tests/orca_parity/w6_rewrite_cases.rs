@@ -27,6 +27,9 @@ mod negative_volume_seam_occlusion;
 #[path = "occlusion_volume_affine.rs"]
 mod occlusion_volume_affine;
 
+#[path = "overhang_angle30_arc_ij.rs"]
+mod overhang_angle30_arc_ij;
+
 #[path = "overall_chamber_placeholder.rs"]
 mod overall_chamber_placeholder;
 
