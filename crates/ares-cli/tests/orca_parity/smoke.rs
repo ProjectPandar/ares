@@ -11,6 +11,9 @@ use crate::{
 #[path = "smoke/nozzle.rs"]
 mod nozzle;
 
+#[path = "smoke/snapmaker_artisan_detour.rs"]
+mod snapmaker_artisan_detour;
+
 /// Focused re-check of the nearest-seam / layer-1 deposition cluster
 /// after seam-placement changes (env-gated, prints outcomes).
 #[test]
