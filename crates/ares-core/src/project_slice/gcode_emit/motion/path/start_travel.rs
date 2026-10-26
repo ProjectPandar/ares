@@ -88,9 +88,11 @@ pub(super) fn emit(
             state.layer_z - f64::from(properties.height)
                 + f64::from(properties.height) * slope.z_begin
         });
-    let slope_needs_z_travel = slope_start_z.is_some_and(|target| {
-        (state.scarf_z.unwrap_or(state.layer_z) - target).abs() >= super::SOURCE_EPSILON_MM
-    });
+    // `GCode.cpp:6359-6368`: `slope_need_z_travel =
+    // m_writer.will_move_z(target_z)` — the writer's live nozzle z
+    // (with the lift band), not the nominal layer z.
+    let slope_needs_z_travel =
+        slope_start_z.is_some_and(|target| approach::travel_will_move_z(state, target));
     let contour_z = properties
         .contour
         .map(|points| state.layer_z + geometry.scale.unscale(points[0].z));

@@ -4,6 +4,8 @@
 mod move_emit;
 mod waypoints;
 
+pub(super) use move_emit::travel_will_move_z;
+
 use super::dispatch;
 use super::retract;
 use super::route::{plan_route, polyline_length_scaled};

@@ -375,7 +375,7 @@ pub(super) fn emit_approach_move(
 /// nozzle treats a target z inside `[pos - m_lifted, pos]` as a no-op;
 /// only without a positive lift does the bare `abs(delta) < EPSILON`
 /// shortcut apply.
-fn travel_will_move_z(state: &EmitState, z: f64) -> bool {
+pub(in crate::project_slice::gcode_emit) fn travel_will_move_z(state: &EmitState, z: f64) -> bool {
     let pos = state.writer_z.unwrap_or(state.layer_z);
     if state.lifted_amount > 0.0 {
         let nominal = pos - state.lifted_amount;
