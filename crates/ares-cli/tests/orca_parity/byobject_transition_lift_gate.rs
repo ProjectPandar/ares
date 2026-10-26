@@ -26,14 +26,17 @@ fn check(label: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let fixture =
-        crate::runner::repo_root().join("tests/parity/byobject-transition-lift-gate");
+    let fixture = crate::runner::repo_root().join("tests/parity/byobject-transition-lift-gate");
     let manifest: Value =
         serde_json::from_slice(&fs::read(fixture.join("manifest.json")).unwrap()).unwrap();
     let bytes = fs::read(fixture.join(format!("{label}.3mf"))).unwrap();
     assert_eq!(sha(&bytes), manifest["cases"][label]["sha256"]);
-    let lift_above = manifest["cases"][label]["retract_lift_above"].as_str().unwrap();
-    let lift_below = manifest["cases"][label]["retract_lift_below"].as_str().unwrap();
+    let lift_above = manifest["cases"][label]["retract_lift_above"]
+        .as_str()
+        .unwrap();
+    let lift_below = manifest["cases"][label]["retract_lift_below"]
+        .as_str()
+        .unwrap();
     let settings = crate::runner::application::settings(&bytes).unwrap();
     for (key, value) in [
         ("print_sequence", "by object"),
@@ -87,7 +90,10 @@ fn check(label: &str) {
         // destination to `m_pos(2) + m_to_lift` and materializes the lift.
         assert_eq!(lines[origin - 2], "G1 Z4.4 F9000");
         assert_eq!(lines[origin - 1], "G1 Z4.8 F9000 ; normal lift Z");
-        assert_eq!(lines[origin], "G1 X140 Y110 Z4.8 F9000 ; move to origin position for next object");
+        assert_eq!(
+            lines[origin],
+            "G1 X140 Y110 Z4.8 F9000 ; move to origin position for next object"
+        );
     } else {
         // Z 4.0 (retract) and Z 4.4 (post safety lift) sit above the
         // upper boundary (3): `lazy_lift` never defers, so the transition
@@ -95,10 +101,15 @@ fn check(label: &str) {
         // object's nominal Z. Intra-object hops inside the band keep their
         // own `normal lift Z` lines elsewhere.
         assert_eq!(lines[origin - 1], "G1 Z4.4 F9000");
-        assert_eq!(lines[origin], "G1 X140 Y110 Z4 F9000 ; move to origin position for next object");
-        assert!(!lines[origin - 4..origin]
-            .iter()
-            .any(|line| line.contains("; normal lift Z")));
+        assert_eq!(
+            lines[origin],
+            "G1 X140 Y110 Z4 F9000 ; move to origin position for next object"
+        );
+        assert!(
+            !lines[origin - 4..origin]
+                .iter()
+                .any(|line| line.contains("; normal lift Z"))
+        );
     }
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
