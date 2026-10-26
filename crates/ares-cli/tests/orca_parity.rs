@@ -236,8 +236,6 @@ mod byobject_perobject_multi_copy_brim;
 mod byobject_perobject_skirt;
 #[path = "orca_parity/byobject_transition_comments.rs"]
 mod byobject_transition_comments;
-#[path = "orca_parity/byobject_transition_lift_gate.rs"]
-mod byobject_transition_lift_gate;
 #[path = "orca_parity/change_filament_flush_blocks.rs"]
 mod change_filament_flush_blocks;
 #[path = "orca_parity/clearance_admission.rs"]
