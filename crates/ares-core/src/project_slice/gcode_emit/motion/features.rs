@@ -163,15 +163,23 @@ impl PathProperties<'_> {
         object_layer_over_raft: bool,
         requested_speed: Option<f64>,
     ) -> f64 {
-        if requested_speed.is_none()
-            && let Some(slope) = self.slope
-        {
-            return slope.speed;
-        }
         let is_perimeter = matches!(self.feature, "Inner wall" | "Outer wall" | "Overhang wall");
-        // `GCode.cpp:5896-5900,6515-6526`: a positive caller speed skips
-        // role selection and its default sloped-perimeter speed cap.
-        let base = requested_speed.unwrap_or_else(|| self.role_speed(options));
+        // `GCode.cpp:5896-5900,6516-6531`: a caller speed bypasses role
+        // defaults; only inner/outer perimeter defaults receive the scarf cap.
+        let base = requested_speed.unwrap_or_else(|| {
+            let role_speed = self.role_speed(options);
+            match self.feature {
+                "Inner wall" | "Outer wall" if self.slope.is_some() => {
+                    let scarf_speed = match options.scarf.speed {
+                        Some(crate::FloatOrPercent::Float(value)) => value,
+                        Some(crate::FloatOrPercent::Percent(value)) => role_speed * value.0 / 100.0,
+                        None => role_speed,
+                    };
+                    role_speed.min(scarf_speed)
+                }
+                _ => role_speed,
+            }
+        });
         // `GCode.cpp:6564-6570`: the first-layer speed override applies to
         // `on_first_layer()` OR `object_layer_over_raft()` — the first
         // object layer over a raft prints at `initial_layer_speed` even
