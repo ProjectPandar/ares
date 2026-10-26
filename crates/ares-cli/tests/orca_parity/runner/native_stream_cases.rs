@@ -20,5 +20,7 @@ mod fan_verbose_text;
 mod processor_word_boundary;
 #[path = "project_settings_bool_wire.rs"]
 mod project_settings_bool_wire;
+#[path = "seam_slope_travel.rs"]
+mod seam_slope_travel;
 #[path = "zero_extrusion_comment.rs"]
 mod zero_extrusion_comment;
