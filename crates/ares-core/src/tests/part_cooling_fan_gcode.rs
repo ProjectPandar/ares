@@ -198,6 +198,7 @@ async fn long_layer_default_does_not_emit_redundant_fan_off() {
         "fan_max_speed": 100,
         "full_fan_speed_layer": 1,
         "close_fan_the_first_x_layers": 0,
+        "slow_down_layer_time": 0.0,
         "fan_cooling_layer_time": 0.0
     }))
     .await
@@ -214,6 +215,7 @@ async fn reduce_fan_stop_start_frequency_keeps_long_layer_minimum_fan() {
         "fan_max_speed": 100,
         "full_fan_speed_layer": 1,
         "close_fan_the_first_x_layers": 0,
+        "slow_down_layer_time": 0.0,
         "fan_cooling_layer_time": 0.0
     }))
     .await
