@@ -346,23 +346,32 @@ fn clip_front_points(points: &mut Vec<Point3>, distance: f64) {
     points.reverse();
 }
 
+// `Polyline.cpp:683-702`: additive displacement before the coord_t cast.
 fn clip_end_points(points: &mut Vec<Point3>, mut distance: f64) {
-    while points.len() > 1 {
-        let last = points[points.len() - 1];
-        let previous = points[points.len() - 2];
-        let length = point_distance(previous, last);
-        if length > distance {
-            let ratio = distance / length;
-            *points.last_mut().unwrap() = lerp(last, previous, ratio);
-            return;
-        }
+    while distance > 0.0 {
+        let last = points.last().unwrap();
+        let last = [last.x as f64, last.y as f64, last.z as f64];
         points.pop();
-        distance -= length;
-        if distance <= 0.0 {
+        let Some(previous) = points.last() else {
             return;
+        };
+        let v = [
+            previous.x as f64 - last[0],
+            previous.y as f64 - last[1],
+            previous.z as f64 - last[2],
+        ];
+        let lsqr = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+        if lsqr > distance * distance {
+            let ratio = distance / lsqr.sqrt();
+            points.push(Point3 {
+                x: (last[0] + v[0] * ratio) as i64,
+                y: (last[1] + v[1] * ratio) as i64,
+                z: (last[2] + v[2] * ratio) as i64,
+            });
+            break;
         }
+        distance -= lsqr.sqrt();
     }
-    points.clear();
 }
 
 fn path_length(points: &[Point3]) -> f64 {
