@@ -26,6 +26,8 @@ mod scarf_clip_end;
 mod scarf_remaining_mm;
 #[path = "scarf_role_speed.rs"]
 mod scarf_role_speed;
+#[path = "seam_occlusion_object_affine.rs"]
+mod seam_occlusion_object_affine;
 #[path = "seam_slope_travel.rs"]
 mod seam_slope_travel;
 #[path = "wall_direction_seam.rs"]
