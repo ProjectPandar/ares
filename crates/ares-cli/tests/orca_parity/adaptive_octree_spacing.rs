@@ -3,7 +3,10 @@
 #[path = "adaptive_endpoint_touch.rs"]
 mod adaptive_endpoint_touch;
 
-use crate::{OrcaRunner, golden, runner::stages};
+use crate::{
+    OrcaRunner, golden,
+    runner::{native_stream_case, stages},
+};
 use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
@@ -12,6 +15,25 @@ fn sha(bytes: &[u8]) -> String {
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect()
+}
+
+fn run_parity_case(name: &str, expected_sha: &str) {
+    native_stream_case::check(
+        (
+            "adaptive-supportcubic-offset",
+            &[
+                "Fill/FillAdaptive.cpp:641-647",
+                "Line.cpp:121-126",
+                "Line.hpp:123-148",
+            ],
+        ),
+        name,
+        include_bytes!(
+            "../../../../tests/parity/adaptive-supportcubic-offset/mk4-supportcubic-d40.3mf"
+        ),
+        expected_sha,
+        (false, |_, _| {}),
+    );
 }
 
 fn run_case(name: &str, expected_sha: &str) {
@@ -107,5 +129,13 @@ fn adaptive_octree_spacing_multiline_red() {
     run_case(
         "multiline",
         "7050c7d1916fa42d9a2ea6f9e8990f4aef447530423a4c175e11c3aef440240d",
+    );
+}
+
+#[test]
+fn adaptive_supportcubic_offset_mk4_d40() {
+    run_parity_case(
+        "mk4-supportcubic-d40",
+        "a6ee6f899f0f640ff4aaec35b12175cc59f29aab6ef7e26fed22a1a7e803095e",
     );
 }
