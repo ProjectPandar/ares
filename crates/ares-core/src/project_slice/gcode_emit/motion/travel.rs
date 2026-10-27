@@ -119,7 +119,7 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     }
     // `reset_e` runs unconditionally after the retract/wipe block
     // (`GCode.cpp:7674`), independent of whether anything retracted.
-    reset_e(output, state);
+    reset_e(output, state, false);
     if state.spiral_vase {
         lift::append_spiral_vase(output, state);
     }
@@ -135,7 +135,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
         retract_and_wipe(output, state);
         state.extruder.retracted = true;
     }
-    reset_e(output, state);
+    reset_e(output, state, false);
     // GCode.cpp:7674-7704 lifts even when retraction is already complete.
     let needs_lift = state.options.retraction_length > 0.0 || state.options.use_firmware_retraction;
     if needs_lift && lift::is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)) {
@@ -156,7 +156,7 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
         retract_and_wipe(output, state);
         state.extruder.retracted = true;
     }
-    reset_e(output, state);
+    reset_e(output, state, false);
     // The `needs_lift && can_lift` guards of the parent retract
     // (`GCode.cpp:7680-7703`) still apply to the wrap insert's eager lift:
     // `needs_lift` requires a nonzero retraction length or firmware
@@ -194,7 +194,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
         state.extruder.retracted = true;
     }
     if change_layer_retract {
-        reset_e(output, state);
+        reset_e(output, state, false);
     }
 }
 
@@ -260,7 +260,7 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
         // `reset_e` runs unconditionally after every `retract()` call
         // (`GCode.cpp:7674`) — a fully-retracted nozzle still clears the
         // counter the template assignments may have left behind.
-        reset_e(output, state);
+        reset_e(output, state, false);
     }
     state.pending_layer_retract = false;
     // The eager lift supersedes any lift that the deferred path scheduled

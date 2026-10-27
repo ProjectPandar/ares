@@ -51,7 +51,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn unretract(
                 b"G11 ; unretract\n"
             },
         );
-        super::reset_e(output, state);
+        super::reset_e(output, state, false);
     } else {
         let comment = if state.options.gcode_comments {
             " ;  ; unretract"

@@ -85,7 +85,7 @@ pub(super) fn decide(
             state.extruder.retracted = true;
             // The suppressed tail still runs `reset_e` and the lazy lift
             // (`GCode.cpp:7674-7681`).
-            travel::reset_e(output, state);
+            travel::reset_e(output, state, false);
             travel::schedule_retract_tail(output, state);
         } else if hilbert_suppressed {
             // `GCode.cpp:7667-7672` suppresses ONLY `m_writer.retract()`;
@@ -93,7 +93,7 @@ pub(super) fn decide(
             // `reset_e` emits nothing for a zero E counter (force=false)
             // or Mach3/MakerWare/Sailfish flavors
             // (`GCodeWriter.cpp:480-499`).
-            travel::reset_e(output, state);
+            travel::reset_e(output, state, false);
             // `needs_lift` (`GCode.cpp:7678-7681`): configured length OR
             // firmware retraction allows the deferred hop; upstream
             // `lazy_lift` reads the CURRENT writer Z.
@@ -124,7 +124,7 @@ pub(super) fn decide(
                 wipe_then_replan(output, state, travel::wipe_only_retract)?;
             }
         }
-        travel::reset_e(output, state);
+        travel::reset_e(output, state, false);
         // The deferred hop is additionally gated on the nozzle already
         // being retracted (`defer_lift_for_retracted_travel`);
         // `schedule_retract_tail` re-checks the shared needs_lift band

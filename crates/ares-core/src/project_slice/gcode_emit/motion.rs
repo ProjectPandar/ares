@@ -120,7 +120,7 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
         state.extruder.retracted = true;
         travel::defer_layer_change_lift(state);
     }
-    travel::reset_e(output, state);
+    travel::reset_e(output, state, false);
 }
 
 /// The second-layer first-layer-inspection scan (`GCode.cpp:4780-4790`):

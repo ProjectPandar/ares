@@ -249,7 +249,7 @@ pub(super) fn retract_and_wipe_impl(
             }
         }
     }
-    reset_e(output, state);
+    reset_e(output, state, false);
 }
 
 /// `GCodeWriter::_retract` comment gating: the feature comment is
@@ -281,22 +281,25 @@ fn emit_retract_e(output: &mut Vec<u8>, state: &mut EmitState, d_e: f64, comment
     state.current_feedrate = state.options.retraction_feedrate;
 }
 
-/// `GCodeWriter::reset_e` (`GCodeWriter.cpp:480-499`): emits
-/// `G92 E0` (+ ` ; reset extrusion distance` under gcode_comments)
-/// only when `!is_zero(E)` — 1e-6 — and never for
-/// Mach3/MakerWare/Sailfish.
-pub(in crate::project_slice::gcode_emit) fn reset_e(output: &mut Vec<u8>, state: &mut EmitState) {
-    if !state.options.use_relative_e_distances
-        && !matches!(
-            state.options.gcode_flavor,
-            crate::GCodeFlavor::Mach3
-                | crate::GCodeFlavor::MakerWare
-                | crate::GCodeFlavor::Sailfish
-        )
-        && state.extruder.e_position.abs() >= 1e-6
+/// `GCodeWriter::reset_e(force)` (`GCodeWriter.cpp:480-502`): excluded
+/// flavors do nothing; otherwise only `is_zero(E) && !force` suppresses
+/// the reset. Clear the counter in both E modes, emitting the existing
+/// reset line and optional comment only for absolute E.
+pub(in crate::project_slice::gcode_emit) fn reset_e(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    force: bool,
+) {
+    if matches!(
+        state.options.gcode_flavor,
+        crate::GCodeFlavor::Mach3 | crate::GCodeFlavor::MakerWare | crate::GCodeFlavor::Sailfish
+    ) || (state.extruder.e_position.abs() < 1e-6 && !force)
     {
+        return;
+    }
+    state.extruder.e_position = 0.0;
+    if !state.options.use_relative_e_distances {
         let comment = gcode_comment(state, " ; reset extrusion distance");
         output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
-        state.extruder.e_position = 0.0;
     }
 }

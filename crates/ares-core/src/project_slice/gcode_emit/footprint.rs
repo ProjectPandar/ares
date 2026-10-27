@@ -191,22 +191,11 @@ pub(super) fn in_print_labels(
     } else {
         format!("M486 S{preceding_instances}\n")
     };
-    let mut end = if klipper {
+    let end = if klipper {
         format!("EXCLUDE_OBJECT_END NAME={name}\n")
     } else {
         "M486 S-1\n".to_owned()
     };
-    if !traversal
-        .resolved
-        .views
-        .runtime_gcode
-        .use_relative_e_distances
-        .0
-    {
-        // `GCodeWriter::add_object_end_labels` resets E after the end marker
-        // when extrusion is absolute (`GCodeWriter.cpp:1183-1192`).
-        end.push_str("G92 E0\n");
-    }
     (Some(start), Some(end))
 }
 
