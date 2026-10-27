@@ -1,3 +1,5 @@
+#[path = "acceleration_raw_f64.rs"]
+mod acceleration_raw_f64;
 #[path = "bbl_type1_categories.rs"]
 mod bbl_type1_categories;
 #[path = "bbl_type1_tower.rs"]
