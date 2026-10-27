@@ -1,5 +1,8 @@
 //! FillAdaptive.cpp:314-354 object-level spacing and region-0 multiline.
 
+#[path = "adaptive_endpoint_touch.rs"]
+mod adaptive_endpoint_touch;
+
 use crate::{OrcaRunner, golden, runner::stages};
 use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
