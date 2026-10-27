@@ -7,17 +7,11 @@ use crate::{
     ProcessSeamPosition,
     geometry::CoordinateScale,
     project::effective_config::types::ResolvedProjectObject,
-    project_slice::{
-        island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
-        perimeters::classic::{
-            chained_loops::ExtrusionLoop, entity_collections::ExtrusionEntity, materialize::Point3,
-        },
-    },
+    project_slice::perimeters::classic::{chained_loops::ExtrusionLoop, materialize::Point3},
 };
 
 pub(super) fn placement_modes(
     objects: &[&ResolvedProjectObject],
-    prepared: &[Vec<OrderedExtrusionLayer>],
     spiral_mode: bool,
 ) -> Vec<Option<ProcessSeamPosition>> {
     // GCode.cpp:5769-5775 bypasses perimeter SeamPlacer for configured spiral mode.
@@ -26,68 +20,8 @@ pub(super) fn placement_modes(
     }
     objects
         .iter()
-        .enumerate()
-        .map(|(index, object)| match object.object.seam_position {
-            ProcessSeamPosition::Aligned
-                if object.layer_candidates[0].model_parts[0]
-                    .region
-                    .wall_direction
-                    == crate::ProcessWallDirection::Clockwise
-                    && prepared_cw_rectangles_have_source_seams(&prepared[index])
-                    && !object.all_regions.iter().any(|region| {
-                        region.seam_slope_type != crate::ProcessSeamScarfType::None
-                            && region.seam_slope_conditional.0
-                            && region.scarf_overhang_threshold.0 > 0.0
-                    }) =>
-            {
-                None
-            }
-            ProcessSeamPosition::Aligned | ProcessSeamPosition::Random => {
-                Some(object.object.seam_position)
-            }
-            ProcessSeamPosition::AlignedBack
-            | ProcessSeamPosition::Nearest
-            | ProcessSeamPosition::Back => Some(object.object.seam_position),
-        })
+        .map(|object| Some(object.object.seam_position))
         .collect()
-}
-
-pub(super) fn prepared_cw_rectangles_have_source_seams(layers: &[OrderedExtrusionLayer]) -> bool {
-    let mut found = false;
-    for loop_ in layers
-        .iter()
-        .flat_map(|layer| &layer.islands)
-        .flat_map(|island| &island.entities)
-        .filter_map(|entity| match entity {
-            IslandPrintEntity::Perimeter(collection) => Some(collection),
-            _ => None,
-        })
-        .flat_map(|collection| &collection.entities)
-        .filter_map(|entity| match entity {
-            ExtrusionEntity::Loop(ordered) => Some(&ordered.extrusion_loop),
-            // Thin-wall `ExtrusionPath`s are not clockwise-rectangle loops;
-            // skip them in the shortcut scan.
-            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => None,
-        })
-    {
-        found = true;
-        if !is_closed_axis_rectangle(loop_) {
-            return false;
-        }
-    }
-    found
-}
-
-pub(super) fn is_closed_axis_rectangle(loop_: &ExtrusionLoop) -> bool {
-    if loop_.paths.len() != 1 {
-        return false;
-    }
-    let points = &loop_.paths[0].polyline.points;
-    points.len() == 5
-        && points.first() == points.last()
-        && points
-            .windows(2)
-            .all(|segment| segment[0].x == segment[1].x || segment[0].y == segment[1].y)
 }
 
 pub(in crate::project_slice) fn place_nearest(

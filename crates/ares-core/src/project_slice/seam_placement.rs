@@ -37,8 +37,6 @@ fn gauss_penalty(value: f32, falloff_speed: f32) -> f32 {
     (exponential - 1.0) / (normalization - 1.0)
 }
 
-#[cfg(test)]
-use runtime::is_closed_axis_rectangle;
 pub(in crate::project_slice) use runtime::{
     place_nearest, place_nearest_penalized, place_nearest_projection,
 };
@@ -57,7 +55,6 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         .collect::<Vec<_>>();
     let placements = runtime::placement_modes(
         &configurations,
-        &prepared.objects,
         traversal.resolved.views.full.process.print.spiral_mode.0,
     );
     if !placements.iter().any(Option::is_some) {
