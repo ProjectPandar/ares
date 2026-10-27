@@ -20,11 +20,11 @@ use crate::options::ProcessRegionSourceOptions;
 use crate::project::effective_config::types::ResolvedProjectObject;
 use crate::{ProjectSettings, RegionOptions};
 
-/// Object-scoped accelerations consumed by the non-region tail of
-/// `assemble` (`outer_wall_acceleration` feeds `bridge_acceleration`).
+/// Raw object-scoped references for `ConfigBase::get_abs_value` percentages.
+/// `GCode.cpp:6414-6439` rounds only the selected role acceleration.
 pub(in crate::project_slice::gcode_emit) struct RegionAccelerations {
-    pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) default_acceleration: f64,
 }
 
 pub(in crate::project_slice::gcode_emit) fn accelerations(

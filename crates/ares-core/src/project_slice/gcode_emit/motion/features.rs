@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use super::MotionOptions;
+use super::{MotionOptions, options::helpers::rounded_acceleration};
 use crate::ExtrusionRole;
 use crate::project_slice::perimeters::classic::materialize::FittedMove;
 
@@ -98,40 +98,40 @@ impl PathProperties<'_> {
         );
         // `GCode.cpp:6414`: default acceleration of zero disables all per-print
         // acceleration switches.
-        if options.default_acceleration == 0 {
+        if options.default_acceleration <= 0.0 {
             return (0, speed);
         }
         // `GCode.cpp:6418-6438`: first layer uses its own value when set,
         // otherwise each role picks only an option above zero and every
         // remaining case falls back to the default.
-        let acceleration = if layer_index == 0 && options.initial_layer_acceleration > 0 {
+        let acceleration = if layer_index == 0 && options.initial_layer_acceleration > 0.0 {
             options.initial_layer_acceleration
         } else {
             match self.feature {
                 "Bridge" | "Overhang wall" | "Internal Bridge"
-                    if options.bridge_acceleration > 0 =>
+                    if options.bridge_acceleration > 0.0 =>
                 {
                     options.bridge_acceleration
                 }
-                "Sparse infill" if options.sparse_infill_acceleration > 0 => {
+                "Sparse infill" if options.sparse_infill_acceleration > 0.0 => {
                     options.sparse_infill_acceleration
                 }
-                "Internal solid infill" if options.internal_solid_infill_acceleration > 0 => {
+                "Internal solid infill" if options.internal_solid_infill_acceleration > 0.0 => {
                     options.internal_solid_infill_acceleration
                 }
-                "Outer wall" if options.outer_wall_acceleration > 0 => {
+                "Outer wall" if options.outer_wall_acceleration > 0.0 => {
                     options.outer_wall_acceleration
                 }
-                "Inner wall" if options.inner_wall_acceleration > 0 => {
+                "Inner wall" if options.inner_wall_acceleration > 0.0 => {
                     options.inner_wall_acceleration
                 }
-                "Top surface" if options.top_surface_acceleration > 0 => {
+                "Top surface" if options.top_surface_acceleration > 0.0 => {
                     options.top_surface_acceleration
                 }
                 _ => options.default_acceleration,
             }
         };
-        (acceleration, speed)
+        (rounded_acceleration(acceleration), speed)
     }
 }
 

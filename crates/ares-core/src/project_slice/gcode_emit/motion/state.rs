@@ -4,7 +4,9 @@ pub(in crate::project_slice::gcode_emit) use layer::{LayerBegin, begin_layer};
 mod object_labels;
 pub(in crate::project_slice::gcode_emit) use object_labels::*;
 
-use super::{MotionOptions, arc, extruder_state, set_accel_and_jerk};
+use super::{
+    MotionOptions, arc, extruder_state, options::helpers::rounded_acceleration, set_accel_and_jerk,
+};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(in crate::project_slice::gcode_emit) enum LiftMode {
@@ -298,23 +300,22 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     destination_feature: &str,
     travel_distance: f64,
 ) {
-    let acceleration = if state.options.default_acceleration == 0 {
+    let acceleration = if state.options.default_acceleration <= 0.0 {
         None
     } else if state.layer_index == 0 {
-        (state.options.initial_layer_travel_acceleration > 0)
+        (state.options.initial_layer_travel_acceleration > 0.0)
             .then_some(state.options.initial_layer_travel_acceleration)
     } else if travel_distance < state.options.retraction_minimum_travel {
         match destination_feature {
-            "Overhang wall" => {
-                (state.options.bridge_acceleration > 0).then_some(state.options.bridge_acceleration)
-            }
-            "Outer wall" => (state.options.outer_wall_acceleration > 0)
+            "Overhang wall" => (state.options.bridge_acceleration > 0.0)
+                .then_some(state.options.bridge_acceleration),
+            "Outer wall" => (state.options.outer_wall_acceleration > 0.0)
                 .then_some(state.options.outer_wall_acceleration),
             _ => None,
         }
-        .or((state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration))
+        .or((state.options.travel_acceleration > 0.0).then_some(state.options.travel_acceleration))
     } else {
-        (state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration)
+        (state.options.travel_acceleration > 0.0).then_some(state.options.travel_acceleration)
     };
     let jerk = if state.options.default_jerk <= 0.0 {
         0.0
@@ -328,5 +329,11 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     } else {
         state.options.travel_jerk
     };
-    set_accel_and_jerk(output, state, acceleration.unwrap_or(0), jerk, true);
+    set_accel_and_jerk(
+        output,
+        state,
+        acceleration.map(rounded_acceleration).unwrap_or(0),
+        jerk,
+        true,
+    );
 }

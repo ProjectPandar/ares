@@ -39,8 +39,8 @@ pub(super) fn acceleration(
     object: Option<&crate::ObjectOptions>,
     fallback: f64,
     value: impl Fn(&crate::ObjectOptions) -> f64,
-) -> u32 {
-    rounded_acceleration(object.map_or(fallback, value))
+) -> f64 {
+    object.map_or(fallback, value)
 }
 
 pub(super) fn absolute(value: FloatOrPercent, base: f64) -> f64 {
@@ -50,7 +50,8 @@ pub(super) fn absolute(value: FloatOrPercent, base: f64) -> f64 {
     }
 }
 
-pub(super) fn rounded_acceleration(value: f64) -> u32 {
+/// Final `GCode.cpp` selection or writer machine-limit conversion: floor(+0.5).
+pub(in crate::project_slice::gcode_emit::motion) fn rounded_acceleration(value: f64) -> u32 {
     (value + 0.5).floor() as u32
 }
 

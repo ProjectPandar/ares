@@ -23,8 +23,8 @@ pub(super) struct Prelude<'a> {
     pub filament_diameter: f64,
     pub travel_speed: f64,
     pub travel_acceleration: f64,
-    pub outer_wall_acceleration: u32,
-    pub default_acceleration: u32,
+    pub outer_wall_acceleration: f64,
+    pub default_acceleration: f64,
     pub retraction_speed: f64,
     pub deretraction_speed: f64,
 }

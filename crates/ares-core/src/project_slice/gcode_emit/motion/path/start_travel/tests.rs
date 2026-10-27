@@ -37,7 +37,7 @@ fn tower_travel_uses_native_comment_without_extrusion_z_restatement() {
             retraction_minimum_travel: 1000.0,
             travel_feedrate: 1200.0,
             first_layer_travel_feedrate: 1200.0,
-            default_acceleration: 0,
+            default_acceleration: 0.0,
             default_jerk: 0.0,
             ..MotionOptions::default()
         },

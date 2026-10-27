@@ -1,4 +1,4 @@
-use super::super::set_layer_acceleration_and_jerk;
+use super::super::{options::helpers::rounded_acceleration, set_layer_acceleration_and_jerk};
 use super::EmitState;
 
 /// The `begin_layer` inputs beyond the writer state: the print z/height
@@ -54,8 +54,9 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     // printing resets `m_second_layer_things_done` per object
     // (`GCode.cpp:3367`), so each object re-runs its layer-0 and
     // second-layer blocks.
-    let has_default_acceleration = state.options.default_acceleration > 0;
-    let acceleration = if has_default_acceleration && state.options.initial_layer_acceleration > 0 {
+    let has_default_acceleration = state.options.default_acceleration > 0.0;
+    let acceleration = if has_default_acceleration && state.options.initial_layer_acceleration > 0.0
+    {
         if first_layer {
             Some(state.options.initial_layer_acceleration)
         } else if second_layer_reset {
@@ -66,6 +67,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     } else {
         None
     };
+    let acceleration = acceleration.map(rounded_acceleration);
     // `GCode.cpp:4767-4776`: jerk emission is independent of the
     // acceleration emit; `default_jerk > 0 && initial_layer_jerk > 0` gate
     // applies on both the first-layer value and the second-layer reset.

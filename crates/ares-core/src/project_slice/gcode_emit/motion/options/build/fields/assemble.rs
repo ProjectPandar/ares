@@ -161,35 +161,35 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             full.process.object.inner_wall_acceleration.0,
             |value| value.inner_wall_acceleration.0,
         ),
-        bridge_acceleration: rounded_acceleration(absolute(
+        bridge_acceleration: absolute(
             object.map_or(full.process.object.bridge_acceleration, |value| {
                 value.object.bridge_acceleration
             }),
-            f64::from(outer_wall_acceleration),
-        )),
-        sparse_infill_acceleration: rounded_acceleration(absolute(
+            outer_wall_acceleration,
+        ),
+        sparse_infill_acceleration: absolute(
             object.map_or(full.process.object.sparse_infill_acceleration, |value| {
                 value.object.sparse_infill_acceleration
             }),
-            f64::from(default_acceleration),
-        )),
-        internal_solid_infill_acceleration: rounded_acceleration(absolute(
+            default_acceleration,
+        ),
+        internal_solid_infill_acceleration: absolute(
             object.map_or(
                 full.process.object.internal_solid_infill_acceleration,
                 |value| value.object.internal_solid_infill_acceleration,
             ),
-            f64::from(default_acceleration),
-        )),
+            default_acceleration,
+        ),
         top_surface_acceleration: acceleration(
             object.map(|value| &value.object),
             full.process.object.top_surface_acceleration.0,
             |value| value.top_surface_acceleration.0,
         ),
-        initial_layer_travel_acceleration: rounded_acceleration(absolute(
+        initial_layer_travel_acceleration: absolute(
             gcode.initial_layer_travel_acceleration,
             travel_acceleration,
-        )),
-        travel_acceleration: rounded_acceleration(travel_acceleration),
+        ),
+        travel_acceleration,
         default_jerk: object.map_or(full.process.object.default_jerk.0, |value| {
             value.object.default_jerk.0
         }),
