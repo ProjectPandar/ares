@@ -66,6 +66,7 @@ pub(super) fn emit(
                 })
                 .unwrap_or_default();
             EntryGeometry {
+                previous_curled: &[],
                 top_surfaces: Vec::new(),
                 lower_boundary_lines: Vec::new(),
                 nearest_penalties: None,
@@ -81,6 +82,7 @@ pub(super) fn emit(
                 .support_layer
                 .expect("support-only pair has a support layer")];
             EntryGeometry {
+                previous_curled: &[],
                 top_surfaces: Vec::new(),
                 lower_boundary_lines: Vec::new(),
                 nearest_penalties: None,

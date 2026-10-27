@@ -62,7 +62,6 @@ pub(super) fn emit_perimeter(
                         end_clip: 0.0,
                         slope: None,
                         geometry,
-                        inside_loop: false,
                     },
                 )?;
                 continue;
@@ -72,17 +71,6 @@ pub(super) fn emit_perimeter(
                 continue;
             }
         };
-        // `estimate_malformations` (`PrintObject.cpp:900-914`) runs BEFORE
-        // seam placement, so its `collect_points` sees the loop's natural
-        // segmentation — no seam vertex splitting a mid-edge segment and no
-        // fragment boundary truncating the 8mm curvature `walk`. Collect
-        // here on the untouched loop; the per-path `estimate` call then
-        // skips its own collect via `inside_loop`.
-        if state.options.enable_overhang_speed {
-            state
-                .curl
-                .collect_entity(state.layer_index, &loop_.extrusion_loop.paths, &geometry);
-        }
         if state.spiral_vase {
             crate::project_slice::seam_placement::place_nearest_projection(
                 &mut loop_.extrusion_loop,

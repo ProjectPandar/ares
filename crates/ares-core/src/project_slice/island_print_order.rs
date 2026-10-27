@@ -41,6 +41,11 @@ pub(in crate::project_slice) struct PreparedPostIslandPrintOrder {
     /// surface-type stage (`get_boundary`'s top subtraction,
     /// `AvoidCrossingPerimeters.cpp:1122-1132`).
     pub(in crate::project_slice) top_surfaces: Vec<Vec<Vec<crate::geometry::ExPolygon>>>,
+    /// Per-object per-layer curled lines from the pre-emit estimation
+    /// (`PrintObject::estimate_curled_extrusions`, `PrintObject.cpp:
+    /// 897-913`) — the stored `Layer::curled_lines` consumed one layer
+    /// later by the overhang estimator.
+    pub(in crate::project_slice) curled_lines: Vec<Vec<Vec<super::gcode_emit::motion::CurledLine>>>,
     /// Per-object per-layer seam penalty data for the Nearest seam mode
     /// (`SeamPlacer.cpp:930-940` `pick_nearest_seam_point_index` —
     /// overhang, embedded distance, visibility + angle penalty per
@@ -147,6 +152,7 @@ pub(in crate::project_slice) fn prepare(
         predecessor,
         objects,
         top_surfaces,
+        curled_lines: Vec::new(),
         nearest_seam_plans,
         support_layers: Vec::new(),
     }

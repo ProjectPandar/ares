@@ -4,7 +4,9 @@ mod tests;
 mod curl;
 mod sections;
 
-pub(in crate::project_slice::gcode_emit) use curl::CurlTracker;
+pub(in crate::project_slice) use curl::{
+    CurlEstimate, CurledLine, ExternalEntityPoints, estimate_object,
+};
 use sections::{scale_trunc, speed_for_distance, speed_sections};
 
 use super::{LayerGeometry, MotionOptions, features::PathProperties};
@@ -19,7 +21,6 @@ pub(super) struct EstimateRequest<'a> {
     pub(super) options: &'a MotionOptions,
     pub(super) layer_index: usize,
     pub(super) original_speed: f64,
-    pub(super) curl: &'a mut CurlTracker,
 }
 
 #[derive(Clone, Copy)]
@@ -47,25 +48,6 @@ pub(super) struct BoundaryContext<'a> {
 }
 
 pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoint>> {
-    // `estimate_malformations` (`PrintObject.cpp:900-914`) runs over every
-    // layer's external perimeters while overhang speed is enabled —
-    // including the first layer, whose curl state feeds the next layer's
-    // artificial distance (`SupportSpotsGenerator.cpp:141-196`).
-    // A path inside a loop is collected once at `loop_paths::emit` with
-    // the whole loop's closed point list; collecting the open fragment
-    // here would score seam-adjacent curvature on a truncated walk and
-    // duplicate the loop's lines in `current`.
-    if request.options.enable_overhang_speed
-        && request.properties.feature == "Outer wall"
-        && !request.properties.inside_loop
-    {
-        request.curl.collect(
-            request.layer_index,
-            request.points,
-            (request.properties.width, request.properties.height),
-            &request.geometry,
-        );
-    }
     let boundary = request.geometry.previous_layer_boundary?;
     if !request.options.enable_overhang_speed
         || request.layer_index == 0
@@ -117,12 +99,14 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     let extended = context.add_segmentation_points(&extended, minimum_slowdown_distance);
     // The artificial curl distance (`ExtrusionProcessor.hpp:415-418`):
     // min() the curl speed into the pair speed like the boundary bands.
-    let curled_lines = if request.options.slowdown_for_curled_perimeters {
-        let curled = request.curl.previous_curled(request.layer_index);
-        (!curled.is_empty()).then_some(curled)
-    } else {
-        None
-    };
+    // The previous layer's curled lines are the pre-estimated
+    // `Layer::curled_lines` (`PrintObject::estimate_curled_extrusions`
+    // consumed by `prepare_for_new_layer`).
+    let curled_lines = request
+        .options
+        .slowdown_for_curled_perimeters
+        .then_some(request.geometry.previous_curled)
+        .filter(|lines| !lines.is_empty());
 
     let mut processed = Vec::with_capacity(extended.len());
     let mut variable = false;

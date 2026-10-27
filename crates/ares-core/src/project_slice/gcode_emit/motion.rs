@@ -39,6 +39,9 @@ pub(in crate::project_slice) use arc::{simplify_linear_points, simplify_points};
 pub(super) use extruder_registry::ExtruderRegistry;
 pub(super) use layer::emit_layer;
 pub(super) use origin::set_origin;
+pub(in crate::project_slice) use overhang::{
+    CurlEstimate, CurledLine, ExternalEntityPoints, estimate_object,
+};
 pub(super) use shared_reversals::{EmissionPhase, SharedLayerId};
 pub(super) use skirt_brim::{SkirtLoopParameters, emit_brim_loop, emit_skirt_loop};
 pub(super) use state::{
@@ -169,7 +172,6 @@ fn emit_fill_entity(
                 end_clip: 0.0,
                 fitting: &path.polyline.fitting,
                 slope: None,
-                inside_loop: false,
             },
             geometry,
             state,
@@ -195,7 +197,6 @@ fn emit_variable_width_entity(
                 end_clip: 0.0,
                 slope: None,
                 geometry,
-                inside_loop: false,
             },
         ),
         GapFillEntity::Loop(paths) => {

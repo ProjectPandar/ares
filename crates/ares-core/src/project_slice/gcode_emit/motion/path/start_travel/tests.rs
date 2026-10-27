@@ -49,6 +49,7 @@ fn tower_travel_uses_native_comment_without_extrusion_z_restatement() {
         internal_surfaces: &[],
         support_islands: None,
         scale: CoordinateScale::Normal,
+        previous_curled: &[],
         previous_layer_boundary: None,
         avoid_crossing: AvoidCrossingGeometry {
             layer_slices: &[],

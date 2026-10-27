@@ -36,6 +36,7 @@ pub(super) fn emit(
             .geometry(entry.object_index, layer, input.spacing)
     } else {
         EntryGeometry {
+            previous_curled: &[],
             top_surfaces: Vec::new(),
             lower_boundary_lines: Vec::new(),
             nearest_penalties: None,

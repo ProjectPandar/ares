@@ -6,13 +6,6 @@ pub(super) struct Emission<'a> {
     pub(super) end_clip: f64,
     pub(super) slope: Option<scarf::Slope>,
     pub(super) geometry: LayerGeometry<'a>,
-    /// The path belongs to an `ExtrusionLoop`/`ExtrusionMultiPath`
-    /// entity whose full point list was already handed to
-    /// `CurlTracker::collect_entity`; the per-path collect in
-    /// `overhang::estimate` must skip it
-    /// (`ExtrusionLoop::collect_points` covers the closed loop,
-    /// `ExtrusionEntity.hpp:507-512`).
-    pub(super) inside_loop: bool,
 }
 
 pub(super) fn emit(
@@ -34,7 +27,6 @@ pub(super) fn emit_with_speed(
         end_clip,
         slope,
         geometry,
-        inside_loop,
     } = emission;
     let feature = match path.role {
         ExtrusionRole::ExternalPerimeter => "Outer wall",
@@ -64,7 +56,6 @@ pub(super) fn emit_with_speed(
                 end_clip,
                 fitting: &path.polyline.fitting,
                 slope,
-                inside_loop,
             },
             requested_speed,
         ),

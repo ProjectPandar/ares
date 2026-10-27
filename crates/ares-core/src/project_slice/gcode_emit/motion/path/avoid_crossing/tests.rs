@@ -30,6 +30,7 @@ fn geometry() -> LayerGeometry<'static> {
         internal_surfaces: Box::leak(vec![&*Box::leak(Box::new(surface))].into_boxed_slice()),
         support_islands: None,
         scale: CoordinateScale::Normal,
+        previous_curled: &[],
         previous_layer_boundary: None,
         avoid_crossing: AvoidCrossingGeometry {
             external_perimeter_width: 0.42,
@@ -64,6 +65,7 @@ fn boundary_builds_from_layer_slices() {
         internal_surfaces: &[],
         support_islands: None,
         scale: CoordinateScale::Normal,
+        previous_curled: &[],
         previous_layer_boundary: None,
         avoid_crossing: AvoidCrossingGeometry {
             external_perimeter_width: 0.42,

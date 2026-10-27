@@ -38,6 +38,7 @@ pub(super) fn emit(
         })
         .unwrap_or_default();
     let geometry = EntryGeometry {
+        previous_curled: &[],
         top_surfaces: Vec::new(),
         lower_boundary_lines: Vec::new(),
         nearest_penalties: None,

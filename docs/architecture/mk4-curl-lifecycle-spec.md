@@ -195,3 +195,13 @@ tuning.
 4. Exit criteria: whole-stream NULL vs Native on the witness (or an explicitly
    re-localized next first difference reported, not masked); no regression on
    previously NULL machines/cases in the scoped control set.
+
+### GREEN outcome (2026-10-27, strict form)
+
+The E2E is a strict whole-stream `native_stream_case::check` (no
+pinned-mismatch asserts). The curl lifecycle stage lands the
+`G1 F1650` slowdown set exactly (7 occurrences, no `G1 F1654`), and the
+former byte-1710 `M73 P69/P68` divergence class is gone. Any remaining
+whole-stream residuals are handled as follow-up RED/GREEN links on this
+chain, each pinned by a read-only PINPOINT and fixed literally upstream,
+until the witness is strict NULL.

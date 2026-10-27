@@ -39,6 +39,7 @@ fn geometry() -> LayerGeometry<'static> {
         internal_surfaces: &[],
         support_islands: None,
         scale: CoordinateScale::Normal,
+        previous_curled: &[],
         previous_layer_boundary: None,
         avoid_crossing: super::super::state::AvoidCrossingGeometry {
             external_perimeter_width: 0.42,
@@ -170,7 +171,6 @@ fn sloped_writer_compares_quantized_z_and_tracks_raw_position() {
             end_clip: 0.0,
             fitting: &[],
             slope: None,
-            inside_loop: false,
         };
         let mut output = Vec::new();
         super::emit_segments(
@@ -217,7 +217,6 @@ fn sloped_segments_interpolate_z_and_endpoint_extrusion_ratio() {
         end_clip: 0.0,
         fitting: &[],
         slope: None,
-        inside_loop: false,
     };
     let mut output = Vec::new();
 

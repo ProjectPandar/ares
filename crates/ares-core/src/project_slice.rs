@@ -16,6 +16,7 @@ pub(crate) mod compatibility;
 mod compensation;
 mod conical_overhang;
 mod contour_z;
+mod curl_estimation;
 mod elephant_foot;
 mod extruders;
 mod extrusion_islands;
@@ -215,6 +216,7 @@ pub(crate) fn slice_source(
     let islands = extrusion_islands::prepare(filled);
     let mut ordered = island_print_order::prepare(islands, top_surfaces);
     ordered.support_layers = support_layers;
+    ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
     consume_post_island_print_order(ordered, metadata, record_moves, &mut context)

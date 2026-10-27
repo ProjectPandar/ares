@@ -44,13 +44,6 @@ pub(super) struct PathProperties<'a> {
     pub(super) end_clip: f64,
     pub(super) fitting: &'a [FittedMove],
     pub(super) slope: Option<super::scarf::Slope>,
-    /// The path belongs to a loop entity whose full closed point list
-    /// was already handed to `CurlTracker::collect`
-    /// (`ExtrusionLoop::collect_points` covers the complete closed loop,
-    /// `ExtrusionEntity.hpp:507-512`); a path-level collect would
-    /// duplicate the segments and, worse, score curvatures on the
-    /// open fragment instead of the closed loop.
-    pub(super) inside_loop: bool,
 }
 
 /// `is_infill` (`ExtrusionEntity.hpp:73-82`): the infill-jerk class.

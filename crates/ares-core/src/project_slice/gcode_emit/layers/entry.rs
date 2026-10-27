@@ -1,5 +1,6 @@
 //! Owned buffers backing one entry's `LayerGeometry` borrows.
 use super::super::motion;
+use super::super::motion::CurledLine;
 use crate::geometry::ExPolygon;
 
 pub(super) struct EntryGeometry<'a> {
@@ -7,6 +8,9 @@ pub(super) struct EntryGeometry<'a> {
     pub(super) lower_boundary_lines: Vec<crate::geometry::Line>,
     pub(super) nearest_penalties:
         Option<&'a crate::project_slice::island_print_order::NearestSeamLayer>,
+    /// The previous physical layer's `Layer::curled_lines`
+    /// (`estimate_curled_extrusions`) for the artificial curl distance.
+    pub(super) previous_curled: &'a [CurledLine],
     pub(super) layer_slices: std::rc::Rc<[ExPolygon]>,
     pub(super) internal_surfaces: Vec<&'a crate::project_slice::region_slices::RegionSurface>,
     /// The chunk-wide slice list and cross-object average spacing for the
@@ -30,6 +34,7 @@ impl EntryGeometry<'_> {
             internal_surfaces: &[],
             support_islands: None,
             scale,
+            previous_curled: &[],
             previous_layer_boundary: None,
             avoid_crossing: motion::AvoidCrossingGeometry {
                 layer_slices: &self.layer_slices,
@@ -63,6 +68,7 @@ impl EntryGeometry<'_> {
             internal_surfaces: &self.internal_surfaces,
             support_islands: None,
             scale: traversal.scale,
+            previous_curled: self.previous_curled,
             previous_layer_boundary,
             avoid_crossing: motion::AvoidCrossingGeometry {
                 layer_slices: &self.layer_slices,

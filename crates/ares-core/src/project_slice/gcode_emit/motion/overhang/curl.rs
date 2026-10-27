@@ -1,33 +1,40 @@
-//! Curled-perimeter tracker (`SupportSpotsGenerator.cpp:141-196`).
+//! Curled-perimeter estimation (`SupportSpotsGenerator.cpp:141-196`).
 //!
-//! Each layer's external walls are collected as they are emitted; per
-//! segment, the distance to the nearest previous-layer line signed
-//! through the lower layer's slices and the endpoint curvature feed
-//! `estimate_curled_up_height`, and segments above the tolerance become
-//! the layer's curled lines. Layer N's estimation consumes layer N−1's
-//! lines with their chained heights, so the tracker rolls over on the
-//! first path of each new layer — the same layer chaining as
-//! `estimate_malformations`.
+//! `estimate_object` ports `PrintObject::estimate_curled_extrusions`'
+//! per-object pass (`PrintObject.cpp:897-913`): one layer at a time, each
+//! external-perimeter entity's ORIGINAL ordered points are annotated, and
+//! per segment the distance to the nearest previous-layer line signed
+//! through the lower layer's slices plus the endpoint curvature feed
+//! `estimate_curled_up_height`; segments above the tolerance become the
+//! layer's curled lines. Layer N's estimation consumes layer N−1's lines
+//! with their chained heights — the same layer chaining as
+//! `estimate_malformations`. The pass runs in `curl_estimation` BEFORE
+//! path simplification and seam placement (`Print.cpp:2303/2393` before
+//! `:2571`; `GCode.cpp:5752-5775`), so inputs are the original entities.
 
 mod geometry;
 
 #[cfg(test)]
 mod tests;
 
-use super::super::LayerGeometry;
 use crate::geometry::{CoordinateScale, FloatLineDistanceTree, LineDistanceTree};
 
-pub(super) use geometry::artificial_distance;
+pub(in crate::project_slice) use geometry::artificial_distance;
 
 use geometry::{curvatures, estimate_curled_up_height, signed_distance};
+
+/// One external entity's concatenated `collect_points` output with its
+/// region's nominal `frExternalPerimeter` flow width.
+pub(in crate::project_slice) type ExternalEntityPoints = (Vec<(f64, f64)>, f32);
 
 const CURLING_TOLERANCE_LIMIT: f32 = 0.1;
 
 /// One curled segment above the tolerance, stored in scaled-int
 /// coordinates (`Point::new_scale` — `ExtrusionProcessor.hpp:381`-
-/// `416` compares against the scaled `CurledLine` endpoints).
+/// `416` compares against the scaled `CurledLine` endpoints). The stored
+/// form of upstream `Layer::curled_lines`.
 #[derive(Clone, Copy, Debug)]
-pub(super) struct CurledLine {
+pub(in crate::project_slice) struct CurledLine {
     x0: i64,
     y0: i64,
     x1: i64,
@@ -35,7 +42,7 @@ pub(super) struct CurledLine {
     curled_height: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 struct ExternalLine {
     x0: f64,
     y0: f64,
@@ -50,103 +57,89 @@ struct AnnotatedPoint {
     distance: f32,
 }
 
+/// One layer's estimation input — the external-perimeter entities of
+/// `estimate_malformations`' `layer_region->perimeters.flatten()` pass.
+pub(in crate::project_slice) struct CurlEstimate<'a> {
+    /// Each external entity's concatenated sub-path points
+    /// (`collect_points`, `ExtrusionEntity.hpp:507-512,431-435`) in
+    /// unscaled millimetres, with the region's nominal
+    /// `frExternalPerimeter` flow width (`get_flow_width`,
+    /// `SupportSpotsGenerator.cpp:92`).
+    pub(in crate::project_slice) entities: Vec<ExternalEntityPoints>,
+    /// The physical layer's height (`l->height`).
+    pub(in crate::project_slice) height: f32,
+    /// The lower layer's `lslices` distance tree for the sign
+    /// correction (`to_unscaled_linesf(l->lower_layer->lslices)`).
+    pub(in crate::project_slice) lower_boundary: Option<&'a LineDistanceTree<'a>>,
+}
+
+/// Per-object curled-lines estimation, one `Vec<CurledLine>` per layer —
+/// the stored `Layer::curled_lines` consumed one layer later by the
+/// overhang artificial distance (`ExtrusionProcessor.hpp:296-308`).
+pub(in crate::project_slice) fn estimate_object(
+    scale: CoordinateScale,
+    layers: &[CurlEstimate<'_>],
+) -> Vec<Vec<CurledLine>> {
+    let mut estimator = CurlEstimator::default();
+    layers
+        .iter()
+        .map(|layer| estimator.estimate_layer(scale, layer))
+        .collect()
+}
+
 #[derive(Default)]
-pub(crate) struct CurlTracker {
-    layer: Option<usize>,
+struct CurlEstimator {
     previous: Vec<ExternalLine>,
     previous_tree: FloatLineDistanceTree<f32>,
-    previous_curled: Vec<CurledLine>,
     current: Vec<ExternalLine>,
     current_curled: Vec<CurledLine>,
 }
 
-impl CurlTracker {
-    /// The previous layer's curled segments for the artificial distance.
-    pub(super) fn previous_curled(&mut self, layer_index: usize) -> &[CurledLine] {
-        self.roll_over(layer_index);
-        &self.previous_curled
-    }
-
-    fn roll_over(&mut self, layer_index: usize) {
-        if self.layer != Some(layer_index) {
-            self.previous = std::mem::take(&mut self.current);
-            // `SupportSpotsGenerator.cpp:151,195`: construct the indexed
-            // previous-layer distancer once, preserving collected line order.
-            self.previous_tree = FloatLineDistanceTree::new(
-                self.previous
-                    .iter()
-                    .map(|line| {
-                        [
-                            [line.x0 as f32, line.y0 as f32],
-                            [line.x1 as f32, line.y1 as f32],
-                        ]
-                    })
-                    .collect(),
-            );
-            self.previous_curled = std::mem::take(&mut self.current_curled);
-            self.layer = Some(layer_index);
-        }
-    }
-
-    /// Collects one whole external-perimeter ENTITY — an
-    /// `ExtrusionLoop`'s or `ExtrusionMultiPath`'s concatenated sub-path
-    /// points (`ExtrusionEntity.hpp:507-512,431-435`). Doing this at
-    /// entity level, before seam placement, gives `collect` the closed
-    /// loop upstream feeds `estimate_malformations`: `looped` sees
-    /// `front == back` and the 8 mm curvature `walk` wraps across the
-    /// seam instead of truncating at emitted-path fragment ends. Returns
-    /// early for non-external roles (`erExternalPerimeter` filter,
-    /// `SupportSpotsGenerator.cpp:159-160`).
-    pub(in crate::project_slice::gcode_emit) fn collect_entity(
+impl CurlEstimator {
+    /// One layer of the `estimate_malformations` loop: the previous
+    /// layer's lines become the distancer (`SupportSpotsGenerator.cpp:
+    /// 151,195`), every external entity is collected, and the layer's
+    /// curled lines are the segments above the tolerance.
+    fn estimate_layer(
         &mut self,
-        layer_index: usize,
-        paths: &[crate::project_slice::perimeters::classic::materialize::ExtrusionPath],
-        geometry: &LayerGeometry<'_>,
-    ) {
-        use crate::project_slice::perimeters::classic::materialize::ExtrusionRole;
-        if !paths
-            .first()
-            .is_some_and(|path| path.role == ExtrusionRole::ExternalPerimeter)
-        {
-            return;
-        }
-        let points: Vec<(f64, f64)> = paths
-            .iter()
-            .flat_map(|path| {
-                path.polyline.points.iter().map(|point| {
-                    (
-                        geometry.scale.unscale(point.x),
-                        geometry.scale.unscale(point.y),
-                    )
+        scale: CoordinateScale,
+        layer: &CurlEstimate<'_>,
+    ) -> Vec<CurledLine> {
+        self.previous = std::mem::take(&mut self.current);
+        self.previous_tree = FloatLineDistanceTree::new(
+            self.previous
+                .iter()
+                .map(|line| {
+                    [
+                        [line.x0 as f32, line.y0 as f32],
+                        [line.x1 as f32, line.y1 as f32],
+                    ]
                 })
-            })
-            .collect();
-        self.collect(
-            layer_index,
-            &points,
-            (paths[0].width, paths[0].height),
-            geometry,
+                .collect(),
         );
+        for (points, width) in &layer.entities {
+            if points.len() >= 2 {
+                self.collect(points, *width, layer, scale);
+            }
+        }
+        std::mem::take(&mut self.current_curled)
     }
 
-    /// Collects one outer-wall path (`estimate_malformations` over an
-    /// `erExternalPerimeter`): the entity points are first annotated
-    /// (`annotate`), then per segment the distance to the nearest
-    /// previous-layer line signed through the lower layer's slices, the
-    /// endpoint curvature, and the chained curl height.
-    pub(in crate::project_slice::gcode_emit) fn collect(
+    /// Collects one whole external-perimeter ENTITY — an `ExtrusionLoop`'s
+    /// or `ExtrusionMultiPath`'s concatenated sub-path points. The
+    /// entity points are first annotated (`annotate`), then per segment
+    /// the distance to the nearest previous-layer line signed through
+    /// the lower layer's slices, the endpoint curvature, and the chained
+    /// curl height.
+    fn collect(
         &mut self,
-        layer_index: usize,
         points: &[(f64, f64)],
-        (width, height): (f32, f32),
-        geometry: &LayerGeometry<'_>,
+        width: f32,
+        layer: &CurlEstimate<'_>,
+        scale: CoordinateScale,
     ) {
-        let boundary = geometry.previous_layer_boundary;
-        let scale = geometry.scale;
-        self.roll_over(layer_index);
-        if points.len() < 2 {
-            return;
-        }
+        let boundary = layer.lower_boundary;
+        let height = layer.height;
         let annotated = self.annotate(points, width);
         let sequence: Vec<(f64, f64)> = annotated.iter().map(|point| point.position).collect();
         let curvature = curvatures(&sequence);

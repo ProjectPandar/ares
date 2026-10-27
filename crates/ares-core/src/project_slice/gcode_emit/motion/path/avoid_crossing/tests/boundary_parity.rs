@@ -140,7 +140,6 @@ fn start_travel_slope_z_at_same_xy_outside_safe_zone_emits_corner_then_destinati
                     speed: 50.0,
                     flow_ratio: 1.0,
                 }),
-                inside_loop: false,
             },
             geometry,
         },

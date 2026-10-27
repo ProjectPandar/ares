@@ -51,7 +51,6 @@ pub(super) fn emit(
                     end_clip: 0.0,
                     slope: path.slope,
                     geometry,
-                    inside_loop: true,
                 },
                 speed_for_path(&path.path),
             )?;
@@ -115,7 +114,6 @@ pub(super) fn emit(
                 end_clip,
                 slope: None,
                 geometry,
-                inside_loop: true,
             },
             speed_for_path(path),
         )?;
@@ -276,7 +274,6 @@ fn append_wipe_before_external(
             end_clip: 0.0,
             fitting: &[],
             slope: None,
-            inside_loop: false,
         },
         geometry,
         state,

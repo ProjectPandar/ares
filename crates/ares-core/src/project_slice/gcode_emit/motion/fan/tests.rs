@@ -16,7 +16,6 @@ fn properties(feature: &'static str) -> PathProperties<'static> {
         end_clip: 0.0,
         fitting: &[],
         slope: None,
-        inside_loop: false,
     }
 }
 

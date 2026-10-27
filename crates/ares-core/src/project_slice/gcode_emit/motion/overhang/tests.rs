@@ -65,11 +65,9 @@ fn overhang_reference_speed_cap_divides_by_print_and_filament_flow_ratios() {
         end_clip: 0.0,
         fitting: &[],
         slope: None,
-        inside_loop: false,
     };
     let points = [(0.0, 0.0), (1.0, 0.0)];
     let original_speed = 4.0 / (0.08 * 0.5 * 0.98);
-    let mut tracker = super::CurlTracker::default();
 
     let processed = super::estimate(super::EstimateRequest {
         points: &points,
@@ -78,7 +76,6 @@ fn overhang_reference_speed_cap_divides_by_print_and_filament_flow_ratios() {
         options: &options,
         layer_index: 1,
         original_speed,
-        curl: &mut tracker,
     })
     .expect("a fully unsupported wall slows to the severe band");
 
@@ -95,6 +92,7 @@ fn boundary_geometry(
         internal_surfaces: &[],
         support_islands: None,
         scale: CoordinateScale::Normal,
+        previous_curled: &[],
         previous_layer_boundary: Some(boundary),
         avoid_crossing: super::super::state::AvoidCrossingGeometry {
             external_perimeter_width: 0.42,

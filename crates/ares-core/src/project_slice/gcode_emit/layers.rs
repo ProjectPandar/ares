@@ -67,6 +67,7 @@ pub(super) fn append(
     let objects = &mut prepared.objects;
     let support_layers = &mut prepared.support_layers;
     let top_surfaces = &prepared.top_surfaces;
+    let curled_lines = &prepared.curled_lines;
     let nearest_seam_plans = &prepared.nearest_seam_plans;
     let island_predecessor = &prepared.predecessor;
     let emit_labels = traversal
@@ -102,6 +103,7 @@ pub(super) fn append(
     let mut entry_builder = EntryBuilder::new(
         traversal,
         top_surfaces,
+        curled_lines,
         nearest_seam_plans,
         island_predecessor,
     );

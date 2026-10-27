@@ -41,6 +41,7 @@ pub(super) fn emit(
         entry_builder.geometry(object_index, index, chunk_perimeter_spacing)
     } else {
         EntryGeometry {
+            previous_curled: &[],
             top_surfaces: Vec::new(),
             lower_boundary_lines: Vec::new(),
             nearest_penalties: None,

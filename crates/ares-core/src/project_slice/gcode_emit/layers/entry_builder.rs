@@ -5,6 +5,7 @@
 use super::entry::EntryGeometry;
 use crate::geometry::ExPolygon;
 use crate::project_slice::extrusion_islands::PreparedPostExtrusionIslands;
+use crate::project_slice::gcode_emit::motion::CurledLine;
 use crate::project_slice::island_print_order::{self, NearestSeamLayer};
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
@@ -12,6 +13,7 @@ pub(super) struct EntryBuilder<'a> {
     traversal: &'a PreparedPostClassicTraversal,
     top_surfaces: &'a [Vec<Vec<ExPolygon>>],
     nearest_seam_plans: &'a [Vec<NearestSeamLayer>],
+    curled_lines: &'a [Vec<Vec<CurledLine>>],
     island_predecessor: &'a PreparedPostExtrusionIslands,
     layer_boundary_cache: std::collections::HashMap<(usize, usize), std::rc::Rc<[ExPolygon]>>,
     /// The chunk's EXTERNAL-boundary slices, instance-translated
@@ -24,12 +26,14 @@ impl<'a> EntryBuilder<'a> {
     pub(super) fn new(
         traversal: &'a PreparedPostClassicTraversal,
         top_surfaces: &'a [Vec<Vec<ExPolygon>>],
+        curled_lines: &'a [Vec<Vec<CurledLine>>],
         nearest_seam_plans: &'a [Vec<NearestSeamLayer>],
         island_predecessor: &'a PreparedPostExtrusionIslands,
     ) -> Self {
         Self {
             traversal,
             top_surfaces,
+            curled_lines,
             nearest_seam_plans,
             island_predecessor,
             layer_boundary_cache: std::collections::HashMap::new(),
@@ -59,6 +63,11 @@ impl<'a> EntryBuilder<'a> {
                 .nearest_seam_plans
                 .get(object_index)
                 .and_then(|plans| plans.get(layer_index)),
+            previous_curled: self
+                .curled_lines
+                .get(object_index)
+                .and_then(|layers| layer_index.checked_sub(1).and_then(|prev| layers.get(prev)))
+                .map_or(&[], |lines| lines),
             layer_slices: super::super::layer_boundary_slices_rc(
                 self.traversal,
                 object_index,

@@ -77,6 +77,7 @@ pub(super) fn emit(
             .map(|polygon| ExPolygon::new(polygon.clone(), Vec::new()))
             .collect::<Vec<_>>();
         let geometry = EntryGeometry {
+            previous_curled: &[],
             top_surfaces: Vec::new(),
             lower_boundary_lines: Vec::new(),
             nearest_penalties: None,
@@ -99,6 +100,7 @@ pub(super) fn emit(
         // emission (`GCode.cpp:4465-4485`).
         let support = &input.support_layers[input.object][support_index];
         let geometry = EntryGeometry {
+            previous_curled: &[],
             top_surfaces: Vec::new(),
             lower_boundary_lines: Vec::new(),
             nearest_penalties: None,

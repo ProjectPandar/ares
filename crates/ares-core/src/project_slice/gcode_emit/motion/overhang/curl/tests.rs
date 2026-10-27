@@ -9,35 +9,26 @@ use super::CurledLine;
 #[test]
 fn sermoon_layer_two_corner_height_matches_oracle() {
     use crate::geometry::CoordinateScale;
-    use crate::project_slice::gcode_emit::motion::{LayerGeometry, state::AvoidCrossingGeometry};
-    let geometry = LayerGeometry {
-        nearest_seam_penalties: None,
-        staggered_inner: false,
-        internal_surfaces: &[],
-        support_islands: None,
-        scale: CoordinateScale::Normal,
-        previous_layer_boundary: None,
-        avoid_crossing: AvoidCrossingGeometry {
-            external_perimeter_width: 0.61,
-            layer_slices: &[],
-            perimeter_spacing: 0.0,
-            top_surfaces: &[],
-            chunk_slices: &[],
-            chunk_perimeter_spacing: 0.0,
-        },
-    };
-    let mut tracker = super::CurlTracker::default();
-    for (layer, half_side) in [4.345001, 4.645001, 4.645001].into_iter().enumerate() {
-        let points = [
-            (half_side, half_side),
-            (-half_side, half_side),
-            (-half_side, -half_side),
-            (half_side, -half_side),
-            (half_side, half_side),
-        ];
-        tracker.collect(layer, &points, (0.61, 0.2), &geometry);
-    }
-    let corner = tracker.current_curled[0];
+    use crate::project_slice::gcode_emit::motion::{CurlEstimate, estimate_object};
+    let layers = [4.345001, 4.645001, 4.645001]
+        .into_iter()
+        .map(|half_side| CurlEstimate {
+            entities: vec![(
+                vec![
+                    (half_side, half_side),
+                    (-half_side, half_side),
+                    (-half_side, -half_side),
+                    (half_side, -half_side),
+                    (half_side, half_side),
+                ],
+                0.61,
+            )],
+            height: 0.2,
+            lower_boundary: None,
+        })
+        .collect::<Vec<_>>();
+    let output = estimate_object(CoordinateScale::Normal, &layers);
+    let corner = output[2][0];
     assert_eq!((corner.x0, corner.y0), (corner.x1, corner.y1));
     // curlp oracle kv5pcc97ack7c1fpmvni44bm5ffp4hm2, byte-identical
     // case-6qvP0t output: CURL layer=2 corner h=0.166997.

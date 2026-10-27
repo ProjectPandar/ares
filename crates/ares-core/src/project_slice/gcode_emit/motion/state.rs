@@ -203,9 +203,6 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// (`AvoidCrossingPerimeters::init_layer`).
     pub(in crate::project_slice::gcode_emit) avoid_boundary:
         Option<std::rc::Rc<super::path::Boundary>>,
-    /// Curled-perimeter tracker feeding the overhang estimator's
-    /// artificial distance (`SupportSpotsGenerator.cpp:141-196`).
-    pub(in crate::project_slice::gcode_emit) curl: super::overhang::CurlTracker,
     /// `ppi.failed_templates` (`GCode.cpp:3920-3933`): first failure per
     /// template name; export aborts after emit (`GCode.cpp:3637-3645`).
     pub(in crate::project_slice::gcode_emit) failed_templates: Vec<(String, String)>,
@@ -239,6 +236,10 @@ pub(in crate::project_slice::gcode_emit) struct LayerGeometry<'a> {
     pub(in crate::project_slice::gcode_emit) support_islands:
         Option<super::support::LayerAreas<'a>>,
     pub(in crate::project_slice::gcode_emit) scale: crate::geometry::CoordinateScale,
+    /// The previous layer's curled lines — upstream `Layer::curled_lines`
+    /// pre-estimated by `curl_estimation` and consumed one layer later
+    /// (`ExtrusionProcessor.hpp:296-308` `prepare_for_new_layer`).
+    pub(in crate::project_slice::gcode_emit) previous_curled: &'a [super::CurledLine],
     pub(in crate::project_slice::gcode_emit) previous_layer_boundary:
         Option<&'a crate::geometry::LineDistanceTree<'a>>,
     /// Current layer's merged slices plus the perimeter spacing and top
