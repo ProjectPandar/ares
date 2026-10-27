@@ -1,5 +1,7 @@
 //! GCode object emission and writer-motion parity cases.
 
+#[path = "bbl_absolute_e_end_label_reset.rs"]
+mod bbl_absolute_e_end_label_reset;
 #[path = "bbl_layer_object_labels.rs"]
 mod bbl_layer_object_labels;
 #[path = "byobject_transition_lift_gate.rs"]
