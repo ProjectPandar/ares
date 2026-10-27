@@ -244,12 +244,12 @@ impl TriangleMesh {
         // (`its_transform` swaps indices 0 and 1, admesh stl.h:362-367).
         let object_left_handed = object_transform.linear_determinant() < 0.0;
         for vertex in &mut mesh.vertices {
-            let [x, y, z] = object_transform.transform_point_f32(Point3d::new(
+            let Point3d { x, y, z } = object_transform.transform_point(Point3d::new(
                 f64::from(vertex.x),
                 f64::from(vertex.y),
                 f64::from(vertex.z),
             ));
-            *vertex = Vec3::new(x, y, z);
+            *vertex = Vec3::new(x as f32, y as f32, z as f32);
         }
         let mut triangles = mesh
             .indices
