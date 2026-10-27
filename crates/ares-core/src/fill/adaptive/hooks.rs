@@ -7,6 +7,7 @@
 mod geometry;
 mod hook;
 mod pair;
+mod touching;
 mod trim;
 
 #[cfg(test)]
@@ -81,24 +82,38 @@ pub(crate) fn connect_lines_using_hooks(
     let scaled_trim_distance = f64::from((spacing * 0.5 * 0.75) as f32);
     let scaled_epsilon = 1e-4 * units_per_mm;
 
-    // The immutable 2-point source lines (`lines_src`, `:864-868`).
-    let source: Vec<Line> = lines
+    let mut working: Vec<Vec<Point>> = lines.into_iter().map(Polyline::into_points).collect();
+    let touching_pairs = touching::collect(&mut working);
+    // `:874-878`: keep cleared collinear slots in the source-line index domain.
+    let source: Vec<Line> = working
         .iter()
-        .filter(|l| l.points().len() >= 2)
-        .map(|l| Line::new(l.points()[0], l.points()[1]))
+        .map(|points| {
+            if points.is_empty() {
+                Line::new(Point::new(0, 0), Point::new(0, 0))
+            } else {
+                Line::new(points[0], *points.last().unwrap())
+            }
+        })
         .collect();
-
-    // The mutable working set (upstream `lines`, mutated by
-    // drop/trim/hooks/connect).
-    let mut working: Vec<Vec<Point>> = lines.iter().map(|l| l.points().to_vec()).collect();
 
     // T-joints (`:887-1010`): per endpoint the nearest line whose
     // interior projects the point; thresholds drop/anchor/trim.
     let thresholds = Thresholds::new(scaled_offset, scaled_epsilon);
     let mut joints: Vec<Joint> = Vec::new();
     for (index, line) in source.iter().enumerate() {
-        let tjoint_front = nearest_tjoint(&source, &working, index, line.a);
-        let tjoint_back = nearest_tjoint(&source, &working, index, line.b);
+        if working[index].is_empty() {
+            continue;
+        }
+        // `filter_end_point_connections` (`:939-954`), pointer order as slot order.
+        let filter_touching = |candidate: Option<usize>| {
+            candidate.filter(|&other| {
+                touching_pairs
+                    .binary_search(&(index.min(other), index.max(other)))
+                    .is_err()
+            })
+        };
+        let tjoint_front = filter_touching(nearest_tjoint(&source, &working, index, line.a));
+        let tjoint_back = filter_touching(nearest_tjoint(&source, &working, index, line.b));
         let num_tjoints = usize::from(tjoint_front.is_some()) + usize::from(tjoint_back.is_some());
         if num_tjoints == 0 {
             continue;
@@ -165,6 +180,7 @@ pub(crate) fn connect_lines_using_hooks(
     // sorted along the line direction; `merged_with` re-points polylines
     // merged into a lower slot (`:1042-1049`).
     let mut merged_with: Vec<usize> = (0..working.len()).collect();
+    touching::merge(&mut working, &touching_pairs, &mut merged_with);
     let segments = collision_segments(&source, boundary);
     let hook_params = HookParams {
         source: &source,

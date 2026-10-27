@@ -155,11 +155,9 @@ fn line_line_point(hook: Line, l: Line) -> Option<Point> {
     segment_line_intersection(l, hook)
 }
 
-/// `update_merged_polyline_idx` (`:1049-1076`): follow the merge chain
-/// to the surviving polyline slot (with path compression) and refresh
-/// `front` against the surviving polyline when the joint is still fresh.
-pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint, working: &[Vec<Point>]) {
-    let mut last = joint.intersect_pl;
+/// `update_merged_polyline_idx` (`FillAdaptive.cpp:1049-1061`).
+pub(super) fn resolve_merged_index(merged_with: &mut [usize], index: usize) -> usize {
+    let mut last = index;
     loop {
         let lower = merged_with[last];
         if lower == last {
@@ -167,7 +165,13 @@ pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint, worki
         }
         last = lower;
     }
-    merged_with[joint.intersect_pl] = last;
+    merged_with[index] = last;
+    last
+}
+
+/// `update_merged_polyline` (`:1063-1072`): refresh a surviving joint's front.
+pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint, working: &[Vec<Point>]) {
+    let last = resolve_merged_index(merged_with, joint.intersect_pl);
     joint.intersect_pl = last;
     if !joint.used && !working[last].is_empty() {
         joint.front = working[last][0] == joint.intersect_point;
