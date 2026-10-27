@@ -303,8 +303,11 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     let acceleration = if state.options.default_acceleration <= 0.0 {
         None
     } else if state.layer_index == 0 {
-        (state.options.initial_layer_travel_acceleration > 0.0)
-            .then_some(state.options.initial_layer_travel_acceleration)
+        // `GCode.cpp:7371-7375`: truncate the unsigned local before its gate and rounding.
+        let initial_layer_travel_acceleration =
+            state.options.initial_layer_travel_acceleration as u32;
+        (initial_layer_travel_acceleration > 0)
+            .then_some(f64::from(initial_layer_travel_acceleration))
     } else if travel_distance < state.options.retraction_minimum_travel {
         match destination_feature {
             "Overhang wall" => (state.options.bridge_acceleration > 0.0)
