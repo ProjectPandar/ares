@@ -1,9 +1,8 @@
 # support-interface-top-layers-base-connect RED fixtures
 
 Non-P1S stock Creality K1 0.4 mm overhang project (tree(auto) support,
-organic style, `support_base_pattern=rectilinear`). Frozen byte-for-byte
-from the discovery evidence at
-`/home/indexyz/ares-coord/evidence/w6-mm-toolchange-discovery/support-raft-nonp1s/`.
+organic style, `support_base_pattern=rectilinear`). The discovery target/control
+inputs are preserved byte-for-byte.
 
 - `control.3mf` — fixture defaults, `support_interface_top_layers=2`
   (SHA-256 `7a8b9f2abfb2bbc8b74b76bd9affb458ad5a96c81353cfa767b66b773db23239`);

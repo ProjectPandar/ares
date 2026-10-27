@@ -2,8 +2,7 @@
 
 Status: SPEC (docs-only). No production code changes in this slice.
 Authorization: coordinator, 2026-10-26, following the
-`staggered_inner_seams` seam-scan pinpoint
-(`/home/indexyz/ares-evidence/w2-seam-scan-20261026T001604-pinpoint/PINPOINT.md`).
+`staggered_inner_seams` seam-scan pinpoint.
 
 ## Non-negotiable decision
 

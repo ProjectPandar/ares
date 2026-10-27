@@ -8,9 +8,8 @@ official 2.4.2 reference (`--export-3mf`, arrange enabled) from vendor presets
 `Anker M5 0.4 nozzle` / `0.20mm Standard @Anker` / `Anker Generic PLA+`
 (`gcode_flavor marlin2`, effective `reduce_crossing_wall=1`,
 `max_travel_detour_distance=0`); the effective preset ids inside the 3MF were
-verified against the selection before capture. Source evidence:
-`/home/indexyz/ares-evidence/w2-matrix5-20261025T223253` (matrix5 discovery) and
-`.../-pinpoint/PINPOINT.md` (bilateral gdb trace).
+verified against the selection before capture. Bilateral gdb traces qualified
+the first object-travel detour during stock-machine discovery.
 
 The fixture contains model/settings only — no G-code, no golden output.
 

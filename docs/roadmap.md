@@ -261,7 +261,7 @@ Native-runtime stock Anker M5 fixture (matrix5 discovery residual, bilateral
 gdb pinpoint published), grouped registration in an existing case file, dual
 mode CPU13 threads1, REVIEW/HOLD; GREEN only the upstream literal ordering
 above with identical tests; FULL separately authorized. Defer detour shape
-internals (W4 path_shape lane), boundary construction internals, multi-extruder
+internals (path_shape family), boundary construction internals, multi-extruder
 loop ranges, wipe tower, cooling, other flavors.
 [ARD / SPEC](architecture/ard-avoid-once-arm-consumption.md).
 
@@ -287,11 +287,9 @@ No production/tests/FULL/rebase/merge/push here; beam integration window separat
 [SPEC](architecture/painted-fuzzy-skin-spec.md),
 [ARD](architecture/ard-painted-fuzzy-skin.md).
 
-### W5 MM flush_into_infill object-label envelope: SPEC+RED / HOLD
+### MM flush_into_infill object-label envelope: SPEC+RED / HOLD
 
-Discovery on main `78d642702` (worker W5; evidence dir
-`/home/indexyz/ares-coord/evidence/w6-mm-toolchange-discovery/`, name
-historical): stock P1S AMS two-filament witness, single knob
+Discovery on main `78d642702`: stock P1S AMS two-filament witness, single knob
 `flush_into_infill` 0→1. Stable dual-mode residual, zero motion bytes:
 84 extra `; stop printing object, unique label id`/M625 pairs plus 2
 stale layer-end stop ids (Native 142/142 envelope balance vs Ares 142/205).

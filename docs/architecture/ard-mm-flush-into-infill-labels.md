@@ -1,10 +1,9 @@
 # ARD: MM flush_into_infill object-label envelope (wiping two-pass)
 
-Status: **SPEC + RED / REVIEW-REQUEST / HOLD**. W5 owns this slice.
+Status: **SPEC + RED / REVIEW-REQUEST / HOLD**.
 Base: main `78d642702b9c1497d658b04d5478ba0d5dd86483`.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1` (seed-replay source).
-GREEN is not authorized. Discovery evidence root (historical directory name,
-worker is W5): `/home/indexyz/ares-coord/evidence/w6-mm-toolchange-discovery/`.
+GREEN is not authorized at this SPEC stage.
 
 ## Witness
 

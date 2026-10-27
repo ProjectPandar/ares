@@ -1,12 +1,9 @@
 # Spec: curl-annotation point pipeline for long walls — XL block-hole witness
 
-Status: GREEN implemented on branch `w6/xl-curl-annotation-red-4af042def`
-(RED frozen at `f33e5ab6c`, coordinator-approved scope; witness,
-controls and the C1 Sermoon regression pass in both modes).
+Status: GREEN implemented (RED frozen at `f33e5ab6c`, coordinator-approved
+scope; witness, controls and the C1 Sermoon regression pass in both modes).
 Provenance: machine-matrix discovery at main `4af042def` (Prusa XL, 2nd
-machine), two-sided GDB localization in
-`/home/indexyz/ares-evidence/w6-machine-matrix-blockhole-p8n4d/`
-(`SPEC-PROPOSAL-v2.md`); extends the C1 curled-perimeter spec family
+machine), with two-sided GDB localization; extends the C1 curled-perimeter spec family
 (`2026-10-06-curled-perimeter-slowdown.md`, which already anticipated
 "`bridge_distance` 16 passed as `max_line_length` changes segmentation if
 edges were longer" — the Sermoon C1 cube10 edges are 10 mm, below the

@@ -62,7 +62,7 @@ public comparisons, raw API==actual CLI). Expected strict failure: first
 difference at byte 2426 (line 106) after `;WIPE_END` — upstream emits the
 post-wipe re-plan detour (6 intermediate vertices on the fixture hole contour
 plus the destination) while Ares emits one direct segment. Bilateral gdb
-pinpoint: `/home/indexyz/ares-evidence/w2-matrix5-20261025T223253-pinpoint/PINPOINT.md`.
+traces confirmed the planning-slot/reset/re-plan ordering.
 
 ## GREEN boundary (authorized separately; upstream literal order only)
 
@@ -83,7 +83,7 @@ No assertion weakening, no fixture/golden G-code, no new guards or fallbacks.
 
 ## Deferred
 
-Detour polyline shape internals (W4 lane: router/path_shape family), external
+Detour polyline shape internals (router/path_shape family), external
 boundary construction internals (`AvoidCrossingPerimeters.cpp` beyond the entry
 contract), multi-extruder skirt loop-range assignment beyond the loop-0 arm
 condition, wipe-tower and cooling-buffer interactions, other gcode flavors'

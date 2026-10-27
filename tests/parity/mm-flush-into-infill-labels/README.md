@@ -4,9 +4,7 @@
 `c80f9ebb4465e426e6f74b49d1f68c99dc0556b59a24a0f780e9b37e86181c6a`) and
 `base.3mf` (control, `flush_into_infill=0`, SHA
 `8e09d0d146adf8cd9f444c2c343396e772e508e185a69eefa5700733cb8043d0`) are
-byte-for-byte copies of the W5 discovery inputs
-`/home/indexyz/ares-coord/evidence/w6-mm-toolchange-discovery/flush_into_infill/input.3mf`
-and `…/control/input.3mf` (directory name historical; worker is W5).
+byte-for-byte copies of the frozen discovery target/control projects.
 Stock machine `Bambu Lab P1S 0.4 nozzle`, process `0.20mm Standard @BBL X1C`,
 filaments `Bambu PLA Basic @BBL X1C` + `Bambu PLA Matte @BBL X1C`, two cubes
 on extruders 1/2, type2 wipe tower; only `flush_into_infill` differs.

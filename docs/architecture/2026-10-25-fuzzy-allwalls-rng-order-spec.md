@@ -1,6 +1,6 @@
 # Fuzzy skin `allwalls` seeded-RNG consumption order (SPEC)
 
-Date: 2026-10-25 · Worker: W4 · Status: SPEC + tests-only RED (frozen), awaiting review ·
+Date: 2026-10-25 · Status: SPEC + tests-only RED (frozen), awaiting review ·
 Base: main `28539c7fbe3e14c8f48a90803ec49b172396ffba`
 
 ## Upstream boundary (OrcaSlicer 2.4.2)
@@ -56,8 +56,7 @@ Base: main `28539c7fbe3e14c8f48a90803ec49b172396ffba`
 
 ## Confirmed divergence (discovery evidence)
 
-`/home/indexyz/ares-evidence/w4-fuzzy-surface-discovery/` (SPEC-PROPOSAL rev 2,
-`cases/fuzzy-allwalls/localization/`): on the K1 classic fixture at layer
+Discovery localization on the K1 classic fixture at layer
 `Z:0.4` (first layer past the first-layer gate; one island, outer depth-0 +
 inner depth-1 contour walls):
 

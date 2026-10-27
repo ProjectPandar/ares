@@ -10,7 +10,7 @@ Fixture for the `project_settings.config` boolean wire-form RED
 at Native runtime by the official 2.4.2 reference (`--export-3mf`, arrange
 enabled) from the K1 stock presets (`seam_position: aligned`,
 `seam_gap: 10%`, `staggered_inner_seams: "1"`), with `staggered_inner_seams`
-rewired to an unquoted JSON `true` — the exact patch artifact of the W2 seam
+rewired to an unquoted JSON `true` — the exact patch artifact of the seam
 scan. Upstream `load_from_json` hits the `invalid json type` else-branch for
 the boolean, drops the key, and slices UNSTAGGERED (first inner wall
 `X130.857`); Ares main resolves the JSON boolean as `true` and staggers
@@ -19,9 +19,8 @@ the boolean, drops the key, and slices UNSTAGGERED (first inner wall
 
 Controls (same base project): stock `"1"` and probe `""`/`"0"` are
 full-output PASS dual-stable — the divergence is isolated to the JSON
-boolean. Source evidence:
-`/home/indexyz/ares-evidence/w2-seam-scan-20261026T001604` (scan) and
-`.../-pinpoint/PINPOINT.md` (bilateral value matrix + parity).
+boolean. Bilateral value-matrix traces confirmed the wire-form classification
+and complete-stream parity of these controls.
 
 The fixture contains model/settings only — no G-code, no golden output.
 
