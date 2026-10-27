@@ -1,5 +1,8 @@
 //! Lightning initial-overhang offset uses the upstream default miter join.
 
+#[path = "lightning_initial_overhang_polygons.rs"]
+mod lightning_initial_overhang_polygons;
+
 #[test]
 fn lightning_initial_overhang_join_grid_control() {
     crate::runner::native_stream_case::check(
