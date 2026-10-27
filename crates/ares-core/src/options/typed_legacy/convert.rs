@@ -121,6 +121,15 @@ where
             JsonArrayAllowance::Flatten(vector) => {
                 flatten_json_array(deserializer, rule, vector, value)
             }
+            // Scalar options join exactly like the numeric vector flavor
+            // (',' separator, '#' nested, no c-style quoting): the upstream
+            // scalar branch of `parse_str_arr` differs from coStrings only in
+            // separator/escaping, and c-style quoting there belongs to the
+            // coStrings vector type alone (Config.cpp:974-987). The per-type
+            // deserialize split happens at assignment (lexical.rs).
+            JsonArrayAllowance::FlattenScalar => {
+                flatten_json_array(deserializer, rule, VectorType::Ints, value)
+            }
             JsonArrayAllowance::ConsumeFirstPass => {
                 consume_json(deserializer, rule.source, LegacyOutcome::Consume)
             }

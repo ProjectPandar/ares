@@ -137,9 +137,12 @@ fn empty_first_pass_preserves_top_one_value_and_consumes_prime_rib_arrays() {
         "only_one_wall_top",
         "1",
     );
-    assert_invalid_array(
+    // `Config.cpp:947-1000`: the array joins (`parse_str_arr`) before the
+    // rewrite runs, so `["top"]` binds like the bare string.
+    assert_assign(
         array("top_one_wall_type", "[\"top\"]"),
-        "top_one_wall_type",
+        "only_one_wall_top",
+        "1",
     );
     assert_eq!(
         array_first_pass(super::rule("prime_tower_rib_wall")),
@@ -157,11 +160,17 @@ fn empty_first_pass_preserves_top_one_value_and_consumes_prime_rib_arrays() {
 }
 
 #[test]
-fn every_string_only_rule_rejects_json_arrays_after_its_first_pass() {
+fn every_string_only_rule_joins_json_arrays_instead_of_rejecting() {
+    // `Config.cpp:947-1000`: the array branch joins homogeneous string
+    // arrays for every rule shape — no scalar rule keeps the first-pass
+    // rejection.
     for rule in EXPLICIT_RULES {
-        if rule.wire.json_array == JsonArrayAllowance::RejectAfterFirstPass {
-            assert_invalid_array(array(rule.source, "[\"value\"]"), rule.source);
-        }
+        assert_ne!(
+            rule.wire.json_array,
+            JsonArrayAllowance::RejectAfterFirstPass,
+            "{}",
+            rule.source
+        );
     }
 }
 

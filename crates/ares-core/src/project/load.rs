@@ -151,6 +151,14 @@ pub(crate) fn load_project_with_preparation(
     // `Slic3r::validate` flat map — is post-legacy (e.g. `ironing_angle: -1`
     // normalizes to `0`).
     project_settings_raw.handle_legacy();
+    // The array branch of the same upstream load: joined string arrays bind
+    // scalar options (`Config.cpp:945-1001`), so the validation flat map and
+    // the typed builders see the bound scalar, not the array.
+    project_settings_raw
+        .normalize_scalar_arrays()
+        .map_err(|error| {
+            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
+        })?;
     let settings = <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
         project_settings_raw.clone().into_object(),
     )

@@ -2,6 +2,7 @@
 mod scalar;
 #[cfg(test)]
 mod tests;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use serde::de::DeserializeOwned;
@@ -50,6 +51,17 @@ pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
 /// Config.cpp:927-929 routes bare strings there). Raw views must carry the
 /// same shape, so both raw entry points (catalog documents and 3MF embedded
 /// settings) normalize through this function.
+/// The shared per-kind scalar deserialize for a joined array wire
+/// (`Config.cpp:947-1000` → `set_deserialize`): numeric kinds keep their
+/// `istringstream` prefix (`Config.hpp:784-790`), booleans their first
+/// trimmed `','`-segment (`Config.hpp:1828-1850`), and every other kind the
+/// whole string. Empty output keeps the original wire (a join can never
+/// produce it, but `scalar::normalize` is also the no-op pass-through for
+/// uncovered kinds).
+pub(crate) fn scalar_token(kind: OptionValueKind, value: &str) -> Result<Cow<'_, str>, String> {
+    scalar::normalize(kind, value)
+}
+
 pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawConfigValue>) {
     for (key, value) in values {
         if let Some(definition) = option_definition(key)

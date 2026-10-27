@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::de::{
     Error,
     value::{SeqDeserializer, StringDeserializer},
@@ -34,6 +36,11 @@ where
         })?;
         builder.deserialize_known_value(target, SeqDeserializer::<_, E>::new(values.into_iter()))
     } else {
+        let value = if origin == ValueOrigin::Array {
+            array_joined_scalar::<E>(source, target, value)?
+        } else {
+            value
+        };
         builder.deserialize_known_value(target, StringDeserializer::<E>::new(value))
     }
     .or_else(|error| {
@@ -50,6 +57,37 @@ where
             "legacy Orca option {source} resolved to unknown target {target}"
         )))
     }
+}
+
+/// `Config.cpp:947-1000` + `Config.hpp` per-type deserialize for a scalar
+/// rule that received a homogeneous JSON array: the elements were already
+/// joined with `','` (`parse_str_arr`, `Config.cpp:832-867`); the option's
+/// own deserialize semantics decide how the joined string binds — the
+/// `istringstream` numeric prefix for `coFloat`/`coInt`/`coPercent`/
+/// `coFloatOrPercent` (`Config.hpp:784-790`, `:975-981`, `:1189-1195`,
+/// `:1303-1310`), the first trimmed `','`-segment for `coBool`
+/// (`Config.hpp:1828-1850`), the whole string for `coString`
+/// (`Config.hpp:1106-1110`) and enums (whose joined string never matches an
+/// enum key, so `assign`'s `Config.cpp:657-676` default substitution takes
+/// over). Shared with the preset presence view via
+/// `json_deserialize::scalar` — one source, no generic first-token rule.
+fn array_joined_scalar<E>(source: &str, target: &str, value: String) -> Result<String, E>
+where
+    E: Error,
+{
+    let Some(definition) = registry::option_definition(target) else {
+        return Ok(value);
+    };
+    let token = crate::options::json_deserialize::scalar_token(definition.kind, value.as_str())
+        .map_err(|error| {
+            E::custom(format_args!(
+                "invalid legacy Orca project array option {source} for {target}: {error}"
+            ))
+        })?;
+    Ok(match token {
+        Cow::Borrowed("") => value,
+        token => token.into_owned(),
+    })
 }
 
 /// `Config.cpp:654-672`: a failed enum deserialization under the 3MF load
