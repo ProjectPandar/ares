@@ -100,22 +100,25 @@ pub(super) fn build(
     let mut starts = Vec::new();
     let mut flats = Vec::new();
     let mut ends = Vec::new();
-    let mut remaining = slope_length / scale;
-    let total_slope = remaining;
+    // `ExtrusionEntity.cpp:480-501`: keep remaining/path lengths in mm;
+    // convert only the split distance to scaled coordinates.
+    let mut remaining = slope_length;
     let mut ratio = start_ratio;
     let mut index = 0;
 
     while index < original.len() && remaining > 0.0 {
         let source = &original[index];
-        let length = path_length(&source.polyline.points);
-        let (slope_path, flat_path, consumed) = if length > remaining {
-            let (slope, flat) = split_path(source, remaining);
-            (slope, Some(flat), remaining)
+        let length = path_length(&source.polyline.points) * scale;
+        let (slope_path, flat_path, end_ratio) = if length > remaining {
+            let (slope, flat) = split_path(source, remaining / scale);
+            remaining = 0.0;
+            (slope, Some(flat), 1.0)
         } else {
-            (source.clone(), None, length)
+            remaining -= length;
+            let factor = remaining / slope_length;
+            let end_ratio = (1.0 - factor) * 1.0 + factor * start_ratio;
+            (source.clone(), None, end_ratio)
         };
-        remaining -= consumed;
-        let end_ratio = 1.0_f64 + (start_ratio - 1.0) * (remaining / total_slope);
         add_slope(
             slope_path,
             ratio,
