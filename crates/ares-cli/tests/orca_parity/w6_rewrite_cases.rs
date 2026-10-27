@@ -18,6 +18,9 @@ mod ironing_equivalent_span;
 #[path = "medial_endpoint_zero.rs"]
 mod medial_endpoint_zero;
 
+#[path = "mk4_curl_lifecycle.rs"]
+mod mk4_curl_lifecycle;
+
 #[path = "mesh_center_precision.rs"]
 mod mesh_center_precision;
 
