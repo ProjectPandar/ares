@@ -28,5 +28,7 @@ mod scarf_remaining_mm;
 mod scarf_role_speed;
 #[path = "seam_slope_travel.rs"]
 mod seam_slope_travel;
+#[path = "wall_direction_seam.rs"]
+mod wall_direction_seam;
 #[path = "zero_extrusion_comment.rs"]
 mod zero_extrusion_comment;
