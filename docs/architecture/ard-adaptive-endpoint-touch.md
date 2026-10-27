@@ -59,9 +59,8 @@ integer arithmetic reproduces the entire observed Native23-polyline vector.
 The earlier F4325 difference and XY4429 difference share layer12/Z2.6.
 These facts localize this witness; they are not universal Adaptive parity.
 
-External sealed PINPOINT:
-`/home/indexyz/ares-evidence/worker1/adaptivecubic40-pinpoint-fe346c6d6/PINPOINT.md`,
-seal SHA256 `3258961546c4173ec50530b7d9bb7c24fd8146342fea83fbe1118825c9ee11a8`.
+Sealed PINPOINT evidence is retained outside the repository,
+identified by SHA256 `3258961546c4173ec50530b7d9bb7c24fd8146342fea83fbe1118825c9ee11a8`.
 Native data remains external. The fixture is the unchanged input-only archive.
 
 ## Failure modes to guard before implementation
