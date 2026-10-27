@@ -116,8 +116,14 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         let mut speed = speed_for_distance(current.distance, &sections, original_speed)
             .min(speed_for_distance(next.distance, &sections, original_speed))
             .min(original_speed);
+        // `artificial_distance_to_curled_lines` starts at 0 per segment
+        // (`ExtrusionProcessor.hpp:379`) and is added to BOTH endpoint
+        // distances in the overlap (`hpp:455`) — it drives the overhang
+        // bridge fan toggles through `check_overhang_fan`, not just the
+        // curled speed floor.
+        let mut artificial = 0.0_f32;
         if let Some(curled) = curled_lines {
-            let artificial = curl::artificial_distance(
+            artificial = curl::artificial_distance(
                 curled,
                 [(current.x, current.y), (next.x, next.y)],
                 request.properties.width,
@@ -134,8 +140,8 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
             z: context.scale.unscale(scale_trunc(current.z, context.scale)),
             speed: f64::from(speed),
             overlap: f64::from(
-                (1.0_f32 - current.distance * width_inverse)
-                    .min(1.0_f32 - next.distance * width_inverse),
+                (1.0_f32 - (current.distance + artificial) * width_inverse)
+                    .min(1.0_f32 - (next.distance + artificial) * width_inverse),
             ),
         });
     }
