@@ -20,6 +20,8 @@ mod fan_verbose_text;
 mod processor_word_boundary;
 #[path = "project_settings_bool_wire.rs"]
 mod project_settings_bool_wire;
+#[path = "scarf_clip_end.rs"]
+mod scarf_clip_end;
 #[path = "scarf_remaining_mm.rs"]
 mod scarf_remaining_mm;
 #[path = "scarf_role_speed.rs"]
