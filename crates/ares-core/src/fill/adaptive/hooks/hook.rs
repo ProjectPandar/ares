@@ -41,7 +41,7 @@ pub(super) fn add_hook(joint: &mut Joint, working: &mut [Vec<Point>], params: &H
     .unwrap();
     let start = segment_line_intersection(
         params.source[joint.intersect_line],
-        create_offset_line(crossing.a, crossing.b, joint.left, params.offset),
+        create_offset_line(crossing.a, crossing.b, crossing, joint.left, params.offset),
     )
     .unwrap();
     let extension = params.length + 1.16 * params.trim;

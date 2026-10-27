@@ -24,6 +24,7 @@ pub(super) fn connect_pair(
     let anchor = create_offset_line(
         first.intersect_point,
         nearest.intersect_point,
+        source[first.closest_line],
         first.left,
         scaled_offset,
     );

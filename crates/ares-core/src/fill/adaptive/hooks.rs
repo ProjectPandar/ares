@@ -34,28 +34,24 @@ pub(super) struct Joint {
     pub(super) used: bool,
 }
 
-/// `FillAdaptive.cpp:642-657` — anchor line offset to the intersection's
-/// side (`perp(v) = (-v.y, v.x)`, `Point.hpp:119-122`) and extended by
-/// `1.16·offset` to guarantee collisions. All casts truncate, matching
-/// Eigen's `cast<coord_t>`.
-pub(super) fn create_offset_line(a: Point, b: Point, left: bool, offset: f64) -> Line {
-    let vx = (b.x() - a.x()) as f64;
-    let vy = (b.y() - a.y()) as f64;
-    let n = (vx * vx + vy * vy).sqrt();
-    let (vx, vy) = if n > 0.0 {
-        (vx / n, vy / n)
-    } else {
-        (1.0, 0.0)
-    };
-    // perp of the unit closest-line direction: (x, y) -> (-y, x).
-    let (px, py) = (-vy, vx);
-    let sign = if left { 1.0 } else { -1.0 };
-    let dx = (offset * sign * px) as i64;
-    let dy = (offset * sign * py) as i64;
+/// `FillAdaptive.cpp:641-647` — translate the offset line by
+/// `perp(closest_line.vector().cast<double>().normalized()) *
+/// (left ? offset : -offset)` cast to `coord_t` (`perp(v) = (-v.y, v.x)`,
+/// `Point.hpp:119-122`), then extend it by `1.16·offset` along its own
+/// direction. All casts truncate, matching Eigen's `cast<coord_t>`.
+pub(super) fn create_offset_line(
+    a: Point,
+    b: Point,
+    closest_line: Line,
+    left: bool,
+    offset: f64,
+) -> Line {
+    let (dx, dy) = translate_by_closest(closest_line, left, offset);
     let a = Point::new(a.x() + dx, a.y() + dy);
     let b = Point::new(b.x() + dx, b.y() + dy);
     // `Line::extend` (`Line.cpp:121-126`): integer offset first, then
-    // truncate the per-component products.
+    // truncate the per-component products along the offset line itself.
+    let (vx, vy) = eigen_normalized(b.x() - a.x(), b.y() - a.y());
     let extend = (offset * 1.16) as i64;
     let ex = (extend as f64 * vx) as i64;
     let ey = (extend as f64 * vy) as i64;
@@ -63,6 +59,33 @@ pub(super) fn create_offset_line(a: Point, b: Point, left: bool, offset: f64) ->
         Point::new(a.x() - ex, a.y() - ey),
         Point::new(b.x() + ex, b.y() + ey),
     )
+}
+
+/// The `create_offset_line` translate vector components
+/// (`FillAdaptive.cpp:643-644`).
+fn translate_by_closest(closest_line: Line, left: bool, offset: f64) -> (i64, i64) {
+    let (vx, vy) = eigen_normalized(
+        closest_line.b.x() - closest_line.a.x(),
+        closest_line.b.y() - closest_line.a.y(),
+    );
+    // perp of the unit closest-line direction: (x, y) -> (-y, x).
+    let sign = if left { 1.0 } else { -1.0 };
+    ((offset * sign * -vy) as i64, (offset * sign * vx) as i64)
+}
+
+/// `Eigen::MatrixBase::normalized()` (Eigen 5.0.1 `src/Core/Dot.h`):
+/// divide by `sqrt(squaredNorm())` only when the squared norm is positive;
+/// a zero vector is returned unchanged.
+fn eigen_normalized(x: i64, y: i64) -> (f64, f64) {
+    let vx = x as f64;
+    let vy = y as f64;
+    let squared_norm = vx * vx + vy * vy;
+    if squared_norm > 0.0 {
+        let norm = squared_norm.sqrt();
+        (vx / norm, vy / norm)
+    } else {
+        (vx, vy)
+    }
 }
 
 /// `FillAdaptive.cpp:801-1262`.
