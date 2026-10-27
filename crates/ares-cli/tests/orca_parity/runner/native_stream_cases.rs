@@ -18,6 +18,8 @@ mod fan_layer_tag;
 mod fan_reader_xyz;
 #[path = "fan_verbose_text.rs"]
 mod fan_verbose_text;
+#[path = "initial_travel_uint.rs"]
+mod initial_travel_uint;
 #[path = "processor_word_boundary.rs"]
 mod processor_word_boundary;
 #[path = "project_settings_bool_wire.rs"]
