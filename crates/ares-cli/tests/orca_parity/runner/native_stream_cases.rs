@@ -22,6 +22,8 @@ mod fan_reader_xyz;
 mod fan_verbose_text;
 #[path = "initial_travel_uint.rs"]
 mod initial_travel_uint;
+#[path = "mk4_layer_change.rs"]
+mod mk4_layer_change;
 #[path = "processor_m1020.rs"]
 mod processor_m1020;
 #[path = "processor_word_boundary.rs"]
