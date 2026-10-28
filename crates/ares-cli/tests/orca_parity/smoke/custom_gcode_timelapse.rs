@@ -70,7 +70,10 @@ fn orca_parity_custom_gcode_timelapse_overlay_mk4_matches_native() {
     );
     let diagnostic = b"Not a variable name";
     assert!(
-        native.stderr.windows(diagnostic.len()).any(|w| w == diagnostic),
+        native
+            .stderr
+            .windows(diagnostic.len())
+            .any(|w| w == diagnostic),
         "upstream rejects the lambda-only variable on the non-BBL path: {:?}",
         String::from_utf8_lossy(&native.stderr)
     );

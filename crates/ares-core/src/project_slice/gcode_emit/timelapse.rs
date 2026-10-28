@@ -29,12 +29,24 @@ pub(super) struct Context<'a> {
 /// spiral lift to the uncleared-position split (Qidi Q1 Pro emits a spiral
 /// at every layer change because its position stays clear through this
 /// render).
+/// The timelapse overlay split of the two upstream render sites: the
+/// non-BBL layer-start render (`GCode.cpp:4667-4674`) overlays only
+/// `layer_num`/`layer_z`/`max_layer_z`, while the `insert_timelapse_gcode`
+/// lambda (`:5162-5167`, BBL layer-start and traditional layer-end
+/// insert) additionally maps the physical extruder ids and the timelapse
+/// park position.
+#[derive(Clone, Copy, PartialEq)]
+enum Overlay {
+    LayerStart,
+    InsertLambda,
+}
+
 pub(super) fn append_untracked(
     output: &mut Vec<u8>,
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<(), SliceError> {
-    append(output, state, context)?;
+    append(output, state, context, Overlay::LayerStart)?;
     Ok(())
 }
 
@@ -49,7 +61,7 @@ pub(super) fn append_and_track(
     if let Some(labels) = &state.layer_object_labels {
         labels.append_start(output, context.layer.index + 1);
     }
-    if let Some(last_z) = append(output, state, context)? {
+    if let Some(last_z) = append(output, state, context, Overlay::InsertLambda)? {
         if let Some(z) = last_z {
             // `GCode.cpp:5173-5178`: the template's last Z is ADOPTED into
             // `m_pos(2)` — subsequent eager lifts target writer-domain
@@ -101,6 +113,7 @@ fn append(
         metadata,
         first_layer_bounds,
     }: Context<'_>,
+    overlay: Overlay,
 ) -> Result<Option<Option<f64>>, SliceError> {
     let runtime = &traversal.resolved.views.runtime_gcode;
     let source = &runtime.time_lapse_gcode.0;
@@ -132,16 +145,23 @@ fn append(
     }
     // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`,
     // `state.most_used_extruder`): the placeholder id is then
-    // `physical_extruder_map.get_at(most_used)` (`GCode.cpp:5162`).
-    let most_used = insert_physical_extruder_ids(&mut config, traversal, state.most_used_extruder);
-    let position = safe_position(traversal, most_used);
-    config.insert(
-        "has_timelapse_safe_pos",
-        value::Value::option_bool(position.is_some()),
-    );
-    let (x, y) = position.unwrap_or_default();
-    config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
-    config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
+    // `physical_extruder_map.get_at(most_used)` — but ONLY on the
+    // `insert_timelapse_gcode` lambda overlay (`GCode.cpp:5162-5167`);
+    // the non-BBL layer-start render (`:4667-4674`) overlays only
+    // layer_num/layer_z/max_layer_z, so those spellings stay unresolved
+    // variables there.
+    if overlay == Overlay::InsertLambda {
+        let most_used =
+            insert_physical_extruder_ids(&mut config, traversal, state.most_used_extruder);
+        let position = safe_position(traversal, most_used);
+        config.insert(
+            "has_timelapse_safe_pos",
+            value::Value::option_bool(position.is_some()),
+        );
+        let (x, y) = position.unwrap_or_default();
+        config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
+        config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
+    }
 
     // Write-back validation precedes emission; render or validation
     // failure emits only the inline report (`GCode.cpp:3920-3933`).
