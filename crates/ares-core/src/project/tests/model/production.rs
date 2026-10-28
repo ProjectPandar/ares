@@ -225,8 +225,14 @@ fn material_group_and_color_require_typed_attributes() {
 async fn bbs_painted_triangle_attributes_remain_fail_closed_through_load_and_slice() {
     const MODEL_PATH: &str = "3D/Objects/ksr_fdmtest_v4.drc_2.model";
     const FIRST_TRIANGLE: &str = r#"<triangle v1="2" v2="0" v3="1"/>"#;
-    const ERROR: &str =
-        "invalid project model XML: attribute namespace does not match its 3MF meaning";
+    // 1d8a9d088 consumes painted fuzzy-skin masks and fails closed on
+    // compositions whose compiled facet tree is absent: a lone
+    // `paint_fuzzy_skin` attribute with no painting data is rejected as a
+    // truncated tree. Native comparison on this exact construction
+    // (ksr_fdmtest_v4 with the attribute injected on the first triangle):
+    // orca-slicer 2.4.2 crashes with SIGSEGV and emits no diagnostic, so
+    // the fail-closed rejection below is strictly safer than upstream.
+    const ERROR: &str = "invalid project model XML: truncated support painting tree";
 
     for attribute in [r#"paint_fuzzy_skin="1""#] {
         let mut parts = ProjectParts::fixture();
