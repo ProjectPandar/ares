@@ -143,8 +143,11 @@ fn one_physical_extruder_map_broadcasts_to_all_logical_filaments() {
     assert_eq!(materialized.project.gcode.filament_map, ints(&[1, 1, 1]));
 }
 
+// OrcaSlicer.cpp:6029-6033: single-extruder printers reset every filament_count
+// prefix entry to 1 in the final assembled map; trailing entries are left as-is
+// and never validated here.
 #[test]
-fn one_extruder_one_variant_replaces_only_map_without_validation() {
+fn one_extruder_one_variant_normalizes_map_prefix_without_validation() {
     let mut source = one_extruder_source();
     source.printer.gcode.extruder_type.0.clear();
     source.project.gcode.nozzle_volume_type.0.clear();
@@ -160,7 +163,7 @@ fn one_extruder_one_variant_replaces_only_map_without_validation() {
 
     let materialized = materialize_project_variants_full(&source, &invalid_map).unwrap();
 
-    assert_eq!(materialized.project.gcode.filament_map, invalid_map);
+    assert_eq!(materialized.project.gcode.filament_map, ints(&[1, 99]));
     assert_eq!(source, original);
     assert_eq!(
         materialized.project.gcode.retraction_length,

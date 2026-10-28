@@ -42,8 +42,11 @@ async fn project_config_export_preserves_archive_error_precedence() {
     );
 }
 
+// OrcaSlicer.cpp:6029-6031: an empty filament_map is grown to the filament
+// count with 1s instead of being rejected, so export proceeds past
+// materialization and fails later at layer detection.
 #[tokio::test]
-async fn project_config_export_preserves_materialization_error_precedence() {
+async fn project_config_export_grows_empty_filament_map_before_failing_on_layers() {
     let mut parts = ProjectParts::valid();
     parts.replace(
         "Metadata/project_settings.config",
@@ -55,7 +58,7 @@ async fn project_config_export_preserves_materialization_error_precedence() {
         slice_project(parts.bytes(), metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
-        SliceError::InvalidInput("invalid Orca option filament_map".to_owned())
+        SliceError::InvalidInput("no layers were detected".to_owned())
     );
 }
 

@@ -55,15 +55,21 @@ fn task22a_nozzle_height_vectors_accept_singletons_for_many_extruders() {
     assert_eq!(validated.physical_extruder_count, 4);
 }
 
+// Raw-config boundary gate: maps shorter than the filament count are still
+// rejected here (the slice path grows them first per OrcaSlicer.cpp:
+// 6029-6031), while longer maps pass through untouched — the CLI assembly
+// only grows, never truncates.
 #[test]
-fn rejects_filament_map_length_mismatch() {
+fn rejects_short_but_accepts_longer_filament_map_at_raw_validation() {
     let project = valid_project();
-    for entries in [vec![OrcaInt(1)], vec![OrcaInt(1), OrcaInt(2), OrcaInt(1)]] {
-        let mut settings = valid_settings(2, 2);
-        settings.project.gcode.filament_map = OrcaInts(entries);
+    let mut settings = valid_settings(2, 2);
+    settings.project.gcode.filament_map = OrcaInts(vec![OrcaInt(1)]);
 
-        assert_invalid_key(validate(&settings, &project), "filament_map");
-    }
+    assert_invalid_key(validate(&settings, &project), "filament_map");
+
+    settings.project.gcode.filament_map = OrcaInts(vec![OrcaInt(1), OrcaInt(2), OrcaInt(1)]);
+
+    assert!(validate(&settings, &project).is_ok());
 }
 
 #[test]

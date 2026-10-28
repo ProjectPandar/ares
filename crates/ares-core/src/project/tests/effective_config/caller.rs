@@ -2,8 +2,11 @@ use crate::{GenerationMetadata, SliceError, load_project, slice_project};
 
 use super::support::ProjectParts;
 
+// OrcaSlicer.cpp:6029-6031: an empty filament_map is grown to the filament
+// count with 1s instead of being rejected, so slicing proceeds past
+// materialization and fails later at layer detection.
 #[tokio::test]
-async fn slice_project_reports_materialized_cardinality_before_incomplete() {
+async fn slice_project_grows_empty_filament_map_before_failing_on_layers() {
     let mut parts = ProjectParts::valid();
     parts.replace(
         "Metadata/project_settings.config",
@@ -17,7 +20,7 @@ async fn slice_project_reports_materialized_cardinality_before_incomplete() {
         slice_project(bytes, metadata(), crate::SlicerContext::new(0))
             .await
             .unwrap_err(),
-        SliceError::InvalidInput("invalid Orca option filament_map".to_owned())
+        SliceError::InvalidInput("no layers were detected".to_owned())
     );
 }
 
