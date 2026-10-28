@@ -182,6 +182,32 @@ impl OrcaRunner {
         })
     }
 
+    /// Wraps an authored `.3mf` fixture for the slice reference stages
+    /// (custom-G-code witness fixtures).
+    pub(crate) fn fixture_case(
+        &self,
+        label: &str,
+        project: Vec<u8>,
+    ) -> Result<ExportedCase, StageError> {
+        let directory = tempfile::Builder::new()
+            .prefix("fixture-case-")
+            .tempdir_in(crate::artifacts::root_from_env().map_err(|error| {
+                io(Stage::Export, error)
+            })?)
+            .map_err(|error| io(Stage::Export, error))?
+            .keep();
+        let project_path = directory.join("input.3mf");
+        fs::write(&project_path, &project).map_err(|error| io(Stage::Export, error))?;
+        let output_dir = directory.join("native");
+        fs::create_dir_all(&output_dir).map_err(|error| io(Stage::Export, error))?;
+        Ok(ExportedCase {
+            label: label.to_owned(),
+            project,
+            project_path,
+            output_dir,
+        })
+    }
+
     pub(crate) fn slice_case(&self, exported: &ExportedCase) -> Result<ParityCase, StageError> {
         self.cached_slice(exported, false)
     }
