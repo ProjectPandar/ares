@@ -147,7 +147,15 @@ fn task22o74_exact_four_millimeter_sections_remain_long() {
         )
     );
     assert_eq!(grouped.surface_fills[0].expolygons, [rectangle]);
-    assert!(grouped.surface_fills[0].params.fixed_angle);
+    // Upstream FillAlignedRectilinear pins the angle by overriding
+    // _layer_angle to a constant 0 (FillRectilinear.hpp:44-46, "Always
+    // generate infill at the same angle") — it never touches the base
+    // Fill::fixed_angle flag (the default _layer_angle,
+    // FillBase.hpp:211). The projected params therefore leave fixed_angle
+    // at whatever the surface role produced (false here); the aligned
+    // no-alternation is carried by layer_angle_fixed at fill time
+    // (2c6af2e12, FillBase.cpp:311-312 alternation gate).
+    assert!(!grouped.surface_fills[0].params.fixed_angle);
     combine_infill::dispose(graph);
 }
 
