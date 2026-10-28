@@ -94,11 +94,7 @@ fn assert_rejection_matches_native(case: &str) {
         format!("{:?}\n", output.status.code()),
     )
     .unwrap();
-    assert_eq!(
-        output.status.code(),
-        Some(156),
-        "{case}: {artifacts:?}"
-    );
+    assert_eq!(output.status.code(), Some(156), "{case}: {artifacts:?}");
     assert_eq!(output.stdout, native.stdout);
     assert_eq!(
         output.stderr, native.stderr,
