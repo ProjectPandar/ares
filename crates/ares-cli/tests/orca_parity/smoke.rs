@@ -23,6 +23,8 @@ mod custom_gcode_functions;
 mod custom_gcode_unknown_function;
 #[path = "smoke/custom_gcode_vector_scalar.rs"]
 mod custom_gcode_vector_scalar;
+#[path = "smoke/custom_gcode_timelapse.rs"]
+mod custom_gcode_timelapse;
 
 /// Focused re-check of the nearest-seam / layer-1 deposition cluster
 /// after seam-placement changes (env-gated, prints outcomes).
