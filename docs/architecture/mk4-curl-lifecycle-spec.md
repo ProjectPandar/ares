@@ -3,8 +3,9 @@
 Status: **APPROVED by the coordinator; implemented by the RED/GREEN slice
 on this branch.** Base `6876ad70cc2e8d68b86bb7220124a6b27be775aa`.
 
-Originating evidence: W6 MK4 `make_overhang_printable=1` PINPOINT-FINAL —
-`/home/indexyz/ares-evidence/w6-overhang-remaining-tip6876-n8k4/PINPOINT-FINAL-mk4-make-overhang-printable.md`
+Originating evidence: MK4 `make_overhang_printable=1` PINPOINT-FINAL —
+the worker-lane evidence receipt
+`PINPOINT-FINAL-mk4-make-overhang-printable.md`
 (SHA256 `ef6b4b2fc5752bbece5fdcd02a2f347d5fd7b1477f12848d23f6196ad64ec107`).
 This is a source-cited rewrite slice of `libslic3r`; it replaces Ares
 scaffolding around an upstream concept and creates no Ares-owned pipeline.
@@ -190,7 +191,7 @@ tuning.
    fresh seeded) plus API==CLI raw equality, existing curl/overhang controls,
    `cargo nextest run` scoped core suite, fmt, clippy, LOC<400 module split.
 3. Evidence: artifacts + receipts under a new evidence dir; Native outputs
-   never committed; shared `ARES_ORCA_CACHE_DIR=/home/indexyz/ares-coord/orca-cache`
+   never committed; a shared Orca cache directory via `ARES_ORCA_CACHE_DIR`
    with `ARES_REQUIRE_ORCA=1`; CPU15/threads1/jobs1.
 4. Exit criteria: whole-stream NULL vs Native on the witness (or an explicitly
    re-localized next first difference reported, not masked); no regression on
