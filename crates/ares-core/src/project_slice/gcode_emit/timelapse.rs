@@ -20,15 +20,6 @@ pub(super) struct Context<'a> {
     pub(super) first_layer_bounds: Option<footprint::FirstLayerBounds>,
 }
 
-/// The non-BBL layer-start render (`GCode.cpp:4667-4675`): emits the
-/// timelapse template directly after `change_layer` WITHOUT the
-/// `set_current_position_clear(false)` / `get_last_z_from_gcode` bookkeeping
-/// — those live only in the `insert_timelapse_gcode` lambda
-/// (`GCode.cpp:5171-5178`) used by the layer-end traditional insert and the
-/// BBL layer-start insert. Clearing here would wrongly downgrade a deferred
-/// spiral lift to the uncleared-position split (Qidi Q1 Pro emits a spiral
-/// at every layer change because its position stays clear through this
-/// render).
 /// The timelapse overlay split of the two upstream render sites: the
 /// non-BBL layer-start render (`GCode.cpp:4667-4674`) overlays only
 /// `layer_num`/`layer_z`/`max_layer_z`, while the `insert_timelapse_gcode`
@@ -41,6 +32,15 @@ enum Overlay {
     InsertLambda,
 }
 
+/// The non-BBL layer-start render (`GCode.cpp:4667-4675`): emits the
+/// timelapse template directly after `change_layer` WITHOUT the
+/// `set_current_position_clear(false)` / `get_last_z_from_gcode` bookkeeping
+/// — those live only in the `insert_timelapse_gcode` lambda
+/// (`GCode.cpp:5171-5178`) used by the layer-end traditional insert and the
+/// BBL layer-start insert. Clearing here would wrongly downgrade a deferred
+/// spiral lift to the uncleared-position split (Qidi Q1 Pro emits a spiral
+/// at every layer change because its position stays clear through this
+/// render).
 pub(super) fn append_untracked(
     output: &mut Vec<u8>,
     state: &mut super::motion::EmitState,
