@@ -102,18 +102,29 @@ impl Clipper {
             return;
         }
         if self.z_fill_width {
-            // PerimeterGenerator.cpp:283–303: select the subject edge and
-            // truncate the width delta before adding its bottom width.
+            // PerimeterGenerator.cpp:299-301: the interpolation parameter
+            // comes from Eigen 3D squaredNorm over (x, y, z) — the width
+            // delta enters the edge length, and the not-yet-set intersection
+            // z (= 0) enters the distance, so t is not the geometric
+            // fraction and may exceed 1.
             let (start, end) = if first.bottom.z <= 0 && first.top.z <= 0 {
                 (second.bottom, second.top)
             } else {
                 (first.bottom, first.top)
             };
-            let dx = (end.x() - start.x()) as f64;
-            let dy = (end.y() - start.y()) as f64;
-            let px = (point.x() - start.x()) as f64;
-            let py = (point.y() - start.y()) as f64;
-            let t = ((px * px + py * py) / (dx * dx + dy * dy)).sqrt();
+            let length_sqr = {
+                let dx = (end.x() - start.x()) as f64;
+                let dy = (end.y() - start.y()) as f64;
+                let dz = (end.z - start.z) as f64;
+                dx * dx + dy * dy + dz * dz
+            };
+            let dist_sqr = {
+                let px = (point.x() - start.x()) as f64;
+                let py = (point.y() - start.y()) as f64;
+                let pz = (0 - start.z) as f64;
+                px * px + py * py + pz * pz
+            };
+            let t = (dist_sqr / length_sqr).sqrt();
             point.z = start.z + ((end.z - start.z) as f64 * t) as i64;
             return;
         }
