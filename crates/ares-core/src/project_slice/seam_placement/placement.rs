@@ -127,7 +127,10 @@ fn place_loop(
                 .1
                 .mul_add(displacement.1, displacement.2 * displacement.2),
         );
-        if displacement_squared < depth && angle < -f32::EPSILON {
+        // `local_ccw_angle < -EPSILON` — upstream EPSILON is the shared
+        // `1e-4` double literal (`libslic3r.h:52`), compared with the
+        // float promoted to double (`SeamPlacer.cpp:1581`).
+        if displacement_squared < depth && f64::from(angle) < -1e-4 {
             let previous = placement.previous.position;
             let next = placement.next.position;
             let to_previous = normalized((selected.x - previous.x, selected.y - previous.y));
