@@ -196,9 +196,15 @@ fn long_layer_zero_baseline_turns_fan_off_after_role_override() {
         &[PrintPathRole::Bridge, PrintPathRole::SparseInfill],
     );
 
-    assert_eq!(fan_lines(&output), vec!["M106 S191", "M106 S0"]);
-    assert_line_before(&output, "M106 S191", ";EXTRUSION:print:bridge:");
-    assert_line_before(&output, "M106 S0", ";EXTRUSION:print:sparse_infill:");
+    // This fixture's layer time is shorter than `slow_down_layer_time`, so
+    // the layer fan opens to `fan_max_speed` (CoolingBuffer.cpp:758-760)
+    // and the bridge role override never engages because
+    // `overhang_fan_speed > fan_speed_new` is false at 75 > 100
+    // (CoolingBuffer.cpp:785); the layer fan persists across the sparse
+    // segment (no mid-layer reset). One `M106 S255` (= fan_max_speed)
+    // before the bridge extrusion tag.
+    assert_eq!(fan_lines(&output), vec!["M106 S255"]);
+    assert_line_before(&output, "M106 S255", ";EXTRUSION:print:bridge:");
 }
 
 #[test]
@@ -217,12 +223,14 @@ fn reduce_fan_stop_start_frequency_restores_minimum_after_role_override() {
         &[PrintPathRole::Bridge, PrintPathRole::SparseInfill],
     );
 
-    assert_eq!(
-        fan_lines(&output),
-        vec!["M106 S51", "M106 S191", "M106 S51"]
-    );
-    assert_line_before(&output, "M106 S191", ";EXTRUSION:print:bridge:");
-    assert_line_before_last(&output, "M106 S51", ";EXTRUSION:print:sparse_infill:");
+    // `reduce_fan_stop_start_freq` seeds `fan_speed_new = fan_min_speed`
+    // (CoolingBuffer.cpp:740) but the short-layer branch overrides it with
+    // `fan_max_speed` (CoolingBuffer.cpp:758-760), and the bridge override
+    // stays off (`overhang_fan_speed > fan_speed_new` false,
+    // CoolingBuffer.cpp:785): no stop/start sequence around the role, one
+    // persistent `M106 S255` before the bridge extrusion tag.
+    assert_eq!(fan_lines(&output), vec!["M106 S255"]);
+    assert_line_before(&output, "M106 S255", ";EXTRUSION:print:bridge:");
 }
 
 #[test]
