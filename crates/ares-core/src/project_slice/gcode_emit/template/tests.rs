@@ -31,13 +31,15 @@ fn renderer_distinguishes_option_and_expression_booleans() {
     config.insert("disabled", super::super::value::Value::option_bool(false));
 
     assert_eq!(
-        render(
-            "[enabled] [disabled] {enabled} {disabled} {enabled == 1}",
-            &mut config,
-        )
-        .unwrap(),
-        "1 0 true false true"
+        render("[enabled] [disabled] {enabled} {disabled}", &mut config).unwrap(),
+        "1 0 true false"
     );
+    // Option bools stay bools in expression context, and compare_op only
+    // accepts bool==bool, numeric==numeric, or a string side — bool == int
+    // falls into the reject branch (PlaceholderParser.cpp:581-593,
+    // "*Cannot compare the types.").
+    let error = render("{enabled == 1}", &mut config).unwrap_err();
+    assert!(error.contains("Cannot compare the types"), "{error}");
 }
 
 #[test]
