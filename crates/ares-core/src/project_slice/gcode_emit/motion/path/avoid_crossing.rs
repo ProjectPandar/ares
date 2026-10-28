@@ -29,8 +29,8 @@ pub(super) struct Request<'a> {
     pub(super) offset: (f64, f64),
     /// `gcodegen.origin()` — the planning origin `set_origin(unscale(
     /// instance.shift))` maintains (`GCode.cpp:5385`), i.e. `state.origin`;
-    // the emission `offset` minus the extruder offset. Only the external
-    // planner consumes it (`AvoidCrossingPerimeters.cpp:1237-1240`).
+    /// the emission `offset` minus the extruder offset. Only the external
+    /// planner consumes it (`AvoidCrossingPerimeters.cpp:1237-1240`).
     pub(super) origin: (f64, f64),
     /// `m_use_external_mp_once` — route along the chunk-wide hole boundary
     /// (`AvoidCrossingPerimeters.cpp:1553-1556`).

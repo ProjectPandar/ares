@@ -94,12 +94,18 @@ impl Boundary {
             min = Point::new(min.x().min(point.x()), min.y().min(point.y()));
             max = Point::new(max.x().max(point.x()), max.y().max(point.y()));
         }
-        // `init_boundary(boundary, polygons, merge_points)` pads by the bbox
-        // radius so travel endpoints outside the contours stay in the grid
-        // (`AvoidCrossingPerimeters.cpp:1216-1229`); `SCALED_EPSILON`
+        // `init_boundary(boundary, polygons, merge_points)` pads by the
+        // bbox radius so travel endpoints outside the contours stay in the
+        // grid (`AvoidCrossingPerimeters.cpp:1216-1229`); `SCALED_EPSILON`
         // padding lost later travels whose start left the grid.
-        let radius =
-            (((max.x() - min.x()) as f64).hypot((max.y() - min.y()) as f64) / 2.0) as Coord;
+        // `radius() = 0.5 * (max - min).cast<double>().norm()` and
+        // `Point(double, double)` rounds each coordinate
+        // (`BoundingBox.cpp:189-209`, `Point.hpp:196`), so the pad is
+        // `round(0.5 * sqrt(dx*dx + dy*dy))`; `f64::round` rounds half
+        // away from zero exactly like `std::round`.
+        let dx = (max.x() - min.x()) as f64;
+        let dy = (max.y() - min.y()) as f64;
+        let radius = (0.5 * (dx * dx + dy * dy).sqrt()).round() as Coord;
         let padded_min = Point::new(
             min.x().saturating_sub(radius),
             min.y().saturating_sub(radius),
@@ -209,8 +215,14 @@ impl Boundary {
         // `init_boundary(boundary, polygons, merge_points)` pads the bounds by
         // the bbox radius so travel endpoints outside the contours stay in
         // the grid (`AvoidCrossingPerimeters.cpp:1216-1229`).
-        let radius =
-            (((max.x() - min.x()) as f64).hypot((max.y() - min.y()) as f64) / 2.0) as Coord;
+        // `radius() = 0.5 * (max - min).cast<double>().norm()` and
+        // `Point(double, double)` rounds each coordinate
+        // (`BoundingBox.cpp:189-209`, `Point.hpp:196`), so the pad is
+        // `round(0.5 * sqrt(dx*dx + dy*dy))`; `f64::round` rounds half
+        // away from zero exactly like `std::round`.
+        let dx = (max.x() - min.x()) as f64;
+        let dy = (max.y() - min.y()) as f64;
+        let radius = (0.5 * (dx * dx + dy * dy).sqrt()).round() as Coord;
         let padded_min = Point::new(
             min.x().saturating_sub(radius),
             min.y().saturating_sub(radius),
