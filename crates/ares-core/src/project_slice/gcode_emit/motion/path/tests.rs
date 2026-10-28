@@ -152,6 +152,12 @@ fn plate_loops_unscale_after_integer_translation() {
                 origin: (110.0, 110.0),
                 offset: (110.0, 110.0 - extruder_y),
                 extruder_offset: (0.0, extruder_y),
+                // The emission path multiplies the brim role flow by the
+                // current object ratio (`GCode.cpp:6479-6480`, applied from
+                // the object config at `apply_object_config` with the
+                // default `brim_flow_ratio: 1.0`); a bare `EmitState`
+                // default carries 0.0 and would zero out brim extrusion.
+                current_brim_flow_ratio: 1.0,
                 scale_factor: 1e-6,
                 options: MotionOptions {
                     filament_flow_ratio: 1.0,
