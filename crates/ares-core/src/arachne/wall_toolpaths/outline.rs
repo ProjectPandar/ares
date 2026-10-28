@@ -22,6 +22,7 @@ pub(super) fn prepare(
     }
     let allowed_distance = config.wall_maximum_deviation;
     let epsilon_offset = allowed_distance / 2 - 1;
+    // `WallToolPaths.cpp:495`: offset(offset(offset(outline, -eps), 2*eps), -eps).
     let contracted = offset_paths(&normalized, -(epsilon_offset as f32), JoinType::Miter, 3.0)?;
     let expanded = offset_paths(
         &contracted,
@@ -32,6 +33,10 @@ pub(super) fn prepare(
     let restored = offset_paths(&expanded, -(epsilon_offset as f32), JoinType::Miter, 3.0)?;
     let maximum_resolution = config.wall_maximum_resolution;
     let maximum_deviation = config.wall_maximum_deviation;
+    // `WallToolPaths.cpp:496`: simplify + `:497-502`: fixSelfIntersections /
+    // removeDegenerateVerts / removeColinearEdges(0.005), repeated after the
+    // collinear pass; the even-odd union resolves the self-intersections the
+    // way `fixSelfIntersections` (`:497`,`:501`) does.
     let mut simplified = restored
         .into_iter()
         .filter_map(normalize_polygon)
@@ -49,12 +54,56 @@ pub(super) fn prepare(
         .into_iter()
         .filter_map(clean_degenerate_and_collinear)
         .collect();
-    let minimum_area = (config.outer_spacing / 2) as f64;
+    // `WallToolPaths.cpp:503`: removeSmallAreas(prepared_outline, small_area_length *
+    // small_area_length, false), with small_area_length = bead_width_0 / 2
+    // (`WallToolPaths.cpp:80`).
+    let small_area_length = config.outer_spacing as f64 / 2.0;
+    remove_small_areas(&mut simplified, small_area_length * small_area_length);
+    // `WallToolPaths.cpp:509`: prepared_outline = union_(prepared_outline).
     Ok(union_polygons_paths(&simplified)?
         .into_iter()
         .filter_map(normalize_polygon)
-        .filter(|polygon| polygon.area().abs() > minimum_area * minimum_area)
         .collect())
+}
+
+/// `WallToolPaths.cpp:353-404::removeSmallAreas` with `remove_holes = false`:
+/// small outlines are swapped to the tail and truncated; small holes stay in
+/// place, and the tail-removal loop (`:393-402`) truncates one kept element per
+/// hole whose first point lies inside a removed outline (the move writes back
+/// into `small_holes`, so only the truncation takes effect).
+fn remove_small_areas(thiss: &mut Vec<Polygon>, min_area_size: f64) {
+    let mut new_end = thiss.len();
+    let mut small_holes: Vec<Polygon> = Vec::new();
+    let mut index = 0;
+    while index < new_end {
+        let area = thiss[index].area();
+        if area.abs() < min_area_size {
+            if area >= 0.0 {
+                new_end -= 1;
+                if index < new_end {
+                    thiss.swap(index, new_end);
+                    continue;
+                } else {
+                    break;
+                }
+            } else {
+                small_holes.push(thiss[index].clone());
+            }
+        }
+        index += 1;
+    }
+    let removed_outlines_start = new_end;
+    for hole_index in (0..small_holes.len()).rev() {
+        for outline_index in removed_outlines_start..thiss.len() {
+            let first_point = small_holes[hole_index].points()[0];
+            if thiss[outline_index].contains(&first_point) {
+                new_end -= 1;
+                small_holes[hole_index] = thiss[new_end].clone();
+                break;
+            }
+        }
+    }
+    thiss.truncate(new_end);
 }
 
 fn normalize_polygon(polygon: Polygon) -> Option<Polygon> {
