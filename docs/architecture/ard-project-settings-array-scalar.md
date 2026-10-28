@@ -1,6 +1,6 @@
 # Project-settings array-valued scalar — approved Rust rewrite slice
 
-Chain: `w1/supportcubic40-create-offset-line` on RED parent
+Source RED parent:
 `1f784dbae58dd1f27c51c688e68176a85623dbe9` (main=aecea85be lineage).
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Status: COORD approved chained RED→GREEN after the sealed read-only PINPOINT
