@@ -6,6 +6,15 @@ use crate::runner::native_stream_case::check;
 
 #[test]
 fn orca_parity_seam_position_random_concave_epsilon_matches_complete_output() {
+    // Seeded-only oracle: two official replays of the single-object KSR
+    // project disagree on the uninitialized `; printing object` id, so
+    // `native_stream_case::qualify` would panic with Native
+    // nondeterminism in official mode (same qualification as
+    // `initialized_object_id.rs`).
+    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
+        crate::native_environment::skipped("seeded-only reference");
+        return;
+    }
     check(
         (
             "seam-position-random",
