@@ -151,7 +151,10 @@ fn place_loop(
         } else {
             // Convex corner: the perpendicular depth, not the distance to
             // the nearest point (upstream place_loop, SeamPlacer.cpp:1594).
-            depth *= (angle * 0.5).cos() / 1.4142;
+            // `depth * beta_angle / 1.4142` multiplies in f32, promotes the
+            // product to double for the division by the `1.4142` double
+            // literal, then narrows back to float.
+            depth = (f64::from(depth * (angle * 0.5).cos()) / 1.4142) as f32;
         }
         seam = (projection.x, projection.y);
         // Stagger inner seams inside the placement pass — upstream walks the
