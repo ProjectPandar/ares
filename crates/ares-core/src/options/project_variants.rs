@@ -8,7 +8,7 @@ pub(crate) use index::get_index_for_extruder;
 
 use crate::{
     SliceError,
-    options::{OrcaInts, ProjectSettings, project_config_views::ProjectConfigViews},
+    options::{OrcaInt, OrcaInts, ProjectSettings, project_config_views::ProjectConfigViews},
 };
 
 pub(crate) struct MaterializedProjectVariants {
@@ -77,11 +77,12 @@ pub(crate) fn refresh_filament_map(
 
 fn expanded_filament_map(source: &ProjectSettings, map: &OrcaInts) -> OrcaInts {
     let mut expanded = map.clone();
-    if expanded.0.len() == 1 {
-        expanded.0.resize(
-            source.filament.gcode.filament_diameter.0.len(),
-            expanded.0[0],
-        );
+    let filament_count = source.filament.gcode.filament_diameter.0.len();
+    if expanded.0.len() < filament_count {
+        expanded.0.resize(filament_count, OrcaInt(1));
+    }
+    if source.project.print.nozzle_diameter.0.len() == 1 {
+        expanded.0[..filament_count].fill(OrcaInt(1));
     }
     expanded
 }

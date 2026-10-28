@@ -26,7 +26,7 @@ pub(super) fn validate(
     }
 
     let filament_map = &settings.project.gcode.filament_map.0;
-    if filament_map.len() != logical_filament_count
+    if filament_map.len() < logical_filament_count
         || filament_map
             .iter()
             .any(|entry| entry.0 <= 0 || entry.0 as usize > physical_extruder_count)

@@ -39,7 +39,10 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             &used,
             is_bbl,
         );
-        if changed {
+        if changed
+            || traversal.resolved.applied_filament_map
+                != traversal.resolved.views.full.project.gcode.filament_map
+        {
             // Print.cpp:3166-3200 refreshes from the PrintApply.cpp:1165-1172 checkpoint.
             traversal.resolved.views = refresh_filament_map(
                 &traversal.resolved.filament_variant_checkpoint,
