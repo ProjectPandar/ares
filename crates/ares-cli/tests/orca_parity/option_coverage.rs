@@ -44,6 +44,9 @@ mod semm_ramming;
 #[path = "option_coverage/seam_position_random.rs"]
 mod seam_position_random;
 
+#[path = "option_coverage/staggered_inner_seams.rs"]
+mod staggered_inner_seams;
+
 #[path = "option_coverage/nozzle_dataset.rs"]
 mod nozzle_dataset;
 
