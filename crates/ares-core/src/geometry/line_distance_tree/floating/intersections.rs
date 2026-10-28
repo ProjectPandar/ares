@@ -43,7 +43,8 @@ fn visit<F: NativeFloat>(
             }
         }
         NodeKind::Inner => {
-            // `BoundingBox::intersects` is strict on every axis.
+            // `Eigen::AlignedBox::intersects` is inclusive on every axis
+            // (`min <= other.max && max >= other.min`).
             for child in [index * 2 + 1, index * 2 + 2] {
                 if intersects(tree.nodes[child].bounds, line_bounds) {
                     visit(tree, child, line, line_bounds, hits);
@@ -61,7 +62,7 @@ fn bounds_over<F: NativeFloat>(line: [[F; 2]; 2]) -> Bounds<F> {
 }
 
 fn intersects<F: NativeFloat>(left: Bounds<F>, right: Bounds<F>) -> bool {
-    (0..2).all(|axis| left.min[axis] < right.max[axis] && left.max[axis] > right.min[axis])
+    (0..2).all(|axis| left.min[axis] <= right.max[axis] && left.max[axis] >= right.min[axis])
 }
 
 fn squared_distance_from_start<F: NativeFloat>(line: [[F; 2]; 2], point: [F; 2]) -> F {
