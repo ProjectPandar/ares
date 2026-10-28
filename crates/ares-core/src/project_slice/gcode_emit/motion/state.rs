@@ -265,25 +265,6 @@ pub(in crate::project_slice::gcode_emit) struct AvoidCrossingGeometry<'a> {
 }
 
 impl EmitState {
-    pub(in crate::project_slice::gcode_emit) fn extrusion_totals(
-        &self,
-    ) -> crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
-        let used_filament = if self.options.single_extruder_multi_material {
-            self.extruder.filament_used
-        } else {
-            self.extruder.filament_used + self.extruder.retracted_amount
-        };
-        crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
-            // GCode.cpp:1675-1690: the template totals use the typed
-            // per-extruder cross-section (`Extruder::filament_crossection`,
-            // carried as the typed `MotionOptions::filament_area`) and
-            // density; `GCode.cpp:1686` weighs `v * density * 0.001`.
-            crossection: self.options.filament_area,
-            density: self.options.filament_density,
-            used_filament,
-        }
-    }
-
     /// Track an emitted Z coordinate: `writer_z` mirrors
     /// `GCodeWriter::m_pos(2)` (`GCodeWriter.cpp`) — every emitted move
     /// carrying a Z word (lifts, descends, scarf/spiral Z-in-extrusion,

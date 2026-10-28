@@ -50,12 +50,6 @@ fn max_additional_fan(traversal: &PreparedPostClassicTraversal) -> f64 {
 mod startup;
 pub(super) use startup::append_print_preamble;
 
-pub(super) struct ExtrusionTotals {
-    pub(super) crossection: f64,
-    pub(super) density: f64,
-    pub(super) used_filament: f64,
-}
-
 pub(super) struct LayerTemplateContext<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) layer_index: usize,
@@ -64,7 +58,6 @@ pub(super) struct LayerTemplateContext<'a> {
     /// writer z (`print_z + z_offset`) — layers ascend, so this equals
     /// the current layer's offset z.
     pub(super) max_layer_z: f64,
-    pub(super) totals: ExtrusionTotals,
     pub(super) context: &'a LayerChangeTemplate,
 }
 
@@ -80,7 +73,6 @@ pub(super) fn append_before_layer_change_gcode(
         layer_index,
         layer_z,
         max_layer_z,
-        totals,
         context,
     } = template_context;
     let template = traversal
@@ -109,15 +101,6 @@ pub(super) fn append_before_layer_change_gcode(
     super::motion::refresh_writer_state(&mut config, state);
     config.insert("layer_num", value::Value::number(layer_index as f64));
     config.insert("layer_z", value::Value::number(layer_z));
-    // Orca's extruded_volume_total is `Extruder::extruded_volume()` =
-    // `filament_crossection() * extruded` — the writer's cumulative
-    // extrusion, not a G-code re-scan that would include template output.
-    let volume = totals.used_filament * totals.crossection;
-    config.insert("extruded_volume_total", value::Value::number(volume));
-    config.insert(
-        "extruded_weight_total",
-        value::Value::number(volume * totals.density * 0.001),
-    );
     config.insert("max_layer_z", value::Value::number(max_layer_z));
     // Render or write-back failure both reduce to the inline report —
     // the processed text is discarded (`GCode.cpp:3920-3933` returns the
@@ -164,7 +147,6 @@ pub(super) fn append_layer_change(
         layer_index,
         layer_z,
         max_layer_z: _,
-        totals,
         context,
     } = template_context;
     let template = &traversal.resolved.views.runtime_gcode.layer_change_gcode.0;
@@ -211,16 +193,6 @@ pub(super) fn append_layer_change(
         config.insert(
             "most_used_physical_extruder_id",
             value::Value::number(most_used_physical_extruder_id as f64),
-        );
-        // The upstream parser exposes the running extrusion totals to the
-        // layer-change template as well (`GCode.cpp:1652, 1689`); they are
-        // re-scanned from the emitted G-code, which is the accumulated
-        // extrusion of every layer printed so far.
-        let volume = totals.used_filament * totals.crossection;
-        config.insert("extruded_volume_total", value::Value::number(volume));
-        config.insert(
-            "extruded_weight_total",
-            value::Value::number(volume * totals.density * 0.001),
         );
         // Render or write-back failure both produce only the inline
         // report (`GCode.cpp:3920-3933`).

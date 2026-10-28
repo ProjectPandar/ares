@@ -158,7 +158,6 @@ pub(super) fn append<'a>(
             // `{max_layer_z}` = `m_max_layer_z` — float-domain running
             // max over raw print z (`GCode.cpp:4638`), not `layer_z`.
             max_layer_z: f64::from(state.max_layer_z),
-            totals: state.extrusion_totals(),
             context: layer_change_template,
         },
     )?;
@@ -269,7 +268,6 @@ pub(super) fn append<'a>(
             layer_index,
             layer_z,
             max_layer_z: f64::from(state.max_layer_z),
-            totals: state.extrusion_totals(),
             context: layer_change_template,
         },
     )?;
