@@ -1,4 +1,6 @@
 //! `GCode.cpp:594–710`: shorter squared-length route around the tower bbox.
+//! The polyline points are `Point`s (grid ints) that `GCode.cpp:1034-1046`
+//! feeds straight into `travel_to(p)` — never rescaled through `f32`.
 use super::super::super::{motion, timelapse};
 use super::super::postprocess;
 use crate::geometry::CoordinateScale;
@@ -10,7 +12,7 @@ pub(super) fn path(
     state: &motion::EmitState,
     context: timelapse::Context<'_>,
     scale: CoordinateScale,
-) -> Vec<[f32; 2]> {
+) -> Vec<Point> {
     let mut start = [0.0_f32; 2];
     // GCodeProcessor.cpp:3021: complete motion lines and first X/Y word.
     for line in source
@@ -99,11 +101,12 @@ pub(super) fn path(
             bed_max[a] = bed_max[a].max(p[a]);
         }
     }
+    let end_local = local(end);
     if points
         .iter()
         .any(|p| (0..2).any(|a| p[a] <= bed_min[a] || p[a] >= bed_max[a]))
     {
-        return vec![end];
+        return vec![end_local];
     }
     // GCode.cpp:1013,8138: parsed G-code is in nozzle coordinates, unlike
     // tower points. gcode_to_point adds the active nozzle offset and truncates.
@@ -111,7 +114,6 @@ pub(super) fn path(
         ((f64::from(start[0]) - state.origin.0 + state.extruder_offset.0) / scale.factor()) as i64,
         ((f64::from(start[1]) - state.origin.1 + state.extruder_offset.1) / scale.factor()) as i64,
     ];
-    let end_local = local(end);
     let direction = if (end_local[0] - low[0]).abs() < (high[0] - low[0]) / 2 {
         -1.0
     } else {
@@ -145,7 +147,7 @@ pub(super) fn path(
         )
         .map(|p| (i, p))
     }) else {
-        return vec![end];
+        return vec![end_local];
     };
     let a = mm(start);
     let b = mm(hit);
@@ -191,12 +193,5 @@ pub(super) fn path(
         vec![hit]
     };
     path.push(end_local);
-    path.into_iter()
-        .map(|p| {
-            [
-                (scale.unscale(p[0]) + state.origin.0) as f32,
-                (scale.unscale(p[1]) + state.origin.1) as f32,
-            ]
-        })
-        .collect()
+    path
 }

@@ -127,12 +127,17 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
         let path = if settings.process.print.prime_tower_skip_points.0 {
             travel::path(&change, change_start, state, context, geometry.scale)
         } else {
-            vec![change_start]
+            vec![motion::tower::type1_travel_grid(
+                change_start,
+                state.origin,
+                geometry.scale,
+            )]
         };
-        for (i, &point) in path.iter().enumerate() {
+        let last_index = path.len() - 1;
+        for (i, point) in path.into_iter().enumerate() {
             let mut moves = Vec::new();
-            motion::tower::type1_travel(&mut moves, state, point, geometry)?;
-            if i + 1 == path.len() {
+            motion::tower::type1_travel_scaled(&mut moves, state, point, geometry)?;
+            if i == last_index {
                 last_travel = moves;
             } else {
                 change.push_str(std::str::from_utf8(&moves).expect("writer G-code is UTF-8"));

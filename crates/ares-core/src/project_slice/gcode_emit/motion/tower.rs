@@ -167,6 +167,8 @@ pub(in crate::project_slice::gcode_emit) fn type1_retract(
     travel::retract_for_type1(output, state, toolchange);
 }
 
+/// `GCode.cpp:824`: nozzle-change start move — grid of the transformed
+/// `Vec2f` via `wipe_tower_point_to_object_point`.
 pub(in crate::project_slice::gcode_emit) fn type1_travel(
     output: &mut Vec<u8>,
     state: &mut EmitState,
@@ -179,6 +181,29 @@ pub(in crate::project_slice::gcode_emit) fn type1_travel(
         local(point, state.origin, geometry.scale),
         geometry,
     )
+}
+
+pub(in crate::project_slice::gcode_emit) fn type1_travel_grid(
+    point: [f32; 2],
+    origin: (f64, f64),
+    scale: CoordinateScale,
+) -> [i64; 2] {
+    let (x, y) = local(point, origin, scale);
+    [x, y]
+}
+
+/// `GCode.cpp:1036-1043`: the `prime_tower_skip_points` polyline points are
+/// grid `Point`s fed straight into `travel_to(p)` (`point_to_gcode`,
+/// GCode.cpp:8124-8127) — rescaling them through `f32` shifts boundary
+/// cases across the 3-decimal rounding of the next slope-lift top
+/// (`GCodeWriter.cpp:685-770`).
+pub(in crate::project_slice::gcode_emit) fn type1_travel_scaled(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    point: [i64; 2],
+    geometry: LayerGeometry<'_>,
+) -> Result<(), crate::SliceError> {
+    path::tower_travel(output, state, (point[0], point[1]), geometry)
 }
 
 pub(in crate::project_slice::gcode_emit) fn type1_unretract(
