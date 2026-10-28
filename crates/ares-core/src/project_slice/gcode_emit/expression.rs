@@ -8,7 +8,7 @@ mod functions;
 #[cfg(test)]
 mod tests;
 
-use functions::function;
+use functions::{function, is_function_keyword};
 
 /// The placeholder parse path an evaluation runs under. Upstream's grammar
 /// routes the two placeholder spellings into separate resolution paths, and
@@ -223,7 +223,7 @@ impl Parser<'_> {
             Token::Bool(value) => Ok(Value::Bool(value)),
             Token::String(value) | Token::Regex(value) => Ok(Value::String(value)),
             Token::Ident(name, offset) => {
-                if self.take(Token::Left) {
+                if is_function_keyword(&name) && self.take(Token::Left) {
                     // PlaceholderParser.cpp:1687,2333: size takes an unindexed
                     // vector variable, not a scalar or an arbitrary expression.
                     if name == "size" {

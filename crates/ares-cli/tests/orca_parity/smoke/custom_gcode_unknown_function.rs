@@ -53,7 +53,9 @@ fn orca_parity_custom_gcode_unknown_function_matches_native() {
     )
     .unwrap();
     assert!(
-        native.stderr.starts_with(b"Failed to generate G-code for invalid custom G-code."),
+        native
+            .stderr
+            .starts_with(b"Failed to generate G-code for invalid custom G-code."),
         "fixture must keep the custom-G-code rejection shape"
     );
     assert!(
