@@ -3,12 +3,16 @@ use super::{
     value::{Config, Value},
 };
 
+mod arithmetic;
 mod comparison;
 mod functions;
 #[cfg(test)]
 mod tests;
 
+use arithmetic::{Arithmetic, arithmetic};
 use functions::{function, is_function_keyword};
+
+pub(super) use arithmetic::to_string;
 
 /// The placeholder parse path an evaluation runs under. Upstream's grammar
 /// routes the two placeholder spellings into separate resolution paths, and
@@ -17,7 +21,7 @@ use functions::{function, is_function_keyword};
 ///   "Not a variable name" (`PlaceholderParser.cpp:988-1000`);
 /// - legacy bracket placeholders expand via `legacy_variable_expansion`,
 ///   which throws "Variable does not exist" (`PlaceholderParser.cpp:918-932`).
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub(crate) enum ParsePath {
     Brace,
     Legacy,
@@ -47,39 +51,59 @@ pub(crate) enum PathError {
 
 /// Evaluates `input` under one of the upstream placeholder parse paths so
 /// unknown symbols surface with the path's message and identifier offset.
+/// `filament` is the process call's extruder context: the bare-vector
+/// auto-serialization of `vector_element_to_expr` selects
+/// `get_at(get_extruder_id())` (`PlaceholderParser.cpp:1191-1201`).
 pub(crate) fn evaluate_path(
     input: &str,
     config: &Config,
     path: ParsePath,
+    filament: usize,
 ) -> Result<Value, PathError> {
     let tokens = tokenize(input).map_err(PathError::Other)?;
     let mut parser = Parser {
         tokens,
         index: 0,
         config,
+        path,
+        filament,
         unknown_offset: None,
+        scalar_failure: None,
     };
     match parser.parse_or() {
         Ok(value) if parser.index == parser.tokens.len() => Ok(value),
         Ok(_) => Err(PathError::Other(format!(
             "unexpected token in expression: {input}"
         ))),
-        Err(error) => match parser.unknown_offset {
-            Some(offset) => Err(PathError::Parse(ParseFailure {
-                message: path.unknown_variable_message().to_owned(),
-                offset,
-            })),
-            None => Err(PathError::Other(error)),
-        },
+        Err(error) => {
+            if let Some((offset, message)) = parser.scalar_failure {
+                return Err(PathError::Parse(ParseFailure {
+                    message: message.to_owned(),
+                    offset,
+                }));
+            }
+            match parser.unknown_offset {
+                Some(offset) => Err(PathError::Parse(ParseFailure {
+                    message: path.unknown_variable_message().to_owned(),
+                    offset,
+                })),
+                None => Err(PathError::Other(error)),
+            }
+        }
     }
 }
 
-pub(crate) fn evaluate(input: &str, config: &Config) -> Result<Value, String> {
+/// Evaluates a brace-context expression (`{if …}` conditions and
+/// assignment right-hand sides) under the same variable semantics.
+pub(crate) fn evaluate(input: &str, config: &Config, filament: usize) -> Result<Value, String> {
     let mut parser = Parser {
         tokens: tokenize(input)?,
         index: 0,
         config,
+        path: ParsePath::Brace,
+        filament,
         unknown_offset: None,
+        scalar_failure: None,
     };
     let value = parser.parse_or()?;
     if parser.index != parser.tokens.len() {
@@ -92,9 +116,14 @@ struct Parser<'a> {
     tokens: Vec<Token>,
     index: usize,
     config: &'a Config,
+    path: ParsePath,
+    filament: usize,
     /// Byte offset of the identifier whose resolution failed, captured at
     /// the unknown-variable throw site for the caret report.
     unknown_offset: Option<usize>,
+    /// `(offset, message)` of a scalar-context violation, captured at the
+    /// bare-vector throw site for the line/caret report.
+    scalar_failure: Option<(usize, &'static str)>,
 }
 
 impl Parser<'_> {
@@ -259,6 +288,33 @@ impl Parser<'_> {
                         return Err(format!("unknown placeholder: {name}"));
                     }
                 };
+                // `vector_element_to_expr` (`PlaceholderParser.cpp:1166-1211`):
+                // a bare (non-indexed) vector reference only resolves for
+                // float vectors — `size() == 1 ? get_at(0) :
+                // get_at(get_extruder_id())` — while every other vector
+                // type throws `:1204`. The legacy `[var]` spelling keeps
+                // whole-vector expansion (`:915`).
+                if self.path == ParsePath::Brace
+                    && !matches!(self.peek(), Some(Token::LeftBracket))
+                    && let Value::List(values) = &value
+                    && !values.is_empty()
+                {
+                    if values.iter().all(|item| matches!(item, Value::Number(_))) {
+                        value = values
+                            .get(self.filament)
+                            .or_else(|| values.first())
+                            .cloned()
+                            .unwrap();
+                    } else {
+                        self.scalar_failure = Some((
+                            offset,
+                            "Referencing a vector variable when scalar is expected",
+                        ));
+                        return Err(
+                            "Referencing a vector variable when scalar is expected".to_owned()
+                        );
+                    }
+                }
                 while self.take(Token::LeftBracket) {
                     let index = self
                         .parse_or()?
@@ -317,61 +373,4 @@ impl Parser<'_> {
             false
         }
     }
-}
-
-#[derive(Clone, Copy)]
-enum Arithmetic {
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-    Remainder,
-}
-
-pub(super) fn to_string(value: &Value) -> String {
-    // PlaceholderParser.cpp:302-327: doubles use default ostream precision.
-    match value {
-        Value::Number(number) if *number == 0.0 && number.is_sign_negative() => "-0".to_owned(),
-        Value::Number(number) => super::motion::format::ostream(*number),
-        value => value.as_string(),
-    }
-}
-
-fn arithmetic(left: Value, right: Value, operation: Arithmetic) -> Result<Value, String> {
-    // PlaceholderParser.cpp:435-456: either string operand selects concatenation.
-    if matches!(operation, Arithmetic::Add)
-        && (matches!(left.scalar(), Value::String(_)) || matches!(right.scalar(), Value::String(_)))
-    {
-        let mut result = to_string(left.scalar());
-        result.push_str(&to_string(right.scalar()));
-        return Ok(Value::String(result));
-    }
-    if let (Some(left), Some(right)) = (left.as_integer(), right.as_integer()) {
-        if matches!(operation, Arithmetic::Divide | Arithmetic::Remainder) && right == 0 {
-            return Err("division by zero".to_owned());
-        }
-        return Ok(Value::Integer(match operation {
-            Arithmetic::Add => left + right,
-            Arithmetic::Subtract => left - right,
-            Arithmetic::Multiply => left * right,
-            Arithmetic::Divide => left / right,
-            Arithmetic::Remainder => left % right,
-        }));
-    }
-    let left = left
-        .as_number()
-        .ok_or("numeric expression expected in lhs")?;
-    let right = right
-        .as_number()
-        .ok_or("numeric expression expected in rhs")?;
-    if matches!(operation, Arithmetic::Divide | Arithmetic::Remainder) && right == 0.0 {
-        return Err("division by zero".to_owned());
-    }
-    Ok(Value::Number(match operation {
-        Arithmetic::Add => left + right,
-        Arithmetic::Subtract => left - right,
-        Arithmetic::Multiply => left * right,
-        Arithmetic::Divide => left / right,
-        Arithmetic::Remainder => left % right,
-    }))
 }

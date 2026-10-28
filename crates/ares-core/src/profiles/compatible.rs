@@ -333,7 +333,7 @@ fn compatible_with_printer(
         .unwrap_or_default();
     if !has_list && !condition.is_empty() {
         // Preset.cpp:830-836: a parse/eval error keeps the preset compatible.
-        return match evaluate(condition, &printer.config) {
+        return match evaluate(condition, &printer.config, 0) {
             Ok(value) => value.as_bool(),
             Err(message) => {
                 diagnostics.push(CompatibilityDiagnostic {
@@ -378,7 +378,7 @@ fn compatible_with_print(
         .as_deref()
         .unwrap_or_default();
     if !has_list && !condition.is_empty() {
-        return match evaluate(condition, &process.config) {
+        return match evaluate(condition, &process.config, 0) {
             Ok(value) => value.as_bool(),
             Err(message) => {
                 diagnostics.push(CompatibilityDiagnostic {

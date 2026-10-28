@@ -19,10 +19,10 @@ mod layer_fan_priority;
 
 #[path = "smoke/custom_gcode_functions.rs"]
 mod custom_gcode_functions;
-#[path = "smoke/custom_gcode_vector_scalar.rs"]
-mod custom_gcode_vector_scalar;
 #[path = "smoke/custom_gcode_unknown_function.rs"]
 mod custom_gcode_unknown_function;
+#[path = "smoke/custom_gcode_vector_scalar.rs"]
+mod custom_gcode_vector_scalar;
 
 /// Focused re-check of the nearest-seam / layer-1 deposition cluster
 /// after seam-placement changes (env-gated, prints outcomes).

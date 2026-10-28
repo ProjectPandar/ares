@@ -71,7 +71,10 @@ fn assert_rejection_matches_native(case: &str) {
     );
     let diagnostic = b"Referencing a vector variable when scalar is expected";
     assert!(
-        native.stderr.windows(diagnostic.len()).any(|w| w == diagnostic),
+        native
+            .stderr
+            .windows(diagnostic.len())
+            .any(|w| w == diagnostic),
         "upstream rejects the bare vector reference: {:?}",
         String::from_utf8_lossy(&native.stderr)
     );

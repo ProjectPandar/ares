@@ -47,7 +47,7 @@ fn render_nodes(
                 for arm in arms {
                     let selected = match &arm.condition {
                         None => true,
-                        Some(condition) => evaluate(condition, config)
+                        Some(condition) => evaluate(condition, config, filament)
                             .map_err(|error| format!("{error} in {condition}"))?
                             .as_bool(),
                     };
@@ -105,19 +105,21 @@ fn render_text(
         // store into the parser and render nothing.
         if let Some((name, index_expression, rhs)) = assignment_parts(expression) {
             let assignment_index = match index_expression {
-                Some(index_expression) => match evaluate(index_expression, config)?.as_number() {
-                    Some(number) if number >= 0.0 => Some(number as usize),
-                    _ => return Err(format!("invalid assignment index in {expression}")),
-                },
+                Some(index_expression) => {
+                    match evaluate(index_expression, config, filament)?.as_number() {
+                        Some(number) if number >= 0.0 => Some(number as usize),
+                        _ => return Err(format!("invalid assignment index in {expression}")),
+                    }
+                }
                 None => None,
             };
-            let value =
-                evaluate(rhs, config).map_err(|error| format!("{error} in {expression}"))?;
+            let value = evaluate(rhs, config, filament)
+                .map_err(|error| format!("{error} in {expression}"))?;
             config.assign(name, assignment_index, value);
             index = expression_start + relative_end + 1;
             continue;
         }
-        let value = match evaluate_path(expression, config, path) {
+        let value = match evaluate_path(expression, config, path, filament) {
             Ok(value) => value,
             Err(PathError::Parse(failure)) => {
                 return Err(error::report(

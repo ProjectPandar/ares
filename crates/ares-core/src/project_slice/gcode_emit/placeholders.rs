@@ -178,7 +178,7 @@ fn insert_runtime_placeholders(
         .unwrap_or(1);
     let first = Value::List(
         (0..filament_count.max(extruder_count))
-            .map(|index| Value::number(index.min(filament_count - 1) as f64))
+            .map(|index| Value::Integer((index.min(filament_count - 1)) as i64))
             .collect(),
     );
     for name in [

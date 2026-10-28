@@ -8,21 +8,21 @@ fn config() -> Config {
 #[test]
 fn expression_supports_indexing_arithmetic_and_functions() {
     assert_eq!(
-        evaluate("values[1]", &config()).unwrap().as_number(),
+        evaluate("values[1]", &config(), 0).unwrap().as_number(),
         Some(5.0)
     );
     assert_eq!(
-        evaluate("ceil(n / 2)", &config()).unwrap().as_number(),
+        evaluate("ceil(n / 2)", &config(), 0).unwrap().as_number(),
         Some(1.0)
     );
     assert_eq!(
-        evaluate("values[1] + ceil(n / 2)", &config())
+        evaluate("values[1] + ceil(n / 2)", &config(), 0)
             .unwrap()
             .as_number(),
         Some(6.0)
     );
     assert!(
-        evaluate("type == \"PLA\" && max(n, 3) == 3", &config())
+        evaluate("type == \"PLA\" && max(n, 3) == 3", &config(), 0)
             .unwrap()
             .as_bool()
     );
@@ -31,26 +31,26 @@ fn expression_supports_indexing_arithmetic_and_functions() {
 #[test]
 fn numeric_conversion_functions_match_placeholder_parser() {
     assert_eq!(
-        evaluate("int(2.9)", &config()).unwrap().as_number(),
+        evaluate("int(2.9)", &config(), 0).unwrap().as_number(),
         Some(2.0)
     );
     assert_eq!(
-        evaluate("int(-2.9)", &config()).unwrap().as_number(),
+        evaluate("int(-2.9)", &config(), 0).unwrap().as_number(),
         Some(-2.0)
     );
     assert_eq!(
-        evaluate("round(2.5)", &config()).unwrap().as_number(),
+        evaluate("round(2.5)", &config(), 0).unwrap().as_number(),
         Some(3.0)
     );
     assert_eq!(
-        evaluate("floor(-2.1)", &config()).unwrap().as_number(),
+        evaluate("floor(-2.1)", &config(), 0).unwrap().as_number(),
         Some(-3.0)
     );
 }
 
 #[test]
 fn vector_identifier_uses_first_value_without_an_explicit_index() {
-    assert!(evaluate("values == 3", &config()).unwrap().as_bool());
+    assert!(evaluate("values == 3", &config(), 0).unwrap().as_bool());
 }
 
 #[test]
@@ -58,7 +58,8 @@ fn expression_interpolates_piecewise_table_tuples() {
     assert_eq!(
         evaluate(
             "interpolate_table(n, (0,4000), (4,2000), (10,1000))",
-            &config()
+            &config(),
+            0
         )
         .unwrap()
         .as_number(),
@@ -70,11 +71,11 @@ fn expression_interpolates_piecewise_table_tuples() {
 fn expression_random_is_bounded_and_advances_state() {
     let mut config = config();
     config.random = Some(Default::default());
-    let first = evaluate("random(-160, -152)", &config)
+    let first = evaluate("random(-160, -152)", &config, 0)
         .unwrap()
         .as_number()
         .unwrap();
-    let second = evaluate("random(-160, -152)", &config)
+    let second = evaluate("random(-160, -152)", &config, 0)
         .unwrap()
         .as_number()
         .unwrap();
@@ -88,23 +89,23 @@ fn expression_random_is_bounded_and_advances_state() {
 fn expression_supports_regex_match_and_nonmatch() {
     let config = Config::from_block(b"; notes = PRINTER_MODEL_MINIIS HF_NOZZLE\n");
     assert!(
-        evaluate("notes=~/.*PRINTER_MODEL_MINI.*/", &config)
+        evaluate("notes=~/.*PRINTER_MODEL_MINI.*/", &config, 0)
             .unwrap()
             .as_bool()
     );
-    assert!(evaluate("notes!~/.*MK4S.*/", &config).unwrap().as_bool());
+    assert!(evaluate("notes!~/.*MK4S.*/", &config, 0).unwrap().as_bool());
 }
 
 #[test]
 fn expression_formats_digits_with_width_and_decimals() {
     assert_eq!(
-        evaluate("digits(values[1], 8, 2)", &config())
+        evaluate("digits(values[1], 8, 2)", &config(), 0)
             .unwrap()
             .as_string(),
         "    5.00"
     );
     assert_eq!(
-        evaluate("digits(values[1], 3)", &config())
+        evaluate("digits(values[1], 3)", &config(), 0)
             .unwrap()
             .as_string(),
         "  5"
@@ -113,23 +114,27 @@ fn expression_formats_digits_with_width_and_decimals() {
 
 #[test]
 fn expression_supports_word_operators_and_boolean_literals() {
-    assert!(evaluate("true and not false", &config()).unwrap().as_bool());
-    assert!(evaluate("false or n == 2", &config()).unwrap().as_bool());
-    assert!(!evaluate("n != 2 or false", &config()).unwrap().as_bool());
+    assert!(
+        evaluate("true and not false", &config(), 0)
+            .unwrap()
+            .as_bool()
+    );
+    assert!(evaluate("false or n == 2", &config(), 0).unwrap().as_bool());
+    assert!(!evaluate("n != 2 or false", &config(), 0).unwrap().as_bool());
 }
 
 #[test]
 fn integer_literals_keep_upstream_integer_division() {
     assert_eq!(
-        evaluate("24 / 20", &config()).unwrap().as_number(),
+        evaluate("24 / 20", &config(), 0).unwrap().as_number(),
         Some(1.0)
     );
     assert_eq!(
-        evaluate("24.0 / 20", &config()).unwrap().as_number(),
+        evaluate("24.0 / 20", &config(), 0).unwrap().as_number(),
         Some(1.2)
     );
     assert_eq!(
-        evaluate("5 / 2 * 3", &config()).unwrap().as_number(),
+        evaluate("5 / 2 * 3", &config(), 0).unwrap().as_number(),
         Some(6.0)
     );
 }
@@ -137,11 +142,13 @@ fn integer_literals_keep_upstream_integer_division() {
 #[test]
 fn expression_supports_modulo_unary_plus_and_conditionals() {
     assert_eq!(
-        evaluate("+values[1] % 2", &config()).unwrap().as_number(),
+        evaluate("+values[1] % 2", &config(), 0)
+            .unwrap()
+            .as_number(),
         Some(1.0)
     );
     assert_eq!(
-        evaluate("n > 1 ? values[0] : values[1]", &config())
+        evaluate("n > 1 ? values[0] : values[1]", &config(), 0)
             .unwrap()
             .as_number(),
         Some(3.0)

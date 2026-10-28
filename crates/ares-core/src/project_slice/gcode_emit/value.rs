@@ -148,15 +148,7 @@ impl Config {
             };
             let kind =
                 crate::options::registry::option_definition(key).map(|definition| definition.kind);
-            let is_bool = kind.is_some_and(|kind| {
-                matches!(
-                    kind,
-                    crate::options::registry::OptionValueKind::Bool
-                        | crate::options::registry::OptionValueKind::Bools
-                )
-            });
-            let is_ints = kind == Some(crate::options::registry::OptionValueKind::Ints);
-            config.insert(key, parse_value(raw, is_bool, is_ints));
+            config.insert(key, parse_value(raw, kind));
         }
         config
     }
@@ -196,18 +188,41 @@ impl Config {
     }
 }
 
-fn parse_value(raw: &str, is_bool: bool, is_ints: bool) -> Value {
-    if is_ints {
-        let mut values = raw
-            .split([';', ','])
-            .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
-            .collect::<Vec<_>>();
-        return if values.len() == 1 {
-            values.remove(0)
-        } else {
-            Value::List(values)
+fn parse_value(raw: &str, kind: Option<crate::options::registry::OptionValueKind>) -> Value {
+    use crate::options::registry::OptionValueKind as Kind;
+    // Registry-typed vector options keep their vector shape regardless of
+    // element count — upstream vectors stay `is_vector()` even with a
+    // single element, and a bare brace reference then enters
+    // `vector_element_to_expr` (`PlaceholderParser.cpp:1086-1211`) instead
+    // of scalar resolution. Element kinds follow the option type:
+    // `Ints → Integer`, float/percent vectors → `Number`, bool vectors →
+    // OptionBool, string vectors → String.
+    if let Some(kind) = kind {
+        let elements = match kind {
+            Kind::Ints | Kind::IntsNullable => raw
+                .split([';', ','])
+                .map(|scalar| parse_scalar(scalar, false, true))
+                .collect::<Vec<_>>(),
+            Kind::Floats | Kind::FloatsNullable | Kind::Percents | Kind::PercentsNullable => raw
+                .split([';', ','])
+                .map(|scalar| parse_scalar(scalar, false, false))
+                .collect::<Vec<_>>(),
+            Kind::Bools | Kind::BoolsNullable => raw
+                .split([';', ','])
+                .map(|scalar| parse_scalar(scalar, true, false))
+                .collect::<Vec<_>>(),
+            Kind::Strings | Kind::Enums | Kind::EnumsNullable => raw
+                .split([';', ','])
+                .map(|scalar| parse_scalar(scalar, false, false))
+                .collect::<Vec<_>>(),
+            _ => Vec::new(),
         };
+        if !elements.is_empty() {
+            return Value::List(elements);
+        }
     }
+    let is_bool = kind.is_some_and(|kind| matches!(kind, Kind::Bool | Kind::Bools));
+    let is_ints = kind == Some(Kind::Ints);
     let mut values = raw
         .split(';')
         .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
