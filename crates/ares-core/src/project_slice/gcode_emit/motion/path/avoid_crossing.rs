@@ -27,6 +27,11 @@ pub(super) struct Request<'a> {
     pub(super) end: arc::Point,
     pub(super) geometry: LayerGeometry<'a>,
     pub(super) offset: (f64, f64),
+    /// `gcodegen.origin()` — the planning origin `set_origin(unscale(
+    /// instance.shift))` maintains (`GCode.cpp:5385`), i.e. `state.origin`;
+    // the emission `offset` minus the extruder offset. Only the external
+    // planner consumes it (`AvoidCrossingPerimeters.cpp:1237-1240`).
+    pub(super) origin: (f64, f64),
     /// `m_use_external_mp_once` — route along the chunk-wide hole boundary
     /// (`AvoidCrossingPerimeters.cpp:1553-1556`).
     pub(super) use_external: bool,
@@ -65,6 +70,7 @@ pub(super) fn route(
         end,
         geometry,
         offset,
+        origin,
         use_external,
         max_detour,
     } = request;
@@ -90,14 +96,18 @@ pub(super) fn route(
     };
     let scaled_start = to_scaled(start)?;
     let scaled_end = to_scaled(end)?;
-    // The plate-frame image of `start`, so the external boundary can be
-    // moved into the router's frame exactly instead of through a second
-    // rounding of the origin.
-    let plate_start = Point::new(
-        scale.checked_scale_rounded(start.x).ok_or_else(|| {
+    // `Point::new_scale(gcodegen.origin())` — the use_external planning
+    // frame's `scaled_origin` (`AvoidCrossingPerimeters.cpp:1237-1240`).
+    // The plate-frame external holes move into this frame by
+    // `-scaled_origin`; deriving the shift from the emission `offset`
+    // instead displaced the boundary by the extruder offset and changed
+    // which boundary lines the travel reaches. `checked_scale` truncates
+    // exactly like upstream `coord_t(scale_(v))`.
+    let scaled_origin = Point::new(
+        scale.checked_scale(origin.0).ok_or_else(|| {
             SliceError::InvalidInput("avoid-crossing endpoint out of range".into())
         })?,
-        scale.checked_scale_rounded(start.y).ok_or_else(|| {
+        scale.checked_scale(origin.1).ok_or_else(|| {
             SliceError::InvalidInput("avoid-crossing endpoint out of range".into())
         })?,
     );
@@ -150,15 +160,16 @@ pub(super) fn route(
         // `get_boundary_external` builds from every object's holes at this
         // print z; an empty hole set or a travel clear of it routes
         // straight (`travel_to` :1557-1571, Liang-Barsky bbox gate).
-        if boundary.external.is_none() {
-            // The boundary input is plate-frame (`:1172-1177`); the
-            // router's frame is the endpoint frame, so shift by the same
-            // translation `to_scaled` applied — `local - plate`, i.e. the
-            // negated gcode origin.
-            let frame_shift = Point::new(
-                scaled_start.x() - plate_start.x(),
-                scaled_start.y() - plate_start.y(),
-            );
+        //
+        // `travel_to` :1262-1268: rebuild when the external boundary is
+        // empty or either endpoint left its (radius-padded) bbox.
+        if boundary.external.as_ref().is_none_or(|external| {
+            !external.contains(scaled_start) || !external.contains(scaled_end)
+        }) {
+            // The boundary input is plate-frame (`:1172-1177`); the router
+            // frame is `last_pos + scaled_origin`, so shift the holes by
+            // `-scaled_origin` (`:1237-1240`).
+            let frame_shift = Point::new(-scaled_origin.x(), -scaled_origin.y());
             boundary.external = match boundary::Boundary::build_external(
                 geometry.avoid_crossing.chunk_slices,
                 geometry.avoid_crossing.chunk_perimeter_spacing,

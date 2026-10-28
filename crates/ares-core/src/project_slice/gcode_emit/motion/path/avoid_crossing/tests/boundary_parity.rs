@@ -173,6 +173,7 @@ fn assert_route(start: (i64, i64), end: (i64, i64), expected: &[(i64, i64)]) {
             end: point(end),
             geometry,
             offset: (0.0, 0.0),
+            origin: (0.0, 0.0),
             use_external: false,
             max_detour: FloatOrPercent::Float(0.0),
         },

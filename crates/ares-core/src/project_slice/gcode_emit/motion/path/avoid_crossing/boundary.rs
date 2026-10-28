@@ -37,13 +37,12 @@ pub(super) enum BuildResult {
 }
 
 impl Boundary {
-    /// `get_boundary_external` + the first `init_boundary` overload
-    /// (`AvoidCrossingPerimeters.cpp:1137-1189, 1187-1203`): every hole of
-    /// every print object at this print z, made CCW and expanded by half
-    /// the cross-object average perimeter spacing (miter join), then
-    /// reversed so normals point outward; the bbox is padded only by
-    /// `SCALED_EPSILON`, so travels clear of every hole stay outside and
-    /// route straight.
+    /// `get_boundary_external` + the merge-points `init_boundary`
+    /// overload (`AvoidCrossingPerimeters.cpp:1137-1189, 1216-1229`): every
+    /// hole of every print object at this print z, made CCW and expanded by
+    /// half the cross-object average perimeter spacing (miter join), then
+    /// reversed so normals point outward; the merged bbox is padded by its
+    /// radius so endpoint-leaving travels stay inside the grid.
     pub(in crate::project_slice::gcode_emit) fn build_external(
         chunk_slices: &[ExPolygon],
         perimeter_spacing_mm: f64,
@@ -95,14 +94,19 @@ impl Boundary {
             min = Point::new(min.x().min(point.x()), min.y().min(point.y()));
             max = Point::new(max.x().max(point.x()), max.y().max(point.y()));
         }
-        let epsilon = scale.checked_scale(SCALED_EPSILON).unwrap_or(100) as Coord;
+        // `init_boundary(boundary, polygons, merge_points)` pads by the bbox
+        // radius so travel endpoints outside the contours stay in the grid
+        // (`AvoidCrossingPerimeters.cpp:1216-1229`); `SCALED_EPSILON`
+        // padding lost later travels whose start left the grid.
+        let radius =
+            (((max.x() - min.x()) as f64).hypot((max.y() - min.y()) as f64) / 2.0) as Coord;
         let padded_min = Point::new(
-            min.x().saturating_sub(epsilon),
-            min.y().saturating_sub(epsilon),
+            min.x().saturating_sub(radius),
+            min.y().saturating_sub(radius),
         );
         let padded_max = Point::new(
-            max.x().saturating_add(epsilon),
-            max.y().saturating_add(epsilon),
+            max.x().saturating_add(radius),
+            max.y().saturating_add(radius),
         );
         let grid_resolution = unit(1.0).unwrap_or(1_000_000);
         let grid = EdgeGrid::new_from_contours(

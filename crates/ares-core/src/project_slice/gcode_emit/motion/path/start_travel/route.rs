@@ -47,6 +47,7 @@ pub(super) fn plan_route(
                 },
                 geometry: *geometry,
                 offset: state.offset,
+                origin: state.origin,
                 // `AvoidCrossingPerimeters.cpp:1237`:
                 // `m_use_external_mp || m_use_external_mp_once`.
                 use_external: state.use_external_mp || state.use_external_mp_once,
