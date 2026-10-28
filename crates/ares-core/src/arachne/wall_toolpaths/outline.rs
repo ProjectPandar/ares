@@ -77,18 +77,16 @@ fn remove_small_areas(thiss: &mut Vec<Polygon>, min_area_size: f64) {
     let mut index = 0;
     while index < new_end {
         let area = thiss[index].area();
-        if area.abs() < min_area_size {
-            if area >= 0.0 {
-                new_end -= 1;
-                if index < new_end {
-                    thiss.swap(index, new_end);
-                    continue;
-                } else {
-                    break;
-                }
-            } else {
-                small_holes.push(thiss[index].clone());
+        if area.abs() < min_area_size && area >= 0.0 {
+            new_end -= 1;
+            if index < new_end {
+                thiss.swap(index, new_end);
+                continue;
             }
+            break;
+        }
+        if area.abs() < min_area_size {
+            small_holes.push(thiss[index].clone());
         }
         index += 1;
     }
