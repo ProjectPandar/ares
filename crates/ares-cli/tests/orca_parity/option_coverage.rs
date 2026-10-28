@@ -293,6 +293,9 @@ mod resolution_floor;
 #[path = "option_coverage/filament_map_mode.rs"]
 mod filament_map_mode;
 
+#[path = "option_coverage/filament_map_length.rs"]
+mod filament_map_length;
+
 #[cfg(test)]
 #[path = "option_coverage/thumbnails.rs"]
 mod thumbnails;
