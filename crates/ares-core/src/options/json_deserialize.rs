@@ -55,9 +55,8 @@ pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
 /// (`Config.cpp:947-1000` → `set_deserialize`): numeric kinds keep their
 /// `istringstream` prefix (`Config.hpp:784-790`), booleans their first
 /// trimmed `','`-segment (`Config.hpp:1828-1850`), and every other kind the
-/// whole string. Empty output keeps the original wire (a join can never
-/// produce it, but `scalar::normalize` is also the no-op pass-through for
-/// uncovered kinds).
+/// whole string (an empty join deserializes as an empty `coString`,
+/// `Config.hpp:1106-1110`).
 pub(crate) fn scalar_token(kind: OptionValueKind, value: &str) -> Result<Cow<'_, str>, String> {
     scalar::normalize(kind, value)
 }

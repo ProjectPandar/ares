@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use serde::de::{
     Error,
     value::{SeqDeserializer, StringDeserializer},
@@ -67,27 +65,27 @@ where
 /// `coFloatOrPercent` (`Config.hpp:784-790`, `:975-981`, `:1189-1195`,
 /// `:1303-1310`), the first trimmed `','`-segment for `coBool`
 /// (`Config.hpp:1828-1850`), the whole string for `coString`
-/// (`Config.hpp:1106-1110`) and enums (whose joined string never matches an
-/// enum key, so `assign`'s `Config.cpp:657-676` default substitution takes
-/// over). Shared with the preset presence view via
+/// (`Config.hpp:1106-1110`). An enum binds normally when the joined string
+/// matches an enum key (a single-element array joins to exactly that key);
+/// otherwise `assign`'s `Config.cpp:657-676` default substitution takes
+/// over. Shared with the preset presence view via
 /// `json_deserialize::scalar` — one source, no generic first-token rule.
 fn array_joined_scalar<E>(source: &str, target: &str, value: String) -> Result<String, E>
 where
     E: Error,
 {
-    let Some(definition) = registry::option_definition(target) else {
-        return Ok(value);
-    };
-    let token = crate::options::json_deserialize::scalar_token(definition.kind, value.as_str())
+    let definition = registry::option_definition(target).ok_or_else(|| {
+        E::custom(format_args!(
+            "invalid legacy Orca project array option {source} for {target}: unknown target option"
+        ))
+    })?;
+    crate::options::json_deserialize::scalar_token(definition.kind, value.as_str())
+        .map(|token| token.into_owned())
         .map_err(|error| {
             E::custom(format_args!(
                 "invalid legacy Orca project array option {source} for {target}: {error}"
             ))
-        })?;
-    Ok(match token {
-        Cow::Borrowed("") => value,
-        token => token.into_owned(),
-    })
+        })
 }
 
 /// `Config.cpp:654-672`: a failed enum deserialization under the 3MF load
