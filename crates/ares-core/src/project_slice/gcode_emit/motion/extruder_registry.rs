@@ -96,6 +96,13 @@ impl ExtruderRegistry {
         self.active_id
     }
 
+    /// `m_writer.filament()->extruder_id()` (`Extruder.cpp:21-27`): the
+    /// active filament's `filament_map` group minus one; a filament id
+    /// beyond the map falls back to 0.
+    pub(in crate::project_slice::gcode_emit) fn active_physical(&self) -> usize {
+        self.physical[self.active_id]
+    }
+
     pub(in crate::project_slice::gcode_emit) fn vector_size(&self) -> usize {
         self.ids.last().map_or(0, |id| id + 1)
     }

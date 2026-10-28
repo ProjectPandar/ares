@@ -151,8 +151,7 @@ fn append(
     // layer_num/layer_z/max_layer_z, so those spellings stay unresolved
     // variables there.
     if overlay == Overlay::InsertLambda {
-        let most_used =
-            insert_physical_extruder_ids(&mut config, traversal, state.most_used_extruder);
+        let most_used = insert_physical_extruder_ids(&mut config, traversal, state);
         let position = safe_position(traversal, most_used);
         config.insert(
             "has_timelapse_safe_pos",
@@ -201,30 +200,39 @@ fn append(
     Ok(Some(last_z))
 }
 
-/// `GCode.cpp:5162-5163`: inserts `most_used_physical_extruder_id` and
-/// `curr_physical_extruder_id`, where the placeholder id is the layer's
-/// most-used logical extruder mapped through `physical_extruder_map`.
+/// `GCode.cpp:5162-5163` (and the wrapping-detection twin
+/// `:5232-5233`): `most_used_physical_extruder_id` maps the layer-count
+/// winner (`ToolOrdering.cpp:955-981`, `state.most_used_extruder`)
+/// through `physical_extruder_map.get_at`, while
+/// `curr_physical_extruder_id` maps the writer's current
+/// `extruder_id()` — `Extruder.cpp:21-27` computes it as
+/// `filament_map.get_at(filament_id) - 1` (out-of-range filament id
+/// falls back to 0), i.e. the active filament's map group.
 pub(in crate::project_slice::gcode_emit) fn insert_physical_extruder_ids(
     config: &mut value::Config,
     traversal: &PreparedPostClassicTraversal,
-    most_used_extruder: usize,
+    state: &super::motion::EmitState,
 ) -> Option<usize> {
     let runtime = &traversal.resolved.views.runtime_gcode;
-    let physical_extruder = runtime
-        .physical_extruder_map
-        .0
-        .get(most_used_extruder)
-        .or_else(|| runtime.physical_extruder_map.0.first())
-        .map_or(0, |value| value.0);
+    let map_at = |index: usize| {
+        runtime
+            .physical_extruder_map
+            .0
+            .get(index)
+            .or_else(|| runtime.physical_extruder_map.0.first())
+            .map_or(0, |value| value.0)
+    };
+    let most_used = map_at(state.most_used_extruder);
+    let curr = map_at(state.extruders.active_physical());
     config.insert(
         "most_used_physical_extruder_id",
-        value::Value::number(physical_extruder as f64),
+        value::Value::number(most_used as f64),
     );
     config.insert(
         "curr_physical_extruder_id",
-        value::Value::number(physical_extruder as f64),
+        value::Value::number(curr as f64),
     );
-    Some(most_used_extruder)
+    Some(state.most_used_extruder)
 }
 
 pub(super) fn last_motion_z(gcode: &str) -> Option<f64> {

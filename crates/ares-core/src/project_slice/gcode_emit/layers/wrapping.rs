@@ -65,7 +65,7 @@ pub(super) fn emit(
         );
         config.insert("layer_z", value::Value::number(context.layer.z));
         config.insert("max_layer_z", value::Value::number(context.layer.max_z));
-        timelapse::insert_physical_extruder_ids(&mut config, traversal, state.most_used_extruder);
+        timelapse::insert_physical_extruder_ids(&mut config, traversal, state);
         // Write-back validation precedes emission
         // (`GCode.cpp:3920-3933`).
         match template::render(source, &mut config) {
