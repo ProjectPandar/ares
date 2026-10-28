@@ -293,13 +293,19 @@ fn task22b_mirrored_affine_preserves_import_normalized_indices_and_direction() {
     )
     .unwrap();
 
+    // A mirrored instance (det < 0) enters slicing with its triangles
+    // flipped by the upstream its_flip_triangles convention
+    // (PrintObjectSlice.cpp:88-90 swaps vertices 1 and 2), so the slice
+    // line's directed signature runs opposite to the unmirrored import:
+    // a/b endpoints (and their edge references) swap compared to the
+    // pre-flip direction.
     assert_line(
         objects[0].volumes()[0].layers()[0][0],
         LineSignature {
-            a: (1, 0),
-            a_reference: EndpointReference::Edge(1),
-            b: (0, 0),
-            b_reference: EndpointReference::Edge(2),
+            a: (0, 0),
+            a_reference: EndpointReference::Edge(2),
+            b: (1, 0),
+            b_reference: EndpointReference::Edge(1),
             edge_type: FacetEdgeType::General,
         },
     );
