@@ -1,5 +1,7 @@
 #[path = "acceleration_raw_f64.rs"]
 mod acceleration_raw_f64;
+#[path = "avoid_crossing_external_frame.rs"]
+mod avoid_crossing_external_frame;
 #[path = "bbl_type1_categories.rs"]
 mod bbl_type1_categories;
 #[path = "bbl_type1_tower.rs"]
