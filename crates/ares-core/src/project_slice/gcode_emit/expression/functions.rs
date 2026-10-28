@@ -73,7 +73,7 @@ pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<
         "round" if numbers.len() == 1 => Ok(integer_result(f64::round)),
         "floor" if numbers.len() == 1 => Ok(integer_result(f64::floor)),
         "ceil" if numbers.len() == 1 => Ok(integer_result(f64::ceil)),
-        "digits" if matches!(numbers.len(), 2 | 3) => {
+        "digits" | "zdigits" if matches!(numbers.len(), 2 | 3) => {
             let width = numbers[1].clamp(0.0, 64.0) as usize;
             let rendered = if let Some(decimals) = numbers.get(2) {
                 let decimals = decimals.clamp(0.0, 64.0) as usize;
@@ -84,9 +84,29 @@ pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<
                     .unwrap_or_else(|| i64::from(numbers[0].round() as i32));
                 integer.to_string()
             };
-            Ok(Value::String(format!("{rendered:>width$}")))
+            Ok(Value::String(pad_number(
+                rendered,
+                width,
+                name == "zdigits",
+            )))
         }
         _ => Err(format!("unknown function: {name}")),
+    }
+}
+
+/// `expr::digits<leading_zeros>` (`PlaceholderParser.cpp:663-687`) pads
+/// the formatted number to `width`: `%*d`/`%*.*lf` right-justify with
+/// spaces, `%0*d`/`%0*.*lf` zero-pad after a leading sign.
+fn pad_number(rendered: String, width: usize, leading_zeros: bool) -> String {
+    if !leading_zeros {
+        return format!("{rendered:>width$}");
+    }
+    if rendered.len() >= width {
+        return rendered;
+    }
+    match rendered.as_bytes().first() {
+        Some(b'-') => format!("-{}{}", "0".repeat(width - rendered.len()), &rendered[1..]),
+        _ => format!("{}{}", "0".repeat(width - rendered.len()), rendered),
     }
 }
 

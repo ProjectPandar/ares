@@ -191,9 +191,9 @@ impl OrcaRunner {
     ) -> Result<ExportedCase, StageError> {
         let directory = tempfile::Builder::new()
             .prefix("fixture-case-")
-            .tempdir_in(crate::artifacts::root_from_env().map_err(|error| {
-                io(Stage::Export, error)
-            })?)
+            .tempdir_in(
+                crate::artifacts::root_from_env().map_err(|error| io(Stage::Export, error))?,
+            )
             .map_err(|error| io(Stage::Export, error))?
             .keep();
         let project_path = directory.join("input.3mf");
