@@ -131,9 +131,12 @@ fn source_scarf_recursively_segments_and_clips_both_overlaps() {
     assert_eq!(scarf.paths[0].path.polyline.points[0].x, 200_000);
     assert_eq!(scarf.paths[1].path.polyline.points.len(), 3);
     assert_eq!(scarf.paths[2].path.polyline.points.len(), 17);
+    // The clip-end displacement is inserted before the coord_t cast
+    // (Polyline.cpp:683-702, 09240d202): the double interpolation lands on
+    // exactly 9800000.0 here instead of the old integer-arithmetic 9799999.
     assert_eq!(
         scarf.paths[2].path.polyline.points.last().unwrap().y,
-        9_799_999
+        9_800_000
     );
     assert_eq!(scarf.paths[0].slope.unwrap().e_begin, 0.0);
     assert_eq!(scarf.paths[2].slope.unwrap().z_begin, 1.0);
