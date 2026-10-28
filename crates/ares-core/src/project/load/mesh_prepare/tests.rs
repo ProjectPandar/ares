@@ -56,7 +56,7 @@ fn task22b_import_winding_preserves_positive_zero_negative_zero_nan_and_degenera
 }
 
 #[test]
-fn task22b_fresh_mesh_centering_keeps_f32_subtraction_and_f64_shift() {
+fn task22b_fresh_mesh_centering_keeps_float_subtraction_and_double_center() {
     let project = load_mesh(
         "<vertex x=\"128.0\" y=\"0\" z=\"0\"/><vertex x=\"128.00001525878906\" y=\"0\" z=\"0\"/><vertex x=\"128.0\" y=\"1\" z=\"0\"/>",
         "<triangle v1=\"0\" v2=\"1\" v3=\"2\"/>",
@@ -75,11 +75,12 @@ fn task22b_fresh_mesh_centering_keeps_f32_subtraction_and_f64_shift() {
     let shift = instance
         .transform()
         .transform_point(Point3d::new(0.0, 0.0, 0.0));
-    // Upstream `BoundingBoxf3::center()` evaluates `(min + max) / 2` in f32
-    // (Vec3f): `(128.0 + 128.00001525878906) / 2` rounds to exactly `128.0`
-    // because f32 cannot hold the half-ulp. The center is then widened to
-    // f64 for the transform shift.
-    assert_eq!(shift.x - 10.0, 128.0);
+    // Upstream `BoundingBoxf3` is `BoundingBoxBase<Vec3d>` — double — and
+    // `BoundingBoxBase::center()` evaluates `(min + max) / 2` in that double
+    // domain (BoundingBox.cpp:222-226, instantiated for Vec3d): the float
+    // mesh endpoints are widened before averaging, so the half-ulp survives
+    // (`(128.0 + 128.0000152587890625) / 2 = 128.00000762939453125`).
+    assert_eq!(shift.x - 10.0, 128.000_007_629_394_53);
     let reconstructed = x
         .iter()
         .map(|x| {
@@ -91,11 +92,18 @@ fn task22b_fresh_mesh_centering_keeps_f32_subtraction_and_f64_shift() {
                 - 10.0
         })
         .collect::<Vec<_>>();
-    // With the f32 center the round-trip reconstructs the input vertices
+    // With the double center the round-trip reconstructs the input vertices
     // exactly relative to build placement, after the single-volume shift.
-    assert_eq!(reconstructed, vec![128.0, 128.000_015_258_789_06, 128.0]);
+    assert_eq!(
+        reconstructed,
+        vec![
+            128.000_007_629_394_53,
+            128.000_022_888_183_6,
+            128.000_007_629_394_53
+        ]
+    );
     let raw_center = ((reconstructed[0] + reconstructed[1]) * 0.5 * 1_000_000.0) as i64;
-    assert_eq!(raw_center, 128_000_007);
+    assert_eq!(raw_center, 128_000_015);
 }
 
 #[test]
