@@ -41,6 +41,9 @@ mod printer_physical_identity;
 #[path = "option_coverage/semm_ramming.rs"]
 mod semm_ramming;
 
+#[path = "option_coverage/seam_position_random.rs"]
+mod seam_position_random;
+
 #[path = "option_coverage/nozzle_dataset.rs"]
 mod nozzle_dataset;
 
