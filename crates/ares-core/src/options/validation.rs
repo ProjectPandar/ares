@@ -8,5 +8,5 @@ mod flow;
 mod gcode_flavor;
 mod helpers;
 mod infill_pattern;
-mod loaded;
+pub(in crate::options) mod loaded;
 mod spiral_vase;

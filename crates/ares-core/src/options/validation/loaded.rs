@@ -203,7 +203,7 @@ fn serialize_value(elements: &[LoadedElement]) -> String {
 
 /// `PrintConfig.cpp:10521-10559`: the generic `is_value_valid` loop over a
 /// normalized flat `key → Value` config (the `cfg.keys()` iteration).
-fn collect_range_errors(
+pub(in crate::options) fn collect_range_errors(
     values: &BTreeMap<String, RawConfigValue>,
     errors: &mut BTreeMap<String, String>,
 ) -> Result<(), SliceError> {

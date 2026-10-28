@@ -81,19 +81,53 @@ impl ConfigOverrides {
 
     /// `OrcaSlicer.cpp:7198,7209-7214`: validate caller config before loading input.
     /// C1 owns only these ten `PrintConfig.cpp:10340-10457` threshold keys.
+    /// `CLI::setup` → `m_config.validate(true)` (`OrcaSlicer.cpp:7197-7214`):
+    /// `DynamicPrintConfig::validate` runs `Slic3r::validate`
+    /// (`PrintConfig.cpp:10337+`) over the CLI config; its `std::map` errors
+    /// serialize as `key: text` lines under `Params in command line error:`.
+    /// Defaults are all in range, so the loop is equivalent to checking the
+    /// override entries: the O2 special cases (`cli_threshold_error`,
+    /// `PrintConfig.cpp:10339-10358`) first, then the O3 `is_value_valid`
+    /// loop (`collect_range_errors`, `PrintConfig.cpp:10521-10559`); the
+    /// first message per key wins (`error_message.emplace`, `:10559`),
+    /// and the map orders keys (`std::map`, `OrcaSlicer.cpp:7211-7213`).
     pub fn validate_cli_config(&self) -> Result<(), SliceError> {
-        let errors = self
+        let mut errors: BTreeMap<String, String> = self
             .values
             .iter()
             .filter_map(|(key, value)| {
-                cli_threshold_error(key, &value.cli_numbers)
-                    .map(|message| format!("{key}: {message}"))
+                cli_threshold_error(key, &value.cli_numbers).map(|message| (key.clone(), message))
             })
-            .collect::<Vec<_>>();
+            .collect();
+        let raw = self
+            .values
+            .iter()
+            .map(|(key, value)| {
+                let raw_value = if value.tokens.len() == 1 {
+                    RawConfigValue::Text(value.tokens[0].clone())
+                } else {
+                    RawConfigValue::List(
+                        value
+                            .tokens
+                            .iter()
+                            .map(|token| RawConfigValue::Text(token.clone()))
+                            .collect(),
+                    )
+                };
+                (key.clone(), raw_value)
+            })
+            .collect();
+        super::validation::loaded::collect_range_errors(&raw, &mut errors)?;
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(SliceError::InvalidInput(errors.join("\n")))
+            Err(SliceError::InvalidInput(
+                errors
+                    .into_iter()
+                    .map(|(key, message)| format!("{key}: {message}"))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            ))
         }
     }
 
