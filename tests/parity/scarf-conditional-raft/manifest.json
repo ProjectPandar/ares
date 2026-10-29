@@ -1,7 +1,8 @@
 {
-  "spec": "c7a31e09d4b8f25a6e0c93d17a84f5b2e6d901ca37f48b52d9e60a7c13b8e4f",
+  "source_boundary": "src/libslic3r/GCode.cpp:5777-5791; src/libslic3r/GCode/SeamPlacer.hpp:59-70; src/libslic3r/GCode/SeamPlacer.cpp:1083-1092,1563",
+  "derived_from": "tests/parity/scarf-conditional/overhang-high.3mf",
   "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
-  "base_sha256": "8cda6c553c73d4f55ab638781b1e42c1edc9291652b73ca66c1c529abc2ac6ba",
+  "base_sha256": "3884be1b8d08fba07b1216613ee1152ad2e2101e64ab633f123352c852599ec3",
   "cases": {
     "taper-raft-40": {
       "sha256": "abeeb454cf7ebf73f51a56f77b24c4e5d87c74d21e6e8522b63fb4aa91b53885",
@@ -17,7 +18,7 @@
         "seam_slope_entire_loop": "0",
         "raft_layers": "2"
       },
-      "native_slope_count": 31,
+      "native_slope_count": 64,
       "native_first_slope": "G1 X109.72 Y114.063 Z.63 E.0027 ; perimeter"
     }
   }
