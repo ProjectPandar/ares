@@ -10,11 +10,13 @@
     "build:wasm": "npm run build:wasm -w @ares-slicer/wasm",
     "build": "npm run build -w @ares-slicer/wasm && npm run build -w @ares-slicer/profiles && npm run build -w ares-app",
     "dev": "npm run build -w @ares-slicer/wasm && npm run build -w @ares-slicer/profiles && npm run dev -w ares-app",
-    "lint": "oxlint packages app e2e",
+    "lint": "oxlint packages app e2e pages",
     "typecheck": "npm run typecheck -w @ares-slicer/wasm && npm run typecheck -w ares-app && tsc -p tsconfig.json",
     "prepare:e2e": "cargo build --release -p ares-cli && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build",
     "test:e2e": "npm run prepare:e2e && playwright test",
-    "lighthouse": "node e2e/lighthouse.mjs"
+    "lighthouse": "node e2e/lighthouse.mjs",
+    "build:pages": "npm run build:wasm && npm run build && node scripts/package-pages.mjs",
+    "test:pages": "playwright test --config playwright.pages.config.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -25,6 +27,7 @@
     "lighthouse": "^13.5.0",
     "oxlint": "^1.86.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.2"
+    "vite": "^8.3.2",
+    "wrangler": "4.150.0"
   }
 }

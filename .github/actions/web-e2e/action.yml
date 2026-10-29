@@ -1,5 +1,5 @@
 name: Web E2E
-description: Prepare once, stream failure diagnostics and retain each browser group
+description: Prepare once, stream diagnostics and keep browser files in the runner workspace only
 runs:
   using: composite
   steps:
@@ -8,23 +8,7 @@ runs:
     - name: Desktop E2E
       run: npm exec --prefix web -- playwright test --config web/playwright.config.ts --project desktop --workers 1 --trace retain-on-failure --output /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/desktop
       shell: bash
-    - if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: web-e2e-desktop-artifacts
-        path: |
-          target/web-e2e
-          /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/desktop
-        retention-days: 1
     - name: Mobile E2E
       if: ${{ !cancelled() }}
       shell: bash
       run: npm exec --prefix web -- playwright test --config web/playwright.config.ts --project iphone --project pixel --project ipad --workers 1 --trace retain-on-failure --output /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/mobile
-    - if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: web-e2e-mobile-artifacts
-        path: |
-          target/web-e2e
-          /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/mobile
-        retention-days: 1

@@ -28,6 +28,64 @@ npm run build        # library (packages/ares-wasm-js/dist) then app (app/dist)
 `app/dist/` is a static site; serve it with any static file server
 (`npm run preview -w ares-app` serves it on http://127.0.0.1:4174).
 
+### Cloudflare Pages
+
+`npm run build:pages` produces `app/dist/`, including the WASM, module worker,
+lazy profile assets, Pages `_headers`, existing `THIRD_PARTY_NOTICES.md` and
+`LICENSES/` texts. It requires the pinned OrcaSlicer
+profiles checkout used by CI. `npm run test:pages` runs Chromium against
+Wrangler's local Pages server and writes screenshots/traces to the runner's
+`target/pages-e2e/` workspace only; they are not uploaded as GitHub artifacts.
+Install Chromium first with `npx playwright install chromium`.
+The headers enable cross-origin isolation and SharedArrayBuffer; all app assets
+are served from the same origin. The app uses `/#/prepare` and `/#/preview`, so
+no custom SPA redirect is required.
+
+The Cloudflare Pages workflow uses the existing `Default` self-hosted runner
+group (the current fleet has no `self-hosted` label) and
+builds and checks every push and pull request,
+independently of the native oracle jobs. Bundles, screenshots and traces stay in
+the runner workspace; diagnostic text stays in job logs. The workflow does not
+upload GitHub artifacts or consume artifact storage quota. Workspace files are
+not guaranteed to remain available after the job ends. PRs and branch pushes
+never deploy.
+Production deploys only on `main` pushes when repository variable
+`CLOUDFLARE_PAGES_ENABLED` is `true`; that variable is now enabled.
+
+Public hosting has been approved in the existing **Indexyz Cloudflare** account.
+The direct Pages project is **`ares`**, at <https://ares-cdh.pages.dev>, with
+`main` as its production branch. It is a Pages project, not a Workers deployment.
+GitHub is already configured with:
+
+- repository variable `CLOUDFLARE_PAGES_PROJECT=ares`;
+- repository variable `CLOUDFLARE_PAGES_ENABLED=true`;
+- environment `cloudflare-pages-production`, restricted to deployments from `main`;
+- environment secret `CLOUDFLARE_ACCOUNT_ID`.
+
+The only remaining user setup is the environment secret `CLOUDFLARE_API_TOKEN`.
+Keep its value out of files, command arguments, logs and chat. The API token
+needs only **Account / Cloudflare Pages / Edit**, restricted to the selected
+account, with an explicitly approved expiry. This permission covers Pages
+projects in that account; it is not restricted to one project. Transfer a newly
+created token directly into GitHub secrets through an approved secure handoff;
+do not reuse or read existing secret values.
+
+Both web library packages declare `AGPL-3.0-or-later`; npm's `prepack` license
+copy does not run during a Vite build. The Pages package preserves the existing
+notices and license texts, but does not publish private source or establish
+license compliance. Public-hosting approval does not replace review of any
+required corresponding-source availability and disclosure obligations.
+
+By user decision, both build and deployment jobs run on the self-hosted
+`Default` group. Deployment still requires the build job's checks to pass via
+`needs: build`, but does not depend on uploaded artifacts. It checks out the same
+commit, repeats the build job's pinned toolchain and profile setup, and runs
+`npm ci` and `npm run build:pages` before deploying `web/app/dist` directly.
+It uses `cloudflare/wrangler-action@v4` with the locked Wrangler version and
+references deployment credentials only in the final action, not in the build
+commands. PR builds perform no preview deployment or Cloudflare
+account changes. See Cloudflare's [Direct Upload CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/).
+
 ### Bundle size
 
 Measured at `314b224c`:
@@ -116,7 +174,13 @@ npm run test:e2e
 The Playwright test loads the built SPA in Chromium, imports
 `tests/parity/orca_cli_ender3.3mf`, slices it in the WASM worker, downloads the
 G-code, and checks that it is byte-identical to native `ares slice --plate 1`.
-Artifacts are written to `target/web-e2e/`:
+Evidence files are written to the runner workspace at `target/web-e2e/`;
+screenshots and traces are not uploaded as GitHub artifacts. Diagnostic text
+remains in job logs, and workspace files may disappear when the job ends.
+For the policy on future cross-job files, see the
+[CI artifact lifecycle](../docs/architecture/ci-tier1-repair-speedup.md#当前-artifact-生命周期2026-10-29-用户裁决).
+
+The local files include:
 
 - `prepare.png`, `preview.png`: screenshots
 - `orca_cli_ender3_plate_1.gcode`, `native.gcode`: browser and native G-code

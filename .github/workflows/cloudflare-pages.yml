@@ -1,0 +1,91 @@
+name: Cloudflare Pages
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on:
+      group: Default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # OrcaSlicer v2.4.2
+          path: OrcaSlicer
+          persist-credentials: false
+          sparse-checkout: resources/profiles
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install matching wasm-bindgen CLI
+        run: |
+          version=$(grep -A1 'name = "wasm-bindgen"' Cargo.lock | grep -m1 'version' | cut -d'"' -f2)
+          cargo install wasm-bindgen-cli --version "$version" --locked
+      - run: npm ci --prefix web
+      - run: npm run build:pages --prefix web
+      - run: npm run lint --prefix web
+      - run: npm run typecheck --prefix web
+      - run: npm exec --prefix web -- playwright install --with-deps chromium
+      - run: npm run test:pages --prefix web
+
+  deploy:
+    # Public hosting and the Pages project ares are approved; retain the opt-in gate.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PAGES_ENABLED == 'true'
+    needs: build
+    runs-on:
+      group: Default
+    environment: cloudflare-pages-production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # OrcaSlicer v2.4.2
+          path: OrcaSlicer
+          persist-credentials: false
+          sparse-checkout: resources/profiles
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install matching wasm-bindgen CLI
+        run: |
+          version=$(grep -A1 'name = "wasm-bindgen"' Cargo.lock | grep -m1 'version' | cut -d'"' -f2)
+          cargo install wasm-bindgen-cli --version "$version" --locked
+      - run: npm ci --prefix web
+      - run: npm run build:pages --prefix web
+      - name: Require the approved Pages project
+        env:
+          PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+        run: test -n "$PROJECT"
+      - uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: 4.150.0
+          command: pages deploy web/app/dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main --commit-hash=${{ github.sha }}
