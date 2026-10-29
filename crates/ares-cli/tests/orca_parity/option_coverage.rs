@@ -47,6 +47,9 @@ mod seam_position_random;
 #[path = "option_coverage/staggered_inner_seams.rs"]
 mod staggered_inner_seams;
 
+#[path = "option_coverage/wall_generator_arachne.rs"]
+mod wall_generator_arachne;
+
 #[path = "option_coverage/nozzle_dataset.rs"]
 mod nozzle_dataset;
 
