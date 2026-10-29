@@ -4,10 +4,13 @@
 //!
 //! `machine_pause_gcode` (`:4240`) and `template_custom_gcode`
 //! (`:4246`) render through `placeholder_parser_process(name, template,
-//! current_extruder_id)` with NO DynamicConfig overlay — the per-layer
-//! keys (`layer_num`/`layer_z`/`max_layer_z`) exist only at the overlay
-//! sites (`:4636-4684` before/layer change, `:5162-5167` timelapse
-//! lambda, `:5228-5233` wrapping detection). The base `PlaceholderParser`
+//! current_extruder_id)` with NO DynamicConfig overlay. Layer variables
+//! instead belong to explicit overlays, including wipe-tower/toolchange
+//! (`GCode.cpp:783-784`, `:853-854`, `:1359-1360`, `:7728-7730`,
+//! `:7771-7773`, `:7867-7869`, `:8019-8021`), startup filament (:3149),
+//! print end (:3476-3479), layer hooks (:4636-4685), timelapse/wrapping
+//! (`:5159-5161`, `:5219-5221`), and role change (:6755-6756).
+//! The base `PlaceholderParser`
 //! carries no `layer_num`, so a pause template referencing `{layer_num}`
 //! fails symbol resolution — "Not a variable name" with the identifier's
 //! line/caret (`resolve_variable` `:988-1000`, `process_error_message`

@@ -81,12 +81,23 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
             "filament_extruder_id",
             super::super::value::Value::Integer(filament as i64),
         );
-        // `GCode.cpp:3149`: the BBL machine-start filament-start render
-        // receives the current layer number, but not layer_z/max_layer_z.
-        config.insert(
-            "layer_num",
-            super::super::value::Value::number(state.layer_index as f64),
-        );
+        // Before the first change_layer, m_layer_index is -1
+        // (`GCode.hpp:193`). BBL startup overlays only layer_num
+        // (`GCode.cpp:3149`); ordinary set_extruder also overlays the
+        // writer-domain Z minus z_offset and m_max_layer_z (:7728-7730).
+        config.insert("layer_num", super::super::value::Value::Integer(-1));
+        if !is_bbl {
+            config.insert(
+                "layer_z",
+                super::super::value::Value::number(
+                    state.writer_z.unwrap_or(0.0) - state.options.z_offset,
+                ),
+            );
+            config.insert(
+                "max_layer_z",
+                super::super::value::Value::number(f64::from(state.max_layer_z)),
+            );
+        }
         let name = "filament_start_gcode";
         // Render and write-back failures both emit only the inline
         // report (`GCode.cpp:3920-3933`).

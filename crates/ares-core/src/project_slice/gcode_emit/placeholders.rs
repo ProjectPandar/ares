@@ -153,13 +153,11 @@ fn int_at(values: &crate::OrcaInts, index: usize) -> i32 {
         .map_or(0, |value| value.0)
 }
 
-// `layer_num`/`layer_z` are intentionally not seeded here. Upstream adds
-// them only through the per-site DynamicConfig overlays: wipe-tower and
-// toolchange paths (`GCode.cpp:783-784`, `:853-854`, `:1359-1360`,
-// `:3149`, `:3476-3478`, `:4636-4684`, `:5159-5160`, `:5219-5220`,
-// `:6755`). Printer-level renders without one, such as
-// `machine_pause_gcode`/`template_custom_gcode` (`:4240`/`:4246`),
-// must reject those names.
+// `layer_num`/`layer_z` belong to per-site DynamicConfig overlays only:
+// GCode.cpp:783-784,853-854,1359-1360,3149,3476-3478,4636-4684,
+// 5159-5160,5219-5220,6755 (plus set_extruder's filament overlays).
+// Base-only renders such as machine_pause_gcode/template_custom_gcode
+// (:4240/:4246) must reject those names.
 fn insert_runtime_placeholders(
     config: &mut value::Config,
     traversal: &PreparedPostClassicTraversal,
