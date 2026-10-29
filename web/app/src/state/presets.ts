@@ -1,7 +1,8 @@
 import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
 import { presetFilamentSlots } from "../sidebar/options";
+import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
 import { slicer } from "./slicer";
-import { type ModelFile, type PresetSelection, useApp } from "./store";
+import { type CompatibleState, type ModelFile, type PresetSelection, useApp } from "./store";
 import { decodeOptions } from "./typedSettings";
 
 /**
@@ -63,7 +64,31 @@ async function updateSystemPrinters() {
   }
 }
 
-if (useApp.getState().vendors.length > 0) void updateSystemPrinters();
+/**
+ * GUI_App startup (PresetBundle::load_selections, PresetBundle.cpp:2723): the stored
+ * imports join the catalog and the stored printer is selected again.
+ */
+async function restoreSession() {
+  const stored = await loadImports();
+  for (const { key, file } of stored) {
+    try {
+      const parsed = await slicer.parsePresetBundle(file.bytes, file.filename);
+      importFiles.push({ input: file.bytes, filename: file.filename });
+      useApp.setState(({ presetImports }) => ({ presetImports: [...presetImports, parsed] }));
+    } catch {
+      await deleteImport(key);
+    }
+  }
+  if (useApp.getState().vendors.length > 0) await updateSystemPrinters();
+  const { printer } = storedConfig;
+  if (printer === null) return;
+  // select_preset_by_name_strict: a printer that is no longer loaded is not selected.
+  const printers = await (await presetCatalog()).printers();
+  if (printers.some(({ name }) => name === printer)) await selectPrinter(printer);
+  else saveConfig({ printer: null });
+}
+
+void restoreSession();
 
 /** PresetBundle::update_compatible for the selected printer and process. */
 async function updateCompatible() {
@@ -94,6 +119,7 @@ export async function importPresetFiles(files: File[]) {
     const parsed = await Promise.all(files.map((file, index) => slicer.parsePresetBundle(inputs[index], file.name)));
     importFiles.push(...files.map((file, index) => ({ input: inputs[index], filename: file.name })));
     useApp.setState(({ presetImports }) => ({ presetImports: [...presetImports, ...parsed], loadError: undefined }));
+    await saveImports(files.map((file, index) => ({ filename: file.name, bytes: inputs[index] })));
   } catch (error) {
     useApp.setState({ loadError: (error as Error).message });
     return;
@@ -103,15 +129,46 @@ export async function importPresetFiles(files: File[]) {
 
 /** ConfigWizard: the installed system vendors. */
 export async function setVendors(vendors: string[]) {
-  localStorage.setItem("ares.vendors", JSON.stringify(vendors));
+  saveConfig({ vendors });
   useApp.setState({ vendors });
   await Promise.all([updateSystemPrinters(), updateCompatible()]);
 }
 
-/** Selects a user or system printer; `null` returns to the project's presets. */
+/** PresetBundle::export_selections (PresetBundle.cpp:2917-2945): the selection, also under its printer. */
+function saveSelection() {
+  const selection = useApp.getState().presetSelection;
+  if (!selection) {
+    saveConfig({ printer: null });
+    return;
+  }
+  const { printer, process, filaments } = selection;
+  const settings = { ...storedConfig.printers[printer], process, filaments: Array.from(filaments, (name) => name ?? "") };
+  saveConfig({ printer, printers: { ...storedConfig.printers, [printer]: settings } });
+}
+
+/**
+ * Selects a user or system printer; `null` returns to the project's presets. The printer's
+ * last process and filaments come back (`remember_printer_config`, Tab.cpp:6229-6233,
+ * PresetBundle::update_selections, PresetBundle.cpp:2625-2650), each only while it is still
+ * loaded and compatible (select_preset_by_name_strict, then update_compatible).
+ */
 export async function selectPrinter(printer: string | null) {
-  useApp.setState({ presetSelection: printer === null ? null : { printer, filaments: [] } });
+  const saved = printer === null ? undefined : storedConfig.printers[printer];
+  useApp.setState({ presetSelection: printer === null ? null : { printer, filaments: saved?.filaments ?? [] } });
   await updateCompatible();
+  const restored = (selection: PresetSelection | null, compatible: CompatibleState | null) =>
+    selection?.printer === printer && compatible?.status === "done" ? { selection, presets: compatible.presets } : null;
+  let state = restored(useApp.getState().presetSelection, useApp.getState().compatible);
+  if (state && saved?.process && state.presets.processes.includes(saved.process)) {
+    useApp.setState({ presetSelection: { ...state.selection, process: saved.process } });
+    await updateCompatible();
+    state = restored(useApp.getState().presetSelection, useApp.getState().compatible);
+  }
+  if (state) {
+    const filaments = state.selection.filaments.map((name) => (state.presets.filaments.includes(name) ? name : ""));
+    useApp.setState({ presetSelection: { ...state.selection, filaments } });
+  }
+  if ((useApp.getState().presetSelection?.printer ?? null) === printer) saveSelection();
 }
 
 /**
@@ -135,6 +192,7 @@ export async function selectPrinterModel(model: string, current: CurrentPrinter)
 export async function selectProcess(process: string) {
   const selection = useApp.getState().presetSelection!;
   useApp.setState({ presetSelection: { ...selection, process } });
+  saveSelection();
   await updateCompatible();
 }
 
@@ -143,6 +201,7 @@ export function selectFilament(slot: number, filament: string) {
   const filaments = [...selection.filaments];
   filaments[slot] = filament;
   useApp.setState({ presetSelection: { ...selection, filaments } });
+  saveSelection();
 }
 
 /**

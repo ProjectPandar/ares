@@ -1,5 +1,6 @@
 import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
+import { saveConfig } from "./persistence";
 import { overrideTokens, presetSliceBlocker, sliceWithPresets } from "./presets";
 import { slicer } from "./slicer";
 import { decodeSettings } from "./typedSettings";
@@ -12,12 +13,12 @@ configDefs.then(
 );
 
 export function setTheme(theme: Theme) {
-  localStorage.setItem("ares.theme", theme);
+  saveConfig({ theme });
   useApp.setState({ theme });
 }
 
 export function setMode(mode: ViewMode) {
-  localStorage.setItem("ares.mode", mode);
+  saveConfig({ mode });
   useApp.setState({ mode });
 }
 
@@ -148,7 +149,7 @@ export function toggleOneLayer() {
 /** GUI_App::toggle_show_gcode_window, persisted like `show_gcode_window`. */
 export function toggleGcodeWindow() {
   const gcodeWindow = !useApp.getState().gcodeWindow;
-  localStorage.setItem("ares.gcodeWindow", String(gcodeWindow));
+  saveConfig({ gcodeWindow });
   useApp.setState({ gcodeWindow });
 }
 

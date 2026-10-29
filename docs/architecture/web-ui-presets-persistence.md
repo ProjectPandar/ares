@@ -44,11 +44,14 @@ Design:
 
 - `web/app/src/state/persistence.ts` is the only module that touches browser
   storage. It holds one `localStorage` record, `ares.config`:
-  `{ version: 1, ui: {theme, mode, gcodeWindow}, vendors, rememberPrinterConfig,
-  preferredFilamentMapMode, selected: {printer} | null,
-  printers: { [printerName]: {process?, filaments[], currBedType?} },
-  nozzleVolumeTypes: { [basePrinter]: string[] } }`. The record is small and is
-  read synchronously before the first render, so the theme does not flash.
+  `{ version: 1, theme, mode, gcodeWindow, vendors, printer: string | null,
+  printers: { [printerName]: {process?, filaments[], bedType?} },
+  installedFilaments, nozzleVolumeTypes: { [basePrinter]: string[] },
+  preferredFilamentMapMode }`. Fields arrive with the features that use them,
+  still at version 1 because nothing has shipped. `remember_printer_config`
+  is always on (its upstream default) because Ares has no Preferences page.
+  The record is small and is read synchronously before the first render, so
+  the theme does not flash. Unset filament slots are stored as `""`.
 - Imported preset files go to IndexedDB (database `ares`, store
   `presetImports`, entries `{version: 1, filename, bytes}`), because
   `.orca_bundle` archives can be larger than the localStorage quota. They load

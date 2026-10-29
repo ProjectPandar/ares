@@ -1,5 +1,6 @@
 import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, Scene, SelectablePrinter, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
+import { storedConfig } from "./persistence";
 import type { TypedSettings } from "./typedSettings";
 
 export type Theme = "dark" | "light";
@@ -95,11 +96,10 @@ export const DEFAULT_PREVIEW: PreviewView = {
 };
 
 export const useApp = create<AppState>(() => ({
-  theme: (localStorage.getItem("ares.theme") as Theme | null) ?? "dark",
+  theme: storedConfig.theme,
   engine: "loading",
   configDefs: new Map(),
-  // OrcaSlicer starts in simple mode (GUI_App::get_saved_mode).
-  mode: (localStorage.getItem("ares.mode") as ViewMode | null) ?? "simple",
+  mode: storedConfig.mode,
   fieldError: null,
   file: null,
   scene: null,
@@ -108,12 +108,12 @@ export const useApp = create<AppState>(() => ({
   selectedObject: null,
   overrides: {},
   slice: { status: "idle" },
-  vendors: JSON.parse(localStorage.getItem("ares.vendors") ?? "[]") as string[],
+  vendors: storedConfig.vendors,
   systemPrinters: [],
   printerModels: [],
   presetImports: [],
   presetSelection: null,
   compatible: null,
   preview: DEFAULT_PREVIEW,
-  gcodeWindow: localStorage.getItem("ares.gcodeWindow") !== "false",
+  gcodeWindow: storedConfig.gcodeWindow,
 }));
