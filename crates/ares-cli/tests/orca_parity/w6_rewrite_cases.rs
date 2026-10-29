@@ -50,3 +50,6 @@ mod kobra_wipe_before_external;
 
 #[path = "zero_area_orientation.rs"]
 mod zero_area_orientation;
+
+#[path = "per_object_skirt_combine.rs"]
+mod per_object_skirt_combine;

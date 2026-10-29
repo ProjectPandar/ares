@@ -1,0 +1,10 @@
+{
+  "cases": {
+    "multi-instance-far": {
+      "sha256": "1350308144b3c823656d52d93abbfdf207be4729d86937ee173d1e176bf33094"
+    },
+    "multi-instance-contact": {
+      "sha256": "54312ea98552c1093d96b390041221883564816124fc02a002379df46b714e34"
+    }
+  }
+}
