@@ -94,7 +94,7 @@ fn unescape_string_cstyle(value: &str) -> Result<String, String> {
     Ok(output)
 }
 
-fn unescape_strings_cstyle(value: &str) -> Result<Vec<String>, String> {
+pub(crate) fn unescape_strings_cstyle(value: &str) -> Result<Vec<String>, String> {
     if value.is_empty() {
         return Ok(Vec::new());
     }

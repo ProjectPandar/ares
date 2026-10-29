@@ -121,7 +121,9 @@ pub(crate) use part_cooling_fan::{
 pub(crate) use project_variants::refresh_filament_map;
 pub(crate) use project_variants::{MaterializedProjectVariants, materialize_project_variants};
 #[cfg_attr(not(test), allow(unused_imports))]
-pub(crate) use region_options::{RegionBase, RegionOptionOverrides, RegionOverrideSources};
+pub(crate) use region_options::{
+    RegionBase, RegionOptionOverrides, RegionOverrideSources, unescape_strings_cstyle,
+};
 pub use support_different_extruders::DifferentExtrudersSupport;
 pub use update_multi_to_multi::{MultiToMulti2Update, MultiToMultiUpdate};
 pub use update_printer_extruders::{PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate};

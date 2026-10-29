@@ -1,4 +1,4 @@
-import type { ConfigValue, CurrentPrinter } from "./types.js";
+import type { ConfigValue, CurrentPrinter, PresetKind } from "./types.js";
 
 export type WorkerRequest =
   | { id: number; kind: "init"; wasmUrl: string }
@@ -18,6 +18,9 @@ export type WorkerRequest =
   | { id: number; kind: "catalogPrinters"; catalogId: number }
   | { id: number; kind: "catalogPrinterModels"; catalogId: number }
   | { id: number; kind: "catalogSimilarPrinter"; catalogId: number; model: string; variant: string; current: CurrentPrinter }
+  | { id: number; kind: "catalogPresetValues"; catalogId: number; presetKind: PresetKind; names: string[]; keys: string[] }
+  | { id: number; kind: "catalogPrinterModelInfo"; catalogId: number; model: string }
+  | { id: number; kind: "catalogInstalledFilaments"; catalogId: number; installed: string[] }
   | { id: number; kind: "catalogFree"; catalogId: number }
   | { id: number; kind: "decodeConfigValues"; entries: [string, string][] }
   | { id: number; kind: "encodeConfigValues"; entries: [string, ConfigValue][] }

@@ -144,6 +144,14 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       const { catalogId, model, variant, current } = request;
       return [JSON.parse(catalogs.get(catalogId)!.similarPrinterPreset(model, variant, current.name, current.printer_variant)), []];
     }
+    case "catalogPresetValues": {
+      const { catalogId, presetKind, names, keys } = request;
+      return [JSON.parse(catalogs.get(catalogId)!.presetValues(presetKind, JSON.stringify(names), JSON.stringify(keys))), []];
+    }
+    case "catalogPrinterModelInfo":
+      return [JSON.parse(catalogs.get(request.catalogId)!.printerModelInfo(request.model)), []];
+    case "catalogInstalledFilaments":
+      return [JSON.parse(catalogs.get(request.catalogId)!.installedFilaments(JSON.stringify(request.installed))), []];
     case "catalogFree":
       catalogs.get(request.catalogId)!.free();
       catalogs.delete(request.catalogId);

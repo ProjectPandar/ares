@@ -1,6 +1,10 @@
+mod catalog;
+
 use ares_core::{GenerationMetadata, ProfileSliceRequest, SlicerContext};
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
+
+pub use catalog::PresetCatalog;
 
 #[wasm_bindgen(js_name = parsePresetBundle)]
 pub fn parse_preset_bundle(input: Vec<u8>, filename: String) -> Result<String, JsValue> {
@@ -131,115 +135,6 @@ pub async fn slice_with_profiles_bytes(
     .map_err(|error| error.to_string())
 }
 
-/// Stateful preset catalog (`PresetBundle` holding semantics): vendor data is
-/// parsed once per `addVendor` and filtering reuses the loaded records.
-#[wasm_bindgen]
-pub struct PresetCatalog {
-    handle: ares_core::PresetCatalogHandle,
-}
-
-impl Default for PresetCatalog {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[wasm_bindgen]
-impl PresetCatalog {
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
-        Self {
-            handle: ares_core::PresetCatalogHandle::new(),
-        }
-    }
-
-    /// One vendor envelope `{index, files}` (Uint8Array JSON bytes).
-    #[wasm_bindgen(js_name = addVendor)]
-    pub fn add_vendor(&mut self, vendor_json: Vec<u8>) -> Result<(), JsValue> {
-        self.add_vendor_json(&vendor_json)
-            .map_err(|error| JsValue::from_str(&error))
-    }
-
-    /// An Orca preset JSON or `.orca_*`/`.zip` import.
-    #[wasm_bindgen(js_name = addImport)]
-    pub fn add_import(&mut self, input: Vec<u8>, filename: String) -> Result<(), JsValue> {
-        self.add_import_json(&input, &filename)
-            .map_err(|error| JsValue::from_str(&error))
-    }
-
-    #[wasm_bindgen(js_name = filterCompatible)]
-    pub fn filter_compatible(
-        &self,
-        printer: String,
-        process: Option<String>,
-    ) -> Result<String, JsValue> {
-        self.filter_compatible_json(&printer, process.as_deref())
-            .map_err(|error| JsValue::from_str(&error))
-    }
-
-    /// Selectable printers grouped by vendor, as JSON
-    /// `[{vendor, name, printer_model, printer_variant}]`.
-    #[wasm_bindgen(js_name = printers)]
-    pub fn printers(&self) -> Result<String, JsValue> {
-        self.printers_json()
-            .map_err(|error| JsValue::from_str(&error))
-    }
-
-    /// System printer models in "System presets" group order, as JSON
-    /// `[{model}]` (`PresetComboBoxes.cpp:1243-1251, 1427`).
-    #[wasm_bindgen(js_name = printerModels)]
-    pub fn printer_models(&self) -> Result<String, JsValue> {
-        self.printer_models_json()
-            .map_err(|error| JsValue::from_str(&error))
-    }
-
-    /// `PresetBundle::get_similar_printer_preset`: resolves a model/variant
-    /// pair to a concrete preset name (JSON string or null), given the
-    /// selected printer's name and `printer_variant`.
-    #[wasm_bindgen(js_name = similarPrinterPreset)]
-    pub fn similar_printer_preset(
-        &self,
-        model: String,
-        variant: String,
-        current_name: String,
-        current_variant: String,
-    ) -> String {
-        self.similar_printer_preset_json(&model, &variant, &current_name, &current_variant)
-    }
-}
-
-impl PresetCatalog {
-    pub fn printers_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.handle.printers())
-            .map_err(|error| format!("printer listing cannot serialize: {error}"))
-    }
-
-    pub fn add_vendor_json(&mut self, vendor_json: &[u8]) -> Result<(), String> {
-        self.handle
-            .add_vendor(vendor_json)
-            .map_err(|e| e.to_string())
-    }
-
-    pub fn add_import_json(&mut self, input: &[u8], filename: &str) -> Result<(), String> {
-        self.handle
-            .add_import(input, filename)
-            .map_err(|e| e.to_string())
-    }
-
-    pub fn filter_compatible_json(
-        &self,
-        printer: &str,
-        process: Option<&str>,
-    ) -> Result<String, String> {
-        let filtered = self
-            .handle
-            .filter_compatible(printer, process)
-            .map_err(|error| error.to_string())?;
-        serde_json::to_string(&filtered)
-            .map_err(|error| format!("compatible preset result cannot serialize: {error}"))
-    }
-}
-
 #[wasm_bindgen(js_name = sliceWithProfilesProcessed)]
 pub async fn slice_with_profiles_processed(
     input: Vec<u8>,
@@ -342,28 +237,6 @@ pub(crate) async fn profile_settings_json_for_test(
     options_json: &str,
 ) -> Result<String, String> {
     profile_settings_json(input, filename, catalog_json, selection_json, options_json).await
-}
-
-impl PresetCatalog {
-    pub fn printer_models_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.handle.printer_models())
-            .map_err(|error| format!("printer model listing cannot serialize: {error}"))
-    }
-
-    pub fn similar_printer_preset_json(
-        &self,
-        model: &str,
-        variant: &str,
-        current_name: &str,
-        current_variant: &str,
-    ) -> String {
-        let current = ares_core::CurrentPrinter {
-            name: current_name,
-            printer_variant: current_variant,
-        };
-        serde_json::to_string(&self.handle.similar_printer_preset(model, variant, current))
-            .unwrap_or_else(|_| "null".to_owned())
-    }
 }
 
 /// Returns the placed scene (after `placement` is applied) as `SceneData`,

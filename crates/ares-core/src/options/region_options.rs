@@ -11,6 +11,7 @@ use super::{
 
 mod merge;
 mod metadata;
+pub(crate) use metadata::unescape_strings_cstyle;
 mod normalization;
 mod overrides;
 

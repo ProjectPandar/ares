@@ -1,5 +1,5 @@
 import type { RequestBody } from "./protocol.js";
-import type { CompatiblePresets, CurrentPrinter, PrinterModel, SelectablePrinter } from "./types.js";
+import type { CompatiblePresets, CurrentPrinter, OptionMap, PresetKind, PrinterModel, PrinterModelInfo, SelectablePrinter } from "./types.js";
 
 type Call = (body: RequestBody) => Promise<unknown>;
 
@@ -73,6 +73,30 @@ export class PresetCatalog {
    */
   async similarPrinterPreset(model: string, variant: string, current: CurrentPrinter): Promise<string | null> {
     return (await this.#call({ kind: "catalogSimilarPrinter", catalogId: this.#catalogId, model, variant, current })) as string | null;
+  }
+
+  /**
+   * The `keys` of each named preset of `kind` as loaded (`inherits` applied,
+   * `PresetBundle.cpp:4885-4927`), in `names` order: the stored value of the
+   * nearest preset in the chain that sets a key, else the option's default
+   * text. Rejects an unknown name or key.
+   */
+  async presetValues(kind: PresetKind, names: string[], keys: string[]): Promise<OptionMap[]> {
+    return (await this.#call({ kind: "catalogPresetValues", catalogId: this.#catalogId, presetKind: kind, names, keys })) as OptionMap[];
+  }
+
+  /** Vendor, unsupported bed types, default materials and nozzle diameters of a `printer_model`. */
+  async printerModelInfo(model: string): Promise<PrinterModelInfo> {
+    return (await this.#call({ kind: "catalogPrinterModelInfo", catalogId: this.#catalogId, model })) as PrinterModelInfo;
+  }
+
+  /**
+   * The installed filament set (AppConfig `filaments` section) after
+   * `PresetBundle::load_installed_filaments` seeds it with the default
+   * materials of printers no installed filament is compatible with, sorted.
+   */
+  async installedFilaments(installed: string[]): Promise<string[]> {
+    return (await this.#call({ kind: "catalogInstalledFilaments", catalogId: this.#catalogId, installed })) as string[];
   }
 
   /** Releases the worker's catalog. */

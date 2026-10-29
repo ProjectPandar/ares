@@ -141,6 +141,20 @@ export interface SelectablePrinter {
   printer_variant: string;
 }
 
+export type PresetKind = "machine" | "process" | "filament";
+
+/** `PresetCatalog.printerModelInfo` result. */
+export interface PrinterModelInfo {
+  /** Index name of the vendor listing the model (`PresetBundle::get_current_vendor_type`), null when none does. */
+  vendor: string | null;
+  /** `curr_bed_type` enum values the model does not support (`not_support_bed_type`). */
+  not_support_bed_types: string[];
+  /** System filament presets installed for the model by default. */
+  default_materials: string[];
+  /** `printer_variant`s of the printers of this model (`PresetCollection::diameters_of_selected_printer`). */
+  nozzle_diameters: string[];
+}
+
 /** One system printer model of the plater printer combo. */
 export interface PrinterModel {
   model: string;

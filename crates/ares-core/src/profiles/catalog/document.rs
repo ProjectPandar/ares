@@ -20,6 +20,8 @@ pub(in crate::profiles) struct VendorInput {
 pub(in crate::profiles) struct VendorIndex {
     pub name: String,
     #[serde(default)]
+    pub machine_model_list: Vec<VendorModelEntry>,
+    #[serde(default)]
     pub machine_list: Vec<VendorEntry>,
     #[serde(default)]
     pub process_list: Vec<VendorEntry>,
@@ -29,6 +31,14 @@ pub(in crate::profiles) struct VendorIndex {
 
 #[derive(Deserialize)]
 pub(in crate::profiles) struct VendorEntry {
+    pub sub_path: String,
+}
+
+/// `machine_model_list` entry: `name` is the model id
+/// (`PresetBundle.cpp:4718`, `model.id = machine_model.first`).
+#[derive(Deserialize)]
+pub(in crate::profiles) struct VendorModelEntry {
+    pub name: String,
     pub sub_path: String,
 }
 
