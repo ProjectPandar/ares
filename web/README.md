@@ -34,8 +34,9 @@ npm run build        # library (packages/ares-wasm-js/dist) then app (app/dist)
 lazy profile assets, Pages `_headers`, existing `THIRD_PARTY_NOTICES.md` and
 `LICENSES/` texts. It requires the pinned OrcaSlicer
 profiles checkout used by CI. `npm run test:pages` runs Chromium against
-Wrangler's local Pages server and retains screenshots/traces in
-`target/pages-e2e/`. Install Chromium first with `npx playwright install chromium`.
+Wrangler's local Pages server and writes screenshots/traces to the runner's
+`target/pages-e2e/` workspace only; they are not uploaded as GitHub artifacts.
+Install Chromium first with `npx playwright install chromium`.
 The headers enable cross-origin isolation and SharedArrayBuffer; all app assets
 are served from the same origin. The app uses `/#/prepare` and `/#/preview`, so
 no custom SPA redirect is required.
@@ -43,11 +44,11 @@ no custom SPA redirect is required.
 The Cloudflare Pages workflow uses the existing `Default` self-hosted runner
 group (the current fleet has no `self-hosted` label) and
 builds and checks every push and pull request,
-independently of the native oracle jobs. The `cloudflare-pages` bundle and browser
-check artifacts are uploaded on a best-effort basis with seven-day retention.
-The account-level artifact storage quota is currently exhausted, even though the
-repository has no stored artifacts; upload failures do not fail passing checks.
-PRs and branch pushes never deploy.
+independently of the native oracle jobs. Bundles, screenshots and traces stay in
+the runner workspace; diagnostic text stays in job logs. The workflow does not
+upload GitHub artifacts or consume artifact storage quota. Workspace files are
+not guaranteed to remain available after the job ends. PRs and branch pushes
+never deploy.
 Production deploys only on `main` pushes when repository variable
 `CLOUDFLARE_PAGES_ENABLED` is `true`; that variable is now enabled.
 
