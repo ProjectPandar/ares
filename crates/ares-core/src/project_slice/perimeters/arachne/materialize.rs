@@ -265,6 +265,8 @@ fn materialize_record(
             crate::project_slice::perimeters::arachne::walls::BoundaryOverlap {
                 overlaps,
                 top_or_bottom: config.is_bottom_layer || config.is_topmost_layer,
+                scale,
+                top_expolygons: &generated.top_expolygons,
             },
         )?;
         let generated = extra

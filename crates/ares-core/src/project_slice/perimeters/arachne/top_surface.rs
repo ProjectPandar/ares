@@ -125,6 +125,7 @@ pub(in crate::project_slice) fn regenerate(
         return Ok(GeneratedSurfaceWalls {
             toolpaths: regenerated.toolpaths,
             infill_contour: infill,
+            top_expolygons,
         });
     }
     // Remove bridges over lower slices (`:2196-2203`).
@@ -205,6 +206,7 @@ pub(in crate::project_slice) fn regenerate(
     Ok(GeneratedSurfaceWalls {
         toolpaths,
         infill_contour: final_contour,
+        top_expolygons,
     })
 }
 

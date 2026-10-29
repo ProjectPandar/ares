@@ -198,6 +198,8 @@ fn task22w16_infill_boundary_applies_the_wall_overlap_percent() {
                 top_bottom_infill_wall_overlap: 25.0,
             },
             top_or_bottom: false,
+            scale: SCALE,
+            top_expolygons: &generated.top_expolygons,
         },
     )
     .unwrap();
@@ -251,6 +253,8 @@ fn task22w17_infill_boundary_truncates_offsets_before_halving() {
                 top_bottom_infill_wall_overlap: 15.0,
             },
             top_or_bottom: false,
+            scale: SCALE,
+            top_expolygons: &[],
         },
     )
     .unwrap();

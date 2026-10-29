@@ -10,7 +10,7 @@ use crate::{
     arachne::{ExtrusionLine, wall_toolpaths},
     geometry::{
         ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Polygon, offset_expolygons,
-        offset_paths_tree, offset2_ex, simplify_expolygon_polygons, union_ex,
+        offset_paths_tree, offset2_ex, simplify_expolygon_polygons, union_ex, union_expolygons,
     },
     project_slice::region_slices::RegionSurface,
 };
@@ -25,6 +25,7 @@ pub(in crate::project_slice) const MITER_LIMIT: f64 = 3.0;
 pub(in crate::project_slice) struct GeneratedSurfaceWalls {
     pub(in crate::project_slice) toolpaths: Vec<Vec<ExtrusionLine>>,
     pub(in crate::project_slice) infill_contour: Vec<ExPolygon>,
+    pub(in crate::project_slice) top_expolygons: Vec<ExPolygon>,
 }
 
 /// Scaled flow widths `process_arachne` derives per record
@@ -175,6 +176,7 @@ pub(in crate::project_slice) fn generate_surface_walls(
         return Ok(GeneratedSurfaceWalls {
             toolpaths: generated.toolpaths,
             infill_contour,
+            top_expolygons: Vec::new(),
         });
     }
     // Top-surface regeneration (`PerimeterGenerator.cpp:2177-2247`): the
@@ -217,9 +219,11 @@ pub(in crate::project_slice) struct WallCounts {
 }
 
 /// Inputs from `PerimeterGenerator.cpp:2475-2519 overlap selection`.
-pub(in crate::project_slice) struct BoundaryOverlap {
+pub(in crate::project_slice) struct BoundaryOverlap<'a> {
     pub(in crate::project_slice) overlaps: InfillOverlapPercents,
     pub(in crate::project_slice) top_or_bottom: bool,
+    pub(in crate::project_slice) scale: CoordinateScale,
+    pub(in crate::project_slice) top_expolygons: &'a [ExPolygon],
 }
 
 pub(in crate::project_slice) fn surface_infill_boundary(
@@ -233,7 +237,9 @@ pub(in crate::project_slice) fn surface_infill_boundary(
     BoundaryOverlap {
         overlaps,
         top_or_bottom,
-    }: BoundaryOverlap,
+        scale,
+        top_expolygons,
+    }: BoundaryOverlap<'_>,
 ) -> Result<SurfaceInfillBoundary, SliceError> {
     // `PerimeterGenerator.cpp:2475-2478`: the too-small infill filter uses
     // the single-wall external spacing average.
@@ -263,6 +269,11 @@ pub(in crate::project_slice) fn surface_infill_boundary(
     } else {
         spacings.perimeter_spacing
     };
+    // `PerimeterGenerator.cpp:2490-2497`: retain the top overlap before
+    // replacing the ordinary inset with its selected wall overlap.
+    let top_inset = scale
+        .scaled_delta(scale.unscale(base_inset) * overlaps.top_bottom_infill_wall_overlap / 100.0)
+        as i64;
     let overlap_factor = if top_or_bottom {
         overlaps.top_bottom_infill_wall_overlap / 100.0
     } else {
@@ -288,7 +299,7 @@ pub(in crate::project_slice) fn surface_infill_boundary(
     // half-integer rounding boundary (e.g. 125561/2 = 62780.5).
     let min_perimeter_infill_spacing =
         (spacings.solid_infill_spacing as f64 * (1.0 - INSET_OVERLAP_TOLERANCE)) as i64;
-    let fill_surfaces = offset2_ex(
+    let mut fill_surfaces = offset2_ex(
         &not_filled,
         (-(min_perimeter_infill_spacing as f64) / 2.0) as f32,
         ((inset as f64) + (min_perimeter_infill_spacing as f64) / 2.0) as f32,
@@ -296,8 +307,20 @@ pub(in crate::project_slice) fn surface_infill_boundary(
         MITER_LIMIT,
     )
     .map_err(geometry_error)?;
+    // `PerimeterGenerator.cpp:2516-2518`: single-wall top areas use the
+    // separate top overlap instead of only the ordinary infill boundary.
+    if !top_expolygons.is_empty() {
+        let top_fill = offset_expolygons(
+            top_expolygons,
+            top_inset as f32,
+            JoinType::Miter,
+            MITER_LIMIT,
+        )
+        .map_err(geometry_error)?;
+        fill_surfaces = union_expolygons(&fill_surfaces, &top_fill).map_err(geometry_error)?;
+    }
     // BBS no-overlap infill expolygons (`PerimeterGenerator.cpp:2522-2531`).
-    let fill_no_overlap = offset2_ex(
+    let mut fill_no_overlap = offset2_ex(
         &not_filled,
         (-(min_perimeter_infill_spacing as f64) / 2.0) as f32,
         ((min_perimeter_infill_spacing as f64) / 2.0) as f32,
@@ -305,6 +328,11 @@ pub(in crate::project_slice) fn surface_infill_boundary(
         MITER_LIMIT,
     )
     .map_err(geometry_error)?;
+    // `PerimeterGenerator.cpp:2529-2531`: retain the unoffset top region.
+    if !top_expolygons.is_empty() {
+        fill_no_overlap =
+            union_expolygons(&fill_no_overlap, top_expolygons).map_err(geometry_error)?;
+    }
     Ok(SurfaceInfillBoundary {
         fill_surfaces,
         fill_no_overlap,
