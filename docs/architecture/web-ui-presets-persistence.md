@@ -221,14 +221,17 @@ nozzle" buttons, plus drag where the pointer supports it. The logic lives in
 `ares-core` already consumes them: `options/extruder_index.rs`,
 `options/filament_map_recommend.rs`, and `options/different_extruders.rs`.
 
-Engine check, done first in implementation: the H2D E2E below compares the
-web G-code to the official OrcaSlicer G-code with `nozzle_volume_type =
-High Flow` on one nozzle and Manual `filament_map`. If `ares-core` does not
-resolve the per-extruder variant values from an overridden
-`nozzle_volume_type` the way `PresetBundle::full_fff_config`
-(`PresetBundle.cpp:3884-4045`, `update_values_to_printer_extruders`) does,
-I stop and send a QUESTION. I will not patch the slicing path from this
-branch.
+Engine check (done before the dual-extruder code). Official OrcaSlicer was run
+on the H2D project edited to `nozzle_volume_type` Standard/High Flow and the
+Manual `filament_map` 2,1. ares-core produced byte-identical G-code from the
+edited file and through the overrides. The preset path re-resolves the
+variants too: High Flow changes `filament_extruder_variant` and
+`filament_max_volumetric_speed`. No slicing change was needed. The fixture's
+master extruder 1 rejects TPU on the left nozzle, so the E2E uses master
+extruder 2, the legal variant its provenance names.
+
+The volume types and filament map reach the slice only for the dual layout
+(BBL with two nozzles), for the same reason as the plate type.
 
 ## Engine API (ares-core → ares-wasm → @ares-slicer/wasm)
 

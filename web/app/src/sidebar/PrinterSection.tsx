@@ -3,6 +3,7 @@ import { lazy, Suspense, useState } from "react";
 import { OrcaIcon } from "../shell/icons";
 import { importedNames, selectPrinter, selectPrinterModel } from "../state/presets";
 import { type CompatibleState, useApp } from "../state/store";
+import { ExtruderGroups } from "./ExtruderGroups";
 import { PlateNozzle } from "./PlateNozzle";
 import { PresetCombo } from "./PresetCombo";
 import { EditButton, type OpenTab, project, Section } from "./Section";
@@ -62,6 +63,7 @@ export function PrinterSection({ settings, openTab }: { settings: ProjectSetting
       </div>
       <CompatibleStatus compatible={compatible} />
       <PlateNozzle settings={settings} />
+      <ExtruderGroups />
       {wizard && <Suspense><VendorDialog onClose={() => setWizard(false)} /></Suspense>}
     </Section>
   );

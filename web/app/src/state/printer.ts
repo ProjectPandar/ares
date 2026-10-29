@@ -2,7 +2,7 @@
 import { firstString } from "../sidebar/options";
 import { setOverride } from "./actions";
 import { saveSelection, presetCatalog, selectPrinter } from "./presets";
-import { accordBedType, bedTypeOptions, defaultBedType, nozzleOptions, PANEL_KEYS, printerPanel, showsBedTypes } from "./printerPanel";
+import { accordBedType, bedTypeOptions, defaultBedType, diameterString, PANEL_KEYS, type PrinterPanel, printerPanel, showsBedTypes } from "./printerPanel";
 import { useApp } from "./store";
 
 /** The panel of the selected preset printer, or of the project's printer without a selection. */
@@ -12,7 +12,7 @@ export async function updatePrinterPanel() {
   // A printer whose parent is not loaded has no values (the compatible filter reports why).
   const values = selection
     ? (await catalog.presetValues("machine", [selection.printer], PANEL_KEYS).catch(() => null))?.[0]
-    : scene?.settings?.printer;
+    : scene?.settings && { ...scene.settings.project, ...scene.settings.printer };
   if (!values) {
     useApp.setState({ printerPanel: null });
     return;
@@ -58,21 +58,17 @@ export function selectBedType(bedType: string) {
 /**
  * Sidebar::priv::switch_diameter (Plater.cpp:1243-1300): another diameter selects the printer of
  * the same model with that variant (PresetBundle::get_similar_printer_preset); without one the
- * configuration is incompatible.
+ * configuration is incompatible. Both nozzles of a dual printer take the chosen diameter, as one
+ * print cannot mix them.
  */
-export async function selectNozzle(diameter: string) {
-  const { presetSelection: selection, printerPanel: panel, scene } = useApp.getState();
-  if (!panel || diameter === nozzleOptions(panel, 0).selected) return;
-  const current = selection
-    ? { name: selection.printer, printer_variant: panel.printerVariant }
-    : {
-      name: firstString(scene?.settings?.printer, "printer_settings_id") ?? firstString(scene?.settings?.project, "printer_settings_id") ?? "",
-      printer_variant: panel.printerVariant,
-    };
+export async function selectDiameter(panel: PrinterPanel, diameter: string) {
+  if (panel.nozzleDiameters.every((value) => diameterString(value) === diameter)) return;
+  const { presetSelection: selection, scene } = useApp.getState();
+  const current = {
+    name: selection?.printer ?? firstString(scene?.settings?.printer, "printer_settings_id") ?? firstString(scene?.settings?.project, "printer_settings_id") ?? "",
+    printer_variant: panel.printerVariant,
+  };
   const printer = await (await presetCatalog()).similarPrinterPreset(panel.printerModel, diameter, current);
-  if (printer === null) {
-    useApp.setState({ compatible: { status: "error", error: "Configuration incompatible" } });
-    return;
-  }
-  await selectPrinter(printer);
+  if (printer === null) useApp.setState({ compatible: { status: "error", error: "Configuration incompatible" } });
+  else await selectPrinter(printer);
 }

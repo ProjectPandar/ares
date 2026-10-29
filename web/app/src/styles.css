@@ -1,6 +1,7 @@
 @import "./styles/tokens.css";
 @import "./styles/shell.css";
 @import "./styles/sidebar.css";
+@import "./styles/printer.css";
 @import "./styles/viewport.css";
 @import "./styles/mobile.css";
 @import "./styles/touch.css";
