@@ -22,52 +22,6 @@ impl SkirtPlan {
             return Ok(None);
         }
         let per_object = loops_count > 0 && print.skirt_type == crate::ProcessSkirtType::PerObject;
-        // The contact-component slice admits only the frozen ByLayer,
-        // single-instance explicit-outer envelope; other combined scopes
-        // retain the existing rejection below.
-        let grouped_combining = print.print_sequence == crate::ProcessPrintSequence::ByLayer
-            && print.draft_shield == crate::ProcessDraftShield::Disabled
-            && tower_corners.is_empty()
-            && raft.is_none()
-            && support.iter().all(Vec::is_empty)
-            && traversal
-                .resolved
-                .views
-                .full
-                .filament
-                .gcode
-                .filament_diameter
-                .0
-                .len()
-                == 1
-            && (0..traversal.objects.len()).all(|index| {
-                let (object, group) = traversal.print_object_config(index);
-                object.object.brim_type == crate::ProcessBrimType::OuterOnly
-                    && group.instance_indices.len() == 1
-            });
-        if per_object
-            && traversal.resolved.objects.len() > 1
-            && brim.iter().enumerate().any(|(index, plan)| {
-                let (object, _) = traversal.print_object_config(index);
-                plan.is_some()
-                    && ((print.combine_brims.0 && !grouped_combining)
-                        // `Print.cpp:2847-2971` / `Brim.cpp:448-460,964-977`:
-                        // admitted brim kinds retain their object's occupied footprint.
-                        || !matches!(
-                            object.object.brim_type,
-                            crate::ProcessBrimType::AutoBrim
-                                | crate::ProcessBrimType::OuterOnly
-                                | crate::ProcessBrimType::InnerOnly
-                                | crate::ProcessBrimType::Painted
-                                | crate::ProcessBrimType::BrimEars
-                                | crate::ProcessBrimType::OuterAndInner
-                        ))
-            })
-        {
-            return Err(SliceError::UnsupportedProjectFeature(
-                "skirt_type per-object".to_owned(),
-            ));
-        }
         let items = occupied::items(traversal, support, brim, layer_limit, raft);
         let mut hulls = items
             .iter()
@@ -158,16 +112,18 @@ impl SkirtPlan {
                 hull: hull_polygon.clone(),
             }]
         };
-        // `Print.cpp:2551-2556`: ByObject shared per-object skirts throw SlicingError.
-        // Keep this unsupported scope guarded; only separate object groups are admitted.
+        // `Print.cpp:2551-2556`: after `_make_skirt`, ByObject shared
+        // per-object skirts (a group with more than one object,
+        // `Print.cpp:2977-2978`) throw Slic3r::SlicingError.
         if per_object
             && print.print_sequence == crate::ProcessPrintSequence::ByObject
             && generation_groups
                 .iter()
                 .any(|group| group.members.len() > 1)
         {
-            return Err(SliceError::UnsupportedProjectFeature(
-                "skirt_type per-object".to_owned(),
+            return Err(SliceError::InvalidInput(
+                "Per-object skirts cannot fit between the objects in By object print sequence.\n\nMove the objects farther apart, reduce brim/skirt size, switch Skirt type to Combined, or switch Print sequence to By layer."
+                    .to_owned(),
             ));
         }
         let mut loops = Vec::new();

@@ -89,7 +89,10 @@ fn check(label: &str, expected_groups: usize, expected_brims: usize) {
     assert!(text.contains("; skirt_type = perobject\n"));
     assert!(text.contains("; combine_brims = 1\n"));
     let skirt_blocks = text.split(";TYPE:Skirt\n").skip(1).count();
-    assert_eq!(skirt_blocks, expected_groups, "Native skirt groups {root:?}");
+    assert_eq!(
+        skirt_blocks, expected_groups,
+        "Native skirt groups {root:?}"
+    );
     let brim_blocks = text.split(";TYPE:Brim\n").skip(1).count();
     assert_eq!(brim_blocks, expected_brims, "Native brim blocks {root:?}");
     fs::write(
