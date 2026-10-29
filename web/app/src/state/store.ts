@@ -1,5 +1,6 @@
 import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, Scene, SelectablePrinter, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
+import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
 import type { TypedSettings } from "./typedSettings";
 
@@ -46,7 +47,7 @@ export interface PresetSelection {
 
 export type CompatibleState =
   | { status: "filtering" }
-  | { status: "done"; presets: CompatiblePresets }
+  | { status: "done"; presets: CompatiblePresets; filamentInfo: ReadonlyMap<string, FilamentInfo> }
   | { status: "error"; error: string };
 
 export interface AppState {
@@ -80,6 +81,8 @@ export interface AppState {
   presetSelection: PresetSelection | null;
   /** Compatible processes and filaments of `presetSelection`. */
   compatible: CompatibleState | null;
+  /** Installed system filaments, the visible ones of the filament combos (`Preset::is_visible`). */
+  installedFilaments: ReadonlySet<string>;
   preview: PreviewView;
   /** G-code window visibility (GUI_App `show_gcode_window`). */
   gcodeWindow: boolean;
@@ -114,6 +117,7 @@ export const useApp = create<AppState>(() => ({
   presetImports: [],
   presetSelection: null,
   compatible: null,
+  installedFilaments: new Set(storedConfig.installedFilaments),
   preview: DEFAULT_PREVIEW,
   gcodeWindow: storedConfig.gcodeWindow,
 }));

@@ -2,6 +2,7 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { vendorProfiles } from "./filamentOracle";
 import { projectConfig } from "./settingsOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -162,9 +163,14 @@ test("imported printer presets list the compatible processes and filaments", asy
     ...await groupOptions(page, "Filament 1 preset", "User presets"),
     ...await groupOptions(page, "Filament 1 preset", "System presets"),
   ];
-  expect(filaments.sort()).toEqual([...expected.withProcess.filaments].sort());
+  // The combo lists the compatible filaments that are visible (PresetComboBoxes.cpp:1179-1187): user
+  // presets and the installed system ones, seeded from the printer models' default materials.
+  const bbl = vendorProfiles(["BBL"]);
+  const visible = expected.withProcess.filaments.filter((name) => !bbl.filaments.has(name) || bbl.seeded.has(name));
+  expect(filaments.sort()).toEqual([...visible].sort());
   await expect(sliceButton).toHaveAttribute("title", "Select a filament preset for every filament to slice");
-  await choose(page, "Filament 1 preset", expected.withProcess.filaments[0]);
+  // The imported PLA: Cool Plate, the 3MF plate, supports it.
+  await choose(page, "Filament 1 preset", visible.find((name) => !bbl.filaments.has(name))!);
   // A 3MF with every preset selected slices through sliceWithProfiles.
   await expect(sliceButton).toBeEnabled();
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);

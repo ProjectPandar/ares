@@ -55,6 +55,12 @@
   padding: 4px 8px 2px; color: var(--text-dim); font-size: 11px; border-bottom: 1px solid var(--separator);
 }
 .combo-option { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; cursor: pointer; }
+.combo-subgroup-title { padding: 4px 8px 2px; color: var(--text-faint); font-size: 11px; }
+.combo-subgroup .combo-option { padding-left: 16px; }
+.combo-search {
+  position: sticky; top: -2px; z-index: 1; display: block; width: calc(100% - 8px); margin: 2px 4px 4px; height: 24px;
+  padding: 0 6px; background: var(--field); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font: inherit;
+}
 @media (hover: hover) { .combo-option:hover { background: var(--panel-raised); } }
 .combo-option[aria-selected="true"] { background: var(--accent-checked); }
 .combo-option-swatch { width: 14px; height: 14px; border-radius: 2px; flex: none; border: 1px solid var(--border-strong); }
@@ -168,3 +174,19 @@
 .vendor-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 4px 16px; padding: 12px 16px; max-height: 60vh; overflow-y: auto; }
 .vendor-item { display: flex; align-items: center; gap: 6px; }
 .vendor-footer { display: flex; justify-content: flex-end; padding: 8px 16px 12px; }
+/* Filament selection dialog (guide/23): type, vendor and filament columns. */
+.filament-dialog { width: min(980px, 94vw); }
+.filament-columns { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 12px; padding: 12px 16px; }
+.filament-column { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.filament-column-list { display: flex; flex-direction: column; gap: 2px; height: 50vh; overflow-y: auto; }
+.filament-column-search {
+  height: 26px; padding: 0 6px; background: var(--field); color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; font: inherit; min-width: 0;
+}
+.filament-items-bar { display: flex; align-items: center; gap: 6px; }
+.filament-items-bar .filament-column-search { flex: 1; }
+.filament-count { color: var(--text-dim); white-space: nowrap; }
+@media (max-width: 640px) {
+  .filament-columns { grid-template-columns: 1fr; }
+  .filament-column-list { height: auto; max-height: 30vh; }
+}
