@@ -1,4 +1,5 @@
-use super::{Token, Value, to_string};
+use super::super::lexer::Token;
+use super::{Value, to_string};
 
 // PlaceholderParser.cpp:558-600: compare_op and its inverted wrappers.
 pub(super) fn compare(left: &Value, right: &Value, token: Token) -> Result<bool, String> {
