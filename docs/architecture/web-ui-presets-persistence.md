@@ -158,13 +158,27 @@ Upstream:
   `similarPrinterPreset`. When no preset matches, the "Configuration
   incompatible" warning is shown.
 
-Design: `web/app/src/sidebar/printerOptions.ts` (pure) and
-`PrinterSection.tsx`. The bed type is sent as the `curr_bed_type` override
-for both preset slices and project slices. Changing the nozzle selects a
-printer through `selectPrinter`. In project mode (a 3MF without a preset
-selection) the model data comes from the project printer's `printer_model`.
-If that vendor is not installed, the model is unknown: all bed types are
-offered and the nozzle combo lists only the project's diameter.
+Design: `web/app/src/state/printerPanel.ts` (pure rules), `state/printer.ts`
+(loading and actions) and `sidebar/PlateNozzle.tsx`. The engine gains
+`model_id` in `printerModelInfo` (`PresetBundle.cpp:4735-4738`) for
+`get_default_bed_type`. Changing the nozzle selects a printer through
+`selectPrinter`. In project mode (a 3MF without a preset selection) the model
+data comes from the project printer's `printer_model`. If that vendor is not
+installed, the model is unknown: all bed types are offered and the nozzle combo
+lists only the project's diameter.
+
+The plate type reaches the slice as the `curr_bed_type` override only when
+the plate combo is shown (BBL or `support_multi_bed_types`). Upstream also
+writes the default bed type into the project config for other printers
+(`set_bed_type_accord_combox` on the disabled combo, `Plater.cpp:2534-2539`).
+Ares leaves those printers on the bed type the CLI uses, so the
+`--load-settings` parity E2E (LH Stinger) keeps its oracle.
+
+The plate-type E2E finds one ares-core gap, which this branch does not patch:
+on an X1C project with a Textured PEI plate, official OrcaSlicer emits
+`M106 P3 S150` from the `bed_temperature` branch of `filament_start_gcode`,
+and ares-core omits it. The gap shows both on the edited project file and
+through the override. Every other line matches.
 
 ## 4. Dual-extruder sidebar (H2D)
 

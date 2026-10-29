@@ -2,6 +2,7 @@ import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetB
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
+import type { PrinterPanel } from "./printerPanel";
 import type { TypedSettings } from "./typedSettings";
 
 export type Theme = "dark" | "light";
@@ -43,6 +44,8 @@ export interface PresetSelection {
   process?: string;
   /** Filament preset by slot; unset slots keep the project's. */
   filaments: string[];
+  /** `curr_bed_type` of the plate combo; unset when the printer has none. */
+  bedType?: string;
 }
 
 export type CompatibleState =
@@ -81,6 +84,8 @@ export interface AppState {
   presetSelection: PresetSelection | null;
   /** Compatible processes and filaments of `presetSelection`. */
   compatible: CompatibleState | null;
+  /** The printer panel of the selected or project printer. */
+  printerPanel: PrinterPanel | null;
   /** Installed system filaments, the visible ones of the filament combos (`Preset::is_visible`). */
   installedFilaments: ReadonlySet<string>;
   preview: PreviewView;
@@ -118,6 +123,7 @@ export const useApp = create<AppState>(() => ({
   presetSelection: null,
   compatible: null,
   installedFilaments: new Set(storedConfig.installedFilaments),
+  printerPanel: null,
   preview: DEFAULT_PREVIEW,
   gcodeWindow: storedConfig.gcodeWindow,
 }));

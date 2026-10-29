@@ -149,6 +149,8 @@ export interface PrinterModelInfo {
   vendor: string | null;
   /** `curr_bed_type` enum values the model does not support (`not_support_bed_type`). */
   not_support_bed_types: string[];
+  /** `model_id` of the model with this name (`Preset::get_printer_type`), empty when none. */
+  model_id: string;
   /** System filament presets installed for the model by default. */
   default_materials: string[];
   /** `printer_variant`s of the printers of this model (`PresetCollection::diameters_of_selected_printer`). */

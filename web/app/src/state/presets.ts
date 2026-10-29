@@ -2,6 +2,7 @@ import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPre
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
+import { printerBedType, updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
 import { type CompatibleState, type ModelFile, type PresetSelection, useApp } from "./store";
 import { decodeOptions } from "./typedSettings";
@@ -23,7 +24,7 @@ let syncing: Promise<unknown> = Promise.resolve();
  * presets: rebuilt when the vendors change, imports added as they arrive.
  * Syncs run one at a time.
  */
-function presetCatalog(): Promise<PresetCatalog> {
+export function presetCatalog(): Promise<PresetCatalog> {
   const next = syncing.then(syncCatalog);
   syncing = next.catch(() => undefined);
   return next;
@@ -139,7 +140,7 @@ export async function importPresetFiles(files: File[]) {
 export async function setVendors(vendors: string[]) {
   saveConfig({ vendors });
   useApp.setState({ vendors });
-  await Promise.all([updateSystemPrinters(), updateInstalledFilaments(), updateCompatible()]);
+  await Promise.all([updateSystemPrinters(), updateInstalledFilaments(), updateCompatible(), updatePrinterPanel()]);
 }
 
 /** PresetBundle::load_installed_filaments (PresetBundle.cpp:2541-2600) over the stored set. */
@@ -174,14 +175,14 @@ export function setInstalledFilaments(installed: string[]) {
 }
 
 /** PresetBundle::export_selections (PresetBundle.cpp:2917-2945): the selection, also under its printer. */
-function saveSelection() {
+export function saveSelection() {
   const selection = useApp.getState().presetSelection;
   if (!selection) {
     saveConfig({ printer: null });
     return;
   }
-  const { printer, process, filaments } = selection;
-  const settings = { ...storedConfig.printers[printer], process, filaments: Array.from(filaments, (name) => name ?? "") };
+  const { printer, process, filaments, bedType } = selection;
+  const settings = { ...storedConfig.printers[printer], process, filaments: Array.from(filaments, (name) => name ?? ""), bedType };
   saveConfig({ printer, printers: { ...storedConfig.printers, [printer]: settings } });
 }
 
@@ -206,6 +207,11 @@ export async function selectPrinter(printer: string | null) {
   if (state) {
     const filaments = state.selection.filaments.map((name) => (state.presets.filaments.includes(name) ? name : ""));
     useApp.setState({ presetSelection: { ...state.selection, filaments } });
+  }
+  await updatePrinterPanel();
+  const selection = useApp.getState().presetSelection;
+  if (selection && selection.printer === printer) {
+    useApp.setState({ presetSelection: { ...selection, bedType: printerBedType(saved?.bedType) } });
   }
   if ((useApp.getState().presetSelection?.printer ?? null) === printer) saveSelection();
 }
@@ -302,7 +308,9 @@ export async function overrideTokens(overrides: ConfigOverrides): Promise<Record
  */
 export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides): Promise<SliceResult> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, useApp.getState());
-  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, { ...options, overrides: await overrideTokens(overrides) });
+  // The plate combo's `curr_bed_type` is part of the project config the slice composes.
+  const bedType: ConfigOverrides = selection.bedType === undefined ? {} : { curr_bed_type: selection.bedType };
+  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, { ...options, overrides: await overrideTokens({ ...overrides, ...bedType }) });
 }
 
 /**

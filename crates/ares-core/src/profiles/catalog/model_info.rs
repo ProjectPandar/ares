@@ -16,6 +16,10 @@ pub struct PrinterModelInfo {
     /// `VendorProfile::PrinterModel::not_support_bed_types` of the model
     /// with this id (`PresetUtils::system_printer_model`, `Preset.cpp:4448-4460`).
     pub not_support_bed_types: Vec<String>,
+    /// `model_id` of the model with this name (`Preset::get_printer_type`,
+    /// `Preset.cpp:889-905`), which `Preset::get_default_bed_type` tests
+    /// (`Preset.cpp:985-990`); empty when no vendor lists the model.
+    pub model_id: String,
     /// `VendorProfile::PrinterModel::default_materials` of the same model.
     pub default_materials: Vec<String>,
     /// `PresetCollection::diameters_of_selected_printer` (`Preset.cpp:3319-3328`).
@@ -33,18 +37,26 @@ impl super::PresetCatalogHandle {
         printer_model: &str,
     ) -> Result<PrinterModelInfo, crate::SliceError> {
         let catalog = &self.catalog;
-        let vendor = catalog
+        let named = catalog
             .vendor_models
             .iter()
-            .position(|models| models.iter().any(|model| model.name == printer_model))
-            .map(|scope| catalog.vendor_names[scope].clone());
+            .enumerate()
+            .find_map(|(scope, models)| {
+                models
+                    .iter()
+                    .find(|model| model.name == printer_model)
+                    .map(|model| (scope, model))
+            });
         let model = catalog
             .vendor_models
             .iter()
             .flatten()
             .find(|model| model.id == printer_model);
         Ok(PrinterModelInfo {
-            vendor,
+            vendor: named.map(|(scope, _)| catalog.vendor_names[scope].clone()),
+            model_id: named
+                .map(|(_, model)| model.model_id.clone())
+                .unwrap_or_default(),
             not_support_bed_types: model
                 .map(|model| model.not_support_bed_types.clone())
                 .unwrap_or_default(),
