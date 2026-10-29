@@ -11,6 +11,11 @@ async fn filament_start_position_uses_assignments_not_machine_moves() {
         serde_json::from_str(&archive.entry_text(PROJECT_SETTINGS)).unwrap();
     let settings = settings.as_object_mut().unwrap();
     settings.insert("printer_model".to_owned(), json!("SeeMeCNC Artemis"));
+    // Non-BBL routing renders the KSR stock timelapse through the
+    // layer-start overlay (`GCode.cpp:4667-4674`), which lacks
+    // `{has_timelapse_safe_pos}` (Native rejects it); cleared to keep this
+    // test on an accepted input.
+    settings.insert("time_lapse_gcode".to_owned(), json!(""));
     settings.insert(
         "machine_start_gcode".to_owned(),
         json!("{position[0] = 2}\nG90\nG1 Z1"),

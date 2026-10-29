@@ -11,6 +11,11 @@ async fn absolute_e_preamble_resets_and_depositions_accumulate() {
         serde_json::from_str(&archive.entry_text(PROJECT_SETTINGS)).unwrap();
     let settings = settings.as_object_mut().unwrap();
     settings.insert("printer_model".to_owned(), json!("Eryone ER20"));
+    // Non-BBL routing renders the KSR stock timelapse through the
+    // layer-start overlay (`GCode.cpp:4667-4674`), which lacks
+    // `{has_timelapse_safe_pos}` (Native rejects it); cleared to keep this
+    // test on an accepted input.
+    settings.insert("time_lapse_gcode".to_owned(), json!(""));
     settings.insert("machine_start_gcode".to_owned(), json!(";START"));
     settings.insert("machine_end_gcode".to_owned(), json!(";END"));
     settings.insert("filament_start_gcode".to_owned(), json!(["", ""]));

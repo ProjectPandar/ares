@@ -11,6 +11,11 @@ async fn non_bbl_fans_follow_orca_print_start_layer_and_finish_order() {
         serde_json::from_str(&archive.entry_text(PROJECT_SETTINGS)).unwrap();
     let settings = settings.as_object_mut().unwrap();
     settings.insert("printer_model".to_owned(), json!("SeeMeCNC Artemis"));
+    // Non-BBL routing renders the KSR stock timelapse through the
+    // layer-start overlay (`GCode.cpp:4667-4674`), which lacks
+    // `{has_timelapse_safe_pos}` (Native rejects it); cleared to keep this
+    // test on an accepted input.
+    settings.insert("time_lapse_gcode".to_owned(), json!(""));
     settings.insert("machine_start_gcode".to_owned(), json!(";MACHINE-START"));
     settings.insert("machine_end_gcode".to_owned(), json!(";MACHINE-END"));
     settings.insert("filament_start_gcode".to_owned(), json!([" ", " "]));
@@ -112,6 +117,11 @@ async fn fan_mover_suppresses_redundant_initial_part_fan_off() {
         serde_json::from_str(&archive.entry_text(PROJECT_SETTINGS)).unwrap();
     let settings = settings.as_object_mut().unwrap();
     settings.insert("printer_model".to_owned(), json!("Prusa MINI IS"));
+    // Non-BBL routing renders the KSR stock timelapse through the
+    // layer-start overlay (`GCode.cpp:4667-4674`), which lacks
+    // `{has_timelapse_safe_pos}` (Native rejects it); cleared to keep this
+    // test on an accepted input.
+    settings.insert("time_lapse_gcode".to_owned(), json!(""));
     settings.insert("machine_start_gcode".to_owned(), json!(";MACHINE-START"));
     settings.insert("machine_end_gcode".to_owned(), json!(";MACHINE-END"));
     settings.insert("filament_start_gcode".to_owned(), json!(["", ""]));

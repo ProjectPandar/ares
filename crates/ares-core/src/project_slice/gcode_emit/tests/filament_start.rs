@@ -30,6 +30,16 @@ async fn print_preamble(value: &str) -> String {
         "\"printer_model\": \"Bambu Lab X2D\"",
         "\"printer_model\": \"SeeMeCNC Artemis\"",
     );
+    // The KSR stock `time_lapse_gcode` belongs to the X2D insert-lambda
+    // overlay; on this non-BBL routing it renders through the layer-start
+    // overlay (`GCode.cpp:4667-4674`), which does not provide
+    // `{has_timelapse_safe_pos}` — Native 2.4.2 rejects the stock template
+    // here (`timelapse_gcode Parsing error ... Not a variable name`), so
+    // the template is cleared to keep this test on an accepted input.
+    let mut settings: serde_json::Value =
+        serde_json::from_str(&archive.entry_text(PROJECT_SETTINGS)).unwrap();
+    settings["time_lapse_gcode"] = serde_json::Value::String(String::new());
+    archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
     let output = crate::slice_project(
         &archive.bytes(),
