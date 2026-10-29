@@ -28,9 +28,9 @@ pub(super) fn permits(
         // over a raft: `layer_id() > 0` admits it at GCode.cpp:5780, but
         // SeamPlacer.cpp:1083-1092 only assigns unsupported_dist through a
         // previous layer) reaches GCode.cpp:5786-5790 reading the
-        // uninitialized SeamCandidate field (SeamPlacer.hpp:59-70). The owner
-        // approves 0.0 for this undefined boundary to match observed Native
-        // admission, not as a claim that the C++ value is zero. See
+        // indeterminate SeamCandidate field (SeamPlacer.hpp:59-70). The
+        // owner-approved deterministic policy uses 0.0 to match observed
+        // admission, not as a literal port or proof of the C++ value. See
         // docs/architecture/ard-scarf-raft-unset-distance.md.
         let unsupported = unsupported.unwrap_or(0.0);
         return f64::from(unsupported)

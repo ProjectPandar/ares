@@ -9,7 +9,7 @@
 //! behavior keeps the first object layer's scarf (16 segments at z .6 in
 //! the 5% variant too), while computed later layers flip off below the
 //! threshold. Admission does not prove the uninitialized field is zero;
-//! the owner-approved absent-distance policy is recorded in
+//! the owner-approved deterministic absent-distance policy is recorded in
 //! `docs/architecture/ard-scarf-raft-unset-distance.md`.
 use super::{OrcaRunner, cache_identity, profile_entry, stages};
 use serde_json::{Value, json};
