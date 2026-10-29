@@ -7,6 +7,9 @@ use serde_json::json;
 
 use crate::runner::{ExportedCase, OrcaRunner};
 
+#[path = "spiral_layer_ranges.rs"]
+mod spiral;
+
 macro_rules! input {
     ($name:literal) => {
         include_bytes!(concat!(
