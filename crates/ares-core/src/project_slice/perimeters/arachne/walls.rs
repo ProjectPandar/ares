@@ -157,7 +157,10 @@ pub(in crate::project_slice) fn generate_surface_walls(
             min_bead_width: params.min_bead_width,
             min_feature_size: params.min_feature_size,
             transition_length: params.wall_transition_length,
-            transitioning_angle: std::f64::consts::PI * params.wall_transition_angle / 180.0,
+            // WallToolPaths.cpp:490 / Geometry.hpp:301-305: T is float.
+            transitioning_angle: f64::from(
+                std::f32::consts::PI * params.wall_transition_angle as f32 / 180.0_f32,
+            ),
             transition_filter_deviation: params.wall_transition_filter_deviation,
             wall_distribution_count: params.wall_distribution_count,
             min_length_factor: params.min_length_factor,
