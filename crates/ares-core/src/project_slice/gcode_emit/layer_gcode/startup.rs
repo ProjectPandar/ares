@@ -81,6 +81,12 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
             "filament_extruder_id",
             super::super::value::Value::Integer(filament as i64),
         );
+        // `GCode.cpp:3149`: the BBL machine-start filament-start render
+        // receives the current layer number, but not layer_z/max_layer_z.
+        config.insert(
+            "layer_num",
+            super::super::value::Value::number(state.layer_index as f64),
+        );
         let name = "filament_start_gcode";
         // Render and write-back failures both emit only the inline
         // report (`GCode.cpp:3920-3933`).

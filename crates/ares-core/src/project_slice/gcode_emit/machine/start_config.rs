@@ -40,7 +40,6 @@ pub(super) fn self_start_config(
         .map(|record| record.layer_height)
         .sum::<f64>();
     config.insert("max_layer_z", value::Value::number(max_z));
-    config.insert("layer_num", value::Value::number(0.0));
     if let Some((min_x, min_y, size_x, size_y)) = first_layer_bounds {
         config.insert(
             "first_layer_print_min",
