@@ -2,6 +2,107 @@ use super::*;
 use crate::runner::CaseInputs;
 use std::io::{Cursor, Read, Write};
 
+#[test]
+fn orca_parity_bookkeeping_short_vectors_pad_to_filament_count() {
+    if !crate::runner::reference_enabled("ARES_PARITY_BOOKKEEPING_REFERENCE") {
+        return;
+    }
+    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
+        crate::native_environment::skipped("seeded-only reference");
+        return;
+    }
+    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
+    let selection =
+        parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
+    let machine = profiles.machine(&selection.printer).unwrap();
+    let mut process = profiles.process(&selection.process).unwrap();
+    parity::normalize_process_defaults(&machine, &mut process);
+    process.insert("disable_m73".into(), Value::String("1".into()));
+    process.insert("enable_prime_tower".into(), Value::String("0".into()));
+    let machine = machine.clone();
+    let process = process.clone();
+    let mut filaments = vec![profiles.filament(&selection.filaments[0]).unwrap(); 2];
+    parity::normalize_filament_defaults(&mut filaments);
+    let exported = runner
+        .export_case(
+            &CaseInputs {
+                label: "bookkeeping/short-vectors",
+                machine: &machine,
+                process: &process,
+                filaments: &filaments,
+            },
+            &parity::smoke_overrides(),
+            &runner::repo_root().join("tests/parity/cube10.stl"),
+        )
+        .unwrap();
+    let mut input = zip::ZipArchive::new(Cursor::new(&exported.project)).unwrap();
+    let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..input.len() {
+        let mut file = input.by_index(index).unwrap();
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        if file.name() == "Metadata/project_settings.config" {
+            let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
+            // Two filaments, so OrcaSlicer.cpp:2817-2818 resizes both
+            // bookkeeping vectors to filament_count + 2 = 4 entries
+            // (grow with empty strings) before the config block is
+            // serialized; the stored vectors are SHORT here.
+            settings["different_settings_to_system"] = serde_json::json!(["outer_wall_speed", ""]);
+            settings["inherits_group"] = serde_json::json!(["", ""]);
+            bytes = serde_json::to_vec(&settings).unwrap();
+        }
+        output
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
+            )
+            .unwrap();
+        output.write_all(&bytes).unwrap();
+    }
+    let project = output.finish().unwrap().into_inner();
+    let directory = tempfile::Builder::new()
+        .prefix("bookkeeping-short-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    let path = directory.join("input.3mf");
+    std::fs::write(&path, &project).unwrap();
+    runner::stages::run(
+        runner.bin(),
+        [
+            "--slice".to_owned(),
+            "0".to_owned(),
+            "--outputdir".to_owned(),
+            directory.to_str().unwrap().to_owned(),
+            path.to_str().unwrap().to_owned(),
+        ],
+        runner::stages::Stage::Slice,
+        &directory,
+    )
+    .unwrap();
+    let reference = std::fs::read(directory.join("plate_1.gcode")).unwrap();
+    let text = std::str::from_utf8(&reference).unwrap();
+    assert!(
+        text.lines()
+            .any(|line| line == "; different_settings_to_system = outer_wall_speed;;;"),
+        "short different_settings_to_system must resize to filament_count + 2"
+    );
+    assert!(
+        text.lines().any(|line| line == "; inherits_group = ;;;"),
+        "short inherits_group must resize to filament_count + 2"
+    );
+    let outcome = crate::artifacts::compare(
+        &crate::artifacts::root_from_env().unwrap(),
+        "bookkeeping/short-vectors",
+        Ok(&project),
+        Ok(&reference),
+        serde_json::json!({"kind": "bookkeeping_reference", "binary": std::env::var("ORCA_REPLAY_BIN").unwrap(), "seed": std::env::var("ORCA_REPLAY_SEED").unwrap(), "cpu": std::env::var("ORCA_REPLAY_CPU").unwrap()}),
+    )
+    .unwrap();
+    assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+}
+
 fn configure_different_settings(settings: &mut Value, supplied: bool) {
     if supplied {
         settings["different_settings_to_system"] =
