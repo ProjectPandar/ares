@@ -9,11 +9,7 @@ pub(super) fn plan_project(
     project: &Project,
     resolved: &BoundedResolvedProjectConfig,
 ) -> Result<Vec<layers::PlannedPrintObject>, SliceError> {
-    capabilities::validate(
-        project.objects(),
-        &resolved.objects,
-        resolved.views.full.process.print.spiral_mode.0,
-    )?;
+    capabilities::validate(project.objects(), &resolved.objects)?;
     let object_extruders = extruders::collect_project_object_extruders(
         project.objects(),
         &resolved.objects,

@@ -15,7 +15,7 @@ fn validate(
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
 ) -> Result<(), SliceError> {
-    validate_capabilities(source_objects, resolved_objects, false)
+    validate_capabilities(source_objects, resolved_objects)
 }
 
 #[test]
@@ -83,13 +83,12 @@ fn task22a_capability_gate_order_is_project_key_major() {
 
 #[test]
 fn task22o18_global_spiral_crosses_the_capability_boundary_after_earlier_gates() {
-    assert_eq!(validate_capabilities(&[], &[], true), Ok(()));
+    assert_eq!(validate_capabilities(&[], &[]), Ok(()));
 
     let source = source_object(Default::default(), Vec::new(), Vec::new());
     let object = with_object(|value| value.raft_layers = OrcaInt(1));
-    // The raft gate is removed: only spiral_mode gates here.
     assert_eq!(
-        validate_capabilities(&[source], &[resolved(0, object, Vec::new())], true),
+        validate_capabilities(&[source], &[resolved(0, object, Vec::new())]),
         Ok(())
     );
 }

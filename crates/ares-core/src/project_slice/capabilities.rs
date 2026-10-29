@@ -3,7 +3,6 @@ use crate::{ProjectObject, SliceError, project::effective_config::types::Resolve
 pub(super) fn validate(
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
-    spiral_mode: bool,
 ) -> Result<(), SliceError> {
     if resolved_objects.iter().any(|resolved| {
         source_objects[resolved.source_object_index]
