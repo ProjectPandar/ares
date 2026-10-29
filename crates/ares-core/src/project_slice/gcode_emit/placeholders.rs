@@ -153,6 +153,11 @@ fn int_at(values: &crate::OrcaInts, index: usize) -> i32 {
         .map_or(0, |value| value.0)
 }
 
+// `layer_num`/`layer_z` are intentionally not seeded here. Upstream only
+// adds them through the per-site DynamicConfig overlays
+// (`GCode.cpp:4639-4684`, `:5162-5167`, `:5228-5233`); printer-level
+// renders such as `machine_pause_gcode`/`template_custom_gcode`
+// (`GCode.cpp:4240`/`:4246`) must reject those names.
 fn insert_runtime_placeholders(
     config: &mut value::Config,
     traversal: &PreparedPostClassicTraversal,
@@ -166,8 +171,6 @@ fn insert_runtime_placeholders(
         "initial_no_support_hotend",
         "total_toolchanges",
         "current_object_idx",
-        "layer_num",
-        "layer_z",
     ] {
         config.insert(name, Value::number(0.0));
     }
