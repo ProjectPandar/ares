@@ -150,7 +150,9 @@ impl Parser<'_> {
                 ("if", "if".len())
             } else if trimmed
                 .strip_prefix("elsif")
-                .is_some_and(|tail| tail.starts_with([' ', '\t']) || tail.starts_with('}'))
+                // `kw["elsif"] > bool_expr_eval` accepts `elsif(`
+                // without whitespace (`PlaceholderParser.cpp:2110,2182`).
+                .is_some_and(|tail| tail.starts_with([' ', '\t', '(']) || tail.starts_with('}'))
             {
                 ("elsif", "elsif".len())
             } else if trimmed
