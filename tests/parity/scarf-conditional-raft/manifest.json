@@ -1,0 +1,24 @@
+{
+  "spec": "c7a31e09d4b8f25a6e0c93d17a84f5b2e6d901ca37f48b52d9e60a7c13b8e4f",
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "base_sha256": "8cda6c553c73d4f55ab638781b1e42c1edc9291652b73ca66c1c529abc2ac6ba",
+  "cases": {
+    "taper-raft-40": {
+      "sha256": "abeeb454cf7ebf73f51a56f77b24c4e5d87c74d21e6e8522b63fb4aa91b53885",
+      "settings": {
+        "seam_slope_type": "external",
+        "seam_slope_conditional": "1",
+        "scarf_angle_threshold": "0",
+        "scarf_overhang_threshold": "40%",
+        "seam_slope_steps": "10",
+        "seam_slope_min_length": "10",
+        "seam_slope_start_height": "10%",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_entire_loop": "0",
+        "raft_layers": "2"
+      },
+      "native_slope_count": 31,
+      "native_first_slope": "G1 X109.72 Y114.063 Z.63 E.0027 ; perimeter"
+    }
+  }
+}

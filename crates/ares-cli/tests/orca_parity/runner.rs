@@ -26,6 +26,8 @@ mod resource_triangle_defaults;
 mod resource_vertex_defaults;
 #[path = "runner/scarf_conditional.rs"]
 mod scarf_conditional;
+#[path = "runner/scarf_conditional_raft.rs"]
+mod scarf_conditional_raft;
 #[path = "runner/seam_physical_plane.rs"]
 mod seam_physical_plane;
 #[path = "runner/seam_rear.rs"]
