@@ -122,7 +122,13 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
     await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
     await expect(combo(page, "Printer preset")).toHaveText("No printer preset");
     expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe("dark");
-    dropped[name] = await page.evaluate(() => localStorage.getItem("ares.config") === null);
+    // The corrupt record is gone; the app may already have written a fresh default record.
+    dropped[name] = await page.evaluate(() => {
+      const text = localStorage.getItem("ares.config");
+      if (text === null) return true;
+      const stored = JSON.parse(text) as { version: number; theme: string; printer: string | null; vendors: string[] };
+      return stored.version === 1 && stored.theme === "dark" && stored.printer === null && stored.vendors.length === 0;
+    });
     expect(dropped[name], name).toBe(true);
   }
   await page.screenshot({ path: `${artifacts}corrupt-config.png` });
