@@ -30,6 +30,7 @@ impl Catalog {
             index: BTreeMap::new(),
             selectable: BTreeMap::new(),
             vendor_names: Vec::new(),
+            vendor_models: Vec::new(),
             direct_imports: false,
         }
     }
@@ -67,6 +68,15 @@ impl Catalog {
     }
 
     fn insert_vendor(&mut self, scope: Scope, mut vendor: VendorInput) -> Result<(), SliceError> {
+        // `PresetBundle.cpp:4712-4821`: the machine models load before the presets.
+        let mut models = Vec::new();
+        for entry in &vendor.index.machine_model_list {
+            let document = vendor.files.remove(&entry.sub_path).ok_or_else(|| {
+                invalid(format!("missing vendor profile file {}", entry.sub_path))
+            })?;
+            models.extend(super::vendor_models::printer_model(entry, &document));
+        }
+        self.vendor_models.push(models);
         let entries = [
             (ProfileKind::Machine, vendor.index.machine_list),
             (ProfileKind::Process, vendor.index.process_list),

@@ -11,7 +11,9 @@ mod inheritance;
 #[cfg(test)]
 mod tests;
 
-pub use catalog::{CurrentPrinter, PresetCatalogHandle, SelectablePrinter};
+pub use catalog::{
+    CurrentPrinter, PresetCatalogHandle, PresetValues, PrinterModelInfo, SelectablePrinter,
+};
 pub use compatible::{FilteredPresets, MissingParent, filter_compatible_presets};
 pub use composition::{
     ComposedProfile, ProfileGroupMetadata, ProfileSelection, compose_profile_fragments,

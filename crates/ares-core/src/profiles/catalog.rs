@@ -2,10 +2,13 @@ mod chain;
 mod cli_metadata;
 mod compose;
 mod document;
+mod model_info;
+mod preset_values;
 mod printer_models;
 #[allow(unused_imports)]
 mod raw;
 mod store;
+mod vendor_models;
 
 use std::collections::BTreeMap;
 
@@ -22,6 +25,8 @@ use crate::{
 pub(in crate::profiles) use chain::MissingParentLink;
 pub(super) use document::ProfileDocument;
 use document::VendorInput;
+pub use model_info::PrinterModelInfo;
+pub use preset_values::PresetValues;
 pub use printer_models::CurrentPrinter;
 
 /// `Catalog::compose` result: the fully resolved profile, the merged raw
@@ -48,6 +53,8 @@ pub(super) struct Catalog {
     selectable: BTreeMap<(ProfileKind, String), usize>,
     /// Vendor index name per vendor scope (`VendorProfile::name`).
     vendor_names: Vec<String>,
+    /// `VendorProfile::models` per vendor scope.
+    vendor_models: Vec<Vec<vendor_models::PrinterModelProfile>>,
     /// Set only by the `--load-settings` entry: every import composes
     /// as its own single record (`load_config_file` direct-load,
     /// `OrcaSlicer.cpp:1953-2010`; the chain reads are commented out,
@@ -156,6 +163,12 @@ impl PresetCatalogHandle {
         process: Option<&str>,
     ) -> Result<FilteredPresets, SliceError> {
         super::compatible::filter_with_catalog(&self.catalog, printer, process)
+    }
+
+    /// The installed filament set after `PresetBundle::load_installed_filaments`
+    /// seeds it (`PresetBundle.cpp:2541-2600`).
+    pub fn installed_filaments(&self, installed: &[String]) -> Result<Vec<String>, SliceError> {
+        super::compatible::installed_filaments(&self.catalog, installed)
     }
 }
 

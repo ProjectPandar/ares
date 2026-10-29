@@ -229,10 +229,15 @@ of a `libslic3r` read.
   default_materials, nozzle_diameters}`: `get_current_vendor_type`
   (`PresetBundle.cpp:612-640`), `VendorProfile::PrinterModel`
   (`:4785-4810`) and `diameters_of_selected_printer` (`Preset.cpp:3319-3328`).
+  `vendor` is the vendor index `name` (e.g. "Bambulab"). The vendor
+  envelope carries no file stem, so `is_bbl_vendor` maps that name back to
+  its `@ares-slicer/profiles` id (`BBL`) in TypeScript.
 - `installedFilaments(installed)` (D1) is the seed of `load_installed_filaments` (`PresetBundle.cpp:2541-2600`).
 
-Destination: `crates/ares-core/src/profiles/catalog/printer_models.rs` and a
-new `catalog/preset_values.rs`. `crates/ares-wasm/src/profiles.rs` is already
+Destination: `crates/ares-core/src/profiles/catalog/{vendor_models,model_info,preset_values}.rs`,
+with `profiles/compatible/installed.rs` for the seed. `compatible.rs` was
+already over 400 lines, so its compatibility checks move to
+`compatible/checks.rs`. `crates/ares-wasm/src/profiles.rs` is already
 397 lines, so the catalog bindings move to `profiles/catalog.rs`. The JS
 wrapper goes in `web/packages/ares-wasm-js/src/presetCatalog.ts`.
 
