@@ -140,12 +140,10 @@ pub(in crate::project_slice) fn regenerate(
         .map_err(geometry_error)?;
         top_expolygons = difference_ex(&top_expolygons, &bridges).map_err(geometry_error)?;
     }
-    // Filter thin areas and expand to hide the wall line (`:2205-2214`).
-    let scaled_1e5 = scale.checked_scale(0.00001).unwrap_or(0) as f32;
-    let min_width_scaled = scale
-        .checked_scale(ts.min_width_top_surface_mm)
-        .ok_or_else(|| invalid("min_width_top_surface exceeds the coordinate range"))?
-        as f32;
+    // `PerimeterGenerator.cpp:2210-2215`: retain fractional scaled deltas
+    // until the float conversions, including the double-product margin.
+    let scaled_1e5 = scale.scaled_delta(0.00001) as f32;
+    let min_width_scaled = scale.scaled_delta(ts.min_width_top_surface_mm) as f32;
     let top_surface_min_width = f32::max(
         spacings.ext_perimeter_spacing as f32 / 4.0 + scaled_1e5,
         min_width_scaled / 4.0,
@@ -153,7 +151,7 @@ pub(in crate::project_slice) fn regenerate(
     top_expolygons = offset2_ex(
         &top_expolygons,
         -top_surface_min_width,
-        top_surface_min_width + (ts.perimeter_width * 85 / 100) as f32,
+        top_surface_min_width + (ts.perimeter_width as f64 * 0.85) as f32,
         JoinType::Miter,
         MITER_LIMIT,
     )

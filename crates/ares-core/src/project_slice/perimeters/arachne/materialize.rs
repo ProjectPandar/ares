@@ -133,11 +133,11 @@ fn materialize_record(
     )?;
     // `min_width_top_surface.get_abs_value(unscale_(perimeter_width))`
     // (`PerimeterGenerator.cpp:2210`): resolve the percent over the
-    // perimeter flow width.
+    // unscaled quantized perimeter width.
     let min_width_top_surface_mm = match region.min_width_top_surface {
         crate::FloatOrPercent::Float(value) => value,
         crate::FloatOrPercent::Percent(percent) => {
-            f64::from(input.perimeter_flow.width) * percent.0 / 100.0
+            scale.unscale(spacings.perimeter_width) * percent.0 / 100.0
         }
     };
     let overlaps = InfillOverlapPercents {
