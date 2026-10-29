@@ -6,6 +6,20 @@ Native 产物。runner 为 org 级 ephemeral VM
 /tmp、/nix/store）均不可用——Native 一律在 CI 内用仓库内 Nix 表达式
 现场构建或下载官方 AppImage。
 
+## 当前 artifact 生命周期（2026-10-29 用户裁决）
+
+Tier 1、web E2E 和 Pages 不上传 GitHub artifacts。截图、trace、G-code 和
+Native 比较文件只写入 runner workspace；诊断文本写入 job logs。runner
+workspace 在 job 结束后不保证可用，不能承诺下载截图或保留产物。
+
+Pages deploy 在同一个 job 中 checkout、setup、`build:pages` 后部署；不从
+build job 下载文件，但仍用 `needs: build` 等待检查成功。已移除仅供证据
+留存的上传步骤，以及没有上传方之后多余的全局 artifact cleanup job。
+
+未来如果确实需要跨 job 文件：生产方上传，消费方下载并消费，然后必须在
+**消费 job 内立即删除** artifact（例如 `geekyeggo/delete-artifact` 或
+GitHub REST API）；不能以短 retention 或末尾独立 cleanup job 替代。
+
 ## 1. 失败清单与根因（不变）
 
 - run 38145688037：`embedded_script_whole_file` 2 测试读

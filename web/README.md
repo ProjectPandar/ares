@@ -174,7 +174,13 @@ npm run test:e2e
 The Playwright test loads the built SPA in Chromium, imports
 `tests/parity/orca_cli_ender3.3mf`, slices it in the WASM worker, downloads the
 G-code, and checks that it is byte-identical to native `ares slice --plate 1`.
-Artifacts are written to `target/web-e2e/`:
+Evidence files are written to the runner workspace at `target/web-e2e/`;
+screenshots and traces are not uploaded as GitHub artifacts. Diagnostic text
+remains in job logs, and workspace files may disappear when the job ends.
+For the policy on future cross-job files, see the
+[CI artifact lifecycle](../docs/architecture/ci-tier1-repair-speedup.md#当前-artifact-生命周期2026-10-29-用户裁决).
+
+The local files include:
 
 - `prepare.png`, `preview.png`: screenshots
 - `orca_cli_ender3_plate_1.gcode`, `native.gcode`: browser and native G-code
