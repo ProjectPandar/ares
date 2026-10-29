@@ -2,6 +2,7 @@ import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { saveConfig } from "./persistence";
 import { overrideTokens, presetSliceBlocker, sliceWithPresets } from "./presets";
+import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
 import { decodeSettings } from "./typedSettings";
 import { DEFAULT_PREVIEW, type PreviewView, type Theme, type Thumb, useApp, type ViewMode } from "./store";
@@ -50,6 +51,7 @@ export async function importFile(file: File) {
       overrides: {},
       slice: { status: "idle" },
     });
+    if (!useApp.getState().presetSelection) await updatePrinterPanel();
   } catch (error) {
     useApp.setState({ loadError: (error as Error).message });
   } finally {

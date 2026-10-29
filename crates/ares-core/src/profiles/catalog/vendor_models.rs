@@ -9,6 +9,8 @@ use crate::project::raw_settings::RawConfigValue;
 pub(in crate::profiles) struct PrinterModelProfile {
     pub(in crate::profiles) id: String,
     pub(in crate::profiles) name: String,
+    /// `model_id`, the printer type of `Preset::get_printer_type`.
+    pub(in crate::profiles) model_id: String,
     pub(in crate::profiles) default_materials: Vec<String>,
     pub(in crate::profiles) not_support_bed_types: Vec<String>,
 }
@@ -44,6 +46,8 @@ pub(super) fn printer_model(
         id: entry.name.clone(),
         // `:4731-4734`: the `name` key.
         name: document.name.clone(),
+        // `:4735-4738`: the `model_id` key.
+        model_id: text("model_id").unwrap_or_default().to_owned(),
         // `:4786-4797` (`default_materials`) and `:4798-4809` (`not_support_bed_type`).
         default_materials: sorted_list(text("default_materials")),
         not_support_bed_types: sorted_list(text("not_support_bed_type")),
