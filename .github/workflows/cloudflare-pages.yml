@@ -45,15 +45,19 @@ jobs:
       - run: npm run typecheck --prefix web
       - run: npm exec --prefix web -- playwright install --with-deps chromium
       - run: npm run test:pages --prefix web
+      # Account-level artifact storage quota may be exhausted; uploads are best effort.
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: cloudflare-pages
           path: web/app/dist
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
+      # Account-level artifact storage quota must not fail otherwise passing checks.
       - if: always()
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: cloudflare-pages-browser-check
           path: target/pages-e2e
@@ -67,13 +71,31 @@ jobs:
       group: Default
     environment: cloudflare-pages-production
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: cloudflare-pages
-          path: dist
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # OrcaSlicer v2.4.2
+          path: OrcaSlicer
+          persist-credentials: false
+          sparse-checkout: resources/profiles
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install matching wasm-bindgen CLI
+        run: |
+          version=$(grep -A1 'name = "wasm-bindgen"' Cargo.lock | grep -m1 'version' | cut -d'"' -f2)
+          cargo install wasm-bindgen-cli --version "$version" --locked
+      - run: npm ci --prefix web
+      - run: npm run build:pages --prefix web
       - name: Require the approved Pages project
         env:
           PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
@@ -83,4 +105,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: 4.150.0
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main --commit-hash=${{ github.sha }}
+          command: pages deploy web/app/dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main --commit-hash=${{ github.sha }}

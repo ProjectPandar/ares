@@ -43,8 +43,11 @@ no custom SPA redirect is required.
 The Cloudflare Pages workflow uses the existing `Default` self-hosted runner
 group (the current fleet has no `self-hosted` label) and
 builds and checks every push and pull request,
-independently of the native oracle jobs, and retains the `cloudflare-pages`
-deployment artifact for seven days. PRs and branch pushes never deploy.
+independently of the native oracle jobs. The `cloudflare-pages` bundle and browser
+check artifacts are uploaded on a best-effort basis with seven-day retention.
+The account-level artifact storage quota is currently exhausted, even though the
+repository has no stored artifacts; upload failures do not fail passing checks.
+PRs and branch pushes never deploy.
 Production deploys only on `main` pushes when repository variable
 `CLOUDFLARE_PAGES_ENABLED` is `true`; that variable is now enabled.
 
@@ -73,10 +76,13 @@ license compliance. Public-hosting approval does not replace review of any
 required corresponding-source availability and disclosure obligations.
 
 By user decision, both build and deployment jobs run on the self-hosted
-`Default` group. The deployment job downloads only this run's checked artifact.
+`Default` group. Deployment still requires the build job's checks to pass via
+`needs: build`, but does not depend on uploaded artifacts. It checks out the same
+commit, repeats the build job's pinned toolchain and profile setup, and runs
+`npm ci` and `npm run build:pages` before deploying `web/app/dist` directly.
 It uses `cloudflare/wrangler-action@v4` with the locked Wrangler version and
-names secrets only in that job; it does not execute app build scripts with
-deployment credentials. PR builds perform no preview deployment or Cloudflare
+references deployment credentials only in the final action, not in the build
+commands. PR builds perform no preview deployment or Cloudflare
 account changes. See Cloudflare's [Direct Upload CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/).
 
 ### Bundle size
