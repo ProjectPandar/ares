@@ -32,21 +32,6 @@ pub(super) fn validate(
     {
         return unsupported("layer_config_ranges");
     }
-    if !spiral_mode
-        && resolved_objects.iter().any(|object| {
-            object.object.raft_layers.0 > 0
-                && object.all_regions.iter().any(|region| {
-                    region.seam_slope_type != crate::ProcessSeamScarfType::None
-                        && region.seam_slope_conditional.0
-                        && region.scarf_overhang_threshold.0 > 0.0
-                })
-        })
-    {
-        // Native UB: SeamPlacer.hpp:59-70 leaves unsupported_dist uninitialized
-        // on object layer0 (:1092 assigns only with a previous layer; :1563 reads).
-        // GCode.cpp:5787-5791 consumes it over a raft, whose print ID is >0.
-        return unsupported("scarf_overhang_threshold");
-    }
     Ok(())
 }
 

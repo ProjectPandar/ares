@@ -24,9 +24,16 @@ pub(super) fn permits(
         } else {
             options.scarf.inner_line_width
         };
-        return f64::from(
-            unsupported.expect("admitted active scarf has selected support distance"),
-        ) < options.scarf.overhang_threshold * f64::from(0.01_f32) * width;
+        // A seam without a previous-layer distancer (the first object slice
+        // over a raft: `layer_id() > 0` admits it at GCode.cpp:5780, but
+        // SeamPlacer.cpp:1083-1092 only assigns unsupported_dist through a
+        // previous layer) reaches GCode.cpp:5786-5790 reading the
+        // uninitialized SeamCandidate field (SeamPlacer.hpp:59-70). Measured
+        // Native behavior is zero, so `0 < threshold * width` keeps the
+        // scarf; model the unset distance as 0.0.
+        let unsupported = unsupported.unwrap_or(0.0);
+        return f64::from(unsupported)
+            < options.scarf.overhang_threshold * f64::from(0.01_f32) * width;
     }
     true
 }
