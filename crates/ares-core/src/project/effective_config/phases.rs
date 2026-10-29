@@ -68,6 +68,9 @@ fn resolve_with_observer(
 
     let mut first = normalized_source;
     call_normalize_fdm_2(&mut first, NormalizeFdm2Pass::ColdFirst, 0, 0, observer);
+    // The raw-map entry guard must run before materialization rewrites the
+    // slots (grow + single-extruder reset, `OrcaSlicer.cpp:6027-6034`).
+    super::cardinality::validate_source_filament_map_entries(&first)?;
     let MaterializedProjectVariants {
         full: materialized,
         checkpoint: filament_variant_checkpoint,

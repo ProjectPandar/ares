@@ -2,6 +2,22 @@ use crate::{ProjectSettings, SliceError};
 
 use super::{ValidatedMaterializedProject, invalid_option};
 
+// Preserve the input entry-range gate before CLI normalization resets single-
+// extruder slots (OrcaSlicer.cpp:6027-6034). Length remains grow-only.
+pub(super) fn validate_source_filament_map_entries(
+    settings: &ProjectSettings,
+) -> Result<(), SliceError> {
+    let physical_extruder_count = settings.project.print.nozzle_diameter.0.len();
+    let filament_map = &settings.project.gcode.filament_map.0;
+    if filament_map
+        .iter()
+        .any(|entry| entry.0 <= 0 || entry.0 as usize > physical_extruder_count)
+    {
+        return Err(invalid_option("filament_map"));
+    }
+    Ok(())
+}
+
 pub(super) fn validate(
     settings: &ProjectSettings,
 ) -> Result<ValidatedMaterializedProject, SliceError> {

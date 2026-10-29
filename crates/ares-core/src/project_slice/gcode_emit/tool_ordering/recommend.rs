@@ -1,7 +1,7 @@
 //! ToolOrdering.cpp:1278-1316: actual layer usage precedes grouping and reorder.
 use super::{OrderingScope, RaftSchedule, ToolOrdering, collect_layers, finish_layers};
 use crate::{
-    ProcessPrintSequence, SliceError,
+    ProcessPrintSequence, ProjectFilamentMapMode, SliceError,
     options::{filament_map_recommend, refresh_filament_map, write_config_block},
     project_slice::{
         island_print_order::OrderedExtrusionLayer,
@@ -39,14 +39,24 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             &used,
             is_bbl,
         );
+        // ToolOrdering.cpp:1291-1303 updates config only for auto maps.
         if changed
-            || traversal.resolved.applied_filament_map
-                != traversal.resolved.views.full.project.gcode.filament_map
+            || (traversal
+                .resolved
+                .views
+                .full
+                .project
+                .gcode
+                .filament_map_mode
+                != ProjectFilamentMapMode::Manual
+                && traversal.resolved.applied_filament_map
+                    != traversal.resolved.views.full.project.gcode.filament_map)
         {
             // Print.cpp:3166-3200 refreshes from the PrintApply.cpp:1165-1172 checkpoint.
             traversal.resolved.views = refresh_filament_map(
                 &traversal.resolved.filament_variant_checkpoint,
                 &traversal.resolved.views.full.project.gcode.filament_map,
+                &traversal.resolved.views.full,
             )?;
             let mut block = Vec::new();
             write_config_block(
