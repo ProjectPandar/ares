@@ -189,7 +189,8 @@ fn model_part_threshold(
     match volume_type {
         ProjectVolumeType::ModelPart => {
             let [candidate] = resolved.layer_candidates.as_slice() else {
-                panic!("looped object must have exactly one resolved layer candidate");
+                // PrintObjectSlice.cpp:213-222 keeps base mode for global multi-range.
+                return Ok(None);
             };
             let region = &candidate
                 .model_parts

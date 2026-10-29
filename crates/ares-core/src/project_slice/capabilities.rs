@@ -22,16 +22,6 @@ pub(super) fn validate(
         // this rejection if a nonempty stored profile must regenerate.
         return unsupported("layer_config_ranges");
     }
-    if spiral_mode
-        && resolved_objects.iter().any(|resolved| {
-            source_objects[resolved.source_object_index]
-                .layer_config_ranges()
-                .iter()
-                .any(|range| range.region_overrides() != &Default::default())
-        })
-    {
-        return unsupported("layer_config_ranges");
-    }
     Ok(())
 }
 

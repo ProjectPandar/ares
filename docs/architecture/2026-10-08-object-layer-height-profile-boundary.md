@@ -23,12 +23,15 @@ Status: Stage1 approved; Stage2 requires separate approval.
    `layer_height` option in Slicing.cpp:249 (`getFloat`), which is UB, not a
    default-height rule. Do not imitate UB or fabricate defaults; pure None keeps
    its pre-existing behavior. Coordinator confirmed this bounded scope.
-5. Height-only ranges do not split region candidates: this is the equivalent
-   mapping of PrintApply.cpp::generate_print_object_regions (:958+, equal-config
-   get_create_region :1000-1011), where these ranges yield identical PrintRegion.
-   Raw range gate admits explicit-height/no-region-override ranges only. Pure
-   None/region overrides retain their previous rejection; region-range slicing
-   is a separate stage, not newly designed here.
+5. Retain all source ranges, including height-only entries, default gaps and
+   empty tails: PrintApply.cpp::LayerRanges::assign (:342-395) and
+   generate_print_object_regions (:958-1027) preserve their global cardinality.
+   Equal-config get_create_region deduplicates PrintRegion, not those ranges.
+   The approved [spiral range slice](spiral-single-range-spec.md) corrects the
+   former height-only candidate filter through this one canonical assignment.
+   PrintObjectSlice.cpp:194-222 selects its single-range spiral threshold or
+   release multi-range base mode using that global count. Decision4's mixed
+   missing-height rejection is unchanged.
 6. Remove only the capability branch proved supported by independent Native RED
    and subsequent strict GREEN. Painted and ZAA branches stay while deferred.
    Update earlier rejection tests before production changes, never after.

@@ -14,11 +14,6 @@ pub(crate) fn layer_candidate_ranges(source: &[LayerConfigRange]) -> Vec<LayerCa
     let mut last_z = 0.0;
 
     for (source_range_index, source_range) in source.iter().enumerate() {
-        if source_range.layer_height().is_some()
-            && source_range.region_overrides() == &Default::default()
-        {
-            continue;
-        }
         let max_z = source_range.max_z();
         if max_z <= last_z {
             continue;

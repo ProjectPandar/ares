@@ -1,7 +1,8 @@
 # SPEC: release single/multi-range spiral slicing
 
-Status: SPEC REVIEW-REQUEST preparation; documentation and Native observations
-only. No product edit or guard removal is authorized by this note.
+Status: owner-approved source contract. Tests-only RED `c252fa902` qualified
+Native first in both modes, then API/CLI rejected R1/R2 at layer_config_ranges;
+C0 passed strict complete output. Minimal literal GREEN is under verification.
 Owner amendment: the official release uses NDEBUG; the multi-range branch is a
 defined literal-port target, not UB merely because a debug assertion rejects it.
 Base: `2859763166e4a16e4aa4db5bc01380f9316d414f`.
