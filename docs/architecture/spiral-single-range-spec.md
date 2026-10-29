@@ -1,7 +1,9 @@
-# SPEC: source-owned single-range spiral admission
+# SPEC: release single/multi-range spiral slicing
 
 Status: SPEC REVIEW-REQUEST preparation; documentation and Native observations
 only. No product edit or guard removal is authorized by this note.
+Owner amendment: the official release uses NDEBUG; the multi-range branch is a
+defined literal-port target, not UB merely because a debug assertion rejects it.
 Base: `2859763166e4a16e4aa4db5bc01380f9316d414f`.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Independent of the scarf policy; no scarf stack is required.
@@ -36,9 +38,12 @@ particularly `:194-222`.
    ranged `slice_volume`. Generated range vectors are nonempty, so this
    otherwise branch is the multi-range path in the admitted source graph.
 
-Multi-range spiral remains unsupported. An assertions-disabled Native build
-may complete on that path; completion does not establish defined single-range
-spiral behavior or authorize enabling that path in Rust.
+The official 2.4.2 release compiles that assertion out under NDEBUG. Entering
+the otherwise branch then executes the ordinary defined ranged-slicing code;
+the assertion itself is not an undefined read. The owner explicitly approves
+using deterministic completed Native release runs as authority for R1-like
+multi-range cases as well as the single-range path. Debug-assert behavior must
+not become a new release-only rejection in Rust.
 
 ## 2. How upstream obtains one versus multiple ranges
 
@@ -88,7 +93,11 @@ model-settings resource ID is2.
 - `project/effective_config/layers.rs::layer_candidate_ranges`: existing
   assignment shell includes the source gap/tail logic, but deliberately
   skips height-only entries. Its length cannot be assumed identical to the
-  unfiltered upstream `LayerRanges` count for mixed inputs.
+  unfiltered upstream `LayerRanges` count for mixed inputs. The older
+  `2026-10-08-object-layer-height-profile-boundary.md` decision5 equates
+  equal PrintRegion configurations with unsplit candidates; the source
+  distinguishes those two counts. This RR requests correcting that assumption
+  by retaining source ranges, not building a second approximate counter.
 - `project/region_graph.rs::object_region_graph`: bounds/membership and
   configuration reuse already exist; no parallel registry is proposed.
 - `project_slice/slicing_mode_intersections.rs::model_part_threshold`,
@@ -97,20 +106,34 @@ model-settings resource ID is2.
   these source-shaped owners rather than design another spiral algorithm.
 - `project_slice/raw_intersections/ranges.rs` remains the ranged-volume owner.
 
-After review and a Native-backed public RED, the candidate change is to reject
-this guard's spiral cases when the **source-faithful global range count is
-multi-range**, while allowing a proven single-range case through the existing
-literal branch. Determine cardinality before any height-only compatibility
-filter; do not count just nonempty spans or distinct region configurations.
-Exact factoring of the existing assignment owner requires implementation
-review; no duplicate planner, public option or heuristic is authorized here.
+After review and a Native-backed public RED, admit Native-completing,
+deterministic cases such as C0/R1/R2 rather than rejecting all range overrides.
+Port the branch selected by the **source-faithful global range count**:
 
-Included: the source single-range branch, matching per-volume region selection,
-regular stock bottom/upper positive-largest transition, and consistent API/CLI
-admission. Deferred: multi-range spiral, missing-height profile-regeneration
-policy, adaptive height generation, unrelated vase emission and scarf changes.
-The missing-height guard is unchanged; no scalar/default-height fabrication.
-Core remains byte-oriented and portable, with no Native invocation or file I/O.
+- Single range: preserve matching-volume membership, region lookup, the bottom
+  cutoff and PositiveLargestContour upper layers already owned by the existing
+  modules.
+- Multiple ranges: do not invoke the single-candidate spiral threshold or panic
+  because multiple candidates exist. Keep the configured base slicing mode for
+  all intersections, build this volume's occupied ranges, and use the ranged
+  slice-volume path literally. For R1 only one range contains the volume, but
+  global count2 still selects this multi-range branch.
+
+Determine source cardinality before any height-only compatibility filter; do
+not count just nonempty spans or distinct region configurations. Retire that
+filter as part of the source assignment rewrite, reusing region configuration
+deduplication and bbox membership downstream. Review the older height-profile
+boundary decision5 accordingly and retain height-only/mixed-range regression
+controls. One canonical assignment owner replaces the temporary shell; no
+duplicate planner, public flag or shape/input whitelist is authorized.
+
+Included: literal single and release multi-range branches, range membership and
+per-layer configuration, the source-derived schedule, regular stock bottom/
+positive-largest single-range transition, and consistent API/CLI behavior.
+Defer Native-rejected or nondeterministic cases for evidence/ruling rather than
+invent acceptance. Missing-height profile-regeneration policy, adaptive height
+generation, unrelated vase emission and scarf are unchanged. No default-height
+fabrication; core stays portable with no Native invocation or file I/O.
 
 ## 4. Native-first probe plan (CPU18 only)
 
@@ -124,8 +147,8 @@ All probe ranges include `layer_height=0.2`, avoiding missing-height UB.
 - C0: unchanged no-range control; source predicts one default range.
 - R1: one non-default `outer_wall_speed=17` override over `[0,1000]`, covering
   the object. Source predicts configured range plus default tail: **two**.
-  Observe official/seeded exits and output, but do not label any successful
-  release execution of this multi-range assert path as legal single-range.
+  GDB must confirm the multi-range branch; literal release behavior, not the
+  compiled-out debug assertion, owns this active-override witness.
 - R2: the same non-default option over `[0,0.00005]`; source predicts one
   default range because the interval is ignored. Explicitly label this as
   an ignored-override admission case, not active speed-override parity.
@@ -141,15 +164,19 @@ vector size and mode/cutoff; keep official observation limits explicit.
 
 ## 5. Review and implementation gates
 
-Send this spec plus probe receipts as REVIEW-REQUEST **before product edits**.
-Report Native rejection/crash/nondeterminism without retries to manufacture a
-pass. Native success is necessary but insufficient: the source branch must be
-single-range. If only the ignored case is safe, state that limited reachability
-and do not claim support for an active range override.
+Send this amended spec plus probe receipts as REVIEW-REQUEST **before product
+edits**. Report Native rejection/crash/nondeterminism without retries to
+manufacture a pass. GDB must identify the selected branch; a completed R1 is a
+multi-range release witness, never mislabeled single-range. R2 is independently
+an ignored-override admission witness, not active speed-override behavior.
 
-A later authorized RED uses the public byte API and CLI on the identical input;
-Native must complete first. Strict complete ordered-byte comparisons retain the
-existing generator-only normalization, with no tolerances or assertion waivers.
-Keep multi-range rejection tests and unrelated boundaries. Future GREEN requires
-both-mode directed parity, required-oracle non-parity, fmt/clippy and a clean,
-source-cited diff. Any inherited failures must be named rather than called green.
+A later authorized RED uses the public byte API and CLI on identical C0/R1/R2
+inputs; Native must complete first in both official and seeded modes. Preserve
+strict complete ordered-byte comparison with only the existing generator-line
+normalization. In particular preserve R1's actual layer count/Z schedule,
+region speed and motion, not C0's schedule or a guessed one-range result.
+No tolerances, assertion waivers or expanded normalization. Refuse only the
+Native-rejected/nondeterministic boundary demonstrated for this slice; leave
+other independent guards and invalid-input validation untouched. Future GREEN
+requires both-mode directed parity, required-oracle non-parity, fmt/clippy and
+a clean source-cited diff. Name inherited failures rather than calling them green.
