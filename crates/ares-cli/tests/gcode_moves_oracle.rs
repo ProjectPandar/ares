@@ -98,6 +98,48 @@ fn ksr_fdmtest_v4_moves_match_gcode_processor_oracle() {
     }
 }
 
+/// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`) erases and
+/// relocates the vertex at its stale index after actual-speed insertions
+/// (`GCodeProcessor.cpp:5951-6009`); see
+/// `docs/architecture/gcode-processor-options-z-moves.md`.
+fn check_emission_fixture(name: &str) {
+    if let Some(oracle) = oracle_bin() {
+        check_fixture(
+            &oracle,
+            name,
+            &workspace_path(&format!(
+                "tests/parity/plate-custom-gcode-emission/{name}.3mf"
+            )),
+            None,
+        );
+    }
+}
+
+#[test]
+fn plate_custom_gcode_template_moves_match_gcode_processor_oracle() {
+    check_emission_fixture("template");
+}
+
+#[test]
+fn plate_custom_gcode_custom_moves_match_gcode_processor_oracle() {
+    check_emission_fixture("custom");
+}
+
+#[test]
+fn plate_custom_gcode_pause_moves_match_gcode_processor_oracle() {
+    check_emission_fixture("pause");
+}
+
+#[test]
+fn plate_custom_gcode_mode_mismatch_moves_match_gcode_processor_oracle() {
+    check_emission_fixture("mode-mismatch");
+}
+
+#[test]
+fn plate_custom_gcode_same_layer_moves_match_gcode_processor_oracle() {
+    check_emission_fixture("same-layer");
+}
+
 fn check_fixture(oracle: &Path, name: &str, project: &Path, plate: Option<u32>) {
     let artifacts = workspace_path("target/gcode-moves-oracle").join(name);
     fs::create_dir_all(&artifacts).unwrap();

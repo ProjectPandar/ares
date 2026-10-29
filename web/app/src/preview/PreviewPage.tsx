@@ -6,7 +6,7 @@ import { cmdDown, isShortcut } from "../shell/keys";
 import { setPreview, slicePlate, stepLayers, stepTopLayer, toggleGcodeWindow, toggleOneLayer } from "../state/actions";
 import { slicer } from "../state/slicer";
 import { useApp } from "../state/store";
-import { usedOptions, usedRoles } from "../viewport/roles";
+import { usedOptions } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
 import { LayerSlider } from "./LayerSlider";
 import type { LayerSteps, MovesState } from "./MovesSlider";
@@ -69,7 +69,6 @@ export function PreviewPage() {
     window.addEventListener("keydown", onPreviewKey);
     return () => window.removeEventListener("keydown", onPreviewKey);
   }, []);
-  const roles = useMemo(() => (toolpaths ? usedRoles(toolpaths) : []), [toolpaths]);
   const options = useMemo(() => (toolpaths ? usedOptions(toolpaths) : []), [toolpaths]);
   const colors = useViewColors(toolpaths, view.viewType, view.hiddenRoles, view.visibleOptions);
   const [movesState, setMoves] = useState<MovesState | null>(null);
@@ -107,7 +106,7 @@ export function PreviewPage() {
         </div>
         {toolpaths && (
           <Suspense>
-            <Legend roles={roles} options={options} toolpaths={toolpaths}
+            <Legend options={options} toolpaths={toolpaths}
               range={colors?.range ?? null} view={view} onChange={setPreview} />
           </Suspense>
         )}

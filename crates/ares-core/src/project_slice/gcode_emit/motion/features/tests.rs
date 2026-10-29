@@ -2,6 +2,7 @@ use super::{MotionOptions, PathProperties};
 
 fn properties(feature: &'static str, is_perimeter: bool) -> PathProperties<'static> {
     PathProperties {
+        contour: None,
         mm3_per_mm: 0.08,
         width: 0.45,
         height: 0.2,

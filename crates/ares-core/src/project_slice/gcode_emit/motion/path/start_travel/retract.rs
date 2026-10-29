@@ -6,11 +6,12 @@ use crate::project_slice::gcode_emit::motion::state::EmitState;
 use crate::project_slice::gcode_emit::motion::travel;
 
 /// The `_retract` call context (`GCode.cpp:7424-7443`): whether the
-/// route qualified for retraction, its routed length, the exemption
+/// route qualified for retraction, whether its coord_t routed length
+/// reaches `scale_(retraction_minimum_travel)`, the exemption
 /// flag, and the destination feature name used by Hilbert suppression.
 pub(super) struct RetractContext<'a> {
     pub(super) retract: bool,
-    pub(super) routed_length: f64,
+    pub(super) route_reaches_minimum: bool,
     pub(super) skip_retraction: bool,
     pub(super) destination_feature: &'a str,
 }
@@ -22,11 +23,11 @@ pub(super) fn decide(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     context: RetractContext<'_>,
-    replan: &mut dyn FnMut(&mut EmitState),
-) {
+    replan: &mut dyn FnMut(&mut EmitState) -> Result<(), crate::SliceError>,
+) -> Result<(), crate::SliceError> {
     let RetractContext {
         retract,
-        routed_length,
+        route_reaches_minimum,
         skip_retraction,
         destination_feature,
     } = context;
@@ -58,8 +59,7 @@ pub(super) fn decide(
     // retracted flag — a long non-exempt travel invokes `retract()` even
     // when already retracted, and `Extruder::retract` assigns
     // `m_restart_extra` unconditionally (`Extruder.cpp:77`).
-    let upstream_would_retract =
-        routed_length >= state.options.retraction_minimum_travel && !skip_retraction;
+    let upstream_would_retract = route_reaches_minimum && !skip_retraction;
     // Lift eligibility is a separate, narrower condition
     // (`GCodeWriter.cpp:637` gates on m_lifted == 0 && m_to_lift == 0).
     let defer_lift_for_retracted_travel = upstream_would_retract
@@ -68,35 +68,38 @@ pub(super) fn decide(
         && state.pending_lift.is_none();
     // A wipe that moved the head re-plans the route from the wipe's end
     // (`GCode.cpp:7436-7443`).
-    let mut wipe_then_replan =
-        |output: &mut Vec<u8>, state: &mut EmitState, emit: fn(&mut Vec<u8>, &mut EmitState)| {
-            let head_before = (state.x, state.y);
-            emit(output, state);
-            if (state.x, state.y) != head_before {
-                replan(state);
-            }
-        };
+    let mut wipe_then_replan = |output: &mut Vec<u8>,
+                                state: &mut EmitState,
+                                emit: fn(&mut Vec<u8>, &mut EmitState)|
+     -> Result<(), crate::SliceError> {
+        let head_before = (state.x, state.y);
+        emit(output, state);
+        if (state.x, state.y) != head_before {
+            replan(state)?;
+        }
+        Ok(())
+    };
     if retract {
         if hilbert_wipe_only {
-            wipe_then_replan(output, state, travel::retract_and_wipe_suppressed_tail);
+            wipe_then_replan(output, state, travel::retract_and_wipe_suppressed_tail)?;
             state.extruder.retracted = true;
             // The suppressed tail still runs `reset_e` and the lazy lift
             // (`GCode.cpp:7674-7681`).
-            travel::reset_e(output, state);
-            travel::schedule_retract_tail(state);
+            travel::reset_e(output, state, false);
+            travel::schedule_retract_tail(output, state);
         } else if hilbert_suppressed {
             // `GCode.cpp:7667-7672` suppresses ONLY `m_writer.retract()`;
             // `reset_e` (`GCode.cpp:7674`) and the lazy lift still run.
             // `reset_e` emits nothing for a zero E counter (force=false)
             // or Mach3/MakerWare/Sailfish flavors
             // (`GCodeWriter.cpp:480-499`).
-            travel::reset_e(output, state);
+            travel::reset_e(output, state, false);
             // `needs_lift` (`GCode.cpp:7678-7681`): configured length OR
             // firmware retraction allows the deferred hop; upstream
             // `lazy_lift` reads the CURRENT writer Z.
-            travel::schedule_retract_tail(state);
+            travel::schedule_retract_tail(output, state);
         } else {
-            wipe_then_replan(output, state, travel::retract_and_lift);
+            wipe_then_replan(output, state, travel::retract_and_lift)?;
         }
     } else if upstream_would_retract {
         // A fully-retracted nozzle still runs upstream's wipe +
@@ -113,21 +116,22 @@ pub(super) fn decide(
             !state.wipe_path.is_empty() && state.options.wipe && state.options.wipe_distance > 1e-4;
         if hilbert_wipe_only {
             if wipe_eligible {
-                wipe_then_replan(output, state, travel::retract_and_wipe_suppressed_tail);
+                wipe_then_replan(output, state, travel::retract_and_wipe_suppressed_tail)?;
             }
         } else if !hilbert_suppressed {
             state.extruder.restart_extra = state.options.retract_restart_extra;
             if wipe_eligible {
-                wipe_then_replan(output, state, travel::wipe_only_retract);
+                wipe_then_replan(output, state, travel::wipe_only_retract)?;
             }
         }
-        travel::reset_e(output, state);
+        travel::reset_e(output, state, false);
         // The deferred hop is additionally gated on the nozzle already
         // being retracted (`defer_lift_for_retracted_travel`);
         // `schedule_retract_tail` re-checks the shared needs_lift band
         // (`GCode.cpp:7678-7681`).
         if defer_lift_for_retracted_travel {
-            travel::schedule_retract_tail(state);
+            travel::schedule_retract_tail(output, state);
         }
     }
+    Ok(())
 }

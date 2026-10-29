@@ -12,13 +12,26 @@ use crate::{
 use super::simplify_before_ordering;
 use super::types::LayerFillEntities;
 
-pub(in crate::project_slice) fn generate_layer(
+pub(in crate::project_slice) struct LayerGenerationOptions<'a> {
+    pub(in crate::project_slice) lightning_generator:
+        Option<&'a crate::fill::lightning::generator::Generator>,
+    pub(in crate::project_slice) stars_bounds: Option<crate::geometry::BoundingBox>,
+    pub(in crate::project_slice) adaptive_spacing: f64,
+    pub(in crate::project_slice) support_spacing: f64,
+}
+
+pub(in crate::project_slice) fn generate_layer_with_active(
     prepared: &PreparedPostExternalSurfaces,
     object_index: usize,
     layer_index: usize,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    stars_bounds: Option<crate::geometry::BoundingBox>,
+    options: LayerGenerationOptions<'_>,
 ) -> Result<LayerFillEntities, SliceError> {
+    let LayerGenerationOptions {
+        lightning_generator,
+        stars_bounds,
+        adaptive_spacing,
+        support_spacing,
+    } = options;
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
     let minimum_nozzle_diameter = traversal
@@ -55,7 +68,7 @@ pub(in crate::project_slice) fn generate_layer(
     // `PrintObject::bounding_box` (Print.hpp:347) is symmetric around zero;
     // `Fill::_infill_direction` uses that center, not quantized slice bounds.
     let object_reference = crate::geometry::Point::new(0, 0);
-    // `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) — the
+    // `FillRectilinear::extended_object_bounding_box()` (FillRectilinear.cpp:2741) — the
     // object bbox transpose-merged + sqrt(2)-scaled so the consistent-pattern
     // vertical-line grid is anchored object-wide, independent of rotation.
     // Computed lazily: only consistent-pattern fills consume it, and a fully
@@ -65,20 +78,12 @@ pub(in crate::project_slice) fn generate_layer(
     let mut extended_object_bounds = || {
         let (extended_object_min_x, extended_object_max_x) = *extended_object_bounds_x
             .get_or_insert_with(|| {
-                // `extended_object_bounding_box` (`FillBase.cpp:1569-1578`) reads
-                // `PrintObject::bounding_box()` (`Print.hpp:347`), the centered mesh
-                // `m_size`. Empirically the ORACLE's grid anchor matches the
-                // slice-contour extent, not the raw mesh `m_size` — on the
-                // uncompensated cube the raw-mesh `m_size` (10mm) produced a
-                // narrower grid (-7.07mm) than the oracle's actual anchor
-                // (-8.14mm, = contour extent). So `bounding_box` for a fill is
-                // anchored on the compensated slice contours in practice (the
-                // perimeter/slice that was actually generated), which we reproduce
-                // here via `plane_path_object_bounding_box` centered on the
-                // origin. See the residual map for the divergence analysis.
-                plane_path_object_bounding_box(object_slices)
-                    .map(super::extended_object_bounding_box_x)
-                    .unwrap_or((0, 0))
+                let bounds = super::stars_bounds::object(
+                    &traversal.project.objects()[plan.source_object_index],
+                    resolved_object.print_objects[plan.transform_index].transform,
+                    traversal.scale,
+                );
+                super::extended_object_bounding_box_x(bounds)
             });
         super::types::ObjectFillGeometry {
             scale: traversal.scale,
@@ -96,6 +101,17 @@ pub(in crate::project_slice) fn generate_layer(
     for fill in surface_fills {
         let region_id = fill.region_id;
         let collection_start = output.collections.len();
+        // Fill.cpp:1235-1242: each filler uses its printing region's runtime flag.
+        let region = &resolved_object.all_regions[region_id];
+        let call = super::types::SurfaceCall {
+            layer_id: layer.id,
+            dont_alternate_fill_direction: region.zaa_enabled.0
+                && region.zaa_dont_alternate_fill_direction.0,
+            reference: object_reference,
+            scale: traversal.scale,
+            link_max_length: 0.0,
+            dont_adjust: fill.params.bridge,
+        };
         match fill.params.pattern {
             SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
                 super::crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
@@ -104,9 +120,12 @@ pub(in crate::project_slice) fn generate_layer(
                 super::grid::append(
                     &mut output,
                     fill,
-                    layer.id,
                     traversal.scale,
                     object_reference,
+                    super::grid::LayerGeometry {
+                        layer_id: layer.id,
+                        bounds: stars_bounds,
+                    },
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Cubic) => {
@@ -119,7 +138,16 @@ pub(in crate::project_slice) fn generate_layer(
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
-                super::triangles::append(&mut output, fill, traversal.scale, object_reference)?;
+                super::triangles::append(
+                    &mut output,
+                    fill,
+                    traversal.scale,
+                    object_reference,
+                    super::triangles::LayerGeometry {
+                        layer_id: layer.id,
+                        bounds: stars_bounds,
+                    },
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
                 super::gyroid::append(
@@ -134,15 +162,16 @@ pub(in crate::project_slice) fn generate_layer(
                 pattern
                 @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
             ) => {
-                let _ = pattern;
+                let line_spacing = super::adaptive::ObjectSpacing {
+                    adaptive: adaptive_spacing,
+                    support: support_spacing,
+                }
+                .for_pattern(pattern);
                 super::adaptive::append(
                     &mut output,
                     fill,
                     layer.print_z,
-                    super::adaptive::AdaptiveObject {
-                        traversal,
-                        object_index,
-                    },
+                    super::adaptive::AdaptiveObject::new(traversal, object_index, line_spacing),
                     traversal.scale,
                 )?;
             }
@@ -155,16 +184,10 @@ pub(in crate::project_slice) fn generate_layer(
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Honeycomb) => {
-                super::honeycomb::append(&mut output, fill, layer.id, traversal.scale)?;
+                super::honeycomb::append(&mut output, fill, call)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Line) => {
-                super::line::append(
-                    &mut output,
-                    fill,
-                    layer.id,
-                    object_reference,
-                    traversal.scale,
-                )?;
+                super::line::append(&mut output, fill, call)?;
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear
@@ -178,7 +201,7 @@ pub(in crate::project_slice) fn generate_layer(
                     &mut output,
                     fill,
                     pattern,
-                    layer.id,
+                    call,
                     extended_object_bounds(),
                 )?;
             }
@@ -233,7 +256,7 @@ pub(in crate::project_slice) fn generate_layer(
                     &mut output,
                     fill,
                     &lock_region_param,
-                    layer.id,
+                    call,
                     extended_object_bounds(),
                 )?;
             }
@@ -250,10 +273,11 @@ pub(in crate::project_slice) fn generate_layer(
                     | ExtrusionRole::InternalInfill
             ) =>
             {
-                let Some(object_bounding_box) = plane_path_object_bounding_box(object_slices)
-                else {
-                    continue;
-                };
+                let object_bounding_box = super::stars_bounds::object(
+                    &traversal.project.objects()[plan.source_object_index],
+                    resolved_object.print_objects[plan.transform_index].transform,
+                    traversal.scale,
+                );
                 super::plane_path::append(
                     &mut output,
                     fill,
@@ -273,6 +297,7 @@ pub(in crate::project_slice) fn generate_layer(
                 super::concentric::append(
                     &mut output,
                     fill,
+                    layer.height,
                     minimum_nozzle_diameter,
                     traversal.scale,
                 )?;
@@ -292,6 +317,7 @@ pub(in crate::project_slice) fn generate_layer(
                 super::concentric::append_configured(
                     &mut output,
                     fill,
+                    layer.height,
                     minimum_nozzle_diameter,
                     traversal.scale,
                 )?;
@@ -301,38 +327,20 @@ pub(in crate::project_slice) fn generate_layer(
             .collection_ranges
             .push((region_id, collection_start..output.collections.len()));
     }
-    if let (Some(record), Some(input)) = (
-        prepared.predecessor.objects[object_index].records[layer_index].as_ref(),
-        prelude.records[layer_index].as_ref(),
-    ) {
-        let region = prelude.region_options(input);
-        let collection_start = output.collections.len();
-        super::ironing::append(
-            &mut output,
-            super::ironing::Input {
-                record,
-                layer_slices: &object_slices[layer_index],
-                region,
-                object: object_options,
-                default_region: &traversal.resolved.views.full.process.region,
-                nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
-                layer,
-                layers: &plan.layers,
-                last_layer: input.upper_layer_index.is_none(),
-                spiral_mode: input.spiral_mode,
-                model_rotation_offset: if region.align_infill_direction_to_model.0 {
-                    input.model_rotation_rad as f32
-                } else {
-                    0.0
-                },
-                scale: traversal.scale,
-            },
-        )?;
-        output.collection_ranges.push((
-            input.current.region_index,
-            collection_start..output.collections.len(),
-        ));
-    }
+    super::ironing::append_spans(super::ironing::SpanGeneration {
+        output: &mut output,
+        prepared,
+        object_index,
+        layer_index,
+        prelude,
+        layer,
+        layers: &plan.layers,
+        layer_slices: &object_slices[layer_index],
+        object: object_options,
+        default_region: &traversal.resolved.views.full.process.region,
+        nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
+        scale: traversal.scale,
+    })?;
     let process = &traversal.resolved.views.full.process;
     if simplify_before_ordering(
         process.gcode.enable_arc_fitting.0,
@@ -347,19 +355,33 @@ pub(in crate::project_slice) fn generate_layer(
     Ok(output)
 }
 
-fn plane_path_object_bounding_box(
-    slices: &[Vec<crate::geometry::ExPolygon>],
-) -> Option<crate::geometry::BoundingBox> {
-    let mut points = slices
-        .iter()
-        .flatten()
-        .flat_map(|expolygon| expolygon.contour().points());
-    let first = *points.next()?;
-    let (minimum, maximum) = points.fold((first, first), |(minimum, maximum), point| {
-        (
-            crate::geometry::Point::new(minimum.x().min(point.x()), minimum.y().min(point.y())),
-            crate::geometry::Point::new(maximum.x().max(point.x()), maximum.y().max(point.y())),
-        )
-    });
-    Some(crate::geometry::BoundingBox::new(minimum, maximum))
+pub(in crate::project_slice) fn layer_options<'a>(
+    prepared: &PreparedPostExternalSurfaces,
+    object_index: usize,
+    lightning_generator: Option<&'a crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<crate::geometry::BoundingBox>,
+) -> LayerGenerationOptions<'a> {
+    let spacing = prepared.object_spacings[object_index];
+    LayerGenerationOptions {
+        lightning_generator,
+        stars_bounds,
+        adaptive_spacing: spacing.adaptive,
+        support_spacing: spacing.support,
+    }
+}
+
+#[cfg(test)]
+pub(in crate::project_slice) fn generate_layer(
+    prepared: &PreparedPostExternalSurfaces,
+    object_index: usize,
+    layer_index: usize,
+    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    stars_bounds: Option<crate::geometry::BoundingBox>,
+) -> Result<LayerFillEntities, SliceError> {
+    generate_layer_with_active(
+        prepared,
+        object_index,
+        layer_index,
+        layer_options(prepared, object_index, lightning_generator, stars_bounds),
+    )
 }

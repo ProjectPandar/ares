@@ -3,11 +3,11 @@
 use super::super::super::MotionOptions;
 use super::super::super::helpers::{
     absolute, acceleration, first_float, machine_acceleration_limit, rounded_acceleration,
+    use_mach_limits,
 };
 use super::super::super::nullable_float_at;
 use super::super::context::Prelude;
-use super::super::{crossing, scarf};
-use super::hilbert;
+use super::super::crossing;
 use crate::options::InternalBridgeFanSpeed;
 
 pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
@@ -19,23 +19,17 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         full,
         gcode,
         object,
-        region,
         filament,
         filament_diameter,
         travel_speed,
         travel_acceleration,
-        bridge_speed,
-        outer_wall_speed,
-        small_perimeter_speed,
         outer_wall_acceleration,
         default_acceleration,
         ..
     } = prelude;
+    let use_mach_limits = use_mach_limits(full.printer.gcode.gcode_flavor);
     let mut options = MotionOptions {
         adaptive_pa: crate::project_slice::gcode_emit::adaptive_pa::Options::new(full, filament),
-        wall_direction: region.map_or(full.process.region.wall_direction, |value| {
-            value.wall_direction
-        }),
         // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`
         // — the multiplication order matters for f64 parity with upstream.
         filament_area: filament_diameter * filament_diameter * 0.25 * std::f64::consts::PI,
@@ -46,9 +40,10 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .or_else(|| gcode.filament_density.0.first())
             .map_or(0.0, |value| value.0),
         filament_flow_ratio: nullable_float_at(&gcode.filament_flow_ratio, filament, 1.0),
-        print_flow_ratio: region.map_or(full.process.region.print_flow_ratio.0, |value| {
-            value.print_flow_ratio.0
-        }),
+        set_other_flow_ratios: object
+            .map_or(full.process.object.set_other_flow_ratios.0, |value| {
+                value.object.set_other_flow_ratios.0
+            }),
         max_volumetric_speed: gcode
             .filament_max_volumetric_speed
             .0
@@ -61,25 +56,6 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             * 60.0,
         initial_layer_speed: full.process.print.initial_layer_speed.0,
         initial_layer_infill_speed: full.process.print.initial_layer_infill_speed.0,
-        inner_wall_speed: region.map_or(full.process.region.inner_wall_speed.0, |value| {
-            value.inner_wall_speed.0
-        }),
-        outer_wall_speed,
-        small_perimeter_speed,
-        small_perimeter_threshold: region
-            .map_or(full.process.region.small_perimeter_threshold.0, |region| {
-                region.small_perimeter_threshold.0
-            }),
-        bridge_speed,
-        internal_bridge_speed: absolute(
-            region.map_or(full.process.region.internal_bridge_speed, |value| {
-                value.internal_bridge_speed
-            }),
-            bridge_speed,
-        ),
-        sparse_infill_speed: region.map_or(full.process.region.sparse_infill_speed.0, |value| {
-            value.sparse_infill_speed.0
-        }),
         skirt_speed: full.process.print.skirt_speed.0,
         resonance_avoidance: full.printer.machine.resonance_avoidance.0.then_some((
             full.printer.machine.min_resonance_avoidance_speed.0,
@@ -87,22 +63,16 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         )),
         slow_down_layers: full.process.print.slow_down_layers.0.max(0) as u32,
         raft_layers: full.process.object.raft_layers.0.max(0) as u32,
-        internal_solid_infill_speed: region
-            .map_or(full.process.region.internal_solid_infill_speed.0, |value| {
-                value.internal_solid_infill_speed.0
-            }),
-        top_surface_speed: region.map_or(full.process.region.top_surface_speed.0, |value| {
-            value.top_surface_speed.0
-        }),
-        ironing_speed: region.map_or(full.process.region.ironing_speed.0, |value| {
-            value.ironing_speed.0
-        }),
-        gap_infill_speed: region.map_or(full.process.region.gap_infill_speed.0, |value| {
-            value.gap_infill_speed.0
-        }),
         support_speed: object.map_or(full.process.object.support_speed.0, |value| {
             value.object.support_speed.0
         }),
+        support_flow_ratio: object.map_or(full.process.object.support_flow_ratio.0, |value| {
+            value.object.support_flow_ratio.0
+        }),
+        support_interface_flow_ratio: object.map_or(
+            full.process.object.support_interface_flow_ratio.0,
+            |value| value.object.support_interface_flow_ratio.0,
+        ),
         support_type: object.map_or(full.process.object.support_type, |value| {
             value.object.support_type
         }),
@@ -110,36 +80,6 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .map_or(full.process.object.support_interface_speed.0, |value| {
                 value.object.support_interface_speed.0
             }),
-        enable_overhang_speed: region
-            .map_or(full.process.region.enable_overhang_speed.0, |value| {
-                value.enable_overhang_speed.0
-            }),
-        slowdown_for_curled_perimeters: region.map_or(
-            full.process.region.slowdown_for_curled_perimeters.0,
-            |value| value.slowdown_for_curled_perimeters.0,
-        ),
-        overhang_speed_bands: [
-            Some(
-                region.map_or(full.process.region.overhang_1_4_speed, |value| {
-                    value.overhang_1_4_speed
-                }),
-            ),
-            Some(
-                region.map_or(full.process.region.overhang_2_4_speed, |value| {
-                    value.overhang_2_4_speed
-                }),
-            ),
-            Some(
-                region.map_or(full.process.region.overhang_3_4_speed, |value| {
-                    value.overhang_3_4_speed
-                }),
-            ),
-            Some(
-                region.map_or(full.process.region.overhang_4_4_speed, |value| {
-                    value.overhang_4_4_speed
-                }),
-            ),
-        ],
         enable_overhang_bridge_fan: full
             .filament
             .print
@@ -221,35 +161,35 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             full.process.object.inner_wall_acceleration.0,
             |value| value.inner_wall_acceleration.0,
         ),
-        bridge_acceleration: rounded_acceleration(absolute(
+        bridge_acceleration: absolute(
             object.map_or(full.process.object.bridge_acceleration, |value| {
                 value.object.bridge_acceleration
             }),
-            f64::from(outer_wall_acceleration),
-        )),
-        sparse_infill_acceleration: rounded_acceleration(absolute(
+            outer_wall_acceleration,
+        ),
+        sparse_infill_acceleration: absolute(
             object.map_or(full.process.object.sparse_infill_acceleration, |value| {
                 value.object.sparse_infill_acceleration
             }),
-            f64::from(default_acceleration),
-        )),
-        internal_solid_infill_acceleration: rounded_acceleration(absolute(
+            default_acceleration,
+        ),
+        internal_solid_infill_acceleration: absolute(
             object.map_or(
                 full.process.object.internal_solid_infill_acceleration,
                 |value| value.object.internal_solid_infill_acceleration,
             ),
-            f64::from(default_acceleration),
-        )),
+            default_acceleration,
+        ),
         top_surface_acceleration: acceleration(
             object.map(|value| &value.object),
             full.process.object.top_surface_acceleration.0,
             |value| value.top_surface_acceleration.0,
         ),
-        initial_layer_travel_acceleration: rounded_acceleration(absolute(
+        initial_layer_travel_acceleration: absolute(
             gcode.initial_layer_travel_acceleration,
             travel_acceleration,
-        )),
-        travel_acceleration: rounded_acceleration(travel_acceleration),
+        ),
+        travel_acceleration,
         default_jerk: object.map_or(full.process.object.default_jerk.0, |value| {
             value.object.default_jerk.0
         }),
@@ -271,8 +211,16 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         travel_jerk: object.map_or(full.process.object.travel_jerk.0, |value| {
             value.object.travel_jerk.0
         }),
-        max_jerk_x: first_float(&full.printer.machine.machine_max_jerk_x),
-        max_jerk_y: first_float(&full.printer.machine.machine_max_jerk_y),
+        max_jerk_x: if use_mach_limits {
+            first_float(&full.printer.machine.machine_max_jerk_x).round_ties_even()
+        } else {
+            0.0
+        },
+        max_jerk_y: if use_mach_limits {
+            first_float(&full.printer.machine.machine_max_jerk_y).round_ties_even()
+        } else {
+            0.0
+        },
         max_jerk_z: first_float(&full.printer.machine.machine_max_jerk_z),
         max_jerk_e: first_float(&full.printer.machine.machine_max_jerk_e),
         gcode_flavor: full.printer.gcode.gcode_flavor,
@@ -281,12 +229,13 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         use_relative_e_distances: gcode.use_relative_e_distances.0,
         single_extruder_multi_material: gcode.single_extruder_multi_material.0,
         max_acceleration: machine_acceleration_limit(full),
-        max_travel_acceleration: if matches!(
-            full.printer.gcode.gcode_flavor,
-            crate::GCodeFlavor::Repetier
-                | crate::GCodeFlavor::MarlinFirmware
-                | crate::GCodeFlavor::RepRapFirmware
-        ) {
+        max_travel_acceleration: if use_mach_limits
+            && matches!(
+                full.printer.gcode.gcode_flavor,
+                crate::GCodeFlavor::Repetier
+                    | crate::GCodeFlavor::MarlinFirmware
+                    | crate::GCodeFlavor::RepRapFirmware
+            ) {
             rounded_acceleration(first_float(
                 &full.printer.machine.machine_max_acceleration_travel,
             ))
@@ -298,39 +247,29 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         use_firmware_retraction: gcode.use_firmware_retraction.0,
         z_offset: traversal.resolved.views.full.printer.remaining.z_offset.0,
         reduce_infill_retraction: full.process.print.reduce_infill_retraction.0,
-        bottom_surface_pattern_hilbert: hilbert::is_hilbert(
-            region.map_or(full.process.region.bottom_surface_pattern, |region| {
-                region.bottom_surface_pattern
-            }),
-        ),
-        top_surface_pattern_hilbert: hilbert::is_hilbert(
-            region.map_or(full.process.region.top_surface_pattern, |region| {
-                region.top_surface_pattern
-            }),
-        ),
-        has_sparse_infill: region.map_or(
-            full.process.region.sparse_infill_density.0 > 0.0,
-            |region| region.sparse_infill_density.0 > 0.0,
-        ),
         retract_before_wipe: wipe_tail.retract_before_wipe,
-        role_based_wipe_speed: wipe_tail.role_based_wipe_speed,
-        wipe_speed: wipe_tail.wipe_speed,
-        wipe_on_loops: wipe_tail.wipe_on_loops,
-        wipe_before_external_loop: wipe_tail.wipe_before_external_loop,
-        wall_loops: wipe_tail.wall_loops,
         nozzle_diameter: wipe_tail.nozzle_diameter,
-        seam_gap: absolute(
-            region.map_or(full.process.region.seam_gap, |value| value.seam_gap),
-            wipe_tail.nozzle_diameter,
-        ),
         seam_position: full.process.object.seam_position,
         reduce_crossing_wall: full.process.print.reduce_crossing_wall.0,
         crossing_boundary_inset: crossing::boundary_inset(traversal),
-        scarf: scarf::from_region(&full.process.region, region),
+        max_travel_detour_distance: full.process.print.max_travel_detour_distance,
         enable_arc_fitting: gcode.enable_arc_fitting.0,
         arc_fitting_tolerance: full.process.print.resolution.0,
         ..Default::default()
     };
     super::retraction::apply(&mut options, &prelude, &traversal.resolved.views.runtime);
+    // `GCode.cpp:6136/6163` — the same `region::apply` the emit loop
+    // runs per phase populates every region-scoped field (speeds,
+    // flow, patterns, wipe knobs, seam_gap, scarf) from the initially
+    // resolved region (or `full.process.region` when `region` is
+    // `None`); `nozzle_diameter` was set by `wipe::tail`.
+    let nozzle = options.nozzle_diameter;
+    super::super::region::apply(
+        &mut options,
+        &prelude.full.process.region,
+        prelude.region,
+        prelude.travel_speed,
+        nozzle,
+    );
     options
 }

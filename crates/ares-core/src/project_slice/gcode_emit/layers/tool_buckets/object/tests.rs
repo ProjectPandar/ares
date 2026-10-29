@@ -1,5 +1,6 @@
 use super::*;
 use crate::project_slice::gcode_emit::tool_ordering::wiping::CollectionId;
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     OrcaInt,
     geometry::{Point, Polyline},
@@ -10,8 +11,11 @@ use crate::{
 fn tool_buckets_preserve_source_collection_identity_and_region() {
     let entity = || {
         IslandPrintEntity::Fill(FillExtrusionEntity::Path(FillExtrusionPath {
-            polyline: Polyline::new(vec![Point::new(0, 0), Point::new(1_000_000, 0)]),
-            fitting: Vec::new(),
+            polyline: Polyline3::from_xy(
+                Polyline::new(vec![Point::new(0, 0), Point::new(1_000_000, 0)]),
+                Vec::new(),
+            ),
+            z_contoured: false,
             role: ExtrusionRole::InternalInfill,
             mm3_per_mm: 0.04,
             width: 0.4,

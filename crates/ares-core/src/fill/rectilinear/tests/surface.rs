@@ -19,6 +19,8 @@ fn scaled_rectangle() -> ExPolygon {
 
 fn params() -> MonotonicFillParams {
     MonotonicFillParams {
+        dont_alternate_fill_direction: false,
+        layer_angle_fixed: false,
         spacing: 0.2,
         overlap: 0.0,
         density: 1.0,

@@ -7,7 +7,7 @@
 
 use crate::geometry::{
     BoundingBox, ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, JoinType, Point,
-    Polygon, Polyline, difference_polygons_ex, offset_expolygons,
+    Polygon, Polyline, difference_polygons_ex, offset_paths,
 };
 
 use super::layer::Layer;
@@ -184,15 +184,12 @@ impl Generator {
         let mut infill_area_above: Vec<Polygon> = Vec::new();
         for layer_nr in (0..layer_outlines.len()).rev() {
             let infill_area_here = &layer_outlines[layer_nr];
-            let shrunk = to_polygons(&offset_expolygons(
-                &infill_area_here
-                    .iter()
-                    .map(|p| ExPolygon::new(p.clone(), Vec::new()))
-                    .collect::<Vec<_>>(),
+            let shrunk = offset_paths(
+                infill_area_here,
                 -self.wall_supporting_radius as f32,
-                JoinType::Square,
+                JoinType::Miter,
                 3.0,
-            )?);
+            )?;
             let overhang = to_polygons(&difference_polygons_ex(&shrunk, &infill_area_above)?);
             self.overhang_per_layer[layer_nr] = overhang;
             infill_area_above = infill_area_here.clone();

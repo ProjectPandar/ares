@@ -1,0 +1,65 @@
+{
+  "purpose": "Frozen official-exported project INPUTS only; no expected output",
+  "upstream": [
+    "GCode/SpiralVase.cpp:182-183",
+    "GCodeReader.hpp:57",
+    "GCodeReader.cpp:323-326"
+  ],
+  "base": "89560ca66ff8418bcf175d573df299955f9a216f",
+  "gui_option": "Smooth Spiral (PrintConfig.cpp:5837-5842)",
+  "geometry": "closed eight-sided cylinder, radius6mm, height1.2mm, 18vertices/32triangles, six actual layers",
+  "inputs": {
+    "control": {
+      "file": "control.3mf",
+      "sha256": "61e8e63712918c1c167d4276eb73cbd2881d9a76054f42c3b9a91ac6c058be26",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "6504834545657beb86b35b6b5e2364ab50a0f2d82eea36e3142ee68ef4c832e4",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "500599edde926073885302543f1c6a16c42f00bbf27a9bcbe431a1a4fe70ab81",
+        "Metadata/project_settings.config": "99595c007b845052dc3b5bb02029594c3c7b47cac51b44cc6dd4be18069a1280",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-89560-spiral-smooth2/control/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-89560-spiral-smooth2/control/export-launch.json",
+        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-spiral-smooth-fixed-xy/original-export-receipts/control",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-spiral-smooth-fixed-xy/witness/verified.json"
+      }
+    },
+    "positive": {
+      "file": "positive.3mf",
+      "sha256": "a48e157624f34a7e7425e95dddafaeb7676692dc23674a03eac41a09efb2356e",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "6504834545657beb86b35b6b5e2364ab50a0f2d82eea36e3142ee68ef4c832e4",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "500599edde926073885302543f1c6a16c42f00bbf27a9bcbe431a1a4fe70ab81",
+        "Metadata/project_settings.config": "98608ad20235d603f0c984c3581c20cc4fc6277bbd47084d4e323cc30269f4e9",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-89560-spiral-smooth2/positive/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-89560-spiral-smooth2/positive/export-launch.json",
+        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-spiral-smooth-fixed-xy/original-export-receipts/positive",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-spiral-smooth-fixed-xy/witness/verified.json"
+      }
+    }
+  },
+  "sole_changed_payload": "Metadata/project_settings.config",
+  "sole_changed_setting": {
+    "key": "spiral_mode_smooth",
+    "control": "0",
+    "positive": "1"
+  },
+  "exported_settings_equal_except": [
+    "spiral_mode_smooth"
+  ],
+  "all_other_zip_payloads_byte_identical": true
+}

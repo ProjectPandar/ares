@@ -2,14 +2,15 @@
 //! tags, `:3812-4234` `process_G1`, `:5004-5081` M104/M106/M107/M109,
 //! `:5540-5605` filament change, `:5630-5718` `store_move_vertex`).
 
-mod actual_speed;
+pub(super) mod actual_speed;
 pub(super) mod dynamics;
 mod extrusion;
 use extrusion::move_type;
 pub(super) mod tags;
 
 use super::ProcessorConfig;
-use super::motion::{MotionState, Trapezoid};
+use super::estimate::options_z::{Log, Scheduled};
+use super::motion::MotionState;
 use super::motion_util::{MMMIN_TO_MMSEC, word};
 use crate::ExtrusionRole;
 use crate::gcode_processor::{CustomGCodeItem, EMoveType, GCodeProcessorResult, MoveVertex};
@@ -43,7 +44,9 @@ pub(super) struct MoveRecorder {
     last_default_color: usize,
     color_change_volume: f64,
     color_change_volumes: Vec<f64>,
-    pending_option: Option<(usize, usize)>,
+    /// The `custom_gcode_per_print_z` item of a pending `set()`.
+    pending_option: Option<usize>,
+    pub(super) options_z: Log,
     tags: &'static Tags,
     role: ExtrusionRole,
     processing_start_custom_gcode: bool,
@@ -112,6 +115,7 @@ impl MoveRecorder {
             color_change_volume: 0.0,
             color_change_volumes: Vec::new(),
             pending_option: None,
+            options_z: Log::new(),
             tags: if config.limits.bbl_printer {
                 &BBL_TAGS
             } else {
@@ -210,18 +214,11 @@ impl MoveRecorder {
         }
     }
 
-    /// `process_filament_change` (`:5540-5605`) tool-change vertex; returns
-    /// the move id its time block carries.
-    pub(super) fn tool_change(
-        &mut self,
-        source: usize,
-        filament: usize,
-        position: [f64; 4],
-    ) -> u32 {
+    /// `process_filament_change` (`:5540-5605`) tool-change vertex.
+    pub(super) fn tool_change(&mut self, source: usize, filament: usize, position: [f64; 4]) {
         self.filament = filament;
         self.cp_color_current = self.extruder_colors[filament];
         self.store(source, EMoveType::ToolChange, [position; 2], 0.0);
-        self.moves.len() as u32 - 1
     }
 
     /// `m_feedrate` after a line's `F` word: linear moves narrow the f32
@@ -237,8 +234,8 @@ impl MoveRecorder {
     }
 
     /// `process_G1` from the move-type classification to `store_move_vertex`
-    /// (`:3829-3947`, `:4190-4234`); returns the time block's `move_id`.
-    pub(super) fn motion(&mut self, motion: RecordedMotion) -> u32 {
+    /// (`:3829-3947`, `:4190-4234`).
+    pub(super) fn motion(&mut self, motion: RecordedMotion) {
         let RecordedMotion {
             source,
             start,
@@ -256,7 +253,6 @@ impl MoveRecorder {
             self.extrusion_geometry(delta, delta_xyz, end[2], linear);
             self.correct_options_z();
         }
-        let move_id = self.moves.len() as u32;
         if let Some(seam) = seam {
             // `set_end_position(0.5f * (new_pos + first) + m_z_offset * UnitZ)`
             // then `store_move_vertex(Seam)` subtracts `m_z_offset` again.
@@ -270,21 +266,23 @@ impl MoveRecorder {
             );
         }
         self.store(source, move_type, [start, end], delta[3]);
-        move_id
     }
 
-    /// OptionsZCorrector::update (GCodeProcessor.hpp:693-705): relocate only
-    /// the latest pending marker, preserving its original source line.
+    /// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`); the copy
+    /// and erase of `moves` replay in `Log::replay` once the flushes are known.
     fn correct_options_z(&mut self) {
-        if let Some((move_id, item_id)) = self.pending_option.take() {
+        if let Some(item_id) = self.pending_option.take() {
             let position = self.moves[self.moves.len() - 1].position;
-            let mut marker = self.moves[move_id];
-            marker.position = position;
-            marker.height = self.height;
-            self.moves.push(marker);
-            self.moves.remove(move_id);
+            self.options_z.update(self.height);
             self.custom_gcode_per_print_z[item_id].print_z = f64::from(position[2]);
         }
+    }
+
+    /// `OptionsZCorrector::set` (`GCodeProcessor.hpp:688-691`) after a marker
+    /// vertex and its `custom_gcode_per_print_z` item.
+    fn set_option(&mut self) {
+        self.pending_option = Some(self.custom_gcode_per_print_z.len() - 1);
+        self.options_z.set();
     }
 
     /// `store_move_vertex` (`:5630-5718`); `source` is the input line the
@@ -309,13 +307,15 @@ impl MoveRecorder {
         } else {
             (end[2] - f64::from(self.z_offset)) as f32
         };
+        let position = [end[0] as f32 + offset[0], end[1] as f32 + offset[1], z];
+        self.options_z.vertex();
         self.moves.push(MoveVertex {
             gcode_id: source as u32,
             move_type,
             extrusion_role: self.role,
             extruder_id: self.filament as u8,
             cp_color_id: self.cp_color_current,
-            position: [end[0] as f32 + offset[0], end[1] as f32 + offset[1], z],
+            position,
             delta_extruder: delta_extruder as f32,
             feedrate: self.feedrate,
             width: self.width,
@@ -336,11 +336,11 @@ impl MoveRecorder {
 
     pub(super) fn apply_schedule(
         &mut self,
-        block_moves: &[u32],
-        times: &[f64],
-        trapezoids: &[Trapezoid],
+        scheduled: &Scheduled<'_>,
+        cache_eligible: &mut [bool],
     ) {
-        actual_speed::apply(&mut self.moves, block_moves, times, trapezoids);
+        let recorded = std::mem::take(&mut self.moves);
+        self.moves = self.options_z.replay(recorded, scheduled, cache_eligible);
     }
 
     /// `finalize` wipe sizes (`:2689-2695`); `gcode_id` moves from processor

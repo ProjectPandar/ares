@@ -22,9 +22,9 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
     pub(super) print_position: Vec<usize>,
     pub(in crate::project_slice::gcode_emit) instances: Vec<Vec<super::instances::Instance>>,
     pub(in crate::project_slice::gcode_emit) tower: Option<super::super::wipe_tower::Data>,
+    pub(in crate::project_slice::gcode_emit) label_inventory: super::super::object::LabelInventory,
     pub(super) labels: Vec<Vec<Option<ObjectLabels>>>,
     pub(super) object_layer_counts: Vec<usize>,
-    pub(super) last_entry: Option<(usize, usize)>,
     pub(super) layer_count: usize,
     pub(super) skirt_schedule: super::skirt_schedule::SkirtSchedule,
 }
@@ -270,17 +270,17 @@ pub(in crate::project_slice::gcode_emit) fn build(
                 .expect("print object has printable instances")
         })
         .collect();
+    let label_inventory = super::super::object::LabelInventory::new(
+        instances.iter().flatten().map(|instance| instance.label_id),
+    );
     let labels = (0..object_count)
         .map(|index| {
             (0..instances[index].len())
-                .map(|copy| ObjectLabels::from_traversal(traversal, index, copy))
+                .map(|copy| ObjectLabels::from_traversal(traversal, index, copy, &label_inventory))
                 .collect()
         })
         .collect();
     let object_layer_counts = objects.iter().map(Vec::len).collect();
-    let last_entry = merged
-        .last()
-        .and_then(|(_, entry)| entry.object_layer.map(|layer| (entry.object_index, layer)));
     let max_layer_height = super::super::tool_ordering::max_layer_height(
         settings,
         object_options
@@ -311,6 +311,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         .map_err(|error| {
             crate::SliceError::InvalidInput(format!("wipe tower geometry: {error:?}"))
         })?;
+    tool_ordering.assign_custom_gcodes(traversal);
     Ok(Schedule {
         tower,
         tool_ordering,
@@ -318,9 +319,9 @@ pub(in crate::project_slice::gcode_emit) fn build(
         raft,
         print_position,
         instances,
+        label_inventory,
         labels,
         object_layer_counts,
-        last_entry,
         layer_count,
         skirt_schedule,
     })

@@ -14,8 +14,8 @@ use regex::Regex;
 use serde::Deserialize;
 
 use crate::{
-    ConfigOverrides, GCodeFlavor, OrcaFloat, OrcaFloats, Project, ProjectSettings, SliceError,
-    SliceOptions,
+    ConfigOverrides, GCodeFlavor, OrcaFloat, OrcaFloats, ProcessPrintSequence, Project,
+    ProjectSettings, SliceError, SliceOptions,
     project::effective_config::{
         resolve_bounded_project_config, types::BoundedResolvedProjectConfig,
     },
@@ -166,7 +166,7 @@ pub fn validate_project_plate(
     let mut project = crate::project::load_project_with(input, overrides)?;
     project
         .settings()
-        .validate_loaded_config(&project.documents().project_settings_raw)?;
+        .validate_loaded_config(&project.documents().project_settings_raw, true)?;
     project.initialize_cli_loaded_project_config();
     validate_loaded_project(project, plate, None)
 }
@@ -191,6 +191,30 @@ pub(crate) fn validate_applied_project(
     let settings = &resolved.views.full;
     let into_validate = |error: SliceError| into_validate_message(error, settings);
     layered_wrapping::validate(project, resolved, plate_number)?;
+    // `Print.cpp:1334-1341`: spiral vase admits one copy unless the print
+    // runs by object; the adjacent regions check (`:1342-1353`) stays
+    // deferred.
+    if settings.process.print.spiral_mode.0 {
+        let total_copies_count: usize = project
+            .objects()
+            .iter()
+            .map(|object| object.instances().len())
+            .sum();
+        if total_copies_count > 1
+            && settings.process.print.print_sequence != ProcessPrintSequence::ByObject
+        {
+            return Err(SliceError::Validate {
+                message: "Please select \"By object\" print sequence to print multiple objects in spiral vase mode."
+                    .to_owned(),
+                plate_index: plate_number,
+                layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+                wall_loops: settings.process.region.wall_loops.0,
+                sparse_infill_density: f64::from(
+                    settings.process.region.sparse_infill_density.0 as f32,
+                ),
+            });
+        }
+    }
     sequential_clearance::validate(project, resolved, plate_number)?;
     crate::project_slice::validate_print_height(project, resolved, plate_number)?;
     extrusion_width::applied(resolved).map_err(into_validate)?;

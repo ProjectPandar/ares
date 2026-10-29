@@ -16,8 +16,8 @@ pub(super) struct MoveContext<'a> {
     pub first_travel_comment: &'a str,
     pub first_position: bool,
     pub layer_change_travel: bool,
-    /// `state.pending_lift.is_some()` captured before consumption — the
-    //   deferred hop that applies to THIS travel.
+    /// A pending lift strictly above EPSILON, captured before consumption.
+    /// This is the deferred hop that applies to THIS travel.
     pub lifted_for_travel: bool,
     /// `emit_pending`'s raised destination (when a pending lift ran).
     pub pending_target: Option<f64>,
@@ -178,12 +178,13 @@ pub(super) fn emit_approach_move(
             first_travel_comment,
         );
         travel_set_layer_z = true;
-    } else if first_position && (first_travel_lift.is_some() || state.pending_lift.is_some()) {
-        // `m_to_lift` consumption is independent of the retracted flag
-        // (`GCodeWriter.cpp:694-710`) — a deferred hop (scheduled by a
-        // qualifying retraction, including a Hilbert-suppressed one or
-        // the retract path's own deferral) always emits on the first
-        // travel. No scheduled lift → no hop (`GCode.cpp:7530-7533`).
+    } else if first_position
+        && state.options.z_hop.abs() > travel::EPSILON
+        && (first_travel_lift.is_some() || state.pending_lift.is_some())
+    {
+        // `GCodeWriter.cpp:700-710`: only a deferred hop above EPSILON is
+        // consumed, independently of the retracted flag. A subthreshold
+        // pending lift takes the ordinary travel branch and remains set.
         let lift = first_travel_lift.or_else(|| state.pending_lift.take());
         dispatch::emit_retracted_first_travel(
             output,
@@ -212,7 +213,8 @@ pub(super) fn emit_approach_move(
         // (`GCodeWriter.cpp:725-757`: slope/spiral moves come from the
         // `m_to_lift` block; with no lift the plain combined XYZ path
         // emits the destination directly).
-        let has_lift = state.lifted_amount > 0.0 || state.pending_lift.is_some();
+        let has_lift = state.lifted_amount > 0.0
+            || (state.pending_lift.is_some() && state.options.z_hop.abs() > travel::EPSILON);
         if has_lift
             && state.options.z_hop > 0.0
             && retraction::uses_sloped_lift(state.options.z_hop_type)
@@ -269,6 +271,8 @@ pub(super) fn emit_approach_move(
         state.record_z(z);
         travel_set_layer_z = z == leg_z;
     } else if slope_start_z.is_some() {
+        // GCode.cpp:6371-6394/7480-7482 supplies contour/sloped or nominal Z;
+        // GCodeWriter.cpp:771-806 handles their XY/XYZ travel branches.
         // The first leg's destination z equals the live writer z on a
         // same-z detour (or a clamped approach): upstream's
         // `travel_to_xyz` then takes the XY-only, COMMENTLESS
@@ -277,7 +281,7 @@ pub(super) fn emit_approach_move(
         // Upstream takes the XY-only branch when `std::abs(delta(2)) <
         // EPSILON` — STRICTLY below 1e-4 (`GCodeWriter.cpp:927`,
         // `libslic3r.h:52`).
-        if (leg_z - live_z).abs() < 1e-4 {
+        if (leg_z - live_z).abs() < travel::EPSILON {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         } else if !state.positioned {
             // Unclear position: upstream's `travel_to_xyz` splits into
@@ -371,14 +375,14 @@ pub(super) fn emit_approach_move(
 /// nozzle treats a target z inside `[pos - m_lifted, pos]` as a no-op;
 /// only without a positive lift does the bare `abs(delta) < EPSILON`
 /// shortcut apply.
-fn travel_will_move_z(state: &EmitState, z: f64) -> bool {
+pub(in crate::project_slice::gcode_emit) fn travel_will_move_z(state: &EmitState, z: f64) -> bool {
     let pos = state.writer_z.unwrap_or(state.layer_z);
     if state.lifted_amount > 0.0 {
         let nominal = pos - state.lifted_amount;
         if z >= nominal && z <= pos {
             return false;
         }
-    } else if (pos - z).abs() < 1e-4 {
+    } else if (pos - z).abs() < travel::EPSILON {
         return false;
     }
     true

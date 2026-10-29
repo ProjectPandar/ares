@@ -1,0 +1,176 @@
+{
+  "base_main": "73e8e712e",
+  "source": "PrintApply.cpp:1032-1088; PrintObject.cpp:3664-3710/2252-2280/3973-3995",
+  "cases": {
+    "classic-none": {
+      "sha256": "9e3979e986feba92be88c36f389c1ba8fdf125a5c06ab86df6c60253e3be1f55",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": null,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "classic-zero": {
+      "sha256": "710a020317fdf8310270381c53d563d807b2d076810c0ceeb8f5bd262f3709b5",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": 0,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "classic-one": {
+      "sha256": "6f7f8bbd2a2b4a07d3e3915fe7aa00a0de79709a4a469430d2872b682c7925f6",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": 1,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "classic-four": {
+      "sha256": "438bf4c61895a7a8d51e3c61a70fa8df120a9f3a607d63a4291d359984154a7c",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": 4,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "classic-equal": {
+      "sha256": "71fad2284f337152078748cb64a5f704e0caf2d98516637e68ea6392fc07cdc2",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": 2,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "classic-outside": {
+      "sha256": "6e4a926af93dc937d3206520120bb05929021c120c34ca27709df81e8c48b22e",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": 4,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": true,
+      "overlap_later_bottom": null
+    },
+    "classic-overlap": {
+      "sha256": "d52490b2f758e3acd1a0765436186fd9c77779e75e34a71c331d8f7b7eac8eda",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": 4,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": 1
+    },
+    "classic-horizontal-none": {
+      "sha256": "8d70099dd8a8ae329e99d9a8c41d0c1a21b5af73ecc9f3b83a123d3b3e059fe3",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": null,
+      "parent_bottom": 2,
+      "horizontal": true,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "classic-horizontal-one": {
+      "sha256": "12ee28401bdcdebd8f6c4c6c24d3e08eb6e0e1e7d5b32f7794f96588ae2c6114",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": 1,
+      "parent_bottom": 2,
+      "horizontal": true,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "classic-horizontal-four": {
+      "sha256": "52ab5091a7ecaaad4f5b45d27a4e1f112288c2fc2231aa3b8bfe3b5a07f2e4ab",
+      "base": "tests/parity/validation/modifier-wall-loops-classic.3mf",
+      "base_sha256": "66e398caa9286359051e0af158bc6ca393bb022671679642f1aa251b851cb7cf",
+      "bottom": 4,
+      "parent_bottom": 2,
+      "horizontal": true,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "arachne-none": {
+      "sha256": "74412fecaff9095c24ff9897a729c877955c5d3a8901151e138f7f14d9aa2386",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "bottom": null,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "arachne-zero": {
+      "sha256": "d13f7d84606d4a8d5d11ef439d7ff6cea95fc911a1f2c7ef47bc2334f1a29b84",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "bottom": 0,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "arachne-one": {
+      "sha256": "76e41d687e389b2e69c7bbef1407fc8316c9aa2b0403a458a370798fd2524c84",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "bottom": 1,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "arachne-four": {
+      "sha256": "43e30855c3b9027f19aa663d38569660e541bdc2d6809aca9d362dd4bb4865fb",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "bottom": 4,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "arachne-equal": {
+      "sha256": "d1337496b93c8d3e7695c9bab064247d033f873fb301befd10f1b9050eb913ff",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "bottom": 2,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": null
+    },
+    "arachne-outside": {
+      "sha256": "a0cdf3e820ba0ba3a910446c7f2d1d68d93a303907307956d346c3a6e7e5b997",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "bottom": 4,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": true,
+      "overlap_later_bottom": null
+    },
+    "arachne-overlap": {
+      "sha256": "f1b941eb6bc4f74844a9ca53d3f8414743f65b3a9419469879577cd3e3f4faac",
+      "base": "tests/parity/validation/modifier-wall-loops-arachne.3mf",
+      "base_sha256": "b208aa90d3b5039927a2bfa92472c12b6b71008e2a5d71d57ff058789333b90a",
+      "bottom": 4,
+      "parent_bottom": 2,
+      "horizontal": false,
+      "outside": false,
+      "overlap_later_bottom": 1
+    }
+  }
+}

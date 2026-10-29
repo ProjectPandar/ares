@@ -1,14 +1,43 @@
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     ExtrusionRole, ProcessInfillPattern, SliceError,
     fill::plane_path::{PlanePathFillParams, PlanePathPattern, fill_surface},
-    geometry::{BoundingBox, CoordinateScale},
-    project_slice::group_fills::SurfaceFill,
+    geometry::{BoundingBox, CoordinateScale, ExPolygon, Polyline},
+    project_slice::group_fills::{SurfaceFill, SurfaceFillParams},
 };
 
 use super::{
     FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities,
     geometry_error,
 };
+
+/// Ironing entry: solid fills keep the `FillParams` default resolution
+/// (`FillBase.hpp:64`) and never read the object bounding box
+/// (`FillPlanePath.cpp:80` — align only below 0.995 density), so the
+/// expolygon bounds stand in for it.
+pub(super) fn expolygon_polylines(
+    expolygon: &ExPolygon,
+    pattern: PlanePathPattern,
+    params: SurfaceFillParams,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, SliceError> {
+    let fill_params = PlanePathFillParams {
+        spacing: params.spacing,
+        overlap: params.overlap,
+        density: (0.01_f64 * f64::from(params.density)) as f32,
+        angle: params.angle,
+        multiline: params.multiline,
+        resolution: 0.0125,
+        anchor_length: params.anchor_length,
+        anchor_length_max: params.anchor_length_max,
+        object_bounding_box: BoundingBox::from_expolygon(expolygon)
+            .expect("expolygon contour is non-empty by invariant"),
+        calibration_order: false,
+    };
+    fill_surface(expolygon, pattern, fill_params, scale)
+        .map(|components| components.into_iter().flatten().collect())
+        .map_err(geometry_error)
+}
 
 #[expect(
     clippy::too_many_arguments,
@@ -60,8 +89,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

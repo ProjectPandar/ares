@@ -5,7 +5,7 @@ use std::{
     fs,
     io::{Cursor, Read, Write},
     os::unix::fs::PermissionsExt,
-    path::Path,
+    path::{Path, PathBuf},
     process::Command,
 };
 
@@ -85,6 +85,10 @@ fn compare(scripts: Option<Value>) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
+    compare_with(&runner, scripts);
+}
+
+pub(super) fn compare_with(runner: &OrcaRunner, scripts: Option<Value>) -> (PathBuf, Value) {
     let directory = tempfile::Builder::new()
         .prefix("post-process-cli-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
@@ -198,4 +202,5 @@ fn compare(scripts: Option<Value>) {
             normalize_generator(&native, "OrcaSlicer")
         );
     }
+    (directory, scripts)
 }

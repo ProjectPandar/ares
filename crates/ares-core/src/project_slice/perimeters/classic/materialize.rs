@@ -1,3 +1,4 @@
+mod polyline;
 // Reached raw-path seam from OrcaSlicer v2.4.2 `PerimeterGenerator.cpp:153-207,
 // 213-222`, `ExtrusionEntity.hpp:153-188,551-580`, and `Polyline.hpp:291-302`.
 // Thin walls, entity traversal, and final orientation are deferred.

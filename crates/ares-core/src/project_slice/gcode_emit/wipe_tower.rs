@@ -17,25 +17,34 @@ mod geometry;
 mod occupancy;
 mod plan;
 mod planning;
-pub(super) use planning::prepare;
+mod prepare;
+pub(super) use prepare::prepare;
 mod postprocess;
 mod prime;
 mod result;
 mod runtime;
+mod type1;
 pub(super) use runtime::{finalize, initialize, tool_change};
 mod tool_change;
 mod unload;
 mod wipe;
 mod writer;
 
-pub(super) fn type2_requested(settings: &crate::ProjectSettings, bbl: bool) -> bool {
+pub(super) fn requested(
+    settings: &crate::ProjectSettings,
+    bbl: bool,
+) -> Option<crate::WipeTowerType> {
     let print = &settings.process.print;
-    !bbl && settings.printer.gcode.wipe_tower_type == crate::WipeTowerType::Type2
-        && print.enable_prime_tower.0
+    let enabled = print.enable_prime_tower.0
         && ((settings.process.gcode.enable_wrapping_detection.0
             && settings.printer.gcode.wrapping_exclude_area.0.len() > 2)
             || print.timelapse_type == crate::ProcessTimelapseType::Smooth
-            || (!print.spiral_mode.0 && settings.filament.gcode.filament_diameter.0.len() > 1))
+            || (!print.spiral_mode.0 && settings.filament.gcode.filament_diameter.0.len() > 1));
+    enabled.then_some(if bbl {
+        crate::WipeTowerType::Type1
+    } else {
+        settings.printer.gcode.wipe_tower_type
+    })
 }
 
 #[cfg(test)]
@@ -48,12 +57,21 @@ mod tests {
         settings.process.print.enable_prime_tower.0 = true;
         settings.process.print.timelapse_type = crate::ProcessTimelapseType::Smooth;
         settings.printer.gcode.wipe_tower_type = crate::WipeTowerType::Type2;
-        assert!(type2_requested(&settings, false));
-        assert!(!type2_requested(&settings, true));
+        assert_eq!(
+            requested(&settings, false),
+            Some(crate::WipeTowerType::Type2)
+        );
+        assert_eq!(
+            requested(&settings, true),
+            Some(crate::WipeTowerType::Type1)
+        );
         settings.printer.gcode.wipe_tower_type = crate::WipeTowerType::Type1;
-        assert!(!type2_requested(&settings, false));
+        assert_eq!(
+            requested(&settings, false),
+            Some(crate::WipeTowerType::Type1)
+        );
         settings.printer.gcode.wipe_tower_type = crate::WipeTowerType::Type2;
         settings.process.print.enable_prime_tower.0 = false;
-        assert!(!type2_requested(&settings, false));
+        assert_eq!(requested(&settings, false), None);
     }
 }

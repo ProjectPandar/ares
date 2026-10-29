@@ -78,8 +78,8 @@ fn classic_polygon_fuzzy_runs_after_polygon_generation_for_all_modes() {
     .map(|mode| {
         apply(
             &source,
+            config(ProcessFuzzySkinType::External, mode),
             FuzzySkinInput {
-                config: config(ProcessFuzzySkinType::External, mode),
                 layer_id: 0,
                 slice_z: 0.1,
                 loop_index: 0,

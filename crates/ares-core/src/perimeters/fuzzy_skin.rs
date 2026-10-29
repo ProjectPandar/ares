@@ -163,17 +163,17 @@ impl FuzzySkinConfig {
 
     pub(crate) fn fuzzified_scaled_points(
         self,
-        points: Vec<Point>,
+        (points, closed): (&[Point], bool),
         FuzzySkinLayer { layer_id, print_z }: FuzzySkinLayer,
         scale: CoordinateScale,
         context: &mut crate::SlicerContext,
     ) -> Vec<Point> {
         if self.noise_type == FuzzySkinNoiseType::Ripple {
             return super::fuzzy_skin_noise::ripple_scaled_closed_polyline(
-                &points, self, layer_id, scale,
+                points, self, layer_id, scale,
             );
         }
-        super::fuzzy_skin_seeded::fuzzify_closed(&points, self, print_z, scale, context.rng())
+        super::fuzzy_skin_seeded::fuzzify((points, closed), self, print_z, scale, context.rng())
     }
 
     pub(crate) fn external_points(

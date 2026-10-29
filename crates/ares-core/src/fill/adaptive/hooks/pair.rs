@@ -3,64 +3,43 @@
 //! that determines the connected path direction.
 
 use super::Joint;
-use super::add_hook;
 use super::create_offset_line;
 use super::geometry::{
     distance_squared, dot, normalize, segment_line_intersection, segments_cross,
 };
+use super::hook::{HookParams, add_hook};
 use crate::geometry::{Line, Point};
 
-#[allow(clippy::too_many_arguments)]
 pub(super) fn connect_pair(
     first: &mut Joint,
     nearest: &mut Joint,
-    source: &[Line],
+    params: &HookParams<'_>,
     working: &mut [Vec<Point>],
     merged_with: &mut [usize],
-    scaled_offset: f64,
-    hook_length_max: f64,
-    hook_length: f64,
-    scaled_trim_distance: f64,
 ) {
+    let source = params.source;
+    let scaled_offset = params.offset;
+    let hook_length_max = params.maximum_length;
+    let scaled_trim_distance = params.trim;
     let anchor = create_offset_line(
         first.intersect_point,
         nearest.intersect_point,
+        source[first.closest_line],
         first.left,
         scaled_offset,
     );
     let Some(first_pt) = segment_line_intersection(source[first.intersect_line], anchor) else {
-        add_hook(
-            first,
-            source,
-            working,
-            scaled_offset,
-            hook_length,
-            scaled_trim_distance,
-        );
+        add_hook(first, working, params);
         first.used = true;
         return;
     };
     let Some(nearest_pt) = segment_line_intersection(source[nearest.intersect_line], anchor) else {
-        add_hook(
-            first,
-            source,
-            working,
-            scaled_offset,
-            hook_length,
-            scaled_trim_distance,
-        );
+        add_hook(first, working, params);
         first.used = true;
         return;
     };
     if distance_squared(first_pt, nearest_pt) > hook_length_max * hook_length_max {
-        add_hook(
-            first,
-            source,
-            working,
-            scaled_offset,
-            hook_length,
-            scaled_trim_distance,
-        );
+        add_hook(first, working, params);
         first.used = true;
         return;
     }
@@ -70,14 +49,7 @@ pub(super) fn connect_pair(
             && index != nearest.intersect_line
             && segments_cross(first_pt, nearest_pt, line.a, line.b).is_some()
         {
-            add_hook(
-                first,
-                source,
-                working,
-                scaled_offset,
-                hook_length,
-                scaled_trim_distance,
-            );
+            add_hook(first, working, params);
             first.used = true;
             return;
         }
@@ -167,7 +139,7 @@ pub(super) fn connect_pair(
 
 /// `Intersection::other_hook` (`FillAdaptive.cpp:600-606`): the hook
 /// segment of a just-hooked 3-point polyline.
-fn other_hook(joint: &Joint, points: &[Point]) -> Option<Line> {
+pub(super) fn other_hook(joint: &Joint, points: &[Point]) -> Option<Line> {
     if points.len() >= 3 {
         Some(if joint.front {
             Line::new(points[1], points[2])
@@ -184,11 +156,9 @@ fn line_line_point(hook: Line, l: Line) -> Option<Point> {
     segment_line_intersection(l, hook)
 }
 
-/// `update_merged_polyline_idx` (`:1049-1076`): follow the merge chain
-/// to the surviving polyline slot (with path compression) and refresh
-/// `front` against the surviving polyline when the joint is still fresh.
-pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint, working: &[Vec<Point>]) {
-    let mut last = joint.intersect_pl;
+/// `update_merged_polyline_idx` (`FillAdaptive.cpp:1049-1061`).
+pub(super) fn resolve_merged_index(merged_with: &mut [usize], index: usize) -> usize {
+    let mut last = index;
     loop {
         let lower = merged_with[last];
         if lower == last {
@@ -196,7 +166,13 @@ pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint, worki
         }
         last = lower;
     }
-    merged_with[joint.intersect_pl] = last;
+    merged_with[index] = last;
+    last
+}
+
+/// `update_merged_polyline` (`:1063-1072`): refresh a surviving joint's front.
+pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint, working: &[Vec<Point>]) {
+    let last = resolve_merged_index(merged_with, joint.intersect_pl);
     joint.intersect_pl = last;
     if !joint.used && !working[last].is_empty() {
         joint.front = working[last][0] == joint.intersect_point;

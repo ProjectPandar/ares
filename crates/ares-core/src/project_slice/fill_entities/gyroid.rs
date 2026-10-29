@@ -1,4 +1,5 @@
 //! Standard parametric Gyroid sparse infill (`FillGyroid.cpp:288-324`).
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -9,13 +10,12 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
     print_z: f64,
     layer_height: f64,
     scale: CoordinateScale,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = GyroidFillParams {
         z: print_z,
         spacing: fill.params.spacing,
@@ -35,6 +35,17 @@ pub(super) fn append(
     for expolygon in &fill.expolygons {
         polylines.extend(fill_surface(expolygon, params, scale).map_err(gyroid_error)?);
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    print_z: f64,
+    layer_height: f64,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, print_z, layer_height, scale)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -44,8 +55,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

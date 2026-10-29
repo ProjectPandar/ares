@@ -93,7 +93,10 @@ fn perimeter(output: &mut Layer, entity: &ExtrusionEntity) {
 fn fill(output: &mut Layer, entity: &FillExtrusionEntity) {
     match entity {
         FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => output.path(
-            path.polyline.points().iter().copied(),
+            path.polyline
+                .points()
+                .iter()
+                .map(|point| crate::geometry::Point::new(point.x, point.y)),
             is_support(path.role),
         ),
         FillExtrusionEntity::VariableWidth(path) => gap(output, path),

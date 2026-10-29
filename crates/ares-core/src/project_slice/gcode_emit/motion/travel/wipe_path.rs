@@ -32,11 +32,11 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
     // Upstream substitutes `gcodegen.last_pos()` — the LOCAL scaled int
     // stored verbatim at the last emitted point (`GCode.cpp:449`), not a
     // rescale of the mm position. Use the cached scaled int directly.
-    points.push(
-        state
-            .last_scaled_position
-            .unwrap_or_else(|| scaled_position(start, state)),
-    );
+    points.push(if state.last_position_defined {
+        state.last_scaled_position
+    } else {
+        scaled_position(start, state)
+    });
     // Upstream `Wipe::path.points` are already scaled ints (the path
     // lives in scaled space); our mm round-trip must recover exactly
     // those ints — round-to-nearest, since `int * 1e-6 / 1e-6` can land

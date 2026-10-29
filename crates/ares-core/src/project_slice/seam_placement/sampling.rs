@@ -12,6 +12,7 @@ pub(super) struct TriangleSamples {
     pub(super) total_area: f32,
     pub(super) positions: Vec<Vec3>,
     pub(super) normals: Vec<Vec3>,
+    pub(super) triangle_indices: Vec<usize>,
 }
 
 pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> TriangleSamples {
@@ -35,9 +36,20 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
         .collect::<Vec<_>>();
     let mut positions = Vec::with_capacity(sample_count);
     let mut normals = Vec::with_capacity(sample_count);
+    let mut triangle_indices = Vec::with_capacity(sample_count);
     for [triangle_sample, u, v] in random_samples {
         let target = triangle_sample * f64::from(total_area);
-        let triangle_index = cumulative.partition_point(|&sum| f64::from(sum) <= target);
+        let mut triangle_index = cumulative.partition_point(|&sum| f64::from(sum) <= target);
+        // `TriangleSetSampling.cpp:26-31` accumulates into
+        // `std::map<double, size_t>` keyed on the float cumulative sum:
+        // duplicate keys (zero-area triangle runs) collapse to the LAST
+        // inserted index; `upper_bound` returns that index, not the first
+        // member of the equal run.
+        while triangle_index + 1 < cumulative.len()
+            && cumulative[triangle_index + 1] == cumulative[triangle_index]
+        {
+            triangle_index += 1;
+        }
         let triangle = mesh.triangles[triangle_index];
         let square_u = u.sqrt();
         // `TriangleSetSampling.cpp:67`: Eigen converts each double
@@ -48,11 +60,13 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
                 + weighted(triangle.vertices[2], v * square_u),
         );
         normals.push(triangle.normal());
+        triangle_indices.push(triangle_index);
     }
     TriangleSamples {
         total_area,
         positions,
         normals,
+        triangle_indices,
     }
 }
 

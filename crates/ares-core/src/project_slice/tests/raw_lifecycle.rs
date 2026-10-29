@@ -5,7 +5,7 @@ use super::{
     raw_support::{intersections, preflight_order_scenarios},
     support::{
         KsrArchive, identity_resolved, metadata, object, plan, project_volume, project_volume_at_x,
-        slot_limit, unsupported,
+        slot_limit,
     },
 };
 
@@ -235,28 +235,6 @@ fn assert_later_request_preflights_beat_earlier_coordinate() {
         coordinate_error()
     );
 
-    let shared_later = object(
-        "shared-later.model",
-        2,
-        vec![project_volume(
-            "shared-later.model",
-            2,
-            ProjectVolumeType::ModelPart,
-            true,
-            true,
-        )],
-        &[Transform3d::IDENTITY],
-    );
-    assert_eq!(
-        intersections(
-            &[invalid_coordinate.clone(), shared_later],
-            &[identity_resolved(0), identity_resolved(1)],
-            vec![plan(0, 0, 1), plan(1, 0, 1)]
-        )
-        .unwrap_err(),
-        unsupported("shared_mesh_centering")
-    );
-
     let dense_later = object(
         "dense-later.model",
         3,
@@ -267,7 +245,6 @@ fn assert_later_request_preflights_beat_earlier_coordinate() {
                     10 + index,
                     ProjectVolumeType::ModelPart,
                     true,
-                    false,
                 )
             })
             .collect(),

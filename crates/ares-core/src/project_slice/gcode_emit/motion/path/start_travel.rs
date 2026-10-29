@@ -19,7 +19,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn tower_travel(
     state: &mut EmitState,
     first_scaled: (i64, i64),
     geometry: LayerGeometry<'_>,
-) {
+) -> Result<(), crate::SliceError> {
     let first_x = geometry.scale.unscale(first_scaled.0) + state.offset.0;
     let first_y = geometry.scale.unscale(first_scaled.1) + state.offset.1;
     let comment = if state.options.gcode_comments {
@@ -41,34 +41,45 @@ pub(in crate::project_slice::gcode_emit::motion) fn tower_travel(
         target_z: state.layer_z,
         travel_distance: (first_x - state.x).hypot(first_y - state.y),
     };
-    approach::emit_needs_travel(output, state, request);
+    approach::emit_needs_travel(output, state, request)?;
     state.layer_change_travel_pending = false;
+    Ok(())
 }
 
 pub(super) struct Request<'a> {
     pub(super) first_scaled: (i64, i64),
+    pub(super) force_no_extrusion: bool,
     pub(super) first_x: f64,
     pub(super) first_y: f64,
     pub(super) properties: PathProperties<'a>,
     pub(super) geometry: LayerGeometry<'a>,
 }
 
-pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request<'_>) {
+pub(super) fn emit(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    request: Request<'_>,
+) -> Result<(), crate::SliceError> {
     let Request {
         first_scaled,
+        force_no_extrusion,
         first_x,
         first_y,
         properties,
         geometry,
     } = request;
+    let after_contour = std::mem::replace(
+        &mut state.last_path_z_contoured,
+        properties.contour.is_some(),
+    );
     // `positioned` mirrors `GCodeWriter::m_is_current_pos_clear`: cleared by
     // custom g-code (timelapse/toolchange), set by every travel. The
-    // `never_positioned` flag mirrors `GCode::m_last_pos.is_none()` — true
+    // `never_positioned` flag mirrors `!GCode::m_last_pos_defined` — true
     // only before the first generated travel — and drives the extra
     // `G1 Z{nominal_z}` re-statement that `_last_pos_undefined` triggers
     // (`GCode.cpp:6381-6386`), which a merely-uncleared position does not.
     let first_position = !state.positioned;
-    let never_positioned = state.last_scaled_position.is_none();
+    let never_positioned = !state.last_position_defined;
     let layer_change_travel = state.layer_change_travel_pending && !first_position;
     let slope_start_z = properties
         .slope
@@ -77,12 +88,23 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             state.layer_z - f64::from(properties.height)
                 + f64::from(properties.height) * slope.z_begin
         });
-    let slope_needs_z_travel = slope_start_z.is_some_and(|target| {
-        (state.scarf_z.unwrap_or(state.layer_z) - target).abs() >= super::SOURCE_EPSILON_MM
-    });
-    let target_z = slope_start_z.unwrap_or(state.layer_z);
-    let needs_travel =
-        first_position || state.last_scaled_position != Some(first_scaled) || slope_needs_z_travel;
+    // `GCode.cpp:6359-6368`: `slope_need_z_travel =
+    // m_writer.will_move_z(target_z)` — the writer's live nozzle z
+    // (with the lift band), not the nominal layer z.
+    let slope_needs_z_travel =
+        slope_start_z.is_some_and(|target| approach::travel_will_move_z(state, target));
+    let contour_z = properties
+        .contour
+        .map(|points| state.layer_z + geometry.scale.unscale(points[0].z));
+    // GCode.cpp:7480-7482 restores nominal Z through travel_to_xyz.
+    let travel_z = slope_start_z
+        .or(contour_z)
+        .or(after_contour.then_some(state.layer_z));
+    let target_z = travel_z.unwrap_or(state.layer_z);
+    let needs_travel = first_position
+        || !state.last_position_defined
+        || state.last_scaled_position != first_scaled
+        || slope_needs_z_travel;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     let (mut travel_set_layer_z, eager_lifted_travel, unclear_position_travel) = if needs_travel {
         let comment = if state.options.gcode_comments {
@@ -93,7 +115,11 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             };
             format!(
                 " ; move to first {}{bridge} point",
-                features::feature_description(properties.feature)
+                if force_no_extrusion {
+                    "move inwards before retraction/seam"
+                } else {
+                    features::feature_description(properties.feature)
+                }
             )
         } else {
             String::new()
@@ -111,11 +137,11 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 geometry,
                 first_position,
                 layer_change_travel,
-                slope_start_z,
+                slope_start_z: travel_z,
                 target_z,
                 travel_distance,
             },
-        )
+        )?
     } else {
         (false, false, false)
     };
@@ -150,10 +176,12 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         state,
         restate::RestateContext {
             is_sloped: properties.slope.is_some(),
+            contour_z,
             never_positioned,
             travel_set_layer_z,
             eager_lifted_travel,
             unclear_position_travel,
         },
     );
+    Ok(())
 }

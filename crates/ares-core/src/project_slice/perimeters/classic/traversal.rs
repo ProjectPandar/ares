@@ -11,7 +11,9 @@ use super::hierarchy::{PostClassicHierarchyPrintObject, PreparedPostClassicHiera
 use classify::classify_roots;
 use types::{ClassicTraversalRecord as Record, RouteFlows};
 
-pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClassicTraversal {
+pub(super) fn finish(
+    prepared: PreparedPostClassicHierarchy,
+) -> Result<PreparedPostClassicTraversal, crate::SliceError> {
     let objects = prepared
         .objects
         .iter()
@@ -33,7 +35,7 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
                 .0;
             prepare_object(predecessor, raft_layers, prepared.scale)
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, _>>()?;
     let PreparedPostClassicHierarchy {
         project,
         resolved,
@@ -41,7 +43,7 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
         scale,
         objects: predecessors,
     } = prepared;
-    PreparedPostClassicTraversal {
+    Ok(PreparedPostClassicTraversal {
         project,
         resolved,
         config_block,
@@ -57,14 +59,14 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
             .collect(),
         #[cfg(test)]
         drop_probe: types::TraversalDropProbe::new(),
-    }
+    })
 }
 
 fn prepare_object(
     hierarchy: &PostClassicHierarchyPrintObject,
     raft_layers: i32,
     scale: crate::geometry::CoordinateScale,
-) -> Vec<Option<ClassicTraversalRecord>> {
+) -> Result<Vec<Option<ClassicTraversalRecord>>, crate::SliceError> {
     let onion = &hierarchy.predecessor;
     let top_split = &onion.predecessor;
     let prelude_object = &top_split.predecessor;
@@ -106,12 +108,16 @@ fn prepare_object(
                                     .unwrap_or_default(),
                             })
                             .collect();
-                        Some(Record {
+                        Ok(Some(Record {
                             surfaces,
                             layer_id: input.layer_id,
                             layer_height: input.layer_height,
                             slice_z: plan.layers[input.planned_layer_index].slice_z,
-                            fuzzy_skin: crate::perimeters::FuzzySkinConfig::from_region(region),
+                            fuzzy_skin: super::super::arachne::fuzzy::Regions::prepare(
+                                input_object,
+                                input,
+                                scale,
+                            )?,
                             overhang_flow: input.overhang_flow,
                             ext_perimeter_flow: input.ext_perimeter_flow,
                             scale,
@@ -120,9 +126,9 @@ fn prepare_object(
                                 input.layer_id,
                                 raft_layers,
                             ),
-                        })
+                        }))
                     }
-                    (None, None, None) => None,
+                    (None, None, None) => Ok(None),
                     _ => unreachable!("O5 record slots remain aligned with O4 and O1"),
                 }
             },

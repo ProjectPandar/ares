@@ -57,8 +57,8 @@ impl<'a> ReorientPlan<'a> {
             detect_branch: detect_overhang_wall && above_raft,
             above_raft,
             // `FuzzySkin.cpp:458-464`
-            has_fuzzy_skin: record.fuzzy_skin.should_fuzzify(layer_id, 0, true),
-            has_fuzzy_hole: record.fuzzy_skin.should_fuzzify(layer_id, 0, false),
+            has_fuzzy_skin: record.fuzzy_skin.has_contour,
+            has_fuzzy_hole: record.fuzzy_skin.has_hole,
         }
     }
 

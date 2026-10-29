@@ -38,9 +38,9 @@ fn request(geometry: LayerGeometry<'_>) -> Request<'_> {
         },
         geometry,
         offset: (160.0, 175.0),
-        inset: 0.284_932_5,
+        origin: (160.0, 175.0),
         use_external: false,
-        after_skirt: false,
+        max_detour: FloatOrPercent::Float(0.0),
     }
 }
 
@@ -86,14 +86,14 @@ fn travel_to_empty_internal_boundary_after_top_subtraction_is_direct() {
     for _ in 0..2 {
         // The interior-waypoint API leaves the start/end polyline to its caller.
         assert_eq!(
-            super::super::route(request(geometry), Some(&mut boundary)),
-            Some(Vec::new())
+            super::super::route(request(geometry), &mut boundary),
+            Ok(Vec::new())
         );
     }
 }
 
 #[test]
-fn travel_to_unavailable_internal_boundary_still_requests_rectangle_shell() {
+fn travel_to_unavailable_internal_boundary_yields_direct_travel() {
     let slices = slices();
     let geometry = LayerGeometry {
         avoid_crossing: AvoidCrossingGeometry {
@@ -107,5 +107,10 @@ fn travel_to_unavailable_internal_boundary_still_requests_rectangle_shell() {
         ..geometry()
     };
     let mut boundary = super::super::build_boundary(&geometry).unwrap();
-    assert!(super::super::route(request(geometry), Some(&mut boundary)).is_none());
+    // Upstream returns `{start, end}` (`:1259-1264`); the interior-waypoint
+    // API yields an empty waypoint list.
+    assert_eq!(
+        super::super::route(request(geometry), &mut boundary),
+        Ok(Vec::new())
+    );
 }

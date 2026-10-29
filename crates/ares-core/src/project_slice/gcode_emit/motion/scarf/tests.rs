@@ -11,6 +11,7 @@ use crate::{FloatOrPercent, Percent, ProcessSeamScarfType};
 
 fn square() -> Vec<ExtrusionPath> {
     vec![ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: [
                 (0, 0),
@@ -75,7 +76,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
     assert!(
         build(
             &paths,
-            ExtrusionLoopRole::Default,
+            (ExtrusionLoopRole::Default, None),
             geometry(),
             &options(ProcessSeamScarfType::None),
             1,
@@ -85,7 +86,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
     assert!(
         build(
             &paths,
-            ExtrusionLoopRole::Default,
+            (ExtrusionLoopRole::Default, None),
             geometry(),
             &options(ProcessSeamScarfType::External),
             1,
@@ -95,7 +96,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
     assert!(
         build(
             &paths,
-            ExtrusionLoopRole::Hole,
+            (ExtrusionLoopRole::Hole, None),
             geometry(),
             &options(ProcessSeamScarfType::External),
             1,
@@ -105,7 +106,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
     assert!(
         build(
             &paths,
-            ExtrusionLoopRole::Hole,
+            (ExtrusionLoopRole::Hole, None),
             geometry(),
             &options(ProcessSeamScarfType::All),
             1,
@@ -118,7 +119,7 @@ fn source_enum_gate_distinguishes_contours_and_holes_after_first_layer() {
 fn source_scarf_recursively_segments_and_clips_both_overlaps() {
     let scarf = build(
         &square(),
-        ExtrusionLoopRole::Default,
+        (ExtrusionLoopRole::Default, None),
         geometry(),
         &options(ProcessSeamScarfType::External),
         1,
@@ -157,6 +158,7 @@ fn sloped_writer_compares_quantized_z_and_tracks_raw_position() {
             ..EmitState::default()
         };
         let properties = PathProperties {
+            contour: None,
             mm3_per_mm: 1.0,
             width: 0.45,
             height: 0.2,
@@ -203,6 +205,7 @@ fn sloped_segments_interpolate_z_and_endpoint_extrusion_ratio() {
         ..EmitState::default()
     };
     let properties = PathProperties {
+        contour: None,
         mm3_per_mm: 1.0,
         width: 0.45,
         height: 0.2,

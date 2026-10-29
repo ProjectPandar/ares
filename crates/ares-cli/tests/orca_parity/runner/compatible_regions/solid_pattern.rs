@@ -115,3 +115,35 @@ fn observe(bytes: &[u8]) -> (usize, Vec<String>) {
     }
     (bridge_moves, solid_moves)
 }
+
+#[path = "bridge_anchor_max_projection.rs"]
+mod anchor_max_projection;
+
+#[path = "bridge_anchor_length_projection.rs"]
+mod anchor_length_projection;
+
+#[path = "zaa_contour_z.rs"]
+mod zaa_contour_z;
+
+#[path = "zaa_modifier_slice_z.rs"]
+mod zaa_modifier_slice_z;
+
+#[path = "zaa_fill_direction.rs"]
+mod zaa_fill_direction;
+
+#[path = "zaa_anchoring_direction.rs"]
+mod zaa_anchoring_direction;
+
+#[path = "zaa_locked_zag_direction.rs"]
+mod zaa_locked_zag_direction;
+
+#[path = "zaa_line_direction.rs"]
+mod zaa_line_direction;
+
+#[path = "zaa_honeycomb_direction.rs"]
+mod zaa_honeycomb_direction;
+
+#[path = "zaa_modifier_ironing_admission.rs"]
+mod zaa_modifier_ironing_admission;
+#[path = "zaa_object_ironing_direction.rs"]
+mod zaa_object_ironing_direction;

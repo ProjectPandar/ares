@@ -1,0 +1,60 @@
+{
+  "base": "8f6ce1660ccfaf95a6888b60c258047183d19ff0",
+  "geometry": "closed10x10x1mm8vertices12triangles5layers",
+  "cases": {
+    "archimedean-active": {
+      "sha256": "7a900b9b6a31a9ae7731dca238c601c39d81c22419b7ff04979d8a155a96c326",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "a0308efdf809f982b7a597d2a7a459396eaabf8b762e74cb074f5aa4e5175c0e",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "archimedeanchords",
+      "ironing_type": "topmost"
+    },
+    "rectilinear-control": {
+      "sha256": "74f447fffe933f8d5540426e8fea625894c9c63ee5fbce679861e9fcb94a5cce",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "ac9c586cd3755fe1f579839c6a32c7cbdc5e91c52c11abfa0ba0cbfc3acd8c88",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "rectilinear",
+      "ironing_type": "topmost"
+    },
+    "archimedean-disabled-control": {
+      "sha256": "4862a3f50cbbe63785962306277417ec2ff32391084ddc446d52a7a54ba1c0a6",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "8a89a361c0700b09ce16f220fa0609c63d174d32db788cbe53074428c74f8db6",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "archimedeanchords",
+      "ironing_type": "no ironing"
+    }
+  },
+  "source": {
+    "pin": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+    "owner": "Fill.cpp:1611-1640,1705-1731;FillBase.cpp:61;FillPlanePath.cpp:69-200",
+    "approved_proposal": "841b1775f2ade7209ae464996709af357feecb9e",
+    "RED_base_approved_Hilbert_GREEN": "3678fe64e9f635033710a57c6113c422c3b10c5b"
+  }
+}

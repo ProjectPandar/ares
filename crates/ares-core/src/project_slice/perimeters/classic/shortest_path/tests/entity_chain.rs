@@ -99,8 +99,11 @@ fn collection(endpoints: &[(i64, i64)], no_sort: bool) -> FillExtrusionCollectio
             .iter()
             .map(|&(first, last)| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline: Polyline::new(vec![Point::new(first, 0), Point::new(last, 0)]),
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(
+                        Polyline::new(vec![Point::new(first, 0), Point::new(last, 0)]),
+                        Vec::new(),
+                    ),
+                    z_contoured: false,
                     role: ExtrusionRole::InternalInfill,
                     mm3_per_mm: 1.0,
                     width: 1.0,
@@ -139,6 +142,7 @@ fn gap_path(first: i64, last: i64) -> GapFillEntity {
 
 fn gap_extrusion_path(first: i64, last: i64) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: vec![
                 Point3 {

@@ -1,4 +1,6 @@
 //! Closest boundary hits and endpoint extension (`AvoidCrossingPerimeters.cpp:150–294`).
+use crate::geometry::fixed_gcc_sort_by;
+
 use super::{Boundary, Coord, Intersection, Point, distance};
 
 #[derive(Clone, Copy)]
@@ -12,7 +14,7 @@ pub(super) struct ClosestLine {
 pub(super) fn closest_lines_in_radius(
     boundary: &Boundary,
     center: Point,
-    radius: f64,
+    radius: f32,
 ) -> Vec<ClosestLine> {
     let radius_coordinate = radius.round() as Coord;
     let query_min = Point::new(
@@ -24,13 +26,18 @@ pub(super) fn closest_lines_in_radius(
         center.y().saturating_add(radius_coordinate),
     );
     let mut lines = Vec::new();
+    let mut seen = std::collections::HashSet::new();
     boundary
         .grid
         .visit_cells_intersecting_box(query_min, query_max, |_, _, edges| {
             for &edge in edges {
+                if !seen.insert((edge.contour_index, edge.segment_index)) {
+                    continue;
+                }
                 let (segment_start, segment_end) = boundary.grid.segment(edge);
-                let closest = project_on_segment(center, segment_start, segment_end);
-                if distance(center, closest) <= radius {
+                let (closest, distance_squared) =
+                    project_on_segment(center, segment_start, segment_end);
+                if distance_squared <= f64::from(radius * radius) {
                     lines.push(ClosestLine {
                         point: closest,
                         contour: edge.contour_index,
@@ -40,15 +47,13 @@ pub(super) fn closest_lines_in_radius(
             }
             true
         });
-    lines.sort_by(|left, right| {
-        distance(center, left.point)
-            .partial_cmp(&distance(center, right.point))
-            .expect("finite distances")
+    fixed_gcc_sort_by(&mut lines, |left, right| {
+        squared_distance(center, left.point) < squared_distance(center, right.point)
     });
     lines
 }
 
-fn project_on_segment(point: Point, start: Point, end: Point) -> Point {
+fn project_on_segment(point: Point, start: Point, end: Point) -> (Point, f64) {
     let segment = (
         end.x() as f64 - start.x() as f64,
         end.y() as f64 - start.y() as f64,
@@ -58,15 +63,45 @@ fn project_on_segment(point: Point, start: Point, end: Point) -> Point {
         point.y() as f64 - start.y() as f64,
     );
     let length_squared = segment.0 * segment.0 + segment.1 * segment.1;
-    let parameter = if length_squared == 0.0 {
-        0.0
-    } else {
-        ((from_start.0 * segment.0 + from_start.1 * segment.1) / length_squared).clamp(0.0, 1.0)
-    };
-    Point::new(
-        (start.x() as f64 + parameter * segment.0) as Coord,
-        (start.y() as f64 + parameter * segment.1) as Coord,
+    if length_squared == 0.0 {
+        return (
+            start,
+            from_start.0 * from_start.0 + from_start.1 * from_start.1,
+        );
+    }
+    let t = (from_start.0 * segment.0 + from_start.1 * segment.1) / length_squared;
+    if t <= 0.0 {
+        return (
+            start,
+            from_start.0 * from_start.0 + from_start.1 * from_start.1,
+        );
+    }
+    let to_end = (
+        point.x() as f64 - end.x() as f64,
+        point.y() as f64 - end.y() as f64,
+    );
+    if t >= 1.0 {
+        return (end, to_end.0 * to_end.0 + to_end.1 * to_end.1);
+    }
+    let projected_vector = (t * segment.0, t * segment.1);
+    let projected = (
+        start.x() as f64 + projected_vector.0,
+        start.y() as f64 + projected_vector.1,
+    );
+    let distance_vector = (
+        projected_vector.0 - from_start.0,
+        projected_vector.1 - from_start.1,
+    );
+    (
+        Point::new(projected.0 as Coord, projected.1 as Coord),
+        distance_vector.0 * distance_vector.0 + distance_vector.1 * distance_vector.1,
     )
+}
+
+fn squared_distance(first: Point, second: Point) -> f64 {
+    let dx = second.x() as f64 - first.x() as f64;
+    let dy = second.y() as f64 - first.y() as f64;
+    dx * dx + dy * dy
 }
 
 /// `extend_for_closest_lines` (:171-290): when the offset swallowed the
@@ -76,7 +111,7 @@ pub(super) fn extend_for_closest_lines(
     intersections: Vec<Intersection>,
     start: Point,
     end: Point,
-    search_radius: f64,
+    search_radius: f32,
 ) -> Vec<Intersection> {
     let start_lines = closest_lines_in_radius(boundary, start, search_radius);
     let end_lines = closest_lines_in_radius(boundary, end, search_radius);
@@ -143,7 +178,7 @@ fn get_closer(
     lines: &[ClosestLine],
     current: Intersection,
     close_to: Point,
-    search_radius: f64,
+    search_radius: f32,
 ) -> Option<ClosestLine> {
     let squared_distance = |point: Point| {
         let dx = (close_to.x() - point.x()) as f32;
@@ -151,7 +186,7 @@ fn get_closer(
         dx * dx + dy * dy
     };
     let old_distance = squared_distance(current.point);
-    let radius = search_radius as f32;
+    let radius = search_radius;
     lines.iter().copied().find(|line| {
         line.contour == current.contour
             && old_distance <= radius * radius

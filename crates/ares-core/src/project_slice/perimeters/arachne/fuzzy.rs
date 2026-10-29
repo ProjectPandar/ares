@@ -15,15 +15,17 @@ mod junctions;
 mod ripple;
 use config::Config;
 
-struct Region {
-    config: Config,
-    mask: Vec<ExPolygon>,
+#[derive(Clone, Debug)]
+pub(in crate::project_slice::perimeters) struct Region {
+    pub(in crate::project_slice::perimeters) config: Config,
+    pub(in crate::project_slice::perimeters) mask: Vec<ExPolygon>,
 }
 
+#[derive(Clone, Debug)]
 pub(in crate::project_slice) struct Regions {
-    entries: Vec<Region>,
-    pub(super) has_contour: bool,
-    pub(super) has_hole: bool,
+    pub(in crate::project_slice::perimeters) entries: Vec<Region>,
+    pub(in crate::project_slice::perimeters) has_contour: bool,
+    pub(in crate::project_slice::perimeters) has_hole: bool,
 }
 
 #[cfg(test)]
@@ -34,7 +36,7 @@ pub(in crate::project_slice) static EMPTY: Regions = Regions {
 };
 
 impl Regions {
-    pub(super) fn prepare(
+    pub(in crate::project_slice::perimeters) fn prepare(
         object: &PostPerimeterInputPrintObject,
         input: &PerimeterInputRecord,
         scale: CoordinateScale,
@@ -76,7 +78,7 @@ impl Regions {
         })
     }
 
-    fn merged(
+    pub(in crate::project_slice::perimeters) fn merged(
         &self,
         layer_id: usize,
         inset: usize,
@@ -154,7 +156,9 @@ fn merge_mask(existing: &mut Region, region: &Region) {
     }
 }
 
-fn make_exclusive(merged: &mut [Region]) -> Result<(), SliceError> {
+pub(in crate::project_slice::perimeters) fn make_exclusive(
+    merged: &mut [Region],
+) -> Result<(), SliceError> {
     for index in 0..merged.len() {
         let (earlier, later) = merged.split_at_mut(index + 1);
         let region = &mut earlier[index];
@@ -174,7 +178,7 @@ fn apply_mask(
     context: &mut SlicerContext,
 ) -> Result<(), SliceError> {
     let points: Vec<_> = extrusion.junctions.iter().map(|j| j.point).collect();
-    let split = split_line(&points, &region.mask, layer.scale).map_err(geometry_error)?;
+    let split = split_line(&points, &region.mask, false, layer.scale).map_err(geometry_error)?;
     if split.is_empty() {
         return Ok(());
     }

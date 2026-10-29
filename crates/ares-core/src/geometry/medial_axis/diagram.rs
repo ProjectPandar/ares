@@ -1,8 +1,9 @@
-use boostvoronoi::prelude::{
-    Builder, CellIndex, Diagram, EdgeIndex, Line as BvLine, SourceCategory,
-};
+use boostvoronoi::prelude::{CellIndex, EdgeIndex, SourceCategory};
 
-use crate::geometry::Line;
+use crate::geometry::{
+    Line,
+    voronoi::{self, Diagram},
+};
 
 use super::MedialAxisError;
 
@@ -10,14 +11,10 @@ pub(crate) fn build(lines: &[Line]) -> Result<Diagram, MedialAxisError> {
     if lines.iter().any(|line| line.a == line.b) {
         return Err(MedialAxisError::ConstructionFailed);
     }
-    let sites = lines
-        .iter()
-        .map(|line| BvLine::from([line.a.x(), line.a.y(), line.b.x(), line.b.y()]))
-        .collect::<Vec<_>>();
-    let diagram = Builder::<i64>::default()
-        .with_segments(&sites)
-        .and_then(Builder::build)
-        .map_err(|_| MedialAxisError::ConstructionFailed)?;
+    let diagram = voronoi::build(lines).map_err(|_| MedialAxisError::ConstructionFailed)?;
+    if !diagram.is_valid() {
+        return Err(MedialAxisError::ConstructionFailed);
+    }
     validate_topology(&diagram, lines)?;
     Ok(diagram)
 }

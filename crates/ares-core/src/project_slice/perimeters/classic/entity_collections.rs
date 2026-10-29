@@ -76,9 +76,7 @@ fn transform_record(
         .surfaces
         .into_iter()
         .enumerate()
-        .map(|(index, loops)| {
-            transform_surface(loops, &seeds.surfaces[index], wall_direction, seeds)
-        })
+        .map(|(index, loops)| transform_surface(loops, &seeds.surfaces[index], wall_direction))
         .collect();
     PreparedEntityCollectionRecord { surfaces }
 }
@@ -87,20 +85,16 @@ fn transform_surface(
     loops: PreparedChainedLoopSurface,
     seeds: &super::traversal::PreparedTraversalSurface,
     wall_direction: crate::ProcessWallDirection,
-    record: &ClassicTraversalRecord,
 ) -> PreparedEntityCollectionSurface {
     assert_eq!(loops.source_index, seeds.source_index);
     PreparedEntityCollectionSurface {
         source_index: loops.source_index,
         collection: traverse::traverse_loops(
-loops.roots,
-&seeds.roots,
-wall_direction,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &loops.thin_walls,
-ext_perimeter_flow: record.ext_perimeter_flow,
- },
-record.scale,
-),
+            loops.roots,
+            &seeds.roots,
+            wall_direction,
+            loops.thin_entities,
+            loops.root_order,
+        ),
     }
 }

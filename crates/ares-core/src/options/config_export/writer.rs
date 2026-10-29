@@ -9,33 +9,10 @@ use super::{
     transform::transformed_for_export,
     value::serialize_config_value,
 };
+use crate::options::config_types::format_number;
 use crate::options::project_config_views::ProjectConfigViews;
-use crate::project::raw_settings::ProjectSettingsRaw;
-/// Nullable filament extruder-override options
-/// (`PrintConfig.cpp:63-80`, `filament_extruder_override_keys`). Upstream
-/// serializes them from the full print config, whose vector is nil when the
-/// project never set a per-filament override, and the echo loop's `is_nil`
-/// filter (all values nil) then skips the key — a nil override never falls
-/// back to the resolved machine value in the echo block.
-const FILAMENT_EXTRUDER_OVERRIDE_KEYS: &[&str] = &[
-    "filament_retraction_length",
-    "filament_z_hop",
-    "filament_z_hop_types",
-    "filament_retract_lift_above",
-    "filament_retract_lift_below",
-    "filament_retract_lift_enforce",
-    "filament_retraction_speed",
-    "filament_deretraction_speed",
-    "filament_retract_restart_extra",
-    "filament_retraction_minimum_travel",
-    "filament_wipe_distance",
-    "filament_retract_when_changing_layer",
-    "filament_wipe",
-    "filament_retract_before_wipe",
-    "filament_long_retractions_when_cut",
-    "filament_retraction_distances_when_cut",
-];
-
+use crate::options::registry::OptionValueKind as Kind;
+use crate::project::raw_settings::{ProjectSettingsRaw, RawConfigValue};
 /// CLI-oracle export state the interactive `Print::apply` passes never
 /// observe (see `transform::apply_cli_oracle_state`).
 #[derive(Default)]
@@ -50,20 +27,21 @@ pub(super) struct ExportOverrides {
 }
 
 impl ExportOverrides {
+    /// Bookkeeping lookups read the raw map directly and render with the
+    /// generic (non-Floats) token — no export-echo serialization, so no
+    /// error path and no silent skips.
     fn from_raw(raw_settings: &ProjectSettingsRaw, is_bbl: bool) -> Self {
         let enable_prime_tower = raw_settings
-            .iter()
-            .find(|(key, _)| *key == "enable_prime_tower")
-            .and_then(|(_, token)| token)
+            .get("enable_prime_tower")
+            .and_then(RawConfigValue::token)
             .and_then(|token| match token.as_str() {
                 "1" | "true" => Some(OrcaBool(true)),
                 "0" | "false" => Some(OrcaBool(false)),
                 _ => None,
             });
         let raw_filament_map_token = raw_settings
-            .iter()
-            .find(|(key, _)| *key == "filament_map")
-            .and_then(|(_, token)| token.to_owned());
+            .get("filament_map")
+            .and_then(RawConfigValue::token);
         Self {
             enable_prime_tower,
             raw_filament_map_token,
@@ -162,19 +140,6 @@ pub(crate) fn write_canonical_entries(
             continue;
         }
         // Nullable per-filament overrides echo only when the project set
-        // them (`GCode.cpp:5642` `is_nil` filter over the full config,
-        // vectors trimmed to the active filament count). The slot count
-        // comes from the typed filament vector (`ConfigOptionVector::size`),
-        // never from splitting the serialized token: nullable vectors join
-        // with ',' while coStrings join with ';' and elements may contain
-        // separators (`Config.hpp` `ConfigOptionVector::serialize`).
-        if FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&entry.key.as_str())
-            && raw_settings
-                .token_prefix(&entry.key, filament_count)
-                .is_none()
-        {
-            continue;
-        }
         if entry.key == "extruder_colour" {
             let colour = serialize_config_value(&settings.filament.gcode.filament_colour)
                 .map_err(config_error)?;
@@ -183,7 +148,8 @@ pub(crate) fn write_canonical_entries(
         }
         emit(&mut lines, &entry.key, entry.token.clone(), entry.is_nil);
     }
-    for (key, token) in raw_settings.iter() {
+    for entry in raw_settings.iter() {
+        let (key, token) = entry.map_err(config_error)?;
         if matches!(key, "from" | "name" | "version") {
             continue;
         }
@@ -199,6 +165,16 @@ pub(crate) fn write_canonical_entries(
         }) {
             continue;
         }
+        // Unknown or alias-named keys never enter the config under that
+        // name upstream: `set_deserialize_raw` accepts a key only when the
+        // definition table has a definition for it, and stores an alias
+        // under its canonical key (`opt_key = opt.first`, Config.cpp:608-
+        // 629). Either way the name is not re-serialized into the
+        // full-config block (GCode.cpp:5591-5646); canonical keys echo via
+        // their own raw entries.
+        if crate::options::registry::option_definition(key).is_none() {
+            continue;
+        }
         if entries.iter().any(|entry| entry.key == key && entry.is_nil) {
             // GCode.cpp:5632-5633: nil canonical options cannot be reinserted
             // by retained raw input after the type-owned echo filter.
@@ -207,15 +183,26 @@ pub(crate) fn write_canonical_entries(
         if lines.iter().any(|(existing, _)| existing.as_str() == key) {
             continue;
         }
-        // The same trimmed `is_nil` filter as the canonical entries:
-        // all-nil active-slot overrides never echo.
-        if FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&key)
-            && raw_settings.token_prefix(key, filament_count).is_none()
-        {
-            continue;
-        }
         let Some(rendered) = token else {
             continue;
+        };
+        // Upstream loads every preset key into the config object and
+        // re-serializes it (`Config.cpp` `ConfigOptionFloat::serialize`)
+        // in the full-config block, so raw scalar Float preset echoes
+        // must go through the single typed float serialization
+        // (`format_number`) instead of the verbatim input spelling; a
+        // non-float token is invalid input, not a fallback echo.
+        // Vector Floats echoes keep the verbatim spelling until a RED
+        // freezes their class (nil/empty elements, separator) against
+        // upstream `ConfigOptionFloats::serialize`.
+        let rendered = match crate::options::registry::option_definition(key)
+            .map(|definition| definition.kind)
+        {
+            Some(Kind::Float) => rendered
+                .parse::<f64>()
+                .map(format_number)
+                .map_err(|_| invalid(format!("invalid Orca option {key}: expected a float")))?,
+            _ => rendered.to_owned(),
         };
         let raw_is_nil =
             crate::options::registry::option_definition(key).is_some_and(|definition| {

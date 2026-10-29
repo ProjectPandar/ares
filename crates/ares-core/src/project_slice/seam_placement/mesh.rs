@@ -35,7 +35,10 @@ impl Vec3 {
     }
 
     pub(super) fn normalized(self) -> Self {
-        self / self.norm()
+        // Eigen normalized() returns the vector unchanged for zero vectors
+        // (Eigen/src/Core/Dot.h:92-102): 0/0 stays zero instead of NaN.
+        let z = self.dot(self);
+        if z > 0.0 { self / z.sqrt() } else { self }
     }
 
     pub(super) fn axis(self, axis: usize) -> f32 {
@@ -142,12 +145,16 @@ impl Triangle {
 #[derive(Debug, PartialEq)]
 pub(super) struct TriangleMesh {
     pub(super) triangles: Vec<Triangle>,
+    pub(super) negative_start: usize,
 }
 
 impl TriangleMesh {
     #[cfg(test)]
     pub(super) fn new(triangles: Vec<Triangle>) -> Self {
-        Self { triangles }
+        Self {
+            negative_start: triangles.len(),
+            triangles,
+        }
     }
 
     /// `SeamPlacer.cpp:630` — the occlusion mesh is transformed by
@@ -171,30 +178,101 @@ impl TriangleMesh {
                     -scale.unscale(center.y()),
                     0.0,
                 ));
-        let mut triangles = Vec::new();
-        for volume in object
-            .volumes()
-            .iter()
-            .filter(|volume| volume.volume_type() == ProjectVolumeType::ModelPart)
-        {
-            let transform = object_transform.then(volume.transform());
-            let vertices = volume
-                .mesh()
-                .vertices()
-                .iter()
-                .map(|&vertex| {
-                    let [x, y, z] = transform.transform_point_f32(vertex);
-                    Vec3::new(x, y, z)
-                })
-                .collect::<Vec<_>>();
-            triangles.extend(volume.mesh().triangles().iter().map(|indices| {
-                Triangle::new(
-                    vertices[indices[0] as usize],
-                    vertices[indices[1] as usize],
-                    vertices[indices[2] as usize],
-                )
-            }));
+        let mut mesh = super::short_edge_collapse::IndexedMesh {
+            vertices: Vec::new(),
+            indices: Vec::new(),
+        };
+        let mut negative = super::short_edge_collapse::IndexedMesh {
+            vertices: Vec::new(),
+            indices: Vec::new(),
+        };
+        for volume in object.volumes() {
+            let mesh = match volume.volume_type() {
+                ProjectVolumeType::ModelPart => &mut mesh,
+                ProjectVolumeType::NegativeVolume => &mut negative,
+                _ => continue,
+            };
+            // `SeamPlacer.cpp:638-640` — "Mirrored transforms flip winding,
+            // keep normals outward": the volume matrix is applied with
+            // fix_left_handed=true, which swaps indices 0 and 1
+            // (`its_transform`, admesh stl.h:362-367). The merged set is
+            // `its_merge` concatenation (SeamPlacer.cpp:640-647).
+            let volume_left_handed = volume.transform().linear_determinant() < 0.0;
+            let order: [u32; 3] = if volume_left_handed {
+                [1, 0, 2]
+            } else {
+                [0, 1, 2]
+            };
+            let base = mesh.vertices.len() as u32;
+            mesh.vertices
+                .extend(volume.mesh().vertices().iter().map(|&vertex| {
+                    let vertex = volume.transform().transform_point(vertex);
+                    Vec3::new(vertex.x as f32, vertex.y as f32, vertex.z as f32)
+                }));
+            mesh.indices
+                .extend(volume.mesh().triangles().iter().map(|&[a, b, c]| {
+                    let corners = [a, b, c];
+                    [
+                        base + corners[order[0] as usize],
+                        base + corners[order[1] as usize],
+                        base + corners[order[2] as usize],
+                    ]
+                }));
         }
-        Self { triangles }
+        // `SeamPlacer.cpp:650-659`: decimate separately before merging;
+        // sampled triangle IDs retain the positive/negative split.
+        super::short_edge_collapse::short_edge_collapse(
+            &mut mesh,
+            FAST_DECIMATION_TRIANGLE_COUNT_TARGET,
+        );
+        super::short_edge_collapse::short_edge_collapse(
+            &mut negative,
+            FAST_DECIMATION_TRIANGLE_COUNT_TARGET,
+        );
+        let negative_start = mesh.indices.len();
+        let vertex_offset = mesh.vertices.len() as u32;
+        mesh.vertices.extend(negative.vertices);
+        mesh.indices.extend(
+            negative
+                .indices
+                .into_iter()
+                .map(|indices| indices.map(|index| index + vertex_offset)),
+        );
+        // `SeamPlacer.cpp:659-660` — "Mirroring flips normals, keep them
+        // outward for visibility sampling": the whole merged set is
+        // transformed by obj_transform with fix_left_handed=true
+        // (`its_transform` swaps indices 0 and 1, admesh stl.h:362-367).
+        let object_left_handed = object_transform.linear_determinant() < 0.0;
+        for vertex in &mut mesh.vertices {
+            let Point3d { x, y, z } = object_transform.transform_point(Point3d::new(
+                f64::from(vertex.x),
+                f64::from(vertex.y),
+                f64::from(vertex.z),
+            ));
+            *vertex = Vec3::new(x as f32, y as f32, z as f32);
+        }
+        let mut triangles = mesh
+            .indices
+            .iter()
+            .map(|&[a, b, c]| {
+                Triangle::new(
+                    mesh.vertices[a as usize],
+                    mesh.vertices[b as usize],
+                    mesh.vertices[c as usize],
+                )
+            })
+            .collect::<Vec<_>>();
+        if object_left_handed {
+            for triangle in &mut triangles {
+                triangle.vertices.swap(0, 1);
+            }
+        }
+        Self {
+            triangles,
+            negative_start,
+        }
     }
 }
+
+/// `SeamPlacer.hpp:115` `fast_decimation_triangle_count_target`.
+const FAST_DECIMATION_TRIANGLE_COUNT_TARGET: usize = 16000;

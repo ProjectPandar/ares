@@ -28,6 +28,10 @@ pub struct OptionDefinition {
     pub key: &'static str,
     pub kind: OptionValueKind,
     pub default_value: &'static str,
+    /// `ConfigOptionEnum<T>` type-map keys when wider than the option's own
+    /// `enum_values` whitelist (`ConfigOptionEnum::from_string`,
+    /// `Config.hpp:2032-2040`); `None` when the whitelist is the type map.
+    pub enum_type_keys: Option<&'static [&'static str]>,
 }
 
 impl OptionValueKind {

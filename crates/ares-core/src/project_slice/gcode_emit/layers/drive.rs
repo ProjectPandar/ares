@@ -1,11 +1,28 @@
     while phase_index < phases.len() {
         let merged: &[(f64, schedule::LayerToPrint)] = phases[phase_index].merged;
         let phase = &phases[phase_index];
+        state.layer_object_labels = None;
         let tool_ordering: &super::tool_ordering::ToolOrdering = phases[phase_index].tool_ordering;
         if group_start >= merged.len() {
             phase_index += 1;
             group_start = 0;
             if let Some(phase) = phases.get(phase_index) {
+                // `GCode.cpp:3359-3361`: after the finished object's layers
+                // (its stop label already written) and before the instance
+                // transition, disable power loss recovery once the
+                // second-layer block ran with `Enable`; `:3367` then
+                // resets the flag for the incoming instance (whose own
+                // second layer re-arms it).
+                output.extend_from_slice(
+                    crate::gcode_power_loss_recovery::finish_command(
+                        state.tags.is_bbl(),
+                        state.options.gcode_flavor,
+                        state.options.gcode_comments,
+                        state.power_loss_recovery,
+                    )
+                    .as_bytes(),
+                );
+                state.power_loss_recovery = Default::default();
                 // `GCode.cpp:3309-3342`: the instance transition between
                 // the sequential objects; `:3369-3372` resets the
                 // second-layer flag for the incoming instance, and the
@@ -58,6 +75,14 @@
             cooling.empty_layer(output, cooling_layer_index, group_end == merged.len());
             continue;
         }
+        // GCode.cpp:4559-4594 selects the first object layer in source order,
+        // or the first support layer when no object layer exists, before dispatch.
+        let layer_object = entries
+            .iter()
+            .find(|entry| entry.object_layer.is_some())
+            .unwrap_or(&entries[0])
+            .object_index;
+        state.apply_object_config(&traversal.print_object_config(layer_object).0.object);
         entries.sort_by_key(|entry| print_position[entry.object_index]);
         max_layer_z = max_layer_z.max(f64::from(group_z as f32));
         // Chunk-wide inputs for the external motion planner
@@ -65,6 +90,12 @@
         // spacing over every object with slices at this print z,
         // `AvoidCrossingPerimeters.cpp:511-529`).
         let (chunk_slices, chunk_perimeter_spacing) = group::geometry(traversal, &entries);
+        // `get_boundary_external` translates every appended hole by its
+        // print instance's shift (`AvoidCrossingPerimeters.cpp:1172-1177`),
+        // so the external boundary's input is plate-frame while the
+        // brim/skirt/tower copy above stays object-local.
+        entry_builder.boundary_slices =
+            group::boundary_slices(traversal, &entries, &instances);
         // The preamble fires on the first PHYSICAL layer chunk — raft layer
         // 0 included (`first_layer` is a sentinel there, so the check keys
         // off `first_group`, not `first_layer == 0`). Upstream emits the
@@ -115,6 +146,28 @@
         // `GCode.cpp:4589`: `first_layer` is per-object — the leading
         // object/support/raft layer sitting on the plate.
         let first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
+        let layer_tools = tool_ordering.for_layer(group_z);
+        let wiping = &layer_tools.wiping;
+        let mut by_tool = tool_buckets::build(tool_buckets::Input {
+            traversal,
+            entries: &entries,
+            instances: &instances,
+            copy_filter: phase.copy_filter,
+            tools: tool_ordering.tools_for_layer(group_z),
+            wiping,
+            objects,
+            support: support_layers,
+            raft: &mut raft_layers,
+        });
+        // GCode.cpp:5139-5144 unions the actual filament instance lists.
+        // Build membership before the existing tracked layer-start insertion.
+        if state.tags.is_bbl() {
+            state.layer_object_labels = label_inventory.layer(
+                by_tool
+                    .iter()
+                    .flat_map(|(_, entries)| entries.iter().map(|entry| entry.instance.label_id)),
+            );
+        }
         let boundary = boundary::append(
             output,
             state,
@@ -133,6 +186,7 @@
                 first_layer,
                 second_layer_done: &mut second_layer_done,
                 bed_cache: &mut bed_cache,
+                custom_gcode: tool_ordering.for_layer(group_z).custom_gcode.as_ref(),
             },
         )?;
         let timelapse_context = boundary.timelapse_context;
@@ -174,29 +228,16 @@
                 chunk_slices: &chunk_slices,
                 chunk_perimeter_spacing,
             },
-        );
+        )?;
         // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
         // template insert fire once per layer inside the per-extruder loop
         // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
         // toolchange and every instance block (object skirt group, brim,
         // `; printing object` marker, content).
-        let layer_tools = tool_ordering.for_layer(group_z);
         let has_tower = layer_tools.has_wipe_tower && state.wipe_tower.is_some();
         if has_tower {
             state.wipe_tower.as_mut().unwrap().next_layer();
         }
-        let wiping = &layer_tools.wiping;
-        let mut by_tool = tool_buckets::build(tool_buckets::Input {
-            traversal,
-            entries: &entries,
-            instances: &instances,
-            copy_filter: phase.copy_filter,
-            tools: tool_ordering.tools_for_layer(group_z),
-            wiping,
-            objects,
-            support: support_layers,
-            raft: &mut raft_layers,
-        });
         let last_tool = by_tool.last().map(|(tool, _)| *tool);
         let mut final_entry = entries[0];
         for (tool, tool_entries) in &mut by_tool {
@@ -265,11 +306,12 @@
                         chunk_slices: &chunk_slices,
                         chunk_perimeter_spacing,
                         brim,
+                        skirt,
+                        object_skirt_done: &mut object_skirt_done,
                         spiral: &mut spiral,
                         layer_z,
                         layer_height,
                         object_layer_counts: &object_layer_counts,
-                        last_entry,
                         layer_output_start,
                     },
                 )?;

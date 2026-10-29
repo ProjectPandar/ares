@@ -5,8 +5,14 @@ pub(super) fn command_delay(code: &str) -> Option<f64> {
     if code.split_whitespace().next() == Some("SYNC") {
         return word(code, 'T');
     }
+    // GCodeProcessor.cpp:5347-5355: valid S short-circuits the P lookup.
     if code.starts_with("M400") {
-        return Some(word(code, 'S').unwrap_or(0.0) + word(code, 'P').unwrap_or(0.0) * 0.001);
+        if let Some(seconds) = word(code, 'S') {
+            return Some(seconds);
+        }
+        if let Some(milliseconds) = word(code, 'P') {
+            return Some(milliseconds * 0.001);
+        }
     }
     // OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:4848-4856. process_G4's
     // `has_value('S') || has_value('P')` short-circuits, so a parseable S

@@ -12,8 +12,7 @@ use super::{
 };
 use crate::project_slice::volume_regions::VolumeRegion;
 
-#[path = "range_lookup.rs"]
-mod range_lookup;
+use super::range_lookup;
 
 pub(in crate::project_slice) fn compose_complex_region_slices(
     pending: PendingRegionSlices,

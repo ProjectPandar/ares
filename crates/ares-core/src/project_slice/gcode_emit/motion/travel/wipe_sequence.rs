@@ -113,7 +113,9 @@ pub(super) fn retract_and_wipe_impl(
     // whole pre-wipe fraction retracts BEFORE the wipe and the wipe
     // carries no retraction (`GCode.cpp:350-353`). Otherwise `during >
     // remaining` within the EPSILON window emits as-is (:352-357).
-    let during = if during_max <= 1e-4 {
+    // `GCode.cpp:330,337`: the full-length and remaining-length early
+    // returns precede the during-wipe budget calculation.
+    let during = if retraction_length <= 1e-4 || remaining <= 1e-4 || during_max <= 1e-4 {
         0.0
     } else if during_max - remaining > 1e-4 {
         remaining
@@ -131,6 +133,8 @@ pub(super) fn retract_and_wipe_impl(
     let before = if !has_wipe {
         (retraction_length - state.extruder.retracted_amount).max(0.0)
     } else if during <= 0.0 {
+        // `GCodeWriter.cpp:1004-1011` consumes the `(0, 0)` return via
+        // its configured before-wipe fraction, as for `(fL, 0)` here.
         // `(fL, 0)` — no leftover difference is folded into the
         // pre-wipe amount (`GCode.cpp:351-352`).
         (requested_before - state.extruder.retracted_amount).max(0.0)
@@ -138,7 +142,15 @@ pub(super) fn retract_and_wipe_impl(
         // The before-wipe call emits `max(0, before - m_retracted)`
         // (`Extruder.cpp:77-84`); the post-wipe `retract()` tops the
         // remainder off to the full length.
-        (retraction_length - during - state.extruder.retracted_amount).max(0.0)
+        // `GCodeWriter.cpp:1004-1011`: only overrides above EPSILON
+        // select the explicit length; otherwise use the configured fraction.
+        let override_length = retraction_length - during;
+        let length = if override_length > 1e-4 {
+            override_length
+        } else {
+            requested_before
+        };
+        (length - state.extruder.retracted_amount).max(0.0)
     };
     if state.options.use_firmware_retraction && (has_wipe || !suppressed_tail) {
         firmware_retract(output, state);
@@ -182,7 +194,12 @@ pub(super) fn retract_and_wipe_impl(
                     format_extrusion(retract)
                 )
             } else {
-                format!("G1 X{} Y{}\n", format_axis(point.x), format_axis(point.y))
+                let comment = gcode_comment(state, " ; wipe and retract");
+                format!(
+                    "G1 X{} Y{}{comment}\n",
+                    format_axis(point.x),
+                    format_axis(point.y)
+                )
             };
             output.extend_from_slice(line.as_bytes());
             state.x = point.x;
@@ -192,12 +209,13 @@ pub(super) fn retract_and_wipe_impl(
             // exact under round-to-nearest).
             // `(point - m_origin) + extruder_offset` order
             // (`GCode.cpp:8138-8144`).
-            state.last_scaled_position = Some((
+            state.last_scaled_position = (
                 ((point.x - state.origin.0 + state.extruder_offset.0) / state.scale_factor).round()
                     as i64,
                 ((point.y - state.origin.1 + state.extruder_offset.1) / state.scale_factor).round()
                     as i64,
-            ));
+            );
+            state.last_position_defined = true;
             state.wipe_start = Some(point);
         }
         let wipe_end = if state.tags.is_bbl() {
@@ -231,7 +249,7 @@ pub(super) fn retract_and_wipe_impl(
             }
         }
     }
-    reset_e(output, state);
+    reset_e(output, state, false);
 }
 
 /// `GCodeWriter::_retract` comment gating: the feature comment is
@@ -263,22 +281,25 @@ fn emit_retract_e(output: &mut Vec<u8>, state: &mut EmitState, d_e: f64, comment
     state.current_feedrate = state.options.retraction_feedrate;
 }
 
-/// `GCodeWriter::reset_e` (`GCodeWriter.cpp:480-499`): emits
-/// `G92 E0` (+ ` ; reset extrusion distance` under gcode_comments)
-/// only when `!is_zero(E)` — 1e-6 — and never for
-/// Mach3/MakerWare/Sailfish.
-pub(in crate::project_slice::gcode_emit) fn reset_e(output: &mut Vec<u8>, state: &mut EmitState) {
-    if !state.options.use_relative_e_distances
-        && !matches!(
-            state.options.gcode_flavor,
-            crate::GCodeFlavor::Mach3
-                | crate::GCodeFlavor::MakerWare
-                | crate::GCodeFlavor::Sailfish
-        )
-        && state.extruder.e_position.abs() >= 1e-6
+/// `GCodeWriter::reset_e(force)` (`GCodeWriter.cpp:480-502`): excluded
+/// flavors do nothing; otherwise only `is_zero(E) && !force` suppresses
+/// the reset. Clear the counter in both E modes, emitting the existing
+/// reset line and optional comment only for absolute E.
+pub(in crate::project_slice::gcode_emit) fn reset_e(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    force: bool,
+) {
+    if matches!(
+        state.options.gcode_flavor,
+        crate::GCodeFlavor::Mach3 | crate::GCodeFlavor::MakerWare | crate::GCodeFlavor::Sailfish
+    ) || (state.extruder.e_position.abs() < 1e-6 && !force)
     {
+        return;
+    }
+    state.extruder.e_position = 0.0;
+    if !state.options.use_relative_e_distances {
         let comment = gcode_comment(state, " ; reset extrusion distance");
         output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
-        state.extruder.e_position = 0.0;
     }
 }

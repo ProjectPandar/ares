@@ -21,7 +21,7 @@ use wipe_sequence::{retract_and_wipe_with, retract_sequence_due, wipe_eligible};
 use super::{EmitState, arc};
 pub(in crate::project_slice::gcode_emit) use lift::schedule_retract_tail;
 pub(super) use lift::{
-    emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
+    EPSILON, emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
     mode_for as lift_mode_for, schedule_normal, z_feedrate as lift_z_feedrate,
 };
 
@@ -46,6 +46,20 @@ pub(in crate::project_slice::gcode_emit) fn transition_retract(
     wipe_sequence::retract_and_wipe_with(output, state, false);
     schedule_normal(state);
     state.extruder.retracted = true;
+}
+
+/// `append_tcr`: retract(toolchange, false, configured lift, true).
+pub(in crate::project_slice::gcode_emit) fn retract_for_type1(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    toolchange: bool,
+) {
+    let suppressed_tail = state.on_first_layer && state.options.bottom_surface_pattern_hilbert;
+    wipe_sequence::retract_and_wipe_impl(output, state, true, suppressed_tail, toolchange);
+    state.extruder.retracted = state.extruder.retracted_amount > 0.0;
+    if lift::enforce_allows_lift(state) {
+        lift::append_eager(output, state, false);
+    }
 }
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -105,7 +119,7 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     }
     // `reset_e` runs unconditionally after the retract/wipe block
     // (`GCode.cpp:7674`), independent of whether anything retracted.
-    reset_e(output, state);
+    reset_e(output, state, false);
     if state.spiral_vase {
         lift::append_spiral_vase(output, state);
     }
@@ -121,7 +135,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
         retract_and_wipe(output, state);
         state.extruder.retracted = true;
     }
-    reset_e(output, state);
+    reset_e(output, state, false);
     // GCode.cpp:7674-7704 lifts even when retraction is already complete.
     let needs_lift = state.options.retraction_length > 0.0 || state.options.use_firmware_retraction;
     if needs_lift && lift::is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)) {
@@ -142,7 +156,7 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
         retract_and_wipe(output, state);
         state.extruder.retracted = true;
     }
-    reset_e(output, state);
+    reset_e(output, state, false);
     // The `needs_lift && can_lift` guards of the parent retract
     // (`GCode.cpp:7680-7703`) still apply to the wrap insert's eager lift:
     // `needs_lift` requires a nonzero retraction length or firmware
@@ -157,25 +171,30 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
 /// layer marker block (`GCode.cpp` change_layer: the wipe lands between
 /// the rendered `before_layer_change_gcode` and the cooling fan marker,
 /// the lift after it).
-/// `will_move_z` mirrors the upstream `change_layer` retract gate
-/// (`GCode.cpp:5693`): when false the upstream retract call never runs,
-/// so neither the E move nor the `m_restart_extra` assignment happens.
+/// `GCode.cpp:5692-5697`: `change_layer` retracts straight from the
+/// config predicate (`retract_when_changing_layer && will_move_z`) —
+/// there is no pending state to lose, and the stored wipe path survives
+/// the layer change (`:5713-5715`), so the boundary flush decides from
+/// config state, not a flag the tool transition clears
+/// (`tool_transition/change.rs` resets `positioned`, disarming the
+/// pending-flag arming under wiping overrides).
 pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     will_move_z: bool,
 ) {
+    let change_layer_retract = state.options.retract_when_changing_layer && will_move_z;
     // Upstream `retract()` assigns `m_restart_extra` even when the extruder
     // is already retracted (`Extruder.cpp:77`).
-    if state.pending_layer_retract && will_move_z {
+    if change_layer_retract {
         state.extruder.restart_extra = state.options.retract_restart_extra;
     }
-    if state.pending_layer_retract && will_move_z && retract_sequence_due(state) {
+    if change_layer_retract && retract_sequence_due(state) {
         retract_and_wipe(output, state);
         state.extruder.retracted = true;
     }
-    if state.pending_layer_retract && will_move_z {
-        reset_e(output, state);
+    if change_layer_retract {
+        reset_e(output, state, false);
     }
 }
 
@@ -241,33 +260,33 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
         // `reset_e` runs unconditionally after every `retract()` call
         // (`GCode.cpp:7674`) — a fully-retracted nozzle still clears the
         // counter the template assignments may have left behind.
-        reset_e(output, state);
+        reset_e(output, state, false);
     }
     state.pending_layer_retract = false;
     // The eager lift supersedes any lift that the deferred path scheduled
     // for the layer's first travel.
     state.pending_lift = None;
-    if state.extruder.retracted {
+    if state.extruder.retracted && lift::enforce_allows_lift(state) {
         lift::append_eager(output, state, false);
     }
 }
 
+/// `travel_inside_internal_regions`
+/// (`RetractWhenCrossingPerimeters.cpp:9-51`): the travel polyline stays in the
+/// scaled-int domain — upstream never leaves coord_t for this check. Passing
+/// millimeters back through `checked_scale` (truncating) loses a unit to the
+/// unscale/offset roundtrip, which lands a boundary-collinear travel one unit
+/// inside the island and flips `diff_pl` empty.
+///
+/// The polyline is whatever `needs_retraction` is about to examine: the
+/// straight `[m_last_pos, destination]` pair on the first call
+/// (`GCode.cpp:7359`), and the avoid-crossing detour once routing has replaced
+/// `travel` (`GCode.cpp:7421-7425`).
 pub(super) fn inside_internal_surfaces<'a>(
     surfaces: impl IntoIterator<Item = &'a crate::project_slice::region_slices::RegionSurface>,
-    start: arc::Point,
-    end: arc::Point,
-    scale: crate::geometry::CoordinateScale,
-    offset: (f64, f64),
+    travel: &crate::geometry::Polyline,
 ) -> bool {
     use crate::project_slice::region_slices::RegionSurfaceKind;
-
-    let point = |point: arc::Point| {
-        crate::geometry::Point::new(
-            scale.checked_scale(point.x - offset.0).unwrap(),
-            scale.checked_scale(point.y - offset.1).unwrap(),
-        )
-    };
-    let travel = crate::geometry::Polyline::new(vec![point(start), point(end)]);
     surfaces.into_iter().any(|surface| {
         let (kind, region, ..) = surface.as_parts();
         matches!(
@@ -276,7 +295,7 @@ pub(super) fn inside_internal_surfaces<'a>(
                 | RegionSurfaceKind::InternalSolid
                 | RegionSurfaceKind::InternalBridge
                 | RegionSurfaceKind::InternalVoid
-        ) && crate::geometry::open_polyline_inside_expolygon(&travel, region).unwrap()
+        ) && crate::geometry::open_polyline_inside_expolygon(travel, region).unwrap()
     })
 }
 

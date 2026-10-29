@@ -184,11 +184,14 @@ mod tests {
         ]
         .map(|role| {
             FillExtrusionEntity::Path(crate::project_slice::fill_entities::FillExtrusionPath {
-                polyline: crate::geometry::Polyline::new(vec![
-                    crate::geometry::Point::new(0, 0),
-                    crate::geometry::Point::new(1_000_000, 0),
-                ]),
-                fitting: Vec::new(),
+                polyline: Polyline3::from_xy(
+                    crate::geometry::Polyline::new(vec![
+                        crate::geometry::Point::new(0, 0),
+                        crate::geometry::Point::new(1_000_000, 0),
+                    ]),
+                    Vec::new(),
+                ),
+                z_contoured: false,
                 role,
                 mm3_per_mm: 1.0,
                 width: 0.5,
@@ -235,6 +238,7 @@ mod tests {
     #[test]
     fn source_volume_uses_three_dimensional_polyline_not_fitted_arc_length() {
         let extrusion = ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: vec![
                     Point3 { x: 0, y: 0, z: 0 },
@@ -269,11 +273,14 @@ mod tests {
         );
         let fills = [1_000_000, 4_000_000].map(|length| {
             FillExtrusionEntity::Oriented(crate::project_slice::fill_entities::FillExtrusionPath {
-                polyline: crate::geometry::Polyline::new(vec![
-                    crate::geometry::Point::new(0, 0),
-                    crate::geometry::Point::new(length, 0),
-                ]),
-                fitting: Vec::new(),
+                polyline: Polyline3::from_xy(
+                    crate::geometry::Polyline::new(vec![
+                        crate::geometry::Point::new(0, 0),
+                        crate::geometry::Point::new(length, 0),
+                    ]),
+                    Vec::new(),
+                ),
+                z_contoured: false,
                 role: crate::ExtrusionRole::InternalInfill,
                 mm3_per_mm: 1.0,
                 width: 0.5,

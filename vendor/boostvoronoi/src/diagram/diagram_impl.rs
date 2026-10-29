@@ -135,9 +135,7 @@ impl Diagram {
         // Set up incident edge pointers for cells and vertices.
         for edge_it in self.decoupled_edges_iter() {
             if let Some(cell) = self.edge_get_cell_(edge_it) {
-                if self.cell_get_incident_edge_(cell).is_none() {
-                    self.cell_set_incident_edge_(cell, Some(edge_it));
-                }
+                self.cell_set_incident_edge_(cell, Some(edge_it));
             }
             if let Some(vertex) = self.edge_get_vertex0_(edge_it) {
                 self.vertex_set_incident_edge_(vertex, Some(edge_it));

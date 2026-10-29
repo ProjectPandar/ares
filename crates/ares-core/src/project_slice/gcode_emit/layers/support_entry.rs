@@ -38,7 +38,7 @@ pub(super) fn emit(
     timelapse_context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
     let geometry = if let Some(index) = object_layer {
-        entry_builder.geometry(object_index, index, chunk_slices, chunk_perimeter_spacing)
+        entry_builder.geometry(object_index, index, chunk_perimeter_spacing)
     } else {
         EntryGeometry {
             top_surfaces: Vec::new(),
@@ -95,13 +95,21 @@ pub(super) fn emit(
     if let Some(labels) = labels {
         labels.queue_start(output, state, emit_labels);
     }
+    let phase = motion::EmissionPhase {
+        geometry: motion_geometry,
+        reversal: state.reversal_scope(
+            traversal,
+            object_index,
+            motion::SharedLayerId::Support(layer.id),
+        ),
+    };
     motion::emit_support(
         output,
         &mut layer.support_fills,
         selected_role,
-        motion_geometry,
+        phase,
         state,
-    );
+    )?;
     if standalone {
         if let Some(labels) = labels {
             labels.queue_stop(output, state, emit_labels);

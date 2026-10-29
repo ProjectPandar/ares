@@ -46,6 +46,9 @@ pub(super) fn append_and_track(
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<(), SliceError> {
+    if let Some(labels) = &state.layer_object_labels {
+        labels.append_start(output, context.layer.index + 1);
+    }
     if let Some(last_z) = append(output, state, context)? {
         if let Some(z) = last_z {
             // `GCode.cpp:5173-5178`: the template's last Z is ADOPTED into
@@ -65,6 +68,9 @@ pub(super) fn append_and_track(
         // a detected Z motion) so the next travel takes the separate
         // first-position form.
         state.positioned = false;
+    }
+    if let Some(labels) = &state.layer_object_labels {
+        labels.append_end(output, context.layer.index + 1);
     }
     Ok(())
 }

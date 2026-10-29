@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, num::NonZeroU32, ops::Deref};
+use std::{borrow::Cow, num::NonZeroU32, ops::Deref};
 
 use crate::{
     Point3d, ProjectObject, ProjectVolumeType, SliceError,
@@ -125,7 +125,6 @@ pub(super) fn prepare_projected_objects(
     planned_objects: Vec<PlannedPrintObject>,
 ) -> Result<Vec<ProjectedPrintObject>, SliceError> {
     validate_layer_ranges(source_objects, resolved_objects)?;
-    validate_shared_meshes(source_objects)?;
 
     let projected_objects = planned_objects
         .into_iter()
@@ -184,20 +183,32 @@ pub(super) fn intersect_projected_objects(
                 .prescaled_xy(scale.factor());
             let vertices =
                 transformed_vertices(source_volume.mesh().vertices(), slicing_transform)?;
+            // PrintObjectSlice.cpp:84-92: a left-handed slicing trafo
+            // (negative linear determinant) flips the triangle winding
+            // before slicing — `its_flip_triangles` swaps the last two
+            // indices (TriangleMesh.cpp:736-740). `prescaled_xy` applies a
+            // positive-uniform scale, so the sign test is invariant to it.
+            let triangles = if slicing_transform.linear_determinant() < 0.0 {
+                Cow::Owned(
+                    source_volume
+                        .mesh()
+                        .triangles()
+                        .iter()
+                        .map(|&[a, b, c]| [a, c, b])
+                        .collect::<Vec<_>>(),
+                )
+            } else {
+                Cow::Borrowed(source_volume.mesh().triangles())
+            };
             let layers = match &active_ranges {
                 Some(active) => ranges::slice_volume(
                     &vertices,
-                    source_volume.mesh().triangles(),
+                    &triangles,
                     &planes,
                     &active[projected_volume.source_volume_index],
                     &mut budget,
                 )?,
-                None => slice_mesh_on_planes(
-                    &vertices,
-                    source_volume.mesh().triangles(),
-                    &planes,
-                    &mut budget,
-                )?,
+                None => slice_mesh_on_planes(&vertices, &triangles, &planes, &mut budget)?,
             };
             // PrintObjectSlice.cpp:221-225 drops volumes with no filtered layers.
             if active_ranges.is_some() && layers.is_empty() {
@@ -314,21 +325,6 @@ fn validate_layer_ranges(
                 .is_empty()
     }) {
         return unsupported("layer_config_ranges");
-    }
-    Ok(())
-}
-
-fn validate_shared_meshes(source_objects: &[ProjectObject]) -> Result<(), SliceError> {
-    let mut source_ids = BTreeSet::new();
-    for volume in source_objects
-        .iter()
-        .flat_map(ProjectObject::volumes)
-        .filter(|volume| !volume.mesh().triangles().is_empty())
-    {
-        if volume.has_mesh_shared() || !source_ids.insert((volume.source_model_path(), volume.id()))
-        {
-            return unsupported("shared_mesh_centering");
-        }
     }
     Ok(())
 }

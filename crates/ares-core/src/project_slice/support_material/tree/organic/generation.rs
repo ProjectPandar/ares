@@ -119,7 +119,7 @@ pub(in crate::project_slice::support_material) fn generate(
             .collect::<Vec<_>>();
         generation::generate(objects, &mut volumes, &mut interface, &mut graph, context)
             .map_err(error)?;
-        pathing::create_layer_pathing(&mut volumes, &config, &mut graph, workers(), input.scale)
+        pathing::create_layer_pathing(&mut volumes, &config, &mut graph, input.scale)
             .map_err(error)?;
         nodes::create_nodes_from_area(&mut volumes, &config, &mut graph).map_err(error)?;
         let slices =
@@ -212,17 +212,6 @@ fn detect(input: &TreeInput<'_>, raft_count: usize) -> Result<Vec<Vec<Polygon>>,
         }
     }
     Ok(overhangs)
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn workers() -> usize {
-    std::thread::available_parallelism()
-        .expect("native executor has available CPUs")
-        .get()
-}
-#[cfg(target_arch = "wasm32")]
-fn workers() -> usize {
-    1
 }
 
 fn error(error: ClipperError) -> SliceError {

@@ -211,11 +211,13 @@ pub(super) fn projected_parts(
         fitting::append(&mut prefix, point);
         let (_, mut suffix) =
             fitting::split_at_index(&path.polyline, projection.segment + 1, scale);
-        fitting::prepend(&mut suffix, point);
+        let suffix_point = Point3 { z: end.z, ..point };
+        fitting::prepend(&mut suffix, suffix_point);
         (suffix, prefix)
     };
     let make = |polyline: crate::project_slice::perimeters::classic::materialize::Polyline3| {
         (polyline.points.len() >= 2).then_some(ExtrusionPath {
+            z_contoured: path.z_contoured,
             polyline,
             role: path.role,
             can_reverse: path.can_reverse,

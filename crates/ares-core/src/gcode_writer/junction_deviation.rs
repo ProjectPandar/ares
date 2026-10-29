@@ -1,5 +1,4 @@
 use super::GCodeWriter;
-use crate::options::GCodeFlavor;
 
 impl GCodeWriter {
     pub(crate) fn set_junction_deviation(
@@ -8,18 +7,11 @@ impl GCodeWriter {
         max_junction_deviation: f64,
         comments_enabled: bool,
     ) -> String {
-        if self.gcode_flavor != GCodeFlavor::MarlinFirmware
-            || max_junction_deviation <= 0.0
-            || junction_deviation <= 0.0
-        {
-            return String::new();
-        }
-        let value = junction_deviation.min(max_junction_deviation);
-        let mut gcode = format!("M205 J{value:.3}\n");
-        if comments_enabled {
-            gcode.pop();
-            gcode.push_str(" ; Junction Deviation\n");
-        }
-        gcode
+        crate::gcode_junction_deviation::junction_deviation_command(
+            self.gcode_flavor,
+            junction_deviation,
+            max_junction_deviation,
+            comments_enabled,
+        )
     }
 }

@@ -306,7 +306,6 @@ fn parses_bridge_options() {
 #[test]
 fn rejects_invalid_bridge_options() {
     for value in [
-        json!({"bridge_flow": 0}),
         json!({"bridge_flow": 2.1}),
         json!({"internal_bridge_flow": -0.1}),
         json!({"bridge_speed": 0}),

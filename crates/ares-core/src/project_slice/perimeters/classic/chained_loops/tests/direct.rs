@@ -1,9 +1,7 @@
 use super::super::{
     super::{
         materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3, RawPathNode},
-        traversal::{
-            LowerFlowRoute, PendingExtrusionRole, PendingLoopRole, PendingPathBranch, TraversalSeed,
-        },
+        traversal::{LowerFlowRoute, PendingExtrusionRole, PendingLoopRole, TraversalSeed},
     },
     ExtrusionLoopRole,
     tree::transform_nodes,
@@ -11,7 +9,10 @@ use super::super::{
 use crate::geometry::{Point, Polygon};
 
 #[test]
-fn task22o8_maps_all_loop_roles_and_chains_only_overhang_paths() {
+fn task22o8_maps_all_loop_roles_and_moves_paths_verbatim() {
+    // The overhang path reorder now lives in the materialization flat pass
+    // (`PerimeterGenerator.cpp:207`); `transform_nodes` wraps the stored
+    // paths verbatim, so both branches keep the input order and buffers.
     let roles = [
         (PendingLoopRole::Internal, ExtrusionLoopRole::Internal),
         (PendingLoopRole::Default, ExtrusionLoopRole::Default),
@@ -26,14 +27,15 @@ fn task22o8_maps_all_loop_roles_and_chains_only_overhang_paths() {
         let raw = RawPathNode {
             paths: raw_paths,
             children: Vec::new(),
+            child_order: Vec::new(),
         };
-        let nodes = transform_nodes(vec![raw], &[seed(pending, Vec::new())], overhang_branch());
+        let nodes = transform_nodes(vec![raw], &[seed(pending, Vec::new())]);
         let extrusion_loop = nodes[0].extrusion_loop.as_ref().unwrap();
         assert_eq!(extrusion_loop.role, expected);
         assert_eq!(xyz(&extrusion_loop.paths[0]), vec![(0, 0, 1), (2, 0, 2)]);
         assert_eq!(
             xyz(&extrusion_loop.paths[1]),
-            vec![(4, 0, 5), (6, 0, 4), (8, 0, 3)]
+            vec![(8, 0, 3), (6, 0, 4), (4, 0, 5)]
         );
         assert_eq!(
             (
@@ -65,9 +67,11 @@ fn task22o8_empty_overhang_is_none_but_ordinary_bypasses_continue_and_chaining()
         children: vec![RawPathNode {
             paths: vec![path(&[(1, 1, 0), (2, 1, 0)], 4.0, 0.4, 0.2)],
             children: Vec::new(),
+            child_order: Vec::new(),
         }],
+        child_order: Vec::new(),
     };
-    let nodes = transform_nodes(vec![empty_raw], &[empty_seed], overhang_branch());
+    let nodes = transform_nodes(vec![empty_raw], &[empty_seed]);
     assert!(nodes[0].extrusion_loop.is_none());
     assert_eq!(nodes[0].children.len(), 1);
     assert!(nodes[0].children[0].extrusion_loop.is_some());
@@ -78,13 +82,9 @@ fn task22o8_empty_overhang_is_none_but_ordinary_bypasses_continue_and_chaining()
         vec![RawPathNode {
             paths: original,
             children: Vec::new(),
+            child_order: Vec::new(),
         }],
         &[seed(PendingLoopRole::Internal, Vec::new())],
-        PendingPathBranch::OrdinaryUnsplit {
-            detect_overhang_wall: false,
-            layer_id: 5,
-            raft_layers: 0,
-        },
     );
     let actual: Vec<_> = ordinary[0]
         .extrusion_loop
@@ -105,14 +105,6 @@ fn task22o8_empty_overhang_is_none_but_ordinary_bypasses_continue_and_chaining()
         (paths[1].mm3_per_mm, paths[1].width, paths[1].height),
         (2.0, 0.42, 0.22)
     );
-}
-
-fn overhang_branch() -> PendingPathBranch {
-    PendingPathBranch::OverhangClipping {
-        detect_overhang_wall: true,
-        layer_id: 5,
-        raft_layers: 0,
-    }
 }
 
 fn seed(role: PendingLoopRole, children: Vec<TraversalSeed>) -> TraversalSeed {
@@ -143,6 +135,7 @@ fn mixed_paths() -> Vec<ExtrusionPath> {
 
 fn path(points: &[(i64, i64, i64)], mm3: f64, width: f32, height: f32) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y, z)| Point3 { x, y, z }).collect(),
             fitting: Vec::new(),

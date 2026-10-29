@@ -60,22 +60,35 @@ pub(super) fn emit(
     if let Some(labels) = labels {
         labels.queue_start(output, state, emit_labels);
     }
+    let reversal = state.reversal_scope(
+        traversal,
+        object_index,
+        motion::SharedLayerId::Raft(raft_index),
+    );
     motion::emit_layer(
         output,
         layer,
-        (motion_geometry, first_layer, |_, _| {
-            let region = &traversal.resolved.views.full.process.region;
-            (
-                region.sparse_infill_density.0,
-                region.is_infill_first.0,
-                super::super::small_area::Gate {
-                    enabled: region.small_area_infill_flow_compensation.0,
-                    bottom: region.bottom_surface_pattern,
-                    internal: region.internal_solid_infill_pattern,
-                    top: region.top_surface_pattern,
-                },
-            )
-        }),
+        (
+            motion::EmissionPhase {
+                geometry: motion_geometry,
+                reversal,
+            },
+            first_layer,
+            |_, _, current_seam_gap: &mut crate::FloatOrPercent| {
+                let region = &traversal.resolved.views.full.process.region;
+                *current_seam_gap = region.seam_gap;
+                (
+                    region.sparse_infill_density.0,
+                    region.is_infill_first.0,
+                    super::super::small_area::Gate {
+                        enabled: region.small_area_infill_flow_compensation.0,
+                        bottom: region.bottom_surface_pattern,
+                        internal: region.internal_solid_infill_pattern,
+                        top: region.top_surface_pattern,
+                    },
+                )
+            },
+        ),
         state,
         |output, state| {
             timelapse_core::append_traditional(

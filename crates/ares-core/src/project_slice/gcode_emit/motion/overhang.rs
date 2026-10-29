@@ -26,6 +26,7 @@ pub(super) struct EstimateRequest<'a> {
 pub(super) struct ProcessedPoint {
     pub(super) x: f64,
     pub(super) y: f64,
+    pub(super) z: f64,
     pub(super) speed: f64,
     pub(super) overlap: f64,
 }
@@ -34,6 +35,7 @@ pub(super) struct ProcessedPoint {
 pub(super) struct ExtendedPoint {
     x: f64,
     y: f64,
+    z: f64,
     distance: f32,
 }
 
@@ -84,19 +86,11 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     } else {
         request.options.inner_wall_speed
     };
-    // `_mm3_per_mm` multiplies `scarf_joint_flow_ratio` into the cap for
-    // sloped paths (`GCode.cpp:6478-6480`), so the cap includes it here too.
-    let slope_flow_ratio = request
-        .properties
-        .slope
-        .map_or(1.0, |slope| slope.flow_ratio);
+    // First-layer paths returned above; share the complete effective flow.
     let reference_speed = if request.options.max_volumetric_speed > 0.0 {
         role_speed.min(
             request.options.max_volumetric_speed
-                / (request.properties.mm3_per_mm
-                    * request.options.print_flow_ratio
-                    * request.options.filament_flow_ratio
-                    * slope_flow_ratio),
+                / super::extrusion::effective_flow(request.properties, request.options, false),
         )
     } else {
         role_speed
@@ -119,7 +113,7 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         offset: 0.5_f32 * request.properties.width,
         minimum_spacing: f64::from(request.properties.width) * 0.25,
     };
-    let extended = context.add_boundary_intersections(request.points);
+    let extended = context.add_boundary_intersections(request.points, request.properties.contour);
     let extended = context.add_segmentation_points(&extended, minimum_slowdown_distance);
     // The artificial curl distance (`ExtrusionProcessor.hpp:415-418`):
     // min() the curl speed into the pair speed like the boundary bands.
@@ -153,6 +147,7 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         processed.push(ProcessedPoint {
             x: context.scale.unscale(scale_trunc(current.x, context.scale)),
             y: context.scale.unscale(scale_trunc(current.y, context.scale)),
+            z: context.scale.unscale(scale_trunc(current.z, context.scale)),
             speed: f64::from(speed),
             overlap: f64::from(
                 (1.0_f32 - current.distance * width_inverse)

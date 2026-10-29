@@ -20,6 +20,9 @@ mod polyline;
 mod region_expansion;
 pub(crate) mod simplification;
 pub(crate) mod support_grid;
+mod tessellation;
+pub(crate) mod voronoi;
+pub(crate) use tessellation::triangulate_expolygon_3d;
 
 pub(crate) use bbox_clip::{
     clip_clipper_expolygons_with_subject_bbox, clip_clipper_expolygons_with_subject_bbox_mode,
@@ -59,7 +62,7 @@ pub(crate) use convex_hull::convex_hull;
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};
 pub(crate) use expolygon::{ExPolygon, keep_largest_contour_only};
-pub(crate) use line::{Line, ThickLine};
+pub(crate) use line::{Line, ThickLine, liang_barsky_interval};
 #[cfg_attr(
     not(test),
     expect(

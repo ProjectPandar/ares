@@ -56,6 +56,7 @@ fn overhang_reference_speed_cap_divides_by_print_and_filament_flow_ratios() {
         ..super::MotionOptions::default()
     };
     let properties = super::super::features::PathProperties {
+        contour: None,
         mm3_per_mm: 0.08,
         width: 0.45,
         height: 0.2,

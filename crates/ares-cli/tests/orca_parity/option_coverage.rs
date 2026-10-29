@@ -1,10 +1,36 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "option_coverage/filament_self_index.rs"]
+mod filament_self_index;
+
+#[path = "option_coverage/master_extruder_id.rs"]
+mod master_extruder_id;
+
+#[path = "option_coverage/printer_technology.rs"]
+mod printer_technology;
+
 #[path = "option_coverage/multiline_union.rs"]
-mod multiline_union;
+pub(crate) mod multiline_union;
 
 #[path = "option_coverage/interface_shells_alignment.rs"]
 mod interface_shells_alignment;
+
+#[path = "option_coverage/filament_override_range.rs"]
+mod filament_override_range;
+#[path = "option_coverage/hole_to_polyhole.rs"]
+mod hole_to_polyhole;
+#[path = "option_coverage/ironing_pattern.rs"]
+mod ironing_pattern;
+#[path = "option_coverage/max_travel_detour_distance.rs"]
+mod max_travel_detour_distance;
+#[path = "option_coverage/region_speed_emission.rs"]
+mod region_speed_emission;
+
+#[path = "option_coverage/support_ironing_pattern_domain.rs"]
+mod support_ironing_pattern_domain;
+
+#[path = "option_coverage/support_ironing_unknown_wire.rs"]
+mod support_ironing_unknown_wire;
 
 #[path = "option_coverage/print_extruder_identity.rs"]
 mod print_extruder_identity;
@@ -15,8 +41,15 @@ mod printer_physical_identity;
 #[path = "option_coverage/semm_ramming.rs"]
 mod semm_ramming;
 
+#[path = "option_coverage/seam_position_random.rs"]
+mod seam_position_random;
+
 #[path = "option_coverage/nozzle_dataset.rs"]
 mod nozzle_dataset;
+
+#[cfg(target_os = "linux")]
+#[path = "option_coverage/post_process_matrix.rs"]
+mod post_process_matrix;
 
 #[path = "option_coverage/legacy_brim_ears.rs"]
 mod legacy_brim_ears;
@@ -273,100 +306,7 @@ use crate::{
 use serde_json::{Map, Value};
 use std::path::PathBuf;
 
-fn profiles_root() -> PathBuf {
-    runner::repo_root().join("OrcaSlicer/resources/profiles")
-}
+#[path = "option_coverage/outcome.rs"]
+mod outcome;
 
-fn strict_comparator_ran(status: &str) -> bool {
-    matches!(status, "PASS" | "DIVERGENT")
-}
-
-struct OptionOutcome {
-    key: String,
-    option_type: String,
-    source: String,
-    cases: usize,
-    compared: usize,
-    rejected: usize,
-    status: &'static str,
-    detail: String,
-}
-
-impl OptionOutcome {
-    fn executed(
-        plan: &domains::OptionPlan,
-        compared: usize,
-        rejected: Vec<String>,
-        excused: usize,
-        failure: Option<String>,
-    ) -> Self {
-        let (status, detail) = if let Some(detail) = failure {
-            ("FAIL", detail)
-        } else if compared == 0
-            || compared + excused != plan.cases.len()
-            || !rejected.is_empty()
-            || plan.cases.iter().any(|case| case.value.is_none())
-        {
-            (
-                "INCOMPLETE",
-                format!(
-                    "required legal cases not all compared; {}",
-                    rejected.join("; ")
-                ),
-            )
-        } else if excused > 0 {
-            // Nondeterministic-oracle cases never byte-match by
-            // construction; crediting them as strict coverage would
-            // certify the domain on fewer verified values than it
-            // declares. Report them as an evidenced incomplete instead.
-            (
-                "INCOMPLETE",
-                format!("{excused} case(s) excused: oracle is nondeterministic for these values"),
-            )
-        } else if !plan.provably_legal {
-            // Baseline-only, unresolved-expression and deferred context domains
-            // cannot complete the declared-endpoint/interior scope.
-            (
-                "INCOMPLETE",
-                plan.omission
-                    .map(str::to_owned)
-                    .unwrap_or_else(|| "legacy domain application/legality unverified".into()),
-            )
-        } else {
-            ("PASS", String::new())
-        };
-        Self::new(
-            plan,
-            (plan.cases.len(), compared, rejected.len()),
-            status,
-            detail,
-        )
-    }
-
-    fn omitted(plan: &domains::OptionPlan) -> Self {
-        Self::new(
-            plan,
-            (0, 0, 0),
-            "UNBOUNDED",
-            plan.omission.unwrap_or_default().to_owned(),
-        )
-    }
-
-    fn new(
-        plan: &domains::OptionPlan,
-        counts: (usize, usize, usize),
-        status: &'static str,
-        detail: String,
-    ) -> Self {
-        Self {
-            key: plan.key.clone(),
-            option_type: plan.option_type.clone(),
-            source: plan.source.clone(),
-            cases: counts.0,
-            compared: counts.1,
-            rejected: counts.2,
-            status,
-            detail,
-        }
-    }
-}
+use outcome::{OptionOutcome, profiles_root, strict_comparator_ran};

@@ -6,8 +6,7 @@ mod multi_path;
 
 use super::{local_cursor, loop_paths, state::EmitState, state::LayerGeometry};
 use crate::project_slice::{
-    island_print_order::IslandPrintEntity,
-    perimeters::classic::{chained_loops::ExtrusionLoopRole, entity_collections::ExtrusionEntity},
+    island_print_order::IslandPrintEntity, perimeters::classic::entity_collections::ExtrusionEntity,
 };
 
 pub(super) fn emit_perimeter(
@@ -15,7 +14,7 @@ pub(super) fn emit_perimeter(
     entity: IslandPrintEntity,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     let IslandPrintEntity::Perimeter(collection) = entity else {
         unreachable!("perimeter phase contains only perimeter entities");
     };
@@ -65,11 +64,11 @@ pub(super) fn emit_perimeter(
                         geometry,
                         inside_loop: false,
                     },
-                );
+                )?;
                 continue;
             }
             ExtrusionEntity::MultiPath(multi_path) => {
-                multi_path::emit(output, &multi_path.paths, geometry, state);
+                multi_path::emit(output, &multi_path.paths, geometry, state)?;
                 continue;
             }
         };
@@ -84,7 +83,7 @@ pub(super) fn emit_perimeter(
                 .curl
                 .collect_entity(state.layer_index, &loop_.extrusion_loop.paths, &geometry);
         }
-        if state.spiral_vase && loop_.extrusion_loop.role != ExtrusionLoopRole::Hole {
+        if state.spiral_vase {
             crate::project_slice::seam_placement::place_nearest_projection(
                 &mut loop_.extrusion_loop,
                 crate::project_slice::perimeters::classic::materialize::Point3 {
@@ -101,13 +100,14 @@ pub(super) fn emit_perimeter(
                 z: 0,
             };
             if let Some(layer) = geometry.nearest_seam_penalties {
-                crate::project_slice::seam_placement::place_nearest_penalized(
-                    &mut loop_.extrusion_loop,
-                    cursor,
-                    layer,
-                    geometry.staggered_inner,
-                    geometry.scale,
-                );
+                loop_.unsupported_distance =
+                    crate::project_slice::seam_placement::place_nearest_penalized(
+                        &mut loop_.extrusion_loop,
+                        cursor,
+                        layer,
+                        geometry.staggered_inner,
+                        geometry.scale,
+                    );
             } else {
                 crate::project_slice::seam_placement::place_nearest(
                     &mut loop_.extrusion_loop,
@@ -118,10 +118,11 @@ pub(super) fn emit_perimeter(
         }
         loop_paths::emit(
             output,
-            &loop_.extrusion_loop,
+            (&loop_.extrusion_loop, loop_.unsupported_distance),
             geometry,
             state,
             &region_perimeters,
-        );
+        )?;
     }
+    Ok(())
 }

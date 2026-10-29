@@ -1,6 +1,16 @@
 //! Normal `ExportLines::update` cache cursor (`GCodeProcessor.cpp:771–810`).
 
 use super::super::export_lines::reader::command;
+use super::Estimate;
+
+impl Estimate {
+    pub(in crate::project_slice::gcode_emit::processor) fn export_elapsed_at(
+        &self,
+        line: usize,
+    ) -> Option<f32> {
+        self.export_elapsed[line]
+    }
+}
 
 pub(super) struct Entry {
     pub(super) id: usize,

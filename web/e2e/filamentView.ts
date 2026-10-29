@@ -114,10 +114,10 @@ export async function checkFilamentView(page: Page, moves: Move[], gcode: string
   const total = legend.locator("tbody tr.legend-filament-total");
   if (expected.total) expect(await total.locator("td").allTextContents()).toEqual(expected.total);
   else await expect(total).toHaveCount(0);
-  await expect.poll(() => canvasDigest(page), { message: "Filament must recolor the toolpaths" }).not.toBe(featureType);
+  expect(await canvasDigest(page), "Filament must recolor the toolpaths").not.toBe(featureType);
   await page.screenshot({ path: `${artifacts}preview-view-ColorPrint.png` });
   await select.selectOption({ label: "Line Type" });
   await expect(legend).toHaveCount(0);
-  await expect.poll(() => canvasDigest(page), { message: "Line Type restores the feature colors" }).toBe(featureType);
+  expect(await canvasDigest(page), "Line Type restores the feature colors").toBe(featureType);
   return expected;
 }

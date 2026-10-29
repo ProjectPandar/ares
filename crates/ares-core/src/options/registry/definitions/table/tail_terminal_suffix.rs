@@ -25,7 +25,12 @@ pub(super) const TAIL_TERMINAL_SUFFIX_OPTION_DEFINITIONS: &[OptionDefinition] = 
     definition!("top_surface_filament_id", Int, "0",),
     definition!("top_surface_jerk", Float, "9",),
     definition!("top_surface_line_width", FloatOrPercent, "0",),
-    definition!("top_surface_pattern", Enum, "monotonicline",),
+    definition!(
+        "top_surface_pattern",
+        Enum,
+        "monotonicline",
+        super::INFILL_PATTERN_TYPE_KEYS,
+    ),
     definition!("top_surface_speed", Float, "100",),
     definition!("travel_acceleration", Float, "10000",),
     definition!("travel_jerk", Float, "12",),

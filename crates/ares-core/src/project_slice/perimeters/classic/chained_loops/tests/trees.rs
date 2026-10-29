@@ -1,9 +1,7 @@
 use super::super::{
     super::{
         materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3, RawPathNode},
-        traversal::{
-            LowerFlowRoute, PendingExtrusionRole, PendingLoopRole, PendingPathBranch, TraversalSeed,
-        },
+        traversal::{LowerFlowRoute, PendingExtrusionRole, PendingLoopRole, TraversalSeed},
     },
     tree::{consume_nodes, transform_nodes},
 };
@@ -13,31 +11,20 @@ use crate::geometry::{Point, Polygon};
 fn task22o8_transform_and_sink_are_iterative_on_a_constrained_stack() {
     std::thread::Builder::new()
         .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
-        .spawn(|| {
-            run_deep(PendingPathBranch::OrdinaryUnsplit {
-                detect_overhang_wall: false,
-                layer_id: 1,
-                raft_layers: 0,
-            });
-            run_deep(PendingPathBranch::OverhangClipping {
-                detect_overhang_wall: true,
-                layer_id: 1,
-                raft_layers: 0,
-            });
-        })
+        .spawn(run_deep)
         .unwrap()
         .join()
         .unwrap();
 }
 
-fn run_deep(branch: PendingPathBranch) {
+fn run_deep() {
     let mut current_seed = seed(Vec::new());
     let mut raw_node = raw(Vec::new());
     for _ in 0..10_000 {
         current_seed = seed(vec![current_seed]);
         raw_node = raw(vec![raw_node]);
     }
-    let output = transform_nodes(vec![raw_node], std::slice::from_ref(&current_seed), branch);
+    let output = transform_nodes(vec![raw_node], std::slice::from_ref(&current_seed));
     assert_eq!(output.len(), 1);
     consume_nodes(output);
     consume_seeds(vec![current_seed]);
@@ -65,6 +52,7 @@ fn seed(children: Vec<TraversalSeed>) -> TraversalSeed {
 fn raw(children: Vec<RawPathNode>) -> RawPathNode {
     RawPathNode {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: vec![Point3 { x: 0, y: 0, z: 0 }, Point3 { x: 10, y: 0, z: 0 }],
                 fitting: Vec::new(),
@@ -76,6 +64,7 @@ fn raw(children: Vec<RawPathNode>) -> RawPathNode {
             height: 0.2,
         }],
         children,
+        child_order: Vec::new(),
     }
 }
 

@@ -1,7 +1,6 @@
-mod numeric;
-
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::numeric::{atof, atoi};
 use crate::SliceError;
 
 use super::{PackagePath, ProjectArchive, domain::ProjectObject};
@@ -45,7 +44,7 @@ fn import_record(record: &str, profiles: &mut BTreeMap<i32, Vec<f64>>) {
     let Some((_, ordinal)) = pair(header, '=') else {
         return;
     };
-    let ordinal = numeric::atoi(ordinal);
+    let ordinal = atoi(ordinal);
     if ordinal == 0 || profiles.contains_key(&ordinal) {
         return;
     }
@@ -55,7 +54,7 @@ fn import_record(record: &str, profiles: &mut BTreeMap<i32, Vec<f64>>) {
         return;
     }
     // bbs_3mf.cpp:2877-2878 uses atof, including prefix conversion and no-conversion zero.
-    profiles.insert(ordinal, values.into_iter().map(numeric::atof).collect());
+    profiles.insert(ordinal, values.into_iter().map(atof).collect());
 }
 
 fn pair(text: &str, separator: char) -> Option<(&str, &str)> {

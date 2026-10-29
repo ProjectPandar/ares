@@ -31,7 +31,8 @@ pub(crate) fn fill_surface(
     params: CrossHatchFillParams,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    debug_assert!(params.anchor_length_max >= 0.05);
+    // FillBase.hpp:52 / FillBase.cpp:1820-1828 admits small anchor maxima:
+    // the shared connector chains these paths instead of connecting boundaries.
 
     let offset_delta = ((params.overlap - 0.5 * params.spacing) / scale.factor()) as f32;
     let components = offset_expolygon(surface, offset_delta, JoinType::Miter, 3.0)?;

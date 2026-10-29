@@ -15,6 +15,7 @@ mod closing;
 pub(crate) mod compatibility;
 mod compensation;
 mod conical_overhang;
+mod contour_z;
 mod elephant_foot;
 mod extruders;
 mod extrusion_islands;
@@ -28,19 +29,17 @@ pub(crate) mod gcode_emit;
     )
 )]
 mod group_fills;
+mod hole_to_polyhole;
 mod incomplete_sink;
 mod island_print_order;
 mod largest_contours;
 mod layers;
 mod load_stages;
 mod looped_intersections;
-use load_stages::prepare_post_conical_overhang;
 mod parameters;
 mod path_simplification;
 mod raft;
-pub(crate) use perimeters::classic::shortest_path::{
-    chain_polylines, chain_polylines_multifragment,
-};
+pub(crate) use perimeters::classic::shortest_path::chain_polylines;
 mod perimeters;
 pub(crate) use perimeters::flow::skirt_flow_width_spacing;
 mod planning;
@@ -204,7 +203,8 @@ pub(crate) fn slice_source(
     // `get_boundary` consumes current Top fill surfaces after prepare_infill
     // (`AvoidCrossingPerimeters.cpp:1116-1130`), not the classification snapshot.
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
-    let filled = fill_entities::prepare(prepared)?;
+    let mut filled = fill_entities::prepare(prepared)?;
+    contour_z::prepare(&mut filled);
     let support_layers = match support_material::generate(&filled, &mut context) {
         Ok(layers) => layers,
         Err(error) => {
@@ -286,4 +286,5 @@ struct PreparedPostRegions {
     config_block: Option<Vec<u8>>,
     scale: CoordinateScale,
     objects: Vec<region_slices::PostRegionPrintObject>,
+    painting: Vec<region_slices::painted::ObjectRegions>,
 }

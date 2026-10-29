@@ -1,4 +1,4 @@
-//! TriangleMeshSlicer.cpp::slice_facet_with_slabs<false>.
+//! TriangleMeshSlicer.cpp::slice_facet_with_slabs<ProjectionFromTop>.
 
 use super::IntersectionLine;
 use super::{
@@ -18,15 +18,13 @@ fn reverse_when(input: IntersectionLine, reverse_order: bool) -> IntersectionLin
     if reverse_order { reverse(input) } else { input }
 }
 
-fn horizontal(facet: &Facet, first: usize, zs: &[f32], lines: &mut SlabLines) {
+fn horizontal<const TOP: bool>(facet: &Facet, first: usize, zs: &[f32], lines: &mut SlabLines) {
     let (vertices, indices, neighbors) = (facet.vertices, facet.indices, facet.neighbors);
-    if first == zs.len() {
-        return;
-    }
-    let coplanar =
-        vertices.iter().all(|vertex| vertex[2] == vertices[0][2]) && zs[first] == vertices[0][2];
+    let coplanar = first != zs.len()
+        && vertices.iter().all(|vertex| vertex[2] == vertices[0][2])
+        && zs[first] == vertices[0][2];
     if coplanar {
-        let target = first + 1;
+        let target = if TOP { first } else { first + 1 };
         if target == zs.len() {
             return;
         }
@@ -37,21 +35,28 @@ fn horizontal(facet: &Facet, first: usize, zs: &[f32], lines: &mut SlabLines) {
                     point(vertices[edge], indices[edge]),
                     point(vertices[next], indices[next]),
                 ),
-                kind: Kind::Top,
+                kind: if TOP { Kind::Bottom } else { Kind::Top },
             });
         }
     } else {
+        if (TOP && first == 0) || (!TOP && first == zs.len()) {
+            return;
+        }
+        let slab = first - usize::from(TOP);
         for edge in (0..3).filter(|&edge| neighbors[edge].is_none()) {
             let next = (edge + 1) % 3;
-            lines.between[first].push(line(
-                point(vertices[next], indices[next]),
-                point(vertices[edge], indices[edge]),
+            lines.between[slab].push(reverse_when(
+                line(
+                    point(vertices[edge], indices[edge]),
+                    point(vertices[next], indices[next]),
+                ),
+                !TOP,
             ));
         }
     }
 }
 
-fn record_slice(
+fn record_slice<const TOP: bool>(
     current: Option<SlabLine>,
     indices: [u32; 3],
     neighbors: [Option<usize>; 3],
@@ -75,7 +80,7 @@ fn record_slice(
     }
     if retain {
         lines.at_slice[slab].push(SlabLine {
-            line: reverse(input.line),
+            line: reverse_when(input.line, !TOP),
             kind: input.kind,
         });
     }
@@ -118,7 +123,12 @@ fn on_edge(input: Option<SlabLine>, edge: u32) -> Option<IntersectionPoint> {
         .find(|point| point.reference() == EndpointReference::Edge(edge))
 }
 
-pub(super) fn slice(facet: Facet, edge_count: u32, zs: &[f32], lines: &mut SlabLines) {
+pub(super) fn slice<const TOP: bool>(
+    facet: Facet,
+    edge_count: u32,
+    zs: &[f32],
+    lines: &mut SlabLines,
+) {
     let Facet {
         vertices,
         indices,
@@ -130,19 +140,20 @@ pub(super) fn slice(facet: Facet, edge_count: u32, zs: &[f32], lines: &mut SlabL
     let first = zs.partition_point(|&z| z < min_z);
     let last = zs.partition_point(|&z| z <= max_z);
     if first == last || min_z == max_z {
-        horizontal(&facet, first, zs, lines);
+        horizontal::<TOP>(&facet, first, zs, lines);
         return;
     }
     let mut previous = None;
-    for slab in first..last {
-        let current = record_slice(
-            intersection(zs[slab], &vertices, indices, edges),
+    for plane in first..last {
+        let current = record_slice::<TOP>(
+            intersection(zs[plane], &vertices, indices, edges),
             indices,
             neighbors,
-            slab,
+            plane,
             lines,
         );
-        for edge in 0..3 {
+        let slab = plane - usize::from(TOP && plane > 0);
+        for edge in (0..3).filter(|_| !TOP || plane > 0) {
             if neighbors[edge].is_some() {
                 continue;
             }
@@ -160,26 +171,30 @@ pub(super) fn slice(facet: Facet, edge_count: u32, zs: &[f32], lines: &mut SlabL
                 )),
                 (Some(a), None) => Some(line(a, point(vertices[high], indices[high]))),
                 (None, None)
-                    if (vertices[edge][2] < zs[slab] || vertices[next][2] < zs[slab])
-                        && (slab == first
-                            || vertices[edge][2] > zs[slab - 1]
-                            || vertices[next][2] > zs[slab - 1]) =>
+                    if (vertices[edge][2] < zs[plane] || vertices[next][2] < zs[plane])
+                        && (plane == first
+                            || vertices[edge][2] > zs[plane - 1]
+                            || vertices[next][2] > zs[plane - 1]) =>
                 {
-                    lines.between[slab].push(line(
-                        point(vertices[next], indices[next]),
-                        point(vertices[edge], indices[edge]),
+                    lines.between[slab].push(reverse_when(
+                        line(
+                            point(vertices[edge], indices[edge]),
+                            point(vertices[next], indices[next]),
+                        ),
+                        !TOP,
                     ));
                     None
                 }
                 (None, None) => None,
             };
             if let Some(segment) = segment {
-                lines.between[slab].push(reverse_when(segment, upwards));
+                lines.between[slab].push(reverse_when(segment, TOP != upwards));
             }
         }
         previous = current;
     }
-    if last != zs.len() {
+    if TOP || last != zs.len() {
+        let slab = last - usize::from(TOP);
         for edge in 0..3 {
             if neighbors[edge].is_some() {
                 continue;
@@ -189,11 +204,14 @@ pub(super) fn slice(facet: Facet, edge_count: u32, zs: &[f32], lines: &mut SlabL
                 let upwards = vertices[next][2] > vertices[edge][2];
                 let high = [edge, next][usize::from(upwards)];
                 let segment = line(a, point(vertices[high], indices[high]));
-                lines.between[last].push(reverse_when(segment, upwards));
+                lines.between[slab].push(reverse_when(segment, TOP != upwards));
             } else if vertices[edge][2] > zs[last - 1] || vertices[next][2] > zs[last - 1] {
-                lines.between[last].push(line(
-                    point(vertices[next], indices[next]),
-                    point(vertices[edge], indices[edge]),
+                lines.between[slab].push(reverse_when(
+                    line(
+                        point(vertices[edge], indices[edge]),
+                        point(vertices[next], indices[next]),
+                    ),
+                    !TOP,
                 ));
             }
         }

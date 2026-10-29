@@ -53,7 +53,7 @@ async function checkSliderShortcuts(page: Page) {
   await page.screenshot({ path: `${artifacts}one-layer.png` });
   await page.keyboard.press("ArrowUp");
   await expect(top).toHaveAttribute("aria-valuenow", "44");
-  await expect.poll(() => canvasDigest(page), { message: "one-layer mode must follow the thumb" }).not.toBe(oneLayer);
+  expect(await canvasDigest(page), "one-layer mode must follow the thumb").not.toBe(oneLayer);
   await page.keyboard.press("l");
   await expect(top).toHaveAttribute("aria-valuenow", "50");
   await expect(bottom).toHaveAttribute("aria-valuenow", "1");
@@ -111,10 +111,10 @@ test("OrcaSlicer keyboard shortcuts drive import, camera, slicing, export and pr
   // I / O: camera zoom in / out.
   const framed = await canvasDigest(page);
   await page.keyboard.press("i");
-  await expect.poll(() => canvasDigest(page), { message: "I must zoom in" }).not.toBe(framed);
   const zoomed = await canvasDigest(page);
+  expect(zoomed, "I must zoom in").not.toBe(framed);
   await page.keyboard.press("o");
-  await expect.poll(() => canvasDigest(page), { message: "O must zoom out" }).not.toBe(zoomed);
+  expect(await canvasDigest(page), "O must zoom out").not.toBe(zoomed);
 
   // Esc: deselect all.
   const object = page.getByTestId("object-list").getByRole("treeitem").first();

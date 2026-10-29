@@ -139,7 +139,13 @@ pub(in crate::fill) fn take_full_arc(
     debug_assert!(intersections[end].prev.is_some() && intersections[end].next.is_some());
     let start_point_index = intersections[start].point_index;
     let end_point_index = intersections[end].point_index;
-    debug_assert_ne!(start_point_index, end_point_index);
+    // Equal indices are the upstream release behavior, not an invariant: two
+    // distinct intersection records may project onto one contour vertex,
+    // and `take_ccw_full` (`FillBase.cpp:474-486`) then walks the whole
+    // contour — `append_full` below mirrors that loop. The ported assert
+    // (from the `#ifndef NDEBUG` block at `FillBase.cpp:534-536`) turned
+    // this degeneracy into a debug-build panic (lateral-lattice ironing at
+    // dense spacing); the parity target is the Native release build.
     append_full(
         output,
         contour,

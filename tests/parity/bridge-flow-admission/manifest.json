@@ -1,0 +1,47 @@
+{
+  "base": "c251aa6166bcc0270063fc6d2e41b84ab01a637d",
+  "spec": "66b05815bdff4da97b91fd265d89b0b00822c30f",
+  "source_sha256": "183a2d5cbce46aabbe99d22a39b90636326a62a20e752448e444467cb02f9993",
+  "cases": {
+    "flow-1-1": {
+      "sha256": "5b409ed970293f59fb18a0380fe0217af7e1550394f277517e91feecfa158226",
+      "retract_before_wipe": "50%",
+      "retraction_length": "0.8",
+      "wipe": "0",
+      "wipe_distance": "2",
+      "gcode_flavor": "marlin2",
+      "bridge_flow": "1",
+      "internal_bridge_flow": "1"
+    },
+    "flow-0-1": {
+      "sha256": "43acc24cf21c820672519b64b07cc4917d861e1036bbec169f356daccdbd92cc",
+      "retract_before_wipe": "50%",
+      "retraction_length": "0.8",
+      "wipe": "0",
+      "wipe_distance": "2",
+      "gcode_flavor": "marlin2",
+      "bridge_flow": "0",
+      "internal_bridge_flow": "1"
+    },
+    "flow-1-0": {
+      "sha256": "8422762962187ff858b61959124328b117a3fdd2cf35ca93334fa2a7c8137081",
+      "retract_before_wipe": "50%",
+      "retraction_length": "0.8",
+      "wipe": "0",
+      "wipe_distance": "2",
+      "gcode_flavor": "marlin2",
+      "bridge_flow": "1",
+      "internal_bridge_flow": "0"
+    },
+    "flow-0-0": {
+      "sha256": "e92016645854bdd618d508a1099707014ba13dfa0ccbf648dff7f20d0826f31f",
+      "retract_before_wipe": "50%",
+      "retraction_length": "0.8",
+      "wipe": "0",
+      "wipe_distance": "2",
+      "gcode_flavor": "marlin2",
+      "bridge_flow": "0",
+      "internal_bridge_flow": "0"
+    }
+  }
+}

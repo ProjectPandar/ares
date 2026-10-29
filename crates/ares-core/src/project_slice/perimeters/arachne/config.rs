@@ -29,6 +29,7 @@ pub(in crate::project_slice) struct ArachneWallParams {
 #[derive(Clone, Copy, Debug)]
 pub(in crate::project_slice) struct ArachneRecordConfig {
     pub(in crate::project_slice) params: ArachneWallParams,
+    pub(in crate::project_slice) scaled_resolution: f64,
     pub(in crate::project_slice) surface_simplify_resolution: f64,
     pub(in crate::project_slice) is_bottom_layer: bool,
     pub(in crate::project_slice) is_topmost_layer: bool,
@@ -82,6 +83,7 @@ pub(in crate::project_slice) fn validate_record(
     };
     Ok(ArachneRecordConfig {
         params: make_paths_params(layer_id, object, nozzle_diameters, scale)?,
+        scaled_resolution,
         surface_simplify_resolution,
         is_bottom_layer: i32::try_from(layer_id).is_ok_and(|layer| layer == object.raft_layers.0),
         is_topmost_layer: upper_layer_index.is_none(),

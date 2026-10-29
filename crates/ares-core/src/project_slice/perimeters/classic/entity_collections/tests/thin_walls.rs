@@ -8,19 +8,18 @@ fn task22o9_thin_wall_entities_interleave_with_loops_and_emit() {
     let nodes = vec![ChainedLoopNode {
         extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Default)),
         children: Vec::new(),
+        child_order: Vec::new(),
     }];
     let seeds = vec![seed(true, 0, Vec::new())];
     let thin = vec![thin_wall(&[(1_000_000, 1_000_000), (2_000_000, 1_000_000)])];
+    let (thin_entities, order) = root_thin_entities_and_order(&nodes, &thin);
     let collection = traverse_loops(
-nodes,
-&seeds,
-ProcessWallDirection::CounterClockwise,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &thin,
-ext_perimeter_flow: test_flow(),
- },
-TEST_SCALE,
-);
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        thin_entities,
+        order,
+    );
     assert_eq!(collection.entities.len(), 2);
     let has_path = collection
         .entities
@@ -52,25 +51,25 @@ fn task22o9_thin_wall_chain_order_and_reversal() {
         ChainedLoopNode {
             extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Default)),
             children: Vec::new(),
+            child_order: Vec::new(),
         },
         ChainedLoopNode {
             extrusion_loop: Some(square_loop(9_000_000, 0, ExtrusionLoopRole::Default)),
             children: Vec::new(),
+            child_order: Vec::new(),
         },
     ];
     let seeds = vec![seed(true, 0, Vec::new()), seed(true, 0, Vec::new())];
     // Open thin wall near the first loop, running right->left (reversed input).
     let thin = vec![thin_wall(&[(2_000_000, 500_000), (1_000_000, 500_000)])];
+    let (thin_entities, order) = root_thin_entities_and_order(&nodes, &thin);
     let collection = traverse_loops(
-nodes,
-&seeds,
-ProcessWallDirection::CounterClockwise,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &thin,
-ext_perimeter_flow: test_flow(),
- },
-TEST_SCALE,
-);
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        thin_entities,
+        order,
+    );
     assert_eq!(collection.entities.len(), 3);
     let kinds: Vec<&str> = collection
         .entities
@@ -113,24 +112,24 @@ fn task22o9_skipped_root_keeps_thin_wall_boundary() {
         ChainedLoopNode {
             extrusion_loop: None, // empty-overhang root — compacted out
             children: Vec::new(),
+            child_order: Vec::new(),
         },
         ChainedLoopNode {
             extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Default)),
             children: Vec::new(),
+            child_order: Vec::new(),
         },
     ];
     let seeds = vec![seed(true, 0, Vec::new()), seed(true, 0, Vec::new())];
     let thin = vec![thin_wall(&[(2_000_000, 500_000), (3_000_000, 500_000)])];
+    let (thin_entities, order) = root_thin_entities_and_order(&nodes, &thin);
     let collection = traverse_loops(
-nodes,
-&seeds,
-ProcessWallDirection::CounterClockwise,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &thin,
-ext_perimeter_flow: test_flow(),
- },
-TEST_SCALE,
-);
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        thin_entities,
+        order,
+    );
     assert_eq!(collection.entities.len(), 2);
     assert!(
         collection
@@ -148,6 +147,7 @@ fn task22o9_closed_thin_wall_emits_loop() {
     let nodes = vec![ChainedLoopNode {
         extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Default)),
         children: Vec::new(),
+        child_order: Vec::new(),
     }];
     let seeds = vec![seed(true, 0, Vec::new())];
     let thin = vec![thin_wall(&[
@@ -156,16 +156,14 @@ fn task22o9_closed_thin_wall_emits_loop() {
         (1_000_000, 1_000_000),
         (0, 0),
     ])];
+    let (thin_entities, order) = root_thin_entities_and_order(&nodes, &thin);
     let collection = traverse_loops(
-nodes,
-&seeds,
-ProcessWallDirection::CounterClockwise,
-crate::project_slice::perimeters::classic::entity_collections::traverse::ThinWallExtrusion {
-thin_walls: &thin,
-ext_perimeter_flow: test_flow(),
- },
-TEST_SCALE,
-);
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        thin_entities,
+        order,
+    );
     // Two loops: the square + the closed thin ring.
     let loops = collection
         .entities

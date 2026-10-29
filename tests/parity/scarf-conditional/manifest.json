@@ -1,0 +1,142 @@
+{
+  "spec": "5189e53a586ccffde246c3e798b8563aac0f97e9",
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "base_sha256": "8cda6c553c73d4f55ab638781b1e42c1edc9291652b73ca66c1c529abc2ac6ba",
+  "cases": {
+    "control": {
+      "sha256": "0e2448b51db7003392c83e123aed4d1340d49eecbee2b725c4ca5bf12fd842b1",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ad8843e4f7b2ba8bfaa15016ae0bf48cf5f2bb8f42115edc8cc222f5d5c5320",
+        "3D/_rels/3dmodel.model.rels": "a76765105a9ee731f5fb01edf0014cec99cac5952c954c53712e72589864bedd",
+        "3D/Objects/overhang.stl_1.model": "d946cc88e6430073ccca5ef1adc9cad6d8abcf60fac2b9ced4e4d5096e9138b8",
+        "Metadata/project_settings.config": "6d1e3536cb628253192c5ca64c0a039c2f435787a8966779094b934632de558e",
+        "Metadata/model_settings.config": "1200707ec1ee21f415f2c8e03f06165a38f63993b9ceabc00db00944c16df819",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings": {
+        "seam_slope_type": "external",
+        "seam_slope_conditional": "0",
+        "scarf_angle_threshold": "0",
+        "scarf_overhang_threshold": "0%",
+        "seam_slope_steps": "10",
+        "seam_slope_min_length": "10",
+        "seam_slope_start_height": "10%",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_entire_loop": "0"
+      },
+      "native_slope_count": 48,
+      "native_first_slope": "G1 X109.72 Y113.938 Z.23 E.0027 ; perimeter"
+    },
+    "positive": {
+      "sha256": "b89abfb6df717f88a513723f469c966577c7361d789f623dcd3e9feddca4849d",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ad8843e4f7b2ba8bfaa15016ae0bf48cf5f2bb8f42115edc8cc222f5d5c5320",
+        "3D/_rels/3dmodel.model.rels": "a76765105a9ee731f5fb01edf0014cec99cac5952c954c53712e72589864bedd",
+        "3D/Objects/overhang.stl_1.model": "d946cc88e6430073ccca5ef1adc9cad6d8abcf60fac2b9ced4e4d5096e9138b8",
+        "Metadata/project_settings.config": "ef5874e20cf46921117f846114194fd669840aa58722789ae4c151beabcf17ff",
+        "Metadata/model_settings.config": "1200707ec1ee21f415f2c8e03f06165a38f63993b9ceabc00db00944c16df819",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings": {
+        "seam_slope_type": "external",
+        "seam_slope_conditional": "1",
+        "scarf_angle_threshold": "0",
+        "scarf_overhang_threshold": "0%",
+        "seam_slope_steps": "10",
+        "seam_slope_min_length": "10",
+        "seam_slope_start_height": "10%",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_entire_loop": "0"
+      },
+      "native_slope_count": 48,
+      "native_first_slope": "G1 X109.72 Y113.938 Z.23 E.0027 ; perimeter"
+    },
+    "sharp": {
+      "sha256": "666600f0eb1b870ca4c8e3a5cb87ea7320a8516f77c9c0f3fe0e2f86532608c4",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ad8843e4f7b2ba8bfaa15016ae0bf48cf5f2bb8f42115edc8cc222f5d5c5320",
+        "3D/_rels/3dmodel.model.rels": "a76765105a9ee731f5fb01edf0014cec99cac5952c954c53712e72589864bedd",
+        "3D/Objects/overhang.stl_1.model": "d946cc88e6430073ccca5ef1adc9cad6d8abcf60fac2b9ced4e4d5096e9138b8",
+        "Metadata/project_settings.config": "a0ddadd660332a713f49d346969593d0c5795af5395095bdeb8d8015da75fd9e",
+        "Metadata/model_settings.config": "1200707ec1ee21f415f2c8e03f06165a38f63993b9ceabc00db00944c16df819",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings": {
+        "seam_slope_type": "external",
+        "seam_slope_conditional": "1",
+        "scarf_angle_threshold": "155",
+        "scarf_overhang_threshold": "0%",
+        "seam_slope_steps": "10",
+        "seam_slope_min_length": "10",
+        "seam_slope_start_height": "10%",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_entire_loop": "0"
+      },
+      "native_slope_count": 0,
+      "native_first_slope": null
+    },
+    "overhang-low": {
+      "sha256": "0cfebc322260c4ebfec8c9d1cac3cfd3f86c97055fbe722a187e31295c49d235",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ad8843e4f7b2ba8bfaa15016ae0bf48cf5f2bb8f42115edc8cc222f5d5c5320",
+        "3D/_rels/3dmodel.model.rels": "a76765105a9ee731f5fb01edf0014cec99cac5952c954c53712e72589864bedd",
+        "3D/Objects/overhang.stl_1.model": "dd64e6171209bfb03333b5d153e09b11389f8bbad607ae19ec284babee43ad7a",
+        "Metadata/project_settings.config": "f15c54c83aea4470fc3b7c10407336576a2a04521bef9582bb90e536c35d023f",
+        "Metadata/model_settings.config": "1200707ec1ee21f415f2c8e03f06165a38f63993b9ceabc00db00944c16df819",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings": {
+        "seam_slope_type": "external",
+        "seam_slope_conditional": "1",
+        "scarf_angle_threshold": "0",
+        "scarf_overhang_threshold": "1%",
+        "seam_slope_steps": "10",
+        "seam_slope_min_length": "10",
+        "seam_slope_start_height": "10%",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_entire_loop": "0"
+      },
+      "native_slope_count": 0,
+      "native_first_slope": null
+    },
+    "overhang-high": {
+      "sha256": "3884be1b8d08fba07b1216613ee1152ad2e2101e64ab633f123352c852599ec3",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "1ad8843e4f7b2ba8bfaa15016ae0bf48cf5f2bb8f42115edc8cc222f5d5c5320",
+        "3D/_rels/3dmodel.model.rels": "a76765105a9ee731f5fb01edf0014cec99cac5952c954c53712e72589864bedd",
+        "3D/Objects/overhang.stl_1.model": "dd64e6171209bfb03333b5d153e09b11389f8bbad607ae19ec284babee43ad7a",
+        "Metadata/project_settings.config": "439e59a8ad57ef04679d01521e876a0f3394a712ed81fa55b9a3cd910e740c12",
+        "Metadata/model_settings.config": "1200707ec1ee21f415f2c8e03f06165a38f63993b9ceabc00db00944c16df819",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings": {
+        "seam_slope_type": "external",
+        "seam_slope_conditional": "1",
+        "scarf_angle_threshold": "0",
+        "scarf_overhang_threshold": "100%",
+        "seam_slope_steps": "10",
+        "seam_slope_min_length": "10",
+        "seam_slope_start_height": "10%",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_entire_loop": "0"
+      },
+      "native_slope_count": 48,
+      "native_first_slope": "G1 X109.72 Y114.313 Z.23 E.0027 ; perimeter"
+    }
+  }
+}

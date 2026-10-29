@@ -6,9 +6,88 @@ macro_rules! definition {
             key: $key,
             kind: OptionValueKind::$kind,
             default_value: $default_value,
+            enum_type_keys: None,
+        }
+    };
+    ($key:literal, $kind:ident, $default_value:literal, $enum_type_keys:expr $(,)?) => {
+        OptionDefinition {
+            key: $key,
+            kind: OptionValueKind::$kind,
+            default_value: $default_value,
+            enum_type_keys: Some($enum_type_keys),
         }
     };
 }
+
+/// Typed `ProjectBedType` variants (the `s_keys_map_BedType` keys plus
+/// the ares-tracked "Default Plate" sentinel the bed sentinel checks
+/// accept): wider than the option's `enum_values` whitelist.
+pub(crate) const BED_TYPE_TYPE_KEYS: &[&str] = &[
+    "Cool Plate",
+    "Engineering Plate",
+    "High Temp Plate",
+    "Textured PEI Plate",
+    "Textured Cool Plate",
+    "Supertack Plate",
+    "Default Plate",
+];
+
+/// `s_keys_map_GCodeFlavor` (`PrintConfig.cpp`): the shared
+/// `ConfigOptionEnum<GCodeFlavor>` type map — wider than the option's
+/// `enum_values` whitelist of GUI-supported flavors; legacy keys like
+/// `makerware` parse and are then rejected by the admission checks.
+pub(crate) const GCODE_FLAVOR_TYPE_KEYS: &[&str] = &[
+    "marlin",
+    "klipper",
+    "reprapfirmware",
+    "repetier",
+    "marlin2",
+    "reprap",
+    "teacup",
+    "makerware",
+    "sailfish",
+    "mach3",
+    "machinekit",
+    "smoothie",
+    "no-extrusion",
+];
+
+/// `s_keys_map_InfillPattern` (`PrintConfig.cpp:226-256`): the shared
+/// `ConfigOptionEnum<InfillPattern>` type map every infill-pattern option
+/// deserializes through (`ConfigOptionEnum::from_string`,
+/// `Config.hpp:2032-2040`) — wider than each option's own `enum_values`
+/// whitelist, which only the `Slic3r::validate` loop enforces
+/// (`PrintConfig.cpp:10519-10559`).
+pub(crate) const INFILL_PATTERN_TYPE_KEYS: &[&str] = &[
+    "monotonic",
+    "monotonicline",
+    "rectilinear",
+    "alignedrectilinear",
+    "zigzag",
+    "crosszag",
+    "lockedzag",
+    "line",
+    "grid",
+    "triangles",
+    "tri-hexagon",
+    "cubic",
+    "adaptivecubic",
+    "quartercubic",
+    "supportcubic",
+    "lightning",
+    "honeycomb",
+    "3dhoneycomb",
+    "lateral-honeycomb",
+    "lateral-lattice",
+    "crosshatch",
+    "tpmsd",
+    "tpmsfk",
+    "gyroid",
+    "concentric",
+    "hilbertcurve",
+    "archimedeanchords",
+    "octagramspiral",
+];
 
 mod early;
 mod late;
@@ -65,6 +144,7 @@ const EMPTY_OPTION_DEFINITION: OptionDefinition = OptionDefinition {
     key: "",
     kind: OptionValueKind::String,
     default_value: "",
+    enum_type_keys: None,
 };
 static OPTION_DEFINITIONS_ARRAY: [OptionDefinition; OPTION_DEFINITION_COUNT] = merge_definitions();
 

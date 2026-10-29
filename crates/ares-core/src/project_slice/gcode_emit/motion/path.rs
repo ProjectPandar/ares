@@ -1,6 +1,7 @@
 mod adaptive_pa;
 mod avoid_crossing;
 mod constant;
+pub(super) mod contour;
 mod retraction;
 pub(in crate::project_slice::gcode_emit) mod role_change;
 mod start_travel;
@@ -27,17 +28,53 @@ pub(super) fn emit(
     properties: PathProperties<'_>,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
-    emit_with_speed(output, points, (properties, None), geometry, state);
+) -> Result<(), crate::SliceError> {
+    emit_with_speed(output, points, (properties, None), geometry, state)
 }
 
 pub(super) fn emit_with_speed(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
-    (properties, requested_speed): (PathProperties<'_>, Option<f64>),
+    (properties, speed): (PathProperties<'_>, Option<f64>),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
+    if let Some(points) = properties.contour {
+        let points = contour::clipped(points, properties.end_clip / geometry.scale.factor());
+        let properties = PathProperties {
+            contour: Some(&points),
+            end_clip: 0.0,
+            ..properties
+        };
+        emit_inner(
+            output,
+            points.iter().map(|p| (p.x, p.y)),
+            (properties, speed, false),
+            geometry,
+            state,
+        )
+    } else {
+        emit_inner(output, points, (properties, speed, false), geometry, state)
+    }
+}
+
+pub(super) fn emit_force_no_extrusion(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    properties: PathProperties<'_>,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) -> Result<(), crate::SliceError> {
+    emit_inner(output, points, (properties, None, true), geometry, state)
+}
+
+fn emit_inner(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    (properties, requested_speed, force_no_extrusion): (PathProperties<'_>, Option<f64>, bool),
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) -> Result<(), crate::SliceError> {
     let role = role_id(properties.feature);
     let role_changed = state.last_extrusion_role != Some(role);
     let mut scaled_points = points.collect::<Vec<_>>();
@@ -50,7 +87,7 @@ pub(super) fn emit_with_speed(
     );
     let Some((&first_scaled, &last_scaled)) = scaled_points.first().zip(scaled_points.last())
     else {
-        return;
+        return Ok(());
     };
     // Upstream computes segment lengths from scaled integer coordinates
     // (`Line::length() * SCALING_FACTOR`, `GCode.cpp:6997-6998`), not from
@@ -115,19 +152,11 @@ pub(super) fn emit_with_speed(
         state.object_layer_over_raft,
         requested_speed,
     );
-    // `_mm3_per_mm` carries the effective flow (`GCode.cpp:6469-6471`:
-    // geometric mm3_per_mm scaled by print and filament flow ratios, with
-    // role ratios pre-baked into `PathProperties::mm3_per_mm`), and the cap
-    // only applies while `filament_max_volumetric_speed > 0`
-    // (`GCode.cpp:6615-6617`).
-    let slope_flow_ratio = properties.slope.map_or(1.0, |slope| slope.flow_ratio);
+    // GCode.cpp:6615-6617 caps against the same effective flow as extrusion.
     let capped_speed = if state.options.max_volumetric_speed > 0.0 {
         configured_speed.min(
             state.options.max_volumetric_speed
-                / (properties.mm3_per_mm
-                    * state.options.print_flow_ratio
-                    * state.options.filament_flow_ratio
-                    * slope_flow_ratio),
+                / extrusion::effective_flow_at_emission(properties, state),
         )
     } else {
         configured_speed
@@ -174,7 +203,7 @@ pub(super) fn emit_with_speed(
     );
     // Source travels to the raw path start before overhang processing quantizes its points.
     let Some(&(first_local_x, first_local_y)) = local_points.first() else {
-        return;
+        return Ok(());
     };
     let (first_x, first_y) = if plate_space {
         points[0]
@@ -189,12 +218,13 @@ pub(super) fn emit_with_speed(
         state,
         start_travel::Request {
             first_scaled,
+            force_no_extrusion,
             first_x,
             first_y,
             properties,
             geometry,
         },
-    );
+    )?;
     // Acceleration/jerk emit BEFORE the custom role-change hooks
     // (`GCode.cpp:6460-6464` before `:6745-6770`) so a hook can
     // override them.
@@ -234,11 +264,6 @@ pub(super) fn emit_with_speed(
         let feature = state.tags.feature(properties.feature) + "\n";
         output.extend_from_slice(feature.as_bytes());
         state.last_feature = Some(properties.feature);
-        // Arm the one-shot routing disable after the first-layer skirt
-        // (`disable_once`, `GCode.cpp:4448-4450`).
-        if properties.feature == "Skirt" && state.layer_index == 0 {
-            state.avoid_crossing_disabled_once = true;
-        }
     }
     if last_was_tower || state.last_width != Some(properties.width) {
         output.extend_from_slice(
@@ -287,22 +312,6 @@ pub(super) fn emit_with_speed(
     }
     extrusion::speed(output, state.extrusion_feedrate, properties);
     state.current_feedrate = state.extrusion_feedrate;
-    if let Some(target) = state.pending_wipe_before_external_target.take() {
-        output.extend_from_slice(
-            format!("G1 X{} Y{}\n", format_axis(target.x), format_axis(target.y)).as_bytes(),
-        );
-        state.x = target.x;
-        state.y = target.y;
-        state.wipe_start = Some(target);
-        // Upstream wraps the fake wipe path in its own
-        // `;_EXTRUDE_SET_SPEED..;_EXTRUDE_END` block (`GCode.cpp:5884-5893` —
-        // `extrude_path` on the force-no-extrusion polyline), then the wall
-        // loop opens a fresh block; the cooling buffer therefore attributes
-        // the wipe move's time to its own entry instead of the wall block.
-        output.extend_from_slice(b";_EXTRUDE_END\n");
-        extrusion::speed(output, state.extrusion_feedrate, properties);
-        state.current_feedrate = state.extrusion_feedrate;
-    }
     // `GCode.cpp:7115`: sloped paths run through the same processed
     // `extrude_path` loop when `estimate` produced `new_points` — the
     // `sloped` flag only changes the per-segment emission to
@@ -316,13 +325,23 @@ pub(super) fn emit_with_speed(
             processed: &processed,
             original_speed,
             acceleration,
+            force_no_extrusion,
             properties,
             state,
         });
-        state.last_scaled_position = Some(last_scaled);
-        state.scarf_z = Some(state.layer_z);
+        state.last_scaled_position = last_scaled;
+        state.last_position_defined = true;
+        if properties.contour.is_none() {
+            state.scarf_z = Some(state.layer_z);
+        }
         output.extend_from_slice(b";_EXTRUDE_END\n");
-        return;
+        return Ok(());
+    }
+    if properties.contour.is_some() {
+        contour::emit(output, &points, properties, geometry, state);
+        state.last_scaled_position = last_scaled;
+        state.last_position_defined = true;
+        return Ok(());
     }
     // Non-processed sloped path (`GCode.cpp:6992` non-`new_points`
     // branch, `sloped != nullptr`): constant speed F, Z-interpolated
@@ -336,8 +355,9 @@ pub(super) fn emit_with_speed(
         super::scarf::emit_segments(output, &points, slope, properties, state);
         output.extend_from_slice(b";_EXTRUDE_END\n");
         state.wipe_path = wipe_points.into_iter().rev().collect();
-        state.last_scaled_position = Some(last_scaled);
-        return;
+        state.last_scaled_position = last_scaled;
+        state.last_position_defined = true;
+        return Ok(());
     }
     constant::emit(constant::Emission {
         output,
@@ -346,7 +366,9 @@ pub(super) fn emit_with_speed(
         segment_lengths: &segment_lengths,
         fitting: &fitting,
         last_scaled,
+        force_no_extrusion,
         properties,
         state,
     });
+    Ok(())
 }

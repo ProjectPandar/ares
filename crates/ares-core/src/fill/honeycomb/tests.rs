@@ -15,6 +15,7 @@ fn surface(scale: CoordinateScale) -> ExPolygon {
 
 fn params(layer_index: usize) -> HoneycombFillParams {
     HoneycombFillParams {
+        dont_alternate_fill_direction: false,
         spacing: 0.45,
         density: 0.15,
         multiline: 1,

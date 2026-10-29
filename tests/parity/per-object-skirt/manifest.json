@@ -1,0 +1,74 @@
+{
+  "source_fixture_sha256": "c25524af86d95069a9e5919c35f0091ecd2b6b26d2fbfb360cad5ad9deda5738",
+  "source": "retained runner/multi_object_skirt.rs combined unequal-height fixture",
+  "cases": {
+    "disjoint": {
+      "sha256": "c98041c6033ffecbd0dace6feb89af8f6f0c286650f9241bc52cd617cbbb3317",
+      "items": [
+        [
+          2,
+          80
+        ],
+        [
+          3,
+          140
+        ]
+      ],
+      "expected_groups": 2,
+      "expected_skirt_loops": 4
+    },
+    "overlap": {
+      "sha256": "7a7d9bde3d576d016540c43e9479d7a584fb1afb554fecb2f75a89f595c20d7c",
+      "items": [
+        [
+          2,
+          90
+        ],
+        [
+          3,
+          108
+        ]
+      ],
+      "expected_groups": 1,
+      "expected_skirt_loops": 2
+    },
+    "transitive": {
+      "sha256": "644915393e65f1bf477acb63c991ece812b4143ae4c6d68168f847c2fd879f28",
+      "items": [
+        [
+          2,
+          80
+        ],
+        [
+          3,
+          99
+        ],
+        [
+          4,
+          118
+        ]
+      ],
+      "expected_groups": 1,
+      "expected_skirt_loops": 2
+    },
+    "copies": {
+      "sha256": "06f4ef0ece928c8b4154767470b00bc97c58f11670e17496e5294478ada345b2",
+      "items": [
+        [
+          2,
+          80
+        ],
+        [
+          2,
+          140
+        ],
+        [
+          3,
+          110
+        ]
+      ],
+      "expected_groups": 1,
+      "expected_skirt_loops": 2
+    }
+  }
+}

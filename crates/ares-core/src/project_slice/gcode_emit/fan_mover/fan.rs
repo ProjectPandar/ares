@@ -8,7 +8,7 @@ use super::helpers::{LineMotion, split_line};
 use super::{BufferData, FanMover, Kickstart};
 
 impl FanMover {
-    pub(super) fn process_fan_command(&mut self, raw: &str, fan_speed: i16, time: &mut f32) {
+    pub(super) fn process_fan_command(&mut self, raw: &str, fan_speed: i16, time: &mut f64) {
         if self.back_buffer_fan_speed >= fan_speed {
             return;
         }
@@ -36,7 +36,7 @@ impl FanMover {
             let kickstart_duration =
                 self.kickstart * f32::from(fan_speed - self.back_buffer_fan_speed) / 100.0;
             self.push_buffer(
-                BufferData::new(set_fan_line(100), 0.0, fan_speed, true),
+                BufferData::new(set_fan_line(100, self.gcode_comments), 0.0, fan_speed, true),
                 &LineMotion::default(),
                 self.position,
                 self.e_position,
@@ -52,29 +52,36 @@ impl FanMover {
     fn process_delayed_fan(&mut self, raw: &str, fan_speed: i16) {
         if self.kickstart > 0.0 && fan_speed > self.front_buffer_fan_speed {
             self.current_kickstart = None;
-            self.remove_slow_fan(fan_speed, self.buffer_time_size + 1.0);
+            self.remove_slow_fan(fan_speed, (self.buffer_time_size + 1.0) as f32);
             self.remove_slow_fan(255, self.kickstart);
             if !self.buffer.is_empty()
-                && (self.buffer_time_size - self.buffer[0].time * 0.1) > self.nb_seconds_delay
+                && (self.buffer_time_size - f64::from(self.buffer[0].time) * 0.1)
+                    > f64::from(self.nb_seconds_delay)
             {
                 self.print_in_middle(
                     0,
-                    self.buffer_time_size - self.nb_seconds_delay,
-                    &set_fan_line(100),
+                    (self.buffer_time_size - f64::from(self.nb_seconds_delay)) as f32,
+                    &set_fan_line(100, self.gcode_comments),
                 );
             } else {
-                self.output.push_str(&set_fan_line(100));
+                self.output
+                    .push_str(&set_fan_line(100, self.gcode_comments));
             }
             let kickstart_duration =
                 self.kickstart * f32::from(fan_speed - self.front_buffer_fan_speed) / 100.0;
             self.schedule_delayed_target(raw, fan_speed, kickstart_duration);
             self.front_buffer_fan_speed = fan_speed;
         } else {
-            self.remove_slow_fan(fan_speed, self.buffer_time_size + 1.0);
+            self.remove_slow_fan(fan_speed, (self.buffer_time_size + 1.0) as f32);
             if !self.buffer.is_empty()
-                && (self.buffer_time_size - self.buffer[0].time * 0.1) > self.nb_seconds_delay
+                && (self.buffer_time_size - f64::from(self.buffer[0].time) * 0.1)
+                    > f64::from(self.nb_seconds_delay)
             {
-                self.print_in_middle(0, self.buffer_time_size - self.nb_seconds_delay, raw);
+                self.print_in_middle(
+                    0,
+                    (self.buffer_time_size - f64::from(self.nb_seconds_delay)) as f32,
+                    raw,
+                );
             } else {
                 self.output.push_str(raw);
                 self.output.push('\n');
@@ -111,7 +118,7 @@ impl FanMover {
         start: [f32; 3],
         e_start: f32,
     ) {
-        self.buffer_time_size += data.time;
+        self.buffer_time_size += f64::from(data.time);
         let mut data = data;
         // FanMover.cpp:444-449 stores the START coordinate (reader position
         // before the move) plus the delta; the split math `x + dx*percent`
@@ -179,7 +186,7 @@ impl FanMover {
     /// (optionally split) with the fan command inside.
     fn print_in_middle(&mut self, index: usize, nb_sec: f32, fan_line: &str) {
         let item = self.buffer.remove(index);
-        self.buffer_time_size -= item.time;
+        self.buffer_time_size -= f64::from(item.time);
         if nb_sec < item.time * 0.1 {
             self.output.push_str(&item.raw);
             self.output.push('\n');
@@ -216,7 +223,7 @@ impl FanMover {
             past_sec -= self.buffer[index].time;
             if self.buffer[index].fan_speed >= 0 && self.buffer[index].fan_speed < min_speed {
                 let removed = self.buffer.remove(index);
-                self.buffer_time_size -= removed.time;
+                self.buffer_time_size -= f64::from(removed.time);
             } else {
                 index += 1;
             }

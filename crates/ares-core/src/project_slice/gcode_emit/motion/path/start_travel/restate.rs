@@ -27,6 +27,7 @@ fn emit_z_restate(output: &mut Vec<u8>, state: &mut EmitState, z: f64, comment: 
 
 pub(super) struct RestateContext {
     pub(super) is_sloped: bool,
+    pub(super) contour_z: Option<f64>,
     pub(super) never_positioned: bool,
     pub(super) travel_set_layer_z: bool,
     pub(super) eager_lifted_travel: bool,
@@ -36,6 +37,7 @@ pub(super) struct RestateContext {
 pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: RestateContext) {
     let RestateContext {
         is_sloped,
+        contour_z,
         never_positioned,
         travel_set_layer_z,
         eager_lifted_travel,
@@ -57,6 +59,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     // `GCode.cpp:6396-6401`: sloped paths never enter the post-contour
     // nominal-Z reset, including slope ends with constant Z ratios.
     if !is_sloped
+        && contour_z.is_none()
         && !suppressed
         && travel_emit::quantize_axis(current_z) != travel_emit::quantize_axis(state.layer_z)
     {
@@ -78,13 +81,24 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         state.lifted_amount = 0.0;
         state.template_lifted = false;
     }
+    // GCode.cpp:6389-6394: synchronize the path's first contour Z before unretract.
+    if let Some(z) = contour_z {
+        if travel_emit::quantize_axis(z)
+            != travel_emit::quantize_axis(state.writer_z.unwrap_or(state.layer_z))
+        {
+            let comment = travel::gcode_comment(state, " ; set Z for contouring");
+            emit_z_restate(output, state, z, comment);
+            state.lifted_amount = 0.0;
+        }
+        state.scarf_z = Some(z);
+    }
     // Upstream calls `unretract()` unconditionally before every
     // extrusion (`GCode.cpp:6407-6408`), and `unretract` runs `unlift()`
     // independently of the E restoration (`GCode.hpp:255`,
     // `GCodeWriter.cpp:1084-1092`) — a template that cleared
     // `e_retracted` after the lift was scheduled must still descend.
     {
-        if is_sloped {
+        if is_sloped || contour_z.is_some() {
             // `GCode.cpp:6407-6408`, `GCodeWriter.cpp:1084-1092`: the
             // sloped descent is writer unlift, with Z = m_pos.z - m_lifted,
             // not a forced reset to the path's requested slope start.

@@ -72,8 +72,28 @@ fn context_and_baseline_domains_are_not_promoted_by_the_unbounded_rule() {
         .iter()
         .find(|plan| plan.key == "filament_self_index")
         .unwrap();
-    assert!(!identity.provably_legal, "filament_self_index");
-    assert!(identity.omission.is_some(), "filament_self_index");
+    assert!(
+        identity.provably_legal,
+        "filament_self_index: bounded Native slot witnesses"
+    );
+    assert!(identity.omission.is_none(), "filament_self_index");
+    assert_eq!(
+        identity
+            .cases
+            .iter()
+            .map(|case| case.value.clone())
+            .collect::<Vec<_>>(),
+        [
+            Some(json!(["1", "2"])),
+            Some(json!(["2", "1"])),
+            Some(json!(["1", "1", "2", "2"])),
+            Some(json!(["2", "2", "1", "1"]))
+        ]
+    );
+    assert_eq!(
+        identity.tool_metadata.as_ref().unwrap()["domain"],
+        "bounded H2D filament self-index slots"
+    );
 
     let mapping = plans
         .iter()

@@ -39,13 +39,14 @@ pub(in crate::project_slice::gcode_emit) fn travel_to(
     state: &mut EmitState,
     point: [f32; 2],
     geometry: LayerGeometry<'_>,
-) {
+) -> Result<(), crate::SliceError> {
     retract(output, state);
     state.use_external_mp_once = true;
     let point = local(point, state.origin, geometry.scale);
-    path::tower_travel(output, state, point, geometry);
+    path::tower_travel(output, state, point, geometry)?;
     travel::unlift(output, state);
     travel::unretract(output, state);
+    Ok(())
 }
 
 pub(in crate::project_slice::gcode_emit) fn change_z(
@@ -88,7 +89,8 @@ pub(in crate::project_slice::gcode_emit) fn writer_z(
         return;
     }
     let feedrate = travel::lift_z_feedrate(state);
-    let comment = if state.options.gcode_comments {
+    // `GCodeWriter.hpp:266-267`: empty descriptions never emit a comment.
+    let comment = if state.options.gcode_comments && !comment.is_empty() {
         format!(" ; {comment}")
     } else {
         String::new()
@@ -112,7 +114,8 @@ pub(in crate::project_slice::gcode_emit) fn finish(
     // The discarded writer XY move does not subtract nozzle offsets.
     state.x = f64::from(end[0]);
     state.y = f64::from(end[1]);
-    state.last_scaled_position = Some(local(end, state.origin, scale));
+    state.last_scaled_position = local(end, state.origin, scale);
+    state.last_position_defined = true;
     state.positioned = true;
     state.wipe_path = wipe
         .into_iter()
@@ -154,6 +157,36 @@ pub(in crate::project_slice::gcode_emit) fn change_layer(
     state.layer_chunk_index += 1;
     state.layer_z = z;
     state.record_z(z);
+}
+
+pub(in crate::project_slice::gcode_emit) fn type1_retract(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    toolchange: bool,
+) {
+    travel::retract_for_type1(output, state, toolchange);
+}
+
+pub(in crate::project_slice::gcode_emit) fn type1_travel(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    point: [f32; 2],
+    geometry: LayerGeometry<'_>,
+) -> Result<(), crate::SliceError> {
+    path::tower_travel(
+        output,
+        state,
+        local(point, state.origin, geometry.scale),
+        geometry,
+    )
+}
+
+pub(in crate::project_slice::gcode_emit) fn type1_unretract(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    travel::unlift(output, state);
+    travel::unretract(output, state);
 }
 
 fn local(point: [f32; 2], origin: (f64, f64), scale: CoordinateScale) -> (i64, i64) {

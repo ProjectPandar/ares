@@ -4,7 +4,7 @@
 #[cfg(test)]
 mod tests;
 
-use super::{EmitState, format, jerk};
+use super::{EmitState, format, jerk, travel::EPSILON};
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32, travel: bool) {
     let comment = if state.options.gcode_comments {
@@ -52,7 +52,7 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
             let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
             if state.options.accel_to_decel_enable {
                 let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
-                line.push_str(&format!(" ACCEL_TO_DECEL={}", format::axis(decel)));
+                line.push_str(&format!(" ACCEL_TO_DECEL={}", format::ostream(decel)));
                 if state.options.gcode_comments {
                     line.push_str(" ; adjust ACCEL_TO_DECEL");
                 }
@@ -106,7 +106,7 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
         if state.options.accel_to_decel_enable {
             // streams as a double with ostream's default 6-significant digits
             let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
-            line.push_str(&format!(" ACCEL_TO_DECEL={}", format::axis(decel)));
+            line.push_str(&format!(" ACCEL_TO_DECEL={}", format::ostream(decel)));
         }
         state.last_acceleration = Some(acceleration);
         empty = false;
@@ -114,13 +114,19 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
     if jerk > 0.01
         && !state
             .last_jerk
-            .is_some_and(|last| (last - jerk).abs() < 1.0e-6)
+            .is_some_and(|last| (last - jerk).abs() < EPSILON)
     {
-        line.push_str(&format!(" SQUARE_CORNER_VELOCITY={}", format::axis(jerk)));
+        line.push_str(&format!(
+            " SQUARE_CORNER_VELOCITY={}",
+            format::ostream(jerk)
+        ));
         state.last_jerk = Some(jerk);
         empty = false;
     }
     if !empty {
+        if state.options.gcode_comments {
+            line.push_str(" ; adjust VELOCITY_LIMIT(accel/jerk)");
+        }
         line.push('\n');
         output.extend_from_slice(line.as_bytes());
     }

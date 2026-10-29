@@ -120,6 +120,15 @@ pub(crate) fn load_project_with_preparation(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
+    // `load_from_json`'s type dispatch runs before any per-key
+    // deserialization: non-string/non-array JSON scalars never reach
+    // `set_deserialize` and the key keeps its default (`Config.cpp:905-990`).
+    project_settings_raw.drop_invalid_wire_scalars();
+    // The EnableSilent 3MF load rule (Model.cpp:259) substitutes unknown
+    // enum/bool wires on the EMBEDDED config before anything else consumes
+    // it; CLI overrides below merge through their own deserialization rule
+    // and are not silently substituted.
+    project_settings_raw.normalize_embedded_wire_substitutions();
     // CLI:1704 captures the old configuration before user edits.
     let preparation = crate::options::flush_matrix::PreparationContext::capture(
         &project_settings_raw,
@@ -133,7 +142,7 @@ pub(crate) fn load_project_with_preparation(
     // `ConfigOptionStrings::deserialize`, `Config.hpp:1153-1159`) — a bare
     // scalar is a single-element vector, an empty string an empty one.
     project_settings_raw
-        .normalize_option_scalars()
+        .normalize_wire_vector_shapes()
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
@@ -142,6 +151,14 @@ pub(crate) fn load_project_with_preparation(
     // `Slic3r::validate` flat map — is post-legacy (e.g. `ironing_angle: -1`
     // normalizes to `0`).
     project_settings_raw.handle_legacy();
+    // The array branch of the same upstream load: joined string arrays bind
+    // scalar options (`Config.cpp:945-1001`), so the validation flat map and
+    // the typed builders see the bound scalar, not the array.
+    project_settings_raw
+        .normalize_scalar_arrays()
+        .map_err(|error| {
+            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
+        })?;
     let settings = <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
         project_settings_raw.clone().into_object(),
     )
@@ -149,9 +166,11 @@ pub(crate) fn load_project_with_preparation(
     .resolve();
 
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
+    super::domain::materialize_meshes(&mut objects);
     super::domain::normalize_volume_offsets(&mut objects);
     super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
     super::layer_height_profiles::load(&mut archive, &archive_paths, &mut objects)?;
+    super::brim_ear_points::load(&mut archive, &archive_paths, &mut objects)?;
     let plates_custom_gcodes = super::plate_custom_gcodes::load(&mut archive, &archive_paths)?;
     // bbs_3mf.cpp:3945-3957: the model's `Application` metadata tags the
     // BambuStudio/OrcaSlicer family (`is_bbl_3mf`).

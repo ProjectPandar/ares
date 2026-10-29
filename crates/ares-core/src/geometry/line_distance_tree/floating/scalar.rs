@@ -1,9 +1,15 @@
 //! Native scalar precision for `AABBTreeLines`'s `Linef` and `ExtrusionLine`.
 
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub};
 
 pub(crate) trait NativeFloat:
-    Copy + PartialOrd + Add<Output = Self> + Sub<Output = Self> + Mul<Output = Self> + Into<f64>
+    Copy
+    + PartialOrd
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Mul<Output = Self>
+    + Div<Output = Self>
+    + Into<f64>
 {
     const ZERO: Self;
     const HALF: Self;

@@ -1,5 +1,8 @@
+use super::areas::enabled;
 use super::*;
+use crate::ProcessIroningType;
 use crate::project_slice::region_slices::RegionSurface;
+use crate::project_slice::region_slices::RegionSurfaceKind;
 use crate::{OrcaFloat, OrcaInt, geometry::Polygon};
 
 fn emit(domain: ExPolygon, spacing: f64) -> LayerFillEntities {
@@ -36,6 +39,7 @@ fn emit(domain: ExPolygon, spacing: f64) -> LayerFillEntities {
             default_region: &settings.process.region,
             layer_slices: std::slice::from_ref(&domain),
             region: &region,
+            dont_alternate_fill_direction: false,
             object: &object,
             nozzles: &nozzles,
             layer: &layer,

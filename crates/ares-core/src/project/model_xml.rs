@@ -11,7 +11,7 @@ pub(crate) const MATERIAL_NAMESPACE: &str =
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename = "model")]
-pub(crate) struct ModelDocument {
+pub(crate) struct ModelDocument<B = Build> {
     #[serde(rename = "@unit", default)]
     pub unit: ModelUnit,
     #[serde(rename = "@requiredextensions", default)]
@@ -19,7 +19,21 @@ pub(crate) struct ModelDocument {
     #[serde(rename = "metadata", default)]
     pub metadata: Vec<ModelMetadata>,
     pub resources: Resources,
-    pub build: Build,
+    pub build: B,
+}
+
+impl ModelDocument<Option<serde::de::IgnoredAny>> {
+    pub(crate) fn into_resource_document(self) -> ModelDocument {
+        // bbs_3mf.cpp ObjectImporter start/end dispatch:5612-5687 ignores build/item;
+        // only the main _handle_start_item:3893-3909 creates instances.
+        ModelDocument {
+            unit: self.unit,
+            required_extensions: self.required_extensions,
+            metadata: self.metadata,
+            resources: self.resources,
+            build: Build { items: Vec::new() },
+        }
+    }
 }
 
 impl ModelDocument {
@@ -159,13 +173,14 @@ pub(crate) struct Vertices {
     pub vertices: Vec<Vertex>,
 }
 
+// bbs_3mf.cpp:3772-3782 / :5485-5495: missing x/y/z read as zero (bbs_get_attribute_value_float).
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct Vertex {
-    #[serde(rename = "@x")]
+    #[serde(rename = "@x", default)]
     pub x: f32,
-    #[serde(rename = "@y")]
+    #[serde(rename = "@y", default)]
     pub y: f32,
-    #[serde(rename = "@z")]
+    #[serde(rename = "@z", default)]
     pub z: f32,
 }
 
@@ -175,16 +190,21 @@ pub(crate) struct Triangles {
     pub triangles: Vec<Triangle>,
 }
 
+// bbs_3mf.cpp:508-514 / :3813-3819 / :5526-5532: absent triangle indices read as zero.
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct Triangle {
-    #[serde(rename = "@v1")]
+    #[serde(rename = "@v1", default)]
     pub v1: u32,
-    #[serde(rename = "@v2")]
+    #[serde(rename = "@v2", default)]
     pub v2: u32,
-    #[serde(rename = "@v3")]
+    #[serde(rename = "@v3", default)]
     pub v3: u32,
     #[serde(rename = "@paint_supports", default)]
     pub paint_supports: super::facets_annotation::TriangleCodes,
+    #[serde(rename = "@paint_color", default)]
+    pub paint_color: super::facets_annotation::TriangleCodes,
+    #[serde(rename = "@paint_fuzzy_skin", default)]
+    pub paint_fuzzy_skin: super::facets_annotation::TriangleCodes,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]

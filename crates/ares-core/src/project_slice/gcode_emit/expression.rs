@@ -3,11 +3,12 @@ use super::{
     value::{Config, Value},
 };
 
+mod comparison;
 mod functions;
 #[cfg(test)]
 mod tests;
 
-use functions::function;
+use functions::{function, is_function_keyword};
 
 /// The placeholder parse path an evaluation runs under. Upstream's grammar
 /// routes the two placeholder spellings into separate resolution paths, and
@@ -146,38 +147,16 @@ impl Parser<'_> {
         self.index += 1;
         let right = self.parse_add()?;
         let result = if matches!(comparison, Token::RegexMatch | Token::RegexNotMatch) {
-            let matched = regex::Regex::new(&right.as_string())
+            let matched = regex::bytes::Regex::new(&format!("^(?-u:{})$", right.as_string()))
                 .map_err(|error| format!("invalid regex: {error}"))?
-                .is_match(&left.as_string());
+                .is_match(left.as_string().as_bytes());
             if comparison == Token::RegexMatch {
                 matched
             } else {
                 !matched
             }
-        } else if let (Some(left), Some(right)) = (left.as_number(), right.as_number()) {
-            match comparison {
-                // Upstream compares doubles with a 1e-8 tolerance
-                // (`PlaceholderParser.cpp:5679-5681`).
-                Token::Eq => (left - right).abs() < 1e-8,
-                Token::NotEq => (left - right).abs() >= 1e-8,
-                Token::Lt => left < right,
-                Token::Le => left <= right,
-                Token::Gt => left > right,
-                Token::Ge => left >= right,
-                _ => unreachable!(),
-            }
         } else {
-            let left = left.as_string();
-            let right = right.as_string();
-            match comparison {
-                Token::Eq => left == right,
-                Token::NotEq => left != right,
-                Token::Lt => left < right,
-                Token::Le => left <= right,
-                Token::Gt => left > right,
-                Token::Ge => left >= right,
-                _ => unreachable!(),
-            }
+            comparison::compare(&left, &right, comparison)?
         };
         Ok(Value::Bool(result))
     }
@@ -244,7 +223,7 @@ impl Parser<'_> {
             Token::Bool(value) => Ok(Value::Bool(value)),
             Token::String(value) | Token::Regex(value) => Ok(Value::String(value)),
             Token::Ident(name, offset) => {
-                if self.take(Token::Left) {
+                if is_function_keyword(&name) && self.take(Token::Left) {
                     // PlaceholderParser.cpp:1687,2333: size takes an unindexed
                     // vector variable, not a scalar or an arbitrary expression.
                     if name == "size" {
@@ -349,7 +328,24 @@ enum Arithmetic {
     Remainder,
 }
 
+pub(super) fn to_string(value: &Value) -> String {
+    // PlaceholderParser.cpp:302-327: doubles use default ostream precision.
+    match value {
+        Value::Number(number) if *number == 0.0 && number.is_sign_negative() => "-0".to_owned(),
+        Value::Number(number) => super::motion::format::ostream(*number),
+        value => value.as_string(),
+    }
+}
+
 fn arithmetic(left: Value, right: Value, operation: Arithmetic) -> Result<Value, String> {
+    // PlaceholderParser.cpp:435-456: either string operand selects concatenation.
+    if matches!(operation, Arithmetic::Add)
+        && (matches!(left.scalar(), Value::String(_)) || matches!(right.scalar(), Value::String(_)))
+    {
+        let mut result = to_string(left.scalar());
+        result.push_str(&to_string(right.scalar()));
+        return Ok(Value::String(result));
+    }
     if let (Some(left), Some(right)) = (left.as_integer(), right.as_integer()) {
         if matches!(operation, Arithmetic::Divide | Arithmetic::Remainder) && right == 0 {
             return Err("division by zero".to_owned());

@@ -51,7 +51,7 @@ mod startup;
 pub(super) use startup::append_print_preamble;
 
 pub(super) struct ExtrusionTotals {
-    pub(super) diameter: f64,
+    pub(super) crossection: f64,
     pub(super) density: f64,
     pub(super) used_filament: f64,
 }
@@ -109,10 +109,10 @@ pub(super) fn append_before_layer_change_gcode(
     super::motion::refresh_writer_state(&mut config, state);
     config.insert("layer_num", value::Value::number(layer_index as f64));
     config.insert("layer_z", value::Value::number(layer_z));
-    // Orca's extruded_volume_total is `Extruder::used_filament() *
-    // filament_crossection()` — the writer's cumulative extrusion, not a
-    // G-code re-scan that would include template output.
-    let volume = totals.used_filament * totals.diameter.powi(2) * 0.25 * std::f64::consts::PI;
+    // Orca's extruded_volume_total is `Extruder::extruded_volume()` =
+    // `filament_crossection() * extruded` — the writer's cumulative
+    // extrusion, not a G-code re-scan that would include template output.
+    let volume = totals.used_filament * totals.crossection;
     config.insert("extruded_volume_total", value::Value::number(volume));
     config.insert(
         "extruded_weight_total",
@@ -183,9 +183,12 @@ pub(super) fn append_layer_change(
         if let Some(value) = config
             .get("temperature_vitrification")
             .and_then(|value| value.index(0))
-            .cloned()
+            .and_then(value::Value::as_number)
         {
-            config.insert("min_vitrification_temperature", value);
+            config.insert(
+                "min_vitrification_temperature",
+                value::Value::Integer(value as i64),
+            );
         }
         config.insert(
             "max_additional_fan",
@@ -213,7 +216,7 @@ pub(super) fn append_layer_change(
         // layer-change template as well (`GCode.cpp:1652, 1689`); they are
         // re-scanned from the emitted G-code, which is the accumulated
         // extrusion of every layer printed so far.
-        let volume = totals.used_filament * totals.diameter.powi(2) * 0.25 * std::f64::consts::PI;
+        let volume = totals.used_filament * totals.crossection;
         config.insert("extruded_volume_total", value::Value::number(volume));
         config.insert(
             "extruded_weight_total",

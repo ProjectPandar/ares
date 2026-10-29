@@ -208,6 +208,16 @@ fn collect_range_errors(
     errors: &mut BTreeMap<String, String>,
 ) -> Result<(), SliceError> {
     for (key, value) in values {
+        // `PrintConfig.cpp:8876-8878`: `Slic3r::validate` runs over
+        // `FullPrintConfig` after `fpc.apply(*this, true)`, which drops the
+        // dynamic `filament_extruder_override_keys` (`add_nullable`,
+        // `:7288-7320`) — they are not `FullPrintConfig` static members, so
+        // the `fpc.keys()` range loop never sees them. Keyed on the typed
+        // `FilamentRetractOverrideOptions` field set, not the `filament_`
+        // prefix: static `GCodeConfig` filament members stay checked.
+        if crate::options::filament_options::is_dynamic_filament_override_key(key) {
+            continue;
+        }
         let Some(definition) = registry::option_definition(key) else {
             continue;
         };
@@ -271,7 +281,10 @@ impl ProjectSettingsRaw {
     /// this runs), so the range loop reads `RawConfigValue` elements
     /// directly — the same values upstream `Slic3r::validate` sees on the
     /// post-normalize config.
-    pub(crate) fn loaded_range_options(&self) -> Result<BTreeMap<String, String>, SliceError> {
+    pub(crate) fn loaded_range_options(
+        &self,
+        validate_print: bool,
+    ) -> Result<BTreeMap<String, String>, SliceError> {
         let mut errors = BTreeMap::new();
         collect_range_errors(self.as_map(), &mut errors)?;
         // `PrintConfig.cpp:10504-10517`: the line-width nozzle bound (bridge
@@ -281,6 +294,23 @@ impl ProjectSettingsRaw {
             SliceOptions::deserialize(self.clone().into_object()).map_err(|error| {
                 SliceError::InvalidInput(format!("invalid project settings: {error}"))
             })?;
+        // `PrintConfig.cpp:3904-3920`: known flavor tokens must also be allowed.
+        merge_first(&mut errors, normalized.validate_gcode_flavor_option()?);
+        // `PrintConfig.cpp:10426-10434` belongs to validate(), not process().
+        // Pure processing retains the existing Flow preflight error boundary.
+        if validate_print {
+            merge_first(&mut errors, normalized.validate_bridge_flow_options()?);
+            // `PrintConfig.cpp:10436-10447`: strict-positive clearance values.
+            merge_first(
+                &mut errors,
+                normalized.validate_extruder_clearance_options()?,
+            );
+            // `PrintConfig.cpp:10449-10454`: reject any nonpositive flow ratio.
+            merge_first(
+                &mut errors,
+                normalized.validate_filament_flow_ratio_options()?,
+            );
+        }
         merge_first(&mut errors, normalized.validate_infill_pattern_options()?);
         merge_first(&mut errors, normalized.validate_extrusion_width_options()?);
         Ok(errors)
@@ -294,8 +324,9 @@ impl crate::ProjectSettings {
     pub(crate) fn validate_loaded_config(
         &self,
         raw: &ProjectSettingsRaw,
+        validate_print: bool,
     ) -> Result<(), SliceError> {
-        let mut errors = raw.loaded_range_options()?;
+        let mut errors = raw.loaded_range_options(validate_print)?;
         // O2 (firmware/wipe) writes the same std::map (PrintConfig.cpp:10391).
         merge_first(&mut errors, self.validate_loaded_retraction_map()?);
         loaded_config_error(errors)

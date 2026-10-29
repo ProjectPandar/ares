@@ -1,0 +1,72 @@
+{
+  "source": "Print.cpp:2465-2467,2520-2530; Brim.cpp:36-45,573-581,914-977; GCode.cpp:3230-3243,3280-3345,4486-4531",
+  "upstream_pin": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "cases": {
+    "combined": {
+      "sha256": "5467219291d3d177824fc4b7677605eb855707962ee9fd5d773db96dc15d9922",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "972ca49afdb8db7b198646906f777f599c682ba04a2acd63e3a6a1cf67c10177",
+        "3D/_rels/3dmodel.model.rels": "d80b29f82fb4b12463a8c1a8ef0a70d054250c49a4d2e3ff50e7421794a2e0a7",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "b034f2161b5a22b0a133b1cef6580f540bfae1da26a321c8736ca33ec3b929c2",
+        "Metadata/model_settings.config": "ea52d120f03dfad1ee3b081feb61d70913ec358c579b4aef88dd0bf98fce9bf9",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/Objects/cube10-tall.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805"
+      },
+      "native_brim_blocks": 2,
+      "native_skirt_blocks": 1,
+      "active_model_x_centers": [
+        50,
+        125,
+        200
+      ]
+    },
+    "no-skirt": {
+      "sha256": "6e241142bd2298c7492a9c1a4716cb71ef45dc0a494170cbe336955d493e45e8",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "972ca49afdb8db7b198646906f777f599c682ba04a2acd63e3a6a1cf67c10177",
+        "3D/_rels/3dmodel.model.rels": "d80b29f82fb4b12463a8c1a8ef0a70d054250c49a4d2e3ff50e7421794a2e0a7",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "53b28b55a012d356350bf676d1f8fc8d7ac7633b2d415d30e53bc5ef94c0e2f2",
+        "Metadata/model_settings.config": "ea52d120f03dfad1ee3b081feb61d70913ec358c579b4aef88dd0bf98fce9bf9",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/Objects/cube10-tall.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805"
+      },
+      "native_brim_blocks": 2,
+      "native_skirt_blocks": 0,
+      "active_model_x_centers": [
+        50,
+        125,
+        200
+      ]
+    },
+    "control": {
+      "sha256": "2295fbaeccb4f4d136888f8c27e4180eb604d2114b823e3a3b61ef5a65ac1ec9",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "972ca49afdb8db7b198646906f777f599c682ba04a2acd63e3a6a1cf67c10177",
+        "3D/_rels/3dmodel.model.rels": "d80b29f82fb4b12463a8c1a8ef0a70d054250c49a4d2e3ff50e7421794a2e0a7",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "bf08ab673724478be978af87c6e6da4e3047d74f0486d2d5ffe202cdb969a67b",
+        "Metadata/model_settings.config": "ea52d120f03dfad1ee3b081feb61d70913ec358c579b4aef88dd0bf98fce9bf9",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+        "3D/Objects/cube10-tall.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805"
+      },
+      "native_brim_blocks": 0,
+      "native_skirt_blocks": 1,
+      "active_model_x_centers": [
+        50,
+        125,
+        200
+      ]
+    }
+  }
+}

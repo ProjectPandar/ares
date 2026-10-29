@@ -17,9 +17,16 @@ pub(in crate::project_slice) fn emit(
         .predecessor
         .predecessor
         .predecessor;
-    let brim = (0..traversal.objects.len())
-        .map(|index| brim::BrimPlan::generate(traversal, index))
-        .collect::<Result<Vec<_>, _>>()?;
+    let tower_exclusions = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
+        tower.brim_exclusions(&traversal.resolved.views.full, traversal.scale)
+    });
+    let mut brim = brim::BrimPlan::generate_all(
+        traversal,
+        &prepared.support_layers,
+        &tower_exclusions,
+        |index| &prepared.objects[index][0].tool_regions,
+    )?;
+    brim::combine(traversal, &mut brim)?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         tower.first_layer_corners(&traversal.resolved.views.full, traversal.scale)
     });
@@ -99,18 +106,11 @@ pub(in crate::project_slice) fn emit(
     let initial_filaments = machine::first_filaments::resolve(traversal, &schedule.tool_ordering);
     let options = motion::MotionOptions::from_traversal(traversal, 0);
     let small_area_flow = small_area::from_traversal(traversal)?;
-    let model_offset = if schedule.tower.is_some() {
-        (0.0, 0.0)
-    } else {
-        let (origin_x, origin_y) = traversal.project.plate_origin();
-        let object_offset = footprint::print_object_origin(traversal, 0);
-        (object_offset.0 - origin_x, object_offset.1 - origin_y)
-    };
+    // `GCode.hpp:185-187`: origin starts at zero; real set_origin calls
+    // accumulate the numeric generator cursor's local-frame translations.
+    let origin = (0.0, 0.0);
     let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
-    let offset = (
-        model_offset.0 - extruder_offset.0,
-        model_offset.1 - extruder_offset.1,
-    );
+    let offset = (origin.0 - extruder_offset.0, origin.1 - extruder_offset.1);
     let extrusion_role_markers = options.extrusion_role_markers;
     let extruders = motion::ExtruderRegistry::new(
         schedule.tool_ordering.all_extruders().to_vec(),
@@ -130,7 +130,18 @@ pub(in crate::project_slice) fn emit(
         crate::slicer_context::Mt19937::new(context.seed()),
     ));
     let mut state = motion::EmitState {
-        total_layer_count: sliced_layer_count,
+        total_layer_count: tail_layer_count,
+        // GCode.cpp:2533-2534 initializes the region state from defaults.
+        current_seam_gap: traversal.resolved.views.full.process.region.seam_gap,
+        current_support_speed: traversal.resolved.views.full.process.object.support_speed.0,
+        current_brim_flow_ratio: traversal
+            .resolved
+            .views
+            .full
+            .process
+            .object
+            .brim_flow_ratio
+            .0,
         template_rng: template_rng.clone(),
         first_layer_hull: footprint::first_layer_convex_hull(
             traversal,
@@ -179,7 +190,7 @@ pub(in crate::project_slice) fn emit(
         extruders,
         initial_filaments,
         offset,
-        origin: model_offset,
+        origin,
         extruder_offset,
         scale_factor: traversal.scale.factor(),
         travel_feedrate: options.first_layer_travel_feedrate,
@@ -214,7 +225,7 @@ pub(in crate::project_slice) fn emit(
     };
     // Writer registration precedes machine-start and its output-variable
     // refresh/write-back (`GCode.cpp:2791,2829,3118`). No extruder is selected yet.
-    machine::append_limits(&mut output, traversal);
+    machine::append_limits(&mut output, traversal, state.initial_filaments.initial());
     let bed_cache = machine::append_start(
         &mut output,
         &mut state,
@@ -244,6 +255,20 @@ pub(in crate::project_slice) fn emit(
         .predecessor
         .predecessor
         .predecessor;
+    if state.contour_z_too_low {
+        // GCode.cpp:7025/7233, OrcaSlicer.cpp:6286-6291: export failure, not config admission.
+        let settings = &traversal.resolved.views.full;
+        return Err(SliceError::Slicing {
+            message: "GCode: very low z".to_owned(),
+            plate_index: traversal.project.first_plate_id(),
+            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+            wall_loops: settings.process.region.wall_loops.0,
+            sparse_infill_density: f64::from(
+                settings.process.region.sparse_infill_density.0 as f32,
+            ),
+        });
+    }
+
     // The compatible tail's `; total layers count` prints `m_layer_count`
     // (`GCode.cpp:3542`) — the sliced layer count, NOT the processor's
     // tag-based count the header placeholder carries.
@@ -267,7 +292,7 @@ pub(in crate::project_slice) fn emit(
             position: end_position,
         },
     )?;
-    machine::append_completion_controls(&mut output, traversal);
+    machine::append_completion_controls(&mut output, traversal, &state);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let filament = &traversal.resolved.views.full.filament.gcode;
     // `GCodeProcessorResult::extruder_colors`: `filament_colour` padded
@@ -308,7 +333,7 @@ pub(in crate::project_slice) fn emit(
         let mut layers = output.split_off(fan_layers_start);
         let tail = layers.split_off(fan_layers_end - fan_layers_start);
         if let Some(mover) = fan_mover_handle.as_mut() {
-            layers = fan_chunks::process_layer_chunks(mover, layers);
+            layers = fan_chunks::process_layer_chunks(mover, layers, state.tags.layer_change());
         }
         output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);

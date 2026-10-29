@@ -1,4 +1,4 @@
-mod helpers;
+pub(super) mod helpers;
 
 use crate::{
     FloatOrPercent, RawOverhangFanThreshold, RetractLiftEnforce, options::InternalBridgeFanSpeed,
@@ -12,6 +12,10 @@ mod build;
 pub(in crate::project_slice::gcode_emit) struct ScarfOptions {
     pub(in crate::project_slice::gcode_emit) seam_slope_type: crate::ProcessSeamScarfType,
     pub(in crate::project_slice::gcode_emit) conditional: bool,
+    pub(in crate::project_slice::gcode_emit) angle_threshold: f64,
+    pub(in crate::project_slice::gcode_emit) overhang_threshold: f64,
+    pub(in crate::project_slice::gcode_emit) outer_line_width: f64,
+    pub(in crate::project_slice::gcode_emit) inner_line_width: f64,
     pub(in crate::project_slice::gcode_emit) start_height: Option<FloatOrPercent>,
     pub(in crate::project_slice::gcode_emit) entire_loop: bool,
     pub(in crate::project_slice::gcode_emit) min_length: f64,
@@ -30,6 +34,16 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) filament_density: f64,
     pub(in crate::project_slice::gcode_emit) filament_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) print_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) set_other_flow_ratios: bool,
+    pub(in crate::project_slice::gcode_emit) outer_wall_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) inner_wall_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) overhang_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) sparse_infill_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) internal_solid_infill_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) gap_fill_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) support_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) support_interface_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) first_layer_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) max_volumetric_speed: f64,
     pub(in crate::project_slice::gcode_emit) travel_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) first_layer_travel_feedrate: f64,
@@ -77,16 +91,16 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) internal_bridge_fan_speed: InternalBridgeFanSpeed,
     pub(in crate::project_slice::gcode_emit) support_interface_fan_speed: Option<u8>,
     pub(in crate::project_slice::gcode_emit) ironing_fan_speed: Option<u8>,
-    pub(in crate::project_slice::gcode_emit) initial_layer_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) inner_wall_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) bridge_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) sparse_infill_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) internal_solid_infill_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) top_surface_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) initial_layer_travel_acceleration: u32,
-    pub(in crate::project_slice::gcode_emit) travel_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) initial_layer_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) default_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) inner_wall_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) bridge_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) sparse_infill_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) internal_solid_infill_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) top_surface_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) initial_layer_travel_acceleration: f64,
+    pub(in crate::project_slice::gcode_emit) travel_acceleration: f64,
     pub(in crate::project_slice::gcode_emit) default_jerk: f64,
     pub(in crate::project_slice::gcode_emit) outer_wall_jerk: f64,
     pub(in crate::project_slice::gcode_emit) inner_wall_jerk: f64,
@@ -163,5 +177,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) seam_position: crate::ProcessSeamPosition,
     pub(in crate::project_slice::gcode_emit) reduce_crossing_wall: bool,
     pub(in crate::project_slice::gcode_emit) crossing_boundary_inset: f64,
+    /// `max_travel_detour_distance` (`PrintConfig.hpp:1489`), consumed by
+    /// `AvoidCrossingPerimeters::travel_to`
+    /// (`AvoidCrossingPerimeters.cpp:1291-1302`).
+    pub(in crate::project_slice::gcode_emit) max_travel_detour_distance: FloatOrPercent,
     pub(in crate::project_slice::gcode_emit) scarf: ScarfOptions,
 }

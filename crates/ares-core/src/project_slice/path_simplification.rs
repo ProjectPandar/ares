@@ -1,5 +1,5 @@
 use crate::{
-    geometry::{CoordinateScale, Point, Polyline},
+    geometry::{CoordinateScale, Point},
     project_slice::{
         fill_entities::FillExtrusionEntity,
         gcode_emit,
@@ -105,6 +105,10 @@ fn simplify_fill_entity(
 ) {
     match entity {
         FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
+            // ExtrusionEntity.cpp:33-47: contour samples are already simplified.
+            if path.z_contoured {
+                return;
+            }
             let mut points = path
                 .polyline
                 .points()
@@ -119,7 +123,7 @@ fn simplify_fill_entity(
                 tolerance
             };
             if arc_fitting {
-                path.fitting = gcode_emit::motion::simplify_points(
+                path.polyline.fitting = gcode_emit::motion::simplify_points(
                     &mut points,
                     tolerance,
                     units_per_mm(scale),
@@ -130,14 +134,19 @@ fn simplify_fill_entity(
                     tolerance,
                     units_per_mm(scale),
                 );
-                path.fitting = Vec::new();
+                path.polyline.fitting = Vec::new();
             }
-            path.polyline = Polyline::new(
-                points
-                    .into_iter()
-                    .map(|point| scaled_point(point, scale))
-                    .collect(),
-            );
+            path.polyline.points = points
+                .into_iter()
+                .map(|point| {
+                    let point = scaled_point(point, scale);
+                    Point3 {
+                        x: point.x(),
+                        y: point.y(),
+                        z: 0,
+                    }
+                })
+                .collect();
         }
         FillExtrusionEntity::VariableWidth(entity) => {
             simplify_gap_entity(entity, scale, tolerance, arc_fitting);
@@ -186,6 +195,10 @@ fn simplify_path3(
     tolerance: f64,
     arc_fitting: bool,
 ) {
+    // ExtrusionEntity.cpp:33-47: ContourZ already simplifies its own 3D samples.
+    if path.z_contoured {
+        return;
+    }
     simplify_polyline3(&mut path.polyline, scale, tolerance, arc_fitting);
 }
 

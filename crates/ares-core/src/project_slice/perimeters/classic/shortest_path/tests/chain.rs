@@ -88,6 +88,7 @@ pub(super) fn path(
     height: f32,
 ) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y, z)| Point3 { x, y, z }).collect(),
             fitting: Vec::new(),

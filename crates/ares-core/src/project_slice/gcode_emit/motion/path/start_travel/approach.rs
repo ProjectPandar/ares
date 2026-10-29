@@ -4,9 +4,11 @@
 mod move_emit;
 mod waypoints;
 
+pub(super) use move_emit::travel_will_move_z;
+
 use super::dispatch;
 use super::retract;
-use super::route::{plan_route, polyline_length};
+use super::route::{plan_route, polyline_length_scaled};
 use crate::project_slice::gcode_emit::motion::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, travel,
 };
@@ -31,7 +33,7 @@ pub(super) fn emit_needs_travel(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     approach: Approach<'_>,
-) -> (bool, bool, bool) {
+) -> Result<(bool, bool, bool), crate::SliceError> {
     let Approach {
         first_scaled,
         first_x,
@@ -59,20 +61,44 @@ pub(super) fn emit_needs_travel(
     // scaled-int anchor (`motion::local_cursor`), so the retraction length
     // and internal-region checks measure from the pre-clip position.
     let cursor = crate::project_slice::gcode_emit::motion::local_cursor(state, geometry);
-    let travel_origin = arc::Point {
-        x: cursor.x() as f64 * geometry.scale.factor() + state.offset.0,
-        y: cursor.y() as f64 * geometry.scale.factor() + state.offset.1,
+    let destination = crate::geometry::Point::new(first_scaled.0, first_scaled.1);
+    // Orca decides the travel retraction on the routed polyline
+    // (`GCode.cpp:7424-7425` re-checks `needs_retraction` after
+    // `avoid_crossing_perimeters.travel_to`), so route first and then
+    // decide; a wiping retract moves the head and the route is planned
+    // again from the new position (`GCode.cpp:7436-7443`).
+    // `GCode.cpp:7350` captures `used_external_mp_once` at travel_to
+    // entry, before the first planning slot consumes it.
+    let used_external_mp_once = state.use_external_mp_once;
+    let mut route = plan_route(state, &geometry, first_x, first_y)?;
+    // `reset_once_modifiers` (`GCode.cpp:7429-7431`) clears both
+    // once-modifiers immediately after the first planning slot, before
+    // the retraction branch — the post-wipe re-plan (`:7444-7452`)
+    // therefore routes with the disable already cleared.
+    state.avoid_crossing_disabled_once = false;
+    state.use_external_mp_once = false;
+    let inside_internal_surface = {
+        // `GCode.cpp:7424`: `travel_inside_internal_regions(travel)`. Once
+        // avoid-crossing routing has replaced `travel` with the detour, the
+        // predicate sees every detour vertex; with no detour the straight
+        // `Polyline(m_last_pos, destination)` pair stands, in coord_t either
+        // way (`RetractWhenCrossingPerimeters.cpp:9-51`).
+        let travel_polyline = if route.len() > 1 {
+            super::super::retraction::routed_travel(
+                cursor,
+                &route,
+                destination,
+                geometry.scale,
+                state.offset,
+            )
+        } else {
+            crate::geometry::Polyline::new(vec![cursor, destination])
+        };
+        travel::inside_internal_surfaces(
+            geometry.internal_surfaces.iter().copied(),
+            &travel_polyline,
+        )
     };
-    let inside_internal_surface = travel::inside_internal_surfaces(
-        geometry.internal_surfaces.iter().copied(),
-        travel_origin,
-        arc::Point {
-            x: first_x,
-            y: first_y,
-        },
-        geometry.scale,
-        state.offset,
-    );
     let skip_retraction = super::super::can_skip_retraction(
         state.options.reduce_infill_retraction,
         state.options.has_sparse_infill,
@@ -80,30 +106,33 @@ pub(super) fn emit_needs_travel(
         is_perimeter,
         inside_internal_surface,
     );
-    // Orca decides the travel retraction on the routed polyline length
-    // (`GCode.cpp:7424-7425` re-checks `needs_retraction` after
-    // `avoid_crossing_perimeters.travel_to`), so route first and then
-    // decide; a wiping retract moves the head and the route is planned
-    // again from the new position (`GCode.cpp:7436-7443`).
-    let mut route = plan_route(state, &geometry, feature, first_x, first_y);
     let skip_retraction = skip_retraction
         || (!matches!(state.last_feature, Some("Outer wall" | "Overhang wall"))
             && matches!(feature, "Support" | "Support transition")
             && geometry.support_islands.is_some_and(|islands| {
                 super::super::inside_support_islands(
                     islands,
-                    [
-                        cursor,
-                        crate::geometry::Point::new(first_scaled.0, first_scaled.1),
-                    ],
+                    [cursor, destination],
                     &route,
                     geometry,
                     state.offset,
                 )
             }));
-    let routed_length = polyline_length(travel_origin.x, travel_origin.y, &route);
+    // `GCode.cpp:7528-7533`: the routed length gate runs in coord_t —
+    // upstream `Polyline::length()` sums scaled hypots and compares
+    // against `scale_(retraction_minimum_travel)`.
+    let scaled_min = geometry
+        .scale
+        .scaled_delta(state.options.retraction_minimum_travel);
+    let routed_length = polyline_length_scaled(
+        cursor,
+        crate::geometry::Point::new(first_scaled.0, first_scaled.1),
+        &route,
+        geometry.scale,
+        state.offset,
+    );
     let lift_mode = if state.options.z_hop_type == crate::ZHopType::Auto
-        && routed_length >= state.options.retraction_minimum_travel
+        && routed_length >= scaled_min
         && !skip_retraction
         && state.auto_lift.crosses_overhang(
             state,
@@ -133,7 +162,7 @@ pub(super) fn emit_needs_travel(
     // (`Extruder.cpp:75-84`) — a template-assigned PARTIAL retract tops
     // up rather than skipping.
     let retract = state.extruder.retracted_amount < travel::effective_retraction_length(state)
-        && routed_length >= state.options.retraction_minimum_travel
+        && routed_length >= scaled_min
         && !skip_retraction;
     {
         let geometry_ref = geometry;
@@ -142,14 +171,24 @@ pub(super) fn emit_needs_travel(
             state,
             retract::RetractContext {
                 retract,
-                routed_length,
+                route_reaches_minimum: routed_length >= scaled_min,
                 skip_retraction,
                 destination_feature: feature,
             },
             &mut |state| {
-                route = plan_route(state, &geometry_ref, feature, first_x, first_y);
+                // `GCode.cpp:7446-7451`: restore `use_external_mp_once`
+                // for the re-plan call when the first slot used it, and
+                // clear it again right after.
+                if used_external_mp_once {
+                    state.use_external_mp_once = true;
+                }
+                route = plan_route(state, &geometry_ref, first_x, first_y)?;
+                if used_external_mp_once {
+                    state.use_external_mp_once = false;
+                }
+                Ok(())
             },
-        );
+        )?;
     }
     if !had_pending_lift && state.pending_lift.is_some() {
         state.pending_lift = Some(lift_mode);
@@ -157,13 +196,6 @@ pub(super) fn emit_needs_travel(
     let first_travel = route[0];
     let (travel_x, travel_y) = (first_travel.x, first_travel.y);
     append_object_start(output, state);
-    // Consume the one-shot disable after the travel is planned
-    // (`reset_once_modifiers`, `GCode.cpp:7431`) — only routed
-    // travels consume it; the skirt's own travels keep it armed.
-    if !matches!(feature, "Skirt" | "Brim") {
-        state.avoid_crossing_disabled_once = false;
-        state.use_external_mp_once = false;
-    }
     // Upstream never schedules a layer-start lift without a retraction
     // (`GCode.cpp:5692-5698`: `change_layer`'s own retract — gated on
     // `retract_when_changing_layer` — is the only deferral source; with
@@ -174,7 +206,10 @@ pub(super) fn emit_needs_travel(
     // (`m_to_lift`); a nozzle already lifted by an earlier sequence (the
     // layer-end timelapse retract, a deferred layer-change lift) travels
     // flat in XY and the unlift descends at the destination.
-    let lifted_for_travel = state.pending_lift.is_some();
+    // The consumption gate is stricter than lazy_lift's positive scheduling
+    // gate (`GCodeWriter.cpp:637,700`; `libslic3r.h:52`).
+    let lifted_for_travel =
+        state.pending_lift.is_some() && state.options.z_hop.abs() > travel::EPSILON;
     let mut pending_target: Option<f64> = None;
     // The print's first travel has no known source position, so Orca
     // cannot slope/spiral from it (`GCodeWriter.cpp:travel_to_xyz`
@@ -196,7 +231,7 @@ pub(super) fn emit_needs_travel(
         // `needs_lift` (`GCode.cpp:7678-7681`): zero retraction length
         // (no firmware retraction) never schedules a deferred hop.
         if !skip_retraction
-            && routed_length >= state.options.retraction_minimum_travel
+            && routed_length >= scaled_min
             && state.pending_lift.is_none()
             && state.options.z_hop > 0.0
             && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
@@ -212,7 +247,9 @@ pub(super) fn emit_needs_travel(
         {
             state.pending_lift = Some(lift_mode);
         }
-        state.pending_lift.take()
+        state
+            .pending_lift
+            .take_if(|_| state.options.z_hop.abs() > travel::EPSILON)
     } else {
         pending_target = travel::emit_pending_lift(
             output,
@@ -264,13 +301,14 @@ pub(super) fn emit_needs_travel(
     let route_comment = first_travel_comment.to_string();
     travel_set_layer_z |=
         waypoints::emit_detour_waypoints(output, state, &route, slope_start_z, &route_comment);
-    state.last_scaled_position = Some(first_scaled);
+    state.last_scaled_position = first_scaled;
+    state.last_position_defined = true;
     state.positioned = true;
     state.current_feedrate = state.travel_feedrate;
 
-    (
+    Ok((
         travel_set_layer_z,
         eager_lifted_travel,
         unclear_position_travel,
-    )
+    ))
 }

@@ -143,11 +143,17 @@ pub(super) fn dispatch_tail(
                 anchor_length_max: fill.params.anchor_length_max,
                 dont_sort: false,
             };
+            // FillBase.cpp:105-118 contracts each zero-overlap anchor surface.
+            let delta = (-0.5 * params.spacing / traversal.scale.factor()) as f32;
             for expolygon in fill.expolygons {
-                result.extend(
-                    crate::fill::tpms_d::fill_tpmsd_surface(&expolygon, &params, traversal.scale)
-                        .map_err(super::super::transaction::geometry_error)?,
-                );
+                for domain in offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0)
+                    .map_err(super::super::transaction::geometry_error)?
+                {
+                    result.extend(
+                        crate::fill::tpms_d::fill_tpmsd_surface(&domain, &params, traversal.scale)
+                            .map_err(super::super::transaction::geometry_error)?,
+                    );
+                }
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsFk) => {

@@ -57,13 +57,12 @@ pub(crate) fn fill_concentric_sparse(
     let dont_adjust = params.dont_adjust;
     // All of `min_spacing`, `distance`, `contract` are already in scaled coord
     // units (spacing is divided by scale.factor() once here).
+    let mut effective_spacing = spacing;
     let scaled_spacing = spacing / scale.factor();
-    let min_spacing = scaled_spacing * f64::from(multiline);
-    // `coord_t(min_spacing / params.density)` — upstream truncates the
-    // ring pitch to integer scaled units (`FillConcentric.cpp:23`), so
-    // the i64 cast (toward zero) is load-bearing: sub-micron remainder
-    // shifts every subsequent `offset2_ex` ring by accumulating drift.
-    let mut distance = (min_spacing / f64::from(density)).trunc();
+    // FillConcentric.cpp:22-23: truncate the double product to coord_t,
+    // divide that integer in float, then truncate the quotient to coord_t.
+    let min_spacing = (scaled_spacing * f64::from(multiline)) as i64;
+    let mut distance = (min_spacing as f32 / density) as i64;
     // `FillConcentric.cpp:25-27`: ironing retains nominal spacing;
     // ordinary full-density fills may adjust it to the contour's X extent.
     if density > 0.9999 && !dont_adjust {
@@ -75,22 +74,22 @@ pub(crate) fn fill_concentric_sparse(
             }
             (x0, x1)
         };
-        distance = adjust_solid_spacing(x1 - x0, distance as i64) as f64;
+        distance = adjust_solid_spacing(x1 - x0, distance);
+        // FillConcentric.cpp:25-27: only solid adjustment rewrites mm spacing.
+        effective_spacing = distance as f64 * scale.factor();
     }
-    // `-float(scale_(0.5 * (multiline - 1) * this->spacing))` — `this->spacing`
-    // has already been reassigned to the adjusted distance upstream, so the
-    // contract derives from `distance`, not the raw option spacing.
-    let contract = (0.5 * f64::from(multiline - 1) * distance).trunc();
-    let mut last = if contract.abs() > f64::EPSILON {
-        offset_expolygons(
-            std::slice::from_ref(expolygon),
-            -contract as f32,
-            JoinType::Miter,
-            3.0,
-        )?
-    } else {
-        vec![expolygon.clone()]
-    };
+    // FillConcentric.cpp:31: contract using nominal/adjusted mm spacing,
+    // not the scaled, density-dependent ring pitch. Narrow after scaling.
+    // `offset_ex` is called unconditionally there, including at delta == 0,
+    // where the clipper still re-normalises the rings (`DoOffset` NEAR_ZERO
+    // plus `Execute`'s delta <= 0 branch), so do not short-circuit.
+    let contract = 0.5 * f64::from(multiline - 1) * effective_spacing / scale.factor();
+    let mut last = offset_expolygons(
+        std::slice::from_ref(expolygon),
+        -contract as f32,
+        JoinType::Miter,
+        3.0,
+    )?;
     let mut loops: Vec<Polygon> = last
         .iter()
         .flat_map(|e| {
@@ -101,8 +100,9 @@ pub(crate) fn fill_concentric_sparse(
     while !last.is_empty() {
         last = offset2_ex(
             &last,
-            -(distance + min_spacing / 2.0) as f32,
-            (min_spacing / 2.0) as f32,
+            // FillConcentric.cpp:37: integer half-spacing and sum before float conversion.
+            -(distance + min_spacing / 2) as f32,
+            (min_spacing / 2) as f32,
             JoinType::Miter,
             3.0,
         )?;
@@ -135,9 +135,9 @@ pub(crate) fn fill_concentric_sparse(
     }
     // `multiline_fill` — expand by the multiline overlap count.
     let mut polylines = if multiline > 1 {
-        // `multiline_fill(polylines_out, params, spacing)` — upstream `spacing`
-        // is `this->spacing` (the adjusted distance at full density).
-        crate::fill::multiline_offset::apply(polylines, multiline, distance, scale)?
+        // FillConcentric.cpp:54 / FillBase.cpp:2712: multiline_fill takes
+        // mm spacing; its offset implementation performs the scaling.
+        crate::fill::multiline_offset::apply(polylines, multiline, effective_spacing, scale)?
     } else {
         polylines
     };

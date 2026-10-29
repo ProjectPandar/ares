@@ -1,4 +1,5 @@
-use boostvoronoi::prelude::{Diagram, EdgeIndex};
+use crate::geometry::voronoi::Diagram;
+use boostvoronoi::prelude::EdgeIndex;
 
 use crate::geometry::{Point, ThickPolyline};
 

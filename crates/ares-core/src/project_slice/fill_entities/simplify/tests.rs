@@ -6,6 +6,7 @@ use crate::project_slice::perimeters::classic::materialize::{
 #[test]
 fn post_clip_corner_removes_sub_resolution_penultimate_point() {
     let mut path = ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: vec![
                 point(-3_903_983, 3_886_298),

@@ -41,7 +41,12 @@ pub(super) const MIDDLE_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("gap_infill_speed", Float, "30",),
     definition!("gcode_add_line_number", Bool, "false",),
     definition!("gcode_comments", Bool, "false",),
-    definition!("gcode_flavor", Enum, "marlin",),
+    definition!(
+        "gcode_flavor",
+        Enum,
+        "marlin",
+        super::GCODE_FLAVOR_TYPE_KEYS,
+    ),
     definition!("gcode_label_objects", Bool, "true",),
     definition!("grab_length", Floats, "0",),
     definition!("gyroid_optimized", Bool, "false",),

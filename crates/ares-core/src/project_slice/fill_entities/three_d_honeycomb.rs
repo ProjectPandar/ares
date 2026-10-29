@@ -1,3 +1,4 @@
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     SliceError,
     fill::three_d_honeycomb::{Params, fill_surface},
@@ -7,12 +8,11 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
     print_z: f64,
     scale: CoordinateScale,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = Params {
         z: print_z,
         spacing: fill.params.spacing,
@@ -30,6 +30,16 @@ pub(super) fn append(
             SliceError::InvalidInput(format!("3D honeycomb failed: {error:?}"))
         })?);
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    print_z: f64,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, print_z, scale)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -39,8 +49,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

@@ -20,7 +20,7 @@ fn layer_corpus_matches_gt_chunk_outputs() {
             ))
         })
     });
-    let mut mover = FanMover::new(0.3, 0.0, false, true, GCodeFlavor::MarlinLegacy);
+    let mut mover = FanMover::new(0.3, 0.0, false, true, (GCodeFlavor::MarlinLegacy, false));
     for (layer, expected) in layers.iter().zip(expected.iter()) {
         let out = mover.process_gcode(layer, true);
         assert_eq!(out.trim_end(), expected.trim_end());

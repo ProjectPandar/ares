@@ -6,7 +6,7 @@ use crate::{
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
-mod dynamic;
+pub(in crate::project_slice::gcode_emit::tool_transition) mod dynamic;
 
 #[derive(Clone, Copy)]
 pub(super) struct Context<'a> {

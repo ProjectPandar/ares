@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use super::MotionOptions;
+use super::{MotionOptions, options::helpers::rounded_acceleration};
 use crate::ExtrusionRole;
 use crate::project_slice::perimeters::classic::materialize::FittedMove;
 
@@ -34,6 +34,8 @@ pub(super) fn role_id(feature: &str) -> u32 {
 
 #[derive(Clone, Copy)]
 pub(super) struct PathProperties<'a> {
+    pub(super) contour:
+        Option<&'a [crate::project_slice::perimeters::classic::materialize::Point3]>,
     pub(super) mm3_per_mm: f64,
     pub(super) width: f32,
     pub(super) height: f32,
@@ -96,40 +98,40 @@ impl PathProperties<'_> {
         );
         // `GCode.cpp:6414`: default acceleration of zero disables all per-print
         // acceleration switches.
-        if options.default_acceleration == 0 {
+        if options.default_acceleration <= 0.0 {
             return (0, speed);
         }
         // `GCode.cpp:6418-6438`: first layer uses its own value when set,
         // otherwise each role picks only an option above zero and every
         // remaining case falls back to the default.
-        let acceleration = if layer_index == 0 && options.initial_layer_acceleration > 0 {
+        let acceleration = if layer_index == 0 && options.initial_layer_acceleration > 0.0 {
             options.initial_layer_acceleration
         } else {
             match self.feature {
                 "Bridge" | "Overhang wall" | "Internal Bridge"
-                    if options.bridge_acceleration > 0 =>
+                    if options.bridge_acceleration > 0.0 =>
                 {
                     options.bridge_acceleration
                 }
-                "Sparse infill" if options.sparse_infill_acceleration > 0 => {
+                "Sparse infill" if options.sparse_infill_acceleration > 0.0 => {
                     options.sparse_infill_acceleration
                 }
-                "Internal solid infill" if options.internal_solid_infill_acceleration > 0 => {
+                "Internal solid infill" if options.internal_solid_infill_acceleration > 0.0 => {
                     options.internal_solid_infill_acceleration
                 }
-                "Outer wall" if options.outer_wall_acceleration > 0 => {
+                "Outer wall" if options.outer_wall_acceleration > 0.0 => {
                     options.outer_wall_acceleration
                 }
-                "Inner wall" if options.inner_wall_acceleration > 0 => {
+                "Inner wall" if options.inner_wall_acceleration > 0.0 => {
                     options.inner_wall_acceleration
                 }
-                "Top surface" if options.top_surface_acceleration > 0 => {
+                "Top surface" if options.top_surface_acceleration > 0.0 => {
                     options.top_surface_acceleration
                 }
                 _ => options.default_acceleration,
             }
         };
-        (acceleration, speed)
+        (rounded_acceleration(acceleration), speed)
     }
 }
 
@@ -161,15 +163,23 @@ impl PathProperties<'_> {
         object_layer_over_raft: bool,
         requested_speed: Option<f64>,
     ) -> f64 {
-        if requested_speed.is_none()
-            && let Some(slope) = self.slope
-        {
-            return slope.speed;
-        }
         let is_perimeter = matches!(self.feature, "Inner wall" | "Outer wall" | "Overhang wall");
-        // `GCode.cpp:5896-5900,6515-6526`: a positive caller speed skips
-        // role selection and its default sloped-perimeter speed cap.
-        let base = requested_speed.unwrap_or_else(|| self.role_speed(options));
+        // `GCode.cpp:5896-5900,6516-6531`: a caller speed bypasses role
+        // defaults; only inner/outer perimeter defaults receive the scarf cap.
+        let base = requested_speed.unwrap_or_else(|| {
+            let role_speed = self.role_speed(options);
+            match self.feature {
+                "Inner wall" | "Outer wall" if self.slope.is_some() => {
+                    let scarf_speed = match options.scarf.speed {
+                        Some(crate::FloatOrPercent::Float(value)) => value,
+                        Some(crate::FloatOrPercent::Percent(value)) => role_speed * value.0 / 100.0,
+                        None => role_speed,
+                    };
+                    role_speed.min(scarf_speed)
+                }
+                _ => role_speed,
+            }
+        });
         // `GCode.cpp:6564-6570`: the first-layer speed override applies to
         // `on_first_layer()` OR `object_layer_over_raft()` — the first
         // object layer over a raft prints at `initial_layer_speed` even

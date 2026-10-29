@@ -8,10 +8,9 @@ use crate::{
         cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
         gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
         multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
-        rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
         three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
-    geometry::{Point, Polyline},
+    geometry::{JoinType, Point, Polyline, offset_expolygon},
     project_slice::group_fills::SurfaceFillPattern,
 };
 
@@ -31,6 +30,8 @@ pub(super) fn dispatch(
     object_bounding_box: crate::geometry::BoundingBox,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
     stars_bounds: Option<(crate::geometry::BoundingBox, usize)>,
+    adaptive_spacing: f64,
+    support_spacing: f64,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
     match fill.params.pattern {
@@ -68,10 +69,27 @@ pub(super) fn dispatch(
                 dont_sort: false,
             };
             for expolygon in fill.expolygons {
-                result.extend(
-                    fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
-                        .map_err(super::super::transaction::geometry_error)?,
-                );
+                let lines = match (params.multiline > 1, stars_bounds) {
+                    (true, Some((bounds, layer_id))) => {
+                        crate::fill::grid_trapezoidal::fill_surface(
+                            &expolygon,
+                            params,
+                            crate::fill::grid_trapezoidal::SurfaceGeometry {
+                                layer_id,
+                                thickness_layers: fill.representative.thickness_layers,
+                                bounds,
+                            },
+                            traversal.scale,
+                        )
+                    }
+                    (true, None) => {
+                        unreachable!("Grid anchoring retains its object box and layer id")
+                    }
+                    (false, _) => {
+                        fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
+                    }
+                };
+                result.extend(lines.map_err(super::super::transaction::geometry_error)?);
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
@@ -87,10 +105,30 @@ pub(super) fn dispatch(
                 dont_sort: false,
             };
             for expolygon in fill.expolygons {
-                result.extend(
-                    fill_multiline_surface(&expolygon, params, &TRIANGLE_SWEEPS, traversal.scale)
-                        .map_err(super::super::transaction::geometry_error)?,
-                );
+                let lines = match (params.multiline > 1, stars_bounds) {
+                    (true, Some((bounds, layer_id))) => {
+                        crate::fill::triangles_trapezoidal::fill_surface(
+                            &expolygon,
+                            params,
+                            crate::fill::triangles_trapezoidal::SurfaceGeometry {
+                                layer_id,
+                                thickness_layers: fill.representative.thickness_layers,
+                                bounds,
+                            },
+                            traversal.scale,
+                        )
+                    }
+                    (true, None) => {
+                        unreachable!("Triangles anchoring retains its object box and layer id")
+                    }
+                    (false, _) => fill_multiline_surface(
+                        &expolygon,
+                        params,
+                        &TRIANGLE_SWEEPS,
+                        traversal.scale,
+                    ),
+                };
+                result.extend(lines.map_err(super::super::transaction::geometry_error)?);
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Cubic) => {
@@ -169,11 +207,16 @@ pub(super) fn dispatch(
         SurfaceFillPattern::Configured(ProcessInfillPattern::Line) => {
             // `FillLine` (FillLine.cpp) — oscillating vertical lines, a
             // distinct generator from the rectilinear family.
+            // Fill.cpp:1444-1446: use the anchoring fill's printing region.
+            let (resolved_object, _) = traversal.print_object_config(object_index);
+            let region = &resolved_object.all_regions[fill.region_id];
             for expolygon in fill.expolygons {
                 result.extend(
                     crate::fill::line::fill_line(
                         &expolygon,
                         crate::fill::line::LineFillParams {
+                            dont_alternate_fill_direction: region.zaa_enabled.0
+                                && region.zaa_dont_alternate_fill_direction.0,
                             spacing: fill.params.spacing,
                             overlap: 0.0,
                             density: (0.01 * f64::from(fill.params.density)) as f32,
@@ -200,66 +243,30 @@ pub(super) fn dispatch(
             | ProcessInfillPattern::CrossZag
             | ProcessInfillPattern::LockedZag),
         ) => {
-            // Upstream `generate_sparse_infill_polylines_for_anchoring`
-            // (`Fill.cpp:1394`) creates `Fill::new_from_type(pattern)` for
-            // every linear pattern — `FillRectilinear`/`FillMonotonic`/
-            // `FillLine`/`FillZigZag`/`FillCrossZag`/`FillLockedZag`/
-            // `FillMonotonicLines`/`FillAlignedRectilinear` all share the
-            // rectilinear/monotonic core (`fill_surface` `monotonic` flag).
-            let params = MonotonicFillParams {
-                spacing: fill.params.spacing,
-                overlap: 0.0,
-                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
-                angle: fill.params.angle,
-                layer_index,
-                thickness_layers: fill.representative.thickness_layers.max(1),
-                fixed_angle: fill.params.fixed_angle,
-                bridge_angle: None,
-                reference_point: Point::new(0, 0),
-                dont_adjust: false,
-                // `FillMonotonicLines` forces `anchor_length_max = 0`
-                // (`FillRectilinear.cpp:3676-3682`).
-                anchor_length_max: if pattern == ProcessInfillPattern::MonotonicLine {
-                    0.0
-                } else {
-                    fill.params.anchor_length_max
-                },
+            let prelude = &traversal.objects[object_index]
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object;
+            let resolved_object = traversal
+                .resolved
+                .objects
+                .iter()
+                .find(|object| object.source_object_index == prelude.identity().0)
+                .expect("anchoring retains its resolved object");
+            // Fill.cpp:1440-1447: use the anchoring fill's printing region.
+            let region = &resolved_object.all_regions[fill.region_id];
+            let call = crate::project_slice::fill_entities::SurfaceCall {
+                dont_alternate_fill_direction: region.zaa_enabled.0
+                    && region.zaa_dont_alternate_fill_direction.0,
+                layer_id: layer_index,
+                reference: object_reference,
+                scale: traversal.scale,
                 link_max_length: 0.0,
-                consistent_pattern: pattern.has_consistent_pattern(),
-                horiz_move: fill.params.horiz_move,
-                // `extended_object_bounding_box` (`FillBase.cpp:1569-1578`) —
-                // same transpose-merge + sqrt(2) origin-scale as the main fill
-                // path, so anchored zig-zag/locked-zag keeps the object-wide
-                // grid parity.
-                extended_object_min_x: pattern.has_consistent_pattern().then(|| {
-                    crate::project_slice::fill_entities::extended_object_bounding_box_x(
-                        object_bounding_box,
-                    )
-                    .0
-                }),
-                extended_object_max_x: pattern.has_consistent_pattern().then(|| {
-                    crate::project_slice::fill_entities::extended_object_bounding_box_x(
-                        object_bounding_box,
-                    )
-                    .1
-                }),
-                locked_zag: false,
+                dont_adjust: false,
             };
-            let generate = if matches!(
-                pattern,
-                ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
-            ) {
-                fill_monotonic_surface
-            } else {
-                fill_rectilinear_surface
-            };
-            for expolygon in fill.expolygons {
-                result.extend(
-                    generate(&expolygon, params, traversal.scale)
-                        .map_err(super::super::transaction::geometry_error)?
-                        .polylines,
-                );
-            }
+            super::linear::append((fill, pattern), call, object_bounding_box, result)?;
         }
         SurfaceFillPattern::Configured(
             pattern @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
@@ -268,8 +275,15 @@ pub(super) fn dispatch(
                 let _ = expolygon;
             }
             let anchored = crate::project_slice::fill_entities::adaptive::anchoring_lines(
-                traversal,
-                object_index,
+                crate::project_slice::fill_entities::adaptive::AdaptiveObject::new(
+                    traversal,
+                    object_index,
+                    crate::project_slice::fill_entities::adaptive::ObjectSpacing {
+                        adaptive: adaptive_spacing,
+                        support: support_spacing,
+                    }
+                    .for_pattern(pattern),
+                ),
                 &fill,
                 z,
                 traversal.scale,
@@ -278,45 +292,32 @@ pub(super) fn dispatch(
             let _ = pattern;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Honeycomb) => {
-            for expolygon in fill.expolygons {
-                result.extend(
-                    crate::fill::honeycomb::fill_honeycomb(
-                        &expolygon,
-                        crate::fill::honeycomb::HoneycombFillParams {
-                            spacing: fill.params.spacing,
-                            density: (0.01 * f64::from(fill.params.density)) as f32,
-                            multiline: fill.params.multiline,
-                            angle: fill.params.angle,
-                            layer_index,
-                            thickness_layers: fill.representative.thickness_layers.max(1),
-                            fixed_angle: fill.params.fixed_angle,
-                            bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
-                            anchor_length: fill.params.anchor_length,
-                            anchor_length_max: fill.params.anchor_length_max,
-                        },
-                        traversal.scale,
-                    )
-                    .map_err(super::super::transaction::geometry_error)?,
-                );
-            }
+            super::honeycomb::append(fill, traversal, object_index, layer_index, result)?;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Concentric) => {
+            // Fill.cpp:1479,1497 / FillBase.cpp:105-117: anchoring uses the
+            // zero-overlap fill_surface contraction before the pattern generator.
+            let params = crate::fill::FillParams {
+                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                multiline: fill.params.multiline,
+                dont_adjust: false,
+            };
+            let delta = (-0.5 * fill.params.spacing / traversal.scale.factor()) as f32;
             for expolygon in fill.expolygons {
-                result.extend(
-                    crate::fill::concentric_sparse::fill_concentric_sparse(
-                        &expolygon,
-                        fill.params.spacing,
-                        &crate::fill::FillParams { density: // upstream `params.density` is a 0..1 fraction; the
-                            // SurfaceFill param is a percent.
-                            0.01 * fill.params.density,
- multiline: fill.params.multiline,
- dont_adjust: false,
- },
-                        fill.params.loop_clipping,
-                        traversal.scale,
-                    )
-                    .map_err(super::super::transaction::geometry_error)?,
-                );
+                let domains = offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0)
+                    .map_err(super::super::transaction::geometry_error)?;
+                for domain in domains {
+                    result.extend(
+                        crate::fill::concentric_sparse::fill_concentric_sparse(
+                            &domain,
+                            fill.params.spacing,
+                            &params,
+                            fill.params.loop_clipping,
+                            traversal.scale,
+                        )
+                        .map_err(super::super::transaction::geometry_error)?,
+                    );
+                }
             }
         }
         SurfaceFillPattern::Configured(
@@ -336,6 +337,12 @@ pub(super) fn dispatch(
                 }
                 _ => unreachable!("plane-path arm only admits its three patterns"),
             };
+            let (object, print_object) = traversal.print_object_config(object_index);
+            let object_bounding_box = crate::project_slice::fill_entities::print_object_bounds(
+                &traversal.project.objects()[object.source_object_index],
+                print_object.transform,
+                traversal.scale,
+            );
             let resolution = traversal.resolved.views.full.process.print.resolution.0;
             let params = fill.params;
             let fill_params = crate::fill::plane_path::PlanePathFillParams {

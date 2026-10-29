@@ -135,14 +135,14 @@ fn synthetic_input() -> Vec<SlicingModePrintObject> {
     };
 
     let volumes = vec![
-        project_volume("pre-closing.model", 900, ModelPart, false, false),
-        project_volume("pre-closing.model", 17, SupportBlocker, true, false),
-        project_volume("pre-closing.model", 500, ModelPart, true, false),
-        project_volume("pre-closing.model", 3, ParameterModifier, false, false),
-        project_volume("pre-closing.model", 700, NegativeVolume, false, false),
-        project_volume("pre-closing.model", 44, ParameterModifier, true, false),
-        project_volume("pre-closing.model", 5, SupportEnforcer, true, false),
-        project_volume("pre-closing.model", 100, NegativeVolume, true, false),
+        project_volume("pre-closing.model", 900, ModelPart, false),
+        project_volume("pre-closing.model", 17, SupportBlocker, true),
+        project_volume("pre-closing.model", 500, ModelPart, true),
+        project_volume("pre-closing.model", 3, ParameterModifier, false),
+        project_volume("pre-closing.model", 700, NegativeVolume, false),
+        project_volume("pre-closing.model", 44, ParameterModifier, true),
+        project_volume("pre-closing.model", 5, SupportEnforcer, true),
+        project_volume("pre-closing.model", 100, NegativeVolume, true),
     ];
     let source = object("pre-closing.model", 10, volumes, &[Transform3d::IDENTITY]);
     let resolved = identity_resolved(0);

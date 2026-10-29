@@ -3,10 +3,7 @@
 use super::{EmitState, LayerGeometry, features::PathProperties, local_cursor, path};
 use crate::{
     ExtrusionRole,
-    project_slice::{
-        perimeters::classic::shortest_path::chain_and_reorder_entities,
-        support_material::{SupportExtrusionEntity, SupportExtrusionPath},
-    },
+    project_slice::support_material::{SupportExtrusionEntity, SupportExtrusionPath},
 };
 
 #[derive(Clone, Copy)]
@@ -22,9 +19,10 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     output: &mut Vec<u8>,
     entities: &mut Vec<SupportExtrusionEntity>,
     selected_role: ExtrusionRole,
-    geometry: LayerGeometry<'_>,
+    phase: super::shared_reversals::EmissionPhase<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
+    let geometry = phase.geometry;
     let (selected, mut remaining): (Vec<_>, Vec<_>) =
         std::mem::take(entities).into_iter().partition(|entity| {
             let role = entity.role();
@@ -43,14 +41,20 @@ pub(in crate::project_slice::gcode_emit) fn emit(
         (&mut ordinary, selected_role),
         (&mut ironing, ExtrusionRole::Ironing),
     ] {
-        chain_and_reorder_entities(group, local_cursor(state, geometry));
+        // GCode.cpp:6199-6201 — extrude_support chains the SHARED
+        // support_fills entities in place (no_sort false), so reversals
+        // persist to later islands/instances of the same source object.
+        state
+            .shared_reversals
+            .chain_support(phase.reversal, group, local_cursor(state, geometry));
         for entity in &*group {
-            emit_entity(output, entity, selected_role, geometry, state);
+            emit_entity(output, entity, selected_role, geometry, state)?;
         }
     }
     ordinary.append(&mut ironing);
     ordinary.append(&mut remaining);
     *entities = ordinary;
+    Ok(())
 }
 
 fn emit_entity(
@@ -59,22 +63,22 @@ fn emit_entity(
     selected_role: ExtrusionRole,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     match entity {
-        SupportExtrusionEntity::Path(path) => emit_path(output, path, geometry, state, true),
-        SupportExtrusionEntity::Loop(loop_) => emit_loop(output, loop_, geometry, state),
+        SupportExtrusionEntity::Path(path) => emit_path(output, path, geometry, state, true)?,
+        SupportExtrusionEntity::Loop(loop_) => emit_loop(output, loop_, geometry, state)?,
         SupportExtrusionEntity::NoSort(entities) => {
             for entity in entities.iter().filter(|entity| {
                 let role = entity.role();
                 role == selected_role
                     || (selected_role == ExtrusionRole::Mixed && role != ExtrusionRole::Ironing)
             }) {
-                emit_entity(output, entity, selected_role, geometry, state);
+                emit_entity(output, entity, selected_role, geometry, state)?;
             }
         }
         SupportExtrusionEntity::MultiPath(paths) => {
             for path in paths {
-                emit_path(output, path, geometry, state, false);
+                emit_path(output, path, geometry, state, false)?;
             }
             if state.options.wipe {
                 let mut wipe = Vec::new();
@@ -95,6 +99,7 @@ fn emit_entity(
             }
         }
     }
+    Ok(())
 }
 
 fn emit_path(
@@ -103,7 +108,7 @@ fn emit_path(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     single_path: bool,
-) {
+) -> Result<(), crate::SliceError> {
     path::emit(
         output,
         support
@@ -112,6 +117,7 @@ fn emit_path(
             .iter()
             .map(|point| (point.x, point.y)),
         PathProperties {
+            contour: None,
             mm3_per_mm: support.mm3_per_mm,
             width: support.width,
             height: support.height,
@@ -124,7 +130,7 @@ fn emit_path(
         },
         geometry,
         state,
-    );
+    )?;
     if !single_path
         || !state.options.wipe
         || !matches!(
@@ -138,7 +144,7 @@ fn emit_path(
                 | ExtrusionRole::SupportTransition
         )
     {
-        return;
+        return Ok(());
     }
     // GCode.cpp:6112-6123: Tree single paths keep a forward closest-end tail.
     state.wipe_path.reverse();
@@ -148,7 +154,7 @@ fn emit_path(
     let dx = (points[0].x - last.x) as f64;
     let dy = (points[0].y - last.y) as f64;
     if (dx * dx + dy * dy).sqrt() <= threshold {
-        return;
+        return Ok(());
     }
     let mut minimum = threshold;
     let mut index = points.len();
@@ -166,6 +172,7 @@ fn emit_path(
         }
     }
     state.wipe_path.drain(..index - 1);
+    Ok(())
 }
 
 fn emit_loop(
@@ -173,7 +180,7 @@ fn emit_loop(
     support: &SupportExtrusionPath,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     let polyline = support.loop_polyline(
         local_cursor(state, geometry),
         geometry.scale,
@@ -194,7 +201,7 @@ fn emit_loop(
         })
         .sum::<f64>();
     if end_clip > 0.0 && length <= end_clip / geometry.scale.factor() {
-        return;
+        return Ok(());
     }
     let previous_wipe = if state.options.wipe {
         Vec::new()
@@ -205,6 +212,7 @@ fn emit_loop(
         output,
         polyline.points.iter().map(|point| (point.x, point.y)),
         PathProperties {
+            contour: None,
             mm3_per_mm: support.mm3_per_mm,
             width: support.width,
             height: support.height,
@@ -217,12 +225,13 @@ fn emit_loop(
         },
         geometry,
         state,
-    );
+    )?;
     if state.options.wipe {
         state.wipe_path.reverse();
     } else {
         state.wipe_path = previous_wipe;
     }
+    Ok(())
 }
 
 fn feature(role: ExtrusionRole) -> &'static str {

@@ -138,17 +138,28 @@ impl PartCoolingFanRamp {
     }
 
     fn base_speed_for_runtime_layer_time(self, layer_time_s: f64) -> f64 {
-        if layer_time_s >= self.fan_cooling_layer_time_s {
-            return self.long_layer_baseline_speed();
+        // CoolingBuffer.cpp:740,756-768: float locals and arithmetic, then
+        // widen the quotient to double. Keep the incoming fan baseline.
+        let layer_time = layer_time_s as f32;
+        let slow_down_layer_time = self.slow_down_layer_time_s as f32;
+        let fan_cooling_layer_time = self.fan_cooling_layer_time_s as f32;
+        let fan_min_speed = self.min_speed as f32;
+        let fan_max_speed = self.max_speed as f32;
+        let mut fan_speed_new = self.long_layer_baseline_speed() as f32;
+        if layer_time < slow_down_layer_time {
+            fan_speed_new = fan_max_speed;
+        } else if layer_time < fan_cooling_layer_time {
+            let t = f64::from(
+                (layer_time - slow_down_layer_time)
+                    / (fan_cooling_layer_time - slow_down_layer_time),
+            );
+            // The +0.5 is outside floor, before upstream's int conversion.
+            fan_speed_new = ((t * f64::from(fan_min_speed)
+                + (1.0 - t) * f64::from(fan_max_speed))
+            .floor()
+                + 0.5) as i32 as f32;
         }
-        if layer_time_s <= self.slow_down_layer_time_s
-            || self.fan_cooling_layer_time_s <= self.slow_down_layer_time_s
-        {
-            return self.max_speed;
-        }
-        let factor = (self.fan_cooling_layer_time_s - layer_time_s)
-            / (self.fan_cooling_layer_time_s - self.slow_down_layer_time_s);
-        (self.min_speed + (self.max_speed - self.min_speed) * factor).floor()
+        f64::from(fan_speed_new)
     }
 
     const fn long_layer_baseline_speed(self) -> f64 {

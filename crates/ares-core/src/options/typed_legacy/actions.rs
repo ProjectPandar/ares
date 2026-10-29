@@ -80,6 +80,13 @@ pub(crate) enum StringAllowance {
 pub(crate) enum JsonArrayAllowance {
     RejectAfterFirstPass,
     Flatten(VectorType),
+    /// `Config.cpp:947-1000` `load_from_json` homogeneous-array branch for
+    /// scalar options: join with the default scalar separator `','`
+    /// (`parse_str_arr`, `Config.cpp:832-867`) and hand the joined string to
+    /// the option type's own deserialize semantics (`Config.hpp`). No
+    /// generic first-token rule lives here; the per-type split happens at
+    /// assignment. Mixed-type element arrays still reject.
+    FlattenScalar,
     ConsumeFirstPass,
     Deferred,
 }
@@ -108,7 +115,7 @@ impl WireContract {
         Self {
             json_string: StringAllowance::Execute,
             xml_string: StringAllowance::Execute,
-            json_array: JsonArrayAllowance::RejectAfterFirstPass,
+            json_array: JsonArrayAllowance::FlattenScalar,
             vector: None,
             empty_first_pass: EmptyValueAction::Retain { target, value },
         }

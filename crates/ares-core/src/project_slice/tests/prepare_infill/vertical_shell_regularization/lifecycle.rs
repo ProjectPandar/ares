@@ -30,31 +30,6 @@ fn task22o22_inactive_typed_mode_produces_empty_sidecars_without_geometry() {
 }
 
 #[tokio::test]
-async fn task22o22_earlier_capability_errors_have_precedence() {
-    for (from, to, expected) in [(
-        "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
-        SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
-    )] {
-        let mut archive = KsrArchive::new();
-        archive.replace_unique("Metadata/project_settings.config", from, to);
-        archive.replace_unique(
-            "Metadata/project_settings.config",
-            "\"wall_generator\": \"classic\"",
-            "\"wall_generator\": \"arachne\"",
-        );
-        vertical_shell_regularization::reset_invocations();
-        assert_eq!(
-            slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
-                .await
-                .unwrap_err(),
-            expected
-        );
-        assert_eq!(vertical_shell_regularization::invocations(), 0);
-    }
-}
-
-#[tokio::test]
 async fn task22o22_o17_o19_o20_and_o21_failures_precede_regularization() {
     surface_type_detection::reset_geometry_hooks();
     surface_type_detection::fail_geometry_at(

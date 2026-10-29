@@ -9,13 +9,13 @@ use crate::{
     },
 };
 
-pub(super) fn hulls(
+pub(super) fn items(
     traversal: &PreparedPostClassicTraversal,
     support: &[Vec<InstalledSupportLayer>],
     brim: &[Option<BrimPlan>],
     layer_limit: usize,
     raft: Option<&super::super::layers::RaftSchedule>,
-) -> Vec<Vec<Point>> {
+) -> Vec<(usize, Vec<Point>)> {
     let skirt_height_z = traversal
         .objects
         .iter()
@@ -91,7 +91,7 @@ pub(super) fn hulls(
             );
         }
         if let Some(brim) = &brim[object_index] {
-            let (x, y) = footprint::print_object_origin(traversal, object_index);
+            let (x, y) = brim.occupied_origin(traversal, object_index);
             let shift = Point::new(
                 (x / scale.factor()).round() as i64,
                 (y / scale.factor()).round() as i64,
@@ -103,7 +103,7 @@ pub(super) fn hulls(
             );
         }
         if occupied.len() >= 3 {
-            hulls.push(super::convex_hull(&occupied));
+            hulls.push((object_index, super::convex_hull(&occupied)));
         }
     }
     hulls

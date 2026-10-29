@@ -1,0 +1,61 @@
+{
+  "purpose": "Actual official-exported INPUT3MFs only, no expected outputs",
+  "base": "47821c760d5ea86102a34bbc78c092bbaf381214",
+  "upstream": [
+    "Support/SupportCommon.cpp:1438-1441/1493-1504/1700-1738"
+  ],
+  "gui_option": "Raft layers (raft_layers)",
+  "geometry": "closed8point star/16alternating XYvertices per cap/34vertices/64triangles/radii10and5mm/rotation0.17rad/height1.2mm/sixobjectlayers",
+  "inputs": {
+    "control": {
+      "file": "control.3mf",
+      "sha256": "4a868581914a8b5dde68862978fe2678401eb4c784a7ca0e6ccc32632343704e",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "6504834545657beb86b35b6b5e2364ab50a0f2d82eea36e3142ee68ef4c832e4",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "1f1600a291fc352fc11bb2044709d3a1044bc0ee24190e3e165636c7435f18cf",
+        "Metadata/project_settings.config": "dadc863390e341895fa30ee960d41eeac3fd17609dad268f9e5508548836ce0e",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-478-raft-star1/control/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-478-raft-star1/control/export-launch.json",
+        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-478-raft-contact-first-flow/original-export-receipts/control",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-478-raft-contact-first-flow/witness/verified.json"
+      }
+    },
+    "positive": {
+      "file": "positive.3mf",
+      "sha256": "e4f862f94000e30939c66a72fc94217826a4714f0fb7bf36f4280f431a91b706",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "6504834545657beb86b35b6b5e2364ab50a0f2d82eea36e3142ee68ef4c832e4",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "1f1600a291fc352fc11bb2044709d3a1044bc0ee24190e3e165636c7435f18cf",
+        "Metadata/project_settings.config": "abc0002f4fa511efd6c0ec23fddc32e81388a865e149100ea26fb359af1e02fd",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "original_official_export": "/tmp/w5-discovery-478-raft-star1/positive/exported.3mf",
+        "export_launch_receipt": "/tmp/w5-discovery-478-raft-star1/positive/export-launch.json",
+        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-478-raft-contact-first-flow/original-export-receipts/positive",
+        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-478-raft-contact-first-flow/witness/verified.json"
+      }
+    }
+  },
+  "sole_changed_payload": "Metadata/project_settings.config",
+  "sole_changed_setting": {
+    "key": "raft_layers",
+    "control": "0",
+    "positive": "1"
+  },
+  "all_other_settings_equal": true,
+  "all_other_zip_payloads_byte_identical": true
+}

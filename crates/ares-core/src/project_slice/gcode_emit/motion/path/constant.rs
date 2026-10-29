@@ -16,6 +16,7 @@ pub(super) struct Emission<'a, 'b> {
     pub(super) segment_lengths: &'a [f64],
     pub(super) fitting: &'a [FittedMove],
     pub(super) last_scaled: (i64, i64),
+    pub(super) force_no_extrusion: bool,
     pub(super) properties: PathProperties<'b>,
     pub(super) state: &'a mut EmitState,
 }
@@ -28,6 +29,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
         segment_lengths,
         fitting,
         last_scaled,
+        force_no_extrusion,
         properties,
         state,
     } = emission;
@@ -44,7 +46,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
         // Upstream replays the precomputed fitting result at export time
         // (`GCode.cpp:6992`); paths with no fitting (brim, skirt, clipped
         // tails) emit straight segments and are never fitted here.
-        arc::from_fitting(&arc_points, fitting, state.offset)
+        arc::from_fitting(&arc_points, fitting, state.origin, state.extruder_offset)
     } else {
         points
             .windows(2)
@@ -71,15 +73,18 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     for segment in segments {
         match segment {
             arc::Segment::Line { end, length } if length >= SOURCE_EPSILON_MM => {
-                extrusion::linear_segment(output, end, length, properties, state);
+                if force_no_extrusion {
+                    extrusion::force_no_extrusion_segment(output, end, state);
+                } else {
+                    extrusion::linear_segment(output, end, length, properties, state);
+                }
             }
             arc::Segment::Line { .. } => {}
             arc::Segment::Arc(arc_segment) if arc_segment.length >= SOURCE_EPSILON_MM => {
                 let extrusion = extrusion::for_length(
                     arc_segment.length,
-                    properties.mm3_per_mm,
+                    extrusion::effective_flow_at_emission(properties, state),
                     state.options.filament_flow_ratio,
-                    state.options.print_flow_ratio,
                     state.options.filament_area,
                 ) * extrusion::small_area_multiplier(
                     state,
@@ -108,6 +113,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     }
     output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = wipe_points.into_iter().rev().collect();
-    state.last_scaled_position = Some(last_scaled);
+    state.last_scaled_position = last_scaled;
+    state.last_position_defined = true;
     state.scarf_z = Some(state.layer_z);
 }

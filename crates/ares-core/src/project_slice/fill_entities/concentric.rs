@@ -1,3 +1,4 @@
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 use crate::{
     SliceError,
     geometry::{
@@ -27,6 +28,7 @@ use generate::{generate_standard_thick_polylines, generate_thick_polylines};
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
@@ -42,22 +44,14 @@ pub(super) fn append(
     for expolygon in fill.expolygons {
         let mut polylines = Vec::new();
         for domain in intersect_no_overlap_domains(&fill.no_overlap_expolygons, &expolygon)? {
-            let first_polyline = polylines.len();
             let generated = generate_thick_polylines(
                 domain,
                 spacing,
-                scale
-                    .checked_scale(f64::from(fill.params.flow.height))
-                    .unwrap(),
+                layer_height,
                 minimum_nozzle_diameter,
                 scale,
             )?;
-            polylines.extend(generated);
-            finalize_polylines(
-                &mut polylines,
-                first_polyline,
-                fill.params.loop_clipping as f64,
-            );
+            finalize_polylines(&mut polylines, generated, fill.params.loop_clipping as f64);
         }
         let entities = variable_width::convert_with_role(
             &polylines,
@@ -82,6 +76,7 @@ pub(super) fn append(
 pub(super) fn append_configured(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
@@ -94,7 +89,8 @@ pub(super) fn append_configured(
     // (`FillConcentric.cpp:22`): the Arachne variable-width generator runs only
     // at full density; below `density > 0.9999` upstream uses the plain
     // `offset2_ex` ring loop emitting fixed-width `Polyline` entities.
-    let density_fraction = 0.01 * params.density;
+    // Fill.cpp:1283,1479: multiply in double, then narrow the fraction to float.
+    let density_fraction = (0.01_f64 * f64::from(params.density)) as f32;
     let sparse = density_fraction <= 0.9999 || params.bridge;
     for expolygon in fill.expolygons {
         if sparse {
@@ -130,6 +126,7 @@ pub(super) fn append_configured(
                 let width = spacing as f32 * scale.factor() as f32
                     + params.flow.height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
                 let mut flow = params.flow.with_width(width)?;
+                // Same ungated-only handoff as materialized_flow; no gated pre-bake.
                 flow.mm3_per_mm *= params.flow_ratio;
                 append_sparse_paths(&mut entities, polylines, params.extrusion_role, flow);
             }
@@ -159,17 +156,17 @@ pub(super) fn append_configured(
             3.0,
         )
         .map_err(geometry_error)?;
-        let mut polylines = Vec::new();
+        let mut generated = Vec::new();
         for domain in generation_domains {
-            polylines.extend(generate_standard_thick_polylines(
+            generated.extend(generate_standard_thick_polylines(
                 domain,
                 spacing,
-                scale.checked_scale(f64::from(params.flow.height)).unwrap(),
+                layer_height,
                 minimum_nozzle_diameter,
                 scale,
             )?);
         }
-        finalize_standard_polylines(&mut polylines, params.loop_clipping as f64);
+        let polylines = finalize_standard_polylines(generated, params.loop_clipping as f64);
         let materialized_role = match params.extrusion_role {
             crate::ExtrusionRole::TopSolidInfill => MaterializedRole::TopSolidInfill,
             crate::ExtrusionRole::BottomSurface => MaterializedRole::BottomSurface,
@@ -212,8 +209,8 @@ fn append_sparse_paths(
 ) {
     entities.extend(polylines.into_iter().map(|polyline| {
         FillExtrusionEntity::Path(super::FillExtrusionPath {
-            polyline,
-            fitting: Vec::new(),
+            polyline: Polyline3::from_xy(polyline, Vec::new()),
+            z_contoured: false,
             role,
             mm3_per_mm: flow.mm3_per_mm,
             width: flow.width,
@@ -232,11 +229,15 @@ fn intersect_no_overlap_domains(
 
 fn finalize_polylines(
     polylines: &mut Vec<ThickPolyline>,
-    first_polyline: usize,
+    generated: Vec<(ThickPolyline, bool)>,
     loop_clipping: f64,
 ) {
-    for polyline in &mut polylines[first_polyline..] {
-        if polyline.points.first() == polyline.points.last()
+    let first_polyline = polylines.len();
+    for (mut polyline, is_closed) in generated {
+        // `FillConcentricInternal.cpp:55`: gate on ExtrusionLine::is_closed
+        // before the closed-shape checks.
+        if is_closed
+            && polyline.points.first() == polyline.points.last()
             && polyline.width.first() == polyline.width.last()
         {
             polyline.points.pop();
@@ -244,6 +245,7 @@ fn finalize_polylines(
             polyline.points.push(polyline.points[0]);
             polyline.start_at_index(start);
         }
+        polylines.push(polyline);
     }
     let mut write_index = first_polyline;
     for read_index in first_polyline..polylines.len() {

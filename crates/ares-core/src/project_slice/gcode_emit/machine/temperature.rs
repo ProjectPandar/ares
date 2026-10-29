@@ -68,15 +68,19 @@ pub(super) fn append_startup(
     bed_temperature
 }
 
-pub(super) fn overall_chamber_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
-    chamber_settings(traversal).1
+pub(super) fn overall_chamber_temperature(
+    traversal: &PreparedPostClassicTraversal,
+    used_extruders: &[usize],
+) -> i32 {
+    chamber_settings(traversal, used_extruders).1
 }
 
 pub(super) fn append_chamber_shutdown(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
+    used_extruders: &[usize],
 ) {
-    let (active, temperature) = chamber_settings(traversal);
+    let (active, temperature) = chamber_settings(traversal, used_extruders);
     if active && temperature > 0 {
         output.extend_from_slice(b"M141 S0;set chamber_temperature\n");
     }
@@ -86,8 +90,9 @@ pub(super) fn append_chamber_startup(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     machine_start_gcode: &str,
+    used_extruders: &[usize],
 ) {
-    let (active, temperature) = chamber_settings(traversal);
+    let (active, temperature) = chamber_settings(traversal, used_extruders);
     if !active
         || temperature <= 0
         || sets_temperature(machine_start_gcode, &["M141", "M191"], false)
@@ -107,10 +112,14 @@ pub(super) fn append_chamber_startup(
     }
 }
 
-fn chamber_settings(traversal: &PreparedPostClassicTraversal) -> (bool, i32) {
+fn chamber_settings(
+    traversal: &PreparedPostClassicTraversal,
+    used_extruders: &[usize],
+) -> (bool, i32) {
     let filament = &traversal.resolved.views.full.filament.print;
-    used_filaments(traversal)
-        .into_iter()
+    used_extruders
+        .iter()
+        .copied()
         .fold((false, 0), |(active, maximum), index| {
             let enabled = filament
                 .activate_chamber_temp_control
@@ -201,18 +210,98 @@ fn used_filaments(traversal: &PreparedPostClassicTraversal) -> Vec<usize> {
 }
 
 fn sets_temperature(gcode: &str, commands: &[&str], include_g10: bool) -> bool {
-    gcode.lines().any(|line| {
-        let code = line.split_once(';').map_or(line, |(code, _)| code).trim();
-        let mut words = code.split_ascii_whitespace();
-        let Some(command) = words.next() else {
-            return false;
+    // GCode.cpp:528-589 scans a NUL-terminated string, not whitespace tokens.
+    let bytes = gcode.as_bytes();
+    let at = |index: usize| bytes.get(index).copied().unwrap_or(0);
+    let commands = [commands[0], commands[1]].map(|command| command[1..].parse::<i32>().unwrap());
+    let mut position = 0;
+    let mut temperature_set = false;
+    while at(position) != 0 {
+        while matches!(at(position), b' ' | b'\t') {
+            position += 1;
+        }
+        if at(position) == b'M' || (include_g10 && at(position) == b'G') {
+            let is_gcode = at(position) == b'G';
+            position += 1;
+            let (number, end) = strtol(bytes, position);
+            let number = number as i32;
+            // Preserve C++'s (conversion && is_gcode) ? G10 : M-code test.
+            let matched = if end != position && is_gcode {
+                number == 10
+            } else {
+                commands.contains(&number)
+            };
+            if matched {
+                position = end;
+                temperature_set |= !is_gcode;
+                let (end, parameter_sets_temperature) =
+                    scan_temperature_parameters(bytes, position);
+                position = end;
+                temperature_set |= parameter_sets_temperature;
+            }
+        }
+        while !matches!(at(position), b'\r' | b'\n' | 0) {
+            position += 1;
+        }
+        while matches!(at(position), b'\r' | b'\n') {
+            position += 1;
+        }
+    }
+    temperature_set
+}
+
+// GCode.cpp:561-583, the matched-command parameter loop.
+fn scan_temperature_parameters(bytes: &[u8], mut position: usize) -> (usize, bool) {
+    let at = |index: usize| bytes.get(index).copied().unwrap_or(0);
+    let mut temperature_set = false;
+    while !matches!(at(position), b';' | b'\r' | b'\n' | 0) {
+        while matches!(at(position), b' ' | b'\t') {
+            position += 1;
+        }
+        if at(position) == b'S' {
+            position += 1;
+            while matches!(at(position), b' ' | b'\t') {
+                position += 1;
+            }
+            let (_, end) = strtol(bytes, position);
+            if end > position {
+                position = end;
+                temperature_set = true;
+            }
+        } else {
+            while !matches!(at(position), b' ' | b'\t' | b';' | b'\r' | b'\n' | 0) {
+                position += 1;
+            }
+        }
+    }
+    (position, temperature_set)
+}
+
+fn strtol(bytes: &[u8], start: usize) -> (i64, usize) {
+    let at = |index: usize| bytes.get(index).copied().unwrap_or(0);
+    let mut end = start;
+    while matches!(at(end), b' ' | b'\t' | b'\n' | b'\r' | 11 | 12) {
+        end += 1;
+    }
+    let negative = at(end) == b'-';
+    if matches!(at(end), b'+' | b'-') {
+        end += 1;
+    }
+    let digits = end;
+    let mut value = 0_i64;
+    while at(end).is_ascii_digit() {
+        let digit = i64::from(at(end) - b'0');
+        value = value.saturating_mul(10);
+        value = if negative {
+            value.saturating_sub(digit)
+        } else {
+            value.saturating_add(digit)
         };
-        commands.contains(&command)
-            || (include_g10
-                && command == "G10"
-                && words.any(|word| {
-                    word.strip_prefix('S')
-                        .is_some_and(|value| value.parse::<i32>().is_ok())
-                }))
-    })
+        end += 1;
+    }
+    if end == digits {
+        (0, start)
+    } else {
+        (value, end)
+    }
 }

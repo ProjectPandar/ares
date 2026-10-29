@@ -45,24 +45,21 @@ pub(super) fn arc_seams(
 }
 
 /// Records one command's `process_G1` vertices; each arc segment starts
-/// where the previous one ended. Returns the move id of every block.
+/// where the previous one ended.
 pub(super) fn record_motions(
     recorder: &mut MoveRecorder,
     mut motion: RecordedMotion,
     motions: &[IndexedMotion],
     seams: &[Option<[f32; 3]>],
-) -> Vec<u32> {
-    motions
-        .iter()
-        .enumerate()
-        .map(|(index, indexed)| {
-            motion.end = indexed.end;
-            motion.seam = seams.get(index).copied().flatten();
-            let move_id = recorder.motion(motion);
-            motion.start = indexed.end;
-            move_id
-        })
-        .collect()
+) {
+    for (index, indexed) in motions.iter().enumerate() {
+        motion.end = indexed.end;
+        motion.seam = seams.get(index).copied().flatten();
+        let vertex = recorder.options_z.next_vertex();
+        recorder.motion(motion);
+        recorder.options_z.block(vertex);
+        motion.start = indexed.end;
+    }
 }
 
 pub(super) fn synchronizes_planner(code: &str, measured_g29: bool) -> bool {

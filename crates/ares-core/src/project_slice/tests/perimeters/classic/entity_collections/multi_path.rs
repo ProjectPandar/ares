@@ -21,6 +21,7 @@ use crate::{
 
 fn path(points: &[(i64, i64)], role: ExtrusionRole, width: f32) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y)| Point3 { x, y, z: 0 }).collect(),
             fitting: Vec::new(),
@@ -35,6 +36,7 @@ fn path(points: &[(i64, i64)], role: ExtrusionRole, width: f32) -> ExtrusionPath
 
 fn ordered_loop(role: ExtrusionRole, inset_idx: i32) -> ExtrusionEntity {
     ExtrusionEntity::Loop(OrderedExtrusionLoop {
+        unsupported_distance: None,
         extrusion_loop: ExtrusionLoop {
             paths: vec![path(
                 &[(0, 0), (1_000, 0), (1_000, 1_000), (0, 1_000), (0, 0)],

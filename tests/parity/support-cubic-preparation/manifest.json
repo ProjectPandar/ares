@@ -1,0 +1,103 @@
+{
+  "source": "PrintObject.cpp:984\u20131007 + FillAdaptive.cpp::build_octree + Tesselate.cpp:192\u2013195",
+  "spec": "docs/architecture/support-cubic-object-octree-localization-spec.md",
+  "authored_stl": "tests/parity/multiline-union/prism.stl",
+  "authored_stl_sha256": "1d50f639d940e2a95c324b8f7ef1a33ba9bcf7e83706ba3cf0669f67f6feae7e",
+  "generator": "crates/ares-cli/tests/orca_parity/runner/adaptive_cubic_precision_inputs.rs",
+  "generator_sha256": "da5594095691536ae7cdd6c182d1c6cca4c6ec9a5f4a0790c7db2bcdbc5274d6",
+  "fixed_process_options": {
+    "layer_height": "0.2",
+    "initial_layer_print_height": "0.2",
+    "wall_generator": "classic",
+    "wall_loops": "2",
+    "bottom_surface_pattern": "rectilinear",
+    "top_surface_pattern": "rectilinear",
+    "internal_solid_infill_pattern": "rectilinear",
+    "bottom_shell_layers": "3",
+    "top_shell_layers": "3",
+    "enable_support": "0",
+    "raft_layers": "0",
+    "brim_type": "no_brim",
+    "skirt_loops": "0",
+    "enable_prime_tower": "0",
+    "enable_arc_fitting": "0",
+    "spiral_mode": "0",
+    "seam_slope_type": "none",
+    "fuzzy_skin": "none",
+    "small_area_infill_flow_compensation": "0",
+    "xy_contour_compensation": "0",
+    "xy_hole_compensation": "0",
+    "elefant_foot_compensation": "0",
+    "infill_anchor": "400%",
+    "infill_anchor_max": "20"
+  },
+  "shared_process_options": {
+    "fill_multiline": "1",
+    "infill_direction": "45",
+    "sparse_infill_density": "30%",
+    "infill_combination": "0"
+  },
+  "cases": [
+    {
+      "label": "S45",
+      "sparse_infill_pattern": "supportcubic",
+      "sparse_infill_line_width": "0.45",
+      "role": "RED"
+    },
+    {
+      "label": "S50",
+      "sparse_infill_pattern": "supportcubic",
+      "sparse_infill_line_width": "0.50",
+      "role": "RED"
+    },
+    {
+      "label": "S125",
+      "sparse_infill_pattern": "supportcubic",
+      "sparse_infill_line_width": "125%",
+      "role": "RED"
+    },
+    {
+      "label": "SAUTO",
+      "sparse_infill_pattern": "supportcubic",
+      "sparse_infill_line_width": "0",
+      "role": "RED"
+    },
+    {
+      "label": "A45",
+      "sparse_infill_pattern": "adaptivecubic",
+      "sparse_infill_line_width": "0.45",
+      "role": "control"
+    },
+    {
+      "label": "A50",
+      "sparse_infill_pattern": "adaptivecubic",
+      "sparse_infill_line_width": "0.50",
+      "role": "control"
+    },
+    {
+      "label": "A125",
+      "sparse_infill_pattern": "adaptivecubic",
+      "sparse_infill_line_width": "125%",
+      "role": "control"
+    },
+    {
+      "label": "AAUTO",
+      "sparse_infill_pattern": "adaptivecubic",
+      "sparse_infill_line_width": "0",
+      "role": "control"
+    },
+    {
+      "label": "R1",
+      "sparse_infill_pattern": "rectilinear",
+      "sparse_infill_line_width": "0.45",
+      "role": "control"
+    },
+    {
+      "label": "L1",
+      "sparse_infill_pattern": "alignedrectilinear",
+      "sparse_infill_line_width": "0.45",
+      "role": "control"
+    }
+  ],
+  "outputs": "Native project exports and all G-code/results generated at test time; no output/golden included"
+}

@@ -120,7 +120,7 @@ pub(crate) fn raft_layer_plans(
             z: *z,
             polygons,
             spec,
-            width_mm: if index == 0 {
+            width_mm: if index == 0 && z.kind == RaftLayerKind::Base {
                 // Base flange: `first_layer_flow` width
                 // (`SupportCommon.cpp:1501-1504`).
                 first_layer_width_mm

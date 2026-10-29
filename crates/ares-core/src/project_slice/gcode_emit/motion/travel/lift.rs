@@ -8,6 +8,9 @@ mod spiral;
 mod tests;
 use spiral::append as append_spiral;
 
+// `libslic3r.h:52`, shared by the writer's lift and Z-travel gates.
+pub(in crate::project_slice::gcode_emit::motion) const EPSILON: f64 = 1e-4;
+
 pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
     // `lazy_lift` reads the live `m_pos(2)` (`GCodeWriter.cpp:633-639`)
     // — template `position[2]` assignments move the eligibility origin.
@@ -45,7 +48,24 @@ pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f
 /// schedules the deferred hop when a retraction is configured and the
 /// writer sits inside the lift band, evaluated at the live writer z.
 /// Shares `schedule`'s `m_lifted == 0 && m_to_lift == 0` gate.
-pub(in crate::project_slice::gcode_emit) fn schedule_retract_tail(state: &mut EmitState) {
+/// `GCodeWriter::lazy_lift`'s spiral-vase branch (`GCodeWriter.cpp:
+/// 637-643`) materializes the hop instantly inside the retract —
+/// `m_lifted = target_lift` plus `_travel_to_z(m_pos(2) + target_lift,
+/// "lift Z")` — before any label flush or travel move consumes the
+/// deferred slot; the same `m_spiral_vase != nullptr` source the
+/// upstream retract call passes (`GCode.cpp:7704`).
+pub(in crate::project_slice::gcode_emit) fn schedule_retract_tail(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if state.spiral_vase
+        && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
+        && state.lifted_amount <= 0.0
+        && state.pending_lift.is_none()
+    {
+        append_spiral_vase(output, state);
+        return;
+    }
     schedule_at(state, false, state.writer_z.unwrap_or(state.layer_z));
 }
 
@@ -150,7 +170,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     state: &mut EmitState,
     travel_comment: &str,
 ) -> Option<f64> {
-    let mode = state.pending_lift.take()?;
+    // `GCodeWriter.cpp:700-710`: only consume abs(m_to_lift) > EPSILON
+    // (`libslic3r.h:52`); a smaller scheduled lift stays pending.
+    let mode = state
+        .pending_lift
+        .take_if(|_| state.options.z_hop.abs() > EPSILON)?;
     // `GCodeWriter.cpp:701-709`: the deferred lift raises from the LIVE
     // writer z (`dest_point(2) = m_to_lift + m_pos(2)`), not the nominal
     // layer z — but only while that raised target actually exceeds the

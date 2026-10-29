@@ -1,4 +1,4 @@
-//! TriangleSelector.cpp::deserialize / get_facets_strict.
+//! TriangleSelector.cpp::deserialize / get_facets / get_facets_strict.
 
 use crate::{ProjectMesh, SliceError, mesh_slicer::index_mesh_edges};
 
@@ -108,7 +108,12 @@ fn export_step(
     }
 }
 
-pub(crate) fn strict_facets(mesh: &ProjectMesh, state: u8) -> Result<SelectedFacets, SliceError> {
+type FaceNeighbors = Vec<[Option<usize>; 3]>;
+
+fn deserialize(
+    mesh: &ProjectMesh,
+    annotation: &super::FacetsAnnotation,
+) -> Result<(Selector, FaceNeighbors), SliceError> {
     let topology = index_mesh_edges(mesh.triangles())?;
     let face_neighbors = topology.build_face_neighbors();
     let mut selector = Selector {
@@ -124,23 +129,34 @@ pub(crate) fn strict_facets(mesh: &ProjectMesh, state: u8) -> Result<SelectedFac
             .map(Triangle::new)
             .collect(),
     };
-    selector
-        .triangles
-        .reserve(mesh.supported_facets.codes.len());
+    selector.triangles.reserve(annotation.codes.len());
     let mut decode = Vec::new();
-    for &(root, offset) in &mesh.supported_facets.mapping {
+    for &(root, offset) in &annotation.mapping {
         let mut cursor = offset;
         decode.push(DecodeWork::Read(root, face_neighbors[root]));
         while let Some(work) = decode.pop() {
             decode_step(
                 &mut selector,
-                &mesh.supported_facets.codes,
+                &annotation.codes,
                 &mut cursor,
                 work,
                 &mut decode,
             );
         }
     }
+    Ok((selector, face_neighbors))
+}
+
+pub(crate) fn strict_facets(mesh: &ProjectMesh, state: u8) -> Result<SelectedFacets, SliceError> {
+    strict_annotated_facets(mesh, &mesh.supported_facets, state)
+}
+
+pub(crate) fn strict_annotated_facets(
+    mesh: &ProjectMesh,
+    annotation: &super::FacetsAnnotation,
+    state: u8,
+) -> Result<SelectedFacets, SliceError> {
+    let (selector, face_neighbors) = deserialize(mesh, annotation)?;
     let mut triangles = Vec::new();
     let mut stack = Vec::new();
     for (root, &neighbors) in face_neighbors.iter().enumerate() {
@@ -169,6 +185,36 @@ pub(crate) fn strict_facets(mesh: &ProjectMesh, state: u8) -> Result<SelectedFac
     }
     for triangle in &mut triangles {
         *triangle = triangle.map(|vertex| mapping[vertex as usize]);
+    }
+    Ok(SelectedFacets {
+        vertices,
+        triangles,
+    })
+}
+
+/// TriangleSelector.cpp1474–1493: ordinary leaves, in selector storage order.
+pub(crate) fn ordinary_facets(
+    mesh: &ProjectMesh,
+    annotation: &super::FacetsAnnotation,
+    state: u8,
+) -> Result<SelectedFacets, SliceError> {
+    let (selector, _) = deserialize(mesh, annotation)?;
+    let mut mapping = vec![u32::MAX; selector.vertices.len()];
+    let mut vertices = Vec::new();
+    let mut triangles = Vec::new();
+    for triangle in selector
+        .triangles
+        .iter()
+        .filter(|triangle| triangle.splits() == 0 && triangle.state == state)
+    {
+        triangles.push(triangle.vertices.map(|index| {
+            let index = index as usize;
+            if mapping[index] == u32::MAX {
+                mapping[index] = vertices.len() as u32;
+                vertices.push(selector.vertices[index]);
+            }
+            mapping[index]
+        }));
     }
     Ok(SelectedFacets {
         vertices,

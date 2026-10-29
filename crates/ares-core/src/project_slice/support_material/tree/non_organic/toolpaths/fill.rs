@@ -71,6 +71,8 @@ impl Filler {
             RaftFillPattern::Rectilinear => Ok(fill_rectilinear_surface(
                 area,
                 MonotonicFillParams {
+                    dont_alternate_fill_direction: false,
+                    layer_angle_fixed: false,
                     spacing: self.spacing,
                     overlap: 0.0,
                     density,
@@ -148,6 +150,7 @@ impl Filler {
                     lines.extend(fill_honeycomb(
                         &component,
                         HoneycombFillParams {
+                            dont_alternate_fill_direction: false,
                             spacing: self.spacing,
                             density,
                             multiline: 1,

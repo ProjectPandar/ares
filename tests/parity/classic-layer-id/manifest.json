@@ -1,0 +1,19 @@
+{
+  "version": "M-v3",
+  "v1_v2_retained": true,
+  "correction": "Native --arrange1 export supplies plate/model_instance (object2 instance0 identify14); v1/v2 --arrange0 export lacked it. Same geometry/model transforms/options. Also proper --load-filaments export settings",
+  "geometry": [
+    {
+      "name": "m-later-owner",
+      "sha256": "afcd62a6835e860b9d92d67d159aef5bc3ad8b153ca1e6d25918178128ed24ff"
+    },
+    {
+      "name": "m-first-owner",
+      "sha256": "226845d44b4a754ad1fd41470fdd0a787e44b51b7a7d3a9a3e5da2a5d6b72071"
+    },
+    {
+      "name": "m-incompatible",
+      "sha256": "2d3758695c61a4bc0ad37b0d6ba6e8c113d274d91a1fb1a4484ff39d24574ecd"
+    }
+  ]
+}

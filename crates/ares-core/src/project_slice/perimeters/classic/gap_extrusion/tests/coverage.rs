@@ -8,6 +8,7 @@ use crate::{
 
 fn path(y: i64) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: vec![
                 Point3 { x: 0, y, z: 0 },

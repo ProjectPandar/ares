@@ -17,6 +17,18 @@ use region_source::FilamentRegionSourceOptionsBuilder;
 pub use retract_overrides::FilamentRetractOverrideOptions;
 use retract_overrides::FilamentRetractOverrideOptionsBuilder;
 
+/// Whether `key` is one of the 16 dynamic `filament_extruder_override_keys`
+/// (`PrintConfig.cpp:63-84`) — the `add_nullable` overrides loop at
+/// `:7288-7320`. These are `DynamicPrintConfig`-only entries, not
+/// `FullPrintConfig` static members, so `fpc.apply(*this, true)` at
+/// `PrintConfig.cpp:8876-8878` drops them and `Slic3r::validate`'s
+/// `fpc.keys()` range loop (`:10515-10565`) never checks them. Static
+/// `filament_*` `GCodeConfig` members (e.g.
+/// `filament_max_volumetric_speed`) are not in this set and stay checked.
+pub(crate) fn is_dynamic_filament_override_key(key: &str) -> bool {
+    FilamentRetractOverrideOptionsBuilder::is_known_field(key)
+}
+
 use super::{OrcaFloat, OrcaFloats, VariantStride};
 
 #[derive(Clone, Debug, PartialEq)]

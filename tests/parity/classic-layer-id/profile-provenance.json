@@ -1,0 +1,68 @@
+{
+  "machine": {
+    "name": "WEMAKE3D PhoenixProV1 0.4mm nozzle",
+    "vendor": "WEMAKE3D",
+    "parent_chain": [
+      {
+        "path": "WEMAKE3D/machine/fdm_machine_common.json",
+        "sha256": "e2bee2126b303e8f8263d863dc6a9bf8caf9ad3d59161d275e4bf4beefa72c91",
+        "name": "fdm_machine_common"
+      },
+      {
+        "path": "WEMAKE3D/machine/fdm_machine_phoenixprov1_common.json",
+        "sha256": "1b943995967fa25c96be415680a473b1df095c033ea236aa82461e630019114a",
+        "name": "fdm_machine_phoenixprov1_common"
+      },
+      {
+        "path": "WEMAKE3D/machine/WEMAKE3D PhoenixProV1 0.4mm nozzle.json",
+        "sha256": "1038b00370063466c6001d3bc89c92634b1b7fd9e05e0b46094b4207050850ef",
+        "name": "WEMAKE3D PhoenixProV1 0.4mm nozzle"
+      }
+    ],
+    "flattened_sha256": "cfb65e162aef1c7766747a8a6e6caff27f7e4e3c361d8791a838600bbe59388b"
+  },
+  "process": {
+    "name": "0.2mm Standard @WEMAKE3D PhoenixProV1 0.4mm nozzle",
+    "vendor": "WEMAKE3D",
+    "parent_chain": [
+      {
+        "path": "WEMAKE3D/process/fdm_process_common.json",
+        "sha256": "110e207ea670e366061b77a190ee9b3e6aa927d02afa3b87ae4f508baf0e67d8",
+        "name": "fdm_process_common"
+      },
+      {
+        "path": "WEMAKE3D/process/fdm_process_phoenixProV1_common.json",
+        "sha256": "8012f4fccab406df1a51ee2139de01ef996884ec0c6186ccb21546c9a7452c31",
+        "name": "fdm_process_phoenixProV1_common"
+      },
+      {
+        "path": "WEMAKE3D/process/0.2mm Standard @WEMAKE3D PhoenixProV1 0.4mm nozzle.json",
+        "sha256": "da57ac7db14fe6b707c67acd8ae651e722598292777205cdc9f66ac7306e6608",
+        "name": "0.2mm Standard @WEMAKE3D PhoenixProV1 0.4mm nozzle"
+      }
+    ],
+    "flattened_sha256": "8cb266494e35e33b485f68f2b4827af05a09eb6f340dc5647f8ce21e84810c52"
+  },
+  "filament": {
+    "name": "Generic PLA @System",
+    "vendor": "OrcaFilamentLibrary",
+    "parent_chain": [
+      {
+        "path": "OrcaFilamentLibrary/filament/base/fdm_filament_common.json",
+        "sha256": "e50153a9d859235a9d477cc5c114174635561093b508e111fd2be4186c3f49fc",
+        "name": "fdm_filament_common"
+      },
+      {
+        "path": "OrcaFilamentLibrary/filament/base/fdm_filament_pla.json",
+        "sha256": "0dc0e0679ce186a559b4e8bf19d4f298c27d9bfe77a9ac91fd31ecb5e0c6e10a",
+        "name": "fdm_filament_pla"
+      },
+      {
+        "path": "OrcaFilamentLibrary/filament/Generic PLA @System.json",
+        "sha256": "53884fd5b73f524f2abc62c3d8175196d741f15662bec5387cf564e0d78bae00",
+        "name": "Generic PLA @System"
+      }
+    ],
+    "flattened_sha256": "88d1985ee789aa68e7754d7900faaebfe29e76f2c59235176cf34239d94f3c6b"
+  }
+}

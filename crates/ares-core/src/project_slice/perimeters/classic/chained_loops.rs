@@ -64,7 +64,7 @@ fn transform_record(
         .surfaces
         .into_iter()
         .enumerate()
-        .map(|(index, raw)| transform_surface(raw, &traversal.surfaces[index], traversal.branch))
+        .map(|(index, raw)| transform_surface(raw, &traversal.surfaces[index]))
         .collect();
     PreparedChainedLoopRecord { surfaces }
 }
@@ -72,13 +72,13 @@ fn transform_record(
 fn transform_surface(
     raw: PreparedRawPathSurface,
     traversal: &super::traversal::PreparedTraversalSurface,
-    branch: super::traversal::PendingPathBranch,
 ) -> PreparedChainedLoopSurface {
     assert_eq!(raw.source_index, traversal.source_index);
-    let roots = tree::transform_nodes(raw.roots, &traversal.roots, branch);
+    let roots = tree::transform_nodes(raw.roots, &traversal.roots);
     PreparedChainedLoopSurface {
         source_index: raw.source_index,
         roots,
-        thin_walls: raw.thin_walls,
+        root_order: raw.root_order,
+        thin_entities: raw.thin_entities,
     }
 }

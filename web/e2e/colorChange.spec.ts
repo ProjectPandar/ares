@@ -104,7 +104,7 @@ test("ColorChange shows source records, unavailable usage, view restoration and 
         await expect(changes).toHaveCount(0);
         await page.getByTestId("view-type").selectOption("ColorPrint");
         await expect(changes).toBeVisible();
-        await expect.poll(() => canvasDigest(page)).toBe(colorView);
+        expect(await canvasDigest(page)).toBe(colorView);
       }
     }
     await page.screenshot({ path: `${directory}/preview.png` });

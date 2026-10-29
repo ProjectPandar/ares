@@ -21,14 +21,26 @@ pub(in crate::project_slice) struct PreparedRawPathRecord {
 pub(in crate::project_slice) struct PreparedRawPathSurface {
     pub(in crate::project_slice) source_index: usize,
     pub(in crate::project_slice) roots: Vec<RawPathNode>,
-    /// `thin_walls` — `detect_thin_wall` extractions for `traverse_loops`.
-    pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
+    /// Root-level chain over the compacted loops plus `thin_entities`
+    /// (`PerimeterGenerator.cpp:238`), computed once during materialization
+    /// and consumed verbatim by the emission traversal — the single chain
+    /// computation for the surface level.
+    pub(in crate::project_slice) root_order: Vec<(usize, bool)>,
+    /// `variable_width` thin-wall entities (`PerimeterGenerator.cpp:231`),
+    /// materialized once here because the root chain interleaves them.
+    pub(in crate::project_slice) thin_entities:
+        Vec<crate::project_slice::perimeters::classic::entity_collections::ExtrusionEntity>,
 }
 
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct RawPathNode {
     pub(in crate::project_slice) paths: Vec<ExtrusionPath>,
     pub(in crate::project_slice) children: Vec<RawPathNode>,
+    /// Chain over this node's children level (`PerimeterGenerator.cpp:238`),
+    /// computed once during materialization and consumed verbatim by the
+    /// emission traversal's child descent and ordering. Loop-only level:
+    /// reverse flags stay `false` (chain-extrusion loop semantics).
+    pub(in crate::project_slice) child_order: Vec<(usize, bool)>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -72,6 +84,7 @@ pub(in crate::project_slice) struct Polyline3 {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionPath {
+    pub(in crate::project_slice) z_contoured: bool,
     pub(in crate::project_slice) polyline: Polyline3,
     pub(in crate::project_slice) role: ExtrusionRole,
     pub(in crate::project_slice) can_reverse: bool,
@@ -82,16 +95,6 @@ pub(in crate::project_slice) struct ExtrusionPath {
 
 impl ExtrusionPath {
     pub(in crate::project_slice) fn reverse(&mut self) {
-        let last_index = self.polyline.points.len().saturating_sub(1);
-        for fitted in &mut self.polyline.fitting {
-            let start = fitted.start;
-            fitted.start = last_index - fitted.end;
-            fitted.end = last_index - start;
-            if let Some(arc) = &mut fitted.arc {
-                arc.clockwise = !arc.clockwise;
-            }
-        }
-        self.polyline.fitting.reverse();
-        self.polyline.points.reverse();
+        self.polyline.reverse();
     }
 }

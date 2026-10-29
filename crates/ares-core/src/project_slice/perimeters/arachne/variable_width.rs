@@ -123,6 +123,7 @@ fn thick_polyline_to_multi_path(
         match path.as_mut() {
             None => {
                 path = Some(ExtrusionPath {
+                    z_contoured: false,
                     polyline: Polyline3 {
                         points: vec![point3(line.a), point3(line.b)],
                         fitting: Vec::new(),

@@ -65,6 +65,8 @@ pub(super) fn rectilinear(
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let params = MonotonicFillParams {
+        dont_alternate_fill_direction: false,
+        layer_angle_fixed: false,
         spacing: spec.spacing,
         overlap: 0.0,
         density: spec.density,
@@ -95,6 +97,7 @@ pub(super) fn honeycomb(
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let params = HoneycombFillParams {
+        dont_alternate_fill_direction: false,
         spacing: spec.spacing,
         density: spec.density,
         multiline: 1,

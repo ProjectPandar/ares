@@ -8,7 +8,7 @@ pub(super) fn emit(
     paths: &[ExtrusionPath],
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     // `estimate_malformations` collects each entity once — for an
     // `ExtrusionMultiPath` (`ExtrusionEntity.hpp:430-436`, role = first
     // path's role, `ExtrusionEntity.hpp:415`) that is the concatenated
@@ -37,7 +37,7 @@ pub(super) fn emit(
                 geometry,
                 inside_loop: true,
             },
-        );
+        )?;
         state.adaptive_pa_emitted = true;
     }
     state.adaptive_pa_flow = None;
@@ -59,4 +59,5 @@ pub(super) fn emit(
             })
             .collect();
     }
+    Ok(())
 }

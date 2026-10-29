@@ -1,0 +1,85 @@
+{
+  "base": "89560ca66ff8418bcf175d573df299955f9a216f",
+  "spec": "374f1c602",
+  "upstream": [
+    "GCode/SpiralVase.cpp:122-123",
+    "GCode/SpiralVase.cpp:153-166",
+    "GCode/SpiralVase.cpp:206-215"
+  ],
+  "cases": {
+    "control": {
+      "sha256": "7a476876c3242aa7936de75e685b2c3292a32c678bf53f994b36d6c1e2308b77",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "a33d97588db689a1a287b366c1eea467ac136cf36241068df18d2a70084fcbbe",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "9bc271c6372460387f129375dfd49a65d6b37764fccab8dbdb9f106f9fdd4227",
+        "Metadata/project_settings.config": "6193aafdc823e441d842f4a14e9a2809e64d03af3a0fb46ec97d789b3e7586e4",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "source_export": "/tmp/w5-discovery-89560-spiral-short/control/exported.3mf",
+      "settings": {
+        "spiral_mode": "0",
+        "use_relative_e_distances": "1",
+        "wall_generator": "classic",
+        "wall_loops": "1",
+        "layer_height": "0.2",
+        "initial_layer_print_height": "0.2",
+        "bottom_shell_layers": "0",
+        "seam_slope_type": "none",
+        "wipe": [
+          "0"
+        ],
+        "retract_when_changing_layer": [
+          "0"
+        ],
+        "filament_retract_when_changing_layer": [
+          "0"
+        ]
+      }
+    },
+    "positive": {
+      "sha256": "d35033bde4712fd6befa3b7341c172901e654608be904cab43757cdcf6890621",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "a33d97588db689a1a287b366c1eea467ac136cf36241068df18d2a70084fcbbe",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "9bc271c6372460387f129375dfd49a65d6b37764fccab8dbdb9f106f9fdd4227",
+        "Metadata/project_settings.config": "99595c007b845052dc3b5bb02029594c3c7b47cac51b44cc6dd4be18069a1280",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "source_export": "/tmp/w5-discovery-89560-spiral-short/positive/exported.3mf",
+      "settings": {
+        "spiral_mode": "1",
+        "use_relative_e_distances": "1",
+        "wall_generator": "classic",
+        "wall_loops": "1",
+        "layer_height": "0.2",
+        "initial_layer_print_height": "0.2",
+        "bottom_shell_layers": "0",
+        "seam_slope_type": "none",
+        "wipe": [
+          "0"
+        ],
+        "retract_when_changing_layer": [
+          "0"
+        ],
+        "filament_retract_when_changing_layer": [
+          "0"
+        ]
+      }
+    }
+  },
+  "only_delta": {
+    "zip_payload": "Metadata/project_settings.config",
+    "key": "spiral_mode",
+    "control": "0",
+    "positive": "1"
+  }
+}

@@ -1,6 +1,7 @@
 //! `ToolOrdering.cpp` materialized layer tools and writer-used IDs.
 
 mod collect;
+mod custom_gcodes;
 mod first_layer;
 mod initialize;
 use initialize::{initialize_layers, initialize_layers_scoped, layer_index};
@@ -11,7 +12,7 @@ mod reorder;
 mod statistics;
 pub(super) mod wiping;
 
-pub(super) use collect::object_options;
+pub(super) use collect::{object_options, print_extruders};
 pub(super) use partitions::max_layer_height;
 
 use super::layers::RaftSchedule;
@@ -32,13 +33,15 @@ pub(super) struct LayerTools {
     pub(super) has_wipe_tower: bool,
     pub(super) wipe_tower_layer_height: f64,
     pub(super) wiping: wiping::WipingExtrusions,
+    /// `LayerTools::custom_gcode` (`ToolOrdering.hpp:168`).
+    pub(super) custom_gcode: Option<crate::gcode_processor::CustomGCodeItem>,
 }
 
 pub(super) struct ToolOrdering {
     pub(super) layers: Vec<LayerTools>,
     all_extruders: Vec<usize>,
     pub(super) first_extruder: Option<usize>,
-    pub(super) type2_tower: bool,
+    pub(super) tower_type: Option<crate::WipeTowerType>,
 }
 
 /// `ToolOrdering.cpp:962-972`: count each distinct extruder of the layer
@@ -57,7 +60,7 @@ impl ToolOrdering {
         &mut self,
         support: &mut [Vec<InstalledSupportLayer>],
     ) {
-        if !self.type2_tower {
+        if self.tower_type.is_none() {
             return;
         }
         let tower_only =
@@ -101,7 +104,7 @@ impl ToolOrdering {
     pub(super) fn initial_extruder(&self, settings: &crate::ProjectSettings) -> usize {
         if settings.process.print.print_sequence == crate::ProcessPrintSequence::ByObject {
             self.ordered_tools().next().unwrap_or(0)
-        } else if self.type2_tower
+        } else if self.tower_type == Some(crate::WipeTowerType::Type2)
             && !settings
                 .process
                 .gcode
@@ -315,16 +318,17 @@ fn finish_layers(
         reorder::apply(&mut layers, traversal, scoped);
         partitions::fill(&mut layers, settings, object_bottom_z, max_height);
     }
-    let prime =
-        super::wipe_tower::type2_requested(settings, super::tags::Tags::of(traversal).is_bbl());
+    let requested =
+        super::wipe_tower::requested(settings, super::tags::Tags::of(traversal).is_bbl());
+    let prime = requested == Some(crate::WipeTowerType::Type2);
     let (all_extruders, first_extruder) = statistics::collect(&layers, prime);
-    let type2_tower = prime
-        && first_extruder.is_some()
-        && layers.first().is_some_and(|layer| layer.has_wipe_tower);
+    let tower_type = requested.filter(|_| {
+        first_extruder.is_some() && layers.first().is_some_and(|layer| layer.has_wipe_tower)
+    });
     Ok(ToolOrdering {
         layers,
         all_extruders,
         first_extruder,
-        type2_tower,
+        tower_type,
     })
 }

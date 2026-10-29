@@ -1,24 +1,17 @@
 use super::super::{
-    materialize::RawPathNode,
-    shortest_path::chain_and_reorder_extrusion_paths,
-    traversal::{PendingLoopRole, PendingPathBranch, TraversalSeed},
+    materialize::RawPathNode, traversal::PendingLoopRole, traversal::TraversalSeed,
 };
-use super::types::{ChainedLoopNode, ExtrusionLoop, ExtrusionLoopRole};
 
-struct FinishFrame {
-    extrusion_loop: Option<ExtrusionLoop>,
-    child_count: usize,
-}
+use super::types::{ChainedLoopNode, ExtrusionLoop, ExtrusionLoopRole};
 
 enum Frame<'a> {
     Visit(RawPathNode, &'a TraversalSeed),
-    Finish(FinishFrame),
+    Finish(usize),
 }
 
 pub(super) fn transform_nodes(
     raw_nodes: Vec<RawPathNode>,
     seeds: &[TraversalSeed],
-    branch: PendingPathBranch,
 ) -> Vec<ChainedLoopNode> {
     assert_eq!(raw_nodes.len(), seeds.len());
     let mut frames = Vec::new();
@@ -29,43 +22,42 @@ pub(super) fn transform_nodes(
     while let Some(frame) = frames.pop() {
         match frame {
             Frame::Visit(raw, seed) => {
-                let RawPathNode { paths, children } = raw;
+                let RawPathNode {
+                    paths,
+                    children,
+                    child_order,
+                } = raw;
                 assert_eq!(children.len(), seed.children.len());
-                let extrusion_loop = build_loop(paths, seed.loop_role, branch);
-                frames.push(Frame::Finish(FinishFrame {
-                    extrusion_loop,
-                    child_count: children.len(),
-                }));
+                // Empty paths keep the `None` slot for source line 208
+                // `continue` — the loop is not an entity and compacts out of
+                // the emission chain. The overhang path reorder already ran
+                // in the materialization flat pass (`:207`).
+                let extrusion_loop = (!paths.is_empty()).then_some(ExtrusionLoop {
+                    paths,
+                    role: map_loop_role(seed.loop_role),
+                });
+                let child_count = children.len();
+                frames.push(Frame::Finish(child_count));
                 for (index, child) in children.into_iter().enumerate().rev() {
                     frames.push(Frame::Visit(child, &seed.children[index]));
                 }
-            }
-            Frame::Finish(finish) => {
-                let child_start = completed.len() - finish.child_count;
-                let children = completed.split_off(child_start);
                 completed.push(ChainedLoopNode {
-                    extrusion_loop: finish.extrusion_loop,
-                    children,
+                    extrusion_loop,
+                    children: Vec::new(),
+                    child_order,
                 });
+            }
+            Frame::Finish(child_count) => {
+                let child_start = completed.len() - child_count;
+                let children = completed.split_off(child_start);
+                completed
+                    .last_mut()
+                    .expect("a finish has its node")
+                    .children = children;
             }
         }
     }
     completed
-}
-
-fn build_loop(
-    mut paths: Vec<super::super::materialize::ExtrusionPath>,
-    role: PendingLoopRole,
-    branch: PendingPathBranch,
-) -> Option<ExtrusionLoop> {
-    if matches!(branch, PendingPathBranch::OverhangClipping { .. }) {
-        let first = paths.first()?.polyline.points[0];
-        chain_and_reorder_extrusion_paths(&mut paths, [first.x, first.y]);
-    }
-    Some(ExtrusionLoop {
-        paths,
-        role: map_loop_role(role),
-    })
 }
 
 fn map_loop_role(role: PendingLoopRole) -> ExtrusionLoopRole {

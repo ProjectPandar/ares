@@ -66,8 +66,12 @@ pub(super) fn prepare_infill_lines(
         .all_regions
         .iter()
         .any(|region| {
-            region.sparse_infill_pattern == crate::ProcessInfillPattern::TriHexagon
-                && region.fill_multiline.0 > 1
+            matches!(
+                region.sparse_infill_pattern,
+                crate::ProcessInfillPattern::TriHexagon
+                    | crate::ProcessInfillPattern::Grid
+                    | crate::ProcessInfillPattern::Triangles
+            ) && region.fill_multiline.0 > 1
         })
         .then(|| {
             crate::project_slice::fill_entities::extended_stars_bounds(

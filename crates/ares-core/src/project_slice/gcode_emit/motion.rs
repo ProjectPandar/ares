@@ -22,9 +22,11 @@ mod path_tests;
 mod perimeter;
 mod scan;
 mod scarf;
+mod shared_reversals;
 mod skirt_brim;
 mod state;
 mod support;
+
 #[cfg(test)]
 mod tests;
 pub(super) mod tool_selection;
@@ -37,6 +39,7 @@ pub(in crate::project_slice) use arc::{simplify_linear_points, simplify_points};
 pub(super) use extruder_registry::ExtruderRegistry;
 pub(super) use layer::emit_layer;
 pub(super) use origin::set_origin;
+pub(super) use shared_reversals::{EmissionPhase, SharedLayerId};
 pub(super) use skirt_brim::{SkirtLoopParameters, emit_brim_loop, emit_skirt_loop};
 pub(super) use state::{
     AvoidCrossingGeometry, EmitState, LayerBegin, LayerGeometry, LiftMode, append_exclude_end,
@@ -117,7 +120,7 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
         state.extruder.retracted = true;
         travel::defer_layer_change_lift(state);
     }
-    travel::reset_e(output, state);
+    travel::reset_e(output, state, false);
 }
 
 /// The second-layer first-layer-inspection scan (`GCode.cpp:4780-4790`):
@@ -143,7 +146,7 @@ fn emit_fill_entity(
     entity: &FillExtrusionEntity,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     match entity {
         FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => path::emit(
             output,
@@ -152,6 +155,7 @@ fn emit_fill_entity(
                 .iter()
                 .map(|point| (point.x(), point.y())),
             PathProperties {
+                contour: path.z_contoured.then_some(path.polyline.points.as_slice()),
                 mm3_per_mm: path.mm3_per_mm,
                 width: path.width,
                 height: path.height,
@@ -163,7 +167,7 @@ fn emit_fill_entity(
                         | crate::ExtrusionRole::OverhangPerimeter
                 ),
                 end_clip: 0.0,
-                fitting: &path.fitting,
+                fitting: &path.polyline.fitting,
                 slope: None,
                 inside_loop: false,
             },
@@ -171,7 +175,7 @@ fn emit_fill_entity(
             state,
         ),
         FillExtrusionEntity::VariableWidth(entity) => {
-            emit_variable_width_entity(output, entity, geometry, state);
+            emit_variable_width_entity(output, entity, geometry, state)
         }
     }
 }
@@ -181,7 +185,7 @@ fn emit_variable_width_entity(
     entity: &GapFillEntity,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     match entity {
         GapFillEntity::Path(path) => materialized::emit(
             output,
@@ -212,25 +216,12 @@ fn emit_variable_width_entity(
                 },
                 geometry.scale,
             );
-            loop_paths::emit(output, &loop_, geometry, state, &[])
+            loop_paths::emit(output, (&loop_, None), geometry, state, &[])
         }
     }
 }
 
-pub(super) fn local_cursor(state: &EmitState, geometry: LayerGeometry<'_>) -> Point {
-    // `GCode::extrude_infill` chains from m_last_pos, not GCodeWriter::m_pos.
-    if let Some((x, y)) = state.last_scaled_position {
-        return Point::new(x, y);
-    }
-    // Before the first generated path, use the position left by start G-code.
-    Point::new(
-        geometry
-            .scale
-            .checked_scale(state.x - state.offset.0)
-            .expect("emitted X remains in the coordinate domain"),
-        geometry
-            .scale
-            .checked_scale(state.y - state.offset.1)
-            .expect("emitted Y remains in the coordinate domain"),
-    )
+pub(super) fn local_cursor(state: &EmitState, _geometry: LayerGeometry<'_>) -> Point {
+    // `GCode.hpp:224`: numeric m_last_pos exists even while undefined for travel.
+    Point::new(state.last_scaled_position.0, state.last_scaled_position.1)
 }

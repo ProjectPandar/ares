@@ -1,4 +1,5 @@
-use boostvoronoi::prelude::{CellIndex, Diagram, EdgeIndex, SourceCategory};
+use crate::geometry::voronoi::Diagram;
+use boostvoronoi::prelude::{CellIndex, EdgeIndex, SourceCategory};
 
 use crate::geometry::Line;
 

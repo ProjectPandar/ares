@@ -97,7 +97,7 @@ fn task22m_apply_wraps_exact_one_two_layer_ramps_and_short_object_clamp() {
     let output = apply_project_compensation(
         objects, &resolved, FloatOrPercent::Float(0.5),
         &OrcaFloats(vec![OrcaFloat(0.4)]),
-        crate::geometry::CoordinateScale::Normal,
+        (crate::geometry::CoordinateScale::Normal, std::iter::repeat(false)),
     ).unwrap();
 
     assert_eq!(output.len(), 3);
@@ -129,7 +129,7 @@ fn task22m_apply_signed_raft_and_disabled_objects_preserve_complete_current_stat
     ];
     let output = apply_project_compensation(
         objects, &resolved, FloatOrPercent::Float(0.5), &OrcaFloats(Vec::new()),
-        crate::geometry::CoordinateScale::Normal,
+        (crate::geometry::CoordinateScale::Normal, std::iter::repeat(false)),
     ).unwrap();
 
     assert_eq!(output.len(), 3);
@@ -151,7 +151,7 @@ fn task22m_apply_zero_region_object_has_one_empty_slice_vector_per_planned_layer
     let mut output = apply_project_compensation(
         vec![object], &[resolved(33, compensation_options(0.15, 1, 0), Vec::new())],
         FloatOrPercent::Float(0.5), &OrcaFloats(Vec::new()),
-        crate::geometry::CoordinateScale::Normal,
+        (crate::geometry::CoordinateScale::Normal, std::iter::repeat(false)),
     ).unwrap();
 
     let (post_regions, lslices) = output.pop().unwrap().into_parts();

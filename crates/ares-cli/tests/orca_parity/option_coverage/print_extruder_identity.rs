@@ -4,7 +4,12 @@ use serde_json::json;
 use std::{
     fs,
     io::{Cursor, Read, Write},
+    path::PathBuf,
 };
+
+#[path = "print_extruder_identity/cases.rs"]
+mod cases;
+use cases::{CASES, Case};
 
 fn authored_identity(project: &[u8], ids: &Value, variants: &Value) -> Vec<u8> {
     let mut before = zip::ZipArchive::new(Cursor::new(project)).unwrap();
@@ -58,18 +63,11 @@ fn authored_identity(project: &[u8], ids: &Value, variants: &Value) -> Vec<u8> {
     result
 }
 
-async fn compare_identity(
-    label: &str,
-    context: (&str, &str),
-    ids: Value,
-    variants: Value,
-    expected: (&str, &str),
-) {
-    let (vendor, printer) = context;
-    let (expected_ids, expected_variants) = expected;
-    let Some(runner) = OrcaRunner::from_env().unwrap() else {
-        return;
-    };
+async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
+    let label = format!("print-process-identity/{}", case.label);
+    let (vendor, printer) = ("BBL", case.printer);
+    let (ids, variants) = (json!(case.ids), json!(case.variants));
+    let (expected_ids, expected_variants) = (case.expected_ids, case.expected_variants);
     let profiles = VendorProfiles::load(&profiles_root(), vendor).unwrap();
     let selected = parity::select_printer(&profiles, vendor, printer).unwrap();
     let machine = profiles.machine(&selected.printer).unwrap();
@@ -84,7 +82,7 @@ async fn compare_identity(
     let exported = runner
         .export_case(
             &crate::runner::CaseInputs {
-                label,
+                label: &label,
                 machine: &machine,
                 process: &process,
                 filaments: &filaments,
@@ -165,87 +163,109 @@ async fn compare_identity(
         crate::cli_retained_input::normalize_generator(&native, "OrcaSlicer"),
         "complete process identity stream: {directory:?}"
     );
+    directory
 }
 
-const STANDARD_PAIR: &str = "\"Direct Drive Standard\";\"Direct Drive Standard\"";
+async fn compare_case(label: &str) {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let case = CASES.iter().find(|case| case.label == label).unwrap();
+    compare_identity(&runner, case).await;
+}
+
+pub(super) fn generate(key: &str) -> Option<(Vec<super::domains::OptionCase>, Value)> {
+    if key != "print_extruder_id" {
+        return None;
+    }
+    Some((
+        CASES
+            .iter()
+            .map(|case| super::domains::OptionCase {
+                label: case.label.into(),
+                value: Some(json!(case.ids)),
+            })
+            .collect(),
+        json!({
+            "domain":"six Native-admitted print identity/materialization contexts",
+            "source":"PrintConfig.cpp:5405,9004-9055,9634-9683; PrintApply.cpp:1169",
+            "spec":"docs/architecture/2026-10-14-print-extruder-id-matrix-spec.md",
+            "cases":CASES.iter().map(|case| json!({
+                "label":case.label,"printer":case.printer,"ids":case.ids,
+                "variants":case.variants,"expected_ids":case.expected_ids,
+                "expected_variants":case.expected_variants
+            })).collect::<Vec<_>>(),
+            "comparison":"existing complete Native/API stream and materialized config assertions",
+            "deferred":["arbitrary ID/vector shapes","other printer/variant contexts","master/physical identity","production changes"]
+        }),
+    ))
+}
+
+pub(super) fn execute_plan(
+    runner: &OrcaRunner,
+    plan: &super::domains::OptionPlan,
+) -> super::OptionOutcome {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap();
+    let root = parity::artifacts::root_from_env().unwrap();
+    parity::artifacts::overwrite(
+        &root.join("print-extruder-id-domain.json"),
+        &serde_json::to_vec_pretty(plan.tool_metadata.as_ref().unwrap()).unwrap(),
+    )
+    .unwrap();
+    for request in &plan.cases {
+        let case = CASES
+            .iter()
+            .find(|case| case.label == request.label)
+            .unwrap();
+        assert_eq!(request.value, Some(json!(case.ids)));
+        let directory = runtime.block_on(compare_identity(runner, case));
+        // The sweep and its public regression can publish this same case concurrently.
+        let mut receipt = tempfile::NamedTempFile::new_in(&root).unwrap();
+        serde_json::to_writer_pretty(
+            receipt.as_file_mut(),
+            &json!({
+                "key":plan.key,"label":case.label,"directory":directory,
+                "comparison":"PASS","kind":"strict whole G-code",
+                "requested_ids":case.ids,"requested_variants":case.variants,
+                "expected_ids":case.expected_ids,"expected_variants":case.expected_variants
+            }),
+        )
+        .unwrap();
+        receipt
+            .persist(root.join(format!("print-extruder-id-{}-comparison.json", case.label)))
+            .unwrap();
+    }
+    super::OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None)
+}
 
 #[tokio::test]
 async fn print_process_identity_materializes_reversed_complete_map_without_master_changes() {
-    compare_identity(
-        "print-process-identity/reversed",
-        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
-        json!(["2", "1"]),
-        json!(["Direct Drive Standard", "Direct Drive Standard"]),
-        ("1,2", STANDARD_PAIR),
-    )
-    .await;
+    compare_case("reversed").await;
 }
 
 #[tokio::test]
 async fn print_process_identity_complete_physical_order_is_preserved() {
-    compare_identity(
-        "print-process-identity/ordered",
-        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
-        json!(["1", "2"]),
-        json!(["Direct Drive Standard", "Direct Drive Standard"]),
-        ("1,2", STANDARD_PAIR),
-    )
-    .await;
+    compare_case("ordered").await;
 }
 
 #[tokio::test]
 async fn print_process_identity_default_singleton_exports_complete_output() {
-    compare_identity(
-        "print-process-identity/default",
-        ("BBL", "Bambu Lab X1 Carbon 0.4 nozzle"),
-        json!(["1"]),
-        json!(["Direct Drive Standard"]),
-        ("1", "\"Direct Drive Standard\""),
-    )
-    .await;
+    compare_case("default").await;
 }
 
 #[tokio::test]
 async fn print_process_identity_repeated_ids_select_matching_variants() {
-    compare_identity(
-        "print-process-identity/repeated",
-        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
-        json!(["1", "1", "2"]),
-        json!([
-            "Direct Drive High Flow",
-            "Direct Drive Standard",
-            "Direct Drive Standard"
-        ]),
-        ("1,2", STANDARD_PAIR),
-    )
-    .await;
+    compare_case("repeated").await;
 }
 
 #[tokio::test]
 async fn print_process_identity_short_ids_use_generated_group_identity() {
-    compare_identity(
-        "print-process-identity/short",
-        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
-        json!(["7"]),
-        json!([
-            "Direct Drive High Flow",
-            "Direct Drive Standard",
-            "Direct Drive High Flow",
-            "Direct Drive Standard"
-        ]),
-        ("7,7", STANDARD_PAIR),
-    )
-    .await;
+    compare_case("short").await;
 }
 
 #[tokio::test]
 async fn print_process_identity_unmatched_variant_uses_native_materialized_view() {
-    compare_identity(
-        "print-process-identity/unmatched",
-        ("BBL", "Bambu Lab H2D 0.4 nozzle"),
-        json!(["1", "2"]),
-        json!(["Bowden Standard", "Bowden Standard"]),
-        ("1,1", "\"Bowden Standard\";\"Bowden Standard\""),
-    )
-    .await;
+    compare_case("unmatched").await;
 }

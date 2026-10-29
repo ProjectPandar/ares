@@ -1,0 +1,26 @@
+{
+  "base": "29f4a49c18139925fec238d31d2fdb6b790fbc30",
+  "source_sha256": "afcd62a6835e860b9d92d67d159aef5bc3ad8b153ca1e6d25918178128ed24ff",
+  "cases": {
+    "none-inner-outer": {
+      "sha256": "a87421a8693ffab880d2b0c838eb0f191fa8855c8743b978cea042b8a6d7b5ab",
+      "brim_type": "no_brim",
+      "wall_sequence": "inner wall/outer wall"
+    },
+    "outer-inner-outer": {
+      "sha256": "f2938a05b5f4a81606f2bed1c24605ec9c17445318e3f9545befab92a3bedbc0",
+      "brim_type": "outer_only",
+      "wall_sequence": "inner wall/outer wall"
+    },
+    "outer-outer-inner": {
+      "sha256": "4db60ddbc830466f539075adb474041c90c7b987832e843f563b8443be0b5576",
+      "brim_type": "outer_only",
+      "wall_sequence": "outer wall/inner wall"
+    },
+    "inner-inner-outer": {
+      "sha256": "f8212c0883c17ac79f799cac8c1e4dbed0242555410971aab43198a1dcc5e787",
+      "brim_type": "inner_only",
+      "wall_sequence": "inner wall/outer wall"
+    }
+  }
+}

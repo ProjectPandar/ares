@@ -37,7 +37,9 @@ pub(crate) use segments::{
     IntersectionKind, LinkQuality, LinkType, SegmentIntersection, SegmentedLine,
     prepare_rectilinear_slice, slice_vertical_lines,
 };
-pub(crate) use surface::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface};
+pub(crate) use surface::{
+    MonotonicFillOutput, MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface,
+};
 
 #[cfg(test)]
 mod tests;

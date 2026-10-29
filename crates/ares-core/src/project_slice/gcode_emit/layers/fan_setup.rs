@@ -12,11 +12,14 @@ pub(super) fn gate(traversal: &PreparedPostClassicTraversal) -> Option<FanMover>
         let relative_e = gcode.use_relative_e_distances.0;
         let flavor: GCodeFlavor = gcode.gcode_flavor;
         FanMover::new(
-            speedup_time,
+            f64::from((speedup_time as f32).abs()),
             kickstart,
             gcode.fan_speedup_overhangs.0,
             relative_e,
-            flavor,
+            (
+                flavor,
+                traversal.resolved.views.full.process.print.gcode_comments.0,
+            ),
         )
     })
 }

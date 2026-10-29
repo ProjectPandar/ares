@@ -1,0 +1,15 @@
+{
+  "upstream_pin": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "file": "a1-lightning15.3mf",
+  "sha256": "fbba9c87450ad465300b3d522912068e9625395faf3feed937eaa4267f54c067",
+  "bytes": 14438,
+  "machine": "Bambu Lab A1 0.4 nozzle",
+  "model": "cube_with_hole.obj",
+  "sparse_infill_pattern": "lightning",
+  "sparse_infill_density": "15%",
+  "spiral_mode": "0",
+  "ironing_type": "no ironing",
+  "top_shell_layers": "5",
+  "bottom_shell_layers": "3",
+  "source": "unchanged approved discovery input; input only, no expected Native output"
+}

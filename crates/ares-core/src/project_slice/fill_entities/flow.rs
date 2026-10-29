@@ -12,14 +12,13 @@ pub(in crate::project_slice) fn materialized_flow(
     } else {
         crate::project_slice::perimeters::flow::with_spacing(params.flow, spacing)?
     };
+    // Only earlier ungated fill roles are pre-baked; gated ratios belong to motion export.
     flow.mm3_per_mm *= params.flow_ratio;
     Ok(flow)
 }
 
-/// `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) applied
-/// to the object bounding box. The incoming `bounding_box` is the slice-contour
-/// extent (empirically this is what the oracle's grid anchors on — see
-/// `fill_entities/generate.rs` and the residual map). This helper centers it on
+/// `FillRectilinear::extended_object_bounding_box()` (FillRectilinear.cpp:2741-2750)
+/// applied to the raw model-size object box. This helper centers it on
 /// the origin (matching `PrintObject::bounding_box`'s centered `m_size` box,
 /// `Print.hpp:347`), merges the transposed corners
 /// (`out.merge(min.y(),min.x())` + `out.merge(max.y(),max.x())`), then applies

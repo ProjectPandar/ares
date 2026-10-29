@@ -1,4 +1,4 @@
-use super::Project;
+use super::{ImportScope, Project};
 use crate::{ProjectSettings, SliceError};
 
 impl Project {
@@ -18,31 +18,23 @@ impl Project {
             .iter()
             .copied()
             .collect::<std::collections::BTreeSet<_>>();
-        let objects = self
-            .objects
-            .iter()
-            .filter_map(|object| {
-                let mut instances = object.instances().to_vec();
-                instances.retain(|instance| {
-                    // Unassigned instances (no plate metadata) stay for the
-                    // geometric print-volume gate; assigned instances match
-                    // the plate's identity set.
-                    match instance.loaded_label_id() {
-                        Some(label) => identity.contains(&[
-                            instance.object_id(),
-                            instance.instance_id(),
-                            label,
-                        ]),
-                        None => true,
+        let mut objects = match plate {
+            Some(_) => self.selected_import_objects(&self.plates[index]),
+            None => self.objects.clone(),
+        };
+        for object in &mut objects {
+            object
+                .instances
+                .retain(|instance| match instance.loaded_label_id() {
+                    Some(label) => {
+                        identity.contains(&[instance.object_id(), instance.instance_id(), label])
                     }
+                    // All-import views retain unassigned instances for the volume gate.
+                    // Explicit importer scopes already excluded absent object IDs.
+                    None => true,
                 });
-                (!instances.is_empty()).then(|| {
-                    let mut object = object.clone();
-                    object.instances = instances;
-                    object
-                })
-            })
-            .collect::<Vec<_>>();
+        }
+        objects.retain(|object| !object.instances.is_empty());
         if objects.is_empty() {
             // Model.cpp:354-355 rejects an empty selected importer model.
             // The CLI adapter maps this to `CLI_NO_SUITABLE_OBJECTS`
@@ -62,7 +54,12 @@ impl Project {
         // (`OrcaSlicer.cpp:5979` `new_print_config.apply(*part_plate->config())`;
         // keys listed in `BBS_3MF_Importer`, `bbs_3mf.cpp:4418-4565`).
         let mut settings = self.settings.clone();
-        if let Some(plate_settings) = self.documents.model_settings.plates.get(index) {
+        let source_index = if self.plate_view {
+            self.curr_plate_index as usize
+        } else {
+            index
+        };
+        if let Some(plate_settings) = self.documents.model_settings.plates.get(source_index) {
             super::super::plate_config::apply_plate_config_overrides(
                 &mut settings,
                 &plate_settings.metadata,
@@ -74,10 +71,16 @@ impl Project {
             plates: vec![self.plates[index].clone()],
             settings,
             documents,
-            plate_origin: plate_grid_origin(index, plate_count, &self.settings),
+            import_scope: plate.map_or(self.import_scope, ImportScope::Plate),
+            plate_view: true,
+            plate_origin: if self.plate_view {
+                self.plate_origin
+            } else {
+                plate_grid_origin(index, plate_count, &self.settings)
+            },
             plates_custom_gcodes: self.plates_custom_gcodes.clone(),
             // OrcaSlicer.cpp:5690 `model.curr_plate_index = index`.
-            curr_plate_index: index as i32,
+            curr_plate_index: source_index as i32,
         })
     }
 }

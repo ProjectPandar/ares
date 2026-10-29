@@ -19,6 +19,7 @@ fn shared_inset_erases_narrow_domains_unless_overlap_restores_them() {
             Vec::new(),
         );
         let mut params = LineFillParams {
+            dont_alternate_fill_direction: false,
             spacing: 0.45,
             overlap: 0.0,
             density: 0.15,
@@ -58,6 +59,7 @@ fn clipping_and_connection_use_the_rotated_surface_frame() {
             let paths = fill_line(
                 &domain,
                 LineFillParams {
+                    dont_alternate_fill_direction: false,
                     spacing: 0.45,
                     overlap: 0.0,
                     density: 0.15,

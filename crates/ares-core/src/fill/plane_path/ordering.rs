@@ -1,9 +1,12 @@
 use super::PlanePathPattern;
 use crate::{
     geometry::{Line, Point, Polyline},
-    project_slice::{chain_polylines, chain_polylines_multifragment},
+    project_slice::chain_polylines,
 };
 
+// `FillPlanePath.cpp:130-160`: every plane-path pattern chains through
+// `chain_polylines` (greedy2 + two-exchange flipping,
+// `ShortestPath.cpp:1968-1994`), calibrated or not.
 pub(super) fn chain(
     polylines: &mut Vec<Polyline>,
     pattern: PlanePathPattern,
@@ -11,17 +14,18 @@ pub(super) fn chain(
     scale: crate::geometry::CoordinateScale,
 ) {
     if calibration_order && pattern == PlanePathPattern::ArchimedeanChords {
-        order_calibration_archimedean(polylines);
-    } else if pattern == PlanePathPattern::OctagramSpiral {
-        chain_polylines(polylines, scale);
+        order_calibration_archimedean(polylines, scale);
     } else {
-        chain_polylines_multifragment(polylines);
+        chain_polylines(polylines, scale);
     }
 }
 
 // `FillPlanePath.cpp:132-153`: preserve the first longest segment on ties,
 // orient its center line inside-out, and append it after chaining the remainder.
-fn order_calibration_archimedean(polylines: &mut Vec<Polyline>) {
+fn order_calibration_archimedean(
+    polylines: &mut Vec<Polyline>,
+    scale: crate::geometry::CoordinateScale,
+) {
     let mut longest_index = 0;
     let mut longest_length = polyline_length(&polylines[0]);
     for (index, polyline) in polylines.iter().enumerate().skip(1) {
@@ -37,7 +41,7 @@ fn order_calibration_archimedean(polylines: &mut Vec<Polyline>) {
     {
         center.reverse();
     }
-    chain_polylines_multifragment(polylines);
+    chain_polylines(polylines, scale);
     polylines.push(center);
 }
 

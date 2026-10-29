@@ -2,27 +2,10 @@ use super::{
     expression::{ParsePath, PathError, evaluate, evaluate_path},
     value::Config,
 };
+use parser::{Node, parse};
 
 mod error;
-
-/// Orca template node: literal text or an `{if}`/`{elsif}`/`{else}` branch.
-/// Directives are consumed with their condition text (including any newline
-/// inside a multiline condition); every other byte, newlines included, is
-/// preserved verbatim, so whole-line and inline directives share one engine.
-enum Node {
-    /// Verbatim template text with its byte offset in the template (the
-    /// offset feeds the upstream caret report for placeholder failures).
-    Text { text: String, offset: usize },
-    /// An `{if}`/`{elsif}`/`{else}` branch.
-    Branch { arms: Vec<Arm> },
-}
-
-/// One `{if}`/`{elsif}`/`{else}` arm; `None` condition is the catch-all
-/// `{else}`.
-struct Arm {
-    condition: Option<String>,
-    nodes: Vec<Node>,
-}
+mod parser;
 
 pub(super) fn render(template: &str, config: &mut Config) -> Result<String, String> {
     render_for_filament(template, config, 0)
@@ -33,183 +16,15 @@ pub(super) fn render_for_filament(
     config: &mut Config,
     filament: usize,
 ) -> Result<String, String> {
-    // Upstream `process_macro` calls `qi::phrase_parse` with the ASCII
-    // whitespace skipper (`PlaceholderParser.cpp:2510-2517`), which runs
-    // `skip_over` BEFORE the grammar — the template's leading
-    // ' '/'\t'/'\r'/'\n' never reach the output (the MMU start gcode's
-    // `" _SP_PRINT_START"` loses its leading space).
-    let template = template.trim_start_matches([' ', '\t', '\r', '\n']);
+    // `process_macro` parses the template value byte-for-byte with no trim
+    // and no prefix (`PlaceholderParser.cpp:2516-2526`); the ASCII
+    // whitespace skipper drops the leading ' '/'\t'/'\r'/'\n' from the
+    // output only (the MMU start gcode's `" _SP_PRINT_START"` loses its
+    // leading space), while parse positions — and the error line/caret
+    // report (`process_error_message` `:1731-1770`) — stay relative to the
+    // untrimmed template, so a skipped blank line still counts.
     let nodes = parse(template)?;
     render_nodes(&nodes, template, config, filament)
-}
-
-fn parse(template: &str) -> Result<Vec<Node>, String> {
-    let mut parser = Parser {
-        template,
-        offset: 0,
-    };
-    let (nodes, terminator) = parser.parse_branch()?;
-    match terminator {
-        None => Ok(nodes),
-        Some(_) => Err("unexpected template directive".to_owned()),
-    }
-}
-
-struct Parser<'a> {
-    template: &'a str,
-    offset: usize,
-}
-
-#[expect(
-    clippy::excessive_nesting,
-    reason = "recursive descent keeps directive scanning ordered"
-)]
-impl Parser<'_> {
-    /// Parses nodes until a branch terminator (`elsif`/`else`/`endif`), which
-    /// is consumed and reported without turning it into a node.
-    fn parse_branch(&mut self) -> Result<(Vec<Node>, Option<Directive>), String> {
-        let mut nodes = Vec::new();
-        loop {
-            let Some((start, end, directive)) = self.next_directive() else {
-                let text = &self.template[self.offset..];
-                if !text.is_empty() {
-                    nodes.push(Node::Text {
-                        text: text.to_owned(),
-                        offset: self.offset,
-                    });
-                }
-                self.offset = self.template.len();
-                return Ok((nodes, None));
-            };
-            if start > self.offset {
-                nodes.push(Node::Text {
-                    text: self.template[self.offset..start].to_owned(),
-                    offset: self.offset,
-                });
-            }
-            self.offset = end;
-            match directive {
-                Directive::If(condition) => {
-                    let arms = self.parse_arms(condition)?;
-                    nodes.push(Node::Branch { arms });
-                }
-                terminator => return Ok((nodes, Some(terminator))),
-            }
-        }
-    }
-
-    /// Parses the `{if}`/`{elsif}`/`{else}` arms that follow the opening
-    /// condition, consuming the closing `{endif}`.
-    fn parse_arms(&mut self, condition: String) -> Result<Vec<Arm>, String> {
-        let mut arms = vec![Arm {
-            condition: (!condition.is_empty()).then_some(condition),
-            nodes: Vec::new(),
-        }];
-        let (nodes, terminator) = self.parse_branch()?;
-        arms.last_mut().unwrap().nodes = nodes;
-        let mut terminator = terminator;
-        loop {
-            match terminator {
-                Some(Directive::Elsif(condition)) => {
-                    let (nodes, next) = self.parse_branch()?;
-                    arms.push(Arm {
-                        condition: (!condition.is_empty()).then_some(condition),
-                        nodes,
-                    });
-                    terminator = next;
-                }
-                Some(Directive::Else) => {
-                    let (nodes, next) = self.parse_branch()?;
-                    if !matches!(next, Some(Directive::Endif)) {
-                        return Err("missing endif".to_owned());
-                    }
-                    arms.push(Arm {
-                        condition: None,
-                        nodes,
-                    });
-                    return Ok(arms);
-                }
-                Some(Directive::Endif) => return Ok(arms),
-                _ => return Err("missing endif".to_owned()),
-            }
-        }
-    }
-
-    /// Finds the next directive token and returns `(start, end, directive)`
-    /// where `end` is just past the closing `}`. `self.offset` is not
-    /// advanced; the caller keeps the text before `start`.
-    fn next_directive(&self) -> Option<(usize, usize, Directive)> {
-        let bytes = self.template.as_bytes();
-        let mut index = self.offset;
-        while index < bytes.len() {
-            if bytes[index] != b'{' {
-                index += 1;
-                continue;
-            }
-            let rest = &self.template[index + 1..];
-            let trimmed = rest.trim_start_matches([' ', '\t']);
-            let keyword_start = index + 1 + (rest.len() - trimmed.len());
-            let (name, length) = if trimmed
-                .strip_prefix("if")
-                .is_some_and(|tail| tail.starts_with([' ', '\t', '(']) || tail.starts_with('}'))
-            {
-                ("if", "if".len())
-            } else if trimmed
-                .strip_prefix("elsif")
-                .is_some_and(|tail| tail.starts_with([' ', '\t']) || tail.starts_with('}'))
-            {
-                ("elsif", "elsif".len())
-            } else if trimmed
-                .strip_prefix("else")
-                .is_some_and(|tail| tail.trim_start().starts_with('}'))
-            {
-                ("else", "else".len())
-            } else if trimmed
-                .strip_prefix("endif")
-                .is_some_and(|tail| tail.trim_start().starts_with('}'))
-            {
-                ("endif", "endif".len())
-            } else {
-                index += 1;
-                continue;
-            };
-            let end = self.directive_end(keyword_start)?;
-            let condition = self.template[keyword_start + length..end].trim().to_owned();
-            if name == "if" {
-                return Some((index, end + 1, Directive::If(condition)));
-            }
-            let directive = match name {
-                "elsif" => Directive::Elsif(condition),
-                "else" => Directive::Else,
-                _ => Directive::Endif,
-            };
-            return Some((index, end + 1, directive));
-        }
-        None
-    }
-
-    /// Index of the `}` closing a directive opened at `start` (already past
-    /// `{`). Square-bracket subscripts may contain `}`-free indices but are
-    /// still skipped for safety.
-    fn directive_end(&self, start: usize) -> Option<usize> {
-        let mut square_depth: u32 = 0;
-        for (offset, character) in self.template[start..].char_indices() {
-            match character {
-                '[' => square_depth += 1,
-                ']' => square_depth = square_depth.saturating_sub(1),
-                '}' if square_depth == 0 => return Some(start + offset),
-                _ => {}
-            }
-        }
-        None
-    }
-}
-
-enum Directive {
-    If(String),
-    Elsif(String),
-    Else,
-    Endif,
 }
 
 #[expect(
@@ -324,7 +139,7 @@ fn render_text(
         let value = value.index(vector_index).unwrap_or(&value);
         let rendered = match path {
             ParsePath::Legacy => value.as_legacy_string(),
-            ParsePath::Brace => value.as_string(),
+            ParsePath::Brace => super::expression::to_string(value),
         };
         output.push_str(&rendered);
         index = expression_start + relative_end + 1;

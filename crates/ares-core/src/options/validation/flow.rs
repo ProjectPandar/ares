@@ -9,10 +9,8 @@ impl SliceOptions {
     pub fn validate_skirt_and_bridge_flow_options(
         &self,
     ) -> Result<BTreeMap<String, String>, SliceError> {
-        let mut errors = BTreeMap::new();
         let skirt_height = self.scalar_i64_or_default("skirt_height")?;
-        let bridge_flow = self.scalar_f64_or_default("bridge_flow")?;
-        let internal_bridge_flow = self.scalar_f64_or_default("internal_bridge_flow")?;
+        let mut errors = self.validate_bridge_flow_options()?;
 
         if skirt_height < 0 {
             errors.insert(
@@ -21,6 +19,16 @@ impl SliceOptions {
             );
         }
 
+        Ok(errors)
+    }
+
+    pub(crate) fn validate_bridge_flow_options(
+        &self,
+    ) -> Result<BTreeMap<String, String>, SliceError> {
+        let mut errors = BTreeMap::new();
+        let bridge_flow = self.scalar_f64_or_default("bridge_flow")?;
+        let internal_bridge_flow = self.scalar_f64_or_default("internal_bridge_flow")?;
+        // `PrintConfig.cpp:10426-10434`: both keys share the invalid-values map.
         if bridge_flow <= 0.0 {
             errors.insert(
                 "bridge_flow".to_owned(),

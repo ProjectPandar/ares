@@ -26,6 +26,7 @@ struct LayerConfig {
     pattern: ProcessInfillPattern,
     maximum_height: f64,
     area_threshold: f64,
+    layer_id: usize,
     layer_height: f64,
     flows: PerimeterFlows,
 }
@@ -46,7 +47,7 @@ pub(super) fn apply(
 ) -> Result<(), SliceError> {
     let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
     let (post_regions, _) = prelude.object.object.as_parts();
-    let (_, _, regions) = post_regions.as_parts();
+    let (plan, _, regions) = post_regions.as_parts();
     if regions.iter().all(|region| {
         let options = region.as_parts().1;
         !options.infill_combination.0 || options.sparse_infill_density.0 == 0.0
@@ -54,13 +55,19 @@ pub(super) fn apply(
         return Ok(());
     }
     let configs = layer_configs(traversal, nozzles, scale)?;
-    let groups = groups(&configs);
-    for (top, count) in groups
-        .into_iter()
-        .enumerate()
-        .filter(|(_, count)| *count > 1)
-    {
-        combine_group(object, &configs, top, count, scale)?;
+    for region_index in 0..regions.len() {
+        let start = region_index * plan.layers.len();
+        let end = start + plan.layers.len();
+        let configs = &configs[start..end];
+        let records = &mut object.records[start..end];
+        let groups = groups(configs);
+        for (top, count) in groups
+            .into_iter()
+            .enumerate()
+            .filter(|(_, count)| *count > 1)
+        {
+            combine_group(records, configs, top, count, scale)?;
+        }
     }
     Ok(())
 }
@@ -103,6 +110,7 @@ fn layer_configs(
                 pattern,
                 maximum_height,
                 area_threshold: infill_area_threshold(input.solid_infill_flow, scale),
+                layer_id: input.layer_id,
                 layer_height: input.layer_height,
                 flows: PerimeterFlows {
                     perimeter_flow: input.perimeter_flow,
@@ -142,8 +150,10 @@ fn groups(configs: &[LayerConfig]) -> Vec<usize> {
     let mut output = vec![0; configs.len()];
     let mut current_height = 0.0;
     let mut count = 0;
-    for index in 1..configs.len() {
-        let config = &configs[index];
+    for (index, config) in configs.iter().enumerate() {
+        if config.layer_id == 0 {
+            continue;
+        }
         if !config.active {
             current_height = 0.0;
             count = 0;
@@ -164,7 +174,7 @@ fn groups(configs: &[LayerConfig]) -> Vec<usize> {
 }
 
 fn combine_group(
-    object: &mut PreparedSurfaceTypeObject,
+    records: &mut [Option<PreparedSurfaceTypeRecord>],
     configs: &[LayerConfig],
     top: usize,
     count: usize,
@@ -172,10 +182,10 @@ fn combine_group(
 ) -> Result<(), SliceError> {
     let bottom = top + 1 - count;
     let kind = configs[top].kind;
-    let mut intersection = surfaces_of_kind(record(object, bottom), kind);
+    let mut intersection = surfaces_of_kind(record(records, bottom), kind);
     for index in bottom + 1..=top {
         intersection = intersection_ex(
-            &surfaces_of_kind(record(object, index), kind),
+            &surfaces_of_kind(record(records, index), kind),
             &intersection,
         )
         .map_err(geometry_error)?;
@@ -192,10 +202,9 @@ fn combine_group(
     } else {
         0.5
     };
-    let clearance = (0.5 * f64::from(configs[top].flows.perimeter_flow.width)
-        + factor * f64::from(configs[top].flows.solid_infill_flow.width))
-        / scale.factor();
-    let clearance = offset_expolygons(&intersection, clearance as f32, JoinType::Miter, 3.0)
+    let clearance = 0.5_f32 * configs[top].flows.perimeter_flow.scaled_width(scale) as f32
+        + factor * configs[top].flows.solid_infill_flow.scaled_width(scale) as f32;
+    let clearance = offset_expolygons(&intersection, clearance, JoinType::Miter, 3.0)
         .map_err(geometry_error)?;
     let thickness = configs[bottom..=top]
         .iter()
@@ -209,7 +218,7 @@ fn combine_group(
         layers: u16::try_from(count).unwrap_or(u16::MAX),
     };
     for index in bottom..=top {
-        rewrite_layer(record_mut(object, index), &geometry, index == top)?;
+        rewrite_layer(record_mut(records, index), &geometry, index == top)?;
     }
     Ok(())
 }
@@ -262,17 +271,20 @@ fn surfaces_of_kind(record: &PreparedSurfaceTypeRecord, kind: RegionSurfaceKind)
         .collect()
 }
 
-fn record(object: &PreparedSurfaceTypeObject, index: usize) -> &PreparedSurfaceTypeRecord {
-    object.records[index]
+fn record(
+    records: &[Option<PreparedSurfaceTypeRecord>],
+    index: usize,
+) -> &PreparedSurfaceTypeRecord {
+    records[index]
         .as_ref()
         .expect("combined layer has a fill record")
 }
 
 fn record_mut(
-    object: &mut PreparedSurfaceTypeObject,
+    records: &mut [Option<PreparedSurfaceTypeRecord>],
     index: usize,
 ) -> &mut PreparedSurfaceTypeRecord {
-    object.records[index]
+    records[index]
         .as_mut()
         .expect("combined layer has a fill record")
 }

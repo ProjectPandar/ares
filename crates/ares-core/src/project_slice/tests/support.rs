@@ -86,14 +86,8 @@ pub(super) fn project_volume(
     id: u32,
     volume_type: ProjectVolumeType,
     nonempty: bool,
-    mesh_shared: bool,
 ) -> ProjectVolume {
-    project_volume_fixture(
-        source_model_path,
-        id,
-        volume_type,
-        (nonempty, mesh_shared, 0.0),
-    )
+    project_volume_fixture(source_model_path, id, volume_type, (nonempty, 0.0))
 }
 
 pub(super) fn project_volume_at_x(
@@ -102,16 +96,16 @@ pub(super) fn project_volume_at_x(
     volume_type: ProjectVolumeType,
     x: f64,
 ) -> ProjectVolume {
-    project_volume_fixture(source_model_path, id, volume_type, (true, false, x))
+    project_volume_fixture(source_model_path, id, volume_type, (true, x))
 }
 
 fn project_volume_fixture(
     source_model_path: &str,
     id: u32,
     volume_type: ProjectVolumeType,
-    fixture: (bool, bool, f64),
+    fixture: (bool, f64),
 ) -> ProjectVolume {
-    let (nonempty, mesh_shared, x) = fixture;
+    let (nonempty, x) = fixture;
     let mesh = if nonempty {
         ProjectMesh::new(
             vec![
@@ -124,7 +118,7 @@ fn project_volume_fixture(
     } else {
         ProjectMesh::new(Vec::new(), Vec::new())
     };
-    let mut volume = ProjectVolume::new(
+    ProjectVolume::new(
         source_model_path.to_owned(),
         id,
         mesh,
@@ -135,9 +129,7 @@ fn project_volume_fixture(
             RegionOptionOverrides::default(),
             Transform3d::IDENTITY,
         ),
-    );
-    volume.set_mesh_shared(mesh_shared);
-    volume
+    )
 }
 
 pub(super) fn object(

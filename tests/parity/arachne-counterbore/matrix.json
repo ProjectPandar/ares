@@ -1,0 +1,58 @@
+{
+  "spec": "a522a632ab6b17cc20ef4a947a7b3b2369c36f08",
+  "wall_generator": "arachne",
+  "geometry_manifest_sha256": "9051fd619d3ba81b0f9eb029f23500ae61b381a2e5e3f4deed1cbf9b32532b55",
+  "profile_provenance_sha256": "7b16569b0e94b04b1ae80f08ee3cbc2b964fb695f5726d014c7cd97f7d9ad18e",
+  "cases": [
+    {
+      "name": "bridges-primary",
+      "geometry": "stepped-hole",
+      "counterbore_hole_bridging": "partiallybridge"
+    },
+    {
+      "name": "bridges-first_layer_control",
+      "geometry": "first-layer-hole",
+      "counterbore_hole_bridging": "partiallybridge"
+    },
+    {
+      "name": "bridges-straight_hole_control",
+      "geometry": "straight-hole",
+      "counterbore_hole_bridging": "partiallybridge"
+    },
+    {
+      "name": "bridges-solid_control",
+      "geometry": "solid-plate",
+      "counterbore_hole_bridging": "partiallybridge"
+    },
+    {
+      "name": "bridges-two_islands",
+      "geometry": "two-islands",
+      "counterbore_hole_bridging": "partiallybridge"
+    },
+    {
+      "name": "filled-primary",
+      "geometry": "stepped-hole",
+      "counterbore_hole_bridging": "sacrificiallayer"
+    },
+    {
+      "name": "filled-first_layer_control",
+      "geometry": "first-layer-hole",
+      "counterbore_hole_bridging": "sacrificiallayer"
+    },
+    {
+      "name": "filled-straight_hole_control",
+      "geometry": "straight-hole",
+      "counterbore_hole_bridging": "sacrificiallayer"
+    },
+    {
+      "name": "filled-solid_control",
+      "geometry": "solid-plate",
+      "counterbore_hole_bridging": "sacrificiallayer"
+    },
+    {
+      "name": "filled-two_islands",
+      "geometry": "two-islands",
+      "counterbore_hole_bridging": "sacrificiallayer"
+    }
+  ]
+}

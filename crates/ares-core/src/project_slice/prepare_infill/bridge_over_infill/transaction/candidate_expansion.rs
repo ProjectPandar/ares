@@ -98,6 +98,18 @@ pub(super) fn prepare_object(
             },
         )?;
     }
+    // PrintObject.cpp:2728-2735: original candidates, before anchor generation
+    // and surface rewrite; the resulting tree also survives to make_fills.
+    crate::project_slice::fill_entities::adaptive::prepare_support(
+        crate::project_slice::fill_entities::adaptive::SupportPreparation {
+            traversal: &predecessor.predecessor.predecessor,
+            object_index,
+            candidates,
+            horizontal,
+            prelude,
+            spacing: predecessor.object_spacings[object_index],
+        },
+    );
     if candidates.surfaces_by_layer.is_empty() {
         return Ok(());
     }

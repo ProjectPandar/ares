@@ -1,14 +1,13 @@
-use crate::{ProjectVolumeType, Transform3d, load_project, slice_project};
+use crate::{ProjectVolumeType, Transform3d, slice_project};
 
 use super::{
     raw_support::{
         bfs_restart_request, exact_dense_object, ordinal_gap_object, preflight_order_scenarios,
         ranged_later_request, request_wide_dense_objects, retained_facts,
-        unique_unprinted_shared_request,
     },
     support::{
-        KsrArchive, identity_resolved, metadata, object, object_with_instances, plan, project,
-        project_volume, project_volume_at_x, resolved_object, slot_limit, transform, unsupported,
+        KsrArchive, identity_resolved, metadata, object, plan, project, project_volume,
+        resolved_object, slot_limit, transform, unsupported,
     },
 };
 use crate::project_slice::raw_intersections::validate_dense_slot_counts;
@@ -75,84 +74,14 @@ async fn task22b_volume_ordinals_distinguish_bfs_from_dfs_and_restart_per_object
 }
 
 #[test]
-fn task22b_mesh_shared_presence_and_repeated_resource_keys_are_rejected_request_wide() {
-    let plain = load_project(KsrArchive::new().bytes()).unwrap();
-    assert!(!plain.objects()[0].volumes()[0].has_mesh_shared());
-
-    let mut archive = KsrArchive::new();
-    archive.replace(
-        "Metadata/model_settings.config",
-        r#"<part id="1" subtype="normal_part">"#,
-        r#"<part id="1" subtype="normal_part"><metadata key="mesh_shared" value="0"/>"#,
-    );
-    let shared = load_project(archive.bytes()).unwrap();
-    assert!(shared.objects()[0].volumes()[0].has_mesh_shared());
-    let first_transform = shared.objects()[0].instances()[0]
-        .transform()
-        .without_xy_translation();
-    assert_eq!(
-        project(
-            shared.objects(),
-            &[resolved_object(0, &[first_transform])],
-            vec![plan(0, 0, 1)]
-        )
-        .unwrap_err(),
-        unsupported("shared_mesh_centering")
-    );
-
-    let objects = vec![
-        object(
-            "3D/root-a.model",
-            10,
-            vec![project_volume(
-                "3D/leaf-a.model",
-                7,
-                ProjectVolumeType::ModelPart,
-                true,
-                false,
-            )],
-            &[Transform3d::IDENTITY],
-        ),
-        object_with_instances(
-            "3D/root-b.model",
-            20,
-            vec![project_volume(
-                "3D/leaf-a.model",
-                7,
-                ProjectVolumeType::SupportBlocker,
-                true,
-                false,
-            )],
-            &[(false, Transform3d::IDENTITY)],
-        ),
-    ];
-    assert_eq!(
-        project(&objects, &[identity_resolved(0)], vec![plan(0, 0, 1)]).unwrap_err(),
-        unsupported("shared_mesh_centering")
-    );
-}
-
-#[test]
-fn task22b_shared_mesh_gate_ignores_empty_occurrences_and_precedes_dense_or_coordinate_errors() {
+fn task22b_empty_occurrences_preserve_retained_volume_facts() {
     let accepted = object(
         "accepted.model",
         1,
         vec![
-            project_volume(
-                "empty-a.model",
-                7,
-                ProjectVolumeType::ModelPart,
-                false,
-                true,
-            ),
-            project_volume(
-                "empty-b.model",
-                7,
-                ProjectVolumeType::NegativeVolume,
-                false,
-                false,
-            ),
-            project_volume("full.model", 8, ProjectVolumeType::ModelPart, true, false),
+            project_volume("empty-a.model", 7, ProjectVolumeType::ModelPart, false),
+            project_volume("empty-b.model", 7, ProjectVolumeType::NegativeVolume, false),
+            project_volume("full.model", 8, ProjectVolumeType::ModelPart, true),
         ],
         &[Transform3d::IDENTITY],
     );
@@ -165,39 +94,6 @@ fn task22b_shared_mesh_gate_ignores_empty_occurrences_and_precedes_dense_or_coor
     assert_eq!(
         retained_facts(&projected[0], &accepted),
         [(1, 8, ProjectVolumeType::ModelPart)]
-    );
-
-    let mut volumes = (0..11)
-        .map(|id| project_volume("dense.model", id, ProjectVolumeType::ModelPart, true, false))
-        .collect::<Vec<_>>();
-    volumes[0] = project_volume_at_x(
-        "huge.model",
-        77,
-        ProjectVolumeType::ModelPart,
-        f64::from(f32::MAX),
-    );
-    volumes[1] = project_volume(
-        "huge.model",
-        77,
-        ProjectVolumeType::NegativeVolume,
-        true,
-        false,
-    );
-    let conflict = object("dense-root.model", 2, volumes, &[Transform3d::IDENTITY]);
-    assert_eq!(
-        project(
-            &[conflict],
-            &[identity_resolved(0)],
-            vec![plan(0, 0, 100_000)]
-        )
-        .unwrap_err(),
-        unsupported("shared_mesh_centering")
-    );
-
-    let (objects, resolved, plans) = unique_unprinted_shared_request();
-    assert_eq!(
-        project(&objects, &resolved, plans).unwrap_err(),
-        unsupported("shared_mesh_centering")
     );
 }
 
@@ -234,7 +130,6 @@ fn task22b_print_object_centering_controls_accept_collapsed_xy_and_z_compensatio
             1,
             ProjectVolumeType::ModelPart,
             true,
-            false,
         )],
         &[z, xyz],
     );
@@ -268,19 +163,19 @@ fn task22b_dense_slot_budget_counts_only_nonempty_sliceable_volumes_request_wide
         "first.model",
         1,
         vec![
-            project_volume("first.model", 1, ModelPart, true, false),
-            project_volume("first.model", 2, NegativeVolume, true, false),
-            project_volume("first.model", 3, ParameterModifier, true, false),
-            project_volume("first.model", 4, ModelPart, false, false),
-            project_volume("first.model", 5, SupportBlocker, true, false),
-            project_volume("first.model", 6, SupportEnforcer, true, false),
+            project_volume("first.model", 1, ModelPart, true),
+            project_volume("first.model", 2, NegativeVolume, true),
+            project_volume("first.model", 3, ParameterModifier, true),
+            project_volume("first.model", 4, ModelPart, false),
+            project_volume("first.model", 5, SupportBlocker, true),
+            project_volume("first.model", 6, SupportEnforcer, true),
         ],
         &[Transform3d::IDENTITY],
     );
     let second = object(
         "second.model",
         2,
-        vec![project_volume("second.model", 7, ModelPart, true, false)],
+        vec![project_volume("second.model", 7, ModelPart, true)],
         &[Transform3d::IDENTITY],
     );
     let projected = project(

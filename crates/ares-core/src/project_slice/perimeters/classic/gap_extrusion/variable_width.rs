@@ -41,6 +41,7 @@ pub(in crate::project_slice) fn convert_entities(
                 == last.polyline.points.last().map(|p| (p.x, p.y))
             {
                 output.push(ExtrusionEntity::Loop(OrderedExtrusionLoop {
+                    unsupported_distance: None,
                     extrusion_loop: ExtrusionLoop {
                         paths,
                         role: ExtrusionLoopRole::Default,
@@ -244,6 +245,7 @@ fn push_group(
             + flow.height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
         let new_flow = flow.with_width(width)?;
         output.push(ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points,
                 fitting: Vec::new(),

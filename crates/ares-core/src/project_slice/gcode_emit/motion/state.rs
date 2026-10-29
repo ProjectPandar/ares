@@ -1,8 +1,11 @@
+mod config;
+mod layer;
+pub(in crate::project_slice::gcode_emit) use layer::{LayerBegin, begin_layer};
 mod object_labels;
 pub(in crate::project_slice::gcode_emit) use object_labels::*;
 
 use super::{
-    MotionOptions, arc, extruder_state, set_accel_and_jerk, set_layer_acceleration_and_jerk,
+    MotionOptions, arc, extruder_state, options::helpers::rounded_acceleration, set_accel_and_jerk,
 };
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -13,8 +16,14 @@ pub(in crate::project_slice::gcode_emit) enum LiftMode {
     Spiral,
 }
 
+use super::shared_reversals::SharedEntityReversals;
+
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct EmitState {
+    pub(in crate::project_slice::gcode_emit) global_brim_done: bool,
+    pub(in crate::project_slice::gcode_emit) emitted_brim_owners: std::collections::BTreeSet<usize>,
+    pub(in crate::project_slice::gcode_emit) contour_z_too_low: bool,
+    pub(in crate::project_slice::gcode_emit) last_path_z_contoured: bool,
     pub(in crate::project_slice::gcode_emit) total_layer_count: usize,
     pub(in crate::project_slice::gcode_emit) template_rng: super::super::value::TemplateRng,
     pub(in crate::project_slice::gcode_emit) hold_chamber_temp_for_flat_print: bool,
@@ -26,6 +35,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) adaptive_pa_last_flow: f64,
     pub(in crate::project_slice::gcode_emit) adaptive_pa_resets: Vec<(usize, f64)>,
     pub(in crate::project_slice::gcode_emit) adaptive_pa_layer: usize,
+    pub(in crate::project_slice::gcode_emit) power_loss_recovery:
+        crate::gcode_power_loss_recovery::PowerLossRecoveryState,
     pub(in crate::project_slice::gcode_emit) x: f64,
     pub(in crate::project_slice::gcode_emit) y: f64,
     pub(in crate::project_slice::gcode_emit) extruder: extruder_state::ExtruderState,
@@ -57,10 +68,28 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) extrusion_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) current_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) options: MotionOptions,
+    /// Current region field in GCode::m_config; object applies do not reset it.
+    pub(in crate::project_slice::gcode_emit) current_seam_gap: crate::FloatOrPercent,
+    /// Current object field in GCode::m_config, applied before each instance's body.
+    pub(in crate::project_slice::gcode_emit) current_brim_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) current_support_speed: f64,
     pub(in crate::project_slice::gcode_emit) auto_lift: super::auto_lift::AutoLift,
     pub(in crate::project_slice::gcode_emit) active_layer_print_z: f64,
     pub(in crate::project_slice::gcode_emit) small_area_flow:
         crate::extrusions::SmallAreaInfillFlowCompensation,
+    /// Object-level shared orientation state for chained emission: the port
+    /// of upstream's in-place reversals of the SHARED layer entities
+    /// (`GCode.cpp:6164,6201` over the pointer vector; `ShortestPath.cpp:
+    /// 1040-1052` `out.back()->reverse()`), which later islands/instances
+    /// of the same source object observe. Keyed by
+    /// `(source_object_index, layer)` — never cross-layer, never
+    /// cross-object; deterministic and independent of parallelism.
+    pub(in crate::project_slice::gcode_emit) shared_reversals: SharedEntityReversals,
+    /// Cached `shares_print_toolpaths` representatives per source object
+    /// (`Print.cpp:2240-2251`) — the object whose shared layers later
+    /// identical objects observe.
+    pub(in crate::project_slice::gcode_emit) print_sharing:
+        std::collections::BTreeMap<(usize, usize), (usize, usize)>,
     pub(in crate::project_slice::gcode_emit) small_area_gate: super::super::small_area::Gate,
     /// Active layer id — upstream's `layer->id()`
     /// (`GCode.cpp:5689`, `GCode.hpp:671-676`): raft layers occupy ids
@@ -85,10 +114,10 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// The Z the machine start/filament g-code left the nozzle at; mirrors
     /// `GCodeWriter::m_pos(2)` for the `change_layer` `will_move_z` gate.
     pub(in crate::project_slice::gcode_emit) writer_z: Option<f64>,
-    /// Generator `GCode::m_last_pos` in local scaled coordinates. Writer-only
-    /// inward moves change x/y without changing this cursor; None precedes
-    /// the first generated path (start G-code supplies the initial writer XY).
-    pub(in crate::project_slice::gcode_emit) last_scaled_position: Option<(i64, i64)>,
+    /// `GCode.hpp:607-608`: numeric cursor defaults to zero independently of
+    /// its defined flag; writer-only inward moves change neither field.
+    pub(in crate::project_slice::gcode_emit) last_scaled_position: (i64, i64),
+    pub(in crate::project_slice::gcode_emit) last_position_defined: bool,
     pub(in crate::project_slice::gcode_emit) last_feature: Option<&'static str>,
     /// `m_last_notgapfill_extrusion_role` (`GCode.cpp:7255-7257`): the last
     /// emitted feature that is not gap fill — the `retract_lift_enforce`
@@ -134,24 +163,32 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) ironing_fan_marker_layer: Option<usize>,
     pub(in crate::project_slice::gcode_emit) pending_object_start: Option<(u32, [u8; 12])>,
     pub(in crate::project_slice::gcode_emit) filament_instances_code: Option<[u8; 12]>,
+    pub(in crate::project_slice::gcode_emit) layer_object_labels:
+        Option<super::super::object::LayerLabels>,
     pub(in crate::project_slice::gcode_emit) last_travel_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_start: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_object_stop_label: Option<u32>,
     pub(in crate::project_slice::gcode_emit) tags: super::super::tags::Tags,
-    /// The one-shot routing disable armed after the first-layer skirt
-    // (`disable_once`, `GCode.cpp:4448-4450`: a straight travel to the
-    // first object point).
+    /// The one-shot routing disable armed at the END of the first-layer
+    // skirt emission (`disable_once`, `GCode.cpp:4448-4450`) and of the
+    // brim emission (`GCode.cpp:4498-4500`): a straight travel to the
+    // first object point. Consumed right after the first planning slot
+    // (`reset_once_modifiers`, `GCode.cpp:7429-7431`).
     pub(in crate::project_slice::gcode_emit) avoid_crossing_disabled_once: bool,
     /// `use_external_mp_once` (`AvoidCrossingPerimeters.hpp:21`): armed
     /// when a new object copy starts (`GCode.cpp:5380-5384`), the first
     /// travel routes along the chunk-wide hole boundary; cleared with the
-    /// other once-modifiers after the emitted travel (`GCode.cpp:7431`).
+    /// other once-modifiers right after the first planning slot
+    /// (`GCode.cpp:7429-7431`) and re-armed around the post-wipe re-plan
+    /// (`GCode.cpp:7446-7451`).
     pub(in crate::project_slice::gcode_emit) use_external_mp_once: bool,
+    /// `use_external_mp` (`AvoidCrossingPerimeters.hpp:19`): the
+    /// skirt/brim emission windows plan every travel against the external
+    /// boundary (`GCode.cpp:4413/:4448`, `:4496/:4498`).
+    pub(in crate::project_slice::gcode_emit) use_external_mp: bool,
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
     pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
-    pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
-        Option<super::arc::Point>,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
     /// `has_insert_timelapse_gcode` is a `process_layer` local upstream
     /// (`GCode.cpp:4653`) — reset at every layer, set by the traditional
@@ -219,94 +256,11 @@ pub(in crate::project_slice::gcode_emit) struct AvoidCrossingGeometry<'a> {
     /// Every print object's slices at this print z and the cross-object
     /// average perimeter spacing, feeding the EXTERNAL motion planner's
     /// hole boundary (`get_boundary_external`,
-    /// `AvoidCrossingPerimeters.cpp:1137-1189`).
+    /// `AvoidCrossingPerimeters.cpp:1137-1189`). Already translated once
+    /// per print instance (`:1172-1177`), i.e. plate coordinates —
+    /// `layers/group.rs` `boundary_slices`.
     pub(in crate::project_slice::gcode_emit) chunk_slices: &'a [crate::geometry::ExPolygon],
     pub(in crate::project_slice::gcode_emit) chunk_perimeter_spacing: f64,
-}
-
-/// The `begin_layer` inputs beyond the writer state: the print z/height
-/// plus the per-object first/second-layer gates (`GCode.cpp:4589`,
-/// `:4762`, `:4777`).
-pub(in crate::project_slice::gcode_emit) struct LayerBegin {
-    pub(in crate::project_slice::gcode_emit) layer_z: f64,
-    pub(in crate::project_slice::gcode_emit) layer_height: f64,
-    /// The per-object `first_layer` (`GCode.cpp:4589`) — under sequential
-    /// printing every object's layer 0 qualifies.
-    pub(in crate::project_slice::gcode_emit) first_layer: bool,
-    /// The `!first_layer && !m_second_layer_things_done` gate
-    /// (`GCode.cpp:4777`), reset per object under sequential printing
-    /// (`GCode.cpp:3367`).
-    pub(in crate::project_slice::gcode_emit) second_layer_reset: bool,
-}
-
-pub(in crate::project_slice::gcode_emit) fn begin_layer(
-    output: &mut Vec<u8>,
-    state: &mut EmitState,
-    begin: LayerBegin,
-) {
-    let LayerBegin {
-        layer_z,
-        layer_height,
-        first_layer,
-        second_layer_reset,
-    } = begin;
-    state.layer_change_travel_pending = true;
-    state.avoid_boundary = None;
-    state.last_height = Some(layer_height as f32);
-    // `GCode.cpp:4629-4630`: `m_last_layer_z = float(print_z)` then
-    // `m_max_layer_z = max(m_max_layer_z, m_last_layer_z)` — float-domain
-    // running max over the RAW print z.
-    state.max_layer_z = state.max_layer_z.max(layer_z as f32);
-    // Writer-domain z (`GCode.cpp:5692` `z = print_z + z_offset`);
-    // mirrors `advance_for_layer`'s offset store.
-    state.layer_z = layer_z + state.options.z_offset;
-    // `GCodeWriter` travel speed keys on the per-object first layer
-    // (`m_writer.set_is_first_layer(first_layer)`, `GCode.cpp:4590`,
-    // `GCodeWriter.cpp:699`): under sequential printing every object's
-    // layer 0 travels at the initial-layer speed again.
-    state.travel_feedrate = if first_layer {
-        state.options.first_layer_travel_feedrate
-    } else {
-        state.options.travel_feedrate
-    };
-    // `GCode.cpp:4764-4776, 4794-4797`: the first-layer acceleration emit
-    // and the second-layer reset are both gated on `default_acceleration > 0`
-    // AND `initial_layer_acceleration > 0`; without both, no M204 is emitted
-    // at the layer change. Both gates key on the PER-OBJECT `first_layer`
-    // (`GCode.cpp:4589`), never the global chunk index: sequential
-    // printing resets `m_second_layer_things_done` per object
-    // (`GCode.cpp:3367`), so each object re-runs its layer-0 and
-    // second-layer blocks.
-    let has_default_acceleration = state.options.default_acceleration > 0;
-    let acceleration = if has_default_acceleration && state.options.initial_layer_acceleration > 0 {
-        if first_layer {
-            Some(state.options.initial_layer_acceleration)
-        } else if second_layer_reset {
-            Some(state.options.default_acceleration)
-        } else {
-            None
-        }
-    } else {
-        None
-    };
-    // `GCode.cpp:4767-4776`: jerk emission is independent of the
-    // acceleration emit; `default_jerk > 0 && initial_layer_jerk > 0` gate
-    // applies on both the first-layer value and the second-layer reset.
-    let has_layer_jerk = state.options.default_jerk > 0.0 && state.options.initial_layer_jerk > 0.0;
-    let jerk = if has_layer_jerk {
-        if first_layer {
-            state.options.initial_layer_jerk
-        } else if second_layer_reset {
-            state.options.default_jerk
-        } else {
-            0.0
-        }
-    } else {
-        0.0
-    };
-    if acceleration.is_some() || jerk > 0.0 {
-        set_layer_acceleration_and_jerk(output, state, acceleration.unwrap_or(0), jerk);
-    }
 }
 
 impl EmitState {
@@ -319,8 +273,12 @@ impl EmitState {
             self.extruder.filament_used + self.extruder.retracted_amount
         };
         crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
-            diameter: 1.75,
-            density: 1.24,
+            // GCode.cpp:1675-1690: the template totals use the typed
+            // per-extruder cross-section (`Extruder::filament_crossection`,
+            // carried as the typed `MotionOptions::filament_area`) and
+            // density; `GCode.cpp:1686` weighs `v * density * 0.001`.
+            crossection: self.options.filament_area,
+            density: self.options.filament_density,
             used_filament,
         }
     }
@@ -342,23 +300,25 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     destination_feature: &str,
     travel_distance: f64,
 ) {
-    let acceleration = if state.options.default_acceleration == 0 {
+    let acceleration = if state.options.default_acceleration <= 0.0 {
         None
     } else if state.layer_index == 0 {
-        (state.options.initial_layer_travel_acceleration > 0)
-            .then_some(state.options.initial_layer_travel_acceleration)
+        // `GCode.cpp:7371-7375`: truncate the unsigned local before its gate and rounding.
+        let initial_layer_travel_acceleration =
+            state.options.initial_layer_travel_acceleration as u32;
+        (initial_layer_travel_acceleration > 0)
+            .then_some(f64::from(initial_layer_travel_acceleration))
     } else if travel_distance < state.options.retraction_minimum_travel {
         match destination_feature {
-            "Overhang wall" => {
-                (state.options.bridge_acceleration > 0).then_some(state.options.bridge_acceleration)
-            }
-            "Outer wall" => (state.options.outer_wall_acceleration > 0)
+            "Overhang wall" => (state.options.bridge_acceleration > 0.0)
+                .then_some(state.options.bridge_acceleration),
+            "Outer wall" => (state.options.outer_wall_acceleration > 0.0)
                 .then_some(state.options.outer_wall_acceleration),
             _ => None,
         }
-        .or((state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration))
+        .or((state.options.travel_acceleration > 0.0).then_some(state.options.travel_acceleration))
     } else {
-        (state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration)
+        (state.options.travel_acceleration > 0.0).then_some(state.options.travel_acceleration)
     };
     let jerk = if state.options.default_jerk <= 0.0 {
         0.0
@@ -372,5 +332,11 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     } else {
         state.options.travel_jerk
     };
-    set_accel_and_jerk(output, state, acceleration.unwrap_or(0), jerk, true);
+    set_accel_and_jerk(
+        output,
+        state,
+        acceleration.map(rounded_acceleration).unwrap_or(0),
+        jerk,
+        true,
+    );
 }

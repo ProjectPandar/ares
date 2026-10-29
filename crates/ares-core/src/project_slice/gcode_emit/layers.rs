@@ -3,6 +3,7 @@ mod boundary;
 mod brim_emit;
 mod context;
 mod cooling_result;
+mod custom_gcode;
 mod entry;
 mod entry_builder;
 mod fan_setup;
@@ -13,7 +14,8 @@ pub(super) use context::Context;
 mod instances;
 pub(super) use instances::Instance;
 mod object_entry;
-mod object_order;
+pub(super) mod object_order;
+mod object_skirt;
 mod preamble;
 mod raft_entry;
 mod raft_schedule;
@@ -75,6 +77,7 @@ pub(super) fn append(
         .print
         .gcode_label_objects
         .0;
+    let mut object_skirt_done = vec![(0, 0.0); skirt.as_ref().map_or(0, |plan| plan.group_count())];
     let mut cooling = cooling::CoolingState::from_traversal(traversal, state);
     let mut spiral =
         spiral_vase::SpiralVaseFilter::from_traversal(traversal, brim.iter().any(Option::is_some));
@@ -125,9 +128,9 @@ pub(super) fn append(
         mut raft,
         print_position,
         instances,
+        label_inventory,
         labels,
         object_layer_counts,
-        last_entry,
         mut skirt_schedule,
         tool_ordering,
         layer_count,
@@ -144,11 +147,7 @@ pub(super) fn append(
             .0
         && traversal.resolved.views.full.process.print.print_sequence
             == crate::ProcessPrintSequence::ByLayer)
-        .then(|| {
-            super::object::FilamentInstances::new(
-                instances.iter().flatten().map(|instance| instance.label_id),
-            )
-        });
+        .then_some(&label_inventory);
     // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`) —
     // consumed by the toolchange-boundary timelapse insert gate
     // (`GCode.cpp:5292-5297`).
@@ -252,6 +251,20 @@ pub(super) fn append(
     let mut final_chunk = None;
     include!("layers/drive.rs");
     cooling.finish(output);
+    // `GCode.cpp:3440-3441` (ByLayer; the per-object completion
+    // `:3359-3361` reaches the same point at the final object): once
+    // the second-layer block ran with `Enable`, the disable command
+    // closes power-loss recovery after `process_layers` and before the
+    // wipe-tower finalize (`GCodeWriter.cpp:505-522`).
+    output.extend_from_slice(
+        crate::gcode_power_loss_recovery::finish_command(
+            state.tags.is_bbl(),
+            state.options.gcode_flavor,
+            state.options.gcode_comments,
+            state.power_loss_recovery,
+        )
+        .as_bytes(),
+    );
 
     let filtered_end = output.len();
     if let Some((entry, slices, spacing)) = final_chunk {

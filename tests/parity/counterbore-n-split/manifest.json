@@ -1,0 +1,11 @@
+{
+  "case": "n-split-arachne-sacrificiallayer",
+  "input_sha256": "444935eac2493ed4f695e9fa635e8409fd4cad273ce817373a450c706bc9d807",
+  "shape_sha256": "b26c43ac9f6ce542e8e01d9498886fd3b995c932e23c2df7cbeca92f49fc3441",
+  "profile_provenance": "tests/parity/counterbore-partiallybridge/profile-provenance.json",
+  "profile_provenance_sha256": "7b16569b0e94b04b1ae80f08ee3cbc2b964fb695f5726d014c7cd97f7d9ad18e",
+  "source": "PerimeterGenerator.cpp::process_no_bridge:1739-1924",
+  "boundary": "ares_core::slice_with_profiles; Native slice_stl_with_settings; complete ordered bytes, existing generated-by identity only",
+  "origin": "W4 frozen discovery /tmp/worker4-counterbore-bounded-o6df; adopted unchanged for W3 approved SPEC a779ad1d1",
+  "generator": "generate.py (N geometry only; no M projects or Native artifacts)"
+}

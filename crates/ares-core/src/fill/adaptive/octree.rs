@@ -40,6 +40,7 @@ pub(crate) struct Octree {
     pub(crate) cubes_properties: Vec<CubeProperties>,
 }
 
+mod float_bounds;
 mod frame;
 
 use frame::{Matrix3, cross, dot, norm, octree_rotation_to_world, sub, triangle_aabb_intersects};
@@ -130,26 +131,44 @@ pub(crate) fn build_octree(
     // PrintObject.cpp:110); added back to the rotated cube centers.
     world_offset: [f64; 3],
 ) -> Octree {
+    // FillAdaptive.cpp:1495-1497: bbox size/center finish in Vec3f.
+    let (cube_center, bbox_size) = float_bounds::of(mesh.vertices);
+    build_octree_from_bounds(
+        mesh,
+        overhang_triangles,
+        line_spacing,
+        support_overhangs_only,
+        (world_offset, cube_center, bbox_size),
+    )
+}
+
+// FillAdaptive.cpp:1495-1497: only the completed Vec3f bbox values widen.
+pub(crate) fn build_adaptive_octree(
+    mesh: OctreeMesh<'_>,
+    line_spacing: f64,
+    world_offset: [f64; 3],
+) -> Octree {
+    let (cube_center, bbox_size) = float_bounds::of(mesh.vertices);
+    build_octree_from_bounds(
+        mesh,
+        &[],
+        line_spacing,
+        false,
+        (world_offset, cube_center, bbox_size),
+    )
+}
+
+fn build_octree_from_bounds(
+    mesh: OctreeMesh<'_>,
+    overhang_triangles: &[[f64; 3]],
+    line_spacing: f64,
+    support_overhangs_only: bool,
+    (world_offset, cube_center, bbox_size): ([f64; 3], [f64; 3], f64),
+) -> Octree {
     let OctreeMesh {
         vertices: mesh_vertices,
         triangles: mesh_triangles,
     } = mesh;
-    let mut bbox_min = [f64::INFINITY; 3];
-    let mut bbox_max = [f64::NEG_INFINITY; 3];
-    for v in mesh_vertices {
-        for k in 0..3 {
-            bbox_min[k] = bbox_min[k].min(v[k]);
-            bbox_max[k] = bbox_max[k].max(v[k]);
-        }
-    }
-    let cube_center = [
-        0.5 * (bbox_min[0] + bbox_max[0]),
-        0.5 * (bbox_min[1] + bbox_max[1]),
-        0.5 * (bbox_min[2] + bbox_max[2]),
-    ];
-    let bbox_size = (bbox_max[0] - bbox_min[0])
-        .max(bbox_max[1] - bbox_min[1])
-        .max(bbox_max[2] - bbox_min[2]);
     let cubes_properties = make_cubes_properties(bbox_size, line_spacing);
     let mut octree = Octree {
         root_cube: Box::new(Cube::new(cube_center)),

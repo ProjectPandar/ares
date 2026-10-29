@@ -46,6 +46,7 @@ pub(super) struct ProcessorLimits {
 pub(super) struct ProcessorConfig<'a> {
     limits: ProcessorLimits,
     settings: &'a crate::ProjectSettings,
+    detect_layer_based_on_tag: bool,
     /// Also record `GCodeProcessorResult::moves` (`GCodeProcessor::process_file`).
     record_moves: bool,
     /// `GCodeProcessorResult::extruder_colors`
@@ -60,6 +61,8 @@ impl ProcessorLimits {
         ProcessorConfig {
             limits: self,
             settings,
+            detect_layer_based_on_tag: settings.process.print.spiral_mode.0
+                || settings.project.gcode.has_scarf_joint_seam.0,
             record_moves: false,
             extruder_colors: Vec::new(),
             writer_extruders: Vec::new(),

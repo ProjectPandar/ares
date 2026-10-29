@@ -10,6 +10,8 @@ use super::{parameters::ProcessExternalSurfacesConfig, process::process_external
 
 pub(in crate::project_slice) struct PreparedPostExternalSurfaces {
     pub(in crate::project_slice) predecessor: PreparedPostHorizontalShellPropagation,
+    pub(in crate::project_slice) object_spacings:
+        Vec<crate::project_slice::fill_entities::adaptive::ObjectSpacing>,
 }
 
 pub(in crate::project_slice) fn prepare(
@@ -19,7 +21,31 @@ pub(in crate::project_slice) fn prepare(
         horizontal_shell_propagation::dispose(predecessor);
         return Err(geometry_error(error));
     }
-    Ok(PreparedPostExternalSurfaces { predecessor })
+    let object_spacings = predecessor
+        .objects
+        .iter()
+        .enumerate()
+        .map(|(object_index, object)| {
+            let traversal = &predecessor.predecessor;
+            let prelude = &traversal.objects[object_index]
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object;
+            let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
+            crate::project_slice::fill_entities::adaptive::object_spacings(
+                traversal,
+                prelude,
+                &object.records,
+                plan.layers.len(),
+            )
+        })
+        .collect();
+    Ok(PreparedPostExternalSurfaces {
+        predecessor,
+        object_spacings,
+    })
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostExternalSurfaces) {

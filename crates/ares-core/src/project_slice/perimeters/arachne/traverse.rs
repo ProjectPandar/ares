@@ -194,6 +194,7 @@ pub(in crate::project_slice) fn traverse_extrusions(
             collection
                 .entities
                 .push(ExtrusionEntity::Loop(OrderedExtrusionLoop {
+                    unsupported_distance: None,
                     extrusion_loop,
                     // Arachne loops keep the `ExtrusionEntity::inset_idx` base
                     // default (`ExtrusionEntity.hpp`); classic sets loop depth.

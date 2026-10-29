@@ -1,10 +1,10 @@
 mod projected;
 
-pub(in crate::project_slice) use projected::{
-    object_bounding_box, projected_anchor_lengths, projected_sparse_density,
-};
+pub(in crate::project_slice) use projected::projected_sparse_density;
 mod arms;
 mod arms_tail;
+mod honeycomb;
+mod linear;
 
 use crate::{
     SliceError,
@@ -58,16 +58,19 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
         .predecessor
         .object;
     let (compensated, _) = prelude.as_parts();
-    let (post_regions, object_slices) = compensated.as_parts();
+    let (post_regions, _) = compensated.as_parts();
     let (plan, _, _) = post_regions.as_parts();
     let z = plan.layers[layer_index].print_z;
     // Fill.cpp:1398,1442 uses the symmetric PrintObject box (Print.hpp:347).
     let object_reference = crate::geometry::Point::new(0, 0);
-    // Empirically the consistent-pattern grid anchor + plane-path `out_shift`
-    // match the slice-contour extent, not the raw mesh `m_size` (see
-    // `fill_entities/generate.rs`). Keep the contour-derived bbox.
-    let object_bounding_box = object_bounding_box(object_slices);
+    let (object, print_object) = traversal.print_object_config(object_index);
+    let object_bounding_box = crate::project_slice::fill_entities::print_object_bounds(
+        &traversal.project.objects()[object.source_object_index],
+        print_object.transform,
+        traversal.scale,
+    );
     let mut result = Vec::new();
+    let spacing = prepared.object_spacings[object_index];
 
     for fill in grouped.surface_fills {
         if fill.representative.kind != RegionSurfaceKind::Internal {
@@ -83,6 +86,8 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             object_bounding_box,
             lightning_generator,
             stars_bounds.map(|bounds| (bounds, plan.layers[layer_index].id)),
+            spacing.adaptive,
+            spacing.support,
             &mut result,
         )?;
     }

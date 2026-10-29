@@ -1,6 +1,6 @@
 mod bvh;
 
-pub(super) use bvh::TriangleBvh;
+pub(super) use bvh::{Hit, TriangleBvh};
 
 use super::mesh::Vec3;
 const NONE: usize = usize::MAX;

@@ -26,8 +26,9 @@ pub(super) fn self_start_config(
     config.insert("next_hotend", value::Value::number(-1.0));
     config.insert(
         "overall_chamber_temperature",
-        value::Value::number(f64::from(temperature::overall_chamber_temperature(
+        value::Value::Integer(i64::from(temperature::overall_chamber_temperature(
             traversal,
+            state.extruders.ids(),
         ))),
     );
     let max_z = traversal
@@ -38,7 +39,6 @@ pub(super) fn self_start_config(
         .filter_map(|record| record.as_ref())
         .map(|record| record.layer_height)
         .sum::<f64>();
-    config.insert("max_print_z", value::Value::number(max_z));
     config.insert("max_layer_z", value::Value::number(max_z));
     config.insert("layer_num", value::Value::number(0.0));
     if let Some((min_x, min_y, size_x, size_y)) = first_layer_bounds {

@@ -1,0 +1,19 @@
+{
+  "upstream_revision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "source_boundary": [
+    "Fill/FillAdaptive.cpp:815-880",
+    "Fill/FillAdaptive.cpp:939-954",
+    "Fill/FillAdaptive.cpp:1074-1110"
+  ],
+  "files": [
+    {
+      "path": "a1-adaptivecubic40.3mf",
+      "sha256": "9667257ee00c05b082b0f5affb823def7c31dac5c0169d03da20c70890f84f21",
+      "input_only": true,
+      "original_archive_unchanged": true,
+      "pattern": "adaptivecubic",
+      "density": "40%",
+      "printer": "Bambu Lab A1"
+    }
+  ]
+}

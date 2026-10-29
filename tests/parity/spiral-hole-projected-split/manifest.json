@@ -1,0 +1,109 @@
+{
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "model": "OrcaSlicer/tests/data/cube_with_hole.obj",
+  "model_sha256": "a938b25260e5f52c8ead83ef95cce980f775453173593e96bae66b3b7178bd20",
+  "printer": "Prusa MK4 0.4 nozzle",
+  "process": "0.20mm Standard @MK4",
+  "filament": "Prusa Generic PLA @MK4",
+  "flattening": "unchanged orca_parity/presets.rs::VendorProfiles",
+  "cases": [
+    {
+      "case": "spiral",
+      "sha256": "7737bc4991c554b645ceed6fe819462cfb1ece3ad2b6cfdf9095dacd78dbde27",
+      "discovery_source": "/home/indexyz/ares-evidence/worker1/mk4-spiral-hole-discovery-1a57f677f/mk4-default-hole.3mf",
+      "effective_settings": {
+        "spiral_mode": "1",
+        "ironing_type": "no ironing",
+        "ironing_pattern": "rectilinear",
+        "enable_arc_fitting": "0",
+        "wall_loops": "1",
+        "top_shell_layers": "0",
+        "bottom_shell_layers": "3",
+        "sparse_infill_density": "0%",
+        "enable_support": "0",
+        "enforce_support_layers": "0",
+        "detect_thin_wall": "0",
+        "overhang_reverse": "0",
+        "timelapse_type": "0",
+        "enable_wrapping_detection": "0",
+        "wall_generator": "arachne",
+        "wall_direction": "ccw",
+        "seam_position": "aligned",
+        "brim_type": "auto_brim",
+        "brim_width": "5",
+        "retract_when_changing_layer": [
+          "0"
+        ],
+        "filament_retract_when_changing_layer": [
+          "0"
+        ]
+      }
+    },
+    {
+      "case": "control",
+      "sha256": "4c4ceaf15b083f1882c29ab0dc867ae62099abd3d3c13c30c8b6f6c2416766fa",
+      "discovery_source": "/home/indexyz/ares-evidence/worker1/mk4-default-hole-discovery-1a57f677f/mk4-default-hole.3mf",
+      "effective_settings": {
+        "spiral_mode": "0",
+        "ironing_type": "no ironing",
+        "ironing_pattern": "rectilinear",
+        "enable_arc_fitting": "0",
+        "wall_loops": "3",
+        "top_shell_layers": "4",
+        "bottom_shell_layers": "3",
+        "sparse_infill_density": "15%",
+        "enable_support": "0",
+        "enforce_support_layers": "0",
+        "detect_thin_wall": "0",
+        "overhang_reverse": "0",
+        "timelapse_type": "0",
+        "enable_wrapping_detection": "0",
+        "wall_generator": "arachne",
+        "wall_direction": "ccw",
+        "seam_position": "aligned",
+        "brim_type": "auto_brim",
+        "brim_width": "5",
+        "retract_when_changing_layer": [
+          "1"
+        ],
+        "filament_retract_when_changing_layer": [
+          "nil"
+        ]
+      }
+    }
+  ],
+  "normalized_changes": {
+    "filament_retract_when_changing_layer": {
+      "control": [
+        "nil"
+      ],
+      "target": [
+        "0"
+      ]
+    },
+    "retract_when_changing_layer": {
+      "control": [
+        "1"
+      ],
+      "target": [
+        "0"
+      ]
+    },
+    "sparse_infill_density": {
+      "control": "15%",
+      "target": "0%"
+    },
+    "spiral_mode": {
+      "control": "0",
+      "target": "1"
+    },
+    "top_shell_layers": {
+      "control": "4",
+      "target": "0"
+    },
+    "wall_loops": {
+      "control": "3",
+      "target": "1"
+    }
+  }
+}

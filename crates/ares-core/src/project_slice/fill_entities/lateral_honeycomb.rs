@@ -4,25 +4,24 @@
 //! chosen by which third of the vertical period the layer height lands in;
 //! the double family splits the density and offsets the two lines
 //! symmetrically around the period knot.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
-    fill::multiline::{MultilineFillParams, fill_surface},
+    fill::multiline::{MultilineFillParams, fill_surface_lateral},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
-    layer: &crate::project_slice::layers::PlannedLayer,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
+    layer_id: usize,
+    print_z: f64,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
-) -> Result<(), SliceError> {
-    let layer_id = layer.id;
-    let print_z = layer.print_z;
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
     let (sweeps, sweep_density) = crate::fill::multiline::lateral_honeycomb_sweeps(
         fill.params.spacing,
@@ -45,13 +44,26 @@ pub(super) fn append(
     };
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
-        polylines.extend(fill_surface(expolygon, params, &sweeps, scale).map_err(honeycomb_error)?);
+        polylines.extend(
+            fill_surface_lateral(expolygon, params, &sweeps, scale).map_err(honeycomb_error)?,
+        );
     }
     if layer_id % 2 == 1 {
         for polyline in &mut polylines {
             polyline.reverse();
         }
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    layer: &crate::project_slice::layers::PlannedLayer,
+    scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, layer.id, layer.print_z, scale, object_reference)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -61,8 +73,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

@@ -3,8 +3,15 @@ use boostvoronoi::prelude::SourceCategory;
 use crate::geometry::{Line, Point, medial_axis::diagram};
 
 #[test]
-fn task22o13_single_segment_topology_is_literal_and_source_indexed() {
-    let output = diagram::build(&[Line::new(Point::new(0, 0), Point::new(10, 0))]).unwrap();
+fn task22o13_raw_backend_single_segment_topology_is_literal_and_source_indexed() {
+    use boostvoronoi::prelude::{Builder, Line as BvLine};
+
+    // Raw backend topology only; this open site is outside default consumer parity.
+    let sites = [BvLine::from([0_i64, 0, 10, 0])];
+    let output = Builder::<i64>::default()
+        .with_segments(sites)
+        .and_then(Builder::build)
+        .unwrap();
     assert_eq!(
         (
             output.num_cells(),
@@ -31,7 +38,7 @@ fn task22o13_single_segment_topology_is_literal_and_source_indexed() {
     );
     let edges = (0..output.num_edges())
         .map(|index| {
-            let edge = diagram::edge_index(&output, index);
+            let edge = output.edges()[index].id();
             let value = output.edge(edge).unwrap();
             (
                 edge.u32(),
@@ -88,7 +95,6 @@ fn task22o13_finite_multisite_topology_is_fully_literal() {
         .collect::<Vec<_>>();
     let vertices = output
         .vertices()
-        .iter()
         .enumerate()
         .map(|(id, vertex)| format!("vertex={id} x={} y={}", vertex.x(), vertex.y()))
         .collect::<Vec<_>>();
@@ -130,17 +136,19 @@ fn task22o13_finite_multisite_topology_is_fully_literal() {
             cycle
         })
         .collect::<Vec<_>>();
+    // Boost1.86 voronoi_diagram.hpp:470-475 assigns cell incidents last-wins.
+    // These values were measured externally with the same Boost header version.
     assert_eq!(
         cells,
         [
-            "cell=0 source=0 category=SegmentStart point=true segment=false incident=Some(0)",
-            "cell=1 source=3 category=Segment point=false segment=true incident=Some(1)",
-            "cell=2 source=2 category=SegmentEnd point=true segment=false incident=Some(3)",
-            "cell=3 source=0 category=Segment point=false segment=true incident=Some(5)",
-            "cell=4 source=2 category=Segment point=false segment=true incident=Some(9)",
-            "cell=5 source=0 category=SegmentEnd point=true segment=false incident=Some(15)",
-            "cell=6 source=1 category=Segment point=false segment=true incident=Some(17)",
-            "cell=7 source=1 category=SegmentEnd point=true segment=false incident=Some(23)",
+            "cell=0 source=0 category=SegmentStart point=true segment=false incident=Some(4)",
+            "cell=1 source=3 category=Segment point=false segment=true incident=Some(10)",
+            "cell=2 source=2 category=SegmentEnd point=true segment=false incident=Some(8)",
+            "cell=3 source=0 category=Segment point=false segment=true incident=Some(19)",
+            "cell=4 source=2 category=Segment point=false segment=true incident=Some(25)",
+            "cell=5 source=0 category=SegmentEnd point=true segment=false incident=Some(16)",
+            "cell=6 source=1 category=Segment point=false segment=true incident=Some(22)",
+            "cell=7 source=1 category=SegmentEnd point=true segment=false incident=Some(24)",
         ]
     );
     assert_eq!(
@@ -185,31 +193,38 @@ fn task22o13_finite_multisite_topology_is_fully_literal() {
             "edge=25 twin=24 cell=4 v0=Some(5) v1=None primary=false secondary=true finite=false next=9 rot=Some(20)",
         ]
     );
+    // Cycle starts and order were measured by the same external Boost1.86 diagnostic.
     assert_eq!(
         incident_cycles,
         vec![
-            vec![0, 4],
-            vec![1, 7, 10, 2],
-            vec![3, 8],
-            vec![5, 14, 19, 12, 6],
-            vec![9, 11, 13, 21, 25],
-            vec![15, 16],
-            vec![17, 22, 20, 18],
-            vec![23, 24],
+            vec![4, 0],
+            vec![10, 2, 1, 7],
+            vec![8, 3],
+            vec![19, 12, 6, 5, 14],
+            vec![25, 9, 11, 13, 21],
+            vec![16, 15],
+            vec![22, 20, 18, 17],
+            vec![24, 23],
         ]
     );
 }
 
 #[test]
-fn task22o13_disconnected_segments_pin_point_point_face_and_rotation_order() {
-    let output = diagram::build(&[
-        Line::new(Point::new(0, 0), Point::new(10, 0)),
-        Line::new(Point::new(30, 10), Point::new(40, 10)),
-    ])
-    .unwrap();
+fn task22o13_raw_backend_disconnected_segments_pin_point_point_face_and_rotation_order() {
+    use boostvoronoi::prelude::{Builder, Line as BvLine};
+
+    // Raw backend topology only; these open sites are outside default consumer parity.
+    let sites = [
+        BvLine::from([0_i64, 0, 10, 0]),
+        BvLine::from([30_i64, 10, 40, 10]),
+    ];
+    let output = Builder::<i64>::default()
+        .with_segments(sites)
+        .and_then(Builder::build)
+        .unwrap();
     let point_point_edges = (0..output.num_edges())
         .filter_map(|index| {
-            let edge = diagram::edge_index(&output, index);
+            let edge = output.edges()[index].id();
             let twin = output.edge_get_twin(edge).unwrap();
             let left = output.cell(output.edge_get_cell(edge).unwrap()).unwrap();
             let right = output.cell(output.edge_get_cell(twin).unwrap()).unwrap();

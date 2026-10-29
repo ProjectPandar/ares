@@ -228,7 +228,7 @@ async fn bbs_painted_triangle_attributes_remain_fail_closed_through_load_and_sli
     const ERROR: &str =
         "invalid project model XML: attribute namespace does not match its 3MF meaning";
 
-    for attribute in [r#"paint_color="1""#, r#"paint_fuzzy_skin="1""#] {
+    for attribute in [r#"paint_fuzzy_skin="1""#] {
         let mut parts = ProjectParts::fixture();
         parts.replace(
             MODEL_PATH,

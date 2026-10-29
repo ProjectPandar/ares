@@ -23,11 +23,16 @@ pub(super) struct LineMotion {
     pub(super) de: f32,
 }
 
-pub(super) fn set_fan_line(percent: i16) -> String {
+pub(super) fn set_fan_line(percent: i16, gcode_comments: bool) -> String {
     // `GCodeWriter::set_fan` (GCodeWriter.cpp:1114) terminates the command
     // with a newline; a buffered kickstart line then flushes as `raw + "\n"`
     // leaving a blank line after the command, matching upstream.
-    format!("M106 S{}\n", fan_pwm(percent))
+    let comment = match (gcode_comments, percent == 0) {
+        (true, true) => " ; disable fan",
+        (true, false) => " ; enable fan",
+        (false, _) => "",
+    };
+    format!("M106 S{}{comment}\n", fan_pwm(percent))
 }
 
 pub(super) fn fan_pwm(percent: i16) -> u32 {
@@ -130,29 +135,12 @@ pub(super) fn split_line(
 }
 
 pub(super) fn replace_word(line: &str, axis: char, value: f32, digits: usize) -> String {
-    let mut result = String::with_capacity(line.len() + 8);
-    let code = line.split(';').next().unwrap_or(line);
-    let comment = &line[code.len()..];
-    let mut replaced = false;
-    for token in code.split_whitespace() {
-        if !result.is_empty() {
-            result.push(' ');
-        }
-        if !replaced {
-            let mut characters = token.chars();
-            if let Some(first) = characters.next()
-                && first.eq_ignore_ascii_case(&axis)
-                && characters.as_str().parse::<f32>().is_ok()
-            {
-                result.push(first);
-                result.push_str(&format!("{value:.digits$}"));
-                replaced = true;
-                continue;
-            }
-        }
-        result.push_str(token);
-    }
-    result.push_str(comment);
+    let pos = line.find(format!(" {axis}").as_str()).unwrap() + 2;
+    let end = line[pos + 1..]
+        .find([' ', ';'])
+        .map_or(line.len(), |end| pos + 1 + end);
+    let mut result = line.to_owned();
+    result.replace_range(pos..end, &format!("{value:.digits$}"));
     result
 }
 

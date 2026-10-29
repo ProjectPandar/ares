@@ -69,14 +69,13 @@ impl ProjectSpiralVaseRunState {
         let base_z = f64::from(layer.z as f32 - layer.height as f32);
         let total_length = total_extrusion_length(&input, &self.reader, self.config.relative_e);
         let minimum_segment_length = SOURCE_EPSILON_MM.max(2.0 * self.config.resolution);
-        let transition_out = layer.final_layer && self.config.relative_e && !transition_in;
+        let transition_out = layer.final_layer && self.config.relative_e;
         let smooth = self.config.smooth_xy && self.config.max_xy_smoothing > 0.0;
         let mut length = 0.0_f32;
         let mut current_layer = Vec::new();
         let mut last_emitted = self.previous_layer.last().copied();
         let mut transformed = String::new();
         let mut transition = String::new();
-        let mut emitted_layer_z = false;
 
         for line in input.lines() {
             let parsed = ParsedLine::parse(line);
@@ -93,7 +92,9 @@ impl ProjectSpiralVaseRunState {
                 continue;
             }
             if parsed.z.is_some() && !parsed.has_xy() {
-                emitted_layer_z = append_layer_z(&mut transformed, line, base_z, emitted_layer_z);
+                // `SpiralVase.cpp:136-141`: every remaining Z-only G1 is kept
+                // and rewritten to the layer base z (`line.set(Z, z)`).
+                push_line(&mut transformed, &set_word(line, 'Z', format_z(base_z)));
                 continue;
             }
             if !parsed.has_xy() {
@@ -115,19 +116,14 @@ impl ProjectSpiralVaseRunState {
             let mut normal = line.to_owned();
             if transition_in && let Some(e) = parsed.e {
                 let starting = self.config.starting_flow_ratio as f32;
-                let factor = f64::from(starting + progress as f32 * (1.0 - starting));
-                normal = set_word(&normal, 'E', format_e(e * factor));
-            }
-            if transition_out {
-                let factor = f64::from(
-                    super::super::gcode_spiral_vase_transition::finishing_factor(
-                        progress,
-                        self.config.finishing_flow_ratio,
-                    ) as f32,
-                );
+                let factor = starting + progress as f32 * (1.0 - starting);
+                normal = set_word(&normal, 'E', format_e(f64::from(e as f32 * factor)));
+            } else if transition_out {
+                let finishing = self.config.finishing_flow_ratio as f32;
+                let factor = finishing + (1.0 - progress as f32) * (1.0 - finishing);
                 let tapered = parsed.e.map_or_else(
                     || line.to_owned(),
-                    |e| set_word(line, 'E', format_e(e * factor)),
+                    |e| set_word(line, 'E', format_e(f64::from(e as f32 * factor))),
                 );
                 push_line(&mut transition, &tapered);
             }
@@ -204,14 +200,18 @@ impl ParsedLine {
             let Some(letter) = chars.next() else {
                 continue;
             };
-            let Ok(value) = chars.as_str().parse::<f64>() else {
-                continue;
-            };
             match letter {
-                'X' => parsed.x = Some(value),
-                'Y' => parsed.y = Some(value),
-                'Z' => parsed.z = Some(value),
-                'E' => parsed.e = Some(value),
+                'X' => parsed.x = chars.as_str().parse().ok().or(parsed.x),
+                'Y' => parsed.y = chars.as_str().parse().ok().or(parsed.y),
+                'Z' => parsed.z = chars.as_str().parse().ok().or(parsed.z),
+                'E' => {
+                    parsed.e = chars
+                        .as_str()
+                        .parse::<f32>()
+                        .ok()
+                        .map(f64::from)
+                        .or(parsed.e);
+                }
                 _ => {}
             }
         }
@@ -236,13 +236,15 @@ impl Movement {
     fn from(reader: &ReaderState, line: &ParsedLine, relative_e: bool) -> Self {
         let target_x = line.x.unwrap_or(reader.x);
         let target_y = line.y.unwrap_or(reader.y);
+        let dx = target_x as f32 - reader.x as f32;
+        let dy = target_y as f32 - reader.y as f32;
         let e_delta = line
             .e
             .map_or(0.0, |e| if relative_e { e } else { e - reader.e });
         Self {
             target_x,
             target_y,
-            xy_distance: (target_x - reader.x).hypot(target_y - reader.y),
+            xy_distance: f64::from((dx * dx + dy * dy).sqrt()),
             extruding: e_delta > f64::EPSILON,
             retracting: e_delta < -f64::EPSILON,
         }
@@ -318,13 +320,6 @@ fn push_line(output: &mut String, line: &str) {
     output.push('\n');
 }
 
-fn append_layer_z(output: &mut String, line: &str, base_z: f64, already_emitted: bool) -> bool {
-    if !already_emitted {
-        push_line(output, &set_word(line, 'Z', format_z(base_z)));
-    }
-    true
-}
-
 fn push_passthrough(
     transformed: &mut String,
     transition: &mut String,
@@ -338,7 +333,7 @@ fn push_passthrough(
 }
 
 fn format_axis(value: f64) -> String {
-    trim_fixed(value, 3, false)
+    format!("{:.3}", value as f32)
 }
 fn format_z(value: f64) -> String {
     // `GCodeLine::set` default `decimal_digits = 3` with `std::fixed`.
@@ -347,27 +342,6 @@ fn format_z(value: f64) -> String {
 fn format_e(value: f64) -> String {
     // `line.set(E, .., 5)` — fixed 5 decimals, leading zero kept.
     format!("{value:.5}")
-}
-
-fn trim_fixed(value: f64, precision: usize, omit_leading_zero: bool) -> String {
-    let scale = 10_f64.powi(precision as i32);
-    let mut value = format!("{:.precision$}", (value * scale).round() / scale);
-    while value.ends_with('0') {
-        value.pop();
-    }
-    if value.ends_with('.') {
-        value.pop();
-    }
-    if value.is_empty() || value == "-" || value == "0" || value == "-0" {
-        return "0".to_owned();
-    }
-    if omit_leading_zero {
-        if let Some(value) = value.strip_prefix("-0") {
-            return format!("-{value}");
-        }
-        return value.strip_prefix('0').unwrap_or(&value).to_owned();
-    }
-    value
 }
 
 #[cfg(test)]

@@ -189,10 +189,13 @@ async fn no_change_slice_is_a_native_processor_control() {
 
 #[tokio::test]
 async fn color_change_z_follows_the_next_extrusion_position() {
-    // OptionsZCorrector::update copies the preceding move's f32 position
-    // at the next extrusion (GCodeProcessor.hpp:693-705). The template hop
-    // precedes the slicer's own layer travel: neither the tag Z nor the first
-    // travel after it is necessarily the next extrusion's Z.
+    // OptionsZCorrector::update sets print_z from the preceding move's f32
+    // position at the next extrusion (GCodeProcessor.hpp:693-705). The template
+    // hop precedes the slicer's own layer travel: neither the tag Z nor the
+    // first travel after it is necessarily the next extrusion's Z. The copy and
+    // erase act on the stale m_move_id (actual-speed insertions,
+    // GCodeProcessor.cpp:5962-6008, do not renumber it), so Native leaves the
+    // marker vertex at the tag Z (procgcode oracle on Native's own G-code).
     let overrides = ConfigOverrides::from_json(
         br##"{"layer_change_gcode":"{if layer_num == 2};COLOR_CHANGE,T0,#FF0000\nM600\nG1 Z0.9 F600\nG1 X21 F600\n{endif}"} "##,
     ).unwrap();
@@ -221,10 +224,7 @@ async fn color_change_z_follows_the_next_extrusion_position() {
         output.result.custom_gcode_per_print_z[0].print_z,
         f64::from(extrusion.position[2])
     );
-    assert_eq!(
-        output.result.moves[marker].position[2],
-        extrusion.position[2]
-    );
+    assert_eq!(output.result.moves[marker].position[2], 0.4);
     check_native_processor(&output, "corrected-z");
 }
 

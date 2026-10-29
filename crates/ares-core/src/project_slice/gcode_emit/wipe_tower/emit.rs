@@ -54,7 +54,7 @@ pub(super) fn append(
             || ramming
             || settings.printer.gcode.tool_change_on_wipe_tower.0);
     if should_travel || state.layer_change_travel_pending {
-        motion::tower::travel_to(output, state, start, geometry);
+        motion::tower::travel_to(output, state, start, geometry)?;
     }
     if will_go_down {
         motion::tower::change_z(

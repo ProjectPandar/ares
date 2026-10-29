@@ -14,8 +14,8 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
     flow: SkirtLoopFlow,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
-    state.adaptive_pa_flow = Some(flow.mm3_per_mm);
+) -> Result<(), crate::SliceError> {
+    state.adaptive_pa_flow = Some(flow.mm3_per_mm * state.current_brim_flow_ratio);
     state.adaptive_pa_emitted = false;
     // `GCode::extrude_entity("brim")` dispatches to `extrude_loop`, which
     // splits every non-perimeter loop at the point nearest the last
@@ -41,13 +41,17 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
                 .collect::<Vec<_>>();
         // Same plate-frame seam-gap clip as the skirt
         // (`GCode.cpp:5804` truncates toward zero on plate ints).
-        super::clip::clip_end(&mut split, state.options.seam_gap / geometry.scale.factor());
+        super::clip::clip_end(
+            &mut split,
+            state.current_seam_gap_mm() / geometry.scale.factor(),
+        );
         path::emit(
             output,
             split
                 .iter()
                 .map(|point| (point.0 - offset.0, point.1 - offset.1)),
             PathProperties {
+                contour: None,
                 mm3_per_mm: flow.mm3_per_mm,
                 width: flow.width,
                 height: flow.height,
@@ -61,7 +65,7 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
             },
             geometry,
             state,
-        );
+        )?;
         // `extrude_loop`'s wipe storage (GCode.cpp:5979-5991) concatenates
         // the loop's paths FORWARD (no reverse) — the brim retract's wipe
         // walks the ring from the seam. `path::emit` stored the reversed
@@ -75,27 +79,29 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
             .collect::<Vec<_>>();
         state.adaptive_pa_flow = None;
         state.adaptive_pa_emitted = false;
-        return;
+        return Ok(());
     }
     path::emit(
         output,
         points.into_iter(),
         PathProperties {
+            contour: None,
             mm3_per_mm: flow.mm3_per_mm,
             width: flow.width,
             height: flow.height,
             feature: "Brim",
             is_perimeter: false,
-            end_clip: state.options.seam_gap,
+            end_clip: state.current_seam_gap_mm(),
             fitting: &[],
             slope: None,
             inside_loop: false,
         },
         geometry,
         state,
-    );
+    )?;
     state.adaptive_pa_flow = None;
     state.adaptive_pa_emitted = false;
+    Ok(())
 }
 
 /// Flow and clipping state for the skirt loop (`GCode.cpp:5804`, `Flow.hpp::Flow`).
@@ -113,37 +119,43 @@ pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
     SkirtLoopParameters { flow, preclipped }: SkirtLoopParameters,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     state.adaptive_pa_flow = Some(flow.mm3_per_mm);
     state.adaptive_pa_emitted = false;
-    path::emit(
+    // GCode.cpp:4438-4441 passes the live object speed before layer/role overrides.
+    path::emit_with_speed(
         output,
         points,
-        PathProperties {
-            mm3_per_mm: flow.mm3_per_mm,
-            width: flow.width,
-            height: flow.height,
-            feature: "Skirt",
-            is_perimeter: false,
-            // `GCode::extrude_loop` clips every loop by the seam gap
-            // (`GCode.cpp:5778-5790`) on the plate-frame polyline; the
-            // skirt caller pre-clips in that frame, so `path::emit` must
-            // not clip again.
-            end_clip: if preclipped {
-                0.0
-            } else {
-                state.options.seam_gap
+        (
+            PathProperties {
+                contour: None,
+                mm3_per_mm: flow.mm3_per_mm,
+                width: flow.width,
+                height: flow.height,
+                feature: "Skirt",
+                is_perimeter: false,
+                // `GCode::extrude_loop` clips every loop by the seam gap
+                // (`GCode.cpp:5778-5790`) on the plate-frame polyline; the
+                // skirt caller pre-clips in that frame, so `path::emit` must
+                // not clip again.
+                end_clip: if preclipped {
+                    0.0
+                } else {
+                    state.options.seam_gap
+                },
+                fitting: &[],
+                slope: None,
+                inside_loop: false,
             },
-            fitting: &[],
-            slope: None,
-            inside_loop: false,
-        },
+            Some(state.current_support_speed),
+        ),
         geometry,
         state,
-    );
+    )?;
     state.adaptive_pa_flow = None;
     state.adaptive_pa_emitted = false;
     // `GCode.cpp:5979-5991` stores loop wipe paths forward so the wipe
     // wraps from the loop end back toward the path start.
     state.wipe_path.reverse();
+    Ok(())
 }

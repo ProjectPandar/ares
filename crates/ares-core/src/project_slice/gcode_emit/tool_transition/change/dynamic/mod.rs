@@ -10,7 +10,7 @@ use super::{
     value::{Config, Value},
 };
 
-pub(super) fn insert(
+pub(in crate::project_slice::gcode_emit::tool_transition) fn insert(
     config: &mut Config,
     state: &motion::EmitState,
     old: Option<usize>,

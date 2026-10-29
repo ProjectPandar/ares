@@ -4,7 +4,7 @@
 pub(in crate::project_slice) mod chained_loops;
 mod counterbore;
 pub(in crate::project_slice) mod entity_collections;
-mod extra_perimeters;
+pub(super) mod extra_perimeters;
 mod fuzzy_skin;
 pub(in crate::project_slice) mod gap_domain;
 pub(in crate::project_slice) mod gap_extrusion;
@@ -109,7 +109,7 @@ pub(super) fn finish_classic_hierarchy(
 
 pub(super) fn finish_classic_traversal(
     prepared: PreparedPostClassicHierarchy,
-) -> PreparedPostClassicTraversal {
+) -> Result<PreparedPostClassicTraversal, SliceError> {
     traversal::finish(prepared)
 }
 

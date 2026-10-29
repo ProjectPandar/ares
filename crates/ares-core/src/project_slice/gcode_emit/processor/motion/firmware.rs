@@ -1,5 +1,5 @@
 //! Firmware-retraction G10/G11 emulation (`GCodeProcessor.cpp:4873-4893`):
-//! expand to a fake G1 with the retraction E delta and the
+//! expand to a fake G1 with the literal E word and the
 //! retraction/deretraction feedrate.
 
 use super::MotionKind;
@@ -9,7 +9,7 @@ pub(super) fn emulate_firmware_retraction(
     state: &mut MotionState,
     command: &str,
 ) -> Option<super::MotionBlock> {
-    let (e_delta, feedrate) = if command == "G10" {
+    let (e_value, feedrate) = if command == "G10" {
         (-state.retraction_length, state.retraction_feedrate)
     } else {
         (
@@ -18,12 +18,7 @@ pub(super) fn emulate_firmware_retraction(
         )
     };
     let mut fake = String::from("G1");
-    if !state.e_relative {
-        let absolute = state.e_position + e_delta;
-        fake.push_str(&format!(" E{absolute}"));
-    } else {
-        fake.push_str(&format!(" E{e_delta}"));
-    }
+    fake.push_str(&format!(" E{e_value}"));
     fake.push_str(&format!(" F{feedrate}"));
     state.motion(&fake).map(|mut block| {
         block.kind = if command == "G10" {

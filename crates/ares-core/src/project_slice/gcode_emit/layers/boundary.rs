@@ -80,6 +80,8 @@ pub(super) struct LayerBoundary<'a> {
     /// mutable so the second-layer M140 refreshes it for the next
     /// sequential-object transition.
     pub(super) bed_cache: &'a mut i32,
+    /// `LayerTools::custom_gcode` of this layer's by-layer ordering.
+    pub(super) custom_gcode: Option<&'a crate::gcode_processor::CustomGCodeItem>,
 }
 
 /// Emits the `change_layer` block for `layer_index` (`GCode.cpp:5685-5718`
@@ -103,6 +105,7 @@ pub(super) fn append<'a>(
         first_layer,
         second_layer_done,
         bed_cache,
+        custom_gcode,
     }: LayerBoundary<'_>,
 ) -> Result<BoundaryAdvance<'a>, SliceError> {
     state.physical_fan_speed = state.part_fan_speed;
@@ -186,14 +189,18 @@ pub(super) fn append<'a>(
     let layer_retract_pending = state.pending_layer_retract
         && will_move_z
         && state.options.z_hop > 0.0
-        && state.options.retraction_length > 0.0
+        && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
         && state.lifted_amount <= 0.0
         && state.pending_lift.is_none();
     // `change_layer` retract requires `will_move_z` (`GCode.cpp:5693`) —
     // on non-BBL paths a pending retract whose target Z equals the
     // (possibly template-assigned) writer Z performs no retract at all,
     // so its `restart_extra` assignment must not run either.
-    motion::flush_pending_retract_wipe(output, state, will_move_z);
+    // Exactly one Ares call owns each upstream `change_layer` retract:
+    // `retract_before_layer` owns layer 0, the config-predicate flush
+    // owns layer > 0 — without the exclusivity a start g-code that
+    // leaves Z unpositioned runs both for the single :5693 call.
+    motion::flush_pending_retract_wipe(output, state, will_move_z && layer_index > 0);
     // Pending object-end labels flush after the layer-change
     // retract/wipe, before the layer-change gcode
     // (`GCode.cpp:5699` `change_layer`).
@@ -275,6 +282,26 @@ pub(super) fn append<'a>(
     // flag at every object boundary (`GCode.cpp:3367`), so each object's
     // first non-first layer runs the block once, not just global chunk 1.
     let second_layer_reset = !first_layer && !*second_layer_done;
+    // `GCode.cpp:4777-4779`: the second-layer block emits the configured
+    // power-loss-recovery mode command (`GCodeWriter.cpp:505-522` —
+    // `M1003` on BBL machines, `M413` on Marlin 2 firmware) before the
+    // first-layer-inspection scan.
+    if second_layer_reset {
+        let command = crate::gcode_power_loss_recovery::second_layer_command(
+            state.tags.is_bbl(),
+            state.options.gcode_flavor,
+            traversal
+                .resolved
+                .views
+                .full
+                .printer
+                .gcode
+                .enable_power_loss_recovery,
+            state.options.gcode_comments,
+            &mut state.power_loss_recovery,
+        );
+        output.extend_from_slice(command.as_bytes());
+    }
     if second_layer_reset
         && state.tags.is_bbl()
         && traversal
@@ -298,12 +325,46 @@ pub(super) fn append<'a>(
             second_layer_reset,
         },
     );
+    // `GCode.cpp:4772-4773`: the first-layer block closes with the
+    // junction deviation — after the initial-layer acceleration and
+    // jerk emits above (`:4761-4774`, M204 -> M205 X/Y -> M205 J) —
+    // on the per-object first layer (`:4589`, reset per sequential
+    // object at `:3367`); `GCodeWriter.cpp:352-361` clamps the value
+    // to the machine maximum at 3 fixed decimals.
+    if first_layer {
+        let command = crate::gcode_junction_deviation::junction_deviation_command(
+            state.options.gcode_flavor,
+            traversal
+                .resolved
+                .views
+                .full
+                .process
+                .object
+                .default_junction_deviation
+                .0,
+            traversal
+                .resolved
+                .views
+                .full
+                .printer
+                .machine
+                .machine_max_junction_deviation
+                .0[0]
+                .0,
+            state.options.gcode_comments,
+        );
+        output.extend_from_slice(command.as_bytes());
+    }
     // Second-layer transition: bed temperature for the remaining
     // layers (`GCode.cpp:4777-4830`), once per object under sequential
     // printing (`GCode.cpp:3367`).
     if second_layer_reset {
         *second_layer_done = true;
         machine::append_second_layer_transition(output, traversal, state, bed_cache);
+    }
+    // `GCode.cpp:4825-4828`, after the second-layer block.
+    if let Some(item) = custom_gcode {
+        super::custom_gcode::append(output, state, item, &timelapse_context)?;
     }
     // Orca `GCode.cpp:5205-5210`: core-xy BBL printers emit the eager
     // change-layer lift (the second change-layer retract is a no-op

@@ -58,48 +58,108 @@ pub(in crate::project_slice::gcode_emit) fn emit(
             "sequential by-object printing with a priming toolchange at the object boundary is not supported yet".into(),
         ));
     }
+    // GCode.cpp:3298 sets the incoming instance frame before retract/travel.
+    motion::set_origin(state, (origin[0], origin[1]));
     motion::tower::transition_retract(output, state);
     // `GCode.cpp:3326`: the safety lift above every printed layer.
     motion::tower::writer_z(output, state, lift_z, "", true);
     // `GCode.cpp:3327` runs `GCode::travel_to` (GCode.cpp:7350) for the
     // origin move: it selects the travel acceleration/jerk BEFORE the
-    // writer performs the hop — `erNone` with the previous object's
-    // layer active takes the plain travel values (the native
-    // `SET_VELOCITY_LIMIT` between `G1 Z10.36` and `G1 Z10.76`).
+    // retraction handling and the hop.
     motion::begin_path_travel(output, state, "", f64::INFINITY);
-    // `GCode.cpp:3327-3330`: the travel to the incoming instance's origin
-    // with the external motion planner once; the writer lifts again for
-    // the planar move (the native pair `G1 Z10.4` / `G1 Z10.8` /
-    // `G1 X… Y… Z10.8`).
+    // `GCode.cpp:7432-7462`: the retraction handling fires before the
+    // label flush (:7465). The extruder is already retracted (the block's
+    // own `retract()` did it), so the E part is a no-op, but the lift
+    // still runs through `lazy_lift` (GCodeWriter.cpp:626-648) — and its
+    // materialization point splits on vase mode:
+    //
+    // * spiral vase materializes instantly inside the retraction
+    //   (`spiral_vase=true` → `_travel_to_z` "lift Z") — before the label
+    //   flush; then `travel_to_xyz` branch 3 (GCodeWriter.cpp:785+) takes
+    //   the finished object's nominal Z as the destination (`z ==
+    //   DBL_MAX ? m_nominal_z`, GCode.cpp:7483) and the combined move
+    //   cancels the lift (the native `G1 Z7 F42000` / `G1 X50 Y40 Z6.2
+    //   F42000`), so the incoming instance's first-path travel performs
+    //   its own entry hop pair.
+    // * otherwise the lift defers once inside the block's own retract
+    //   (`GCode.cpp:3308` `transition_retract` → `lazy_lift`,
+    //   GCodeWriter.cpp:626-648, band checked at that moment's
+    //   `m_pos.z()`); the travel never re-evaluates the band — it only
+    //   consumes `m_to_lift`. With a deferral queued, `travel_to_xyz`
+    //   branch 1 (GCodeWriter.cpp:700-737) raises the destination to
+    //   `m_pos(2) + m_to_lift`, materializes the slop `G1 Z4.8 F9000 ;
+    //   normal lift Z` and travels there — the arrival keeps the nozzle
+    //   lifted (`m_lifted = z_hop`), so the incoming instance's first
+    //   travel descends in the combined move without a new hop. With
+    //   none queued (e.g. the retract's `m_pos.z()` sat outside the
+    //   `retract_lift_above/below` band), the travel takes the
+    //   nominal-Z destination like the vase branch.
     let hop_z = lift_z + state.options.z_hop;
-    motion::tower::writer_z(output, state, hop_z, "", true);
+    // `GCode.cpp:3322`: forward the sequential origin travel description.
+    let comment = if state.options.gcode_comments {
+        " ; move to origin position for next object"
+    } else {
+        ""
+    };
     let feedrate = motion::tower::travel_feedrate(state);
+    let destination_z;
+    if state.spiral_vase {
+        motion::tower::writer_z(output, state, hop_z, "lift Z", true);
+        // GCode.cpp:7466-7467 consumes pending labels after the
+        // retraction handling, before the travel move.
+        motion::append_object_start(output, state);
+        destination_z = state.layer_z;
+        // Branch 3 ends at the nominal Z with the lift cancelled
+        // (`m_lifted = 0`, GCodeWriter.cpp:810-815).
+        state.lifted = false;
+        state.lifted_amount = 0.0;
+    } else {
+        // GCode.cpp:7466-7467 consumes pending labels before the
+        // deferred lift materializes in the travel's branch 1. The defer
+        // decision itself happened once inside the block's retract
+        // (`transition_retract` → `schedule_normal`, gated by
+        // `is_allowed_at` at that writer z) — the travel only consumes
+        // `m_to_lift`: queued → branch 1 hop, absent → nominal Z.
+        motion::append_object_start(output, state);
+        if state.pending_lift.is_some() {
+            motion::tower::writer_z(output, state, hop_z, "normal lift Z", true);
+            destination_z = hop_z;
+            // Branch 1 keeps the arrival lifted (`m_lifted = z_hop`,
+            // GCodeWriter.cpp:701-710).
+            state.lifted = true;
+            state.lifted_amount = state.options.z_hop;
+        } else {
+            // No deferred lift: `travel_to_xyz` keeps the finished
+            // object's nominal Z (`z == DBL_MAX ? m_nominal_z`,
+            // GCode.cpp:7483) and the arrival cancels the lift.
+            destination_z = state.layer_z;
+            state.lifted = false;
+            state.lifted_amount = 0.0;
+        }
+    }
     output.extend_from_slice(
         format!(
-            "G1 X{} Y{} Z{} F{}\n",
-            format_z(origin[0]),
-            format_z(origin[1]),
-            format_z(hop_z),
+            "G1 X{} Y{} Z{} F{}{comment}\n",
+            format_z(state.offset.0),
+            format_z(state.offset.1),
+            format_z(destination_z),
             motion::tower::format_feedrate(feedrate)
         )
         .as_bytes(),
     );
-    state.x = origin[0];
-    state.y = origin[1];
+    state.x = state.offset.0;
+    state.y = state.offset.1;
+    // GCode.cpp:3322/7506: travel_to ends at (0, 0) in the incoming frame.
+    state.last_scaled_position = (0, 0);
+    state.last_position_defined = true;
     state.positioned = true;
-    // The transition's hop leaves the nozzle lifted above the layer
-    // domain (`GCodeWriter` lifted state): the incoming instance's
-    // layer change then skips its own lift and the first travel merges
-    // the descent into the combined move (`GCodeWriter.cpp:782-806`,
-    // the Ares `cancelled_lift` branch in `move_emit.rs`).
-    state.lifted = true;
-    state.lifted_amount = state.options.z_hop;
-    // The transition's toolchange retract ran before the hop and its
-    // tail scheduled a deferred lift for the pre-hop (zero-lift) state;
-    // the explicit `travel_to_z` hop above has already materialized it
-    // (`GCode.cpp:3316-3326`: the retract precedes the explicit hop —
-    // the lazy slot is consumed by it, not re-fired on the incoming
-    // instance's first travel).
+    state.current_feedrate = feedrate;
+    // The move's destination is the live writer Z in both branches.
+    state.record_z(destination_z);
+    state.template_lifted = false;
+    // `GCode.cpp:3316-3326`: the block's explicit retract precedes the
+    // origin travel — the deferred slot is consumed by it, not re-fired
+    // on the incoming instance's first travel.
     state.pending_lift = None;
     // `GCode.cpp:3330`: the instance's first travel runs once without the
     // crossing avoidance — the direct combined move to the first print

@@ -33,7 +33,7 @@ pub(super) fn emit(
     let geometry = if let Some(layer) = entry.object_layer {
         input
             .builder
-            .geometry(entry.object_index, layer, input.chunk_slices, input.spacing)
+            .geometry(entry.object_index, layer, input.spacing)
     } else {
         EntryGeometry {
             top_surfaces: Vec::new(),

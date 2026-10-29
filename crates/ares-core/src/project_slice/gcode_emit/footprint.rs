@@ -13,6 +13,7 @@ mod coverage;
 pub(super) use coverage::covered_by_spacing;
 mod islands;
 pub(super) use islands::FirstLayerIslands;
+pub(super) use islands::support_no_brim;
 mod first_layer;
 pub(super) use first_layer::{
     first_layer_bounds, first_layer_convex_hull, first_layer_object_center,
@@ -190,22 +191,11 @@ pub(super) fn in_print_labels(
     } else {
         format!("M486 S{preceding_instances}\n")
     };
-    let mut end = if klipper {
+    let end = if klipper {
         format!("EXCLUDE_OBJECT_END NAME={name}\n")
     } else {
         "M486 S-1\n".to_owned()
     };
-    if !traversal
-        .resolved
-        .views
-        .runtime_gcode
-        .use_relative_e_distances
-        .0
-    {
-        // `GCodeWriter::add_object_end_labels` resets E after the end marker
-        // when extrusion is absolute (`GCodeWriter.cpp:1183-1192`).
-        end.push_str("G92 E0\n");
-    }
     (Some(start), Some(end))
 }
 
@@ -310,11 +300,11 @@ fn sanitize_instance_name(name: &str) -> String {
     let mut separator = false;
     for character in name.chars() {
         if SPECIAL.contains(&character) {
-            separator = true;
-        } else {
-            if separator && !output.is_empty() {
+            if !separator {
                 output.push('_');
             }
+            separator = true;
+        } else {
             separator = false;
             output.push(character);
         }

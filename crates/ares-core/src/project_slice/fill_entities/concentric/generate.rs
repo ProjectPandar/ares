@@ -13,10 +13,10 @@ use super::geometry_error;
 pub(super) fn generate_thick_polylines(
     expolygon: ExPolygon,
     spacing: i64,
-    layer_height: i64,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
-) -> Result<Vec<ThickPolyline>, SliceError> {
+) -> Result<Vec<(ThickPolyline, bool)>, SliceError> {
     generate_with_mode(
         expolygon,
         spacing,
@@ -30,10 +30,10 @@ pub(super) fn generate_thick_polylines(
 pub(super) fn generate_standard_thick_polylines(
     expolygon: ExPolygon,
     spacing: i64,
-    layer_height: i64,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
-) -> Result<Vec<ThickPolyline>, SliceError> {
+) -> Result<Vec<(ThickPolyline, bool)>, SliceError> {
     generate_with_mode(
         expolygon,
         spacing,
@@ -51,11 +51,11 @@ pub(super) fn generate_standard_thick_polylines(
 fn generate_with_mode(
     expolygon: ExPolygon,
     spacing: i64,
-    layer_height: i64,
+    layer_height: f64,
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
     standard: bool,
-) -> Result<Vec<ThickPolyline>, SliceError> {
+) -> Result<Vec<(ThickPolyline, bool)>, SliceError> {
     let (contour, holes) = expolygon.into_parts();
     let (minimum_x, maximum_x, minimum_y, maximum_y) = contour.points().iter().fold(
         (i64::MAX, i64::MIN, i64::MAX, i64::MIN),
@@ -91,7 +91,7 @@ fn generate_with_mode(
         inner_spacing: spacing,
         inset_count: loops_count,
         outer_wall_inset: 0,
-        layer_height: layer_height as f64 * scale.factor(),
+        layer_height,
         min_bead_width: scale.checked_scale(0.85 * minimum_nozzle_diameter).unwrap(),
         min_feature_size: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
         transition_length: scale
@@ -120,6 +120,6 @@ fn generate_with_mode(
         .into_iter()
         .flatten()
         .filter(|line| line.junctions.len() >= 2)
-        .map(|line| line.to_thick_polyline())
+        .map(|line| (line.to_thick_polyline(), line.is_closed))
         .collect())
 }

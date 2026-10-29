@@ -1,0 +1,151 @@
+{
+  "approved_spec": "45ab3be48",
+  "upstream": "PerimeterGenerator.cpp1087-1113,2521; Classic1672 unchanged",
+  "cases": {
+    "arachne-control": {
+      "sha256": "0f6cac9cd2e66be4b28ca80edfeab5bcc713609d99ddebd08dbedb364ed6d8cc",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "875bd9c4b2fe2352cca65301c494e9c8283ea43f0ad101f4824f340538bf1e8b",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "62b3a10ad3b388c9d4ff4cc31878b16b0c81ebba0f3fc4b1411cfbb21a35bd10",
+        "Metadata/project_settings.config": "2550c2865e54f4dfff7da48766285f278454d2c4795ddbd6a5a7bb92dc354011",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-overhang-isolate1/arachne-control/exported.3mf",
+      "settings": {
+        "wall_generator": "arachne",
+        "wall_loops": "3",
+        "detect_overhang_wall": "1",
+        "extra_perimeters_on_overhangs": "0",
+        "seam_position": "aligned",
+        "staggered_inner_seams": "0",
+        "seam_slope_type": "none",
+        "wipe": [
+          "0"
+        ],
+        "sparse_infill_density": "0%"
+      }
+    },
+    "arachne-positive": {
+      "sha256": "77968f1ac5b7497c7f7207bf43153a954d1328a32faf89eff1c8d2268fcb037f",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "875bd9c4b2fe2352cca65301c494e9c8283ea43f0ad101f4824f340538bf1e8b",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "62b3a10ad3b388c9d4ff4cc31878b16b0c81ebba0f3fc4b1411cfbb21a35bd10",
+        "Metadata/project_settings.config": "ecfaef46508791b730464dcc7716346f97c81a76ccaa2ae51e40d7d5a2b1af1d",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-overhang-isolate1/arachne-positive/exported.3mf",
+      "settings": {
+        "wall_generator": "arachne",
+        "wall_loops": "3",
+        "detect_overhang_wall": "1",
+        "extra_perimeters_on_overhangs": "1",
+        "seam_position": "aligned",
+        "staggered_inner_seams": "0",
+        "seam_slope_type": "none",
+        "wipe": [
+          "0"
+        ],
+        "sparse_infill_density": "0%"
+      }
+    },
+    "arachne-undetected-control": {
+      "sha256": "1c0b73fabffd108411557558eadd34db539bcb9cd1db6a3a265460579f44a545",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "875bd9c4b2fe2352cca65301c494e9c8283ea43f0ad101f4824f340538bf1e8b",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "62b3a10ad3b388c9d4ff4cc31878b16b0c81ebba0f3fc4b1411cfbb21a35bd10",
+        "Metadata/project_settings.config": "0af3b893b3775d8baaa1f32f44ad240775dc206b3ee75541c3bc18a5f07fdfda",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-overhang-isolate1/arachne-undetected-control/exported.3mf",
+      "settings": {
+        "wall_generator": "arachne",
+        "wall_loops": "3",
+        "detect_overhang_wall": "0",
+        "extra_perimeters_on_overhangs": "0",
+        "seam_position": "aligned",
+        "staggered_inner_seams": "0",
+        "seam_slope_type": "none",
+        "wipe": [
+          "0"
+        ],
+        "sparse_infill_density": "0%"
+      }
+    },
+    "arachne-undetected-extra": {
+      "sha256": "550e19473adf26e61e0861b2736784179808a7035fdac58168b521bd79ccbdf5",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "875bd9c4b2fe2352cca65301c494e9c8283ea43f0ad101f4824f340538bf1e8b",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "62b3a10ad3b388c9d4ff4cc31878b16b0c81ebba0f3fc4b1411cfbb21a35bd10",
+        "Metadata/project_settings.config": "d7cf06d7404f63437c68d2b37af35ee23e9da6129e6cda1f719af2b89b36f591",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-overhang-isolate1/arachne-undetected-extra/exported.3mf",
+      "settings": {
+        "wall_generator": "arachne",
+        "wall_loops": "3",
+        "detect_overhang_wall": "0",
+        "extra_perimeters_on_overhangs": "1",
+        "seam_position": "aligned",
+        "staggered_inner_seams": "0",
+        "seam_slope_type": "none",
+        "wipe": [
+          "0"
+        ],
+        "sparse_infill_density": "0%"
+      }
+    },
+    "classic-detected-extra-control": {
+      "sha256": "85e93cb93363cd43ce7d6007db39162871d6e9d6539679bb974926617c414fce",
+      "zip_entry_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "875bd9c4b2fe2352cca65301c494e9c8283ea43f0ad101f4824f340538bf1e8b",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "62b3a10ad3b388c9d4ff4cc31878b16b0c81ebba0f3fc4b1411cfbb21a35bd10",
+        "Metadata/project_settings.config": "fda90ea9f813dbba229f28553c5dcccf7b6e3f305e59c308fcf4e470b9269265",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "original_export": "/tmp/w5-overhang-isolate1/classic-detected-extra-control/exported.3mf",
+      "settings": {
+        "wall_generator": "classic",
+        "wall_loops": "3",
+        "detect_overhang_wall": "1",
+        "extra_perimeters_on_overhangs": "1",
+        "seam_position": "aligned",
+        "staggered_inner_seams": "0",
+        "seam_slope_type": "none",
+        "wipe": [
+          "0"
+        ],
+        "sparse_infill_density": "0%"
+      }
+    }
+  },
+  "sole_key_pair": [
+    "arachne-control",
+    "arachne-positive",
+    "extra_perimeters_on_overhangs"
+  ]
+}

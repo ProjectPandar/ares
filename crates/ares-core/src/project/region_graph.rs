@@ -1,4 +1,8 @@
 pub(crate) mod bounds;
+mod fuzzy;
+mod painted;
+pub(crate) use fuzzy::{FuzzyRegion, PaintedRegions};
+pub(crate) use painted::PaintedRegion;
 
 use super::effective_config::types::{
     ResolvedLayerCandidate, ResolvedModelPartCandidate, ResolvedProjectObject,
@@ -20,6 +24,9 @@ pub(crate) struct VolumeRegion {
 pub(crate) struct RegionGraph {
     pub(crate) all_regions: Vec<RegionOptions>,
     pub(crate) ranges: Vec<Vec<VolumeRegion>>,
+    pub(crate) painted_regions: Vec<Vec<PaintedRegion>>,
+    pub(crate) mmu_painted: bool,
+    pub(crate) fuzzy_regions: Vec<Vec<FuzzyRegion>>,
 }
 
 pub(crate) fn object_region_graph(
@@ -34,7 +41,11 @@ pub(crate) fn object_region_graph(
         .iter()
         .map(|range| (range.min_z - 1e-4, range.max_z + 1e-4))
         .collect::<Vec<_>>();
-    let offset = (resolved.object.xy_contour_compensation.0 as f32).max(0.0);
+    let offset = if source.is_mm_painted(logical_count) {
+        0.0
+    } else {
+        (resolved.object.xy_contour_compensation.0 as f32).max(0.0)
+    };
     for (index, volume) in source.volumes().iter().enumerate() {
         if matches!(
             volume.volume_type(),
@@ -73,6 +84,9 @@ pub(crate) fn build_region_graph(
     let mut graph = RegionGraph {
         all_regions: Vec::new(),
         ranges: candidates.iter().map(|_| Vec::new()).collect(),
+        painted_regions: candidates.iter().map(|_| Vec::new()).collect(),
+        mmu_painted: source.is_mm_painted(logical_count),
+        fuzzy_regions: candidates.iter().map(|_| Vec::new()).collect(),
     };
     for (source_volume_index, volume) in source.volumes().iter().enumerate() {
         let kind = volume.volume_type();
@@ -111,6 +125,8 @@ pub(crate) fn build_region_graph(
             }
         }
     }
+    painted::register(source, &mut graph);
+    fuzzy::register(source, &mut graph);
     graph
 }
 

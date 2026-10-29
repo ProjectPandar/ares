@@ -1,19 +1,28 @@
 //! G-code word parsing and kinematic clamp helpers shared by motion planning.
 
-/// Parse a G-code word (letter + numeric value) from a command string.
-/// A leading `+` carries no value: `fast_float::from_chars` rejects it
-/// (`GCodeReader.cpp:276-288`), so upstream treats `Z+0.5` as axis-less.
+/// Parse a complete argument word like `GCodeReader.cpp:29-84`.
+/// A leading `+` carries no value: `fast_float::from_chars` rejects it.
 pub(super) fn word(code: &str, letter: char) -> Option<f64> {
-    let start = code.find(letter)? + letter.len_utf8();
-    let value = &code[start..];
-    let end = value
-        .find(|character: char| character.is_ascii_alphabetic())
-        .unwrap_or(value.len());
-    let value = value[..end].trim();
-    if value.starts_with('+') {
-        return None;
+    let code = code.split([';', '\r', '\n', '\0']).next()?;
+    let mut result = None;
+    for token in code
+        .split([' ', '\t'])
+        .filter(|word| !word.is_empty())
+        .skip(1)
+    {
+        let Some(value) = token.strip_prefix(letter) else {
+            continue;
+        };
+        if value.starts_with('+') {
+            continue;
+        }
+        // A numeric prefix followed by another axis is not a word:
+        // discard the whole token, then continue at the next word.
+        if let Ok(value) = value.parse::<f64>() {
+            result = Some(f64::from(value as f32));
+        }
     }
-    value.parse::<f32>().ok().map(f64::from)
+    result
 }
 
 pub(super) fn clamped_word(code: &str, letter: char, current: f64, maximum: f64) -> f64 {

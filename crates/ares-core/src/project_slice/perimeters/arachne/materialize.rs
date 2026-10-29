@@ -1,5 +1,5 @@
 // `PerimeterGenerator::process_arachne` materialization from OrcaSlicer
-// v2.4.2 `PerimeterGenerator.cpp:2093-2519`: the per-record transaction that
+// v2.4.2 `PerimeterGenerator.cpp:2093-2521`: the per-record transaction that
 // generates arachne walls, orders them, converts them through
 // `traverse_extrusions` (`:370-574`) into the typed entity vocabulary and
 // produces the layer-region perimeter record. Classic records are untouched;
@@ -9,8 +9,9 @@
 
 use crate::{
     SliceError,
+    geometry::difference_ex_polygons,
     project_slice::perimeters::{
-        classic::{ClassicPreludeRecord, PreparedPostClassicPrelude},
+        classic::{ClassicPreludeRecord, PreparedPostClassicPrelude, extra_perimeters},
         layer_region::PreparedLayerRegionPerimeterRecord,
         types::{PerimeterDispatch, PerimeterInputRecord, PostPerimeterInputPrintObject},
     },
@@ -150,8 +151,23 @@ fn materialize_record(
         && !input.spiral_mode
         && region.sparse_infill_density.0 as i32 > 0;
     let mut perimeters = Vec::new();
-    let mut fill_surfaces = Vec::new();
+    // `process_no_bridge:1899–1929` precedes ordinary island fill.
+    let mut fill_surfaces = prelude_record.counterbore_fill.clone();
     let mut fill_no_overlap = Vec::new();
+    let geometry_error =
+        |error| SliceError::InvalidInput(format!("extra overhang perimeter geometry: {error:?}"));
+    let extra = (!input.spiral_mode
+        && object.lower_slices(input).is_some()
+        && region.detect_overhang_wall.0
+        && region.extra_perimeters_on_overhangs.0
+        && region.wall_loops.0 > 0
+        && i64::try_from(input.layer_id).unwrap() > i64::from(config.raft_layers))
+    .then_some(extra_perimeters::Context {
+        lower: &prelude_record.lower_slices_polygons,
+        perimeter_count: region.wall_loops.0,
+        flow: input.overhang_flow,
+        scale,
+    });
     // we need each island separately (`PerimeterGenerator.cpp:2124-2126`).
     for surface in object.perimeter_surfaces(input) {
         // `only_one_wall_top` regeneration inputs (`PerimeterGenerator.cpp:2160-2175`):
@@ -245,13 +261,34 @@ fn materialize_record(
                 loop_number,
             },
             &spacings,
-            prelude_record.surface_simplify_resolution,
+            config.scaled_resolution,
             crate::project_slice::perimeters::arachne::walls::BoundaryOverlap {
                 overlaps,
                 top_or_bottom: config.is_bottom_layer || config.is_topmost_layer,
             },
         )?;
+        let generated = extra
+            .as_ref()
+            .map(|context| context.generate(&boundary.fill_surfaces))
+            .transpose()?;
         fill_surfaces.extend(boundary.fill_surfaces);
+        // `process_arachne:2521`, after surface append and before no-overlap.
+        if let Some(generated) = generated
+            && !generated.paths.is_empty()
+        {
+            let collection = perimeters.last_mut().unwrap();
+            let mut entities = extra.as_ref().unwrap().materialize(generated.paths);
+            entities.append(&mut collection.entities);
+            collection.entities = entities;
+            let mut remaining = Vec::new();
+            for surface in fill_surfaces {
+                remaining.extend(
+                    difference_ex_polygons(std::slice::from_ref(&surface), &generated.filled)
+                        .map_err(geometry_error)?,
+                );
+            }
+            fill_surfaces = remaining;
+        }
         fill_no_overlap.extend(boundary.fill_no_overlap);
     }
     let fill_expolygons = fill_surfaces.clone();

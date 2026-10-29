@@ -78,7 +78,9 @@ fn transform_object(
                 (Some(source), Some(traversal_record)) => {
                     let region = region_options(traversal, index);
                     let inactive = classify_inactive(traversal_record, object_options);
-                    let wall_sequence = if index == 0
+                    // Brim.cpp:462-468 / PerimeterGenerator.cpp:1463-1467:
+                    // first physical layer, not the compatible-region record slot.
+                    let wall_sequence = if traversal_record.layer_id == 0
                         && object_options.brim_type == ProcessBrimType::OuterOnly
                         && object_options.brim_width.0 > 0.0
                     {
@@ -96,7 +98,7 @@ fn transform_object(
                         source,
                         inactive,
                         wall_sequence,
-                        index,
+                        traversal_record.layer_id,
                         reorient,
                     ))
                 }

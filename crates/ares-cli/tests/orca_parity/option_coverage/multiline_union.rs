@@ -4,7 +4,7 @@ use super::*;
 use serde_json::json;
 
 #[path = "multiline_union_observation.rs"]
-mod observation;
+pub(crate) mod observation;
 
 const FIXED: [(&str, &str); 22] = [
     ("layer_height", "0.2"),

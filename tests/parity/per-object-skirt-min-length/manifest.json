@@ -1,0 +1,53 @@
+{
+  "base": "de1211be5067d0eb6f709602a1299a0854c89145",
+  "cases": {
+    "disjoint-0": {
+      "sha256": "45ee9b8b8fdad2dc8a6c1e95f72d62e939e77743b78f10131fb26a384f918962",
+      "source_sha256": "c98041c6033ffecbd0dace6feb89af8f6f0c286650f9241bc52cd617cbbb3317",
+      "min_skirt_length": 0,
+      "expected_groups": 2
+    },
+    "disjoint-20": {
+      "sha256": "86b070b0b100cd0eadf60edc3e9ec1db3d21a10481f25ff51acd40bd195272fb",
+      "source_sha256": "c98041c6033ffecbd0dace6feb89af8f6f0c286650f9241bc52cd617cbbb3317",
+      "min_skirt_length": 20,
+      "expected_groups": 2
+    },
+    "overlap-0": {
+      "sha256": "4b7e02fd4fbf914957d72ac175b7f496d19bf078f68953295f3018c119194275",
+      "source_sha256": "7a7d9bde3d576d016540c43e9479d7a584fb1afb554fecb2f75a89f595c20d7c",
+      "min_skirt_length": 0,
+      "expected_groups": 1
+    },
+    "overlap-20": {
+      "sha256": "7438cc1786c91530bf5a79f3e25e0c17214b456bb7b5d6081b0d59f897ebeba2",
+      "source_sha256": "7a7d9bde3d576d016540c43e9479d7a584fb1afb554fecb2f75a89f595c20d7c",
+      "min_skirt_length": 20,
+      "expected_groups": 1
+    },
+    "transitive-0": {
+      "sha256": "9c06439795927d51659d92f4b852c177b4fd6014e391b0c661c6a623ad75a6b1",
+      "source_sha256": "644915393e65f1bf477acb63c991ece812b4143ae4c6d68168f847c2fd879f28",
+      "min_skirt_length": 0,
+      "expected_groups": 1
+    },
+    "transitive-20": {
+      "sha256": "fc341ae293d45b4d74a9d1fa66e8b192d73fb61704379d4e4b7dd8ff6083b30e",
+      "source_sha256": "644915393e65f1bf477acb63c991ece812b4143ae4c6d68168f847c2fd879f28",
+      "min_skirt_length": 20,
+      "expected_groups": 1
+    },
+    "copies-0": {
+      "sha256": "df8489398e315dc878290af18d97f04ac8e3745d21a75858f276378a5890b05c",
+      "source_sha256": "06f4ef0ece928c8b4154767470b00bc97c58f11670e17496e5294478ada345b2",
+      "min_skirt_length": 0,
+      "expected_groups": 1
+    },
+    "copies-20": {
+      "sha256": "7a6a8896755bd308289fd314a4cadb748c44f1df421467ebda2d2acdb07998f9",
+      "source_sha256": "06f4ef0ece928c8b4154767470b00bc97c58f11670e17496e5294478ada345b2",
+      "min_skirt_length": 20,
+      "expected_groups": 1
+    }
+  }
+}

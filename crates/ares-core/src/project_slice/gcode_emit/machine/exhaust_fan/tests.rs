@@ -8,7 +8,7 @@ fn speed_uses_only_extruders_with_both_activation_flags() {
     let speeds = [OrcaInt(40), OrcaInt(100), OrcaInt(80)];
 
     assert_eq!(
-        max_during_print_speed(&activate, &during, &speeds),
+        max_during_print_speed(&activate, &during, &speeds, &[0, 1, 2]),
         Some(40)
     );
 }
@@ -20,7 +20,7 @@ fn speed_reuses_last_vector_value_and_takes_the_maximum() {
     let speeds = [OrcaInt(40), OrcaInt(80)];
 
     assert_eq!(
-        max_during_print_speed(&activate, &during, &speeds),
+        max_during_print_speed(&activate, &during, &speeds, &[0, 1]),
         Some(80)
     );
 }

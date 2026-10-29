@@ -10,6 +10,12 @@ const EPSILON: f64 = 1e-4;
 
 pub(in crate::project_slice) struct InstalledSupportLayer {
     pub(in crate::project_slice) id: usize,
+    /// Upstream `SupportInnerType` fact: only the classic-tree layer
+    /// factory (`add_tree_support_layer`, PrintObject.cpp:1073-1077)
+    /// sets stInnerTree; every other factory (`add_support_layer`,
+    /// PrintObject.cpp:1080-1083) leaves the Layer.hpp:288 default
+    /// stInnerNormal.
+    pub(in crate::project_slice) inner_tree: bool,
     pub(super) interface_id: usize,
     pub(in crate::project_slice) print_z: f64,
     pub(in crate::project_slice) height: f64,
@@ -24,6 +30,7 @@ impl InstalledSupportLayer {
     pub(in crate::project_slice) fn for_wipe_tower(print_z: f64, height: f64) -> Self {
         Self {
             id: usize::MAX,
+            inner_tree: false,
             interface_id: 0,
             print_z,
             height,
@@ -163,6 +170,7 @@ fn install_groups(sorted: &mut [LayerView<'_>]) -> Vec<InstalledSupportLayer> {
             }
             layers.push(InstalledSupportLayer {
                 id: layers.len(),
+                inner_tree: false,
                 interface_id: this_interface_id,
                 print_z,
                 height,

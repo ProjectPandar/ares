@@ -13,6 +13,7 @@ use super::super::{
 pub(super) struct ModelGraph {
     pub models: Vec<LoadedModel>,
     identities: BTreeMap<(PackagePath, u32), (usize, usize)>,
+    import_paths: BTreeMap<String, PackagePath>,
 }
 
 pub(super) struct LoadedModel {
@@ -46,6 +47,32 @@ impl ModelGraph {
         ))
     }
 
+    /// bbs_3mf.cpp:3661-3663/4867-4891: exact literal importer ID lookup.
+    pub fn imported_object(
+        &self,
+        namespace: &str,
+        object_id: u32,
+    ) -> Option<(&LoadedModel, &ModelObject)> {
+        let path = self.import_paths.get(namespace)?;
+        let &(model, object) = self.identities.get(&(path.clone(), object_id))?;
+        Some((
+            &self.models[model],
+            &self.models[model].document.resources.objects[object],
+        ))
+    }
+
+    pub fn import_namespace(&self, path: &PackagePath) -> &str {
+        if *path == self.root().path {
+            ""
+        } else {
+            self.import_paths
+                .iter()
+                .find(|(_, target)| *target == path)
+                .map(|(namespace, _)| namespace.as_str())
+                .unwrap()
+        }
+    }
+
     pub fn component_target(
         &self,
         owner: &LoadedModel,
@@ -72,7 +99,8 @@ pub(super) fn load(
     archive_paths: &BTreeSet<PackagePath>,
     root: PackagePath,
 ) -> Result<ModelGraph, SliceError> {
-    let mut queue = VecDeque::from([root]);
+    let mut import_paths = BTreeMap::from([(String::new(), root.clone())]);
+    let mut queue = VecDeque::from([root.clone()]);
     let mut loaded_paths = BTreeSet::new();
     let mut models = Vec::new();
 
@@ -82,7 +110,12 @@ pub(super) fn load(
         }
         require_model_content_type(content_types, &path)?;
         let bytes = archive.read(&path)?;
-        let document: ModelDocument = deserialize_xml(&bytes, XmlRole::Model)?;
+        let document = if path == root {
+            deserialize_xml::<ModelDocument>(&bytes, XmlRole::Model)?
+        } else {
+            deserialize_xml::<ModelDocument<Option<serde::de::IgnoredAny>>>(&bytes, XmlRole::Model)?
+                .into_resource_document()
+        };
         document.validate()?;
 
         let relationship_part = relationship_part(&path)?;
@@ -104,6 +137,7 @@ pub(super) fn load(
         {
             let target = path.resolve(&relationship.target)?;
             require_model_content_type(content_types, &target)?;
+            import_paths.insert(relationship.target.clone(), target.clone());
             authorized_targets.insert(target.clone());
             queue.push_back(target);
         }
@@ -132,7 +166,11 @@ pub(super) fn load(
             }
         }
     }
-    let graph = ModelGraph { models, identities };
+    let graph = ModelGraph {
+        models,
+        identities,
+        import_paths,
+    };
     validate_component_identities(&graph)?;
     Ok(graph)
 }

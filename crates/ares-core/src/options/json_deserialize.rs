@@ -2,6 +2,7 @@
 mod scalar;
 #[cfg(test)]
 mod tests;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use serde::de::DeserializeOwned;
@@ -9,7 +10,7 @@ use serde::de::DeserializeOwned;
 use super::{
     config_export::value::escape_scalar_string,
     model_config_deserialize::wire::{self, WireValue},
-    registry::{OptionValueKind, option_definition},
+    registry::{OptionValueKind, option_definition, option_metadata},
 };
 use crate::project::raw_settings::RawConfigValue;
 
@@ -50,6 +51,16 @@ pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
 /// Config.cpp:927-929 routes bare strings there). Raw views must carry the
 /// same shape, so both raw entry points (catalog documents and 3MF embedded
 /// settings) normalize through this function.
+/// The shared per-kind scalar deserialize for a joined array wire
+/// (`Config.cpp:947-1000` → `set_deserialize`): numeric kinds keep their
+/// `istringstream` prefix (`Config.hpp:784-790`), booleans their first
+/// trimmed `','`-segment (`Config.hpp:1828-1850`), and every other kind the
+/// whole string (an empty join deserializes as an empty `coString`,
+/// `Config.hpp:1106-1110`).
+pub(crate) fn scalar_token(kind: OptionValueKind, value: &str) -> Result<Cow<'_, str>, String> {
+    scalar::normalize(kind, value)
+}
+
 pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawConfigValue>) {
     for (key, value) in values {
         if let Some(definition) = option_definition(key)
@@ -170,6 +181,100 @@ pub(crate) fn decode(kind: OptionValueKind, value: &str) -> Result<RawConfigValu
             RawConfigValue::List(values.into_iter().map(RawConfigValue::Text).collect())
         }
     })
+}
+
+/// `Config.cpp:654-672` substitution under the `EnableSilent` 3MF load
+/// rule (`Model.cpp:259`): a scalar-bool wire that fails the "0"/"1"
+/// parse (`Config.hpp:1828-1848`) retries the `looks_like_true` verdict
+/// (`Config.hpp:96-99`: trim + case-insensitive "enabled"/"on"), and an
+/// enum-vector wire carrying an unknown entry replaces the whole vector
+/// with the option default (`Config.cpp:668-671`). Everything else keeps
+/// its value — the typed builders still diagnose other failures.
+pub(crate) fn normalize_unknown_wire_substitutions(values: &mut BTreeMap<String, RawConfigValue>) {
+    for (key, value) in values {
+        let Some(definition) = option_definition(key) else {
+            continue;
+        };
+        match definition.kind {
+            OptionValueKind::Bool => {
+                let RawConfigValue::Text(text) = value else {
+                    continue;
+                };
+                if matches!(text.split(',').next().unwrap_or_default().trim(), "0" | "1") {
+                    continue;
+                }
+                *value = RawConfigValue::Text(if looks_like_true(text) {
+                    "1".to_owned()
+                } else {
+                    "0".to_owned()
+                });
+            }
+            OptionValueKind::Enum => {
+                let RawConfigValue::Text(text) = value else {
+                    continue;
+                };
+                // Scalar coEnum substitution (`Config.cpp:657-676`): a key
+                // missing from the option's enum TYPE map
+                // (`ConfigOptionEnum::from_string`, `Config.hpp:2032-2040`)
+                // replaces the whole option with the definition default
+                // under the EnableSilent 3MF load rule. Keys valid for the
+                // type but outside the option's own `enum_values` whitelist
+                // (e.g. `monotonic` on `sparse_infill_pattern`) pass through
+                // for the `Slic3r::validate` loop to reject, like native.
+                let type_keys = definition
+                    .enum_type_keys
+                    .or_else(|| option_metadata(key).map(|metadata| metadata.enum_values));
+                if type_keys.is_none_or(|keys| keys.contains(&text.trim())) {
+                    continue;
+                }
+                *value = RawConfigValue::Text(definition.default_value.to_owned());
+            }
+            OptionValueKind::Enums | OptionValueKind::EnumsNullable => {
+                let wire = match value {
+                    // An empty vector is a valid vector (no substitution).
+                    RawConfigValue::Text(text) if !text.is_empty() => text.clone(),
+                    RawConfigValue::List(items) if is_string_array(items) => {
+                        match encode_array(definition.kind, items) {
+                            Ok(wire) => wire,
+                            Err(_) => continue,
+                        }
+                    }
+                    _ => continue,
+                };
+                let Some(metadata) = option_metadata(key) else {
+                    continue;
+                };
+                // `ConfigOptionVector` splits the wire on commas
+                // (`Config.hpp:2156-2178`) and each entry goes through the
+                // enum key map. `nil` is only legal on the nullable kinds —
+                // on the non-nullable ones Native throws instead of
+                // substituting, so the wire passes through untouched for
+                // the typed builder to diagnose. `std::getline` emits no
+                // trailing empty item for a final comma, so the last empty
+                // segment is dropped before validation.
+                let mut entries: Vec<&str> = wire.split(',').map(str::trim).collect();
+                if entries.last() == Some(&"") {
+                    entries.pop();
+                }
+                if entries.contains(&"nil") && definition.kind != OptionValueKind::EnumsNullable {
+                    continue;
+                }
+                let type_keys = definition.enum_type_keys.unwrap_or(metadata.enum_values);
+                let entries_valid = |entry: &str| type_keys.contains(&entry) || entry == "nil";
+                if entries.iter().copied().all(entries_valid) {
+                    continue;
+                }
+                *value = RawConfigValue::Text(definition.default_value.to_owned());
+            }
+            _ => {}
+        }
+    }
+}
+
+/// `ConfigHelpers::enum_looks_like_true_value` (`Config.hpp:96-99`).
+fn looks_like_true(value: &str) -> bool {
+    let value = value.trim();
+    value.eq_ignore_ascii_case("enabled") || value.eq_ignore_ascii_case("on")
 }
 
 fn is_string_array(values: &[RawConfigValue]) -> bool {

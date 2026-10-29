@@ -1,4 +1,5 @@
 mod archive;
+mod brim_ear_points;
 mod content_types;
 mod domain;
 pub(crate) mod effective_config;
@@ -9,6 +10,7 @@ mod layer_height_profiles;
 mod load;
 mod model_settings;
 mod model_xml;
+mod numeric;
 mod plate;
 pub(crate) mod plate_config;
 mod plate_custom_gcodes;

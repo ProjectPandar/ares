@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use super::{
     mesh::{TriangleMesh, Vec3},
     sampling::{TriangleSamples, sample_uniform},
-    spatial::{PointKdTree, TriangleBvh},
+    spatial::{Hit, PointKdTree, TriangleBvh},
 };
 
 const RAYS_PER_AXIS: usize = 5;
@@ -24,14 +24,34 @@ impl GlobalVisibility {
         let samples = sample_uniform(&mesh, sample_count);
         let tree = TriangleBvh::new(&mesh);
         let directions = hemisphere_directions();
+        let contains_negative = mesh.negative_start < mesh.triangles.len();
+        let mut negative_caster = NegativeRaycaster {
+            mesh: &mesh,
+            tree: &tree,
+            directions: &directions,
+            hits: Vec::new(),
+        };
         let values: Vec<f32> = samples
             .positions
             .iter()
             .zip(&samples.normals)
-            .map(|(&center, &normal)| {
+            .zip(&samples.triangle_indices)
+            .map(|((&center, &normal), &triangle_index)| {
+                let front_adjustment = if front_bias {
+                    ((-normal.y + 1.2) * 0.5).clamp(0.0, 1.0)
+                } else {
+                    0.0
+                };
+                if contains_negative {
+                    return negative_caster.visibility(
+                        center,
+                        normal,
+                        triangle_index,
+                        1.0 + front_adjustment,
+                    );
+                }
                 let visibility = sample_visibility(&mesh, &tree, center, normal, &directions);
                 if front_bias {
-                    let front_adjustment = ((-normal.y + 1.2) * 0.5).clamp(0.0, 1.0);
                     visibility + front_adjustment
                 } else {
                     visibility
@@ -96,13 +116,8 @@ fn hemisphere_directions() -> [Vec3; DIRECTION_COUNT] {
     })
 }
 
-fn sample_visibility(
-    mesh: &TriangleMesh,
-    tree: &TriangleBvh,
-    center: Vec3,
-    normal: Vec3,
-    directions: &[Vec3],
-) -> f32 {
+// `SeamPlacer.cpp:74-80` Frame::set_from_z and :160-161 decrease_step.
+fn visibility_frame(normal: Vec3, direction_count: usize) -> ([Vec3; 3], f32) {
     let z = normal.normalized();
     let provisional_x = if z.x.abs() > 0.99 {
         Vec3::new(0.0, 1.0, 0.0)
@@ -111,8 +126,64 @@ fn sample_visibility(
     };
     let y = z.cross(provisional_x).normalized();
     let x = y.cross(z);
+    ([x, y, z], 1.0 / direction_count as f32)
+}
+
+// `SeamPlacer.cpp:188-225`: negative-face samples cast inward; hit signs
+// distinguish subtraction surfaces without constructing a Boolean mesh.
+struct NegativeRaycaster<'a> {
+    mesh: &'a TriangleMesh,
+    tree: &'a TriangleBvh,
+    directions: &'a [Vec3],
+    hits: Vec<Hit>,
+}
+
+impl NegativeRaycaster<'_> {
+    fn visibility(
+        &mut self,
+        center: Vec3,
+        normal: Vec3,
+        triangle_index: usize,
+        mut visibility: f32,
+    ) -> f32 {
+        let mesh = self.mesh;
+        let from_negative = triangle_index >= mesh.negative_start;
+        let ([x, y, z], decrement) = visibility_frame(normal, self.directions.len());
+        let origin = if from_negative {
+            center - normal * 0.01
+        } else {
+            center + normal * 0.01
+        };
+        for &local in self.directions {
+            let direction = x * local.x + y * local.y + z * local.z;
+            let direction = if from_negative { -direction } else { direction };
+            self.tree.all_hits(mesh, origin, direction, &mut self.hits);
+            if self.hits.is_empty() {
+                continue;
+            }
+            let mut counter = 0;
+            for hit in self.hits.iter().rev() {
+                let dot = mesh.triangles[hit.triangle].normal().dot(direction);
+                let sign = i32::from(dot > 0.0) - i32::from(dot < 0.0);
+                counter += sign * (1 - 2 * i32::from(hit.triangle >= mesh.negative_start));
+            }
+            if counter == 0 {
+                visibility -= decrement;
+            }
+        }
+        visibility
+    }
+}
+
+fn sample_visibility(
+    mesh: &TriangleMesh,
+    tree: &TriangleBvh,
+    center: Vec3,
+    normal: Vec3,
+    directions: &[Vec3],
+) -> f32 {
+    let ([x, y, z], decrement) = visibility_frame(normal, directions.len());
     let origin = center + normal * 0.01;
-    let decrement = 1.0 / directions.len() as f32;
     let mut visibility = 1.0;
     for &local in directions {
         let direction = x * local.x + y * local.y + z * local.z;

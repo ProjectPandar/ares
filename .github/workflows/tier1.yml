@@ -2,7 +2,13 @@ name: Tier 1
 
 on:
   push:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 permissions:
   contents: read
@@ -41,6 +47,13 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            deps_src/glu-libtess
+      - name: Verify runtime GLU oracle prerequisites
+        run: |
+          command -v gcc
+          command -v g++
+          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
+          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
       - run: cargo nextest run --workspace --no-fail-fast
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
@@ -69,6 +82,10 @@ jobs:
           - print-statistics
           - plate-custom-gcodes
           - custom-gcode-overview
+          - actual-speed-profile
+          - role-times
+          - segment-hw
+          - segment-colors
           - patchelf
     steps:
       - uses: actions/checkout@v4
@@ -98,6 +115,7 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            deps_src/glu-libtess
             src/libvgcode
             src/slic3r/GUI/LibVGCode
       - uses: actions/setup-node@v4
@@ -124,7 +142,7 @@ jobs:
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview patchelf; do
+          for v in merged-oracle ksr-initialized procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview actual-speed-profile role-times segment-hw segment-colors patchelf; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -152,6 +170,10 @@ jobs:
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
             echo "ARES_CUSTOM_GCODE_OVERVIEW_BIN=$ORACLE_custom_gcode_overview/bin/orca-slicer"
+            echo "ARES_ACTUAL_SPEED_PROFILE_BIN=$ORACLE_actual_speed_profile/bin/orca-slicer"
+            echo "ARES_ROLE_TIMES_BIN=$ORACLE_role_times/bin/orca-slicer"
+            echo "ARES_SEGMENT_HW_BIN=$ORACLE_segment_hw/bin/orca-slicer"
+            echo "ARES_SEGMENT_COLOR_BIN=$ORACLE_segment_colors/bin/orca-slicer"
             echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
@@ -231,6 +253,7 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            deps_src/glu-libtess
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
@@ -275,13 +298,21 @@ jobs:
             echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
+      - name: Verify runtime GLU oracle prerequisites
+        run: |
+          command -v gcc
+          command -v g++
+          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
+          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
+      - name: Compare GLU tessellation against runtime Native supplier
+        run: cargo nextest run -p ares-core --lib --no-fail-fast -E 'test(/^geometry::tessellation::tests::/)' --test-threads 2
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: parity-seeded-artifacts
           path: ${{ runner.temp }}/parity-artifacts
-          retention-days: 3
+          retention-days: 1
 
   parity-official:
     runs-on: self-hosted
@@ -332,6 +363,7 @@ jobs:
           sparse-checkout: |
             resources/profiles
             src/libslic3r
+            deps_src/glu-libtess
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
@@ -380,10 +412,37 @@ jobs:
             echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
             echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
           } >> "$GITHUB_ENV"
+      - name: Verify runtime GLU oracle prerequisites
+        run: |
+          command -v gcc
+          command -v g++
+          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
+          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
+      - name: Compare GLU tessellation against runtime Native supplier
+        run: cargo nextest run -p ares-core --lib --no-fail-fast -E 'test(/^geometry::tessellation::tests::/)' --test-threads 2
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: parity-official-artifacts
           path: ${{ runner.temp }}/parity-artifacts
-          retention-days: 3
+          retention-days: 1
+
+  cleanup-artifacts:
+    runs-on: self-hosted
+    needs: [native, format, web, parity-seeded, parity-official]
+    if: success()
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            for (const { id } of artifacts) {
+              await github.rest.actions.deleteArtifact({ owner: context.repo.owner, repo: context.repo.repo, artifact_id: id });
+            }

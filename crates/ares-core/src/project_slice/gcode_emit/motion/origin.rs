@@ -8,10 +8,8 @@ pub(in crate::project_slice::gcode_emit) fn set_origin(state: &mut EmitState, or
         ((state.origin.0 - origin.0) / state.scale_factor).round() as i64,
         ((state.origin.1 - origin.1) / state.scale_factor).round() as i64,
     );
-    if let Some((x, y)) = &mut state.last_scaled_position {
-        *x += translation.0;
-        *y += translation.1;
-    }
+    state.last_scaled_position.0 += translation.0;
+    state.last_scaled_position.1 += translation.1;
     for point in &mut state.wipe_path {
         // Wipe points represent upstream scaled integers, not writer coordinates.
         point.x = ((point.x / state.scale_factor).round() as i64 + translation.0) as f64

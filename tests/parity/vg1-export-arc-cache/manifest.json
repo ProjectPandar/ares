@@ -1,0 +1,74 @@
+{
+  "purpose": "Actual official-exported INPUT3MF pair only; no expected G-code",
+  "base": "d0ebd29ade6b257cfb5493b948a9bbdc2eb7f04a",
+  "upstream": [
+    "GCodeProcessor.cpp:771-810",
+    "GCodeProcessor.cpp:1458-1471",
+    "GCodeProcessor.cpp:4278"
+  ],
+  "inputs": {
+    "control": {
+      "file": "control.3mf",
+      "sha256": "61d36dff5dfb995fb3cd1f2bcb3ece0d9e79c5476137b05ddd495d4b901368fb",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "Metadata/plate_1.png": "dfe32954d6ab273265d9db35aab38595707adc5da1b2b67e69bca3f85260c30e",
+        "Metadata/plate_1_small.png": "888f31f06b0b1e75a7a6324189703e8e4350aad94fa14e2e046cdd84a593e165",
+        "Metadata/plate_no_light_1.png": "928fb898dbc9c8156ac1877e67c1d48f01eb203188d65e25c9581463179301ff",
+        "Metadata/top_1.png": "95b49d12b781fb1aa93d147cbbf44d48887ced63365ebde2753e61f455eb656c",
+        "Metadata/pick_1.png": "94f145af3f5e71065af6cf7e6af1c94850ec172e2857ae77ff508bea064889c6",
+        "3D/3dmodel.model": "9f3d12226cbb2c66b94549695d8dba2feb501ecac97a2733709fcdc073812a5f",
+        "3D/_rels/3dmodel.model.rels": "f3386560bbe0a0fed7aa611cbfdb3eaac8311e6936e72ab6f5be2c20b5c4aa77",
+        "3D/Objects/ksr_fdmtest_v4.drc_2.model": "3ebf6e35e9cc258ddfd7b2fb7175170b127216bf83a426a5d5f8104cda2d306a",
+        "Metadata/project_settings.config": "380d3e1e5d370a6f49d4760040ef7c3c20effea2b9e6a1e934add0bd4371f5fe",
+        "Metadata/model_settings.config": "6d5faac9edbdcb88961394cbfc965e27c0bde253786a375ec65c92a70b4ccd6f",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "evidence_id": "w5-multimat-vg1-export-arc-cache",
+        "actual_export_receipt": "original-export-controls/w5-discovery-d0-multimat-macro-no-virtual1/positive/export-launch.json",
+        "verification": "main-pair-verified/verified.json",
+        "source_geometry": "tests/parity/validation/bbl-toolchange-boundary.3mf",
+        "source_macro": "tests/parity/validation/multi-filament-bridge-anchor-narrowed.3mf"
+      }
+    },
+    "target": {
+      "file": "target.3mf",
+      "sha256": "f6a1b0ab02e4be9f4d3c20e6dcf09d55b0ba37f4b47e3989053de03adefac169",
+      "zip_payload_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "Metadata/plate_1.png": "dfe32954d6ab273265d9db35aab38595707adc5da1b2b67e69bca3f85260c30e",
+        "Metadata/plate_1_small.png": "888f31f06b0b1e75a7a6324189703e8e4350aad94fa14e2e046cdd84a593e165",
+        "Metadata/plate_no_light_1.png": "928fb898dbc9c8156ac1877e67c1d48f01eb203188d65e25c9581463179301ff",
+        "Metadata/top_1.png": "95b49d12b781fb1aa93d147cbbf44d48887ced63365ebde2753e61f455eb656c",
+        "Metadata/pick_1.png": "94f145af3f5e71065af6cf7e6af1c94850ec172e2857ae77ff508bea064889c6",
+        "3D/3dmodel.model": "9f3d12226cbb2c66b94549695d8dba2feb501ecac97a2733709fcdc073812a5f",
+        "3D/_rels/3dmodel.model.rels": "f3386560bbe0a0fed7aa611cbfdb3eaac8311e6936e72ab6f5be2c20b5c4aa77",
+        "3D/Objects/ksr_fdmtest_v4.drc_2.model": "3ebf6e35e9cc258ddfd7b2fb7175170b127216bf83a426a5d5f8104cda2d306a",
+        "Metadata/project_settings.config": "78fc8792f81f277250cbd44b2f8050f67df034459bf6a93d06cf79eeedceeb6a",
+        "Metadata/model_settings.config": "6d5faac9edbdcb88961394cbfc965e27c0bde253786a375ec65c92a70b4ccd6f",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "provenance": {
+        "evidence_id": "w5-multimat-vg1-export-arc-cache",
+        "actual_export_receipt": "original-export-controls/w5-discovery-d0-multimat-change-real-macro1/positive/export-launch.json",
+        "verification": "main-pair-verified/verified.json",
+        "source_geometry": "tests/parity/validation/bbl-toolchange-boundary.3mf",
+        "source_macro": "tests/parity/validation/multi-filament-bridge-anchor-narrowed.3mf"
+      }
+    }
+  },
+  "sole_changed_payload": "Metadata/project_settings.config",
+  "sole_changed_setting": "change_filament_gcode",
+  "target": "Real existing X2D macro including ;VG1 lines",
+  "control": "Same macro with only ;VG1 lines removed",
+  "all_other_settings_equal": true,
+  "all_other_zip_payloads_byte_identical": true,
+  "geometry": "Unchanged existing two-active-filament Bambu X2D fixture",
+  "prime_tower": "0",
+  "skirt_loops": "0"
+}

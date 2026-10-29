@@ -2,13 +2,14 @@ use super::{EPSILON, LayerConfig};
 use super::{groups, infill_area_threshold, layer_configs};
 use crate::{ProcessInfillPattern, project_slice::perimeters::types::PerimeterFlows};
 
-fn config(height: f64, maximum: f64) -> LayerConfig {
+fn config(layer_id: usize, height: f64, maximum: f64) -> LayerConfig {
     LayerConfig {
         active: true,
         kind: crate::project_slice::region_slices::RegionSurfaceKind::Internal,
         pattern: ProcessInfillPattern::CrossHatch,
         maximum_height: maximum,
         area_threshold: 0.0,
+        layer_id,
         layer_height: height,
         flows: PerimeterFlows {
             perimeter_flow: flow(),
@@ -32,14 +33,16 @@ fn flow() -> crate::project_slice::perimeters::types::Flow {
 
 #[test]
 fn grouping_skips_first_layer_and_caps_combined_height() {
-    let configs = vec![config(0.2, 0.4); 6];
+    let configs = (0..6).map(|id| config(id, 0.2, 0.4)).collect::<Vec<_>>();
 
     assert_eq!(groups(&configs), [0, 0, 2, 0, 2, 1]);
 }
 
 #[test]
 fn grouping_combines_layers_strictly_below_cap_plus_epsilon() {
-    let configs = vec![config(0.1, 0.4 + 2.0 * EPSILON); 5];
+    let configs = (0..5)
+        .map(|id| config(id, 0.1, 0.4 + 2.0 * EPSILON))
+        .collect::<Vec<_>>();
 
     assert_eq!(groups(&configs), [0, 0, 0, 0, 4]);
 }

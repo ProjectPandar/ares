@@ -39,6 +39,7 @@ fn volumetric_speed_cap_divides_by_print_and_filament_flow_ratios() {
         &mut output,
         [(0, 0), (1_000_000, 0)].into_iter(),
         PathProperties {
+            contour: None,
             mm3_per_mm: 0.08,
             width: 0.45,
             height: 0.2,
@@ -51,7 +52,8 @@ fn volumetric_speed_cap_divides_by_print_and_filament_flow_ratios() {
         },
         test_geometry(),
         &mut state,
-    );
+    )
+    .unwrap();
 
     let expected = 4.0 / (0.08 * 0.5 * 0.98) * 60.0;
     assert!(
@@ -100,6 +102,7 @@ fn zero_max_volumetric_speed_leaves_the_role_speed_uncapped() {
         &mut output,
         [(0, 0), (1_000_000, 0)].into_iter(),
         PathProperties {
+            contour: None,
             mm3_per_mm: 0.08,
             width: 0.45,
             height: 0.2,
@@ -112,7 +115,8 @@ fn zero_max_volumetric_speed_leaves_the_role_speed_uncapped() {
         },
         test_geometry(),
         &mut state,
-    );
+    )
+    .unwrap();
 
     assert!(
         (state.extrusion_feedrate - 200.0 * 60.0).abs() < 1e-9,
@@ -163,6 +167,7 @@ fn plate_loops_unscale_after_integer_translation() {
                 &mut output,
                 [(8_000_000, -11_811_500), (8_550_000, -11_811_500)].into_iter(),
                 PathProperties {
+                    contour: None,
                     mm3_per_mm: 0.08,
                     width: 0.45,
                     height: 0.2,
@@ -175,7 +180,8 @@ fn plate_loops_unscale_after_integer_translation() {
                 },
                 test_geometry(),
                 &mut state,
-            );
+            )
+            .unwrap();
             let text = String::from_utf8(output).unwrap();
             assert!(
                 text.contains(&format!("G1 X118 Y{expected_y} ")),
@@ -185,7 +191,8 @@ fn plate_loops_unscale_after_integer_translation() {
                 text.contains(&format!("G1 X118.55 Y{expected_y} E")),
                 "{feature}: {text}"
             );
-            assert_eq!(state.last_scaled_position, Some((8_550_000, -11_811_500)));
+            assert_eq!(state.last_scaled_position, (8_550_000, -11_811_500));
+            assert!(state.last_position_defined);
             assert_eq!(state.origin, (110.0, 110.0));
             assert_eq!(state.wipe_path.len(), 2);
             for (point, expected_x) in state.wipe_path.iter().zip([8.55, 8.0]) {
@@ -224,6 +231,7 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
             ..EmitState::default()
         };
         let properties = PathProperties {
+            contour: None,
             mm3_per_mm: 0.08,
             width: 0.45,
             height: 0.2,
@@ -245,23 +253,27 @@ fn wipe_clipping_uses_the_destination_origin_frame() {
             properties,
             test_geometry(),
             &mut state,
-        );
+        )
+        .unwrap();
         let mut output = Vec::new();
         path::emit(
             &mut output,
             [(-9_000_000, -9_000_000), (-8_000_000, -9_000_000)].into_iter(),
             PathProperties {
+                contour: None,
                 feature: destination,
                 ..properties
             },
             test_geometry(),
             &mut state,
-        );
+        )
+        .unwrap();
         let text = String::from_utf8(output).unwrap();
         assert!(
             text.contains(&format!("G1 X121.761 Y118.566 E{expected_e}\n")),
             "{source} -> {destination}: {text}"
         );
-        assert_eq!(state.last_scaled_position, Some((-8_000_000, -9_000_000)));
+        assert_eq!(state.last_scaled_position, (-8_000_000, -9_000_000));
+        assert!(state.last_position_defined);
     }
 }

@@ -162,10 +162,7 @@ impl MoveRecorder {
                 color: String::new(),
                 extra: String::new(),
             });
-            self.pending_option = Some((
-                self.moves.len() - 1,
-                self.custom_gcode_per_print_z.len() - 1,
-            ));
+            self.set_option();
         } else if matches!(custom, Some(CustomTag::Custom)) {
             self.store(source, EMoveType::CustomGCode, [position; 2], 0.0);
             self.custom_gcode_per_print_z.push(CustomGCodeItem {
@@ -175,10 +172,7 @@ impl MoveRecorder {
                 color: String::new(),
                 extra: String::new(),
             });
-            self.pending_option = Some((
-                self.moves.len() - 1,
-                self.custom_gcode_per_print_z.len() - 1,
-            ));
+            self.set_option();
         } else if comment == tags.layer_change {
             self.layer_id += 1;
         }
@@ -227,10 +221,7 @@ impl MoveRecorder {
                 color: color.to_owned(),
                 extra: String::new(),
             });
-            self.pending_option = Some((
-                self.moves.len() - 1,
-                self.custom_gcode_per_print_z.len() - 1,
-            ));
+            self.set_option();
             self.flush_color_change_volume();
         }
     }

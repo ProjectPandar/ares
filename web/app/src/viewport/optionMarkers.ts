@@ -1,6 +1,5 @@
 import { MOVE_TYPES, type Toolpaths, VERTEX_VALUES } from "@ares-slicer/wasm";
 import * as THREE from "three";
-import { fragmentShader } from "./toolpathMesh";
 
 const TRAVEL = MOVE_TYPES.indexOf("Travel");
 const WIPE = MOVE_TYPES.indexOf("Wipe");
@@ -35,6 +34,18 @@ void main() {
   vColor = aColor;
   vec3 local = aCenter + vec3(position.xy * aSize.y, position.z * aSize.x);
   gl_Position = projectionMatrix * modelViewMatrix * vec4(local, 1.0);
+}
+`;
+
+const fragmentShader = /* glsl */ `
+in vec3 vColor;
+in vec3 vNormal;
+out vec4 outColor;
+const vec3 LIGHT = normalize(vec3(-0.3, 0.4, 1.0));
+
+void main() {
+  float diffuse = max(dot(normalize(vNormal), LIGHT), 0.0);
+  outColor = vec4(vColor * (0.45 + 0.55 * diffuse), 1.0);
 }
 `;
 

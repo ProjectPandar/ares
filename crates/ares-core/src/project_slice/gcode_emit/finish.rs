@@ -57,7 +57,6 @@ pub(super) fn append(
         position.2 - traversal.resolved.views.full.printer.remaining.z_offset.0;
     config.insert("layer_z", value::Value::number(layer_z_placeholder));
     config.insert("max_layer_z", value::Value::number(max_layer_z));
-    config.insert("max_print_z", value::Value::number(max_layer_z));
     config.insert("timelapse_type", value::Value::number(0.0));
     config.insert("most_used_physical_extruder_id", value::Value::number(1.0));
     config.insert("curr_physical_extruder_id", value::Value::number(1.0));

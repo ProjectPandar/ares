@@ -6,6 +6,7 @@ import { css, RangeRows, VIEW_TYPE_ITEMS } from "./LegendRange";
 import { CustomGCodeRows } from "./LegendCustomGCode";
 import { EstimationRows } from "./LegendEstimation";
 import { SummaryRows } from "./LegendSummary";
+import { printf, shortTime, timeDhms } from "./toolPositionFormat";
 
 const FilamentRows = lazy(() => import("./LegendFilament"));
 
@@ -64,16 +65,32 @@ function compactCount(value: number) {
 }
 
 /**
+ * Feature Type Time and % cells of `time` against `total` (`GCodeViewer.cpp:3410-3418,
+ * 3644-3649, 3659-3663`): no time when 0, `"0"`, `"<0.1"` up to 0.1%, else `%.1f`.
+ */
+function TimeCells({ time, total }: { time: number; total: number }) {
+  const f32 = Math.fround;
+  const percent = total > 0 ? f32(time / total) : 0;
+  return (
+    <>
+      <span className="legend-time">{time > 0 ? shortTime(timeDhms(time)) : ""}</span>
+      <span className="legend-percent">{percent === 0 ? "0" : percent > 0.001 ? printf(f32(percent * 100), 1) : "<0.1"}</span>
+    </>
+  );
+}
+
+/**
  * GCodeViewer legend (`GCodeViewer::render_legend`): the view type combo, then
  * in the feature type view (`GCodeViewer.cpp:3870-3911`) one row per used
- * extrusion role and one per used option in `EOptionType` order; clicking a
- * row toggles it. Option rows but Travel show the move count
+ * extrusion role (`get_extrusion_roles`) with its Time and % cells, and one per
+ * used option in `EOptionType` order, Travel with its Time and % cells; clicking a
+ * row toggles it. The cells and their `Line Type`, `Time`, `%` headers show when the
+ * total time (`GCodeViewer.cpp:3151`) is positive. Option rows but Travel show the move count
  * (`GCodeViewer.cpp:3808`; Travel's comes from print statistics). Range views
  * list their color range; Speed, Acceleration and Jerk add the Travel row
  * (`GCodeViewer.cpp:3913-3929, 3947-3978`).
  */
-export function Legend({ roles, options, toolpaths, range, view, onChange }: {
-  roles: number[];
+export function Legend({ options, toolpaths, range, view, onChange }: {
   options: number[];
   toolpaths: Toolpaths;
   /** Color range of `view.viewType`, once the engine has computed it. */
@@ -81,7 +98,9 @@ export function Legend({ roles, options, toolpaths, range, view, onChange }: {
   view: PreviewView;
   onChange: (patch: Partial<PreviewView>) => void;
 }) {
-  const { optionTypes, moveTypeCounts, roleColors, optionColors, viewTypes } = toolpaths;
+  const { optionTypes, moveTypeCounts, roleColors, optionColors, viewTypes, extrusionRoles, extrusionRoleTimes } = toolpaths;
+  const total = toolpaths.estimation.time > 0 ? toolpaths.estimation.time : toolpaths.estimatedTime;
+  const times = total > 0;
   const optionRow = (id: number, count: boolean) => {
     const name = optionTypes[id];
     const row = OPTION_ROWS[name];
@@ -94,6 +113,7 @@ export function Legend({ roles, options, toolpaths, range, view, onChange }: {
           <span className="legend-swatch" style={{ background: css(optionColors.subarray(3 * id, 3 * id + 3)) }} />
           <span className="legend-label">{row.label}</span>
           {count && <span className="legend-count">{row.moves && compactCount(moveTypeCounts[MOVE_TYPES.indexOf(row.moves)])}</span>}
+          {count && name === "Travels" && times && <TimeCells time={toolpaths.travelsTime} total={total} />}
         </button>
       </li>,
     ];
@@ -119,21 +139,25 @@ export function Legend({ roles, options, toolpaths, range, view, onChange }: {
           {TRAVEL_ROW_VIEWS.has(view.viewType) && <ul className="legend-list">{optionRow(optionTypes.indexOf("Travels"), false)}</ul>}
         </>
       ) : (
+      <>
+      {times && <div className="legend-header" aria-hidden="true"><span>Line Type</span><span>Time</span><span>%</span></div>}
       <ul className="legend-list">
-        {roles.map((id) => {
+        {Array.from(extrusionRoles, (id, index) => {
           const hidden = (view.hiddenRoles >> id) & 1;
           return (
             <li key={id}>
               <button className={hidden ? "legend-row off" : "legend-row"} aria-pressed={!hidden}
                 onClick={() => onChange({ hiddenRoles: view.hiddenRoles ^ (1 << id) })}>
                 <span className="legend-swatch" style={{ background: css(roleColors.subarray(3 * id, 3 * id + 3)) }} />
-                {ROLE_LABELS[EXTRUSION_ROLES[id]]}
+                <span className="legend-label">{ROLE_LABELS[EXTRUSION_ROLES[id]]}</span>
+                {times && <TimeCells time={extrusionRoleTimes[index]} total={total} />}
               </button>
             </li>
           );
         })}
         {options.flatMap((id) => optionRow(id, true))}
       </ul>
+      </>
       )}
       <CustomGCodeRows rows={toolpaths.customGcodeOverview} />
       <EstimationRows estimation={toolpaths.estimation} legend={toolpaths.filamentLegend}

@@ -2,14 +2,14 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 
 #[derive(Serialize)]
-pub(super) struct Observation {
+pub(crate) struct Observation {
     sparse_layers: BTreeMap<usize, usize>,
     wall_min: [f64; 2],
     wall_max: [f64; 2],
     sparse_endpoints: Vec<[f64; 2]>,
 }
 
-pub(super) fn observe(bytes: &[u8]) -> Observation {
+pub(crate) fn observe(bytes: &[u8]) -> Observation {
     let mut result = Observation {
         sparse_layers: BTreeMap::new(),
         wall_min: [f64::INFINITY; 2],
@@ -82,7 +82,7 @@ fn record(result: &mut Observation, role: &str, layer: usize, start: [f64; 2], e
     }
 }
 
-pub(super) fn require_sparse(result: &Observation) {
+pub(crate) fn require_sparse(result: &Observation) {
     let phases = result
         .sparse_layers
         .keys()
@@ -92,7 +92,7 @@ pub(super) fn require_sparse(result: &Observation) {
     assert!(result.sparse_layers.values().all(|count| *count > 0));
 }
 
-pub(super) fn require_hole_clipping(result: &Observation) {
+pub(crate) fn require_hole_clipping(result: &Observation) {
     let center = [
         (result.wall_min[0] + result.wall_max[0]) / 2.0,
         (result.wall_min[1] + result.wall_max[1]) / 2.0,

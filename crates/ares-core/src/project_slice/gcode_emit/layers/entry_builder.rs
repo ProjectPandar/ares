@@ -14,6 +14,10 @@ pub(super) struct EntryBuilder<'a> {
     nearest_seam_plans: &'a [Vec<NearestSeamLayer>],
     island_predecessor: &'a PreparedPostExtrusionIslands,
     layer_boundary_cache: std::collections::HashMap<(usize, usize), std::rc::Rc<[ExPolygon]>>,
+    /// The chunk's EXTERNAL-boundary slices, instance-translated
+    /// (`get_boundary_external`, `AvoidCrossingPerimeters.cpp:1172-1177`),
+    /// installed once per chunk by `layers/drive.rs`.
+    pub(super) boundary_slices: Vec<ExPolygon>,
 }
 
 impl<'a> EntryBuilder<'a> {
@@ -29,6 +33,7 @@ impl<'a> EntryBuilder<'a> {
             nearest_seam_plans,
             island_predecessor,
             layer_boundary_cache: std::collections::HashMap::new(),
+            boundary_slices: Vec::new(),
         }
     }
 
@@ -36,7 +41,6 @@ impl<'a> EntryBuilder<'a> {
         &mut self,
         object_index: usize,
         layer_index: usize,
-        chunk_slices: &[ExPolygon],
         chunk_perimeter_spacing: f64,
     ) -> EntryGeometry<'a> {
         let lower_boundary_lines = self.traversal.objects[object_index]
@@ -66,7 +70,7 @@ impl<'a> EntryBuilder<'a> {
                 object_index,
                 layer_index,
             ),
-            chunk_slices: chunk_slices.to_vec(),
+            chunk_slices: self.boundary_slices.clone(),
             chunk_perimeter_spacing,
         }
     }

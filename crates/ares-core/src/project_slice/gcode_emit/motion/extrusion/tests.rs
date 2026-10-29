@@ -36,6 +36,7 @@ fn active_small_area_model_scales_solid_segment_extrusion() {
         arc::Point { x: 0.2, y: 0.0 },
         0.2,
         PathProperties {
+            contour: None,
             mm3_per_mm: 1.0,
             width: 0.45,
             height: 0.2,
@@ -71,6 +72,7 @@ fn zero_flow_move_omits_extrusion_axis() {
         arc::Point { x: 1.0, y: 2.0 },
         3.0,
         PathProperties {
+            contour: None,
             mm3_per_mm: 0.0,
             width: 0.45,
             height: 0.2,

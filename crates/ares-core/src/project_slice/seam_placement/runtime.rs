@@ -7,99 +7,21 @@ use crate::{
     ProcessSeamPosition,
     geometry::CoordinateScale,
     project::effective_config::types::ResolvedProjectObject,
-    project_slice::{
-        island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
-        perimeters::classic::{
-            chained_loops::ExtrusionLoop, entity_collections::ExtrusionEntity, materialize::Point3,
-            traversal::ClassicTraversalRecord,
-        },
-    },
+    project_slice::perimeters::classic::{chained_loops::ExtrusionLoop, materialize::Point3},
 };
 
 pub(super) fn placement_modes(
     objects: &[&ResolvedProjectObject],
-    prepared: &[Vec<OrderedExtrusionLayer>],
+    spiral_mode: bool,
 ) -> Vec<Option<ProcessSeamPosition>> {
+    // GCode.cpp:5769-5775 bypasses perimeter SeamPlacer for configured spiral mode.
+    if spiral_mode {
+        return vec![None; objects.len()];
+    }
     objects
         .iter()
-        .enumerate()
-        .map(|(index, object)| match object.object.seam_position {
-            ProcessSeamPosition::Aligned
-                if object.layer_candidates[0].model_parts[0]
-                    .region
-                    .wall_direction
-                    == crate::ProcessWallDirection::Clockwise
-                    && prepared_cw_rectangles_have_source_seams(&prepared[index]) =>
-            {
-                None
-            }
-            ProcessSeamPosition::Aligned | ProcessSeamPosition::Random => {
-                Some(object.object.seam_position)
-            }
-            ProcessSeamPosition::AlignedBack | ProcessSeamPosition::Nearest => {
-                Some(object.object.seam_position)
-            }
-            _ => None,
-        })
+        .map(|object| Some(object.object.seam_position))
         .collect()
-}
-
-/// Candidate z is `layer->slice_z` (`SeamPlacer.cpp:1025` `unscaled_z =
-/// layer->slice_z`), the bottom of the layer, not the mid-layer extrusion
-/// height. Used both for the candidate z stored in `positions` and for the
-/// `projected_position.z` during seam-string search.
-pub(super) fn layer_slice_zs(records: &[Option<ClassicTraversalRecord>]) -> Vec<f32> {
-    // Upstream anchors seam candidates at `Layer::slice_z` = the layer
-    // MIDPOINT `0.5*(lo+hi)` (`PrintObjectSlice.cpp:44`), not the layer
-    // bottom: the visibility query radius is small, so the 0.5*h offset
-    // changes the neighbor set and corner ranking.
-    records
-        .iter()
-        .scan(0.0_f64, |print_z, record| {
-            let height = record.as_ref().map_or(0.0, |record| record.layer_height);
-            let slice_z = *print_z + 0.5 * height;
-            *print_z += height;
-            Some(slice_z as f32)
-        })
-        .collect()
-}
-
-pub(super) fn prepared_cw_rectangles_have_source_seams(layers: &[OrderedExtrusionLayer]) -> bool {
-    let mut found = false;
-    for loop_ in layers
-        .iter()
-        .flat_map(|layer| &layer.islands)
-        .flat_map(|island| &island.entities)
-        .filter_map(|entity| match entity {
-            IslandPrintEntity::Perimeter(collection) => Some(collection),
-            _ => None,
-        })
-        .flat_map(|collection| &collection.entities)
-        .filter_map(|entity| match entity {
-            ExtrusionEntity::Loop(ordered) => Some(&ordered.extrusion_loop),
-            // Thin-wall `ExtrusionPath`s are not clockwise-rectangle loops;
-            // skip them in the shortcut scan.
-            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => None,
-        })
-    {
-        found = true;
-        if !is_closed_axis_rectangle(loop_) {
-            return false;
-        }
-    }
-    found
-}
-
-pub(super) fn is_closed_axis_rectangle(loop_: &ExtrusionLoop) -> bool {
-    if loop_.paths.len() != 1 {
-        return false;
-    }
-    let points = &loop_.paths[0].polyline.points;
-    points.len() == 5
-        && points.first() == points.last()
-        && points
-            .windows(2)
-            .all(|segment| segment[0].x == segment[1].x || segment[0].y == segment[1].y)
 }
 
 pub(in crate::project_slice) fn place_nearest(

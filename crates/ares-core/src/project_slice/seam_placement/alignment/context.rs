@@ -1,4 +1,5 @@
-use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
+mod unsupported;
+use crate::geometry::{CoordinateScale, ExPolygon, Line, LineDistanceTree, Point, Polygon};
 use crate::project_slice::layers::PlannedLayer;
 
 use super::LayerPlan;
@@ -18,6 +19,7 @@ pub(super) fn populate(
         }
         if layer_index > 0 {
             let (_, current) = layers.split_at_mut(layer_index);
+            unsupported::populate(&layer_slices[layer_index - 1], &mut current[0], scale);
             populate_overhang(
                 &layer_slices[layer_index - 1],
                 &mut current[0],
@@ -34,6 +36,20 @@ fn populate_overhang(
     layer_height: f64,
     scale: CoordinateScale,
 ) {
+    // ExPolygon.hpp:175-192 / Line.hpp:251: Linef endpoints and queries are double.
+    let lines: Vec<_> = previous_slices
+        .iter()
+        .flat_map(|slice| std::iter::once(slice.contour()).chain(slice.holes()))
+        .flat_map(|polygon| {
+            let points = polygon.points();
+            points
+                .iter()
+                .zip(points.iter().cycle().skip(1))
+                .take(points.len())
+                .map(|(&a, &b)| Line::new(a, b))
+        })
+        .collect();
+    let tree = LineDistanceTree::new(&lines);
     // SeamPlacer.hpp:122 uses a float angle; tan(float) rounds before
     // multiplication by Layer::height (double).
     let threshold = 45.0_f32 * std::f32::consts::PI / 180.0;
@@ -41,9 +57,14 @@ fn populate_overhang(
     for index in 0..current.candidates.points.len() {
         let point = position(current, index);
         let flow_width = flow_width(current, index);
-        let distance = signed_distance_to_slices(previous_slices, point, scale);
-        let overhang = (f64::from(distance) + f64::from(0.65 * flow_width)
-            - threshold_tangent * layer_height) as f32;
+        let query = [f64::from(point.0), f64::from(point.1)];
+        let distance = tree
+            .nearest_mm(query, scale.factor())
+            .map_or(f64::INFINITY, |hit| {
+                hit.squared_distance.sqrt() * f64::from(tree.outside_mm(query, scale.factor()))
+            });
+        let overhang =
+            (distance + f64::from(0.65_f32 * flow_width) - threshold_tangent * layer_height) as f32;
         current.overhangs[index] = overhang.max(0.0);
     }
 }

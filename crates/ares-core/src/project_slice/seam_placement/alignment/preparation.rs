@@ -1,4 +1,7 @@
+use std::collections::BTreeSet;
+
 use crate::{
+    ProcessSeamPosition,
     geometry::CoordinateScale,
     project_slice::{
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
@@ -22,9 +25,14 @@ pub(in crate::project_slice::seam_placement) fn prepare(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     nozzle_diameter: f32,
-    visibility: &visibility::GlobalVisibility,
+    visibility: Option<&visibility::GlobalVisibility>,
 ) -> Vec<LayerPlan> {
     let (layers, layer_zs) = layers;
+    let placement = traversal
+        .print_object_config(object_index)
+        .0
+        .object
+        .seam_position;
     let input = &traversal.objects[object_index]
         .predecessor
         .predecessor
@@ -37,14 +45,20 @@ pub(in crate::project_slice::seam_placement) fn prepare(
         .enumerate()
         .map(|(index, (layer, &z))| {
             let regions = layer_regions(layer, input, index);
-            prepare_layer(&regions, z, traversal.scale, nozzle_diameter, visibility)
+            prepare_layer(
+                &regions,
+                z,
+                traversal.scale,
+                nozzle_diameter,
+                (visibility, placement),
+            )
         })
         .collect::<Vec<_>>();
     let (post_region, layer_slices) = input.object.as_parts();
     let (planned_object, _, _) = post_region.as_parts();
     context::populate(
         &mut plans,
-        &embedding_layers(traversal, object_index, layers.len()),
+        &embedding_layers(layers),
         layer_slices,
         &planned_object.layers,
         traversal.scale,
@@ -64,32 +78,19 @@ pub(in crate::project_slice::seam_placement) fn prepare(
     plans
 }
 
-fn embedding_layers(
-    traversal: &PreparedPostClassicTraversal,
-    object_index: usize,
-    layer_count: usize,
-) -> Vec<bool> {
-    let object = &traversal.objects[object_index];
-    let input = &object
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .object;
-    let mut region_counts = vec![0_u16; layer_count];
-    for (input, perimeters) in input.records.iter().zip(&object.records) {
-        let (Some(input), Some(perimeters)) = (input, perimeters) else {
-            continue;
-        };
-        if perimeters
-            .surfaces
-            .iter()
-            .any(|surface| !surface.roots.is_empty())
-        {
-            region_counts[input.planned_layer_index] += 1;
-        }
-    }
-    region_counts.into_iter().map(|count| count > 1).collect()
+fn embedding_layers(layers: &[OrderedExtrusionLayer]) -> Vec<bool> {
+    layers
+        .iter()
+        .map(|layer| {
+            layer
+                .islands
+                .iter()
+                .flat_map(|island| island.perimeter_regions.iter().copied())
+                .collect::<BTreeSet<_>>()
+                .len()
+                > 1
+        })
+        .collect()
 }
 
 fn layer_regions<'a>(
@@ -133,7 +134,7 @@ fn prepare_layer(
     z: f32,
     scale: CoordinateScale,
     nozzle_diameter: f32,
-    visibility: &visibility::GlobalVisibility,
+    (visibility, placement): (Option<&visibility::GlobalVisibility>, ProcessSeamPosition),
 ) -> LayerPlan {
     let collections = regions
         .iter()
@@ -176,12 +177,14 @@ fn prepare_layer(
         .map(|collection| association.collection_map(collection))
         .collect();
     LayerPlan {
+        placement,
         candidates,
         choices: Vec::new(),
         collection_perimeters,
         scores,
         z,
         overhangs: vec![0.0; candidate_count],
+        unsupported_distances: None,
         embedded_distances: vec![0.0; candidate_count],
         positions,
         point_tree,

@@ -31,11 +31,12 @@ pub(super) struct Input<'a, 'b> {
     pub(super) chunk_slices: &'a [ExPolygon],
     pub(super) chunk_perimeter_spacing: f64,
     pub(super) brim: &'a [Option<BrimPlan>],
+    pub(super) skirt: &'a Option<super::super::skirt::SkirtPlan>,
+    pub(super) object_skirt_done: &'a mut [(usize, f64)],
     pub(super) spiral: &'a mut spiral_vase::SpiralVaseFilter,
     pub(super) layer_z: f64,
     pub(super) layer_height: f64,
     pub(super) object_layer_counts: &'a [usize],
-    pub(super) last_entry: Option<(usize, usize)>,
     pub(super) layer_output_start: usize,
 }
 
@@ -62,11 +63,12 @@ pub(super) fn emit(
         chunk_slices,
         chunk_perimeter_spacing,
         brim,
+        skirt,
+        object_skirt_done,
         spiral,
         layer_z,
         layer_height,
         object_layer_counts,
-        last_entry,
         layer_output_start,
     } = input;
     if purging_finished {
@@ -90,6 +92,32 @@ pub(super) fn emit(
         .predecessor
         .object
         .identity();
+    // `GCode.cpp:5336-5338`: `generate_object_skirt_group` runs inside
+    // the FIRST `print_wipe_extrusions` loop only (the wiping loop when
+    // extrusions are overridden, the single normal loop otherwise),
+    // before the instance's labels (`:5349`); the `object_skirt_done`
+    // tracking keeps later loops from re-emitting.
+    if entry.object_layer.is_some() || entry.support_layer.is_some() || entry.raft_layer.is_some() {
+        super::object_skirt::emit(
+            output,
+            state,
+            super::object_skirt::Input {
+                skirt,
+                done: object_skirt_done,
+                object: object_index,
+                layer: entry.object_layer,
+                builder: entry_builder,
+                traversal,
+                slices: chunk_slices,
+                spacing: chunk_perimeter_spacing,
+                support_layers,
+                raft,
+                support_layer: entry.support_layer,
+                raft_layer: entry.raft_layer,
+                print_z: layer_z,
+            },
+        )?;
+    }
     let shift = bucket.instance.shift;
     // Every emitted coordinate is plate-local: the per-object origin from
     // the global instance shift loses the plate grid origin
@@ -109,6 +137,8 @@ pub(super) fn emit(
         let Some(body) = body.as_mut() else {
             return Ok(());
         };
+        state.current_seam_gap = traversal.resolved.views.full.process.region.seam_gap;
+        state.apply_object_config(&traversal.print_object_config(object_index).0.object);
         raft_entry::emit(
             output,
             state,
@@ -162,8 +192,43 @@ pub(super) fn emit(
                 region.top_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
         }
     }
+    // GCode.cpp:5335 emits the object brim ahead of the same instance's
+    // support extrusions (:5419-5426); the layer state it reads is the
+    // object-layer state assigned at :5343-5344, so hoist those
+    // assignments ahead of the brim instead of leaving the previous
+    // entry's values in place.
+    let object_layer_state = entry.object_layer.inspect(|&layer_index| {
+        let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
+        state.layer_index = physical_layer.id;
+        state.active_layer_print_z = physical_layer.print_z;
+        state.on_first_layer =
+            physical_layer.id == 0 && (physical_layer.print_z - physical_layer.height).abs() < 1e-4;
+        let slicing = traversal.objects[object_index].slicing_parameters();
+        state.object_layer_over_raft =
+            layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
+    });
+    if let Some(layer_index) = object_layer_state {
+        brim_emit::emit(
+            output,
+            state,
+            (brim, skirt),
+            object_index,
+            layer_index,
+            entry_builder,
+            traversal,
+            chunk_perimeter_spacing,
+        )?;
+    }
+    // GCode.cpp:5334-5342 resets region config only AFTER skirt and brim.
+    state.current_seam_gap = traversal.resolved.views.full.process.region.seam_gap;
+    state.apply_object_config(&traversal.print_object_config(object_index).0.object);
     if let Some(selected_role) = support_role {
         let support_index = entry.support_layer.expect("support bucket retains layer");
+        // GCode.cpp:5388 runs the support extrusions with
+        // `m_object_layer_over_raft = false` and :5429-5430 restores the
+        // object-layer value before the islands.
+        let saved_over_raft = state.object_layer_over_raft;
+        state.object_layer_over_raft = false;
         support_entry::emit(
             output,
             state,
@@ -182,29 +247,11 @@ pub(super) fn emit(
             traditional_timelapse,
             timelapse_context,
         )?;
+        state.object_layer_over_raft = saved_over_raft;
     }
-    let Some(layer_index) = entry.object_layer else {
+    let Some(layer_index) = object_layer_state else {
         return Ok(());
     };
-    let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
-    state.layer_index = physical_layer.id;
-    state.active_layer_print_z = physical_layer.print_z;
-    state.on_first_layer =
-        physical_layer.id == 0 && (physical_layer.print_z - physical_layer.height).abs() < 1e-4;
-    let slicing = traversal.objects[object_index].slicing_parameters();
-    state.object_layer_over_raft =
-        layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
-    brim_emit::emit(
-        output,
-        state,
-        brim,
-        object_index,
-        layer_index,
-        entry_builder,
-        traversal,
-        chunk_slices,
-        chunk_perimeter_spacing,
-    );
     let Some(layer) = body.as_mut() else {
         // GCode.cpp:5348–5372,5478–5494 labels every selected instance,
         // including an empty half of the wiping/normal two-pass traversal.
@@ -226,7 +273,6 @@ pub(super) fn emit(
         object_index,
         layer_index,
         support_role.is_some(),
-        chunk_slices,
         chunk_perimeter_spacing,
         labels,
         emit_labels,
@@ -236,7 +282,6 @@ pub(super) fn emit(
         layer_z,
         layer_height,
         object_layer_counts,
-        last_entry,
         is_group_end,
         layer_output_start,
     )?;

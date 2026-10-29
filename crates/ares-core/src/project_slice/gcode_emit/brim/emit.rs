@@ -8,6 +8,18 @@ use crate::{
 };
 
 impl BrimPlan {
+    pub(in crate::project_slice::gcode_emit) fn occupied_origin(
+        &self,
+        traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+        object_index: usize,
+    ) -> (f64, f64) {
+        if self.owner_collection {
+            (0.0, 0.0)
+        } else {
+            super::super::footprint::print_object_origin(traversal, object_index)
+        }
+    }
+
     pub(in crate::project_slice::gcode_emit) fn covered_hull(&self) -> &[Point] {
         &self.covered_hull
     }
@@ -17,7 +29,14 @@ impl BrimPlan {
         scale: CoordinateScale,
     ) -> Option<(f64, f64, f64, f64)> {
         let mut bounds = None::<(f64, f64, f64, f64)>;
-        for point in self.paths.iter().flatten() {
+        // Brim.cpp:930-935,945-956 retains each object's original area,
+        // not the merged carrier's emission paths, for occupied bounds.
+        let paths = if self.area.is_empty() {
+            self.paths.as_slice()
+        } else {
+            std::slice::from_ref(&self.covered_hull)
+        };
+        for point in paths.iter().flatten() {
             let x = scale.unscale(point.x());
             let y = scale.unscale(point.y());
             bounds = Some(match bounds {
@@ -27,7 +46,11 @@ impl BrimPlan {
                 None => (x, y, x, y),
             });
         }
-        let padding = 0.5 * f64::from(self.spacing);
+        let padding = if self.area.is_empty() {
+            0.5 * f64::from(self.spacing)
+        } else {
+            0.0
+        };
         bounds.map(|(min_x, min_y, max_x, max_y)| {
             (
                 min_x - padding,
@@ -43,7 +66,11 @@ impl BrimPlan {
         output: &mut Vec<u8>,
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
-    ) {
+    ) -> Result<(), crate::SliceError> {
+        let origin = state.origin;
+        if self.global || self.owner_collection {
+            motion::set_origin(state, (0.0, 0.0));
+        }
         for path in &self.paths {
             // Upstream emits the brim from the ring's natural (anchored)
             // start: the layer-change travel targets the loop's first
@@ -60,7 +87,11 @@ impl BrimPlan {
                 },
                 geometry,
                 state,
-            );
+            )?;
         }
+        if self.global || self.owner_collection {
+            motion::set_origin(state, origin);
+        }
+        Ok(())
     }
 }

@@ -2,7 +2,10 @@ mod context;
 mod preparation;
 mod random;
 
-use crate::project_slice::seam_candidates::{LayerSeamCandidates, SeamPerimeter};
+use crate::{
+    ProcessSeamPosition,
+    project_slice::seam_candidates::{LayerSeamCandidates, SeamPerimeter},
+};
 
 use super::{angle_penalty, mesh::Vec3, spatial::PointKdTree, spline::CubicSpline};
 
@@ -15,12 +18,14 @@ const MILLIMETERS_PER_SEGMENT: f32 = 4.0;
 const SHARP_ANGLE_THRESHOLD: f32 = 55.0 * std::f32::consts::PI / 180.0;
 
 pub(super) struct LayerPlan {
+    placement: ProcessSeamPosition,
     pub(super) candidates: LayerSeamCandidates,
     pub(super) choices: Vec<PerimeterChoice>,
     pub(super) collection_perimeters: Vec<Vec<usize>>,
     pub(super) scores: Vec<f32>,
     z: f32,
     pub(super) overhangs: Vec<f32>,
+    pub(super) unsupported_distances: Option<Vec<f32>>,
     pub(super) embedded_distances: Vec<f32>,
     positions: Vec<Vec3>,
     point_tree: PointKdTree,
@@ -42,6 +47,12 @@ fn is_better(layer: &LayerPlan, first: usize, second: usize) -> bool {
     if layer.embedded_distances[second] < -0.5 && layer.embedded_distances[first] > -0.5 {
         return false;
     }
+    // SeamPlacer.cpp:777-779 — rear preference follows context priorities.
+    if layer.placement == ProcessSeamPosition::Back
+        && layer.positions[first].y != layer.positions[second].y
+    {
+        return layer.positions[first].y > layer.positions[second].y;
+    }
     layer.scores[first] < layer.scores[second]
 }
 
@@ -61,6 +72,11 @@ fn is_better_between(layers: &[LayerPlan], first: (usize, usize), second: (usize
     {
         return false;
     }
+    if first_layer.placement == ProcessSeamPosition::Back
+        && first_layer.positions[first.1].y != second_layer.positions[second.1].y
+    {
+        return first_layer.positions[first.1].y > second_layer.positions[second.1].y;
+    }
     first_layer.scores[first.1] < second_layer.scores[second.1]
 }
 
@@ -78,6 +94,10 @@ fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
     }
     if layer.embedded_distances[second] < -0.5 && layer.embedded_distances[first] > -0.5 {
         return false;
+    }
+    // SeamPlacer.cpp:839-841 — strict rear-Y similarity, not score tolerance.
+    if layer.placement == ProcessSeamPosition::Back {
+        return layer.positions[first].y + SCORE_TOLERANCE * 5.0 > layer.positions[second].y;
     }
     let first_penalty = layer.overhangs[first] + layer.scores[first];
     let second_penalty = layer.overhangs[second] + layer.scores[second];
@@ -237,7 +257,11 @@ fn finalize_string(layers: &mut [LayerPlan], seam_string: &[(usize, usize)]) {
         .iter()
         .map(|&point| 1.0 / (0.1 + angle_penalty(candidate_angle(layers, point))))
         .collect::<Vec<_>>();
-    let total_length = string_length(layers, seam_string);
+    let mut total_length = string_length(layers, seam_string);
+    // SeamPlacer.cpp:1364-1366 — fewer spline segments for spRear strings.
+    if layers[seam_string[0].0].placement == ProcessSeamPosition::Back {
+        total_length *= 0.3;
+    }
     let segment_count = ((total_length.max(0.0) / MILLIMETERS_PER_SEGMENT) as usize).max(1);
     let curve = CubicSpline::fit(&observations, &points, &weights, segment_count);
     let finals = seam_string

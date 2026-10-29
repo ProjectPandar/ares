@@ -138,6 +138,12 @@ fn execute_plan(
     if plan.cases.is_empty() {
         return OptionOutcome::omitted(plan);
     }
+    if plan.key == "filament_self_index" {
+        return super::filament_self_index::execute_plan(runner, plan);
+    }
+    if plan.key == "master_extruder_id" {
+        return super::master_extruder_id::execute_plan(runner, plan);
+    }
     if plan.key == super::print_compatible_printers::KEY {
         // Replay embedded requests, never load this metadata key as a preset.
         // All seven witnesses and the retained baseline must pass before credit.
@@ -149,6 +155,13 @@ fn execute_plan(
         "printer_extruder_id" | "physical_extruder_map"
     ) {
         return super::printer_physical_identity::execute_plan(runner, plan);
+    }
+    #[cfg(target_os = "linux")]
+    if plan.key == "post_process" {
+        return super::post_process_matrix::execute_plan(runner, plan);
+    }
+    if plan.key == "print_extruder_id" {
+        return super::print_extruder_identity::execute_plan(runner, plan);
     }
     if plan.key == "brim_ears" {
         return super::legacy_brim_ears::execute_plan(runner, plan);
@@ -345,14 +358,9 @@ fn execute_plan(
                 // still surface as failures.
                 if oracle_nondeterministic(&plan.key, &case.label) && outcome.status == "DIVERGENT"
                 {
-                    // Upstream slices lightning layers concurrently through
-                    // the process-global, unseeded `rand()`
-                    // (`PrintObject.cpp:710-715` + `Lightning/TreeNode.cpp`
-                    // child selection): the oracle itself emits different
-                    // G-code across identical runs, so byte-exactness is
-                    // undefined for this value. Count only cases the
-                    // exemption actually excused — a case that byte-matches
-                    // is ordinary coverage, not nondeterministic evidence.
+                    // Feature/FuzzySkin/FuzzySkin.cpp:26-31 random_value uses a
+                    // thread-local entropy/thread-ID-seeded generator. These
+                    // excused divergences remain incomplete coverage.
                     excused += 1;
                     eprintln!("[option] ORACLE_NONDETERMINISTIC {label}");
                     continue;

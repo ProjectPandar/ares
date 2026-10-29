@@ -47,6 +47,9 @@ pub(super) fn generate(
         .enumerate()
         .map(|(id, layer)| InstalledSupportLayer {
             id,
+            // `add_tree_support_layer` (PrintObject.cpp:1073-1077) marks
+            // classic-tree layers stInnerTree.
+            inner_tree: true,
             interface_id: 0,
             print_z: layer.print_z,
             height: layer.height,

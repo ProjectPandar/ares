@@ -16,9 +16,9 @@ pub(super) fn tag(
     if state.adaptive_pa_emitted && !role_changed {
         return false;
     }
-    let flow = state.adaptive_pa_flow.unwrap_or(
-        properties.mm3_per_mm * state.options.print_flow_ratio * state.options.filament_flow_ratio,
-    );
+    let flow = state
+        .adaptive_pa_flow
+        .unwrap_or_else(|| super::extrusion::effective_flow_at_emission(properties, state));
     if flow <= 0.0 {
         return true;
     }
@@ -53,10 +53,7 @@ pub(super) fn ramp(
     if !state.options.adaptive_pa.enabled || !state.options.adaptive_pa.overhangs {
         return;
     }
-    let flow = properties.mm3_per_mm
-        * state.options.print_flow_ratio
-        * state.options.filament_flow_ratio
-        * properties.slope.map_or(1.0, |slope| slope.flow_ratio);
+    let flow = super::extrusion::effective_flow_at_emission(properties, state);
     let (Ramp::Constant { previous, next } | Ramp::Variable { previous, next }) = kind;
     if flow <= 0.0
         || ((previous - next).abs() <= SOURCE_EPSILON_MM

@@ -4,7 +4,7 @@
 //! Extends each infill line along its boundary contour while the
 //! contour stays within `0.33·line_spacing` horizontally and rises
 //! more than `0.5·line_spacing` vertically (sign-flipped for a
-//! polyline's first endpoint), preferring the longer side.
+//! polyline's first endpoint), preferring a valid previous side.
 
 use crate::fill::connect::contour::{append_full, closed_contour_distance_ccw};
 use crate::fill::connect::types::{BoundaryContour, Intersection};
@@ -51,7 +51,7 @@ pub(super) fn base_support_extend_infill_lines(
                 },
             },
         );
-        let (mut extend_prev, dist_y_prev) = probe_extension_side(
+        let (extend_prev, dist_y_prev) = probe_extension_side(
             target,
             intersections[index]
                 .prev
@@ -68,14 +68,10 @@ pub(super) fn base_support_extend_infill_lines(
         let mut arc_len_prev = 0f64;
         let _ = (&mut arc_len_next, &mut arc_len_prev);
 
-        // Drop the shorter side (`:1925`: the ternary assigns −1 to
-        // the variable with the smaller dist_y).
-        if extend_prev.is_some() && extend_next.is_some() {
-            if dist_y_prev < dist_y_next {
-                extend_prev = None;
-            } else {
-                extend_next = None;
-            }
+        // FillBase.cpp:1915 parses as cond ? prev : (next = -1),
+        // so the previous candidate is never cleared.
+        if extend_prev.is_some() && extend_next.is_some() && dist_y_prev >= dist_y_next {
+            extend_next = None;
         }
 
         let path_index =

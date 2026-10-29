@@ -1,4 +1,4 @@
-use crate::{SliceError, slice_project};
+use crate::slice_project;
 
 use super::super::super::support::{KsrArchive, metadata};
 
@@ -16,27 +16,6 @@ async fn fuzzy_skin_reaches_active_classic_output() {
         .unwrap();
 
     assert!(!output.is_empty());
-}
-
-#[tokio::test]
-async fn arachne_sacrificial_layer_counterbore_hole_remains_out_of_scope() {
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\"counterbore_hole_bridging\": \"none\"",
-        "\"counterbore_hole_bridging\": \"sacrificiallayer\"",
-    );
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\"wall_generator\": \"classic\"",
-        "\"wall_generator\": \"arachne\"",
-    );
-    assert_eq!(
-        slice_project(archive.bytes(), metadata(), crate::SlicerContext::new(0))
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
-    );
 }
 
 #[tokio::test]

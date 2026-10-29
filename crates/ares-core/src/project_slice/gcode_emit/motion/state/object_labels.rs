@@ -1,4 +1,4 @@
-use super::EmitState;
+use super::{super::travel, EmitState};
 
 pub(in crate::project_slice::gcode_emit) fn queue_object_start(
     state: &mut EmitState,
@@ -23,11 +23,16 @@ pub(in crate::project_slice::gcode_emit) fn queue_exclude_end(state: &mut EmitSt
     }
 }
 
+/// Mirrors `GCode.cpp:5478-5494` for the BBL label: an unflushed start
+/// label is dropped (empty instance) and only then does the end label
+/// get armed.
 pub(in crate::project_slice::gcode_emit) fn queue_object_stop_label(
     state: &mut EmitState,
     label_id: u32,
 ) {
-    state.pending_object_stop_label = Some(label_id);
+    if state.pending_object_start.take().is_none() {
+        state.pending_object_stop_label = Some(label_id);
+    }
 }
 
 pub(in crate::project_slice::gcode_emit) fn append_exclude_end(
@@ -38,11 +43,14 @@ pub(in crate::project_slice::gcode_emit) fn append_exclude_end(
         output.extend_from_slice(
             format!("; stop printing object, unique label id: {label_id}\nM625\n").as_bytes(),
         );
+        if !state.options.use_relative_e_distances {
+            travel::reset_e(output, state, true);
+        }
     }
     if let Some(text) = state.pending_exclude_end.take() {
         output.extend_from_slice(text.as_bytes());
-        if !state.options.use_relative_e_distances && text.lines().any(|line| line == "G92 E0") {
-            state.extruder.e_position = 0.0;
+        if !state.options.use_relative_e_distances {
+            travel::reset_e(output, state, true);
         }
     }
 }

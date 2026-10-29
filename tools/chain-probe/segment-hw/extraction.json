@@ -1,0 +1,65 @@
+{
+  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "conversion": {
+    "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
+    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+  },
+  "label": "native source-kernel oracle; not full native viewer execution",
+  "adaptations": [
+    "radius members become named constexpr defaults",
+    "static file-scope function becomes inline",
+    "radius setters become free functions over a caller-owned radius; the GL-only update_heights_widths call is dropped"
+  ],
+  "upstream": [
+    {
+      "path": "src/libvgcode/src/ViewerImpl.hpp",
+      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "lines": [
+        234,
+        234
+      ],
+      "excerptSha256": "9126ec947913e398f0dbb7d1cbd00ffbe61bb8ed1f1979f0e779fb89473a71d5"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.hpp",
+      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "lines": [
+        238,
+        238
+      ],
+      "excerptSha256": "11b5713a40215010822bca5c8bd5716e49dd97f31eea26dd78aadbac7da1d2c5"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        909,
+        983
+      ],
+      "excerptSha256": "9ebe83082cad041ce15dff7f0e2308c6f3099e28cc160d50cf5f9f5a3dc10bdf"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        1648,
+        1652
+      ],
+      "excerptSha256": "583337f61dc0d9934342b4dfadbf5d92dafa10dcad6f40ff56b3f30b94a5e80c"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        1654,
+        1658
+      ],
+      "excerptSha256": "357e712158055ce9d7a9d4f01cf3f4a025d7f9a842c4fbfe84355bae9611412e"
+    }
+  ],
+  "files": {
+    "kernel.upstream.hpp": "53c4634a4a49012debd6b8da07a23ec4f28137e2012af84f9b2c42cdc0f7dfe6",
+    "kernel.hpp": "35b627c0e878fa688586c22dcccbcba4ac269cdf50088e47265c8c5b0e5712f5",
+    "kernel.diff": "e3449d2ce2189e5a6ed4e49eb97f693fb1feb24638c0113905414813148ff417"
+  }
+}

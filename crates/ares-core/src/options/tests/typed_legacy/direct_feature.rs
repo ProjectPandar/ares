@@ -36,7 +36,7 @@ fn typed_legacy_direct_renames_have_exact_targets_and_array_contracts() {
         assert_eq!(rule(source).action, LegacyAction::Rename { target });
         assert_eq!(
             rule(source).wire.json_array,
-            vector.map_or(JsonArrayAllowance::RejectAfterFirstPass, JsonArrayAllowance::Flatten)
+            vector.map_or(JsonArrayAllowance::FlattenScalar, JsonArrayAllowance::Flatten)
         );
     }
 }
@@ -67,7 +67,7 @@ fn typed_legacy_feature_filament_aliases_have_exact_inherit_parameters() {
                 canonical_inherit: "0",
             }
         );
-        assert_eq!(rule(source).wire.json_array, JsonArrayAllowance::RejectAfterFirstPass);
+        assert_eq!(rule(source).wire.json_array, JsonArrayAllowance::FlattenScalar);
     }
 }
 

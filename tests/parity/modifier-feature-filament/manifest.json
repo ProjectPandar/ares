@@ -1,0 +1,408 @@
+{
+  "approved_spec": "a2ffbb77bcf205b657e70f17245b38c9b78cd2d2",
+  "control_sha256": "68e5b1010eb40d8ec44b55b349eea04d6088ea6b49212e51402a6f2ea171b652",
+  "roles": {
+    "sparse_infill": {
+      "key": "sparse_infill_filament_id",
+      "feature": "Sparse infill",
+      "sha256": "3b81f66c1e1df0b5fd39f9de8e426b2e1d24376ad5d23110a4a5b607d08c00f2",
+      "entries": [
+        {
+          "entry": "3D/3dmodel.model",
+          "control_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "positive_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/cube10.stl_1.model",
+          "control_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "positive_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/epsilon-modifier.model",
+          "control_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "positive_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "changed": false
+        },
+        {
+          "entry": "3D/_rels/3dmodel.model.rels",
+          "control_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "positive_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/filament_sequence.json",
+          "control_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "positive_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/model_settings.config",
+          "control_sha256": "d38e4e693c9e61934939e5265bfd5dee241050fc296a8d194bbcebd597932b80",
+          "positive_sha256": "c432474645d071efa71ab299ef31fa937b8c7a1e485be3ed073fa2def5890a12",
+          "changed": true
+        },
+        {
+          "entry": "Metadata/project_settings.config",
+          "control_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "positive_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/slice_info.config",
+          "control_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "positive_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "changed": false
+        },
+        {
+          "entry": "[Content_Types].xml",
+          "control_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "positive_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "changed": false
+        },
+        {
+          "entry": "_rels/.rels",
+          "control_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "positive_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "changed": false
+        }
+      ]
+    },
+    "internal_solid": {
+      "key": "internal_solid_filament_id",
+      "feature": "Internal solid infill",
+      "sha256": "79e6b198013dbadd3cbe0655d4d5be7bfbc0e0dec6fddacc411e178eaaf33ca7",
+      "entries": [
+        {
+          "entry": "3D/3dmodel.model",
+          "control_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "positive_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/cube10.stl_1.model",
+          "control_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "positive_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/epsilon-modifier.model",
+          "control_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "positive_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "changed": false
+        },
+        {
+          "entry": "3D/_rels/3dmodel.model.rels",
+          "control_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "positive_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/filament_sequence.json",
+          "control_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "positive_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/model_settings.config",
+          "control_sha256": "d38e4e693c9e61934939e5265bfd5dee241050fc296a8d194bbcebd597932b80",
+          "positive_sha256": "18eadad21dbbef53d7666b18e8da76f139248b436cbc57e86978a24c0d35f166",
+          "changed": true
+        },
+        {
+          "entry": "Metadata/project_settings.config",
+          "control_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "positive_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/slice_info.config",
+          "control_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "positive_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "changed": false
+        },
+        {
+          "entry": "[Content_Types].xml",
+          "control_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "positive_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "changed": false
+        },
+        {
+          "entry": "_rels/.rels",
+          "control_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "positive_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "changed": false
+        }
+      ]
+    },
+    "top_surface": {
+      "key": "top_surface_filament_id",
+      "feature": "Top surface",
+      "sha256": "ace739eeb0a2095a6e5b7e32677f25fcfefbd69e52cedbde75208153259f3f23",
+      "entries": [
+        {
+          "entry": "3D/3dmodel.model",
+          "control_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "positive_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/cube10.stl_1.model",
+          "control_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "positive_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/epsilon-modifier.model",
+          "control_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "positive_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "changed": false
+        },
+        {
+          "entry": "3D/_rels/3dmodel.model.rels",
+          "control_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "positive_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/filament_sequence.json",
+          "control_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "positive_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/model_settings.config",
+          "control_sha256": "d38e4e693c9e61934939e5265bfd5dee241050fc296a8d194bbcebd597932b80",
+          "positive_sha256": "b4b3c16b68ca7c0eaa0cff53176f0c2363322c65b4aaa1c684265638a29cddce",
+          "changed": true
+        },
+        {
+          "entry": "Metadata/project_settings.config",
+          "control_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "positive_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/slice_info.config",
+          "control_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "positive_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "changed": false
+        },
+        {
+          "entry": "[Content_Types].xml",
+          "control_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "positive_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "changed": false
+        },
+        {
+          "entry": "_rels/.rels",
+          "control_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "positive_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "changed": false
+        }
+      ]
+    },
+    "bottom_surface": {
+      "key": "bottom_surface_filament_id",
+      "feature": "Bottom surface",
+      "sha256": "b4d1f1c9bc55e45723c2c47b821f929f35365bb6c3b8cfb139a98b3768fdf549",
+      "entries": [
+        {
+          "entry": "3D/3dmodel.model",
+          "control_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "positive_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/cube10.stl_1.model",
+          "control_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "positive_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/epsilon-modifier.model",
+          "control_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "positive_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "changed": false
+        },
+        {
+          "entry": "3D/_rels/3dmodel.model.rels",
+          "control_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "positive_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/filament_sequence.json",
+          "control_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "positive_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/model_settings.config",
+          "control_sha256": "d38e4e693c9e61934939e5265bfd5dee241050fc296a8d194bbcebd597932b80",
+          "positive_sha256": "1b8d014a7219ab43a0667b1d9fdc5b8477b1625a5b3847d7488b95a5a4aacd4a",
+          "changed": true
+        },
+        {
+          "entry": "Metadata/project_settings.config",
+          "control_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "positive_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/slice_info.config",
+          "control_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "positive_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "changed": false
+        },
+        {
+          "entry": "[Content_Types].xml",
+          "control_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "positive_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "changed": false
+        },
+        {
+          "entry": "_rels/.rels",
+          "control_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "positive_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "changed": false
+        }
+      ]
+    },
+    "outer_wall": {
+      "key": "outer_wall_filament_id",
+      "feature": "Outer wall",
+      "sha256": "e05e812deab44545410f3a68f55bdb75b9fa6b7eacd3d04d5ad458b21ee56456",
+      "entries": [
+        {
+          "entry": "3D/3dmodel.model",
+          "control_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "positive_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/cube10.stl_1.model",
+          "control_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "positive_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/epsilon-modifier.model",
+          "control_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "positive_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "changed": false
+        },
+        {
+          "entry": "3D/_rels/3dmodel.model.rels",
+          "control_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "positive_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/filament_sequence.json",
+          "control_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "positive_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/model_settings.config",
+          "control_sha256": "d38e4e693c9e61934939e5265bfd5dee241050fc296a8d194bbcebd597932b80",
+          "positive_sha256": "f56bba0f62f455662ba59b2dd80f9ab177256add98afae4322c9c2ca15ff9584",
+          "changed": true
+        },
+        {
+          "entry": "Metadata/project_settings.config",
+          "control_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "positive_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/slice_info.config",
+          "control_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "positive_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "changed": false
+        },
+        {
+          "entry": "[Content_Types].xml",
+          "control_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "positive_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "changed": false
+        },
+        {
+          "entry": "_rels/.rels",
+          "control_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "positive_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "changed": false
+        }
+      ]
+    },
+    "inner_wall": {
+      "key": "inner_wall_filament_id",
+      "feature": "Inner wall",
+      "sha256": "70a7ad8be73101a80b1e41d4c612d311d55e6571460071570761338e4572bd22",
+      "entries": [
+        {
+          "entry": "3D/3dmodel.model",
+          "control_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "positive_sha256": "f9b174cbc6fc901e7a6cbf9cea7a7134f4b77fdf0600c430dff48b39df36ba28",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/cube10.stl_1.model",
+          "control_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "positive_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "changed": false
+        },
+        {
+          "entry": "3D/Objects/epsilon-modifier.model",
+          "control_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "positive_sha256": "99dc74257ef53385c40cc89e127b6b66af0cd259947a1a38bbe8d9ff4404cccf",
+          "changed": false
+        },
+        {
+          "entry": "3D/_rels/3dmodel.model.rels",
+          "control_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "positive_sha256": "ade7b31f5433e657d23223ea72d735ecfe74670da4d474f95298fdbee4c687a6",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/filament_sequence.json",
+          "control_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "positive_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/model_settings.config",
+          "control_sha256": "d38e4e693c9e61934939e5265bfd5dee241050fc296a8d194bbcebd597932b80",
+          "positive_sha256": "595374b65754f8dc8994c69008f28c95d6c78a8dff56da8ee6fecf8056866bdf",
+          "changed": true
+        },
+        {
+          "entry": "Metadata/project_settings.config",
+          "control_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "positive_sha256": "78fce61f3bc26fd460075ac890908800bb8bf80165975ce0e6373561fbfe1b31",
+          "changed": false
+        },
+        {
+          "entry": "Metadata/slice_info.config",
+          "control_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "positive_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "changed": false
+        },
+        {
+          "entry": "[Content_Types].xml",
+          "control_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "positive_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "changed": false
+        },
+        {
+          "entry": "_rels/.rels",
+          "control_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "positive_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "changed": false
+        }
+      ]
+    }
+  }
+}

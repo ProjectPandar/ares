@@ -6,9 +6,7 @@ mod shortest_direction_tests;
 #[cfg(test)]
 mod tests;
 
-use super::{
-    Boundary, Coord, Intersection, Point, SCALED_EPSILON, TravelPoint, segment_intersection,
-};
+use super::{Boundary, Coord, Intersection, Point, SCALED_EPSILON, TravelPoint};
 
 /// `get_shortest_direction` (:390-423): which way around the contour is
 /// shorter between the two intersections.
@@ -169,12 +167,48 @@ fn furthest_skippable(
     best
 }
 
+/// `Geometry.hpp::segments_intersect`: preserve its endpoint-contact branch,
+/// rather than substituting the intersection-point collector's predicate.
+fn segments_intersect(a: Point, b: Point, c: Point, d: Point) -> bool {
+    let sides = |a: Point, b: Point, c: Point, d: Point| {
+        let cross_sign = |p: Point| {
+            let dx = i128::from(b.x()) - i128::from(a.x());
+            let dy = i128::from(b.y()) - i128::from(a.y());
+            let px = i128::from(p.x()) - i128::from(a.x());
+            let py = i128::from(p.y()) - i128::from(a.y());
+            (dx * py - dy * px).signum()
+        };
+        (cross_sign(c), cross_sign(d))
+    };
+    let first = sides(a, b, c, d);
+    let second = sides(c, d, a, b);
+    let test_first = first.0 * first.1;
+    let test_second = second.0 * second.1;
+    if test_first > 0 || test_second > 0 {
+        return false;
+    }
+    if test_first != 0 || test_second != 0 {
+        return true;
+    }
+    if first != (0, 0) {
+        return false;
+    }
+    let axis = if (b.x() - a.x()).abs() > (b.y() - a.y()).abs() {
+        Point::x
+    } else {
+        Point::y
+    };
+    let (i, j) = (axis(a).min(axis(b)), axis(a).max(axis(b)));
+    let (k, l) = (axis(c).min(axis(d)), axis(c).max(axis(d)));
+    (i..=j).contains(&k) || (k..=l).contains(&i)
+}
+
 fn crosses_boundary(grid: &EdgeGrid, start: Point, end: Point) -> bool {
     let mut crosses = false;
     let _ = grid.visit_cells_intersecting_line(start, end, |_, _, edges| {
         for &edge in edges {
             let (segment_start, segment_end) = grid.segment(edge);
-            if segment_intersection(start, end, segment_start, segment_end).is_some() {
+            if segments_intersect(segment_start, segment_end, start, end) {
                 crosses = true;
                 return false;
             }

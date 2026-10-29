@@ -137,7 +137,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   await page.screenshot({ path: `${artifacts}preview.png` });
   await expect(page.getByTestId("toolpaths-pending")).toHaveCount(0);
 
-  if (oracle) await checkToolpathPreview(page, oracle, gcodePath, artifacts, errors);
+  if (oracle) await checkToolpathPreview(page, oracle, gcodePath, artifacts, errors, true);
 
   // A process edit slices the project with the edit applied over its config (M854): the G-code is
   // byte-equal to OrcaSlicer's for the project carrying the same value.

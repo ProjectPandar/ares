@@ -19,13 +19,18 @@ mod quartercubic;
 mod simplify;
 mod stars;
 mod stars_bounds;
+mod surface;
 mod tpms_d;
 mod tpms_fk;
 
 pub(in crate::project_slice) use flow::{extended_object_bounding_box_x, materialized_flow};
 #[cfg(test)]
 pub(in crate::project_slice) use generate::generate_layer;
-pub(in crate::project_slice) use stars_bounds::extended as extended_stars_bounds;
+pub(in crate::project_slice) use stars_bounds::{
+    extended as extended_stars_bounds, object as print_object_bounds,
+};
+
+pub(in crate::project_slice) use surface::{SurfaceRequest, surface_polylines};
 
 mod generate;
 #[cfg(test)]
@@ -35,7 +40,7 @@ mod triangles;
 mod types;
 
 pub(in crate::project_slice) use types::{
-    FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities,
+    FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities, SurfaceCall,
 };
 
 use crate::{
@@ -88,13 +93,17 @@ pub(in crate::project_slice) fn prepare(
                     unreachable!("fill object retains its resolved configuration");
                 };
                 // Fill.cpp:1224/1237 -> PrintObject::bounding_box, once per object.
-                // Only Stars multiline reads this box; other generators keep their adapters.
+                // Stars/Grid/Triangles multiline read this box; other generators keep their adapters.
                 let stars_bounds = resolved
                     .all_regions
                     .iter()
                     .any(|region| {
-                        region.sparse_infill_pattern == crate::ProcessInfillPattern::TriHexagon
-                            && region.fill_multiline.0 > 1
+                        matches!(
+                            region.sparse_infill_pattern,
+                            crate::ProcessInfillPattern::TriHexagon
+                                | crate::ProcessInfillPattern::Grid
+                                | crate::ProcessInfillPattern::Triangles
+                        ) && region.fill_multiline.0 > 1
                     })
                     .then(|| {
                         stars_bounds::extended(
@@ -113,12 +122,16 @@ pub(in crate::project_slice) fn prepare(
                     .and_then(|g| g.as_ref());
                 (0..plan.layers.len())
                     .map(|layer_index| {
-                        generate::generate_layer(
+                        generate::generate_layer_with_active(
                             external,
                             object_index,
                             layer_index,
-                            lightning_generator.map(|g| g.as_ref()),
-                            stars_bounds,
+                            generate::layer_options(
+                                external,
+                                object_index,
+                                lightning_generator.map(|g| g.as_ref()),
+                                stars_bounds,
+                            ),
                         )
                     })
                     .collect::<Result<Vec<_>, _>>()

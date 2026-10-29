@@ -6,8 +6,8 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct Config {
-    pub(super) base: FuzzySkinConfig,
+pub(in crate::project_slice::perimeters) struct Config {
+    pub(in crate::project_slice::perimeters) base: FuzzySkinConfig,
     pub(super) mode: ProcessFuzzySkinMode,
     pub(super) thickness: i64,
     pub(super) point_distance: i64,

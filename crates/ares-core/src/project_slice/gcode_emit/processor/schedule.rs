@@ -30,6 +30,8 @@ pub(super) struct Schedule {
     pub(super) flush_ends: Vec<usize>,
     /// Observation for stop registration, before each explicit flush.
     pub(super) flush_starts: Vec<usize>,
+    /// Processed-block count once each block is queued.
+    pub(super) pushed: Vec<usize>,
     pub(super) processed_blocks: usize,
 }
 
@@ -42,12 +44,14 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
     let mut emitted = 0;
     let mut flush_ends = Vec::with_capacity(events.len());
     let mut flush_starts = Vec::with_capacity(events.len());
+    let mut pushed_processed = Vec::with_capacity(blocks.len());
 
     for event in events {
         while pushed < event.block_count {
             let batch = planner.push(&blocks[pushed]);
             pushed += 1;
             record_batch(blocks, &mut timed, &mut emitted, batch, &mut pending);
+            pushed_processed.push(emitted);
         }
         flush_starts.push(emitted);
         if let Some(delay) = event.delay.filter(|delay| delay.seconds > 0.0) {
@@ -68,6 +72,7 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
         let batch = planner.push(&blocks[pushed]);
         pushed += 1;
         record_batch(blocks, &mut timed, &mut emitted, batch, &mut pending);
+        pushed_processed.push(emitted);
     }
     let batch = planner.finish(!pending.is_empty());
     record_batch(blocks, &mut timed, &mut emitted, batch, &mut pending);
@@ -82,6 +87,7 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
         trailing_delay: f64::from(trailing_delay),
         flush_ends,
         flush_starts,
+        pushed: pushed_processed,
         processed_blocks: emitted,
     }
 }

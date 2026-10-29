@@ -193,6 +193,8 @@ fn cone_infill(
     let min_y = points.iter().map(|p| p.y()).min().unwrap();
     let max_y = points.iter().map(|p| p.y()).max().unwrap();
     let params = MonotonicFillParams {
+        dont_alternate_fill_direction: false,
+        layer_angle_fixed: false,
         spacing: f64::from(spacing),
         overlap: 0.0,
         density: 1.0,

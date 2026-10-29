@@ -37,18 +37,18 @@ pub(super) enum BuildResult {
 }
 
 impl Boundary {
-    /// `get_boundary_external` + the first `init_boundary` overload
-    /// (`AvoidCrossingPerimeters.cpp:1137-1189, 1187-1203`): every hole of
-    /// every print object at this print z, made CCW and expanded by half
-    /// the cross-object average perimeter spacing (miter join), then
-    /// reversed so normals point outward; the bbox is padded only by
-    /// `SCALED_EPSILON`, so travels clear of every hole stay outside and
-    /// route straight.
+    /// `get_boundary_external` + the merge-points `init_boundary`
+    /// overload (`AvoidCrossingPerimeters.cpp:1137-1189, 1216-1229`): every
+    /// hole of every print object at this print z, made CCW and expanded by
+    /// half the cross-object average perimeter spacing (miter join), then
+    /// reversed so normals point outward; the merged bbox is padded by its
+    /// radius so endpoint-leaving travels stay inside the grid.
     pub(in crate::project_slice::gcode_emit) fn build_external(
         chunk_slices: &[ExPolygon],
         perimeter_spacing_mm: f64,
         scale: CoordinateScale,
         endpoints: [Point; 2],
+        translate: Point,
     ) -> Result<BuildResult, ClipperError> {
         let unit = |millimetres: f64| scale.checked_scale(millimetres);
         let Some(scaled_spacing) = unit(perimeter_spacing_mm) else {
@@ -56,12 +56,18 @@ impl Boundary {
         };
         let scaled_spacing = scaled_spacing as f32;
         // CW holes reversed to CCW before the positive offset
-        // (`polygons_reverse(holes_per_obj)`).
+        // (`polygons_reverse(holes_per_obj)`). The input is plate-frame
+        // (`:1172-1177`); `translate` lands it in the printing instance's
+        // frame, which is the one the router compares against.
         let holes = chunk_slices
             .iter()
             .flat_map(|expolygon| expolygon.holes())
             .map(|hole| {
-                let mut points = hole.points().to_vec();
+                let mut points = hole
+                    .points()
+                    .iter()
+                    .map(|point| Point::new(point.x() + translate.x(), point.y() + translate.y()))
+                    .collect::<Vec<_>>();
                 points.reverse();
                 Polygon::new(points)
             })
@@ -88,14 +94,25 @@ impl Boundary {
             min = Point::new(min.x().min(point.x()), min.y().min(point.y()));
             max = Point::new(max.x().max(point.x()), max.y().max(point.y()));
         }
-        let epsilon = scale.checked_scale(SCALED_EPSILON).unwrap_or(100) as Coord;
+        // `init_boundary(boundary, polygons, merge_points)` pads by the
+        // bbox radius so travel endpoints outside the contours stay in the
+        // grid (`AvoidCrossingPerimeters.cpp:1216-1229`); `SCALED_EPSILON`
+        // padding lost later travels whose start left the grid.
+        // `radius() = 0.5 * (max - min).cast<double>().norm()` and
+        // `Point(double, double)` rounds each coordinate
+        // (`BoundingBox.cpp:189-209`, `Point.hpp:196`), so the pad is
+        // `round(0.5 * sqrt(dx*dx + dy*dy))`; `f64::round` rounds half
+        // away from zero exactly like `std::round`.
+        let dx = (max.x() - min.x()) as f64;
+        let dy = (max.y() - min.y()) as f64;
+        let radius = (0.5 * (dx * dx + dy * dy).sqrt()).round() as Coord;
         let padded_min = Point::new(
-            min.x().saturating_sub(epsilon),
-            min.y().saturating_sub(epsilon),
+            min.x().saturating_sub(radius),
+            min.y().saturating_sub(radius),
         );
         let padded_max = Point::new(
-            max.x().saturating_add(epsilon),
-            max.y().saturating_add(epsilon),
+            max.x().saturating_add(radius),
+            max.y().saturating_add(radius),
         );
         let grid_resolution = unit(1.0).unwrap_or(1_000_000);
         let grid = EdgeGrid::new_from_contours(
@@ -164,7 +181,8 @@ impl Boundary {
         let mut boundary = inner_offset(geometry.layer_slices, offset_dis, scale)?;
         if !geometry.top_surfaces.is_empty() {
             // perimeter_offset = spacing / 2; the diff insets the top
-            // surfaces by 1.2 * perimeter_offset.
+            // surfaces by 1.2 * perimeter_offset. `offset_ex` defaults:
+            // jtMiter / DefaultMiterLimit 3.0 (ClipperUtils.hpp:19,27).
             let inset_by = 0.6 * f64::from(scaled_spacing);
             let inset = offset_expolygons(
                 &geometry
@@ -173,8 +191,8 @@ impl Boundary {
                     .map(|expolygon| (*expolygon).clone())
                     .collect::<Vec<_>>(),
                 -(inset_by as f32),
-                JoinType::Round,
-                MITER_LIMIT,
+                JoinType::Miter,
+                3.0,
             )?;
             boundary = difference_ex(&boundary, &inset)?;
         }
@@ -197,8 +215,14 @@ impl Boundary {
         // `init_boundary(boundary, polygons, merge_points)` pads the bounds by
         // the bbox radius so travel endpoints outside the contours stay in
         // the grid (`AvoidCrossingPerimeters.cpp:1216-1229`).
-        let radius =
-            (((max.x() - min.x()) as f64).hypot((max.y() - min.y()) as f64) / 2.0) as Coord;
+        // `radius() = 0.5 * (max - min).cast<double>().norm()` and
+        // `Point(double, double)` rounds each coordinate
+        // (`BoundingBox.cpp:189-209`, `Point.hpp:196`), so the pad is
+        // `round(0.5 * sqrt(dx*dx + dy*dy))`; `f64::round` rounds half
+        // away from zero exactly like `std::round`.
+        let dx = (max.x() - min.x()) as f64;
+        let dy = (max.y() - min.y()) as f64;
+        let radius = (0.5 * (dx * dx + dy * dy).sqrt()).round() as Coord;
         let padded_min = Point::new(
             min.x().saturating_sub(radius),
             min.y().saturating_sub(radius),

@@ -96,9 +96,12 @@ fn typed_legacy_inventory_has_exact_string_and_empty_first_pass_contracts() {
         assert_eq!(item.wire.empty_first_pass, empty, "{} empty first pass", item.source);
         let array = match (item.wire.vector, item.wire.empty_first_pass) {
             (Some(vector), _) => JsonArrayAllowance::Flatten(vector),
+            // Scalar rules flatten into the `parse_str_arr` join and hand
+            // the joined string to the option's own deserialize semantics
+            // (`Config.cpp:947-1000`).
+            (None, EmptyValueAction::Retain { .. }) => JsonArrayAllowance::FlattenScalar,
             (None, EmptyValueAction::Consume) => JsonArrayAllowance::ConsumeFirstPass,
             (None, EmptyValueAction::Deferred) => JsonArrayAllowance::Deferred,
-            (None, EmptyValueAction::Retain { .. }) => JsonArrayAllowance::RejectAfterFirstPass,
         };
         assert_eq!(item.wire.json_array, array, "{} JSON array", item.source);
     }

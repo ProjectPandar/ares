@@ -42,12 +42,15 @@ pub(super) fn emit(
         chunk_slices,
         chunk_perimeter_spacing,
     }: SkirtEmission<'_, '_>,
-) {
+) -> Result<(), crate::SliceError> {
+    if skirt.as_ref().is_some_and(|plan| plan.group_count() > 0) {
+        return Ok(());
+    }
     if let (Some(entry), Some(plan)) = (entries.first(), skirt) {
         let object = entry.object_index;
         let Some((skirt_plan_index, skirt_height)) = schedule.next(print_z, plan.layer_count)
         else {
-            return;
+            return Ok(());
         };
         let skirt_layer = entry.object_layer.unwrap_or(0);
         let geometry = if let Some(raft_index) = entry.raft_layer {
@@ -72,7 +75,7 @@ pub(super) fn emit(
                 chunk_perimeter_spacing: 0.0,
             }
         } else if entry.object_layer.is_some() {
-            entry_builder.geometry(object, skirt_layer, chunk_slices, chunk_perimeter_spacing)
+            entry_builder.geometry(object, skirt_layer, chunk_perimeter_spacing)
         } else {
             let layer = &support[object][entry
                 .support_layer
@@ -94,6 +97,14 @@ pub(super) fn emit(
         } else {
             geometry.view_raft(traversal.scale)
         };
+        // `GCode.cpp:4413/:4448`: the whole skirt emission plans travels
+        // against the external boundary; the window closes after the
+        // loops, then `:4449-4450` arms the one-shot disable (straight
+        // travel to the first object point) at emission END on the first
+        // layer (upstream `loops.first == 0` loop-0 extruder condition;
+        // multi-extruder loop ranges deferred).
+        state.use_external_mp = true;
+        let first_layer = skirt_layer == 0;
         plan.emit(
             output,
             skirt::SkirtLayer {
@@ -102,6 +113,11 @@ pub(super) fn emit(
             },
             motion_geometry,
             state,
-        );
+        )?;
+        state.use_external_mp = false;
+        if first_layer {
+            state.avoid_crossing_disabled_once = true;
+        }
     }
+    Ok(())
 }

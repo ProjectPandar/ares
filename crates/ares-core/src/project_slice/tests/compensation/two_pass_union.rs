@@ -51,7 +51,7 @@ fn task22m_two_pass_union_preserves_discriminant_geometry() {
         std::slice::from_ref(&resolved),
         FloatOrPercent::Float(0.5),
         &OrcaFloats(vec![OrcaFloat(0.4)]),
-        CoordinateScale::Normal,
+        (CoordinateScale::Normal, std::iter::repeat(false)),
     )
     .unwrap()
     .pop()

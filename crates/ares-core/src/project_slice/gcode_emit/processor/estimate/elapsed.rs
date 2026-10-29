@@ -1,6 +1,30 @@
 //! `ExportLines::update` M73 lookup over `g1_times_cache` (`GCodeProcessor.cpp:771-810`, `:1241-1252`, `:1458-1471`).
 
-use super::export_cache;
+use super::{Estimate, export_cache};
+
+impl Estimate {
+    pub(in crate::project_slice::gcode_emit::processor) fn elapsed_at(
+        &self,
+        line: usize,
+    ) -> Option<f64> {
+        self.elapsed
+            .get(line)
+            .copied()
+            .flatten()
+            .map(|entry| f64::from(entry.elapsed))
+    }
+
+    pub(in crate::project_slice::gcode_emit::processor) fn next_elapsed_at(
+        &self,
+        line: usize,
+    ) -> Option<f32> {
+        self.elapsed
+            .get(line)
+            .copied()
+            .flatten()
+            .and_then(|entry| entry.next)
+    }
+}
 
 #[derive(Clone, Copy)]
 pub(super) struct Snapshot {
@@ -11,11 +35,10 @@ pub(super) struct Snapshot {
 pub(super) fn elapsed_snapshots(
     lines: &[String],
     cache: &[export_cache::Entry],
-    arc_segment_counts: &[usize],
-    arc_seam_excluded: &[bool],
 ) -> Vec<Option<Snapshot>> {
     let mut elapsed = vec![None; lines.len() + 1];
     let mut cache_index = 0;
+    let mut update_cache_index = 0;
     let mut exported_g1_lines = 0;
     for (index, line) in lines.iter().enumerate() {
         let command = line
@@ -25,52 +48,37 @@ pub(super) fn elapsed_snapshots(
             .split_whitespace()
             .next()
             .unwrap_or_default();
-        let lookup_id = match command {
-            "G0" | "G1" => {
-                // `process_line_move(g1_lines_counter++)` (:1460) probes
-                // `g1_times_cache_it->id == g1_lines_counter` at the
-                // PRE-increment caller counter (:1246-1248) — the line
-                // reads the cumulative through the previous eligible
-                // cache entry.
-                let id = exported_g1_lines;
-                exported_g1_lines += 1;
-                Some(id)
-            }
-            "G2" | "G3" => {
-                // `ret` = `internal_g1_lines_counter` = the
-                // `remaining_internal_g1_lines > 0` walk count in
-                // `ExportLines::update` (:793-799): `arc_internal - 1`
-                // eligible internal entries for a fully-cached arc
-                // (the `it->id == counter` probe lands on the
-                // second-to-last internal segment), 0 when the first
-                // block was seam-excluded (`it->id > counter`).
-                // `process_line_move(g1_lines_counter + ret)` (:1466),
-                // `g1_lines_counter += 1 + ret` (:1467). The `it->id`
-                // probe is `exported + 1 + ret` (`++` at :778).
-                let internal = if arc_seam_excluded[index] {
-                    0
-                } else {
-                    arc_segment_counts[index]
-                };
-                // `process_line_move(g1_lines_counter + internal)` (:1466)
-                // probes `g1_times_cache_it->id == g1_lines_counter +
-                // internal` (:1246-1248) — `internal` is `update`'s
-                // `ret` = the `remaining>0` walk count = `arc_internal`
-                // for a fully-cached arc, 0 when the first block was
-                // seam-excluded. `g1_lines_counter += 1 + internal` (:1467).
-                let lookup = exported_g1_lines + internal;
-                exported_g1_lines += 1 + internal;
-                Some(lookup)
-            }
-            "G28" => {
-                exported_g1_lines += 1;
-                None
-            }
-            _ => None,
-        };
-        let Some(lookup_id) = lookup_id else {
+        if !matches!(command, "G0" | "G1" | "G2" | "G3" | "G28") {
             continue;
-        };
+        }
+        // `ExportLines::update` (:778-800) walks the current cache, not
+        // the source arc's segment count: VG1 advances estimate ids only.
+        let update_id = exported_g1_lines + 1;
+        while update_cache_index < cache.len() && cache[update_cache_index].id < update_id {
+            update_cache_index += 1;
+        }
+        let mut internal = 0;
+        if matches!(command, "G2" | "G3")
+            && cache
+                .get(update_cache_index)
+                .is_some_and(|entry| entry.id == update_id)
+        {
+            while cache
+                .get(update_cache_index)
+                .is_some_and(|entry| entry.remaining > 0)
+            {
+                update_cache_index += 1;
+                internal += 1;
+            }
+        }
+        if command == "G28" {
+            exported_g1_lines += 1;
+            continue;
+        }
+        // Caller :1458-1471 probes before advancing its physical counter;
+        // its progress-cache iterator is separate from update's cursor.
+        let lookup_id = exported_g1_lines + internal;
+        exported_g1_lines += 1 + internal;
         while cache_index < cache.len() && cache[cache_index].id < lookup_id {
             cache_index += 1;
         }

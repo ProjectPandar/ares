@@ -8,7 +8,7 @@ use ares_wasm::SliceOutput;
 #[tokio::test]
 async fn wasm_statistics_transparently_preserve_native_role_usage() {
     let processed = slice_project_plate_processed(
-        include_bytes!("../../../tests/parity/validation/kobra3-centered/0.8.3mf").to_vec(),
+        include_bytes!("../../../tests/parity/role-filament-usage/wasm-plate1.3mf").to_vec(),
         GenerationMetadata::default(),
         Some(1),
         &ConfigOverrides::default(),

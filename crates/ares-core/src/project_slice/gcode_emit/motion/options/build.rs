@@ -18,10 +18,16 @@ impl MotionOptions {
         fields::assemble(traversal, context::prelude(traversal, filament))
     }
 
-    pub(in crate::project_slice::gcode_emit) fn apply_region_outer_wall_speed(
+    /// `GCode.cpp:6136/6163`: re-apply the whole region config before
+    /// emitting that region's perimeter/infill entities — the same
+    /// `region::apply` the initial build runs for the first region.
+    pub(in crate::project_slice::gcode_emit) fn apply_region(
         &mut self,
-        current: &crate::RegionOptions,
+        default: &crate::options::ProcessRegionSourceOptions,
+        current: Option<&crate::RegionOptions>,
+        travel_speed: f64,
+        nozzle: f64,
     ) {
-        region::apply_outer_wall_speed(self, current);
+        region::apply(self, default, current, travel_speed, nozzle);
     }
 }

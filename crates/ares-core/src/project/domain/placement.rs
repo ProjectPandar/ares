@@ -32,7 +32,11 @@ impl Project {
             return false;
         }
         for object in &mut self.objects {
-            for instance in &mut object.instances {
+            for instance in object
+                .instances
+                .iter_mut()
+                .chain(&mut object.import_instances)
+            {
                 instance.transform = instance
                     .transform
                     .pretranslated(Point3d::new(shift[0], shift[1], 0.0));
@@ -68,7 +72,11 @@ impl Project {
             return;
         }
         for object in &mut self.objects {
-            for instance in &mut object.instances {
+            for instance in object
+                .instances
+                .iter_mut()
+                .chain(&mut object.import_instances)
+            {
                 instance.transform = instance
                     .transform
                     .pretranslated(Point3d::new(shift[0], shift[1], 0.0));
@@ -90,7 +98,11 @@ impl Project {
             if !min_z.is_finite() {
                 continue;
             }
-            for instance in &mut object.instances {
+            for instance in object
+                .instances
+                .iter_mut()
+                .chain(&mut object.import_instances)
+            {
                 instance.transform = instance
                     .transform
                     .pretranslated(Point3d::new(0.0, 0.0, -min_z));

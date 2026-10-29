@@ -1,0 +1,58 @@
+{
+  "source_fixture_sha256": "c98041c6033ffecbd0dace6feb89af8f6f0c286650f9241bc52cd617cbbb3317",
+  "source": "retained per-object-skirt/disjoint.3mf; only build X and explicit brim settings changed",
+  "cases": {
+    "far-control": {
+      "label": "far-control",
+      "x": [
+        80,
+        140
+      ],
+      "brim": false,
+      "combine_brims": false,
+      "sha256": "903a9f44ba478b4aad89b917a92194d2b662eba29bdefa60c791da3bf5556708",
+      "source_sha256": "c98041c6033ffecbd0dace6feb89af8f6f0c286650f9241bc52cd617cbbb3317",
+      "expected_groups": 2,
+      "expected_brim_blocks": 0
+    },
+    "far-brim": {
+      "label": "far-brim",
+      "x": [
+        80,
+        140
+      ],
+      "brim": true,
+      "combine_brims": false,
+      "sha256": "43c012f6a5d1e566834cbb9ada7763a8395dcf270b2b0bb923750e53a8af8ca8",
+      "source_sha256": "c98041c6033ffecbd0dace6feb89af8f6f0c286650f9241bc52cd617cbbb3317",
+      "expected_groups": 2,
+      "expected_brim_blocks": 2
+    },
+    "near-control": {
+      "label": "near-control",
+      "x": [
+        80,
+        110
+      ],
+      "brim": false,
+      "combine_brims": false,
+      "sha256": "1cb8cf433de76d0dfa8f70b9a013690c39ecae5b6396689099b476b974342809",
+      "source_sha256": "c98041c6033ffecbd0dace6feb89af8f6f0c286650f9241bc52cd617cbbb3317",
+      "expected_groups": 2,
+      "expected_brim_blocks": 0
+    },
+    "near-brim": {
+      "label": "near-brim",
+      "x": [
+        80,
+        110
+      ],
+      "brim": true,
+      "combine_brims": false,
+      "sha256": "8e28413bbff6addfc83e410ebc7737e1eec3efdba2e3ed3a94ea47a5f2fa752b",
+      "source_sha256": "c98041c6033ffecbd0dace6feb89af8f6f0c286650f9241bc52cd617cbbb3317",
+      "expected_groups": 1,
+      "expected_brim_blocks": 2
+    }
+  }
+}

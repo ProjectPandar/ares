@@ -1,7 +1,10 @@
 use crate::{
     ProjectObject, ProjectVolumeType, RegionOptions,
     options::FilamentRegionSourceOptions,
-    project::{effective_config::types::ResolvedProjectObject, region_graph::object_region_graph},
+    project::{
+        effective_config::types::ResolvedProjectObject,
+        region_graph::{PaintedRegions, object_region_graph},
+    },
 };
 
 use super::volume_bounds::{BoundedPrintObject, VolumeOccurrenceId};
@@ -35,7 +38,7 @@ pub(super) fn build_volume_region_graph(
     bounded: &BoundedPrintObject,
     filament: &FilamentRegionSourceOptions,
     logical_filament_count: usize,
-) -> VolumeRegionGraph {
+) -> (VolumeRegionGraph, PaintedRegions) {
     let graph = object_region_graph(source, resolved, filament, logical_filament_count);
     let ranges = graph
         .ranges
@@ -62,8 +65,14 @@ pub(super) fn build_volume_region_graph(
                 .collect(),
         })
         .collect();
-    VolumeRegionGraph {
-        all_regions: graph.all_regions,
-        ranges,
-    }
+    (
+        VolumeRegionGraph {
+            all_regions: graph.all_regions,
+            ranges,
+        },
+        PaintedRegions {
+            mmu: graph.painted_regions,
+            fuzzy: graph.fuzzy_regions,
+        },
+    )
 }

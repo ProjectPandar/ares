@@ -95,17 +95,29 @@ pub(super) fn project_surface(
     } else {
         1
     };
+    // FillAdaptive.cpp:296-309,344-354: retain the owning region's
+    // configuration doubles before the extrusion Flow rounds them to f32.
+    params.adaptive_line_spacing = if matches!(
+        params.pattern,
+        SurfaceFillPattern::Configured(
+            ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic
+        )
+    ) {
+        crate::project_slice::fill_entities::adaptive::line_spacing::configured(
+            context.region,
+            context.nozzles,
+            params.multiline,
+        )
+    } else {
+        0.0
+    };
     params.gyroid_optimized = matches!(
         params.pattern,
         SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid)
     ) && context.region.gyroid_optimized.0;
     let (angle, fixed_angle) = projected_angle(context, params.extrusion_role)?;
     params.angle = angle;
-    params.fixed_angle = fixed_angle
-        || matches!(
-            params.pattern,
-            SurfaceFillPattern::Configured(ProcessInfillPattern::AlignedRectilinear)
-        );
+    params.fixed_angle = fixed_angle;
     params.bridge_angle = bridge_angle as f32;
     params.bridge = is_bridge;
 
@@ -174,6 +186,7 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
         bridge_angle: 0.0,
         density: 0.0,
         multiline: 1,
+        adaptive_line_spacing: 0.0,
         anchor_length: 1000.0,
         anchor_length_max: 1000.0,
         flow: Flow {
@@ -217,23 +230,14 @@ pub(super) fn flow_role(kind: RegionSurfaceKind, solid: bool) -> FillFlowRole {
 
 fn role_flow_ratio(context: &LayerContext<'_>, role: ExtrusionRole) -> f64 {
     let region = context.region;
-    let mut ratio = match role {
+    // Only the earlier, ungated roles remain pre-baked. GCode.cpp:6485-6507
+    // is owned by motion::extrusion::effective_flow for every entity family.
+    match role {
         ExtrusionRole::TopSolidInfill => region.top_solid_infill_flow_ratio.0,
         ExtrusionRole::BottomSurface => region.bottom_solid_infill_flow_ratio.0,
         ExtrusionRole::InternalBridgeInfill => region.internal_bridge_flow.0,
         _ => 1.0,
-    };
-    if context.object.set_other_flow_ratios.0 {
-        ratio *= match role {
-            ExtrusionRole::InternalInfill => region.sparse_infill_flow_ratio.0,
-            ExtrusionRole::SolidInfill => region.internal_solid_infill_flow_ratio.0,
-            _ => 1.0,
-        };
-        if context.planned.id == 0 {
-            ratio *= region.first_layer_flow_ratio.0;
-        }
     }
-    ratio
 }
 
 fn output_selector(region: &RegionOptions, role: ExtrusionRole, current: u32) -> u32 {

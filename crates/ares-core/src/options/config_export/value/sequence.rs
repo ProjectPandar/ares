@@ -5,7 +5,7 @@ use serde::{
 
 use super::{
     ConfigValueError, SerializedConfigValue, raw_string::RawStringSerializer,
-    serialize_config_value, strings::serialize_string_vector, token,
+    serialize_config_value_with_sequence_kind, strings::serialize_string_vector, token,
 };
 
 #[derive(Clone, Copy)]
@@ -21,13 +21,19 @@ pub(super) enum SequenceKind {
 pub(super) struct ConfigSequence {
     kind: SequenceKind,
     values: Vec<SerializedConfigValue>,
+    active_count: Option<usize>,
 }
 
 impl ConfigSequence {
-    pub(super) fn new(kind: SequenceKind, length: Option<usize>) -> Self {
+    pub(super) fn new(
+        kind: SequenceKind,
+        length: Option<usize>,
+        active_count: Option<usize>,
+    ) -> Self {
         Self {
             kind,
             values: Vec::with_capacity(length.unwrap_or(0)),
+            active_count,
         }
     }
 
@@ -37,7 +43,7 @@ impl ConfigSequence {
     {
         let value = match self.kind {
             SequenceKind::Strings => token(value.serialize(RawStringSerializer)?),
-            _ => serialize_config_value(value)?,
+            _ => serialize_config_value_with_sequence_kind(value, self.kind)?,
         };
         self.values.push(value);
         Ok(())
@@ -51,14 +57,15 @@ impl ConfigSequence {
             },
             SequenceKind::PointGroups => joined(self.values, "#", false),
             SequenceKind::Nullable | SequenceKind::Numeric => {
-                let is_nil = self.values.iter().all(|value| value.is_nil);
-                joined(self.values, ",", is_nil)
-            }
-            SequenceKind::Ints => {
                 let is_nil = self
                     .values
                     .iter()
-                    .all(|value| value.is_nil || value.token == "2147483647");
+                    .take(self.active_count.unwrap_or(self.values.len()))
+                    .all(|value| value.is_nil);
+                joined(self.values, ",", is_nil)
+            }
+            SequenceKind::Ints => {
+                let is_nil = self.values.iter().all(|value| value.is_nil);
                 joined(self.values, ",", is_nil)
             }
             SequenceKind::Ordinary => joined(self.values, ",", false),

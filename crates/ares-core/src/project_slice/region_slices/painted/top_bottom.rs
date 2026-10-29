@@ -1,0 +1,258 @@
+//! MultiMaterialSegmentation.cpp1285–1472: slab cleanup, embedded shells and ordered color ownership.
+use super::super::PostRegion;
+use super::{clip_error, math::paths, preprocess::Layer, projection::Input, slabs};
+use crate::geometry::difference_polygons_paths;
+use crate::{
+    FloatOrPercent, SliceError,
+    geometry::{
+        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, difference_ex,
+        intersection_ex, offset_expolygons, opening_ex, union_ex, union_expolygons,
+    },
+};
+
+#[derive(Default)]
+struct Stat {
+    width: f32,
+    spacing: f32,
+    small: f32,
+    top: usize,
+    bottom: usize,
+}
+fn stat(
+    regions: &[PostRegion],
+    color: usize,
+    height: f32,
+    nozzle: f64,
+    scale: CoordinateScale,
+) -> Result<Stat, SliceError> {
+    let mut out = Stat::default();
+    for region in regions
+        .iter()
+        .filter(|r| color == 0 || r.options.outer_wall_filament_id.0 == color as i32)
+    {
+        let cfg = &region.options;
+        let width = match cfg.outer_wall_line_width {
+            FloatOrPercent::Float(v) => v,
+            FloatOrPercent::Percent(v) => v.0 * nozzle / 100.0,
+        };
+        let spacing = width as f32 - height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
+        if spacing <= 0.0 {
+            return Err(SliceError::InvalidInput(
+                "negative painted extrusion spacing".into(),
+            ));
+        }
+        out.width = out.width.max(width as f32);
+        out.top = out.top.max(cfg.top_shell_layers.0 as usize);
+        out.bottom = out.bottom.max(cfg.bottom_shell_layers.0 as usize);
+        let small = if cfg.gap_infill_speed.0 > 0.0 {
+            (0.5 * width) as f32
+        } else {
+            (width + f64::from(0.7_f32 * spacing)) as f32
+        };
+        out.small = (small * 0.5) / scale.factor() as f32;
+        out.spacing = spacing;
+    }
+    out.width /= scale.factor() as f32;
+    out.spacing /= scale.factor() as f32;
+    Ok(out)
+}
+
+type Patches = Vec<Vec<Vec<ExPolygon>>>;
+struct Embedded {
+    base: Patches,
+    shell: Patches,
+}
+impl Embedded {
+    fn new(states: usize, count: usize) -> Self {
+        Self {
+            base: vec![vec![Vec::new(); count]; states],
+            shell: vec![vec![Vec::new(); count]; states],
+        }
+    }
+}
+struct EmbedInput<'a> {
+    raw: &'a [slabs::Surfaces],
+    layers: &'a [Layer],
+    stats: &'a [Vec<Stat>],
+}
+fn embed_patch<const TOP: bool>(
+    patch: &[ExPolygon],
+    input: &EmbedInput<'_>,
+    (index, color): (usize, usize),
+    output: &mut Embedded,
+) -> Result<(), ClipperError> {
+    let stat = &input.stats[index][color];
+    let count = input.layers.len();
+    output.base[color][index].extend(patch.iter().cloned());
+    let mut slices = input.layers[index].input.clone();
+    let mut offset = 0.0_f32;
+    let target_count = if TOP {
+        index.saturating_sub(index.saturating_sub(stat.top) + 1)
+    } else {
+        (index + stat.bottom).min(count).saturating_sub(index + 1)
+    };
+    for step in 0..target_count {
+        let target = if TOP {
+            index - 1 - step
+        } else {
+            index + 1 + step
+        };
+        offset -= stat.spacing + stat.width;
+        slices = intersection_ex(&slices, &input.layers[target].input)?;
+        let last = opening_ex(
+            &intersection_ex(
+                patch,
+                &offset_expolygons(&slices, offset, JoinType::Miter, 3.0)?,
+            )?,
+            stat.small,
+            JoinType::Miter,
+            3.0,
+        )?;
+        if last.is_empty() {
+            break;
+        }
+        output.shell[color][target].extend(last);
+    }
+    Ok(())
+}
+fn embed<const TOP: bool>(
+    input: EmbedInput<'_>,
+    output: &mut Embedded,
+) -> Result<(), ClipperError> {
+    let count = input.layers.len();
+    for index in 0..count {
+        for (color, raw) in input
+            .raw
+            .iter()
+            .enumerate()
+            .filter(|(_, raw)| !raw.is_empty())
+        {
+            if raw[index].is_empty() {
+                continue;
+            }
+            let stat = &input.stats[index][color];
+            let patch = opening_ex(
+                &union_ex(&raw[index], FillRule::NonZero)?,
+                stat.small,
+                JoinType::Miter,
+                3.0,
+            )?;
+            if patch.is_empty() {
+                continue;
+            }
+            embed_patch::<TOP>(&patch, &input, (index, color), output)?;
+        }
+    }
+    Ok(())
+}
+fn merge(top: Embedded, bottom: Embedded) -> Result<Patches, ClipperError> {
+    let states = top.base.len();
+    let count = top.base[0].len();
+    let mut out = vec![vec![Vec::new(); count]; states];
+    for layer in 0..count {
+        let mut painted = Vec::new();
+        for (color, surfaces) in out.iter_mut().enumerate() {
+            surfaces[layer] =
+                union_expolygons(&bottom.base[color][layer], &top.base[color][layer])?;
+            painted.extend(surfaces[layer].iter().cloned());
+        }
+        painted = union_expolygons(&painted, &[])?;
+        for (color, surfaces) in out.iter_mut().enumerate() {
+            surfaces[layer].extend(difference_ex(
+                &union_expolygons(&top.shell[color][layer], &[])?,
+                &painted,
+            )?);
+            surfaces[layer].extend(difference_ex(
+                &union_expolygons(&bottom.shell[color][layer], &[])?,
+                &painted,
+            )?);
+            surfaces[layer] = union_expolygons(&surfaces[layer], &[])?;
+        }
+        let mut owned = Vec::new();
+        for surfaces in out.iter_mut().skip(1) {
+            surfaces[layer] = difference_ex(&surfaces[layer], &owned)?;
+            owned.extend(surfaces[layer].iter().cloned());
+        }
+        out[0][layer] = difference_ex(&out[0][layer], &owned)?;
+    }
+    Ok(out)
+}
+pub(super) fn segment(
+    input: &Input<'_>,
+    layers: &[Layer],
+    regions: &[PostRegion],
+    heights: &[f32],
+    nozzle: f64,
+) -> Result<Patches, SliceError> {
+    let max_top = regions
+        .iter()
+        .map(|r| r.options.top_shell_layers.0)
+        .max()
+        .unwrap();
+    let max_bottom = regions
+        .iter()
+        .map(|r| r.options.bottom_shell_layers.0)
+        .max()
+        .unwrap();
+    let mut raw = slabs::collect(input, (max_top > 0, max_bottom > 0))?;
+    let area = input.scale.scaled_delta(f64::from(0.1_f32)).powi(2);
+    for surfaces in [&mut raw.top, &mut raw.bottom] {
+        for color in surfaces.iter_mut().filter(|v| !v.is_empty()) {
+            for layer in color {
+                layer.retain(|p| p.area().abs() >= area);
+            }
+        }
+    }
+    for color in 0..input.states {
+        for index in 0..layers.len() {
+            if !raw.top[color].is_empty()
+                && !raw.top[color][index].is_empty()
+                && index + 1 < layers.len()
+            {
+                raw.top[color][index] = difference_polygons_paths(
+                    &raw.top[color][index],
+                    &paths(layers[index + 1].input.iter().cloned()),
+                )
+                .map_err(clip_error)?;
+            }
+            if !raw.bottom[color].is_empty() && !raw.bottom[color][index].is_empty() && index > 0 {
+                raw.bottom[color][index] = difference_polygons_paths(
+                    &raw.bottom[color][index],
+                    &paths(layers[index - 1].input.iter().cloned()),
+                )
+                .map_err(clip_error)?;
+            }
+        }
+    }
+    let stats = heights
+        .iter()
+        .map(|&h| {
+            (0..input.states)
+                .map(|color| stat(regions, color, h, nozzle, input.scale))
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let (mut top, mut bottom) = (
+        Embedded::new(input.states, layers.len()),
+        Embedded::new(input.states, layers.len()),
+    );
+    embed::<true>(
+        EmbedInput {
+            raw: &raw.top,
+            layers,
+            stats: &stats,
+        },
+        &mut top,
+    )
+    .map_err(clip_error)?;
+    embed::<false>(
+        EmbedInput {
+            raw: &raw.bottom,
+            layers,
+            stats: &stats,
+        },
+        &mut bottom,
+    )
+    .map_err(clip_error)?;
+    merge(top, bottom).map_err(clip_error)
+}

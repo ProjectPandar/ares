@@ -250,7 +250,7 @@ fn apply_case(case: SyntheticCase) -> PostCompensationPrintObject {
         std::slice::from_ref(&resolved),
         case.options.initial_width,
         &nozzles,
-        case.options.scale,
+        (case.options.scale, std::iter::repeat(false)),
     )
     .unwrap();
     assert_eq!(output.len(), 1);

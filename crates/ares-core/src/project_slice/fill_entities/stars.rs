@@ -4,6 +4,7 @@
 //!
 //! Count1 keeps `fill_surface_by_multilines`; count>1 uses mode2
 //! `fill_surface_trapezoidal` (`FillRectilinear.cpp:3487-3505`).
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -19,13 +20,12 @@ pub(super) struct LayerGeometry {
     pub(super) bounds: Option<crate::geometry::BoundingBox>,
 }
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
     geometry: LayerGeometry,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
     let sweeps =
         crate::fill::multiline::stars_sweeps(fill.params.spacing, fill.params.multiline, density);
@@ -61,6 +61,17 @@ pub(super) fn append(
         };
         polylines.extend(lines.map_err(stars_error)?);
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
+    geometry: LayerGeometry,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, scale, object_reference, geometry)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -70,8 +81,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

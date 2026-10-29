@@ -9,6 +9,7 @@ pub(super) struct Emission<'a> {
     pub(super) processed: &'a [overhang::ProcessedPoint],
     pub(super) original_speed: f64,
     pub(super) acceleration: u32,
+    pub(super) force_no_extrusion: bool,
     pub(super) properties: PathProperties<'a>,
     pub(super) state: &'a mut EmitState,
 }
@@ -21,6 +22,7 @@ pub(super) fn emit(command: Emission<'_>) {
         processed,
         original_speed,
         acceleration,
+        force_no_extrusion,
         properties,
         state,
     } = command;
@@ -44,6 +46,7 @@ pub(super) fn emit(command: Emission<'_>) {
             .sum::<f64>();
         (slope, total_length)
     });
+    let mut previous_z = quantize(processed[0].z);
     let mut slope_path_length = 0.0;
     for index in 1..points.len() {
         let end = arc::Point {
@@ -59,8 +62,9 @@ pub(super) fn emit(command: Emission<'_>) {
         );
         let end_q = (quantize(end.x), quantize(end.y));
         let length = ((end_q.0 - previous.0) * (end_q.0 - previous.0)
-            + (end_q.1 - previous.1) * (end_q.1 - previous.1))
-            .sqrt();
+            + (end_q.1 - previous.1) * (end_q.1 - previous.1)
+            + (quantize(processed[index].z) - previous_z).powi(2))
+        .sqrt();
         if length < SOURCE_EPSILON_MM {
             continue;
         }
@@ -84,7 +88,15 @@ pub(super) fn emit(command: Emission<'_>) {
             state.current_feedrate = original_feedrate;
             last_feedrate = original_feedrate;
         }
-        if let Some((slope, total_length)) = slope {
+        if properties.contour.is_some() {
+            super::contour::segment(
+                output,
+                crate::Point3d::new(end.x, end.y, processed[index].z),
+                length,
+                properties,
+                state,
+            );
+        } else if let Some((slope, total_length)) = slope {
             slope_path_length += length;
             let ratio = slope_path_length / total_length;
             let z_ratio = slope.z_begin + (slope.z_end - slope.z_begin) * ratio;
@@ -95,12 +107,10 @@ pub(super) fn emit(command: Emission<'_>) {
             // the processed delta-60 speed loop; the writer is shared.
             let delta = extrusion::for_length(
                 length,
-                properties.mm3_per_mm,
+                extrusion::effective_flow(properties, &state.options, state.on_first_layer),
                 state.options.filament_flow_ratio,
-                state.options.print_flow_ratio,
                 state.options.filament_area,
-            ) * slope.flow_ratio
-                * extrusion::small_area_multiplier(state, properties.feature, length)
+            ) * extrusion::small_area_multiplier(state, properties.feature, length)
                 * e_ratio;
             extrusion::extrude_to_xyz(
                 output,
@@ -112,10 +122,13 @@ pub(super) fn emit(command: Emission<'_>) {
                 },
                 state,
             );
+        } else if force_no_extrusion {
+            extrusion::force_no_extrusion_segment(output, end, state);
         } else {
             extrusion::linear_segment(output, end, length, properties, state);
         }
         previous = end_q;
+        previous_z = quantize(processed[index].z);
     }
     state.extrusion_feedrate = last_feedrate;
     // The PATH points are local mm (raw scaled points, like upstream

@@ -7,5 +7,10 @@ pub(super) const PRE_MIDDLE_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("cooling_tube_length", Float, "5",),
     definition!("cooling_tube_retraction", Float, "91.5",),
     definition!("counterbore_hole_bridging", Enum, "none",),
-    definition!("curr_bed_type", Enum, "Cool Plate",),
+    definition!(
+        "curr_bed_type",
+        Enum,
+        "Cool Plate",
+        super::BED_TYPE_TYPE_KEYS,
+    ),
 ];

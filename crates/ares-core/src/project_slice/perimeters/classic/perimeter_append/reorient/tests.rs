@@ -29,7 +29,7 @@ fn record(layer_id: usize, raft_layers: i32, detect: bool) -> ClassicTraversalRe
         layer_id,
         layer_height: 0.2,
         slice_z: layer_id as f64 * 0.2 + 0.1,
-        fuzzy_skin: crate::perimeters::FuzzySkinConfig::disabled(),
+        fuzzy_skin: crate::project_slice::perimeters::arachne::fuzzy::EMPTY.clone(),
         overhang_flow: Flow {
             width: 0.4,
             height: 0.2,
@@ -93,8 +93,10 @@ fn seed(is_contour: bool) -> TraversalSeed {
 
 fn loop_entity(role: ExtrusionLoopRole, path_role: ExtrusionRole, x: i64) -> ExtrusionEntity {
     ExtrusionEntity::Loop(OrderedExtrusionLoop {
+        unsupported_distance: None,
         extrusion_loop: ExtrusionLoop {
             paths: vec![ExtrusionPath {
+                z_contoured: false,
                 polyline: Polyline3 {
                     points: vec![
                         Point3 { x, y: 0, z: 0 },

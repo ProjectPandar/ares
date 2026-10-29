@@ -10,6 +10,8 @@ use crate::geometry::{
 
 #[derive(Clone, Copy)]
 pub(crate) struct LineFillParams {
+    /// Regional runtime flag from Fill.cpp:1235-1242 / FillBase.cpp:311-313.
+    pub(crate) dont_alternate_fill_direction: bool,
     /// Line spacing in mm (unscaled).
     pub(crate) spacing: f64,
     pub(crate) overlap: f64,
@@ -97,12 +99,13 @@ fn fill_surface_single(
     params: LineFillParams,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    // `Fill::_infill_direction` (`FillBase.cpp:275-320`): `out_angle =
+    // `Fill::_infill_direction` (`FillBase.cpp:275-323`): `out_angle =
     // bridge_angle.unwrap_or(angle)`, `+ _layer_angle` alternation when
-    // `!fixed_angle`, then `+ pi/2`.
+    // `!fixed_angle && !dont_alternate_fill_direction`, then `+ pi/2`.
     let mut angle = params.bridge_angle.unwrap_or(params.angle);
     if params.bridge_angle.is_none()
         && !params.fixed_angle
+        && !params.dont_alternate_fill_direction
         && (params.layer_index / usize::from(params.thickness_layers)) & 1 == 1
     {
         angle += std::f32::consts::FRAC_PI_2;

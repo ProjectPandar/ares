@@ -190,7 +190,7 @@ fn record(layer_id: usize) -> ClassicTraversalRecord {
         layer_id,
         layer_height: 0.2,
         slice_z: layer_id as f64 * 0.2 + 0.1,
-        fuzzy_skin: crate::perimeters::FuzzySkinConfig::disabled(),
+        fuzzy_skin: crate::project_slice::perimeters::arachne::fuzzy::EMPTY.clone(),
         overhang_flow: flow(),
         ext_perimeter_flow: flow(),
         scale: crate::geometry::CoordinateScale::Normal,
@@ -234,6 +234,7 @@ fn collection() -> ExtrusionEntityCollection {
 
 fn thin_path(x0: i64, x1: i64) -> ExtrusionEntity {
     ExtrusionEntity::Path(ExtrusionPath {
+        z_contoured: false,
         polyline: Polyline3 {
             points: vec![Point3 { x: x0, y: 0, z: 0 }, Point3 { x: x1, y: 0, z: 0 }],
             fitting: Vec::new(),
@@ -248,8 +249,10 @@ fn thin_path(x0: i64, x1: i64) -> ExtrusionEntity {
 
 fn entity(x: i64, inset_idx: i32) -> OrderedExtrusionLoop {
     OrderedExtrusionLoop {
+        unsupported_distance: None,
         extrusion_loop: ExtrusionLoop {
             paths: vec![ExtrusionPath {
+                z_contoured: false,
                 polyline: Polyline3 {
                     points: vec![
                         Point3 { x, y: 0, z: 0 },

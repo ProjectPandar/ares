@@ -6,6 +6,10 @@ import { checkFilamentView } from "./filamentView";
 import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
 import { checkActualSpeedProfile } from "./actualSpeedProfile";
 import { oracleMoves, type Move } from "./oracleMoves";
+import { checkRoleTimes } from "./roleTimes";
+import { checkSegmentColors } from "./segmentColors";
+import { checkSegmentGeometry } from "./segmentGeometry";
+import { checkSegmentSizes } from "./segmentSizes";
 
 /** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current and drawn. */
 export async function canvasDigest(page: Page) {
@@ -139,7 +143,7 @@ async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top:
   const middle = Math.floor(stops.length / 2);
   await slider.fill(String(middle));
   await expectMarkedLine(page, gcode, stops[middle]);
-  await expect.poll(() => canvasDigest(page), { message: "a middle stop must hide later moves" }).not.toBe(full);
+  expect(await canvasDigest(page), "a middle stop must hide later moves").not.toBe(full);
   await page.screenshot({ path: `${artifacts}preview-moves-middle.png` });
   await slider.fill("0");
   await expectMarkedLine(page, gcode, stops[0]);
@@ -148,8 +152,8 @@ async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top:
   // The marker latches once the thumb leaves the end and stays (`GCodeViewer.cpp:1594-1596`): back at the
   // end it is drawn, which changes the view only if it was not drawn at the start.
   await expect(page.getByTestId("tool-position")).toHaveCount(1);
-  if (latched) await expect.poll(() => canvasDigest(page)).toBe(full);
-  else await expect.poll(() => canvasDigest(page), { message: "the latched tool marker draws at the end" }).not.toBe(full);
+  if (latched) expect(await canvasDigest(page)).toBe(full);
+  else expect(await canvasDigest(page), "the latched tool marker draws at the end").not.toBe(full);
   return { stops: stops.length, first: stops[0], middle: stops[middle], last: stops.at(-1) };
 }
 
@@ -260,16 +264,17 @@ async function checkOptions(page: Page, moves: Move[], roles: number, artifacts:
   const seams = legend.locator("[data-option=Seams]");
   await seams.click();
   await expect(seams).toHaveAttribute("aria-pressed", "false");
-  await expect.poll(() => canvasDigest(page), { message: "hiding seams must change the view" }).not.toBe(shown);
   const hidden = await canvasDigest(page);
+  expect(hidden, "hiding seams must change the view").not.toBe(shown);
   const retract = legend.locator("[data-option=Retractions]");
   await retract.click();
   await expect(retract).toHaveAttribute("aria-pressed", "true");
-  await expect.poll(() => canvasDigest(page), { message: "showing retractions must change the view" }).not.toBe(hidden);
+  expect(await canvasDigest(page), "showing retractions must change the view").not.toBe(hidden);
   await page.screenshot({ path: `${artifacts}preview-retractions.png` });
   await retract.click();
   await seams.click();
-  await expect.poll(() => canvasDigest(page)).toBe(shown);
+  await expect(seams).toHaveAttribute("aria-pressed", "true");
+  expect(await canvasDigest(page)).toBe(shown);
   return { counts: Object.fromEntries(rows.map(({ option, type }) => [option, counts.get(type)])), markers };
 }
 
@@ -278,7 +283,7 @@ async function checkOptions(page: Page, moves: Move[], roles: number, artifacts:
  * with the layer slider and legend, checked against upstream GCodeProcessor
  * moves of the same G-code.
  */
-export async function checkToolpathPreview(page: Page, oracle: string, gcodePath: string, artifacts: string, errors: string[]) {
+export async function checkToolpathPreview(page: Page, oracle: string, gcodePath: string, artifacts: string, errors: string[], speedTravelEnds: boolean) {
   const moves = oracleMoves(oracle, gcodePath, artifacts);
   const layers = moves.at(-1)!.layer + 1;
   const extrudeRoles = new Set(moves.filter((move) => move.type === EXTRUDE).map((move) => move.role));
@@ -292,6 +297,10 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
     await expect(legend).toContainText(label);
   }
   const options = await checkOptions(page, moves, extrudeRoles.size, artifacts);
+  const roleTimes = await checkRoleTimes(page, artifacts);
+  const segmentSizes = await checkSegmentSizes(page, artifacts);
+  const segmentGeometry = await checkSegmentGeometry(page, artifacts);
+  const segmentColors = await checkSegmentColors(page, artifacts, speedTravelEnds);
   const top = page.getByRole("slider", { name: "Top layer" });
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
   await expect(page.getByTestId("layer-slider")).toContainText(layerZ(moves, layers - 1).toFixed(2));
@@ -304,7 +313,7 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await expect(top).toHaveAttribute("aria-valuenow", "1");
   await expect(page.getByTestId("layer-slider")).toContainText(layerZ(moves, 0).toFixed(2));
   await expectCurrentLine(page, gcode, moves, 0);
-  await expect.poll(() => canvasDigest(page), { message: "first layer only must differ from all layers" }).not.toBe(full);
+  expect(await canvasDigest(page), "first layer only must differ from all layers").not.toBe(full);
   await expectNoToolPosition(page);
   // Fresh load: the marker is not latched yet (`GCodeViewer.cpp:1388`).
   const movesSlider = { 1: await checkMovesSlider(page, gcode, moves, 0, artifacts, false) };
@@ -321,24 +330,26 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
   await page.keyboard.press("End");
   await expect(top).toHaveAttribute("aria-valuenow", String(layers));
   // GCodeViewer::render (`GCodeViewer.cpp:1594-1601`): the marker stays shown once the moves thumb left the end.
-  await expect.poll(() => canvasDigest(page), { message: "the latched tool marker draws at the last move" }).not.toBe(full);
+  // The top layer commit sets `aria-busy` until the latched-marker frame is drawn, which `canvasDigest` waits on.
   const marked = await canvasDigest(page);
+  expect(marked, "the latched tool marker draws at the last move").not.toBe(full);
   Object.assign(movesSlider, { [layers]: await checkMovesSlider(page, gcode, moves, layers - 1, artifacts, true) });
 
   const outerWall = legend.getByRole("button", { name: "Outer wall" });
   await outerWall.click();
   await expect(outerWall).toHaveAttribute("aria-pressed", "false");
-  await expect.poll(() => canvasDigest(page), { message: "hiding outer walls must change the view" }).not.toBe(full);
+  expect(await canvasDigest(page), "hiding outer walls must change the view").not.toBe(full);
   await page.screenshot({ path: `${artifacts}preview-no-outer-wall.png` });
   await outerWall.click();
-  await expect.poll(() => canvasDigest(page)).toBe(marked);
+  await expect(outerWall).toHaveAttribute("aria-pressed", "true");
+  expect(await canvasDigest(page)).toBe(marked);
   const colorRanges = await checkColorRanges(page, moves, artifacts);
   const filamentView = await checkFilamentView(page, moves, gcode.join("\n"), artifacts);
 
   writeFileSync(
     `${artifacts}toolpaths.json`,
     `${JSON.stringify({
-      moves: moves.length, layers, movesSlider, toolPosition, actualSpeedProfile, roles: [...extrudeRoles].sort((a, b) => a - b), options, colorRanges, filamentView,
+      moves: moves.length, layers, movesSlider, toolPosition, actualSpeedProfile, roles: [...extrudeRoles].sort((a, b) => a - b), roleTimes, segmentSizes, segmentGeometry, segmentColors, options, colorRanges, filamentView,
       layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
       currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
     }, null, 2)}\n`,

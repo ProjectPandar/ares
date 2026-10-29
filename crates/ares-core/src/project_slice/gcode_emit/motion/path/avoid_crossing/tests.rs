@@ -2,9 +2,10 @@ mod boundary_parity;
 mod empty_boundary;
 mod integer_nudge;
 
-use super::{Request, rectangle_route};
+use super::Request;
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
+    options::FloatOrPercent,
     project_slice::{
         gcode_emit::motion::{
             LayerGeometry, arc::Point as MotionPoint, state::AvoidCrossingGeometry,
@@ -39,86 +40,6 @@ fn geometry() -> LayerGeometry<'static> {
             chunk_perimeter_spacing: 0.0,
         },
     }
-}
-
-/// The rectangle shell keeps the routed-corner behavior for crossing travels
-/// (`after_skirt` projection and excessive-detour clamps) that the
-/// printers passing today depend on.
-#[test]
-fn rectangle_shell_routes_crossing_travels_along_inset_boundary() {
-    let geometry = geometry();
-    let inset = 0.610_62;
-    let offset = (110.0, 110.0);
-
-    assert_eq!(
-        rectangle_route(Request {
-            start: MotionPoint {
-                x: 105.674,
-                y: 117.189,
-            },
-            end: MotionPoint {
-                x: 114.325,
-                y: 114.325,
-            },
-            geometry,
-            offset,
-            inset,
-            after_skirt: true,
-            use_external: false,
-        }),
-        [MotionPoint {
-            x: 114.389_38,
-            y: 114.325,
-        }]
-    );
-    assert_eq!(
-        rectangle_route(Request {
-            start: MotionPoint {
-                x: 113.775,
-                y: 114.739,
-            },
-            end: MotionPoint {
-                x: 112.604,
-                y: 113.918,
-            },
-            geometry,
-            offset,
-            inset,
-            after_skirt: false,
-            use_external: false,
-        }),
-        [
-            MotionPoint {
-                x: 113.775,
-                y: 114.389_38,
-            },
-            MotionPoint {
-                x: 112.604,
-                y: 114.389_38,
-            },
-        ]
-    );
-    assert_eq!(
-        rectangle_route(Request {
-            start: MotionPoint {
-                x: 121.29,
-                y: 122.254,
-            },
-            end: MotionPoint {
-                x: 120.187,
-                y: 121.005,
-            },
-            geometry,
-            offset: (117.5, 117.5),
-            inset,
-            after_skirt: false,
-            use_external: false,
-        }),
-        [MotionPoint {
-            x: 121.29,
-            y: 121.889_38,
-        }]
-    );
 }
 
 /// A single square slice builds a boundary whose contour keeps the layer's

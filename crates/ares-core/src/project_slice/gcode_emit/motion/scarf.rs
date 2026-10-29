@@ -1,5 +1,6 @@
 //! `GCode.cpp::extrude_loop` / `ExtrusionEntity.cpp::ExtrusionLoopSloped` scarf paths.
 
+mod eligibility;
 mod emit;
 #[cfg(test)]
 mod tests;
@@ -36,7 +37,7 @@ pub(super) struct Loop {
 
 pub(super) fn build(
     original: &[ExtrusionPath],
-    role: ExtrusionLoopRole,
+    (role, unsupported_distance): (ExtrusionLoopRole, Option<f32>),
     geometry: LayerGeometry<'_>,
     options: &MotionOptions,
     layer_index: usize,
@@ -53,7 +54,16 @@ pub(super) fn build(
             ExtrusionRole::ExternalPerimeter | ExtrusionRole::Perimeter
         )
         || (first.role == ExtrusionRole::Perimeter && !options.scarf.inner_walls)
-        || options.scarf.conditional
+    {
+        return None;
+    }
+    if options.scarf.conditional
+        && !eligibility::permits(
+            original,
+            unsupported_distance,
+            options,
+            geometry.scale.factor(),
+        )
     {
         return None;
     }
@@ -90,22 +100,25 @@ pub(super) fn build(
     let mut starts = Vec::new();
     let mut flats = Vec::new();
     let mut ends = Vec::new();
-    let mut remaining = slope_length / scale;
-    let total_slope = remaining;
+    // `ExtrusionEntity.cpp:480-501`: keep remaining/path lengths in mm;
+    // convert only the split distance to scaled coordinates.
+    let mut remaining = slope_length;
     let mut ratio = start_ratio;
     let mut index = 0;
 
     while index < original.len() && remaining > 0.0 {
         let source = &original[index];
-        let length = path_length(&source.polyline.points);
-        let (slope_path, flat_path, consumed) = if length > remaining {
-            let (slope, flat) = split_path(source, remaining);
-            (slope, Some(flat), remaining)
+        let length = path_length(&source.polyline.points) * scale;
+        let (slope_path, flat_path, end_ratio) = if length > remaining {
+            let (slope, flat) = split_path(source, remaining / scale);
+            remaining = 0.0;
+            (slope, Some(flat), 1.0)
         } else {
-            (source.clone(), None, length)
+            remaining -= length;
+            let factor = remaining / slope_length;
+            let end_ratio = (1.0 - factor) * 1.0 + factor * start_ratio;
+            (source.clone(), None, end_ratio)
         };
-        remaining -= consumed;
-        let end_ratio = 1.0_f64 + (start_ratio - 1.0) * (remaining / total_slope);
         add_slope(
             slope_path,
             ratio,
@@ -132,7 +145,10 @@ pub(super) fn build(
     // clip_dist is only effective while that distance is positive — at
     // `seam_gap = 0` upstream emits the full slope head unclipped.
     if seam_gap * 2.0 > 0.0 {
-        let front_clip = if first.role == ExtrusionRole::Perimeter {
+        let front_clip = if flats
+            .first()
+            .is_some_and(|path| path.role == ExtrusionRole::Perimeter)
+        {
             starts
                 .iter()
                 .map(|path| path_length(&path.path.polyline.points))
@@ -262,6 +278,7 @@ fn split_path(path: &ExtrusionPath, distance: f64) -> (ExtrusionPath, ExtrusionP
 
 fn copy_with_points(path: &ExtrusionPath, points: Vec<Point3>) -> ExtrusionPath {
     ExtrusionPath {
+        z_contoured: path.z_contoured,
         polyline: Polyline3 {
             points,
             fitting: Vec::new(),
@@ -329,23 +346,32 @@ fn clip_front_points(points: &mut Vec<Point3>, distance: f64) {
     points.reverse();
 }
 
+// `Polyline.cpp:683-702`: additive displacement before the coord_t cast.
 fn clip_end_points(points: &mut Vec<Point3>, mut distance: f64) {
-    while points.len() > 1 {
-        let last = points[points.len() - 1];
-        let previous = points[points.len() - 2];
-        let length = point_distance(previous, last);
-        if length > distance {
-            let ratio = distance / length;
-            *points.last_mut().unwrap() = lerp(last, previous, ratio);
-            return;
-        }
+    while distance > 0.0 {
+        let last = points.last().unwrap();
+        let last = [last.x as f64, last.y as f64, last.z as f64];
         points.pop();
-        distance -= length;
-        if distance <= 0.0 {
+        let Some(previous) = points.last() else {
             return;
+        };
+        let v = [
+            previous.x as f64 - last[0],
+            previous.y as f64 - last[1],
+            previous.z as f64 - last[2],
+        ];
+        let lsqr = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+        if lsqr > distance * distance {
+            let ratio = distance / lsqr.sqrt();
+            points.push(Point3 {
+                x: (last[0] + v[0] * ratio) as i64,
+                y: (last[1] + v[1] * ratio) as i64,
+                z: (last[2] + v[2] * ratio) as i64,
+            });
+            break;
         }
+        distance -= lsqr.sqrt();
     }
-    points.clear();
 }
 
 fn path_length(points: &[Point3]) -> f64 {

@@ -4,25 +4,28 @@ use crate::{OrcaInt, SliceError};
 
 use super::{
     colors,
-    graph::{LoadedModel, ModelGraph},
-    mesh_prepare,
+    graph::ModelGraph,
     metadata::{self, MetadataIndex},
-    volume_metadata,
 };
 use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 use crate::project::{
     PackagePath,
     domain::{ProjectInstance, ProjectModel, ProjectObject, ProjectVolume},
-    model_settings::{ModelSettings, ObjectSettings, PartSettings},
-    transform::Transform3d,
+    model_settings::{ModelSettings, ObjectSettings},
 };
+
+mod component_graph;
+mod volumes;
+use component_graph::{validate_bare_metadata_identity, validate_component_cycles};
+use volumes::collect_volumes;
 
 #[cfg(test)]
 mod tests;
 
 const EXPANDED_MODEL_LIMIT: usize = 1_000_000;
 type ObjectIdentity = (PackagePath, u32);
-type Pending = (PackagePath, u32, Transform3d);
+#[cfg(test)]
+type Pending = (PackagePath, u32, crate::project::transform::Transform3d);
 
 #[derive(Default)]
 struct ExpandedModelBudget {
@@ -55,10 +58,10 @@ fn expanded_model_limit_error() -> SliceError {
     )
 }
 
-fn enqueue_occurrence(
-    pending: &mut VecDeque<Pending>,
+fn enqueue_occurrence<T>(
+    pending: &mut VecDeque<T>,
     budget: &mut ExpandedModelBudget,
-    occurrence: Pending,
+    occurrence: T,
 ) -> Result<(), SliceError> {
     budget.claim(1)?;
     pending.push_back(occurrence);
@@ -232,170 +235,6 @@ fn object_metadata(
         ObjectOptionOverrides::default(),
         region_overrides,
     )
-}
-
-fn validate_bare_metadata_identity(
-    graph: &ModelGraph,
-    root: &LoadedModel,
-) -> Result<Vec<ObjectIdentity>, SliceError> {
-    let mut paths = BTreeMap::<u32, PackagePath>::new();
-    let mut root_set = BTreeSet::new();
-    let mut roots = Vec::new();
-    for item in &root.document.build.items {
-        let target_path = graph.component_target(root, item.path.as_deref())?;
-        graph.object(&target_path, item.object_id)?;
-
-        let identity = (target_path.clone(), item.object_id);
-        if root_set.insert(identity.clone()) {
-            roots.push(identity);
-        }
-
-        match paths.entry(item.object_id) {
-            std::collections::btree_map::Entry::Vacant(entry) => {
-                entry.insert(target_path);
-            }
-            std::collections::btree_map::Entry::Occupied(entry) if entry.get() != &target_path => {
-                return Err(invalid(format!(
-                    "ambiguous object ID {} maps to both {} and {} at the bare model-settings/plate/assemble metadata boundary",
-                    item.object_id,
-                    entry.get().as_str(),
-                    target_path.as_str()
-                )));
-            }
-            std::collections::btree_map::Entry::Occupied(_) => {}
-        }
-    }
-    Ok(roots)
-}
-
-#[derive(Clone, Copy, Eq, PartialEq)]
-enum VisitColor {
-    Gray,
-    Black,
-}
-
-fn next_component(
-    graph: &ModelGraph,
-    frame: &mut (PackagePath, u32, usize),
-) -> Result<Option<ObjectIdentity>, SliceError> {
-    let (path, object_id, component_index) = frame;
-    let (model, object) = graph.object(path, *object_id)?;
-    let Some(component) = object
-        .components
-        .as_ref()
-        .and_then(|components| components.components.get(*component_index))
-    else {
-        return Ok(None);
-    };
-    *component_index += 1;
-    Ok(Some((
-        graph.component_target(model, component.path.as_deref())?,
-        component.object_id,
-    )))
-}
-
-fn validate_component_cycles(
-    graph: &ModelGraph,
-    roots: &[ObjectIdentity],
-) -> Result<(), SliceError> {
-    let mut colors = BTreeMap::<ObjectIdentity, VisitColor>::new();
-    for root in roots {
-        if colors.contains_key(root) {
-            continue;
-        }
-        colors.insert(root.clone(), VisitColor::Gray);
-        let mut stack = vec![(root.0.clone(), root.1, 0_usize)];
-
-        while !stack.is_empty() {
-            let child = next_component(graph, stack.last_mut().unwrap())?;
-
-            let Some(child) = child else {
-                let (path, object_id, _) = stack.pop().unwrap();
-                colors.insert((path, object_id), VisitColor::Black);
-                continue;
-            };
-            match colors.get(&child).copied() {
-                Some(VisitColor::Gray) => {
-                    return Err(invalid("component graph contains a cycle"));
-                }
-                Some(VisitColor::Black) => {}
-                None => {
-                    colors.insert(child.clone(), VisitColor::Gray);
-                    stack.push((child.0, child.1, 0));
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-fn collect_volumes(
-    graph: &ModelGraph,
-    root: &ObjectIdentity,
-    parts: &[PartSettings],
-    object_name: &str,
-    budget: &mut ExpandedModelBudget,
-) -> Result<Vec<ProjectVolume>, SliceError> {
-    let mut pending = VecDeque::<Pending>::new();
-    enqueue_occurrence(
-        &mut pending,
-        budget,
-        (root.0.clone(), root.1, Transform3d::IDENTITY),
-    )?;
-    let mut output = Vec::new();
-    let mut unnamed_count = 0_usize;
-
-    while let Some((path, object_id, accumulated)) = pending.pop_front() {
-        let (model, object) = graph.object(&path, object_id)?;
-        if let Some(mesh) = &object.mesh {
-            if mesh.vertices.vertices.is_empty() || mesh.triangles.triangles.is_empty() {
-                continue;
-            }
-            budget.claim_mesh(mesh.vertices.vertices.len(), mesh.triangles.triangles.len())?;
-            let mut selected = volume_metadata::select(parts, output.len(), object.id)?;
-            selected.name = volume_name(selected.name, object_name, &mut unnamed_count);
-            let prepared = mesh_prepare::prepare(mesh, model.document.unit, accumulated);
-            let mut volume = ProjectVolume::new(
-                path.as_str().to_owned(),
-                object.id,
-                prepared.mesh,
-                prepared.transform,
-                (
-                    selected.name,
-                    selected.volume_type,
-                    selected.region_overrides,
-                    selected.source_transform,
-                ),
-            );
-            volume.set_mesh_shared(selected.mesh_shared);
-            output.push(volume);
-        } else if let Some(components) = &object.components {
-            for component in &components.components {
-                let child_path = graph.component_target(model, component.path.as_deref())?;
-                enqueue_occurrence(
-                    &mut pending,
-                    budget,
-                    (
-                        child_path,
-                        component.object_id,
-                        accumulated.then(component.transform),
-                    ),
-                )?;
-            }
-        }
-    }
-    Ok(output)
-}
-
-fn volume_name(name: String, object_name: &str, unnamed_count: &mut usize) -> String {
-    if !name.is_empty() {
-        return name;
-    }
-    *unnamed_count += 1;
-    match *unnamed_count {
-        1 => object_name.to_owned(),
-        count => format!("{object_name}_{count}"),
-    }
 }
 
 fn invalid(reason: impl std::fmt::Display) -> SliceError {

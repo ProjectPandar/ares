@@ -82,18 +82,6 @@ fn task22a_capability_gate_order_is_project_key_major() {
 }
 
 #[test]
-fn zaa_requires_a_provably_inactive_axis_aligned_box() {
-    let source = source_object(Default::default(), Vec::new(), Vec::new());
-    assert_unsupported(
-        validate(
-            &[source],
-            &[resolved(0, object_options(), vec![region(true)])],
-        ),
-        "zaa_enabled",
-    );
-}
-
-#[test]
 fn task22o18_global_spiral_crosses_the_capability_boundary_after_earlier_gates() {
     assert_eq!(validate_capabilities(&[], &[], true), Ok(()));
 
@@ -119,13 +107,6 @@ fn task22o17_support_options_cross_the_early_capability_boundary() {
     );
 }
 
-fn assert_unsupported(result: Result<(), SliceError>, key: &str) {
-    assert_eq!(
-        result.unwrap_err(),
-        SliceError::UnsupportedProjectFeature(key.to_owned())
-    );
-}
-
 fn with_object(update: impl FnOnce(&mut ObjectOptions)) -> ObjectOptions {
     let mut options = object_options();
     update(&mut options);
@@ -134,12 +115,6 @@ fn with_object(update: impl FnOnce(&mut ObjectOptions)) -> ObjectOptions {
 
 fn object_options() -> ObjectOptions {
     ObjectOptions::from_base(&ProjectSettings::default().process.object)
-}
-
-fn region(zaa_enabled: bool) -> RegionOptions {
-    let mut region = RegionOptions::from_base(&ProjectSettings::default().process.region);
-    region.zaa_enabled = OrcaBool(zaa_enabled);
-    region
 }
 
 fn resolved(

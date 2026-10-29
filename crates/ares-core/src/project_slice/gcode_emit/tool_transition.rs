@@ -106,6 +106,30 @@ pub(super) fn tower(
     )
 }
 
+pub(super) fn type1_config(
+    config: &mut value::Config,
+    state: &motion::EmitState,
+    filament: usize,
+    context: timelapse::Context<'_>,
+    print_z: f32,
+) {
+    change::dynamic::insert(
+        config,
+        state,
+        state.extruder_selected.then(|| state.extruders.active_id()),
+        filament,
+        change::Context {
+            traversal: context.traversal,
+            metadata: context.metadata,
+            first_layer_bounds: context.first_layer_bounds,
+            layer_num: context.layer.index as i64,
+            print_z: f64::from(print_z),
+            max_z: context.layer.max_z,
+            temperature_override: None,
+        },
+    );
+}
+
 fn emit_inner(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
@@ -185,7 +209,7 @@ fn emit_inner(
     )?;
     temperature::post(output, state, context);
     super::pressure_advance::append(output, state, context.traversal, filament);
-    state.last_scaled_position = None;
+    state.last_position_defined = false;
     Ok(())
 }
 

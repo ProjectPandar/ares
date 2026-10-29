@@ -2,6 +2,7 @@
 //! (`FillTpmsFK.cpp:117`): Fischer–Koch S TPMS via marching-squares. Like
 //! `FillTpmsD`/`FillGyroid`, it reads the raw `this->angle` (no
 //! `_infill_direction`/`_layer_angle`).
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
@@ -12,12 +13,11 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
     layer_z: f64,
     scale: CoordinateScale,
-) -> Result<(), SliceError> {
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = TpmsFKFillParams {
         spacing: fill.params.spacing,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
@@ -39,6 +39,16 @@ pub(super) fn append(
             polylines.extend(fill_tpmsfk_surface(component, &params, scale).map_err(tpmsfk_error)?);
         }
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    layer_z: f64,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, layer_z, scale)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -48,8 +58,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

@@ -105,7 +105,7 @@ fn empty_selected_plate_control_nonempty_outside_volume_keeps_later_error() {
         .block_on(ares_core::slice_project_plate(
             input.as_slice(),
             GenerationMetadata::default(),
-            Some(1),
+            None,
             &ConfigOverrides::default(),
             SlicerContext::new(0),
         ));

@@ -12,22 +12,46 @@ use crate::{
 
 use super::{brim_geometry_error, scaled_f64};
 
+pub(super) fn plate_shift(traversal: &PreparedPostClassicTraversal, object_index: usize) -> Point {
+    let scale = traversal.scale;
+    let (x, y) = super::super::footprint::print_object_origin(traversal, object_index);
+    Point::new(
+        (x / scale.factor()).round() as i64,
+        (y / scale.factor()).round() as i64,
+    )
+}
+
 pub(super) fn clip(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     logical_filament: usize,
-    (area, inner): (Vec<ExPolygon>, Vec<ExPolygon>),
+    (area, no_brim_area, tower_exclusions): (Vec<ExPolygon>, Vec<ExPolygon>, &[ExPolygon]),
     resolution: f64,
 ) -> Result<Vec<ExPolygon>, SliceError> {
-    let scale = traversal.scale;
-    let (x, y) = super::super::footprint::print_object_origin(traversal, object_index);
-    let shift = Point::new(
-        (x / scale.factor()).round() as i64,
-        (y / scale.factor()).round() as i64,
-    );
+    let shift = plate_shift(traversal, object_index);
+    // The complete no-brim collection is already in plate coordinates.
     // Existing model-local storage ↔ global geometry, not a plate-origin transform.
     let area = translate(area, shift);
-    let mut forbidden = translate(inner, shift);
+    let clipped = clip_plate(
+        traversal,
+        logical_filament,
+        (area, no_brim_area),
+        tower_exclusions,
+        resolution,
+    )?;
+    Ok(translate(clipped, Point::new(-shift.x(), -shift.y())))
+}
+
+pub(super) fn clip_plate(
+    traversal: &PreparedPostClassicTraversal,
+    logical_filament: usize,
+    (area, mut forbidden): (Vec<ExPolygon>, Vec<ExPolygon>),
+    tower_exclusions: &[ExPolygon],
+    resolution: f64,
+) -> Result<Vec<ExPolygon>, SliceError> {
+    // Brim.cpp:651–659: the tower exclusions are already in the plate frame.
+    forbidden.extend_from_slice(tower_exclusions);
+    let scale = traversal.scale;
     let printer = &traversal.project.settings().printer.remaining;
     let bed = if printer.extruder_printable_area.0.is_empty() {
         // Same printable-area coordinates as PrintVolume::new; O6 owns their frame.
@@ -73,8 +97,7 @@ pub(super) fn clip(
     if let Some(first) = border.into_iter().next() {
         forbidden.push(first);
     }
-    let clipped = difference_ex(&area, &forbidden).map_err(brim_geometry_error)?;
-    Ok(translate(clipped, Point::new(-shift.x(), -shift.y())))
+    difference_ex(&area, &forbidden).map_err(brim_geometry_error)
 }
 
 fn polygon(
@@ -92,7 +115,7 @@ fn polygon(
         .map(Polygon::new)
 }
 
-fn translate(area: Vec<ExPolygon>, shift: Point) -> Vec<ExPolygon> {
+pub(super) fn translate(area: Vec<ExPolygon>, shift: Point) -> Vec<ExPolygon> {
     area.into_iter()
         .map(|area| {
             let (contour, holes) = area.into_parts();

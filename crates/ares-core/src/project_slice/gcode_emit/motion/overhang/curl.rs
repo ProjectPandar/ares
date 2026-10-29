@@ -44,6 +44,12 @@ struct ExternalLine {
     curled_height: f32,
 }
 
+#[derive(Clone, Copy)]
+struct AnnotatedPoint {
+    position: (f64, f64),
+    distance: f32,
+}
+
 #[derive(Default)]
 pub(crate) struct CurlTracker {
     layer: Option<usize>,
@@ -124,7 +130,8 @@ impl CurlTracker {
     }
 
     /// Collects one outer-wall path (`estimate_malformations` over an
-    /// `erExternalPerimeter`): per segment, the distance to the nearest
+    /// `erExternalPerimeter`): the entity points are first annotated
+    /// (`annotate`), then per segment the distance to the nearest
     /// previous-layer line signed through the lower layer's slices, the
     /// endpoint curvature, and the chained curl height.
     pub(in crate::project_slice::gcode_emit) fn collect(
@@ -140,15 +147,17 @@ impl CurlTracker {
         if points.len() < 2 {
             return;
         }
-        let curvature = curvatures(points);
+        let annotated = self.annotate(points, width);
+        let sequence: Vec<(f64, f64)> = annotated.iter().map(|point| point.position).collect();
+        let curvature = curvatures(&sequence);
         // `SupportSpotsGenerator.cpp:166-170`: `a = i > 0 ? annotated[i - 1]
         // : annotated[i]` — the i == 0 pair is DEGENERATE (a == b == the
         // first point) and still produces a line with the corner curvature
         // (the oracle's first curled line (p0, p0) with the π/4 corner
         // curvature); `windows(2)` alone would skip it.
-        for index in 0..points.len() {
+        for index in 0..sequence.len() {
             let previous = index.saturating_sub(1);
-            let (a, b) = (points[previous], points[index]);
+            let (a, b) = (sequence[previous], sequence[index]);
             // Upstream stores `ExtrusionLine.a/b` as `Vec2f` — both
             // endpoints and the midpoint are rounded to f32
             // (`SupportSpotsGenerator.cpp:170-174`).
@@ -192,6 +201,86 @@ impl CurlTracker {
         }
     }
 
+    /// `estimate_points_properties<true, true, false, false>`
+    /// (`ExtrusionProcessor.hpp:36-215`) at `boundary_offset = 0`:
+    /// unsigned previous-layer distances, intersection points where
+    /// consecutive distances straddle `EPSILON` (crossing the previous
+    /// layer's lines, `distance = 0`, `hpp:106-121`), then the
+    /// `bridge_distance` 16 mm segmentation pass (`hpp:189-215`); both
+    /// passes filter insertions closer than `0.25 · flow_width` to either
+    /// segment endpoint.
+    fn annotate(&self, points: &[(f64, f64)], width: f32) -> Vec<AnnotatedPoint> {
+        const EPSILON: f64 = 1e-4;
+        const MAX_LINE_LENGTH: f64 = 16.0;
+        let min_spacing = f64::from(width) * 0.25;
+        let mut annotated = Vec::with_capacity(points.len() * 2);
+        annotated.push(AnnotatedPoint {
+            position: points[0],
+            distance: self.nearest_previous(points[0]).0,
+        });
+        for &point in &points[1..] {
+            let distance = self.nearest_previous(point).0;
+            let back = *annotated.last().unwrap();
+            if (f64::from(back.distance) > EPSILON) != (f64::from(distance) > EPSILON) {
+                annotated.extend(
+                    self.boundary_crossings(back.position, point)
+                        .into_iter()
+                        .filter(|position| between(back.position, *position, point, min_spacing))
+                        .map(|position| AnnotatedPoint {
+                            position,
+                            distance: 0.0,
+                        }),
+                );
+            }
+            annotated.push(AnnotatedPoint {
+                position: point,
+                distance,
+            });
+        }
+        let mut segmented = Vec::with_capacity(annotated.len() * 2);
+        for index in 0..annotated.len() - 1 {
+            let (current, next) = (annotated[index], annotated[index + 1]);
+            segmented.push(current);
+            let length_squared = {
+                let (dx, dy) = (
+                    next.position.0 - current.position.0,
+                    next.position.1 - current.position.1,
+                );
+                dx * dx + dy * dy
+            };
+            let t = (MAX_LINE_LENGTH * MAX_LINE_LENGTH / length_squared).sqrt();
+            let new_point_count = (1.0 / t) as usize;
+            segmented.extend(
+                (1..=new_point_count)
+                    .map(|j| interpolate(current.position, next.position, f64::from(j as u32) * t))
+                    .filter(|position| {
+                        between(current.position, *position, next.position, min_spacing)
+                    })
+                    .map(|position| AnnotatedPoint {
+                        position,
+                        distance: self.nearest_previous(position).0,
+                    }),
+            );
+        }
+        segmented.push(*annotated.last().unwrap());
+        segmented
+    }
+
+    /// `intersections_with_line<true>` crossings of the `back → point`
+    /// segment against the previous layer's lines, widened to double
+    /// (`hpp:110-116`).
+    fn boundary_crossings(&self, back: (f64, f64), point: (f64, f64)) -> Vec<(f64, f64)> {
+        let line = [
+            [back.0 as f32, back.1 as f32],
+            [point.0 as f32, point.1 as f32],
+        ];
+        self.previous_tree
+            .intersections_sorted(line)
+            .into_iter()
+            .map(|(position, _)| (f64::from(position[0]), f64::from(position[1])))
+            .collect()
+    }
+
     /// Unsigned distance to the nearest previous-layer external line and
     /// that line's chained curl height
     /// (`prev_layer_lines.distance_from_lines_extra<false>`).
@@ -221,4 +310,25 @@ fn boundary_sign(
     } else {
         1.0
     }
+}
+
+/// `(a - b).norm() > min_spacing` — Eigen's `sqrt(squaredNorm)`, not
+/// `hypot`.
+fn spaced(a: (f64, f64), b: (f64, f64), min_spacing: f64) -> bool {
+    let (dx, dy) = (a.0 - b.0, a.1 - b.1);
+    (dx * dx + dy * dy).sqrt() > min_spacing
+}
+
+/// Both flanking distances of the inserted `mid` point exceed the
+/// minimum spacing (`hpp:118-120, 209-211`).
+fn between(start: (f64, f64), mid: (f64, f64), end: (f64, f64), min_spacing: f64) -> bool {
+    spaced(mid, start, min_spacing) && spaced(end, mid, min_spacing)
+}
+
+/// `curr · (1 − t) + next · t` at double precision (`hpp:198`).
+fn interpolate(current: (f64, f64), next: (f64, f64), t: f64) -> (f64, f64) {
+    (
+        current.0 * (1.0 - t) + next.0 * t,
+        current.1 * (1.0 - t) + next.1 * t,
+    )
 }

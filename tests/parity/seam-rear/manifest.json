@@ -1,0 +1,35 @@
+{
+  "geometry": "closed triangularprism10x10x0.8mm,6verts8triangles4layers",
+  "sha256": {
+    "control": "8cda6c553c73d4f55ab638781b1e42c1edc9291652b73ca66c1c529abc2ac6ba",
+    "positive": "d4bfafd0fff8e1f55df0310775f17f9af600c3e1863049e580c660838fd31afa"
+  },
+  "zip_entry_sha256": {
+    "control": {
+      "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+      "3D/3dmodel.model": "1ad8843e4f7b2ba8bfaa15016ae0bf48cf5f2bb8f42115edc8cc222f5d5c5320",
+      "3D/_rels/3dmodel.model.rels": "a76765105a9ee731f5fb01edf0014cec99cac5952c954c53712e72589864bedd",
+      "3D/Objects/overhang.stl_1.model": "d946cc88e6430073ccca5ef1adc9cad6d8abcf60fac2b9ced4e4d5096e9138b8",
+      "Metadata/project_settings.config": "dbc581c532fe66969364de1628083b351432aa10da965e665c05c0eb152c18db",
+      "Metadata/model_settings.config": "1200707ec1ee21f415f2c8e03f06165a38f63993b9ceabc00db00944c16df819",
+      "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+      "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+      "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+    },
+    "positive": {
+      "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+      "3D/3dmodel.model": "1ad8843e4f7b2ba8bfaa15016ae0bf48cf5f2bb8f42115edc8cc222f5d5c5320",
+      "3D/_rels/3dmodel.model.rels": "a76765105a9ee731f5fb01edf0014cec99cac5952c954c53712e72589864bedd",
+      "3D/Objects/overhang.stl_1.model": "d946cc88e6430073ccca5ef1adc9cad6d8abcf60fac2b9ced4e4d5096e9138b8",
+      "Metadata/project_settings.config": "0a2df96afd3cb49a866378a55ea06a97727aeaa6eb3b19a3eb243bdc845ba339",
+      "Metadata/model_settings.config": "1200707ec1ee21f415f2c8e03f06165a38f63993b9ceabc00db00944c16df819",
+      "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+      "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+      "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+    }
+  },
+  "discovery_base": "4351a644d6683555ae48e44ea7f898a66f75d585",
+  "red_implementation_base": "4dbba4fc09b4b84033797ab83f2941e5d8484b95",
+  "approved_spec": "3dbb48c0bc3a5e297d3b3e466347e6514bf7197d",
+  "only_delta": "Metadata/project_settings.config seam_position aligned -> back; all meshes/transforms/relationships/other settings identical"
+}

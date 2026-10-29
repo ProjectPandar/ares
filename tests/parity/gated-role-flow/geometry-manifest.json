@@ -1,0 +1,111 @@
+{
+  "template": "/tmp/ares-w1-object-ironing-remaining-discovery-8f6ce1660/inputs/rectilinear-control.3mf",
+  "template_sha256": "74f447fffe933f8d5540426e8fea625894c9c63ee5fbce679861e9fcb94a5cce",
+  "models": {
+    "box": {
+      "sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
+      "geometry": {
+        "vertices": 98,
+        "triangles": 192,
+        "closed_oriented_edge_pairs": 288,
+        "Euler": 2,
+        "signed_volume_mm3": 1599.9999999999973,
+        "bounds": [
+          [
+            -10,
+            10
+          ],
+          [
+            -10,
+            10
+          ],
+          [
+            0,
+            4
+          ]
+        ]
+      },
+      "member_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "7e94e5b26f4038c243a66df37abc3bb5c86e6ecbaec39c62f5b4a68f88b83a6b",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "a8191d6e9f8fcf768ead69d49c9ef9abebe6e0f2f3627cdc1f1d8d9c664fee31",
+        "Metadata/project_settings.config": "ac9c586cd3755fe1f579839c6a32c7cbdc5e91c52c11abfa0ba0cbfc3acd8c88",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      }
+    },
+    "gap": {
+      "sha256": "11f0236e5e047fba8eb2b4ab2a6e355d30cabd96a4cfc624b6072d1085700eab",
+      "geometry": {
+        "vertices": 50,
+        "triangles": 96,
+        "closed_oriented_edge_pairs": 144,
+        "Euler": 2,
+        "signed_volume_mm3": 104.00000000000006,
+        "bounds": [
+          [
+            -0.65,
+            0.65
+          ],
+          [
+            -10,
+            10
+          ],
+          [
+            0,
+            4
+          ]
+        ]
+      },
+      "member_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "7e94e5b26f4038c243a66df37abc3bb5c86e6ecbaec39c62f5b4a68f88b83a6b",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "9ac118a79f69b8282922f85897c6e18334596a347276502a35688823f5c361b2",
+        "Metadata/project_settings.config": "ac9c586cd3755fe1f579839c6a32c7cbdc5e91c52c11abfa0ba0cbfc3acd8c88",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      }
+    },
+    "T": {
+      "sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
+      "geometry": {
+        "vertices": 66,
+        "triangles": 128,
+        "closed_oriented_edge_pairs": 192,
+        "Euler": 2,
+        "signed_volume_mm3": 600.0000000000003,
+        "bounds": [
+          [
+            -15,
+            15
+          ],
+          [
+            -5,
+            5
+          ],
+          [
+            0,
+            4
+          ]
+        ]
+      },
+      "member_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "7e94e5b26f4038c243a66df37abc3bb5c86e6ecbaec39c62f5b4a68f88b83a6b",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "d52676568889489e8d6d305647f69620c3f89b5fdb500348316a6a3bfdda3dec",
+        "Metadata/project_settings.config": "ac9c586cd3755fe1f579839c6a32c7cbdc5e91c52c11abfa0ba0cbfc3acd8c88",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      }
+    }
+  }
+}

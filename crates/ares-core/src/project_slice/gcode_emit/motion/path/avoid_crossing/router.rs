@@ -50,7 +50,7 @@ pub(super) fn avoid_perimeters(
         // The inner-offset boundary may not touch a short travel; nudge the
         // endpoints toward the closest boundary lines and retry
         // (:560-584).
-        let radius = 1.5 * f64::from(boundary.scaled_spacing);
+        let radius = 1.5 * boundary.scaled_spacing;
         let start_lines = closest_lines_in_radius(boundary, start, radius);
         let end_lines = closest_lines_in_radius(boundary, end, radius);
         if !(start_lines.is_empty() && end_lines.is_empty()) {
@@ -80,7 +80,7 @@ pub(super) fn avoid_perimeters(
             }
         }
     }
-    let search_radius = f64::from(2.0 * boundary.scaled_spacing);
+    let search_radius = 2.0 * boundary.scaled_spacing;
     intersections = extend_for_closest_lines(boundary, intersections, start, end, search_radius);
 
     let mut result = vec![TravelPoint {

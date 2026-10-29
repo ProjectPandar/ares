@@ -13,6 +13,7 @@ pub(crate) mod checked_rotate;
 pub(crate) mod concentric_sparse;
 pub(crate) mod connect;
 pub(crate) mod cross_hatch;
+pub(crate) mod grid_trapezoidal;
 pub(crate) mod gyroid;
 pub(crate) mod gyroid_field;
 pub(crate) mod honeycomb;
@@ -31,7 +32,10 @@ pub(crate) mod plane_path;
     )
 )]
 pub(crate) mod rectilinear;
+pub(crate) mod rectilinear_multiline;
 pub(crate) mod stars_trapezoidal;
 pub(crate) mod three_d_honeycomb;
 pub(crate) mod tpms_d;
 pub(crate) mod tpms_fk;
+mod trapezoidal_tail;
+pub(crate) mod triangles_trapezoidal;

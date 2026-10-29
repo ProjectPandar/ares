@@ -19,6 +19,8 @@ mod tests;
 /// params the upstream `FillParams` provides.
 #[derive(Clone, Copy)]
 pub(crate) struct HoneycombFillParams {
+    /// Regional runtime flag from Fill.cpp:1235-1242 / FillBase.cpp:311-313.
+    pub(crate) dont_alternate_fill_direction: bool,
     /// Line spacing in mm (unscaled).
     pub(crate) spacing: f64,
     /// Infill density fraction (0..1) — upstream `params.density` is a percent
@@ -148,11 +150,13 @@ pub(crate) fn fill_honeycomb(
     let y_offset = (x_offset as f64 * 3.0_f64.sqrt() / 3.0) as i64;
     let hex_center = Point::new(hex_width / 2, hex_side);
 
-    // `Fill::_infill_direction` (`FillBase.cpp:275-320`): `out_angle =
-    // bridge_angle.unwrap_or(angle)`, `+ _layer_angle` when `!fixed_angle`,
+    // `Fill::_infill_direction` (`FillBase.cpp:275-323`): `out_angle =
+    // bridge_angle.unwrap_or(angle)`, `+ _layer_angle` when
+    // `!fixed_angle && !dont_alternate_fill_direction`,
     // then `+ pi/2`.
     let mut direction_f = params.bridge_angle.unwrap_or(params.angle);
-    if params.bridge_angle.is_none() && !params.fixed_angle {
+    if params.bridge_angle.is_none() && !params.fixed_angle && !params.dont_alternate_fill_direction
+    {
         // FillHoneycomb::_layer_angle overrides the base two-layer alternation.
         let layer = params.layer_index / usize::from(params.thickness_layers);
         direction_f += (std::f64::consts::PI / 3.0) as f32 * (layer % 3) as f32;

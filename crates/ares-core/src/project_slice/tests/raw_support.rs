@@ -11,8 +11,8 @@ use super::super::{
     },
 };
 use super::support::{
-    identity_resolved, object, object_with_instances, plan, project_volume, project_volume_at_x,
-    project_with_range, resolved_object, slot_limit, transform, unsupported,
+    identity_resolved, object, plan, project_volume, project_volume_at_x, project_with_range,
+    resolved_object, slot_limit, transform, unsupported,
 };
 
 pub(super) fn retained_facts(
@@ -105,12 +105,12 @@ pub(super) fn ordinal_gap_object() -> ProjectObject {
         "root.model",
         10,
         vec![
-            project_volume("root.model", 9, ModelPart, false, false),
+            project_volume("root.model", 9, ModelPart, false),
             project_volume_at_x("root.model", 8, SupportBlocker, 1_000.0),
-            project_volume("root.model", 7, ModelPart, true, false),
-            project_volume("root.model", 6, ParameterModifier, true, false),
+            project_volume("root.model", 7, ModelPart, true),
+            project_volume("root.model", 6, ParameterModifier, true),
             project_volume_at_x("root.model", 5, SupportEnforcer, 1_000.0),
-            project_volume("root.model", 4, NegativeVolume, true, false),
+            project_volume("root.model", 4, NegativeVolume, true),
         ],
         &[Transform3d::IDENTITY],
     )
@@ -125,7 +125,7 @@ pub(super) fn bfs_restart_request() -> (
         "first.model",
         10,
         [3, 1, 2]
-            .map(|id| project_volume("first.model", id, ProjectVolumeType::ModelPart, true, false))
+            .map(|id| project_volume("first.model", id, ProjectVolumeType::ModelPart, true))
             .into(),
         &[
             Transform3d::IDENTITY,
@@ -140,7 +140,6 @@ pub(super) fn bfs_restart_request() -> (
             99,
             ProjectVolumeType::NegativeVolume,
             true,
-            false,
         )],
         &[Transform3d::IDENTITY],
     );
@@ -148,42 +147,6 @@ pub(super) fn bfs_restart_request() -> (
         vec![first, second],
         vec![identity_resolved(0), identity_resolved(1)],
         vec![plan(0, 0, 1), plan(1, 0, 1)],
-    )
-}
-
-pub(super) fn unique_unprinted_shared_request() -> (
-    Vec<ProjectObject>,
-    Vec<ResolvedProjectObject>,
-    Vec<PlannedPrintObject>,
-) {
-    let printed = object(
-        "printed.model",
-        30,
-        vec![project_volume(
-            "printed-leaf.model",
-            80,
-            ProjectVolumeType::ModelPart,
-            true,
-            false,
-        )],
-        &[Transform3d::IDENTITY],
-    );
-    let unprinted_shared = object_with_instances(
-        "unprinted.model",
-        40,
-        vec![project_volume(
-            "unprinted-leaf.model",
-            81,
-            ProjectVolumeType::SupportEnforcer,
-            true,
-            true,
-        )],
-        &[(false, Transform3d::IDENTITY)],
-    );
-    (
-        vec![printed, unprinted_shared],
-        vec![identity_resolved(0)],
-        vec![plan(0, 0, 1)],
     )
 }
 
@@ -211,7 +174,6 @@ pub(super) fn ranged_later_request() -> (
             92,
             ProjectVolumeType::ModelPart,
             true,
-            false,
         )],
         &[Transform3d::IDENTITY],
     );
@@ -231,12 +193,12 @@ pub(super) fn exact_dense_object() -> ProjectObject {
     use ProjectVolumeType::{ModelPart, SupportBlocker, SupportEnforcer};
 
     let mut volumes = (100..110)
-        .map(|id| project_volume("exact.model", id, ModelPart, true, false))
+        .map(|id| project_volume("exact.model", id, ModelPart, true))
         .collect::<Vec<_>>();
     volumes.extend([
-        project_volume("exact.model", 110, ModelPart, false, false),
-        project_volume("exact.model", 111, SupportBlocker, true, false),
-        project_volume("exact.model", 112, SupportEnforcer, true, false),
+        project_volume("exact.model", 110, ModelPart, false),
+        project_volume("exact.model", 111, SupportBlocker, true),
+        project_volume("exact.model", 112, SupportEnforcer, true),
     ]);
     object(
         "exact.model",
@@ -265,7 +227,6 @@ pub(super) fn request_wide_dense_objects() -> Vec<ProjectObject> {
                             200 + (object_index * 20 + volume_index) as u32,
                             ProjectVolumeType::ModelPart,
                             true,
-                            false,
                         )
                     })
                     .collect(),
@@ -282,7 +243,7 @@ type PreflightScenario = (
     SliceError,
 );
 
-pub(super) fn preflight_order_scenarios() -> [PreflightScenario; 3] {
+pub(super) fn preflight_order_scenarios() -> [PreflightScenario; 2] {
     let distinct = transform("1 0 0 0 1 0 0 0 1 0 0 2");
 
     let mut range_later = object(
@@ -293,7 +254,6 @@ pub(super) fn preflight_order_scenarios() -> [PreflightScenario; 3] {
             250,
             ProjectVolumeType::ModelPart,
             true,
-            false,
         )],
         &[Transform3d::IDENTITY],
     );
@@ -312,31 +272,13 @@ pub(super) fn preflight_order_scenarios() -> [PreflightScenario; 3] {
         unsupported("layer_config_ranges"),
     );
 
-    let sharing_later = object(
-        "sharing-later.model",
-        6,
-        vec![project_volume(
-            "sharing-later.model",
-            650,
-            ProjectVolumeType::ModelPart,
-            true,
-            true,
-        )],
-        &[Transform3d::IDENTITY],
-    );
-    let sharing = (
-        vec![dense_object(5, false), sharing_later],
-        vec![identity_resolved(0), identity_resolved(1)],
-        vec![plan(0, 0, 100_000), plan(1, 0, 1)],
-        unsupported("shared_mesh_centering"),
-    );
     let dense = (
         vec![dense_object(7, true)],
         vec![identity_resolved(0)],
         vec![plan(0, 0, 100_000)],
         slot_limit(),
     );
-    [range, sharing, dense]
+    [range, dense]
 }
 
 fn dense_object(object_id: u32, large_coordinate: bool) -> ProjectObject {
@@ -348,7 +290,6 @@ fn dense_object(object_id: u32, large_coordinate: bool) -> ProjectObject {
                 object_id * 100 + id,
                 ProjectVolumeType::ModelPart,
                 true,
-                false,
             )
         })
         .collect::<Vec<_>>();

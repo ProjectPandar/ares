@@ -13,11 +13,11 @@ use crate::{
     },
 };
 
-pub(in crate::project_slice::perimeters::classic) struct Context<'a> {
-    pub(super) lower: &'a [Polygon],
-    pub(super) perimeter_count: i32,
-    pub(super) flow: Flow,
-    pub(super) scale: CoordinateScale,
+pub(in crate::project_slice::perimeters) struct Context<'a> {
+    pub(in crate::project_slice::perimeters) lower: &'a [Polygon],
+    pub(in crate::project_slice::perimeters) perimeter_count: i32,
+    pub(in crate::project_slice::perimeters) flow: Flow,
+    pub(in crate::project_slice::perimeters) scale: CoordinateScale,
 }
 
 pub(in crate::project_slice::perimeters::classic) fn context<'a>(
@@ -60,7 +60,7 @@ pub(in crate::project_slice::perimeters::classic) fn context<'a>(
 }
 
 impl Context<'_> {
-    pub(in crate::project_slice::perimeters::classic) fn materialize(
+    pub(in crate::project_slice::perimeters) fn materialize(
         &self,
         paths: Vec<Polyline>,
     ) -> Vec<ExtrusionEntity> {
@@ -68,6 +68,7 @@ impl Context<'_> {
             .into_iter()
             .map(|path| {
                 ExtrusionEntity::Path(ExtrusionPath {
+                    z_contoured: false,
                     polyline: Polyline3 {
                         points: path
                             .into_points()

@@ -1,5 +1,5 @@
 use super::scale::coord_from_completed;
-use crate::geometry::{ClipperError, Point};
+use crate::geometry::{ClipperError, Point, liang_barsky_interval};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(in crate::fill) struct F64Point {
@@ -212,13 +212,13 @@ pub(in crate::fill) fn rounded_thick_segment_collision(
         let direction_y = F64Point::new(-direction_x.y, direction_x.x);
         let line_from_segment = line.a.sub(segment.a);
         if let Some(rectangle) = liang_barsky_interval(
-            F64Point::new(
+            [
                 line_from_segment.dot(direction_x),
                 line_from_segment.dot(direction_y),
-            ),
-            F64Point::new(line_vector.dot(direction_x), line_vector.dot(direction_y)),
-            F64Point::new(0.0, -offset),
-            F64Point::new(segment_length, offset),
+            ],
+            [line_vector.dot(direction_x), line_vector.dot(direction_y)],
+            [0.0, -offset],
+            [segment_length, offset],
         ) {
             extend_interval(&mut interval, rectangle.0, rectangle.1);
         }
@@ -296,43 +296,6 @@ fn extend_circle_interval(
     if start <= end {
         extend_interval(interval, start, end);
     }
-}
-
-fn liang_barsky_interval(
-    point: F64Point,
-    vector: F64Point,
-    min: F64Point,
-    max: F64Point,
-) -> Option<(f64, f64)> {
-    let mut interval = (0.0, 1.0);
-    (clip_side(&mut interval, -vector.x, -min.x + point.x)
-        && clip_side(&mut interval, vector.x, max.x - point.x)
-        && clip_side(&mut interval, -vector.y, -min.y + point.y)
-        && clip_side(&mut interval, vector.y, max.y - point.y))
-    .then_some(interval)
-}
-
-fn clip_side(interval: &mut (f64, f64), p: f64, q: f64) -> bool {
-    if p == 0.0 {
-        return q >= 0.0;
-    }
-    let ratio = q / p;
-    if p < 0.0 {
-        if ratio > interval.1 {
-            return false;
-        }
-        if ratio > interval.0 {
-            interval.0 = ratio;
-        }
-    } else {
-        if ratio < interval.0 {
-            return false;
-        }
-        if ratio < interval.1 {
-            interval.1 = ratio;
-        }
-    }
-    true
 }
 
 fn extend_interval(interval: &mut (f64, f64), start: f64, end: f64) {

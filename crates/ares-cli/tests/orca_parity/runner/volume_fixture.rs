@@ -1,6 +1,6 @@
 use std::io::{Cursor, Read, Write};
 
-pub(super) fn add_volumes(
+pub(crate) fn add_volumes(
     project: &[u8],
     subtype: &str,
     transforms: &[(f64, f64)],
@@ -56,6 +56,12 @@ pub(super) fn add_volumes(
                 .unwrap()
                 .replace("</object>", &format!("{parts}</object>"))
                 .into_bytes();
+        } else if file.name() == "Metadata/project_settings.config"
+            && let Some((_, material)) = options.iter().find(|(key, _)| *key == "filament_type")
+        {
+            let mut settings: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+            set_filament_type(&mut settings, material);
+            bytes = serde_json::to_vec_pretty(&settings).unwrap();
         }
         output
             .start_file(file.name(), zip::write::SimpleFileOptions::DEFAULT)
@@ -76,4 +82,38 @@ pub(super) fn add_volumes(
         output.write_all(model.as_bytes()).unwrap();
     }
     output.finish().unwrap().into_inner()
+}
+
+fn set_filament_type(settings: &mut serde_json::Value, material: &str) {
+    let Some(map) = settings.as_object_mut() else {
+        return;
+    };
+    for (key, value) in map.iter_mut() {
+        if (key == "different_settings_to_system" || key == "inherits_group")
+            && value.as_array().is_some_and(|values| values.len() < 6)
+        {
+            while value.as_array().unwrap().len() < 6 {
+                value
+                    .as_array_mut()
+                    .unwrap()
+                    .push(serde_json::Value::String(String::new()));
+            }
+        }
+        if (key.starts_with("filament_")
+            || key.starts_with("printer_extruder")
+            || key == "filament_map"
+            || key == "filament_ids"
+            || key == "filament_self_index")
+            && value.as_array().is_some_and(|values| values.len() < 4)
+        {
+            let first = value.as_array().unwrap()[0].clone();
+            while value.as_array().unwrap().len() < 4 {
+                value.as_array_mut().unwrap().push(first.clone());
+            }
+        }
+    }
+    map.get_mut("filament_type")
+        .unwrap()
+        .as_array_mut()
+        .unwrap()[1] = serde_json::Value::String(material.to_string());
 }

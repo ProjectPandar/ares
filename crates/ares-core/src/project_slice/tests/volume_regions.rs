@@ -257,6 +257,7 @@ fn graph(
         &FilamentRegionSourceOptions::default(),
         1,
     )
+    .0
 }
 
 fn loaded_graph(bytes: &[u8]) -> (VolumeRegionGraph, RegionOptions, Vec<u32>) {
@@ -272,7 +273,7 @@ fn loaded_graph(bytes: &[u8]) -> (VolumeRegionGraph, RegionOptions, Vec<u32>) {
         .region
         .clone();
     let bounded = build_volume_bounds(source, resolved_object, objects.into_iter().next().unwrap());
-    let graph = build_volume_region_graph(
+    let (graph, _) = build_volume_region_graph(
         source,
         resolved_object,
         &bounded,

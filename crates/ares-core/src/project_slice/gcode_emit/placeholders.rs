@@ -253,7 +253,8 @@ fn insert_runtime_placeholders(
                 .sum::<f64>()
         })
         .fold(0.0, f64::max);
-    config.insert("max_print_z", Value::number(max_print_z));
+    // GCode.cpp:2968-2973: one shared integer-ceiling binding for all templates.
+    config.insert("max_print_z", Value::Integer(max_print_z.ceil() as i64));
     if let Some(value) = config.get("initial_layer_print_height").cloned() {
         config.insert("first_layer_height", value);
     }
@@ -276,7 +277,10 @@ fn insert_runtime_placeholders(
         .filter_map(Value::as_number)
         .reduce(f64::min)
     {
-        config.insert("min_vitrification_temperature", Value::number(minimum));
+        config.insert(
+            "min_vitrification_temperature",
+            Value::Integer(minimum as i64),
+        );
     }
     // `GCode.cpp:3009-3037`: `overall_chamber_temperature` is the maximum
     // `chamber_temperature` over the writer's extruders (the used

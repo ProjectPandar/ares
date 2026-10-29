@@ -28,12 +28,10 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
             state.layer_z - f64::from(properties.height) + f64::from(properties.height) * z_ratio;
         let delta = extrusion::for_length(
             length,
-            properties.mm3_per_mm,
+            extrusion::effective_flow(properties, &state.options, state.on_first_layer),
             state.options.filament_flow_ratio,
-            state.options.print_flow_ratio,
             state.options.filament_area,
-        ) * slope.flow_ratio
-            * extrusion::small_area_multiplier(state, properties.feature, length)
+        ) * extrusion::small_area_multiplier(state, properties.feature, length)
             * e_ratio;
         extrusion::extrude_to_xyz(
             output,

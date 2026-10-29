@@ -20,14 +20,11 @@ pub(in crate::project_slice) fn place_nearest_penalized(
     layer: &crate::project_slice::island_print_order::NearestSeamLayer,
     staggered: bool,
     scale: CoordinateScale,
-) {
-    let Some(first) = loop_
+) -> Option<f32> {
+    let first = loop_
         .paths
         .first()
-        .and_then(|path| path.polyline.points.first())
-    else {
-        return;
-    };
+        .and_then(|path| path.polyline.points.first())?;
     // `SeamPlacer.cpp:1527-1544`: match the loop to a perimeter by walking
     // consecutive loop points until two in a row resolve to the SAME
     // perimeter (T-junction disambiguation). Using only the first point can
@@ -68,9 +65,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
                 scale.unscale(current.y) as f32,
                 query_z,
             ];
-            let Some(closest) = tree.find_closest(query, &coordinate) else {
-                return;
-            };
+            let closest = tree.find_closest(query, &coordinate)?;
             let candidate_perimeter = layer.perimeter_of_candidate[closest];
             if perimeter == candidate_perimeter {
                 break;
@@ -80,9 +75,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         }
         perimeter
     };
-    let Some(&(start, end)) = layer.perimeter_ranges.get(closest_perimeter) else {
-        return;
-    };
+    let &(start, end) = layer.perimeter_ranges.get(closest_perimeter)?;
     let cursor = (
         scale.unscale(cursor.x) as f32,
         scale.unscale(cursor.y) as f32,
@@ -120,12 +113,16 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             best = index;
         }
     }
+    let unsupported_distance = layer
+        .unsupported_distances
+        .as_ref()
+        .map(|values| values[best]);
     let (seam_x, seam_y, _) = layer.positions[best];
     let (Some(seam_x), Some(seam_y)) = (
         scale.checked_scale(seam_x as f64),
         scale.checked_scale(seam_y as f64),
     ) else {
-        return;
+        return None;
     };
     let seam_query = (seam_x, seam_y);
     // External loops split directly at the candidate; inner loops project
@@ -187,13 +184,9 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             let next = layer.positions[index_of_next];
             let to_prev = (cand_pos.0 - prev.0, cand_pos.1 - prev.1);
             let to_next = (cand_pos.0 - next.0, cand_pos.1 - next.1);
-            let norm = |v: (f32, f32)| {
-                let len = (v.0 * v.0 + v.1 * v.1).sqrt();
-                (v.0 / len, v.1 / len)
-            };
             let dir_to_middle = {
-                let (px, py) = norm(to_prev);
-                let (nx, ny) = norm(to_next);
+                let (px, py) = split::normalized(to_prev);
+                let (nx, ny) = split::normalized(to_next);
                 ((px + nx) * 0.5, (py + ny) * 0.5)
             };
             // `1.4142`/`1.4142` are double literals upstream — promote
@@ -227,15 +220,16 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             let depth_mm = depth.max(width);
             let target = walk_along(loop_, &projection, depth_mm, scale);
             split_at(loop_, target, scale);
-            return;
+            return unsupported_distance;
         }
         split_at(loop_, target, scale);
-        return;
+        return unsupported_distance;
     }
     // Non-`erPerimeter` loops (external/overhang): upstream passes the
     // scaled seam candidate straight into `split_at_vertex` with its
     // 1.5µm snap (`SeamPlacer.cpp:1620-1627`) — no vertex search.
     split_at(loop_, seam_query, scale);
+    unsupported_distance
 }
 
 /// Walk `distance_mm` forward along the loop from `from`, wrapping around.

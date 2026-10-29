@@ -97,6 +97,14 @@ pub(super) fn distance_to_segment_squared(point: Point, start: Point, end: Point
 }
 
 pub(crate) fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
+    douglas_peucker_projected(points, tolerance, |point| *point)
+}
+
+pub(crate) fn douglas_peucker_projected<T: Copy>(
+    points: &[T],
+    tolerance: f64,
+    project: impl Fn(&T) -> Point,
+) -> Vec<T> {
     let Some(&first) = points.first() else {
         return Vec::new();
     };
@@ -116,8 +124,11 @@ pub(crate) fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
         let mut maximum = 0.0;
         let mut farthest = anchor;
         for index in anchor + 1..floater {
-            let distance =
-                distance_to_segment_squared(points[index], points[anchor], points[floater]);
+            let distance = distance_to_segment_squared(
+                project(&points[index]),
+                project(&points[anchor]),
+                project(&points[floater]),
+            );
             if distance > maximum {
                 maximum = distance;
                 farthest = index;

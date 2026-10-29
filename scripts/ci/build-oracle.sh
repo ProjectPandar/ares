@@ -60,7 +60,7 @@ case "$variant" in
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/scripts/orca-replay/build.nix"
     ;;
-  procgcode|procgcode-stable-options|procgcode-dynamics|marker-time|marker-time-stable-options|custom-gcode-overview)
+  procgcode|procgcode-stable-options|procgcode-dynamics|marker-time|marker-time-stable-options|custom-gcode-overview|actual-speed-profile|role-times|segment-hw|segment-colors)
     ORCA_PROCGCODE_SOURCE="$src" ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/$variant.nix"

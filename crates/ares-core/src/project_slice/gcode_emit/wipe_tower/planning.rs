@@ -26,7 +26,7 @@ pub(in crate::project_slice::gcode_emit) fn prepare(
     support: &[Vec<InstalledSupportLayer>],
     ordering: &mut ToolOrdering,
 ) -> Option<Planned> {
-    if !ordering.type2_tower {
+    if ordering.tower_type != Some(crate::WipeTowerType::Type2) {
         return None;
     }
     let settings = &traversal.resolved.views.full;

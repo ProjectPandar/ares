@@ -1,0 +1,59 @@
+{
+  "source": {
+    "pin": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+    "owner": "Fill.cpp:1619-1640,1705-1731;FillBase.cpp:73-75;FillRectilinear.hpp:193-224;FillRectilinear.cpp:2853-2875,3387-3399",
+    "approved_spec": "3248dc0f6ee2040b0d9b28df8318c1ff8ca34298",
+    "approved_production_base": "845adf9d704118daaec4574af58bc1e8945ddf70",
+    "approval": "Owner accepts NO-DISCRIMINATION as source-defined ironing equivalence and authorizes three-target RED then existing-rectilinear-path GREEN; supersedes prior STOP/body-discrimination prerequisite for this slice only."
+  },
+  "cases": {
+    "zigzag-active": {
+      "sha256": "e746e92e4830e8131e44118e9f4287068d2100c16c01d166ce834fb5162a8b7a",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "8c371e7dcdf3581ca4ff207b4456fd4c2ee688df4cf6f500784c2446dccdf7a5",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "zigzag",
+      "ironing_type": "topmost"
+    },
+    "crosszag-active": {
+      "sha256": "7835c88e90172692fe170cb4eee173701532d81e540b7fef859e7e24a44186fa",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "124a51847b9cc69cf1e309633fba1b24b1c9f4cc5da61c977e617624caa9dffa",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "crosszag",
+      "ironing_type": "topmost"
+    },
+    "lockedzag-active": {
+      "sha256": "a106c79a64cf7d5968e3d46d6645c0485a7a9bd46b27dc756be791a77f5b2b83",
+      "members_sha256": {
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "3D/3dmodel.model": "05c9090b520f5a2e1088f0f337785a631689efdf094379188e600e1a5f0a5020",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "35d3efcaa03d76e4f1292c97a2c2f6fa5b9a28c06650ee171344d307a7c01caf",
+        "Metadata/project_settings.config": "c00cde4b57280b5ffb95a8cd4ecbc67796ba69301a67da05d2883b519b78c06b",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "ironing_pattern": "lockedzag",
+      "ironing_type": "topmost"
+    }
+  }
+}

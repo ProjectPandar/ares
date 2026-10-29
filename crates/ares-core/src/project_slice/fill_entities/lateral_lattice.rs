@@ -2,25 +2,24 @@
 //! (`FillRectilinear.cpp:3449-3464`): two parallel scanline families at 90°,
 //! shifted by `tan(lateral_lattice_angle_{1,2}) * z` so the lattice leans with
 //! the layer height; the polylines are reversed on odd layers.
+use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
     SliceError,
-    fill::multiline::{MultilineFillParams, fill_surface},
+    fill::multiline::{MultilineFillParams, fill_surface_lateral},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn append(
-    output: &mut LayerFillEntities,
-    fill: SurfaceFill,
-    layer: &crate::project_slice::layers::PlannedLayer,
+pub(super) fn polylines(
+    fill: &SurfaceFill,
+    layer_id: usize,
+    print_z: f64,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
-) -> Result<(), SliceError> {
-    let layer_id = layer.id;
-    let print_z = layer.print_z;
+) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let sweeps = crate::fill::multiline::lateral_lattice_sweeps(
         fill.params.lateral_lattice_angle_1,
         fill.params.lateral_lattice_angle_2,
@@ -39,7 +38,9 @@ pub(super) fn append(
     };
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
-        polylines.extend(fill_surface(expolygon, params, &sweeps, scale).map_err(lattice_error)?);
+        polylines.extend(
+            fill_surface_lateral(expolygon, params, &sweeps, scale).map_err(lattice_error)?,
+        );
     }
     // `if (this->layer_id % 2 == 1) std::reverse(...)` — odd layers reverse each
     // polyline so the lattice overhang leans the other way.
@@ -48,6 +49,17 @@ pub(super) fn append(
             polyline.reverse();
         }
     }
+    Ok(polylines)
+}
+
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    layer: &crate::project_slice::layers::PlannedLayer,
+    scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
+) -> Result<(), SliceError> {
+    let polylines = polylines(&fill, layer.id, layer.print_z, scale, object_reference)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -57,8 +69,8 @@ pub(super) fn append(
             .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
+                    polyline: Polyline3::from_xy(polyline, Vec::new()),
+                    z_contoured: false,
                     role: fill.params.extrusion_role,
                     mm3_per_mm: flow.mm3_per_mm,
                     width: flow.width,

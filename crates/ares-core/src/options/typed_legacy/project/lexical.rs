@@ -4,7 +4,10 @@ use serde::de::{
 };
 
 use super::super::{LegacyRule, VectorType};
-use crate::options::project_settings::ProjectSettingsBuilder;
+use crate::options::{
+    project_settings::ProjectSettingsBuilder,
+    registry::{self, OptionValueKind},
+};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(super) enum ValueOrigin {
@@ -31,12 +34,18 @@ where
         })?;
         builder.deserialize_known_value(target, SeqDeserializer::<_, E>::new(values.into_iter()))
     } else {
+        let value = if origin == ValueOrigin::Array {
+            array_joined_scalar::<E>(source, target, value)?
+        } else {
+            value
+        };
         builder.deserialize_known_value(target, StringDeserializer::<E>::new(value))
     }
-    .map_err(|error| {
-        E::custom(format_args!(
+    .or_else(|error| {
+        let wrapped = E::custom(format_args!(
             "invalid legacy Orca option {source} for {target}: {error}"
-        ))
+        ));
+        substitute_enum_default::<E>(builder, target, wrapped)
     })?;
 
     if handled {
@@ -45,6 +54,64 @@ where
         Err(E::custom(format_args!(
             "legacy Orca option {source} resolved to unknown target {target}"
         )))
+    }
+}
+
+/// `Config.cpp:947-1000` + `Config.hpp` per-type deserialize for a scalar
+/// rule that received a homogeneous JSON array: the elements were already
+/// joined with `','` (`parse_str_arr`, `Config.cpp:832-867`); the option's
+/// own deserialize semantics decide how the joined string binds — the
+/// `istringstream` numeric prefix for `coFloat`/`coInt`/`coPercent`/
+/// `coFloatOrPercent` (`Config.hpp:784-790`, `:975-981`, `:1189-1195`,
+/// `:1303-1310`), the first trimmed `','`-segment for `coBool`
+/// (`Config.hpp:1828-1850`), the whole string for `coString`
+/// (`Config.hpp:1106-1110`). An enum binds normally when the joined string
+/// matches an enum key (a single-element array joins to exactly that key);
+/// otherwise `assign`'s `Config.cpp:657-676` default substitution takes
+/// over. Shared with the preset presence view via
+/// `json_deserialize::scalar` — one source, no generic first-token rule.
+fn array_joined_scalar<E>(source: &str, target: &str, value: String) -> Result<String, E>
+where
+    E: Error,
+{
+    let definition = registry::option_definition(target).ok_or_else(|| {
+        E::custom(format_args!(
+            "invalid legacy Orca project array option {source} for {target}: unknown target option"
+        ))
+    })?;
+    crate::options::json_deserialize::scalar_token(definition.kind, value.as_str())
+        .map(|token| token.into_owned())
+        .map_err(|error| {
+            E::custom(format_args!(
+                "invalid legacy Orca project array option {source} for {target}: {error}"
+            ))
+        })
+}
+
+/// `Config.cpp:654-672`: a failed enum deserialization under the 3MF load
+/// rule (`EnableSilent`, `Model.cpp:259`) silently substitutes the option's
+/// default value instead of failing the load — `opt->set(optdef->
+/// default_value)`, `success = true`. Only the scalar enum kind mirrors
+/// this (RED-covered); enum vectors and every other failure keep the
+/// original error until their own Native evidence lands.
+fn substitute_enum_default<E>(
+    builder: &mut ProjectSettingsBuilder,
+    target: &str,
+    error: E,
+) -> Result<bool, E>
+where
+    E: Error,
+{
+    let Some(definition) = registry::option_definition(target) else {
+        return Err(error);
+    };
+    if definition.kind == OptionValueKind::Enum {
+        builder.deserialize_known_value(
+            target,
+            StringDeserializer::<E>::new(definition.default_value.to_string()),
+        )
+    } else {
+        Err(error)
     }
 }
 

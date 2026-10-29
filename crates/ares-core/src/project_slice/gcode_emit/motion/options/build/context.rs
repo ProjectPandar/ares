@@ -23,11 +23,8 @@ pub(super) struct Prelude<'a> {
     pub filament_diameter: f64,
     pub travel_speed: f64,
     pub travel_acceleration: f64,
-    pub bridge_speed: f64,
-    pub outer_wall_speed: f64,
-    pub small_perimeter_speed: f64,
-    pub outer_wall_acceleration: u32,
-    pub default_acceleration: u32,
+    pub outer_wall_acceleration: f64,
+    pub default_acceleration: f64,
     pub retraction_speed: f64,
     pub deretraction_speed: f64,
 }
@@ -51,7 +48,7 @@ pub(super) fn prelude(traversal: &PreparedPostClassicTraversal, filament: usize)
     let travel_acceleration = object.map_or(full.process.object.travel_acceleration.0, |value| {
         value.object.travel_acceleration.0
     });
-    let speeds = region::region_speeds(full, object, region);
+    let accelerations = region::accelerations(full, object);
     let (retraction_speed, deretraction_speed) = retraction::speeds(gcode, filament);
     Prelude {
         full,
@@ -68,11 +65,8 @@ pub(super) fn prelude(traversal: &PreparedPostClassicTraversal, filament: usize)
         filament_diameter,
         travel_speed,
         travel_acceleration,
-        bridge_speed: speeds.bridge_speed,
-        outer_wall_speed: speeds.outer_wall_speed,
-        small_perimeter_speed: speeds.small_perimeter_speed,
-        outer_wall_acceleration: speeds.outer_wall_acceleration,
-        default_acceleration: speeds.default_acceleration,
+        outer_wall_acceleration: accelerations.outer_wall_acceleration,
+        default_acceleration: accelerations.default_acceleration,
         retraction_speed,
         deretraction_speed,
     }

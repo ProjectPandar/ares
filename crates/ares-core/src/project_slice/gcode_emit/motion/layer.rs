@@ -9,7 +9,6 @@ use crate::{
     project_slice::{
         fill_entities::FillExtrusionEntity,
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
-        perimeters::classic::shortest_path::chain_and_reorder_entities,
     },
 };
 
@@ -24,14 +23,19 @@ struct RegionEntities {
 pub(in crate::project_slice::gcode_emit) fn emit_layer<F, D>(
     output: &mut Vec<u8>,
     layer: &mut OrderedExtrusionLayer,
-    (geometry, first_layer, options_for_region): (LayerGeometry<'_>, bool, D),
+    (phase, first_layer, options_for_region): (super::shared_reversals::EmissionPhase<'_>, bool, D),
     state: &mut EmitState,
     mut before_first_infill: F,
 ) -> Result<bool, SliceError>
 where
     F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
-    D: Fn(usize, &mut MotionOptions) -> (f64, bool, super::super::small_area::Gate),
+    D: Fn(
+        usize,
+        &mut MotionOptions,
+        &mut crate::FloatOrPercent,
+    ) -> (f64, bool, super::super::small_area::Gate),
 {
+    let super::shared_reversals::EmissionPhase { geometry, reversal } = phase;
     let mut interlude_emitted = false;
     for island in &mut layer.islands {
         let entities = std::mem::take(&mut island.entities);
@@ -65,10 +69,11 @@ where
             if !region.had_perimeters {
                 continue;
             }
-            let (density, infill_first, gate) = options_for_region(id, &mut state.options);
+            let (density, infill_first, gate) =
+                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
             if first_layer || !infill_first {
-                emit_perimeters(output, &mut region.perimeters, geometry, state, density);
+                emit_perimeters(output, &mut region.perimeters, geometry, state, density)?;
             }
         }
         if !interlude_emitted && has_infill {
@@ -78,9 +83,16 @@ where
             if region.infills.is_empty() {
                 continue;
             }
-            let (density, _, gate) = options_for_region(id, &mut state.options);
+            let (density, _, gate) =
+                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
-            emit_infills(output, &mut region.infills, geometry, state, density);
+            emit_infills(
+                output,
+                &mut region.infills,
+                super::shared_reversals::EmissionPhase { geometry, reversal },
+                state,
+                density,
+            )?;
         }
         for (&id, region) in &mut regions {
             // GCode.cpp:6135-6140 applies even when this phase skips the
@@ -88,17 +100,25 @@ where
             if !region.had_perimeters {
                 continue;
             }
-            let (density, _, gate) = options_for_region(id, &mut state.options);
+            let (density, _, gate) =
+                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
-            emit_perimeters(output, &mut region.perimeters, geometry, state, density);
+            emit_perimeters(output, &mut region.perimeters, geometry, state, density)?;
         }
         for (&id, region) in &mut regions {
             if region.ironing.is_empty() {
                 continue;
             }
-            let (density, _, gate) = options_for_region(id, &mut state.options);
+            let (density, _, gate) =
+                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
-            emit_infills(output, &mut region.ironing, geometry, state, density);
+            emit_infills(
+                output,
+                &mut region.ironing,
+                super::shared_reversals::EmissionPhase { geometry, reversal },
+                state,
+                density,
+            )?;
         }
     }
     Ok(interlude_emitted)
@@ -110,48 +130,57 @@ fn emit_perimeters(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     sparse_density: f64,
-) {
+) -> Result<(), SliceError> {
     if entities.is_empty() {
-        return;
+        return Ok(());
     }
     state.options.has_sparse_infill = sparse_density > 0.0;
     for entity in entities.drain(..) {
-        perimeter::emit_perimeter(output, entity, geometry, state);
+        perimeter::emit_perimeter(output, entity, geometry, state)?;
     }
+    Ok(())
 }
 
 fn emit_infills(
     output: &mut Vec<u8>,
     entities: &mut Vec<IslandPrintEntity>,
-    geometry: LayerGeometry<'_>,
+    phase: super::shared_reversals::EmissionPhase<'_>,
     state: &mut EmitState,
     sparse_density: f64,
-) {
+) -> Result<(), SliceError> {
     if entities.is_empty() {
-        return;
+        return Ok(());
     }
     // GCode.cpp:6163/7635-7636 applies the current emitted region's density.
     state.options.has_sparse_infill = sparse_density > 0.0;
-    chain_and_reorder_entities(entities, local_cursor(state, geometry));
+    // GCode.cpp:6164 runs chain_and_reorder_extrusion_entities over the
+    // shared layer entities: reversals persist to later islands/instances
+    // of the same source object (also covers the ironing pass above and
+    // `extrude_support`, GCode.cpp:6201).
+    let geometry = phase.geometry;
+    state
+        .shared_reversals
+        .chain_infill(phase.reversal, entities, local_cursor(state, geometry));
     for entity in entities.drain(..) {
         match entity {
             IslandPrintEntity::Fill(entity) => {
-                emit_fill_entity(output, &entity, geometry, state);
+                emit_fill_entity(output, &entity, geometry, state)?;
             }
             IslandPrintEntity::FillCollection(collection) => {
                 let collection = collection.chained_path_from(local_cursor(state, geometry));
                 for entity in &collection.entities {
-                    emit_fill_entity(output, entity, geometry, state);
+                    emit_fill_entity(output, entity, geometry, state)?;
                 }
             }
             IslandPrintEntity::Thin(entity) => {
-                emit_variable_width_entity(output, &entity, geometry, state);
+                emit_variable_width_entity(output, &entity, geometry, state)?;
             }
             IslandPrintEntity::Perimeter(_) => {
                 unreachable!("infill phase contains only infill entities")
             }
         }
     }
+    Ok(())
 }
 
 fn is_ironing_entity(entity: &IslandPrintEntity) -> bool {

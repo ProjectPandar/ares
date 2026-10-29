@@ -1,0 +1,171 @@
+{
+  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "conversion": {
+    "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
+    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+  },
+  "label": "native source-kernel oracle; not full native viewer execution",
+  "adaptations": [
+    "ViewerImpl members and member functions are placed in a GL-free ColorsViewer struct; the ViewerImpl:: qualifier is dropped"
+  ],
+  "upstream": [
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        23,
+        24
+      ],
+      "excerptSha256": "54c2bed90b70322a5ef028c25612dc4b069eda4cce5254e975445c6ca96a8f3c"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        37,
+        43
+      ],
+      "excerptSha256": "d72ee798ffa99a2c41dc2429cb2739e08415bc764499d7aeff27e91233592a83"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        47,
+        63
+      ],
+      "excerptSha256": "8ebcf0de3a0b07287bfbab15e8b86457134270a736e963341cf4a26b5a57623b"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        283,
+        305
+      ],
+      "excerptSha256": "75ce309e5407579fcad9a933061c08796c17a43b15e2409b81cfc394882898e7"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        307,
+        317
+      ],
+      "excerptSha256": "f7b3219415275ac0ac49c6557ec8b68997fda9d780cd58fb6f8acc7e07601202"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.hpp",
+      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "lines": [
+        202,
+        202
+      ],
+      "excerptSha256": "d916929bb0c9252125fee66c18bd385dc2a4ef5c257640672dde05545bec29ca"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.hpp",
+      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "lines": [
+        206,
+        206
+      ],
+      "excerptSha256": "f1a264b73a1f642eb306641dbbef0b996e8e44bbe7d045db8d63777e236e49ed"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.hpp",
+      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "lines": [
+        242,
+        242
+      ],
+      "excerptSha256": "2d05e6ab404981ee3856ba6afd2dd356f2c3517daaf6d73c798dbef7a6769c82"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.hpp",
+      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "lines": [
+        246,
+        246
+      ],
+      "excerptSha256": "6d16c2091a9590ea48c4add4ebae6497ece520fec0a3ddfe04547d929c080935"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.hpp",
+      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "lines": [
+        273,
+        273
+      ],
+      "excerptSha256": "2935cccc018713587e4bb529b93f835b3f4c70ed91e2ce7292d2e13b45de90d2"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.hpp",
+      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "lines": [
+        285,
+        304
+      ],
+      "excerptSha256": "28868fe3708242ee5ab5d716f6770200538d52cea30e146be4eea3e47c79fac1"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        1567,
+        1570
+      ],
+      "excerptSha256": "08e0f09222dfa482dfd0d017c6085683d42f877c3fea2e8703fe1a69d350ed9f"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        1578,
+        1581
+      ],
+      "excerptSha256": "1c3f0995bab8842b2eacecb58b236a18cc52e8706ce0cb32826461afcf2347c5"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        1583,
+        1586
+      ],
+      "excerptSha256": "1c09b06a814a5594180df69631df5509a9c1722c80765932ba137eaaff985ac3"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        1594,
+        1597
+      ],
+      "excerptSha256": "18c999b8fe24ecdda70f075fbe09ff5ad4964a7c45c662af4cc2df735c1cc8c4"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        1817,
+        1878
+      ],
+      "excerptSha256": "c07cccce6b571b0e88ea6b1c831c68e7cdb90ef894f0566e8eb300ce5d9fd733"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "lines": [
+        1467,
+        1553
+      ],
+      "excerptSha256": "87c1516d8879afb87a3c7162a9a266fc4fb42b5e0524c3d57f3e2b704557ca97"
+    }
+  ],
+  "files": {
+    "kernel.upstream.hpp": "0b92b04e555323847b8cef9a84823ec7db7c85e62f60ac1510981ab3fc1f351a",
+    "kernel.hpp": "cef62998ba88eb1db76455cae305a3050bd668e89267a6e604f2894ae1e1f6b9",
+    "kernel.diff": "430c715d1e255496e65a3313c55eaaddd9913e64ef11e25d7f1c39ad641019d6"
+  }
+}

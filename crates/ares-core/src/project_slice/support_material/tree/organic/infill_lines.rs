@@ -78,6 +78,8 @@ pub(super) fn generate(
             )?),
             RaftFillPattern::Rectilinear => {
                 let params = MonotonicFillParams {
+                    dont_alternate_fill_direction: false,
+                    layer_angle_fixed: false,
                     spacing,
                     overlap: 0.0,
                     density,
@@ -100,6 +102,7 @@ pub(super) fn generate(
             }
             RaftFillPattern::Honeycomb => {
                 let params = HoneycombFillParams {
+                    dont_alternate_fill_direction: false,
                     spacing,
                     density,
                     multiline: 1,

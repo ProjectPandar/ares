@@ -1,0 +1,32 @@
+{
+  "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "owner": "GCode.cpp::travel_to:7466-7467",
+  "cases": [
+    {
+      "case": "k1-byobject-two-objects",
+      "file": "by-object.3mf",
+      "sha256": "baa6c8d352d5e62c400cc450d50de643ce868fcc619a71352748f89aabe7aab1",
+      "original": "/home/indexyz/ares-evidence/worker1/sequential-directed-discovery-a6232a1df-after-4eeda42be/sequential-grid/project.3mf",
+      "print_sequence": "by object",
+      "sparse_infill_pattern": "grid",
+      "enable_support": "0",
+      "models": [
+        "OrcaSlicer/tests/data/overhang.obj",
+        "OrcaSlicer/tests/data/cube_with_hole.obj"
+      ]
+    },
+    {
+      "case": "k1-bylayer-two-objects",
+      "file": "by-layer.3mf",
+      "sha256": "855dbb94249d0ce5c31eb80a6641a86b63118cd560668fa00a62eeaa54460b12",
+      "original": "/home/indexyz/ares-evidence/worker1/multiobject-directed-discovery-a6232a1df-after-4eeda42be/overhang-plus-cube-hole/project.3mf",
+      "print_sequence": "by layer",
+      "sparse_infill_pattern": "grid",
+      "enable_support": "0",
+      "models": [
+        "OrcaSlicer/tests/data/overhang.obj",
+        "OrcaSlicer/tests/data/cube_with_hole.obj"
+      ]
+    }
+  ]
+}

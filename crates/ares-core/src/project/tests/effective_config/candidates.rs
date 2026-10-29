@@ -200,23 +200,6 @@ fn only_nonempty_model_parts_receive_candidates() {
 }
 
 #[test] #[rustfmt::skip]
-fn usage_affecting_modifier_keys_are_rejected_in_fixed_order() {
-    let cases = [
-        ("top_shell_layers", RegionOptionOverrides { top_shell_layers: Some(OrcaInt(2)), ..Default::default() }),
-        ("bottom_shell_layers", RegionOptionOverrides { bottom_shell_layers: Some(OrcaInt(2)), ..Default::default() }),
-        ("sparse_infill_filament_id", RegionOptionOverrides { sparse_infill_filament_id: Some(OrcaInt(2)), ..Default::default() }),
-        ("internal_solid_filament_id", RegionOptionOverrides { internal_solid_filament_id: Some(OrcaInt(2)), ..Default::default() }),
-        ("top_surface_filament_id", RegionOptionOverrides { top_surface_filament_id: Some(OrcaInt(2)), ..Default::default() }),
-        ("bottom_surface_filament_id", RegionOptionOverrides { bottom_surface_filament_id: Some(OrcaInt(2)), ..Default::default() }),
-        ("outer_wall_filament_id", RegionOptionOverrides { outer_wall_filament_id: Some(OrcaInt(2)), ..Default::default() }),
-        ("inner_wall_filament_id", RegionOptionOverrides { inner_wall_filament_id: Some(OrcaInt(2)), ..Default::default() }),
-    ];
-    for (key, overrides) in cases {
-        assert_eq!(modifier_error(overrides), SliceError::UnsupportedProjectFeature(key.to_owned()));
-    }
-}
-
-#[test] #[rustfmt::skip]
 fn zero_width_painted_brim_is_an_inactive_configuration() {
     assert!(resolve(&settings(), &[object_with_brim(ProcessBrimType::Painted, 0.0)]).is_ok());
     assert!(resolve(&settings(), &[object_with_brim(ProcessBrimType::Painted, 1.0)]).is_ok());
@@ -261,14 +244,6 @@ fn object_with_brim(brim_type: ProcessBrimType, width: f64) -> ProjectObject {
         ..Default::default()
     };
     object(overrides, Default::default(), Vec::new(), vec![Transform3d::IDENTITY], Vec::new())
-}
-
-#[rustfmt::skip]
-fn modifier_error(overrides: RegionOptionOverrides) -> SliceError {
-    let object = object(Default::default(), Default::default(),
-        vec![volume(1, ProjectVolumeType::ParameterModifier, 0.0, true, overrides)],
-        vec![Transform3d::IDENTITY], Vec::new());
-    resolve(&settings(), &[object]).unwrap_err()
 }
 
 #[rustfmt::skip]

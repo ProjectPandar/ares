@@ -1,5 +1,33 @@
 use super::{Config, Value};
 
+/// The `unary_expression` function keywords of PlaceholderParser.cpp:2315-2334.
+/// Only these spellings parse as function calls; every other identifier
+/// before `(` is a plain variable reference, so an unknown name like
+/// `format` fails symbol resolution in `resolve_variable` (`:989-1002`,
+/// "Not a variable name") with its line/caret instead of entering
+/// function-argument evaluation.
+const FUNCTION_KEYWORDS: [&str; 15] = [
+    "min",
+    "max",
+    "random",
+    "filament_change",
+    "digits",
+    "zdigits",
+    "int",
+    "round",
+    "ceil",
+    "floor",
+    "is_nil",
+    "one_of",
+    "empty",
+    "size",
+    "interpolate_table",
+];
+
+pub(crate) fn is_function_keyword(name: &str) -> bool {
+    FUNCTION_KEYWORDS.contains(&name)
+}
+
 pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, String> {
     if name == "interpolate_table" {
         return interpolate_table(&args);
@@ -15,28 +43,46 @@ pub(crate) fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<
                 .ok_or("numeric function argument expected")
         })
         .collect::<Result<Vec<_>, _>>()?;
+    let integer_result = |operation: fn(f64) -> f64| {
+        Value::Integer(
+            args[0]
+                .as_integer()
+                .unwrap_or_else(|| i64::from(operation(numbers[0]) as i32)),
+        )
+    };
     match name {
-        "min" => numbers
-            .into_iter()
-            .reduce(f64::min)
-            .map(Value::Number)
-            .ok_or("min requires an argument".to_owned()),
-        "max" => numbers
-            .into_iter()
-            .reduce(f64::max)
-            .map(Value::Number)
-            .ok_or("max requires an argument".to_owned()),
-        "int" if numbers.len() == 1 => Ok(Value::Number(numbers[0].trunc())),
-        "round" if numbers.len() == 1 => Ok(Value::Number(numbers[0].round())),
-        "floor" if numbers.len() == 1 => Ok(Value::Number(numbers[0].floor())),
-        "ceil" if numbers.len() == 1 => Ok(Value::Number(numbers[0].ceil())),
+        "min" | "max" => {
+            let maximum = name == "max";
+            let result = match args
+                .iter()
+                .map(Value::as_integer)
+                .collect::<Option<Vec<_>>>()
+            {
+                Some(integers) => integers
+                    .into_iter()
+                    .reduce(if maximum { i64::max } else { i64::min })
+                    .map(Value::Integer),
+                None => numbers
+                    .into_iter()
+                    .reduce(if maximum { f64::max } else { f64::min })
+                    .map(Value::Number),
+            };
+            result.ok_or_else(|| format!("{name} requires an argument"))
+        }
+        "int" if numbers.len() == 1 => Ok(integer_result(f64::trunc)),
+        "round" if numbers.len() == 1 => Ok(integer_result(f64::round)),
+        "floor" if numbers.len() == 1 => Ok(integer_result(f64::floor)),
+        "ceil" if numbers.len() == 1 => Ok(integer_result(f64::ceil)),
         "digits" if matches!(numbers.len(), 2 | 3) => {
             let width = numbers[1].clamp(0.0, 64.0) as usize;
             let rendered = if let Some(decimals) = numbers.get(2) {
                 let decimals = decimals.clamp(0.0, 64.0) as usize;
                 format!("{:.decimals$}", numbers[0])
             } else {
-                format!("{:.0}", numbers[0])
+                let integer = args[0]
+                    .as_integer()
+                    .unwrap_or_else(|| i64::from(numbers[0].round() as i32));
+                integer.to_string()
             };
             Ok(Value::String(format!("{rendered:>width$}")))
         }

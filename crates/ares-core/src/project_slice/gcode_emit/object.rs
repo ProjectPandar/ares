@@ -1,5 +1,5 @@
-mod filament_instances;
-pub(super) use filament_instances::FilamentInstances;
+mod label_inventory;
+pub(super) use label_inventory::{LabelInventory, LayerLabels};
 
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
@@ -36,24 +36,12 @@ impl ObjectLabels {
         traversal: &PreparedPostClassicTraversal,
         object_index: usize,
         copy_index: usize,
+        inventory: &LabelInventory,
     ) -> Option<Self> {
         let (resolved, group) = traversal.print_object_config(object_index);
         let object = &traversal.project.objects()[resolved.source_object_index];
         let instance = &object.instances()[group.instance_indices[copy_index]];
-        let mut labels = traversal
-            .project
-            .objects()
-            .iter()
-            .flat_map(|object| object.instances())
-            .filter(|instance| instance.printable())
-            .map(|instance| instance.loaded_label_id().unwrap_or(0))
-            .collect::<Vec<_>>();
-        labels.sort_unstable();
-        labels.dedup();
-        let position = labels
-            .binary_search(&instance.loaded_label_id().unwrap_or(0))
-            .ok()?;
-        let bitset = 1_u64.checked_shl(position as u32)?;
+        let encoded_labels = inventory.encode_one(instance.loaded_label_id().unwrap_or(0))?;
         let (exclude_start, exclude_end) =
             super::footprint::in_print_labels(traversal, object_index, copy_index);
         let settings = &traversal.resolved.views.full;
@@ -70,7 +58,7 @@ impl ObjectLabels {
             object_id: if ids_assigned { object_index as u32 } else { 0 },
             copy_id: if ids_assigned { copy_index as u32 } else { 0 },
             label_id: instance.loaded_label_id().unwrap_or(0),
-            encoded_labels: encode_base64(bitset.to_le_bytes()),
+            encoded_labels,
             exclude_start,
             exclude_end,
         })
@@ -122,7 +110,10 @@ impl ObjectLabels {
     }
 
     /// Arms the in-print object-end marker after instance content
-    /// (`GCode.cpp:5478-5494`); BBL writes its M625 tail directly.
+    /// (`GCode.cpp:5478-5494`); the end label is only armed when the
+    /// instance's start label was actually flushed — an unflushed start
+    /// (empty wiping/normal half-pass, `GCode.cpp:5326-5329`) is dropped
+    /// without arming the end. BBL writes its M625 tail directly.
     pub(super) fn queue_stop(
         &self,
         output: &mut Vec<u8>,

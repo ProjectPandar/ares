@@ -1,5 +1,6 @@
 mod annotate;
 mod chaining;
+mod default_repair;
 mod diagram;
 mod eligibility;
 mod error;

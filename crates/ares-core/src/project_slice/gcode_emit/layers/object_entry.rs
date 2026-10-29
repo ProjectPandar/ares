@@ -7,7 +7,6 @@ use super::super::{
 };
 use super::entry_builder::EntryBuilder;
 use super::layer_end;
-use crate::geometry::ExPolygon;
 use crate::project_slice::island_print_order::OrderedExtrusionLayer;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
@@ -25,7 +24,6 @@ pub(super) fn emit(
     object_index: usize,
     layer_index: usize,
     starts_after_support: bool,
-    chunk_slices: &[ExPolygon],
     chunk_perimeter_spacing: f64,
     labels: Option<&ObjectLabels>,
     emit_labels: bool,
@@ -35,18 +33,12 @@ pub(super) fn emit(
     layer_z: f64,
     layer_height: f64,
     object_layer_counts: &[usize],
-    last_entry: Option<(usize, usize)>,
     is_group_end: bool,
     layer_output_start: usize,
 ) -> Result<(), SliceError> {
     let spiral_body_layer = spiral.is_body_layer(layer, layer_index, layer_z);
     state.spiral_vase_layer = spiral_body_layer;
-    let geometry = entry_builder.geometry(
-        object_index,
-        layer_index,
-        chunk_slices,
-        chunk_perimeter_spacing,
-    );
+    let geometry = entry_builder.geometry(object_index, layer_index, chunk_perimeter_spacing);
     let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
     let motion_geometry = geometry.view(
@@ -79,15 +71,34 @@ pub(super) fn emit(
         .0
         .object
         .seam_position;
+    let reversal = state.reversal_scope(
+        traversal,
+        object_index,
+        motion::SharedLayerId::Object(layer_index),
+    );
     let timelapse_inserted = motion::emit_layer(
         output,
         layer,
         (
-            motion_geometry,
+            motion::EmissionPhase {
+                geometry: motion_geometry,
+                reversal,
+            },
             first_layer,
-            |region: usize, motion: &mut motion::MotionOptions| {
+            |region: usize,
+             motion: &mut motion::MotionOptions,
+             current_seam_gap: &mut crate::FloatOrPercent| {
                 let options = &regions[region].options;
-                motion.apply_region_outer_wall_speed(options);
+                *current_seam_gap = options.seam_gap;
+                // GCode.cpp:6136/6163 `m_config.apply(region.config())`:
+                // one region apply refreshes every region-scoped
+                // `MotionOptions` field before the phase emits.
+                motion.apply_region(
+                    &traversal.resolved.views.full.process.region,
+                    Some(options),
+                    traversal.resolved.views.runtime_gcode.travel_speed.0,
+                    motion.nozzle_diameter,
+                );
                 (
                     options.sparse_infill_density.0,
                     options.is_infill_first.0,
@@ -110,7 +121,6 @@ pub(super) fn emit(
             )
         },
     )?;
-    let is_last_entry = Some((object_index, layer_index)) == last_entry;
     if let Some(labels) = labels {
         labels.queue_stop(output, state, emit_labels);
     }
@@ -139,7 +149,12 @@ pub(super) fn emit(
                 entry_output_start
             },
             enabled: spiral_body_layer,
-            final_layer: is_last_entry && layer_index + 1 == object_layer_counts[object_index],
+            // `GCode.cpp:3805-3806`: `last_layer` is per object batch
+            // under the single-object (by-object) pipeline, and the
+            // by-layer batch degenerates to the same expression because
+            // spiral by-layer prints are admission-limited to one copy
+            // (`Print.cpp:1334-1341`).
+            final_layer: layer_index + 1 == object_layer_counts[object_index],
             z: layer_z + state.options.z_offset,
             height: layer_height,
         },

@@ -157,6 +157,7 @@ impl<'a> Generator<'a> {
             writer.rotated(writer.position)
         };
         ToolChangeResult {
+            type1: None,
             priming,
             initial_tool: old_tool,
             new_tool: self.current_tool,

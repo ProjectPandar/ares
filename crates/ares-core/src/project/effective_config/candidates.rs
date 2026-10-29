@@ -1,6 +1,6 @@
 use crate::{
     ObjectOptions, ProjectObject, ProjectSettings, ProjectVolumeType, RegionOptions, SliceError,
-    options::{RegionBase, RegionOptionOverrides, RegionOverrideSources},
+    options::{RegionBase, RegionOverrideSources},
 };
 
 use super::{
@@ -32,7 +32,6 @@ pub(crate) fn resolve_project_objects(
                 object.object_overrides(),
                 validated.logical_filament_count,
             );
-            reject_unsupported_object_sources(object)?;
             Ok(ResolvedProjectObject {
                 source_object_index: groups.source_object_index,
                 object: object_options,
@@ -132,6 +131,7 @@ pub(crate) fn resolve_project_candidates(
             .collect();
 
         resolved_object.layer_candidates = layer_candidates;
+        // PrintObject.cpp:3592-3705 resolves modifier feature IDs from parent regions.
         resolved_object.all_regions = crate::project::region_graph::object_region_graph(
             object,
             resolved_object,
@@ -142,39 +142,4 @@ pub(crate) fn resolve_project_candidates(
     }
 
     Ok(resolved)
-}
-
-fn reject_unsupported_object_sources(object: &ProjectObject) -> Result<(), SliceError> {
-    for volume in object
-        .volumes()
-        .iter()
-        .filter(|volume| volume.volume_type() == ProjectVolumeType::ParameterModifier)
-    {
-        if let Some(key) = first_unsupported_modifier_key(volume.region_overrides()) {
-            return Err(SliceError::UnsupportedProjectFeature(key.to_owned()));
-        }
-    }
-    Ok(())
-}
-
-fn first_unsupported_modifier_key(overrides: &RegionOptionOverrides) -> Option<&'static str> {
-    if overrides.top_shell_layers.is_some() {
-        Some("top_shell_layers")
-    } else if overrides.bottom_shell_layers.is_some() {
-        Some("bottom_shell_layers")
-    } else if overrides.sparse_infill_filament_id.is_some() {
-        Some("sparse_infill_filament_id")
-    } else if overrides.internal_solid_filament_id.is_some() {
-        Some("internal_solid_filament_id")
-    } else if overrides.top_surface_filament_id.is_some() {
-        Some("top_surface_filament_id")
-    } else if overrides.bottom_surface_filament_id.is_some() {
-        Some("bottom_surface_filament_id")
-    } else if overrides.outer_wall_filament_id.is_some() {
-        Some("outer_wall_filament_id")
-    } else if overrides.inner_wall_filament_id.is_some() {
-        Some("inner_wall_filament_id")
-    } else {
-        None
-    }
 }

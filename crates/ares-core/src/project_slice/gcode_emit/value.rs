@@ -83,7 +83,6 @@ impl Value {
     pub(crate) fn as_string(&self) -> String {
         match self.scalar() {
             Self::Integer(value) => value.to_string(),
-            Self::Number(value) if value.fract() == 0.0 => format!("{value:.0}"),
             Self::Number(value) => format_number(*value),
             Self::String(value) => value.clone(),
             Self::OptionBool(value) | Self::Bool(value) => value.to_string(),
@@ -104,16 +103,31 @@ impl Value {
 }
 
 fn format_number(value: f64) -> String {
-    if value == 0.0 {
-        return "0".to_owned();
+    if !value.is_finite() {
+        return match (value.is_nan(), value.is_sign_negative()) {
+            (true, false) => "nan",
+            (true, true) => "-nan",
+            (false, false) => "inf",
+            (false, true) => "-inf",
+        }
+        .to_owned();
     }
-    let exponent = value.abs().log10().floor() as i32;
-    let decimals = (5 - exponent).max(0) as usize;
-    let formatted = format!("{value:.decimals$}");
-    formatted
-        .trim_end_matches('0')
-        .trim_end_matches('.')
-        .to_owned()
+    // Select defaultfloat's style from the six-digit rounded binary value.
+    let scientific = format!("{value:.5e}");
+    let (mantissa, exponent) = scientific.split_once('e').unwrap();
+    let exponent: i32 = exponent.parse().unwrap();
+    if !(-4..6).contains(&exponent) {
+        let mantissa = mantissa.trim_end_matches('0').trim_end_matches('.');
+        format!("{mantissa}e{exponent:+03}")
+    } else {
+        let decimals = (5 - exponent) as usize;
+        let fixed = format!("{value:.decimals$}");
+        if decimals == 0 {
+            fixed
+        } else {
+            fixed.trim_end_matches('0').trim_end_matches('.').to_owned()
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -132,15 +146,17 @@ impl Config {
             let Some((key, raw)) = line.split_once(" = ") else {
                 continue;
             };
-            let is_bool =
-                crate::options::registry::option_definition(key).is_some_and(|definition| {
-                    matches!(
-                        definition.kind,
-                        crate::options::registry::OptionValueKind::Bool
-                            | crate::options::registry::OptionValueKind::Bools
-                    )
-                });
-            config.insert(key, parse_value(raw, is_bool));
+            let kind =
+                crate::options::registry::option_definition(key).map(|definition| definition.kind);
+            let is_bool = kind.is_some_and(|kind| {
+                matches!(
+                    kind,
+                    crate::options::registry::OptionValueKind::Bool
+                        | crate::options::registry::OptionValueKind::Bools
+                )
+            });
+            let is_ints = kind == Some(crate::options::registry::OptionValueKind::Ints);
+            config.insert(key, parse_value(raw, is_bool, is_ints));
         }
         config
     }
@@ -180,17 +196,28 @@ impl Config {
     }
 }
 
-fn parse_value(raw: &str, is_bool: bool) -> Value {
+fn parse_value(raw: &str, is_bool: bool, is_ints: bool) -> Value {
+    if is_ints {
+        let mut values = raw
+            .split([';', ','])
+            .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
+            .collect::<Vec<_>>();
+        return if values.len() == 1 {
+            values.remove(0)
+        } else {
+            Value::List(values)
+        };
+    }
     let mut values = raw
         .split(';')
-        .map(|scalar| parse_scalar(scalar, is_bool))
+        .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
         .collect::<Vec<_>>();
     if values.len() == 1 {
         let value = values.remove(0);
         let comma_values = value
             .as_string()
             .split(',')
-            .map(|scalar| parse_scalar(scalar, is_bool))
+            .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
             .collect::<Vec<_>>();
         return if comma_values.len() == 1 {
             value
@@ -201,10 +228,12 @@ fn parse_value(raw: &str, is_bool: bool) -> Value {
     Value::List(values)
 }
 
-fn parse_scalar(raw: &str, is_bool: bool) -> Value {
+fn parse_scalar(raw: &str, is_bool: bool, is_ints: bool) -> Value {
     let raw = raw.trim().trim_matches('"');
     if is_bool && matches!(raw, "0" | "1" | "false" | "true") {
         Value::option_bool(matches!(raw, "1" | "true"))
+    } else if is_ints {
+        Value::Integer(raw.parse().unwrap())
     } else if let Ok(value) = raw.parse::<f64>() {
         Value::Number(value)
     } else if raw == "true" || raw == "false" {

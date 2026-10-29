@@ -12,6 +12,8 @@ serde_json = { workspace = true }
 tokio = { workspace = true }
 
 [dev-dependencies]
+boostvoronoi = { workspace = true }
+ares-wasm = { path = "../ares-wasm" }
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 jiff = { workspace = true }
 assert_cmd = { workspace = true }

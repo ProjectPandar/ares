@@ -28,6 +28,17 @@ pub(in crate::project_slice) fn chain_and_reorder_entities_with_optional_start<T
     entities: &mut Vec<T>,
     start_near: Option<Point>,
 ) {
+    let _ = chain_and_reorder_entities_flips(entities, start_near);
+}
+
+/// Chains and reorders in place, reporting the greedy reversal decision per
+/// ORIGINAL entity index (`ShortestPath.cpp:1040-1052`). Upstream
+/// `GCode.cpp:6164,6201` applies these to the SHARED layer entities, so the
+/// reversals persist into later islands/instances of the same source object.
+pub(in crate::project_slice) fn chain_and_reorder_entities_flips<T: ChainEntity>(
+    entities: &mut Vec<T>,
+    start_near: Option<Point>,
+) -> Vec<bool> {
     let endpoints = entities
         .iter()
         .map(|entity| {
@@ -50,14 +61,17 @@ pub(in crate::project_slice) fn chain_and_reorder_entities_with_optional_start<T
         .into_iter()
         .map(Some)
         .collect::<Vec<_>>();
+    let mut flips = vec![false; source.len()];
     entities.reserve(chain.len());
     for (index, reverse) in chain {
         let mut entity = source[index].take().expect("chain indices are unique");
         if reverse && !entity.is_loop() {
             entity.reverse();
+            flips[index] = true;
         }
         entities.push(entity);
     }
+    flips
 }
 
 impl FillExtrusionCollection {
@@ -115,16 +129,6 @@ impl FillExtrusionPath {
     }
 
     fn reverse(&mut self) {
-        let last_index = self.polyline.points().len().saturating_sub(1);
-        for fitted in &mut self.fitting {
-            let start = fitted.start;
-            fitted.start = last_index - fitted.end;
-            fitted.end = last_index - start;
-            if let Some(arc) = &mut fitted.arc {
-                arc.clockwise = !arc.clockwise;
-            }
-        }
-        self.fitting.reverse();
         self.polyline.reverse();
     }
 }

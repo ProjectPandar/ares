@@ -1,7 +1,15 @@
 mod documents;
 mod layer_height_profile;
+mod mesh;
 mod placement;
+mod shared_mesh;
+mod sharing;
+pub use mesh::ProjectMesh;
+use shared_mesh::MeshPreparation;
+pub(crate) use shared_mesh::materialize_meshes;
+mod import_scope;
 mod plate_selection;
+use import_scope::ImportScope;
 mod profile_input;
 mod volume_offsets;
 
@@ -30,31 +38,6 @@ impl Point3d {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct ProjectMesh {
-    vertices: Vec<Point3d>,
-    triangles: Vec<[u32; 3]>,
-    pub(crate) supported_facets: super::facets_annotation::FacetsAnnotation,
-}
-
-impl ProjectMesh {
-    pub(crate) fn new(vertices: Vec<Point3d>, triangles: Vec<[u32; 3]>) -> Self {
-        Self {
-            vertices,
-            triangles,
-            supported_facets: super::facets_annotation::FacetsAnnotation::default(),
-        }
-    }
-
-    pub fn vertices(&self) -> &[Point3d] {
-        &self.vertices
-    }
-
-    pub fn triangles(&self) -> &[[u32; 3]] {
-        &self.triangles
-    }
-}
-
 #[derive(Debug)]
 pub struct Project {
     models: Vec<ProjectModel>,
@@ -62,6 +45,8 @@ pub struct Project {
     plates: Vec<PlateMetadata>,
     settings: ProjectSettings,
     documents: ProjectDocuments,
+    import_scope: ImportScope,
+    plate_view: bool,
     /// The selected plate's grid origin in the project-global coordinate
     /// space (`PartPlate.cpp:3914-3962`; zero until a plate is selected).
     /// Instances stay in global coordinates upstream
@@ -90,6 +75,8 @@ impl Project {
             plates,
             settings,
             documents,
+            import_scope: ImportScope::All,
+            plate_view: false,
             plate_origin: (0.0, 0.0),
             plates_custom_gcodes: Default::default(),
             curr_plate_index: 0,
@@ -159,6 +146,8 @@ pub struct ProjectObject {
     layer_height_profile: Vec<f64>,
     volumes: Vec<ProjectVolume>,
     instances: Vec<ProjectInstance>,
+    import_instances: Vec<ProjectInstance>,
+    pub(in crate::project) brim_points: Vec<crate::project::brim_ear_points::BrimPoint>,
 }
 
 impl ProjectObject {
@@ -179,7 +168,9 @@ impl ProjectObject {
             layer_config_ranges: Vec::new(),
             layer_height_profile: Vec::new(),
             volumes,
+            import_instances: instances.clone(),
             instances,
+            brim_points: Vec::new(),
         }
     }
 
@@ -197,6 +188,21 @@ impl ProjectObject {
 
     pub fn module(&self) -> &str {
         &self.module
+    }
+
+    /// PrintApply.cpp:998 and PrintObjectSlice.cpp:1208–1210.
+    pub(crate) fn is_mm_painted(&self, logical_filament_count: usize) -> bool {
+        logical_filament_count > 1
+            && self
+                .volumes
+                .iter()
+                .any(|v| !v.mesh().mmu_segmentation_facets.mapping.is_empty())
+    }
+
+    pub(crate) fn is_fuzzy_skin_painted(&self) -> bool {
+        self.volumes
+            .iter()
+            .any(|volume| !volume.mesh().fuzzy_skin_facets.mapping.is_empty())
     }
 
     pub(crate) fn object_overrides(&self) -> &ObjectOptionOverrides {
@@ -243,7 +249,7 @@ pub struct ProjectVolume {
     volume_type: ProjectVolumeType,
     region_overrides: RegionOptionOverrides,
     source_transform: Transform3d,
-    mesh_shared: bool,
+    mesh_preparation: MeshPreparation,
 }
 
 impl ProjectVolume {
@@ -262,13 +268,13 @@ impl ProjectVolume {
         Self {
             source_model_path,
             id,
+            mesh_preparation: MeshPreparation::new(&mesh, transform, id as i32),
             mesh,
             transform,
             name: metadata.0,
             volume_type: metadata.1,
             region_overrides: metadata.2,
             source_transform: metadata.3,
-            mesh_shared: false,
         }
     }
 
@@ -304,12 +310,15 @@ impl ProjectVolume {
         self.source_transform
     }
 
-    pub(crate) fn has_mesh_shared(&self) -> bool {
-        self.mesh_shared
-    }
-
-    pub(crate) fn set_mesh_shared(&mut self, mesh_shared: bool) {
-        self.mesh_shared = mesh_shared;
+    pub(crate) fn set_mesh_preparation(
+        &mut self,
+        shift: Point3d,
+        component: Transform3d,
+        key: i32,
+    ) {
+        self.mesh_preparation.init_shift = shift;
+        self.mesh_preparation.component = component;
+        self.mesh_preparation.key = key;
     }
 }
 

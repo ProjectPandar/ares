@@ -11,7 +11,8 @@ use super::{ArcSegment, Point, Segment, append_line};
 pub(in crate::project_slice::gcode_emit::motion) fn from_fitting(
     points: &[Point],
     fitting: &[FittedMove],
-    offset: (f64, f64),
+    origin: (f64, f64),
+    extruder_offset: (f64, f64),
 ) -> Vec<Segment> {
     let mut segments = Vec::with_capacity(points.len());
     for fitted in fitting {
@@ -19,9 +20,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn from_fitting(
             segments.push(Segment::Arc(ArcSegment {
                 start: points[fitted.start],
                 end: points[fitted.end],
+                // `GCode.cpp:8124-8128`: add origin before subtracting the
+                // extruder offset; folding them changes I/J at rounding ties.
                 center: Point {
-                    x: arc.center.0 + offset.0,
-                    y: arc.center.1 + offset.1,
+                    x: arc.center.0 + origin.0 - extruder_offset.0,
+                    y: arc.center.1 + origin.1 - extruder_offset.1,
                 },
                 radius: arc.radius,
                 length: arc.length,

@@ -1,5 +1,5 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum StagedSeamScarfType {
+pub(crate) enum StagedSeamScarfType {
     None,
     External,
     All,
@@ -12,14 +12,14 @@ impl StagedSeamScarfType {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct StagedApplyScarfJointSeamObject {
+pub(crate) struct StagedApplyScarfJointSeamObject {
     object_seam_slope_type: StagedSeamScarfType,
     volume_seam_slope_types: Vec<Option<StagedSeamScarfType>>,
     layer_range_seam_slope_types: Vec<Option<StagedSeamScarfType>>,
 }
 
 impl StagedApplyScarfJointSeamObject {
-    pub(super) fn new(
+    pub(crate) fn new(
         object_seam_slope_type: StagedSeamScarfType,
         volume_seam_slope_types: Vec<Option<StagedSeamScarfType>>,
         layer_range_seam_slope_types: Vec<Option<StagedSeamScarfType>>,
@@ -47,18 +47,18 @@ impl StagedApplyScarfJointSeamObject {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct StagedApplyScarfJointSeamSet {
+pub(crate) struct StagedApplyScarfJointSeamSet {
     value: bool,
 }
 
 impl StagedApplyScarfJointSeamSet {
-    pub(super) fn value(&self) -> bool {
+    pub(crate) fn value(&self) -> bool {
         self.value
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct StagedApplyScarfJointSeamResult {
+pub(crate) struct StagedApplyScarfJointSeamResult {
     has_scarf_joint_seam: bool,
     config_set: Option<StagedApplyScarfJointSeamSet>,
 }
@@ -68,12 +68,12 @@ impl StagedApplyScarfJointSeamResult {
         self.has_scarf_joint_seam
     }
 
-    pub(super) fn config_set(&self) -> Option<StagedApplyScarfJointSeamSet> {
+    pub(crate) fn config_set(&self) -> Option<StagedApplyScarfJointSeamSet> {
         self.config_set
     }
 }
 
-pub(super) fn staged_apply_scarf_joint_seam(
+pub(crate) fn staged_apply_scarf_joint_seam(
     objects: &[StagedApplyScarfJointSeamObject],
 ) -> StagedApplyScarfJointSeamResult {
     let has_scarf_joint_seam = objects

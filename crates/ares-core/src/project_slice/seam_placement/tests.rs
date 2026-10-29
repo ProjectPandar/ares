@@ -1,5 +1,4 @@
 use super::{
-    is_closed_axis_rectangle,
     mesh::{Triangle, TriangleMesh, Vec3},
     place_nearest,
     sampling::sample_uniform,
@@ -13,29 +12,6 @@ use crate::{
         materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3},
     },
 };
-
-#[test]
-fn prepared_axis_rectangle_is_safe_for_clockwise_source_seam() {
-    let loop_ = ExtrusionLoop {
-        paths: vec![ExtrusionPath {
-            polyline: Polyline3 {
-                points: [(0, 0), (10, 0), (10, 10), (0, 10), (0, 0)]
-                    .into_iter()
-                    .map(|(x, y)| Point3 { x, y, z: 0 })
-                    .collect(),
-                fitting: Vec::new(),
-            },
-            role: ExtrusionRole::Perimeter,
-            can_reverse: true,
-            mm3_per_mm: 0.04,
-            width: 0.4,
-            height: 0.2,
-        }],
-        role: ExtrusionLoopRole::Default,
-    };
-
-    assert!(is_closed_axis_rectangle(&loop_));
-}
 
 fn upward_triangle(z: f32) -> Triangle {
     Triangle::new(
@@ -100,6 +76,7 @@ fn task22o128_occluding_surface_lowers_visibility() {
 fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
     let mut loop_ = ExtrusionLoop {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: [(0, 0), (1_000_000, 0), (1_000_000, 1_000_000), (0, 0)]
                     .into_iter()
@@ -140,6 +117,7 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
 fn nearest_seam_uses_the_runtime_cursor() {
     let mut loop_ = ExtrusionLoop {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: [
                     (1_000_000, 1_000_000),
@@ -185,6 +163,7 @@ fn nearest_seam_uses_the_runtime_cursor() {
 fn split_within_source_epsilon_snaps_to_existing_vertex() {
     let mut loop_ = ExtrusionLoop {
         paths: vec![ExtrusionPath {
+            z_contoured: false,
             polyline: Polyline3 {
                 points: [(0, 0), (1_000_000, 0), (1_000_000, 1_000_000), (0, 0)]
                     .into_iter()

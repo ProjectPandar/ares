@@ -25,10 +25,19 @@ pub(super) fn append_inward_move(
 
     // GCode.cpp:5804,5994-6002 uses the clipped last path, but the original
     // loop winding. The selected end-3 vertex precedes any inserted endpoint.
-    let (point_count, _) = super::super::clip::clipped_tail(
-        last.polyline.points.iter().map(|point| (point.x, point.y)),
-        end_clip / geometry.scale.factor(),
-    );
+    let point_count = if last.z_contoured {
+        super::super::path::contour::clipped(
+            &last.polyline.points,
+            end_clip / geometry.scale.factor(),
+        )
+        .len()
+    } else {
+        let (point_count, _) = super::super::clip::clipped_tail(
+            last.polyline.points.iter().map(|point| (point.x, point.y)),
+            end_clip / geometry.scale.factor(),
+        );
+        point_count
+    };
     if point_count < 3 {
         return;
     }
@@ -67,6 +76,7 @@ pub(super) fn inward_point(
     nozzle: f64,
 ) -> crate::geometry::Point {
     let (is_hole, counter_clockwise) = orientation;
+    let displacement_end = first;
     if is_hole == counter_clockwise {
         std::mem::swap(&mut first, &mut second);
     }
@@ -74,8 +84,8 @@ pub(super) fn inward_point(
     if is_hole == counter_clockwise {
         angle = -angle;
     }
-    let dx = (first.x - center.x) as f64;
-    let dy = (first.y - center.y) as f64;
+    let dx = (displacement_end.x - center.x) as f64;
+    let dy = (displacement_end.y - center.y) as f64;
     let length_squared = dx * dx + dy * dy;
     let factor = if nozzle * nozzle < length_squared {
         0.2 * nozzle / length_squared.sqrt()
@@ -103,7 +113,7 @@ pub(super) fn loop_is_counter_clockwise(paths: &[ExtrusionPath]) -> bool {
         .zip(points.iter().cycle().skip(1))
         .map(|(left, right)| left.x as i128 * right.y as i128 - right.x as i128 * left.y as i128)
         .sum::<i128>()
-        > 0
+        >= 0
 }
 
 pub(super) fn ccw_angle(center: Point3, first: Point3, second: Point3) -> f64 {
@@ -121,10 +131,17 @@ pub(super) fn path_length(path: &ExtrusionPath, geometry: LayerGeometry<'_>) -> 
         .points
         .windows(2)
         .map(|segment| {
-            geometry
-                .scale
-                .unscale(segment[1].x - segment[0].x)
-                .hypot(geometry.scale.unscale(segment[1].y - segment[0].y))
+            if path.z_contoured {
+                let dx = (segment[1].x - segment[0].x) as f64;
+                let dy = (segment[1].y - segment[0].y) as f64;
+                let dz = (segment[1].z - segment[0].z) as f64;
+                (dx * dx + dy * dy + dz * dz).sqrt() * geometry.scale.factor()
+            } else {
+                geometry
+                    .scale
+                    .unscale(segment[1].x - segment[0].x)
+                    .hypot(geometry.scale.unscale(segment[1].y - segment[0].y))
+            }
         })
         .sum()
 }

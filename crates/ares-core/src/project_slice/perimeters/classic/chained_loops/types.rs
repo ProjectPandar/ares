@@ -19,8 +19,13 @@ pub(in crate::project_slice) struct PreparedChainedLoopRecord {
 pub(in crate::project_slice) struct PreparedChainedLoopSurface {
     pub(in crate::project_slice) source_index: usize,
     pub(in crate::project_slice) roots: Vec<ChainedLoopNode>,
-    /// `thin_walls` — `detect_thin_wall` extractions for `traverse_loops`.
-    pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
+    /// Root-level chain from materialization (`PerimeterGenerator.cpp:238`),
+    /// passed through for the emission traversal to consume without
+    /// recomputation.
+    pub(in crate::project_slice) root_order: Vec<(usize, bool)>,
+    /// Thin-wall entities from materialization (`PerimeterGenerator.cpp:231`).
+    pub(in crate::project_slice) thin_entities:
+        Vec<crate::project_slice::perimeters::classic::entity_collections::ExtrusionEntity>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -28,6 +33,9 @@ pub(in crate::project_slice) struct ChainedLoopNode {
     // None preserves O5 alignment for source line 208 `continue`; it is not an entity.
     pub(in crate::project_slice) extrusion_loop: Option<ExtrusionLoop>,
     pub(in crate::project_slice) children: Vec<ChainedLoopNode>,
+    /// Chain over this node's children level, computed once at materialization
+    /// (`PerimeterGenerator.cpp:238`) and consumed by the emission traversal.
+    pub(in crate::project_slice) child_order: Vec<(usize, bool)>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -71,11 +71,11 @@ pub(super) fn plan_resolved_objects(
 }
 
 fn zaa_min_z(object: &ResolvedProjectObject) -> Option<f64> {
+    // PrintObjectSlice.cpp:24-47 and Print.hpp:423-424 include all printing regions.
     object
-        .layer_candidates
+        .all_regions
         .iter()
-        .flat_map(|candidate| &candidate.model_parts)
-        .filter(|part| part.region.zaa_enabled.0)
-        .map(|part| part.region.zaa_min_z.0)
+        .filter(|region| region.zaa_enabled.0)
+        .map(|region| region.zaa_min_z.0)
         .reduce(f64::min)
 }

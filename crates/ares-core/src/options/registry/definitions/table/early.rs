@@ -38,7 +38,12 @@ pub(super) const EARLY_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("bottom_solid_infill_flow_ratio", Float, "1",),
     definition!("bottom_surface_density", Percent, "100",),
     definition!("bottom_surface_filament_id", Int, "0",),
-    definition!("bottom_surface_pattern", Enum, "monotonic",),
+    definition!(
+        "bottom_surface_pattern",
+        Enum,
+        "monotonic",
+        super::INFILL_PATTERN_TYPE_KEYS,
+    ),
     definition!("bridge_acceleration", FloatOrPercent, "50%",),
     definition!("bridge_angle", Float, "0",),
     definition!("bridge_density", Percent, "100",),

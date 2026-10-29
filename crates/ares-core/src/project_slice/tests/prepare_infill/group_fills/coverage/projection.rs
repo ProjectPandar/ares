@@ -61,7 +61,8 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     assert_eq!(first_sparse.params.anchor_length_max.to_bits(), 0x3e0a_f329);
     assert_eq!(first_sparse.params.multiline, 4);
     assert!(first_sparse.params.gyroid_optimized);
-    assert_eq!(first_sparse.params.flow_ratio, 1.1);
+    // GCode.cpp:6485-6507 applies gated flow at motion export, not fill grouping.
+    assert_eq!(first_sparse.params.flow_ratio, 1.0);
     assert_eq!(
         first_sparse.params.flow.mm3_per_mm.to_bits(),
         0x3fb4_d7ac_a000_0000
@@ -85,7 +86,7 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     assert_eq!(solid.params.multiline, 1);
     assert!(!solid.params.gyroid_optimized);
     assert_eq!(solid.params.density, 50.0);
-    assert_eq!(solid.params.flow_ratio, 1.2);
+    assert_eq!(solid.params.flow_ratio, 1.0);
     assert_eq!(solid.expolygons, [solid_shape]);
 
     {

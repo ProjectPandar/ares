@@ -5,7 +5,7 @@ use super::{
     lift_is_allowed_at, retract_and_lift, retract_for_print_end,
 };
 use crate::{
-    geometry::{CoordinateScale, ExPolygon, Point, Polygon},
+    geometry::{ExPolygon, Point, Polygon, Polyline},
     project_slice::{gcode_emit::motion::arc, region_slices::RegionSurface},
 };
 
@@ -258,10 +258,10 @@ fn print_end_retracts_without_a_layer_change_lift() {
 fn travel_fully_inside_internal_surface_avoids_retraction() {
     assert!(inside_internal_surfaces(
         &[internal_square()],
-        arc::Point { x: 1.0, y: 1.0 },
-        arc::Point { x: 9.0, y: 9.0 },
-        CoordinateScale::Normal,
-        (0.0, 0.0),
+        &Polyline::new(vec![
+            Point::new(1_000_000, 1_000_000),
+            Point::new(9_000_000, 9_000_000),
+        ]),
     ));
 }
 
@@ -269,10 +269,10 @@ fn travel_fully_inside_internal_surface_avoids_retraction() {
 fn travel_leaving_internal_surface_requires_retraction() {
     assert!(!inside_internal_surfaces(
         &[internal_square()],
-        arc::Point { x: 1.0, y: 1.0 },
-        arc::Point { x: 11.0, y: 9.0 },
-        CoordinateScale::Normal,
-        (0.0, 0.0),
+        &Polyline::new(vec![
+            Point::new(1_000_000, 1_000_000),
+            Point::new(11_000_000, 9_000_000),
+        ]),
     ));
 }
 

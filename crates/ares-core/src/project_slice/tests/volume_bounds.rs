@@ -18,19 +18,12 @@ fn task22j_volume_bounds_promote_ordinals_once_and_preserve_carrier_order() {
         "synthetic.model",
         1,
         vec![
-            project_volume(
-                "synthetic.model",
-                3,
-                ProjectVolumeType::ModelPart,
-                true,
-                false,
-            ),
+            project_volume("synthetic.model", 3, ProjectVolumeType::ModelPart, true),
             project_volume(
                 "synthetic.model",
                 1,
                 ProjectVolumeType::ParameterModifier,
                 true,
-                false,
             ),
         ],
         &[Transform3d::IDENTITY],
@@ -88,7 +81,7 @@ fn task22j_volume_bounds_promote_ordinals_once_and_preserve_carrier_order() {
             ProjectVolumeType::SupportEnforcer,
             ProjectVolumeType::ParameterModifier,
         ]
-        .map(|kind| project_volume("synthetic.model", 1, kind, true, false))
+        .map(|kind| project_volume("synthetic.model", 1, kind, true))
         .to_vec(),
         &[Transform3d::IDENTITY],
     );

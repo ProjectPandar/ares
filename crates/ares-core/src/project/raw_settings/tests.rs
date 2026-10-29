@@ -3,7 +3,10 @@ use super::ProjectSettingsRaw;
 fn tokens(json: &str) -> Vec<(String, Option<String>)> {
     let raw: ProjectSettingsRaw = serde_json::from_str(json).unwrap();
     raw.iter()
-        .map(|(key, token)| (key.to_owned(), token))
+        .map(|entry| {
+            let (key, token) = entry.unwrap();
+            (key.to_owned(), token)
+        })
         .collect()
 }
 
@@ -29,7 +32,7 @@ fn nil_null_and_objects_stay_known_without_tokens() {
     assert!(raw.contains_key("nil"));
     assert!(raw.contains_key("none"));
     assert!(raw.contains_key("object"));
-    assert!(raw.iter().all(|(_, token)| token.is_none()));
+    assert!(raw.iter().all(|entry| entry.unwrap().1.is_none()));
 }
 
 #[test]

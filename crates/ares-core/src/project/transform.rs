@@ -123,6 +123,14 @@ impl Transform3d {
         self.0[..2] == rhs.0[..2]
     }
 
+    /// Zero the X/Y translation, mirroring upstream
+    /// `get_matrix_no_offset().pretranslate(...)` composition
+    /// (`Brim.cpp:371-374`).
+    pub(crate) fn clear_translation_xy(&mut self) {
+        self.0[0][3] = 0.0;
+        self.0[1][3] = 0.0;
+    }
+
     pub(crate) fn transform_z_f32(self, point: Point3d) -> f32 {
         self.0[2][0] as f32 * point.x as f32
             + self.0[2][1] as f32 * point.y as f32

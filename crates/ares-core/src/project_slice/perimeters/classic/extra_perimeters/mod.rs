@@ -2,7 +2,8 @@
 
 mod apply;
 mod ordering;
-pub(super) use apply::{Context, context};
+pub(in crate::project_slice::perimeters) use apply::Context;
+pub(super) use apply::context;
 
 use crate::SliceError;
 use crate::geometry::medial_axis::MedialAxisError;
@@ -15,14 +16,17 @@ use crate::geometry::{
 };
 use crate::project_slice::perimeters::types::Flow;
 
-pub(super) struct ExtraPerimeters {
-    pub(super) paths: Vec<Polyline>,
+pub(in crate::project_slice::perimeters) struct ExtraPerimeters {
+    pub(in crate::project_slice::perimeters) paths: Vec<Polyline>,
     pub(super) has_regions: bool,
-    pub(super) filled: Vec<Polygon>,
+    pub(in crate::project_slice::perimeters) filled: Vec<Polygon>,
 }
 
 impl Context<'_> {
-    pub(super) fn generate(&self, infill: &[ExPolygon]) -> Result<ExtraPerimeters, SliceError> {
+    pub(in crate::project_slice::perimeters) fn generate(
+        &self,
+        infill: &[ExPolygon],
+    ) -> Result<ExtraPerimeters, SliceError> {
         generate(
             infill,
             self.lower,

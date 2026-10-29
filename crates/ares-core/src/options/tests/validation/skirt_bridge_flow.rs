@@ -29,10 +29,18 @@ fn bridge_flow_zero_reports_only_invalid_bridge_flow() {
     }))
     .unwrap();
 
-    let errors = options.validate_skirt_and_bridge_flow_options().unwrap();
+    // `PrintConfig.cpp:1327-1337` permits zero during load; :10427-10429
+    // rejects it through validation rather than the typed bridge accessor.
+    assert_eq!(options.bridge_options().unwrap().bridge_flow(), 0.0);
+    let errors = options.validate_bridge_flow_options().unwrap();
 
+    assert_eq!(errors.len(), 1);
     assert_eq!(errors["bridge_flow"], "invalid value 0.000000");
-    assert_eq!(errors.get("internal_bridge_flow"), None);
+    assert!(matches!(
+        options.validate_loaded_config(),
+        Err(SliceError::InvalidValuesInProject(message))
+            if message == "bridge_flow: invalid value 0.000000"
+    ));
 }
 
 #[test]

@@ -1,0 +1,15 @@
+{
+  "source": "GCode.cpp:3326-3327; GCode.cpp:7432-7462; GCode.cpp:7483; GCodeWriter.cpp:626-648",
+  "cases": {
+    "gate-open": {
+      "sha256": "a8f3b2a3e99da81d1de2b3ae0070281162d6425e525db0f1e58e3eb445c2e04b",
+      "retract_lift_above": "0",
+      "retract_lift_below": "0"
+    },
+    "gate-band": {
+      "sha256": "6fd0a322f8319e17532de0f98359f1542ae195e977c0b681207f134d14793a34",
+      "retract_lift_above": "1",
+      "retract_lift_below": "3"
+    }
+  }
+}

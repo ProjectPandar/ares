@@ -61,8 +61,46 @@ pub(super) fn moves(
             }
         }
         old = [-1000.1; 2];
-        position = result.start;
+        position = result
+            .type1
+            .as_ref()
+            .map_or(result.start, |metadata| metadata.change_start);
         transformed = transform(position, translation, angle);
+    }
+    output
+}
+
+/// `GCode.cpp:364–412`: nozzle-change stream transformation (G1 only).
+pub(super) fn nozzle_moves(
+    gcode: &str,
+    mut position: [f32; 2],
+    translation: [f32; 2],
+    angle: f32,
+) -> String {
+    let mut old = [-1000.1; 2];
+    let mut output = String::with_capacity(gcode.len());
+    for original in gcode.split('\n') {
+        let mut line = original.to_owned();
+        if line.starts_with("G1 ") {
+            let never_skip = if let Some(index) = line.find("_GCODE_WIPE_TOWER_NEVER_SKIP_TAG") {
+                line.truncate(index);
+                true
+            } else {
+                false
+            };
+            let stripped = strip_coordinates(&line, &mut position);
+            let transformed = transform(position, translation, angle);
+            if transformed != old || never_skip {
+                line = stripped;
+                line.replace_range(
+                    ..3,
+                    &motion_prefix("G1 ".into(), transformed, old, [0.0; 2], never_skip),
+                );
+                old = transformed;
+            }
+        }
+        output.push_str(&line);
+        output.push('\n');
     }
     output
 }
@@ -119,6 +157,7 @@ mod tests {
     #[test]
     fn tool_offset_change_preserves_source_spacing_and_resets_position() {
         let mut result = ToolChangeResult {
+            type1: None,
             priming: false,
             initial_tool: 1,
             new_tool: 2,

@@ -35,6 +35,7 @@ fn fill(width: i64, overlap: f64) -> SurfaceFill {
             bridge_angle: 0.0,
             density: 15.0,
             multiline: 1,
+            adaptive_line_spacing: 0.0,
             anchor_length: 0.0,
             anchor_length_max: 0.0,
             flow: Flow {
@@ -75,6 +76,7 @@ fn sparse_concentric_applies_overlap_minus_half_spacing() {
         append_configured(
             &mut output,
             fill(10_000_000, overlap),
+            0.2,
             0.4,
             CoordinateScale::Normal,
         )
@@ -100,7 +102,7 @@ fn sparse_concentric_reconstructs_width_from_quantized_spacing() {
     input.params.flow.width = 0.45;
     input.params.flow.spacing = input.params.spacing as f32;
     let mut output = LayerFillEntities::default();
-    append_configured(&mut output, input, 0.4, CoordinateScale::Normal).unwrap();
+    append_configured(&mut output, input, 0.2, 0.4, CoordinateScale::Normal).unwrap();
     let FillExtrusionEntity::Path(first) = &output.collections[0].entities[0] else {
         panic!("sparse concentric must emit fixed-flow paths");
     };
@@ -115,6 +117,7 @@ fn sparse_concentric_disappears_when_offset_erases_domain() {
     append_configured(
         &mut output,
         fill(300_000, 0.0),
+        0.2,
         0.4,
         CoordinateScale::Normal,
     )

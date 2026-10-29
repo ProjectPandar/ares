@@ -239,13 +239,8 @@ fn flow_multiplier(
     key: &str,
     default: f64,
 ) -> Result<f64, SliceError> {
-    let value =
-        crate::options::parsing::parse_positive_number_or_string(key, values.get(key), default)?;
-    if value <= 2.0 {
-        Ok(value)
-    } else {
-        Err(SliceError::InvalidInput(format!("{key} is out of range")))
-    }
+    // `PrintConfig.cpp:1327-1365`: zero loads; strict-positive validation is later.
+    crate::options::parsing::parse_range_f64(key, values.get(key), default, 0.0, 2.0)
 }
 
 fn boolean(values: &BTreeMap<String, Value>, key: &str, default: bool) -> Result<bool, SliceError> {

@@ -1,0 +1,19 @@
+{
+  "source": "Print.cpp:2780-2977; Brim.cpp:448-460,890,948-977",
+  "cases": {
+    "target": {
+      "sha256": "dae87696a7d27160df37d9516b3af3d933a79bedb9a997c95db3bb82915a7877",
+      "brim_type": "outer_and_inner",
+      "combine_brims": "0",
+      "skirt_type": "perobject",
+      "source": "per-object-skirt-brim/far-brim"
+    },
+    "control": {
+      "sha256": "aec6e8580930fb2200b55dd657ecc10ead605ffc8b575522b5a31fcabc544925",
+      "brim_type": "outer_and_inner",
+      "combine_brims": "0",
+      "skirt_type": "combined",
+      "source": "per-object-skirt-brim/far-brim"
+    }
+  }
+}

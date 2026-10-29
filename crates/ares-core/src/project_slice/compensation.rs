@@ -3,20 +3,24 @@ use std::mem;
 use crate::{
     FloatOrPercent, ObjectOptions, OrcaFloats, Project, SliceError,
     geometry::{CoordinateScale, ExPolygon, FillRule, union_ex},
-    project::effective_config::types::{BoundedResolvedProjectConfig, ResolvedProjectObject},
+    project::effective_config::types::BoundedResolvedProjectConfig,
 };
 
 use super::{
     PreparedPostRegions, ProjectBytes,
     elephant_foot::compensate_expolygons,
-    prepare_post_conical_overhang,
+    hole_to_polyhole,
+    load_stages::prepare_post_interlocking,
     region_slices::{PostRegion, PostRegionPrintObject, RegionSurface},
     slice_ordering::{make_slices, order_expolygons},
 };
 
 mod multi_region;
 mod preflight;
+mod prepare;
 mod xy;
+
+pub(in crate::project_slice) use prepare::apply_project_compensation;
 
 use preflight::{
     PreparedLayerCompensation, PreparedObjectCompensation, prepare_object_compensation,
@@ -85,11 +89,23 @@ const _: ValidateTask22mConfigs = validate_task22m_configs;
 
 pub(in crate::project_slice) struct PostCompensationPrintObject {
     post_regions: PostRegionPrintObject,
+    volume_slices: Vec<RawBrimVolume>,
     lslices: Vec<Vec<ExPolygon>>,
     raw_slices: Vec<Vec<Vec<ExPolygon>>>,
 }
 
+#[derive(Clone)]
+pub(in crate::project_slice) struct RawBrimVolume {
+    pub(in crate::project_slice) source_volume_index: usize,
+    pub(in crate::project_slice) volume_type: crate::ProjectVolumeType,
+    pub(in crate::project_slice) first_layer: Vec<ExPolygon>,
+}
+
 impl PostCompensationPrintObject {
+    pub(in crate::project_slice) fn volume_slices(&self) -> &[RawBrimVolume] {
+        &self.volume_slices
+    }
+
     pub(super) fn as_parts(&self) -> (&PostRegionPrintObject, &[Vec<ExPolygon>]) {
         (&self.post_regions, &self.lslices)
     }
@@ -100,6 +116,15 @@ impl PostCompensationPrintObject {
 
     pub(super) fn raw_slices(&self, region_index: usize, layer_index: usize) -> &[ExPolygon] {
         &self.raw_slices[region_index][layer_index]
+    }
+
+    /// Mutable `(post_regions, lslices)` access for
+    /// `hole_to_polyhole::transform` (`PrintObject.cpp:189-295`), which
+    /// rewrites region surface holes and the `lslices` clones in place.
+    pub(super) fn polyhole_parts_mut(
+        &mut self,
+    ) -> (&mut PostRegionPrintObject, &mut Vec<Vec<ExPolygon>>) {
+        (&mut self.post_regions, &mut self.lslices)
     }
 
     #[cfg(test)]
@@ -127,7 +152,8 @@ pub(super) fn prepare_post_compensation<'a>(
         config_block,
         scale,
         objects,
-    } = prepare_post_conical_overhang(project.into_source())?;
+        painting,
+    } = prepare_post_interlocking(project.into_source())?;
     let initial_layer_width = resolved.views.full.process.print.initial_layer_line_width;
     let nozzle_diameters = &resolved.views.full.project.print.nozzle_diameter;
     let objects = apply_project_compensation(
@@ -135,7 +161,7 @@ pub(super) fn prepare_post_compensation<'a>(
         &resolved.objects,
         initial_layer_width,
         nozzle_diameters,
-        scale,
+        (scale, painting.iter().map(|metadata| metadata.active)),
     )?;
     Ok(PreparedPostCompensation {
         project,
@@ -144,66 +170,6 @@ pub(super) fn prepare_post_compensation<'a>(
         scale,
         objects,
     })
-}
-
-pub(in crate::project_slice) fn apply_project_compensation(
-    objects: Vec<PostRegionPrintObject>,
-    resolved_objects: &[ResolvedProjectObject],
-    initial_layer_width: FloatOrPercent,
-    nozzle_diameters: &OrcaFloats,
-    scale: CoordinateScale,
-) -> Result<Vec<PostCompensationPrintObject>, SliceError> {
-    let contexts = resolved_objects
-        .iter()
-        .flat_map(|resolved| {
-            resolved
-                .print_objects
-                .iter()
-                .enumerate()
-                .map(move |(transform_index, _)| (resolved, transform_index))
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(
-        objects.len(),
-        contexts.len(),
-        "Task 22M objects must match resolved print-object contexts"
-    );
-    for (object, (resolved, transform_index)) in objects.iter().zip(&contexts) {
-        assert_eq!(
-            object.plan.source_object_index,
-            resolved.source_object_index
-        );
-        assert_eq!(object.plan.transform_index, *transform_index);
-    }
-
-    let options = contexts
-        .iter()
-        .map(|(resolved, _)| &resolved.object)
-        .collect::<Vec<_>>();
-    let configs = validate_task22m_configs(&options)?;
-    validate_structures(&objects);
-    let prepared = objects
-        .iter()
-        .zip(&configs)
-        .map(|(object, config)| {
-            prepare_object_compensation(
-                object,
-                *config,
-                initial_layer_width,
-                nozzle_diameters,
-                scale,
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-
-    let mut closing_epsilon = None;
-    objects
-        .into_iter()
-        .zip(prepared)
-        .map(|(object, prepared)| {
-            apply_object_compensation(object, prepared, scale, &mut closing_epsilon)
-        })
-        .collect()
 }
 
 fn validate_structures(objects: &[PostRegionPrintObject]) {
@@ -222,9 +188,20 @@ fn validate_structures(objects: &[PostRegionPrintObject]) {
 fn apply_object_compensation(
     mut object: PostRegionPrintObject,
     prepared: PreparedObjectCompensation,
+    nozzle_diameters: &OrcaFloats,
     scale: CoordinateScale,
     closing_epsilon: &mut Option<f32>,
 ) -> Result<PostCompensationPrintObject, SliceError> {
+    let volume_slices = object
+        .as_parts()
+        .1
+        .iter()
+        .map(|volume| RawBrimVolume {
+            source_volume_index: volume.source_volume_index(),
+            volume_type: volume.volume_type(),
+            first_layer: volume.first_layer().to_vec(),
+        })
+        .collect::<Vec<_>>();
     let backups = if object.regions.len() > 1 {
         multi_region::apply(&mut object.regions, &prepared, scale, closing_epsilon)?
     } else {
@@ -239,6 +216,24 @@ fn apply_object_compensation(
     for (layer_index, raw) in backups.into_iter().enumerate() {
         lslices[layer_index] = order_expolygons(raw);
     }
+    // `PrintObjectSlice.cpp:847`: `_transform_hole_to_polyholes` runs
+    // after `slice_volumes` (which includes this XY/EFC compensation,
+    // `PrintObjectSlice.cpp:1250+`) and before `backup_untyped_slices`
+    // (:851-867) — the `raw_slices` snapshot below therefore already
+    // sees the polyhole points, matching `Layer::backup_untyped_slices`.
+    let mut wrapped = PostCompensationPrintObject {
+        post_regions: object,
+        volume_slices: volume_slices.clone(),
+        lslices,
+        raw_slices: Vec::new(),
+    };
+    hole_to_polyhole::transform(&mut wrapped, nozzle_diameters, scale);
+    let PostCompensationPrintObject {
+        post_regions: object,
+        volume_slices: _,
+        lslices,
+        ..
+    } = wrapped;
     // Layer::backup_untyped_slices saves regions, not the elephant-foot lslices backup.
     let raw_slices = object
         .regions
@@ -259,6 +254,7 @@ fn apply_object_compensation(
         .collect();
     Ok(PostCompensationPrintObject {
         post_regions: object,
+        volume_slices,
         lslices,
         raw_slices,
     })
@@ -331,12 +327,3 @@ fn geometry_error() -> SliceError {
         "project elephant-foot compensation geometry is nonfinite or outside the supported Clipper range",
     )
 }
-
-type ApplyProjectCompensation = fn(
-    Vec<PostRegionPrintObject>,
-    &[ResolvedProjectObject],
-    FloatOrPercent,
-    &OrcaFloats,
-    CoordinateScale,
-) -> Result<Vec<PostCompensationPrintObject>, SliceError>;
-const _: ApplyProjectCompensation = apply_project_compensation;

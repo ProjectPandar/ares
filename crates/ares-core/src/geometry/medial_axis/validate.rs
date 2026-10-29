@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 
-use boostvoronoi::prelude::{Diagram, EdgeIndex, SourceCategory};
+use crate::geometry::voronoi::Diagram;
+use boostvoronoi::prelude::{EdgeIndex, SourceCategory};
 
 use crate::geometry::{Line, Point};
 
