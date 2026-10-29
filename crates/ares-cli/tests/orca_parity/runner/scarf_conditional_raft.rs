@@ -11,7 +11,9 @@
 //! threshold. Admission does not prove the uninitialized field is zero;
 //! the owner-approved deterministic absent-distance policy is recorded in
 //! `docs/architecture/ard-scarf-raft-unset-distance.md`.
-use super::{OrcaRunner, cache_identity, profile_entry, stages};
+use crate::runner::{
+    OrcaRunner, cache_identity, profile_entry, reference_enabled, repo_root, stages,
+};
 use serde_json::{Value, json};
 use std::{fs, path::Path, process::Command};
 
@@ -19,13 +21,13 @@ const LABEL: &str = "taper-raft-40";
 
 #[test]
 fn raft_conditional_scarf_matches_native_public_slicing() {
-    if !super::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    if !reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let fixtures = super::repo_root().join("tests/parity/scarf-conditional-raft");
+    let fixtures = repo_root().join("tests/parity/scarf-conditional-raft");
     let manifest: Value =
         serde_json::from_slice(&fs::read(fixtures.join("manifest.json")).unwrap()).unwrap();
     let input = fs::read(fixtures.join(format!("{LABEL}.3mf"))).unwrap();

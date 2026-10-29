@@ -3,6 +3,9 @@ use super::{OrcaRunner, cache_identity, profile_entry, stages};
 use serde_json::{Value, json};
 use std::{fs, path::Path, process::Command};
 
+#[path = "scarf_conditional_raft.rs"]
+mod raft;
+
 const LABELS: [&str; 5] = [
     "control",
     "positive",
