@@ -1,13 +1,9 @@
 //! `OptionsZCorrector` (`GCodeProcessor.hpp:678-711`) replayed on the move
 //! list `GCodeProcessor::calculate_time` grows (`GCodeProcessor.cpp:5951-6008`).
-//! A block keeps the `move_id` it got at creation (`:4004`, `:5617`); only
-//! the actual-speed insertion renumbers it (`:6003-6008`). `set()` stores
-//! `moves.size() - 1` and nothing renumbers it, so a flush between `set()`
-//! and `update()` leaves the index pointing at an earlier element.
-//! `update()` copies and erases whatever sits there, and every queued block
-//! at or after it resolves to the next element: its time (`:472`), its
-//! actual-speed vertices (`:480-573`) and its `g1_times_cache` entry
-//! (`:484-488`, `:574`) follow that element.
+//! Export-cache membership mirrors the unmodified upstream stale index.
+//! Public moves use the approved `procgcode-stable-options.patch:8-30`
+//! correction: remap the pending marker across actual-speed insertions.
+//! Both views reuse the same recorded vertices and planner schedule.
 
 use crate::gcode_processor::MoveVertex;
 use crate::project_slice::gcode_emit::processor::motion::Trapezoid;
@@ -28,6 +24,11 @@ enum Call {
     Set,
     /// `update(m_height)` (`GCodeProcessor.cpp:3929`).
     Update(f32),
+}
+
+enum MarkerIdentity {
+    Official,
+    Stable,
 }
 
 /// The stored vertex count, the first vertex each block stored and the
@@ -113,14 +114,43 @@ impl Log {
         self.call(Call::Update(height));
     }
 
-    /// Rebuilds `GCodeProcessorResult::moves` from the `recorded` vertices
-    /// (origin first) with the flushes interleaved where Native ran them, and
-    /// corrects `cache_eligible` of the blocks an `update()` shifted.
+    /// Keep official export-cache membership, but expose the approved stable
+    /// marker identity in public moves (`web-colorchange.md:128-189`).
     pub(in crate::project_slice::gcode_emit::processor) fn replay(
         &self,
         recorded: Vec<MoveVertex>,
         scheduled: &Scheduled<'_>,
         cache_eligible: &mut [bool],
+    ) -> Vec<MoveVertex> {
+        if self.calls.is_empty() {
+            return self.replay_as(
+                recorded,
+                scheduled,
+                cache_eligible,
+                MarkerIdentity::Official,
+            );
+        }
+        drop(self.replay_as(
+            recorded.clone(),
+            scheduled,
+            cache_eligible,
+            MarkerIdentity::Official,
+        ));
+        let mut viewer_cache = vec![false; cache_eligible.len()];
+        self.replay_as(
+            recorded,
+            scheduled,
+            &mut viewer_cache,
+            MarkerIdentity::Stable,
+        )
+    }
+
+    fn replay_as(
+        &self,
+        recorded: Vec<MoveVertex>,
+        scheduled: &Scheduled<'_>,
+        cache_eligible: &mut [bool],
+        identity: MarkerIdentity,
     ) -> Vec<MoveVertex> {
         debug_assert_eq!(self.blocks.len(), cache_eligible.len());
         let mut replay = Replay {
@@ -132,14 +162,15 @@ impl Log {
             queue: Vec::with_capacity(self.blocks.len()),
             done: 0,
             pass: Pass::default(),
+            identity,
+            pending_marker: None,
         };
-        let mut stale = None;
         for &(clock, ref call) in &self.calls {
             replay.advance(clock.vertices, &self.blocks[..clock.blocks]);
             replay.flush(scheduled.processed(clock));
-            match (call, stale.take()) {
-                // `m_move_id = moves.size() - 1`.
-                (Call::Set, _) => stale = Some(replay.moves.len() - 1),
+            match (call, replay.pending_marker.take()) {
+                // `m_move_id = moves.size() - 1` (`GCodeProcessor.hpp:689`).
+                (Call::Set, _) => replay.pending_marker = Some(replay.moves.len() - 1),
                 (&Call::Update(height), Some(index)) => replay.update(index, height),
                 (Call::Update(_), None) => {}
             }
@@ -168,6 +199,8 @@ struct Replay<'a, 'b> {
     queue: Vec<Queued>,
     done: usize,
     pass: Pass,
+    identity: MarkerIdentity,
+    pending_marker: Option<usize>,
 }
 
 impl Replay<'_, '_> {
@@ -216,10 +249,20 @@ impl Replay<'_, '_> {
                 Err(_) => *id + inserted,
             };
         }
+        // Approved stable correction (`procgcode-stable-options.patch:8-30`):
+        // upper_bound followed by its predecessor, not an exact ID lookup.
+        if matches!(self.identity, MarkerIdentity::Stable)
+            && let Some(index) = &mut self.pending_marker
+        {
+            let upper = map.partition_point(|&(old, _)| old <= *index);
+            if let Some(&(old, new)) = map[..upper].last() {
+                *index += new - old;
+            }
+        }
     }
 
-    /// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`) on the
-    /// stale `index`; queued blocks keep their `move_id`.
+    /// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`);
+    /// queued blocks keep their `move_id` after the indexed element is erased.
     fn update(&mut self, index: usize, height: f32) {
         let mut copy = self.moves[index];
         copy.position = self.moves[self.moves.len() - 1].position;
