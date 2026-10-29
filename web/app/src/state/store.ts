@@ -46,6 +46,10 @@ export interface PresetSelection {
   filaments: string[];
   /** `curr_bed_type` of the plate combo; unset when the printer has none. */
   bedType?: string;
+  /** `nozzle_volume_type`, `filament_map_mode` and `filament_map` of a dual-nozzle printer. */
+  nozzleVolumeTypes?: string[];
+  filamentMapMode?: string;
+  filamentMap?: string[];
 }
 
 export type CompatibleState =

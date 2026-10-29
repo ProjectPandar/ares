@@ -2,6 +2,7 @@ import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPre
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
+import { extruderOverrides, selectionExtruders } from "./extruders";
 import { printerBedType, updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
 import { type CompatibleState, type ModelFile, type PresetSelection, useApp } from "./store";
@@ -211,7 +212,9 @@ export async function selectPrinter(printer: string | null) {
   await updatePrinterPanel();
   const selection = useApp.getState().presetSelection;
   if (selection && selection.printer === printer) {
-    useApp.setState({ presetSelection: { ...selection, bedType: printerBedType(saved?.bedType) } });
+    useApp.setState({
+      presetSelection: { ...selection, bedType: printerBedType(saved?.bedType), ...selectionExtruders(printer, useApp.getState().printerPanel) },
+    });
   }
   if ((useApp.getState().presetSelection?.printer ?? null) === printer) saveSelection();
 }
@@ -309,8 +312,12 @@ export async function overrideTokens(overrides: ConfigOverrides): Promise<Record
 export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides): Promise<SliceResult> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, useApp.getState());
   // The plate combo's `curr_bed_type` is part of the project config the slice composes.
-  const bedType: ConfigOverrides = selection.bedType === undefined ? {} : { curr_bed_type: selection.bedType };
-  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, { ...options, overrides: await overrideTokens({ ...overrides, ...bedType }) });
+  // So are the dual-nozzle volume types and filament map.
+  const project: ConfigOverrides = {
+    ...(selection.bedType === undefined ? {} : { curr_bed_type: selection.bedType }),
+    ...extruderOverrides(selection, presetFilamentSlots(scene.settings)),
+  };
+  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, { ...options, overrides: await overrideTokens({ ...overrides, ...project }) });
 }
 
 /**

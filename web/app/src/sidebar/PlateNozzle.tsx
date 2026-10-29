@@ -1,5 +1,5 @@
 import type { ProjectSettings } from "@ares-slicer/wasm";
-import { selectBedType, selectNozzle } from "../state/printer";
+import { selectBedType, selectDiameter } from "../state/printer";
 import { accordBedType, bedTypeOptions, nozzleOptions, showsBedTypes } from "../state/printerPanel";
 import { useApp } from "../state/store";
 import { firstString } from "./options";
@@ -32,7 +32,7 @@ export function PlateNozzle({ settings }: { settings: ProjectSettings | null }) 
         <label className="kv-row">
           <span>Nozzle</span>
           <select className="option-select printer-select" aria-label="Nozzle diameter" value={nozzle.selected}
-            onChange={(event) => void selectNozzle(event.target.value)}>
+            onChange={(event) => void selectDiameter(panel, event.target.value)}>
             {nozzle.options.map((diameter) => <option key={diameter} value={diameter}>{`${diameter} mm`}</option>)}
           </select>
         </label>

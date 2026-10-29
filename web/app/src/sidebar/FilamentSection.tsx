@@ -4,6 +4,7 @@ import { OrcaIcon } from "../shell/icons";
 import { importedNames, selectFilament } from "../state/presets";
 import { useApp } from "../state/store";
 import { filamentGroups } from "./filamentGroups";
+import { FilamentMapPanel } from "./FilamentMapPanel";
 import { type PresetGroup, PresetCombo } from "./PresetCombo";
 import { EditButton, type OpenTab, Section } from "./Section";
 import { filamentNames, presetFilamentSlots, stringList } from "./options";
@@ -47,6 +48,7 @@ export function FilamentSection({ settings, openTab }: { settings: ProjectSettin
           )}
         </div>
       ))}
+      <FilamentMapPanel settings={settings} />
       {dialog && selection && <Suspense><FilamentDialog printer={selection.printer} onClose={() => setDialog(false)} /></Suspense>}
     </Section>
   );

@@ -33,6 +33,10 @@ export interface StoredConfig {
   printers: Record<string, PrinterSettings>;
   /** Section `filaments`: the installed system filaments (PresetBundle::load_installed_filaments). */
   installedFilaments: string[];
+  /** Section `nozzle_volume_types` by printer (AppConfig.cpp:1555-1580). */
+  nozzleVolumeTypes: Record<string, string[]>;
+  /** `prefered_filament_map_mode` (FilamentGroupPopup.cpp:25-48). */
+  preferredFilamentMapMode: "Auto For Flush" | "Auto For Match" | "Manual";
 }
 
 const DEFAULTS: StoredConfig = {
@@ -44,6 +48,9 @@ const DEFAULTS: StoredConfig = {
   printer: null,
   printers: {},
   installedFilaments: [],
+  nozzleVolumeTypes: {},
+  // AppConfig.cpp:456-457.
+  preferredFilamentMapMode: "Auto For Flush",
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -63,7 +70,9 @@ function isStoredConfig(value: Record<string, unknown>): boolean {
     && isStrings(value.vendors)
     && (value.printer === null || typeof value.printer === "string")
     && isRecord(value.printers) && Object.values(value.printers).every(isPrinterSettings)
-    && isStrings(value.installedFilaments);
+    && isStrings(value.installedFilaments)
+    && isRecord(value.nozzleVolumeTypes) && Object.values(value.nozzleVolumeTypes).every(isStrings)
+    && ["Auto For Flush", "Auto For Match", "Manual"].includes(value.preferredFilamentMapMode as string);
 }
 
 /** The stored record, or the defaults after deleting a missing, old or malformed one. */
