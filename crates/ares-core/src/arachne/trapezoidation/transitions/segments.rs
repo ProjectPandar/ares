@@ -2,11 +2,14 @@ mod junctions;
 mod local_maxima;
 mod toolpaths;
 
-use std::{cell::RefCell, cmp::Ordering, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
-use crate::arachne::{
-    beading::base::Beading,
-    skeletal::{BeadingPropagation, EdgeId},
+use crate::{
+    arachne::{
+        beading::base::Beading,
+        skeletal::{BeadingPropagation, EdgeId},
+    },
+    geometry::fixed_gcc_sort_by,
 };
 
 use super::{SkeletalTrapezoidation, point_distance};
@@ -61,7 +64,10 @@ impl SkeletalTrapezoidation<'_> {
                     && self.graph.edge_is_upward(edge)
             })
             .collect::<Vec<_>>();
-        edges.sort_by(|left, right| self.compare_upward_quad_mids(*left, *right));
+        // SkeletalTrapezoidation.cpp:1441-1467: retain libstdc++ equal-key ordering.
+        fixed_gcc_sort_by(&mut edges, |left, right| {
+            self.upward_quad_mid_less(*left, *right)
+        });
         edges
     }
 
@@ -172,7 +178,8 @@ impl SkeletalTrapezoidation<'_> {
         *bottom = BeadingPropagation::new(merged);
     }
 
-    fn compare_upward_quad_mids(&self, left: EdgeId, right: EdgeId) -> Ordering {
+    // SkeletalTrapezoidation.cpp:1441-1467: the upstream strict-weak less predicate.
+    fn upward_quad_mid_less(&self, left: EdgeId, right: EdgeId) -> bool {
         let left_edge = self.graph.edge(left);
         let right_edge = self.graph.edge(right);
         let left_from = left_edge.from.unwrap();
@@ -187,16 +194,14 @@ impl SkeletalTrapezoidation<'_> {
                 self.graph.node(right_from).data.distance_to_boundary == right_to_radius;
             match (left_flat, right_flat) {
                 (true, true) => {
-                    return self
-                        .distance_before_rise(left)
-                        .cmp(&self.distance_before_rise(right));
+                    return self.distance_before_rise(left) < self.distance_before_rise(right);
                 }
-                (true, false) => return Ordering::Less,
-                (false, true) => return Ordering::Greater,
+                (true, false) => return true,
+                (false, true) => return false,
                 (false, false) => {}
             }
         }
-        right_to_radius.cmp(&left_to_radius)
+        left_to_radius > right_to_radius
     }
 
     fn distance_before_rise(&self, edge: EdgeId) -> i64 {
@@ -211,10 +216,7 @@ impl SkeletalTrapezoidation<'_> {
             .unwrap_or(i64::MAX);
         let from = half_edge.from.unwrap();
         let to = half_edge.to.unwrap();
-        rise.saturating_sub(point_distance(
-            self.graph.node(from).point,
-            self.graph.node(to).point,
-        ))
+        rise - point_distance(self.graph.node(from).point, self.graph.node(to).point)
     }
 }
 
