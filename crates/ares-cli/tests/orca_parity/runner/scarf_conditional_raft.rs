@@ -6,10 +6,11 @@
 //! `SeamCandidate::unsupported_dist` — which `SeamPlacer.cpp:1083-1092`
 //! only assigns through a previous-layer distancer, leaving the layer-0
 //! candidate's field uninitialized (`SeamPlacer.hpp:59-70`). Measured Native
-//! behavior (three byte-identical runs): the uninitialized read acts as zero
-//! (`0 < threshold * line_width` always true), so the first object layer
-//! keeps its scarf (16 segments at z .6 in the 5% variant too), while the
-//! computed later layers flip off below the threshold.
+//! behavior keeps the first object layer's scarf (16 segments at z .6 in
+//! the 5% variant too), while computed later layers flip off below the
+//! threshold. Admission does not prove the uninitialized field is zero;
+//! the owner-approved absent-distance policy is recorded in
+//! `docs/architecture/ard-scarf-raft-unset-distance.md`.
 use super::{OrcaRunner, cache_identity, profile_entry, stages};
 use serde_json::{Value, json};
 use std::{fs, path::Path, process::Command};

@@ -1,4 +1,5 @@
 {
+  "spec": "docs/architecture/ard-scarf-raft-unset-distance.md",
   "source_boundary": "src/libslic3r/GCode.cpp:5777-5791; src/libslic3r/GCode/SeamPlacer.hpp:59-70; src/libslic3r/GCode/SeamPlacer.cpp:1083-1092,1563",
   "derived_from": "tests/parity/scarf-conditional/overhang-high.3mf",
   "upstream": "8500fcdccaa10b5099ac20d252af3a7c560046f1",

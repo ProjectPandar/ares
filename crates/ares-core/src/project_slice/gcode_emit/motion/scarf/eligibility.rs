@@ -28,9 +28,10 @@ pub(super) fn permits(
         // over a raft: `layer_id() > 0` admits it at GCode.cpp:5780, but
         // SeamPlacer.cpp:1083-1092 only assigns unsupported_dist through a
         // previous layer) reaches GCode.cpp:5786-5790 reading the
-        // uninitialized SeamCandidate field (SeamPlacer.hpp:59-70). Measured
-        // Native behavior is zero, so `0 < threshold * width` keeps the
-        // scarf; model the unset distance as 0.0.
+        // uninitialized SeamCandidate field (SeamPlacer.hpp:59-70). The owner
+        // approves 0.0 for this undefined boundary to match observed Native
+        // admission, not as a claim that the C++ value is zero. See
+        // docs/architecture/ard-scarf-raft-unset-distance.md.
         let unsupported = unsupported.unwrap_or(0.0);
         return f64::from(unsupported)
             < options.scarf.overhang_threshold * f64::from(0.01_f32) * width;

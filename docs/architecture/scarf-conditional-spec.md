@@ -7,6 +7,11 @@ exact SPEC approval. [ARD](ard-scarf-conditional.md).
 
 ## Owner amendment: first-object-over-raft Native UB (2026-10-17)
 
+Superseded on 2026-10-29 **only for the absent-distance policy** by the
+[owner-approved raft distance decision](ard-scarf-raft-unset-distance.md).
+The historical guard rationale below remains evidence of the undefined source
+boundary; the new decision does not claim that Native's field is zero.
+
 After approved REDbdb36e092, owner authorizes ONE narrow explicit admission error:
 `raft_layers>0 && conditional scarf active && scarf_overhang_threshold>0` →
 `SliceError::UnsupportedProjectFeature`, key `scarf_overhang_threshold`.
