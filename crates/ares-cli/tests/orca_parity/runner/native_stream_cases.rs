@@ -38,6 +38,8 @@ mod seam_occlusion_object_affine;
 mod seam_slope_travel;
 #[path = "template_elsif.rs"]
 mod template_elsif;
+#[path = "template_ternary.rs"]
+mod template_ternary;
 #[path = "wall_direction_seam.rs"]
 mod wall_direction_seam;
 #[path = "zero_extrusion_comment.rs"]
