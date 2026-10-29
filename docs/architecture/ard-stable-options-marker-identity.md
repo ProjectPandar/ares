@@ -42,8 +42,11 @@ time estimator.
 5. Keep raw Native captures. Tagged controls must prove the complete
    raw-to-Rust XYZ-bit difference equals raw-to-stable Native, including
    missing tails, and compare move identities against stable Native.
-   Untagged controls, metadata and statistics remain raw-official. No fixture
-   changes, exclusions, looser tolerances, or raw-for-stable substitution.
+   Untagged controls, metadata and statistics remain raw-official. No
+   fixture changes, exclusions, looser tolerances, or raw-for-stable substitution.
+   Motion-attribute controls with marker-bearing inputs use the separately
+   rooted initialized stable-dynamics diagnostic (raw dynamics plus only the
+   marker patch); untagged motion controls continue using raw dynamics.
 
 ## Included and deferred behavior
 
@@ -73,6 +76,10 @@ bounded-difference assertions.
 GREEN must pass every tagged stable ID, both duration modes, and ordered-f32
 Normal elapsed bits, plus the Native raw/stable bounded-impact proof. Run
 full official and seeded G-code parity, full non-parity with required live
-oracles, fmt and strict clippy. All own work stays CPU13/thread1/build-jobs1.
+oracles, fmt and strict clippy.
+The corrected initialized stable-dynamics diagnostic is a GC-rooted local
+oracle built from `tools/chain-probe/procgcode-dynamics.patch` and the approved
+`tools/chain-probe/procgcode-stable-options.patch`; its hash and patch receipt
+remain outside Git. It is not an unmodified upstream parity claim.
 Report any baseline failures by exact binary/test name; do not claim an
 all-green workspace when baseline failures remain.

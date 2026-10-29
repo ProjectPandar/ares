@@ -7,6 +7,7 @@ enum Recipe {
     RawColor,
     StableColor,
     Dynamics,
+    StableDynamics,
 }
 
 impl Recipe {
@@ -15,6 +16,7 @@ impl Recipe {
             Self::RawColor => "ARES_PROCGCODE_BIN",
             Self::StableColor => "ARES_PROCGCODE_STABLE_BIN",
             Self::Dynamics => "ARES_PROCGCODE_DYNAMICS_BIN",
+            Self::StableDynamics => "ARES_PROCGCODE_DYNAMICS_STABLE_BIN",
         }
     }
 
@@ -23,13 +25,18 @@ impl Recipe {
             Self::RawColor => &["procgcode.patch"],
             Self::StableColor => &["procgcode.patch", "procgcode-stable-options.patch"],
             Self::Dynamics => &["procgcode.patch", "procgcode-dynamics.patch"],
+            Self::StableDynamics => &[
+                "procgcode.patch",
+                "procgcode-dynamics.patch",
+                "procgcode-stable-options.patch",
+            ],
         }
     }
 
     fn products(&self) -> &'static [&'static str] {
         match self {
             Self::RawColor | Self::StableColor => &["native.json", "native.csv"],
-            Self::Dynamics => &["native-dynamics.csv", "native.csv"],
+            Self::Dynamics | Self::StableDynamics => &["native-dynamics.csv", "native.csv"],
         }
     }
 }
@@ -54,6 +61,13 @@ impl OrcaRunner {
         input: &Path,
     ) -> Result<Option<PathBuf>, StageError> {
         self.diagnostic_reference(input, Recipe::Dynamics)
+    }
+
+    pub(crate) fn processor_stable_dynamics_reference(
+        &self,
+        input: &Path,
+    ) -> Result<Option<PathBuf>, StageError> {
+        self.diagnostic_reference(input, Recipe::StableDynamics)
     }
 
     fn diagnostic_reference(
@@ -129,7 +143,7 @@ impl OrcaRunner {
                 .keep();
             let option = match recipe {
                 Recipe::RawColor | Recipe::StableColor => "--dump-color-change",
-                Recipe::Dynamics => "--dump-move-dynamics",
+                Recipe::Dynamics | Recipe::StableDynamics => "--dump-move-dynamics",
             };
             stages::run(
                 &bin,
