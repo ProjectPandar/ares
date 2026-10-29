@@ -317,7 +317,18 @@ Included: everything above. Deferred: Bundle presets
 and `show_unsupported_presets` preference UI, AMS/printer sync
 (`add_ams_filaments`, `sync_extruder_list`, Auto For Match), per-plate bed
 type and map mode (`PartPlate`), flush-volume matrices in persistence, and
-cross-device sync.
+cross-device sync. Filament items are also still labelled with the preset name
+rather than `Preset::label(false)` (the system alias, `Preset.cpp:765-769`,
+`PresetComboBoxes.cpp:1098-1101`), because existing E2E selectors depend on
+the names.
+
+Observed with D1: OrcaSlicer's first-run wizard does not check any filament in
+the dialog for BBL. `ChooseDefaultFilament` (`22/common.js:421-484`) compares
+short names with the full `default_materials` names. So the installed set is
+the `load_installed_filaments` seed only, which names exact presets. A printer
+whose compatible presets are none of those (e.g. the X1C 0.2 nozzle, whose
+filaments are `… @BBL X1C 0.2 nozzle`) lists only user presets until
+filaments are added in the dialog.
 
 ## Decisions (coordinator review of the spec)
 

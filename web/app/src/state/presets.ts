@@ -1,5 +1,6 @@
 import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
-import { presetFilamentSlots } from "../sidebar/options";
+import type { DialogFilament } from "../sidebar/filamentDialog";
+import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
 import { slicer } from "./slicer";
 import { type CompatibleState, type ModelFile, type PresetSelection, useApp } from "./store";
@@ -80,6 +81,7 @@ async function restoreSession() {
     }
   }
   if (useApp.getState().vendors.length > 0) await updateSystemPrinters();
+  await updateInstalledFilaments();
   const { printer } = storedConfig;
   if (printer === null) return;
   // select_preset_by_name_strict: a printer that is no longer loaded is not selected.
@@ -104,7 +106,13 @@ async function updateCompatible() {
     const presets = await catalog
       .filterCompatible(selection.printer, selection.process)
       .finally(() => performance.measure("ares:filter-compatible-presets", { start }));
-    if (useApp.getState().presetSelection === selection) useApp.setState({ compatible: { status: "done", presets } });
+    // PresetComboBoxes.cpp:1216-1226: each filament's type and vendor for the combo's grouping.
+    const values = await catalog.presetValues("filament", presets.filaments, ["filament_type", "filament_vendor"]);
+    const filamentInfo = new Map(presets.filaments.map((name, index) => [name, {
+      type: firstString(values[index], "filament_type") ?? "",
+      vendor: firstString(values[index], "filament_vendor") ?? "",
+    }]));
+    if (useApp.getState().presetSelection === selection) useApp.setState({ compatible: { status: "done", presets, filamentInfo } });
   } catch (error) {
     if (useApp.getState().presetSelection === selection) {
       useApp.setState({ compatible: { status: "error", error: (error as Error).message } });
@@ -131,7 +139,38 @@ export async function importPresetFiles(files: File[]) {
 export async function setVendors(vendors: string[]) {
   saveConfig({ vendors });
   useApp.setState({ vendors });
-  await Promise.all([updateSystemPrinters(), updateCompatible()]);
+  await Promise.all([updateSystemPrinters(), updateInstalledFilaments(), updateCompatible()]);
+}
+
+/** PresetBundle::load_installed_filaments (PresetBundle.cpp:2541-2600) over the stored set. */
+async function updateInstalledFilaments() {
+  const { vendors } = useApp.getState();
+  const installed = await (await presetCatalog()).installedFilaments(storedConfig.installedFilaments);
+  if (useApp.getState().vendors !== vendors) return;
+  saveConfig({ installedFilaments: installed });
+  useApp.setState({ installedFilaments: new Set(installed) });
+}
+
+/**
+ * The system filaments of the filament dialog for the selected printer, with their type and vendor
+ * (GuideFrame::GetFilamentInfo, WebGuideDialog.cpp:1035): the compatible ones (common.js:86-117).
+ */
+export async function dialogFilaments(printer: string): Promise<DialogFilament[]> {
+  const catalog = await presetCatalog();
+  const user = importedNames(useApp.getState().presetImports, "filament");
+  const names = (await catalog.filterCompatible(printer)).filaments.filter((name) => !user.has(name));
+  const values = await catalog.presetValues("filament", names, ["filament_type", "filament_vendor"]);
+  return names.map((name, index) => ({
+    name,
+    type: firstString(values[index], "filament_type") ?? "",
+    vendor: firstString(values[index], "filament_vendor") ?? "",
+  }));
+}
+
+/** The filament dialog's result (GuideFrame::SaveProfile): the new installed set. */
+export function setInstalledFilaments(installed: string[]) {
+  saveConfig({ installedFilaments: [...installed].sort() });
+  useApp.setState({ installedFilaments: new Set(installed) });
 }
 
 /** PresetBundle::export_selections (PresetBundle.cpp:2917-2945): the selection, also under its printer. */

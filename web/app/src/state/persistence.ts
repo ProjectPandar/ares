@@ -31,6 +31,8 @@ export interface StoredConfig {
   printer: string | null;
   /** Printer settings by printer preset name. */
   printers: Record<string, PrinterSettings>;
+  /** Section `filaments`: the installed system filaments (PresetBundle::load_installed_filaments). */
+  installedFilaments: string[];
 }
 
 const DEFAULTS: StoredConfig = {
@@ -41,6 +43,7 @@ const DEFAULTS: StoredConfig = {
   vendors: [],
   printer: null,
   printers: {},
+  installedFilaments: [],
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -59,7 +62,8 @@ function isStoredConfig(value: Record<string, unknown>): boolean {
     && typeof value.gcodeWindow === "boolean"
     && isStrings(value.vendors)
     && (value.printer === null || typeof value.printer === "string")
-    && isRecord(value.printers) && Object.values(value.printers).every(isPrinterSettings);
+    && isRecord(value.printers) && Object.values(value.printers).every(isPrinterSettings)
+    && isStrings(value.installedFilaments);
 }
 
 /** The stored record, or the defaults after deleting a missing, old or malformed one. */
