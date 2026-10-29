@@ -60,10 +60,11 @@ jobs:
           retention-days: 7
 
   deploy:
-    # Enable only after account/project, credentials and public exposure are approved.
+    # Public hosting and the Pages project ares are approved; retain the opt-in gate.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PAGES_ENABLED == 'true'
     needs: build
-    runs-on: ubuntu-latest
+    runs-on:
+      group: Default
     environment: cloudflare-pages-production
     steps:
       - uses: actions/download-artifact@v4

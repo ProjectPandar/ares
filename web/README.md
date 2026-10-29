@@ -46,38 +46,38 @@ builds and checks every push and pull request,
 independently of the native oracle jobs, and retains the `cloudflare-pages`
 deployment artifact for seven days. PRs and branch pushes never deploy.
 Production deploys only on `main` pushes when repository variable
-`CLOUDFLARE_PAGES_ENABLED` is `true`. Deployment is disabled until setup is approved.
+`CLOUDFLARE_PAGES_ENABLED` is `true`; that variable is now enabled.
 
-Before enabling production, verify the existing Cloudflare account and Pages
-project, with its production branch set to `main`, and approve public hosting
-of the private repository's compiled JS/WASM and bundled upstream profiles.
+Public hosting has been approved in the existing **Indexyz Cloudflare** account.
+The direct Pages project is **`ares`**, at <https://ares-cdh.pages.dev>, with
+`main` as its production branch. It is a Pages project, not a Workers deployment.
+GitHub is already configured with:
+
+- repository variable `CLOUDFLARE_PAGES_PROJECT=ares`;
+- repository variable `CLOUDFLARE_PAGES_ENABLED=true`;
+- environment `cloudflare-pages-production`, restricted to deployments from `main`;
+- environment secret `CLOUDFLARE_ACCOUNT_ID`.
+
+The only remaining user setup is the environment secret `CLOUDFLARE_API_TOKEN`.
+Keep its value out of files, command arguments, logs and chat. The API token
+needs only **Account / Cloudflare Pages / Edit**, restricted to the selected
+account, with an explicitly approved expiry. This permission covers Pages
+projects in that account; it is not restricted to one project. Transfer a newly
+created token directly into GitHub secrets through an approved secure handoff;
+do not reuse or read existing secret values.
+
 Both web library packages declare `AGPL-3.0-or-later`; npm's `prepack` license
 copy does not run during a Vite build. The Pages package preserves the existing
 notices and license texts, but does not publish private source or establish
-license compliance. Before public hosting, separately review licensing and
-approve any required corresponding-source availability and disclosure plan.
-Set `CLOUDFLARE_PAGES_PROJECT` to that verified project name. Use the
-`cloudflare-pages-production` GitHub environment and configure its branch
-restrictions and required reviewers as appropriate. Store `CLOUDFLARE_API_TOKEN`
-and `CLOUDFLARE_ACCOUNT_ID` as environment secrets, keeping the token out of
-files, command arguments, logs and chat. The API token needs only **Account /
-Cloudflare Pages / Edit**, restricted to the selected account, with an explicitly
-approved expiry. This permission covers Pages projects in that account; it is
-not restricted to one project. Transfer the newly created token through an
-approved secure handoff directly into GitHub secrets. Do not reuse or read
-existing secret values. Set the enable variable only after these steps and
-publication approval are complete.
+license compliance. Public-hosting approval does not replace review of any
+required corresponding-source availability and disclosure obligations.
 
-The deployment job runs on a hosted runner and downloads only this run's checked
-artifact. It uses `cloudflare/wrangler-action@v4` with the locked Wrangler version
-and names secrets only in that job; it does not execute app build scripts with
-deployment credentials. No preview deployment or Cloudflare account changes are
-performed by PR builds. See Cloudflare's [Direct Upload CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/).
-The current shared runner group permits all private repositories and does not
-restrict workflows. The CI architecture document describes per-job VMs, but
-the selected fleet's clean creation/destruction controls have not been verified.
-Keep secret-bearing deployment on a fresh hosted runner until an equivalent
-isolation guarantee is established; GitHub billing availability is a prerequisite.
+By user decision, both build and deployment jobs run on the self-hosted
+`Default` group. The deployment job downloads only this run's checked artifact.
+It uses `cloudflare/wrangler-action@v4` with the locked Wrangler version and
+names secrets only in that job; it does not execute app build scripts with
+deployment credentials. PR builds perform no preview deployment or Cloudflare
+account changes. See Cloudflare's [Direct Upload CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/).
 
 ### Bundle size
 
