@@ -25,9 +25,8 @@ pub(super) fn order_expolygons(expolygons: Vec<ExPolygon>) -> Vec<ExPolygon> {
         .collect()
 }
 
-/// `Layer.cpp:34-67::make_slices` merges all regions using the safety offset.
-/// The single-region adapter retains its existing surface ordering until
-/// region-owned perimeter inputs replace that compatibility shell.
+/// `Layer.cpp:38-67::make_slices` chains a copy into physical-layer `lslices`.
+/// Region-owned surface ordering remains unchanged for perimeter generation.
 pub(super) fn make_slices(
     object: &mut PostRegionPrintObject,
 ) -> Result<Vec<Vec<ExPolygon>>, ClipperError> {
@@ -35,37 +34,15 @@ pub(super) fn make_slices(
         [] => (0..object.plan.layers.len()).map(|_| Vec::new()).collect(),
         [region] => region
             .layers
-            .iter_mut()
+            .iter()
             .map(|layer| {
-                let surfaces = std::mem::take(&mut layer.surfaces);
-                let ordering_points = surfaces
-                    .iter()
-                    .map(|surface| {
-                        *surface
-                            .as_parts()
-                            .1
-                            .contour()
-                            .points()
-                            .first()
-                            .expect("a region surface ExPolygon contour must be nonempty")
-                    })
-                    .collect::<Vec<_>>();
-                let order = chain_points(&ordering_points);
-                let mut source = surfaces.into_iter().map(Some).collect::<Vec<_>>();
-                let ordered = order
-                    .into_iter()
-                    .map(|index| {
-                        source[index]
-                            .take()
-                            .expect("chain_points must return each source index once")
-                    })
-                    .collect::<Vec<_>>();
-                let lslices = ordered
-                    .iter()
-                    .map(|surface| surface.as_parts().1.clone())
-                    .collect();
-                layer.surfaces = ordered;
-                lslices
+                order_expolygons(
+                    layer
+                        .surfaces
+                        .iter()
+                        .map(|surface| surface.as_parts().1.clone())
+                        .collect(),
+                )
             })
             .collect(),
         regions => {

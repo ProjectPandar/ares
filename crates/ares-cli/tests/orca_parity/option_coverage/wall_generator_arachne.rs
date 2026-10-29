@@ -17,7 +17,11 @@ fn orca_parity_wall_generator_arachne_matches_complete_output() {
     check(
         (
             "wall-generator-arachne",
-            &["Layer.cpp:38", "Layer.cpp:67", "PerimeterGenerator.cpp:2128"],
+            &[
+                "Layer.cpp:38",
+                "Layer.cpp:67",
+                "PerimeterGenerator.cpp:2128",
+            ],
         ),
         "x1c-wall-generator-arachne",
         include_bytes!(
