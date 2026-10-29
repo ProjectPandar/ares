@@ -40,14 +40,15 @@ export function ExtruderGroups() {
   useApp((state) => state.presetSelection);
   useApp((state) => state.overrides);
   useApp((state) => state.scene);
-  const [mismatch, setMismatch] = useState<[string, string] | null>(null);
+  // Each question is its own dialog: the close event of a dismissed one arrives after the click.
+  const [mismatch, setMismatch] = useState<{ id: number; diameters: [string, string] } | null>(null);
   if (!isDual(panel) || !volumeTypeDef) return null;
   const { volumeTypes } = extruderState();
   const nozzles = [nozzleOptions(panel, 0), nozzleOptions(panel, 1)];
   const pickDiameter = (extruder: number, diameter: string) => {
     const pair: [string, string] = extruder === 0 ? [diameter, nozzles[1].selected] : [nozzles[0].selected, diameter];
     if (pair[0] === pair[1]) void selectDiameter(panel, diameter);
-    else setMismatch(pair);
+    else setMismatch((current) => ({ id: (current?.id ?? 0) + 1, diameters: pair }));
   };
   return (
     <div className="extruder-groups">
@@ -75,7 +76,8 @@ export function ExtruderGroups() {
           </fieldset>
         );
       })}
-      {mismatch && <SwitchDiameter panel={panel} diameters={mismatch} onClose={() => setMismatch(null)} />}
+      {mismatch && <SwitchDiameter key={mismatch.id} panel={panel} diameters={mismatch.diameters}
+        onClose={() => setMismatch((current) => (current?.id === mismatch.id ? null : current))} />}
     </div>
   );
 }
