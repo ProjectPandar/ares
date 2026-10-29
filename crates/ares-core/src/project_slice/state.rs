@@ -33,7 +33,8 @@ pub(super) fn prepare_project_slice(
     overrides: &crate::ConfigOverrides,
 ) -> Result<ProjectSliceState, SliceError> {
     let mut project = crate::project::load_project_with(project, overrides)?;
-    project.initialize_cli_loaded_project_config();
+    let filament_count = project.cli_filament_count();
+    project.initialize_cli_loaded_project_config(filament_count);
     prepare_loaded_project_slice(project, plate)
 }
 
@@ -52,7 +53,8 @@ pub(super) fn prepare_project_source(
         &project.documents().project_settings_raw,
         source.validate_print,
     )?;
-    project.initialize_cli_loaded_project_config();
+    let filament_count = project.cli_filament_count();
+    project.initialize_cli_loaded_project_config(filament_count);
     // CLI:2656 commits the original-machine report before plate selection
     // and Print::validate. Early load/config failures above cannot leak it.
     if let Some(upward) = source.upward {

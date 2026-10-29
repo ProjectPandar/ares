@@ -19,7 +19,18 @@ use crate::{
 };
 
 impl Project {
-    pub(crate) fn initialize_cli_loaded_project_config(&mut self) {
+    /// The CLI `filament_count` variable of `CLI::run`: the embedded
+    /// project's `filament_settings_id` size (`current_filaments_name`,
+    /// `OrcaSlicer.cpp:1768`) — the load-settings overlay never
+    /// recomputes it (`:2272-2273` only fills a zero count).
+    pub(crate) fn cli_filament_count(&self) -> usize {
+        self.documents
+            .project_settings_raw
+            .get("filament_settings_id")
+            .map_or(0, crate::project::raw_settings::RawConfigValue::len)
+    }
+
+    pub(crate) fn initialize_cli_loaded_project_config(&mut self, filament_count: usize) {
         // OrcaSlicer.cpp:1769: the CLI's 3MF import reads this dynamic option
         // with create=true. STL --load-settings does not perform that read.
         let raw = &mut self.documents.project_settings_raw;
@@ -28,6 +39,32 @@ impl Project {
                 "upward_compatible_machine",
                 &self.settings.printer.remaining.upward_compatible_machine.0,
             );
+        }
+        // OrcaSlicer.cpp:2815-2818 resizes both CLI bookkeeping vectors
+        // on m_print_config to filament_count + 2 before the preset sync
+        // and GCode::append_full_config serialize them (`std::vector::
+        // resize` semantics: grow with empty strings, truncate longer
+        // vectors). `filament_count` is the embedded count the CLI loaded
+        // in `:1768`, never the post-overlay vector length.
+        for key in ["different_settings_to_system", "inherits_group"] {
+            let Some(value) = raw.get(key) else {
+                continue;
+            };
+            let mut strings: Vec<String> = match value {
+                crate::project::raw_settings::RawConfigValue::List(items) => items
+                    .iter()
+                    .map(|item| match item {
+                        crate::project::raw_settings::RawConfigValue::Text(text) => text.clone(),
+                        other => other.token().unwrap_or_default(),
+                    })
+                    .collect(),
+                crate::project::raw_settings::RawConfigValue::Text(token) => {
+                    token.split(';').map(str::to_owned).collect()
+                }
+                _ => continue,
+            };
+            strings.resize(filament_count + 2, String::new());
+            raw.insert_strings(key, &strings);
         }
     }
 
@@ -148,7 +185,7 @@ impl Project {
 
         project.settings = resolved;
         project.documents.project_settings_raw = merged;
-        project.initialize_cli_loaded_project_config();
+        project.initialize_cli_loaded_project_config(embedded_count);
         Ok((project, preparation))
     }
 }

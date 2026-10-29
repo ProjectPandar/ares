@@ -226,8 +226,10 @@ pub(crate) fn write_canonical_entries(
             });
         emit(&mut lines, key, rendered.to_owned(), raw_is_nil);
     }
-    // OrcaSlicer.cpp:2815-2818 creates the absent CLI bookkeeping vector
-    // at filament_count + 2 before GCode::append_full_config serializes it.
+    // The resize itself is `initialize_cli_loaded_project_config`
+    // (OrcaSlicer.cpp:2815-2818) on the loaded raw; this loop only
+    // creates an absent key at filament_count + 2 before
+    // GCode::append_full_config serializes it.
     for key in ["different_settings_to_system", "inherits_group"] {
         if !raw_settings.contains_key(key) {
             emit(&mut lines, key, ";".repeat(filament_count + 1), false);
