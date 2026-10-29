@@ -108,12 +108,11 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
         serde_json::to_vec_pretty(&raw_stable_diff).unwrap(),
     )
     .unwrap();
-    // Ares targets the raw upstream processor, including the stale
-    // OptionsZCorrector m_move_id; the stable-options run is only a witness.
+    // The approved marker-identity correction is authoritative for public
+    // moves; retain the complete raw-to-stable difference, including tails.
     assert_eq!(
-        raw_rust_diff,
-        Vec::new(),
-        "Rust must equal the raw native processor by ordinal and exact XYZ bits"
+        raw_rust_diff, raw_stable_diff,
+        "Rust must differ from raw Native exactly like the stable marker correction"
     );
     if name == "two-changes" {
         assert!(
@@ -121,7 +120,7 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
             "fixture must still expose the pinned upstream stale-index defect"
         );
     }
-    let expected_moves: Vec<_> = std::fs::read_to_string(raw.join("native.csv"))
+    let expected_moves: Vec<_> = std::fs::read_to_string(&stable_csv)
         .unwrap()
         .lines()
         .skip(1)
