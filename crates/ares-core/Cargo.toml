@@ -5,6 +5,7 @@ edition = "2024"
 rust-version.workspace = true
 
 [dependencies]
+num-traits = "=0.2.19"
 boostvoronoi = { workspace = true }
 quick-xml = { workspace = true }
 regex = { workspace = true }

@@ -4,6 +4,7 @@ mod bounding_box;
 mod bridge_direction;
 mod chain_points;
 mod clipper;
+mod clipper2;
 mod convex_hull;
 mod coord;
 mod edge_grid;
