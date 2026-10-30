@@ -25,6 +25,8 @@ const GROUPS: [string, [string, string][]][] = [
     [`${ctrl}6`, "Camera Angle - Right side"],
     ["I", "Zoom in"],
     ["O", "Zoom out"],
+    ["M", "Gizmo move"],
+    ["R", "Gizmo rotate"],
     ["Tab", "Switch between Prepare/Preview"],
   ]],
   ["Preview", [

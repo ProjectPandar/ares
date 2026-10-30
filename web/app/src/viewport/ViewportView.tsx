@@ -3,12 +3,13 @@ import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState }
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
-import { moveInstance } from "../state/plates";
+import { moveInstance, rotateInstance } from "../state/plates";
 import { openStlSession, placedScene, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
 import { bedFromSettings } from "./bedShape";
 import type { ViewPreset, ZoomTarget } from "./camera";
+import type { GizmoMode } from "./gizmos";
 import type { Viewport, ViewportColors } from "./Viewport";
 
 // Three.js lives in this chunk; requesting it with the entry lets the shell render while it downloads.
@@ -53,6 +54,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   const host = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState<Viewport | null>(null);
   const [active, setActive] = useState<ViewPreset | null>("plate");
+  const [gizmo, setGizmo] = useState<GizmoMode>("move");
   const theme = useApp((state) => state.theme);
   const loaded = useApp((state) => state.scene);
   const file = useApp((state) => state.file);
@@ -104,9 +106,13 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     const onKey = (event: KeyboardEvent) => {
       if (!instance || !isShortcut(event) || event.altKey) return;
       const key = event.key.toLowerCase();
-      // GLCanvas3D::on_char without Ctrl: I / O zoom in / out.
+      // GLCanvas3D::on_char without Ctrl: I / O zoom in / out; GLGizmosManager: M move, R rotate.
       if (!cmdDown(event) && (key === "i" || key === "o")) {
         instance.zoomBy(key === "i" ? 1 : -1);
+        return;
+      }
+      if (!cmdDown(event) && (key === "m" || key === "r")) {
+        setGizmo(key === "m" ? "move" : "rotate");
         return;
       }
       const preset = VIEW_KEYS[event.key];
@@ -147,12 +153,18 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   // A press on an instance selects it (GLCanvas3D::on_mouse LeftDown) and drags it.
   useEffect(() => {
     if (!viewport) return;
-    viewport.setMoveHandler(editable && plater ? (target, displacement) => {
-      const id = useApp.getState().scene?.objects[target.object]?.id;
+    const select = (object: number) => {
+      const id = useApp.getState().scene?.objects[object]?.id;
       if (id !== undefined && useApp.getState().selectedObject !== id) selectObject(id);
-      void moveInstance(target, displacement);
-    } : undefined);
-  }, [viewport, editable, plater]);
+    };
+    viewport.setEditHandlers(editable && plater ? {
+      move: (target, displacement) => {
+        select(target.object);
+        void moveInstance(target, displacement);
+      },
+      rotate: (target, radians) => void rotateInstance(target, radians),
+    } : undefined, gizmo);
+  }, [viewport, editable, plater, gizmo]);
   useEffect(() => viewport?.setSelected(selected), [viewport, selected]);
   // A new scene or slice result is re-framed: Prepare the plate, Preview the print.
   useEffect(() => {
@@ -202,7 +214,16 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
           }}>Plate</button>
         <button className="view-button" aria-label="Fit to objects" title="Fit to objects" disabled={!scene}
           onClick={() => viewport?.zoomTo("objects")}>Fit</button>
+
       </div>
+      {editable && plater && (
+        <div className="gizmo-toolbar" role="toolbar" aria-label="Gizmos">
+          {(["move", "rotate"] as const).map((mode) => (
+            <button key={mode} className="view-button" aria-pressed={gizmo === mode} title={mode === "move" ? "Move (M)" : "Rotate (R)"}
+              onClick={() => setGizmo(mode)}>{mode === "move" ? "Move" : "Rotate"}</button>
+          ))}
+        </div>
+      )}
       {children}
     </div>
   );

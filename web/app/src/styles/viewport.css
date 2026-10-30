@@ -10,6 +10,10 @@
 @media (hover: hover) { .view-button:not(:disabled):hover { color: var(--text); background: var(--panel-raised); } }
 .view-button[aria-pressed="true"] { color: var(--accent-text); background: var(--accent-fill); }
 .view-button:disabled { opacity: 0.4; }
+.gizmo-toolbar {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px;
+  padding: 3px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow);
+}
 .view-separator { width: 1px; margin: 3px 2px; background: var(--separator); }
 .canvas-hint {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center;

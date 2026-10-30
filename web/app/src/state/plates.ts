@@ -50,33 +50,52 @@ export async function deletePlate(index: number) {
 }
 
 type Vec3 = [number, number, number];
-const moves: { target: InstanceRef; displacement: Vec3 }[] = [];
-let moving = false;
+type Step = { kind: "move" | "rotate"; target: InstanceRef; vector: Vec3 };
+const steps: Step[] = [];
+let editing = false;
 
 /**
- * A canvas drag or move gizmo step (Selection::translate, then GLCanvas3D::do_move). Steps that
- * arrive while the worker applies one are summed per instance and sent as one.
+ * Canvas drags and gizmo steps run one at a time in the worker; steps of one kind on one instance
+ * that arrive meanwhile are summed and sent as one (gizmo drags turn about a single axis).
  */
-export async function moveInstance(target: InstanceRef, displacement: Vec3) {
-  const last = moves.at(-1);
-  if (last && last.target.object === target.object && last.target.instance === target.instance) {
-    last.displacement = last.displacement.map((value, axis) => value + displacement[axis]) as Vec3;
+async function enqueue(step: Step) {
+  const last = steps.at(-1);
+  if (last && last.kind === step.kind && last.target.object === step.target.object && last.target.instance === step.target.instance) {
+    last.vector = last.vector.map((value, axis) => value + step.vector[axis]) as Vec3;
   }
-  else moves.push({ target, displacement });
-  if (moving) return;
-  moving = true;
+  else steps.push(step);
+  if (editing) return;
+  editing = true;
   try {
-    for (let next = moves.shift(); next; next = moves.shift()) {
+    for (let next = steps.shift(); next; next = steps.shift()) {
       const { plater, currentPlate } = useApp.getState();
-      applyLayout(await plater!.translate(next.target.object, next.target.instance, next.displacement), currentPlate);
+      const { object, instance } = next.target;
+      const layout = next.kind === "move" ? await plater!.translate(object, instance, next.vector) : await plater!.rotate(object, instance, next.vector);
+      applyLayout(layout, currentPlate);
     }
   } finally {
-    moving = false;
+    editing = false;
   }
+}
+
+/** A canvas drag or move gizmo step (Selection::translate, then GLCanvas3D::do_move). */
+export function moveInstance(target: InstanceRef, displacement: Vec3) {
+  return enqueue({ kind: "move", target, vector: displacement });
+}
+
+/** A rotate gizmo step about world axes, in radians (Selection::rotate, then GLCanvas3D::do_rotate). */
+export function rotateInstance(target: InstanceRef, radians: Vec3) {
+  return enqueue({ kind: "rotate", target, vector: radians });
 }
 
 /** A Position field edit in world coordinates (GizmoObjectManipulation::change_position_value). */
 export async function setInstancePosition(target: InstanceRef, axis: 0 | 1 | 2, value: number) {
   const { plater, currentPlate } = useApp.getState();
   applyLayout(await plater!.setPosition(target.object, target.instance, axis, value), currentPlate);
+}
+
+/** An absolute rotation field edit in degrees (GizmoObjectManipulation::change_absolute_rotation_value). */
+export async function setInstanceRotation(target: InstanceRef, axis: 0 | 1 | 2, degrees: number) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.setAbsoluteRotation(target.object, target.instance, axis, degrees), currentPlate);
 }

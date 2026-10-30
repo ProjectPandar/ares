@@ -10,15 +10,14 @@ const SLEEVE_PX = 22;
 
 /**
  * GLGizmoMove3D (GLGizmoMove.cpp:130-200): from the selection's bounding box centre, one arrow
- * per axis to a grabber just past the box, sized in screen pixels at the box centre. Each arrow
+ * per axis to a grabber just past the box, sized in `pixel`s at the box centre. Each arrow
  * carries its axis in `userData.axis`; an invisible 44 px sphere round the tip is the grabber.
  */
-export function buildMoveGizmo(box: THREE.Box3, camera: THREE.PerspectiveCamera, viewportHeight: number): THREE.Group {
+export function buildMoveGizmo(box: THREE.Box3, pixel: number) {
   const gizmo = new THREE.Group();
   const center = box.getCenter(new THREE.Vector3());
   const half = box.getSize(new THREE.Vector3()).multiplyScalar(0.5);
-  // World length of one screen pixel at the box centre.
-  const pixel = (2 * camera.position.distanceTo(center) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) / viewportHeight;
+  const tips: THREE.Vector3[] = [];
   AXES.forEach((axis, index) => {
     const length = half.getComponent(index) + OFFSET_PX * pixel;
     const tipLength = 12 * pixel;
@@ -39,7 +38,8 @@ export function buildMoveGizmo(box: THREE.Box3, camera: THREE.PerspectiveCamera,
     // Cylinders stand along +y: turn each onto its axis.
     arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
     gizmo.add(arrow);
+    tips.push(center.clone().addScaledVector(axis, length + tipLength / 2));
   });
   gizmo.position.copy(center);
-  return gizmo;
+  return { gizmo, tips };
 }

@@ -1,29 +1,33 @@
 import * as THREE from "three";
 import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import type { GizmoHit } from "./gizmos";
 
 /** An instance by its `Scene.objects` index and its `instances` index. */
 export type InstanceRef = { object: number; instance: number };
 
-/** Moves one instance by a world displacement. */
-export type MoveHandler = (target: InstanceRef, displacement: [number, number, number]) => void;
+type Vec3 = [number, number, number];
 
-/** What a pointer press landed on: an instance body, or a move gizmo arrow along `axis`. */
-export type DragHit = { target: InstanceRef; point: THREE.Vector3; axis: THREE.Vector3 | null };
+/** Moves one instance by a world displacement, or turns it by world-axis angles in radians. */
+export type EditHandlers = { move: (target: InstanceRef, displacement: Vec3) => void; rotate: (target: InstanceRef, radians: Vec3) => void };
 
-type Drag = { target: InstanceRef; last: THREE.Vector3; axis: THREE.Vector3 | null };
+/** What a pointer press landed on: an instance body, or one of its gizmo's handles. */
+export type DragHit = { target: InstanceRef; point: THREE.Vector3; gizmo: GizmoHit | null };
+
+type Drag = { target: InstanceRef; last: THREE.Vector3; gizmo: GizmoHit | null };
 
 /**
  * GLCanvas3D::on_mouse dragging (`m_mouse.drag`): a press on an instance starts a move on the
- * horizontal plane through the pressed point, a press on a GLGizmoMove3D arrow one along its
- * axis; every pointer move reports the displacement since the last one. Orbiting stays off for
- * the gesture.
+ * horizontal plane through the pressed point, a press on a GLGizmoMove3D arrow a move along its
+ * axis, a press on a GLGizmoRotate3D ring a turn about its axis through the gizmo centre by the
+ * angle the pointer sweeps on the ring's plane (GLGizmoRotate::on_dragging). Every pointer move
+ * reports the change since the last one. Orbiting stays off for the gesture.
  */
 export function attachInstanceDrag(
   canvas: HTMLCanvasElement,
   controls: OrbitControls,
   camera: THREE.Camera,
   hit: (raycaster: THREE.Raycaster) => DragHit | null,
-  onMove: MoveHandler,
+  edit: () => EditHandlers | undefined,
 ) {
   let drag: Drag | null = null;
   const raycaster = new THREE.Raycaster();
@@ -41,18 +45,29 @@ export function attachInstanceDrag(
     if (event.button !== 0) return;
     const pressed = hit(ray(event));
     if (!pressed) return;
-    drag = { target: pressed.target, last: pressed.point, axis: pressed.axis };
+    const { gizmo } = pressed;
+    const last = gizmo?.kind === "ring" ? planePoint(ray(event).ray, gizmo.center, gizmo.axis) : pressed.point;
+    if (!last) return;
+    drag = { target: pressed.target, last, gizmo };
     controls.enabled = false;
   }, { capture: true });
   canvas.addEventListener("pointermove", (event) => {
-    if (!drag) return;
+    const handlers = edit();
+    if (!drag || !handlers) return;
     const { ray: line } = ray(event);
-    const point = drag.axis ? axisPoint(line, drag.last, drag.axis) : planePoint(line, drag.last.z);
-    if (!point) return;
-    const delta = point.clone().sub(drag.last);
-    if (delta.lengthSq() === 0) return;
+    const { gizmo } = drag;
+    const point = !gizmo ? planePoint(line, drag.last, new THREE.Vector3(0, 0, 1))
+      : gizmo.kind === "axis" ? axisPoint(line, drag.last, gizmo.axis)
+      : planePoint(line, gizmo.center, gizmo.axis);
+    if (!point || point.equals(drag.last)) return;
+    if (gizmo?.kind === "ring") {
+      const from = drag.last.clone().sub(gizmo.center);
+      const to = point.clone().sub(gizmo.center);
+      const angle = Math.atan2(from.clone().cross(to).dot(gizmo.axis), from.dot(to));
+      handlers.rotate(drag.target, gizmo.axis.toArray().map((component) => component * angle) as Vec3);
+    }
+    else handlers.move(drag.target, point.clone().sub(drag.last).toArray());
     drag.last = point;
-    onMove(drag.target, [delta.x, delta.y, delta.z]);
   });
   const end = () => {
     if (!drag) return;
@@ -63,9 +78,9 @@ export function attachInstanceDrag(
   canvas.addEventListener("pointercancel", end);
 }
 
-/** The ray's point on the horizontal plane at `z`. */
-function planePoint(ray: THREE.Ray, z: number) {
-  return ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), -z), new THREE.Vector3());
+/** The ray's point on the plane through `origin` normal to `normal`. */
+function planePoint(ray: THREE.Ray, origin: THREE.Vector3, normal: THREE.Vector3) {
+  return ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(normal, origin), new THREE.Vector3());
 }
 
 /** The point of the line through `origin` along unit `axis` closest to the ray. */

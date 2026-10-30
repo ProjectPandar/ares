@@ -3,8 +3,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildPlates } from "./bed";
 import { disposeTree } from "./dispose";
-import { attachInstanceDrag, type DragHit, type InstanceRef, type MoveHandler } from "./instanceDrag";
-import { buildMoveGizmo } from "./moveGizmo";
+import { type GizmoMode, Gizmos } from "./gizmos";
+import { attachInstanceDrag, type DragHit, type EditHandlers, type InstanceRef } from "./instanceDrag";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildOptionMarkers } from "./optionMarkers";
@@ -61,9 +61,9 @@ export class Viewport {
   #selected: number | null = null;
   #pointerDown: { x: number; y: number } | null = null;
   onPick?: (objectId: number | null) => void;
-  /** Where instances can be moved: a drag or move gizmo displacement of one instance. */
-  #onMove?: MoveHandler;
-  #gizmo: THREE.Group | null = null;
+  /** Where instances can be edited: drags and gizmo moves and turns of one instance. */
+  #edit?: EditHandlers;
+  readonly #gizmos: Gizmos;
   /** The mesh data of the drawn scene; a scene with the same data only moves instances. */
   #positions: Float32Array | null = null;
   /** The user started orbiting/panning/zooming away from a preset view. */
@@ -104,8 +104,8 @@ export class Viewport {
       this.onPick?.(this.#pick(event));
     });
 
-    attachInstanceDrag(canvas, this.#controls, this.#camera, (raycaster) => this.#dragHit(raycaster),
-      (target, displacement) => this.#onMove?.(target, displacement));
+    this.#gizmos = new Gizmos(this.#scene, this.#camera, container);
+    attachInstanceDrag(canvas, this.#controls, this.#camera, (raycaster) => this.#dragHit(raycaster), () => this.#edit);
 
     this.#resize = new ResizeObserver(() => this.#fitCanvas());
     this.#resize.observe(container);
@@ -211,32 +211,26 @@ export class Viewport {
 
   /** The move gizmo on the selected object's first instance, while instances can be moved. */
   #placeGizmo() {
-    if (this.#gizmo) {
-      this.#scene.remove(this.#gizmo);
-      disposeTree(this.#gizmo);
-      this.#gizmo = null;
-    }
-    const group = this.#models.children.find((node) => node.userData.objectId === this.#selected && node.userData.ref.instance === 0);
-    if (group && this.#onMove && this.#models.visible) {
-      this.#gizmo = buildMoveGizmo(new THREE.Box3().setFromObject(group), this.#camera, this.container.clientHeight);
-      this.#scene.add(this.#gizmo);
-    }
+    const group = this.#edit && this.#models.visible ? this.#selectedGroup() : undefined;
+    this.#gizmos.place(group ? new THREE.Box3().setFromObject(group) : null);
     this.render();
   }
 
-  #dragHit(raycaster: THREE.Raycaster): DragHit | null {
-    if (!this.#onMove || !this.#models.visible) return null;
-    const arrow = this.#gizmo && raycaster.intersectObject(this.#gizmo, true)[0];
-    if (arrow) {
-      const group = this.#models.children.find((node) => node.userData.objectId === this.#selected && node.userData.ref.instance === 0)!;
-      return { target: group.userData.ref as InstanceRef, point: arrow.point, axis: arrow.object.userData.axis as THREE.Vector3 };
-    }
-    const hit = raycaster.intersectObject(this.#models, true)[0];
-    return hit ? { target: hit.object.parent!.userData.ref as InstanceRef, point: hit.point, axis: null } : null;
+  #selectedGroup() {
+    return this.#models.children.find((node) => node.userData.objectId === this.#selected && node.userData.ref.instance === 0);
   }
 
-  setMoveHandler(onMove: MoveHandler | undefined) {
-    this.#onMove = onMove;
+  #dragHit(raycaster: THREE.Raycaster): DragHit | null {
+    if (!this.#edit || !this.#models.visible) return null;
+    const gizmo = this.#gizmos.hit(raycaster);
+    if (gizmo) return { target: this.#selectedGroup()!.userData.ref as InstanceRef, point: gizmo.point, gizmo };
+    const hit = raycaster.intersectObject(this.#models, true)[0];
+    return hit ? { target: hit.object.parent!.userData.ref as InstanceRef, point: hit.point, gizmo: null } : null;
+  }
+
+  setEditHandlers(edit: EditHandlers | undefined, mode: GizmoMode) {
+    this.#edit = edit;
+    this.#gizmos.mode = mode;
     this.#placeGizmo();
   }
 
@@ -371,7 +365,7 @@ export class Viewport {
     disposeTree(this.#models);
     disposeTree(this.#bed);
     disposeTree(this.#toolMarker);
-    if (this.#gizmo) disposeTree(this.#gizmo);
+    this.#gizmos.dispose();
     if (this.#toolpaths) disposeTree(this.#toolpaths);
     this.#renderer.dispose();
     this.#renderer.domElement.remove();

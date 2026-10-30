@@ -49,6 +49,18 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
   await expect(position(page, "Z")).toHaveValue("5.00");
   await page.screenshot({ path: `${artifacts}dragged.png` });
 
+  // GLGizmoMove3D: a drag on the X grabber, along the arrow on screen, moves the instance along X only.
+  const dragged = await position(page, "X").inputValue();
+  const gizmo = JSON.parse((await page.getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<"center" | "x", [number, number]>;
+  await page.mouse.move(box.x + gizmo.x[0], box.y + gizmo.x[1]);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 2 * gizmo.x[0] - gizmo.center[0], box.y + 2 * gizmo.x[1] - gizmo.center[1], { steps: 10 });
+  await page.mouse.up();
+  await expect(position(page, "X")).not.toHaveValue(dragged);
+  await expect(position(page, "Y")).toHaveValue("110.00");
+  await expect(position(page, "Z")).toHaveValue("5.00");
+  await page.screenshot({ path: `${artifacts}gizmo-x.png` });
+
   // Position fields set world X/Y; a raised Z drops back onto the bed (GLCanvas3D::do_move).
   await setPosition(page, "X", "145.5");
   await expect(position(page, "X")).toHaveValue("145.50");
@@ -76,7 +88,7 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
     fixture: FIXTURE,
-    edits: ["drag along X", "Position X 145.5", "Position Y 95.5", "Position Z 12 drops to 5"],
+    edits: ["drag along X", "move gizmo X arrow", "Position X 145.5", "Position Y 95.5", "Position Z 12 drops to 5"],
     oracle: "OrcaSlicer 2.4.2 --slice 1 of the GUI-exported project (official and seed-replay seed 0)",
     evidence: "ordered_bytes_generator_only",
     results,
