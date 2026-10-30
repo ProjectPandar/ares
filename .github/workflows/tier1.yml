@@ -54,7 +54,7 @@ jobs:
           command -v g++
           test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
-      - run: cargo nextest run --workspace --no-fail-fast
+      - run: cargo nextest run --workspace --no-fail-fast -E 'not binary(orca_parity)'
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   format:
@@ -275,8 +275,10 @@ jobs:
           set -euo pipefail
           nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
           ksr="$ORACLE_ksr_initialized"
+          python3="$(command -v python3)"
           {
             echo "NIX_PATH=nixpkgs=$nixpkgs"
+            echo "ARES_PYTHON_BIN=$python3"
             echo "ARES_ORCA_BIN=$PWD/scripts/orca-seeded-parity.sh"
             echo "ORCA_REPLAY_BIN=$ORACLE_seed_replay/bin/orca-slicer"
             echo "ARES_ORCA_REFERENCE_BINARY=$ORACLE_seed_replay/bin/.orca-slicer-wrapped"
@@ -381,8 +383,10 @@ jobs:
           set -euo pipefail
           nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
           ksr="$ORACLE_ksr_initialized"
+          python3="$(command -v python3)"
           {
             echo "NIX_PATH=nixpkgs=$nixpkgs"
+            echo "ARES_PYTHON_BIN=$python3"
             echo "ARES_ORCA_BIN=$PWD/scripts/orca-parity.sh"
             echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
             echo "ORCA_JOB_APPDIR=$RUNNER_TEMP/orca-patched-appdir"
