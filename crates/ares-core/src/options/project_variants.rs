@@ -65,7 +65,8 @@ pub(crate) fn refresh_filament_map(
     filament_map: &OrcaInts,
     current: &ProjectSettings,
 ) -> Result<ProjectConfigViews, SliceError> {
-    let filament_map = expanded_filament_map(checkpoint, filament_map);
+    // Print.cpp:3171-3175 assigns the recommendation without CLI-entry growth.
+    let filament_map = filament_map.clone();
     let mut refreshed = current.clone();
     refreshed.project.gcode.filament_map = filament_map.clone();
     if let Some(active) = index::resolve_activation(checkpoint)? {
