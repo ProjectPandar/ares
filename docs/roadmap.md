@@ -5,7 +5,23 @@ Every future milestone must be a source-cited Rust rewrite slice of `OrcaSlicer/
 
 This applies to every later milestone: the default design target is an upstream `libslic3r` or `libvgcode` rewrite slice, not an Ares-authored pipeline. Any milestone that cannot point to the upstream source boundary and the Rust destination boundary must be rejected or rewritten before work begins.
 
-## Active program: OrcaSlicer v2.4.2 3MF project G-code parity
+## Active baseline migration: OrcaSlicer v2.5.0-beta
+
+The user selected upstream `345efec64c7b95a05ce5cf96df0dde66a158835c`
+(tag `v2.5.0-beta`, 2026-10-27) as the next parity baseline. The source-only
+[migration ARD and complete file inventory](architecture/2026-10-30-upstream-baseline-v2.5.0-beta.md)
+start from Ares `e4a12268782154587e164a11bb67f09701599d3b`; this planning
+change does not switch executable references or claim beta parity.
+
+Priority is config/resources, geometry and mesh ordering, walls, seams, fill,
+fixed-tool writer/travel contracts, material/tower planning and final processor
+integration. The ARD names upstream functions, current Rust owners, per-layer
+exits, deferred features and the six-area ownership partition. Slice authors use only
+their public targeted RED/GREEN filter plus fmt/Clippy; batch E2E belongs to the
+integrator. Keep approved 2.4.2 chains and receipts frozen; do not relabel them as
+beta qualification or rename existing tests outside the fill/support owner's dedicated rename commit.
+
+## Prior baseline program: OrcaSlicer v2.4.2 3MF project G-code parity
 
 ### By-object spiral per-object transition_out: approved SPEC → side-branch tests-only RED → bounded GREEN
 
