@@ -186,6 +186,18 @@ impl Config {
     pub(crate) fn get(&self, key: &str) -> Option<&Value> {
         self.values.get(key)
     }
+
+    /// Drops an output variable created during a template render
+    /// (upstream `config_local` lifetime, `PlaceholderParser.cpp:889-906`),
+    /// including the spread `key_index` entries of an assigned list.
+    pub(crate) fn remove(&mut self, key: &str) {
+        if let Some(Value::List(values)) = self.values.get(key).cloned() {
+            for index in 0..values.len() {
+                self.values.remove(&format!("{key}_{index}"));
+            }
+        }
+        self.values.remove(key);
+    }
 }
 
 fn parse_value(raw: &str, kind: Option<crate::options::registry::OptionValueKind>) -> Value {

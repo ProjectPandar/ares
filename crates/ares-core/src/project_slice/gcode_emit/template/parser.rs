@@ -146,6 +146,7 @@ impl Parser<'_> {
             let (name, length) = if trimmed
                 .strip_prefix("if")
                 .is_some_and(|tail| tail.starts_with([' ', '\t', '(']) || tail.starts_with('}'))
+                && !self.inline_macro_if(keyword_start)
             {
                 ("if", "if".len())
             } else if trimmed
@@ -198,6 +199,16 @@ impl Parser<'_> {
             }
         }
         None
+    }
+
+    /// True when the brace block at `start` is an inline
+    /// `if ... then ...` macro block (`if_macros`,
+    /// `PlaceholderParser.cpp:2157`), which the macro evaluator owns
+    /// instead of the directive parser.
+    fn inline_macro_if(&self, start: usize) -> bool {
+        self.directive_end(start).is_some_and(|end| {
+            super::macro_block::has_top_level_then(&self.template[start + "if".len()..end])
+        })
     }
 }
 

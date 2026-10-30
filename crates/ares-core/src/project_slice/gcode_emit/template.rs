@@ -1,10 +1,11 @@
 use super::{
     expression::{ParsePath, PathError, evaluate, evaluate_path},
-    value::Config,
+    value::{Config, Value},
 };
 use parser::{Node, parse};
 
 mod error;
+mod macro_block;
 mod parser;
 
 pub(super) fn render(template: &str, config: &mut Config) -> Result<String, String> {
@@ -24,129 +25,163 @@ pub(super) fn render_for_filament(
     // report (`process_error_message` `:1731-1770`) — stay relative to the
     // untrimmed template, so a skipped blank line still counts.
     let nodes = parse(template)?;
-    render_nodes(&nodes, template, config, filament)
+    // Output variables created by `local`/`global` live for this render
+    // only (`config_local`, `PlaceholderParser.cpp:889-906`): their prior
+    // absence is journaled and restored afterwards.
+    let mut renderer = Renderer {
+        template,
+        config,
+        filament,
+        journal: Vec::new(),
+    };
+    let output = renderer.render_nodes(&nodes);
+    restore_output_variables(renderer.config, &mut renderer.journal);
+    output
+}
+
+/// Drops output variables created during a render, restoring any value a
+/// `local`/`global` declaration replaced (`config_local` lifetime,
+/// `PlaceholderParser.cpp:889-906,1384-1448`).
+fn restore_output_variables(config: &mut Config, journal: &mut Vec<(String, Option<Value>)>) {
+    for (name, previous) in journal.drain(..).rev() {
+        match previous {
+            Some(value) => config.insert(name, value),
+            None => config.remove(&name),
+        }
+    }
+}
+
+/// Render state shared by node and text rendering: the config mutated by
+/// assignments and the journal of `local`/`global` output variables.
+struct Renderer<'a> {
+    template: &'a str,
+    config: &'a mut Config,
+    filament: usize,
+    journal: Vec<(String, Option<Value>)>,
 }
 
 #[expect(
     clippy::excessive_nesting,
     reason = "branch selection stays with node rendering"
 )]
-fn render_nodes(
-    nodes: &[Node],
-    template: &str,
-    config: &mut Config,
-    filament: usize,
-) -> Result<String, String> {
-    let mut output = String::new();
-    for node in nodes {
-        match node {
-            Node::Text { text, offset } => {
-                output.push_str(&render_text(text, *offset, template, config, filament)?)
-            }
-            Node::Branch { arms } => {
-                for arm in arms {
-                    let selected = match &arm.condition {
-                        None => true,
-                        Some(condition) => evaluate(condition, config, filament)
-                            .map_err(|error| format!("{error} in {condition}"))?
-                            .as_bool(),
-                    };
-                    if selected {
-                        output.push_str(&render_nodes(&arm.nodes, template, config, filament)?);
-                        break;
+impl Renderer<'_> {
+    fn render_nodes(&mut self, nodes: &[Node]) -> Result<String, String> {
+        let mut output = String::new();
+        for node in nodes {
+            match node {
+                Node::Text { text, offset } => output.push_str(&self.render_text(text, *offset)?),
+                Node::Branch { arms } => {
+                    for arm in arms {
+                        let selected = match &arm.condition {
+                            None => true,
+                            Some(condition) => evaluate(condition, self.config, self.filament)
+                                .map_err(|error| format!("{error} in {condition}"))?
+                                .as_bool(),
+                        };
+                        if selected {
+                            output.push_str(&self.render_nodes(&arm.nodes)?);
+                            break;
+                        }
                     }
                 }
             }
         }
+        Ok(output)
     }
-    Ok(output)
-}
 
-fn render_text(
-    text: &str,
-    text_offset: usize,
-    template: &str,
-    config: &mut Config,
-    filament: usize,
-) -> Result<String, String> {
-    let mut output = String::new();
-    let mut index = 0;
-    while index < text.len() {
-        let remaining = &text[index..];
-        let next_square = remaining.find('[');
-        let next_brace = remaining.find('{');
-        let Some((offset, delimiter)) = [
-            next_square.map(|offset| (offset, '[')),
-            next_brace.map(|offset| (offset, '{')),
-        ]
-        .into_iter()
-        .flatten()
-        .min_by_key(|(offset, _)| *offset) else {
-            output.push_str(remaining);
-            break;
-        };
-        output.push_str(&remaining[..offset]);
-        index += offset;
-        let expression_start = index + 1;
-        let Some(relative_end) = placeholder_end(text, expression_start, delimiter) else {
-            return Err(format!("unclosed placeholder in {text:?}"));
-        };
-        let expression = &text[expression_start..expression_start + relative_end];
-        // The placeholder spelling selects the upstream parse path: brace
-        // placeholders resolve symbols via resolve_variable
-        // (`PlaceholderParser.cpp:988-1000`), bracket placeholders expand
-        // via legacy_variable_expansion (`:918-932`); each path reports
-        // unknown symbols with its own message.
-        let path = match delimiter {
-            '{' => ParsePath::Brace,
-            _ => ParsePath::Legacy,
-        };
-        // Upstream supports assignment statements (`{var[idx] = expr}`) that
-        // store into the parser and render nothing.
-        if let Some((name, index_expression, rhs)) = assignment_parts(expression) {
-            let assignment_index = match index_expression {
-                Some(index_expression) => {
-                    match evaluate(index_expression, config, filament)?.as_number() {
-                        Some(number) if number >= 0.0 => Some(number as usize),
-                        _ => return Err(format!("invalid assignment index in {expression}")),
-                    }
-                }
-                None => None,
+    fn render_text(&mut self, text: &str, text_offset: usize) -> Result<String, String> {
+        let mut output = String::new();
+        let mut index = 0;
+        while index < text.len() {
+            let remaining = &text[index..];
+            let next_square = remaining.find('[');
+            let next_brace = remaining.find('{');
+            let Some((offset, delimiter)) = [
+                next_square.map(|offset| (offset, '[')),
+                next_brace.map(|offset| (offset, '{')),
+            ]
+            .into_iter()
+            .flatten()
+            .min_by_key(|(offset, _)| *offset) else {
+                output.push_str(remaining);
+                break;
             };
-            let value = evaluate(rhs, config, filament)
-                .map_err(|error| format!("{error} in {expression}"))?;
-            config.assign(name, assignment_index, value);
+            output.push_str(&remaining[..offset]);
+            index += offset;
+            let expression_start = index + 1;
+            let Some(relative_end) = placeholder_end(text, expression_start, delimiter) else {
+                return Err(format!("unclosed placeholder in {text:?}"));
+            };
+            let expression = &text[expression_start..expression_start + relative_end];
+            // The placeholder spelling selects the upstream parse path: brace
+            // placeholders resolve symbols via resolve_variable
+            // (`PlaceholderParser.cpp:988-1000`), bracket placeholders expand
+            // via legacy_variable_expansion (`:918-932`); each path reports
+            // unknown symbols with its own message.
+            let path = match delimiter {
+                '{' => ParsePath::Brace,
+                _ => ParsePath::Legacy,
+            };
+            // Statement lists inside one brace block (`macros`,
+            // `PlaceholderParser.cpp:2162-2174`): `;`-separated statements,
+            // `local`/`global` and inline `if/then/elsif/else/endif`.
+            if delimiter == '{' && macro_block::is_macro_body(expression) {
+                output.push_str(&macro_block::evaluate_block(
+                    expression,
+                    self.config,
+                    self.filament,
+                    &mut self.journal,
+                )?);
+                index = expression_start + relative_end + 1;
+                continue;
+            }
+            // Upstream supports assignment statements (`{var[idx] = expr}`) that
+            // store into the parser and render nothing.
+            if let Some((name, index_expression, rhs)) = assignment_parts(expression) {
+                let assignment_index = match index_expression {
+                    Some(index_expression) => {
+                        match evaluate(index_expression, self.config, self.filament)?.as_number() {
+                            Some(number) if number >= 0.0 => Some(number as usize),
+                            _ => return Err(format!("invalid assignment index in {expression}")),
+                        }
+                    }
+                    None => None,
+                };
+                let value = evaluate(rhs, self.config, self.filament)
+                    .map_err(|error| format!("{error} in {expression}"))?;
+                self.config.assign(name, assignment_index, value);
+                index = expression_start + relative_end + 1;
+                continue;
+            }
+            let value = match evaluate_path(expression, self.config, path, self.filament) {
+                Ok(value) => value,
+                Err(PathError::Parse(failure)) => {
+                    return Err(error::report(
+                        self.template,
+                        &failure,
+                        text_offset + expression_start + failure.offset,
+                    ));
+                }
+                Err(PathError::Other(message)) => {
+                    return Err(format!("{message} in {expression}"));
+                }
+            };
+            // `PlaceholderParser.cpp:915`: legacy vectors use the process call's
+            // logical filament context, not a template's physical extruder ID.
+            let vector_index = match path {
+                ParsePath::Legacy => self.filament,
+                ParsePath::Brace => 0,
+            };
+            let value = value.index(vector_index).unwrap_or(&value);
+            let rendered = match path {
+                ParsePath::Legacy => value.as_legacy_string(),
+                ParsePath::Brace => super::expression::to_string(value),
+            };
+            output.push_str(&rendered);
             index = expression_start + relative_end + 1;
-            continue;
         }
-        let value = match evaluate_path(expression, config, path, filament) {
-            Ok(value) => value,
-            Err(PathError::Parse(failure)) => {
-                return Err(error::report(
-                    template,
-                    &failure,
-                    text_offset + expression_start + failure.offset,
-                ));
-            }
-            Err(PathError::Other(message)) => {
-                return Err(format!("{message} in {expression}"));
-            }
-        };
-        // `PlaceholderParser.cpp:915`: legacy vectors use the process call's
-        // logical filament context, not a template's physical extruder ID.
-        let vector_index = match path {
-            ParsePath::Legacy => filament,
-            ParsePath::Brace => 0,
-        };
-        let value = value.index(vector_index).unwrap_or(&value);
-        let rendered = match path {
-            ParsePath::Legacy => value.as_legacy_string(),
-            ParsePath::Brace => super::expression::to_string(value),
-        };
-        output.push_str(&rendered);
-        index = expression_start + relative_end + 1;
+        Ok(output)
     }
-    Ok(output)
 }
 
 /// Splits `name[index] = rhs` assignment statements; returns the variable
