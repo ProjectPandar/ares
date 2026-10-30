@@ -263,3 +263,131 @@ selection and traits ported, plus about 0.8k lines of NLopt.
   - files stay at 400 lines or fewer;
   - Native runs are serial on CPUs 4-7;
   - the full ares-core suite runs whenever core changes.
+
+## Auto-arrange on OrcaSlicer v2.5.0-beta (supersedes the 2.4.2 arrange design)
+
+Coordinator decision: auto-arrange ports OrcaSlicer **v2.5.0-beta at
+`345efec64c7b95a05ce5cf96df0dde66a158835c`** (release/v2.5.0), not 2.4.2 and
+not main. This section replaces the arrange parts above: "Upstream sources >
+Auto-arrange", the arrange port under "Design", the arrange oracle under
+"Parity and tests", D2, and commits 7-8. Every `file:line` below is at
+`345efec64`. Arrange ships as its own PR, stacked on the move/rotate/plates
+branch. The move/rotate/plates work stays on 2.4.2 parity until the Ares
+baseline migration to v2.5.0-beta lands.
+
+### Upstream sources (at 345efec64)
+
+| Upstream | What it does |
+| --- | --- |
+| `src/libslic3r/Arrange.hpp:58-124` `ArrangePolygon`, `:128-205` `ArrangeParams` | Arrange input and output, including the new exclusion fields `z_min`/`z_max`/`has_z_range`/`is_bed_exclusion`/`bed_exclusion_extruder_ids`/`bed_exclusion_extruder_id` and the belt fields. |
+| `src/libslic3r/Arrange.cpp:108-146` `z_ranges_overlap`, `bed_exclusion_applies`, `has_bed_exclusion_regions` | Exclusion volumes: a fixed bed-exclusion item applies only when the Z ranges overlap (touching counts) and only to its owning physical nozzle. |
+| `Arrange.cpp:148` `update_arrange_params`, `:163` `update_selected_items_inflation`, `:213` `update_unselected_items_inflation`, `:234` `update_selected_items_axis_align`, `:339` `get_shrink_bedpts` | Parameter and inflation setup: auto spacing, sequential-print clearance, brim/skirt, align to Y. |
+| `Arrange.cpp:356` `fill_config`, `:416-452` overfit scores, `:455-1003` `AutoArranger`, `:1005/1034/1063` objective functions per bed type, `:1092` `remove_large_items`, `:1105` `min_area_boundingbox_rotation`, `:1119` `fit_into_box_rotation`, `:1125` `_arrange`, `:1221` `process_arrangeable`, `:1259` `call_with_bed`, `:1280-1316` `arrange` | The packing kernel. |
+| `deps_src/libnest2d/include/libnest2d/`: `placers/nfpplacer.hpp`, `selections/firstfit.hpp`, `geometry_traits.hpp`, `geometry_traits_nfp.hpp`, `nester.hpp`, `utils/rotcalipers.hpp`, `optimizers/nlopt/subplex.hpp`, `parallel.hpp`; `backends/libslic3r/geometries.hpp` | Only the placer, selection, NFP and traits that `Arrange.cpp` instantiates. |
+| NLopt **2.5.0** (`deps/NLopt/NLopt.cmake`, tarball `v2.5.0`): `sbplx` + `nldrmd` | The subplex optimizer `NfpPlacer` uses. |
+| `src/libslic3r/IMEXArrange.hpp:15-101`, `IMEXArrange.cpp:33-220` `imex_arrange_zones`, `ImexArrangeInput::read_config`, `ImexArranger` (`bed_shape`, `add_keep_outs`, `finish`) | IDEX/IQEX plates stay inside their primary zone and out of the carriage collision strips. |
+| `src/libslic3r/IMEXZones.hpp:25` `ImexZoneLayout`, plus the `PartPlate::imex_primary_zone`/`imex_collision_zones` it feeds | Zone layout per plate. |
+| `src/slic3r/GUI/Jobs/ArrangeJob.cpp:53-104` bed-exclusion extruder mapping, `:156-175` wipe tower polygon, `:249` `prepare_arrange_polygon`, `:259` `prepare_selected`, `:342` `prepare_all`, `:416-531` `estimate_wipe_tower_info`/`prepare_wipe_tower`, `:532` `prepare_partplate`, `:605-630` `prepare_imex_zones`, `:632` `prepare`, `:697` `check_unprintable`, `:722-805` `process`, `:819-965` `finalize`, `:989-1043` `init_arrange_params` | The GUI arrange job that the web arrange buttons run. |
+| `src/slic3r/GUI/PartPlate.cpp:7617` `preprocess_arrange_polygon`, `:7663` `…_other_locked`, `:7692` `preprocess_exclude_areas`, `:7799` `preprocess_nonprefered_areas`, `:7913` `postprocess_bed_index_for_current_plate`, `:7931` `postprocess_arrange_polygon` | Plate list input and output; arranged items past the last plate create plates. |
+| `src/slic3r/GUI/GLCanvas3D.hpp:603-614` `ArrangeSettings`; `GLCanvas3D.cpp:1549-1557` loaded settings, `:6679-6770` arrange menu | GUI defaults and the settings popup: spacing, auto-rotate, multi-material, calibration region, align to Y (off while rotation is on; default from `printer_structure == i3`, `:6763`). |
+| `src/OrcaSlicer.cpp:5900-6040` CLI arrange (`--arrange`, `PrintConfig.cpp:12962`; `--allow_rotations` `:13231`, `--align_to_y_axis`, `--avoid_extrusion_cali_region` `:13242`; `--export-3mf` `:12763`) | Native oracle path. |
+| Upstream tests: `tests/libslic3r/test_arrange.cpp`, `test_imex_arrange.cpp` (287 LOC), `test_exclusion_volumes.cpp`, `tests/cli/test_cli_arrange_rotations.sh` | Literal expectations to port as Ares RED cases. |
+
+### GUI versus CLI at 345efec64
+
+Both paths call the same `update_*` / `get_shrink_bedpts` /
+`preprocess_exclude_areas` / `arrangement::arrange` sequence. They differ as
+follows:
+
+- **Defaults:** the CLI defaults are `allow_rotations` false (changed from
+  2.4.2), `avoid_extrusion_cali_region` false, `min_obj_distance` 0 (auto), and
+  `align_to_y_axis` from `printer_structure` when not given
+  (`OrcaSlicer.cpp:5978-5982`). The GUI defaults (`GLCanvas3D.hpp:603-614`)
+  are distance 0, rotation off, cali region on (forced off when the checkbox is
+  hidden, `GLCanvas3D.cpp:6726-6734`), and align to Y from `printer_structure`.
+  The E2E passes CLI flags equal to the web's settings (D2 stands).
+- **GUI-only steps:** `ImexArranger` (`ArrangeJob.cpp:744-746, 776`), the
+  per-nozzle bed-exclusion extruder mapping (`:53-104`), the selection and
+  current-plate scopes, and `preprocess_nonprefered_areas` for BBL
+  `scan_first_layer` (`:733-734`). The CLI does not exercise any of these.
+
+### Rust destination
+
+**`crates/ares-core/src/arrange/`:**
+- `arrange.rs`: `Arrange.cpp`.
+- `params.rs`: the `update_*` functions and `get_shrink_bedpts`.
+- `nest2d/`: the listed libnest2d subset.
+- `nlopt/`: sbplx and nldrmd 2.5.0.
+- `imex.rs`: `IMEXArrange.cpp` plus the `IMEXZones` layout it reads.
+- The public API is upstream's: `arrangement::arrange(items, excludes, bed, params)` with `ArrangePolygon` and `ArrangeParams`.
+
+**`crates/ares-core/src/plater/arrange_job.rs`:**
+- ArrangeJob `prepare*`, `process`, `finalize` and `init_arrange_params`, plus the PartPlateList pre/post-processing.
+- Exposed as `PlaterSession::arrange(scope, settings)`, with `scope` all / current plate / selection.
+
+**ares-wasm:** `PlaterSession.arrange(scope, settingsJson)` returns the layout.
+
+**Web:** the "Arrange all" and "Arrange current plate" buttons and the settings popup of `GLCanvas3D.cpp:6679-6770`.
+
+The parallel candidate evaluation becomes a deterministic sequential loop that keeps libnest2d's reduction order.
+
+### Included / deferred
+
+**Included:**
+- the whole kernel, with box, circle and polygon beds;
+- auto spacing and fixed spacing;
+- rotations: `fit_into_box_rotation`, `min_area_boundingbox_rotation`, and allowed angles;
+- align to Y;
+- `best_object_pos` alignment;
+- sequential-print clearance and bed shrink;
+- multi-material and temperature separation (`extrude_ids`, bed and print temperatures, vitrify);
+- the wipe tower as a fixed item;
+- the extrusion-calibration region;
+- `bed_exclude_area` and exclusion volumes with Z ranges and per-nozzle ownership;
+- IDEX/IQEX zones (`ImexArranger`);
+- the all, current-plate and selection scopes;
+- unarrangeable items going to the unprintable plate;
+- new plates for overflow.
+
+**Deferred:**
+- **Belt printers** (`prepare_belt_regions` `:176-225` and the `is_belt` params): Ares has no belt slicing to verify against.
+- **Wrapping-detection exclude areas** (`enable_wrapping_detection`).
+- **Locked plates:** plate lock is deferred, so no plate is locked.
+- **Not ported:** duplicate/fill-bed (`ModelArrange.cpp:77-106`), auto-orient, SLA arrange, the assemble-view arrange, and the CLI-only assemble path.
+
+**Dependency:** the v2.5.0-beta `PrintConfig` keys must exist in Ares first:
+- `bed_exclude_volumes` (`PrintConfig.cpp:1063`), `bed_exclude_volume_mode` (`:1073`) and `extruder_bed_exclude_volumes` (`:1083`);
+- `imex_*` (`:7035-7106`).
+
+These come from the baseline migration, not from this PR.
+
+### Parity oracle
+
+1. **End-to-end Native: official v2.5.0-beta AppImage.**
+   - **Where it comes from:** the extraction is named by `ORCA_APPDIR` and run through `scripts/orca-parity.sh`, as the 2.4.2 official leg is.
+   - **Run:** each case runs `--arrange 1 --allow_rotations <b> --avoid_extrusion_cali_region <b> --align_to_y_axis <b> --export-3mf arranged.3mf <input.3mf>`, pinned to one CPU like the existing parity runs.
+   - **Compared output:** Ares `PlaterSession::arrange(All, settings)` must produce the same build item transforms (as strings, the way `bbs_3mf` writes them) and the same `model_settings.config` plate map.
+   - **Cases:** overflow onto new plates; rotation on and off; align to Y on an i3 printer; by-object clearance; a multi-material temperature split; `bed_exclude_area`; exclusion volumes with Z ranges; a circular (delta) bed; the wipe tower.
+   - **Not compared yet:** per-plate G-code waits until Ares slices at v2.5.0-beta parity. Arrange itself does not slice.
+2. **Kernel oracle for the GUI-only paths** (IMEX, per-nozzle exclusions, partial scopes): `arrange-kernel`, a small driver linked against `libslic3r` at `345efec64`.
+   - **Driver:** it reads `ArrangePolygons`/`ArrangeParams`/bed as JSON and prints `translation`/`rotation`/`bed_idx` after `arrangement::arrange`, optionally with `ImexArranger`, single-threaded.
+   - **Source in the repo:** the driver source and its nix recipe live in `tools/orca-probes/arrange-kernel/`, like the other patched probes.
+   - **Build:** the recipe builds from the pinned `345efec64` tarball and is added as an `arrange-kernel` variant of `scripts/ci/build-oracle.sh`, whose source revision becomes per variant.
+   - **Tests:** the binary is named by `ORCA_ARRANGE_KERNEL_BIN`, and missing oracles follow `oracleEnv`/`reference_enabled`. The Ares tests call the public `arrangement::arrange` with literal inputs, and the expected outputs are the driver's recorded bytes.
+   - **Kept out of git:** the built binary and the recorded Native outputs (no committed Native artifacts).
+3. **Literal upstream cases:** the assertions of `test_imex_arrange.cpp`, `test_arrange.cpp`, `test_exclusion_volumes.cpp` (arrange parts) and `test_cli_arrange_rotations.sh`, ported as Ares RED tests against the public API.
+4. **Property tests (proptest)** through `arrangement::arrange`:
+   - arranged items do not overlap closer than the spacing;
+   - items stay inside the shrunk bed;
+   - the same input gives the same output.
+
+There is no seeded leg: arrange has no random stream. Tie order comes from running single-threaded, matched by the sequential port.
+
+### Commit plan (arrange PR)
+
+| # | Commit | RED evidence |
+| --- | --- | --- |
+| A1 | Kernel: NLopt sbplx 2.5.0, the libnest2d subset, `Arrange.cpp` | Kernel-oracle and literal cases; proptest |
+| A2 | `IMEXArrange` + zones, after the migration adds `imex_*` | Kernel-oracle and literal `test_imex_arrange` cases |
+| A3 | ArrangeJob and the PartPlateList pre/post-processing on `PlaterSession` | Official v2.5.0-beta CLI end-to-end cases |
+| A4 | wasm + web arrange buttons and settings | `arrange.spec.ts` against the same CLI oracle |
