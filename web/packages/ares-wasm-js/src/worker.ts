@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import init, {
   PlaterSession,
+  createPlaterSessionWithProfiles,
   PresetCatalog,
   decodeConfigValue,
   encodeConfigValue,
@@ -198,6 +199,11 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "platerCreate":
       sessions.set(request.sessionId, new PlaterSession(request.input, request.filename));
       return [undefined, []];
+    case "platerCreateWithProfiles": {
+      const { sessionId, input, filename, catalog, selection, options } = request;
+      sessions.set(sessionId, await createPlaterSessionWithProfiles(input, filename, catalog, selection, options));
+      return [undefined, []];
+    }
     case "platerScene":
       return sceneResult(sessions.get(request.sessionId)!.scene());
     case "platerEdit": {

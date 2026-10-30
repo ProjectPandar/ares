@@ -183,6 +183,33 @@ export class AresSlicer {
   }
 
   /**
+   * Loads a model with selected presets into an editable plater session, the bed and plates from
+   * the composed config: an STL lands on the bed centre as on an empty plate when
+   * `options.placement` is "center" (`Plater::priv::load_model_objects`). Arguments and
+   * rejections are those of `sliceWithProfiles`.
+   */
+  async createPlaterSessionWithProfiles(
+    input: Uint8Array,
+    filename: string,
+    catalogJson: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
+  ): Promise<PlaterSession> {
+    await this.#ready;
+    const sessionId = this.#nextSessionId++;
+    await this.#call({
+      kind: "platerCreateWithProfiles",
+      sessionId,
+      input: input.slice(),
+      filename,
+      catalog: catalogJson,
+      selection: JSON.stringify(selection),
+      options: JSON.stringify(options),
+    });
+    return new PlaterSession((body) => this.#call(body), sessionId);
+  }
+
+  /**
    * Selectable processes and filaments of the catalog compatible with the
    * `printer` preset, and filaments also with the `process` preset when given
    * (`Preset::is_compatible_with_printer` / `is_compatible_with_print`).

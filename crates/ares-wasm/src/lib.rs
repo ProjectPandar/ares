@@ -14,7 +14,7 @@ mod scene;
 
 pub use colors::{option_colors, role_colors, view_types};
 pub use moves::{SliceOutput, VertexBuffers, option_types};
-pub use plater::PlaterSession;
+pub use plater::{PlaterSession, create_plater_session_with_profiles};
 pub use raw_moves::MoveBuffers;
 
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};

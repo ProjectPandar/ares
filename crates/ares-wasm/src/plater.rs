@@ -40,6 +40,32 @@ fn vector(values: &[f64]) -> Result<[f64; 3], JsValue> {
         .map_err(|_| js_error(format!("expected [x, y, z], got {} values", values.len())))
 }
 
+/// Loads a model with selected presets into a plater session: an STL lands on the bed centre
+/// as on an empty plate when `options.placement` is "center" (`Plater::priv::load_model_objects`).
+#[wasm_bindgen(js_name = createPlaterSessionWithProfiles)]
+pub async fn create_plater_session_with_profiles(
+    input: Vec<u8>,
+    filename: String,
+    catalog_json: String,
+    selection_json: String,
+    options_json: String,
+) -> Result<PlaterSession, JsValue> {
+    let options = ProfileSliceOptions::parse(&options_json).map_err(js_error)?;
+    let overrides = options.overrides();
+    let request = ProfileSliceRequest {
+        filename: &filename,
+        catalog_json: &catalog_json,
+        selection_json: &selection_json,
+        plate: options.plate,
+        overrides: &overrides,
+        placement: options.placement(),
+    };
+    let session = ares_core::PlaterSession::load_with_profiles(input, request)
+        .await
+        .map_err(js_error)?;
+    Ok(PlaterSession { session, filename })
+}
+
 #[wasm_bindgen]
 impl PlaterSession {
     /// Loads a 3MF project with its plates (`PartPlateList::load_from_3mf_structure`).

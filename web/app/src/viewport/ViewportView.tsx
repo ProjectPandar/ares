@@ -4,7 +4,7 @@ import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
 import { moveInstance } from "../state/plates";
-import { placedScene, presetSliceBlocker } from "../state/presets";
+import { openStlSession, placedScene, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
 import { bedFromSettings } from "./bedShape";
@@ -61,33 +61,36 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   const presetImports = useApp((state) => state.presetImports);
   const selected = useApp((state) => state.selectedObject);
   const currentPlate = useApp((state) => state.currentPlate);
+  const plater = useApp((state) => state.plater);
   // With presets selected the plate shows the model and bed the preset slice uses, re-placed on
   // every printer switch (on_select_preset -> on_config_change -> set_bed_shape, Plater.cpp:9576-9580,
-  // 16754-16755).
+  // 16754-16755). An STL becomes a plater session there; plater edits keep the placement.
   const [placed, setPlaced] = useState<{ inputs: unknown[]; scene: Scene } | null>(null);
-  const inputs = [loaded, selection, vendors, presetImports];
+  const inputs = [file, selection, vendors, presetImports];
   const current = placed && placed.inputs.every((input, at) => input === inputs[at]) ? placed.scene : null;
-  // A project keeps its plater's edited objects and plates; the placement supplies the composed bed.
+  // A plater session keeps its edited objects and plates; the placement supplies the composed bed.
   const scene = useMemo(
-    () => (current && loaded?.format === "3mf" ? { ...loaded, settings: current.settings } : current ?? loaded),
-    [current, loaded],
+    () => (current && plater && loaded ? { ...loaded, settings: current.settings } : current ?? loaded),
+    [current, loaded, plater],
   );
   useEffect(() => {
-    if (!file || !loaded || !selection || presetSliceBlocker(selection, loaded)) return;
+    const model = useApp.getState().scene;
+    if (!file || !model || !selection || presetSliceBlocker(selection, model)) return;
     let stale = false;
+    const sources = { vendors, presetImports };
     // A selection the engine cannot compose keeps the loaded plate; the process tab shows the
     // same composition error (usePresetValues).
-    placedScene(file, loaded, selection, { vendors, presetImports }).then(
-      (result) => !stale && setPlaced({ inputs: [loaded, selection, vendors, presetImports], scene: result }),
+    (model.format === "stl" ? openStlSession(file, model, selection, sources) : placedScene(file, model, selection, sources)).then(
+      (result) => !stale && setPlaced({ inputs: [file, selection, vendors, presetImports], scene: result }),
       () => !stale && setPlaced(null),
     );
     return () => {
       stale = true;
     };
-  }, [file, loaded, selection, vendors, presetImports]);
-  // A new scene or slice result resets the camera to the plate view; a project's plater edits keep
-  // its settings and the camera.
-  const frame = loaded?.format === "3mf" ? scene?.settings : scene;
+  }, [file, selection, vendors, presetImports]);
+  // A new scene or slice result resets the camera to the plate view; plater edits keep the
+  // session's settings and the camera.
+  const frame = plater ? scene?.settings : scene;
   const [framed, setFramed] = useState([frame, toolpaths]);
   if (framed[0] !== frame || framed[1] !== toolpaths) {
     setFramed([frame, toolpaths]);
@@ -141,7 +144,6 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     viewport?.setScene(scene, firstString(loaded?.settings?.filament, "filament_colour") ?? "#29b2a3");
   }, [viewport, scene, loaded]);
 
-  const plater = useApp((state) => state.plater);
   // A press on an instance selects it (GLCanvas3D::on_mouse LeftDown) and drags it.
   useEffect(() => {
     if (!viewport) return;

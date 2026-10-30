@@ -5,7 +5,7 @@ import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from
 import { extruderOverrides, selectionExtruders } from "./extruders";
 import { printerBedType, updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
-import { type CompatibleState, type ModelFile, type PresetSelection, useApp } from "./store";
+import { type CompatibleState, invalidatedSlices, type ModelFile, type PresetSelection, useApp } from "./store";
 import { decodeOptions } from "./typedSettings";
 
 /**
@@ -341,6 +341,26 @@ export async function presetValues(file: ModelFile, scene: Scene, selection: Pre
 export async function placedScene(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
   return slicer.placementScene(file.bytes, file.name, catalog, profiles, options);
+}
+
+/**
+ * An STL with complete presets becomes a plater session on the selected printer's bed, centered
+ * like one model loaded on an empty plate (Plater.cpp:7149-7160), so it can be moved and sliced
+ * per plate; the store keeps it as an STL scene without project settings. Returns the session's
+ * scene, whose `settings` are the composed config.
+ */
+export async function openStlSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
+  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
+  const plater = await slicer.createPlaterSessionWithProfiles(file.bytes, file.name, catalog, profiles, options);
+  const placed = await plater.scene();
+  if (useApp.getState().file !== file) {
+    void plater.free();
+    return placed;
+  }
+  const previous = useApp.getState().plater;
+  useApp.setState(({ slice }) => ({ plater, scene: { ...placed, format: "stl", settings: null }, currentPlate: 0, ...invalidatedSlices(slice) }));
+  void previous?.free();
+  return placed;
 }
 
 /** Names of the imported presets of one `type`, for the "User presets" group. */
