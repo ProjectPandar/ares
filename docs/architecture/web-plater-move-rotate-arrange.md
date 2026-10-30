@@ -391,3 +391,21 @@ There is no seeded leg: arrange has no random stream. Tie order comes from runni
 | A2 | `IMEXArrange` + zones, after the migration adds `imex_*` | Kernel-oracle and literal `test_imex_arrange` cases |
 | A3 | ArrangeJob and the PartPlateList pre/post-processing on `PlaterSession` | Official v2.5.0-beta CLI end-to-end cases |
 | A4 | wasm + web arrange buttons and settings | `arrange.spec.ts` against the same CLI oracle |
+
+## STL plater session (core slice before commit 5)
+
+Coordinator decision: approved as its own source-cited core slice, RED then
+GREEN.
+
+**Upstream (2.4.2, `8500fcdcc`):**
+- `Plater::priv::load_files` loads an STL into the `Model`.
+- `Plater::priv::load_model_objects` (`Plater.cpp:7056-7058, 7111-7112, 7149-7160`) places an object loaded onto an empty plate at the bed's centre and drops it onto the bed.
+- The selected presets' `printable_area` sets the bed, and with it the plate list (`PartPlateList::reset_size`).
+- The object is then edited and sliced like any other model; slicing never re-places it.
+
+**Ares destination:**
+- `PlaterSession::load_with_profiles(input, ProfileSliceRequest)` loads through the existing `profile_placed_project` (`Placement::Center`, `OrcaSlicer.cpp:4376-4392`, `Model.cpp:704-722`). Its plate list comes from the composed settings.
+- `slice_plater_with_profiles` reloads the STL with the presets, skips the placement, and applies the session edits; the session transforms already hold the centring.
+- STL input without selected presets has no bed, so it keeps today's `sliceStl` path and gets no session.
+
+**Native oracle:** the official and seeded CLI with `--load-settings`/`--load-filaments` and `--arrange 0`, on cube10 pre-positioned where the session puts it (the `orca_parity_profile_entry_stl_center_placement` pattern). The case is first unedited, then after a raised move.
