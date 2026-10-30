@@ -1,7 +1,7 @@
 use super::{Line, Point};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct Polygon {
+pub struct Polygon {
     points: Vec<Point>,
 }
 
@@ -20,11 +20,11 @@ fn consider_projection(point: Point, candidate: Point, projection: &mut Point, m
 }
 
 impl Polygon {
-    pub(crate) fn new(points: Vec<Point>) -> Self {
+    pub fn new(points: Vec<Point>) -> Self {
         Self { points }
     }
 
-    pub(crate) fn points(&self) -> &[Point] {
+    pub fn points(&self) -> &[Point] {
         &self.points
     }
 

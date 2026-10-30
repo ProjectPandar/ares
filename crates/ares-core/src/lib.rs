@@ -6,6 +6,7 @@
     )
 )]
 mod arachne;
+pub mod arrangement;
 mod bridge_support;
 mod bridges;
 mod brims;

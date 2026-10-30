@@ -1,21 +1,21 @@
 use super::{Line, Point, Polygon};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct ExPolygon {
+pub struct ExPolygon {
     contour: Polygon,
     holes: Vec<Polygon>,
 }
 
 impl ExPolygon {
-    pub(crate) fn new(contour: Polygon, holes: Vec<Polygon>) -> Self {
+    pub fn new(contour: Polygon, holes: Vec<Polygon>) -> Self {
         Self { contour, holes }
     }
 
-    pub(crate) fn contour(&self) -> &Polygon {
+    pub fn contour(&self) -> &Polygon {
         &self.contour
     }
 
-    pub(crate) fn holes(&self) -> &[Polygon] {
+    pub fn holes(&self) -> &[Polygon] {
         &self.holes
     }
 

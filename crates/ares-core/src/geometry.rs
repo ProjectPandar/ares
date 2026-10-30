@@ -30,7 +30,8 @@ pub(crate) use bbox_clip::{
     clip_clipper_expolygons_with_subject_bbox, clip_clipper_expolygons_with_subject_bbox_mode,
     clip_clipper_polygons_with_subject_bbox,
 };
-pub(crate) use bounding_box::{BoundingBox, chain_expolygons, chain_expolygons_order};
+pub use bounding_box::BoundingBox;
+pub(crate) use bounding_box::{chain_expolygons, chain_expolygons_order};
 pub(crate) use bridge_direction::detect_bridging_direction;
 pub(crate) use chain_points::{chain_points, chain_points_with_start, chain_segments_exact};
 pub(crate) use clipper::ClipOperation;
@@ -59,15 +60,17 @@ pub(crate) use clipper::{
 };
 pub(crate) use clipper2::EndType;
 pub(crate) use convex_hull::convex_hull;
-pub(crate) use coord::{Coord, CoordinateScale, Point};
+pub use coord::Point;
+pub(crate) use coord::{Coord, CoordinateScale};
 pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};
-pub(crate) use expolygon::{ExPolygon, keep_largest_contour_only};
+pub use expolygon::ExPolygon;
+pub(crate) use expolygon::keep_largest_contour_only;
 pub(crate) use line::{Line, ThickLine, liang_barsky_interval};
 pub(crate) use line_distance_tree::{FloatLineDistanceTree, LineDistanceTree};
 pub(crate) use line_split::{SplitJunction, split_line};
 pub(crate) use medial_axis::medial_axis;
 pub(crate) use point_ordering::{chain_points_with_postprocessing, order_points_with_strategy};
-pub(crate) use polygon::Polygon;
+pub use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
 pub(crate) use region_expansion::{
     RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, expand_expolygons,

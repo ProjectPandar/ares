@@ -84,21 +84,21 @@ impl CoordinateScale {
 }
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub(crate) struct Point {
+pub struct Point {
     x: Coord,
     y: Coord,
 }
 
 impl Point {
-    pub(crate) const fn new(x: Coord, y: Coord) -> Self {
+    pub const fn new(x: Coord, y: Coord) -> Self {
         Self { x, y }
     }
 
-    pub(crate) const fn x(self) -> Coord {
+    pub const fn x(self) -> Coord {
         self.x
     }
 
-    pub(crate) const fn y(self) -> Coord {
+    pub const fn y(self) -> Coord {
         self.y
     }
 

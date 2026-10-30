@@ -4,7 +4,7 @@
 use super::{ExPolygon, Point, Polygon, chain_points};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct BoundingBox {
+pub struct BoundingBox {
     min: Point,
     max: Point,
 }
@@ -47,7 +47,7 @@ impl BoundingBox {
         ]
     }
 
-    pub(crate) const fn new(min: Point, max: Point) -> Self {
+    pub const fn new(min: Point, max: Point) -> Self {
         Self { min, max }
     }
 
@@ -86,7 +86,7 @@ impl BoundingBox {
         Some(bounds)
     }
 
-    pub(crate) fn from_expolygon(expolygon: &ExPolygon) -> Option<Self> {
+    pub fn from_expolygon(expolygon: &ExPolygon) -> Option<Self> {
         Self::from_polygon(expolygon.contour())
     }
 
@@ -106,11 +106,11 @@ impl BoundingBox {
         Some(bounds)
     }
 
-    pub(crate) const fn min(self) -> Point {
+    pub const fn min(self) -> Point {
         self.min
     }
 
-    pub(crate) const fn max(self) -> Point {
+    pub const fn max(self) -> Point {
         self.max
     }
 
@@ -131,7 +131,7 @@ impl BoundingBox {
         self.max = Point::new(self.max.x() + delta, self.max.y() + delta);
     }
 
-    pub(crate) fn center(self) -> Point {
+    pub fn center(self) -> Point {
         Point::new(
             midpoint(self.min.x(), self.max.x()),
             midpoint(self.min.y(), self.max.y()),
