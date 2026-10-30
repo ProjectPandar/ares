@@ -20,6 +20,10 @@ mod preset_scalar_loading;
 #[path = "preset_vector_loading.rs"]
 mod preset_vector_loading;
 
+// The plater session's public slice entries against Native `--slice <plate>`.
+#[path = "../plater_session.rs"]
+mod plater_session;
+
 use std::path::Path;
 
 use serde_json::{Value, json};

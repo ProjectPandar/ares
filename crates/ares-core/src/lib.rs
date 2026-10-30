@@ -80,6 +80,7 @@ mod options;
 mod perimeters;
 mod pipeline;
 mod planning;
+mod plater;
 mod print;
 mod print_apply;
 mod print_paths;
@@ -165,6 +166,7 @@ pub use perimeters::{
 pub use pipeline::slice_stl_validated;
 pub use pipeline::{PipelineDiagnostics, PipelineStage, SlicingPipeline, run_slicing_pipeline};
 pub use planning::{Layer, plan_layers};
+pub use plater::{PlaterPlate, PlaterSession, PlaterSlice, slice_plater_plate};
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::{LayerRegion, Print, PrintLayer, PrintObject, PrintRegion, build_print_domain};
 #[cfg(test)]
