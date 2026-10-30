@@ -9,6 +9,9 @@ use ares_core::{ConfigOverrides, GenerationMetadata, PlaterSession, PlaterSlice,
 
 use crate::runner::{OrcaRunner, repo_root};
 
+#[path = "plater_rotation_pivot.rs"]
+mod rotation_pivot;
+
 const SINGLE: &str = "tests/parity/orca_cli_ender3.3mf";
 const TWO_PLATES: &str = "tests/parity/custom-gcode-overview/two-plates.3mf";
 /// `plate_stride_x` of the 220 mm Ender-3 bed (`PartPlate.cpp:4836-4842`).
