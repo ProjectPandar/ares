@@ -40,7 +40,12 @@ impl<'a> FilamentChange<'a> {
             // Upstream sets this before consulting its unload-time getter.
             self.unloaded = true;
         }
-        let filament = selected_filament(command, self.count)?;
+        let filament = match selected_filament(command, self.count) {
+            Some(filament) => filament,
+            // `GCodeProcessor.cpp:1829` binds M1020 to the same
+            // filament-change accounting as T (`:5444-5466`).
+            None => m1020_filament(command, code, self.count)?,
+        };
         let previous = self.physical.and_then(|id| self.current[id]);
         if previous == Some(filament) {
             return None;
@@ -91,6 +96,32 @@ impl<'a> FilamentChange<'a> {
     fn unload_time(&self) -> f32 {
         if self.unloaded { 0.0 } else { self.unload }
     }
+}
+
+/// `GCodeProcessor.cpp:5444-5466`: M1020 selects the filament from the
+/// raw line's `substr(7)` when the line is longer than 5 characters;
+/// `stoi` skips leading whitespace and one optional sign and tolerates
+/// trailing junk, and ids outside `[0, filaments_count)` select nothing.
+fn m1020_filament(command: &str, code: &str, count: usize) -> Option<usize> {
+    if command != "M1020" || code.len() <= 5 {
+        return None;
+    }
+    let rest = code.get(7..)?.trim_start();
+    let (sign, digits) = match rest.as_bytes().first() {
+        Some(b'-') => (-1_i64, &rest[1..]),
+        Some(b'+') => (1_i64, &rest[1..]),
+        _ => (1_i64, rest),
+    };
+    let end = digits.bytes().take_while(u8::is_ascii_digit).count();
+    if end == 0 {
+        // `stoi` would throw; no producer emits a nonnumeric payload.
+        return None;
+    }
+    let filament = sign * digits[..end].parse::<i64>().unwrap_or(i64::MAX);
+    (0..=254)
+        .contains(&filament)
+        .then_some(filament as usize)
+        .filter(|filament| *filament < count)
 }
 
 /// `GCodeProcessor.cpp:5470–5499`: logical T validation, not writer selection.
