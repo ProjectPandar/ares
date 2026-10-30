@@ -11,6 +11,8 @@ pub(crate) struct ProjectSource<'a> {
     /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
     pub(crate) validate_print: bool,
     pub(crate) upward: Option<CliUpwardMachine<'a>>,
+    /// Plater edits applied to the loaded model (empty for a plain slice).
+    pub(crate) edits: &'a crate::plater::PlaterEdits,
 }
 
 /// CLI byte resources and the report snapshot written at CLI:2656. The
@@ -63,6 +65,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             upward: None,
+            edits: &crate::plater::NO_EDITS,
         }
     }
 }
@@ -78,6 +81,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             upward: None,
+            edits: &crate::plater::NO_EDITS,
         }
     }
 }

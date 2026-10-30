@@ -1,0 +1,296 @@
+//! An editable plater: the loaded project, its plate list and the GUI
+//! edits on them. Slicing reads the edits (`PlaterSession::edits`).
+
+use std::collections::BTreeSet;
+
+use super::edits::{EditedPlate, PlaterEdits};
+use super::plate_list::{BoundingBox, InstanceKey, PlateList, PlateModel};
+use super::{eigen, selection};
+use crate::{Project, SliceError, Transform3d};
+
+pub struct PlaterSession {
+    input: Vec<u8>,
+    project: Project,
+    plates: PlateList,
+}
+
+/// One plate of the session: its grid origin and instances.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PlaterPlate {
+    pub origin: [f64; 2],
+    /// `(object index, instance index)` pairs.
+    pub instances: Vec<(usize, usize)>,
+    /// The loaded plate (0-based) this plate is, `None` for an added plate.
+    pub source: Option<usize>,
+}
+
+struct Model<'a>(&'a mut Project);
+
+impl PlateModel for Model<'_> {
+    fn keys(&self) -> Vec<InstanceKey> {
+        keys(self.0)
+    }
+    fn convex_hull_bounding_box(&self, key: InstanceKey) -> BoundingBox {
+        selection::instance_bounding_box(self.0, key)
+    }
+    fn translate(&mut self, key: InstanceKey, offset: [f64; 2]) {
+        let mut rows = *self.0.objects()[key.0].instances()[key.1]
+            .transform()
+            .as_matrix();
+        rows[0][3] += offset[0];
+        rows[1][3] += offset[1];
+        self.0
+            .set_instance_transform(key.0, key.1, Transform3d::from_rows(rows));
+    }
+}
+
+fn keys(project: &Project) -> Vec<InstanceKey> {
+    project
+        .objects()
+        .iter()
+        .enumerate()
+        .flat_map(|(object, item)| {
+            (0..item.instances().len()).map(move |instance| (object, instance))
+        })
+        .collect()
+}
+
+impl PlaterSession {
+    /// Loads a 3MF project with its plates (`PartPlateList::load_from_3mf_structure`).
+    pub fn load(input: Vec<u8>) -> Result<Self, SliceError> {
+        let project = crate::load_project(&input)?;
+        let plates = project
+            .plates()
+            .iter()
+            .map(|plate| {
+                plate
+                    .instances()
+                    .iter()
+                    .filter_map(|identity| find_instance(&project, identity[0], identity[1]))
+                    .collect::<BTreeSet<_>>()
+            })
+            .collect::<Vec<_>>();
+        let settings = project.settings();
+        let area = &settings.printer.remaining.printable_area.0;
+        let mut shape = ([f64::MAX; 2], [f64::MIN; 2]);
+        for point in area {
+            shape.0 = [shape.0[0].min(point.x), shape.0[1].min(point.y)];
+            shape.1 = [shape.1[0].max(point.x), shape.1[1].max(point.y)];
+        }
+        let size = crate::project::plate_dimensions(settings);
+        let height = settings.printer.remaining.printable_height.0 as i32;
+        let plates = PlateList::new(plates, size, height, shape);
+        Ok(Self {
+            input,
+            project,
+            plates,
+        })
+    }
+
+    pub fn input(&self) -> &[u8] {
+        &self.input
+    }
+
+    pub fn project(&self) -> &Project {
+        &self.project
+    }
+
+    pub fn instance_transform(
+        &self,
+        object: usize,
+        instance: usize,
+    ) -> Result<Transform3d, SliceError> {
+        self.check(object, instance)?;
+        Ok(self.project.objects()[object].instances()[instance].transform())
+    }
+
+    pub fn plates(&self) -> Vec<PlaterPlate> {
+        self.plates
+            .plates
+            .iter()
+            .enumerate()
+            .map(|(index, plate)| PlaterPlate {
+                origin: self.plates.plate_origin(index),
+                instances: plate.instances.iter().copied().collect(),
+                source: plate.source,
+            })
+            .collect()
+    }
+
+    /// Instances outside every plate (`PartPlateList::unprintable_plate`).
+    pub fn unprintable_instances(&self) -> Vec<(usize, usize)> {
+        self.plates.unprintable.instances.iter().copied().collect()
+    }
+
+    /// A move by `displacement` in world coordinates: `Selection::translate`
+    /// then `GLCanvas3D::do_move` (`GLCanvas3D.cpp:4910-5001`).
+    pub fn translate_instance(
+        &mut self,
+        object: usize,
+        instance: usize,
+        displacement: [f64; 3],
+    ) -> Result<(), SliceError> {
+        self.check(object, instance)?;
+        let key = (object, instance);
+        selection::translate(&mut self.project, key, displacement);
+        self.plates
+            .notify_instance_update(&Model(&mut self.project), key);
+        if selection::drop_after_move(&mut self.project, key) {
+            self.plates
+                .notify_instance_update(&Model(&mut self.project), key);
+        }
+        Ok(())
+    }
+
+    /// The "Position" field (`GizmoObjectManipulation::change_position_value`,
+    /// `GizmoObjectManipulation.cpp:309-341`): a move by the difference to the
+    /// instance offset on `axis`.
+    pub fn set_instance_position(
+        &mut self,
+        object: usize,
+        instance: usize,
+        axis: usize,
+        value: f64,
+    ) -> Result<(), SliceError> {
+        let axis = check_axis(axis)?;
+        let offset = self.instance_transform(object, instance)?.as_matrix()[axis][3];
+        let mut displacement = [0.0; 3];
+        displacement[axis] = value - offset;
+        self.translate_instance(object, instance, displacement)
+    }
+
+    /// A rotation by `rotation` (radians, `Geometry::rotation_transform` order)
+    /// about the world axes: `Selection::rotate` then `GLCanvas3D::do_rotate`
+    /// (`GLCanvas3D.cpp:5026-5110`). The gizmo rings and the relative rotation
+    /// fields both rotate this way.
+    pub fn rotate_instance(
+        &mut self,
+        object: usize,
+        instance: usize,
+        rotation: [f64; 3],
+    ) -> Result<(), SliceError> {
+        self.check(object, instance)?;
+        let key = (object, instance);
+        let min_z_before = selection::instance_bounding_box(&self.project, key).0[2];
+        selection::rotate(&mut self.project, key, rotation);
+        self.plates
+            .notify_instance_update(&Model(&mut self.project), key);
+        if selection::drop_after_rotate(&mut self.project, key, min_z_before) {
+            self.plates
+                .notify_instance_update(&Model(&mut self.project), key);
+        }
+        Ok(())
+    }
+
+    /// The absolute rotation fields' values in degrees
+    /// (`update_settings_value`, `GizmoObjectManipulation.cpp:120-122`).
+    pub fn absolute_rotation(
+        &self,
+        object: usize,
+        instance: usize,
+    ) -> Result<[f64; 3], SliceError> {
+        let transform = self.instance_transform(object, instance)?;
+        Ok(eigen::rotation_by_quaternion(transform).map(|radians| {
+            let degrees = radians * (180.0 / std::f64::consts::PI);
+            if degrees.abs() < 0.001 { 0.0 } else { degrees }
+        }))
+    }
+
+    /// An absolute rotation field edit (`change_absolute_rotation_value`,
+    /// `GizmoObjectManipulation.cpp:370-398`): a world rotation by the change.
+    pub fn set_absolute_rotation(
+        &mut self,
+        object: usize,
+        instance: usize,
+        axis: usize,
+        degrees: f64,
+    ) -> Result<(), SliceError> {
+        let current = self.absolute_rotation(object, instance)?;
+        let mut change = [0.0; 3];
+        let axis = check_axis(axis)?;
+        change[axis] = degrees - current[axis];
+        self.rotate_instance(
+            object,
+            instance,
+            change.map(|value| (std::f64::consts::PI / 180.0) * value),
+        )
+    }
+
+    /// "Add plate" (`PartPlateList::create_plate`).
+    pub fn add_plate(&mut self) {
+        self.plates.create_plate(&mut Model(&mut self.project));
+    }
+
+    /// "Delete plate" (`PartPlateList::delete_plate`); a sole plate stays.
+    pub fn delete_plate(&mut self, index: usize) -> bool {
+        self.plates
+            .delete_plate(index, &mut Model(&mut self.project))
+    }
+
+    /// The edits slicing applies to the loaded input.
+    pub fn edits(&self) -> PlaterEdits {
+        let mut transforms = Vec::new();
+        for object in self.project.objects() {
+            for instance in object.instances() {
+                transforms.push(((object.id(), instance.instance_id()), instance.transform()));
+            }
+        }
+        let plates = self
+            .plates
+            .plates
+            .iter()
+            .map(|plate| EditedPlate {
+                source: plate.source,
+                instances: plate
+                    .instances
+                    .iter()
+                    .filter_map(|(object, instance)| {
+                        let item = &self.project.objects()[*object].instances()[*instance];
+                        item.loaded_label_id()
+                            .map(|label| [item.object_id(), item.instance_id(), label])
+                    })
+                    .collect(),
+            })
+            .collect();
+        PlaterEdits {
+            transforms,
+            plates: Some(plates),
+        }
+    }
+
+    fn check(&self, object: usize, instance: usize) -> Result<(), SliceError> {
+        self.project
+            .objects()
+            .get(object)
+            .and_then(|item| item.instances().get(instance))
+            .map(|_| ())
+            .ok_or_else(|| {
+                SliceError::InvalidInput(format!("no instance {instance} of object {object}"))
+            })
+    }
+}
+
+fn check_axis(axis: usize) -> Result<usize, SliceError> {
+    if axis < 3 {
+        Ok(axis)
+    } else {
+        Err(SliceError::InvalidInput(format!("no axis {axis}")))
+    }
+}
+
+fn find_instance(project: &Project, object_id: u32, instance_id: u32) -> Option<InstanceKey> {
+    project
+        .objects()
+        .iter()
+        .enumerate()
+        .find_map(|(object, item)| {
+            (item.id() == object_id)
+                .then(|| {
+                    item.instances()
+                        .iter()
+                        .position(|instance| instance.instance_id() == instance_id)
+                })
+                .flatten()
+                .map(|instance| (object, instance))
+        })
+}

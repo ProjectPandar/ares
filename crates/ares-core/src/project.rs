@@ -30,6 +30,7 @@ pub use domain::{
     PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
     ProjectVolume, ProjectVolumeType,
 };
+pub(crate) use domain::{compute_colum_count, plate_dimensions, plate_origin_at};
 pub use layer_config_ranges::LayerConfigRange;
 pub(crate) use load::load_project_with_preparation;
 pub use load::{load_project, load_project_with};

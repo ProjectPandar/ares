@@ -115,6 +115,7 @@ fn overlay(
         },
         &crate::ConfigOverrides::default(),
         None,
+        &crate::plater::NO_EDITS,
     )
     .map(|(project, _)| project)
 }

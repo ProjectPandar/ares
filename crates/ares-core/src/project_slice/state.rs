@@ -43,6 +43,7 @@ pub(super) fn prepare_project_source(
 ) -> Result<ProjectSliceState, SliceError> {
     let (mut project, preparation) =
         crate::project::load_project_with_preparation(source.bytes, source.overrides)?;
+    project.apply_plater_edits(source.edits);
     if source.validate_print {
         super::validated::validate_post_process(&project)?;
     }

@@ -249,6 +249,7 @@ fn with_load_settings_source<T>(
         overrides,
         validate_print,
         upward: None,
+        edits: &crate::plater::NO_EDITS,
     })
 }
 
@@ -257,6 +258,16 @@ fn with_load_settings_source<T>(
 fn with_profile_source<T>(
     input: &[u8],
     request: ProfileSliceRequest<'_>,
+    body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
+) -> Result<T, SliceError> {
+    with_edited_profile_source(input, request, &crate::plater::NO_EDITS, body)
+}
+
+/// `with_profile_source` with plater edits applied to the loaded model.
+pub(crate) fn with_edited_profile_source<T>(
+    input: &[u8],
+    request: ProfileSliceRequest<'_>,
+    edits: &crate::plater::PlaterEdits,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
 ) -> Result<T, SliceError> {
     let ProfileSliceRequest {
@@ -290,5 +301,6 @@ fn with_profile_source<T>(
         overrides,
         validate_print: false,
         upward: None,
+        edits,
     })
 }

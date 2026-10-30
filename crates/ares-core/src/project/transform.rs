@@ -21,6 +21,10 @@ impl Transform3d {
         ]))
     }
 
+    pub(crate) const fn from_rows(rows: [[f64; 4]; 4]) -> Self {
+        Self(rows)
+    }
+
     /// The matrix in column-major order (Eigen's storage and Three.js `Matrix4.fromArray`).
     pub fn to_column_major(self) -> [f64; 16] {
         std::array::from_fn(|index| self.0[index % 4][index / 4])

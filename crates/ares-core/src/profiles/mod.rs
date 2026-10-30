@@ -18,6 +18,7 @@ pub use compatible::{FilteredPresets, MissingParent, filter_compatible_presets};
 pub use composition::{
     ComposedProfile, ProfileGroupMetadata, ProfileSelection, compose_profile_fragments,
 };
+pub(crate) use entry::with_edited_profile_source;
 pub use entry::{
     LoadSettingsSliceRequest, Placement, ProfileSettings, ProfileSliceRequest,
     profile_placed_project, profile_settings, slice_with_load_settings, slice_with_profiles,

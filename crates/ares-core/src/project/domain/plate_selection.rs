@@ -99,7 +99,7 @@ impl Project {
 /// `compute_colum_count` (`PartPlate.hpp:38-48`), ported verbatim: the
 /// float `sqrt`/`round` comparison decides the column count, not an f64
 /// `ceil`, so boundary counts match upstream exactly.
-fn compute_colum_count(count: usize) -> usize {
+pub(crate) fn compute_colum_count(count: usize) -> usize {
     let value = (count as f32).sqrt();
     let round_value = value.round();
     if value > round_value {
@@ -111,17 +111,31 @@ fn compute_colum_count(count: usize) -> usize {
 
 /// `OrcaSlicer.cpp:1775-1778,3726,3805` initializes CLI plate dimensions
 /// from ordered printable-area points [2]-[0], truncated to integers.
-/// `PartPlate.cpp:4836-4849,3952-3962` applies the 1/5 gap and grid offsets;
-/// this deliberately does not substitute the polygon bounding box.
-fn plate_grid_origin(index: usize, plate_count: usize, settings: &ProjectSettings) -> (f64, f64) {
+/// This deliberately does not substitute the polygon bounding box.
+pub(crate) fn plate_dimensions(settings: &ProjectSettings) -> (i32, i32) {
     let area = &settings.printer.remaining.printable_area.0;
-    let width = (area[2].x - area[0].x) as i32;
-    let depth = (area[2].y - area[0].y) as i32;
-    let cols = compute_colum_count(plate_count);
+    (
+        (area[2].x - area[0].x) as i32,
+        (area[2].y - area[0].y) as i32,
+    )
+}
+
+/// `PartPlateList::compute_origin` / `compute_shape_position`
+/// (`PartPlate.cpp:3915-3962`) with the 1/5 gap of `plate_stride_x/y`
+/// (`:4836-4849`).
+pub(crate) fn plate_origin_at(index: usize, cols: usize, (width, depth): (i32, i32)) -> (f64, f64) {
     let row = index / cols;
     let col = index % cols;
     (
         col as f64 * f64::from(width) * 1.2,
         -(row as f64) * f64::from(depth) * 1.2,
+    )
+}
+
+fn plate_grid_origin(index: usize, plate_count: usize, settings: &ProjectSettings) -> (f64, f64) {
+    plate_origin_at(
+        index,
+        compute_colum_count(plate_count),
+        plate_dimensions(settings),
     )
 }

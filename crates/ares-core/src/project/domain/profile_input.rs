@@ -84,6 +84,7 @@ impl Project {
         profile: SelectedProfile<'_>,
         overrides: &crate::ConfigOverrides,
         plate: Option<u32>,
+        edits: &crate::plater::PlaterEdits,
     ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
         let SelectedProfile {
             settings,
@@ -95,6 +96,7 @@ impl Project {
             input,
             &crate::ConfigOverrides::default(),
         )?;
+        project.apply_plater_edits(edits);
         let preparation = preparation.for_overrides(overrides);
         let embedded_raw = project.documents.project_settings_raw.clone();
         // O5: the CLI composite entry checks the **embedded**

@@ -10,6 +10,10 @@ pub(crate) struct FilamentSequences(pub BTreeMap<PlateId, PlateFilamentSequence>
 pub(crate) struct PlateId(u32);
 
 impl PlateId {
+    pub(crate) const fn new(id: u32) -> Self {
+        Self(id)
+    }
+
     pub(crate) fn get(self) -> u32 {
         self.0
     }

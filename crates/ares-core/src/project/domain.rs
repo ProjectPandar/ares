@@ -9,7 +9,9 @@ use shared_mesh::MeshPreparation;
 pub(crate) use shared_mesh::materialize_meshes;
 mod import_scope;
 mod plate_selection;
+mod plater_edits;
 use import_scope::ImportScope;
+pub(crate) use plate_selection::{compute_colum_count, plate_dimensions, plate_origin_at};
 mod profile_input;
 mod volume_offsets;
 
