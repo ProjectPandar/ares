@@ -46,14 +46,16 @@ pub async fn slice_plater_plate(
     )
 }
 
-/// Slices a session plate with selected presets (`request.plate` selects it).
+/// Slices a session plate with selected presets (`request.plate` selects it). The session's
+/// transforms already hold any load placement, so `request.placement` is not applied again.
 pub async fn slice_plater_with_profiles(
     session: &PlaterSession,
-    request: ProfileSliceRequest<'_>,
+    mut request: ProfileSliceRequest<'_>,
     validate_print: bool,
     metadata: GenerationMetadata,
     context: SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
+    request.placement = crate::Placement::None;
     let edits = session.edits();
     crate::profiles::with_edited_profile_source(session.input(), request, &edits, |mut source| {
         source.validate_print = validate_print;

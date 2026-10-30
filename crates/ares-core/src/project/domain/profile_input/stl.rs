@@ -126,7 +126,8 @@ impl Project {
         // `loaded_id` stays 0 for STL inputs; the header emits it at
         // `GCode.cpp:2594`.
         let label_id = 2 + 2 + 3 + 6 + 1;
-        let instance = ProjectInstance::new([1, 0, label_id], true, false, Transform3d::IDENTITY);
+        // `ModelInstance` drops onto the bed by default (`auto_drop(true)`, `Model.hpp:1392`).
+        let instance = ProjectInstance::new([1, 0, label_id], true, true, Transform3d::IDENTITY);
         let object = ProjectObject::new(
             filename.to_owned(),
             1,

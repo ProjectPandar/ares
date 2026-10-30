@@ -59,6 +59,21 @@ impl PlaterSession {
     /// Loads a 3MF project with its plates (`PartPlateList::load_from_3mf_structure`).
     pub fn load(input: Vec<u8>) -> Result<Self, SliceError> {
         let project = crate::load_project(&input)?;
+        Ok(Self::with_project(input, project))
+    }
+
+    /// Loads a model with selected presets onto an empty plate, centered on the bed and dropped
+    /// when `request.placement` asks (`Plater::priv::load_model_objects`); the composed
+    /// `printable_area` sizes the plates.
+    pub async fn load_with_profiles(
+        input: Vec<u8>,
+        request: crate::ProfileSliceRequest<'_>,
+    ) -> Result<Self, SliceError> {
+        let project = crate::profile_placed_project(&input, request).await?;
+        Ok(Self::with_project(input, project))
+    }
+
+    fn with_project(input: Vec<u8>, project: Project) -> Self {
         let plates = project
             .plates()
             .iter()
@@ -80,20 +95,11 @@ impl PlaterSession {
         let size = crate::project::plate_dimensions(settings);
         let height = settings.printer.remaining.printable_height.0 as i32;
         let plates = PlateList::new(plates, size, height, shape);
-        Ok(Self {
+        Self {
             input,
             project,
             plates,
-        })
-    }
-
-    /// Loads a model with selected presets onto an empty plate, centered on the bed and dropped
-    /// when `request.placement` asks (`Plater::priv::load_model_objects`).
-    pub async fn load_with_profiles(
-        _input: Vec<u8>,
-        _request: crate::ProfileSliceRequest<'_>,
-    ) -> Result<Self, SliceError> {
-        todo!("PlaterSession::load_with_profiles")
+        }
     }
 
     pub fn input(&self) -> &[u8] {

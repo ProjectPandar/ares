@@ -63,7 +63,11 @@ fn load_with_profile_preparation(
             profile.filename,
             selected,
             project.overrides,
-        ),
+        )
+        .map(|(mut loaded, preparation)| {
+            loaded.apply_plater_edits(project.edits);
+            (loaded, preparation)
+        }),
     }
 }
 
