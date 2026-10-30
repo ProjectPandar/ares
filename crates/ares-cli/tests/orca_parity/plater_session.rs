@@ -137,18 +137,28 @@ fn rewrite_sequences(sequences: &str, session: &PlaterSession) -> String {
 
 /// The project as the GUI exports the session; other entries are unchanged.
 fn export(session: &PlaterSession) -> Vec<u8> {
-    let mut input = zip::ZipArchive::new(Cursor::new(session.input())).unwrap();
+    rewrite_archive(session.input(), |name, text| match name {
+        "3D/3dmodel.model" => Some(rewrite_build(text, session)),
+        "Metadata/model_settings.config" => Some(rewrite_plates(text, session)),
+        "Metadata/filament_sequence.json" => Some(rewrite_sequences(text, session)),
+        _ => None,
+    })
+}
+
+/// `input` with the text entries `edit` returns replaced.
+fn rewrite_archive(input: &[u8], edit: impl Fn(&str, &str) -> Option<String>) -> Vec<u8> {
+    let mut input = zip::ZipArchive::new(Cursor::new(input)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..input.len() {
         let mut file = input.by_index(index).unwrap();
         let mut bytes = Vec::new();
         file.read_to_end(&mut bytes).unwrap();
-        let text = || String::from_utf8(bytes.clone()).unwrap();
-        let bytes = match file.name() {
-            "3D/3dmodel.model" => rewrite_build(&text(), session).into_bytes(),
-            "Metadata/model_settings.config" => rewrite_plates(&text(), session).into_bytes(),
-            "Metadata/filament_sequence.json" => rewrite_sequences(&text(), session).into_bytes(),
-            _ => bytes,
+        let bytes = match std::str::from_utf8(&bytes)
+            .ok()
+            .and_then(|text| edit(file.name(), text))
+        {
+            Some(text) => text.into_bytes(),
+            None => bytes,
         };
         output
             .start_file(
@@ -162,11 +172,16 @@ fn export(session: &PlaterSession) -> Vec<u8> {
 }
 
 fn assert_plate_like_native(label: &str, session: &PlaterSession, plate: u32) {
+    assert_oracle_like_native(label, session, export(session), plate);
+}
+
+/// Native slicing `oracle`, a project the GUI exports for the session.
+fn assert_oracle_like_native(label: &str, session: &PlaterSession, oracle: Vec<u8>, plate: u32) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
     let exported = runner
-        .fixture_case(&format!("plater/{label}"), export(session))
+        .fixture_case(&format!("plater/{label}"), oracle)
         .unwrap();
     let case = runner.slice_selected_plate_case(&exported, plate).unwrap();
     let actual = tokio::runtime::Builder::new_current_thread()
@@ -321,4 +336,60 @@ fn plater_delete_plate_keeps_custom_gcodes_by_index_like_native() {
     assert_eq!(session.plates()[0].instances, vec![(1, 0)]);
     assert_eq!(offset(&session, 1), [110.0, 110.0, 5.0]);
     assert_plate_like_native("custom-gcodes-by-index", &session, 1);
+}
+
+/// The single cube with its offset in the component transform, the part `matrix` and source
+/// offsets (model_settings.config), and the build item at `item`: the frame `--export-3mf` writes for a placed STL
+/// (runner/profile_entry_3mf.rs). Loading moves the volume offset into the instance.
+fn volume_offset_project(item: &str) -> Vec<u8> {
+    let input = std::fs::read(repo_root().join(SINGLE)).unwrap();
+    rewrite_archive(&input, |name, text| match name {
+        "3D/3dmodel.model" => {
+            let component = text.find("<component ").unwrap();
+            let start = component + text[component..].find("transform=\"").unwrap() + 11;
+            let end = start + text[start..].find('"').unwrap();
+            let text = format!(
+                "{}1 0 0 0 1 0 0 0 1 110 110 5{}",
+                &text[..start],
+                &text[end..]
+            );
+            let item_start = text.find("<item ").unwrap();
+            Some(format!(
+                "{}{}",
+                &text[..item_start],
+                text[item_start..].replace("1 0 0 0 1 0 0 0 1 110 110 5", item)
+            ))
+        }
+        "Metadata/model_settings.config" => Some(
+            [
+                (
+                    "matrix",
+                    "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1",
+                    "1 0 0 110 0 1 0 110 0 0 1 5 0 0 0 1",
+                ),
+                ("source_offset_x", "0", "110"),
+                ("source_offset_y", "0", "110"),
+                ("source_offset_z", "0", "5"),
+            ]
+            .iter()
+            .fold(text.to_owned(), |text, (key, from, to)| {
+                text.replace(
+                    &format!("\"{key}\" value=\"{from}\""),
+                    &format!("\"{key}\" value=\"{to}\""),
+                )
+            }),
+        ),
+        _ => None,
+    })
+}
+
+#[test]
+fn plater_volume_offset_project_slices_like_native() {
+    let input = volume_offset_project("1 0 0 0 1 0 0 0 1 0 0 0");
+    let mut session = PlaterSession::load(input.clone()).unwrap();
+    assert_oracle_like_native("volume-offset", &session, input, 1);
+    // A world move of the instance moves the build item the same way in the project's frame.
+    session.translate_instance(0, 0, [10.0, -5.0, 0.0]).unwrap();
+    let moved = volume_offset_project("1 0 0 0 1 0 0 0 1 10 -5 0");
+    assert_oracle_like_native("volume-offset-moved", &session, moved, 1);
 }
