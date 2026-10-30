@@ -1,4 +1,5 @@
 import type { PlaterLayout } from "@ares-slicer/wasm";
+import type { InstanceRef } from "../viewport/instanceDrag";
 import { setSliceResult } from "./actions";
 import { invalidatedSlices, useApp } from "./store";
 
@@ -46,4 +47,36 @@ export async function deletePlate(index: number) {
   const { plater, currentPlate } = useApp.getState();
   const layout = await plater!.deletePlate(index);
   applyLayout(layout, currentPlate >= index && currentPlate > 0 ? currentPlate - 1 : currentPlate);
+}
+
+type Vec3 = [number, number, number];
+const moves: { target: InstanceRef; displacement: Vec3 }[] = [];
+let moving = false;
+
+/**
+ * A canvas drag or move gizmo step (Selection::translate, then GLCanvas3D::do_move). Steps that
+ * arrive while the worker applies one are summed per instance and sent as one.
+ */
+export async function moveInstance(target: InstanceRef, displacement: Vec3) {
+  const last = moves.at(-1);
+  if (last && last.target.object === target.object && last.target.instance === target.instance) {
+    last.displacement = last.displacement.map((value, axis) => value + displacement[axis]) as Vec3;
+  }
+  else moves.push({ target, displacement });
+  if (moving) return;
+  moving = true;
+  try {
+    for (let next = moves.shift(); next; next = moves.shift()) {
+      const { plater, currentPlate } = useApp.getState();
+      applyLayout(await plater!.translate(next.target.object, next.target.instance, next.displacement), currentPlate);
+    }
+  } finally {
+    moving = false;
+  }
+}
+
+/** A Position field edit in world coordinates (GizmoObjectManipulation::change_position_value). */
+export async function setInstancePosition(target: InstanceRef, axis: 0 | 1 | 2, value: number) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.setPosition(target.object, target.instance, axis, value), currentPlate);
 }

@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState }
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
+import { moveInstance } from "../state/plates";
 import { placedScene, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
@@ -36,7 +37,7 @@ const VIEW_KEYS: Record<string, ViewPreset> = {
   "0": "plate", "1": "top", "2": "bottom", "3": "front", "4": "rear", "5": "left", "6": "right",
 };
 
-export function ViewportView({ toolpaths = null, colors = null, enabled = null, view, fit = "plate", children }: {
+export function ViewportView({ toolpaths = null, colors = null, enabled = null, view, fit = "plate", editable = false, children }: {
   toolpaths?: Toolpaths | null;
   /** Per-vertex RGB of `toolpaths` (`ViewColors.colors`); `null` keeps `Toolpaths.colors`. */
   colors?: Uint8Array | null;
@@ -45,6 +46,8 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   view?: ToolpathFilter;
   /** Initial framing when the scene loads. */
   fit?: Exclude<ZoomTarget, "bed" | "plates">;
+  /** Instances move by drag and the move gizmo (Prepare). */
+  editable?: boolean;
   children?: ReactNode;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -138,6 +141,16 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     viewport?.setScene(scene, firstString(loaded?.settings?.filament, "filament_colour") ?? "#29b2a3");
   }, [viewport, scene, loaded]);
 
+  const plater = useApp((state) => state.plater);
+  // A press on an instance selects it (GLCanvas3D::on_mouse LeftDown) and drags it.
+  useEffect(() => {
+    if (!viewport) return;
+    viewport.setMoveHandler(editable && plater ? (target, displacement) => {
+      const id = useApp.getState().scene?.objects[target.object]?.id;
+      if (id !== undefined && useApp.getState().selectedObject !== id) selectObject(id);
+      void moveInstance(target, displacement);
+    } : undefined);
+  }, [viewport, editable, plater]);
   useEffect(() => viewport?.setSelected(selected), [viewport, selected]);
   // A new scene or slice result is re-framed: Prepare the plate, Preview the print.
   useEffect(() => {

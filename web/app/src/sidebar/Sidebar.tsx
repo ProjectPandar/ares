@@ -3,6 +3,7 @@ import { ObjectIcon } from "../shell/icons";
 import { useApp } from "../state/store";
 import { FilamentSection } from "./FilamentSection";
 import { AddPlateButton, ObjectList } from "./ObjectList";
+import { ObjectManipulation } from "./ObjectManipulation";
 import { PrinterSection } from "./PrinterSection";
 import { ProcessSection } from "./ProcessSection";
 import { Section } from "./Section";
@@ -30,6 +31,7 @@ export function Sidebar() {
         action={<AddPlateButton />}>
         <ObjectList />
       </Section>
+      <ObjectManipulation />
       <ProcessSection settings={settings} />
       {tab && settings && (
         <Suspense>

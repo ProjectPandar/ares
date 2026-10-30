@@ -2,6 +2,9 @@ import { type Scene, type Toolpaths, VERTEX_VALUES, type VolumeType } from "@are
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildPlates } from "./bed";
+import { disposeTree } from "./dispose";
+import { attachInstanceDrag, type DragHit, type InstanceRef, type MoveHandler } from "./instanceDrag";
+import { buildMoveGizmo } from "./moveGizmo";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildOptionMarkers } from "./optionMarkers";
@@ -58,6 +61,11 @@ export class Viewport {
   #selected: number | null = null;
   #pointerDown: { x: number; y: number } | null = null;
   onPick?: (objectId: number | null) => void;
+  /** Where instances can be moved: a drag or move gizmo displacement of one instance. */
+  #onMove?: MoveHandler;
+  #gizmo: THREE.Group | null = null;
+  /** The mesh data of the drawn scene; a scene with the same data only moves instances. */
+  #positions: Float32Array | null = null;
   /** The user started orbiting/panning/zooming away from a preset view. */
   onOrbit?: () => void;
 
@@ -74,7 +82,7 @@ export class Viewport {
     };
     this.#controls = new OrbitControls(this.#camera, this.#renderer.domElement);
     this.#controls.enableDamping = false;
-    this.#controls.addEventListener("change", () => this.render());
+    this.#controls.addEventListener("change", () => this.#placeGizmo());
     this.#controls.addEventListener("start", () => this.onOrbit?.());
     this.#camera.position.set(0, -500, 500);
 
@@ -95,6 +103,9 @@ export class Viewport {
       if (event.button !== 0 || !start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) return;
       this.onPick?.(this.#pick(event));
     });
+
+    attachInstanceDrag(canvas, this.#controls, this.#camera, (raycaster) => this.#dragHit(raycaster),
+      (target, displacement) => this.#onMove?.(target, displacement));
 
     this.#resize = new ResizeObserver(() => this.#fitCanvas());
     this.#resize.observe(container);
@@ -134,10 +145,12 @@ export class Viewport {
   }
 
   setScene(scene: Scene | null, filamentColour: string) {
+    if (scene && scene.positions === this.#positions && this.#moveInstances(scene)) return;
     disposeTree(this.#models);
     this.#models.clear();
+    this.#positions = scene?.positions ?? null;
     if (scene) {
-      for (const object of scene.objects) {
+      for (const [objectIndex, object] of scene.objects.entries()) {
         const geometries = object.volumes.map((volume) => {
           const geometry = new THREE.BufferGeometry();
           const start = volume.vertexOffset * 3;
@@ -150,11 +163,12 @@ export class Viewport {
           ));
           return { volume, geometry };
         });
-        for (const instance of object.instances) {
+        for (const [instanceIndex, instance] of object.instances.entries()) {
           const group = new THREE.Group();
           group.matrixAutoUpdate = false;
           group.matrix.fromArray(instance.matrix);
           group.userData.objectId = object.id;
+          group.userData.ref = { object: objectIndex, instance: instanceIndex } satisfies InstanceRef;
           for (const { volume, geometry } of geometries) {
             const [color, opacity] = volume.type === "ModelPart"
               ? [new THREE.Color(filamentColour).getHex(), 1]
@@ -184,8 +198,51 @@ export class Viewport {
     this.setSelected(this.#selected);
   }
 
+  /** Plater edits: the same objects with new instance matrices. */
+  #moveInstances(scene: Scene) {
+    const groups = this.#models.children;
+    const matrices = scene.objects.flatMap((object) => object.instances.map((instance) => instance.matrix));
+    if (groups.length !== matrices.length) return false;
+    groups.forEach((group, index) => group.matrix.fromArray(matrices[index]));
+    this.#models.updateMatrixWorld(true);
+    this.#placeGizmo();
+    return true;
+  }
+
+  /** The move gizmo on the selected object's first instance, while instances can be moved. */
+  #placeGizmo() {
+    if (this.#gizmo) {
+      this.#scene.remove(this.#gizmo);
+      disposeTree(this.#gizmo);
+      this.#gizmo = null;
+    }
+    const group = this.#models.children.find((node) => node.userData.objectId === this.#selected && node.userData.ref.instance === 0);
+    if (group && this.#onMove && this.#models.visible) {
+      this.#gizmo = buildMoveGizmo(new THREE.Box3().setFromObject(group), this.#camera, this.container.clientHeight);
+      this.#scene.add(this.#gizmo);
+    }
+    this.render();
+  }
+
+  #dragHit(raycaster: THREE.Raycaster): DragHit | null {
+    if (!this.#onMove || !this.#models.visible) return null;
+    const arrow = this.#gizmo && raycaster.intersectObject(this.#gizmo, true)[0];
+    if (arrow) {
+      const group = this.#models.children.find((node) => node.userData.objectId === this.#selected && node.userData.ref.instance === 0)!;
+      return { target: group.userData.ref as InstanceRef, point: arrow.point, axis: arrow.object.userData.axis as THREE.Vector3 };
+    }
+    const hit = raycaster.intersectObject(this.#models, true)[0];
+    return hit ? { target: hit.object.parent!.userData.ref as InstanceRef, point: hit.point, axis: null } : null;
+  }
+
+  setMoveHandler(onMove: MoveHandler | undefined) {
+    this.#onMove = onMove;
+    this.#placeGizmo();
+  }
+
   setSelected(objectId: number | null) {
     this.#selected = objectId;
+    this.#placeGizmo();
     this.#models.traverse((node) => {
       if (!(node instanceof THREE.Mesh)) return;
       const material = node.material as THREE.MeshStandardMaterial;
@@ -256,6 +313,7 @@ export class Viewport {
 
   setModelsVisible(visible: boolean) {
     this.#models.visible = visible;
+    this.#placeGizmo();
     this.render();
   }
 
@@ -313,6 +371,7 @@ export class Viewport {
     disposeTree(this.#models);
     disposeTree(this.#bed);
     disposeTree(this.#toolMarker);
+    if (this.#gizmo) disposeTree(this.#gizmo);
     if (this.#toolpaths) disposeTree(this.#toolpaths);
     this.#renderer.dispose();
     this.#renderer.domElement.remove();
@@ -337,13 +396,4 @@ export class Viewport {
     const hit = this.#raycaster.intersectObject(this.#models, true)[0];
     return (hit?.object.userData.objectId as number | undefined) ?? null;
   }
-}
-
-function disposeTree(root: THREE.Object3D) {
-  root.traverse((node) => {
-    if (node instanceof THREE.Mesh || node instanceof THREE.LineSegments || node instanceof THREE.Line) {
-      node.geometry.dispose();
-      (Array.isArray(node.material) ? node.material : [node.material]).forEach((material) => material.dispose());
-    }
-  });
 }

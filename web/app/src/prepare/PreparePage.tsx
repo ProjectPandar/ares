@@ -7,7 +7,7 @@ export function PreparePage() {
   return (
     <div className="page">
       <Sidebar />
-      <ViewportView>
+      <ViewportView editable>
         {!scene && (
           <div className="canvas-hint">
             <div className="canvas-hint-title">Drag a 3MF project or STL model here</div>

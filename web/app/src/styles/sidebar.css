@@ -206,3 +206,8 @@
   .filament-columns { grid-template-columns: 1fr; }
   .filament-column-list { height: auto; max-height: 30vh; }
 }
+
+.manipulation { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; align-items: center; }
+.manipulation-title { grid-column: 1 / -1; color: var(--text-dim); }
+.manipulation-field { grid-column: 1 / -1; display: grid; grid-template-columns: 16px 1fr auto; gap: 6px; align-items: center; }
+.manipulation-unit { color: var(--text-dim); }
