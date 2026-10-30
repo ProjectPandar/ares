@@ -409,3 +409,12 @@ GREEN.
 - STL input without selected presets has no bed, so it keeps today's `sliceStl` path and gets no session.
 
 **Native oracle:** the official and seeded CLI with `--load-settings`/`--load-filaments` and `--arrange 0`, on cube10 pre-positioned where the session puts it (the `orca_parity_profile_entry_stl_center_placement` pattern). The case is first unedited, then after a raised move.
+
+## Follow-ups (accepted deviations, coordinator review of commit 6)
+
+- **Rotate ring snapping:** `GLGizmoRotate::on_dragging` snaps the angle within the inner snap regions (`SnapRegionsCount` 8, `GLGizmoRotate.cpp:24, 102-120`). The web ring turns freely.
+- **Relative rotation fields:** upstream "Rotate (relative)" shows the rotation accumulated since the tool opened and rotates by the edit's difference (`GizmoObjectManipulation.cpp:960-1000`, `change_rotation_value`). The web fields rotate by the entered value and show 0 again.
+- **Move and rotate drops:** a gizmo or drag step runs `do_move`/`do_rotate` on every step rather than once at mouse-up, so a Z drag shows no lift while dragging. The final state is the same.
+- **Plate edits invalidate every plate's slice:** upstream invalidates only the affected plates.
+- **Per-plate wipe tower position on delete:** `PartPlateList::delete_plate` erases that plate's `wipe_tower_x`/`wipe_tower_y` entries (`PartPlate.cpp:4580-4590`); this is not ported.
+- **Bed size change:** the plate grid keeps the bed size the session loaded with; upstream re-lays out the plates.
