@@ -27,7 +27,9 @@ impl Project {
     }
 
     /// Sets each listed instance's transformation and, with a plate list,
-    /// replaces the plates; per-plate documents follow their source plate.
+    /// replaces the plates; per-plate documents follow their source plate,
+    /// while `Model::plates_custom_gcodes` stays keyed by plate index
+    /// (`PartPlateList::delete_plate`, `PartPlate.cpp:4554-4660`, leaves it).
     pub(crate) fn apply_plater_edits(&mut self, edits: &PlaterEdits) {
         let updates =
             self.objects
@@ -56,7 +58,6 @@ impl Project {
             FilamentSequences(Default::default()),
         );
         let old_documents = std::mem::take(&mut documents.plate_documents);
-        let old_gcodes = std::mem::take(&mut self.plates_custom_gcodes);
         let mut new_plates = Vec::with_capacity(plates.len());
         for (index, plate) in plates.iter().enumerate() {
             let id = index as u32 + 1;
@@ -82,10 +83,6 @@ impl Project {
             documents
                 .plate_documents
                 .extend(old_documents.get(source).cloned());
-            if let Some(gcodes) = old_gcodes.get(&(source as i32)) {
-                self.plates_custom_gcodes
-                    .insert(index as i32, gcodes.clone());
-            }
         }
         self.plates = new_plates;
     }
