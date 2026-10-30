@@ -29,6 +29,10 @@ length gate, not by input truncation.
   `ToolOrdering.cpp:1291-1303` / `Print.cpp:2485-2492`; within that mode refresh
   when the applied map differs (`Print.cpp:3166-3175`). A manual map must not
   be rematerialized by this recommendation pass.
+- Assign the recommended map exactly during refresh (`Print.cpp:3171-3175`).
+  Do not reuse the earlier CLI grow/reset operation here. ToolOrdering sizes its
+  recommendation from `filament_colour` (`ToolOrdering.cpp:1114,1151`), which
+  need not have the same count as the configured filament-diameter records.
 - Preserve current normalized non-filament settings during refresh. Upstream
   `Print.cpp:3174-3195` restores `m_full_print_config` from its checkpoint but
   updates runtime `m_config` using only filament variant keys and retract
@@ -55,7 +59,7 @@ length gate, not by input truncation.
 | --- | --- |
 | `PrintApply.cpp:1165-1172` | Existing `filament_variant_checkpoint`, captured after printer/process variant selection and before filament selection, represents `m_ori_full_print_config`. |
 | `ToolOrdering.cpp:1291-1303` | `build_recommended`: refresh only for auto mode, after layer usage is known. |
-| `Print.cpp:3168,3171-3172` | Compare the applied/recommended maps; `refresh_filament_map` updates the cloned current settings' map. The new map is passed explicitly to variant selection rather than mutating the saved checkpoint. |
+| `Print.cpp:3168,3171-3172` | Compare the applied/recommended maps; `refresh_filament_map` assigns the supplied recommendation unchanged to the cloned current settings' map, without CLI-entry regrowth. The new map is passed explicitly to variant selection rather than mutating the saved checkpoint. |
 | `Print.cpp:3174-3175` / `PrintConfig.cpp:9817-9863` | Read raw checkpoint values and resolve the new map's variant indices. |
 | `Print.cpp:3191-3192` | `filament::materialize(destination, checkpoint, indices)` selects and assigns exactly the existing 37 variant-key fields, leaving process/printer/non-variant filament fields untouched. This fuses materialization into the `apply_only` destination without copying unrelated checkpoint values. |
 | `Print.cpp:3177-3188,3193-3195` | Existing `resolve_project_config_views` computes retract overrides from the newly selected filament keys and unchanged machine settings, then constructs effective runtime/G-code views. The override computation is pure; its inputs are unchanged by assignments to the disjoint filament variant keys. |
@@ -101,3 +105,40 @@ from `ToolOrdering.cpp:1303` with runtime `enable_prime_tower == false`, while
 its exported config still records `enable_prime_tower = 1`. Thus auto-mode
 filtering alone is insufficient: preserving normalized runtime state is the
 required correction.
+
+## Entry growth versus late recommended-map assignment
+
+The frozen Ender-3 refresh witness has two filament-diameter records but one
+filament colour and an initial map `[1]`. CLI entry grows the map to `[1,1]`
+(`OrcaSlicer.cpp:6027-6034`). Later, ToolOrdering constructs a one-entry map
+from the colour count (`ToolOrdering.cpp:1114,1151`), converts its IDs to one-based,
+and supplies `[1]` to `Print::update_filament_maps_to_config` (`:1302-1303`).
+`Print.cpp:3171-3175` retains that exact vector; it does not repeat CLI growth.
+Rust's `refresh_filament_map` must likewise preserve the recommendation, while
+initial `materialize_project_variants` keeps the CLI grow-only operation.
+
+The config footer is not a duplicate-ID compression policy.
+`GCode.cpp:5591-5643` serializes the full print config via
+`ConfigBase::opt_serialize` (`Config.cpp:543-547`) and the ordinary
+`ConfigOptionIntsTempl::serialize` comma-join (`Config.hpp:1023-1032`).
+Consequently `[1]` exports as `1`, and `[1,1]` exports as `1,1`.
+No serializer, Manual gate, variant-selection algorithm or admission rule changes
+are included in this refresh correction; the existing views remain a temporary
+compatibility shell around the cited upstream config owners.
+
+### RED/GREEN qualification contract
+
+Freeze the existing two-diameter/one-colour project bytes and SHA without changing
+its configuration. The canonical Native-double-replay/public-API/CLI witness
+must assert Native diameter count 2, colour count 1 and map `[1]`, then compare
+complete output with the existing generator-line-only comparator. Run the witness
+with genuine official and seeded producers, without an opt-in or seeded-only
+skip. Preserve the pre-fix RED and subsequent GREEN receipts separately.
+
+The older `bookkeeping_export` test is **not** an official agreement claim:
+its lines 22-25 return with `seeded-only reference` unless the seeded-reference
+environment is active. Its official PASS therefore skips the Native comparison.
+Keep that existing guard unchanged and exercise its four subcases in seeded mode;
+only the new unguarded frozen witness establishes a real official comparison.
+Retain all earlier filament-map, admission and TiQ2 controls, then run both FULL
+inventories and the REQUIRE=1 workspace gate with explicit producer provenance.

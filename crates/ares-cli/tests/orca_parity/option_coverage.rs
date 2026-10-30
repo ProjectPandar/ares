@@ -296,6 +296,9 @@ mod filament_map_mode;
 #[path = "option_coverage/filament_map_length.rs"]
 mod filament_map_length;
 
+#[path = "option_coverage/filament_map_refresh.rs"]
+mod filament_map_refresh;
+
 #[cfg(test)]
 #[path = "option_coverage/thumbnails.rs"]
 mod thumbnails;
