@@ -1,0 +1,266 @@
+name: Restore current-run Native oracles
+description: Import exact-run Native outputs and fetch only signed Nixpkgs dependencies
+inputs:
+  variants:
+    description: JSON array of required producer variants
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Restore actual-speed-profile
+      if: contains(fromJSON(inputs.variants), 'actual-speed-profile')
+      id: actual-speed-profile
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-actual-speed-profile
+        path: ${{ runner.temp }}/native-oracle-caches/actual-speed-profile
+        fail-on-cache-miss: true
+    - name: Require exact actual-speed-profile cache
+      if: contains(fromJSON(inputs.variants), 'actual-speed-profile') && steps.actual-speed-profile.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: actual-speed-profile" >&2
+        exit 1
+    - name: Restore custom-gcode-overview
+      if: contains(fromJSON(inputs.variants), 'custom-gcode-overview')
+      id: custom-gcode-overview
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-custom-gcode-overview
+        path: ${{ runner.temp }}/native-oracle-caches/custom-gcode-overview
+        fail-on-cache-miss: true
+    - name: Require exact custom-gcode-overview cache
+      if: contains(fromJSON(inputs.variants), 'custom-gcode-overview') && steps.custom-gcode-overview.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: custom-gcode-overview" >&2
+        exit 1
+    - name: Restore gdb
+      if: contains(fromJSON(inputs.variants), 'gdb')
+      id: gdb
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-gdb
+        path: ${{ runner.temp }}/native-oracle-caches/gdb
+        fail-on-cache-miss: true
+    - name: Require exact gdb cache
+      if: contains(fromJSON(inputs.variants), 'gdb') && steps.gdb.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: gdb" >&2
+        exit 1
+    - name: Restore ksr-initialized
+      if: contains(fromJSON(inputs.variants), 'ksr-initialized')
+      id: ksr-initialized
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-ksr-initialized
+        path: ${{ runner.temp }}/native-oracle-caches/ksr-initialized
+        fail-on-cache-miss: true
+    - name: Require exact ksr-initialized cache
+      if: contains(fromJSON(inputs.variants), 'ksr-initialized') && steps.ksr-initialized.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: ksr-initialized" >&2
+        exit 1
+    - name: Restore marker-time
+      if: contains(fromJSON(inputs.variants), 'marker-time')
+      id: marker-time
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-marker-time
+        path: ${{ runner.temp }}/native-oracle-caches/marker-time
+        fail-on-cache-miss: true
+    - name: Require exact marker-time cache
+      if: contains(fromJSON(inputs.variants), 'marker-time') && steps.marker-time.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: marker-time" >&2
+        exit 1
+    - name: Restore marker-time-stable-options
+      if: contains(fromJSON(inputs.variants), 'marker-time-stable-options')
+      id: marker-time-stable-options
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-marker-time-stable-options
+        path: ${{ runner.temp }}/native-oracle-caches/marker-time-stable-options
+        fail-on-cache-miss: true
+    - name: Require exact marker-time-stable-options cache
+      if: contains(fromJSON(inputs.variants), 'marker-time-stable-options') && steps.marker-time-stable-options.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: marker-time-stable-options" >&2
+        exit 1
+    - name: Restore merged-oracle
+      if: contains(fromJSON(inputs.variants), 'merged-oracle')
+      id: merged-oracle
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-merged-oracle
+        path: ${{ runner.temp }}/native-oracle-caches/merged-oracle
+        fail-on-cache-miss: true
+    - name: Require exact merged-oracle cache
+      if: contains(fromJSON(inputs.variants), 'merged-oracle') && steps.merged-oracle.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: merged-oracle" >&2
+        exit 1
+    - name: Restore patchelf
+      if: contains(fromJSON(inputs.variants), 'patchelf')
+      id: patchelf
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-patchelf
+        path: ${{ runner.temp }}/native-oracle-caches/patchelf
+        fail-on-cache-miss: true
+    - name: Require exact patchelf cache
+      if: contains(fromJSON(inputs.variants), 'patchelf') && steps.patchelf.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: patchelf" >&2
+        exit 1
+    - name: Restore plate-custom-gcodes
+      if: contains(fromJSON(inputs.variants), 'plate-custom-gcodes')
+      id: plate-custom-gcodes
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-plate-custom-gcodes
+        path: ${{ runner.temp }}/native-oracle-caches/plate-custom-gcodes
+        fail-on-cache-miss: true
+    - name: Require exact plate-custom-gcodes cache
+      if: contains(fromJSON(inputs.variants), 'plate-custom-gcodes') && steps.plate-custom-gcodes.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: plate-custom-gcodes" >&2
+        exit 1
+    - name: Restore print-statistics
+      if: contains(fromJSON(inputs.variants), 'print-statistics')
+      id: print-statistics
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-print-statistics
+        path: ${{ runner.temp }}/native-oracle-caches/print-statistics
+        fail-on-cache-miss: true
+    - name: Require exact print-statistics cache
+      if: contains(fromJSON(inputs.variants), 'print-statistics') && steps.print-statistics.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: print-statistics" >&2
+        exit 1
+    - name: Restore procgcode
+      if: contains(fromJSON(inputs.variants), 'procgcode')
+      id: procgcode
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-procgcode
+        path: ${{ runner.temp }}/native-oracle-caches/procgcode
+        fail-on-cache-miss: true
+    - name: Require exact procgcode cache
+      if: contains(fromJSON(inputs.variants), 'procgcode') && steps.procgcode.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: procgcode" >&2
+        exit 1
+    - name: Restore procgcode-dynamics
+      if: contains(fromJSON(inputs.variants), 'procgcode-dynamics')
+      id: procgcode-dynamics
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-procgcode-dynamics
+        path: ${{ runner.temp }}/native-oracle-caches/procgcode-dynamics
+        fail-on-cache-miss: true
+    - name: Require exact procgcode-dynamics cache
+      if: contains(fromJSON(inputs.variants), 'procgcode-dynamics') && steps.procgcode-dynamics.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: procgcode-dynamics" >&2
+        exit 1
+    - name: Restore procgcode-dynamics-stable-options
+      if: contains(fromJSON(inputs.variants), 'procgcode-dynamics-stable-options')
+      id: procgcode-dynamics-stable-options
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-procgcode-dynamics-stable-options
+        path: ${{ runner.temp }}/native-oracle-caches/procgcode-dynamics-stable-options
+        fail-on-cache-miss: true
+    - name: Require exact procgcode-dynamics-stable-options cache
+      if: contains(fromJSON(inputs.variants), 'procgcode-dynamics-stable-options') && steps.procgcode-dynamics-stable-options.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: procgcode-dynamics-stable-options" >&2
+        exit 1
+    - name: Restore procgcode-stable-options
+      if: contains(fromJSON(inputs.variants), 'procgcode-stable-options')
+      id: procgcode-stable-options
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-procgcode-stable-options
+        path: ${{ runner.temp }}/native-oracle-caches/procgcode-stable-options
+        fail-on-cache-miss: true
+    - name: Require exact procgcode-stable-options cache
+      if: contains(fromJSON(inputs.variants), 'procgcode-stable-options') && steps.procgcode-stable-options.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: procgcode-stable-options" >&2
+        exit 1
+    - name: Restore role-times
+      if: contains(fromJSON(inputs.variants), 'role-times')
+      id: role-times
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-role-times
+        path: ${{ runner.temp }}/native-oracle-caches/role-times
+        fail-on-cache-miss: true
+    - name: Require exact role-times cache
+      if: contains(fromJSON(inputs.variants), 'role-times') && steps.role-times.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: role-times" >&2
+        exit 1
+    - name: Restore seed-replay
+      if: contains(fromJSON(inputs.variants), 'seed-replay')
+      id: seed-replay
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-seed-replay
+        path: ${{ runner.temp }}/native-oracle-caches/seed-replay
+        fail-on-cache-miss: true
+    - name: Require exact seed-replay cache
+      if: contains(fromJSON(inputs.variants), 'seed-replay') && steps.seed-replay.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: seed-replay" >&2
+        exit 1
+    - name: Restore segment-colors
+      if: contains(fromJSON(inputs.variants), 'segment-colors')
+      id: segment-colors
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-segment-colors
+        path: ${{ runner.temp }}/native-oracle-caches/segment-colors
+        fail-on-cache-miss: true
+    - name: Require exact segment-colors cache
+      if: contains(fromJSON(inputs.variants), 'segment-colors') && steps.segment-colors.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: segment-colors" >&2
+        exit 1
+    - name: Restore segment-hw
+      if: contains(fromJSON(inputs.variants), 'segment-hw')
+      id: segment-hw
+      uses: actions/cache/restore@v4
+      with:
+        key: native-oracle-closure-${{ github.run_id }}-segment-hw
+        path: ${{ runner.temp }}/native-oracle-caches/segment-hw
+        fail-on-cache-miss: true
+    - name: Require exact segment-hw cache
+      if: contains(fromJSON(inputs.variants), 'segment-hw') && steps.segment-hw.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::error::Missing exact current-run Native cache: segment-hw" >&2
+        exit 1
+    - name: Import current-run Native outputs
+      shell: bash
+      env:
+        NATIVE_ORACLE_VARIANTS: ${{ inputs.variants }}
+      run: python3 scripts/ci/native-oracle-cache.py import "$RUNNER_TEMP/native-oracle-caches" "$NATIVE_ORACLE_VARIANTS"

@@ -76,9 +76,13 @@ jobs:
           - merged-oracle
           - ksr-initialized
           - seed-replay
+          - marker-time
+          - marker-time-stable-options
+          - gdb
           - procgcode
           - procgcode-stable-options
           - procgcode-dynamics
+          - procgcode-dynamics-stable-options
           - print-statistics
           - plate-custom-gcodes
           - custom-gcode-overview
@@ -98,11 +102,23 @@ jobs:
       - uses: Mic92/hestia@v3
         with:
           upstream-cache-filter: true
-      - run: bash scripts/ci/build-oracle.sh ${{ matrix.variant }}
+      - name: Build and export Native oracle
+        run: |
+          set -euo pipefail
+          outputs="$(bash scripts/ci/build-oracle.sh ${{ matrix.variant }})"
+          readarray -t paths <<< "$outputs"
+          python3 scripts/ci/native-oracle-cache.py export "$RUNNER_TEMP/native-oracle-caches/${{ matrix.variant }}" "${paths[@]}"
+      - name: Publish current-run Native oracle cache
+        uses: actions/cache/save@v4
+        with:
+          key: native-oracle-closure-${{ github.run_id }}-${{ matrix.variant }}
+          path: ${{ runner.temp }}/native-oracle-caches/${{ matrix.variant }}
 
   web:
     runs-on: self-hosted
     needs: native-oracle-build
+    env:
+      ARES_REQUIRE_ORCA: "1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -138,11 +154,15 @@ jobs:
       - uses: Mic92/hestia@v3
         with:
           upstream-cache-filter: true
+      - name: Restore current-run Native oracles
+        uses: ./.github/actions/native-oracle-cache
+        with:
+          variants: '["merged-oracle","ksr-initialized","seed-replay","marker-time","marker-time-stable-options","procgcode","procgcode-dynamics","print-statistics","plate-custom-gcodes","custom-gcode-overview","actual-speed-profile","role-times","segment-hw","segment-colors","patchelf"]'
       - name: Substitute Native oracles
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview actual-speed-profile role-times segment-hw segment-colors patchelf; do
+          for v in merged-oracle ksr-initialized seed-replay marker-time marker-time-stable-options procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview actual-speed-profile role-times segment-hw segment-colors patchelf; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -154,13 +174,22 @@ jobs:
           set -euo pipefail
           nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
           ksr="$ORACLE_ksr_initialized"
+          replay_cpu="$(awk '/^Cpus_allowed_list:/ { split($2, cpus, /[-,]/); print cpus[1] }' /proc/self/status)"
           {
             echo "NIX_PATH=nixpkgs=$nixpkgs"
             echo "ORCA_SLICER_DIR=$PWD/OrcaSlicer/"
             echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
             echo "ORCA_JOB_APPDIR=$RUNNER_TEMP/orca-patched-appdir"
             echo "ORCA_PATCHELF=$ORACLE_patchelf/bin/patchelf"
+            echo "ORCA_REPLAY_BIN=$ORACLE_seed_replay/bin/orca-slicer"
             echo "ORCA_REPLAY_SEED=0"
+            echo "ORCA_REPLAY_CPU=$replay_cpu"
+            echo "ARES_PARITY_SEEDED_REFERENCE=1"
+            echo "ARES_ORCA_BIN=$PWD/scripts/orca-seeded-parity.sh"
+            echo "ARES_ORCA_NATIVE_BIN=$ORACLE_seed_replay/bin/.orca-slicer-wrapped"
+            echo "ARES_ORCA_REFERENCE_BINARY=$ORACLE_seed_replay/bin/.orca-slicer-wrapped"
+            echo "ARES_ORCA_RESOURCES_DIR=$ORACLE_seed_replay/share/OrcaSlicer"
+            echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
             echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
             echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
             echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
@@ -174,8 +203,8 @@ jobs:
             echo "ARES_ROLE_TIMES_BIN=$ORACLE_role_times/bin/orca-slicer"
             echo "ARES_SEGMENT_HW_BIN=$ORACLE_segment_hw/bin/orca-slicer"
             echo "ARES_SEGMENT_COLOR_BIN=$ORACLE_segment_colors/bin/orca-slicer"
-            echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_BIN=$ORACLE_marker_time/bin/orca-slicer"
+            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_marker_time_stable_options/bin/orca-slicer"
             echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
             echo "LC_ALL=C.UTF-8"
             echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
@@ -201,6 +230,12 @@ jobs:
       - run: npm run build --prefix web
       - run: npm run typecheck --prefix web
       - uses: ./.github/actions/web-e2e
+      - name: Compare viewer Native source kernels
+        if: ${{ !cancelled() }}
+        run: cargo nextest run -p ares-vgcode --test actual_speed_profile --test extrusion_roles --test heights_widths --test marker_time --test custom_gcode_overview --no-fail-fast --test-threads 1
+      - name: Compare WASM adapter Native source kernels
+        if: ${{ !cancelled() }}
+        run: cargo nextest run -p ares-wasm --test custom_gcode_overview --test marker_time --test marker_time_tagged --no-fail-fast --test-threads 1
 
   parity-seeded:
     runs-on: self-hosted
@@ -262,11 +297,15 @@ jobs:
       - uses: Mic92/hestia@v3
         with:
           upstream-cache-filter: true
+      - name: Restore current-run Native oracles
+        uses: ./.github/actions/native-oracle-cache
+        with:
+          variants: '["merged-oracle","ksr-initialized","gdb","seed-replay","procgcode","procgcode-stable-options","procgcode-dynamics","procgcode-dynamics-stable-options","print-statistics","plate-custom-gcodes","custom-gcode-overview"]'
       - name: Substitute Native oracles
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview; do
+          for v in merged-oracle ksr-initialized gdb seed-replay seed-replay-debug seed-replay-source procgcode procgcode-stable-options procgcode-dynamics procgcode-dynamics-stable-options print-statistics plate-custom-gcodes custom-gcode-overview; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -291,6 +330,7 @@ jobs:
             echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
             echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_procgcode_stable_options/bin/orca-slicer"
             echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
+            echo "ARES_PROCGCODE_DYNAMICS_STABLE_BIN=$ORACLE_procgcode_dynamics_stable_options/bin/orca-slicer"
             echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
@@ -309,7 +349,26 @@ jobs:
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
       - name: Verify profile input fail-closed boundary
         run: python3 tests/parity/profile-inputs/check.py
+      - name: Require Native GLU integration admission
+        run: cargo nextest run -p ares-core --test glu_tessellation_native_oracle --no-fail-fast --test-threads 1
+      - name: Compare CLI Native integration cases
+        run: cargo nextest run -p ares-cli --test cli_master_extruder_id --test gcode_moves_oracle --no-fail-fast --test-threads 1
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
+      - name: Compare seeded public Voronoi Native diagram
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ORACLE_seed_replay:-}" ] || [ -z "${ORACLE_seed_replay_debug:-}" ] || [ -z "${ORACLE_seed_replay_source:-}" ]; then
+            echo "::error::Seeded Native diagram requires seed-replay out, debug and source; oracle substitution did not complete." >&2
+            exit 1
+          fi
+          export ARES_ORCA_NATIVE_BIN="$ORACLE_seed_replay/bin/.orca-slicer-wrapped"
+          export ARES_ORCA_REFERENCE_BINARY="$ARES_ORCA_NATIVE_BIN"
+          export ARES_ORCA_RESOURCES_DIR="$ORACLE_seed_replay/share/OrcaSlicer"
+          export ARES_ORCA_DEBUG_DIR="$ORACLE_seed_replay_debug/lib/debug"
+          export ARES_ORCA_SOURCE_DIR="$ORACLE_seed_replay_source/src/libslic3r"
+          export ARES_ORCA_UPSTREAM_DIR="$PWD/OrcaSlicer"
+          cargo nextest run -p ares-cli --test voronoi_incident_native --no-fail-fast --test-threads 1
 
   parity-official:
     runs-on: self-hosted
@@ -369,11 +428,15 @@ jobs:
       - uses: Mic92/hestia@v3
         with:
           upstream-cache-filter: true
+      - name: Restore current-run Native oracles
+        uses: ./.github/actions/native-oracle-cache
+        with:
+          variants: '["merged-oracle","ksr-initialized","gdb","seed-replay","procgcode","procgcode-stable-options","procgcode-dynamics","procgcode-dynamics-stable-options","print-statistics","plate-custom-gcodes","custom-gcode-overview","patchelf"]'
       - name: Substitute Native oracles
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview patchelf; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics procgcode-dynamics-stable-options print-statistics plate-custom-gcodes custom-gcode-overview patchelf; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -402,6 +465,7 @@ jobs:
             echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
             echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_procgcode_stable_options/bin/orca-slicer"
             echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
+            echo "ARES_PROCGCODE_DYNAMICS_STABLE_BIN=$ORACLE_procgcode_dynamics_stable_options/bin/orca-slicer"
             echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
@@ -420,4 +484,8 @@ jobs:
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
       - name: Verify profile input fail-closed boundary
         run: python3 tests/parity/profile-inputs/check.py
+      - name: Require Native GLU integration admission
+        run: cargo nextest run -p ares-core --test glu_tessellation_native_oracle --no-fail-fast --test-threads 1
+      - name: Compare CLI Native integration cases
+        run: cargo nextest run -p ares-cli --test cli_master_extruder_id --test gcode_moves_oracle --no-fail-fast --test-threads 1
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8

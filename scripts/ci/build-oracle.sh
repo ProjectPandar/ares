@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Builds one Native oracle variant for CI (matrix job calls it per variant)
-# and prints the resulting /nix/store path on the last line.
-# Requires nix with flakes and the hestia substituter already configured.
+# and prints the resulting /nix/store paths (all paired seed outputs for producers).
+# Requires Nix with flakes. Producers may reuse the configured Hestia cache.
 set -euo pipefail
 
 variant="${1:?usage: build-oracle.sh <variant>}"
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
 
-# Consumer jobs set ORACLE_SUBSTITUTE_ONLY=1: every path must come from the
-# hestia cache; a cache miss fails instead of compiling Orca locally.
+# Consumers import in-run Native outputs first. Only signed Nixpkgs dependencies
+# may be substituted afterwards; missing Native outputs cannot build locally.
 jobs_flag=(--cores 4 --max-jobs 1)
 if [ "${ORACLE_SUBSTITUTE_ONLY:-0}" = "1" ]; then
-  jobs_flag=(--max-jobs 0)
+  jobs_flag=(--max-jobs 0 --substituters https://cache.nixos.org)
 fi
 
 # Pinned nixpkgs identical to the local gate store path
@@ -49,18 +49,37 @@ case "$variant" in
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/merged-oracle.nix"
     ;;
-  seed-replay)
+  seed-replay|seed-replay-debug|seed-replay-source)
+    # Keep the Native ELF, debug info and source on one derivation so the
+    # read-only Voronoi observer never mixes suppliers.
+    attribute=out
+    case "$variant" in
+      seed-replay-debug) attribute=debug ;;
+      seed-replay-source) attribute=src ;;
+    esac
     # The approved seed-replay oracle carries all three initialization patches,
     # not just seed-only (verified byte-identical to the accepted source tree).
     git -C "$src" apply --unidiff-zero \
       "$repo/scripts/orca-replay/seed-only.patch" \
       "$repo/scripts/orca-replay/concentric-initialization.patch" \
       "$repo/scripts/orca-replay/object-id-initialization.patch"
-    ORCA_REPLAY_SOURCE="$src" ORCA_REPLAY_NIXPKGS="$nixpkgs" \
+    export ORCA_REPLAY_SOURCE="$src" ORCA_REPLAY_NIXPKGS="$nixpkgs"
+    if [ "${ORACLE_SUBSTITUTE_ONLY:-0}" = "1" ]; then
+      if [ "$attribute" = "src" ]; then
+        nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
+          --file "$repo/scripts/orca-replay/build.nix" src
+      else
+        nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
+          --file "$repo/scripts/orca-replay/build.nix" "^$attribute"
+      fi
+    else
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
-      --file "$repo/scripts/orca-replay/build.nix"
+        --file "$repo/scripts/orca-replay/build.nix" '^*'
+      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
+        --file "$repo/scripts/orca-replay/build.nix" src
+    fi
     ;;
-  procgcode|procgcode-stable-options|procgcode-dynamics|marker-time|marker-time-stable-options|custom-gcode-overview|actual-speed-profile|role-times|segment-hw|segment-colors)
+  procgcode|procgcode-stable-options|procgcode-dynamics|procgcode-dynamics-stable-options|marker-time|marker-time-stable-options|custom-gcode-overview|actual-speed-profile|role-times|segment-hw|segment-colors)
     ORCA_PROCGCODE_SOURCE="$src" ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/$variant.nix"
