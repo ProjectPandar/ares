@@ -7,7 +7,7 @@ import { setOverride } from "./actions";
 import { saveConfig, storedConfig } from "./persistence";
 import { saveSelection } from "./presets";
 import type { PrinterPanel } from "./printerPanel";
-import { type PresetSelection, useApp } from "./store";
+import { invalidatedSlices, type PresetSelection, useApp } from "./store";
 
 /** FilamentMapMode values (PrintConfig.cpp:579-583). */
 export const MAP_MODES = ["Auto For Flush", "Auto For Match", "Manual"] as const;
@@ -68,7 +68,7 @@ function update(patch: Partial<PresetSelection>, edits: Record<string, string | 
   }
   useApp.setState(({ slice }) => ({
     presetSelection: { ...selection, ...patch },
-    slice: slice.status === "slicing" ? slice : { status: "idle" },
+    ...invalidatedSlices(slice),
   }));
   saveSelection();
 }

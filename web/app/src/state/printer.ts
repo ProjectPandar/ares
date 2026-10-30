@@ -3,7 +3,7 @@ import { firstString } from "../sidebar/options";
 import { setOverride } from "./actions";
 import { saveSelection, presetCatalog, selectPrinter } from "./presets";
 import { accordBedType, bedTypeOptions, defaultBedType, diameterString, PANEL_KEYS, type PrinterPanel, printerPanel, showsBedTypes } from "./printerPanel";
-import { useApp } from "./store";
+import { invalidatedSlices, useApp } from "./store";
 
 /** The panel of the selected preset printer, or of the project's printer without a selection. */
 export async function updatePrinterPanel() {
@@ -50,7 +50,7 @@ export function selectBedType(bedType: string) {
   }
   useApp.setState(({ slice }) => ({
     presetSelection: { ...selection, bedType },
-    slice: slice.status === "slicing" ? slice : { status: "idle" },
+    ...invalidatedSlices(slice),
   }));
   saveSelection();
 }

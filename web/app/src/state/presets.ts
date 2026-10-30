@@ -274,12 +274,12 @@ export function presetSliceBlocker(selection: PresetSelection, scene: Scene): st
 export type CatalogSources = { vendors: readonly string[]; presetImports: readonly ParsedPresetBundle[] };
 
 /** The `sliceWithProfiles` / `profileSettings` arguments of a complete selection. */
-async function profileRequest(scene: Scene, { printer, process, filaments }: PresetSelection, { vendors, presetImports }: CatalogSources) {
+async function profileRequest(scene: Scene, { printer, process, filaments }: PresetSelection, { vendors, presetImports }: CatalogSources, plate = scene.plates[0]?.id) {
   const { loadVendor } = await import("@ares-slicer/profiles");
   const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
   const catalog = JSON.stringify({ vendors: loaded, imports: presetImports });
   const options: ProfileSliceOptions = {
-    plate: scene.plates[0]?.id,
+    plate,
     seed: 0,
     placement: scene.format === "stl" ? "center" : "none",
   };
@@ -304,20 +304,24 @@ export async function overrideTokens(overrides: ConfigOverrides): Promise<Record
 
 /**
  * Slices with the selected presets, like the OrcaSlicer CLI's `--load-settings` /
- * `--load-filaments`: a 3MF plate over its project config, or an STL centered on
+ * `--load-filaments`: plate `plate` of the edited 3MF over its project config, or an STL centered on
  * the bed as Plater::priv::load_model_objects places a model loaded on an empty
  * plate (Plater.cpp:7056-7058, 7111-7112, 7149-7160). Sidebar edits apply after
  * the presets, as an edit of the selected preset in a settings tab does.
  */
-export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides): Promise<SliceResult> {
-  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, useApp.getState());
+export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides, plate?: number): Promise<SliceResult> {
+  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, useApp.getState(), plate);
   // The plate combo's `curr_bed_type` is part of the project config the slice composes.
   // So are the dual-nozzle volume types and filament map.
   const project: ConfigOverrides = {
     ...(selection.bedType === undefined ? {} : { curr_bed_type: selection.bedType }),
     ...extruderOverrides(selection, presetFilamentSlots(scene.settings)),
   };
-  return slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, { ...options, overrides: await overrideTokens({ ...overrides, ...project }) });
+  const request = { ...options, overrides: await overrideTokens({ ...overrides, ...project }) };
+  const { plater } = useApp.getState();
+  return plater
+    ? plater.sliceWithProfiles(catalog, profiles, request)
+    : slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, request);
 }
 
 /**

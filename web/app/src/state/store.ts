@@ -1,4 +1,4 @@
-import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, Scene, SelectablePrinter, Toolpaths } from "@ares-slicer/wasm";
+import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
@@ -15,6 +15,13 @@ export type SliceState =
   | { status: "slicing"; startedAt: number }
   | { status: "done"; gcode: Uint8Array<ArrayBuffer>; toolpaths: Toolpaths | null; elapsedMs: number }
   | { status: "error"; error: string };
+
+export type SlicedPlate = Extract<SliceState, { status: "done" }>;
+
+/** A config or model change invalidates every plate's slice result; a running slice finishes. */
+export function invalidatedSlices(slice: SliceState): { slice: SliceState; plateSlices: Record<number, SlicedPlate> } {
+  return { slice: slice.status === "slicing" ? slice : { status: "idle" }, plateSlices: {} };
+}
 
 /** Layer slider thumb: 0 lower, 1 upper (IMSlider `ssLower` / `ssHigher`). */
 export type Thumb = 0 | 1;
@@ -69,6 +76,12 @@ export interface AppState {
   fieldError: { key: string; message: string } | null;
   file: ModelFile | null;
   scene: Scene | null;
+  /** The editable plater of a loaded 3MF (`Plater` with its `PartPlateList`); STL input has none. */
+  plater: PlaterSession | null;
+  /** 0-based index of the current plate (`PartPlateList::m_current_plate`). */
+  currentPlate: number;
+  /** The latest slice of each plate by index (`PartPlate::m_gcode_result`); `slice` shows the current one. */
+  plateSlices: Record<number, SlicedPlate>;
   /** `scene.settings` options decoded for typed fields. */
   typedSettings: TypedSettings | null;
   loadingFile: boolean;
@@ -115,6 +128,9 @@ export const useApp = create<AppState>(() => ({
   fieldError: null,
   file: null,
   scene: null,
+  plater: null,
+  currentPlate: 0,
+  plateSlices: {},
   typedSettings: null,
   loadingFile: false,
   selectedObject: null,

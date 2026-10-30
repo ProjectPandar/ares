@@ -117,7 +117,8 @@ test("OrcaSlicer keyboard shortcuts drive import, camera, slicing, export and pr
   expect(await canvasDigest(page), "O must zoom out").not.toBe(zoomed);
 
   // Esc: deselect all.
-  const object = page.getByTestId("object-list").getByRole("treeitem").first();
+  // The first object, under the "Plate 1" node.
+  const object = page.getByTestId("object-list").getByRole("treeitem").nth(1);
   await object.click();
   await expect(object).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("Escape");

@@ -87,6 +87,20 @@
 .object-count { color: var(--text-dim); }
 .object-row.unprintable .object-name { color: var(--text-faint); }
 .object-part { padding-left: 40px; }
+.object-nested { padding-left: 20px; }
+.plate-row { font-weight: 600; }
+.plate-delete {
+  flex: none; width: 20px; height: 20px; padding: 0; border: none; border-radius: 3px; background: none;
+  color: var(--text-dim); font-size: 14px; line-height: 1; cursor: pointer;
+}
+@media (hover: hover) { .plate-delete:not(:disabled):hover { color: var(--text); background: var(--panel-sunken); } }
+.plate-delete:disabled { opacity: 0.4; cursor: default; }
+.plate-add {
+  padding: 1px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel);
+  color: var(--text); font: inherit; font-size: 11px; cursor: pointer;
+}
+@media (hover: hover) { .plate-add:not(:disabled):hover { border-color: var(--accent); } }
+.plate-add:disabled { opacity: 0.4; cursor: default; }
 .object-expander {
   flex: none; width: 0; height: 0; margin: 0 2px; padding: 0; border: none; background: none; cursor: pointer;
   border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--text-dim);

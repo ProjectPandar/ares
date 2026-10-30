@@ -2,8 +2,48 @@ import * as THREE from "three";
 import type { BedShape } from "./bedShape";
 import type { ViewportColors } from "./Viewport";
 
-/** Plate surface, 10 mm grid with 50 mm major lines, outline and Bed3D origin axes. */
-export function buildBed({ polygon, height }: BedShape, colors: ViewportColors): THREE.Group {
+/**
+ * Every plate of the plate list at its grid origin (PartPlateList::render): the bed with its grid,
+ * the current plate's outline in the accent colour, and each plate's index above its top-left
+ * corner (`m_plate_idx_icon`, PartPlate::render_icons, PartPlate.cpp:1106-1207). The Bed3D origin axes stay at the first plate's origin.
+ */
+export function buildPlates(shape: BedShape, origins: readonly (readonly [number, number])[], current: number, colors: ViewportColors): THREE.Group {
+  const group = new THREE.Group();
+  const xs = shape.polygon.map(([x]) => x);
+  const ys = shape.polygon.map(([, y]) => y);
+  const labelSize = 0.08 * Math.max(...xs) - 0.08 * Math.min(...xs);
+  origins.forEach(([x, y], index) => {
+    const outline = origins.length > 1 && index === current ? colors.current : colors.outline;
+    const plate = buildBed(shape, { ...colors, outline });
+    if (origins.length > 1) {
+      const label = buildLabel(String(index + 1), outline, labelSize);
+      label.position.set(Math.min(...xs) + labelSize / 2, Math.max(...ys) + labelSize * 0.7, 0);
+      plate.add(label);
+    }
+    plate.position.set(x, y, 0);
+    group.add(plate);
+  });
+  group.add(buildAxes(0.1 * Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), shape.height)));
+  return group;
+}
+
+/** A plate index sprite facing the camera. */
+function buildLabel(text: string, color: number, size: number) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 64;
+  const context = canvas.getContext("2d")!;
+  context.fillStyle = `#${color.toString(16).padStart(6, "0")}`;
+  context.font = "bold 44px sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(text, 32, 34);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), depthWrite: false }));
+  sprite.scale.set(size, size, 1);
+  return sprite;
+}
+
+/** Plate surface, 10 mm grid with 50 mm major lines and outline. */
+function buildBed({ polygon }: BedShape, colors: ViewportColors): THREE.Group {
   const group = new THREE.Group();
   const shape = new THREE.Shape(polygon.map(([x, y]) => new THREE.Vector2(x, y)));
   const surface = new THREE.Mesh(
@@ -36,8 +76,6 @@ export function buildBed({ polygon, height }: BedShape, colors: ViewportColors):
     new THREE.LineBasicMaterial({ color: colors.outline }),
   );
   group.add(outline);
-
-  group.add(buildAxes(0.1 * Math.max(maxX - minX, maxY - minY, height)));
   return group;
 }
 

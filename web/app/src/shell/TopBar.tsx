@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { type RefObject, useRef } from "react";
-import { exportGcode, importFile, setTheme, slicePlate } from "../state/actions";
+import { exportAllGcode, exportGcode, importFile, setTheme, sliceAllPlates, slicePlate } from "../state/actions";
 import { importPresetFiles, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
@@ -54,11 +54,16 @@ export function TitleBar({ importInput: input, onShortcuts }: {
   );
 }
 
-/** MainFrame notebook: Prepare/Preview tabs, slice and export SideButtons. */
+/**
+ * MainFrame notebook: Prepare/Preview tabs, slice and export SideButtons. A multi-plate project
+ * also offers "Slice all" (`eSliceAll`, Plater::priv::on_action_slice_all) and exports every
+ * sliced plate.
+ */
 export function TabBar() {
-  const { engine, scene, slice, presetSelection } = useApp();
+  const { engine, scene, slice, presetSelection, plateSlices } = useApp();
   const slicing = slice.status === "slicing";
   const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
+  const multiPlate = (scene?.plates.length ?? 0) > 1;
   return (
     <nav className="tabbar">
       <div className="tabbar-tabs">
@@ -75,9 +80,20 @@ export function TabBar() {
           title={blocker ?? undefined}>
           {slicing ? "Slicing…" : "Slice plate"}
         </button>
+        {multiPlate && (
+          <button className="side-button" onClick={() => void sliceAllPlates()}
+            disabled={slicing || engine !== "ready" || blocker !== null} title={blocker ?? undefined}>
+            Slice all
+          </button>
+        )}
         <button className="side-button" onClick={exportGcode} disabled={slice.status !== "done"}>
           Export G-code file
         </button>
+        {multiPlate && (
+          <button className="side-button" onClick={exportAllGcode} disabled={slicing || Object.keys(plateSlices).length === 0}>
+            Export all
+          </button>
+        )}
       </div>
     </nav>
   );

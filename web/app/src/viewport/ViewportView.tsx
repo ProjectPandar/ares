@@ -1,5 +1,5 @@
 import type { MovesView, Scene, Toolpaths } from "@ares-slicer/wasm";
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
@@ -22,6 +22,7 @@ function themeColors(): ViewportColors {
     gridMinor: color("--bed-grid"),
     gridMajor: color("--bed-grid-major"),
     outline: color("--bed-outline"),
+    current: color("--accent"),
   };
 }
 
@@ -43,7 +44,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   enabled?: MovesView | null;
   view?: ToolpathFilter;
   /** Initial framing when the scene loads. */
-  fit?: Exclude<ZoomTarget, "bed">;
+  fit?: Exclude<ZoomTarget, "bed" | "plates">;
   children?: ReactNode;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -56,12 +57,18 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   const vendors = useApp((state) => state.vendors);
   const presetImports = useApp((state) => state.presetImports);
   const selected = useApp((state) => state.selectedObject);
+  const currentPlate = useApp((state) => state.currentPlate);
   // With presets selected the plate shows the model and bed the preset slice uses, re-placed on
   // every printer switch (on_select_preset -> on_config_change -> set_bed_shape, Plater.cpp:9576-9580,
   // 16754-16755).
   const [placed, setPlaced] = useState<{ inputs: unknown[]; scene: Scene } | null>(null);
   const inputs = [loaded, selection, vendors, presetImports];
-  const scene = placed && placed.inputs.every((input, at) => input === inputs[at]) ? placed.scene : loaded;
+  const current = placed && placed.inputs.every((input, at) => input === inputs[at]) ? placed.scene : null;
+  // A project keeps its plater's edited objects and plates; the placement supplies the composed bed.
+  const scene = useMemo(
+    () => (current && loaded?.format === "3mf" ? { ...loaded, settings: current.settings } : current ?? loaded),
+    [current, loaded],
+  );
   useEffect(() => {
     if (!file || !loaded || !selection || presetSliceBlocker(selection, loaded)) return;
     let stale = false;
@@ -75,12 +82,16 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       stale = true;
     };
   }, [file, loaded, selection, vendors, presetImports]);
-  // A new scene or slice result resets the camera to the plate view.
-  const [framed, setFramed] = useState([scene, toolpaths]);
-  if (framed[0] !== scene || framed[1] !== toolpaths) {
-    setFramed([scene, toolpaths]);
+  // A new scene or slice result resets the camera to the plate view; a project's plater edits keep
+  // its settings and the camera.
+  const frame = loaded?.format === "3mf" ? scene?.settings : scene;
+  const [framed, setFramed] = useState([frame, toolpaths]);
+  if (framed[0] !== frame || framed[1] !== toolpaths) {
+    setFramed([frame, toolpaths]);
     setActive("plate");
   }
+  const plateCount = scene?.plates.length ?? 0;
+  const counted = useRef({ frame, plateCount });
 
   useEffect(() => {
     let instance: Viewport | null = null;
@@ -120,7 +131,10 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   useEffect(() => viewport?.setColors(themeColors()), [viewport, theme]);
 
   useEffect(() => {
-    viewport?.setBed(bedFromSettings(scene?.settings ?? null));
+    const origins = scene?.plates.map(({ origin }): [number, number] => origin ?? [0, 0]);
+    viewport?.setBed(bedFromSettings(scene?.settings ?? null), origins?.length ? origins : undefined, currentPlate);
+  }, [viewport, scene, currentPlate]);
+  useEffect(() => {
     viewport?.setScene(scene, firstString(loaded?.settings?.filament, "filament_colour") ?? "#29b2a3");
   }, [viewport, scene, loaded]);
 
@@ -131,8 +145,13 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     viewport.setToolpaths(toolpaths);
     viewport.setModelsVisible(!toolpaths);
     viewport.setView("plate");
-    viewport.zoomTo(scene ? fit : "plate");
-  }, [viewport, scene, toolpaths, fit]);
+    viewport.zoomTo(frame ? fit : "plate");
+  }, [viewport, frame, toolpaths, fit]);
+  // An added plate frames every plate (Plater::priv::on_action_add_plate, REQUIRES_ZOOM_TO_ALL_PLATE).
+  useEffect(() => {
+    if (viewport && counted.current.frame === frame && plateCount > counted.current.plateCount) viewport.zoomTo("plates");
+    counted.current = { frame, plateCount };
+  }, [viewport, frame, plateCount]);
   // Layout effects: the commit that shows a preview state already has its draw queued.
   useLayoutEffect(() => {
     if (view) viewport?.setPreviewView(view);

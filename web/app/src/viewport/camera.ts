@@ -3,9 +3,12 @@ import * as THREE from "three";
 /** Camera::select_view directions; "plate" is the topfront view of GLCanvas3D key 0. */
 export type ViewPreset = "iso" | "top" | "bottom" | "front" | "rear" | "left" | "right" | "plate";
 
-/** GLCanvas3D::Default*MarginFactor: objects/plate 1.25, bed 2.0. */
-export type ZoomTarget = "objects" | "plate" | "bed";
-const MARGIN: Record<ZoomTarget, number> = { objects: 1.25, plate: 1.25, bed: 2 };
+/**
+ * GLCanvas3D::Default*MarginFactor: objects/plate 1.25, bed 2.0. "plate" and "bed" frame the current
+ * plate (`m_bed` sits on it), "plates" every plate (zoom_to_plate(REQUIRES_ZOOM_TO_ALL_PLATE)).
+ */
+export type ZoomTarget = "objects" | "plate" | "bed" | "plates";
+const MARGIN: Record<ZoomTarget, number> = { objects: 1.25, plate: 1.25, bed: 2, plates: 1.25 };
 
 // Eye offsets from the target. Camera.up stays +Z for OrbitControls, so the
 // top/bottom eyes lean towards -Y to keep Orca's +Y / -Y screen-up.

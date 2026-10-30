@@ -96,7 +96,9 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   await dropFiles(page, [{ name: "default-prisms.3mf", bytes: readFileSync(prisms) }]);
   await expect(status).toHaveText("Ready to slice");
   await page.getByRole("link", { name: "Prepare" }).click();
-  await expect(rows).toHaveCount(3);
+  // ObjectList::reload_all_plates: the plate node, then its objects.
+  await expect(rows).toHaveCount(4);
+  await expect(rows.first()).toHaveText("Plate 1");
   for (const name of ["wide.stl", "neck.stl", "hole.stl"]) await expect(rows.filter({ hasText: name })).toHaveCount(1);
   await expect(page.getByTestId("object-count")).toHaveText("3");
 

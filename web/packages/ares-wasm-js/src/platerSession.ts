@@ -83,10 +83,21 @@ export class PlaterSession {
     return (await this.#call({
       kind: "platerSliceWithProfiles",
       sessionId: this.#sessionId,
+      plate: options.plate,
       catalog: catalogJson,
       selection: JSON.stringify(selection),
       options: JSON.stringify(options),
     })) as SliceResult;
+  }
+
+  /**
+   * Makes the latest slice of plate `plate` (1-based) the toolpaths `AresSlicer.viewRange` and the
+   * other view calls apply to, as switching plates reloads that plate's G-code preview
+   * (`PartPlateList::get_current_slice_result`). Each plate's latest slice is kept until an edit.
+   * Resolves `false` when the plate has no slice to show.
+   */
+  async preview(plate: number): Promise<boolean> {
+    return (await this.#call({ kind: "platerPreview", sessionId: this.#sessionId, plate })) as boolean;
   }
 
   /** Releases the worker's session. */

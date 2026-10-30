@@ -1,7 +1,7 @@
 import { type Scene, type Toolpaths, VERTEX_VALUES, type VolumeType } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { buildBed } from "./bed";
+import { buildPlates } from "./bed";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildOptionMarkers } from "./optionMarkers";
@@ -16,6 +16,8 @@ export interface ViewportColors {
   gridMinor: number;
   gridMajor: number;
   outline: number;
+  /** The current plate's outline and index. */
+  current: number;
 }
 
 const SELECTED = new THREE.Color(0xffa040);
@@ -46,6 +48,9 @@ export class Viewport {
   #toolpathColors: Uint8Array | null = null;
   #previewView: ToolpathFilter | null = null;
   #bedShape: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
+  /** Plate grid origins (PartPlateList::compute_origin) and the current plate's index. */
+  #plateOrigins: readonly (readonly [number, number])[] = [[0, 0]];
+  #currentPlate = 0;
   #colors: ViewportColors;
   /** Delivers the render after the requesting task; `#dirty` while one is queued. */
   readonly #renderTask = new MessageChannel();
@@ -100,16 +105,32 @@ export class Viewport {
   setColors(colors: ViewportColors) {
     this.#colors = colors;
     this.#scene.background = new THREE.Color(colors.background);
-    this.setBed(this.#bedShape);
+    this.setBed(this.#bedShape, this.#plateOrigins, this.#currentPlate);
   }
 
-  setBed(shape: BedShape) {
+  /** The bed shape at every plate origin; toolpaths and plate zoom follow the current plate. */
+  setBed(shape: BedShape, origins: readonly (readonly [number, number])[] = [[0, 0]], current = 0) {
     this.#bedShape = shape;
+    this.#plateOrigins = origins;
+    this.#currentPlate = current;
     this.#scene.remove(this.#bed);
     disposeTree(this.#bed);
-    this.#bed = buildBed(shape, this.#colors);
+    this.#bed = buildPlates(shape, origins, current, this.#colors);
     this.#scene.add(this.#bed);
+    this.container.dataset.plates = JSON.stringify({ origins, current });
+    this.#placeToolpaths();
     this.render();
+  }
+
+  get #origin(): readonly [number, number] {
+    return this.#plateOrigins[this.#currentPlate] ?? [0, 0];
+  }
+
+  /** A plate's G-code is in its own coordinates; the preview draws it on the current plate. */
+  #placeToolpaths() {
+    if (!this.#toolpaths) return;
+    this.#toolpaths.position.set(...this.#origin, 0);
+    this.#toolpaths.updateMatrix();
   }
 
   setScene(scene: Scene | null, filamentColour: string) {
@@ -191,6 +212,7 @@ export class Viewport {
       const markers = buildOptionMarkers(toolpaths);
       this.#toolpaths.add(markers.mesh);
       this.#scene.add(this.#toolpaths);
+      this.#placeToolpaths();
       this.container.dataset.optionMarkers = JSON.stringify(markers.counts);
       this.container.dataset.segmentSizes = segmentSizesProbe(this.#toolpaths);
       this.container.dataset.segmentGeometry = segmentGeometryProbe(this.#toolpaths);
@@ -221,7 +243,7 @@ export class Viewport {
     this.#toolMarker.visible = vertex !== null;
     if (vertex !== null) {
       const [x, y, z] = toolpaths.values.subarray(vertex * VERTEX_VALUES.length);
-      placeToolMarker(this.#toolMarker, x, y, z);
+      placeToolMarker(this.#toolMarker, x + this.#origin[0], y + this.#origin[1], z);
     }
     this.render();
   }
@@ -257,9 +279,14 @@ export class Viewport {
     const box = new THREE.Box3();
     if (target === "objects") {
       box.setFromObject(this.#models);
-      if (this.#toolpaths) box.union(this.#toolpaths.geometry.boundingBox!);
+      if (this.#toolpaths) box.union(this.#toolpaths.geometry.boundingBox!.clone().translate(this.#toolpaths.position));
     }
-    else for (const [x, y] of this.#bedShape.polygon) box.expandByPoint(new THREE.Vector3(x, y, 0));
+    else {
+      const origins = target === "plates" ? this.#plateOrigins : [this.#origin];
+      for (const [ox, oy] of origins) {
+        for (const [x, y] of this.#bedShape.polygon) box.expandByPoint(new THREE.Vector3(x + ox, y + oy, 0));
+      }
+    }
     const center = zoomToBox(this.#camera, box, target);
     if (!center) return;
     this.#controls.target.copy(center);

@@ -61,6 +61,7 @@ function useViewColors(toolpaths: Toolpaths | null, viewType: string, hiddenRole
 
 export function PreviewPage() {
   const scene = useApp((state) => state.scene);
+  const currentPlate = useApp((state) => state.currentPlate);
   const slice = useApp((state) => state.slice);
   const view = useApp((state) => state.preview);
   const toolpaths = slice.status === "done" ? slice.toolpaths : null;
@@ -86,7 +87,7 @@ export function PreviewPage() {
             <dl className="summary">
               <dt>G-code size</dt><dd data-testid="gcode-bytes">{slice.gcode.length.toLocaleString()} bytes</dd>
               <dt>Slicing time</dt><dd>{(slice.elapsedMs / 1000).toFixed(2)} s</dd>
-              <dt>Plate</dt><dd>{scene?.plates[0]?.id ?? 1}</dd>
+              <dt>Plate</dt><dd data-testid="slice-plate">{scene?.plates[currentPlate]?.id ?? 1}</dd>
               {toolpaths && <><dt>Layers</dt><dd data-testid="layer-count">{toolpaths.layerZs.length}</dd></>}
             </dl>
           ) : slice.status === "slicing" ? (

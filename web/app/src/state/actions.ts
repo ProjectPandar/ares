@@ -5,7 +5,7 @@ import { overrideTokens, presetSliceBlocker, sliceWithPresets } from "./presets"
 import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
 import { decodeSettings } from "./typedSettings";
-import { DEFAULT_PREVIEW, type PreviewView, type Theme, type Thumb, useApp, type ViewMode } from "./store";
+import { DEFAULT_PREVIEW, invalidatedSlices, type PreviewView, type SlicedPlate, type Theme, type Thumb, useApp, type ViewMode } from "./store";
 
 const configDefs = slicer.printConfigDef().then(({ options }) => new Map(options.map((def) => [def.key, def])));
 configDefs.then(
@@ -41,16 +41,23 @@ export async function importFile(file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   useApp.setState({ loadingFile: true, loadError: undefined });
   try {
-    const scene = await slicer.loadScene(bytes);
+    // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure).
+    const plater = /\.3mf$/i.test(file.name) ? await slicer.createPlaterSession(bytes, file.name) : null;
+    const scene = plater ? await plater.scene() : await slicer.loadScene(bytes);
     const typedSettings = scene.settings && (await decodeSettings(await configDefs, scene.settings));
+    const previous = useApp.getState().plater;
     useApp.setState({
       file: { name: file.name, bytes },
       scene,
+      plater,
+      currentPlate: 0,
+      plateSlices: {},
       typedSettings,
       selectedObject: null,
       overrides: {},
       slice: { status: "idle" },
     });
+    void previous?.free();
     if (!useApp.getState().presetSelection) await updatePrinterPanel();
   } catch (error) {
     useApp.setState({ loadError: (error as Error).message });
@@ -63,41 +70,68 @@ export function selectObject(id: number | null) {
   useApp.setState({ selectedObject: id });
 }
 
-/** Slices the first plate (BackgroundSlicingProcess::start in the worker). */
+/** Slices the current plate ("Slice plate", BackgroundSlicingProcess::start in the worker). */
 export async function slicePlate() {
-  const { file, scene, slice, overrides, presetSelection } = useApp.getState();
+  await slicePlates([useApp.getState().currentPlate]);
+}
+
+/**
+ * "Slice all" (Plater::priv::on_action_slice_all, Plater.cpp:10176-10197): selects and slices
+ * each plate in turn, ending on the last; plates without instances have nothing to slice.
+ */
+export async function sliceAllPlates() {
+  const { scene } = useApp.getState();
+  await slicePlates(scene?.plates.flatMap(({ instances }, index) => (instances.length ? [index] : [])) ?? []);
+}
+
+async function slicePlates(indices: number[]) {
+  const { file, scene, slice, overrides, presetSelection, plater } = useApp.getState();
   if (!file || !scene || slice.status === "slicing") return;
   if (presetSelection && presetSliceBlocker(presetSelection, scene)) return;
-  const startedAt = performance.now();
-  useApp.setState({ slice: { status: "slicing", startedAt } });
-  try {
-    const result = presetSelection
-      ? await sliceWithPresets(file, scene, presetSelection, overrides)
-      : scene.format === "3mf"
-        ? await slicer.sliceProject(file.bytes, scene.plates[0]?.id, await overrideTokens(overrides))
-        : await slicer.sliceStl(file.bytes);
-    if (useApp.getState().file !== file) return;
-    setSliceResult(result, performance.now() - startedAt);
-  } catch (error) {
-    useApp.setState({ slice: { status: "error", error: (error as Error).message } });
+  for (const index of indices) {
+    const startedAt = performance.now();
+    useApp.setState({ currentPlate: index, slice: { status: "slicing", startedAt } });
+    const plate = scene.plates[index]?.id;
+    try {
+      const result = presetSelection
+        ? await sliceWithPresets(file, scene, presetSelection, overrides, plate)
+        : plater
+          ? await plater.slice(plate, await overrideTokens(overrides))
+          : await slicer.sliceStl(file.bytes);
+      if (useApp.getState().file !== file) return;
+      setSliceResult(result, performance.now() - startedAt);
+      useApp.setState(({ plateSlices, slice: done }) => ({ plateSlices: { ...plateSlices, [index]: done as SlicedPlate } }));
+    } catch (error) {
+      useApp.setState({ slice: { status: "error", error: (error as Error).message } });
+      return;
+    }
   }
 }
 
-export function gcodeFileName(): string {
+/** `<project>_plate_<n>.gcode` of plate `index`, the current plate by default. */
+export function gcodeFileName(index = useApp.getState().currentPlate): string {
   const { file, scene } = useApp.getState();
   const stem = file?.name.replace(/\.(3mf|stl)$/i, "") ?? "plate";
-  return `${stem}_plate_${scene?.plates[0]?.id ?? 1}.gcode`;
+  return `${stem}_plate_${scene?.plates[index]?.id ?? 1}.gcode`;
+}
+
+function download(gcode: Uint8Array<ArrayBuffer>, name: string) {
+  const url = URL.createObjectURL(new Blob([gcode], { type: "text/x-gcode" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export function exportGcode() {
   const { slice } = useApp.getState();
-  if (slice.status !== "done") return;
-  const url = URL.createObjectURL(new Blob([slice.gcode], { type: "text/x-gcode" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = gcodeFileName();
-  link.click();
-  URL.revokeObjectURL(url);
+  if (slice.status === "done") download(slice.gcode, gcodeFileName());
+}
+
+/** Saves every sliced plate's G-code, one file per plate. */
+export function exportAllGcode() {
+  for (const [index, { gcode }] of Object.entries(useApp.getState().plateSlices)) download(gcode, gcodeFileName(Number(index)));
 }
 
 /** Shows a slice result and resets the preview to every layer (GCodeViewer::load). */
@@ -169,10 +203,10 @@ export function setOverride(key: string, value: OptionValue | undefined, origina
     const next = { ...overrides };
     if (value === undefined || JSON.stringify(value) === JSON.stringify(original)) delete next[key];
     else next[key] = value;
-    return { overrides: next, slice: slice.status === "slicing" ? slice : { status: "idle" } };
+    return { overrides: next, ...invalidatedSlices(slice) };
   });
 }
 
 export function resetOverrides() {
-  useApp.setState(({ slice }) => ({ overrides: {}, slice: slice.status === "slicing" ? slice : { status: "idle" } }));
+  useApp.setState(({ slice }) => ({ overrides: {}, ...invalidatedSlices(slice) }));
 }

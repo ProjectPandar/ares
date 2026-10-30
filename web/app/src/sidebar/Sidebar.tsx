@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { ObjectIcon } from "../shell/icons";
 import { useApp } from "../state/store";
 import { FilamentSection } from "./FilamentSection";
-import { ObjectList } from "./ObjectList";
+import { AddPlateButton, ObjectList } from "./ObjectList";
 import { PrinterSection } from "./PrinterSection";
 import { ProcessSection } from "./ProcessSection";
 import { Section } from "./Section";
@@ -26,7 +26,8 @@ export function Sidebar() {
     <aside className="sidebar" id="sidebar" data-open={open} data-testid="sidebar">
       <PrinterSection settings={settings} openTab={setTab} />
       <FilamentSection settings={settings} openTab={setTab} />
-      <Section icon={<ObjectIcon />} title="Objects" extra={scene ? <span data-testid="object-count">{scene.objects.length}</span> : undefined}>
+      <Section icon={<ObjectIcon />} title="Objects" extra={scene ? <span data-testid="object-count">{scene.objects.length}</span> : undefined}
+        action={<AddPlateButton />}>
         <ObjectList />
       </Section>
       <ProcessSection settings={settings} />

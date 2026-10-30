@@ -71,12 +71,12 @@ function rewriteSequences(sequences: string, plates: OraclePlate[]) {
 
 /**
  * The project the GUI exports after plater edits: `fixture` with the plates' build item
- * matrices, plate map and filament sequences. Every other entry, including the plate-index
- * keyed custom G-codes, is unchanged.
+ * matrices, plate map and filament sequences; `outside` items lie on no plate. Every other entry,
+ * including the plate-index keyed custom G-codes, is unchanged.
  */
-export function guiExport(fixture: string, plates: OraclePlate[]): Uint8Array<ArrayBuffer> {
+export function guiExport(fixture: string, plates: OraclePlate[], outside: OracleItem[] = []): Uint8Array<ArrayBuffer> {
   const entries = unzipSync(readFileSync(`${repositoryRoot}${fixture}`));
-  const items = plates.flatMap((plate) => plate.items);
+  const items = [...plates.flatMap((plate) => plate.items), ...outside];
   const rewrite = (name: string, edit: (text: string) => string) => {
     if (entries[name]) entries[name] = strToU8(edit(strFromU8(entries[name])));
   };
@@ -101,6 +101,6 @@ export function orcaPlate(project: string, plate: number, leg: "official" | "see
     env: { ...process.env, ORCA_REPLAY_SEED: "0", ORCA_REPLAY_CPU: cpu },
   });
   const gcode = readFileSync(`${work}plate_${plate}.gcode`, "utf8");
-  writeFileSync(`${project.replace(/\.3mf$/, "")}-${leg}.gcode`, gcode);
+  writeFileSync(`${project.replace(/\.3mf$/, "")}-plate_${plate}-${leg}.gcode`, gcode);
   return normalize(gcode, "OrcaSlicer");
 }

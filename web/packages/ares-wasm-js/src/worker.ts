@@ -33,10 +33,30 @@ const owned = (bytes: Uint8Array) => bytes as Uint8Array<ArrayBuffer>;
 
 /** Vertices of the latest `sliceProject`, loaded in libvgcode `ViewerImpl` for `viewRange` and `viewColors`. */
 let viewer: VertexBuffers | undefined;
+/** The latest sliced vertices of each plater session plate (`PartPlate::m_gcode_result`), by `sessionId:plate`. */
+const plateViewers = new Map<string, VertexBuffers>();
 const replaceViewer = (next?: VertexBuffers) => {
-  viewer?.free();
+  if (viewer && ![...plateViewers.values()].includes(viewer)) viewer.free();
   viewer = next;
 };
+
+/** Keeps the active vertices as plate `plate`'s result, replacing its previous one. */
+function keepPlateViewer(sessionId: number, plate: number | undefined) {
+  const key = `${sessionId}:${plate ?? 1}`;
+  const previous = plateViewers.get(key);
+  plateViewers.set(key, viewer!);
+  if (previous !== viewer) previous?.free();
+}
+
+/** An edit or release invalidates every slice result of the session. */
+function dropPlateViewers(sessionId: number) {
+  for (const [key, plateViewer] of plateViewers) {
+    if (!key.startsWith(`${sessionId}:`)) continue;
+    plateViewers.delete(key);
+    if (plateViewer === viewer) viewer = undefined;
+    plateViewer.free();
+  }
+}
 
 const catalogs = new Map<number, PresetCatalog>();
 const sessions = new Map<number, PlaterSession>();
@@ -183,17 +203,29 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "platerEdit": {
       const session = sessions.get(request.sessionId)!;
       applyEdit(session, request.edit);
+      dropPlateViewers(request.sessionId);
       return [JSON.parse(session.layout()), []];
     }
     case "platerAbsoluteRotation":
       return [[...sessions.get(request.sessionId)!.absoluteRotation(request.object, request.instance)], []];
-    case "platerSlice":
-      return processedResult(await sessions.get(request.sessionId)!.sliceProcessed(request.plate, request.overrides));
+    case "platerSlice": {
+      const result = processedResult(await sessions.get(request.sessionId)!.sliceProcessed(request.plate, request.overrides));
+      keepPlateViewer(request.sessionId, request.plate);
+      return result;
+    }
     case "platerSliceWithProfiles": {
-      const { sessionId, catalog, selection, options } = request;
-      return processedResult(await sessions.get(sessionId)!.sliceWithProfilesProcessed(catalog, selection, options));
+      const { sessionId, plate, catalog, selection, options } = request;
+      const result = processedResult(await sessions.get(sessionId)!.sliceWithProfilesProcessed(catalog, selection, options));
+      keepPlateViewer(sessionId, plate);
+      return result;
+    }
+    case "platerPreview": {
+      const plateViewer = plateViewers.get(`${request.sessionId}:${request.plate}`);
+      if (plateViewer) replaceViewer(plateViewer);
+      return [plateViewer !== undefined, []];
     }
     case "platerFree":
+      dropPlateViewers(request.sessionId);
       sessions.get(request.sessionId)!.free();
       sessions.delete(request.sessionId);
       return [undefined, []];
