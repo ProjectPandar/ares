@@ -87,6 +87,15 @@ impl PlaterSession {
         })
     }
 
+    /// Loads a model with selected presets onto an empty plate, centered on the bed and dropped
+    /// when `request.placement` asks (`Plater::priv::load_model_objects`).
+    pub async fn load_with_profiles(
+        _input: Vec<u8>,
+        _request: crate::ProfileSliceRequest<'_>,
+    ) -> Result<Self, SliceError> {
+        todo!("PlaterSession::load_with_profiles")
+    }
+
     pub fn input(&self) -> &[u8] {
         &self.input
     }

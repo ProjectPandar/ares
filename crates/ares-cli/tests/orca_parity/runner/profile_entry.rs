@@ -13,6 +13,9 @@ mod loaded_config_validation;
 #[path = "loaded_config_ranges.rs"]
 mod loaded_config_ranges;
 
+#[path = "plater_stl_session.rs"]
+mod plater_stl_session;
+
 #[path = "preset_scalar_array_slice.rs"]
 mod preset_scalar_array_slice;
 #[path = "preset_scalar_loading.rs"]
