@@ -8,6 +8,9 @@ use crate::project::filament_sequence::{FilamentSequences, PlateId};
 use crate::project::model_settings::PlateSettings;
 
 impl Project {
+    /// Sets an instance's transformation. Its imported copy keeps the frame it was loaded in:
+    /// `normalize_volume_offsets` moved a single volume's offset `v` into the loaded instance
+    /// (`loaded = imported · T(v)`), so the import becomes `transform · T(-v)`.
     pub(crate) fn set_instance_transform(
         &mut self,
         object: usize,
@@ -15,14 +18,18 @@ impl Project {
         transform: crate::Transform3d,
     ) {
         let object = &mut self.objects[object];
-        let identity = object.instances[instance].instance_id;
-        object.instances[instance].transform = transform;
-        for loaded in object
+        let loaded = &mut object.instances[instance];
+        let (identity, previous) = (loaded.instance_id, loaded.transform);
+        if previous == transform {
+            return;
+        }
+        loaded.transform = transform;
+        for imported in object
             .import_instances
             .iter_mut()
-            .filter(|loaded| loaded.instance_id == identity)
+            .filter(|imported| imported.instance_id == identity)
         {
-            loaded.transform = transform;
+            imported.transform = transform.translated(object_offset(previous, imported.transform));
         }
     }
 
@@ -86,4 +93,20 @@ impl Project {
         }
         self.plates = new_plates;
     }
+}
+
+/// `c` with `loaded · T(c) = imported`: `A·c = t_imported - t_loaded` for the shared linear part
+/// `A`, solved by Cramer's rule.
+fn object_offset(loaded: crate::Transform3d, imported: crate::Transform3d) -> crate::Point3d {
+    let (m, t) = (loaded.as_matrix(), imported.as_matrix());
+    let b = [0, 1, 2].map(|row| t[row][3] - m[row][3]);
+    let determinant = loaded.linear_determinant();
+    let solve = |column: usize| {
+        let mut replaced = *m;
+        for row in 0..3 {
+            replaced[row][column] = b[row];
+        }
+        crate::Transform3d::from_rows(replaced).linear_determinant() / determinant
+    };
+    crate::Point3d::new(solve(0), solve(1), solve(2))
 }
