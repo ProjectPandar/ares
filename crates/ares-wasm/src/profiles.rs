@@ -40,9 +40,9 @@ pub fn filter_compatible_presets_json(
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct ProfileSliceOptions {
-    plate: Option<u32>,
-    seed: u32,
+pub(crate) struct ProfileSliceOptions {
+    pub(crate) plate: Option<u32>,
+    pub(crate) seed: u32,
     /// M854 user edits in the same `{key: token}` shape as
     /// `sliceProjectPlate`'s `overridesJson`; deserialization validates
     /// every entry (shared with `ConfigOverrides::from_json`).
@@ -54,7 +54,7 @@ struct ProfileSliceOptions {
 }
 
 impl ProfileSliceOptions {
-    fn parse(options_json: &str) -> Result<Self, String> {
+    pub(crate) fn parse(options_json: &str) -> Result<Self, String> {
         let options: ProfileSliceOptions = serde_json::from_str(options_json)
             .map_err(|error| format!("invalid profile slice options JSON: {error}"))?;
         if let Some(placement) = &options.placement {
@@ -63,11 +63,11 @@ impl ProfileSliceOptions {
         Ok(options)
     }
 
-    fn overrides(&self) -> ares_core::ConfigOverrides {
+    pub(crate) fn overrides(&self) -> ares_core::ConfigOverrides {
         self.overrides.clone().unwrap_or_default()
     }
 
-    fn placement(&self) -> ares_core::Placement {
+    pub(crate) fn placement(&self) -> ares_core::Placement {
         self.placement
             .as_deref()
             .and_then(|value| ares_core::Placement::parse(value).ok())

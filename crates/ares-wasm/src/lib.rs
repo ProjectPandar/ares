@@ -6,6 +6,7 @@ mod estimation;
 mod filament_legend;
 mod heights_widths;
 mod moves;
+mod plater;
 mod profiles;
 mod raw_moves;
 mod role_times;
@@ -13,6 +14,7 @@ mod scene;
 
 pub use colors::{option_colors, role_colors, view_types};
 pub use moves::{SliceOutput, VertexBuffers, option_types};
+pub use plater::PlaterSession;
 pub use raw_moves::MoveBuffers;
 
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};

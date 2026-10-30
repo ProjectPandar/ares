@@ -1,0 +1,100 @@
+import type { PlaterEdit, RequestBody } from "./protocol.js";
+import type { SliceResult } from "./toolpaths.js";
+import type { PlaterLayout, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
+
+type Call = (body: RequestBody) => Promise<unknown>;
+type Vec3 = [number, number, number];
+type Axis = 0 | 1 | 2;
+
+/**
+ * An editable plater held in the slicer worker, like OrcaSlicer's `Plater` with its
+ * `Model` and `PartPlateList`: instance moves and rotations, plate add/delete, and per-plate
+ * slicing of the edited project. `object` and `instance` index `Scene.objects` and their
+ * `instances`; coordinates are world (plater scene) millimetres. Each edit resolves to the
+ * new layout. Create with `AresSlicer.createPlaterSession`; `free` it when replaced.
+ */
+export class PlaterSession {
+  readonly #call: Call;
+  readonly #sessionId: number;
+
+  /** @internal */
+  constructor(call: Call, sessionId: number) {
+    this.#call = call;
+    this.#sessionId = sessionId;
+  }
+
+  /** The edited project as `loadScene` returns it, with every plate's `origin`. */
+  async scene(): Promise<Scene> {
+    return (await this.#call({ kind: "platerScene", sessionId: this.#sessionId })) as Scene;
+  }
+
+  /**
+   * Moves an instance by `displacement` (`Selection::translate`), then drops it onto the bed
+   * unless it now sinks into it (`GLCanvas3D::do_move`) and reassigns it to the plate it lies on.
+   */
+  translate(object: number, instance: number, displacement: Vec3): Promise<PlaterLayout> {
+    return this.#edit({ op: "translate", object, instance, displacement });
+  }
+
+  /** Sets one world position coordinate of an instance (the Position fields, `change_position_value`). */
+  setPosition(object: number, instance: number, axis: Axis, value: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "setPosition", object, instance, axis, value });
+  }
+
+  /**
+   * Rotates an instance by `radians` about the world axes through its bounding-sphere centre
+   * (`Selection::rotate`), then drops it onto the bed unless it sank before and after
+   * (`GLCanvas3D::do_rotate`).
+   */
+  rotate(object: number, instance: number, radians: Vec3): Promise<PlaterLayout> {
+    return this.#edit({ op: "rotate", object, instance, radians });
+  }
+
+  /** The instance's absolute rotation fields in degrees (`GizmoObjectManipulation`). */
+  async absoluteRotation(object: number, instance: number): Promise<Vec3> {
+    return (await this.#call({ kind: "platerAbsoluteRotation", sessionId: this.#sessionId, object, instance })) as Vec3;
+  }
+
+  /** Sets one absolute rotation field, rotating by the change (`change_absolute_rotation_value`). */
+  setAbsoluteRotation(object: number, instance: number, axis: Axis, degrees: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "setAbsoluteRotation", object, instance, axis, degrees });
+  }
+
+  /** Appends a plate to the grid (`PartPlateList::create_plate`). */
+  addPlate(): Promise<PlaterLayout> {
+    return this.#edit({ op: "addPlate" });
+  }
+
+  /**
+   * Deletes the plate at 0-based `index` with its instances' assignment; later plates and their
+   * instances move up one place (`PartPlateList::delete_plate`). The sole plate stays.
+   */
+  deletePlate(index: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "deletePlate", index });
+  }
+
+  /** Slices plate `plate` (1-based, the first when omitted) as `AresSlicer.sliceProject` slices a project. */
+  async slice(plate?: number, overrides: Record<string, string | string[]> = {}): Promise<SliceResult> {
+    return (await this.#call({ kind: "platerSlice", sessionId: this.#sessionId, plate, overrides: JSON.stringify(overrides) })) as SliceResult;
+  }
+
+  /** Slices plate `options.plate` with selected presets, as `AresSlicer.sliceWithProfiles` slices the loaded file. */
+  async sliceWithProfiles(catalogJson: string, selection: ProfileSelection, options: ProfileSliceOptions): Promise<SliceResult> {
+    return (await this.#call({
+      kind: "platerSliceWithProfiles",
+      sessionId: this.#sessionId,
+      catalog: catalogJson,
+      selection: JSON.stringify(selection),
+      options: JSON.stringify(options),
+    })) as SliceResult;
+  }
+
+  /** Releases the worker's session. */
+  async free(): Promise<void> {
+    await this.#call({ kind: "platerFree", sessionId: this.#sessionId });
+  }
+
+  async #edit(edit: PlaterEdit): Promise<PlaterLayout> {
+    return (await this.#call({ kind: "platerEdit", sessionId: this.#sessionId, edit })) as PlaterLayout;
+  }
+}

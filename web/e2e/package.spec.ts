@@ -19,6 +19,7 @@ const PACKED_FILES = [
   "dist/configDef.d.ts",
   "dist/index.d.ts",
   "dist/index.js",
+  "dist/platerSession.d.ts",
   "dist/presetCatalog.d.ts",
   "dist/protocol.d.ts",
   "dist/toolpaths.d.ts",

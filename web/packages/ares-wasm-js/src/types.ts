@@ -36,7 +36,16 @@ export interface SceneObject {
 
 export interface ScenePlate {
   id: number;
+  /** The plate's origin in the plater scene (`PartPlateList` grid); plater session scenes only. */
+  origin?: [number, number];
   instances: [number, number, number][];
+}
+
+/** A plater session's instance matrices and plates after an edit: its `Scene` without meshes. */
+export interface PlaterLayout {
+  /** Per scene object, in `Scene.objects` order. */
+  objects: { instances: SceneInstance[] }[];
+  plates: ScenePlate[];
 }
 
 /** OrcaSlicer option values keyed by config key, as serialized by ares-core. */

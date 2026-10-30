@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import init, {
+  PlaterSession,
   PresetCatalog,
   decodeConfigValue,
   encodeConfigValue,
@@ -21,7 +22,7 @@ import init, {
   viewTypes,
 } from "./wasm/ares_wasm.js";
 import type { PrintConfigDef } from "./configDef.js";
-import type { WorkerRequest, WorkerResponse } from "./protocol.js";
+import type { PlaterEdit, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ActualSpeedProfile, ColorRange, MovesSlider, MovesView, SliceResult, Toolpaths, ViewColors, ViewRange } from "./toolpaths.js";
 import type { Scene } from "./types.js";
 
@@ -38,6 +39,24 @@ const replaceViewer = (next?: VertexBuffers) => {
 };
 
 const catalogs = new Map<number, PresetCatalog>();
+const sessions = new Map<number, PlaterSession>();
+
+function applyEdit(session: PlaterSession, edit: PlaterEdit) {
+  switch (edit.op) {
+    case "translate":
+      return session.translate(edit.object, edit.instance, new Float64Array(edit.displacement));
+    case "setPosition":
+      return session.setPosition(edit.object, edit.instance, edit.axis, edit.value);
+    case "rotate":
+      return session.rotate(edit.object, edit.instance, new Float64Array(edit.radians));
+    case "setAbsoluteRotation":
+      return session.setAbsoluteRotation(edit.object, edit.instance, edit.axis, edit.degrees);
+    case "addPlate":
+      return session.addPlate();
+    case "deletePlate":
+      return session.deletePlate(edit.index);
+  }
+}
 
 /** G-code and libvgcode toolpaths of a processed slice; its vertices stay loaded for `viewRange`. */
 function sceneResult(data: SceneData): [Scene, Transferable[]] {
@@ -155,6 +174,28 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "catalogFree":
       catalogs.get(request.catalogId)!.free();
       catalogs.delete(request.catalogId);
+      return [undefined, []];
+    case "platerCreate":
+      sessions.set(request.sessionId, new PlaterSession(request.input, request.filename));
+      return [undefined, []];
+    case "platerScene":
+      return sceneResult(sessions.get(request.sessionId)!.scene());
+    case "platerEdit": {
+      const session = sessions.get(request.sessionId)!;
+      applyEdit(session, request.edit);
+      return [JSON.parse(session.layout()), []];
+    }
+    case "platerAbsoluteRotation":
+      return [[...sessions.get(request.sessionId)!.absoluteRotation(request.object, request.instance)], []];
+    case "platerSlice":
+      return processedResult(await sessions.get(request.sessionId)!.sliceProcessed(request.plate, request.overrides));
+    case "platerSliceWithProfiles": {
+      const { sessionId, catalog, selection, options } = request;
+      return processedResult(await sessions.get(sessionId)!.sliceWithProfilesProcessed(catalog, selection, options));
+    }
+    case "platerFree":
+      sessions.get(request.sessionId)!.free();
+      sessions.delete(request.sessionId);
       return [undefined, []];
     case "decodeConfigValues":
       return [request.entries.map(([key, serialized]) => {

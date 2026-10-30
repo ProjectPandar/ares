@@ -1,10 +1,12 @@
 import type { PrintConfigDef } from "./configDef.js";
+import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
 import type { CompatiblePresets, ConfigValue, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 export * from "./toolpaths.js";
+export { PlaterSession } from "./platerSession.js";
 export { PresetCatalog } from "./presetCatalog.js";
 export type * from "./configDef.js";
 export type * from "./types.js";
@@ -30,6 +32,7 @@ export class AresSlicer {
   readonly #ready: Promise<void>;
   #nextId = 0;
   #nextCatalogId = 0;
+  #nextSessionId = 0;
 
   constructor({ worker, wasmUrl }: AresSlicerOptions) {
     this.#worker = worker;
@@ -165,6 +168,18 @@ export class AresSlicer {
     const catalogId = this.#nextCatalogId++;
     await this.#call({ kind: "catalogCreate", catalogId });
     return new PresetCatalog((body) => this.#call(body), catalogId);
+  }
+
+  /**
+   * Loads a 3MF project into an editable plater session in the worker
+   * (`PartPlateList::load_from_3mf_structure`). `filename` names the file for preset slicing.
+   * Rejects as `loadScene` does on a bad project.
+   */
+  async createPlaterSession(input: Uint8Array, filename: string): Promise<PlaterSession> {
+    await this.#ready;
+    const sessionId = this.#nextSessionId++;
+    await this.#call({ kind: "platerCreate", sessionId, input: input.slice(), filename });
+    return new PlaterSession((body) => this.#call(body), sessionId);
   }
 
   /**

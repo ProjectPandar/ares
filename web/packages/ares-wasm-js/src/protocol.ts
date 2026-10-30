@@ -1,5 +1,16 @@
 import type { ConfigValue, CurrentPrinter, PresetKind } from "./types.js";
 
+type Vec3 = [number, number, number];
+
+/** One plater session edit; `object` and `instance` index `Scene.objects` and its `instances`. */
+export type PlaterEdit =
+  | { op: "translate"; object: number; instance: number; displacement: Vec3 }
+  | { op: "setPosition"; object: number; instance: number; axis: 0 | 1 | 2; value: number }
+  | { op: "rotate"; object: number; instance: number; radians: Vec3 }
+  | { op: "setAbsoluteRotation"; object: number; instance: number; axis: 0 | 1 | 2; degrees: number }
+  | { op: "addPlate" }
+  | { op: "deletePlate"; index: number };
+
 export type WorkerRequest =
   | { id: number; kind: "init"; wasmUrl: string }
   | { id: number; kind: "printConfigDef" }
@@ -22,6 +33,13 @@ export type WorkerRequest =
   | { id: number; kind: "catalogPrinterModelInfo"; catalogId: number; model: string }
   | { id: number; kind: "catalogInstalledFilaments"; catalogId: number; installed: string[] }
   | { id: number; kind: "catalogFree"; catalogId: number }
+  | { id: number; kind: "platerCreate"; sessionId: number; input: Uint8Array; filename: string }
+  | { id: number; kind: "platerScene"; sessionId: number }
+  | { id: number; kind: "platerEdit"; sessionId: number; edit: PlaterEdit }
+  | { id: number; kind: "platerAbsoluteRotation"; sessionId: number; object: number; instance: number }
+  | { id: number; kind: "platerSlice"; sessionId: number; plate: number | undefined; overrides: string }
+  | { id: number; kind: "platerSliceWithProfiles"; sessionId: number; catalog: string; selection: string; options: string }
+  | { id: number; kind: "platerFree"; sessionId: number }
   | { id: number; kind: "decodeConfigValues"; entries: [string, string][] }
   | { id: number; kind: "encodeConfigValues"; entries: [string, ConfigValue][] }
   | { id: number; kind: "viewRange"; layers: [number, number]; visibleRoles: number; visibleOptions: number }

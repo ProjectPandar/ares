@@ -2,8 +2,8 @@
 //! project or STL meshes as flat buffers plus JSON metadata.
 
 use ares_core::{
-    FilamentOptions, Model, Point3d, PrinterOptions, ProcessOptions, Project,
-    ProjectRuntimeOptions, ProjectVolumeType, SliceError, Transform3d,
+    FilamentOptions, Model, Point3d, PrinterOptions, ProcessOptions, Project, ProjectInstance,
+    ProjectObject, ProjectRuntimeOptions, ProjectVolumeType, SliceError, Transform3d,
 };
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
@@ -12,7 +12,7 @@ use wasm_bindgen::prelude::*;
 struct SceneMetadata<'a> {
     format: &'static str,
     objects: Vec<SceneObject<'a>>,
-    plates: Vec<ScenePlate<'a>>,
+    plates: Vec<ScenePlate>,
     settings: Option<SceneSettings<'a>>,
 }
 
@@ -39,16 +39,19 @@ struct SceneVolume<'a> {
 }
 
 #[derive(Serialize)]
-struct SceneInstance {
+pub(crate) struct SceneInstance {
     id: [u32; 3],
     printable: bool,
     matrix: [f64; 16],
 }
 
 #[derive(Serialize)]
-struct ScenePlate<'a> {
-    id: u32,
-    instances: &'a [[u32; 3]],
+pub(crate) struct ScenePlate {
+    pub(crate) id: u32,
+    /// The plate's origin in the plater scene; plater sessions only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) origin: Option<[f64; 2]>,
+    pub(crate) instances: Vec<[u32; 3]>,
 }
 
 #[derive(Serialize)]
@@ -108,6 +111,20 @@ pub(crate) fn project_scene_data(project: &Project) -> SceneData {
 }
 
 fn project_scene(project: &Project) -> SceneData {
+    let plates = project
+        .plates()
+        .iter()
+        .map(|plate| ScenePlate {
+            id: plate.id(),
+            origin: None,
+            instances: plate.instances().to_vec(),
+        })
+        .collect();
+    project_scene_with_plates(project, plates)
+}
+
+/// `project`'s scene with `plates` in place of its loaded plates.
+pub(crate) fn project_scene_with_plates(project: &Project, plates: Vec<ScenePlate>) -> SceneData {
     let mut positions = Vec::new();
     let mut indices = Vec::new();
     let objects = project
@@ -138,33 +155,12 @@ fn project_scene(project: &Project) -> SceneData {
                         }
                     })
                     .collect();
-            let instances = object
-                .instances()
-                .iter()
-                .map(|instance| SceneInstance {
-                    id: [
-                        instance.object_id(),
-                        instance.instance_id(),
-                        instance.loaded_label_id().unwrap_or(0),
-                    ],
-                    printable: instance.printable(),
-                    matrix: column_major(instance.transform()),
-                })
-                .collect();
             SceneObject {
                 id: object.id(),
                 name: object.name(),
                 volumes,
-                instances,
+                instances: scene_instances(object),
             }
-        })
-        .collect();
-    let plates = project
-        .plates()
-        .iter()
-        .map(|plate| ScenePlate {
-            id: plate.id(),
-            instances: plate.instances(),
         })
         .collect();
     let settings = project.settings();
@@ -185,6 +181,27 @@ fn project_scene(project: &Project) -> SceneData {
         positions,
         indices,
     }
+}
+
+pub(crate) fn scene_instances(object: &ProjectObject) -> Vec<SceneInstance> {
+    object
+        .instances()
+        .iter()
+        .map(|instance| SceneInstance {
+            id: instance_identity(instance),
+            printable: instance.printable(),
+            matrix: column_major(instance.transform()),
+        })
+        .collect()
+}
+
+/// `[object_id, instance_id, loaded_label_id]`, the plate identity of an instance.
+pub(crate) fn instance_identity(instance: &ProjectInstance) -> [u32; 3] {
+    [
+        instance.object_id(),
+        instance.instance_id(),
+        instance.loaded_label_id().unwrap_or(0),
+    ]
 }
 
 fn model_scene(model: &Model) -> SceneData {
