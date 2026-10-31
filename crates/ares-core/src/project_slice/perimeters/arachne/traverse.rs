@@ -51,6 +51,7 @@ pub(in crate::project_slice) struct TraverseExtrusionsContext<'a> {
     pub(in crate::project_slice) overhang_reverse_threshold: FloatOrPercent,
     pub(in crate::project_slice) wall_direction: ProcessWallDirection,
     pub(in crate::project_slice) wall_sequence: ProcessWallSequence,
+    pub(in crate::project_slice) outer_walls_first_for_brim: bool,
     pub(in crate::project_slice) fuzzy_skin: &'a super::fuzzy::Regions,
     pub(in crate::project_slice) slice_z: f64,
     pub(in crate::project_slice) perimeter_flow: Flow,
@@ -202,9 +203,12 @@ pub(in crate::project_slice) fn traverse_extrusions(
                 }));
             // Orca: Reverse the order of paths for thin wall holes. We define
             // thin wall hole as a hole with only one perimeter
-            // (`PerimeterGenerator.cpp:546-548`).
+            // (v2.5.0-beta PerimeterGenerator.cpp:581-584).
             let thin_wall_hole = !pg_extrusion.is_contour && thin_wall_context;
-            if thin_wall_hole && context.wall_sequence != ProcessWallSequence::OuterInner {
+            if thin_wall_hole
+                && context.wall_sequence != ProcessWallSequence::OuterInner
+                && !context.outer_walls_first_for_brim
+            {
                 collection.entities.reverse();
             }
         } else {

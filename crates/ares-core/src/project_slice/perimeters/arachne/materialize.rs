@@ -230,6 +230,7 @@ fn materialize_record(
                 overhang_reverse_threshold: region.overhang_reverse_threshold,
                 wall_direction: region.wall_direction,
                 wall_sequence: region.wall_sequence,
+                outer_walls_first_for_brim: config.outer_walls_first_for_brim,
                 fuzzy_skin: &fuzzy,
                 slice_z,
                 perimeter_flow: input.perimeter_flow,

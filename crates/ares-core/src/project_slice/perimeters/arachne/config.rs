@@ -38,6 +38,7 @@ pub(in crate::project_slice) struct ArachneRecordConfig {
     pub(in crate::project_slice) raft_layers: i32,
     pub(in crate::project_slice) precise_outer_wall: bool,
     pub(in crate::project_slice) outer_wall_first: bool,
+    pub(in crate::project_slice) outer_walls_first_for_brim: bool,
 }
 
 /// Print-level inputs to `PerimeterGenerator::process_arachne`.
@@ -81,6 +82,13 @@ pub(in crate::project_slice) fn validate_record(
     } else {
         scaled_resolution
     };
+    // v2.5.0-beta PerimeterGenerator.cpp:3204-3211, for the imported brim kinds.
+    let outer_walls_first_for_brim = layer_id == 0
+        && object.brim_width.0 > 0.0
+        && matches!(
+            object.brim_type,
+            crate::ProcessBrimType::OuterOnly | crate::ProcessBrimType::OuterAndInner
+        );
     Ok(ArachneRecordConfig {
         params: make_paths_params(layer_id, object, nozzle_diameters, scale)?,
         scaled_resolution,
@@ -95,7 +103,9 @@ pub(in crate::project_slice) fn validate_record(
         raft_layers: object.raft_layers.0,
         precise_outer_wall: region.precise_outer_wall.0
             && region.wall_sequence == crate::ProcessWallSequence::InnerOuter,
-        outer_wall_first: is_outer_wall_first(region, layer_id),
+        // v2.5.0-beta PerimeterGenerator.cpp:2909-2911.
+        outer_wall_first: is_outer_wall_first(region, layer_id) || outer_walls_first_for_brim,
+        outer_walls_first_for_brim,
     })
 }
 
