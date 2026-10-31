@@ -7,8 +7,9 @@ This is a Rust rewrite slice of OrcaSlicer v2.5.0-beta
 `src/libslic3r/GCode/SeamPlacer.cpp`:
 
 - `edge_normal` and `place_on_loop`, approximately1490-1627;
-- the unpainted branch of `align_seam_points`,2050-2055, which maps an
-  angle-blended fitted target onto the loop before finalizing the seam.
+- the non-Enforced branch of `align_seam_points`,2058-2062: `t >= 1`
+  keeps the current candidate; otherwise `place_on_loop` maps the angle-blended
+  fitted target onto the loop before finalizing the seam.
 
 The destination is
 `project_slice/seam_placement/alignment/loop_normal.rs::place_on_loop`, called by
@@ -42,18 +43,50 @@ not changed by this slice.
 
 ## Included and deferred behavior
 
-Included is the unpainted/Neutral `place_on_loop` branch and its call from
-alignment. Current `SeamCandidate` has no Enforced/Blocked annotation state.
-Consequently both allowed-arc walks in the cited source traverse a complete
-Neutral loop and return unlimited arcs; the final normal solution is not clamped
-to a painted boundary. Do not invent paint metadata or configuration to port a
-branch the current public input boundary cannot express.
+Included is the Neutral case of the non-Enforced `place_on_loop` alignment
+branch at2058-2062. Every candidate is Neutral in the current supported input
+path, not because painted candidates may safely use the same algorithm:
 
-Enforced/Blocked arc limits, exact paint ends, oversampling extensions and corner
-protection need their own cited annotation/import slice. Also deferred are
-`SeamContour::Resolver`, Precise Seam warnings/import, spline/numeric changes,
-candidate fallback and geometry changes. This slice does not admit or emulate
-those adjacent upstream behaviors.
+- Upstream `Format/bbs_3mf.cpp:357` names the triangle seam-paint attribute
+  `paint_seam` (`CUSTOM_SEAM_ATTR`); the importer reads it at4041 and reconstructs
+  `seam_facets` at5389-5390.
+- In Rust, `project/load/graph.rs::load` sends both the root model and referenced
+  component models through `project/xml.rs::deserialize_xml` with `XmlRole::Model`.
+  Its XML validation checks attributes on both start and empty elements through
+  `validate_attributes` and `project/xml/attribute.rs::validate`, which dispatches
+  to `project/xml/model.rs::validate_attribute_namespace`. That function's model
+  attribute whitelist admits `paint_supports`, `paint_color` and `paint_fuzzy_skin`,
+  but not `paint_seam`. A model carrying that seam-paint attribute is rejected as
+  `SliceError::InvalidInput` before deserialization/slicing, not silently imported
+  as Neutral.
+- `project/model_xml.rs::Triangle` and `project/domain/mesh.rs::ProjectMesh`
+  retain support, color/MMU and fuzzy-skin annotations, but no seam-paint field.
+  Those other annotations are not converted into seam paint.
+  `project_slice/seam_candidates.rs::SeamCandidate` has no Enforced/Blocked state;
+  `project_slice/seam_placement/alignment/preparation.rs::prepare_layer` generates
+  candidates from perimeter collections, without a seam-annotation import channel.
+
+Thus actual seam-paint annotations cannot currently reach this alignment code
+through the supported project loader. Both source allowed-arc walks consequently
+traverse a complete Neutral loop and return unlimited arcs; the solution is not
+clamped to a painted boundary. Admitting/importing seam painting must first get a
+follow-up public RED and a source-cited annotation/placement slice, rather than
+silently reusing this Neutral-only assumption.
+
+Explicitly deferred:
+
+- The **Enforced alignment branch at2063-2075**, including its sharp-angle return,
+  `protect = max(flow_width, max_nozzle_diameter)` and source default, measured
+  corner protection via `enforced_corner_influence`, and the corner-weighted
+  `t = max(t, 0.4 * corner)` pull before mapping back onto the painted loop.
+  The Neutral port does not implement or claim parity for that branch.
+- **Blocked-candidate arc limits** in `place_on_loop::allowed_arc`, as well as
+  Enforced-run limits, exact paint ends and oversampling extensions. These require
+  retained Enforced/Blocked annotations; unlimited Neutral arcs do not emulate
+  their behavior.
+- `SeamContour::Resolver`, Precise Seam warnings/import, spline/numeric changes,
+  candidate fallback and geometry changes. This slice does not admit or emulate
+  those adjacent upstream behaviors.
 
 ## Public witness and acceptance
 
