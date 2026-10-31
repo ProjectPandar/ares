@@ -14,6 +14,8 @@ use crate::runner::{OrcaRunner, repo_root, stages};
 
 #[path = "plater_arrange/arranged.rs"]
 mod arranged;
+#[path = "plater_arrange/current_plate.rs"]
+mod current_plate;
 #[path = "plater_arrange/wipe_tower.rs"]
 mod wipe_tower;
 use arranged::Arranged;
@@ -88,6 +90,23 @@ fn assert_arranged_like_native_with(
     settings: ArrangeSettings,
     cli: &[&str],
 ) {
+    assert_scope_arranged_like_native(label, (base, edits), settings, cli, ArrangeScope::All);
+}
+
+/// Native and the session arrange `scope` alike. Native arranges and exports only the plate
+/// it slices (`--slice <n>`, `OrcaSlicer.cpp:5815-5960, 8399-8404`), so a current-plate
+/// arrange compares that plate's instances.
+fn assert_scope_arranged_like_native(
+    label: &str,
+    (base, edits): (&str, &[Edit]),
+    settings: ArrangeSettings,
+    cli: &[&str],
+    scope: ArrangeScope,
+) {
+    let plate = match scope {
+        ArrangeScope::All => None,
+        ArrangeScope::CurrentPlate(plate) => Some(plate),
+    };
     let runner = OrcaRunner::from_env()
         .unwrap()
         .expect("official v2.5.0-beta arrange oracle");
@@ -125,6 +144,11 @@ fn assert_arranged_like_native_with(
         ]
         .into_iter()
         .chain(cli.iter().map(|&arg| arg.to_owned()))
+        .chain(
+            plate
+                .into_iter()
+                .flat_map(|plate| ["--slice".to_owned(), (plate + 1).to_string()]),
+        )
         .chain([
             "--export-3mf".to_owned(),
             output_path.to_str().unwrap().to_owned(),
@@ -136,8 +160,8 @@ fn assert_arranged_like_native_with(
     .unwrap();
     let native = Arranged::from_native(&std::fs::read(&output_path).unwrap());
     let mut session = PlaterSession::load(input).unwrap();
-    session.arrange(ArrangeScope::All, settings).unwrap();
-    assert_eq!(Arranged::from_session(&session), native, "{label}");
+    session.arrange(scope, settings).unwrap();
+    assert_eq!(Arranged::from_session(&session, plate), native, "{label}");
 }
 
 #[test]

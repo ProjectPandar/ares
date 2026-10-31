@@ -526,20 +526,35 @@ A3b cases:
     - an empty plate arranges nothing.
   - `init_arrange_params` for `PREPARE_STATE_MENU` (`:1026-1034`): the plate's own print sequence (`PartPlate::get_real_print_seq`, `PartPlate.cpp:370`), and an automatic distance when that sequence differs from the global one.
   - `finalize` with `only_on_partplate` (`:851-856, 860-863, 877-878, 946-951`):
-    - `clear` empties only the current plate;
+    - `clear(false, false, true, current)` (`PartPlate.cpp:6454-6501`) empties every plate: `PartPlate::clear(false)` also clears `obj_to_instance_set` (`:4173-4176`), and only the sliced-result reset is limited to the current plate;
     - `postprocess_bed_index_for_current_plate` (`PartPlate.cpp:7913-7928`) maps bed 0 to the current plate, and any other bed to the plate count;
     - locked instances are applied back unchanged, through `set_rotation(Z)` and taking an arrange order;
-    - `rebuild_plates_after_arrangement(false, true, current)` sorts the objects and reloads the current plate.
+    - `rebuild_plates_after_arrangement(false, true, current)` sorts the objects and reloads every plate: `reload_all_objects` clears them all the same way and puts each instance on the first plate it reaches (`:7498-7546`).
 - **Destination:**
   - `ArrangeScope::CurrentPlate(usize)`, with the A3a modules extended: `prepare_partplate` next to `prepare_all`;
   - the plate-list steps `preprocess_arrange_polygon_other_locked` and `postprocess_bed_index_for_current_plate` in `plater/plate_list/arrange.rs`;
-  - plate-scoped `clear` and `reload_all_objects`.
+  - `clear` and `reload_all_objects` as for "Arrange all": the plate index changes only the sliced-result reset, and the session keeps no sliced results.
 - **A3a rejections that no longer apply:**
   - A plate's own print sequence is supported here: the MENU job reads it and locks nothing.
   - The tower is supported here as the existing-tower part of A3b.
 - **Oracle:** the CLI global-arrange path with `--slice <plate>` (`OrcaSlicer.cpp:5815-5960, 6022-6035, 6091`), started as `--slice <n> --arrange 1 <flags> --export-3mf`.
   - Probed: `custom-gcode-overview/two-plates.3mf` with plate 2's cube moved off-centre arranges it to plate 2's centre, slices plate 2 and returns 0.
   - The CLI then exports only that plate (`store_params.export_plate_idx`, `:8399-8404`). The comparison therefore covers the current plate's build items and its plate entry, keyed by object name in build order as in A3a. The locked instances on other plates are not in Native's output.
+- **How the CLI branch maps onto the GUI job.** The CLI's `plate_to_slice > 0` branch (`OrcaSlicer.cpp:5815-5960`) runs the same steps as `PREPARE_STATE_MENU` -> `prepare_partplate`:
+  - the same in-plate test (`contain_instance || intersect_instance`);
+  - the same `preprocess_arrange_polygon_other_locked`, so other plates' instances are locked and never reach the arranger;
+  - exclusion areas on beds `0..=current`;
+  - the plate's own print sequence (`get_print_sequence(cur_plate)`).
+
+  Its finalize (`:6022-6091`) matches the GUI's `only_on_partplate` finalize:
+  - it runs `clear(false, false, true, plate_to_slice - 1)` (`:6023`), which empties every plate as in the GUI, and `postprocess_bed_index_for_current_plate`;
+  - it re-applies the locked instances with `postprocess_arrange_polygon(ap, false)` + `apply()`, which writes their transformation back through `set_rotation(Z)` and gives them an arrange order;
+  - it calls `rebuild_plates_after_arrangement(false, true, current)`.
+
+  So both paths also rewrite the other plates' instances and sort every object. Native's export cannot show this, and that leaves the comparison intact:
+  - locked instances are not fixed items in the arrange, so they cannot change the current plate's placement;
+  - each case exports one object, so the object sort cannot change the exported order;
+  - the transformation round trip they go through is the one A3a already compares on every arranged instance.
 - **Where the CLI and the GUI job differ, and how the cases avoid it:**
   - **Tower.** The CLI estimates its own tower for the plate (`:5855-5955`); the GUI uses the tower the plate shows. The cases print one filament with no smooth timelapse, so neither path adds a tower.
   - **An item that does not fit.** The CLI stops with `CLI_OBJECT_ARRANGE_FAILED` (`:6026-6031`); the GUI moves it past the plates. The cases fit on the plate.

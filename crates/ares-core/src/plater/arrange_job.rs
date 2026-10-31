@@ -10,6 +10,9 @@ use crate::SliceError;
 pub enum ArrangeScope {
     /// `PREPARE_STATE_DEFAULT`: every instance on an unlocked plate (`prepare_all`).
     All,
+    /// `PREPARE_STATE_MENU`: the instances on the plate at this 0-based index, the others
+    /// left where they are (`prepare_partplate`).
+    CurrentPlate(usize),
 }
 
 /// `GLCanvas3D::ArrangeSettings` (`GLCanvas3D.hpp:603-614`) of the FFF settings set in use;

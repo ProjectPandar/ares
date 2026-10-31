@@ -83,11 +83,21 @@ impl Arranged {
         Self { items, plates }
     }
 
-    pub(super) fn from_session(session: &PlaterSession) -> Self {
+    /// The session's arrange as Native exports it: every plate, or with `only`, just that
+    /// plate's instances while the other plates stay listed empty.
+    pub(super) fn from_session(session: &PlaterSession, only: Option<usize>) -> Self {
         let objects = session.project().objects();
-        let mut items = Vec::new();
-        for (object, item) in objects.iter().enumerate() {
-            for (instance, placed) in item.instances().iter().enumerate() {
+        let plates = session.plates();
+        let exported =
+            |key: &(usize, usize)| only.is_none_or(|plate| plates[plate].instances.contains(key));
+        let items = objects
+            .iter()
+            .enumerate()
+            .flat_map(|(object, item)| {
+                (0..item.instances().len()).map(move |instance| (object, instance))
+            })
+            .filter(exported)
+            .map(|(object, instance)| {
                 let matrix = session
                     .instance_transform(object, instance)
                     .unwrap()
@@ -97,16 +107,21 @@ impl Arranged {
                     .map(digits)
                     .collect::<Vec<_>>()
                     .join(" ");
-                items.push((item.name().to_owned(), transform, placed.printable()));
-            }
-        }
-        let plates = session
-            .plates()
+                let placed = &objects[object].instances()[instance];
+                (
+                    objects[object].name().to_owned(),
+                    transform,
+                    placed.printable(),
+                )
+            })
+            .collect();
+        let plates = plates
             .iter()
             .map(|plate| {
                 plate
                     .instances
                     .iter()
+                    .filter(|key| exported(key))
                     .map(|&(object, instance)| (objects[object].name().to_owned(), instance))
                     .collect()
             })
