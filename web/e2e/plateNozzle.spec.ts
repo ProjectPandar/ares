@@ -108,7 +108,7 @@ function lineDiff(a: string, b: string) {
 }
 
 test("plate type and nozzle offer the selected printer's options and reach the slice", async ({ page }) => {
-  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
+  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   test.setTimeout(400_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });

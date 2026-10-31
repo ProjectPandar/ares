@@ -83,7 +83,7 @@ async function sliceTimings(page: Page, runs = 20) {
 
 test("import 3MF, slice in the WASM worker, export and preview G-code", async ({ page }) => {
   // GCodeProcessor oracle (tools/chain-probe/procgcode.nix) of the toolpath preview.
-  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
+  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   const oracle = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
@@ -174,7 +174,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   if (orca) {
     const nativeEdited = orcaEditedGcode({ layer_height: "0.12" });
     writeFileSync(`${artifacts}project-edit/result.json`, `${JSON.stringify({
-      oracle: "official OrcaSlicer 2.4.2 on the project with the edit in Metadata/project_settings.config",
+      oracle: "official OrcaSlicer 2.5.0-beta on the project with the edit in Metadata/project_settings.config",
       evidence: "ordered_bytes_generator_only",
       edit: { layer_height: "0.12" },
       bytes: edited.length,

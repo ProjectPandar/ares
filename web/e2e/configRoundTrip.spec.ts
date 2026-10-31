@@ -17,7 +17,7 @@ const cases = fileURLToPath(new URL("../../target/web-e2e/encode-roundtrip-cases
 type Case = { source: string; key: string; element: number | null; original: string };
 
 test("decodeConfigValues then encodeConfigValues in the browser returns the original serialize() bytes", async ({ page }) => {
-  const orca = oraclePath("ORCA_APPDIR", "the CONFIG_BLOCK oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
+  const orca = oraclePath("ORCA_APPDIR", "the CONFIG_BLOCK oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   if (!orca) test.skip();
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });

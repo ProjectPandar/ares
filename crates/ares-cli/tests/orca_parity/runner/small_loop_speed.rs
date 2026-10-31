@@ -119,7 +119,7 @@ fn check(
     fs::write(
         directory.join("request.json"),
         serde_json::to_vec_pretty(&json!({
-            "label":label,"upstream":"8500fcdccaa10b5099ac20d252af3a7c560046f1",
+            "label":label,"upstream":"345efec64c7b95a05ce5cf96df0dde66a158835c",
             "generator":generator,"threshold":threshold,"speed":speed,"explicit_skirt_speed":skirt,
             "scope":"real byte-input slicing E2E; no test-only production API",
             "model_sha256":super::cache_identity::raw_digest(&fs::read(&model_path).unwrap())

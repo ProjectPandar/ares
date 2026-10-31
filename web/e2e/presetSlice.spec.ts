@@ -69,7 +69,7 @@ async function exportGcode(page: Page, directory: string) {
 }
 
 test("a 3MF plate with and without a sidebar edit and a centered STL sliced with selected system presets match OrcaSlicer --load-settings bytes", async ({ page }) => {
-  const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
+  const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   const procgcode = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
   if (!orca) test.skip();
   test.setTimeout(600_000);
@@ -156,7 +156,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const gcodePath = await exportGcode(page, artifacts);
   const browser = readFileSync(gcodePath, "utf8");
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    oracle: "official OrcaSlicer 2.4.2 --load-settings on a 3MF (orca_parity_profile_entry_3mf_load_settings)",
+    oracle: "official OrcaSlicer 2.5.0-beta --load-settings on a 3MF (orca_parity_profile_entry_3mf_load_settings)",
     evidence: "ordered_bytes_generator_only",
     selection,
     bytes: browser.length,
@@ -182,7 +182,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const editedPath = await exportGcode(page, `${artifacts}edited/`);
   const browserEdited = readFileSync(editedPath, "utf8");
   writeFileSync(`${artifacts}edited/result.json`, `${JSON.stringify({
-    oracle: "official OrcaSlicer 2.4.2 --load-settings with the edit written into the process JSON",
+    oracle: "official OrcaSlicer 2.5.0-beta --load-settings with the edit written into the process JSON",
     evidence: "ordered_bytes_generator_only",
     edit: EDIT,
     bytes: browserEdited.length,
@@ -213,7 +213,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const centered = readFileSync(await exportGcode(page, artifacts), "utf8");
   writeFileSync(`${artifacts}result-stl.json`, `${JSON.stringify({
-    oracle: "official OrcaSlicer 2.4.2 --load-settings on cube10.stl at the bed center (orca_parity_profile_entry_stl_center_placement)",
+    oracle: "official OrcaSlicer 2.5.0-beta --load-settings on cube10.stl at the bed center (orca_parity_profile_entry_stl_center_placement)",
     evidence: "ordered_bytes_generator_only",
     selection,
     bytes: centered.length,

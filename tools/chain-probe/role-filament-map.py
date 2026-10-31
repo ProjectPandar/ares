@@ -17,11 +17,9 @@ import gdb
 
 
 ROOT = Path(os.environ["ARES_ROLE_ORACLE_OUTPUT"])
-BINARY = Path(
-    "/nix/store/1bq61dyqxb8yjdsaaq697ii6hbhb5cxm-orca-slicer-procgcode-2.4.2"
-    "/bin/.orca-slicer-wrapped"
-)
-SHA = "59f9ea7e16165df6979a243de7d6acd49d8cf523ac5de6d3fec08d6e25c7896e"
+BINARY = Path(os.environ["ARES_PROCGCODE_NATIVE_BIN"])
+SHA = os.environ["ARES_PROCGCODE_NATIVE_SHA256"]
+assert os.environ["ARES_PROCGCODE_UPSTREAM_REV"] == "345efec64c7b95a05ce5cf96df0dde66a158835c"
 assert hashlib.sha256(BINARY.read_bytes()).hexdigest() == SHA
 ROOT.mkdir(parents=True)
 SOURCE = Path(os.environ["ARES_ROLE_ORACLE_INPUT"]).resolve()

@@ -15,7 +15,7 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/profile-slice/", i
 type Slice = { gcode: string; catalogBytes: number; loadMs: number; serializeMs: number; sliceMs: number };
 
 test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlicer --load-settings bytes, with and without overrides", async ({ page }) => {
-  const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
+  const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   if (!orca) test.skip();
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
@@ -73,7 +73,7 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
     writeFileSync(`${artifacts}browser-override.gcode`, edited.gcode);
     const timing = ({ gcode, ...rest }: Slice) => ({ bytes: gcode.length, ...rest });
     writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-      oracle: "official OrcaSlicer 2.4.2 --load-settings (orca_parity_profile_entry_stl_load_settings, orca_parity_profile_entry_3mf_override_parity)",
+      oracle: "official OrcaSlicer 2.5.0-beta --load-settings (orca_parity_profile_entry_stl_load_settings, orca_parity_profile_entry_3mf_override_parity)",
       evidence: "ordered_bytes_generator_only",
       selection,
       lh: timing(lh),

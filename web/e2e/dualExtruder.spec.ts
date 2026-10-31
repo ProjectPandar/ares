@@ -41,7 +41,7 @@ const nozzleFilaments = (page: Page, nozzle: string) =>
   page.getByRole("group", { name: nozzle, exact: true }).getByRole("button").evaluateAll((buttons) => buttons.map((button) => button.textContent!.trim()));
 
 test("an H2D project shows the left and right nozzles and slices its filament map and flow like OrcaSlicer", async ({ page }) => {
-  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.4.2 AppImage, see scripts/orca-parity.sh");
+  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   test.setTimeout(400_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -115,6 +115,6 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   await expect(page.getByRole("radiogroup", { name: "Filament grouping" }).getByRole("radio", { name: /Custom Mode/ })).toBeChecked();
   await page.screenshot({ path: `${artifacts}after-reload.png` });
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ edits: EDITS, legal: LEGAL, oracle: orca ? "OrcaSlicer 2.4.2" : null }, null, 2)}\n`);
+  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ edits: EDITS, legal: LEGAL, oracle: orca ? "OrcaSlicer 2.5.0-beta" : null }, null, 2)}\n`);
   expect(errors).toEqual([]);
 });

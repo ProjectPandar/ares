@@ -6,11 +6,11 @@ use super::{OrcaRunner, Stage, StageError, cache_identity, fs, io, lock, publish
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
-const NATIVE: &str = "/nix/store/1bq61dyqxb8yjdsaaq697ii6hbhb5cxm-orca-slicer-procgcode-2.4.2/bin/.orca-slicer-wrapped";
 fn native_bin() -> PathBuf {
-    std::env::var_os("ARES_PROCGCODE_NATIVE_BIN")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from(NATIVE))
+    PathBuf::from(
+        std::env::var_os("ARES_PROCGCODE_NATIVE_BIN")
+            .expect("ARES_PROCGCODE_NATIVE_BIN must select the pinned v2.5.0-beta processor ELF"),
+    )
 }
 impl OrcaRunner {
     pub(crate) fn processor_reference(&self, input: &Path) -> Result<Option<PathBuf>, StageError> {

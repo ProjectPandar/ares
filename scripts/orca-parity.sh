@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the extracted OrcaSlicer 2.4.2 AppImage binary for the parity harness
+# Runs the extracted OrcaSlicer 2.5.0-beta AppImage binary for the parity harness
 # by assembling a host LD_LIBRARY_PATH from nixpkgs runtime libraries.
 #
 # Set ORCA_APPDIR to the explicitly selected extraction directory.
@@ -8,8 +8,13 @@
 # The parity test suite invokes this script through ARES_ORCA_BIN.
 set -euo pipefail
 
+if [ -z "${ORCA_APPDIR:-}" ] && [ -n "${ARES_PARITY_ENV:-}" ]; then
+    set -a
+    source "$ARES_PARITY_ENV"
+    set +a
+fi
 if [ -z "${ORCA_APPDIR:-}" ]; then
-    echo "ORCA_APPDIR must name an explicitly selected reference extraction" >&2
+    echo "ORCA_APPDIR must name an explicitly selected v2.5.0-beta extraction (or set ARES_PARITY_ENV)" >&2
     exit 127
 fi
 APPDIR="$ORCA_APPDIR"
@@ -21,7 +26,7 @@ fi
 
 # The nix eval is expensive and flaky under repeated invocations; cache the
 # resolved library paths across runs (force a refresh with ORCA_LIB_REFRESH=1).
-CACHE="${ORCA_LIB_CACHE:-/tmp/orca-parity-libs-v2.cache}"
+CACHE="${ORCA_LIB_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/ares/orca-parity-250b-libs.cache}"
 cache_valid=0
 if [ -s "$CACHE" ] && [ -z "${ORCA_LIB_REFRESH:-}" ]; then
     cache_valid=1
@@ -38,6 +43,7 @@ if [ "$cache_valid" -eq 1 ]; then
     extra="$(cat "$CACHE")"
 else
     extra="$(nix build --no-link --print-out-paths --impure --expr 'with import <nixpkgs> {}; builtins.map lib.getLib [ gtk3 webkitgtk_4_1 libGLU pango glib glib-networking gst_all_1.gstreamer gst_all_1.gst-plugins-base libsoup_3 libx11 libxext libxkbcommon libSM libICE libglvnd stdenv.cc.cc.lib wayland harfbuzz atk cairo gdk-pixbuf fontconfig.lib dbus libsecret glibc ]' | sed 's#$#/lib#' | paste -sd:)"
+    mkdir -p "$(dirname "$CACHE")"
     printf '%s' "$extra" > "$CACHE"
 fi
 

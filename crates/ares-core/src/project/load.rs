@@ -7,7 +7,7 @@ mod volume_metadata;
 
 use std::collections::BTreeSet;
 
-use crate::{ORCA_SLICER_COMPATIBILITY_VERSION, SliceError};
+use crate::SliceError;
 
 use super::{
     ArchiveLimits, PackagePath, ProjectArchive,
@@ -92,7 +92,6 @@ pub(crate) fn load_project_with_preparation(
     validate_plate_previews(&model_settings, &content_types, &archive_paths)?;
     content_types.validate_png_entries(&mut archive)?;
     let slice_info: SliceInfo = read_xml(&mut archive, SLICE_INFO_PATH, XmlRole::SliceInfo)?;
-    validate_compatibility(&slice_info)?;
     let filament_sequences: FilamentSequences = read_json(
         &mut archive,
         FILAMENT_SEQUENCE_PATH,
@@ -225,21 +224,6 @@ fn require_model_content_type(
         return Err(SliceError::InvalidInput(format!(
             "project model part {:?} has the wrong content type",
             path.as_str()
-        )));
-    }
-    Ok(())
-}
-
-fn validate_compatibility(slice_info: &SliceInfo) -> Result<(), SliceError> {
-    let version = slice_info
-        .header
-        .items
-        .iter()
-        .find(|item| item.key == "OrcaSlicer-Version")
-        .map(|item| item.value.as_str());
-    if version != Some(ORCA_SLICER_COMPATIBILITY_VERSION) {
-        return Err(SliceError::InvalidInput(format!(
-            "project requires OrcaSlicer compatibility version {ORCA_SLICER_COMPATIBILITY_VERSION}"
         )));
     }
     Ok(())

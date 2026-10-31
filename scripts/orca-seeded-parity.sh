@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${ORCA_REPLAY_BIN:?select the separately built seed-only OrcaSlicer executable}"
+if [ -z "${ORCA_REPLAY_BIN:-}" ] && [ -n "${ARES_PARITY_ENV:-}" ]; then
+    set -a
+    source "$ARES_PARITY_ENV"
+    set +a
+fi
+: "${ORCA_REPLAY_BIN:?select the separately built v2.5.0-beta seed-only executable}"
 : "${ORCA_REPLAY_SEED:?provide an explicit u32 replay seed}"
 : "${ORCA_REPLAY_CPU:?select one CPU for the continuous-stream reference}"
 case "$ORCA_REPLAY_SEED" in
