@@ -135,7 +135,9 @@ fn validate_record(
     {
         wall_loops += 1;
     }
-    if region.only_one_wall_first_layer.0 && first_object_layer {
+    // v2.5.0-beta PerimeterGenerator.cpp:628-631,1540-1556.
+    if region.only_one_wall_first_layer.0 && region.bottom_shell_layers.0 > 0 && first_object_layer
+    {
         wall_loops = wall_loops.min(1);
     }
     Ok(ValidatedClassicConfig {

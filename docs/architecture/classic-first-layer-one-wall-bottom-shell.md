@@ -34,8 +34,14 @@ only isolate ordinary non-arc, non-overhang wall emission.
 
 Potential failures are the old unconditional reduction, gating on thickness or
 density instead of the shell-layer count, or applying the predicate to the wrong
-layer. The witness isolates the zero-bottom-shell first-layer case; positive-shell
-and other wall-count cases are not newly claimed by this slice.
+layer. The original witness isolates the zero-bottom-shell first-layer case.
+The adjacent `classic_first_layer_keeps_one_wall_with_bottom_shell` control changes
+only `bottom_shell_layers` from zero to one. It verifies Native keeps one outer
+wall, then compares the runtime first-layer Outer wall and wipe block through
+`WIPE_END` inclusive byte-for-byte with the public API. Subsequent bottom-fill
+travel and fill are outside this adjacent wall-control boundary; their residual
+is retained as external integration handoff evidence. The original zero-shell
+comparison is unchanged. Other wall-count cases are not newly claimed by this slice.
 
 `classic_first_layer_keeps_inner_wall_without_bottom_shell` first qualifies Native
 double replay, verifies that the runtime Native first layer has inner and outer
