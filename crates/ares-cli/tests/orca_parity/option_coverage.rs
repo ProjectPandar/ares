@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "arachne_center_wall_follows_inner_outer.rs"]
+mod arachne_center_wall_follows_inner_outer;
+
 #[path = "top_layer_one_wall_requires_top_shell.rs"]
 mod top_layer_one_wall_requires_top_shell;
 
