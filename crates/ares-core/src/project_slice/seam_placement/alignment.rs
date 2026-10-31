@@ -190,6 +190,8 @@ fn find_seam_string(layers: &[LayerPlan], start: (usize, usize)) -> Vec<(usize, 
             if next_layer < 0 {
                 break;
             }
+            // v2.5.0-beta SeamPlacer.cpp:1865-1869: visit start-1 before stepping.
+            continue;
         } else {
             break;
         }
