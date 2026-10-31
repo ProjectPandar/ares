@@ -392,6 +392,26 @@ There is no seeded leg: arrange has no random stream. Tie order comes from runni
 | A3 | ArrangeJob and the PartPlateList pre/post-processing on `PlaterSession` | Official v2.5.0-beta CLI end-to-end cases |
 | A4 | wasm + web arrange buttons and settings | `arrange.spec.ts` against the same CLI oracle |
 
+### Kernel port boundaries (A1, coordinator review)
+
+Where upstream has no defined behaviour, or a precision Rust does not offer, the port does the following:
+
+- **`fixed_bins` read past its end (undefined behaviour upstream).**
+  - Where: `_FirstFitSelection::packItems` (`firstfit.hpp:169-180`).
+  - When: an item does not fit even after its retry with only the excluded regions, and the last bed is still empty.
+  - What upstream does: it preloads `fixed_bins[placers.size() - 1]`. When that bed has no fixed items, this indexes past the end of `fixed_bins`.
+  - Port: preloads nothing on that bed (`nest/selection.rs`, `retry_with_excluded`).
+  - The other `fixed_bins` reads in the same function are bounds-guarded upstream and are ported as-is.
+- **`boost::bad_rational` in the rotating calipers.**
+  - When: dividing by an edge's squared length throws when the contour has a zero-length edge.
+  - `min_area_boundingbox_rotation` (`Arrange.cpp:1105-1116`): upstream catches the throw and returns rotation 0. The port does the same.
+  - `fit_into_box_rotation` (`Arrange.cpp:1118-1122`): upstream has no catch, so the exception leaves `arrange`. The port instead stops the caliper walk and bisects the angle interval found so far.
+- **`long double` versus `f64`.**
+  - Upstream: `RotatedBox::width`/`height` (`rotcalipers.hpp:27-33`) are `long double`, which is 80-bit x87 on x86-64 Linux.
+  - Port: computes them in `f64`.
+  - Only `fitIntoBoxRotation`'s aspect-ratio comparison against the bed reads them. `minAreaBoundingBox` compares exact rationals and is not affected.
+  - Residual risk: when a box's aspect ratio is within `f64` rounding of the bed's, the bisection may start from the neighbouring caliper interval.
+
 ## STL plater session (core slice before commit 5)
 
 Coordinator decision: approved as its own source-cited core slice, RED then

@@ -3,7 +3,12 @@
 //! `docs/architecture/web-plater-move-rotate-arrange.md`, "Auto-arrange on OrcaSlicer
 //! v2.5.0-beta".
 
+mod arrange;
+mod arranger;
+mod nest;
+mod nlopt;
 mod params;
+mod rotcalipers;
 mod types;
 
 pub use crate::geometry::{BoundingBox, ExPolygon, Point, Polygon};
@@ -28,12 +33,12 @@ pub const SCALING_FACTOR: f64 = 0.000_001;
 
 /// `arrangement::arrange` (`Arrange.cpp:1279-1321`): places `items` on `bed` and the virtual
 /// beds after it around the fixed `excludes`, setting each item's `translation`, `rotation` and
-/// `bed_idx`; an item that fits no bed keeps its input and stays `UNARRANGED`.
+/// `bed_idx`; an item that does not fit an empty bed keeps its input and stays `UNARRANGED`.
 pub fn arrange(
-    _items: &mut [ArrangePolygon],
-    _excludes: &[ArrangePolygon],
-    _bed: &Bed,
-    _params: &ArrangeParams,
+    items: &mut [ArrangePolygon],
+    excludes: &[ArrangePolygon],
+    bed: &Bed,
+    params: &ArrangeParams,
 ) {
-    todo!("arrangement::arrange")
+    arrange::arrange(items, excludes, bed, params);
 }
