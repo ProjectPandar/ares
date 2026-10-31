@@ -55,5 +55,8 @@ mod wall_direction_seam;
 #[path = "zero_extrusion_comment.rs"]
 mod zero_extrusion_comment;
 
+#[path = "width_overhang_residual.rs"]
+mod width_overhang_residual;
+
 #[path = "clipper_wrapper_geometry.rs"]
 mod clipper_wrapper_geometry;
