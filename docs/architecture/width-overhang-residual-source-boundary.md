@@ -135,8 +135,13 @@ overhang object block byte-equal at498 bytes while retaining all351 bytes of the
 supported-layer GREEN. Stable official replay, fmt and strict all-target Clippy
 pass. No record is masked or removed by the comparator.
 
-The required bounded20-case official cooling/fan regression sample remains a
-pre-HANDOFF gate; full-stream and batch no-new-failure claims remain separate.
+The required bounded20-case official sample passes20/20 before and after the
+physical-state slice, with no oracle skips or introduced failures. Selection
+and coverage limits are recorded in the follow-on ARD: this is not20 strict
+Native stream comparisons. The final11 owned directed cases retain four scoped
+GREENs and seven strict full-stream REDs. Width advances to a first mismatch at
+configuration/footer line236; its complete movement prefix now matches. Full-
+stream completion and batch no-new-failure claims remain separate.
 
 ## Non-negotiable production boundary
 

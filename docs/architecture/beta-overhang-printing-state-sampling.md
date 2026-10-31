@@ -1,7 +1,7 @@
 # ARD: beta overhang sampling by effective printing state
 
-Status: focused runtime witnesses GREEN; required bounded20-case official
-fan/cooling regression gate pending. Later batch only, not frozen B13.
+Status: focused runtime witnesses GREEN; bounded official20-case sample
+passes before and after. Batch FULL remains separate. Later batch only, not B13.
 Authority: OrcaSlicer v2.5.0-beta,
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
@@ -200,8 +200,31 @@ to25624 bytes across the physical-state slice. Fmt and strict all-target Clippy
 pass without introduced suppressions.
 
 This is exact scoped GREEN, not a full-stream or global regression claim. The
-required20 current-PASS official beta-ledger cooling/fan cases must be verified
-before HANDOFF. The original seven full-stream comparators remain strict.
+original seven full-stream comparators remain strict. The required bounded
+regression sample is complete below; batch FULL remains the integration gate.
+
+## Bounded official regression result
+
+Selection is frozen independently of outcomes: the two named mapped baseline-
+PASS cooling cases plus the first18 remaining baseline-PASS names in lexical
+order whose retained full Native output contains an actual M106/M107 command.
+That rule selects17 F1 official stochastic diagnostics and the absolute-E reset
+Native preflight. Do not substitute more convenient cases or call this20 strict
+Native full-stream parity passes: the preflight does not execute Ares cooling,
+and the two live cooling cases assert fan/feedrate scopes.
+
+At `eb9672f1b` before dedup and `e5ac1f012` after, the exact20 selected cases
+pass20/20 on each side, with zero oracle skips or introduced failures. The
+required region-filament comparison gate is explicitly enabled; the same pinned
+beta profile inputs are supplied on both sides. Earlier gated-off passes and
+missing-profile-input runs were rejected as qualification, not relabeled GREEN.
+Only the official Native image is used; no seeded Native sweep.
+
+Three F1 displacement API streams change only by removal of duplicate part-fan
+commands: billow20→4, perlin6→4, ridgedmulti8→4. All other captured API/fan
+streams are unchanged, including the two live cooling cases. Non-fan byte
+identity is diagnostic attribution, not a masked acceptance comparator. The
+first-overhang witness still requires and passes every one of its498 bytes.
 
 ## Test-first acceptance and execution
 
