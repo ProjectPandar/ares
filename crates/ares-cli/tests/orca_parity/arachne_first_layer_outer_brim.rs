@@ -1,5 +1,7 @@
 //! A positive outer brim puts the first Arachne exterior wall before inner walls.
 
+use super::first_layer_object;
+
 #[tokio::test]
 async fn positive_outer_brim_prints_outer_wall_first() {
     let project = include_bytes!(
@@ -50,20 +52,4 @@ async fn positive_outer_brim_prints_outer_wall_first() {
         "Arachne first-layer wall order with an outer brim must match the runtime beta oracle: {:?}",
         reference.root,
     );
-}
-
-fn first_layer_object(gcode: &str) -> &str {
-    gcode
-        .split(";LAYER_CHANGE\n")
-        .nth(1)
-        .unwrap()
-        .split_once("; printing object ")
-        .unwrap()
-        .1
-        .split_once('\n')
-        .unwrap()
-        .1
-        .split_once("; stop printing object ")
-        .unwrap()
-        .0
 }

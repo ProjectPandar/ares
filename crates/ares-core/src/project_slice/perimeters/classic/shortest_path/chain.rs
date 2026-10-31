@@ -140,6 +140,10 @@ fn chain_multiple_constrained(
     start_near: Option<[f64; 2]>,
     can_reverse: Option<&[bool]>,
 ) -> Vec<(usize, bool)> {
+    // v2.5.0-beta ShortestPath.cpp:164-176; preserve the shared kernel tie order.
+    if positions.len() / 2 <= 4 {
+        return crate::geometry::chain_segments_exact(positions, can_reverse, start_near);
+    }
     let tree = KdTree::new(positions);
     let mut endpoints: Vec<_> = positions.iter().map(|_| EndPoint::new()).collect();
     let segment_count = positions.len() / 2;

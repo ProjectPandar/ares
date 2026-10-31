@@ -1,5 +1,7 @@
 //! Three sibling hole walls follow the beta runtime's shortest chain.
 
+use super::first_layer_object;
+
 #[tokio::test]
 async fn three_holes_follow_runtime_shortest_chain() {
     let project =
@@ -60,20 +62,4 @@ async fn three_holes_follow_runtime_shortest_chain() {
         "Classic sibling-hole order must match the runtime beta oracle: {:?}",
         reference.root,
     );
-}
-
-fn first_layer_object(gcode: &str) -> &str {
-    gcode
-        .split(";LAYER_CHANGE\n")
-        .nth(1)
-        .unwrap()
-        .split_once("; printing object ")
-        .unwrap()
-        .1
-        .split_once('\n')
-        .unwrap()
-        .1
-        .split_once("; stop printing object ")
-        .unwrap()
-        .0
 }

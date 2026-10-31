@@ -223,3 +223,19 @@ use std::path::PathBuf;
 mod outcome;
 
 use outcome::{profiles_root, strict_comparator_ran};
+
+fn first_layer_object(gcode: &str) -> &str {
+    gcode
+        .split(";LAYER_CHANGE\n")
+        .nth(1)
+        .unwrap()
+        .split_once("; printing object ")
+        .unwrap()
+        .1
+        .split_once('\n')
+        .unwrap()
+        .1
+        .split_once("; stop printing object ")
+        .unwrap()
+        .0
+}
