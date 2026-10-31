@@ -1,6 +1,7 @@
 # ARD: beta first-layer Brim speed selection
 
-Status: source boundary and public seam approved; RED before production code.
+Status: complete executable-block parity GREEN for the three public witnesses;
+original seven full-stream comparisons remain OPEN at the shared footer boundary.
 Later batch only, not frozen B13. Authority: OrcaSlicer v2.5.0-beta,
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
@@ -92,6 +93,26 @@ and all records. Native/API block lengths are41969/41947 (below),41994/41972
 blockline16 in every case. All three public APIs admit the immutable inputs;
 complete pre-fix API streams are retained externally. Fmt and strict workspace/
 all-target Clippy pass, with no introduced suppressions.
+
+## Minimal port and directed result
+
+The separate runtime RED is frozen in `495727d1d`. Adding Brim only inside the
+first-layer-like speed predicate makes all three complete executable blocks
+byte-equal to the unchanged runtime Native blocks:41969 bytes below,41994 at,
+41989 above. Every M73 record now matches, including the original earliest
+preamble progress mismatch, without changing any counter/planner/progress code.
+This publicly establishes the shared feed→progress cause, not just geometric
+alignment. Complete API streams change by22 bytes each; source, blocks and
+before/after hashes are retained externally. Native double replay stays stable.
+
+The final bounded owned14 run has seven scoped PASSes (three executable blocks,
+two island blocks, two width blocks) and seven unchanged strict full-stream REDs.
+All seven inputs admit, CLI exits0, raw API==CLI and Native replays are stable.
+The offset trio advances from progress line32 to the common configuration/footer
+boundary at lines1638/1639; the other four complete API streams are byte-unchanged.
+No original strict comparison is relabeled GREEN. Fmt and strict workspace/
+all-target Clippy pass, with no new suppression. The perimeter-only slowdown ramp
+and all unrelated production logic remain unchanged. No FULL or ledger rerun.
 
 Included: the first-layer and over-raft speed-selection leaf, with inherited
 wipe/progress effects observed through the existing consumers. No separate

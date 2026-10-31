@@ -170,14 +170,15 @@ impl PathProperties<'_> {
                 _ => role_speed,
             }
         });
-        // `GCode.cpp:6564-6570`: the first-layer speed override applies to
+        // `GCode.cpp:9458-9464`: the first-layer speed override applies to
         // `on_first_layer()` OR `object_layer_over_raft()` — the first
         // object layer over a raft prints at `initial_layer_speed` even
         // though its `layer->id()` is `raft_count`, not 0. Bottom surface
         // keeps its own role speed (`initial_layer_infill_speed` already).
+        // Brim joins perimeters here, not in the slowdown ramp below.
         let first_layer_like = layer_index == 0 || object_layer_over_raft;
         let speed = if first_layer_like && self.feature != "Bottom surface" {
-            if is_perimeter {
+            if is_perimeter || self.feature == "Brim" {
                 options.initial_layer_speed
             } else {
                 options.initial_layer_infill_speed
