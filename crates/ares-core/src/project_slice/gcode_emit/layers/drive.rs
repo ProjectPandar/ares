@@ -50,6 +50,7 @@
                     },
                 )?;
                 let _ = _primed;
+                cooling.reset_fans();
                 previous_layer_z = 0.0;
                 second_layer_done = false;
             }

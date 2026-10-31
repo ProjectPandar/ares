@@ -43,7 +43,8 @@ pub(super) fn append_deferred_role_fan(output: &mut Vec<u8>, target: DeferredRol
 
 pub(super) struct CoolingState {
     part_speed: Option<u8>,
-    physical_part_speed: u8,
+    /// CoolingBuffer::m_current_fan_speed: requested percent before PWM clamping.
+    current_part_speed: Option<u8>,
     provisional_part_speed: u8,
     pending_layer_index: Option<usize>,
     /// The layer the equalizer is holding back.
@@ -63,6 +64,13 @@ pub(super) struct CoolingState {
 }
 
 impl CoolingState {
+    pub(super) fn reset_fans(&mut self) {
+        // CoolingBuffer.cpp:62–64; GCode.cpp:4678 resets between sequential instances.
+        self.part_speed = None;
+        self.additional_speed = None;
+        self.current_part_speed = None;
+    }
+
     pub(super) fn begin_layer(&mut self, output: &mut Vec<u8>, layer_index: usize) {
         self.pending_layer_index = Some(layer_index);
         self.provisional_part_speed = self
@@ -159,17 +167,18 @@ impl CoolingState {
             .ramp(tool)
             .speed_for_layer_time(layer_index, Some(f64::from(layer_time)))
             .unwrap_or(0);
-        let mut replacement = if self.part_speed != Some(part_speed) {
-            let speed = clamped_part_speed(part_speed, self.part_cooling_fan_min_pwm);
-            let comment = match (self.gcode_comments, speed == 0) {
-                (false, _) => "",
-                (true, true) => " ; disable fan",
-                (true, false) => " ; enable fan",
+        let mut replacement =
+            if self.part_speed != Some(part_speed) || self.current_part_speed != Some(part_speed) {
+                let speed = clamped_part_speed(part_speed, self.part_cooling_fan_min_pwm);
+                let comment = match (self.gcode_comments, speed == 0) {
+                    (false, _) => "",
+                    (true, true) => " ; disable fan",
+                    (true, false) => " ; enable fan",
+                };
+                format!("M106 S{}{comment}\n", part_fan_pwm(speed)).into_bytes()
+            } else {
+                Vec::new()
             };
-            format!("M106 S{}{comment}\n", part_fan_pwm(speed)).into_bytes()
-        } else {
-            Vec::new()
-        };
         // `CoolingBuffer.cpp:834`: even empty final input updates the fan.
         let marker_len = if layer.is_empty() {
             0
@@ -186,7 +195,7 @@ impl CoolingState {
                     .unwrap()
         };
         if !replacement.is_empty() {
-            self.physical_part_speed = part_speed;
+            self.current_part_speed = Some(part_speed);
         }
         let additional_speed = if layer_index < self.ramp(tool).close_fan_first_layers() as usize {
             0

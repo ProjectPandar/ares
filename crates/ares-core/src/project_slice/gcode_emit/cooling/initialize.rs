@@ -83,7 +83,7 @@ impl CoolingState {
         Self {
             equalizer,
             part_speed: None,
-            physical_part_speed: 0,
+            current_part_speed: None,
             provisional_part_speed: 0,
             pending_layer_index: None,
             equalized_layer_result: None,

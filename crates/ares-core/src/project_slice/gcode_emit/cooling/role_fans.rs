@@ -156,13 +156,8 @@ impl CoolingState {
                     || ironing_end
                     || marker.contains("_BASE__")
                     || marker.contains("_FORCE_"));
-            // CoolingBuffer.cpp:1004 emits baseline without replacing the
-            // retained request speed used by FORCE_RESUME (1000-1002).
-            if emit && role_speed.or(support_speed).or(ironing_speed).is_some() {
-                self.physical_part_speed = target;
-            }
             let replacement = if emit {
-                self.part_fan_command(target)
+                self.set_part_fan(target)
             } else {
                 Vec::new()
             };
@@ -244,9 +239,9 @@ impl CoolingState {
             0
         };
         let mut replacement = Vec::new();
-        if baseline != part_speed {
+        if baseline != part_speed || self.current_part_speed != Some(part_speed) {
             replacement.extend_from_slice(&self.part_fan_command(part_speed));
-            self.physical_part_speed = part_speed;
+            self.current_part_speed = Some(part_speed);
         }
         if self.auxiliary_fan && self.additional_speed != Some(additional_speed) {
             let comment = match (self.gcode_comments, additional_speed == 0) {
@@ -286,10 +281,24 @@ impl CoolingState {
                 format!("M106 P2 S{}{comment}\n", additional_fan_pwm(speed)).as_bytes(),
             );
         }
-        if role_speed.is_none() && support_speed.is_none() && ironing_speed.is_none() {
-            replacement.extend_from_slice(&self.part_fan_command(self.physical_part_speed));
+        if role_speed.is_none()
+            && support_speed.is_none()
+            && ironing_speed.is_none()
+            && let Some(speed) = self.current_part_speed
+        {
+            replacement.extend_from_slice(&self.part_fan_command(speed));
         }
         replacement
+    }
+
+    fn set_part_fan(&mut self, target: u8) -> Vec<u8> {
+        // CoolingBuffer.cpp:1066–1071 compares the request, not clamped PWM bytes.
+        if self.current_part_speed == Some(target) {
+            return Vec::new();
+        }
+        let command = self.part_fan_command(target);
+        self.current_part_speed = Some(target);
+        command
     }
 
     fn part_fan_command(&self, target: u8) -> Vec<u8> {

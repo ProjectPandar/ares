@@ -86,8 +86,8 @@ unchanged runtime Native block, including travel, E and every other record.
 Native replay is stable; full API bytes change from25690 to25686. Fmt and strict
 workspace/all-target Clippy pass. This is supported-layer GREEN only.
 
-The independently rerun first-overhang block remains RED, Native498/API571
-bytes. Its remaining differences are estimator-generated straight splits and
+At the collinear-only checkpoint, the independently rerun first-overhang block
+remains RED, Native498/API571 bytes. Its remaining differences are estimator-generated straight splits and
 fan/progress records, matching the separate beta estimator/consumer gap. The
 seven original full-stream comparators are unchanged; no full-stream or broad
 no-regression GREEN is claimed by this directed slice.
@@ -122,6 +122,21 @@ Neither follow-up belongs to frozen B13.
 
 Every intermediate RED/GREEN commit must introduce no `#[allow]` or `#[expect]`.
 The original seven full-stream comparators and parity ROOT remain unchanged.
+
+## Follow-on source-consumer result
+
+The beta printing-state sampling/consumer ARD is recorded separately in
+[beta-overhang-printing-state-sampling.md](beta-overhang-printing-state-sampling.md).
+The source sampler/GCode consumer commit `eb9672f1b` preserves one final fan-line
+RED. Its subsequent authorized physical fan-state deduplication ports
+`CoolingBuffer.cpp:1066–1071` together with constructor/reset, layer/tool baseline
+updates and the distinct force-resume branch. It makes the complete first Native
+overhang object block byte-equal at498 bytes while retaining all351 bytes of the
+supported-layer GREEN. Stable official replay, fmt and strict all-target Clippy
+pass. No record is masked or removed by the comparator.
+
+The required bounded20-case official cooling/fan regression sample remains a
+pre-HANDOFF gate; full-stream and batch no-new-failure claims remain separate.
 
 ## Non-negotiable production boundary
 

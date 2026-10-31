@@ -1,7 +1,8 @@
 # ARD: beta overhang sampling by effective printing state
 
-Status: sampling/consumer candidate implemented; physical-fan state follow-up
-authorized below. Later batch only, not frozen B13. Authority: OrcaSlicer v2.5.0-beta,
+Status: focused runtime witnesses GREEN; required bounded20-case official
+fan/cooling regression gate pending. Later batch only, not frozen B13.
+Authority: OrcaSlicer v2.5.0-beta,
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Owning upstream boundary
@@ -186,6 +187,21 @@ introduced suppressions. Because this state affects fan lines outside the
 witness, before HANDOFF run an official bounded sample of20 cooling/fan cases
 whose beta-ledger status is current-PASS, record their ledger provenance and
 exact selectors, and report all results. No FULL or new baseline classification.
+
+## Implemented focused result
+
+The sampling/consumer commit `eb9672f1b` independently passes fmt and strict
+workspace/all-target Clippy while explicitly retaining the one-line fan RED
+(Native498/API508 bytes). Its following physical-state slice ports the lifecycle
+table above, removes the obsolete retained-speed field, and passes both complete
+public witnesses: first-overhang498/498 bytes and last-supported351/351 bytes.
+Both official Native replays are stable. The full API output changes from25634
+to25624 bytes across the physical-state slice. Fmt and strict all-target Clippy
+pass without introduced suppressions.
+
+This is exact scoped GREEN, not a full-stream or global regression claim. The
+required20 current-PASS official beta-ledger cooling/fan cases must be verified
+before HANDOFF. The original seven full-stream comparators remain strict.
 
 ## Test-first acceptance and execution
 
