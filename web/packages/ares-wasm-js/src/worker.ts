@@ -76,6 +76,8 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.addPlate();
     case "deletePlate":
       return session.deletePlate(edit.index);
+    case "arrange":
+      return session.arrange(edit.plate, JSON.stringify(edit.settings));
   }
 }
 
@@ -212,6 +214,17 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       dropPlateViewers(request.sessionId);
       return [JSON.parse(session.layout()), []];
     }
+    case "platerArrangeSettings": {
+      const session = sessions.get(request.sessionId)!;
+      const settings = {
+        defaults: JSON.parse(session.defaultArrangeSettings()),
+        key: session.arrangeSettingsKey(),
+        showsCalibrationRegion: session.showsCalibrationRegion(),
+      };
+      return [settings, []];
+    }
+    case "platerShownArrangeSettings":
+      return [JSON.parse(sessions.get(request.sessionId)!.shownArrangeSettings(JSON.stringify(request.settings))), []];
     case "platerAbsoluteRotation":
       return [[...sessions.get(request.sessionId)!.absoluteRotation(request.object, request.instance)], []];
     case "platerSlice": {

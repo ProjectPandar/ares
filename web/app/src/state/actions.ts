@@ -1,5 +1,6 @@
 import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
+import { loadArrangeSettings } from "./arrange";
 import { saveConfig } from "./persistence";
 import { overrideTokens, presetSliceBlocker, sliceWithPresets, stlSessionOpened } from "./presets";
 import { updatePrinterPanel } from "./printer";
@@ -51,6 +52,8 @@ export async function importFile(file: File) {
       scene,
       plater,
       currentPlate: 0,
+      arrange: null,
+      arrangeError: undefined,
       plateSlices: {},
       typedSettings,
       selectedObject: null,
@@ -58,6 +61,7 @@ export async function importFile(file: File) {
       slice: { status: "idle" },
     });
     void previous?.free();
+    if (plater) await loadArrangeSettings(plater);
     if (!useApp.getState().presetSelection) await updatePrinterPanel();
   } catch (error) {
     useApp.setState({ loadError: (error as Error).message });
@@ -91,7 +95,7 @@ async function slicePlates(indices: number[]) {
   if (presetSelection && presetSliceBlocker(presetSelection, scene)) return;
   for (const index of indices) {
     const startedAt = performance.now();
-    useApp.setState({ currentPlate: index, slice: { status: "slicing", startedAt } });
+    useApp.setState({ currentPlate: index, slice: { status: "slicing", startedAt }, arrangeError: undefined });
     const plate = scene.plates[index]?.id;
     try {
       const result = presetSelection

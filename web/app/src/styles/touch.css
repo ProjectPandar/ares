@@ -19,7 +19,7 @@
   .layer-slider-track::before { inset: -8px -20px; }
   .process-tab { min-height: 44px; }
   .plate-row { min-height: 44px; }
-  .plate-delete { width: 44px; height: 44px; }
+  .plate-arrange, .plate-delete { width: 44px; height: 44px; }
   .plate-add { min-height: 44px; }
   /* 16px text so iOS Safari does not zoom into a focused field. */
   .option-field, .option-select, .legend-view, .combo-search, .filament-column-search { height: 44px; font-size: 16px; }

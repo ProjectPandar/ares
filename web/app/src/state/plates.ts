@@ -20,12 +20,15 @@ export async function selectPlate(index: number) {
   else useApp.setState({ slice: { status: "idle" } });
 }
 
-/** The scene with an edit's instance matrices and plates; every slice result is stale. */
-function applyLayout(layout: PlaterLayout, currentPlate: number) {
+/**
+ * The scene with an edit's instance matrices and plates, its objects in the layout's model order
+ * (an arrange sorts them); every slice result is stale.
+ */
+export function applyLayout(layout: PlaterLayout, currentPlate: number) {
   useApp.setState(({ scene, slice }) => ({
     scene: {
       ...scene!,
-      objects: scene!.objects.map((object, at) => ({ ...object, instances: layout.objects[at].instances })),
+      objects: layout.objects.map(({ id, instances }) => ({ ...scene!.objects.find((object) => object.id === id)!, instances })),
       plates: layout.plates,
     },
     currentPlate,

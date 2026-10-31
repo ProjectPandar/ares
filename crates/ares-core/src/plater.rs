@@ -4,6 +4,7 @@
 //! `docs/architecture/web-plater-move-rotate-arrange.md`.
 
 mod arrange_job;
+mod arrange_settings;
 mod edits;
 mod eigen;
 mod min_sphere;

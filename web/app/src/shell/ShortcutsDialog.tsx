@@ -27,6 +27,8 @@ const GROUPS: [string, [string, string][]][] = [
     ["O", "Zoom out"],
     ["M", "Gizmo move"],
     ["R", "Gizmo rotate"],
+    ["A", "Arrange all objects"],
+    ["Shift+A", "Arrange objects on selected plates"],
     ["Tab", "Switch between Prepare/Preview"],
   ]],
   ["Preview", [

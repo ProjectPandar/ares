@@ -1,3 +1,4 @@
+import { loadArrangeSettings } from "./arrange";
 import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
@@ -384,8 +385,9 @@ async function openSession(file: ModelFile, scene: Scene, selection: PresetSelec
     return placed;
   }
   const previous = useApp.getState().plater;
-  useApp.setState(({ slice }) => ({ plater, scene: { ...placed, format: "stl", settings: null }, currentPlate: 0, ...invalidatedSlices(slice) }));
+  useApp.setState(({ slice }) => ({ plater, scene: { ...placed, format: "stl", settings: null }, currentPlate: 0, arrange: null, ...invalidatedSlices(slice) }));
   openedSession = { plater, file, selection, sources, placed };
+  await loadArrangeSettings(plater);
   void previous?.free();
   return placed;
 }

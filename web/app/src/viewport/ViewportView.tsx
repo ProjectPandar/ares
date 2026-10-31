@@ -1,4 +1,4 @@
-import type { MovesView, Scene, Toolpaths } from "@ares-slicer/wasm";
+import type { MovesView, Scene, SceneInstance, Toolpaths } from "@ares-slicer/wasm";
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
@@ -9,6 +9,7 @@ import { useApp } from "../state/store";
 import { firstString } from "../sidebar/options";
 import { bedFromSettings } from "./bedShape";
 import type { ViewPreset, ZoomTarget } from "./camera";
+import { ArrangeMenu } from "./ArrangeMenu";
 import type { GizmoMode } from "./gizmos";
 import type { Viewport, ViewportColors } from "./Viewport";
 
@@ -37,6 +38,21 @@ const VIEWS: [ViewPreset, string][] = [
 const VIEW_KEYS: Record<string, ViewPreset> = {
   "0": "plate", "1": "top", "2": "bottom", "3": "front", "4": "rear", "5": "left", "6": "right",
 };
+
+/**
+ * The instances the canvas draws: per object in scene order its name and each instance's printable
+ * flag and column-major matrix, and per plate its `[object, instance]` positions in that order.
+ */
+function instancesProbe(scene: Scene | null) {
+  if (!scene) return undefined;
+  const objects = scene.objects.map(({ name, instances }) => ({ name, instances: instances.map(({ printable, matrix }) => ({ printable, matrix })) }));
+  const position = ([objectId, instanceId]: readonly number[]) => {
+    const at = (instances: SceneInstance[]) => instances.findIndex(({ id }) => id[0] === objectId && id[1] === instanceId);
+    const object = scene.objects.findIndex(({ instances }) => at(instances) >= 0);
+    return [object, at(scene.objects[object].instances)];
+  };
+  return JSON.stringify({ objects, plates: scene.plates.map((plate) => plate.instances.map(position)) });
+}
 
 export function ViewportView({ toolpaths = null, colors = null, enabled = null, view, fit = "plate", editable = false, children }: {
   toolpaths?: Toolpaths | null;
@@ -193,7 +209,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   }, [viewport, enabled, toolpaths]);
 
   return (
-    <div className="viewport">
+    <div className="viewport" data-instances={instancesProbe(scene)}>
       <div className="viewport-canvas" ref={host} data-testid="viewport" />
       <div className="view-toolbar" role="toolbar" aria-label="Camera view" data-testid="view-toolbar">
         {VIEWS.map(([preset, label]) => (
@@ -222,6 +238,8 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
             <button key={mode} className="view-button" aria-pressed={gizmo === mode} title={mode === "move" ? "Move (M)" : "Rotate (R)"}
               onClick={() => setGizmo(mode)}>{mode === "move" ? "Move" : "Rotate"}</button>
           ))}
+          <span className="view-separator" />
+          <ArrangeMenu />
         </div>
       )}
       {children}

@@ -15,6 +15,25 @@
   padding: 3px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow);
 }
 .view-separator { width: 1px; margin: 3px 2px; background: var(--separator); }
+/* The main toolbar's arrange popup (GLCanvas3D::_render_arrange_menu). */
+.arrange-menu { position: relative; display: flex; }
+.arrange-popup {
+  position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); width: 280px;
+  display: grid; gap: 8px; padding: 10px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 6px; box-shadow: var(--shadow);
+}
+.arrange-popup label { display: flex; align-items: center; gap: 6px; }
+.arrange-popup label:has(input:disabled) { color: var(--text-faint); }
+.arrange-spacing { display: grid; grid-template-columns: auto 1fr 64px; align-items: center; gap: 8px; }
+.arrange-spacing input[type="number"] { width: 100%; font: inherit; }
+.arrange-hint { margin: -4px 0 0; color: var(--text-dim); font-size: 11px; }
+.arrange-actions { display: flex; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.arrange-actions button {
+  flex: 1; padding: 3px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel-raised);
+  color: var(--text); font: inherit; cursor: pointer;
+}
+@media (hover: hover) { .arrange-actions button:not(:disabled):hover { border-color: var(--accent); } }
+.arrange-actions button:disabled { opacity: 0.4; cursor: default; }
 .canvas-hint {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center;
   pointer-events: none; color: var(--text-dim);

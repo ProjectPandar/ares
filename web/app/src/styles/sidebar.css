@@ -89,12 +89,15 @@
 .object-part { padding-left: 40px; }
 .object-nested { padding-left: 20px; }
 .plate-row { font-weight: 600; }
-.plate-delete {
+/* PartPlate arrange (plate_arrange) and delete (plate_close) icons. */
+.plate-arrange, .plate-delete {
   flex: none; width: 20px; height: 20px; padding: 0; border: none; border-radius: 3px; background: none;
   color: var(--text-dim); font-size: 14px; line-height: 1; cursor: pointer;
 }
-@media (hover: hover) { .plate-delete:not(:disabled):hover { color: var(--text); background: var(--panel-sunken); } }
-.plate-delete:disabled { opacity: 0.4; cursor: default; }
+@media (hover: hover) { :is(.plate-arrange, .plate-delete):not(:disabled):hover { color: var(--text); background: var(--panel-sunken); } }
+:is(.plate-arrange, .plate-delete):disabled { opacity: 0.4; cursor: default; }
+/* An image icon upstream: drawn outside the row's text. */
+.plate-arrange::before { content: "\21F2"; }
 .plate-add {
   padding: 1px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel);
   color: var(--text); font: inherit; font-size: 11px; cursor: pointer;

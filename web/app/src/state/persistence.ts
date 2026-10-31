@@ -37,6 +37,8 @@ export interface StoredConfig {
   nozzleVolumeTypes: Record<string, string[]>;
   /** `prefered_filament_map_mode` (FilamentGroupPopup.cpp:25-48). */
   preferredFilamentMapMode: "Auto For Flush" | "Auto For Match" | "Manual";
+  /** Section `arrange` (GLCanvas3D.cpp:1526-1561), app-config strings by key; absent in older records. */
+  arrange?: Record<string, string>;
 }
 
 const DEFAULTS: StoredConfig = {
@@ -72,7 +74,8 @@ function isStoredConfig(value: Record<string, unknown>): boolean {
     && isRecord(value.printers) && Object.values(value.printers).every(isPrinterSettings)
     && isStrings(value.installedFilaments)
     && isRecord(value.nozzleVolumeTypes) && Object.values(value.nozzleVolumeTypes).every(isStrings)
-    && ["Auto For Flush", "Auto For Match", "Manual"].includes(value.preferredFilamentMapMode as string);
+    && ["Auto For Flush", "Auto For Match", "Manual"].includes(value.preferredFilamentMapMode as string)
+    && (value.arrange === undefined || (isRecord(value.arrange) && Object.values(value.arrange).every((item) => typeof item === "string")));
 }
 
 /** The stored record, or the defaults after deleting a missing, old or malformed one. */

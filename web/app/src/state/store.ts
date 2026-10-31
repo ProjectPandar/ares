@@ -1,4 +1,4 @@
-import type { CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, Toolpaths } from "@ares-slicer/wasm";
+import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
@@ -80,6 +80,12 @@ export interface AppState {
   plater: PlaterSession | null;
   /** 0-based index of the current plate (`PartPlateList::m_current_plate`). */
   currentPlate: number;
+  /** The plater's arrange settings model and the settings in use (`GLCanvas3D::get_arrange_settings`). */
+  arrange: { model: ArrangeSettingsModel; settings: ArrangeSettings } | null;
+  /** An arrange is running (`Plater::priv::m_arrange_running`). */
+  arranging: boolean;
+  /** Why the last arrange failed. */
+  arrangeError?: string;
   /** The latest slice of each plate by index (`PartPlate::m_gcode_result`); `slice` shows the current one. */
   plateSlices: Record<number, SlicedPlate>;
   /** `scene.settings` options decoded for typed fields. */
@@ -130,6 +136,8 @@ export const useApp = create<AppState>(() => ({
   scene: null,
   plater: null,
   currentPlate: 0,
+  arrange: null,
+  arranging: false,
   plateSlices: {},
   typedSettings: null,
   loadingFile: false,

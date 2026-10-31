@@ -1,6 +1,6 @@
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
-import type { PlaterLayout, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
+import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
 
 type Call = (body: RequestBody) => Promise<unknown>;
 type Vec3 = [number, number, number];
@@ -71,6 +71,24 @@ export class PlaterSession {
    */
   deletePlate(index: number): Promise<PlaterLayout> {
     return this.#edit({ op: "deletePlate", index });
+  }
+
+  /**
+   * Arranges every plate, or with `plate` (0-based) that plate alone (`ArrangeJob`). Rejects with the
+   * message when the project needs what is not ported; the plater then stays as it was.
+   */
+  arrange(settings: ArrangeSettings, plate?: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "arrange", plate, settings });
+  }
+
+  /** The arrange settings defaults, their app-config key and the options the popup offers. */
+  async arrangeSettings(): Promise<ArrangeSettingsModel> {
+    return (await this.#call({ kind: "platerArrangeSettings", sessionId: this.#sessionId })) as ArrangeSettingsModel;
+  }
+
+  /** `settings` as the arrange popup leaves them (`GLCanvas3D::_render_arrange_menu`). */
+  async shownArrangeSettings(settings: ArrangeSettings): Promise<ArrangeSettings> {
+    return (await this.#call({ kind: "platerShownArrangeSettings", sessionId: this.#sessionId, settings })) as ArrangeSettings;
   }
 
   /** Slices plate `plate` (1-based, the first when omitted) as `AresSlicer.sliceProject` slices a project. */

@@ -2,6 +2,7 @@ import type { Scene, SceneObject, ScenePlate, VolumeType } from "@ares-slicer/wa
 import { Fragment, type ReactNode, useState } from "react";
 import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
 import { selectObject } from "../state/actions";
+import { arrange } from "../state/arrange";
 import { addPlate, deletePlate, MAX_PLATES, selectPlate } from "../state/plates";
 import { useApp } from "../state/store";
 
@@ -55,6 +56,8 @@ const onPlate = ({ instances: [first] }: SceneObject, plate: ScenePlate) =>
 function PlateNodes({ scene, object }: { scene: Scene; object: (object: SceneObject, nested: boolean) => ReactNode }) {
   const current = useApp((state) => state.currentPlate);
   const slicing = useApp((state) => state.slice.status === "slicing");
+  const arranging = useApp((state) => state.arranging);
+  const arrangeable = useApp((state) => state.arrange !== null);
   const outside = scene.objects.filter((item) => !scene.plates.some((plate) => onPlate(item, plate)));
   return (
     <>
@@ -63,6 +66,15 @@ function PlateNodes({ scene, object }: { scene: Scene; object: (object: SceneObj
           <div role="treeitem" aria-selected={index === current} className={`object-row plate-row${index === current ? " selected" : ""}`}
             onClick={() => void selectPlate(index)}>
             <span className="object-name">Plate {plate.id}</span>
+            {/* PartPlate arrange icon (plate_arrange): makes the plate current and arranges it. */}
+            {arrangeable && (
+              <button className="plate-arrange" aria-label={`Arrange plate ${plate.id}`} title="Arrange objects on current plate"
+                disabled={slicing || arranging}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void arrange(index);
+                }} />
+            )}
             {/* PartPlate delete icon (plate_close), shown while the list has more than one plate. */}
             {scene.plates.length > 1 && (
               <button className="plate-delete" aria-label={`Delete plate ${plate.id}`} title="Remove this plate" disabled={slicing}

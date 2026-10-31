@@ -3,8 +3,11 @@
 //! slice runs in `ares_core::PlaterSession`; this adapter converts arguments
 //! and results.
 
-use ares_core::{GenerationMetadata, PlaterSlice, ProfileSliceRequest, SlicerContext};
-use serde::Serialize;
+use ares_core::{
+    ArrangeScope, ArrangeSettings, GenerationMetadata, PlaterSlice, ProfileSliceRequest,
+    SlicerContext,
+};
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 use crate::profiles::ProfileSliceOptions;
@@ -25,9 +28,46 @@ struct Layout {
     plates: Vec<ScenePlate>,
 }
 
+/// An object's instances; the id follows an object an arrange sorts (`PartPlate.cpp:8389`).
 #[derive(Serialize)]
 struct LayoutObject {
+    id: u32,
     instances: Vec<SceneInstance>,
+}
+
+/// `GLCanvas3D::ArrangeSettings` as the web passes it.
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct SettingsJson {
+    distance: f32,
+    enable_rotation: bool,
+    allow_multi_materials_on_same_plate: bool,
+    avoid_extrusion_cali_region: bool,
+    align_to_y_axis: bool,
+}
+
+impl SettingsJson {
+    fn parse(json: &str) -> Result<ArrangeSettings, JsValue> {
+        let settings: Self = serde_json::from_str(json).map_err(js_error)?;
+        Ok(ArrangeSettings {
+            distance: settings.distance,
+            enable_rotation: settings.enable_rotation,
+            allow_multi_materials_on_same_plate: settings.allow_multi_materials_on_same_plate,
+            avoid_extrusion_cali_region: settings.avoid_extrusion_cali_region,
+            align_to_y_axis: settings.align_to_y_axis,
+        })
+    }
+
+    fn json(settings: ArrangeSettings) -> String {
+        serde_json::to_string(&Self {
+            distance: settings.distance,
+            enable_rotation: settings.enable_rotation,
+            allow_multi_materials_on_same_plate: settings.allow_multi_materials_on_same_plate,
+            avoid_extrusion_cali_region: settings.avoid_extrusion_cali_region,
+            align_to_y_axis: settings.align_to_y_axis,
+        })
+        .expect("arrange settings serialize")
+    }
 }
 
 fn js_error(error: impl ToString) -> JsValue {
@@ -89,6 +129,7 @@ impl PlaterSession {
                 .objects()
                 .iter()
                 .map(|object| LayoutObject {
+                    id: object.id(),
                     instances: scene::scene_instances(object),
                 })
                 .collect(),
@@ -168,6 +209,41 @@ impl PlaterSession {
     #[wasm_bindgen(js_name = deletePlate)]
     pub fn delete_plate(&mut self, index: usize) -> bool {
         self.session.delete_plate(index)
+    }
+
+    /// "Arrange" (`ArrangeJob`): every plate, or with `plate` (0-based) that plate alone.
+    pub fn arrange(&mut self, plate: Option<usize>, settings_json: &str) -> Result<(), JsValue> {
+        let scope = plate.map_or(ArrangeScope::All, ArrangeScope::CurrentPlate);
+        self.session
+            .arrange(scope, SettingsJson::parse(settings_json)?)
+            .map_err(js_error)
+    }
+
+    /// The arrange settings after "Reset" (`GLCanvas3D.cpp:6757-6767`), as JSON.
+    #[wasm_bindgen(js_name = defaultArrangeSettings)]
+    pub fn default_arrange_settings(&self) -> String {
+        SettingsJson::json(self.session.default_arrange_settings())
+    }
+
+    /// `settingsJson` as the arrange popup leaves them (`GLCanvas3D.cpp:6712-6745`).
+    #[wasm_bindgen(js_name = shownArrangeSettings)]
+    pub fn shown_arrange_settings(&self, settings_json: &str) -> Result<String, JsValue> {
+        let settings = SettingsJson::parse(settings_json)?;
+        Ok(SettingsJson::json(
+            self.session.shown_arrange_settings(settings),
+        ))
+    }
+
+    /// Whether the arrange popup offers the extrusion calibration region.
+    #[wasm_bindgen(js_name = showsCalibrationRegion)]
+    pub fn shows_calibration_region(&self) -> bool {
+        self.session.shows_calibration_region()
+    }
+
+    /// The app-config postfix of the arrange settings in use, `_fff` or `_fff_seq_print`.
+    #[wasm_bindgen(js_name = arrangeSettingsKey)]
+    pub fn arrange_settings_key(&self) -> String {
+        self.session.arrange_settings_key().to_owned()
     }
 
     /// Slices plate `plate` (1-based; the first when omitted) with the project's presets and

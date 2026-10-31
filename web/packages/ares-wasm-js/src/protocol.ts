@@ -1,4 +1,4 @@
-import type { ConfigValue, CurrentPrinter, PresetKind } from "./types.js";
+import type { ArrangeSettings, ConfigValue, CurrentPrinter, PresetKind } from "./types.js";
 
 type Vec3 = [number, number, number];
 
@@ -9,7 +9,8 @@ export type PlaterEdit =
   | { op: "rotate"; object: number; instance: number; radians: Vec3 }
   | { op: "setAbsoluteRotation"; object: number; instance: number; axis: 0 | 1 | 2; degrees: number }
   | { op: "addPlate" }
-  | { op: "deletePlate"; index: number };
+  | { op: "deletePlate"; index: number }
+  | { op: "arrange"; plate: number | undefined; settings: ArrangeSettings };
 
 export type WorkerRequest =
   | { id: number; kind: "init"; wasmUrl: string }
@@ -38,6 +39,8 @@ export type WorkerRequest =
   | { id: number; kind: "platerScene"; sessionId: number }
   | { id: number; kind: "platerEdit"; sessionId: number; edit: PlaterEdit }
   | { id: number; kind: "platerAbsoluteRotation"; sessionId: number; object: number; instance: number }
+  | { id: number; kind: "platerArrangeSettings"; sessionId: number }
+  | { id: number; kind: "platerShownArrangeSettings"; sessionId: number; settings: ArrangeSettings }
   | { id: number; kind: "platerSlice"; sessionId: number; plate: number | undefined; overrides: string }
   | { id: number; kind: "platerSliceWithProfiles"; sessionId: number; plate: number | undefined; catalog: string; selection: string; options: string }
   | { id: number; kind: "platerPreview"; sessionId: number; plate: number }

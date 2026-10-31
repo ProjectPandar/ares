@@ -43,9 +43,32 @@ export interface ScenePlate {
 
 /** A plater session's instance matrices and plates after an edit: its `Scene` without meshes. */
 export interface PlaterLayout {
-  /** Per scene object, in `Scene.objects` order. */
-  objects: { instances: SceneInstance[] }[];
+  /**
+   * Per scene object in model order, by `SceneObject.id`. An arrange sorts the model's objects
+   * (`PartPlateList::rebuild_plates_after_arrangement`), so this order can differ from the scene's.
+   */
+  objects: { id: number; instances: SceneInstance[] }[];
   plates: ScenePlate[];
+}
+
+/** The arrange settings popup (`GLCanvas3D::ArrangeSettings`); `distance` 0 spaces items automatically. */
+export interface ArrangeSettings {
+  /** mm. */
+  distance: number;
+  enableRotation: boolean;
+  allowMultiMaterialsOnSamePlate: boolean;
+  avoidExtrusionCaliRegion: boolean;
+  alignToYAxis: boolean;
+}
+
+/** The arrange settings model of a plater session. */
+export interface ArrangeSettingsModel {
+  /** The settings after "Reset" and a printer change. */
+  defaults: ArrangeSettings;
+  /** The app-config postfix the settings belong to, by the global print sequence. */
+  key: "_fff" | "_fff_seq_print";
+  /** Whether the popup offers "Avoid extrusion calibration region". */
+  showsCalibrationRegion: boolean;
 }
 
 /** OrcaSlicer option values keyed by config key, as serialized by ares-core. */
