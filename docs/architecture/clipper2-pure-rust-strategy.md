@@ -124,7 +124,7 @@ Current helper correspondence:
 
 | Rust helper boundary | Pinned source segment |
 | --- | --- |
-| `geometry/chain_points.rs` and `geometry/chain_points/exact.rs::chain_points_exact` | `ShortestPath.cpp:103–137,164–176,1565–1575`; shared two-through-four-point subset DP, preserving both orientation states, source Euclidean costs, ascending state/candidate scans and strict `<` ties; larger sets retain the existing greedy implementation. See `chain-points-small-set-exact.md` |
+| `geometry/chain_points.rs` and `geometry/chain_points/exact.rs::chain_segments_exact` | `ShortestPath.cpp:103–137,164–176,1565–1575`; shared two-through-four-point subset DP, preserving both orientation states, source Euclidean costs, ascending state/candidate scans and strict `<` ties; larger sets retain the existing greedy implementation. See `chain-points-small-set-exact.md` |
 | `clipper/ordering/gcc.rs::move_median_to_front` | Retain the already audited GNU `std::sort` median helper used at the pinned engine's sort sites; group only its three candidate indices in a tuple, removing the existing argument-count exemption without changing comparisons or swaps |
 | `polytree/stray_holes/bbox_index.rs::{partition,median,split}` | `AABBTreeIndirect.hpp:162–218::Tree::partition_input`; median-of-three, pivot partition, restoration and narrowing retain their original order |
 | `polytree/stray_holes/bbox_index.rs::Index::{new,build,visit}` | `AABBTreeIndirect.hpp:129–155,228–242` and `ClipperUtils.cpp::c2_attach_stray_holes`; preserve inflated wrapper bounds, integer centroid truncation, axis ties and left-before-right traversal |

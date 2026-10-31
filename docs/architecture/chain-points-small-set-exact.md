@@ -38,19 +38,47 @@ start-point preference or fixture-specific branch is allowed.
 Sets larger than four retain the existing greedy/KD-tree/priority-queue path
 unchanged. This is the upstream size dispatch, not an engine fallback.
 
+## Shared open-chain kernel contract
+
+Expose exactly one crate-visible source kernel for point and constrained segment
+callers:
+
+```rust
+geometry::chain_segments_exact(
+    endpoints: &[[f64; 2]],
+    could_reverse: Option<&[bool]>,
+    start_near: Option<[f64; 2]>,
+) -> Vec<(usize, bool)>
+```
+
+Each segment retains its paired first/last endpoints; the endpoint vector is not
+flattened into one representative point. `None` orientation mask means all
+segments may reverse, matching the source unconstrained adapter. A supplied mask
+admits only orientation zero for nonreversible segments. The optional start
+initializes singleton entry costs with the source Euclidean distance; `None`
+leaves them zero. Coordinates are already cast to scaled-coordinate doubles at
+the caller, just as the upstream `end_points`/`start` arrays are.
+
+The point adapter alone duplicates each point into a coincident endpoint pair,
+calls the same kernel with both options `None`, and discards the returned
+orientation. W3's classic constrained callers reuse the paired-endpoint kernel
+with their real mask and start. There is no second copy of this DP. The separate
+upstream `OrderingStrategies.cpp::tsp_exact_cycle` solves a closed cycle and must
+not be replaced with this open-chain algorithm.
+
 | Rust segment | Upstream segment |
 | --- | --- |
-| `chain_points_exact` singleton initialization, mask/state walk, final scan and reconstruction | `chain_segments_exact`, `ShortestPath.cpp:103–137`, with the point adapter from `:1565–1575` |
+| `chain_segments_exact` singleton initialization, mask/state walk, final scan and reconstruction | `chain_segments_exact`, `ShortestPath.cpp:103–137`, preserving optional start costs and allowed orientations |
 | `extend_state` candidate/orientation loops and predecessor writes | The inner reachable-state transition block of the same `chain_segments_exact`; only helper extraction, with unchanged scan and arithmetic order |
+| `distance` | Source `Vec2d::norm` expressions at singleton initialization and transition cost; preserve double subtraction, ordinary squared sum and sqrt |
 
 ## Deferred behavior
 
-Do not port start-constrained or non-point segment chaining in this slice.
-The corresponding gap in
-`project_slice/perimeters/classic/shortest_path/chain.rs` belongs to the separate
-wall/seam rewrite. Do not add cycle postprocessing, change the KD-tree or queue,
-or introduce a testing-only public geometry API. Global shared-helper effects
-are verified by the integration batch's FULL gate, not a local broad sweep.
+Do not migrate the classic caller dispatches in this slice; those changes remain
+with the separate wall/seam rewrite. Do not add cycle postprocessing, change the
+KD-tree or queue, or introduce a testing-only public geometry API. Global shared-
+helper effects are verified by the integration batch's FULL gate, not a local
+broad sweep.
 
 ## Failure modes and verification contract
 

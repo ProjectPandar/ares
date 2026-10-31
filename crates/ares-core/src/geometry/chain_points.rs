@@ -3,6 +3,7 @@ use kd_tree::KdTree;
 use priority_queue::EndPointHeap;
 
 mod exact;
+pub(crate) use exact::chain_segments_exact;
 pub(in crate::geometry) mod kd_tree;
 pub(in crate::geometry) mod priority_queue;
 
@@ -33,7 +34,17 @@ pub(crate) fn chain_points(points: &[Point]) -> Vec<usize> {
         return (0..points.len()).collect();
     }
     if points.len() <= 4 {
-        return exact::chain_points_exact(points);
+        let endpoints = points
+            .iter()
+            .flat_map(|point| {
+                let position = [point.x() as f64, point.y() as f64];
+                [position, position]
+            })
+            .collect::<Vec<_>>();
+        return super::chain_segments_exact(&endpoints, None, None)
+            .into_iter()
+            .map(|(index, _)| index)
+            .collect();
     }
 
     let mut end_points = Vec::with_capacity(points.len() * 2);

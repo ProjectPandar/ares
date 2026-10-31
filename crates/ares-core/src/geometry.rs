@@ -31,7 +31,7 @@ pub(crate) use bbox_clip::{
 };
 pub(crate) use bounding_box::{BoundingBox, chain_expolygons, chain_expolygons_order};
 pub(crate) use bridge_direction::detect_bridging_direction;
-pub(crate) use chain_points::chain_points;
+pub(crate) use chain_points::{chain_points, chain_segments_exact};
 pub(crate) use clipper::ClipOperation;
 pub(crate) use clipper::offset_lines;
 pub(crate) use clipper::ordering::{fixed_gcc_sort_by, fixed_msvc_sort_by, stable_sort_by};
