@@ -79,12 +79,18 @@ similar source gap but is deferred unless this public witness demonstrates that
 boundary must change.
 
 The single-predicate experiment confirms that upstream owner: both corner
-mismatches disappear, and the entire following supported object block becomes
-byte-equal to runtime Native. The scoped first-overhang block is still RED. Its
-remaining differences are the estimator-generated straight splits and fan/
-progress records, matching the separate beta estimator/consumer gap. Fmt and
-strict all-target Clippy pass for the candidate. This candidate is not a scoped
-GREEN and is not a committed production repair.
+mismatches disappear. The dedicated supported-layer RED is now frozen separately
+in `906e6f34c`: Native351 bytes versus pre-fix API352, first mismatch at block
+line8. Restoring the source collinear predicate makes all351 bytes equal to the
+unchanged runtime Native block, including travel, E and every other record.
+Native replay is stable; full API bytes change from25690 to25686. Fmt and strict
+workspace/all-target Clippy pass. This is supported-layer GREEN only.
+
+The independently rerun first-overhang block remains RED, Native498/API571
+bytes. Its remaining differences are estimator-generated straight splits and
+fan/progress records, matching the separate beta estimator/consumer gap. The
+seven original full-stream comparators are unchanged; no full-stream or broad
+no-regression GREEN is claimed by this directed slice.
 
 The remaining cited boundary is `ExtrusionProcessor.hpp:50–355` plus
 `GCode.cpp:9538–9643`, including effective-speed/fan predicate transport and

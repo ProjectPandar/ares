@@ -138,8 +138,12 @@ impl ExtrusionLine {
         if self.junctions.len() <= minimum_size {
             return;
         }
-        let (five_microns, floating_five_microns) = five_micron_tolerances(scale);
+        let five_microns = scale.checked_scale(0.005).unwrap();
         let five_microns_squared = five_microns * five_microns;
+        // ExtrusionLine.hpp:40: near-collinearity uses SCALED_EPSILON,
+        // not the separate five-micron tiny-segment threshold above.
+        let collinear_tolerance = scale.scaled_delta(0.0001) as i64;
+        let collinear_tolerance_squared = collinear_tolerance * collinear_tolerance;
         let mut output = vec![self.junctions[0]];
         let mut previous = self.junctions[0];
         let mut previous_previous = if self.is_closed {
@@ -184,9 +188,9 @@ impl ExtrusionLine {
             }
             let height_squared = (area as f64 * area as f64 / base_squared as f64) as i64;
             let area_error = Self::extrusion_area_deviation(previous, current, next);
-            if height_squared <= five_microns_squared
+            if height_squared <= collinear_tolerance_squared
                 && distance_to_infinite(current.point, previous.point, next.point)
-                    <= floating_five_microns
+                    <= collinear_tolerance as f64
                 && area_error <= maximum_area_deviation
             {
                 continue;
@@ -267,10 +271,6 @@ fn short_segment_action(
 
 fn distance(left: Point, right: Point) -> f64 {
     (distance_squared(left, right) as f64).sqrt()
-}
-
-pub(super) fn five_micron_tolerances(scale: CoordinateScale) -> (i64, f64) {
-    (scale.checked_scale(0.005).unwrap(), 0.005 / scale.factor())
 }
 
 fn distance_squared(left: Point, right: Point) -> i64 {
