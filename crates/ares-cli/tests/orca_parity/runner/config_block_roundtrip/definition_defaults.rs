@@ -130,3 +130,25 @@ fn mixed_filament_components_default_matches_native_settings_export() {
         runner.work
     );
 }
+
+#[test]
+fn filament_prime_volume_default_matches_native_settings_export() {
+    let Some((runner, native)) = native_defaults() else {
+        return;
+    };
+    let [native_default] = native["filament_prime_volume"]
+        .as_array()
+        .unwrap()
+        .as_slice()
+    else {
+        panic!("Native default must have one filament: {:?}", runner.work);
+    };
+    let native_default = native_default.as_str().unwrap();
+    let definition = exported_definition(&runner, "filament_prime_volume");
+    assert_eq!(definition.kind, "floats");
+    assert_eq!(
+        definition.default_value, native_default,
+        "{:?}",
+        runner.work
+    );
+}

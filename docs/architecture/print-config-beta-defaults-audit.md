@@ -129,3 +129,22 @@ matching beta `GCode.cpp:8287`. Do not merely rely on its absence from the stati
 CONFIG_BLOCK key list. No typed mixed-filament execution, normalization, active
 Saving/Fast behavior or other beta definition is included. The approved three
 public REDs are unchanged; verify only those cases plus fmt and strict Clippy.
+
+## Tower-estimate prime-volume definition follow-up
+
+At the same beta source revision, `GCode/WipeTowerEstimate.cpp:190` reads
+`filament_prime_volume` through `float_at` for each Type1 purge estimate.
+It does not read `filament_prime_volume_nc`; that separate hotend-change key
+is deferred rather than registered speculatively.
+
+The included definition is `PrintConfig.cpp:8955-8961`: `coFloats`, one
+`ConfigOptionFloats{45.}` value, label `Filament change`, minimum1.0, simple
+mode and `mm³` sidetext. Its destination is the existing public definition and
+metadata tables, not an estimate/planner implementation. Native public settings
+export on the unchanged fixture provides the default; the fixture does not
+author this key. Add one behavior-named RED in the existing definition-defaults
+group before porting it. Neither prime-volume vector is in the beta
+`GCode::append_full_config` ban list, so do not introduce a ban. This slice does
+not add typed emission fields, alter the static CONFIG_BLOCK list or qualify
+full G-code/planner parity. Preserve all existing metadata records and use the
+same generator-format, source-cited insertion as the prior three definitions.
