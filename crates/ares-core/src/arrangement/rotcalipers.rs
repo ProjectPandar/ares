@@ -84,7 +84,7 @@ fn dot(a: Point, b: Point) -> i64 {
 }
 
 fn perp(a: Point) -> Point {
-    Point::new(-a.y(), a.x())
+    Point::new(a.y(), -a.x())
 }
 
 fn neg(a: Point) -> Point {
