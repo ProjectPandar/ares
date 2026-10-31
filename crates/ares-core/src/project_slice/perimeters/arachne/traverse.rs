@@ -197,9 +197,8 @@ pub(in crate::project_slice) fn traverse_extrusions(
                 .push(ExtrusionEntity::Loop(OrderedExtrusionLoop {
                     unsupported_distance: None,
                     extrusion_loop,
-                    // Arachne loops keep the `ExtrusionEntity::inset_idx` base
-                    // default (`ExtrusionEntity.hpp`); classic sets loop depth.
-                    inset_idx: -1,
+                    // v2.5.0-beta PerimeterGenerator.cpp:565-566.
+                    inset_idx: extrusion.inset_index as i32,
                 }));
             // Orca: Reverse the order of paths for thin wall holes. We define
             // thin wall hole as a hole with only one perimeter

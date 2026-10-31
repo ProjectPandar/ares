@@ -20,7 +20,8 @@ first-subpath-only assertion was corrected previously and is not evidence here.
 
 Include only the closed-loop source index transfer. Open MultiPath transfer at
 PG595, per-collection fallback, SeamContour physical-boundary metadata, paint,
-normal placement, alignment restart and geometry are adjacent/deferred slices.
+normal placement, alignment restart, scoring and geometry are adjacent/deferred
+slices.
 Do not rewrite fallback or synthesize an ExternalPerimeter path/role to hide the
 metadata gap. Existing Ares extrusion records are a temporary compatibility shell
 around upstream extrusion entities, not a new pipeline design.
