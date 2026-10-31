@@ -23,12 +23,15 @@ pub(super) fn is_seq_print(settings: &ProjectSettings) -> bool {
     settings.process.print.print_sequence == ProcessPrintSequence::ByObject
 }
 
-/// `init_arrange_params` for "Arrange all" with the object skirt offset of the current
-/// plate's print.
+/// `init_arrange_params` with the object skirt offset of the current plate's print. For the
+/// current plate (`PREPARE_STATE_MENU`, `ArrangeJob.cpp:1026-1034`) `plate_sequence` is the
+/// plate's real print sequence: it decides the sequential print, and the distance turns
+/// automatic when it differs from the global one.
 pub(super) fn arrange_params(
     settings: &ProjectSettings,
     arrange: ArrangeSettings,
     object_skirt_offset: f32,
+    plate_sequence: Option<ProcessPrintSequence>,
 ) -> ArrangeParams {
     let printer = &settings.printer.remaining;
     let mut params = ArrangeParams {
@@ -48,6 +51,12 @@ pub(super) fn arrange_params(
         align_to_y_axis: arrange.align_to_y_axis,
         ..ArrangeParams::default()
     };
+    if let Some(sequence) = plate_sequence {
+        params.is_seq_print = sequence == ProcessPrintSequence::ByObject;
+        if sequence != settings.process.print.print_sequence {
+            params.min_obj_distance = 0;
+        }
+    }
     if params.is_seq_print {
         params.bed_shrink_x = BED_SHRINK_SEQ_PRINT;
         params.bed_shrink_y = BED_SHRINK_SEQ_PRINT;

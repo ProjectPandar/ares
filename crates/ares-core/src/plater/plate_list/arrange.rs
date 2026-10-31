@@ -4,7 +4,7 @@
 
 use std::collections::BTreeSet;
 
-use super::{Plate, PlateList, PlateModel, origin};
+use super::{BoundingBox, InstanceKey, Plate, PlateList, PlateModel, origin};
 use crate::arrangement::{ArrangePolygon, SCALING_FACTOR, UNARRANGED};
 use crate::geometry::{ExPolygon, Point, Polygon};
 use crate::project::compute_colum_count;
@@ -76,7 +76,68 @@ impl PlateList {
         items
     }
 
-    /// `clear(false, false, true, -1)` (`PartPlate.cpp:6454-6501`): no plate holds an instance.
+    /// `contain_instance(key) || intersect_instance(key)` of the plate at `index`, with the
+    /// instance's convex hull box `bbox` (`PartPlate.cpp:4459-4470, 4627-4649`): the test
+    /// `prepare_partplate` selects by.
+    pub(in crate::plater) fn holds_or_reaches(
+        &self,
+        index: usize,
+        key: InstanceKey,
+        bbox: &BoundingBox,
+    ) -> bool {
+        let plate = &self.plates[index];
+        plate.instances.contains(&key) || self.intersects(plate, true, bbox)
+    }
+
+    /// `preprocess_arrange_polygon_other_locked` (`PartPlate.cpp:7663-7690`): an instance off
+    /// the current plate is locked, moved to its plate's bed or, on no plate, given bed
+    /// `MAX_PLATES_COUNT`.
+    pub(in crate::plater) fn lock_off_current_plate(
+        &self,
+        key: InstanceKey,
+        ap: &mut ArrangePolygon,
+        selected: bool,
+    ) -> bool {
+        if selected {
+            return false;
+        }
+        let Some(index) = self
+            .plates
+            .iter()
+            .position(|plate| plate.instances.contains(&key))
+        else {
+            ap.bed_idx = MAX_PLATES_COUNT;
+            return true;
+        };
+        let index = index as i32;
+        let (row, col) = (index / self.cols as i32, index % self.cols as i32);
+        ap.bed_idx = index;
+        ap.row = row;
+        ap.col = col;
+        let (stride_x, stride_y) = self.stride();
+        // `translation -= scaled<double>(...)`: the difference truncates to `coord_t`.
+        let x = (ap.translation.x() as f64 - stride_x * f64::from(col) / SCALING_FACTOR) as i64;
+        let y = (ap.translation.y() as f64 + stride_y * f64::from(row) / SCALING_FACTOR) as i64;
+        ap.translation = Point::new(x, y);
+        true
+    }
+
+    /// `postprocess_bed_index_for_current_plate` (`PartPlate.cpp:7913-7928`): the first bed is
+    /// the current plate, any other is the plate past the last one.
+    pub(in crate::plater) fn bed_index_for_current_plate(
+        &self,
+        ap: &mut ArrangePolygon,
+        current: usize,
+    ) {
+        ap.bed_idx = match ap.bed_idx {
+            UNARRANGED => UNARRANGED,
+            0 => current as i32,
+            _ => self.plates.len() as i32,
+        };
+    }
+
+    /// `clear(false, false, true, plate_index)` (`PartPlate.cpp:6454-6501`): every plate is
+    /// cleared, `PartPlate::clear(false)` included (`:4173-4176`), so no plate holds an instance.
     pub(in crate::plater) fn clear_instances(&mut self) {
         for plate in &mut self.plates {
             plate.instances.clear();
@@ -137,8 +198,8 @@ impl PlateList {
         ap.translation = Point::new(x, y);
     }
 
-    /// `reload_all_objects(true, -1)` (`PartPlate.cpp:7498-7546`): each instance on the first
-    /// plate it reaches, else on the unprintable plate.
+    /// `reload_all_objects(true, plate_index)` (`PartPlate.cpp:7498-7546`) for any plate index:
+    /// each instance on the first plate it reaches, else on the unprintable plate.
     pub(in crate::plater) fn reload_all_objects(&mut self, model: &impl PlateModel) {
         self.clear_instances();
         for key in model.keys() {
