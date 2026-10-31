@@ -584,6 +584,30 @@ A3b cases:
   5. `bed_exclude_area` on plate 2.
   6. Plate 2 printed by object while the global sequence is by layer.
 
+**A4 addendum: the arrange UI.** Every `file:line` is at `345efec64`. A4 stacks on the A3 GREENs and calls `PlaterSession::arrange`; an arrange the core rejects (`InvalidInput`) shows its message in the status bar and leaves the plater as it was.
+
+- **Core (ported GUI logic, so TS stays thin):**
+  - `PlaterSession::default_arrange_settings()`: the `ArrangeSettings` defaults (`GLCanvas3D.hpp:603-614`) with align to Y on for an i3 printer. This is the popup's Reset (`GLCanvas3D.cpp:6757-6767`), and what a printer change sets (`Plater.cpp:3994-3999`).
+  - `PlaterSession::shown_arrange_settings(settings)`, the popup's rules (`GLCanvas3D.cpp:6712-6745`):
+    - spacing is at least 0;
+    - the calibration-region option is forced off unless the printer is Bambu Lab and scans the first layer;
+    - align to Y is off while auto-rotate is on.
+  - `PlaterSession::shows_calibration_region()`: whether the popup shows that option. Bambu Lab is detected by `printer_model`, as the CLI does (`WipeTowerEstimate.cpp:64-67`).
+  - `PlaterSession::arrange_settings_key()`: the app-config postfix of the settings set in use, `_fff` or `_fff_seq_print` by the global print sequence (`:6690-6700`, `:1563-1580`).
+- **ares-wasm:**
+  - `PlaterSession.arrange(scope, settingsJson)`, where `scope` is `"all"` or a 0-based plate index. It returns the layout.
+  - `defaultArrangeSettings()`, `shownArrangeSettings(json)`, `showsCalibrationRegion()` and `arrangeSettingsKey()`.
+  - The layout now carries each object's id. An arrange sorts the model's objects (`PartPlate.cpp:8389`), so the web reorders its scene objects by id, not by position.
+- **Web:**
+  - **Main toolbar "Arrange" item** (`GLCanvas3D.cpp:7567-7582`): toggles the settings popup (`:6654-6778`). The popup has spacing (0-100, "0 means auto spacing."), auto rotate, multiple materials on one plate, the calibration region only where shown, align to Y (disabled while auto rotate is on), "Arrange" (all plates) and "Reset".
+  - **Persistence** with the app-config keys (`:1526-1561`): distance and rotation per postfix; multi-material and calibration region shared by both FFF sets.
+  - **Per plate:** each plate row gets the plate's "Arrange objects on current plate" icon (`PartPlate.cpp:2621-2627`) for `CurrentPlate(index)`.
+  - **Shortcuts** (`Shortcuts.cpp:90-91`): A arranges all; Shift+A arranges the current plate.
+  - A failed arrange shows its message and leaves the plater as it was.
+- **E2E `arrange.spec.ts`:**
+  - The popup rules, Reset and persistence across a reload.
+  - "Arrange all" and "Arrange current plate" on fixtures from the A3a and A3c cases, against the CLI oracle they use.
+
 **Oracle and comparison (A3a).**
 - Native run: the official v2.5.0-beta CLI global arrange (`OrcaSlicer.cpp:5619-6098`), started as `--arrange 1 --allow-rotations=<0|1> --avoid-extrusion-cali-region=<0|1> --align-to-y-axis=<0|1> --export-3mf <out> <input.3mf>` through `scripts/orca-parity.sh` with `ORCA_APPDIR`.
 - Booleans take `=<0|1>` (`Config.cpp:1750-1773`). Upstream disables the `--no-` prefix (`:1822`), and a separate value (`--align-to-y-axis 0`) is read as an input file. All three flags are always passed, so no CLI default applies.
