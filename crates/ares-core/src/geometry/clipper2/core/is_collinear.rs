@@ -25,7 +25,7 @@ pub fn is_collinear(pt1: Point64, shared_pt: Point64, pt2: Point64) -> bool {
 #[inline]
 pub fn point_in_polygon(pt: Point64, polygon: &Path64) -> PointInPolygonResult {
     if polygon.len() < 3 {
-        return PointInPolygonResult::IsOutside;
+        return PointInPolygonResult::Outside;
     }
 
     let mut val = 0i32;
@@ -38,7 +38,7 @@ pub fn point_in_polygon(pt: Point64, polygon: &Path64) -> PointInPolygonResult {
 
     if first_idx == polygon.len() {
         // Not a proper polygon - all points have same y as test point
-        return PointInPolygonResult::IsOutside;
+        return PointInPolygonResult::Outside;
     }
 
     let mut is_above = polygon[first_idx].y < pt.y;
@@ -89,7 +89,7 @@ pub fn point_in_polygon(pt: Point64, polygon: &Path64) -> PointInPolygonResult {
 
         if curr.y == pt.y {
             if curr.x == pt.x || (curr.y == prev.y && ((pt.x < prev.x) != (pt.x < curr.x))) {
-                return PointInPolygonResult::IsOn;
+                return PointInPolygonResult::On;
             }
             curr_idx += 1;
             if curr_idx == first_idx {
@@ -105,7 +105,7 @@ pub fn point_in_polygon(pt: Point64, polygon: &Path64) -> PointInPolygonResult {
         } else {
             let d = cross_product_sign(*prev, *curr, pt);
             if d == 0 {
-                return PointInPolygonResult::IsOn;
+                return PointInPolygonResult::On;
             }
             if (d < 0) == is_above {
                 val = 1 - val;
@@ -132,7 +132,7 @@ pub fn point_in_polygon(pt: Point64, polygon: &Path64) -> PointInPolygonResult {
         let prev = &polygon[prev_idx];
         let d = cross_product_sign(*prev, *curr, pt);
         if d == 0 {
-            return PointInPolygonResult::IsOn;
+            return PointInPolygonResult::On;
         }
         if (d < 0) == is_above {
             val = 1 - val;
@@ -140,9 +140,9 @@ pub fn point_in_polygon(pt: Point64, polygon: &Path64) -> PointInPolygonResult {
     }
 
     if val == 0 {
-        PointInPolygonResult::IsOutside
+        PointInPolygonResult::Outside
     } else {
-        PointInPolygonResult::IsInside
+        PointInPolygonResult::Inside
     }
 }
 

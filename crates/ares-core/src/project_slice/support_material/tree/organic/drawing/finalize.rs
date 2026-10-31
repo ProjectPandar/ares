@@ -4,7 +4,7 @@ use super::super::interface_placer::{GeneratorLayer, LayerType, RoofLayers, laye
 use super::Slice;
 use crate::geometry::{
     ClipperError, CoordinateScale, difference_polygons_paths, mutable_polygon::smooth_outward,
-    simplification::polygons_simplify_with_mode, union_polygons_paths,
+    simplification::polygons_simplify, union_polygons_paths,
 };
 
 pub(in super::super) fn allocate_layers(
@@ -37,11 +37,9 @@ pub(in super::super) fn allocate_layers(
                 config.mesh.support_line_width,
                 scale,
             );
-            // Common.hpp's polygons_strictly_simple is false in this source path.
-            base = polygons_simplify_with_mode(
+            base = polygons_simplify(
                 base,
                 scale.scaled_delta(0.03).min(config.mesh.resolution as f64),
-                false,
             )?;
         }
         if let Some(top) = roofs.top_contacts[layer]

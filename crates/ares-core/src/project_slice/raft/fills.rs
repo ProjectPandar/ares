@@ -108,7 +108,8 @@ fn closing_polygons(
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     use crate::geometry::{JoinType, offset_paths, offset_paths_tree};
     let expanded = offset_paths(polygons, expand, JoinType::Miter, 3.0)?;
-    Ok(offset_paths_tree(&expanded, -shrink, JoinType::Miter, 3.0)?.into_expolygons())
+    Ok(offset_paths_tree(&expanded, -shrink, JoinType::Miter, 3.0)?
+        .into_expolygons(CoordinateScale::Normal))
 }
 
 /// `Polyline::clip_end` (`Polyline.cpp`): shorten the polyline tail by

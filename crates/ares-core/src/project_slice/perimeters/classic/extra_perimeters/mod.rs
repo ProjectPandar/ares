@@ -146,7 +146,7 @@ fn generate(
             }
             let gaps = if shrunken.is_empty() {
                 offset_paths_tree(&previous, (0.5 * spacing) as f32, JoinType::Miter, 3.0)?
-                    .into_expolygons()
+                    .into_expolygons(scale)
             } else {
                 // `to_expolygons` wraps each polygon without unioning or regrouping holes.
                 shrunken

@@ -69,6 +69,7 @@ impl Area {
                 brim_area.clone(),
                 self.spacing,
                 traversal.scale.scaled_delta(0.0125),
+                traversal.scale,
             )?;
             if paths.is_empty() {
                 return Ok(None);

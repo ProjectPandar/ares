@@ -138,7 +138,7 @@ pub(in crate::project_slice) fn generate_surface_walls(
         MITER_LIMIT,
     )
     .map_err(geometry_error)?
-    .into_expolygons();
+    .into_expolygons(scale);
     let wall_0_inset = if config.precise_outer_wall {
         -(spacings.ext_perimeter_width / 2 - spacings.ext_perimeter_spacing / 2)
     } else {

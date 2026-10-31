@@ -2,9 +2,8 @@ use std::ops::{Add, Mul, Sub};
 
 use crate::geometry::{ExPolygon, Point, Polygon};
 
-use super::bounds::negative_outer;
-use super::predicates::HI_RANGE;
-use super::{ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, PathRole};
+use super::{ClipOperation, ClipperError, FillRule, backend};
+use crate::geometry::clipper2::MAX_COORD;
 
 const SHORTEST_EDGE_FACTOR: f64 = 0.005;
 
@@ -17,8 +16,8 @@ pub(crate) fn variable_offset_inner_ex(
         .chain(input.holes())
         .flat_map(|polygon| polygon.points())
         .any(|point| {
-            !(-HI_RANGE..=HI_RANGE).contains(&point.x())
-                || !(-HI_RANGE..=HI_RANGE).contains(&point.y())
+            !(-MAX_COORD..=MAX_COORD).contains(&point.x())
+                || !(-MAX_COORD..=MAX_COORD).contains(&point.y())
         });
     if coordinate_out_of_range
         || !miter_limit.is_finite()
@@ -46,27 +45,14 @@ pub(crate) fn variable_offset_inner_ex(
         holes.append(&mut repair_outer(path)?);
     }
 
-    if holes.is_empty() {
-        return Ok(contours
-            .into_iter()
-            .map(|contour| ExPolygon::new(contour, Vec::new()))
-            .collect());
-    }
-
-    let mut clipper = Clipper::new(ClipperOptions::default());
-    clipper.add_closed_paths(&contours, PathRole::Subject)?;
-    clipper.add_closed_paths(&holes, PathRole::Clip)?;
-    Ok(clipper
-        .execute_polytree(
-            ClipOperation::Difference,
-            FillRule::NonZero,
-            FillRule::NonZero,
-        )
-        .into_expolygons())
+    Ok(backend::clip_tree(
+        backend::paths(&contours),
+        backend::paths(&holes),
+        ClipOperation::Difference,
+        FillRule::NonZero,
+    )?
+    .into_expolygons(crate::geometry::CoordinateScale::Normal))
 }
-
-type VariableOffsetFn = fn(&ExPolygon, &[Vec<f32>], f64) -> Result<Vec<ExPolygon>, ClipperError>;
-const _: VariableOffsetFn = variable_offset_inner_ex;
 
 fn mitered_offset_path(
     contour: &Polygon,
@@ -173,20 +159,12 @@ fn repair_inner(path: Polygon) -> Result<Vec<Polygon>, ClipperError> {
         return Ok(Vec::new());
     }
 
-    let mut clipper = Clipper::new(ClipperOptions {
-        reverse_solution: true,
-        preserve_collinear: false,
-        strictly_simple: false,
-    });
-    clipper.add_closed_path(&path, PathRole::Subject)?;
-    let outer = negative_outer(clipper.bounds());
-    clipper.add_closed_path(&outer, PathRole::Subject)?;
-    let mut output =
-        clipper.execute_paths(ClipOperation::Union, FillRule::Negative, FillRule::Negative)?;
-    if !output.is_empty() {
-        output.remove(0);
-    }
-    Ok(output)
+    backend::clip_paths(
+        vec![backend::to_path(path.points())],
+        Vec::new(),
+        ClipOperation::Union,
+        FillRule::Positive,
+    )
 }
 
 fn repair_outer(path: Polygon) -> Result<Vec<Polygon>, ClipperError> {
@@ -194,9 +172,12 @@ fn repair_outer(path: Polygon) -> Result<Vec<Polygon>, ClipperError> {
         return Ok(Vec::new());
     }
 
-    let mut clipper = Clipper::new(ClipperOptions::default());
-    clipper.add_closed_path(&path, PathRole::Subject)?;
-    clipper.execute_paths(ClipOperation::Union, FillRule::Negative, FillRule::Negative)
+    backend::clip_paths(
+        vec![backend::to_path(path.points())],
+        Vec::new(),
+        ClipOperation::Union,
+        FillRule::Negative,
+    )
 }
 
 fn append_rounded(output: &mut Vec<Point>, point: Vector) -> Result<(), ClipperError> {
@@ -213,7 +194,7 @@ fn round_half_away(value: f64) -> Result<i64, ClipperError> {
         return Err(ClipperError::CoordinateOutOfRange);
     }
     let rounded = adjusted.trunc() as i64;
-    if !(-HI_RANGE..=HI_RANGE).contains(&rounded) {
+    if !(-MAX_COORD..=MAX_COORD).contains(&rounded) {
         return Err(ClipperError::CoordinateOutOfRange);
     }
     Ok(rounded)

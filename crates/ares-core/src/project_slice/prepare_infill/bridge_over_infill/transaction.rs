@@ -65,8 +65,5 @@ pub(super) fn geometry_error(error: ClipperError) -> SliceError {
         ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
             "bridge-over-infill coordinate is outside the supported Clipper range".to_owned(),
         ),
-        ClipperError::OpenPathMustBeSubject | ClipperError::OpenPathsRequirePolyTree => {
-            unreachable!("bridge-over-infill open paths use subject input and PolyTree output")
-        }
     }
 }

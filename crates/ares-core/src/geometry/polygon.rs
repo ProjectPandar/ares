@@ -37,7 +37,7 @@ impl Polygon {
     }
 
     pub(crate) fn is_counter_clockwise(&self) -> bool {
-        super::clipper::area(&self.points) >= 0.0
+        self.area() >= 0.0
     }
 
     /// `MultiPoint.cpp::rotate(double cos_angle, double sin_angle)`.

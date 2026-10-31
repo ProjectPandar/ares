@@ -307,9 +307,5 @@ fn geometry_error(error: crate::geometry::ClipperError) -> SliceError {
         crate::geometry::ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
             "combined-infill coordinate is outside the supported Clipper range".to_owned(),
         ),
-        crate::geometry::ClipperError::OpenPathMustBeSubject
-        | crate::geometry::ClipperError::OpenPathsRequirePolyTree => {
-            unreachable!("combined infill uses closed polygon operations")
-        }
     }
 }

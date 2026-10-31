@@ -67,7 +67,8 @@ pub(in crate::project_slice::gcode_emit) fn combine(
         .as_mut()
         .expect("carrier contributed brim area");
     let spacing = super::scaled_f32(scale, f64::from(plan.spacing))?;
-    plan.paths = crate::brims::ears::paths::from_area(area, spacing, scale.scaled_delta(0.0125))?;
+    plan.paths =
+        crate::brims::ears::paths::from_area(area, spacing, scale.scaled_delta(0.0125), scale)?;
     plan.global = true;
     Ok(())
 }
@@ -174,7 +175,7 @@ pub(in crate::project_slice::gcode_emit) fn group_brims(
                 f64::from(cleanup_resolution),
             )
             .map_err(brim_geometry_error)?;
-            let paths = crate::brims::ears::paths::from_area(area, spacing, resolution)?;
+            let paths = crate::brims::ears::paths::from_area(area, spacing, resolution, scale)?;
             Ok(GroupBrim::Combined {
                 owners,
                 plan: BrimPlan {

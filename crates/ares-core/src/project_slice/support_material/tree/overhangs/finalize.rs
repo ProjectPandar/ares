@@ -41,7 +41,7 @@ impl SmartOverhangs<'_> {
                 JoinType::Miter,
                 3.0,
             )?
-            .into_expolygons();
+            .into_expolygons(self.scale);
             layer.overhangs = difference_ex(&layer.overhangs, &blockers)?;
             layer.cantilevers = difference_ex(&layer.cantilevers, &blockers)?;
             sharp_tail_overhangs = difference_ex(&sharp_tail_overhangs, &blockers)?;

@@ -144,8 +144,5 @@ fn geometry_error(error: ClipperError) -> SliceError {
         ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
             "bridge candidate-layer coverage is outside the supported Clipper range".to_owned(),
         ),
-        ClipperError::OpenPathMustBeSubject | ClipperError::OpenPathsRequirePolyTree => {
-            unreachable!("bridge candidate-layer clustering uses closed paths only")
-        }
     }
 }

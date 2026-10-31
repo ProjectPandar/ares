@@ -196,8 +196,5 @@ fn map_clipper_error(error: ClipperError) -> SliceError {
         ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
             "classic perimeter raw path coordinate is outside the supported Clipper range".into(),
         ),
-        ClipperError::OpenPathMustBeSubject | ClipperError::OpenPathsRequirePolyTree => {
-            unreachable!("closed polygon wrappers cannot produce open-path API errors")
-        }
     }
 }

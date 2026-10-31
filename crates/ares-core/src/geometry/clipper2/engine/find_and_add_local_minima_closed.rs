@@ -6,128 +6,6 @@
 use super::*;
 
 impl ClipperBase {
-    /// `clipper.engine.cpp:637–742,862–866`: one input walk, retaining minima order.
-    pub fn add_paths(&mut self, paths: &Paths64, polytype: PathType, is_open: bool) {
-        self.has_open_paths |= is_open;
-        self.minima_list_sorted = false;
-        self.vertex_arena.reserve(paths.iter().map(Vec::len).sum());
-        for path in paths {
-            let start = self.vertex_arena.len();
-            let mut previous: Option<usize> = None;
-            let mut count = 0;
-            for &point in path {
-                if let Some(prev) = previous {
-                    if self.vertex_arena[prev].pt == point {
-                        continue;
-                    }
-                    self.vertex_arena[prev].next = self.vertex_arena.len();
-                }
-                let mut vertex = Vertex::new(point);
-                vertex.prev = previous.unwrap_or(NONE);
-                previous = Some(self.vertex_arena.len());
-                self.vertex_arena.push(vertex);
-                count += 1;
-            }
-            let Some(mut previous) = previous else {
-                continue;
-            };
-            if self.vertex_arena[previous].prev == NONE {
-                self.vertex_arena.truncate(start);
-                continue;
-            }
-            if !is_open && self.vertex_arena[previous].pt == self.vertex_arena[start].pt {
-                previous = self.vertex_arena[previous].prev;
-            }
-            self.vertex_arena[previous].next = start;
-            self.vertex_arena[start].prev = previous;
-            if count < 2 || (count == 2 && !is_open) {
-                continue;
-            }
-
-            let mut going_up;
-            if is_open {
-                let mut current = self.vertex_arena[start].next;
-                while current != start
-                    && self.vertex_arena[current].pt.y == self.vertex_arena[start].pt.y
-                {
-                    current = self.vertex_arena[current].next;
-                }
-                going_up = self.vertex_arena[current].pt.y <= self.vertex_arena[start].pt.y;
-                if going_up {
-                    self.vertex_arena[start].flags = VertexFlags::OPEN_START;
-                    self.add_loc_min(start, polytype, true);
-                } else {
-                    self.vertex_arena[start].flags =
-                        VertexFlags::OPEN_START | VertexFlags::LOCAL_MAX;
-                }
-            } else {
-                previous = self.vertex_arena[start].prev;
-                while previous != start
-                    && self.vertex_arena[previous].pt.y == self.vertex_arena[start].pt.y
-                {
-                    previous = self.vertex_arena[previous].prev;
-                }
-                if previous == start {
-                    continue;
-                }
-                going_up = self.vertex_arena[previous].pt.y > self.vertex_arena[start].pt.y;
-            }
-
-            let going_up_start = going_up;
-            previous = start;
-            let mut current = self.vertex_arena[start].next;
-            while current != start {
-                if self.vertex_arena[current].pt.y > self.vertex_arena[previous].pt.y && going_up {
-                    self.vertex_arena[previous].flags |= VertexFlags::LOCAL_MAX;
-                    going_up = false;
-                } else if self.vertex_arena[current].pt.y < self.vertex_arena[previous].pt.y
-                    && !going_up
-                {
-                    going_up = true;
-                    self.add_loc_min(previous, polytype, is_open);
-                }
-                previous = current;
-                current = self.vertex_arena[current].next;
-            }
-            if is_open {
-                self.vertex_arena[previous].flags |= VertexFlags::OPEN_END;
-                if going_up {
-                    self.vertex_arena[previous].flags |= VertexFlags::LOCAL_MAX;
-                } else {
-                    self.add_loc_min(previous, polytype, true);
-                }
-            } else if going_up != going_up_start {
-                if going_up_start {
-                    self.add_loc_min(previous, polytype, false);
-                } else {
-                    self.vertex_arena[previous].flags |= VertexFlags::LOCAL_MAX;
-                }
-            }
-        }
-    }
-}
-
-impl ClipperBase {
-    /// Sort the local minima list
-    pub fn sort_minima_list(&mut self) {
-        if !self.minima_list_sorted {
-            // Sort by y descending (bottom first), then by x ascending
-            let vertex_arena = &self.vertex_arena;
-            self.minima_list.sort_by(|a, b| {
-                let a_pt = vertex_arena[a.vertex].pt;
-                let b_pt = vertex_arena[b.vertex].pt;
-                if a_pt.y != b_pt.y {
-                    b_pt.y.cmp(&a_pt.y) // descending by y (larger y = lower on screen)
-                } else {
-                    a_pt.x.cmp(&b_pt.x) // ascending by x
-                }
-            });
-            self.minima_list_sorted = true;
-        }
-    }
-}
-
-impl ClipperBase {
     /// Duplicate an OutPt, inserting after or before
     /// Direct port from clipper.engine.cpp DuplicateOp
     pub fn duplicate_op(&mut self, op_idx: usize, insert_after: bool) -> usize {
@@ -173,22 +51,13 @@ impl ClipperBase {
     /// Dispose all OutPts in a circular list, setting outrec.pts to None
     /// Direct port from clipper.engine.cpp DisposeOutPts
     pub fn dispose_out_pts(&mut self, outrec_idx: usize) {
-        if let Some(pts_idx) = self.outrec_list[outrec_idx].pts {
-            // Unlink the circular list (don't actually free, arena-based)
-            let prev = self.outpt_arena[pts_idx].prev;
-            self.outpt_arena[prev].next = NONE; // break the circle
-            // Walk and mark as disposed
-            let mut op = Some(pts_idx);
-            while let Some(idx) = op {
-                if self.outpt_arena[idx].next == NONE {
-                    break;
-                }
-                let next = self.outpt_arena[idx].next;
-                if next == NONE || next == idx {
-                    break;
-                }
-                op = Some(next);
-            }
+        let point = self.outrec_list[outrec_idx].pts.unwrap();
+        let previous = self.outpt_arena[point].prev;
+        self.outpt_arena[previous].next = NONE;
+        let mut current = Some(point);
+        while let Some(point) = current {
+            let next = self.outpt_arena[point].next;
+            current = (next != NONE).then_some(next);
         }
         self.outrec_list[outrec_idx].pts = None;
     }

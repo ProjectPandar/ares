@@ -3,7 +3,7 @@
 use crate::geometry::{
     BoundingBox, ClipperError, Coord, CoordinateScale, JoinType, Point, Polygon,
     clip_clipper_polygons_with_subject_bbox, difference_polygons_paths, offset_open_paths,
-    offset_paths, simplification::polygons_simplify_with_mode, union_polygons_paths,
+    offset_paths, simplification::polygons_simplify, union_polygons_paths,
     union_polygons_paths_pair,
 };
 
@@ -102,14 +102,14 @@ pub(super) fn safe_offset_inc(
             clipped_collision(&mut collision_buffer, collision, &result, padding),
         )?;
         if index % 10 == 7 {
-            result = polygons_simplify_with_mode(result, simplify_tolerance, false)?;
+            result = polygons_simplify(result, simplify_tolerance)?;
         }
     }
     let remainder = distance - i64::from(steps) * step;
     if f64::from(remainder as f32) > epsilon {
         result = offset_paths(&result, remainder as f32, JoinType::Round, arc_tolerance)?;
     }
-    result = polygons_simplify_with_mode(result, simplify_tolerance, false)?;
+    result = polygons_simplify(result, simplify_tolerance)?;
     if final_difference {
         result = difference_polygons_paths(
             &result,

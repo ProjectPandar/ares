@@ -1,18 +1,8 @@
-// `clip_extrusion` port from OrcaSlicer v2.4.2
-// `PerimeterGenerator.cpp:280-357`: clips one open variable-width wall
-// polyline (width as the Z coordinate) against closed polygons, keeping a
-// width on every output vertex, with the source ZFill callback and zero-width
-// subject projection repair.
+// ClipperZUtils.cpp and SupportCommon.cpp: preserve caller metadata on C2 paths.
+use super::z::{KernelPoint, clip_zpaths};
+use super::{ClipOperation, ClipperError, JoinType, raw_offset_paths};
+use crate::geometry::{ExPolygon, Polygon};
 
-use super::{
-    ClipOperation, Clipper, ClipperError, ClipperOffset, ClipperOptions, FillRule, JoinType,
-    PathRole, Polygon,
-    z::{KernelPoint, ZPath},
-};
-use crate::geometry::ExPolygon;
-
-/// One clipped wall polyline vertex: `(x, y, width)` with the width in
-/// scaled coordinates.
 pub(crate) type ZWidthPath = Vec<(i64, i64, i64)>;
 
 pub(crate) fn clip_open_path_widths(
@@ -20,23 +10,42 @@ pub(crate) fn clip_open_path_widths(
     clip: &[Polygon],
     operation: ClipOperation,
 ) -> Result<Vec<ZWidthPath>, ClipperError> {
-    let subject_path = subject
+    let subject_path: Vec<_> = subject
         .iter()
-        .map(|&(x, y, width)| KernelPoint::new(x, y, width))
-        .collect::<ZPath>();
-    let mut clipper = Clipper::new(ClipperOptions::default());
-    clipper.add_z_open_path(&subject_path, PathRole::Subject)?;
-    for polygon in clip {
-        clipper.add_z_closed_path(
-            &polygon
-                .points()
+        .map(|&(x, y, z)| KernelPoint::new(x, y, z))
+        .collect();
+    let clip_paths: Vec<_> = clip
+        .iter()
+        .map(|p| {
+            p.points()
                 .iter()
-                .map(|&point| KernelPoint::new(point.x(), point.y(), 0))
-                .collect::<ZPath>(),
-            PathRole::Clip,
-        )?;
-    }
-    let mut paths = clipper.execute_z_width_paths(operation);
+                .map(|&xy| KernelPoint { xy, z: 0 })
+                .collect()
+        })
+        .collect();
+    let mut paths = clip_zpaths(
+        std::slice::from_ref(&subject_path),
+        (true, false),
+        &clip_paths,
+        operation,
+        |a, b, c, d, point| {
+            let (mut start, mut end) = (a, b);
+            if start.z <= 0 && end.z <= 0 {
+                start = c;
+                end = d;
+            }
+            let dx = (end.x - start.x) as f64;
+            let dy = (end.y - start.y) as f64;
+            let dz = (end.z - start.z) as f64;
+            let length = dx * dx + dy * dy + dz * dz;
+            let px = (point.x - start.x) as f64;
+            let py = (point.y - start.y) as f64;
+            let pz = (point.z - start.z) as f64;
+            let distance = px * px + py * py + pz * pz;
+            let t = (distance / length).sqrt();
+            point.z = start.z + ((end.z - start.z) as f64 * t) as i64;
+        },
+    );
     for point in paths.iter_mut().flatten().filter(|point| point.z == 0) {
         if subject_path.len() <= 2 {
             continue;
@@ -89,72 +98,51 @@ fn distance_squared(a: KernelPoint, b: KernelPoint) -> f64 {
     dx * dx + dy * dy
 }
 
-/// A closed path whose vertices carry a source contour index as Z.
 pub(crate) type ZTaggedPath = Vec<(i64, i64, i64)>;
 
-/// `shrink_expolygon_with_contour_idx` (`SupportCommon.cpp:486-570`):
-/// offsets `expolygon` inward by `delta`. Each output vertex is tagged with
-/// its source contour index (0 = contour, 1 + i = hole i), or -1 where an
-/// offset hole cuts the offset contour. Empty when nothing survives.
+// SupportCommon.cpp:shrink_expolygon_with_contour_idx/offset_ccw.
 pub(crate) fn shrink_expolygon_with_contour_idx(
     expolygon: &ExPolygon,
     delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
+    kind: JoinType,
+    limit: f64,
 ) -> Result<Vec<ZTaggedPath>, ClipperError> {
-    let shortest_edge_length = f64::from(delta) * 0.005;
-    let offset = |polygon: &Polygon, delta: f32| {
-        let mut co = ClipperOffset::default();
-        if join_type == JoinType::Round {
-            co.set_arc_tolerance(miter_limit);
-        } else {
-            co.set_miter_limit(miter_limit);
+    let offset = |polygon: &Polygon, delta, tag| -> Result<Vec<Vec<KernelPoint>>, ClipperError> {
+        let mut polygon = polygon.clone();
+        if !polygon.is_counter_clockwise() {
+            polygon.reverse();
         }
-        co.set_shortest_edge_length(shortest_edge_length);
-        co.add_closed_path(polygon, join_type);
-        co.execute_paths(f64::from(delta))
+        Ok(raw_offset_paths(&[polygon], delta, kind, limit)?
+            .into_iter()
+            .map(|p| {
+                p.into_points()
+                    .into_iter()
+                    .map(|xy| KernelPoint { xy, z: tag })
+                    .collect()
+            })
+            .collect())
     };
-    let tagged = |paths: Vec<Polygon>, z: i64| {
-        paths.into_iter().map(move |path| {
-            path.points()
-                .iter()
-                .map(|point| KernelPoint::new(point.x(), point.y(), z))
-                .collect::<ZPath>()
-        })
-    };
-    let contours_raw = offset(expolygon.contour(), -delta)?;
-    if contours_raw.is_empty() {
+    let contours = offset(expolygon.contour(), -delta, 0)?;
+    if contours.is_empty() {
         return Ok(Vec::new());
     }
-    let contours = tagged(contours_raw, 0).collect::<Vec<_>>();
-    // `Execute` reorients each CW hole to CCW, so `+delta` grows it.
     let mut holes = Vec::new();
-    for (index, hole) in expolygon.holes().iter().enumerate() {
-        holes.extend(tagged(offset(hole, delta)?, 1 + index as i64));
+    for (i, hole) in expolygon.holes().iter().enumerate() {
+        holes.extend(offset(hole, delta, (i + 1) as i64)?);
     }
-    let output = if holes.is_empty() {
+    let paths = if holes.is_empty() {
         contours
     } else {
-        let mut clipper = Clipper::new(ClipperOptions::default());
-        for path in &contours {
-            clipper.add_z_closed_path(path, PathRole::Subject)?;
-        }
-        for path in &holes {
-            clipper.add_z_closed_path(path, PathRole::Clip)?;
-        }
-        clipper.execute_z_paths_marked(
+        clip_zpaths(
+            &contours,
+            (false, false),
+            &holes,
             ClipOperation::Difference,
-            FillRule::NonZero,
-            FillRule::NonZero,
-            -1,
+            |_, _, _, _, point| point.z = -1,
         )
     };
-    Ok(output
+    Ok(paths
         .into_iter()
-        .map(|path| {
-            path.into_iter()
-                .map(|point| (point.x(), point.y(), point.z))
-                .collect()
-        })
+        .map(|path| path.into_iter().map(|p| (p.x(), p.y(), p.z)).collect())
         .collect())
 }

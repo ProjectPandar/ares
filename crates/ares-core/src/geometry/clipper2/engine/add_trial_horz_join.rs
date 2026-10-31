@@ -44,68 +44,6 @@ impl ClipperBase {
     }
 }
 
-impl ClipperBase {
-    /// Build Path64 output from OutRec
-    /// Direct port from clipper.engine.cpp BuildPath64
-    pub fn build_path64(&self, outrec: &OutRec) -> Option<Path64> {
-        let op_start = outrec.pts?;
-        let cnt = point_count(op_start, &self.outpt_arena);
-        if cnt < 2 {
-            return None;
-        }
-
-        let reverse = if outrec.is_open {
-            false
-        } else {
-            let area = area_outpt(op_start, &self.outpt_arena);
-            if area == 0.0 {
-                return None;
-            }
-            (area < 0.0) != self.reverse_solution
-        };
-
-        let mut result = Path64::with_capacity(cnt as usize);
-        if reverse {
-            let mut op = op_start;
-            loop {
-                result.push(self.outpt_arena[op].pt);
-                op = self.outpt_arena[op].prev;
-                if op == op_start {
-                    break;
-                }
-            }
-        } else {
-            let op_next = self.outpt_arena[op_start].next;
-            let mut op = op_next;
-            loop {
-                result.push(self.outpt_arena[op].pt);
-                op = self.outpt_arena[op].next;
-                if op == op_next {
-                    break;
-                }
-            }
-        }
-
-        // Remove collinear if not preserving
-        if !self.preserve_collinear {
-            // Strip collinear points
-            let mut i = 0;
-            while i < result.len() && result.len() > 2 {
-                let prev = if i == 0 { result.len() - 1 } else { i - 1 };
-                let next = (i + 1) % result.len();
-                if is_collinear(result[prev], result[i], result[next]) {
-                    result.remove(i);
-                    i = i.saturating_sub(1);
-                } else {
-                    i += 1;
-                }
-            }
-        }
-
-        if result.len() < 2 { None } else { Some(result) }
-    }
-}
-
 impl Default for ClipperBase {
     fn default() -> Self {
         Self::new()

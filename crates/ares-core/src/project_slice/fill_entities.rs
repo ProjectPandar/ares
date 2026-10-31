@@ -188,9 +188,5 @@ pub(in crate::project_slice) fn geometry_error(error: crate::geometry::ClipperEr
         crate::geometry::ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
             "fill generation coordinate is outside the supported Clipper range".to_owned(),
         ),
-        crate::geometry::ClipperError::OpenPathMustBeSubject
-        | crate::geometry::ClipperError::OpenPathsRequirePolyTree => {
-            unreachable!("fill generators use valid open subjects and closed clips")
-        }
     }
 }

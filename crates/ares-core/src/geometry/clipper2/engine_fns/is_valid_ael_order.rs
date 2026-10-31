@@ -239,7 +239,7 @@ pub fn point_in_op_polygon(
 ) -> PointInPolygonResult {
     let next = outpt_arena[op_start].next;
     if next == op_start || outpt_arena[op_start].prev == next {
-        return PointInPolygonResult::IsOutside;
+        return PointInPolygonResult::Outside;
     }
 
     let mut op = op_start;
@@ -253,7 +253,7 @@ pub fn point_in_op_polygon(
         }
     }
     if outpt_arena[op].pt.y == pt.y {
-        return PointInPolygonResult::IsOutside;
+        return PointInPolygonResult::Outside;
     }
 
     let mut is_above = outpt_arena[op].pt.y < pt.y;
@@ -281,7 +281,7 @@ pub fn point_in_op_polygon(
                 || (outpt_arena[op2].pt.y == outpt_arena[prev].pt.y
                     && (pt.x < outpt_arena[prev].pt.x) != (pt.x < outpt_arena[op2].pt.x))
             {
-                return PointInPolygonResult::IsOn;
+                return PointInPolygonResult::On;
             }
             op2 = outpt_arena[op2].next;
             if op2 == op {
@@ -298,7 +298,7 @@ pub fn point_in_op_polygon(
         } else {
             let i = cross_product_sign(outpt_arena[prev].pt, outpt_arena[op2].pt, pt);
             if i == 0 {
-                return PointInPolygonResult::IsOn;
+                return PointInPolygonResult::On;
             }
             if (i < 0) == is_above {
                 val = 1 - val;
@@ -312,7 +312,7 @@ pub fn point_in_op_polygon(
         let prev = outpt_arena[op2].prev;
         let i = cross_product_sign(outpt_arena[prev].pt, outpt_arena[op2].pt, pt);
         if i == 0 {
-            return PointInPolygonResult::IsOn;
+            return PointInPolygonResult::On;
         }
         if (i < 0) == is_above {
             val = 1 - val;
@@ -320,8 +320,8 @@ pub fn point_in_op_polygon(
     }
 
     if val == 0 {
-        PointInPolygonResult::IsOutside
+        PointInPolygonResult::Outside
     } else {
-        PointInPolygonResult::IsInside
+        PointInPolygonResult::Inside
     }
 }

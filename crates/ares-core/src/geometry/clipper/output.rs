@@ -1,9 +1,0 @@
-mod append;
-mod clipper2_front;
-mod fixup;
-mod join_points;
-mod joins;
-mod open_fixup;
-mod ownership;
-mod rings;
-mod simple;

@@ -12,21 +12,21 @@ pub fn path2_contains_path1_outpt(
     op2_start: usize,
     outpt_arena: &[OutPt],
 ) -> bool {
-    let mut pip = PointInPolygonResult::IsOn;
+    let mut pip = PointInPolygonResult::On;
     let mut op = op1_start;
     loop {
         match point_in_op_polygon(outpt_arena[op].pt, op2_start, outpt_arena) {
-            PointInPolygonResult::IsOutside => {
-                if pip == PointInPolygonResult::IsOutside {
+            PointInPolygonResult::Outside => {
+                if pip == PointInPolygonResult::Outside {
                     return false;
                 }
-                pip = PointInPolygonResult::IsOutside;
+                pip = PointInPolygonResult::Outside;
             }
-            PointInPolygonResult::IsInside => {
-                if pip == PointInPolygonResult::IsInside {
+            PointInPolygonResult::Inside => {
+                if pip == PointInPolygonResult::Inside {
                     return true;
                 }
-                pip = PointInPolygonResult::IsInside;
+                pip = PointInPolygonResult::Inside;
             }
             _ => {}
         }
@@ -45,30 +45,30 @@ pub fn path2_contains_path1_outpt(
 /// Direct port from clipper.h line 717 - template Path2ContainsPath1<T>
 /// precondition: paths must not intersect, except for transient micro intersections
 pub fn path2_contains_path1(path1: &Path64, path2: &Path64) -> bool {
-    let mut pip = PointInPolygonResult::IsOn;
+    let mut pip = PointInPolygonResult::On;
     for pt in path1 {
         match point_in_polygon(*pt, path2) {
-            PointInPolygonResult::IsOutside => {
-                if pip == PointInPolygonResult::IsOutside {
+            PointInPolygonResult::Outside => {
+                if pip == PointInPolygonResult::Outside {
                     return false;
                 }
-                pip = PointInPolygonResult::IsOutside;
+                pip = PointInPolygonResult::Outside;
             }
-            PointInPolygonResult::IsInside => {
-                if pip == PointInPolygonResult::IsInside {
+            PointInPolygonResult::Inside => {
+                if pip == PointInPolygonResult::Inside {
                     return true;
                 }
-                pip = PointInPolygonResult::IsInside;
+                pip = PointInPolygonResult::Inside;
             }
             _ => {}
         }
     }
-    if pip != PointInPolygonResult::IsInside {
+    if pip != PointInPolygonResult::Inside {
         return false;
     }
     // result is likely true but check midpoint
     let mp1 = get_bounds_path(path1).mid_point();
-    point_in_polygon(mp1, path2) == PointInPolygonResult::IsInside
+    point_in_polygon(mp1, path2) == PointInPolygonResult::Inside
 }
 
 /// `clipper.engine.cpp:2917–2954`: preserve the original walk and output admission.
@@ -142,12 +142,6 @@ pub fn fix_outrec_pts(outrec_idx: usize, outrec_list: &[OutRec], outpt_arena: &m
             }
         }
     }
-}
-
-/// Update all OutPt outrec references in an OutRec
-/// Direct port from clipper.engine.cpp UpdateOutrecOwner (line 1684)
-pub fn update_outrec_owner(outrec_idx: usize, outrec_list: &[OutRec], outpt_arena: &mut [OutPt]) {
-    fix_outrec_pts(outrec_idx, outrec_list, outpt_arena);
 }
 
 /// `clipper.engine.cpp:2294–2303`: exclude self and retain the cleared source list.

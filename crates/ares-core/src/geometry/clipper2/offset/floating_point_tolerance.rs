@@ -63,12 +63,8 @@ pub(crate) fn get_lowest_closed_path_info(paths: &Paths64) -> (Option<usize>, bo
             if (pt.y < bot_pt.y) || (pt.y == bot_pt.y && pt.x >= bot_pt.x) {
                 continue;
             }
-            if a == f64::MAX {
-                a = area(path_i);
-                if a == 0.0 {
-                    break; // invalid closed path
-                }
-                is_neg_area = a < 0.0;
+            if a == f64::MAX && !update_lowest_path_area(path_i, &mut a, &mut is_neg_area) {
+                break;
             }
             idx = Some(i);
             bot_pt.x = pt.x;
@@ -76,6 +72,16 @@ pub(crate) fn get_lowest_closed_path_info(paths: &Paths64) -> (Option<usize>, bo
         }
     }
     (idx, is_neg_area)
+}
+
+// clipper.offset.cpp:40–71: area is evaluated only for a new lowest candidate.
+fn update_lowest_path_area(path: &Path64, value: &mut f64, negative: &mut bool) -> bool {
+    *value = area(path);
+    if *value == 0.0 {
+        return false;
+    }
+    *negative = *value < 0.0;
+    true
 }
 
 /// Hypotenuse calculation.
@@ -208,7 +214,6 @@ impl Group {
 /// clean up self-intersections.
 pub struct ClipperOffset {
     // Internal state
-    pub(crate) error_code: i32,
     pub(crate) delta: f64,
     pub(crate) group_delta: f64,
     pub(crate) temp_lim: f64,
@@ -247,7 +252,6 @@ impl ClipperOffset {
         reverse_solution: bool,
     ) -> Self {
         ClipperOffset {
-            error_code: 0,
             delta: 0.0,
             group_delta: 0.0,
             temp_lim: 0.0,
@@ -281,29 +285,8 @@ impl ClipperOffset {
 }
 
 impl ClipperOffset {
-    /// Get the error code from the last operation.
-    pub fn error_code(&self) -> i32 {
-        self.error_code
-    }
-}
-
-impl ClipperOffset {
-    /// Get the miter limit.
-    pub fn miter_limit(&self) -> f64 {
-        self.miter_limit
-    }
-}
-
-impl ClipperOffset {
     /// Set the miter limit.
     pub fn set_miter_limit(&mut self, miter_limit: f64) {
         self.miter_limit = miter_limit;
-    }
-}
-
-impl ClipperOffset {
-    /// Get the arc tolerance.
-    pub fn arc_tolerance(&self) -> f64 {
-        self.arc_tolerance
     }
 }

@@ -1,8 +1,9 @@
 use super::{RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, wave_seeds};
 use crate::geometry::clipper::{
-    ClipOperation, Clipper, ClipperError, ClipperOffset, ClipperOptions, FillRule, JoinType,
-    PathRole, orientation, union_ex,
+    ClipperError, FillRule, JoinType, intersection_polygons_paths_with_fill, offset_lines,
+    raw_offset_paths, union_ex,
 };
+use crate::geometry::clipper2::EndType;
 use crate::geometry::{
     BoundingBox, CoordinateScale, ExPolygon, Polygon, clip_clipper_expolygons_with_subject_bbox,
 };
@@ -136,10 +137,6 @@ pub(crate) fn propagate_waves(
         return Ok(Vec::new());
     }
 
-    let mut offsetter = ClipperOffset::default();
-    offsetter.set_arc_tolerance(params.arc_tolerance);
-    offsetter.set_shortest_edge_length(params.shortest_edge_length);
-
     let mut output = Vec::new();
     let mut group_start = 0;
     while group_start < seeds.len() {
@@ -155,12 +152,7 @@ pub(crate) fn propagate_waves(
             .iter()
             .map(|seed| seed.path.clone())
             .collect::<Vec<_>>();
-        let polygons = propagate_group(
-            &mut offsetter,
-            &paths,
-            &boundary[first.boundary as usize],
-            params,
-        )?;
+        let polygons = propagate_group(&paths, &boundary[first.boundary as usize], params)?;
         output.extend(polygons.into_iter().map(|polygon| RegionExpansion {
             polygon,
             src_id: first.src,
@@ -172,7 +164,6 @@ pub(crate) fn propagate_waves(
 }
 
 fn propagate_group(
-    offsetter: &mut ClipperOffset,
     seeds: &[Polygon],
     boundary: &ExPolygon,
     params: &RegionExpansionParameters,
@@ -183,71 +174,52 @@ fn propagate_group(
     let clipping =
         clip_clipper_expolygons_with_subject_bbox(std::slice::from_ref(boundary), bounds);
 
-    let initial = wavefront_initial(offsetter, seeds, params.initial_step)?;
+    let initial = wavefront_initial(seeds, params.initial_step, params.arc_tolerance)?;
     let mut polygons = wavefront_clip(&initial, &clipping)?;
     for _ in 0..params.num_other_steps {
-        let stepped = wavefront_step(offsetter, &polygons, params.other_step)?;
+        let stepped = wavefront_step(&polygons, params.other_step, params.arc_tolerance)?;
         polygons = wavefront_clip(&stepped, &clipping)?;
     }
     Ok(polygons)
 }
 
 fn wavefront_initial(
-    offsetter: &mut ClipperOffset,
     paths: &[Polygon],
     delta: f32,
+    arc_tolerance: f64,
 ) -> Result<Vec<Polygon>, ClipperError> {
     let mut output = Vec::with_capacity(paths.len());
     for path in paths {
         assert!(path.points().len() >= 2);
-        let closed = path.points().first() == path.points().last();
-        offsetter.clear();
-        if closed {
-            offsetter.add_closed_line(path, JoinType::Round);
+        let end = if path.points().first() == path.points().last() {
+            EndType::Joined
         } else {
-            offsetter.add_open_round_path(path, JoinType::Round);
-        }
-        output.append(&mut offsetter.execute_paths(f64::from(delta))?);
+            EndType::Round
+        };
+        output.extend(offset_lines(
+            std::slice::from_ref(path),
+            delta,
+            JoinType::Round,
+            arc_tolerance,
+            (end, 0.0),
+        )?);
     }
     Ok(output)
 }
 
-pub(in crate::geometry) fn wavefront_counter_clockwise(polygon: &Polygon) -> bool {
-    orientation(polygon)
-}
-
+// RegionExpansion.cpp:wavefront_step: the single-polygon overload grows CCW
+// contours and shrinks CW holes; there is no caller-side sign/reverse repair.
 fn wavefront_step(
-    offsetter: &mut ClipperOffset,
     polygons: &[Polygon],
     delta: f32,
+    arc_tolerance: f64,
 ) -> Result<Vec<Polygon>, ClipperError> {
-    let mut output = Vec::with_capacity(polygons.len());
-    for polygon in polygons {
-        offsetter.clear();
-        offsetter.add_closed_path(polygon, JoinType::Round);
-        let counter_clockwise = wavefront_counter_clockwise(polygon);
-        let applied_delta = if counter_clockwise { delta } else { -delta };
-        let mut expanded = offsetter.execute_paths(f64::from(applied_delta))?;
-        if !counter_clockwise {
-            for path in &mut expanded {
-                path.reverse();
-            }
-        }
-        output.append(&mut expanded);
-    }
-    Ok(output)
+    raw_offset_paths(polygons, delta, JoinType::Round, arc_tolerance)
 }
 
 fn wavefront_clip(
     wavefront: &[Polygon],
     clipping: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
-    let mut clipper = Clipper::new(ClipperOptions::default());
-    clipper.add_closed_paths(wavefront, PathRole::Subject)?;
-    clipper.add_closed_paths(clipping, PathRole::Clip)?;
-    clipper.execute_paths(
-        ClipOperation::Intersection,
-        FillRule::Positive,
-        FillRule::Positive,
-    )
+    intersection_polygons_paths_with_fill(wavefront, clipping, FillRule::Positive)
 }

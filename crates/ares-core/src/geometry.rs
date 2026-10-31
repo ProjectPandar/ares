@@ -32,14 +32,14 @@ pub(crate) use bbox_clip::{
 pub(crate) use bounding_box::{BoundingBox, chain_expolygons, chain_expolygons_order};
 pub(crate) use bridge_direction::detect_bridging_direction;
 pub(crate) use chain_points::chain_points;
-
+pub(crate) use clipper::ClipOperation;
+pub(crate) use clipper::offset_lines;
 pub(crate) use clipper::ordering::{fixed_gcc_sort_by, fixed_msvc_sort_by, stable_sort_by};
 pub(crate) use clipper::raw_offset_paths;
 pub(crate) use clipper::union_contours;
 pub(crate) use clipper::z_clip::{
     ZTaggedPath, clip_open_path_widths, shrink_expolygon_with_contour_idx,
 };
-pub(crate) use clipper::{ClipOperation, IntersectionEdge, RoundPolicy};
 pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, SAFETY_OFFSET, closing_ex, diff_pl, difference_ex,
     difference_ex_polygons, difference_ex_polygons_with_safety_offset,
@@ -53,9 +53,10 @@ pub(crate) use clipper::{
     offset_open_paths, offset_paths, offset_paths_tree, offset2_ex, offset2_ex_with_interstage,
     open_polyline_inside_expolygon, opening_ex, opening_paths, point_in_polygon,
     union_even_odd_polygons_paths, union_ex, union_expolygons, union_polygons_paths,
-    union_polygons_paths_pair, union_positive_polygons_paths, union_safety_offset_ex,
-    union_safety_offset_expolygons, union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
+    union_polygons_paths_pair, union_safety_offset_ex, union_safety_offset_expolygons,
+    union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
 };
+pub(crate) use clipper2::EndType;
 pub(crate) use convex_hull::convex_hull;
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};
@@ -72,7 +73,6 @@ pub(crate) use region_expansion::{
     propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
     propagate_waves_from_sources_with_steps, wave_seeds,
 };
-
 pub(crate) use simplification::{
     append_simplified_expolygon, douglas_peucker, simplify_closed_points,
     simplify_expolygon_polygons,

@@ -52,7 +52,6 @@ pub struct ClipperBase {
     pub fillrule: FillRule,
     pub preserve_collinear: bool,
     pub reverse_solution: bool,
-    pub error_code: i32,
     pub has_open_paths: bool,
     pub succeeded: bool,
     pub(crate) using_polytree: bool,
@@ -99,7 +98,6 @@ impl ClipperBase {
             fillrule: FillRule::EvenOdd,
             preserve_collinear: true,
             reverse_solution: false,
-            error_code: 0,
             has_open_paths: false,
             succeeded: true,
             using_polytree: false,
@@ -122,28 +120,6 @@ impl ClipperBase {
 
             default_z: 0,
         }
-    }
-}
-
-impl ClipperBase {
-    /// Clear all data
-    /// Direct port from clipper.engine.h line 284
-    pub fn clear(&mut self) {
-        self.vertex_arena.clear();
-        self.active_arena.clear();
-        self.outpt_arena.clear();
-        self.outrec_list.clear();
-        self.minima_list.clear();
-        self.current_locmin_idx = 0;
-        self.actives = None;
-        self.sel = None;
-        self.scanline_list.clear();
-        self.intersect_nodes.clear();
-        self.horz_seg_list.clear();
-        self.horz_join_list.clear();
-        self.minima_list_sorted = false;
-        self.has_open_paths = false;
-        self.succeeded = true;
     }
 }
 
@@ -208,15 +184,6 @@ impl ClipperBase {
         op.next = idx;
         op.prev = idx;
         self.outpt_arena.push(op);
-        idx
-    }
-}
-
-impl ClipperBase {
-    /// Create a new Active in the arena
-    pub fn new_active(&mut self) -> usize {
-        let idx = self.active_arena.len();
-        self.active_arena.push(Active::new());
         idx
     }
 }

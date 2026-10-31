@@ -6,22 +6,11 @@ pub(crate) fn polygons_simplify(
     polygons: Vec<Polygon>,
     tolerance: f64,
 ) -> Result<Vec<Polygon>, ClipperError> {
-    polygons_simplify_with_mode(polygons, tolerance, true)
-}
-
-pub(crate) fn polygons_simplify_with_mode(
-    polygons: Vec<Polygon>,
-    tolerance: f64,
-    strictly_simple: bool,
-) -> Result<Vec<Polygon>, ClipperError> {
     let mut output = Vec::with_capacity(polygons.len());
     for mut polygon in polygons {
         polygon.douglas_peucker(tolerance);
         let counter_clockwise = polygon.area() > 0.0;
-        let mut simplified = super::clipper::simplify_polygons_with_mode(
-            std::slice::from_ref(&polygon),
-            strictly_simple,
-        )?;
+        let mut simplified = simplify_polygons(std::slice::from_ref(&polygon))?;
         if !counter_clockwise {
             for path in &mut simplified {
                 path.reverse();

@@ -52,8 +52,8 @@ pub(in crate::project_slice) fn merge_bridges(
         }
         let angle = root_angles[root].expect("bridge angle must be calculated before merging");
         let expanded = offset_paths(&polygons, closing_radius, JoinType::Miter, 3.0)?;
-        let closed =
-            offset_paths_tree(&expanded, -closing_radius, JoinType::Miter, 3.0)?.into_expolygons();
+        let closed = offset_paths_tree(&expanded, -closing_radius, JoinType::Miter, 3.0)?
+            .into_expolygons(crate::geometry::CoordinateScale::Normal);
         for expolygon in closed {
             let mut surface = RegionSurface::new(RegionSurfaceKind::BottomBridge, expolygon);
             surface.set_bridge_angle(angle);

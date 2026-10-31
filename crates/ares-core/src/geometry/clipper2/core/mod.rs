@@ -6,8 +6,8 @@
 /// Get bounding rectangle for a single path - using existing implementation
 /// Direct port from clipper.core.h line 432 (template function)
 pub(crate) use get_bounds_path as get_bounds;
-use num_traits::{Float, Num, Zero};
-use std::fmt::{Debug, Display};
+use num_traits::Num;
+use std::fmt::Debug;
 
 mod fillrule;
 pub(crate) use fillrule::*;

@@ -1,87 +1,56 @@
-use super::{ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, PathRole};
-use crate::geometry::{Polygon, Polyline};
+// ClipperUtils.cpp:1036–1118: open clipping and closed-path recombination.
+use super::{ClipOperation, ClipperError, backend};
+use crate::geometry::{ExPolygon, Polygon, Polyline};
 
 pub(crate) fn intersection_pl(
     subject: &[Polygon],
     clip: &[Polygon],
 ) -> Result<Vec<Polyline>, ClipperError> {
-    clipper_pl_closed(ClipOperation::Intersection, subject, clip)
+    closed(subject, clip, ClipOperation::Intersection)
 }
-
 pub(crate) fn diff_pl(
     subject: &[Polygon],
     clip: &[Polygon],
 ) -> Result<Vec<Polyline>, ClipperError> {
-    clipper_pl_closed(ClipOperation::Difference, subject, clip)
+    closed(subject, clip, ClipOperation::Difference)
 }
-
 pub(crate) fn difference_open_polylines(
     subject: &[Polyline],
     clip: &[Polygon],
 ) -> Result<Vec<Polyline>, ClipperError> {
-    clipper_pl_open(ClipOperation::Difference, subject, clip)
+    backend::clip_open(subject, clip, ClipOperation::Difference)
 }
-
 pub(crate) fn intersection_open_polylines(
     subject: &[Polyline],
     clip: &[Polygon],
 ) -> Result<Vec<Polyline>, ClipperError> {
-    clipper_pl_open(ClipOperation::Intersection, subject, clip)
+    backend::clip_open(subject, clip, ClipOperation::Intersection)
 }
-
 pub(crate) fn open_polyline_inside_expolygon(
     subject: &Polyline,
-    clip: &crate::geometry::ExPolygon,
+    clip: &ExPolygon,
 ) -> Result<bool, ClipperError> {
-    let mut clipper = Clipper::new(ClipperOptions::default());
-    clipper.add_open_path(subject, PathRole::Subject)?;
-    clipper.add_closed_path(clip.contour(), PathRole::Clip)?;
-    for hole in clip.holes() {
-        clipper.add_closed_path(hole, PathRole::Clip)?;
-    }
-    Ok(clipper
-        .execute_polytree(
-            ClipOperation::Difference,
-            FillRule::NonZero,
-            FillRule::NonZero,
-        )
-        .into_open_polylines()
-        .is_empty())
+    let paths: Vec<_> = std::iter::once(clip.contour())
+        .chain(clip.holes())
+        .cloned()
+        .collect();
+    Ok(backend::clip_open(
+        std::slice::from_ref(subject),
+        &paths,
+        ClipOperation::Difference,
+    )?
+    .is_empty())
 }
-
-fn clipper_pl_closed(
-    operation: ClipOperation,
+fn closed(
     subject: &[Polygon],
     clip: &[Polygon],
+    kind: ClipOperation,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let paths = subject
-        .iter()
-        .map(Polygon::split_at_first_point)
-        .collect::<Vec<_>>();
-    let mut result = clipper_pl_open(operation, &paths, clip)?;
+    let paths: Vec<_> = subject.iter().map(Polygon::split_at_first_point).collect();
+    let mut result = backend::clip_open(&paths, clip, kind)?;
     recombine_polylines(&mut result);
     Ok(result)
 }
-
-fn clipper_pl_open(
-    operation: ClipOperation,
-    subject: &[Polyline],
-    clip: &[Polygon],
-) -> Result<Vec<Polyline>, ClipperError> {
-    let mut clipper = Clipper::new(ClipperOptions::default());
-    clipper.add_open_paths(subject, PathRole::Subject)?;
-    clipper.add_closed_paths(clip, PathRole::Clip)?;
-    Ok(clipper
-        .execute_polytree(operation, FillRule::NonZero, FillRule::NonZero)
-        .into_open_polylines())
-}
-
-type OpenPolylineDifferenceFn = fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
-type OpenPolylineIntersectionFn =
-    fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
-
-const _: OpenPolylineDifferenceFn = difference_open_polylines;
-const _: OpenPolylineIntersectionFn = intersection_open_polylines;
 
 pub(crate) fn recombine_polylines(polylines: &mut Vec<Polyline>) {
     let mut i = 0;

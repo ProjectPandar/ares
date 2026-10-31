@@ -1,3 +1,4 @@
+// Polygon.cpp:738–765, Slic3r's integer ray test (not Clipper2 PointInPolygon).
 use super::super::Point;
 
 pub(crate) fn point_in_polygon(point: Point, path: &[Point]) -> i32 {
@@ -40,12 +41,12 @@ fn crosses_boundary(current: Point, next: Point, point: Point, result: &mut i32)
 }
 
 fn crossing(current: Point, next: Point, point: Point, result: &mut i32) -> bool {
-    let determinant = (current.x() - point.x()) as f64 * (next.y() - point.y()) as f64
-        - (next.x() - point.x()) as f64 * (current.y() - point.y()) as f64;
-    if determinant == 0.0 {
+    let determinant = (current.x() - point.x()) * (next.y() - point.y())
+        - (next.x() - point.x()) * (current.y() - point.y());
+    if determinant == 0 {
         true
     } else {
-        if (determinant > 0.0) == (next.y() > current.y()) {
+        if (determinant > 0) == (next.y() > current.y()) {
             *result = 1 - *result;
         }
         false

@@ -49,13 +49,6 @@ impl Clipper64 {
 }
 
 impl Clipper64 {
-    /// Get error code
-    pub fn error_code(&self) -> i32 {
-        self.base.error_code
-    }
-}
-
-impl Clipper64 {
     /// Set/get preserve collinear
     pub fn set_preserve_collinear(&mut self, val: bool) {
         self.base.preserve_collinear = val;
@@ -63,28 +56,9 @@ impl Clipper64 {
 }
 
 impl Clipper64 {
-    pub fn preserve_collinear(&self) -> bool {
-        self.base.preserve_collinear
-    }
-}
-
-impl Clipper64 {
     /// Set/get reverse solution
     pub fn set_reverse_solution(&mut self, val: bool) {
         self.base.reverse_solution = val;
-    }
-}
-
-impl Clipper64 {
-    pub fn reverse_solution(&self) -> bool {
-        self.base.reverse_solution
-    }
-}
-
-impl Clipper64 {
-    /// Clear the clipper
-    pub fn clear(&mut self) {
-        self.base.clear();
     }
 }
 
@@ -133,6 +107,23 @@ impl Clipper64 {
 }
 
 impl Clipper64 {
+    // clipper.engine.cpp:BuildPaths64/BuildTree64, BuildPath64 admission only.
+    fn append_built_path(&self, record: usize, is_open: bool, output: &mut Paths64) {
+        let Some(point) = self.base.outrec_list[record].pts else {
+            return;
+        };
+        if let Some(path) = build_path64_from_outpt(
+            point,
+            self.base.reverse_solution,
+            is_open,
+            &self.base.outpt_arena,
+        ) {
+            output.push(path);
+        }
+    }
+}
+
+impl Clipper64 {
     /// Build output paths from outrec list
     /// Direct port from clipper.engine.cpp Clipper64::BuildPaths64 (line 2992)
     pub(crate) fn build_paths64(
@@ -153,28 +144,10 @@ impl Clipper64 {
             }
 
             if solution_open.is_some() && self.base.outrec_list[i].is_open {
-                let op = self.base.outrec_list[i].pts.unwrap();
-                if let Some(path) = build_path64_from_outpt(
-                    op,
-                    self.base.reverse_solution,
-                    true,
-                    &self.base.outpt_arena,
-                ) {
-                    open_paths.push(path);
-                }
+                self.append_built_path(i, true, &mut open_paths);
             } else {
                 self.base.clean_collinear(i);
-                if self.base.outrec_list[i].pts.is_some() {
-                    let op = self.base.outrec_list[i].pts.unwrap();
-                    if let Some(path) = build_path64_from_outpt(
-                        op,
-                        self.base.reverse_solution,
-                        false,
-                        &self.base.outpt_arena,
-                    ) {
-                        solution_closed.push(path);
-                    }
-                }
+                self.append_built_path(i, false, solution_closed);
             }
             i += 1;
         }
@@ -203,15 +176,7 @@ impl Clipper64 {
             }
 
             if self.base.outrec_list[i].is_open {
-                let op = self.base.outrec_list[i].pts.unwrap();
-                if let Some(path) = build_path64_from_outpt(
-                    op,
-                    self.base.reverse_solution,
-                    true,
-                    &self.base.outpt_arena,
-                ) {
-                    open_paths.push(path);
-                }
+                self.append_built_path(i, true, open_paths);
                 i += 1;
                 continue;
             }

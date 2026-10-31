@@ -11,7 +11,7 @@ mod wall;
 
 use super::super::layer_input::to_polygons;
 use super::organic::TreeSettings;
-use crate::geometry::simplification::polygons_simplify_with_mode;
+use crate::geometry::simplification::polygons_simplify;
 use crate::geometry::{ClipperError, Coord, CoordinateScale, ExPolygon, Polygon};
 pub(super) use avoidance::AvoidanceType;
 use cache::RadiusLayerPolygonCache;
@@ -54,10 +54,9 @@ impl<'a> TreeModelVolumes<'a> {
         let mut outlines = Vec::with_capacity(settings.raft_layers.len() + slices.len());
         outlines.resize_with(settings.raft_layers.len(), Vec::new);
         for layer in slices {
-            outlines.push(polygons_simplify_with_mode(
+            outlines.push(polygons_simplify(
                 to_polygons(layer),
                 settings.mesh.resolution as f64,
-                false,
             )?);
         }
         Ok(Self {

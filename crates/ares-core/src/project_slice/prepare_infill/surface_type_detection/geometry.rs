@@ -62,7 +62,7 @@ pub(super) fn opening(
     Ok(
         offset_paths_tree(&first, offset, JoinType::Miter, MITER_LIMIT)
             .map_err(geometry_error)?
-            .into_expolygons(),
+            .into_expolygons(crate::geometry::CoordinateScale::Normal),
     )
 }
 

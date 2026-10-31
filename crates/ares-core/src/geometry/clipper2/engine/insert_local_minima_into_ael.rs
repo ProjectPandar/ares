@@ -2,161 +2,149 @@
 // BSL-1.0. Rust seed by MatterHackers.
 // Derived from clipper2-rust 2f5e9d4249bc4d624773094ff6164335d9ff6ae7.
 // See ../LICENSE-Boost-1.0 and ../SOURCE.md for pinned source authority.
-
 use super::*;
 
 impl ClipperBase {
-    /// Insert local minima into AEL at a given y
-    /// Direct port from clipper.engine.cpp InsertLocalMinimaIntoAEL (line 1198)
+    // clipper.engine.cpp:1224–1340. The loop body is extracted without moving
+    // allocation, contribution, intersection or scanline work across minima.
     pub(crate) fn insert_local_minima_into_ael(&mut self, bot_y: i64) {
-        while let Some(loc_min_idx) = self.pop_local_minima(bot_y) {
-            let vert_idx = self.minima_list[loc_min_idx].vertex;
-            let vert_flags = self.vertex_arena[vert_idx].flags;
-            let vert_pt = self.vertex_arena[vert_idx].pt;
-
-            // Create left bound if not open start
-            let left_bound_opt = if (vert_flags & VertexFlags::OPEN_START) != VertexFlags::EMPTY {
-                None
-            } else {
-                let lb_idx = self.active_arena.len();
-                let mut lb = Active::new();
-                lb.bot = vert_pt;
-                lb.curr_x = vert_pt.x;
-                lb.wind_dx = -1;
-                lb.vertex_top = self.vertex_arena[vert_idx].prev; // descending
-                lb.top = self.vertex_arena[lb.vertex_top].pt;
-                lb.local_min = loc_min_idx;
-                set_dx(&mut lb);
-                self.active_arena.push(lb);
-                Some(lb_idx)
-            };
-
-            // Create right bound if not open end
-            let right_bound_opt = if (vert_flags & VertexFlags::OPEN_END) != VertexFlags::EMPTY {
-                None
-            } else {
-                let rb_idx = self.active_arena.len();
-                let mut rb = Active::new();
-                rb.bot = vert_pt;
-                rb.curr_x = vert_pt.x;
-                rb.wind_dx = 1;
-                rb.vertex_top = self.vertex_arena[vert_idx].next; // ascending
-                rb.top = self.vertex_arena[rb.vertex_top].pt;
-                rb.local_min = loc_min_idx;
-                set_dx(&mut rb);
-                self.active_arena.push(rb);
-                Some(rb_idx)
-            };
-
-            // Determine which is actually left and which is right
-            let (mut left_bound, mut right_bound) = (left_bound_opt, right_bound_opt);
-
-            if let (Some(lb), Some(rb)) = (left_bound, right_bound) {
-                if self.is_horizontal_idx(lb) {
-                    if is_heading_right_horz(&self.active_arena[lb]) {
-                        std::mem::swap(&mut left_bound, &mut right_bound);
-                    }
-                } else if self.is_horizontal_idx(rb) {
-                    if is_heading_left_horz(&self.active_arena[rb]) {
-                        std::mem::swap(&mut left_bound, &mut right_bound);
-                    }
-                } else if self.active_arena[lb].dx < self.active_arena[rb].dx {
-                    std::mem::swap(&mut left_bound, &mut right_bound);
-                }
-            } else if left_bound.is_none() {
-                left_bound = right_bound;
-                right_bound = None;
-            }
-
-            let lb_idx = left_bound.unwrap();
-            self.active_arena[lb_idx].is_left_bound = true;
-            self.insert_left_edge(lb_idx);
-
-            let contributing = if self.is_open_idx(lb_idx) {
-                self.set_wind_count_for_open_path_edge(lb_idx);
-                self.is_contributing_open(lb_idx)
-            } else {
-                self.set_wind_count_for_closed_path_edge(lb_idx);
-                self.is_contributing_closed(lb_idx)
-            };
-
-            if let Some(rb_idx) = right_bound {
-                self.active_arena[rb_idx].is_left_bound = false;
-                self.active_arena[rb_idx].wind_cnt = self.active_arena[lb_idx].wind_cnt;
-                self.active_arena[rb_idx].wind_cnt2 = self.active_arena[lb_idx].wind_cnt2;
-                self.insert_right_edge(lb_idx, rb_idx);
-
-                if contributing {
-                    let bot = self.active_arena[lb_idx].bot;
-                    self.add_local_min_poly(lb_idx, rb_idx, bot, true);
-                    if !self.is_horizontal_idx(lb_idx) {
-                        let bot = self.active_arena[lb_idx].bot;
-                        self.check_join_left(lb_idx, bot, false);
-                    }
-                }
-
-                // Process any right-bound edge intersections
-                while let Some(next) = self.active_arena[rb_idx].next_in_ael {
-                    if !is_valid_ael_order(
-                        &self.active_arena[next],
-                        &self.active_arena[rb_idx],
-                        &self.vertex_arena,
-                        &self.minima_list,
-                    ) {
-                        break;
-                    }
-                    let bot = self.active_arena[rb_idx].bot;
-                    self.intersect_edges(rb_idx, next, bot);
-                    self.swap_positions_in_ael(rb_idx, next);
-                }
-
-                if self.is_horizontal_idx(rb_idx) {
-                    self.push_horz(rb_idx);
-                } else {
-                    let bot = self.active_arena[rb_idx].bot;
-                    self.check_join_right(rb_idx, bot, false);
-                    let top_y = self.active_arena[rb_idx].top.y;
-                    self.insert_scanline(top_y);
-                }
-            } else if contributing {
-                let bot = self.active_arena[lb_idx].bot;
-                self.start_open_path(lb_idx, bot);
-            }
-
-            if self.is_horizontal_idx(lb_idx) {
-                self.push_horz(lb_idx);
-            } else {
-                let top_y = self.active_arena[lb_idx].top.y;
-                self.insert_scanline(top_y);
-            }
+        while let Some(minimum) = self.pop_local_minima(bot_y) {
+            self.insert_local_minimum(minimum);
         }
     }
-}
 
-impl ClipperBase {
-    /// Reset horizontal direction for a horizontal edge
-    /// Direct port from clipper.engine.cpp ResetHorzDirection (line 2511)
+    fn insert_local_minimum(&mut self, minimum: usize) {
+        let vertex = self.minima_list[minimum].vertex;
+        let flags = self.vertex_arena[vertex].flags;
+        let point = self.vertex_arena[vertex].pt;
+        let mut left = if (flags & VertexFlags::OPEN_START) != VertexFlags::EMPTY {
+            None
+        } else {
+            let index = self.active_arena.len();
+            let mut edge = Active::new();
+            edge.bot = point;
+            edge.curr_x = point.x;
+            edge.wind_dx = -1;
+            edge.vertex_top = self.vertex_arena[vertex].prev;
+            edge.top = self.vertex_arena[edge.vertex_top].pt;
+            edge.local_min = minimum;
+            set_dx(&mut edge);
+            self.active_arena.push(edge);
+            Some(index)
+        };
+        let mut right = if (flags & VertexFlags::OPEN_END) != VertexFlags::EMPTY {
+            None
+        } else {
+            let index = self.active_arena.len();
+            let mut edge = Active::new();
+            edge.bot = point;
+            edge.curr_x = point.x;
+            edge.wind_dx = 1;
+            edge.vertex_top = self.vertex_arena[vertex].next;
+            edge.top = self.vertex_arena[edge.vertex_top].pt;
+            edge.local_min = minimum;
+            set_dx(&mut edge);
+            self.active_arena.push(edge);
+            Some(index)
+        };
+        if let (Some(left_index), Some(right_index)) = (left, right) {
+            if self.minimum_bounds_need_swap(left_index, right_index) {
+                std::mem::swap(&mut left, &mut right);
+            }
+        } else if left.is_none() {
+            left = right;
+            right = None;
+        }
+
+        let left = left.unwrap();
+        self.active_arena[left].is_left_bound = true;
+        self.insert_left_edge(left);
+        let contributing = if self.is_open_idx(left) {
+            self.set_wind_count_for_open_path_edge(left);
+            self.is_contributing_open(left)
+        } else {
+            self.set_wind_count_for_closed_path_edge(left);
+            self.is_contributing_closed(left)
+        };
+        if let Some(right) = right {
+            self.insert_minimum_right_bound(left, right, contributing);
+        } else if contributing {
+            self.start_open_path(left, self.active_arena[left].bot);
+        }
+        if self.is_horizontal_idx(left) {
+            self.push_horz(left);
+        } else {
+            self.insert_scanline(self.active_arena[left].top.y);
+        }
+    }
+
+    // InsertLocalMinimaIntoAEL:1268–1283, short-circuit in the source order.
+    fn minimum_bounds_need_swap(&self, left: usize, right: usize) -> bool {
+        if self.is_horizontal_idx(left) {
+            return is_heading_right_horz(&self.active_arena[left]);
+        }
+        if self.is_horizontal_idx(right) {
+            return is_heading_left_horz(&self.active_arena[right]);
+        }
+        self.active_arena[left].dx < self.active_arena[right].dx
+    }
+
+    // InsertLocalMinimaIntoAEL:1302–1333, right bound remains immediately
+    // after left contribution and before left horizontal/scanline admission.
+    fn insert_minimum_right_bound(&mut self, left: usize, right: usize, contributing: bool) {
+        self.active_arena[right].is_left_bound = false;
+        self.active_arena[right].wind_cnt = self.active_arena[left].wind_cnt;
+        self.active_arena[right].wind_cnt2 = self.active_arena[left].wind_cnt2;
+        self.insert_right_edge(left, right);
+        if contributing {
+            self.add_local_min_poly(left, right, self.active_arena[left].bot, true);
+            if !self.is_horizontal_idx(left) {
+                self.check_join_left(left, self.active_arena[left].bot, false);
+            }
+        }
+        while let Some(next) = self.active_arena[right].next_in_ael {
+            if !is_valid_ael_order(
+                &self.active_arena[next],
+                &self.active_arena[right],
+                &self.vertex_arena,
+                &self.minima_list,
+            ) {
+                break;
+            }
+            self.intersect_edges(right, next, self.active_arena[right].bot);
+            self.swap_positions_in_ael(right, next);
+        }
+        if self.is_horizontal_idx(right) {
+            self.push_horz(right);
+        } else {
+            self.check_join_right(right, self.active_arena[right].bot, false);
+            self.insert_scanline(self.active_arena[right].top.y);
+        }
+    }
+
+    // clipper.engine.cpp:ResetHorzDirection. Nonvertical cases finish before
+    // the vertical maxima search; direction and visit order are unchanged.
     pub(crate) fn reset_horz_direction(
         &self,
-        horz_idx: usize,
-        max_vertex: Option<usize>,
+        index: usize,
+        maximum: Option<usize>,
     ) -> (i64, i64, bool) {
-        let horz = &self.active_arena[horz_idx];
-        if horz.bot.x == horz.top.x {
-            let horz_left = horz.curr_x;
-            let horz_right = horz.curr_x;
-            let mut e = horz.next_in_ael;
-            while let Some(e_idx) = e {
-                if Some(self.active_arena[e_idx].vertex_top) == max_vertex {
-                    return (horz_left, horz_right, true);
-                }
-                e = self.active_arena[e_idx].next_in_ael;
-            }
-            (horz_left, horz_right, false)
-        } else if horz.curr_x < horz.top.x {
-            (horz.curr_x, horz.top.x, true)
-        } else {
-            (horz.top.x, horz.curr_x, false)
+        let horizontal = &self.active_arena[index];
+        if horizontal.bot.x != horizontal.top.x {
+            return if horizontal.curr_x < horizontal.top.x {
+                (horizontal.curr_x, horizontal.top.x, true)
+            } else {
+                (horizontal.top.x, horizontal.curr_x, false)
+            };
         }
+        let x = horizontal.curr_x;
+        let mut current = horizontal.next_in_ael;
+        while let Some(edge) = current {
+            if Some(self.active_arena[edge].vertex_top) == maximum {
+                return (x, x, true);
+            }
+            current = self.active_arena[edge].next_in_ael;
+        }
+        (x, x, false)
     }
 }

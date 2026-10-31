@@ -40,27 +40,7 @@ impl ClipperBase {
 
         if or1 == or2 {
             let or_idx = or1.unwrap();
-            self.outrec_list[or_idx].pts = Some(result);
-
-            if self.using_polytree {
-                let prev_hot = self.get_prev_hot_edge(e1_idx);
-                if prev_hot.is_none() {
-                    self.outrec_list[or_idx].owner = None;
-                } else if let Some(prev_hot_idx) = prev_hot {
-                    if let Some(prev_or) = self.active_arena[prev_hot_idx].outrec {
-                        set_owner(&mut self.outrec_list, or_idx, prev_or);
-                    }
-                }
-            }
-
-            uncouple_outrec(e1_idx, &mut self.active_arena, &mut self.outrec_list);
-            let final_result = self.outrec_list[or_idx].pts;
-            if let Some(owner) = self.outrec_list[or_idx].owner {
-                if self.outrec_list[owner].front_edge.is_none() {
-                    self.outrec_list[or_idx].owner = get_real_outrec(&self.outrec_list, owner);
-                }
-            }
-            return final_result;
+            return self.close_local_max_outrec(e1_idx, or_idx, result);
         } else if self.is_open_idx(e1_idx) {
             if self.active_arena[e1_idx].wind_dx < 0 {
                 self.join_outrec_paths(e1_idx, e2_idx);
@@ -77,6 +57,35 @@ impl ClipperBase {
             }
         }
         Some(result)
+    }
+}
+
+impl ClipperBase {
+    // clipper.engine.cpp:1433–1445, same-record AddLocalMaxPoly branch.
+    fn close_local_max_outrec(
+        &mut self,
+        edge: usize,
+        record: usize,
+        point: usize,
+    ) -> Option<usize> {
+        self.outrec_list[record].pts = Some(point);
+        if self.using_polytree {
+            match self.get_prev_hot_edge(edge) {
+                None => self.outrec_list[record].owner = None,
+                Some(previous) => {
+                    let owner = self.active_arena[previous].outrec.unwrap();
+                    set_owner(&mut self.outrec_list, record, owner);
+                }
+            }
+        }
+        uncouple_outrec(edge, &mut self.active_arena, &mut self.outrec_list);
+        let result = self.outrec_list[record].pts;
+        if let Some(owner) = self.outrec_list[record].owner
+            && self.outrec_list[owner].front_edge.is_none()
+        {
+            self.outrec_list[record].owner = get_real_outrec(&self.outrec_list, owner);
+        }
+        result
     }
 }
 
@@ -286,26 +295,23 @@ impl ClipperBase {
             if !self.is_horizontal_idx(r_idx)
                 && self.active_arena[e_idx].bot != self.active_arena[r_idx].bot
             {
-                result = None;
                 break;
             }
             result = self.active_arena[r_idx].next_in_ael;
         }
 
         // Search backward
-        if result.is_none() {
-            result = self.active_arena[e_idx].prev_in_ael;
-            while let Some(r_idx) = result {
-                if self.active_arena[r_idx].local_min == local_min {
-                    return Some(r_idx);
-                }
-                if !self.is_horizontal_idx(r_idx)
-                    && self.active_arena[e_idx].bot != self.active_arena[r_idx].bot
-                {
-                    return None;
-                }
-                result = self.active_arena[r_idx].prev_in_ael;
+        result = self.active_arena[e_idx].prev_in_ael;
+        while let Some(r_idx) = result {
+            if self.active_arena[r_idx].local_min == local_min {
+                return Some(r_idx);
             }
+            if !self.is_horizontal_idx(r_idx)
+                && self.active_arena[e_idx].bot != self.active_arena[r_idx].bot
+            {
+                return None;
+            }
+            result = self.active_arena[r_idx].prev_in_ael;
         }
         result
     }

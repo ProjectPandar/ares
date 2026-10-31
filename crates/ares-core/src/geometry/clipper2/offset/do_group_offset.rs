@@ -6,6 +6,44 @@
 use super::*;
 
 impl ClipperOffset {
+    // clipper.offset.cpp:520–553, single-point DoGroupOffset branch.
+    fn offset_single_point(&mut self, path: &Path64, join: JoinType, reversed: bool) {
+        if let Some(callback) = &self.delta_callback {
+            self.group_delta = callback(path, &self.norms, 0, 0);
+            if reversed {
+                self.group_delta = -self.group_delta;
+            }
+        }
+        if self.group_delta < 1.0 {
+            return;
+        }
+        let point = path[0];
+        let radius = self.group_delta.abs();
+        if join == JoinType::Round {
+            let steps = if self.steps_per_rad > 0.0 {
+                (self.steps_per_rad * 2.0 * constants::PI).ceil() as usize
+            } else {
+                0
+            };
+            self.path_out = ellipse_point64(point, radius, radius, steps);
+        } else {
+            let extent = i64::from(radius.ceil() as i32);
+            self.path_out = Rect64::new(
+                point.x - extent,
+                point.y - extent,
+                point.x + extent,
+                point.y + extent,
+            )
+            .as_path();
+        }
+        for point_out in &mut self.path_out {
+            point_out.z = point.z;
+        }
+        self.solution.push(std::mem::take(&mut self.path_out));
+    }
+}
+
+impl ClipperOffset {
     /// Process a single group of paths.
     /// Direct port from ClipperOffset::DoGroupOffset (clipper.offset.cpp line 455-539).
     pub(crate) fn do_group_offset(&mut self, group_idx: usize) {
@@ -58,54 +96,14 @@ impl ClipperOffset {
             self.path_out.clear();
 
             if path_len == 1 {
-                // Single point
-                if let Some(callback) = &self.delta_callback {
-                    self.group_delta = callback(path, &self.norms, 0, 0);
-                    if group_is_reversed {
-                        self.group_delta = -self.group_delta;
-                    }
-                }
-
-                if self.group_delta < 1.0 {
-                    continue;
-                }
-                let pt = path[0];
-                let abs_delta_local = self.group_delta.abs();
-
-                // Single vertex: build a circle or square
-                if group_join_type == JoinType::Round {
-                    let radius = abs_delta_local;
-                    let steps = if self.steps_per_rad > 0.0 {
-                        (self.steps_per_rad * 2.0 * constants::PI).ceil() as usize
-                    } else {
-                        0
-                    };
-                    self.path_out = ellipse_point64(pt, radius, radius, steps);
-
-                    for p in self.path_out.iter_mut() {
-                        p.z = pt.z;
-                    }
-                } else {
-                    let d = i64::from(abs_delta_local.ceil() as i32);
-                    let r = Rect64::new(pt.x - d, pt.y - d, pt.x + d, pt.y + d);
-                    self.path_out = r.as_path();
-
-                    for p in self.path_out.iter_mut() {
-                        p.z = pt.z;
-                    }
-                }
-
-                let path_out = std::mem::take(&mut self.path_out);
-                self.solution.push(path_out);
+                self.offset_single_point(path, group_join_type, group_is_reversed);
                 continue;
-            } // end of offsetting a single point
+            }
 
-            if path_len == 2 && group_end_type == EndType::Joined {
-                self.end_type = if group_join_type == JoinType::Round {
-                    EndType::Round
-                } else {
-                    EndType::Square
-                };
+            match (path_len, group_end_type, group_join_type) {
+                (2, EndType::Joined, JoinType::Round) => self.end_type = EndType::Round,
+                (2, EndType::Joined, _) => self.end_type = EndType::Square,
+                _ => {}
             }
 
             self.build_normals(path);

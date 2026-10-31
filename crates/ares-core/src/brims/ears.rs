@@ -314,7 +314,7 @@ pub(super) fn brim_ear_paths(
         },
     )?;
     let area = difference_ex(&area, &footprint).map_err(geometry_error)?;
-    paths::from_area(area, spacing, resolution)?
+    paths::from_area(area, spacing, resolution, scale)?
         .into_iter()
         .map(|points| {
             BrimPath::new(

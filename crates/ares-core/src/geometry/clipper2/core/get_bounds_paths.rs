@@ -5,106 +5,6 @@
 
 use super::*;
 
-/// Calculate the bounding rectangle of multiple paths
-/// Direct port from clipper.core.h line 449
-#[inline]
-pub fn get_bounds_paths<T>(paths: &Paths<T>) -> Rect<T>
-where
-    T: Copy + PartialOrd + num_traits::Bounded + num_traits::Num,
-{
-    let mut xmin = T::max_value();
-    let mut ymin = T::max_value();
-    let mut xmax = T::min_value();
-    let mut ymax = T::min_value();
-
-    for path in paths {
-        for p in path {
-            if p.x < xmin {
-                xmin = p.x;
-            }
-            if p.x > xmax {
-                xmax = p.x;
-            }
-            if p.y < ymin {
-                ymin = p.y;
-            }
-            if p.y > ymax {
-                ymax = p.y;
-            }
-        }
-    }
-
-    Rect::new(xmin, ymin, xmax, ymax)
-}
-
-/// Calculate the bounding rectangle of a path with type conversion
-/// Direct port from clipper.core.h line 467
-#[inline]
-pub fn get_bounds_path_convert<T, T2>(path: &Path<T2>) -> Rect<T>
-where
-    T: Copy + PartialOrd + num_traits::Bounded + num_traits::Num,
-    T2: Copy + Into<T>,
-{
-    let mut xmin = T::max_value();
-    let mut ymin = T::max_value();
-    let mut xmax = T::min_value();
-    let mut ymax = T::min_value();
-
-    for p in path {
-        let x: T = p.x.into();
-        let y: T = p.y.into();
-        if x < xmin {
-            xmin = x;
-        }
-        if x > xmax {
-            xmax = x;
-        }
-        if y < ymin {
-            ymin = y;
-        }
-        if y > ymax {
-            ymax = y;
-        }
-    }
-
-    Rect::new(xmin, ymin, xmax, ymax)
-}
-
-/// Calculate the bounding rectangle of multiple paths with type conversion
-/// Direct port from clipper.core.h line 484
-#[inline]
-pub fn get_bounds_paths_convert<T, T2>(paths: &Paths<T2>) -> Rect<T>
-where
-    T: Copy + PartialOrd + num_traits::Bounded + num_traits::Num,
-    T2: Copy + Into<T>,
-{
-    let mut xmin = T::max_value();
-    let mut ymin = T::max_value();
-    let mut xmax = T::min_value();
-    let mut ymax = T::min_value();
-
-    for path in paths {
-        for p in path {
-            let x: T = p.x.into();
-            let y: T = p.y.into();
-            if x < xmin {
-                xmin = x;
-            }
-            if x > xmax {
-                xmax = x;
-            }
-            if y < ymin {
-                ymin = y;
-            }
-            if y > ymax {
-                ymax = y;
-            }
-        }
-    }
-
-    Rect::new(xmin, ymin, xmax, ymax)
-}
-
 /// Square a value (matches C++ template<typename T> inline double Sqr(T val))
 /// Direct port from clipper.core.h line 611
 #[inline]
@@ -123,30 +23,6 @@ where
     T: Num + Copy + ToF64,
 {
     sqr(pt1.x - pt2.x) + sqr(pt1.y - pt2.y)
-}
-
-/// Calculate squared perpendicular distance from point to line
-/// Direct port from clipper.core.h line 840
-#[inline]
-pub fn perpendicular_distance_from_line_sqr<T>(
-    pt: Point<T>,
-    line1: Point<T>,
-    line2: Point<T>,
-) -> f64
-where
-    T: Num + Copy + ToF64,
-{
-    // clipper.core.h:834–846.
-    let a = (pt.x - line1.x).to_f64();
-    let b = (pt.y - line1.y).to_f64();
-    let c = (line2.x - line1.x).to_f64();
-    let d = (line2.y - line1.y).to_f64();
-
-    if c == 0.0 && d == 0.0 {
-        return 0.0;
-    }
-
-    sqr(a * d - c * b) / (c * c + d * d)
 }
 
 /// `clipper.core.h:849–869`: retain the paired accumulation and cast positions.
@@ -178,46 +54,14 @@ where
     area * 0.5
 }
 
-/// Calculate total area of multiple polygon paths
-/// Direct port from clipper.core.h line 874
-#[inline]
-pub fn area_paths<T>(paths: &Paths<T>) -> f64
-where
-    T: Num + Copy + ToF64,
-{
-    let mut total_area = 0.0;
-    for path in paths {
-        total_area += area(path);
-    }
-    total_area
-}
-
-/// Test if a polygon has positive orientation (counterclockwise)
-/// Direct port from clipper.core.h line 886
-#[inline]
-pub fn is_positive<T>(poly: &Path<T>) -> bool
-where
-    T: Num + Copy + ToF64,
-{
-    area(poly) >= 0.0
-}
-
-/// Check if a line segment between two points is horizontal
-/// Returns true if both points have the same y-coordinate
-/// Direct port from clipper.rectclip.cpp line 68
-#[inline]
-pub fn is_horizontal(pt1: &Point64, pt2: &Point64) -> bool {
-    pt1.y == pt2.y
-}
-
 /// Result of point-in-polygon test
 /// Direct port from clipper.core.h line 1046
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub enum PointInPolygonResult {
-    IsOn,
-    IsInside,
-    IsOutside,
+    On,
+    Inside,
+    Outside,
 }
 
 /// Calculate exact intersection point between two line segments for Point64

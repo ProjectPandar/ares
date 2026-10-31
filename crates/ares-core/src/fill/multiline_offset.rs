@@ -1,10 +1,8 @@
-mod numerics;
-mod round;
+use crate::geometry::{
+    ClipperError, CoordinateScale, EndType, JoinType, Polygon, Polyline, offset_lines,
+};
 
-use crate::geometry::{ClipperError, CoordinateScale, Polygon, Polyline};
-
-/// `FillBase.cpp:2712-2784`: expand each sparse centerline into the configured
-/// odd/even bundle using round-ended Clipper2 offsets.
+/// `FillBase.cpp:2947–3004`: expand centerlines using miter joins and round caps.
 pub(crate) fn apply(
     polylines: Vec<Polyline>,
     multiline: i32,
@@ -41,8 +39,14 @@ pub(crate) fn apply(
         } else {
             f64::from((index + 1) as f32 * spacing)
         };
-        let delta = offset / scale.factor();
-        for polygon in round::offset(&source, delta)? {
+        let delta = (offset / scale.factor()) as f32;
+        for polygon in offset_lines(
+            &source,
+            delta,
+            JoinType::Miter,
+            3.0,
+            (EndType::Round, 0.002 * f64::from(delta)),
+        )? {
             let mut points = polygon.into_points();
             if points.len() < 3 {
                 continue;

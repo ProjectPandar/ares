@@ -9,53 +9,6 @@ impl<T> Rect<T>
 where
     T: Num + Copy + PartialOrd,
 {
-    /// Create a rectangle, valid by default or invalid if specified
-    /// Direct port from clipper.core.h line 307
-    pub fn new_with_validity(is_valid: bool) -> Self
-    where
-        T: num_traits::Bounded,
-    {
-        if is_valid {
-            Self {
-                left: T::zero(),
-                top: T::zero(),
-                right: T::zero(),
-                bottom: T::zero(),
-            }
-        } else {
-            Self {
-                left: T::max_value(),
-                top: T::max_value(),
-                right: T::min_value(),
-                bottom: T::min_value(),
-            }
-        }
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
-    /// Create an invalid rectangle
-    /// Direct port from clipper.core.h line 320
-    pub fn invalid() -> Self
-    where
-        T: num_traits::Bounded,
-    {
-        Self {
-            left: T::max_value(),
-            top: T::max_value(),
-            right: T::min_value(),
-            bottom: T::min_value(),
-        }
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
     /// Get midpoint of rectangle
     /// Direct port from clipper.core.h line 336
     pub fn mid_point(&self) -> Point<T> {
@@ -88,17 +41,6 @@ impl<T> Rect<T>
 where
     T: Num + Copy + PartialOrd,
 {
-    /// Check if point is contained within rectangle (exclusive bounds)
-    /// Direct port from clipper.core.h line 352
-    pub fn contains_point(&self, pt: &Point<T>) -> bool {
-        pt.x > self.left && pt.x < self.right && pt.y > self.top && pt.y < self.bottom
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
     /// Check if another rectangle is fully contained within this rectangle
     /// Direct port from clipper.core.h line 357
     pub fn contains_rect(&self, rec: &Rect<T>) -> bool {
@@ -113,108 +55,9 @@ impl<T> Rect<T>
 where
     T: Num + Copy + PartialOrd,
 {
-    /// Check if this rectangle intersects with another
-    /// Direct port from clipper.core.h line 372
-    pub fn intersects(&self, rec: &Rect<T>) -> bool {
-        let max_left = if self.left > rec.left {
-            self.left
-        } else {
-            rec.left
-        };
-        let min_right = if self.right < rec.right {
-            self.right
-        } else {
-            rec.right
-        };
-        let max_top = if self.top > rec.top {
-            self.top
-        } else {
-            rec.top
-        };
-        let min_bottom = if self.bottom < rec.bottom {
-            self.bottom
-        } else {
-            rec.bottom
-        };
-
-        max_left <= min_right && max_top <= min_bottom
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
-    /// Check if rectangle is valid (not using max sentinel values)
-    /// Direct port from clipper.core.h line 329
-    pub fn is_valid(&self) -> bool
-    where
-        T: num_traits::Bounded + PartialEq,
-    {
-        self.left != T::max_value()
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
-    /// Get width of rectangle
-    pub fn width(&self) -> T {
-        self.right - self.left
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
-    /// Get height of rectangle
-    pub fn height(&self) -> T {
-        self.bottom - self.top
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
-    /// Set width, adjusting right edge
-    pub fn set_width(&mut self, width: T) {
-        self.right = self.left + width;
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
-    /// Set height, adjusting bottom edge
-    pub fn set_height(&mut self, height: T) {
-        self.bottom = self.top + height;
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Num + Copy + PartialOrd,
-{
     /// Check if rectangle is empty
     pub fn is_empty(&self) -> bool {
         self.left >= self.right || self.top >= self.bottom
-    }
-}
-
-impl<T> Rect<T>
-where
-    T: Float + Copy,
-{
-    /// Scale rectangle by floating-point factor
-    pub fn scale(&mut self, scale: T) {
-        self.left = self.left * scale;
-        self.top = self.top * scale;
-        self.right = self.right * scale;
-        self.bottom = self.bottom * scale;
     }
 }
 
@@ -277,8 +120,6 @@ pub type PointD = Point<f64>;
 
 pub type Rect64 = Rect<i64>;
 
-pub type RectD = Rect<f64>;
-
 /// Vector of points forming a path
 pub type Path<T> = Vec<Point<T>>;
 
@@ -290,22 +131,3 @@ pub type PathD = Path<f64>;
 pub type Paths<T> = Vec<Path<T>>;
 
 pub type Paths64 = Paths<i64>;
-
-pub type PathsD = Paths<f64>;
-
-/// Invalid point constants
-// z is 0, not MAX: C++ constructs these via Point(x, y), which
-// default-initializes z (and equality ignores z regardless).
-pub const INVALID_POINT64: Point64 = Point64 {
-    x: i64::MAX,
-    y: i64::MAX,
-
-    z: 0,
-};
-
-pub const INVALID_POINTD: PointD = PointD {
-    x: f64::MAX,
-    y: f64::MAX,
-
-    z: 0,
-};

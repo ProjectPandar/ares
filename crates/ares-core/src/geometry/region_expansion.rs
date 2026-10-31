@@ -9,7 +9,6 @@ pub(crate) use propagate::{
     propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
     propagate_waves_from_sources_with_steps,
 };
-
 pub(crate) use types::{RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed};
 pub(crate) use wave_seeds::wave_seeds;
 

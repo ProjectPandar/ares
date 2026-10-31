@@ -1,11 +1,12 @@
 //! Brim.cpp:813-856: source-owned stepped brim areas to ordered paths.
 use crate::SliceError;
-use crate::geometry::{ExPolygon, JoinType, Point, offset_expolygons};
+use crate::geometry::{CoordinateScale, ExPolygon, JoinType, Point, offset_expolygons};
 
 pub(crate) fn from_area(
     brim_area: Vec<ExPolygon>,
     spacing: f32,
     resolution: f64,
+    scale: CoordinateScale,
 ) -> Result<Vec<Vec<Point>>, SliceError> {
     // `Brim.cpp:824-832` — every stage of the loop stepping runs a
     // douglas_peucker pass with `resolution` (0.0125 mm) between the
@@ -48,6 +49,7 @@ pub(crate) fn from_area(
             .iter()
             .map(|points| crate::geometry::Polygon::new(points.clone()))
             .collect::<Vec<_>>(),
+        scale,
     )
     .map_err(brim_geometry_error)?;
     let loops = unified;

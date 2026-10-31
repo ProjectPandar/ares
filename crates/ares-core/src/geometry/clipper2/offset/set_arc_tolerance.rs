@@ -14,51 +14,6 @@ impl ClipperOffset {
 }
 
 impl ClipperOffset {
-    /// Get the preserve_collinear flag.
-    pub fn preserve_collinear(&self) -> bool {
-        self.preserve_collinear
-    }
-}
-
-impl ClipperOffset {
-    /// Set the preserve_collinear flag.
-    pub fn set_preserve_collinear(&mut self, preserve_collinear: bool) {
-        self.preserve_collinear = preserve_collinear;
-    }
-}
-
-impl ClipperOffset {
-    /// Get the reverse_solution flag.
-    pub fn reverse_solution(&self) -> bool {
-        self.reverse_solution
-    }
-}
-
-impl ClipperOffset {
-    /// Set the reverse_solution flag.
-    pub fn set_reverse_solution(&mut self, reverse_solution: bool) {
-        self.reverse_solution = reverse_solution;
-    }
-}
-
-impl ClipperOffset {
-    /// Set the delta callback for variable offset.
-    /// Direct port from ClipperOffset::SetDeltaCallback.
-    pub fn set_delta_callback(&mut self, cb: Option<DeltaCallback64>) {
-        self.delta_callback = cb;
-    }
-}
-
-impl ClipperOffset {
-    /// Set the fallback callback used to assign z at intersections created
-    /// by the finishing union when z inheritance finds no agreeing vertex
-    /// Direct port from clipper.offset.h line 118 (ClipperOffset::SetZCallback)
-    pub fn set_z_callback(&mut self, cb: impl ZCallback64 + 'static) {
-        self.z_callback = Some(Rc::new(RefCell::new(Box::new(cb))));
-    }
-}
-
-impl ClipperOffset {
     /// Add a single path with the given join type and end type.
     /// Direct port from ClipperOffset::AddPath (clipper.offset.cpp line 168-171).
     pub fn add_path(&mut self, path: &Path64, jt: JoinType, et: EndType) {
@@ -111,16 +66,6 @@ impl ClipperOffset {
 }
 
 impl ClipperOffset {
-    /// Execute using a delta callback for variable offset.
-    /// Direct port from ClipperOffset::Execute(DeltaCallback64, Paths64&)
-    /// (clipper.offset.cpp line 655-659).
-    pub fn execute_with_callback(&mut self, delta_cb: DeltaCallback64, paths: &mut Paths64) {
-        self.delta_callback = Some(delta_cb);
-        self.execute(1.0, paths);
-    }
-}
-
-impl ClipperOffset {
     /// Calculate the expected solution capacity.
     /// Direct port from ClipperOffset::CalcSolutionCapacity (clipper.offset.cpp line 553-559).
     pub(crate) fn calc_solution_capacity(&self) -> usize {
@@ -154,7 +99,6 @@ impl ClipperOffset {
     /// Core internal execution logic.
     /// Direct port from ClipperOffset::ExecuteInternal (clipper.offset.cpp line 574-634).
     pub(crate) fn execute_internal(&mut self, delta: f64, polytree: Option<&mut PolyTree64>) {
-        self.error_code = 0;
         if self.groups.is_empty() {
             return;
         }
@@ -182,9 +126,6 @@ impl ClipperOffset {
             // borrows self mutably
             for i in 0..self.groups.len() {
                 self.do_group_offset(i);
-                if self.error_code != 0 {
-                    self.solution.clear();
-                }
             }
         }
 
@@ -202,20 +143,19 @@ impl ClipperOffset {
         // callback) so offset z values survive the finishing union
         // Direct port from clipper.offset.cpp line 543 (ClipperOffset::ZCB)
 
-        {
-            let user_cb = self.z_callback.clone();
-            c.set_z_callback(move |bot1, top1, bot2, top2, ip| {
-                if bot1.z != 0 && (bot1.z == bot2.z || bot1.z == top2.z) {
-                    ip.z = bot1.z;
-                } else if bot2.z != 0 && bot2.z == top1.z {
-                    ip.z = bot2.z;
-                } else if top1.z != 0 && top1.z == top2.z {
-                    ip.z = top1.z;
-                } else if let Some(ref cb) = user_cb {
-                    (*cb.borrow_mut())(bot1, top1, bot2, top2, ip);
-                }
-            });
-        }
+        let user_cb = self.z_callback.clone();
+        c.set_z_callback(move |bot1, top1, bot2, top2, ip| {
+            if bot1.z != 0 && (bot1.z == bot2.z || bot1.z == top2.z) {
+                ip.z = bot1.z;
+            } else if bot2.z != 0 && bot2.z == top1.z {
+                ip.z = bot2.z;
+            } else if top1.z != 0 && top1.z == top2.z {
+                ip.z = top1.z;
+            } else if let Some(ref cb) = user_cb {
+                (*cb.borrow_mut())(bot1, top1, bot2, top2, ip);
+            }
+        });
+
         c.add_subject(&self.solution);
 
         let fill_rule = if paths_reversed {

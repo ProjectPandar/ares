@@ -1,156 +1,134 @@
-use super::execute::{configured_offset, difference_paths, union_paths, union_tree};
-use super::{JoinType, offset_paths_tree};
-use crate::geometry::clipper::{ClipperError, FillRule};
-use crate::geometry::{ExPolygon, Polygon};
+// ClipperUtils.cpp:c2_offset_expolygons: normalize only declared contour/hole roles.
+use super::*;
+use crate::geometry::ExPolygon;
+
+fn normalized<'a, T: Output>(
+    polygons: impl IntoIterator<Item = &'a ExPolygon>,
+    delta: f32,
+    kind: JoinType,
+    limit: f64,
+) -> T {
+    let mut paths = Vec::new();
+    let shortest = (f64::from(delta) * 0.005).abs();
+    for polygon in polygons {
+        if !append_path(
+            &mut paths,
+            polygon.contour().points(),
+            shortest,
+            c2::EndType::Polygon,
+        ) {
+            continue;
+        }
+        let area = c2::area(paths.last().unwrap());
+        if area == 0.0 {
+            if delta < 0.0 {
+                paths.pop();
+            }
+            continue;
+        } else if area < 0.0 {
+            paths.last_mut().unwrap().reverse();
+        }
+        for hole in polygon.holes() {
+            append_offset_hole(&mut paths, hole, shortest);
+        }
+    }
+    let mut co = setup(delta, kind, limit, 0.0);
+    co.add_paths(&paths, join(kind), c2::EndType::Polygon);
+    let mut output = T::default();
+    output.offset(&mut co, f64::from(delta));
+    output
+}
+
+// ClipperUtils.cpp:c2_offset_expolygons, retained-hole orientation block.
+fn append_offset_hole(paths: &mut c2::Paths64, hole: &Polygon, shortest: f64) {
+    if !append_path(paths, hole.points(), shortest, c2::EndType::Polygon) {
+        return;
+    }
+    let area = c2::area(paths.last().unwrap());
+    if area == 0.0 {
+        paths.pop();
+    } else if area > 0.0 {
+        paths.last_mut().unwrap().reverse();
+    }
+}
 
 pub(crate) fn offset_expolygon(
-    expolygon: &ExPolygon,
+    polygon: &ExPolygon,
     delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
+    kind: JoinType,
+    limit: f64,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let (paths, _) = offset_expolygon_paths(expolygon, delta, join_type, miter_limit)?;
-    Ok(union_tree(&paths, FillRule::EvenOdd)?.into_expolygons())
+    let tree: c2::PolyTree64 = normalized(std::iter::once(polygon), delta, kind, limit);
+    Ok(PolyTree::new(tree).into_expolygons(crate::geometry::CoordinateScale::Normal))
 }
-
 pub(crate) fn offset_expolygons(
-    expolygons: &[ExPolygon],
+    polygons: &[ExPolygon],
     delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
+    kind: JoinType,
+    limit: f64,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let (paths, _) = offset_expolygons_raw(expolygons, delta, join_type, miter_limit)?;
-    Ok(union_tree(&paths, FillRule::NonZero)?.into_expolygons())
+    let tree: c2::PolyTree64 = normalized(polygons, delta, kind, limit);
+    Ok(PolyTree::new(tree).into_expolygons(crate::geometry::CoordinateScale::Normal))
 }
-
-pub(crate) fn opening_ex(
-    expolygons: &[ExPolygon],
+pub(crate) fn offset_expolygons_paths(
+    polygons: &[ExPolygon],
     delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
-) -> Result<Vec<ExPolygon>, ClipperError> {
-    assert!(delta > 0.0);
-    offset2_ex(expolygons, -delta, delta, join_type, miter_limit)
+    kind: JoinType,
+    limit: f64,
+) -> Result<Vec<Polygon>, ClipperError> {
+    let paths: c2::Paths64 = normalized(polygons, delta, kind, limit);
+    Ok(backend::polygons(&paths))
 }
-
-pub(crate) fn closing_ex(
-    expolygons: &[ExPolygon],
+pub(crate) fn offset_expolygon_refs_paths(
+    polygons: &[&ExPolygon],
     delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
-) -> Result<Vec<ExPolygon>, ClipperError> {
-    assert!(delta > 0.0);
-    offset2_ex(expolygons, delta, -delta, join_type, miter_limit)
+    kind: JoinType,
+    limit: f64,
+) -> Result<Vec<Polygon>, ClipperError> {
+    let paths: c2::Paths64 = normalized(polygons.iter().copied(), delta, kind, limit);
+    Ok(backend::polygons(&paths))
 }
-
 pub(crate) fn offset2_ex(
-    expolygons: &[ExPolygon],
+    polygons: &[ExPolygon],
     first: f32,
     second: f32,
-    join_type: JoinType,
-    miter_limit: f64,
+    kind: JoinType,
+    limit: f64,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    offset2_ex_with_interstage(expolygons, (first, second, join_type, miter_limit), || {
-        Ok(())
-    })
+    offset2_ex_with_interstage(polygons, (first, second, kind, limit), || Ok(()))
 }
-
 pub(crate) fn offset2_ex_with_interstage(
-    expolygons: &[ExPolygon],
-    (first, second, join_type, miter_limit): (f32, f32, JoinType, f64),
+    polygons: &[ExPolygon],
+    (first, second, kind, limit): (f32, f32, JoinType, f64),
     interstage: impl FnOnce() -> Result<(), ClipperError>,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let first_stage = offset_expolygons_paths(expolygons, first, join_type, miter_limit)?;
+    let first: c2::Paths64 = normalized(polygons, first, kind, limit);
     interstage()?;
-    Ok(offset_paths_tree(&first_stage, second, join_type, miter_limit)?.into_expolygons())
+    let mut paths = Vec::with_capacity(first.len());
+    for path in &first {
+        append_path(
+            &mut paths,
+            path,
+            (f64::from(second) * 0.005).abs(),
+            c2::EndType::Polygon,
+        );
+    }
+    let tree: c2::PolyTree64 = closed(paths, second, kind, limit);
+    Ok(PolyTree::new(tree).into_expolygons(crate::geometry::CoordinateScale::Normal))
 }
-
-pub(crate) fn offset_expolygons_raw(
-    expolygons: &[ExPolygon],
+pub(crate) fn opening_ex(
+    polygons: &[ExPolygon],
     delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
-) -> Result<(Vec<Polygon>, usize), ClipperError> {
-    let mut output = Vec::with_capacity(expolygons.len());
-    let mut collected = 0;
-    for expolygon in expolygons {
-        let (mut paths, survives) =
-            offset_expolygon_paths(expolygon, delta, join_type, miter_limit)?;
-        output.append(&mut paths);
-        collected += usize::from(survives);
-    }
-    Ok((output, collected))
+    kind: JoinType,
+    limit: f64,
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    offset2_ex(polygons, -delta, delta, kind, limit)
 }
-
-pub(crate) fn offset_expolygons_paths(
-    expolygons: &[ExPolygon],
+pub(crate) fn closing_ex(
+    polygons: &[ExPolygon],
     delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
-) -> Result<Vec<Polygon>, ClipperError> {
-    let (paths, collected) = offset_expolygons_raw(expolygons, delta, join_type, miter_limit)?;
-    if collected > 1 && delta > 0.0 {
-        union_paths(&paths, FillRule::NonZero)
-    } else {
-        Ok(paths)
-    }
-}
-
-pub(crate) fn offset_expolygon_refs_paths(
-    expolygons: &[&ExPolygon],
-    delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
-) -> Result<Vec<Polygon>, ClipperError> {
-    let mut paths = Vec::with_capacity(expolygons.len());
-    let mut collected = 0;
-    for expolygon in expolygons {
-        let (mut offset, survives) =
-            offset_expolygon_paths(expolygon, delta, join_type, miter_limit)?;
-        paths.append(&mut offset);
-        collected += usize::from(survives);
-    }
-    if collected > 1 && delta > 0.0 {
-        union_paths(&paths, FillRule::NonZero)
-    } else {
-        Ok(paths)
-    }
-}
-
-fn offset_expolygon_paths(
-    expolygon: &ExPolygon,
-    delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
-) -> Result<(Vec<Polygon>, bool), ClipperError> {
-    let mut contour_offset = configured_offset(delta, join_type, miter_limit);
-    contour_offset.add_closed_path(expolygon.contour(), join_type);
-    let mut contours = contour_offset.execute_paths(f64::from(delta))?;
-    if contours.is_empty() {
-        return Ok((Vec::new(), false));
-    }
-    if expolygon.holes().is_empty() {
-        return Ok((contours, true));
-    }
-
-    let mut holes = Vec::with_capacity(expolygon.holes().len());
-    for hole in expolygon.holes() {
-        let mut hole_offset = configured_offset(delta, join_type, miter_limit);
-        hole_offset.add_closed_path(hole, join_type);
-        holes.append(&mut hole_offset.execute_paths(f64::from(-delta))?);
-    }
-
-    if holes.is_empty() {
-        Ok((contours, true))
-    } else if delta < 0.0 {
-        let output = difference_paths(&contours, &holes)?;
-        let survives = !output.is_empty();
-        Ok((output, survives))
-    } else {
-        for hole in &mut holes {
-            hole.reverse();
-        }
-        contours.append(&mut holes);
-        Ok((contours, true))
-    }
+    kind: JoinType,
+    limit: f64,
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    offset2_ex(polygons, delta, -delta, kind, limit)
 }

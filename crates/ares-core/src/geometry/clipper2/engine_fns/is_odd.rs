@@ -33,13 +33,6 @@ pub fn is_open_end_vertex(v: &Vertex) -> bool {
     (v.flags & (VertexFlags::OPEN_START | VertexFlags::OPEN_END)) != VertexFlags::EMPTY
 }
 
-/// Check if an active edge's vertex_top is an open end
-/// Direct port from clipper.engine.cpp line 87
-#[inline]
-pub fn is_open_end_active(e: &Active, vertex_arena: &[Vertex]) -> bool {
-    is_open_end_vertex(&vertex_arena[e.vertex_top])
-}
-
 /// Calculate slope dx for an edge defined by two points
 /// Direct port from clipper.engine.cpp line 116
 #[inline]
@@ -69,13 +62,6 @@ pub fn top_x(ae: &Active, current_y: i64) -> i64 {
     }
 }
 
-/// Check if an active edge is horizontal
-/// Direct port from clipper.engine.cpp line 137
-#[inline]
-pub fn is_horizontal_active(e: &Active) -> bool {
-    e.top.y == e.bot.y
-}
-
 /// Check if a horizontal edge is heading right
 /// Direct port from clipper.engine.cpp line 143
 #[inline]
@@ -88,20 +74,6 @@ pub fn is_heading_right_horz(e: &Active) -> bool {
 #[inline]
 pub fn is_heading_left_horz(e: &Active) -> bool {
     e.dx == f64::MAX
-}
-
-/// Get the polytype of an active edge
-/// Direct port from clipper.engine.cpp line 162
-#[inline]
-pub fn get_poly_type(e: &Active, minima_list: &[LocalMinima]) -> PathType {
-    minima_list[e.local_min].polytype
-}
-
-/// Check if two active edges are the same polytype
-/// Direct port from clipper.engine.cpp line 167
-#[inline]
-pub fn is_same_poly_type(e1: &Active, e2: &Active, minima_list: &[LocalMinima]) -> bool {
-    minima_list[e1.local_min].polytype == minima_list[e2.local_min].polytype
 }
 
 /// Set dx for an active edge from its bot/top points
@@ -149,31 +121,6 @@ pub fn is_maxima_active(e: &Active, vertex_arena: &[Vertex]) -> bool {
     is_maxima_vertex(&vertex_arena[e.vertex_top])
 }
 
-/// Count points in an OutPt circular list
-/// Direct port from clipper.engine.cpp line 266
-pub fn point_count(op_start: usize, outpt_arena: &[OutPt]) -> i32 {
-    let mut op2 = op_start;
-    let mut cnt = 0;
-    loop {
-        op2 = outpt_arena[op2].next;
-        cnt += 1;
-        if op2 == op_start {
-            break;
-        }
-    }
-    cnt
-}
-
-/// Check if an OutPt path is invalid (single point or None)
-/// Direct port from clipper.engine.cpp line 105
-#[inline]
-pub fn is_invalid_path(op: Option<usize>, outpt_arena: &[OutPt]) -> bool {
-    match op {
-        None => true,
-        Some(idx) => outpt_arena[idx].next == idx,
-    }
-}
-
 /// Calculate area of an OutPt circular list
 /// Direct port from clipper.engine.cpp line 366
 pub fn area_outpt(op_start: usize, outpt_arena: &[OutPt]) -> f64 {
@@ -198,19 +145,6 @@ pub fn area_triangle(pt1: Point64, pt2: Point64, pt3: Point64) -> f64 {
     (pt3.y + pt1.y) as f64 * (pt3.x - pt1.x) as f64
         + (pt1.y + pt2.y) as f64 * (pt1.x - pt2.x) as f64
         + (pt2.y + pt3.y) as f64 * (pt2.x - pt3.x) as f64
-}
-
-/// Reverse the direction of an OutPt circular list
-/// Direct port from clipper.engine.cpp line 388
-pub fn reverse_out_pts(op_start: usize, outpt_arena: &mut [OutPt]) {
-    let mut op1 = op_start;
-    loop {
-        std::mem::swap(&mut outpt_arena[op1].next, &mut outpt_arena[op1].prev);
-        op1 = outpt_arena[op1].prev; // advance to original next (now in prev)
-        if op1 == op_start {
-            break;
-        }
-    }
 }
 
 /// Sort comparator for IntersectNodes

@@ -32,21 +32,6 @@ impl From<&PointD> for Point64 {
     }
 }
 
-/// Calculate midpoint between two points
-/// Direct port from clipper.core.h line 278
-#[inline]
-pub fn mid_point<T>(p1: Point<T>, p2: Point<T>) -> Point<T>
-where
-    T: Num + Copy,
-{
-    Point {
-        x: (p1.x + p2.x) / (T::one() + T::one()),
-        y: (p1.y + p2.y) / (T::one() + T::one()),
-
-        z: 0,
-    }
-}
-
 /// Helper trait for converting to f64 - matching C++ static_cast<double> behavior
 pub trait ToF64 {
     fn to_f64(self) -> f64;
@@ -74,16 +59,6 @@ impl ToF64 for f32 {
     fn to_f64(self) -> f64 {
         self as f64
     }
-}
-
-/// `clipper.core.h:803–809`: subtract in the coordinate type before conversion.
-#[inline]
-pub fn cross_product_three_points<T>(pt1: Point<T>, pt2: Point<T>, pt3: Point<T>) -> f64
-where
-    T: Num + Copy + ToF64,
-{
-    (pt2.x - pt1.x).to_f64() * (pt3.y - pt2.y).to_f64()
-        - (pt2.y - pt1.y).to_f64() * (pt3.x - pt2.x).to_f64()
 }
 
 /// `clipper.core.h:811–814`: multiply before converting the two products.
@@ -136,49 +111,6 @@ where
             path.pop();
         }
     }
-}
-
-/// Strip duplicate consecutive points from multiple paths
-/// Direct port from clipper.core.h line 670
-#[inline]
-pub fn strip_duplicates_paths<T>(paths: &mut Paths<T>, is_closed_path: bool)
-where
-    T: PartialEq + Clone,
-{
-    for path in paths.iter_mut() {
-        strip_duplicates_path(path, is_closed_path);
-    }
-}
-
-/// Check if precision is within acceptable range and adjust if needed
-/// Direct port from clipper.core.h line 682
-#[inline]
-pub fn check_precision_range(precision: &mut i32, error_code: &mut i32) {
-    use constants::CLIPPER2_MAX_DEC_PRECISION;
-    use errors::PRECISION_ERROR_I;
-
-    if *precision >= -CLIPPER2_MAX_DEC_PRECISION && *precision <= CLIPPER2_MAX_DEC_PRECISION {
-        return;
-    }
-
-    *error_code |= PRECISION_ERROR_I; // non-fatal error
-
-    // In Rust, we return the error instead of calling DoError with exceptions
-    // This matches the C++ behavior when exceptions are disabled
-
-    *precision = if *precision > 0 {
-        CLIPPER2_MAX_DEC_PRECISION
-    } else {
-        -CLIPPER2_MAX_DEC_PRECISION
-    };
-}
-
-/// Check precision range without error code (convenience function)
-/// Direct port from clipper.core.h line 691
-#[inline]
-pub fn check_precision_range_simple(precision: &mut i32) {
-    let mut error_code = 0;
-    check_precision_range(precision, &mut error_code);
 }
 
 /// Calculate the bounding rectangle of a path

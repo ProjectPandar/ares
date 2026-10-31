@@ -29,7 +29,7 @@ fn introsort_loop<T>(
         // __unguarded_partition_pivot: move the median of
         // (first+1, mid, last-1) to first, then partition from first+1.
         let mid = items.len() / 2;
-        move_median_to_front(items, 0, 1, mid, items.len() - 1, less);
+        move_median_to_front(items, 0, (1, mid, items.len() - 1), less);
         let cut = unguarded_partition(items, less);
         // libstdc++ recurses on the right half [cut, last) and loops on the left.
         let (left, right) = items.split_at_mut(cut);
@@ -38,16 +38,10 @@ fn introsort_loop<T>(
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "the source helper passes one output and three candidate iterators"
-)]
 fn move_median_to_front<T>(
     items: &mut [T],
     result: usize,
-    a: usize,
-    b: usize,
-    c: usize,
+    (a, b, c): (usize, usize, usize),
     less: &mut impl FnMut(&T, &T) -> bool,
 ) {
     if less(&items[a], &items[b]) {

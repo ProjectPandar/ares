@@ -42,7 +42,7 @@ pub(in crate::project_slice) fn concentric(
             );
         }
         let mut last_position = Point::new(0, 0);
-        for points in union_contours(&loops)? {
+        for points in union_contours(&loops, scale)? {
             let start = nearest_point_index(last_position, &points);
             let mut path = Vec::with_capacity(points.len() + 1);
             path.extend_from_slice(&points[start..]);

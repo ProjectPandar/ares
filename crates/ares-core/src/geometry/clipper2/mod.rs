@@ -11,7 +11,8 @@ mod engine_fns;
 mod engine_public;
 mod offset;
 
-pub(crate) use core::{FillRule, Path64, Paths64, Point64};
+pub(crate) use core::constants::MAX_COORD;
+pub(crate) use core::{FillRule, Path64, Paths64, Point64, Rect64, area, get_bounds_path};
 pub(crate) use engine::ClipType;
 pub(crate) use engine_public::{Clipper64, PolyTree64};
 pub(crate) use offset::{ClipperOffset, EndType, JoinType};

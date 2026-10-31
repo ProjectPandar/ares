@@ -41,22 +41,6 @@ pub fn nearbyint_f64(x: f64) -> f64 {
     x.round_ties_even()
 }
 
-/// Get the sign of a value: -1, 0, or 1
-/// Direct port from clipper.core.h line 996
-#[inline]
-pub fn get_sign<T>(val: &T) -> i32
-where
-    T: Num + PartialOrd,
-{
-    if val.is_zero() {
-        0
-    } else if *val > T::zero() {
-        1
-    } else {
-        -1
-    }
-}
-
 /// Get the sign of the cross product of vectors (pt1->pt2) and (pt2->pt3)
 /// Uses high-precision 128-bit arithmetic for exact results with i64 coordinates
 /// Direct port from clipper.core.h line 753
@@ -157,11 +141,7 @@ where
     let dy = (seg2.y - seg1.y).to_f64();
     let mut q = ((off_pt.x - seg1.x).to_f64() * dx + (off_pt.y - seg1.y).to_f64() * dy)
         / (sqr(dx) + sqr(dy));
-    if q < 0.0 {
-        q = 0.0;
-    } else if q > 1.0 {
-        q = 1.0;
-    }
+    q = q.clamp(0.0, 1.0);
     let (dx, dy) = if T::is_integral() {
         (nearbyint_f64(q * dx), nearbyint_f64(q * dy))
     } else {

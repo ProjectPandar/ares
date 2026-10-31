@@ -6,11 +6,8 @@ pub(super) use self::aabb::sample_in_expolygons;
 
 use self::splits::{merge_splits, sort_seeds, split_registry};
 use super::WaveSeed;
-use crate::geometry::clipper::z::{KernelPoint, ZPath};
-use crate::geometry::clipper::{
-    ClipOperation, Clipper, ClipperError, ClipperOffset, ClipperOptions, FillRule, JoinType,
-    PathRole,
-};
+use crate::geometry::clipper::z::{KernelPoint, ZPath, clip_pairs};
+use crate::geometry::clipper::{ClipOperation, ClipperError, JoinType, raw_offset_paths};
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
 
 pub(crate) fn wave_seeds(
@@ -27,23 +24,17 @@ pub(crate) fn wave_seeds(
 
     let boundary_begin = 1_i64;
     let mut boundary_end = boundary_begin;
-    let mut clipper = Clipper::new(ClipperOptions::default());
+    let mut boundary_paths = Vec::new();
     for expolygon in boundary {
-        add_boundary(&mut clipper, expolygon, boundary_end)?;
+        add_boundary(&mut boundary_paths, expolygon, boundary_end);
         boundary_end += 1;
     }
 
     let mut src_end = boundary_end;
     let source_paths = expanded_source_paths(src, tiny_expansion, &mut src_end)?;
-    for path in &source_paths {
-        clipper.add_z_open_path(path, PathRole::Subject)?;
-    }
     let mut split_records = split_registry(&source_paths);
-    let (mut segments, intersections) = clipper.execute_z_paths(
-        ClipOperation::Intersection,
-        FillRule::NonZero,
-        FillRule::NonZero,
-    );
+    let (mut segments, intersections) =
+        clip_pairs(&source_paths, &boundary_paths, ClipOperation::Intersection);
     merge_splits(&mut segments, &mut split_records);
 
     let mut tree = None;
@@ -65,16 +56,15 @@ pub(crate) fn wave_seeds(
     Ok(output)
 }
 
-fn add_boundary(clipper: &mut Clipper, expolygon: &ExPolygon, z: i64) -> Result<(), ClipperError> {
+fn add_boundary(paths: &mut Vec<ZPath>, expolygon: &ExPolygon, z: i64) {
     for polygon in std::iter::once(expolygon.contour()).chain(expolygon.holes()) {
         let path = polygon
             .points()
             .iter()
             .map(|point| KernelPoint { xy: *point, z })
             .collect::<ZPath>();
-        clipper.add_z_closed_path(&path, PathRole::Clip)?;
+        paths.push(path);
     }
-    Ok(())
 }
 
 fn expanded_source_paths(
@@ -83,21 +73,18 @@ fn expanded_source_paths(
     src_end: &mut i64,
 ) -> Result<Vec<ZPath>, ClipperError> {
     let mut output = Vec::new();
-    let mut offsetter = ClipperOffset::default();
-    offsetter.set_shortest_edge_length(f64::from(expansion) * 0.005_f64);
     for expolygon in src {
         for (index, polygon) in std::iter::once(expolygon.contour())
             .chain(expolygon.holes())
             .enumerate()
         {
-            offsetter.clear();
-            offsetter.add_closed_path(polygon, JoinType::Square);
-            let delta = if index == 0 {
-                f64::from(expansion)
-            } else {
-                -f64::from(expansion)
-            };
-            for polygon in offsetter.execute_paths(delta)? {
+            // RegionExpansion.cpp:100–105 explicitly orients both roles CCW.
+            let mut contour = polygon.clone();
+            if !contour.is_counter_clockwise() {
+                contour.reverse();
+            }
+            let delta = if index == 0 { expansion } else { -expansion };
+            for polygon in raw_offset_paths(&[contour], delta, JoinType::Square, 3.0)? {
                 let mut path = polygon
                     .into_points()
                     .into_iter()

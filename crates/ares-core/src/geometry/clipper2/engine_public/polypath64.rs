@@ -9,15 +9,13 @@ use super::*;
 /// Direct port from clipper.engine.h line 334
 #[derive(Debug, Clone)]
 pub struct PolyPath64 {
-    pub(crate) parent: Option<usize>, // index into polytree arena
-    pub(crate) children: Vec<usize>,  // indices into polytree arena
+    pub(crate) children: Vec<usize>, // indices into polytree arena
     pub(crate) polygon: Path64,
 }
 
 impl PolyPath64 {
     pub fn new() -> Self {
         Self {
-            parent: None,
             children: Vec::new(),
             polygon: Path64::new(),
         }
@@ -25,19 +23,8 @@ impl PolyPath64 {
 }
 
 impl PolyPath64 {
-    pub fn with_parent(parent_idx: usize) -> Self {
+    pub fn with_path(path: Path64) -> Self {
         Self {
-            parent: Some(parent_idx),
-            children: Vec::new(),
-            polygon: Path64::new(),
-        }
-    }
-}
-
-impl PolyPath64 {
-    pub fn with_path(parent_idx: usize, path: Path64) -> Self {
-        Self {
-            parent: Some(parent_idx),
             children: Vec::new(),
             polygon: path,
         }
@@ -53,12 +40,6 @@ impl PolyPath64 {
 impl PolyPath64 {
     pub fn count(&self) -> usize {
         self.children.len()
-    }
-}
-
-impl PolyPath64 {
-    pub fn parent(&self) -> Option<usize> {
-        self.parent
     }
 }
 
@@ -92,7 +73,7 @@ impl PolyTree64 {
     /// Add a child path to a parent node
     pub fn add_child(&mut self, parent_idx: usize, path: Path64) -> usize {
         let child_idx = self.nodes.len();
-        self.nodes.push(PolyPath64::with_path(parent_idx, path));
+        self.nodes.push(PolyPath64::with_path(path));
         self.nodes[parent_idx].children.push(child_idx);
         child_idx
     }
@@ -110,38 +91,6 @@ impl PolyTree64 {
     pub fn clear(&mut self) {
         self.nodes.clear();
         self.nodes.push(PolyPath64::new());
-    }
-}
-
-impl PolyTree64 {
-    /// Get level of a node
-    pub fn level(&self, node_idx: usize) -> u32 {
-        let mut result = 0u32;
-        let mut p = self.nodes[node_idx].parent;
-        while let Some(parent_idx) = p {
-            result += 1;
-            p = self.nodes[parent_idx].parent;
-        }
-        result
-    }
-}
-
-impl PolyTree64 {
-    /// Check if a node is a hole
-    pub fn is_hole(&self, node_idx: usize) -> bool {
-        let lvl = self.level(node_idx);
-        lvl > 0 && (lvl & 1) == 0
-    }
-}
-
-impl PolyTree64 {
-    /// Get total area including children
-    pub fn area_of(&self, node_idx: usize) -> f64 {
-        let mut result = area(&self.nodes[node_idx].polygon);
-        for &child_idx in &self.nodes[node_idx].children {
-            result += self.area_of(child_idx);
-        }
-        result
     }
 }
 

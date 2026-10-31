@@ -169,9 +169,6 @@ fn map_clipper_error(error: ClipperError) -> SliceError {
             "project region composition polygon coordinate is outside the supported Clipper range"
                 .to_owned(),
         ),
-        ClipperError::OpenPathMustBeSubject | ClipperError::OpenPathsRequirePolyTree => {
-            unreachable!("closed clipping cannot produce open-path errors")
-        }
     }
 }
 

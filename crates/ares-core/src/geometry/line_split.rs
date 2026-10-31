@@ -2,7 +2,10 @@
 // closed paths duplicate then remove the first point; source indices preserve order.
 use super::{
     ClipperError, CoordinateScale, ExPolygon, Line, LineDistanceTree, Point,
-    clipper::{ClipOperation, Clipper, ClipperOptions, PathRole, z::KernelPoint},
+    clipper::{
+        ClipOperation,
+        z::{KernelPoint, clip_zpaths},
+    },
 };
 
 const CLIP_INDEX: i64 = i64::MAX;
@@ -40,22 +43,26 @@ pub(crate) fn split_line(
         .enumerate()
         .map(|(index, p)| KernelPoint::new(p.x(), p.y(), index as i64))
         .collect();
-    let mut clipper = Clipper::new(ClipperOptions {
-        preserve_collinear: true,
-        ..ClipperOptions::default()
-    });
-    for polygon in mask {
-        for contour in std::iter::once(polygon.contour()).chain(polygon.holes()) {
-            let clip: Vec<_> = contour
+    let clip: Vec<_> = mask
+        .iter()
+        .flat_map(|polygon| std::iter::once(polygon.contour()).chain(polygon.holes()))
+        .map(|contour| {
+            contour
                 .points()
                 .iter()
                 .map(|p| KernelPoint::new(p.x(), p.y(), CLIP_INDEX))
-                .collect();
-            clipper.add_z_closed_path(&clip, PathRole::Clip)?;
-        }
-    }
-    clipper.add_z_open_path(&path, PathRole::Subject)?;
-    let mut segments = clipper.execute_z_source_paths(ClipOperation::Intersection);
+                .collect()
+        })
+        .collect();
+    let mut segments = clip_zpaths(
+        std::slice::from_ref(&path),
+        (true, true),
+        &clip,
+        ClipOperation::Intersection,
+        |a, b, c, d, point| {
+            point.z = -(a.z.min(b.z).min(c.z).min(d.z) + 1);
+        },
+    );
     if segments.is_empty() {
         return Ok(Vec::new());
     }

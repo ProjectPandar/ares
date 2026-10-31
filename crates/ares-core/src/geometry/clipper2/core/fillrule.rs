@@ -21,96 +21,14 @@ pub enum FillRule {
     Negative,
 }
 
-/// Exception type for Clipper2 errors
-/// Direct port from clipper.core.h line 27
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Clipper2Exception {
-    pub(crate) description: String,
-}
-
-impl Clipper2Exception {
-    pub fn new(description: &str) -> Self {
-        Self {
-            description: description.to_string(),
-        }
-    }
-}
-
-impl Clipper2Exception {
-    pub fn description(&self) -> &str {
-        &self.description
-    }
-}
-
-impl Display for Clipper2Exception {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Clipper2Exception: {}", self.description)
-    }
-}
-
-impl std::error::Error for Clipper2Exception {}
-
-/// Handle errors by throwing appropriate exceptions
-/// Direct port from clipper.core.h line 73
-pub fn do_error(error_code: i32) -> Result<(), Clipper2Exception> {
-    use errors::*;
-
-    match error_code {
-        PRECISION_ERROR_I => Err(Clipper2Exception::new(PRECISION_ERROR)),
-        SCALE_ERROR_I => Err(Clipper2Exception::new(SCALE_ERROR)),
-        NON_PAIR_ERROR_I => Err(Clipper2Exception::new(NON_PAIR_ERROR)),
-        UNDEFINED_ERROR_I => Err(Clipper2Exception::new(UNDEFINED_ERROR)),
-        RANGE_ERROR_I => Err(Clipper2Exception::new(RANGE_ERROR)),
-        _ => Err(Clipper2Exception::new("Unknown error")),
-    }
-}
-
 /// Constants matching C++ implementation
 /// Direct port from clipper.core.h line 55-71
 pub mod constants {
     /// PI constant
     pub const PI: f64 = std::f64::consts::PI;
 
-    /// Maximum decimal precision for clipper operations
-    pub const CLIPPER2_MAX_DEC_PRECISION: i32 = 8;
-
     /// Maximum coordinate value (INT64_MAX >> 2)
     pub const MAX_COORD: i64 = i64::MAX >> 2;
-    /// Minimum coordinate value
-    pub const MIN_COORD: i64 = -MAX_COORD;
-    /// Invalid coordinate sentinel
-    pub const INVALID: i64 = i64::MAX;
-    /// Maximum coordinate as double
-    pub const MAX_COORD_D: f64 = MAX_COORD as f64;
-    /// Minimum coordinate as double
-    pub const MIN_COORD_D: f64 = MIN_COORD as f64;
-    /// Maximum double value
-    pub const MAX_DBL: f64 = f64::MAX;
-}
-
-/// Error constants matching C++ implementation
-pub mod errors {
-    /// Precision exceeds the permitted range
-    pub const PRECISION_ERROR: &str = "Precision exceeds the permitted range";
-    /// Values exceed permitted range
-    pub const RANGE_ERROR: &str = "Values exceed permitted range";
-    /// Invalid scale (either 0 or too large)
-    pub const SCALE_ERROR: &str = "Invalid scale (either 0 or too large)";
-    /// There must be 2 values for each coordinate
-    pub const NON_PAIR_ERROR: &str = "There must be 2 values for each coordinate";
-    /// There is an undefined error in Clipper2
-    pub const UNDEFINED_ERROR: &str = "There is an undefined error in Clipper2";
-
-    /// Error codes (2^n) - non-fatal
-    pub const PRECISION_ERROR_I: i32 = 1;
-    /// Error codes (2^n) - non-fatal
-    pub const SCALE_ERROR_I: i32 = 2;
-    /// Error codes (2^n) - non-fatal
-    pub const NON_PAIR_ERROR_I: i32 = 4;
-    /// Error codes (2^n) - fatal
-    pub const UNDEFINED_ERROR_I: i32 = 32;
-    /// Error codes (2^n)
-    pub const RANGE_ERROR_I: i32 = 64;
 }
 
 /// Z coordinate type when the `using_z` feature is enabled
@@ -162,24 +80,6 @@ impl<T> Point<T>
 where
     T: Num + Copy,
 {
-    /// Create a zero point
-    pub fn zero() -> Self
-    where
-        T: Zero,
-    {
-        Self {
-            x: T::zero(),
-            y: T::zero(),
-
-            z: ZType::zero(),
-        }
-    }
-}
-
-impl<T> Point<T>
-where
-    T: Num + Copy,
-{
     /// Add two points
     // z is zeroed (not propagated): C++ operator+ builds the result with
     // Point(x, y), which default-initializes z. Only scaling preserves z.
@@ -219,25 +119,6 @@ where
             y: T::zero() - self.y,
 
             z: 0,
-        }
-    }
-}
-
-impl<T> Point<T>
-where
-    T: Num + Copy + PartialOrd,
-{
-    /// Scale a point by a floating-point factor
-    pub fn scale<F>(self, scale: F) -> Point<F>
-    where
-        F: Float,
-        T: Into<F>,
-    {
-        Point {
-            x: self.x.into() * scale,
-            y: self.y.into() * scale,
-
-            z: self.z,
         }
     }
 }

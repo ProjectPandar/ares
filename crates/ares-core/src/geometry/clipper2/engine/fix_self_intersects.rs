@@ -5,77 +5,74 @@
 
 use super::*;
 
+// The three control-flow exits of clipper.engine.cpp:1672–1706.
+enum SelfIntersectionStep {
+    Next(usize),
+    Restart(usize),
+    Finish,
+}
+
 impl ClipperBase {
-    /// Fix self-intersections in an OutRec
-    /// Direct port from clipper.engine.cpp FixSelfIntersects (line 1646)
-    pub(crate) fn fix_self_intersects(&mut self, outrec_idx: usize) {
-        let start_op = match self.outrec_list[outrec_idx].pts {
-            Some(op) => op,
-            None => return,
-        };
-
-        let prev = self.outpt_arena[start_op].prev;
-        let next = self.outpt_arena[start_op].next;
-        if prev == self.outpt_arena[next].next {
-            return; // triangles can't self-intersect
+    pub(crate) fn fix_self_intersects(&mut self, record: usize) {
+        let mut current = self.outrec_list[record].pts.unwrap();
+        if self.outpt_arena[current].prev == self.outpt_arena[self.outpt_arena[current].next].next {
+            return;
         }
-
-        let mut op2 = start_op;
         loop {
-            let prev = self.outpt_arena[op2].prev;
-            let next = self.outpt_arena[op2].next;
-            let next_next = self.outpt_arena[next].next;
-
-            if segments_intersect(
-                self.outpt_arena[prev].pt,
-                self.outpt_arena[op2].pt,
-                self.outpt_arena[next].pt,
-                self.outpt_arena[next_next].pt,
-                false,
-            ) {
-                let next_next_next = self.outpt_arena[next_next].next;
-                if segments_intersect(
-                    self.outpt_arena[prev].pt,
-                    self.outpt_arena[op2].pt,
-                    self.outpt_arena[next_next].pt,
-                    self.outpt_arena[next_next_next].pt,
-                    false,
-                ) {
-                    // Adjacent intersections (micro self-intersection)
-                    op2 = self.duplicate_op(op2, false);
-                    let nnext = self.outpt_arena[self.outpt_arena[op2].next].next;
-                    let nnn = self.outpt_arena[nnext].next;
-                    self.outpt_arena[op2].pt = self.outpt_arena[nnn].pt;
-                    op2 = self.outpt_arena[op2].next;
-                } else {
-                    if Some(op2) == self.outrec_list[outrec_idx].pts
-                        || Some(next) == self.outrec_list[outrec_idx].pts
-                    {
-                        let pts = self.outrec_list[outrec_idx].pts.unwrap();
-                        self.outrec_list[outrec_idx].pts = Some(self.outpt_arena[pts].prev);
-                    }
-                    self.do_split_op(outrec_idx, op2);
-                    if self.outrec_list[outrec_idx].pts.is_none() {
-                        break;
-                    }
-                    op2 = self.outrec_list[outrec_idx].pts.unwrap();
-                    let prev = self.outpt_arena[op2].prev;
-                    let next = self.outpt_arena[op2].next;
-                    if prev == self.outpt_arena[next].next {
-                        break;
-                    }
+            match self.self_intersection_step(record, current) {
+                SelfIntersectionStep::Next(next) => current = next,
+                SelfIntersectionStep::Restart(next) => {
+                    current = next;
                     continue;
                 }
-            } else {
-                op2 = self.outpt_arena[op2].next;
+                SelfIntersectionStep::Finish => break,
             }
-            if op2 == start_op
-                || (self.outrec_list[outrec_idx].pts.is_some()
-                    && op2 == self.outrec_list[outrec_idx].pts.unwrap())
-            {
+            if Some(current) == self.outrec_list[record].pts {
                 break;
             }
         }
+    }
+    fn self_intersection_step(&mut self, record: usize, current: usize) -> SelfIntersectionStep {
+        let previous = self.outpt_arena[current].prev;
+        let next = self.outpt_arena[current].next;
+        let next_next = self.outpt_arena[next].next;
+        if !segments_intersect(
+            self.outpt_arena[previous].pt,
+            self.outpt_arena[current].pt,
+            self.outpt_arena[next].pt,
+            self.outpt_arena[next_next].pt,
+            false,
+        ) {
+            return SelfIntersectionStep::Next(next);
+        }
+        let third = self.outpt_arena[next_next].next;
+        if segments_intersect(
+            self.outpt_arena[previous].pt,
+            self.outpt_arena[current].pt,
+            self.outpt_arena[next_next].pt,
+            self.outpt_arena[third].pt,
+            false,
+        ) {
+            let duplicate = self.duplicate_op(current, false);
+            let next_next = self.outpt_arena[self.outpt_arena[duplicate].next].next;
+            let third = self.outpt_arena[next_next].next;
+            self.outpt_arena[duplicate].pt = self.outpt_arena[third].pt;
+            return SelfIntersectionStep::Next(self.outpt_arena[duplicate].next);
+        }
+        if Some(current) == self.outrec_list[record].pts
+            || Some(next) == self.outrec_list[record].pts
+        {
+            let start = self.outrec_list[record].pts.unwrap();
+            self.outrec_list[record].pts = Some(self.outpt_arena[start].prev);
+        }
+        self.do_split_op(record, current);
+        let Some(restart) = self.outrec_list[record].pts else {
+            return SelfIntersectionStep::Finish;
+        };
+        if self.outpt_arena[restart].prev == self.outpt_arena[self.outpt_arena[restart].next].next {
+            return SelfIntersectionStep::Finish;
+        }
+        SelfIntersectionStep::Restart(restart)
     }
 }
 
@@ -149,18 +146,7 @@ impl ClipperBase {
             self.outpt_arena[next_op].next = new_op;
 
             if self.using_polytree {
-                if path2_contains_path1_outpt(prev_op, new_op, &self.outpt_arena) {
-                    self.outrec_list[new_or].splits = Some(vec![outrec_idx]);
-                } else {
-                    if self.outrec_list[outrec_idx].splits.is_none() {
-                        self.outrec_list[outrec_idx].splits = Some(Vec::new());
-                    }
-                    self.outrec_list[outrec_idx]
-                        .splits
-                        .as_mut()
-                        .unwrap()
-                        .push(new_or);
-                }
+                self.register_split_owner(outrec_idx, new_or, prev_op, new_op);
             }
         }
         // Otherwise the split triangle is too small, just discard split_op and next_op
@@ -274,33 +260,54 @@ impl ClipperBase {
             {
                 break;
             }
-            if self.outrec_list[owner].pts.is_some() && self.check_bounds(owner) {
-                let or_bounds = self.outrec_list[outrec_idx].bounds;
-                let owner_bounds = self.outrec_list[owner].bounds;
-                let contains = owner_bounds.contains_rect(&or_bounds);
-                if contains {
-                    let or_pts = self.outrec_list[outrec_idx].pts.unwrap();
-                    let owner_pts = self.outrec_list[owner].pts.unwrap();
-                    let p2cp1 = path2_contains_path1_outpt(or_pts, owner_pts, &self.outpt_arena);
-                    if p2cp1 {
-                        break;
-                    }
-                }
+            if self.outrec_list[owner].pts.is_some()
+                && self.check_bounds(owner)
+                && self.outrec_list[owner]
+                    .bounds
+                    .contains_rect(&self.outrec_list[outrec_idx].bounds)
+                && path2_contains_path1_outpt(
+                    self.outrec_list[outrec_idx].pts.unwrap(),
+                    self.outrec_list[owner].pts.unwrap(),
+                    &self.outpt_arena,
+                )
+            {
+                break;
             }
             self.outrec_list[outrec_idx].owner = self.outrec_list[owner].owner;
         }
 
-        let path = self.outrec_list[outrec_idx].path.clone();
-        if let Some(owner) = self.outrec_list[outrec_idx].owner {
+        let parent = if let Some(owner) = self.outrec_list[outrec_idx].owner {
             if self.outrec_list[owner].polypath.is_none() {
                 self.recursive_check_owners(owner, polytree);
             }
-            let parent_pp = self.outrec_list[owner].polypath.unwrap();
-            let pp = polytree.add_child(parent_pp, path);
-            self.outrec_list[outrec_idx].polypath = Some(pp);
+            let owner = self.outrec_list[outrec_idx].owner.unwrap();
+            self.outrec_list[owner].polypath.unwrap()
         } else {
-            let pp = polytree.add_child(0, path);
-            self.outrec_list[outrec_idx].polypath = Some(pp);
+            0
+        };
+        let path = self.outrec_list[outrec_idx].path.clone();
+        let child = polytree.add_child(parent, path);
+        self.outrec_list[outrec_idx].polypath = Some(child);
+    }
+}
+
+impl ClipperBase {
+    // clipper.engine.cpp:DoSplitOp, polytree split registration. Preserve an
+    // allocated-but-cleared list; do not clone its live membership.
+    fn register_split_owner(
+        &mut self,
+        record: usize,
+        split: usize,
+        previous_point: usize,
+        split_point: usize,
+    ) {
+        if path2_contains_path1_outpt(previous_point, split_point, &self.outpt_arena) {
+            self.outrec_list[split].splits = Some(vec![record]);
+        } else {
+            self.outrec_list[record]
+                .splits
+                .get_or_insert_with(Vec::new)
+                .push(split);
         }
     }
 }

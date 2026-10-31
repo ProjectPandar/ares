@@ -113,7 +113,7 @@ pub(crate) fn fill_concentric_sparse(
     }
     // outside-in ordering via the union contour walk
     // (`union_pt_chained_outside_in`).
-    let contours = union_contours(&loops)?;
+    let contours = union_contours(&loops, scale)?;
     // split each ring at the point nearest the previous ring's end
     // (`loop.split_at_index(last_pos.nearest_point_index(loop.points))`),
     // then `last_pos = polyline.last_point()` (the re-appended split point).

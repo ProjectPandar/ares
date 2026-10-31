@@ -62,9 +62,6 @@ fn geometry_error(error: ClipperError) -> SliceError {
         ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
             "fill-grouping polygon coordinate is outside the supported Clipper range".to_owned(),
         ),
-        ClipperError::OpenPathMustBeSubject | ClipperError::OpenPathsRequirePolyTree => {
-            unreachable!("fill-grouping operations contain only closed polygon paths")
-        }
     }
 }
 

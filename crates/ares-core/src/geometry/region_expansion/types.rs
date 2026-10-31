@@ -8,7 +8,6 @@ pub(crate) struct RegionExpansionParameters {
     pub(crate) num_other_steps: usize,
     pub(crate) max_inflation: f32,
     pub(crate) arc_tolerance: f64,
-    pub(crate) shortest_edge_length: f64,
 }
 
 impl RegionExpansionParameters {
@@ -47,7 +46,6 @@ impl RegionExpansionParameters {
             max_inflation: (f64::from(tiny_expansion + nsteps as f32 * initial_step) * 1.1_f64)
                 as f32,
             arc_tolerance: 0.1_f64 / scale.factor(),
-            shortest_edge_length: f64::from(initial_step) * 0.005_f64,
         }
     }
 }
