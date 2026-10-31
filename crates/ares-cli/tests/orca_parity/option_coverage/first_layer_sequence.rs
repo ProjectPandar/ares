@@ -6,7 +6,7 @@ mod context;
 mod observation;
 
 #[test]
-fn orca_parity_g4_first_layer_sequence_orders_actual_wall_tools() {
+fn g4_first_layer_sequence_orders_actual_wall_tools() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

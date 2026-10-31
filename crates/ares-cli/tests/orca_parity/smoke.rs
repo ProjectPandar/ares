@@ -31,7 +31,7 @@ mod custom_gcode_vector_scalar;
 /// Focused re-check of the nearest-seam / layer-1 deposition cluster
 /// after seam-placement changes (env-gated, prints outcomes).
 #[test]
-fn orca_parity_nearest_cluster_check() {
+fn nearest_cluster_check() {
     if !crate::runner::reference_enabled("ARES_PARITY_CLUSTER") {
         eprintln!("skipping: set ARES_PARITY_CLUSTER=1");
         return;
@@ -125,22 +125,22 @@ fn cube_model() -> PathBuf {
 /// Single-printer smoke case used to develop the harness and record the
 /// first divergences on a plain Marlin i3 profile.
 #[test]
-fn orca_parity_lh_stinger_smoke() {
+fn lh_stinger_smoke() {
     assert_printer_smoke("LH", "LH Stinger 0.4 nozzle");
 }
 
 #[test]
-fn orca_parity_kobra_s1_max_025_smoke() {
+fn kobra_s1_max_025_smoke() {
     assert_printer_smoke("Anycubic", "Anycubic Kobra S1 Max 0.25 nozzle");
 }
 
 #[test]
-fn orca_parity_ender3_smoke() {
+fn ender3_smoke() {
     assert_printer_smoke("Creality", "Creality Ender-3 0.4 nozzle");
 }
 
 #[test]
-fn orca_parity_fuzzy_skin_enum_smoke() {
+fn fuzzy_skin_enum_smoke() {
     for value in [
         "none",
         "external",
@@ -154,17 +154,17 @@ fn orca_parity_fuzzy_skin_enum_smoke() {
 }
 
 #[test]
-fn orca_parity_internal_octagram_smoke() {
+fn internal_octagram_smoke() {
     assert_process_option_smoke("internal_solid_infill_pattern", "octagramspiral");
 }
 
 #[test]
-fn orca_parity_bottom_hilbert_smoke() {
+fn bottom_hilbert_smoke() {
     assert_process_option_smoke("bottom_surface_pattern", "hilbertcurve");
 }
 
 #[test]
-fn orca_parity_extra_bridge_layer_smoke() {
+fn extra_bridge_layer_smoke() {
     for value in [
         "apply_to_all",
         "disabled",
@@ -176,116 +176,116 @@ fn orca_parity_extra_bridge_layer_smoke() {
 }
 
 #[test]
-fn orca_parity_gap_fill_target_smoke() {
+fn gap_fill_target_smoke() {
     for value in ["everywhere", "nowhere", "topbottom"] {
         assert_process_option_smoke("gap_fill_target", value);
     }
 }
 
 #[test]
-fn orca_parity_top_concentric_smoke() {
+fn top_concentric_smoke() {
     assert_process_option_smoke("top_surface_pattern", "concentric");
 }
 
 #[test]
-fn orca_parity_top_rectilinear_smoke() {
+fn top_rectilinear_smoke() {
     assert_process_option_smoke("top_surface_pattern", "rectilinear");
 }
 
 #[test]
-fn orca_parity_reduce_crossing_wall_smoke() {
+fn reduce_crossing_wall_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("reduce_crossing_wall", value);
     }
 }
 
 #[test]
-fn orca_parity_random_seam_smoke() {
+fn random_seam_smoke() {
     assert_process_option_smoke("seam_position", "random");
 }
 
 #[test]
-fn orca_parity_staggered_inner_seams_smoke() {
+fn staggered_inner_seams_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("staggered_inner_seams", value);
     }
 }
 
 #[test]
-fn orca_parity_seam_slope_type_smoke() {
+fn seam_slope_type_smoke() {
     for value in ["none", "external", "all"] {
         assert_process_option_smoke("seam_slope_type", value);
     }
 }
 
 #[test]
-fn orca_parity_skirt_loops_smoke() {
+fn skirt_loops_smoke() {
     for value in ["0", "4", "10"] {
         assert_process_option_smoke("skirt_loops", value);
     }
 }
 
 #[test]
-fn orca_parity_max_raft_wipe_smoke() {
+fn max_raft_wipe_smoke() {
     assert_process_option_smoke("raft_layers", "100");
 }
 
 #[test]
-fn orca_parity_sovol_sv06_high_speed_smoke() {
+fn sovol_sv06_high_speed_smoke() {
     assert_printer_smoke("Sovol", "Sovol SV06 0.4 High-Speed nozzle");
 }
 
 #[test]
-fn orca_parity_kobra3_02_wipe_smoke() {
+fn kobra3_02_wipe_smoke() {
     assert_printer_smoke("Anycubic", "Anycubic Kobra 3 0.2 nozzle");
 }
 
 #[test]
-fn orca_parity_rolohaun_delta_flyer_smoke() {
+fn rolohaun_delta_flyer_smoke() {
     assert_printer_smoke("RolohaunDesign", "Rolohaun Delta Flyer Refit 0.4 nozzle");
 }
 
 #[test]
-fn orca_parity_wemake_tinybot_smoke() {
+fn wemake_tinybot_smoke() {
     assert_printer_smoke("WEMAKE3D", "WEMAKE3D TinyBotV1 0.4mm nozzle");
 }
 
 #[test]
-fn orca_parity_zaa_enabled_smoke() {
+fn zaa_enabled_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("zaa_enabled", value);
     }
 }
 
 #[test]
-fn orca_parity_spiral_mode_smoke() {
+fn spiral_mode_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("spiral_mode", value);
     }
 }
 
 #[test]
-fn orca_parity_ironing_solid_smoke() {
+fn ironing_solid_smoke() {
     assert_process_option_smoke("ironing_type", "solid");
 }
 
 #[test]
-fn orca_parity_afinia_hs_06_smoke() {
+fn afinia_hs_06_smoke() {
     assert_printer_smoke("Afinia", "Afinia H+1(HS) 0.6 nozzle");
 }
 
 #[test]
-fn orca_parity_kobra_max_smoke() {
+fn kobra_max_smoke() {
     assert_printer_smoke("Anycubic", "Anycubic Kobra Max 0.4 nozzle");
 }
 
 #[test]
-fn orca_parity_artillery_x3_pro_smoke() {
+fn artillery_x3_pro_smoke() {
     assert_printer_smoke("Artillery", "Artillery Sidewinder X3 Pro 0.4 nozzle");
 }
 
 #[test]
-fn orca_parity_prusa_core_one_dump() {
+fn prusa_core_one_dump() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|e| panic!("{e}")) else {
         eprintln!("skipping: no OrcaSlicer CLI available");
         return;
@@ -306,7 +306,7 @@ fn orca_parity_prusa_core_one_dump() {
 }
 
 #[test]
-fn orca_parity_ratrig_vcast_smoke() {
+fn ratrig_vcast_smoke() {
     assert_printer_smoke("Ratrig", "RatRig V-Cast 0.4 nozzle");
 }
 
@@ -370,6 +370,6 @@ mod sweep;
 /// Gated behind `ARES_PARITY_SWEEP=1` because slicing every vendor preset
 /// through both slicers takes hours.
 #[test]
-fn orca_parity_printer_sweep() {
+fn printer_sweep() {
     sweep::run_printer_sweep();
 }

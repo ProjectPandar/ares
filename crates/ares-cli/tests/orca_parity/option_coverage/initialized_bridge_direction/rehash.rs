@@ -1,12 +1,12 @@
 use super::*;
 
 #[test]
-fn orca_parity_initialized_rehash_bridge_matches_complete_output() {
+fn initialized_rehash_bridge_matches_complete_output() {
     compare_polygon("initialized-bridge/rehash-stretched/no-m73", 2.0);
 }
 
 #[test]
-fn orca_parity_initialized_compressed_bridge_matches_complete_output() {
+fn initialized_compressed_bridge_matches_complete_output() {
     compare_polygon("initialized-mesh/compressed/no-m73", 0.99);
 }
 

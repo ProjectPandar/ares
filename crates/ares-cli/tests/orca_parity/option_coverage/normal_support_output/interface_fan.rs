@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn orca_parity_support_interface_fan_preserves_complete_output_and_role_speed() {
+fn support_interface_fan_preserves_complete_output_and_role_speed() {
     if !crate::runner::reference_enabled("ARES_PARITY_NORMAL_SUPPORT_REFERENCE") {
         return;
     }

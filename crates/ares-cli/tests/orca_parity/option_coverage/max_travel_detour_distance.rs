@@ -275,7 +275,7 @@ fn control_native() -> Option<Vec<u8>> {
 /// Native output is the baseline; Ares must match byte-for-byte
 /// (uncapped path is already parity-correct).
 #[test]
-fn orca_parity_max_travel_detour_control_default() {
+fn max_travel_detour_control_default() {
     let Some(control) = control_native() else {
         return;
     };
@@ -285,7 +285,7 @@ fn orca_parity_max_travel_detour_control_default() {
 /// Control: `cap=200`mm — upstream computes the cap but every detour
 /// is shorter; output must equal the control baseline byte-for-byte.
 #[test]
-fn orca_parity_max_travel_detour_control_200mm() {
+fn max_travel_detour_control_200mm() {
     let Some(control) = control_native() else {
         return;
     };
@@ -296,7 +296,7 @@ fn orca_parity_max_travel_detour_control_200mm() {
 /// travels (`G1 X73.613 Y73.694 Z7`). Ares must reproduce the whole
 /// Native output.
 #[test]
-fn orca_parity_max_travel_detour_cap_1mm() {
+fn max_travel_detour_cap_1mm() {
     let Some(control) = control_native() else {
         return;
     };
@@ -307,7 +307,7 @@ fn orca_parity_max_travel_detour_cap_1mm() {
 /// (`direct_length * 0.01 * value`, `AvoidCrossingPerimeters.cpp:1296`)
 /// reverts nearly all detours; marker `G1 X74.203 Y72.607 Z1.4`.
 #[test]
-fn orca_parity_max_travel_detour_cap_2pct() {
+fn max_travel_detour_cap_2pct() {
     let Some(control) = control_native() else {
         return;
     };
@@ -317,7 +317,7 @@ fn orca_parity_max_travel_detour_cap_2pct() {
 /// Target: `cap=10%` — partial revert set through the same Percent
 /// branch; marker `G1 X73.613 Y73.694 Z7`.
 #[test]
-fn orca_parity_max_travel_detour_cap_10pct() {
+fn max_travel_detour_cap_10pct() {
     let Some(control) = control_native() else {
         return;
     };

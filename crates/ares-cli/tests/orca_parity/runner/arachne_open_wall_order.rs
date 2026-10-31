@@ -5,7 +5,7 @@ use sha2::{Digest, Sha256};
 use std::io::{Cursor, Read};
 
 #[test]
-fn orca_parity_arachne_open_wall_c0_neck0_25_r0() {
+fn arachne_open_wall_c0_neck0_25_r0() {
     compare(
         include_bytes!(
             "../../../../../tests/parity/validation/arachne-open-wall-order/C0-neck0.25-r0.3mf"
@@ -17,7 +17,7 @@ fn orca_parity_arachne_open_wall_c0_neck0_25_r0() {
 }
 
 #[test]
-fn orca_parity_arachne_open_wall_c0_neck0_25_r17() {
+fn arachne_open_wall_c0_neck0_25_r17() {
     compare(
         include_bytes!(
             "../../../../../tests/parity/validation/arachne-open-wall-order/C0-neck0.25-r17.3mf"
@@ -29,7 +29,7 @@ fn orca_parity_arachne_open_wall_c0_neck0_25_r17() {
 }
 
 #[test]
-fn orca_parity_arachne_open_wall_c0_neck0_25_r43() {
+fn arachne_open_wall_c0_neck0_25_r43() {
     compare(
         include_bytes!(
             "../../../../../tests/parity/validation/arachne-open-wall-order/C0-neck0.25-r43.3mf"
@@ -41,7 +41,7 @@ fn orca_parity_arachne_open_wall_c0_neck0_25_r43() {
 }
 
 #[test]
-fn orca_parity_arachne_open_wall_nearest_control_neck0_25_r0() {
+fn arachne_open_wall_nearest_control_neck0_25_r0() {
     compare(
         include_bytes!(
             "../../../../../tests/parity/validation/arachne-open-wall-order/nearest-control-neck0.25-r0.3mf"
@@ -53,7 +53,7 @@ fn orca_parity_arachne_open_wall_nearest_control_neck0_25_r0() {
 }
 
 #[test]
-fn orca_parity_arachne_open_wall_nearest_control_neck0_25_r17() {
+fn arachne_open_wall_nearest_control_neck0_25_r17() {
     compare(
         include_bytes!(
             "../../../../../tests/parity/validation/arachne-open-wall-order/nearest-control-neck0.25-r17.3mf"
@@ -65,7 +65,7 @@ fn orca_parity_arachne_open_wall_nearest_control_neck0_25_r17() {
 }
 
 #[test]
-fn orca_parity_arachne_open_wall_nearest_control_neck0_25_r43() {
+fn arachne_open_wall_nearest_control_neck0_25_r43() {
     compare(
         include_bytes!(
             "../../../../../tests/parity/validation/arachne-open-wall-order/nearest-control-neck0.25-r43.3mf"
@@ -77,7 +77,7 @@ fn orca_parity_arachne_open_wall_nearest_control_neck0_25_r43() {
 }
 
 #[test]
-fn orca_parity_arachne_open_wall_wide_neck_control() {
+fn arachne_open_wall_wide_neck_control() {
     compare(
         include_bytes!(
             "../../../../../tests/parity/validation/seam-aligned-back-single-control.3mf"

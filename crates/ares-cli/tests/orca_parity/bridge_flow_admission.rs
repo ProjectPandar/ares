@@ -6,22 +6,22 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_bridge_flow_admission_flow_1_1() {
+fn bridge_flow_admission_flow_1_1() {
     check("flow-1-1");
 }
 
 #[test]
-fn orca_parity_bridge_flow_admission_flow_0_1() {
+fn bridge_flow_admission_flow_0_1() {
     check("flow-0-1");
 }
 
 #[test]
-fn orca_parity_bridge_flow_admission_flow_1_0() {
+fn bridge_flow_admission_flow_1_0() {
     check("flow-1-0");
 }
 
 #[test]
-fn orca_parity_bridge_flow_admission_flow_0_0() {
+fn bridge_flow_admission_flow_0_0() {
     check("flow-0-0");
 }
 

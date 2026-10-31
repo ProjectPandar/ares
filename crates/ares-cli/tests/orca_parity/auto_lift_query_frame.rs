@@ -29,7 +29,7 @@ fn assert_native_witness(native: &str) {
 }
 
 #[test]
-fn orca_parity_auto_lift_query_frame_p1s() {
+fn auto_lift_query_frame_p1s() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         LABEL,

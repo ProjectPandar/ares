@@ -22,7 +22,7 @@ const MK4_BASE: &[u8] = include_bytes!("../../../../../tests/parity/mk4-layer-ch
 const MK4_BASE_SHA: &str = "d0a4dfdb7f89120719b380a2995687a81a7e699025b8f3734349480bdebdc046";
 
 #[test]
-fn orca_parity_mk4_layer_change_weight_total() {
+fn mk4_layer_change_weight_total() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

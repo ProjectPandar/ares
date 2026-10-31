@@ -173,7 +173,7 @@ async fn embedded_script_case(stripped: bool) -> Option<(String, String)> {
 }
 
 #[tokio::test]
-async fn orca_parity_embedded_script_whole_file_matches_native() {
+async fn embedded_script_whole_file_matches_native() {
     let Some((native, ares)) = embedded_script_case(false).await else {
         return;
     };
@@ -187,7 +187,7 @@ async fn orca_parity_embedded_script_whole_file_matches_native() {
 }
 
 #[tokio::test]
-async fn orca_parity_embedded_script_without_old_bed_height_matches_native() {
+async fn embedded_script_without_old_bed_height_matches_native() {
     let Some((native, ares)) = embedded_script_case(true).await else {
         return;
     };

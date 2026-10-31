@@ -112,11 +112,11 @@ fn assert_rejection_matches_native(case: &str) {
 }
 
 #[test]
-fn orca_parity_custom_gcode_unknown_function_matches_native() {
+fn custom_gcode_unknown_function_matches_native() {
     assert_rejection_matches_native("mk4-unknown-function");
 }
 
 #[test]
-fn orca_parity_custom_gcode_leading_blank_line_matches_native() {
+fn custom_gcode_leading_blank_line_matches_native() {
     assert_rejection_matches_native("x1c-blc-leading-blank");
 }

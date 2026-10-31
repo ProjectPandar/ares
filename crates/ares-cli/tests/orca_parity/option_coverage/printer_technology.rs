@@ -49,7 +49,7 @@ fn export(runner: &OrcaRunner, technology: &str) -> runner::ExportedCase {
 }
 
 #[test]
-fn orca_parity_printer_technology_fff_control() {
+fn printer_technology_fff_control() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -74,7 +74,7 @@ fn orca_parity_printer_technology_fff_control() {
 }
 
 #[test]
-fn orca_parity_printer_technology_original_sla_machine_mismatch() {
+fn printer_technology_original_sla_machine_mismatch() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -106,7 +106,7 @@ fn orca_parity_printer_technology_original_sla_machine_mismatch() {
 }
 
 #[test]
-fn orca_parity_printer_technology_parsed_sla_rejection() {
+fn printer_technology_parsed_sla_rejection() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

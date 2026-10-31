@@ -6,42 +6,42 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_wipe_retraction_epsilon_length_0() {
+fn wipe_retraction_epsilon_length_0() {
     check("length-0");
 }
 
 #[test]
-fn orca_parity_wipe_retraction_epsilon_length_0_00005() {
+fn wipe_retraction_epsilon_length_0_00005() {
     check("length-0.00005");
 }
 
 #[test]
-fn orca_parity_wipe_retraction_epsilon_length_0_0001() {
+fn wipe_retraction_epsilon_length_0_0001() {
     check("length-0.0001");
 }
 
 #[test]
-fn orca_parity_wipe_retraction_epsilon_length_0_0002() {
+fn wipe_retraction_epsilon_length_0_0002() {
     check("length-0.0002");
 }
 
 #[test]
-fn orca_parity_wipe_retraction_epsilon_before_100() {
+fn wipe_retraction_epsilon_before_100() {
     check("before-100");
 }
 
 #[test]
-fn orca_parity_wipe_retraction_epsilon_before_99_995() {
+fn wipe_retraction_epsilon_before_99_995() {
     check("before-99.995");
 }
 
 #[test]
-fn orca_parity_wipe_retraction_epsilon_before_99_98() {
+fn wipe_retraction_epsilon_before_99_98() {
     check("before-99.98");
 }
 
 #[test]
-fn orca_parity_wipe_retraction_epsilon_before_50() {
+fn wipe_retraction_epsilon_before_50() {
     check("before-50");
 }
 

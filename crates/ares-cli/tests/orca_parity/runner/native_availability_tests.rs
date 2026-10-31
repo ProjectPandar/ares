@@ -102,7 +102,7 @@ fn required_native_absence_cannot_hide_behind_disabled_selector() {
 fn required_procgcode_absence_fails_actual_vg1_entrypoint() {
     let root = tempfile::tempdir().unwrap();
     let output = invoke(
-        "vg1::vg1_x1c_virtual_state_and_vertex_effects_match_native",
+        "vg1_flush_state::vg1_x1c_virtual_state_and_vertex_effects_match_native",
         root.path(),
         "ARES_PROCGCODE_BIN",
         true,

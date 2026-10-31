@@ -47,7 +47,7 @@ fn first_difference(expected: &str, actual: &str) -> String {
 }
 
 #[tokio::test]
-async fn orca_parity_exported_project_metadata_matches_native_whole_file() {
+async fn exported_project_metadata_matches_native_whole_file() {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();

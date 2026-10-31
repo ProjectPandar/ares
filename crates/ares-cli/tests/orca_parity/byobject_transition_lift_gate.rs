@@ -6,12 +6,12 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_byobject_transition_lift_gate_open() {
+fn byobject_transition_lift_gate_open() {
     check("gate-open");
 }
 
 #[test]
-fn orca_parity_byobject_transition_lift_gate_band() {
+fn byobject_transition_lift_gate_band() {
     check("gate-band");
 }
 

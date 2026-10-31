@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 use super::{OrcaRunner, stages, vendor, write_json};
 
 #[tokio::test]
-async fn orca_parity_preset_scalar_original_bbl_array() {
+async fn preset_scalar_original_bbl_array() {
     let root = super::super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, "BBL").unwrap();

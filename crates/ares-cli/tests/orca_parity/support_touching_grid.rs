@@ -13,7 +13,7 @@ fn sha(bytes: &[u8]) -> String {
 }
 
 #[test]
-fn orca_parity_support_touching_grid_s_c0_public_api_cli() {
+fn support_touching_grid_s_c0_public_api_cli() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

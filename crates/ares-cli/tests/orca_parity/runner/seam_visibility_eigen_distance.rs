@@ -153,11 +153,11 @@ pub(super) fn check(name: &str, filename: &str, none: bool) {
 }
 
 #[test]
-fn orca_parity_seam_visibility_eigen_distance_complete_output() {
+fn seam_visibility_eigen_distance_complete_output() {
     check("seam-visibility-eigen-distance", "stepped-hole", true);
 }
 
 #[test]
-fn orca_parity_seam_visibility_solid_control_complete_output() {
+fn seam_visibility_solid_control_complete_output() {
     check("seam-visibility-solid-control", "solid-plate", true);
 }

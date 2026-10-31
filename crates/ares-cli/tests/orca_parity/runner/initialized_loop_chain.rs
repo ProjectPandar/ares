@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::io::{Cursor, Read, Write};
 
 #[test]
-fn orca_parity_initialized_loop_chain_matches_complete_output() {
+fn initialized_loop_chain_matches_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_LOOP_CHAIN_REFERENCE") {
         return;
     }

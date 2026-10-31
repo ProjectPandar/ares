@@ -3,7 +3,7 @@ use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 
 #[test]
-fn orca_parity_modifier_infill_first_preserves_region_wall_phases() {
+fn modifier_infill_first_preserves_region_wall_phases() {
     if !crate::runner::reference_enabled("ARES_PARITY_REGION_PERIMETERS_REFERENCE") {
         return;
     }

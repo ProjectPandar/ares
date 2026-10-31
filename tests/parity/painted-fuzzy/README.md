@@ -5,7 +5,7 @@ Upstream8500fcdccaa10b5099ac20d252af3a7c560046f1; approved SPEC2dc9cdd57:
 Owners: bbs_3mf canonical carrier → PrintApply actual regions → fuzzy wrapper of
 segmentation_by_painting → PrintObjectSlice apply → classic FuzzySkin masked apply.
 
-Both fixed projects retain legacy-brim-ears/O0.3mf's stock cube geometry:
+Both fixed projects retain legacy-brim-ears/outer-only-legacy-disabled.3mf's stock cube geometry:
 8vertices/12triangles, model/instances/preset container unchanged. Only original
 project setting Disabled_fuzzy→None is changed in both inputs. The target also
 annotates original triangles10/11 (local+X complete vertical face) with canonical

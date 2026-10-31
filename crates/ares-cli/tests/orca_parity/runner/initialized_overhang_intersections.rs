@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::io::{Cursor, Read, Write};
 
 #[test]
-fn orca_parity_initialized_overhang_intersections_match_complete_output() {
+fn initialized_overhang_intersections_match_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_OVERHANG_INTERSECTION_REFERENCE") {
         return;
     }

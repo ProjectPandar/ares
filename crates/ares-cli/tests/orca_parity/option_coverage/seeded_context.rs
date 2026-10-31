@@ -2,17 +2,17 @@ use super::*;
 use crate::runner::CaseInputs;
 
 #[test]
-fn orca_parity_seeded_context_replays_active_fuzzy_output_and_isolates_jobs() {
+fn seeded_context_replays_active_fuzzy_output_and_isolates_jobs() {
     verify_context("cube10.stl", "0.3", "classic");
 }
 
 #[test]
-fn orca_parity_seeded_context_matches_short_fuzzy_contour_padding() {
+fn seeded_context_matches_short_fuzzy_contour_padding() {
     verify_context("cube08.stl", "2", "classic");
 }
 
 #[test]
-fn orca_parity_seeded_context_matches_coherent_random_spacing() {
+fn seeded_context_matches_coherent_random_spacing() {
     for noise in ["perlin", "billow", "ridgedmulti", "voronoi"] {
         verify_context("cube10.stl", "0.3", noise);
     }

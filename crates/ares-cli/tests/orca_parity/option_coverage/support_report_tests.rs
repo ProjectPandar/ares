@@ -5,7 +5,7 @@ use serde_json::Value;
 use super::OrcaRunner;
 
 #[test]
-fn orca_parity_support_report_counts_every_compared_type_and_preserves_divergence() {
+fn support_report_counts_every_compared_type_and_preserves_divergence() {
     if OrcaRunner::from_env().unwrap().is_none() {
         return;
     }

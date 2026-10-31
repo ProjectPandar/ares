@@ -21,40 +21,52 @@ struct Case {
 }
 const CASES: [Case; 6] = [
     Case {
-        label: "N0",
+        label: "no-brim-legacy-disabled",
         selector: "no_brim",
         enabled: false,
-        project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/N0.3mf"),
+        project: include_bytes!(
+            "../../../../../tests/parity/legacy-brim-ears/no-brim-legacy-disabled.3mf"
+        ),
     },
     Case {
-        label: "N1",
+        label: "no-brim-legacy-enabled",
         selector: "no_brim",
         enabled: true,
-        project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/N1.3mf"),
+        project: include_bytes!(
+            "../../../../../tests/parity/legacy-brim-ears/no-brim-legacy-enabled.3mf"
+        ),
     },
     Case {
-        label: "O0",
+        label: "outer-only-legacy-disabled",
         selector: "outer_only",
         enabled: false,
-        project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/O0.3mf"),
+        project: include_bytes!(
+            "../../../../../tests/parity/legacy-brim-ears/outer-only-legacy-disabled.3mf"
+        ),
     },
     Case {
-        label: "O1",
+        label: "outer-only-legacy-enabled",
         selector: "outer_only",
         enabled: true,
-        project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/O1.3mf"),
+        project: include_bytes!(
+            "../../../../../tests/parity/legacy-brim-ears/outer-only-legacy-enabled.3mf"
+        ),
     },
     Case {
-        label: "E0",
+        label: "ears-legacy-disabled",
         selector: "brim_ears",
         enabled: false,
-        project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/E0.3mf"),
+        project: include_bytes!(
+            "../../../../../tests/parity/legacy-brim-ears/ears-legacy-disabled.3mf"
+        ),
     },
     Case {
-        label: "E1",
+        label: "ears-legacy-enabled",
         selector: "brim_ears",
         enabled: true,
-        project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/E1.3mf"),
+        project: include_bytes!(
+            "../../../../../tests/parity/legacy-brim-ears/ears-legacy-enabled.3mf"
+        ),
     },
 ];
 fn verify_input(case: &Case) {
@@ -175,7 +187,7 @@ fn compare_with(runner: &OrcaRunner, case: &Case) {
             "legacy bool must not change Native geometry"
         );
     }
-    if case.label == "E0" {
+    if case.label == "ears-legacy-disabled" {
         let outer = native(runner, &root.join("outer"), CASES[2].project);
         assert_ne!(
             brim_lines,
@@ -235,31 +247,31 @@ fn compare_with(runner: &OrcaRunner, case: &Case) {
 }
 
 #[test]
-fn legacy_brim_n0_whole_output() {
-    compare("N0");
+fn legacy_brim_no_brim_legacy_disabled_whole_output() {
+    compare("no-brim-legacy-disabled");
 }
 
 #[test]
-fn legacy_brim_n1_whole_output() {
-    compare("N1");
+fn legacy_brim_no_brim_legacy_enabled_whole_output() {
+    compare("no-brim-legacy-enabled");
 }
 
 #[test]
-fn legacy_brim_o0_whole_output() {
-    compare("O0");
+fn legacy_brim_outer_only_legacy_disabled_whole_output() {
+    compare("outer-only-legacy-disabled");
 }
 
 #[test]
-fn legacy_brim_o1_whole_output() {
-    compare("O1");
+fn legacy_brim_outer_only_legacy_enabled_whole_output() {
+    compare("outer-only-legacy-enabled");
 }
 
 #[test]
-fn legacy_brim_e0_whole_output() {
-    compare("E0");
+fn legacy_brim_ears_legacy_disabled_whole_output() {
+    compare("ears-legacy-disabled");
 }
 
 #[test]
-fn legacy_brim_e1_whole_output() {
-    compare("E1");
+fn legacy_brim_ears_legacy_enabled_whole_output() {
+    compare("ears-legacy-enabled");
 }

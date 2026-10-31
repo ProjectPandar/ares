@@ -6,17 +6,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_wipe_zero_retraction_comment_before_50() {
+fn wipe_zero_retraction_comment_before_50() {
     check("before-50");
 }
 
 #[test]
-fn orca_parity_wipe_zero_retraction_comment_before_100() {
+fn wipe_zero_retraction_comment_before_100() {
     check("before-100");
 }
 
 #[test]
-fn orca_parity_wipe_zero_retraction_comment_zero_retraction() {
+fn wipe_zero_retraction_comment_zero_retraction() {
     check("zero-retraction");
 }
 

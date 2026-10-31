@@ -7,17 +7,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_byobject_owner_brim_combined_target() {
+fn byobject_owner_brim_combined_target() {
     check("combined");
 }
 
 #[test]
-fn orca_parity_byobject_owner_brim_no_skirt_target() {
+fn byobject_owner_brim_no_skirt_target() {
     check("no-skirt");
 }
 
 #[test]
-fn orca_parity_byobject_owner_brim_width0_control() {
+fn byobject_owner_brim_width0_control() {
     check("control");
 }
 

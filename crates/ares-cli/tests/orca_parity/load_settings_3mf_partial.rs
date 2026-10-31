@@ -16,7 +16,7 @@ use crate::load_settings_cli::{banner_normalized, stages_run};
 /// filament list still overlays its slot. Native slices (arrange
 /// pinned), so GREEN is whole-file parity.
 #[test]
-fn orca_parity_load_settings_3mf_machine_only_whole_file() {
+fn load_settings_3mf_machine_only_whole_file() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -88,7 +88,7 @@ fn orca_parity_load_settings_3mf_machine_only_whole_file() {
 /// from the start of the partial-list GREEN, so this is an always-green
 /// control (no RED phase exists for it).
 #[test]
-fn orca_parity_load_settings_3mf_process_only_whole_file() {
+fn load_settings_3mf_process_only_whole_file() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -155,7 +155,7 @@ fn orca_parity_load_settings_3mf_process_only_whole_file() {
 /// embedded machine and process are retained. Native slices
 /// (arrange pinned), so GREEN is whole-file parity.
 #[test]
-fn orca_parity_load_settings_3mf_filament_only_whole_file() {
+fn load_settings_3mf_filament_only_whole_file() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };

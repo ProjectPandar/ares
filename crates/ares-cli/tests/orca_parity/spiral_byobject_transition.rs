@@ -28,13 +28,13 @@ const WITNESS: (&str, &str, &[u8]) = (
 );
 
 #[test]
-fn orca_parity_spiral_byobject_transition_witness() {
+fn spiral_byobject_transition_witness() {
     let (label, sha, project) = WITNESS;
     native_stream_case::check((DIR, UPSTREAM), label, project, sha, (false, |_, _| {}));
 }
 
 #[test]
-fn orca_parity_spiral_byobject_transition_native_preflight() {
+fn spiral_byobject_transition_native_preflight() {
     let (label, sha, project) = WITNESS;
     let namespace = format!("{DIR}-preflight");
     let (reference, replay) =

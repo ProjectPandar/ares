@@ -28,12 +28,12 @@ const INPUT: &[u8] =
 const INPUT_SHA256: &str = "266073a3b15d47e962f4b576e81b564424b56263d124db1e6c7a3b5cd2e7f8fd";
 
 #[test]
-fn orca_parity_bridge_over_infill_multi_filament() {
+fn bridge_over_infill_multi_filament() {
     assert_parity(INPUT, INPUT_SHA256);
 }
 
 #[test]
-fn orca_parity_bridge_over_infill_multi_filament_x2d() {
+fn bridge_over_infill_multi_filament_two_filament() {
     assert_parity(
         include_bytes!(
             "../../../../tests/parity/validation/multi-filament-bridge-anchor-narrowed.3mf"

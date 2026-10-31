@@ -367,7 +367,7 @@ const output = `${JSON.stringify(rows, null, 2)}\n`;
 if (process.argv.includes("--stdout")) {
   process.stdout.write(output);
 } else if (process.argv.includes("--write")) {
-  writeFileSync("tests/ksr_fdmtest_v4/options-v242.json", output);
+  writeFileSync("tests/ksr_fdmtest_v4/stock_project_options.json", output);
 } else {
   throw new Error("pass --stdout or --write");
 }

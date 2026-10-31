@@ -6,17 +6,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_firmware_zero_layer_lift_target() {
+fn firmware_zero_layer_lift_target() {
     check("fw-zero-hop");
 }
 
 #[test]
-fn orca_parity_firmware_zero_layer_lift_positive_control() {
+fn firmware_zero_layer_lift_positive_control() {
     check("fw-positive-hop");
 }
 
 #[test]
-fn orca_parity_firmware_zero_layer_lift_no_hop_control() {
+fn firmware_zero_layer_lift_no_hop_control() {
     check("fw-zero-no-hop");
 }
 

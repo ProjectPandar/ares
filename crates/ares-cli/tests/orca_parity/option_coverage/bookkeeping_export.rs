@@ -3,7 +3,7 @@ use crate::runner::CaseInputs;
 use std::io::{Cursor, Read, Write};
 
 #[test]
-fn orca_parity_bookkeeping_short_vectors_pad_to_filament_count() {
+fn bookkeeping_short_vectors_pad_to_filament_count() {
     if !crate::runner::reference_enabled("ARES_PARITY_BOOKKEEPING_REFERENCE") {
         return;
     }
@@ -116,7 +116,7 @@ fn configure_different_settings(settings: &mut Value, supplied: bool) {
 }
 
 #[test]
-fn orca_parity_bookkeeping_matches_complete_configured_filament_output() {
+fn bookkeeping_matches_complete_configured_filament_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_BOOKKEEPING_REFERENCE") {
         return;
     }

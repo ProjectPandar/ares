@@ -66,7 +66,7 @@ fn export_landed_case(runner: &OrcaRunner) -> ExportedCase {
 }
 
 #[test]
-fn orca_parity_landed_support_preserves_complete_output() {
+fn landed_support_preserves_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_MODIFIER_REFERENCE") {
         return;
     }
@@ -82,7 +82,7 @@ fn orca_parity_landed_support_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_support_modifier_bridge_flow_averages_printing_regions() {
+fn support_modifier_bridge_flow_averages_printing_regions() {
     if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_MODIFIER_REFERENCE") {
         return;
     }

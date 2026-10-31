@@ -13,17 +13,17 @@ const MESH_SHA256: &str = "a7f79fdf8a5c136095b6ef2384de24dcaa3166c7df4e92768a434
 const MODEL: &str = "0.015,1,100\n0.045,5,100\n0.09,20,100\n0.02,1,1000\n0.08,5,1000\n0.12,20,1000\n0.035,1,5000\n0.1,5,5000\n0.2,20,5000";
 
 #[test]
-fn orca_parity_adaptive_pa_scarf_ramp_s0() {
+fn adaptive_pa_scarf_ramp_s0() {
     check("all", "0", "0", "1", "0");
 }
 
 #[test]
-fn orca_parity_adaptive_pa_scarf_ramp_s1() {
+fn adaptive_pa_scarf_ramp_s1() {
     check("all", "1", "0", "1", "0");
 }
 
 #[test]
-fn orca_parity_adaptive_pa_scarf_ramp_s2() {
+fn adaptive_pa_scarf_ramp_s2() {
     check("all", "1", "1", "1", "0");
 }
 
@@ -34,7 +34,7 @@ fn orca_parity_adaptive_pa_scarf_ramp_s2() {
 /// inner `erPerimeter` loop (`wall_loops = 2`, `seam_slope_inner_walls = 1`,
 /// `seam_gap = 0`) where upstream emits the full unclipped slope head.
 #[test]
-fn orca_parity_adaptive_pa_scarf_ramp_inner_perimeter() {
+fn adaptive_pa_scarf_ramp_inner_perimeter() {
     check("all", "0", "0", "2", "1");
 }
 

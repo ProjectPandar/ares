@@ -4,7 +4,7 @@ use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 
 #[test]
-fn orca_parity_support_blocker_volume_preserves_complete_output() {
+fn support_blocker_volume_preserves_complete_output() {
     verify_annotation(
         "normal(auto)",
         (
@@ -18,7 +18,7 @@ fn orca_parity_support_blocker_volume_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_manual_support_enforcer_volume_preserves_complete_output() {
+fn manual_support_enforcer_volume_preserves_complete_output() {
     verify_annotation(
         "normal(manual)",
         (
@@ -32,7 +32,7 @@ fn orca_parity_manual_support_enforcer_volume_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_mirrored_support_blocker_preserves_complete_output() {
+fn mirrored_support_blocker_preserves_complete_output() {
     verify_annotation(
         "normal(auto)",
         (
@@ -46,7 +46,7 @@ fn orca_parity_mirrored_support_blocker_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_overlapping_support_blockers_preserve_complete_output() {
+fn overlapping_support_blockers_preserve_complete_output() {
     verify_annotation(
         "normal(auto)",
         (
@@ -60,7 +60,7 @@ fn orca_parity_overlapping_support_blockers_preserve_complete_output() {
 }
 
 #[test]
-fn orca_parity_annotation_custom_end_layer_tags_preserve_complete_output() {
+fn annotation_custom_end_layer_tags_preserve_complete_output() {
     verify_annotation(
         "normal(manual)",
         (

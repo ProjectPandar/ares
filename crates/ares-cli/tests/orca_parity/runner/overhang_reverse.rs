@@ -3,7 +3,7 @@ use crate::{self as parity, presets::VendorProfiles};
 use serde_json::{Map, json};
 
 #[test]
-fn orca_parity_arachne_zero_threshold_reverses_real_moves_and_preserves_complete_output() {
+fn arachne_zero_threshold_reverses_real_moves_and_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -43,7 +43,7 @@ fn capture(runner: &OrcaRunner, reverse: &str) -> ParityCase {
 }
 
 #[test]
-fn orca_parity_arachne_internal_only_hole_preserves_complete_output() {
+fn arachne_internal_only_hole_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -55,7 +55,7 @@ fn orca_parity_arachne_internal_only_hole_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_arachne_nonzero_reverse_threshold_preserves_complete_output() {
+fn arachne_nonzero_reverse_threshold_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -67,7 +67,7 @@ fn orca_parity_arachne_nonzero_reverse_threshold_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_arachne_reverse_without_detection_preserves_complete_output() {
+fn arachne_reverse_without_detection_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -77,7 +77,7 @@ fn orca_parity_arachne_reverse_without_detection_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_arachne_hole_without_reversal_preserves_complete_output() {
+fn arachne_hole_without_reversal_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -87,7 +87,7 @@ fn orca_parity_arachne_hole_without_reversal_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_arachne_overhang_without_reversal_preserves_complete_output() {
+fn arachne_overhang_without_reversal_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -97,7 +97,7 @@ fn orca_parity_arachne_overhang_without_reversal_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_arachne_overhang_without_detection_preserves_complete_output() {
+fn arachne_overhang_without_detection_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -107,7 +107,7 @@ fn orca_parity_arachne_overhang_without_detection_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_arachne_supported_reverse_boundaries_preserve_complete_output() {
+fn arachne_supported_reverse_boundaries_preserve_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -133,7 +133,7 @@ fn capture_settings(
 }
 
 #[test]
-fn orca_parity_arachne_wall_transition_angle_range_preserves_complete_output() {
+fn arachne_wall_transition_angle_range_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

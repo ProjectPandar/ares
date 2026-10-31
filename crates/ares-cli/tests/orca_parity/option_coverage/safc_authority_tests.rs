@@ -4,7 +4,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 #[test]
-fn orca_parity_safc_concentric_cases_use_initialized_authority_in_both_modes() {
+fn safc_concentric_cases_use_initialized_authority_in_both_modes() {
     if let Some(request) = std::env::var_os(crate::runner::safc_reference::REQUEST) {
         crate::runner::safc_reference::child(std::path::Path::new(&request));
         return;

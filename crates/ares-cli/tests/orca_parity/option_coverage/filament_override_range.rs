@@ -278,14 +278,14 @@ fn run_leg(leg: &Leg) {
 /// drops the dynamic key before the range loop. Ares must slice and
 /// match byte-for-byte. FAILS pre-fix (`5 not in range [10,18]`).
 #[test]
-fn orca_parity_filament_override_range_target_5() {
+fn filament_override_range_target_5() {
     run_leg(&LEGS[0]);
 }
 
 /// Control: `=["15"]` — in-range value on the same dynamic key; both
 /// Native and Ares accept, output must be byte-equal pre- and post-fix.
 #[test]
-fn orca_parity_filament_override_range_control_15() {
+fn filament_override_range_control_15() {
     run_leg(&LEGS[1]);
 }
 
@@ -299,7 +299,7 @@ fn orca_parity_filament_override_range_control_15() {
 /// over the unpatched fixture and must produce identical bytes.
 /// FAILS pre-fix (`5 not in range [10,18]` at the boundary).
 #[test]
-fn orca_parity_filament_override_range_overrides_cli_5() {
+fn filament_override_range_overrides_cli_5() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -368,6 +368,6 @@ fn orca_parity_filament_override_range_overrides_cli_5() {
 /// Native rejects with `not in range`; Ares must reject identically
 /// both pre- and post-fix — the skip must NOT widen to all `filament_*`.
 #[test]
-fn orca_parity_filament_override_range_reject_mvs() {
+fn filament_override_range_reject_mvs() {
     run_leg(&LEGS[2]);
 }

@@ -1,5 +1,5 @@
 {
-  "base": "tests/parity/legacy-brim-ears/O0.3mf",
+  "base": "tests/parity/legacy-brim-ears/outer-only-legacy-disabled.3mf",
   "base_sha256": "72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec",
   "source": "libslic3r/Brim.cpp:448-458,529-570,678-711,903-904",
   "scope": "input-only single watertight model part, z=0..1, center=110,110",

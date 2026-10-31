@@ -153,31 +153,31 @@ pub(super) fn check(name: &str, filename: &str, none: bool) {
 }
 
 #[test]
-fn orca_parity_counterbore_partiallybridge_primary_complete_output() {
+fn counterbore_partiallybridge_primary_complete_output() {
     check("primary", "stepped-hole", false);
 }
 
 #[test]
-fn orca_parity_counterbore_none_control_complete_output() {
+fn counterbore_none_control_complete_output() {
     check("none-control", "stepped-hole", true);
 }
 
 #[test]
-fn orca_parity_counterbore_first_layer_control_complete_output() {
+fn counterbore_first_layer_control_complete_output() {
     check("first-layer-control", "first-layer-hole", false);
 }
 
 #[test]
-fn orca_parity_counterbore_straight_hole_control_complete_output() {
+fn counterbore_straight_hole_control_complete_output() {
     check("straight-hole-control", "straight-hole", false);
 }
 
 #[test]
-fn orca_parity_counterbore_solid_control_complete_output() {
+fn counterbore_solid_control_complete_output() {
     check("solid-control", "solid-plate", false);
 }
 
 #[test]
-fn orca_parity_counterbore_two_islands_complete_output() {
+fn counterbore_two_islands_complete_output() {
     check("two-islands", "two-islands", false);
 }

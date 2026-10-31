@@ -4,12 +4,12 @@ use super::{
 };
 
 #[test]
-fn orca_parity_manual_slim_one_edge_side_zero_preserves_complete_output() {
+fn manual_slim_one_edge_side_zero_preserves_complete_output() {
     compare_split_side("tree-support/manual/slim/one-edge/side-zero", "401");
 }
 
 #[test]
-fn orca_parity_manual_slim_one_edge_side_one_preserves_complete_output() {
+fn manual_slim_one_edge_side_one_preserves_complete_output() {
     compare_split_side("tree-support/manual/slim/one-edge/side-one", "405");
 }
 

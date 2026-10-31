@@ -15,7 +15,7 @@ mod sloped_loop;
 mod tools;
 
 #[test]
-fn orca_parity_adaptive_pa_constant_model() {
+fn adaptive_pa_constant_model() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };
@@ -96,7 +96,7 @@ fn settings() -> PresetSettings {
 }
 
 #[test]
-fn orca_parity_adaptive_pa_models_and_activation() {
+fn adaptive_pa_models_and_activation() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };

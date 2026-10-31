@@ -28,25 +28,25 @@ const CASES: [(&str, &str, &[u8]); 3] = [
 ];
 
 #[test]
-fn orca_parity_support_base_tree_auto_overhang() {
+fn support_base_tree_auto_overhang() {
     let (label, sha, project) = CASES[0];
     native_stream_case::check((DIR, UPSTREAM), label, project, sha, (false, |_, _| {}));
 }
 
 #[test]
-fn orca_parity_support_base_stock_control() {
+fn support_base_stock_control() {
     let (label, sha, project) = CASES[1];
     native_stream_case::check((DIR, UPSTREAM), label, project, sha, (false, |_, _| {}));
 }
 
 #[test]
-fn orca_parity_support_base_normal_auto_control() {
+fn support_base_normal_auto_control() {
     let (label, sha, project) = CASES[2];
     native_stream_case::check((DIR, UPSTREAM), label, project, sha, (false, |_, _| {}));
 }
 
 #[test]
-fn orca_parity_support_base_native_preflight() {
+fn support_base_native_preflight() {
     let namespace = format!("{DIR}-preflight");
     let mut qualified = Vec::new();
     for (label, sha, project) in CASES {

@@ -6,22 +6,22 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_skirt_min_brim_far_0() {
+fn per_object_skirt_min_brim_far_0() {
     check("far-0", 2, false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_brim_far_20() {
+fn per_object_skirt_min_brim_far_20() {
     check("far-20", 2, true);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_brim_near_0() {
+fn per_object_skirt_min_brim_near_0() {
     check("near-0", 1, false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_brim_near_20() {
+fn per_object_skirt_min_brim_near_20() {
     check("near-20", 1, true);
 }
 

@@ -6,22 +6,22 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_brim_physical_none_inner_outer() {
+fn brim_physical_none_inner_outer() {
     check("none-inner-outer");
 }
 
 #[test]
-fn orca_parity_brim_physical_outer_inner_outer() {
+fn brim_physical_outer_inner_outer() {
     check("outer-inner-outer");
 }
 
 #[test]
-fn orca_parity_brim_physical_outer_outer_inner() {
+fn brim_physical_outer_outer_inner() {
     check("outer-outer-inner");
 }
 
 #[test]
-fn orca_parity_brim_physical_inner_inner_outer() {
+fn brim_physical_inner_inner_outer() {
     check("inner-inner-outer");
 }
 

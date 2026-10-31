@@ -15,7 +15,7 @@ use super::{
 use crate::presets::VendorProfiles;
 
 #[tokio::test]
-async fn orca_parity_stl_model_label_id() {
+async fn stl_model_label_id() {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();

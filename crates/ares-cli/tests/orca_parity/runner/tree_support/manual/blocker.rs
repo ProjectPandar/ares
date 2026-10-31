@@ -4,7 +4,7 @@ use super::{
 };
 
 #[test]
-fn orca_parity_auto_slim_painted_blocker_suppresses_support_and_preserves_complete_output() {
+fn auto_slim_painted_blocker_suppresses_support_and_preserves_complete_output() {
     let label = "tree-support/auto/slim/painted-blocker";
     let Some(baseline) = overhang_case(label, "tree_slim", &[]) else {
         return;
@@ -26,7 +26,7 @@ fn orca_parity_auto_slim_painted_blocker_suppresses_support_and_preserves_comple
 }
 
 #[test]
-fn orca_parity_auto_slim_split_blocker_changes_support_paths_and_preserves_complete_output() {
+fn auto_slim_split_blocker_changes_support_paths_and_preserves_complete_output() {
     let label = "tree-support/auto/slim/split-painted-blocker";
     let Some(baseline) = overhang_case(label, "tree_slim", &[]) else {
         return;

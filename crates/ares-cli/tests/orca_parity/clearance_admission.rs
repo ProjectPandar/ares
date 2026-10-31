@@ -6,32 +6,32 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_clearance_admission_control() {
+fn clearance_admission_control() {
     check("control");
 }
 
 #[test]
-fn orca_parity_clearance_admission_extruder_clearance_radius_zero() {
+fn clearance_admission_extruder_clearance_radius_zero() {
     check("extruder_clearance_radius-zero");
 }
 
 #[test]
-fn orca_parity_clearance_admission_extruder_clearance_height_to_rod_zero() {
+fn clearance_admission_extruder_clearance_height_to_rod_zero() {
     check("extruder_clearance_height_to_rod-zero");
 }
 
 #[test]
-fn orca_parity_clearance_admission_extruder_clearance_height_to_lid_zero() {
+fn clearance_admission_extruder_clearance_height_to_lid_zero() {
     check("extruder_clearance_height_to_lid-zero");
 }
 
 #[test]
-fn orca_parity_clearance_admission_nozzle_height_zero() {
+fn clearance_admission_nozzle_height_zero() {
     check("nozzle_height-zero");
 }
 
 #[test]
-fn orca_parity_clearance_admission_all_zero() {
+fn clearance_admission_all_zero() {
     check("all-zero");
 }
 

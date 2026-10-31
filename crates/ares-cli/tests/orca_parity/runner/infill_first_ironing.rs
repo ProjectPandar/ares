@@ -3,12 +3,12 @@ use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 
 #[test]
-fn orca_parity_infill_first_ironing_follows_walls_in_complete_output() {
+fn infill_first_ironing_follows_walls_in_complete_output() {
     assert_complete_output("");
 }
 
 #[test]
-fn orca_parity_infill_first_ironing_preserves_traditional_timelapse() {
+fn infill_first_ironing_preserves_traditional_timelapse() {
     assert_complete_output("M400 ; emission-phase-timelapse");
 }
 

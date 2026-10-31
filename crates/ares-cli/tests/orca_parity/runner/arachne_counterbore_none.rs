@@ -237,6 +237,6 @@ fn check(name: &str) {
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_none_primary_complete_output() {
+fn arachne_counterbore_none_primary_complete_output() {
     check("none-primary");
 }

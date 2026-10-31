@@ -6,7 +6,7 @@ use serde_json::json;
 use std::fs;
 
 #[test]
-fn orca_parity_adaptive_pa_bridge_effective_domain_and_dependencies() {
+fn adaptive_pa_bridge_effective_domain_and_dependencies() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };

@@ -8,7 +8,7 @@ mod rehash;
 mod tilted;
 
 #[test]
-fn orca_parity_initialized_equal_cost_bridge_matches_complete_output() {
+fn initialized_equal_cost_bridge_matches_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_BRIDGE_DIRECTION_REFERENCE") {
         return;
     }

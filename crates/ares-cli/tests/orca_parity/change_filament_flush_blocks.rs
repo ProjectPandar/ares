@@ -28,7 +28,7 @@ const INPUT: &[u8] =
 const INPUT_SHA256: &str = "22d3813ddbbfbc40bd3955fb35d5f6d19b7d8ee23472e7aa2e354e50a23cfe82";
 
 #[test]
-fn orca_parity_change_filament_flush_blocks() {
+fn change_filament_flush_blocks() {
     use sha2::{Digest, Sha256};
     assert_eq!(
         Sha256::digest(INPUT)

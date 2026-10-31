@@ -88,7 +88,7 @@ fn ender3_moves_match_gcode_processor_oracle() {
 }
 
 #[test]
-fn ksr_fdmtest_v4_moves_match_gcode_processor_oracle() {
+fn stock_project_fdmtest_v4_moves_match_gcode_processor_oracle() {
     if let Some(oracle) = oracle_bin() {
         check_fixture(
             &oracle,

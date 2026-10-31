@@ -5,7 +5,7 @@ use crate::runner::{self, CaseInputs, OrcaRunner};
 use serde_json::json;
 
 #[test]
-fn orca_parity_printable_height_scene_and_tall_last() {
+fn printable_height_scene_and_tall_last() {
     if crate::native_environment::binary("ARES_ORCA_NATIVE_BIN").is_none()
         || crate::native_environment::value("ARES_ORCA_RESOURCES_DIR").is_none()
     {

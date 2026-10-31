@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use super::{RELATIVE_ERROR, RELATIVE_INPUT};
 
 #[test]
-fn o1_processed_project_entry_rejects_missing_reset() {
+fn processed_project_entry_rejects_missing_reset() {
     let result = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
@@ -27,7 +27,7 @@ fn o1_processed_project_entry_rejects_missing_reset() {
 }
 
 #[test]
-fn o1_stl_entry_rejects_relative_without_layer_reset() {
+fn stl_entry_rejects_relative_without_layer_reset() {
     let options = serde_json::from_value(json!({
         "use_relative_e_distances": true, "gcode_flavor": "marlin",
     }))
@@ -45,7 +45,7 @@ fn o1_stl_entry_rejects_relative_without_layer_reset() {
 }
 
 #[test]
-fn o1_profile_entries_reject_relative_without_reset() {
+fn profile_entries_reject_relative_without_reset() {
     let mut archive = zip::ZipArchive::new(Cursor::new(RELATIVE_INPUT)).unwrap();
     let mut bytes = Vec::new();
     archive

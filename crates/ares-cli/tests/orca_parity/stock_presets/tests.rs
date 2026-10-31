@@ -3,7 +3,7 @@ use crate::runner::{application, repo_root};
 use serde_json::json;
 
 #[test]
-fn orca_parity_stock_prusa_miniis_preserves_overhang_reverse_and_complete_output() {
+fn stock_prusa_miniis_preserves_overhang_reverse_and_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -30,7 +30,7 @@ fn orca_parity_stock_prusa_miniis_preserves_overhang_reverse_and_complete_output
 }
 
 #[test]
-fn orca_parity_stock_kobra3_max_preserves_first_layer_bounds_and_complete_output() {
+fn stock_kobra3_max_preserves_first_layer_bounds_and_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -55,7 +55,7 @@ fn orca_parity_stock_kobra3_max_preserves_first_layer_bounds_and_complete_output
 }
 
 #[test]
-fn orca_parity_stock_ender3_preserves_thin_walls_and_complete_output() {
+fn stock_ender3_preserves_thin_walls_and_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

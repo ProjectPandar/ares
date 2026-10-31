@@ -2,7 +2,7 @@ use super::*;
 use serde_json::json;
 
 #[test]
-fn orca_parity_nozzle_ceiling_seams() {
+fn nozzle_ceiling_seams() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|e| panic!("{e}")) else {
         return;
     };

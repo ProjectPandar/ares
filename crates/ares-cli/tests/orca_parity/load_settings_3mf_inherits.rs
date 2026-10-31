@@ -17,7 +17,7 @@ use crate::load_settings_cli::{banner_normalized, stages_run};
 /// semantics match the from:system witness and the change isolates the
 /// load boundary. Ares today fails parent resolution.
 #[test]
-fn orca_parity_load_settings_3mf_user_inherits_whole_file() {
+fn load_settings_3mf_user_inherits_whole_file() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -95,7 +95,7 @@ fn orca_parity_load_settings_3mf_user_inherits_whole_file() {
 /// orders); `parent-filament.json` stays as the documented pair
 /// counterpart of that investigation.
 #[test]
-fn orca_parity_load_settings_3mf_filament_inherits_no_chain() {
+fn load_settings_3mf_filament_inherits_no_chain() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };

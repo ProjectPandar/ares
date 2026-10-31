@@ -2,7 +2,7 @@ use super::*;
 use crate::runner::CaseInputs;
 
 #[test]
-fn orca_parity_postprocessed_statistics_include_unused_trailing_filament() {
+fn postprocessed_statistics_include_unused_trailing_filament() {
     if !crate::runner::reference_enabled("ARES_PARITY_FILAMENT_STATS_REFERENCE") {
         return;
     }

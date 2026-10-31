@@ -58,7 +58,7 @@ fn check(name: &str, input_bytes: &[u8], input_sha256: &str, expected_feedrates:
 }
 
 #[test]
-fn orca_parity_scarf_default_threshold_matches_complete_output() {
+fn scarf_default_threshold_matches_complete_output() {
     check(
         "scaled-mm-disagreement",
         include_bytes!("../../../../../tests/parity/scarf-default-threshold/boundary.3mf"),
@@ -68,7 +68,7 @@ fn orca_parity_scarf_default_threshold_matches_complete_output() {
 }
 
 #[test]
-fn orca_parity_scarf_default_percentage_matches_complete_output() {
+fn scarf_default_percentage_matches_complete_output() {
     check(
         "percentage",
         include_bytes!("../../../../../tests/parity/scarf-default-threshold/percentage.3mf"),
@@ -78,7 +78,7 @@ fn orca_parity_scarf_default_percentage_matches_complete_output() {
 }
 
 #[test]
-fn orca_parity_scarf_default_absolute_matches_complete_output() {
+fn scarf_default_absolute_matches_complete_output() {
     check(
         "absolute",
         include_bytes!("../../../../../tests/parity/scarf-default-threshold/absolute.3mf"),
@@ -88,7 +88,7 @@ fn orca_parity_scarf_default_absolute_matches_complete_output() {
 }
 
 #[test]
-fn orca_parity_scarf_default_above_role_matches_complete_output() {
+fn scarf_default_above_role_matches_complete_output() {
     check(
         "above-role",
         include_bytes!("../../../../../tests/parity/scarf-default-threshold/above-role.3mf"),

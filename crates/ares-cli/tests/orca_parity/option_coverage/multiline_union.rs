@@ -116,51 +116,51 @@ fn compare(label: &str, pattern: &str, count: &str, hole: bool) {
 }
 
 #[test]
-fn orca_parity_multiline_union_r1() {
+fn multiline_union_r1() {
     compare("R1", "rectilinear", "1", false);
 }
 
 #[test]
-fn orca_parity_multiline_union_g1() {
+fn multiline_union_g1() {
     compare("G1", "grid", "1", false);
 }
 
 #[test]
-fn orca_parity_multiline_union_c1() {
+fn multiline_union_c1() {
     compare("C1", "cubic", "1", false);
 }
 
 #[test]
-fn orca_parity_multiline_union_c2() {
+fn multiline_union_c2() {
     compare("C2", "cubic", "2", false);
 }
 
 #[test]
-fn orca_parity_multiline_union_c3() {
+fn multiline_union_c3() {
     compare("C3", "cubic", "3", false);
 }
 
 #[test]
-fn orca_parity_multiline_union_h1() {
+fn multiline_union_h1() {
     compare("H1", "honeycomb", "1", false);
 }
 
 #[test]
-fn orca_parity_multiline_union_h2() {
+fn multiline_union_h2() {
     compare("H2", "honeycomb", "2", false);
 }
 
 #[test]
-fn orca_parity_multiline_union_h3() {
+fn multiline_union_h3() {
     compare("H3", "honeycomb", "3", false);
 }
 
 #[test]
-fn orca_parity_multiline_union_hc2() {
+fn multiline_union_hc2() {
     compare("HC2", "cubic", "2", true);
 }
 
 #[test]
-fn orca_parity_multiline_union_hh2() {
+fn multiline_union_hh2() {
     compare("HH2", "honeycomb", "2", true);
 }

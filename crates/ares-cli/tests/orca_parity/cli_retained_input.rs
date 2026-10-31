@@ -6,7 +6,7 @@ use std::{
 
 pub(super) fn second_plate(temp: &Path, fixtures: &Path, translation_x: &str) -> PathBuf {
     let input = temp.join("selected-plate.3mf");
-    let original = fs::read(fixtures.join("o6-stock-circle-inward.3mf")).unwrap();
+    let original = fs::read(fixtures.join("print-volume-stock-circle-inward.3mf")).unwrap();
     let mut archive = zip::ZipArchive::new(Cursor::new(original)).unwrap();
     let mut writer = zip::ZipWriter::new(fs::File::create(&input).unwrap());
     for index in 0..archive.len() {

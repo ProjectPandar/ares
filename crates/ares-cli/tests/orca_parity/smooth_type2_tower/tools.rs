@@ -4,7 +4,7 @@ use crate::{CaseInputs, OrcaRunner, VendorProfiles, runner};
 use serde_json::json;
 
 #[test]
-fn orca_parity_smooth_type2_tower_tools_and_priming() {
+fn smooth_type2_tower_tools_and_priming() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -208,7 +208,7 @@ fn orca_parity_smooth_type2_tower_tools_and_priming() {
             }
         }
         let exported = if copies {
-            runner::type2_copies::second_copy(exported)
+            runner::object_copy_second_print_instance::second_copy(exported)
         } else {
             exported
         };

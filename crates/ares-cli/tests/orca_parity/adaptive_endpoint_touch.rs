@@ -1,7 +1,7 @@
 //! `FillAdaptive.cpp:815-880,939-954,1074-1110` endpoint-touch handling.
 
 #[test]
-fn orca_parity_adaptive_endpoint_touch_a1() {
+fn adaptive_endpoint_touch_a1() {
     crate::runner::native_stream_case::check(
         (
             "adaptive-endpoint-touch",

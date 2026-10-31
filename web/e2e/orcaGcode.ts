@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 /**
- * `normalize_one_generator_line` (crates/ares-cli/tests/ksr_fdmtest_v4/golden.rs): exactly one
+ * `normalize_one_generator_line` (crates/ares-cli/tests/stock_project_whole_file/golden.rs): exactly one
  * slicer generator line, plus any vendor start G-code timestamp lines, are host identity.
  */
 export function normalize(gcode: string, slicer: "OrcaSlicer" | "Ares") {

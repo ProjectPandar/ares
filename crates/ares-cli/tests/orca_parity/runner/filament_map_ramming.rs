@@ -66,7 +66,7 @@ fn h2d_filament(
 }
 
 #[test]
-fn orca_parity_filament_map_cross_map_matches_native() {
+fn filament_map_cross_map_matches_native() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -136,7 +136,7 @@ fn orca_parity_filament_map_cross_map_matches_native() {
 /// shapes its own tool-change block. Confirmed against native first
 /// (`native_ramming_blocks`), then compared with Ares.
 #[test]
-fn orca_parity_semm_ramming_profile_changes_tool_change_block() {
+fn semm_ramming_profile_changes_tool_change_block() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

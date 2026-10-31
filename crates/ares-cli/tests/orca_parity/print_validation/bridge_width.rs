@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use crate::runner::{OrcaRunner, stages};
 
 #[test]
-fn print_bridge_width_original_thin_precedes_o1() {
+fn print_bridge_width_original_thin_precedes_layer_reset_check() {
     verify(
         super::RELATIVE_INPUT,
         super::RELATIVE_SHA256,
@@ -17,7 +17,7 @@ fn print_bridge_width_original_thin_precedes_o1() {
 }
 
 #[test]
-fn print_bridge_width_scoped_upper_precedes_o1() {
+fn print_bridge_width_scoped_upper_precedes_layer_reset_check() {
     let input =
         include_bytes!("../../../../../tests/parity/validation/print-bridge-region-upper.3mf");
     verify(

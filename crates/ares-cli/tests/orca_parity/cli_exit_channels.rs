@@ -138,7 +138,7 @@ fn cli_exit_values_family_matches_native() {
 }
 
 #[test]
-fn cli_exit_o3_range_family_matches_native() {
+fn cli_exit_numeric_range_family_matches_native() {
     assert_family("range", EarlyExit::InvalidValues);
 }
 

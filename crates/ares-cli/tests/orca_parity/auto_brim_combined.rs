@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[test]
-fn orca_parity_auto_brim_combined_red() {
+fn auto_brim_combined_red() {
     run(
         include_bytes!("../../../../tests/parity/per-object-skirt-brim-types/auto-combined.3mf"),
         "a8d9731e66be1021eca82d50813fdfde685c6af70df72656c0f6119b6ef7e74c",
@@ -14,7 +14,7 @@ fn orca_parity_auto_brim_combined_red() {
 }
 
 #[test]
-fn orca_parity_auto_brim_formula_red() {
+fn auto_brim_formula_red() {
     run(
         include_bytes!("../../../../tests/parity/per-object-skirt-brim-types/auto-formula.3mf"),
         "fca874b8abdfee33e7e9c2108fea92b6bbe3dae74c3d3f7ba4458dd36cbcaaeb",

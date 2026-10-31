@@ -23,49 +23,49 @@ macro_rules! stock_case {
 
 stock_case!(
     o4_cr10se_0_2,
-    "tests/parity/validation/o4-cr10se-0.2.3mf",
+    "tests/parity/validation/minimum-width-cr10se-0.2.3mf",
     "dcaf990d1563fb43f91eecdd1e97dd9212da4a37d734cef6a551219e49350c0c",
     "stock/Creality/Creality CR-10 SE 0.2 nozzle"
 );
 stock_case!(
     o4_ender3_0_2,
-    "tests/parity/validation/o4-ender3-0.2.3mf",
+    "tests/parity/validation/minimum-width-ender3-0.2.3mf",
     "741badc6fd0024dea8473f81f48beb4940c590d4c6e9d221341f9f7423ac16d6",
     "stock/Creality/Creality Ender-3 0.2 nozzle"
 );
 stock_case!(
     o4_ender3pro_0_2,
-    "tests/parity/validation/o4-ender3pro-0.2.3mf",
+    "tests/parity/validation/minimum-width-ender3pro-0.2.3mf",
     "e8d7c006d42f6ae5079e1e093836f96c263d854f4e3d9660cc603e67da025751",
     "stock/Creality/Creality Ender-3 Pro 0.2 nozzle"
 );
 stock_case!(
     o4_ender3s1plus_0_2,
-    "tests/parity/validation/o4-ender3s1plus-0.2.3mf",
+    "tests/parity/validation/minimum-width-ender3s1plus-0.2.3mf",
     "edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110",
     "stock/Creality/Creality Ender-3 S1 Plus 0.2 nozzle"
 );
 stock_case!(
     o4_ender3v3ke_0_2,
-    "tests/parity/validation/o4-ender3v3ke-0.2.3mf",
+    "tests/parity/validation/minimum-width-ender3v3ke-0.2.3mf",
     "e2d577d48b05b2238f00d7fdb3fdd707efdac05580ae71d37be70e6e9c11a3d8",
     "stock/Creality/Creality Ender-3 V3 KE 0.2 nozzle"
 );
 stock_case!(
     o4_ender3v3se_0_2,
-    "tests/parity/validation/o4-ender3v3se-0.2.3mf",
+    "tests/parity/validation/minimum-width-ender3v3se-0.2.3mf",
     "4da4853ebdbfeeb2770552341dbb756ec0d1fdd95c8f0c9bf2fe80f1dbe232a2",
     "stock/Creality/Creality Ender-3 V3 SE 0.2 nozzle"
 );
 stock_case!(
     o4_lk10_0_2,
-    "tests/parity/validation/o4-lk10-0.2.3mf",
+    "tests/parity/validation/minimum-width-lk10-0.2.3mf",
     "93a1a1639f38a3e4c419472c8be00c06004d2e73e6254fbf34834f4d2acb68c7",
     "stock/LONGER/LONGER LK10 (0.2 nozzle)"
 );
 stock_case!(
     o4_lk10plus_0_2,
-    "tests/parity/validation/o4-lk10plus-0.2.3mf",
+    "tests/parity/validation/minimum-width-lk10plus-0.2.3mf",
     "36021e556f2c003fcbf965bd8802c57bbe2e8c39e63d9370edf2023e4603d699",
     "stock/LONGER/LONGER LK10 Plus (0.2 nozzle)"
 );

@@ -12,7 +12,7 @@ records the three simple closed/oriented genus-0 models. No Native output is
 committed. The initial 0%-sparse attempt is NOT used.
 
 Native evidence at approved spec hash:
-`/tmp/ares-w1-gated-flow-spec-reviewed-scope/spec-review-audit.json`:
+`/tmp/ares-gated-flow-spec-reviewed-scope/spec-review-audit.json`:
 60 successful Native slices, official/seeded, two independent processes each,
 CPU18 actual ELF/all sampled threads, complete generator-only repeat and
 cross-mode equality including config/M73/statistics/order.

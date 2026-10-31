@@ -14,7 +14,7 @@ use super::{
 };
 
 #[test]
-fn orca_parity_profile_entry_3mf_load_settings() {
+fn profile_entry_3mf_load_settings() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
@@ -167,7 +167,7 @@ fn orca_parity_profile_entry_3mf_load_settings() {
 /// order: preset → user edit wins, `Config.cpp:461`). Full ordered output
 /// must be byte-identical (generator line normalized).
 #[test]
-fn orca_parity_profile_entry_3mf_override_parity() {
+fn profile_entry_3mf_override_parity() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
@@ -299,7 +299,7 @@ fn orca_parity_profile_entry_3mf_override_parity() {
 /// every key the slice consumes — any missing key would fall back to the
 /// native default and diverge.
 #[test]
-fn orca_parity_profile_settings_view_round_trips_through_3mf() {
+fn profile_settings_view_round_trips_through_3mf() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
@@ -465,7 +465,7 @@ fn rewrite_project_settings(archive_bytes: &[u8], settings: &[u8]) -> Vec<u8> {
 /// archive directly while the Rust entry slices the original STL with
 /// catalog/selection/override.
 #[test]
-fn orca_parity_profile_settings_view_round_trips_through_stl() {
+fn profile_settings_view_round_trips_through_stl() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
@@ -636,7 +636,7 @@ fn orca_parity_profile_settings_view_round_trips_through_stl() {
 /// `process_common_mk3` chain carrying `post_process: [""]`) is rejected
 /// by the native CLI with exit code -19 and by Ares with the same message.
 #[test]
-fn orca_parity_o5_mk3s_post_process_rejection() {
+fn mk3s_post_process_rejection() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
@@ -645,7 +645,8 @@ fn orca_parity_o5_mk3s_post_process_rejection() {
         .expect("native profile oracle");
     let root = super::repo_root();
     let fixture =
-        std::fs::read(root.join("tests/parity/validation/o5-mk3s-postprocess.3mf")).unwrap();
+        std::fs::read(root.join("tests/parity/validation/post-process-mk3s-postprocess.3mf"))
+            .unwrap();
     std::fs::write(runner.work.join("o5-mk3s.3mf"), &fixture).unwrap();
 
     // Native: direct 3MF slice → exit -19 (CLI_POSTPROCESS_NOT_SUPPORTED).

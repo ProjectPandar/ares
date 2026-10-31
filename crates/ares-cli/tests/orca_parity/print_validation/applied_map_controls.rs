@@ -31,7 +31,8 @@ fn print_applied_map_flat_shared_map_retains_height_error() {
 
 #[test]
 fn print_applied_map_invalid_input_still_rejected_before_print() {
-    let input = include_bytes!("../../../../../tests/parity/validation/o4-ender3s1plus-0.2.3mf");
+    let input =
+        include_bytes!("../../../../../tests/parity/validation/minimum-width-ender3s1plus-0.2.3mf");
     let directory = super::evidence_directory("print-map-invalid-");
     for (index, map) in [json!(["1", "0"]), json!(["1", "2"])]
         .into_iter()

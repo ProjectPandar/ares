@@ -33,7 +33,7 @@ use std::{fs, path::Path, process::Command};
 use crate::native_wall_clock::result_comparison_bytes;
 
 #[test]
-fn orca_parity_custom_gcode_timelapse_overlay_mk4_matches_native() {
+fn custom_gcode_timelapse_overlay_mk4_matches_native() {
     let case = "mk4-tlmpe";
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/parity/validation/cli-exit/custom-gcode")

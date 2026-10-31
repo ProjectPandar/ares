@@ -15,7 +15,7 @@ mod tools;
 mod variants;
 
 #[test]
-fn orca_parity_smooth_type2_tower_complete_output() {
+fn smooth_type2_tower_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

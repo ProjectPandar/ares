@@ -41,12 +41,12 @@ use sha2::{Digest, Sha256};
 use crate::runner::{OrcaRunner, stages};
 
 const RELATIVE_INPUT: &[u8] =
-    include_bytes!("../../../../tests/parity/validation/o1-kobra-plus-relative.3mf");
+    include_bytes!("../../../../tests/parity/validation/layer-reset-kobra-plus-relative.3mf");
 const RELATIVE_SHA256: &str = "0919c79bc4f84dd0fdaffd237645a0e91124fa12cf07a24da6376d4eeeca9093";
 const RELATIVE_ERROR: &str = "Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add \"G92 E0\" to layer_gcode.";
 
 const ABSOLUTE_INPUT: &[u8] =
-    include_bytes!("../../../../tests/parity/validation/o1-dremel-3d40-absolute.3mf");
+    include_bytes!("../../../../tests/parity/validation/layer-reset-dremel-3d40-absolute.3mf");
 const ABSOLUTE_SHA256: &str = "9bede932e95c6e2a1c558667e233c75c3d467ac0f8ed3c3628c03be1e7a9ae01";
 const ABSOLUTE_ERROR: &str = "\"G92 E0\" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing.";
 
@@ -69,7 +69,7 @@ fn sha256(bytes: &[u8]) -> String {
 }
 
 #[test]
-fn o1_relative_stock_project_rejects_missing_active_layer_reset() {
+fn relative_stock_project_rejects_missing_active_layer_reset() {
     verify_stock_rejection(
         "stock/Anycubic/Anycubic Kobra Plus 0.4 nozzle",
         RELATIVE_INPUT,
@@ -79,7 +79,7 @@ fn o1_relative_stock_project_rejects_missing_active_layer_reset() {
 }
 
 #[test]
-fn o1_absolute_stock_project_rejects_before_layer_reset() {
+fn absolute_stock_project_rejects_before_layer_reset() {
     verify_stock_rejection(
         "stock/Dremel/Dremel 3D40 0.4 nozzle",
         ABSOLUTE_INPUT,

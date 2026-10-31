@@ -26,7 +26,7 @@ fn stock_model() -> Value {
 }
 
 #[test]
-fn orca_parity_safc_coupled_models_preserve_whole_output_and_segment_consumers() {
+fn safc_coupled_models_preserve_whole_output_and_segment_consumers() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

@@ -62,8 +62,8 @@ mod aligned_rectilinear_multiline;
 #[path = "runner/aligned_template_identity.rs"]
 mod aligned_template_identity;
 
-#[path = "runner/native_ksr_reference_migration.rs"]
-mod native_ksr_reference_migration;
+#[path = "runner/stock_project_native_stream.rs"]
+mod stock_project_native_stream;
 
 #[path = "runner/repetier_cached_feedrate.rs"]
 mod repetier_cached_feedrate;
@@ -127,26 +127,26 @@ mod adjacent_color;
 #[path = "runner/adjacent_motion.rs"]
 mod adjacent_motion;
 
+#[path = "runner/object_copy_second_print_instance.rs"]
+pub(crate) mod object_copy_second_print_instance;
 #[cfg(test)]
-#[path = "runner/tiq2_footer_templates.rs"]
-mod tiq2_footer_templates;
+#[path = "runner/tiq2_footer_dispatch_whole_file.rs"]
+mod tiq2_footer_dispatch_whole_file;
 #[cfg(test)]
-#[path = "runner/tiq2_footer_whole.rs"]
-mod tiq2_footer_whole;
+#[path = "runner/tiq2_footer_template_slot_dispatch.rs"]
+mod tiq2_footer_template_slot_dispatch;
 #[cfg(test)]
-#[path = "runner/tiq2_retained_fan.rs"]
-mod tiq2_retained_fan;
-#[path = "runner/type2_copies.rs"]
-pub(crate) mod type2_copies;
-#[path = "runner/vg1_inputs.rs"]
-pub(crate) mod vg1_inputs;
+#[path = "runner/tiq2_restores_retained_role_fan.rs"]
+mod tiq2_restores_retained_role_fan;
+#[path = "runner/vg1_two_filament_inputs.rs"]
+pub(crate) mod vg1_two_filament_inputs;
 
 #[cfg(test)]
-#[path = "runner/apa_m_active.rs"]
-mod apa_m_active;
+#[path = "runner/adaptive_pa_activation_edits_hold_arachne_parity.rs"]
+mod adaptive_pa_activation_edits_hold_arachne_parity;
 #[cfg(test)]
-#[path = "runner/apa_m_pa_off.rs"]
-mod apa_m_pa_off;
+#[path = "runner/adaptive_pa_off_cannot_hide_arachne_mismatch.rs"]
+mod adaptive_pa_off_cannot_hide_arachne_mismatch;
 #[path = "runner/application.rs"]
 pub(crate) mod application;
 #[cfg(test)]
@@ -187,6 +187,9 @@ mod counterbore_n_split;
 mod counterbore_partiallybridge;
 
 #[cfg(test)]
+#[path = "runner/avoid_crossing_routes_around_top_surfaces.rs"]
+mod avoid_crossing_routes_around_top_surfaces;
+#[cfg(test)]
 #[path = "runner/direct_stl_override_bookkeeping.rs"]
 mod direct_stl_override_bookkeeping;
 #[cfg(test)]
@@ -222,11 +225,8 @@ mod initialized_loop_chain;
 #[path = "runner/initialized_overhang_intersections.rs"]
 mod initialized_overhang_intersections;
 #[cfg(test)]
-#[path = "runner/j1_runtime_used_mask.rs"]
-mod j1_runtime_used_mask;
-#[cfg(test)]
-#[path = "runner/j1_top_surface_lifecycle.rs"]
-mod j1_top_surface_lifecycle;
+#[path = "runner/j1_used_extruder_mask_follows_emitted_tools.rs"]
+mod j1_used_extruder_mask_follows_emitted_tools;
 #[cfg(test)]
 #[path = "runner/lifecycle_tests.rs"]
 mod lifecycle_tests;
@@ -341,11 +341,11 @@ mod strict_reference_tests;
 mod user_overrides;
 
 #[cfg(test)]
+#[path = "runner/flush_matrix_cli_reconstruction.rs"]
+mod flush_matrix_cli_reconstruction;
+#[cfg(test)]
 #[path = "runner/wrapper_tests.rs"]
 mod wrapper_tests;
-#[cfg(test)]
-#[path = "runner/x2d_flush_matrix.rs"]
-mod x2d_flush_matrix;
 
 #[cfg(test)]
 #[path = "runner/wipe_tags.rs"]

@@ -15,7 +15,7 @@ mod styles;
 mod vertical;
 
 #[test]
-fn orca_parity_manual_slim_painted_overhang_preserves_complete_output() {
+fn manual_slim_painted_overhang_preserves_complete_output() {
     let label = "tree-support/manual/slim/painted-overhang";
     let Some(baseline) = overhang_case(label, "tree_slim", &[("support_type", "tree(manual)")])
     else {

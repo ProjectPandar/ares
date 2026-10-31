@@ -78,11 +78,11 @@ fn assert_zdigits_matches_native(case: &str) {
 }
 
 #[test]
-fn orca_parity_custom_gcode_zdigits_mk4_matches_native() {
+fn custom_gcode_zdigits_mk4_matches_native() {
     assert_zdigits_matches_native("mk4-ms-zdigits");
 }
 
 #[test]
-fn orca_parity_custom_gcode_zdigits_k1_matches_native() {
+fn custom_gcode_zdigits_k1_matches_native() {
     assert_zdigits_matches_native("k1-ms-zdigits");
 }

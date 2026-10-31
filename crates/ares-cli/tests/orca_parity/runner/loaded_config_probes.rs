@@ -12,7 +12,7 @@ const ERROR: &str =
     "use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe";
 
 #[tokio::test]
-async fn orca_parity_o2_legacy_stl_firmware_wipe() {
+async fn legacy_stl_firmware_wipe() {
     let directory = tempfile::Builder::new()
         .prefix("o2-legacy-stl-")
         .tempdir()
@@ -43,7 +43,7 @@ async fn orca_parity_o2_legacy_stl_firmware_wipe() {
 }
 
 #[tokio::test]
-async fn orca_parity_o2_any_wipe_before_variant_selection() {
+async fn any_wipe_before_variant_selection() {
     let profiles_root = super::super::repo_root().join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, "RH3D").unwrap();
     let machine = "E3NG v1.2S - 0.4 nozzle";

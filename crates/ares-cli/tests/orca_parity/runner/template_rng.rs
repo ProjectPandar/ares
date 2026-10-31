@@ -3,42 +3,42 @@ use std::io::{Cursor, Read, Write};
 use super::{ExportedCase, OrcaRunner};
 
 #[test]
-fn orca_parity_seeded_template_flashforge_04() {
+fn seeded_template_flashforge_04() {
     verify("flashforge-04", false);
 }
 
 #[test]
-fn orca_parity_seeded_template_flashforge_06() {
+fn seeded_template_flashforge_06() {
     verify("flashforge-06", false);
 }
 
 #[test]
-fn orca_parity_seeded_template_flashforge_08() {
+fn seeded_template_flashforge_08() {
     verify("flashforge-08", false);
 }
 
 #[test]
-fn orca_parity_seeded_template_raise3d_dual() {
+fn seeded_template_raise3d_dual() {
     verify("raise3d-dual", false);
 }
 
 #[test]
-fn orca_parity_seeded_template_raise3d_left() {
+fn seeded_template_raise3d_left() {
     verify("raise3d-left", false);
 }
 
 #[test]
-fn orca_parity_seeded_template_raise3d_right() {
+fn seeded_template_raise3d_right() {
     verify("raise3d-right", false);
 }
 
 #[test]
-fn orca_parity_seeded_template_distributions_and_shared_stream() {
+fn seeded_template_distributions_and_shared_stream() {
     verify("raise3d-left", true);
 }
 
 #[test]
-fn orca_parity_seeded_template_file_start_has_no_rng_context() {
+fn seeded_template_file_start_has_no_rng_context() {
     if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
         return;
     }

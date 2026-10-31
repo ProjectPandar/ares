@@ -7,7 +7,7 @@ use super::{RELATIVE_INPUT, sha256};
 use crate::runner::{OrcaRunner, stages};
 
 #[test]
-fn o1_marlin_relative_accepts_active_reset_in_before_template() {
+fn marlin_relative_accepts_active_reset_in_before_template() {
     verify_positive_override(
         "marlin-with-reset",
         json!({"before_layer_change_gcode": "G92 E0\n"}),
@@ -15,12 +15,12 @@ fn o1_marlin_relative_accepts_active_reset_in_before_template() {
 }
 
 #[test]
-fn o1_non_marlin_relative_does_not_require_layer_reset() {
+fn non_marlin_relative_does_not_require_layer_reset() {
     verify_positive_override("klipper-without-reset", json!({"gcode_flavor": "klipper"}));
 }
 
 #[test]
-fn o1_bbl_marlin_relative_does_not_require_layer_reset() {
+fn bbl_marlin_relative_does_not_require_layer_reset() {
     verify_positive_override(
         "bbl-without-reset",
         json!({"printer_model": "Bambu Lab P1S"}),

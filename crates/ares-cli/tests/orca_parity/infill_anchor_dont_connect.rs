@@ -21,17 +21,17 @@ use std::fs;
 const MESH_SHA256: &str = "a7f79fdf8a5c136095b6ef2384de24dcaa3166c7df4e92768a434c454db55031";
 
 #[test]
-fn orca_parity_infill_anchor_max_zero_rectilinear() {
+fn infill_anchor_max_zero_rectilinear() {
     check("rectilinear", "0");
 }
 
 #[test]
-fn orca_parity_infill_anchor_max_zero_zigzag() {
+fn infill_anchor_max_zero_zigzag() {
     check("zigzag", "0");
 }
 
 #[test]
-fn orca_parity_infill_anchor_max_below_threshold_rectilinear() {
+fn infill_anchor_max_below_threshold_rectilinear() {
     check("rectilinear", "0.02");
 }
 

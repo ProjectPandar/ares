@@ -3,7 +3,7 @@ use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 
 #[test]
-fn orca_parity_fully_clipped_loops_preserve_complete_output() {
+fn fully_clipped_loops_preserve_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_CLIPPED_LOOP_REFERENCE") {
         return;
     }

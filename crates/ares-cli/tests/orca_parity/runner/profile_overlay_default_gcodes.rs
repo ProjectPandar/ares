@@ -44,7 +44,7 @@ fn line_token(line: &str) -> &str {
 }
 
 #[tokio::test]
-async fn orca_parity_profile_overlay_default_gcodes() {
+async fn profile_overlay_default_gcodes() {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();

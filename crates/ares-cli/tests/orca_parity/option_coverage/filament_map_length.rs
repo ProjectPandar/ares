@@ -3,7 +3,7 @@
 use crate::runner::native_stream_case::check;
 
 #[test]
-fn orca_parity_filament_map_longer_than_consumables_matches_complete_output() {
+fn filament_map_longer_than_consumables_matches_complete_output() {
     check(
         ("filament-map-length", &["OrcaSlicer.cpp:6027-6034"]),
         "x1c-cube-too-long",

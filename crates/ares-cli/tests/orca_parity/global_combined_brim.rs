@@ -6,12 +6,12 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_global_combined_brim_target() {
+fn global_combined_brim_target() {
     check("target");
 }
 
 #[test]
-fn orca_parity_global_combined_brim_control() {
+fn global_combined_brim_control() {
     check("control");
 }
 

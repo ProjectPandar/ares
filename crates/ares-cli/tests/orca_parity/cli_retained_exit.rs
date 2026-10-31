@@ -124,7 +124,11 @@ fn cli_unprintable_area_retains_complete_native_gcode_before_exit_154() {
         .tempdir()
         .unwrap()
         .keep();
-    run_cli(&fixtures().join("o6-stock-circle-inward.3mf"), false, &temp);
+    run_cli(
+        &fixtures().join("print-volume-stock-circle-inward.3mf"),
+        false,
+        &temp,
+    );
 }
 
 #[test]
@@ -149,7 +153,7 @@ async fn circle_bed_per_vertex_accepts_inward_cylinder_then_rejects_export() {
         .tempdir()
         .unwrap()
         .keep();
-    let input = fixtures().join("o6-stock-circle-inward.3mf");
+    let input = fixtures().join("print-volume-stock-circle-inward.3mf");
     let Some((_, _, _, expected)) = native_reference(&input, false, &artifacts) else {
         return;
     };

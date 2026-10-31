@@ -11,7 +11,7 @@ Both cases use `native_stream_case::check`: missing Native fails, two Native
 replays must qualify before complete Native/API/CLI output comparison,
 including timing, and raw API/CLI equality. No Native motion lines are
 embedded as goldens or asserted by callbacks; the full comparator is the gate.
-The passing control reuses `validation/w5-brim/outer-only-w5.3mf` without changes;
+The passing control reuses `validation/brim_support_and_painted_ears/outer-only.3mf` without changes;
 it is an OuterOnly materialization control, not a matched P1S settings control.
 
 Run `cargo nextest run -p ares-cli --test orca_parity

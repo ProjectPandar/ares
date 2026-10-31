@@ -25,19 +25,19 @@ struct Witness {
 
 const TARGETS: [Witness; 3] = [
     Witness {
-        label: "split-w1-d0",
+        label: "split-d0",
         sha: "265d61e302c60ba42d384defbeaf938cb88205246c3606238654e8baa21dfcf3",
         width: "1",
         depth: "0",
     },
     Witness {
-        label: "split-w1-d1p5",
+        label: "split-d1p5",
         sha: "07d8496e37ee5f4fa43a2e28abf077c345a7deac395357f5ee24e109b9cc321e",
         width: "1",
         depth: "1.5",
     },
     Witness {
-        label: "split-w0-d0p5",
+        label: "split-d0p5",
         sha: "a73cba5ae616adaf741feedb318e50587910e5cdbeb9e53a53dcfd56fbd5a1bf",
         width: "0",
         depth: "0.5",
@@ -45,22 +45,22 @@ const TARGETS: [Witness; 3] = [
 ];
 
 #[test]
-fn orca_parity_painted_side_cut_width_only() {
+fn painted_side_cut_width_only() {
     check(&TARGETS[0]);
 }
 
 #[test]
-fn orca_parity_painted_side_cut_depth_over_width() {
+fn painted_side_cut_depth_over_width() {
     check(&TARGETS[1]);
 }
 
 #[test]
-fn orca_parity_painted_side_cut_depth_only() {
+fn painted_side_cut_depth_only() {
     check(&TARGETS[2]);
 }
 
 #[test]
-fn orca_parity_painted_side_cut_native_preflight() {
+fn painted_side_cut_native_preflight() {
     let mut qualified = Vec::new();
     for case in &TARGETS {
         let project = input(case);

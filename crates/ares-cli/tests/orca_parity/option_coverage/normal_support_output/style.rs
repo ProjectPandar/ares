@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn orca_parity_normal_support_normalizes_organic_style_to_grid() {
+fn normal_support_normalizes_organic_style_to_grid() {
     if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_STYLE_REFERENCE") {
         return;
     }

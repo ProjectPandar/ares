@@ -236,51 +236,51 @@ fn check(name: &str) {
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_bridges_primary_complete_output() {
+fn arachne_counterbore_bridges_primary_complete_output() {
     check("bridges-primary");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_bridges_first_layer_control_complete_output() {
+fn arachne_counterbore_bridges_first_layer_control_complete_output() {
     check("bridges-first_layer_control");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_bridges_straight_hole_control_complete_output() {
+fn arachne_counterbore_bridges_straight_hole_control_complete_output() {
     check("bridges-straight_hole_control");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_bridges_solid_control_complete_output() {
+fn arachne_counterbore_bridges_solid_control_complete_output() {
     check("bridges-solid_control");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_bridges_two_islands_complete_output() {
+fn arachne_counterbore_bridges_two_islands_complete_output() {
     check("bridges-two_islands");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_filled_primary_complete_output() {
+fn arachne_counterbore_filled_primary_complete_output() {
     check("filled-primary");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_filled_first_layer_control_complete_output() {
+fn arachne_counterbore_filled_first_layer_control_complete_output() {
     check("filled-first_layer_control");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_filled_straight_hole_control_complete_output() {
+fn arachne_counterbore_filled_straight_hole_control_complete_output() {
     check("filled-straight_hole_control");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_filled_solid_control_complete_output() {
+fn arachne_counterbore_filled_solid_control_complete_output() {
     check("filled-solid_control");
 }
 
 #[test]
-fn orca_parity_arachne_counterbore_filled_two_islands_complete_output() {
+fn arachne_counterbore_filled_two_islands_complete_output() {
     check("filled-two_islands");
 }

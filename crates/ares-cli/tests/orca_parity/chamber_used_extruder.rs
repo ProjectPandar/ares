@@ -33,26 +33,26 @@ const CASES: [Witness; 4] = [
 ];
 
 #[test]
-fn orca_parity_chamber_equal() {
+fn chamber_equal() {
     CASES[0].check("chamber-used-extruder", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_chamber_unused_hot() {
+fn chamber_unused_hot() {
     CASES[1].check("chamber-used-extruder", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_chamber_unused_enabled() {
+fn chamber_unused_enabled() {
     CASES[2].check("chamber-used-extruder", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_chamber_used_hot_control() {
+fn chamber_used_hot_control() {
     CASES[3].check("chamber-used-extruder", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_chamber_native_preflight() {
+fn chamber_native_preflight() {
     preflight("chamber-used-extruder", UPSTREAM, &CASES);
 }

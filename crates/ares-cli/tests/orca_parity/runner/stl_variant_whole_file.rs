@@ -44,7 +44,7 @@ fn first_difference(expected: &str, actual: &str) -> String {
 }
 
 #[tokio::test]
-async fn orca_parity_stl_variant_whole_file_matches_native() {
+async fn stl_variant_whole_file_matches_native() {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();

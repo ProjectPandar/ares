@@ -155,7 +155,7 @@ fn print_bed_compat_flat_wipe_tower_explicit_filament_enters_used_union() {
 }
 
 #[test]
-fn print_bed_compat_flat_height_bridge_and_o1_still_precede_bed() {
+fn print_bed_compat_flat_height_bridge_and_layer_reset_check_still_precede_bed() {
     check(
         json!({"cool_plate_temp":["0"],"layer_height":"0.5"}),
         false,

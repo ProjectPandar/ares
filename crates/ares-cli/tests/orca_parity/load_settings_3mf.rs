@@ -32,7 +32,7 @@ pub(crate) fn parse_return_code(stdout: &[u8]) -> i32 {
 /// 3MF load block before `--load-settings` processing, so Native rejects
 /// while the Ares guard (`main.rs`) exits 1.
 #[test]
-fn orca_parity_load_settings_3mf_post_process_reject() {
+fn load_settings_3mf_post_process_reject() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -122,7 +122,7 @@ fn orca_parity_load_settings_3mf_post_process_reject() {
 /// names the loaded machine (`OrcaSlicer.cpp:2576-2585` branch 1), so
 /// Native slices and the whole-file output must match (guard-normalized).
 #[test]
-fn orca_parity_load_settings_3mf_compatible_whole_file() {
+fn load_settings_3mf_compatible_whole_file() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -200,7 +200,7 @@ fn orca_parity_load_settings_3mf_compatible_whole_file() {
 /// adapter reads the files first (`main.rs`), so today the missing-file
 /// legacy failure (exit 1) shadows the `-19` — the ordering RED.
 #[test]
-fn orca_parity_load_settings_3mf_missing_file_post_process_order() {
+fn load_settings_3mf_missing_file_post_process_order() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };

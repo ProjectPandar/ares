@@ -3,32 +3,32 @@ use super::{
 };
 
 #[test]
-fn orca_parity_manual_default_painted_overhang_preserves_complete_output() {
+fn manual_default_painted_overhang_preserves_complete_output() {
     compare_manual_style("tree-support/manual/default/painted-overhang", "default");
 }
 
 #[test]
-fn orca_parity_manual_organic_painted_overhang_preserves_complete_output() {
+fn manual_organic_painted_overhang_preserves_complete_output() {
     compare_manual_style("tree-support/manual/organic/painted-overhang", "organic");
 }
 
 #[test]
-fn orca_parity_manual_strong_painted_overhang_preserves_complete_output() {
+fn manual_strong_painted_overhang_preserves_complete_output() {
     compare_manual_style("tree-support/manual/strong/painted-overhang", "tree_strong");
 }
 
 #[test]
-fn orca_parity_manual_hybrid_painted_overhang_preserves_complete_output() {
+fn manual_hybrid_painted_overhang_preserves_complete_output() {
     compare_manual_style("tree-support/manual/hybrid/painted-overhang", "tree_hybrid");
 }
 
 #[test]
-fn orca_parity_manual_grid_style_painted_overhang_preserves_complete_output() {
+fn manual_grid_style_painted_overhang_preserves_complete_output() {
     compare_manual_style("tree-support/manual/grid/painted-overhang", "grid");
 }
 
 #[test]
-fn orca_parity_manual_snug_style_painted_overhang_preserves_complete_output() {
+fn manual_snug_style_painted_overhang_preserves_complete_output() {
     compare_manual_style("tree-support/manual/snug/painted-overhang", "snug");
 }
 

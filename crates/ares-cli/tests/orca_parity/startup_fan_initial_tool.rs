@@ -27,21 +27,21 @@ const CASES: [Witness; 3] = [
 ];
 
 #[test]
-fn orca_parity_startup_fan_open_control() {
+fn startup_fan_open_control() {
     CASES[0].check("startup-fan-initial-tool", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_startup_fan_initial_t1_closed() {
+fn startup_fan_initial_t1_closed() {
     CASES[1].check("startup-fan-initial-tool", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_startup_fan_no_aux_control() {
+fn startup_fan_no_aux_control() {
     CASES[2].check("startup-fan-initial-tool", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_startup_fan_native_preflight() {
+fn startup_fan_native_preflight() {
     preflight("startup-fan-initial-tool", UPSTREAM, &CASES);
 }

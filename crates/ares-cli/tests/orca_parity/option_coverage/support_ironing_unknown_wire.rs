@@ -63,7 +63,7 @@ pub(super) fn zhop_project(value: &str) -> Vec<u8> {
 /// Domain: a non-"0"/"1" bool wire silently substitutes via
 /// `looks_like_true` (`Config.cpp:666-668`) — "enabled" keeps ironing on.
 #[test]
-fn orca_parity_support_ironing_unknown_bool_enabled() {
+fn support_ironing_unknown_bool_enabled() {
     leg_with_project(
         "unknown-bool-enabled",
         "rectilinear",
@@ -75,7 +75,7 @@ fn orca_parity_support_ironing_unknown_bool_enabled() {
 /// (`Config.hpp:96-99`: only "enabled"/"on") — it substitutes to false and
 /// the ironing section disappears.
 #[test]
-fn orca_parity_support_ironing_unknown_bool_true() {
+fn support_ironing_unknown_bool_true() {
     leg_with_project(
         "unknown-bool-true",
         "rectilinear",
@@ -87,7 +87,7 @@ fn orca_parity_support_ironing_unknown_bool_true() {
 /// option default (`Config.cpp:668-671`) — the echo carries
 /// `filament_z_hop_types = Slope Lift`.
 #[test]
-fn orca_parity_support_ironing_unknown_vector_enum_zhop() {
+fn support_ironing_unknown_vector_enum_zhop() {
     leg_with_project(
         "unknown-vector-enum-zhop",
         "rectilinear",

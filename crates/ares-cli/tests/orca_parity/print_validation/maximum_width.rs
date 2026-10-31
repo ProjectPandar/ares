@@ -7,7 +7,7 @@ use serde_json::json;
 use crate::runner::{OrcaRunner, stages};
 
 #[test]
-fn print_upper_general_width_precedes_later_o4_lower_width() {
+fn print_upper_general_width_precedes_later_minimum_width() {
     verify("3");
 }
 
@@ -17,7 +17,8 @@ fn print_upper_general_percentage_is_not_in_loading_width_list() {
 }
 
 fn verify(width: &str) {
-    let input = include_bytes!("../../../../../tests/parity/validation/o4-ender3s1plus-0.2.3mf");
+    let input =
+        include_bytes!("../../../../../tests/parity/validation/minimum-width-ender3s1plus-0.2.3mf");
     let hash = "edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110";
     assert_eq!(super::sha256(input), hash);
     let directory = super::evidence_directory("print-upper-general-");

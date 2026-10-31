@@ -34,7 +34,7 @@ fn assert_native(native: &str, printer: &str, sequence: &str, total: usize, offs
 }
 
 #[test]
-fn orca_parity_sequential_template_layer_count_a1_byobject() {
+fn sequential_template_layer_count_a1_byobject() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         "a1-byobject",
@@ -49,7 +49,7 @@ fn orca_parity_sequential_template_layer_count_a1_byobject() {
 }
 
 #[test]
-fn orca_parity_sequential_template_layer_count_a1_bylayer_control() {
+fn sequential_template_layer_count_a1_bylayer_control() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         "a1-bylayer-control",
@@ -64,7 +64,7 @@ fn orca_parity_sequential_template_layer_count_a1_bylayer_control() {
 }
 
 #[test]
-fn orca_parity_sequential_origin_writer_frame_p1s_byobject_target() {
+fn sequential_origin_writer_frame_p1s_byobject_target() {
     native_stream_case::check(
         (
             DIR,
@@ -86,7 +86,7 @@ fn orca_parity_sequential_origin_writer_frame_p1s_byobject_target() {
 }
 
 #[test]
-fn orca_parity_sequential_origin_writer_frame_p1s_zero_offset_control() {
+fn sequential_origin_writer_frame_p1s_zero_offset_control() {
     native_stream_case::check(
         (
             DIR,
@@ -110,7 +110,7 @@ fn orca_parity_sequential_origin_writer_frame_p1s_zero_offset_control() {
 }
 
 #[test]
-fn orca_parity_sequential_origin_writer_frame_a1_byobject_control() {
+fn sequential_origin_writer_frame_a1_byobject_control() {
     native_stream_case::check(
         (DIR, &["GCode.cpp::travel_to:7480-7506"]),
         "a1-byobject-control",
@@ -125,7 +125,7 @@ fn orca_parity_sequential_origin_writer_frame_a1_byobject_control() {
 }
 
 #[test]
-fn orca_parity_sequential_template_layer_count_p1s_bylayer_control() {
+fn sequential_template_layer_count_p1s_bylayer_control() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         "p1s-bylayer-control",

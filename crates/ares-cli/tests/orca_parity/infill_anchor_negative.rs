@@ -19,17 +19,17 @@ use std::fs;
 const MESH_SHA256: &str = "a7f79fdf8a5c136095b6ef2384de24dcaa3166c7df4e92768a434c454db55031";
 
 #[test]
-fn orca_parity_infill_anchor_negative_one_connect() {
+fn infill_anchor_negative_one_connect() {
     check("-1", "1000");
 }
 
 #[test]
-fn orca_parity_infill_anchor_negative_one_dont_connect() {
+fn infill_anchor_negative_one_dont_connect() {
     check("-1", "0");
 }
 
 #[test]
-fn orca_parity_infill_anchor_negative_percent_connect() {
+fn infill_anchor_negative_percent_connect() {
     check("-50%", "1000");
 }
 

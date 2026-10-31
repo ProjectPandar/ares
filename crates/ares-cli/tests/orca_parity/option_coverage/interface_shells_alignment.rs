@@ -159,7 +159,7 @@ fn leg(label: &str, interface_shells: &str) {
 /// Control: interface_shells=0 keeps whole-layer surface semantics and must
 /// stay byte-identical before and after the alignment slice.
 #[test]
-fn orca_parity_interface_shells_alignment_off_control() {
+fn interface_shells_alignment_off_control() {
     leg("off-control", "0");
 }
 
@@ -167,6 +167,6 @@ fn orca_parity_interface_shells_alignment_off_control() {
 /// Native oracle byte-for-byte (per-region top surfaces plus the extra
 /// `stBottom` pass of PrintObject.cpp:1611-1630).
 #[test]
-fn orca_parity_interface_shells_alignment_on() {
+fn interface_shells_alignment_on() {
     leg("on", "1");
 }

@@ -7,17 +7,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_object_octagram_ironing_target() {
+fn object_octagram_ironing_target() {
     check("octagramspiral-active");
 }
 
 #[test]
-fn orca_parity_object_octagram_ironing_rectilinear_control() {
+fn object_octagram_ironing_rectilinear_control() {
     check("rectilinear-control");
 }
 
 #[test]
-fn orca_parity_object_octagram_ironing_disabled_control() {
+fn object_octagram_ironing_disabled_control() {
     check("octagramspiral-disabled-control");
 }
 

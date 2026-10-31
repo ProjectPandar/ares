@@ -11,4 +11,4 @@ and the script lists what each case covers.
 `crates/ares-cli/tests/orca_parity/runner/plate_custom_gcode_emission.rs`
 compares Ares with Native G-code made at runtime by the orca_parity runner
 (official and seeded). It also builds the two-filament cases at runtime from
-the vg1 X1C cube10 export. No Native output is stored.
+the vg1_flush_state X1C cube10 export. No Native output is stored.

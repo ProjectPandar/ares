@@ -41,7 +41,7 @@ fn normalized(bytes: &[u8]) -> Vec<String> {
 }
 
 #[test]
-fn orca_parity_layer_fan_priority() {
+fn layer_fan_priority() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };

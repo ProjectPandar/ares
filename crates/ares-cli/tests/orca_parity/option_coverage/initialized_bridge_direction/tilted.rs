@@ -2,7 +2,7 @@ use super::*;
 use std::{fmt::Write as _, io::Write as _};
 
 #[test]
-fn orca_parity_initialized_tilted_mesh_matches_complete_output() {
+fn initialized_tilted_mesh_matches_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_BRIDGE_DIRECTION_REFERENCE") {
         return;
     }

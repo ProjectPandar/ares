@@ -57,7 +57,7 @@ fn assert_native_alias_witness(native: &str) {
 }
 
 #[test]
-fn orca_parity_unknown_key_config_block_control_p1s() {
+fn unknown_key_config_block_control_p1s() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         CONTROL_LABEL,
@@ -71,7 +71,7 @@ fn orca_parity_unknown_key_config_block_control_p1s() {
 }
 
 #[test]
-fn orca_parity_unknown_key_config_block_target_p1s() {
+fn unknown_key_config_block_target_p1s() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         UNKNOWN_KEY_LABEL,
@@ -85,7 +85,7 @@ fn orca_parity_unknown_key_config_block_target_p1s() {
 }
 
 #[test]
-fn orca_parity_unknown_key_config_block_alias_p1s() {
+fn unknown_key_config_block_alias_p1s() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         ALIAS_KEY_LABEL,

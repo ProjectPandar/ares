@@ -28,7 +28,7 @@ fn line_token(line: &str) -> &str {
 }
 
 #[tokio::test]
-async fn orca_parity_profile_legacy_machine_overlay_matches_native() {
+async fn profile_legacy_machine_overlay_matches_native() {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();

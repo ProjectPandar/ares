@@ -6,19 +6,19 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_skirt_brim_far_control() {
+fn per_object_skirt_brim_far_control() {
     check("far-control", 2, false);
 }
 #[test]
-fn orca_parity_per_object_skirt_brim_far() {
+fn per_object_skirt_brim_far() {
     check("far-brim", 2, true);
 }
 #[test]
-fn orca_parity_per_object_skirt_brim_near_control() {
+fn per_object_skirt_brim_near_control() {
     check("near-control", 2, false);
 }
 #[test]
-fn orca_parity_per_object_skirt_brim_near_merges() {
+fn per_object_skirt_brim_near_merges() {
     check("near-brim", 1, true);
 }
 

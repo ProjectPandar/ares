@@ -50,7 +50,7 @@ fn assert_native_template_witness(native: &str, clamp: &str, weight: &str) {
 }
 
 #[test]
-fn orca_parity_extruded_weight_totals_stock_mk4() {
+fn extruded_weight_totals_stock_mk4() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         STOCK_LABEL,
@@ -69,7 +69,7 @@ fn orca_parity_extruded_weight_totals_stock_mk4() {
 }
 
 #[test]
-fn orca_parity_extruded_weight_totals_density2_mk4() {
+fn extruded_weight_totals_density2_mk4() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         DENSITY_LABEL,
@@ -89,7 +89,7 @@ fn orca_parity_extruded_weight_totals_density2_mk4() {
 }
 
 #[test]
-fn orca_parity_extruded_weight_totals_diameter185_mk4() {
+fn extruded_weight_totals_diameter185_mk4() {
     native_stream_case::check(
         (DIR, UPSTREAM),
         DIAMETER_LABEL,

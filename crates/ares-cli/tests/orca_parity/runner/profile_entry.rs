@@ -34,12 +34,12 @@ use serde_json::{Value, json};
 use super::{OrcaRunner, stages};
 
 #[test]
-fn orca_parity_profile_entry_stl_load_settings() {
+fn profile_entry_stl_load_settings() {
     run_profile_entry(&[]);
 }
 
 #[test]
-fn orca_parity_profile_entry_cli_config_presence() {
+fn profile_entry_cli_config_presence() {
     for upward in [json!([]), json!(["another printer"])] {
         run_profile_entry(&[
             ("machine", "upward_compatible_machine", upward),
@@ -257,7 +257,7 @@ pub(super) fn write_json(path: &Path, value: &Value) {
 /// `Model.cpp:704-722`); identical world geometry must give identical
 /// G-code.
 #[test]
-fn orca_parity_profile_entry_stl_center_placement() {
+fn profile_entry_stl_center_placement() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }

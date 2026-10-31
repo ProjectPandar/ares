@@ -252,7 +252,7 @@ fn junction_deviation_zero_control_matches_native() {
         return;
     };
     let root = crate::artifacts::root_from_env().unwrap();
-    let reference = slice_native(&runner, &root, ZERO_CONTROL, "jd-zero-ctl-");
+    let reference = slice_native(&runner, &root, ZERO_CONTROL, "jd-zero-control-");
     assert_eq!(
         reference.lines().filter(|l| *l == "M205 J0.080").count(),
         1,
@@ -279,7 +279,7 @@ fn junction_deviation_flavor_control_matches_native() {
         return;
     };
     let root = crate::artifacts::root_from_env().unwrap();
-    let reference = slice_native(&runner, &root, FLAVOR_CONTROL, "jd-flavor-ctl-");
+    let reference = slice_native(&runner, &root, FLAVOR_CONTROL, "jd-flavor-control-");
     assert_eq!(
         reference
             .lines()

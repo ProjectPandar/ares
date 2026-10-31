@@ -132,19 +132,19 @@ fn check(name: &str, flavor: &str, rates: [&str; 2], setter: &str) {
 }
 
 #[test]
-fn orca_parity_m205_config_minimum_rates() {
+fn m205_config_minimum_rates() {
     check("config-minimum-rates", "marlin", ["6", "12"], "");
 }
 #[test]
-fn orca_parity_m205_start_minimum_rates() {
+fn m205_start_minimum_rates() {
     check("start-minimum-rates", "marlin", ["0", "0"], "M205 S6 T12");
 }
 #[test]
-fn orca_parity_m205_start_x_inherits_y() {
+fn m205_start_x_inherits_y() {
     check("start-x-inherits-y", "marlin", ["0", "0"], "M205 X1");
 }
 #[test]
-fn orca_parity_m205_start_junction_deviation() {
+fn m205_start_junction_deviation() {
     check(
         "start-junction-deviation",
         "marlin2",
@@ -153,10 +153,10 @@ fn orca_parity_m205_start_junction_deviation() {
     );
 }
 #[test]
-fn orca_parity_m205_zero_control() {
+fn m205_zero_control() {
     check("zero-control", "marlin", ["0", "0"], "");
 }
 #[test]
-fn orca_parity_m205_rrf_configuration_reset() {
+fn m205_rrf_configuration_reset() {
     check("rrf-configuration-reset", "reprapfirmware", ["6", "12"], "");
 }

@@ -3,7 +3,7 @@ use crate::runner::CaseInputs;
 use serde_json::json;
 
 #[test]
-fn orca_parity_lightning_preserves_complete_ordered_output() {
+fn lightning_preserves_complete_ordered_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_LIGHTNING_REFERENCE") {
         return;
     }

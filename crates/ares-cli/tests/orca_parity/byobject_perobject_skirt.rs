@@ -6,17 +6,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_byobject_perobject_skirt_target() {
+fn byobject_perobject_skirt_target() {
     check("target");
 }
 
 #[test]
-fn orca_parity_byobject_perobject_skirt_bylayer_control() {
+fn byobject_perobject_skirt_bylayer_control() {
     check("bylayer-control");
 }
 
 #[test]
-fn orca_parity_byobject_perobject_skirt_combined_control() {
+fn byobject_perobject_skirt_combined_control() {
     check("combined-control");
 }
 

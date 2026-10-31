@@ -98,7 +98,7 @@ fn run_case(name: &str, expected_sha: &str) {
 }
 
 #[test]
-fn orca_parity_xl_curl_segmentation_witness_red() {
+fn xl_curl_segmentation_witness_red() {
     run_case(
         "xl-witness",
         "e4ef60761982e53bff9525ae4aaf7fe5955d5ed2b4e5b8753561b08cbde9c842",
@@ -106,7 +106,7 @@ fn orca_parity_xl_curl_segmentation_witness_red() {
 }
 
 #[test]
-fn orca_parity_xl_curl_off_control() {
+fn xl_curl_off_control() {
     run_case(
         "xl-curl-off",
         "063105d8c4375d70bbab5b8310239e202030b60763c85eec57306b1c7e36489a",
@@ -114,7 +114,7 @@ fn orca_parity_xl_curl_off_control() {
 }
 
 #[test]
-fn orca_parity_xl_curl_mini_control() {
+fn xl_curl_mini_control() {
     run_case(
         "mini-control",
         "4d283b4608f843740c02e0094540b18b5561efbcf69c6605c4b71b873747a099",

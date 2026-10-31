@@ -155,7 +155,7 @@ async fn original_profile(case: &RangeCase) {
 // --- O3 single-key out-of-range cases (original matrix vendor data) ---
 
 #[tokio::test]
-async fn orca_parity_o3_retraction_when_cut_28_loaded_config() {
+async fn retraction_when_cut_28_loaded_config() {
     original_profile(&RangeCase {
         vendor_name: "Creality",
         machine: "Creality SPARKX i7 0.4 nozzle",
@@ -172,7 +172,7 @@ async fn orca_parity_o3_retraction_when_cut_28_loaded_config() {
 /// semantics (`f5c869df`), so the O3 range loop reaches and rejects the
 /// out-of-range retraction with the native text.
 #[tokio::test]
-async fn orca_parity_o3_retraction_when_cut_30_loaded_config() {
+async fn retraction_when_cut_30_loaded_config() {
     original_profile(&RangeCase {
         vendor_name: "Creality",
         machine: "Creality K2 0.4 nozzle",
@@ -184,7 +184,7 @@ async fn orca_parity_o3_retraction_when_cut_30_loaded_config() {
 }
 
 #[tokio::test]
-async fn orca_parity_o3_extruder_printable_height_2100_loaded_config() {
+async fn extruder_printable_height_2100_loaded_config() {
     original_profile(&RangeCase {
         vendor_name: "SeeMeCNC",
         machine: "SeeMeCNC BOSSdelta 500 0521 0.4 nozzle",
@@ -200,7 +200,7 @@ async fn orca_parity_o3_extruder_printable_height_2100_loaded_config() {
 /// element is the `INT_MAX` sentinel (Config.hpp:1013), which
 /// `is_value_valid` reports out-of-range (max 1500). Two sorted lines.
 #[tokio::test]
-async fn orca_parity_o3_nil_flush_temp_and_retraction_zero_loaded_config() {
+async fn nil_flush_temp_and_retraction_zero_loaded_config() {
     original_profile(&RangeCase {
         vendor_name: "Anycubic",
         machine: "Anycubic Kobra S1 Max 0.6 nozzle",
@@ -366,7 +366,7 @@ async fn run_override_case(case: &OverrideCase) {
 /// `Slic3r::validate` line-width bound (PrintConfig.cpp:10504-10517), not
 /// the generic `is_value_valid` loop.
 #[tokio::test]
-async fn orca_parity_o3_bridge_line_width_over_nozzle_loaded_config() {
+async fn bridge_line_width_over_nozzle_loaded_config() {
     run_override_case(&OverrideCase {
         vendor_name: "Creality",
         machine: "Creality Ender-3 0.4 nozzle",
@@ -389,7 +389,7 @@ async fn orca_parity_o3_bridge_line_width_over_nozzle_loaded_config() {
 /// `Param values in 3mf/config error: ` header. The machine already carries
 /// `wipe: "1"`; forcing `use_firmware_retraction` adds the O2 violation.
 #[tokio::test]
-async fn orca_parity_o3_firmware_and_range_loaded_config() {
+async fn firmware_and_range_loaded_config() {
     run_override_case(&OverrideCase {
         vendor_name: "Creality",
         machine: "Creality SPARKX i7 0.4 nozzle",
@@ -414,7 +414,7 @@ async fn orca_parity_o3_firmware_and_range_loaded_config() {
 /// runtime so the sweep is a self-documenting report of the shared
 /// `Slic3r::validate` map.
 #[tokio::test]
-async fn orca_parity_o3_matrix_sweep_loaded_config() {
+async fn matrix_sweep_loaded_config() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

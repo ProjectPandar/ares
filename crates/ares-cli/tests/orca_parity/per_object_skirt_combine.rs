@@ -10,12 +10,12 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_skirt_combine_multi_instance_far() {
+fn per_object_skirt_combine_multi_instance_far() {
     check("multi-instance-far", 2, 2);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_combine_multi_instance_contact() {
+fn per_object_skirt_combine_multi_instance_contact() {
     check("multi-instance-contact", 1, 1);
 }
 

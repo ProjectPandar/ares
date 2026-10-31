@@ -5,7 +5,7 @@ use super::*;
 use crate::runner::CaseInputs;
 
 #[test]
-fn orca_parity_initialized_stitch_junction_matches_complete_internal_fill() {
+fn initialized_stitch_junction_matches_complete_internal_fill() {
     if !crate::runner::reference_enabled("ARES_PARITY_STITCH_JUNCTION_REFERENCE") {
         return;
     }

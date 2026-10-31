@@ -9,22 +9,22 @@ mod manual;
 mod retraction;
 
 #[test]
-fn orca_parity_default_tree_auto_overhang_preserves_complete_output() {
+fn default_tree_auto_overhang_preserves_complete_output() {
     compare_overhang("tree-support/auto/default/overhang", "default", &[]);
 }
 
 #[test]
-fn orca_parity_grid_tree_auto_normalizes_style_and_preserves_complete_output() {
+fn grid_tree_auto_normalizes_style_and_preserves_complete_output() {
     compare_overhang("tree-support/auto/grid/overhang", "grid", &[]);
 }
 
 #[test]
-fn orca_parity_snug_tree_auto_normalizes_style_and_preserves_complete_output() {
+fn snug_tree_auto_normalizes_style_and_preserves_complete_output() {
     compare_overhang("tree-support/auto/snug/overhang", "snug", &[]);
 }
 
 #[test]
-fn orca_parity_organic_zero_branch_angle_preserves_complete_output() {
+fn organic_zero_branch_angle_preserves_complete_output() {
     compare_overhang(
         "tree-support/auto/organic/zero-branch-angle",
         "default",
@@ -33,22 +33,22 @@ fn orca_parity_organic_zero_branch_angle_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_slim_tree_auto_overhang_preserves_complete_output() {
+fn slim_tree_auto_overhang_preserves_complete_output() {
     compare_overhang("tree-support/auto/slim/overhang", "tree_slim", &[]);
 }
 
 #[test]
-fn orca_parity_strong_tree_auto_overhang_preserves_complete_output() {
+fn strong_tree_auto_overhang_preserves_complete_output() {
     compare_overhang("tree-support/auto/strong/overhang", "tree_strong", &[]);
 }
 
 #[test]
-fn orca_parity_hybrid_tree_auto_overhang_preserves_complete_output() {
+fn hybrid_tree_auto_overhang_preserves_complete_output() {
     compare_overhang("tree-support/auto/hybrid/overhang", "tree_hybrid", &[]);
 }
 
 #[test]
-fn orca_parity_strong_tree_lightning_overhang_preserves_complete_output() {
+fn strong_tree_lightning_overhang_preserves_complete_output() {
     compare_overhang(
         "tree-support/auto/strong/lightning/overhang",
         "tree_strong",
@@ -57,7 +57,7 @@ fn orca_parity_strong_tree_lightning_overhang_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_normal_snug_overhang_preserves_complete_output() {
+fn normal_snug_overhang_preserves_complete_output() {
     compare_overhang(
         "normal-support/auto/snug/overhang",
         "snug",
@@ -66,7 +66,7 @@ fn orca_parity_normal_snug_overhang_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_normal_snug_sparse_interfaces_preserve_complete_output() {
+fn normal_snug_sparse_interfaces_preserve_complete_output() {
     compare_overhang(
         "normal-support/auto/snug/sparse-interfaces",
         "snug",

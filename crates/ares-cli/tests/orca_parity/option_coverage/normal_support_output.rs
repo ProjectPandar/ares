@@ -14,7 +14,7 @@ mod interface_fan;
 mod style;
 
 #[test]
-fn orca_parity_normal_support_boolean_values_preserve_complete_output() {
+fn normal_support_boolean_values_preserve_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_NORMAL_SUPPORT_REFERENCE") {
         return;
     }

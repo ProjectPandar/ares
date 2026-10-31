@@ -32,7 +32,7 @@ const CASES: [(&str, &str, &[u8], bool); 3] = [
 ];
 
 #[test]
-fn orca_parity_absolute_e_reset_verbose() {
+fn absolute_e_reset_verbose() {
     let (label, sha, project, expected) = CASES[0];
     native_stream_case::check(
         (DIR, UPSTREAM),
@@ -48,7 +48,7 @@ fn orca_parity_absolute_e_reset_verbose() {
 }
 
 #[test]
-fn orca_parity_absolute_e_reset_quiet_control() {
+fn absolute_e_reset_quiet_control() {
     let (label, sha, project, expected) = CASES[1];
     native_stream_case::check(
         (DIR, UPSTREAM),
@@ -64,7 +64,7 @@ fn orca_parity_absolute_e_reset_quiet_control() {
 }
 
 #[test]
-fn orca_parity_absolute_e_reset_relative_control() {
+fn absolute_e_reset_relative_control() {
     let (label, sha, project, expected) = CASES[2];
     native_stream_case::check(
         (DIR, UPSTREAM),
@@ -80,7 +80,7 @@ fn orca_parity_absolute_e_reset_relative_control() {
 }
 
 #[test]
-fn orca_parity_absolute_e_reset_native_preflight() {
+fn absolute_e_reset_native_preflight() {
     let namespace = format!("{DIR}-preflight");
     let mut qualified = Vec::new();
     for (label, sha, project, expected) in CASES {

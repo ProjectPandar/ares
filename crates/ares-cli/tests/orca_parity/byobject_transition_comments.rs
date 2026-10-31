@@ -6,12 +6,12 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_byobject_transition_comments_on() {
+fn byobject_transition_comments_on() {
     check("comments-on");
 }
 
 #[test]
-fn orca_parity_byobject_transition_comments_off() {
+fn byobject_transition_comments_off() {
     check("comments-off");
 }
 

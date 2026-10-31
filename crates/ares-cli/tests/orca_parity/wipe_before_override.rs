@@ -6,37 +6,37 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_wipe_before_override_distance_0_3999() {
+fn wipe_before_override_distance_0_3999() {
     check("distance-0.3999");
 }
 
 #[test]
-fn orca_parity_wipe_before_override_distance_0_39995() {
+fn wipe_before_override_distance_0_39995() {
     check("distance-0.39995");
 }
 
 #[test]
-fn orca_parity_wipe_before_override_distance_0_399975() {
+fn wipe_before_override_distance_0_399975() {
     check("distance-0.399975");
 }
 
 #[test]
-fn orca_parity_wipe_before_override_distance_0_4() {
+fn wipe_before_override_distance_0_4() {
     check("distance-0.4");
 }
 
 #[test]
-fn orca_parity_wipe_before_override_distance_0_400025() {
+fn wipe_before_override_distance_0_400025() {
     check("distance-0.400025");
 }
 
 #[test]
-fn orca_parity_wipe_before_override_control_before50() {
+fn wipe_before_override_control_before50() {
     check("control-before50");
 }
 
 #[test]
-fn orca_parity_wipe_before_override_control_before0() {
+fn wipe_before_override_control_before0() {
     check("control-before0");
 }
 

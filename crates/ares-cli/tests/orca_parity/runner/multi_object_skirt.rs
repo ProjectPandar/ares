@@ -4,17 +4,17 @@ use serde_json::json;
 use std::io::{Cursor, Read, Write};
 
 #[test]
-fn orca_parity_unequal_height_objects_preserve_complete_skirt_output() {
+fn unequal_height_objects_preserve_complete_skirt_output() {
     run("1", "combined", "99", "disabled", 50);
 }
 
 #[test]
-fn orca_parity_zero_loop_per_object_shield_preserves_finite_hull_and_complete_output() {
+fn zero_loop_per_object_shield_preserves_finite_hull_and_complete_output() {
     run("0", "perobject", "1", "enabled", 0);
 }
 
 #[test]
-fn orca_parity_no_skirt_per_object_preserves_complete_output() {
+fn no_skirt_per_object_preserves_complete_output() {
     run("0", "perobject", "0", "disabled", 0);
 }
 

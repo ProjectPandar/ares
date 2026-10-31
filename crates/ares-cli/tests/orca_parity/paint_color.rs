@@ -17,22 +17,22 @@ const UPSTREAM: &[&str] = &[
 ];
 
 #[test]
-fn orca_parity_paint_color_unpainted() {
+fn paint_color_unpainted() {
     check("unpainted");
 }
 
 #[test]
-fn orca_parity_paint_color_leaves() {
+fn paint_color_leaves() {
     check("painted-leaves");
 }
 
 #[test]
-fn orca_parity_paint_color_split() {
+fn paint_color_split() {
     check("painted-split");
 }
 
 #[test]
-fn orca_parity_paint_color_native_preflight() {
+fn paint_color_native_preflight() {
     let mut qualified = Vec::new();
     for label in ["unpainted", "painted-leaves", "painted-split"] {
         let (project, case) = prepare(label);

@@ -12,7 +12,7 @@
       "case": "stock-fuzzy-unpainted",
       "file": "stock-fuzzy-unpainted.3mf",
       "SHA256": "603c3228513e194c6fccabea843ba3640b3b96aefa7b4728ea902c9f59fa8357",
-      "source_stock": "tests/parity/legacy-brim-ears/O0.3mf",
+      "source_stock": "tests/parity/legacy-brim-ears/outer-only-legacy-disabled.3mf",
       "source_stock_SHA256": "72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec",
       "annotation": {
         "attribute": "paint_fuzzy_skin",
@@ -55,7 +55,7 @@
       "case": "stock-fuzzy-painted-face",
       "file": "stock-fuzzy-painted-face.3mf",
       "SHA256": "3d3401362eb9904e84999b2e2ab6368137e521702f4ebb26dec779608ada0f22",
-      "source_stock": "tests/parity/legacy-brim-ears/O0.3mf",
+      "source_stock": "tests/parity/legacy-brim-ears/outer-only-legacy-disabled.3mf",
       "source_stock_SHA256": "72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec",
       "annotation": {
         "attribute": "paint_fuzzy_skin",

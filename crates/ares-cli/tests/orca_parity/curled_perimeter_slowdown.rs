@@ -36,7 +36,7 @@ fn layer_section<'a>(gcode: &'a str, z_marker: &str, end_marker: &str) -> Vec<&'
 }
 
 #[test]
-fn orca_parity_curled_perimeter_slowdown() {
+fn curled_perimeter_slowdown() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };

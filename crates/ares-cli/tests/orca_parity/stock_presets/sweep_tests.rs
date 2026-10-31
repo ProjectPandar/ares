@@ -26,7 +26,7 @@ fn official_mode_marks_random_start_gcode_printers_skip() {
 }
 
 #[test]
-fn orca_parity_stock_printer_sweep() {
+fn stock_printer_sweep() {
     super::run();
 }
 

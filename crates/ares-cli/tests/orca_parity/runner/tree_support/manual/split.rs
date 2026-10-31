@@ -3,7 +3,7 @@ use super::{
 };
 
 #[test]
-fn orca_parity_manual_slim_split_painting_at_shared_edge_preserves_complete_output() {
+fn manual_slim_split_painting_at_shared_edge_preserves_complete_output() {
     let label = "tree-support/manual/slim/split-painted-shared-edge";
     let Some(baseline) = overhang_case(label, "tree_slim", &[("support_type", "tree(manual)")])
     else {
@@ -35,7 +35,7 @@ fn orca_parity_manual_slim_split_painting_at_shared_edge_preserves_complete_outp
 }
 
 #[test]
-fn orca_parity_manual_slim_nested_painting_on_both_shared_edge_faces_preserves_complete_output() {
+fn manual_slim_nested_painting_on_both_shared_edge_faces_preserves_complete_output() {
     let label = "tree-support/manual/slim/nested-painting-both-shared-edge-faces";
     let Some(baseline) = overhang_case(label, "tree_slim", &[("support_type", "tree(manual)")])
     else {

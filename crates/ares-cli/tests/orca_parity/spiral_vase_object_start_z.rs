@@ -42,19 +42,19 @@ const CASES: [(&str, &str, &[u8]); 2] = [
 ];
 
 #[test]
-fn orca_parity_spiral_object_start_z_witness() {
+fn spiral_object_start_z_witness() {
     let (label, sha, project) = CASES[0];
     native_stream_case::check((DIR, UPSTREAM), label, project, sha, (false, |_, _| {}));
 }
 
 #[test]
-fn orca_parity_spiral_object_start_z_zhop0() {
+fn spiral_object_start_z_zhop0() {
     let (label, sha, project) = CASES[1];
     native_stream_case::check((DIR, UPSTREAM), label, project, sha, (false, |_, _| {}));
 }
 
 #[test]
-fn orca_parity_spiral_object_start_z_native_preflight() {
+fn spiral_object_start_z_native_preflight() {
     let namespace = format!("{DIR}-preflight");
     let mut qualified = Vec::new();
     for (label, sha, project) in CASES {

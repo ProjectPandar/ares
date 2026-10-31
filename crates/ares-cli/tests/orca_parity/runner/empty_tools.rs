@@ -4,7 +4,7 @@ use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 
 #[test]
-fn orca_parity_final_empty_geometry_layer_preserves_complete_output() {
+fn final_empty_geometry_layer_preserves_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE") {
         return;
     }

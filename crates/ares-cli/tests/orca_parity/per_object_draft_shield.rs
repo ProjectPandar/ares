@@ -6,62 +6,62 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_draft_shield_disjoint_disabled() {
+fn per_object_draft_shield_disjoint_disabled() {
     check("disjoint-disabled", 2, false, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_disjoint_all() {
+fn per_object_draft_shield_disjoint_all() {
     check("disjoint-all", 2, true, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_disjoint_single() {
+fn per_object_draft_shield_disjoint_single() {
     check("disjoint-single", 2, true, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_overlap_disabled() {
+fn per_object_draft_shield_overlap_disabled() {
     check("overlap-disabled", 1, false, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_overlap_all() {
+fn per_object_draft_shield_overlap_all() {
     check("overlap-all", 1, true, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_overlap_single() {
+fn per_object_draft_shield_overlap_single() {
     check("overlap-single", 1, true, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_transitive_disabled() {
+fn per_object_draft_shield_transitive_disabled() {
     check("transitive-disabled", 1, false, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_transitive_all() {
+fn per_object_draft_shield_transitive_all() {
     check("transitive-all", 1, true, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_transitive_single() {
+fn per_object_draft_shield_transitive_single() {
     check("transitive-single", 1, true, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_copies_disabled() {
+fn per_object_draft_shield_copies_disabled() {
     check("copies-disabled", 1, false, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_copies_all() {
+fn per_object_draft_shield_copies_all() {
     check("copies-all", 1, true, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_shield_copies_single() {
+fn per_object_draft_shield_copies_single() {
     check("copies-single", 1, true, true);
 }
 

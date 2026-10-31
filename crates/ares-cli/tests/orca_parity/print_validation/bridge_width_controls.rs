@@ -123,7 +123,7 @@ fn print_bridge_width_ordinary_height_and_width_errors_precede_bridge() {
 }
 
 #[test]
-fn print_bridge_width_native_auto_above_and_both_thick_reach_o1() {
+fn print_bridge_width_native_auto_above_and_both_thick_reach_layer_reset_check() {
     for fields in [
         json!({"bridge_line_width":"0"}),
         json!({"bridge_line_width":"51%"}),

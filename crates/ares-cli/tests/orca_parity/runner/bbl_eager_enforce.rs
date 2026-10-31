@@ -11,7 +11,7 @@ const SOURCE: (&str, &[&str]) = (
 );
 
 #[test]
-fn orca_parity_bbl_eager_enforce_all_surfaces_complete_output() {
+fn bbl_eager_enforce_all_surfaces_complete_output() {
     native_stream_case::check(
         SOURCE,
         "all-surfaces",
@@ -22,7 +22,7 @@ fn orca_parity_bbl_eager_enforce_all_surfaces_complete_output() {
 }
 
 #[test]
-fn orca_parity_bbl_eager_enforce_bottom_only_complete_output() {
+fn bbl_eager_enforce_bottom_only_complete_output() {
     native_stream_case::check(
         SOURCE,
         "bottom-only",
@@ -33,7 +33,7 @@ fn orca_parity_bbl_eager_enforce_bottom_only_complete_output() {
 }
 
 #[test]
-fn orca_parity_bbl_eager_enforce_top_only_complete_output() {
+fn bbl_eager_enforce_top_only_complete_output() {
     native_stream_case::check(
         SOURCE,
         "top-only",
@@ -44,7 +44,7 @@ fn orca_parity_bbl_eager_enforce_top_only_complete_output() {
 }
 
 #[test]
-fn orca_parity_bbl_eager_enforce_top_and_bottom_complete_output() {
+fn bbl_eager_enforce_top_and_bottom_complete_output() {
     native_stream_case::check(
         SOURCE,
         "top-and-bottom",

@@ -19,7 +19,7 @@ const UPSTREAM: &[&str] = &[
 ];
 
 #[test]
-fn orca_parity_mk4_curl_lifecycle_strict() {
+fn mk4_curl_lifecycle_strict() {
     native_stream_case::check(
         ("mk4-curl-lifecycle", UPSTREAM),
         "make-overhang-printable",

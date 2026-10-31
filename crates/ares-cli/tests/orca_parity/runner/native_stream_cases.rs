@@ -2,10 +2,10 @@
 mod acceleration_raw_f64;
 #[path = "avoid_crossing_external_frame.rs"]
 mod avoid_crossing_external_frame;
-#[path = "bbl_type1_categories.rs"]
-mod bbl_type1_categories;
-#[path = "bbl_type1_tower.rs"]
-mod bbl_type1_tower;
+#[path = "bbl_type1_adhesiveness_categories.rs"]
+mod bbl_type1_adhesiveness_categories;
+#[path = "bbl_type1_prime_tower_waypoints.rs"]
+mod bbl_type1_prime_tower_waypoints;
 
 #[path = "concentric_internal_start.rs"]
 mod concentric_internal_start;
@@ -22,10 +22,10 @@ mod fan_reader_xyz;
 mod fan_verbose_text;
 #[path = "initial_travel_uint.rs"]
 mod initial_travel_uint;
+#[path = "m1020_bills_filament_change_without_tool_change.rs"]
+mod m1020_bills_filament_change_without_tool_change;
 #[path = "mk4_layer_change.rs"]
 mod mk4_layer_change;
-#[path = "processor_m1020.rs"]
-mod processor_m1020;
 #[path = "processor_word_boundary.rs"]
 mod processor_word_boundary;
 #[path = "project_settings_bool_wire.rs"]

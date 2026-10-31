@@ -4,7 +4,7 @@ use crate::{CaseInputs, OrcaRunner, VendorProfiles, runner};
 use serde_json::json;
 
 #[test]
-fn orca_parity_adaptive_pa_tool_changes() {
+fn adaptive_pa_tool_changes() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };

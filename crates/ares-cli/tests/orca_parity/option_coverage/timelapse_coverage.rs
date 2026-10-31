@@ -6,7 +6,7 @@ use serde_json::json;
 pub(super) mod input;
 
 #[test]
-fn orca_parity_timelapse_type_conditional_template_and_empty_controls() {
+fn timelapse_type_conditional_template_and_empty_controls() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -82,7 +82,7 @@ fn branch_lines<'a>(native: &'a str, mode: &str, active: bool) -> Vec<(usize, &'
 // GCodeProcessor.cpp:1922-1948 / OrcaSlicer.cpp:6221-6227: tower/skirt
 // outside the original preset bed is a rejection, never success coverage.
 #[test]
-fn orca_parity_timelapse_original_smooth_sweep_retains_minus102_control() {
+fn timelapse_original_smooth_sweep_retains_minus102_control() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

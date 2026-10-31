@@ -5,7 +5,7 @@ use serde_json::json;
 use std::io::{Cursor, Read, Write};
 
 #[test]
-fn orca_parity_printable_height_loaded_range_rejections() {
+fn printable_height_loaded_range_rejections() {
     if crate::native_environment::binary("ARES_ORCA_NATIVE_BIN").is_none()
         || crate::native_environment::value("ARES_ORCA_RESOURCES_DIR").is_none()
     {

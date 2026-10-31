@@ -3,7 +3,7 @@
 //! missing rejection, CLI channel mismatch, and footer-only false positive.
 #![cfg(target_os = "linux")]
 
-#[path = "ksr_fdmtest_v4/golden.rs"]
+#[path = "stock_project_whole_file/golden.rs"]
 mod golden;
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;

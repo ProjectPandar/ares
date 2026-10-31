@@ -13,7 +13,7 @@
 //! missing; the pause message emitted; `extra` rendered by the placeholder
 //! parser; emission before the second-layer M140, after the BBL timelapse, or
 //! in sequential mode.
-use super::{CaseInputs, ExportedCase, OrcaRunner, ParityCase, repo_root, vg1_inputs};
+use super::{CaseInputs, ExportedCase, OrcaRunner, ParityCase, repo_root, vg1_two_filament_inputs};
 use crate::VendorProfiles;
 use serde_json::json;
 use std::io::{Cursor, Read, Write};
@@ -121,7 +121,7 @@ fn frozen(name: &str, witness: &Witness) {
 }
 
 /// Two filaments, every object on filament 1: print mode `MultiAsSingle`
-/// (`ToolOrdering.cpp:1464-1467`). The vg1 X1C two-filament cube10 export,
+/// (`ToolOrdering.cpp:1464-1467`). The vg1_flush_state X1C two-filament cube10 export,
 /// with `entry` added as `Metadata/custom_gcode_per_layer.xml`.
 fn two_filaments(name: &str, entry: Option<&str>, witness: &Witness) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
@@ -152,7 +152,7 @@ fn two_filaments(name: &str, entry: Option<&str>, witness: &Witness) {
             &repo_root().join("tests/parity/cube10.stl"),
         )
         .unwrap();
-    let project = vg1_inputs::bind_two_filaments(exported).project;
+    let project = vg1_two_filament_inputs::bind_two_filaments(exported).project;
     let project = match entry {
         Some(xml) => with_entry(&project, xml),
         None => project,

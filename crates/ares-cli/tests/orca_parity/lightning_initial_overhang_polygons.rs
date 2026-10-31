@@ -1,7 +1,7 @@
 //! `Generator.cpp:166` offsets the complete winding-aware Polygons collection.
 
 #[test]
-fn orca_parity_lightning_initial_overhang_polygons_a1() {
+fn lightning_initial_overhang_polygons_a1() {
     crate::runner::native_stream_case::check(
         (
             "lightning-initial-overhang-polygons",

@@ -6,62 +6,62 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_draft_composition_far_control_all() {
+fn per_object_draft_composition_far_control_all() {
     check("far-control-all", 2, false, false, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_far_control_single() {
+fn per_object_draft_composition_far_control_single() {
     check("far-control-single", 2, false, false, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_far_minimum_all() {
+fn per_object_draft_composition_far_minimum_all() {
     check("far-minimum-all", 2, true, false, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_far_minimum_single() {
+fn per_object_draft_composition_far_minimum_single() {
     check("far-minimum-single", 2, true, false, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_far_brim_all() {
+fn per_object_draft_composition_far_brim_all() {
     check("far-brim-all", 2, false, true, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_far_brim_single() {
+fn per_object_draft_composition_far_brim_single() {
     check("far-brim-single", 2, false, true, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_near_control_all() {
+fn per_object_draft_composition_near_control_all() {
     check("near-control-all", 2, false, false, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_near_control_single() {
+fn per_object_draft_composition_near_control_single() {
     check("near-control-single", 2, false, false, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_near_minimum_all() {
+fn per_object_draft_composition_near_minimum_all() {
     check("near-minimum-all", 2, true, false, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_near_minimum_single() {
+fn per_object_draft_composition_near_minimum_single() {
     check("near-minimum-single", 2, true, false, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_near_brim_all() {
+fn per_object_draft_composition_near_brim_all() {
     check("near-brim-all", 1, false, true, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_composition_near_brim_single() {
+fn per_object_draft_composition_near_brim_single() {
     check("near-brim-single", 1, false, true, true);
 }
 

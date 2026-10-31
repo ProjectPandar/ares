@@ -172,7 +172,7 @@ fn assert_footer_equal(
 }
 
 #[test]
-fn orca_parity_filament_stats_sermoon_v1() {
+fn filament_stats_sermoon_v1() {
     statistics_case(&Case {
         vendor: "Creality",
         printer: "Creality Sermoon V1 0.4 nozzle",
@@ -182,7 +182,7 @@ fn orca_parity_filament_stats_sermoon_v1() {
 }
 
 #[test]
-fn orca_parity_filament_stats_ender3() {
+fn filament_stats_ender3() {
     statistics_case(&Case {
         vendor: "Creality",
         printer: "Creality Ender-3 0.4 nozzle",
@@ -192,7 +192,7 @@ fn orca_parity_filament_stats_ender3() {
 }
 
 #[test]
-fn orca_parity_filament_stats_mk4s() {
+fn filament_stats_mk4s() {
     statistics_case(&Case {
         vendor: "Prusa",
         printer: "Prusa MK4S 0.4 nozzle",
@@ -202,7 +202,7 @@ fn orca_parity_filament_stats_mk4s() {
 }
 
 #[test]
-fn orca_parity_filament_stats_h2d() {
+fn filament_stats_h2d() {
     statistics_case(&Case {
         vendor: "BBL",
         printer: "Bambu Lab H2D 0.4 nozzle",
@@ -212,7 +212,7 @@ fn orca_parity_filament_stats_h2d() {
 }
 
 #[test]
-fn orca_parity_filament_stats_kobra3max_wipe_tower() {
+fn filament_stats_kobra3max_wipe_tower() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };
@@ -268,7 +268,7 @@ fn orca_parity_filament_stats_kobra3max_wipe_tower() {
 }
 
 #[test]
-fn orca_parity_filament_stats_x1c_support() {
+fn filament_stats_x1c_support() {
     let mut overrides = Map::new();
     overrides.insert("enable_support".into(), Value::String("1".into()));
     statistics_case(&Case {

@@ -64,7 +64,8 @@ fn empty_selected_plate_control_nonempty_outside_volume_keeps_later_error() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let input = include_bytes!("../../../../tests/parity/validation/o6-kobra3-off-bed.3mf");
+    let input =
+        include_bytes!("../../../../tests/parity/validation/print-volume-kobra3-off-bed.3mf");
     let root = crate::artifacts::root_from_env().unwrap();
     let directory = tempfile::Builder::new()
         .prefix("empty-plate-outside-")

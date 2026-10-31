@@ -8,12 +8,12 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_skirt_inner_only_brim_red() {
+fn per_object_skirt_inner_only_brim_red() {
     run_case("inner-only", false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_outer_only_control() {
+fn per_object_skirt_outer_only_control() {
     run_case("outer-only", true);
 }
 

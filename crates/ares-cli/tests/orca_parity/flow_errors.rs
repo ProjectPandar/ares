@@ -5,7 +5,8 @@ use ares_core::{ConfigOverrides, GenerationMetadata, SliceError, SlicerContext};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 
-const INPUT: &[u8] = include_bytes!("../../../../tests/parity/validation/o4-ender3s1plus-0.2.3mf");
+const INPUT: &[u8] =
+    include_bytes!("../../../../tests/parity/validation/minimum-width-ender3s1plus-0.2.3mf");
 const HASH: &str = "edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110";
 const INVALID_SPACING: &str =
     "Invalid spacing supplied to Flow::with_spacing(), check your layer height and extrusion width";
@@ -75,7 +76,7 @@ fn positive_spacing_and_flow_generate_complete_gcode() {
 }
 
 #[test]
-fn validated_s1plus_keeps_o4_first_error() {
+fn validated_s1plus_keeps_minimum_width_first_error() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();

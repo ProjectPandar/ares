@@ -3,7 +3,7 @@
 use crate::runner::native_stream_case::check;
 
 #[test]
-fn orca_parity_filament_map_refresh_preserves_recommended_length_complete_output() {
+fn filament_map_refresh_preserves_recommended_length_complete_output() {
     check(
         (
             "filament-map-refresh",

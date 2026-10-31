@@ -3,7 +3,7 @@ use crate::{CaseInputs, OrcaRunner, VendorProfiles, runner};
 use serde_json::json;
 
 #[test]
-fn orca_parity_smooth_type2_tower_support_islands() {
+fn smooth_type2_tower_support_islands() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

@@ -6,62 +6,62 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_draft_triple_far_triple_all() {
+fn per_object_draft_triple_far_triple_all() {
     check("far-triple-all", 2, 2, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_far_triple_single() {
+fn per_object_draft_triple_far_triple_single() {
     check("far-triple-single", 2, 2, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_near_triple_all() {
+fn per_object_draft_triple_near_triple_all() {
     check("near-triple-all", 1, 2, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_near_triple_single() {
+fn per_object_draft_triple_near_triple_single() {
     check("near-triple-single", 1, 2, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_far_all_no_brim_2() {
+fn per_object_draft_triple_far_all_no_brim_2() {
     check("far-all-no-brim-2", 2, 1, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_far_all_no_brim_3() {
+fn per_object_draft_triple_far_all_no_brim_3() {
     check("far-all-no-brim-3", 2, 1, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_far_single_no_brim_2() {
+fn per_object_draft_triple_far_single_no_brim_2() {
     check("far-single-no-brim-2", 2, 1, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_far_single_no_brim_3() {
+fn per_object_draft_triple_far_single_no_brim_3() {
     check("far-single-no-brim-3", 2, 1, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_near_all_no_brim_2() {
+fn per_object_draft_triple_near_all_no_brim_2() {
     check("near-all-no-brim-2", 1, 1, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_near_all_no_brim_3() {
+fn per_object_draft_triple_near_all_no_brim_3() {
     check("near-all-no-brim-3", 1, 1, false);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_near_single_no_brim_2() {
+fn per_object_draft_triple_near_single_no_brim_2() {
     check("near-single-no-brim-2", 1, 1, true);
 }
 
 #[test]
-fn orca_parity_per_object_draft_triple_near_single_no_brim_3() {
+fn per_object_draft_triple_near_single_no_brim_3() {
     check("near-single-no-brim-3", 1, 1, true);
 }
 

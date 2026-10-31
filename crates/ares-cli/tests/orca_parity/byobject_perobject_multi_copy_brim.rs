@@ -7,17 +7,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_byobject_perobject_multi_copy_brim_target() {
+fn byobject_perobject_multi_copy_brim_target() {
     check("perobject-brim");
 }
 
 #[test]
-fn orca_parity_byobject_perobject_multi_copy_brim_combined_control() {
+fn byobject_perobject_multi_copy_brim_combined_control() {
     check("combined-brim");
 }
 
 #[test]
-fn orca_parity_byobject_perobject_multi_copy_brim_width0_control() {
+fn byobject_perobject_multi_copy_brim_width0_control() {
     check("perobject-no-brim");
 }
 

@@ -101,7 +101,7 @@ fn run_case(name: &str, expected_sha: &str) {
 }
 
 #[test]
-fn orca_parity_kobra_wipe_before_external_red() {
+fn kobra_wipe_before_external_red() {
     run_case(
         "kobra-witness",
         "c8a16b7e4a95ed450144812890f6fef84a1039010d0036470b55fc3af550de62",

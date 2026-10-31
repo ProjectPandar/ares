@@ -6,42 +6,42 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_skirt_min_length_disjoint_0() {
+fn per_object_skirt_min_length_disjoint_0() {
     check("disjoint-0", 2, false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_length_disjoint_20() {
+fn per_object_skirt_min_length_disjoint_20() {
     check("disjoint-20", 2, true);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_length_overlap_0() {
+fn per_object_skirt_min_length_overlap_0() {
     check("overlap-0", 1, false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_length_overlap_20() {
+fn per_object_skirt_min_length_overlap_20() {
     check("overlap-20", 1, true);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_length_transitive_0() {
+fn per_object_skirt_min_length_transitive_0() {
     check("transitive-0", 1, false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_length_transitive_20() {
+fn per_object_skirt_min_length_transitive_20() {
     check("transitive-20", 1, true);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_length_copies_0() {
+fn per_object_skirt_min_length_copies_0() {
     check("copies-0", 1, false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_min_length_copies_20() {
+fn per_object_skirt_min_length_copies_20() {
     check("copies-20", 1, true);
 }
 

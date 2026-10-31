@@ -28,7 +28,7 @@ mod infill_first;
 mod tool_templates;
 
 #[test]
-fn orca_parity_compatible_regions_with_later_higher_density_preserve_complete_output() {
+fn compatible_regions_with_later_higher_density_preserve_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_REGION_PERIMETERS_REFERENCE") {
         return;
     }

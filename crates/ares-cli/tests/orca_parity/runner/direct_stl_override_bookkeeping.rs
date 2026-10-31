@@ -153,11 +153,11 @@ fn check(name: &str, filename: &str, none: bool) {
 }
 
 #[test]
-fn orca_parity_direct_stl_none_override_bookkeeping_complete_output() {
+fn direct_stl_none_override_bookkeeping_complete_output() {
     check("direct-stl-none-override", "solid-plate", true);
 }
 
 #[test]
-fn orca_parity_direct_stl_no_override_bookkeeping_control_complete_output() {
+fn direct_stl_no_override_bookkeeping_control_complete_output() {
     check("direct-stl-no-override-control", "solid-plate", false);
 }

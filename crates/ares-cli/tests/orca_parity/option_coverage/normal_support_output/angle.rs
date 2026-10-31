@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn orca_parity_rotated_normal_support_preserves_complete_output() {
+fn rotated_normal_support_preserves_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_ANGLE_REFERENCE") {
         return;
     }

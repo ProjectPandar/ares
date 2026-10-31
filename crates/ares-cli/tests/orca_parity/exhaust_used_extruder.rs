@@ -33,26 +33,26 @@ const CASES: [Witness; 4] = [
 ];
 
 #[test]
-fn orca_parity_exhaust_unused_high_speed() {
+fn exhaust_unused_high_speed() {
     CASES[0].check("exhaust-used-extruder", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_exhaust_equal_speed() {
+fn exhaust_equal_speed() {
     CASES[1].check("exhaust-used-extruder", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_exhaust_unused_disabled() {
+fn exhaust_unused_disabled() {
     CASES[2].check("exhaust-used-extruder", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_exhaust_capability_off() {
+fn exhaust_capability_off() {
     CASES[3].check("exhaust-used-extruder", UPSTREAM);
 }
 
 #[test]
-fn orca_parity_exhaust_native_preflight() {
+fn exhaust_native_preflight() {
     preflight("exhaust-used-extruder", UPSTREAM, &CASES);
 }

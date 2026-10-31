@@ -7,7 +7,7 @@ const BASE: &[u8] =
     include_bytes!("../../../../tests/parity/per-object-skirt-brim-types/auto-multisland.3mf");
 
 #[test]
-fn orca_parity_auto_brim_small_diagonal() {
+fn auto_brim_small_diagonal() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

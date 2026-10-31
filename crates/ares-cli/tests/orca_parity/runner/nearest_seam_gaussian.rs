@@ -4,7 +4,7 @@ use super::{ExportedCase, OrcaRunner};
 use sha2::{Digest, Sha256};
 
 #[test]
-fn orca_parity_dumbbell_nearest_seam_preserves_complete_output() {
+fn dumbbell_nearest_seam_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

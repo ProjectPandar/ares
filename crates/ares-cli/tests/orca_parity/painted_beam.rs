@@ -71,7 +71,7 @@ fn assert_native(reference: &NativeCase, replay: &NativeCase, beam: &str) -> Val
 }
 
 #[test]
-fn orca_parity_painted_beam_native_preflight() {
+fn painted_beam_native_preflight() {
     let mut qualified = Vec::new();
     let mut activities = Vec::new();
     for (label, digest, beam) in CASES {
@@ -114,11 +114,11 @@ fn check(index: usize) {
 }
 
 #[test]
-fn orca_parity_painted_beam_off_control() {
+fn painted_beam_off_control() {
     check(0);
 }
 
 #[test]
-fn orca_parity_painted_beam_on() {
+fn painted_beam_on() {
     check(1);
 }

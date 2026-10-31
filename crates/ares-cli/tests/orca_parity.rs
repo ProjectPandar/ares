@@ -8,8 +8,8 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
-#[path = "orca_parity/w6_rewrite_cases.rs"]
-mod w6_rewrite_cases;
+#[path = "orca_parity/gcode_regression_cases.rs"]
+mod gcode_regression_cases;
 
 #[path = "orca_parity/object_emission_cases.rs"]
 mod object_emission_cases;
@@ -133,8 +133,8 @@ mod perobject_auto_admission;
 #[path = "orca_parity/config_floats_header_serialization.rs"]
 mod config_floats_header_serialization;
 
-#[path = "orca_parity/auto_brim_efc_outline.rs"]
-mod auto_brim_efc_outline;
+#[path = "orca_parity/auto_brim_consumes_efc_clipped_groups.rs"]
+mod auto_brim_consumes_efc_clipped_groups;
 #[path = "orca_parity/auto_brim_exact_group_assignment.rs"]
 mod auto_brim_exact_group_assignment;
 #[path = "orca_parity/auto_brim_object_adhesion.rs"]
@@ -145,14 +145,14 @@ mod auto_brim_object_speed;
 mod auto_brim_small_diagonal;
 #[path = "orca_parity/auto_brim_tables.rs"]
 mod auto_brim_tables;
-#[path = "orca_parity/brim_ears_efc_outline.rs"]
-mod brim_ears_efc_outline;
+#[path = "orca_parity/brim_ears_consumes_efc_outline.rs"]
+mod brim_ears_consumes_efc_outline;
 #[path = "orca_parity/config_float_header_serialization.rs"]
 mod config_float_header_serialization;
 #[path = "orca_parity/crosshatch_ordering.rs"]
 mod crosshatch_ordering;
-#[path = "orca_parity/efc_outline_case.rs"]
-mod efc_outline_case;
+#[path = "orca_parity/efc_outline_witness_case.rs"]
+mod efc_outline_witness_case;
 #[path = "orca_parity/junction_deviation.rs"]
 mod junction_deviation;
 #[path = "orca_parity/per_object_skirt_brim_ears.rs"]
@@ -167,20 +167,20 @@ mod per_object_skirt_painted;
 mod per_object_skirt_support_raft;
 #[path = "orca_parity/power_loss_recovery.rs"]
 mod power_loss_recovery;
-#[path = "orca_parity/skirt_flush_infill_w5.rs"]
-mod skirt_flush_infill_w5;
-#[path = "orca_parity/skirt_flush_objects_w5.rs"]
-mod skirt_flush_objects_w5;
-#[path = "orca_parity/skirt_flush_support_w5.rs"]
-mod skirt_flush_support_w5;
-#[path = "orca_parity/skirt_per_object_tower_ctl.rs"]
-mod skirt_per_object_tower_ctl;
-#[path = "orca_parity/skirt_per_object_tower_w5.rs"]
-mod skirt_per_object_tower_w5;
-#[path = "orca_parity/toolchange_wipe_ctl.rs"]
-mod toolchange_wipe_ctl;
-#[path = "orca_parity/toolchange_wipe_flush_w5.rs"]
-mod toolchange_wipe_flush_w5;
+#[path = "orca_parity/skirt_per_object_flush_into_infill_wiping_pass.rs"]
+mod skirt_per_object_flush_into_infill_wiping_pass;
+#[path = "orca_parity/skirt_per_object_flush_into_objects.rs"]
+mod skirt_per_object_flush_into_objects;
+#[path = "orca_parity/skirt_per_object_flush_into_support.rs"]
+mod skirt_per_object_flush_into_support;
+#[path = "orca_parity/skirt_per_object_groups_with_tower_obstacle.rs"]
+mod skirt_per_object_groups_with_tower_obstacle;
+#[path = "orca_parity/skirt_per_object_tower_control.rs"]
+mod skirt_per_object_tower_control;
+#[path = "orca_parity/toolchange_layer_boundary_retract_wipe_timing.rs"]
+mod toolchange_layer_boundary_retract_wipe_timing;
+#[path = "orca_parity/toolchange_wipe_control.rs"]
+mod toolchange_wipe_control;
 
 #[path = "orca_parity/adaptive_octree_spacing.rs"]
 mod adaptive_octree_spacing;
@@ -204,28 +204,28 @@ mod bridge_over_infill_zero_density;
 mod brim_bed_region;
 #[path = "orca_parity/brim_bed_region_controls.rs"]
 mod brim_bed_region_controls;
-#[path = "orca_parity/brim_ears_w5.rs"]
-mod brim_ears_w5;
-#[path = "orca_parity/brim_efc_outline.rs"]
-mod brim_efc_outline;
-#[path = "orca_parity/brim_inner_only_w5.rs"]
-mod brim_inner_only_w5;
-#[path = "orca_parity/brim_outer_inner_w8.rs"]
-mod brim_outer_inner_w8;
-#[path = "orca_parity/brim_outeronly_w5.rs"]
-mod brim_outeronly_w5;
-#[path = "orca_parity/brim_painted_ctl.rs"]
-mod brim_painted_ctl;
-#[path = "orca_parity/brim_painted_efc_ctl.rs"]
-mod brim_painted_efc_ctl;
-#[path = "orca_parity/brim_painted_efc_w5.rs"]
-mod brim_painted_efc_w5;
-#[path = "orca_parity/brim_painted_inner_ctl.rs"]
-mod brim_painted_inner_ctl;
-#[path = "orca_parity/brim_painted_inner_w5.rs"]
-mod brim_painted_inner_w5;
-#[path = "orca_parity/brim_painted_w5.rs"]
-mod brim_painted_w5;
+#[path = "orca_parity/brim_consumes_efc_region_polygons.rs"]
+mod brim_consumes_efc_region_polygons;
+#[path = "orca_parity/brim_ears_explicit_width_support_no_brim.rs"]
+mod brim_ears_explicit_width_support_no_brim;
+#[path = "orca_parity/brim_inner_only_explicit_width.rs"]
+mod brim_inner_only_explicit_width;
+#[path = "orca_parity/brim_outer_and_inner_support_no_brim_type_independent.rs"]
+mod brim_outer_and_inner_support_no_brim_type_independent;
+#[path = "orca_parity/brim_outer_only_explicit_width.rs"]
+mod brim_outer_only_explicit_width;
+#[path = "orca_parity/brim_painted_control.rs"]
+mod brim_painted_control;
+#[path = "orca_parity/brim_painted_ears_from_ear_points.rs"]
+mod brim_painted_ears_from_ear_points;
+#[path = "orca_parity/brim_painted_efc_control_no_snap.rs"]
+mod brim_painted_efc_control_no_snap;
+#[path = "orca_parity/brim_painted_efc_snaps_ear_centre.rs"]
+mod brim_painted_efc_snaps_ear_centre;
+#[path = "orca_parity/brim_painted_inner_control.rs"]
+mod brim_painted_inner_control;
+#[path = "orca_parity/brim_painted_inner_hole_point.rs"]
+mod brim_painted_inner_hole_point;
 #[path = "orca_parity/brim_physical_layer.rs"]
 mod brim_physical_layer;
 #[path = "orca_parity/byobject_owner_brim.rs"]
@@ -330,8 +330,8 @@ mod infill_rotate_template;
 mod klipper_velocity_limit;
 #[path = "orca_parity/m205.rs"]
 mod m205;
-#[path = "orca_parity/narrowed_x2d_whole_file.rs"]
-mod narrowed_x2d_whole_file;
+#[path = "orca_parity/narrowed_bridge_anchor_whole_file_control.rs"]
+mod narrowed_bridge_anchor_whole_file_control;
 #[path = "orca_parity/option_coverage.rs"]
 mod option_coverage;
 #[path = "orca_parity/plate_custom_gcodes.rs"]
@@ -364,13 +364,13 @@ mod smooth_type2_tower;
 mod stock_presets;
 #[path = "orca_parity/sync_time.rs"]
 mod sync_time;
-#[path = "orca_parity/vg1.rs"]
-mod vg1;
+#[path = "orca_parity/vg1_flush_state.rs"]
+mod vg1_flush_state;
 
-#[path = "ksr_fdmtest_v4/golden.rs"]
+#[path = "stock_project_whole_file/golden.rs"]
 mod golden;
 // Diagnostic-only semantic behavior tests; never a whole-output acceptance gate.
-#[path = "ksr_fdmtest_v4/semantic.rs"]
+#[path = "stock_project_whole_file/semantic.rs"]
 mod semantic;
 
 #[path = "orca_parity/case_support.rs"]

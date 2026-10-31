@@ -2,7 +2,7 @@ use super::split::support_moves;
 use super::{OrcaRunner, has_support_extrusion, overhang_case, paint_faces, parity, slice_painted};
 
 #[test]
-fn orca_parity_manual_slim_nested_vertical_painting_preserves_complete_output() {
+fn manual_slim_nested_vertical_painting_preserves_complete_output() {
     let Some(baseline) = overhang_case(
         "tree-support/manual/slim/nested-vertical-painting",
         "tree_slim",
@@ -38,7 +38,7 @@ fn orca_parity_manual_slim_nested_vertical_painting_preserves_complete_output() 
 }
 
 #[test]
-fn orca_parity_manual_slim_vertical_painting_creates_support_and_preserves_complete_output() {
+fn manual_slim_vertical_painting_creates_support_and_preserves_complete_output() {
     let Some(baseline) = overhang_case(
         "tree-support/manual/slim/vertical-painting",
         "tree_slim",
@@ -62,8 +62,7 @@ fn orca_parity_manual_slim_vertical_painting_creates_support_and_preserves_compl
 }
 
 #[test]
-fn orca_parity_manual_slim_split_vertical_painting_changes_support_paths_and_preserves_complete_output()
- {
+fn manual_slim_split_vertical_painting_changes_support_paths_and_preserves_complete_output() {
     let Some(baseline) = overhang_case(
         "tree-support/manual/slim/split-vertical-painting",
         "tree_slim",

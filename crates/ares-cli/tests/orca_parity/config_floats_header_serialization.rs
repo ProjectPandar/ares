@@ -74,7 +74,7 @@ fn config_floats_header_serialization_control_matches_native() {
         return;
     };
     let root = crate::artifacts::root_from_env().unwrap();
-    let reference = slice_native(&runner, &root, CONTROL, "config-floats-header-ctl-");
+    let reference = slice_native(&runner, &root, CONTROL, "config-floats-header-control-");
     let outcome = crate::artifacts::compare(
         &root,
         "config-floats-header-control",

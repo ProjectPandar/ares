@@ -4,7 +4,7 @@
 use crate::runner::native_stream_case;
 
 #[test]
-fn orca_parity_bbl_absolute_e_end_label_reset() {
+fn bbl_absolute_e_end_label_reset() {
     native_stream_case::check(
         (
             "bbl-absolute-e-end-label-reset",

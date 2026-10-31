@@ -6,22 +6,22 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_per_object_skirt_disjoint() {
+fn per_object_skirt_disjoint() {
     check("disjoint", 2);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_overlap() {
+fn per_object_skirt_overlap() {
     check("overlap", 1);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_transitive() {
+fn per_object_skirt_transitive() {
     check("transitive", 1);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_copies() {
+fn per_object_skirt_copies() {
     check("copies", 1);
 }
 

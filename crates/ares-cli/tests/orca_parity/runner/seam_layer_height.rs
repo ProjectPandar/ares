@@ -5,7 +5,7 @@ use serde_json::json;
 use sha2::{Digest, Sha256};
 
 #[test]
-fn orca_parity_second_layer_overhang_seam_uses_current_layer_height() {
+fn second_layer_overhang_seam_uses_current_layer_height() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

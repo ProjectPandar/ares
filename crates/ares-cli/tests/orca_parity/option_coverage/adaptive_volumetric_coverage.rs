@@ -10,7 +10,7 @@ const ENABLE: &str = "filament_adaptive_volumetric_speed";
 const MODEL: &str = "volumetric_speed_coefficients";
 
 #[test]
-fn orca_parity_adaptive_volumetric_coupled_models_preserve_whole_output_and_segment_consumers() {
+fn adaptive_volumetric_coupled_models_preserve_whole_output_and_segment_consumers() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

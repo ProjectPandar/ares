@@ -299,7 +299,7 @@ fn control_native(fixture: &'static [u8]) -> Vec<u8> {
 /// Control: unpatched fixture — Native output is the baseline; Ares
 /// must match byte-for-byte before and after the bounded GREEN.
 #[test]
-fn orca_parity_hole_to_polyhole_control() {
+fn hole_to_polyhole_control() {
     let control = control_native(BASE);
     if control.is_empty() {
         return;
@@ -312,7 +312,7 @@ fn orca_parity_hole_to_polyhole_control() {
 /// `G1 X130.802 Y125 E.05577` must be present. Ares must reproduce the
 /// whole Native output.
 #[test]
-fn orca_parity_hole_to_polyhole_enabled_twisted() {
+fn hole_to_polyhole_enabled_twisted() {
     let control = control_native(BASE);
     if control.is_empty() {
         return;
@@ -324,7 +324,7 @@ fn orca_parity_hole_to_polyhole_enabled_twisted() {
 /// Native emits a single untwisted polyhole (same vertex marker, no
 /// per-layer rotation). Ares must reproduce the whole Native output.
 #[test]
-fn orca_parity_hole_to_polyhole_enabled_untwisted() {
+fn hole_to_polyhole_enabled_untwisted() {
     let control = control_native(BASE);
     if control.is_empty() {
         return;
@@ -338,7 +338,7 @@ fn orca_parity_hole_to_polyhole_enabled_untwisted() {
 /// the circular hole; Native output must equal the plain control. Ares
 /// must match byte-for-byte.
 #[test]
-fn orca_parity_hole_to_polyhole_threshold_miss() {
+fn hole_to_polyhole_threshold_miss() {
     let control = control_native(BASE);
     if control.is_empty() {
         return;
@@ -353,7 +353,7 @@ fn orca_parity_hole_to_polyhole_threshold_miss() {
 /// bug (percent of the *coord-unit* mean radius yields an astronomical
 /// bound that wrongly converts the hole).
 #[test]
-fn orca_parity_hole_to_polyhole_noisy_percent_miss() {
+fn hole_to_polyhole_noisy_percent_miss() {
     let control = control_native(BASE_NOISY);
     if control.is_empty() {
         return;
@@ -369,7 +369,7 @@ fn orca_parity_hole_to_polyhole_noisy_percent_miss() {
 /// vertex absent from the control. Ares must reproduce the whole
 /// Native output.
 #[test]
-fn orca_parity_hole_to_polyhole_noisy_percent() {
+fn hole_to_polyhole_noisy_percent() {
     let control = control_native(BASE_NOISY);
     if control.is_empty() {
         return;

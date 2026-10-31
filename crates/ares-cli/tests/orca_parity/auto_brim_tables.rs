@@ -16,17 +16,17 @@ const PETG: &[u8] =
 const PETG_SHA: &str = "a92a043aa16d538e8732ab389849130f7d5ba39cb5c9ba4a1ce781eb6e55d7c1";
 
 #[test]
-fn orca_parity_auto_brim_multisland_width() {
+fn auto_brim_multisland_width() {
     run_case("auto-brim-multisland-", MULTI, MULTI_SHA, true);
 }
 
 #[test]
-fn orca_parity_auto_brim_petg_tables() {
+fn auto_brim_petg_tables() {
     run_case("auto-brim-petg-", PETG, PETG_SHA, false);
 }
 
 #[test]
-fn orca_parity_auto_brim_derived_small_area_bump() {
+fn auto_brim_derived_small_area_bump() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -35,7 +35,7 @@ fn orca_parity_auto_brim_derived_small_area_bump() {
 }
 
 #[test]
-fn orca_parity_auto_brim_derived_multi_material() {
+fn auto_brim_derived_multi_material() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

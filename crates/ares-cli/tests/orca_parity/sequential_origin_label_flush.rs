@@ -31,7 +31,7 @@ fn assert_native_objects(native: &str) {
 }
 
 #[test]
-fn orca_parity_sequential_origin_label_target() {
+fn sequential_origin_label_target() {
     let (label, sha, project) = CASES[0];
     native_stream_case::check(
         (DIR, UPSTREAM),
@@ -52,7 +52,7 @@ fn orca_parity_sequential_origin_label_target() {
 }
 
 #[test]
-fn orca_parity_sequential_origin_label_bylayer_control() {
+fn sequential_origin_label_bylayer_control() {
     let (label, sha, project) = CASES[1];
     native_stream_case::check(
         (DIR, UPSTREAM),
@@ -67,7 +67,7 @@ fn orca_parity_sequential_origin_label_bylayer_control() {
 }
 
 #[test]
-fn orca_parity_sequential_origin_label_native_preflight() {
+fn sequential_origin_label_native_preflight() {
     let namespace = format!("{DIR}-preflight");
     let mut qualified = Vec::new();
     for (label, sha, project) in CASES {

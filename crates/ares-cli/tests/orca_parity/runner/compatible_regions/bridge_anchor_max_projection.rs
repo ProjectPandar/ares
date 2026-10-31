@@ -11,22 +11,22 @@ use std::{
 use super::fixture::{self, Scope};
 
 #[test]
-fn orca_parity_local_object_anchor_max_float_overflow() {
+fn local_object_anchor_max_float_overflow() {
     check(Scope::Object, "1e39");
 }
 
 #[test]
-fn orca_parity_local_part_anchor_max_float_overflow() {
+fn local_part_anchor_max_float_overflow() {
     check(Scope::Part, "1e39");
 }
 
 #[test]
-fn orca_parity_local_object_anchor_max_percent_overflow() {
+fn local_object_anchor_max_percent_overflow() {
     check(Scope::Object, "1e39%");
 }
 
 #[test]
-fn orca_parity_local_part_anchor_max_percent_overflow() {
+fn local_part_anchor_max_percent_overflow() {
     check(Scope::Part, "1e39%");
 }
 

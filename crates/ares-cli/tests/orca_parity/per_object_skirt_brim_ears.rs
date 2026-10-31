@@ -11,7 +11,7 @@ const INPUT: &[u8] =
 const INPUT_SHA256: &str = "ff8389789f3795235be0cc11666e5acb301e3f5797bbf915366a694495d31593";
 
 #[test]
-fn orca_parity_per_object_skirt_brim_ears_red() {
+fn per_object_skirt_brim_ears_red() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

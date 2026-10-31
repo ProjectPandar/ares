@@ -4,7 +4,7 @@ use crate::{CaseInputs, OrcaRunner, VendorProfiles, runner};
 use serde_json::json;
 
 #[test]
-fn orca_parity_smooth_type2_tower_path_conflict() {
+fn smooth_type2_tower_path_conflict() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

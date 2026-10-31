@@ -32,7 +32,7 @@ fn normalized(bytes: &[u8]) -> Vec<String> {
 }
 
 #[test]
-fn orca_parity_sermoon_v1_whole_file() {
+fn sermoon_v1_whole_file() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };

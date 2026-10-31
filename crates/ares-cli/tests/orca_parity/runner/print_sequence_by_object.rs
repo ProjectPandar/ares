@@ -47,7 +47,7 @@ fn by_object_case_impl(
         )
         .unwrap();
     let exported = if second_instance {
-        super::type2_copies::second_instance_of_first_object(exported)
+        super::object_copy_second_print_instance::second_instance_of_first_object(exported)
     } else {
         exported
     };
@@ -70,7 +70,7 @@ fn by_object_case_impl(
 }
 
 #[test]
-fn orca_parity_print_sequence_by_object_single_object_two_instances_matches_native() {
+fn print_sequence_by_object_single_object_two_instances_matches_native() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -81,7 +81,7 @@ fn orca_parity_print_sequence_by_object_single_object_two_instances_matches_nati
     // gate, :3326-3327 hop/origin, :3333-3339 temps). Ares currently merges
     // both copies into one chunk: the header layer count says 62 vs native
     // 124 and the body is missing the inter-instance transition (RED log:
-    // /tmp/ares-w5-gates/m73-multi-red2.log).
+    // /tmp/ares-gates/m73-multi-red2.log).
     by_object_case_impl(
         &runner,
         "Creality",
@@ -92,7 +92,7 @@ fn orca_parity_print_sequence_by_object_single_object_two_instances_matches_nati
 }
 
 #[test]
-fn orca_parity_print_sequence_by_object_ender3_matches_native() {
+fn print_sequence_by_object_ender3_matches_native() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -105,7 +105,7 @@ fn orca_parity_print_sequence_by_object_ender3_matches_native() {
 }
 
 #[test]
-fn orca_parity_print_sequence_by_object_kobra3_matches_native() {
+fn print_sequence_by_object_kobra3_matches_native() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

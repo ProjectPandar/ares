@@ -23,7 +23,9 @@ fn p1s_bylayer_brim_outeronly_control_matches_native() {
             &["Brim.cpp:813-856::tryExPolygonOffset/makeBrimInfillImpl"],
         ),
         "control",
-        include_bytes!("../../../../tests/parity/validation/w5-brim/outer-only-w5.3mf"),
+        include_bytes!(
+            "../../../../tests/parity/validation/brim_support_and_painted_ears/outer-only.3mf"
+        ),
         "a4a661702406d16509ed439e704661cc8cc0e8f0bcc39695ed86218a2f26c9bc",
         (false, |_, _| {}),
     );

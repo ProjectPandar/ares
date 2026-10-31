@@ -107,7 +107,7 @@ fn print_layer_nozzle_raft_out_of_range_uses_front_not_last_or_minimum() {
 }
 
 #[test]
-fn print_layer_nozzle_error_precedes_width_and_o1() {
+fn print_layer_nozzle_error_precedes_width_and_layer_reset_check() {
     check(json!({"layer_height":"0.5","line_width":"3"}), true);
     check(
         json!({"initial_layer_print_height":"0.5","line_width":"0.2"}),

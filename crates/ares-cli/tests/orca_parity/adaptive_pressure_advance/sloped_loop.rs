@@ -10,17 +10,17 @@ const MESH_SHA256: &str = "a7f79fdf8a5c136095b6ef2384de24dcaa3166c7df4e92768a434
 const MODEL: &str = "0.015,1,100\n0.045,5,100\n0.09,20,100\n0.02,1,1000\n0.08,5,1000\n0.12,20,1000\n0.035,1,5000\n0.1,5,5000\n0.2,20,5000";
 
 #[test]
-fn orca_parity_adaptive_pa_sloped_loop_n0() {
+fn adaptive_pa_sloped_loop_n0() {
     check("none", "0", "0");
 }
 
 #[test]
-fn orca_parity_adaptive_pa_sloped_loop_n1() {
+fn adaptive_pa_sloped_loop_n1() {
     check("none", "1", "0");
 }
 
 #[test]
-fn orca_parity_adaptive_pa_sloped_loop_n2() {
+fn adaptive_pa_sloped_loop_n2() {
     check("none", "1", "1");
 }
 

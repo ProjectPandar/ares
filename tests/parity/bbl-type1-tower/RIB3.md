@@ -7,14 +7,14 @@ Baseline: merged `bdb47cefe5d7851ff0e17e12d40425a1fd43bcfa`.
 `wipe_tower_extra_rib_length` changed from `0` to `3` mm. All other archive
 entry payloads are unchanged. Target SHA256:
 `986e7ea38d1f60ff26e086c0ae8cdb4ba68336ba5d442689276deba603768f5d`.
-The existing `bbl_type1_tower_enabled` is the unchanged zero-extra-rib control.
+The existing `bbl_type1_prime_tower_waypoints_enabled` is the unchanged zero-extra-rib control.
 
 Use the existing Native-first API/CLI complete-stream comparison with no new
 normalization or masking:
 
 ```
 cargo nextest run -p ares-cli --test orca_parity --no-fail-fast \
-  -E 'test(bbl_type1_tower_rib3_segment_unscale) | test(bbl_type1_tower_enabled)'
+  -E 'test(bbl_type1_prime_tower_waypoints_rib3_segment_unscale) | test(bbl_type1_prime_tower_waypoints_enabled)'
 ```
 
 Run via the coordinator official/seeded environment, CPU11 and threads1.

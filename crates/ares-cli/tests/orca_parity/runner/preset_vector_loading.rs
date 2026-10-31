@@ -15,7 +15,7 @@ const ERROR: &str =
     "use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe";
 
 #[tokio::test]
-async fn orca_parity_rh3d_original_scalar_vector_profile_loads_then_rejects_o2() {
+async fn rh3d_original_scalar_vector_profile_loads_then_rejects_double_reset() {
     let root = super::super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, "RH3D").unwrap();

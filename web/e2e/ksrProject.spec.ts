@@ -76,7 +76,7 @@ test("a project sliced twice through the worker API is complete, repeatable and 
   console.log(`KSR seeded replay CPU ${replayCpu}`);
   try {
     execFileSync("cargo", ["nextest", "run", "-p", "ares-cli", "--test", "orca_parity", "--test-threads", "2", "-E",
-      "test(runner::native_ksr_reference_migration::browser::browser_output_matches_initialized_orca_242_ordered_bytes)"], {
+      "test(runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_242_ordered_bytes)"], {
       cwd: repositoryRoot,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],

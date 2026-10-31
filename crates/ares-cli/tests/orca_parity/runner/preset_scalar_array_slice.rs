@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 use super::{OrcaRunner, stages, vendor, write_json};
 
 #[tokio::test(flavor = "current_thread")]
-async fn orca_parity_inherited_user_process_scalar_array_whole_file() {
+async fn inherited_user_process_scalar_array_whole_file() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

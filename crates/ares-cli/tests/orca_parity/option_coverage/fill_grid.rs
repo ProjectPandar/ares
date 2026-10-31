@@ -3,7 +3,7 @@ use crate::runner::CaseInputs;
 use serde_json::json;
 
 #[test]
-fn orca_parity_wide_solid_fill_preserves_complete_output() {
+fn wide_solid_fill_preserves_complete_output() {
     compare(
         "fill-grid/wide-solid",
         None,
@@ -14,7 +14,7 @@ fn orca_parity_wide_solid_fill_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_signed_cross_zag_shifts_preserve_complete_output() {
+fn signed_cross_zag_shifts_preserve_complete_output() {
     for step in ["0.731272", "2.30772"] {
         compare(
             &format!("fill-grid/cross-zag-{step}"),
@@ -27,7 +27,7 @@ fn orca_parity_signed_cross_zag_shifts_preserve_complete_output() {
 }
 
 #[test]
-fn orca_parity_locked_zag_shifts_preserve_complete_output() {
+fn locked_zag_shifts_preserve_complete_output() {
     compare(
         "fill-grid/locked-zag",
         Some("0.731272"),
@@ -38,7 +38,7 @@ fn orca_parity_locked_zag_shifts_preserve_complete_output() {
 }
 
 #[test]
-fn orca_parity_accumulated_cross_zag_phase_preserves_complete_output() {
+fn accumulated_cross_zag_phase_preserves_complete_output() {
     compare(
         "fill-grid/accumulated-cross-zag",
         Some("0.0655373"),
@@ -49,7 +49,7 @@ fn orca_parity_accumulated_cross_zag_phase_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_nondefault_filament_diameter_preserves_complete_output() {
+fn nondefault_filament_diameter_preserves_complete_output() {
     compare(
         "fill-grid/diameter-2.85",
         Some("0.0655373"),
@@ -60,7 +60,7 @@ fn orca_parity_nondefault_filament_diameter_preserves_complete_output() {
 }
 
 #[test]
-fn orca_parity_absolute_extrusion_preserves_complete_output() {
+fn absolute_extrusion_preserves_complete_output() {
     compare(
         "fill-grid/absolute-e",
         Some("0.0655373"),

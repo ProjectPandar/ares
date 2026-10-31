@@ -6,17 +6,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_multi_instance_brim_target() {
+fn multi_instance_brim_target() {
     check("target");
 }
 
 #[test]
-fn orca_parity_multi_instance_brim_control() {
+fn multi_instance_brim_control() {
     check("control");
 }
 
 #[test]
-fn orca_parity_multi_instance_brim_no_skirt_witness() {
+fn multi_instance_brim_no_skirt_witness() {
     check("no-skirt");
 }
 

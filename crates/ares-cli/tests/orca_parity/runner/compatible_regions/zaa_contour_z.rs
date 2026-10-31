@@ -11,7 +11,7 @@ use std::{
 };
 
 #[test]
-fn orca_parity_zaa_sloped_roof_preserves_complete_xyz_output() {
+fn zaa_sloped_roof_preserves_complete_xyz_output() {
     for enabled in [false, true] {
         let Some(runner) = OrcaRunner::from_env().unwrap() else {
             return;

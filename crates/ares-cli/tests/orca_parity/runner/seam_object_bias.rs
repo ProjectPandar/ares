@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use std::io::{Cursor, Read};
 
 #[test]
-fn orca_parity_aligned_back_object_does_not_bias_nearest_object() {
+fn aligned_back_object_does_not_bias_nearest_object() {
     compare(
         include_bytes!("../../../../../tests/parity/validation/seam-mixed-object-bias.3mf"),
         "3ab40b2ea7cf55598aecf52b0de61404c7b890737a2b8e638a47f6e2acd2c9f8",
@@ -16,7 +16,7 @@ fn orca_parity_aligned_back_object_does_not_bias_nearest_object() {
 }
 
 #[test]
-fn orca_parity_two_nearest_objects_preserve_complete_output() {
+fn two_nearest_objects_preserve_complete_output() {
     compare(
         include_bytes!("../../../../../tests/parity/validation/seam-two-nearest-control.3mf"),
         "9df9c0de9faf1ab6854c74b58d372f4f78e9a4d773987edd481b428ddf522115",
@@ -26,7 +26,7 @@ fn orca_parity_two_nearest_objects_preserve_complete_output() {
 }
 
 #[test]
-fn orca_parity_single_aligned_back_preserves_complete_output() {
+fn single_aligned_back_preserves_complete_output() {
     compare(
         include_bytes!(
             "../../../../../tests/parity/validation/seam-aligned-back-single-control.3mf"

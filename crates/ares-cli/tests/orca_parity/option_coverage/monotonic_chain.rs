@@ -6,7 +6,7 @@ use crate::runner::CaseInputs;
 use serde_json::json;
 
 #[test]
-fn orca_parity_concave_monotonic_fill_preserves_complete_output() {
+fn concave_monotonic_fill_preserves_complete_output() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

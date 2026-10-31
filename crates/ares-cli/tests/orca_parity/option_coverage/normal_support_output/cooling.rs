@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn orca_parity_interlaced_support_cooling_and_equalizer_preserve_complete_output() {
+fn interlaced_support_cooling_and_equalizer_preserve_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_NORMAL_SUPPORT_REFERENCE") {
         return;
     }

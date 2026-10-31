@@ -35,7 +35,7 @@ fn normalized(bytes: &[u8]) -> Vec<String> {
 }
 
 #[test]
-fn orca_parity_snapmaker_artisan_detour() {
+fn snapmaker_artisan_detour() {
     let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}")) else {
         return;
     };

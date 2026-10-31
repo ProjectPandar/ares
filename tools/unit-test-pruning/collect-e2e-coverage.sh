@@ -2,7 +2,7 @@
 # E2E-only coverage for unit-test pruning evidence. Runs orca_parity (seeded,
 # which exercises every ares path the official suite does) + ksr_fdmtest_v4.
 set -euo pipefail
-P=/nix/store/wahgmwqll1vg1svk64fjqgzfzq0q2asf-llvm-23.1.0-rc1
+P=/nix/store/wahgmwqll1vg1_flush_statesvk64fjqgzfzq0q2asf-llvm-23.1.0-rc1
 cd /tmp/ares-pi-tower
 exec env \
   LLVM_COV=$P/bin/llvm-cov LLVM_PROFDATA=$P/bin/llvm-profdata \

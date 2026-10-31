@@ -6,17 +6,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_gcode_flavor_admission_makerware_wipe0() {
+fn gcode_flavor_admission_makerware_wipe0() {
     check("makerware-wipe0");
 }
 
 #[test]
-fn orca_parity_gcode_flavor_admission_makerware_wipe1() {
+fn gcode_flavor_admission_makerware_wipe1() {
     check("makerware-wipe1");
 }
 
 #[test]
-fn orca_parity_gcode_flavor_admission_marlin2_control() {
+fn gcode_flavor_admission_marlin2_control() {
     check("marlin2-wipe0");
 }
 

@@ -235,7 +235,7 @@ fn feedrates(gcode: &str, feature: &str) -> Vec<f64> {
 }
 
 #[test]
-fn orca_parity_small_loop_bare_path() {
+fn small_loop_bare_path() {
     check(
         "bare-path",
         model::Shape::ThinWall,
@@ -245,7 +245,7 @@ fn orca_parity_small_loop_bare_path() {
     );
 }
 #[test]
-fn orca_parity_small_loop_open_multipath() {
+fn small_loop_open_multipath() {
     check(
         "open-multipath",
         model::Shape::ThinWall,
@@ -255,7 +255,7 @@ fn orca_parity_small_loop_open_multipath() {
     );
 }
 #[test]
-fn orca_parity_small_loop_true_loop_percent() {
+fn small_loop_true_loop_percent() {
     check(
         "true-loop-percent",
         model::Shape::Square,
@@ -265,7 +265,7 @@ fn orca_parity_small_loop_true_loop_percent() {
     );
 }
 #[test]
-fn orca_parity_small_loop_long_loop_overhang_fragments() {
+fn small_loop_long_loop_overhang_fragments() {
     check(
         "long-loop-overhang-fragments",
         model::Shape::OverhangLoft,
@@ -275,7 +275,7 @@ fn orca_parity_small_loop_long_loop_overhang_fragments() {
     );
 }
 #[test]
-fn orca_parity_small_loop_threshold_below() {
+fn small_loop_threshold_below() {
     check(
         "threshold-below",
         model::Shape::Square,
@@ -285,7 +285,7 @@ fn orca_parity_small_loop_threshold_below() {
     );
 }
 #[test]
-fn orca_parity_small_loop_threshold_equal() {
+fn small_loop_threshold_equal() {
     check(
         "threshold-equal",
         model::Shape::Square,
@@ -295,7 +295,7 @@ fn orca_parity_small_loop_threshold_equal() {
     );
 }
 #[test]
-fn orca_parity_small_loop_threshold_above() {
+fn small_loop_threshold_above() {
     check(
         "threshold-above",
         model::Shape::Square,
@@ -305,7 +305,7 @@ fn orca_parity_small_loop_threshold_above() {
     );
 }
 #[test]
-fn orca_parity_small_loop_explicit_skirt() {
+fn small_loop_explicit_skirt() {
     check(
         "explicit-skirt",
         model::Shape::Square,
@@ -316,7 +316,7 @@ fn orca_parity_small_loop_explicit_skirt() {
 }
 
 #[test]
-fn orca_parity_small_loop_true_loop_scarf_ramp() {
+fn small_loop_true_loop_scarf_ramp() {
     check(
         "true-loop-scarf-ramp",
         model::Shape::Square,

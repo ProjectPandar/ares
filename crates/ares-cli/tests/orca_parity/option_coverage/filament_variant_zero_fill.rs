@@ -32,7 +32,7 @@ fn shorten_payloads(project: &[u8]) -> Vec<u8> {
 }
 
 #[test]
-fn orca_parity_short_filament_variants_preserve_zero_slots_in_complete_output() {
+fn short_filament_variants_preserve_zero_slots_in_complete_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_FILAMENT_VARIANTS_REFERENCE") {
         return;
     }

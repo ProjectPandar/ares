@@ -194,26 +194,26 @@ fn check(name: &str, filename: &str) {
 }
 
 #[test]
-fn orca_parity_counterbore_sacrificiallayer_primary_complete_output() {
+fn counterbore_sacrificiallayer_primary_complete_output() {
     check("filled-primary", "stepped-hole");
 }
 
 #[test]
-fn orca_parity_counterbore_sacrificiallayer_first_layer_control_complete_output() {
+fn counterbore_sacrificiallayer_first_layer_control_complete_output() {
     check("filled-first_layer_control", "first-layer-hole");
 }
 
 #[test]
-fn orca_parity_counterbore_sacrificiallayer_straight_hole_control_complete_output() {
+fn counterbore_sacrificiallayer_straight_hole_control_complete_output() {
     check("filled-straight_hole_control", "straight-hole");
 }
 
 #[test]
-fn orca_parity_counterbore_sacrificiallayer_solid_control_complete_output() {
+fn counterbore_sacrificiallayer_solid_control_complete_output() {
     check("filled-solid_control", "solid-plate");
 }
 
 #[test]
-fn orca_parity_counterbore_sacrificiallayer_two_islands_complete_output() {
+fn counterbore_sacrificiallayer_two_islands_complete_output() {
     check("filled-two_islands", "two-islands");
 }

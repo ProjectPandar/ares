@@ -7,7 +7,7 @@
 use crate::runner::native_stream_case::check;
 
 #[test]
-fn orca_parity_wall_generator_arachne_matches_complete_output() {
+fn wall_generator_arachne_matches_complete_output() {
     // This frozen KSR project needs the previously qualified seeded oracle:
     // uninitialized `; printing object` IDs make official double replay differ.
     if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {

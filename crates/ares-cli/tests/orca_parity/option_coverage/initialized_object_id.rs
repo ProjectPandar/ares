@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn orca_parity_initialized_reference_repeats_complete_ksr_output() {
+fn initialized_reference_repeats_complete_stock_project_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_OBJECT_ID_REFERENCE") {
         return;
     }

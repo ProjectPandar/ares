@@ -11,22 +11,22 @@ use std::{
 };
 
 #[test]
-fn orca_parity_per_object_skirt_control_matches_native() {
+fn per_object_skirt_control_matches_native() {
     run_case("control", false, 0, false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_single_raft_control_matches_native() {
+fn per_object_skirt_single_raft_control_matches_native() {
     run_case("single-raft-control", false, 2, false);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_support_red_matches_native() {
+fn per_object_skirt_support_red_matches_native() {
     run_case("support", true, 0, true);
 }
 
 #[test]
-fn orca_parity_per_object_skirt_raft_red_matches_native() {
+fn per_object_skirt_raft_red_matches_native() {
     run_case("raft", true, 2, true);
 }
 

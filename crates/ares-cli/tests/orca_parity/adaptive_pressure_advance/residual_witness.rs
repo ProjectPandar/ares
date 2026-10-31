@@ -6,17 +6,17 @@ use serde_json::json;
 use std::fs;
 
 #[test]
-fn orca_parity_adaptive_pa_sloped_loop_native_witness() {
+fn adaptive_pa_sloped_loop_native_witness() {
     check("all", "1");
 }
 
 #[test]
-fn orca_parity_adaptive_pa_non_sloped_loop_control() {
+fn adaptive_pa_non_sloped_loop_control() {
     check("none", "1");
 }
 
 #[test]
-fn orca_parity_adaptive_pa_sloped_loop_disabled_control() {
+fn adaptive_pa_sloped_loop_disabled_control() {
     check("all", "0");
 }
 

@@ -8,7 +8,7 @@ use std::{
 };
 
 #[tokio::test]
-async fn orca_parity_o2_legacy_firmware_wipe_valid_pairs() {
+async fn legacy_firmware_wipe_valid_pairs() {
     for (firmware, wipe) in [(false, true), (true, false)] {
         let directory = tempfile::Builder::new()
             .prefix("o2-valid-legacy-")
@@ -50,7 +50,7 @@ async fn orca_parity_o2_legacy_firmware_wipe_valid_pairs() {
 }
 
 #[test]
-fn orca_parity_o2_profile_overrides_apply_before_validation() {
+fn profile_overrides_apply_before_validation() {
     let root = super::super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, "RH3D").unwrap();

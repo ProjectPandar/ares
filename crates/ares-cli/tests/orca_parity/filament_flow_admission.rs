@@ -6,17 +6,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_filament_flow_admission_control() {
+fn filament_flow_admission_control() {
     check("control");
 }
 
 #[test]
-fn orca_parity_filament_flow_admission_zero() {
+fn filament_flow_admission_zero() {
     check("zero");
 }
 
 #[test]
-fn orca_parity_filament_flow_admission_upper_control() {
+fn filament_flow_admission_upper_control() {
     check("upper-control");
 }
 

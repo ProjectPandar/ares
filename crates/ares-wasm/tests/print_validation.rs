@@ -1,8 +1,9 @@
-const INPUT: &[u8] = include_bytes!("../../../tests/parity/validation/o1-kobra-plus-relative.3mf");
+const INPUT: &[u8] =
+    include_bytes!("../../../tests/parity/validation/layer-reset-kobra-plus-relative.3mf");
 const ERROR: &str = "Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add \"G92 E0\" to layer_gcode.";
 
 #[tokio::test]
-async fn o1_wasm_stl_boundary_preserves_print_validation_error() {
+async fn wasm_stl_boundary_preserves_print_validation_error() {
     let input = include_bytes!("../../../tests/parity/cube10.stl").to_vec();
     let result = ares_wasm::slice_stl_bytes(
         input,
@@ -22,7 +23,7 @@ fn tempfile_root(name: &str, text: &str) -> std::path::PathBuf {
 }
 
 #[test]
-fn o1_wasm_project_core_boundary_preserves_print_validation_error() {
+fn wasm_project_core_boundary_preserves_print_validation_error() {
     let result =
         ares_core::validate_project_plate(INPUT, None, &ares_core::ConfigOverrides::default());
     let artifact = tempfile_root("o1-wasm-project-core.json", &format!("{result:?}"));

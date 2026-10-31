@@ -10,7 +10,7 @@ const PROCESS: &str = "0.2mm Standard @WEMAKE3D PhoenixProV1 0.4mm nozzle";
 const FILAMENT: &str = "Generic PLA @System";
 
 #[test]
-fn orca_parity_counterbore_n_split_arachne_filled_complete_output() {
+fn counterbore_n_split_arachne_filled_complete_output() {
     if !super::environment::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }

@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn orca_parity_support_flow_and_gap_dependencies_preserve_complete_raft_output() {
+fn support_flow_and_gap_dependencies_preserve_complete_raft_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_FLOW_REFERENCE") {
         return;
     }

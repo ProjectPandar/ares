@@ -58,7 +58,7 @@ pub(crate) fn banner_normalized(bytes: &[u8]) -> Vec<u8> {
 }
 
 #[tokio::test]
-async fn orca_parity_load_settings_cli_ender3_whole_file() {
+async fn load_settings_cli_ender3_whole_file() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };

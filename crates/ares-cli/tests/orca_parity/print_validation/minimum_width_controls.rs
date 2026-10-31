@@ -32,7 +32,7 @@ fn check(extra: Value, rejected: bool) {
 }
 
 #[test]
-fn o4_flat_auto_and_nozzle_relative_percent_boundaries() {
+fn flat_auto_and_nozzle_relative_percent_boundaries() {
     for width in ["0", "0%", "0.200001", "50.0001%", "100%"] {
         check(json!({"line_width":width}), false);
     }
@@ -42,7 +42,7 @@ fn o4_flat_auto_and_nozzle_relative_percent_boundaries() {
 }
 
 #[test]
-fn o4_flat_each_region_width_rejects_equality() {
+fn flat_each_region_width_rejects_equality() {
     for key in [
         "inner_wall_line_width",
         "outer_wall_line_width",
@@ -58,7 +58,7 @@ fn o4_flat_each_region_width_rejects_equality() {
 }
 
 #[test]
-fn o4_flat_support_width_is_conditional_on_support_or_raft() {
+fn flat_support_width_is_conditional_on_support_or_raft() {
     check(json!({"support_line_width":"0.2"}), false);
     check(
         json!({"support_line_width":"0.2", "enable_support":"1"}),
@@ -72,7 +72,7 @@ fn o4_flat_support_width_is_conditional_on_support_or_raft() {
 }
 
 #[test]
-fn o4_flat_first_error_precedes_o1() {
+fn flat_first_error_precedes_layer_reset_check() {
     check(
         json!({"line_width":"0.2", "use_relative_e_distances":"1", "layer_change_gcode":"g92 e0"}),
         true,
@@ -80,7 +80,7 @@ fn o4_flat_first_error_precedes_o1() {
 }
 
 #[test]
-fn o4_flat_nozzle_baseline_uses_mapped_used_extruder_only() {
+fn flat_nozzle_baseline_uses_mapped_used_extruder_only() {
     check(
         json!({"nozzle_diameter":["0.2", "0.6"], "filament_map":["2"], "line_width":"50%"}),
         true,

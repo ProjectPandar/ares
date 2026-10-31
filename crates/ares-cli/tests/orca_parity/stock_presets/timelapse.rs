@@ -5,7 +5,7 @@ use crate::runner::{CaseInputs, application, repo_root};
 use serde_json::{Map, json};
 
 #[test]
-fn orca_parity_stock_bbl_timelapse_z_restatement() {
+fn stock_bbl_timelapse_z_restatement() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -24,7 +24,7 @@ fn orca_parity_stock_bbl_timelapse_z_restatement() {
 }
 
 #[test]
-fn orca_parity_stock_bbl_timelapse_z_comments() {
+fn stock_bbl_timelapse_z_comments() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

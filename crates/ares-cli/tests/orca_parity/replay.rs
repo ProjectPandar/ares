@@ -28,7 +28,7 @@ fn replay_one(case: &ReplayCase, root: &Path) -> parity::ParityOutcome {
 }
 
 #[test]
-fn orca_parity_replay_sweep() {
+fn replay_sweep() {
     if crate::native_environment::required() {
         let _ = crate::runner::OrcaRunner::from_env().unwrap();
     }

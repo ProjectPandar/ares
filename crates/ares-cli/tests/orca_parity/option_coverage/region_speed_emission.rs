@@ -242,7 +242,7 @@ fn run_leg(leg: &Leg) {
 /// Control: unpatched fixture — must match Native byte-for-byte and stay
 /// green before and after the bounded GREEN.
 #[test]
-fn orca_parity_region_speed_emission_control() {
+fn region_speed_emission_control() {
     run_leg(&LEGS[0]);
 }
 
@@ -250,7 +250,7 @@ fn orca_parity_region_speed_emission_control() {
 /// the overridden part's `;TYPE:Inner wall` blocks in Native; Ares must
 /// reproduce the whole Native output.
 #[test]
-fn orca_parity_region_speed_emission_inner_wall() {
+fn region_speed_emission_inner_wall() {
     run_leg(&LEGS[1]);
 }
 
@@ -258,6 +258,6 @@ fn orca_parity_region_speed_emission_inner_wall() {
 /// inside `;TYPE:Sparse infill` blocks in Native; Ares must reproduce the
 /// whole Native output.
 #[test]
-fn orca_parity_region_speed_emission_sparse_infill() {
+fn region_speed_emission_sparse_infill() {
     run_leg(&LEGS[2]);
 }

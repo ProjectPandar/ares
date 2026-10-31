@@ -6,7 +6,7 @@
 use crate::runner::native_stream_case::check;
 
 #[test]
-fn orca_parity_staggered_inner_seams_convex_depth_matches_complete_output() {
+fn staggered_inner_seams_convex_depth_matches_complete_output() {
     // Seeded-only oracle: two official replays of the single-object KSR
     // project disagree on the uninitialized `; printing object` id, so
     // `native_stream_case::qualify` would panic with Native

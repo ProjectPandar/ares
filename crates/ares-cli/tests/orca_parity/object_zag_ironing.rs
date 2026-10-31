@@ -7,17 +7,17 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_object_zag_ironing_zigzag_target() {
+fn object_zag_ironing_zigzag_target() {
     check("zigzag");
 }
 
 #[test]
-fn orca_parity_object_zag_ironing_crosszag_target() {
+fn object_zag_ironing_crosszag_target() {
     check("crosszag");
 }
 
 #[test]
-fn orca_parity_object_zag_ironing_lockedzag_target() {
+fn object_zag_ironing_lockedzag_target() {
     check("lockedzag");
 }
 

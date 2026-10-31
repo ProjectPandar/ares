@@ -6,12 +6,12 @@ use sha2::{Digest, Sha256};
 use std::{fs, process::Command};
 
 #[test]
-fn orca_parity_perobject_multi_copy_skirt_target() {
+fn perobject_multi_copy_skirt_target() {
     check("target");
 }
 
 #[test]
-fn orca_parity_perobject_multi_copy_skirt_combined_control() {
+fn perobject_multi_copy_skirt_combined_control() {
     check("control");
 }
 

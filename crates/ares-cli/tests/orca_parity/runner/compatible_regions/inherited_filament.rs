@@ -4,7 +4,7 @@ use serde_json::json;
 use std::io::{Cursor, Read};
 
 #[test]
-fn orca_parity_modifier_density_activates_inherited_second_filament() {
+fn modifier_density_activates_inherited_second_filament() {
     if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
         return;
     }

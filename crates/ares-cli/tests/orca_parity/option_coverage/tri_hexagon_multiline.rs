@@ -114,30 +114,30 @@ fn compare(label: &str, count: &str, density: &str, angle: &str, hole: bool) {
 }
 
 #[test]
-fn orca_parity_tri_hexagon_multiline_s1() {
+fn tri_hexagon_multiline_s1() {
     compare("S1", "1", "30%", "45", false);
 }
 #[test]
-fn orca_parity_tri_hexagon_multiline_s2() {
+fn tri_hexagon_multiline_s2() {
     compare("S2", "2", "30%", "45", false);
 }
 #[test]
-fn orca_parity_tri_hexagon_multiline_s3() {
+fn tri_hexagon_multiline_s3() {
     compare("S3", "3", "30%", "45", false);
 }
 #[test]
-fn orca_parity_tri_hexagon_multiline_s10() {
+fn tri_hexagon_multiline_s10() {
     compare("S10", "10", "30%", "45", false);
 }
 #[test]
-fn orca_parity_tri_hexagon_multiline_s2a() {
+fn tri_hexagon_multiline_s2a() {
     compare("S2A", "2", "15%", "0", false);
 }
 #[test]
-fn orca_parity_tri_hexagon_multiline_h1() {
+fn tri_hexagon_multiline_h1() {
     compare("H1", "1", "30%", "45", true);
 }
 #[test]
-fn orca_parity_tri_hexagon_multiline_h2() {
+fn tri_hexagon_multiline_h2() {
     compare("H2", "2", "30%", "45", true);
 }

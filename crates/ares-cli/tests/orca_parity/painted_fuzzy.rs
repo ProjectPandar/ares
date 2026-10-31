@@ -107,7 +107,7 @@ fn assert_native(reference: &NativeCase, replay: &NativeCase) -> Value {
 }
 
 #[test]
-fn orca_parity_painted_fuzzy_native_preflight() {
+fn painted_fuzzy_native_preflight() {
     let mut qualified = Vec::new();
     let mut activities = Vec::new();
     for (label, digest) in CASES {
@@ -151,11 +151,11 @@ fn check(index: usize) {
 }
 
 #[test]
-fn orca_parity_painted_fuzzy_unpainted_control() {
+fn painted_fuzzy_unpainted_control() {
     check(0);
 }
 
 #[test]
-fn orca_parity_painted_fuzzy_painted_face() {
+fn painted_fuzzy_painted_face() {
     check(1);
 }
