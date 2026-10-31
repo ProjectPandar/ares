@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "first_layer_one_wall_requires_bottom_shell.rs"]
+mod first_layer_one_wall_requires_bottom_shell;
+
 #[path = "classic_fully_overhanging_exterior_nearest.rs"]
 mod classic_fully_overhanging_exterior_nearest;
 
