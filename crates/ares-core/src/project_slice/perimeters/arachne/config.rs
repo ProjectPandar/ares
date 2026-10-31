@@ -90,7 +90,8 @@ pub(in crate::project_slice) fn validate_record(
         // v2.5.0-beta PerimeterGenerator.cpp:628-631,2682,2708-2711.
         only_one_wall_first_layer: region.only_one_wall_first_layer.0
             && region.bottom_shell_layers.0 > 0,
-        only_one_wall_top: region.only_one_wall_top.0,
+        // v2.5.0-beta PerimeterGenerator.cpp:619-622,2681,2713-2716,2735-2739.
+        only_one_wall_top: region.only_one_wall_top.0 && region.top_shell_layers.0 > 0,
         raft_layers: object.raft_layers.0,
         precise_outer_wall: region.precise_outer_wall.0
             && region.wall_sequence == crate::ProcessWallSequence::InnerOuter,
