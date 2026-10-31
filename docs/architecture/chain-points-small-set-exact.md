@@ -61,8 +61,8 @@ the caller, just as the upstream `end_points`/`start` arrays are.
 
 The point adapter alone duplicates each point into a coincident endpoint pair,
 calls the same kernel with both options `None`, and discards the returned
-orientation. W3's classic constrained callers reuse the paired-endpoint kernel
-with their real mask and start. There is no second copy of this DP. The separate
+orientation. The classic perimeter constrained callers reuse the paired-endpoint
+kernel with their real mask and start. There is no second copy of this DP. The separate
 upstream `OrderingStrategies.cpp::tsp_exact_cycle` solves a closed cycle and must
 not be replaced with this open-chain algorithm.
 
@@ -116,6 +116,6 @@ until the separately source-cited `GCode.cpp:7680–7720::process_layer` visit-i
 ordering follow-up is qualified RED-first and reaches GREEN in the same batch.
 Do not change the DP's source ties or restore the old greedy branch to mask it.
 
-The seam witness's GREEN requires the separate W3 seam extraction slice through
+The seam witness's GREEN requires the separate seam-candidate slice through
 `af0177a5a`; its authorized combination check is evidence of that dependency,
-not permission to absorb W3 production changes here.
+not permission to absorb seam-candidate production changes here.
