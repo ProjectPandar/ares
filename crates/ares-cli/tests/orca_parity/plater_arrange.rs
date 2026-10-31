@@ -14,6 +14,8 @@ use crate::runner::{OrcaRunner, repo_root, stages};
 
 #[path = "plater_arrange/arranged.rs"]
 mod arranged;
+#[path = "plater_arrange/wipe_tower.rs"]
+mod wipe_tower;
 use arranged::Arranged;
 
 const SINGLE: &str = "tests/parity/orca_cli_ender3.3mf";
@@ -74,6 +76,18 @@ fn flag(name: &str, value: bool) -> String {
 
 /// Native global arrange of the edited `base` and the session arrange with `settings` agree.
 fn assert_arranged_like_native(label: &str, base: &str, edits: &[Edit], settings: ArrangeSettings) {
+    assert_arranged_like_native_with(label, base, edits, settings, &[]);
+}
+
+/// `assert_arranged_like_native` with `cli` flags for Native that the session reads from the
+/// project instead.
+fn assert_arranged_like_native_with(
+    label: &str,
+    base: &str,
+    edits: &[Edit],
+    settings: ArrangeSettings,
+    cli: &[&str],
+) {
     let runner = OrcaRunner::from_env()
         .unwrap()
         .expect("official v2.5.0-beta arrange oracle");
@@ -108,10 +122,14 @@ fn assert_arranged_like_native(label: &str, base: &str, edits: &[Edit], settings
                 settings.avoid_extrusion_cali_region,
             ),
             flag("align-to-y-axis", settings.align_to_y_axis),
+        ]
+        .into_iter()
+        .chain(cli.iter().map(|&arg| arg.to_owned()))
+        .chain([
             "--export-3mf".to_owned(),
             output_path.to_str().unwrap().to_owned(),
             input_path.to_str().unwrap().to_owned(),
-        ],
+        ]),
         stages::Stage::Export,
         &directory,
     )
