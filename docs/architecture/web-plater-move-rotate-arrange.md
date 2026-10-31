@@ -323,7 +323,7 @@ follows:
 
 **`crates/ares-core/src/plater/arrange_job.rs`:**
 - ArrangeJob `prepare*`, `process`, `finalize` and `init_arrange_params`, plus the PartPlateList pre/post-processing.
-- Exposed as `PlaterSession::arrange(scope, settings)`, with `scope` all / current plate / selection.
+- Exposed as `PlaterSession::arrange(scope, settings)`, with `scope` all or current plate. The GUI arranges no selection; see A3c.
 
 **ares-wasm:** `PlaterSession.arrange(scope, settingsJson)` returns the layout.
 
@@ -345,7 +345,7 @@ The parallel candidate evaluation becomes a deterministic sequential loop that k
 - the extrusion-calibration region;
 - `bed_exclude_area` and exclusion volumes with Z ranges and per-nozzle ownership;
 - IDEX/IQEX zones (`ImexArranger`);
-- the all, current-plate and selection scopes;
+- the all and current-plate scopes;
 - unarrangeable items going to the unprintable plate;
 - new plates for overflow.
 
@@ -511,8 +511,48 @@ A3b cases:
 6. A by-object print with one object.
 7. The prime tower disabled (control).
 
-**A3c: current-plate and selection scopes.**
-- Upstream: `prepare_partplate` (`:532-603`), `preprocess_arrange_polygon_other_locked` (`PartPlate.cpp:7663`), `postprocess_bed_index_for_current_plate` (`:7913`) and `prepare_selected` (`ArrangeJob.cpp:259-340`).
+**A3c addendum: "Arrange" on the current plate.** Every `file:line` is at `345efec64`.
+
+- **Selection scope: not ported.** `ArrangeJob::prepare_selected` (`ArrangeJob.cpp:259-340`) is defined but nothing calls it: `ArrangeJob::prepare` (`:650-657`) runs `prepare_all` for `PREPARE_STATE_DEFAULT` and `prepare_partplate` for `PREPARE_STATE_MENU`.
+  - The toolbar Arrange (`GLCanvas3D.cpp:6751`) and arrange-after-import (`GUI_Factories.cpp:668`) set DEFAULT.
+  - The plate context-menu "Arrange current plate" (`GUI_Factories.cpp:1993-1999`) sets MENU.
+  - A selection-only arrange would be an Ares design with no upstream behaviour, so `ArrangeScope` gets only `All` and `CurrentPlate(index)`.
+- **Upstream:**
+  - `prepare_partplate` (`ArrangeJob.cpp:532-599`):
+    - the current plate's instances (`contain_instance || intersect_instance`) are selected;
+    - every other instance is locked by `preprocess_arrange_polygon_other_locked` (`PartPlate.cpp:7663-7690`);
+    - only the tower the plate already shows is added; no estimate is made;
+    - exclusion areas cover beds `0..=current` (`preprocess_exclude_areas(..., current + 1)`);
+    - an empty plate arranges nothing.
+  - `init_arrange_params` for `PREPARE_STATE_MENU` (`:1026-1034`): the plate's own print sequence (`PartPlate::get_real_print_seq`, `PartPlate.cpp:370`), and an automatic distance when that sequence differs from the global one.
+  - `finalize` with `only_on_partplate` (`:851-856, 860-863, 877-878, 946-951`):
+    - `clear` empties only the current plate;
+    - `postprocess_bed_index_for_current_plate` (`PartPlate.cpp:7913-7928`) maps bed 0 to the current plate, and any other bed to the plate count;
+    - locked instances are applied back unchanged, through `set_rotation(Z)` and taking an arrange order;
+    - `rebuild_plates_after_arrangement(false, true, current)` sorts the objects and reloads the current plate.
+- **Destination:**
+  - `ArrangeScope::CurrentPlate(usize)`, with the A3a modules extended: `prepare_partplate` next to `prepare_all`;
+  - the plate-list steps `preprocess_arrange_polygon_other_locked` and `postprocess_bed_index_for_current_plate` in `plater/plate_list/arrange.rs`;
+  - plate-scoped `clear` and `reload_all_objects`.
+- **A3a rejections that no longer apply:**
+  - A plate's own print sequence is supported here: the MENU job reads it and locks nothing.
+  - The tower is supported here as the existing-tower part of A3b.
+- **Oracle:** the CLI global-arrange path with `--slice <plate>` (`OrcaSlicer.cpp:5815-5960, 6022-6035, 6091`), started as `--slice <n> --arrange 1 <flags> --export-3mf`.
+  - Probed: `custom-gcode-overview/two-plates.3mf` with plate 2's cube moved off-centre arranges it to plate 2's centre, slices plate 2 and returns 0.
+  - The CLI then exports only that plate (`store_params.export_plate_idx`, `:8399-8404`). The comparison therefore covers the current plate's build items and its plate entry, keyed by object name in build order as in A3a. The locked instances on other plates are not in Native's output.
+- **Where the CLI and the GUI job differ, and how the cases avoid it:**
+  - **Tower.** The CLI estimates its own tower for the plate (`:5855-5955`); the GUI uses the tower the plate shows. The cases print one filament with no smooth timelapse, so neither path adds a tower.
+  - **An item that does not fit.** The CLI stops with `CLI_OBJECT_ARRANGE_FAILED` (`:6026-6031`); the GUI moves it past the plates. The cases fit on the plate.
+  - **Unprintable instances** move to bed `current + 1`, outside the exported plate. The cases have none on the current plate.
+  - **Distance.** The CLI always keeps the distance automatic; the GUI uses the setting unless the plate's sequence differs. The cases use distance 0.
+  - **Slicing.** The CLI slices the plate before exporting, so the case projects must slice at v2.5.0-beta.
+- **A3c cases:**
+  1. An off-centre object on plate 2 of a two-plate project, centred on plate 2.
+  2. Several objects on plate 2, with plate 1's object left in place.
+  3. As case 2, with rotation.
+  4. Align to Y on the i3 printer.
+  5. `bed_exclude_area` on plate 2.
+  6. Plate 2 printed by object while the global sequence is by layer.
 
 **Oracle and comparison (A3a).**
 - Native run: the official v2.5.0-beta CLI global arrange (`OrcaSlicer.cpp:5619-6098`), started as `--arrange 1 --allow-rotations=<0|1> --avoid-extrusion-cali-region=<0|1> --align-to-y-axis=<0|1> --export-3mf <out> <input.3mf>` through `scripts/orca-parity.sh` with `ORCA_APPDIR`.
