@@ -80,15 +80,18 @@ fn extract_collection(
     polygons: &mut Vec<SourcePerimeterPolygon>,
 ) {
     for entity in &collection.entities {
-        // `SeamPlacer.cpp:413-420`: only loops scan every sub-path for the
-        // external-perimeter role; a multi-path contributes through its entity
-        // role, the first sub-path's role (`ExtrusionEntity.hpp`).
+        // OrcaSlicer v2.5.0-beta `SeamPlacer.cpp:487-497`: closed loops keep
+        // exterior identity through inset 0 even when every path is overhang.
+        // MultiPaths still use their entity role (the first sub-path).
         let external = match entity {
-            ExtrusionEntity::Loop(ordered) => ordered
-                .extrusion_loop
-                .paths
-                .iter()
-                .any(|path| path.role == ExtrusionRole::ExternalPerimeter),
+            ExtrusionEntity::Loop(ordered) => {
+                ordered.inset_idx == 0
+                    || ordered
+                        .extrusion_loop
+                        .paths
+                        .iter()
+                        .any(|path| path.role == ExtrusionRole::ExternalPerimeter)
+            }
             ExtrusionEntity::MultiPath(multi_path) => matches!(
                 multi_path.paths.first().map(|path| path.role),
                 Some(ExtrusionRole::ExternalPerimeter)
