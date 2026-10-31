@@ -29,6 +29,8 @@ pub(super) const PRE_MIDDLE_FILAMENT_OPTION_DEFINITIONS: &[OptionDefinition] = &
     definition!("filament_ironing_inset", FloatsNullable, "nil",),
     definition!("filament_ironing_spacing", FloatsNullable, "nil",),
     definition!("filament_ironing_speed", FloatsNullable, "nil",),
+    // PrintConfig.cpp (345efec64c7b):3545-3549, ConfigOptionBools{false}.
+    definition!("filament_is_mixed", Bools, "0",),
     definition!("filament_is_support", Bools, "false",),
     definition!("filament_loading_speed", Floats, "28",),
     definition!("filament_loading_speed_start", Floats, "3",),
@@ -37,6 +39,8 @@ pub(super) const PRE_MIDDLE_FILAMENT_OPTION_DEFINITIONS: &[OptionDefinition] = &
     definition!("filament_map_mode", Enum, "Auto For Flush",),
     definition!("filament_max_volumetric_speed", Floats, "2",),
     definition!("filament_minimal_purge_on_wipe_tower", Floats, "15",),
+    // PrintConfig.cpp (345efec64c7b):3551-3555, ConfigOptionStrings{""}.
+    definition!("filament_mixed_components", Strings, "",),
     definition!("filament_multi_colour", Strings, "",),
     definition!("filament_multitool_ramming", Bools, "false",),
     definition!("filament_multitool_ramming_flow", Floats, "10",),

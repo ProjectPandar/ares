@@ -52,9 +52,11 @@ impl ExportOverrides {
 
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
 const END: &[u8] = b"; CONFIG_BLOCK_END\n\n";
-const BANNED_KEYS: [&str; 9] = [
+const BANNED_KEYS: [&str; 10] = [
     "compatible_printers",
     "compatible_prints",
+    // GCode.cpp (345efec64c7b):8287, GCode::append_full_config.
+    "prime_volume_mode",
     "print_host",
     "print_host_webui",
     "printhost_apikey",

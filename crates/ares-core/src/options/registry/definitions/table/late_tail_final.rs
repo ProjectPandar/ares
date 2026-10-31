@@ -17,6 +17,8 @@ pub(super) const LATE_TAIL_FINAL_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("prime_tower_skip_points", Bool, "true",),
     definition!("prime_tower_width", Float, "60",),
     definition!("prime_volume", Float, "45",),
+    // PrintConfig.cpp (345efec64c7b):8310-8321, PrimeVolumeMode::pvmDefault.
+    definition!("prime_volume_mode", Enum, "Default",),
     definition!("print_compatible_printers", Strings, "",),
     definition!("print_extruder_id", Ints, "1",),
     definition!("print_extruder_variant", Strings, "Direct Drive Standard",),

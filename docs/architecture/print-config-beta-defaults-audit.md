@@ -70,7 +70,7 @@ nonliteral plugin/remap registrations, generated nullable filament overrides,
 header member deltas, key-list changes and enum/type changes. A constructor
 expression spelling change is not automatically a behavioral default change.
 See `print-config-beta-option-inventory.md` for the concrete new-key/type groups.
-The Ares public export's675 keys exactly match the old common/FFF source keyset;
+At the RED base, the Ares public export's675 keys exactly match the old common/FFF source keyset;
 the beta keyset is805 (131 additions, one removal). This is not an intersection
 that silently discards unknown beta keys.
 
@@ -103,3 +103,29 @@ enum, not a Boolean with broadened truthiness. `silent_mode` is removed.
    missing/default/type REDs in required mode against official and seeded beta.
 3. Run rustfmt, strict Clippy and scope/diff audits. Do not implement GREEN here.
 4. Keep the separate dual-FULL ledger gated on explicit `B11-FULL-DONE`.
+
+## Approved definition-only GREEN
+
+The follow-up ports only the three declarations above into the default and
+metadata tables, growing the public export675 ->678 without changing any old
+record. `filament_is_mixed` uses the Native Boolean wire spelling `0`
+for the cited `ConfigOptionBools{false}` constructor. `prime_volume_mode` carries
+its three source enum names and integer codes0/1/2. Labels, tooltips, develop
+mode and all other metadata fields use the in-repository generator's rendering.
+The pre-existing675 metadata records must remain byte-identical.
+
+The full generator currently rejects beta's unrelated `printer_agent.plugin_type`.
+Do not fix that parser or regenerate other beta records in this slice. An
+external selected-input invocation keeps the existing parser/renderer intact,
+feeds only the three exact source blocks and produces the formatted records;
+insert only those records at their sorted positions. Retain the failed full
+attempt and selected-renderer receipt externally. The existing generated metadata
+table is exempt from the module-length split; handwritten modules remain below
+400 LOC.
+
+Registering a key also makes authored raw settings eligible for config-block
+write-back. Therefore add `prime_volume_mode` to the existing writer ban list,
+matching beta `GCode.cpp:8287`. Do not merely rely on its absence from the static
+CONFIG_BLOCK key list. No typed mixed-filament execution, normalization, active
+Saving/Fast behavior or other beta definition is included. The approved three
+public REDs are unchanged; verify only those cases plus fmt and strict Clippy.
