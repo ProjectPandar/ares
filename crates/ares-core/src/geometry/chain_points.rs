@@ -2,6 +2,7 @@ use super::Point;
 use kd_tree::KdTree;
 use priority_queue::EndPointHeap;
 
+mod exact;
 pub(in crate::geometry) mod kd_tree;
 pub(in crate::geometry) mod priority_queue;
 
@@ -30,6 +31,9 @@ impl EndPoint {
 pub(crate) fn chain_points(points: &[Point]) -> Vec<usize> {
     if points.len() < 2 {
         return (0..points.len()).collect();
+    }
+    if points.len() <= 4 {
+        return exact::chain_points_exact(points);
     }
 
     let mut end_points = Vec::with_capacity(points.len() * 2);
