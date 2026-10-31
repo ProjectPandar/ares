@@ -87,7 +87,9 @@ pub(super) fn validate_project(
 
                         Ok(Some(ValidatedTopSplitConfig {
                             wall_loops: region.wall_loops.0,
-                            only_one_wall_top: region.only_one_wall_top.0,
+                            // v2.5.0-beta PerimeterGenerator.cpp:619-622,1540.
+                            only_one_wall_top: region.only_one_wall_top.0
+                                && region.top_shell_layers.0 > 0,
                             interface_shells: resolved.object.interface_shells.0,
                             min_width_top_surface: scaled_option(
                                 prepared.scale,

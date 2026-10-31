@@ -146,7 +146,8 @@ fn validate_record(
             && region.wall_sequence == crate::ProcessWallSequence::InnerOuter,
         detect_overhang_wall: region.detect_overhang_wall.0,
         detect_thin_wall: region.detect_thin_wall.0,
-        only_one_wall_top: region.only_one_wall_top.0,
+        // v2.5.0-beta PerimeterGenerator.cpp:619-622,1540.
+        only_one_wall_top: region.only_one_wall_top.0 && region.top_shell_layers.0 > 0,
         gap_infill_speed: region.gap_infill_speed.0,
         surface_simplify_resolution: simplify_resolution,
         support_nozzle_diameter,
