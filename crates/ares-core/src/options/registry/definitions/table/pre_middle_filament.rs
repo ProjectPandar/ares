@@ -46,5 +46,7 @@ pub(super) const PRE_MIDDLE_FILAMENT_OPTION_DEFINITIONS: &[OptionDefinition] = &
     definition!("filament_multitool_ramming_flow", Floats, "10",),
     definition!("filament_multitool_ramming_volume", Floats, "10",),
     definition!("filament_notes", Strings, "",),
+    // PrintConfig.cpp (345efec64c7b):8955-8961, ConfigOptionFloats{45.}.
+    definition!("filament_prime_volume", Floats, "45",),
     definition!("filament_printable", Ints, "3",),
 ];
