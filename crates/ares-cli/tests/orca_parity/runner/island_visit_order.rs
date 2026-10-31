@@ -5,6 +5,32 @@ async fn nested_island_visits_follow_runtime_orca_order() {
     let project = include_bytes!(
         "../../../../../tests/parity/clipper-wrapper-geometry/nested-hole-island.3mf"
     );
+    compare_first_object_layer(
+        "nested-hole-island",
+        project,
+        "f91fae699cd1410003fe4c0d59ce2602c0fa1039e709c11d195641e5488da74c",
+        1,
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn four_island_visits_follow_runtime_orca_closed_tour() {
+    compare_first_object_layer(
+        "four-disjoint-prisms",
+        include_bytes!("../../../../../tests/parity/island-visit-order/four-disjoint-prisms.3mf"),
+        "1fc8527ace719c91329124259b93767329793e71e41438bfb0e5b2d07bab8be2",
+        4,
+    )
+    .await;
+}
+
+async fn compare_first_object_layer(
+    case: &str,
+    project: &[u8],
+    input_sha256: &str,
+    minimum_wall_groups: usize,
+) {
     let (reference, _) = crate::runner::native_stream_case::qualify(
         (
             "island-visit-order",
@@ -13,16 +39,30 @@ async fn nested_island_visits_follow_runtime_orca_order() {
                 "GCode.cpp:7238-7362 process_layer per-filament IslandOrderNode/InstanceVisit producer",
                 "GCode.cpp:7680-7720 process_layer explicit visit island consumption",
                 "Polygon.cpp:154-169 centroid",
+                "ShortestPath.cpp:1624-1650 chain_points_with_postprocessing default tour",
+                "GCode/OrderingStrategies.cpp:230-266 tsp_exact_cycle closed-cycle DP",
             ],
         ),
-        "nested-hole-island",
+        case,
         project,
-        "f91fae699cd1410003fe4c0d59ce2602c0fa1039e709c11d195641e5488da74c",
+        input_sha256,
         false,
     );
     let native = first_printed_object_layer(&reference.native);
-    assert!(native.contains(";TYPE:Inner wall\n"));
-    assert!(native.contains(";TYPE:Outer wall\n"));
+    let inner_groups = native.matches(";TYPE:Inner wall\n").count();
+    let outer_groups = native.matches(";TYPE:Outer wall\n").count();
+    assert!(inner_groups >= minimum_wall_groups);
+    assert!(outer_groups >= minimum_wall_groups);
+    std::fs::write(
+        reference.root.join("native.island_activation.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "minimum_wall_groups": minimum_wall_groups,
+            "native_inner_wall_groups": inner_groups,
+            "native_outer_wall_groups": outer_groups,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
     std::fs::write(
         reference.root.join("native.first_object_layer.gcode"),
         native,

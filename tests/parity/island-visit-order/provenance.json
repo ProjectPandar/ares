@@ -1,0 +1,37 @@
+{
+  "upstream": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "scope": "input-only; no Native output or expected output fragments",
+  "base": "tests/parity/clipper-wrapper-geometry/nested-hole-island.3mf",
+  "base_sha256": "f91fae699cd1410003fe4c0d59ce2602c0fa1039e709c11d195641e5488da74c",
+  "input_sha256": "1fc8527ace719c91329124259b93767329793e71e41438bfb0e5b2d07bab8be2",
+  "instances": 1,
+  "model_parts": 1,
+  "disjoint_closed_components": 4,
+  "local_centers_mm": [
+    [
+      -20,
+      -20
+    ],
+    [
+      20,
+      -17
+    ],
+    [
+      17,
+      20
+    ],
+    [
+      -17,
+      -5
+    ]
+  ],
+  "component_dimensions_mm": [
+    10,
+    10,
+    1
+  ],
+  "vertices": 32,
+  "triangles": 48,
+  "every_directed_edge_once_with_reverse": true,
+  "packaging_config_and_transform_unchanged": true
+}

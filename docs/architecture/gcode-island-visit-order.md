@@ -9,16 +9,25 @@ Authority: OrcaSlicer v2.5.0-beta
   `IslandOrderNode` tour and `InstanceVisit` production.
 - `GCode.cpp:7680–7720::process_layer`: consume the visit's explicit island
   sequence; use the source fallback only when the visit has no explicit islands.
-- `GCode/OrderingStrategies.cpp:501–550::order_points_with_strategy` and its
-  cited ShortestPath/strategy helpers own point-tour selection.
+- `GCode/OrderingStrategies.cpp:501–550::order_points_with_strategy` owns the
+  default strategy dispatch; `:230–266::tsp_exact_cycle` owns its closed-cycle
+  exact solver, including the return edge to point zero.
+- `ShortestPath.cpp:1624–1650::chain_points_with_postprocessing` owns the
+  complete default branch and its cited 2-opt, or-opt and crossing helpers.
+- `ShortestPath.cpp:2547::chain_print_object_instances` is a known second
+  consumer of that same default kernel, using instance shifts as reference
+  points. Default by-layer export calls it from `GCode.cpp:3658`; the two
+  witnesses have one reference point, so that call reaches the identity case.
+  Reuse the same kernel at that reached adapter; do not invent another solver.
 - `Polygon.cpp:154–169::Polygon::centroid` owns contour centers of mass.
 
-Rust destination: `project_slice/island_print_order.rs` and responsibility-sized
-child modules for source visit data/production, plus
-`project_slice/gcode_emit/motion/layer.rs` for consumption. Existing layer/instance
-adapters provide source geometry, shift, filament, print-order and wipe-tower
-inputs; they are temporary compatibility shells around `process_layer`, not a
-new Ares-owned scheduling pipeline.
+Rust destination: `geometry/point_ordering.rs` and responsibility-sized children
+for the default tour kernel; `project_slice/island_print_order.rs` and children
+for source visit data/production; the reached object-reference ordering adapter;
+and `project_slice/gcode_emit/motion/layer.rs` for visit consumption. Existing
+layer/instance adapters provide source geometry, shift, filament, print-order
+and wipe-tower inputs; they are temporary compatibility shells around
+`process_layer`, not a new Ares-owned scheduling pipeline.
 
 ## Problem and source-rewrite boundary
 
@@ -43,6 +52,13 @@ key, or canonicalize island/contour order to hide the missing producer.
 4. Run `order_points_with_strategy(node_points, print_order, &wt_pos)` with the
    upstream wipe-tower start input and conversion sites. This is not a tour
    starting from the current nozzle. Reverse the selected tour as upstream does.
+   Port the **whole default branch**: identity for at most three points, exact
+   closed-cycle DP for four through ten, and the source greater-than-ten chain
+   followed by up to three alternating 2-opt/or-opt/crossing passes. Preserve
+   start-near rotation, nearer-neighbor direction and no-start closing rotation.
+   Do not add an unsupported node-count admission or fall back to old ordering.
+   The closed-cycle DP is mathematically distinct from the shared paired-endpoint
+   open-chain kernel; neither may be substituted for or duplicated as the other.
 5. Group consecutive nodes of an instance into `InstanceVisit` records, retain
    first-visit identity, and append the trailing catch-all island to that
    instance's last explicit visit. An empty explicit list retains the source
@@ -58,22 +74,42 @@ key, or canonicalize island/contour order to hide the missing producer.
 
 ## Included/deferred scope
 
-The immutable witness reaches one object, one instance, one filament and two
-nested material islands, with no support, brim, sparse fill or shell fill. Port
-its actual producer-to-consumer path, not a fixture-coordinate conditional.
-Preserve the source model and grouping operations that this path exercises.
+The two immutable witnesses reach one object, one instance and one filament,
+with two nested material islands or four disjoint prism islands, respectively.
+Both have no support, brim, sparse fill or shell fill. Port their actual
+producer-to-consumer path, not fixture-coordinate or fixture-node-count branches.
+Preserve real source grouping and first-visit/catch-all semantics.
 
-Explicitly defer cross-instance interleaving beyond the immutable witness and
-the upstream invalid-visit-index error-log path. These deferrals are not a
-license to silently discard islands, index invalid data, or claim those adjacent
-behaviors as parity. Do not add terminal behavior to the production core.
+The default branch is included for **all** node counts, even though the public
+witnesses exercise two and four. The greater-than-ten optimization branch requires
+source audit and is not directly qualified by these two inputs.
+Multi-island layers are ordinary admitted input: no fail-closed limit and no
+legacy/greedy fallback for unported default branches are permitted.
+
+Snake and BestOfStrategies remain configuration-boundary deferrals: the current
+admitted enum has Default and AsObjectList only. Do not add enum modes in this
+slice. Explicitly defer cross-instance interleaving beyond the witnesses and the
+upstream invalid-visit-index error-log path. These deferrals are not a license to
+silently discard islands, index invalid data, or claim adjacent behavior as
+parity. Do not add terminal behavior to the production core. The known object-
+reference consumer is reached only at one reference point here; broader instance
+ordering remains an integration-batch verification responsibility.
 
 ## Qualified public RED contract
 
-Use **one** existing input:
-`tests/parity/clipper-wrapper-geometry/nested-hole-island.3mf`, unchanged.
-A second input is permitted only if the first cannot qualify; do not expand the
-search or modify the seven approved geometry cases.
+Use exactly **two** inputs:
+
+1. The approved, unchanged
+   `tests/parity/clipper-wrapper-geometry/nested-hole-island.3mf`.
+2. `tests/parity/island-visit-order/four-disjoint-prisms.3mf`, generated by mesh-
+   only replacement of that same admitted template. One instance/part contains
+   four separated, closed, positive-area vertical prisms. Static input topology
+   establishes four chainable horizontal sections; runtime Native must emit at
+   least four inner/outer wall groups in the first object block. This qualifies
+   the four-node closed-cycle DP, not merely the small-count identity branch.
+
+Do not add more inputs or modify the seven approved geometry cases. Freeze and
+qualify the additional four-island RED before the default tour/visit port.
 
 The agreed seam is the existing public
 `ares_core::slice_project_plate_validated` API against the runtime official beta
