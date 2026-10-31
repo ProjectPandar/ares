@@ -87,7 +87,9 @@ pub(in crate::project_slice) fn validate_record(
         surface_simplify_resolution,
         is_bottom_layer: i32::try_from(layer_id).is_ok_and(|layer| layer == object.raft_layers.0),
         is_topmost_layer: upper_layer_index.is_none(),
-        only_one_wall_first_layer: region.only_one_wall_first_layer.0,
+        // v2.5.0-beta PerimeterGenerator.cpp:628-631,2682,2708-2711.
+        only_one_wall_first_layer: region.only_one_wall_first_layer.0
+            && region.bottom_shell_layers.0 > 0,
         only_one_wall_top: region.only_one_wall_top.0,
         raft_layers: object.raft_layers.0,
         precise_outer_wall: region.precise_outer_wall.0
