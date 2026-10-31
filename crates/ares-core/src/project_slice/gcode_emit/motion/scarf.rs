@@ -98,7 +98,7 @@ pub(super) fn build(
     let mut starts = Vec::new();
     let mut flats = Vec::new();
     let mut ends = Vec::new();
-    // `ExtrusionEntity.cpp:480-501`: keep remaining/path lengths in mm;
+    // `ExtrusionEntity.cpp:571-595`: keep remaining/path lengths in mm;
     // convert only the split distance to scaled coordinates.
     let mut remaining = slope_length;
     let mut ratio = start_ratio;
@@ -108,9 +108,10 @@ pub(super) fn build(
         let source = &original[index];
         let length = path_length(&source.polyline.points) * scale;
         let (slope_path, flat_path, end_ratio) = if length > remaining {
-            let (slope, flat) = split_path(source, remaining / scale);
+            let cut = (remaining / scale, (0.5 * max_segment).min(1.0 / scale));
+            let (slope, flat) = split_path(source, cut);
             remaining = 0.0;
-            (slope, Some(flat), 1.0)
+            (slope, (flat.polyline.points.len() > 1).then_some(flat), 1.0)
         } else {
             remaining -= length;
             let factor = remaining / slope_length;
@@ -244,14 +245,19 @@ fn scarf_speed(role: ExtrusionRole, options: &MotionOptions) -> f64 {
     base.min(configured)
 }
 
-fn split_path(path: &ExtrusionPath, distance: f64) -> (ExtrusionPath, ExtrusionPath) {
-    let points = &path.polyline.points;
+// `ExtrusionEntity.cpp:487-505`: split at the nearby vertex instead of leaving a short stub.
+fn split_path(src: &ExtrusionPath, (distance, snap): (f64, f64)) -> (ExtrusionPath, ExtrusionPath) {
+    let points = &src.polyline.points;
     let mut traversed = 0.0;
     for (index, segment) in points.windows(2).enumerate() {
         let length = point_distance(segment[0], segment[1]);
-        if traversed + length >= distance {
-            let ratio = (distance - traversed) / length;
-            let point = lerp(segment[0], segment[1], ratio);
+        let end_length = traversed + length;
+        if end_length >= distance {
+            let point = if end_length - distance < snap {
+                segment[1]
+            } else {
+                lerp(segment[0], segment[1], (distance - traversed) / length)
+            };
             let mut before = points[..=index].to_vec();
             if before.last() != Some(&point) {
                 before.push(point);
@@ -261,16 +267,13 @@ fn split_path(path: &ExtrusionPath, distance: f64) -> (ExtrusionPath, ExtrusionP
                 after.clear();
             }
             after.extend_from_slice(&points[index + 1..]);
-            return (
-                copy_with_points(path, before),
-                copy_with_points(path, after),
-            );
+            return (copy_with_points(src, before), copy_with_points(src, after));
         }
-        traversed += length;
+        traversed = end_length;
     }
     (
-        path.clone(),
-        copy_with_points(path, vec![*points.last().unwrap()]),
+        src.clone(),
+        copy_with_points(src, vec![*points.last().unwrap()]),
     )
 }
 
