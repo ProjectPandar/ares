@@ -21,18 +21,6 @@ pub enum FillRule {
     Negative,
 }
 
-/// Location of a point relative to a rectangle
-/// Direct port from clipper.rectclip.h line 20
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
-pub enum Location {
-    Left,
-    Top,
-    Right,
-    Bottom,
-    Inside,
-}
-
 /// Exception type for Clipper2 errors
 /// Direct port from clipper.core.h line 27
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -127,7 +115,6 @@ pub mod errors {
 
 /// Z coordinate type when the `using_z` feature is enabled
 /// Direct port from clipper.core.h line 111 (z_type)
-
 pub type ZType = i64;
 
 /// 2D point with generic numeric type
@@ -166,7 +153,6 @@ where
 {
     /// Create a new point with an explicit z value
     /// Direct port from clipper.core.h Point(x, y, z) constructor
-
     pub fn new_z(x: T, y: T, z: ZType) -> Self {
         Self { x, y, z }
     }

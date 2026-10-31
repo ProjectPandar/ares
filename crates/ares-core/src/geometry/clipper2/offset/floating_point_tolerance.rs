@@ -124,14 +124,6 @@ pub(crate) fn get_avg_unit_vector(vec1: &PointD, vec2: &PointD) -> PointD {
     normalize_vector(&PointD::new(vec1.x + vec2.x, vec1.y + vec2.y))
 }
 
-/// Check if the end type represents a closed path.
-/// Direct port from clipper.offset.cpp IsClosedPath.
-#[inline]
-#[allow(dead_code)]
-pub(crate) fn is_closed_path(et: EndType) -> bool {
-    et == EndType::Polygon || et == EndType::Joined
-}
-
 /// Get perpendicular offset point (returns Point64, rounds coordinates).
 /// Direct port from clipper.offset.cpp GetPerpendic.
 #[inline]

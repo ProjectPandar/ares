@@ -5,19 +5,6 @@
 
 use super::*;
 
-impl PolyTreeD {
-    pub fn is_hole(&self, node_idx: usize) -> bool {
-        let lvl = self.level(node_idx);
-        lvl > 0 && (lvl & 1) == 0
-    }
-}
-
-impl Default for PolyTreeD {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// Main integer-coordinate polygon clipper
 /// Direct port from clipper.engine.h line 459
 pub struct Clipper64 {
@@ -35,7 +22,6 @@ impl Clipper64 {
 impl Clipper64 {
     /// Set the callback invoked at each intersection to assign the z value
     /// Direct port from clipper.engine.h line 466 (Clipper64::SetZCallback)
-
     pub fn set_z_callback(&mut self, cb: impl ZCallback64 + 'static) {
         self.base.z_callback = Some(Box::new(cb));
     }
@@ -166,7 +152,7 @@ impl Clipper64 {
                 continue;
             }
 
-            if self.base.outrec_list[i].is_open {
+            if solution_open.is_some() && self.base.outrec_list[i].is_open {
                 let op = self.base.outrec_list[i].pts.unwrap();
                 if let Some(path) = build_path64_from_outpt(
                     op,
@@ -241,70 +227,5 @@ impl Clipper64 {
 impl Default for Clipper64 {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-/// Double-precision polygon clipper that scales to int64 internally
-/// Direct port from clipper.engine.h line 520
-pub struct ClipperD {
-    pub base: ClipperBase,
-    pub(crate) scale: f64,
-    pub(crate) inv_scale: f64,
-}
-
-impl ClipperD {
-    pub fn new(precision: i32) -> Self {
-        let mut prec = precision;
-        let mut error_code = 0;
-        check_precision_range(&mut prec, &mut error_code);
-
-        // Set the scale to a power of double's radix (2)
-        let scale = 2.0f64.powi(((10.0f64.powi(prec)).log2().floor() as i32) + 1);
-        let inv_scale = 1.0 / scale;
-
-        let mut base = ClipperBase::new();
-        base.error_code = error_code;
-
-        Self {
-            base,
-            scale,
-            inv_scale,
-        }
-    }
-}
-
-impl ClipperD {
-    pub fn scale(&self) -> f64 {
-        self.scale
-    }
-}
-
-impl ClipperD {
-    pub fn inv_scale(&self) -> f64 {
-        self.inv_scale
-    }
-}
-
-impl ClipperD {
-    /// Set the callback invoked at each intersection to assign the z value.
-    /// The user callback sees de-scaled (double) coordinates; the stored proxy
-    /// closure replaces C++'s ZCB member + std::bind indirection.
-    /// Direct port from clipper.engine.h lines 540-556 (ClipperD::SetZCallback/ZCB)
-
-    pub fn set_z_callback(&mut self, mut cb: impl ZCallbackD + 'static) {
-        let inv_scale = self.inv_scale;
-        self.base.z_callback = Some(Box::new(move |e1bot, e1top, e2bot, e2top, pt| {
-            // de-scale (x & y)
-            // temporarily convert integers to their initial float values
-            // this will slow clipping marginally but will make it much easier
-            // to understand the coordinates passed to the callback function
-            let mut tmp = PointD::from(pt as &Point64).scale(inv_scale);
-            let e1b = PointD::from(e1bot).scale(inv_scale);
-            let e1t = PointD::from(e1top).scale(inv_scale);
-            let e2b = PointD::from(e2bot).scale(inv_scale);
-            let e2t = PointD::from(e2top).scale(inv_scale);
-            cb(&e1b, &e1t, &e2b, &e2t, &mut tmp);
-            pt.z = tmp.z; // only update 'z'
-        }));
     }
 }

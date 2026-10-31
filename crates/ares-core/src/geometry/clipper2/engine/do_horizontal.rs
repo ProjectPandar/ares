@@ -234,10 +234,7 @@ impl ClipperBase {
 }
 
 impl ClipperBase {
-    /// Build the intersection list
-    /// Port from clipper.engine.cpp BuildIntersectList (line 2390); unlike C++,
-    /// returns before the merge sort when no edges cross, because the sort
-    /// would then find no intersections.
+    /// `clipper.engine.cpp:2416–2472`: stable merge walk of adjacent intersections.
     pub(crate) fn build_intersect_list(&mut self, top_y: i64) -> bool {
         if self.actives.is_none() {
             return false;
@@ -247,11 +244,7 @@ impl ClipperBase {
             return false;
         }
 
-        // If the edges are still in order at top_y, the merge sort below
-        // would find no intersections and leave the SEL in AEL order
-        if !self.adjust_curr_x_and_copy_to_sel(top_y) {
-            return false;
-        }
+        self.adjust_curr_x_and_copy_to_sel(top_y);
 
         let mut left_opt = self.sel;
         // Check if we have a jump

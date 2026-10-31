@@ -1,6 +1,6 @@
 # Pure-Rust Clipper2 boundary strategy
 
-Status: **proposed; review required before implementation**. Target: OrcaSlicer
+Status: **approved before implementation**. Target: OrcaSlicer
 v2.5.0-beta, `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 This is a source-rewrite strategy, not a parity or platform PASS claim.
 
@@ -11,7 +11,7 @@ with an in-tree, safe Rust port of the pinned `deps_src/clipper2/Clipper2Lib`:
 `clipper.core.h`, `clipper.engine.h/.cpp`, and `clipper.offset.h/.cpp`.
 The dependency identifies itself as **2.0.1** (`clipper.version.h:4`); its pinned
 Git tree is `09f1baceae892df95ea07250dbb6b6d3dedd3d2b`.
-`src/libslic3r/ClipperUtils.cpp/.hpp` and `ClipperZUtils.cpp:33–64` own the
+`src/libslic3r/ClipperUtils.cpp/.hpp` and `ClipperZUtils.cpp:48–80` own the
 application wrappers; dependency-version equivalence alone is insufficient.
 
 Keep the existing geometry entry signatures only as temporary adapter shells
@@ -76,7 +76,7 @@ FMA substitution, epsilon tuning or saturating/wrapping arithmetic workaround.
   bbox group test, isolated-CW delta reversal, degenerate negative-offset handling,
   fallback union fill rule, and ExPolygon contour/hole winding preparation
   (`:433–525,582–598`). These are beta wrapper behavior, not an old-engine fallback.
-- **Z paths:** `ClipperZUtils.cpp:33–64` executes NonZero clipping, distinguishes
+- **Z paths:** `ClipperZUtils.cpp:48–80` executes NonZero clipping, distinguishes
   open subjects, and appends closed outputs before open outputs. Port engine
   endpoint-Z precedence (`clipper.engine.cpp:831–868`); the wrapper suppresses the
   user fill callback whenever the intersection XY coincides with any input endpoint.

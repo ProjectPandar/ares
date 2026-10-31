@@ -51,22 +51,16 @@ impl ClipperOffset {
             self.steps_per_rad = steps_per_360 / (2.0 * constants::PI);
         }
 
-        // Iterate over paths in the group
-        let paths_count = self.groups[group_idx].paths_in.len();
-        for path_idx in 0..paths_count {
-            let path = self.groups[group_idx].paths_in[path_idx].clone();
+        // clipper.offset.cpp:514–567: borrow owned group paths without copying them.
+        let paths = std::mem::take(&mut self.groups[group_idx].paths_in);
+        for path in &paths {
             let path_len = path.len();
             self.path_out.clear();
 
             if path_len == 1 {
                 // Single point
-                if self.delta_callback.is_some() {
-                    let cb_result = if let Some(ref cb) = self.delta_callback {
-                        cb(&path, &self.norms, 0, 0)
-                    } else {
-                        0.0
-                    };
-                    self.group_delta = cb_result;
+                if let Some(callback) = &self.delta_callback {
+                    self.group_delta = callback(path, &self.norms, 0, 0);
                     if group_is_reversed {
                         self.group_delta = -self.group_delta;
                     }
@@ -92,7 +86,7 @@ impl ClipperOffset {
                         p.z = pt.z;
                     }
                 } else {
-                    let d = abs_delta_local.ceil() as i64;
+                    let d = i64::from(abs_delta_local.ceil() as i32);
                     let r = Rect64::new(pt.x - d, pt.y - d, pt.x + d, pt.y + d);
                     self.path_out = r.as_path();
 
@@ -114,14 +108,15 @@ impl ClipperOffset {
                 };
             }
 
-            self.build_normals(&path);
+            self.build_normals(path);
             if self.end_type == EndType::Polygon {
-                self.offset_polygon(group_idx, &path);
+                self.offset_polygon(group_idx, path);
             } else if self.end_type == EndType::Joined {
-                self.offset_open_joined(group_idx, &path);
+                self.offset_open_joined(group_idx, path);
             } else {
-                self.offset_open_path(group_idx, &path);
+                self.offset_open_path(group_idx, path);
             }
         }
+        self.groups[group_idx].paths_in = paths;
     }
 }

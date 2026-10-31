@@ -71,8 +71,7 @@ pub fn path2_contains_path1(path1: &Path64, path2: &Path64) -> bool {
     point_in_polygon(mp1, path2) == PointInPolygonResult::IsInside
 }
 
-/// Build a Path64 from OutPt circular list
-/// Direct port from clipper.engine.cpp BuildPath64 (line 2891)
+/// `clipper.engine.cpp:2917–2954`: preserve the original walk and output admission.
 pub fn build_path64_from_outpt(
     op_start: usize,
     reverse: bool,
@@ -83,124 +82,30 @@ pub fn build_path64_from_outpt(
     if next == op_start || (!is_open && next == outpt_arena[op_start].prev) {
         return None;
     }
-
-    let mut path = Path64::new();
-    let (mut last_pt, mut op2);
-
-    if reverse {
-        last_pt = outpt_arena[op_start].pt;
-        op2 = outpt_arena[op_start].prev;
+    let start = if reverse { op_start } else { next };
+    let mut last = outpt_arena[start].pt;
+    let mut current = if reverse {
+        outpt_arena[start].prev
     } else {
-        let op_next = outpt_arena[op_start].next;
-        last_pt = outpt_arena[op_next].pt;
-        op2 = outpt_arena[op_next].next;
-        path.push(last_pt);
-        while op2 != outpt_arena[op_start].next {
-            if outpt_arena[op2].pt != last_pt {
-                last_pt = outpt_arena[op2].pt;
-                path.push(last_pt);
-            }
-            op2 = outpt_arena[op2].next;
+        outpt_arena[start].next
+    };
+    let mut path = vec![last];
+    while current != start {
+        if outpt_arena[current].pt != last {
+            last = outpt_arena[current].pt;
+            path.push(last);
         }
-        if !is_open
-            && path.len() == 3
-            && is_very_small_triangle(outpt_arena[op_start].next, outpt_arena)
-        {
-            return None;
-        }
-        return if path.len() >= 2 { Some(path) } else { None };
+        current = if reverse {
+            outpt_arena[current].prev
+        } else {
+            outpt_arena[current].next
+        };
     }
-
-    // reverse case
-    path.push(last_pt);
-    while op2 != op_start {
-        if outpt_arena[op2].pt != last_pt {
-            last_pt = outpt_arena[op2].pt;
-            path.push(last_pt);
-        }
-        op2 = outpt_arena[op2].prev;
-    }
-
-    if !is_open && path.len() == 3 && is_very_small_triangle(op_start, outpt_arena) {
-        return None;
-    }
-
-    if path.len() >= 2 { Some(path) } else { None }
-}
-
-/// Build a PathD from OutPt circular list
-/// Direct port from clipper.engine.cpp BuildPathD (line 3055)
-pub fn build_path_d_from_outpt(
-    op_start: usize,
-    reverse: bool,
-    is_open: bool,
-    outpt_arena: &[OutPt],
-    inv_scale: f64,
-) -> Option<PathD> {
-    let next = outpt_arena[op_start].next;
-    if next == op_start || (!is_open && next == outpt_arena[op_start].prev) {
-        return None;
-    }
-
-    let mut path = PathD::new();
-    let (mut last_pt, mut op2);
-
-    if reverse {
-        last_pt = outpt_arena[op_start].pt;
-        op2 = outpt_arena[op_start].prev;
+    if !is_open && path.len() == 3 && is_very_small_triangle(current, outpt_arena) {
+        None
     } else {
-        let op_next = outpt_arena[op_start].next;
-        last_pt = outpt_arena[op_next].pt;
-        op2 = outpt_arena[op_next].next;
-        path.push(PointD {
-            x: last_pt.x as f64 * inv_scale,
-            y: last_pt.y as f64 * inv_scale,
-
-            z: last_pt.z,
-        });
-        while op2 != outpt_arena[op_start].next {
-            if outpt_arena[op2].pt != last_pt {
-                last_pt = outpt_arena[op2].pt;
-                path.push(PointD {
-                    x: last_pt.x as f64 * inv_scale,
-                    y: last_pt.y as f64 * inv_scale,
-
-                    z: last_pt.z,
-                });
-            }
-            op2 = outpt_arena[op2].next;
-        }
-        if path.len() == 3 && is_very_small_triangle(outpt_arena[op_start].next, outpt_arena) {
-            return None;
-        }
-        return if path.len() >= 2 { Some(path) } else { None };
+        Some(path)
     }
-
-    // reverse case
-    path.push(PointD {
-        x: last_pt.x as f64 * inv_scale,
-        y: last_pt.y as f64 * inv_scale,
-
-        z: last_pt.z,
-    });
-    while op2 != op_start {
-        if outpt_arena[op2].pt != last_pt {
-            last_pt = outpt_arena[op2].pt;
-            path.push(PointD {
-                x: last_pt.x as f64 * inv_scale,
-                y: last_pt.y as f64 * inv_scale,
-
-                z: last_pt.z,
-            });
-        }
-        op2 = outpt_arena[op2].prev;
-    }
-
-    if path.len() == 3 && is_very_small_triangle(op_start, outpt_arena) {
-        return None;
-    }
-
-    if path.len() >= 2 { Some(path) } else { None }
 }
 
 /// Get the last output point for a hot edge
@@ -245,20 +150,13 @@ pub fn update_outrec_owner(outrec_idx: usize, outrec_list: &[OutRec], outpt_aren
     fix_outrec_pts(outrec_idx, outrec_list, outpt_arena);
 }
 
-/// Move splits from one OutRec to another
-/// Direct port from clipper.engine.cpp MoveSplits (line 2269)
+/// `clipper.engine.cpp:2294–2303`: exclude self and retain the cleared source list.
 pub fn move_splits(outrec_list: &mut [OutRec], from_or: usize, to_or: usize) {
-    let from_splits = outrec_list[from_or].splits.take().unwrap_or_default();
-    if outrec_list[to_or].splits.is_none() {
-        outrec_list[to_or].splits = Some(Vec::new());
-    }
-    if let Some(ref mut to_splits) = outrec_list[to_or].splits {
-        for s in &from_splits {
-            if *s != to_or {
-                to_splits.push(*s);
-            }
-        }
-    }
+    let mut from_splits = outrec_list[from_or].splits.take().unwrap();
+    let to_splits = outrec_list[to_or].splits.get_or_insert_with(Vec::new);
+    to_splits.extend(from_splits.iter().copied().filter(|split| *split != to_or));
+    from_splits.clear();
+    outrec_list[from_or].splits = Some(from_splits);
 }
 
 /// Uncouple an OutRec from its edges

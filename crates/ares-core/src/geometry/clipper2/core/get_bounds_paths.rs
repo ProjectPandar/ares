@@ -202,37 +202,6 @@ where
     area(poly) >= 0.0
 }
 
-/// Get the location of a point relative to a rectangle
-/// Returns false if the point is on the rectangle edge, true otherwise
-/// Direct port from clipper.rectclip.cpp line 37
-#[inline]
-pub fn get_location(rec: &Rect64, pt: &Point64, loc: &mut Location) -> bool {
-    if pt.x == rec.left && pt.y >= rec.top && pt.y <= rec.bottom {
-        *loc = Location::Left;
-        return false;
-    } else if pt.x == rec.right && pt.y >= rec.top && pt.y <= rec.bottom {
-        *loc = Location::Right;
-        return false;
-    } else if pt.y == rec.top && pt.x >= rec.left && pt.x <= rec.right {
-        *loc = Location::Top;
-        return false;
-    } else if pt.y == rec.bottom && pt.x >= rec.left && pt.x <= rec.right {
-        *loc = Location::Bottom;
-        return false;
-    } else if pt.x < rec.left {
-        *loc = Location::Left;
-    } else if pt.x > rec.right {
-        *loc = Location::Right;
-    } else if pt.y < rec.top {
-        *loc = Location::Top;
-    } else if pt.y > rec.bottom {
-        *loc = Location::Bottom;
-    } else {
-        *loc = Location::Inside;
-    }
-    true
-}
-
 /// Check if a line segment between two points is horizontal
 /// Returns true if both points have the same y-coordinate
 /// Direct port from clipper.rectclip.cpp line 68

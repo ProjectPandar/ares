@@ -6,148 +6,103 @@
 use super::*;
 
 impl ClipperBase {
-    /// Find and add local minima for a closed path
-    pub(crate) fn find_and_add_local_minima_closed(
-        &mut self,
-        first_vert_idx: usize,
-        vert_count: usize,
-        polytype: PathType,
-    ) {
-        // Find all local minima in the closed path
-        // A local minimum is where the path changes from descending to ascending
-        // (in screen coordinates where Y increases downward)
-
-        // First, find any vertex that is NOT a local minimum to start from
-        // We need to find a vertex where prev.y != curr.y to know direction
-        let mut start = first_vert_idx;
-        let end = first_vert_idx + vert_count;
-
-        // Skip vertices where prev has same y
-        let mut found_start = false;
-        for i in first_vert_idx..end {
-            let prev = self.vertex_arena[i].prev;
-            if self.vertex_arena[prev].pt.y != self.vertex_arena[i].pt.y {
-                start = i;
-                found_start = true;
-                break;
+    /// `clipper.engine.cpp:637–742,862–866`: one input walk, retaining minima order.
+    pub fn add_paths(&mut self, paths: &Paths64, polytype: PathType, is_open: bool) {
+        self.has_open_paths |= is_open;
+        self.minima_list_sorted = false;
+        self.vertex_arena.reserve(paths.iter().map(Vec::len).sum());
+        for path in paths {
+            let start = self.vertex_arena.len();
+            let mut previous: Option<usize> = None;
+            let mut count = 0;
+            for &point in path {
+                if let Some(prev) = previous {
+                    if self.vertex_arena[prev].pt == point {
+                        continue;
+                    }
+                    self.vertex_arena[prev].next = self.vertex_arena.len();
+                }
+                let mut vertex = Vertex::new(point);
+                vertex.prev = previous.unwrap_or(NONE);
+                previous = Some(self.vertex_arena.len());
+                self.vertex_arena.push(vertex);
+                count += 1;
             }
-        }
-        if !found_start {
-            return; // All vertices at same y - degenerate
-        }
-
-        // Determine initial direction
-        let prev = self.vertex_arena[start].prev;
-        let mut going_up = self.vertex_arena[prev].pt.y > self.vertex_arena[start].pt.y;
-
-        let mut curr = start;
-        loop {
-            let next = self.vertex_arena[curr].next;
-            let curr_pt = self.vertex_arena[curr].pt;
-            let next_pt = self.vertex_arena[next].pt;
-
-            if next_pt.y > curr_pt.y && going_up {
-                // Was going up, now going down => local max
-                self.vertex_arena[curr].flags |= VertexFlags::LOCAL_MAX;
-                going_up = false;
-            } else if next_pt.y < curr_pt.y && !going_up {
-                // Was going down, now going up => local min
-                going_up = true;
-                self.add_loc_min(curr, polytype, false);
+            let Some(mut previous) = previous else {
+                continue;
+            };
+            if self.vertex_arena[previous].prev == NONE {
+                self.vertex_arena.truncate(start);
+                continue;
             }
-
-            // Skip horizontal edges (same y)
-            if next_pt.y == curr_pt.y && next != start {
-                curr = next;
+            if !is_open && self.vertex_arena[previous].pt == self.vertex_arena[start].pt {
+                previous = self.vertex_arena[previous].prev;
+            }
+            self.vertex_arena[previous].next = start;
+            self.vertex_arena[start].prev = previous;
+            if count < 2 || (count == 2 && !is_open) {
                 continue;
             }
 
-            curr = next;
-            if curr == start {
-                break;
-            }
-        }
-    }
-}
-
-impl ClipperBase {
-    /// Find and add local minima for an open path
-    pub(crate) fn find_and_add_local_minima_open(
-        &mut self,
-        first_vert_idx: usize,
-        vert_count: usize,
-        polytype: PathType,
-    ) {
-        let last_vert_idx = first_vert_idx + vert_count - 1;
-
-        // For open paths, the first and last vertices are potential local minima
-        let first_pt = self.vertex_arena[first_vert_idx].pt;
-        let second_pt = self.vertex_arena[first_vert_idx + 1].pt;
-
-        // The start is a local min if it goes up (in screen coords, y decreases)
-        // or if horizontal then the next segment goes up
-        let mut going_up;
-        if first_pt.y > second_pt.y {
-            // Going up from first vertex - first is a local min
-            self.add_loc_min(first_vert_idx, polytype, true);
-            going_up = true;
-        } else if first_pt.y < second_pt.y {
-            // Going down - first is NOT a local min, it's a local max
-            self.vertex_arena[first_vert_idx].flags |= VertexFlags::LOCAL_MAX;
-            going_up = false;
-        } else {
-            // Horizontal at start - need to keep scanning
-            let mut i = first_vert_idx + 1;
-            while i < last_vert_idx && self.vertex_arena[i].pt.y == first_pt.y {
-                i += 1;
-            }
-            if i >= last_vert_idx {
-                // Completely horizontal open path - still add as local minimum
-                // so it participates in the sweep line (matches C++ Clipper2 behavior)
-                self.add_loc_min(first_vert_idx, polytype, true);
-                going_up = true;
-            } else {
-                going_up = self.vertex_arena[i].pt.y < first_pt.y;
+            let mut going_up;
+            if is_open {
+                let mut current = self.vertex_arena[start].next;
+                while current != start
+                    && self.vertex_arena[current].pt.y == self.vertex_arena[start].pt.y
+                {
+                    current = self.vertex_arena[current].next;
+                }
+                going_up = self.vertex_arena[current].pt.y <= self.vertex_arena[start].pt.y;
                 if going_up {
-                    self.add_loc_min(first_vert_idx, polytype, true);
+                    self.vertex_arena[start].flags = VertexFlags::OPEN_START;
+                    self.add_loc_min(start, polytype, true);
                 } else {
-                    self.vertex_arena[first_vert_idx].flags |= VertexFlags::LOCAL_MAX;
+                    self.vertex_arena[start].flags =
+                        VertexFlags::OPEN_START | VertexFlags::LOCAL_MAX;
+                }
+            } else {
+                previous = self.vertex_arena[start].prev;
+                while previous != start
+                    && self.vertex_arena[previous].pt.y == self.vertex_arena[start].pt.y
+                {
+                    previous = self.vertex_arena[previous].prev;
+                }
+                if previous == start {
+                    continue;
+                }
+                going_up = self.vertex_arena[previous].pt.y > self.vertex_arena[start].pt.y;
+            }
+
+            let going_up_start = going_up;
+            previous = start;
+            let mut current = self.vertex_arena[start].next;
+            while current != start {
+                if self.vertex_arena[current].pt.y > self.vertex_arena[previous].pt.y && going_up {
+                    self.vertex_arena[previous].flags |= VertexFlags::LOCAL_MAX;
+                    going_up = false;
+                } else if self.vertex_arena[current].pt.y < self.vertex_arena[previous].pt.y
+                    && !going_up
+                {
+                    going_up = true;
+                    self.add_loc_min(previous, polytype, is_open);
+                }
+                previous = current;
+                current = self.vertex_arena[current].next;
+            }
+            if is_open {
+                self.vertex_arena[previous].flags |= VertexFlags::OPEN_END;
+                if going_up {
+                    self.vertex_arena[previous].flags |= VertexFlags::LOCAL_MAX;
+                } else {
+                    self.add_loc_min(previous, polytype, true);
+                }
+            } else if going_up != going_up_start {
+                if going_up_start {
+                    self.add_loc_min(previous, polytype, false);
+                } else {
+                    self.vertex_arena[previous].flags |= VertexFlags::LOCAL_MAX;
                 }
             }
-        }
-
-        // Scan interior vertices
-        for i in (first_vert_idx + 1)..last_vert_idx {
-            let curr_pt = self.vertex_arena[i].pt;
-            let next_pt = self.vertex_arena[i + 1].pt;
-
-            if next_pt.y > curr_pt.y && going_up {
-                self.vertex_arena[i].flags |= VertexFlags::LOCAL_MAX;
-                going_up = false;
-            } else if next_pt.y < curr_pt.y && !going_up {
-                going_up = true;
-                self.add_loc_min(i, polytype, true);
-            }
-        }
-
-        // Handle last vertex
-        let last_pt = self.vertex_arena[last_vert_idx].pt;
-        let prev_pt = self.vertex_arena[last_vert_idx - 1].pt;
-        if !going_up {
-            // Was descending - last vertex is a local min
-            self.add_loc_min(last_vert_idx, polytype, true);
-        } else if last_pt.y < prev_pt.y || (last_pt.y == prev_pt.y && going_up) {
-            self.vertex_arena[last_vert_idx].flags |= VertexFlags::LOCAL_MAX;
-        }
-    }
-}
-
-impl ClipperBase {
-    /// Add multiple paths for clipping
-    /// Direct port from clipper.engine.h AddPaths
-    pub fn add_paths(&mut self, paths: &Paths64, polytype: PathType, is_open: bool) {
-        for path in paths {
-            self.add_path(path, polytype, is_open);
         }
     }
 }

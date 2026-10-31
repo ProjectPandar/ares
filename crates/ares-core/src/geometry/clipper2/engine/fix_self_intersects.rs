@@ -295,7 +295,7 @@ impl ClipperBase {
             if self.outrec_list[owner].polypath.is_none() {
                 self.recursive_check_owners(owner, polytree);
             }
-            let parent_pp = self.outrec_list[owner].polypath.unwrap_or(0);
+            let parent_pp = self.outrec_list[owner].polypath.unwrap();
             let pp = polytree.add_child(parent_pp, path);
             self.outrec_list[outrec_idx].polypath = Some(pp);
         } else {

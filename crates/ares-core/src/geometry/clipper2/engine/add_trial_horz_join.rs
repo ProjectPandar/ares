@@ -194,7 +194,6 @@ impl ClipperBase {
     /// Assign z to the out-point at ip_idx (inheriting from any matching edge
     /// vertex, else default_z), then invoke the user callback
     /// Direct port from clipper.engine.cpp line 805 (ClipperBase::SetZ)
-
     pub(crate) fn set_z(&mut self, e1_idx: usize, e2_idx: usize, ip_idx: usize) {
         if self.z_callback.is_none() {
             return;

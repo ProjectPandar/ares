@@ -40,17 +40,9 @@ impl Default for HorzJoin {
 /// Callback invoked at each intersection so callers can assign the z value:
 /// (e1bot, e1top, e2bot, e2top, intersect_pt)
 /// Direct port from clipper.engine.h line 163 (ZCallback64 std::function)
-
 pub trait ZCallback64: FnMut(&Point64, &Point64, &Point64, &Point64, &mut Point64) {}
 
 impl<T: FnMut(&Point64, &Point64, &Point64, &Point64, &mut Point64)> ZCallback64 for T {}
-
-/// Double-precision variant of [`ZCallback64`]
-/// Direct port from clipper.engine.h line 167 (ZCallbackD std::function)
-
-pub trait ZCallbackD: FnMut(&PointD, &PointD, &PointD, &PointD, &mut PointD) {}
-
-impl<T: FnMut(&PointD, &PointD, &PointD, &PointD, &mut PointD)> ZCallbackD for T {}
 
 /// Main clipping engine. Manages all arenas and the sweep-line algorithm state.
 /// Direct port from clipper.engine.h line 192
@@ -78,7 +70,6 @@ pub struct ClipperBase {
     pub outrec_list: Vec<OutRec>,
     pub minima_list: Vec<LocalMinima>,
     pub(crate) current_locmin_idx: usize,
-    pub(crate) vertex_lists: Vec<Vec<usize>>, // groups of vertex indices
 
     // Active edge list head
     pub actives: Option<usize>, // index into active_arena
@@ -120,7 +111,6 @@ impl ClipperBase {
             outrec_list: Vec::new(),
             minima_list: Vec::new(),
             current_locmin_idx: 0,
-            vertex_lists: Vec::new(),
             actives: None,
             sel: None,
             scanline_list: BinaryHeap::new(),
@@ -145,7 +135,6 @@ impl ClipperBase {
         self.outrec_list.clear();
         self.minima_list.clear();
         self.current_locmin_idx = 0;
-        self.vertex_lists.clear();
         self.actives = None;
         self.sel = None;
         self.scanline_list.clear();
@@ -236,74 +225,12 @@ impl ClipperBase {
     /// Add a local minimum
     /// Direct port from clipper.engine.cpp AddLocMin
     pub fn add_loc_min(&mut self, vert_idx: usize, polytype: PathType, is_open: bool) {
-        // Check that the vertex is a local minima
+        // clipper.engine.cpp:925–932: register each vertex only once.
+        if self.vertex_arena[vert_idx].flags & VertexFlags::LOCAL_MIN != VertexFlags::EMPTY {
+            return;
+        }
         self.vertex_arena[vert_idx].flags |= VertexFlags::LOCAL_MIN;
         self.minima_list
             .push(LocalMinima::new(vert_idx, polytype, is_open));
-    }
-}
-
-impl ClipperBase {
-    /// Add a path for clipping (converts to vertex representation)
-    /// Direct port from clipper.engine.cpp AddPath / AddPaths_
-    pub fn add_path(&mut self, path: &Path64, polytype: PathType, is_open: bool) {
-        let mut path = path.clone();
-
-        // Validate path
-        let cnt = path.len();
-        if cnt < 2 || (!is_open && cnt < 3) {
-            return;
-        }
-
-        // Remove consecutive duplicates
-        strip_duplicates_path(&mut path, !is_open);
-
-        if path.len() < 2 || (!is_open && path.len() < 3) {
-            return;
-        }
-
-        if is_open {
-            self.has_open_paths = true;
-        }
-
-        // Build vertices
-        let first_vert_idx = self.vertex_arena.len();
-        let vert_count = path.len();
-
-        for pt in &path {
-            self.vertex_arena.push(Vertex::new(*pt));
-        }
-
-        // Link vertices into circular list
-        for i in 0..vert_count {
-            let abs_idx = first_vert_idx + i;
-            self.vertex_arena[abs_idx].next = first_vert_idx + (i + 1) % vert_count;
-            self.vertex_arena[abs_idx].prev = first_vert_idx + (i + vert_count - 1) % vert_count;
-        }
-
-        // Record this vertex list
-        let vert_indices: Vec<usize> = (first_vert_idx..first_vert_idx + vert_count).collect();
-        self.vertex_lists.push(vert_indices);
-
-        if is_open {
-            // For open paths, mark start and end
-            self.vertex_arena[first_vert_idx].flags |= VertexFlags::OPEN_START;
-            self.vertex_arena[first_vert_idx + vert_count - 1].flags |= VertexFlags::OPEN_END;
-
-            // Find local minima for open paths
-            let mut i = first_vert_idx;
-            let last = first_vert_idx + vert_count - 1;
-
-            // Skip ascending from start
-            while i < last && self.vertex_arena[i].pt.y <= self.vertex_arena[i + 1].pt.y {
-                i += 1;
-            }
-            // We need to handle ascending/descending sequences and add local minima
-            // The first local min for an open path is the start if it's lower than next,
-            // or wherever we first start going up after going down
-            self.find_and_add_local_minima_open(first_vert_idx, vert_count, polytype);
-        } else {
-            self.find_and_add_local_minima_closed(first_vert_idx, vert_count, polytype);
-        }
     }
 }

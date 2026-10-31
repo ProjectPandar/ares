@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 // Copyright (c) Angus Johnson 2010-2025.
 // BSL-1.0. Rust seed by MatterHackers.
 // Derived from clipper2-rust 2f5e9d4249bc4d624773094ff6164335d9ff6ae7.

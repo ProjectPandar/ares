@@ -11,4 +11,3 @@ mod polypath64;
 pub(crate) use polypath64::*;
 mod is_hole;
 pub(crate) use is_hole::*;
-mod add_subject;

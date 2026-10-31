@@ -5,83 +5,6 @@
 
 use super::*;
 
-/// Transform multiple paths between types (no scaling, just type conversion)
-/// Direct port from clipper.core.h line 601
-#[inline]
-pub fn transform_paths<T1, T2>(paths: &Paths<T2>) -> Paths<T1>
-where
-    T1: Num + Copy + FromF64,
-    T2: Copy + ToF64,
-{
-    let mut result = Vec::with_capacity(paths.len());
-    for path in paths {
-        result.push(transform_path(path));
-    }
-    result
-}
-
-/// Check if two points are near each other within a distance threshold
-/// Direct port from clipper.core.h line 616
-#[inline]
-pub fn near_equal<T>(p1: &Point<T>, p2: &Point<T>, max_dist_sqrd: f64) -> bool
-where
-    T: Copy + ToF64,
-{
-    sqr(p1.x.to_f64() - p2.x.to_f64()) + sqr(p1.y.to_f64() - p2.y.to_f64()) < max_dist_sqrd
-}
-
-/// Strip near-equal consecutive points from a path
-/// Direct port from clipper.core.h line 623
-#[inline]
-pub fn strip_near_equal<T>(path: &Path<T>, max_dist_sqrd: f64, is_closed_path: bool) -> Path<T>
-where
-    T: Copy + ToF64 + PartialEq + Num,
-{
-    if path.is_empty() {
-        return Path::new();
-    }
-
-    let mut result = Vec::with_capacity(path.len());
-    let first_pt = path[0];
-    let mut last_pt = first_pt;
-    result.push(first_pt);
-
-    for pt in path.iter().skip(1) {
-        if !near_equal(pt, &last_pt, max_dist_sqrd) {
-            last_pt = *pt;
-            result.push(last_pt);
-        }
-    }
-
-    if !is_closed_path {
-        return result;
-    }
-
-    while result.len() > 1 && near_equal(result.last().unwrap(), &first_pt, max_dist_sqrd) {
-        result.pop();
-    }
-
-    result
-}
-
-/// Strip near-equal consecutive points from multiple paths
-/// Direct port from clipper.core.h line 647
-#[inline]
-pub fn strip_near_equal_paths<T>(
-    paths: &Paths<T>,
-    max_dist_sqrd: f64,
-    is_closed_path: bool,
-) -> Paths<T>
-where
-    T: Copy + ToF64 + PartialEq + Num,
-{
-    let mut result = Vec::with_capacity(paths.len());
-    for path in paths {
-        result.push(strip_near_equal(path, max_dist_sqrd, is_closed_path));
-    }
-    result
-}
-
 /// Translate a point by dx, dy
 /// Direct port from clipper.core.h line 975
 #[inline]
@@ -261,26 +184,4 @@ where
         return 0.0;
     }
     sqr(a * d - c * b) / (c * c + d * d)
-}
-
-/// Generate an elliptical path inscribed in a rectangle
-/// Direct port from clipper.core.h Ellipse(const Rect<T>&) overload
-pub fn ellipse_rect64(rect: &Rect64, steps: usize) -> Path64 {
-    ellipse_point64(
-        rect.mid_point(),
-        rect.width() as f64 * 0.5,
-        rect.height() as f64 * 0.5,
-        steps,
-    )
-}
-
-/// Generate an elliptical path inscribed in a rectangle
-/// Direct port from clipper.core.h Ellipse(const Rect<T>&) overload
-pub fn ellipse_rect_d(rect: &RectD, steps: usize) -> PathD {
-    ellipse_point_d(
-        rect.mid_point(),
-        rect.width() * 0.5,
-        rect.height() * 0.5,
-        steps,
-    )
 }

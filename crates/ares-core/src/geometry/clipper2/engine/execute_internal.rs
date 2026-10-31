@@ -48,8 +48,8 @@ impl ClipperBase {
                 None => break,
             }
 
-            let curr_x_is_top_x = self.do_intersections(y);
-            self.do_top_of_scanbeam(y, curr_x_is_top_x);
+            self.do_intersections(y);
+            self.do_top_of_scanbeam(y);
 
             while let Some(e) = self.pop_horz() {
                 self.do_horizontal(e);

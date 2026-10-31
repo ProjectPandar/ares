@@ -194,26 +194,18 @@ impl ClipperBase {
 }
 
 impl ClipperBase {
-    /// Copy AEL to SEL and update curr_x for top_y
-    /// Port from clipper.engine.cpp AdjustCurrXAndCopyToSEL (line 2113); unlike
-    /// C++, also returns whether any edge's new curr_x is less than its left
-    /// neighbour's, i.e. whether any edges cross in this scanbeam.
-    pub(crate) fn adjust_curr_x_and_copy_to_sel(&mut self, top_y: i64) -> bool {
+    /// `clipper.engine.cpp:2139–2153`: copy AEL links and update current X.
+    pub(crate) fn adjust_curr_x_and_copy_to_sel(&mut self, top_y: i64) {
         let mut e_opt = self.actives;
         self.sel = e_opt;
-        let mut prev_x = i64::MIN;
-        let mut out_of_order = false;
         while let Some(e_idx) = e_opt {
             let e = &mut self.active_arena[e_idx];
             e.prev_in_sel = e.prev_in_ael;
             e.next_in_sel = e.next_in_ael;
             e.jump = e.next_in_sel;
             e.curr_x = top_x(e, top_y);
-            out_of_order |= e.curr_x < prev_x;
-            prev_x = e.curr_x;
             e_opt = e.next_in_ael;
         }
-        out_of_order
     }
 }
 

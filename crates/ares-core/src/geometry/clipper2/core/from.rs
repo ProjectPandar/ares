@@ -114,47 +114,6 @@ where
     (vec1.x * vec2.x).to_f64() + (vec1.y * vec2.y).to_f64()
 }
 
-/// Helper for returning -1, 0, or 1 based on sign
-/// Direct port from clipper.core.h line 697
-#[inline]
-pub fn tri_sign(x: i64) -> i32 {
-    if x > 0 {
-        1
-    } else if x < 0 {
-        -1
-    } else {
-        0
-    }
-}
-
-/// 128-bit unsigned integer struct for high-precision multiplication
-/// Direct port from clipper.core.h line 685
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct UInt128Struct {
-    pub lo: u64,
-    pub hi: u64,
-}
-
-/// Multiply two 64-bit unsigned integers to get 128-bit result
-/// Direct port from clipper.core.h line 690
-#[inline]
-pub fn multiply_u64(a: u64, b: u64) -> UInt128Struct {
-    // Lambdas from C++: lo = x & 0xFFFFFFFF, hi = x >> 32
-    let lo = |x: u64| -> u64 { x & 0xFFFFFFFF };
-    let hi = |x: u64| -> u64 { x >> 32 };
-
-    let x1 = lo(a) * lo(b);
-    let x2 = hi(a) * lo(b) + hi(x1);
-    let x3 = lo(a) * hi(b) + lo(x2);
-    let lobits = lo(x3) << 32 | lo(x1);
-    let hibits = hi(a) * hi(b) + hi(x2) + hi(x3);
-
-    UInt128Struct {
-        lo: lobits,
-        hi: hibits,
-    }
-}
-
 /// `clipper.core.h:730–750`: exact products on native and WASM alike.
 #[inline]
 pub fn products_are_equal(a: i64, b: i64, c: i64, d: i64) -> bool {

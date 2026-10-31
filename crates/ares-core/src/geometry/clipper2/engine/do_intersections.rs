@@ -6,19 +6,11 @@
 use super::*;
 
 impl ClipperBase {
-    /// Do intersections
-    /// Port from clipper.engine.cpp DoIntersections (line 2347); unlike C++,
-    /// returns whether every active edge's curr_x is still top_x(e, top_y),
-    /// i.e. curr_x was updated for top_y and no intersection moved it.
-    pub(crate) fn do_intersections(&mut self, top_y: i64) -> bool {
+    /// `clipper.engine.cpp:2373–2380`.
+    pub(crate) fn do_intersections(&mut self, top_y: i64) {
         if self.build_intersect_list(top_y) {
             self.process_intersect_list();
             self.intersect_nodes.clear();
-            false
-        } else {
-            // build_intersect_list updates curr_x when there are 2+ edges
-            self.actives
-                .is_some_and(|e| self.active_arena[e].next_in_ael.is_some())
         }
     }
 }
@@ -27,22 +19,20 @@ impl ClipperBase {
     /// Process the intersection list
     /// Direct port from clipper.engine.cpp ProcessIntersectList (line 2448)
     pub(crate) fn process_intersect_list(&mut self) {
-        // Sort by y descending (bottom up), then x ascending
-        self.intersect_nodes.sort_by(intersect_list_sort);
+        // clipper.engine.cpp:2482 uses std::sort, not stable_sort.
+        crate::geometry::fixed_gcc_sort_by(&mut self.intersect_nodes, |a, b| {
+            intersect_list_sort(a, b).is_lt()
+        });
 
         let len = self.intersect_nodes.len();
         for i in 0..len {
             // Ensure edges are adjacent
             if !edges_adjacent_in_ael(&self.intersect_nodes[i], &self.active_arena) {
                 let mut j = i + 1;
-                while j < len
-                    && !edges_adjacent_in_ael(&self.intersect_nodes[j], &self.active_arena)
-                {
+                while !edges_adjacent_in_ael(&self.intersect_nodes[j], &self.active_arena) {
                     j += 1;
                 }
-                if j < len {
-                    self.intersect_nodes.swap(i, j);
-                }
+                self.intersect_nodes.swap(i, j);
             }
 
             let e1 = self.intersect_nodes[i].edge1;
@@ -61,12 +51,8 @@ impl ClipperBase {
 }
 
 impl ClipperBase {
-    /// Process the top of a scanbeam
-    /// Port from clipper.engine.cpp DoTopOfScanbeam (line 2708); unlike C++,
-    /// doesn't recompute curr_x for edges that don't end at y when
-    /// `curr_x_is_top_x` (do_intersections' result for the same y) says it
-    /// already holds top_x(e, y).
-    pub(crate) fn do_top_of_scanbeam(&mut self, y: i64, curr_x_is_top_x: bool) {
+    /// `clipper.engine.cpp:2734–2768`: update every non-ending edge's current X.
+    pub(crate) fn do_top_of_scanbeam(&mut self, y: i64) {
         self.sel = None;
         let mut e_opt = self.actives;
         while let Some(e_idx) = e_opt {
@@ -85,7 +71,7 @@ impl ClipperBase {
                         self.push_horz(e_idx);
                     }
                 }
-            } else if !curr_x_is_top_x {
+            } else {
                 self.active_arena[e_idx].curr_x = top_x(&self.active_arena[e_idx], y);
             }
             e_opt = self.active_arena[e_idx].next_in_ael;
@@ -175,30 +161,5 @@ impl ClipperBase {
         } else {
             self.actives
         }
-    }
-}
-
-impl ClipperBase {
-    /// Set horizontal segment heading forward
-    #[allow(dead_code)]
-    pub(crate) fn set_horz_seg_heading_forward(
-        &mut self,
-        hs_idx: usize,
-        op_p: usize,
-        op_n: usize,
-    ) -> bool {
-        if self.outpt_arena[op_p].pt.x == self.outpt_arena[op_n].pt.x {
-            return false;
-        }
-        if self.outpt_arena[op_p].pt.x < self.outpt_arena[op_n].pt.x {
-            self.horz_seg_list[hs_idx].left_op = Some(op_p);
-            self.horz_seg_list[hs_idx].right_op = Some(op_n);
-            self.horz_seg_list[hs_idx].left_to_right = true;
-        } else {
-            self.horz_seg_list[hs_idx].left_op = Some(op_n);
-            self.horz_seg_list[hs_idx].right_op = Some(op_p);
-            self.horz_seg_list[hs_idx].left_to_right = false;
-        }
-        true
     }
 }

@@ -53,7 +53,6 @@ impl ClipperOffset {
     /// Set the fallback callback used to assign z at intersections created
     /// by the finishing union when z inheritance finds no agreeing vertex
     /// Direct port from clipper.offset.h line 118 (ClipperOffset::SetZCallback)
-
     pub fn set_z_callback(&mut self, cb: impl ZCallback64 + 'static) {
         self.z_callback = Some(Rc::new(RefCell::new(Box::new(cb))));
     }
