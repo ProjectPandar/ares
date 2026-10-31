@@ -52,3 +52,6 @@ mod template_ternary;
 mod wall_direction_seam;
 #[path = "zero_extrusion_comment.rs"]
 mod zero_extrusion_comment;
+
+#[path = "clipper_wrapper_geometry.rs"]
+mod clipper_wrapper_geometry;

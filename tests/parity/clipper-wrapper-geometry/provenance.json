@@ -1,0 +1,522 @@
+{
+  "base": "tests/parity/legacy-brim-ears/O0.3mf",
+  "base_sha256": "72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec",
+  "cases": {
+    "coincident-width-overhang-intersections": {
+      "bands": [
+        [
+          -0.5,
+          0.05,
+          [
+            [
+              [
+                [
+                  -5,
+                  -5
+                ],
+                [
+                  5,
+                  -5
+                ],
+                [
+                  5,
+                  5
+                ],
+                [
+                  -5,
+                  5
+                ]
+              ],
+              []
+            ]
+          ]
+        ],
+        [
+          0.05,
+          0.5,
+          [
+            [
+              [
+                [
+                  -5,
+                  -5
+                ],
+                [
+                  7,
+                  -5
+                ],
+                [
+                  7,
+                  0
+                ],
+                [
+                  5.5,
+                  0
+                ],
+                [
+                  5.5,
+                  5.5
+                ],
+                [
+                  -5,
+                  5.5
+                ]
+              ],
+              []
+            ]
+          ]
+        ]
+      ],
+      "every_directed_edge_once_with_reverse": true,
+      "input_sha256": "7688c5eaac8bb610fae4e92863474c85262d9f83f64737ba17f5574c6b635866",
+      "overrides": {
+        "detect_overhang_wall": "1",
+        "extra_perimeters_on_overhangs": "0",
+        "initial_layer_line_width": "0.5",
+        "inner_wall_line_width": "0.5",
+        "line_width": "0.5",
+        "nozzle_diameter": [
+          "0.5"
+        ],
+        "outer_wall_line_width": "0.5",
+        "wall_generator": "arachne",
+        "wall_loops": "1"
+      },
+      "signed_volume_mm3": 107.9875,
+      "triangles": 64,
+      "vertices": 34
+    },
+    "collinear-boundary-with-thin-spike": {
+      "bands": [
+        [
+          -0.5,
+          0.5,
+          [
+            [
+              [
+                [
+                  -5,
+                  -5
+                ],
+                [
+                  5,
+                  -5
+                ],
+                [
+                  5,
+                  -5e-05
+                ],
+                [
+                  5.8,
+                  -5e-05
+                ],
+                [
+                  5.8,
+                  5e-05
+                ],
+                [
+                  5,
+                  5e-05
+                ],
+                [
+                  5,
+                  5
+                ],
+                [
+                  -5,
+                  5
+                ]
+              ],
+              []
+            ]
+          ]
+        ]
+      ],
+      "every_directed_edge_once_with_reverse": true,
+      "input_sha256": "e3c2b3e5d29ac1766eca1be0464c1e8a0e88fe964630cb218f185affc504b1d5",
+      "overrides": {},
+      "signed_volume_mm3": 100.00007999999998,
+      "triangles": 36,
+      "vertices": 20
+    },
+    "holes-touch-after-compensation": {
+      "bands": [
+        [
+          -0.5,
+          0.5,
+          [
+            [
+              [
+                [
+                  -15,
+                  -15
+                ],
+                [
+                  15,
+                  -15
+                ],
+                [
+                  15,
+                  15
+                ],
+                [
+                  -15,
+                  15
+                ]
+              ],
+              [
+                [
+                  [
+                    -10,
+                    -10
+                  ],
+                  [
+                    -0.4,
+                    -10
+                  ],
+                  [
+                    -0.4,
+                    -0.4
+                  ],
+                  [
+                    -10,
+                    -0.4
+                  ]
+                ],
+                [
+                  [
+                    0.4,
+                    0.4
+                  ],
+                  [
+                    10,
+                    0.4
+                  ],
+                  [
+                    10,
+                    10
+                  ],
+                  [
+                    0.4,
+                    10
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "every_directed_edge_once_with_reverse": true,
+      "input_sha256": "a1326b0b6be5f1f90d5e5a4ea618e86a3b8892eb137b17308838310c97474c1a",
+      "overrides": {
+        "xy_hole_compensation": "0.4"
+      },
+      "signed_volume_mm3": 715.68,
+      "triangles": 148,
+      "vertices": 72
+    },
+    "nested-hole-island": {
+      "bands": [
+        [
+          -0.5,
+          0.5,
+          [
+            [
+              [
+                [
+                  -15,
+                  -15
+                ],
+                [
+                  15,
+                  -15
+                ],
+                [
+                  15,
+                  15
+                ],
+                [
+                  -15,
+                  15
+                ]
+              ],
+              [
+                [
+                  [
+                    -10,
+                    -10
+                  ],
+                  [
+                    10,
+                    -10
+                  ],
+                  [
+                    10,
+                    10
+                  ],
+                  [
+                    -10,
+                    10
+                  ]
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -6,
+                  -6
+                ],
+                [
+                  6,
+                  -6
+                ],
+                [
+                  6,
+                  6
+                ],
+                [
+                  -6,
+                  6
+                ]
+              ],
+              [
+                [
+                  [
+                    -2,
+                    -2
+                  ],
+                  [
+                    2,
+                    -2
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    -2,
+                    2
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "every_directed_edge_once_with_reverse": true,
+      "input_sha256": "f91fae699cd1410003fe4c0d59ce2602c0fa1039e709c11d195641e5488da74c",
+      "overrides": {},
+      "signed_volume_mm3": 628.0,
+      "triangles": 256,
+      "vertices": 128
+    },
+    "round-offset-short-edge-above-threshold": {
+      "bands": [
+        [
+          -0.5,
+          0.5,
+          [
+            [
+              [
+                [
+                  -5,
+                  -5
+                ],
+                [
+                  5,
+                  -5
+                ],
+                [
+                  5,
+                  0.015625
+                ],
+                [
+                  9,
+                  0.015625
+                ],
+                [
+                  9,
+                  0.025825
+                ],
+                [
+                  5,
+                  0.025825
+                ],
+                [
+                  5,
+                  5
+                ],
+                [
+                  -5,
+                  5
+                ]
+              ],
+              []
+            ]
+          ]
+        ]
+      ],
+      "every_directed_edge_once_with_reverse": true,
+      "input_sha256": "6b53a7623b9dfca2271c8d138aca5f2b667693d145f7da648f15836f3902fe24",
+      "overrides": {
+        "brim_ears_detection_length": "0",
+        "brim_ears_max_angle": "180",
+        "brim_object_gap": "2",
+        "brim_type": "brim_ears",
+        "brim_width": "8"
+      },
+      "signed_volume_mm3": 100.0408,
+      "triangles": 36,
+      "vertices": 20
+    },
+    "round-offset-short-edge-at-threshold": {
+      "bands": [
+        [
+          -0.5,
+          0.5,
+          [
+            [
+              [
+                [
+                  -5,
+                  -5
+                ],
+                [
+                  5,
+                  -5
+                ],
+                [
+                  5,
+                  0.015625
+                ],
+                [
+                  9,
+                  0.015625
+                ],
+                [
+                  9,
+                  0.025625002
+                ],
+                [
+                  5,
+                  0.025625002
+                ],
+                [
+                  5,
+                  5
+                ],
+                [
+                  -5,
+                  5
+                ]
+              ],
+              []
+            ]
+          ]
+        ]
+      ],
+      "every_directed_edge_once_with_reverse": true,
+      "input_sha256": "99a0afc16380d62a2da6dd956a338ecc23a592b5586297274cb7e17f8907ec9a",
+      "overrides": {
+        "brim_ears_detection_length": "0",
+        "brim_ears_max_angle": "180",
+        "brim_object_gap": "2",
+        "brim_type": "brim_ears",
+        "brim_width": "8"
+      },
+      "signed_volume_mm3": 100.04000000799999,
+      "triangles": 36,
+      "vertices": 20
+    },
+    "round-offset-short-edge-below-threshold": {
+      "bands": [
+        [
+          -0.5,
+          0.5,
+          [
+            [
+              [
+                [
+                  -5,
+                  -5
+                ],
+                [
+                  5,
+                  -5
+                ],
+                [
+                  5,
+                  0.015625
+                ],
+                [
+                  9,
+                  0.015625
+                ],
+                [
+                  9,
+                  0.025425
+                ],
+                [
+                  5,
+                  0.025425
+                ],
+                [
+                  5,
+                  5
+                ],
+                [
+                  -5,
+                  5
+                ]
+              ],
+              []
+            ]
+          ]
+        ]
+      ],
+      "every_directed_edge_once_with_reverse": true,
+      "input_sha256": "ce8aa1e13b8f867acad2743d33cdec3a667018613066e6701ec0622f00eeeb97",
+      "overrides": {
+        "brim_ears_detection_length": "0",
+        "brim_ears_max_angle": "180",
+        "brim_object_gap": "2",
+        "brim_type": "brim_ears",
+        "brim_width": "8"
+      },
+      "signed_volume_mm3": 100.0392,
+      "triangles": 36,
+      "vertices": 20
+    }
+  },
+  "common_settings": {
+    "bottom_shell_layers": "0",
+    "brim_ears": "0",
+    "brim_type": "no_brim",
+    "brim_use_efc_outline": "0",
+    "combine_brims": "0",
+    "elefant_foot_compensation": "0",
+    "enable_arc_fitting": "0",
+    "enable_prime_tower": "0",
+    "enable_support": "0",
+    "initial_layer_line_width": "0.4",
+    "initial_layer_print_height": "0.2",
+    "inner_wall_line_width": "0.4",
+    "layer_height": "0.2",
+    "line_width": "0.4",
+    "outer_wall_line_width": "0.4",
+    "resolution": "0",
+    "seam_position": "aligned",
+    "skirt_height": "0",
+    "skirt_loops": "0",
+    "slice_gap_closing_radius": "0",
+    "sparse_infill_density": "0%",
+    "top_shell_layers": "0",
+    "wall_generator": "classic",
+    "wall_loops": "2",
+    "xy_contour_compensation": "0",
+    "xy_hole_compensation": "0"
+  },
+  "scope": "input-only; one model part; geometry boundary, not Native reference output",
+  "upstream": "345efec64c7b95a05ce5cf96df0dde66a158835c"
+}
