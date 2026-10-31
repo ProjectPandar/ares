@@ -9,6 +9,9 @@
 //! Writes `config-block-cases.json` (replayed in the browser by
 //! `web/e2e/configRoundTrip.spec.ts`) and `config-block-roundtrip.json` into
 //! the runner work directory. The 3MF half is `crates/ares-wasm/tests/encode_roundtrip.rs`.
+#[path = "config_block_roundtrip/definition_defaults.rs"]
+mod definition_defaults;
+
 use super::{ExportedCase, OrcaRunner};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
