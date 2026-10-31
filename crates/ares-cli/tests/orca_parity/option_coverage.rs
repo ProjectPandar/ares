@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "scarf_seam_neighbor_trim.rs"]
+mod scarf_seam_neighbor_trim;
+
 #[path = "scarf_ramp_endpoint_vertex_snap.rs"]
 mod scarf_ramp_endpoint_vertex_snap;
 
