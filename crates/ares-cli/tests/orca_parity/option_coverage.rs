@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "seam_string_immediate_lower_layer_restart.rs"]
+mod seam_string_immediate_lower_layer_restart;
+
 #[path = "arachne_fully_overhanging_exterior_nearest.rs"]
 mod arachne_fully_overhanging_exterior_nearest;
 
