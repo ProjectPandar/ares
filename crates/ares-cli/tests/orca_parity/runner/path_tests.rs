@@ -31,6 +31,12 @@ fn relative_executable_survives_changed_command_cwd() {
         .current_dir(temp.path())
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
     eprintln!(
         "{}\n{}",
         String::from_utf8_lossy(&output.stdout),

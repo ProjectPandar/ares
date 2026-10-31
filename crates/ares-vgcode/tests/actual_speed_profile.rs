@@ -141,6 +141,12 @@ fn required_missing_native_cannot_pass() {
         .env_remove("ARES_ACTUAL_SPEED_PROFILE_BIN")
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
     assert!(!output.status.success());
     assert!(
         String::from_utf8_lossy(&output.stderr)
@@ -157,6 +163,12 @@ fn optional_missing_native_reports_skipped() {
         .env_remove("ARES_ACTUAL_SPEED_PROFILE_BIN")
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
     assert!(output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("SKIPPED:"));
 }

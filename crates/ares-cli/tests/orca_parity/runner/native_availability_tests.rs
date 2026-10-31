@@ -17,7 +17,14 @@ fn invoke(selector: &str, root: &Path, missing: &str, required: bool) -> std::pr
         .env_remove("ARES_PARITY_HONEYCOMB_MULTILINE")
         .env_remove("ORCA_REPLAY_BIN")
         .env_remove(missing);
-    command.output().unwrap()
+    let output = command.output().unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
+    output
 }
 
 fn text(output: &std::process::Output) -> String {
@@ -63,7 +70,7 @@ fn required_native_missing_artifact_root_fails_at_initialization() {
 fn optional_native_absence_explicitly_reports_unexecuted_comparison() {
     let root = tempfile::tempdir().unwrap();
     let output = invoke(
-        "smoke::orca_parity_ender3_smoke",
+        "smoke::ender3_smoke",
         root.path(),
         "ARES_PARITY_ARTIFACT_ROOT",
         false,

@@ -24,12 +24,18 @@ fn safc_concentric_cases_use_initialized_authority_in_both_modes() {
     let output = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
-            "option_coverage::safc_coverage::orca_parity_safc_coupled_models_preserve_whole_output_and_segment_consumers",
+            "option_coverage::safc_coverage::safc_coupled_models_preserve_whole_output_and_segment_consumers",
             "--nocapture",
         ])
         .env("ARES_PARITY_ARTIFACT_ROOT", &root)
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
     fs::write(root.join("child.stdout"), &output.stdout).unwrap();
     fs::write(root.join("child.stderr"), &output.stderr).unwrap();
     let proofs: Vec<Value> =

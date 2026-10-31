@@ -131,6 +131,12 @@ fn invoke(directory: &std::path::Path, change: &str, step: &str) {
         .output()
         .unwrap();
     assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
+    assert!(
         output.status.success(),
         "{}\n{}",
         String::from_utf8_lossy(&output.stdout),

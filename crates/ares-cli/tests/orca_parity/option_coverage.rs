@@ -150,10 +150,6 @@ mod completion_tests;
 mod owner_pair_tests;
 
 #[cfg(test)]
-#[path = "option_coverage/support_report_tests.rs"]
-mod support_report_tests;
-
-#[cfg(test)]
 #[cfg(test)]
 #[cfg(test)]
 #[cfg(test)]

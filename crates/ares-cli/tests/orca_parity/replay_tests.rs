@@ -6,13 +6,20 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 fn replay(fixtures: &Path, artifacts: &Path, cwd: &Path) -> std::process::Output {
-    Command::new(std::env::current_exe().unwrap())
-        .args(["--exact", "replay::orca_parity_replay_sweep", "--nocapture"])
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args(["--exact", "replay::replay_sweep", "--nocapture"])
         .env("ARES_PARITY_REPLAY", fixtures)
         .env("ARES_PARITY_ARTIFACT_ROOT", artifacts)
         .current_dir(cwd)
         .output()
-        .unwrap()
+        .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "replay child selector did not run exactly one test: {output:?}"
+    );
+    output
 }
 
 fn fixture(root: &Path, reference: bool) -> bool {
@@ -295,12 +302,18 @@ fn explicit_request_without_artifact_destination_fails() {
     let input = temp.path().join("input");
     fixture(&input, false);
     let output = Command::new(std::env::current_exe().unwrap())
-        .args(["--exact", "replay::orca_parity_replay_sweep", "--nocapture"])
+        .args(["--exact", "replay::replay_sweep", "--nocapture"])
         .env("ARES_PARITY_REPLAY", &input)
         .env_remove("ARES_PARITY_ARTIFACT_ROOT")
         .current_dir(temp.path())
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "replay child selector did not run exactly one test: {output:?}"
+    );
     assert!(String::from_utf8_lossy(&output.stderr).contains("ARES_PARITY_ARTIFACT_ROOT"));
     assert_failed(output);
 }
@@ -309,13 +322,19 @@ fn explicit_request_without_artifact_destination_fails() {
 fn unset_replay_is_explicitly_offline_not_a_comparison() {
     let temp = tempfile::tempdir().unwrap();
     let output = Command::new(std::env::current_exe().unwrap())
-        .args(["--exact", "replay::orca_parity_replay_sweep", "--nocapture"])
+        .args(["--exact", "replay::replay_sweep", "--nocapture"])
         .env_remove("ARES_PARITY_REPLAY")
         .env_remove("ARES_REQUIRE_ORCA")
         .env_remove("ARES_PARITY_ARTIFACT_ROOT")
         .current_dir(temp.path())
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "replay child selector did not run exactly one test: {output:?}"
+    );
     assert!(output.status.success());
     let diagnostic = String::from_utf8_lossy(&output.stderr);
     assert!(diagnostic.contains("SKIPPED:"));

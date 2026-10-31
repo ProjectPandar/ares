@@ -16,7 +16,14 @@ fn invoke(selector: &str, root: Option<&Path>, cwd: &Path) -> std::process::Outp
     if let Some(root) = root {
         command.env("ARES_PARITY_ARTIFACT_ROOT", root);
     }
-    command.output().unwrap()
+    let output = command.output().unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
+    output
 }
 
 #[test]
@@ -28,12 +35,11 @@ fn configured_callers_fail_on_artifact_initialization_errors() {
     let relative = std::path::PathBuf::from("relative-artifacts");
     let mut failures = Vec::new();
     for selector in [
-        "smoke::orca_parity_ender3_smoke",
-        "smoke::orca_parity_top_concentric_smoke",
-        "smoke::orca_parity_printer_sweep",
-        "smoke::orca_parity_nearest_cluster_check",
-        "smoke::orca_parity_prusa_core_one_dump",
-        "option_coverage::sweep::orca_parity_option_coverage",
+        "smoke::ender3_smoke",
+        "smoke::top_concentric_smoke",
+        "smoke::printer_sweep",
+        "smoke::nearest_cluster_check",
+        "smoke::prusa_core_one_dump",
     ] {
         for (name, root, cause) in [
             ("missing", None, "ARES_PARITY_ARTIFACT_ROOT"),

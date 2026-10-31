@@ -29,6 +29,12 @@ fn required_missing_tagged_producer_cannot_pass_from_frozen_authority() {
             .env_remove(missing);
         let output = command.output().unwrap();
         assert!(
+            String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .any(|line| line == "running 1 test"),
+            "child selector did not run exactly one test: {output:?}"
+        );
+        assert!(
             !output.status.success(),
             "tagged used frozen authority without {missing}"
         );

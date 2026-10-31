@@ -399,6 +399,12 @@ fn flush_matrix_cli_reconstruction_scalar_controls_require_native() {
         .env_remove("ARES_ORCA_NATIVE_BIN")
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
     let diagnostic = format!(
         "{}\n{}",
         String::from_utf8_lossy(&output.stdout),

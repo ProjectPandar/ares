@@ -6,7 +6,7 @@ use serde_json::Value;
 use std::{fs, path::Path, path::PathBuf, process::Command};
 
 pub(crate) const REQUEST: &str = "ARES_SAFC_CONCENTRIC_REQUEST";
-const CHILD: &str = "option_coverage::safc_coverage::authority_tests::orca_parity_safc_concentric_cases_use_initialized_authority_in_both_modes";
+const CHILD: &str = "option_coverage::safc_coverage::authority_tests::safc_concentric_cases_use_initialized_authority_in_both_modes";
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct References {
@@ -52,6 +52,12 @@ pub(crate) fn initialized_pair(cases: &[&ExportedCase], root: &Path) -> Option<R
         .env_remove("ORCA_APPDIR")
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
     fs::write(directory.join("child.stdout"), &output.stdout).unwrap();
     fs::write(directory.join("child.stderr"), &output.stderr).unwrap();
     let diagnostic = format!(

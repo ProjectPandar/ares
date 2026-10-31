@@ -67,6 +67,12 @@ fn required_missing_native_cannot_pass_from_frozen_marker_time() {
         .output()
         .unwrap();
     assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
+    assert!(
         !output.status.success(),
         "required Native comparison silently passed without Native: {}{}",
         String::from_utf8_lossy(&output.stdout),
@@ -92,6 +98,12 @@ fn optional_missing_native_reports_skipped_instead_of_frozen_parity() {
         .env_remove("ARES_MARKER_TIME_STABLE_BIN")
         .output()
         .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
     assert!(output.status.success());
     assert!(
         String::from_utf8_lossy(&output.stderr).contains("SKIPPED:"),
@@ -116,6 +128,12 @@ fn missing_node_is_visible_optional_skip_and_required_failure() {
             .env("ARES_REQUIRE_ORCA", if required { "1" } else { "0" })
             .output()
             .unwrap();
+        assert!(
+            String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .any(|line| line == "running 1 test"),
+            "child selector did not run exactly one test: {output:?}"
+        );
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert_eq!(output.status.success(), !required);
         assert!(stderr.contains("node"));

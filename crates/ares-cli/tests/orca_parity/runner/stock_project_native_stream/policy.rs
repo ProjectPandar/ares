@@ -10,7 +10,7 @@ fn optional_missing_native_never_consumes_frozen_stock_project_reference() {
 #[test]
 fn optional_missing_native_never_consumes_frozen_stock_project_config_block() {
     missing_native(
-        "runner::stock_project_native_stream::config_block::config_export_fixture_matches_resolved_task19b3_views_byte_for_byte",
+        "runner::stock_project_native_stream::config_block::config_export_fixture_matches_resolved_views_byte_for_byte",
     );
 }
 
