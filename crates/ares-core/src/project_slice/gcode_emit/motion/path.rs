@@ -162,14 +162,21 @@ fn emit_inner(
         configured_speed
     };
     let original_speed = properties.resonance_avoided(&state.options, capped_speed);
-    let processed = overhang::estimate(overhang::EstimateRequest {
+    let estimated = overhang::estimate(overhang::EstimateRequest {
         points: &local_points,
         properties,
         geometry,
         options: &state.options,
-        layer_index: state.layer_index,
+        on_first_layer: state.on_first_layer,
+        object_layer_over_raft: state.object_layer_over_raft,
         original_speed,
     });
+    let path_overhang_fan_active = estimated
+        .as_ref()
+        .is_some_and(|estimate| estimate.fan_active);
+    let processed = estimated
+        .filter(|estimate| estimate.segmented)
+        .map(|estimate| estimate.points);
     let points = processed.as_ref().map_or_else(
         || {
             plate_points.unwrap_or_else(|| {
@@ -337,7 +344,13 @@ fn emit_inner(
         return Ok(());
     }
     if properties.contour.is_some() {
-        contour::emit(output, &points, properties, geometry, state);
+        contour::emit(
+            output,
+            &points,
+            (properties, path_overhang_fan_active),
+            geometry,
+            state,
+        );
         state.last_scaled_position = last_scaled;
         state.last_position_defined = true;
         return Ok(());
@@ -350,7 +363,7 @@ fn emit_inner(
             .iter()
             .map(|&(x, y)| arc::Point { x, y })
             .collect::<Vec<_>>();
-        fan::update_for_constant_path(output, properties, state);
+        fan::update_for_constant_path(output, properties, path_overhang_fan_active, state);
         super::scarf::emit_segments(output, &points, slope, properties, state);
         output.extend_from_slice(b";_EXTRUDE_END\n");
         state.wipe_path = wipe_points.into_iter().rev().collect();
@@ -365,6 +378,7 @@ fn emit_inner(
         segment_lengths: &segment_lengths,
         fitting: &fitting,
         last_scaled,
+        path_overhang_fan_active,
         force_no_extrusion,
         properties,
         state,

@@ -1,7 +1,7 @@
 # ARD: beta overhang sampling by effective printing state
 
-Status: approved source slice; implementation pending. Later batch only, not
-frozen B13. Authority: OrcaSlicer v2.5.0-beta,
+Status: sampling/consumer candidate implemented; physical-fan state follow-up
+authorized below. Later batch only, not frozen B13. Authority: OrcaSlicer v2.5.0-beta,
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Owning upstream boundary
@@ -130,6 +130,62 @@ no new global cooling option or invented extrusion fallback is introduced.
   its own sensitive witness. No additional Clipper2 or offset changes.
 - No changes to original seven full-stream comparators, parity ROOT, fixtures,
   feature enums, or Native expected byte fragments.
+
+## First implementation result and newly isolated dependency
+
+The first source-port candidate passes fmt and strict workspace/all-target
+Clippy. The independent last-supported block remains byte-equal to Native.
+The accepted first-overhang block advances from571 to508 API bytes against
+Native498: every movement, E, feed and M73 record is now equal, but one extra
+part-fan command remains. This is still RED, not acceptance GREEN.
+
+Read-only source analysis identifies a distinct consuming boundary:
+`GCode/CoolingBuffer.cpp:1066–1071` applies a role fan request through `set_fan`,
+which emits only if requested speed differs from `m_current_fan_speed`.
+The source overhang END at930–935 still requests a fan update even if START
+was inactive; it is **not** correct to omit the END marker in the generator.
+The current Rust `cooling/role_fans.rs` unconditionally emits on BASE and has
+no corresponding deduplication of the actual requested fan state. The immutable
+input's equal baseline and overhang speeds make this boundary observable.
+
+The coordinator authorizes the physical-state follow-up below. No cooling code
+was changed when this dependency was qualified. Do not hide the mismatch by
+filtering output commands or weakening the block comparator. Force-resume fan
+output is a distinct source branch and must not be deduplicated by a generic
+textual-command filter.
+
+## Authorized physical fan-state follow-up (before its implementation)
+
+The first implementation commit contains only the ExtrusionProcessor/GCode
+sampling/consumer port and explicitly retains the one-line fan RED. A second
+commit ports the following source state; the complete498-byte block, not a
+filtered movement-only comparison, must become GREEN.
+
+| Upstream state site | Required Rust correspondence |
+| --- | --- |
+| `CoolingBuffer.cpp:40–64`, constructor calls `reset`, current speed=−1 | Replace the old retained physical-speed scaffold with `Option<u8>` for the currently requested part-fan percentage; initialize `None` (unknown), not0. |
+| `GCode.cpp:4676–4678`, sequential instance boundary calls `reset` after unfiltered transition | Reset current, baseline and auxiliary fan identities to `None` at the corresponding by-object transition. Construction covers the first instance; do not reset per ordinary layer. |
+| `CoolingBuffer.cpp:879–883`, `change_extruder_set_fan(immediately_apply)` | On layer entry and tool change, update baseline and current requested speed if baseline changes **or** immediate application must restore a differing current speed. Compare before minimum-PWM conversion. |
+| `CoolingBuffer.cpp:1066–1071`, local `set_fan` | Route ordinary role/baseline requests through a mutable state helper: emit only for a different requested percentage, then update current state. Preserve existing role precedence and END request generation. |
+| `CoolingBuffer.cpp:1092–1094`, force resume | If current state is known and no higher-priority role request wins, emit that current speed unconditionally; do not deduplicate or rewrite current state here. |
+
+The source assignment/reference audit finds no other updates to
+`m_current_fan_speed`. Its identity is requested percent, **not** the clamped PWM
+bytes: distinct requests that map to the same physical PWM remain distinct.
+Auxiliary fan command handling stays separately owned. Do not copy state from
+start/custom G-code or infer the unknown reset state from the writer.
+
+Rust destinations: `gcode_emit/cooling.rs`, `cooling/initialize.rs`,
+`cooling/role_fans.rs`, and the existing by-object transition in
+`gcode_emit/layers/drive.rs`. Remove the obsolete scaffold field rather than
+introducing duplicate retained state or a compatibility alias. Do not add an
+unused public reset API or change pressure-equalizer/feedrate algorithms.
+
+Every intermediate commit must pass fmt and strict all-target Clippy with no
+introduced suppressions. Because this state affects fan lines outside the
+witness, before HANDOFF run an official bounded sample of20 cooling/fan cases
+whose beta-ledger status is current-PASS, record their ledger provenance and
+exact selectors, and report all results. No FULL or new baseline classification.
 
 ## Test-first acceptance and execution
 

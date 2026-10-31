@@ -39,12 +39,12 @@ pub(in crate::project_slice::gcode_emit::motion) fn clipped(
 pub(super) fn emit(
     output: &mut Vec<u8>,
     xy: &[(f64, f64)],
-    properties: PathProperties<'_>,
+    (properties, path_overhang_fan_active): (PathProperties<'_>, bool),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
     let points = properties.contour.unwrap();
-    fan::update_for_constant_path(output, properties, state);
+    fan::update_for_constant_path(output, properties, path_overhang_fan_active, state);
     for (pair, end) in points.windows(2).zip(&xy[1..]) {
         let dx = (pair[1].x - pair[0].x) as f64;
         let dy = (pair[1].y - pair[0].y) as f64;

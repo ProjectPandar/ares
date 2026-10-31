@@ -16,6 +16,7 @@ pub(super) struct Emission<'a, 'b> {
     pub(super) segment_lengths: &'a [f64],
     pub(super) fitting: &'a [FittedMove],
     pub(super) last_scaled: (i64, i64),
+    pub(super) path_overhang_fan_active: bool,
     pub(super) force_no_extrusion: bool,
     pub(super) properties: PathProperties<'b>,
     pub(super) state: &'a mut EmitState,
@@ -29,6 +30,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
         segment_lengths,
         fitting,
         last_scaled,
+        path_overhang_fan_active,
         force_no_extrusion,
         properties,
         state,
@@ -37,7 +39,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
         .iter()
         .map(|&(x, y)| arc::Point { x, y })
         .collect::<Vec<_>>();
-    fan::update_for_constant_path(output, properties, state);
+    fan::update_for_constant_path(output, properties, path_overhang_fan_active, state);
     let arc_points = points
         .iter()
         .map(|&(x, y)| arc::Point { x, y })

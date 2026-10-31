@@ -4,11 +4,13 @@ use crate::RawOverhangFanThreshold;
 pub(super) fn update_for_constant_path(
     output: &mut Vec<u8>,
     properties: PathProperties<'_>,
+    path_overhang_fan_active: bool,
     state: &mut EmitState,
 ) {
     let markers_enabled = state.options.enable_overhang_bridge_fan;
     let overhang_active = markers_enabled
-        && (matches!(properties.feature, "Overhang wall" | "Bridge")
+        && (path_overhang_fan_active
+            || matches!(properties.feature, "Overhang wall" | "Bridge")
             || state.options.overhang_fan_threshold == RawOverhangFanThreshold::Percent0
                 && properties.feature == "Outer wall");
     update_marker(output, state, FanMarker::Overhang, overhang_active);
@@ -25,17 +27,18 @@ pub(super) fn update_for_constant_path(
 pub(super) fn update_for_variable_segment(
     output: &mut Vec<u8>,
     properties: PathProperties<'_>,
-    start: ProcessedPoint,
-    end: ProcessedPoint,
+    (start, end, first_segment): (ProcessedPoint, ProcessedPoint, bool),
     state: &mut EmitState,
 ) {
     let markers_enabled = state.options.enable_overhang_bridge_fan;
-    let overhang_active = markers_enabled
-        && fan_enabled(
+    let previous_active = (first_segment && properties.feature == "Internal Bridge")
+        || fan_enabled(
             properties.feature,
             start.overlap,
             state.options.overhang_fan_threshold,
-        )
+        );
+    let overhang_active = markers_enabled
+        && previous_active
         && fan_enabled(
             properties.feature,
             end.overlap,
@@ -88,13 +91,21 @@ fn fan_enabled(feature: &str, overlap: f64, threshold: RawOverhangFanThreshold) 
     if matches!(feature, "Overhang wall" | "Bridge") {
         return true;
     }
+    if threshold == RawOverhangFanThreshold::Percent0 {
+        return feature == "Outer wall";
+    }
+    let threshold = overlap_threshold(threshold);
+    threshold >= 0.0 && overlap as f32 <= threshold
+}
+
+pub(super) const fn overlap_threshold(threshold: RawOverhangFanThreshold) -> f32 {
     match threshold {
-        RawOverhangFanThreshold::Percent0 => feature == "Outer wall",
-        RawOverhangFanThreshold::Percent10 => overlap <= 0.9,
-        RawOverhangFanThreshold::Percent25 => overlap <= 0.75,
-        RawOverhangFanThreshold::Percent50 => overlap <= 0.5,
-        RawOverhangFanThreshold::Percent75 => overlap <= 0.25,
-        RawOverhangFanThreshold::Percent95 => overlap <= 0.05,
+        RawOverhangFanThreshold::Percent0 => -1.0,
+        RawOverhangFanThreshold::Percent10 => 0.9,
+        RawOverhangFanThreshold::Percent25 => 0.75,
+        RawOverhangFanThreshold::Percent50 => 0.5,
+        RawOverhangFanThreshold::Percent75 => 0.25,
+        RawOverhangFanThreshold::Percent95 => 0.05,
     }
 }
 

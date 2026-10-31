@@ -56,8 +56,7 @@ pub(super) fn emit(command: Emission<'_>) {
         fan::update_for_variable_segment(
             output,
             properties,
-            processed[index - 1],
-            processed[index],
+            (processed[index - 1], processed[index], index == 1),
             state,
         );
         let end_q = (quantize(end.x), quantize(end.y));

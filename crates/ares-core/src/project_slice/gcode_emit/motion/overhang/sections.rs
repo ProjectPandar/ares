@@ -108,73 +108,6 @@ impl BoundaryContext<'_> {
         }
     }
 
-    pub(super) fn add_segmentation_points(
-        &self,
-        points: &[ExtendedPoint],
-        minimum_slowdown_distance: f32,
-    ) -> Vec<ExtendedPoint> {
-        let mut result = Vec::with_capacity(points.len() * 2);
-        result.push(points[0]);
-        for pair in points.windows(2) {
-            let current = pair[0];
-            let next = pair[1];
-            let line_length = distance(current, next);
-            let near_boundary = |point: ExtendedPoint| {
-                point.distance > -self.offset && point.distance < self.offset + 2.0
-            };
-            let needs_slowdown = current.distance.abs() > minimum_slowdown_distance
-                || next.distance.abs() > minimum_slowdown_distance;
-            let should_segment = (near_boundary(current) || near_boundary(next))
-                && ((minimum_slowdown_distance > 0.0 && needs_slowdown && line_length >= 2.0)
-                    || (minimum_slowdown_distance <= 0.0 && line_length > 4.0));
-            if should_segment {
-                let a0 = (f64::from(current.distance + 3.0_f32 * self.offset) / line_length)
-                    .clamp(0.0, 1.0);
-                let a1 = (1.0 - f64::from(next.distance + 3.0_f32 * self.offset) / line_length)
-                    .clamp(0.0, 1.0);
-                self.append_segmentation_candidate(
-                    &mut result,
-                    [current, next],
-                    a0.min(a1),
-                    minimum_slowdown_distance,
-                );
-                self.append_segmentation_candidate(
-                    &mut result,
-                    [current, next],
-                    a0.max(a1),
-                    minimum_slowdown_distance,
-                );
-            }
-            result.push(next);
-        }
-        result
-    }
-
-    fn append_segmentation_candidate(
-        &self,
-        result: &mut Vec<ExtendedPoint>,
-        endpoints: [ExtendedPoint; 2],
-        factor: f64,
-        minimum_slowdown_distance: f32,
-    ) {
-        let [current, next] = endpoints;
-        if factor <= 0.0 || factor >= 1.0 {
-            return;
-        }
-        let candidate = interpolate(current, next, factor);
-        let raw_distance = self.signed_distance((candidate.x, candidate.y), candidate.z);
-        let candidate = ExtendedPoint {
-            distance: (raw_distance + f64::from(self.offset)) as f32,
-            ..candidate
-        };
-        if raw_distance.abs() > f64::from(minimum_slowdown_distance)
-            && distance(current, candidate) > self.minimum_spacing
-            && distance(candidate, next) > self.minimum_spacing
-        {
-            result.push(candidate);
-        }
-    }
-
     fn extended(&self, point: (f64, f64), z: f64) -> ExtendedPoint {
         // `ExtendedPoint.distance` is `float`, but the boundary offset
         // add happens in the f64 distance domain before narrowing
@@ -189,7 +122,7 @@ impl BoundaryContext<'_> {
         }
     }
 
-    fn signed_distance(&self, point: (f64, f64), z: f64) -> f64 {
+    pub(super) fn signed_distance(&self, point: (f64, f64), z: f64) -> f64 {
         // `distance_from_lines_extra<true>` over `LinesDistancer<Linef3>`
         // (`ExtrusionProcessor.hpp:92-101,366`): the previous-layer
         // boundary lines are unscaled f64 — the distance is measured in
@@ -259,13 +192,8 @@ pub(super) fn interpolate(
 }
 
 pub(super) fn distance(first: ExtendedPoint, second: ExtendedPoint) -> f64 {
-    let xy = (second.x - first.x).hypot(second.y - first.y);
-    if first.z == second.z {
-        xy
-    } else {
-        let dx = second.x - first.x;
-        let dy = second.y - first.y;
-        let dz = second.z - first.z;
-        (dx * dx + dy * dy + dz * dz).sqrt()
-    }
+    let dx = second.x - first.x;
+    let dy = second.y - first.y;
+    let dz = second.z - first.z;
+    (dx * dx + dy * dy + dz * dz).sqrt()
 }

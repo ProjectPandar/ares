@@ -1,12 +1,16 @@
 mod curl;
+mod interior;
+mod printing_state;
+mod sampling;
 mod sections;
 
 pub(in crate::project_slice) use curl::{
     CurlEstimate, CurledLine, ExternalEntityPoints, estimate_object,
 };
+use printing_state::PrintingState;
 use sections::{scale_trunc, speed_for_distance, speed_sections};
 
-use super::{LayerGeometry, MotionOptions, features::PathProperties};
+use super::{LayerGeometry, MotionOptions, fan, features::PathProperties};
 
 pub(super) const OVERLAPS: [f64; 6] = [90.0, 75.0, 50.0, 25.0, 13.0, 0.0];
 pub(super) const INTERSECTION_EPSILON_MM: f64 = 1e-4;
@@ -16,8 +20,15 @@ pub(super) struct EstimateRequest<'a> {
     pub(super) properties: PathProperties<'a>,
     pub(super) geometry: LayerGeometry<'a>,
     pub(super) options: &'a MotionOptions,
-    pub(super) layer_index: usize,
+    pub(super) on_first_layer: bool,
+    pub(super) object_layer_over_raft: bool,
     pub(super) original_speed: f64,
+}
+
+pub(super) struct Estimate {
+    pub(super) points: Vec<ProcessedPoint>,
+    pub(super) segmented: bool,
+    pub(super) fan_active: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -44,10 +55,11 @@ pub(super) struct BoundaryContext<'a> {
     pub(super) minimum_spacing: f64,
 }
 
-pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoint>> {
+pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Estimate> {
     let boundary = request.geometry.previous_layer_boundary?;
-    if !request.options.enable_overhang_speed
-        || request.layer_index == 0
+    if !(request.options.enable_overhang_speed || request.options.enable_overhang_bridge_fan)
+        || request.on_first_layer
+        || request.object_layer_over_raft
         || !matches!(
             request.properties.feature,
             "Inner wall" | "Outer wall" | "Overhang wall" | "Bridge" | "Internal Bridge"
@@ -56,29 +68,11 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     {
         return None;
     }
-
-    // The reference speed caps against the same effective `_mm3_per_mm` as
-    // the extrusion speed cap (`GCode.cpp:6658-6665`), and only while
-    // `filament_max_volumetric_speed > 0`.
-    let role_speed = if matches!(request.properties.feature, "Outer wall" | "Overhang wall") {
-        request.options.outer_wall_speed
-    } else {
-        request.options.inner_wall_speed
-    };
-    // First-layer paths returned above; share the complete effective flow.
-    let reference_speed = if request.options.max_volumetric_speed > 0.0 {
-        role_speed.min(
-            request.options.max_volumetric_speed
-                / super::extrusion::effective_flow(request.properties, request.options, false),
-        )
-    } else {
-        role_speed
-    };
-    let reference_speed = request
-        .properties
-        .slope
-        .map_or(reference_speed, |slope| reference_speed.min(slope.speed));
-    let sections = speed_sections(request.properties.width, reference_speed, request.options);
+    let sections = speed_sections(
+        request.properties.width,
+        reference_speed(&request),
+        request.options,
+    );
     let original_speed = request.original_speed as f32;
     let minimum_slowdown_distance = sections
         .iter()
@@ -86,38 +80,90 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         .map(|section| section.0)
         .reduce(f32::min)
         .unwrap_or(-1.0);
+    let fan_threshold = if request.options.enable_overhang_bridge_fan
+        && !matches!(request.properties.feature, "Bridge" | "Overhang wall")
+    {
+        fan::overlap_threshold(request.options.overhang_fan_threshold)
+    } else {
+        -1.0
+    };
     let context = BoundaryContext {
         tree: boundary,
         scale: request.geometry.scale,
         offset: 0.5_f32 * request.properties.width,
         minimum_spacing: f64::from(request.properties.width) * 0.25,
     };
+    let printing = PrintingState {
+        sections: &sections,
+        original_speed,
+        width_inverse: 1.0_f32 / request.properties.width,
+        fan_threshold,
+    };
     let extended = context.add_boundary_intersections(request.points, request.properties.contour);
-    let extended = context.add_segmentation_points(&extended, minimum_slowdown_distance);
-    // The artificial curl distance (`ExtrusionProcessor.hpp:415-418`):
-    // min() the curl speed into the pair speed like the boundary bands.
-    // The previous layer's curled lines are the pre-estimated
-    // `Layer::curled_lines` (`PrintObject::estimate_curled_extrusions`
-    // consumed by `prepare_for_new_layer`).
+    let extended = context.add_interior_points(extended, minimum_slowdown_distance, &printing);
+    let extended = context.add_segmentation_points(&extended, &printing);
+    let points = process_points(&request, &context, &extended, &sections);
+    let speed_changes = points
+        .iter()
+        .any(|point| (point.speed - request.original_speed).abs() > 1.0);
+    let threshold = f64::from(fan_threshold);
+    let fan_active = fan_threshold >= 0.0 && points[0].overlap <= threshold;
+    let fan_changes = fan_threshold >= 0.0
+        && points
+            .windows(2)
+            .any(|pair| (pair[0].overlap <= threshold) != (pair[1].overlap <= threshold));
+    Some(Estimate {
+        points,
+        segmented: speed_changes || fan_changes,
+        fan_active,
+    })
+}
+
+fn reference_speed(request: &EstimateRequest<'_>) -> f64 {
+    // GCode.cpp:9559–9570: role speed, automatic speed, actual-flow cap, scarf cap.
+    let role_speed = if matches!(request.properties.feature, "Outer wall" | "Overhang wall") {
+        request.options.outer_wall_speed
+    } else {
+        request.options.inner_wall_speed
+    };
+    let volumetric_speed = request.options.max_volumetric_speed
+        / super::extrusion::effective_flow(request.properties, request.options, false);
+    let reference_speed = if role_speed == 0.0 {
+        volumetric_speed
+    } else {
+        role_speed
+    };
+    let reference_speed = if request.options.max_volumetric_speed > 0.0 {
+        reference_speed.min(volumetric_speed)
+    } else {
+        reference_speed
+    };
+    request
+        .properties
+        .slope
+        .map_or(reference_speed, |slope| reference_speed.min(slope.speed))
+}
+
+fn process_points(
+    request: &EstimateRequest<'_>,
+    context: &BoundaryContext<'_>,
+    extended: &[ExtendedPoint],
+    sections: &[(f32, f32)],
+) -> Vec<ProcessedPoint> {
+    let original_speed = request.original_speed as f32;
     let curled_lines = request
         .options
         .slowdown_for_curled_perimeters
         .then_some(request.geometry.previous_curled)
         .filter(|lines| !lines.is_empty());
-
     let mut processed = Vec::with_capacity(extended.len());
-    let mut variable = false;
     for index in 0..extended.len() {
         let current = extended[index];
         let next = extended.get(index + 1).copied().unwrap_or(current);
-        let mut speed = speed_for_distance(current.distance, &sections, original_speed)
-            .min(speed_for_distance(next.distance, &sections, original_speed))
+        let mut speed = speed_for_distance(current.distance, sections, original_speed)
+            .min(speed_for_distance(next.distance, sections, original_speed))
             .min(original_speed);
-        // `artificial_distance_to_curled_lines` starts at 0 per segment
-        // (`ExtrusionProcessor.hpp:379`) and is added to BOTH endpoint
-        // distances in the overlap (`hpp:455`) — it drives the overhang
-        // bridge fan toggles through `check_overhang_fan`, not just the
-        // curled speed floor.
+        // Existing source curl distance contributes to speed AND overlap.
         let mut artificial = 0.0_f32;
         if let Some(curled) = curled_lines {
             artificial = curl::artificial_distance(
@@ -127,9 +173,11 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
                 request.properties.height,
                 request.geometry.scale,
             );
-            speed = speed.min(speed_for_distance(artificial, &sections, original_speed));
+            speed = speed.min(speed_for_distance(artificial, sections, original_speed));
         }
-        variable |= (f64::from(speed) - request.original_speed).abs() > 1.0;
+        if !request.options.enable_overhang_speed {
+            speed = original_speed;
+        }
         let width_inverse = 1.0_f32 / request.properties.width;
         processed.push(ProcessedPoint {
             x: context.scale.unscale(scale_trunc(current.x, context.scale)),
@@ -142,5 +190,5 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
             ),
         });
     }
-    variable.then_some(processed)
+    processed
 }
