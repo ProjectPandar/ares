@@ -11,7 +11,7 @@ mod config_export;
 pub(crate) mod flush_matrix;
 mod flush_volume;
 pub(crate) use config_export::{
-    escape_scalar_string, escape_string_vector_element, write_config_block,
+    collect_config_entries, escape_scalar_string, escape_string_vector_element, write_config_block,
 };
 pub(crate) use typed_legacy::{EXPLICIT_RULES, LegacyAction, OBSOLETE_INPUTS};
 mod config_types;

@@ -511,6 +511,21 @@ A3b cases:
 6. A by-object print with one object.
 7. The prime tower disabled (control).
 
+**A3b port boundaries (coordinator decisions).** Every `file:line` is at `345efec64`.
+- **Config reads.** The estimate reads an untyped `DynamicPrintConfig` through `option_of` (`GCode/WipeTowerEstimate.cpp:31-39`): the stored value, else the key's declared default. The port has one helper for it, `estimate/config.rs`. It reads the composed settings by key (`collect_config_entries`), falls back to the default in the public `PrintConfigDef` registry, and parses by the registry's declared type (`decode_config_value`). The plate list and the arrange job read every tower key through it. No key is typed in core for this slice.
+- **Instances a plate holds whole.** `contain_instance_totally` (`PartPlate.cpp:4494-4508`) excludes `instance_outside_set`, which `check_outside` (`:4545-4625`) maintains.
+  - Ported: the plate-box containment, and the sinking branch through `BuildVolume` and `calc_print_volume_state`. The outside test is evaluated when needed; upstream refreshes the set on every add.
+  - Deferred to A2's `bed_exclude_volumes` boundary: the per-extruder bed exclusion regions (`get_bed_excluded_regions_by_extruder`, `intersects_bed_exclude_region`, the legacy `m_exclude_bounding_box`, `:4573-4615`) and the IMEX check (`:4617-4623`).
+  - An arrange that would reach the tower estimate on a project whose `bed_exclude_area` describes a region is rejected with `InvalidInput` ("arranging with a prime tower beside a bed exclude area is not supported yet"). No IMEX printer can be expressed before A2.
+- **Printer type.** `set_default_wipe_tower_pos_for_plate` moves the default Y for an `N9` printer. `Preset::get_printer_type` (`Preset.cpp:1003-1017`) looks the model id up in the loaded vendor profiles. A session has none, so it returns `""` as upstream does without a match, and the `N9` row never applies.
+- **Belt printers.** There is no `belt_printer` key. The shown-tower conditions treat every printer as non-belt; belts stay deferred.
+- **Stored tower positions.** The session keeps `wipe_tower_x`/`wipe_tower_y` from its first arrange on.
+  - Updated by `reload_scene`'s clamp before each arrange, and by `create_plate`'s default for the plates an arrange adds.
+  - Not yet read or written by plate add/delete edits or slicing.
+  - `set_default_wipe_tower_pos_for_plate` builds `full_config(false, filament_maps, volume_maps)`; the session uses its one composed config.
+- **Clipping.** The cone outline's `union_`, the brim and obstacle offsets, the relocation's `diff_ex` and `move_box_inside_polygon`'s `diff` call the existing geometry wrappers. These are Clipper2 at the beta, and W2's slice swaps them.
+- **Evidence.** The tower sizes and positions equal Native's `--debug` estimate log (for the fixtures before the case redesign: a 32.0841 mm square at (150, 150), a 21.487 mm square at (100, 100)). On the beta debug build, Native's `diff_ex` no-fit polygons match the port's in vertices and order, apart from the GUI/CLI tower rounding above. All seven A3b cases pass against the official v2.5.0-beta.
+
 **A3c addendum: "Arrange" on the current plate.** Every `file:line` is at `345efec64`.
 
 - **Selection scope: not ported.** `ArrangeJob::prepare_selected` (`ArrangeJob.cpp:259-340`) is defined but nothing calls it: `ArrangeJob::prepare` (`:650-657`) runs `prepare_all` for `PREPARE_STATE_DEFAULT` and `prepare_partplate` for `PREPARE_STATE_MENU`.

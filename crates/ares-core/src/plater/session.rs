@@ -14,6 +14,8 @@ pub struct PlaterSession {
     pub(super) plates: PlateList,
     /// `ModelInstance::arrange_order` by `(object_id, instance_id)`; 0 until an arrange.
     pub(super) arrange_orders: BTreeMap<(u32, u32), i32>,
+    /// The stored tower positions (`wipe_tower_x`, `wipe_tower_y`) once an arrange read them.
+    pub(super) wipe_tower: Option<super::arrange_job::TowerPositions>,
 }
 
 /// One plate of the session: its grid origin and instances.
@@ -102,6 +104,7 @@ impl PlaterSession {
             project,
             plates,
             arrange_orders: BTreeMap::new(),
+            wipe_tower: None,
         }
     }
 

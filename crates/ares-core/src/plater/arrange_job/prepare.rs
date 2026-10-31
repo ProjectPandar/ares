@@ -20,7 +20,7 @@ pub(super) struct Prepared {
 }
 
 /// `PartPlate::get_print_seq`: the print sequence the plate's document sets, if any.
-fn plate_sequence(
+pub(super) fn plate_sequence(
     project: &Project,
     plates: &PlateList,
     index: usize,

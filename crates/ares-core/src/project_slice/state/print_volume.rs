@@ -69,6 +69,11 @@ impl PrintVolume {
     /// midpoint undercut 3 mm); Convex uses the convex hull (non-convex
     /// shapes are `Unported`).
     pub(crate) fn new(project: &Project) -> Result<Self, SliceError> {
+        Self::at(project, project.plate_origin())
+    }
+
+    /// The print volume of the plate at `origin`.
+    fn at(project: &Project, (origin_x, origin_y): (f64, f64)) -> Result<Self, SliceError> {
         let printer = &project.settings().printer.remaining;
         let area = &printer.printable_area.0;
         let max_z = height::scene_limit(printer.printable_height.0);
@@ -76,7 +81,13 @@ impl PrintVolume {
         // the gate (`PartPlate.cpp:3179-3187` `set_shape` adds the position
         // to every point) so the still-global instance coordinates are
         // tested against the equally-global shape.
-        let translated = global_bed_points(project, area).collect::<Vec<_>>();
+        let translated = area
+            .iter()
+            .map(|point| crate::Point2d {
+                x: point.x + origin_x,
+                y: point.y + origin_y,
+            })
+            .collect::<Vec<_>>();
         let area = &translated;
         let shape = if area.len() == 4 && is_axis_aligned_rectangle(area) {
             BedShape::Rectangle {
@@ -285,6 +296,19 @@ pub(crate) fn count_inside_instances(project: &Project) -> Result<usize, SliceEr
         }
     }
     Ok(count)
+}
+
+/// `PartPlate::check_outside`'s sinking test (`PartPlate.cpp:4565-4572` at v2.5.0-beta
+/// `345efec64`): the instance partly outside the build volume of the plate at `origin`.
+pub(crate) fn instance_partly_outside(
+    project: &Project,
+    origin: (f64, f64),
+    (object, instance): (usize, usize),
+) -> Result<bool, SliceError> {
+    let volume = PrintVolume::at(project, origin)?;
+    let object = &project.objects()[object];
+    let transform = object.instances()[instance].transform();
+    Ok(calc_print_volume_state(object, transform, &volume) == InstancePvs::PartlyOutside)
 }
 
 /// `ModelInstance::calc_print_volume_state` (`Model.cpp:3423-3469`):

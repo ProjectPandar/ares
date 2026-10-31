@@ -2,6 +2,7 @@
 
 mod data;
 mod emit;
+pub(crate) mod estimate;
 mod extents;
 mod fake;
 pub(super) use data::Data;

@@ -4,7 +4,7 @@
 //! `ModelObject::convex_hull_2d` (`:1819-1881`, `ModelVolume::calculate_convex_hull_2d`
 //! `:2818-2844`).
 
-use super::super::plate_list::InstanceKey;
+use super::super::plate_list::{InstanceKey, volume_extruders};
 use super::super::{selection, transformation};
 use crate::arrangement::{ArrangePolygon, SCALING_FACTOR};
 use crate::geometry::{ExPolygon, Point, Polygon, convex_hull};
@@ -138,7 +138,7 @@ fn model_parts(object: &ProjectObject) -> impl Iterator<Item = &crate::ProjectVo
 
 /// `ModelObject::convex_hull_2d(trafo_instance)`: each part's hull of its vertices through the
 /// matrix without offset, moved by the offset, then the hull of all parts.
-fn convex_hull_2d(object: &ProjectObject, instance: Transform3d) -> Polygon {
+pub(in crate::plater) fn convex_hull_2d(object: &ProjectObject, instance: Transform3d) -> Polygon {
     let mut points = Vec::new();
     for volume in model_parts(object) {
         let matrix = instance.then(volume.transform());
@@ -161,26 +161,6 @@ fn convex_hull_2d(object: &ProjectObject, instance: Transform3d) -> Polygon {
         );
     }
     Polygon::new(convex_hull(&points))
-}
-
-/// `ModelVolume::get_extruders` for a model part (`Model.cpp:2713-2742`): the painted
-/// filaments, then the part's extruder (`extruder_id`, `:2690-2701`).
-fn volume_extruders(object: &ProjectObject, volume: &crate::ProjectVolume) -> Vec<i32> {
-    let painted = volume.mesh().mmu_segmentation_facets.used_states();
-    let mut extruders: Vec<i32> = (1..painted.len())
-        .filter(|&state| painted[state])
-        .map(|state| state as i32)
-        .collect();
-    let extruder = volume
-        .region_overrides()
-        .extruder
-        .filter(|value| value.0 != 0)
-        .or(object.region_overrides().extruder)
-        .map_or(1, |value| value.0);
-    if extruder > 0 {
-        extruders.push(extruder);
-    }
-    extruders
 }
 
 /// The object's options over the global ones (`ModelObject::get_config_value`).

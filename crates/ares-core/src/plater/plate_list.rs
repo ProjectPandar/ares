@@ -7,6 +7,14 @@ use crate::project::{compute_colum_count, plate_origin_at};
 
 #[path = "plate_list/arrange.rs"]
 mod arrange;
+#[path = "plate_list/extruders.rs"]
+mod extruders;
+pub(super) use extruders::volume_extruders;
+#[path = "plate_list/tower_default.rs"]
+mod tower_default;
+#[path = "plate_list/wipe_tower.rs"]
+mod wipe_tower;
+pub(super) use wipe_tower::{Relocation, Towers};
 
 /// `(object index, instance index)`, the key of `PartPlate::obj_to_instance_set`.
 pub(super) type InstanceKey = (usize, usize);
@@ -78,6 +86,11 @@ impl PlateList {
         };
         list.unprintable.origin = list.origin_for_unprintable();
         list
+    }
+
+    /// `m_plate_width`, `m_plate_depth`.
+    pub(super) fn size(&self) -> (i32, i32) {
+        self.size
     }
 
     pub(super) fn plate_origin(&self, index: usize) -> [f64; 2] {

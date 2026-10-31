@@ -1,13 +1,19 @@
 //! The GUI arrange job (`src/slic3r/GUI/Jobs/ArrangeJob.cpp` at v2.5.0-beta `345efec64`) on the
 //! plater session: `prepare`, `check_unprintable`, `process` and `finalize`
-//! (`:342-414, 532-599, 632-965`) over the plate list, running `arrangement::arrange`. The wipe
-//! tower, locked plates, per-object skirts, the BBL calibration strip and several nozzles' shared
-//! bed are not ported yet; projects needing them are rejected.
+//! (`:342-414, 532-599, 632-965`) over the plate list, running `arrangement::arrange`, with the
+//! prime tower. Locked plates, per-object skirts, the BBL calibration strip, several nozzles'
+//! shared bed and a prime tower beside a bed exclude area are not ported yet; projects needing
+//! them are rejected.
 
 mod finalize;
 mod params;
 mod polygon;
 mod prepare;
+mod wipe_tower;
+
+pub(super) use wipe_tower::TowerPositions;
+
+pub(super) use polygon::convex_hull_2d;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,6 +27,7 @@ use crate::arrangement::{
 use crate::geometry::fixed_gcc_sort_by;
 use crate::options::{ProcessTimelapseType, ProjectSettings};
 use crate::project::raw_settings::RawConfigValue;
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicConfig;
 use crate::{Project, SliceError};
 
 /// Which instances an arrange moves (`Job::JobPrepareState`).
@@ -171,24 +178,33 @@ impl PlaterSession {
             Some(plate) => self.prepare_partplate(plate),
         };
         let aps: Vec<ArrangePolygon> = prepared.selected.iter().map(|(_, ap)| ap.clone()).collect();
-        // `prepare_wipe_tower` adds no tower to a sequential print (`ArrangeJob.cpp:449-450`);
-        // `prepare_partplate` takes the shown one regardless.
-        let tower = match current {
-            None => {
-                !params.is_seq_print
-                    && (may_show_wipe_tower(project_settings)
-                        || needs_wipe_tower(project_settings, &params, &aps))
-            }
-            Some(_) => may_show_wipe_tower(project_settings),
-        };
-        if tower {
-            return Err(unsupported("with a prime tower"));
+        // The tower estimate counts the instances a plate holds whole; `check_outside`'s bed
+        // exclusion branch (`PartPlate.cpp:4573-4615`) is A2's `bed_exclude_volumes` boundary.
+        let tower_path = may_show_wipe_tower(project_settings)
+            || (current.is_none()
+                && !params.is_seq_print
+                && needs_wipe_tower(project_settings, &params, &aps));
+        if tower_path && project_settings.printer.remaining.bed_exclude_area.0.len() >= 3 {
+            return Err(unsupported("with a prime tower beside a bed exclude area"));
         }
         if needs_calibration_strip(&self.project, &params) {
             return Err(unsupported("around the first-layer scan region"));
         }
+        let full = DynamicConfig::new(project_settings)?;
+        let mut positions = self.wipe_tower.clone().unwrap_or_else(|| {
+            let x = full.option("wipe_tower_x").floats().to_vec();
+            (x, full.option("wipe_tower_y").floats().to_vec())
+        });
+        let shown = self.shown_towers(&full, &mut positions)?;
+        let mut unselected = match current {
+            None => self.prepare_wipe_tower(&full, (&positions, &shown), &params, &aps)?,
+            Some(plate) => shown[plate]
+                .iter()
+                .map(|tower| tower.arrange_polygon())
+                .collect(),
+        };
         let beds = current.map_or(MAX_NUM_PLATES, |plate| plate as i32 + 1);
-        let mut unselected = exclusion_items(project_settings, beds, 0);
+        unselected.extend(exclusion_items(project_settings, beds, 0));
         // check_unprintable (`ArrangeJob.cpp:697-720`)
         let printable_height = f64::from(params.printable_height);
         let (kept, too_small_or_tall): (Vec<_>, Vec<_>) = prepared
@@ -208,7 +224,10 @@ impl PlaterSession {
         arrange(&mut items, &unselected, &bed, &params);
         prepared.selected = keys.into_iter().zip(items).collect();
         fixed_gcc_sort_by(&mut prepared.selected, |a, b| a.1.itemid < b.1.itemid);
+        let plates_before = self.plates.plates.len();
         self.finalize(prepared, current);
+        self.place_new_towers(&full, &mut positions, plates_before)?;
+        self.wipe_tower = Some(positions);
         Ok(())
     }
 }

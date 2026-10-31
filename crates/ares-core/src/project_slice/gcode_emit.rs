@@ -47,5 +47,6 @@ mod orchestration;
 pub(crate) mod value;
 mod wipe_tower;
 pub(super) use orchestration::emit;
+pub(crate) use wipe_tower::estimate as wipe_tower_estimate;
 
 pub(in crate::project_slice) use emit_helpers::format_processor_float;
