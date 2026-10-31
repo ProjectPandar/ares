@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "classic_fully_overhanging_exterior_nearest.rs"]
+mod classic_fully_overhanging_exterior_nearest;
+
 #[path = "option_coverage/printer_technology.rs"]
 mod printer_technology;
 
