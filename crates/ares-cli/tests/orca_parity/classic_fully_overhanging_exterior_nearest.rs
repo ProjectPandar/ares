@@ -1,5 +1,7 @@
 //! Fully overhanging classic outer loops retain exterior seam identity.
 
+use super::first_cap_layer_object;
+
 #[tokio::test]
 async fn nearest_keeps_exterior_identity_for_fully_overhanging_walls() {
     let project = include_bytes!(
@@ -42,20 +44,4 @@ async fn nearest_keeps_exterior_identity_for_fully_overhanging_walls() {
         "Nearest seam output for a fully overhanging classic exterior must match the runtime beta oracle: {:?}",
         reference.root,
     );
-}
-
-fn first_cap_layer_object(gcode: &str) -> &str {
-    gcode
-        .split_once(";LAYER_CHANGE\n;Z:1\n")
-        .unwrap()
-        .1
-        .split_once("; printing object ")
-        .unwrap()
-        .1
-        .split_once('\n')
-        .unwrap()
-        .1
-        .split_once("; stop printing object ")
-        .unwrap()
-        .0
 }

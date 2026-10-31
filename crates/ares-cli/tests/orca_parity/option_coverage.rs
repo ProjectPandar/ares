@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "arachne_fully_overhanging_exterior_nearest.rs"]
+mod arachne_fully_overhanging_exterior_nearest;
+
 #[path = "classic_three_hole_wall_order.rs"]
 mod classic_three_hole_wall_order;
 
@@ -223,6 +226,22 @@ use std::path::PathBuf;
 mod outcome;
 
 use outcome::{profiles_root, strict_comparator_ran};
+
+fn first_cap_layer_object(gcode: &str) -> &str {
+    gcode
+        .split_once(";LAYER_CHANGE\n;Z:1\n")
+        .unwrap()
+        .1
+        .split_once("; printing object ")
+        .unwrap()
+        .1
+        .split_once('\n')
+        .unwrap()
+        .1
+        .split_once("; stop printing object ")
+        .unwrap()
+        .0
+}
 
 fn first_layer_object(gcode: &str) -> &str {
     gcode
