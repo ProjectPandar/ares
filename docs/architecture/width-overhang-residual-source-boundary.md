@@ -51,6 +51,72 @@ Ranked predictions before experiments:
    point (or the source predicate rejects the old split), and the discrepancy
    appears between estimator input and processed output.
 
+## Localized ownership before repair
+
+The approved bounded Ares-only trace is complete and removed. Its full API output
+was byte-identical to the uninstrumented RED, and both source files were restored
+byte-for-byte before production work.
+
+The corner is already present in the input `Arachne::ExtrusionLine` junctions
+before ClipperZ. The Z-width clip preserves its XY and constant width; the later
+supported layer returns the entire subject as inside with no outside paths.
+The quality estimator returns no variable emission for that later layer. Thus a
+sampling-only repair cannot correct this upstream corner geometry.
+
+Conversely, the extra straight-edge point is absent from the prepared path and
+appears in estimator output. These are two distinct source boundaries, not a
+single clipping-engine conclusion. No Native internal state was instrumented.
+
+A concrete upstream simplification mismatch is now isolated for the first
+single-variable experiment: `Arachne/utils/ExtrusionLine.hpp:40` defines
+`colinear_vertex_tolerance()` as integer `SCALED_EPSILON`, consumed by
+`ExtrusionLine.cpp:143–149`. The Rust simplifier reused its five-micron tiny-line
+threshold for near-collinearity as well. Keep the source five-micron tiny-line
+rule, but use the owning source scaled epsilon only for the collinear height and
+infinite-line distance predicates. This is a source-constant correction, not a
+new tolerance fitted to this fixture. The adjacent outline simplifier has a
+similar source gap but is deferred unless this public witness demonstrates that
+boundary must change.
+
+The single-predicate experiment confirms that upstream owner: both corner
+mismatches disappear, and the entire following supported object block becomes
+byte-equal to runtime Native. The scoped first-overhang block is still RED. Its
+remaining differences are the estimator-generated straight splits and fan/
+progress records, matching the separate beta estimator/consumer gap. Fmt and
+strict all-target Clippy pass for the candidate. This candidate is not a scoped
+GREEN and is not a committed production repair.
+
+The remaining cited boundary is `ExtrusionProcessor.hpp:50–355` plus
+`GCode.cpp:9538–9643`, including effective-speed/fan predicate transport and
+fan-only segmented-versus-path-wide emission. The coordinator has authorized
+this follow-on consumer slice after the independent collinear slice below.
+Keep the first-overhang block OPEN until its complete bytes match; never remove
+fan/progress/movement records to declare GREEN.
+
+## Later-batch commit and acceptance boundaries
+
+Neither follow-up belongs to frozen B13.
+
+1. Freeze a separate public RED for the **last Native object block** of this
+   immutable input, with Native activation proving it follows the overhang block
+   and contains no overhang role. Compare the API block at that same ordinal,
+   including initial travel and every record. The unchanged final two input
+   cross-sections and the bounded source trace establish the last block as the
+   supported layer. Qualify this RED on the pre-fix simplifier and commit it
+   independently. Then restore only the source `ExtrusionLine` collinear
+   predicates and commit GREEN separately, citing the header/function above.
+   Keep the five-micron tiny-length rule, ClipperZ and outline simplifier out of
+   that production slice.
+2. Before implementing the beta estimator/consumer follow-up, write its ARD with
+   the exact source inputs, speed/fan callbacks, included interior discovery and
+   cut retention, emission branches, and explicit deferrals. Its acceptance is
+   the already-qualified first-overhang block, not the new supported block.
+   New modules stay under the emission owner, below400 LOC; use source context
+   structs/tuples rather than exceeding five function arguments.
+
+Every intermediate RED/GREEN commit must introduce no `#[allow]` or `#[expect]`.
+The original seven full-stream comparators and parity ROOT remain unchanged.
+
 ## Non-negotiable production boundary
 
 Follow the owning source after localization. Existing Ares containers/adapters
