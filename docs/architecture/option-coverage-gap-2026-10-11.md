@@ -9,7 +9,7 @@ Scope: **live FFF print/process, printer and filament input definitions** in
 ## Non-negotiable interpretation
 
 A missing literal grep hit is NOT a missing test: the inventory-driven
-`domains.rs::load/plan` + `sweep.rs::orca_parity_option_coverage` generates
+`domains.rs::load/plan` + `sweep.rs::option_coverage` generates
 cases without naming each key in Rust. Conversely a baseline-only plan with
 `value: None` compares the default fixture, not the option's behavior.
 Keep these separate:
@@ -34,7 +34,7 @@ Source fingerprint (actual local source, not an inferred upstream Git SHA):
 
 - PrintConfig.cpp SHA256:
   `f635101adb6da3ee657656c6fcaa9449871b7c17446b5e2eb59b560a0eb836aa`
-- `tests/ksr_fdmtest_v4/options-v242.json` SHA256:
+- `tests/ksr_fdmtest_v4/stock_project_options.json` SHA256:
   `33c99ee71594ed7f80b44abc3007df8e9ae4ec0800411e3b5dba500f47fd085b`
 
 Registration boundary: `init_common_params():674` and

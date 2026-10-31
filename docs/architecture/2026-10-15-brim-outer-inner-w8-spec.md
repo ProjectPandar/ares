@@ -58,7 +58,7 @@ support，official 2.4.2 vs ares，CPU7/8）：
 
 ## 4. RED 设计与门
 
-- Fixture：`tests/parity/validation/w5-brim/outer-inner-w8.3mf`
+- Fixture：`tests/parity/validation/brim_support_and_painted_ears/outer-inner.3mf`
   （canon base 仅改 brim_type=outer_and_inner、brim_width=8，
   sha 钉死）；native 参考本地留档不入库。
 - 今日必红实证：§2（1496 行 / 571 vs 919 / bbox X 裁剪缺失）。

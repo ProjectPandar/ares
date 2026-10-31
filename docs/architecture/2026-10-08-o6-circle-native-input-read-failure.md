@@ -9,7 +9,7 @@ Do not use this receipt to change the printable-area detector or imitate a crash
 
 ## Exact input and reproduction
 
-- Source: `crates/ares-core/tests/o6_print_volume.rs::circle_bed_cylinder_bbox_outside_vertices_inside`.
+- Source: `crates/ares-core/tests/plateless_instances_hit_no_suitable_objects_gate.rs::circle_bed_cylinder_bbox_outside_vertices_inside`.
 - Persisted input: `/tmp/worker3-circle-area-native-admitted/input.3mf`.
 - SHA256: `82a5d8d342c8599251edf886aea67092610d3638781818d452ff14a718f1e225`.
 - Producer ELF SHA256: `59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`;

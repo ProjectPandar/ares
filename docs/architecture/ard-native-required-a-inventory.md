@@ -25,7 +25,7 @@ production code are outside the change boundary.
 | `crates/ares-cli/tests/orca_parity/honeycomb_multiline.rs` | Gate + central policy |
 | `crates/ares-cli/tests/orca_parity/klipper_velocity_limit.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/m205.rs` | Central policy; no caller rewrite needed |
-| `crates/ares-cli/tests/orca_parity/narrowed_x2d_whole_file.rs` | Central policy; no caller rewrite needed |
+| `crates/ares-cli/tests/orca_parity/narrowed_bridge_anchor_whole_file_control.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/option_coverage/air_filtration.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/option_coverage/bookkeeping_export.rs` | Gate + central policy |
 | `crates/ares-cli/tests/orca_parity/option_coverage/bottom_shell_count.rs` | Central policy; no caller rewrite needed |
@@ -110,8 +110,8 @@ production code are outside the change boundary.
 | `crates/ares-cli/tests/orca_parity/runner/infill_first_ironing.rs` | Gate + central policy |
 | `crates/ares-cli/tests/orca_parity/runner/initialized_loop_chain.rs` | Gate + central policy |
 | `crates/ares-cli/tests/orca_parity/runner/initialized_overhang_intersections.rs` | Gate + central policy |
-| `crates/ares-cli/tests/orca_parity/runner/j1_runtime_used_mask.rs` | Central policy; no caller rewrite needed |
-| `crates/ares-cli/tests/orca_parity/runner/j1_top_surface_lifecycle.rs` | Central policy; no caller rewrite needed |
+| `crates/ares-cli/tests/orca_parity/runner/j1_used_extruder_mask_follows_emitted_tools.rs` | Central policy; no caller rewrite needed |
+| `crates/ares-cli/tests/orca_parity/runner/avoid_crossing_routes_around_top_surfaces.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/runner/loaded_config_acceptance.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/runner/loaded_config_probes.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/runner/loaded_config_ranges.rs` | Central policy; no caller rewrite needed |
@@ -149,7 +149,7 @@ production code are outside the change boundary.
 | `crates/ares-cli/tests/orca_parity/runner/tree_support/manual/vertical.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/runner/tree_support/retraction.rs` | Gate + central policy |
 | `crates/ares-cli/tests/orca_parity/runner/user_overrides.rs` | Gate + central policy |
-| `crates/ares-cli/tests/orca_parity/runner/x2d_flush_matrix.rs` | Central policy; no caller rewrite needed |
+| `crates/ares-cli/tests/orca_parity/runner/flush_matrix_cli_reconstruction.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/sermoon_v1_whole_file.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/smoke.rs` | Gate + central policy |
 | `crates/ares-cli/tests/orca_parity/smoke/nozzle.rs` | Central policy; no caller rewrite needed |
@@ -164,7 +164,7 @@ production code are outside the change boundary.
 | `crates/ares-cli/tests/orca_parity/stock_presets/tests.rs` | Harness audit; preserve assertions |
 | `crates/ares-cli/tests/orca_parity/stock_presets/timelapse.rs` | Central policy; no caller rewrite needed |
 | `crates/ares-cli/tests/orca_parity/sync_time.rs` | Central policy; no caller rewrite needed |
-| `crates/ares-cli/tests/orca_parity/vg1.rs` | Central policy; no caller rewrite needed |
+| `crates/ares-cli/tests/orca_parity/vg1_flush_state.rs` | Central policy; no caller rewrite needed |
 
 The separately enumerated procgcode/core mixed-test consumers and configuration
 files are in the ARD table. No test module under this inventory is production

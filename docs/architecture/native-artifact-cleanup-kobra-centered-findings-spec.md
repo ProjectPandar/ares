@@ -51,7 +51,7 @@ git grep -n -I -F 'ender3-classic.orca.gcode' -- . ':(exclude)OrcaSlicer/**'
 
 | Hit at audit base | Kind |
 | --- | --- |
-| `crates/ares-cli/tests/ksr_fdmtest_v4/ordered_bytes_tests.rs:63` | Active KSR `include_bytes!` consumer |
+| `crates/ares-cli/tests/stock_project_whole_file/ordered_bytes_tests.rs:63` | Active KSR `include_bytes!` consumer |
 | `docs/architecture/ard-native-artifact-runtime-b-inventory.md:45` | Inventory documentation |
 | `docs/architecture/native-artifact-cleanup-replay-reference-spec.md:41` | P1 retention decision |
 | `tests/parity/replay/README.md:38` | Runtime/retention contract |

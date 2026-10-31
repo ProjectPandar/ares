@@ -272,7 +272,7 @@ revision. All four caches were fresh and separate, threads 16/build jobs 8.
 | Official CAND | `32deda5c-09f0-4a52-b89f-1264c6af343a` | 18.43 | 889 PASS |
 
 Official BASE failed
-`runner::compatible_regions::infill_first::orca_parity_modifier_infill_first_preserves_region_wall_phases`.
+`runner::compatible_regions::infill_first::modifier_infill_first_preserves_region_wall_phases`.
 It did not stop candidate pairing. CAND has no failed names, so its exact raw
 failure-name set is a baseline subset; no ND exemption was needed or granted.
 The coarse driver parser omitted padded first-99 counters and double-counted a

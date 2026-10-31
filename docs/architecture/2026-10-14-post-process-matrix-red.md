@@ -18,7 +18,7 @@ the CLI execution call OrcaSlicer.cpp:6247-6248 is commented out.
 Driver:/tmp/worker2-s5-red-leg.sh. Outer taskset CPU13 or14 respectively,
 jobs2/threads2, existing directed control set, no full/workspace.
 Selection: test(post_process_cli::post_process_) plus the new
-orca_parity_post_process_accounts_bounded_cli_admission_cases regression.
+post_process_accounts_bounded_cli_admission_cases regression.
 START/END posted to coordinator inbox; logs and Native products stay external.
 
 The existing [] success, [""] exact -19/237 rejection and owned-script

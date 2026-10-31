@@ -39,7 +39,7 @@ follow-up after #165, not part of this slice.
 ## Test-first evidence and qualification
 
 The unchanged strict Native-double-replay/API/CLI whole-output witness
-`orca_parity_wall_generator_arachne_matches_complete_output` was frozen before
+`wall_generator_arachne_matches_complete_output` was frozen before
 production fixes. Its f46214d06 run remains RED. Read-only v70 evidence identifies
 identical ordered graph edges and pre-sort inputs, an equal-key pair reordered
 differently by Native and Rust, and the resulting exact failing raw junction.

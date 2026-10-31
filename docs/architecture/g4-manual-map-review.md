@@ -37,8 +37,8 @@ The candidate-official load41.35 hold did not create a capture; only that pendin
 ## Raw failure sets and explicit owner adjudication
 
 Raw exact-name subset is **false**, not relabeled as a literal subset:
-- Base official: `runner::tree_support::manual::vertical::orca_parity_manual_slim_nested_vertical_painting_preserves_complete_output`.
-- Candidate official: `option_coverage::tree_activation::orca_parity_classic_tree_dependencies_activate_support_moves_and_preserve_complete_output`.
+- Base official: `runner::tree_support::manual::vertical::manual_slim_nested_vertical_painting_preserves_complete_output`.
+- Candidate official: `option_coverage::tree_activation::classic_tree_dependencies_activate_support_moves_and_preserve_complete_output`.
 
 Owner explicitly adjudicated the latter as Native-side ND and authorized review without three directed repeats. The original failure stays visible. No comparator tolerance, output filtering or Native goldens were added.
 

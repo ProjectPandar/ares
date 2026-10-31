@@ -11,7 +11,7 @@ Integrate bounded `filament_ramming_parameters` coverage into
 The current generic coStrings plan falls through `domains.rs` to a None-valued
 baseline: it cannot activate two logical filaments and their unload profiles.
 The key is **not globally untested**: existing
-`runner/filament_map_ramming.rs::orca_parity_semm_ramming_profile_changes_tool_change_block`
+`runner/filament_map_ramming.rs::semm_ramming_profile_changes_tool_change_block`
 (:138-235) proves Native toolchange/profile-swap activation and compares the
 original distinct-profile case to Ares. It does not itself register an authored
 sweep domain or compare both original and swapped inputs through validated API

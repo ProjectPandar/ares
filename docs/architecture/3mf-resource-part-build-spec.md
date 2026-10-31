@@ -88,7 +88,7 @@ versus positive
 Only this positive is derived; control is an exact existing file, not regenerated.
 
 **Current-main strict-PASS evidence, not a new runtime claim:** FULL16
-`wipe_before_override::orca_parity_wipe_before_override_control_before50` passes
+`wipe_before_override::wipe_before_override_control_before50` passes
 in official/run.log14837 and seeded/run.log14796, same main3ee8f272c.
 Raw retained streams were read offline: strict generator-only COMPLETE equality
 and raw API/CLI equality independently verified, retaining M73/all movement/footer.

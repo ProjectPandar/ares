@@ -49,7 +49,7 @@ Fresh supplemental runs on candidate `320fb0757` matched the actual
 - official `/tmp/worker2-c2t-loaded-official.tWhUM2`: 16 PASS, 1 FAIL.
 - seeded `/tmp/worker2-c2t-loaded-seeded.3NOeCp`: 16 PASS, 1 FAIL.
 
-The unchanged `orca_parity_o3_matrix_sweep_loaded_config` fails in both modes.
+The unchanged `o3_matrix_sweep_loaded_config` fails in both modes.
 Anycubic Kobra S1 Max 0.25/0.4 and Kobra X 0.4 acquire an extra Ares
 `internal_solid_infill_pattern: invalid value zig-zag` error; Native reports
 only the existing numeric errors. Per PLAN approval condition, implementation

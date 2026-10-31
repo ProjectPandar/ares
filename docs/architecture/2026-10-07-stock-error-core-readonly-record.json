@@ -19,7 +19,7 @@
       "basis": "existing_source_and_control_only",
       "expectedCoreError": "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading.",
       "source": "crates/ares-core/src/project_slice/state.rs:92-96",
-      "control": "crates/ares-core/tests/o6_print_volume.rs kobra3_matrix_fixture_returns_upstream_error",
+      "control": "crates/ares-core/tests/plateless_instances_hit_no_suitable_objects_gate.rs kobra3_matrix_fixture_returns_upstream_error",
       "pending": "exact4 original saved3MF current-main rerun after worker4 merge"
     },
     {
@@ -32,7 +32,7 @@
       "basis": "existing_source_and_control_only",
       "expectedCoreError": "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading.",
       "source": "crates/ares-core/src/project_slice/state.rs:92-96",
-      "control": "crates/ares-core/tests/o6_print_volume.rs kobra3_matrix_fixture_returns_upstream_error",
+      "control": "crates/ares-core/tests/plateless_instances_hit_no_suitable_objects_gate.rs kobra3_matrix_fixture_returns_upstream_error",
       "pending": "exact4 original saved3MF current-main rerun after worker4 merge"
     },
     {
@@ -45,7 +45,7 @@
       "basis": "existing_source_and_control_only",
       "expectedCoreError": "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading.",
       "source": "crates/ares-core/src/project_slice/state.rs:92-96",
-      "control": "crates/ares-core/tests/o6_print_volume.rs kobra3_matrix_fixture_returns_upstream_error",
+      "control": "crates/ares-core/tests/plateless_instances_hit_no_suitable_objects_gate.rs kobra3_matrix_fixture_returns_upstream_error",
       "pending": "exact4 original saved3MF current-main rerun after worker4 merge"
     },
     {
@@ -58,7 +58,7 @@
       "basis": "existing_source_and_control_only",
       "expectedCoreError": "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading.",
       "source": "crates/ares-core/src/project_slice/state.rs:92-96",
-      "control": "crates/ares-core/tests/o6_print_volume.rs kobra3_matrix_fixture_returns_upstream_error",
+      "control": "crates/ares-core/tests/plateless_instances_hit_no_suitable_objects_gate.rs kobra3_matrix_fixture_returns_upstream_error",
       "pending": "exact4 original saved3MF current-main rerun after worker4 merge"
     },
     {

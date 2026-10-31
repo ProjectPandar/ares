@@ -15,7 +15,7 @@ precedence, statuses, counts and missing-comparison explanation remain.
 Driver: /tmp/worker2-s6-green-leg.sh. Each mode used a fresh root/cache/target,
 outer taskset CPU13 (official) or CPU14 (seeded), jobs2/threads2, and the
 existing directed control/comparator. Filter:
-orca_parity_fuzzy_incomplete_details_keep_actual_oracle_nondeterminism.
+fuzzy_incomplete_details_keep_actual_oracle_nondeterminism.
 Both nextest runs passed 1/1; these are reporting-regression results.
 Official coverage remains four INCOMPLETE domains, not four PASS domains.
 

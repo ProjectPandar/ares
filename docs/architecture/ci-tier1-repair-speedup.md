@@ -220,7 +220,7 @@ cache 预计 3–5min；parity-seeded/official 首次 60–90min（Orca 构建�
 | `ares-core` `gt_oracle_tests::toolchange_tail_delays_match_gt_oracle` (:60) | 断言 ares 5.8204 vs GT 5.6211 的**已知发散**；且注释自述 oracle SEGFAULT 部分流不可信 | **删除**（发散探针，非 gate；残差事实移入模块注释） |
 | `gt_oracle_tests` :243 `prefix probe` | 打印探针 | **删除**（连同 println 探针体） |
 | `gt_oracle_tests` :284 `ladder probe` | 打印探针 | **删除** |
-| `ares-cli` `ksr_fdmtest_v4::dump_elegoo_depositions` (:123) | ARES_ELEGOO_DUMP 诊断 dump | **删除** |
+| `ares-cli` `stock_project_whole_file::dump_elegoo_depositions` (:123) | ARES_ELEGOO_DUMP 诊断 dump | **删除** |
 | `ares-core` `no_unapproved_dynamic_values::print_current_dynamic_value_baseline` (:78) | print-only 迁移辅助，输出已固化在 `scripts/dynamic_value_baseline.txt` | **删除** |
 
 删除后 nextest "skipped" 应为 0（仅 env-gated 的 stderr SKIPPED 在

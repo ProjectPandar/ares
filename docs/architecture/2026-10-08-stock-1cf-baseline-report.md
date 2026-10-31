@@ -130,6 +130,6 @@ is not mislabeled as new-main or final nit gates.
 - Prior circle `/tmp/worker3-o6-circle-stock-aaa-final-artifacts/stock-printer-summary.json`.
 
 Raw result commands are the unchanged coordinator control-set seeded launcher,
-`ARES_PARITY_STOCK_SWEEP=1`, fresh cache and `-E test(stock_presets::sweep::tests::orca_parity_stock_printer_sweep)`.
+`ARES_PARITY_STOCK_SWEEP=1`, fresh cache and `-E test(stock_presets::sweep::tests::stock_printer_sweep)`.
 All paths/hashes and producer components needed to recheck the record are bound
 in the accompanying JSON. No failed attempt was discarded or replaced.

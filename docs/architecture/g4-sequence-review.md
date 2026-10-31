@@ -32,7 +32,7 @@ The driver exit0 records four-leg completion, **not** an unqualified literal all
 
 ## Sole Native nondeterminism adjudication
 
-The owner explicitly ruled `option_coverage::normal_support_output::interface_fan::orca_parity_support_interface_fan_preserves_complete_output_and_role_speed`, official-cand `closed-layers`, as Native nondeterminism, not G4 regression, and accepted G4 full with this **single observed failure exempted once**. This is not a blanket flaky allowance. The owner separately opened the Native nondeterminism issue.
+The owner explicitly ruled `option_coverage::normal_support_output::interface_fan::support_interface_fan_preserves_complete_output_and_role_speed`, official-cand `closed-layers`, as Native nondeterminism, not G4 regression, and accepted G4 full with this **single observed failure exempted once**. This is not a blanket flaky allowance. The owner separately opened the Native nondeterminism issue.
 
 Evidence: `/tmp/worker2-g4-full-eade-fresh.L1rhpk/interface-fan-adjudication-audit.json`, produced by `/tmp/worker2-interface-fan-offline-audit.py`. Four full receipts plus official directed BASE2/CAND2 under `/tmp/worker2-interface-fan-directed.iMDWTn` retain every manifest/input/Native/Ares stream. Directed runs all passed (8.045s, 8.147s, 8.120s, 8.209s); original failure remains untouched. All nine serialized ZIP members match across all eight observations. Ares raw SHA is identical 8/8: `96913956f36359125c7a264c4ced339e3295388728229ead6d7ed8dd0642f590`. Native raw hashes are all retained; diagnostic generated-banner-only grouping is seven identical vs one outlier. This offline grouping changes neither saved bytes nor the comparator.
 

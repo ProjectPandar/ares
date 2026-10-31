@@ -32,7 +32,7 @@ freeze at these two named bindings only. All other constructors remain unchanged
 ## Existing RED and minimal correction
 
 The existing, unchanged
-`option_coverage::vitrification::orca_parity_vitrification_signed_values_reach_start_and_complete_output`
+`option_coverage::vitrification::vitrification_signed_values_reach_start_and_complete_output`
 is the regression seam. On the failed integration26a87adfe and the double chain
 its negative case compares full ordered generator output and reports Native
 `;VITRIFICATION -123456789` vs Ares `;VITRIFICATION -1.23457e+08`. The domain test

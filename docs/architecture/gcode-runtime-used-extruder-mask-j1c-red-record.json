@@ -6,8 +6,8 @@
   "rows": [
     {
       "status": "DIVERGENT",
-      "directory": "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output",
-      "witness": "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output/artifacts/j1-runtime-used-mask-zuoqrR/usage-witness.json",
+      "directory": "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output",
+      "witness": "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output/artifacts/j1-runtime-used-mask-zuoqrR/usage-witness.json",
       "data": {
         "ares": {
           "initial_extruder": 1,
@@ -27,7 +27,7 @@
         "complete_comparison": [
           "DIVERGENT",
           "first difference at byte 3810 (line 222, column 1; expected 38416 bytes, actual 38536 bytes)\ncontext:\n  line 221: \"G1 X152.475 Y96.475 E.34876\"\n  line 222: expected \"M73 P46 R1\"; actual \"G1 X159.525 Y96.475 E.34876\"\n  line 223: expected \"G1 X159.525 Y96.475 E.34876\"; actual \"M73 P46 R1\"",
-          "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output/artifacts/case-cu0W7E"
+          "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output/artifacts/case-cu0W7E"
         ],
         "input_sha256": "7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4",
         "native": {
@@ -45,7 +45,7 @@
         },
         "native_sha256": "7ae276a300844261e81ab666fe26fcecad2b0c7832051b83e5d01c823a3ae585"
       },
-      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
+      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
       "producer": {
         "components": {
           "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
@@ -75,8 +75,8 @@
         }
       },
       "process": {
-        "name": "orca_parity_j1_by_layer_role2_usage_matches_complete_output",
-        "test": "runner::j1_runtime_used_mask::orca_parity_j1_by_layer_role2_usage_matches_complete_output",
+        "name": "j1_by_layer_role2_usage_matches_complete_output",
+        "test": "runner::j1_runtime_used_mask::j1_by_layer_role2_usage_matches_complete_output",
         "process": {
           "exit_code": 100,
           "timed_out": false,
@@ -88,13 +88,13 @@
           }
         },
         "elapsed_seconds": 2.101013956591487,
-        "directory": "/tmp/ares-j1-mask/j1c-red/directed/00-orca_parity_j1_by_layer_role2_usage_matches_complete_output"
+        "directory": "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output"
       }
     },
     {
       "status": "PASS",
-      "directory": "/tmp/ares-j1-mask/j1c-red/directed/01-orca_parity_j1c_nonzero_top_layers_travel_control",
-      "witness": "/tmp/ares-j1-mask/j1c-red/directed/01-orca_parity_j1c_nonzero_top_layers_travel_control/artifacts/j1-top-surface-lifecycle-kf5wl2/travel-witness.json",
+      "directory": "/tmp/ares-j1-mask/j1c-red/directed/01-j1c_nonzero_top_layers_travel_control",
+      "witness": "/tmp/ares-j1-mask/j1c-red/directed/01-j1c_nonzero_top_layers_travel_control/artifacts/j1-top-surface-lifecycle-kf5wl2/travel-witness.json",
       "data": {
         "ares_sha256": "09e8987c3e4cead31b71438e893f1ab3f10379b4801590ebdc2eaed4cb732f17",
         "ares_travel": [
@@ -167,7 +167,7 @@
         ],
         "scope": "final-layer G0/G1 XY travels only; complete primary remains separately asserted"
       },
-      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/01-orca_parity_j1c_nonzero_top_layers_travel_control/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/f40b167aa256418274134643c007bcaf029c8241af3e3633632f9e424e223ab6/receipt.json",
+      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/01-j1c_nonzero_top_layers_travel_control/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/f40b167aa256418274134643c007bcaf029c8241af3e3633632f9e424e223ab6/receipt.json",
       "producer": {
         "components": {
           "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
@@ -197,8 +197,8 @@
         }
       },
       "process": {
-        "name": "orca_parity_j1c_nonzero_top_layers_travel_control",
-        "test": "runner::j1_top_surface_lifecycle::orca_parity_j1c_nonzero_top_layers_travel_control",
+        "name": "j1c_nonzero_top_layers_travel_control",
+        "test": "runner::j1_top_surface_lifecycle::j1c_nonzero_top_layers_travel_control",
         "process": {
           "exit_code": 0,
           "timed_out": false,
@@ -209,13 +209,13 @@
           }
         },
         "elapsed_seconds": 1.7346763690002263,
-        "directory": "/tmp/ares-j1-mask/j1c-red/directed/01-orca_parity_j1c_nonzero_top_layers_travel_control"
+        "directory": "/tmp/ares-j1-mask/j1c-red/directed/01-j1c_nonzero_top_layers_travel_control"
       }
     },
     {
       "status": "RED",
-      "directory": "/tmp/ares-j1-mask/j1c-red/directed/02-orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes",
-      "witness": "/tmp/ares-j1-mask/j1c-red/directed/02-orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes/artifacts/j1-top-surface-lifecycle-PG1LTp/travel-witness.json",
+      "directory": "/tmp/ares-j1-mask/j1c-red/directed/02-j1c_zero_top_layers_travel_has_no_stale_top_holes",
+      "witness": "/tmp/ares-j1-mask/j1c-red/directed/02-j1c_zero_top_layers_travel_has_no_stale_top_holes/artifacts/j1-top-surface-lifecycle-PG1LTp/travel-witness.json",
       "data": {
         "ares_sha256": "da4e1fc6b3cc1d32285dab67ec2e9d4d2643bf83c552e0c5829c108fc3b200ad",
         "ares_travel": [
@@ -270,7 +270,7 @@
         ],
         "scope": "final-layer G0/G1 XY travels only; complete primary remains separately asserted"
       },
-      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/02-orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
+      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/02-j1c_zero_top_layers_travel_has_no_stale_top_holes/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
       "producer": {
         "components": {
           "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
@@ -300,8 +300,8 @@
         }
       },
       "process": {
-        "name": "orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes",
-        "test": "runner::j1_top_surface_lifecycle::orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes",
+        "name": "j1c_zero_top_layers_travel_has_no_stale_top_holes",
+        "test": "runner::j1_top_surface_lifecycle::j1c_zero_top_layers_travel_has_no_stale_top_holes",
         "process": {
           "exit_code": 100,
           "timed_out": false,
@@ -312,7 +312,7 @@
           }
         },
         "elapsed_seconds": 1.625868537928909,
-        "directory": "/tmp/ares-j1-mask/j1c-red/directed/02-orca_parity_j1c_zero_top_layers_travel_has_no_stale_top_holes"
+        "directory": "/tmp/ares-j1-mask/j1c-red/directed/02-j1c_zero_top_layers_travel_has_no_stale_top_holes"
       }
     }
   ],
@@ -322,8 +322,8 @@
   "fmt_exit": 0,
   "fixture_change": "separate control top_shell_layers 0\u21921 only; other config and ZIP payloads identical",
   "frozen_inputs": {
-    "tests/parity/j1-runtime-used-mask/role2.3mf": "7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4",
-    "tests/parity/j1-runtime-used-mask/top1-control.3mf": "83d0c1908087d796008602671bdc3a6ef43f12fdd7423b0d3c96db2d423af310",
+    "tests/parity/j1-used-extruder-follows-emitted-tools/role2.3mf": "7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4",
+    "tests/parity/j1-used-extruder-follows-emitted-tools/top1-control.3mf": "83d0c1908087d796008602671bdc3a6ef43f12fdd7423b0d3c96db2d423af310",
     "control_change": "top_shell_layers:0\u21921 only in project settings; all other ZIP entry payloads unchanged; frozen before first Native invocation"
   }
 }

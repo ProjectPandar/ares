@@ -68,7 +68,7 @@ under the corresponding `/tmp/worker6-seam-D-probe*` paths.
 Original standalone RED commit:
 `4ab2e3de45bb43bbf1ea30c9ddbdbb71677abe9e`.
 Test:
-`runner::seam_layer_height::orca_parity_second_layer_overhang_seam_uses_current_layer_height`.
+`runner::seam_layer_height::second_layer_overhang_seam_uses_current_layer_height`.
 Fresh seeded RED exits nextest100 and retains
 `/tmp/worker6-seam-D-red-artifacts/case-sof17X`;
 log `/tmp/worker6-seam-D-red.log`, evidence record
@@ -142,7 +142,7 @@ Passed: `cargo fmt --check`;
 (35.65s, exit0). Logs: `/tmp/worker6-seam-D-{fmt,clippy,wasm}.log`.
 New-main seeded candidate completed:660 tests,660 PASS,183.286s, exit0.
 Its failure set is a strict subset of base; the only status change is D's
-`runner::seam_layer_height::orca_parity_second_layer_overhang_seam_uses_current_layer_height`,
+`runner::seam_layer_height::second_layer_overhang_seam_uses_current_layer_height`,
 DIVERGENT/FAIL→PASS. No other seeded status changed.
 New-main official completed:base649 PASS/11 FAIL (140.477s), candidate650
 PASS/10 FAIL (108.800s),660 tests each, nextest100 on both because shared
@@ -181,14 +181,14 @@ both failure sets and the sole status/reason change, D.
 Eight failures remain missing initialized reference environment (NotPresent),
 with the same status and reason on both sides. They remain FAIL:
 
-- `option_coverage::bookkeeping_export::orca_parity_bookkeeping_matches_complete_configured_filament_output`
-- `option_coverage::initialized_object_id::orca_parity_initialized_reference_repeats_complete_ksr_output`
-- `option_coverage::initialized_short_line::orca_parity_initialized_short_line_matches_complete_internal_fill_output`
-- `option_coverage::initialized_stitch_junction::orca_parity_initialized_stitch_junction_matches_complete_internal_fill`
-- `option_coverage::initialized_transition_snap::orca_parity_initialized_transition_snap_matches_complete_internal_fill`
-- `option_coverage::single_volume_offset::orca_parity_single_volume_offset_matches_complete_rotated_prism_output`
-- `runner::initialized_loop_chain::orca_parity_initialized_loop_chain_matches_complete_output`
-- `runner::initialized_overhang_intersections::orca_parity_initialized_overhang_intersections_match_complete_output`
+- `option_coverage::bookkeeping_export::bookkeeping_matches_complete_configured_filament_output`
+- `option_coverage::initialized_object_id::initialized_reference_repeats_complete_ksr_output`
+- `option_coverage::initialized_short_line::initialized_short_line_matches_complete_internal_fill_output`
+- `option_coverage::initialized_stitch_junction::initialized_stitch_junction_matches_complete_internal_fill`
+- `option_coverage::initialized_transition_snap::initialized_transition_snap_matches_complete_internal_fill`
+- `option_coverage::single_volume_offset::single_volume_offset_matches_complete_rotated_prism_output`
+- `runner::initialized_loop_chain::initialized_loop_chain_matches_complete_output`
+- `runner::initialized_overhang_intersections::initialized_overhang_intersections_match_complete_output`
 
 The other two are known official Native object-id UB, with the same fixture
 SHA256 `22d3813ddbbfbc40bd3955fb35d5f6d19b7d8ee23472e7aa2e354e50a23cfe82`
@@ -199,8 +199,8 @@ O8-X2D-SCALAR and no garbage ID is ported into Ares.
 
 | Case | First assertion difference base→candidate | Ares first differing line |
 |---|---|---|
-| `bridge_over_infill_filament::orca_parity_bridge_over_infill_multi_filament_x2d` | byte57060,line1096 (raw1097): Native id4575657223555907584→2147483648 | `; printing object ksr_fdmtest_v4.drc id:0 copy 0` |
-| `narrowed_x2d_whole_file::orca_parity_narrowed_x2d_whole_file` | byte57075,line1097: Native id4564685423565588874→4575657221408423936 | Same Ares id0 line |
+| `bridge_over_infill_filament::bridge_over_infill_multi_filament_x2d` | byte57060,line1096 (raw1097): Native id4575657223555907584→2147483648 | `; printing object ksr_fdmtest_v4.drc id:0 copy 0` |
+| `narrowed_x2d_whole_file::narrowed_x2d_whole_file` | byte57075,line1097: Native id4564685423565588874→4575657221408423936 | Same Ares id0 line |
 
 These facts come from parsing the actual full byte arrays retained in the
 four test failure assertions, not selecting a nearby unrelated temp directory.

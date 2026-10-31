@@ -56,7 +56,7 @@ timeout.
 
 ## O3 matrix sweep — all 15 cases GREEN
 
-`orca_parity_o3_matrix_sweep_loaded_config` writes `o3-sweep-report.json`
+`o3_matrix_sweep_loaded_config` writes `o3-sweep-report.json`
 with one row per **stock machine** that ships an O3 range violation — 14
 rows (the 10 `retraction_distances_when_cut` + 4
 `extruder_printable_height` stock cases), all `matched=true` (Ares
@@ -64,7 +64,7 @@ rows (the 10 `retraction_distances_when_cut` + 4
 prints). The 15th O3 case — `bridge_line_width > nozzle` — has no stock
 value in any matrix profile, so it is not a sweep row; it is covered by
 the override test
-`orca_parity_o3_bridge_line_width_over_nozzle_loaded_config`
+`o3_bridge_line_width_over_nozzle_loaded_config`
 (`loaded_config_ranges.rs:369`), which injects `bridge_line_width:"1.0"`
 onto `Creality Ender-3 0.4` and asserts
 `bridge_line_width: Bridge line width must not exceed nozzle diameter:

@@ -27,7 +27,7 @@ Model/BuildVolume/GCode/CLI concepts. Not a new pipeline feature/milestone.
 
 1. Current cli_retained_exit.rs::
    cli_unprintable_area_retains_complete_native_gcode_before_exit_154:
-   original o6-stock-circle-inward.3mf, Ares Linux154; exact stdout/stderr,
+   original print-volume-stock-circle-inward.3mf, Ares Linux154; exact stdout/stderr,
    complete resultJSON, complete retained G-code after generator-only normalization.
 2. Current cli_retained_exit.rs::
    cli_unprintable_area_reports_selected_nonminimum_plate:
@@ -89,11 +89,11 @@ After REAL Native GREEN, delete six frozen Native products:
 - o6-stock-circle-inward.native-emitted.gcode
 - o6-stock-circle-inward.oracle.json (mixed historical Native command receipt).
 
-KEEP o6-stock-circle-inward.3mf unchanged; o6-stock-circle-cylinder.3mf/off-bed
+KEEP print-volume-stock-circle-inward.3mf unchanged; print-volume-stock-circle-cylinder.3mf/off-bed
 and all hand-authored synthetic inputs remain untouched. oracle.json is not a
 live expected-code consumer; it mixes Native exit/result/wholeGcode hashes with
 source construction metadata. BEFORE deletion copy only INPUT-AUTHORING fields
-into o6-stock-circle-inward.provenance.json: parent/input SHA, only changed XML
+into print-volume-stock-circle-inward.provenance.json: parent/input SHA, only changed XML
 entry, translation=-0.1, center50.9, maximum vertex54.9, bbox corner/radius,
 mesh SHA and source fixture names. Preserve those values exactly; no Native exit,
 expectedJSON/Gcodehash, local/tmp capture paths, singleattempt/paritypass flags

@@ -49,8 +49,8 @@ It has reduce-crossing enabled, top/bottom shell count 0, sparse infill 0%,
 nearest seam, wipe enabled and no support/tower. Do not tune this fixture.
 
 Existing test:
-`orca_parity_j1_by_layer_role2_usage_matches_complete_output` in
-`crates/ares-cli/tests/orca_parity/runner/j1_runtime_used_mask.rs`.
+`j1_by_layer_role2_usage_matches_complete_output` in
+`crates/ares-cli/tests/orca_parity/runner/j1_used_extruder_mask_follows_emitted_tools.rs`.
 The complete-byte comparator keeps M73, stats and footer; only generated-by
 identity is normalized. Three other J1 cases remain coordinator-approved
 **witness-only** controls, not complete-byte parity claims.

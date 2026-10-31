@@ -168,7 +168,7 @@ ARES_/ORCA_ variable; jobs2 and test-threads2.
 | official candidate |922/922 PASS,0 FAIL,0 skip,exit0 |official-cand.log |
 
 Both modes' sole status change among existing tests is
-option_coverage::sweep::orca_parity_option_coverage FAIL→PASS. Base's selected
+option_coverage::sweep::option_coverage FAIL→PASS. Base's selected
 timelapse_type domain is INCOMPLETE (2 generated,1 compared,1 rejected);
 candidate is PASS (2 generated,2 compared,0 rejected). Base runs its own test
 tree with explicit ARES_PARITY_OPTIONS=1/ARES_OPTION_KEYS=timelapse_type,

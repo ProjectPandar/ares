@@ -18,7 +18,7 @@ Each leg used a fresh target/cache/artifact root, outer taskset CPU13 or14,
 CARGO_BUILD_JOBS=2, NEXTEST_TEST_THREADS=2 and ARES_PARITY_THREADS=2.
 Command driver:/tmp/worker2-s3-red-leg.sh; existing directed control wrapper
 /tmp/worker2-bridge-directed-control.sh. Selection was
-`test(print_process_identity_) | test(orca_parity_print_extruder_id_accounts_six_materialized_identity_cases)`.
+`test(print_process_identity_) | test(print_extruder_id_accounts_six_materialized_identity_cases)`.
 No full/workspace, no unpinned Native probes. START/END posted to inbox.
 
 Both modes: six existing standalone materialization/full-stream witnesses

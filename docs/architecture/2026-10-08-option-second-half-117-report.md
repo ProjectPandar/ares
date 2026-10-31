@@ -12,7 +12,7 @@ Detached `/tmp/worker3-option-main-117` was clean, with the admitted2.4.2
 source/profile symlink. Unique target `/tmp/worker3-option-117-target`, fresh
 cache `/tmp/worker3-option-117-second-half-native-cache`, fresh artifacts
 `/tmp/worker3-option-117-second-half-artifacts`, seed0,16 nextest threads,
-CARGO_BUILD_JOBS8. Only `option_coverage::sweep::orca_parity_option_coverage`
+CARGO_BUILD_JOBS8. Only `option_coverage::sweep::option_coverage`
 was selected, with ARES_PARITY_OPTIONS=1 and explicit ARES_OPTION_KEYS.
 All authored/generated values were retained, no value filter or retry-to-PASS.
 

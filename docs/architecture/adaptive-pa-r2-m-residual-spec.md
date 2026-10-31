@@ -20,7 +20,7 @@ Loop initialization/suppression is already present in
 role override is present in
 `crates/ares-core/src/project_slice/gcode_emit/motion/path/adaptive_pa.rs:16-34`.
 The rejected discovery duplicated existing public tests:
-`crates/ares-cli/tests/orca_parity/runner/apa_m_active.rs`, `apa_m_pa_off.rs`,
+`crates/ares-cli/tests/orca_parity/runner/adaptive_pa_activation_edits_hold_arachne_parity.rs`, `apa_m_pa_off.rs`,
 `adaptive_pressure_advance/sloped_loop.rs` n0-n2 and `scarf_ramp.rs` s0-s2.
 Neither missing accounting nor a speculative code difference is an authentic RED.
 No new run is necessary to repeat that already-covered scope.

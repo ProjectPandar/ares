@@ -13,7 +13,7 @@ Source owners and immutable numeric decisions:
 
 The full stock-circle archive (SHA256
 `446e19e8f8dc9443c68774bc31fca6d0187798e41031882919cf0930362be8f6`)
-is retained as `tests/parity/validation/o6-stock-circle-cylinder.3mf`.
+is retained as `tests/parity/validation/print-volume-stock-circle-cylinder.3mf`.
 The core RED accepted G-code (`/tmp/worker3-o6-circle-red.log`), not a compile
 failure. GREEN asserts Native's exact -50 diagnostic. All seven O6 core E2E
 cases passed. No CLI production changes or CLI -50 assertions are included:
@@ -43,7 +43,7 @@ emission is now checked against runtime Native by the same-named byte-API E2E in
 `crates/ares-cli/tests/orca_parity/cli_retained_exit.rs`, preserving typed error/code4
 and the complete generator-only assertion. The frozen G-code and mixed oracle
 receipt are removed; input-authoring fields alone remain in
-`tests/parity/validation/o6-stock-circle-inward.provenance.json`.
+`tests/parity/validation/print-volume-stock-circle-inward.provenance.json`.
 Receipts `/tmp/worker3-o6-stock-circle-inward/{provenance.json,stdout.bin,stderr.bin,exit.code,output/result.json}`.
 When timelapse is restored, this same input must instead verify the exact
 final -102 diagnostic; CLI mapping remains worker4-owned.
@@ -127,11 +127,11 @@ Logs `/tmp/worker3-o6-circle-official-{final,base}.log`; persisted Ares outputs
 
 Five of those failures are Native Slice TIMEOUT on **both** sides:
 
-- `change_filament_flush_blocks::orca_parity_change_filament_flush_blocks`
-- `bridge_over_infill_filament::orca_parity_bridge_over_infill_multi_filament_x2d`
-- `narrowed_x2d_whole_file::orca_parity_narrowed_x2d_whole_file`
-- `option_coverage::tree_activation::orca_parity_explicit_organic_tip_legal_boundaries_and_native_rejection_are_distinct`
-- `option_coverage::tree_activation::orca_parity_organic_angle_and_normalized_grid_tip_preserve_complete_output`
+- `change_filament_flush_blocks::change_filament_flush_blocks`
+- `bridge_over_infill_filament::bridge_over_infill_multi_filament_x2d`
+- `narrowed_x2d_whole_file::narrowed_x2d_whole_file`
+- `option_coverage::tree_activation::explicit_organic_tip_legal_boundaries_and_native_rejection_are_distinct`
+- `option_coverage::tree_activation::organic_angle_and_normalized_grid_tip_preserve_complete_output`
 
 These remain **INCONCLUSIVE**, never PASS or byte mismatch. The full logs retain
 all failed attempt paths; the two tree inputs are verified to have the unchanged

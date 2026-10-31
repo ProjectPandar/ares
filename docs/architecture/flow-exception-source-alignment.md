@@ -36,7 +36,7 @@ bridge 分支保留 gap / new_diameter 的源 float 运算与 width/height 同�
 
 ## Test-first 与退出条件
 
-顺序为 spec → 真实 RED → 预写控制 → 实现。原 `tests/parity/validation/o4-ender3s1plus-0.2.3mf` SHA256 `edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110` 无 overrides 的纯处理返回精确 with_spacing 错误且无 G-code；narrow width 的公开输入返回精确 NegativeSpacing；bridge0 保持 preflight 首错；合法 flow 产出完整 G-code，validated S1 保持 O4 首错。不把 native CLI 的 O4 exit205 当成 Flow oracle，也不把前置拒绝或控制测试自身错误当成 Flow RED。
+顺序为 spec → 真实 RED → 预写控制 → 实现。原 `tests/parity/validation/minimum-width-ender3s1plus-0.2.3mf` SHA256 `edb48192a609ede526e8e09e805b845ff99494c0d2d2b31a8655ca9b0ac89110` 无 overrides 的纯处理返回精确 with_spacing 错误且无 G-code；narrow width 的公开输入返回精确 NegativeSpacing；bridge0 保持 preflight 首错；合法 flow 产出完整 G-code，validated S1 保持 O4 首错。不把 native CLI 的 O4 exit205 当成 Flow oracle，也不把前置拒绝或控制测试自身错误当成 Flow RED。
 
 不新增 catch_unwind（测试或产品）；panic 由失败测试进程和调用前保存的 input/invocation 记录。测试自己的 kept tempdir 不依赖 artifact 环境变量。保持既有 float-bits 断言；Result 的必要机械提取不放宽断言。不新增不可能场景的隔离测试/错误处理。
 

@@ -132,8 +132,8 @@ files need their gate replaced, with oracle assertions untouched.
 | crates/ares-cli/tests/orca_parity/runner/strict_reference_tests.rs | synthetic retry contract, not a live Native oracle; preserve all ordering assertions |
 | crates/ares-cli/tests/orca_parity.rs | test-only policy inclusion and environment contract docs |
 | crates/ares-cli/tests/gcode_moves_oracle.rs | oracle_bin missing ARES_PROCGCODE_BIN policy, assertions unchanged |
-| crates/ares-cli/tests/orca_parity/vg1.rs | is_some procgcode gates report skip/fail instead of no comparison |
-| crates/ares-cli/tests/orca_parity/vg1/state_oracle.rs | consumer audit; retain exact Native state/data assertions |
+| crates/ares-cli/tests/orca_parity/vg1_flush_state.rs | is_some procgcode gates report skip/fail instead of no comparison |
+| crates/ares-cli/tests/orca_parity/vg1_flush_state/state_oracle.rs | consumer audit; retain exact Native state/data assertions |
 | crates/ares-cli/tests/orca_parity/filament_volume_oracle.rs | consumer audit; retain exact Native volumes assertions |
 | crates/ares-core/tests/processed_color_change/native.rs | missing ARES_PROCGCODE_BIN required failure or visible optional skip; retain separate STABLE_BIN requirement |
 | crates/ares-core/tests/processed_color_change.rs | test-only policy inclusion as needed, no core API changes |

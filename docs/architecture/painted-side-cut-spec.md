@@ -84,8 +84,8 @@ From the eight-input sealed discovery choose three independent target3MFs:
 | split-w0-d0p5 |0/0.5|depth-only gate, not tooltip ignore|
 
 Control coverage belongs solely to existing
-`paint_color::orca_parity_paint_color_split` and its existing
-`orca_parity_paint_color_native_preflight`, with the original frozen painted-split
+`paint_color::paint_color_split` and its existing
+`paint_color_native_preflight`, with the original frozen painted-split
 archive/preparer/manifest (width/depth0). The new suite qualifies only its three
 targets; it contains no CONTROL, copied preparer or control input branch.
 No copied control3MF. Only three target3MFs are added as fixture data: no new

@@ -44,7 +44,7 @@ reproduced literally from `process_M1020` (`:5444-5466`):
   `prev == next` early return makes a trailing `M1020` after a script
   `T` a no-op, exactly as upstream.
 
-Witness E2E: `tests/parity/processor-m1020/towerless-change.3mf`
+Witness E2E: `tests/parity/m1020-filament-change/towerless-change.3mf`
 (bbl-type1-tower host, deltas `change_filament_gcode` and
 `enable_prime_tower = 0`), full stream compare against Native in both
 oracle modes. The towerless host isolates the processor billing from

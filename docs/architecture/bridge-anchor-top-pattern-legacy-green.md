@@ -30,7 +30,7 @@ fresh Native cache/artifact root, both 255/255 PASS, zero FAIL/TIMEOUT:
 
 Each leg includes finite7, option_coverage220, bridge/anchor11 and
 profile_entry loaded-config17. The previously failing unchanged
-orca_parity_o3_matrix_sweep_loaded_config passes in both modes, including
+o3_matrix_sweep_loaded_config passes in both modes, including
 the three Anycubic profiles; the prior STOP evidence remains preserved.
 Local positive cases compare whole Native/API/CLI output, while global
 negative cases retain exact Native config-error diagnostics and receipts.

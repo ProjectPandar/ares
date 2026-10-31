@@ -155,7 +155,7 @@ hot has 50 hits. Fresh full controls on baseline `016dfc86f` produce:
 | official | 871/872 PASS | 877/877 PASS | 530 keys, unchanged |
 
 In both controls the only existing-test change is
-`option_coverage::sweep::orca_parity_option_coverage` FAIL→PASS.
+`option_coverage::sweep::option_coverage` FAIL→PASS.
 The five added tests PASS: external bridge thick, external bridge thin,
 internal bridge thick, internal bridge thin, and zero bridge-ratio rejection.
 There are no candidate-only failures, common Native generator-normalized SHA
@@ -206,7 +206,7 @@ controls compare baseline `1151db4bc` with GREEN:
 Both controls change sweep FAIL→PASS and add three PASS tests: filament ratio
 bounded output, filament diameter bounded output, and invalid filament
 ratio/diameter rejection. Official additionally changes
-`runner::support_annotations::orca_parity_overlapping_support_blockers_preserve_complete_output`
+`runner::support_annotations::overlapping_support_blockers_preserve_complete_output`
 FAIL→PASS. Its identical input bytes and producer/request components yield
 identical complete Ares raw output; only Native selects a different internal
 solid-infill entry point at line 508. See the Native-only observation in

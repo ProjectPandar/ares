@@ -96,9 +96,9 @@ Arachne reject assertions remain unchanged during this prerequisite.
 ## RED and verification sequence
 
 Existing frozen RED is
-`runner::arachne_counterbore_none::orca_parity_arachne_counterbore_none_primary_complete_output`
+`runner::arachne_counterbore_none::arachne_counterbore_none_primary_complete_output`
 on the isolated branch, extracted from the original
-`runner::arachne_counterbore::orca_parity_arachne_counterbore_none_primary_complete_output`,
+`runner::arachne_counterbore::arachne_counterbore_none_primary_complete_output`,
 original test commit `9af8025a1`, rebased equivalent `45b1726b4`.
 Keep stepped-hole input, stock parent-chain hashes, explicit Arachne/None,
 `enable_arc_fitting=1`, resolution0.012, Placement::None, and complete ordered-byte

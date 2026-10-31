@@ -141,14 +141,14 @@ consumer assertions and owner approval. Source/manual inputs are listed below.
   preserve it, with worker6 auditing its source-use contract.
 - tools/chain-probe/marker-time original upstream excerpts, kernel adapters,
   source extraction manifest/diff/SHA are source inputs, not runtime Native
-  products. tests/ksr_fdmtest_v4/options-v242.json is source-derived option
+  products. tests/ksr_fdmtest_v4/stock_project_options.json is source-derived option
   inventory from generate_task5_inventory.mjs, not a Native slice product.
 - README/ARD retains source/contract conclusions, not generated stream dumps.
   SHA256SUMS loses output rows and preserves input identity only.
 - tests/parity/validation/kobra3-centered/0.4-outer-only-provenance.json is
   input transformation provenance (one brim setting), not Native output; retain.
 - Existing input-oriented preset JSON under validation/e5max-legacy and
-  validation/o8-cubicon stays; do not mass-delete JSON by extension.
+  validation/empty-filament-colour-cubicon stays; do not mass-delete JSON by extension.
 
 ## Consumers and shared boundary checks
 

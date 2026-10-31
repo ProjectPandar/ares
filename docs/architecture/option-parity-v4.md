@@ -133,7 +133,7 @@ legacy handling, `Preset.cpp` raw-scope lists, `Preset.hpp` JSON-key macros,
 `GCode.cpp::append_full_config`, and the project-settings save call in
 `Format/bbs_3mf.cpp`.
 
-The committed `options-v242.json` contract contains 653 bytewise-sorted unique
+The committed `stock_project_options.json` contract contains 653 bytewise-sorted unique
 rows: 448 scalar strings, 205 arrays, and five empty arrays. Raw scopes are 132
 printer, 352 process, 122 filament, and 47 residual keys. Static ownership and
 effective projection are recorded separately; the verified projections are

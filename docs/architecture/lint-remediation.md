@@ -11,7 +11,7 @@
 
 ## First slice: CLI semantic comparison
 
-Destination: `crates/ares-cli/tests/ksr_fdmtest_v4/semantic/{controls,parser,depositions,lifecycle,travel}.rs` and `semantic/depositions/leftovers/geometry.rs`.
+Destination: `crates/ares-cli/tests/stock_project_whole_file/semantic/{controls,parser,depositions,lifecycle,travel}.rs` and `semantic/depositions/leftovers/geometry.rs`.
 
 ARD-0081 owns the boundary: semantic comparison remains a diagnostic utility, never a fallback for strict ordered-byte acceptance. Preserve existing control canonicalization, fan parsing/error order, geometric sampling arithmetic, matching predicates, and diagnostic output. Extract existing nested control/diagnostic operations or use equivalent flatter branches. Do not add probes, tolerances, fixtures, or assertions.
 

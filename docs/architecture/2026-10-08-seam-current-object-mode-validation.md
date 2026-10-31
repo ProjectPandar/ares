@@ -233,8 +233,8 @@ remains in its original log.
 
 | Case | Seeded base→candidate | Official base→candidate | Classification |
 |---|---|---|---|
-| `runner::seam_object_bias::orca_parity_aligned_back_object_does_not_bias_nearest_object` | FAIL→PASS | FAIL→PASS | A0+A complete-output fix |
-| `bridge_over_infill_filament::orca_parity_bridge_over_infill_multi_filament_x2d` | PASS→PASS | PASS→FAIL | INCONCLUSIVE-oracle-UB, coordinator accepted |
+| `runner::seam_object_bias::aligned_back_object_does_not_bias_nearest_object` | FAIL→PASS | FAIL→PASS | A0+A complete-output fix |
+| `bridge_over_infill_filament::bridge_over_infill_multi_filament_x2d` | PASS→PASS | PASS→FAIL | INCONCLUSIVE-oracle-UB, coordinator accepted |
 
 All other661 cases have unchanged raw status and reason. Machine-readable
 full failure sets and reason changes are retained in
@@ -258,7 +258,7 @@ Native oracle. This is the previously classified uninitialized
 `Print.hpp:582 m_id`, read at `:468–469`, not an invented Ares object ID or
 an O8-X2D-SCALAR attribution.
 
-`narrowed_x2d_whole_file::orca_parity_narrowed_x2d_whole_file` remains FAIL
+`narrowed_x2d_whole_file::narrowed_x2d_whole_file` remains FAIL
 on both sides. First asserted difference is byte57075,line1097 at the same
 id0 object label; Native IDs are9223372037920129024→4565949087785943040.
 The complete asserted Ares SHA256 is identical on both sides:
@@ -270,14 +270,14 @@ INCONCLUSIVE-oracle-UB, never promoted to PASS.
 The other8 official failures are unchanged missing initialized-reference
 environment (`NotPresent`), retained as FAIL:
 
-- `option_coverage::bookkeeping_export::orca_parity_bookkeeping_matches_complete_configured_filament_output`
-- `option_coverage::initialized_object_id::orca_parity_initialized_reference_repeats_complete_ksr_output`
-- `option_coverage::initialized_short_line::orca_parity_initialized_short_line_matches_complete_internal_fill_output`
-- `option_coverage::initialized_stitch_junction::orca_parity_initialized_stitch_junction_matches_complete_internal_fill`
-- `option_coverage::initialized_transition_snap::orca_parity_initialized_transition_snap_matches_complete_internal_fill`
-- `option_coverage::single_volume_offset::orca_parity_single_volume_offset_matches_complete_rotated_prism_output`
-- `runner::initialized_loop_chain::orca_parity_initialized_loop_chain_matches_complete_output`
-- `runner::initialized_overhang_intersections::orca_parity_initialized_overhang_intersections_match_complete_output`
+- `option_coverage::bookkeeping_export::bookkeeping_matches_complete_configured_filament_output`
+- `option_coverage::initialized_object_id::initialized_reference_repeats_complete_ksr_output`
+- `option_coverage::initialized_short_line::initialized_short_line_matches_complete_internal_fill_output`
+- `option_coverage::initialized_stitch_junction::initialized_stitch_junction_matches_complete_internal_fill`
+- `option_coverage::initialized_transition_snap::initialized_transition_snap_matches_complete_internal_fill`
+- `option_coverage::single_volume_offset::single_volume_offset_matches_complete_rotated_prism_output`
+- `runner::initialized_loop_chain::initialized_loop_chain_matches_complete_output`
+- `runner::initialized_overhang_intersections::initialized_overhang_intersections_match_complete_output`
 
 ### Serial bridge X2D recheck
 

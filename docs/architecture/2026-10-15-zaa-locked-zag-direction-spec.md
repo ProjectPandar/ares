@@ -74,7 +74,7 @@ is already handled by approved0eadb58ff and is not reopened here.
 
 After approval, reuse the admitted input setup from
 option_coverage/fill_grid.rs::
-orca_parity_locked_zag_shifts_preserve_complete_output:30-39 and its compare
+locked_zag_shifts_preserve_complete_output:30-39 and its compare
 helper:80 onward: existing wide slab height2.4mm, LockedZag40%, relative E,
 infill angle45, infill_shift_step0.731272, one top/bottom shell, wall_loops0,
 prime tower disabled. Preserve model/member provenance and existing normalized

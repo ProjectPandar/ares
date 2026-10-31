@@ -125,7 +125,7 @@ from `ironing_pattern` only, not `internal_solid_infill_pattern`.
 
 ## Test plan (red)
 
-New spec-driven test `orca_parity_filament_override_range_ironing_patterns` (or
+New spec-driven test `filament_override_range_ironing_patterns` (or
 rename the existing one to a generic coverage module):
 
 - Fixture: `tests/parity/summary/time-cost.3mf` (Arachne, real top surface).

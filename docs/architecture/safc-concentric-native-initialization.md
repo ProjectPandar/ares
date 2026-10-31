@@ -9,7 +9,7 @@ part of this slice. Source pin: OrcaSlicer8500fcdcc.
 ## Retained evidence and bounded diagnosis
 
 Existing actual runs of
-`safc_coverage::orca_parity_safc_coupled_models_preserve_whole_output_and_segment_consumers`
+`safc_coverage::safc_coupled_models_preserve_whole_output_and_segment_consumers`
 contain the same on-concentric input ZIP members but different official Native
 geometry. The current audit is read-only; it is not a fresh Native execution.
 

@@ -30,7 +30,7 @@
 ## E2E 验收合同
 
 - 覆盖原始 Anycubic Kobra Max/Plus/Vyper、Raise3D Pro3 Plus Dual/Left/Right、Wanhao D12-300 的 relative 缺 reset，以及 Dremel 3D40/45 的 absolute before reset。
-- 仅固定两类最小未修改原始 3MF：`tests/parity/validation/o1-kobra-plus-relative.3mf` 与 `o1-dremel-3d40-absolute.3mf`；其余原始案例在完整 stock sweep 验证，不入库。
+- 仅固定两类最小未修改原始 3MF：`tests/parity/validation/layer-reset-kobra-plus-relative.3mf` 与 `layer-reset-dremel-3d40-absolute.3mf`；其余原始案例在完整 stock sweep 验证，不入库。
 - 拒绝证据必须同时满足 native exit205/O1 精确文本、Ares InvalidInput/同文且无新 G-code；其他错误、崩溃或单侧拒绝不得算通过。双方拒绝不得算有效输出的 byte PASS。
 - 覆盖两模板、大小写、注释、零数字形式、STL/project/profile/processed 边界；合法大写 reset 的非 BBL Marlin、无 reset 的非 BBL 非 Marlin、无 reset 的 BBL Marlin 不误拒。
 - 合法配置保持既有 G-code 字节比较器，错误保持精确类型/文本断言。真实 Orca E2E 的 RED 先于产品实现；全量 workspace nextest、Clippy、fmt、wasm32 以及 official/seeded 双侧对照为验收门禁，参考故障独立报告。

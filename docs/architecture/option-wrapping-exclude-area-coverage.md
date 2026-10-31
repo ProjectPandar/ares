@@ -218,8 +218,8 @@ Both `seeded-comparison.json` and `official-comparison.json` retain all original
 statuses and strict subset results; their companion comparison exits are 0.
 Every test-status change, in both modes, is:
 
-- `option_coverage::sweep::orca_parity_option_coverage`: FAIL → PASS.
-- `option_coverage::wrapping_exclude_coverage::orca_parity_wrapping_exclude_area_bounded_project_output`: absent → PASS.
+- `option_coverage::sweep::option_coverage`: FAIL → PASS.
+- `option_coverage::wrapping_exclude_coverage::wrapping_exclude_area_bounded_project_output`: absent → PASS.
 - `option_coverage::wrapping_exclude_coverage::rejections::original_orca_and_ares_reject_arranged_wrapping_object_outside_bed`: absent → PASS.
 - `option_coverage::wrapping_exclude_coverage::rejections::original_orca_and_ares_reject_wrapping_polygon_intersection`: absent → PASS.
 

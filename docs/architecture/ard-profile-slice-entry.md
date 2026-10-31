@@ -74,7 +74,7 @@ filament migration (`set_with_restore_2`) is deferred: selections whose
 filament variant groups differ from the embedded groups are not supported.
 The slice entry performs no machine-switch compatibility check, matching the
 CLI, whose `--load-settings` path does not gate on it; compatibility stays
-with `filterCompatiblePresets`. E2E: `orca_parity_profile_entry_3mf_load_settings`
+with `filterCompatiblePresets`. E2E: `profile_entry_3mf_load_settings`
 exports a native 3MF and compares full ordered output against the native
 `3mf --load-settings/--load-filaments` slice; unit tests pin retention,
 per-slot tail preservation, count rejection, unconditional

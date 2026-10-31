@@ -42,7 +42,7 @@ git grep -n -I -E 'processor[-_]wipe[-_]tower' -- scripts web crates tests .gith
 
 以下原测试在 required v2 seeded 环境实际运行，全部 **7/7 PASS**（6.298 秒）：
 
-- `filament_usage_stats::orca_parity_filament_stats_kobra3max_wipe_tower`
+- `filament_usage_stats::filament_stats_kobra3max_wipe_tower`
 - `vg1::vg1_x1c_flush_below_remaining_volume_five_maps_match_native`
 - `vg1::vg1_x1c_flush_overflow_five_maps_match_native`
 - `vg1::vg1_x1c_repeated_flush_five_maps_match_native`

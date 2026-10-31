@@ -15,7 +15,7 @@ owns the42-attempt provenance; this slice adds no collector or schema.
 
 Driver:/tmp/worker2-s6-red-final-leg.sh; outer taskset CPU13/14 respectively,
 jobs2/threads2, existing canonical comparison/retry behavior. Only the new
-orca_parity_fuzzy_incomplete_details_keep_actual_oracle_nondeterminism test
+fuzzy_incomplete_details_keep_actual_oracle_nondeterminism test
 ran. Four live domains execute before summary publication/assertions.
 
 | Key | Cases | Official compared/status/detail | Seeded compared/status |

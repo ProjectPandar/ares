@@ -22,7 +22,7 @@ OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`，下表路径相对 `src/
 
 ## 精确范围与不变合同
 
-- `crates/ares-core/tests/o6_plate_origin.rs` 仅移走 Native 依赖 case 及其
+- `crates/ares-core/tests/multi_plate_instances_keep_global_coordinates.rs` 仅移走 Native 依赖 case 及其
   冻结输出比较 helper；`fixture` helper 仍供纯 core case 使用。
 - 新 `crates/ares-cli/tests/orca_parity/runner/native_plate_origin_migration.rs`，
   必要 helper 仅同前缀；`runner.rs` 只增加一个模块注册。

@@ -83,7 +83,7 @@ separate directed runs. Exact skipped lines are in `final-owner-ruling-audit.jso
 ## Owner-adjudicated Native nondeterminism — no full rerun
 
 The sole original candidate-official failure is
-`runner::tree_support::manual::vertical::orca_parity_manual_slim_nested_vertical_painting_preserves_complete_output`.
+`runner::tree_support::manual::vertical::manual_slim_nested_vertical_painting_preserves_complete_output`.
 It is **not deleted, converted to PASS, retried until PASS or a new comparator
 exception**. No blanket tree-support waiver follows from this ruling.
 

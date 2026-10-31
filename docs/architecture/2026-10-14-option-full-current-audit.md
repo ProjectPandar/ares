@@ -34,7 +34,7 @@ The unchanged official wrapper SHA256 is
 | Fresh seeded | 651 | 646 | 4 | 1 | 1703 | 1702 | 0 |
 
 Both nextest legs:1169 run/1168PASS/1FAIL/0skipped, exit100, no TIMEOUT.
-The only failing test is `option_coverage::sweep::orca_parity_option_coverage`:
+The only failing test is `option_coverage::sweep::option_coverage`:
 official9 domains and seeded5 domains trigger its completeness assertion.
 Official nextest elapsed1577.041s, sweep1164.369s; seeded2510.400s,
 sweep1987.139s. No other nextest failure or successful retry hides this result.

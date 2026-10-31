@@ -73,7 +73,7 @@ terminate called after throwing an instance of 'Slic3r::ConfigurationError'
 
 Ares 现有 `profile_input/overlay.rs::filament_slot` 已返回同一消息的
 `SliceError::InvalidInput`。在 main `5fed632db` 重跑既有
-`crates/ares-core/tests/o8_cubicon_empty_vector.rs`，三个真实 vendor
+`crates/ares-core/tests/cubicon_empty_filament_colour_loads_empty_vector.rs`，三个真实 vendor
 preset-chain 用例 **3/3 PASS**；它们验证同一合并拒绝语义，不冒充重建
 Native 输入的逐字节公共 API 重放。既有检测无缺口，按裁定不新增
 带 key 的类型化错误。通用 CLI 错误路径保持不变；原生 abort 与 Ares

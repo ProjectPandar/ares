@@ -117,19 +117,19 @@ recipe was changed for the correction; failed attempts were not relabeled.
 The following eight names fail on **both** sides due to the known existing
 missing `ORCA_REPLAY_SEED` environment reads in the official control context:
 
-1. `option_coverage::bookkeeping_export::orca_parity_bookkeeping_matches_complete_configured_filament_output`
-2. `option_coverage::initialized_object_id::orca_parity_initialized_reference_repeats_complete_ksr_output`
-3. `option_coverage::initialized_short_line::orca_parity_initialized_short_line_matches_complete_internal_fill_output`
-4. `option_coverage::initialized_stitch_junction::orca_parity_initialized_stitch_junction_matches_complete_internal_fill`
-5. `option_coverage::initialized_transition_snap::orca_parity_initialized_transition_snap_matches_complete_internal_fill`
-6. `option_coverage::single_volume_offset::orca_parity_single_volume_offset_matches_complete_rotated_prism_output`
-7. `runner::initialized_loop_chain::orca_parity_initialized_loop_chain_matches_complete_output`
-8. `runner::initialized_overhang_intersections::orca_parity_initialized_overhang_intersections_match_complete_output`
+1. `option_coverage::bookkeeping_export::bookkeeping_matches_complete_configured_filament_output`
+2. `option_coverage::initialized_object_id::initialized_reference_repeats_complete_ksr_output`
+3. `option_coverage::initialized_short_line::initialized_short_line_matches_complete_internal_fill_output`
+4. `option_coverage::initialized_stitch_junction::initialized_stitch_junction_matches_complete_internal_fill`
+5. `option_coverage::initialized_transition_snap::initialized_transition_snap_matches_complete_internal_fill`
+6. `option_coverage::single_volume_offset::single_volume_offset_matches_complete_rotated_prism_output`
+7. `runner::initialized_loop_chain::initialized_loop_chain_matches_complete_output`
+8. `runner::initialized_overhang_intersections::initialized_overhang_intersections_match_complete_output`
 
 BASE-only ninth failure:
-`runner::tree_support::manual::styles::orca_parity_manual_strong_painted_overhang_preserves_complete_output`.
+`runner::tree_support::manual::styles::manual_strong_painted_overhang_preserves_complete_output`.
 CAND-only ninth failure:
-`option_coverage::tree_activation::orca_parity_organic_angle_and_normalized_grid_tip_preserve_complete_output`.
+`option_coverage::tree_activation::organic_angle_and_normalized_grid_tip_preserve_complete_output`.
 Thus the **raw candidate failure-name set is not a subset of BASE**. Matching
 failure counts alone are not a passing gate.
 
