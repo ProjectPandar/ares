@@ -16,6 +16,7 @@ pub(crate) mod marching_squares;
 pub(crate) mod medial_axis;
 pub(crate) mod mutable_polygon;
 pub(crate) mod point_hash_map;
+mod point_ordering;
 mod polygon;
 mod polyline;
 mod region_expansion;
@@ -31,7 +32,7 @@ pub(crate) use bbox_clip::{
 };
 pub(crate) use bounding_box::{BoundingBox, chain_expolygons, chain_expolygons_order};
 pub(crate) use bridge_direction::detect_bridging_direction;
-pub(crate) use chain_points::{chain_points, chain_segments_exact};
+pub(crate) use chain_points::{chain_points, chain_points_with_start, chain_segments_exact};
 pub(crate) use clipper::ClipOperation;
 pub(crate) use clipper::offset_lines;
 pub(crate) use clipper::ordering::{fixed_gcc_sort_by, fixed_msvc_sort_by, stable_sort_by};
@@ -65,6 +66,7 @@ pub(crate) use line::{Line, ThickLine, liang_barsky_interval};
 pub(crate) use line_distance_tree::{FloatLineDistanceTree, LineDistanceTree};
 pub(crate) use line_split::{SplitJunction, split_line};
 pub(crate) use medial_axis::medial_axis;
+pub(crate) use point_ordering::chain_points_with_postprocessing;
 pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
 pub(crate) use region_expansion::{

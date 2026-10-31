@@ -95,6 +95,28 @@ parity. Do not add terminal behavior to the production core. The known object-
 reference consumer is reached only at one reference point here; broader instance
 ordering remains an integration-batch verification responsibility.
 
+## Default-kernel source ledger
+
+| Rust boundary | Pinned upstream owner |
+| --- | --- |
+| `geometry/point_ordering.rs::chain_points_with_postprocessing` | `ShortestPath.cpp:1624–1650`; same <=10/>10 dispatch, three alternating improvement rounds, start-near/closing rotations |
+| `point_ordering/exact_cycle.rs::tsp_exact_cycle` and `extend` | `OrderingStrategies.cpp:230–266`; fixed point zero, subset costs/predecessors, ascending state/candidate scans, strict updates, final return edge and reconstruction |
+| `point_ordering/two_opt.rs` | `OrderingStrategies.cpp:30–102`; separate edge/squared-edge caches, source rejection, best-gain scan, ten-pass default |
+| `point_ordering/or_opt.rs` | `ShortestPath.cpp:1578–1622`; lengths1–3, fixed first point, source endpoint/neighbor/gap order, strict reversal selection and position refresh |
+| `point_ordering/nearest_points.rs` | `ShortestPath.cpp:1100–1187::NearestPoints`; uniform cells, prefix/index construction, ring order/stopping distance and native distance/index pair ordering |
+| `point_ordering/crossings.rs` and `crossing_grid.rs` | `OrderingStrategies.cpp:104–228`; first i/first j, grid threshold500, source signed iteration cap and uint64 FNV cycle memo; `Geometry.hpp:134–184` signed-integer segment predicate, including collinear overlap |
+| `geometry/chain_points/greedy.rs` and optional-start point adapter | `ShortestPath.cpp:182–434` point specialization; reserve the KD-nearest start before initial links/heap insertion and retain the free-endpoint queue behavior for no start |
+| `gcode_emit/layers/object_order.rs::reference_order` / default by-layer collection | `ShortestPath.cpp:2533–2555` and `GCode.cpp:3658`; instance-shift reference points, shared postprocessing with no start and no tour reversal |
+
+The cycle helpers cast coordinates to doubles before subtraction where the
+source does. The small-tour start rotation instead preserves the source integer
+point subtraction before its double cast. The or-opt source epsilon receives
+the actual `CoordinateScale`; it is not inferred from coordinates or replaced
+with an implicit Normal mode. No new epsilon or tie key is introduced. The
+crossing hash retains the source uint64 wrapping arithmetic on all Tier1 targets.
+Source helpers are extracted only to meet module/function/nesting boundaries,
+not to introduce a new optimizer or scheduling model.
+
 ## Qualified public RED contract
 
 Use exactly **two** inputs:

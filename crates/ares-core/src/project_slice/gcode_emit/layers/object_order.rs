@@ -2,6 +2,18 @@
 
 use crate::project_slice::perimeters::classic::shortest_path::chain_segments_constrained_with_optional_start;
 
+/// ShortestPath.cpp:2533–2555, reached from default by-layer GCode.cpp:3658.
+pub(super) fn reference_order(
+    centers: &[(i64, i64)],
+    scale: crate::geometry::CoordinateScale,
+) -> Vec<usize> {
+    let points = centers
+        .iter()
+        .map(|&(x, y)| crate::geometry::Point::new(x, y))
+        .collect::<Vec<_>>();
+    crate::geometry::chain_points_with_postprocessing(&points, None, scale)
+}
+
 pub(super) fn chain_instance_order(centers: &[(i64, i64)], start_near: (i64, i64)) -> Vec<usize> {
     chain(centers, Some(start_near))
 }

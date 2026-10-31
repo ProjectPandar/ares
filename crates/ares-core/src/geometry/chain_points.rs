@@ -1,8 +1,7 @@
 use super::Point;
-use kd_tree::KdTree;
-use priority_queue::EndPointHeap;
 
 mod exact;
+mod greedy;
 pub(crate) use exact::chain_segments_exact;
 pub(in crate::geometry) mod kd_tree;
 pub(in crate::geometry) mod priority_queue;
@@ -30,6 +29,10 @@ impl EndPoint {
 }
 
 pub(crate) fn chain_points(points: &[Point]) -> Vec<usize> {
+    super::chain_points_with_start(points, None)
+}
+
+pub(crate) fn chain_points_with_start(points: &[Point], start_near: Option<Point>) -> Vec<usize> {
     if points.len() < 2 {
         return (0..points.len()).collect();
     }
@@ -41,101 +44,16 @@ pub(crate) fn chain_points(points: &[Point]) -> Vec<usize> {
                 [position, position]
             })
             .collect::<Vec<_>>();
-        return super::chain_segments_exact(&endpoints, None, None)
-            .into_iter()
-            .map(|(index, _)| index)
-            .collect();
+        return super::chain_segments_exact(
+            &endpoints,
+            None,
+            start_near.map(|point| [point.x() as f64, point.y() as f64]),
+        )
+        .into_iter()
+        .map(|(index, _)| index)
+        .collect();
     }
-
-    let mut end_points = Vec::with_capacity(points.len() * 2);
-    for &point in points {
-        end_points.push(EndPoint::new(point));
-        end_points.push(EndPoint::new(point));
-    }
-    let positions = end_points
-        .iter()
-        .map(|end_point| end_point.position)
-        .collect::<Vec<_>>();
-    let tree = KdTree::new(&positions);
-
-    for index in 0..end_points.len() {
-        let closest = tree
-            .closest(&positions, end_points[index].position, |candidate| {
-                (candidate ^ index) > 1
-            })
-            .expect("each point must have an endpoint from another segment");
-        end_points[index].edge_out = closest;
-        end_points[index].distance_out =
-            squared_distance(end_points[index].position, end_points[closest].position);
-    }
-
-    let mut queue = EndPointHeap::with_capacity(end_points.len());
-    for index in 0..end_points.len() {
-        queue.push(index, &mut end_points);
-    }
-    let mut chains = EquivalentChains::new(points.len());
-    let mut remaining_connections = points.len() - 1;
-
-    let first = loop {
-        let point1 = queue.top();
-        let point2 = end_points[point1].edge_out;
-        let chain1 = chains.find(end_points[point1 ^ 1].chain_id);
-        let chain2 = chains.find(end_points[point2 ^ 1].chain_id);
-        let valid = end_points[point2].chain_id == 0 && (chain1 == 0 || chain1 != chain2);
-
-        if valid {
-            queue.pop(&mut end_points);
-            let point2_heap_index = end_points[point2].heap_index;
-            queue.remove(point2_heap_index, &mut end_points);
-            end_points[point1].edge_out = point2;
-            end_points[point2].edge_out = point1;
-            end_points[point2].distance_out = end_points[point1].distance_out;
-
-            let chain = match (chain1, chain2) {
-                (0, 0) => chains.next(),
-                (0, chain) | (chain, 0) => chain,
-                (left, right) if left == right => left,
-                (left, right) => chains.merge(left, right),
-            };
-            end_points[point1].chain_id = chain;
-            end_points[point2].chain_id = chain;
-
-            remaining_connections -= 1;
-            if remaining_connections == 0 {
-                let first = queue.top();
-                queue.pop(&mut end_points);
-                end_points[first].edge_out = NO_INDEX;
-                let last = queue.top();
-                end_points[last].edge_out = NO_INDEX;
-                queue.pop(&mut end_points);
-                break first;
-            }
-        } else {
-            let closest = tree
-                .closest(&positions, end_points[point1].position, |candidate| {
-                    (candidate ^ point1) > 1
-                        && end_points[candidate].chain_id == 0
-                        && chains.can_connect(
-                            end_points[point1 ^ 1].chain_id,
-                            end_points[candidate ^ 1].chain_id,
-                        )
-                })
-                .expect("an open chain endpoint must have a valid peer");
-            end_points[point1].edge_out = closest;
-            end_points[point1].distance_out =
-                squared_distance(end_points[point1].position, end_points[closest].position);
-            let heap_index = end_points[point1].heap_index;
-            queue.update(heap_index, &mut end_points);
-        }
-    };
-
-    let mut order = Vec::with_capacity(points.len());
-    let mut current = first;
-    while current != NO_INDEX {
-        order.push(current >> 1);
-        current = end_points[current ^ 1].edge_out;
-    }
-    order
+    greedy::chain(points, start_near)
 }
 
 fn squared_distance(left: [f64; 2], right: [f64; 2]) -> f64 {

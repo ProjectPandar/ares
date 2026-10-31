@@ -74,10 +74,17 @@ pub(super) fn collect(traversal: &PreparedPostClassicTraversal) -> Vec<Vec<Insta
         }
     }
     // Bucket identity remains independent of the model-order field.
-    let order = super::object_order::chain_instance_order(&centers, seed(traversal))
-        .into_iter()
-        .rev();
-    for (position, index) in order.enumerate() {
+    let print = &traversal.resolved.views.full.process.print;
+    let order = if print.print_sequence == crate::ProcessPrintSequence::ByLayer
+        && print.print_order == crate::ProcessPrintOrder::Default
+    {
+        super::object_order::reference_order(&centers, traversal.scale)
+    } else {
+        let mut order = super::object_order::chain_instance_order(&centers, seed(traversal));
+        order.reverse();
+        order
+    };
+    for (position, index) in order.into_iter().enumerate() {
         let (object, copy) = owners[index];
         instances[object][copy].position = position;
     }
