@@ -32,11 +32,6 @@ pub(in crate::project_slice) fn prepare(
     }
 }
 
-#[cfg(test)]
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostBridgeCandidates) {
-    external_surfaces::dispose(prepared.predecessor);
-}
-
 fn gather_objects(
     predecessor: &PreparedPostExternalSurfaces,
 ) -> Result<Vec<BridgeCandidateObject>, SliceError> {

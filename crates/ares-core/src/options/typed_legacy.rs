@@ -5,12 +5,11 @@ mod project;
 mod thumbnails;
 
 pub(crate) use actions::{
-    Comparison, EXPLICIT_RULES, EmptyValueAction, JsonArrayAllowance, JsonDerivedEffect,
-    LegacyAction, LegacyRule, RecursionContract, Replacement, StringAllowance, VectorType,
-    WireContract,
+    Comparison, EXPLICIT_RULES, JsonArrayAllowance, JsonDerivedEffect, LegacyAction, LegacyRule,
+    Replacement, VectorType,
 };
 pub(crate) use convert::{
-    LegacyOutcome, LegacyTransformError, array_first_pass, transform_json_array, transform_lexical,
+    LegacyOutcome, LegacyTransformError, transform_json_array, transform_lexical,
     transform_obsolete,
 };
 pub(crate) use obsolete::OBSOLETE_INPUTS;

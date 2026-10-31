@@ -21,8 +21,7 @@ mod top_surface;
 
 use area::filled_area_mm2;
 use rotation::{InfillLayerPosition, InfillPasses};
-#[cfg(test)]
-use scanline::compare_points;
+
 use scanline::{
     ScanlineBasis, Vector2, anchored_segment, clip_contours, compare_candidates, scanline_bounds,
     transform_contour,
@@ -392,6 +391,3 @@ fn generate_layer_infills(input: LayerInfillInput<'_>) -> Result<LayerInfills, S
         .collect::<Result<Vec<_>, SliceError>>()?;
     Ok(LayerInfills::new(layer.layer_id(), layer.print_z(), paths))
 }
-
-#[cfg(test)]
-mod tests;

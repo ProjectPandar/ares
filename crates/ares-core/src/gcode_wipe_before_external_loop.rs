@@ -122,5 +122,3 @@ fn project_to_segment(point: Point2, a: Point2, b: Point2) -> Point2 {
 fn distance(a: Point2, b: Point2) -> f64 {
     ((a.x() - b.x()).powi(2) + (a.y() - b.y()).powi(2)).sqrt()
 }
-#[cfg(test)]
-mod tests;

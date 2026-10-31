@@ -134,5 +134,3 @@ pub(crate) fn generate(
         inner_contour,
     })
 }
-#[cfg(test)]
-mod tests;

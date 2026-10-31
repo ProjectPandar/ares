@@ -12,13 +12,6 @@ pub(crate) enum SupportStyle {
 }
 
 impl SupportStyle {
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub(crate) const fn is_tree_style(self) -> bool {
-        matches!(
-            self,
-            Self::TreeOrganic | Self::TreeSlim | Self::TreeStrong | Self::TreeHybrid
-        )
-    }
 
     pub(crate) const fn is_snug(self) -> bool {
         matches!(self, Self::Snug)

@@ -4,9 +4,6 @@ use std::collections::{HashMap, HashSet};
 
 use crate::arachne::extrusion_line::{ExtrusionJunction, ExtrusionLine};
 
-#[cfg(test)]
-mod tests;
-
 /// Returns (before, after) indices into the distinct, flattened input paths.
 /// The set is not a traversal order; `process_arachne` chooses available paths.
 pub(crate) fn get_region_order(

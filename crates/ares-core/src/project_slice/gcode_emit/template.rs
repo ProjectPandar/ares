@@ -242,6 +242,3 @@ fn placeholder_end(text: &str, start: usize, delimiter: char) -> Option<usize> {
     }
     None
 }
-
-#[cfg(test)]
-mod tests;

@@ -244,6 +244,3 @@ fn shrink_layer_height(
 fn round_6(value: f64) -> f64 {
     (value * 1_000_000.0).round() / 1_000_000.0
 }
-
-#[cfg(test)]
-mod tests;

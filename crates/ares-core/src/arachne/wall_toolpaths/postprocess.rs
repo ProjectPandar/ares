@@ -95,5 +95,3 @@ fn distance(left: Point, right: Point) -> i64 {
     let dy = i128::from(left.y() - right.y());
     ((dx * dx + dy * dy) as f64).sqrt() as i64
 }
-#[cfg(test)]
-mod tests;

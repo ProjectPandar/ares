@@ -39,18 +39,6 @@ impl ExtrusionLine {
         self.junctions.push(junction);
     }
 
-    pub(crate) fn remove(&mut self, index: usize) -> ExtrusionJunction {
-        self.junctions.remove(index)
-    }
-
-    pub(crate) fn insert(&mut self, index: usize, junction: ExtrusionJunction) {
-        self.junctions.insert(index, junction);
-    }
-
-    pub(crate) fn clear(&mut self) {
-        self.junctions.clear();
-    }
-
     pub(crate) fn reverse(&mut self) {
         self.junctions.reverse();
     }

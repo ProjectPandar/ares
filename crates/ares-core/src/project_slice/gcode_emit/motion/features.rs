@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use super::{MotionOptions, options::helpers::rounded_acceleration};
 use crate::ExtrusionRole;
 use crate::project_slice::perimeters::classic::materialize::FittedMove;

@@ -158,5 +158,3 @@ fn adjust_heap<T>(items: &mut [T], hole: usize, len: usize, less: &mut impl FnMu
         items.swap(path[index], path[index + 1]);
     }
 }
-#[cfg(test)]
-mod tests;

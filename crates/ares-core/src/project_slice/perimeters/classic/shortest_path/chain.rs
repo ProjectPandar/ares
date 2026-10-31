@@ -2,12 +2,9 @@ mod reorder;
 mod search;
 
 pub(in crate::project_slice) use reorder::chain_and_reorder_extrusion_paths;
-#[cfg(test)]
-pub(in crate::project_slice) use reorder::reorder_extrusion_paths;
 
 use super::{kd_tree::KdTree, priority_queue::MutablePriorityQueue};
-#[cfg(test)]
-use crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop;
+
 use crate::project_slice::perimeters::classic::materialize::ExtrusionPath;
 use search::CandidateSearch;
 
@@ -93,23 +90,6 @@ pub(in crate::project_slice) fn chain_extrusion_paths(
             chain_multiple(&positions, start_near.map(coord_to_f64))
         }
     }
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn chain_extrusion_loops(
-    loops: &[ExtrusionLoop],
-) -> Vec<(usize, bool)> {
-    let first_points: Vec<_> = loops
-        .iter()
-        .map(|loop_| {
-            let first = &loop_.paths[0].polyline.points[0];
-            [first.x as f64, first.y as f64]
-        })
-        .collect();
-    chain_loops_by_first_points(&first_points)
-        .into_iter()
-        .map(|index| (index, false))
-        .collect()
 }
 
 /// First-point loop chaining shared by `chain_extrusion_loops` and the

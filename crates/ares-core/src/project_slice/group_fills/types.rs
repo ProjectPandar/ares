@@ -28,7 +28,6 @@ pub(in crate::project_slice) struct SurfaceFillParams {
     pub(in crate::project_slice) flow: Flow,
     pub(in crate::project_slice) flow_ratio: f64,
     pub(in crate::project_slice) extrusion_role: ExtrusionRole,
-    pub(in crate::project_slice) idx: usize,
     pub(in crate::project_slice) loop_clipping: i64,
     pub(in crate::project_slice) role_speed: f32,
     pub(in crate::project_slice) lateral_lattice_angle_1: f32,
@@ -51,8 +50,6 @@ pub(in crate::project_slice) struct RepresentativeSurface {
     pub(in crate::project_slice) kind: RegionSurfaceKind,
     pub(in crate::project_slice) thickness: f64,
     pub(in crate::project_slice) thickness_layers: u16,
-    pub(in crate::project_slice) bridge_angle: f64,
-    pub(in crate::project_slice) extra_perimeters: u16,
 }
 
 pub(in crate::project_slice) struct SurfaceFill {
@@ -101,15 +98,11 @@ impl RepresentativeSurface {
         kind: RegionSurfaceKind,
         thickness: f64,
         thickness_layers: u16,
-        bridge_angle: f32,
-        extra_perimeters: u16,
     ) -> Self {
         Self {
             kind,
             thickness,
             thickness_layers,
-            bridge_angle: f64::from(bridge_angle),
-            extra_perimeters,
         }
     }
 }

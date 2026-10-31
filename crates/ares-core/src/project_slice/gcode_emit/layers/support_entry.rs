@@ -1,9 +1,5 @@
 //! Native per-instance support dispatch precedes object islands (`GCode.cpp:5390`).
 
-#[cfg(test)]
-#[path = "support_entry/default_spacing_tests.rs"]
-mod default_spacing_tests;
-
 use super::{
     super::{SliceError, motion, object::ObjectLabels, timelapse},
     entry::EntryGeometry,

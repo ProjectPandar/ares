@@ -66,10 +66,7 @@ impl PartCoolingFanRamp {
         self.close_fan_first_layers
     }
 
-    #[cfg(test)]
-    pub(crate) const fn fan_cooling_layer_time_s(self) -> f64 {
-        self.fan_cooling_layer_time_s
-    }
+
 
     pub(crate) fn speed_for_layer_time(
         self,

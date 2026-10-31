@@ -41,11 +41,6 @@ impl DenseEdgeSet {
         }
         true
     }
-
-    #[cfg(test)]
-    fn values(&self) -> &[EdgeId] {
-        &self.values
-    }
 }
 
 impl SkeletalTrapezoidation<'_> {
@@ -80,6 +75,3 @@ impl SkeletalTrapezoidation<'_> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

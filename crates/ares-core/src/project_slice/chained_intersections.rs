@@ -21,26 +21,6 @@ impl ChainedVolumeIntersections {
             self.layers,
         )
     }
-
-    #[cfg(test)]
-    pub(super) const fn source_volume_index(&self) -> usize {
-        self.source_volume_index
-    }
-
-    #[cfg(test)]
-    pub(super) const fn ordinal(&self) -> u32 {
-        self.volume_ordinal
-    }
-
-    #[cfg(test)]
-    pub(super) const fn volume_type(&self) -> ProjectVolumeType {
-        self.volume_type
-    }
-
-    #[cfg(test)]
-    pub(super) fn layers(&self) -> &[ChainedLayer] {
-        &self.layers
-    }
 }
 
 pub(super) struct ChainedPrintObject {
@@ -51,16 +31,6 @@ pub(super) struct ChainedPrintObject {
 impl ChainedPrintObject {
     pub(super) fn into_parts(self) -> (PlannedPrintObject, Vec<ChainedVolumeIntersections>) {
         (self.plan, self.volumes)
-    }
-
-    #[cfg(test)]
-    pub(super) fn plan(&self) -> &PlannedPrintObject {
-        &self.plan
-    }
-
-    #[cfg(test)]
-    pub(super) fn volumes(&self) -> &[ChainedVolumeIntersections] {
-        &self.volumes
     }
 }
 

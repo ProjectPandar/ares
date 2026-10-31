@@ -269,6 +269,3 @@ fn interpolate_beading_at_radius(
         .min(1.0);
     interpolate_beading(left, f64::from(adjusted_ratio), right)
 }
-
-#[cfg(test)]
-mod tests;

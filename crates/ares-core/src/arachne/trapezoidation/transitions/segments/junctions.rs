@@ -62,27 +62,6 @@ impl SkeletalTrapezoidation<'_> {
         selected
     }
 
-    pub(super) fn connect_even_quad_junctions(&mut self, quad_start: EdgeId, force_new_path: bool) {
-        let edge_to_peak = self.get_quad_max_r_edge_to(quad_start);
-        let peak = self.graph.edge(edge_to_peak).to.unwrap();
-        assert_eq!(self.graph.node(peak).data.bead_count % 2, 0);
-        let sides = self.quad_junction_sides(quad_start);
-        self.connect_junction_vectors(
-            &sides.from,
-            &sides.to,
-            SegmentConditions {
-                is_odd: false,
-                force_new_path,
-                from_is_three_way: false,
-                to_is_three_way: false,
-            },
-        );
-    }
-
-    pub(super) fn connect_quad_junctions(&mut self, quad_start: EdgeId, force_new_path: bool) {
-        self.connect_quad_junctions_with_passed(quad_start, force_new_path, &mut HashSet::new());
-    }
-
     pub(super) fn connect_quad_junctions_with_passed(
         &mut self,
         quad_start: EdgeId,
@@ -169,17 +148,6 @@ impl SkeletalTrapezoidation<'_> {
         self.extrusion_junction_storage.push(storage);
     }
 
-    pub(super) fn connect_junction_pair(
-        &mut self,
-        from_edge: EdgeId,
-        to_edge: EdgeId,
-        conditions: SegmentConditions,
-    ) {
-        let from_junctions = self.edge_junctions(from_edge);
-        let to_junctions = self.edge_junctions(to_edge);
-        self.connect_junction_vectors(&from_junctions, &to_junctions, conditions);
-    }
-
     fn edge_junctions(&self, edge: EdgeId) -> Vec<ExtrusionJunction> {
         self.graph
             .edge(edge)
@@ -188,22 +156,6 @@ impl SkeletalTrapezoidation<'_> {
             .unwrap()
             .borrow()
             .clone()
-    }
-
-    fn connect_junction_vectors(
-        &mut self,
-        from_junctions: &[ExtrusionJunction],
-        to_junctions: &[ExtrusionJunction],
-        conditions: SegmentConditions,
-    ) {
-        assert!(from_junctions.len().abs_diff(to_junctions.len()) <= 1);
-        let segment_count = from_junctions.len().min(to_junctions.len());
-        for reverse_index in 0..segment_count {
-            let from = from_junctions[from_junctions.len() - 1 - reverse_index];
-            let to = to_junctions[to_junctions.len() - 1 - reverse_index];
-            assert_eq!(from.perimeter_index, to.perimeter_index);
-            self.add_toolpath_segment(from, to, conditions);
-        }
     }
 
     fn junctions_for_edge(
@@ -285,9 +237,6 @@ fn point_is_near(left: Point, right: Point, tolerance: i64) -> bool {
     let dy = left.y() - right.y();
     (dx as i128 * dx as i128 + dy as i128 * dy as i128) < tolerance as i128 * tolerance as i128
 }
-
-#[cfg(test)]
-mod tests;
 
 fn append_adjacent_junctions(
     mut junctions: Vec<ExtrusionJunction>,

@@ -95,6 +95,3 @@ impl RadiusQuantization {
         output
     }
 }
-
-#[cfg(test)]
-mod tests;

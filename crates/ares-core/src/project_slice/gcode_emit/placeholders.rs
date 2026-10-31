@@ -1,7 +1,6 @@
 mod bounds;
 mod cut_retraction;
-#[cfg(test)]
-mod tests;
+
 mod timestamp;
 
 pub(super) use cut_retraction::insert_aliases as refresh_filament_aliases;

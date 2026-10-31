@@ -1,4 +1,4 @@
-use crate::{SliceError, SliceOptions, options::support_style::SupportStyle};
+use crate::{SliceError, SliceOptions};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum SupportType {
@@ -19,10 +19,6 @@ impl SupportType {
         matches!(self, Self::NormalAuto | Self::TreeAuto)
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub(crate) fn is_tree_slim(self, style: SupportStyle) -> bool {
-        self.is_tree() && style.resolve_for_support_type(self) == SupportStyle::TreeSlim
-    }
 }
 
 pub(crate) fn parse(options: &SliceOptions) -> Result<SupportType, SliceError> {

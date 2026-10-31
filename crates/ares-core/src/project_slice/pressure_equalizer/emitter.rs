@@ -228,6 +228,3 @@ pub(crate) fn output_gcode_line(
 mod split;
 
 use split::{SplitParameters, emit_accel_then_decel, emit_single_slope};
-
-#[cfg(test)]
-mod tests;

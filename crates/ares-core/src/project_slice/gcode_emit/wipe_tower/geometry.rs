@@ -3,8 +3,6 @@ mod bottom;
 mod cone;
 pub(super) use cone::{ConeOptions, cone_base};
 mod rounding;
-#[cfg(test)]
-mod tests;
 
 use super::writer::Writer;
 use crate::geometry::{

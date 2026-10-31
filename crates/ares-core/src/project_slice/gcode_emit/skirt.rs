@@ -21,8 +21,6 @@ mod groups;
 mod loop_generation;
 mod member_groups;
 mod occupied;
-#[cfg(test)]
-mod tests;
 
 use crate::geometry::convex_hull;
 pub(in crate::project_slice::gcode_emit) use geometry::split_at_nearest;

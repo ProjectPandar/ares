@@ -1,5 +1,3 @@
-#[cfg(test)]
-use super::object_fields::OBJECT_OPTION_DECLARATION_ORDER;
 use super::{
     FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, Percent, ProcessBrimType,
     ProcessExtraBridgeLayer, ProcessGapFillTarget, ProcessInfillPattern,
@@ -65,7 +63,4 @@ macro_rules! declare_object_options {
 
 object_option_fields!(declare_object_options);
 
-impl ObjectOptions {
-    #[cfg(test)]
-    pub(crate) const DECLARATION_ORDER: [&'static str; 126] = OBJECT_OPTION_DECLARATION_ORDER;
-}
+impl ObjectOptions {}

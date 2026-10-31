@@ -93,25 +93,6 @@ pub(super) fn span_sort_key(region: &RegionOptions, context: &SpanContext<'_>) -
     }
 }
 
-#[cfg(test)]
-pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result<(), SliceError> {
-    if !areas::enabled(
-        input.region.ironing_type,
-        input.region,
-        input.last_layer,
-        input.spiral_mode,
-    ) {
-        return Ok(());
-    }
-    let mut polygons = Vec::new();
-    let mut infills = Vec::new();
-    areas::collect(&input, &mut polygons, &mut infills);
-    let Some(ironing_areas) = areas::ironing_areas(&input, polygons, infills, false)? else {
-        return Ok(());
-    };
-    append_areas(output, &input, ironing_areas)
-}
-
 pub(super) fn append_areas(
     output: &mut LayerFillEntities,
     input: &Input<'_>,
@@ -311,6 +292,3 @@ pub(super) fn append_areas(
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

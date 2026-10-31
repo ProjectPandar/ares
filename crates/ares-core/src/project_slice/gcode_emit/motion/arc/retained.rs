@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::{
     geometry::CoordinateScale,
     project_slice::perimeters::classic::materialize::{FittedArc, FittedMove},

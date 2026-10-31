@@ -1,7 +1,4 @@
-#[cfg(not(test))]
 use crate::geometry::opening_paths;
-#[cfg(test)]
-use crate::geometry::{ClipperError, opening_paths_with_interstage};
 
 use crate::{
     ProcessEnsureVerticalShellThickness, RegionOptions, SliceError,
@@ -93,38 +90,15 @@ fn opening_with_step(
     margin: f32,
     expansion_step: GeometryStep,
 ) -> Result<Vec<Polygon>, SliceError> {
-    #[cfg(not(test))]
     {
         let _ = expansion_step;
         opening_paths(paths, margin, margin + SAFETY_OFFSET, JoinType::Miter, 5.0)
             .map_err(|_| range_error())
     }
-    #[cfg(test)]
-    opening_paths_with_interstage(
-        paths,
-        [margin, margin + SAFETY_OFFSET],
-        JoinType::Miter,
-        5.0,
-        |_| geometry_step(expansion_step).map_err(|_| ClipperError::CoordinateOutOfRange),
-    )
-    .map_err(|_| range_error())
 }
 
 fn repair_expansion(paths: &[Polygon], margin: f32) -> Result<Vec<Polygon>, SliceError> {
     offset_paths(paths, margin, JoinType::Miter, 3.0).map_err(|_| range_error())
-}
-
-#[cfg(test)]
-pub(super) fn opening_for_test(paths: &[Polygon], margin: f32) -> Result<Vec<Polygon>, SliceError> {
-    opening_with_step(paths, margin, GeometryStep::FirstOpeningExpand)
-}
-
-#[cfg(test)]
-pub(super) fn repair_expansion_for_test(
-    paths: &[Polygon],
-    margin: f32,
-) -> Result<Vec<Polygon>, SliceError> {
-    repair_expansion(paths, margin)
 }
 
 pub(super) fn scaled_width(scale: CoordinateScale, width: f32) -> Result<f32, SliceError> {

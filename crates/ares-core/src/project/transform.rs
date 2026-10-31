@@ -127,11 +127,6 @@ impl Transform3d {
         true
     }
 
-    #[cfg(test)]
-    pub(crate) fn fixed_xy_equal(self, rhs: Self) -> bool {
-        self.0[..2] == rhs.0[..2]
-    }
-
     /// Zero the X/Y translation, mirroring upstream
     /// `get_matrix_no_offset().pretranslate(...)` composition
     /// (`Brim.cpp:371-374`).

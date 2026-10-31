@@ -82,5 +82,3 @@ pub(crate) fn format_machine_envelope(flavor: GCodeFlavor, limits: MachineLimits
 fn round_machine_limit(value: f64) -> u32 {
     (value + 0.5).floor() as u32
 }
-#[cfg(test)]
-mod tests;

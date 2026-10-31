@@ -9,15 +9,7 @@ pub(crate) struct SupportZDistanceOptions {
 }
 
 impl SupportZDistanceOptions {
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub(crate) fn top_z_distance_mm(&self) -> f64 {
-        self.top_z_distance_mm
-    }
 
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub(crate) fn bottom_z_distance_mm(&self) -> f64 {
-        self.bottom_z_distance_mm
-    }
 
     #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn enforce_support_layers(&self) -> u32 {
@@ -34,15 +26,6 @@ impl SupportZDistanceOptions {
         top_layers > 0 && self.zero_top_contact()
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub(crate) fn zero_gap_interface_bottom(&self, top_layers: usize, bottom_layers: isize) -> bool {
-        let resolved_bottom_layers = if bottom_layers < 0 {
-            top_layers
-        } else {
-            bottom_layers as usize
-        };
-        resolved_bottom_layers > 0 && (self.zero_top_contact() || self.bottom_z_distance_mm == 0.0)
-    }
 }
 
 pub(crate) fn parse(options: &SliceOptions) -> Result<SupportZDistanceOptions, SliceError> {

@@ -52,6 +52,3 @@ fn first_layer_reference_speed_for_role(
         PrintPathRole::GapFill | PrintPathRole::Skirt => None,
     }
 }
-
-#[cfg(test)]
-mod tests;

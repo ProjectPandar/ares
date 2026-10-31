@@ -25,14 +25,7 @@ impl InternalBridgeFilter {
         }
     }
 
-    #[cfg(test)]
-    pub(crate) const fn as_str(self) -> &'static str {
-        match self {
-            Self::Disabled => "disabled",
-            Self::Limited => "limited",
-            Self::NoFilter => "nofilter",
-        }
-    }
+
 }
 
 fn invalid() -> SliceError {

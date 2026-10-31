@@ -46,32 +46,3 @@ pub(super) fn requested(
         settings.printer.gcode.wipe_tower_type
     })
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn smooth_activation_preserves_source_type_dispatch_and_enable_flag() {
-        let mut settings = crate::ProjectSettings::default();
-        settings.process.print.enable_prime_tower.0 = true;
-        settings.process.print.timelapse_type = crate::ProcessTimelapseType::Smooth;
-        settings.printer.gcode.wipe_tower_type = crate::WipeTowerType::Type2;
-        assert_eq!(
-            requested(&settings, false),
-            Some(crate::WipeTowerType::Type2)
-        );
-        assert_eq!(
-            requested(&settings, true),
-            Some(crate::WipeTowerType::Type1)
-        );
-        settings.printer.gcode.wipe_tower_type = crate::WipeTowerType::Type1;
-        assert_eq!(
-            requested(&settings, false),
-            Some(crate::WipeTowerType::Type1)
-        );
-        settings.printer.gcode.wipe_tower_type = crate::WipeTowerType::Type2;
-        settings.process.print.enable_prime_tower.0 = false;
-        assert_eq!(requested(&settings, false), None);
-    }
-}

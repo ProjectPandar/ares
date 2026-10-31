@@ -8,31 +8,6 @@ use super::{
     gcode_fields::gcode_option_fields,
 };
 
-#[cfg(test)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum GCodeOptionSource {
-    Printer,
-    Process,
-    Filament,
-    Project,
-}
-
-#[cfg(test)]
-macro_rules! source {
-    (printer) => {
-        GCodeOptionSource::Printer
-    };
-    (process) => {
-        GCodeOptionSource::Process
-    };
-    (filament) => {
-        GCodeOptionSource::Filament
-    };
-    (project) => {
-        GCodeOptionSource::Project
-    };
-}
-
 macro_rules! clone_source_field {
     ($printer:ident, $process:ident, $filament:ident, $project:ident; printer, $field:ident) => {
         $printer.$field.clone()
@@ -76,13 +51,7 @@ macro_rules! declare_gcode_options {
             }
         }
 
-        #[cfg(test)]
-        impl GCodeOptions {
-            pub(crate) const DECLARATION_ORDER: [&'static str; 149] = [$($key),*];
-            pub(crate) const FIELD_METADATA: [(&'static str, &'static str, GCodeOptionSource); 149] = [
-                $((stringify!($field), $key, source!($owner))),*
-            ];
-        }
+
     };
 }
 

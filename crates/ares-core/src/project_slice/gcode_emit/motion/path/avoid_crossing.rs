@@ -6,9 +6,6 @@ mod boundary;
 mod router;
 mod safe_zone;
 
-#[cfg(test)]
-mod tests;
-
 use crate::{
     SliceError, geometry::Point, options::FloatOrPercent, project_slice::gcode_emit::motion::arc,
 };

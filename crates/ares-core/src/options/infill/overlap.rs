@@ -84,45 +84,13 @@ impl InfillWallBoundaryOptions {
         self.alternate_extra_wall
     }
 
-    #[cfg(test)]
-    pub(crate) const fn new_for_tests(
-        wall_loops: u32,
-        external_wall_line_width: f64,
-        internal_wall_line_width: f64,
-    ) -> Self {
-        Self {
-            wall_loops,
-            external_wall_line_width,
-            internal_wall_line_width,
-            only_one_wall_first_layer: false,
-            only_one_wall_top: false,
-            alternate_extra_wall: false,
-        }
-    }
 
-    #[cfg(test)]
-    pub(crate) const fn with_only_one_wall_first_layer_for_tests(self) -> Self {
-        Self {
-            only_one_wall_first_layer: true,
-            ..self
-        }
-    }
 
-    #[cfg(test)]
-    pub(crate) const fn with_only_one_wall_top_for_tests(self) -> Self {
-        Self {
-            only_one_wall_top: true,
-            ..self
-        }
-    }
 
-    #[cfg(test)]
-    pub(crate) const fn with_alternate_extra_wall_for_tests(self) -> Self {
-        Self {
-            alternate_extra_wall: true,
-            ..self
-        }
-    }
+
+
+
+
 }
 
 fn parse_percent_option(value: Option<&Value>, key: &str, default: f64) -> Result<f64, SliceError> {
@@ -145,14 +113,4 @@ fn parse_percent_option(value: Option<&Value>, key: &str, default: f64) -> Resul
 fn parse_percent_text(text: &str) -> Option<f64> {
     let text = text.trim();
     text.strip_suffix('%').unwrap_or(text).trim().parse().ok()
-}
-
-#[cfg(test)]
-impl InfillWallOverlapOptions {
-    pub(crate) const fn new_for_tests(infill_percent: f64, top_bottom_percent: f64) -> Self {
-        Self {
-            infill_percent,
-            top_bottom_percent,
-        }
-    }
 }

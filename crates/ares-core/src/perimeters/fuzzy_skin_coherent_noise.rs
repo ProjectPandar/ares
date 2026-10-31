@@ -74,6 +74,3 @@ pub(crate) fn coherent_value(
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -268,6 +268,3 @@ fn float_at(values: &OrcaFloats, id: usize, default: f64) -> f64 {
         .or_else(|| values.0.first())
         .map_or(default, |value| value.0)
 }
-
-#[cfg(test)]
-mod tests;

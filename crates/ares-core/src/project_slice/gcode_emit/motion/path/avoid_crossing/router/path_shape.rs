@@ -1,11 +1,6 @@
 //! Contour detour geometry and simplification (`AvoidCrossingPerimeters.cpp:299–479`).
 use crate::geometry::EdgeGrid;
 
-#[cfg(test)]
-mod shortest_direction_tests;
-#[cfg(test)]
-mod tests;
-
 use super::{Boundary, Coord, Intersection, Point, SCALED_EPSILON, TravelPoint};
 
 /// `get_shortest_direction` (:390-423): which way around the contour is

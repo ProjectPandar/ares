@@ -18,14 +18,7 @@ impl GapFillTarget {
         matches!(self, Self::Everywhere)
     }
 
-    #[cfg(test)]
-    pub(crate) const fn as_str_for_tests(self) -> &'static str {
-        match self {
-            Self::Everywhere => "everywhere",
-            Self::TopBottom => "topbottom",
-            Self::Nowhere => "nowhere",
-        }
-    }
+
 }
 
 pub(crate) fn parse_gap_fill_target(options: &SliceOptions) -> Result<GapFillTarget, SliceError> {

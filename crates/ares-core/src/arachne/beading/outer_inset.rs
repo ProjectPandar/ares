@@ -50,11 +50,4 @@ impl BeadingStrategy for OuterWallInsetBeadingStrategy {
     fn transitioning_length(&self, lower_bead_count: i64) -> i64 {
         self.parent.transitioning_length(lower_bead_count)
     }
-
-    fn description(&self) -> String {
-        format!(
-            "OuterWallOfsetBeadingStrategy+{}",
-            self.parent.description()
-        )
-    }
 }

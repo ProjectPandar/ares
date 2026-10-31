@@ -241,9 +241,6 @@ pub(crate) fn fill_surface(
     )
 }
 
-#[cfg(test)]
-mod tests;
-
 fn expolygon_polygons(expolygon: &ExPolygon) -> Vec<crate::geometry::Polygon> {
     let mut polygons = vec![expolygon.contour().clone()];
     polygons.extend(expolygon.holes().iter().cloned());

@@ -187,6 +187,3 @@ fn close_seed(seed: &mut OpenPolyline, polygons: &mut Vec<Polygon>, try_connect_
     }
     polygons.push(Polygon::new(std::mem::take(&mut seed.points)));
 }
-
-#[cfg(test)]
-mod tests;

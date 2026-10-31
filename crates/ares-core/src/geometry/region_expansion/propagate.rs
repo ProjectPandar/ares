@@ -216,19 +216,6 @@ pub(in crate::geometry) fn wavefront_counter_clockwise(polygon: &Polygon) -> boo
     orientation(polygon)
 }
 
-#[cfg(test)]
-pub(in crate::geometry) fn wavefront_step_for_test(
-    polygons: &[Polygon],
-    delta: f32,
-    arc_tolerance: f64,
-    shortest_edge_length: f64,
-) -> Result<Vec<Polygon>, ClipperError> {
-    let mut offsetter = ClipperOffset::default();
-    offsetter.set_arc_tolerance(arc_tolerance);
-    offsetter.set_shortest_edge_length(shortest_edge_length);
-    wavefront_step(&mut offsetter, polygons, delta)
-}
-
 fn wavefront_step(
     offsetter: &mut ClipperOffset,
     polygons: &[Polygon],

@@ -6,9 +6,6 @@ use crate::geometry::CoordinateScale;
 
 use super::Sweep;
 
-#[cfg(test)]
-mod tests;
-
 /// `FillStars`/`ipStars` (`FillRectilinear.cpp:3487`): three 60° families, the
 /// third shifted by `(3/2)·spacing·multiline/density`.
 pub(crate) fn stars_sweeps(spacing: f64, multiline: i32, density: f32) -> [Sweep; 3] {

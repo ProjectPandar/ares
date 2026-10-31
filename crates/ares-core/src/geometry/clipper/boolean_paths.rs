@@ -81,13 +81,6 @@ pub(crate) fn intersection_polygons_paths_with_safety_offset(
     )
 }
 
-#[cfg(test)]
-pub(crate) fn safety_offset_clip_paths_for_test(
-    clip: &[Polygon],
-) -> Result<Vec<Polygon>, ClipperError> {
-    safety_offset_polygons(clip)
-}
-
 fn execute(
     subject: &[Polygon],
     clip: &[Polygon],

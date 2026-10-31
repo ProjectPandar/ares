@@ -7,11 +7,6 @@ use crate::geometry::{ExPolygon, Polygon};
 pub(crate) const SAFETY_OFFSET: f32 = 10.0;
 pub(super) const SAFETY_MITER_LIMIT: f64 = 3.0;
 
-#[cfg(test)]
-pub(in crate::geometry) fn safety_offset_configuration_for_test() -> (f64, f64) {
-    super::offset::offset_configuration_for_test(SAFETY_OFFSET, JoinType::Miter, SAFETY_MITER_LIMIT)
-}
-
 pub(crate) fn difference_ex(
     subject: &[ExPolygon],
     clip: &[ExPolygon],

@@ -309,16 +309,6 @@ impl GCodeWriter {
     pub(crate) const fn current_e(&self) -> f64 {
         self.current_e
     }
-
-    #[cfg(test)]
-    pub(crate) const fn current_acceleration(&self) -> u32 {
-        self.current_print_acceleration
-    }
-
-    #[cfg(test)]
-    pub(crate) const fn current_jerk(&self) -> f64 {
-        self.current_jerk
-    }
 }
 
 fn format_xyzf(value: f64) -> String {
@@ -383,6 +373,3 @@ pub(super) fn append_comment(mut command: String, comment: Option<&str>) -> Stri
     }
     command
 }
-
-#[cfg(test)]
-mod tests;

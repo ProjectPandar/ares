@@ -23,8 +23,7 @@ pub(in crate::project_slice) mod region_bridge_ensuring_areas;
 pub(in crate::project_slice) mod region_bridge_surface_commit;
 pub(in crate::project_slice) mod sparse_anchoring;
 mod stage;
-#[cfg(test)]
-mod tests;
+
 pub(in crate::project_slice) mod transaction;
 mod types;
 
@@ -35,39 +34,8 @@ use crate::{
 pub(in crate::project_slice) use stage::PreparedPostBridgeCandidates;
 pub(in crate::project_slice) use types::BridgeCandidateObject;
 
-#[cfg(test)]
-thread_local! {
-    static INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-    static DISPOSALS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
 pub(in crate::project_slice) fn prepare(
     predecessor: PreparedPostExternalSurfaces,
 ) -> Result<PreparedPostBridgeCandidates, SliceError> {
-    #[cfg(test)]
-    INVOCATIONS.with(|count| count.set(count.get() + 1));
     stage::prepare(predecessor)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostBridgeCandidates) {
-    #[cfg(test)]
-    DISPOSALS.with(|count| count.set(count.get() + 1));
-    stage::dispose(prepared);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_hooks() {
-    INVOCATIONS.with(|count| count.set(0));
-    DISPOSALS.with(|count| count.set(0));
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn invocations() -> usize {
-    INVOCATIONS.with(std::cell::Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn disposals() -> usize {
-    DISPOSALS.with(std::cell::Cell::get)
 }

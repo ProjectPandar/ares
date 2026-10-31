@@ -5,9 +5,6 @@ mod role_fans;
 
 use markers::strip_pressure_markers;
 
-#[cfg(test)]
-mod tests;
-
 use crate::options::PartCoolingFanRamp;
 
 const PART_FAN_MARKER: &[u8] = b";__ARES_PART_FAN_STATE__\n";

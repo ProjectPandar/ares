@@ -243,14 +243,3 @@ trait PhaseObserver {
 
 struct NoopObserver;
 impl PhaseObserver for NoopObserver {}
-
-#[cfg(test)]
-pub(crate) use super::types::{
-    CandidateSnapshot, MaterializationSnapshot, NormalizeFdm2Snapshot, PhaseEvent, ResolutionTrace,
-    UsageSnapshot,
-};
-
-#[cfg(test)]
-mod trace;
-#[cfg(test)]
-pub(crate) use trace::resolve_bounded_project_config_with_trace;

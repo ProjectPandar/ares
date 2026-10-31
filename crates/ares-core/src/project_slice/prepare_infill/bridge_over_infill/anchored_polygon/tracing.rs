@@ -97,24 +97,3 @@ fn emit_trace(trace: &mut TracedPolygon, output: &mut Vec<Polygon>) {
     points.extend(trace.highs.drain(..).rev());
     output.push(Polygon::new(points));
 }
-
-#[cfg(test)]
-pub(super) fn candidate_range_for_test(slice: &[Line], low: Point, high: Point) -> (usize, usize) {
-    candidate_range(slice, low, high)
-}
-
-#[cfg(test)]
-pub(super) fn distance_squared_bits_for_test(left: Point, right: Point) -> u64 {
-    distance_squared(left, right).to_bits()
-}
-
-#[cfg(test)]
-pub(super) fn connect_points_for_test(
-    previous: Point,
-    candidate: Point,
-    spacing: i64,
-) -> Vec<Point> {
-    let mut points = vec![previous];
-    append_connected(&mut points, candidate, spacing);
-    points
-}

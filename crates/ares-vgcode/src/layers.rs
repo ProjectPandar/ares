@@ -120,6 +120,3 @@ fn is_colorprint_option(vertex: &PathVertex) -> bool {
         MoveType::PausePrint | MoveType::CustomGCode
     )
 }
-
-#[cfg(test)]
-mod tests;

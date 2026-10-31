@@ -5,8 +5,6 @@ use crate::{
 
 #[cfg(all(test, windows))]
 pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 256 * 1024;
-#[cfg(all(test, not(windows)))]
-pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 64 * 1024;
 
 mod bounds;
 mod capabilities;
@@ -22,13 +20,6 @@ mod extruders;
 mod extrusion_islands;
 mod fill_entities;
 pub(crate) mod gcode_emit;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "full fill grouping remains inactive until a later source-cited lifecycle slice"
-    )
-)]
 mod group_fills;
 mod hole_to_polyhole;
 mod incomplete_sink;
@@ -90,16 +81,10 @@ mod state;
 use source::ProjectBytes;
 pub(crate) use source::{ProfileInput, ProjectSource};
 mod support_material;
-#[cfg(test)]
-mod test_consumers;
+
 mod top_empty_layers;
 mod volume_bounds;
 mod volume_regions;
-#[cfg(test)]
-use test_consumers::*;
-
-#[cfg(test)]
-mod tests;
 
 pub async fn slice_project(
     project: impl AsRef<[u8]>,

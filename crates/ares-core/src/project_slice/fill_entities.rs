@@ -24,8 +24,7 @@ mod tpms_d;
 mod tpms_fk;
 
 pub(in crate::project_slice) use flow::{extended_object_bounding_box_x, materialized_flow};
-#[cfg(test)]
-pub(in crate::project_slice) use generate::generate_layer;
+
 pub(in crate::project_slice) use stars_bounds::{
     extended as extended_stars_bounds, object as print_object_bounds,
 };
@@ -33,8 +32,7 @@ pub(in crate::project_slice) use stars_bounds::{
 pub(in crate::project_slice) use surface::{SurfaceRequest, surface_polylines};
 
 mod generate;
-#[cfg(test)]
-mod tests;
+
 mod three_d_honeycomb;
 mod triangles;
 mod types;
@@ -51,12 +49,6 @@ use crate::{
     },
 };
 
-#[cfg(test)]
-thread_local! {
-    static INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-    static DISPOSALS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
 pub(in crate::project_slice) struct PreparedPostFillEntities {
     pub(in crate::project_slice) predecessor: PreparedPostInfillCombination,
     pub(in crate::project_slice) objects: Vec<Vec<LayerFillEntities>>,
@@ -65,8 +57,6 @@ pub(in crate::project_slice) struct PreparedPostFillEntities {
 pub(in crate::project_slice) fn prepare(
     mut predecessor: PreparedPostInfillCombination,
 ) -> Result<PreparedPostFillEntities, SliceError> {
-    #[cfg(test)]
-    INVOCATIONS.with(|count| count.set(count.get() + 1));
     let result = {
         let external = &predecessor.predecessor.predecessor;
         let traversal = &external.predecessor.predecessor;
@@ -183,25 +173,7 @@ fn move_thin_fills(
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostFillEntities) {
-    #[cfg(test)]
-    DISPOSALS.with(|count| count.set(count.get() + 1));
     combine_infill::dispose(prepared.predecessor);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_hooks() {
-    INVOCATIONS.with(|count| count.set(0));
-    DISPOSALS.with(|count| count.set(0));
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn invocations() -> usize {
-    INVOCATIONS.with(std::cell::Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn disposals() -> usize {
-    DISPOSALS.with(std::cell::Cell::get)
 }
 
 pub(in crate::project_slice) fn simplify_before_ordering(

@@ -115,9 +115,6 @@ where
         }
         LegacyOutcome::Error(error) => LegacyOutcome::Error(error),
         LegacyOutcome::Assign { value, .. } => match rule.wire.json_array {
-            JsonArrayAllowance::RejectAfterFirstPass => {
-                consume_json(deserializer, rule.source, invalid_array(rule.source))
-            }
             JsonArrayAllowance::Flatten(vector) => {
                 flatten_json_array(deserializer, rule, vector, value)
             }

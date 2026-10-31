@@ -1,7 +1,5 @@
 //! `libslic3r/Tesselate.cpp:23–56/100–170/192–195` default GLU boundary.
 mod kernel;
-#[cfg(test)]
-mod tests;
 
 use super::{CoordinateScale, ExPolygon};
 

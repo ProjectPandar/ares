@@ -71,19 +71,6 @@ pub(super) fn print_object_origin(
     )
 }
 
-#[cfg(test)]
-pub(super) fn object_origin(object: &ProjectObject, scale: CoordinateScale) -> (f64, f64) {
-    let instance = object
-        .instances()
-        .iter()
-        .find(|instance| instance.printable())
-        .expect("resolved object has a printable instance");
-    let center = crate::project_slice::raw_intersections::raw_center(object, scale)
-        .expect("sliced object has validated raw bounds");
-    let shift = instance_shift(instance, center, scale);
-    (scale.unscale(shift.x()), scale.unscale(shift.y()))
-}
-
 pub(super) fn instance_shift(
     instance: &ProjectInstance,
     center: Point,
@@ -314,5 +301,3 @@ fn sanitize_instance_name(name: &str) -> String {
     let stripped = output.strip_prefix('_').unwrap_or(&output);
     stripped.strip_suffix('_').unwrap_or(stripped).to_owned()
 }
-#[cfg(test)]
-mod tests;

@@ -80,11 +80,6 @@ impl KdTree {
         search.result
     }
 
-    #[cfg(test)]
-    pub(in crate::geometry) fn nodes(&self) -> &[usize] {
-        &self.nodes
-    }
-
     fn build_recursive(
         &mut self,
         points: &[[f64; 2]],

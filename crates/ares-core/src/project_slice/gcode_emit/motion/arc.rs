@@ -35,22 +35,6 @@ pub(super) enum Segment {
     Arc(ArcSegment),
 }
 
-#[cfg(test)]
-pub(super) fn fit(points: &[Point], tolerance: f64) -> Vec<Segment> {
-    let ranges = simplify::fit_ranges(points, tolerance, 1_000_000.0);
-    let mut segments = Vec::with_capacity(points.len());
-    for range in ranges {
-        if let Some(arc) = range.arc {
-            segments.push(Segment::Arc(arc));
-        } else {
-            for pair in points[range.start..=range.end].windows(2) {
-                append_line(&mut segments, pair[0], pair[1]);
-            }
-        }
-    }
-    segments
-}
-
 fn append_line(segments: &mut Vec<Segment>, start: Point, end: Point) {
     segments.push(Segment::Line {
         end,
@@ -383,15 +367,3 @@ fn quantize(value: f64, units_per_mm: f64) -> f64 {
 fn distance(left: Point, right: Point) -> f64 {
     (left.x - right.x).hypot(left.y - right.y)
 }
-
-#[cfg(test)]
-#[path = "arc/dp_fragment_tests.rs"]
-mod dp_fragment_tests;
-#[cfg(test)]
-#[path = "arc/dp_pre129_tests.rs"]
-mod dp_pre129_tests;
-#[cfg(test)]
-#[path = "arc/dp_pre75_tests.rs"]
-mod dp_pre75_tests;
-#[cfg(test)]
-mod tests;

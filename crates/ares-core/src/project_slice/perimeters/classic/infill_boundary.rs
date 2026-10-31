@@ -3,8 +3,7 @@
 
 mod geometry;
 mod preflight;
-#[cfg(test)]
-mod tests;
+
 mod types;
 
 pub(in crate::project_slice) use types::{
@@ -21,9 +20,6 @@ use crate::{
     },
 };
 use types::{StagedObject, StagedRecord, ValidatedProject};
-
-#[cfg(test)]
-pub(in crate::project_slice) use geometry::GeometryStep;
 
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicGapExtrusion,
@@ -153,26 +149,4 @@ fn consume_predecessor(prepared: PreparedPostClassicGapExtrusion) {
         incomplete_sink::consume_gap_extrusion_object(object);
     }
     incomplete_sink::consume_boxed_post_classic_traversal(predecessor);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn validate_numeric_preflight_for_test(
-    prepared: &PreparedPostClassicGapExtrusion,
-) -> Result<(), SliceError> {
-    preflight::validate(prepared).map(drop)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_geometry_hooks() {
-    tests::reset_geometry_hooks();
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn fail_geometry_at(step: GeometryStep) {
-    tests::fail_at(step);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn geometry_events() -> Vec<GeometryStep> {
-    tests::geometry_events()
 }

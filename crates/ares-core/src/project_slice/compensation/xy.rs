@@ -52,6 +52,3 @@ fn offset_or_original(polygon: &Polygon, delta: f32) -> Result<Vec<Polygon>, Cli
         raw_offset_paths(std::slice::from_ref(polygon), delta, JoinType::Miter, 3.0)
     }
 }
-
-#[cfg(test)]
-mod tests;

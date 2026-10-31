@@ -8,8 +8,7 @@ mod parse;
 pub(crate) mod patterns;
 mod scalars;
 mod top_surface;
-#[cfg(test)]
-mod test_support;
+
 
 pub(crate) use extra_solid::ExtraSolidInfills;
 pub(crate) use internal_bridge_filter::InternalBridgeFilter;

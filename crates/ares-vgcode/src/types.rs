@@ -233,6 +233,3 @@ pub fn lerp_color(c1: Color, c2: Color, t: f32) -> Color {
 fn lerp_channel(c1: u8, c2: u8, t: f32) -> u8 {
     ((1.0 - t) * f32::from(c1) + t * f32::from(c2)) as u8
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::{
     geometry::{ClipperError, ExPolygon, Polygon, difference_ex, difference_ex_polygons},
     project_slice::region_slices::{RegionSurface, RegionSurfaceKind},

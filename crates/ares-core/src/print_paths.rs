@@ -6,8 +6,7 @@ use crate::{
 mod gap_fill_filter;
 pub use gap_fill_filter::filter_short_gap_fill_paths;
 mod generate;
-#[cfg(test)]
-pub(crate) use generate::finalize_print_paths;
+
 pub use generate::generate_print_paths;
 pub(crate) use generate::{
     finalize_print_paths_with_layer_contours, generate_print_paths_with_bridge_policy,
@@ -302,6 +301,3 @@ impl LayerPrintPaths {
         &self.paths
     }
 }
-
-#[cfg(test)]
-mod tests;

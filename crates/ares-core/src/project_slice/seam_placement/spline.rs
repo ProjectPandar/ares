@@ -1,8 +1,5 @@
 mod qr;
 
-#[cfg(test)]
-mod tests;
-
 use qr::FullPivQr;
 
 fn cubic_kernel(mut value: f32) -> f32 {

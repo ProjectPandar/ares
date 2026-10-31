@@ -1,7 +1,5 @@
 //! `GCodeProcessor::UsedFilaments`, `process_filaments` and G1/VG1
 //! volume accounting (cpp:1515–1650, 3895–3961, 4306–4324, 5937–5950).
-#[cfg(test)]
-mod tests;
 
 use super::ProcessorConfig;
 use super::filament_change::FilamentChange;

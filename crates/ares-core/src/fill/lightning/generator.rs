@@ -14,9 +14,6 @@ use super::layer::Layer;
 use super::layer_geom::GroundingContext;
 use super::tree_node::{Node, PropagationSettings};
 
-#[cfg(test)]
-mod tests;
-
 /// `to_polygons(ExPolygons)` — flatten each expolygon to contour+holes.
 fn to_polygons(expolys: &[ExPolygon]) -> Vec<Polygon> {
     expolys

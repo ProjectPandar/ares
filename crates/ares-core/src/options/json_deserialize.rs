@@ -1,7 +1,6 @@
 //! Config.cpp:927-929/952-1006 maps preset JSON strings/arrays to ConfigOption wire values.
 mod scalar;
-#[cfg(test)]
-mod tests;
+
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 

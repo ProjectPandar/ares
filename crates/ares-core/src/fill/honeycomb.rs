@@ -12,9 +12,6 @@ use crate::geometry::{
     douglas_peucker, intersection_open_polylines,
 };
 
-#[cfg(test)]
-mod tests;
-
 /// Parameters carried into `fill_honeycomb` — subset of the surface-fill
 /// params the upstream `FillParams` provides.
 #[derive(Clone, Copy)]

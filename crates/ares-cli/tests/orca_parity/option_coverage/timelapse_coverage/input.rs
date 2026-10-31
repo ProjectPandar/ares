@@ -104,11 +104,3 @@ pub(super) fn rejected_smooth(
         &runner::repo_root().join("tests/parity/cube10.stl"),
     )
 }
-
-pub(in super::super) fn metadata() -> Value {
-    json!({"scope":"Traditional/Smooth; one nozzle/filament, centered cube, by-layer, input prime tower disabled, conditional template",
-        "source":"PrintConfig.cpp:5879-5894; Print.cpp:3290-3303,3385-3388; GCode.cpp:4645-4675,5145-5202,5455-5461,5527-5546",
-        "enable_prime_tower":"0", "time_lapse_gcode":TEMPLATE,
-        "tower_policy":"accept upstream emitted tower behavior; preserve preset bed/tower coordinates",
-        "deferred":["Type2", "SEMM", "tool mapping", "multiple tools", "by-object", "BBL", "warning flags", "physical camera motion"]})
-}

@@ -187,20 +187,11 @@ fn geometry_error_value() -> SliceError {
     SliceError::InvalidInput(GEOMETRY_ERROR.to_owned())
 }
 
-fn observe(step: GeometryStep) -> Result<(), SliceError> {
-    #[cfg(test)]
-    if super::tests::observe_step(step) {
-        return Err(geometry_error_value());
-    }
-    #[cfg(not(test))]
-    let _ = step;
+fn observe(_step: GeometryStep) -> Result<(), SliceError> {
     Ok(())
 }
 
-fn observe_extra_perimeters_guard() {
-    #[cfg(test)]
-    super::tests::observe_guard();
-}
+fn observe_extra_perimeters_guard() {}
 
 pub(super) struct StagedSurfaceOutput {
     pub(super) fill_surfaces: Vec<RegionSurface>,

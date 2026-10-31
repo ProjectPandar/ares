@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::{
     geometry::{
         ClipperError, CoordinateScale, ExPolygon, JoinType, Polygon, difference_polygons_paths,
@@ -43,11 +40,6 @@ pub(in crate::project_slice) fn prepare_region_bridge_ensuring_areas(
 fn shrink_near_perimeters(polygons: &[Polygon], delta: f32) -> Result<Vec<Polygon>, ClipperError> {
     let (join_type, miter_limit) = SHRINK_CONFIGURATION;
     offset_paths(polygons, delta, join_type, miter_limit)
-}
-
-#[cfg(test)]
-fn shrink_configuration_for_test() -> (JoinType, f64) {
-    SHRINK_CONFIGURATION
 }
 
 struct RegionBridgeEnsuringOperations<Union, Shrink, Difference, Intersection> {

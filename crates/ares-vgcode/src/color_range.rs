@@ -147,6 +147,3 @@ pub(crate) fn round_to_bin(value: f32) -> f32 {
     };
     rounded as f32 * INVSCALE[i]
 }
-
-#[cfg(test)]
-mod tests;

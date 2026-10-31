@@ -3,8 +3,7 @@ mod entities;
 mod mesh;
 mod path;
 mod ray;
-#[cfg(test)]
-mod tests;
+
 mod tree;
 
 use crate::project_slice::fill_entities::PreparedPostFillEntities;

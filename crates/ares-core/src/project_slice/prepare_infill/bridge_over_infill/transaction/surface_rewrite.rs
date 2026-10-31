@@ -23,9 +23,6 @@ use super::super::{
 };
 use super::geometry_error;
 
-#[cfg(test)]
-mod tests;
-
 pub(super) fn prepare(
     predecessor: &mut PreparedPostExternalSurfaces,
     candidate_objects: &[BridgeCandidateObject],

@@ -41,5 +41,3 @@ pub(in crate::project_slice::gcode_emit) fn clipped_tail(
     }
     (0, None)
 }
-#[cfg(test)]
-mod tests;

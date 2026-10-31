@@ -45,8 +45,6 @@ pub(super) fn apply(fills: &mut Vec<SurfaceFill>, context: Context) -> Result<()
                     kind: RegionSurfaceKind::InternalSolid,
                     thickness: source.representative.thickness,
                     thickness_layers: 1,
-                    bridge_angle: -1.0,
-                    extra_perimeters: 0,
                 },
                 expolygons: narrow,
                 params,

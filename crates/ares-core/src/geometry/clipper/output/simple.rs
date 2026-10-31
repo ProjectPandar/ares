@@ -1,6 +1,5 @@
 use super::super::Clipper;
-#[cfg(test)]
-use super::super::SimpleRepair;
+
 use super::super::types::{OutPointId, OutRecId};
 
 impl Clipper {
@@ -71,8 +70,6 @@ impl Clipper {
             self.out_recs[new.0].is_hole = !old_is_hole;
             self.out_recs[new.0].first_left = Some(old);
             if self.using_polytree {
-                #[cfg(test)]
-                self.simple_repairs_for_test.push(SimpleRepair::FirstLefts2);
                 self.fixup_first_lefts2(new, old);
             }
         } else if self.poly_contains(first, second) {
@@ -81,23 +78,14 @@ impl Clipper {
             self.out_recs[new.0].first_left = old_first_left;
             self.out_recs[old.0].first_left = Some(new);
             if self.using_polytree {
-                #[cfg(test)]
-                self.simple_repairs_for_test.push(SimpleRepair::FirstLefts2);
                 self.fixup_first_lefts2(old, new);
             }
         } else {
             self.out_recs[new.0].is_hole = old_is_hole;
             self.out_recs[new.0].first_left = old_first_left;
             if self.using_polytree {
-                #[cfg(test)]
-                self.simple_repairs_for_test.push(SimpleRepair::FirstLefts1);
                 self.fixup_first_lefts1(old, new);
             }
         }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn simple_repairs_for_test(&self) -> &[SimpleRepair] {
-        &self.simple_repairs_for_test
     }
 }

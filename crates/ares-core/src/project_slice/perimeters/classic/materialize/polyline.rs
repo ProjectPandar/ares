@@ -20,10 +20,7 @@ impl Polyline3 {
         }));
         Self { points, fitting }
     }
-    #[cfg(test)]
-    pub(in crate::project_slice) fn is_valid(&self) -> bool {
-        self.points.len() >= 2
-    }
+
     pub(in crate::project_slice) fn points(&self) -> &[Point3] {
         &self.points
     }

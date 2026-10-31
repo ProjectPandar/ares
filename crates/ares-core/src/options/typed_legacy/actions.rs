@@ -78,7 +78,6 @@ pub(crate) enum StringAllowance {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum JsonArrayAllowance {
-    RejectAfterFirstPass,
     Flatten(VectorType),
     /// `Config.cpp:947-1000` `load_from_json` homogeneous-array branch for
     /// scalar options: join with the default scalar separator `','`

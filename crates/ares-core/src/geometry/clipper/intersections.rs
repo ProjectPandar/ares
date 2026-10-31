@@ -1,9 +1,6 @@
 mod open;
 mod top;
 
-#[cfg(test)]
-pub(in crate::geometry) use top::top_updates_for_test;
-
 use super::ordering::fixed_gcc_sort_by;
 use super::predicates::top_x;
 use super::round_policy::RoundPolicy;

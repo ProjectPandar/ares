@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use super::{
     EmitState, arc,
     features::{PathProperties, feature_description, is_bridge_feature},

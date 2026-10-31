@@ -44,11 +44,6 @@ impl EndPointHeap {
         self.push(point, points);
     }
 
-    #[cfg(test)]
-    pub(in crate::geometry) fn heap(&self) -> &[usize] {
-        &self.heap
-    }
-
     fn update_up(&mut self, top: usize, bottom: usize, points: &mut [EndPoint]) {
         let mut child = bottom;
         loop {

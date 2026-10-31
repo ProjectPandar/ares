@@ -148,11 +148,6 @@ fn midpoint(left: i64, right: i64) -> i64 {
     ((i128::from(left) + i128::from(right)) as f64 * 0.5) as i64
 }
 
-#[cfg(test)]
-pub(super) fn centroids_for_test(lines: &[Line]) -> Vec<Point> {
-    lines.iter().copied().map(line_centroid).collect()
-}
-
 fn coordinate(point: Point, dimension: usize) -> i64 {
     if dimension == 0 { point.x() } else { point.y() }
 }

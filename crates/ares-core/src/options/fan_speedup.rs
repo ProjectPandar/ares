@@ -22,15 +22,9 @@ impl FanSpeedupControl {
         }
     }
 
-    #[cfg(test)]
-    pub(crate) const fn time_s(self) -> f64 {
-        self.time_s
-    }
 
-    #[cfg(test)]
-    pub(crate) const fn only_overhangs(self) -> bool {
-        self.only_overhangs
-    }
+
+
 
     pub(crate) const fn enabled(self) -> bool {
         self.time_s > 0.0

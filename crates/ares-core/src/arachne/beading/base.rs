@@ -70,8 +70,6 @@ pub(crate) trait BeadingStrategy {
         Vec::new()
     }
 
-    fn description(&self) -> String;
-
     fn split_middle_threshold(&self) -> f64 {
         self.config().wall_split_middle_threshold
     }

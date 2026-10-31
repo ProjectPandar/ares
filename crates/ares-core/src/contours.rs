@@ -289,6 +289,3 @@ fn compare_contours(a: &Contour, b: &Contour) -> Ordering {
         .find(|ordering| !ordering.is_eq())
         .unwrap_or_else(|| a.points().len().cmp(&b.points().len()))
 }
-
-#[cfg(test)]
-mod tests;

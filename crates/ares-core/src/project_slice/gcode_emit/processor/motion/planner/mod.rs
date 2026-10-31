@@ -105,52 +105,6 @@ impl RollingPlanner {
     }
 }
 
-#[cfg(test)]
-pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
-    let mut planner = RollingPlanner::new();
-    let mut times = Vec::with_capacity(blocks.len());
-    for block in blocks {
-        times.extend(planner.push(block).into_iter().map(|(time, _)| time));
-    }
-    // Test hook: force-drain the queue even for a lone block so trapezoid
-    // math stays inspectable; production `finish` drops a lone tail block
-    // (upstream `calculate_time`'s `blocks.size() < 2` guard) unless a
-    // buffered delay is still pending (`drain_final`).
-    if planner.blocks.is_empty() {
-        return times;
-    }
-    times.extend(planner.process(0).into_iter().map(|(time, _)| time));
-    times
-}
-
-/// `TimeBlock::calculate_trapezoid()` + `time()` over one fixed profile
-/// (GCodeProcessor.cpp:255-274, GCodeProcessor.hpp:473-476).
-#[cfg(test)]
-pub(super) fn planned_trapezoid_time(
-    distance: f32,
-    cruise: f32,
-    entry: f32,
-    exit: f32,
-    acceleration: f32,
-) -> f32 {
-    block_time(PlannedBlock {
-        distance,
-        acceleration,
-        cruise,
-        entry,
-        exit,
-        max_entry: entry,
-        safe: exit,
-        time: 0.0,
-        trapezoid: Trapezoid::default(),
-        nominal_length: false,
-        recalculate: false,
-        direction: [0.0; 4],
-        axis_feedrate: [0.0; 4],
-    })
-    .0
-}
-
 fn plan(blocks: &mut [PlannedBlock]) {
     if blocks.is_empty() {
         return;

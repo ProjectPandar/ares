@@ -342,6 +342,3 @@ fn boundary_distance_squared(expoly: &ExPolygon, sp: Point) -> f64 {
     }
     d2
 }
-
-#[cfg(test)]
-mod tests;

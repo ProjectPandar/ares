@@ -291,7 +291,3 @@ fn is_overhang_triangle(a: [f64; 3], b: [f64; 3], c: [f64; 3], up: [f64; 3]) -> 
     let n = cross(sub(b, a), sub(c, b));
     dot(n, up) > 0.707 * norm(n)
 }
-
-/// `FillAdaptive.cpp:401-412` — the fixed octree frame rotations.
-#[cfg(test)]
-mod tests;

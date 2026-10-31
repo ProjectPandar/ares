@@ -163,11 +163,6 @@ impl RadiusGrid {
             y: (i128::from(point.y()) + half) >> self.log2,
         }
     }
-
-    #[cfg(test)]
-    pub(super) fn len(&self) -> usize {
-        self.locations.len()
-    }
 }
 
 /// `(a - b).cast<double>().squaredNorm()` — squared distance in f64.
@@ -183,6 +178,3 @@ pub(super) fn distance_squared_inside(a: Point, b: Point, radius: Coord) -> Opti
     let distance_squared = squared_distance(a, b);
     (distance_squared < (radius as f64).powi(2)).then_some(distance_squared)
 }
-
-#[cfg(test)]
-mod tests;

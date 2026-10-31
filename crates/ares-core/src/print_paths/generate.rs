@@ -22,14 +22,6 @@ pub fn generate_print_paths(
     )
 }
 
-#[cfg_attr(not(test), allow(dead_code))]
-pub(crate) fn finalize_print_paths(
-    paths: Vec<LayerPrintPaths>,
-    options: &SliceOptions,
-) -> Result<Vec<LayerPrintPaths>, SliceError> {
-    finalize_print_paths_inner(paths, options, None)
-}
-
 pub(crate) fn finalize_print_paths_with_layer_contours(
     paths: Vec<LayerPrintPaths>,
     options: &SliceOptions,

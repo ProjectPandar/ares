@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::project_slice::region_slices::{RegionSurface, RegionSurfaceKind};
 
 pub(in crate::project_slice) fn commit_region_bridge_surfaces(

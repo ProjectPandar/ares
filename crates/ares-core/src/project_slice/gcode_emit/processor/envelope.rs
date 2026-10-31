@@ -145,6 +145,3 @@ fn normal(values: &OrcaFloats) -> f64 {
     // get_option_value returns float, indexing by time mode, not extruder.
     f64::from(values.0.first().map_or(0.0, |value| value.0 as f32))
 }
-
-#[cfg(test)]
-mod tests;

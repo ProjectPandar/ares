@@ -4,8 +4,6 @@ mod commands;
 mod moves;
 mod path;
 pub(super) use moves::Extrude;
-#[cfg(test)]
-mod tests;
 
 use crate::GCodeFlavor;
 

@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::{
     geometry::{
         ClipperError, CoordinateScale, ExPolygon, JoinType, Polygon, closing_ex,

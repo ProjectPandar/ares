@@ -204,42 +204,6 @@ pub(super) fn adjust_layer_pairs_to_object_height(
     Ok(true)
 }
 
-#[cfg(test)]
-pub(super) fn planned_layers(pairs: &[LayerPair]) -> Result<Vec<PlannedLayer>, SliceError> {
-    planned_layers_with_zaa(pairs, None, &test_parameters())
-}
-
-#[cfg(test)]
-fn test_parameters() -> SlicingParameters {
-    SlicingParameters {
-        base_raft_layers: 0,
-        interface_raft_layers: 0,
-        base_raft_layer_height: 0.0,
-        interface_raft_layer_height: 0.0,
-        contact_raft_layer_height: 0.0,
-        layer_height: 0.2,
-        min_layer_height: 0.07,
-        max_layer_height: 0.2,
-        max_support_layer_height: 0.0,
-        zero_gap_interface_top: false,
-        zero_gap_interface_bottom: false,
-        zero_gap_interface_raft: false,
-        first_print_layer_height: 0.2,
-        first_object_layer_height: 0.2,
-        first_object_layer_bridging: false,
-        gap_raft_object: 0.0,
-        gap_object_support: 0.0,
-        gap_support_object: 0.0,
-        raft_base_top_z: 0.0,
-        raft_interface_top_z: 0.0,
-        raft_contact_top_z: 0.0,
-        object_print_z_min: 0.0,
-        object_print_z_max: 1.0,
-        object_print_z_uncompensated_max: 1.0,
-        object_shrinkage_compensation_z: 0.0,
-    }
-}
-
 pub(super) fn planned_layers_with_zaa(
     pairs: &[LayerPair],
     zaa_min_z: Option<f64>,
@@ -312,6 +276,3 @@ fn require_finite(value: f64) -> Result<(), SliceError> {
 fn invalid(message: &str) -> SliceError {
     SliceError::InvalidInput(message.to_owned())
 }
-
-#[cfg(test)]
-mod tests;

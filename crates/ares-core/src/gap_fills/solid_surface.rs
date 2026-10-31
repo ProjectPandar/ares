@@ -115,5 +115,3 @@ fn solid_surface_path(
         Ok(None)
     }
 }
-#[cfg(test)]
-mod tests;

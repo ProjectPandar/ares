@@ -35,20 +35,6 @@ fn orca_parity_timelapse_type_conditional_template_and_empty_controls() {
     }
 }
 
-pub(super) fn compare(
-    runner: &OrcaRunner,
-    exported: &runner::ExportedCase,
-    requested: &Value,
-) -> crate::ParityOutcome {
-    let sliced = runner.slice_case(exported).unwrap();
-    branch_lines(
-        std::str::from_utf8(&sliced.reference).unwrap(),
-        requested.as_str().unwrap(),
-        true,
-    );
-    crate::compare_exported_for(runner, exported, Some("timelapse_type"))
-}
-
 fn branch_lines<'a>(native: &'a str, mode: &str, active: bool) -> Vec<(usize, &'a str)> {
     let expected = if mode == "0" {
         ";W6_TL_TRAD "

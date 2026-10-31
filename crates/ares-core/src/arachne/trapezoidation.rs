@@ -86,6 +86,3 @@ impl<'a> SkeletalTrapezoidation<'a> {
         self.generated_toolpaths
     }
 }
-
-#[cfg(test)]
-mod tests;

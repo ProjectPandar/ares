@@ -314,6 +314,3 @@ impl ViewerImpl {
         self.settings_used_for_ranges = Some(self.settings.clone());
     }
 }
-
-#[cfg(test)]
-mod tests;

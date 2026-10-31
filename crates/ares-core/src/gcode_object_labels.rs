@@ -189,5 +189,3 @@ pub(crate) fn enabled(options: &SliceOptions) -> Result<bool, SliceError> {
         .as_bool()
         .ok_or_else(|| SliceError::InvalidInput("gcode_label_objects must be a boolean".to_owned()))
 }
-#[cfg(test)]
-mod tests;

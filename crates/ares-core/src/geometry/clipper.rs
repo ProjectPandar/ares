@@ -26,8 +26,6 @@ mod winding;
 pub(in crate::geometry) mod z;
 pub(crate) mod z_clip;
 
-#[cfg(test)]
-pub(super) use boolean_ex::safety_offset_configuration_for_test;
 pub(crate) use boolean_ex::{
     SAFETY_OFFSET, difference_ex, difference_ex_polygons,
     difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
@@ -36,47 +34,34 @@ pub(crate) use boolean_ex::{
     intersection_polygons_polygons_ex, union_expolygons, union_safety_offset_ex,
     union_safety_offset_expolygons, xor_ex,
 };
-#[cfg(test)]
-pub(crate) use boolean_paths::safety_offset_clip_paths_for_test;
+
 pub(crate) use boolean_paths::{
     difference_polygons_paths, difference_polygons_paths_with_safety_offset,
     intersection_polygons_paths, intersection_polygons_paths_with_safety_offset,
     union_even_odd_polygons_paths, union_polygons_paths, union_polygons_paths_pair,
     union_positive_polygons_paths, union_safety_offset_polygons,
 };
-#[cfg(test)]
-pub(crate) use bounds::{IntBounds, negative_outer};
-#[cfg(test)]
-pub(in crate::geometry) use input::reverse_horizontal_for_test;
-#[cfg(test)]
-pub(in crate::geometry) use intersections::top_updates_for_test;
+
 pub(crate) use offset::offset_paths_tree;
-#[cfg(test)]
-pub(in crate::geometry) use offset::opening_path_configurations_for_test;
-#[cfg(test)]
-pub(crate) use offset::opening_paths_with_interstage;
+
 pub(crate) use offset::{
     ClipperOffset, JoinType, closing_ex, offset_expolygon, offset_expolygon_refs_paths,
     offset_expolygons, offset_expolygons_paths, offset_open_paths, offset_paths, offset2_ex,
     offset2_ex_with_interstage, opening_ex, opening_paths, raw_offset_paths,
 };
-#[cfg(test)]
-pub(crate) use offset::{offset_expolygons_raw, raw_offset_open_paths};
+
 pub(crate) use point_in_polygon::point_in_polygon;
-#[cfg(test)]
-pub(crate) use polyline::recombine_polylines;
+
 pub(crate) use polyline::{
     diff_pl, difference_open_polylines, intersection_open_polylines, intersection_pl,
     open_polyline_inside_expolygon,
 };
-#[cfg(test)]
-pub(crate) use polytree::PolyNode;
+
 pub(crate) use polytree::{PolyTree, union_contours, union_ex};
 pub(crate) use predicates::{fixed_round, slopes_equal};
 pub(crate) use round_policy::{IntersectionEdge, RoundPolicy};
 pub(super) use simplify::{simplify_polygons, simplify_polygons_with_mode};
-#[cfg(test)]
-pub(crate) use strictly_simple::MaximaCursor;
+
 pub(crate) use variable_offset::variable_offset_inner_ex;
 
 use std::collections::BinaryHeap;
@@ -127,13 +112,6 @@ pub(crate) fn orientation(polygon: &Polygon) -> bool {
     area(polygon.points()) >= 0.0
 }
 
-#[cfg(test)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum SimpleRepair {
-    FirstLefts1,
-    FirstLefts2,
-}
-
 pub(crate) struct Clipper {
     options: ClipperOptions,
     using_polytree: bool,
@@ -156,10 +134,6 @@ pub(crate) struct Clipper {
     z_fill_mark: Option<i64>,
     z_fill_width: bool,
     z_fill_source_index: bool,
-    #[cfg(test)]
-    collected_maxima_for_test: Vec<i64>,
-    #[cfg(test)]
-    simple_repairs_for_test: Vec<SimpleRepair>,
 }
 
 impl Clipper {
@@ -184,10 +158,6 @@ impl Clipper {
             z_fill_mark: None,
             z_fill_width: false,
             z_fill_source_index: false,
-            #[cfg(test)]
-            collected_maxima_for_test: Vec::new(),
-            #[cfg(test)]
-            simple_repairs_for_test: Vec::new(),
         }
     }
 }

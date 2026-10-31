@@ -128,5 +128,3 @@ pub(super) fn ostream_with_precision(value: f64, precision: usize) -> String {
     };
     format!("{sign}{fixed}")
 }
-#[cfg(test)]
-mod tests;

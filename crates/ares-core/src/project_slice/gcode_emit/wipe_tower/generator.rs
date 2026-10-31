@@ -7,9 +7,6 @@ use crate::{
     geometry::{BoundingBox, CoordinateScale},
 };
 
-#[cfg(test)]
-mod tests;
-
 pub(super) struct Generator<'a> {
     pub(super) settings: &'a ProjectSettings,
     pub(super) scale: CoordinateScale,

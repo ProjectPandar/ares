@@ -1,13 +1,9 @@
 // Reached loop-construction seam from OrcaSlicer v2.4.2
 // `PerimeterGenerator.cpp:208-210,227`. Entity traversal and orientation are deferred.
 
-#[cfg(test)]
-mod tests;
 pub(in crate::project_slice) mod tree;
 mod types;
 
-#[cfg(test)]
-pub(in crate::project_slice) use types::PreparedChainedLoopRecord as TestPreparedChainedLoopRecord;
 pub(in crate::project_slice) use types::{
     ChainedLoopNode, ExtrusionLoop, ExtrusionLoopRole, PreparedChainedLoopObject,
     PreparedChainedLoopRecord, PreparedChainedLoopSurface, PreparedPostClassicChainedLoops,

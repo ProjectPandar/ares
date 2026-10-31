@@ -165,34 +165,6 @@ impl ExtrusionOptions {
         }
     }
 
-    #[cfg(test)]
-    pub(crate) fn with_role_hardware_for_tests(
-        &self,
-        wall: RoleHardwareValues,
-        sparse_infill: RoleHardwareValues,
-        solid_infill: RoleHardwareValues,
-    ) -> Self {
-        self.with_role_hardware(
-            RoleExtrusionHardware::from_default(self.hardware.default)
-                .with_wall(wall)
-                .with_sparse_infill(sparse_infill)
-                .with_solid_infill(solid_infill),
-        )
-    }
-
-    #[cfg(test)]
-    pub(crate) fn with_support_hardware_for_tests(
-        &self,
-        support: RoleHardwareValues,
-        support_interface: RoleHardwareValues,
-    ) -> Self {
-        self.with_role_hardware(
-            self.hardware
-                .with_support(support)
-                .with_support_interface(support_interface),
-        )
-    }
-
     pub fn with_bridge_flow(&self, bridge_flow: f64) -> Self {
         Self {
             bridge_flow,

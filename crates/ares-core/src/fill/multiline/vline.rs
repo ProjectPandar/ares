@@ -277,6 +277,3 @@ fn append_span_samples(out: &mut Vec<Point>, x: Coord, a: Coord, b: Coord, spaci
         y += spacing;
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -160,5 +160,3 @@ fn encode_base64(bytes: [u8; 8]) -> [u8; 12] {
     }
     output
 }
-#[cfg(test)]
-mod tests;

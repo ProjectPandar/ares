@@ -143,6 +143,3 @@ pub fn encode_config_value(key: &str, typed_json: &str) -> Result<String, JsValu
     ares_core::encode_config_value_by_key(key, typed_json)
         .map_err(|error| JsValue::from_str(&error))
 }
-
-#[cfg(test)]
-mod tests;

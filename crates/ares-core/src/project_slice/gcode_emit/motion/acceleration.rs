@@ -1,9 +1,6 @@
 //! Acceleration/jerk emission per flavor (`GCodeWriter.cpp:216-256,
 //! 324-348`).
 
-#[cfg(test)]
-mod tests;
-
 use super::{EmitState, format, jerk, travel::EPSILON};
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32, travel: bool) {

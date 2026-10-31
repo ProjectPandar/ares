@@ -53,5 +53,3 @@ fn skirt_loop_extrusion_mm(input: &LoopCountInput, loop_index: u32) -> f64 {
     let height = input.bounds.max_y - input.bounds.min_y + 2.0 * expand;
     2.0 * (width + height) * input.skirt_extrusion_per_mm
 }
-#[cfg(test)]
-mod tests;

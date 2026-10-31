@@ -20,7 +20,3 @@ pub(in crate::project_slice) use materialize::PreparedArachnePerimeters;
 
 // Constructed only by the seam tests until the arachne materialization
 // transaction (`PerimeterGenerator.cpp:2093-2519`) dispatches here.
-#[cfg_attr(not(test), allow(unused_imports))]
-pub(in crate::project_slice) use traverse::{
-    PerimeterGeneratorArachneExtrusion, TraverseExtrusionsContext, traverse_extrusions,
-};

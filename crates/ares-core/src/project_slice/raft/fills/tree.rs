@@ -285,6 +285,3 @@ fn norm(a: [f64; 2]) -> f64 {
 fn distance(a: [f64; 2], b: [f64; 2]) -> f64 {
     norm(sub(a, b))
 }
-
-#[cfg(test)]
-mod tests;

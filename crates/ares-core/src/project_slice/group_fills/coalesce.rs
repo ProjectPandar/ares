@@ -41,9 +41,8 @@ pub(super) fn coalesce(
     }
     let mut fills = unique
         .into_iter()
-        .enumerate()
-        .map(|(idx, key)| PendingFill {
-            params: SurfaceFillParams { idx, ..key.0 },
+        .map(|key| PendingFill {
+            params: key.0,
             fill: None,
         })
         .collect::<Vec<_>>();
@@ -57,8 +56,7 @@ pub(super) fn coalesce(
                 .binary_search_by(|fill| compare(&fill.params, params))
                 .expect("projected surface parameter was interned before coalescing");
             let pending = &mut fills[index];
-            let (kind, expolygon, thickness, thickness_layers, _, extra_perimeters) =
-                surface.as_parts();
+            let (kind, expolygon, thickness, thickness_layers, _, _) = surface.as_parts();
             let Some(fill) = &mut pending.fill else {
                 pending.fill = Some(SurfaceFill {
                     region_id: projected.region_id,
@@ -66,8 +64,6 @@ pub(super) fn coalesce(
                         kind,
                         thickness,
                         thickness_layers,
-                        pending.params.bridge_angle,
-                        extra_perimeters,
                     ),
                     expolygons: vec![expolygon.clone()],
                     params: pending.params,

@@ -25,51 +25,7 @@ trait TraceSink<T> {
 }
 struct NoTrace;
 impl<T> TraceSink<T> for NoTrace {}
-#[cfg(test)]
-#[derive(Debug, Default, Eq, PartialEq)]
-pub(crate) struct SortTrace {
-    pub(crate) insertion_calls: usize,
-    pub(crate) median3_calls: usize,
-    pub(crate) ninther_calls: usize,
-    pub(crate) partition_calls: usize,
-    pub(crate) heap_fallback_calls: usize,
-    pub(crate) partitions: Vec<[usize; 5]>,
-    pub(crate) heap_entry_identities: Vec<Vec<usize>>,
-}
 
-#[cfg(test)]
-struct TestTrace<I> {
-    result: SortTrace,
-    identity: I,
-}
-
-#[cfg(test)]
-impl<T, I> TraceSink<T> for TestTrace<I>
-where
-    I: Fn(&T) -> usize,
-{
-    fn insertion(&mut self) {
-        self.result.insertion_calls += 1;
-    }
-    fn median3(&mut self) {
-        self.result.median3_calls += 1;
-    }
-    fn ninther(&mut self) {
-        self.result.ninther_calls += 1;
-    }
-    fn partition(&mut self, length: usize, ideal: isize, parts: [usize; 3]) {
-        self.result.partition_calls += 1;
-        self.result
-            .partitions
-            .push([length, ideal as usize, parts[0], parts[1], parts[2]]);
-    }
-    fn heap_fallback(&mut self, items: &[T], first: usize, last: usize) {
-        self.result.heap_fallback_calls += 1;
-        self.result
-            .heap_entry_identities
-            .push(items[first..last].iter().map(&self.identity).collect());
-    }
-}
 pub(crate) fn fixed_msvc_sort_by<T, F>(items: &mut [T], mut compare: F)
 where
     T: Copy,
@@ -85,31 +41,7 @@ where
         &mut trace,
     );
 }
-#[cfg(test)]
-pub(crate) fn fixed_msvc_sort_by_for_test<T, F, I>(
-    items: &mut [T],
-    mut compare: F,
-    identity: I,
-) -> SortTrace
-where
-    T: Copy,
-    F: FnMut(&T, &T) -> bool,
-    I: Fn(&T) -> usize,
-{
-    let mut trace = TestTrace {
-        result: SortTrace::default(),
-        identity,
-    };
-    let length = items.len();
-    sort_unchecked(
-        items,
-        SortRange(0, length),
-        length as isize,
-        &mut compare,
-        &mut trace,
-    );
-    trace.result
-}
+
 fn insertion_sort<T: Copy, F: Less<T>, S: TraceSink<T>>(
     items: &mut [T],
     first: usize,

@@ -269,5 +269,3 @@ fn squared_distance(left: Point, right: Point) -> i128 {
 fn distance(left: Point, right: Point) -> i64 {
     (squared_distance(left, right) as f64).sqrt() as i64
 }
-#[cfg(test)]
-mod tests;

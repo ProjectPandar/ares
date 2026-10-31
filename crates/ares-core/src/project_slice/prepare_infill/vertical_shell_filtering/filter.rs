@@ -19,12 +19,6 @@ const SCALED_AREA_LARGE_MM: f64 = 8.0;
 const EPSILON_MM: f64 = 1.0e-4;
 const DEFAULT_MITER_LIMIT: f64 = 3.0;
 
-#[cfg(test)]
-thread_local! {
-    static VOLUME_SNAPSHOTS: std::cell::RefCell<Vec<(Vec<Polygon>, Vec<Polygon>)>> =
-        const { std::cell::RefCell::new(Vec::new()) };
-}
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct Thresholds {
     pub(super) minimum: f32,
@@ -155,21 +149,4 @@ fn flatten_expolygon(expolygon: &ExPolygon) -> Vec<Polygon> {
     paths
 }
 
-fn record_volume_snapshot(_object_volume: &[Polygon], _internal_volume: &[Polygon]) {
-    #[cfg(test)]
-    VOLUME_SNAPSHOTS.with(|snapshots| {
-        snapshots
-            .borrow_mut()
-            .push((_object_volume.to_vec(), _internal_volume.to_vec()));
-    });
-}
-
-#[cfg(test)]
-pub(super) fn volume_snapshots() -> Vec<(Vec<Polygon>, Vec<Polygon>)> {
-    VOLUME_SNAPSHOTS.with(|snapshots| snapshots.borrow().clone())
-}
-
-#[cfg(test)]
-pub(super) fn reset_volume_snapshots() {
-    VOLUME_SNAPSHOTS.with(|snapshots| snapshots.borrow_mut().clear());
-}
+fn record_volume_snapshot(_object_volume: &[Polygon], _internal_volume: &[Polygon]) {}

@@ -26,13 +26,6 @@ impl PostPerimeterPredecessor {
         }
     }
 
-    #[cfg(test)]
-    pub(in crate::project_slice) fn as_classic_mut(&mut self) -> &mut PreparedPostClassicTraversal {
-        match self {
-            Self::Classic(traversal) => traversal,
-        }
-    }
-
     pub(in crate::project_slice) fn into_classic(self) -> Box<PreparedPostClassicTraversal> {
         match self {
             Self::Classic(traversal) => traversal,

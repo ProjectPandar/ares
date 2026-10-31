@@ -75,8 +75,4 @@ impl BeadingStrategy for WideningBeadingStrategy {
         result.extend(self.parent.nonlinear_thicknesses(lower_bead_count));
         result
     }
-
-    fn description(&self) -> String {
-        format!("Widening+{}", self.parent.description())
-    }
 }

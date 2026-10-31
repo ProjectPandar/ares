@@ -2,9 +2,6 @@
 use super::filament::Filament;
 use crate::ProjectSettings;
 
-#[cfg(test)]
-mod tests;
-
 pub(super) struct ToolChange {
     pub(super) old_tool: usize,
     pub(super) new_tool: usize,

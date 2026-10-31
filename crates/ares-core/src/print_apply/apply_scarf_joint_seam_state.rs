@@ -64,10 +64,6 @@ pub(crate) struct StagedApplyScarfJointSeamResult {
 }
 
 impl StagedApplyScarfJointSeamResult {
-    pub(super) fn has_scarf_joint_seam(&self) -> bool {
-        self.has_scarf_joint_seam
-    }
-
     pub(crate) fn config_set(&self) -> Option<StagedApplyScarfJointSeamSet> {
         self.config_set
     }

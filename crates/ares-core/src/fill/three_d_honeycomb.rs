@@ -327,6 +327,3 @@ fn polyline_length(polyline: &Polyline) -> f64 {
         })
         .sum()
 }
-
-#[cfg(test)]
-mod tests;

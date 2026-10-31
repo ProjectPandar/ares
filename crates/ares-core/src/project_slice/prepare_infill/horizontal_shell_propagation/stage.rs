@@ -18,17 +18,9 @@ pub(super) fn prepare(
     prepared: PreparedPostHorizontalShellPromotion,
 ) -> Result<PreparedPostHorizontalShellPropagation, SliceError> {
     validate_alignment(&prepared);
-    #[cfg(test)]
-    let original_snapshot = super::transaction_snapshot::fingerprint(&prepared);
+
     let mut working = build_working_graph(&prepared);
     if let Err(error) = super::propagate::project(&prepared, &mut working) {
-        #[cfg(test)]
-        {
-            super::hooks::record_rollback_snapshot(original_snapshot);
-            super::hooks::record_rollback_snapshot(super::transaction_snapshot::fingerprint(
-                &prepared,
-            ));
-        }
         record_disposal();
         horizontal_shell_promotion::dispose(prepared);
         return Err(error);

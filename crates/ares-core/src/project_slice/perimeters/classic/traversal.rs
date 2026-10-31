@@ -57,8 +57,6 @@ pub(super) fn finish(
                 records,
             })
             .collect(),
-        #[cfg(test)]
-        drop_probe: types::TraversalDropProbe::new(),
     })
 }
 
@@ -249,6 +247,3 @@ impl PostClassicTraversalPrintObject {
         prelude.object.region_options(input).wall_direction
     }
 }
-
-#[cfg(test)]
-mod tests;

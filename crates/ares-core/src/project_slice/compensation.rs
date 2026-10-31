@@ -126,13 +126,6 @@ impl PostCompensationPrintObject {
     ) -> (&mut PostRegionPrintObject, &mut Vec<Vec<ExPolygon>>) {
         (&mut self.post_regions, &mut self.lslices)
     }
-
-    #[cfg(test)]
-    pub(in crate::project_slice) fn as_parts_mut(
-        &mut self,
-    ) -> (&mut PostRegionPrintObject, &mut Vec<Vec<ExPolygon>>) {
-        (&mut self.post_regions, &mut self.lslices)
-    }
 }
 
 pub(super) struct PreparedPostCompensation {

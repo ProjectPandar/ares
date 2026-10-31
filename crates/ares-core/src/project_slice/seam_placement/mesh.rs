@@ -149,14 +149,6 @@ pub(super) struct TriangleMesh {
 }
 
 impl TriangleMesh {
-    #[cfg(test)]
-    pub(super) fn new(triangles: Vec<Triangle>) -> Self {
-        Self {
-            negative_start: triangles.len(),
-            triangles,
-        }
-    }
-
     /// `SeamPlacer.cpp:630` — the occlusion mesh is transformed by
     /// `PrintObject::trafo_centered()` = instance transform with zeroed XY
     /// translation (`PrintApply.cpp` zeroes `trafo` XY, moving it to `shift`)

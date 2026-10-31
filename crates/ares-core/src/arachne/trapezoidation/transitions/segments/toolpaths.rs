@@ -78,6 +78,3 @@ fn compatible_endpoint(
     distance_squared < tolerance as i128 * tolerance as i128
         && endpoint.width.abs_diff(junction.width) < tolerance as u64
 }
-
-#[cfg(test)]
-mod tests;

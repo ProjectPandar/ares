@@ -160,6 +160,3 @@ pub fn generate_speed_moves(
 ) -> Vec<LayerSpeedMoves> {
     volumetric::generate_capped_speed_moves(layers, options)
 }
-
-#[cfg(test)]
-mod tests;

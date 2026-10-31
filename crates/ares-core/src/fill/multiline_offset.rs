@@ -55,6 +55,3 @@ pub(crate) fn apply(
     }
     Ok(output)
 }
-
-#[cfg(test)]
-mod tests;

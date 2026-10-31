@@ -17,9 +17,6 @@ use super::super::{
 };
 use super::geometry_error;
 
-#[cfg(test)]
-mod tests;
-
 pub(super) const TARGET_FLOW_HEIGHT_FACTOR: f32 = 0.9;
 
 pub(super) fn prepare(

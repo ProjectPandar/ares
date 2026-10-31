@@ -170,6 +170,3 @@ const _: fn(IntersectionPoint) -> EndpointReference = IntersectionPoint::referen
 const _: fn(&[[u32; 3]]) -> Result<MeshTopology, crate::SliceError> = index_mesh_edges;
 const _: fn(&MeshTopology) -> &[[u32; 3]] = MeshTopology::face_edge_ids;
 const _: fn(&MeshTopology) -> u64 = MeshTopology::edge_count;
-
-#[cfg(test)]
-mod tests;

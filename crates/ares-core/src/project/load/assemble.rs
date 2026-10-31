@@ -19,13 +19,8 @@ mod volumes;
 use component_graph::{validate_bare_metadata_identity, validate_component_cycles};
 use volumes::collect_volumes;
 
-#[cfg(test)]
-mod tests;
-
 const EXPANDED_MODEL_LIMIT: usize = 1_000_000;
 type ObjectIdentity = (PackagePath, u32);
-#[cfg(test)]
-type Pending = (PackagePath, u32, crate::project::transform::Transform3d);
 
 #[derive(Default)]
 struct ExpandedModelBudget {

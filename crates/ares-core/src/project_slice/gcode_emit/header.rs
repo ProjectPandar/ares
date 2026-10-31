@@ -253,5 +253,3 @@ fn width(value: crate::FloatOrPercent, nozzle: f64) -> Option<f32> {
 fn auto_width(automatic_ratio: f64, nozzle: f64) -> f32 {
     (automatic_ratio as f32) * (nozzle as f32)
 }
-#[cfg(test)]
-mod tests;

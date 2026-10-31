@@ -14,18 +14,7 @@ enum NullableFloat {
 }
 
 impl SliceOptions {
-    #[cfg(test)]
-    pub(crate) fn filament_cooling_before_tower(&self) -> Result<Vec<f64>, SliceError> {
-        self.filament_cooling_before_tower_values()?
-            .into_iter()
-            .map(|value| match value {
-                NullableFloat::Value(value) => Ok(value),
-                NullableFloat::Nil => Err(SliceError::InvalidInput(format!(
-                    "{KEY} contains invalid value"
-                ))),
-            })
-            .collect()
-    }
+
 
     pub(crate) fn filament_cooling_before_tower_placeholder(&self) -> Result<String, SliceError> {
         Ok(format_nullable_floats(
@@ -33,12 +22,7 @@ impl SliceOptions {
         ))
     }
 
-    #[cfg(test)]
-    pub(crate) fn filament_cooling_before_tower_config_export(
-        &self,
-    ) -> Result<Option<String>, SliceError> {
-        filament_cooling_before_tower_config_export(self.values().get(KEY))
-    }
+
 
     fn filament_cooling_before_tower_values(&self) -> Result<Vec<NullableFloat>, SliceError> {
         parse_nullable_float_vector(self.values().get(KEY))

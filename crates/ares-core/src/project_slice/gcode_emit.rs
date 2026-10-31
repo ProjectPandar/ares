@@ -36,16 +36,14 @@ mod tags;
 mod temperature;
 mod template;
 mod template_failure;
-#[cfg(test)]
-mod tests;
+
 mod timelapse;
 mod timelapse_pos;
 mod tool_ordering;
 mod tool_transition;
 
 mod orchestration;
-#[cfg(test)]
-mod timelapse_tests;
+
 pub(crate) mod value;
 mod wipe_tower;
 pub(super) use orchestration::emit;

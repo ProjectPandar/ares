@@ -47,15 +47,7 @@ macro_rules! declare_region_option_overrides {
                 }
             }
 
-            #[cfg(test)]
-            pub(crate) fn present_keys(&self) -> Vec<&'static str> {
-                let mut keys = Vec::new();
-                $(if self.$field.is_some() { keys.push($key); })*
-                if self.extruder.is_some() {
-                    keys.push("extruder");
-                }
-                keys
-            }
+
         }
     };
 }

@@ -1,6 +1,6 @@
 //! Preset and archive construction helpers shared by runner parity cases.
 
-use super::{ExportedCase, FailureKind, Map, Path, PathBuf, Stage, StageError, Value, application};
+use super::{FailureKind, Map, Path, PathBuf, Stage, StageError, Value};
 
 #[path = "preset_helpers.rs"]
 pub(crate) mod preset_helpers;

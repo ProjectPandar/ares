@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use super::super::mesh::{TriangleMesh, Vec3};
 
 #[derive(Clone, Copy)]

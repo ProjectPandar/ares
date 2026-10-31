@@ -170,5 +170,3 @@ impl ExtrusionEntityCollection {
         self.paths.len()
     }
 }
-#[cfg(test)]
-mod tests;

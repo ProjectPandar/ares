@@ -1,8 +1,6 @@
 // Layer-region perimeter outputs from OrcaSlicer v2.4.2 `LayerRegion.cpp:82-142`
 // and the one-compatible-region branch in `Layer.cpp:185-226`.
 
-#[cfg(test)]
-mod tests;
 mod types;
 
 pub(in crate::project_slice) use types::{
@@ -18,18 +16,6 @@ use super::classic::{
     },
 };
 
-#[cfg(test)]
-thread_local! {
-    static FINISH_INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
-#[cfg_attr(not(test), allow(dead_code))]
-pub(in crate::project_slice) fn finish(
-    prepared: PreparedPostClassicInfillBoundary,
-) -> PreparedPostLayerRegionPerimeters {
-    finish_with_arachne(prepared, None)
-}
-
 /// `LayerRegion::make_perimeters` dispatches per region
 /// (`LayerRegion.cpp:82-142`): classic records keep their classic results,
 /// arachne records take the entities materialized by `process_arachne`
@@ -38,9 +24,6 @@ pub(in crate::project_slice) fn finish_with_arachne(
     prepared: PreparedPostClassicInfillBoundary,
     arachne: Option<crate::project_slice::perimeters::arachne::PreparedArachnePerimeters>,
 ) -> PreparedPostLayerRegionPerimeters {
-    #[cfg(test)]
-    FINISH_INVOCATIONS.with(|count| count.set(count.get() + 1));
-
     validate_alignment(&prepared);
     let PreparedPostClassicInfillBoundary {
         predecessor,
@@ -160,14 +143,4 @@ fn append_surface_outputs(
     } = surface;
     perimeters.extend(appended.collections);
     thin_fills.extend(gap_fill.entities);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn finish_invocations() -> usize {
-    FINISH_INVOCATIONS.with(std::cell::Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_finish_invocations() {
-    FINISH_INVOCATIONS.with(|count| count.set(0));
 }

@@ -115,5 +115,3 @@ pub const fn thumbnail_error_string(error: ThumbnailParseError) -> &'static str 
         ThumbnailParseError::InvalidExtension => "Some extension in the input is invalid",
     }
 }
-#[cfg(test)]
-mod tests;

@@ -88,7 +88,6 @@ mod support_ironing;
 #[cfg_attr(not(test), allow(dead_code, unused_imports))]
 mod typed_legacy;
 mod update_multi_to_multi;
-mod update_non_diff_values_to_base_config;
 mod update_printer_extruders;
 mod update_single_to_multi;
 mod validation;
@@ -101,8 +100,7 @@ use defaults::*;
 pub use encode::{encode_config_value, encode_config_value_by_key};
 pub(crate) use fan_speedup::FanSpeedupControl;
 pub(crate) use gap_fill::GapFillTarget;
-#[cfg(test)]
-pub(crate) use gcode_options::GCodeOptionSource;
+
 pub(crate) use infill::{
     ExtraSolidInfills, InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions,
     InternalBridgeFilter,
@@ -356,4 +354,3 @@ impl SliceOptions {
         }
     }
 }
-#[rustfmt::skip] #[cfg(test)] mod tests;

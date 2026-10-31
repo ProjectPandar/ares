@@ -32,8 +32,6 @@ pub(super) struct Estimate {
     pub(super) printable_area: PrintableAreaTracker,
     elapsed: Vec<Option<elapsed::Snapshot>>,
     export_elapsed: Vec<Option<f32>>,
-    #[cfg(test)]
-    pub(super) block_line_ids: Vec<usize>,
 }
 impl Estimate {
     /// Runs the time estimate and, with a `recorder`, records the
@@ -331,8 +329,7 @@ impl Estimate {
         // `total`, but round each cache entry to f32 — the M73 boundary
         // reads the f32 snapshot, not the running f64 sum.
         let mut cumulative = 0.0;
-        #[cfg(test)]
-        let block_line_ids_snapshot = block_line_ids.clone();
+
         let cache = block_line_ids
             .into_iter()
             .zip(&times)
@@ -376,8 +373,6 @@ impl Estimate {
             printable_area,
             elapsed,
             export_elapsed,
-            #[cfg(test)]
-            block_line_ids: block_line_ids_snapshot,
         }
     }
 }

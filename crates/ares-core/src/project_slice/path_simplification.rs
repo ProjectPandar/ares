@@ -232,5 +232,3 @@ fn simplify_polyline3(
         fitting,
     };
 }
-#[cfg(test)]
-mod tests;

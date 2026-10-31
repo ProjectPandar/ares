@@ -115,17 +115,6 @@ pub(super) fn resolve_filament_indices(
     )
 }
 
-#[cfg(test)]
-pub(crate) fn inspect_printer_indices_for_test(
-    source: &ProjectSettings,
-) -> Result<Option<Vec<usize>>, SliceError> {
-    let Some(active) = resolve_activation(source)? else {
-        return Ok(None);
-    };
-
-    resolve_printer_indices(source, &active).map(Some)
-}
-
 fn physical_count(source: &ProjectSettings) -> Result<usize, SliceError> {
     let count = source.project.print.nozzle_diameter.0.len();
     if count == 0 {

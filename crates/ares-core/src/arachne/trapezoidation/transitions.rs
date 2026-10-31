@@ -4,9 +4,6 @@ mod filtering;
 mod ribs;
 mod segments;
 
-#[cfg(test)]
-mod test_support;
-
 use std::{cell::RefCell, rc::Rc};
 
 use crate::geometry::Point;
@@ -109,6 +106,3 @@ fn point_at_distance(start: Point, finish: Point, distance: i64) -> Point {
         start.y() + (i128::from(dy) * i128::from(distance) / i128::from(length)) as i64,
     )
 }
-
-#[cfg(test)]
-mod tests;

@@ -153,15 +153,9 @@ impl Clipper {
         self.z_fill_mark = None;
         self.z_fill_width = false;
         self.z_fill_source_index = false;
-        #[cfg(test)]
-        self.collected_maxima_for_test.clear();
-        #[cfg(test)]
-        self.simple_repairs_for_test.clear();
     }
 
     pub(super) fn execute_internal<P: RoundPolicy>(&mut self, config: ExecutionConfig) -> bool {
-        #[cfg(test)]
-        self.simple_repairs_for_test.clear();
         self.reset_for_execute::<P>();
         if self.minima.is_empty() {
             return true;
@@ -229,16 +223,6 @@ impl Clipper {
         if self.options.strictly_simple {
             self.do_simple_polygons();
         }
-    }
-
-    #[cfg(test)]
-    pub(in crate::geometry) fn z_state_for_test(&self) -> (usize, bool) {
-        (self.edges.len(), self.z_intersections.is_none())
-    }
-
-    #[cfg(all(test, debug_assertions))]
-    pub(in crate::geometry) fn activate_z_collector_for_test(&mut self) {
-        self.z_intersections = Some(Vec::new());
     }
 
     fn fixup_output_record<P: RoundPolicy>(&mut self, index: usize) {

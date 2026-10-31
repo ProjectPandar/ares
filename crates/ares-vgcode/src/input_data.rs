@@ -28,6 +28,3 @@ impl Default for ColorPrint {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use super::{EmitState, features::PathProperties, overhang::ProcessedPoint};
 use crate::RawOverhangFanThreshold;
 

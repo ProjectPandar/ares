@@ -11,12 +11,6 @@ use crate::{
 
 use super::{PreparedPostBridgeCandidates, types::BridgeCandidateObject};
 
-#[cfg(test)]
-thread_local! {
-    static INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-    static DISPOSALS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
 pub(in crate::project_slice) struct PreparedPostBridgeOverInfill {
     pub(in crate::project_slice) predecessor: PreparedPostExternalSurfaces,
     /// `prepare_lightning_infill_data` per object — the generator built on the
@@ -29,8 +23,6 @@ pub(in crate::project_slice) struct PreparedPostBridgeOverInfill {
 pub(in crate::project_slice) fn prepare(
     predecessor: PreparedPostBridgeCandidates,
 ) -> Result<PreparedPostBridgeOverInfill, SliceError> {
-    #[cfg(test)]
-    INVOCATIONS.with(|count| count.set(count.get() + 1));
     let PreparedPostBridgeCandidates {
         mut predecessor,
         mut objects,
@@ -54,25 +46,7 @@ pub(in crate::project_slice) fn prepare(
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostBridgeOverInfill) {
-    #[cfg(test)]
-    DISPOSALS.with(|count| count.set(count.get() + 1));
     external_surfaces::dispose(prepared.predecessor);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_hooks() {
-    INVOCATIONS.with(|count| count.set(0));
-    DISPOSALS.with(|count| count.set(0));
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn invocations() -> usize {
-    INVOCATIONS.with(std::cell::Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn disposals() -> usize {
-    DISPOSALS.with(std::cell::Cell::get)
 }
 
 fn validate_capabilities(

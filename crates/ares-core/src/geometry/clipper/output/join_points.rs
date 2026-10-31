@@ -364,28 +364,3 @@ fn overlap(
     let right = first_start.max(first_end).min(second_start.max(second_end));
     (left < right).then_some((left, right))
 }
-
-#[cfg(test)]
-impl Clipper {
-    pub(in crate::geometry) fn join_copy_overwrite_for_test(
-        ring: &[KernelPoint],
-        replacement: KernelPoint,
-    ) -> (KernelPoint, KernelPoint, KernelPoint) {
-        let mut clipper = Self::new(super::super::ClipperOptions::default());
-        let out_rec = super::rings::seed_ring_for_test(&mut clipper, ring);
-        let original_id = clipper.out_recs[out_rec.0].points.unwrap();
-        let original = clipper.out_points.point(original_id).point;
-        let mut overwritten = original_id;
-        let duplicate = clipper.insert_horizontal_join_point(
-            &mut overwritten,
-            HorizontalDirection::LeftToRight,
-            replacement,
-            false,
-        );
-        (
-            original,
-            clipper.out_points.point(overwritten).point,
-            clipper.out_points.point(duplicate).point,
-        )
-    }
-}

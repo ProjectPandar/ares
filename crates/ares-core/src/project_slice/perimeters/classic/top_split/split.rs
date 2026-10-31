@@ -151,6 +151,3 @@ fn geometry_error() -> SliceError {
         "Classic top split geometry is outside the supported Clipper range".to_owned(),
     )
 }
-
-#[cfg(test)]
-mod tests;

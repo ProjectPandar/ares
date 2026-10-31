@@ -1,16 +1,10 @@
 use super::{layers, perimeters};
 use perimeters::classic::entity_collections::ExtrusionEntity;
 
-#[cfg(test)]
-mod infill_boundary;
 mod layer_region;
 mod project_context;
 pub(super) mod surface_type_detection;
-#[cfg(test)]
-mod tests;
 
-#[cfg(test)]
-pub(super) use infill_boundary::consume_infill_boundary_object;
 pub(super) use layer_region::consume_layer_region_perimeter_object;
 
 #[inline(never)]
@@ -24,16 +18,12 @@ pub(super) fn consume_boxed_post_classic_traversal(
         scale,
         adaptive_octrees: _,
         objects,
-        #[cfg(test)]
-        drop_probe,
     } = *prepared;
     project_context::observe(&project, &resolved);
     for object in objects {
         consume_traversal_object(object);
     }
     let _ = (project, resolved, config_block, scale);
-    #[cfg(test)]
-    let _ = drop_probe;
 }
 
 #[inline(never)]
@@ -212,19 +202,6 @@ fn consume_entity(entity: ExtrusionEntity) {
     for path in paths {
         let _ = path.polyline.fitting;
         consume_gap_path(path);
-    }
-}
-
-#[inline(never)]
-#[cfg(test)]
-pub(super) fn consume_raw_path_object(
-    object: perimeters::classic::materialize::PreparedRawPathObject,
-) {
-    for record in object.records.into_iter().flatten() {
-        for surface in record.surfaces {
-            let _ = surface.source_index;
-            perimeters::classic::materialize::tree::consume_nodes(surface.roots);
-        }
     }
 }
 

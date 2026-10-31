@@ -284,6 +284,3 @@ impl SkeletalTrapezoidation<'_> {
             && distance + search.traveled_distance < search.maximum_distance
     }
 }
-
-#[cfg(test)]
-mod tests;

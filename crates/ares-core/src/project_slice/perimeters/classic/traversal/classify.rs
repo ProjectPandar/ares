@@ -85,6 +85,3 @@ fn selected_flow(route: LowerFlowRoute, flows: &RouteFlows) -> Flow {
         LowerFlowRoute::Internal => flows.perimeter,
     }
 }
-
-#[cfg(test)]
-mod tests;

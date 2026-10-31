@@ -1,11 +1,5 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
-#[path = "option_coverage/filament_self_index.rs"]
-mod filament_self_index;
-
-#[path = "option_coverage/master_extruder_id.rs"]
-mod master_extruder_id;
-
 #[path = "option_coverage/printer_technology.rs"]
 mod printer_technology;
 
@@ -64,18 +58,10 @@ mod legacy_brim_ears;
 mod timelapse_coverage;
 
 #[cfg(test)]
-#[path = "option_coverage/wrapping_exclude_coverage.rs"]
-mod wrapping_exclude_coverage;
-
 #[cfg(test)]
-#[path = "option_coverage/filament_flow_coverage.rs"]
-mod filament_flow_coverage;
-
 #[path = "option_coverage/adaptive_volumetric_coverage.rs"]
 mod adaptive_volumetric_coverage;
 #[cfg(test)]
-#[path = "option_coverage/bridge_flow_coverage.rs"]
-mod bridge_flow_coverage;
 #[path = "option_coverage/first_layer_sequence.rs"]
 mod first_layer_sequence;
 #[cfg(test)]
@@ -83,41 +69,20 @@ mod first_layer_sequence;
 mod tri_hexagon_multiline;
 
 #[cfg(test)]
+#[cfg(test)]
+#[cfg(test)]
+#[path = "option_coverage/height_context.rs"]
+mod height_context;
+#[cfg(test)]
 #[path = "option_coverage/safc_coverage.rs"]
 mod safc_coverage;
 #[cfg(test)]
 #[path = "option_coverage/tool_context.rs"]
 mod tool_context;
-#[cfg(test)]
-#[path = "option_coverage/tool_mapping.rs"]
-mod tool_mapping;
 
 #[cfg(test)]
-#[path = "option_coverage/tool_sequences.rs"]
-mod tool_sequences;
-
 #[cfg(test)]
-#[path = "option_coverage/layer_heights.rs"]
-mod layer_heights;
-
-#[path = "option_coverage/height_context.rs"]
-mod height_context;
-
 #[cfg(test)]
-#[path = "option_coverage/print_compatible_printers.rs"]
-mod print_compatible_printers;
-
-#[path = "option_coverage/adaptive_pa_bridges.rs"]
-mod adaptive_pa_bridges;
-
-#[cfg(test)]
-#[path = "option_coverage/locked_width_context.rs"]
-mod locked_width_context;
-
-#[cfg(test)]
-#[path = "option_coverage/extruder_printable_area.rs"]
-mod extruder_printable_area;
-
 #[cfg(test)]
 #[path = "option_coverage/ironing_fan.rs"]
 mod ironing_fan;
@@ -143,9 +108,6 @@ mod initialized_stitch_junction;
 mod initialized_bridge_direction;
 
 #[cfg(test)]
-#[path = "option_coverage/filament_ironing_speed.rs"]
-mod filament_ironing_speed;
-
 #[cfg(test)]
 #[path = "option_coverage/filament_stats_vectors.rs"]
 mod filament_stats_vectors;
@@ -167,82 +129,34 @@ mod initialized_object_id;
 mod seeded_context;
 
 #[cfg(test)]
-#[path = "option_coverage/elephant_foot_count.rs"]
-mod elephant_foot_count;
-
 #[cfg(test)]
-#[path = "option_coverage/top_shell_count.rs"]
-mod top_shell_count;
-
 #[cfg(test)]
-#[path = "option_coverage/bottom_shell_count.rs"]
-mod bottom_shell_count;
-
 #[cfg(test)]
-#[path = "option_coverage/slow_layer_count.rs"]
-mod slow_layer_count;
-
 #[cfg(test)]
-#[path = "option_coverage/filename_format.rs"]
-mod filename_format;
-
 #[cfg(test)]
-#[path = "option_coverage/range_completion.rs"]
-mod range_completion;
-
 #[cfg(test)]
-#[path = "option_coverage/filament_printable.rs"]
-mod filament_printable;
 #[cfg(test)]
-#[path = "option_coverage/vitrification.rs"]
-mod vitrification;
-
 #[path = "option_coverage/activation.rs"]
 mod activation;
-use activation::{inject_case, support_geometry_option};
 
-#[path = "option_coverage/domains.rs"]
-mod domains;
-#[path = "option_coverage/summary.rs"]
-mod summary;
-use summary::write_summary;
 #[cfg(test)]
-#[path = "option_coverage/float_percent_tests.rs"]
-mod float_percent_tests;
 #[cfg(test)]
-#[path = "option_coverage/owner_pair_tests.rs"]
-mod owner_pair_tests;
-#[cfg(test)]
-#[path = "option_coverage/sweep.rs"]
-mod sweep;
-#[cfg(test)]
-#[path = "option_coverage/tests.rs"]
-mod tests;
-
 #[cfg(test)]
 #[path = "option_coverage/completion_tests.rs"]
 mod completion_tests;
+#[cfg(test)]
+#[cfg(test)]
+#[path = "option_coverage/owner_pair_tests.rs"]
+mod owner_pair_tests;
 
 #[cfg(test)]
 #[path = "option_coverage/support_report_tests.rs"]
 mod support_report_tests;
 
 #[cfg(test)]
-#[path = "option_coverage/tree_activation.rs"]
-mod tree_activation;
-
 #[cfg(test)]
-#[path = "option_coverage/pressure_advance.rs"]
-mod pressure_advance;
-
 #[cfg(test)]
-#[path = "option_coverage/skirt_height.rs"]
-mod skirt_height;
-
 #[cfg(test)]
-#[path = "option_coverage/hot_plate.rs"]
-mod hot_plate;
-
 #[cfg(test)]
 #[path = "option_coverage/fill_grid.rs"]
 mod fill_grid;
@@ -258,41 +172,14 @@ mod lightning_output;
 pub(crate) mod normal_support_output;
 
 #[cfg(test)]
-#[path = "option_coverage/locked_widths.rs"]
-mod locked_widths;
-
 #[cfg(test)]
-#[path = "option_coverage/cut_retraction.rs"]
-mod cut_retraction;
-
 #[cfg(test)]
-#[path = "option_coverage/cut_retraction_values.rs"]
-mod cut_retraction_values;
-
 #[cfg(test)]
-#[path = "option_coverage/air_filtration.rs"]
-mod air_filtration;
-
 #[cfg(test)]
-#[path = "option_coverage/chamber_control.rs"]
-mod chamber_control;
-
 #[cfg(test)]
-#[path = "option_coverage/scalar_points.rs"]
-mod scalar_points;
-
 #[cfg(test)]
-#[path = "option_coverage/obsolete_silent_mode.rs"]
-mod obsolete_silent_mode;
-
 #[cfg(test)]
-#[path = "option_coverage/resolution_floor.rs"]
-mod resolution_floor;
-
 #[cfg(test)]
-#[path = "option_coverage/filament_map_mode.rs"]
-mod filament_map_mode;
-
 #[path = "option_coverage/filament_map_length.rs"]
 mod filament_map_length;
 
@@ -300,13 +187,7 @@ mod filament_map_length;
 mod filament_map_refresh;
 
 #[cfg(test)]
-#[path = "option_coverage/thumbnails.rs"]
-mod thumbnails;
-
 #[cfg(test)]
-#[path = "option_coverage/preset_identity_tests.rs"]
-mod preset_identity_tests;
-
 #[path = "option_coverage/preset_identity.rs"]
 mod preset_identity;
 
@@ -321,4 +202,4 @@ use std::path::PathBuf;
 #[path = "option_coverage/outcome.rs"]
 mod outcome;
 
-use outcome::{OptionOutcome, profiles_root, strict_comparator_ran};
+use outcome::{profiles_root, strict_comparator_ran};

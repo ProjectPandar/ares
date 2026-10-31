@@ -55,47 +55,6 @@ const CASES: [Case; 7] = [
     },
 ];
 
-pub(super) fn generate(key: &str) -> Option<(Vec<super::domains::OptionCase>, serde_json::Value)> {
-    if key != "filament_ramming_parameters" {
-        return None;
-    }
-    let cases = CASES
-        .iter()
-        .map(|case| super::domains::OptionCase {
-            label: case.label.into(),
-            value: Some(json!(case.profiles)),
-        })
-        .collect();
-    Some((
-        cases,
-        json!({
-         "domain":"bounded SEMM ramming profiles and feature-off controls",
-         "source":"PrintConfig.cpp:2833-2840; WipeTower2.cpp:1380-1390,1643-1657,1707-1713,1834-1844",
-         "spec":"docs/architecture/option-semm-ramming-sweep-integration-spec.md",
-         "fixture":"tests/parity/semm-ramming/R1.3mf",
-         "cases":CASES.iter().map(|c| json!({"label":c.label,"profiles":c.profiles,"enable_filament_ramming":c.gate})).collect::<Vec<_>>(),
-         "scope":"Ender3 0.4, two PLA/two cubes, one physical nozzle, tower150/150",
-         "off_control":"no ramming comments/E fragment, profile-dependent wiping XY preserved",
-         "deferred":["malformed profiles","multitool ramming","all tower/vector shapes"]
-        }),
-    ))
-}
-
-pub(super) fn execute_plan(
-    runner: &OrcaRunner,
-    plan: &super::domains::OptionPlan,
-) -> super::OptionOutcome {
-    for case in &plan.cases {
-        let authored = CASES
-            .iter()
-            .find(|authored| authored.label == case.label)
-            .unwrap();
-        assert_eq!(case.value.as_ref().unwrap(), &json!(authored.profiles));
-        compare_with(runner, authored);
-    }
-    super::OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None)
-}
-
 fn sha(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()

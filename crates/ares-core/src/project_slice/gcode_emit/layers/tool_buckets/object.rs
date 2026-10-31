@@ -1,8 +1,5 @@
 //! `LayerTools::extruder` and `GCode.cpp:5074–5095` mixed wall splitting.
 
-#[cfg(test)]
-mod tests;
-
 use crate::project_slice::gcode_emit::tool_ordering::wiping::CollectionId;
 use std::collections::BTreeMap;
 

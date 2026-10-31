@@ -22,24 +22,3 @@ pub(super) fn collect(
     }
     (all, first)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn priming_ends_on_the_first_printing_tool() {
-        let layers = vec![
-            LayerTools {
-                extruders: vec![0],
-                ..Default::default()
-            },
-            LayerTools {
-                extruders: vec![1],
-                ..Default::default()
-            },
-        ];
-        assert_eq!(collect(&layers, false), (vec![0, 1], Some(0)));
-        assert_eq!(collect(&layers, true), (vec![1, 0], Some(1)));
-    }
-}

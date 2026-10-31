@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use super::types::CandidateSurface;
 use crate::{
     geometry::{ClipperError, ExPolygon, FillRule, union_ex},

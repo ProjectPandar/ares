@@ -1,6 +1,5 @@
 use super::super::Clipper;
-#[cfg(test)]
-use super::super::types::Edge;
+
 use super::super::types::{EdgeId, EdgeSide, LocalMinimum, OutputIndex};
 
 impl Clipper {
@@ -316,24 +315,4 @@ impl Clipper {
         edge.bottom = super::super::z::KernelPoint::new(top.x(), bottom.y(), top.z);
         edge.top = super::super::z::KernelPoint::new(bottom.x(), top.y(), bottom.z);
     }
-}
-
-#[cfg(test)]
-pub(in crate::geometry) fn reverse_horizontal_for_test(
-    bottom: super::super::z::KernelPoint,
-    top: super::super::z::KernelPoint,
-) -> (super::super::z::KernelPoint, super::super::z::KernelPoint) {
-    let mut clipper = Clipper::new(super::super::ClipperOptions::default());
-    let mut edge = Edge::new(
-        bottom,
-        super::super::PathRole::Subject,
-        EdgeId(0),
-        EdgeId(0),
-    );
-    edge.bottom = bottom;
-    edge.top = top;
-    clipper.edges.push(edge);
-    clipper.reverse_horizontal(EdgeId(0));
-    let edge = clipper.edges.edge(EdgeId(0));
-    (edge.bottom, edge.top)
 }

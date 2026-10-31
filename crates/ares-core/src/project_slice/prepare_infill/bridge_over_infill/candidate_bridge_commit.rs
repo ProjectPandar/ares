@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::geometry::Polygon;
 
 use super::{

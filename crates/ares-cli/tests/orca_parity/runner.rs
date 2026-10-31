@@ -392,7 +392,6 @@ pub(super) use fixture_support::preset_helpers::{
     PresetKind, apply_override, digest_slug, join_paths, repo_root, write_preset,
 };
 pub(super) use fixture_support::volume_fixture;
-pub(crate) use fixture_support::wrapping_input;
 
 #[path = "option_coverage/safc_reference.rs"]
 pub(super) mod safc_reference;

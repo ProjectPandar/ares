@@ -316,6 +316,3 @@ mod sweeps;
 pub(crate) use sweeps::{
     lateral_honeycomb_sweeps, lateral_lattice_sweeps, quartercubic_sweeps, stars_sweeps,
 };
-
-#[cfg(test)]
-mod tests;

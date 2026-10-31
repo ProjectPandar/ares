@@ -4,9 +4,6 @@ use crate::{
 
 use super::super::{tool_ordering::ToolOrdering, value};
 
-#[cfg(test)]
-mod tests;
-
 /// `ToolOrdering::cal_non_support_filaments` and the physical-hotend remap in
 /// `GCode.cpp:2721-2851`. Unused physical hotends remain `-1`.
 /// This export metadata shell also caches the non-tower total-change

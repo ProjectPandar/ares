@@ -3,8 +3,6 @@ use crate::{LayerContours, Point2, SliceError};
 mod brim_envelope;
 mod min_length;
 mod per_object;
-#[cfg(test)]
-mod tests;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DraftShield {

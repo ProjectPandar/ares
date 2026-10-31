@@ -43,18 +43,7 @@ pub(crate) struct SelectedMeshStatistics {
     backwards_edges: u32,
 }
 
-impl SelectedMeshStatistics {
-    #[cfg(test)]
-    pub(crate) fn as_array(self) -> [u32; 5] {
-        [
-            self.edges_fixed,
-            self.degenerate_facets,
-            self.facets_removed,
-            self.facets_reversed,
-            self.backwards_edges,
-        ]
-    }
-}
+impl SelectedMeshStatistics {}
 
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(not(test), allow(dead_code))]
@@ -97,15 +86,6 @@ pub(super) fn select(
 
 pub(super) fn validate(part: &PartSettings) -> Result<(), SliceError> {
     from_part(part).map(|_| ())
-}
-
-#[cfg(test)]
-pub(crate) fn selected_volume_metadata_for_test(
-    parts: &[PartSettings],
-    leaf_index: usize,
-    leaf_id: u32,
-) -> Result<SelectedVolumeMetadata, SliceError> {
-    select(parts, leaf_index, leaf_id)
 }
 
 fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> {

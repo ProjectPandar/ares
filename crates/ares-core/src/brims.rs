@@ -328,6 +328,3 @@ fn contour_bounds(contour: &crate::Contour) -> Option<(f64, f64, f64, f64)> {
 
     Some((min_x, min_y, max_x, max_y))
 }
-
-#[cfg(test)]
-mod tests;

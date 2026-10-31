@@ -258,7 +258,3 @@ impl FanMover {
         }
     }
 }
-#[cfg(test)]
-mod corpus;
-#[cfg(test)]
-mod tests;

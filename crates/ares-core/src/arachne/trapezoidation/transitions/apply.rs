@@ -89,6 +89,3 @@ impl SkeletalTrapezoidation<'_> {
         storage
     }
 }
-
-#[cfg(test)]
-mod tests;

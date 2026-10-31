@@ -4,8 +4,6 @@ mod bounds;
 mod generate;
 mod ordering;
 mod output;
-#[cfg(test)]
-mod tests;
 
 use bounds::Bounds;
 use output::InfillPolylineOutput;

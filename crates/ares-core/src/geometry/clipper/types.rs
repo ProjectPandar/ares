@@ -1,6 +1,5 @@
 use super::{ClipOperation, FillRule, PathRole, predicates::get_dx, z::KernelPoint};
-#[cfg(test)]
-use crate::geometry::Point;
+
 use crate::geometry::{Polygon, Polyline};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -138,37 +137,6 @@ impl EdgeArena {
         self.slots[id.0] = None;
         edge.next
     }
-
-    #[cfg(test)]
-    pub(super) fn snapshot(&self) -> Vec<EdgeSnapshot> {
-        self.slots
-            .iter()
-            .map(|slot| match slot {
-                Some(edge) => EdgeSnapshot {
-                    removed: false,
-                    current: Some(edge.current.xy),
-                    bottom: Some(edge.bottom.xy),
-                    top: Some(edge.top.xy),
-                    dx: Some(edge.dx),
-                    wind_delta: Some(edge.wind_delta),
-                    previous: Some(edge.previous.0),
-                    next: Some(edge.next.0),
-                    next_in_lml: edge.next_in_lml.map(|id| id.0),
-                },
-                None => EdgeSnapshot {
-                    removed: true,
-                    current: None,
-                    bottom: None,
-                    top: None,
-                    dx: None,
-                    wind_delta: None,
-                    previous: None,
-                    next: None,
-                    next_in_lml: None,
-                },
-            })
-            .collect()
-    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -247,34 +215,4 @@ pub(super) struct ExecutionConfig {
     pub(super) operation: ClipOperation,
     pub(super) subject_fill: FillRule,
     pub(super) clip_fill: FillRule,
-}
-
-#[cfg(test)]
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct EdgeSnapshot {
-    pub(crate) removed: bool,
-    pub(crate) current: Option<Point>,
-    pub(crate) bottom: Option<Point>,
-    pub(crate) top: Option<Point>,
-    pub(crate) dx: Option<f64>,
-    pub(crate) wind_delta: Option<i32>,
-    pub(crate) previous: Option<usize>,
-    pub(crate) next: Option<usize>,
-    pub(crate) next_in_lml: Option<usize>,
-}
-
-#[cfg(test)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct LocalMinimumSnapshot {
-    pub(crate) y: i64,
-    pub(crate) left: Option<usize>,
-    pub(crate) right: Option<usize>,
-}
-
-#[cfg(test)]
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct InputSnapshot {
-    pub(crate) use_full_range: bool,
-    pub(crate) edges: Vec<EdgeSnapshot>,
-    pub(crate) minima: Vec<LocalMinimumSnapshot>,
 }

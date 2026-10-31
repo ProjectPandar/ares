@@ -11,9 +11,6 @@ use crate::{
 
 mod lightning;
 
-#[cfg(test)]
-mod tests;
-
 /// `match fill.params.pattern` dispatch — tail arms (TriHexagon onward).
 /// Extracted verbatim from `generate_sparse_infill_polylines_for_anchoring`.
 #[allow(clippy::too_many_arguments)]

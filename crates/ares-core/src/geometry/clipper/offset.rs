@@ -4,21 +4,14 @@ mod generate;
 mod input;
 mod opening;
 
-#[cfg(test)]
-pub(super) use execute::offset_configuration_for_test;
-#[cfg(test)]
-pub(crate) use execute::raw_offset_open_paths;
 pub(crate) use execute::{offset_open_paths, offset_paths, offset_paths_tree, raw_offset_paths};
 pub(crate) use expolygon::{
     closing_ex, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
     offset_expolygons_paths, offset_expolygons_raw, offset2_ex, offset2_ex_with_interstage,
     opening_ex,
 };
-#[cfg(test)]
-pub(in crate::geometry) use opening::opening_path_configurations_for_test;
+
 pub(crate) use opening::opening_paths;
-#[cfg(test)]
-pub(crate) use opening::opening_paths_with_interstage;
 
 use super::{ClipperError, PolyTree};
 use crate::geometry::{ExPolygon, Polygon};

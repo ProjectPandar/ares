@@ -57,42 +57,6 @@ const CASES: [Case; 6] = [
         project: include_bytes!("../../../../../tests/parity/legacy-brim-ears/E1.3mf"),
     },
 ];
-pub(super) fn generate(key: &str) -> Option<(Vec<super::domains::OptionCase>, serde_json::Value)> {
-    if key != "brim_ears" {
-        return None;
-    }
-    Some((
-        CASES
-            .iter()
-            .map(|c| super::domains::OptionCase {
-                label: c.label.into(),
-                value: Some(json!(if c.enabled { "1" } else { "0" })),
-            })
-            .collect(),
-        json!({
-        "domain":"legacy bool config echo versus actual brim_type selector",
-        "source":"PrintConfig.cpp:1751-1756; Brim.cpp:455-458,536-554",
-        "spec":"docs/architecture/option-legacy-brim-ears-bounded-spec.md",
-        "cases":CASES.iter().map(|c|json!({"label":c.label,"brim_type":c.selector,"brim_ears":c.enabled})).collect::<Vec<_>>(),
-        "scope":"single PLA cube, one nozzle, fixed width4/gap0.1/angle125/detection1",
-        "deferred":["painted ears","holes","multi objects","geometry production"]
-        }),
-    ))
-}
-pub(super) fn execute_plan(
-    runner: &OrcaRunner,
-    plan: &super::domains::OptionPlan,
-) -> super::OptionOutcome {
-    for c in &plan.cases {
-        let case = CASES.iter().find(|case| case.label == c.label).unwrap();
-        assert_eq!(
-            c.value.as_ref().unwrap(),
-            &json!(if case.enabled { "1" } else { "0" })
-        );
-        compare_with(runner, case);
-    }
-    super::OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None)
-}
 fn verify_input(case: &Case) {
     let mut zip = zip::ZipArchive::new(Cursor::new(case.project)).unwrap();
     let mut bytes = Vec::new();

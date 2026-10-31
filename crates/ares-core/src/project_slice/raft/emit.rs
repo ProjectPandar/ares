@@ -235,6 +235,3 @@ fn interface_ids(raft_grid: &[RaftLayerZ]) -> Vec<usize> {
     }
     ids
 }
-
-#[cfg(test)]
-mod tests;

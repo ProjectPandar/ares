@@ -67,22 +67,3 @@ fn map_loop_role(role: PendingLoopRole) -> ExtrusionLoopRole {
         PendingLoopRole::Hole => ExtrusionLoopRole::Hole,
     }
 }
-
-#[cfg(test)]
-pub(in crate::project_slice) fn consume_nodes(mut nodes: Vec<ChainedLoopNode>) {
-    while let Some(mut node) = nodes.pop() {
-        if let Some(extrusion_loop) = node.extrusion_loop {
-            for path in extrusion_loop.paths {
-                let _ = (
-                    path.polyline.points,
-                    path.role,
-                    path.mm3_per_mm,
-                    path.width,
-                    path.height,
-                );
-            }
-            let _ = extrusion_loop.role;
-        }
-        nodes.append(&mut node.children);
-    }
-}

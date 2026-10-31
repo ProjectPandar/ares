@@ -115,11 +115,6 @@ pub(in crate::project_slice) fn materialize_overhang_from_lower(
     Ok(paths)
 }
 
-#[cfg(test)]
-pub(super) fn materialize_ordinary(seed: &TraversalSeed, layer_height: f64) -> Vec<ExtrusionPath> {
-    materialize_ordinary_polygon(seed, &seed.polygon, layer_height)
-}
-
 fn materialize_ordinary_polygon(
     seed: &TraversalSeed,
     polygon: &Polygon,
@@ -205,9 +200,4 @@ fn map_clipper_error(error: ClipperError) -> SliceError {
             unreachable!("closed polygon wrappers cannot produce open-path API errors")
         }
     }
-}
-
-#[cfg(test)]
-pub(super) fn scaled_epsilon(scale: CoordinateScale) -> i64 {
-    scale.checked_scale(EPSILON_MM).unwrap()
 }

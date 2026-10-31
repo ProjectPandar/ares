@@ -110,8 +110,4 @@ impl BeadingStrategy for RedistributeBeadingStrategy {
     fn transition_anchor_pos(&self, lower_bead_count: i64) -> f32 {
         self.parent.transition_anchor_pos(lower_bead_count)
     }
-
-    fn description(&self) -> String {
-        format!("RedistributeBeadingStrategy+{}", self.parent.description())
-    }
 }

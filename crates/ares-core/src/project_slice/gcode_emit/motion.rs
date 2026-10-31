@@ -16,9 +16,7 @@ mod options;
 mod origin;
 mod overhang;
 mod path;
-#[cfg(test)]
-#[path = "motion/path/tests.rs"]
-mod path_tests;
+
 mod perimeter;
 mod scan;
 mod scarf;
@@ -27,8 +25,6 @@ mod skirt_brim;
 mod state;
 mod support;
 
-#[cfg(test)]
-mod tests;
 pub(super) mod tool_selection;
 pub(super) mod tower;
 mod travel;

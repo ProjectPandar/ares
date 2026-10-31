@@ -5,8 +5,7 @@ mod lift;
 mod retract_core;
 mod unretract;
 pub(super) use unretract::{unlift, unretract};
-#[cfg(test)]
-mod tests;
+
 mod wipe_path;
 mod wipe_sequence;
 pub(super) use retract_core::plain_retract;

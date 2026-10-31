@@ -47,16 +47,6 @@ fn finish(mut entries: Vec<ConfigEntry>) -> Result<Vec<ConfigEntry>, ConfigValue
     Ok(entries)
 }
 
-#[cfg(test)]
-pub(crate) fn collect_serializable_for_test<T>(
-    value: &T,
-) -> Result<Vec<ConfigEntry>, ConfigValueError>
-where
-    T: Serialize + ?Sized,
-{
-    finish(value.serialize(GroupSerializer { active_count: None })?)
-}
-
 struct GroupSerializer {
     active_count: Option<usize>,
 }

@@ -72,7 +72,6 @@ impl IroningSurface {
             flow: input.parameters.raft_interface_flow,
             flow_ratio: 1.0,
             extrusion_role: ExtrusionRole::Ironing,
-            idx: 0,
             loop_clipping: 0,
             role_speed: 0.0,
             lateral_lattice_angle_1: -45.0,

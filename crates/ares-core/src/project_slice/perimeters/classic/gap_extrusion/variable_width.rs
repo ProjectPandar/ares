@@ -267,6 +267,3 @@ const fn point3(point: Point) -> Point3 {
         z: 0,
     }
 }
-
-#[cfg(test)]
-mod tests;

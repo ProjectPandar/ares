@@ -66,22 +66,6 @@ impl Line {
         (dx * dx + dy * dy).sqrt()
     }
 
-    #[cfg(test)]
-    pub(crate) fn projection(self, point: Point) -> Point {
-        let (x, y) = self.projection_f64(point.x() as f64, point.y() as f64);
-        Point::new(x as i64, y as i64)
-    }
-
-    #[cfg(test)]
-    pub(crate) fn projection_f64(self, x: f64, y: f64) -> (f64, f64) {
-        let ax = self.a.x() as f64;
-        let ay = self.a.y() as f64;
-        let dx = (self.b.x() - self.a.x()) as f64;
-        let dy = (self.b.y() - self.a.y()) as f64;
-        let t = (((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
-        (ax + t * dx, ay + t * dy)
-    }
-
     pub(crate) fn intersection(self, other: Self) -> Option<Point> {
         let v1 = (
             (self.b.x() - self.a.x()) as f64,

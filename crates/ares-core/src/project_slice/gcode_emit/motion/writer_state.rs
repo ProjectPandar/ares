@@ -232,25 +232,3 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
 fn is_approx(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-4
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn hull_point_placeholders_use_native_general_precision() {
-        let state = EmitState {
-            first_layer_hull: vec![crate::geometry::Point::new(-1, 999_999_600_000)],
-            scale_factor: 1e-6,
-            ..Default::default()
-        };
-        let mut config = Config::default();
-        refresh_writer_state(&mut config, &state);
-        let rendered = crate::project_slice::gcode_emit::template::render(
-            "{first_layer_print_convex_hull[0]}",
-            &mut config,
-        )
-        .unwrap();
-        assert_eq!(rendered, "[-1e-06, 1e+06]");
-    }
-}

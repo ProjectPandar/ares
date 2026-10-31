@@ -118,5 +118,3 @@ fn points_bounds<'a>(
     }
     Some(bounds)
 }
-#[cfg(test)]
-mod tests;

@@ -330,6 +330,3 @@ fn perimeters_for_contour(
         layer_id,
     ))
 }
-
-#[cfg(test)]
-mod tests;

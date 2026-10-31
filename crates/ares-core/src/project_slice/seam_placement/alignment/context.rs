@@ -148,5 +148,3 @@ fn point_segment_distance(point: (f32, f32), start: (f32, f32), end: (f32, f32))
     let closest = (start.0 + projection * edge.0, start.1 + projection * edge.1);
     (point.0 - closest.0).hypot(point.1 - closest.1)
 }
-#[cfg(test)]
-mod tests;

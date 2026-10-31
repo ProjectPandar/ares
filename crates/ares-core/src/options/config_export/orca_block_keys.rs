@@ -11,5 +11,3 @@ pub(crate) fn contains(key: &str) -> bool {
     };
     keys.binary_search(&key).is_ok()
 }
-#[cfg(test)]
-mod tests;

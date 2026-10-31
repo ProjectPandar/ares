@@ -101,19 +101,7 @@ fn propagate_kind(
         .as_ref()
         .expect("a populated source has a working record");
     let mut solid = gather::source_paths(source_record, &source.fill_surfaces, kind);
-    #[cfg(test)]
-    {
-        let original = gather::source_paths(source_record, &source_record.fill_surfaces, kind);
-        super::record_gather(super::GatherObservation {
-            object: object_index,
-            layer: source_index,
-            kind,
-            dirty_before_gather: source.dirty,
-            path_count: solid.len(),
-            path_digest: super::hooks::path_digest(&solid),
-            original_path_digest: super::hooks::path_digest(&original),
-        });
-    }
+
     if solid.is_empty() {
         return Ok(());
     }

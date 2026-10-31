@@ -25,31 +25,6 @@ impl OpenPolyline {
             consumed: false,
         }
     }
-
-    #[cfg(test)]
-    pub(crate) const fn start(&self) -> EndpointReference {
-        self.start
-    }
-
-    #[cfg(test)]
-    pub(crate) const fn end(&self) -> EndpointReference {
-        self.end
-    }
-
-    #[cfg(test)]
-    pub(crate) fn points(&self) -> &[Point] {
-        &self.points
-    }
-
-    #[cfg(test)]
-    pub(crate) const fn length(&self) -> f64 {
-        self.length
-    }
-
-    #[cfg(test)]
-    pub(crate) const fn consumed(&self) -> bool {
-        self.consumed
-    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -59,16 +34,6 @@ pub(crate) struct ChainedLayer {
 }
 
 impl ChainedLayer {
-    #[cfg(test)]
-    pub(crate) fn polygons(&self) -> &[Polygon] {
-        &self.polygons
-    }
-
-    #[cfg(test)]
-    pub(crate) fn open_polylines(&self) -> &[OpenPolyline] {
-        &self.open_polylines
-    }
-
     pub(super) fn into_parts(self) -> (Vec<Polygon>, Vec<OpenPolyline>) {
         (self.polygons, self.open_polylines)
     }

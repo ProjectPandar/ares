@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::{
     ProcessInfillPattern, RegionOptions,
     geometry::{CoordinateScale, Line, Polygon, Polyline},

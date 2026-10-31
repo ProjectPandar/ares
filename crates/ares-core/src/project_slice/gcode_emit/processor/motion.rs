@@ -1,15 +1,11 @@
 pub(super) mod arc;
-#[cfg(test)]
-mod axis_acceleration_tests;
+
 mod cached_feedrate;
 mod config_commands;
 mod firmware;
 mod homing;
 mod segment;
-#[cfg(test)]
-mod test_hooks;
-#[cfg(test)]
-pub(in crate::project_slice) use test_hooks::{planned_times, planned_trapezoid_time};
+
 mod limits;
 use super::motion_util::{MMMIN_TO_MMSEC, norm, word};
 use crate::options::GCodeFlavor;
@@ -139,14 +135,6 @@ impl MotionState {
 
     pub(super) fn set_wiping(&mut self, wiping: bool) {
         self.wiping = wiping;
-    }
-
-    #[cfg(test)]
-    pub(super) fn motions(&mut self, code: &str) -> Vec<MotionBlock> {
-        self.motions_indexed(code)
-            .into_iter()
-            .map(|motion| motion.block)
-            .collect()
     }
 
     /// `index` is `0` for linear moves and the segment's position in

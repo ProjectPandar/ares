@@ -93,8 +93,3 @@ fn squared_distance(origin: Point, point: Point) -> f64 {
     let dy = (point.y() - origin.y()) as f64;
     dx * dx + dy * dy
 }
-
-#[cfg(test)]
-pub(super) fn squared_distance_bits_for_test(origin: Point, point: Point) -> u64 {
-    squared_distance(origin, point).to_bits()
-}

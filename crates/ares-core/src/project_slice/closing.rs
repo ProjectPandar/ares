@@ -19,22 +19,12 @@ pub(super) struct PostClosingLayer {
 }
 
 impl PostClosingLayer {
-    #[cfg(test)]
-    pub(super) fn new(mode: SlicingMode, expolygons: Vec<ExPolygon>) -> Self {
-        Self { mode, expolygons }
-    }
-
     pub(super) fn into_parts(self) -> (SlicingMode, Vec<ExPolygon>) {
         (self.mode, self.expolygons)
     }
 
     pub(super) const fn mode(&self) -> SlicingMode {
         self.mode
-    }
-
-    #[cfg(test)]
-    pub(super) fn expolygons(&self) -> &[ExPolygon] {
-        &self.expolygons
     }
 
     pub(super) fn expolygons_mut(&mut self) -> &mut Vec<ExPolygon> {
@@ -50,21 +40,6 @@ pub(super) struct PostClosingVolume {
 }
 
 impl PostClosingVolume {
-    #[cfg(test)]
-    pub(super) fn new(
-        source_volume_index: usize,
-        volume_ordinal: u32,
-        volume_type: ProjectVolumeType,
-        layers: Vec<PostClosingLayer>,
-    ) -> Self {
-        Self {
-            source_volume_index,
-            volume_ordinal,
-            volume_type,
-            layers,
-        }
-    }
-
     pub(super) fn into_parts(self) -> (usize, u32, ProjectVolumeType, Vec<PostClosingLayer>) {
         (
             self.source_volume_index,
@@ -72,26 +47,6 @@ impl PostClosingVolume {
             self.volume_type,
             self.layers,
         )
-    }
-
-    #[cfg(test)]
-    pub(super) const fn source_volume_index(&self) -> usize {
-        self.source_volume_index
-    }
-
-    #[cfg(test)]
-    pub(super) const fn ordinal(&self) -> u32 {
-        self.volume_ordinal
-    }
-
-    #[cfg(test)]
-    pub(super) const fn volume_type(&self) -> ProjectVolumeType {
-        self.volume_type
-    }
-
-    #[cfg(test)]
-    pub(super) fn layers(&self) -> &[PostClosingLayer] {
-        &self.layers
     }
 
     pub(super) fn layers_mut(&mut self) -> &mut [PostClosingLayer] {
@@ -105,23 +60,8 @@ pub(super) struct PostClosingPrintObject {
 }
 
 impl PostClosingPrintObject {
-    #[cfg(test)]
-    pub(super) fn new(plan: PlannedPrintObject, volumes: Vec<PostClosingVolume>) -> Self {
-        Self { plan, volumes }
-    }
-
     pub(super) fn into_parts(self) -> (PlannedPrintObject, Vec<PostClosingVolume>) {
         (self.plan, self.volumes)
-    }
-
-    #[cfg(test)]
-    pub(super) const fn plan(&self) -> &PlannedPrintObject {
-        &self.plan
-    }
-
-    #[cfg(test)]
-    pub(super) fn volumes(&self) -> &[PostClosingVolume] {
-        &self.volumes
     }
 
     pub(super) fn volumes_mut(&mut self) -> &mut [PostClosingVolume] {

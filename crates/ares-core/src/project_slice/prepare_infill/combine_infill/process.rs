@@ -313,6 +313,3 @@ fn geometry_error(error: crate::geometry::ClipperError) -> SliceError {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

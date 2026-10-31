@@ -3,16 +3,7 @@ mod splits;
 
 use self::aabb::BoundaryAabb;
 pub(super) use self::aabb::sample_in_expolygons;
-#[cfg(test)]
-pub(in crate::geometry) use self::aabb::{bbox_contains_for_test, sample_for_test};
-#[cfg(test)]
-pub(in crate::geometry) use self::aabb::{
-    centroid_for_test, longest_axis_for_test, partition_for_test,
-};
-#[cfg(test)]
-pub(in crate::geometry) use self::splits::{
-    merge_path_for_test, reconcile_for_test, sort_seeds_for_test, split_registry_for_test,
-};
+
 use self::splits::{merge_splits, sort_seeds, split_registry};
 use super::WaveSeed;
 use crate::geometry::clipper::z::{KernelPoint, ZPath};
@@ -252,44 +243,4 @@ fn seed(path: ZPath, src: u32, boundary: u32) -> WaveSeed {
         boundary,
         path: Polygon::new(path.into_iter().map(|point| point.xy).collect()),
     }
-}
-
-#[cfg(test)]
-pub(in crate::geometry) fn expanded_source_paths_for_test(
-    src: &[ExPolygon],
-    expansion: f32,
-    first_id: i64,
-) -> Result<(Vec<ZPath>, i64), ClipperError> {
-    let mut end = first_id;
-    let paths = expanded_source_paths(src, expansion, &mut end)?;
-    Ok((paths, end))
-}
-
-#[cfg(test)]
-pub(in crate::geometry) fn recover_path_for_test(
-    path: ZPath,
-    intersections: &[(i64, i64)],
-    boundaries: &[ExPolygon],
-    ids: (i64, i64, i64),
-    scale: CoordinateScale,
-) -> (Vec<WaveSeed>, bool) {
-    let mut tree = None;
-    let mut output = Vec::new();
-    let context = RecoveryContext {
-        intersections,
-        boundaries,
-        boundary_begin: ids.0,
-        boundary_end: ids.1,
-        src_end: ids.2,
-        scale,
-    };
-    let front = path[0];
-    let back = *path.last().unwrap();
-    recover_path_after_topology(path, context, &mut tree, &mut output, (front, back));
-    (output, tree.is_some())
-}
-
-#[cfg(all(test, debug_assertions))]
-pub(in crate::geometry) fn assert_source_topology_for_test(path: &ZPath, ids: (i64, i64)) {
-    assert_source_topology(path[0], *path.last().unwrap(), ids.0, ids.1);
 }

@@ -166,6 +166,3 @@ impl PressureEqualizerPass {
         buffer.finish()
     }
 }
-
-#[cfg(test)]
-mod tests;

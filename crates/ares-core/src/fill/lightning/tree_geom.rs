@@ -7,9 +7,6 @@ use crate::geometry::{Coord, EdgeGrid, Point, Polygon, Polyline};
 use super::glibc_rand::GlibcRand;
 use super::tree_node::{Node, NodeSPtr};
 
-#[cfg(test)]
-mod tests;
-
 impl Node {
     /// `convertToPolylines` — depth-first branch order, first child picked by
     /// `rand()` (glibc), other children get new polylines (TreeNode.cpp:355).

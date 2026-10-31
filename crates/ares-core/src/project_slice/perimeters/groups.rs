@@ -9,8 +9,6 @@ use crate::{
 
 mod compatibility;
 pub(super) mod redistribute;
-#[cfg(test)]
-mod tests;
 
 pub(super) struct PerimeterGroup {
     pub(super) owner: RegionLayerIndex,

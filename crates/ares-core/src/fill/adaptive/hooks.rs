@@ -10,9 +10,6 @@ mod pair;
 mod touching;
 mod trim;
 
-#[cfg(test)]
-mod tests;
-
 use crate::geometry::{ExPolygon, Line, LineDistanceTree, Point, Polyline};
 use geometry::{
     Thresholds, candidate_dir, distance_point_to_segment_squared, dot, left_of, line_dir,

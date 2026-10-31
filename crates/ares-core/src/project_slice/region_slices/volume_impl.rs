@@ -20,11 +20,4 @@ impl super::PostRegion {
     ) -> (usize, &crate::RegionOptions, &[super::RegionLayer]) {
         (self.id, &self.options, &self.layers)
     }
-
-    #[cfg(test)]
-    pub(in crate::project_slice) fn into_parts(
-        self,
-    ) -> (usize, crate::RegionOptions, Vec<super::RegionLayer>) {
-        (self.id, self.options, self.layers)
-    }
 }

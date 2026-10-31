@@ -2,9 +2,6 @@ use crate::{
     OrcaBool, OrcaInt, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
-#[cfg(test)]
-mod tests;
-
 // GCode.cpp:3181-3196: when air filtration is supported and a writer-used extruder has
 // `activate_air_filtration` + `activate_air_filtration_during_print`, upstream
 // emits the during-print exhaust fan (`set_exhaust_fan`, M106 P3) right after

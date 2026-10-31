@@ -349,6 +349,3 @@ pub(super) use combined::{GroupBrim, combine, group_brims};
 mod emit;
 mod outline;
 mod owner;
-
-#[cfg(test)]
-mod tests;

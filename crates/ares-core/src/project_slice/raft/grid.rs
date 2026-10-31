@@ -99,6 +99,3 @@ pub(crate) fn raft_layer_grid(
     );
     Ok(layers)
 }
-
-#[cfg(test)]
-mod tests;

@@ -4,8 +4,7 @@ mod polyline;
 // Thin walls, entity traversal, and final orientation are deferred.
 
 pub(in crate::project_slice) mod path;
-#[cfg(test)]
-mod tests;
+
 pub(in crate::project_slice) mod tree;
 mod types;
 

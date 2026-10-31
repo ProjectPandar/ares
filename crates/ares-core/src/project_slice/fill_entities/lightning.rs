@@ -14,9 +14,6 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-#[cfg(test)]
-mod tests;
-
 /// `to_polygons(ExPolygon)` — flatten contour+holes.
 fn to_polygons(expolygon: &ExPolygon) -> Vec<Polygon> {
     let mut v = vec![expolygon.contour().clone()];

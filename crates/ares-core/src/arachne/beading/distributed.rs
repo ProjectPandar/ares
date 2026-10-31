@@ -84,8 +84,4 @@ impl BeadingStrategy for DistributedBeadingStrategy {
         let minimum_line_width = (self.config.optimal_width as f64 * threshold) as i64;
         naive_count + (remainder >= minimum_line_width) as i64
     }
-
-    fn description(&self) -> String {
-        "DistributedBeadingStrategy".into()
-    }
 }

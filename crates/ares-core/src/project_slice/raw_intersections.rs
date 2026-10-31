@@ -12,8 +12,6 @@ use super::layers::PlannedPrintObject;
 
 #[path = "raw_intersections/ranges.rs"]
 mod ranges;
-#[cfg(test)]
-use crate::geometry::Point;
 
 const DENSE_SLOT_LIMIT: usize = 1_000_000;
 
@@ -26,16 +24,6 @@ pub(super) struct ProjectedVolume {
     volume_ordinal: VolumeOrdinal,
 }
 
-#[cfg(test)]
-impl ProjectedVolume {
-    pub(super) fn source_volume_index(&self) -> usize {
-        self.source_volume_index
-    }
-    pub(super) fn ordinal(&self) -> u32 {
-        self.volume_ordinal.0.get()
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct ProjectedPrintObject {
     plan: PlannedPrintObject,
@@ -43,10 +31,6 @@ pub(super) struct ProjectedPrintObject {
 }
 
 impl ProjectedPrintObject {
-    #[cfg(test)]
-    pub(super) fn volumes(&self) -> &[ProjectedVolume] {
-        &self.volumes
-    }
     pub(super) fn into_parts(self) -> (PlannedPrintObject, Vec<ProjectedVolume>) {
         (self.plan, self.volumes)
     }
@@ -69,22 +53,6 @@ pub(super) struct RawVolumeIntersections {
 }
 
 impl RawVolumeIntersections {
-    #[cfg(test)]
-    pub(super) const fn source_volume_index(&self) -> usize {
-        self.source_volume_index
-    }
-    #[cfg(test)]
-    pub(super) fn ordinal(&self) -> u32 {
-        self.volume_ordinal.0.get()
-    }
-    #[cfg(test)]
-    pub(super) const fn volume_type(&self) -> ProjectVolumeType {
-        self.volume_type
-    }
-    #[cfg(test)]
-    pub(super) fn layers(&self) -> &[Vec<IntersectionLine>] {
-        &self.layers
-    }
     pub(super) fn into_parts(self) -> (usize, u32, ProjectVolumeType, Vec<Vec<IntersectionLine>>) {
         (
             self.source_volume_index,
@@ -102,10 +70,6 @@ pub(super) struct IntersectedPrintObject {
 }
 
 impl IntersectedPrintObject {
-    #[cfg(test)]
-    pub(super) fn volumes(&self) -> &[RawVolumeIntersections] {
-        &self.volumes
-    }
     pub(super) fn into_parts(self) -> (PlannedPrintObject, Vec<RawVolumeIntersections>) {
         (self.plan, self.volumes)
     }
@@ -224,18 +188,6 @@ pub(super) fn intersect_projected_objects(
         intersected_objects.push(IntersectedPrintObject { plan, volumes });
     }
     Ok(intersected_objects)
-}
-
-#[cfg(test)]
-pub(super) fn raw_center(
-    source: &ProjectObject,
-    scale: CoordinateScale,
-) -> Result<Point, SliceError> {
-    let [x, y] = raw_center_unscaled(source)?;
-    Ok(Point::new(
-        scale.checked_scale(x).ok_or_else(coordinate_error)?,
-        scale.checked_scale(y).ok_or_else(coordinate_error)?,
-    ))
 }
 
 pub(super) fn raw_center_unscaled(source: &ProjectObject) -> Result<[f64; 2], SliceError> {

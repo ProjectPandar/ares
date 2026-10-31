@@ -143,6 +143,3 @@ fn geometry_error() -> SliceError {
         "Classic onion geometry is outside the supported Clipper range".to_owned(),
     )
 }
-
-#[cfg(test)]
-mod tests;

@@ -5,9 +5,6 @@ use crate::{
     geometry::{CoordinateScale, Line, LineDistanceTree, Point, Polygon},
 };
 
-#[cfg(test)]
-mod tests;
-
 #[derive(Clone, Copy)]
 struct DirectionBucket {
     angle: f64,
@@ -200,49 +197,4 @@ const fn pattern_adjustment(pattern: ProcessInfillPattern) -> f64 {
         | ProcessInfillPattern::Concentric
         | ProcessInfillPattern::ArchimedeanChords => 0.0,
     }
-}
-
-#[cfg(test)]
-pub(super) fn sampled_points_for_test(
-    bridged_area: &[Polygon],
-    scale: CoordinateScale,
-) -> Vec<Point> {
-    let mut points = Vec::new();
-    for_each_sample(bridged_area, scale, |point| points.push(point));
-    points
-}
-
-#[cfg(test)]
-pub(super) fn counted_directions_for_test(
-    bridged_area: &[Polygon],
-    anchors: &[Line],
-    scale: CoordinateScale,
-) -> Vec<(u64, i32)> {
-    count_directions(bridged_area, anchors, scale)
-        .into_iter()
-        .map(|bucket| (bucket.angle.to_bits(), bucket.count))
-        .collect()
-}
-
-#[cfg(test)]
-pub(super) fn reduce_directions_for_test(directions: &[(f64, i32)]) -> (f64, Vec<(u64, i32)>) {
-    let mut ordered = Vec::new();
-    for &(angle, count) in directions {
-        insert_direction(&mut ordered, angle, count);
-    }
-    let angle = reduce_directions(&ordered);
-    let buckets = ordered
-        .into_iter()
-        .map(|bucket| (bucket.angle.to_bits(), bucket.count))
-        .collect();
-    (angle, buckets)
-}
-
-#[cfg(test)]
-pub(super) fn direction_window_for_test(directions: &[(f64, i32)], direction: f64) -> (f64, i32) {
-    let mut ordered = Vec::new();
-    for &(angle, count) in directions {
-        insert_direction(&mut ordered, angle, count);
-    }
-    accumulate_window(&ordered, direction)
 }

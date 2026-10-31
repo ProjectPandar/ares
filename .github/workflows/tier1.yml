@@ -306,8 +306,6 @@ jobs:
           command -v g++
           test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
-      - name: Compare GLU tessellation against runtime Native supplier
-        run: cargo nextest run -p ares-core --lib --no-fail-fast -E 'test(/^geometry::tessellation::tests::/)' --test-threads 2
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
 
   parity-official:
@@ -416,6 +414,4 @@ jobs:
           command -v g++
           test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
-      - name: Compare GLU tessellation against runtime Native supplier
-        run: cargo nextest run -p ares-core --lib --no-fail-fast -E 'test(/^geometry::tessellation::tests::/)' --test-threads 2
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8

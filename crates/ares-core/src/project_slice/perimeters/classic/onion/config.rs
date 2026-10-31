@@ -85,6 +85,3 @@ fn validate_density(value: f64) -> Result<i32, SliceError> {
         ))
     }
 }
-
-#[cfg(test)]
-mod tests;

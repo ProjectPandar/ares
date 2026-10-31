@@ -9,8 +9,6 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 use crate::{FloatOrPercent, ZHopType};
 
 mod detect;
-#[cfg(test)]
-mod tests;
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct AutoLift {

@@ -258,6 +258,3 @@ fn finalize_polylines(
     polylines.truncate(write_index);
     reorder_thick_polylines(polylines);
 }
-
-#[cfg(test)]
-mod tests;

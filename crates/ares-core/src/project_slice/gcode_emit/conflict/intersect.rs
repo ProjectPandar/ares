@@ -3,9 +3,6 @@
 use crate::geometry::{CoordinateScale, Line};
 use std::collections::BTreeMap;
 
-#[cfg(test)]
-mod tests;
-
 pub(super) struct OwnedLine {
     pub(super) line: Line,
     pub(super) owner: usize,

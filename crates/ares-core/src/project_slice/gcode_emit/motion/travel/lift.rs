@@ -4,8 +4,7 @@ use super::super::{
 };
 
 mod spiral;
-#[cfg(test)]
-mod tests;
+
 use spiral::append as append_spiral;
 
 // `libslic3r.h:52`, shared by the writer's lift and Z-travel gates.

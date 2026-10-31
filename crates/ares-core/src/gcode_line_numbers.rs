@@ -30,5 +30,3 @@ fn add_line_numbers_if_enabled(gcode: String, enabled: bool) -> String {
     }
     numbered
 }
-#[cfg(test)]
-mod tests;

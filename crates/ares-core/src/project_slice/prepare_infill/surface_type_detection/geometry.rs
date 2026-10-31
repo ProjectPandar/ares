@@ -108,13 +108,7 @@ pub(super) fn internal(
         .map_err(geometry_error)
 }
 
-pub(super) fn observe(step: GeometryStep) -> Result<(), SliceError> {
-    #[cfg(test)]
-    if super::tests::observe_step(step) {
-        return Err(geometry_error_value());
-    }
-    #[cfg(not(test))]
-    let _ = step;
+pub(super) fn observe(_step: GeometryStep) -> Result<(), SliceError> {
     Ok(())
 }
 

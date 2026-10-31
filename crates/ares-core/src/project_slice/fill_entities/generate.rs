@@ -369,19 +369,3 @@ pub(in crate::project_slice) fn layer_options<'a>(
         support_spacing: spacing.support,
     }
 }
-
-#[cfg(test)]
-pub(in crate::project_slice) fn generate_layer(
-    prepared: &PreparedPostExternalSurfaces,
-    object_index: usize,
-    layer_index: usize,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    stars_bounds: Option<crate::geometry::BoundingBox>,
-) -> Result<LayerFillEntities, SliceError> {
-    generate_layer_with_active(
-        prepared,
-        object_index,
-        layer_index,
-        layer_options(prepared, object_index, lightning_generator, stars_bounds),
-    )
-}

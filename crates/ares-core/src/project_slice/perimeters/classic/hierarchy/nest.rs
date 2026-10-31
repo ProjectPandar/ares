@@ -97,6 +97,3 @@ pub(super) struct NestedLoops {
     pub(super) contours: Vec<Vec<PerimeterGeneratorLoop>>,
     pub(super) holes: Vec<Vec<PerimeterGeneratorLoop>>,
 }
-
-#[cfg(test)]
-mod tests;

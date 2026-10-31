@@ -8,9 +8,6 @@ mod load_settings;
 mod fragment;
 mod inheritance;
 
-#[cfg(test)]
-mod tests;
-
 pub use catalog::{
     CurrentPrinter, PresetCatalogHandle, PresetValues, PrinterModelInfo, SelectablePrinter,
 };

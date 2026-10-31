@@ -64,42 +64,6 @@ const CASES: [Case; 6] = [
         project: include_bytes!("../../../../../tests/parity/nozzle-flush-dataset/C2.3mf"),
     },
 ];
-pub(super) fn generate(key: &str) -> Option<(Vec<super::domains::OptionCase>, serde_json::Value)> {
-    if key != "nozzle_flush_dataset" {
-        return None;
-    }
-    Some((
-        CASES
-            .iter()
-            .map(|c| super::domains::OptionCase {
-                label: c.label.into(),
-                value: Some(json!(c.dataset.map(|v| v.to_string()))),
-            })
-            .collect(),
-        json!({
-        "domain":"bounded X2D selected nozzle predictor datasets",
-        "source":"PrintConfig.cpp:2602; FlushVolPredictor.cpp:312-327; FlushVolCalc.cpp:43-124; OrcaSlicer.cpp:3351,3436-3495",
-        "spec":"docs/architecture/option-nozzle-flush-dataset-sweep-integration-spec.md",
-        "cases":CASES.iter().map(|c|json!({"label":c.label,"dataset":c.dataset,"explicit_matrix":c.explicit,"expected_matrix":c.matrix})).collect::<Vec<_>>(),
-        "witness":"computed matrix differences, not motion differences; fixed one-object scene has equal command streams",
-        "deferred":["RGB grids","malformed IDs","tower/flush production"]
-        }),
-    ))
-}
-pub(super) fn execute_plan(
-    runner: &OrcaRunner,
-    plan: &super::domains::OptionPlan,
-) -> super::OptionOutcome {
-    for c in &plan.cases {
-        let case = CASES.iter().find(|case| case.label == c.label).unwrap();
-        assert_eq!(
-            c.value.as_ref().unwrap(),
-            &json!(case.dataset.map(|v| v.to_string()))
-        );
-        compare_with(runner, case);
-    }
-    super::OptionOutcome::executed(plan, plan.cases.len(), Vec::new(), 0, None)
-}
 fn verify_input(case: &Case) {
     let mut zip = zip::ZipArchive::new(Cursor::new(case.project)).unwrap();
     let mut bytes = Vec::new();

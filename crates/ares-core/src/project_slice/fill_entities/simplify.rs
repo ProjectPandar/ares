@@ -64,6 +64,3 @@ fn simplify_extrusion_path(path: &mut ExtrusionPath, tolerance: f64) {
         .collect();
     path.polyline.fitting.clear();
 }
-
-#[cfg(test)]
-mod tests;

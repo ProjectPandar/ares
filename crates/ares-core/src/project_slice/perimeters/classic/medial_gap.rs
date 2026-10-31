@@ -22,26 +22,12 @@ use super::gap_domain::{
 
 const VORONOI_ERROR: &str = "Classic medial-axis Voronoi construction failed";
 
-#[cfg(test)]
-thread_local! {
-    static ERROR_CLEANUP_PROBE_ALIVE: std::cell::Cell<Option<bool>> = const { std::cell::Cell::new(None) };
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn error_cleanup_probe_alive() -> Option<bool> {
-    ERROR_CLEANUP_PROBE_ALIVE.with(std::cell::Cell::get)
-}
-
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicGapDomain,
 ) -> Result<PreparedPostClassicMedialGap, SliceError> {
     let staged = match stage(&prepared) {
         Ok(staged) => staged,
         Err(error) => {
-            #[cfg(test)]
-            ERROR_CLEANUP_PROBE_ALIVE.with(|alive| {
-                alive.set(Some(prepared.predecessor.drop_probe_is_alive()));
-            });
             let PreparedPostClassicGapDomain {
                 predecessor,
                 objects,

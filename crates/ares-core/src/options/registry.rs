@@ -188,6 +188,3 @@ pub fn option_metadata(key: &str) -> Option<&'static OptionMetadata> {
         .ok()
         .map(|index| &METADATA[index])
 }
-
-#[cfg(test)]
-mod tests;

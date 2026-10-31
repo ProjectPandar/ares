@@ -28,13 +28,6 @@ pub(in crate::project_slice) struct Regions {
     pub(in crate::project_slice::perimeters) has_hole: bool,
 }
 
-#[cfg(test)]
-pub(in crate::project_slice) static EMPTY: Regions = Regions {
-    entries: Vec::new(),
-    has_contour: false,
-    has_hole: false,
-};
-
 impl Regions {
     pub(in crate::project_slice::perimeters) fn prepare(
         object: &PostPerimeterInputPrintObject,

@@ -13,8 +13,6 @@ pub(in crate::project_slice) struct PreparedPostClassicTraversal {
     /// Per-slice adaptive octree cache — replaces global thread-local
     /// state so repeated slice calls with multiple projects are isolated.
     pub(in crate::project_slice) adaptive_octrees: crate::fill::adaptive::AdaptiveOctreeCache,
-    #[cfg(test)]
-    pub(in crate::project_slice) drop_probe: TraversalDropProbe,
 }
 
 impl PreparedPostClassicTraversal {
@@ -39,51 +37,6 @@ impl PreparedPostClassicTraversal {
             .find(|object| object.source_object_index == source)
             .expect("print object retains its source configuration");
         (resolved, &resolved.print_objects[transform])
-    }
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) struct TraversalDropProbe {
-    token: std::sync::Arc<()>,
-    dropped: std::sync::Arc<std::sync::atomic::AtomicBool>,
-}
-
-#[cfg(test)]
-impl TraversalDropProbe {
-    pub(super) fn new() -> Self {
-        Self {
-            token: std::sync::Arc::new(()),
-            dropped: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
-        }
-    }
-}
-
-#[cfg(test)]
-impl Drop for TraversalDropProbe {
-    fn drop(&mut self) {
-        self.dropped
-            .store(true, std::sync::atomic::Ordering::SeqCst);
-    }
-}
-
-#[cfg(test)]
-impl PreparedPostClassicTraversal {
-    pub(in crate::project_slice) fn drop_probe_observer(
-        &self,
-    ) -> (
-        std::sync::Weak<()>,
-        std::sync::Arc<std::sync::atomic::AtomicBool>,
-    ) {
-        (
-            std::sync::Arc::downgrade(&self.drop_probe.token),
-            std::sync::Arc::clone(&self.drop_probe.dropped),
-        )
-    }
-
-    pub(in crate::project_slice) fn drop_probe_is_alive(&self) -> bool {
-        std::sync::Arc::downgrade(&self.drop_probe.token)
-            .upgrade()
-            .is_some()
     }
 }
 

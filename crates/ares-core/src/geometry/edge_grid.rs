@@ -1,7 +1,5 @@
 mod query;
 pub(crate) mod raster;
-#[cfg(test)]
-mod simplify;
 
 pub(crate) use query::ClosestPointResult;
 

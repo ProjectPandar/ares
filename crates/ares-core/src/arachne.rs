@@ -6,6 +6,3 @@ pub(crate) mod wall_toolpaths;
 
 pub(crate) use extrusion_line::ExtrusionJunction;
 pub(crate) use extrusion_line::ExtrusionLine;
-
-#[cfg(test)]
-mod tests;

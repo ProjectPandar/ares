@@ -34,9 +34,6 @@ pub(crate) struct LineFillParams {
     pub(crate) dont_adjust: bool,
 }
 
-#[cfg(test)]
-mod tests;
-
 const EPSILON: f64 = 1e-4;
 
 fn rotate_polygon_origin(polygon: &Polygon, angle: f64) -> Result<Polygon, ClipperError> {

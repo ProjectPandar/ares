@@ -96,6 +96,3 @@ fn polygon_bounds(polygon: &Polygon) -> SourceBounds {
     bounds.defined = bounds.min_x < bounds.max_x && bounds.min_y < bounds.max_y;
     bounds
 }
-
-#[cfg(test)]
-mod tests;

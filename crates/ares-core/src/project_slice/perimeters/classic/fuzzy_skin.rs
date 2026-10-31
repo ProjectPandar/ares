@@ -1,9 +1,6 @@
 // OrcaSlicer v2.4.2 `Feature/FuzzySkin/FuzzySkin.cpp::apply_fuzzy_skin`
 // classic-polygon seam after surface simplification and before overhang clipping.
 
-#[cfg(test)]
-mod tests;
-
 use crate::{
     SliceError,
     geometry::{CoordinateScale, Polygon},

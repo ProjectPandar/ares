@@ -291,8 +291,6 @@ fn surface_fill(request: &SurfaceRequest) -> SurfaceFill {
             kind: RegionSurfaceKind::InternalSolid,
             thickness: 0.0,
             thickness_layers: request.thickness_layers,
-            bridge_angle: 0.0,
-            extra_perimeters: 0,
         },
         expolygons: vec![request.expolygon.clone()],
         params: request.params,

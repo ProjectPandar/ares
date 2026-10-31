@@ -1,5 +1,3 @@
-#[cfg(test)]
-use super::region_fields::REGION_OPTION_DECLARATION_ORDER;
 use super::{
     FilamentRegionSourceOptions, FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaInts,
     OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
@@ -69,18 +67,9 @@ macro_rules! declare_region_options {
                 }
             }
 
-            #[cfg(test)]
-            pub(crate) const PROCESS_DECLARATION_ORDER: [&'static str; 149] =
-                REGION_OPTION_DECLARATION_ORDER;
 
-            #[cfg(test)]
-            pub(crate) const DECLARATION_ORDER: [&'static str; 153] = [
-                $($key),*,
-                "filament_ironing_flow",
-                "filament_ironing_spacing",
-                "filament_ironing_inset",
-                "filament_ironing_speed",
-            ];
+
+
         }
     };
 }

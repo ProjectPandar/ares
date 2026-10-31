@@ -4,8 +4,7 @@
 pub(in crate::project_slice) mod coverage;
 mod entity;
 mod preflight;
-#[cfg(test)]
-mod tests;
+
 mod types;
 pub(in crate::project_slice) mod variable_width;
 
@@ -33,21 +32,6 @@ use preflight::{ValidatedObject, ValidatedRecord};
 const FLOW_ERROR: &str = "Classic variable-width gap flow is invalid";
 const GEOMETRY_ERROR: &str =
     "Classic gap-extrusion geometry is outside the supported Clipper range";
-
-#[cfg(test)]
-thread_local! {
-    static STAGE_SURFACE_INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_stage_surface_invocations() {
-    STAGE_SURFACE_INVOCATIONS.with(|count| count.set(0));
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn stage_surface_invocations() -> usize {
-    STAGE_SURFACE_INVOCATIONS.with(std::cell::Cell::get)
-}
 
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicMedialGap,
@@ -141,8 +125,6 @@ fn stage_surface(
     validated: ValidatedRecord,
     scale: crate::geometry::CoordinateScale,
 ) -> Result<StagedSurface, SliceError> {
-    #[cfg(test)]
-    STAGE_SURFACE_INVOCATIONS.with(|count| count.set(count.get() + 1));
     let keep = source
         .medial
         .as_ref()

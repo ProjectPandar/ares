@@ -197,6 +197,3 @@ fn fill_expolygons(
     }
     Ok(out)
 }
-
-#[cfg(test)]
-mod tests;

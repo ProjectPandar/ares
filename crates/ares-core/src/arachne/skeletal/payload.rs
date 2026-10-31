@@ -119,22 +119,12 @@ impl SkeletalEdge {
         self.transition_ends.upgrade()
     }
 
-    pub(crate) fn has_transition_ends(&self, ignore_empty: bool) -> bool {
-        self.transition_ends()
-            .is_some_and(|storage| ignore_empty || !storage.borrow().is_empty())
-    }
-
     pub(crate) fn set_extrusion_junctions(&mut self, storage: &Shared<ExtrusionJunction>) {
         self.extrusion_junctions = Rc::downgrade(storage);
     }
 
     pub(crate) fn extrusion_junctions(&self) -> Option<Shared<ExtrusionJunction>> {
         self.extrusion_junctions.upgrade()
-    }
-
-    pub(crate) fn has_extrusion_junctions(&self, ignore_empty: bool) -> bool {
-        self.extrusion_junctions()
-            .is_some_and(|storage| ignore_empty || !storage.borrow().is_empty())
     }
 }
 

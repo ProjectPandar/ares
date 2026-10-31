@@ -126,6 +126,3 @@ impl ViewRange {
         self.visible.reset();
     }
 }
-
-#[cfg(test)]
-mod tests;

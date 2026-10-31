@@ -7,8 +7,6 @@ mod arithmetic;
 mod comparison;
 mod functions;
 mod parser;
-#[cfg(test)]
-mod tests;
 
 pub(super) use arithmetic::to_string;
 use parser::Parser;

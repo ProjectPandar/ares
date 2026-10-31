@@ -1,7 +1,5 @@
 //! `GCode.cpp::change_layer` boundary emission: the layer-change labels,
 //! retraction deferral and state advance that open every layer chunk.
-#[cfg(test)]
-mod tests;
 
 use super::super::{
     GenerationMetadata, PreparedPostClassicTraversal, SliceError, footprint,

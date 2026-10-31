@@ -58,23 +58,6 @@ pub(crate) fn deserialize_json<T: DeserializeOwned>(
     })
 }
 
-#[cfg(test)]
-pub(crate) fn validate_xml_for_test(
-    input: &[u8],
-    role: XmlRole,
-    document_size: usize,
-    decoded_text: usize,
-) -> Result<(), SliceError> {
-    validate_xml(
-        input,
-        role,
-        XmlLimits {
-            document_size,
-            decoded_text,
-        },
-    )
-}
-
 pub(super) fn configured_reader(input: &[u8]) -> NsReader<&[u8]> {
     let mut reader = NsReader::from_reader(input);
     reader.config_mut().enable_all_checks(true);

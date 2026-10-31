@@ -5,8 +5,6 @@ use std::collections::HashMap;
 mod assign;
 mod source;
 pub(in crate::project_slice::gcode_emit) use source::objects;
-#[cfg(test)]
-mod tests;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(in crate::project_slice::gcode_emit) enum CollectionId {

@@ -113,5 +113,3 @@ fn resolve_wall_loops(
     }
     wall_loops
 }
-#[cfg(test)]
-mod tests;

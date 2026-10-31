@@ -75,20 +75,6 @@ impl ProfileSliceOptions {
     }
 }
 
-#[cfg(test)]
-pub(crate) fn parse_profile_slice_overrides_for_test(
-    options_json: &str,
-) -> Result<ares_core::ConfigOverrides, String> {
-    Ok(ProfileSliceOptions::parse(options_json)?.overrides())
-}
-
-#[cfg(test)]
-pub(crate) fn parse_profile_slice_options_for_test(
-    options_json: &str,
-) -> Result<ares_core::Placement, String> {
-    Ok(ProfileSliceOptions::parse(options_json)?.placement())
-}
-
 #[wasm_bindgen(js_name = sliceWithProfiles)]
 pub async fn slice_with_profiles(
     input: Vec<u8>,
@@ -226,17 +212,6 @@ pub async fn profile_settings_json(
     .map_err(|error| error.to_string())?;
     serde_json::to_string(&settings)
         .map_err(|error| format!("profile settings cannot serialize: {error}"))
-}
-
-#[cfg(test)]
-pub(crate) async fn profile_settings_json_for_test(
-    input: Vec<u8>,
-    filename: &str,
-    catalog_json: &str,
-    selection_json: &str,
-    options_json: &str,
-) -> Result<String, String> {
-    profile_settings_json(input, filename, catalog_json, selection_json, options_json).await
 }
 
 /// Returns the placed scene (after `placement` is applied) as `SceneData`,

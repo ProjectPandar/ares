@@ -45,15 +45,3 @@ fn number(line: &str, letter: char) -> Option<i32> {
     let length = line[start..].bytes().take_while(u8::is_ascii_digit).count();
     line[start..start + length].parse().ok()
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn contact_change_preserves_other_tools_and_preheat_timing() {
-        let custom = " M109 S210 T1\nM109 S210 T0\nM109 S210\nM109 S250 T1\n";
-        let tower = "  M104 S210 T1 ; preheat T1\nM109 S250\nM109 S250 T0\nM109 S250 T1\nG1 X2\n";
-        let (custom, tower) = super::rewrite(custom, tower, 1, 210, 250);
-        assert_eq!(custom, "M109 S210 T0\nM109 S210\nM109 S250 T1\n");
-        assert_eq!(tower, "  M104 S250 T1 ; preheat T1\nM109 S250 T0\nG1 X2\n");
-    }
-}

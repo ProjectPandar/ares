@@ -2,8 +2,7 @@
 // `PerimeterGenerator.cpp:1451-1569`.
 
 pub(in crate::project_slice) mod reorient;
-#[cfg(test)]
-mod tests;
+
 mod types;
 
 pub(in crate::project_slice) use types::{

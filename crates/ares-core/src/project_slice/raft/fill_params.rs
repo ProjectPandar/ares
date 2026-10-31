@@ -21,8 +21,6 @@
 //!   layer hatches perpendicularly. Per-layer interface angle
 //!   alternates ±45° (`:284-285`).
 
-#[cfg(test)]
-use std::f64::consts::FRAC_PI_4;
 use std::f64::consts::{FRAC_PI_2, PI};
 
 /// `tree_branch_diameter_double_wall_area_scaled`
@@ -206,16 +204,3 @@ impl RaftFillParams {
         f64::from((self.interface_angle as f32) + toggle)
     }
 }
-
-/// Normalized angle into [0, π) for comparing line directions.
-#[cfg(test)]
-pub(crate) fn normalized_direction(angle: f64) -> f64 {
-    let mut angle = angle.rem_euclid(PI);
-    if angle < 0.0 {
-        angle += PI;
-    }
-    angle
-}
-
-#[cfg(test)]
-mod tests;

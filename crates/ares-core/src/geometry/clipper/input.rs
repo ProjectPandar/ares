@@ -1,15 +1,9 @@
 mod bounds;
 mod path;
 
-#[cfg(test)]
-pub(in crate::geometry) use bounds::reverse_horizontal_for_test;
-
 use super::round_policy::{Clipper1Round, RoundPolicy};
 use super::{Clipper, ClipperError, PathRole};
 use crate::geometry::{Polygon, Polyline};
-
-#[cfg(test)]
-use super::types::{InputSnapshot, LocalMinimumSnapshot};
 
 impl Clipper {
     pub(crate) fn add_closed_path(
@@ -64,22 +58,5 @@ impl Clipper {
             accepted_any |= self.add_path(path.points(), role, false)?;
         }
         Ok(accepted_any)
-    }
-
-    #[cfg(test)]
-    pub(crate) fn input_snapshot(&self) -> InputSnapshot {
-        InputSnapshot {
-            use_full_range: self.use_full_range,
-            edges: self.edges.snapshot(),
-            minima: self
-                .minima
-                .iter()
-                .map(|minimum| LocalMinimumSnapshot {
-                    y: minimum.y,
-                    left: minimum.left.map(|id| id.0),
-                    right: minimum.right.map(|id| id.0),
-                })
-                .collect(),
-        }
     }
 }

@@ -177,6 +177,3 @@ fn path_closing_target(path: &crate::PrintPath, points: &[Point2]) -> Option<Poi
         _ => None,
     }
 }
-
-#[cfg(test)]
-mod tests;

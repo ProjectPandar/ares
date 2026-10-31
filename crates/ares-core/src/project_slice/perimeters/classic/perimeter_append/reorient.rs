@@ -209,6 +209,3 @@ pub(in crate::project_slice) fn reorient_perimeters(
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

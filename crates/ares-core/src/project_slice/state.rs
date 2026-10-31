@@ -26,18 +26,6 @@ pub(super) struct ProjectSliceState {
     pub(super) intersected_objects: Vec<IntersectedPrintObject>,
 }
 
-#[cfg(test)]
-pub(super) fn prepare_project_slice(
-    project: impl AsRef<[u8]>,
-    plate: Option<u32>,
-    overrides: &crate::ConfigOverrides,
-) -> Result<ProjectSliceState, SliceError> {
-    let mut project = crate::project::load_project_with(project, overrides)?;
-    let filament_count = project.cli_filament_count();
-    project.initialize_cli_loaded_project_config(filament_count);
-    prepare_loaded_project_slice(project, plate)
-}
-
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
@@ -71,14 +59,6 @@ pub(super) fn prepare_project_source(
         source.validate_print,
         Some((preparation, source.overrides)),
     )
-}
-
-#[cfg(test)]
-pub(super) fn prepare_loaded_project_slice(
-    project: Project,
-    plate: Option<u32>,
-) -> Result<ProjectSliceState, SliceError> {
-    prepare_loaded_project_slice_with_validation(project, plate, None, false, None)
 }
 
 pub(super) fn prepare_loaded_project_slice_with_validation(

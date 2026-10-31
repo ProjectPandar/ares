@@ -2,9 +2,6 @@ mod z_paths;
 
 use std::mem;
 
-#[cfg(test)]
-use std::slice;
-
 use super::types::{OutPointId, OutRecId, PolyNodeContour, PolyNodeId, PolyNodeRecord};
 use super::{ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, PathRole};
 use crate::geometry::{ExPolygon, Polygon, Polyline};
@@ -15,40 +12,11 @@ pub(crate) struct PolyTree {
     children: Vec<PolyNodeId>,
 }
 
-#[cfg(test)]
-#[derive(Clone, Copy)]
-pub(crate) struct PolyNode<'a> {
-    tree: &'a PolyTree,
-    id: PolyNodeId,
-}
-
-#[cfg(test)]
-pub(crate) struct PolyNodeChildren<'a> {
-    tree: &'a PolyTree,
-    ids: slice::Iter<'a, PolyNodeId>,
-}
-
 impl PolyTree {
     pub(crate) fn empty() -> Self {
         Self {
             nodes: Vec::new(),
             children: Vec::new(),
-        }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn total(&self) -> usize {
-        self.nodes
-            .iter()
-            .filter(|node| node.contour.is_some())
-            .count()
-    }
-
-    #[cfg(test)]
-    pub(crate) fn children(&self) -> PolyNodeChildren<'_> {
-        PolyNodeChildren {
-            tree: self,
-            ids: self.children.iter(),
         }
     }
 
@@ -163,71 +131,6 @@ impl PolyTree {
         }
     }
 }
-
-#[cfg(test)]
-impl<'a> PolyNode<'a> {
-    pub(crate) fn contour(self) -> &'a Polygon {
-        match self.tree.nodes[self.id.0].contour.as_ref() {
-            Some(PolyNodeContour::Closed(polygon)) => polygon,
-            Some(PolyNodeContour::Open(_)) => panic!("open PolyTree node is not a polygon"),
-            None => panic!("live PolyTree node has a contour"),
-        }
-    }
-
-    pub(crate) fn polyline(self) -> &'a Polyline {
-        match self.tree.nodes[self.id.0].contour.as_ref() {
-            Some(PolyNodeContour::Open(polyline)) => polyline,
-            Some(PolyNodeContour::Closed(_)) => panic!("closed PolyTree node is not a polyline"),
-            None => panic!("live PolyTree node has a contour"),
-        }
-    }
-
-    pub(crate) fn is_open(self) -> bool {
-        matches!(
-            self.tree.nodes[self.id.0].contour,
-            Some(PolyNodeContour::Open(_))
-        )
-    }
-
-    pub(crate) fn children(self) -> PolyNodeChildren<'a> {
-        PolyNodeChildren {
-            tree: self.tree,
-            ids: self.tree.nodes[self.id.0].children.iter(),
-        }
-    }
-
-    pub(crate) fn is_hole(self) -> bool {
-        if self.is_open() {
-            return false;
-        }
-        let mut is_hole = false;
-        let mut parent = self.tree.nodes[self.id.0].parent;
-        while let Some(node) = parent {
-            is_hole = !is_hole;
-            parent = self.tree.nodes[node.0].parent;
-        }
-        is_hole
-    }
-}
-
-#[cfg(test)]
-impl<'a> Iterator for PolyNodeChildren<'a> {
-    type Item = PolyNode<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.ids.next().map(|&id| PolyNode {
-            tree: self.tree,
-            id,
-        })
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.ids.size_hint()
-    }
-}
-
-#[cfg(test)]
-impl ExactSizeIterator for PolyNodeChildren<'_> {}
 
 impl Clipper {
     pub(super) fn build_polytree(&mut self) -> PolyTree {

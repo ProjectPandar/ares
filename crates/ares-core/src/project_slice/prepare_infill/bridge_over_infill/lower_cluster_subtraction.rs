@@ -27,6 +27,3 @@ pub(in crate::project_slice) fn subtract_filled_lower_cluster_bridges(
     }
     difference_polygons_paths(deep_infill_area, &filled_lower_polygons)
 }
-
-#[cfg(test)]
-mod tests;

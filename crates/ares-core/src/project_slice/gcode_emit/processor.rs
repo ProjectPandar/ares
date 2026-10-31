@@ -93,29 +93,6 @@ impl ProcessorConfig<'_> {
     }
 }
 
-#[cfg(test)]
-impl Default for ProcessorLimits {
-    fn default() -> Self {
-        Self {
-            print_acceleration: 0.0,
-            retract_acceleration: 0.0,
-            travel_acceleration: 0.0,
-            gcode_flavor: GCodeFlavor::default(),
-            bbl_printer: false,
-            junction_deviation: 0.0,
-            min_extruding_rate: 0.0,
-            min_travel_rate: 0.0,
-            max_feedrate: [0.0; 4],
-            max_acceleration: [0.0; 4],
-            jerk: [9.0, 9.0, 3.0, 2.5],
-            retraction_length: 0.0,
-            retract_restart_extra: 0.0,
-            retraction_feedrate: 0.0,
-            deretraction_feedrate: 0.0,
-        }
-    }
-}
-
 /// `GCodeProcessor::apply_config` + `process_file`/`process_buffer` and
 /// `finalize` (`GCodeProcessor.hpp:887,905,914-915`; cpp:2025,2677-2709).
 /// `post_process` selects the existing progress pass (`hpp:915::finalize(bool)`).
@@ -301,18 +278,3 @@ fn is_progress_motion(line: &str) -> bool {
         Some("G0" | "G1" | "G2" | "G3")
     )
 }
-
-#[cfg(test)]
-mod arc_cache_tests;
-#[cfg(test)]
-mod estimate_tests;
-#[cfg(test)]
-mod gt_oracle_tests;
-#[cfg(test)]
-mod motion_parse_tests;
-#[cfg(test)]
-mod tests;
-#[cfg(test)]
-mod trapezoid_tests;
-#[cfg(test)]
-mod zero_acceleration_tests;

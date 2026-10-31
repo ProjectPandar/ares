@@ -5,9 +5,6 @@ use crate::{
 
 use super::super::temperature::append as append_nozzle_temperature;
 
-#[cfg(test)]
-mod tests;
-
 pub(super) fn first_layer_bed_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
     let settings = &traversal.resolved.views.full;
     use crate::ProjectBedType;

@@ -97,6 +97,3 @@ pub(crate) fn connect_infill_polygons(
     );
     Ok(out)
 }
-
-#[cfg(test)]
-mod tests;

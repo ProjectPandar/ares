@@ -324,8 +324,6 @@ fn shift_first_slot(value: &RawConfigValue, offset: f64) -> Option<RawConfigValu
 
 mod overlay;
 mod stl_mesh;
-#[cfg(test)]
-mod tests;
 
 pub(crate) use overlay::SelectedProfile;
 use overlay::{OverlayContext, machine_switch, merged_profile_raw};

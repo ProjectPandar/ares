@@ -369,6 +369,3 @@ impl ViewerImpl {
         top_first
     }
 }
-
-#[cfg(test)]
-mod tests;

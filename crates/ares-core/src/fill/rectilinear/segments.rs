@@ -90,24 +90,6 @@ pub(crate) struct RectilinearSlice {
     pub(crate) lines: Vec<SegmentedLine>,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "the source seam carries exact offset and scanline parameters"
-)]
-pub(crate) fn prepare_rectilinear_slice(
-    expolygon: &ExPolygon,
-    angle: f64,
-    outer_offset: f32,
-    inner_offset: f32,
-    count: usize,
-    x0: i64,
-    spacing: i64,
-) -> Result<RectilinearSlice, ClipperError> {
-    let mut slice = prepare_rectilinear_contours(expolygon, angle, outer_offset, inner_offset)?;
-    populate_vertical_lines(&mut slice, count, x0, spacing)?;
-    Ok(slice)
-}
-
 pub(crate) fn prepare_rectilinear_contours(
     expolygon: &ExPolygon,
     angle: f64,
@@ -173,31 +155,6 @@ pub(crate) fn populate_vertical_lines(
         remove_overlapping_vertices(line, &slice.contours);
     }
     Ok(())
-}
-
-#[expect(
-    clippy::too_many_arguments,
-    reason = "temporary O77 test shell forwards the exact source slice parameters"
-)]
-pub(crate) fn slice_vertical_lines(
-    expolygon: &ExPolygon,
-    angle: f64,
-    outer_offset: f32,
-    inner_offset: f32,
-    count: usize,
-    x0: i64,
-    spacing: i64,
-) -> Result<Vec<SegmentedLine>, ClipperError> {
-    prepare_rectilinear_slice(
-        expolygon,
-        angle,
-        outer_offset,
-        inner_offset,
-        count,
-        x0,
-        spacing,
-    )
-    .map(|slice| slice.lines)
 }
 
 fn prepare_contours(

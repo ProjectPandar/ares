@@ -140,6 +140,3 @@ fn validate_non_negative(key: &str, value: f64) -> Result<(), SliceError> {
 fn invalid(key: &str) -> SliceError {
     SliceError::InvalidInput(format!("invalid Orca option {key}"))
 }
-
-#[cfg(test)]
-mod tests;

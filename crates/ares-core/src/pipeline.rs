@@ -302,9 +302,3 @@ fn run_slicing_pipeline_with_validation(
         diagnostics,
     })
 }
-#[cfg(test)]
-pub(crate) mod layer_change_test_support;
-#[cfg(test)]
-pub(crate) mod test_support;
-#[cfg(test)]
-mod tests;

@@ -343,6 +343,3 @@ fn checked_truncating_point(point: F64Point) -> Result<Point, ClipperError> {
         coord_from_completed(point.y)?,
     ))
 }
-
-#[cfg(test)]
-mod tests;

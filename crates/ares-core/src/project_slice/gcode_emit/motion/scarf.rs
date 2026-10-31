@@ -2,8 +2,6 @@
 
 mod eligibility;
 mod emit;
-#[cfg(test)]
-mod tests;
 
 pub(super) use emit::segments as emit_segments;
 

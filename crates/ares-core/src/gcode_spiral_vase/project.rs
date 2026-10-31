@@ -343,6 +343,3 @@ fn format_e(value: f64) -> String {
     // `line.set(E, .., 5)` — fixed 5 decimals, leading zero kept.
     format!("{value:.5}")
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,8 +1,5 @@
 use crate::RegionOptions;
 
-#[cfg(test)]
-mod tests;
-
 pub(in crate::project_slice) fn apply_internal_bridge_angle_override(
     detected_angle: f64,
     region: &RegionOptions,

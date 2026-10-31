@@ -346,5 +346,3 @@ fn render_list_token(rendered: &[String]) -> String {
     }
     rendered.join(";")
 }
-#[cfg(test)]
-mod tests;

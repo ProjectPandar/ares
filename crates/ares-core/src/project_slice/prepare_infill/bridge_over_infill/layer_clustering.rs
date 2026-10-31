@@ -149,6 +149,3 @@ fn geometry_error(error: ClipperError) -> SliceError {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

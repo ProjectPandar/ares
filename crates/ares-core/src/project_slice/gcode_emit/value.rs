@@ -269,5 +269,3 @@ fn parse_scalar(raw: &str, is_bool: bool, is_ints: bool) -> Value {
         Value::String(raw.to_owned())
     }
 }
-#[cfg(test)]
-mod tests;

@@ -89,15 +89,3 @@ fn point_between(first: KernelPoint, middle: KernelPoint, last: KernelPoint) -> 
         (middle.y() > first.y()) == (middle.y() < last.y())
     }
 }
-
-#[cfg(test)]
-impl Clipper {
-    pub(in crate::geometry) fn fixup_survivors_for_test(
-        points: &[KernelPoint],
-    ) -> Vec<KernelPoint> {
-        let mut clipper = Self::new(super::super::ClipperOptions::default());
-        let out_rec = super::rings::seed_ring_for_test(&mut clipper, points);
-        clipper.fixup_out_polygon(out_rec);
-        super::rings::ring_xyz_for_test(&clipper, out_rec)
-    }
-}

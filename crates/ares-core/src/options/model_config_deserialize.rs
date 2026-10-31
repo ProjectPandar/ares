@@ -196,23 +196,3 @@ fn bounded(value: &str, limit: usize) -> String {
         bounded
     }
 }
-
-#[cfg(test)]
-pub(crate) fn validate_wire_value(kind: OptionValueKind, value: &str) -> Result<(), SliceError> {
-    wire::validate_lexical(kind, value).map_err(|reason| invalid_value("wire_test", value, &reason))
-}
-
-#[cfg(test)]
-pub(crate) fn decode_wire_strings(value: &str) -> Result<Vec<String>, SliceError> {
-    let WireValue::Sequence(values) = wire::decode(OptionValueKind::Strings, value)
-        .map_err(|reason| invalid_value("wire_test", value, &reason))?
-    else {
-        unreachable!("string vector decoded as scalar")
-    };
-    Ok(values)
-}
-
-#[cfg(test)]
-pub(crate) fn decode_wire_string(value: &str) -> Result<String, SliceError> {
-    wire::decode_scalar_string(value).map_err(|reason| invalid_value("wire_test", value, &reason))
-}

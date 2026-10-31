@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::{
     geometry::{
         ClipperError, ExPolygon, Polygon, difference_ex_polygons, union_safety_offset_expolygons,

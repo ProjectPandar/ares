@@ -22,9 +22,5 @@ mod emitter;
 mod limiter;
 mod line;
 mod pass;
-#[cfg(test)]
-mod tests;
 
-#[cfg(test)]
-pub(crate) use line::{GCodeLine, GCodeLineType, LineParser};
 pub(crate) use pass::PressureEqualizerPass;

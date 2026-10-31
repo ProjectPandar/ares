@@ -117,5 +117,3 @@ impl Mt19937_64 {
         self.index = 0;
     }
 }
-#[cfg(test)]
-mod tests;

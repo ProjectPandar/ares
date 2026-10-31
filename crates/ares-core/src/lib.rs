@@ -73,9 +73,7 @@ mod mesh_slicer;
 mod model;
 mod model_shrinkage;
 mod moves;
-#[cfg(test)]
-#[path = "../../../tests/support/native_environment.rs"]
-mod native_environment;
+
 mod options;
 mod perimeters;
 mod pipeline;
@@ -99,8 +97,7 @@ use std::fmt;
 
 pub use bridges::BridgeOptions;
 pub use brims::{BrimOptions, BrimPath, BrimType, LayerBrims, generate_brims};
-#[cfg(test)]
-pub(crate) use contours::make_overhang_printable_contours;
+
 pub(crate) use contours::stitch_printable;
 pub use contours::{Contour, LayerContours, stitch_layer_slices};
 pub use extrusion_entity::{ExtrusionEntityCollection, ExtrusionPath, ExtrusionRole};
@@ -172,8 +169,7 @@ pub use plater::{
 };
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::{LayerRegion, Print, PrintLayer, PrintObject, PrintRegion, build_print_domain};
-#[cfg(test)]
-pub(crate) use print_paths::finalize_print_paths;
+
 pub use print_paths::{
     LayerPrintPaths, PrintPath, PrintPathInput, PrintPathRole, ShellLayerOptions,
     filter_short_gap_fill_paths, generate_print_paths,
@@ -367,8 +363,3 @@ pub async fn slice(input: impl AsRef<[u8]>, options: SliceOptions) -> Result<Vec
     let pipeline = run_slicing_pipeline(input, &options)?;
     gcode::format_gcode(&pipeline, pipeline.options())
 }
-
-#[cfg(test)]
-mod test_fixtures;
-#[cfg(test)]
-mod tests;

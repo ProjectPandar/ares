@@ -163,31 +163,3 @@ fn fill_z(point: &mut KernelPoint, table: &mut Vec<(i64, i64)>, mut values: [i64
         point.z = -(table.len() as i64);
     }
 }
-
-#[cfg(test)]
-pub(in crate::geometry) fn z_fill_for_test(values: [i64; 4]) -> (i64, Vec<(i64, i64)>) {
-    let mut point = KernelPoint::new(0, 0, 0);
-    let mut table = Vec::new();
-    fill_z(&mut point, &mut table, values);
-    (point.z, table)
-}
-
-#[cfg(test)]
-pub(in crate::geometry) fn set_z_for_test(
-    candidate: KernelPoint,
-    endpoints: [KernelPoint; 4],
-) -> (KernelPoint, Vec<(i64, i64)>) {
-    use super::types::{Edge, EdgeId};
-
-    let mut first = Edge::new(endpoints[0], PathRole::Subject, EdgeId(0), EdgeId(0));
-    first.bottom = endpoints[0];
-    first.top = endpoints[1];
-    let mut second = Edge::new(endpoints[2], PathRole::Clip, EdgeId(0), EdgeId(0));
-    second.bottom = endpoints[2];
-    second.top = endpoints[3];
-    let mut clipper = Clipper::new(super::ClipperOptions::default());
-    clipper.z_intersections = Some(Vec::new());
-    let mut candidate = candidate;
-    clipper.set_z(&mut candidate, first, second);
-    (candidate, clipper.z_intersections.take().unwrap())
-}

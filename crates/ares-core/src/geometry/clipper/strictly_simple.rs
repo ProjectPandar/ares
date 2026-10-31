@@ -56,8 +56,6 @@ impl Clipper {
         if self.options.strictly_simple {
             let x = self.edges.edge(edge).top.x();
             self.maxima.push(x);
-            #[cfg(test)]
-            self.collected_maxima_for_test.push(x);
         }
     }
 
@@ -108,20 +106,5 @@ impl Clipper {
                 offset: point,
             });
         }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn seed_strict_maxima_for_test(&mut self, maxima: &[i64]) {
-        self.maxima.extend_from_slice(maxima);
-    }
-
-    #[cfg(test)]
-    pub(crate) fn strict_maxima_for_test(&self) -> &[i64] {
-        &self.maxima
-    }
-
-    #[cfg(test)]
-    pub(crate) fn collected_strict_maxima_for_test(&self) -> &[i64] {
-        &self.collected_maxima_for_test
     }
 }

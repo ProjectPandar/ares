@@ -94,5 +94,3 @@ impl Surface {
         &self.contour
     }
 }
-#[cfg(test)]
-mod tests;

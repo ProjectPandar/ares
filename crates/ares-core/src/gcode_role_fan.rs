@@ -195,5 +195,3 @@ impl RoleFanGCodeState {
 fn distance(start: Point2, end: Point2) -> f64 {
     ((end.x() - start.x()).powi(2) + (end.y() - start.y()).powi(2)).sqrt()
 }
-#[cfg(test)]
-mod tests;

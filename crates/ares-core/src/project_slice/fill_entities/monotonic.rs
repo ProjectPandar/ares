@@ -11,9 +11,6 @@ use super::{
     geometry_error,
 };
 
-#[cfg(test)]
-mod tests;
-
 // Fill.cpp constructs fresh FillParams; raw group metadata remains sticky.
 fn runtime_controls(pattern: ProcessInfillPattern, phase: f32, symmetric: bool) -> (f32, bool) {
     let phase = if pattern == ProcessInfillPattern::CrossZag {

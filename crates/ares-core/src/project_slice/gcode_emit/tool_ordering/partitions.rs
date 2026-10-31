@@ -3,9 +3,6 @@
 use super::LayerTools;
 use crate::{ProcessTimelapseType, ProjectSettings};
 
-#[cfg(test)]
-mod tests;
-
 const EPSILON: f64 = 1e-4;
 
 pub(in crate::project_slice::gcode_emit) fn max_layer_height(

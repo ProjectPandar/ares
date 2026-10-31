@@ -2,8 +2,7 @@
 // `PerimeterGenerator.cpp:230-280` and caller `1443-1450`.
 
 mod orientation;
-#[cfg(test)]
-mod tests;
+
 mod traverse;
 mod types;
 

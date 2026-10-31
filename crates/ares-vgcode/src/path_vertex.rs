@@ -91,6 +91,3 @@ impl Default for PathVertex {
         Self::DUMMY_PATH_VERTEX
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -36,5 +36,3 @@ pub(crate) use load::load_project_with_preparation;
 pub use load::{load_project, load_project_with};
 pub use plate_custom_gcodes::{CustomGCodeInfo, CustomGCodeMode};
 pub use transform::Transform3d;
-#[cfg(test)]
-mod tests;

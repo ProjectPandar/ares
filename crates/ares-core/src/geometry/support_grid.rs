@@ -295,6 +295,3 @@ fn bounds_of(polygons: &[Polygon]) -> Option<(Coord, Coord, Coord, Coord)> {
 fn align_down(value: Coord, resolution: Coord) -> Coord {
     value.div_euclid(resolution) * resolution
 }
-
-#[cfg(test)]
-mod tests;

@@ -7,8 +7,7 @@ use super::types::{EdgeId, ExecutionConfig, Join, LocalMinimum, OutputIndex};
 impl Clipper {
     pub(super) fn reset_for_execute<P: RoundPolicy>(&mut self) {
         self.maxima.clear();
-        #[cfg(test)]
-        self.collected_maxima_for_test.clear();
+
         if P::SORT_MINIMA_BY_X {
             // Clipper2 Reset/LocMinSorter (:53-60, :788-796) consumes a stable
             // Y-descending/X-ascending sequence. This engine consumes from back.

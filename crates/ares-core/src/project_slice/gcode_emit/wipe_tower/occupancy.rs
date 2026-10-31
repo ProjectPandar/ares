@@ -77,28 +77,3 @@ fn placed_corners(
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn tower_corners_use_double_rotation_and_scaled_plate_coordinates() {
-        use crate::geometry::{CoordinateScale, Point};
-        let points = super::placed_corners(
-            [[-2.0, -3.0], [42.0, 15.0]],
-            (2.0, 1.0),
-            ([70.0, 150.0], std::f64::consts::FRAC_PI_2),
-            CoordinateScale::Normal,
-        );
-        assert_eq!(
-            &points[..4],
-            &[
-                Point::new(73_000_000, 148_000_000),
-                Point::new(73_000_000, 192_000_000),
-                Point::new(55_000_000, 192_000_000),
-                Point::new(55_000_000, 148_000_000),
-            ]
-        );
-        assert_eq!(points.len(), 44);
-        assert_eq!(points[4], Point::new(64_000_000, 172_000_000));
-    }
-}

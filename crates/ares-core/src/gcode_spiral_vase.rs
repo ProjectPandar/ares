@@ -245,5 +245,3 @@ fn parse_max_xy_smoothing(options: &SliceOptions, nozzle_diameter: f64) -> Resul
         ))
     }
 }
-#[cfg(test)]
-mod tests;

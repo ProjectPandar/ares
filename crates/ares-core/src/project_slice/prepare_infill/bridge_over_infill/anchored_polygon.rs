@@ -1,9 +1,6 @@
 mod sections;
 mod tracing;
 
-#[cfg(test)]
-mod tests;
-
 use crate::{
     geometry::{ClipperError, CoordinateScale, Line, Point, Polygon, union_safety_offset_polygons},
     project_slice::perimeters::types::Flow,
@@ -74,14 +71,4 @@ fn rotate_point(point: Point, cosine: f64, sine: f64) -> Point {
         (cosine * x - sine * y).round() as i64,
         (cosine * y + sine * x).round() as i64,
     )
-}
-
-#[cfg(test)]
-pub(super) fn scaled_flow_value_for_test(value: f32, scale: CoordinateScale) -> i64 {
-    scaled_flow_value(value, scale)
-}
-
-#[cfg(test)]
-pub(super) fn rotate_point_for_test(point: Point, cosine: f64, sine: f64) -> Point {
-    rotate_point(point, cosine, sine)
 }

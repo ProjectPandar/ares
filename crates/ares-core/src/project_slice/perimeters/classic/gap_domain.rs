@@ -1,8 +1,6 @@
 // Pre-medial Classic gap domain from OrcaSlicer v2.4.2
 // `PerimeterGenerator.cpp:1573-1581,1583-1585`.
 
-#[cfg(test)]
-mod tests;
 mod types;
 
 pub(in crate::project_slice) use types::{

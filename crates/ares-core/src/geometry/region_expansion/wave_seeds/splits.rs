@@ -122,32 +122,3 @@ pub(super) fn sort_seeds(seeds: &mut Vec<WaveSeed>) {
             .map(|index| source[index].take().expect("sort permutation is unique")),
     );
 }
-
-#[cfg(test)]
-pub(in crate::geometry) fn sort_seeds_for_test(seeds: &mut Vec<WaveSeed>) {
-    sort_seeds(seeds);
-}
-
-#[cfg(test)]
-pub(in crate::geometry) fn reconcile_for_test(source_paths: &[ZPath], paths: &mut Vec<ZPath>) {
-    let mut records = split_registry(source_paths);
-    merge_splits(paths, &mut records);
-}
-
-#[cfg(test)]
-pub(in crate::geometry) fn merge_path_for_test(
-    destination: &mut ZPath,
-    destination_front: bool,
-    source: ZPath,
-    source_front: bool,
-) {
-    let mut source = source;
-    merge_path(destination, destination_front, &mut source, source_front);
-}
-
-#[cfg(test)]
-pub(in crate::geometry) fn split_registry_for_test(
-    source_paths: &[ZPath],
-) -> Vec<(KernelPoint, Option<usize>)> {
-    split_registry(source_paths)
-}

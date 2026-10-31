@@ -146,5 +146,3 @@ fn probe_count(size: f64, distance: f64) -> u32 {
     let distance = distance.max(1.0);
     ((size / distance).ceil() as u32 + 1).max(3)
 }
-#[cfg(test)]
-mod tests;

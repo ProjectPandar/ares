@@ -31,10 +31,7 @@ pub(crate) use bbox_clip::{
 pub(crate) use bounding_box::{BoundingBox, chain_expolygons, chain_expolygons_order};
 pub(crate) use bridge_direction::detect_bridging_direction;
 pub(crate) use chain_points::chain_points;
-#[cfg(test)]
-pub(in crate::geometry) use clipper::opening_path_configurations_for_test;
-#[cfg(test)]
-pub(crate) use clipper::opening_paths_with_interstage;
+
 pub(crate) use clipper::ordering::{fixed_gcc_sort_by, fixed_msvc_sort_by, stable_sort_by};
 pub(crate) use clipper::raw_offset_paths;
 pub(crate) use clipper::union_contours;
@@ -63,14 +60,7 @@ pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};
 pub(crate) use expolygon::{ExPolygon, keep_largest_contour_only};
 pub(crate) use line::{Line, ThickLine, liang_barsky_interval};
-#[cfg_attr(
-    not(test),
-    expect(
-        unused_imports,
-        reason = "consumed by the future automatic bridge-direction operation"
-    )
-)]
-pub(crate) use line_distance_tree::{FloatLineDistanceTree, LineDistanceTree, NearestLine};
+pub(crate) use line_distance_tree::{FloatLineDistanceTree, LineDistanceTree};
 pub(crate) use line_split::{SplitJunction, split_line};
 pub(crate) use medial_axis::medial_axis;
 pub(crate) use polygon::Polygon;
@@ -81,10 +71,7 @@ pub(crate) use region_expansion::{
     propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
     propagate_waves_from_sources_with_steps, wave_seeds,
 };
-#[cfg(test)]
-pub(in crate::geometry) use region_expansion::{
-    wavefront_counter_clockwise, wavefront_step_for_test,
-};
+
 pub(crate) use simplification::{
     append_simplified_expolygon, douglas_peucker, simplify_closed_points,
     simplify_expolygon_polygons,
@@ -247,6 +234,3 @@ const _: fn(&EdgeGrid, Point, Point, EdgeGridVisitor) =
 const _: EdgeGridClosestPointQuery = EdgeGrid::closest_point_signed_distance;
 const _: fn(&EdgeGrid, Point, Point, EdgeGridVisitor) -> Result<(), ClipperError> =
     EdgeGrid::visit_cells_intersecting_line::<EdgeGridVisitor>;
-
-#[cfg(test)]
-mod tests;

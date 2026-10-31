@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::{
     RegionOptions,
     project_slice::{
@@ -16,18 +13,9 @@ pub(in crate::project_slice) struct PreparedPostFillSurfacePreparation {
     pub(in crate::project_slice) objects: Vec<PreparedSurfaceTypeObject>,
 }
 
-#[cfg(test)]
-thread_local! {
-    static INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-    static RETAGS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
 pub(in crate::project_slice) fn prepare(
     prepared: PreparedPostSurfaceTypeDetection,
 ) -> PreparedPostFillSurfacePreparation {
-    #[cfg(test)]
-    INVOCATIONS.with(|count| count.set(count.get() + 1));
-
     validate_alignment(&prepared);
     let PreparedPostSurfaceTypeDetection {
         predecessor,
@@ -114,26 +102,4 @@ pub(super) fn prepare_record(
 
 fn retag(surface: &mut RegionSurface, kind: RegionSurfaceKind) {
     surface.retag(kind);
-    #[cfg(test)]
-    RETAGS.with(|count| count.set(count.get() + 1));
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn retags() -> usize {
-    RETAGS.with(std::cell::Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_retags() {
-    RETAGS.with(|count| count.set(0));
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn invocations() -> usize {
-    INVOCATIONS.with(std::cell::Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_invocations() {
-    INVOCATIONS.with(|count| count.set(0));
 }

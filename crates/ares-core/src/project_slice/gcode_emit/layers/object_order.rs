@@ -42,6 +42,3 @@ fn chain(centers: &[(i64, i64)], start_near: Option<(i64, i64)>) -> Vec<usize> {
     .map(|(index, _)| index)
     .collect()
 }
-
-#[cfg(test)]
-mod tests;

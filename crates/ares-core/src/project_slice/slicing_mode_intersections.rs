@@ -20,16 +20,6 @@ impl SlicingModeLayer {
     pub(super) fn into_parts(self) -> (SlicingMode, LoopedLayer) {
         (self.mode, self.looped_layer)
     }
-
-    #[cfg(test)]
-    pub(super) const fn mode(&self) -> SlicingMode {
-        self.mode
-    }
-
-    #[cfg(test)]
-    pub(super) const fn looped_layer(&self) -> &LoopedLayer {
-        &self.looped_layer
-    }
 }
 
 pub(super) struct SlicingModeVolumeIntersections {
@@ -48,31 +38,6 @@ impl SlicingModeVolumeIntersections {
             self.layers,
         )
     }
-
-    #[cfg(test)]
-    pub(super) const fn source_volume_index(&self) -> usize {
-        self.source_volume_index
-    }
-
-    #[cfg(test)]
-    pub(super) const fn ordinal(&self) -> u32 {
-        self.volume_ordinal
-    }
-
-    #[cfg(test)]
-    pub(super) const fn volume_type(&self) -> ProjectVolumeType {
-        self.volume_type
-    }
-
-    #[cfg(test)]
-    pub(super) fn layers(&self) -> &[SlicingModeLayer] {
-        &self.layers
-    }
-
-    #[cfg(test)]
-    pub(super) fn set_ordinal_for_test(&mut self, ordinal: u32) {
-        self.volume_ordinal = ordinal;
-    }
 }
 
 pub(super) struct SlicingModePrintObject {
@@ -83,21 +48,6 @@ pub(super) struct SlicingModePrintObject {
 impl SlicingModePrintObject {
     pub(super) fn into_parts(self) -> (PlannedPrintObject, Vec<SlicingModeVolumeIntersections>) {
         (self.plan, self.volumes)
-    }
-
-    #[cfg(test)]
-    pub(super) const fn plan(&self) -> &PlannedPrintObject {
-        &self.plan
-    }
-
-    #[cfg(test)]
-    pub(super) fn volumes(&self) -> &[SlicingModeVolumeIntersections] {
-        &self.volumes
-    }
-
-    #[cfg(test)]
-    pub(super) fn volumes_mut(&mut self) -> &mut Vec<SlicingModeVolumeIntersections> {
-        &mut self.volumes
     }
 }
 

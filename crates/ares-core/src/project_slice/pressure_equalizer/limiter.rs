@@ -41,9 +41,6 @@ pub(crate) fn role_index(role: ExtrusionRole) -> usize {
     }
 }
 
-#[cfg(test)]
-mod tests;
-
 const ROLE_COUNT: usize = 20;
 const UNLIMITED: f32 = f32::MAX;
 

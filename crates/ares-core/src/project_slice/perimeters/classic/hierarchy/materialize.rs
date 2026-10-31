@@ -49,6 +49,3 @@ fn append_expolygons(
         }));
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -52,14 +52,6 @@ pub(crate) fn materialize_project_variants(
     })
 }
 
-#[cfg(test)]
-pub(crate) fn materialize_project_variants_full(
-    source: &ProjectSettings,
-    filament_map: &OrcaInts,
-) -> Result<ProjectSettings, SliceError> {
-    materialize_project_variants(source, filament_map).map(|value| value.full)
-}
-
 pub(crate) fn refresh_filament_map(
     checkpoint: &ProjectSettings,
     filament_map: &OrcaInts,
@@ -90,6 +82,3 @@ fn expanded_filament_map(source: &ProjectSettings, map: &OrcaInts) -> OrcaInts {
     }
     expanded
 }
-
-#[cfg(test)]
-pub(crate) use index::inspect_printer_indices_for_test;

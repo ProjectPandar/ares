@@ -5,9 +5,6 @@ mod mesh_prepare;
 mod metadata;
 mod volume_metadata;
 
-#[cfg(test)]
-pub(crate) use volume_metadata::selected_volume_metadata_for_test;
-
 use std::collections::BTreeSet;
 
 use crate::{ORCA_SLICER_COMPATIBILITY_VERSION, SliceError};

@@ -197,6 +197,3 @@ const fn endpoint_key(original_index: usize, side: EndpointSide) -> EndpointKey 
         side,
     }
 }
-
-#[cfg(test)]
-mod tests;

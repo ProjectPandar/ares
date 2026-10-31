@@ -25,16 +25,6 @@ impl ExtraBridgeLayer {
     pub(crate) const fn applies_to_external_bridge(self) -> bool {
         matches!(self, Self::ExternalBridgeOnly | Self::ApplyToAll)
     }
-
-    #[cfg(test)]
-    pub(crate) const fn as_str(self) -> &'static str {
-        match self {
-            Self::Disabled => "disabled",
-            Self::ExternalBridgeOnly => "external_bridge_only",
-            Self::InternalBridgeOnly => "internal_bridge_only",
-            Self::ApplyToAll => "apply_to_all",
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -47,15 +37,6 @@ pub(crate) enum CounterboreHoleBridging {
 impl CounterboreHoleBridging {
     pub(crate) const fn preserves_bridge_surfaces_for_solid_detection(self) -> bool {
         matches!(self, Self::SacrificialLayer)
-    }
-
-    #[cfg(test)]
-    pub(crate) const fn as_str(self) -> &'static str {
-        match self {
-            Self::None => "none",
-            Self::PartiallyBridge => "partiallybridge",
-            Self::SacrificialLayer => "sacrificiallayer",
-        }
     }
 }
 
@@ -143,16 +124,6 @@ impl BridgeOptions {
 
     pub(crate) const fn counterbore_hole_bridging(&self) -> CounterboreHoleBridging {
         self.counterbore_hole_bridging
-    }
-
-    #[cfg(test)]
-    pub(crate) const fn extra_bridge_layer_for_tests(&self) -> &'static str {
-        self.extra_bridge_layer.as_str()
-    }
-
-    #[cfg(test)]
-    pub(crate) const fn counterbore_hole_bridging_for_tests(&self) -> &'static str {
-        self.counterbore_hole_bridging.as_str()
     }
 }
 

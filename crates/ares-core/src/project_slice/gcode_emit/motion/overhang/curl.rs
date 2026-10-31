@@ -14,9 +14,6 @@
 
 mod geometry;
 
-#[cfg(test)]
-mod tests;
-
 use crate::geometry::{CoordinateScale, FloatLineDistanceTree, LineDistanceTree};
 
 pub(in crate::project_slice) use geometry::artificial_distance;

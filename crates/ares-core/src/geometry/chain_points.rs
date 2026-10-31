@@ -25,27 +25,6 @@ impl EndPoint {
             heap_index: NO_INDEX,
         }
     }
-
-    #[cfg(test)]
-    pub(in crate::geometry) fn for_queue_test(distance_out: f64) -> Self {
-        Self {
-            position: [0.0, 0.0],
-            chain_id: 0,
-            edge_out: NO_INDEX,
-            distance_out,
-            heap_index: NO_INDEX,
-        }
-    }
-
-    #[cfg(test)]
-    pub(in crate::geometry) fn heap_index_for_test(&self) -> usize {
-        self.heap_index
-    }
-
-    #[cfg(test)]
-    pub(in crate::geometry) fn set_distance_for_test(&mut self, distance_out: f64) {
-        self.distance_out = distance_out;
-    }
 }
 
 pub(crate) fn chain_points(points: &[Point]) -> Vec<usize> {

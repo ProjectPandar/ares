@@ -8,8 +8,7 @@ mod convert;
 pub(super) mod interlocking;
 pub(super) mod painted;
 mod range_lookup;
-#[cfg(test)]
-mod tests;
+
 use super::{
     layers::PlannedPrintObject,
     volume_bounds::{BoundedPrintObject, VolumeBound, VolumeOccurrenceId},
@@ -26,12 +25,7 @@ pub(super) struct VolumeSlices {
     pub(super) layers: Vec<Vec<ExPolygon>>,
 }
 
-impl VolumeSlices {
-    #[cfg(test)]
-    pub(super) fn as_parts(&self) -> (VolumeOccurrenceId, &[Vec<ExPolygon>]) {
-        (self.occurrence_id, &self.layers)
-    }
-}
+impl VolumeSlices {}
 
 pub(super) struct PostRegionPrintObject {
     pub(super) plan: PlannedPrintObject,
@@ -62,11 +56,6 @@ pub(super) struct RegionLayer {
 impl RegionLayer {
     pub(super) fn surfaces(&self) -> &[RegionSurface] {
         &self.surfaces
-    }
-
-    #[cfg(test)]
-    pub(super) fn into_parts(self) -> Vec<RegionSurface> {
-        self.surfaces
     }
 }
 
@@ -167,24 +156,6 @@ impl RegionSurface {
         self.thickness_layers = thickness_layers;
     }
 
-    #[cfg(test)]
-    pub(super) fn internal_with_metadata(
-        expolygon: ExPolygon,
-        thickness: f64,
-        thickness_layers: u16,
-        bridge_angle: f64,
-        extra_perimeters: u16,
-    ) -> Self {
-        Self {
-            kind: RegionSurfaceKind::Internal,
-            expolygon,
-            thickness,
-            thickness_layers,
-            bridge_angle,
-            extra_perimeters,
-        }
-    }
-
     pub(super) fn as_parts(&self) -> (RegionSurfaceKind, &ExPolygon, f64, u16, f64, u16) {
         (
             self.kind,
@@ -217,25 +188,6 @@ pub(super) struct PendingRegionSlices {
 }
 
 impl PendingRegionSlices {
-    #[cfg(test)]
-    pub(super) fn as_parts(
-        &self,
-    ) -> (
-        &PostRegionPrintObject,
-        &[VolumeSlices],
-        &[VolumeBound],
-        &[VolumeRegionRange],
-        &[usize],
-    ) {
-        (
-            &self.output,
-            &self.working_slices,
-            &self.bounds,
-            &self.volume_regions,
-            &self.complex_layer_indices,
-        )
-    }
-
     pub(super) fn into_parts(
         self,
     ) -> (

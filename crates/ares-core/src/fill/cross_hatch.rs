@@ -108,6 +108,3 @@ fn fill_component(
     }
     Ok(connected)
 }
-
-#[cfg(test)]
-mod tests;

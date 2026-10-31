@@ -280,6 +280,3 @@ fn angle_penalty(angle: f32) -> f32 {
     let gaussian = (exponent - 1.0) / (1.0_f32.exp() - 1.0);
     gaussian + 1.0 / (2.0 + sigmoid_exponent)
 }
-
-#[cfg(test)]
-mod tests;

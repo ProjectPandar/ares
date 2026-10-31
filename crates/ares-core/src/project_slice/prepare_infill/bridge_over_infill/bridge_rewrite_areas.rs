@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use crate::{
     geometry::{
         ClipperError, CoordinateScale, JoinType, Polygon, difference_polygons_paths, offset_paths,

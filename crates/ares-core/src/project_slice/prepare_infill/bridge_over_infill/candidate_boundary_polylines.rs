@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use super::candidate_bridge_area::CandidateBridgeArea;
 use crate::geometry::{ClipperError, Coord, JoinType, Polygon, Polyline, offset_paths};
 

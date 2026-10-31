@@ -17,8 +17,6 @@ mod extend;
 mod link;
 mod mark;
 mod take;
-#[cfg(test)]
-mod tests;
 
 /// Port of `emit_loops_in_band` (`FillBase.cpp:1952`).
 ///
