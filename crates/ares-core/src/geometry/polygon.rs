@@ -36,6 +36,29 @@ impl Polygon {
         self.points.reverse();
     }
 
+    /// Polygon.cpp:154–169 at345efec64c7b95a05ce5cf96df0dde66a158835c.
+    pub(crate) fn centroid(&self) -> Point {
+        let points = self.points();
+        let mut previous = [
+            points[points.len() - 1].x() as f64,
+            points[points.len() - 1].y() as f64,
+        ];
+        let mut area = 0.0;
+        let mut center = [0.0, 0.0];
+        for point in points {
+            let current = [point.x() as f64, point.y() as f64];
+            let cross = previous[0] * current[1] - previous[1] * current[0];
+            area += cross;
+            center[0] += (previous[0] + current[0]) * cross;
+            center[1] += (previous[1] + current[1]) * cross;
+            previous = current;
+        }
+        Point::new(
+            (center[0] / (3.0 * area)).round() as i64,
+            (center[1] / (3.0 * area)).round() as i64,
+        )
+    }
+
     pub(crate) fn is_counter_clockwise(&self) -> bool {
         self.area() >= 0.0
     }

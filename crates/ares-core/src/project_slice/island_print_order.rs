@@ -1,3 +1,5 @@
+pub(in crate::project_slice) mod visits;
+
 use crate::{
     geometry::Point,
     project_slice::{

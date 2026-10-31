@@ -8,7 +8,10 @@ use crate::{
     SliceError,
     project_slice::{
         fill_entities::FillExtrusionEntity,
-        island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
+        island_print_order::{
+            IslandPrintEntity, OrderedExtrusionLayer,
+            visits::{self, InstanceVisit},
+        },
     },
 };
 
@@ -22,7 +25,11 @@ struct RegionEntities {
 
 pub(in crate::project_slice::gcode_emit) fn emit_layer<F, D>(
     output: &mut Vec<u8>,
-    layer: &mut OrderedExtrusionLayer,
+    (layer, visit, slices): (
+        &mut OrderedExtrusionLayer,
+        &InstanceVisit,
+        Option<&[crate::geometry::ExPolygon]>,
+    ),
     (phase, first_layer, options_for_region): (super::shared_reversals::EmissionPhase<'_>, bool, D),
     state: &mut EmitState,
     mut before_first_infill: F,
@@ -37,7 +44,16 @@ where
 {
     let super::shared_reversals::EmissionPhase { geometry, reversal } = phase;
     let mut interlude_emitted = false;
-    for island in &mut layer.islands {
+    let order = visits::island_order(
+        layer,
+        visit,
+        slices,
+        state
+            .last_position_defined
+            .then(|| local_cursor(state, geometry)),
+    );
+    for island_index in order {
+        let island = &mut layer.islands[island_index];
         let entities = std::mem::take(&mut island.entities);
         let has_infill = entities
             .iter()

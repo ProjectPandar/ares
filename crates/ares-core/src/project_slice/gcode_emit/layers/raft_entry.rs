@@ -5,7 +5,7 @@
 use super::super::{SliceError, motion, object::ObjectLabels, timelapse as timelapse_core};
 use super::entry::EntryGeometry;
 use super::raft_schedule::RaftSchedule;
-use crate::project_slice::island_print_order::OrderedExtrusionLayer;
+use crate::project_slice::island_print_order::{OrderedExtrusionLayer, visits::InstanceVisit};
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
 #[expect(
@@ -15,7 +15,7 @@ use crate::project_slice::perimeters::classic::traversal::types::PreparedPostCla
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
-    layer: &mut OrderedExtrusionLayer,
+    (layer, visit): (&mut OrderedExtrusionLayer, &InstanceVisit),
     raft: &Option<RaftSchedule>,
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
@@ -68,7 +68,7 @@ pub(super) fn emit(
     );
     motion::emit_layer(
         output,
-        layer,
+        (layer, visit, None),
         (
             motion::EmissionPhase {
                 geometry: motion_geometry,

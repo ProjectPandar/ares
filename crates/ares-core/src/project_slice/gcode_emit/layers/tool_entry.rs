@@ -15,6 +15,7 @@ use crate::{
 };
 
 pub(super) struct Input<'a, 'b> {
+    pub(super) visit: &'a crate::project_slice::island_print_order::visits::InstanceVisit,
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) pass: tool_buckets::Pass,
     pub(super) purging_finished: bool,
@@ -47,6 +48,7 @@ pub(super) fn emit(
     input: Input<'_, '_>,
 ) -> Result<(), SliceError> {
     let Input {
+        visit,
         traversal,
         pass,
         purging_finished,
@@ -78,9 +80,9 @@ pub(super) fn emit(
         tool_buckets::Pass::Wiping => &mut bucket.wipe_body,
         tool_buckets::Pass::Normal => &mut bucket.body,
     };
-    let support_role = bucket
-        .support_role
-        .filter(|_| bucket.support_wiping == (pass == tool_buckets::Pass::Wiping));
+    let support_role = bucket.support_role.filter(|_| {
+        visit.first_visit && bucket.support_wiping == (pass == tool_buckets::Pass::Wiping)
+    });
     let entry = &bucket.source;
     let object_index = entry.object_index;
     let labels = labels[object_index][bucket.instance.copy].as_ref();
@@ -97,7 +99,11 @@ pub(super) fn emit(
     // extrusions are overridden, the single normal loop otherwise),
     // before the instance's labels (`:5349`); the `object_skirt_done`
     // tracking keeps later loops from re-emitting.
-    if entry.object_layer.is_some() || entry.support_layer.is_some() || entry.raft_layer.is_some() {
+    if visit.first_visit
+        && (entry.object_layer.is_some()
+            || entry.support_layer.is_some()
+            || entry.raft_layer.is_some())
+    {
         super::object_skirt::emit(
             output,
             state,
@@ -142,7 +148,7 @@ pub(super) fn emit(
         raft_entry::emit(
             output,
             state,
-            body,
+            (body, visit),
             raft,
             traversal,
             object_index,
@@ -207,7 +213,9 @@ pub(super) fn emit(
         state.object_layer_over_raft =
             layer_index == 0 && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
     });
-    if let Some(layer_index) = object_layer_state {
+    if let Some(layer_index) = object_layer_state
+        && visit.first_visit
+    {
         brim_emit::emit(
             output,
             state,
@@ -266,7 +274,7 @@ pub(super) fn emit(
     object_entry::emit(
         output,
         state,
-        layer,
+        (layer, visit),
         spiral,
         entry_builder,
         traversal,

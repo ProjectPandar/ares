@@ -2,6 +2,11 @@ use super::{ImportScope, Project};
 use crate::{ProjectSettings, SliceError};
 
 impl Project {
+    /// Model::curr_plate_index, consumed by GCode.cpp:7276 wipe-tower options.
+    pub(crate) fn current_plate_index(&self) -> usize {
+        self.curr_plate_index as usize
+    }
+
     /// Projects slice one plate at a time (OrcaSlicer exports `plate_<n>.gcode`
     /// per plate). Returns a view containing only the instances of `plate`
     /// (the first plate when `None`), selected as `Model::curr_plate_index`.

@@ -58,7 +58,7 @@ pub(super) struct Input<'a> {
     pub(super) raft: &'a mut [Vec<OrderedExtrusionLayer>],
 }
 
-pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
+pub(super) fn build(input: Input<'_>) -> Vec<(usize, super::island_visits::InstanceTour)> {
     let mut buckets = BTreeMap::<usize, BTreeMap<usize, Entry>>::new();
     for (source, instance) in input.entries.iter().flat_map(|&source| {
         input.instances[source.object_index]
@@ -183,7 +183,11 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, Vec<Entry>)> {
             let entries = buckets.remove(&tool).unwrap_or_default();
             (
                 tool,
-                super::instances::order(entries.into_values().collect(), input.traversal),
+                super::island_visits::plan(
+                    entries.into_values().collect(),
+                    input.traversal,
+                    input.copy_filter,
+                ),
             )
         })
         .collect()

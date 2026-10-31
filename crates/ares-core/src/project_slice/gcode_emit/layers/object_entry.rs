@@ -7,7 +7,7 @@ use super::super::{
 };
 use super::entry_builder::EntryBuilder;
 use super::layer_end;
-use crate::project_slice::island_print_order::OrderedExtrusionLayer;
+use crate::project_slice::island_print_order::{OrderedExtrusionLayer, visits::InstanceVisit};
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
 #[expect(
@@ -17,7 +17,7 @@ use crate::project_slice::perimeters::classic::traversal::types::PreparedPostCla
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
-    layer: &mut OrderedExtrusionLayer,
+    (layer, visit): (&mut OrderedExtrusionLayer, &InstanceVisit),
     spiral: &mut spiral_vase::SpiralVaseFilter,
     entry_builder: &mut EntryBuilder<'_>,
     traversal: &PreparedPostClassicTraversal,
@@ -78,7 +78,11 @@ pub(super) fn emit(
     );
     let timelapse_inserted = motion::emit_layer(
         output,
-        layer,
+        (
+            layer,
+            visit,
+            traversal.objects[object_index].slices(layer_index),
+        ),
         (
             motion::EmissionPhase {
                 geometry: motion_geometry,

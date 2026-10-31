@@ -12,6 +12,7 @@ mod layer_end;
 
 pub(super) use context::Context;
 mod instances;
+mod island_visits;
 pub(super) use instances::Instance;
 mod object_entry;
 pub(super) mod object_order;

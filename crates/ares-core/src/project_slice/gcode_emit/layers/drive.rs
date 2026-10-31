@@ -165,7 +165,7 @@
             state.layer_object_labels = label_inventory.layer(
                 by_tool
                     .iter()
-                    .flat_map(|(_, entries)| entries.iter().map(|entry| entry.instance.label_id)),
+                    .flat_map(|(_, tour)| tour.instances.iter().map(|entry| entry.instance.label_id)),
             );
         }
         let boundary = boundary::append(
@@ -244,7 +244,7 @@
             wrapping::emit(output, state, &timelapse_context)?;
             if let Some(instances) = &filament_instances {
                 state.filament_instances_code = Some(
-                    instances.encode(tool_entries.iter().map(|entry| entry.instance.label_id)),
+                    instances.encode(tool_entries.instances.iter().map(|entry| entry.instance.label_id)),
                 );
             }
             let needs_change = !state.extruder_selected || state.extruders.active_id() != *tool;
@@ -274,18 +274,20 @@
             if needs_change {
                 last_object_copy = None;
             }
-            let entry_count = tool_entries.len();
+            let entry_count = tool_entries.visits.len();
             for (pass, entry_position) in [tool_buckets::Pass::Wiping, tool_buckets::Pass::Normal]
                 .into_iter()
                 .filter(|pass| *pass == tool_buckets::Pass::Normal || wiping.has_overrides())
                 .flat_map(|pass| (0..entry_count).map(move |position| (pass, position)))
             {
-                final_entry = tool_entries[entry_position].source;
+                let visit = &tool_entries.visits[entry_position];
+                final_entry = tool_entries.instances[visit.instance_idx].source;
                 tool_entry::emit(
                     output,
                     state,
-                    &mut tool_entries[entry_position],
+                    &mut tool_entries.instances[visit.instance_idx],
                     tool_entry::Input {
+                        visit,
                         traversal,
                         pass,
                         purging_finished: pass == tool_buckets::Pass::Normal

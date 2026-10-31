@@ -10,6 +10,20 @@ mod two_opt;
 
 use super::{CoordinateScale, Point};
 
+/// OrderingStrategies.cpp:501–510; Snake/Best are not admitted enum modes yet.
+pub(crate) fn order_points_with_strategy(
+    points: &[Point],
+    print_order: crate::ProcessPrintOrder,
+    start_near: Option<Point>,
+    scale: CoordinateScale,
+) -> Vec<usize> {
+    match print_order {
+        crate::ProcessPrintOrder::Default | crate::ProcessPrintOrder::AsObjectList => {
+            chain_points_with_postprocessing(points, start_near, scale)
+        }
+    }
+}
+
 pub(crate) fn chain_points_with_postprocessing(
     points: &[Point],
     start_near: Option<Point>,

@@ -117,6 +117,26 @@ crossing hash retains the source uint64 wrapping arithmetic on all Tier1 targets
 Source helpers are extracted only to meet module/function/nesting boundaries,
 not to introduce a new optimizer or scheduling model.
 
+## Visit data and adapter correspondence
+
+| Rust boundary | Pinned upstream owner |
+| --- | --- |
+| `Polygon::centroid` | `Polygon.cpp:154–169`; double cross accumulation followed by the rounded Point(Vec2d) conversion, not a bounding-box center |
+| `island_print_order/visits.rs::InstanceVisit`, `InstanceInput`, `IslandOrderNode` | `GCode.hpp::InstanceVisit` and `IslandOrderNode`, plus the actual per-filament instance/layout inputs; cache-only identity remains in the owning instance vector |
+| `visits::produce`, `nodes`, `append_chainable_nodes`, `quantize`, `append_catch_all` | `GCode.cpp:7290–7362`; actual nonempty islands, centroid+shift then integer1mm quantization, wt_pos strategy, reverse, consecutive grouping, first-visit identity, last-visit catch-all |
+| `gcode_emit/layers/island_visits.rs::InstanceTour` and `plan` | The per-filament pair of `instances_to_print` / `instance_visits` at `GCode.cpp:7238–7362`; native gate and source instance order, not a new scheduling abstraction |
+| `island_visits::occupied` | Recombine only island presence across the existing wipe/normal split to represent the source pre-split by_region; actual extrusion data is neither cloned nor moved by tour production |
+| `island_visits::wipe_start` and `Project::current_plate_index` | `GCode.cpp` selected plate/wipe-tower input and `Config.hpp:676–682::get_at`; retain element-zero semantics and rounded unscaled Point construction |
+| `layers/drive.rs`, `tool_entry.rs`, object/raft adapters | Iterate actual visits over the retained instance vector; first-visit skirt/brim/support and the same labels/origin/config path, with raw object lslices passed to consumption |
+| `visits::island_order` and `motion/layer.rs` | `GCode.cpp:7680–7720`; explicit produced indices, otherwise source current-nozzle point chaining of nonempty islands and catch-all last, or stored order for the source unexpected-layout branch |
+
+The producer reads the same raw merged physical-layer slices used for island
+membership, not the second union made for avoid-crossing boundaries. The current
+filament enumeration remains the existing tool-ordering adapter's input; this
+slice does not introduce mixed-slot configuration modes. The region-expansion
+bounding-box centroid discrepancy is a separate RED-first handoff and is not
+changed by the source Polygon centroid port.
+
 ## Qualified public RED contract
 
 Use exactly **two** inputs:
