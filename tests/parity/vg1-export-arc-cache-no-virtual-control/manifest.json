@@ -27,7 +27,7 @@
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
       "provenance": {
-        "evidence_id": "w5-multimat-vg1-export-arc-cache-no-virtual-control",
+        "evidence_id": "w5-multimat-vg1-export-arc-cache",
         "actual_export_receipt": "original-export-controls/w5-discovery-d0-multimat-macro-no-virtual1/positive/export-launch.json",
         "verification": "main-pair-verified/verified.json",
         "source_geometry": "tests/parity/validation/bbl-toolchange-boundary.3mf",
@@ -54,7 +54,7 @@
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
       "provenance": {
-        "evidence_id": "w5-multimat-vg1-export-arc-cache-no-virtual-control",
+        "evidence_id": "w5-multimat-vg1-export-arc-cache",
         "actual_export_receipt": "original-export-controls/w5-discovery-d0-multimat-change-real-macro1/positive/export-launch.json",
         "verification": "main-pair-verified/verified.json",
         "source_geometry": "tests/parity/validation/bbl-toolchange-boundary.3mf",

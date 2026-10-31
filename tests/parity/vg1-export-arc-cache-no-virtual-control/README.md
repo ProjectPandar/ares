@@ -33,7 +33,7 @@ NO M73/header/time/E/XY/fan/comment/config/trailing-line masks/sorting.
 M73 is output; first-M73 failure is legitimate strict RED, not permission
 to ignore it or patch time totals. Source block caches already match.
 
-External evidence ID `w5-multimat-vg1-export-arc-cache-no-virtual-control` retains exports/
+External evidence ID `w5-multimat-vg1-export-arc-cache` retains exports/
 launches/settings/diagnostics. Such source-counter diagnostics are NOT
 formal public API/CLI acceptance evidence. Freeze tests/inputs/helpers/
 docs after RED; any later bounded GREEN residual requires STOP/report.

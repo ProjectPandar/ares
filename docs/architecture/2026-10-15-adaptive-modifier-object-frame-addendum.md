@@ -129,7 +129,7 @@ for every run, verify:
 - Existing `runner::adaptive_cubic_precision` family: A45/A50/A125/AAUTO,
   S45/S50/S125/SAUTO, Rectilinear and Aligned controls, both modes. Existing
   non-RED controls retain their raw Ares outputs compared with the base.
-- W3's frozen `support_touching_grid_s_c0_public_api_cli` witness
+- The frozen `support_touching_grid_s_c0_public_api_cli` witness
   (input SHA `9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1`)
   is run unchanged on both base and candidate. It is currently an acknowledged
   independent public RED in W3's unmerged `c15b29c60`; a continuing known panic
