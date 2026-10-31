@@ -16,6 +16,9 @@ pub(super) fn polylines(
         area,
         pattern,
         plane_path::PlanePathFillParams {
+            // Fill.cpp:1814-1816 leaves FillParams::extrusion_role at 0,
+            // not erInternalInfill (FillBase.hpp:116).
+            sparse: false,
             spacing,
             overlap: 0.0,
             density: 1.0,

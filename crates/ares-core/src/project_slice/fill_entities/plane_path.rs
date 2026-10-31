@@ -11,10 +11,8 @@ use super::{
     geometry_error,
 };
 
-/// Ironing entry: solid fills keep the `FillParams` default resolution
-/// (`FillBase.hpp:64`) and never read the object bounding box
-/// (`FillPlanePath.cpp:80` — align only below 0.995 density), so the
-/// expolygon bounds stand in for it.
+/// Surface entry retains the real extrusion role for beta
+/// `FillPlanePath.cpp:96`; non-sparse fills use their snug surface bounds.
 pub(super) fn expolygon_polylines(
     expolygon: &ExPolygon,
     pattern: PlanePathPattern,
@@ -22,6 +20,7 @@ pub(super) fn expolygon_polylines(
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, SliceError> {
     let fill_params = PlanePathFillParams {
+        sparse: params.extrusion_role == crate::ExtrusionRole::InternalInfill,
         spacing: params.spacing,
         overlap: params.overlap,
         density: (0.01_f64 * f64::from(params.density)) as f32,
@@ -61,6 +60,7 @@ pub(super) fn append(
     let params = fill.params;
     let density = (0.01 * f64::from(params.density)) as f32;
     let fill_params = PlanePathFillParams {
+        sparse: params.extrusion_role == crate::ExtrusionRole::InternalInfill,
         spacing: params.spacing,
         overlap: params.overlap,
         density,

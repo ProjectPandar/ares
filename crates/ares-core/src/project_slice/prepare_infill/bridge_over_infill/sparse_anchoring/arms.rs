@@ -346,6 +346,7 @@ pub(super) fn dispatch(
             let resolution = traversal.resolved.views.full.process.print.resolution.0;
             let params = fill.params;
             let fill_params = crate::fill::plane_path::PlanePathFillParams {
+                sparse: params.extrusion_role == crate::ExtrusionRole::InternalInfill,
                 spacing: params.spacing,
                 overlap: params.overlap,
                 density: (0.01 * f64::from(params.density)) as f32,

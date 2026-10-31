@@ -27,6 +27,8 @@ pub(crate) enum PlanePathPattern {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct PlanePathFillParams {
+    /// Beta FillPlanePath.cpp:96: extrusion_role == erInternalInfill.
+    pub(crate) sparse: bool,
     pub(crate) spacing: f64,
     pub(crate) overlap: f64,
     pub(crate) density: f32,
@@ -74,7 +76,8 @@ fn fill_component(
         scale,
     )?)?;
 
-    let align = params.density < 0.995;
+    // Low-density top/bottom fills stay local; only sparse infill aligns across layers.
+    let align = params.sparse;
     let mut generation_bounds = if align {
         Bounds::from_bounding_box(params.object_bounding_box).rotated(-direction)?
     } else {
