@@ -26,6 +26,8 @@ mod initial_travel_uint;
 mod m1020_bills_filament_change_without_tool_change;
 #[path = "mk4_layer_change.rs"]
 mod mk4_layer_change;
+#[path = "plane_path_low_density_top.rs"]
+mod plane_path_low_density_top;
 #[path = "processor_word_boundary.rs"]
 mod processor_word_boundary;
 #[path = "project_settings_bool_wire.rs"]
