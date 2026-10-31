@@ -1,4 +1,4 @@
-//! OrcaSlicer 2.4.2 `Arachne/WallToolPaths.cpp:809-903`, `getRegionOrder`.
+//! OrcaSlicer v2.5.0-beta `Arachne/WallToolPaths.cpp:810-899`, `getRegionOrder`.
 
 use std::collections::{HashMap, HashSet};
 
@@ -78,9 +78,7 @@ fn region_constraint(
     } else {
         (other_index, index)
     };
-    if input[outer].is_odd || input[inner].is_odd {
-        (!input[outer].is_odd && input[inner].is_odd).then_some((outer, inner))
-    } else if outer_to_inner {
+    if outer_to_inner {
         Some((outer, inner))
     } else {
         Some((inner, outer))

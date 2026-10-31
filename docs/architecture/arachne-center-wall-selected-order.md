@@ -57,10 +57,10 @@ Native artifact or copied implementation. Both full streams and compared blocks
 are retained externally. No complete-output or CLI parity claim follows from a
 matching selected layer block.
 
-No private test is added or executed. An existing private test encodes the old
-special-case policy; its authorized deletion is part of the pending source port,
-replaced by the public output witness rather than updated private structure
-assertions. The test root remains byte-identical to main; new registration belongs to
+No private test is added or executed. The private test encoding the old
+special-case policy is deleted with this source port, replaced by the public
+output witness rather than updated private structure assertions.
+The test root remains byte-identical to main; new registration belongs to
 the existing option-domain group. The approved bottom/top shell gates and their
 public witnesses remain unchanged.
 
