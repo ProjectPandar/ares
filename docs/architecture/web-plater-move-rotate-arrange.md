@@ -412,6 +412,63 @@ Where upstream has no defined behaviour, or a precision Rust does not offer, the
   - Only `fitIntoBoxRotation`'s aspect-ratio comparison against the bed reads them. `minAreaBoundingBox` compares exact rationals and is not affected.
   - Residual risk: when a box's aspect ratio is within `f64` rounding of the bed's, the bisection may start from the neighbouring caliper interval.
 
+### A3 slice plan: ArrangeJob on `PlaterSession`
+
+A3 ports the GUI arrange job, which the web buttons run, onto the existing session. It ships in three source-cited slices. Each slice is RED first, then GREEN. Every `file:line` is at `345efec64`.
+
+**A3a: whole-scene arrange (`ArrangeScope::All`), no wipe tower.**
+- Upstream:
+  - `ArrangeJob::prepare_all` (`ArrangeJob.cpp:342-414`) and `prepare_arrange_polygon` (`:249-257`);
+  - `get_arrange_poly` and `get_instance_arrange_poly` (`ModelArrange.cpp:107-202`), `ModelInstance::get_arrange_polygon` (`Model.cpp:3920-3971`) and `ModelObject::convex_hull_2d` (`:1819`);
+  - `check_unprintable` (`ArrangeJob.cpp:697-720`);
+  - `process` (`:722-805`), without IMEX and without the BBL `scan_first_layer` non-preferred areas;
+  - `finalize` (`:819-965`) and `init_arrange_params` (`:989-1043`), with `GLCanvas3D::ArrangeSettings` (`GLCanvas3D.hpp:603-614`) as the settings;
+  - the `PartPlateList` steps: `preprocess_arrange_polygon` (`PartPlate.cpp:7617`), `preprocess_exclude_areas` (`:7692`), `postprocess_bed_index_for_selected`/`_unselected` (`:7833`, `:7882`), `postprocess_arrange_polygon` (`:7931`), `clear` (`:6454`) and `rebuild_plates_after_arrangement(false, true)` (`:8382`);
+  - `ModelInstance::apply_arrange_result` (`Model.hpp:1531-1538`).
+- Destination:
+  - `crates/ares-core/src/plater/arrange_job/` (prepare, process, finalize, params);
+  - plate-list pre/post-processing next to the existing `plater/plate_list.rs`.
+- Public API: `PlaterSession::arrange(ArrangeScope::All, ArrangeSettings)`. It reuses `arrangement::arrange` from A1.
+- Existing scaffold: the session's plate list and instance transforms are reused as `PartPlateList` and `ModelInstance`. No Ares-owned arrange step is added.
+- Deferred: the wipe tower (`prepare_wipe_tower`, A3b), locked plates (no plate lock in Ares), IMEX and exclusion volumes (A2, after the migration), belts.
+
+**A3b: wipe tower.**
+- Upstream:
+  - `ArrangeJob::prepare_wipe_tower` (`:442-531`) and `estimate_wipe_tower_info` (`:416-440`);
+  - `PartPlate::estimate_wipe_tower_polygon` and the v2.5.0-beta tower footprint estimate it calls.
+- Scoped by its own spec addendum once A3a lands, because the footprint estimate is a separate upstream boundary.
+
+**A3c: current-plate and selection scopes.**
+- Upstream: `prepare_partplate` (`:532-603`), `preprocess_arrange_polygon_other_locked` (`PartPlate.cpp:7663`), `postprocess_bed_index_for_current_plate` (`:7913`) and `prepare_selected` (`ArrangeJob.cpp:259-340`).
+
+**Oracle and comparison (A3a).**
+- Native run: the official v2.5.0-beta CLI global arrange (`OrcaSlicer.cpp:5619-6098`), started as `--arrange 1 --allow-rotations=<0|1> --avoid-extrusion-cali-region=<0|1> --align-to-y-axis=<0|1> --export-3mf <out> <input.3mf>` through `scripts/orca-parity.sh` with `ORCA_APPDIR`.
+- Booleans take `=<0|1>` (`Config.cpp:1750-1773`). Upstream disables the `--no-` prefix (`:1822`), and a separate value (`--align-to-y-axis 0`) is read as an input file. All three flags are always passed, so no CLI default applies.
+- Ares side: `PlaterSession::arrange(All, settings)` with the same settings.
+  - Each instance's transform is written the way `_add_build_to_model_stream` writes it: `%.9g`, from `std::setprecision(float max_digits10)` at `bbs_3mf.cpp:7150-7151`.
+  - The result must equal the Native build-item `transform` strings and the plate→object/instance map in `Metadata/model_settings.config`.
+- Per-plate G-code is not compared until slicing is at v2.5.0-beta parity.
+
+**Where the CLI and the GUI job differ, and how the A3a cases stay on the shared path.**
+- `clearance_radius`: the GUI adds `2 * Print::object_skirt_offset` (`ArrangeJob.cpp:1000`). Fixtures have no per-object skirt, so the offset is 0.
+- `check_unprintable` (GUI only): no fixture has a zero-area item or an item taller than `printable_height`.
+- Plates locked for a print sequence that differs from the global one (GUI `prepare_all` `:345-354`): no fixture overrides a plate's print sequence.
+- `preprocess_exclude_areas` plate count: the GUI passes 36 and the CLI defaults to 16 (`PartPlate.hpp:1047`). Fixtures stay within 16 plates.
+- Plate recycling: the CLI calls `rebuild_plates_after_arrangement()`, which recycles plates; the GUI passes `false, true`. No fixture leaves a plate empty.
+- The wipe tower: every fixture prints one filament per plate, so neither path adds a tower (`OrcaSlicer.cpp:5733-5748`).
+
+The ported code follows the GUI job. These differences are listed so that a mismatch can be traced back to them. They are not fixed up on the Ares side.
+
+**A3a cases.**
+1. Ender-3 project with a single object: centring.
+2. Several objects on one plate, rotations off and then on.
+3. Overflow onto new plates.
+4. Align to Y on an i3 printer, plus the `--align-to-y-axis=0` control.
+5. `bed_exclude_area`.
+6. By-object print clearance (`print_sequence = by object`).
+7. A circular (delta) bed.
+8. An unprintable instance going to the plate after the last one.
+
 ## STL plater session (core slice before commit 5)
 
 Coordinator decision: approved as its own source-cited core slice, RED then
