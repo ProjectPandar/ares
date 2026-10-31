@@ -82,6 +82,17 @@ goldens, fixture branches or new fixtures are committed.
    Clippy. Preserve both island and both width scoped GREENs. Report the seven
    full-stream residuals honestly; no FULL, seeded sweep or ledger rerun.
 
+## Runtime RED qualification before the port
+
+All three complete executable-block comparisons are runtime RED on unchanged
+production code. Official Native double replay is stable; both streams expose
+exactly one executable block and compare ordinal0 against0 with both markers
+and all records. Native/API block lengths are41969/41947 (below),41994/41972
+(at),41989/41967 (above). The first mismatch is the progress record at byte429,
+blockline16 in every case. All three public APIs admit the immutable inputs;
+complete pre-fix API streams are retained externally. Fmt and strict workspace/
+all-target Clippy pass, with no introduced suppressions.
+
 Included: the first-layer and over-raft speed-selection leaf, with inherited
 wipe/progress effects observed through the existing consumers. No separate
 planner/progress implementation is added. Over-raft uses the same source branch
