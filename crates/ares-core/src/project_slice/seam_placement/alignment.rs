@@ -1,4 +1,5 @@
 mod context;
+mod loop_normal;
 mod preparation;
 mod random;
 
@@ -275,11 +276,16 @@ fn finalize_string(layers: &mut [LayerPlan], seam_string: &[(usize, usize)]) {
             // SeamPlacer.cpp:1377-1378: round the cube to float once;
             // target-specific powf otherwise changes the blended seam.
             let blend = (f64::from(angle_ratio).powi(3) as f32).min(1.0);
-            Vec3::new(
+            if blend >= 1.0 {
+                return current;
+            }
+            let target = Vec3::new(
                 blend * current.x + (1.0 - blend) * fitted.0,
                 blend * current.y + (1.0 - blend) * fitted.1,
                 current.z,
-            )
+            );
+            // v2.5.0-beta SeamPlacer.cpp:2050-2055, Neutral alignment.
+            loop_normal::place_on_loop(&layers[point.0].candidates, point.1, target)
         })
         .collect::<Vec<_>>();
     for (&point, final_position) in seam_string.iter().zip(finals) {
