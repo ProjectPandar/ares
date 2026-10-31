@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "scarf_ramp_endpoint_vertex_snap.rs"]
+mod scarf_ramp_endpoint_vertex_snap;
+
 #[path = "seam_string_immediate_lower_layer_restart.rs"]
 mod seam_string_immediate_lower_layer_restart;
 
