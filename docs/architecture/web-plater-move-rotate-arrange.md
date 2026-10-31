@@ -438,6 +438,79 @@ A3 ports the GUI arrange job, which the web buttons run, onto the existing sessi
   - `PartPlate::estimate_wipe_tower_polygon` and the v2.5.0-beta tower footprint estimate it calls.
 - Scoped by its own spec addendum once A3a lands, because the footprint estimate is a separate upstream boundary.
 
+**A3b addendum: the wipe tower in "Arrange all".** Every `file:line` is at `345efec64`.
+
+This slice ports the prime tower items `prepare_wipe_tower` adds to the fixed items, and replaces A3a's rejection of projects that need a tower. It stacks on A3a GREEN. That GREEN waits for the Clipper2 `ClipperUtils` port (see A3a above), so A3b's GREEN does too.
+
+Upstream, in the order the job reaches it:
+
+1. **`ArrangeJob::prepare_wipe_tower`** (`ArrangeJob.cpp:442-528`).
+   - No tower when the prime tower is disabled, the print is by object, or the printer is a belt printer.
+   - Otherwise a tower is needed for a smooth timelapse, an item with several filaments, or several filaments sharing a bed temperature while multi-material plates are allowed.
+   - For each of the 36 beds:
+     - a bed past the plate count reuses the last plate's settings;
+     - a plate that already shows a tower gets that tower (`get_wipe_tower` -> `get_wipetower_arrange_poly`, `:156-167`);
+     - otherwise, when a tower is needed, it gets `estimate_wipe_tower_info` (`:416-430`), sized for the extruders of all plates (`PartPlateList::get_extruders(true)`, `PartPlate.cpp:6943-6954`).
+   - Locked plates are skipped (`bedid_unlocked`); Ares has none.
+2. **The tower a plate already shows.**
+   - `GLCanvas3D::reload_scene` (`GLCanvas3D.cpp:3564-3663`) adds a tower volume per plate:
+     - only when the prime tower is enabled, and only when two or more filament colours exist or a tower is needed (`need_wipe_tower`);
+     - a by-object plate gets one only with exactly one printable instance;
+     - a plate with no objects or a zero estimated depth gets none.
+   - The stored `wipe_tower_x/y` is re-clamped first, with relocation (`estimate_wipe_tower_polygon(..., &relocation)` -> `nearest_clear_wipe_tower_anchor`, `GCode/WipeTowerEstimate.cpp:247-285`; obstacles from `PartPlate::wipe_tower_obstacles`, `PartPlate.cpp:4036-4063`).
+   - The volume is the preview cube plus its brim (`GLVolumeCollection::load_wipe_tower_preview`, `3DScene.cpp:987-1052`).
+   - `GLCanvas3D::get_wipe_tower_info` (`GLCanvas3D.cpp:6149-6185`) turns that volume into the item:
+     - the volume's box, offset by the brim twice;
+     - placed at the stored position, clamped onto the plate;
+     - a fixed virtual item with `++priority`.
+   - The session models this state from the project; it has no canvas.
+3. **`PartPlate::estimate_wipe_tower_polygon`** (`PartPlate.cpp:4065-4155`): the footprint clamped onto the plate, by `WIPE_TOWER_MARGIN` and the brim, or re-placed with the comfort margin. The arrange job calls it without relocation.
+4. **`PartPlate::estimate_wipe_tower_footprint`** (`PartPlate.cpp:3982-4034`):
+   - the plate's filaments (`PartPlate::get_extruders(true, config, config)`, `:3075-3250`), padded to the requested count and including `wipe_tower_filament`;
+   - the tallest instance and the thinnest object layer height over the plate's instances (`contain_instance_totally`, `:4473-4521`).
+5. **`GCode/WipeTowerEstimate.cpp`**:
+   - `resolve_wipe_tower_type` (`:62-73`), `estimate_wipe_tower_first_layer_outline` (`:75-84`) and `estimate_wipe_tower_footprint` (`:86-245`);
+   - with the statics they call: `WipeTower::get_limit_depth_by_height`, `get_auto_brim_by_height`, `estimate_brim_real_width`, `get_wrapping_detection_depth`, `estimate_tower_blocks_depth`, `rib_footprint_side` and `estimate_rib_tower_bbox_side` (`GCode/WipeTower.cpp:1697-1824`); `WipeTower2::cone_base_polygon` and `estimate_semm_flush_volume` (`GCode/WipeTower2.cpp:2167-2245`); and the mixed-filament expansion `has_any_mixed_filament` / `expand_mixed_filaments` (`FilamentMixer.cpp:486-538`).
+6. **`PartPlateList::set_default_wipe_tower_pos_for_plate(new_index, true)`** (`PartPlate.cpp:6339-6428`), which GUI-mode `create_plate` calls (`:6646`): the tower position of a plate the arrange adds.
+
+Destination:
+- `plater/arrange_job/wipe_tower.rs`: steps 1 and 2.
+- `plater/plate_list/wipe_tower.rs`: steps 3, 4 and 6, plus the obstacles and relocation of step 2.
+- `crates/ares-core/src/project_slice/gcode_emit/wipe_tower/estimate.rs`: step 5. Ares' existing 2.4.2 wipe tower geometry is not reused for these beta statics. If the beta `WipeTower` migration ports any of them first, A3b reuses those.
+
+Dependencies and deferrals:
+- **Config keys.** The estimate reads keys that must exist in Ares' typed settings at the beta baseline: `wipe_tower_type`, `wipe_tower_wall_type`, `wipe_tower_cone_angle`, `wipe_tower_rib_width`, `wipe_tower_extra_rib_length`, `prime_volume_mode`, `filament_prime_volume`, `filament_adhesiveness_category`, `filament_change_length`, `filament_is_mixed` and `filament_mixed_components`. Any still missing come from the baseline migration, not from this slice.
+- **A sliced plate's real tower mesh** (`load_real_wipe_tower_preview`, after `psWipeTower`) is deferred. A session keeps no per-plate `Print`, so a plate's tower is always the estimate.
+- **Belt purge prisms and IMEX** are deferred as in A3a.
+
+Oracle: the CLI global arrange (`OrcaSlicer.cpp:5729-5810`), compared as in A3a. The CLI and the GUI job differ here, and the A3b cases keep to the path they share:
+- **Which tower.**
+  - The CLI estimates a tower for every bed whose project plate prints one: prime tower enabled, not by object unless smooth timelapse, and two or more filaments or a smooth timelapse (`plate_needs_wipe_tower`).
+  - The GUI uses the tower the plate shows.
+  - The cases use valid stored tower positions, so neither path re-places them.
+  - The cases use `prime_tower_brim_width = 0`. The GUI's twice-offset volume box then equals the CLI's polygon in millimetres, but not always in scaled units, because the two paths round differently:
+    - The GUI item is the shown volume's `float` box scaled in `double`, plus the scaled stored position, with `++priority` (`ArrangeJob.cpp:122-145`, `GLCanvas3D.cpp:6149-6185`).
+    - The CLI item is `estimate_wipe_tower_polygon`'s absolute polygon, each corner a `float` sum scaled in `float`, with priority 0 (`PartPlate.cpp:4139-4152`).
+    - For example, a 32.0841 mm tower at x = 150 has its far edge at 182084110 in the GUI and at 182084112 in the CLI.
+  - The port follows the GUI. The difference only decides a result where two placements score exactly the same: libnest2d keeps the first of equal scores (`std::min_element` and the strict `<` in `nfpplacer.hpp` `_trypack`), and a tower on the bed diagonal makes mirror placements tie.
+  - The tower cases therefore use a rectangle-wall tower of `prime_tower_width` 20 mm that purges the prime volume (`purge_in_prime_tower = 0`), off the diagonal, at sizes and positions where both paths give the same scaled corners: 20 x 11.25 mm at (1, 1) for two filaments, and 20 x 12.6 mm at (120, 95) for the smooth timelapse. No placement mirrors another: the second object, and in the rotated case the turned one, is 15 x 10 mm.
+  - Each tower case gives the same Native result on two fresh runs, fails when the port drops the tower items, and places every object with a score at least 8.7e-4 below the next-best placement.
+- **Footprint inputs.**
+  - The CLI sizes with all objects (`use_global_objects = true`) and the plate's filament count; the GUI preview sizes with the plate's own objects.
+  - The cases put all objects on the plate the tower is for, or use objects of equal height.
+- **Overflow beds.**
+  - Both estimate on the last plate's settings: the CLI with the largest plate filament count, the GUI with every plate's extruders.
+  - The overflow case uses one filament set across plates.
+
+A3b cases:
+1. A two-colour object beside the corner tower.
+2. Two single-colour objects in different filaments sharing a bed temperature, with multi-material plates allowed, beside the corner tower.
+3. The same as case 2 with rotation.
+4. Overflow onto a new plate with two colours and the corner tower.
+5. A smooth timelapse with one filament, the tower where the centred cube would be.
+6. A by-object print with one object.
+7. The prime tower disabled (control).
+
 **A3c: current-plate and selection scopes.**
 - Upstream: `prepare_partplate` (`:532-603`), `preprocess_arrange_polygon_other_locked` (`PartPlate.cpp:7663`), `postprocess_bed_index_for_current_plate` (`:7913`) and `prepare_selected` (`ArrangeJob.cpp:259-340`).
 
