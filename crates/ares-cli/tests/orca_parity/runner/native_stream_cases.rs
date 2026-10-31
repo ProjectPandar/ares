@@ -22,6 +22,8 @@ mod fan_reader_xyz;
 mod fan_verbose_text;
 #[path = "initial_travel_uint.rs"]
 mod initial_travel_uint;
+#[path = "island_visit_order.rs"]
+mod island_visit_order;
 #[path = "m1020_bills_filament_change_without_tool_change.rs"]
 mod m1020_bills_filament_change_without_tool_change;
 #[path = "mk4_layer_change.rs"]
