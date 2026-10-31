@@ -3,10 +3,9 @@
 //! transforms (`bbs_3mf.cpp:8050-8073`), the plate map (`:7918`) and one
 //! `filament_sequence.json` entry per plate. Native runs `--slice <plate>`.
 
-use std::io::{Cursor, Read, Write};
-
 use ares_core::{ConfigOverrides, GenerationMetadata, PlaterSession, PlaterSlice, SlicerContext};
 
+use super::plater_archive::{attribute, rewrite_archive};
 use crate::runner::{OrcaRunner, repo_root};
 
 #[path = "plater_rotation_pivot.rs"]
@@ -77,11 +76,6 @@ fn rewrite_build(model: &str, session: &PlaterSession) -> String {
     output
 }
 
-fn attribute<'a>(element: &'a str, name: &str) -> &'a str {
-    let start = element.find(&format!("{name}=\"")).unwrap() + name.len() + 2;
-    &element[start..start + element[start..].find('"').unwrap()]
-}
-
 /// The `<plate>` blocks of `model_settings.config` for the session plates:
 /// a loaded plate keeps its metadata, every plate lists its instances.
 fn rewrite_plates(settings: &str, session: &PlaterSession) -> String {
@@ -146,32 +140,6 @@ fn export(session: &PlaterSession) -> Vec<u8> {
         "Metadata/filament_sequence.json" => Some(rewrite_sequences(text, session)),
         _ => None,
     })
-}
-
-/// `input` with the text entries `edit` returns replaced.
-fn rewrite_archive(input: &[u8], edit: impl Fn(&str, &str) -> Option<String>) -> Vec<u8> {
-    let mut input = zip::ZipArchive::new(Cursor::new(input)).unwrap();
-    let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
-    for index in 0..input.len() {
-        let mut file = input.by_index(index).unwrap();
-        let mut bytes = Vec::new();
-        file.read_to_end(&mut bytes).unwrap();
-        let bytes = match std::str::from_utf8(&bytes)
-            .ok()
-            .and_then(|text| edit(file.name(), text))
-        {
-            Some(text) => text.into_bytes(),
-            None => bytes,
-        };
-        output
-            .start_file(
-                file.name(),
-                zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
-            )
-            .unwrap();
-        output.write_all(&bytes).unwrap();
-    }
-    output.finish().unwrap().into_inner()
 }
 
 fn assert_plate_like_native(label: &str, session: &PlaterSession, plate: u32) {

@@ -26,9 +26,16 @@ mod preset_scalar_loading;
 #[path = "preset_vector_loading.rs"]
 mod preset_vector_loading;
 
+#[path = "../plater_archive.rs"]
+mod plater_archive;
+
 // The plater session's public slice entries against Native `--slice <plate>`.
 #[path = "../plater_session.rs"]
 mod plater_session;
+
+// The plater session's arrange against the v2.5.0-beta Native global arrange.
+#[path = "../plater_arrange.rs"]
+mod plater_arrange;
 
 use std::path::Path;
 

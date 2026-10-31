@@ -456,8 +456,29 @@ A3 ports the GUI arrange job, which the web buttons run, onto the existing sessi
 - `preprocess_exclude_areas` plate count: the GUI passes 36 and the CLI defaults to 16 (`PartPlate.hpp:1047`). Fixtures stay within 16 plates.
 - Plate recycling: the CLI calls `rebuild_plates_after_arrangement()`, which recycles plates; the GUI passes `false, true`. No fixture leaves a plate empty.
 - The wipe tower: every fixture prints one filament per plate, so neither path adds a tower (`OrcaSlicer.cpp:5733-5748`).
+- Unprintable instances:
+  - The CLI arranges them on their own before moving them past the last plate (`OrcaSlicer.cpp:6012`). The GUI job moves them without arranging (`ArrangeJob.cpp:912-920`).
+  - The unprintable fixture's instance sits at the bed centre, where an arrange of it alone leaves it.
+- Object order: both paths sort the model objects by their first instance's `arrange_order` (`PartPlate.cpp:8389`), which renumbers the exported object ids. The comparison therefore keys build items and plate entries by object name, and the fixture edits give the two cubes distinct names.
 
 The ported code follows the GUI job. These differences are listed so that a mismatch can be traced back to them. They are not fixed up on the Ares side.
+
+**A3a unported paths are rejected.** `PlaterSession::arrange` returns `Result<(), SliceError>`. It returns `SliceError::InvalidInput` instead of arranging when the project needs any of these:
+- a prime tower (A3b);
+- a per-object skirt clearance (`Print::object_skirt_offset` past its no-skirt guard);
+- the BBL first-layer-scan strip (`preprocess_nonprefered_areas`);
+- a plate with its own print sequence, which the GUI locks;
+- the shared bed of several nozzles (`get_shared_poly`).
+
+**Kernel position parity depends on Clipper2.**
+- At `345efec64`, `ClipperUtils::_clipper_ex` clips with Clipper2 (`C2::PolyTree64`, `c2_clip`, `ClipperUtils.cpp:823-829`). libnest2d's `nfp::merge`/`nfp::subtract` are `union_ex`/`diff_ex` (`backends/libslic3r/geometries.hpp:259-264`). Their output vertex order sets where each NFP outline starts.
+- `EdgeCache` reads an open outline without its closing edge (`nfpplacer.hpp`, `createCache`). So that start decides which edge the placer never searches, and which corners subplex starts from.
+- The A1 kernel still uses Ares' 2.4.2 Clipper1 `difference_ex`/`union_expolygons`.
+- Evidence: a scene with a 30 x 10 mm bar, a cube turned 30° and a cube, on the Ender-3 bed.
+  - The v2.5.0-beta CLI logs its first-fit scores with `--debug 5 --logfile`. It places the second item at score 0.155280; the port places it at 0.214060.
+  - The port's objective at Native's position is 0.15528036, so the objective agrees.
+  - Native's position lies on the port's skipped closing edge.
+- A3a GREEN waits for the Clipper2 `ClipperUtils` port. The kernel's merge and subtract then switch to it, and so does its inflation offset if the beta offsets through Clipper2. All eight A3a cases are then re-run.
 
 **A3a cases.**
 1. Ender-3 project with a single object: centring.

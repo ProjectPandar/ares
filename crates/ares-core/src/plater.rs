@@ -3,6 +3,7 @@
 //! (`PartPlateList`) and per-plate slicing of the edited model. See
 //! `docs/architecture/web-plater-move-rotate-arrange.md`.
 
+mod arrange_job;
 mod edits;
 mod eigen;
 mod min_sphere;
@@ -11,6 +12,7 @@ mod selection;
 mod session;
 mod slice;
 
+pub use arrange_job::{ArrangeScope, ArrangeSettings};
 pub use edits::PlaterEdits;
 pub use session::{PlaterPlate, PlaterSession};
 pub use slice::{PlaterSlice, slice_plater_plate, slice_plater_with_profiles};
