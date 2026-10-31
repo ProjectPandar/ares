@@ -156,13 +156,30 @@ pub(super) fn rotation_by_quaternion(transform: Transform3d) -> [f64; 3] {
     [angles[2], angles[1], angles[0]]
 }
 
+/// `numext::hypot` (`Core/MathFunctionsImpl.h:150-170`): `p * sqrt(1 + (q / p)^2)`.
+fn hypot(x: f64, y: f64) -> f64 {
+    let (x, y) = (x.abs(), y.abs());
+    if x.is_infinite() || y.is_infinite() {
+        return f64::INFINITY;
+    }
+    if x.is_nan() || y.is_nan() {
+        return f64::NAN;
+    }
+    let p = x.max(y);
+    if p == 0.0 {
+        return 0.0;
+    }
+    let qp = x.min(y) / p;
+    p * (1.0 + qp * qp).sqrt()
+}
+
 /// `MatrixBase::eulerAngles(2, 1, 0)` (`EulerAngles.h:135-197`), the
 /// Tait-Bryan branch with `odd = 1`, `i = 2`, `j = 1`, `k = 0`.
-fn euler_angles_210(m: [[f64; 3]; 3]) -> [f64; 3] {
+pub(super) fn euler_angles_210(m: [[f64; 3]; 3]) -> [f64; 3] {
     let (i, j, k) = (2, 1, 0);
     let mut res = [0.0; 3];
     res[0] = m[j][k].atan2(m[k][k]);
-    let c2 = m[i][i].hypot(m[i][j]);
+    let c2 = hypot(m[i][i], m[i][j]);
     if res[0] < 0.0 {
         res[0] += std::f64::consts::PI;
         res[1] = (-m[i][k]).atan2(-c2);

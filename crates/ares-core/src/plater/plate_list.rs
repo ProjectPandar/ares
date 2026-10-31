@@ -5,6 +5,9 @@ use std::collections::BTreeSet;
 
 use crate::project::{compute_colum_count, plate_origin_at};
 
+#[path = "plate_list/arrange.rs"]
+mod arrange;
+
 /// `(object index, instance index)`, the key of `PartPlate::obj_to_instance_set`.
 pub(super) type InstanceKey = (usize, usize);
 

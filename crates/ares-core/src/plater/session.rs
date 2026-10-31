@@ -1,7 +1,7 @@
 //! An editable plater: the loaded project, its plate list and the GUI
 //! edits on them. Slicing reads the edits (`PlaterSession::edits`).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::edits::{EditedPlate, PlaterEdits};
 use super::plate_list::{BoundingBox, InstanceKey, PlateList, PlateModel};
@@ -10,8 +10,10 @@ use crate::{Project, SliceError, Transform3d};
 
 pub struct PlaterSession {
     input: Vec<u8>,
-    project: Project,
-    plates: PlateList,
+    pub(super) project: Project,
+    pub(super) plates: PlateList,
+    /// `ModelInstance::arrange_order` by `(object_id, instance_id)`; 0 until an arrange.
+    pub(super) arrange_orders: BTreeMap<(u32, u32), i32>,
 }
 
 /// One plate of the session: its grid origin and instances.
@@ -24,7 +26,7 @@ pub struct PlaterPlate {
     pub source: Option<usize>,
 }
 
-struct Model<'a>(&'a mut Project);
+pub(super) struct Model<'a>(pub(super) &'a mut Project);
 
 impl PlateModel for Model<'_> {
     fn keys(&self) -> Vec<InstanceKey> {
@@ -99,6 +101,7 @@ impl PlaterSession {
             input,
             project,
             plates,
+            arrange_orders: BTreeMap::new(),
         }
     }
 
@@ -270,6 +273,13 @@ impl PlaterSession {
         PlaterEdits {
             transforms,
             plates: Some(plates),
+            object_order: Some(
+                self.project
+                    .objects()
+                    .iter()
+                    .map(|object| object.id())
+                    .collect(),
+            ),
         }
     }
 

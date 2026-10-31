@@ -11,6 +11,7 @@ mod plate_list;
 mod selection;
 mod session;
 mod slice;
+mod transformation;
 
 pub use arrange_job::{ArrangeScope, ArrangeSettings};
 pub use edits::PlaterEdits;

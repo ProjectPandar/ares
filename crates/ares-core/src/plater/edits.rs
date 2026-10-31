@@ -21,12 +21,15 @@ pub struct PlaterEdits {
     /// By `(object_id, instance_id)`.
     pub(crate) transforms: Vec<((u32, u32), Transform3d)>,
     pub(crate) plates: Option<Vec<EditedPlate>>,
+    /// The object ids in model order, which an arrange sorts (`PartPlate.cpp:8389`).
+    pub(crate) object_order: Option<Vec<u32>>,
 }
 
 impl PlaterEdits {
     pub(crate) const NONE: Self = Self {
         transforms: Vec::new(),
         plates: None,
+        object_order: None,
     };
 
     pub(crate) fn transform(&self, object_id: u32, instance_id: u32) -> Option<Transform3d> {

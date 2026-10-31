@@ -38,6 +38,9 @@ impl Project {
     /// while `Model::plates_custom_gcodes` stays keyed by plate index
     /// (`PartPlateList::delete_plate`, `PartPlate.cpp:4554-4660`, leaves it).
     pub(crate) fn apply_plater_edits(&mut self, edits: &PlaterEdits) {
+        if let Some(order) = &edits.object_order {
+            self.order_objects(order);
+        }
         let updates =
             self.objects
                 .iter()
@@ -92,6 +95,14 @@ impl Project {
                 .extend(old_documents.get(source).cloned());
         }
         self.plates = new_plates;
+    }
+}
+
+impl Project {
+    /// Puts the objects in the order of their ids in `order`.
+    pub(crate) fn order_objects(&mut self, order: &[u32]) {
+        self.objects
+            .sort_by_key(|object| order.iter().position(|id| *id == object.id()));
     }
 }
 
