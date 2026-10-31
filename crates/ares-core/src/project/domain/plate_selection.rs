@@ -114,15 +114,17 @@ pub(crate) fn compute_colum_count(count: usize) -> usize {
     }
 }
 
-/// `OrcaSlicer.cpp:1775-1778,3726,3805` initializes CLI plate dimensions
-/// from ordered printable-area points [2]-[0], truncated to integers.
-/// This deliberately does not substitute the polygon bounding box.
+/// The plate dimensions: the printable area's bounding box size, truncated to
+/// integers (`static_cast<int>(BoundingBoxf(area).size())`, `OrcaSlicer.cpp:1899-1903,
+/// 4371-4374` at v2.5.0-beta `345efec64`; 2.4.2 took points [2]-[0]).
 pub(crate) fn plate_dimensions(settings: &ProjectSettings) -> (i32, i32) {
     let area = &settings.printer.remaining.printable_area.0;
-    (
-        (area[2].x - area[0].x) as i32,
-        (area[2].y - area[0].y) as i32,
-    )
+    let (mut min, mut max) = ([f64::MAX; 2], [f64::MIN; 2]);
+    for p in area {
+        min = [min[0].min(p.x), min[1].min(p.y)];
+        max = [max[0].max(p.x), max[1].max(p.y)];
+    }
+    ((max[0] - min[0]) as i32, (max[1] - min[1]) as i32)
 }
 
 /// `PartPlateList::compute_origin` / `compute_shape_position`
