@@ -31,7 +31,12 @@ pub struct ViewerImpl {
     layers: Layers,
     view_range: ViewRange,
     vertices: Vec<PathVertex>,
-    elapsed_times: Vec<[f32; TimeMode::COUNT]>,
+    total_time: [f32; TimeMode::COUNT],
+    // ViewerImpl.hpp:270-281: for each layer, the index of its first vertex
+    // and the running time at that vertex, so `get_estimated_time_at` only
+    // accumulates the vertices of one layer.
+    layer_first_vertex: Vec<u32>,
+    layer_start_times: Vec<[f32; TimeMode::COUNT]>,
     travels_time: [f32; TimeMode::COUNT],
     extrusion_roles: ExtrusionRoles,
     tool_colors: Palette,
@@ -74,8 +79,9 @@ impl ViewerImpl {
         self.settings_used_for_ranges = None;
         self.settings.spiral_vase_mode = data.spiral_vase_mode;
         self.used_extruders.clear();
-        self.elapsed_times.clear();
-        self.elapsed_times.reserve(self.vertices.len());
+        self.total_time = [0.0; TimeMode::COUNT];
+        self.layer_first_vertex.clear();
+        self.layer_start_times.clear();
         self.travels_time = [0.0; TimeMode::COUNT];
         self.extrusion_roles.reset();
         let mut total_time = [0.0; TimeMode::COUNT];
@@ -86,7 +92,6 @@ impl ViewerImpl {
             if v.move_type == MoveType::Travel {
                 add_times(&mut self.travels_time, v.times);
             }
-            self.elapsed_times.push(total_time);
             if v.move_type != MoveType::Extrude {
                 continue;
             }
@@ -107,6 +112,8 @@ impl ViewerImpl {
             let len = self.tool_colors.len().max(usize::from(max) + 1);
             self.tool_colors.resize(len, DUMMY_COLOR);
         }
+        self.total_time = total_time;
+        self.build_layer_time_caches();
         if !self.layers.empty() {
             self.layers.set_view_range(0, self.layers.count() - 1);
         }
@@ -117,6 +124,44 @@ impl ViewerImpl {
         self.settings.update_enabled_entities = true;
     }
 
+    /// `load` (ViewerImpl.cpp:1189-1213): index of the first vertex of each
+    /// layer, walked back to front so that a layer with no vertex of its own
+    /// inherits the next layer's index and the array stays non-decreasing;
+    /// then the running time at each layer's first vertex, summed in vertex
+    /// order so that `get_estimated_time_at` matches a full accumulation
+    /// exactly.
+    fn build_layer_time_caches(&mut self) {
+        if self.layers.empty() {
+            return;
+        }
+        let vertices_count = self.vertices.len() as u32;
+        self.layer_first_vertex = vec![vertices_count; self.layers.count()];
+        for i in (1..=vertices_count).rev() {
+            let layer_id = self.vertices[(i - 1) as usize].layer_id as usize;
+            if layer_id < self.layer_first_vertex.len() {
+                self.layer_first_vertex[layer_id] = i - 1;
+            }
+        }
+        for i in (1..self.layer_first_vertex.len()).rev() {
+            self.layer_first_vertex[i - 1] =
+                self.layer_first_vertex[i - 1].min(self.layer_first_vertex[i]);
+        }
+        let mut running = [0.0; TimeMode::COUNT];
+        self.layer_start_times = vec![[0.0; TimeMode::COUNT]; self.layer_first_vertex.len()];
+        let mut layer = 0;
+        for i in 0..=self.vertices.len() {
+            while layer < self.layer_first_vertex.len()
+                && self.layer_first_vertex[layer] as usize == i
+            {
+                self.layer_start_times[layer] = running;
+                layer += 1;
+            }
+            if i < self.vertices.len() {
+                add_times(&mut running, self.vertices[i].times);
+            }
+        }
+    }
+
     pub fn vertices(&self) -> &[PathVertex] {
         &self.vertices
     }
@@ -125,16 +170,29 @@ impl ViewerImpl {
         &self.layers
     }
 
-    /// ViewerImpl.cpp:1461-1465: inclusive ordered f32 sum, cached during load.
+    /// ViewerImpl.cpp:1717-1732: layer-seeded partial sum; `id >= size`
+    /// (and an out-of-range mode, impossible with the typed index) is 0.0.
     pub fn get_estimated_time_at(&self, id: usize) -> f32 {
-        self.elapsed_times[id][self.settings.time_mode.index()]
+        if id >= self.vertices.len() {
+            return 0.0;
+        }
+        let mode = self.settings.time_mode.index();
+        let mut first = 0;
+        let mut time = 0.0;
+        let layer = self.vertices[id].layer_id as usize;
+        if layer < self.layer_first_vertex.len() && self.layer_first_vertex[layer] as usize <= id {
+            first = self.layer_first_vertex[layer] as usize;
+            time = self.layer_start_times[layer][mode];
+        }
+        for v in &self.vertices[first..=id] {
+            time += v.times[mode];
+        }
+        time
     }
 
-    /// ViewerImpl.hpp:136.
+    /// ViewerImpl.hpp:179.
     pub fn get_estimated_time(&self) -> f32 {
-        self.elapsed_times
-            .last()
-            .map_or(0.0, |total| total[self.settings.time_mode.index()])
+        self.total_time[self.settings.time_mode.index()]
     }
 
     /// ViewerImpl.hpp:141.

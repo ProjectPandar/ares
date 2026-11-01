@@ -10,6 +10,41 @@ using libvgcode::PathVertex;
 using libvgcode::ETimeMode;
 #include "marker-time/kernel.hpp"
 
+// ViewerImpl.cpp:1189-1213 load-time caches, rebuilt locally over the dumped
+// vertex array; convert() renumbers layer ids consecutively
+// (LibVGCodeWrapper.cpp:260-266), so the layer count is the maximum id + 1.
+inline std::pair<std::vector<uint32_t>, std::array<std::vector<float>, libvgcode::TIME_MODES_COUNT>>
+layer_caches(const std::vector<PathVertex>& vertices)
+{
+    std::vector<uint32_t> layer_first_vertex;
+    std::array<std::vector<float>, libvgcode::TIME_MODES_COUNT> layer_start_times;
+    size_t layers_count = 0;
+    for (const PathVertex& v : vertices)
+        layers_count = std::max(layers_count, static_cast<size_t>(v.layer_id) + 1);
+    const uint32_t vertices_count = static_cast<uint32_t>(vertices.size());
+    layer_first_vertex.assign(layers_count, vertices_count);
+    for (uint32_t i = vertices_count; i > 0; --i) {
+        const uint32_t layer_id = vertices[i - 1].layer_id;
+        if (layer_id < layer_first_vertex.size())
+            layer_first_vertex[layer_id] = i - 1;
+    }
+    for (size_t i = layer_first_vertex.size(); i > 1; --i)
+        layer_first_vertex[i - 2] = std::min(layer_first_vertex[i - 2], layer_first_vertex[i - 1]);
+    std::array<float, libvgcode::TIME_MODES_COUNT> running{};
+    for (std::vector<float>& times : layer_start_times)
+        times.assign(layer_first_vertex.size(), 0.0f);
+    size_t layer = 0;
+    for (size_t i = 0; i <= vertices.size(); ++i) {
+        for (; layer < layer_first_vertex.size() && layer_first_vertex[layer] == i; ++layer)
+            for (size_t j = 0; j < libvgcode::TIME_MODES_COUNT; ++j)
+                layer_start_times[j][layer] = running[j];
+        if (i < vertices.size())
+            for (size_t j = 0; j < libvgcode::TIME_MODES_COUNT; ++j)
+                running[j] += vertices[i].times[j];
+    }
+    return { std::move(layer_first_vertex), std::move(layer_start_times) };
+}
+
 inline uint32_t bits(float value)
 {
     uint32_t result;
@@ -28,6 +63,7 @@ inline std::string text(float elapsed, float duration)
 
 inline nlohmann::json records(const std::vector<PathVertex>& vertices)
 {
+    const auto [layer_first_vertex, layer_start_times] = layer_caches(vertices);
     auto rows = nlohmann::json::array();
     for (size_t id = 0; id < vertices.size(); ++id) {
         const auto& vertex = vertices[id];
@@ -39,7 +75,7 @@ inline nlohmann::json records(const std::vector<PathVertex>& vertices)
             {"elapsedBits", nlohmann::json::array()}, {"text", nlohmann::json::array()}
         };
         for (size_t mode = 0; mode < libvgcode::TIME_MODES_COUNT; ++mode) {
-            const float elapsed = get_estimated_time_at(vertices, id, static_cast<ETimeMode>(mode));
+            const float elapsed = get_estimated_time_at(vertices, layer_first_vertex, layer_start_times, id, static_cast<ETimeMode>(mode));
             row["durationBits"].push_back(bits(vertex.times[mode]));
             row["elapsedBits"].push_back(bits(elapsed));
             row["text"].push_back(text(elapsed, vertex.times[mode]));
@@ -75,7 +111,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
     }
     const nlohmann::json data = {
         {"oracle", "native source-kernel (not full Viewer execution)"},
-        {"upstream", "8500fcdccaa10b5099ac20d252af3a7c560046f1"},
+        {"upstream", "345efec64c7b95a05ce5cf96df0dde66a158835c"},
         {"vertices", records(input.vertices)}, {"synthetic", records(synthetic)}, {"formats", formats}
     };
     std::ofstream out(path);
