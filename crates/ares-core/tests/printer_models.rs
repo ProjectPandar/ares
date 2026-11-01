@@ -136,13 +136,14 @@ fn printer_models_follow_the_system_group_key_order() {
     // std::map<wxString> keyed by printer_model, appended in key order
     // (:1324-1327, 1427). wxString::compare is std::basic_string::compare of
     // the wide representation (wxWidgets src/common/string.cpp), i.e. code
-    // point order. The 12 models of the 48 instantiable BBL machines
-    // (OrcaSlicer/resources/profiles/BBL/machine, printer_model through
-    // inherits) in that order; the machine_list order puts H2D/H2D Pro
-    // after X1E.
+    // point order. Beta 345efec64 resources/profiles/BBL.json:7-64 lists
+    // these 14 models in that same order (A2L:17-18, H2C:21-22).
+    // The machine_list order puts H2D/H2D Pro after X1E.
     let expected = [
         "Bambu Lab A1",
         "Bambu Lab A1 mini",
+        "Bambu Lab A2L",
+        "Bambu Lab H2C",
         "Bambu Lab H2D",
         "Bambu Lab H2D Pro",
         "Bambu Lab H2S",
