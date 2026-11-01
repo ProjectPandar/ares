@@ -3,11 +3,11 @@
 use crate::SliceError;
 
 use super::super::{
-    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaInts, OrcaString, OrcaStrings, Percent,
-    ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
-    ProcessFuzzySkinType, ProcessInfillPattern, ProcessIroningType, ProcessNoiseType,
-    ProcessSeamScarfType, ProcessWallDirection, ProcessWallSequence,
-    region_fields::region_option_fields,
+    FloatOrPercent, OrcaBool, OrcaBoolsNullable, OrcaFloat, OrcaFloatsNullable, OrcaInt, OrcaInts,
+    OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
+    ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode, ProcessFuzzySkinType,
+    ProcessInfillPattern, ProcessIroningType, ProcessNoiseType, ProcessSeamScarfType,
+    ProcessWallDirection, ProcessWallSequence, region_fields::region_option_fields,
 };
 use super::metadata::RegionMetadataCodec;
 

@@ -19,7 +19,7 @@ pub(super) fn find_max_speed(traversal: &PreparedPostClassicTraversal, object_in
     let region = source.region_overrides();
     let speeds = [
         global.region.inner_wall_speed.0,
-        global.region.outer_wall_speed.0,
+        global.region.outer_wall_speed.get_at(0),
         global.region.sparse_infill_speed.0,
         global.region.internal_solid_infill_speed.0,
         global.region.top_surface_speed.0,
@@ -37,8 +37,8 @@ pub(super) fn find_max_speed(traversal: &PreparedPostClassicTraversal, object_in
     } else {
         speeds[1]
     };
-    if let Some(speed) = region.outer_wall_speed {
-        outer = speed.0;
+    if let Some(speed) = &region.outer_wall_speed {
+        outer = speed.get_at(0);
     }
     // Model.cpp:58 value-initializes printSpeedMap; setPrintSpeedTable never
     // assigns smallPerimeterSpeed. Only an object key replaces that zero.

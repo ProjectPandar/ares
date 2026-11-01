@@ -1,9 +1,9 @@
 use super::{
-    FilamentRegionSourceOptions, FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaInts,
-    OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
-    ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode, ProcessFuzzySkinType,
-    ProcessInfillPattern, ProcessIroningType, ProcessNoiseType, ProcessRegionSourceOptions,
-    ProcessSeamScarfType, ProcessWallDirection, ProcessWallSequence,
+    FilamentRegionSourceOptions, FloatOrPercent, OrcaBool, OrcaBoolsNullable, OrcaFloat,
+    OrcaFloatsNullable, OrcaInt, OrcaInts, OrcaString, OrcaStrings, Percent,
+    ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
+    ProcessFuzzySkinType, ProcessInfillPattern, ProcessIroningType, ProcessNoiseType,
+    ProcessRegionSourceOptions, ProcessSeamScarfType, ProcessWallDirection, ProcessWallSequence,
     region_fields::region_option_fields,
 };
 
@@ -82,7 +82,8 @@ impl RegionOptions {
         filament: &FilamentRegionSourceOptions,
         sources: RegionOverrideSources<'_>,
         num_extruders: usize,
+        process_variant_indices: &[usize],
     ) -> Self {
-        merge::resolve(filament, sources, num_extruders)
+        merge::resolve(filament, sources, num_extruders, process_variant_indices)
     }
 }

@@ -326,13 +326,10 @@ fn insert_outer_wall_volumetric_speed(
     } else {
         region.outer_wall_line_width
     };
-    let nozzle = full
-        .project
-        .print
-        .nozzle_diameter
-        .0
-        .first()
-        .map_or(0.4, |diameter| diameter.0) as f32;
+    // GCode.cpp:760-774,4034-4037: physical nozzle for the initial filament.
+    let physical = crate::options::mapped_extruder_id(full, 0);
+    let diameters = &full.project.print.nozzle_diameter.0;
+    let nozzle = diameters.get(physical).unwrap_or(&diameters[0]).0 as f32;
     let flow = crate::project_slice::perimeters::flow::build_nonbridging_flow(
         selected_width,
         object.layer_height.0 as f32,
@@ -347,7 +344,7 @@ fn insert_outer_wall_volumetric_speed(
         .map_or(0.0, |speed| speed.0);
     config.insert(
         "outer_wall_volumetric_speed",
-        Value::number((region.outer_wall_speed.0 * flow.mm3_per_mm).min(maximum)),
+        Value::number((region.outer_wall_speed.get_at(physical) * flow.mm3_per_mm).min(maximum)),
     );
     Ok(())
 }

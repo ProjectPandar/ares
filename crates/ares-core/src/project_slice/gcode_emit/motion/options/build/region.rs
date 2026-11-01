@@ -88,8 +88,11 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     });
     options.inner_wall_speed =
         region.map_or(default.inner_wall_speed.0, |value| value.inner_wall_speed.0);
-    options.outer_wall_speed =
-        region.map_or(default.outer_wall_speed.0, |value| value.outer_wall_speed.0);
+    let slot = options.nozzle_config_index;
+    options.outer_wall_speed = region.map_or_else(
+        || default.outer_wall_speed.get_at(slot),
+        |value| value.outer_wall_speed.get_at(slot),
+    );
     let small_perimeter = region.map_or(default.small_perimeter_speed, |value| {
         value.small_perimeter_speed
     });
@@ -119,13 +122,14 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     options.ironing_speed = region.map_or(default.ironing_speed.0, |value| value.ironing_speed.0);
     options.gap_infill_speed =
         region.map_or(default.gap_infill_speed.0, |value| value.gap_infill_speed.0);
-    options.enable_overhang_speed = region.map_or(default.enable_overhang_speed.0, |value| {
-        value.enable_overhang_speed.0
-    });
-    options.slowdown_for_curled_perimeters = region
-        .map_or(default.slowdown_for_curled_perimeters.0, |value| {
-            value.slowdown_for_curled_perimeters.0
-        });
+    options.enable_overhang_speed = region.map_or_else(
+        || default.enable_overhang_speed.get_at(slot),
+        |value| value.enable_overhang_speed.get_at(slot),
+    );
+    options.slowdown_for_curled_perimeters = region.map_or_else(
+        || default.slowdown_for_curled_perimeters.get_at(slot),
+        |value| value.slowdown_for_curled_perimeters.get_at(slot),
+    );
     options.overhang_speed_bands = [
         Some(region.map_or(default.overhang_1_4_speed, |value| value.overhang_1_4_speed)),
         Some(region.map_or(default.overhang_2_4_speed, |value| value.overhang_2_4_speed)),

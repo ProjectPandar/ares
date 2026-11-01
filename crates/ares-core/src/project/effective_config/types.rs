@@ -8,6 +8,7 @@ pub(crate) struct BoundedResolvedProjectConfig {
     pub(crate) views: ProjectConfigViews,
     pub(crate) filament_variant_checkpoint: ProjectSettings,
     pub(crate) applied_filament_map: OrcaInts,
+    pub(crate) process_variant_indices: Vec<usize>,
     pub(crate) logical_filament_count: usize,
     pub(crate) usage: BoundedProjectUsage,
     pub(crate) print_object_count: usize,

@@ -47,7 +47,7 @@ pub(super) const LATE_TAIL_AFTER_MATERIAL_OPTION_DEFINITIONS: &[OptionDefinition
     definition!("outer_wall_flow_ratio", Float, "1"; true, false, "1"),
     definition!("outer_wall_jerk", Float, "9"; true, false, "9"),
     definition!("outer_wall_line_width", FloatOrPercent, "0"; true, false, "0"),
-    definition!("outer_wall_speed", Float, "60"; true, false, "60"),
+    definition!("outer_wall_speed", FloatsNullable, "60"; true, false, "60"),
     definition!("overhang_1_4_speed", FloatOrPercent, "0"; true, false, "0"),
     definition!("overhang_2_4_speed", FloatOrPercent, "0"; true, false, "0"),
     definition!("overhang_3_4_speed", FloatOrPercent, "0"; true, false, "0"),

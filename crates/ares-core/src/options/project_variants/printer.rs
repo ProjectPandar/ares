@@ -210,6 +210,24 @@ pub(super) fn materialize_process(
     settings: &mut ProjectSettings,
     indices: &[usize],
 ) -> Result<(), SliceError> {
+    settings.process.region.outer_wall_speed.0 = select_stride(
+        &settings.process.region.outer_wall_speed.0,
+        indices,
+        1,
+        "outer_wall_speed",
+    )?;
+    settings.process.region.enable_overhang_speed.0 = select_stride(
+        &settings.process.region.enable_overhang_speed.0,
+        indices,
+        1,
+        "enable_overhang_speed",
+    )?;
+    settings.process.region.slowdown_for_curled_perimeters.0 = select_stride(
+        &settings.process.region.slowdown_for_curled_perimeters.0,
+        indices,
+        1,
+        "slowdown_for_curled_perimeters",
+    )?;
     select_field!(
         settings.process.region.print_extruder_id,
         indices,

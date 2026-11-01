@@ -119,6 +119,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         (
             &resolved.views.full.filament.region,
             resolved.logical_filament_count,
+            resolved.process_variant_indices.as_slice(),
         ),
     )?;
     Ok(ProjectSliceState {

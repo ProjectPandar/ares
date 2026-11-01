@@ -69,6 +69,7 @@ pub(crate) fn resolve_project_candidates(
     validated: ValidatedMaterializedProject,
     objects: &[ProjectObject],
     grouped: &GroupedPrintObjects,
+    process_variant_indices: &[usize],
 ) -> Result<Vec<ResolvedProjectObject>, SliceError> {
     let mut resolved = resolve_project_objects(settings, validated, objects, grouped)?;
 
@@ -118,6 +119,7 @@ pub(crate) fn resolve_project_candidates(
                                 material: None,
                             },
                             validated.logical_filament_count,
+                            process_variant_indices,
                         ),
                     })
                     .collect();
@@ -137,6 +139,7 @@ pub(crate) fn resolve_project_candidates(
             resolved_object,
             &settings.filament.region,
             validated.logical_filament_count,
+            process_variant_indices,
         )
         .all_regions;
     }

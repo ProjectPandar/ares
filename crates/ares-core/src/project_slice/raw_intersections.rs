@@ -111,7 +111,11 @@ pub(super) fn intersect_projected_objects(
     resolved_objects: &[ResolvedProjectObject],
     projected_objects: Vec<ProjectedPrintObject>,
     scale: CoordinateScale,
-    (filament, logical_count): (&FilamentRegionSourceOptions, usize),
+    (filament, logical_count, process_variant_indices): (
+        &FilamentRegionSourceOptions,
+        usize,
+        &[usize],
+    ),
 ) -> Result<Vec<IntersectedPrintObject>, SliceError> {
     let mut budget = RawIntersectionBudget::new();
     let mut intersected_objects = Vec::with_capacity(projected_objects.len());
@@ -122,8 +126,15 @@ pub(super) fn intersect_projected_objects(
             .iter()
             .find(|resolved| resolved.source_object_index == plan.source_object_index)
             .expect("planned object must have resolved configuration");
-        let active_ranges = (resolved.layer_candidates.len() > 1)
-            .then(|| ranges::active_volume_ranges(source, resolved, filament, logical_count));
+        let active_ranges = (resolved.layer_candidates.len() > 1).then(|| {
+            ranges::active_volume_ranges(
+                source,
+                resolved,
+                filament,
+                logical_count,
+                process_variant_indices,
+            )
+        });
         let center =
             super::centering::center(source, &resolved.print_objects[plan.transform_index], scale)?;
         let centered_object_transform = resolved.print_objects[plan.transform_index]

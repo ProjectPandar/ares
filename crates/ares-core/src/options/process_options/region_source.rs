@@ -12,7 +12,8 @@ pub use enums::{
 };
 
 use super::super::{
-    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaInts, OrcaString, OrcaStrings, Percent,
+    FloatOrPercent, Nullable, OrcaBool, OrcaBoolsNullable, OrcaFloat, OrcaFloatsNullable, OrcaInt,
+    OrcaInts, OrcaString, OrcaStrings, Percent,
     option_group::declare_option_group,
     region_fields::{REGION_OPTION_DECLARATION_ORDER, region_option_fields},
 };

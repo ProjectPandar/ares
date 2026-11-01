@@ -4,6 +4,10 @@ mod defaults_nil;
 mod input;
 #[path = "nullable_vectors/mapped_nozzle.rs"]
 mod mapped_nozzle;
+#[path = "nullable_vectors/overlays.rs"]
+mod overlays;
+#[path = "nullable_vectors/scalar_authored.rs"]
+mod scalar_authored;
 
 use serde_json::{Map, Value, json};
 

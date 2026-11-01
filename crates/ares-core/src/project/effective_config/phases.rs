@@ -74,6 +74,7 @@ fn resolve_with_observer(
     let MaterializedProjectVariants {
         full: materialized,
         checkpoint: filament_variant_checkpoint,
+        process_variant_indices,
     } = materialize(first, MaterializationPass::First, observer)?;
     first = materialized;
     let first_validated = validate_materialized_project(&first, project)?;
@@ -109,7 +110,7 @@ fn resolve_with_observer(
         CandidatePass::Final,
         &first,
         first_validated,
-        (project, &grouped),
+        (project, &grouped, &process_variant_indices),
         observer,
     )?;
     let usage = collect_usage(
@@ -135,6 +136,7 @@ fn resolve_with_observer(
         views,
         filament_variant_checkpoint,
         applied_filament_map,
+        process_variant_indices,
         logical_filament_count: first_validated.logical_filament_count,
         usage,
         print_object_count,
@@ -146,10 +148,16 @@ fn resolve_candidates(
     pass: CandidatePass,
     settings: &ProjectSettings,
     validated: ValidatedMaterializedProject,
-    (project, grouped): (&Project, &GroupedPrintObjects),
+    (project, grouped, process_variant_indices): (&Project, &GroupedPrintObjects, &[usize]),
     observer: &mut impl PhaseObserver,
 ) -> Result<Vec<ResolvedProjectObject>, SliceError> {
-    let resolved = resolve_project_candidates(settings, validated, project.objects(), grouped)?;
+    let resolved = resolve_project_candidates(
+        settings,
+        validated,
+        project.objects(),
+        grouped,
+        process_variant_indices,
+    )?;
     observer.candidates(pass, &resolved);
     Ok(resolved)
 }

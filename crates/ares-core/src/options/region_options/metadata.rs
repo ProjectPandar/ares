@@ -8,10 +8,11 @@ use serde::{
 };
 
 use super::super::{
-    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaInts, OrcaString, OrcaStrings, Percent,
-    ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
-    ProcessFuzzySkinType, ProcessInfillPattern, ProcessIroningType, ProcessNoiseType,
-    ProcessSeamScarfType, ProcessWallDirection, ProcessWallSequence,
+    FloatOrPercent, OrcaBool, OrcaBoolsNullable, OrcaFloat, OrcaFloatsNullable, OrcaInt, OrcaInts,
+    OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
+    ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode, ProcessFuzzySkinType,
+    ProcessInfillPattern, ProcessIroningType, ProcessNoiseType, ProcessSeamScarfType,
+    ProcessWallDirection, ProcessWallSequence,
 };
 
 pub(super) trait RegionMetadataCodec: Sized {
@@ -48,6 +49,20 @@ lexical_codecs!(
     ProcessWallDirection,
     ProcessWallSequence,
 );
+
+macro_rules! nullable_vector_codecs {
+    ($($ty:ty => $kind:ident),* $(,)?) => {
+        $(impl RegionMetadataCodec for $ty {
+            fn deserialize_metadata(value: &str) -> Result<Self, String> {
+                let raw = crate::options::json_deserialize::decode(
+                    crate::OptionValueKind::$kind, value,
+                )?;
+                Self::deserialize(raw).map_err(|error| error.to_string())
+            }
+        })*
+    };
+}
+nullable_vector_codecs!(OrcaBoolsNullable => BoolsNullable, OrcaFloatsNullable => FloatsNullable);
 
 impl RegionMetadataCodec for OrcaInts {
     fn deserialize_metadata(value: &str) -> Result<Self, String> {

@@ -23,9 +23,9 @@ This is one rewrite slice for three existing options, not a new Ares pipeline:
 Rust destination: options registry/selected metadata, config codec and nullable
 vector types; ProcessRegionSourceOptions and region override/merge paths;
 existing selected-region/motion consumers and existing nozzle variant resolver.
-The present OrcaFloat/OrcaBool scalar fields in region_fields.rs and their
-registry kinds are temporary compatibility shells to replace, not preserve
-behind scalar/vector equality relaxations.
+The OrcaFloat/OrcaBool scalar compatibility shells in region_fields.rs and their
+registry kinds are replaced with nullable vectors, not preserved behind
+scalar/vector equality relaxations.
 
 ## Included and deferred behavior
 
@@ -48,8 +48,14 @@ Native output table or new production fallback.
 First tracer: Native --export-settings on a runtime project variant
 feeds all three canonical values to public ProcessRegionSourceOptions,
 SliceOptions, print_config_def_json and decode/encode APIs. Compare the full
-Native arrays and type/default/nil declarations; report all three gaps in one
-artifact before asserting. Do not call this a legacy-import leaf-DTO seam.
+Native wire-string arrays and type/default/nil declarations. The public codec's
+JSON is deliberately typed bool/number/null, whereas Native settings JSON
+contains vserialize strings. Compare complete typed codec arrays derived from
+Native values and require byte-exact encoding back to the Native wire; do not
+compare those two JSON representations directly or change codec output to
+wire strings. DTO and project-import checks still compare complete Native
+wire-string arrays. Report all three gaps in one artifact before asserting.
+Do not call this a legacy-import leaf-DTO seam.
 
 Subsequent public witnesses use load_project for actual project/default/nil
 application and slice_project_plate_validated output for mapped-nozzle effects,
@@ -69,7 +75,8 @@ repeatable external artifacts. No Native .gcode/goldens committed.
 - Nil becomes false/zero, disappears from mixed vectors or loses position.
 - Canonical vectors change length/order on encode/import/export.
 - Nil override incorrectly clobbers a parent/default or is always filled.
-- Runtime selects first/filament-id/physical-extruder instead of mapped slot.
+- Runtime selects an unconditional first or logical-filament slot instead of
+  the source-selected nozzle slot.
 - Out-of-range get_at or empty/default normalization differs from source.
 - any_enabled precomputation is mistaken for selected-nozzle behavior.
 - A later failure is relabelled PASS merely because shape admission unblocks.
@@ -87,8 +94,8 @@ PrintApply.cpp:1429 and PrintConfig.cpp:11661-11860 gather the physical columns:
 outer speeds [17,21,33,47] become [17,33], Boolean vectors become [0,1].
 Mapping the same logical filament to physical extruder 2 selects configuration
 slot 1. The independently replayed Native outer-wall channel contains F1980
-rather than physical-extruder-1 F1020; the public slicing API currently emits
-F1020 in both cases. This is a selected-feedrate witness, not a replacement
+rather than physical-extruder-1 F1020; the original public RED emitted F1020
+in both cases. This is a selected-feedrate witness, not a replacement
 whole-G-code comparator or complete stream parity claim.
 
 Default/nil witnesses use Native export with no input for true source defaults
@@ -98,6 +105,45 @@ defaults because the importer can seed profile-specific values. Source
 PrintConfig.hpp:887-890 explicitly includes the nonzero nil Boolean sentinel
 in any_enabled; Config.hpp:1992 does the same for const get_at. Preserve that
 behavior rather than invent nil-to-false or float-nil-to-60 substitution.
+
+## Bounded runtime and region-override rules
+
+Print.cpp:5008-5015,5153-5155 defines the ordinary path without a layered
+nozzle-group producer: the current logical filament maps to the physical
+extruder column, and an out-of-range filament argument returns physical0.
+Do not invent a canonical-variant search in that path. Existing printer/process
+variant gathering remains owned by project_variants; active layered grouping
+and its distinct get_config_index_base path remain deferred.
+
+GCode.cpp:760-774,4034-4037 selects the physical extruder for the initial
+outer_wall_volumetric_speed placeholder (and corresponding nozzle diameter),
+not unconditional column0. Retain the existing initial-filament compatibility
+shell; this does not introduce a new ToolOrdering engine. Model.cpp:3218,3485
+explicitly selects column0 for the brim speed table. Layer.cpp:168 passes the
+authored outer_wall_filament_id unchanged to Print::get_extruder_id; retain
+that literal argument and Print's miss rule rather than silently subtracting1.
+
+PrintApply.cpp:1413-1432 retains original process variant indices across
+materialization. Carry that single selection into model-part, modifier,
+material and layer-range resolution, rather than recomputing it from already
+reduced vectors. PrintObject.cpp:4363-4374 and PrintConfig.cpp:11421-11429 apply
+set_variant_override: a non-nil singleton broadcasts; other inputs use the
+original indices. Config.hpp:612-629 resizes from the source front and only
+assigns in-range non-nil source columns, retaining existing target columns
+for nil or absent inputs. A singleton nil therefore inherits, not a NaN
+motion speed or a generic false/default substitution. Apply this rule only
+to the three migrated fields; other40migrations remain deferred.
+
+Supplemental public sliced-output witnesses cover the mapped physical-nozzle
+placeholder and object-region overrides (multi-column remapping, non-nil
+singleton broadcast and singleton-nil inheritance). Native replay must be
+stable and the API admitted on identical inputs; preserve strict output-channel
+comparison without claiming complete G-code parity. A separate scalar-authored
+input witness passes identical original 3MF bytes independently to Native and
+load_project, never Native's re-export to Ares. This distinguishes genuine
+input-parser parity from a historical test comparing an authored scalar request
+to a canonical Native array. Any actual parser discrepancy remains a residual;
+rewriting test requests to source-kind arrays cannot hide it.
 
 A neighboring typed-printer change owns bed_exclude_volumes,
 bed_exclude_volume_mode and extruder_bed_exclude_volumes. This slice does not

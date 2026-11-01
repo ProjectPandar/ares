@@ -16,6 +16,6 @@ pub use scalar::{FloatOrPercent, Millimeters, OrcaFloat, Percent};
 pub use scalar_bool_int::{OrcaBool, OrcaInt, OrcaUInt};
 pub use scalar_nullable::Nullable;
 pub use vector::{
-    NullablePrinterTechnologies, OrcaBools, OrcaFloatOrPercents, OrcaFloats, OrcaInts,
-    OrcaPercents, PrinterTechnologies, PrinterTechnology,
+    NullablePrinterTechnologies, OrcaBools, OrcaBoolsNullable, OrcaFloatOrPercents, OrcaFloats,
+    OrcaFloatsNullable, OrcaInts, OrcaPercents, PrinterTechnologies, PrinterTechnology,
 };

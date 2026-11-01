@@ -30,6 +30,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
     let use_mach_limits = use_mach_limits(full.printer.gcode.gcode_flavor);
     let mut options = MotionOptions {
         adaptive_pa: crate::project_slice::gcode_emit::adaptive_pa::Options::new(full, filament),
+        nozzle_config_index: crate::options::mapped_extruder_id(full, filament),
         // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`
         // — the multiplication order matters for f64 parity with upstream.
         filament_area: filament_diameter * filament_diameter * 0.25 * std::f64::consts::PI,

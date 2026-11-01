@@ -86,7 +86,8 @@ pub(crate) const EXPLICIT_RULES: &[LegacyRule] = &[
     scalar("internal_solid_infill_speed", LegacyAction::ConsumeIfContains { needle: "%" }, "internal_solid_infill_speed"),
     scalar("top_surface_speed", LegacyAction::ConsumeIfContains { needle: "%" }, "top_surface_speed"),
     scalar("support_interface_speed", LegacyAction::ConsumeIfContains { needle: "%" }, "support_interface_speed"),
-    scalar("outer_wall_speed", LegacyAction::ConsumeIfContains { needle: "%" }, "outer_wall_speed"),
+    // Same comma-separated numeric wire; the destination float-vector DTO parses elements.
+    vector("outer_wall_speed", LegacyAction::ConsumeIfContains { needle: "%" }, "outer_wall_speed", VectorType::Ints),
     scalar("support_object_xy_distance", LegacyAction::ConsumeIfContains { needle: "%" }, "support_object_xy_distance"),
     LegacyRule { wire: WireContract::scalar("only_one_wall_top", "1"), ..scalar("top_one_wall_type", LegacyAction::TopOneWall { target: "only_one_wall_top", consume: "none", replacement: "1" }, "only_one_wall_top") },
     LegacyRule { wire: WireContract { json_array: JsonArrayAllowance::ConsumeFirstPass, vector: None, empty_first_pass: EmptyValueAction::Consume, ..WireContract::scalar("wipe_tower_wall_type", "") }, ..scalar("prime_tower_rib_wall", LegacyAction::PrimeTowerRib { target: "wipe_tower_wall_type", trigger: "1", replacement: "rib" }, "wipe_tower_wall_type") },

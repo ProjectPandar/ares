@@ -54,7 +54,7 @@ pub(in crate::project_slice) fn estimate(
         if !resolved
             .all_regions
             .iter()
-            .any(|region| region.enable_overhang_speed.0)
+            .any(|region| region.enable_overhang_speed.any_enabled())
         {
             objects.push(Vec::new());
             continue;

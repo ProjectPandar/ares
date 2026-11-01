@@ -104,8 +104,11 @@ pub(super) fn prepare_post_regions(
                     source,
                     resolved_object,
                     &bounded,
-                    &resolved.views.full.filament.region,
-                    resolved.logical_filament_count,
+                    (
+                        &resolved.views.full.filament.region,
+                        resolved.logical_filament_count,
+                        resolved.process_variant_indices.as_slice(),
+                    ),
                 );
                 painting.push(region_slices::painted::ObjectRegions::new(
                     &graph,

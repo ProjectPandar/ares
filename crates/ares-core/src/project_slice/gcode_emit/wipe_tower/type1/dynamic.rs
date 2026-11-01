@@ -35,8 +35,8 @@ pub(super) fn insert(
         settings.process.object.layer_height.0 as f32,
         at(&settings.project.print.nozzle_diameter.0, nozzle).0 as f32,
     )?;
-    let speed =
-        (f64::from(settings.process.region.outer_wall_speed.0 as f32) * flow.mm3_per_mm) as f32;
+    let speed = (f64::from(settings.process.region.outer_wall_speed.get_at(nozzle) as f32)
+        * flow.mm3_per_mm) as f32;
     config.insert(
         "outer_wall_volumetric_speed",
         Value::number(f64::from(speed.min(

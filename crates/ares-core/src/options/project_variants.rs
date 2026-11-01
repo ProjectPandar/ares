@@ -14,6 +14,8 @@ use crate::{
 pub(crate) struct MaterializedProjectVariants {
     pub(crate) full: ProjectSettings,
     pub(crate) checkpoint: ProjectSettings,
+    // PrintApply.cpp:1413-1432 retains this selection for region overlays.
+    pub(crate) process_variant_indices: Vec<usize>,
 }
 
 pub(crate) fn materialize_project_variants(
@@ -29,6 +31,7 @@ pub(crate) fn materialize_project_variants(
         return Ok(MaterializedProjectVariants {
             full: materialized,
             checkpoint,
+            process_variant_indices: vec![0],
         });
     };
 
@@ -49,6 +52,7 @@ pub(crate) fn materialize_project_variants(
     Ok(MaterializedProjectVariants {
         full: materialized,
         checkpoint,
+        process_variant_indices: process_indices,
     })
 }
 
@@ -69,6 +73,19 @@ pub(crate) fn refresh_filament_map(
     }
     // Print.cpp:3193-3195 applies the newly computed retract overrides last.
     crate::options::project_config_views::resolve_project_config_views(refreshed)
+}
+
+// Print.cpp:5008-5015,5153-5155: without a layered grouping producer,
+// the nozzle config index is the mapped physical extruder, not a variant search.
+// Layered/dynamic multi-nozzle grouping remains outside this rewrite slice.
+pub(crate) fn mapped_extruder_id(settings: &ProjectSettings, filament: usize) -> usize {
+    settings
+        .project
+        .gcode
+        .filament_map
+        .0
+        .get(filament)
+        .map_or(0, |id| (id.0 - 1) as usize)
 }
 
 fn expanded_filament_map(source: &ProjectSettings, map: &OrcaInts) -> OrcaInts {

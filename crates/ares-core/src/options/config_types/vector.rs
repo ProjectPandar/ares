@@ -27,6 +27,43 @@ macro_rules! numeric_vector {
 }
 
 numeric_vector!(OrcaBools, OrcaBool, CONFIG_OPTION_NUMERIC_VECTOR);
+numeric_vector!(
+    OrcaBoolsNullable,
+    Nullable<OrcaBool>,
+    CONFIG_OPTION_NULLABLE_VECTOR
+);
+numeric_vector!(
+    OrcaFloatsNullable,
+    Nullable<OrcaFloat>,
+    CONFIG_OPTION_NULLABLE_VECTOR
+);
+
+impl OrcaFloatsNullable {
+    // Config.hpp:676-682 and ConfigOptionFloatsNullable's NaN sentinel.
+    pub(crate) fn get_at(&self, index: usize) -> f64 {
+        match self.0.get(index).unwrap_or(&self.0[0]) {
+            Nullable::Value(value) => value.0,
+            Nullable::Nil => f64::NAN,
+        }
+    }
+}
+
+impl OrcaBoolsNullable {
+    // Config.hpp:1992: the nil byte is nonzero, not an inferred false.
+    pub(crate) fn get_at(&self, index: usize) -> bool {
+        !matches!(
+            self.0.get(index).unwrap_or(&self.0[0]),
+            Nullable::Value(OrcaBool(false))
+        )
+    }
+
+    // PrintConfig.hpp:887-890 includes nil in any_enabled.
+    pub(crate) fn any_enabled(&self) -> bool {
+        self.0
+            .iter()
+            .any(|value| !matches!(value, Nullable::Value(OrcaBool(false))))
+    }
+}
 numeric_vector!(OrcaInts, OrcaInt, CONFIG_OPTION_INTS);
 numeric_vector!(OrcaFloats, OrcaFloat, CONFIG_OPTION_NUMERIC_VECTOR);
 numeric_vector!(OrcaPercents, Percent, CONFIG_OPTION_NUMERIC_VECTOR);

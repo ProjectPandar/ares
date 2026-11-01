@@ -121,8 +121,8 @@ use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{
     InternalBridgeFanSpeed, LayerRoleFanControl, PartCoolingFanRamp, PartCoolingFanRampConfig,
 };
-pub(crate) use project_variants::refresh_filament_map;
 pub(crate) use project_variants::{MaterializedProjectVariants, materialize_project_variants};
+pub(crate) use project_variants::{mapped_extruder_id, refresh_filament_map};
 #[cfg_attr(not(test), allow(unused_imports))]
 pub(crate) use region_options::{
     RegionBase, RegionOptionOverrides, RegionOverrideSources, unescape_strings_cstyle,
@@ -134,10 +134,10 @@ pub use {
     bed_temperature::BedTemperatureFormula,
     config_types::{
         AmsCounts, CsvTable, FlatMatrix, FloatOrPercent, Millimeters, Nullable,
-        NullablePrinterTechnologies, OrcaBool, OrcaBools, OrcaFloat, OrcaFloatOrPercents,
-        OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaString, OrcaStrings, OrcaUInt, Percent,
-        Point2d, Point2dGroups, Point2dList, PrinterTechnologies, PrinterTechnology,
-        RammingParameters, SpaceTuple, VariantStride,
+        NullablePrinterTechnologies, OrcaBool, OrcaBools, OrcaBoolsNullable, OrcaFloat,
+        OrcaFloatOrPercents, OrcaFloats, OrcaFloatsNullable, OrcaInt, OrcaInts, OrcaPercents,
+        OrcaString, OrcaStrings, OrcaUInt, Percent, Point2d, Point2dGroups, Point2dList,
+        PrinterTechnologies, PrinterTechnology, RammingParameters, SpaceTuple, VariantStride,
     },
     filament_options::{
         FilamentGCodeSourceOptions, FilamentOptions, FilamentPrintSourceOptions,

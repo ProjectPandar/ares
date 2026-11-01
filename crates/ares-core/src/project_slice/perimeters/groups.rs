@@ -20,10 +20,11 @@ pub(super) struct PerimeterGroup {
 pub(super) fn prepare(
     regions: &[PostRegion],
     layer_count: usize,
+    filament_map: &[crate::OrcaInt],
 ) -> Result<Vec<PerimeterGroup>, SliceError> {
     let mut groups = Vec::new();
     for layer_index in 0..layer_count {
-        prepare_layer(regions, layer_index, &mut groups)?;
+        prepare_layer(regions, layer_index, &mut groups, filament_map)?;
     }
     Ok(groups)
 }
@@ -32,6 +33,7 @@ fn prepare_layer(
     regions: &[PostRegion],
     layer_index: usize,
     groups: &mut Vec<PerimeterGroup>,
+    filament_map: &[crate::OrcaInt],
 ) -> Result<(), SliceError> {
     let mut done = vec![false; regions.len()];
     for (region_index, region) in regions.iter().enumerate() {
@@ -47,7 +49,7 @@ fn prepare_layer(
         let mut owner = first;
         for (other_index, other) in regions.iter().enumerate().skip(region_index + 1) {
             if other.layers[layer_index].surfaces.is_empty()
-                || !compatibility::is_compatible(&region.options, &other.options)
+                || !compatibility::is_compatible(&region.options, &other.options, filament_map)
             {
                 continue;
             }

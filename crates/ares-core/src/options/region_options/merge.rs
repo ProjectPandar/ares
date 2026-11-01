@@ -16,6 +16,7 @@ pub(super) fn resolve(
     filament: &FilamentRegionSourceOptions,
     sources: RegionOverrideSources<'_>,
     num_extruders: usize,
+    process_variant_indices: &[usize],
 ) -> RegionOptions {
     let (mut options, mut mask, layer_range) = match sources.base {
         RegionBase::ModelPart {
@@ -26,7 +27,7 @@ pub(super) fn resolve(
             let mut options = RegionOptions::from_base(process);
             let mut mask = FeatureFilamentOverrideMask::from_model_part(&options);
             if let Some(object) = object {
-                apply_overrides(&mut options, object, &mut mask);
+                apply_overrides(&mut options, object, &mut mask, process_variant_indices);
             }
             (options, mask, layer_range)
         }
@@ -37,12 +38,22 @@ pub(super) fn resolve(
         ),
     };
 
-    apply_overrides(&mut options, sources.volume, &mut mask);
+    apply_overrides(
+        &mut options,
+        sources.volume,
+        &mut mask,
+        process_variant_indices,
+    );
     if let Some(material) = sources.material {
-        apply_overrides(&mut options, material, &mut mask);
+        apply_overrides(&mut options, material, &mut mask, process_variant_indices);
     }
     if let Some(layer_range) = layer_range {
-        apply_overrides(&mut options, layer_range, &mut mask);
+        apply_overrides(
+            &mut options,
+            layer_range,
+            &mut mask,
+            process_variant_indices,
+        );
     }
     normalization::normalize(&mut options, num_extruders);
     select_ironing(&mut options, filament);
@@ -105,6 +116,7 @@ fn apply_overrides(
     options: &mut RegionOptions,
     source: &RegionOptionOverrides,
     mask: &mut FeatureFilamentOverrideMask,
+    process_variant_indices: &[usize],
 ) {
     macro_rules! apply_fields {
         ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
@@ -112,6 +124,28 @@ fn apply_overrides(
         };
     }
     region_option_fields!(apply_fields);
+
+    if let Some(value) = &source.outer_wall_speed {
+        apply_nullable_vector(
+            &mut options.outer_wall_speed.0,
+            &value.0,
+            process_variant_indices,
+        );
+    }
+    if let Some(value) = &source.enable_overhang_speed {
+        apply_nullable_vector(
+            &mut options.enable_overhang_speed.0,
+            &value.0,
+            process_variant_indices,
+        );
+    }
+    if let Some(value) = &source.slowdown_for_curled_perimeters {
+        apply_nullable_vector(
+            &mut options.slowdown_for_curled_perimeters.0,
+            &value.0,
+            process_variant_indices,
+        );
+    }
 
     if let Some(extruder) = source.extruder.filter(|value| value.0 > 0) {
         apply_fallbacks!(options, mask, extruder;
@@ -168,11 +202,40 @@ macro_rules! apply_field {
             &mut $mask.inner_wall_filament_id,
         );
     };
+    // These three source-owned vectors use set_variant_override below, not replacement.
+    ($options:ident, $source:ident, $mask:ident, outer_wall_speed) => {};
+    ($options:ident, $source:ident, $mask:ident, enable_overhang_speed) => {};
+    ($options:ident, $source:ident, $mask:ident, slowdown_for_curled_perimeters) => {};
     ($options:ident, $source:ident, $mask:ident, $field:ident) => {
         if let Some(value) = &$source.$field {
             $options.$field = value.clone();
         }
     };
+}
+
+// PrintObject.cpp:4363-4374; PrintConfig.cpp:11421-11429; Config.hpp:612-629.
+// Non-nil singletons broadcast. Nil/out-of-range source columns retain the target.
+fn apply_nullable_vector<T: Clone + PartialEq>(
+    target: &mut Vec<Nullable<T>>,
+    source: &[Nullable<T>],
+    indices: &[usize],
+) {
+    if target.as_slice() == source {
+        return;
+    }
+    if indices.is_empty() {
+        target.clear();
+        target.extend_from_slice(source);
+        return;
+    }
+    target.resize(indices.len(), source[0].clone());
+    let broadcast = source.len() == 1 && !matches!(source[0], Nullable::Nil);
+    for (value, &index) in target.iter_mut().zip(indices) {
+        let index = if broadcast { 0 } else { index };
+        if let Some(selected @ Nullable::Value(_)) = source.get(index) {
+            value.clone_from(selected);
+        }
+    }
 }
 
 macro_rules! apply_fallbacks {

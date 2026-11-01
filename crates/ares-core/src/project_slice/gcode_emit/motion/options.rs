@@ -29,6 +29,7 @@ pub(in crate::project_slice::gcode_emit) struct ScarfOptions {
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) adaptive_pa: super::super::adaptive_pa::Options,
     pub(in crate::project_slice::gcode_emit) filament_area: f64,
+    pub(in crate::project_slice::gcode_emit) nozzle_config_index: usize,
     /// `filament_density` g/cc for the `extruded_weight`
     /// placeholders (`Extruder.cpp:133-135`).
     pub(in crate::project_slice::gcode_emit) filament_density: f64,

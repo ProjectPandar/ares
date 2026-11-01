@@ -7,7 +7,7 @@ use std::{
     io::{Cursor, Write},
 };
 
-fn mapped_project(source: &[u8], physical: u8) -> Vec<u8> {
+pub(super) fn mapped_project(source: &[u8], physical: u8) -> Vec<u8> {
     let updates = json!({
         "filament_map_mode": "Manual",
         "filament_map": [physical.to_string(), physical.to_string()],
@@ -52,7 +52,7 @@ fn config_token<'a>(text: &'a str, key: &str) -> &'a str {
 
 // Observe one output channel, not a replacement whole-G-code comparator.
 // First-layer outer walls retain their independent initial-layer feedrate.
-fn outer_feedrates(text: &str) -> BTreeSet<String> {
+pub(super) fn outer_feedrates(text: &str) -> BTreeSet<String> {
     let mut role = "";
     let mut feed = "";
     let mut result = BTreeSet::new();
@@ -159,5 +159,79 @@ fn native_nonzero_nozzle_slot_selects_public_outer_wall_feedrate() {
     assert!(
         failures.is_empty(),
         "mapped nozzle public output: {failures:?}"
+    );
+}
+
+#[test]
+fn native_outer_wall_volumetric_placeholder_selects_physical_nozzle() {
+    let source = fs::read(repo_root().join("tests/parity/nozzle-flush-dataset/D0.3mf")).unwrap();
+    let mut failures = Vec::new();
+    let mut native_values = Vec::new();
+    for physical in [1u8, 2] {
+        let mapped = mapped_project(&source, physical);
+        let project = super::input::settings_variant(
+            &mapped,
+            json!({"machine_start_gcode": "; NULLABLE_OUTER_VOLUME {outer_wall_volumetric_speed}\n"})
+                .as_object().unwrap(),
+        );
+        let (reference, _) = native_stream_case::qualify(
+            (
+                "nullable-nozzle-placeholder",
+                &[
+                    "GCode.cpp:760-774 get_outer_wall_volumetric_speed physical extruder_id",
+                    "GCode.cpp:4034-4037 initial non-support filament placeholder",
+                ],
+            ),
+            &format!("physical-{physical}"),
+            &project,
+            &sha(&project),
+            false,
+        );
+        let channel = |text: &str| {
+            text.lines()
+                .find_map(|line| line.strip_prefix("; NULLABLE_OUTER_VOLUME "))
+                .unwrap()
+                .to_owned()
+        };
+        let native = channel(&reference.native);
+        native_values.push(native.clone());
+        let result = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(ares_core::slice_project_plate_validated(
+                &project,
+                GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+                None,
+                &ConfigOverrides::default(),
+                SlicerContext::new(0),
+            ));
+        let api = result.as_ref().ok().map(|bytes| {
+            fs::write(reference.root.join("ares.api.gcode"), bytes).unwrap();
+            channel(std::str::from_utf8(bytes).unwrap())
+        });
+        let matches = api.as_ref() == Some(&native);
+        fs::write(
+            reference.root.join("mapped-placeholder-comparison.json"),
+            serde_json::to_vec_pretty(&json!({
+                "physical_extruder": physical, "input_sha256": sha(&project),
+                "native": native, "api": api, "channel_matches": matches,
+                "api_error": result.as_ref().err().map(|error| format!("{error:?}")),
+                "complete_gcode_parity_claimed": false,
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        if !matches {
+            failures.push(reference.root);
+        }
+    }
+    assert_ne!(
+        native_values[0], native_values[1],
+        "Native must select distinct physical slots"
+    );
+    assert!(
+        failures.is_empty(),
+        "mapped placeholder public output: {failures:?}"
     );
 }

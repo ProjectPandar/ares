@@ -12,8 +12,15 @@ pub(super) fn active_volume_ranges(
     resolved: &ResolvedProjectObject,
     filament: &FilamentRegionSourceOptions,
     logical_count: usize,
+    process_variant_indices: &[usize],
 ) -> Vec<Vec<(f64, f64)>> {
-    let graph = object_region_graph(source, resolved, filament, logical_count);
+    let graph = object_region_graph(
+        source,
+        resolved,
+        filament,
+        logical_count,
+        process_variant_indices,
+    );
     (0..source.volumes().len())
         .map(|index| {
             graph

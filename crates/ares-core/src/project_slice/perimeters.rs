@@ -117,7 +117,13 @@ pub(super) fn finish_post_perimeter_inputs(
         scale,
         objects,
     } = prepared;
-    let objects = prepare_perimeter_contexts(objects, flows, &resolved.objects, spiral_mode)?;
+    let objects = prepare_perimeter_contexts(
+        objects,
+        flows,
+        &resolved.objects,
+        spiral_mode,
+        &resolved.views.full.project.gcode.filament_map.0,
+    )?;
     Ok(PreparedPostPerimeterInputs {
         project,
         resolved,

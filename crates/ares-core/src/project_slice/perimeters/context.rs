@@ -15,6 +15,7 @@ pub(in crate::project_slice) fn prepare_perimeter_contexts(
     flows: Vec<PreparedObjectFlows>,
     resolved_objects: &[ResolvedProjectObject],
     spiral_mode: bool,
+    filament_map: &[crate::OrcaInt],
 ) -> Result<Vec<PostPerimeterInputPrintObject>, crate::SliceError> {
     let contexts = resolved_objects
         .iter()
@@ -38,7 +39,7 @@ pub(in crate::project_slice) fn prepare_perimeter_contexts(
                 prepare_object_contexts(&object, flows, resolved, transform_index, spiral_mode);
             let (post_regions, _) = object.as_parts();
             let (plan, _, regions) = post_regions.as_parts();
-            let groups = super::groups::prepare(regions, plan.layers.len())?;
+            let groups = super::groups::prepare(regions, plan.layers.len(), filament_map)?;
             let mut record_groups = vec![None; records.len()];
             for (group_index, group) in groups.iter().enumerate() {
                 for member in &group.members {

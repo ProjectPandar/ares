@@ -34,6 +34,7 @@ pub(crate) fn object_region_graph(
     resolved: &ResolvedProjectObject,
     filament: &FilamentRegionSourceOptions,
     logical_count: usize,
+    process_variant_indices: &[usize],
 ) -> RegionGraph {
     let candidates = &resolved.layer_candidates;
     let mut boxes = vec![vec![None; source.volumes().len()]; candidates.len()];
@@ -71,15 +72,23 @@ pub(crate) fn object_region_graph(
             }
         }
     }
-    build_region_graph(source, candidates, &boxes, filament, logical_count)
+    build_region_graph(
+        source,
+        candidates,
+        &boxes,
+        (filament, logical_count, process_variant_indices),
+    )
 }
 
 pub(crate) fn build_region_graph(
     source: &ProjectObject,
     candidates: &[ResolvedLayerCandidate],
     boxes: &[Vec<Option<BoundingBox3f>>],
-    filament: &FilamentRegionSourceOptions,
-    logical_count: usize,
+    (filament, logical_count, process_variant_indices): (
+        &FilamentRegionSourceOptions,
+        usize,
+        &[usize],
+    ),
 ) -> RegionGraph {
     let mut graph = RegionGraph {
         all_regions: Vec::new(),
@@ -118,8 +127,7 @@ pub(crate) fn build_region_graph(
                     records,
                     &mut graph.all_regions,
                     (source_volume_index, volume, bbox),
-                    filament,
-                    logical_count,
+                    (filament, logical_count, process_variant_indices),
                 ),
                 ProjectVolumeType::SupportEnforcer | ProjectVolumeType::SupportBlocker => {}
             }
@@ -154,8 +162,11 @@ fn add_modifier(
     records: &mut Vec<VolumeRegion>,
     regions: &mut Vec<RegionOptions>,
     (source_volume_index, volume, bbox): (usize, &ProjectVolume, BoundingBox3f),
-    filament: &FilamentRegionSourceOptions,
-    logical_count: usize,
+    (filament, logical_count, process_variant_indices): (
+        &FilamentRegionSourceOptions,
+        usize,
+        &[usize],
+    ),
 ) {
     let mut added = false;
     let mut fallback = None;
@@ -179,6 +190,7 @@ fn add_modifier(
                 material: None,
             },
             logical_count,
+            process_variant_indices,
         );
         if child != regions[parent_id] {
             let region_id = register_region(regions, child);

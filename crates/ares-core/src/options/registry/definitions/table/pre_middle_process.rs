@@ -33,7 +33,7 @@ pub(super) const PRE_MIDDLE_PROCESS_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("enable_long_retraction_when_cut", Int, "0"; true, false, "0"),
     definition!("enable_mixed_color_sublayer", Bool, "false"; true, false, "0"),
     definition!("enable_overhang_bridge_fan", Bools, "true"; true, false, "1"),
-    definition!("enable_overhang_speed", Bool, "true"; true, false, "1"),
+    definition!("enable_overhang_speed", BoolsNullable, "1"; true, false, "1"),
     definition!("enable_power_loss_recovery", Enum, "printer_configuration"; true, false, "printer_configuration"),
     definition!("enable_pre_heating", Bool, "false"; true, false, "0"),
     definition!("enable_pressure_advance", Bools, "false"; true, false, "0"),

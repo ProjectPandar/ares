@@ -36,10 +36,19 @@ pub(super) fn build_volume_region_graph(
     source: &ProjectObject,
     resolved: &ResolvedProjectObject,
     bounded: &BoundedPrintObject,
-    filament: &FilamentRegionSourceOptions,
-    logical_filament_count: usize,
+    (filament, logical_filament_count, process_variant_indices): (
+        &FilamentRegionSourceOptions,
+        usize,
+        &[usize],
+    ),
 ) -> (VolumeRegionGraph, PaintedRegions) {
-    let graph = object_region_graph(source, resolved, filament, logical_filament_count);
+    let graph = object_region_graph(
+        source,
+        resolved,
+        filament,
+        logical_filament_count,
+        process_variant_indices,
+    );
     let ranges = graph
         .ranges
         .into_iter()

@@ -59,5 +59,5 @@ pub(super) const TAIL_RAFT_SUFFIX_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("slow_down_layers", Int, "0"; true, false, "0"),
     definition!("slow_down_min_speed", Floats, "10"; true, false, "10"),
     definition!("slow_tilt_time", Float, "8"; false, false, ""),
-    definition!("slowdown_for_curled_perimeters", Bool, "false"; true, false, "0"),
+    definition!("slowdown_for_curled_perimeters", BoolsNullable, "0"; true, false, "0"),
 ];
