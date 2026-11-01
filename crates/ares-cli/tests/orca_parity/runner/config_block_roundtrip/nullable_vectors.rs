@@ -1,3 +1,10 @@
+#[path = "nullable_vectors/defaults_nil.rs"]
+mod defaults_nil;
+#[path = "nullable_vectors/input.rs"]
+mod input;
+#[path = "nullable_vectors/mapped_nozzle.rs"]
+mod mapped_nozzle;
+
 use serde_json::{Map, Value, json};
 
 #[test]

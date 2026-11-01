@@ -77,3 +77,29 @@ repeatable external artifacts. No Native .gcode/goldens committed.
 First qualify Native and public RED, then commit RED. No production migration
 before that artifact. Exact affected surviving ledger replays remain bounded
 and separately account downstream residuals; no FULL.
+
+## Qualified runtime selection boundary
+
+The bounded nozzle witness starts from unchanged nozzle-flush-dataset/D0.3mf,
+uses Manual filament mapping in project and plate settings, disables the prime
+tower and layer cooling, and authors distinct four-column process vectors.
+PrintApply.cpp:1429 and PrintConfig.cpp:11661-11860 gather the physical columns:
+outer speeds [17,21,33,47] become [17,33], Boolean vectors become [0,1].
+Mapping the same logical filament to physical extruder 2 selects configuration
+slot 1. The independently replayed Native outer-wall channel contains F1980
+rather than physical-extruder-1 F1020; the public slicing API currently emits
+F1020 in both cases. This is a selected-feedrate witness, not a replacement
+whole-G-code comparator or complete stream parity claim.
+
+Default/nil witnesses use Native export with no input for true source defaults
+[1]/[0]/[60], and runtime 3MF variants for mixed/all-nil DTO and load_project
+retention. Removing a key from a historical project does not prove registry
+defaults because the importer can seed profile-specific values. Source
+PrintConfig.hpp:887-890 explicitly includes the nonzero nil Boolean sentinel
+in any_enabled; Config.hpp:1992 does the same for const get_at. Preserve that
+behavior rather than invent nil-to-false or float-nil-to-60 substitution.
+
+A neighboring typed-printer change owns bed_exclude_volumes,
+bed_exclude_volume_mode and extruder_bed_exclude_volumes. This slice does not
+change their declarations; shared schema/export files must retain those
+records when the printer prerequisite is integrated.
