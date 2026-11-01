@@ -6,7 +6,7 @@
 use crate::geometry::{Point, Polygon};
 use crate::{BedExcludeVolumeMode, DynamicPrintConfig};
 
-mod intersection;
+pub(crate) mod intersection;
 
 pub use intersection::model_part_intersects_region;
 

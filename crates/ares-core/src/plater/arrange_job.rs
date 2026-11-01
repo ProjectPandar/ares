@@ -1,9 +1,8 @@
 //! The GUI arrange job (`src/slic3r/GUI/Jobs/ArrangeJob.cpp` at v2.5.0-beta `345efec64`) on the
 //! plater session: `prepare`, `check_unprintable`, `process` and `finalize`
 //! (`:342-414, 532-599, 632-965`) over the plate list, running `arrangement::arrange`, with the
-//! prime tower. Locked plates, per-object skirts, the BBL calibration strip, several nozzles'
-//! shared bed and a prime tower beside a bed exclude area are not ported yet; projects needing
-//! them are rejected.
+//! prime tower. Locked plates, per-object skirts, the BBL calibration strip and several nozzles'
+//! shared bed are not ported yet; projects needing them are rejected.
 
 mod finalize;
 mod params;
@@ -24,7 +23,6 @@ use crate::arrangement::{
     update_arrange_params, update_selected_items_axis_align, update_selected_items_inflation,
     update_unselected_items_inflation,
 };
-use crate::bed_exclusion::has_bed_exclude_volumes;
 use crate::geometry::fixed_gcc_sort_by;
 use crate::options::{ProcessTimelapseType, ProjectSettings};
 use crate::project::raw_settings::RawConfigValue;
@@ -90,18 +88,6 @@ fn needs_wipe_tower(
             .extend(&item.extrude_ids);
     }
     by_bed_temperature.values().any(|ids| ids.len() > 1)
-}
-
-/// Whether `GLCanvas3D::reload_scene` may show a tower on a plate (`GLCanvas3D.cpp:3565-3587`):
-/// the prime tower enabled with a smooth timelapse, wrapping detection or several filaments.
-/// `prepare_wipe_tower` and `prepare_partplate` take a shown tower as a fixed item (`:504-509,
-/// 588-591`); the per-plate conditions of the shown tower are A3b.
-fn may_show_wipe_tower(settings: &ProjectSettings) -> bool {
-    let print = &settings.process.print;
-    print.enable_prime_tower.0
-        && (print.timelapse_type == ProcessTimelapseType::Smooth
-            || settings.process.gcode.enable_wrapping_detection.0
-            || settings.filament.gcode.filament_colour.0.len() > 1)
 }
 
 /// `process`'s BBL first-layer-scan calibration strip (`ArrangeJob.cpp:731-734`).
@@ -180,20 +166,7 @@ impl PlaterSession {
             Some(plate) => self.prepare_partplate(plate),
         };
         let aps: Vec<ArrangePolygon> = prepared.selected.iter().map(|(_, ap)| ap.clone()).collect();
-        // The tower estimate counts the instances a plate holds whole; `check_outside`'s config
-        // region branch (`PartPlate.cpp:4562-4601`), which tests the tower against legacy areas
-        // and collision volumes, is A2b2's boundary.
         let full = DynamicPrintConfig::new(project_settings)?;
-        let tower_path = may_show_wipe_tower(project_settings)
-            || (current.is_none()
-                && !params.is_seq_print
-                && needs_wipe_tower(project_settings, &params, &aps));
-        if tower_path
-            && (project_settings.printer.remaining.bed_exclude_area.0.len() >= 3
-                || has_bed_exclude_volumes(&full))
-        {
-            return Err(unsupported("with a prime tower beside a bed exclude area"));
-        }
         if needs_calibration_strip(&self.project, &params) {
             return Err(unsupported("around the first-layer scan region"));
         }

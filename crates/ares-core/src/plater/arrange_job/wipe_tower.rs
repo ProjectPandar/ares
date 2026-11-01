@@ -115,11 +115,19 @@ fn preview_box(
 
 impl PlaterSession {
     /// `PartPlate::printable_instance_size`: the plate's printable instances not outside it.
-    fn printable_instance_size(&self, plate: usize) -> Result<usize, SliceError> {
+    fn printable_instance_size(
+        &self,
+        plate: usize,
+        config: &DynamicPrintConfig,
+    ) -> Result<usize, SliceError> {
         let mut size = 0;
         for &key in &self.plates.plates[plate].instances {
             let printable = self.project.objects()[key.0].instances()[key.1].printable();
-            if printable && self.plates.contains_totally(plate, key, &self.project)? {
+            if printable
+                && self
+                    .plates
+                    .contains_totally(plate, key, &self.project, config)?
+            {
                 size += 1;
             }
         }
@@ -147,7 +155,7 @@ impl PlaterSession {
                 .map_or(global_by_object, |sequence| {
                     sequence == ProcessPrintSequence::ByObject
                 });
-            if by_object && self.printable_instance_size(plate)? != 1 {
+            if by_object && self.printable_instance_size(plate, config)? != 1 {
                 continue;
             }
             if self.plates.plates[plate].instances.is_empty() {

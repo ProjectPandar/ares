@@ -96,7 +96,7 @@ Every `file:line` is at `345efec64`. `bed_exclude_volumes` are 3D keep-outs: a b
   - It needs `ModelInstance::intersects_bed_exclude_region` (`Model.cpp:3753-3836`).
   - The per-polygon `bed_exclusion_extruder_ids` (`ArrangeJob.cpp:53-103`) and `bed_exclusion_extruder_for_filament` (`PrintConfig.cpp:14187-14209`) are GUI-only as well.
   - Their oracle is the upstream Model and filament-mapping cases (`test_exclusion_volumes.cpp:486, 542-574`).
-  - Until A2b2, the session keeps refusing a prime tower beside an exclusion, now for a volume too, since the tower's GUI outside check would see it.
+  - A2b1 kept refusing a prime tower beside an exclusion, since the tower estimate needs this check; A2b2 ports it and lifts the refusal.
 
 ### A2b1 upstream boundary
 - **`PrintConfig.hpp`:** `BedExcludeVolumeMode` (`:642-646`) and `BedExcludeRegion` (`:2545-2558`).

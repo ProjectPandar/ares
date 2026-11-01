@@ -94,7 +94,9 @@ impl Towers<'_> {
         let global_layer_height = config.option("layer_height").float();
         let (mut max_height, mut layer_height) = (0.0_f64, f64::MAX);
         for (object_index, object) in project.objects().iter().enumerate() {
-            if !use_global_objects && !plates.contains_any_totally(index, object_index, project)? {
+            if !use_global_objects
+                && !plates.contains_any_totally(index, object_index, project, config)?
+            {
                 continue;
             }
             max_height =
@@ -133,7 +135,11 @@ impl Towers<'_> {
         let mut height = 0.0_f64;
         for instance in 0..self.project.objects()[object_index].instances().len() {
             let key = (object_index, instance);
-            if use_global_objects || self.plates.contains_totally(index, key, self.project)? {
+            if use_global_objects
+                || self
+                    .plates
+                    .contains_totally(index, key, self.project, self.config)?
+            {
                 let (min, max) = instance_bounding_box(self.project, key);
                 height = height.max(max[2] - min[2]);
             }

@@ -9,6 +9,7 @@ use crate::project::{compute_colum_count, plate_origin_at};
 mod arrange;
 #[path = "plate_list/extruders.rs"]
 mod extruders;
+mod outside;
 pub(super) use extruders::volume_extruders;
 #[path = "plate_list/tower_default.rs"]
 mod tower_default;

@@ -1,20 +1,15 @@
 //! A plate's filaments and the instances it holds whole (`PartPlate.cpp` at v2.5.0-beta
 //! `345efec64`): `get_extruders(true, config, config)` (`:3075-3250`) with
 //! `ModelVolume::get_extruders` (`Model.cpp:2690-2740`), and `contain_instance_totally` /
-//! `contain_any_instance_totally` (`PartPlate.cpp:4494-4521`) over the outside test of
-//! `check_outside` (`:4545-4625`).
+//! `contain_any_instance_totally` (`PartPlate.cpp:4494-4521`) over `check_outside` (`outside.rs`).
 
 use super::{InstanceKey, PlateList};
 use crate::gcode_processor::CustomGCodeType;
-use crate::plater::selection::instance_bounding_box;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::{
     expand_mixed_filaments, has_any_mixed_filament,
 };
 use crate::{Project, ProjectObject, ProjectVolume, ProjectVolumeType, SliceError};
-
-/// `SINKING_Z_THRESHOLD` (`Model.hpp:1967`, a `float`).
-const SINKING_Z_THRESHOLD: f64 = -0.001_f32 as f64;
 
 /// `ModelVolume::get_extruders`: the painted filaments, then the volume's own one.
 pub(in crate::plater) fn volume_extruders(
@@ -57,43 +52,16 @@ fn role_filament(object: Option<i32>, global: i32) -> Option<i32> {
 }
 
 impl PlateList {
-    /// `check_outside` without the bed exclusion and IMEX branches, which the tower path rejects
-    /// before reaching here.
-    fn outside(
-        &self,
-        index: usize,
-        key: InstanceKey,
-        project: &Project,
-    ) -> Result<bool, SliceError> {
-        let instance = instance_bounding_box(project, key);
-        let (mut min, max) = self.plate_box(self.plates[index].origin);
-        if instance.1[2] > min[2] {
-            min[2] += instance.0[2];
-        }
-        if instance.0[2] < SINKING_Z_THRESHOLD {
-            let intersects =
-                (0..3).all(|axis| min[axis] < instance.1[axis] && max[axis] > instance.0[axis]);
-            if !intersects {
-                return Ok(true);
-            }
-            let origin = self.plates[index].origin;
-            return crate::project_slice::instance_partly_outside(
-                project,
-                (origin[0], origin[1]),
-                key,
-            );
-        }
-        Ok(!(0..3).all(|axis| min[axis] <= instance.0[axis] && instance.1[axis] <= max[axis]))
-    }
-
     /// `contain_instance_totally`.
     pub(in crate::plater) fn contains_totally(
         &self,
         index: usize,
         key: InstanceKey,
         project: &Project,
+        config: &DynamicPrintConfig,
     ) -> Result<bool, SliceError> {
-        Ok(self.plates[index].instances.contains(&key) && !self.outside(index, key, project)?)
+        Ok(self.plates[index].instances.contains(&key)
+            && !self.outside(index, key, (project, config))?)
     }
 
     /// `contain_any_instance_totally`.
@@ -102,9 +70,10 @@ impl PlateList {
         index: usize,
         object: usize,
         project: &Project,
+        config: &DynamicPrintConfig,
     ) -> Result<bool, SliceError> {
         for instance in 0..project.objects()[object].instances().len() {
-            if self.contains_totally(index, (object, instance), project)? {
+            if self.contains_totally(index, (object, instance), project, config)? {
                 return Ok(true);
             }
         }
@@ -145,7 +114,7 @@ impl PlateList {
         };
         let support = config.option("enable_support").bool() || global("raft_layers") > 0;
         for (object_index, object) in project.objects().iter().enumerate() {
-            if !self.contains_any_totally(index, object_index, project)? {
+            if !self.contains_any_totally(index, object_index, project, config)? {
                 continue;
             }
             for volume in object.volumes() {
