@@ -50,15 +50,25 @@ pub(super) struct RawVolumeIntersections {
     volume_ordinal: VolumeOrdinal,
     volume_type: ProjectVolumeType,
     layers: Vec<Vec<IntersectionLine>>,
+    coplanar_edges: Vec<bool>,
 }
 
 impl RawVolumeIntersections {
-    pub(super) fn into_parts(self) -> (usize, u32, ProjectVolumeType, Vec<Vec<IntersectionLine>>) {
+    pub(super) fn into_parts(
+        self,
+    ) -> (
+        usize,
+        u32,
+        ProjectVolumeType,
+        Vec<Vec<IntersectionLine>>,
+        Vec<bool>,
+    ) {
         (
             self.source_volume_index,
             self.volume_ordinal.0.get(),
             self.volume_type,
             self.layers,
+            self.coplanar_edges,
         )
     }
 }
@@ -175,6 +185,27 @@ pub(super) fn intersect_projected_objects(
             } else {
                 Cow::Borrowed(source_volume.mesh().triangles())
             };
+            let topology = crate::mesh_slicer::index_mesh_edges(&triangles)?;
+            let plane_transform = centered_object_transform.then(source_volume.transform());
+            let plane_vertices = source_volume
+                .mesh()
+                .vertices()
+                .iter()
+                .map(|p| {
+                    let p = plane_transform.transform_point(Point3d::new(
+                        f64::from(p.x as f32),
+                        f64::from(p.y as f32),
+                        f64::from(p.z as f32),
+                    ));
+                    [p.x, p.y, p.z]
+                })
+                .collect::<Vec<_>>();
+            let coplanar_edges = crate::mesh_slicer::coplanar_edges(
+                &plane_vertices,
+                &triangles,
+                &topology,
+                scale.factor(),
+            );
             let layers = match &active_ranges {
                 Some(active) => ranges::slice_volume(
                     &vertices,
@@ -194,6 +225,7 @@ pub(super) fn intersect_projected_objects(
                 volume_ordinal: projected_volume.volume_ordinal,
                 volume_type: source_volume.volume_type(),
                 layers,
+                coplanar_edges,
             });
         }
         intersected_objects.push(IntersectedPrintObject { plan, volumes });

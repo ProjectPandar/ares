@@ -36,13 +36,14 @@ fn bottom_slice(
     triangles: &[[u32; 3]],
     z: f32,
     scale: CoordinateScale,
+    coplanar: &[bool],
 ) -> Result<Vec<Polygon>, SliceError> {
     let mut budget = RawIntersectionBudget::new();
     let lines = slice_mesh_on_planes(vertices, triangles, &[z], &mut budget)?
         .pop()
         .unwrap();
     Ok(make_loops(
-        chain_lines_by_triangle_connectivity(lines),
+        chain_lines_by_triangle_connectivity(lines, coplanar),
         scale.scaled_delta(2.0) as i64,
     )
     .polygons()
@@ -90,6 +91,25 @@ pub(super) fn collect(input: &Input<'_>, (top, bottom): (bool, bool)) -> Result<
                     ))
                 })
                 .collect::<Vec<_>>();
+            let topology = crate::mesh_slicer::index_mesh_edges(&facets.triangles)?;
+            let plane_vertices = facets
+                .vertices
+                .iter()
+                .map(|p| {
+                    let p = transform.transform_point(Point3d::new(
+                        f64::from(p[0]),
+                        f64::from(p[1]),
+                        f64::from(p[2]),
+                    ));
+                    [p.x, p.y, p.z]
+                })
+                .collect::<Vec<_>>();
+            let coplanar = crate::mesh_slicer::coplanar_edges(
+                &plane_vertices,
+                &facets.triangles,
+                &topology,
+                input.scale.factor(),
+            );
             let sinking = !planes.is_empty() && vertices.iter().any(|p| p[2] < SINKING_Z_THRESHOLD);
             let zs = if sinking {
                 std::iter::once(0.0)
@@ -110,7 +130,13 @@ pub(super) fn collect(input: &Input<'_>, (top, bottom): (bool, bool)) -> Result<
             }
             if sinking && bottom {
                 projected.bottom.remove(0);
-                let slice = bottom_slice(&vertices, &facets.triangles, planes[0], input.scale)?;
+                let slice = bottom_slice(
+                    &vertices,
+                    &facets.triangles,
+                    planes[0],
+                    input.scale,
+                    &coplanar,
+                )?;
                 projected.bottom[0] =
                     union_polygons_paths_pair(&projected.bottom[0], &slice).map_err(clip_error)?;
             }

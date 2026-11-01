@@ -46,6 +46,18 @@ impl Drawing<'_, '_> {
             };
             slice_z.push((0.5 * (bottom_z + print_z)) as f32);
         }
+        let topology = crate::mesh_slicer::index_mesh_edges(&mesh.indices)?;
+        let plane_vertices = mesh
+            .vertices
+            .iter()
+            .map(|p| p.map(f64::from))
+            .collect::<Vec<_>>();
+        let coplanar = crate::mesh_slicer::coplanar_edges(
+            &plane_vertices,
+            &mesh.indices,
+            &topology,
+            self.extrusion.scale.factor(),
+        );
         let scale = self.extrusion.scale;
         // Native slice_mesh scales XY in float before facet intersection.
         for vertex in &mut mesh.vertices {
@@ -67,7 +79,7 @@ impl Drawing<'_, '_> {
         let mut polygons = Vec::with_capacity(raw.len());
         for (offset, lines) in raw.into_iter().enumerate() {
             let mut loops = make_loops(
-                chain_lines_by_triangle_connectivity(lines),
+                chain_lines_by_triangle_connectivity(lines, &coplanar),
                 scale.scaled_delta(2.0) as i64,
             );
             apply_slicing_mode(&mut loops, SlicingMode::Positive);

@@ -44,11 +44,11 @@ pub(super) fn chain_project_intersections(
             let volumes = volumes
                 .into_iter()
                 .map(|volume| {
-                    let (source_volume_index, volume_ordinal, volume_type, layers) =
+                    let (source_volume_index, volume_ordinal, volume_type, layers, coplanar_edges) =
                         volume.into_parts();
                     let layers = layers
                         .into_iter()
-                        .map(chain_lines_by_triangle_connectivity)
+                        .map(|lines| chain_lines_by_triangle_connectivity(lines, &coplanar_edges))
                         .collect();
                     ChainedVolumeIntersections {
                         source_volume_index,

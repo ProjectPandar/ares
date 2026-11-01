@@ -222,7 +222,7 @@ fn make_loops<const TOP: bool>(mut lines: SlabLines, edge_count: u32) -> Vec<Vec
                     }),
             );
         }
-        let (loops, open) = chain_lines_by_triangle_connectivity(input).into_parts();
+        let (loops, open) = chain_lines_by_triangle_connectivity(input, &[]).into_parts();
         debug_assert!(open.is_empty(), "slab facet connectivity must close");
         polygons.push(loops);
     }

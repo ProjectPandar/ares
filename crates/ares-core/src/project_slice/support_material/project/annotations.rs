@@ -70,9 +70,32 @@ pub(super) fn slice_volumes(
         } else {
             Cow::Borrowed(volume.mesh().triangles())
         };
+        let plane_vertices = volume
+            .mesh()
+            .vertices()
+            .iter()
+            .map(|p| {
+                let p = transform.transform_point(crate::Point3d::new(
+                    f64::from(p.x as f32),
+                    f64::from(p.y as f32),
+                    f64::from(p.z as f32),
+                ));
+                [p.x, p.y, p.z]
+            })
+            .collect::<Vec<_>>();
+        let topology = crate::mesh_slicer::index_mesh_edges(&triangles)?;
+        let coplanar = crate::mesh_slicer::coplanar_edges(
+            &plane_vertices,
+            &triangles,
+            &topology,
+            scale.factor(),
+        );
         let layers = slice_mesh_on_planes(&vertices, &triangles, &planes, &mut budget)?;
         for ((target, merge), lines) in slices.iter_mut().zip(&mut merge_layers).zip(layers) {
-            let loops = make_loops(chain_lines_by_triangle_connectivity(lines), max_gap);
+            let loops = make_loops(
+                chain_lines_by_triangle_connectivity(lines, &coplanar),
+                max_gap,
+            );
             let polygons = union_layer_polygons(SlicingMode::Regular, loops.polygons())?;
             if !polygons.is_empty() {
                 *merge |= !target.is_empty();

@@ -147,7 +147,16 @@ impl StartIndex {
     }
 }
 
-pub(crate) fn chain_lines_by_triangle_connectivity(lines: Vec<IntersectionLine>) -> ChainedLayer {
+pub(crate) fn chain_lines_by_triangle_connectivity(
+    lines: Vec<IntersectionLine>,
+    coplanar_edges: &[bool],
+) -> ChainedLayer {
+    let is_junction = |point: super::IntersectionPoint| match point.reference() {
+        EndpointReference::Edge(edge) => {
+            coplanar_edges.get(edge as usize).copied().unwrap_or(false)
+        }
+        EndpointReference::Vertex(_) => false,
+    };
     let mut starts = StartIndex::new(&lines);
     let mut consumed = vec![false; lines.len()];
     let mut polygons = Vec::new();
@@ -166,13 +175,18 @@ pub(crate) fn chain_lines_by_triangle_connectivity(lines: Vec<IntersectionLine>)
         while let Some(next_index) = starts.take_next(last.b().reference(), &consumed) {
             let next = lines[next_index];
             debug_assert_eq!(last.b().point(), next.a().point());
-            points.push(next.a().point());
+            if !is_junction(next.a()) {
+                points.push(next.a().point());
+            }
             consumed[next_index] = true;
             last = next;
         }
 
         if seed.a().reference() == last.b().reference() {
             debug_assert_eq!(seed.a().point(), last.b().point());
+            if is_junction(seed.a()) {
+                points.remove(0);
+            }
             polygons.push(Polygon::new(points));
         } else {
             points.push(last.b().point());

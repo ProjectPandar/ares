@@ -3,6 +3,7 @@ use std::ops::Range;
 use crate::SliceError;
 
 mod chaining;
+mod coplanar;
 mod intersection;
 mod slabs;
 mod slicing_mode;
@@ -11,6 +12,7 @@ mod topology;
 pub(crate) use chaining::{
     ChainedLayer, LoopedLayer, chain_lines_by_triangle_connectivity, make_loops,
 };
+pub(crate) use coplanar::coplanar_edges;
 pub(crate) use intersection::{
     EndpointReference, FacetEdgeType, IntersectionLine, IntersectionPoint, intersect_facet,
 };
