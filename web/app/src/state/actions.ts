@@ -1,7 +1,7 @@
 import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { saveConfig } from "./persistence";
-import { overrideTokens, presetSliceBlocker, sliceWithPresets } from "./presets";
+import { overrideTokens, presetSliceBlocker, sliceWithPresets, stlSessionOpened } from "./presets";
 import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
 import { decodeSettings } from "./typedSettings";
@@ -85,6 +85,7 @@ export async function sliceAllPlates() {
 }
 
 async function slicePlates(indices: number[]) {
+  await stlSessionOpened();
   const { file, scene, slice, overrides, presetSelection, plater } = useApp.getState();
   if (!file || !scene || slice.status === "slicing") return;
   if (presetSelection && presetSliceBlocker(presetSelection, scene)) return;

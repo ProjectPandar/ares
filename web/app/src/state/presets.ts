@@ -1,4 +1,4 @@
-import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
+import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
@@ -349,7 +349,33 @@ export async function placedScene(file: ModelFile, scene: Scene, selection: Pres
  * per plate; the store keeps it as an STL scene without project settings. Returns the session's
  * scene, whose `settings` are the composed config.
  */
-export async function openStlSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
+export function openStlSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
+  // Each canvas (Prepare, Preview) places the model when it mounts; the plater keeps the session
+  // it holds for the same inputs, as switching tabs reloads nothing upstream.
+  const held = openedSession;
+  if (held && held.plater === useApp.getState().plater && held.file === file && held.selection === selection
+    && held.sources.vendors === sources.vendors && held.sources.presetImports === sources.presetImports) {
+    return Promise.resolve(held.placed);
+  }
+  const opening = openSession(file, scene, selection, sources);
+  stlSessionOpening = opening.catch(() => undefined);
+  return opening;
+}
+
+/**
+ * The latest STL session opening. The GUI places a model before it can be sliced (Plater::load_files
+ * runs on the UI thread); a slice waits for this, so it slices the session the plater ends with and
+ * its result outlives the session that opens after it.
+ */
+let stlSessionOpening: Promise<unknown> = Promise.resolve();
+/** The session the plater holds and the inputs it was opened for. */
+let openedSession: { plater: PlaterSession; file: ModelFile; selection: PresetSelection; sources: CatalogSources; placed: Scene } | null = null;
+
+export function stlSessionOpened(): Promise<unknown> {
+  return stlSessionOpening;
+}
+
+async function openSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
   const plater = await slicer.createPlaterSessionWithProfiles(file.bytes, file.name, catalog, profiles, options);
   const placed = await plater.scene();
@@ -359,6 +385,7 @@ export async function openStlSession(file: ModelFile, scene: Scene, selection: P
   }
   const previous = useApp.getState().plater;
   useApp.setState(({ slice }) => ({ plater, scene: { ...placed, format: "stl", settings: null }, currentPlate: 0, ...invalidatedSlices(slice) }));
+  openedSession = { plater, file, selection, sources, placed };
   void previous?.free();
   return placed;
 }
