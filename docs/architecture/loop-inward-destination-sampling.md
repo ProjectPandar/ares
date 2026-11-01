@@ -1,6 +1,6 @@
 # Loop inward destination sampling
 
-Status: source-cited public RED qualification; no production change authorized.
+Status: tagged OPEN — source-correct NON-GREEN port, blocked on M73 placement.
 
 ## Upstream boundary
 
@@ -15,12 +15,13 @@ Pinned beta `345efec64c7b95a05ce5cf96df0dde66a158835c`:
 - `GCode.cpp:8790-8794` emits that move and updates the logical last position.
 
 The Rust destination is
-`project_slice/gcode_emit/motion/loop_paths/inward.rs::{append_inward_move,inward_point}`,
-its existing loop-path caller, and the existing logical-cursor fields in
-`EmitState`. Current inward code still uses the old first/second/end-3vertex
-angle construction and explicitly updates only writer x/y. It is a temporary
-compatibility shell around the upstream loop-end concept, not authority for
-an independent Ares travel policy. This source gap is not yet causal GREEN.
+`project_slice/gcode_emit/motion/loop_paths/inward.rs::{append_inward_move,inward_destination,sample_path_at_distance}`
+and its existing loop-path caller and logical-cursor fields in `EmitState`.
+The old first/second/end-3vertex angle construction and writer-only cursor
+update are replaced by the cited path sampling and logical-position update.
+The port reuses existing clipping helpers, preserves original loop winding,
+truncates interpolated coordinates, and retains source rotation/epsilon rules.
+It does not introduce an independent Ares travel policy or legacy fallback.
 
 ## Public RED seam
 
@@ -52,13 +53,32 @@ first difference is a failed qualification, not this production RED.
 
 ## Included and deferred behavior
 
-This RED adds only the public test, option-domain registration and this record.
-Production, ROOT test entrypoint, producer selection and fixture bytes are frozen.
-No probe, private planner test, mock or copied solver expectation is introduced.
+The RED originally added only the public test, option-domain registration and
+this record. Its test, ROOT entrypoint, producer selection and fixture bytes
+remain unchanged by the source port. No probe, private planner test, mock or
+copied solver expectation is introduced.
 
-A later separately approved source port may cover literal destination sampling
-and caller/cursor semantics only. Support-offset wipe-inward optimization,
+The separately approved source-correct port covers only literal destination
+sampling and caller/cursor semantics. Support-offset wipe-inward optimization,
 generic routing, travel-count differences, M73/statistics, raw junction widths,
-seam compensation and geometry-kernel policies are deferred. Do not attribute
-those separate observations to this wall slice. No rounding/EPS tuning or
-legacy fallback is permitted, and a RED requires review before any GREEN work.
+seam compensation and geometry-kernel policies remain deferred. No rounding
+or EPS tuning is permitted.
+
+## Tagged OPEN: blocked on M73 placement
+
+The source-correct port aligns the inward XY, wipe endpoint and connector
+records with Native. The complete Z0.34layer remains FAIL: both sides contain
+4931bytes/197lines, but `M73 P10 R12` appears across the neighboring extrusion
+at layer line118. This belongs to the writer/time boundary and remains OPEN;
+it is not attributed to inward destination geometry. The RED and its strict
+whole-layer assertion stay unchanged, including M73. No mask or GREEN claim.
+
+The adjacent anchor travel-count observation changes from Ares774 to846,
+with Native836: FAIL-to-FAIL. This is an accepted observed consequence, not a
+travel-count fix, clean parity result or root-cause claim. The original travel
+assertions remain intact. Publication of the source-correct NON-GREEN port
+requires the authorized broader before/after audit to show zero PASS-to-FAIL
+transitions and to list every status change.
+
+Neither this source-correct acceptance nor the tagged OPEN status closes the
+whole layer, whole file, routing family or writer/time issue.

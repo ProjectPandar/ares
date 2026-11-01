@@ -1,5 +1,6 @@
-//! Loop-end inward moves (`GCode.cpp:6020-6033` "move inwards before travel")
-//! and shared loop geometry helpers.
+//! Beta GCode.cpp:8730-8736,8790-8794 and WipePathHelpers.cpp:61-92,886-926.
+
+use std::borrow::Cow;
 
 use super::*;
 
@@ -10,48 +11,34 @@ pub(super) fn append_inward_move(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
-    let Some(first) = paths.first() else {
-        return;
-    };
     let (loop_role, path_count, end_clip) = clipping;
+    let original_paths = paths;
+    let paths = &paths[..path_count];
     let last = &paths[path_count - 1];
     if !state.options.wipe_on_loops
         || last.role != ExtrusionRole::ExternalPerimeter
         || state.options.wall_loops <= 1
-        || first.polyline.points.len() < 2
+        || paths[0].polyline.points.len() < 2
     {
         return;
     }
-
-    // GCode.cpp:5804,5994-6002 uses the clipped last path, but the original
-    // loop winding. The selected end-3 vertex precedes any inserted endpoint.
-    let point_count = if last.z_contoured {
-        super::super::path::contour::clipped(
-            &last.polyline.points,
-            end_clip / geometry.scale.factor(),
-        )
-        .len()
-    } else {
-        let (point_count, _) = super::super::clip::clipped_tail(
-            last.polyline.points.iter().map(|point| (point.x, point.y)),
-            end_clip / geometry.scale.factor(),
-        );
-        point_count
-    };
-    if point_count < 3 {
+    let last_points = clipped_last(last, end_clip / geometry.scale.factor());
+    if last_points.len() < 2 {
         return;
     }
-
-    let point = inward_point(
-        first.polyline.points[0],
-        first.polyline.points[1],
-        last.polyline.points[point_count - 3],
-        (
-            loop_role == ExtrusionLoopRole::Hole,
-            loop_is_counter_clockwise(paths),
-        ),
-        state.options.nozzle_diameter / geometry.scale.factor(),
+    let orientation = (
+        loop_role == ExtrusionLoopRole::Hole,
+        loop_is_counter_clockwise(original_paths),
     );
+    let Some(point) = inward_destination(
+        paths,
+        &last_points,
+        orientation,
+        state.options.nozzle_diameter / geometry.scale.factor(),
+        super::super::path::SOURCE_EPSILON_MM / geometry.scale.factor(),
+    ) else {
+        return;
+    };
     let x = geometry.scale.unscale(point.x()) + state.origin.0 - state.extruder_offset.0;
     let y = geometry.scale.unscale(point.y()) + state.origin.1 - state.extruder_offset.1;
     let comment = if state.options.gcode_comments {
@@ -64,42 +51,181 @@ pub(super) fn append_inward_move(
     );
     state.x = x;
     state.y = y;
-    // `GCode::extrude_loop` (GCode.cpp:6032) moves only the writer here;
-    // m_last_pos remains the clipped extrusion endpoint for subsequent chaining.
+    state.last_scaled_position = (point.x(), point.y());
+    state.last_position_defined = true;
 }
 
-pub(super) fn inward_point(
-    center: Point3,
-    mut first: Point3,
-    mut second: Point3,
+fn clipped_last(path: &ExtrusionPath, distance: f64) -> Cow<'_, [Point3]> {
+    let points = &path.polyline.points;
+    if path.z_contoured {
+        return super::super::path::contour::clipped(points, distance);
+    }
+    if distance <= 0.0 {
+        return Cow::Borrowed(points);
+    }
+    let (count, endpoint) =
+        super::super::clip::clipped_tail(points.iter().map(|point| (point.x, point.y)), distance);
+    let mut points = points[..count].to_vec();
+    if let Some((x, y)) = endpoint {
+        let last = points.last_mut().unwrap();
+        last.x = x;
+        last.y = y;
+    }
+    Cow::Owned(points)
+}
+
+fn inward_destination(
+    paths: &[ExtrusionPath],
+    last_points: &[Point3],
     orientation: (bool, bool),
     nozzle: f64,
-) -> crate::geometry::Point {
-    let (is_hole, counter_clockwise) = orientation;
-    let displacement_end = first;
-    if is_hole == counter_clockwise {
-        std::mem::swap(&mut first, &mut second);
+    scaled_epsilon: f64,
+) -> Option<crate::geometry::Point> {
+    let total_length = (0..paths.len())
+        .map(|index| scaled_length(path_points(paths, last_points, index)))
+        .sum::<f64>();
+    let sample_distance = nozzle.min(total_length * 0.25);
+    let mut a = sample_path_at_distance(paths, last_points, true, sample_distance, scaled_epsilon);
+    let mut b = sample_path_at_distance(paths, last_points, false, sample_distance, scaled_epsilon);
+    let mut center = paths[0].polyline.points[0];
+    center.z = 0;
+    if a == b || a == center || b == center {
+        return None;
     }
-    let mut angle = ccw_angle(center, first, second) / 3.0;
-    if is_hole == counter_clockwise {
+    let (is_hole, is_ccw) = orientation;
+    let reverse_turn = is_hole == is_ccw;
+    if reverse_turn {
+        std::mem::swap(&mut a, &mut b);
+    }
+    let mut angle = ccw_angle(center, a, b) / 3.0;
+    let angle_epsilon = 0.01;
+    if angle < angle_epsilon || angle > 2.0 * std::f64::consts::PI / 3.0 - angle_epsilon {
+        return None;
+    }
+    if reverse_turn {
         angle = -angle;
     }
-    let dx = (displacement_end.x - center.x) as f64;
-    let dy = (displacement_end.y - center.y) as f64;
-    let length_squared = dx * dx + dy * dy;
-    let factor = if nozzle * nozzle < length_squared {
-        0.2 * nozzle / length_squared.sqrt()
+    let point = sample_path_at_distance(
+        paths,
+        last_points,
+        true,
+        (0.2 * nozzle).min(sample_distance),
+        scaled_epsilon,
+    );
+    Some(rotate_point(point, center, angle))
+}
+
+fn path_points<'a>(
+    paths: &'a [ExtrusionPath],
+    last_points: &'a [Point3],
+    index: usize,
+) -> &'a [Point3] {
+    if index + 1 == paths.len() {
+        last_points
     } else {
-        0.2
+        &paths[index].polyline.points
+    }
+}
+
+fn scaled_length(points: &[Point3]) -> f64 {
+    points
+        .windows(2)
+        .map(|pair| {
+            let dx = (pair[1].x - pair[0].x) as f64;
+            let dy = (pair[1].y - pair[0].y) as f64;
+            let dz = (pair[1].z - pair[0].z) as f64;
+            (dx * dx + dy * dy + dz * dz).sqrt()
+        })
+        .sum()
+}
+
+fn sample_path_at_distance(
+    paths: &[ExtrusionPath],
+    last_points: &[Point3],
+    forward: bool,
+    mut remaining: f64,
+    scaled_epsilon: f64,
+) -> Point3 {
+    let endpoint = if forward {
+        paths[0].polyline.points[0]
+    } else {
+        *last_points.last().unwrap()
     };
-    let x = center.x as f64 + dx * factor;
-    let y = center.y as f64 + dy * factor;
-    let (sine, cosine) = angle.sin_cos();
-    let rotated_x = center.x as f64 + cosine * (x - center.x as f64) - sine * (y - center.y as f64);
-    let rotated_y = center.y as f64 + sine * (x - center.x as f64) + cosine * (y - center.y as f64);
+    let mut result = Point3 { z: 0, ..endpoint };
+    for step in 0..paths.len() {
+        if remaining <= 0.0 {
+            break;
+        }
+        let index = if forward {
+            step
+        } else {
+            paths.len() - 1 - step
+        };
+        if let Some(point) = sample_polyline(
+            path_points(paths, last_points, index),
+            forward,
+            &mut remaining,
+            &mut result,
+            scaled_epsilon,
+        ) {
+            return point;
+        }
+    }
+    result
+}
+
+fn sample_polyline(
+    points: &[Point3],
+    forward: bool,
+    remaining: &mut f64,
+    result: &mut Point3,
+    scaled_epsilon: f64,
+) -> Option<Point3> {
+    for step in 0..points.len() - 1 {
+        let (cur, next) = if forward {
+            (points[step], points[step + 1])
+        } else {
+            (
+                points[points.len() - 1 - step],
+                points[points.len() - 2 - step],
+            )
+        };
+        let dx = (next.x - cur.x) as f64;
+        let dy = (next.y - cur.y) as f64;
+        let length = (dx * dx + dy * dy).sqrt();
+        if length < scaled_epsilon {
+            continue;
+        }
+        if *remaining <= length {
+            let ratio = *remaining / length;
+            return Some(Point3 {
+                x: (cur.x as f64 + ratio * dx) as i64,
+                y: (cur.y as f64 + ratio * dy) as i64,
+                z: 0,
+            });
+        }
+        *remaining -= length;
+        *result = Point3 { z: 0, ..next };
+    }
+    None
+}
+
+fn rotate_point(point: Point3, center: Point3, angle: f64) -> crate::geometry::Point {
+    let sine = angle.sin();
+    let cosine = angle.cos();
+    let dx = (point.x - center.x) as f64;
+    let dy = (point.y - center.y) as f64;
+    // Point.cpp:57-64 uses libslic3r.h::fast_round_up, not interpolation's cast.
+    let round = |value: f64| {
+        if value == 0.49999999999999994 {
+            0
+        } else {
+            (value + 0.5).floor() as i64
+        }
+    };
     crate::geometry::Point::new(
-        (rotated_x + 0.5).floor() as i64,
-        (rotated_y + 0.5).floor() as i64,
+        round(center.x as f64 + cosine * dx - sine * dy),
+        round(center.y as f64 + sine * dx + cosine * dy),
     )
 }
 
