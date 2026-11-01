@@ -8,6 +8,7 @@
 namespace marker_time_source {
 using libvgcode::PathVertex;
 using libvgcode::ETimeMode;
+using libvgcode::TIME_MODES_COUNT;
 #include "marker-time/kernel.hpp"
 
 // ViewerImpl.cpp:1189-1213 load-time caches, rebuilt locally over the dumped
