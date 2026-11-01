@@ -145,7 +145,7 @@ fn legacy_tree_wall_count_normalizes_to_native_auto_options() {
     let requested = serde_json::json!({key: "-1"});
     let options: ares_core::SliceOptions = serde_json::from_value(requested).unwrap();
     let project = ares_core::load_project(
-        &std::fs::read(runner.work.join("legacy-settings-input.3mf")).unwrap(),
+        std::fs::read(runner.work.join("legacy-settings-input.3mf")).unwrap(),
     )
     .unwrap();
     let typed_export = serde_json::to_value(&project.settings().process.object).unwrap();

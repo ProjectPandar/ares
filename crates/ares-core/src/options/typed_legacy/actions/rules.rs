@@ -94,6 +94,8 @@ pub(crate) const EXPLICIT_RULES: &[LegacyRule] = &[
     rewrite!("timelapse_type", "timelapse_type", Exact, &[Replacement { from: "2", to: "0" }]),
     LegacyRule { json_effect: Some(JsonDerivedEffect { triggers: &["hybrid(auto)"], target: "support_style", value: "tree_hybrid" }), ..rewrite!("support_type", "support_type", Exact, &[Replacement { from: "normal", to: "normal(manual)" }, Replacement { from: "tree", to: "tree(manual)" }, Replacement { from: "hybrid(auto)", to: "tree(auto)" }]) },
     rewrite!("support_base_pattern", "support_base_pattern", Exact, &[Replacement { from: "none", to: "hollow" }]),
+    // PrintConfig.cpp (345efec64c7b):9839-9840.
+    rewrite!("tree_support_wall_count", "tree_support_wall_count", Exact, &[Replacement { from: "-1", to: "0" }]),
     LegacyRule { wire: WireContract::vector("overhang_fan_threshold", VectorType::Enums), ..rewrite!("overhang_fan_threshold", "overhang_fan_threshold", Exact, &[Replacement { from: "5%", to: "10%" }]) },
     rewrite!("enable_power_loss_recovery", "enable_power_loss_recovery", AsciiCaseInsensitive, &[Replacement { from: "true", to: "enable" }, Replacement { from: "1", to: "enable" }, Replacement { from: "false", to: "disable" }, Replacement { from: "0", to: "disable" }]),
     // PrintConfig.cpp (345efec64c7b):9886-9891.

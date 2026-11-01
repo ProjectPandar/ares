@@ -90,6 +90,9 @@ pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
         *value = "tree(auto)".to_owned();
     } else if opt_key == "support_base_pattern" && value == "none" {
         *value = "hollow".to_owned();
+    } else if opt_key == "tree_support_wall_count" && value == "-1" {
+        // PrintConfig.cpp (345efec64c7b):9839-9840: legacy auto, not a new minimum.
+        *value = "0".to_owned();
     } else if opt_key == "different_settings_to_system" {
         normalize_different_settings_to_system(value);
     } else if opt_key == "overhang_fan_threshold" && value == "5%" {
