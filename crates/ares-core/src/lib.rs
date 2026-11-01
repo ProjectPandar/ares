@@ -126,9 +126,9 @@ pub use options::registry::{
     printer_extruder_options, printer_options_with_variant_1, printer_options_with_variant_2,
 };
 pub use options::{
-    AmsCounts, ArcFittingMode, AuthorizationType, BedTemperatureFormula, ConfigOverrides, CsvTable,
-    DefaultBedType, DifferentExtrudersSupport, ExtruderIndexIdMapLookup, ExtruderType,
-    ExtruderTypes, ExtruderVariantLists, FilamentGCodeSourceOptions, FilamentOptions,
+    AmsCounts, ArcFittingMode, AuthorizationType, BedExcludeVolumeMode, BedTemperatureFormula,
+    ConfigOverrides, CsvTable, DefaultBedType, DifferentExtrudersSupport, ExtruderIndexIdMapLookup,
+    ExtruderType, ExtruderTypes, ExtruderVariantLists, FilamentGCodeSourceOptions, FilamentOptions,
     FilamentPrintSourceOptions, FilamentRegionSourceOptions, FilamentRetractOverrideOptions,
     FilamentTypeDisplay, FlatMatrix, FloatOrPercent, GCodeFlavor, GCodeOptions, HardwareOptions,
     InfillOptions, InfillPattern, InputShaperType, MachineEnvelopeOptions, Millimeters,

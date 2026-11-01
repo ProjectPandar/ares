@@ -6,7 +6,9 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, de::Visitor};
 
-pub use enums::{AuthorizationType, NozzleVolumeType, NozzleVolumeTypes, PrintHostType};
+pub use enums::{
+    AuthorizationType, BedExcludeVolumeMode, NozzleVolumeType, NozzleVolumeTypes, PrintHostType,
+};
 pub use structured::{
     DefaultBedType, ExtruderVariantLists, NullableFloats, PrinterModel, PrinterNotes,
     ThumbnailDefinitions,
@@ -30,6 +32,10 @@ declare_option_group! {
         parallel_printheads_count => "parallel_printheads_count": OrcaInt = OrcaInt(1),
         parallel_printheads_bed_exclude_areas => "parallel_printheads_bed_exclude_areas": OrcaStrings = OrcaStrings(Vec::new()),
         bed_exclude_area => "bed_exclude_area": Point2dList = points(&[(0.0, 0.0)]),
+        // PrintConfig.cpp:1063-1089, declared at PrintConfig.hpp:1994-1996.
+        bed_exclude_volumes => "bed_exclude_volumes": OrcaString = string(""),
+        bed_exclude_volume_mode => "bed_exclude_volume_mode": BedExcludeVolumeMode = BedExcludeVolumeMode::Shared,
+        extruder_bed_exclude_volumes => "extruder_bed_exclude_volumes": OrcaStrings = OrcaStrings(vec![String::new()]),
         head_wrap_detect_zone => "head_wrap_detect_zone": Point2dList = Point2dList(Vec::new()),
         bed_custom_texture => "bed_custom_texture": OrcaString = string(""),
         bed_custom_model => "bed_custom_model": OrcaString = string(""),
@@ -83,13 +89,16 @@ impl PrinterRemainingOptionsBuilder {
 }
 
 impl PrinterRemainingOptions {
-    pub const PRINT_CONFIG_DECLARATION_ORDER: [&'static str; 27] = [
+    pub const PRINT_CONFIG_DECLARATION_ORDER: [&'static str; 30] = [
         "printable_area",
         "extruder_printable_area",
         "support_parallel_printheads",
         "parallel_printheads_count",
         "parallel_printheads_bed_exclude_areas",
         "bed_exclude_area",
+        "bed_exclude_volumes",
+        "bed_exclude_volume_mode",
+        "extruder_bed_exclude_volumes",
         "head_wrap_detect_zone",
         "bed_custom_texture",
         "bed_custom_model",

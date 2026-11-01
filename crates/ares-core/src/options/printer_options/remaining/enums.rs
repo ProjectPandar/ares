@@ -37,6 +37,18 @@ pub enum PrintHostType {
     Moonraker,
 }
 
+/// `BedExcludeVolumeMode` (`PrintConfig.hpp:642-646`, keys `PrintConfig.cpp:742-746`).
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+pub enum BedExcludeVolumeMode {
+    #[default]
+    #[serde(rename = "shared")]
+    Shared,
+    #[serde(rename = "toolhead_offset")]
+    ToolheadOffset,
+    #[serde(rename = "per_extruder")]
+    PerExtruder,
+}
+
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub enum AuthorizationType {
     #[default]

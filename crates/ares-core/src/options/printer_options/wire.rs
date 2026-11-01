@@ -7,7 +7,7 @@ impl Serialize for PrinterOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(132))?;
+        let mut map = serializer.serialize_map(Some(135))?;
         map.serialize_entry(
             "adaptive_bed_mesh_margin",
             &self.remaining.adaptive_bed_mesh_margin,
@@ -17,6 +17,11 @@ impl Serialize for PrinterOptions {
         map.serialize_entry("bed_custom_model", &self.remaining.bed_custom_model)?;
         map.serialize_entry("bed_custom_texture", &self.remaining.bed_custom_texture)?;
         map.serialize_entry("bed_exclude_area", &self.remaining.bed_exclude_area)?;
+        map.serialize_entry(
+            "bed_exclude_volume_mode",
+            &self.remaining.bed_exclude_volume_mode,
+        )?;
+        map.serialize_entry("bed_exclude_volumes", &self.remaining.bed_exclude_volumes)?;
         map.serialize_entry("bed_mesh_max", &self.remaining.bed_mesh_max)?;
         map.serialize_entry("bed_mesh_min", &self.remaining.bed_mesh_min)?;
         map.serialize_entry(
@@ -69,6 +74,10 @@ impl Serialize for PrinterOptions {
             &self.gcode.enable_power_loss_recovery,
         )?;
         map.serialize_entry("extra_loading_move", &self.gcode.extra_loading_move)?;
+        map.serialize_entry(
+            "extruder_bed_exclude_volumes",
+            &self.remaining.extruder_bed_exclude_volumes,
+        )?;
         map.serialize_entry(
             "extruder_clearance_height_to_lid",
             &self.remaining.extruder_clearance_height_to_lid,

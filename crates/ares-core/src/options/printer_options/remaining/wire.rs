@@ -7,12 +7,14 @@ impl Serialize for PrinterRemainingOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(42))?;
+        let mut map = serializer.serialize_map(Some(45))?;
         map.serialize_entry("adaptive_bed_mesh_margin", &self.adaptive_bed_mesh_margin)?;
         map.serialize_entry("bbl_use_printhost", &self.bbl_use_printhost)?;
         map.serialize_entry("bed_custom_model", &self.bed_custom_model)?;
         map.serialize_entry("bed_custom_texture", &self.bed_custom_texture)?;
         map.serialize_entry("bed_exclude_area", &self.bed_exclude_area)?;
+        map.serialize_entry("bed_exclude_volume_mode", &self.bed_exclude_volume_mode)?;
+        map.serialize_entry("bed_exclude_volumes", &self.bed_exclude_volumes)?;
         map.serialize_entry("bed_mesh_max", &self.bed_mesh_max)?;
         map.serialize_entry("bed_mesh_min", &self.bed_mesh_min)?;
         map.serialize_entry("bed_mesh_probe_distance", &self.bed_mesh_probe_distance)?;
@@ -23,6 +25,10 @@ impl Serialize for PrinterRemainingOptions {
             &self.default_nozzle_volume_type,
         )?;
         map.serialize_entry("default_print_profile", &self.default_print_profile)?;
+        map.serialize_entry(
+            "extruder_bed_exclude_volumes",
+            &self.extruder_bed_exclude_volumes,
+        )?;
         map.serialize_entry(
             "extruder_clearance_height_to_lid",
             &self.extruder_clearance_height_to_lid,
