@@ -44,13 +44,15 @@ fn counter_clockwise(mut polygon: Polygon) -> Polygon {
     polygon
 }
 
-/// `parse_double_token` (`:13892-13902`): the whole trimmed token as a finite number.
+/// `parse_double_token` (`:13892-13902`): the whole trimmed token as a finite number. It reads
+/// through `string_to_double_decimal_point`, `fast_float::from_chars` (`LocalesUtils.cpp:86-93`),
+/// which takes no leading '+'.
 fn parse_double_token(text: &str) -> Option<f64> {
     let token = text.trim();
-    token
-        .parse::<f64>()
-        .ok()
-        .filter(|value| !token.is_empty() && value.is_finite())
+    if token.starts_with('+') {
+        return None;
+    }
+    token.parse::<f64>().ok().filter(|value| value.is_finite())
 }
 
 /// The z range a region specification builds up.

@@ -282,6 +282,21 @@ fn individual_collision_volumes_retain_the_shared_legacy_area() {
 }
 
 #[test]
+fn plus_signed_coordinates_and_z_bounds_are_not_numbers() {
+    // `parse_double_token` (`PrintConfig.cpp:13892-13902`) reads through
+    // `string_to_double_decimal_point`, `fast_float::from_chars` (`LocalesUtils.cpp:86-93`), which
+    // takes no leading '+'. A '+' coordinate leaves no polygon and a '+' z bound no range.
+    assert!(!is_valid_bed_exclude_volumes_string(
+        "+5x0,10x0,10x10,0x10",
+        100.0
+    ));
+    assert!(!is_valid_bed_exclude_volumes_string(
+        "+1..5;0x0,10x0,10x10,0x10",
+        100.0
+    ));
+}
+
+#[test]
 fn arrange_keeps_convex_exclusions_exact_and_bounds_concave_ones() {
     // `:507-523`
     let convex = rectangle(0.0, 0.0, 10.0, 10.0);
