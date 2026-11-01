@@ -250,6 +250,22 @@ impl RawConfigValue {
                 .collect::<Vec<_>>();
             return Ok(Some(rendered.join(";")));
         }
+        // Config.hpp (345efec64c7b):1994-2003: coBools uses comma-separated
+        // canonical 0/1 values, not the generic raw semicolon-list token.
+        if definition.is_some_and(|definition| definition.kind == OptionValueKind::Bools)
+            && let Self::List(values) = self
+        {
+            let count = count.unwrap_or(values.len()).min(values.len());
+            let rendered: Result<Vec<_>, _> = values[..count]
+                .iter()
+                .map(|value| match value {
+                    Self::Text(text) if matches!(text.trim(), "0" | "1") => Ok(text.trim()),
+                    _ => Err(format!("invalid Orca option {key}: expected bools")),
+                })
+                .collect();
+            let rendered = rendered?;
+            return Ok((!rendered.is_empty()).then(|| rendered.join(",")));
+        }
         // `ConfigOptionFloats::serialize` (`Config.hpp`): per-element
         // `%g` serialization, comma-joined — the raw Floats preset echo
         // never keeps the input spelling or the internal `;` list form.
