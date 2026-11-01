@@ -46,6 +46,7 @@ pub(super) fn prepare(
                 maximum_resolution * maximum_resolution,
                 maximum_deviation * maximum_deviation,
                 config.coordinate_scale.checked_scale(0.005).unwrap(),
+                config.coordinate_scale.scaled_delta(0.0001) as i64,
             )
         })
         .filter_map(clean_degenerate_and_collinear)
@@ -148,12 +149,14 @@ fn simplify_polygon(
     smallest_segment_squared: i64,
     allowed_error_squared: i64,
     tiny_distance: i64,
+    collinear_tolerance: i64,
 ) -> Option<Polygon> {
     let points = polygon.into_points();
     if points.len() <= 3 {
         return (points.len() == 3).then(|| Polygon::new(points));
     }
     let tiny_squared = tiny_distance * tiny_distance;
+    let collinear_squared = collinear_tolerance * collinear_tolerance;
     let mut state = SimplifyState {
         output: Vec::with_capacity(points.len()),
         previous: *points.last().unwrap(),
@@ -182,8 +185,8 @@ fn simplify_polygon(
         }
         let height_squared =
             (removed_area as f64 * removed_area as f64 / base_squared as f64) as i64;
-        if height_squared <= tiny_squared
-            && distance_to_infinite(current, state.previous, next) <= tiny_distance as f64
+        if height_squared <= collinear_squared
+            && distance_to_infinite(current, state.previous, next) <= collinear_tolerance as f64
         {
             continue;
         }
