@@ -64,7 +64,40 @@ fn positive_spacing_and_flow_generate_complete_gcode() {
         .unwrap();
     fs::write(directory.join("ares.gcode"), &processed.gcode).unwrap();
     assert!(!processed.gcode.is_empty());
-    assert!(processed.gcode.ends_with(b"; CONFIG_BLOCK_END\n\n\n"));
+    // Beta `GCode.cpp:4882-4935` tail order for non-BBL machines: the config
+    // block is written after the executable block and ends with
+    // `; CONFIG_BLOCK_END\n\n` (:4902); the filament stats follow via
+    // `update_print_stats_and_format_filament_stats` (:4906-4918), then the
+    // `; total filament used [g] = ` / `; total filament cost = ` /
+    // `; total layers count = ` lines and the estimated-printing-time
+    // placeholder (:4919-4931) that the processor expands into the two
+    // `; estimated ... printing time (normal mode) = ` lines. The file ends
+    // with the two `file.write("\n")` calls at :4933-4934.
+    let marker = b"; CONFIG_BLOCK_END\n\n";
+    let tail = &processed.gcode[processed
+        .gcode
+        .windows(marker.len())
+        .rposition(|window| window == marker)
+        .expect("config block end marker")
+        + marker.len()..];
+    let lines: Vec<&[u8]> = tail.split_inclusive(|byte| *byte == b'\n').collect();
+    let prefixes = [
+        "; filament used [mm] = ",
+        "; filament used [cm3] = ",
+        "; filament used [g] = ",
+        "; filament cost = ",
+        "; total filament used [g] = ",
+        "; total filament cost = ",
+        "; total layers count = ",
+        "; estimated printing time (normal mode) = ",
+        "; estimated first layer printing time (normal mode) = ",
+    ];
+    assert_eq!(lines.len(), prefixes.len() + 2);
+    for (line, prefix) in lines.iter().zip(prefixes) {
+        assert!(line.starts_with(prefix.as_bytes()));
+    }
+    assert_eq!(lines[prefixes.len()], b"\n");
+    assert_eq!(lines[prefixes.len() + 1], b"\n");
     fs::write(
         directory.join("result.json"),
         serde_json::to_vec_pretty(&json!({
