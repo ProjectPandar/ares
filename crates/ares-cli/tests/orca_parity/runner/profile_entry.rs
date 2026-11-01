@@ -29,6 +29,10 @@ mod preset_vector_loading;
 #[path = "../plater_archive.rs"]
 mod plater_archive;
 
+// G-code config block string-vector quoting against Native.
+#[path = "../config_string_vector_quoting.rs"]
+mod config_string_vector_quoting;
+
 // The plater session's public slice entries against Native `--slice <plate>`.
 #[path = "../plater_session.rs"]
 mod plater_session;

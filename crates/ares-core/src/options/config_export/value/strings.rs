@@ -28,7 +28,7 @@ fn quote_string_vector_element(value: &str, value_count: usize) -> String {
     let should_quote = (value_count == 1 && value.is_empty())
         || value
             .chars()
-            .any(|character| matches!(character, ' ' | '\t' | '\\' | '"' | '\r' | '\n'));
+            .any(|character| matches!(character, ' ' | '\t' | ';' | '\\' | '"' | '\r' | '\n'));
     if !should_quote {
         return value.to_owned();
     }
