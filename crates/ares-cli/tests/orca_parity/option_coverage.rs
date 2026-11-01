@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "fuzzy_skin_supported_area.rs"]
+mod fuzzy_skin_supported_area;
+
 #[path = "arachne_collinear_vertex_tolerance.rs"]
 mod arachne_collinear_vertex_tolerance;
 
