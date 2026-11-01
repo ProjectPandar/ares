@@ -118,6 +118,7 @@ pub use generation::{GenerationMetadata, ORCA_SLICER_COMPATIBILITY_VERSION};
 pub use infills::{InfillPath, InfillRole, LayerInfills, generate_infills};
 pub use model::{Model, Point3, Triangle, ZBounds};
 pub use moves::{LayerToolpathMoves, ToolpathMove, ToolpathMoveKind, generate_toolpath_moves};
+pub use options::bed_exclusion;
 pub use options::registry::{
     OptionDefinition, OptionGuiType, OptionMetadata, OptionMode, OptionValueKind,
     extruder_option_keys, extruder_retract_keys, filament_option_keys,
@@ -171,6 +172,7 @@ pub use plater::{
 };
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::{LayerRegion, Print, PrintLayer, PrintObject, PrintRegion, build_print_domain};
+pub use project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 
 pub use print_paths::{
     LayerPrintPaths, PrintPath, PrintPathInput, PrintPathRole, ShellLayerOptions,

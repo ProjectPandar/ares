@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 use std::f64::consts::PI;
 
-use super::config::DynamicConfig;
+use super::config::DynamicPrintConfig;
 use super::statics::{
     PurgeEstimate, brim_real_width, limit_depth_by_height, rib_footprint_side, rib_tower_bbox_side,
     semm_flush_volume, tower_blocks_depth, wrapping_detection_depth,
@@ -16,7 +16,7 @@ use super::{
 
 /// The Type1 planner's per-filament purges (`:150-173`).
 fn type1_purges(
-    config: &DynamicConfig,
+    config: &DynamicPrintConfig,
     filament_ids: &[u32],
     prime_volume: f64,
     dual_nozzle: bool,
@@ -54,7 +54,7 @@ fn type1_purges(
 /// The tower's footprint for the filaments `filament_slots` (0-based), sliced at `layer_height`
 /// up to `max_object_height`.
 pub(crate) fn estimate_footprint(
-    config: &DynamicConfig,
+    config: &DynamicPrintConfig,
     tower_type: WipeTowerType,
     filament_slots: &[u32],
     mut layer_height: f64,

@@ -7,7 +7,7 @@
 use super::{InstanceKey, PlateList};
 use crate::gcode_processor::CustomGCodeType;
 use crate::plater::selection::instance_bounding_box;
-use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicConfig;
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::{
     expand_mixed_filaments, has_any_mixed_filament,
 };
@@ -117,7 +117,7 @@ impl PlateList {
         &self,
         index: usize,
         project: &Project,
-        config: &DynamicConfig,
+        config: &DynamicPrintConfig,
     ) -> Result<Vec<i32>, SliceError> {
         let mut extruders = Vec::new();
         if project.objects().is_empty() {

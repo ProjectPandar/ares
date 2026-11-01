@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::f64::consts::{FRAC_PI_4, PI};
 
 use super::EPSILON;
-use super::config::{DynamicConfig, get_at};
+use super::config::{DynamicPrintConfig, get_at};
 
 /// `WipeTower::PurgeEstimate`: one filament's purge in the Type1 planner.
 #[derive(Clone, Copy, Debug, Default)]
@@ -199,7 +199,7 @@ fn flush_volumes_block(matrix: &[f64], nozzle_id: usize, nozzle_nums: usize) -> 
 }
 
 /// `WipeTower2::extract_wipe_volumes`.
-fn extract_wipe_volumes(config: &DynamicConfig) -> Vec<Vec<f32>> {
+fn extract_wipe_volumes(config: &DynamicPrintConfig) -> Vec<Vec<f32>> {
     let raw = config.option("flush_volumes_matrix");
     let raw = raw.floats();
     let nozzle_diameter = config.option("nozzle_diameter");
@@ -233,7 +233,7 @@ fn extract_wipe_volumes(config: &DynamicConfig) -> Vec<Vec<f32>> {
 }
 
 /// `WipeTower2::estimate_semm_flush_volume`.
-pub(crate) fn semm_flush_volume(config: &DynamicConfig, filaments_cnt: usize) -> f32 {
+pub(crate) fn semm_flush_volume(config: &DynamicPrintConfig, filaments_cnt: usize) -> f32 {
     let volumes = extract_wipe_volumes(config);
     if volumes.is_empty() {
         return 0.0;

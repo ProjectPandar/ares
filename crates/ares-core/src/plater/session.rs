@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::edits::{EditedPlate, PlaterEdits};
 use super::plate_list::{BoundingBox, InstanceKey, PlateList, PlateModel};
 use super::{eigen, selection};
-use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicConfig;
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 use crate::{Project, SliceError, Transform3d};
 
 pub struct PlaterSession {
@@ -244,7 +244,7 @@ impl PlaterSession {
     pub fn add_plate(&mut self) -> Result<(), SliceError> {
         let new_index = self.plates.plates.len();
         self.plates.create_plate(&mut Model(&mut self.project));
-        let full = DynamicConfig::new(self.project.settings())?;
+        let full = DynamicPrintConfig::new(self.project.settings())?;
         let mut positions = self.tower_positions();
         self.place_new_towers(&full, &mut positions, new_index)?;
         self.wipe_tower = Some(positions);

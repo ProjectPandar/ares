@@ -5,6 +5,7 @@
 
 mod arrange;
 mod arranger;
+mod exclusion_volume;
 pub mod imex;
 mod nest;
 mod nlopt;
@@ -13,6 +14,7 @@ mod rotcalipers;
 mod types;
 
 pub use crate::geometry::{BoundingBox, ExPolygon, Point, Polygon};
+pub use exclusion_volume::bed_exclusion_arrange_polygon;
 pub use params::{
     bed_exclusion_applies, get_shrink_bedpts, has_bed_exclusion_regions, update_arrange_params,
     update_selected_items_axis_align, update_selected_items_inflation,

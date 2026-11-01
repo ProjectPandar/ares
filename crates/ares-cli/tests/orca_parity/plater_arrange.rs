@@ -14,6 +14,8 @@ use crate::runner::{OrcaRunner, repo_root, stages};
 
 #[path = "plater_arrange/arranged.rs"]
 mod arranged;
+#[path = "plater_arrange/bed_exclusion.rs"]
+mod bed_exclusion;
 #[path = "plater_arrange/current_plate.rs"]
 mod current_plate;
 #[path = "plater_arrange/wipe_tower.rs"]

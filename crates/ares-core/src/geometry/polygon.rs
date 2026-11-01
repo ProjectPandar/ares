@@ -98,7 +98,7 @@ impl Polygon {
         );
     }
 
-    pub(crate) fn contains(&self, point: &Point) -> bool {
+    pub fn contains(&self, point: &Point) -> bool {
         super::clipper::point_in_polygon(*point, &self.points) != 0
     }
 

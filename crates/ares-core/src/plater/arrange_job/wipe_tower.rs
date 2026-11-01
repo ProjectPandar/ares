@@ -14,7 +14,7 @@ use crate::geometry::{ExPolygon, JoinType, Point, Polygon, offset_paths};
 use crate::options::ProcessPrintSequence;
 use crate::plater::PlaterSession;
 use crate::plater::plate_list::{Relocation, Towers};
-use crate::project_slice::gcode_emit::wipe_tower_estimate::config::{DynamicConfig, get_at};
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::{DynamicPrintConfig, get_at};
 use crate::project_slice::gcode_emit::wipe_tower_estimate::{
     auto_brim_by_height, first_layer_outline, resolve_wipe_tower_type,
 };
@@ -81,7 +81,7 @@ impl ShownTower {
 /// The 2D box of `load_wipe_tower_preview`'s shell, its height last: the `float` cube and, with a
 /// brim, the brim slab under the first-layer outline grown by it. `None` where no volume loads.
 fn preview_box(
-    config: &DynamicConfig,
+    config: &DynamicPrintConfig,
     (width, depth, height): (f32, f32, f32),
     brim: f32,
 ) -> Option<([f32; 2], [f32; 2], f32)> {
@@ -129,7 +129,7 @@ impl PlaterSession {
     /// The towers `reload_scene` shows, per plate, after it re-clamps each stored position.
     pub(super) fn shown_towers(
         &self,
-        config: &DynamicConfig,
+        config: &DynamicPrintConfig,
         positions: &mut TowerPositions,
     ) -> Result<Vec<Option<ShownTower>>, SliceError> {
         let count = self.plates.plates.len();
@@ -221,7 +221,7 @@ impl PlaterSession {
     /// is needed.
     pub(super) fn prepare_wipe_tower(
         &self,
-        config: &DynamicConfig,
+        config: &DynamicPrintConfig,
         (positions, shown): (&TowerPositions, &[Option<ShownTower>]),
         params: &ArrangeParams,
         selected: &[ArrangePolygon],
@@ -261,7 +261,7 @@ impl PlaterSession {
     /// `first` on: the stored positions resized to the plates, the new plates' positions set.
     pub(in crate::plater) fn place_new_towers(
         &self,
-        config: &DynamicConfig,
+        config: &DynamicPrintConfig,
         positions: &mut TowerPositions,
         first: usize,
     ) -> Result<(), SliceError> {

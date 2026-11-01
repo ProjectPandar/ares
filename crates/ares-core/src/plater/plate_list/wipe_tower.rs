@@ -10,7 +10,7 @@ use crate::geometry::{ExPolygon, JoinType, Point, Polygon, offset_paths};
 use crate::options::ProcessBrimType;
 use crate::plater::arrange_job::convex_hull_2d;
 use crate::plater::selection::instance_bounding_box;
-use crate::project_slice::gcode_emit::wipe_tower_estimate::config::{DynamicConfig, get_at};
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::{DynamicPrintConfig, get_at};
 use crate::project_slice::gcode_emit::wipe_tower_estimate::{
     Footprint, estimate_footprint, first_layer_outline, nearest_clear_anchor,
     resolve_wipe_tower_type,
@@ -58,7 +58,7 @@ pub(in crate::plater) struct Relocation {
 pub(in crate::plater) struct Towers<'a> {
     pub(in crate::plater) plates: &'a PlateList,
     pub(in crate::plater) project: &'a Project,
-    pub(in crate::plater) config: &'a DynamicConfig,
+    pub(in crate::plater) config: &'a DynamicPrintConfig,
     pub(in crate::plater) positions: (&'a [f64], &'a [f64]),
 }
 

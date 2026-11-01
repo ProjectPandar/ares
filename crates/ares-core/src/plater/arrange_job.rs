@@ -27,7 +27,7 @@ use crate::arrangement::{
 use crate::geometry::fixed_gcc_sort_by;
 use crate::options::{ProcessTimelapseType, ProjectSettings};
 use crate::project::raw_settings::RawConfigValue;
-use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicConfig;
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 use crate::{Project, SliceError};
 
 /// Which instances an arrange moves (`Job::JobPrepareState`).
@@ -190,7 +190,7 @@ impl PlaterSession {
         if needs_calibration_strip(&self.project, &params) {
             return Err(unsupported("around the first-layer scan region"));
         }
-        let full = DynamicConfig::new(project_settings)?;
+        let full = DynamicPrintConfig::new(project_settings)?;
         let mut positions = self.tower_positions();
         let shown = self.shown_towers(&full, &mut positions)?;
         let mut unselected = match current {

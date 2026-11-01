@@ -7,7 +7,7 @@ mod statics;
 
 use std::f64::consts::PI;
 
-use self::config::{DynamicConfig, get_at};
+use self::config::{DynamicPrintConfig, get_at};
 pub(crate) use self::statics::auto_brim_by_height;
 use crate::geometry::{
     ExPolygon, FillRule, Point, Polygon, convex_hull, difference_ex_polygons, point_in_polygon,
@@ -95,7 +95,7 @@ pub(crate) fn expand_mixed_filaments(
 }
 
 /// `resolve_wipe_tower_type` (`:62-73`).
-pub(crate) fn resolve_wipe_tower_type(config: &DynamicConfig) -> WipeTowerType {
+pub(crate) fn resolve_wipe_tower_type(config: &DynamicPrintConfig) -> WipeTowerType {
     if config
         .option("printer_model")
         .text()
@@ -112,7 +112,7 @@ pub(crate) fn resolve_wipe_tower_type(config: &DynamicConfig) -> WipeTowerType {
 /// `estimate_wipe_tower_first_layer_outline` (`:75-84`) with `WipeTower2::cone_base_polygon`
 /// (`WipeTower2.cpp:2167-2185`).
 pub(crate) fn first_layer_outline(
-    config: &DynamicConfig,
+    config: &DynamicPrintConfig,
     tower_type: WipeTowerType,
     (width, depth, height): (f64, f64, f64),
 ) -> Polygon {
@@ -258,12 +258,12 @@ pub(crate) fn nearest_clear_anchor(
 }
 
 /// Values read off the config by `option_of`.
-fn opt_float(config: &DynamicConfig, key: &str) -> f64 {
+fn opt_float(config: &DynamicPrintConfig, key: &str) -> f64 {
     config.option(key).float()
 }
 
 /// `float_at`: the element for `id` of a non-empty vector, else `fallback`.
-fn float_at(config: &DynamicConfig, key: &str, id: u32, fallback: f64) -> f64 {
+fn float_at(config: &DynamicPrintConfig, key: &str, id: u32, fallback: f64) -> f64 {
     let option = config.option(key);
     let values = option.floats();
     if values.is_empty() {
@@ -274,7 +274,7 @@ fn float_at(config: &DynamicConfig, key: &str, id: u32, fallback: f64) -> f64 {
 }
 
 /// `int_at`.
-fn int_at(config: &DynamicConfig, key: &str, id: u32, fallback: i64) -> i64 {
+fn int_at(config: &DynamicPrintConfig, key: &str, id: u32, fallback: i64) -> i64 {
     let option = config.option(key);
     let values = option.ints();
     if values.is_empty() {
@@ -285,7 +285,7 @@ fn int_at(config: &DynamicConfig, key: &str, id: u32, fallback: i64) -> i64 {
 }
 
 /// `max_of`.
-fn max_of(config: &DynamicConfig, key: &str, fallback: f64) -> f64 {
+fn max_of(config: &DynamicPrintConfig, key: &str, fallback: f64) -> f64 {
     let option = config.option(key);
     option
         .floats()

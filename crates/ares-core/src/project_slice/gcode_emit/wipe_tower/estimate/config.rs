@@ -96,12 +96,13 @@ pub(crate) fn get_at<T: Copy>(values: &[T], index: usize) -> T {
     values.get(index).copied().unwrap_or(values[0])
 }
 
-/// The composed settings by key (`full_config()`), each value the token `serialize` writes.
-pub(crate) struct DynamicConfig {
+/// `DynamicPrintConfig`: the composed settings by key (`full_config()`), each value the token
+/// `serialize` writes; a key without one reads the registry default.
+pub struct DynamicPrintConfig {
     tokens: BTreeMap<String, String>,
 }
 
-impl DynamicConfig {
+impl DynamicPrintConfig {
     pub(crate) fn new(settings: &ProjectSettings) -> Result<Self, SliceError> {
         let tokens = collect_config_entries(settings)
             .map_err(|error| SliceError::InvalidInput(error.to_string()))?
@@ -109,6 +110,24 @@ impl DynamicConfig {
             .map(|entry| (entry.key, entry.token))
             .collect();
         Ok(Self { tokens })
+    }
+
+    /// `DynamicPrintConfig::full_print_config()`: every key at its registry default.
+    pub fn full_print_config() -> Self {
+        Self {
+            tokens: BTreeMap::new(),
+        }
+    }
+
+    /// `ConfigBase::set_deserialize_strict` (`Config.hpp:2836-2840`): stores the serialized `value` of
+    /// the registered `key`, rejecting an unknown key or a value its type cannot deserialize.
+    pub fn set_deserialize_strict(&mut self, key: &str, value: &str) -> Result<(), SliceError> {
+        let definition = option_definition(key)
+            .ok_or_else(|| SliceError::InvalidInput(format!("unknown option {key}")))?;
+        decode_config_value(definition.kind, value)
+            .map_err(|error| SliceError::InvalidInput(format!("{key}: {error}")))?;
+        self.tokens.insert(key.to_owned(), value.to_owned());
+        Ok(())
     }
 
     /// `option_of(config, key)`.
