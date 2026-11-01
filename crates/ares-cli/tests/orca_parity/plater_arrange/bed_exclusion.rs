@@ -9,7 +9,9 @@
 use super::wipe_tower::{
     NO_TOWER_BRIM, PRIME_VOLUME_PURGE, RECTANGLE_TOWER, TWO_FILAMENTS, TWO_FILAMENTS_CORNER,
 };
-use super::{CUBES, Edit, PROJECT, assert_arranged_like_native, settings};
+use super::{CUBES, Edit, PROJECT, assert_arranged_like_native, rewrite_archive, settings};
+use crate::runner::{profile_entry, repo_root};
+use ares_core::{ArrangeScope, PlaterSession, PresetCatalogHandle};
 
 /// The two-filament cubes with the 20 x 11.25 mm rectangle tower at (1, 1) (`wipe_tower.rs`).
 const CORNER_TOWER: [Edit; 6] = [
@@ -65,5 +67,111 @@ fn plater_arrange_keeps_clear_of_the_prime_tower_and_a_bed_exclude_volume_like_n
         TWO_FILAMENTS,
         &[CORNER_TOWER.as_slice(), &[right_volume]].concat(),
         settings(false, false),
+    );
+}
+
+/// A Snapmaker J1 (two extruders, `filament_map` [1, 2] Manual): a 30 x 10 mm object on filament 1,
+/// on a 324 x 200 mm bed.
+const J1: &str = "tests/parity/closest-lines/single.3mf";
+/// A Bambu Lab X2D (two nozzles, `filament_map_mode` Auto For Flush): one object on filament 1 on a
+/// 256 mm bed.
+const X2D: &str = "tests/parity/generated-printer-ids/input.3mf";
+/// Both X2D nozzles reach the whole bed: the arrange of several nozzles' shared area is not ported,
+/// and the vendor test reads only `printer_model`.
+const X2D_ONE_AREA: Edit = (
+    PROJECT,
+    "\"extruder_printable_area\": [\n    \"0x0,256x0,256x256,0x256\",\n    \"20.5x0,256x0,256x256,20.5x256\"\n  ]",
+    "\"extruder_printable_area\": []",
+);
+
+/// `base` in PerExtruder mode with a full-height volume over `(min, max)` for extruder 2 only.
+fn extruder_two_volume(
+    base: &str,
+    (min, max): ([f64; 2], [f64; 2]),
+    edits: &[Edit],
+) -> PlaterSession {
+    let volume = format!(
+        "{{\"bed_exclude_volume_mode\": \"per_extruder\", \"extruder_bed_exclude_volumes\": [\"\", \"0..250;{0}x{1},{2}x{1},{2}x{3},{0}x{3}\"],",
+        min[0], min[1], max[0], max[1]
+    );
+    let input = rewrite_archive(
+        &std::fs::read(repo_root().join(base)).unwrap(),
+        |name, text| {
+            (name == PROJECT).then(|| {
+                let mut text = text.replacen('{', &volume, 1);
+                for (_, from, to) in edits {
+                    assert!(text.contains(from), "{base} has no {from:?}");
+                    text = text.replace(from, to);
+                }
+                text
+            })
+        },
+    );
+    PlaterSession::load(input).unwrap()
+}
+
+/// Whether the arranged first instance's offset lies in `(min, max)`.
+fn arranged_inside(
+    session: &mut PlaterSession,
+    (min, max): ([f64; 2], [f64; 2]),
+) -> (bool, [f64; 2]) {
+    session
+        .arrange(ArrangeScope::All, settings(false, false))
+        .unwrap();
+    let matrix = session.instance_transform(0, 0).unwrap().to_column_major();
+    let xy = [matrix[12], matrix[13]];
+    (
+        (0..2).all(|axis| (min[axis]..=max[axis]).contains(&xy[axis])),
+        xy,
+    )
+}
+
+#[test]
+fn plater_arrange_lets_an_object_into_a_volume_only_another_nozzle_sees() {
+    // A2b3, GUI-only (the CLI arrange leaves the nozzle ids empty), so no Native comparison. The
+    // object prints with filament 1, which the manual map puts on extruder 1, so the arrange job
+    // gives it the nozzle ids {0} (`ArrangeJob.cpp:53-81`). The extruder-2 volume then does not
+    // apply to it (`bed_exclusion_applies`, `Arrange.cpp:131-133`), and the pile centres on the bed
+    // inside it.
+    let volume = ([112.0, 60.0], [212.0, 140.0]);
+    let (inside, xy) = arranged_inside(&mut extruder_two_volume(J1, volume, &[]), volume);
+    assert!(
+        inside,
+        "the object at {xy:?} stays out of the extruder-2 volume"
+    );
+}
+
+#[test]
+fn plater_arrange_keeps_an_installed_bbl_printer_out_of_every_nozzle_volume() {
+    // With BBL installed the X2D's vendor type is Marlin_BBL (`get_current_vendor_type`,
+    // `PresetBundle.cpp:992-1024`). Under an automatic filament map the arrange job leaves the ids
+    // empty (`ArrangeJob.cpp:73-75`), so every nozzle's volume applies and the object moves out.
+    let volume = ([78.0, 78.0], [178.0, 178.0]);
+    let mut session = extruder_two_volume(X2D, volume, &[X2D_ONE_AREA]);
+    let profiles = repo_root().join("OrcaSlicer/resources/profiles");
+    let mut installed = PresetCatalogHandle::new();
+    let bbl = profile_entry::vendor(&profiles, "BBL");
+    installed
+        .add_vendor(&serde_json::to_vec(&bbl).unwrap())
+        .unwrap();
+    session.set_installed_vendors(&installed);
+    let (inside, xy) = arranged_inside(&mut session, volume);
+    assert!(
+        !inside,
+        "the BBL object at {xy:?} entered the extruder-2 volume"
+    );
+}
+
+#[test]
+fn plater_arrange_reads_a_printer_of_no_installed_vendor_as_generic() {
+    // No vendor installed: the X2D's vendor type is Unknown. A generic automatic map takes the
+    // filament id as the tool id (`PrintConfig.cpp:14201-14202`), so filament 1 is on extruder 1, the
+    // ids are {0}, and the object centres inside the extruder-2 volume.
+    let volume = ([78.0, 78.0], [178.0, 178.0]);
+    let mut session = extruder_two_volume(X2D, volume, &[X2D_ONE_AREA]);
+    let (inside, xy) = arranged_inside(&mut session, volume);
+    assert!(
+        inside,
+        "the object at {xy:?} stays out of the extruder-2 volume"
     );
 }

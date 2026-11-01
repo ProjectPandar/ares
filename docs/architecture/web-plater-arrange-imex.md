@@ -217,7 +217,11 @@ Every `file:line` is at `345efec64`. In ToolheadOffset and PerExtruder modes eac
 
   All crate-private.
 - **`plater/arrange_job/prepare`**: both id setters at upstream's three call sites.
-- **The vendor test** reads the vendor models the session was loaded with (`load_with_profiles`' catalog). A plain 3MF session loads no vendor profiles, so its vendor type is Unknown, as upstream gives for a model no loaded vendor lists. This is not a fallback, just the upstream result for an empty vendor list.
+- **The vendor test** (`get_current_vendor_type`) looks the project's `printer_model` up in the *installed* vendors' models, `PresetBundle::vendors`:
+  - It compares the vendor **id**, the index file stem (BBL, Qidi), not the JSON `name` ("Bambulab"). The prerequisite commit adds the id to the vendor envelope (`{id, index, files}`), with `PrinterModelInfo.vendor` returning it.
+  - The installed vendor set is the `PresetCatalogHandle` the caller builds from the installed vendor profiles. Ares has no built-in vendor data. It reaches the session through `PlaterSession::set_installed_vendors(&PresetCatalogHandle)`.
+  - Until that call no vendor is installed, which is a real upstream state (a GUI with no vendor installed gives Unknown).
+  - **The web must call it** right after `createPlaterSession` / `createPlaterSessionWithProfiles` and after every catalog sync, including vendor install and uninstall. Otherwise a BBL project silently reads as Unknown. A session test and the web wiring cover it (below).
 
 ### Included and deferred
 - **Included:** the filament-to-extruder resolution, the plate maps, the object filament collection, and both id setters at their call sites.
@@ -228,8 +232,10 @@ Every `file:line` is at `345efec64`. In ToolheadOffset and PerExtruder modes eac
 ### Oracle and RED
 - **GUI-only.** The CLI arrange never sets the ids, so Native cannot be the oracle.
 - **Unit:** `test_exclusion_volumes.cpp:486-498`, the six `bed_exclusion_extruder_for_filament` checks, ported literally.
-- **Session property case** (a two-extruder project, PerExtruder mode, picked in the RED):
-  - A collision volume over the bed centre applies to extruder 2 only, and the object prints with a filament mapped to extruder 1.
-  - Upstream's ids then let the object pile at the centre inside that volume; the empty ids today push it out.
-  - The expectation is derived from `bed_exclusion_applies` (`Arrange.cpp:131-133`) and the setter (`ArrangeJob.cpp:53-81`), and asserted as the arranged box meeting the volume.
+- **Session property cases**, each in PerExtruder mode with a full-height volume over the bed centre for extruder 2 only. The expectations are derived from `bed_exclusion_applies` (`Arrange.cpp:131-133`) and the setter (`ArrangeJob.cpp:53-81`), and asserted on the arranged offset.
+  1. A Snapmaker J1 with the object on filament 1, manual map [1, 2]: ids {0}, so it centres inside the volume.
+  2. A Bambu Lab X2D with BBL installed (`set_installed_vendors` with the BBL vendor from `resources/profiles`), automatic map: Marlin_BBL leaves the ids empty, so the object moves out of the volume.
+  3. The same X2D with no vendor installed: Unknown, so the generic automatic map gives ids {0} and the object centres inside the volume.
+  - Cases 2 and 3 differ only in the installed vendors, which pins the vendor test's observable effect.
+  - Both X2D cases give the two nozzles one area (`extruder_printable_area` emptied), since several nozzles' shared area is not ported and the vendor test reads only `printer_model`.
 - **The kernel side** (`test_arrange.cpp:509-575`) is already ported in `tests/arrange/parameters.rs`.

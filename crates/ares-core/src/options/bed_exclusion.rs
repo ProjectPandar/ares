@@ -6,8 +6,10 @@
 use crate::geometry::{Point, Polygon};
 use crate::{BedExcludeVolumeMode, DynamicPrintConfig};
 
+mod filament_map;
 pub(crate) mod intersection;
 
+pub use filament_map::{ExclusionFilamentMap, bed_exclusion_extruder_for_filament};
 pub use intersection::model_part_intersects_region;
 
 /// `BedExcludeRegion::Purpose`.

@@ -12,6 +12,8 @@ use ares_core::bed_exclusion::{
 };
 use ares_core::{BedExcludeVolumeMode, DynamicPrintConfig};
 
+#[path = "bed_exclusion/filament_map.rs"]
+mod filament_map;
 #[path = "bed_exclusion/intersection.rs"]
 mod intersection;
 

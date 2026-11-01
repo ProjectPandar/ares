@@ -5,6 +5,7 @@
 //! shared bed are not ported yet; projects needing them are rejected.
 
 mod finalize;
+mod nozzle_ids;
 mod params;
 mod polygon;
 mod prepare;
