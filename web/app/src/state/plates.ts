@@ -1,4 +1,4 @@
-import type { PlaterLayout } from "@ares-slicer/wasm";
+import type { PlaterLayout, ScaleEdit } from "@ares-slicer/wasm";
 import type { InstanceRef } from "../viewport/instanceDrag";
 import { setSliceResult } from "./actions";
 import { invalidatedSlices, useApp } from "./store";
@@ -96,6 +96,18 @@ export function rotateInstance(target: InstanceRef, radians: Vec3) {
 export async function setInstancePosition(target: InstanceRef, axis: 0 | 1 | 2, value: number) {
   const { plater, currentPlate } = useApp.getState();
   applyLayout(await plater!.setPosition(target.object, target.instance, axis, value), currentPlate);
+}
+
+/** A Scale field edit in percent (GizmoObjectManipulation::change_scale_value). */
+export async function setInstanceScale(target: InstanceRef, edit: ScaleEdit) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.setScale(target.object, target.instance, edit), currentPlate);
+}
+
+/** A Size field edit in millimetres (GizmoObjectManipulation::change_size_value). */
+export async function setInstanceSize(target: InstanceRef, edit: ScaleEdit) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.setSize(target.object, target.instance, edit), currentPlate);
 }
 
 /** An absolute rotation field edit in degrees (GizmoObjectManipulation::change_absolute_rotation_value). */

@@ -4,7 +4,7 @@
 //! and results.
 
 use ares_core::{
-    ArrangeScope, ArrangeSettings, GenerationMetadata, PlaterSlice, ProfileSliceRequest,
+    ArrangeScope, ArrangeSettings, GenerationMetadata, PlaterSlice, ProfileSliceRequest, ScaleEdit,
     SlicerContext,
 };
 use serde::{Deserialize, Serialize};
@@ -70,6 +70,26 @@ impl SettingsJson {
             align_to_y_axis: settings.align_to_y_axis,
         })
         .expect("arrange settings serialize")
+    }
+}
+
+/// A scale or size field edit as the web passes it (`ScaleEdit`).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ScaleEditJson {
+    axis: usize,
+    value: f64,
+    uniform: bool,
+}
+
+impl ScaleEditJson {
+    fn parse(json: &str) -> Result<ScaleEdit, JsValue> {
+        let edit: Self = serde_json::from_str(json).map_err(js_error)?;
+        Ok(ScaleEdit {
+            axis: edit.axis,
+            value: edit.value,
+            uniform: edit.uniform,
+        })
     }
 }
 
@@ -201,6 +221,45 @@ impl PlaterSession {
     ) -> Result<(), JsValue> {
         self.session
             .set_absolute_rotation(object, instance, axis, degrees)
+            .map_err(js_error)
+    }
+
+    /// The scale (percent) and size (mm) fields, `[scale x, y, z, size x, y, z]`
+    /// (`GizmoObjectManipulation::update_settings_value`).
+    #[wasm_bindgen(js_name = scaleAndSize)]
+    pub fn scale_and_size(&self, object: usize, instance: usize) -> Result<Vec<f64>, JsValue> {
+        let (scale, size) = self
+            .session
+            .scale_and_size(object, instance)
+            .map_err(js_error)?;
+        Ok([scale, size].concat())
+    }
+
+    /// A "Scale ratios" field edit, `edit_json` `{axis, value, uniform}` (`change_scale_value`).
+    #[wasm_bindgen(js_name = setScale)]
+    pub fn set_scale(
+        &mut self,
+        object: usize,
+        instance: usize,
+        edit_json: &str,
+    ) -> Result<(), JsValue> {
+        let edit = ScaleEditJson::parse(edit_json)?;
+        self.session
+            .set_scale(object, instance, edit)
+            .map_err(js_error)
+    }
+
+    /// A "Size" field edit, `edit_json` `{axis, value, uniform}` (`change_size_value`).
+    #[wasm_bindgen(js_name = setSize)]
+    pub fn set_size(
+        &mut self,
+        object: usize,
+        instance: usize,
+        edit_json: &str,
+    ) -> Result<(), JsValue> {
+        let edit = ScaleEditJson::parse(edit_json)?;
+        self.session
+            .set_size(object, instance, edit)
             .map_err(js_error)
     }
 

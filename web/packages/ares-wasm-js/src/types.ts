@@ -53,6 +53,22 @@ export interface PlaterLayout {
   wipeTower: [number[], number[]];
 }
 
+/**
+ * One Scale or Size field edit (`GizmoObjectManipulation`): the axis, its new value (percent or
+ * millimetres) and the panel's uniform toggle, which applies the edited axis's factor to all three.
+ */
+export interface ScaleEdit {
+  axis: 0 | 1 | 2;
+  value: number;
+  uniform: boolean;
+}
+
+/** The Scale (percent) and Size (mm) fields of one instance in world coordinates. */
+export interface ScaleAndSize {
+  scale: [number, number, number];
+  size: [number, number, number];
+}
+
 /** The arrange settings popup (`GLCanvas3D::ArrangeSettings`); `distance` 0 spaces items automatically. */
 export interface ArrangeSettings {
   /** mm. */

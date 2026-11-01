@@ -214,3 +214,5 @@
 .manipulation-title { grid-column: 1 / -1; color: var(--text-dim); }
 .manipulation-field { grid-column: 1 / -1; display: grid; grid-template-columns: 16px 1fr auto; gap: 6px; align-items: center; }
 .manipulation-unit { color: var(--text-dim); }
+.manipulation-reset { align-self: flex-start; }
+.manipulation-toggle { display: flex; gap: 6px; align-items: center; }

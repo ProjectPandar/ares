@@ -1,6 +1,6 @@
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
-import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
+import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, ScaleAndSize, ScaleEdit, Scene } from "./types.js";
 
 type Call = (body: RequestBody) => Promise<unknown>;
 type Vec3 = [number, number, number];
@@ -58,6 +58,25 @@ export class PlaterSession {
   /** Sets one absolute rotation field, rotating by the change (`change_absolute_rotation_value`). */
   setAbsoluteRotation(object: number, instance: number, axis: Axis, degrees: number): Promise<PlaterLayout> {
     return this.#edit({ op: "setAbsoluteRotation", object, instance, axis, degrees });
+  }
+
+  /** The instance's Scale (percent) and Size (mm) fields in world coordinates (`GizmoObjectManipulation`). */
+  async scaleAndSize(object: number, instance: number): Promise<ScaleAndSize> {
+    return (await this.#call({ kind: "platerScaleAndSize", sessionId: this.#sessionId, object, instance })) as ScaleAndSize;
+  }
+
+  /**
+   * Sets one Scale field in percent (`change_scale_value`): the instance scales about its box centre,
+   * its object's other instances take the same scale, and each drops onto the bed unless it stays
+   * sinking (`GLCanvas3D::do_scale`). A value at or below zero, or the shown one, changes nothing.
+   */
+  setScale(object: number, instance: number, edit: ScaleEdit): Promise<PlaterLayout> {
+    return this.#edit({ op: "setScale", object, instance, edit });
+  }
+
+  /** Sets one Size field in millimetres (`change_size_value`), scaling as `setScale` does. */
+  setSize(object: number, instance: number, edit: ScaleEdit): Promise<PlaterLayout> {
+    return this.#edit({ op: "setSize", object, instance, edit });
   }
 
   /** Appends a plate to the grid (`PartPlateList::create_plate`). */

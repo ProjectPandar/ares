@@ -1,4 +1,4 @@
-import type { ArrangeSettings, ConfigValue, CurrentPrinter, PresetKind } from "./types.js";
+import type { ArrangeSettings, ConfigValue, CurrentPrinter, PresetKind, ScaleEdit } from "./types.js";
 
 type Vec3 = [number, number, number];
 
@@ -8,6 +8,7 @@ export type PlaterEdit =
   | { op: "setPosition"; object: number; instance: number; axis: 0 | 1 | 2; value: number }
   | { op: "rotate"; object: number; instance: number; radians: Vec3 }
   | { op: "setAbsoluteRotation"; object: number; instance: number; axis: 0 | 1 | 2; degrees: number }
+  | { op: "setScale" | "setSize"; object: number; instance: number; edit: ScaleEdit }
   | { op: "addPlate" }
   | { op: "deletePlate"; index: number }
   | { op: "arrange"; plate: number | undefined; settings: ArrangeSettings };
@@ -39,6 +40,7 @@ export type WorkerRequest =
   | { id: number; kind: "platerScene"; sessionId: number }
   | { id: number; kind: "platerEdit"; sessionId: number; edit: PlaterEdit }
   | { id: number; kind: "platerAbsoluteRotation"; sessionId: number; object: number; instance: number }
+  | { id: number; kind: "platerScaleAndSize"; sessionId: number; object: number; instance: number }
   | { id: number; kind: "platerArrangeSettings"; sessionId: number }
   | { id: number; kind: "platerShownArrangeSettings"; sessionId: number; settings: ArrangeSettings }
   | { id: number; kind: "platerSlice"; sessionId: number; plate: number | undefined; overrides: string }

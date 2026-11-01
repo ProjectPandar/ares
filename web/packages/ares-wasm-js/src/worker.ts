@@ -72,6 +72,10 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.rotate(edit.object, edit.instance, new Float64Array(edit.radians));
     case "setAbsoluteRotation":
       return session.setAbsoluteRotation(edit.object, edit.instance, edit.axis, edit.degrees);
+    case "setScale":
+      return session.setScale(edit.object, edit.instance, JSON.stringify(edit.edit));
+    case "setSize":
+      return session.setSize(edit.object, edit.instance, JSON.stringify(edit.edit));
     case "addPlate":
       return session.addPlate();
     case "deletePlate":
@@ -227,6 +231,10 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [JSON.parse(sessions.get(request.sessionId)!.shownArrangeSettings(JSON.stringify(request.settings))), []];
     case "platerAbsoluteRotation":
       return [[...sessions.get(request.sessionId)!.absoluteRotation(request.object, request.instance)], []];
+    case "platerScaleAndSize": {
+      const values = sessions.get(request.sessionId)!.scaleAndSize(request.object, request.instance);
+      return [{ scale: [...values.subarray(0, 3)], size: [...values.subarray(3)] }, []];
+    }
     case "platerSlice": {
       const result = processedResult(await sessions.get(request.sessionId)!.sliceProcessed(request.plate, request.overrides));
       keepPlateViewer(request.sessionId, request.plate);
