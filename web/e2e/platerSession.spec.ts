@@ -15,7 +15,11 @@ const FIXTURE = "tests/parity/custom-gcode-overview/two-plates.3mf";
 const STRIDE = 220 * 1.2;
 
 type Instance = { id: [number, number, number]; printable: boolean; matrix: number[] };
-type Layout = { objects: { instances: Instance[] }[]; plates: { id: number; origin: [number, number]; instances: [number, number, number][] }[] };
+type Layout = {
+  objects: { instances: Instance[] }[];
+  plates: { id: number; origin: [number, number]; instances: [number, number, number][] }[];
+  wipeTower: [number[], number[]];
+};
 type Plater = Record<string, (...args: unknown[]) => Promise<unknown>>;
 
 const call = <T>(page: Page, method: string, ...args: unknown[]) => page.evaluate(
@@ -82,7 +86,7 @@ test("a plater session moves, rotates and replans plates, and slices the edited 
       { source: null, items: [] },
     ];
     const project = `${artifacts}oracle.3mf`;
-    writeFileSync(project, guiExport(FIXTURE, plates));
+    writeFileSync(project, guiExport(FIXTURE, plates, layout.wipeTower));
     const legs = { official: orcaPlate(project, 1, "official"), seeded: orcaPlate(project, 1, "seeded") };
     writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
       fixture: FIXTURE,

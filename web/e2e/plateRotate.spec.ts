@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
-import { aboutX, aboutZ, guiExport, matrix, orcaPlate } from "./platerOracle";
+import { aboutX, aboutZ, guiExport, matrix, orcaPlate, probedTowers } from "./platerOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-rotate/", import.meta.url));
@@ -78,7 +78,7 @@ test("an instance turns by the rotate gizmo ring and rotation fields, drops onto
   const oracle = `${artifacts}rotated.3mf`;
   writeFileSync(oracle, guiExport(FIXTURE, [
     { source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([aboutZ(45), aboutX(90)], [110, 110, 5 * Math.SQRT2]) }] },
-  ]));
+  ], await probedTowers(page)));
   const legs = { official: orcaPlate(oracle, 1, "official"), seeded: orcaPlate(oracle, 1, "seeded") };
   const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));

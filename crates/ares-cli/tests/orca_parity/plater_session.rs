@@ -134,10 +134,29 @@ fn rewrite_sequences(sequences: &str, session: &PlaterSession) -> String {
     serde_json::to_string(&new).unwrap()
 }
 
+/// `project_settings.config` with the session's `wipe_tower_x`/`wipe_tower_y`: the GUI writes its
+/// whole project config, each float as `ss << v` prints it (6 significant digits,
+/// `ConfigOptionFloatsTempl::serialize_single_value`, `Config.hpp:974-976`).
+fn rewrite_tower_positions(settings: &str, session: &PlaterSession) -> String {
+    let mut config: serde_json::Map<String, serde_json::Value> =
+        serde_json::from_str(settings).unwrap();
+    let serialized = |values: Vec<f64>| {
+        values
+            .into_iter()
+            .map(|value| format!("{}", format!("{value:.5e}").parse::<f64>().unwrap()).into())
+            .collect::<Vec<serde_json::Value>>()
+    };
+    let (x, y) = session.tower_positions();
+    config.insert("wipe_tower_x".to_owned(), serialized(x).into());
+    config.insert("wipe_tower_y".to_owned(), serialized(y).into());
+    serde_json::to_string_pretty(&config).unwrap()
+}
+
 /// The project as the GUI exports the session; other entries are unchanged.
 fn export(session: &PlaterSession) -> Vec<u8> {
     rewrite_archive(session.input(), |name, text| match name {
         "3D/3dmodel.model" => Some(rewrite_build(text, session)),
+        "Metadata/project_settings.config" => Some(rewrite_tower_positions(text, session)),
         "Metadata/model_settings.config" => Some(rewrite_plates(text, session)),
         "Metadata/filament_sequence.json" => Some(rewrite_sequences(text, session)),
         _ => None,

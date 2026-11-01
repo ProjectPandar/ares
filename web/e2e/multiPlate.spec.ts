@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
-import { guiExport, matrix, orcaPlate } from "./platerOracle";
+import { guiExport, matrix, orcaPlate, probedTowers } from "./platerOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/multi-plate/", import.meta.url));
@@ -111,7 +111,7 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   writeFileSync(oracle, guiExport(FIXTURE, [
     { source: 1, items: [{ objectId: 3, instanceId: 0, identifyId: 15, matrix: matrix([], [110, 110, 5]) }] },
     { source: null, items: [] }, { source: null, items: [] }, { source: null, items: [] },
-  ], [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([], [110 + 2 * STRIDE, 110 - STRIDE, 5]) }]));
+  ], await probedTowers(page), [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([], [110 + 2 * STRIDE, 110 - STRIDE, 5]) }]));
   compare("after delete, plate 1", moved, oracle, 1);
 
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({

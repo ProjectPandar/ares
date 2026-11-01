@@ -7,7 +7,7 @@
 
 use ares_core::PlaterSession;
 
-use super::super::plater_archive::rewrite_archive;
+use super::super::plater_archive::{read_entry, rewrite_archive};
 use super::{STRIDE, export, slice_session};
 use crate::runner::{OrcaRunner, repo_root};
 
@@ -96,29 +96,27 @@ fn tower_corner(gcode: &[u8]) -> [f64; 2] {
     corner
 }
 
-/// Native slicing the session's export with the tower positions the GUI stores, `[x, y]` per
-/// plate, places plate `plate`'s tower at `expected`, and so does the session.
+/// The session's export stores `positions` (`wipe_tower_x`, `wipe_tower_y` as the GUI writes them),
+/// Native slicing it places plate `plate`'s tower at `expected`, and so does the session.
 fn assert_tower_like_native(
     label: &str,
     session: &PlaterSession,
-    (plate, positions): (u32, [&str; 2]),
+    (plate, positions): (u32, [&[&str]; 2]),
     expected: [f64; 2],
 ) {
     let runner = OrcaRunner::from_env()
         .unwrap()
         .expect("official v2.5.0-beta slicing oracle");
-    let stored = [
-        (
-            "\"wipe_tower_x\": [\"150\"]",
-            format!("\"wipe_tower_x\": [{}]", positions[0]),
-        ),
-        (
-            "\"wipe_tower_y\": [\"150\"]",
-            format!("\"wipe_tower_y\": [{}]", positions[1]),
-        ),
-    ];
-    let edits = stored.each_ref().map(|(from, to)| (*from, to.as_str()));
-    let oracle = rewrite_project(&export(session), &edits);
+    let oracle = export(session);
+    let settings = read_entry(&oracle, PROJECT);
+    let config: serde_json::Value = serde_json::from_str(&settings).unwrap();
+    for (key, values) in ["wipe_tower_x", "wipe_tower_y"].into_iter().zip(positions) {
+        assert_eq!(
+            config[key],
+            serde_json::json!(values),
+            "{label}: exported {key}"
+        );
+    }
     let exported = runner
         .fixture_case(&format!("plater/{label}"), oracle)
         .unwrap();
@@ -137,7 +135,7 @@ fn plater_added_plate_slices_its_default_prime_tower_like_native() {
     assert_tower_like_native(
         "tower-added-plate",
         &session,
-        (2, ["\"150\", \"15\"", "\"150\", \"193.75\""]),
+        (2, [&["150", "15"], &["150", "193.75"]]),
         NEW_PLATE_TOWER,
     );
 }
@@ -151,7 +149,7 @@ fn plater_deleted_plate_drops_its_prime_tower_position_like_native() {
     assert_tower_like_native(
         "tower-deleted-plate",
         &session,
-        (1, ["\"15\"", "\"193.75\""]),
+        (1, [&["15"], &["193.75"]]),
         NEW_PLATE_TOWER,
     );
 }

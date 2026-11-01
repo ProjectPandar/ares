@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import type { Page } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
@@ -12,6 +13,14 @@ const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 export type OracleItem = { objectId: number; instanceId: number; identifyId: number; matrix: readonly number[] };
 /** One plate: the loaded plate (0-based) whose metadata it keeps, or `null` for an added plate, and its items. */
 export type OraclePlate = { source: number | null; items: OracleItem[] };
+/** The session's prime tower positions, `[wipe_tower_x, wipe_tower_y]` with one entry per plate. */
+export type OracleTowers = readonly [readonly number[], readonly number[]];
+
+/** The app session's tower positions from the viewport probe (`PlaterLayout.wipeTower`). */
+export async function probedTowers(page: Page): Promise<OracleTowers> {
+  const probe = JSON.parse((await page.locator(".viewport").getAttribute("data-instances"))!) as { wipeTower: OracleTowers };
+  return probe.wipeTower;
+}
 
 /** A column-major 4x4 matrix: rotations applied in order about the origin, then `offset`. */
 export function matrix(rotations: readonly (readonly number[][])[], offset: readonly [number, number, number]): number[] {
@@ -70,11 +79,20 @@ function rewriteSequences(sequences: string, plates: OraclePlate[]) {
 }
 
 /**
- * The project the GUI exports after plater edits: `fixture` with the plates' build item
- * matrices, plate map and filament sequences; `outside` items lie on no plate. Every other entry,
- * including the plate-index keyed custom G-codes, is unchanged.
+ * `project_settings.config` with the session's tower positions: the GUI writes its whole project
+ * config, each float as `ss << v` prints it (6 significant digits, `Config.hpp:974-976`).
  */
-export function guiExport(fixture: string, plates: OraclePlate[], outside: OracleItem[] = []): Uint8Array<ArrayBuffer> {
+function rewriteTowers(settings: string, [x, y]: OracleTowers) {
+  const serialized = (values: readonly number[]) => values.map((value) => String(Number(value.toPrecision(6))));
+  return JSON.stringify({ ...JSON.parse(settings), wipe_tower_x: serialized(x), wipe_tower_y: serialized(y) }, null, 4);
+}
+
+/**
+ * The project the GUI exports after plater edits: `fixture` with the plates' build item
+ * matrices, plate map, filament sequences and the session's tower positions; `outside` items lie
+ * on no plate. Every other entry, including the plate-index keyed custom G-codes, is unchanged.
+ */
+export function guiExport(fixture: string, plates: OraclePlate[], towers: OracleTowers, outside: OracleItem[] = []): Uint8Array<ArrayBuffer> {
   const entries = unzipSync(readFileSync(`${repositoryRoot}${fixture}`));
   const items = [...plates.flatMap((plate) => plate.items), ...outside];
   const rewrite = (name: string, edit: (text: string) => string) => {
@@ -83,6 +101,7 @@ export function guiExport(fixture: string, plates: OraclePlate[], outside: Oracl
   rewrite("3D/3dmodel.model", (model) => rewriteBuild(model, items));
   rewrite("Metadata/model_settings.config", (settings) => rewritePlates(settings, plates));
   rewrite("Metadata/filament_sequence.json", (sequences) => rewriteSequences(sequences, plates));
+  rewrite("Metadata/project_settings.config", (settings) => rewriteTowers(settings, towers));
   return zipSync(entries) as Uint8Array<ArrayBuffer>;
 }
 

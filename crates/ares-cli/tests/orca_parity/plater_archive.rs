@@ -8,6 +8,18 @@ pub(super) fn attribute<'a>(element: &'a str, name: &str) -> &'a str {
     &element[start..start + element[start..].find('"').unwrap()]
 }
 
+/// The text of the archive entry `name`.
+pub(super) fn read_entry(input: &[u8], name: &str) -> String {
+    let mut archive = zip::ZipArchive::new(Cursor::new(input)).unwrap();
+    let mut text = String::new();
+    archive
+        .by_name(name)
+        .unwrap()
+        .read_to_string(&mut text)
+        .unwrap();
+    text
+}
+
 /// `input` with the text entries `edit` returns replaced.
 pub(super) fn rewrite_archive(
     input: &[u8],

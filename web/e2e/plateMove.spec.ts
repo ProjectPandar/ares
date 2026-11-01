@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
-import { guiExport, matrix, orcaPlate } from "./platerOracle";
+import { guiExport, matrix, orcaPlate, probedTowers } from "./platerOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-move/", import.meta.url));
@@ -82,7 +82,7 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
   const oracle = `${artifacts}moved.3mf`;
   writeFileSync(oracle, guiExport(FIXTURE, [
     { source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([], [145.5, 95.5, 5]) }] },
-  ]));
+  ], await probedTowers(page)));
   const legs = { official: orcaPlate(oracle, 1, "official"), seeded: orcaPlate(oracle, 1, "seeded") };
   const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
