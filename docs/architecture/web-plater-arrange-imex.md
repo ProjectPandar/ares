@@ -91,7 +91,7 @@ Every `file:line` is at `345efec64`. `bed_exclude_volumes` are 3D keep-outs: a b
   - The CLI global arrange calls `PartPlateList::preprocess_exclude_areas(unselected, m_print_config, …)` (`src/OrcaSlicer.cpp:5484, 5516, 5727, 5958, 5991`), so this path has a **Native CLI oracle**.
   - A probe on `combined-brim.3mf`, with the volume `0..250;0x0,110x0,110x220,0x220` (the bed's left half), moves Native's `--arrange 1 --allow-rotations=0` pile from x 81.5–138.5 to x 139.7–196.7, clear of the volume. Ares today ignores the key.
   - The region resolution also has **literal upstream unit tests** (`tests/libslic3r/test_exclusion_volumes.cpp`).
-- **A2b2: the plate-side checks (deferred).**
+- **A2b2: the plate-side checks** (its own section below; the per-polygon nozzle ids move to A2b3).
   - `check_outside`'s config-region branch (`PartPlate.cpp:4562-4601`) reads `m_plater->config()`, so it runs in the GUI only; the CLI keeps the `m_exclude_bounding_box` fallback (`:4603-4612`).
   - It needs `ModelInstance::intersects_bed_exclude_region` (`Model.cpp:3753-3836`).
   - The per-polygon `bed_exclusion_extruder_ids` (`ArrangeJob.cpp:53-103`) and `bed_exclusion_extruder_for_filament` (`PrintConfig.cpp:14187-14209`) are GUI-only as well.
@@ -132,3 +132,51 @@ Every `file:line` is at `345efec64`. `bed_exclude_volumes` are 3D keep-outs: a b
   - Left out: `:96`, `:169` and `:269` test the `ConfigOptionPoints` / CLI-option layer; `:228`, `:452` and `:471` test validation and the legacy first-layer helper; `:105` and `:153` test belts; the rest is A2b2 or slicing.
 - **Native parity case** in `plater_arrange.rs`: the probe above as a project edit (`bed_exclude_volumes` set in `project_settings.config`), arranged by the session and by Native `--arrange` (`assert_arranged_like_native`).
 - **Expected before GREEN:** the unit cases fail on a `todo!()` skeleton, and the parity case fails because the session packs the pile onto the volume.
+
+## A2b2: the plate outside check against bed exclusions
+
+Every `file:line` is at `345efec64`. The session's tower path asks whether a plate holds an instance whole (`contain_instance_totally`). Upstream answers through `PartPlate::check_outside`, which tests the instance against the bed exclusions. Ares's `PlateList::outside` has neither exclusion branch, so the session refuses "arrange" with a prime tower beside a legacy area or a collision volume (`arranging with a prime tower beside a bed exclude area is not supported yet`). This slice ports the check and lifts the refusal.
+
+### Upstream boundary
+- **`PartPlate::check_outside`** (`PartPlate.cpp:4524-4625`), the non-sinking branch that runs when the plate box contains the instance box:
+  - **Config-region branch** (`:4562-4601`). This is the branch the session takes, because the GUI has `m_plater`.
+    - It reads extruder group 0 of `get_bed_excluded_regions_by_extruder` (A2b1) and skips collision volumes unless the mode is Shared.
+    - Each region moves by the plate origin and is made counter-clockwise.
+    - An instance is outside when all three hold: its 2D convex hull intersects the region (Clipper `intersection`), its box overlaps the region's z range, and `intersects_bed_exclude_region` holds.
+  - **`m_exclude_bounding_box` fallback** (`:4603-4612`, boxes from `:626-643`): it runs when no config region was checked, as in the CLI. It tests the hull against each legacy-area box.
+- **`ModelInstance::intersects_bed_exclude_region`** (`Model.cpp:3753-3836`), the yes/no path (`intersection_mesh == nullptr`), with its helpers from the anonymous namespace (`:3559-3750`):
+  - footprint and clipping: `ExclusionPrismFootprintTriangle`, `cross_2d`, `clip_polygon_by_signed_distance`, `triangulated_prism_footprints` (over `triangulate_expolygon_2d`, `Tesselate.cpp:216`, beside the ported GLU kernel), `triangle_bbox_intersects_prism_footprint`, `clip_model_triangle_to_prism` and `polygon_3d_area2`;
+  - the enclosed-prism fallback, `mesh_contains_point_linear`.
+  - Every model part's triangles go through `instance matrix * volume matrix`. A clipped area above `1e-8` counts as a hit; otherwise a probe at the first footprint's centroid, mid z range, is tested for containment in the part's mesh.
+- **The refusal** in `PlaterSession::arrange` (`plater/arrange_job.rs`) goes, together with its `has_bed_exclude_volumes` and legacy-area test.
+
+### Ares destination
+- **`crates/ares-core/src/plater/plate_list/`**: `PlateList::outside` gains both branches, so `contains_totally` and the tower estimate see the exclusions. It takes the resolved regions from the session's `DynamicPrintConfig`.
+- **A new `crates/ares-core/src/options/bed_exclusion/` submodule** holds the intersection: the per-part test is `pub fn model_part_intersects_region(vertices, indices, matrix, &BedExcludeRegion) -> bool`.
+  - This is the public surface the unit cases need, because Ares has no public `Project` constructor for upstream's `CubeModel`.
+  - The instance loop over model parts stays crate-private.
+
+### Included and deferred
+- **Included:**
+  - both `check_outside` exclusion branches;
+  - the yes/no `intersects_bed_exclude_region`;
+  - lifting the tower refusal.
+- **Deferred:**
+  - **A2b3, the per-polygon nozzle ids** (`ArrangeJob.cpp:53-103`): `set_arrange_polygon_bed_exclusion_extruders(_for_all_plates)`, `PartPlate::get_object_filament_extruders` (`PartPlate.cpp:3562-3654`), `get_effective_exclusion_filament_maps` (`:3540-3560`) and `bed_exclusion_extruder_for_filament` (`PrintConfig.cpp:14187-14209`, oracle `test_exclusion_volumes.cpp:486`). They need the plate filament map and the BBL-vendor test. Until then a non-Shared item keeps empty ids, so every nozzle's volume applies to it (`Arrange.cpp:131-133`), as upstream does while the mapping is unresolved.
+  - The red intersection preview (`intersection_mesh`, `append_clipped_polygon`) and `intersects_bed_exclude_regions`, both GUI drawing.
+  - `check_outside`'s sinking branch with exclusions (upstream's own TODO, `:4552`) and its IMEX branch (A2c).
+  - Native's slicing refusal for an object inside a collision volume ("intersects a collision volume", return -63), which is slicing validation, not plater.
+
+### Oracle and RED
+- **Native `--arrange`**, where the CLI fallback and the GUI branch agree: rectangular legacy areas, and collision volumes no instance overlaps before the arrange (the CLI fallback does not see volumes). Each case uses the A3b two-filament rectangle tower (`plater_arrange/wipe_tower.rs`: `TWO_FILAMENTS`, `RECTANGLE_TOWER`, `PRIME_VOLUME_PURGE`, `NO_TOWER_BRIM`, the corner tower).
+  1. A legacy `bed_exclude_area` rectangle on the bed's right side, clear of the cubes.
+  2. A full-height `bed_exclude_volumes` box on the right side, clear of the cubes.
+  3. The filament-2 cube starting over the legacy area: `check_outside` reports it outside, so the plate's filaments and the tower estimate change.
+  - Today all three fail on the refusal. The probes in the RED commit pin each case's Native placement.
+- **Unit cases**, through `model_part_intersects_region`, porting `test_exclusion_volumes.cpp` literally:
+  - `:542`: crossing, above, outside, without the preview checks;
+  - `:564`: the rotated and scaled instance;
+  - `:574`: enclosed and above, without the preview checks.
+  - `its_make_cube` (`TriangleMesh.cpp:902`) and the `rectangle`/`region` helpers (`:30-47`) are copied as written.
+  - These are GUI-only, so upstream's unit tests are the oracle.
+- **Expected before GREEN:** the unit cases stop at `todo!()`, and the parity cases fail on the refusal.
