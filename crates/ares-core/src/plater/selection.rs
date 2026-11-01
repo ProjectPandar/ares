@@ -38,16 +38,32 @@ pub(super) fn rotate(project: &mut Project, key: InstanceKey, rotation: [f64; 3]
     project.set_instance_transform(key.0, key.1, transform);
 }
 
-/// `Selection::scale` for a full instance, absolute in world coordinates
-/// (`Selection.cpp:1475-1478, 1627-1650`): the factor made relative through the full unscaled
-/// instance box, applied about the dragging centre (`transform_instance_relative`, `:3364-3372`,
-/// `setup_cache`'s centre `:2547`), and the object's other instances synchronized
-/// (`synchronize_unselected_instances(GENERAL)`, `:1693-1697, 3045-3095`).
-pub(super) fn scale(project: &mut Project, key: InstanceKey, scale: [f64; 3]) {
-    let current_size = world_box_size(project, key);
-    let original_size = unscaled_instance_box_size(project, key, false);
-    let relative: [f64; 3] =
-        std::array::from_fn(|axis| original_size[axis] * scale[axis] / current_size[axis]);
+/// Whether a world `TransformationType` is absolute or relative.
+#[derive(Clone, Copy)]
+pub(super) enum TransformationType {
+    Absolute,
+    Relative,
+}
+
+/// `Selection::scale_and_translate` for a full instance in world coordinates without a translation
+/// (`Selection.cpp:1627-1650`; `scale` `:1475-1478`, `mirror` `:1708-1712`): an absolute factor is
+/// made relative through the full unscaled instance box, then applied about the dragging centre
+/// (`transform_instance_relative`, `:3364-3372`, `setup_cache`'s centre `:2547`), and the object's
+/// other instances are synchronized (`synchronize_unselected_instances(GENERAL)`, `:1693-1697,
+/// 3045-3095`; a mirror's flipped handedness takes the same linear sync).
+pub(super) fn scale(
+    project: &mut Project,
+    key: InstanceKey,
+    (scale, transformation_type): ([f64; 3], TransformationType),
+) {
+    let relative: [f64; 3] = match transformation_type {
+        TransformationType::Absolute => {
+            let current_size = world_box_size(project, key);
+            let original_size = unscaled_instance_box_size(project, key, false);
+            std::array::from_fn(|axis| original_size[axis] * scale[axis] / current_size[axis])
+        }
+        TransformationType::Relative => scale,
+    };
     let center = selection_bounding_box_center(project, key);
     let trafo = translation_transform(center)
         .then(scale_transform(relative))

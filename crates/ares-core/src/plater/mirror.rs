@@ -4,16 +4,28 @@
 //! `docs/architecture/web-plater-mirror.md`.
 
 use super::PlaterSession;
+use super::selection::TransformationType;
+use super::session::{Model, check_axis, keys};
 use crate::SliceError;
 
 impl PlaterSession {
-    /// Mirrors an instance along `axis` (0 X, 1 Y, 2 Z) about its centre (`Plater::mirror`).
+    /// Mirrors an instance along `axis` (0 X, 1 Y, 2 Z) about its centre (`Plater::mirror`): a
+    /// relative world scale by -1 on the axis, then `do_mirror`, which also notifies the plate list
+    /// of every instance (`:6077-6079`).
     pub fn mirror(
         &mut self,
-        _object: usize,
-        _instance: usize,
-        _axis: usize,
+        object: usize,
+        instance: usize,
+        axis: usize,
     ) -> Result<(), SliceError> {
-        todo!("PlaterSession::mirror")
+        self.check(object, instance)?;
+        let axis = check_axis(axis)?;
+        let mirror = std::array::from_fn(|index| if index == axis { -1.0 } else { 1.0 });
+        self.scale_and_drop((object, instance), (mirror, TransformationType::Relative));
+        for key in keys(&self.project) {
+            self.plates
+                .notify_instance_update(&Model(&mut self.project), key);
+        }
+        Ok(())
     }
 }

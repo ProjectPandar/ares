@@ -150,7 +150,6 @@ Included:
   - wipe tower as an obstacle.
 
 Deferred:
-- mirror;
 - lay on face;
 - cut;
 - auto-orient (`Orient.cpp`);
@@ -166,7 +165,7 @@ Deferred:
 - 3MF project save (`bbs_3mf` export) and project persistence of edits;
 - SLA arrange.
 
-The scale and size fields are ported in `web-plater-scale.md`.
+The scale and size fields are ported in `web-plater-scale.md`, mirror in `web-plater-mirror.md`.
 
 ## Parity and tests
 

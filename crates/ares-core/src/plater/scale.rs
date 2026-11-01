@@ -5,7 +5,7 @@
 
 use super::PlaterSession;
 use super::plate_list::InstanceKey;
-use super::selection;
+use super::selection::{self, TransformationType};
 use super::session::{Model, check_axis, keys};
 use crate::SliceError;
 
@@ -125,6 +125,18 @@ impl PlaterSession {
                 *factor = MAX_NUM / unscale;
             }
         }
+        self.scale_and_drop(key, (scaling_factor, TransformationType::Absolute));
+    }
+
+    /// `Selection::scale_and_translate`, then the canvas step `GLCanvas3D::do_scale` and `do_mirror`
+    /// share (`GLCanvas3D.cpp:5897-5962, 6018-6080`): every instance's lowest point is kept from
+    /// before, the transformed object's instances are notified, and each instance drops onto the bed
+    /// unless it stays sinking.
+    pub(super) fn scale_and_drop(
+        &mut self,
+        key: InstanceKey,
+        factor: ([f64; 3], TransformationType),
+    ) {
         let instances: Vec<_> = keys(&self.project)
             .into_iter()
             .map(|key| {
@@ -132,7 +144,7 @@ impl PlaterSession {
                 (key, min_z)
             })
             .collect();
-        selection::scale(&mut self.project, key, scaling_factor);
+        selection::scale(&mut self.project, key, factor);
         for instance in 0..self.project.objects()[key.0].instances().len() {
             self.plates
                 .notify_instance_update(&Model(&mut self.project), (key.0, instance));
