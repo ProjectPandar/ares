@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "two_wall_inward_move.rs"]
+mod two_wall_inward_move;
+
 #[path = "fuzzy_skin_supported_area.rs"]
 mod fuzzy_skin_supported_area;
 
