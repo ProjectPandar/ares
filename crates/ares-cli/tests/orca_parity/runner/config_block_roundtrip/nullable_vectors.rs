@@ -63,7 +63,30 @@ fn native_three_nullable_region_vectors_round_trip_public_options() {
         let requested_matches = options
             .as_ref()
             .is_ok_and(|exported| exported[key] == native[key]);
-        let codec_matches = decoded_value.as_ref() == Some(&native[key])
+        // The codec returns typed JSON, while Native settings stores wire strings.
+        // Retain exact array shape/value/nil order and byte-exact wire re-encoding.
+        let expected_decoded = Value::Array(
+            native[key]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|element| {
+                    let value = element.as_str().unwrap();
+                    if value == "nil" {
+                        Value::Null
+                    } else if kind == "bools_nullable" {
+                        match value {
+                            "0" => Value::Bool(false),
+                            "1" => Value::Bool(true),
+                            _ => panic!("unqualified Native bool value {value:?}"),
+                        }
+                    } else {
+                        json!(value.parse::<f64>().unwrap())
+                    }
+                })
+                .collect(),
+        );
+        let codec_matches = decoded_value.as_ref() == Some(&expected_decoded)
             && encoded.as_deref() == Ok(token.as_str());
         let schema_matches = definition["type"] == kind && definition["nullable"] == true;
         if !(typed_matches && requested_matches && codec_matches && schema_matches) {
@@ -71,7 +94,7 @@ fn native_three_nullable_region_vectors_round_trip_public_options() {
         }
         observations.push(json!({
             "key": key, "native": native[key], "native_token": token,
-            "public_definition": definition, "decoded": decoded, "encoded": encoded,
+            "public_definition": definition, "decoded": decoded, "expected_typed_json": expected_decoded, "encoded": encoded,
             "typed_matches": typed_matches, "requested_matches": requested_matches,
             "codec_matches": codec_matches, "schema_matches": schema_matches,
         }));
