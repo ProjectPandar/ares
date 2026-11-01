@@ -523,7 +523,7 @@ A3b cases:
   - Updated by `reload_scene`'s clamp before each arrange, and by `create_plate`'s default for the plates an arrange adds.
   - Not yet read or written by plate add/delete edits or slicing.
   - `set_default_wipe_tower_pos_for_plate` builds `full_config(false, filament_maps, volume_maps)`; the session uses its one composed config.
-- **Clipping.** The cone outline's `union_`, the brim and obstacle offsets, the relocation's `diff_ex` and `move_box_inside_polygon`'s `diff` call the existing geometry wrappers. These are Clipper2 at the beta, and W2's slice swaps them.
+- **Clipping.** The cone outline's `union_`, the brim and obstacle offsets, the relocation's `diff_ex` and `move_box_inside_polygon`'s `diff` call the existing geometry wrappers. These are Clipper2 at the beta, and the Clipper2 geometry slice swaps them.
 - **Evidence.** The tower sizes and positions equal Native's `--debug` estimate log (for the fixtures before the case redesign: a 32.0841 mm square at (150, 150), a 21.487 mm square at (100, 100)). On the beta debug build, Native's `diff_ex` no-fit polygons match the port's in vertices and order, apart from the GUI/CLI tower rounding above. All seven A3b cases pass against the official v2.5.0-beta.
 
 **A3c addendum: "Arrange" on the current plate.** Every `file:line` is at `345efec64`.
