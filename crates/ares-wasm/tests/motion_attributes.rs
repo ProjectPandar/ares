@@ -76,6 +76,10 @@ fn motion_view_types_expose_processor_values_and_ranges() {
             [0.02, 1000.0, 8.0],
             [0.02, 1000.0, 8.0],
             [0.05, 1500.0, 10.5],
+            // The second extrusion also starts a path: a preview value
+            // changed (LibVGCodeWrapper.cpp:238-239 splits on
+            // acceleration/jerk differences, not just type/role).
+            [0.05, 1500.0, 10.5],
             [0.9, 3000.0, 12.25],
             [0.9, 3000.0, 12.25],
         ]
