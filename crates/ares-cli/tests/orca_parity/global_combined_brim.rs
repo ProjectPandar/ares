@@ -52,38 +52,69 @@ fn check(label: &str) {
         .unwrap()
         .keep();
     fs::write(root.join("input.3mf"), &bytes).unwrap();
-    fs::create_dir(root.join("native")).unwrap();
-    let args = vec![
-        "--slice".into(),
-        "0".into(),
-        "--outputdir".into(),
-        root.join("native").to_str().unwrap().into(),
-        root.join("input.3mf").to_str().unwrap().into(),
-    ];
+    fs::create_dir(root.join("native-first")).unwrap();
+    fs::create_dir(root.join("native-second")).unwrap();
+    let slice_args = |outputdir: &str| {
+        vec![
+            "--slice".into(),
+            "0".into(),
+            "--outputdir".into(),
+            root.join(outputdir).to_str().unwrap().into(),
+            root.join("input.3mf").to_str().unwrap().into(),
+        ]
+    };
     let native_binary = std::env::var_os("ARES_ORCA_NATIVE_BIN").unwrap();
     fs::write(
         root.join("launch.json"),
         serde_json::to_vec_pretty(&json!({
             "wrapper":runner.bin(), "native_binary":native_binary,
             "native_binary_sha256":sha(&fs::read(&native_binary).unwrap()),
-            "input_sha256":sha(&bytes), "args":args,
-            "source":"Print.cpp:2532-2543; Brim.cpp:958-1018; GCode.cpp:4486-4531"
+            "input_sha256":sha(&bytes), "args":slice_args("native-first"),
+            "stability_double_run":"native-second",
+            "source":"Print.cpp:3849-3867; Brim.cpp:941-1010; GCode.cpp:5991-6082"
         }))
         .unwrap(),
     )
     .unwrap();
-    stages::run(runner.bin(), args, stages::Stage::Slice, &root).unwrap();
-    let reference = fs::read(root.join("native/plate_1.gcode")).unwrap();
+    stages::run(
+        runner.bin(),
+        slice_args("native-first"),
+        stages::Stage::Slice,
+        &root,
+    )
+    .unwrap();
+    stages::run(
+        runner.bin(),
+        slice_args("native-second"),
+        stages::Stage::Slice,
+        &root,
+    )
+    .unwrap();
+    // Stability premise: the Native producer must be deterministic on
+    // this input under the generator-line normalization the acceptance
+    // comparison uses.
+    let normalize = |raw: &[u8]| {
+        golden::normalize_one_generator_line(raw, golden::GeneratorKind::Orca)
+            .unwrap_or_else(|error| panic!("Native generator line: {error}"))
+    };
+    let first = fs::read(root.join("native-first/plate_1.gcode")).unwrap();
+    let second = fs::read(root.join("native-second/plate_1.gcode")).unwrap();
+    assert_eq!(
+        normalize(&first),
+        normalize(&second),
+        "Native slice is not deterministic"
+    );
+    let reference = first;
     let native = std::str::from_utf8(&reference).unwrap();
     assert!(
         native
             .lines()
             .any(|line| line.starts_with("G1 X") && line.contains(" E"))
     );
-    assert_eq!(
-        native.matches(";TYPE:Brim\n").count(),
-        if label == "target" { 1 } else { 2 }
-    );
+    // No frozen Native brim-block count premise: the beta oracle emits 2
+    // blocks on the target where this froze 1; the count is compared only
+    // as part of the whole-output comparison below, never waived on its
+    // own.
     assert_eq!(native.matches(";TYPE:Skirt\n").count(), 1);
     for key in [
         "brim_type = outer_only",
