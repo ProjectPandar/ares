@@ -81,3 +81,54 @@ It extends the "Auto-arrange on OrcaSlicer v2.5.0-beta" decisions in `web-plater
   - the `WithinAbs` centres (75 ± 5, 100 ± 5, 150 ± 5, 150 ± 10).
 - **RED commit.** It adds the public types with an `ImexArranger` whose methods panic ("IMEX arrange is not ported"). All 9 cases then compile and fail, including the no-zone case, which a no-op would pass silently.
 - **GREEN.** The port above makes all 9 pass. `cargo nextest run -p ares-core -E 'binary(arrange)'` stays green for the existing 25 cases.
+
+## A2b: bed-exclude volumes in the arrange
+
+Every `file:line` is at `345efec64`. `bed_exclude_volumes` are 3D keep-outs: a bed polygon with an optional z range, per mode (Shared, ToolheadOffset or PerExtruder) and per extruder. They sit beside the legacy 2D `bed_exclude_area`, which A3a already ports.
+
+### Two slices, by oracle
+- **A2b1: the config resolution and the arrange blockers.**
+  - The CLI global arrange calls `PartPlateList::preprocess_exclude_areas(unselected, m_print_config, …)` (`src/OrcaSlicer.cpp:5484, 5516, 5727, 5958, 5991`), so this path has a **Native CLI oracle**.
+  - A probe on `combined-brim.3mf`, with the volume `0..250;0x0,110x0,110x220,0x220` (the bed's left half), moves Native's `--arrange 1 --allow-rotations=0` pile from x 81.5–138.5 to x 139.7–196.7, clear of the volume. Ares today ignores the key.
+  - The region resolution also has **literal upstream unit tests** (`tests/libslic3r/test_exclusion_volumes.cpp`).
+- **A2b2: the plate-side checks (deferred).**
+  - `check_outside`'s config-region branch (`PartPlate.cpp:4562-4601`) reads `m_plater->config()`, so it runs in the GUI only; the CLI keeps the `m_exclude_bounding_box` fallback (`:4603-4612`).
+  - It needs `ModelInstance::intersects_bed_exclude_region` (`Model.cpp:3753-3836`).
+  - The per-polygon `bed_exclusion_extruder_ids` (`ArrangeJob.cpp:53-103`) and `bed_exclusion_extruder_for_filament` (`PrintConfig.cpp:14187-14209`) are GUI-only as well.
+  - Their oracle is the upstream Model and filament-mapping cases (`test_exclusion_volumes.cpp:486, 542-574`).
+  - Until A2b2, the session keeps refusing a prime tower beside an exclusion, now for a volume too, since the tower's GUI outside check would see it.
+
+### A2b1 upstream boundary
+- **`PrintConfig.hpp`:** `BedExcludeVolumeMode` (`:642-646`) and `BedExcludeRegion` (`:2545-2558`).
+- **`PrintConfig.cpp`, the region resolution** (the `DynamicPrintConfig` overloads the arrange reads):
+  - the parsers: `looks_like_bed_exclusion_volume_syntax` (`:13887`), `parse_double_token` (`:13892`), `parse_z_range_token` (`:13904`), `parse_exclude_polygon_points` (`:13940`), `append_legacy_bed_exclude_regions` (`:13973`) and `append_bed_exclusion_volume_regions` (`:13991-14054`);
+  - the resolution: `collision_volumes_configured` (`:14056-14069`), `parse_master_bed_excluded_regions` (`:14071-14087`), `resolve_bed_excluded_regions` (`:14111-14148`), `bed_exclusion_extruder_count` (`:14150`) and `flatten_bed_excluded_regions` (`:14158-14185`);
+  - the public functions: `get_bed_excluded_regions_by_extruder` (`:14211-14243`), `get_bed_excluded_regions` (`:14271-14286`), `is_valid_bed_exclude_volumes_string` (`:14298-14317`), `has_bed_exclude_volumes` (`:14346-14355`) and `active_bed_exclude_volume_mode` (`:14364-14369`).
+- **`ExclusionVolumeGeometry.cpp`:** `bed_exclusion_arrange_polygon` (`:70-83`). A convex region is kept exact, a concave one is replaced by its bounding box.
+- **`PartPlate.cpp`:** `PartPlateList::preprocess_exclude_areas`'s resolved-region branch (`:7725-7761`). Each collision volume of the active groups becomes a `BedExclusionVolume<e>_<r>` blocker on every plate, with its z range and its extruder (-1 when Shared). It goes between the wrapping area and the legacy areas, which `plate_list::exclude_areas` already ports.
+
+### Ares destination
+- **`crates/ares-core/src/options/bed_exclusion.rs`**, public as `ares_core::bed_exclusion`:
+  - `BedExcludeVolumeMode`, `BedExcludeRegion` (with `is_collision_volume`);
+  - the five public functions above, over a key-to-token config with registry defaults: the A3b `DynamicConfig` made public. That is what upstream's `DynamicPrintConfig` overloads read, and it lets a test start from the registry defaults (`full_print_config()`) and set keys as upstream does.
+  - `arrangement` gains `bed_exclusion_arrange_polygon`.
+- **`plater::arrange_job::exclusion_items`** adds the blockers. Ares's `ArrangePolygon` already carries `is_bed_exclusion`, `bed_exclusion_extruder_id`, `z_min`, `z_max` and `has_z_range`, and the A1 kernel already honours them (`arrangement::bed_exclusion_applies`).
+- **Prerequisite: three typed keys.** `bed_exclude_volumes` (String), `bed_exclude_volume_mode` (Enum) and `extruder_bed_exclude_volumes` (Strings) are in the registry but not in the typed `ProjectSettings`. `collect_config_entries` serializes only typed fields, so `DynamicConfig::new(settings)` would read their registry defaults and miss a project's value. A2b1 needs them typed in the printer options (`PrintConfig.cpp:1063-1089` defines them). Whether the config slice or A2b1 adds them is an open question.
+
+### Included and deferred
+- **Included:** all three modes of the resolution (they are pure functions of the config), the arrange polygon, and the blockers.
+- **Deferred:**
+  - A2b2, above.
+  - `project_bed_material_keepouts` (`:14089-14109`), the belt projection: belts are deferred.
+  - `append_bed_exclude_volumes` (`:14319-14344`), a GUI editing helper.
+  - The `validate()` error keys (`:12475-12490`).
+  - The G-code, brim and travel consumers (`GCode.cpp:6037`, `Print.cpp:4295`, `active_bed_exclusion_footprints`), which are slicing, not arrange.
+
+### RED
+- **Unit cases**, ported literally through the public API: `crates/ares-core/tests/bed_exclusion.rs`, citing `test_exclusion_volumes.cpp`.
+  - The resolution: `:178`, `:252`, `:299`, `:319`, `:332`, `:350`, `:367`, `:382`, `:403`, `:417` and `:433`.
+  - The arrange polygon: `:507`.
+  - `two_extruder_config` (`:49-60`) and `rectangle` (`:30-40`) are copied as written.
+  - Left out: `:96`, `:169` and `:269` test the `ConfigOptionPoints` / CLI-option layer; `:228`, `:452` and `:471` test validation and the legacy first-layer helper; `:105` and `:153` test belts; the rest is A2b2 or slicing.
+- **Native parity case** in `plater_arrange.rs`: the probe above as a project edit (`bed_exclude_volumes` set in `project_settings.config`), arranged by the session and by Native `--arrange` (`assert_arranged_like_native`).
+- **Expected before GREEN:** the unit cases fail on a `todo!()` skeleton, and the parity case fails because the session packs the pile onto the volume.
