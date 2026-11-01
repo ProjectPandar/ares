@@ -77,10 +77,21 @@ fn transform_object(
                 (Some(source), Some(traversal_record)) => {
                     let region = region_options(traversal, index);
                     let inactive = classify_inactive(traversal_record, object_options);
-                    // Brim.cpp:462-468 / PerimeterGenerator.cpp:1463-1467:
-                    // first physical layer, not the compatible-region record slot.
+                    // First physical layer, not the compatible-region
+                    // record slot (`PerimeterGenerator.cpp:1858-1865`
+                    // `is_outer_wall_first` / first-layer outer-brim reverse
+                    // over the whole entity table, so island order and
+                    // per-island wall order flip together).
+                    // `outer_walls_first_for_brim` (`:3204-3211`): layer 0,
+                    // `brim_width > 0`, outer-kind brim. Upstream's third
+                    // kind `btLeadingEdgeOnly` (belt printers) is not
+                    // decoded by Ares yet — it fails closed at config
+                    // decode — so the arm is unreachable here.
                     let wall_sequence = if traversal_record.layer_id == 0
-                        && object_options.brim_type == ProcessBrimType::OuterOnly
+                        && matches!(
+                            object_options.brim_type,
+                            ProcessBrimType::OuterOnly | ProcessBrimType::OuterAndInner
+                        )
                         && object_options.brim_width.0 > 0.0
                     {
                         ProcessWallSequence::OuterInner
@@ -183,7 +194,10 @@ fn classify_inactive(
             brim_type: object.brim_type,
             brim_width: object.brim_width.0,
         }
-    } else if object.brim_type != ProcessBrimType::OuterOnly {
+    } else if !matches!(
+        object.brim_type,
+        ProcessBrimType::OuterOnly | ProcessBrimType::OuterAndInner
+    ) {
         InactiveOuterBrimReordering::DifferentBrimType {
             brim_type: object.brim_type,
             brim_width: object.brim_width.0,
