@@ -160,7 +160,13 @@ impl FirstFit<'_> {
         let Some(last) = self.placers.len().checked_sub(1) else {
             return false;
         };
-        if !self.placers[last].items.is_empty() {
+        // `getPackedSize() == 0` (`nester.hpp:673-681`) counts the items that are not fixed: a bed
+        // holding only fixed items is still empty.
+        if self.placers[last]
+            .items
+            .iter()
+            .any(|&item| !nest.items[item].fixed)
+        {
             return false;
         }
         self.placers[last].clear_items(nest, fixed_but_wipe_tower);
