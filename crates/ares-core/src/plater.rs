@@ -8,6 +8,7 @@ mod arrange_settings;
 mod edits;
 mod eigen;
 mod min_sphere;
+mod mirror;
 mod plate_list;
 mod scale;
 mod selection;

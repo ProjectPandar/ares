@@ -34,7 +34,7 @@ const PRISM: &str = r#"<mesh>
    </mesh>"#;
 
 /// The Ender-3 project with its cube replaced by the prism and the build item at `item`.
-fn prism_project(item: &str) -> Vec<u8> {
+pub(super) fn prism_project(item: &str) -> Vec<u8> {
     let input = std::fs::read(repo_root().join(SINGLE)).unwrap();
     rewrite_archive(&input, |name, text| match name {
         "3D/Objects/cube10.stl_1.model" => {

@@ -8,6 +8,8 @@ use ares_core::{ConfigOverrides, GenerationMetadata, PlaterSession, PlaterSlice,
 use super::plater_archive::{attribute, rewrite_archive};
 use crate::runner::{OrcaRunner, repo_root};
 
+#[path = "plater_mirror.rs"]
+mod mirror;
 #[path = "plater_rotation_pivot.rs"]
 mod rotation_pivot;
 #[path = "plater_scale.rs"]
