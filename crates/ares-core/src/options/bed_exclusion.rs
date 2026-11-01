@@ -6,6 +6,10 @@
 use crate::geometry::{Point, Polygon};
 use crate::{BedExcludeVolumeMode, DynamicPrintConfig};
 
+mod intersection;
+
+pub use intersection::model_part_intersects_region;
+
 /// `BedExcludeRegion::Purpose`.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum Purpose {

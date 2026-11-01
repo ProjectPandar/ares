@@ -12,6 +12,9 @@ use ares_core::bed_exclusion::{
 };
 use ares_core::{BedExcludeVolumeMode, DynamicPrintConfig};
 
+#[path = "bed_exclusion/intersection.rs"]
+mod intersection;
+
 /// `Point::new_scale`: `coord_t(scale_(v))`, truncated.
 fn scaled(x: f64, y: f64) -> Point {
     Point::new((x / 1e-6) as i64, (y / 1e-6) as i64)

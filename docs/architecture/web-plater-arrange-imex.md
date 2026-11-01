@@ -168,11 +168,11 @@ Every `file:line` is at `345efec64`. The session's tower path asks whether a pla
   - Native's slicing refusal for an object inside a collision volume ("intersects a collision volume", return -63), which is slicing validation, not plater.
 
 ### Oracle and RED
-- **Native `--arrange`**, where the CLI fallback and the GUI branch agree: rectangular legacy areas, and collision volumes no instance overlaps before the arrange (the CLI fallback does not see volumes). Each case uses the A3b two-filament rectangle tower (`plater_arrange/wipe_tower.rs`: `TWO_FILAMENTS`, `RECTANGLE_TOWER`, `PRIME_VOLUME_PURGE`, `NO_TOWER_BRIM`, the corner tower).
+- **Native `--arrange`**, compared at runtime (`assert_arranged_like_native`; no Native placement is committed), where the CLI and the GUI path agree: no instance starts in an exclusion. Each case uses the A3b two-filament rectangle tower (`plater_arrange/wipe_tower.rs`: `TWO_FILAMENTS`, `RECTANGLE_TOWER`, `PRIME_VOLUME_PURGE`, `NO_TOWER_BRIM`, the corner tower).
   1. A legacy `bed_exclude_area` rectangle on the bed's right side, clear of the cubes.
   2. A full-height `bed_exclude_volumes` box on the right side, clear of the cubes.
-  3. The filament-2 cube starting over the legacy area: `check_outside` reports it outside, so the plate's filaments and the tower estimate change.
-  - Today all three fail on the refusal. The probes in the RED commit pin each case's Native placement.
+  - Both fail on the refusal before GREEN. Before the RED, probes qualified the cases: with each exclusion, Native's pile moves from the no-exclusion placement. The probes are evidence only, outside the repository.
+  - **No Native case for an instance that starts in an exclusion.** The CLI sizes its tower from `get_extruders_under_cli` (`OrcaSlicer.cpp:5735`), which never calls `check_outside`. The GUI estimate counts only the instances `contain_instance_totally` keeps (`PartPlate.cpp:4494-4521`). The two are meant to differ there, so the GUI-only branch rests on the unit cases below.
 - **Unit cases**, through `model_part_intersects_region`, porting `test_exclusion_volumes.cpp` literally:
   - `:542`: crossing, above, outside, without the preview checks;
   - `:564`: the rotated and scaled instance;

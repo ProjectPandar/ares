@@ -13,18 +13,18 @@ use super::{
 };
 
 /// Two 10 mm cubes on filaments 1 and 2 (both PLA at 60 °C) on an Ender-3; tower at (150, 150).
-const TWO_FILAMENTS: &str = "tests/parity/print-order-as-obj-list/class-default.3mf";
+pub(super) const TWO_FILAMENTS: &str = "tests/parity/print-order-as-obj-list/class-default.3mf";
 /// One object whose parts print with filaments 1 and 2.
 const TWO_COLOURS: &str = "tests/parity/interface-shells/two-region-prism.3mf";
 
-const NO_TOWER_BRIM: Edit = (
+pub(super) const NO_TOWER_BRIM: Edit = (
     PROJECT,
     "\"prime_tower_brim_width\": \"3\"",
     "\"prime_tower_brim_width\": \"0\"",
 );
 /// A rectangle-wall tower (`WipeTowerEstimate.cpp:213-232`) of `prime_tower_width` 20 mm: two
 /// filaments at 0.2 mm make it 20 x 11.25 mm, one filament 20 mm by the height's minimum depth.
-const RECTANGLE_TOWER: [Edit; 2] = [
+pub(super) const RECTANGLE_TOWER: [Edit; 2] = [
     (
         PROJECT,
         "\"wipe_tower_wall_type\": \"rib\"",
@@ -38,13 +38,13 @@ const RECTANGLE_TOWER: [Edit; 2] = [
 ];
 /// The tower purges the prime volume, not the single-extruder flush matrix
 /// (`WipeTowerEstimate.cpp:141-146`): 45 mm³ make the 20 mm tower 11.25 mm deep.
-const PRIME_VOLUME_PURGE: Edit = (
+pub(super) const PRIME_VOLUME_PURGE: Edit = (
     PROJECT,
     "\"purge_in_prime_tower\": \"1\"",
     "\"purge_in_prime_tower\": \"0\"",
 );
 /// The tower stored at (1, 1) in the two-filament project.
-const TWO_FILAMENTS_CORNER: [Edit; 2] = [
+pub(super) const TWO_FILAMENTS_CORNER: [Edit; 2] = [
     (
         PROJECT,
         "\"wipe_tower_x\": [\"150\"]",
