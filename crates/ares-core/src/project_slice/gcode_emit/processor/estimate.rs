@@ -204,21 +204,23 @@ impl Estimate {
                     && block.delta[3] > 0.0
                     && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
                 let seam_vertex = seams.associate(extruding, state.position);
-                // `GCodeProcessor.cpp:574` pushes a `g1_times_cache` entry
-                // for EVERY block — E-only retract/deretract moves included
-                // — so the `it->id == g1_lines_counter` probe can land on an
-                // E-only line and emit M73 immediately after it. Excluding
-                // `e_only` blocks deferred the marker to the next XY move
-                // (observed: oracle `M73` follows `G1 E-2.8`).
-                // `g1_times_cache` is only populated for Extrude/Travel/
-                // Wipe move types (`GCodeProcessor.cpp:484-488`). Upstream's
+                // `g1_times_cache` is only populated for blocks whose
+                // `result.moves[block.move_id]` vertex is Extrude/Travel/
+                // Wipe — the Normal-mode vertex filter ahead of the push
+                // (`GCodeProcessor.cpp:656-662`). The seam lifecycle feeds
+                // that filter: when a loop closes, `:5702-5704` stores an
+                // EXTRA `EMoveType::Seam` vertex AFTER this block's enqueue
+                // stamped `move_id` and BEFORE the move's own vertex, so the
+                // closing move's block reads the Seam vertex (`:658`:
+                // Seam ∉ {Extrude,Travel,Wipe}) and is cache-excluded —
+                // exactly one block per closed seam. Upstream's
                 // `move_type` (:4259-4277): `m_wiping` forces Wipe for ANY
                 // delta (an E-only retract inside a wipe IS cached); without
-                // wiping an XYZ-displaced block is Extrude/Travel and an
-                // E-only block is Retract/Unretract — never cached. So
-                // `wiping || !e_only` exactly reproduces the eligibility
-                // set; the `G1 E4`/`G1 E-2.8` standalone retracts and the
-                // G10/G11 fake blocks stay out.
+                // wiping an E-only block is Retract/Unretract — never
+                // cached. `wiping || !e_only` plus the seam-closing
+                // exclusion reproduce the eligibility set; the `G1 E4`/
+                // `G1 E-2.8` standalone retracts and the G10/G11 fake
+                // blocks stay out.
                 cache_eligible.push((!block.e_only || state.wiping) && seam_vertex.is_none());
                 seam_vertices.push(seam_vertex);
             } else if matches!(command, "G2" | "G3") && !motion_blocks.is_empty() {
@@ -227,8 +229,10 @@ impl Estimate {
                 // runs PER SEGMENT (`GCodeProcessor.cpp:4194-4225`), not once
                 // at the arc level. A segment whose start returns to
                 // `first_vertex` while terminating the loop associates a
-                // `Seam` vertex with its block → cache-excluded (:484-488),
-                // collapsing the `remaining` chain `ExportLines::update`
+                // `Seam` vertex with its block → cache-excluded: the segment
+                // stores the extra `EMoveType::Seam` vertex (`:5704`) after
+                // its block's enqueue, so the vertex filter (`:658`) drops
+                // it, collapsing the `remaining` chain `ExportLines::update`
                 // walks (:790-800). `arc_start` is the position before
                 // `motions` advanced `state.position` to the arc end.
                 seam_vertices = arc_seams(

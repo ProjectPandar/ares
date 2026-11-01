@@ -110,7 +110,8 @@ impl Pass {
     }
 }
 
-/// Only these vertex types get a block time entry (`:484-488`).
+/// Only these vertex types get a block time entry — the Normal-mode vertex
+/// filter ahead of the `g1_times_cache` push (`:656-662`).
 pub(in crate::project_slice::gcode_emit::processor) fn is_timed(kind: EMoveType) -> bool {
     matches!(
         kind,
