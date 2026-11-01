@@ -76,7 +76,7 @@ fn strict_comparison_rejects_travel_timing_config_and_statistics_changes() {
         compare(
             reference.as_bytes(),
             actual
-                .replace("2.4.2", "2.4.2 on 2026-09-09 at 01:02:03")
+                .replace("2.5.0-beta", "2.5.0-beta on 2026-09-09 at 01:02:03")
                 .as_bytes()
         )
         .is_err()
