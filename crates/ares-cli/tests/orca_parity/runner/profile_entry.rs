@@ -37,7 +37,7 @@ mod plater_session;
 #[path = "../plater_arrange.rs"]
 mod plater_arrange;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
 
@@ -81,60 +81,53 @@ fn run_profile_entry(overrides: &[(&str, &str, Value)]) {
     let machine_name = "LH Stinger 0.4 nozzle";
     let process_name = profiles.compatible_process(machine_name).unwrap();
     let filament_name = profiles.compatible_filament(machine_name).unwrap();
+    const VENDORS: [&str; 2] = ["OrcaFilamentLibrary", "LH"];
     let mut catalog = json!({
-        "vendors": [vendor(&profiles_root, "OrcaFilamentLibrary"), vendor(&profiles_root, "LH")],
+        "vendors": VENDORS.map(|name| vendor(&profiles_root, name)),
         "imports": [],
     });
     let selection = json!({
         "machine": machine_name, "process": process_name, "filaments": [filament_name],
     });
     write_json(&runner.work.join("selection.json"), &selection);
-    for (kind, name, mut fields) in [
-        (
-            "machine",
-            machine_name,
-            profiles.machine(machine_name).unwrap(),
-        ),
-        (
-            "process",
-            &process_name,
-            profiles.process(&process_name).unwrap(),
-        ),
-        (
-            "filament",
-            &filament_name,
-            profiles.filament(&filament_name).unwrap(),
-        ),
-    ] {
-        // The CLI does not resolve separate parent files. Preserve the selected
-        // parent name after the test-only native flattening removes it.
-        let selected = catalog["vendors"]
-            .as_array_mut()
-            .unwrap()
-            .iter_mut()
-            .flat_map(|vendor| vendor["files"].as_object_mut().unwrap().values_mut())
-            .find(|profile| profile["type"] == kind && profile["name"] == name)
+    // Beta resolves an inherited system leaf by its file through the vendor manifest beside it
+    // (`OrcaSlicer.cpp:2118-2157`, `PresetBundle.cpp:617-645`), so Native reads the selected
+    // leaves inside the staged vendor trees and flattens them itself.
+    let datadir = native_user_presets::system(&runner.work, &profiles_root, &VENDORS);
+    let leaves = [
+        ("machine", machine_name),
+        ("process", process_name.as_str()),
+        ("filament", filament_name.as_str()),
+    ]
+    .map(|(kind, name)| {
+        let (vendor, path, selected) = VENDORS
+            .iter()
+            .zip(catalog["vendors"].as_array_mut().unwrap())
+            .flat_map(|(vendor, entry)| {
+                let files = entry["files"].as_object_mut().unwrap().iter_mut();
+                files.map(move |(path, profile)| (*vendor, path.clone(), profile))
+            })
+            .find(|(_, _, profile)| profile["type"] == kind && profile["name"] == name)
             .unwrap();
-        if let Some(inherits) = selected.get("inherits") {
-            fields.insert("inherits".to_owned(), inherits.clone());
-        }
-        for (_, key, value) in overrides.iter().filter(|(target, _, _)| *target == kind) {
+        let leaf = datadir.join("system").join(vendor).join(path);
+        let edits = overrides.iter().filter(|(target, _, _)| *target == kind);
+        // Both sides read the same edited leaf: the catalog's and the staged copy.
+        for (_, key, value) in edits.clone() {
             selected
                 .as_object_mut()
                 .unwrap()
                 .insert((*key).to_owned(), value.clone());
-            fields.insert((*key).to_owned(), value.clone());
         }
-        write_json(
-            &runner.work.join(format!("{kind}.json")),
-            &Value::Object(fields),
-        );
-    }
+        if edits.count() > 0 {
+            write_json(&leaf, selected);
+        }
+        leaf
+    });
     write_json(&runner.work.join("catalog.json"), &catalog);
     let input = placed_cube(&std::fs::read(root.join("tests/parity/cube10.stl")).unwrap());
     std::fs::write(runner.work.join("cube10.stl"), &input).unwrap();
-    let first = native(&runner, "reference-first");
-    let repeat = native(&runner, "reference-repeat");
+    let first = native(&runner, "reference-first", (&datadir, &leaves));
+    let repeat = native(&runner, "reference-repeat", (&datadir, &leaves));
     let normalize = |bytes: &[u8]| {
         crate::golden::normalize_one_generator_line(bytes, crate::golden::GeneratorKind::Orca)
             .unwrap()
@@ -198,27 +191,23 @@ pub(crate) fn placed_cube(source: &[u8]) -> Vec<u8> {
     bytes
 }
 
-fn native(runner: &OrcaRunner, output: &str) -> Vec<u8> {
+/// Native slicing the cube with the `[machine, process, filament]` leaves of `datadir`.
+fn native(
+    runner: &OrcaRunner,
+    output: &str,
+    (datadir, [machine, process, filament]): (&Path, &[PathBuf; 3]),
+) -> Vec<u8> {
     let output = runner.work.join(output);
     std::fs::create_dir(&output).unwrap();
     stages::run(
         &runner.bin,
         [
+            "--datadir".to_owned(),
+            datadir.to_str().unwrap().to_owned(),
             "--load-settings".to_owned(),
-            super::join_paths(
-                [
-                    runner.work.join("machine.json"),
-                    runner.work.join("process.json"),
-                ]
-                .iter(),
-            ),
+            super::join_paths([machine, process].into_iter()),
             "--load-filaments".to_owned(),
-            runner
-                .work
-                .join("filament.json")
-                .to_str()
-                .unwrap()
-                .to_owned(),
+            filament.to_str().unwrap().to_owned(),
             "--arrange".to_owned(),
             "0".to_owned(),
             "--slice".to_owned(),

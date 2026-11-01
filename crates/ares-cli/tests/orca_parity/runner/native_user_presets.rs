@@ -5,17 +5,7 @@ use serde_json::Value;
 // Beta OrcaSlicer.cpp:2118-2157 resolves inherited user inputs by the file
 // identity loaded from data_dir/user/default, against data_dir/system.
 pub(in super::super) fn stage(work: &Path, profiles: &Path) -> (PathBuf, PathBuf) {
-    let datadir = work.join("preset-data");
-    let system = datadir.join("system");
-    std::fs::create_dir_all(&system).unwrap();
-    for vendor in ["OrcaFilamentLibrary", "BBL"] {
-        std::fs::copy(
-            profiles.join(format!("{vendor}.json")),
-            system.join(format!("{vendor}.json")),
-        )
-        .unwrap();
-        copy_directory(&profiles.join(vendor), &system.join(vendor));
-    }
+    let datadir = system(work, profiles, &["OrcaFilamentLibrary", "BBL"]);
     let index: Value =
         serde_json::from_slice(&std::fs::read(profiles.join("BBL.json")).unwrap()).unwrap();
     let mut process: Value =
@@ -27,6 +17,24 @@ pub(in super::super) fn stage(work: &Path, profiles: &Path) -> (PathBuf, PathBuf
     let path = user.join(format!("{}.json", process["name"].as_str().unwrap()));
     super::write_json(&path, &process);
     (datadir, path)
+}
+
+/// An isolated data_dir whose `system` holds the unchanged `vendors` manifests and trees, as
+/// `PresetBundle.cpp:3313-3345` loads them. A system leaf inside it resolves by file identity
+/// through its vendor manifest (`PresetBundle.cpp:617-645`) and beta flattens the tree itself.
+pub(in super::super) fn system(work: &Path, profiles: &Path, vendors: &[&str]) -> PathBuf {
+    let datadir = work.join("preset-data");
+    let system = datadir.join("system");
+    std::fs::create_dir_all(&system).unwrap();
+    for vendor in vendors {
+        std::fs::copy(
+            profiles.join(format!("{vendor}.json")),
+            system.join(format!("{vendor}.json")),
+        )
+        .unwrap();
+        copy_directory(&profiles.join(vendor), &system.join(vendor));
+    }
+    datadir
 }
 
 fn copy_directory(source: &Path, destination: &Path) {
