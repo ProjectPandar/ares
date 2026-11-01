@@ -287,12 +287,12 @@ fn plater_move_to_second_plate_slices_like_native() {
 #[test]
 fn plater_add_and_delete_plates_slices_like_native() {
     let mut session = load(SINGLE);
-    session.add_plate();
+    session.add_plate().unwrap();
     session
         .translate_instance(0, 0, [STRIDE, 0.0, 0.0])
         .unwrap();
     assert_eq!(session.plates()[1].instances, vec![(0, 0)]);
-    session.add_plate();
+    session.add_plate().unwrap();
     // Deleting plate 1 moves the later plates and their instances up.
     assert!(session.delete_plate(0));
     let plates = session.plates();
@@ -305,7 +305,7 @@ fn plater_add_and_delete_plates_slices_like_native() {
 #[test]
 fn plater_delete_plate_keeps_custom_gcodes_by_index_like_native() {
     let mut session = load(TWO_PLATES);
-    session.add_plate();
+    session.add_plate().unwrap();
     // The second plate's instance moves up; Model::plates_custom_gcodes stays keyed by plate
     // index (PartPlateList::delete_plate does not touch it), so plate 1 keeps plate 1's
     // custom G-codes and the GUI export writes them unchanged (bbs_3mf.cpp:8469).

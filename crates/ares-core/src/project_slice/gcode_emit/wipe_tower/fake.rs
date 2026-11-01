@@ -13,9 +13,10 @@ impl Data {
         &self,
         settings: &ProjectSettings,
         scale: CoordinateScale,
+        position: [f64; 2],
     ) -> Vec<Layer> {
         if !self.outer_walls.is_empty() {
-            return self.true_layers(settings, scale);
+            return self.true_layers(position, scale);
         }
         let print = &settings.process.print;
         let scale_value = |value: f32| (f64::from(value) / scale.factor()) as i64;
@@ -25,8 +26,8 @@ impl Data {
         let angle = std::f32::consts::PI * print.wipe_tower_rotation_angle.0 as f32 / 180.0;
         let (sin, cos) = f64::from(angle).sin_cos();
         let shift = [
-            scale_value(settings.project.print.wipe_tower_x.0[0].0 as f32),
-            scale_value(settings.project.print.wipe_tower_y.0[0].0 as f32),
+            scale_value(position[0] as f32),
+            scale_value(position[1] as f32),
         ];
         let place = |p: Point| {
             Point::new(

@@ -6,10 +6,12 @@ use crate::{
 };
 
 impl Data {
+    /// `placed`: the plate's stored position plus the plate origin (`Print.cpp:4489-4491`).
     pub(in crate::project_slice::gcode_emit) fn first_layer_corners(
         &self,
         settings: &ProjectSettings,
         scale: CoordinateScale,
+        placed: [f64; 2],
     ) -> Vec<Point> {
         if self.changes.is_empty() {
             return Vec::new();
@@ -37,10 +39,7 @@ impl Data {
             ],
             (radius + f64::from(self.brim_width), stretch),
             (
-                [
-                    settings.project.print.wipe_tower_x.0[0].0,
-                    settings.project.print.wipe_tower_y.0[0].0,
-                ],
+                placed,
                 print.wipe_tower_rotation_angle.0 * std::f64::consts::PI / 180.0,
             ),
             scale,

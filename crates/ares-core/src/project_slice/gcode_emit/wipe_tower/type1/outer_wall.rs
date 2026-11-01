@@ -1,16 +1,17 @@
 //! Print.cpp:3565–3571,5171–5224 and Brim.cpp:651–659: live Type1 outer walls.
 use super::super::Data;
 use crate::{
-    ProjectSettings,
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
     project_slice::gcode_emit::conflict::Layer,
 };
 
 impl Data {
-    fn outer_wall_shift(&self, settings: &ProjectSettings, scale: CoordinateScale) -> Point {
+    /// `FakeWipeTower::pos` (`Print.hpp:793`, set at `Print.cpp:3628`): the plate's stored
+    /// position plus the rib offset, plate-local (`Brim.cpp:682`).
+    fn outer_wall_shift(&self, position: [f64; 2], scale: CoordinateScale) -> Point {
         let position = [
-            settings.project.print.wipe_tower_x.0[0].0 as f32 + self.rib_offset[0],
-            settings.project.print.wipe_tower_y.0[0].0 as f32 + self.rib_offset[1],
+            position[0] as f32 + self.rib_offset[0],
+            position[1] as f32 + self.rib_offset[1],
         ];
         Point::new(
             (f64::from(position[0]) / scale.factor()).round() as i64,
@@ -20,13 +21,13 @@ impl Data {
 
     pub(in crate::project_slice::gcode_emit) fn brim_exclusions(
         &self,
-        settings: &ProjectSettings,
+        position: [f64; 2],
         scale: CoordinateScale,
     ) -> Vec<ExPolygon> {
         let Some((_, walls)) = self.outer_walls.first() else {
             return Vec::new();
         };
-        let shift = self.outer_wall_shift(settings, scale);
+        let shift = self.outer_wall_shift(position, scale);
         walls
             .iter()
             .map(|wall| {
@@ -47,10 +48,10 @@ impl Data {
 
     pub(in crate::project_slice::gcode_emit::wipe_tower) fn true_layers(
         &self,
-        settings: &ProjectSettings,
+        position: [f64; 2],
         scale: CoordinateScale,
     ) -> Vec<Layer> {
-        let shift = self.outer_wall_shift(settings, scale);
+        let shift = self.outer_wall_shift(position, scale);
         let mut previous_z = 0.0;
         self.outer_walls
             .iter()

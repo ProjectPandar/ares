@@ -191,10 +191,7 @@ impl PlaterSession {
             return Err(unsupported("around the first-layer scan region"));
         }
         let full = DynamicConfig::new(project_settings)?;
-        let mut positions = self.wipe_tower.clone().unwrap_or_else(|| {
-            let x = full.option("wipe_tower_x").floats().to_vec();
-            (x, full.option("wipe_tower_y").floats().to_vec())
-        });
+        let mut positions = self.tower_positions();
         let shown = self.shown_towers(&full, &mut positions)?;
         let mut unselected = match current {
             None => self.prepare_wipe_tower(&full, (&positions, &shown), &params, &aps)?,

@@ -6,6 +6,7 @@ use super::{PlateMetadata, Project};
 use crate::plater::PlaterEdits;
 use crate::project::filament_sequence::{FilamentSequences, PlateId};
 use crate::project::model_settings::PlateSettings;
+use crate::{OrcaFloat, OrcaFloats};
 
 impl Project {
     /// Sets an instance's transformation. Its imported copy keeps the frame it was loaded in:
@@ -57,6 +58,13 @@ impl Project {
                 .collect::<Vec<_>>();
         for (object, instance, transform) in updates {
             self.set_instance_transform(object, instance, transform);
+        }
+        if let Some((x, y)) = &edits.wipe_tower {
+            let floats =
+                |values: &[f64]| OrcaFloats(values.iter().copied().map(OrcaFloat).collect());
+            let print = &mut self.settings.project.print;
+            print.wipe_tower_x = floats(x);
+            print.wipe_tower_y = floats(y);
         }
         let Some(plates) = &edits.plates else {
             return;

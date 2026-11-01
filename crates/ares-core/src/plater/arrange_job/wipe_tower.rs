@@ -259,7 +259,7 @@ impl PlaterSession {
 
     /// `create_plate`'s `set_default_wipe_tower_pos_for_plate(new_index, true)` for each plate from
     /// `first` on: the stored positions resized to the plates, the new plates' positions set.
-    pub(super) fn place_new_towers(
+    pub(in crate::plater) fn place_new_towers(
         &self,
         config: &DynamicConfig,
         positions: &mut TowerPositions,

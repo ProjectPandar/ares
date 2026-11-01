@@ -201,8 +201,8 @@ impl PlaterSession {
 
     /// "Add plate" (`PartPlateList::create_plate`).
     #[wasm_bindgen(js_name = addPlate)]
-    pub fn add_plate(&mut self) {
-        self.session.add_plate();
+    pub fn add_plate(&mut self) -> Result<(), JsValue> {
+        self.session.add_plate().map_err(js_error)
     }
 
     /// "Delete plate" (`PartPlateList::delete_plate`); false for the sole plate.

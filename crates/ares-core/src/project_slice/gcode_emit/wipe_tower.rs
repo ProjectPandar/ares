@@ -31,6 +31,18 @@ mod unload;
 mod wipe;
 mod writer;
 
+/// `wipe_tower_x.get_at(plate_idx)`, `wipe_tower_y.get_at(plate_idx)`: the sliced plate's stored
+/// tower position (`GCode.cpp:7270`, `GCode/WipeTower2.cpp:1046` at v2.5.0-beta `345efec64`);
+/// `get_at` takes entry 0 past the end.
+pub(super) fn plate_position(
+    traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+) -> [f64; 2] {
+    let print = &traversal.resolved.views.full.project.print;
+    let plate = traversal.project.current_plate_index();
+    let at = |values: &[crate::OrcaFloat]| values.get(plate).unwrap_or(&values[0]).0;
+    [at(&print.wipe_tower_x.0), at(&print.wipe_tower_y.0)]
+}
+
 pub(super) fn requested(
     settings: &crate::ProjectSettings,
     bbl: bool,

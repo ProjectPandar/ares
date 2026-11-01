@@ -18,7 +18,7 @@ pub(in crate::project_slice) fn emit(
         .predecessor
         .predecessor;
     let tower_exclusions = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
-        tower.brim_exclusions(&traversal.resolved.views.full, traversal.scale)
+        tower.brim_exclusions(wipe_tower::plate_position(traversal), traversal.scale)
     });
     let mut brim = brim::BrimPlan::generate_all(
         traversal,
@@ -28,7 +28,13 @@ pub(in crate::project_slice) fn emit(
     )?;
     brim::combine(traversal, &mut brim)?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
-        tower.first_layer_corners(&traversal.resolved.views.full, traversal.scale)
+        let [x, y] = wipe_tower::plate_position(traversal);
+        let origin = traversal.project.plate_origin();
+        tower.first_layer_corners(
+            &traversal.resolved.views.full,
+            traversal.scale,
+            [x + origin.0, y + origin.1],
+        )
     });
     let skirt = skirt::SkirtPlan::generate(
         traversal,
@@ -184,7 +190,13 @@ pub(in crate::project_slice) fn emit(
                 &brim,
                 &islands.support_spacing,
             );
-            wipe_tower::Integration::new(data, settings, center, overlap)
+            wipe_tower::Integration::new(
+                data,
+                settings,
+                center,
+                overlap,
+                wipe_tower::plate_position(traversal),
+            )
         }),
         auto_lift: motion::auto_lift::AutoLift::prepare(traversal)
             .map_err(|error| SliceError::InvalidInput(format!("auto lift geometry: {error:?}")))?,

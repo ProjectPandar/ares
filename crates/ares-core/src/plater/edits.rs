@@ -23,6 +23,8 @@ pub struct PlaterEdits {
     pub(crate) plates: Option<Vec<EditedPlate>>,
     /// The object ids in model order, which an arrange sorts (`PartPlate.cpp:8389`).
     pub(crate) object_order: Option<Vec<u32>>,
+    /// `wipe_tower_x`/`wipe_tower_y` of the project config, one entry per plate.
+    pub(crate) wipe_tower: Option<(Vec<f64>, Vec<f64>)>,
 }
 
 impl PlaterEdits {
@@ -30,6 +32,7 @@ impl PlaterEdits {
         transforms: Vec::new(),
         plates: None,
         object_order: None,
+        wipe_tower: None,
     };
 
     pub(crate) fn transform(&self, object_id: u32, instance_id: u32) -> Option<Transform3d> {

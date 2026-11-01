@@ -79,7 +79,11 @@ pub(super) fn check(
     let Some(tower) = &schedule.tower else {
         return Ok(());
     };
-    let mut sources = vec![tower.fake_layers(&traversal.resolved.views.full, traversal.scale)];
+    let mut sources = vec![tower.fake_layers(
+        &traversal.resolved.views.full,
+        traversal.scale,
+        super::wipe_tower::plate_position(traversal),
+    )];
     let mut buckets = vec![Bucket::new(0, 0, Point::new(0, 0))];
     let mut names = vec!["WipeTower"];
     for (index, copies) in schedule.instances.iter().enumerate() {

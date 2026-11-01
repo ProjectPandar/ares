@@ -174,10 +174,10 @@ impl Data {
         let (sin, cos) =
             (settings.process.print.wipe_tower_rotation_angle.0 * std::f64::consts::PI / 180.0)
                 .sin_cos();
-        let position = [
-            settings.project.print.wipe_tower_x.0[0].0,
-            settings.project.print.wipe_tower_y.0[0].0,
-        ];
+        // `PrintExtents.cpp:152-154`: the plate's stored position plus the plate origin.
+        let [x, y] = super::plate_position(print.traversal);
+        let origin = print.traversal.project.plate_origin();
+        let position = [x + origin.0, y + origin.1];
         for result in self
             .changes
             .iter()

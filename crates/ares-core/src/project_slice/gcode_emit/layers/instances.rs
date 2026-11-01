@@ -100,12 +100,9 @@ pub(super) fn as_object_list(traversal: &PreparedPostClassicTraversal) -> bool {
 }
 
 fn seed(traversal: &PreparedPostClassicTraversal) -> (i64, i64) {
-    let print = &traversal.resolved.views.full.project.print;
-    // GCode.cpp:5113 constructs Point directly, not Point::new_scale.
-    (
-        print.wipe_tower_x.0[0].0 as i64,
-        print.wipe_tower_y.0[0].0 as i64,
-    )
+    // GCode.cpp:7270 (v2.5.0-beta) constructs Point directly, not Point::new_scale.
+    let [x, y] = super::super::wipe_tower::plate_position(traversal);
+    (x as i64, y as i64)
 }
 
 /// `GCode.cpp:5106–5138` chains only instances participating in this tool.

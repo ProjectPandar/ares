@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::edits::{EditedPlate, PlaterEdits};
 use super::plate_list::{BoundingBox, InstanceKey, PlateList, PlateModel};
 use super::{eigen, selection};
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicConfig;
 use crate::{Project, SliceError, Transform3d};
 
 pub struct PlaterSession {
@@ -14,7 +15,7 @@ pub struct PlaterSession {
     pub(super) plates: PlateList,
     /// `ModelInstance::arrange_order` by `(object_id, instance_id)`; 0 until an arrange.
     pub(super) arrange_orders: BTreeMap<(u32, u32), i32>,
-    /// The stored tower positions (`wipe_tower_x`, `wipe_tower_y`) once an arrange read them.
+    /// The project config's tower positions (`wipe_tower_x`, `wipe_tower_y`) once an edit set them.
     pub(super) wipe_tower: Option<super::arrange_job::TowerPositions>,
 }
 
@@ -237,15 +238,46 @@ impl PlaterSession {
         )
     }
 
-    /// "Add plate" (`PartPlateList::create_plate`).
-    pub fn add_plate(&mut self) {
+    /// "Add plate" (`PartPlateList::create_plate`). In GUI mode the new plate takes its default
+    /// tower position (`set_default_wipe_tower_pos_for_plate(new_index, true)`,
+    /// `PartPlate.cpp:6644-6646`).
+    pub fn add_plate(&mut self) -> Result<(), SliceError> {
+        let new_index = self.plates.plates.len();
         self.plates.create_plate(&mut Model(&mut self.project));
+        let full = DynamicConfig::new(self.project.settings())?;
+        let mut positions = self.tower_positions();
+        self.place_new_towers(&full, &mut positions, new_index)?;
+        self.wipe_tower = Some(positions);
+        Ok(())
     }
 
-    /// "Delete plate" (`PartPlateList::delete_plate`); a sole plate stays.
+    /// "Delete plate" (`PartPlateList::delete_plate`); a sole plate stays. In GUI mode the plate's
+    /// tower position is erased where the vectors reach it (`PartPlate.cpp:6766-6781`).
     pub fn delete_plate(&mut self, index: usize) -> bool {
-        self.plates
+        if !self
+            .plates
             .delete_plate(index, &mut Model(&mut self.project))
+        {
+            return false;
+        }
+        let mut positions = self.tower_positions();
+        for values in [&mut positions.0, &mut positions.1] {
+            if index < values.len() {
+                values.remove(index);
+            }
+        }
+        self.wipe_tower = Some(positions);
+        true
+    }
+
+    /// The project config's `wipe_tower_x`/`wipe_tower_y`: the loaded ones until an edit sets them.
+    pub(super) fn tower_positions(&self) -> super::arrange_job::TowerPositions {
+        self.wipe_tower.clone().unwrap_or_else(|| {
+            let print = &self.project.settings().project.print;
+            let values =
+                |floats: &crate::OrcaFloats| floats.0.iter().map(|value| value.0).collect();
+            (values(&print.wipe_tower_x), values(&print.wipe_tower_y))
+        })
     }
 
     /// The edits slicing applies to the loaded input.
@@ -283,6 +315,7 @@ impl PlaterSession {
                     .map(|object| object.id())
                     .collect(),
             ),
+            wipe_tower: self.wipe_tower.clone(),
         }
     }
 

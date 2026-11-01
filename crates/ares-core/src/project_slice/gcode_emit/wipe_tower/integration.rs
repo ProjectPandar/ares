@@ -62,13 +62,11 @@ impl Integration {
         settings: &ProjectSettings,
         center_no_tower: [f64; 2],
         priming_overlap: bool,
+        position: [f64; 2],
     ) -> Self {
         let project = &settings.project.print;
         Self {
-            position: [
-                project.wipe_tower_x.0[0].0 as f32,
-                project.wipe_tower_y.0[0].0 as f32,
-            ],
+            position: position.map(|value| value as f32),
             angle: settings.process.print.wipe_tower_rotation_angle.0 as f32 / 180.0
                 * std::f32::consts::PI,
             offsets: settings

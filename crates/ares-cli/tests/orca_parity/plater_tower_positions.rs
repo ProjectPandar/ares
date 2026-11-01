@@ -53,7 +53,7 @@ fn rewrite_project(input: &[u8], edits: &[(&str, &str)]) -> Vec<u8> {
 fn cubes_on_added_plate() -> PlaterSession {
     let input = std::fs::read(repo_root().join(TWO_FILAMENTS)).unwrap();
     let mut session = PlaterSession::load(rewrite_project(&input, &RECTANGLE_TOWER)).unwrap();
-    session.add_plate();
+    session.add_plate().unwrap();
     for object in 0..2 {
         session
             .translate_instance(object, 0, [STRIDE, 0.0, 0.0])
