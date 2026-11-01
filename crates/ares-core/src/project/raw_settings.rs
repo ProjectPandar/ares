@@ -133,7 +133,11 @@ impl ProjectSettingsRaw {
                 value,
                 RawConfigValue::Text(_) | RawConfigValue::Number(_) | RawConfigValue::Flag(_)
             );
-            let mut token = if scalar {
+            let mut token = if let RawConfigValue::Text(text) = &value {
+                // handle_legacy receives the deserialize input, not the export
+                // view: Config.hpp:946-950 distinguishes "nil" from "" (zero).
+                text.clone()
+            } else if scalar {
                 value.token().unwrap_or_default()
             } else {
                 String::new()

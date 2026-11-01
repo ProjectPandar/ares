@@ -18,7 +18,10 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-const FIXTURE: &str = "tests/parity/orca_cli_ender3.3mf";
+const FIXTURES: [&str; 2] = [
+    "tests/parity/orca_cli_ender3.3mf",
+    "tests/parity/scarf-conditional/overhang-high.3mf",
+];
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -74,7 +77,7 @@ struct Coverage {
 
 #[derive(Serialize)]
 struct Report {
-    fixture: &'static str,
+    fixtures: [&'static str; 2],
     def_keys: usize,
     keys: usize,
     values: usize,
@@ -95,14 +98,14 @@ fn round_trip(case: &Case) -> (Option<String>, Result<String, String>) {
 }
 
 /// Stored 3MF values, and the number of raw string values skipped.
-fn stored(defs: &BTreeMap<String, String>, scene: Scene) -> (Vec<Case>, usize) {
+fn stored(defs: &BTreeMap<String, String>, scene: Scene, fixture: &str) -> (Vec<Case>, usize) {
     let mut cases = Vec::new();
     let mut skipped = 0;
     for (section, values) in scene.settings {
         for (key, stored) in values {
             let Some(kind) = defs.get(&key) else { continue };
             let case = |element, original| Case {
-                source: format!("3mf:{section}"),
+                source: format!("3mf:{fixture}:{section}"),
                 key: key.clone(),
                 element,
                 original,
@@ -131,10 +134,16 @@ fn encode_inverts_decode_on_real_values() {
         .into_iter()
         .map(|def| (def.key, def.kind))
         .collect();
-    let input = fs::read(repo_root().join(FIXTURE)).unwrap();
-    let scene: Scene =
-        serde_json::from_str(&ares_wasm::scene_from_bytes(&input).unwrap().metadata()).unwrap();
-    let (cases, skipped_raw_strings) = stored(&defs, scene);
+    let mut cases = Vec::new();
+    let mut skipped_raw_strings = 0;
+    for fixture in FIXTURES {
+        let input = fs::read(repo_root().join(fixture)).unwrap();
+        let scene: Scene =
+            serde_json::from_str(&ares_wasm::scene_from_bytes(&input).unwrap().metadata()).unwrap();
+        let (stored_cases, skipped) = stored(&defs, scene, fixture);
+        cases.extend(stored_cases);
+        skipped_raw_strings += skipped;
+    }
     let covered: BTreeSet<&str> = cases.iter().map(|case| case.key.as_str()).collect();
     let keys = covered.len();
     let mut by_type = BTreeMap::<String, Coverage>::new();
@@ -166,7 +175,7 @@ fn encode_inverts_decode_on_real_values() {
         })
         .collect();
     let report = Report {
-        fixture: FIXTURE,
+        fixtures: FIXTURES,
         def_keys: defs.len(),
         keys,
         values,
@@ -180,7 +189,8 @@ fn encode_inverts_decode_on_real_values() {
         serde_json::to_string_pretty(&report).unwrap(),
     )
     .unwrap();
-    // 643 stored non-raw values in the fixture 3MF.
+    // Preserve the historical coverage floor after beta retires silent_mode;
+    // the second unchanged real project supplies additional legitimate values.
     assert!(values >= 643, "only {values} values");
     assert_eq!(report.failed, 0, "see target/web-e2e/encode-roundtrip.json");
 }
