@@ -2,6 +2,7 @@
 
 mod eligibility;
 mod emit;
+mod trim;
 
 pub(super) use emit::segments as emit_segments;
 
@@ -94,6 +95,7 @@ pub(super) fn build(
     };
     let speed = scarf_speed(first.role, options);
     let max_segment = slope_length / options.scarf.steps as f64 / scale;
+    let (original, slope_length) = trim::prepare(original, slope_length, scale);
     let seam_gap = options.seam_gap / scale;
     let mut starts = Vec::new();
     let mut flats = Vec::new();
