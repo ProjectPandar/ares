@@ -49,6 +49,8 @@ export interface PlaterLayout {
    */
   objects: { id: number; instances: SceneInstance[] }[];
   plates: ScenePlate[];
+  /** `[wipe_tower_x, wipe_tower_y]` of the project config: the prime tower position per plate. */
+  wipeTower: [number[], number[]];
 }
 
 /** The arrange settings popup (`GLCanvas3D::ArrangeSettings`); `distance` 0 spaces items automatically. */
@@ -85,6 +87,8 @@ export interface Scene {
   format: "3mf" | "stl";
   objects: SceneObject[];
   plates: ScenePlate[];
+  /** A plater session's tower positions (`PlaterLayout.wipeTower`) once an edit returned them. */
+  wipeTower?: [number[], number[]];
   settings: ProjectSettings | null;
   /** xyz triples for every volume, addressed by `vertexOffset`. */
   positions: Float32Array<ArrayBuffer>;

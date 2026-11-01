@@ -51,7 +51,7 @@ function instancesProbe(scene: Scene | null) {
     const object = scene.objects.findIndex(({ instances }) => at(instances) >= 0);
     return [object, at(scene.objects[object].instances)];
   };
-  return JSON.stringify({ objects, plates: scene.plates.map((plate) => plate.instances.map(position)) });
+  return JSON.stringify({ objects, plates: scene.plates.map((plate) => plate.instances.map(position)), wipeTower: scene.wipeTower });
 }
 
 export function ViewportView({ toolpaths = null, colors = null, enabled = null, view, fit = "plate", editable = false, children }: {

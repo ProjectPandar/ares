@@ -30,6 +30,7 @@ export function applyLayout(layout: PlaterLayout, currentPlate: number) {
       ...scene!,
       objects: layout.objects.map(({ id, instances }) => ({ ...scene!.objects.find((object) => object.id === id)!, instances })),
       plates: layout.plates,
+      wipeTower: layout.wipeTower,
     },
     currentPlate,
     ...invalidatedSlices(slice),

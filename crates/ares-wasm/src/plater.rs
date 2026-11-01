@@ -26,6 +26,9 @@ pub struct PlaterSession {
 struct Layout {
     objects: Vec<LayoutObject>,
     plates: Vec<ScenePlate>,
+    /// `wipe_tower_x`, `wipe_tower_y`: the project config's tower position per plate.
+    #[serde(rename = "wipeTower")]
+    wipe_tower: (Vec<f64>, Vec<f64>),
 }
 
 /// An object's instances; the id follows an object an arrange sorts (`PartPlate.cpp:8389`).
@@ -120,7 +123,8 @@ impl PlaterSession {
         scene::project_scene_with_plates(self.session.project(), self.plates())
     }
 
-    /// The edited instance matrices and plates as JSON `{objects: [{instances}], plates}`.
+    /// The edited instance matrices, plates and tower positions as JSON
+    /// `{objects: [{instances}], plates, wipeTower: [x, y]}`.
     pub fn layout(&self) -> String {
         let layout = Layout {
             objects: self
@@ -134,6 +138,7 @@ impl PlaterSession {
                 })
                 .collect(),
             plates: self.plates(),
+            wipe_tower: self.session.tower_positions(),
         };
         serde_json::to_string(&layout).expect("plater layout serializes")
     }

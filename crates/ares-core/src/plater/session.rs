@@ -270,8 +270,9 @@ impl PlaterSession {
         true
     }
 
-    /// The project config's `wipe_tower_x`/`wipe_tower_y`: the loaded ones until an edit sets them.
-    pub(super) fn tower_positions(&self) -> super::arrange_job::TowerPositions {
+    /// The project config's `wipe_tower_x`/`wipe_tower_y`, one entry per plate as the GUI's
+    /// project export writes them: the loaded ones until an edit sets them.
+    pub fn tower_positions(&self) -> (Vec<f64>, Vec<f64>) {
         self.wipe_tower.clone().unwrap_or_else(|| {
             let print = &self.project.settings().project.print;
             let values =
