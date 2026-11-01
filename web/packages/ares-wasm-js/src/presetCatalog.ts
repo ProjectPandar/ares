@@ -19,6 +19,11 @@ export class PresetCatalog {
     this.#catalogId = catalogId;
   }
 
+  /** @internal The worker's id of this catalog. */
+  get workerId(): number {
+    return this.#catalogId;
+  }
+
   /**
    * Adds one vendor `{id, index, files}` as JSON bytes, e.g. the UTF-8 of
    * `JSON.stringify(await loadVendor(id))`. Add OrcaFilamentLibrary first,

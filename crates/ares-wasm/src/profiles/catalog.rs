@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 /// parsed once per `addVendor` and filtering reuses the loaded records.
 #[wasm_bindgen]
 pub struct PresetCatalog {
-    handle: ares_core::PresetCatalogHandle,
+    pub(crate) handle: ares_core::PresetCatalogHandle,
 }
 
 impl Default for PresetCatalog {

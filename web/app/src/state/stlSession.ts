@@ -1,6 +1,6 @@
 import type { PlaterSession, Scene } from "@ares-slicer/wasm";
 import { loadArrangeSettings } from "./arrange";
-import { type CatalogSources, profileRequest } from "./presets";
+import { type CatalogSources, installVendors, profileRequest } from "./presets";
 import { slicer } from "./slicer";
 import { invalidatedSlices, type ModelFile, type PresetSelection, useApp } from "./store";
 
@@ -39,6 +39,7 @@ export function stlSessionOpened(): Promise<unknown> {
 async function openSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
   const plater = await slicer.createPlaterSessionWithProfiles(file.bytes, file.name, catalog, profiles, options);
+  await installVendors(plater);
   const placed = await plater.scene();
   if (useApp.getState().file !== file) {
     void plater.free();

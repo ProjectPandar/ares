@@ -52,6 +52,10 @@ npm pack             # prepack regenerates dist/ and adds LICENSE
 - a Vite build emits one chunk per vendor plus a small entry;
 - a browser loads only the vendor chunk it asks for.
 
+## Release note
+
+The vendor modules now carry `id` (`{ id, index, files }`), and `@ares-slicer/wasm` requires it. Bump the package version when it is next published. This change does not bump it.
+
 ## License
 
 AGPL-3.0-or-later. The preset data comes from OrcaSlicer, which is AGPL-3.0.

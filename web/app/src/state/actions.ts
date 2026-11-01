@@ -2,7 +2,7 @@ import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { loadArrangeSettings } from "./arrange";
 import { saveConfig } from "./persistence";
-import { overrideTokens, presetSliceBlocker, sliceWithPresets } from "./presets";
+import { installVendors, overrideTokens, presetSliceBlocker, sliceWithPresets } from "./presets";
 import { stlSessionOpened } from "./stlSession";
 import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
@@ -45,6 +45,7 @@ export async function importFile(file: File) {
   try {
     // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure).
     const plater = /\.3mf$/i.test(file.name) ? await slicer.createPlaterSession(bytes, file.name) : null;
+    if (plater) await installVendors(plater);
     const scene = plater ? await plater.scene() : await slicer.loadScene(bytes);
     const typedSettings = scene.settings && (await decodeSettings(await configDefs, scene.settings));
     const previous = useApp.getState().plater;

@@ -10,7 +10,7 @@ use ares_core::{
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-use crate::profiles::ProfileSliceOptions;
+use crate::profiles::{PresetCatalog, ProfileSliceOptions};
 use crate::scene::{self, SceneInstance, ScenePlate};
 use crate::{SceneData, SliceOutput};
 
@@ -137,6 +137,13 @@ impl PlaterSession {
             wipe_tower: self.session.tower_positions(),
         };
         serde_json::to_string(&layout).expect("plater layout serializes")
+    }
+
+    /// The installed system vendors (`PresetBundle::vendors`) the arrange job's vendor test reads.
+    /// Call it after creating the session and after every change of the installed vendors.
+    #[wasm_bindgen(js_name = setInstalledVendors)]
+    pub fn set_installed_vendors(&mut self, catalog: &PresetCatalog) {
+        self.session.set_installed_vendors(&catalog.handle);
     }
 
     /// "Add plate" (`PartPlateList::create_plate`).

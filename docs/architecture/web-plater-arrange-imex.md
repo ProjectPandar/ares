@@ -221,7 +221,10 @@ Every `file:line` is at `345efec64`. In ToolheadOffset and PerExtruder modes eac
   - It compares the vendor **id**, the index file stem (BBL, Qidi), not the JSON `name` ("Bambulab"). The prerequisite commit adds the id to the vendor envelope (`{id, index, files}`), with `PrinterModelInfo.vendor` returning it.
   - The installed vendor set is the `PresetCatalogHandle` the caller builds from the installed vendor profiles. Ares has no built-in vendor data. It reaches the session through `PlaterSession::set_installed_vendors(&PresetCatalogHandle)`.
   - Until that call no vendor is installed, which is a real upstream state (a GUI with no vendor installed gives Unknown).
-  - **The web must call it** right after `createPlaterSession` / `createPlaterSessionWithProfiles` and after every catalog sync, including vendor install and uninstall. Otherwise a BBL project silently reads as Unknown. A session test and the web wiring cover it (below).
+  - **The web must call it** right after `createPlaterSession` / `createPlaterSessionWithProfiles` and after every catalog sync, including vendor install and uninstall. Otherwise a BBL project silently reads as Unknown.
+    - The app does it through `installVendors` (`state/presets.ts`) after both session creations, and through `syncCatalog` when the installed vendors change.
+    - The session cases below and `web/e2e/plateArrangeVendors.spec.ts` cover it. The E2E installs BBL, opens the X2D project (the object stays unarranged), then uninstalls BBL (the object packs).
+  - **Release task:** the vendor envelope gained `id`, a format change of `@ares-slicer/profiles`. Its package version (0.1.0) needs a bump on the next publish; this chain does not bump it (README "Release note").
 
 ### Included and deferred
 - **Included:** the filament-to-extruder resolution, the plate maps, the object filament collection, and both id setters at their call sites.

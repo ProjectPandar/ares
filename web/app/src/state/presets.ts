@@ -1,4 +1,4 @@
-import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
+import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
@@ -44,10 +44,20 @@ async function syncCatalog(): Promise<PresetCatalog> {
     for (const vendor of loaded) await catalog.addVendor(encoder.encode(JSON.stringify(vendor)));
     performance.measure("ares:catalog-build", { start });
     synced = { vendors, imports: 0, catalog };
+    // The installed vendors changed: the plater's vendor test reads the new set.
+    await useApp.getState().plater?.setInstalledVendors(catalog);
   }
   for (const { input, filename } of importFiles.slice(synced.imports)) await synced.catalog.addImport(input, filename);
   synced.imports = importFiles.length;
   return synced.catalog;
+}
+
+/**
+ * Hands a new plater the installed system vendors (`PresetBundle::vendors`), which the arrange's
+ * vendor test reads; `syncCatalog` hands them again when the installed vendors change.
+ */
+export async function installVendors(plater: PlaterSession) {
+  await plater.setInstalledVendors(await presetCatalog());
 }
 
 /** The installed vendors' printers and the printer models of the printer combo's "System presets" group. */

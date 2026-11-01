@@ -1,3 +1,4 @@
+import type { PresetCatalog } from "./presetCatalog.js";
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
 import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, ScaleAndSize, ScaleEdit, Scene } from "./types.js";
@@ -48,6 +49,16 @@ export class PlaterSession {
    */
   rotate(object: number, instance: number, radians: Vec3): Promise<PlaterLayout> {
     return this.#edit({ op: "rotate", object, instance, radians });
+  }
+
+  /**
+   * Hands the session the installed system vendors (`PresetBundle::vendors`): the catalog built from
+   * the installed vendor profiles. The arrange reads the printer's vendor from it, so a Bambu Lab
+   * printer counts as one only while BBL is installed. Call it after creating the session and
+   * after every change of the installed vendors; until then no vendor is installed.
+   */
+  async setInstalledVendors(catalog: PresetCatalog): Promise<void> {
+    await this.#call({ kind: "platerSetInstalledVendors", sessionId: this.#sessionId, catalogId: catalog.workerId });
   }
 
   /** The instance's absolute rotation fields in degrees (`GizmoObjectManipulation`). */
