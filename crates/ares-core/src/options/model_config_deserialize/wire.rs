@@ -35,6 +35,7 @@ pub(crate) fn decode(kind: OptionValueKind, value: &str) -> Result<WireValue, St
         | OptionValueKind::EnumsNullable
         | OptionValueKind::Floats
         | OptionValueKind::FloatsNullable
+        | OptionValueKind::FloatsOrPercents
         | OptionValueKind::IntsNullable
         | OptionValueKind::Ints => Ok(WireValue::Sequence(split_flat(value))),
         OptionValueKind::Float
@@ -190,6 +191,9 @@ pub(crate) fn validate_lexical(kind: OptionValueKind, value: &str) -> Result<(),
         OptionValueKind::Enums => Ok(()),
         OptionValueKind::EnumsNullable => Ok(()),
         OptionValueKind::Floats => deserialize_sequence::<OrcaFloats>(kind, value),
+        OptionValueKind::FloatsOrPercents => {
+            deserialize_sequence::<Vec<FloatOrPercent>>(kind, value)
+        }
         OptionValueKind::FloatsNullable => {
             deserialize_sequence::<Vec<Nullable<OrcaFloat>>>(kind, value)
         }

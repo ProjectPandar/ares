@@ -50,6 +50,18 @@ boundary against source before proposing the minimal GREEN implementation.
 Existing Ares typed/export views are temporary compatibility shells around
 upstream FullPrintConfig, not a separate Ares config-output design.
 
+## Approved GREEN data boundary
+
+The existing generated metadata table retains its length exemption; existing
+generator changes are limited to the needed beta syntax. New handwritten
+Rust files remain below400LOC. Preserve all678surviving old metadata records
+byte-for-byte and the43deferred scalar kinds. New definitions carry source
+FullPrintConfig/default-preset/CLI ownership, canonical ConfigOption default
+wire serialization, and default nil state, derived from PrintConfig.hpp,
+Preset.cpp option declarations, PresetBundle.cpp:503-518 and
+OrcaSlicer.cpp:1347-1350. This avoids both an output-key whitelist and default
+materialization for source registry-only options. No Native tokens seed data.
+
 ## Qualified observation before GREEN review
 
 Official and seeded each execute two successful, stable Native slices plus

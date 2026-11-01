@@ -2,6 +2,7 @@
 pub enum OptionValueKind {
     Float,
     FloatOrPercent,
+    FloatsOrPercents,
     Percent,
     Percents,
     PercentsNullable,
@@ -32,6 +33,9 @@ pub struct OptionDefinition {
     /// `enum_values` whitelist (`ConfigOptionEnum::from_string`,
     /// `Config.hpp:2032-2040`); `None` when the whitelist is the type map.
     pub enum_type_keys: Option<&'static [&'static str]>,
+    pub(crate) full_config_default: bool,
+    pub(crate) default_is_nil: bool,
+    pub(crate) default_wire_value: &'static str,
 }
 
 impl OptionValueKind {
@@ -40,6 +44,7 @@ impl OptionValueKind {
         match self {
             Self::Float => "float",
             Self::FloatOrPercent => "float_or_percent",
+            Self::FloatsOrPercents => "floats_or_percents",
             Self::Percent => "percent",
             Self::Percents => "percents",
             Self::PercentsNullable => "percents_nullable",
@@ -95,6 +100,8 @@ pub enum OptionGuiType {
     Slider,
     Legend,
     OneString,
+    PluginConfig,
+    PluginPicker,
 }
 
 impl OptionGuiType {
@@ -108,6 +115,8 @@ impl OptionGuiType {
             Self::Slider => "slider",
             Self::Legend => "legend",
             Self::OneString => "one_string",
+            Self::PluginConfig => "plugin_config",
+            Self::PluginPicker => "plugin_picker",
         }
     }
 }

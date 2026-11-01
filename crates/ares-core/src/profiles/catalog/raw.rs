@@ -60,6 +60,7 @@ pub(super) fn applies(kind: ProfileKind, key: &str) -> bool {
         | OptionValueKind::EnumsNullable
         | OptionValueKind::Floats
         | OptionValueKind::FloatsNullable
+        | OptionValueKind::FloatsOrPercents
         | OptionValueKind::IntsNullable
         | OptionValueKind::Ints
         | OptionValueKind::Strings

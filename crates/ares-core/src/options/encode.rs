@@ -94,6 +94,9 @@ pub fn encode_config_value(kind: OptionValueKind, typed_json: &str) -> Result<St
         Kind::Ints => vector(typed_json, OrcaInt),
         Kind::IntsNullable => nullable(typed_json, OrcaInt),
         Kind::Floats => vector(typed_json, OrcaFloat),
+        Kind::FloatsOrPercents => vector(typed_json, |value: FloatOrPercentJson| {
+            FloatOrPercent::from(value)
+        }),
         Kind::FloatsNullable => nullable(typed_json, OrcaFloat),
         Kind::Percents => vector(typed_json, Percent),
         Kind::PercentsNullable => nullable(typed_json, Percent),

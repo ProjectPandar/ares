@@ -31,7 +31,8 @@ pub(super) fn default_array_member(key: &str) -> Result<Value, SliceError> {
         OptionValueKind::Bool | OptionValueKind::Bools | OptionValueKind::BoolsNullable => {
             default_bool(definition.default_value, key)
         }
-        OptionValueKind::Enum
+        OptionValueKind::FloatsOrPercents
+        | OptionValueKind::Enum
         | OptionValueKind::Enums
         | OptionValueKind::EnumsNullable
         | OptionValueKind::Strings

@@ -1,20 +1,26 @@
 use super::super::{OptionDefinition, OptionValueKind};
 
 macro_rules! definition {
-    ($key:literal, $kind:ident, $default_value:literal $(,)?) => {
+    ($key:literal, $kind:ident, $default_value:literal $(,)?; $full_config:literal, $nil:literal, $wire:literal) => {
         OptionDefinition {
             key: $key,
             kind: OptionValueKind::$kind,
             default_value: $default_value,
             enum_type_keys: None,
+            full_config_default: $full_config,
+            default_is_nil: $nil,
+            default_wire_value: $wire,
         }
     };
-    ($key:literal, $kind:ident, $default_value:literal, $enum_type_keys:expr $(,)?) => {
+    ($key:literal, $kind:ident, $default_value:literal, $enum_type_keys:expr $(,)?; $full_config:literal, $nil:literal, $wire:literal) => {
         OptionDefinition {
             key: $key,
             kind: OptionValueKind::$kind,
             default_value: $default_value,
             enum_type_keys: Some($enum_type_keys),
+            full_config_default: $full_config,
+            default_is_nil: $nil,
+            default_wire_value: $wire,
         }
     };
 }
@@ -145,6 +151,9 @@ const EMPTY_OPTION_DEFINITION: OptionDefinition = OptionDefinition {
     kind: OptionValueKind::String,
     default_value: "",
     enum_type_keys: None,
+    full_config_default: false,
+    default_is_nil: false,
+    default_wire_value: "",
 };
 static OPTION_DEFINITIONS_ARRAY: [OptionDefinition; OPTION_DEFINITION_COUNT] = merge_definitions();
 

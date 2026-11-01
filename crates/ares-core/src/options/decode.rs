@@ -255,6 +255,11 @@ pub fn decode_config_value(kind: OptionValueKind, serialized: &str) -> Result<St
                 nullable(element, |e| Ok(int_element(e).to_string()))
             })
         }
+        (OptionValueKind::FloatsOrPercents, WireValue::Sequence(elements)) => {
+            join_elements(&elements, |element| {
+                decode_config_value(OptionValueKind::FloatOrPercent, element)
+            })
+        }
         (OptionValueKind::Floats, WireValue::Sequence(elements)) => {
             join_elements(&elements, |element| Ok(number(float_element(element))))
         }

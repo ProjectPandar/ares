@@ -153,6 +153,7 @@ fn is_vector(kind: OptionValueKind) -> bool {
         | OptionValueKind::EnumsNullable
         | OptionValueKind::Floats
         | OptionValueKind::FloatsNullable
+        | OptionValueKind::FloatsOrPercents
         | OptionValueKind::IntsNullable
         | OptionValueKind::Ints
         | OptionValueKind::Strings
