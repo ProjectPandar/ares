@@ -71,5 +71,8 @@ mod zero_extrusion_comment;
 #[path = "width_overhang_residual.rs"]
 mod width_overhang_residual;
 
+#[path = "coplanar_outer_wall.rs"]
+mod coplanar_outer_wall;
+
 #[path = "clipper_wrapper_geometry.rs"]
 mod clipper_wrapper_geometry;
