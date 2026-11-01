@@ -1,7 +1,7 @@
 # Honeycomb boundary join ordering: beta rewrite slice
 
 Authority: OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`,
-`Fill/FillBase.cpp::Fill::connect_infill:1809–1897`: open-end initialization,
+`Fill/FillBase.cpp::Fill::connect_infill:1822–1898`: open-end initialization,
 DSU/consumed-state join-count simulation, half-spacing buckets, and forward
 and reverse contour orders chosen only when they increase complete joins.
 Rust destination: private `fill/connect` arc selection before mutation.

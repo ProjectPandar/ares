@@ -174,16 +174,20 @@ fn emit_infills(
     // of the same source object (also covers the ironing pass above and
     // `extrude_support`, GCode.cpp:6201).
     let geometry = phase.geometry;
-    state
-        .shared_reversals
-        .chain_infill(phase.reversal, entities, local_cursor(state, geometry));
+    state.shared_reversals.chain_infill(
+        phase.reversal,
+        entities,
+        local_cursor(state, geometry),
+        geometry.scale,
+    );
     for entity in entities.drain(..) {
         match entity {
             IslandPrintEntity::Fill(entity) => {
                 emit_fill_entity(output, &entity, geometry, state)?;
             }
             IslandPrintEntity::FillCollection(collection) => {
-                let collection = collection.chained_path_from(local_cursor(state, geometry));
+                let collection =
+                    collection.chained_path_from(local_cursor(state, geometry), geometry.scale);
                 for entity in &collection.entities {
                     emit_fill_entity(output, entity, geometry, state)?;
                 }

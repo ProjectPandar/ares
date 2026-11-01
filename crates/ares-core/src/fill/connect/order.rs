@@ -13,7 +13,8 @@ pub(super) fn sort_arcs(
     limits: HookLimits,
 ) {
     fixed_gcc_sort_by(arcs, |a, b| a.length < b.length);
-    let mut best = count_joins(arcs, graph, &limits);
+    let join_length = super::join_length(limits.anchor, limits.anchor_max, spacing, limits.epsilon);
+    let mut best = count_joins(arcs, graph, &limits, join_length);
     let bucket = 0.5 * spacing;
     for backwards in [false, true] {
         let mut candidate = arcs.clone();
@@ -32,7 +33,7 @@ pub(super) fn sort_arcs(
                 a.param < b.param
             }
         });
-        let joins = count_joins(&candidate, graph, &limits);
+        let joins = count_joins(&candidate, graph, &limits, join_length);
         if joins > best {
             best = joins;
             *arcs = candidate;
@@ -46,7 +47,7 @@ fn root(parent: &mut [usize], mut i: usize) -> usize {
     }
     i
 }
-fn count_joins(arcs: &[Arc], graph: &WorkingGraph, limits: &HookLimits) -> usize {
+fn count_joins(arcs: &[Arc], graph: &WorkingGraph, limits: &HookLimits, join_length: f64) -> usize {
     let mut consumed = graph
         .intersections
         .iter()
@@ -70,7 +71,7 @@ fn count_joins(arcs: &[Arc], graph: &WorkingGraph, limits: &HookLimits) -> usize
         if ra == rb {
             continue;
         }
-        if arc.length < limits.anchor_max {
+        if arc.length < join_length {
             parent[rb] = ra;
             joins += 1;
         } else if limits.anchor <= limits.epsilon {
@@ -108,7 +109,7 @@ fn count_joins(arcs: &[Arc], graph: &WorkingGraph, limits: &HookLimits) -> usize
         };
         consumed[e] = limits.anchor > limits.epsilon;
         for l in [lprev.min(lnext), lprev.max(lnext)] {
-            if l > limits.anchor_max {
+            if l > join_length {
                 break;
             }
             let other = if l == lprev { prev } else { next };

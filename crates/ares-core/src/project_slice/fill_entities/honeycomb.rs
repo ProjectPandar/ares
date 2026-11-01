@@ -69,6 +69,13 @@ pub(super) fn append(
             if polylines.is_empty() {
                 continue;
             }
+            let polylines = super::join_close_ends::join(
+                polylines,
+                fill_params.extrusion_role,
+                fill_params.spacing,
+                (false, true),
+                scale,
+            );
             let flow = super::materialized_flow(fill_params, fill_params.spacing as f32)?;
             let mut entities: Vec<FillExtrusionEntity> = polylines
                 .iter()

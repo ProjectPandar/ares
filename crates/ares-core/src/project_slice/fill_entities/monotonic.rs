@@ -167,10 +167,21 @@ pub(super) fn append(
             continue;
         }
         let flow = super::materialized_flow(fill_params, generated.spacing)?;
-        let mut entities: Vec<FillExtrusionEntity> = generated
-            .polylines
-            .iter()
-            .cloned()
+        let polylines = super::join_close_ends::join(
+            generated.polylines,
+            fill_params.extrusion_role,
+            f64::from(generated.spacing),
+            (
+                matches!(
+                    pattern,
+                    ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
+                ),
+                true,
+            ),
+            scale,
+        );
+        let mut entities: Vec<FillExtrusionEntity> = polylines
+            .into_iter()
             .map(|polyline| {
                 FillExtrusionEntity::Path(FillExtrusionPath {
                     polyline: Polyline3::from_xy(polyline, Vec::new()),

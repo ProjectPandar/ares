@@ -49,6 +49,13 @@ pub(super) fn append(
             continue;
         }
         // Fill.cpp:1326-1357 / FillBase.cpp:161-182: one collection per surface call.
+        let polylines = super::join_close_ends::join(
+            polylines,
+            fill.params.extrusion_role,
+            fill.params.spacing,
+            (false, false),
+            scale,
+        );
         let flow = super::materialized_flow(fill.params, fill.params.spacing as f32)?;
         output.collections.push(FillExtrusionCollection {
             entities: polylines

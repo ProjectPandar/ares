@@ -15,6 +15,7 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
+#[derive(Clone, Copy)]
 pub(super) struct LayerGeometry {
     pub(super) layer_id: usize,
     pub(super) bounds: Option<crate::geometry::BoundingBox>,
@@ -66,32 +67,43 @@ pub(super) fn polylines(
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
-    fill: SurfaceFill,
+    mut fill: SurfaceFill,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
     geometry: LayerGeometry,
 ) -> Result<(), SliceError> {
-    let polylines = polylines(&fill, scale, object_reference, geometry)?;
-    if polylines.is_empty() {
-        return Ok(());
-    }
-    let flow = super::materialized_flow(fill.params, fill.params.spacing as f32)?;
-    output.collections.push(FillExtrusionCollection {
-        entities: polylines
-            .into_iter()
-            .map(|polyline| {
-                FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline: Polyline3::from_xy(polyline, Vec::new()),
-                    z_contoured: false,
-                    role: fill.params.extrusion_role,
-                    mm3_per_mm: flow.mm3_per_mm,
-                    width: flow.width,
-                    height: flow.height,
+    let expolygons = std::mem::take(&mut fill.expolygons);
+    for expolygon in expolygons {
+        fill.expolygons = vec![expolygon];
+        let polylines = polylines(&fill, scale, object_reference, geometry)?;
+        if polylines.is_empty() {
+            continue;
+        }
+        let polylines = super::join_close_ends::join(
+            polylines,
+            fill.params.extrusion_role,
+            fill.params.spacing,
+            (false, true),
+            scale,
+        );
+        let flow = super::materialized_flow(fill.params, fill.params.spacing as f32)?;
+        output.collections.push(FillExtrusionCollection {
+            entities: polylines
+                .into_iter()
+                .map(|polyline| {
+                    FillExtrusionEntity::Path(FillExtrusionPath {
+                        polyline: Polyline3::from_xy(polyline, Vec::new()),
+                        z_contoured: false,
+                        role: fill.params.extrusion_role,
+                        mm3_per_mm: flow.mm3_per_mm,
+                        width: flow.width,
+                        height: flow.height,
+                    })
                 })
-            })
-            .collect(),
-        no_sort: false,
-    });
+                .collect(),
+            no_sort: false,
+        });
+    }
     Ok(())
 }
 

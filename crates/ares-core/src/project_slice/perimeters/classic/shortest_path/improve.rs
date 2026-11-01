@@ -10,6 +10,7 @@ pub(super) fn improve(
     points: &[[f64; 2]],
     reversible: &[bool],
     start: Option<[f64; 2]>,
+    epsilon: f64,
 ) {
     if chain.len() <= 1 {
         return;
@@ -18,7 +19,7 @@ pub(super) fn improve(
         *chain = crate::geometry::chain_segments_exact(points, Some(reversible), start);
         return;
     }
-    local(chain, points, reversible, start);
+    local(chain, points, reversible, start, epsilon);
     if let Some(start) = start {
         let nearest = Nearest::new(points);
         let mut taken = vec![false; reversible.len()];
@@ -32,8 +33,8 @@ pub(super) fn improve(
             candidate.push((e / 2, !e.is_multiple_of(2)));
             at = points[e ^ 1];
         }
-        if travel(&candidate, points, start) < travel(chain, points, start) - 100.0 {
-            local(&mut candidate, points, reversible, Some(start));
+        if travel(&candidate, points, start) < travel(chain, points, start) - epsilon {
+            local(&mut candidate, points, reversible, Some(start), epsilon);
             *chain = candidate;
         }
     }
@@ -55,6 +56,7 @@ struct Search<'a> {
     points: &'a [[f64; 2]],
     reversible: &'a [bool],
     start: Option<[f64; 2]>,
+    epsilon: f64,
     order: Vec<usize>,
     pos: Vec<usize>,
     fixed: Vec<usize>,
@@ -121,6 +123,7 @@ fn local(
     points: &[[f64; 2]],
     reversible: &[bool],
     start: Option<[f64; 2]>,
+    epsilon: f64,
 ) {
     let n = chain.len();
     let nearest = Nearest::new(points);
@@ -128,6 +131,7 @@ fn local(
         points,
         reversible,
         start,
+        epsilon,
         order: chain.iter().map(|p| p.0).collect(),
         pos: vec![0; n],
         fixed: vec![0; n + 1],

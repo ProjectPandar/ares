@@ -61,8 +61,9 @@ impl SharedEntityReversals {
         cursor: &mut (Option<ReversalScope>, usize),
         scope: ReversalScope,
         entities: &mut Vec<T>,
-        start: crate::geometry::Point,
+        origin: (crate::geometry::Point, crate::geometry::CoordinateScale),
     ) {
+        let (start, scale) = origin;
         let key = (scope.representative, scope.layer);
         if cursor.0 != Some(scope) {
             cursor.0 = Some(scope);
@@ -83,6 +84,7 @@ impl SharedEntityReversals {
             crate::project_slice::perimeters::classic::shortest_path::chain_and_reorder_entities_flips(
                 entities,
                 Some(start),
+                scale,
             );
         for (slot, flip) in state[base..base + entities.len()].iter_mut().zip(flips) {
             if flip {
@@ -99,13 +101,14 @@ impl SharedEntityReversals {
         scope: ReversalScope,
         entities: &mut Vec<T>,
         start: crate::geometry::Point,
+        scale: crate::geometry::CoordinateScale,
     ) {
         Self::chain(
             &mut self.infill,
             &mut self.infill_cursor,
             scope,
             entities,
-            start,
+            (start, scale),
         );
     }
 
@@ -116,13 +119,14 @@ impl SharedEntityReversals {
         scope: ReversalScope,
         entities: &mut Vec<T>,
         start: crate::geometry::Point,
+        scale: crate::geometry::CoordinateScale,
     ) {
         Self::chain(
             &mut self.support,
             &mut self.support_cursor,
             scope,
             entities,
-            start,
+            (start, scale),
         );
     }
 }

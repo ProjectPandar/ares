@@ -44,9 +44,12 @@ pub(in crate::project_slice::gcode_emit) fn emit(
         // GCode.cpp:6199-6201 — extrude_support chains the SHARED
         // support_fills entities in place (no_sort false), so reversals
         // persist to later islands/instances of the same source object.
-        state
-            .shared_reversals
-            .chain_support(phase.reversal, group, local_cursor(state, geometry));
+        state.shared_reversals.chain_support(
+            phase.reversal,
+            group,
+            local_cursor(state, geometry),
+            geometry.scale,
+        );
         for entity in &*group {
             emit_entity(output, entity, selected_role, geometry, state)?;
         }

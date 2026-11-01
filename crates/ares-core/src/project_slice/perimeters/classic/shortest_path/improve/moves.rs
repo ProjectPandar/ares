@@ -7,7 +7,7 @@ impl Search<'_> {
         let a = self.prev(i);
         let b = self.next(j);
         if dist(a, Some(self.exit(j))) + dist(Some(self.entry(i)), b)
-            > dist(a, Some(self.entry(i))) + dist(Some(self.exit(j)), b) - 100.0
+            > dist(a, Some(self.entry(i))) + dist(Some(self.exit(j)), b) - self.epsilon
         {
             return false;
         }
@@ -45,7 +45,7 @@ impl Search<'_> {
         } else {
             f64::MAX
         };
-        if kept.min(flipped) > removal - 100.0 {
+        if kept.min(flipped) > removal - self.epsilon {
             return false;
         }
         let len = last - i + 1;

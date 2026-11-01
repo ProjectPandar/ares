@@ -20,15 +20,16 @@ pub(in crate::project_slice) trait ChainEntity {
 pub(in crate::project_slice) fn chain_and_reorder_entities<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Point,
+    scale: crate::geometry::CoordinateScale,
 ) {
-    let _ = chain_and_reorder_entities_flips(entities, Some(start_near));
+    let _ = chain_and_reorder_entities_flips(entities, Some(start_near), scale);
 }
 
 pub(in crate::project_slice) fn chain_and_reorder_entities_with_optional_start<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Option<Point>,
 ) {
-    let _ = reorder_entities_flips(entities, start_near, false);
+    let _ = reorder_entities_flips(entities, start_near, None);
 }
 
 /// Chains and improves in place, reporting the reversal decision per
@@ -38,14 +39,15 @@ pub(in crate::project_slice) fn chain_and_reorder_entities_with_optional_start<T
 pub(in crate::project_slice) fn chain_and_reorder_entities_flips<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Option<Point>,
+    scale: crate::geometry::CoordinateScale,
 ) -> Vec<bool> {
-    reorder_entities_flips(entities, start_near, true)
+    reorder_entities_flips(entities, start_near, Some(scale))
 }
 
 fn reorder_entities_flips<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Option<Point>,
-    improve: bool,
+    improve: Option<crate::geometry::CoordinateScale>,
 ) -> Vec<bool> {
     let endpoints = entities
         .iter()
@@ -65,7 +67,7 @@ fn reorder_entities_flips<T: ChainEntity>(
         start_near.map(coordinates),
         &can_reverse,
     );
-    if improve {
+    if let Some(scale) = improve {
         let points = endpoints
             .iter()
             .flat_map(|ends| ends.iter().map(|p| [p[0] as f64, p[1] as f64]))
@@ -75,6 +77,7 @@ fn reorder_entities_flips<T: ChainEntity>(
             &points,
             &can_reverse,
             start_near.map(|p| [p.x() as f64, p.y() as f64]),
+            1e-4 / scale.factor(),
         );
     }
     let mut source = std::mem::take(entities)
@@ -113,9 +116,13 @@ impl FillExtrusionCollection {
         self.entities.reverse();
     }
 
-    pub(in crate::project_slice) fn chained_path_from(mut self, start_near: Point) -> Self {
+    pub(in crate::project_slice) fn chained_path_from(
+        mut self,
+        start_near: Point,
+        scale: crate::geometry::CoordinateScale,
+    ) -> Self {
         if !self.no_sort {
-            chain_and_reorder_entities(&mut self.entities, start_near);
+            chain_and_reorder_entities(&mut self.entities, start_near, scale);
         }
         self
     }

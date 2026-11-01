@@ -33,19 +33,23 @@ missing the upstream improvement phase.
 After the unchanged constrained greedy chain, improve=true chooses exact
 chaining for up to eight entities. Larger chains use the source nearest-32
 endpoint candidate grid, constrained 2-opt and or-opt moves, queue/sweep order,
-50*n move bound, and SCALED_EPSILON acceptance. With a start point, compare the
+50*n move bound, and SCALED_EPSILON acceptance (`1e-4 / scale.factor()`),
+including large-printer coordinate scales. With a start point, compare the
 nearest-next candidate against the locally improved greedy chain, improve and
 select it only under the source travel comparison. Keep index ties, reversal
 constraints and loop orientation behavior. Do not replace the bounded spatial
 candidate search with quadratic scans.
 
 A1 ports complete `FillBase.cpp::join_close_ends:3001–3117` and its
-non-Arachne sparse/no-sort gate. A1+A2 must close the existing ordered honeycomb
+non-Arachne sparse/no-sort gate at each base `fill_surface_extrusion` call,
+before materializing paths, using that filler's actual spacing. LockedZag's
+`FillRectilinear.cpp:4038–4084` override does not call this base gate. There is
+no post-collection metadata regrouping or Z-contour filter. A1+A2 must close the existing ordered honeycomb
 RED; geometric similarity or unordered segment equality is not acceptance.
 
 ## Deferred and verification
 
-Crosshatch connector arc ordering (`FillBase.cpp:1880–1897`) remains slice B.
+Crosshatch connector arc ordering (`FillBase.cpp:1822–1898`) remains slice B.
 No changes to cooling, travel formatting, connector trim flags or thresholds.
 No redefinition of optional-start or shared-reversal ownership in this slice.
 Run the strict honeycomb RED, earlier owned witnesses, then the authorized

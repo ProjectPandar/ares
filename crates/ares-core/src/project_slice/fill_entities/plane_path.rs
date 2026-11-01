@@ -84,6 +84,13 @@ pub(super) fn append(
             continue;
         }
 
+        let polylines = super::join_close_ends::join(
+            polylines,
+            params.extrusion_role,
+            params.spacing,
+            (fill_params.calibration_order, true),
+            scale,
+        );
         let flow = super::materialized_flow(params, params.spacing as f32)?;
         let mut entities = polylines
             .into_iter()

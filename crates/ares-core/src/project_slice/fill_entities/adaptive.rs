@@ -54,8 +54,8 @@ pub(super) fn append(
 ) -> Result<(), SliceError> {
     let kind = octree_kind(fill.params.pattern);
     let octree = octree_for(traversal, object_index, kind, line_spacing)?;
-    let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
+        let mut polylines = Vec::new();
         // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
         // surface by (overlap − 0.5·spacing) before the per-component
         // adaptive fill.
@@ -83,27 +83,34 @@ pub(super) fn append(
                 .map_err(clipper_error)?,
             );
         }
-    }
-    if polylines.is_empty() {
-        return Ok(());
-    }
-    let flow = super::materialized_flow(fill.params, fill.params.spacing as f32)?;
-    output.collections.push(FillExtrusionCollection {
-        entities: polylines
-            .into_iter()
-            .map(|polyline| {
-                FillExtrusionEntity::Path(FillExtrusionPath {
-                    polyline: Polyline3::from_xy(polyline, Vec::new()),
-                    z_contoured: false,
-                    role: fill.params.extrusion_role,
-                    mm3_per_mm: flow.mm3_per_mm,
-                    width: flow.width,
-                    height: flow.height,
+        if polylines.is_empty() {
+            continue;
+        }
+        let polylines = super::join_close_ends::join(
+            polylines,
+            fill.params.extrusion_role,
+            fill.params.spacing,
+            (false, true),
+            scale,
+        );
+        let flow = super::materialized_flow(fill.params, fill.params.spacing as f32)?;
+        output.collections.push(FillExtrusionCollection {
+            entities: polylines
+                .into_iter()
+                .map(|polyline| {
+                    FillExtrusionEntity::Path(FillExtrusionPath {
+                        polyline: Polyline3::from_xy(polyline, Vec::new()),
+                        z_contoured: false,
+                        role: fill.params.extrusion_role,
+                        mm3_per_mm: flow.mm3_per_mm,
+                        width: flow.width,
+                        height: flow.height,
+                    })
                 })
-            })
-            .collect(),
-        no_sort: false,
-    });
+                .collect(),
+            no_sort: false,
+        });
+    }
     Ok(())
 }
 

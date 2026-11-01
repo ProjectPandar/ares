@@ -100,7 +100,6 @@ pub(in crate::project_slice) fn generate_layer_with_active(
     for fill in surface_fills {
         let region_id = fill.region_id;
         let collection_start = output.collections.len();
-        let join_spacing = fill.params.spacing;
         // Fill.cpp:1235-1242: each filler uses its printing region's runtime flag.
         let region = &resolved_object.all_regions[region_id];
         let call = super::types::SurfaceCall {
@@ -322,9 +321,6 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     traversal.scale,
                 )?;
             }
-        }
-        for collection in &mut output.collections[collection_start..] {
-            super::join_close_ends::join(collection, join_spacing, traversal.scale);
         }
         output
             .collection_ranges

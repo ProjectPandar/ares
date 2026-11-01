@@ -1,7 +1,7 @@
 # Contour arc order selection — slice B
 
 Authority: OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`,
-`Fill/FillBase.cpp:1809–1897`: `Arc`, `count_joins`, and the forward/backward
+`Fill/FillBase.cpp:1822–1898`: `Arc`, `count_joins`, and the forward/backward
 `along_contour` sorting candidates. Rust destination:
 `fill/connect/order.rs`, called from `apply::apply_connections` after
 collecting eligible arcs and before applying sorted arcs. Existing length-only
@@ -13,7 +13,11 @@ Retain the original length sort as the first candidate. Simulate full joins
 with private consumed flags and DSU roots, including the remaining-endpoint
 pass, without mutating the real graph. Multiline arcs below spacing*multiline
 are skipped. Full joins use strict length < join_length in the sorted pass;
-the remaining pass includes length == join_length. Hook consumption uses
+the remaining pass includes length == join_length. Both simulation thresholds
+use `FillBase.cpp:1731`: when anchor_length > scaled epsilon, join_length is
+max(anchor_length_max, 2*(anchor_length + 0.5*scaled spacing)); otherwise it
+is anchor_length_max. The actual connector-application correction at
+`FillBase.cpp:1919,1981` is retained as a separate implementation commit. Hook consumption uses
 anchor_length > scaled epsilon. Compare both contour directions in upstream
 order, grouping by llround(length / (0.5*scaled spacing)), then contour index,
 then ascending or descending contour parameter. Replace only when the join

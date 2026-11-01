@@ -13,6 +13,15 @@ use apply::apply_connections;
 use graph::build_working_graph;
 use scale::{scaled_epsilon, scaled_f32, scaled_f64};
 
+// FillBase.cpp:1731: anchors meeting along a wall form one full join.
+fn join_length(anchor: f64, anchor_max: f64, spacing: f64, epsilon: f64) -> f64 {
+    if anchor > epsilon {
+        anchor_max.max(2.0 * (anchor + 0.5 * spacing))
+    } else {
+        anchor_max
+    }
+}
+
 pub(crate) struct FillBoundary<'a> {
     pub(crate) polygons: &'a [Polygon],
     pub(crate) bbox: BoundingBox,
