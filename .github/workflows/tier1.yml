@@ -66,31 +66,25 @@ jobs:
           components: rustfmt
       - run: cargo fmt --check
 
+  native-oracle-inventory:
+    runs-on: self-hosted
+    outputs:
+      variants: ${{ steps.inventory.outputs.variants }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: inventory
+        run: |
+          variants="$(python3 -c 'import json; print(json.dumps(json.load(open("scripts/ci/native-oracle-variants.json"))))')"
+          echo "variants=$variants" >> "$GITHUB_OUTPUT"
+
   native-oracle-build:
     name: oracle-${{ matrix.variant }}
     runs-on: self-hosted
+    needs: native-oracle-inventory
     strategy:
       fail-fast: false
       matrix:
-        variant:
-          - merged-oracle
-          - ksr-initialized
-          - seed-replay
-          - marker-time
-          - marker-time-stable-options
-          - gdb
-          - procgcode
-          - procgcode-stable-options
-          - procgcode-dynamics
-          - procgcode-dynamics-stable-options
-          - print-statistics
-          - plate-custom-gcodes
-          - custom-gcode-overview
-          - actual-speed-profile
-          - role-times
-          - segment-hw
-          - segment-colors
-          - patchelf
+        variant: ${{ fromJSON(needs.native-oracle-inventory.outputs.variants) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -113,6 +107,26 @@ jobs:
         with:
           key: native-oracle-closure-${{ github.run_id }}-${{ matrix.variant }}
           path: ${{ runner.temp }}/native-oracle-caches/${{ matrix.variant }}
+
+  native-cache-capacity:
+    name: Native cache capacity
+    runs-on: self-hosted
+    needs: [native-oracle-inventory, native-oracle-build]
+    if: ${{ !cancelled() }}
+    timeout-minutes: 200
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NATIVE_VARIANTS: ${{ needs.native-oracle-inventory.outputs.variants }}
+      NATIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify actual single and paired automatic cache footprint
+        run: |
+          python3 scripts/ci/native-oracle-cache-budget.py \
+            --repo "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID" \
+            --head-sha "$NATIVE_HEAD_SHA" --ref "$GITHUB_REF" \
+            --variants "$NATIVE_VARIANTS" --pair --wait-seconds 10800 \
+            --report "$RUNNER_TEMP/native-cache-capacity.json"
 
   web:
     runs-on: self-hosted
@@ -300,12 +314,12 @@ jobs:
       - name: Restore current-run Native oracles
         uses: ./.github/actions/native-oracle-cache
         with:
-          variants: '["merged-oracle","ksr-initialized","gdb","seed-replay","procgcode","procgcode-stable-options","procgcode-dynamics","procgcode-dynamics-stable-options","print-statistics","plate-custom-gcodes","custom-gcode-overview"]'
+          variants: '["merged-oracle","ksr-initialized","gdb","seed-replay","procgcode","procgcode-dynamics","print-statistics","plate-custom-gcodes","custom-gcode-overview"]'
       - name: Substitute Native oracles
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay seed-replay-debug seed-replay-source procgcode procgcode-stable-options procgcode-dynamics procgcode-dynamics-stable-options print-statistics plate-custom-gcodes custom-gcode-overview; do
+          for v in merged-oracle ksr-initialized gdb seed-replay seed-replay-debug seed-replay-source procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -328,9 +342,7 @@ jobs:
             echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
             echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
             echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
-            echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_procgcode_stable_options/bin/orca-slicer"
             echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
-            echo "ARES_PROCGCODE_DYNAMICS_STABLE_BIN=$ORACLE_procgcode_dynamics_stable_options/bin/orca-slicer"
             echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
@@ -431,12 +443,12 @@ jobs:
       - name: Restore current-run Native oracles
         uses: ./.github/actions/native-oracle-cache
         with:
-          variants: '["merged-oracle","ksr-initialized","gdb","seed-replay","procgcode","procgcode-stable-options","procgcode-dynamics","procgcode-dynamics-stable-options","print-statistics","plate-custom-gcodes","custom-gcode-overview","patchelf"]'
+          variants: '["merged-oracle","ksr-initialized","gdb","seed-replay","procgcode","procgcode-dynamics","print-statistics","plate-custom-gcodes","custom-gcode-overview","patchelf"]'
       - name: Substitute Native oracles
         run: |
           set -euo pipefail
           export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-stable-options procgcode-dynamics procgcode-dynamics-stable-options print-statistics plate-custom-gcodes custom-gcode-overview patchelf; do
+          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview patchelf; do
             out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
             name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
             echo "$v -> $out"
@@ -463,9 +475,7 @@ jobs:
             echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
             echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
             echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
-            echo "ARES_PROCGCODE_STABLE_BIN=$ORACLE_procgcode_stable_options/bin/orca-slicer"
             echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
-            echo "ARES_PROCGCODE_DYNAMICS_STABLE_BIN=$ORACLE_procgcode_dynamics_stable_options/bin/orca-slicer"
             echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
             echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
             echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"

@@ -39,11 +39,21 @@ neither that manifest nor Hestia's NAR service for in-run suppliers.
 
 ## Capacity gate
 
-Before extending the handoff, account for every producer archive separately;
-counting a deduplicated union understates Actions cache usage. Check the total
-against the repository's 10 GB limit before pushing, and include the duplicate
-push/pull-request workflow footprint. Label measured sizes and conservative
-bounds separately. An unverified or excessive total does not permit a push.
+Account for every producer archive separately; counting a deduplicated union
+understates Actions cache usage. `native-oracle-variants.json` is the shared
+retained matrix/audit inventory (16 after B15's processor stable-pair retirement).
+
+The first beta CI is explicitly authorized to establish actual capacity. Its
+capacity job queries Actions service `size_in_bytes` for every exact-run key in
+both automatic push/pull-request runs and requires their combined archive bytes
+to be strictly below decimal10,000,000,000. Producer completion, cache presence,
+unique versions, refs and source identity are mandatory; missing/evicted entries
+are not zero. The job records each row and repository cache-usage context in its
+log/summary, without uploading another artifact or modifying cache policy.
+
+Inner XZ/NAR sizes and the historical2.4.2 bound are not beta capacity evidence.
+An unverified/excessive actual total blocks CI and REVIEW-REQUEST; no waiver,
+cache deletion or fallback transport can manufacture a pass.
 
 ## References
 

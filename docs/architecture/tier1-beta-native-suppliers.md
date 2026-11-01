@@ -20,10 +20,11 @@ fixture, comparison count or browser timeout changes here.
   the full replay/statistics authority also seeds the GCode placeholder RNG.
 - `GCode/GCodeProcessor.hpp:OptionsZCorrector::on_moves_inserted` and
   `GCodeProcessor.cpp:calculate_time`: retain beta's own sorted-vector index
-  remap. Do not stack the old map-based stable-options patch. The distinct raw
-  and stable supplier names remain separate derivations; their former patch
-  difference disappears because the correction is now upstream, not by aliasing
-  executable paths or substituting one authority for another.
+  remap. Do not stack the old map-based stable-options patch. Main's B15
+  `363b77546` / `ca3534af2` retired the processor color/dynamics stable pair
+  and moved the retained witnesses to raw beta. Remove only their CI producers,
+  consumers and env wiring; keep the independent marker-time stable supplier.
+  No raw/stable executable aliases or replacement defect are introduced.
 - Existing dump seams in `src/OrcaSlicer.cpp:main`, `CLI::run` and
   `GCodeProcessor::reset/apply_config` remain read-only diagnostics plus the
   explicitly declared pressure-advance initialization/travel-limit alignment.
@@ -49,13 +50,23 @@ handoff, miss failure, content-hash validation, official-only dependency
 substitution and no-local-Native-build consumer contract remain unchanged.
 
 The prior2.4.2 capacity result is historical, not a beta result. Re-evaluate the
-beta archive footprint before pushing; do not silently transfer the old bound.
+beta archive footprint in the first CI; do not silently transfer the old bound.
+The single retained inventory is `scripts/ci/native-oracle-variants.json`:
+16 producers after the two processor stable variants retire. The capacity job
+checks exact service `size_in_bytes` rows, identities and refs for every supplier
+in both automatic push/PR runs, requiring their combined actual footprint to be
+strictly below decimal10,000,000,000B. Missing/evicted entries, partial matrices,
+unknown sizes and missing counterpart runs fail; repository usage is also
+reported with GitHub's approximately five-minute freshness caveat.
 A verified source archive and recipe/patch/extraction preflight are not a claim
 that beta Native compilation or the integrated comparisons have already passed.
 
 ## Deferred and landing order
 
 No new GUI/CAD/belt behavior, Rust parity repair, private tests or browser E2E
-repair is included. WEB owns its existing selector/mobile repair; it lands first
-on main. This local cutover commit is reviewed without pushing, then PR4 rebases
-on that main and CI must be entirely green before REVIEW-REQUEST. No waiver.
+repair is included. B15 main `1cf2968d5` contains W2's retirement and WEB repairs.
+Rebase there; every chain-probe conflict takes main, including all23 previously
+identified extraction overlaps, without regeneration. Only the non-overlapping
+overview harness supplies the ordinary empty belt cache and calls main's
+five-argument kernel. Entire CI and actual paired cache capacity must pass
+before REVIEW-REQUEST. No waiver.

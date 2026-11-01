@@ -60,6 +60,8 @@ struct Imgui
     void time(float value) { cells.times.push_back(value); }
 };
 
+// The observer exercises the ordinary non-belt viewer context.
+inline const std::vector<double> m_belt_layer_zs;
 #include "custom-gcode-overview/kernel.hpp"
 #pragma pop_macro("_u8L")
 
@@ -97,8 +99,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* items, 
 
     Cells cells;
     Imgui imgui{ cells };
-    const std::vector<double> belt_layer_zs;
-    render_custom_gcode_overview(custom_gcode_per_print_z, layers_viewer, belt_layer_zs, imgui, 0.0f, 0.0f);
+    render_custom_gcode_overview(custom_gcode_per_print_z, layers_viewer, imgui, 0.0f, 0.0f);
 
     auto zs = nlohmann::json::array();
     for (float z : layers_viewer.get_layers_zs())

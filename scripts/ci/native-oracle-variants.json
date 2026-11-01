@@ -1,0 +1,18 @@
+[
+  "merged-oracle",
+  "ksr-initialized",
+  "seed-replay",
+  "marker-time",
+  "marker-time-stable-options",
+  "gdb",
+  "procgcode",
+  "procgcode-dynamics",
+  "print-statistics",
+  "plate-custom-gcodes",
+  "custom-gcode-overview",
+  "actual-speed-profile",
+  "role-times",
+  "segment-hw",
+  "segment-colors",
+  "patchelf"
+]
