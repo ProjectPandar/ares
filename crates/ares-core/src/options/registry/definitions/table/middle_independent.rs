@@ -32,7 +32,7 @@ pub(super) const MIDDLE_INDEPENDENT_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("infill_overhang_angle", Float, "60"; true, false, "60"),
     definition!("infill_shift_step", Float, "0.4"; true, false, "0.4"),
     definition!("infill_wall_overlap", Percent, "15"; true, false, "15%"),
-    definition!("inherits", String, ""; true, false, ""),
+    definition!("inherits", String, ""; false, false, ""),
     definition!("inherits_group", Strings, ""; false, false, ""),
     definition!("initial_exposure_time", Float, "15"; false, false, ""),
     definition!("initial_layer_acceleration", Float, "300"; true, false, "300"),

@@ -14,7 +14,7 @@ pub(super) const PRE_MIDDLE_FILAMENT_OPTION_DEFINITIONS: &[OptionDefinition] = &
     definition!("filament_cooling_moves", Ints, "4"; true, false, "4"),
     definition!("filament_cost", Floats, "0"; true, false, "0"),
     definition!("filament_density", Floats, "0"; true, false, "0"),
-    definition!("filament_deretraction_speed", FloatsNullable, "0"; true, true, "0"),
+    definition!("filament_deretraction_speed", FloatsNullable, "0"; false, true, "0"),
     definition!("filament_dev_ams_drying_ams_limitations", Strings, ""; true, false, "\"\""),
     definition!(
         "filament_dev_ams_drying_heat_distortion_temperature",
@@ -47,7 +47,7 @@ pub(super) const PRE_MIDDLE_FILAMENT_OPTION_DEFINITIONS: &[OptionDefinition] = &
     definition!("filament_is_support", Bools, "false"; true, false, "0"),
     definition!("filament_loading_speed", Floats, "28"; true, false, "28"),
     definition!("filament_loading_speed_start", Floats, "3"; true, false, "3"),
-    definition!("filament_long_retractions_when_cut", BoolsNullable, "false"; true, true, "0"),
+    definition!("filament_long_retractions_when_cut", BoolsNullable, "false"; false, true, "0"),
     definition!("filament_map", Ints, "1"; true, false, "1"),
     definition!("filament_map_2", Ints, "1"; true, false, "1"),
     definition!("filament_map_mode", Enum, "Auto For Flush"; true, false, "Auto For Flush"),
@@ -68,7 +68,7 @@ pub(super) const PRE_MIDDLE_FILAMENT_OPTION_DEFINITIONS: &[OptionDefinition] = &
     definition!("filament_notes", Strings, ""; true, false, "\"\""),
     // PrintConfig.cpp (345efec64c7b):8955-8961, ConfigOptionFloats{45.}.
     definition!("filament_nozzle_map", Ints, "1"; true, false, "1"),
-    definition!("filament_plugin_config_overrides", String, ""; true, false, ""),
+    definition!("filament_plugin_config_overrides", String, ""; false, false, ""),
     definition!("filament_pre_cooling_temperature", IntsNullable, "0"; true, false, "0"),
     definition!("filament_pre_cooling_temperature_nc", IntsNullable, "0"; true, false, "0"),
     definition!("filament_preheat_temperature_delta", FloatsNullable, "0"; true, false, "0"),

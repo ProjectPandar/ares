@@ -791,15 +791,20 @@ const OVERRIDE_KEYS = filamentOverrideKeys();
 const configHeader = stripComments(readFileSync(join(REPO, 'OrcaSlicer/src/libslic3r/PrintConfig.hpp'), 'utf8'));
 const fullHeader = configHeader.slice(0, configHeader.indexOf('PRINT_CONFIG_CLASS_DEFINE(\n    SLAPrinterConfig'));
 const presetSource = stripComments(readFileSync(join(REPO, 'OrcaSlicer/src/libslic3r/Preset.cpp'), 'utf8'));
-const defaultOwners = new Set([...fullHeader.matchAll(/\(\(\s*ConfigOption[^,\n]+,\s*(\w+)\s*\)\)/g)].map((match) => match[1]));
+const staticDefaultOwners = new Set([...fullHeader.matchAll(/\(\(\s*ConfigOption[^,\n]+,\s*(\w+)\s*\)\)/g)].map((match) => match[1]));
+const defaultOwners = new Set(staticDefaultOwners);
 let filamentDefaults;
 for (const group of ['print', 'filament', 'printer', 'machine_limits']) {
     const body = new RegExp(`s_Preset_${group}_options\\s*\\{([\\s\\S]*?)\\};`).exec(presetSource)[1];
     const keys = [...body.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
     if (group === 'filament') filamentDefaults = new Set(keys);
-    for (const key of keys) defaultOwners.add(key);
+    else for (const key of keys) defaultOwners.add(key);
 }
 const cliSource = stripComments(readFileSync(join(REPO, 'OrcaSlicer/src/OrcaSlicer.cpp'), 'utf8'));
+const bookkeepingBody = /bookkeeping_keys\s*=\s*\{([\s\S]*?)\};/.exec(cliSource)[1];
+for (const match of bookkeepingBody.matchAll(/"([^"]+)"/g)) {
+    if (!staticDefaultOwners.has(match[1])) defaultOwners.delete(match[1]);
+}
 for (const match of cliSource.matchAll(/if\s*\(!m_extra_config\.has\("([^"]+)"\)\)\s*m_extra_config\.set_key_value\("\1", new ConfigOptionBool\(false\)\)/g)) {
     defaultOwners.add(match[1]);
 }
@@ -1002,7 +1007,7 @@ function toJson(rec) {
         default_value: rec.default_value,
         default_wire_value: wire,
         full_config_default: defaultOwners.has(rec.key),
-        default_is_nil: (rec.nullable && filamentDefaults.has(rec.key) && nilOverrides.has(rec.key)) ||
+        default_is_nil: (rec.nullable && !staticDefaultOwners.has(rec.key) && filamentDefaults.has(rec.key) && nilOverrides.has(rec.key)) ||
             (numericVector && (wire === '' || (rec.nullable && wire.split(',').every((value) => value === 'nil')))),
         nullable: rec.nullable,
         label: rec.label,

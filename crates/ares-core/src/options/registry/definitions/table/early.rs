@@ -88,9 +88,9 @@ pub(super) const EARLY_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("close_fan_the_first_x_layers", Ints, "1"; true, false, "1"),
     definition!("combine_brims", Bool, "false"; true, false, "0"),
     definition!("compatible_machine_expression_group", Strings, ""; false, false, ""),
-    definition!("compatible_printers", Strings, ""; true, false, ""),
-    definition!("compatible_printers_condition", String, ""; true, false, ""),
-    definition!("compatible_prints", Strings, ""; true, false, ""),
-    definition!("compatible_prints_condition", String, ""; true, false, ""),
+    definition!("compatible_printers", Strings, ""; false, false, ""),
+    definition!("compatible_printers_condition", String, ""; false, false, ""),
+    definition!("compatible_prints", Strings, ""; false, false, ""),
+    definition!("compatible_prints_condition", String, ""; false, false, ""),
     definition!("compatible_process_expression_group", Strings, ""; false, false, ""),
 ];
