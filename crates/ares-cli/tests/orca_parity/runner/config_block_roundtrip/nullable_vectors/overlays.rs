@@ -36,13 +36,14 @@ fn object_override(source: &[u8], token: &str) -> Vec<u8> {
 #[test]
 fn native_region_overlays_remap_variants_and_inherit_nil() {
     let source = fs::read(repo_root().join("tests/parity/nozzle-flush-dataset/D0.3mf")).unwrap();
-    let mapped = mapped_project(&source, 2);
     let mut failures = Vec::new();
-    for (case, token, expected_feed) in [
-        ("multi", "87,99,113,127", "6780"),
-        ("singleton", "83", "4980"),
-        ("nil", "nil", "1980"),
+    for (case, token, physical, expected_feed) in [
+        ("multi", "87,99,113,127", 2, "6780"),
+        ("singleton", "83", 2, "4980"),
+        ("nil", "nil", 2, "1980"),
+        ("source-equal", "17.00009,33", 1, "1020"),
     ] {
+        let mapped = mapped_project(&source, physical);
         let project = object_override(&mapped, token);
         let (reference, _) = native_stream_case::qualify(
             (
@@ -51,6 +52,7 @@ fn native_region_overlays_remap_variants_and_inherit_nil() {
                     "PrintObject.cpp:4363-4374 apply_to_print_region_config",
                     "PrintConfig.cpp:11421-11429 set_variant_override",
                     "Config.hpp:612-629 set_to_index nil inherits existing target",
+                    "Config.hpp:985-995; libslic3r.h:320-323 option equality precedes overlay",
                 ],
             ),
             case,
@@ -79,7 +81,7 @@ fn native_region_overlays_remap_variants_and_inherit_nil() {
         fs::write(
             reference.root.join("region-overlay-comparison.json"),
             serde_json::to_vec_pretty(&json!({
-                "case": case, "authored_token": token, "physical_extruder": 2,
+                "case": case, "authored_token": token, "physical_extruder": physical,
                 "input_sha256": sha(&project), "native": native, "api": api,
                 "channel_matches": matches,
                 "api_error": result.as_ref().err().map(|error| format!("{error:?}")),
