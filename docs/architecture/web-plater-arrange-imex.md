@@ -232,10 +232,12 @@ Every `file:line` is at `345efec64`. In ToolheadOffset and PerExtruder modes eac
 ### Oracle and RED
 - **GUI-only.** The CLI arrange never sets the ids, so Native cannot be the oracle.
 - **Unit:** `test_exclusion_volumes.cpp:486-498`, the six `bed_exclusion_extruder_for_filament` checks, ported literally.
-- **Session property cases**, each in PerExtruder mode with a full-height volume over the bed centre for extruder 2 only. The expectations are derived from `bed_exclusion_applies` (`Arrange.cpp:131-133`) and the setter (`ArrangeJob.cpp:53-81`), and asserted on the arranged offset.
-  1. A Snapmaker J1 with the object on filament 1, manual map [1, 2]: ids {0}, so it centres inside the volume.
-  2. A Bambu Lab X2D with BBL installed (`set_installed_vendors` with the BBL vendor from `resources/profiles`), automatic map: Marlin_BBL leaves the ids empty, so the object moves out of the volume.
-  3. The same X2D with no vendor installed: Unknown, so the generic automatic map gives ids {0} and the object centres inside the volume.
+- **Session property cases**, each in PerExtruder mode with a full-height volume over the **whole bed** for extruder 2 only.
+  - **Why the whole bed.** Upstream's final alignment moves the pile clear of every fixed item, whatever its nozzle (`finalAlign`, `nfpplacer.hpp:1150-1176`), and `do_final_align` is always on (`Arrange.hpp:143`). So an object a centre volume does not apply to still ends up outside it, and the ids only show where no position is clear. There `finalAlign` returns (`:1166-1167`): an object the volume does not apply to packs on the bed, and one it applies to packs on no bed and keeps its place (`bed_idx < 0`, `ArrangeJob.cpp:791-799`, reported as unarranged `:933-940`).
+  - The expectations come from `bed_exclusion_applies` (`Arrange.cpp:131-133`) and the setter (`ArrangeJob.cpp:53-81`), and are asserted as whether the object moved.
+  1. A Snapmaker J1 with the object on filament 1, manual map [1, 2]: ids {0}, so it packs.
+  2. A Bambu Lab X2D with BBL installed (`set_installed_vendors` with the BBL vendor from `resources/profiles`), automatic map: Marlin_BBL leaves the ids empty, so it stays unarranged.
+  3. The same X2D with no vendor installed: Unknown, so the generic automatic map gives ids {0}, and it packs.
   - Cases 2 and 3 differ only in the installed vendors, which pins the vendor test's observable effect.
   - Both X2D cases give the two nozzles one area (`extruder_printable_area` emptied), since several nozzles' shared area is not ported and the vendor test reads only `printer_model`.
 - **The kernel side** (`test_arrange.cpp:509-575`) is already ported in `tests/arrange/parameters.rs`.

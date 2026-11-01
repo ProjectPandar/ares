@@ -110,34 +110,37 @@ fn extruder_two_volume(
     PlaterSession::load(input).unwrap()
 }
 
-/// Whether the arranged first instance's offset lies in `(min, max)`.
-fn arranged_inside(
-    session: &mut PlaterSession,
-    (min, max): ([f64; 2], [f64; 2]),
-) -> (bool, [f64; 2]) {
+/// Arranges all, then whether the first instance moved (packed), with its offset.
+fn arrange_packs_first_instance(session: &mut PlaterSession) -> (bool, [f64; 2]) {
+    let offset = |session: &PlaterSession| {
+        let matrix = session.instance_transform(0, 0).unwrap().to_column_major();
+        [matrix[12], matrix[13]]
+    };
+    let before = offset(session);
     session
         .arrange(ArrangeScope::All, settings(false, false))
         .unwrap();
-    let matrix = session.instance_transform(0, 0).unwrap().to_column_major();
-    let xy = [matrix[12], matrix[13]];
-    (
-        (0..2).all(|axis| (min[axis]..=max[axis]).contains(&xy[axis])),
-        xy,
-    )
+    let after = offset(session);
+    (after != before, after)
 }
+
+// The extruder-2 volume covers the whole bed. Upstream's final alignment moves the pile clear of
+// every fixed item, whatever its nozzle (`finalAlign`, `nfpplacer.hpp:1150-1176`), and returns
+// where no position is clear (`:1166-1167`). So the nozzle ids show when a volume leaves no room:
+// an object the volume does not apply to packs on the bed; one it applies to packs on no bed and
+// keeps its place (`bed_idx < 0`, `ArrangeJob.cpp:791-799`, reported as unarranged `:933-940`).
 
 #[test]
 fn plater_arrange_lets_an_object_into_a_volume_only_another_nozzle_sees() {
     // A2b3, GUI-only (the CLI arrange leaves the nozzle ids empty), so no Native comparison. The
     // object prints with filament 1, which the manual map puts on extruder 1, so the arrange job
     // gives it the nozzle ids {0} (`ArrangeJob.cpp:53-81`). The extruder-2 volume then does not
-    // apply to it (`bed_exclusion_applies`, `Arrange.cpp:131-133`), and the pile centres on the bed
-    // inside it.
-    let volume = ([112.0, 60.0], [212.0, 140.0]);
-    let (inside, xy) = arranged_inside(&mut extruder_two_volume(J1, volume, &[]), volume);
+    // apply to it (`bed_exclusion_applies`, `Arrange.cpp:131-133`).
+    let whole_bed = ([-10.0, -10.0], [334.0, 210.0]);
+    let (packed, xy) = arrange_packs_first_instance(&mut extruder_two_volume(J1, whole_bed, &[]));
     assert!(
-        inside,
-        "the object at {xy:?} stays out of the extruder-2 volume"
+        packed,
+        "the object stayed unarranged at {xy:?} under the extruder-2 volume"
     );
 }
 
@@ -145,9 +148,9 @@ fn plater_arrange_lets_an_object_into_a_volume_only_another_nozzle_sees() {
 fn plater_arrange_keeps_an_installed_bbl_printer_out_of_every_nozzle_volume() {
     // With BBL installed the X2D's vendor type is Marlin_BBL (`get_current_vendor_type`,
     // `PresetBundle.cpp:992-1024`). Under an automatic filament map the arrange job leaves the ids
-    // empty (`ArrangeJob.cpp:73-75`), so every nozzle's volume applies and the object moves out.
-    let volume = ([78.0, 78.0], [178.0, 178.0]);
-    let mut session = extruder_two_volume(X2D, volume, &[X2D_ONE_AREA]);
+    // empty (`ArrangeJob.cpp:73-75`), so every nozzle's volume applies and no bed takes the object.
+    let whole_bed = ([-10.0, -10.0], [266.0, 266.0]);
+    let mut session = extruder_two_volume(X2D, whole_bed, &[X2D_ONE_AREA]);
     let profiles = repo_root().join("OrcaSlicer/resources/profiles");
     let mut installed = PresetCatalogHandle::new();
     let bbl = profile_entry::vendor(&profiles, "BBL");
@@ -155,10 +158,10 @@ fn plater_arrange_keeps_an_installed_bbl_printer_out_of_every_nozzle_volume() {
         .add_vendor(&serde_json::to_vec(&bbl).unwrap())
         .unwrap();
     session.set_installed_vendors(&installed);
-    let (inside, xy) = arranged_inside(&mut session, volume);
+    let (packed, xy) = arrange_packs_first_instance(&mut session);
     assert!(
-        !inside,
-        "the BBL object at {xy:?} entered the extruder-2 volume"
+        !packed,
+        "the BBL object packed to {xy:?} under the extruder-2 volume"
     );
 }
 
@@ -166,12 +169,12 @@ fn plater_arrange_keeps_an_installed_bbl_printer_out_of_every_nozzle_volume() {
 fn plater_arrange_reads_a_printer_of_no_installed_vendor_as_generic() {
     // No vendor installed: the X2D's vendor type is Unknown. A generic automatic map takes the
     // filament id as the tool id (`PrintConfig.cpp:14201-14202`), so filament 1 is on extruder 1, the
-    // ids are {0}, and the object centres inside the extruder-2 volume.
-    let volume = ([78.0, 78.0], [178.0, 178.0]);
-    let mut session = extruder_two_volume(X2D, volume, &[X2D_ONE_AREA]);
-    let (inside, xy) = arranged_inside(&mut session, volume);
+    // ids are {0}, and the object packs under the extruder-2 volume.
+    let whole_bed = ([-10.0, -10.0], [266.0, 266.0]);
+    let mut session = extruder_two_volume(X2D, whole_bed, &[X2D_ONE_AREA]);
+    let (packed, xy) = arrange_packs_first_instance(&mut session);
     assert!(
-        inside,
-        "the object at {xy:?} stays out of the extruder-2 volume"
+        packed,
+        "the object stayed unarranged at {xy:?} under the extruder-2 volume"
     );
 }
