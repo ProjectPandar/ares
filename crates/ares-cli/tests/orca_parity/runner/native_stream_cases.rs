@@ -24,6 +24,8 @@ mod fan_reader_xyz;
 mod fan_verbose_text;
 #[path = "footer_config_order.rs"]
 mod footer_config_order;
+#[path = "honeycomb_multiline_boundary_hooks.rs"]
+mod honeycomb_multiline_boundary_hooks;
 #[path = "initial_travel_uint.rs"]
 mod initial_travel_uint;
 #[path = "island_visit_order.rs"]
