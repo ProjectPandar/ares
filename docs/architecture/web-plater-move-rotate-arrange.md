@@ -681,5 +681,40 @@ GREEN.
 - **Relative rotation fields:** upstream "Rotate (relative)" shows the rotation accumulated since the tool opened and rotates by the edit's difference (`GizmoObjectManipulation.cpp:960-1000`, `change_rotation_value`). The web fields rotate by the entered value and show 0 again.
 - **Move and rotate drops:** a gizmo or drag step runs `do_move`/`do_rotate` on every step rather than once at mouse-up, so a Z drag shows no lift while dragging. The final state is the same.
 - **Plate edits invalidate every plate's slice:** upstream invalidates only the affected plates.
-- **Per-plate wipe tower position on delete:** `PartPlateList::delete_plate` erases that plate's `wipe_tower_x`/`wipe_tower_y` entries (`PartPlate.cpp:4580-4590`); this is not ported.
 - **Bed size change:** the plate grid keeps the bed size the session loaded with; upstream re-lays out the plates.
+
+## Prime tower positions on plate edits (v2.5.0-beta)
+
+Every `file:line` is at `345efec64`. This slice ports how the GUI keeps the per-plate tower positions `wipe_tower_x`/`wipe_tower_y` through plate edits, and how slicing reads them.
+
+Upstream:
+- **Creating a plate.** In GUI mode `PartPlateList::create_plate` calls `set_default_wipe_tower_pos_for_plate(new_index, true)` (`PartPlate.cpp:6644-6646`). It runs before the new plate takes any instance, so the footprint is that of an empty plate padded to two filaments (`:6339-6428`, `estimate_wipe_tower_footprint`, `:3982-4034`). The positions are first resized to the plate count, copying the first entry.
+- **Deleting a plate.** In GUI mode `PartPlateList::delete_plate` erases the plate's entry from both vectors when they reach it (`:6770-6781`).
+- **Before slicing.** `GLCanvas3D::reload_scene` re-clamps every shown tower's stored position and writes it back (`GLCanvas3D.cpp:3615-3628`).
+- **Slicing.** Every reader takes the sliced plate's entry: `get_at(plate_idx)` in `GCode.hpp:116`, `GCode.cpp:7270`, `GCode/WipeTower.cpp:1977`, `GCode/WipeTower2.cpp:1046`, `GCode/PrintExtents.cpp:153` and `Print.cpp:1409, 1522, 1658, 3628, 3947, 4491, 5625`. The readers that work in the print's frame add the plate origin to the entry: `PrintExtents.cpp:153`, `Print.cpp:1409, 1522, 1658` and `Print.cpp:4491` (`first_layer_wipe_tower_corners`, "offset the wipe tower to the plate origin"). The tower generators and the fake tower stay plate-local.
+
+Ares today:
+- **Session.** `PlaterSession` keeps the positions only inside an arrange (the A3b port boundaries above). `add_plate` and `delete_plate` leave the project's vectors unchanged, and slicing never sees the session's positions.
+- **Emitter.** Most of the emitter reads entry 0 instead of the sliced plate's: `layers/instances.rs`, `wipe_tower/extents.rs`, `wipe_tower/fake.rs`, `wipe_tower/integration.rs`, `wipe_tower/type1/outer_wall.rs` and `wipe_tower/occupancy.rs`. Only `layers/island_visits.rs` uses `get_at(current_plate_index)`. `occupancy.rs` (`:4491`) and `extents.rs` (`PrintExtents.cpp:153`) also leave out the plate origin. On any plate after the first, the combined skirt therefore joins the objects to a tower one plate stride away, and the slice fails its printable-area check (error code 4).
+
+Destination:
+- **Session.** `PlaterSession` holds the positions from load on (`wipe_tower_x`/`wipe_tower_y` read through the A3b `option_of` helper).
+  - `add_plate` runs `set_default_wipe_tower_pos_for_plate(new_index, true)`, the `Towers::default_position` A3b already ports.
+  - `delete_plate` erases the entry.
+  - The arrange keeps using and updating the same vectors.
+- **Slicing.** `PlaterEdits` carries the positions, and the edited project takes them as its `wipe_tower_x`/`wipe_tower_y`. Before a plate slices, the session applies `reload_scene`'s clamp to the shown towers, as the arrange already does.
+- **Emitter.** The listed emitter sites read `get_at(current_plate_index)`, and add `plate_origin()` where upstream adds the plate origin.
+
+Included and deferred:
+- Included: the plate add, plate delete and arrange paths, the pre-slice clamp, and the emitter's plate index.
+- Deferred:
+  - Dragging the tower in the web, which needs a tower volume in the viewport.
+  - The `N9` default row, as recorded for A3b.
+  - Plate reordering, which the session has no edit for.
+
+RED (`plater_tower_positions.rs`):
+- **Fixture.** `print-order-as-obj-list/class-default.3mf`, two cubes on filaments 1 and 2 on an i3 Ender-3. The tower is a rectangle wall, `prime_tower_width` 20, `purge_in_prime_tower` 0 and brim 0. A new empty plate's default is then exactly (15, 193.75): the i3 default (0, 250) clamped by the 15 mm auto margin around a 20 x 11.25 mm footprint.
+- **Cases.**
+  1. Add a plate, move both cubes onto it and slice plate 2. The GUI export holds `wipe_tower_x` = [150, 15] and `wipe_tower_y` = [150, 193.75].
+  2. The same, then delete plate 1 and slice the remaining plate. The export holds [15] and [193.75].
+- **Oracle.** The CLI never runs the GUI default (`create_plate` calls it only with a plater, `:6644-6646`), so the default is a literal derived from the source. Native slices (`--slice <plate>`) the session's export with the vectors the GUI stores for these edits. The tests compare the prime tower's placement, not the whole file, so the open beta deltas elsewhere in the G-code (the M73 markers) cannot decide them. The compared value is the lowest X and Y of the extruding moves in the `;TYPE:Prime tower` sections. Native's corner must equal the literal default, and the session's must equal Native's.
