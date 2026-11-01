@@ -143,9 +143,6 @@ pub(super) fn append_compatible_stats(
         )
         .as_bytes(),
     );
-    if let Some(config) = &traversal.config_block {
-        output.extend_from_slice(config);
-    }
 }
 
 pub(super) fn append_filament_stats(

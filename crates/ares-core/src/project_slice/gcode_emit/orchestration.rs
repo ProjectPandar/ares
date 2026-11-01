@@ -93,8 +93,8 @@ pub(in crate::project_slice) fn emit(
     if header::enabled(traversal) {
         header::append_header(&mut output, traversal, &schedule, max_print_z);
     }
-    // `GCode.cpp` + Orca export layout: BBL keeps the config block up front;
-    // the compatible flavor moves it after the tail statistics.
+    // GCode.cpp:4285-4300/4882-4935: BBL keeps config up front;
+    // non-BBL writes it after executable output and before statistics.
     if tags.is_bbl()
         && let Some(config) = &traversal.config_block
     {
@@ -310,6 +310,11 @@ pub(in crate::project_slice) fn emit(
                 .unwrap_or_else(|| "#FF8000".to_string())
         })
         .collect::<Vec<_>>();
+    if !tags.is_bbl()
+        && let Some(config) = &traversal.config_block
+    {
+        output.extend_from_slice(config);
+    }
     finish::append_filament_stats(&mut output, traversal, &state);
     finish::append_compatible_stats(
         &mut output,

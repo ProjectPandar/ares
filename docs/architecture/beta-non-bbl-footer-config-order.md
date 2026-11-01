@@ -1,6 +1,7 @@
 # ARD: non-BBL config-before-statistics footer order
 
-Status: ordering leaf and post-config public seam approved; RED before code.
+Status: seven complete post-config tails are runtime GREEN after the literal
+ordering port. Original seven full streams remain OPEN inside config schema.
 Later batch. Authority: OrcaSlicer v2.5.0-beta,
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
@@ -102,6 +103,27 @@ Native config follows executable output, so the non-BBL branch is active.
 Official double replays are stable; all public APIs admit; complete pre-fix API
 streams are retained externally and match the accepted checkpoint hashes.
 Fmt and strict workspace/all-target Clippy pass with no new suppressions.
+
+## Literal order port and directed result
+
+The separate RED is frozen in `9ff58ee03`. Moving only the cached config append
+before both statistics phases makes all seven complete post-config tails305
+bytes, byte-equal to the unchanged runtime Native tails. Leading/trailing blank
+lines are included without trimming. Native double replays remain stable.
+
+Before/after complete API captures prove that every header/executable prefix
+and every config payload is byte-unchanged, and total output lengths are
+unchanged. Only source phase order changes; no statistic value or serialization
+calculation is rewritten. BBL's existing header append remains untouched, and
+the relocated tail append retains both non-BBL and optional-block guards.
+
+The final bounded owned21 run has14 scoped PASSes and seven retained strict
+full-stream REDs. All original APIs admit, CLI exits0, rawAPI==CLI and official
+replays are stable. Each strict case advances eight lines into config, first
+missing the same beta adaptive-infill key; the keyset/type/legacy work remains
+with the config owner. Existing island/width/executable-block GREENs are retained.
+Fmt and strict workspace/all-target Clippy pass; no suppression, new fixture,
+probe, FULL, seeded sweep or ledger reclassification is introduced.
 
 BBL/header and optional-block skip behavior are source-audited preservation
 boundaries; these seven inputs activate the non-BBL emitted-config branch, not
