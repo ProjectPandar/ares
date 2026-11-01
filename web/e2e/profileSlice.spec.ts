@@ -28,7 +28,7 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
   // writes the selection, the pre-placed model and the native plate G-code; the 3MF override test
   // writes the same layer_height edit into the native process JSON and keeps the 3MF it slices.
   execFileSync("cargo", ["nextest", "run", "-p", "ares-cli", "-E",
-    "test(orca_parity_profile_entry_stl_load_settings) | test(orca_parity_profile_entry_3mf_override_parity)"], {
+    "test(profile_entry_stl_load_settings) | test(profile_entry_3mf_override_parity)"], {
     cwd: repositoryRoot,
     stdio: ["ignore", "pipe", "pipe"],
     env: {
@@ -73,7 +73,7 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
     writeFileSync(`${artifacts}browser-override.gcode`, edited.gcode);
     const timing = ({ gcode, ...rest }: Slice) => ({ bytes: gcode.length, ...rest });
     writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-      oracle: "official OrcaSlicer 2.5.0-beta --load-settings (orca_parity_profile_entry_stl_load_settings, orca_parity_profile_entry_3mf_override_parity)",
+      oracle: "official OrcaSlicer 2.5.0-beta --load-settings (profile_entry_stl_load_settings, profile_entry_3mf_override_parity)",
       evidence: "ordered_bytes_generator_only",
       selection,
       lh: timing(lh),

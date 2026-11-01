@@ -88,7 +88,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   // 18x38..218x238), where Plater::priv::load_model_objects puts a model loaded on an empty plate.
   const nativeRoot = `${mkdtempSync(`${tmpdir()}/ares-web-preset-oracle-`)}/`;
   execFileSync("cargo", ["nextest", "run", "-p", "ares-cli", "-E",
-    "test(orca_parity_profile_entry_3mf_load_settings) | test(orca_parity_profile_entry_stl_center_placement)"], {
+    "test(profile_entry_3mf_load_settings) | test(profile_entry_stl_center_placement)"], {
     cwd: repositoryRoot,
     stdio: ["ignore", "pipe", "pipe"],
     env: {
@@ -156,7 +156,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const gcodePath = await exportGcode(page, artifacts);
   const browser = readFileSync(gcodePath, "utf8");
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    oracle: "official OrcaSlicer 2.5.0-beta --load-settings on a 3MF (orca_parity_profile_entry_3mf_load_settings)",
+    oracle: "official OrcaSlicer 2.5.0-beta --load-settings on a 3MF (profile_entry_3mf_load_settings)",
     evidence: "ordered_bytes_generator_only",
     selection,
     bytes: browser.length,
@@ -213,7 +213,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const centered = readFileSync(await exportGcode(page, artifacts), "utf8");
   writeFileSync(`${artifacts}result-stl.json`, `${JSON.stringify({
-    oracle: "official OrcaSlicer 2.5.0-beta --load-settings on cube10.stl at the bed center (orca_parity_profile_entry_stl_center_placement)",
+    oracle: "official OrcaSlicer 2.5.0-beta --load-settings on cube10.stl at the bed center (profile_entry_stl_center_placement)",
     evidence: "ordered_bytes_generator_only",
     selection,
     bytes: centered.length,
