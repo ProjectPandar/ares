@@ -2,6 +2,7 @@
 //! `tests/libnest2d/libnest2d_tests.cpp` at v2.5.0-beta `345efec64`. One test binary, so every
 //! shared builder in `support` is used.
 
+mod imex;
 mod parameters;
 mod placement;
 mod properties;

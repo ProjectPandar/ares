@@ -5,6 +5,7 @@
 
 mod arrange;
 mod arranger;
+pub mod imex;
 mod nest;
 mod nlopt;
 mod params;
