@@ -180,3 +180,56 @@ Every `file:line` is at `345efec64`. The session's tower path asks whether a pla
   - `its_make_cube` (`TriangleMesh.cpp:902`) and the `rectangle`/`region` helpers (`:30-47`) are copied as written.
   - These are GUI-only, so upstream's unit tests are the oracle.
 - **Expected before GREEN:** the unit cases stop at `todo!()`, and the parity cases fail on the refusal.
+
+## A2b3: the per-polygon nozzle ids
+
+Every `file:line` is at `345efec64`. In ToolheadOffset and PerExtruder modes each collision-volume blocker carries its extruder (A2b1), and the kernel applies a blocker to an item only if the item's `bed_exclusion_extruder_ids` are empty or contain that extruder (`Arrange.cpp:131-133`, ported in `arrangement::bed_exclusion_applies`). Since A2b2, items keep empty ids, so every nozzle's volume applies to every item. The GUI job fills the ids from the object's filaments and the plate's filament map. This slice ports that.
+
+### Upstream boundary
+- **`bed_exclusion_extruder_for_filament`** (`PrintConfig.cpp:14187-14209`): a filament's physical extruder, or -1 while a Bambu automatic map is unresolved. A generic automatic map uses the filament id as the tool id. Otherwise the configured map is used, falling back to the filament id when it fits.
+- **`PartPlate`**:
+  - `get_real_filament_maps` / `get_real_filament_map_mode` (`PartPlate.cpp:384-394, 408-419`): the plate's own `filament_maps` / `filament_map_mode`, else the global `filament_map` / `filament_map_mode`. `get_filament_maps` is `:5815`.
+  - `get_effective_exclusion_filament_maps` (`:3540-3560`): each filament's 1-based extruder through `bed_exclusion_extruder_for_filament`, 0 when unresolved. The automatic map counts as resolved once the plate has its own maps.
+  - `get_object_filament_extruders` (`:3562-3654`), which collects the object's filaments:
+    - the volumes' `get_extruders`;
+    - the feature filament ids of the volumes, the object and its layer ranges, each active by its feature condition (walls, brim, sparse infill, solid infill, top, bottom shells);
+    - the process-level feature ids the object does not override;
+    - the support and support-interface filaments when supports or a raft are on;
+    - filament 1 when nothing is found.
+
+    Each filament is then mapped to an extruder within `extruder_count`.
+- **`ArrangeJob.cpp`**:
+  - `set_arrange_polygon_bed_exclusion_extruders` (`:53-81`):
+    - It returns empty ids in Shared mode, with no `nozzle_diameter` entries, or for a Bambu printer whose plate map mode is automatic.
+    - Otherwise the ids are the extruders of `get_object_filament_extruders`.
+  - `_for_all_plates` (`:83-103`): the union over every plate, or empty ids as soon as one plate leaves them empty.
+  - The call sites:
+    - `prepare_arrange_polygon` with a mapping plate (`:249-257`), which `prepare_partplate` passes (`:565`);
+    - the all-plates form in `prepare_selected` (`:291-293`) and `prepare_all` (`:368-370`).
+- **The vendor test**, `PresetBundle::is_bbl_vendor` (`PresetBundle.hpp:374`, `get_current_vendor_type`, `PresetBundle.cpp:992-1024`): the printer model is looked up in the loaded vendor profiles, and the test holds when the vendor found is "BBL". The process config the object options fall back to is `prints.get_edited_preset().config`.
+
+### Ares destination
+- **`bed_exclusion::bed_exclusion_extruder_for_filament`**: public, beside A2b1's resolution functions. It is a public `libslic3r` function, and the unit cases call it.
+- **`plater/plate_list/`**:
+  - the plate's real filament map and map mode, read from the loaded plate metadata or the global keys;
+  - the effective exclusion map;
+  - `get_object_filament_extruders`.
+
+  All crate-private.
+- **`plater/arrange_job/prepare`**: both id setters at upstream's three call sites.
+- **The vendor test** reads the vendor models the session was loaded with (`load_with_profiles`' catalog). A plain 3MF session loads no vendor profiles, so its vendor type is Unknown, as upstream gives for a model no loaded vendor lists. This is not a fallback, just the upstream result for an empty vendor list.
+
+### Included and deferred
+- **Included:** the filament-to-extruder resolution, the plate maps, the object filament collection, and both id setters at their call sites.
+- **Deferred:**
+  - `filament_volume_map` (`get_real_filament_volume_maps`), which the id derivation does not read.
+  - The slicing consumers of `bed_exclusion_extruder_for_filament` (`ExclusionVolumeGeometry.cpp:145`, `Print.cpp:203`).
+
+### Oracle and RED
+- **GUI-only.** The CLI arrange never sets the ids, so Native cannot be the oracle.
+- **Unit:** `test_exclusion_volumes.cpp:486-498`, the six `bed_exclusion_extruder_for_filament` checks, ported literally.
+- **Session property case** (a two-extruder project, PerExtruder mode, picked in the RED):
+  - A collision volume over the bed centre applies to extruder 2 only, and the object prints with a filament mapped to extruder 1.
+  - Upstream's ids then let the object pile at the centre inside that volume; the empty ids today push it out.
+  - The expectation is derived from `bed_exclusion_applies` (`Arrange.cpp:131-133`) and the setter (`ArrangeJob.cpp:53-81`), and asserted as the arranged box meeting the volume.
+- **The kernel side** (`test_arrange.cpp:509-575`) is already ported in `tests/arrange/parameters.rs`.
