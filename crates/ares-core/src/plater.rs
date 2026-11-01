@@ -9,6 +9,7 @@ mod edits;
 mod eigen;
 mod min_sphere;
 mod plate_list;
+mod scale;
 mod selection;
 mod session;
 mod slice;
@@ -16,6 +17,7 @@ mod transformation;
 
 pub use arrange_job::{ArrangeScope, ArrangeSettings};
 pub use edits::PlaterEdits;
+pub use scale::ScaleEdit;
 pub use session::{PlaterPlate, PlaterSession};
 pub use slice::{PlaterSlice, slice_plater_plate, slice_plater_with_profiles};
 

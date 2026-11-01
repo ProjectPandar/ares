@@ -10,6 +10,8 @@ use crate::runner::{OrcaRunner, repo_root};
 
 #[path = "plater_rotation_pivot.rs"]
 mod rotation_pivot;
+#[path = "plater_scale.rs"]
+mod scale;
 #[path = "plater_tower_positions.rs"]
 mod tower_positions;
 
