@@ -6,7 +6,10 @@ use super::super::{
 };
 use serde::Deserialize;
 use serde_json::Value;
-use std::time::Duration;
+use std::{
+    io::{Cursor, Write},
+    time::Duration,
+};
 
 #[derive(Deserialize)]
 struct Schema {
@@ -22,9 +25,35 @@ struct Definition {
 }
 
 fn native_defaults() -> Option<(OrcaRunner, Value)> {
+    native_settings(None)
+}
+
+fn native_settings(setting: Option<(&str, &str)>) -> Option<(OrcaRunner, Value)> {
     let runner = OrcaRunner::from_env().unwrap_or_else(|error| panic!("{error}"))?;
-    let fixture = repo_root().join("tests/parity/orca_cli_ender3.3mf");
-    let input = std::fs::read(&fixture).unwrap();
+    let mut fixture = repo_root().join("tests/parity/orca_cli_ender3.3mf");
+    let mut input = std::fs::read(&fixture).unwrap();
+    if let Some((key, token)) = setting {
+        let mut settings = super::super::application::settings(&input).unwrap();
+        settings.insert(key.to_owned(), Value::String(token.to_owned()));
+        let mut archive = zip::ZipArchive::new(Cursor::new(&input)).unwrap();
+        let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        for index in 0..archive.len() {
+            let entry = archive.by_index(index).unwrap();
+            if entry.name() == "Metadata/project_settings.config" {
+                output
+                    .start_file(entry.name(), zip::write::SimpleFileOptions::default())
+                    .unwrap();
+                output
+                    .write_all(&serde_json::to_vec(&settings).unwrap())
+                    .unwrap();
+            } else {
+                output.raw_copy_file(entry).unwrap();
+            }
+        }
+        input = output.finish().unwrap().into_inner();
+        fixture = runner.work.join("legacy-settings-input.3mf");
+        std::fs::write(&fixture, &input).unwrap();
+    }
     let producer = cache_identity::identify(runner.bin()).unwrap_or_else(|error| panic!("{error}"));
     std::fs::write(
         runner.work.join("native-producer.json"),
@@ -103,6 +132,40 @@ fn native_arc_fitting_enum_decodes_and_round_trips_public_options() {
     assert_eq!(
         ares_core::encode_config_value_by_key("enable_arc_fitting", &decoded).unwrap(),
         token
+    );
+}
+
+#[test]
+fn legacy_tree_wall_count_normalizes_to_native_auto_options() {
+    let key = "tree_support_wall_count";
+    let Some((runner, native)) = native_settings(Some((key, "-1"))) else {
+        return;
+    };
+    assert_eq!(native[key], "0", "Native legacy -1 must resolve to auto");
+    let requested = serde_json::json!({key: "-1"});
+    let options: ares_core::SliceOptions = serde_json::from_value(requested).unwrap();
+    let project = ares_core::load_project(
+        &std::fs::read(runner.work.join("legacy-settings-input.3mf")).unwrap(),
+    )
+    .unwrap();
+    let typed_export = serde_json::to_value(&project.settings().process.object).unwrap();
+    std::fs::write(
+        runner.work.join("ares-tree-options.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "slice_options": options.values(), "typed_options": typed_export,
+            "native": native[key], "requested": "-1"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        options.values()[key],
+        native[key],
+        "public SliceOptions legacy normalization"
+    );
+    assert_eq!(
+        typed_export[key], native[key],
+        "public typed legacy normalization"
     );
 }
 
