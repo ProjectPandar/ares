@@ -33,3 +33,15 @@ the same 421 fill/support parity selectors to the A1+A2 baseline; report
 PASS/FAIL transitions without claiming that unchanged failures have identical
 bytes. Clippy must have zero warnings and no added lint suppressions.
 External evidence retained outside the repository.
+
+## Qualification
+
+The new ordered crosshatch witness fails on A1+A2 and passes with this port;
+all five directed witnesses pass. The unchanged 421-test inventory moves from
+204 PASS / 217 FAIL to 211 PASS / 210 FAIL: seven FAIL-to-PASS and zero
+PASS-to-FAIL. Improvements are the by-object/mirror crosshatch targets, one
+TPMS-D anchoring control, three honeycomb direction controls, and the support
+touching-grid public API/CLI case. The new witness is additional to that
+inventory. Remaining failures are not claimed byte-identical or fixed.
+Rustfmt and all-target Clippy pass with zero warnings; no lint suppressions
+were added. This qualification is local, before the pending main rebase.

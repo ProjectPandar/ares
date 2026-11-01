@@ -7,7 +7,7 @@ use super::{
     hooks::{HookLimits, distance_to_open_end, multiline_hook_length},
     types::{Arc, WorkingGraph},
 };
-use crate::geometry::{Point, Polyline, fixed_gcc_sort_by};
+use crate::geometry::{Point, Polyline};
 
 #[expect(
     clippy::too_many_arguments,
@@ -24,7 +24,17 @@ pub(super) fn apply_connections(
 ) -> Vec<Polyline> {
     let mut open_end = vec![true; graph.intersections.len()];
     let mut arcs = collect_arcs(&graph, dont_sort);
-    sort_arcs(&mut arcs);
+    super::order::sort_arcs(
+        &mut arcs,
+        &graph,
+        scaled_spacing,
+        HookLimits {
+            anchor: anchor_length,
+            anchor_max: anchor_length_max,
+            multiline_reach: (multiline > 1).then_some(scaled_spacing * f64::from(multiline)),
+            epsilon: scaled_epsilon,
+        },
+    );
     for arc in arcs {
         apply_sorted_arc(
             &mut graph,
@@ -54,10 +64,6 @@ pub(super) fn apply_connections(
         .filter(|points| !points.is_empty())
         .map(Polyline::new)
         .collect()
-}
-
-pub(super) fn sort_arcs(arcs: &mut [Arc]) {
-    fixed_gcc_sort_by(arcs, |left, right| left.length < right.length);
 }
 
 fn collect_arcs(graph: &WorkingGraph, dont_sort: bool) -> Vec<Arc> {
