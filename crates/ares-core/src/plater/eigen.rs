@@ -135,6 +135,15 @@ pub(super) fn rotation_transform(rotation: [f64; 3]) -> Transform3d {
     rotation_matrix_transform(q.to_rotation_matrix())
 }
 
+/// `Geometry::scale_transform(const Vec3d&)` (`Geometry.cpp:377-392`).
+pub(super) fn scale_transform(scale: [f64; 3]) -> Transform3d {
+    let mut rows = *Transform3d::IDENTITY.as_matrix();
+    for (axis, value) in scale.into_iter().enumerate() {
+        rows[axis][axis] = value;
+    }
+    Transform3d::from_rows(rows)
+}
+
 /// `Geometry::translation_transform` (`Geometry.cpp:335-346`).
 pub(super) fn translation_transform(translation: [f64; 3]) -> Transform3d {
     let mut rows = *Transform3d::IDENTITY.as_matrix();

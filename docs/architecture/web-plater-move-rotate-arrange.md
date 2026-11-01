@@ -150,7 +150,6 @@ Included:
   - wipe tower as an obstacle.
 
 Deferred:
-- scale and size fields;
 - mirror;
 - lay on face;
 - cut;
@@ -167,7 +166,7 @@ Deferred:
 - 3MF project save (`bbs_3mf` export) and project persistence of edits;
 - SLA arrange.
 
-Scale stays deferred. Its upstream path (`change_scale_value` / `change_size_value`, uniform and non-uniform scaling, scaled drop-to-bed) is not trivial.
+The scale and size fields are ported in `web-plater-scale.md`.
 
 ## Parity and tests
 

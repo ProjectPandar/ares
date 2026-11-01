@@ -79,7 +79,9 @@ pub(crate) use region_expansion::{
     propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
     propagate_waves_from_sources_with_steps, wave_seeds,
 };
-pub(crate) use rotation_scaling::{Matrix3, compute_rotation_scaling};
+pub(crate) use rotation_scaling::{
+    Matrix3, compute_rotation_scaling, jacobi_svd, multiply_transpose,
+};
 pub(crate) use simplification::{
     append_simplified_expolygon, douglas_peucker, simplify_closed_points,
     simplify_expolygon_polygons,

@@ -4,7 +4,7 @@
 
 use super::eigen::{euler_angles_210, rotation_transform};
 use crate::Transform3d;
-use crate::geometry::{Matrix3, compute_rotation_scaling};
+use crate::geometry::{Matrix3, compute_rotation_scaling, jacobi_svd, multiply_transpose};
 
 /// `EPSILON` (`libslic3r.h:52`).
 const EPSILON: f64 = 1e-4;
@@ -124,6 +124,63 @@ pub(super) fn with_axis_rotation(transform: Transform3d, axis: usize, angle: f64
 /// `Transformation::get_matrix_no_offset` (`Geometry.cpp:640-645`).
 pub(super) fn without_offset(transform: Transform3d) -> Transform3d {
     affine(linear(transform), [0.0; 3])
+}
+
+/// `Transformation::get_matrix_no_scaling_factor` (`Geometry.cpp:647-652`) through
+/// `reset_scaling_factor` (`:624-628`) and `TransformationSVD` (`:779-791`):
+/// `T · U · Vᵀ · mirror`, a mirror taken out on X before the SVD and put back after it.
+pub(super) fn without_scaling_factor(transform: Transform3d) -> Transform3d {
+    let mut m = linear(transform);
+    let mirror = determinant(m) < 0.0;
+    if mirror {
+        for row in &mut m {
+            row[0] = -row[0];
+        }
+    }
+    let (u, _, v) = jacobi_svd(m);
+    let mut rotation = multiply_transpose(u, v);
+    if mirror {
+        for row in &mut rotation {
+            row[0] = -row[0];
+        }
+    }
+    affine(rotation, offset(transform))
+}
+
+/// `a * b`.
+fn multiply(a: Matrix3, b: Matrix3) -> Matrix3 {
+    std::array::from_fn(|i| {
+        std::array::from_fn(|j| a[i][0] * b[0][j] + a[i][1] * b[1][j] + a[i][2] * b[2][j])
+    })
+}
+
+/// Eigen's 3x3 `inverse()` (`LU/InverseImpl.h`, `compute_inverse_size3_helper`): the
+/// transposed cofactors over the determinant along the first column.
+fn inverse(m: Matrix3) -> Matrix3 {
+    let cofactor = |i: usize, j: usize| {
+        let (i1, i2, j1, j2) = ((i + 1) % 3, (i + 2) % 3, (j + 1) % 3, (j + 2) % 3);
+        m[i1][j1] * m[i2][j2] - m[i1][j2] * m[i2][j1]
+    };
+    let det = cofactor(0, 0) * m[0][0] + cofactor(1, 0) * m[1][0] + cofactor(2, 0) * m[2][0];
+    let invdet = 1.0 / det;
+    std::array::from_fn(|i| std::array::from_fn(|j| cofactor(j, i) * invdet))
+}
+
+/// `Selection::synchronize_unselected_instances` for one unselected instance `j` of the scaled
+/// instance `i` (`Selection.cpp:3082-3088`): the linear part `(old_j · old_i⁻¹) · curr_i`,
+/// the offset kept with Z from `curr_i`.
+pub(super) fn synchronized(
+    old_j: Transform3d,
+    old_i: Transform3d,
+    curr_i: Transform3d,
+) -> Transform3d {
+    let linear_j = multiply(
+        multiply(linear(old_j), inverse(linear(old_i))),
+        linear(curr_i),
+    );
+    let mut offset_j = offset(old_j);
+    offset_j[2] = offset(curr_i)[2];
+    affine(linear_j, offset_j)
 }
 
 /// `Transformation::set_offset(const Vec3d&)`.

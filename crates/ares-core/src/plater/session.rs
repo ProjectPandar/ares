@@ -49,7 +49,7 @@ impl PlateModel for Model<'_> {
     }
 }
 
-fn keys(project: &Project) -> Vec<InstanceKey> {
+pub(super) fn keys(project: &Project) -> Vec<InstanceKey> {
     project
         .objects()
         .iter()
@@ -197,7 +197,7 @@ impl PlaterSession {
         selection::rotate(&mut self.project, key, rotation);
         self.plates
             .notify_instance_update(&Model(&mut self.project), key);
-        if selection::drop_after_rotate(&mut self.project, key, min_z_before) {
+        if selection::drop_after_transform(&mut self.project, key, min_z_before) {
             self.plates
                 .notify_instance_update(&Model(&mut self.project), key);
         }
@@ -320,7 +320,7 @@ impl PlaterSession {
         }
     }
 
-    fn check(&self, object: usize, instance: usize) -> Result<(), SliceError> {
+    pub(super) fn check(&self, object: usize, instance: usize) -> Result<(), SliceError> {
         self.project
             .objects()
             .get(object)
@@ -332,7 +332,7 @@ impl PlaterSession {
     }
 }
 
-fn check_axis(axis: usize) -> Result<usize, SliceError> {
+pub(super) fn check_axis(axis: usize) -> Result<usize, SliceError> {
     if axis < 3 {
         Ok(axis)
     } else {

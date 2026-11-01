@@ -11,7 +11,7 @@ pub(crate) type Matrix3 = [[f64; 3]; 3];
 const IDENTITY: Matrix3 = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
 
 /// The full `JacobiSVD` of `linear`: `(U, singular values, V)`, the values descending.
-fn jacobi_svd(linear: Matrix3) -> (Matrix3, [f64; 3], Matrix3) {
+pub(crate) fn jacobi_svd(linear: Matrix3) -> (Matrix3, [f64; 3], Matrix3) {
     let mut a = linear;
     let scale = a.iter().flatten().map(|v| v.abs()).fold(0.0_f64, f64::max);
     let scale = if scale == 0.0 { 1.0 } else { scale };
@@ -118,7 +118,7 @@ fn on_right(a: &mut Matrix3, p: usize, q: usize, (c, s): (f64, f64)) {
 }
 
 /// `a * b^T`.
-fn multiply_transpose(a: Matrix3, b: Matrix3) -> Matrix3 {
+pub(crate) fn multiply_transpose(a: Matrix3, b: Matrix3) -> Matrix3 {
     std::array::from_fn(|r| {
         std::array::from_fn(|c| a[r][0] * b[c][0] + a[r][1] * b[c][1] + a[r][2] * b[c][2])
     })
