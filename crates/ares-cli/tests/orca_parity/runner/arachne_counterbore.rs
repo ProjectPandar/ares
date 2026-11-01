@@ -66,19 +66,11 @@ fn check(name: &str) {
         "imports": [],
     });
     let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [FILAMENT]});
-    for (kind, preset_name, mut fields) in [
-        ("machine", MACHINE, profiles.machine(MACHINE).unwrap()),
-        ("process", PROCESS, profiles.process(PROCESS).unwrap()),
-        ("filament", FILAMENT, profiles.filament(FILAMENT).unwrap()),
+    for (kind, mut fields) in [
+        ("machine", profiles.machine(MACHINE).unwrap()),
+        ("process", profiles.process(PROCESS).unwrap()),
+        ("filament", profiles.filament(FILAMENT).unwrap()),
     ] {
-        let selected = catalog["vendors"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .flat_map(|vendor| vendor["files"].as_object().unwrap().values())
-            .find(|profile| profile["type"] == kind && profile["name"] == preset_name)
-            .unwrap();
-        fields.insert("inherits".to_owned(), selected["inherits"].clone());
         if kind == "process" {
             assert_eq!(fields["counterbore_hole_bridging"], "partiallybridge");
             assert_eq!(fields["wall_generator"], "classic");

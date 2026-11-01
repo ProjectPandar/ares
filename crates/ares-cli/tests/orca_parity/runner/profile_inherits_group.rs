@@ -108,11 +108,15 @@ async fn profile_inherits_group_slots_match_native() {
     let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
     let output = directory.join("native");
     std::fs::create_dir(&output).unwrap();
+    let (datadir, process_path) =
+        super::profile_entry::native_user_presets::stage(&directory, &profiles_root);
     stages::run(
         runner.bin(),
         [
+            "--datadir".to_owned(),
+            datadir.to_str().unwrap().to_owned(),
             "--load-settings".to_owned(),
-            format!("{};{}", path("machine.json"), path("process.json")),
+            format!("{};{}", path("machine.json"), process_path.display()),
             "--load-filaments".to_owned(),
             path("filament.json"),
             "--slice".to_owned(),
