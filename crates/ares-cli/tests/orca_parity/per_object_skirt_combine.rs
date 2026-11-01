@@ -146,6 +146,17 @@ fn check(label: &str) {
         ));
     if let Ok(gcode) = &api {
         fs::write(root.join("ares.api.gcode"), gcode).unwrap();
+        // Per-instance grouping premise: ares must emit exactly as many
+        // ;TYPE:Skirt blocks as the Native reference produced in this run
+        // (runtime cross-producer equality, not a frozen count).
+        assert_eq!(
+            std::str::from_utf8(gcode)
+                .unwrap()
+                .matches(";TYPE:Skirt\n")
+                .count(),
+            skirt_blocks,
+            "ares per-instance skirt grouping {root:?}"
+        );
     }
     let api_comparison = api
         .as_ref()
