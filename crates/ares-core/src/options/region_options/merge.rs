@@ -125,21 +125,27 @@ fn apply_overrides(
     }
     region_option_fields!(apply_fields);
 
-    if let Some(value) = &source.outer_wall_speed {
+    if let Some(value) = &source.outer_wall_speed
+        && !options.outer_wall_speed.source_equals(value)
+    {
         apply_nullable_vector(
             &mut options.outer_wall_speed.0,
             &value.0,
             process_variant_indices,
         );
     }
-    if let Some(value) = &source.enable_overhang_speed {
+    if let Some(value) = &source.enable_overhang_speed
+        && options.enable_overhang_speed != *value
+    {
         apply_nullable_vector(
             &mut options.enable_overhang_speed.0,
             &value.0,
             process_variant_indices,
         );
     }
-    if let Some(value) = &source.slowdown_for_curled_perimeters {
+    if let Some(value) = &source.slowdown_for_curled_perimeters
+        && options.slowdown_for_curled_perimeters != *value
+    {
         apply_nullable_vector(
             &mut options.slowdown_for_curled_perimeters.0,
             &value.0,
@@ -215,14 +221,11 @@ macro_rules! apply_field {
 
 // PrintObject.cpp:4363-4374; PrintConfig.cpp:11421-11429; Config.hpp:612-629.
 // Non-nil singletons broadcast. Nil/out-of-range source columns retain the target.
-fn apply_nullable_vector<T: Clone + PartialEq>(
+fn apply_nullable_vector<T: Clone>(
     target: &mut Vec<Nullable<T>>,
     source: &[Nullable<T>],
     indices: &[usize],
 ) {
-    if target.as_slice() == source {
-        return;
-    }
     if indices.is_empty() {
         target.clear();
         target.extend_from_slice(source);

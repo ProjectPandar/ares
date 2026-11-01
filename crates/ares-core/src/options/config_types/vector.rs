@@ -39,6 +39,17 @@ numeric_vector!(
 );
 
 impl OrcaFloatsNullable {
+    // Config.hpp:985-995; libslic3r.h:320-323. This is the option-equality
+    // guard before an overlay, not a relaxation of wire/output comparisons.
+    pub(crate) fn source_equals(&self, other: &Self) -> bool {
+        self.0.len() == other.0.len()
+            && self.0.iter().zip(&other.0).all(|(a, b)| match (a, b) {
+                (Nullable::Nil, Nullable::Nil) => true,
+                (Nullable::Value(a), Nullable::Value(b)) => (a.0 - b.0).abs() < 1e-4,
+                (Nullable::Nil, Nullable::Value(_)) | (Nullable::Value(_), Nullable::Nil) => false,
+            })
+    }
+
     // Config.hpp:676-682 and ConfigOptionFloatsNullable's NaN sentinel.
     pub(crate) fn get_at(&self, index: usize) -> f64 {
         match self.0.get(index).unwrap_or(&self.0[0]) {

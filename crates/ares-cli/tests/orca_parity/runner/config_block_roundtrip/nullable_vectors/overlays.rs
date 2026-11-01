@@ -42,6 +42,7 @@ fn native_region_overlays_remap_variants_and_inherit_nil() {
         ("singleton", "83", 2, "4980"),
         ("nil", "nil", 2, "1980"),
         ("source-equal", "17.00009,33", 1, "1020"),
+        ("source-different", "17.00011,33", 1, "1020.007"),
     ] {
         let mapped = mapped_project(&source, physical);
         let project = object_override(&mapped, token);

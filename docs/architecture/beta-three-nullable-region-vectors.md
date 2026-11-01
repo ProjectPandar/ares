@@ -65,7 +65,7 @@ entries and stable Native replay; merely observing exported arrays or reading
 an internal resolver cannot qualify runtime selection.
 
 Use existing config_block_roundtrip grouped registration; no ROOT registration
-or resurrected B12 tests. Keep runtime input/output/producer/JSON diagnostics as
+or previously retired tests. Keep runtime input/output/producer/JSON diagnostics as
 repeatable external artifacts. No Native .gcode/goldens committed.
 
 ## Failure inventory before isolated DTO/default/nil assertions
@@ -132,7 +132,13 @@ original indices. Config.hpp:612-629 resizes from the source front and only
 assigns in-range non-nil source columns, retaining existing target columns
 for nil or absent inputs. A singleton nil therefore inherits, not a NaN
 motion speed or a generic false/default substitution. Apply this rule only
-to the three migrated fields; other40migrations remain deferred.
+to the three migrated fields; other40migrations remain deferred. The existing
+option-equality guard before application is source-owned too:
+Config.hpp:985-995 matches two float nils and uses libslic3r.h:320-323's
+strict absolute difference below EPSILON (1e-4) for non-nil columns. Port this
+only to that runtime guard; retain exact DTO/wire/output assertions. An inside-
+EPSILON override must leave the emitted speed unchanged, while an outside-
+EPSILON control still applies. Boolean option equality remains exact.
 
 Supplemental public sliced-output witnesses cover the mapped physical-nozzle
 placeholder and object-region overrides (multi-column remapping, non-nil
