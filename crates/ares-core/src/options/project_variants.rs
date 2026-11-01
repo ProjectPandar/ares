@@ -4,7 +4,7 @@ mod index;
 mod printer;
 mod select;
 
-pub(crate) use index::get_index_for_extruder;
+pub(crate) use index::{canonical_variant, get_index_for_extruder};
 
 use crate::{
     SliceError,

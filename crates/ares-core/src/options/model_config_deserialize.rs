@@ -157,22 +157,13 @@ fn validate_registry_only(key: &str, kind: OptionValueKind, value: &str) -> Resu
     }
 }
 
-const OWNERLESS_ENUMS: &[(&str, &[&str])] = &[
-    ("display_orientation", &["landscape", "portrait"]),
-    ("first_layer_sequence_choice", &["Auto", "Customize"]),
-    ("material_print_speed", &["slow", "fast"]),
-    ("other_layers_sequence_choice", &["Auto", "Customize"]),
-    (
-        "support_pillar_connection_mode",
-        &["zigzag", "cross", "dynamic"],
-    ),
-];
-
 fn validate_ownerless_enum(key: &str, value: &str) -> Result<(), String> {
-    let index = OWNERLESS_ENUMS
-        .binary_search_by_key(&key, |(key, _)| key)
-        .map_err(|_| "missing registry-only enum ledger".to_owned())?;
-    if OWNERLESS_ENUMS[index].1.contains(&value) {
+    let definition = option_definition(key).unwrap();
+    let keys = definition
+        .enum_type_keys
+        .or_else(|| super::registry::option_metadata(key).map(|metadata| metadata.enum_values))
+        .ok_or_else(|| "missing registry-only enum metadata".to_owned())?;
+    if keys.contains(&value) {
         Ok(())
     } else {
         Err("unknown enum token".to_owned())

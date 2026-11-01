@@ -1,4 +1,4 @@
-pub(crate) const OBSOLETE_INPUTS: [&str; 44] = [
+pub(crate) const OBSOLETE_INPUTS: [&str; 43] = [
     "acceleration",
     "scale",
     "rotate",
@@ -42,5 +42,4 @@ pub(crate) const OBSOLETE_INPUTS: [&str; 44] = [
     "overhang_totally_speed",
     "silent_mode",
     "overhang_speed_classic",
-    "filament_prime_volume",
 ];

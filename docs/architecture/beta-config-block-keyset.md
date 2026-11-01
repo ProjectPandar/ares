@@ -50,7 +50,7 @@ boundary against source before proposing the minimal GREEN implementation.
 Existing Ares typed/export views are temporary compatibility shells around
 upstream FullPrintConfig, not a separate Ares config-output design.
 
-## Approved GREEN data boundary
+## GREEN data boundary
 
 The existing generated metadata table retains its length exemption; existing
 generator changes are limited to the needed beta syntax. New handwritten
@@ -58,9 +58,20 @@ Rust files remain below400LOC. Preserve all678surviving old metadata records
 byte-for-byte and the43deferred scalar kinds. New definitions carry source
 FullPrintConfig/default-preset/CLI ownership, canonical ConfigOption default
 wire serialization, and default nil state, derived from PrintConfig.hpp,
-Preset.cpp option declarations, PresetBundle.cpp:503-518 and
-OrcaSlicer.cpp:1347-1350. This avoids both an output-key whitelist and default
-materialization for source registry-only options. No Native tokens seed data.
+Preset.cpp option declarations, PresetBundle.cpp:503-518 and CLI printer/process
+refresh exclusions at OrcaSlicer.cpp:3165-3173 plus the two headless flags at
+1347-1350. Static defaults take precedence over unselected filament preset
+nil state. Filament-only preset fields are not invented in a printer/process
+refresh. This avoids both an output-key whitelist and default materialization
+for source registry-only options. No Native tokens seed data.
+
+Applied filament_map_2 uses PrintApply.cpp:1603-1627 and the existing variant
+resolver rather than its registered placeholder. Ordinary nozzle grouping uses
+ToolOrdering.cpp:1768-1773,1892-1907 (one nozzle per extruder, zero-based group
+id), copied back by Print.cpp:4673-4675. Active multi-nozzle grouping/fully-manual
+nozzle assignment is not newly implemented or qualified by this block witness.
+Raw scalar strings and numeric/nullable/enum vectors retain source serialization
+and type-owned nil; a literal scalar string nil is not an absent option.
 
 ## Qualified observation before GREEN review
 
@@ -83,7 +94,8 @@ stale typed/default export still resurrects it. New source registrations/default
 initialization must stay separate from the next slice's43existing scalar-to-
 nullable-vector changes. RR must approve that boundary before implementation.
 
-This stage is RED plus RR ONLY. No production change before RR review.
+The RED review precedes production changes. The complete-block acceptance
+stays unchanged during GREEN; native dump records never become production data.
 Defer the three nullable-vector DTO/default/nil/nozzle-index migrations to the
 next slice, as well as geometry, motion, progress, footer placement, active
 purge/planner behavior and unrelated beta algorithms. If their values prevent

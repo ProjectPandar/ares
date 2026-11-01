@@ -8,6 +8,7 @@
 //! holding dynamic JSON.
 
 mod deserialize;
+mod numeric;
 
 use std::collections::BTreeMap;
 
@@ -219,24 +220,17 @@ pub(crate) enum RawConfigValue {
     Null,
 }
 
-/// One `ConfigOptionFloats` element: `%g`-formatted via the shared
-/// `format_number` source; a non-float element is invalid input.
-fn float_element(value: &RawConfigValue, key: &str) -> Result<String, String> {
-    let number = match value {
-        RawConfigValue::Text(text) => text.parse::<f64>().map_err(|_| ()),
-        RawConfigValue::Number(number) => number.as_f64().ok_or(()),
-        _ => Err(()),
-    }
-    .map_err(|()| format!("invalid Orca option {key}: expected floats"))?;
-    Ok(crate::options::format_number(number))
-}
-
 impl RawConfigValue {
     /// Raw coStrings retain logical slots for typed deserialization; only
     /// export renders `escape_strings_cstyle` (Config.cpp:72-120).
     fn option_token(&self, key: &str, count: Option<usize>) -> Result<Option<String>, String> {
         use crate::options::registry::{OptionValueKind, option_definition};
         let definition = option_definition(key);
+        if definition.is_some_and(|definition| definition.kind == OptionValueKind::String)
+            && let Self::Text(text) = self
+        {
+            return Ok(Some(crate::options::escape_scalar_string(text)));
+        }
         if definition.is_some_and(|definition| definition.kind == OptionValueKind::Strings)
             && let Self::List(values) = self
         {
@@ -250,35 +244,12 @@ impl RawConfigValue {
                 .collect::<Vec<_>>();
             return Ok(Some(rendered.join(";")));
         }
-        // Config.hpp (345efec64c7b):1994-2003: coBools uses comma-separated
-        // canonical 0/1 values, not the generic raw semicolon-list token.
-        if definition.is_some_and(|definition| definition.kind == OptionValueKind::Bools)
+        if let Some(definition) = definition
+            && numeric::is_vector(definition.kind)
             && let Self::List(values) = self
         {
             let count = count.unwrap_or(values.len()).min(values.len());
-            let rendered: Result<Vec<_>, _> = values[..count]
-                .iter()
-                .map(|value| match value {
-                    Self::Text(text) if matches!(text.trim(), "0" | "1") => Ok(text.trim()),
-                    _ => Err(format!("invalid Orca option {key}: expected bools")),
-                })
-                .collect();
-            let rendered = rendered?;
-            return Ok((!rendered.is_empty()).then(|| rendered.join(",")));
-        }
-        // `ConfigOptionFloats::serialize` (`Config.hpp`): per-element
-        // `%g` serialization, comma-joined — the raw Floats preset echo
-        // never keeps the input spelling or the internal `;` list form.
-        if definition.is_some_and(|definition| definition.kind == OptionValueKind::Floats)
-            && let Self::List(values) = self
-        {
-            let count = count.unwrap_or(values.len()).min(values.len());
-            let rendered: Result<Vec<_>, _> = values[..count]
-                .iter()
-                .map(|value| float_element(value, key))
-                .collect();
-            let rendered = rendered?;
-            return Ok((!rendered.is_empty()).then(|| rendered.join(",")));
+            return numeric::token(&values[..count], definition.kind, key);
         }
         Ok(count.map_or_else(|| self.token(), |count| self.token_prefix(count)))
     }

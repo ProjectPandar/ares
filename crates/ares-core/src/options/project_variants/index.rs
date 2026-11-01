@@ -292,7 +292,7 @@ fn split_compressed_commas(value: &str) -> impl Iterator<Item = &str> {
         })
 }
 
-fn canonical_variant(extruder: ExtruderType, volume: NozzleVolumeType) -> String {
+pub(crate) fn canonical_variant(extruder: ExtruderType, volume: NozzleVolumeType) -> String {
     let extruder = match extruder {
         ExtruderType::DirectDrive => "Direct Drive",
         ExtruderType::Bowden => "Bowden",

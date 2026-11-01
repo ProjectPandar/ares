@@ -250,7 +250,6 @@ fn is_obsolete_legacy_key(key: &str) -> bool {
             | "smooth_coefficient"
             | "overhang_totally_speed"
             | "overhang_speed_classic"
-            | "filament_prime_volume"
     )
 }
 
