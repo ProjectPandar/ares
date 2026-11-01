@@ -35,13 +35,19 @@ pub(super) fn apply_connections(
             epsilon: scaled_epsilon,
         },
     );
+    let join_length = super::join_length(
+        anchor_length,
+        anchor_length_max,
+        scaled_spacing,
+        scaled_epsilon,
+    );
     for arc in arcs {
         apply_sorted_arc(
             &mut graph,
             &mut open_end,
             arc,
             anchor_length,
-            anchor_length_max,
+            join_length,
             scaled_spacing,
             multiline,
             scaled_epsilon,
@@ -50,6 +56,7 @@ pub(super) fn apply_connections(
     apply_remaining_endpoints(
         &mut graph,
         &mut open_end,
+        join_length,
         HookLimits {
             anchor: anchor_length,
             anchor_max: anchor_length_max,
@@ -105,7 +112,7 @@ fn apply_sorted_arc(
     open_end: &mut [bool],
     arc: Arc,
     anchor_length: f64,
-    anchor_length_max: f64,
+    join_length: f64,
     scaled_spacing: f64,
     multiline: i32,
     scaled_epsilon: f64,
@@ -123,7 +130,7 @@ fn apply_sorted_arc(
     {
         return;
     }
-    if sorted_arc_takes_full(arc.length, anchor_length_max) {
+    if sorted_arc_takes_full(arc.length, join_length) {
         merge_paths(graph, first, second, first_path, second_path, false);
         open_end[first] = false;
         open_end[second] = false;
@@ -153,9 +160,13 @@ fn apply_sorted_arc(
     clippy::excessive_nesting,
     reason = "the source remaining-endpoint pass has ordered merge and hook fallbacks"
 )]
-fn apply_remaining_endpoints(graph: &mut WorkingGraph, open_end: &mut [bool], limits: HookLimits) {
+fn apply_remaining_endpoints(
+    graph: &mut WorkingGraph,
+    open_end: &mut [bool],
+    join_length: f64,
+    limits: HookLimits,
+) {
     let anchor_length = limits.anchor;
-    let anchor_length_max = limits.anchor_max;
     let scaled_epsilon = limits.epsilon;
     for intersection_index in 0..graph.intersections.len() {
         let Some(contour_index) = graph.intersections[intersection_index].contour_index else {
@@ -195,7 +206,7 @@ fn apply_remaining_endpoints(graph: &mut WorkingGraph, open_end: &mut [bool], li
         ));
         let mut connected = false;
         for (length, clockwise) in complete_arc_attempts(previous_length, next_length) {
-            if !remaining_arc_is_eligible(length, anchor_length_max) {
+            if !remaining_arc_is_eligible(length, join_length) {
                 break;
             }
             let other = if clockwise {
