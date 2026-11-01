@@ -72,6 +72,20 @@ fn add_brim_area(
     copies: &[super::layers::Instance],
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
+    // Brim.cpp:1004-1010: uncombined per-instance paths already carry their
+    // instance shifts (plate coordinates); combined/global plans keep the
+    // copy translation below.
+    if !brim.instances.is_empty() {
+        for instance in &brim.instances {
+            for path in &instance.paths {
+                *area += spacing_coverage(path, brim.spacing, scale)?
+                    .iter()
+                    .map(|polygon| polygon.area())
+                    .sum::<f64>();
+            }
+        }
+        return Ok(());
+    }
     // The temporary single-object brim shell emits each copy separately.
     for copy in copies {
         for path in &brim.paths {

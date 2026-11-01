@@ -297,25 +297,31 @@ impl BrimPlan {
             (area.area, forbidden)
         };
         let owner_collection = !combined::enabled(traversal);
-        let (area, forbidden) = if owner_collection {
-            let (area, forbidden, islands) = owner::expand(
+        let per_instance = owner_collection
+            && !traversal.resolved.views.full.process.print.combine_brims.0
+            && traversal.resolved.views.full.process.print.print_sequence
+                != crate::ProcessPrintSequence::ByObject;
+        let (entries, forbidden) = if owner_collection {
+            owner::expand(
                 traversal,
                 object_index,
                 (&brim_area, &inner, &object_islands),
                 accumulated,
-            )?;
-            object_islands = islands;
-            (area, forbidden)
+            )?
         } else {
             (
-                brim_area,
+                vec![owner::InstanceEntry {
+                    copy: 0,
+                    area: brim_area,
+                    islands: object_islands,
+                }],
                 bed_area::translate(inner, bed_area::plate_shift(traversal, object_index)),
             )
         };
         Ok(Some((
             owner::Area {
-                area,
-                object_islands,
+                entries,
+                per_instance,
                 owner_collection,
                 flow,
                 spacing,

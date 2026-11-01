@@ -221,6 +221,7 @@ pub(super) fn emit(
             state,
             (brim, skirt),
             object_index,
+            bucket.instance.copy,
             layer_index,
             entry_builder,
             traversal,

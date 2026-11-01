@@ -66,12 +66,23 @@ impl BrimPlan {
         output: &mut Vec<u8>,
         geometry: LayerGeometry<'_>,
         state: &mut EmitState,
+        copy: usize,
     ) -> Result<(), crate::SliceError> {
         let origin = state.origin;
         if self.global || self.owner_collection {
             motion::set_origin(state, (0.0, 0.0));
         }
-        for path in &self.paths {
+        // GCode.cpp:6065-6079: an uncombined owner plan emits only the
+        // current instance's paths (brimMapByInstance keyed
+        // `ObjectInstanceID`), never the owner's merged set.
+        let paths: &[Vec<Point>] = if self.owner_collection
+            && let Some(instance) = self.instances.iter().find(|entry| entry.copy == copy)
+        {
+            &instance.paths
+        } else {
+            &self.paths
+        };
+        for path in paths {
             // Upstream emits the brim from the ring's natural (anchored)
             // start: the layer-change travel targets the loop's first
             // point, and `split_at(last_pos)` at the arrival is then

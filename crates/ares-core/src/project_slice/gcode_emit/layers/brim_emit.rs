@@ -15,6 +15,7 @@ pub(super) fn emit(
     state: &mut motion::EmitState,
     (brim, skirt): (&[Option<brim::BrimPlan>], &Option<skirt::SkirtPlan>),
     object_index: usize,
+    copy: usize,
     layer_index: usize,
     entry_builder: &mut EntryBuilder<'_>,
     traversal: &PreparedPostClassicTraversal,
@@ -54,7 +55,19 @@ pub(super) fn emit(
     if plan.global {
         state.global_brim_done = true;
     }
-    if plan.owner_collection {
+    // Brim.cpp:1004-1010 / GCode.cpp:6039-6082: uncombined per-instance
+    // brims dedup by `ObjectInstanceID` (`m_objsWithBrim`); each copy emits
+    // its own plan at its own chunk. Merged (combined) plans keep the
+    // owner-level dedup.
+    let per_instance = plan.owner_collection && !plan.instances.is_empty();
+    if per_instance {
+        if plan.instances.iter().all(|instance| instance.copy != copy) {
+            return Ok(());
+        }
+        if !state.emitted_brim_instances.insert((object_index, copy)) {
+            return Ok(());
+        }
+    } else if plan.owner_collection {
         state.emitted_brim_owners.extend(owners.iter().copied());
     }
     let geometry = entry_builder.geometry(object_index, layer_index, chunk_perimeter_spacing);
@@ -74,6 +87,7 @@ pub(super) fn emit(
             lower_boundary.as_ref(),
         ),
         state,
+        copy,
     )?;
     state.use_external_mp = false;
     state.avoid_crossing_disabled_once = true;
