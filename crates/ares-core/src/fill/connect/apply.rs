@@ -4,6 +4,7 @@ use super::{
         remaining_arc_is_eligible, skip_sorted_multiline_arc, sorted_arc_takes_full, take_full_arc,
         take_limited,
     },
+    hooks::{HookLimits, distance_to_open_end, multiline_hook_length},
     types::{Arc, WorkingGraph},
 };
 use crate::geometry::{Point, Polyline, fixed_gcc_sort_by};
@@ -21,11 +22,13 @@ pub(super) fn apply_connections(
     dont_sort: bool,
     scaled_epsilon: f64,
 ) -> Vec<Polyline> {
+    let mut open_end = vec![true; graph.intersections.len()];
     let mut arcs = collect_arcs(&graph, dont_sort);
     sort_arcs(&mut arcs);
     for arc in arcs {
         apply_sorted_arc(
             &mut graph,
+            &mut open_end,
             arc,
             anchor_length,
             anchor_length_max,
@@ -34,7 +37,16 @@ pub(super) fn apply_connections(
             scaled_epsilon,
         );
     }
-    apply_remaining_endpoints(&mut graph, anchor_length, anchor_length_max, scaled_epsilon);
+    apply_remaining_endpoints(
+        &mut graph,
+        &mut open_end,
+        HookLimits {
+            anchor: anchor_length,
+            anchor_max: anchor_length_max,
+            multiline_reach: (multiline > 1).then_some(scaled_spacing * f64::from(multiline)),
+            epsilon: scaled_epsilon,
+        },
+    );
     graph
         .paths
         .into_iter()
@@ -84,6 +96,7 @@ fn collect_arcs(graph: &WorkingGraph, dont_sort: bool) -> Vec<Arc> {
 )]
 fn apply_sorted_arc(
     graph: &mut WorkingGraph,
+    open_end: &mut [bool],
     arc: Arc,
     anchor_length: f64,
     anchor_length_max: f64,
@@ -106,6 +119,8 @@ fn apply_sorted_arc(
     }
     if sorted_arc_takes_full(arc.length, anchor_length_max) {
         merge_paths(graph, first, second, first_path, second_path, false);
+        open_end[first] = false;
+        open_end[second] = false;
     } else if anchor_length > scaled_epsilon {
         take_hook(
             graph,
@@ -132,12 +147,10 @@ fn apply_sorted_arc(
     clippy::excessive_nesting,
     reason = "the source remaining-endpoint pass has ordered merge and hook fallbacks"
 )]
-fn apply_remaining_endpoints(
-    graph: &mut WorkingGraph,
-    anchor_length: f64,
-    anchor_length_max: f64,
-    scaled_epsilon: f64,
-) {
+fn apply_remaining_endpoints(graph: &mut WorkingGraph, open_end: &mut [bool], limits: HookLimits) {
+    let anchor_length = limits.anchor;
+    let anchor_length_max = limits.anchor_max;
+    let scaled_epsilon = limits.epsilon;
     for intersection_index in 0..graph.intersections.len() {
         let Some(contour_index) = graph.intersections[intersection_index].contour_index else {
             continue;
@@ -200,6 +213,8 @@ fn apply_remaining_endpoints(
                 other_path,
                 clockwise,
             );
+            open_end[intersection_index] = false;
+            open_end[other] = false;
             connected = true;
             break;
         }
@@ -207,7 +222,26 @@ fn apply_remaining_endpoints(
             let previous = graph.intersections[intersection_index].not_taken_prev;
             let next = graph.intersections[intersection_index].not_taken_next;
             if previous.max(next) > scaled_epsilon {
-                let clockwise = limited_hook_is_clockwise(previous, next);
+                let to_previous =
+                    distance_to_open_end(graph, open_end, intersection_index, path_index, true);
+                let to_next =
+                    distance_to_open_end(graph, open_end, intersection_index, path_index, false);
+                let mut clockwise = limited_hook_is_clockwise(previous, next);
+                if to_previous < to_next && previous > scaled_epsilon {
+                    clockwise = true;
+                } else if to_next < to_previous && next > scaled_epsilon {
+                    clockwise = false;
+                }
+                let length = multiline_hook_length(
+                    graph,
+                    intersection_index,
+                    path_index,
+                    clockwise,
+                    &limits,
+                );
+                if (if clockwise { previous } else { next }) <= scaled_epsilon {
+                    continue;
+                }
                 let end = if clockwise {
                     graph.intersections[intersection_index]
                         .prev
@@ -223,7 +257,7 @@ fn apply_remaining_endpoints(
                     intersection_index,
                     end,
                     clockwise,
-                    anchor_length,
+                    length.max(0.0),
                     scaled_epsilon,
                 );
             }

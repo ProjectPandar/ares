@@ -52,4 +52,20 @@ and multiline sine-clearance cap are absent from the Rust branch. This
 localizes the owning block; it does not yet prove which subexpression alone
 closes the RED. No experimental GREEN was made.
 
+## Approved GREEN slice
+
+The remaining-endpoint pass now tracks open ends separately from consumed
+intersections, searches up to 64 ends in each direction, and applies the beta
+multiline sine-clearance cap using `path_length_along_contour_ccw`.
+The private `connect/hooks.rs` module holds the source-owned lookup and cap;
+`apply.rs` retains mutation order and endpoint merging. Join thresholds and
+sorted-arc selection are unchanged.
+
+The scoped layer-six witness closes exactly: 22 ordered extrusion records
+match runtime Native bytes. The existing Hilbert surface witness passes before
+and after. The line anchoring witness retains its baseline complete-output
+M73 placement failure; its API and CLI output bytes are unchanged. A third
+rectilinear sample cannot load repository-relative profiles and supplies no
+API parity result. No complete-output parity claim or FULL run is made.
+
 External evidence retained outside the repository.
