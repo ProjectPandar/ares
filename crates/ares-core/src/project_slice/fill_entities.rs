@@ -177,10 +177,12 @@ pub(in crate::project_slice) fn dispose(prepared: PreparedPostFillEntities) {
 }
 
 pub(in crate::project_slice) fn simplify_before_ordering(
-    enable_arc_fitting: bool,
+    arc_fitting: crate::ArcFittingMode,
     spiral_mode: bool,
+    is_sparse_infill: bool,
 ) -> bool {
-    !enable_arc_fitting || spiral_mode
+    // LayerRegion.cpp (345efec64c7b):1104-1112.
+    !arc_fitting.fits(is_sparse_infill) || spiral_mode
 }
 
 pub(in crate::project_slice) fn geometry_error(error: crate::geometry::ClipperError) -> SliceError {

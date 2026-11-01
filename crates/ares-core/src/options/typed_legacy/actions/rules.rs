@@ -96,6 +96,8 @@ pub(crate) const EXPLICIT_RULES: &[LegacyRule] = &[
     rewrite!("support_base_pattern", "support_base_pattern", Exact, &[Replacement { from: "none", to: "hollow" }]),
     LegacyRule { wire: WireContract::vector("overhang_fan_threshold", VectorType::Enums), ..rewrite!("overhang_fan_threshold", "overhang_fan_threshold", Exact, &[Replacement { from: "5%", to: "10%" }]) },
     rewrite!("enable_power_loss_recovery", "enable_power_loss_recovery", AsciiCaseInsensitive, &[Replacement { from: "true", to: "enable" }, Replacement { from: "1", to: "enable" }, Replacement { from: "false", to: "disable" }, Replacement { from: "0", to: "disable" }]),
+    // PrintConfig.cpp (345efec64c7b):9886-9891.
+    rewrite!("enable_arc_fitting", "enable_arc_fitting", AsciiCaseInsensitive, &[Replacement { from: "true", to: "enabled" }, Replacement { from: "1", to: "enabled" }, Replacement { from: "false", to: "disabled" }, Replacement { from: "0", to: "disabled" }]),
     rewrite!("ensure_vertical_shell_thickness", "ensure_vertical_shell_thickness", Exact, &[Replacement { from: "1", to: "ensure_all" }, Replacement { from: "0", to: "ensure_moderate" }]),
     rewrite!("rotate_solid_infill_direction", "solid_infill_rotate_template", Exact, &[Replacement { from: "1", to: "0,90" }, Replacement { from: "0", to: "0" }]),
     rewrite!("ironing_angle", "ironing_angle", Leading, &[Replacement { from: "-", to: "0" }]),

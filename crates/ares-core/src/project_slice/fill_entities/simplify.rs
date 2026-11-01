@@ -9,17 +9,35 @@ use crate::{
     },
 };
 
-use super::{FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
+use super::{FillExtrusionEntity, FillExtrusionPath, LayerFillEntities, simplify_before_ordering};
 
-pub(super) fn apply(output: &mut LayerFillEntities, resolution: f64, scale: CoordinateScale) {
+pub(super) fn apply(
+    output: &mut LayerFillEntities,
+    resolution: f64,
+    scale: CoordinateScale,
+    arc_fitting: crate::ArcFittingMode,
+    spiral_mode: bool,
+) {
     for collection in &mut output.collections {
         for entity in &mut collection.entities {
             match entity {
-                FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
+                FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path)
+                    if simplify_before_ordering(
+                        arc_fitting,
+                        spiral_mode,
+                        path.role == crate::ExtrusionRole::InternalInfill,
+                    ) =>
+                {
                     simplify_fill_path(path, resolution / scale.factor());
                 }
+                FillExtrusionEntity::Path(_) | FillExtrusionEntity::Oriented(_) => {}
                 FillExtrusionEntity::VariableWidth(entity) => {
-                    simplify_gap_entity(entity, resolution / scale.factor());
+                    simplify_gap_entity(
+                        entity,
+                        resolution / scale.factor(),
+                        arc_fitting,
+                        spiral_mode,
+                    );
                 }
             }
         }
@@ -35,7 +53,15 @@ fn simplify_fill_path(path: &mut FillExtrusionPath, tolerance: f64) {
     path.polyline.fitting.clear();
 }
 
-fn simplify_gap_entity(entity: &mut GapFillEntity, tolerance: f64) {
+fn simplify_gap_entity(
+    entity: &mut GapFillEntity,
+    tolerance: f64,
+    arc_fitting: crate::ArcFittingMode,
+    spiral_mode: bool,
+) {
+    if !simplify_before_ordering(arc_fitting, spiral_mode, false) {
+        return;
+    }
     match entity {
         GapFillEntity::Path(path) => simplify_extrusion_path(path, tolerance),
         GapFillEntity::Loop(paths) => {

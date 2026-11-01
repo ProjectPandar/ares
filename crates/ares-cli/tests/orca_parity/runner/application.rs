@@ -104,6 +104,23 @@ pub(crate) fn verify_value(
             }
         }));
     }
+    if key == "enable_arc_fitting" {
+        // PrintConfig.cpp (345efec64c7b):9886-9891: normalize only the
+        // source-owned Boolean legacy tokens, never vector/scalar shapes.
+        let normalized: ares_core::SliceOptions =
+            serde_json::from_value(serde_json::json!({key: requested}))
+                .map_err(|error| mismatch(error.to_string()))?;
+        let canonical = &normalized.values()[key];
+        if !value_equivalent(actual, canonical) {
+            return Err(mismatch(format!(
+                "{key}: requested {requested}, canonical {canonical}, effective {actual}"
+            )));
+        }
+        return Ok(serde_json::json!({
+            "key": key, "requested": requested, "effective": actual,
+            "normalization": {"kind": "arc_fitting_legacy_enum", "source": "PrintConfig.cpp:9886-9891"}
+        }));
+    }
     if !value_equivalent(actual, requested) {
         return Err(mismatch(format!(
             "{key}: requested {requested}, effective {actual}"

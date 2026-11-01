@@ -129,6 +129,13 @@ pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
         } else if value == "0" || value.eq_ignore_ascii_case("false") {
             *value = "disable".to_owned();
         }
+    } else if opt_key == "enable_arc_fitting" {
+        // PrintConfig.cpp (345efec64c7b):9886-9891.
+        if value == "1" || value.eq_ignore_ascii_case("true") {
+            *value = "enabled".to_owned();
+        } else if value == "0" || value.eq_ignore_ascii_case("false") {
+            *value = "disabled".to_owned();
+        }
     } else if opt_key == "ensure_vertical_shell_thickness" {
         if value == "1" {
             *value = "ensure_all".to_owned();

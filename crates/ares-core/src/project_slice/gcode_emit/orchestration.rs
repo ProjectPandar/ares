@@ -44,7 +44,8 @@ pub(in crate::project_slice) fn emit(
         &mut prepared.support_layers,
         traversal.scale,
         process.print.resolution.0,
-        process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0,
+        process.gcode.enable_arc_fitting == crate::ArcFittingMode::Enabled
+            && !process.print.spiral_mode.0,
     );
     schedule.simplify_raft(traversal);
     conflict::check(

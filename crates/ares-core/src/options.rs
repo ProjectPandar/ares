@@ -95,6 +95,8 @@ mod vector_resize;
 pub(crate) use acceleration::AccelToDecelConfig;
 pub(crate) use bed_temperature::{FirstLayerBedTemperature, first_layer_bed_temperature_key_for};
 pub(crate) use config_types::format_number;
+mod arc_fitting;
+pub use arc_fitting::ArcFittingMode;
 pub use decode::{decode_config_value, decode_config_value_by_key};
 use defaults::*;
 pub use encode::{encode_config_value, encode_config_value_by_key};

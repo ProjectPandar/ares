@@ -253,7 +253,8 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         reduce_crossing_wall: full.process.print.reduce_crossing_wall.0,
         crossing_boundary_inset: crossing::boundary_inset(traversal),
         max_travel_detour_distance: full.process.print.max_travel_detour_distance,
-        enable_arc_fitting: gcode.enable_arc_fitting.0,
+        // GCode.cpp:9915 / GCodeWriter.cpp:1218 (345efec64c7b).
+        enable_arc_fitting: gcode.enable_arc_fitting != crate::ArcFittingMode::Disabled,
         arc_fitting_tolerance: full.process.print.resolution.0,
         ..Default::default()
     };

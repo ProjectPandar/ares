@@ -200,7 +200,14 @@ pub(super) fn simplify_layers(
     raft_layers: &mut [Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>],
 ) {
     let process = &traversal.resolved.views.full.process;
-    let arc_fitting = process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0;
+    // Layer.cpp (345efec64c7b):383-419, support/raft is not sparse infill.
+    let arc_fitting = if process.gcode.enable_arc_fitting == crate::ArcFittingMode::Enabled
+        && !process.print.spiral_mode.0
+    {
+        crate::ArcFittingMode::Enabled
+    } else {
+        crate::ArcFittingMode::Disabled
+    };
     let tolerance = process.print.resolution.0;
     for object_layers in raft_layers {
         crate::project_slice::path_simplification::simplify_layers(

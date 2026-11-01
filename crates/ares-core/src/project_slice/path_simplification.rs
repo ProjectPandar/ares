@@ -28,7 +28,11 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     // fitting enabled (and not in spiral mode) each path is arc-fitted
     // then DP-simplified; otherwise every path still gets a plain DP
     // simplify at the printer resolution — the phase never skips.
-    let arc_fitting = process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0;
+    let arc_fitting = if process.print.spiral_mode.0 {
+        crate::ArcFittingMode::Disabled
+    } else {
+        process.gcode.enable_arc_fitting
+    };
     let scale = traversal.scale;
     let tolerance = process.print.resolution.0;
     for layers in &mut prepared.objects {
@@ -58,7 +62,7 @@ pub(in crate::project_slice) fn simplify_layers(
     layers: &mut [OrderedExtrusionLayer],
     scale: CoordinateScale,
     tolerance: f64,
-    arc_fitting: bool,
+    arc_fitting: crate::ArcFittingMode,
 ) {
     for entity in layers
         .iter_mut()
@@ -101,7 +105,7 @@ fn simplify_fill_entity(
     entity: &mut FillExtrusionEntity,
     scale: CoordinateScale,
     tolerance: f64,
-    arc_fitting: bool,
+    arc_fitting: crate::ArcFittingMode,
 ) {
     match entity {
         FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
@@ -115,8 +119,8 @@ fn simplify_fill_entity(
                 .iter()
                 .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
                 .collect::<Vec<_>>();
-            // The coarse sparse-infill tolerance applies only in the
-            // arc-fitting branch (`LayerRegion.cpp:1081`).
+            // LayerRegion.cpp (345efec64c7b):1104-1112.
+            let arc_fitting = arc_fitting.fits(path.role == crate::ExtrusionRole::InternalInfill);
             let tolerance = if arc_fitting {
                 fill_tolerance(path.role, tolerance)
             } else {
@@ -158,7 +162,7 @@ fn simplify_gap_entity(
     entity: &mut GapFillEntity,
     scale: CoordinateScale,
     tolerance: f64,
-    arc_fitting: bool,
+    arc_fitting: crate::ArcFittingMode,
 ) {
     match entity {
         GapFillEntity::Path(path) => simplify_path3(path, scale, tolerance, arc_fitting),
@@ -193,13 +197,18 @@ fn simplify_path3(
     path: &mut ExtrusionPath,
     scale: CoordinateScale,
     tolerance: f64,
-    arc_fitting: bool,
+    arc_fitting: crate::ArcFittingMode,
 ) {
     // ExtrusionEntity.cpp:33-47: ContourZ already simplifies its own 3D samples.
     if path.z_contoured {
         return;
     }
-    simplify_polyline3(&mut path.polyline, scale, tolerance, arc_fitting);
+    simplify_polyline3(
+        &mut path.polyline,
+        scale,
+        tolerance,
+        arc_fitting.fits(false),
+    );
 }
 
 fn simplify_polyline3(

@@ -5,13 +5,13 @@ use std::fmt;
 use serde::{Deserialize, Deserializer, de::Visitor};
 
 use super::super::{
-    FloatOrPercent, OrcaBool, OrcaFloat, OrcaString, OrcaStrings, Percent,
+    ArcFittingMode, FloatOrPercent, OrcaBool, OrcaFloat, OrcaString, OrcaStrings, Percent,
     option_group::declare_option_group,
 };
 
 declare_option_group! {
     pub struct ProcessGCodeSourceOptions, ProcessGCodeSourceOptionsBuilder {
-        enable_arc_fitting => "enable_arc_fitting": OrcaBool = OrcaBool(false),
+        enable_arc_fitting => "enable_arc_fitting": ArcFittingMode = ArcFittingMode::Disabled,
         enable_wrapping_detection => "enable_wrapping_detection": OrcaBool = OrcaBool(false),
         gcode_add_line_number => "gcode_add_line_number": OrcaBool = OrcaBool(false),
         max_volumetric_extrusion_rate_slope => "max_volumetric_extrusion_rate_slope": OrcaFloat = OrcaFloat(0.0),

@@ -39,14 +39,8 @@ pub(in crate::project_slice) fn finish(
     prelude: &PreparedPostClassicPrelude,
     context: &mut crate::SlicerContext,
 ) -> Result<PreparedArachnePerimeters, SliceError> {
-    let enable_arc_fitting = prelude
-        .resolved
-        .views
-        .full
-        .process
-        .gcode
-        .enable_arc_fitting
-        .0;
+    let enable_arc_fitting = prelude.resolved.views.full.process.gcode.enable_arc_fitting
+        == crate::ArcFittingMode::Enabled;
     let resolution = prelude.resolved.views.full.process.print.resolution.0;
     let nozzle_diameters = &prelude.resolved.views.full.project.print.nozzle_diameter;
     let objects = prelude

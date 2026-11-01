@@ -9,7 +9,6 @@ use crate::{
     },
 };
 
-use super::simplify_before_ordering;
 use super::types::LayerFillEntities;
 
 pub(in crate::project_slice) struct LayerGenerationOptions<'a> {
@@ -342,16 +341,13 @@ pub(in crate::project_slice) fn generate_layer_with_active(
         scale: traversal.scale,
     })?;
     let process = &traversal.resolved.views.full.process;
-    if simplify_before_ordering(
-        process.gcode.enable_arc_fitting.0,
+    super::simplify::apply(
+        &mut output,
+        process.print.resolution.0.max(1.0e-4),
+        traversal.scale,
+        process.gcode.enable_arc_fitting,
         process.print.spiral_mode.0,
-    ) {
-        super::simplify::apply(
-            &mut output,
-            process.print.resolution.0.max(1.0e-4),
-            traversal.scale,
-        );
-    }
+    );
     Ok(output)
 }
 

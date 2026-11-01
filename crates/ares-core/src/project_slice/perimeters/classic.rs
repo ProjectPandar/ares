@@ -58,7 +58,7 @@ pub(super) fn finish_classic_prelude(
         .process
         .gcode
         .enable_arc_fitting
-        .0;
+        == crate::ArcFittingMode::Enabled;
     let resolution = prepared.resolved.views.full.process.print.resolution.0;
     let validated = preflight::validate_project(
         &prepared.objects,

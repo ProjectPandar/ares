@@ -23,7 +23,8 @@ pub(super) const PRE_MIDDLE_PROCESS_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("elefant_foot_layers_density", Percent, "100",),
     definition!("elefant_foot_min_width", Float, "0.2",),
     definition!("emit_machine_limits_to_gcode", Bool, "true",),
-    definition!("enable_arc_fitting", Bool, "false",),
+    // PrintConfig.cpp (345efec64c7b):4426-4444.
+    definition!("enable_arc_fitting", Enum, "disabled",),
     definition!("enable_extra_bridge_layer", Enum, "disabled",),
     definition!("enable_filament_dynamic_map", Bool, "false",),
     definition!("enable_filament_ramming", Bool, "true",),

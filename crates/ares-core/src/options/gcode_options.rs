@@ -1,11 +1,11 @@
 use super::{
-    AmsCounts, BedTemperatureFormula, CsvTable, ExtruderTypes, FilamentGCodeSourceOptions,
-    FloatOrPercent, GCodeFlavor, NozzleVolumeTypes, Nullable, NullableInts, NullableNozzleTypes,
-    OrcaBool, OrcaBools, OrcaFloat, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaString,
-    OrcaStrings, Percent, Point2dList, PowerLossRecoveryMode, PrinterGCodeSourceOptions,
-    PrinterStructure, ProcessGCodeSourceOptions, ProjectFilamentMapMode, ProjectGCodeSourceOptions,
-    RammingParameters, RetractLiftEnforces, SpaceTuple, VariantStride, WipeTowerType, ZHopTypes,
-    gcode_fields::gcode_option_fields,
+    AmsCounts, ArcFittingMode, BedTemperatureFormula, CsvTable, ExtruderTypes,
+    FilamentGCodeSourceOptions, FloatOrPercent, GCodeFlavor, NozzleVolumeTypes, Nullable,
+    NullableInts, NullableNozzleTypes, OrcaBool, OrcaBools, OrcaFloat, OrcaFloats, OrcaInt,
+    OrcaInts, OrcaPercents, OrcaString, OrcaStrings, Percent, Point2dList, PowerLossRecoveryMode,
+    PrinterGCodeSourceOptions, PrinterStructure, ProcessGCodeSourceOptions, ProjectFilamentMapMode,
+    ProjectGCodeSourceOptions, RammingParameters, RetractLiftEnforces, SpaceTuple, VariantStride,
+    WipeTowerType, ZHopTypes, gcode_fields::gcode_option_fields,
 };
 
 macro_rules! clone_source_field {
