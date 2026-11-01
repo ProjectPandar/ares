@@ -2,8 +2,8 @@
 
 Assignment #290, Stage 2, after the Stage 1 extractor re-pin (`f416e1718`).
 All ports are source-cited rewrite slices of OrcaSlicer
-`345efec64c7b95a05ce5cf96df0dde66a158835c` (pinned at
-`/home/indexyz/ares-coord/orca-source-250b`); no Ares-owned pipeline design.
+`345efec64c7b95a05ce5cf96df0dde66a158835c` (the pinned upstream source
+checkout of that commit); no Ares-owned pipeline design.
 
 ## Slice 1 — marker-time layer-seeded cache (approved 2a)
 
