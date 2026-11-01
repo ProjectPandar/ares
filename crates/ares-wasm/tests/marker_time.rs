@@ -44,13 +44,19 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
         return;
     };
     let moves_csv = std::fs::read_to_string(root.join("moves.csv")).unwrap();
+    let dynamics_csv = std::fs::read_to_string(root.join("dynamics.csv")).unwrap();
+    let dynamics: Vec<_> = dynamics_csv.lines().skip(1).collect();
     let moves = moves_csv
         .lines()
         .skip(1)
-        .map(|line| {
+        .enumerate()
+        .map(|(i, line)| {
             let fields: Vec<_> = line.split(',').collect();
             let uint = |i: usize| fields[i].parse::<u32>().unwrap();
             let float = |i: usize| fields[i].parse::<f32>().unwrap();
+            // dynamics.csv rows are the same result.moves in the same order
+            // (--dump-move-dynamics): per-move acceleration and jerk.
+            let dynamics_fields: Vec<_> = dynamics[i].split(',').collect();
             MoveVertex {
                 gcode_id: uint(0),
                 move_type: match uint(1) {
@@ -81,6 +87,8 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
                 time: float(16),
                 layer_id: uint(17),
                 internal_only: uint(18) != 0,
+                acceleration: dynamics_fields[4].parse::<f32>().unwrap(),
+                jerk: dynamics_fields[5].parse::<f32>().unwrap(),
                 ..MoveVertex::default()
             }
         })

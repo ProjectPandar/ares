@@ -41,7 +41,11 @@ pub fn from_processor_result(result: &GCodeProcessorResult) -> GCodeInputData {
             || prev.move_type != curr.move_type
             || prev.extrusion_role != curr.extrusion_role
             // ORCA: flow rate changes start a new path.
-            || prev.mm3_per_mm != curr.mm3_per_mm);
+            || prev.mm3_per_mm != curr.mm3_per_mm
+            // ORCA: split the path when a preview value changes
+            // (LibVGCodeWrapper.cpp:236-238).
+            || prev.acceleration != curr.acceleration
+            || prev.jerk != curr.jerk);
         if starts_path {
             // Phantom vertex at the previous position so libvgcode detects the
             // path start; its times stay zero.
