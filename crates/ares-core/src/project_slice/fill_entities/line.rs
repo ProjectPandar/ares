@@ -16,7 +16,7 @@ pub(super) fn expolygon_polylines(
     expolygon: &crate::geometry::ExPolygon,
     fill: &SurfaceFill,
     call: &super::types::SurfaceCall,
-) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
+) -> Result<crate::fill::line::LineFill, SliceError> {
     let params = LineFillParams {
         dont_alternate_fill_direction: call.dont_alternate_fill_direction,
         spacing: fill.params.spacing,
@@ -42,18 +42,18 @@ pub(super) fn append(
     let fill_params = fill.params;
     let fill_kind = fill.representative.kind;
     for expolygon in &fill.expolygons {
-        let polylines = expolygon_polylines(expolygon, &fill, &call)?;
-        if polylines.is_empty() {
+        let generated = expolygon_polylines(expolygon, &fill, &call)?;
+        if generated.polylines.is_empty() {
             continue;
         }
         let polylines = super::join_close_ends::join(
-            polylines,
+            generated.polylines,
             fill_params.extrusion_role,
-            fill_params.spacing,
+            generated.spacing,
             (false, true),
             call.scale,
         );
-        let flow = super::materialized_flow(fill_params, fill_params.spacing as f32)?;
+        let flow = super::materialized_flow(fill_params, generated.spacing as f32)?;
         let mut entities: Vec<FillExtrusionEntity> = polylines
             .into_iter()
             .map(|polyline| {

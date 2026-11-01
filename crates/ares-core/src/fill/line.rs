@@ -76,18 +76,28 @@ fn align_scalar(coord: i64, spacing: i64, base: i64) -> i64 {
     base + aligned
 }
 
+pub(crate) struct LineFill {
+    pub(crate) polylines: Vec<Polyline>,
+    pub(crate) spacing: f64,
+}
+
 /// `Fill::fill_surface` (`FillBase.cpp:105-118`), followed by FillLine.
 pub(crate) fn fill_line(
     expolygon: &ExPolygon,
-    params: LineFillParams,
+    mut params: LineFillParams,
     scale: CoordinateScale,
-) -> Result<Vec<Polyline>, ClipperError> {
+) -> Result<LineFill, ClipperError> {
     let delta = ((params.overlap - 0.5 * params.spacing) / scale.factor()) as f32;
     let mut output = Vec::new();
     for domain in offset_expolygon(expolygon, delta, JoinType::Miter, 3.0)? {
-        output.extend(fill_surface_single(&domain, params, scale)?);
+        let generated = fill_surface_single(&domain, params, scale)?;
+        params.spacing = generated.spacing;
+        output.extend(generated.polylines);
     }
-    Ok(output)
+    Ok(LineFill {
+        polylines: output,
+        spacing: params.spacing,
+    })
 }
 
 /// `FillLine::_fill_surface_single` (`FillLine.cpp:10-115`).
@@ -95,7 +105,7 @@ fn fill_surface_single(
     expolygon: &ExPolygon,
     params: LineFillParams,
     scale: CoordinateScale,
-) -> Result<Vec<Polyline>, ClipperError> {
+) -> Result<LineFill, ClipperError> {
     // `Fill::_infill_direction` (`FillBase.cpp:275-323`): `out_angle =
     // bridge_angle.unwrap_or(angle)`, `+ _layer_angle` alternation when
     // `!fixed_angle && !dont_alternate_fill_direction`, then `+ pi/2`.
@@ -119,13 +129,15 @@ fn fill_surface_single(
     let line_oscillation = line_spacing - min_spacing;
     let mut bounding_box = polygon_bbox(&Polygon::new(rotated.contour().points().to_vec()));
 
-    if f64::from(params.density) > 0.9999 && !params.dont_adjust {
+    let mut spacing = params.spacing;
+    if params.density > 0.9999_f32 && !params.dont_adjust {
         // `_adjust_solid_spacing(bounding_box.size()(0), line_spacing)` — snap the
         // line spacing so a whole number of lines spans the bounding-box width.
         line_spacing = adjust_solid_spacing(
             bounding_box.max().x() - bounding_box.min().x(),
             line_spacing,
         );
+        spacing = line_spacing as f64 * scale.factor();
     } else {
         // extend bounding box to align the pattern with other layers.
         let aligned_min = Point::new(
@@ -245,7 +257,10 @@ fn fill_surface_single(
             direction,
         )?));
     }
-    Ok(out)
+    Ok(LineFill {
+        polylines: out,
+        spacing,
+    })
 }
 
 fn expolygon_to_polygons(expolygon: &ExPolygon) -> Vec<Polygon> {

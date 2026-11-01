@@ -226,6 +226,7 @@ pub(in crate::project_slice) fn surface_polylines(
         ProcessInfillPattern::Line => {
             let fill = surface_fill(request);
             super::line::expolygon_polylines(&request.expolygon, &fill, &request.call)
+                .map(|generated| generated.polylines)
         }
         ProcessInfillPattern::LateralLattice => {
             let fill = surface_fill(request);

@@ -17,8 +17,11 @@ the remaining pass includes length == join_length. Both simulation thresholds
 use `FillBase.cpp:1731`: when anchor_length > scaled epsilon, join_length is
 max(anchor_length_max, 2*(anchor_length + 0.5*scaled spacing)); otherwise it
 is anchor_length_max. The actual connector-application correction at
-`FillBase.cpp:1919,1981` is retained as a separate implementation commit. Hook consumption uses
-anchor_length > scaled epsilon. Compare both contour directions in upstream
+`FillBase.cpp:1919,1981` is retained as a separate implementation commit.
+Correction to that commit's message: anchor_length_max contributes to
+join_length only; it is not a hook-fallback threshold. Its other upstream
+use is inside the disabled `#if 0` block at 1733–1806. Hooks use
+anchor_length, with consumption gated by anchor_length > scaled epsilon. Compare both contour directions in upstream
 order, grouping by llround(length / (0.5*scaled spacing)), then contour index,
 then ascending or descending contour parameter. Replace only when the join
 count strictly improves; equal scores keep the incumbent. dont_sort still

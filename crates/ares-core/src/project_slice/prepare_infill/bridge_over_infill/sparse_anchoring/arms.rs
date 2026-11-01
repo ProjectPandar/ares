@@ -230,7 +230,8 @@ pub(super) fn dispatch(
                         },
                         traversal.scale,
                     )
-                    .map_err(super::super::transaction::geometry_error)?,
+                    .map_err(super::super::transaction::geometry_error)?
+                    .polylines,
                 );
             }
         }
