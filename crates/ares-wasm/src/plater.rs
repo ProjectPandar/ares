@@ -4,7 +4,7 @@
 //! and results.
 
 use ares_core::{
-    ArrangeScope, ArrangeSettings, GenerationMetadata, PlaterSlice, ProfileSliceRequest, ScaleEdit,
+    ArrangeScope, ArrangeSettings, GenerationMetadata, PlaterSlice, ProfileSliceRequest,
     SlicerContext,
 };
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,8 @@ use wasm_bindgen::prelude::*;
 use crate::profiles::ProfileSliceOptions;
 use crate::scene::{self, SceneInstance, ScenePlate};
 use crate::{SceneData, SliceOutput};
+
+mod transform;
 
 #[wasm_bindgen]
 pub struct PlaterSession {
@@ -73,34 +75,8 @@ impl SettingsJson {
     }
 }
 
-/// A scale or size field edit as the web passes it (`ScaleEdit`).
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct ScaleEditJson {
-    axis: usize,
-    value: f64,
-    uniform: bool,
-}
-
-impl ScaleEditJson {
-    fn parse(json: &str) -> Result<ScaleEdit, JsValue> {
-        let edit: Self = serde_json::from_str(json).map_err(js_error)?;
-        Ok(ScaleEdit {
-            axis: edit.axis,
-            value: edit.value,
-            uniform: edit.uniform,
-        })
-    }
-}
-
 fn js_error(error: impl ToString) -> JsValue {
     JsValue::from_str(&error.to_string())
-}
-
-fn vector(values: &[f64]) -> Result<[f64; 3], JsValue> {
-    values
-        .try_into()
-        .map_err(|_| js_error(format!("expected [x, y, z], got {} values", values.len())))
 }
 
 /// Loads a model with selected presets into a plater session: an STL lands on the bed centre
@@ -161,106 +137,6 @@ impl PlaterSession {
             wipe_tower: self.session.tower_positions(),
         };
         serde_json::to_string(&layout).expect("plater layout serializes")
-    }
-
-    /// A world move by `displacement` `[x, y, z]` (`Selection::translate`, `GLCanvas3D::do_move`).
-    pub fn translate(
-        &mut self,
-        object: usize,
-        instance: usize,
-        displacement: Vec<f64>,
-    ) -> Result<(), JsValue> {
-        self.session
-            .translate_instance(object, instance, vector(&displacement)?)
-            .map_err(js_error)
-    }
-
-    /// A world position field edit (`GizmoObjectManipulation::change_position_value`).
-    #[wasm_bindgen(js_name = setPosition)]
-    pub fn set_position(
-        &mut self,
-        object: usize,
-        instance: usize,
-        axis: usize,
-        value: f64,
-    ) -> Result<(), JsValue> {
-        self.session
-            .set_instance_position(object, instance, axis, value)
-            .map_err(js_error)
-    }
-
-    /// A world rotation by `radians` `[x, y, z]` (`Selection::rotate`, `GLCanvas3D::do_rotate`).
-    pub fn rotate(
-        &mut self,
-        object: usize,
-        instance: usize,
-        radians: Vec<f64>,
-    ) -> Result<(), JsValue> {
-        self.session
-            .rotate_instance(object, instance, vector(&radians)?)
-            .map_err(js_error)
-    }
-
-    /// The absolute rotation fields in degrees (`GizmoObjectManipulation::update_settings_value`).
-    #[wasm_bindgen(js_name = absoluteRotation)]
-    pub fn absolute_rotation(&self, object: usize, instance: usize) -> Result<Vec<f64>, JsValue> {
-        self.session
-            .absolute_rotation(object, instance)
-            .map(Vec::from)
-            .map_err(js_error)
-    }
-
-    /// An absolute rotation field edit (`change_absolute_rotation_value`).
-    #[wasm_bindgen(js_name = setAbsoluteRotation)]
-    pub fn set_absolute_rotation(
-        &mut self,
-        object: usize,
-        instance: usize,
-        axis: usize,
-        degrees: f64,
-    ) -> Result<(), JsValue> {
-        self.session
-            .set_absolute_rotation(object, instance, axis, degrees)
-            .map_err(js_error)
-    }
-
-    /// The scale (percent) and size (mm) fields, `[scale x, y, z, size x, y, z]`
-    /// (`GizmoObjectManipulation::update_settings_value`).
-    #[wasm_bindgen(js_name = scaleAndSize)]
-    pub fn scale_and_size(&self, object: usize, instance: usize) -> Result<Vec<f64>, JsValue> {
-        let (scale, size) = self
-            .session
-            .scale_and_size(object, instance)
-            .map_err(js_error)?;
-        Ok([scale, size].concat())
-    }
-
-    /// A "Scale ratios" field edit, `edit_json` `{axis, value, uniform}` (`change_scale_value`).
-    #[wasm_bindgen(js_name = setScale)]
-    pub fn set_scale(
-        &mut self,
-        object: usize,
-        instance: usize,
-        edit_json: &str,
-    ) -> Result<(), JsValue> {
-        let edit = ScaleEditJson::parse(edit_json)?;
-        self.session
-            .set_scale(object, instance, edit)
-            .map_err(js_error)
-    }
-
-    /// A "Size" field edit, `edit_json` `{axis, value, uniform}` (`change_size_value`).
-    #[wasm_bindgen(js_name = setSize)]
-    pub fn set_size(
-        &mut self,
-        object: usize,
-        instance: usize,
-        edit_json: &str,
-    ) -> Result<(), JsValue> {
-        let edit = ScaleEditJson::parse(edit_json)?;
-        self.session
-            .set_size(object, instance, edit)
-            .map_err(js_error)
     }
 
     /// "Add plate" (`PartPlateList::create_plate`).

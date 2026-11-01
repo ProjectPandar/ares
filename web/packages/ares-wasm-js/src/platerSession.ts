@@ -79,6 +79,15 @@ export class PlaterSession {
     return this.#edit({ op: "setSize", object, instance, edit });
   }
 
+  /**
+   * Mirrors an instance along `axis` about its centre (the object menu's "Mirror",
+   * `Selection::mirror`); its object's other instances follow, and each drops onto the bed unless
+   * it stays sinking (`GLCanvas3D::do_mirror`).
+   */
+  mirror(object: number, instance: number, axis: Axis): Promise<PlaterLayout> {
+    return this.#edit({ op: "mirror", object, instance, axis });
+  }
+
   /** Appends a plate to the grid (`PartPlateList::create_plate`). */
   addPlate(): Promise<PlaterLayout> {
     return this.#edit({ op: "addPlate" });

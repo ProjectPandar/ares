@@ -216,3 +216,7 @@
 .manipulation-unit { color: var(--text-dim); }
 .manipulation-reset { align-self: flex-start; }
 .manipulation-toggle { display: flex; gap: 6px; align-items: center; }
+.context-menu { position: fixed; z-index: 50; display: flex; flex-direction: column; min-width: 160px; padding: 4px 0; background: var(--panel-raised); border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 4px 12px rgb(0 0 0 / 30%); }
+.context-menu-label { padding: 4px 12px; color: var(--text-dim); }
+.context-menu button { padding: 4px 12px 4px 20px; text-align: left; background: none; border: 0; color: var(--text); cursor: pointer; }
+@media (hover: hover) { .context-menu button:hover:not(:disabled) { background: var(--accent-checked); } }

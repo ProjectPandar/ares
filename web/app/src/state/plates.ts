@@ -98,6 +98,12 @@ export async function setInstancePosition(target: InstanceRef, axis: 0 | 1 | 2, 
   applyLayout(await plater!.setPosition(target.object, target.instance, axis, value), currentPlate);
 }
 
+/** The object menu's "Mirror" along an axis (Plater::mirror). */
+export async function mirrorInstance(target: InstanceRef, axis: 0 | 1 | 2) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.mirror(target.object, target.instance, axis), currentPlate);
+}
+
 /** A Scale field edit in percent (GizmoObjectManipulation::change_scale_value). */
 export async function setInstanceScale(target: InstanceRef, edit: ScaleEdit) {
   const { plater, currentPlate } = useApp.getState();

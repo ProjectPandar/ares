@@ -1,6 +1,7 @@
 import type { Scene, SceneObject, ScenePlate, VolumeType } from "@ares-slicer/wasm";
 import { Fragment, type ReactNode, useState } from "react";
 import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
+import { ObjectMenu } from "./ObjectMenu";
 import { selectObject } from "../state/actions";
 import { arrange } from "../state/arrange";
 import { addPlate, deletePlate, MAX_PLATES, selectPlate } from "../state/plates";
@@ -18,13 +19,20 @@ const VOLUME_ICON: Record<VolumeType, string> = {
 /** ObjectDataViewModel object node; volumes become child nodes once there is more than one. */
 function ObjectNode({ object, name, selected, nested = false }: { object: SceneObject; name: string; selected: boolean; nested?: boolean }) {
   const [expanded, setExpanded] = useState(false);
+  const [menu, setMenu] = useState<[number, number] | null>(null);
   const parts = object.volumes.length > 1 ? object.volumes : [];
   const printable = object.instances.some((instance) => instance.printable);
   return (
     <>
       <div role="treeitem" aria-selected={selected} aria-expanded={parts.length ? expanded : undefined}
         className={`object-row${nested ? " object-nested" : ""}${selected ? " selected" : ""}${printable ? "" : " unprintable"}`}
-        onClick={() => selectObject(selected ? null : object.id)}>
+        onClick={() => selectObject(selected ? null : object.id)}
+        onContextMenu={(event) => {
+          // ObjectList's right click selects the item, then shows its menu.
+          event.preventDefault();
+          selectObject(object.id);
+          setMenu([event.clientX, event.clientY]);
+        }}>
         <button className={`object-expander${parts.length ? "" : " hidden"}`} aria-label="Toggle parts" tabIndex={-1}
           onClick={(event) => {
             event.stopPropagation();
@@ -34,6 +42,7 @@ function ObjectNode({ object, name, selected, nested = false }: { object: SceneO
         <span className="object-name">{name}</span>
         {object.instances.length > 1 && <span className="object-count" title="Instances">×{object.instances.length}</span>}
       </div>
+      {menu && <ObjectMenu objectId={object.id} position={menu} onClose={() => setMenu(null)} />}
       {expanded && parts.map((volume) => (
         <div key={volume.id} role="treeitem" className="object-row object-part" title={volume.type}
           onClick={() => selectObject(object.id)}>

@@ -76,6 +76,8 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.setScale(edit.object, edit.instance, JSON.stringify(edit.edit));
     case "setSize":
       return session.setSize(edit.object, edit.instance, JSON.stringify(edit.edit));
+    case "mirror":
+      return session.mirror(edit.object, edit.instance, edit.axis);
     case "addPlate":
       return session.addPlate();
     case "deletePlate":
