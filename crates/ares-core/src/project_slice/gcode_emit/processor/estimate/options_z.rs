@@ -262,7 +262,8 @@ impl Replay<'_, '_> {
     }
 
     /// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`);
-    /// queued blocks keep their `move_id` after the indexed element is erased.
+    /// `GCodeProcessor.cpp:5346-5352`: the queued blocks of the moves after
+    /// the erased one follow them down the list.
     fn update(&mut self, index: usize, height: f32) {
         let mut copy = self.moves[index];
         copy.position = self.moves[self.moves.len() - 1].position;
@@ -270,7 +271,11 @@ impl Replay<'_, '_> {
         self.moves.push(copy);
         self.moves.remove(index);
         for queued in &mut self.queue[self.done..] {
-            if queued.move_id.is_some_and(|id| id >= index) {
+            let Some(id) = queued.move_id.as_mut() else {
+                continue;
+            };
+            if *id > index {
+                *id -= 1;
                 queued.shifted = true;
             }
         }
