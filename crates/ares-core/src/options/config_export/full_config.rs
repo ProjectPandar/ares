@@ -1,4 +1,6 @@
 //! GCode.cpp:8244-8354 (345efec64c7b): applied full config projection.
+use std::collections::HashSet;
+
 use crate::options::config_export::collector::ConfigEntry;
 use crate::options::config_export::value::serialize_config_value;
 use crate::options::config_export::writer::append_line;
@@ -53,10 +55,24 @@ pub(super) fn write_entries(
     // historical output-key list. Registry ownership supplies absent defaults.
     let filament_count = settings.filament.gcode.filament_diameter.0.len();
     let mut lines: Vec<(String, String)> = Vec::new();
-    fn emit(lines: &mut Vec<(String, String)>, key: &str, token: String, is_nil: bool) {
+    let entry_keys: HashSet<&str> = entries.iter().map(|entry| entry.key.as_str()).collect();
+    let nil_entry_keys: HashSet<&str> = entries
+        .iter()
+        .filter(|entry| entry.is_nil)
+        .map(|entry| entry.key.as_str())
+        .collect();
+    let mut emitted_keys = HashSet::with_capacity(registry::option_metadata_table().len());
+    fn emit<'a>(
+        lines: &mut Vec<(String, String)>,
+        emitted_keys: &mut HashSet<&'a str>,
+        key: &'a str,
+        token: String,
+        is_nil: bool,
+    ) {
         if BANNED_KEYS.contains(&key) || is_nil {
             return;
         }
+        emitted_keys.insert(key);
         lines.push((key.to_owned(), token));
     }
     for entry in entries {
@@ -71,7 +87,13 @@ pub(super) fn write_entries(
                 .get(plate_index)
                 .or_else(|| values.first())
                 .ok_or_else(|| invalid(format!("{} must not be empty", entry.key)))?;
-            emit(&mut lines, &entry.key, format!("{:.3}", value.0), false);
+            emit(
+                &mut lines,
+                &mut emitted_keys,
+                &entry.key,
+                format!("{:.3}", value.0),
+                false,
+            );
             // GCode.cpp:8342-8347 also writes the ordinary serialization.
         }
         // Preset metadata that was never applied is not a config member.
@@ -84,10 +106,22 @@ pub(super) fn write_entries(
         if entry.key == "extruder_colour" {
             let colour = serialize_config_value(&settings.filament.gcode.filament_colour)
                 .map_err(config_error)?;
-            emit(&mut lines, &entry.key, colour.token, false);
+            emit(
+                &mut lines,
+                &mut emitted_keys,
+                &entry.key,
+                colour.token,
+                false,
+            );
             continue;
         }
-        emit(&mut lines, &entry.key, entry.token.clone(), entry.is_nil);
+        emit(
+            &mut lines,
+            &mut emitted_keys,
+            &entry.key,
+            entry.token.clone(),
+            entry.is_nil,
+        );
     }
     for entry in raw_settings.iter() {
         let (key, token) = entry.map_err(config_error)?;
@@ -106,11 +140,11 @@ pub(super) fn write_entries(
         if crate::options::registry::option_definition(key).is_none() {
             continue;
         }
-        if entries.iter().any(|entry| entry.key == key && entry.is_nil) {
+        if nil_entry_keys.contains(key) {
             // GCode.cpp:8339: applied nil options cannot be reinserted by raw input.
             continue;
         }
-        if lines.iter().any(|(existing, _)| existing.as_str() == key) {
+        if emitted_keys.contains(key) {
             continue;
         }
         let Some(rendered) = token else {
@@ -147,7 +181,13 @@ pub(super) fn write_entries(
                                 && value == "2147483647")
                     }))
             });
-        emit(&mut lines, key, rendered.to_owned(), raw_is_nil);
+        emit(
+            &mut lines,
+            &mut emitted_keys,
+            key,
+            rendered.to_owned(),
+            raw_is_nil,
+        );
     }
     // FullPrintConfig/default preset construction owns absent defaults, not a
     // historical dump-key whitelist. Nil applied values must not be resurrected.
@@ -156,13 +196,14 @@ pub(super) fn write_entries(
         if !definition.full_config_default
             || definition.default_is_nil
             || raw_settings.contains_key(metadata.key)
-            || entries.iter().any(|entry| entry.key == metadata.key)
-            || lines.iter().any(|(key, _)| key == metadata.key)
+            || entry_keys.contains(metadata.key)
+            || emitted_keys.contains(metadata.key)
         {
             continue;
         }
         emit(
             &mut lines,
+            &mut emitted_keys,
             metadata.key,
             definition.default_wire_value.to_owned(),
             false,
@@ -175,7 +216,13 @@ pub(super) fn write_entries(
     // GCode::append_full_config serializes it.
     for key in ["different_settings_to_system", "inherits_group"] {
         if !raw_settings.contains_key(key) {
-            emit(&mut lines, key, ";".repeat(filament_count + 1), false);
+            emit(
+                &mut lines,
+                &mut emitted_keys,
+                key,
+                ";".repeat(filament_count + 1),
+                false,
+            );
         }
     }
     // Orca iterates a sorted key map; a stable sort keeps the duplicated
