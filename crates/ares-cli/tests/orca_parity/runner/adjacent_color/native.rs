@@ -2,9 +2,6 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
     let Some(_) = crate::native_environment::binary("ARES_PROCGCODE_BIN") else {
         return;
     };
-    let Some(_) = crate::native_environment::binary("ARES_PROCGCODE_STABLE_BIN") else {
-        return;
-    };
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -29,34 +26,13 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
         .unwrap()
         .unwrap();
     let native_json = raw.join("native.json");
+    let native_csv = raw.join("native.csv");
     let native: serde_json::Value =
         serde_json::from_slice(&std::fs::read(native_json).unwrap()).unwrap();
-    // Explicitly separate the operator-approved stable-index diagnostic from
-    // the raw upstream oracle; never overwrite or silently substitute it.
-    let stable = runner
-        .processor_stable_color_reference(&oracle_input)
-        .unwrap()
-        .unwrap();
-    let stable_json = stable.join("native.json");
-    let stable_csv = stable.join("native.csv");
-    let stable_data: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(stable_json).unwrap()).unwrap();
-    assert_eq!(
-        stable_data, native,
-        "index-only diagnostic must preserve raw processor metadata/statistics"
-    );
-    if output.result.custom_gcode_per_print_z.is_empty() {
-        assert_eq!(
-            std::fs::read(raw.join("native.csv")).unwrap(),
-            std::fs::read(&stable_csv).unwrap(),
-            "untagged control must remain identical to unmodified native"
-        );
-    }
     std::fs::write(
         directory.join("oracle-identities.json"),
         serde_json::to_vec_pretty(&serde_json::json!({
-            "raw":std::env::var_os("ARES_PROCGCODE_BIN"), "stable_options":std::env::var_os("ARES_PROCGCODE_STABLE_BIN"),
-            "correction":"tools/chain-probe/procgcode-stable-options.patch",
+            "raw":std::env::var_os("ARES_PROCGCODE_BIN"),
         }))
         .unwrap(),
     )
@@ -83,44 +59,29 @@ pub(super) fn check_native_processor(output: &ares_core::ProcessedGCode, name: &
             .collect::<Vec<_>>(),
         expected_z
     );
-    let raw_xyz = xyz_bits(&raw.join("native.csv"));
-    let stable_xyz = xyz_bits(&stable_csv);
+    let raw_xyz = xyz_bits(&native_csv);
     let rust_xyz: Vec<_> = output
         .result
         .moves
         .iter()
         .map(|v| v.position.map(f32::to_bits))
         .collect();
-    assert_eq!(
-        rust_xyz.len(),
-        stable_xyz.len(),
-        "full corrected vertex count"
-    );
+    assert_eq!(rust_xyz.len(), raw_xyz.len(), "full vertex count");
+    // Beta upstreamed the marker-index correction
+    // (`OptionsZCorrector::on_moves_inserted`, GCodeProcessor.hpp:1105-1116,
+    // called at GCodeProcessor.cpp:8132), so raw Native beta is the complete
+    // authority: Ares must match it bit for bit, not differ like a patch.
     let raw_rust_diff = xyz_diff(&raw_xyz, &rust_xyz);
-    let raw_stable_diff = xyz_diff(&raw_xyz, &stable_xyz);
     std::fs::write(
         directory.join("raw-to-rust-xyz-bits-diff.json"),
         serde_json::to_vec_pretty(&raw_rust_diff).unwrap(),
     )
     .unwrap();
-    std::fs::write(
-        directory.join("raw-to-stable-options-xyz-bits-diff.json"),
-        serde_json::to_vec_pretty(&raw_stable_diff).unwrap(),
-    )
-    .unwrap();
-    // The approved marker-identity correction is authoritative for public
-    // moves; retain the complete raw-to-stable difference, including tails.
-    assert_eq!(
-        raw_rust_diff, raw_stable_diff,
-        "Rust must differ from raw Native exactly like the stable marker correction"
+    assert!(
+        raw_rust_diff.is_empty(),
+        "Ares XYZ must be bit-identical to raw Native beta"
     );
-    if name == "two-changes" {
-        assert!(
-            !raw_stable_diff.is_empty(),
-            "fixture must still expose the pinned upstream stale-index defect"
-        );
-    }
-    let expected_moves: Vec<_> = std::fs::read_to_string(&stable_csv)
+    let expected_moves: Vec<_> = std::fs::read_to_string(&native_csv)
         .unwrap()
         .lines()
         .skip(1)

@@ -168,15 +168,7 @@ fn check_native(runner: &OrcaRunner, output: &ProcessedGCode) -> std::path::Path
     assert_ne!(renamed, text);
     let input = directory.join("oracle-input.gcode");
     std::fs::write(&input, renamed).unwrap();
-    let capture = if output.result.custom_gcode_per_print_z.is_empty() {
-        runner.processor_dynamics_reference(&input)
-    } else {
-        // Marker-bearing public moves use the approved stable identity
-        // correction; the raw dynamics oracle remains the untagged control.
-        runner.processor_stable_dynamics_reference(&input)
-    }
-    .unwrap()
-    .unwrap();
+    let capture = runner.processor_dynamics_reference(&input).unwrap().unwrap();
     let csv = capture.join("native-dynamics.csv");
     let rows: Vec<Vec<String>> = std::fs::read_to_string(&csv)
         .unwrap()

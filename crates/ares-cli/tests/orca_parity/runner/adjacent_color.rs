@@ -20,7 +20,7 @@ fn color_oracle_availability_follows_required_optional_policy() {
         .tempdir()
         .unwrap()
         .keep();
-    for key in ["ARES_PROCGCODE_BIN", "ARES_PROCGCODE_STABLE_BIN"] {
+    for key in ["ARES_PROCGCODE_BIN"] {
         for required in [true, false] {
             // Declared files only: the missing peer stops before either can launch.
             let output = std::process::Command::new(std::env::current_exe().unwrap())
@@ -31,10 +31,6 @@ fn color_oracle_availability_follows_required_optional_policy() {
                 ])
                 .env("ARES_REQUIRE_ORCA", if required { "1" } else { "0" })
                 .env("ARES_PROCGCODE_BIN", std::env::current_exe().unwrap())
-                .env(
-                    "ARES_PROCGCODE_STABLE_BIN",
-                    std::env::current_exe().unwrap(),
-                )
                 .env_remove(key)
                 .output()
                 .unwrap();

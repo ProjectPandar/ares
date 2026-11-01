@@ -82,7 +82,6 @@ fn ender3_moves_match_gcode_processor_oracle() {
             "ender3",
             &workspace_path("tests/parity/orca_cli_ender3.3mf"),
             Some(1),
-            None,
         );
     }
 }
@@ -95,19 +94,15 @@ fn stock_project_fdmtest_v4_moves_match_gcode_processor_oracle() {
             "ksr_fdmtest_v4",
             &workspace_path("tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"),
             None,
-            None,
         );
     }
 }
 
-/// The approved stable OptionsZCorrector marker-index correction
-/// (`procgcode-stable-options.patch:8-30`) applies to public move data;
-/// raw Native remains captured for the complete bounded XYZ difference.
+/// Raw Native beta owns public move data end to end: the marker-index
+/// correction is upstreamed (`OptionsZCorrector::on_moves_inserted`,
+/// GCodeProcessor.hpp:1105-1116).
 fn check_emission_fixture(name: &str) {
     if let Some(oracle) = oracle_bin() {
-        let Some(stable) = native_environment::binary("ARES_PROCGCODE_STABLE_BIN") else {
-            return;
-        };
         check_fixture(
             &oracle,
             name,
@@ -115,7 +110,6 @@ fn check_emission_fixture(name: &str) {
                 "tests/parity/plate-custom-gcode-emission/{name}.3mf"
             )),
             None,
-            Some(&stable),
         );
     }
 }
@@ -145,13 +139,7 @@ fn plate_custom_gcode_same_layer_moves_match_gcode_processor_oracle() {
     check_emission_fixture("same-layer");
 }
 
-fn check_fixture(
-    oracle: &Path,
-    name: &str,
-    project: &Path,
-    plate: Option<u32>,
-    stable_oracle: Option<&Path>,
-) {
+fn check_fixture(oracle: &Path, name: &str, project: &Path, plate: Option<u32>) {
     let artifacts = workspace_path("target/gcode-moves-oracle").join(name);
     fs::create_dir_all(&artifacts).unwrap();
     let gcode = artifacts.join("ares.gcode");
@@ -192,26 +180,7 @@ fn check_fixture(
 
     let raw = read_moves(&oracle_csv);
     let actual = read_moves(&ares_csv);
-    let expected = if let Some(stable) = stable_oracle {
-        let stable_csv = artifacts.join("stable.csv");
-        let status = Command::new(stable)
-            .arg("--process-gcode")
-            .arg(&oracle_input)
-            .arg("--dump-moves")
-            .arg(&stable_csv)
-            .status()
-            .unwrap();
-        assert!(status.success(), "stable oracle failed: {status}");
-        let expected = read_moves(&stable_csv);
-        assert_eq!(
-            xyz_diff(&raw, &actual),
-            xyz_diff(&raw, &expected),
-            "{name}: raw-to-Rust XYZ differences must equal raw-to-stable Native"
-        );
-        expected
-    } else {
-        raw
-    };
+    let expected = raw;
     let report = compare(&expected, &actual);
     fs::write(artifacts.join("diff.csv"), &report.diff).unwrap();
     assert_eq!(
@@ -223,21 +192,6 @@ fn check_fixture(
         actual.len(),
         artifacts.join("diff.csv").display(),
     );
-}
-
-type XyzDifference = (usize, Option<[u32; 3]>, Option<[u32; 3]>);
-
-fn xyz_diff(raw: &[Vec<String>], other: &[Vec<String>]) -> Vec<XyzDifference> {
-    let position = |row: &Vec<String>| {
-        std::array::from_fn(|axis| row[5 + axis].parse::<f32>().unwrap().to_bits())
-    };
-    (0..raw.len().max(other.len()))
-        .filter_map(|index| {
-            let before = raw.get(index).map(position);
-            let after = other.get(index).map(position);
-            (before != after).then_some((index, before, after))
-        })
-        .collect()
 }
 
 fn read_moves(path: &Path) -> Vec<Vec<String>> {
