@@ -4,8 +4,8 @@ use crate::{
     SliceError, SlicerContext,
     arachne::{ExtrusionJunction, ExtrusionLine},
     geometry::{
-        CoordinateScale, ExPolygon, JoinType, SAFETY_OFFSET, difference_ex, offset_expolygons,
-        split_line, union_expolygons,
+        CoordinateScale, ExPolygon, JoinType, SAFETY_OFFSET, difference_ex, intersection_ex,
+        offset_expolygons, split_line, union_expolygons,
     },
     project_slice::perimeters::types::{PerimeterInputRecord, PostPerimeterInputPrintObject},
 };
@@ -26,6 +26,7 @@ pub(in crate::project_slice) struct Regions {
     pub(in crate::project_slice::perimeters) entries: Vec<Region>,
     pub(in crate::project_slice::perimeters) has_contour: bool,
     pub(in crate::project_slice::perimeters) has_hole: bool,
+    supported: Option<Vec<ExPolygon>>,
 }
 
 impl Regions {
@@ -33,6 +34,7 @@ impl Regions {
         object: &PostPerimeterInputPrintObject,
         input: &PerimeterInputRecord,
         scale: CoordinateScale,
+        lower_slices: Option<&[ExPolygon]>,
     ) -> Result<Self, SliceError> {
         let mut grouped: Vec<(Config, Vec<ExPolygon>)> = Vec::new();
         let (mut has_contour, mut has_hole) = (false, false);
@@ -51,6 +53,31 @@ impl Regions {
                 .1
                 .extend(surfaces.iter().map(|surface| surface.as_parts().1.clone()));
         }
+        // Feature/FuzzySkin.cpp:480-488: the offset distance is source-scaled f32.
+        let supported = if has_contour || has_hole {
+            let max_thickness = grouped
+                .iter()
+                .filter(|(config, _)| {
+                    config.base.should_fuzzify(input.layer_id, 0, true)
+                        || config.base.should_fuzzify(input.layer_id, 0, false)
+                })
+                .map(|(config, _)| config.thickness)
+                .max()
+                .unwrap_or(0);
+            lower_slices
+                .map(|lower| {
+                    offset_expolygons(
+                        lower,
+                        (input.ext_perimeter_flow.scaled_width(scale) + max_thickness) as f32,
+                        JoinType::Miter,
+                        3.0,
+                    )
+                    .map_err(geometry_error)
+                })
+                .transpose()?
+        } else {
+            None
+        };
         let whole = grouped.len() == 1;
         let entries = grouped
             .into_iter()
@@ -68,6 +95,7 @@ impl Regions {
             entries,
             has_contour,
             has_hole,
+            supported,
         })
     }
 
@@ -109,7 +137,7 @@ impl Regions {
         layer: Layer,
         context: &mut SlicerContext,
     ) -> Result<(), SliceError> {
-        if self.entries.len() == 1 {
+        if self.entries.len() == 1 && self.supported.is_none() {
             let config = self.entries[0].config;
             if config
                 .base
@@ -120,7 +148,7 @@ impl Regions {
             return Ok(());
         }
         let mut merged = self.merged(layer.id, extrusion.inset_index, contour)?;
-        if merged.len() == 1 && merged[0].mask.is_empty() {
+        if merged.len() == 1 && merged[0].mask.is_empty() && self.supported.is_none() {
             junctions::fuzzify(
                 &mut extrusion.junctions,
                 merged[0].config,
@@ -131,11 +159,33 @@ impl Regions {
             return Ok(());
         }
         make_exclusive(&mut merged)?;
+        restrict_to_supported(&mut merged, self.supported.as_deref())?;
         for region in merged {
+            if self.supported.is_some() && region.mask.is_empty() {
+                continue;
+            }
             apply_mask(extrusion, &region, layer, context)?;
         }
         Ok(())
     }
+}
+
+// Feature/FuzzySkin.cpp:587-593: restricted empty masks mean no fuzzy coverage.
+fn restrict_to_supported(
+    regions: &mut [Region],
+    supported: Option<&[ExPolygon]>,
+) -> Result<(), SliceError> {
+    let Some(supported) = supported else {
+        return Ok(());
+    };
+    for region in regions {
+        region.mask = if region.mask.is_empty() {
+            supported.to_vec()
+        } else {
+            intersection_ex(&region.mask, supported).map_err(geometry_error)?
+        };
+    }
+    Ok(())
 }
 
 fn merge_mask(existing: &mut Region, region: &Region) {

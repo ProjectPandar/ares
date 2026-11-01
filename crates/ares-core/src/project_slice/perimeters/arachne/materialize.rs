@@ -102,7 +102,7 @@ fn materialize_record(
     context: &mut crate::SlicerContext,
 ) -> Result<PreparedLayerRegionPerimeterRecord, SliceError> {
     let region = object.region_options(input);
-    let fuzzy = super::fuzzy::Regions::prepare(object, input, scale)?;
+    let fuzzy = super::fuzzy::Regions::prepare(object, input, scale, object.lower_slices(input))?;
     let config = config::validate_record(
         region,
         object_options,

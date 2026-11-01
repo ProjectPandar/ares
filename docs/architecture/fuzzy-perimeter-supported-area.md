@@ -1,6 +1,6 @@
 # Fuzzy perimeter support-area restriction
 
-Status: public RED qualification only; production and GREEN remain unmodified.
+Status: public RED approved; Arachne supported-area rewrite under verification.
 
 ## Ledger selection and source boundary
 
@@ -93,9 +93,18 @@ RED contains only this test, registration, source-cited ARD and derived fixture.
 ROOT entrypoint, production, existing cases and producer scripts stay frozen.
 A later GREEN may only be requested after Native/API qualification and an RR.
 
-The proposed concept includes source support-area construction, restriction and
-its required distinction between unrestricted empty and restricted-empty masks.
-Reuse the exact W2 C2 geometry contract; no new kernel/rounding policy.
+The approved Arachne concept includes source support-area construction,
+restriction and its required distinction between unrestricted empty and
+restricted-empty masks. The existing whole-lower-layer slices reach prepare
+through the Arachne materializer; no cached input geometry is mutated. Reuse the
+exact W2 C2 geometry contract; no new kernel/rounding policy.
+
+The Classic polygon overload in the same upstream file (`apply_fuzzy_skin`,
+595-719, notably 601/662) also consumes `fuzzy_supported_area`. That consumer is
+explicitly DEFERRED in this slice. Its existing Rust shared grouping constructor
+receives no support-area input, preserving Classic behavior; Classic apply and
+all shared effect-merging/region-exclusion logic are unchanged. This is an
+Arachne-only rewrite boundary, not a claim of Classic fuzzy-support parity.
 Defer closed/open endpoint transfer, open-wall mask expansion, new extrusion
 width floor, random kernels, Ripple arithmetic, generic clipping/order changes,
 wall chain/seam scoring, emission/cooling and caller sampling. Do not silently
