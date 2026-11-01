@@ -37,6 +37,28 @@ impl BrimPlan {
                 areas[index] = Some(area);
             }
         }
+        // Brim.cpp:718-722,726-766 then :953-958: for the per-instance
+        // map, the masks/retention run per entry, then the ordered
+        // cumulative claimed-area subtraction iterates the map in key
+        // order (ObjectInstanceID{ObjectID, instance_idx} ascending) —
+        // earlier keys keep overlapping area — before the per-entry
+        // infill (:1004-1010).
+        let mut claimed = Vec::new();
+        for (index, area) in areas.iter_mut().enumerate() {
+            let Some(area) = area else {
+                continue;
+            };
+            if !area.per_instance {
+                continue;
+            }
+            area.mask_entries(traversal, index, &no_brim_area, tower_exclusions)?;
+            for entry in &mut area.entries {
+                let assigned = crate::geometry::difference_ex(&entry.area, &claimed)
+                    .map_err(brim_geometry_error)?;
+                claimed.extend(assigned.iter().cloned());
+                entry.area = assigned;
+            }
+        }
         areas
             .into_iter()
             .enumerate()
@@ -301,7 +323,13 @@ impl BrimPlan {
             && !traversal.resolved.views.full.process.print.combine_brims.0
             && traversal.resolved.views.full.process.print.print_sequence
                 != crate::ProcessPrintSequence::ByObject;
-        let (entries, forbidden) = if owner_collection {
+        let (entries, forbidden) = if per_instance {
+            owner::append(
+                traversal,
+                object_index,
+                (&brim_area, &inner, &object_islands),
+            )?
+        } else if owner_collection {
             owner::expand(
                 traversal,
                 object_index,

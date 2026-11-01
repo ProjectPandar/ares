@@ -80,30 +80,52 @@ impl Area {
         }))
     }
 
-    /// `Brim.cpp:1004-1010`: per map entry — masks and contact retention
-    /// (:718-722,726-766) and one `makeBrimInfill` per entry's area.
-    fn finish_instances(
+    /// `Brim.cpp:718-722,726-766`: masks and contact retention per map
+    /// entry — split from the infill so the ordered claimed-area
+    /// subtraction (:953-958) can run between them, as in `make_brim`.
+    pub(super) fn mask_entries(
         &mut self,
         traversal: &PreparedPostClassicTraversal,
         object_index: usize,
         no_brim_area: &[ExPolygon],
         tower_exclusions: &[ExPolygon],
+    ) -> Result<(), crate::SliceError> {
+        let entries = std::mem::take(&mut self.entries);
+        self.entries = entries
+            .into_iter()
+            .map(|mut entry| {
+                let islands = std::mem::take(&mut entry.islands);
+                let area = std::mem::take(&mut entry.area);
+                entry.area = self.masked(
+                    traversal,
+                    object_index,
+                    area,
+                    &islands,
+                    no_brim_area,
+                    tower_exclusions,
+                )?;
+                Ok(entry)
+            })
+            .collect::<Result<Vec<_>, crate::SliceError>>()?;
+        Ok(())
+    }
+
+    /// `Brim.cpp:1004-1010`: per map entry — one `makeBrimInfill` per
+    /// entry's (already masked and claimed) area.
+    fn finish_instances(
+        &mut self,
+        traversal: &PreparedPostClassicTraversal,
+        _object_index: usize,
+        _no_brim_area: &[ExPolygon],
+        _tower_exclusions: &[ExPolygon],
     ) -> Result<AreaOutput, crate::SliceError> {
         let mut instances = Vec::new();
         let mut area_all = Vec::new();
         for entry in std::mem::take(&mut self.entries) {
-            let brim_area = self.masked(
-                traversal,
-                object_index,
-                entry.area,
-                &entry.islands,
-                no_brim_area,
-                tower_exclusions,
-            )?;
-            if brim_area.is_empty() {
+            if entry.area.is_empty() {
                 continue;
             }
-            let paths = self.infill(&brim_area, traversal)?;
+            let paths = self.infill(&entry.area, traversal)?;
             if paths.is_empty() {
                 continue;
             }
@@ -111,7 +133,7 @@ impl Area {
                 copy: entry.copy,
                 paths,
             });
-            area_all.extend(brim_area);
+            area_all.extend(entry.area);
         }
         Ok((instances, Vec::new(), area_all))
     }
@@ -236,11 +258,38 @@ pub(super) fn generation_order(traversal: &PreparedPostClassicTraversal) -> Vec<
 
 type OwnerAreas = (Vec<InstanceEntry>, Vec<ExPolygon>);
 
+/// `Brim.cpp:619-633`: append each copy's translated area whole — no
+/// subtraction at append; the map-level claimed-area loop (:953-958)
+/// runs after the masks/retention.
+pub(super) fn append(
+    traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
+    (area, forbidden, islands): (&[ExPolygon], &[ExPolygon], &[ExPolygon]),
+) -> Result<OwnerAreas, crate::SliceError> {
+    collect(traversal, object_index, (area, forbidden, islands), None)
+}
+
+/// 2.4.2-era scaffold kept for the owner-merged modes: assign only area
+/// not already owned, accumulating after the owner's instance loop.
 pub(super) fn expand(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     (area, forbidden, islands): (&[ExPolygon], &[ExPolygon], &[ExPolygon]),
     accumulated: &mut Vec<ExPolygon>,
+) -> Result<OwnerAreas, crate::SliceError> {
+    collect(
+        traversal,
+        object_index,
+        (area, forbidden, islands),
+        Some(accumulated),
+    )
+}
+
+fn collect(
+    traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
+    (area, forbidden, islands): (&[ExPolygon], &[ExPolygon], &[ExPolygon]),
+    mut accumulated: Option<&mut Vec<ExPolygon>>,
 ) -> Result<OwnerAreas, crate::SliceError> {
     let (resolved, group) = traversal.print_object_config(object_index);
     let object = &traversal.project.objects()[resolved.source_object_index];
@@ -250,15 +299,12 @@ pub(super) fn expand(
     let mut owner_forbidden = Vec::new();
     for (copy, &member) in group.instance_indices.iter().enumerate() {
         let shift = footprint::instance_shift(&object.instances()[member], center, traversal.scale);
-        // Brim.cpp:36-45,573-581 (2.4.2-era scaffold; the beta map-level
-        // claimed-area loop :953-958 is the subtraction slice): assign only
-        // area not already owned, per instance, keeping each copy's entry
-        // separate (:619-633 appends per `{object_id, instance_idx}`).
-        // The accumulator extends only after the owner's instance loop —
-        // same-owner copies never claim against each other.
-        let assigned =
-            crate::geometry::difference_ex(&translate(area.to_vec(), shift), accumulated)
-                .map_err(super::brim_geometry_error)?;
+        let candidate = translate(area.to_vec(), shift);
+        let assigned = match &mut accumulated {
+            Some(claimed) => crate::geometry::difference_ex(&candidate, claimed)
+                .map_err(super::brim_geometry_error)?,
+            None => candidate,
+        };
         owner_forbidden.extend(translate(forbidden.to_vec(), shift));
         entries.push(InstanceEntry {
             copy,
@@ -266,7 +312,9 @@ pub(super) fn expand(
             islands: translate(islands.to_vec(), shift),
         });
     }
-    accumulated.extend(entries.iter().flat_map(|entry| entry.area.iter().cloned()));
+    if let Some(claimed) = accumulated {
+        claimed.extend(entries.iter().flat_map(|entry| entry.area.iter().cloned()));
+    }
     Ok((entries, owner_forbidden))
 }
 
