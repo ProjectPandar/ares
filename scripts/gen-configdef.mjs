@@ -336,9 +336,12 @@ function fmtNum(tok) {
         tok = tok.slice(1).trim();
     }
     tok = tok.replace(/f$/, '');
+    tok = tok.replace(/^\(int\)\s*\(([A-Za-z_][A-Za-z0-9_:]*)\)$/, '$1');
     if (/nil_value/.test(tok)) return 'nil';
     let v;
-    if (tok in constNumbers) {
+    if (ENUM_VALUES.has(tok)) {
+        v = ENUM_VALUES.get(tok);
+    } else if (tok in constNumbers) {
         v = constNumbers[tok];
         if (typeof v === 'boolean') v = v ? 1 : 0;
     } else {
@@ -443,6 +446,7 @@ function serializeDefault(ctor, argText, ctx) {
 }
 
 function resolveEnumKey(ctx, tok) {
+    tok = argumentBindings?.[tok.trim()] ?? tok;
     let name = tok.trim();
     // Strip a leading C-style cast: (int)X, (BedType)X, ...
     const cast = /^\(\s*[A-Za-z_][A-Za-z0-9_:]*\s*\)\s*(.+)$/.exec(name);
@@ -515,6 +519,7 @@ function newDef(key, type, nullable) {
 }
 
 function fieldAssign(rec, field, rhs) {
+    rhs = argumentBindings?.[rhs.trim()] ?? rhs;
     const str = decodeStringLiterals(rhs);
     switch (field) {
         case 'label':
@@ -635,6 +640,7 @@ function fieldAssign(rec, field, rhs) {
         }
         case 'cli':
         case 'cli_params':
+        case 'plugin_type':
         case 'printer_technology':
             return; // deferred
         default:
@@ -645,6 +651,8 @@ function fieldAssign(rec, field, rhs) {
 let ctxCopySource = null; // record being copied in filament override loop
 let cur = null; // current record
 let curAlias = null;
+let argumentBindings = null;
+let beltRemapBody = null;
 
 // Resolve the `(void)L("...")` literal pool for boost::format substitution.
 const voidLPool = [];
@@ -654,6 +662,20 @@ function handleStatement(stmt) {
     if (!s) return;
 
     let m;
+    if (/^auto\s+add_belt_remap\s*=/.test(s)) {
+        beltRemapBody = s.slice(s.indexOf('{') + 1, s.lastIndexOf('}'));
+        return;
+    }
+    if (/^add_belt_remap\s*\(/.test(s)) {
+        const [argumentsText] = callArgs(s, s.indexOf('('));
+        const argumentsList = splitArgs(argumentsText);
+        argumentBindings = Object.fromEntries(
+            ['key', 'label', 'tooltip', 'default_axis', 'mode'].map((key, index) => [key, argumentsList[index]]),
+        );
+        processBlock(beltRemapBody);
+        argumentBindings = null;
+        return;
+    }
     // alias capture: auto def_x = def = this->add(...)
     if ((m = /^auto\s+([A-Za-z0-9_]+)\s*=\s*def\s*=\s*this->add/.exec(s))) {
         curAlias = m[1];
@@ -661,7 +683,8 @@ function handleStatement(stmt) {
     if ((m = /this->add\s*\(/.exec(s))) {
         const [argText] = callArgs(s, s.indexOf('(', m.index));
         const a = splitArgs(argText);
-        let key = decodeStringLiterals(a[0]);
+        let key = decodeStringLiterals(argumentBindings?.[a[0].trim()] ?? a[0]);
+        if (key === null && a[0].trim() === 'key') key = curLoopKey;
         if (key !== null && /\+\s*axis\.name/.test(a[0])) key += curAxis;
         const type = a[1].trim();
         cur = newDef(key, type, false);
@@ -727,6 +750,8 @@ function handleStatement(stmt) {
                 // written as {{..}} keeps one extra layer.
                 if (inner.startsWith('{') && inner.endsWith('}')) inner = inner.slice(1, -1);
                 cur.default_value = serializeDefault(cm[1], inner, cur);
+                cur.default_ctor = cm[1];
+                cur.default_args = inner;
             } else if (/it_opt->second\.default_value/.test(argText)) {
                 cur.default_value = ctxCopySource.default_value;
             } else {
@@ -759,6 +784,28 @@ function filamentOverrideKeys() {
     return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
 }
 const OVERRIDE_KEYS = filamentOverrideKeys();
+
+// FullPrintConfig defaults, the default preset overlay and headless CLI
+// materialization: PrintConfig.hpp, Preset.cpp/PresetBundle.cpp:503-518,
+// OrcaSlicer.cpp:1347-1350. These are definition ownership, not dump keys.
+const configHeader = stripComments(readFileSync(join(REPO, 'OrcaSlicer/src/libslic3r/PrintConfig.hpp'), 'utf8'));
+const fullHeader = configHeader.slice(0, configHeader.indexOf('PRINT_CONFIG_CLASS_DEFINE(\n    SLAPrinterConfig'));
+const presetSource = stripComments(readFileSync(join(REPO, 'OrcaSlicer/src/libslic3r/Preset.cpp'), 'utf8'));
+const defaultOwners = new Set([...fullHeader.matchAll(/\(\(\s*ConfigOption[^,\n]+,\s*(\w+)\s*\)\)/g)].map((match) => match[1]));
+let filamentDefaults;
+for (const group of ['print', 'filament', 'printer', 'machine_limits']) {
+    const body = new RegExp(`s_Preset_${group}_options\\s*\\{([\\s\\S]*?)\\};`).exec(presetSource)[1];
+    const keys = [...body.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+    if (group === 'filament') filamentDefaults = new Set(keys);
+    for (const key of keys) defaultOwners.add(key);
+}
+const cliSource = stripComments(readFileSync(join(REPO, 'OrcaSlicer/src/OrcaSlicer.cpp'), 'utf8'));
+for (const match of cliSource.matchAll(/if\s*\(!m_extra_config\.has\("([^"]+)"\)\)\s*m_extra_config\.set_key_value\("\1", new ConfigOptionBool\(false\)\)/g)) {
+    defaultOwners.add(match[1]);
+}
+const overrideBody = src.slice(src.indexOf('bool is_filament_extruder_override_key('), src.indexOf('size_t get_extruder_index('));
+const nilOverrides = new Set([...OVERRIDE_KEYS, ...[...overrideBody.matchAll(/opt_key\s*==\s*"([^"]+)"/g)].map((match) => match[1])]);
+
 
 // Extract a function body by name.
 function fnBody(name) {
@@ -872,6 +919,12 @@ function processBlock(block) {
                     processBlock(item.body);
                 }
                 curAxis = null;
+            } else if (/^for\s*\(const char\* key :/.test(head)) {
+                for (const match of head.matchAll(/"([^"]+)"/g)) {
+                    curLoopKey = match[1];
+                    processBlock(item.body);
+                }
+                curLoopKey = null;
             } else if (/^for\s*\(auto& opt_key : filament_extruder_override_keys\)/.test(head)) {
                 for (const key of OVERRIDE_KEYS) {
                     curLoopKey = key;
@@ -929,11 +982,28 @@ groups.filament_retract_keys = keyList(fnBody('init_filament_option_keys'), 'm_f
 
 // ---------- emit JSON ----------
 
+function defaultWire(rec) {
+    const escape = (value) => value.replace(/[\\"\r\n]/g, (character) => ({'\\': '\\\\', '"': '\\"', '\r': '\\r', '\n': '\\n'})[character]);
+    if (rec.type === 'Bool') return rec.default_value === 'true' ? '1' : rec.default_value === 'false' ? '0' : rec.default_value;
+    if (rec.type === 'String') return escape(rec.default_value ?? '');
+    if (rec.type === 'Strings') {
+        const values = splitArgs(rec.default_args ?? '').map((value) => decodeStringLiterals(value));
+        return values.map((value) => ((values.length === 1 && value === '') || /[\s\\"]/.test(value)) ? `"${escape(value)}"` : value).join(';');
+    }
+    return rec.default_value ?? '0';
+}
+
 function toJson(rec) {
+    const wire = defaultWire(rec);
+    const numericVector = /^(Floats|Ints|Bools|Percents)/.test(rec.type);
     return {
         key: rec.key,
         type: rec.type,
         default_value: rec.default_value,
+        default_wire_value: wire,
+        full_config_default: defaultOwners.has(rec.key),
+        default_is_nil: (rec.nullable && filamentDefaults.has(rec.key) && nilOverrides.has(rec.key)) ||
+            (numericVector && (wire === '' || (rec.nullable && wire.split(',').every((value) => value === 'nil')))),
         nullable: rec.nullable,
         label: rec.label,
         full_label: rec.full_label,
@@ -1013,6 +1083,8 @@ const GUI_RS = {
     select_open: 'SelectOpen',
     slider: 'Slider',
     legend: 'Legend',
+    plugin_config: 'PluginConfig',
+    plugin_picker: 'PluginPicker',
     one_string: 'OneString',
 };
 
