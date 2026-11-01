@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "arachne_collinear_vertex_tolerance.rs"]
+mod arachne_collinear_vertex_tolerance;
+
 #[path = "scarf_seam_neighbor_trim.rs"]
 mod scarf_seam_neighbor_trim;
 
