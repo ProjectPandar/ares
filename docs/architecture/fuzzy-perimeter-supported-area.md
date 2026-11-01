@@ -48,9 +48,9 @@ shell, not authority for an independent Ares fuzzy-wall pipeline.
 
 Old F1 Ripple-phase first observation is F1851/F1854, with later ordered geometry
 also differing. Old F2 rows include ordered XY/E point differences. Those saved
-captures may co-observe the queued W2 printing-state sampler `eb9672f1b`. They are
+captures may co-observe the queued printing-state sampler `eb9672f1b`. They are
 NOT new REDs, nor proof that support restriction alone causes every cluster row.
-No W2 sampler/caller code will be duplicated here.
+No printing-state sampler/caller code will be duplicated here.
 
 Input1 derives from the accepted Arachne stepped-cap exterior fixture
 `31909cf497033d59292683c0224ccc6c6806a368f766a1bac04747e8c64ea64e`.
@@ -67,7 +67,7 @@ The cap's exterior is fully overhanging far beyond the lower support-area offset
 Native should keep that exterior smooth even though deterministic Ripple remains
 configured and operates on supported lower walls. Rust's unrestricted path is the
 candidate discrepancy. Source gap is definite; public causal qualification is
-still required. The separate W2 Arachne collinearity dependency is not silently
+still required. The separate Arachne collinearity dependency is not silently
 applied to this 1fa-based branch or claimed closed by this witness.
 
 ## Strict public RED contract and stop rules
@@ -97,7 +97,7 @@ The approved Arachne concept includes source support-area construction,
 restriction and its required distinction between unrestricted empty and
 restricted-empty masks. The existing whole-lower-layer slices reach prepare
 through the Arachne materializer; no cached input geometry is mutated. Reuse the
-exact W2 C2 geometry contract; no new kernel/rounding policy.
+exact C2 geometry contract; no new kernel/rounding policy.
 
 The Classic polygon overload in the same upstream file (`apply_fuzzy_skin`,
 595-719, notably 601/662) also consumes `fuzzy_supported_area`. That consumer is
