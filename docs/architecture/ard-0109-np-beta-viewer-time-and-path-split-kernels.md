@@ -48,16 +48,34 @@ All ports are source-cited rewrite slices of OrcaSlicer
   at `f416e1718` fails the count gate 71 (Ares) vs 72 (Native).
 - Included: predicate change only; no vertex layout change.
 
-## Slice 3 — marker-time-bounds.mjs beta re-anchor (approved)
+## Slice 3 — tagged fixture raw/stable retirement (coordinator disposition)
 
-- Upstream effect: beta Native raw/stable dumps changed shape around the
-  phantom-vertex boundary the tool documents.
-- Change: `tools/chain-probe/marker-time-bounds.mjs` — ids and cardinality
-  constants only; comparator semantics, the bounded-impact checks and the
-  `stop, no waiver` policy stay unchanged. Before/after check list recorded in
-  `/home/indexyz/ares-evidence/np-processor-vgcode-stage2/`.
-- RED: `tagged_normal_time_matches_every_stable_native_vertex` crashes in the
-  tool at `pairs.find` (propagation ids hard-coded to the 8500fcdc shape).
+- Provisioned the beta raw marker-time binary (345efec64 + the raw patch set
+  only: procgcode.patch, marker-time.patch, the beta layer-seeded kernel and
+  the cache-rebuilding oracle header) rooted in the coordinator gcroots.
+- Control: the 2.4.2-era raw/stable pair still diverges on the tagged input
+  (7279/7278, extra raw phantom vertices); the beta raw binary and the beta
+  merged oracle are byte-identical on the same input, and beta carries no
+  remap_after_time_calculation - the marker relocation the stable-options
+  diagnostic correction fixed has no beta behavioral equivalent.
+- Disposition: retire the raw/stable producer distinction for this fixture.
+  `marker-time-stable.mjs` captures the single qualified beta producer;
+  `marker-time-pair.mjs` and `marker-time-bounds.mjs` are deleted; the tagged
+  test asserts Ares against the merged producer (7478 vertices, ids, both
+  duration modes, Normal elapsed bits). No comparator elsewhere changed.
+- Outcome: with the distinction retired, the tagged test no longer crashes
+  in tooling; the Ares-vs-merged comparison now runs and exposes a real,
+  pre-existing Ares estimator gap as its RED. Ares emits 7474 vertices
+  against the producer's 7478, missing exactly one internal actual-speed
+  split vertex at each of the print's four tool changes (gcode 379, 603,
+  776, 884 — the `G1 Z1` hop after `SYNC`/M600). Beta's
+  `process_filament_change` pushes a zero-distance Tool_change block and
+  calls `simulate_st_synchronize`, whose `calculate_time(keep_last_n=0)`
+  clears the planner queue so the following Z-hop block replans from rest
+  and `calculate_time`'s accelerate/decelerate split gains a vertex; Ares
+  schedules the flush but its Z-hop block trapezoid emits no split vertex.
+  The comparator stays 7478; porting the flushed-trapezoid split is the
+  next kernel slice, not a fixture change.
 
 ## Deferred — belt-printer get_layers_zs (per coordinator decision)
 

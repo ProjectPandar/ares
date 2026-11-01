@@ -52,7 +52,7 @@ pub fn raw_fixture() -> Option<PathBuf> {
 }
 
 pub fn tagged_directory() -> Option<PathBuf> {
-    artifacts(&["ARES_MARKER_TIME_BIN", "ARES_MARKER_TIME_STABLE_BIN"])
+    artifacts(&["ARES_MARKER_TIME_STABLE_BIN"])
 }
 
 pub fn tagged_pair(directory: &std::path::Path, input: &str) {
@@ -68,8 +68,7 @@ pub fn tagged_pair(directory: &std::path::Path, input: &str) {
     .unwrap();
     run(
         directory,
-        "marker-time-pair.mjs",
+        "marker-time-stable.mjs",
         &[&oracle_input, directory],
     );
-    run(directory, "marker-time-bounds.mjs", &[directory]);
 }

@@ -68,20 +68,19 @@ seam-property-window assertions. Formatter still compares every C++ text record.
 Tagged tests first slice the unchanged `orca_cli_ender3.3mf`/overrides through
 `slice_project_plate_processed`, transfer public WASM buffers, and capture the
 actual G-code externally. Only the existing generated-by identity adaptation is
-applied to the Native input. `marker-time-pair.mjs` runs raw/stable producers within
-one shared 300s deadline; `marker-time-bounds.mjs` retains all 7348/7347 cardinality,
-phantom, exact five-field differences, G-code-ID/occurrence correspondence,
-unaffected-duration ordering and complete ordered-f32 recurrence checks. Every
-stable identity, both duration modes and Normal elapsed bits are still asserted.
-To repeat the independent bounded proof using that test's retained input:
+applied to the Native input. At 345efec64 the raw producer is byte-identical to
+the stable one on this fixture, so the raw/stable pair and the bounded-impact
+proof were retired: `marker-time-stable.mjs` runs the single qualified beta
+producer within its 300s deadline. Every stable identity, both duration modes
+and Normal elapsed bits are still asserted.
+To repeat the single-producer capture using that test's retained input:
 
 ```sh
-pair=$(mktemp -d /tmp/marker-time-pair.XXXXXX)
-node tools/chain-probe/marker-time-pair.mjs <printed-tagged-artifact>/oracle-input.gcode "$pair"
-node tools/chain-probe/marker-time-bounds.mjs "$pair"
+stable=$(mktemp -d /tmp/marker-time-stable.XXXXXX)
+node tools/chain-probe/marker-time-stable.mjs <printed-tagged-artifact>/oracle-input.gcode "$stable"
 ```
 
-Both producers reject repository destinations and stale Native output admission.
+The producer rejects repository destinations and stale Native output admission.
 `marker-time-runner.mjs` owns deadline cleanup, including descendants, and retains
 failed/nonzero/timed-out receipts. Its short launcher controls are protocol tests,
 not Native numerical evidence. Never tune counts, epsilon, fixture data or source

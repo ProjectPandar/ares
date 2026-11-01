@@ -11,38 +11,30 @@ pub mod marker_time_native;
 
 #[test]
 fn required_missing_tagged_producer_cannot_pass_from_frozen_authority() {
-    for missing in ["ARES_MARKER_TIME_BIN", "ARES_MARKER_TIME_STABLE_BIN"] {
-        let mut command = std::process::Command::new(std::env::current_exe().unwrap());
-        command
-            .args([
-                "--exact",
-                "tagged_normal_time_matches_every_stable_native_vertex",
-                "--nocapture",
-            ])
-            .env("ARES_REQUIRE_ORCA", "1")
-            // Protocol-only placeholders; neither producer should run when one is missing.
-            .env("ARES_MARKER_TIME_BIN", std::env::current_exe().unwrap())
-            .env(
-                "ARES_MARKER_TIME_STABLE_BIN",
-                std::env::current_exe().unwrap(),
-            )
-            .env_remove(missing);
-        let output = command.output().unwrap();
-        assert!(
-            String::from_utf8_lossy(&output.stdout)
-                .lines()
-                .any(|line| line == "running 1 test"),
-            "child selector did not run exactly one test: {output:?}"
-        );
-        assert!(
-            !output.status.success(),
-            "tagged used frozen authority without {missing}"
-        );
-        assert!(
-            String::from_utf8_lossy(&output.stderr)
-                .contains(&format!("ARES_REQUIRE_ORCA=1: missing {missing}"))
-        );
-    }
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "tagged_normal_time_matches_every_stable_native_vertex",
+            "--nocapture",
+        ])
+        .env("ARES_REQUIRE_ORCA", "1")
+        .env_remove("ARES_MARKER_TIME_STABLE_BIN")
+        .output()
+        .unwrap();
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .any(|line| line == "running 1 test"),
+        "child selector did not run exactly one test: {output:?}"
+    );
+    assert!(
+        !output.status.success(),
+        "tagged used frozen authority without ARES_MARKER_TIME_STABLE_BIN"
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("ARES_REQUIRE_ORCA=1: missing ARES_MARKER_TIME_STABLE_BIN")
+    );
 }
 
 #[tokio::test]
@@ -72,7 +64,7 @@ async fn tagged_normal_time_matches_every_stable_native_vertex() {
     marker_time_native::tagged_pair(&root, &gcode);
     let records_tsv = std::fs::read_to_string(root.join("stable.tsv")).unwrap();
     let records: Vec<_> = records_tsv.lines().collect();
-    assert_eq!(records.len(), 7347);
+    assert_eq!(records.len(), 7478);
     assert_eq!(vertices.count(), records.len());
     for (id, line) in records.iter().enumerate().rev() {
         let expected: Vec<u32> = line.split('\t').map(|v| v.parse().unwrap()).collect();
@@ -97,5 +89,5 @@ async fn tagged_normal_time_matches_every_stable_native_vertex() {
             "duration at stable vertex {id}"
         );
     }
-    std::fs::write(root.join("rust.txt"), "7347 stable ids/gcode ids; both duration modes; Normal elapsed bits; buffers transferred; exact match\n").unwrap();
+    std::fs::write(root.join("rust.txt"), "7478 stable ids/gcode ids; both duration modes; Normal elapsed bits; buffers transferred; exact match\n").unwrap();
 }
