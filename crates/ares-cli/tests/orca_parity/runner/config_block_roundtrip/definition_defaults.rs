@@ -24,7 +24,7 @@ struct Definition {
     default_value: String,
 }
 
-fn native_defaults() -> Option<(OrcaRunner, Value)> {
+pub(super) fn native_defaults() -> Option<(OrcaRunner, Value)> {
     native_settings(None)
 }
 

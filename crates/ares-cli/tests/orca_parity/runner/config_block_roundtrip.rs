@@ -13,6 +13,8 @@
 mod complete_block;
 #[path = "config_block_roundtrip/definition_defaults.rs"]
 mod definition_defaults;
+#[path = "config_block_roundtrip/nullable_vectors.rs"]
+mod nullable_vectors;
 
 use super::{ExportedCase, OrcaRunner};
 use serde::{Deserialize, Serialize};
