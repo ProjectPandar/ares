@@ -143,21 +143,15 @@ geometry to index 569, XYZ `(114.346001,114.346001,0.600000024)`, after the
 ColorChange at line 380. The actual marker remains at Z=0.4 while the custom
 item is corrected to Z=0.6. The untagged exact-move control passes.
 
-Keep the unmodified `ARES_PROCGCODE_BIN` and its raw CSV/JSON. A separately
-named `ARES_PROCGCODE_STABLE_BIN`, built with
-`tools/chain-probe/procgcode-stable-options.nix`, adds only a pending-marker
-index remap across those insertions. Label and hash this corrected diagnostic
-separately: it is not an unmodified upstream parity claim. Metadata, volumes
-and custom times remain checked against the unmodified native processor;
-strict vertex/ColorPrint parity uses the explicitly corrected diagnostic.
-The raw comparison remains mandatory: the complete `raw → Rust` difference
-set must exactly equal `raw → stable-patched native`, keyed by vertex ordinal
-and XYZ f32 bits (including absent tail vertices). Both difference artifacts
-are retained. This proves that no unrelated geometry differences are hidden.
-Generated G-code (only existing generator/timestamp normalization) and every
-M73 line remain byte-compared with the unmodified official slicer, never the
-corrected diagnostic. The committed stable-options patch may contain only
-OptionsZCorrector marker remapping. No tolerances are enlarged and no failing
+Keep the unmodified `ARES_PROCGCODE_BIN` and its raw CSV/JSON: beta
+(`345efec64`) upstreamed the pending-marker remap as
+`OptionsZCorrector::on_moves_inserted` (`GCodeProcessor.hpp:1105-1116`),
+so raw Native beta is the complete authority for strict vertex/ColorPrint
+parity — Ares must match it bit for bit, with no separately corrected
+diagnostic. Metadata, volumes and custom times remain checked against the
+unmodified native processor. Generated G-code (only existing
+generator/timestamp normalization) and every M73 line remain byte-compared
+with the unmodified official slicer. No tolerances are enlarged and no failing
 assertion is dropped.
 
 ## Known difference: tagged marker Time (approved)

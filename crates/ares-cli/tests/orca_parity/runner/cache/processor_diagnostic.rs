@@ -1,42 +1,32 @@
-//! Existing processor diagnostics: raw color metadata, stable marker indices, dynamics.
+//! Existing processor diagnostics: raw color metadata, dynamics.
 use super::{OrcaRunner, Stage, StageError, cache_identity, fs, io, lock, publish, stages};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
 enum Recipe {
     RawColor,
-    StableColor,
     Dynamics,
-    StableDynamics,
 }
 
 impl Recipe {
     fn key(&self) -> &'static str {
         match self {
             Self::RawColor => "ARES_PROCGCODE_BIN",
-            Self::StableColor => "ARES_PROCGCODE_STABLE_BIN",
             Self::Dynamics => "ARES_PROCGCODE_DYNAMICS_BIN",
-            Self::StableDynamics => "ARES_PROCGCODE_DYNAMICS_STABLE_BIN",
         }
     }
 
     fn patches(&self) -> &'static [&'static str] {
         match self {
             Self::RawColor => &["procgcode.patch"],
-            Self::StableColor => &["procgcode.patch", "procgcode-stable-options.patch"],
             Self::Dynamics => &["procgcode.patch", "procgcode-dynamics.patch"],
-            Self::StableDynamics => &[
-                "procgcode.patch",
-                "procgcode-dynamics.patch",
-                "procgcode-stable-options.patch",
-            ],
         }
     }
 
     fn products(&self) -> &'static [&'static str] {
         match self {
-            Self::RawColor | Self::StableColor => &["native.json", "native.csv"],
-            Self::Dynamics | Self::StableDynamics => &["native-dynamics.csv", "native.csv"],
+            Self::RawColor => &["native.json", "native.csv"],
+            Self::Dynamics => &["native-dynamics.csv", "native.csv"],
         }
     }
 }
@@ -49,25 +39,11 @@ impl OrcaRunner {
         self.diagnostic_reference(input, Recipe::RawColor)
     }
 
-    pub(crate) fn processor_stable_color_reference(
-        &self,
-        input: &Path,
-    ) -> Result<Option<PathBuf>, StageError> {
-        self.diagnostic_reference(input, Recipe::StableColor)
-    }
-
     pub(crate) fn processor_dynamics_reference(
         &self,
         input: &Path,
     ) -> Result<Option<PathBuf>, StageError> {
         self.diagnostic_reference(input, Recipe::Dynamics)
-    }
-
-    pub(crate) fn processor_stable_dynamics_reference(
-        &self,
-        input: &Path,
-    ) -> Result<Option<PathBuf>, StageError> {
-        self.diagnostic_reference(input, Recipe::StableDynamics)
     }
 
     fn diagnostic_reference(
@@ -142,8 +118,8 @@ impl OrcaRunner {
                 .map_err(|error| io(stage, error))?
                 .keep();
             let option = match recipe {
-                Recipe::RawColor | Recipe::StableColor => "--dump-color-change",
-                Recipe::Dynamics | Recipe::StableDynamics => "--dump-move-dynamics",
+                Recipe::RawColor => "--dump-color-change",
+                Recipe::Dynamics => "--dump-move-dynamics",
             };
             stages::run(
                 &bin,

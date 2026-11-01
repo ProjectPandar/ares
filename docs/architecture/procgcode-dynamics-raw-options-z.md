@@ -64,8 +64,10 @@ semantics move the stale-index element `192/10/1` there. The custom marker
 
 ## Deferred / unchanged
 
-- `procgcode-stable-options` remains a diagnostic-only oracle and keeps its
-  current users, `ARES_PROCGCODE_STABLE_BIN` in `adjacent_color`.
+- `procgcode-stable-options` is retired (`processor/b15-stable-options-retirement`):
+  beta upstreamed the correction (`GCodeProcessor.hpp:1105-1116`), the patch
+  no longer applies to the beta tree, and its former users compare against
+  raw Native beta.
 - `merged-oracle` (the marker-time binaries) keeps stable-options. It doesn't
   feed `ARES_PROCGCODE_DYNAMICS_BIN`, so changing it is a separate ruling.
 - Stealth mode (ARD-0052).

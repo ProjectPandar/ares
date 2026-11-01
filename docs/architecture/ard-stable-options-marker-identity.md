@@ -1,5 +1,12 @@
 # Stable OptionsZCorrector marker identity
 
+> **Status: superseded.** OrcaSlicer `345efec64` upstreamed this correction
+> as `OptionsZCorrector::on_moves_inserted` (`GCodeProcessor.hpp:1105-1116`,
+> called at `GCodeProcessor.cpp:8132`), and `6715afd49` ports the missing
+> queued-block decrement (`GCodeProcessor.cpp:5346-5352`). Raw Native beta is
+> the complete authority; the `procgcode-stable-options` patch/nix pair and
+> the stable witnesses were retired on `processor/b15-stable-options-retirement`.
+
 ## Source boundary
 
 Upstream pin: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.

@@ -104,15 +104,11 @@ with defaults for absent settings (`GCodeProcessor.cpp:2620-2642`). Truncating
 away the config footer changes that experiment. Load/unload/tool-change time
 bootstrap defaults are zero; recognized embedded settings can override them.
 
-`procgcode-stable-options.nix` builds a separately named diagnostic with only
-`procgcode-stable-options.patch` added to the raw oracle. It remaps the pending
-OptionsZCorrector marker after actual-speed insertions. It is **not** the
-unmodified upstream reference. Set `ARES_PROCGCODE_BIN` to the raw executable
-and `ARES_PROCGCODE_STABLE_BIN` to this corrected executable for ColorChange
-checks; preserve both hashes and outputs. See
-`docs/architecture/web-colorchange.md` for the approved difference and exact
-raw→Rust versus raw→stable ordinal/XYZ difference-set requirement. G-code
-and M73 byte comparisons continue to use the unmodified official slicer.
+The stable-marker diagnostic variant is retired: beta upstreamed the
+pending-marker remap as `OptionsZCorrector::on_moves_inserted`
+(`GCodeProcessor.hpp:1105-1116`, called at `GCodeProcessor.cpp:8132`),
+so `ARES_PROCGCODE_BIN` (raw Native beta) is the complete authority for
+ColorChange checks.
 
 ## Print statistics (Summary legend)
 
