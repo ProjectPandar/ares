@@ -26,6 +26,9 @@ pub type Coord = i64;
 /// The logical bed of an item arrange has not placed (`Arrange.hpp:48`).
 pub const UNARRANGED: i32 = -1;
 
+/// `MAX_NUM_PLATES` (`libnest2d/common.hpp:14`): the beds an arrange may open.
+pub(crate) const MAX_NUM_PLATES: usize = 36;
+
 /// `MAX_OUTER_NOZZLE_DIAMETER` (`Print.hpp:72`), in mm.
 pub const MAX_OUTER_NOZZLE_DIAMETER: f64 = 4.0;
 

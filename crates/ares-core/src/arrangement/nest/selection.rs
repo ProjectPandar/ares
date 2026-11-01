@@ -3,6 +3,7 @@
 //! where the scores of every bed sum lowest, opening beds as needed. Placers align their pile
 //! when they go out of scope, as upstream's destructors do.
 
+use super::super::MAX_NUM_PLATES;
 use super::item::Item;
 use super::placer::{LARGE_COST_TO_REJECT, PackResult, Placer, PlacerConfig};
 use super::{Bin, Nest};
@@ -10,8 +11,6 @@ use crate::geometry::fixed_gcc_sort_by;
 
 /// `BIN_ID_UNFIT`.
 const BIN_ID_UNFIT: i32 = -1;
-/// `MAX_NUM_PLATES` (`common.hpp:14`).
-const MAX_NUM_PLATES: usize = 36;
 
 /// The open beds of one `packItems` run.
 struct FirstFit<'a> {
