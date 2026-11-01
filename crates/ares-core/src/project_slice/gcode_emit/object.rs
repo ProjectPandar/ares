@@ -44,19 +44,11 @@ impl ObjectLabels {
         let encoded_labels = inventory.encode_one(instance.loaded_label_id().unwrap_or(0))?;
         let (exclude_start, exclude_end) =
             super::footprint::in_print_labels(traversal, object_index, copy_index);
-        let settings = &traversal.resolved.views.full;
-        let flavor = settings.printer.gcode.gcode_flavor;
-        // `set_object_info` only runs when the exclude-object labeling is
-        // armed (`GCode.cpp:2697`); otherwise `PrintObject::m_id` is never
-        // assigned and every `; printing object ... id:` stays 0
-        // (`GCode.cpp:5349-5352` reads `print_object.get_id()`).
-        let ids_assigned = super::footprint::EXCLUDE_FLAVORS.contains(&flavor)
-            && settings.process.print.exclude_object.0
-            && !super::tags::Tags::of(traversal).is_bbl();
+        // Beta GCode.cpp:4336-4340 assigns label IDs before the exclusion gate.
         Some(Self {
             name: object.name().to_owned(),
-            object_id: if ids_assigned { object_index as u32 } else { 0 },
-            copy_id: if ids_assigned { copy_index as u32 } else { 0 },
+            object_id: object_index as u32,
+            copy_id: copy_index as u32,
             label_id: instance.loaded_label_id().unwrap_or(0),
             encoded_labels,
             exclude_start,
