@@ -64,7 +64,10 @@ async fn tagged_normal_time_matches_every_stable_native_vertex() {
     marker_time_native::tagged_pair(&root, &gcode);
     let records_tsv = std::fs::read_to_string(root.join("stable.tsv")).unwrap();
     let records: Vec<_> = records_tsv.lines().collect();
-    assert_eq!(records.len(), 7478);
+    // No frozen Native row-count premise: the producer's stability is
+    // asserted in tagged_pair (double run, byte-identical artifacts) and
+    // the record count is compared as part of the whole-record comparison
+    // below (vertex count == record count), never waived on its own.
     assert_eq!(vertices.count(), records.len());
     for (id, line) in records.iter().enumerate().rev() {
         let expected: Vec<u32> = line.split('\t').map(|v| v.parse().unwrap()).collect();
@@ -89,5 +92,5 @@ async fn tagged_normal_time_matches_every_stable_native_vertex() {
             "duration at stable vertex {id}"
         );
     }
-    std::fs::write(root.join("rust.txt"), "7478 stable ids/gcode ids; both duration modes; Normal elapsed bits; buffers transferred; exact match\n").unwrap();
+    std::fs::write(root.join("rust.txt"), "stable ids/gcode ids; both duration modes; Normal elapsed bits; buffers transferred; exact match\n").unwrap();
 }

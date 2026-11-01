@@ -66,9 +66,24 @@ pub fn tagged_pair(directory: &std::path::Path, input: &str) {
         ),
     )
     .unwrap();
-    run(
-        directory,
-        "marker-time-stable.mjs",
-        &[&oracle_input, directory],
-    );
+    // Stability premise (B16 disposition): the Native producer must be
+    // deterministic on the same input — run it twice into separate
+    // directories and require byte-identical stable artifacts. The frozen
+    // row-count premise this replaces was stale at birth (7478 written by
+    // 9b966db3b; the same immutable oracle yields 7475 on that very tree).
+    let first = directory.join("stable-first");
+    let second = directory.join("stable-second");
+    run(&first, "marker-time-stable.mjs", &[&oracle_input, &first]);
+    run(&second, "marker-time-stable.mjs", &[&oracle_input, &second]);
+    for name in ["stable.tsv", "stable.json", "stable.csv"] {
+        let a = std::fs::read(first.join(name)).unwrap();
+        let b = std::fs::read(second.join(name)).unwrap();
+        assert_eq!(
+            a, b,
+            "Native marker-time producer is not deterministic on {name}"
+        );
+    }
+    for name in ["stable.tsv", "stable.json", "stable.csv"] {
+        std::fs::copy(first.join(name), directory.join(name)).unwrap();
+    }
 }
