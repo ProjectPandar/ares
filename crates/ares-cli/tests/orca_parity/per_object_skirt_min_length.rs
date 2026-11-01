@@ -7,42 +7,42 @@ use std::{fs, process::Command};
 
 #[test]
 fn per_object_skirt_min_length_disjoint_0() {
-    check("disjoint-0", 2, false);
+    check("disjoint-0", false);
 }
 
 #[test]
 fn per_object_skirt_min_length_disjoint_20() {
-    check("disjoint-20", 2, true);
+    check("disjoint-20", true);
 }
 
 #[test]
 fn per_object_skirt_min_length_overlap_0() {
-    check("overlap-0", 1, false);
+    check("overlap-0", false);
 }
 
 #[test]
 fn per_object_skirt_min_length_overlap_20() {
-    check("overlap-20", 1, true);
+    check("overlap-20", true);
 }
 
 #[test]
 fn per_object_skirt_min_length_transitive_0() {
-    check("transitive-0", 1, false);
+    check("transitive-0", false);
 }
 
 #[test]
 fn per_object_skirt_min_length_transitive_20() {
-    check("transitive-20", 1, true);
+    check("transitive-20", true);
 }
 
 #[test]
 fn per_object_skirt_min_length_copies_0() {
-    check("copies-0", 1, false);
+    check("copies-0", false);
 }
 
 #[test]
 fn per_object_skirt_min_length_copies_20() {
-    check("copies-20", 1, true);
+    check("copies-20", true);
 }
 
 fn sha(bytes: &[u8]) -> String {
@@ -52,7 +52,7 @@ fn sha(bytes: &[u8]) -> String {
         .collect()
 }
 
-fn check(label: &str, expected_groups: usize, positive_minimum: bool) {
+fn check(label: &str, positive_minimum: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -86,31 +86,62 @@ fn check(label: &str, expected_groups: usize, positive_minimum: bool) {
         .unwrap()
         .keep();
     fs::write(root.join("input.3mf"), &bytes).unwrap();
-    fs::create_dir(root.join("native")).unwrap();
-    let args = vec![
-        "--slice".into(),
-        "0".into(),
-        "--outputdir".into(),
-        root.join("native").to_str().unwrap().into(),
-        root.join("input.3mf").to_str().unwrap().into(),
-    ];
+    fs::create_dir(root.join("native-first")).unwrap();
+    fs::create_dir(root.join("native-second")).unwrap();
+    let slice_args = |outputdir: &str| {
+        vec![
+            "--slice".into(),
+            "0".into(),
+            "--outputdir".into(),
+            root.join(outputdir).to_str().unwrap().into(),
+            root.join("input.3mf").to_str().unwrap().into(),
+        ]
+    };
     let native_binary = std::env::var_os("ARES_ORCA_NATIVE_BIN").unwrap();
     fs::write(
         root.join("launch.json"),
         serde_json::to_vec_pretty(&json!({
             "wrapper":runner.bin(), "native_binary":native_binary,
             "native_binary_sha256":sha(&fs::read(&native_binary).unwrap()),
-            "args":args,"input_sha256":sha(&bytes),
-            "source":"Print.cpp2703-2778,2972-2996; GCode.cpp4260-4299,4391-4484"
+            "args":slice_args("native-first"),"input_sha256":sha(&bytes),
+            "stability_double_run":"native-second",
+            "source":"Print.cpp:4231-4400; GCode.cpp:5991-6082"
         }))
         .unwrap(),
     )
     .unwrap();
-    stages::run(runner.bin(), args, stages::Stage::Slice, &root).unwrap();
+    stages::run(
+        runner.bin(),
+        slice_args("native-first"),
+        stages::Stage::Slice,
+        &root,
+    )
+    .unwrap();
+    stages::run(
+        runner.bin(),
+        slice_args("native-second"),
+        stages::Stage::Slice,
+        &root,
+    )
+    .unwrap();
+    // Stability premise: the Native producer must be deterministic on
+    // this input under the generator-line normalization the acceptance
+    // comparison uses.
+    let normalize = |raw: &[u8]| {
+        golden::normalize_one_generator_line(raw, golden::GeneratorKind::Orca)
+            .unwrap_or_else(|error| panic!("Native generator line: {error}"))
+    };
+    let first = fs::read(root.join("native-first/plate_1.gcode")).unwrap();
+    let second = fs::read(root.join("native-second/plate_1.gcode")).unwrap();
+    assert_eq!(
+        normalize(&first),
+        normalize(&second),
+        "Native slice is not deterministic"
+    );
     let result: Value =
-        serde_json::from_slice(&fs::read(root.join("native/result.json")).unwrap()).unwrap();
+        serde_json::from_slice(&fs::read(root.join("native-first/result.json")).unwrap()).unwrap();
     assert_eq!(result["return_code"], 0, "Native admission {root:?}");
-    let reference = fs::read(root.join("native/plate_1.gcode")).unwrap();
+    let reference = first;
     let text = std::str::from_utf8(&reference).unwrap();
     assert!(text.contains("; skirt_type = perobject\n"));
     assert!(text.contains("; skirt_loops = 2\n"));
@@ -120,7 +151,10 @@ fn check(label: &str, expected_groups: usize, positive_minimum: bool) {
     );
     assert!(!text.lines().any(|line| line.starts_with("M82")));
     let blocks = text.split(";TYPE:Skirt\n").skip(1).collect::<Vec<_>>();
-    assert_eq!(blocks.len(), expected_groups, "Native groups {root:?}");
+    // No frozen Native group-count premise: the beta oracle emits 3
+    // per-instance groups on the copies fixtures where this froze 1; the
+    // group count is compared only as part of the whole-output comparison
+    // below, never waived on its own.
     let extrusion = blocks
         .iter()
         .map(|block| positive_extrusion(block))
