@@ -14,8 +14,8 @@ mod modifier_feature_filament;
 #[path = "runner/native_stream_registry.rs"]
 mod native_stream_registry;
 pub(crate) use native_stream_registry::native_stream_case;
-#[path = "runner/placeholder.rs"]
-mod placeholder;
+#[path = "runner/processor_time.rs"]
+mod processor_time;
 #[path = "runner/resource_item_ignore.rs"]
 mod resource_item_ignore;
 #[path = "runner/resource_part_build.rs"]
