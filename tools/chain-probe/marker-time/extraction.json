@@ -1,31 +1,30 @@
 {
-  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
-    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+    "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"
   },
   "label": "native source-kernel oracle; not full native viewer execution",
   "adaptations": [
     "member function to free function",
-    "vertices and time mode supplied as parameters",
-    "lambda captures mode instead of this"
+    "vertices, per-layer first-vertex/start-times caches and time mode supplied as parameters"
   ],
   "upstream": [
     {
       "path": "src/libvgcode/src/ViewerImpl.cpp",
-      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
-      "excerptSha256": "9fbd975e15b7ce5052e1e6c560465391c1685b377d30fba3e64d652dd6d0c4e0"
+      "fileSha256": "f027988dbe8d091e370008e8322106247834673d373595fb84c364d737304e34",
+      "excerptSha256": "134ed4483bfc06defddc860c0181d44b82600c8943b7f552110611c2ee0aff5c"
     },
     {
       "path": "src/libslic3r/Utils.hpp",
-      "fileSha256": "dcda75767a109135f52d366e320a5cd7bf4818d54d2c2a9296ebc49e57590c38",
+      "fileSha256": "fa08fea0cb0aa37b397a05b2543ceaa8318c49193fb6389cc90247f07d793433",
       "excerptSha256": "f959688c2bf1c71a7ec13ef8cc4edb0a7c47d8bf821fc1415a1bc3a5aac0c8af"
     }
   ],
   "files": {
-    "kernel.upstream.hpp": "9fbd975e15b7ce5052e1e6c560465391c1685b377d30fba3e64d652dd6d0c4e0",
-    "kernel.hpp": "a8a448e6b76b5b99fadbeddb9b422fbba1f56e0fef3027d853e5c0745c2f2e22",
-    "kernel.diff": "042fd0f09d11c76d9181b15b2ae95cd535d28a3be2004fc31ff969928298e8cc",
+    "kernel.upstream.hpp": "134ed4483bfc06defddc860c0181d44b82600c8943b7f552110611c2ee0aff5c",
+    "kernel.hpp": "52d725b1436c5ef72d26aa361d85a7201a0d942669968f6ad61c80bf18539909",
+    "kernel.diff": "9b25a57eb4abe5cf49c8cbf529437c8cc9b2fb18bdce376917593ca8e2201845",
     "formatter.upstream.hpp": "f959688c2bf1c71a7ec13ef8cc4edb0a7c47d8bf821fc1415a1bc3a5aac0c8af",
     "formatter.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   }

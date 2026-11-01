@@ -1,18 +1,18 @@
 {
-  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
-    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+    "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"
   },
   "extrusionRoles": [
     {
       "path": "src/libvgcode/src/ExtrusionRoles.hpp",
-      "fileSha256": "aca4e0b5003f18f22ef9f8817d1bcf7ba74adb32a73e5b3fa5d1d9a4e305f538",
+      "fileSha256": "424fb9ce01d19b2c2bb353548a8bb494771df2d88d9571e5dc35c1c82eb4cfb6",
       "compiled": "as is (libvgcode target)"
     },
     {
       "path": "src/libvgcode/src/ExtrusionRoles.cpp",
-      "fileSha256": "2b4f8ffee56885258fef4f3c653fcb0337e409402737a9f3ff5f483d3a5c85d1",
+      "fileSha256": "4ae564cb8727f5cd48fd177eeb59661091e5561b8a4d64dcfa8467ec46f64b04",
       "compiled": "as is (libvgcode target)"
     }
   ],
@@ -25,71 +25,71 @@
   "upstream": [
     {
       "path": "src/libvgcode/src/ViewerImpl.cpp",
-      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "fileSha256": "f027988dbe8d091e370008e8322106247834673d373595fb84c364d737304e34",
       "lines": [
-        1002,
-        1003
+        1139,
+        1140
       ],
       "excerptSha256": "6fb4e1fa03e0a99c172db9af8bec878b7a026567ab945f64d2dc862dfd2dcd75"
     },
     {
       "path": "src/libvgcode/src/ViewerImpl.cpp",
-      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "fileSha256": "f027988dbe8d091e370008e8322106247834673d373595fb84c364d737304e34",
       "lines": [
-        1007,
-        1011
+        1144,
+        1148
       ],
       "excerptSha256": "71db71b7c7cfdd508d077caef48132ac83b1333f1cbdd5750fc875d89f50f4a8"
     },
     {
       "path": "src/libvgcode/src/ViewerImpl.cpp",
-      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "fileSha256": "f027988dbe8d091e370008e8322106247834673d373595fb84c364d737304e34",
       "lines": [
-        1017,
-        1018
+        1154,
+        1155
       ],
       "excerptSha256": "3f1313017ee3d0aeb441a3653ffb2a7e485f007cf190cc831d9a1d478674cad5"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        3151,
-        3151
+        4105,
+        4105
       ],
       "excerptSha256": "d60bb2511a72abd83ce38419547c714c705d58461d4208a4fe46f213e3a6fca7"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        3410,
-        3418
+        4374,
+        4382
       ],
       "excerptSha256": "134a7488ccf157dffeb7b74281d864edb8a822325a68c8b080dd2333817e6b96"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        3638,
-        3650
+        4606,
+        4618
       ],
       "excerptSha256": "cb5f7f43be52e200207d76e50c36b9e6c061db64e57508e4adaa588f66c4a60a"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        3659,
-        3668
+        4627,
+        4636
       ],
       "excerptSha256": "3de4505260ea5d7846305596ab63c60eb4643b3c6bf456c3b04014c280c66eb4"
     }
   ],
   "files": {
     "kernel.upstream.hpp": "9e101ab1eeae6f1d6add9124dbbb51f1f65179ec5a45002064fedd4d9ba0ce7f",
-    "kernel.hpp": "e4cb082a6e9a25b148d05d9b6d12e61d96e26c482a59a58e03adef3f81a3ca14",
-    "kernel.diff": "1507fd12dea4e3c611216dd124f52bd599edd60d70746bc0d308d3461e061980"
+    "kernel.hpp": "8012c302b75b6647d2b39743601af67a5e0205b28d64b189a771ef9880fc2fd8",
+    "kernel.diff": "ea7e7ead091c92593b8e368561457a4c7f29ccecc78df76f74d2708369cf3471"
   }
 }

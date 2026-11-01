@@ -1,4 +1,4 @@
---- upstream/GCodeViewer.cpp:1682-1752
+--- upstream/GCodeViewer.cpp:2632-2702
 +++ actual-speed-profile/kernel.hpp
 @@ -1,36 +1,39 @@
 -    if (enabled_range[1] != m_viewer.get_view_visible_range()[1]) {

@@ -1,4 +1,4 @@
-// ViewerImpl::load (ViewerImpl.cpp:1002-1018): only the time and role accumulators.
+// ViewerImpl::load (ViewerImpl.cpp:1139-1155): only the time and role accumulators.
 inline void load_times(const std::vector<libvgcode::PathVertex>& m_vertices, std::array<float, libvgcode::TIME_MODES_COUNT>& m_total_time,
     std::array<float, libvgcode::TIME_MODES_COUNT>& m_travels_time, libvgcode::ExtrusionRoles& m_extrusion_roles)
 {
@@ -18,7 +18,7 @@ inline void load_times(const std::vector<libvgcode::PathVertex>& m_vertices, std
     }
 }
 
-// GCodeViewer::render_legend (GCodeViewer.cpp:3151, 3410-3418, 3638-3650, 3659-3668):
+// GCodeViewer::render_legend (GCodeViewer.cpp:4105, 4374-4382, 4606-4618, 4627-4636):
 // the Feature Type Time and % cells; Usage cells are a later slice.
 template <class Viewer>
 inline void feature_type_cells(const Viewer& m_viewer, const Slic3r::PrintEstimatedStatistics::Mode& time_mode,

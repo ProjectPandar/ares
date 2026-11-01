@@ -1,11 +1,27 @@
---- upstream/ViewerImpl.cpp:1461-1465
+--- upstream/ViewerImpl.cpp:1717-1732
 +++ marker-time/kernel.hpp
-@@ -1,5 +1,5 @@
+@@ -1,16 +1,16 @@
 -float ViewerImpl::get_estimated_time_at(size_t id) const
-+float get_estimated_time_at(const std::vector<PathVertex>& vertices, size_t id, ETimeMode mode)
++float get_estimated_time_at(const std::vector<PathVertex>& vertices, const std::vector<uint32_t>& layer_first_vertex, const std::array<std::vector<float>, TIME_MODES_COUNT>& layer_start_times, size_t id, ETimeMode time_mode)
  {
--    return std::accumulate(m_vertices.begin(), m_vertices.begin() + id + 1, 0.0f, 
--        [this](float a, const PathVertex& v) { return a + v.times[static_cast<size_t>(m_settings.time_mode)]; });
-+    return std::accumulate(vertices.begin(), vertices.begin() + id + 1, 0.0f, 
-+        [mode](float a, const PathVertex& v) { return a + v.times[static_cast<size_t>(mode)]; });
+-    const size_t mode = static_cast<size_t>(m_settings.time_mode);
+-    if (mode >= TIME_MODES_COUNT || id >= m_vertices.size())
++    const size_t mode = static_cast<size_t>(time_mode);
++    if (mode >= TIME_MODES_COUNT || id >= vertices.size())
+         return 0.0f;
+     size_t first = 0;
+     float time = 0.0f;
+-    const size_t layer = static_cast<size_t>(m_vertices[id].layer_id);
+-    if (layer < m_layer_first_vertex.size() && m_layer_first_vertex[layer] <= id) {
+-        first = m_layer_first_vertex[layer];
+-        time = m_layer_start_times[mode][layer];
++    const size_t layer = static_cast<size_t>(vertices[id].layer_id);
++    if (layer < layer_first_vertex.size() && layer_first_vertex[layer] <= id) {
++        first = layer_first_vertex[layer];
++        time = layer_start_times[mode][layer];
+     }
+     for (size_t i = first; i <= id; ++i)
+-        time += m_vertices[i].times[mode];
++        time += vertices[i].times[mode];
+     return time;
  }

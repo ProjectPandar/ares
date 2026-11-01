@@ -1,8 +1,8 @@
 {
-  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
-    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+    "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"
   },
   "label": "native source-kernel oracle; not full native viewer execution",
   "adaptations": [
@@ -13,10 +13,10 @@
   "upstream": [
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        1682,
-        1752
+        2632,
+        2702
       ],
       "excerptSha256": "a8570b751b81173d6dd6365f43db9db31d7448adb8b823f090068f56d86c8c57"
     }
@@ -24,6 +24,6 @@
   "files": {
     "kernel.upstream.hpp": "a8570b751b81173d6dd6365f43db9db31d7448adb8b823f090068f56d86c8c57",
     "kernel.hpp": "9b8e05fa36dc9c75266c06ebd19cc9776ffa485acd28df8b10364956974ab4b2",
-    "kernel.diff": "0c5e893621ba739617f4ec6af00f857114996d18be0c87f0c1c888a71caf6c59"
+    "kernel.diff": "0ff8df7da2292fef3e391b8db0cac67b9d0298c84bcce78f0ab35dc67ea1e826"
   }
 }

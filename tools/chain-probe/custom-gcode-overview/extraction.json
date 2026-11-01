@@ -1,8 +1,8 @@
 {
-  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
-    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+    "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"
   },
   "label": "native source-kernel oracle; not full native viewer execution",
   "adaptations": [
@@ -13,38 +13,38 @@
   "upstream": [
     {
       "path": "src/slic3r/GUI/IMSlider.hpp",
-      "lines": "24-24",
-      "fileSha256": "85c96c762f4f0d33dab7de9ff82780c911876dd3d8a603015f2a1824153fa2c8",
+      "lines": "31-31",
+      "fileSha256": "5f35103c6eeec19038dd4f632d0888a32e110e140547c6a19414fd236e5a32da",
       "excerptSha256": "ffb6b869ba49abeb5218f015a18dbc88bf44d6fc36218018ba2e8276c482ef6c"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "lines": "108-126",
-      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "lines": "208-226",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "excerptSha256": "8ad5d415399f0385d1b9f287a4214f68d4d46c36cc7373e45a6583798b3c3e49"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.hpp",
-      "lines": "290-295",
-      "fileSha256": "69aa602e0da76aae5e5aac3426f0e4fcefbe89da04e2d66a0dcb96efeda2a14c",
-      "excerptSha256": "394a35da43dfd30aaea66c91bd15dcf9bca08a71c6e08b3b766abd5a62ac9948"
+      "lines": "438-447",
+      "fileSha256": "e653e97d106d5c62963209ab192d30d442fb208628efc70d857b8c247b876235",
+      "excerptSha256": "f0ec21f51c9129d147a6115d7c5fe0d0786b2043a9d6bf341da9918981da0a7c"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "lines": "4488-4493",
-      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
+      "lines": "5454-5459",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "excerptSha256": "56840faabdcb0d2dcd1fa0fc7218001aacdd8ab631d90836de4376256bccd58e"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "lines": "4514-4545",
-      "fileSha256": "dc940588238795d439beedc007a763085a968797764ccf1fdb0a05e3a7c75937",
-      "excerptSha256": "f02657876497194907394f1551f0e428646a08cad30f9489a48de19a3fd1c4dc"
+      "lines": "5480-5512",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
+      "excerptSha256": "586714929df4513102092e528e89160d6e121900a9c723e5238933242ec43828"
     }
   ],
   "files": {
-    "kernel.upstream.hpp": "da209094f7c402faa6f6a073cc9f16ae9569b495231fddf38dac522104d014b9",
-    "kernel.hpp": "5d1984876fd7a4404b22c7bd9530402042216e7374ce903a05ce4254aafb420d",
-    "kernel.diff": "c8873806b3648a32acb4520e021b8925b881f5c1a6d9b6db9e97399ffa968d94"
+    "kernel.upstream.hpp": "b6ecc904d7eb828e709c96846e7ed98e73f9d5a12886a05d340280815742f10a",
+    "kernel.hpp": "58c6195ed5a8e017c71b585e32bccb9c07b30328817d71dd10ae2c70ecef7d1a",
+    "kernel.diff": "0f3ba85eedc9de4b7c365ec82cc48950ef1a2395b133f61dd19f9485df5f90a5"
   }
 }

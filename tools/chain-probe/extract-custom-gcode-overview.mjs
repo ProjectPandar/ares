@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = fileURLToPath(new URL("../../", import.meta.url));
-const revision = "8500fcdccaa10b5099ac20d252af3a7c560046f1";
+const revision = "345efec64c7b95a05ce5cf96df0dde66a158835c";
 if (execFileSync("git", ["-C", `${repo}OrcaSlicer`, "rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== revision)
   throw new Error("upstream revision differs from approved oracle source");
 const output = `${repo}tools/chain-probe/custom-gcode-overview/`;

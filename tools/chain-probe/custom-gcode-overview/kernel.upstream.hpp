@@ -21,6 +21,10 @@ static int find_close_layer_idx(const std::vector<double> &zs, double &z, double
 }
 
     std::vector<double> get_layers_zs() const {
+        // Belt printers: the layer Z the slider labels and the colour-change ticks
+        // use is the layer's print Z (see load_as_gcode), not a toolpath height.
+        if (! m_belt_layer_zs.empty())
+            return m_belt_layer_zs;
         const std::vector<float> zs = m_viewer.get_layers_zs();
         std::vector<double> ret;
         std::transform(zs.begin(), zs.end(), std::back_inserter(ret), [](float z) { return static_cast<double>(z); });
@@ -36,16 +40,18 @@ static int find_close_layer_idx(const std::vector<double> &zs, double &z, double
 
         // ORCA: Get layer Zs as doubles
         std::vector<double> layer_zs = get_layers_zs();
+        // loop invariant, same reason as the layer Zs above
+        const std::vector<float> layer_times = m_viewer.get_layers_estimated_times();
 
         for (Slic3r::CustomGCode::Item custom_gcode : custom_gcode_per_print_z) {
             ImGui::Dummy({window_padding, window_padding});
             ImGui::SameLine();
 
             switch (custom_gcode.type) {
-            case PausePrint: imgui.text(cgcode_pause_str); break;
-            case Template: imgui.text(cgcode_template_str); break;
-            case ToolChange: imgui.text(cgcode_toolchange_str); break;
-            case Custom: imgui.text(cgcode_custom_str); break;
+            case CustomGCode::PausePrint: imgui.text(cgcode_pause_str); break;
+            case CustomGCode::Template: imgui.text(cgcode_template_str); break;
+            case CustomGCode::ToolChange: imgui.text(cgcode_toolchange_str); break;
+            case CustomGCode::Custom: imgui.text(cgcode_custom_str); break;
             default: imgui.text(cgcode_unknown_str); break;
             }
             ImGui::SameLine(max_len);
@@ -55,7 +61,6 @@ static int find_close_layer_idx(const std::vector<double> &zs, double &z, double
             imgui.text(buf);
             ImGui::SameLine(max_len * 1.5);
 
-            std::vector<float> layer_times = m_viewer.get_layers_estimated_times();
             float custom_gcode_time = 0;
             if (layer > 0)
             {

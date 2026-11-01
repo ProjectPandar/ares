@@ -1,65 +1,74 @@
 {
-  "upstreamRevision": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
-    "fileSha256": "59555315021e617c812416adbcb14ecb5d71c25acc8ac2b6357ab9bd84fb109c"
+    "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"
   },
   "label": "native source-kernel oracle; not full native viewer execution",
   "adaptations": [
     "radius members become named constexpr defaults",
-    "static file-scope function becomes inline",
+    "static file-scope helpers and function become inline",
     "radius setters become free functions over a caller-owned radius; the GL-only update_heights_widths call is dropped"
   ],
   "upstream": [
     {
       "path": "src/libvgcode/src/ViewerImpl.hpp",
-      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "fileSha256": "11e524376680069e50355fe3c6181f6fe39c74fbe55f33bf969a11c584e9c72b",
       "lines": [
-        234,
-        234
+        292,
+        292
       ],
       "excerptSha256": "9126ec947913e398f0dbb7d1cbd00ffbe61bb8ed1f1979f0e779fb89473a71d5"
     },
     {
       "path": "src/libvgcode/src/ViewerImpl.hpp",
-      "fileSha256": "168cabd439a214d3d73ef2a28ad8abbde6dfab630c2686df57c694c4fcd20ce1",
+      "fileSha256": "11e524376680069e50355fe3c6181f6fe39c74fbe55f33bf969a11c584e9c72b",
       "lines": [
-        238,
-        238
+        296,
+        296
       ],
       "excerptSha256": "11b5713a40215010822bca5c8bd5716e49dd97f31eea26dd78aadbac7da1d2c5"
     },
     {
-      "path": "src/libvgcode/src/ViewerImpl.cpp",
-      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "path": "src/libvgcode/include/Types.hpp",
+      "fileSha256": "f59a23e86f1ec753b20fc78afb1d114e1ebed5588d170c44af3fa1523a555b77",
       "lines": [
-        909,
-        983
+        42,
+        42
       ],
-      "excerptSha256": "9ebe83082cad041ce15dff7f0e2308c6f3099e28cc160d50cf5f9f5a3dc10bdf"
+      "excerptSha256": "ec785b9e78c12fa3a0a32103774ba8684cc174279bb70f1d9b352fdecb41fff5"
     },
     {
       "path": "src/libvgcode/src/ViewerImpl.cpp",
-      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "fileSha256": "f027988dbe8d091e370008e8322106247834673d373595fb84c364d737304e34",
       "lines": [
-        1648,
-        1652
+        1030,
+        1119
+      ],
+      "excerptSha256": "455ac9e4102d891d0847d60896da7be463ace038ded4a0a880fb26c961932244"
+    },
+    {
+      "path": "src/libvgcode/src/ViewerImpl.cpp",
+      "fileSha256": "f027988dbe8d091e370008e8322106247834673d373595fb84c364d737304e34",
+      "lines": [
+        1937,
+        1941
       ],
       "excerptSha256": "583337f61dc0d9934342b4dfadbf5d92dafa10dcad6f40ff56b3f30b94a5e80c"
     },
     {
       "path": "src/libvgcode/src/ViewerImpl.cpp",
-      "fileSha256": "0f393952652a923a9a2f18072aeebc5819a6d30b8b65dd8d43657697f887b49a",
+      "fileSha256": "f027988dbe8d091e370008e8322106247834673d373595fb84c364d737304e34",
       "lines": [
-        1654,
-        1658
+        1943,
+        1947
       ],
       "excerptSha256": "357e712158055ce9d7a9d4f01cf3f4a025d7f9a842c4fbfe84355bae9611412e"
     }
   ],
   "files": {
-    "kernel.upstream.hpp": "53c4634a4a49012debd6b8da07a23ec4f28137e2012af84f9b2c42cdc0f7dfe6",
-    "kernel.hpp": "35b627c0e878fa688586c22dcccbcba4ac269cdf50088e47265c8c5b0e5712f5",
-    "kernel.diff": "e3449d2ce2189e5a6ed4e49eb97f693fb1feb24638c0113905414813148ff417"
+    "kernel.upstream.hpp": "673f01c0e90e7092c35ccfc13a1f481354b31394bad2bcea7d695ce3e9b9b4a7",
+    "kernel.hpp": "e1eb24a6c972a569022bb67329fd017622445c49a4c0ab22000174ae8d1e3e61",
+    "kernel.diff": "041f2a37177aad01f2e39a04bbad82af1df6a32da7722c24f86f7228af1f1dd1"
   }
 }

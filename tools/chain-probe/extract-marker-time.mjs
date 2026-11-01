@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = fileURLToPath(new URL("../../", import.meta.url));
-const revision = "8500fcdccaa10b5099ac20d252af3a7c560046f1";
+const revision = "345efec64c7b95a05ce5cf96df0dde66a158835c";
 if (execFileSync("git", ["-C", `${repo}OrcaSlicer`, "rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== revision)
   throw new Error("upstream revision differs from approved oracle source");
 const output = `${repo}tools/chain-probe/marker-time/`;
@@ -22,17 +22,18 @@ function extract(path, signature) {
 const kernel = extract("src/libvgcode/src/ViewerImpl.cpp", "float ViewerImpl::get_estimated_time_at(size_t id) const");
 const formatter = extract("src/libslic3r/Utils.hpp", "inline std::string get_time_dhms(float time_in_secs)");
 const adapted = kernel.source
-  .replace("float ViewerImpl::get_estimated_time_at(size_t id) const", "float get_estimated_time_at(const std::vector<PathVertex>& vertices, size_t id, ETimeMode mode)")
+  .replace("float ViewerImpl::get_estimated_time_at(size_t id) const", "float get_estimated_time_at(const std::vector<PathVertex>& vertices, const std::vector<uint32_t>& layer_first_vertex, const std::array<std::vector<float>, TIME_MODES_COUNT>& layer_start_times, size_t id, ETimeMode time_mode)")
+  .replaceAll("m_layer_first_vertex", "layer_first_vertex")
+  .replaceAll("m_layer_start_times", "layer_start_times")
   .replaceAll("m_vertices", "vertices")
-  .replace("[this]", "[mode]")
-  .replace("m_settings.time_mode", "mode");
+  .replace("m_settings.time_mode", "time_mode");
 const temp = mkdtempSync(join(tmpdir(), "ares-marker-extraction-"));
 let diff;
 try {
   writeFileSync(`${temp}/original`, kernel.source);
   writeFileSync(`${temp}/adapted`, adapted);
   try {
-    diff = execFileSync("diff", ["-u", "--label", "upstream/ViewerImpl.cpp:1461-1465", "--label", "marker-time/kernel.hpp", `${temp}/original`, `${temp}/adapted`], { encoding: "utf8" });
+    diff = execFileSync("diff", ["-u", "--label", "upstream/ViewerImpl.cpp:1717-1732", "--label", "marker-time/kernel.hpp", `${temp}/original`, `${temp}/adapted`], { encoding: "utf8" });
   } catch (error) {
     if (error.status !== 1) throw error;
     diff = error.stdout;
@@ -52,7 +53,7 @@ files["extraction.json"] = `${JSON.stringify({
     fileSha256: sha(readFileSync(`${repo}OrcaSlicer/src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp`)),
   },
   label: "native source-kernel oracle; not full native viewer execution",
-  adaptations: ["member function to free function", "vertices and time mode supplied as parameters", "lambda captures mode instead of this"],
+  adaptations: ["member function to free function", "vertices, per-layer first-vertex/start-times caches and time mode supplied as parameters"],
   upstream: [kernel, formatter].map(({ path, fileSha256, source }) => ({ path, fileSha256, excerptSha256: sha(source) })),
   files: Object.fromEntries(Object.entries(files).map(([name, value]) => [name, sha(value)])),
 }, null, 2)}\n`;

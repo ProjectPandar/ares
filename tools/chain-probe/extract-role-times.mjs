@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = fileURLToPath(new URL("../../", import.meta.url));
-const revision = "8500fcdccaa10b5099ac20d252af3a7c560046f1";
+const revision = "345efec64c7b95a05ce5cf96df0dde66a158835c";
 if (execFileSync("git", ["-C", `${repo}OrcaSlicer`, "rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== revision)
   throw new Error("upstream revision differs from approved oracle source");
 const output = `${repo}tools/chain-probe/role-times/`;
@@ -24,15 +24,15 @@ const viewer = "src/libvgcode/src/ViewerImpl.cpp";
 const legend = "src/slic3r/GUI/GCodeViewer.cpp";
 const excerpts = [
   // ViewerImpl::load vertex loop header, time accumulators and the role add.
-  excerpt(viewer, 1002, 1003, "for (size_t i = 0; i < m_vertices.size(); ++i) {", "const PathVertex& v = m_vertices[i];"),
-  excerpt(viewer, 1007, 1011, "for (size_t j = 0; j < TIME_MODES_COUNT; ++j) {", "}"),
-  excerpt(viewer, 1017, 1018, "if (v.type == EMoveType::Extrude) {", "m_extrusion_roles.add(v.role, v.times);"),
+  excerpt(viewer, 1139, 1140, "for (size_t i = 0; i < m_vertices.size(); ++i) {", "const PathVertex& v = m_vertices[i];"),
+  excerpt(viewer, 1144, 1148, "for (size_t j = 0; j < TIME_MODES_COUNT; ++j) {", "}"),
+  excerpt(viewer, 1154, 1155, "if (v.type == EMoveType::Extrude) {", "m_extrusion_roles.add(v.role, v.times);"),
   // GCodeViewer::render_legend total, time/percent lambdas and Feature Type Time/% cells.
-  excerpt(legend, 3151, 3151, "const float total_estimated_time = time_mode.time > 0.0f ? time_mode.time : m_viewer.get_estimated_time();",
+  excerpt(legend, 4105, 4105, "const float total_estimated_time = time_mode.time > 0.0f ? time_mode.time : m_viewer.get_estimated_time();",
     "const float total_estimated_time = time_mode.time > 0.0f ? time_mode.time : m_viewer.get_estimated_time();"),
-  excerpt(legend, 3410, 3418, "auto role_time_and_percent = [this, total_estimated_time](libvgcode::EGCodeExtrusionRole role) {", "};"),
-  excerpt(legend, 3638, 3650, "char buffer[64];", "percents.push_back(buffer);"),
-  excerpt(legend, 3659, 3668, "//BBS: get travel time and percent", "percents.push_back(travel_percent);"),
+  excerpt(legend, 4374, 4382, "auto role_time_and_percent = [this, total_estimated_time](libvgcode::EGCodeExtrusionRole role) {", "};"),
+  excerpt(legend, 4606, 4618, "char buffer[64];", "percents.push_back(buffer);"),
+  excerpt(legend, 4627, 4636, "//BBS: get travel time and percent", "percents.push_back(travel_percent);"),
 ];
 const [loopHead, times, extrude, total, lambdas, roleCells, travelCells] = excerpts.map((e) => e.text);
 const replacements = [["[this, total_estimated_time]", "[&m_viewer, total_estimated_time]"]];
@@ -41,7 +41,7 @@ for (const [from, to] of replacements) {
   if (!adaptedLambdas.includes(from)) throw new Error(`missing upstream text: ${from}`);
   adaptedLambdas = adaptedLambdas.replaceAll(from, to);
 }
-const adapted = `// ViewerImpl::load (ViewerImpl.cpp:1002-1018): only the time and role accumulators.
+const adapted = `// ViewerImpl::load (ViewerImpl.cpp:1139-1155): only the time and role accumulators.
 inline void load_times(const std::vector<libvgcode::PathVertex>& m_vertices, std::array<float, libvgcode::TIME_MODES_COUNT>& m_total_time,
     std::array<float, libvgcode::TIME_MODES_COUNT>& m_travels_time, libvgcode::ExtrusionRoles& m_extrusion_roles)
 {
@@ -52,7 +52,7 @@ ${extrude}        }
     }
 }
 
-// GCodeViewer::render_legend (GCodeViewer.cpp:3151, 3410-3418, 3638-3650, 3659-3668):
+// GCodeViewer::render_legend (GCodeViewer.cpp:4105, 4374-4382, 4606-4618, 4627-4636):
 // the Feature Type Time and % cells; Usage cells are a later slice.
 template <class Viewer>
 inline void feature_type_cells(const Viewer& m_viewer, const Slic3r::PrintEstimatedStatistics::Mode& time_mode,

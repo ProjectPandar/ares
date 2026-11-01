@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = fileURLToPath(new URL("../../", import.meta.url));
-const revision = "8500fcdccaa10b5099ac20d252af3a7c560046f1";
+const revision = "345efec64c7b95a05ce5cf96df0dde66a158835c";
 if (execFileSync("git", ["-C", `${repo}OrcaSlicer`, "rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== revision)
   throw new Error("upstream revision differs from approved oracle source");
 const output = `${repo}tools/chain-probe/segment-hw/`;
@@ -24,13 +24,15 @@ const impl = "src/libvgcode/src/ViewerImpl.cpp";
 const header = "src/libvgcode/src/ViewerImpl.hpp";
 const excerpts = [
   // ViewerImpl radius members and their defaults.
-  excerpt(header, 234, 234, "float m_travels_radius{ DEFAULT_TRAVELS_RADIUS_MM };", "float m_travels_radius{ DEFAULT_TRAVELS_RADIUS_MM };"),
-  excerpt(header, 238, 238, "float m_wipes_radius{ DEFAULT_WIPES_RADIUS_MM };", "float m_wipes_radius{ DEFAULT_WIPES_RADIUS_MM };"),
-  // Vec4 alias, per-vertex positions / heights-widths-angles and the valid lines bitset.
-  excerpt(impl, 909, 983, "using Vec4 = std::array<float, 4>;", "}"),
+  excerpt(header, 292, 292, "float m_travels_radius{ DEFAULT_TRAVELS_RADIUS_MM };", "float m_travels_radius{ DEFAULT_TRAVELS_RADIUS_MM };"),
+  excerpt(header, 296, 296, "float m_wipes_radius{ DEFAULT_WIPES_RADIUS_MM };", "float m_wipes_radius{ DEFAULT_WIPES_RADIUS_MM };"),
+  // Vec4 alias (Types.hpp), the is_line/is_joint helpers and per-vertex positions /
+  // heights-widths-angles over the valid lines bitset.
+  excerpt("src/libvgcode/include/Types.hpp", 42, 42, "using Vec4 = std::array<float, 4>;", "using Vec4 = std::array<float, 4>;"),
+  excerpt(impl, 1030, 1119, "static bool is_line(const std::vector<PathVertex>& vertices, size_t i)", "}"),
   // Radius setters.
-  excerpt(impl, 1648, 1652, "void ViewerImpl::set_travels_radius(float radius)", "}"),
-  excerpt(impl, 1654, 1658, "void ViewerImpl::set_wipes_radius(float radius)", "}"),
+  excerpt(impl, 1937, 1941, "void ViewerImpl::set_travels_radius(float radius)", "}"),
+  excerpt(impl, 1943, 1947, "void ViewerImpl::set_wipes_radius(float radius)", "}"),
 ];
 /** Applies exact textual replacements; each `from` must occur in `text`. */
 function adapt(text, replacements) {
@@ -40,13 +42,15 @@ function adapt(text, replacements) {
   }
   return text;
 }
-const [travels, wipes, kernel, setTravels, setWipes] = excerpts.map((e) => e.text);
-const adapted = `// ViewerImpl.hpp:234,238 radius defaults, ViewerImpl.cpp:909-983 Vec4 and extract_pos_and_or_hwa,
-// ViewerImpl.cpp:1648-1658 radius setters over a caller-owned radius.
+const [travels, wipes, vec4, kernel, setTravels, setWipes] = excerpts.map((e) => e.text);
+const adapted = `// ViewerImpl.hpp:292,296 radius defaults, include/Types.hpp:42 Vec4,
+// ViewerImpl.cpp:1030-1119 is_line/is_joint and extract_pos_and_or_hwa,
+// ViewerImpl.cpp:1937-1947 radius setters over a caller-owned radius.
 namespace libvgcode {
 ${adapt(travels, [["float m_travels_radius", "inline constexpr float default_travels_radius"]])}
 ${adapt(wipes, [["float m_wipes_radius", "inline constexpr float default_wipes_radius"]])}
-${adapt(kernel, [["static void extract_pos_and_or_hwa(", "inline void extract_pos_and_or_hwa("]])}
+${vec4}
+${adapt(kernel, [["static bool is_line(", "inline bool is_line("], ["static bool is_joint(", "inline bool is_joint("], ["static void extract_pos_and_or_hwa(", "inline void extract_pos_and_or_hwa("]])}
 ${adapt(setTravels, [["void ViewerImpl::set_travels_radius(float radius)", "inline void set_travels_radius(float& m_travels_radius, float radius)"], ["    update_heights_widths();\n", ""]])}
 ${adapt(setWipes, [["void ViewerImpl::set_wipes_radius(float radius)", "inline void set_wipes_radius(float& m_wipes_radius, float radius)"], ["    update_heights_widths();\n", ""]])}}
 `;
@@ -73,7 +77,7 @@ files["extraction.json"] = `${JSON.stringify({
   label: "native source-kernel oracle; not full native viewer execution",
   adaptations: [
     "radius members become named constexpr defaults",
-    "static file-scope function becomes inline",
+    "static file-scope helpers and function become inline",
     "radius setters become free functions over a caller-owned radius; the GL-only update_heights_widths call is dropped",
   ],
   upstream: excerpts.map(({ path, lines, text }) => ({ path, fileSha256: sha(sources[path]), lines, excerptSha256: sha(text) })),
