@@ -21,23 +21,31 @@ pub(in crate::project_slice) fn chain_and_reorder_entities<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Point,
 ) {
-    chain_and_reorder_entities_with_optional_start(entities, Some(start_near));
+    let _ = chain_and_reorder_entities_flips(entities, Some(start_near));
 }
 
 pub(in crate::project_slice) fn chain_and_reorder_entities_with_optional_start<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Option<Point>,
 ) {
-    let _ = chain_and_reorder_entities_flips(entities, start_near);
+    let _ = reorder_entities_flips(entities, start_near, false);
 }
 
-/// Chains and reorders in place, reporting the greedy reversal decision per
-/// ORIGINAL entity index (`ShortestPath.cpp:1040-1052`). Upstream
-/// `GCode.cpp:6164,6201` applies these to the SHARED layer entities, so the
+/// Chains and improves in place, reporting the reversal decision per
+/// ORIGINAL entity index (`ShortestPath.cpp:1429–1462`). Upstream
+/// `GCode.cpp:8952,9021` applies these to the SHARED layer entities, so the
 /// reversals persist into later islands/instances of the same source object.
 pub(in crate::project_slice) fn chain_and_reorder_entities_flips<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Option<Point>,
+) -> Vec<bool> {
+    reorder_entities_flips(entities, start_near, true)
+}
+
+fn reorder_entities_flips<T: ChainEntity>(
+    entities: &mut Vec<T>,
+    start_near: Option<Point>,
+    improve: bool,
 ) -> Vec<bool> {
     let endpoints = entities
         .iter()
@@ -52,11 +60,23 @@ pub(in crate::project_slice) fn chain_and_reorder_entities_flips<T: ChainEntity>
         .iter()
         .map(|entity| entity.is_loop() || entity.can_reverse())
         .collect::<Vec<_>>();
-    let chain = chain_segments_constrained_with_optional_start(
+    let mut chain = chain_segments_constrained_with_optional_start(
         &endpoints,
         start_near.map(coordinates),
         &can_reverse,
     );
+    if improve {
+        let points = endpoints
+            .iter()
+            .flat_map(|ends| ends.iter().map(|p| [p[0] as f64, p[1] as f64]))
+            .collect::<Vec<_>>();
+        super::improve::improve(
+            &mut chain,
+            &points,
+            &can_reverse,
+            start_near.map(|p| [p.x() as f64, p.y() as f64]),
+        );
+    }
     let mut source = std::mem::take(entities)
         .into_iter()
         .map(Some)

@@ -4,6 +4,7 @@
 
 mod chain;
 mod entity_chain;
+mod improve;
 mod kd_tree;
 mod polyline_chain;
 mod priority_queue;

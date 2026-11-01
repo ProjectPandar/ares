@@ -17,6 +17,7 @@ pub(crate) mod grid_trapezoidal;
 pub(crate) mod gyroid;
 pub(crate) mod gyroid_field;
 pub(crate) mod honeycomb;
+pub(crate) mod join_close_ends;
 pub(crate) mod lightning;
 pub(crate) mod line;
 pub(crate) mod locked_zag;

@@ -8,6 +8,7 @@ mod grid;
 mod gyroid;
 mod honeycomb;
 mod ironing;
+mod join_close_ends;
 mod lateral_honeycomb;
 mod lateral_lattice;
 mod lightning;

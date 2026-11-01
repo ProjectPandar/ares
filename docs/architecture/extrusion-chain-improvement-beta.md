@@ -15,10 +15,13 @@ missing the upstream improvement phase.
 - `GCode.cpp:9021`: support extrusion uses a reference start point;
   improve=true. Rust `motion/shared_reversals.rs::chain` serves both infill and
   support, preserving its existing reversal ledger while improving the chain.
-- Rust `FillExtrusionCollection::chained_path_from` has a reference start;
-  improve=true, respecting no_sort.
-- `ExtrusionEntityCollection.cpp:100`: pointer-start collection chaining calls
-  the non-improving overload. No global optional-start behavior change.
+- Rust `FillExtrusionCollection::chained_path_from` is called only from
+  `gcode_emit/motion/layer.rs::emit_infills`; despite its name, this is
+  GCode.cpp:8962's explicit reference-start reordering of collection children,
+  not ExtrusionEntityCollection.cpp:100. Use improve=true and respect no_sort.
+- `ExtrusionEntityCollection.cpp:100` calls the non-improving pointer overload.
+  No global optional-start behavior change; keep that distinction rather than
+  infer overload ownership from the Rust helper name.
 - `Support/TreeSupport.cpp:1865`: no-start support preparation stays
   improve=false. Rust `tree/non_organic/toolpaths.rs` calls the optional-start
   entry with None and must retain that behavior.
@@ -50,3 +53,18 @@ fill/support parity set, reporting inherited/harness failures separately.
 Clippy must have zero warnings; no lint suppressions. No Native goldens or
 observation binaries are committed. External evidence retained outside the
 repository.
+
+## Local qualification
+
+A1+A2 closes the ordered honeycomb witness; hook, object-ID and Hilbert
+witnesses also pass (4/4). The authorized fill/support inventory selects 421
+parity tests by fill/support/bridge/pattern/anchoring/raft vocabulary, excludes
+child-only entry points, comparator unit tests and unrelated sweeps. On the
+same base/environment, baseline is 190 PASS / 231 FAIL; candidate is
+204 PASS / 217 FAIL: 14 FAIL-to-PASS and zero PASS-to-FAIL. Improvements cover
+honeycomb and 13 combined-infill/solid-clearance/flow-ratio/seam-gap controls.
+The 217 remaining failures are not claimed fixed or byte-identical; the result
+is a paired test-status comparison, not full-output parity for the collection.
+No assertions or comparison rules changed. Final directed witnesses pass
+again after verifying the G-code collection-child routing; rustfmt and
+all-target Clippy pass with zero warnings.
