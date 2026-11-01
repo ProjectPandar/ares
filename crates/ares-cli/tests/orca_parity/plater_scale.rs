@@ -8,9 +8,9 @@ use ares_core::{PlaterSession, ScaleEdit};
 
 use super::{SINGLE, assert_plate_like_native, load};
 
-/// Object 2 has two instances, a 10 x 10 x 4 mm part (a 10 mm cube under a 0.4 z volume scale) at
-/// (50, 110, 2) and (125, 110, 2); object 3 one at (200, 110, 2).
-const SIBLINGS: &str = "tests/parity/byobject-perobject-multi-copy-brim/combined-brim.3mf";
+/// One 10 mm cube object with two instances, at (90, 110, 5) and (130, 110, 5)
+/// (`tests/parity/plater-scale/generate.mjs`).
+const SIBLINGS: &str = "tests/parity/plater-scale/two-instances.3mf";
 
 /// The instance's column-major matrix, against `expected`.
 fn assert_instance_transform(
@@ -39,8 +39,8 @@ fn scaled_at([sx, sy, sz]: [f64; 3], [x, y, z]: [f64; 3]) -> [f64; 16] {
 
 #[test]
 fn plater_uniform_scale_drops_the_scaled_cube_to_the_bed_like_native() {
-    // The 10 mm cube at (110, 110, 5) scales by 1.5 about its centre (`setup_cache`'s dragging
-    // centre) to 15 mm, so its bottom at z -2.5 drops back to the bed: offset z 7.5.
+    // The 10 mm cube at (110, 110, 5) scales by 1.2 about its centre (`setup_cache`'s dragging
+    // centre) to 12 mm, so its bottom at z -1 drops back to the bed: offset z 6.
     let mut session = load(SINGLE);
     session
         .set_scale(
@@ -48,18 +48,18 @@ fn plater_uniform_scale_drops_the_scaled_cube_to_the_bed_like_native() {
             0,
             ScaleEdit {
                 axis: 0,
-                value: 150.0,
+                value: 120.0,
                 uniform: true,
             },
         )
         .unwrap();
-    assert_instance_transform(&session, (0, 0), scaled_at([1.5; 3], [110.0, 110.0, 7.5]));
+    assert_instance_transform(&session, (0, 0), scaled_at([1.2; 3], [110.0, 110.0, 6.0]));
     assert_plate_like_native("scale-uniform", &session, 1);
 }
 
 #[test]
 fn plater_size_field_scales_one_axis_when_not_uniform_like_native() {
-    // Size X 20 mm of the 10 mm cube: X doubles about the centre, the bottom stays on the bed.
+    // Size X 12 mm of the 10 mm cube: X grows by 1.2 about the centre, the bottom stays on the bed.
     let mut session = load(SINGLE);
     session
         .set_size(
@@ -67,7 +67,7 @@ fn plater_size_field_scales_one_axis_when_not_uniform_like_native() {
             0,
             ScaleEdit {
                 axis: 0,
-                value: 20.0,
+                value: 12.0,
                 uniform: false,
             },
         )
@@ -75,7 +75,7 @@ fn plater_size_field_scales_one_axis_when_not_uniform_like_native() {
     assert_instance_transform(
         &session,
         (0, 0),
-        scaled_at([2.0, 1.0, 1.0], [110.0, 110.0, 5.0]),
+        scaled_at([1.2, 1.0, 1.0], [110.0, 110.0, 5.0]),
     );
     assert_plate_like_native("scale-size-x", &session, 1);
 }
@@ -83,7 +83,7 @@ fn plater_size_field_scales_one_axis_when_not_uniform_like_native() {
 #[test]
 fn plater_scaling_one_instance_scales_its_sibling_like_native() {
     // `synchronize_unselected_instances(GENERAL)` gives the sibling the scaled linear part and the
-    // scaled instance's height. Both 4 mm parts grow to 6 mm about z 2 and drop to z 3.
+    // scaled instance's height. Both cubes grow to 12 mm about z 5 and drop to z 6.
     let mut session = load(SIBLINGS);
     assert_eq!(session.project().objects()[0].id(), 2);
     session
@@ -92,13 +92,12 @@ fn plater_scaling_one_instance_scales_its_sibling_like_native() {
             0,
             ScaleEdit {
                 axis: 0,
-                value: 150.0,
+                value: 120.0,
                 uniform: true,
             },
         )
         .unwrap();
-    assert_instance_transform(&session, (0, 0), scaled_at([1.5; 3], [50.0, 110.0, 3.0]));
-    assert_instance_transform(&session, (0, 1), scaled_at([1.5; 3], [125.0, 110.0, 3.0]));
-    assert_instance_transform(&session, (1, 0), scaled_at([1.0; 3], [200.0, 110.0, 2.0]));
+    assert_instance_transform(&session, (0, 0), scaled_at([1.2; 3], [90.0, 110.0, 6.0]));
+    assert_instance_transform(&session, (0, 1), scaled_at([1.2; 3], [130.0, 110.0, 6.0]));
     assert_plate_like_native("scale-siblings", &session, 1);
 }

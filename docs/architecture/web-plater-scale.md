@@ -35,7 +35,8 @@ Every `file:line` is at OrcaSlicer `345efec64`. This slice ports the "Scale rati
 ## Oracle and RED
 - **Oracle.** Native slicing the project the GUI exports for the session (`--slice <plate>`), as the move and rotate cases do (`crates/ares-cli/tests/orca_parity/plater_session.rs`). The session's instance transform is checked against the matrix the upstream math gives, and its G-code against Native's.
 - **RED** (a `plater_session` child module):
-  1. Uniform 150 % on `orca_cli_ender3.3mf`'s 10 mm cube at (110, 110, 5). It scales about its centre to 15 mm, then drops back to the bed: diag(1.5, 1.5, 1.5), offset (110, 110, 7.5).
-  2. Per-axis size X 20 mm with the uniform toggle off: diag(2, 1, 1), offset (110, 110, 5).
-  3. A multi-instance object (`combined-brim.3mf`, object 2 with two instances): scaling one instance scales the other as well, as `synchronize_unselected_instances` does.
+  1. Uniform 120 % on `orca_cli_ender3.3mf`'s 10 mm cube at (110, 110, 5). It scales about its centre to 12 mm, then drops back to the bed: diag(1.2, 1.2, 1.2), offset (110, 110, 6).
+  2. Per-axis size X 12 mm with the uniform toggle off: diag(1.2, 1, 1), offset (110, 110, 5).
+  3. A multi-instance object (`tests/parity/plater-scale/two-instances.3mf`, the same cube as two instances, made by `generate.mjs` beside it): scaling one instance by 120 % scales the other as well, as `synchronize_unselected_instances` does.
+- The values stay where slicing the scaled cube is at Native parity. A 15 mm cube or a 20 x 10 x 10 mm box hits a crosshatch sparse-infill gap that does not depend on scaling: the same gap shows with the scale baked into the mesh.
 - **Web E2E** (with the UI commit): the Scale and Size fields in `plateScale.spec.ts`, after `plateRotate.spec.ts`, against Native slicing the GUI export.
