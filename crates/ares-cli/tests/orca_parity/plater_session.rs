@@ -10,6 +10,8 @@ use crate::runner::{OrcaRunner, repo_root};
 
 #[path = "plater_rotation_pivot.rs"]
 mod rotation_pivot;
+#[path = "plater_tower_positions.rs"]
+mod tower_positions;
 
 const SINGLE: &str = "tests/parity/orca_cli_ender3.3mf";
 const TWO_PLATES: &str = "tests/parity/custom-gcode-overview/two-plates.3mf";
@@ -155,7 +157,16 @@ fn assert_oracle_like_native(label: &str, session: &PlaterSession, oracle: Vec<u
         .fixture_case(&format!("plater/{label}"), oracle)
         .unwrap();
     let case = runner.slice_selected_plate_case(&exported, plate).unwrap();
-    let actual = tokio::runtime::Builder::new_current_thread()
+    let actual = slice_session(session, plate);
+    let outcome = crate::golden::compare_ordered_bytes_generator_only(&case.reference, &actual);
+    assert!(
+        outcome.is_ok(),
+        "{label}: plate {plate} diverged from Native: {outcome:?}"
+    );
+}
+
+fn slice_session(session: &PlaterSession, plate: u32) -> Vec<u8> {
+    tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
         .block_on(ares_core::slice_plater_plate(
@@ -169,12 +180,7 @@ fn assert_oracle_like_native(label: &str, session: &PlaterSession, oracle: Vec<u
             SlicerContext::new(0),
         ))
         .unwrap()
-        .gcode;
-    let outcome = crate::golden::compare_ordered_bytes_generator_only(&case.reference, &actual);
-    assert!(
-        outcome.is_ok(),
-        "{label}: plate {plate} diverged from Native: {outcome:?}"
-    );
+        .gcode
 }
 
 fn offset(session: &PlaterSession, object: usize) -> [f64; 3] {
