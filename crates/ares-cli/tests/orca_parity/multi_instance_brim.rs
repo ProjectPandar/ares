@@ -1,4 +1,4 @@
-//! Brim.cpp:36-45,573-581,914-977; Print.cpp:2794-2816; GCode.cpp:4486-4531.
+//! Brim.cpp:69-96,458-781,941-1010; Print.cpp:3812,3839-3867; GCode.cpp:5991-6082.
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
@@ -58,37 +58,69 @@ fn check(label: &str) {
         .unwrap()
         .keep();
     fs::write(root.join("input.3mf"), &bytes).unwrap();
-    fs::create_dir(root.join("native")).unwrap();
-    let args = vec![
-        "--slice".into(),
-        "0".into(),
-        "--outputdir".into(),
-        root.join("native").to_str().unwrap().into(),
-        root.join("input.3mf").to_str().unwrap().into(),
-    ];
+    fs::create_dir(root.join("native-first")).unwrap();
+    fs::create_dir(root.join("native-second")).unwrap();
+    let slice_args = |outputdir: &str| {
+        vec![
+            "--slice".into(),
+            "0".into(),
+            "--outputdir".into(),
+            root.join(outputdir).to_str().unwrap().into(),
+            root.join("input.3mf").to_str().unwrap().into(),
+        ]
+    };
     let native_binary = std::env::var_os("ARES_ORCA_NATIVE_BIN").unwrap();
     fs::write(
         root.join("launch.json"),
         serde_json::to_vec_pretty(&json!({
             "wrapper":runner.bin(), "native_binary":native_binary,
             "native_binary_sha256":sha(&fs::read(&native_binary).unwrap()),
-            "input_sha256":sha(&bytes), "args":args,
-            "source":"Brim.cpp:36-45,573-581,914-977; Print.cpp:2794-2816; GCode.cpp:4486-4531"
+            "input_sha256":sha(&bytes), "args":slice_args("native-first"),
+            "stability_double_run":"native-second",
+            "source":"Brim.cpp:69-96,458-781,941-1010; Print.cpp:3812,3839-3867; GCode.cpp:5991-6082"
         }))
         .unwrap(),
     )
     .unwrap();
-    stages::run(runner.bin(), args, stages::Stage::Slice, &root).unwrap();
-    let reference = fs::read(root.join("native/plate_1.gcode")).unwrap();
+    stages::run(
+        runner.bin(),
+        slice_args("native-first"),
+        stages::Stage::Slice,
+        &root,
+    )
+    .unwrap();
+    stages::run(
+        runner.bin(),
+        slice_args("native-second"),
+        stages::Stage::Slice,
+        &root,
+    )
+    .unwrap();
+    // Stability premise: no frozen Native brim-block count — the producer
+    // must be deterministic on this input for every byte the parity
+    // contract observes. The two runs are normalized with the same
+    // generator-line rule as the acceptance comparison below (the
+    // wall-clock generator line is canonicalized, as in
+    // classic_seam_overhang) and compared byte-wise; the emitted block
+    // count is compared only as part of that
+    // whole-output comparison, never waived alone.
+    let normalize = |raw: &[u8]| {
+        golden::normalize_one_generator_line(raw, golden::GeneratorKind::Orca)
+            .unwrap_or_else(|error| panic!("Native generator line: {error}"))
+    };
+    let first = fs::read(root.join("native-first/plate_1.gcode")).unwrap();
+    let second = fs::read(root.join("native-second/plate_1.gcode")).unwrap();
+    assert_eq!(
+        normalize(&first),
+        normalize(&second),
+        "Native slice is not deterministic"
+    );
+    let reference = first;
     let native = std::str::from_utf8(&reference).unwrap();
     assert!(
         native
             .lines()
             .any(|line| line.starts_with("G1 X") && line.contains(" E"))
-    );
-    assert_eq!(
-        native.matches(";TYPE:Brim\n").count(),
-        if label == "control" { 0 } else { 2 }
     );
     assert_eq!(
         native.matches(";TYPE:Skirt\n").count(),

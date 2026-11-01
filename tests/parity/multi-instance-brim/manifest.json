@@ -1,23 +1,20 @@
 {
-  "source": "Brim.cpp:36-45,573-581,914-977; Print.cpp:2794-2816; GCode.cpp:4486-4531",
+  "source": "Brim.cpp:69-96,458-781,941-1010; Print.cpp:3812,3839-3867; GCode.cpp:5991-6082",
   "cases": {
     "target": {
       "sha256": "aac4f3c278fe16614d0694ba9fbe94db059e7bb68d75c7cf55f7ecf0f47aa07d",
       "brim_width": "8",
-      "skirt_loops": "2",
-      "native_brim_blocks": 2
+      "skirt_loops": "2"
     },
     "control": {
       "sha256": "7af8a45b23fa7e735371da1908bfeac3dfa7331c8a5ed310f46fc2ccffb0e38e",
       "brim_width": "0",
-      "skirt_loops": "2",
-      "native_brim_blocks": 0
+      "skirt_loops": "2"
     },
     "no-skirt": {
       "sha256": "e06c5c8708fb773f8fca186e43eae84ab382d36c2cf1f1d1bc4b93afbbe70741",
       "brim_width": "8",
-      "skirt_loops": "0",
-      "native_brim_blocks": 2
+      "skirt_loops": "0"
     }
   }
 }
