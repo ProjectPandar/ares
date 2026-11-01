@@ -26,3 +26,10 @@ output acceptance, and general connector parity. The earlier hook and
 Hilbert witnesses must stay passing. Existing complete-output comparators
 are unchanged. Pending processor/geometry production changes do not alter this Sparse
 residual. External evidence retained outside the repository.
+
+OPEN residual: the experimental join-count ordering and beta join threshold
+leave the same four missing joins. Collision-touching intervals set both
+endpoint trim flags before arc admission. Beta collision arithmetic matches
+on the captured Ares inputs; the unresolved boundary is which boundary/infill
+pairs EdgeGrid visits or whether clipped input geometry differs. The earlier
+hook and Hilbert witnesses still pass. No GREEN port is retained.
