@@ -52,6 +52,17 @@ fn check(
         ("slow_down_layers", "5"),
         ("initial_layer_speed", "20"),
     ];
+    let vector_settings = [
+        (
+            "outer_wall_speed",
+            json!([if overhang { "200" } else { "120" }]),
+        ),
+        (
+            "enable_overhang_speed",
+            json!([if overhang { "1" } else { "0" }]),
+        ),
+        ("slowdown_for_curled_perimeters", json!(["0"])),
+    ];
     let settings = [
         ("wall_generator", generator),
         (
@@ -69,7 +80,6 @@ fn check(
             "outer_wall_line_width",
             if overhang { "0.42" } else { "0.4" },
         ),
-        ("outer_wall_speed", if overhang { "200" } else { "120" }),
         ("inner_wall_speed", "200"),
         ("small_perimeter_threshold", threshold),
         ("small_perimeter_speed", speed),
@@ -79,12 +89,10 @@ fn check(
         ("enable_support", "0"),
         ("enable_prime_tower", "0"),
         ("disable_m73", "0"),
-        ("enable_overhang_speed", if overhang { "1" } else { "0" }),
         ("overhang_1_4_speed", "50"),
         ("overhang_2_4_speed", "30"),
         ("overhang_3_4_speed", "20"),
         ("overhang_4_4_speed", "15"),
-        ("slowdown_for_curled_perimeters", "0"),
         ("enable_arc_fitting", "0"),
         ("resonance_avoidance", "0"),
         ("slow_down_layers", if scarf { "5" } else { "0" }),
@@ -97,6 +105,9 @@ fn check(
         ("support_speed", "80"),
         ("skirt_speed", "0"),
     ];
+    for (key, value) in &vector_settings {
+        process.insert((*key).into(), value.clone());
+    }
     for (key, value) in settings {
         process.insert(key.into(), Value::String(value.into()));
     }
@@ -148,6 +159,9 @@ fn check(
         }
     };
     let exported = transport::threshold_input(exported, threshold, &directory);
+    for (key, value) in &vector_settings {
+        application::verify_value(&exported.project, key, value).unwrap();
+    }
     for (key, value) in settings {
         application::verify_value(&exported.project, key, &json!(value)).unwrap();
     }

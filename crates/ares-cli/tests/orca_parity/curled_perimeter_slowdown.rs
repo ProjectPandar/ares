@@ -48,7 +48,11 @@ fn curled_perimeter_slowdown() {
     let selection =
         crate::select_printer(&profiles, "Creality", "Creality Sermoon V1 0.4 nozzle").unwrap();
     let machine = profiles.machine(&selection.printer).unwrap();
-    let process = profiles.process(&selection.process).unwrap();
+    let mut process = profiles.process(&selection.process).unwrap();
+    process.insert(
+        "slowdown_for_curled_perimeters".into(),
+        serde_json::json!(["1"]),
+    );
     let filaments = selection
         .filaments
         .iter()
@@ -70,7 +74,7 @@ fn curled_perimeter_slowdown() {
     runner::application::verify_value(
         &exported.project,
         "slowdown_for_curled_perimeters",
-        &serde_json::json!("1"),
+        &serde_json::json!(["1"]),
     )
     .unwrap();
     let sliced = runner.slice_case(&exported).unwrap();

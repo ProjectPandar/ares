@@ -54,12 +54,12 @@ fn adaptive_volumetric_coupled_models_preserve_whole_output_and_segment_consumer
             filament.insert(key.into(), json!([value]));
         }
     }
-    let speed_keys = [
-        "outer_wall_speed",
-        "inner_wall_speed",
-        "sparse_infill_speed",
-        "internal_solid_infill_speed",
-        "top_surface_speed",
+    let speed_values = [
+        ("outer_wall_speed", json!(["100"])),
+        ("inner_wall_speed", json!("100")),
+        ("sparse_infill_speed", json!("100")),
+        ("internal_solid_infill_speed", json!("100")),
+        ("top_surface_speed", json!("100")),
     ];
     let cases = [
         ("off-empty", "0", ""),
@@ -79,9 +79,8 @@ fn adaptive_volumetric_coupled_models_preserve_whole_output_and_segment_consumer
     let mut observed_ares = Vec::new();
     let mut failures = Vec::new();
     for (label, enabled, coefficients) in cases {
-        let speed = "100";
-        for key in speed_keys {
-            process.insert(key.into(), json!(speed));
+        for (key, value) in &speed_values {
+            process.insert((*key).into(), value.clone());
         }
         let model = json!([coefficients]);
         for filament in &mut filaments {
@@ -106,8 +105,8 @@ fn adaptive_volumetric_coupled_models_preserve_whole_output_and_segment_consumer
         for (key, value) in fixed {
             runner::application::verify_value(&exported.project, key, &json!(value)).unwrap();
         }
-        for key in speed_keys {
-            runner::application::verify_value(&exported.project, key, &json!(speed)).unwrap();
+        for (key, value) in &speed_values {
+            runner::application::verify_value(&exported.project, key, value).unwrap();
         }
         rejection_project.clone_from(&exported.project);
         let sliced = runner.slice_case(&exported).unwrap();
@@ -135,6 +134,7 @@ fn adaptive_volumetric_coupled_models_preserve_whole_output_and_segment_consumer
         observed_native.push(native);
         observed_ares.push(ares);
     }
+    let speed_keys = speed_values.map(|(key, _)| key);
     rejection::verify(&runner, &root, &rejection_project, &speed_keys);
     let pairs = [
         (0, 1, false),

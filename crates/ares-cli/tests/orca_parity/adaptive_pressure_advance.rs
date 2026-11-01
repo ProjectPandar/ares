@@ -163,7 +163,7 @@ fn adaptive_pa_models_and_activation() {
         }
         for (key, value) in [
             ("gcode_comments", json!(if comments { "1" } else { "0" })),
-            ("enable_overhang_speed", json!("1")),
+            ("enable_overhang_speed", json!(["1"])),
         ] {
             process.insert(key.into(), value.clone());
             requested.push((key, value));

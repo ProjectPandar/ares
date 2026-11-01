@@ -44,13 +44,13 @@ fn adaptive_pa_bridge_effective_domain_and_dependencies() {
             ("adaptive_pressure_advance_bridges", bridge),
         ];
         let process_values = [
-            ("gcode_comments", "1"),
-            ("enable_overhang_speed", "1"),
-            ("enable_prime_tower", "0"),
-            ("seam_slope_type", "none"),
+            ("gcode_comments", json!("1")),
+            ("enable_overhang_speed", json!(["1"])),
+            ("enable_prime_tower", json!("0")),
+            ("seam_slope_type", json!("none")),
         ];
-        for (key, value) in process_values {
-            process.insert(key.into(), json!(value));
+        for (key, value) in &process_values {
+            process.insert((*key).into(), value.clone());
         }
         for filament in &mut filaments {
             for (key, value) in filament_values {
@@ -72,7 +72,7 @@ fn adaptive_pa_bridge_effective_domain_and_dependencies() {
             )
             .unwrap();
         for (key, value) in process_values {
-            runner::application::verify_value(&exported.project, key, &json!(value)).unwrap();
+            runner::application::verify_value(&exported.project, key, &value).unwrap();
         }
         for (key, value) in filament_values {
             runner::application::verify_value(&exported.project, key, &json!([value])).unwrap();

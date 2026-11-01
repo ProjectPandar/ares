@@ -30,6 +30,11 @@ fn initialized_overhang_intersections_match_complete_output() {
     let machine = profiles.machine(&selection.printer).unwrap();
     let mut process = profiles.process(&selection.process).unwrap();
     parity::normalize_process_defaults(&machine, &mut process);
+    let vector_settings = [
+        ("enable_overhang_speed", serde_json::json!(["1"])),
+        ("slowdown_for_curled_perimeters", serde_json::json!(["0"])),
+        ("outer_wall_speed", serde_json::json!(["200"])),
+    ];
     let settings = [
         ("wall_loops", "1"),
         ("layer_height", "0.2"),
@@ -40,10 +45,7 @@ fn initialized_overhang_intersections_match_complete_output() {
         ("enable_support", "0"),
         ("disable_m73", "1"),
         ("enable_prime_tower", "0"),
-        ("enable_overhang_speed", "1"),
-        ("slowdown_for_curled_perimeters", "0"),
         ("outer_wall_line_width", "0.42"),
-        ("outer_wall_speed", "200"),
         ("bridge_speed", "18"),
         ("overhang_1_4_speed", "50"),
         ("overhang_2_4_speed", "30"),
@@ -52,6 +54,9 @@ fn initialized_overhang_intersections_match_complete_output() {
         ("enable_arc_fitting", "0"),
         ("skirt_loops", "0"),
     ];
+    for (key, value) in &vector_settings {
+        process.insert((*key).into(), value.clone());
+    }
     for (key, value) in settings {
         process.insert(key.into(), Value::String(value.into()));
     }
@@ -108,6 +113,9 @@ fn initialized_overhang_intersections_match_complete_output() {
         project_path,
         output_dir,
     };
+    for (key, value) in &vector_settings {
+        application::verify_value(&exported.project, key, value).unwrap();
+    }
     for (key, value) in settings {
         application::verify_value(&exported.project, key, &Value::String(value.into())).unwrap();
     }
