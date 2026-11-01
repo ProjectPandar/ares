@@ -120,6 +120,7 @@ fn cubicon_catalog() -> String {
     }
     json!({
         "vendors": [{
+            "id": "Cubicon",
             "index": {
                 "name": "Cubicon",
                 "machine_list": machine_list,

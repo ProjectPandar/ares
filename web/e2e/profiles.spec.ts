@@ -46,7 +46,8 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
   let profileCount = 0;
   for (const id of ids) {
     const source = readJson(`${profilesDir}${id}.json`) as VendorIndex;
-    const { index, files } = await data.loadVendor(id);
+    const { id: loadedId, index, files } = await data.loadVendor(id);
+    expect(loadedId).toBe(id);
     expect(index).toEqual(source);
     expect(data.vendors.find((vendor: { id: string }) => vendor.id === id)).toEqual({
       id, name: source.name, version: source.version, description: source.description,

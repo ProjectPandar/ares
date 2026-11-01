@@ -197,7 +197,7 @@ export type PresetKind = "machine" | "process" | "filament";
 
 /** `PresetCatalog.printerModelInfo` result. */
 export interface PrinterModelInfo {
-  /** Index name of the vendor listing the model (`PresetBundle::get_current_vendor_type`), null when none does. */
+  /** Id (index file stem, e.g. `BBL`) of the vendor listing the model (`PresetBundle::get_current_vendor_type`), null when none does. */
   vendor: string | null;
   /** `curr_bed_type` enum values the model does not support (`not_support_bed_type`). */
   not_support_bed_types: string[];

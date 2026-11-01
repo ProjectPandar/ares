@@ -12,6 +12,9 @@ pub(in crate::profiles) struct CatalogInput {
 
 #[derive(Deserialize)]
 pub(in crate::profiles) struct VendorInput {
+    /// `VendorProfile::id`, the vendor index file stem that keys `PresetBundle::vendors`
+    /// (`PresetBundle.cpp:7951-7962`).
+    pub id: String,
     pub index: VendorIndex,
     pub files: BTreeMap<String, ProfileDocument>,
 }

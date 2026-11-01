@@ -64,6 +64,7 @@ fn catalog_parts() -> (Value, Value) {
         "instantiation": "true", "filament_diameter": [1.75]
     });
     let vendor = json!({
+        "id": "Acme",
         "index": {
             "name": "Acme",
             "machine_list": [{"sub_path": "machine.json"}],

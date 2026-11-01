@@ -19,8 +19,7 @@ export async function updatePrinterPanel() {
   }
   const info = await catalog.printerModelInfo(firstString(values, "printer_model") ?? "");
   // PresetBundle::is_bbl_vendor: the model's vendor is the one installed from BBL.json.
-  const { vendors } = await import("@ares-slicer/profiles");
-  const bbl = info.vendor !== null && vendors.find((vendor) => vendor.name === info.vendor)?.id === "BBL";
+  const bbl = info.vendor === "BBL";
   const { presetSelection, scene: current } = useApp.getState();
   if (presetSelection?.printer !== selection?.printer || (!selection && current !== scene)) return;
   useApp.setState({ printerPanel: printerPanel(values, info, bbl) });

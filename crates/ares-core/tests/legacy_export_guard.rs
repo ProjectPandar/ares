@@ -91,6 +91,7 @@ fn catalog() -> String {
     });
     json!({
         "vendors": [{
+            "id": "Acme",
             "index": {
                 "name": "Acme",
                 "machine_list": [{"sub_path": "machine.json"}],

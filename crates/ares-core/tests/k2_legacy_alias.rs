@@ -106,6 +106,7 @@ fn catalog(process_override: Option<&[(&str, &str)]>) -> String {
     }
     json!({
         "vendors": [{
+            "id": "Creality",
             "index": {
                 "name": "Creality",
                 "machine_list": machine_list,

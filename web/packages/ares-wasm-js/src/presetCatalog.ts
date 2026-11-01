@@ -20,7 +20,7 @@ export class PresetCatalog {
   }
 
   /**
-   * Adds one vendor `{index, files}` as JSON bytes, e.g. the UTF-8 of
+   * Adds one vendor `{id, index, files}` as JSON bytes, e.g. the UTF-8 of
    * `JSON.stringify(await loadVendor(id))`. Add OrcaFilamentLibrary first,
    * as `PresetBundle::load_system_presets_from_json` loads it.
    */

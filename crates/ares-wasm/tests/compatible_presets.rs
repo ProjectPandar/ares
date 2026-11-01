@@ -38,7 +38,7 @@ struct VendorLists {
     machine_list: Vec<Entry>,
 }
 
-/// `{index, files}` as `@ares-slicer/profiles` `loadVendor(id)` returns it:
+/// `{id, index, files}` as `@ares-slicer/profiles` `loadVendor(id)` returns it:
 /// the vendor index plus every listed file keyed by `sub_path`, values as in
 /// the source.
 fn vendor_json(id: &str) -> String {
@@ -59,7 +59,10 @@ fn vendor_json(id: &str) -> String {
     })
     .collect::<Vec<_>>()
     .join(",");
-    format!(r#"{{"index":{index},"files":{{{files}}}}}"#)
+    format!(
+        r#"{{"id":{},"index":{index},"files":{{{files}}}}}"#,
+        serde_json::to_string(id).unwrap()
+    )
 }
 
 #[test]

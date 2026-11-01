@@ -53,6 +53,8 @@ pub(super) struct Catalog {
     selectable: BTreeMap<(ProfileKind, String), usize>,
     /// Vendor index name per vendor scope (`VendorProfile::name`).
     vendor_names: Vec<String>,
+    /// Vendor id per vendor scope (`VendorProfile::id`, the `PresetBundle::vendors` key).
+    vendor_ids: Vec<String>,
     /// `VendorProfile::models` per vendor scope.
     vendor_models: Vec<Vec<vendor_models::PrinterModelProfile>>,
     /// Set only by the `--load-settings` entry: every import composes
@@ -110,7 +112,7 @@ impl PresetCatalogHandle {
         }
     }
 
-    /// One vendor envelope `{index, files}` as JSON bytes, exactly the
+    /// One vendor envelope `{id, index, files}` as JSON bytes, exactly the
     /// one-shot transport's `vendors[]` element.
     pub fn add_vendor(&mut self, vendor_json: &[u8]) -> Result<(), SliceError> {
         let vendor: VendorInput = serde_json::from_slice(vendor_json)

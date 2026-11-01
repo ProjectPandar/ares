@@ -49,6 +49,8 @@ export interface ProfileJson {
 }
 
 export interface VendorProfiles {
+  /** Vendor index file stem, the `PresetBundle::vendors` key (`BBL` for `BBL.json`). */
+  id: string;
   index: VendorIndex;
   /** Every file listed in the index, keyed by its `sub_path`. */
   files: Record<string, ProfileJson>;

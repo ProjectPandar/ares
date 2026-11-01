@@ -15,7 +15,7 @@ fn vendor(name: &str, lists: Value, files: Value) -> Value {
     if let Some(entries) = lists.get("machine_list") {
         index["machine_list"] = entries.clone();
     }
-    json!({"index": index, "files": files})
+    json!({"id": name, "index": index, "files": files})
 }
 
 fn entry(sub_path: &str) -> Value {
@@ -110,7 +110,7 @@ struct MachineLists {
     machine_list: Vec<Entry>,
 }
 
-/// The raw OrcaSlicer vendor's machine files as `{index, files}` keyed by
+/// The raw OrcaSlicer vendor's machine files as `{id, index, files}` keyed by
 /// `sub_path`, the `@ares-slicer/profiles` `loadVendor` shape.
 fn raw_vendor(id: &str) -> PresetCatalogHandle {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../OrcaSlicer/resources/profiles");
@@ -127,7 +127,7 @@ fn raw_vendor(id: &str) -> PresetCatalogHandle {
         .collect::<serde_json::Map<_, _>>();
     let index: Value = serde_json::from_str(&index).unwrap();
     let index = json!({"name": index["name"], "machine_model_list": index["machine_model_list"], "machine_list": index["machine_list"]});
-    handle(&json!({"index": index, "files": files}))
+    handle(&json!({"id": id, "index": index, "files": files}))
 }
 
 #[test]

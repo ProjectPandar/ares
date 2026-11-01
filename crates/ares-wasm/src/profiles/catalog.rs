@@ -22,7 +22,7 @@ impl PresetCatalog {
         }
     }
 
-    /// One vendor envelope `{index, files}` (Uint8Array JSON bytes).
+    /// One vendor envelope `{id, index, files}` (Uint8Array JSON bytes).
     #[wasm_bindgen(js_name = addVendor)]
     pub fn add_vendor(&mut self, vendor_json: Vec<u8>) -> Result<(), JsValue> {
         self.add_vendor_json(&vendor_json)

@@ -30,6 +30,7 @@ impl Catalog {
             index: BTreeMap::new(),
             selectable: BTreeMap::new(),
             vendor_names: Vec::new(),
+            vendor_ids: Vec::new(),
             vendor_models: Vec::new(),
             direct_imports: false,
         }
@@ -50,6 +51,7 @@ impl Catalog {
     ) -> Result<(), SliceError> {
         let scope = Scope::Vendor(self.vendor_names.len());
         self.vendor_names.push(vendor.index.name.clone());
+        self.vendor_ids.push(vendor.id.clone());
         self.insert_vendor(scope, vendor)
     }
 

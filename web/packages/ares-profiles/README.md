@@ -22,7 +22,7 @@ for (const { sub_path } of index.machine_list) files[sub_path].name;
 | Export | Description |
 | --- | --- |
 | `vendors` | One summary per vendor index file, sorted by `id`. `id` is the file stem (`BBL` for `BBL.json`). |
-| `loadVendor(id)` | Resolves to `{ index, files }`. `index` is the vendor's `<vendor>.json`. `files` holds every file listed in its `machine_model_list`, `process_list`, `filament_list` and `machine_list`, keyed by `sub_path`. Rejects for an unknown `id`. |
+| `loadVendor(id)` | Resolves to `{ id, index, files }`. `id` is the requested file stem, `index` is the vendor's `<vendor>.json`. `files` holds every file listed in its `machine_model_list`, `process_list`, `filament_list` and `machine_list`, keyed by `sub_path`. Rejects for an unknown `id`. |
 | `ORCA_SLICER_COMMIT` | The OrcaSlicer commit the data was generated from. |
 
 The data matches the files OrcaSlicer reads in

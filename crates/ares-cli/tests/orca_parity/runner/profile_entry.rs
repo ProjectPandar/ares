@@ -241,7 +241,7 @@ pub(super) fn vendor(root: &Path, name: &str) -> Value {
         (path.to_owned(), value)
     })
     .collect::<serde_json::Map<_, _>>();
-    json!({"index": index, "files": files})
+    json!({"id": name, "index": index, "files": files})
 }
 
 pub(super) fn write_json(path: &Path, value: &Value) {

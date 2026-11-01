@@ -13,7 +13,7 @@ fn vendor(name: &str, lists: Value, files: Value) -> Value {
             index[key] = entries.clone();
         }
     }
-    json!({"index": index, "files": files})
+    json!({"id": name, "index": index, "files": files})
 }
 
 fn entry(sub_path: &str) -> Value {

@@ -9,9 +9,9 @@ use crate::project::raw_settings::RawConfigValue;
 /// What the sidebar reads about a `printer_model`.
 #[derive(Debug, serde::Serialize)]
 pub struct PrinterModelInfo {
-    /// Index name of the vendor whose models list the model by name
-    /// (`PresetBundle::get_current_vendor_type`, `PresetBundle.cpp:612-640`);
-    /// `None` when no loaded vendor has it.
+    /// Id of the vendor whose models list the model by name, the `PresetBundle::vendors` key
+    /// `get_current_vendor_type` compares (`PresetBundle.cpp:992-1024` at v2.5.0-beta
+    /// `345efec64`); `None` when no loaded vendor has it.
     pub vendor: Option<String>,
     /// `VendorProfile::PrinterModel::not_support_bed_types` of the model
     /// with this id (`PresetUtils::system_printer_model`, `Preset.cpp:4448-4460`).
@@ -53,7 +53,7 @@ impl super::PresetCatalogHandle {
             .flatten()
             .find(|model| model.id == printer_model);
         Ok(PrinterModelInfo {
-            vendor: named.map(|(scope, _)| catalog.vendor_names[scope].clone()),
+            vendor: named.map(|(scope, _)| catalog.vendor_ids[scope].clone()),
             model_id: named
                 .map(|(_, model)| model.model_id.clone())
                 .unwrap_or_default(),

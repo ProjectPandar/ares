@@ -28,7 +28,7 @@ const summaries = ids.map((id) => {
     for (const { sub_path: subPath } of index[list] ?? []) files[subPath] = readJson(`${profiles}/${id}/${subPath}`);
   }
   // JSON.parse of a string literal parses faster than the equivalent object literal.
-  const json = JSON.stringify(JSON.stringify({ index, files }));
+  const json = JSON.stringify(JSON.stringify({ id, index, files }));
   writeFileSync(`${dist}vendors/${moduleName(id)}.js`, `export default JSON.parse(${json});\n`);
   return { id, name: index.name, version: index.version, description: index.description };
 });
