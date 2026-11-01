@@ -77,6 +77,36 @@ fn exported_definition(runner: &OrcaRunner, key: &str) -> Definition {
 }
 
 #[test]
+fn native_arc_fitting_enum_decodes_and_round_trips_public_options() {
+    let Some((runner, native)) = native_defaults() else {
+        return;
+    };
+    let token = native["enable_arc_fitting"].as_str().unwrap();
+    assert_eq!(token, "disabled");
+    let decoded = ares_core::decode_config_value_by_key("enable_arc_fitting", token)
+        .unwrap_or_else(|error| panic!("public arc enum decode: {error}; {:?}", runner.work));
+    assert_eq!(
+        decoded,
+        serde_json::to_string(&native["enable_arc_fitting"]).unwrap()
+    );
+    let options: ares_core::ProcessGCodeSourceOptions = serde_json::from_value(
+        serde_json::json!({"enable_arc_fitting": native["enable_arc_fitting"]}),
+    )
+    .unwrap_or_else(|error| panic!("public typed arc option: {error}; {:?}", runner.work));
+    let exported = serde_json::to_value(options).unwrap();
+    std::fs::write(
+        runner.work.join("ares-arc-options.json"),
+        serde_json::to_vec_pretty(&exported).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(exported["enable_arc_fitting"], native["enable_arc_fitting"]);
+    assert_eq!(
+        ares_core::encode_config_value_by_key("enable_arc_fitting", &decoded).unwrap(),
+        token
+    );
+}
+
+#[test]
 fn prime_volume_mode_default_matches_native_settings_export() {
     let Some((runner, native)) = native_defaults() else {
         return;
