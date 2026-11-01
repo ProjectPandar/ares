@@ -93,6 +93,16 @@ full-stream comparisons and parity ROOT remain unchanged and OPEN.
    all existing island/width/executable-block GREENs. Report where the original
    seven full-stream cases next differ inside config; do not relabel them GREEN.
 
+## Runtime RED qualification before the order port
+
+All seven public cases are runtime RED on unchanged production code: Native
+post-config tail305 bytes versus API2 bytes. Both streams expose exactly one
+CONFIG_END marker and compare ordinal0 through EOF with every byte included.
+Native config follows executable output, so the non-BBL branch is active.
+Official double replays are stable; all public APIs admit; complete pre-fix API
+streams are retained externally and match the accepted checkpoint hashes.
+Fmt and strict workspace/all-target Clippy pass with no new suppressions.
+
 BBL/header and optional-block skip behavior are source-audited preservation
 boundaries; these seven inputs activate the non-BBL emitted-config branch, not
 direct BBL or config-skipped coverage. No additional fixture/probe is included.

@@ -22,6 +22,8 @@ mod fan_layer_tag;
 mod fan_reader_xyz;
 #[path = "fan_verbose_text.rs"]
 mod fan_verbose_text;
+#[path = "footer_config_order.rs"]
+mod footer_config_order;
 #[path = "initial_travel_uint.rs"]
 mod initial_travel_uint;
 #[path = "island_visit_order.rs"]
