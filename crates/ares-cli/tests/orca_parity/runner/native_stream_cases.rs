@@ -12,6 +12,9 @@ mod brim_first_layer_speed;
 #[path = "concentric_internal_start.rs"]
 mod concentric_internal_start;
 
+#[path = "crosshatch_contour_arc_order.rs"]
+mod crosshatch_contour_arc_order;
+
 #[path = "crosshatch_dont_connect.rs"]
 mod crosshatch_dont_connect;
 
