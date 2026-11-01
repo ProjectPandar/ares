@@ -7,9 +7,9 @@
 # and gates the travel acceleration limit by flavor in the process_file
 # DynamicPrintConfig path exactly as the slicing PrintConfig path does
 # (GCodeProcessor.cpp:2116-2119), so the oracle models a sliced preview.
-# OptionsZCorrector keeps raw upstream semantics (GCodeProcessor.hpp:688-705,
-# calculate_time :5951-6009): no stable-options m_move_id remap
-# (docs/architecture/procgcode-dynamics-raw-options-z.md).
+# OptionsZCorrector keeps beta's upstream on_moves_inserted remap
+# (GCodeProcessor.hpp:1104-1114, GCodeProcessor.cpp:8132). The retired
+# map-based stable-options diagnostic patch must not be stacked on it.
 (import ./procgcode.nix).overrideAttrs (old: {
   pname = "orca-slicer-procgcode-dynamics";
   patches = old.patches ++ [ ./procgcode-dynamics.patch ];

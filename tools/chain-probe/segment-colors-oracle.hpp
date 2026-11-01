@@ -1,9 +1,9 @@
 // Read-only diagnostic: real LibVGCodeWrapper conversion, the real libvgcode
 // ColorRange and Layers, and the extracted ViewerImpl color code
-// (ViewerImpl.cpp:1467-1553, 1817-1878) with the default Settings and palettes
-// (ViewerImpl.cpp:729-733), per vertex in the Feature Type, Height, Speed, Width,
+// (ViewerImpl.cpp:1734-1823, 2122-2183) with the default Settings and palettes
+// (ViewerImpl.cpp:770-771), per vertex in the Feature Type, Height, Speed, Width,
 // Volumetric Flow Rate, Fan Speed and Temperature views, plus Speed with Travels
-// visible (the speed range takes travel feedrates only then, :1860-1863).
+// visible (the speed range takes travel feedrates only then, :2163-2165).
 #pragma once
 #include <array>
 #include <cassert>
@@ -38,7 +38,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
     const libvgcode::Viewer viewer; // conversion uses no GL context or viewer state
     auto input = libvgcode::convert(result, result.extruder_colors, {}, viewer);
 
-    // ViewerImpl::ViewerImpl (:729-733) and the vertex move of ViewerImpl::load (:995).
+    // ViewerImpl::ViewerImpl (:770-771) and the vertex move of ViewerImpl::load (:1130).
     libvgcode::ColorsViewer colors;
     colors.reset_default_extrusion_roles_colors();
     colors.reset_default_options_colors();
@@ -79,7 +79,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
     }
     const nlohmann::json data = {
         { "oracle", "native source-kernel (not full Viewer execution)" },
-        { "upstream", "8500fcdccaa10b5099ac20d252af3a7c560046f1" },
+        { "upstream", "345efec64c7b95a05ce5cf96df0dde66a158835c" },
         { "vertices", dumped },
     };
     std::ofstream out(path);

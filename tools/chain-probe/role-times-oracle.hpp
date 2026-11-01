@@ -81,7 +81,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
 
     const nlohmann::json data = {
         { "oracle", "native source-kernel (not full Viewer execution)" },
-        { "upstream", "8500fcdccaa10b5099ac20d252af3a7c560046f1" },
+        { "upstream", "345efec64c7b95a05ce5cf96df0dde66a158835c" },
         { "vertices", vertices },
         { "roles", roles },
         { "travelsTimeBits", { bits(roles_viewer.travels_time[0]), bits(roles_viewer.travels_time[1]) } },

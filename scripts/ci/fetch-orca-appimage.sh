@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# Downloads the official OrcaSlicer 2.4.2 AppImage and extracts it to
+# Downloads the official OrcaSlicer 2.5.0-beta AppImage and extracts it to
 # $1 (the resulting ORCA_APPDIR, containing bin/orca-slicer and resources/).
-# Equivalent of the offline /tmp/orca-official-242 squashfs-root used by the
-# local parity gates. Reproducible: pinned tag + sha256 of the asset.
+# Reproducible: pinned tag + release asset sha256.
 set -euo pipefail
 
 DEST="${1:?usage: fetch-orca-appimage.sh <dest-dir>}"
-URL="https://github.com/SoftFever/OrcaSlicer/releases/download/v2.4.2/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.4.2.AppImage"
-SHA256="d12fb8c8eac1aecd2dfb6377acd48f994f8fa439ed5292fa532dd82880f029fd"
+URL="https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.5.0-beta/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.5.0-beta.AppImage"
+SHA256="15b0e9f9d577bc7a84cfef4f1ecc6e16ef75bc253e500d772fcaa66f4c25b97e"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT

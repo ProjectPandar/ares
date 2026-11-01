@@ -1,18 +1,36 @@
 diff --git a/src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp b/src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp
-index 11e2d081d..b4c66f2ca 100644
+index 301eabeb..034fd16f 100644
 --- a/src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp
 +++ b/src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp
-@@ -1,0 +2,2 @@
-+#include <cstdlib>
+@@ -6,6 +6,7 @@
+ #include <cstddef>
+ #include <limits>
+ #include <cstdlib>
 +#include <string>
-@@ -26,3 +28 @@ static double random_value() {
+ #include <optional>
+ #include <random>
+ #include <thread>
+@@ -36,9 +37,7 @@ namespace Slic3r::Feature::FuzzySkin {
+ 
+ // Produces a random value between 0 and 1. Thread-safe.
+ static double random_value() {
 -    thread_local std::random_device rd;
 -    // Hash thread ID for random number seed if no hardware rng seed is available
 -    thread_local std::mt19937 gen(rd.entropy() > 0 ? rd() : std::hash<std::thread::id>()(std::this_thread::get_id()));
 +    thread_local std::mt19937 gen(static_cast<uint32_t>(std::stoul(std::getenv("ORCA_REPLAY_SEED"))));
+     thread_local std::uniform_real_distribution<double> dist(0.0, 1.0);
+     return dist(gen);
+ }
 diff --git a/src/libslic3r/GCode.cpp b/src/libslic3r/GCode.cpp
+index 7a51938e..dd78b2bf 100644
 --- a/src/libslic3r/GCode.cpp
 +++ b/src/libslic3r/GCode.cpp
-@@ -2707 +2707 @@
+@@ -3557,7 +3557,7 @@ void GCode::_do_export(Print& print, GCodeOutputStream &file, ThumbnailsGenerato
+     m_placeholder_parser_integration.parser = print.placeholder_parser();
+     m_placeholder_parser_integration.parser.update_timestamp();
+     m_placeholder_parser_integration.parser.update_user_name();
 -    m_placeholder_parser_integration.context.rng = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 +    m_placeholder_parser_integration.context.rng = std::mt19937(static_cast<uint32_t>(std::stoul(std::getenv("ORCA_REPLAY_SEED"))));
+     // Enable passing global variables between PlaceholderParser invocations.
+     m_placeholder_parser_integration.context.global_config = std::make_unique<DynamicConfig>();
+     print.update_object_placeholders(m_placeholder_parser_integration.parser.config_writable(), ".gcode");

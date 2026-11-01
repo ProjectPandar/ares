@@ -19,7 +19,7 @@ const oracle = realpathSync(values.oracle);
 mkdirSync(output, { recursive: true });
 const sha256 = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
 const report = {
-  source_revision: '8500fcdccaa10b5099ac20d252af3a7c560046f1',
+  source_revision: '345efec64c7b95a05ce5cf96df0dde66a158835c',
   patch_sha256: sha256(join(root, 'tools/chain-probe/procgcode.patch')),
   binaries: Object.fromEntries([oracle, join(dirname(oracle), '.orca-slicer-wrapped')]
     .filter(existsSync).map((path) => [path, sha256(path)])),

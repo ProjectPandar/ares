@@ -1,6 +1,6 @@
 // Read-only diagnostic: real LibVGCodeWrapper conversion and the extracted
 // libvgcode segment heights/widths (ViewerImpl.cpp:909-983, 1648-1658) with the
-// ViewerImpl.hpp:234,238 default radii, called as ViewerImpl::load does
+// ViewerImpl.hpp:292,296 default radii, called as ViewerImpl::load does
 // (ViewerImpl.cpp:1058-1060, 1071).
 #pragma once
 #include <algorithm>
@@ -62,7 +62,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
     }
     const nlohmann::json data = {
         { "oracle", "native source-kernel (not full Viewer execution)" },
-        { "upstream", "8500fcdccaa10b5099ac20d252af3a7c560046f1" },
+        { "upstream", "345efec64c7b95a05ce5cf96df0dde66a158835c" },
         { "defaultRadiiBits", { bits(libvgcode::default_travels_radius), bits(libvgcode::default_wipes_radius) } },
         { "radiusClampBits", clamps },
         { "vertices", dumped },

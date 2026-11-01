@@ -18,6 +18,7 @@
 
 namespace custom_gcode_overview_source {
 using namespace Slic3r::CustomGCode;
+namespace CustomGCode = Slic3r::CustomGCode;
 using Slic3r::get_time_dhms;
 using Slic3r::short_time;
 
@@ -96,7 +97,8 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* items, 
 
     Cells cells;
     Imgui imgui{ cells };
-    render_custom_gcode_overview(custom_gcode_per_print_z, layers_viewer, imgui, 0.0f, 0.0f);
+    const std::vector<double> belt_layer_zs;
+    render_custom_gcode_overview(custom_gcode_per_print_z, layers_viewer, belt_layer_zs, imgui, 0.0f, 0.0f);
 
     auto zs = nlohmann::json::array();
     for (float z : layers_viewer.get_layers_zs())
@@ -111,7 +113,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* items, 
             { "timeBits", bits(cells.times[i]) }, { "time", cells.text[3 * i + 2] } });
     const nlohmann::json data = {
         { "oracle", "native source-kernel (not full Viewer execution)" },
-        { "upstream", "8500fcdccaa10b5099ac20d252af3a7c560046f1" },
+        { "upstream", "345efec64c7b95a05ce5cf96df0dde66a158835c" },
         { "zsBits", zs },
         { "timesBits", times },
         { "rows", rows },
