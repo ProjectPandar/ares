@@ -1,31 +1,96 @@
 # Ordered cross-owner brim area subtraction rewrite SPEC
 
 Status: **SPEC REVIEW REQUEST — docs-only; RED awaits approval**.
+Rebased on the beta authority `345efec64c7b95a05ce5cf96df0dde66a158835c`
+(OrcaSlicer 2.5.0-beta); every line number and semantic below was re-checked
+against that tree. Differences vs the original 2.4.2 basis (source
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`) are recorded explicitly in the
+"Rebase differences" section.
 Base and explicit dependency: integrated main
-`0616138a348ea99d7bd964d527104b4902cf39d7`.
+`6bba2bdda` (branch `processor/b19-cross-owner-brim-subtraction`).
 This is an independent repair of an already-supported uncombined brim path.
 The per-object combined-brim contact-component gap remains suspended.
 
-## Owning upstream boundary
+Slice order (coordinator decision): the **per-instance brim granularity**
+slice lands first as the prerequisite — beta's `brimAreaMap` is
+instance-keyed and the claimed-area loop (`Brim.cpp:953-958`) reads that
+keying directly — then the subtraction ports as the verbatim map-level loop.
+The subtraction is not landed on an intermediate owner-keyed shell.
 
-Source checkout: `8500fcdccaa10b5099ac20d252af3a7c560046f1`, paths below
+## Owning upstream boundary (beta 345efec64)
+
+Source checkout: `345efec64c7b95a05ce5cf96df0dde66a158835c`, paths below
 under `OrcaSlicer/src/libslic3r`.
 
 | Source | Behavior being preserved or ported |
 |---|---|
-| `Brim.cpp:36-45::append_and_translate` | Translate candidate area by instance shift, then `diff_ex(srcShifted, dst)` before appending it to that owner's `brimAreaMap` entry. Earlier occupied brim area has priority. |
-| `Brim.cpp:421-448::outer_inner_brim_area` | Visit print extruders and `objPrintVec` in upstream order, with written-state tracking; do not substitute arbitrary object-index, hash-map, tool-emission or nearest-nozzle order. |
-| `Brim.cpp:573-581` | Assign instance area under the PrintObject owner, append assigned area to cumulative `brim_area`; later owners see that earlier area. |
-| `Brim.cpp:662-683` | Subtract shared no-brim and per-extruder bed masks after ordered area assignment. Preserve this ordering; do not use already-infilled paths as the subtraction operand. |
-| `Brim.cpp:685-713` | Retain brim fragments contacting object islands, same-owner fragments or other-owner brim areas. Preserve existing behavior; new contact-component combination is not this slice. |
-| `Brim.cpp:836-875::makeBrimInfillImpl` | Generate paths only after source-owned area assignment/masking; preserve stepping, chaining and emission flow. |
-| `Brim.cpp:964-974` | Uncombined mode generates each owner's infill separately from the assigned map, not from independent un-subtracted areas. |
-| `GCode.cpp:4490-4537::generate_object_brim` | Consume stored owner collection once, in plate coordinates, before that owner's extrusion; keep ownership and ordinary emission behavior. |
+| `Brim.cpp:69-96::append_and_translate` (three overloads) | The `brimAreaMap` overload (:78-84) translates the candidate by the instance shift and appends it whole — **no subtraction here in beta** — keyed `{print_object->id(), instance_idx}`. |
+| `Brim.cpp:458-781::outer_inner_brim_area` | Per-extruder visitation over `objPrintVec` with `brimToWrite` written-state tracking (:485-527); candidate generation per object (:529-618); per-instance map append loop (:619-629); cumulative `brim_area` extension only after the instance loop (:631-633). |
+| `Brim.cpp:695-722` masks | `extruder_no_brim_area` bed-exterior diffs (:701-705) and active bed-exclusion footprints (:713-717) applied per map entry (:718-722), after assignment. |
+| `Brim.cpp:726-766` contact retention | Per map entry: keep fragments whose 2-spacing offset intersects `objectIslands`, another fragment of the same entry, or any other entry's area (cross-owner and cross-instance alike); survivors extend `brim_area`. |
+| `Brim.cpp:875-925::makeBrimInfillImpl` (+`apply_plate_offset` wrappers :920-925) | Path generation from a single area after assignment/masking; stepping, outside-in chaining, reversal and `connect_brim_lines` unchanged in kind. |
+| `Brim.cpp:941-948` | Belt printers return before any flat-plate brim work. |
+| **`Brim.cpp:953-958`** | **The ordered cumulative subtraction, the subject of this slice**: when `!combine_brims`, iterate `brimAreaMap` in `std::map` key order (`ObjectInstanceID{ObjectID, instance_idx}` ascending), `areas = diff_ex(areas, claimed_area)`, then append the remainder to `claimed_area`. Earlier keys keep overlapping area. |
+| `Brim.cpp:961-996` | `firstLayerObjectBrimBoundingBox` per object (:961-982); `islands_area` plate shift and `objectBrimAreasByInstanceOut` skirt-grouping footprints (:984-996). |
+| `Brim.cpp:1004-1010` | Uncombined generation is per map entry (per instance): `brimMap[object_id].append(...)` plus `brimMapByInstance.emplace({object_id, instance_idx}, ...)` — the emission data is per-instance. |
+| `Print.cpp:3812,3839-3848` | `print_object_instances_ordering = chain_print_object_instances(...)`; `objPrintVec` = first-seen dedup over that chain. |
+| `Print.cpp:3849-3867` | `make_brim` call wiring (`m_brimMap`, `m_brimMapByInstance`, `objPrintVec`, `printExtruders`, `m_objectBrimAreasByInstance`); `islands_area` Douglas-Peucker and first-layer convex hull. |
+| `GCode.cpp:5991-6082::generate_object_brim` | Per-instance emission: `ObjectInstanceID{object.id(), instance_id}` (:6065), belt path (:5998-6037), flat path consumes `SkirtBrimGroup` brims whose instance lists contain the key, dedup via `m_objsWithBrim`, owner-filament wait for split bed exclusions (:6039-6044). |
+| `ShortestPath.cpp:2533-2576` (`chain_print_object_instances`), with `:64-175,418` chain machinery, `:1007-1011` KD batched updates, `KDTreeIndirect.hpp:34-165` and `MutablePriorityQueue.hpp:60-260` | The instance chain that orders `objPrintVec` and emission; scaled f64 distances, KD visit/pruning and heap mutation order are observable. |
 
 The new rewrite slice is specifically the previously missing **ordered cumulative
-area subtraction**, not another offset or brim-width formula and not a new Ares
-pipeline. The remaining rows constrain where the port belongs in the existing
-upstream sequence; they are not authorization to redesign adjacent behavior.
+area subtraction** at `Brim.cpp:953-958`, not another offset or brim-width
+formula and not a new Ares pipeline. The remaining rows constrain where the
+port belongs in the existing upstream sequence; they are not authorization to
+redesign adjacent behavior.
+
+## Rebase differences vs the 2.4.2 basis
+
+Recorded explicitly, per the rebase instruction; every item below was verified
+by reading the beta tree.
+
+1. **The subtraction moved out of `append_and_translate`.** 2.4.2 diffed each
+candidate against the accumulated area at append time inside the owner loop.
+Beta appends whole per-instance areas into `brimAreaMap` (`Brim.cpp:78-84`)
+and subtracts once afterwards, in `make_brim` (`:953-958`), gated on
+`!combine_brims`.
+2. **Subtraction priority is `std::map` key order, not `objPrintVec` order.**
+`brimAreaMap` keys are `ObjectInstanceID{ObjectID, instance_idx}` and the
+claimed-area loop iterates the map ascending. `objPrintVec` (built from the
+chained `print_object_instances_ordering`, `Print.cpp:3812,3839-3848`) still
+drives generation visitation and the written-state tracking; it no longer
+encodes subtraction priority. The port must reproduce both orders as-is.
+3. **Areas, infill and emission are per-instance in beta.** `brimAreaMap` keys
+include `instance_idx`; uncombined generation fills `brimMap` AND
+`brimMapByInstance` (`Brim.cpp:1004-1010`); `generate_object_brim` takes an
+`instance_id` and keys emission on `ObjectInstanceID` (`GCode.cpp:5991-6082`).
+The 2.4.2 basis described owner-level collections. The per-instance emission
+envelope is shared with the separately routed per-instance granularity slice;
+this SPEC consumes it only as the already-existing upstream shape.
+4. **Masks and contact retention now run inside `outer_inner_brim_area`,
+after assignment and before the subtraction** (`:695-722`, `:726-766`):
+per-extruder bed-exterior diffs, active bed-exclusion footprints, then
+per-entry contact retention against islands, same-entry fragments and other
+entries' areas. Retention therefore sees pre-subtraction areas.
+5. **`makeBrimInfillImpl` gained `apply_plate_offset`** wrappers (`:875-925`).
+6. **Beta-only additions in the same function, all out of this slice's scope**
+but present in the sequence: belt-printer early return (`:941-948`),
+`firstLayerObjectBrimBoundingBox` (`:961-982`), `objectBrimAreasByInstanceOut`
+skirt-grouping footprints (`:991-996`), islands Douglas-Peucker + plate shift
+(`Print.cpp:3863-3866`).
+7. **Chain citation updated.** `chain_print_object_instances` lives at
+`ShortestPath.cpp:2533-2576`; the machinery ranges cited by the approved
+revision (`92-418, 1007-1011, 2015-2041` on 2.4.2) sit at `64-175` and the
+`:418` union-find merge in beta; `KDTreeIndirect.hpp` and
+`MutablePriorityQueue.hpp` are whole-file ports whose 2.4.2 sub-ranges
+(62-69, 114-165, 229-243 / 76-197) are subsumed by the existing Ares
+`perimeters/classic/shortest_path` port — reuse, not re-implementation.
+8. **Deferred combined-brim cite moves** from `Print.cpp:2898-2990` to the
+`_make_skirt` skirt/brim-group construction (`Print.cpp:4231-4400+`, incl.
+`make_brims_for_skirt_brim_group` `:4297+`). Scope unchanged: deferred.
+9. The frozen Native observations below were recorded against the same pinned
+merged oracle used today (numbers like 407/471 and first-divergence anchors
+are historical observations, not assertions); RED re-derives them at runtime.
 
 ## Rust destination and non-negotiable decisions
 
@@ -43,13 +108,16 @@ Required preparation semantics:
 1. Retain candidate areas in the upstream instance/plate coordinate frame.
 2. Follow the existing source-owned object/extruder order corresponding to
    `objPrintVec`, not an invented ordering. Existing
-   `layers/object_order::chain_without_start` / `Print.cpp:2520-2530` mapping
-   must be audited and reused where it is the matching upstream carrier.
-3. Assign each candidate's difference against **earlier accumulated area** to
-   its owner; extend the cumulative area as upstream does before later owners.
-4. Keep subsequent masks/contact retention and per-owner path generation on
-   assigned areas, in the cited order. Do not subtract paths, covered convex
-   hulls, independently generated loops or already-clipped substitutes.
+   `layers/object_order::chain_without_start` / `Print.cpp:3812,3839-3848`
+   mapping must be audited and reused where it is the matching upstream
+   carrier. In beta the chain orders generation visitation and emission;
+   subtraction priority is the `brimAreaMap` key order (see rebase item2).
+3. Subtract **earlier claimed area** in `brimAreaMap` key order from each
+   entry; extend the claimed accumulator as upstream does before later keys.
+4. Keep masks/contact retention before the subtraction and path generation on
+   subtracted areas, in the cited order (`Brim.cpp:695-766` then `:953-958`
+   then `:1004-1010`). Do not subtract paths, covered convex hulls,
+   independently generated loops or already-clipped substitutes.
 5. Preserve occupied-area consumers and owner identity; no global combined
    carrier or new skirt-group admission as a shortcut.
 
@@ -71,17 +139,20 @@ fixed at X80/88 near, X80/94 middle, X80/140 far, Y110.
 The only added behavior is upstream ordered cross-owner area subtraction before
 uncombined infill. Existing upstream owner/path consumers remain unchanged.
 
-Deferred: `Print.cpp:2898-2990` per-skirt-group contact-connected combined brims,
-new combine admission, repeated-copy/ByObject expansion, active support/tower,
-multi-material/extruder expansion, AutoWidth/EFC/material/speed changes, new
-mask/retention algorithms, loop chaining, travel/seam/fill/ironing changes.
+Deferred: `Print.cpp:4231-4400+` (`_make_skirt` skirt/brim-group construction,
+incl. `make_brims_for_skirt_brim_group` `:4297+`) per-skirt-group contact-
+connected combined brims, new combine admission, repeated-copy/ByObject
+expansion, active support/tower, multi-material/extruder expansion,
+AutoWidth/EFC/material/speed changes, new mask/retention algorithms, loop
+chaining, travel/seam/fill/ironing changes, belt-printer brim and
+bed-exclusion volume behavior beyond passing through existing config.
 No time-estimator or M73 correction is included: progress is a strict observable
 of the repaired complete stream, not a value to tune independently.
 
 ## Fixed input provenance and Native observations
 
-External input root:
-`/home/indexyz/ares-coord/evidence/worker2-perobject-combined-discovery-20261021T103537/`.
+External input evidence retained outside the repository
+(directed fixture-discovery archive, 2026-10-21).
 Inputs derive from tracked
 `tests/parity/per-object-auto-brim-admission/{near,far}-perobject-auto.3mf`.
 Source hashes respectively:
@@ -115,8 +186,8 @@ is not the suspended combine2→1 block-count behavior.
 
 ## Why no M73 repair or mask
 
-Independent read-only diagnosis:
-`/home/indexyz/ares-coord/evidence/worker2-near-uncombined-residual-20261021T104006/`.
+Independent read-only diagnosis evidence retained outside the repository
+(residual-mismatch archive, 2026-10-21).
 Original instruction prefix through the early progress mismatch is identical.
 Same existing C++ processor applied to both original G-code streams reports
 anchor elapsed50.00978956s for each, but final totals185.065676/185.608442s;
@@ -143,9 +214,9 @@ All acceptance comparisons must retain M73 and every motion/metadata byte.
    first full-output difference, do not widen into M73/time/travel/combined work.
 5. Directed target/controls plus neighboring brim/skirt regression in both modes,
    fmt, workspace all-target clippy with -Dwarnings, wasm32. Canonical dual FULL
-   only in a future coordinator-allocated W2 window, exact tip after rebase.
+   only in a future coordinator-allocated window, exact tip after rebase.
 
-All present work is docs-only, CPU13 single-core, no FULL/build/source changes.
+All present work is docs-only; no FULL/build/source changes.
 Coordinator owns review/merge. Combined-brim SPEC remains suspended until this
 supported uncombined control is repaired and independently reviewed.
 
@@ -153,19 +224,24 @@ supported uncombined control is repaired and independently reviewed.
 
 Coordinator authorized this revision after the attempted owner subtraction hit
 strict residual; attempted `020062154` is **not** an accepted GREEN. Runtime
-probe evidence is external at
-`/home/indexyz/ares-coord/evidence/worker2-brim-runtime-order-probe-20261021T112517/`.
+probe evidence is external, retained outside the repository
+(runtime order-probe archive, 2026-10-21).
 Native and Ares have the SAME ordered scaled reference points
 `[(80250000,110000000),(88250000,110000000)]`, but unseeded outputs are
 Native `[1,0]`, Ares `[0,1]`. Native `objPrintVec` confirms that owner priority.
 The mismatch is in the duplicated instance-chain algorithm, not slot mapping.
 
-Owning source: `ShortestPath.cpp:92-418,1007-1011,2015-2041`,
-`KDTreeIndirect.hpp:62-69,114-165,229-243`, and
-`MutablePriorityQueue.hpp:76-197`. Scaled f64 distances, KD visit/pruning and
-heap mutation order on equal priorities are observable. Millimetre conversion,
-index-based tie breaks, arbitrary reversal or a two-object special case are
-not equivalent ports.
+Owning source (beta): `ShortestPath.cpp:2533-2576::chain_print_object_instances`
+with machinery at `:64-175` and the `:418` union-find chain merge, KD batched
+update notes at `:1007-1011`; `KDTreeIndirect.hpp:34-165` and
+`MutablePriorityQueue.hpp:60-260`. (2.4.2 sub-ranges `92-418,1007-1011,
+2015-2041`/`62-69,114-165,229-243`/`76-197` are the same constructs.) Scaled f64
+distances, KD visit/pruning and heap mutation order on equal priorities are
+observable. Millimetre conversion, index-based tie breaks, arbitrary reversal
+or a two-object special case are not equivalent ports. In beta the chain feeds
+`objPrintVec` (`Print.cpp:3812,3839-3848`) and emission; the claimed-area
+subtraction iterates `brimAreaMap` key order instead — both must be ported
+as-is and neither substituted for the other.
 
 **One implementation, all callers:** replace
 `gcode_emit/layers/object_order.rs::chain_instance_order/chain_without_start`
@@ -187,10 +263,12 @@ Read-only source arithmetic verified the captured unseeded result `[1,0]` and
 seeded `[15,220]` result `[0,1]`, matching Native before emission reversal.
 
 Also correct accumulation granularity: all of one owner's instances must read
-the same earlier-owner accumulator; extend it with the assigned owner area only
-AFTER the instance loop (`Brim.cpp:578-581`). Previously approved minimal batch
-orchestration call and mechanical empty-accumulator direct-test argument remain
-in scope. Batch output remains keyed by original object index.
+the same earlier-owner accumulator; in beta this is carried by the map-level
+claimed-area loop (`Brim.cpp:953-958`) after the instance loop and cumulative
+`brim_area` extension (`:631-633`, 2.4.2 `:578-581`). Previously approved
+minimal batch orchestration call and mechanical empty-accumulator
+direct-test argument remain in scope. Batch output remains keyed by original
+object index.
 
 Final GREEN is one production commit covering the delegation/deletion, ordered
 owner subtraction and approved wiring; superseded attempt is retained only as
@@ -201,5 +279,6 @@ Expanded directed gates in BOTH modes: the six fixed owner cases; neighboring
 brim/skirt/Auto/Ears/per-object cases; multi-object and multi-instance ordering
 cases exercising `layers/instances.rs` callers. Then fmt, workspace all-target
 clippy with `-D warnings`, wasm32. Any strict residual requires STOP before
-further edits. No FULL until another allocated W2 window. Combined components,
+further edits. No FULL until another coordinator-allocated window. Combined
+components,
 progress/time fixes and all other deferred behavior remain excluded.
