@@ -162,12 +162,12 @@ impl PlaterSession {
             plate_sequence,
         );
         let config = params::arrange_config(project_settings)?;
+        let full = DynamicPrintConfig::new(project_settings)?;
         let mut prepared = match current {
-            None => self.prepare_all(),
-            Some(plate) => self.prepare_partplate(plate),
+            None => self.prepare_all(&full),
+            Some(plate) => self.prepare_partplate(plate, &full),
         };
         let aps: Vec<ArrangePolygon> = prepared.selected.iter().map(|(_, ap)| ap.clone()).collect();
-        let full = DynamicPrintConfig::new(project_settings)?;
         if needs_calibration_strip(&self.project, &params) {
             return Err(unsupported("around the first-layer scan region"));
         }

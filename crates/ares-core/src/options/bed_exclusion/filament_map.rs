@@ -13,11 +13,41 @@ pub struct ExclusionFilamentMap<'a> {
     pub automatic_map_resolved: bool,
 }
 
+/// `is_auto_filament_map_mode` (`PrintConfig.hpp:649-651`): every mode before `fmmManual`.
+pub(crate) fn is_auto_filament_map_mode(mode: ProjectFilamentMapMode) -> bool {
+    match mode {
+        ProjectFilamentMapMode::AutoForFlush | ProjectFilamentMapMode::AutoForMatch => true,
+        ProjectFilamentMapMode::Manual => false,
+    }
+}
+
 /// The 0-based physical extruder of 0-based `filament_id`, or -1 when it may be any.
 pub fn bed_exclusion_extruder_for_filament(
-    _filament_id: usize,
-    _map: &ExclusionFilamentMap<'_>,
-    _extruder_count: usize,
+    filament_id: usize,
+    map: &ExclusionFilamentMap<'_>,
+    extruder_count: usize,
 ) -> i32 {
-    todo!("bed_exclusion::bed_exclusion_extruder_for_filament")
+    if extruder_count == 0 {
+        return -1;
+    }
+    let automatic = is_auto_filament_map_mode(map.mode);
+    if automatic && map.is_bambu && !map.automatic_map_resolved {
+        return -1;
+    }
+    // Generic multi-tool printers use filament ids as tool ids; their global map still carries the
+    // Bambu grouping seed [1, 1, ...].
+    if automatic && !map.is_bambu && filament_id < extruder_count {
+        return filament_id as i32;
+    }
+    if let Some(&extruder) = map.configured.get(filament_id)
+        && extruder > 0
+        && extruder as usize <= extruder_count
+    {
+        return extruder - 1;
+    }
+    if filament_id < extruder_count {
+        filament_id as i32
+    } else {
+        -1
+    }
 }

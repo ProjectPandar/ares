@@ -17,6 +17,8 @@ pub struct PlaterSession {
     pub(super) arrange_orders: BTreeMap<(u32, u32), i32>,
     /// The project config's tower positions (`wipe_tower_x`, `wipe_tower_y`) once an edit set them.
     pub(super) wipe_tower: Option<super::arrange_job::TowerPositions>,
+    /// `get_current_vendor_type` over the installed vendors (`set_installed_vendors`).
+    pub(super) vendor_type: crate::profiles::VendorType,
 }
 
 /// One plate of the session: its grid origin and instances.
@@ -106,6 +108,7 @@ impl PlaterSession {
             plates,
             arrange_orders: BTreeMap::new(),
             wipe_tower: None,
+            vendor_type: crate::profiles::VendorType::Unknown,
         }
     }
 

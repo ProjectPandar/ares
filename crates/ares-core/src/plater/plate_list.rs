@@ -7,6 +7,7 @@ use crate::project::{compute_colum_count, plate_origin_at};
 
 #[path = "plate_list/arrange.rs"]
 mod arrange;
+mod exclusion_filaments;
 #[path = "plate_list/extruders.rs"]
 mod extruders;
 mod outside;

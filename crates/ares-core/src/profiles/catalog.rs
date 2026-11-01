@@ -26,6 +26,7 @@ pub(in crate::profiles) use chain::MissingParentLink;
 pub(super) use document::ProfileDocument;
 use document::VendorInput;
 pub use model_info::PrinterModelInfo;
+pub(crate) use model_info::VendorType;
 pub use preset_values::PresetValues;
 pub use printer_models::CurrentPrinter;
 

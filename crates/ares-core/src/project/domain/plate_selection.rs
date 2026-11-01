@@ -91,6 +91,21 @@ impl Project {
 }
 
 impl Project {
+    /// The own `filament_map_mode` and `filament_map` of loaded plate `source` (0-based), as
+    /// `PartPlate::config` holds them (`plate_config::own_filament_map`).
+    pub(crate) fn plate_filament_map(
+        &self,
+        source: usize,
+    ) -> (Option<crate::options::ProjectFilamentMapMode>, Vec<i32>) {
+        self.documents
+            .model_settings
+            .plates
+            .get(source)
+            .map_or((None, Vec::new()), |plate| {
+                super::super::plate_config::own_filament_map(&plate.metadata)
+            })
+    }
+
     /// The lowest plate id; on a selected view, the selected plate's id.
     pub(crate) fn first_plate_id(&self) -> u32 {
         self.plates

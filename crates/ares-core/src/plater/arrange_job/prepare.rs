@@ -7,6 +7,7 @@ use crate::options::ProcessPrintSequence;
 use crate::plater::PlaterSession;
 use crate::plater::plate_list::{InstanceKey, PlateList};
 use crate::plater::selection::instance_bounding_box;
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 use crate::{Project, SliceError};
 
 type Items = Vec<(InstanceKey, ArrangePolygon)>;
@@ -88,26 +89,29 @@ impl PlaterSession {
     }
 
     /// `prepare_all` without locked plates: the printable instances are selected.
-    pub(super) fn prepare_all(&self) -> Prepared {
+    pub(super) fn prepare_all(&self, config: &DynamicPrintConfig) -> Prepared {
         let mut prepared = Prepared::default();
         for (key, printable) in self.printable_keys() {
+            let mut ap = polygon::instance_arrange_polygon(&self.project, key);
+            // `ArrangeJob.cpp:368-370`.
+            self.set_bed_exclusion_extruders_for_all_plates(&mut ap, key, config);
             let list = if printable {
                 &mut prepared.selected
             } else {
                 &mut prepared.unprintable
             };
-            push_numbered(
-                list,
-                key,
-                polygon::instance_arrange_polygon(&self.project, key),
-            );
+            push_numbered(list, key, ap);
         }
         prepared
     }
 
     /// `prepare_partplate`: the instances on or reaching plate `current` are selected, the
     /// others locked; an empty plate arranges nothing.
-    pub(super) fn prepare_partplate(&self, current: usize) -> Prepared {
+    pub(super) fn prepare_partplate(
+        &self,
+        current: usize,
+        config: &DynamicPrintConfig,
+    ) -> Prepared {
         let mut prepared = Prepared::default();
         if self.plates.plates[current].instances.is_empty() {
             return prepared;
@@ -116,6 +120,8 @@ impl PlaterSession {
             let bbox = instance_bounding_box(&self.project, key);
             let in_plate = self.plates.holds_or_reaches(current, key, &bbox);
             let mut ap = polygon::instance_arrange_polygon(&self.project, key);
+            // `prepare_arrange_polygon` with the mapping plate (`ArrangeJob.cpp:249-257, 565`).
+            self.set_bed_exclusion_extruders(&mut ap, (key, current), config);
             let list = if self.plates.lock_off_current_plate(key, &mut ap, in_plate) {
                 &mut prepared.locked
             } else if printable {

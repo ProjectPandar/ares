@@ -8,6 +8,7 @@ mod load_settings;
 mod fragment;
 mod inheritance;
 
+pub(crate) use catalog::VendorType;
 pub use catalog::{
     CurrentPrinter, PresetCatalogHandle, PresetValues, PrinterModelInfo, SelectablePrinter,
 };

@@ -78,6 +78,28 @@ pub(super) fn apply_plate_config_overrides(settings: &mut ProjectSettings, metad
     }
 }
 
+/// The plate's own `filament_map_mode` and `filament_map` (`PartPlate::get_filament_map_mode`,
+/// `PartPlate.cpp:5790-5796`, and `get_filament_maps`, `:5815-5822`): `None` (`fmmDefault`) and
+/// empty when the plate stores none. The importer clamps each map entry to `>= 1`
+/// (`bbs_3mf.cpp:4456-4460`).
+pub(super) fn own_filament_map(
+    metadata: &[Metadata],
+) -> (Option<ProjectFilamentMapMode>, Vec<i32>) {
+    let (mut mode, mut map) = (None, Vec::new());
+    for item in metadata {
+        match item.key.as_str() {
+            "filament_map_mode" => mode = parse_map_mode(&item.value).or(mode),
+            "filament_maps" | "filament_map" => {
+                if let Some(values) = parse_int_list(&item.value) {
+                    map = values.into_iter().map(|value| value.max(1)).collect();
+                }
+            }
+            _ => {}
+        }
+    }
+    (mode, map)
+}
+
 fn parse_map_mode(value: &str) -> Option<ProjectFilamentMapMode> {
     match value.trim() {
         "Auto For Flush" | "Auto" => Some(ProjectFilamentMapMode::AutoForFlush),

@@ -26,12 +26,30 @@ pub struct PrinterModelInfo {
     pub nozzle_diameters: Vec<String>,
 }
 
+/// `VendorType` (`Preset.hpp`), the vendor kinds `get_current_vendor_type` tells apart.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub(crate) enum VendorType {
+    #[default]
+    Unknown,
+    MarlinBbl,
+    KlipperQidi,
+}
+
 impl super::PresetCatalogHandle {
-    /// The vendor and model data of `printer_model`. Upstream's vendors are a
-    /// `std::map` keyed by vendor id and `system_printer_model` searches only
-    /// the preset's own vendor; the catalog has no vendor ids and searches
-    /// every vendor in load order, which agrees while model names and ids are
-    /// unique across vendors, as in the OrcaSlicer profiles.
+    /// `PresetBundle::get_current_vendor_type` (`PresetBundle.cpp:992-1024` at v2.5.0-beta
+    /// `345efec64`) for `printer_model` among the installed vendors.
+    pub(crate) fn current_vendor_type(&self, printer_model: &str) -> VendorType {
+        match self.catalog.vendor_of_model_name(printer_model) {
+            Some("BBL") => VendorType::MarlinBbl,
+            Some("Qidi") => VendorType::KlipperQidi,
+            _ => VendorType::Unknown,
+        }
+    }
+
+    /// The vendor and model data of `printer_model`. The vendor is `get_current_vendor_type`'s
+    /// lookup; `system_printer_model` searches only the preset's own vendor, while the model data
+    /// here searches every vendor in load order, which agrees while model names and ids are unique
+    /// across vendors, as in the OrcaSlicer profiles.
     pub fn printer_model_info(
         &self,
         printer_model: &str,
@@ -53,7 +71,9 @@ impl super::PresetCatalogHandle {
             .flatten()
             .find(|model| model.id == printer_model);
         Ok(PrinterModelInfo {
-            vendor: named.map(|(scope, _)| catalog.vendor_ids[scope].clone()),
+            vendor: catalog
+                .vendor_of_model_name(printer_model)
+                .map(str::to_owned),
             model_id: named
                 .map(|(_, model)| model.model_id.clone())
                 .unwrap_or_default(),
@@ -94,6 +114,21 @@ impl super::PresetCatalogHandle {
 }
 
 impl super::Catalog {
+    /// The id of the first vendor, in `PresetBundle::vendors` order (a `std::map` by id), whose
+    /// models list one named `printer_model` (`PresetBundle.cpp:1004-1014`).
+    fn vendor_of_model_name(&self, printer_model: &str) -> Option<&str> {
+        let mut scopes: Vec<usize> = (0..self.vendor_ids.len()).collect();
+        scopes.sort_by(|&a, &b| self.vendor_ids[a].cmp(&self.vendor_ids[b]));
+        scopes
+            .into_iter()
+            .find(|&scope| {
+                self.vendor_models[scope]
+                    .iter()
+                    .any(|model| model.name == printer_model)
+            })
+            .map(|scope| self.vendor_ids[scope].as_str())
+    }
+
     /// `PresetUtils::system_printer_model` (`Preset.cpp:4448-4460`): the
     /// model of a vendor printer whose id is its `printer_model`, from its
     /// own vendor; `None` for user printers.
