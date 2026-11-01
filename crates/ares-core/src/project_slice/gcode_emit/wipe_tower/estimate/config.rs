@@ -62,6 +62,11 @@ impl ConfigValue {
         }
     }
 
+    /// `coPoints`, decoded as `[[x, y], ...]` mm.
+    pub(crate) fn points(&self) -> Vec<[f64; 2]> {
+        serde_json::from_str(self.text()).expect("decoded points are JSON pairs")
+    }
+
     pub(crate) fn floats(&self) -> &[f64] {
         match self {
             Self::Floats(values) => values,

@@ -24,6 +24,7 @@ use crate::arrangement::{
     update_arrange_params, update_selected_items_axis_align, update_selected_items_inflation,
     update_unselected_items_inflation,
 };
+use crate::bed_exclusion::has_bed_exclude_volumes;
 use crate::geometry::fixed_gcc_sort_by;
 use crate::options::{ProcessTimelapseType, ProjectSettings};
 use crate::project::raw_settings::RawConfigValue;
@@ -128,6 +129,7 @@ fn needs_calibration_strip(project: &Project, params: &ArrangeParams) -> bool {
 /// The exclusion areas of `preprocess_exclude_areas` as fixed items on `num_plates` beds.
 fn exclusion_items(
     settings: &ProjectSettings,
+    full: &DynamicPrintConfig,
     num_plates: i32,
     inflation: i64,
 ) -> Vec<ArrangePolygon> {
@@ -140,7 +142,7 @@ fn exclusion_items(
         .0
         .then(|| to_pairs(&settings.printer.gcode.wrapping_exclude_area.0));
     let excluded = to_pairs(&settings.printer.remaining.bed_exclude_area.0);
-    PlateList::exclude_areas(wrapping.as_deref(), &excluded, num_plates, inflation)
+    PlateList::exclude_areas(wrapping.as_deref(), &excluded, full, num_plates, inflation)
 }
 
 impl PlaterSession {
@@ -178,19 +180,23 @@ impl PlaterSession {
             Some(plate) => self.prepare_partplate(plate),
         };
         let aps: Vec<ArrangePolygon> = prepared.selected.iter().map(|(_, ap)| ap.clone()).collect();
-        // The tower estimate counts the instances a plate holds whole; `check_outside`'s bed
-        // exclusion branch (`PartPlate.cpp:4573-4615`) is A2's `bed_exclude_volumes` boundary.
+        // The tower estimate counts the instances a plate holds whole; `check_outside`'s config
+        // region branch (`PartPlate.cpp:4562-4601`), which tests the tower against legacy areas
+        // and collision volumes, is A2b2's boundary.
+        let full = DynamicPrintConfig::new(project_settings)?;
         let tower_path = may_show_wipe_tower(project_settings)
             || (current.is_none()
                 && !params.is_seq_print
                 && needs_wipe_tower(project_settings, &params, &aps));
-        if tower_path && project_settings.printer.remaining.bed_exclude_area.0.len() >= 3 {
+        if tower_path
+            && (project_settings.printer.remaining.bed_exclude_area.0.len() >= 3
+                || has_bed_exclude_volumes(&full))
+        {
             return Err(unsupported("with a prime tower beside a bed exclude area"));
         }
         if needs_calibration_strip(&self.project, &params) {
             return Err(unsupported("around the first-layer scan region"));
         }
-        let full = DynamicPrintConfig::new(project_settings)?;
         let mut positions = self.tower_positions();
         let shown = self.shown_towers(&full, &mut positions)?;
         let mut unselected = match current {
@@ -201,7 +207,7 @@ impl PlaterSession {
                 .collect(),
         };
         let beds = current.map_or(MAX_NUM_PLATES, |plate| plate as i32 + 1);
-        unselected.extend(exclusion_items(project_settings, beds, 0));
+        unselected.extend(exclusion_items(project_settings, &full, beds, 0));
         // check_unprintable (`ArrangeJob.cpp:697-720`)
         let printable_height = f64::from(params.printable_height);
         let (kept, too_small_or_tall): (Vec<_>, Vec<_>) = prepared
@@ -217,7 +223,7 @@ impl PlaterSession {
         update_selected_items_axis_align(&mut items, &config, &params);
         let bed = Bed::from_points(&get_shrink_bedpts(&config, &params));
         params.excluded_regions =
-            exclusion_items(project_settings, 1, (1.0 / SCALING_FACTOR) as i64);
+            exclusion_items(project_settings, &full, 1, (1.0 / SCALING_FACTOR) as i64);
         arrange(&mut items, &unselected, &bed, &params);
         prepared.selected = keys.into_iter().zip(items).collect();
         fixed_gcc_sort_by(&mut prepared.selected, |a, b| a.1.itemid < b.1.itemid);

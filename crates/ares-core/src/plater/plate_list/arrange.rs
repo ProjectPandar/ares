@@ -5,12 +5,20 @@
 use std::collections::BTreeSet;
 
 use super::{BoundingBox, InstanceKey, Plate, PlateList, PlateModel, origin};
-use crate::arrangement::{ArrangePolygon, SCALING_FACTOR, UNARRANGED};
+use crate::arrangement::{
+    ArrangePolygon, SCALING_FACTOR, UNARRANGED, bed_exclusion_arrange_polygon,
+};
+use crate::bed_exclusion::{
+    active_bed_exclude_volume_mode, get_bed_excluded_regions_by_extruder, has_bed_exclude_volumes,
+};
 use crate::geometry::{ExPolygon, Point, Polygon};
 use crate::project::compute_colum_count;
+use crate::{BedExcludeVolumeMode, DynamicPrintConfig};
 
 /// `PartPlateList::MAX_PLATES_COUNT` (`PartPlate.hpp`).
 const MAX_PLATES_COUNT: i32 = 36;
+/// `EPSILON` (`libslic3r.h`).
+const EPSILON: f64 = 1e-4;
 /// `LOGICAL_PART_PLATE_GAP` (`PartPlate.hpp`).
 const LOGICAL_PART_PLATE_GAP: f64 = 1.0 / 5.0;
 
@@ -36,14 +44,27 @@ impl PlateList {
     pub(in crate::plater) fn exclude_areas(
         wrapping_area: Option<&[[f64; 2]]>,
         bed_exclude_area: &[[f64; 2]],
+        config: &DynamicPrintConfig,
         num_plates: i32,
         inflation: i64,
     ) -> Vec<ArrangePolygon> {
-        let mut regions = Vec::new();
+        let per_plate = |contour: Polygon, name: String| {
+            (0..num_plates).map(move |bed| ArrangePolygon {
+                poly: ExPolygon::new(contour.clone(), Vec::new()),
+                is_virt_object: true,
+                bed_idx: bed,
+                height: 1.0,
+                name: name.clone(),
+                inflation,
+                ..ArrangePolygon::default()
+            })
+        };
+        let mut items = Vec::new();
         if let Some(area) = wrapping_area.filter(|area| !area.is_empty()) {
             let contour = Polygon::new(area.iter().map(|p| rounded(p[0], p[1])).collect());
-            regions.push((contour, "WrappingRegion".to_owned()));
+            items.extend(per_plate(contour, "WrappingRegion".to_owned()));
         }
+        items.extend(bed_exclusion_blockers(config, num_plates, inflation));
         // `PartPlate::calc_bounding_boxes` (`:626-643`): every four points make a box.
         for (index, corners) in bed_exclude_area.as_chunks::<4>().0.iter().enumerate() {
             let (mut min, mut max) = ([f64::MAX; 2], [f64::MIN; 2]);
@@ -57,21 +78,7 @@ impl PlateList {
                 rounded(max[0], max[1]),
                 rounded(min[0], max[1]),
             ]);
-            regions.push((contour, format!("ExcludedRegion{index}")));
-        }
-        let mut items = Vec::new();
-        for (contour, name) in regions {
-            for bed in 0..num_plates {
-                items.push(ArrangePolygon {
-                    poly: ExPolygon::new(contour.clone(), Vec::new()),
-                    is_virt_object: true,
-                    bed_idx: bed,
-                    height: 1.0,
-                    name: name.clone(),
-                    inflation,
-                    ..ArrangePolygon::default()
-                });
-            }
+            items.extend(per_plate(contour, format!("ExcludedRegion{index}")));
         }
         items
     }
@@ -217,4 +224,50 @@ impl PlateList {
             }
         }
     }
+}
+
+/// `preprocess_exclude_areas`'s resolved-region branch (`PartPlate.cpp:7725-7761`): each collision
+/// volume of the active nozzle groups (the first alone when Shared) becomes a blocker on every
+/// plate, with its z range and nozzle (-1 when Shared).
+fn bed_exclusion_blockers(
+    config: &DynamicPrintConfig,
+    num_plates: i32,
+    inflation: i64,
+) -> Vec<ArrangePolygon> {
+    if !has_bed_exclude_volumes(config) {
+        return Vec::new();
+    }
+    let shared = active_bed_exclude_volume_mode(config) == BedExcludeVolumeMode::Shared;
+    let groups = get_bed_excluded_regions_by_extruder(config);
+    let extruder_count = if shared {
+        groups.len().min(1)
+    } else {
+        groups.len()
+    };
+    let mut blockers = Vec::new();
+    for (extruder_id, regions) in groups.iter().take(extruder_count).enumerate() {
+        let volumes = regions.iter().enumerate().filter(|(_, region)| {
+            region.is_collision_volume()
+                && region.polygon.points().len() >= 3
+                && !(region.has_z_range && region.z_max <= region.z_min + EPSILON)
+        });
+        for (region_id, region) in volumes {
+            let contour = bed_exclusion_arrange_polygon(&region.polygon);
+            blockers.extend((0..num_plates).map(|bed| ArrangePolygon {
+                poly: ExPolygon::new(contour.clone(), Vec::new()),
+                is_virt_object: true,
+                is_bed_exclusion: true,
+                bed_exclusion_extruder_id: if shared { -1 } else { extruder_id as i32 },
+                bed_idx: bed,
+                height: (region.z_max - region.z_min).max(0.0),
+                z_min: region.z_min,
+                z_max: region.z_max,
+                has_z_range: region.has_z_range,
+                name: format!("BedExclusionVolume{extruder_id}_{region_id}"),
+                inflation,
+                ..ArrangePolygon::default()
+            }));
+        }
+    }
+    blockers
 }
