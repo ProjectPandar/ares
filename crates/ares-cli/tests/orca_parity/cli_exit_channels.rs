@@ -163,7 +163,11 @@ fn cli_exit_empty_plate_reports_a_substituted_value_like_native() {
         .tempdir()
         .unwrap()
         .keep();
-    let project = artifacts.join("empty-plate-substituted.3mf");
+    // The report names the input path, and the Native reference is cached by content and file
+    // name: the project needs a path that is the same on every run.
+    let directory = std::env::temp_dir().join("ares-cli-exit-substituted");
+    fs::create_dir_all(&directory).unwrap();
+    let project = directory.join("empty-plate-cross-zag.3mf");
     fs::write(
         &project,
         substituted(&fs::read(fixture("empty-plate.3mf")).unwrap()),
