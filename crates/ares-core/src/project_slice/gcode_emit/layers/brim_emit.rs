@@ -43,24 +43,16 @@ pub(super) fn emit(
             return Ok(());
         }
         // No skirt groups own this instance's brim (no skirt plan):
-        // the owner plan emits per copy (Brim.cpp:1004-1010,
-        // GCode.cpp:6039-6082) with `ObjectInstanceID` dedup; the
-        // by-object shell keeps the owner-level dedup.
-        let Some(plan) = brim[object_index]
-            .as_ref()
-            .filter(|_| !state.emitted_brim_owners.contains(&object_index))
-        else {
+        // the plan emits per copy (Brim.cpp:1004-1010,
+        // GCode.cpp:6039-6082) with `ObjectInstanceID` dedup.
+        let Some(plan) = brim[object_index].as_ref() else {
             return Ok(());
         };
-        if plan.instances.is_empty() {
-            state.emitted_brim_owners.insert(object_index);
-        } else {
-            if plan.instances.iter().all(|instance| instance.copy != copy) {
-                return Ok(());
-            }
-            if !state.emitted_brim_instances.insert((object_index, copy)) {
-                return Ok(());
-            }
+        if plan.instances.iter().all(|instance| instance.copy != copy) {
+            return Ok(());
+        }
+        if !state.emitted_brim_instances.insert((object_index, copy)) {
+            return Ok(());
         }
         plan
     };

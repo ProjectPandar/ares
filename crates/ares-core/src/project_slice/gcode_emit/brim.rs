@@ -22,40 +22,35 @@ impl BrimPlan {
         let mut areas = (0..traversal.objects.len())
             .map(|_| None)
             .collect::<Vec<_>>();
-        let mut accumulated = Vec::new();
         let mut no_brim_area = Vec::new();
         // Brim.cpp:576,662-679: collect every owner's no-brim geometry
         // before subtracting it from any owner, independently of brim ownership.
         for index in owner::generation_order(traversal) {
-            if let Some((area, forbidden)) = Self::prepare_area(
-                traversal,
-                support,
-                first_layer_regions(index),
-                (index, &mut accumulated),
-            )? {
+            if let Some((area, forbidden)) =
+                Self::prepare_area(traversal, support, first_layer_regions(index), index)?
+            {
                 no_brim_area.extend(forbidden);
                 areas[index] = Some(area);
             }
         }
-        // Brim.cpp:718-722,726-766 then :953-958: for the per-instance
-        // map, the masks/retention run per entry, then the ordered
-        // cumulative claimed-area subtraction iterates the map in key
-        // order (ObjectInstanceID{ObjectID, instance_idx} ascending) —
-        // earlier keys keep overlapping area — before the per-entry
-        // infill (:1004-1010).
+        // Brim.cpp:718-722,726-766 then :953-958: the masks/retention run
+        // per entry, then the ordered cumulative claimed-area subtraction
+        // iterates the map in key order (ObjectInstanceID{ObjectID,
+        // instance_idx} ascending) — earlier keys keep overlapping area —
+        // before the per-entry infill (:1004-1010).
         let mut claimed = Vec::new();
         // Brim.cpp:953-958: the ordered cumulative subtraction runs only
         // when brims are not combined; under combine_brims the map keeps
         // whole areas and the group assembly unions contacting clusters.
         let combine = traversal.resolved.views.full.process.print.combine_brims.0;
-        for (index, area) in areas.iter_mut().enumerate() {
+        for area in areas.iter_mut() {
             let Some(area) = area else {
                 continue;
             };
-            if !area.per_instance || combine {
+            if combine {
                 continue;
             }
-            area.mask_entries(traversal, index, &no_brim_area, tower_exclusions)?;
+            area.mask_entries(traversal, &no_brim_area, tower_exclusions)?;
             for entry in &mut area.entries {
                 let assigned = crate::geometry::difference_ex(&entry.area, &claimed)
                     .map_err(brim_geometry_error)?;
@@ -77,7 +72,7 @@ impl BrimPlan {
         traversal: &PreparedPostClassicTraversal,
         support: &[Vec<InstalledSupportLayer>],
         first_layer_regions: &[crate::project_slice::extrusion_islands::RegionToolUsage],
-        (object_index, accumulated): (usize, &mut Vec<crate::geometry::ExPolygon>),
+        object_index: usize,
     ) -> Result<Option<(owner::Area, Vec<crate::geometry::ExPolygon>)>, SliceError> {
         let (resolved, _) = traversal.print_object_config(object_index);
         let options = &resolved.object;
@@ -322,29 +317,17 @@ impl BrimPlan {
             forbidden.extend(support_mask);
             (area.area, forbidden)
         };
-        // The by-object emission shell keeps the owner-merged collection;
-        // every by-layer mode generates per-instance entries
-        // (Print.cpp:4188-4193, GCode.cpp:5991-6082).
-        let per_instance = traversal.resolved.views.full.process.print.print_sequence
-            != crate::ProcessPrintSequence::ByObject;
-        let (entries, forbidden) = if per_instance {
-            owner::append(
-                traversal,
-                object_index,
-                (&brim_area, &inner, &object_islands),
-            )?
-        } else {
-            owner::expand(
-                traversal,
-                object_index,
-                (&brim_area, &inner, &object_islands),
-                accumulated,
-            )?
-        };
+        // Print.cpp:4188-4193, GCode.cpp:5991-6082: generation is
+        // per-instance for every print sequence — the by-object emission
+        // consumes the same instance-keyed map.
+        let (entries, forbidden) = owner::append(
+            traversal,
+            object_index,
+            (&brim_area, &inner, &object_islands),
+        )?;
         Ok(Some((
             owner::Area {
                 entries,
-                per_instance,
                 flow,
                 spacing,
                 resolution: grouping_resolution,

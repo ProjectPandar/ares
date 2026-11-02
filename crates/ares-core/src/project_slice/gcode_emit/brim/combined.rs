@@ -2,7 +2,7 @@
 //! `combine_brims` contact union.
 use super::{BrimPlan, brim_geometry_error};
 use crate::{
-    ProcessPrintSequence, SliceError,
+    SliceError,
     geometry::{JoinType, offset2_ex, union_expolygons},
     project_slice::{
         gcode_emit::motion::EmitState, perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -10,10 +10,6 @@ use crate::{
 };
 
 pub(in crate::project_slice::gcode_emit) enum GroupBrim {
-    /// Owner-keyed fallback for the by-object emission shell: its plans
-    /// carry the owner-merged collection until the per-instance emission
-    /// port replaces it.
-    Single(usize),
     /// Print.cpp:4327-4336: one instance's own per-instance brim
     /// (`m_brimMapByInstance` entry).
     Instance { owner: usize, copy: usize },
@@ -30,7 +26,6 @@ impl GroupBrim {
     /// (`generate_object_brim`, GCode.cpp:6065-6071).
     pub(in crate::project_slice::gcode_emit) fn matches(&self, instance: (usize, usize)) -> bool {
         match self {
-            Self::Single(owner) => instance.0 == *owner,
             Self::Instance { owner, copy } => (*owner, *copy) == instance,
             Self::Combined { instances, .. } => instances.contains(&instance),
         }
@@ -40,7 +35,6 @@ impl GroupBrim {
     /// its instances has emitted it; emitting erases every instance.
     pub(in crate::project_slice::gcode_emit) fn emitted(&self, state: &EmitState) -> bool {
         match self {
-            Self::Single(owner) => state.emitted_brim_owners.contains(owner),
             Self::Instance { owner, copy } => {
                 state.emitted_brim_instances.contains(&(*owner, *copy))
             }
@@ -52,9 +46,6 @@ impl GroupBrim {
 
     pub(in crate::project_slice::gcode_emit) fn mark_done(&self, state: &mut EmitState) {
         match self {
-            Self::Single(owner) => {
-                state.emitted_brim_owners.insert(*owner);
-            }
             Self::Instance { owner, copy } => {
                 state.emitted_brim_instances.insert((*owner, *copy));
             }
@@ -71,7 +62,7 @@ impl GroupBrim {
         plans: &'a [Option<BrimPlan>],
     ) -> &'a BrimPlan {
         match self {
-            Self::Single(owner) | Self::Instance { owner, .. } => plans[*owner].as_ref().unwrap(),
+            Self::Instance { owner, .. } => plans[*owner].as_ref().unwrap(),
             Self::Combined { plan, .. } => plan,
         }
     }
@@ -83,9 +74,6 @@ pub(in crate::project_slice::gcode_emit) fn group_brims(
     plans: &[Option<BrimPlan>],
 ) -> Result<Vec<GroupBrim>, SliceError> {
     let print = &traversal.resolved.views.full.process.print;
-    if print.print_sequence == ProcessPrintSequence::ByObject {
-        return owner_keyed(traversal, members, plans);
-    }
     // Print.cpp:4300-4305: brim instances are the group members whose
     // per-instance brim (m_brimMapByInstance) is non-empty.
     let instances = members
@@ -172,108 +160,6 @@ pub(in crate::project_slice::gcode_emit) fn group_brims(
                 crate::brims::ears::paths::from_area(area, spacing, resolution, traversal.scale)?;
             Ok(GroupBrim::Combined {
                 instances: cluster,
-                plan: BrimPlan {
-                    area: Vec::new(),
-                    instances: Vec::new(),
-                    instance_areas: Vec::new(),
-                    paths,
-                    covered_hull: Vec::new(),
-                    width: template.width,
-                    spacing: template.spacing,
-                    height: template.height,
-                    mm3_per_mm: template.mm3_per_mm,
-                },
-            })
-        })
-        .collect()
-}
-
-/// The owner-keyed fallback used while the by-object emission shell keeps
-/// owner-merged plans: contact union over owner areas, one merged infill
-/// per contacting cluster (the pre-per-instance shape of Print.cpp:4297+).
-fn owner_keyed(
-    traversal: &PreparedPostClassicTraversal,
-    members: &[(usize, usize)],
-    plans: &[Option<BrimPlan>],
-) -> Result<Vec<GroupBrim>, SliceError> {
-    let mut owners = Vec::new();
-    for &(object, _) in members {
-        if plans[object].is_some() && !owners.contains(&object) {
-            owners.push(object);
-        }
-    }
-    if !traversal.resolved.views.full.process.print.combine_brims.0 || owners.len() < 2 {
-        return Ok(owners.into_iter().map(GroupBrim::Single).collect());
-    }
-    let scale = traversal.scale;
-    let template = plans[owners[0]].as_ref().unwrap();
-    let spacing = super::scaled_f32(scale, f64::from(template.spacing))?;
-    let contact = (f64::from(spacing) * 2.0) as i64;
-    let resolution = scale.scaled_delta(0.0125);
-    let mut parent = (0..owners.len()).collect::<Vec<_>>();
-    for i in 0..owners.len() {
-        let expanded = crate::geometry::offset_expolygons(
-            &plans[owners[i]].as_ref().unwrap().area,
-            contact as f32,
-            JoinType::Round,
-            resolution,
-        )
-        .map_err(brim_geometry_error)?;
-        for j in i + 1..owners.len() {
-            if !crate::geometry::intersection_ex(
-                &expanded,
-                &plans[owners[j]].as_ref().unwrap().area,
-            )
-            .map_err(brim_geometry_error)?
-            .is_empty()
-            {
-                let a = root(&mut parent, i);
-                let b = root(&mut parent, j);
-                parent[b] = a;
-            }
-        }
-    }
-    let mut components = std::collections::BTreeMap::<usize, Vec<usize>>::new();
-    for (i, owner) in owners.iter().copied().enumerate() {
-        components
-            .entry(root(&mut parent, i))
-            .or_default()
-            .push(owner);
-    }
-    let cleanup_resolution =
-        scale.scaled_delta(traversal.resolved.views.full.process.print.resolution.0) as f32;
-    let delta = cleanup_resolution.max(scale.scaled_delta(0.0001) as f32);
-    let cluster_instances = |owners: &[usize]| {
-        owners
-            .iter()
-            .flat_map(|&owner| {
-                let (_, group) = traversal.print_object_config(owner);
-                (0..group.instance_indices.len()).map(move |copy| (owner, copy))
-            })
-            .collect::<Vec<_>>()
-    };
-    components
-        .into_values()
-        .map(|cluster| {
-            if cluster.len() == 1 {
-                return Ok(GroupBrim::Single(cluster[0]));
-            }
-            let area = cluster
-                .iter()
-                .flat_map(|&i| plans[i].as_ref().unwrap().area.iter().cloned())
-                .collect::<Vec<_>>();
-            let area = union_expolygons(&area, &[]).map_err(brim_geometry_error)?;
-            let area = offset2_ex(
-                &area,
-                delta,
-                -delta,
-                JoinType::Round,
-                f64::from(cleanup_resolution),
-            )
-            .map_err(brim_geometry_error)?;
-            let paths = crate::brims::ears::paths::from_area(area, spacing, resolution, scale)?;
-            Ok(GroupBrim::Combined {
-                instances: cluster_instances(&cluster),
                 plan: BrimPlan {
                     area: Vec::new(),
                     instances: Vec::new(),
