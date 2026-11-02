@@ -1,6 +1,9 @@
 //! Public RED for per-object skirts with support/raft footprints and layers.
 //! Upstream: Print.cpp:2669-2696; GCode.cpp:4311-4318,4398,4455-4485,5329-5335.
 
+#[path = "per_object_skirt_support_raft/profile_input.rs"]
+mod profile_input;
+
 use crate::{CaseInputs, OrcaRunner, golden, normalize_process_defaults, runner, select_printer};
 use serde_json::json;
 use sha2::Digest;
@@ -34,11 +37,17 @@ fn run_case(label: &str, enable_support: bool, raft_layers: u32, support_fixture
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let Some(resources) =
-        crate::native_environment::value("ARES_ORCA_RESOURCES_DIR").map(std::path::PathBuf::from)
-    else {
-        return;
-    };
+    let (resources, profile_source) = profile_input::from_env();
+    let root = tempfile::Builder::new()
+        .prefix(&format!("per-object-skirt-support-raft-{label}-"))
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    fs::write(
+        root.join("ares-profile-input.json"),
+        serde_json::to_vec_pretty(&profile_source).unwrap(),
+    )
+    .unwrap();
     let profiles =
         crate::presets::VendorProfiles::load(&resources.join("profiles"), "Creality").unwrap();
     let selection = select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
@@ -100,7 +109,7 @@ fn run_case(label: &str, enable_support: bool, raft_layers: u32, support_fixture
     } else {
         spread_second_object(&exported.project)
     };
-    compare_case(&runner, label, &project);
+    compare_case(&runner, label, &project, &root);
 }
 
 fn spread_second_object(project: &[u8]) -> Vec<u8> {
@@ -142,12 +151,7 @@ fn spread_second_object(project: &[u8]) -> Vec<u8> {
     output.finish().unwrap().into_inner()
 }
 
-fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8]) {
-    let root = tempfile::Builder::new()
-        .prefix(&format!("per-object-skirt-support-raft-{label}-"))
-        .tempdir_in(crate::artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
+fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8], root: &std::path::Path) {
     let input = root.join("input.3mf");
     let native_dir = root.join("native");
     fs::write(&input, project).unwrap();
@@ -162,7 +166,7 @@ fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8]) {
             input.to_str().unwrap().to_owned(),
         ],
         runner::stages::Stage::Slice,
-        &root,
+        root,
     )
     .unwrap();
     let native = fs::read(native_dir.join("plate_1.gcode")).unwrap();

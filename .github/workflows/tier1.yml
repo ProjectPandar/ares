@@ -254,6 +254,7 @@ jobs:
             resources/profiles
             src/libslic3r
             deps_src/glu-libtess
+      - uses: ./.github/actions/parity-profile-input
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
@@ -358,6 +359,7 @@ jobs:
             resources/profiles
             src/libslic3r
             deps_src/glu-libtess
+      - uses: ./.github/actions/parity-profile-input
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2

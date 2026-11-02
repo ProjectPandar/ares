@@ -1,0 +1,21 @@
+name: Provision pinned Ares raw profile inputs
+description: Select verified beta source JSON independently of Native packaging
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: OrcaSlicer/OrcaSlicer
+        ref: 345efec64c7b95a05ce5cf96df0dde66a158835c
+        path: OrcaProfileSource
+        sparse-checkout: resources/profiles
+        persist-credentials: false
+    - name: Verify profile source identity and export explicit binding
+      shell: bash
+      run: |
+        set -euo pipefail
+        source="$GITHUB_WORKSPACE/OrcaProfileSource"
+        test "$(git -C "$source" rev-parse HEAD)" = 345efec64c7b95a05ce5cf96df0dde66a158835c
+        test "$(git -C "$source" rev-parse HEAD:resources/profiles)" = 1a0b4442f231034b13984b227ac5e15e23b92541
+        echo "ARES_PARITY_PROFILE_RESOURCES_DIR=$source/resources" >> "$GITHUB_ENV"
+        echo "Ares profile source: v2.5.0-beta / 345efec64c7b95a05ce5cf96df0dde66a158835c / profiles tree 1a0b4442f231034b13984b227ac5e15e23b92541"
