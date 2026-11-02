@@ -1,5 +1,5 @@
 use crate::{
-    ProcessInfillPattern, RegionOptions,
+    RegionOptions,
     geometry::{CoordinateScale, Line, Polygon, Polyline},
 };
 
@@ -14,6 +14,7 @@ struct CandidateBridgeAngleInput<'a> {
     boundary_polylines: &'a [Polyline],
     region: &'a RegionOptions,
     model_rotation_rad: f64,
+    configured_angle: Option<f64>,
     scale: CoordinateScale,
 }
 
@@ -27,6 +28,7 @@ pub(in crate::project_slice) fn determine_candidate_bridge_angle(
     boundary_polylines: &[Polyline],
     region: &RegionOptions,
     model_rotation_rad: f64,
+    configured_angle: Option<f64>,
     scale: CoordinateScale,
 ) -> f64 {
     determine_candidate_bridge_angle_using(
@@ -36,6 +38,7 @@ pub(in crate::project_slice) fn determine_candidate_bridge_angle(
             boundary_polylines,
             region,
             model_rotation_rad,
+            configured_angle,
             scale,
         },
         determine_automatic_bridge_angle,
@@ -49,7 +52,7 @@ fn determine_candidate_bridge_angle_using<Detect, Override>(
     apply_override: Override,
 ) -> f64
 where
-    Detect: FnOnce(&[Polygon], &[Line], ProcessInfillPattern, CoordinateScale) -> f64,
+    Detect: FnOnce(&[Polygon], &[Line], CoordinateScale) -> f64,
     Override: FnOnce(f64, &RegionOptions, f64) -> f64,
 {
     let CandidateBridgeAngleInput {
@@ -58,15 +61,17 @@ where
         boundary_polylines,
         region,
         model_rotation_rad,
+        configured_angle,
         scale,
     } = input;
-    let (polylines, pattern) = if anchors.is_empty() {
-        (boundary_polylines, ProcessInfillPattern::Line)
-    } else {
-        (anchors, region.sparse_infill_pattern)
-    };
-    let lines = to_lines(polylines);
-    let detected = detect(area_to_be_bridge, &lines, pattern, scale);
+    let detected = configured_angle.unwrap_or_else(|| {
+        let polylines = if anchors.is_empty() {
+            boundary_polylines
+        } else {
+            anchors
+        };
+        detect(area_to_be_bridge, &to_lines(polylines), scale)
+    });
     apply_override(detected, region, model_rotation_rad)
 }
 

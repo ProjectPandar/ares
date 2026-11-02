@@ -1,5 +1,5 @@
 use crate::{
-    OrcaFloats, SliceError,
+    ObjectOptions, OrcaFloats, ProcessRegionSourceOptions, SliceError,
     geometry::CoordinateScale,
     project_slice::{
         perimeters::types::{PostPerimeterInputPrintObject, RegionLayerIndex},
@@ -29,6 +29,13 @@ pub(super) fn prepare(
     for (index, candidates) in candidates.iter_mut().enumerate() {
         let traversal_object = &traversal.objects[index];
         let prelude = prelude(traversal_object);
+        let object_options = &traversal
+            .resolved
+            .objects
+            .iter()
+            .find(|object| object.source_object_index == prelude.identity().0)
+            .expect("bridge transaction retains its resolved object")
+            .object;
         prepare_object(
             predecessor,
             index,
@@ -38,6 +45,8 @@ pub(super) fn prepare(
                 prelude,
                 nozzles,
                 scale: traversal.scale,
+                object_options,
+                default_region: &traversal.resolved.views.full.process.region,
             },
         )?;
     }
@@ -50,6 +59,8 @@ pub(super) struct ObjectView<'a> {
     prelude: &'a PostPerimeterInputPrintObject,
     nozzles: &'a OrcaFloats,
     scale: CoordinateScale,
+    object_options: &'a ObjectOptions,
+    default_region: &'a ProcessRegionSourceOptions,
 }
 
 pub(super) fn prepare_object(
@@ -63,6 +74,7 @@ pub(super) fn prepare_object(
         prelude,
         nozzles,
         scale,
+        ..
     } = view;
     let (compensated, _) = prelude.as_parts();
     let (post_regions, _) = compensated.as_parts();
@@ -160,6 +172,8 @@ pub(super) fn prepare_object(
                 infill_lines: &infill_lines,
                 nozzles,
                 scale,
+                object_options: view.object_options,
+                default_region: view.default_region,
             })?;
         }
     }
@@ -354,4 +368,5 @@ pub(super) fn build_lightning_generator(
 }
 
 mod layers;
+mod lower_direction;
 use layers::{LayerJob, prelude, prepare_infill_lines, prepare_layer};

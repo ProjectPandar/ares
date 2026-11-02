@@ -18,7 +18,9 @@ candidate/commit helpers. Existing Ares staged records are compatibility shells
 around the upstream surface transactions, not a separate pipeline design.
 This branch stacks on the approved bridge-limiting-offset tip `a3182a424`,
 which owns the same `PrintObject` transaction and its corrected boundary units.
-Do not modify the approved parent branch or the independent multiline branch.
+The parent was subsequently rewritten for the approved one-line ARD hygiene
+change to `c904de255`; this branch was rebased onto that equivalent-code tip.
+Do not modify the independent multiline branch.
 
 If output and fill-entry inputs are proven equal, continue through upstream
 `Fill.cpp:978–981` (Monotonic/MonotonicLine top pattern maps bridge to Monotonic),
@@ -94,6 +96,45 @@ adjacent turning-pattern behavior remain separate until independently required.
 All probes were temporary, restored, and emitted only to stderr. Their CLI
 outputs are byte-identical to the uninstrumented RED CLI outputs for all three
 inputs. No Native debugger or observation was run.
+
+## Approved configured-angle port
+
+Port `PrintObject.cpp:3913–3942` as one unit. Resolve the candidate's owning
+region and its lower-layer record by stable region index (the Rust equivalent
+of the source's same `PrintRegion` identity check). Require real sparse anchors,
+Hilbert/Octagram, and a nonempty intersection of the candidate area with the
+lower region's Internal surfaces, including their holes. Select the lower
+planned layer's source ID, not the current layer index, for rotation evaluation.
+
+`transaction/candidate_expansion/lower_direction.rs` reuses
+`group_fills::template_rotation_angle` for nonempty templates and preserves the
+existing fixed-angle degrees-to-radians arithmetic for empty templates. Add
+`0.5 * PI`, then the existing f64 model rotation when alignment is enabled.
+Use floating remainder and add PI only for a negative result to match source
+normalization. There is at most one lower record with the same region identity;
+selecting it is the source loop's first-match-and-break operation.
+
+`candidate_bridge_angle.rs` uses the configured angle when present, otherwise
+calls the geometric detector on real anchors, or boundary polylines when there
+are no anchors. The detector no longer accepts a sparse-pattern argument:
+remove `automatic_bridge_angle.rs::pattern_adjustment` entirely, including both
+old Hilbert/Octagram constants. There is no legacy pattern-specific fallback.
+The existing custom internal bridge angle override remains after this choice,
+matching upstream `3944+`. Do not change monotonic fill, flow, or bridge surface
+construction to compensate for direction selection.
+
+The three direct public-output RED tests pass with this port under the unchanged
+whole-output comparator, including Native double replay and API/CLI equality.
+This is complete-output GREEN, not a motion-only exception. The same bridge,
+infill, and plane-path name-filtered inventory has 117 tests on both sides:
+57 PASS / 60 FAIL before, 63 PASS / 54 FAIL after, zero PASS-to-FAIL and no
+inventory additions or removals. Its six improvements are the three direct
+RED cases and the three existing complete-output cases for the same inputs,
+not six distinct inputs. The 54 remaining failures stay failures; the suite
+exits 100 on both sides. Other tests excluded by this bounded filter are not
+claimed as passing. Rustfmt and all-target Clippy with warnings denied pass.
+Temporary Ares probes are absent and no Native intermediate observations were
+used. The standard public Native double replay is unchanged.
 
 ## Included and deferred behavior
 

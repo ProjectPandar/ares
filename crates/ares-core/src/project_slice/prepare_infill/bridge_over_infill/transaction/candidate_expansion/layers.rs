@@ -50,6 +50,7 @@ pub(super) fn prepare_infill_lines(
         prelude,
         nozzles,
         scale,
+        ..
     } = view;
     let resolved = predecessor
         .predecessor
@@ -128,6 +129,8 @@ pub(super) struct LayerJob<'a> {
     pub(super) infill_lines: &'a BTreeMap<usize, Vec<Polyline>>,
     pub(super) nozzles: &'a OrcaFloats,
     pub(super) scale: CoordinateScale,
+    pub(super) object_options: &'a crate::ObjectOptions,
+    pub(super) default_region: &'a crate::ProcessRegionSourceOptions,
 }
 
 pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
@@ -143,6 +146,8 @@ pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
         infill_lines,
         nozzles,
         scale,
+        object_options,
+        default_region,
     } = job;
     let raw = candidates
         .surfaces_by_layer
@@ -216,7 +221,18 @@ pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
         scale,
     )
     .map_err(geometry_error)?;
-    let completed = prepare_candidates(ordered, context, prelude, nozzles, scale)?;
+    let completed = prepare_candidates(
+        ordered,
+        context,
+        super::ObjectView {
+            horizontal,
+            prelude,
+            nozzles,
+            scale,
+            object_options,
+            default_region,
+        },
+    )?;
     let current = candidates.surfaces_by_layer.entry(layer_index).or_default();
     replace_candidate_layer(current, completed);
     Ok(())
@@ -225,10 +241,14 @@ pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
 pub(super) fn prepare_candidates(
     ordered: Vec<CandidateSurface>,
     context: super::super::super::current_layer_context::CurrentLayerBridgeContext,
-    prelude: &PostPerimeterInputPrintObject,
-    nozzles: &OrcaFloats,
-    scale: CoordinateScale,
+    view: super::ObjectView<'_>,
 ) -> Result<Vec<CandidateSurface>, SliceError> {
+    let super::ObjectView {
+        prelude,
+        nozzles,
+        scale,
+        ..
+    } = view;
     let super::super::super::current_layer_context::CurrentLayerBridgeContext {
         deep_infill_area,
         lightning_area,
@@ -264,12 +284,20 @@ pub(super) fn prepare_candidates(
         else {
             continue;
         };
+        let configured_angle = super::lower_direction::configured_angle(
+            view,
+            &candidate,
+            &area.area_to_be_bridge,
+            !anchors.is_empty(),
+        )
+        .map_err(geometry_error)?;
         let angle = determine_candidate_bridge_angle(
             &area.area_to_be_bridge,
             &anchors,
             &boundaries,
             region,
             input.model_rotation_rad,
+            configured_angle,
             scale,
         );
         let initial = construct_candidate_anchored_bridge(

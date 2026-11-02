@@ -1,9 +1,6 @@
 use std::f64::consts::PI;
 
-use crate::{
-    ProcessInfillPattern,
-    geometry::{CoordinateScale, Line, LineDistanceTree, Point, Polygon},
-};
+use crate::geometry::{CoordinateScale, Line, LineDistanceTree, Point, Polygon};
 
 #[derive(Clone, Copy)]
 struct DirectionBucket {
@@ -14,7 +11,6 @@ struct DirectionBucket {
 pub(in crate::project_slice) fn determine_automatic_bridge_angle(
     bridged_area: &[Polygon],
     anchors: &[Line],
-    dominant_pattern: ProcessInfillPattern,
     scale: CoordinateScale,
 ) -> f64 {
     let directions = count_directions(bridged_area, anchors, scale);
@@ -22,7 +18,7 @@ pub(in crate::project_slice) fn determine_automatic_bridge_angle(
     if angle == 0.0 {
         angle = 0.001;
     }
-    angle + pattern_adjustment(dominant_pattern)
+    angle
 }
 
 fn count_directions(
@@ -164,37 +160,4 @@ fn accumulate_window(directions: &[DirectionBucket], direction: f64) -> (f64, i3
         }
     }
     (weighted_angle, score)
-}
-
-const fn pattern_adjustment(pattern: ProcessInfillPattern) -> f64 {
-    match pattern {
-        ProcessInfillPattern::HilbertCurve => 0.25 * PI,
-        ProcessInfillPattern::OctagramSpiral => (1.0 / 16.0) * PI,
-        ProcessInfillPattern::Monotonic
-        | ProcessInfillPattern::MonotonicLine
-        | ProcessInfillPattern::Rectilinear
-        | ProcessInfillPattern::AlignedRectilinear
-        | ProcessInfillPattern::ZigZag
-        | ProcessInfillPattern::CrossZag
-        | ProcessInfillPattern::LockedZag
-        | ProcessInfillPattern::Line
-        | ProcessInfillPattern::Grid
-        | ProcessInfillPattern::Triangles
-        | ProcessInfillPattern::TriHexagon
-        | ProcessInfillPattern::Cubic
-        | ProcessInfillPattern::AdaptiveCubic
-        | ProcessInfillPattern::QuarterCubic
-        | ProcessInfillPattern::SupportCubic
-        | ProcessInfillPattern::Lightning
-        | ProcessInfillPattern::Honeycomb
-        | ProcessInfillPattern::ThreeDHoneycomb
-        | ProcessInfillPattern::LateralHoneycomb
-        | ProcessInfillPattern::LateralLattice
-        | ProcessInfillPattern::CrossHatch
-        | ProcessInfillPattern::TpmsD
-        | ProcessInfillPattern::TpmsFk
-        | ProcessInfillPattern::Gyroid
-        | ProcessInfillPattern::Concentric
-        | ProcessInfillPattern::ArchimedeanChords => 0.0,
-    }
 }
