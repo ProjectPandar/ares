@@ -111,6 +111,7 @@ pub(super) fn emit(
                 skirt,
                 done: object_skirt_done,
                 object: object_index,
+                copy: bucket.instance.copy,
                 layer: entry.object_layer,
                 builder: entry_builder,
                 traversal,

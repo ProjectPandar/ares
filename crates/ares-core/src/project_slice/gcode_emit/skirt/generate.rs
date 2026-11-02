@@ -92,7 +92,7 @@ impl SkirtPlan {
                 flow.mm3_per_mm * ratio / (std::f64::consts::PI * diameter.powi(2) * 0.25)
             })
             .collect::<Vec<_>>();
-        let generation_groups = if per_object && traversal.objects.len() > 1 {
+        let generation_groups = if per_object {
             member_groups::merge(
                 items,
                 if tower_corners.is_empty() {
@@ -130,6 +130,10 @@ impl SkirtPlan {
         let mut member_groups = Vec::new();
         let mut occupied_hull = Vec::new();
         for group in generation_groups {
+            // The brim assembly stays owner-keyed until the per-instance
+            // group brim port (Print.cpp:4297-4389); the skirt groups
+            // themselves are per instance (Print.cpp:4188-4193).
+            let owners = group_owners(&group.members);
             let mut distance = initial_distance;
             let start = loops.len();
             let mut group_loops = make_loops(
@@ -148,7 +152,7 @@ impl SkirtPlan {
             loops.extend(group_loops);
             if !group.members.is_empty() {
                 member_groups.push(SkirtGroup {
-                    brims: super::super::brim::group_brims(traversal, &group.members, brim)?,
+                    brims: super::super::brim::group_brims(traversal, &owners, brim)?,
                     members: group.members,
                     loops: start..loops.len(),
                 });
@@ -193,4 +197,14 @@ impl SkirtPlan {
 
 fn occupied_error(_: crate::geometry::ClipperError) -> SliceError {
     SliceError::InvalidInput("skirt occupied hull offset failed".into())
+}
+
+fn group_owners(members: &[(usize, usize)]) -> Vec<usize> {
+    let mut owners = Vec::new();
+    for &(object, _) in members {
+        if !owners.contains(&object) {
+            owners.push(object);
+        }
+    }
+    owners
 }

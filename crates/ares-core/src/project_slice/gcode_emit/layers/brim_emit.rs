@@ -26,7 +26,7 @@ pub(super) fn emit(
     }
     let grouped = skirt
         .as_ref()
-        .and_then(|plan| plan.group_brims(object_index));
+        .and_then(|plan| plan.group_brims((object_index, copy)));
     let (plan, owners) = if let Some(components) = grouped {
         let Some(component) = components.iter().find(|component| {
             component.owners().contains(&object_index)

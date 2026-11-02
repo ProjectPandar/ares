@@ -1,7 +1,7 @@
 //! Brim.cpp:619-633,1004-1010: instance areas collected as per-instance
 //! map entries under one PrintObject ID.
 use super::bed_area::translate;
-use super::types::InstanceBrim;
+use super::types::{InstanceArea, InstanceBrim};
 use super::{BrimPlan, bed_area};
 use crate::{
     geometry::ExPolygon,
@@ -17,10 +17,12 @@ pub(super) struct InstanceEntry {
     pub(super) islands: Vec<ExPolygon>,
 }
 
-/// The generated collections: per-instance infills, the merged-owner path
-/// set, and the masked areas (hull source).
+/// The generated collections: per-instance infills, the per-instance
+/// plate-frame areas (skirt grouping input, `Brim.cpp:984-996`), the
+/// merged-owner path set, and the masked areas (hull source).
 type AreaOutput = (
     Vec<InstanceBrim>,
+    Vec<InstanceArea>,
     Vec<Vec<crate::geometry::Point>>,
     Vec<ExPolygon>,
 );
@@ -50,7 +52,7 @@ impl Area {
         no_brim_area: &[ExPolygon],
         tower_exclusions: &[ExPolygon],
     ) -> Result<Option<BrimPlan>, crate::SliceError> {
-        let (instances, merged_paths, area_all) = if self.per_instance {
+        let (instances, instance_areas, merged_paths, area_all) = if self.per_instance {
             self.finish_instances(traversal, object_index, no_brim_area, tower_exclusions)?
         } else {
             self.finish_merged(traversal, object_index, no_brim_area, tower_exclusions)?
@@ -71,6 +73,7 @@ impl Area {
             global: false,
             owner_collection: self.owner_collection,
             instances,
+            instance_areas,
             paths: merged_paths,
             covered_hull,
             width: self.flow.width,
@@ -120,11 +123,16 @@ impl Area {
         _tower_exclusions: &[ExPolygon],
     ) -> Result<AreaOutput, crate::SliceError> {
         let mut instances = Vec::new();
+        let mut instance_areas = Vec::new();
         let mut area_all = Vec::new();
         for entry in std::mem::take(&mut self.entries) {
             if entry.area.is_empty() {
                 continue;
             }
+            instance_areas.push(InstanceArea {
+                copy: entry.copy,
+                area: entry.area.clone(),
+            });
             let paths = self.infill(&entry.area, traversal)?;
             if paths.is_empty() {
                 continue;
@@ -135,7 +143,7 @@ impl Area {
             });
             area_all.extend(entry.area);
         }
-        Ok((instances, Vec::new(), area_all))
+        Ok((instances, instance_areas, Vec::new(), area_all))
     }
 
     /// Owner-merged collection (the pre-existing scaffold): one
@@ -147,6 +155,15 @@ impl Area {
         no_brim_area: &[ExPolygon],
         tower_exclusions: &[ExPolygon],
     ) -> Result<AreaOutput, crate::SliceError> {
+        let instance_areas = self
+            .entries
+            .iter()
+            .filter(|entry| !entry.area.is_empty())
+            .map(|entry| InstanceArea {
+                copy: entry.copy,
+                area: entry.area.clone(),
+            })
+            .collect::<Vec<_>>();
         let merged = self
             .entries
             .iter()
@@ -166,14 +183,14 @@ impl Area {
             tower_exclusions,
         )?;
         if brim_area.is_empty() {
-            return Ok((Vec::new(), Vec::new(), Vec::new()));
+            return Ok((Vec::new(), instance_areas, Vec::new(), Vec::new()));
         }
         let merged_paths = if self.owner_collection {
             self.infill(&brim_area, traversal)?
         } else {
             Vec::new()
         };
-        Ok((Vec::new(), merged_paths, brim_area))
+        Ok((Vec::new(), instance_areas, merged_paths, brim_area))
     }
 
     /// Brim.cpp:718-722,726-766: the no-brim/tower masks and contact

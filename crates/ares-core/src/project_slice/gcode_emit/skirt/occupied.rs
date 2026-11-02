@@ -15,7 +15,7 @@ pub(super) fn items(
     brim: &[Option<BrimPlan>],
     layer_limit: usize,
     raft: Option<&super::super::layers::RaftSchedule>,
-) -> Vec<(usize, Vec<Point>)> {
+) -> Vec<((usize, usize), Vec<Point>)> {
     let skirt_height_z = traversal
         .objects
         .iter()
@@ -38,9 +38,8 @@ pub(super) fn items(
         })
         .fold(0.0_f64, f64::max);
     let scale = traversal.scale;
-    let mut hulls = Vec::new();
+    let mut items = Vec::new();
     for (object_index, object) in traversal.objects.iter().enumerate() {
-        let mut occupied = Vec::new();
         let input = &object
             .predecessor
             .predecessor
@@ -82,29 +81,31 @@ pub(super) fn items(
         let source = &traversal.project.objects()[resolved.source_object_index];
         let center = crate::project_slice::centering::center(source, group, scale)
             .expect("sliced object has validated raw bounds");
-        for &member in &group.instance_indices {
+        // Print.cpp:4188-4202: one item per instance — the object hull
+        // translated by this instance's shift plus this instance's
+        // brim-area contours (m_objectBrimAreasByInstance keyed
+        // ObjectInstanceID), never an owner-folded set.
+        let brim = brim[object_index].as_ref();
+        for (copy, &member) in group.instance_indices.iter().enumerate() {
             let shift = footprint::instance_shift(&source.instances()[member], center, scale);
-            occupied.extend(
-                local_hull
-                    .iter()
-                    .map(|point| Point::new(point.x() + shift.x(), point.y() + shift.y())),
-            );
-        }
-        if let Some(brim) = &brim[object_index] {
-            let (x, y) = brim.occupied_origin(traversal, object_index);
-            let shift = Point::new(
-                (x / scale.factor()).round() as i64,
-                (y / scale.factor()).round() as i64,
-            );
-            occupied.extend(
-                brim.covered_hull()
-                    .iter()
-                    .map(|point| Point::new(point.x() + shift.x(), point.y() + shift.y())),
-            );
-        }
-        if occupied.len() >= 3 {
-            hulls.push((object_index, super::convex_hull(&occupied)));
+            let mut occupied = local_hull
+                .iter()
+                .map(|point| Point::new(point.x() + shift.x(), point.y() + shift.y()))
+                .collect::<Vec<_>>();
+            if let Some(brim) = brim
+                && let Some(entry) = brim.instance_areas.iter().find(|area| area.copy == copy)
+            {
+                occupied.extend(
+                    entry
+                        .area
+                        .iter()
+                        .flat_map(|expolygon| expolygon.contour().points().iter().copied()),
+                );
+            }
+            if occupied.len() >= 3 {
+                items.push(((object_index, copy), super::convex_hull(&occupied)));
+            }
         }
     }
-    hulls
+    items
 }

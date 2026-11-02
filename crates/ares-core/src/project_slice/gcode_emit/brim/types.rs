@@ -8,11 +8,20 @@ pub(crate) struct InstanceBrim {
     pub(crate) paths: Vec<Vec<Point>>,
 }
 
+/// `m_objectBrimAreasByInstance` entry (`Brim.cpp:984-996`): the
+/// per-instance plate-frame brim area consumed by skirt grouping
+/// (`Print.cpp:4195-4202`).
+pub(crate) struct InstanceArea {
+    pub(crate) copy: usize,
+    pub(crate) area: Vec<crate::geometry::ExPolygon>,
+}
+
 pub(crate) struct BrimPlan {
     pub(crate) area: Vec<crate::geometry::ExPolygon>,
     pub(crate) global: bool,
     pub(crate) owner_collection: bool,
     pub(crate) instances: Vec<InstanceBrim>,
+    pub(crate) instance_areas: Vec<InstanceArea>,
     pub(crate) paths: Vec<Vec<Point>>,
     pub(crate) covered_hull: Vec<Point>,
     pub(crate) width: f32,

@@ -27,7 +27,7 @@ pub(in crate::project_slice::gcode_emit) use geometry::split_at_nearest;
 use geometry::{closed_length, find_start_point};
 
 struct SkirtGroup {
-    members: Vec<usize>,
+    members: Vec<(usize, usize)>,
     loops: std::ops::Range<usize>,
     brims: Vec<super::brim::GroupBrim>,
 }
@@ -55,14 +55,19 @@ impl SkirtPlan {
         self.member_groups.len()
     }
 
-    pub(super) fn object_group(&self, object: usize) -> Option<usize> {
+    /// `find_skirt_brim_group_idx` (GCode.cpp:5956-5967): the group whose
+    /// instance list contains this `ObjectInstanceID`.
+    pub(super) fn instance_group(&self, instance: (usize, usize)) -> Option<usize> {
         self.member_groups
             .iter()
-            .position(|group| group.members.contains(&object))
+            .position(|group| group.members.contains(&instance))
     }
 
-    pub(super) fn group_brims(&self, object: usize) -> Option<&[super::brim::GroupBrim]> {
-        self.object_group(object)
+    pub(super) fn group_brims(
+        &self,
+        instance: (usize, usize),
+    ) -> Option<&[super::brim::GroupBrim]> {
+        self.instance_group(instance)
             .map(|index| self.member_groups[index].brims.as_slice())
     }
 

@@ -16,6 +16,7 @@ pub(super) struct Input<'a, 'b> {
     pub(super) skirt: &'a Option<skirt::SkirtPlan>,
     pub(super) done: &'a mut [(usize, f64)],
     pub(super) object: usize,
+    pub(super) copy: usize,
     pub(super) layer: Option<usize>,
     pub(super) builder: &'a mut EntryBuilder<'b>,
     pub(super) traversal: &'a PreparedPostClassicTraversal,
@@ -36,7 +37,7 @@ pub(super) fn emit(
     let Some(plan) = input.skirt else {
         return Ok(());
     };
-    let Some(group) = plan.object_group(input.object) else {
+    let Some(group) = plan.instance_group((input.object, input.copy)) else {
         return Ok(());
     };
     let physical_z = input.layer.map_or(input.print_z, |layer| {

@@ -3,12 +3,12 @@
 use super::*;
 
 pub(super) struct Group {
-    pub(super) members: Vec<usize>,
+    pub(super) members: Vec<(usize, usize)>,
     pub(super) hull: Polygon,
 }
 
 struct Item {
-    members: Vec<usize>,
+    members: Vec<(usize, usize)>,
     points: Vec<Point>,
     hull: Polygon,
     /// `emits_skirt` (Print.cpp:2785-2789): obstacle items such as the
@@ -19,7 +19,7 @@ struct Item {
 }
 
 pub(super) fn merge(
-    items: Vec<(usize, Vec<Point>)>,
+    items: Vec<((usize, usize), Vec<Point>)>,
     obstacle: Option<&[Point]>,
     distance: f32,
     tolerance: f64,

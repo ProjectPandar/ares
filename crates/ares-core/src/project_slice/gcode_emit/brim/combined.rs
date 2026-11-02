@@ -183,6 +183,7 @@ pub(in crate::project_slice::gcode_emit) fn group_brims(
                     global: false,
                     owner_collection: true,
                     instances: Vec::new(),
+                    instance_areas: Vec::new(),
                     paths,
                     covered_hull: Vec::new(),
                     width: template.width,
