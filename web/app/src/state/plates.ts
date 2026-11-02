@@ -123,6 +123,14 @@ export async function deleteObject(object: number) {
   applyLayout(layout, currentPlate);
 }
 
+/** "Set number of instances" (Plater::set_number_of_copies, Plater.cpp:19386-19406); 0 can remove the object. */
+export async function setNumberOfCopies(object: number, num: number) {
+  const { plater, currentPlate } = useApp.getState();
+  const layout = await plater!.setNumberOfCopies(object, num);
+  if (!layout.objects.some(({ id }) => id === useApp.getState().selectedObject)) useApp.setState({ selectedObject: null });
+  applyLayout(layout, currentPlate);
+}
+
 /** The object menu's "Mirror" along an axis (Plater::mirror). */
 export async function mirrorInstance(target: InstanceRef, axis: 0 | 1 | 2) {
   const { plater, currentPlate } = useApp.getState();

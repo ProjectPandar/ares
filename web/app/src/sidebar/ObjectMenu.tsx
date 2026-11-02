@@ -32,7 +32,13 @@ const INSTANCE_ITEMS = [
  * transform submenu's "Mirror" items of the object menu (GUI_Factories.cpp:1765). They act on the object's first instance, as the object
  * panel does. Closes on a pick, Escape or a click elsewhere.
  */
-export function ObjectMenu({ objectId, position, onClose }: { objectId: number; position: [number, number]; onClose: () => void }) {
+export function ObjectMenu({ objectId, position, onClose, onCopies }: {
+  objectId: number;
+  position: [number, number];
+  onClose: () => void;
+  /** Opens the "Set number of instances" dialog. */
+  onCopies: () => void;
+}) {
   const menu = useRef<HTMLDivElement>(null);
   const object = useApp((state) => state.scene?.objects.findIndex(({ id }) => id === objectId) ?? -1);
   const edits = instanceEdits(useApp((state) => state.scene?.objects.find(({ id }) => id === objectId)));
@@ -69,6 +75,15 @@ export function ObjectMenu({ objectId, position, onClose }: { objectId: number; 
           {label}
         </button>
       ))}
+      {/* GUI_Factories.cpp:2316-2318, enabled by can_increase_instances. */}
+      <button type="button" role="menuitem" title="Change the number of instances of the selected object"
+        disabled={slicing || !edits.add}
+        onClick={() => {
+          onClose();
+          onCopies();
+        }}>
+        Set number of instances...
+      </button>
       <div className="context-menu-label" role="presentation">Mirror:</div>
       {MIRROR.map(({ label, tooltip }, axis) => (
         <button key={label} type="button" role="menuitem" title={tooltip} disabled={slicing || object < 0}

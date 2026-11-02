@@ -121,6 +121,14 @@ export class PlaterSession {
     return this.#edit({ op: "deleteObject", object });
   }
 
+  /**
+   * "Set number of instances" (`Plater::set_number_of_copies`): instances added or removed to reach
+   * `num` (0 to 1000); 0 removes the object unless it has a single instance.
+   */
+  setNumberOfCopies(object: number, num: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "setNumberOfCopies", object, num });
+  }
+
   /** Appends a plate to the grid (`PartPlateList::create_plate`). */
   addPlate(): Promise<PlaterLayout> {
     return this.#edit({ op: "addPlate" });

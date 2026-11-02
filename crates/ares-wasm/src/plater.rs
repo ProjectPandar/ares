@@ -168,6 +168,14 @@ impl PlaterSession {
             .map_err(js_error)
     }
 
+    /// "Set number of instances" (`Plater::set_number_of_copies`): `num` copies of the object.
+    #[wasm_bindgen(js_name = setNumberOfCopies)]
+    pub fn set_number_of_copies(&mut self, object: usize, num: usize) -> Result<(), JsValue> {
+        self.session
+            .set_number_of_copies(object, num)
+            .map_err(js_error)
+    }
+
     /// The object menu's "Delete" (`Plater::priv::delete_object_from_model`): the object at
     /// `object` leaves the model and its plates.
     #[wasm_bindgen(js_name = deleteObject)]

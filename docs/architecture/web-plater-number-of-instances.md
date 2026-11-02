@@ -36,3 +36,16 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The object menu's "S
      - `decrease_instances(2)` on a two-instance object removes it.
 - **Web E2E** `plateNumberOfInstances.spec.ts`: the menu item, dialog value 3, OK, then "Slice plate", compared with the runtime Native oracle for the two-copy export.
 - **Expected before GREEN:** cases 1-4 fail on the `todo!()` skeleton of `set_number_of_copies`. The last check of case 4 fails on today's `InvalidInput`.
+
+## GREEN
+- **`PlaterSession::set_number_of_copies`** (`plater/instances.rs`).
+  - It refuses a missing object and a count above 1000.
+  - It calls `increase_instances(num − count)` when `can_increase_instances` holds, and `decrease_instances(count − num)` when the object has more than one instance; otherwise it returns `Ok` without a change, as upstream's silent returns.
+  - `can_increase_instances` is one helper, shared with `increase_instances`.
+- **`decrease_instances(num)`** with `num` at least the count calls `delete_object`, the delete slice's model and plate changes, as `Plater::priv::remove` does.
+- **Upstream UB, not ported.** After that removal, upstream reads `model_object->instances` of the freed `ModelObject` to select an instance (`Plater.cpp:19354-19355`): a use-after-free in UI selection code. The session has no selection there, so the read has no counterpart.
+- **Web.**
+  - The object menu has "Set number of instances..." (upstream's `dots` are three ASCII dots, `GUI_App.hpp:183`), enabled with "Add instance". It opens `CopiesDialog`: "Copies of the selected object", "Number of copies:" 0..1000, preset to the count, OK and Cancel.
+  - The selection clears when the object goes.
+  - `plateMirror.spec.ts` expects the menu's seven items.
+  - The two-copies oracle project moved into `e2e/instanceOracle.ts`, which `plateInstances.spec.ts` and `plateNumberOfInstances.spec.ts` share.

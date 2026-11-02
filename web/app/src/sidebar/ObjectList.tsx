@@ -2,6 +2,7 @@ import type { Scene, SceneObject, ScenePlate, VolumeType } from "@ares-slicer/wa
 import { Fragment, type ReactNode, useEffect, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
+import { CopiesDialog } from "./CopiesDialog";
 import { instanceEdits, ObjectMenu } from "./ObjectMenu";
 import { selectObject } from "../state/actions";
 import { arrange } from "../state/arrange";
@@ -21,6 +22,8 @@ const VOLUME_ICON: Record<VolumeType, string> = {
 function ObjectNode({ object, name, selected, nested = false }: { object: SceneObject; name: string; selected: boolean; nested?: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [menu, setMenu] = useState<[number, number] | null>(null);
+  const [copies, setCopies] = useState(false);
+  const index = useApp((state) => state.scene?.objects.findIndex(({ id }) => id === object.id) ?? -1);
   const parts = object.volumes.length > 1 ? object.volumes : [];
   const printable = object.instances.some((instance) => instance.printable);
   return (
@@ -43,7 +46,8 @@ function ObjectNode({ object, name, selected, nested = false }: { object: SceneO
         <span className="object-name">{name}</span>
         {object.instances.length > 1 && <span className="object-count" title="Instances">×{object.instances.length}</span>}
       </div>
-      {menu && <ObjectMenu objectId={object.id} position={menu} onClose={() => setMenu(null)} />}
+      {menu && <ObjectMenu objectId={object.id} position={menu} onClose={() => setMenu(null)} onCopies={() => setCopies(true)} />}
+      {copies && index >= 0 && <CopiesDialog object={index} count={object.instances.length} onClose={() => setCopies(false)} />}
       {expanded && parts.map((volume) => (
         <div key={volume.id} role="treeitem" className="object-row object-part" title={volume.type}
           onClick={() => selectObject(object.id)}>

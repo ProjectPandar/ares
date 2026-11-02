@@ -32,7 +32,7 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The plater's "+" and
 ## Included and deferred
 - **Included:** "+" and "−" for any count, plate registration, slicing and export of the copies, and the menu and keys.
 - **Deferred:**
-  - "Set number of instances" (a dialog over the same two calls), with `decrease_instances` removing the object when `num` reaches the instance count (`Plater.cpp:19351-19353`);
+  - "Set number of instances" and `decrease_instances` removing the object when `num` reaches the instance count (`Plater.cpp:19351-19353`), since ported in `web-plater-number-of-instances.md`;
   - "Fill bed with copies" (`fill_bed_with_copies`), which needs the arrange's fill mode;
   - "Set instance to object";
   - the toolbar buttons, since the web has no plater toolbar;
@@ -54,7 +54,7 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The plater's "+" and
 
 ## GREEN
 - **`plater/instances.rs`:** `increase_instances` / `decrease_instances` with upstream's enabling rules.
-  - "−" also refuses a `num` that would leave no instance with `InvalidInput`. Upstream removes the object there (`Plater.cpp:19351-19353`), a branch the ported menu path (`num` 1, `can_decrease_instances` needing more than one instance) never reaches. It is deferred with "Set number of instances".
+  - A `num` that would leave no instance removed the object upstream (`Plater.cpp:19351-19353`), a branch the menu path (`num` 1) never reaches. This slice refused it with `InvalidInput`; `web-plater-number-of-instances.md` has since ported the removal through the delete path.
   - The offset base reads the printable area's 2D bounding box.
 - **The composition is literal.** Starting from `Transform3d::IDENTITY`, the copy gets `with_offset`, `with_scaling_factor`, `with_rotation` and `with_mirror`, with the last instance's `get_offset`, `scaling_factor`, `rotation` and `mirror`. `plater/transformation.rs` gains the scaling-factor and mirror pairs (`Geometry.cpp:513-535, 550-587`).
 - **What case 3 proves.** Case 3 also asserts the extracted components through `PlaterSession::transformation_components`: rotation (0, 0, π/6), scaling factor (1, 1, 1) within 1e-9, and mirror exactly (−1, 1, 1), on the cube and on its copy. That composition is derived from `Geometry.cpp`, not witnessed by Native. Native's slice equality shows only that the composed copy slices identically.

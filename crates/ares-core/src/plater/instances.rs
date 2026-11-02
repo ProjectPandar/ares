@@ -41,7 +41,7 @@ impl PlaterSession {
             .objects()
             .get(object)
             .ok_or_else(|| refused("there is no such object"))?;
-        if !item.instances().iter().all(|instance| instance.printable()) {
+        if !Self::can_increase_instances(item) {
             return Err(refused(
                 "an object with a non-printable instance cannot get more instances",
             ));
@@ -76,10 +76,10 @@ impl PlaterSession {
         Ok(())
     }
 
-    /// `decrease_instances(num)` on the object at `object`: its last `num` instances removed.
-    /// `InvalidInput` where `can_decrease_instances` is false (`Plater.cpp:15109-15118`): no such
-    /// object or a single instance; and where `num` would leave none, which upstream turns into
-    /// removing the object.
+    /// `decrease_instances(num)` on the object at `object`: its last `num` instances removed, or,
+    /// when `num` reaches the count, the object itself (`Plater::priv::remove`,
+    /// `Plater.cpp:10727-10747, 19351-19353`, the "Delete" changes). `InvalidInput` where
+    /// `can_decrease_instances` is false (`:15109-15118`): no such object or a single instance.
     pub fn decrease_instances(&mut self, object: usize, num: usize) -> Result<(), SliceError> {
         let item = self
             .project
@@ -91,7 +91,9 @@ impl PlaterSession {
             return Err(refused("an object with one instance cannot lose it"));
         }
         if count <= num {
-            return Err(refused("removing an object is not supported yet"));
+            // Upstream then reads the freed object to select an instance (`:19354-19355`), undefined
+            // behaviour in UI selection code, not ported.
+            return self.delete_object(object);
         }
         let id = item.id();
         for _ in 0..num {
@@ -104,10 +106,33 @@ impl PlaterSession {
         Ok(())
     }
 
-    /// `Plater::set_number_of_copies` (`Plater.cpp:19386-19406`) with `num` copies.
+    /// `Plater::set_number_of_copies` (`Plater.cpp:19386-19406`) answered with `num`: copies added
+    /// or removed to reach it, a disabled `increase_instances` / `decrease_instances` returning
+    /// silently as upstream's do. `InvalidInput` for no such object or a count outside the
+    /// dialog's 0..1000 (`:19394-19395`).
     pub fn set_number_of_copies(&mut self, object: usize, num: usize) -> Result<(), SliceError> {
-        let _ = (object, num);
-        todo!()
+        let item = self
+            .project
+            .objects()
+            .get(object)
+            .ok_or_else(|| refused("there is no such object"))?;
+        if num > 1000 {
+            return Err(refused("the number of copies is 0 to 1000"));
+        }
+        let count = item.instances().len();
+        match num.cmp(&count) {
+            std::cmp::Ordering::Greater if Self::can_increase_instances(item) => {
+                self.increase_instances(object, num - count)
+            }
+            // `can_decrease_instances`: more than one instance.
+            std::cmp::Ordering::Less if count > 1 => self.decrease_instances(object, count - num),
+            _ => Ok(()),
+        }
+    }
+
+    /// `can_increase_instances` (`Plater.cpp:15097-15107`): every instance printable.
+    fn can_increase_instances(item: &crate::ProjectObject) -> bool {
+        item.instances().iter().all(|instance| instance.printable())
     }
 
     /// `Transformation::get_rotation`, `get_scaling_factor` and `get_mirror` of an instance
