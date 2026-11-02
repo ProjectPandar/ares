@@ -28,6 +28,9 @@ pub(super) struct FamilyFailure {
     #[cfg(target_os = "linux")]
     error_string: &'static str,
     upward_machines: Vec<String>,
+    /// `sliced_info.warnings` (`OrcaSlicer.cpp:505-518`): the `config_value_substituted` entries.
+    #[cfg(target_os = "linux")]
+    warnings: Vec<(String, ares_core::ConfigSubstitution)>,
     stderr: String,
     #[cfg(target_os = "linux")]
     output: PathBuf,
@@ -48,6 +51,8 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: "The input files to the slicer are not found.",
             upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
             stderr: format!("No such file: {}\n", input.display()),
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
@@ -57,6 +62,29 @@ impl CliFailure {
     pub(super) fn with_upward_report(mut self, upward: Vec<String>) -> Self {
         if let Self::Family(family) = &mut self {
             family.upward_machines = upward;
+        }
+        self
+    }
+
+    /// `cli_report_config_substitutions` (`OrcaSlicer.cpp:520-534`) after the 3MF load (`:1992`):
+    /// the stderr lines precede the family's own, and result.json records each substitution. The
+    /// post_process rejection (`:1806`) comes before the report and carries none.
+    pub(super) fn with_config_substitutions(
+        mut self,
+        file: &str,
+        substitutions: Vec<ares_core::ConfigSubstitution>,
+    ) -> Self {
+        if let Self::Family(family) = &mut self
+            && family.return_code != -19
+        {
+            family.stderr = substitution_warnings(file, &substitutions) + &family.stderr;
+            #[cfg(target_os = "linux")]
+            {
+                family.warnings = substitutions
+                    .into_iter()
+                    .map(|substitution| (file.to_owned(), substitution))
+                    .collect();
+            }
         }
         self
     }
@@ -73,6 +101,22 @@ impl CliFailure {
 }
 
 mod report;
+
+/// The stderr lines of `cli_report_config_substitutions` (`OrcaSlicer.cpp:525-527`).
+pub(super) fn substitution_warnings(
+    file: &str,
+    substitutions: &[ares_core::ConfigSubstitution],
+) -> String {
+    substitutions
+        .iter()
+        .map(|substitution| {
+            format!(
+                "warning: {file}: value \"{}\" for {} is not valid, using \"{}\" instead\n",
+                substitution.old_value, substitution.key, substitution.new_value
+            )
+        })
+        .collect()
+}
 
 impl From<io::Error> for CliFailure {
     fn from(error: io::Error) -> Self {
@@ -115,6 +159,8 @@ pub(super) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             error_string,
             upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
             stderr,
             #[cfg(target_os = "linux")]
             output: output.to_owned(),

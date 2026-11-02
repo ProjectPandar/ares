@@ -194,9 +194,10 @@ pub use profiles::{
 };
 pub use profiles::{slice_with_profiles_processed_validated, slice_with_profiles_validated};
 pub use project::{
-    CustomGCodeInfo, CustomGCodeMode, LayerConfigRange, PlateMetadata, Point3d, Project,
-    ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume, ProjectVolumeType,
-    Transform3d, UpwardMachineInput, UpwardMachineSource, load_project,
+    ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, LayerConfigRange, PlateMetadata, Point3d,
+    Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
+    ProjectVolumeType, Transform3d, UpwardMachineInput, UpwardMachineSource, load_project,
+    project_config_substitutions,
 };
 pub use project_slice::{
     CliProjectSliceRequest, CliUpwardMachine, slice_cli_project_plate_validated,

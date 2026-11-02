@@ -58,13 +58,14 @@ impl ProjectSettingsRaw {
         crate::options::json_deserialize::normalize_scalar_vector_strings(&mut self.0)
     }
 
-    /// The `EnableSilent` wire substitutions alone
-    /// (`Config.cpp:654-676` under the 3MF load rule, `Model.cpp:259`) for
+    /// The 3MF load's wire substitutions alone (`Config.cpp:654-676`) for
     /// the EMBEDDED raw, before CLI overrides merge in: override values
-    /// reach the config through their own deserialization rule and must
-    /// not be silently substituted.
-    pub(crate) fn normalize_embedded_wire_substitutions(&mut self) {
-        crate::options::json_deserialize::normalize_unknown_wire_substitutions(&mut self.0);
+    /// reach the config through their own deserialization rule and are not
+    /// substituted.
+    pub(crate) fn normalize_embedded_wire_substitutions(
+        &mut self,
+    ) -> Vec<crate::ConfigSubstitution> {
+        crate::options::json_deserialize::normalize_unknown_wire_substitutions(&mut self.0)
     }
 
     /// `DynamicPrintConfig::load_from_json` (`Config.cpp:905-990`) hands

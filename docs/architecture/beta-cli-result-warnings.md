@@ -46,3 +46,22 @@ The other 23 fail at assertions that are not result.json comparisons (stderr, G-
 1. **RED** for the key schema: the 34 tests above, which fail at their result.json comparison on the base.
 2. **RED** for substitutions: a new CLI case. A project with an unknown `support_ironing_pattern` value whose plate holds no object inside the print volume must match Native's stderr warning line and its result.json `warnings` entry. It is rejected with `-50` (`:6562-6573`), after the load reports the substitution (`:1992`). A `post_process` rejection cannot serve: it comes earlier (`:1806`), before the report.
 3. **The held `plate_origin_cli` retarget** lands on top. Its Native result.json has `"warnings": []`, so with the keys it compares whole.
+
+## GREEN
+- **The result.json keys.** `record_exit_reason` writes `"strict_mode": false` after `sparse_infill_density`, and `"warnings"` last: `[]`, or one tab-indented, sorted-key object per substitution. `FamilyFailure` carries the warnings with the input file name.
+- **The substitutions.**
+  - `normalize_unknown_wire_substitutions` returns what it replaced: the key, the wire text, and the new value (`"1"`/`"0"` for a bool, the default otherwise).
+  - `ares_core::project_config_substitutions(input)` reads the project settings, drops the non-wire scalars, applies `handle_legacy`, and returns the substitutions. Upstream translates legacy tokens before it substitutes (`set_deserialize_nothrow`, `Config.cpp:596-611`), so `enable_arc_fitting` "0" is not a substitution there.
+  - `ConfigSubstitution` is public: key, `old_value`, `new_value` (`Config.hpp:263-267`).
+- **The CLI, for 3MF input.**
+  - A family failure gets the warnings: the stderr lines (`OrcaSlicer.cpp:525-527`) before its own stderr, and the result.json entries. The post_process family (-19) does not, since upstream rejects it (`:1806`) before the report (`:1992`).
+  - A successful slice prints the stderr lines.
+  - A project whose settings cannot be read reports none: its load fails before the report.
+- **Deviation: `--load-settings` files.** Their substitutions (`:2263`) are not reported. Ares's preset loader (`deserialize_preset_config`) does not substitute unknown values at all, so there is nothing yet to report. The 3MF's own substitutions are reported on that path too.
+- **Order.** Records follow key order after `handle_legacy`. Upstream records in the JSON object's key order before a legacy rename; the two differ only for a renamed key.
+- **The RED case** got a stable input path in a separate test commit. The Native reference is cached by content and file name, so a per-run temp path made the cached stderr name an earlier run's file.
+- **Result, against the beta oracle** (73 tests: the 72 whole-file comparisons plus the new case): 51 pass.
+  - The 34 listed above, the new case, and `plate_origin_cli` with its retarget on top.
+  - `cli_unprintable_area_retains_complete_native_gcode_before_exit_154` gets past result.json (`cli_retained_exit.rs:78`) and still fails on G-code (`:86`).
+  - The other 21 fail where they failed before.
+- **Load order.** The 3MF load applies `handle_legacy` before the embedded substitution, as upstream does. `project_config_substitutions` reports in the same order, so a legacy `enable_arc_fitting` "1" is translated to "enabled", not substituted.

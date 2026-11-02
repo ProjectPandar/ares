@@ -7,7 +7,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
-use failure::{CliFailure, slice_error_to_failure};
+use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[derive(Parser)]
 #[command(name = "ares")]
@@ -112,6 +112,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         }
         Err(error) => return Err(error.into()),
     };
+    // The file name as the CLI received it (`m_input_files`), which the substitution report names.
+    let input_file = args.input.to_string_lossy().into_owned();
     let load_settings = args
         .load_settings
         .as_deref()
@@ -175,9 +177,14 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     // selects that same one-based plate (default first), and
                     // :5723/:433 records index+1 for the -50 result.
                     args.plate.unwrap_or(1),
-                ));
+                )
+                .with_config_substitutions(&input_file, substitutions(&input)));
             }
         };
+        eprint!(
+            "{}",
+            substitution_warnings(&input_file, &substitutions(&input))
+        );
         fs::write(&args.output, gcode)?;
         return Ok(());
     }
@@ -196,7 +203,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             // OrcaSlicer.cpp:5681-5690 iterates from plate index0 when
             // --slice0 is used, or selects the explicit one-based plate.
             // This byte API slices one view; its default is that first plate.
-            match &args.dump_moves {
+            let gcode = match &args.dump_moves {
                 Some(path) => {
                     let processed = match ares_core::slice_cli_project_plate_validated(
                         &input,
@@ -219,7 +226,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
                             )
-                            .with_upward_report(upward_report));
+                            .with_upward_report(upward_report)
+                            .with_config_substitutions(&input_file, substitutions(&input)));
                         }
                     };
                     fs::write(path, moves_csv::format(&processed.result))?;
@@ -247,11 +255,17 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
                             )
-                            .with_upward_report(upward_report));
+                            .with_upward_report(upward_report)
+                            .with_config_substitutions(&input_file, substitutions(&input)));
                         }
                     }
                 }
-            }
+            };
+            eprint!(
+                "{}",
+                substitution_warnings(&input_file, &substitutions(&input))
+            );
+            gcode
         }
         Some(extension) if extension == "stl" => {
             let options = args.options.ok_or_else(|| {
@@ -276,6 +290,12 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     fs::write(&args.output, output)?;
 
     Ok(())
+}
+
+/// The 3MF load's substitutions (`OrcaSlicer.cpp:1737-1758`). A project whose settings cannot be
+/// read fails its load before the report (`:1992`), so it has none to report.
+fn substitutions(input: &[u8]) -> Vec<ares_core::ConfigSubstitution> {
+    ares_core::project_config_substitutions(input).unwrap_or_default()
 }
 
 /// Splits one native coStrings CLI value (`"a;b;c"`, `PrintConfig.cpp:10890-10901`).

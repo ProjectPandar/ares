@@ -11,6 +11,7 @@ use super::{
     model_config_deserialize::wire::{self, WireValue},
     registry::{OptionValueKind, option_definition, option_metadata},
 };
+use crate::ConfigSubstitution;
 use crate::project::raw_settings::RawConfigValue;
 
 pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
@@ -183,14 +184,19 @@ pub(crate) fn decode(kind: OptionValueKind, value: &str) -> Result<RawConfigValu
     })
 }
 
-/// `Config.cpp:654-672` substitution under the `EnableSilent` 3MF load
-/// rule (`Model.cpp:259`): a scalar-bool wire that fails the "0"/"1"
-/// parse (`Config.hpp:1828-1848`) retries the `looks_like_true` verdict
-/// (`Config.hpp:96-99`: trim + case-insensitive "enabled"/"on"), and an
-/// enum-vector wire carrying an unknown entry replaces the whole vector
-/// with the option default (`Config.cpp:668-671`). Everything else keeps
-/// its value — the typed builders still diagnose other failures.
-pub(crate) fn normalize_unknown_wire_substitutions(values: &mut BTreeMap<String, RawConfigValue>) {
+/// `Config.cpp:654-672` substitution under the 3MF load's substitution
+/// rule (the CLI passes `Enable`, `OrcaSlicer.cpp:1380, 1737`): a
+/// scalar-bool wire that fails the "0"/"1" parse (`Config.hpp:1828-1848`)
+/// retries the `looks_like_true` verdict (`Config.hpp:96-99`: trim +
+/// case-insensitive "enabled"/"on"), and an enum-vector wire carrying an
+/// unknown entry replaces the whole vector with the option default
+/// (`Config.cpp:668-671`). Everything else keeps its value — the typed
+/// builders still diagnose other failures. Returns each substitution in key
+/// order, as `ConfigSubstitutionContext` records them.
+pub(crate) fn normalize_unknown_wire_substitutions(
+    values: &mut BTreeMap<String, RawConfigValue>,
+) -> Vec<ConfigSubstitution> {
+    let mut substitutions = Vec::new();
     for (key, value) in values {
         let Some(definition) = option_definition(key) else {
             continue;
@@ -203,11 +209,9 @@ pub(crate) fn normalize_unknown_wire_substitutions(values: &mut BTreeMap<String,
                 if matches!(text.split(',').next().unwrap_or_default().trim(), "0" | "1") {
                     continue;
                 }
-                *value = RawConfigValue::Text(if looks_like_true(text) {
-                    "1".to_owned()
-                } else {
-                    "0".to_owned()
-                });
+                let new_value = if looks_like_true(text) { "1" } else { "0" };
+                substitutions.push(ConfigSubstitution::new(key, text, new_value));
+                *value = RawConfigValue::Text(new_value.to_owned());
             }
             OptionValueKind::Enum => {
                 let RawConfigValue::Text(text) = value else {
@@ -227,6 +231,7 @@ pub(crate) fn normalize_unknown_wire_substitutions(values: &mut BTreeMap<String,
                 if type_keys.is_none_or(|keys| keys.contains(&text.trim())) {
                     continue;
                 }
+                substitutions.push(ConfigSubstitution::new(key, text, definition.default_value));
                 *value = RawConfigValue::Text(definition.default_value.to_owned());
             }
             OptionValueKind::Enums | OptionValueKind::EnumsNullable => {
@@ -264,11 +269,17 @@ pub(crate) fn normalize_unknown_wire_substitutions(values: &mut BTreeMap<String,
                 if entries.iter().copied().all(entries_valid) {
                     continue;
                 }
+                substitutions.push(ConfigSubstitution::new(
+                    key,
+                    &wire,
+                    definition.default_value,
+                ));
                 *value = RawConfigValue::Text(definition.default_value.to_owned());
             }
             _ => {}
         }
     }
+    substitutions
 }
 
 /// `ConfigHelpers::enum_looks_like_true_value` (`Config.hpp:96-99`).

@@ -35,6 +35,43 @@ const FILAMENT_SEQUENCE_PATH: &str = "Metadata/filament_sequence.json";
 const PROJECT_SETTINGS_PATH: &str = "Metadata/project_settings.config";
 const LAYER_HEIGHT_PROFILE_PATH: &str = "Metadata/layer_heights_profile.txt";
 
+/// One value the 3MF load replaced (`ConfigSubstitution`, `Config.hpp:263-267`): the option key,
+/// the wire text it carried and the value it now holds, serialized.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConfigSubstitution {
+    pub key: String,
+    pub old_value: String,
+    pub new_value: String,
+}
+
+impl ConfigSubstitution {
+    pub(crate) fn new(key: &str, old_value: &str, new_value: &str) -> Self {
+        Self {
+            key: key.to_owned(),
+            old_value: old_value.to_owned(),
+            new_value: new_value.to_owned(),
+        }
+    }
+}
+
+/// The substitutions the 3MF load makes in the project settings
+/// (`config_substitutions` of `Model::read_from_file`, `OrcaSlicer.cpp:1737-1758`), which the CLI
+/// reports after the load (`cli_report_config_substitutions`, `:1992`). `load_from_json` hands
+/// each value to `handle_legacy` before `set_deserialize_raw` substitutes it (`set_deserialize_nothrow`, `Config.cpp:596-611`), so
+/// a legacy token (`enable_arc_fitting` "0") is translated, not substituted.
+pub fn project_config_substitutions(
+    input: impl AsRef<[u8]>,
+) -> Result<Vec<ConfigSubstitution>, SliceError> {
+    let mut archive = ProjectArchive::open(input.as_ref(), ArchiveLimits::PROJECT)?;
+    let mut raw: ProjectSettingsRaw =
+        serde_json::from_slice(&read(&mut archive, PROJECT_SETTINGS_PATH)?).map_err(|error| {
+            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
+        })?;
+    raw.drop_invalid_wire_scalars();
+    raw.handle_legacy();
+    Ok(raw.normalize_embedded_wire_substitutions())
+}
+
 pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
     load_project_with(input, &crate::ConfigOverrides::default())
 }
@@ -121,11 +158,12 @@ pub(crate) fn load_project_with_preparation(
     // `set_deserialize` and the key keeps its default (`Config.cpp:905-990`).
     project_settings_raw.drop_invalid_wire_scalars();
     // `Config.cpp:596-617` (345efec64c7b): legacy rewriting precedes
-    // `set_deserialize_raw`'s EnableSilent substitution at680-695.
+    // `set_deserialize_raw`'s substitution at 680-695.
     project_settings_raw.handle_legacy();
-    // The EnableSilent 3MF load rule substitutes unknown enum/bool wires
-    // on the legacy-normalized EMBEDDED config. Caller overrides below
-    // merge through their own deserialization rule and are not substituted.
+    // The 3MF load substitutes unknown enum/bool wires on the legacy-normalized
+    // EMBEDDED config (the CLI passes `Enable`, `OrcaSlicer.cpp:1380, 1737`, and
+    // `project_config_substitutions` reports them). Caller overrides below merge
+    // through their own deserialization rule and are not substituted.
     project_settings_raw.normalize_embedded_wire_substitutions();
     // CLI:1704 captures the old configuration before user edits.
     let preparation = crate::options::flush_matrix::PreparationContext::capture(
