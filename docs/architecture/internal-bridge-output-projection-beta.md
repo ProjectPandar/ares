@@ -126,3 +126,77 @@ port commit, same-inventory breadth with zero PASS-to-FAIL transitions, rustfmt
 and strict all-target Clippy. The limited motion-block GREEN exceptions granted
 to other fill slices do not apply here. Core changes, if later justified, must
 remain rendering-neutral and portable to browser WASM, Windows, macOS and Linux.
+
+## Measured trigger and proposed port scope
+
+Read-only Native debugger captures and temporary Rust diagnostics now establish
+that the component/ring distinction is exercised in both the honeycomb count-two
+and triangles count-one projects. The measurements precede any production port.
+All four Native observation outputs match their public RED streams except the
+permitted generator timestamp. Optimized-out variables at the earlier breakpoint
+are excluded; the subsequent direction breakpoint exposes all compared fields.
+
+At layer 16, print Z 3.4, the following are ordered, coordinate-exact matches:
+original candidate polygons, expanded polygons, deep infill area, unsupported
+area, and real anchors. The anchor counts are 78 for honeycomb and 60 for
+triangles. Native's retained area is exactly the two-ring Rust intersection
+before filtering. Native retains both contour and hole; Rust's independent-ring
+predicate removes the hole and keeps only the contour. This is the first measured
+geometric mismatch at the candidate boundary, not a traversal inference.
+
+A shadow diagnostic invokes the existing Rust automatic-angle helper with the
+unfiltered two-ring intersection and the same anchors, without using its result
+in the pipeline. Its f64 result is exactly equal to Native for both projects:
+
+| Project | Native f64 angle | Actual Rust f64 angle | Two-ring shadow f64 angle |
+| --- | --- | --- | --- |
+| honeycomb count-two | `3.9269908456133424` | `3.92699087173241` | `3.9269908456133424` |
+| triangles count-one | `2.356194536926903` | `3.403392055427836` | `2.356194536926903` |
+
+At the Rectilinear entry, both implementations have the same ordered contour and
+hole, thickness -1, thickness-layers 1, and spacing `0.43987178802490234`. The
+selected bridge angle has already diverged. The honeycomb f32 angles are
+`3.9269907474517822` and `3.9269909858703613`; triangles uses
+`2.356194496154785` and `3.4033920764923096`. No modulo-angle or tolerance
+acceptance is used. Exact full Native Flow fields were not captured; matching
+width/height comments are not promoted to flow equality.
+
+Limiting boundary polylines also differ: Native has four, Rust three. That
+consequence is retained in the evidence, not ignored. These automatic-direction
+calls use the nonempty, ordered-equal real anchors, not the fallback boundaries.
+The restored hole in the final surface therefore does not establish that the
+hole was present during direction voting.
+
+All three Rust diagnostic outputs, including the unused shadow evaluation, are
+byte-identical to the uninstrumented RED outputs. All temporary probes are
+removed; rebuilding the restored code reproduces the same complete bytes for
+all three fixtures. No diagnostic interface or production fallback is retained.
+
+The proposed production slice is only `PrintObject::bridge_over_infill`,
+`PrintObject.cpp:3872–3886`: intersect expanded candidates into ExPolygon
+components; test unsupported overlap for the whole component including holes;
+retain or discard that whole component; flatten the retained components in
+source order before the existing limiting-area union. The Rust destination is
+`candidate_bridge_area.rs`, using the existing ExPolygon boolean operations.
+This replaces the flat-ring predicate; it is not an additional pattern-specific
+path. Keep offset arithmetic, anchors, automatic angle voting, overrides, bridge
+flow, reconstruction, final surface rewrite, fill projection and traversal
+unchanged. Subject-bounding-box clipping optimizations remain outside this
+correctness slice unless separately shown necessary.
+
+The investigation and direct RED commits are replayed onto
+`44fb3e6912efec80b2a12e01df6a44045daf3651` before any GREEN implementation.
+Fresh requalification there still yields three complete-output FAILs, with all
+Native double replays equal and all API/CLI pairs byte-identical. Complete Ares
+bytes for each input are unchanged from the original RED. The count-two triangles
+fixture still differs only at the generator and the two known footer keys, so
+the preset/footer prerequisite is not satisfied for these frozen inputs on this
+base. Do not repair or mask that prerequisite inside the component port, and do
+not label the port GREEN while the complete-output gate remains unsatisfied.
+Require all three complete-output targets to pass after an approved port and its
+separately owned prerequisite. The existing count-two triangles fixture is a
+control with raw motion and M73 already exact on the original RED base, not a
+third demonstrated geometric failure. A future port must also run identical
+before/after bridge/fill breadth inventories with zero PASS-to-FAIL transitions,
+rustfmt and strict all-target Clippy. No product fix is included in these
+measurements or in this scope request.
