@@ -9,6 +9,9 @@ use std::{fs, path::Path, process::Command};
 use crate::native_wall_clock::result_comparison_bytes;
 use crate::runner::{OrcaRunner, stages};
 
+#[path = "support_necessity_warning.rs"]
+mod support_necessity_warning;
+
 /// One 10 mm cube on an Ender-3: 12 facets.
 #[test]
 fn cli_success_result_matches_native_for_one_cube() {
