@@ -73,7 +73,7 @@ def producers_ready(metadata, run, variants):
     return all(job['status'] == 'completed' and job['conclusion'] == 'success' for job in producers)
 
 
-def paired(metadata, current, head, variants, wait_seconds):
+def paired(metadata, current, head, variants, wait_seconds, protected_runs):
     deadline = time.monotonic() + wait_seconds
     while True:
         runs = metadata.pages(f"/actions/workflows/{current['workflow_id']}/runs", 'workflow_runs', {'head_sha':head})
@@ -83,6 +83,11 @@ def paired(metadata, current, head, variants, wait_seconds):
             raise ValueError('multiple automatic runs for one event/head; cannot select a smaller footprint')
         ready = counts == {'push':1, 'pull_request':1} and any(run['id'] == current['id'] for run in automatic)
         if ready:
+            for run in automatic:
+                if run['head_sha'] != head:
+                    raise ValueError('paired run source identity mismatch')
+                run_ref(run)
+            protected_runs.update(run['id'] for run in automatic)
             for run in automatic:
                 ready = producers_ready(metadata, run, variants) and ready
         if ready:
@@ -147,7 +152,7 @@ def main():
         current = metadata.get(f'/actions/runs/{args.run_id}')
         if current['head_sha'] != args.head_sha or run_ref(current) != args.ref:
             raise ValueError('current run source/ref identity mismatch')
-        runs = paired(metadata, current, args.head_sha, variants, args.wait_seconds) if args.pair else [
+        runs = paired(metadata, current, args.head_sha, variants, args.wait_seconds, protected_runs) if args.pair else [
             measure(metadata, current, args.head_sha, args.ref, variants)]
         protected_runs.update(run['run_id'] for run in runs)
         report['runs'] = runs
