@@ -68,6 +68,8 @@ def family(key):
         return 'hestia-pack', 'hestia'
     if re.fullmatch(r'm3#\d+', key):
         return 'hestia-manifest', 'hestia'
+    if re.fullmatch(r'v0-rust-native-.+', key):
+        return 'rust-native-acceleration', 'other'
     if re.fullmatch(r'v\d+-rust-(build|deploy)-.+', key):
         return 'rust-acceleration', 'other'
     if re.fullmatch(r'node-cache-.+-npm-.+', key):

@@ -56,7 +56,7 @@ It also reconciles every live repository key through the Actions service:
 |---|---:|
 | Native delivery, all refs/runs | 5,000,000,000 |
 | Optional Hestia packs/manifests | 1,500,000,000 |
-| Rust build/deploy, npm, Playwright acceleration | 1,500,000,000 |
+| Rust build/deploy/native, npm, Playwright acceleration | 1,500,000,000 |
 | Whole repository working envelope | 8,000,000,000 |
 
 The remaining 2,000,000,000 bytes below decimal10GB are reserved margin, not an
