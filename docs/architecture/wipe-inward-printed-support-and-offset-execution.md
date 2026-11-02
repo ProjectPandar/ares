@@ -1,9 +1,10 @@
 # Wipe inward: printed support, atomic offset paths and execution
 
-Status: source-cited ARD proposal only. The preceding Classic unsupported-loop
-slice is approved strict GREEN at `11598a73a3b080b12a0434dc6dab0e107958be89`.
-No fixture, Native/API/CLI run, RED award or implementation is authorized by
-this proposal. Submit the ARD RR before any RED work.
+Status: approved ARD `89d3d93eaf92d23ceeb781c93aae757fab56d815` on the
+preceding approved Classic GREEN `11598a73a3b080b12a0434dc6dab0e107958be89`.
+The separately approved frozen Native-first three-case RED qualification is
+complete: one strict RED and two whole-stream control PASSes. No production
+implementation has started; submit the RED RR and await review before porting.
 
 Base: `11598a73a3b080b12a0434dc6dab0e107958be89`, the approved port tip, not a
 claim that it is already merged main. Upstream: OrcaSlicer beta
@@ -168,13 +169,13 @@ policy, cooling/estimator/M73 fixes, preset/config-footer repairs and UI
 controls. Preserve the approved Classic deferral port and disabled/nullopt
 behavior; no legacy mode, silent ignore or independent wipe policy.
 
-After ARD review, separately agree exact input hashes and Native-first
-RED budget. No fixture or input variation is authored in this phase.
-A proposed bounded witness set is: an enabled Inner/Outer closed contour
-with actual earlier inner support and a positive accepted offset; the same
-geometry with the option disabled; and an Outer/Inner or single-wall case
-with no eligible earlier inner support, proving no unconditional shift.
-These are proposed premises, not qualified witnesses or a spent budget.
+After ARD approval, the separate budget authorized at most three inputs.
+They were frozen before Native execution: unchanged base30x30x.8 box
+geometry with hollow walls, enabled Inner/Outer with earlier inner support,
+an otherwise identical disabled control, and an enabled single-wall case
+with no possible earlier inner-wall anchor. Only `wipe_inward` differs in
+the disabled control; only `wall_loops` differs in the single-wall control.
+All non-project-settings ZIP members remain byte-identical to the base.
 
 Require actual public wipe movement/markers, direction relative to the
 already printed walls and infill/deferred pass order, not private candidate
@@ -182,6 +183,60 @@ scores or TYPE-only assertions. Native2 fresh stable then validatedAPI1 /
 CLI1 per agreed input, no retry/producer switch/geometry search or probe.
 A failed premise or earlier unrelated first difference means STOP, not
 another candidate. RED RR and approval precede literal implementation.
+
+## Frozen public RED and ordinary-path controls
+
+The committed input-only generator/provenance lives in
+`tests/parity/wipe-inward/`. No Native output is embedded. The existing
+Native stream harness first qualifies a fresh stable Native pair and
+checks public movement premises before validated API and CLI execution.
+
+| Case | Input SHA256 | Strict result / actual Native observation |
+| --- | --- | --- |
+| Enabled Inner/Outer, three walls | `e160622e1c76a54796dee510a8970e65d28c145960b20315f0a32ec88db432bf` | RED; four immediate zero-E interior wipes after closed outer loops with earlier inner walls; API/CLI have none |
+| Disabled control, same geometry/settings | `2c904340328ca20f97e29d046a0b211730db12f1683238ca093842da49b95ed1` | Complete PASS; four ordinary negative-E wipes on the preceding closed outer boundary |
+| Enabled single-wall/no earlier anchor | `b11d24c6414ddefd57e6a31452dd1d5e197f3864cdb5ad57e18a017c2a1b2a12` | Complete PASS; no Inner-wall extrusion, four ordinary negative-E boundary wipes, no interior shift |
+
+Exactly one execution per frozen input, positive case first with STOP gates:
+Native6 fresh exports / validated API3 / CLI3, three stable Native pairs,
+all raw API/CLI outputs identical. All Native movement premises passed
+before the public comparison. There was no retry, extra probe, input
+variant, alternative producer, debugger, carrier trace or production edit.
+These are actual printed movement and earlier-role/closed-ring observations,
+not private candidate identities, support-prefix fields or solver operands.
+The reported counts are evidence, not coordinate/count assertion goldens.
+
+Enabled first strict difference is byte2026, line98, column2: Native
+`;WIPE_START` versus API/CLI `; stop printing object cube10.stl id:0 copy 0`.
+The external M73-command-only first is also original98/98, diagnostic81:
+the exact first owning immediate-wipe marker, not an earlier unrelated
+motion or timing difference. The strict comparator retains every M73 and
+all feed/E/labels/footer/whitespace/trailing bytes; only generator normalizes.
+All removed M73 records, maps and full unfiltered contexts are retained
+externally; no Fword filter or diagnostic acceptance is used.
+
+The disabled control's four complete generator-only streams agree at
+29877 bytes /1009 lines, SHA
+`cf566ab42bb2c9255995a662752d0c8ef76152a3ffd1d5d1c6becf3a8cda6c49`,
+retaining48M73 records. The no-anchor control agrees at28377 bytes /937lines,
+SHA `8899818d9c85319daa2f0cf1f47415b998442009ffb38681cf8349ef97a5a3c2`,
+retaining28M73. Both include footer and terminal/trailing bytes. The enabled
+case remains strict RED; no family or FULL closure is claimed.
+
+Fmt and strict workspace/all-targets Clippy pass. All test/source/input/list/
+producer/tree identities and the dedicated ELF were frozen before Native;
+ELF remained unchanged through all three cases. Only this qualification
+note changes after execution; no postcommit rerun is claimed.
+
+## Implementation review gate
+
+Submit this actual RED RR and await approval before any implementation.
+The approved eventual port must be split into reviewable commits: complete
+source helper module(s) first, then GCode transport/execution. Every file
+stays at most400LOC; no unused prefix stub, placeholder, epsilon tuning or
+independent wipe policy. Before/after runtime scope is agreed and frozen
+before production edits. The helper and transport split is not permission
+to claim GREEN for unconnected source or spend another Native budget.
 
 Later frozen paired breadth must include disabled/zero-distance/no-wipe,
 inner-first/outer-first, holes/contours, mixed/variable-width paths, Auto

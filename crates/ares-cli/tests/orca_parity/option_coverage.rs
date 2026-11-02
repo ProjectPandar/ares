@@ -6,6 +6,9 @@ mod classic_narrow_island_guard;
 #[path = "classic_thin_hole_reach.rs"]
 mod classic_thin_hole_reach;
 
+#[path = "wipe_inward.rs"]
+mod wipe_inward;
+
 #[path = "classic_unsupported_wall_last.rs"]
 mod classic_unsupported_wall_last;
 

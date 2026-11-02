@@ -1,0 +1,293 @@
+{
+  "Native_output_embedded": false,
+  "base": "tests/parity/arachne-fuzzy-f1/none.3mf",
+  "base_sha256": "76d7264607c688b28d6e6108944fbaa6320093af2ba96cb09211850429302e98",
+  "cases": {
+    "disabled-control": {
+      "geometry_unchanged_from_base": true,
+      "input_sha256": "2c904340328ca20f97e29d046a0b211730db12f1683238ca093842da49b95ed1",
+      "member_sha256": {
+        "3D/3dmodel.model": "559fa1c731edc49d3a877874dbb935d70011cda23f9329d4b8d486885d3b85aa",
+        "3D/Objects/cube10.stl_1.model": "2eaf38cdcbc1b0c4cfe646222446a41a6cff9dc8ecc499ef5515fb83524eabb8",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/project_settings.config": "961f04f10b0713c3b7565760848730f0ee7b19828bcbcbb5f6336142ae52a331",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings_overrides": {
+        "bottom_shell_layers": "0",
+        "bottom_shell_thickness": "0",
+        "brim_type": "no_brim",
+        "brim_width": "0",
+        "detect_overhang_wall": "0",
+        "detect_thin_wall": "0",
+        "elefant_foot_compensation": "0",
+        "enable_arc_fitting": "disabled",
+        "enable_prime_tower": "0",
+        "enable_support": "0",
+        "filament_retract_before_wipe": [
+          "nil"
+        ],
+        "filament_retract_when_changing_layer": [
+          "nil"
+        ],
+        "filament_retraction_length": [
+          "nil"
+        ],
+        "filament_wipe": [
+          "nil"
+        ],
+        "filament_wipe_distance": [
+          "nil"
+        ],
+        "fuzzy_skin": "none",
+        "gap_fill_target": "nowhere",
+        "initial_layer_line_width": "0.45",
+        "initial_layer_print_height": "0.2",
+        "inner_wall_line_width": "0.45",
+        "is_infill_first": "0",
+        "layer_height": "0.2",
+        "line_width": "0.45",
+        "only_one_wall_first_layer": "0",
+        "only_one_wall_top": "0",
+        "outer_wall_line_width": "0.45",
+        "overhang_reverse": "0",
+        "precise_outer_wall": "0",
+        "retract_before_wipe": [
+          "0%"
+        ],
+        "retract_when_changing_layer": [
+          "1"
+        ],
+        "retraction_length": [
+          "0.8"
+        ],
+        "role_based_wipe_speed": "0",
+        "seam_gap": "0",
+        "seam_position": "aligned",
+        "seam_slope_type": "none",
+        "skirt_loops": "0",
+        "sparse_infill_density": "0%",
+        "spiral_mode": "0",
+        "top_shell_layers": "0",
+        "top_shell_thickness": "0",
+        "unsupported_wall_last": "0",
+        "use_relative_e_distances": "1",
+        "wall_direction": "ccw",
+        "wall_generator": "classic",
+        "wall_loops": "3",
+        "wall_sequence": "inner wall/outer wall",
+        "wipe": [
+          "1"
+        ],
+        "wipe_before_external_loop": "0",
+        "wipe_distance": [
+          "2"
+        ],
+        "wipe_inward": "0",
+        "wipe_inward_distance": "50%",
+        "wipe_on_loops": "0",
+        "wipe_speed": "30"
+      }
+    },
+    "enabled-inner-outer": {
+      "geometry_unchanged_from_base": true,
+      "input_sha256": "e160622e1c76a54796dee510a8970e65d28c145960b20315f0a32ec88db432bf",
+      "member_sha256": {
+        "3D/3dmodel.model": "559fa1c731edc49d3a877874dbb935d70011cda23f9329d4b8d486885d3b85aa",
+        "3D/Objects/cube10.stl_1.model": "2eaf38cdcbc1b0c4cfe646222446a41a6cff9dc8ecc499ef5515fb83524eabb8",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/project_settings.config": "bee95d06f8a224cdc23f046f8d97ef9d3ff53e3ad345026caf1c6579f323960b",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings_overrides": {
+        "bottom_shell_layers": "0",
+        "bottom_shell_thickness": "0",
+        "brim_type": "no_brim",
+        "brim_width": "0",
+        "detect_overhang_wall": "0",
+        "detect_thin_wall": "0",
+        "elefant_foot_compensation": "0",
+        "enable_arc_fitting": "disabled",
+        "enable_prime_tower": "0",
+        "enable_support": "0",
+        "filament_retract_before_wipe": [
+          "nil"
+        ],
+        "filament_retract_when_changing_layer": [
+          "nil"
+        ],
+        "filament_retraction_length": [
+          "nil"
+        ],
+        "filament_wipe": [
+          "nil"
+        ],
+        "filament_wipe_distance": [
+          "nil"
+        ],
+        "fuzzy_skin": "none",
+        "gap_fill_target": "nowhere",
+        "initial_layer_line_width": "0.45",
+        "initial_layer_print_height": "0.2",
+        "inner_wall_line_width": "0.45",
+        "is_infill_first": "0",
+        "layer_height": "0.2",
+        "line_width": "0.45",
+        "only_one_wall_first_layer": "0",
+        "only_one_wall_top": "0",
+        "outer_wall_line_width": "0.45",
+        "overhang_reverse": "0",
+        "precise_outer_wall": "0",
+        "retract_before_wipe": [
+          "0%"
+        ],
+        "retract_when_changing_layer": [
+          "1"
+        ],
+        "retraction_length": [
+          "0.8"
+        ],
+        "role_based_wipe_speed": "0",
+        "seam_gap": "0",
+        "seam_position": "aligned",
+        "seam_slope_type": "none",
+        "skirt_loops": "0",
+        "sparse_infill_density": "0%",
+        "spiral_mode": "0",
+        "top_shell_layers": "0",
+        "top_shell_thickness": "0",
+        "unsupported_wall_last": "0",
+        "use_relative_e_distances": "1",
+        "wall_direction": "ccw",
+        "wall_generator": "classic",
+        "wall_loops": "3",
+        "wall_sequence": "inner wall/outer wall",
+        "wipe": [
+          "1"
+        ],
+        "wipe_before_external_loop": "0",
+        "wipe_distance": [
+          "2"
+        ],
+        "wipe_inward": "1",
+        "wipe_inward_distance": "50%",
+        "wipe_on_loops": "0",
+        "wipe_speed": "30"
+      }
+    },
+    "single-wall-no-anchor": {
+      "geometry_unchanged_from_base": true,
+      "input_sha256": "b11d24c6414ddefd57e6a31452dd1d5e197f3864cdb5ad57e18a017c2a1b2a12",
+      "member_sha256": {
+        "3D/3dmodel.model": "559fa1c731edc49d3a877874dbb935d70011cda23f9329d4b8d486885d3b85aa",
+        "3D/Objects/cube10.stl_1.model": "2eaf38cdcbc1b0c4cfe646222446a41a6cff9dc8ecc499ef5515fb83524eabb8",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "Metadata/project_settings.config": "4c123cd17ad6b06b43b9403c3385ed07ecc869c46fa22bfc2b05d6b1cd7324d6",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings_overrides": {
+        "bottom_shell_layers": "0",
+        "bottom_shell_thickness": "0",
+        "brim_type": "no_brim",
+        "brim_width": "0",
+        "detect_overhang_wall": "0",
+        "detect_thin_wall": "0",
+        "elefant_foot_compensation": "0",
+        "enable_arc_fitting": "disabled",
+        "enable_prime_tower": "0",
+        "enable_support": "0",
+        "filament_retract_before_wipe": [
+          "nil"
+        ],
+        "filament_retract_when_changing_layer": [
+          "nil"
+        ],
+        "filament_retraction_length": [
+          "nil"
+        ],
+        "filament_wipe": [
+          "nil"
+        ],
+        "filament_wipe_distance": [
+          "nil"
+        ],
+        "fuzzy_skin": "none",
+        "gap_fill_target": "nowhere",
+        "initial_layer_line_width": "0.45",
+        "initial_layer_print_height": "0.2",
+        "inner_wall_line_width": "0.45",
+        "is_infill_first": "0",
+        "layer_height": "0.2",
+        "line_width": "0.45",
+        "only_one_wall_first_layer": "0",
+        "only_one_wall_top": "0",
+        "outer_wall_line_width": "0.45",
+        "overhang_reverse": "0",
+        "precise_outer_wall": "0",
+        "retract_before_wipe": [
+          "0%"
+        ],
+        "retract_when_changing_layer": [
+          "1"
+        ],
+        "retraction_length": [
+          "0.8"
+        ],
+        "role_based_wipe_speed": "0",
+        "seam_gap": "0",
+        "seam_position": "aligned",
+        "seam_slope_type": "none",
+        "skirt_loops": "0",
+        "sparse_infill_density": "0%",
+        "spiral_mode": "0",
+        "top_shell_layers": "0",
+        "top_shell_thickness": "0",
+        "unsupported_wall_last": "0",
+        "use_relative_e_distances": "1",
+        "wall_direction": "ccw",
+        "wall_generator": "classic",
+        "wall_loops": "1",
+        "wall_sequence": "inner wall/outer wall",
+        "wipe": [
+          "1"
+        ],
+        "wipe_before_external_loop": "0",
+        "wipe_distance": [
+          "2"
+        ],
+        "wipe_inward": "1",
+        "wipe_inward_distance": "50%",
+        "wipe_on_loops": "0",
+        "wipe_speed": "30"
+      }
+    }
+  },
+  "source": "WipePathHelpers.cpp:21-884;GCode.cpp:668-756,8494,8729-8801,8847-8854,8903-8929",
+  "unchanged_mesh_bounds_mm": [
+    [
+      -15.0,
+      15.0
+    ],
+    [
+      -15.0,
+      15.0
+    ],
+    [
+      -0.4,
+      0.4
+    ]
+  ],
+  "upstream": "345efec64c7b95a05ce5cf96df0dde66a158835c"
+}
