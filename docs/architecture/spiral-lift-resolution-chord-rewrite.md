@@ -1,7 +1,7 @@
 # Spiral lift: resolution-chord rewrite boundary
 
-Status: public RED qualified on the approved Klipper stack; literal writer
-GREEN and family breadth are not yet executed.
+Status: five public RED cases qualify both spiral branches on the approved
+Klipper stack; literal writer GREEN and family breadth are not yet executed.
 
 ## Upstream owner and destinations
 
@@ -147,6 +147,40 @@ The exact parent-plus-staged execution identity and full exports are in
 the external evidence bundle. This later documentation-only result note
 is not a postcommit runtime rerun. Full GREEN still includes M73 and every
 other record; an endpoint-only diagnostic cannot substitute for it.
+
+## Arc-enabled public RED qualification
+
+Three further unchanged inputs exercise the genuine G17/G3 branch:
+
+- sequential SHA256
+  `baa6c8d352d5e62c400cc450d50de643ce868fcc619a71352748f89aabe7aab1`;
+- stock SHA256
+  `b3f72543f8794281e1d99ef784a993dbb0523bfbe96468403cec4b21da34a5a2`;
+- fuzzy stock-control SHA256
+  `5d4a5f95fd4c12244e87b17e9e64052f56d66fd83df405438fb4c4e34c8c524c`.
+
+Their separate public module is `spiral_lift_arc_enabled.rs`; the earlier
+two tests and fixtures are unchanged and were not rerun. Each added case
+has two fresh stable Native exports, one API call and one CLI call, with
+raw API/CLI equality. All three strict complete-output tests remain RED:
+API inserts an earlier M73 at original line110. No timing record is masked
+or removed by their comparator.
+
+The first external non-M73 differences are sequential327/327 and
+stock/fuzzy322/321: Native `G17`, then
+`G3 Z.8 I1.151 J.396 P1  F30000`, versus API/CLI `G1 F30000`, then
+linearized XYZ points. This directly qualifies
+`GCodeWriter.cpp:1262-1274`, not a formatter-only or later gap witness.
+The two disabled-arc cases qualify the resolution-chord segment branch
+at1227-1259. Both branches remain inside the approved writer slice.
+Across the two selected runs: five expected strict failures, Native10,
+API5 and CLI5, with no retry, observer, writer port or family claim.
+
+A separate E5 check is deferred until after the FillBase gap-direction
+port: rerun its complete output and test whether the same-layer feed
+mismatch disappears. If it does, no cooling slice is needed; if it remains,
+request a separate attribution for `CoolingBuffer.cpp:989-1020`. Neither
+cooling nor FillBase is folded into the spiral writer commit.
 
 ## Breadth, failure inventory and exit evidence
 

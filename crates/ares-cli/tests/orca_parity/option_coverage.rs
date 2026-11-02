@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "spiral_lift_arc_enabled.rs"]
+mod spiral_lift_arc_enabled;
+
 #[path = "spiral_lift_resolution.rs"]
 mod spiral_lift_resolution;
 
