@@ -135,18 +135,20 @@ fn plater_select_plate_tracks_the_current_plate() {
     .unwrap();
     // `Plater.cpp:10222, 10229`: plate 0 after loading.
     assert_eq!(session.current_plate(), 0);
-    session.select_plate(1).unwrap();
-    assert_eq!(session.current_plate(), 1);
+    // Adding a plate does not select it (`PartPlateList::create_plate`).
+    session.add_plate().unwrap();
+    assert_eq!(session.current_plate(), 0);
+    session.select_plate(2).unwrap();
+    assert_eq!(session.current_plate(), 2);
     // `delete_plate` moves the current plate back past a deleted one before it
     // (`PartPlate.cpp:6809-6815`).
     assert!(session.delete_plate(0));
-    assert_eq!(session.current_plate(), 0);
-    session.add_plate().unwrap();
+    assert_eq!(session.current_plate(), 1);
     // The plate's arrange icon selects its plate first.
     session
-        .arrange(ArrangeScope::CurrentPlate(1), settings(false, false))
+        .arrange(ArrangeScope::CurrentPlate(0), settings(false, false))
         .unwrap();
-    assert_eq!(session.current_plate(), 1);
+    assert_eq!(session.current_plate(), 0);
     assert!(matches!(
         session.select_plate(2),
         Err(SliceError::InvalidInput(_))
