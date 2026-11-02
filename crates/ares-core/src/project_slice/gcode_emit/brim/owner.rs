@@ -155,15 +155,23 @@ impl Area {
         no_brim_area: &[ExPolygon],
         tower_exclusions: &[ExPolygon],
     ) -> Result<AreaOutput, crate::SliceError> {
-        let instance_areas = self
-            .entries
-            .iter()
-            .filter(|entry| !entry.area.is_empty())
-            .map(|entry| InstanceArea {
-                copy: entry.copy,
-                area: entry.area.clone(),
-            })
-            .collect::<Vec<_>>();
+        // Only the plate-frame entry paths carry per-instance areas for
+        // skirt grouping (Print.cpp:4195-4202): `append`/`expand`
+        // translate every map entry (Brim.cpp:78-84); the generation-time
+        // global-combine path stores one untranslated local entry, which
+        // is not plate-frame data.
+        let instance_areas = if self.owner_collection {
+            self.entries
+                .iter()
+                .filter(|entry| !entry.area.is_empty())
+                .map(|entry| InstanceArea {
+                    copy: entry.copy,
+                    area: entry.area.clone(),
+                })
+                .collect::<Vec<_>>()
+        } else {
+            Vec::new()
+        };
         let merged = self
             .entries
             .iter()
