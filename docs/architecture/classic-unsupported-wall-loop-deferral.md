@@ -3,7 +3,9 @@
 Status: approved Classic ARD committed before fixture work as
 `9f2e1658197effcb31bb554a38ae23ac97d56954`; frozen Native-first public
 qualification is complete (two strict REDs and one complete control PASS).
-Await RED review before any port; no production implementation yet.
+The frozen RED `aeff66b69d8acee8310cb024cc04353983c9f10b` is approved.
+The consumer boundary below is approved for its `wipe_support == nullopt`
+branch; the entire `wipe_inward` slice is explicitly deferred.
 
 Base: `5910df8eb0c2a9cab5958a1dcce7fdb34d075ecb`.
 Upstream: OrcaSlicer beta `345efec64c7b95a05ce5cf96df0dde66a158835c`.
@@ -53,9 +55,10 @@ observable rewrite slice, so the exact consumer is named below.
 - `GCode.cpp:8889-8933::extrude_perimeters`: retain region selection;
   `defer_unsupported = !is_infill_first`; filter loop flag against
   `unsupported_loops_only`. Already-infill-first walls do not get a
-  duplicate deferred emission. Preserve the source region-scoped printed
-  prefix for any enabled inward wipe, rather than treating unprinted
-  deferred loops as already printed support geometry.
+  duplicate deferred emission. Port this consumer exactly as its
+  `wipe_support == nullopt` branch: region/first-layer `should_print`,
+  `defer_unsupported = !is_infill_first` and `waits_for_infill` filtering.
+  No prefix stub, unused support field or wipe-offset forwarding is added.
 
 ## Rust destination boundary
 
@@ -79,8 +82,9 @@ All implementation stays inside existing core API modules:
    emission adapters in `gcode_emit/motion/perimeter.rs`: implement the
    cited two perimeter passes around existing infill. Preserve original
    collection/region ownership and complete region perimeter context for
-   existing wipe logic. No detached second slicing pipeline or new public
-   scheduling abstraction.
+   the existing wipe-before-external touching-lines gate. No printed-prefix
+   support carrier is introduced in this nullopt branch. No detached second
+   slicing pipeline or new public scheduling abstraction.
 
 Reuse the existing line-distance index only after checking that its
 unsigned query and strict comparison match the cited source. Do not add
@@ -98,12 +102,29 @@ runtime. Browser WASM, Windows, macOS and Linux remain Tier1 targets.
 ## Included and explicitly deferred
 
 Include the Classic producer, option projection, loop field/transport and
-its named G-code pass consumer as one end-to-end source slice. The inward
-wipe printed-prefix bookkeeping at the consumer belongs to the same
-selection contract; preserve existing wipe geometry rather than building
-a different wipe algorithm. If that requires a distinct unported source
-prerequisite, report it before implementation instead of omitting it or
-waiving output.
+its named G-code pass consumer as one end-to-end source slice, specifically
+its `wipe_support == nullopt` branch. The optional support object at
+`GCode.cpp:8903-8907` is only emplaced when wipe is enabled, filament wipe
+is enabled, `wipe_inward` is enabled, its distance is positive, and wipe
+distance exceeds the source epsilon. Otherwise support preseed/append and
+forwarding are no-ops. All three frozen RED inputs set `wipe_inward=0` and
+remain valid for this exact branch. No prefix stub or unused field is added.
+
+### Deferred: wipe_inward slice
+
+The whole `wipe_inward` source boundary is separate and currently unported:
+`WipePathHelpers.hpp::WipeInwardSupport`, `WipePathHelpers.cpp::append` and
+the offset/support/material-side helpers; `GCode.cpp:8494/8738-8801/8847-8854`
+forwarding and `offset_wipe_path_toward_support` execution; plus the optional
+support preseed, append and forwarding at `:8903-8929`. Its typed option
+projection and actual supported wipe geometry belong to that future slice,
+not to this one. Existing `wipe_on_loops` is a different source behavior.
+
+A read-only prerequisite audit stopped before any production edit or new
+runtime on the approved RED. The explicit disposition is this nullopt-branch
+boundary, not a waiver or a placeholder implementation. After this slice's
+GREEN, propose a source-cited `wipe_inward` ARD as the next slice; its actual
+RED and runtime budget require separate approval.
 
 Defer Arachne's separate call at `PerimeterGenerator.cpp:3108`; no Arachne
 parity is claimed from a Classic fixture. If enabling this boolean on an
@@ -201,10 +222,10 @@ is claimed. Submit this frozen RED RR before any implementation.
 
 ## Approval and verification sequence
 
-The Classic ARD/source boundary and named G-code consumer are approved,
-and the ARD was committed before the frozen three-case qualification.
-Submit the RED RR and await review before any literal port. No implicit
-delegation or unrelated queue write is authorized. Freeze Classic/wall-sequence/
+The Classic producer/flag/nullopt-consumer boundary and frozen RED are
+approved. This doc-only boundary amendment must be committed on top of the
+RED before any port. No implicit delegation or unrelated queue write is
+authorized. Freeze Classic/wall-sequence/
 overhang/region-infill/wipe before/after breadth before edits, require
 zero prior-PASS to FAIL and report every flip and first remaining full/
 non-M73 difference. Complete GREEN requires M73-inclusive whole streams;
