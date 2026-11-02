@@ -93,3 +93,41 @@ test("the arrange reads the printer's vendor from the installed vendors, as Pres
     withoutBbl: { offset: withoutBbl, arranged: true },
   }, null, 2)}\n`);
 });
+
+test("the arrange keeps a first-layer-scanning Bambu Lab printer's calibration region clear", async ({ page }) => {
+  test.setTimeout(300_000);
+  mkdirSync(artifacts, { recursive: true });
+  // The X2D scanning its first layer, its cube scaled to 230 mm deep: centred it spans Y 13..243, into
+  // the (18, 0)-(240, 15) region ArrangeJob::process adds for a Bambu Lab vendor (ArrangeJob.cpp:732-734).
+  const project = `${artifacts}x2d-scan.3mf`;
+  writeFileSync(project, editedProject(X2D, [
+    ["3D/3dmodel.model", "transform=\"1 0 0 0 1 0 0 0 1 138.25 128 5\"", "transform=\"1 0 0 0 23 0 0 0 1 138.25 128 5\""],
+    [PROJECT, "\"scan_first_layer\": \"0\"", "\"scan_first_layer\": \"1\""],
+  ]));
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
+  await installBbl(page, true);
+  await page.getByTestId("import-input").setInputFiles(project);
+  await expect(page.getByRole("button", { name: "Arrange", exact: true })).toBeVisible({ timeout: 60_000 });
+
+  const popup = page.getByRole("dialog", { name: "Arrange settings" });
+  const avoid = popup.getByRole("checkbox", { name: "Avoid extrusion calibration region" });
+  /** "Arrange all" with the calibration region avoided or not, then the cube's front edge. */
+  async function frontEdge(avoided: boolean) {
+    if (!(await popup.isVisible())) await page.getByRole("button", { name: "Arrange", exact: true }).click();
+    await popup.getByRole("button", { name: "Reset" }).click();
+    if ((await avoid.isChecked()) !== avoided) await avoid.click();
+    await expect(avoid).toBeChecked({ checked: avoided });
+    await popup.getByRole("button", { name: "Arrange", exact: true }).click();
+    await expect(page.getByTestId("status")).not.toContainText("Arranging", { timeout: 60_000 });
+    await expect(page.getByTestId("status")).not.toContainText("Arrange failed");
+    const probe = JSON.parse((await page.locator(".viewport").getAttribute("data-instances"))!) as {
+      objects: { instances: { matrix: number[] }[] }[];
+    };
+    return probe.objects[0].instances[0].matrix[13] - 115;
+  }
+  expect(await frontEdge(true)).toBeGreaterThanOrEqual(15);
+  await page.screenshot({ path: `${artifacts}scan-region.png` });
+  // Control: without "avoid" there is no region and the cube stays centred, in front of Y 15.
+  expect(await frontEdge(false)).toBeLessThan(15);
+});

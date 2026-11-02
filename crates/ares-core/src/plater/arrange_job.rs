@@ -1,8 +1,8 @@
 //! The GUI arrange job (`src/slic3r/GUI/Jobs/ArrangeJob.cpp` at v2.5.0-beta `345efec64`) on the
 //! plater session: `prepare`, `check_unprintable`, `process` and `finalize`
 //! (`:342-414, 532-599, 632-965`) over the plate list, running `arrangement::arrange`, with the
-//! prime tower, the IDEX/IQEX zones, locked plates and the nozzles' shared bed. Per-object skirts
-//! and the BBL calibration strip are not ported yet; projects needing them are rejected.
+//! prime tower, the IDEX/IQEX zones, locked plates, the nozzles' shared bed and the first-layer-scan
+//! calibration region. Per-object skirts are not ported yet; projects needing them are rejected.
 
 mod finalize;
 mod imex;
@@ -20,6 +20,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::PlaterSession;
 use super::plate_list::PlateList;
+use crate::SliceError;
 use crate::arrangement::imex::ImexArranger;
 use crate::arrangement::{
     ArrangeParams, ArrangePolygon, Bed, SCALING_FACTOR, arrange, get_shrink_bedpts,
@@ -28,9 +29,8 @@ use crate::arrangement::{
 };
 use crate::geometry::fixed_gcc_sort_by;
 use crate::options::{ProcessTimelapseType, ProjectSettings};
-use crate::project::raw_settings::RawConfigValue;
+use crate::profiles::VendorType;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
-use crate::{Project, SliceError};
 
 /// Which instances an arrange moves (`Job::JobPrepareState`).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -59,10 +59,6 @@ const LOCKED_PLATE: &str = "This plate is locked.\nCannot auto-arrange on this p
 
 /// `MAX_NUM_PLATES` the job reserves exclusion areas on (`ArrangeJob.cpp:410`).
 const MAX_NUM_PLATES: i32 = 36;
-
-fn unsupported(what: &str) -> SliceError {
-    SliceError::InvalidInput(format!("arranging {what} is not supported yet"))
-}
 
 /// `prepare_wipe_tower`'s `need_wipe_tower` (`ArrangeJob.cpp:442-489`).
 fn needs_wipe_tower(
@@ -94,28 +90,6 @@ fn needs_wipe_tower(
             .extend(&item.extrude_ids);
     }
     by_bed_temperature.values().any(|ids| ids.len() > 1)
-}
-
-/// `process`'s BBL first-layer-scan calibration strip (`ArrangeJob.cpp:731-734`).
-fn needs_calibration_strip(project: &Project, params: &ArrangeParams) -> bool {
-    let settings = project.settings();
-    let scan = project
-        .documents()
-        .project_settings_raw
-        .get("scan_first_layer")
-        .is_some_and(|value| match value {
-            RawConfigValue::Text(text) => text == "1",
-            RawConfigValue::Flag(flag) => *flag,
-            _ => false,
-        });
-    settings
-        .printer
-        .remaining
-        .printer_model
-        .0
-        .starts_with("Bambu Lab")
-        && params.avoid_extrusion_cali_region
-        && scan
 }
 
 /// The exclusion areas of `preprocess_exclude_areas` as fixed items on `num_plates` beds.
@@ -174,9 +148,6 @@ impl PlaterSession {
         );
         let config = params::arrange_config(project_settings)?;
         let full = DynamicPrintConfig::new(project_settings)?;
-        if needs_calibration_strip(&self.project, &params) {
-            return Err(unsupported("around the first-layer scan region"));
-        }
         let zones = self.plates.imex_zones(&self.project, &full);
         let (mut prepared, uncompatible) = match current {
             None => {
@@ -209,6 +180,14 @@ impl PlaterSession {
         prepared.unprintable.extend(too_small_or_tall);
         // process (`ArrangeJob.cpp:722-805`)
         let (keys, mut items): (Vec<_>, Vec<_>) = kept.into_iter().unzip();
+        // The extrusion and hand-eye calibration region of a first-layer-scanning Bambu Lab
+        // printer (`ArrangeJob.cpp:732-734`, `is_bbl_vendor`, `PresetBundle.hpp:374`).
+        if self.vendor_type == VendorType::MarlinBbl
+            && params.avoid_extrusion_cali_region
+            && full.option("scan_first_layer").bool()
+        {
+            unselected.extend(PlateList::nonprefered_areas(MAX_NUM_PLATES));
+        }
         update_arrange_params(&mut params, &config, &items);
         update_selected_items_inflation(&mut items, &config, &mut params);
         update_unselected_items_inflation(&mut unselected, &config, &params);

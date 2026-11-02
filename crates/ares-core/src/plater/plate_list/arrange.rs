@@ -38,6 +38,32 @@ impl PlateList {
         )
     }
 
+    /// `preprocess_nonprefered_areas` (`PartPlate.cpp:7799-7829`) with its default inflation 0: the
+    /// extrusion and hand-eye calibration box (18, 0)-(240, 15) mm, `scaled(BoundingBoxf).polygon()`,
+    /// as an extrusion-calibration item on each of `num_plates` beds.
+    pub(in crate::plater) fn nonprefered_areas(num_plates: i32) -> Vec<ArrangePolygon> {
+        // `scaled<coord_t>(double)`: divided and truncated.
+        let scaled = |value: f64| (value / SCALING_FACTOR) as i64;
+        let (min, max) = ([scaled(18.0), scaled(0.0)], [scaled(240.0), scaled(15.0)]);
+        let contour = Polygon::new(vec![
+            Point::new(min[0], min[1]),
+            Point::new(max[0], min[1]),
+            Point::new(max[0], max[1]),
+            Point::new(min[0], max[1]),
+        ]);
+        (0..num_plates)
+            .map(|bed| ArrangePolygon {
+                poly: ExPolygon::new(contour.clone(), Vec::new()),
+                is_virt_object: true,
+                is_extrusion_cali_object: true,
+                bed_idx: bed,
+                height: 1.0,
+                name: "NonpreferedRegion0".to_owned(),
+                ..ArrangePolygon::default()
+            })
+            .collect()
+    }
+
     /// `preprocess_exclude_areas` (`PartPlate.cpp:7692-7790`) without exclusion volumes: the
     /// clumping-detection area and each four-point `bed_exclude_area` box of the first plate,
     /// as fixed virtual items on `num_plates` beds.

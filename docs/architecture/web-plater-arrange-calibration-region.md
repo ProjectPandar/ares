@@ -33,3 +33,8 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. On a Bambu Lab print
 - **Expected before GREEN:**
   - Cases 1-3 are refused ("around the first-layer scan region"). Case 2 is refused because the stand-in reads `printer_model`.
   - The E2E shows "Arrange failed".
+
+## GREEN
+- **`PlateList::nonprefered_areas(num_plates)`** builds the box with `scaled<coord_t>`'s division and truncation and `BoundingBox::polygon`'s vertex order: min, (max x, min y), max, (min x, max y). It uses `preprocess_nonprefered_areas`'s default inflation of 0.
+- **The gate.** `arrange()` appends the regions on `MAX_NUM_PLATES` beds after the prepared unselected items and before `update_arrange_params`, as `process` does. It reads `vendor_type == VendorType::MarlinBbl`, the arrange settings' "avoid", and the full config's `scan_first_layer`.
+- **Refusal removed.** `needs_calibration_strip`, its raw `scan_first_layer` read and its `printer_model` stand-in are removed. So is `unsupported`, which no other refusal used.
