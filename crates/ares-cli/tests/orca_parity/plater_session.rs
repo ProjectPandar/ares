@@ -8,6 +8,8 @@ use ares_core::{ConfigOverrides, GenerationMetadata, PlaterSession, PlaterSlice,
 use super::plater_archive::{attribute, rewrite_archive};
 use crate::runner::{OrcaRunner, repo_root};
 
+#[path = "plater_delete_object.rs"]
+mod delete_object;
 #[path = "plater_instances.rs"]
 mod instances;
 #[path = "plater_tower_positions.rs"]
@@ -63,6 +65,17 @@ fn rewrite_build(model: &str, session: &PlaterSession) -> String {
         let end = start + rest[start..].find("/>").unwrap();
         let item = &rest[start..end];
         let object_id = attribute(item, "objectid").parse::<u32>().unwrap();
+        // A deleted object's build items are not exported.
+        if !session
+            .project()
+            .objects()
+            .iter()
+            .any(|o| o.id() == object_id)
+        {
+            output.push_str(&rest[..start]);
+            rest = &rest[end + "/>".len()..];
+            continue;
+        }
         let instance_id = *seen
             .entry(object_id)
             .and_modify(|count| *count += 1)
@@ -168,12 +181,37 @@ fn rewrite_tower_positions(settings: &str, session: &PlaterSession) -> String {
     serde_json::to_string_pretty(&config).unwrap()
 }
 
+/// `text` without the `<object id="N"` ... `</object>` elements of the objects the session
+/// deleted: the GUI exports only the model's objects.
+fn drop_deleted_objects(text: &str, session: &PlaterSession) -> String {
+    let mut output = text.to_owned();
+    let mut from = 0;
+    while let Some(found) = output[from..].find("<object id=\"") {
+        let start = from + found;
+        let id_start = start + "<object id=\"".len();
+        let id = output[id_start..id_start + output[id_start..].find('"').unwrap()]
+            .parse::<u32>()
+            .unwrap();
+        if session.project().objects().iter().any(|o| o.id() == id) {
+            from = id_start;
+            continue;
+        }
+        let end = start + output[start..].find("</object>").unwrap() + "</object>".len();
+        output.replace_range(start..end, "");
+        from = start;
+    }
+    output
+}
+
 /// The project as the GUI exports the session; other entries are unchanged.
 fn export(session: &PlaterSession) -> Vec<u8> {
     rewrite_archive(session.input(), |name, text| match name {
-        "3D/3dmodel.model" => Some(rewrite_build(text, session)),
+        "3D/3dmodel.model" => Some(drop_deleted_objects(&rewrite_build(text, session), session)),
         "Metadata/project_settings.config" => Some(rewrite_tower_positions(text, session)),
-        "Metadata/model_settings.config" => Some(rewrite_plates(text, session)),
+        "Metadata/model_settings.config" => Some(drop_deleted_objects(
+            &rewrite_plates(text, session),
+            session,
+        )),
         "Metadata/filament_sequence.json" => Some(rewrite_sequences(text, session)),
         _ => None,
     })

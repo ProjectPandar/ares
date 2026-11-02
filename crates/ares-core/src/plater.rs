@@ -6,6 +6,7 @@
 mod arrange_job;
 mod arrange_settings;
 mod current_plate;
+mod delete_object;
 mod edits;
 mod eigen;
 mod instances;
