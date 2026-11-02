@@ -161,6 +161,7 @@ pub(in crate::project_slice) fn traverse_extrusions(
         if extrusion.is_closed {
             let mut extrusion_loop = ExtrusionLoop {
                 paths,
+                print_after_infill: false,
                 role: if pg_extrusion.is_contour {
                     ExtrusionLoopRole::Default
                 } else {

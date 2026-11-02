@@ -1,6 +1,4 @@
-// Perimeter emission from `GCode::extrude_perimeters`
-// (`GCode.cpp:6131-6147`): every collection entity dispatches through
-// `GCode::extrude_entity` (`GCode.cpp:6091`).
+//! `GCode.cpp:8889-8933`, the `wipe_support == nullopt` perimeter passes.
 
 mod multi_path;
 
@@ -11,17 +9,23 @@ use crate::project_slice::{
 
 pub(super) fn emit_perimeter(
     output: &mut Vec<u8>,
-    entity: IslandPrintEntity,
+    (entity, defer_unsupported, unsupported_loops_only): (&IslandPrintEntity, bool, bool),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) -> Result<(), crate::SliceError> {
     let IslandPrintEntity::Perimeter(collection) = entity else {
         unreachable!("perimeter phase contains only perimeter entities");
     };
-    // `region.perimeters` feeds the wipe-before-external hop's
-    // touching-lines gate (`GCode.cpp:6144, 5824, 5871-5882`): each
-    // entity counts once when any of its polyline segments lies within
-    // one nozzle diameter of the de-retraction point.
+    let selected = |entity: &ExtrusionEntity| {
+        let waits_for_infill = matches!(entity, ExtrusionEntity::Loop(loop_)
+            if loop_.extrusion_loop.print_after_infill);
+        !defer_unsupported || waits_for_infill == unsupported_loops_only
+    };
+    if !collection.entities.iter().any(selected) {
+        return Ok(());
+    }
+    // Keep the complete original collection for the existing touching-lines
+    // gate, independent of which entities this pass emits.
     let region_perimeters: Vec<Vec<(i64, i64)>> = collection
         .entities
         .iter()
@@ -32,8 +36,6 @@ pub(super) fn emit_perimeter(
                 .iter()
                 .flat_map(|path| path.polyline.points.iter().map(|point| (point.x, point.y)))
                 .collect(),
-            // Thin-wall `ExtrusionPath`s participate in the wipe-touch
-            // touching-lines gate like any other perimeter entity.
             ExtrusionEntity::Path(path) => path
                 .polyline
                 .points
@@ -47,70 +49,74 @@ pub(super) fn emit_perimeter(
                 .collect(),
         })
         .collect();
-    for entity in collection.entities {
-        let mut loop_ = match entity {
-            ExtrusionEntity::Loop(loop_) => loop_,
-            // `GCode::extrude_path` (`GCode.cpp:6092`) — a bare `ExtrusionPath`
-            // (thin-wall `variable_width` materialization) emits directly with
-            // no loop clipping/seam step.
-            ExtrusionEntity::Path(path) => {
-                super::materialized::emit(
-                    output,
-                    state,
-                    super::materialized::Emission {
-                        path: &path,
-                        end_clip: 0.0,
-                        slope: None,
-                        geometry,
-                    },
-                )?;
-                continue;
-            }
-            ExtrusionEntity::MultiPath(multi_path) => {
-                multi_path::emit(output, &multi_path.paths, geometry, state)?;
-                continue;
-            }
-        };
-        if state.spiral_vase {
-            crate::project_slice::seam_placement::place_nearest_projection(
-                &mut loop_.extrusion_loop,
-                crate::project_slice::perimeters::classic::materialize::Point3 {
-                    x: local_cursor(state, geometry).x(),
-                    y: local_cursor(state, geometry).y(),
-                    z: 0,
+    for entity in collection.entities.iter().filter(|entity| selected(entity)) {
+        emit_entity(output, (entity, &region_perimeters), geometry, state)?;
+    }
+    Ok(())
+}
+
+fn emit_entity(
+    output: &mut Vec<u8>,
+    (entity, region_perimeters): (&ExtrusionEntity, &[Vec<(i64, i64)>]),
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) -> Result<(), crate::SliceError> {
+    let mut loop_ = match entity {
+        ExtrusionEntity::Loop(loop_) => loop_.clone(),
+        ExtrusionEntity::Path(path) => {
+            return super::materialized::emit(
+                output,
+                state,
+                super::materialized::Emission {
+                    path,
+                    end_clip: 0.0,
+                    slope: None,
+                    geometry,
                 },
-                geometry.scale,
             );
-        } else if state.options.seam_position == crate::ProcessSeamPosition::Nearest {
-            let cursor = crate::project_slice::perimeters::classic::materialize::Point3 {
+        }
+        ExtrusionEntity::MultiPath(multi_path) => {
+            return multi_path::emit(output, &multi_path.paths, geometry, state);
+        }
+    };
+    if state.spiral_vase {
+        crate::project_slice::seam_placement::place_nearest_projection(
+            &mut loop_.extrusion_loop,
+            crate::project_slice::perimeters::classic::materialize::Point3 {
                 x: local_cursor(state, geometry).x(),
                 y: local_cursor(state, geometry).y(),
                 z: 0,
-            };
-            if let Some(layer) = geometry.nearest_seam_penalties {
-                loop_.unsupported_distance =
-                    crate::project_slice::seam_placement::place_nearest_penalized(
-                        &mut loop_.extrusion_loop,
-                        cursor,
-                        layer,
-                        geometry.staggered_inner,
-                        geometry.scale,
-                    );
-            } else {
-                crate::project_slice::seam_placement::place_nearest(
+            },
+            geometry.scale,
+        );
+    } else if state.options.seam_position == crate::ProcessSeamPosition::Nearest {
+        let cursor = crate::project_slice::perimeters::classic::materialize::Point3 {
+            x: local_cursor(state, geometry).x(),
+            y: local_cursor(state, geometry).y(),
+            z: 0,
+        };
+        if let Some(layer) = geometry.nearest_seam_penalties {
+            loop_.unsupported_distance =
+                crate::project_slice::seam_placement::place_nearest_penalized(
                     &mut loop_.extrusion_loop,
                     cursor,
+                    layer,
+                    geometry.staggered_inner,
                     geometry.scale,
                 );
-            }
+        } else {
+            crate::project_slice::seam_placement::place_nearest(
+                &mut loop_.extrusion_loop,
+                cursor,
+                geometry.scale,
+            );
         }
-        loop_paths::emit(
-            output,
-            (&loop_.extrusion_loop, loop_.unsupported_distance),
-            geometry,
-            state,
-            &region_perimeters,
-        )?;
     }
-    Ok(())
+    loop_paths::emit(
+        output,
+        (&loop_.extrusion_loop, loop_.unsupported_distance),
+        geometry,
+        state,
+        region_perimeters,
+    )
 }

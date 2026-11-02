@@ -127,6 +127,7 @@ macro_rules! region_option_fields {
             overhang_reverse_threshold => "overhang_reverse_threshold": FloatOrPercent = FloatOrPercent::Percent(Percent(50.0)),
             counterbore_hole_bridging => "counterbore_hole_bridging": ProcessCounterboreHoleBridging = ProcessCounterboreHoleBridging::None,
             wall_sequence => "wall_sequence": ProcessWallSequence = ProcessWallSequence::InnerOuter,
+            unsupported_wall_last => "unsupported_wall_last": OrcaBool = OrcaBool(false),
             is_infill_first => "is_infill_first": OrcaBool = OrcaBool(false),
             small_area_infill_flow_compensation => "small_area_infill_flow_compensation": OrcaBool = OrcaBool(false),
             wall_direction => "wall_direction": ProcessWallDirection = ProcessWallDirection::CounterClockwise,
@@ -160,7 +161,7 @@ pub(crate) use region_option_fields;
 
 macro_rules! declare_region_option_order {
     ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
-        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 151] = [$($key),*];
+        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 152] = [$($key),*];
     };
 }
 

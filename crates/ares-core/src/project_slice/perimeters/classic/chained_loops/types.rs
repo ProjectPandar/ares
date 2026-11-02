@@ -50,6 +50,7 @@ pub(in crate::project_slice) enum ExtrusionLoopRole {
 pub(in crate::project_slice) struct ExtrusionLoop {
     pub(in crate::project_slice) paths: Vec<ExtrusionPath>,
     pub(in crate::project_slice) role: ExtrusionLoopRole,
+    pub(in crate::project_slice) print_after_infill: bool,
 }
 
 impl ExtrusionLoop {

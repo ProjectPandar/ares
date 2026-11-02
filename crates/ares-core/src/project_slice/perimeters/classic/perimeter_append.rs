@@ -4,6 +4,7 @@
 pub(in crate::project_slice) mod reorient;
 
 mod types;
+mod unsupported;
 
 pub(in crate::project_slice) use types::{
     AppendedPerimeterCollections, InactiveOuterBrimReordering, InactivePostCollectionBranches,
@@ -75,7 +76,7 @@ fn transform_object(
             |(index, source)| match (source, &traversal.records[index]) {
                 (None, None) => None,
                 (Some(source), Some(traversal_record)) => {
-                    let region = region_options(traversal, index);
+                    let (region, touch_distance) = region_context(traversal, index, scale);
                     let inactive = classify_inactive(traversal_record, object_options);
                     // First physical layer, not the compatible-region
                     // record slot (`PerimeterGenerator.cpp:1858-1865`
@@ -103,6 +104,7 @@ fn transform_object(
                         region,
                         lower: traversal.lower_slices(index),
                         scale,
+                        touch_distance,
                     };
                     Some(transform_record(
                         source,
@@ -149,7 +151,11 @@ fn transform_record(
                 inactive,
                 wall_sequence,
                 layer_id,
-                narrow_wall_hole_island,
+                (
+                    narrow_wall_hole_island,
+                    reorient.region.unsupported_wall_last.0,
+                    reorient.touch_distance,
+                ),
             )
         })
         .collect();
@@ -161,7 +167,7 @@ fn transform_surface(
     inactive: InactivePostCollectionBranches,
     wall_sequence: ProcessWallSequence,
     layer_id: usize,
-    narrow_wall_hole_island: bool,
+    (narrow_wall_hole_island, unsupported_wall_last, touch_distance): (bool, bool, f64),
 ) -> PreparedPerimeterAppendSurface {
     reorder_walls(
         &mut source.collection,
@@ -169,6 +175,9 @@ fn transform_surface(
         layer_id,
         narrow_wall_hole_island,
     );
+    if unsupported_wall_last {
+        unsupported::apply(&mut source.collection, touch_distance);
+    }
     PreparedPerimeterAppendSurface {
         source_index: source.source_index,
         inactive,
@@ -176,15 +185,21 @@ fn transform_surface(
     }
 }
 
-fn region_options(
+fn region_context(
     traversal: &PostClassicTraversalPrintObject,
     record_index: usize,
-) -> &RegionOptions {
+    scale: CoordinateScale,
+) -> (&RegionOptions, f64) {
     let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
     let input = prelude.object.records[record_index]
         .as_ref()
         .expect("an O10 collection has an aligned perimeter input");
-    prelude.object.region_options(input)
+    let touch_distance = 1.5
+        * input
+            .ext_perimeter_flow
+            .scaled_spacing(scale)
+            .max(input.perimeter_flow.scaled_spacing(scale)) as f64;
+    (prelude.object.region_options(input), touch_distance)
 }
 
 /// Borrow bundle keeping `transform_record` below the clippy argument
@@ -195,6 +210,7 @@ struct SurfaceReorient<'a> {
     region: &'a RegionOptions,
     lower: Option<&'a [ExPolygon]>,
     scale: CoordinateScale,
+    touch_distance: f64,
 }
 
 fn classify_inactive(

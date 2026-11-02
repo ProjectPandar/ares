@@ -45,6 +45,7 @@ pub(in crate::project_slice) fn convert_entities(
                     extrusion_loop: ExtrusionLoop {
                         paths,
                         role: ExtrusionLoopRole::Default,
+                        print_after_infill: false,
                     },
                     // `ExtrusionEntity::inset_idx` base default is -1.
                     inset_idx: -1,

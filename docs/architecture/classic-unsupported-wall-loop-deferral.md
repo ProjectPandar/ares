@@ -3,9 +3,11 @@
 Status: approved Classic ARD committed before fixture work as
 `9f2e1658197effcb31bb554a38ae23ac97d56954`; frozen Native-first public
 qualification is complete (two strict REDs and one complete control PASS).
-The frozen RED `aeff66b69d8acee8310cb024cc04353983c9f10b` is approved.
-The consumer boundary below is approved for its `wipe_support == nullopt`
-branch; the entire `wipe_inward` slice is explicitly deferred.
+The frozen RED `aeff66b69d8acee8310cb024cc04353983c9f10b` and doc-only
+nullopt boundary amendment `d6a0309947b37e4ee66bea6a318434c41c0738f3` are
+approved. The literal Classic port is strict GREEN for both enabled cases
+and the disabled control, with frozen paired 298-test scope and 0 P→F.
+The entire `wipe_inward` slice remains explicitly deferred.
 
 Base: `5910df8eb0c2a9cab5958a1dcce7fdb34d075ecb`.
 Upstream: OrcaSlicer beta `345efec64c7b95a05ce5cf96df0dde66a158835c`.
@@ -72,15 +74,16 @@ All implementation stays inside existing core API modules:
 2. `project_slice/perimeters/classic/perimeter_append.rs` with a private
    child module for the helper: execute the source call after current
    reordering, using existing materialized entity paths/inset identity and
-   nominal flow spacings from the aligned traversal record. Keep prior
+   nominal flow spacings from the aligned perimeter input. Keep prior
    sandwich and accepted thin/narrow behavior unchanged.
 3. `perimeters/classic/chained_loops/types.rs::ExtrusionLoop` (and its
    constructors/copy carriers): add the upstream false-default field,
    setting it only at the source helper. The shared neutral loop type may
    carry this vocabulary; that does not implement Arachne's producer call.
-4. `project_slice/island_print_order.rs` and existing region/extruder
-   emission adapters in `gcode_emit/motion/perimeter.rs`: implement the
-   cited two perimeter passes around existing infill. Preserve original
+4. Reuse `project_slice/island_print_order.rs`'s original region/collection
+   ownership unchanged. Its existing regional emission adapter is
+   `gcode_emit/motion/layer.rs`; there and in `motion/perimeter.rs`, implement
+   the cited perimeter passes around existing infill. Preserve original
    collection/region ownership and complete region perimeter context for
    the existing wipe-before-external touching-lines gate. No printed-prefix
    support carrier is introduced in this nullopt branch. No detached second
@@ -220,6 +223,56 @@ trace or family run occurred. Fmt and strict workspace/all-targets Clippy
 pass. Only this result note changes after execution; no postcommit rerun
 is claimed. Submit this frozen RED RR before any implementation.
 
+## Literal nullopt port qualification
+
+The existing region field macro projects the source false-default boolean
+through process-region source, wire and resolved `RegionOptions`; no duplicate
+registry definition is added. The Classic helper stably extracts the
+unsupported tail, stably sorts descending inset, then uses original loop /
+path / multipath polyline semantics and unsigned line-distance-tree queries
+in separate attachment waves. It compares `sqrt(squared_distance)` strictly
+against 1.5 times the maximum nominal scaled spacing. No geometry kernel,
+threshold, formatter, topology classifier or sandwich body is changed.
+
+`print_after_infill` defaults false in all constructors and survives clones.
+Arachne's only mechanical change initializes this shared field false; its
+producer remains deferred. Original collections are retained through the
+three source perimeter passes, and only selected loops are copied for local
+seam placement. First-layer/region `should_print` and already-infill-first
+single emission are literal; no optional wipe support or unused prefix exists.
+
+The scope was frozen before production edits. BEFORE ran on the immutable
+amendment worktree; implementation and AFTER used a separate worktree and
+fresh independent target. The exact same 298 test IDs ran once per phase:
+137 PASS / 161 FAIL → 139 PASS / 159 FAIL, exactly the two enabled targets
+F→P and zero P→F, zero ignored. There were 456 Native command receipts per
+phase (453 code0, two238, one205); the existing Native failures are retained,
+not relabeled as parity. The remaining159 family failures and FULL stay open.
+
+Each phase includes fresh Native6 (three stable pairs), validated API3 and
+CLI3 for the three frozen inputs, with raw API/CLI identity. AFTER all four
+complete generator-only streams per case agree, retaining all M73 records,
+footer, terminal whitespace and trailing bytes:
+
+| Case | Bytes / lines | M73 retained | Complete normalized SHA256 |
+| --- | --- | --- | --- |
+| Attached stack | 67827 / 2594 | 89 | `5fa8595ffc4a1ca3e084ce93826245265484ef1a8db2627673bf2d5533a94528` |
+| Disabled control | 56268 / 2141 | 85 | `e00d2b2e5d993c90246fd8370d91469e6179ca75d600161d47f9f93d925c3892` |
+| Unattached ledge | 56370 / 2150 | 87 | `305888a79143847abfbc9ae6c71ee6c6ba17e27424c1689c9b1efb9a741b5486` |
+
+Every extrusion run/point/line agrees over every physical layer; new full
+and external non-M73 first differences are NONE for all three. No Native
+private flag or attachment operand trace is claimed. Canonical generator
+line is the sole strict normalization; diagnostic M73-only files are not
+acceptance. No runtime retry, extra Native probe, input/producer/formula
+variant, debugger, carrier trace, estimator overlay or test edit occurred.
+Two static preflight command errors and two build/lint corrections are
+retained: heredoc quoting, grep escaping, private-module import changed to
+the existing re-export, and stable `sort_by` changed to stable Reverse-key
+sorting. All happened before AFTER runtime; no suppression or kernel change.
+Fmt and strict workspace/all-targets Clippy pass. This qualification note
+is the sole postexecution tree change; no postcommit rerun is claimed.
+
 ## Approval and verification sequence
 
 The Classic producer/flag/nullopt-consumer boundary and frozen RED are
@@ -233,6 +286,7 @@ COORD owns integration/FULL/closure. Preserve source/ELF/fixture/manifest
 identities and every invalid attempt.
 
 The approved narrow branch is not rebased or extended by this slice.
-The initial ARD is based on the explicitly requested main5910; only the
-new public tests/input artifacts and qualification note were added after
-that commit. No production code or independent pipeline design is added.
+The initial ARD is based on the explicitly requested main5910. The literal
+port adds only the approved metadata/Classic producer/nullopt consumer;
+no independent pipeline design, root harness, runner, comparator, test or
+fixture change is included. Propose the separate `wipe_inward` ARD next.

@@ -79,19 +79,15 @@ where
                 region.infills.push(entity);
             }
         }
-        // GCode.cpp:5450-5468,6131-6145: wall-first regions, all infills,
-        // infill-first region walls, then ironing. First layer is wall-first.
-        for (&id, region) in &mut regions {
-            if !region.had_perimeters {
-                continue;
-            }
-            let (density, infill_first, gate) =
-                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
-            state.small_area_gate = gate;
-            if first_layer || !infill_first {
-                emit_perimeters(output, &mut region.perimeters, geometry, state, density)?;
-            }
-        }
+        // GCode.cpp:7742-7755/8039-8053: ordinary walls, infill,
+        // deferred walls, infill-first walls, then ironing.
+        emit_perimeters(
+            output,
+            &regions,
+            (geometry, first_layer, false, false),
+            state,
+            &options_for_region,
+        )?;
         if !interlude_emitted && has_infill {
             interlude_emitted = before_first_infill(output, state)?;
         }
@@ -110,17 +106,20 @@ where
                 density,
             )?;
         }
-        for (&id, region) in &mut regions {
-            // GCode.cpp:6135-6140 applies even when this phase skips the
-            // original perimeter collection; our first phase drains it.
-            if !region.had_perimeters {
-                continue;
-            }
-            let (density, _, gate) =
-                options_for_region(id, &mut state.options, &mut state.current_seam_gap);
-            state.small_area_gate = gate;
-            emit_perimeters(output, &mut region.perimeters, geometry, state, density)?;
-        }
+        emit_perimeters(
+            output,
+            &regions,
+            (geometry, first_layer, false, true),
+            state,
+            &options_for_region,
+        )?;
+        emit_perimeters(
+            output,
+            &regions,
+            (geometry, first_layer, true, false),
+            state,
+            &options_for_region,
+        )?;
         for (&id, region) in &mut regions {
             if region.ironing.is_empty() {
                 continue;
@@ -140,19 +139,50 @@ where
     Ok(interlude_emitted)
 }
 
-fn emit_perimeters(
+fn emit_perimeters<D>(
     output: &mut Vec<u8>,
-    entities: &mut Vec<IslandPrintEntity>,
-    geometry: LayerGeometry<'_>,
+    regions: &std::collections::BTreeMap<usize, RegionEntities>,
+    (geometry, first_layer, is_infill_first, unsupported_loops_only): (
+        LayerGeometry<'_>,
+        bool,
+        bool,
+        bool,
+    ),
     state: &mut EmitState,
-    sparse_density: f64,
-) -> Result<(), SliceError> {
-    if entities.is_empty() {
-        return Ok(());
-    }
-    state.options.has_sparse_infill = sparse_density > 0.0;
-    for entity in entities.drain(..) {
-        perimeter::emit_perimeter(output, entity, geometry, state)?;
+    options_for_region: &D,
+) -> Result<(), SliceError>
+where
+    D: Fn(
+        usize,
+        &mut MotionOptions,
+        &mut crate::FloatOrPercent,
+    ) -> (f64, bool, super::super::small_area::Gate),
+{
+    // GCode.cpp:8889-8933, with optional wipe support absent.
+    for (&id, region) in regions {
+        if !region.had_perimeters {
+            continue;
+        }
+        let (density, infill_first, gate) =
+            options_for_region(id, &mut state.options, &mut state.current_seam_gap);
+        state.small_area_gate = gate;
+        let should_print = if first_layer {
+            !is_infill_first
+        } else {
+            infill_first == is_infill_first
+        };
+        if !should_print {
+            continue;
+        }
+        state.options.has_sparse_infill = density > 0.0;
+        for entity in &region.perimeters {
+            perimeter::emit_perimeter(
+                output,
+                (entity, !is_infill_first, unsupported_loops_only),
+                geometry,
+                state,
+            )?;
+        }
     }
     Ok(())
 }

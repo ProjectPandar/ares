@@ -203,6 +203,7 @@ fn emit_variable_width_entity(
             let mut loop_ = crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop {
                 paths: paths.clone(),
                 role: crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoopRole::Internal,
+                print_after_infill: false,
             };
             crate::project_slice::seam_placement::place_nearest_projection(
                 &mut loop_,

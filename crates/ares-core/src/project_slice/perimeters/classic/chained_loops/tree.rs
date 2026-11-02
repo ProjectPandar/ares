@@ -35,6 +35,7 @@ pub(super) fn transform_nodes(
                 let extrusion_loop = (!paths.is_empty()).then_some(ExtrusionLoop {
                     paths,
                     role: map_loop_role(seed.loop_role),
+                    print_after_infill: false,
                 });
                 let child_count = children.len();
                 frames.push(Frame::Finish(child_count));
