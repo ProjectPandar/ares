@@ -13,6 +13,8 @@ use ares_core::{
 
 const MACHINE: &str = "LH Stinger 0.4 nozzle";
 
+#[path = "plater_stl_session/honeycomb_geometry.rs"]
+mod honeycomb_geometry;
 #[path = "klipper_time_estimator.rs"]
 mod klipper_time_estimator;
 
