@@ -27,49 +27,43 @@ pub(super) fn emit(
     let grouped = skirt
         .as_ref()
         .and_then(|plan| plan.group_brims((object_index, copy)));
-    let (plan, owners) = if let Some(components) = grouped {
-        let Some(component) = components.iter().find(|component| {
-            component.owners().contains(&object_index)
-                && component
-                    .owners()
-                    .iter()
-                    .any(|owner| !state.emitted_brim_owners.contains(owner))
-        }) else {
-            return Ok(());
-        };
-        (component.plan(brim), component.owners())
+    // Group assembly (Print.cpp:4297-4389): the component owning this
+    // instance emits at its first visiting chunk; emitting marks every
+    // instance of the component done (m_objsWithBrim,
+    // GCode.cpp:6056-6064,6073-6074).
+    let plan = if let Some(component) = grouped.and_then(|components| {
+        components
+            .iter()
+            .find(|component| component.matches((object_index, copy)) && !component.emitted(state))
+    }) {
+        component.mark_done(state);
+        component.plan(brim)
     } else {
-        let global = brim.iter().flatten().find(|plan| plan.global);
-        let plan = if let Some(plan) = global {
-            (!state.global_brim_done).then_some(plan)
+        if grouped.is_some() {
+            return Ok(());
+        }
+        // No skirt groups own this instance's brim (no skirt plan):
+        // the owner plan emits per copy (Brim.cpp:1004-1010,
+        // GCode.cpp:6039-6082) with `ObjectInstanceID` dedup; the
+        // by-object shell keeps the owner-level dedup.
+        let Some(plan) = brim[object_index]
+            .as_ref()
+            .filter(|_| !state.emitted_brim_owners.contains(&object_index))
+        else {
+            return Ok(());
+        };
+        if plan.instances.is_empty() {
+            state.emitted_brim_owners.insert(object_index);
         } else {
-            brim[object_index].as_ref().filter(|plan| {
-                !plan.owner_collection || !state.emitted_brim_owners.contains(&object_index)
-            })
-        };
-        let Some(plan) = plan else {
-            return Ok(());
-        };
-        (plan, std::slice::from_ref(&object_index))
+            if plan.instances.iter().all(|instance| instance.copy != copy) {
+                return Ok(());
+            }
+            if !state.emitted_brim_instances.insert((object_index, copy)) {
+                return Ok(());
+            }
+        }
+        plan
     };
-    if plan.global {
-        state.global_brim_done = true;
-    }
-    // Brim.cpp:1004-1010 / GCode.cpp:6039-6082: uncombined per-instance
-    // brims dedup by `ObjectInstanceID` (`m_objsWithBrim`); each copy emits
-    // its own plan at its own chunk. Merged (combined) plans keep the
-    // owner-level dedup.
-    let per_instance = plan.owner_collection && !plan.instances.is_empty();
-    if per_instance {
-        if plan.instances.iter().all(|instance| instance.copy != copy) {
-            return Ok(());
-        }
-        if !state.emitted_brim_instances.insert((object_index, copy)) {
-            return Ok(());
-        }
-    } else if plan.owner_collection {
-        state.emitted_brim_owners.extend(owners.iter().copied());
-    }
     let geometry = entry_builder.geometry(object_index, layer_index, chunk_perimeter_spacing);
     let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));

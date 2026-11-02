@@ -18,8 +18,6 @@ pub(crate) struct InstanceArea {
 
 pub(crate) struct BrimPlan {
     pub(crate) area: Vec<crate::geometry::ExPolygon>,
-    pub(crate) global: bool,
-    pub(crate) owner_collection: bool,
     pub(crate) instances: Vec<InstanceBrim>,
     pub(crate) instance_areas: Vec<InstanceArea>,
     pub(crate) paths: Vec<Vec<Point>>,

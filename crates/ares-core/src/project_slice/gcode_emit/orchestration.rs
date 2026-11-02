@@ -20,13 +20,12 @@ pub(in crate::project_slice) fn emit(
     let tower_exclusions = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         tower.brim_exclusions(wipe_tower::plate_position(traversal), traversal.scale)
     });
-    let mut brim = brim::BrimPlan::generate_all(
+    let brim = brim::BrimPlan::generate_all(
         traversal,
         &prepared.support_layers,
         &tower_exclusions,
         |index| &prepared.objects[index][0].tool_regions,
     )?;
-    brim::combine(traversal, &mut brim)?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         let [x, y] = wipe_tower::plate_position(traversal);
         let origin = traversal.project.plate_origin();

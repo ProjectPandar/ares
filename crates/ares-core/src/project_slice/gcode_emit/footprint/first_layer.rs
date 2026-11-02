@@ -22,12 +22,8 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
     if let Some(skirt) = skirt {
         include_bounds(skirt.covered_bounds(scale), &mut bounds);
     }
-    for (index, brim) in brim
-        .iter()
-        .enumerate()
-        .filter_map(|(index, plan)| plan.as_ref().map(|plan| (index, plan)))
-    {
-        let (x, y) = brim.occupied_origin(traversal, index);
+    for brim in brim.iter().flatten() {
+        let (x, y) = brim.occupied_origin();
         include_bounds(
             brim.covered_bounds(scale)
                 .map(|(min_x, min_y, max_x, max_y)| (min_x + x, min_y + y, max_x + x, max_y + y)),
@@ -52,12 +48,8 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_convex_hull(
     islands: &[Point],
 ) -> Vec<Point> {
     let mut points = Vec::new();
-    for (index, brim) in brim
-        .iter()
-        .enumerate()
-        .filter_map(|(index, plan)| plan.as_ref().map(|plan| (index, plan)))
-    {
-        let (x, y) = brim.occupied_origin(traversal, index);
+    for brim in brim.iter().flatten() {
+        let (x, y) = brim.occupied_origin();
         let shift = Point::new(
             (x / traversal.scale.factor()).round() as i64,
             (y / traversal.scale.factor()).round() as i64,
@@ -123,19 +115,9 @@ pub(in crate::project_slice::gcode_emit) fn first_layer_object_center(
             && let Some(brim) = brim
             && let Some((min_x, min_y, max_x, max_y)) = brim.covered_bounds(scale)
         {
-            if brim.owner_collection {
-                // Brim.cpp:914-935: this owner box already includes every instance.
-                include_bounds(Some((min_x, min_y, max_x, max_y)), &mut bounds);
-                continue;
-            }
-            for copy in &instances[index] {
-                let x = scale.unscale(copy.shift.x());
-                let y = scale.unscale(copy.shift.y());
-                include_bounds(
-                    Some((min_x + x, min_y + y, max_x + x, max_y + y)),
-                    &mut bounds,
-                );
-            }
+            // Brim.cpp:914-935: the plate-frame owner box already includes
+            // every instance.
+            include_bounds(Some((min_x, min_y, max_x, max_y)), &mut bounds);
         }
     }
     bounds.map_or([0.0; 2], |(min_x, min_y, max_x, max_y)| {

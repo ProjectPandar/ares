@@ -21,8 +21,15 @@ impl SkirtPlan {
         if layer_limit == 0 {
             return Ok(None);
         }
-        let per_object = loops_count > 0 && print.skirt_type == crate::ProcessSkirtType::PerObject;
+        // Print.cpp:4178: the group block runs for both stPerObject and
+        // stCombined whenever skirt_type is set — brim grouping happens
+        // even when no skirt loops are emitted; `generate_skirt`
+        // (loops_count > 0) only gates loop generation and the ByObject
+        // shared-skirt rejection (:4416-4418).
+        let per_object = print.skirt_type == crate::ProcessSkirtType::PerObject;
+        let skirt_emitting = loops_count > 0;
         let items = occupied::items(traversal, support, brim, layer_limit, raft);
+        let instance_keys = items.iter().map(|(key, _)| *key).collect::<Vec<_>>();
         let mut hulls = items
             .iter()
             .map(|(_, hull)| hull.clone())
@@ -107,15 +114,18 @@ impl SkirtPlan {
                 arc_tolerance,
             )?
         } else {
+            // Print.cpp:4227-4229: stCombined unites every instance into
+            // one group before the merge pass.
             vec![member_groups::Group {
-                members: Vec::new(),
+                members: instance_keys,
                 hull: hull_polygon.clone(),
             }]
         };
-        // `Print.cpp:2551-2556`: after `_make_skirt`, ByObject shared
-        // per-object skirts (a group with more than one object,
-        // `Print.cpp:2977-2978`) throw Slic3r::SlicingError.
-        if per_object
+        // `Print.cpp:4416-4418`: after `_make_skirt`, ByObject shared
+        // per-object skirts (a group with more than one instance) throw
+        // Slic3r::SlicingError — only when skirts are actually generated.
+        if skirt_emitting
+            && per_object
             && print.print_sequence == crate::ProcessPrintSequence::ByObject
             && generation_groups
                 .iter()
@@ -130,10 +140,10 @@ impl SkirtPlan {
         let mut member_groups = Vec::new();
         let mut occupied_hull = Vec::new();
         for group in generation_groups {
-            // The brim assembly stays owner-keyed until the per-instance
-            // group brim port (Print.cpp:4297-4389); the skirt groups
-            // themselves are per instance (Print.cpp:4188-4193).
-            let owners = group_owners(&group.members);
+            // The brim assembly is per instance (Print.cpp:4297-4389);
+            // the by-object shell keeps an owner-keyed fallback inside
+            // it until the per-instance emission port.
+            let brims = super::super::brim::group_brims(traversal, &group.members, brim)?;
             let mut distance = initial_distance;
             let start = loops.len();
             let mut group_loops = make_loops(
@@ -152,7 +162,7 @@ impl SkirtPlan {
             loops.extend(group_loops);
             if !group.members.is_empty() {
                 member_groups.push(SkirtGroup {
-                    brims: super::super::brim::group_brims(traversal, &owners, brim)?,
+                    brims,
                     members: group.members,
                     loops: start..loops.len(),
                 });
@@ -185,6 +195,7 @@ impl SkirtPlan {
         Ok(Some(Self {
             loops,
             member_groups,
+            per_object,
             occupied_hull,
             width: flow.width,
             layer_count,
@@ -197,14 +208,4 @@ impl SkirtPlan {
 
 fn occupied_error(_: crate::geometry::ClipperError) -> SliceError {
     SliceError::InvalidInput("skirt occupied hull offset failed".into())
-}
-
-fn group_owners(members: &[(usize, usize)]) -> Vec<usize> {
-    let mut owners = Vec::new();
-    for &(object, _) in members {
-        if !owners.contains(&object) {
-            owners.push(object);
-        }
-    }
-    owners
 }

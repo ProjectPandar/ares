@@ -37,6 +37,12 @@ pub(super) fn emit(
     let Some(plan) = input.skirt else {
         return Ok(());
     };
+    // `generate_object_skirt_group` (GCode.cpp:5976) returns nothing
+    // unless skirt_type is stPerObject — stCombined emits once at the
+    // plate level whatever the group membership.
+    if !plan.per_object() {
+        return Ok(());
+    }
     let Some(group) = plan.instance_group((input.object, input.copy)) else {
         return Ok(());
     };

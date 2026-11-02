@@ -8,16 +8,10 @@ use crate::{
 };
 
 impl BrimPlan {
-    pub(in crate::project_slice::gcode_emit) fn occupied_origin(
-        &self,
-        traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
-        object_index: usize,
-    ) -> (f64, f64) {
-        if self.owner_collection {
-            (0.0, 0.0)
-        } else {
-            super::super::footprint::print_object_origin(traversal, object_index)
-        }
+    /// Every plan lives in plate coordinates: append/expand translate
+    /// each map entry (Brim.cpp:78-84).
+    pub(in crate::project_slice::gcode_emit) fn occupied_origin(&self) -> (f64, f64) {
+        (0.0, 0.0)
     }
 
     pub(in crate::project_slice::gcode_emit) fn covered_hull(&self) -> &[Point] {
@@ -69,19 +63,16 @@ impl BrimPlan {
         copy: usize,
     ) -> Result<(), crate::SliceError> {
         let origin = state.origin;
-        if self.global || self.owner_collection {
-            motion::set_origin(state, (0.0, 0.0));
-        }
-        // GCode.cpp:6065-6079: an uncombined owner plan emits only the
-        // current instance's paths (brimMapByInstance keyed
-        // `ObjectInstanceID`), never the owner's merged set.
-        let paths: &[Vec<Point>] = if self.owner_collection
-            && let Some(instance) = self.instances.iter().find(|entry| entry.copy == copy)
-        {
-            &instance.paths
-        } else {
-            &self.paths
-        };
+        motion::set_origin(state, (0.0, 0.0));
+        // GCode.cpp:6065-6079: an uncombined plan emits only the current
+        // instance's paths (brimMapByInstance keyed `ObjectInstanceID`),
+        // never the owner's merged set.
+        let paths: &[Vec<Point>] =
+            if let Some(instance) = self.instances.iter().find(|entry| entry.copy == copy) {
+                &instance.paths
+            } else {
+                &self.paths
+            };
         for path in paths {
             // Upstream emits the brim from the ring's natural (anchored)
             // start: the layer-change travel targets the loop's first
@@ -100,9 +91,7 @@ impl BrimPlan {
                 state,
             )?;
         }
-        if self.global || self.owner_collection {
-            motion::set_origin(state, origin);
-        }
+        motion::set_origin(state, origin);
         Ok(())
     }
 }

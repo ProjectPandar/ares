@@ -12,36 +12,6 @@ use crate::{
 
 use super::{brim_geometry_error, scaled_f64};
 
-pub(super) fn plate_shift(traversal: &PreparedPostClassicTraversal, object_index: usize) -> Point {
-    let scale = traversal.scale;
-    let (x, y) = super::super::footprint::print_object_origin(traversal, object_index);
-    Point::new(
-        (x / scale.factor()).round() as i64,
-        (y / scale.factor()).round() as i64,
-    )
-}
-
-pub(super) fn clip(
-    traversal: &PreparedPostClassicTraversal,
-    object_index: usize,
-    logical_filament: usize,
-    (area, no_brim_area, tower_exclusions): (Vec<ExPolygon>, Vec<ExPolygon>, &[ExPolygon]),
-    resolution: f64,
-) -> Result<Vec<ExPolygon>, SliceError> {
-    let shift = plate_shift(traversal, object_index);
-    // The complete no-brim collection is already in plate coordinates.
-    // Existing model-local storage ↔ global geometry, not a plate-origin transform.
-    let area = translate(area, shift);
-    let clipped = clip_plate(
-        traversal,
-        logical_filament,
-        (area, no_brim_area),
-        tower_exclusions,
-        resolution,
-    )?;
-    Ok(translate(clipped, Point::new(-shift.x(), -shift.y())))
-}
-
 pub(super) fn clip_plate(
     traversal: &PreparedPostClassicTraversal,
     logical_filament: usize,

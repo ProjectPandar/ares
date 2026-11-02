@@ -44,11 +44,15 @@ impl BrimPlan {
         // earlier keys keep overlapping area — before the per-entry
         // infill (:1004-1010).
         let mut claimed = Vec::new();
+        // Brim.cpp:953-958: the ordered cumulative subtraction runs only
+        // when brims are not combined; under combine_brims the map keeps
+        // whole areas and the group assembly unions contacting clusters.
+        let combine = traversal.resolved.views.full.process.print.combine_brims.0;
         for (index, area) in areas.iter_mut().enumerate() {
             let Some(area) = area else {
                 continue;
             };
-            if !area.per_instance {
+            if !area.per_instance || combine {
                 continue;
             }
             area.mask_entries(traversal, index, &no_brim_area, tower_exclusions)?;
@@ -318,39 +322,29 @@ impl BrimPlan {
             forbidden.extend(support_mask);
             (area.area, forbidden)
         };
-        let owner_collection = !combined::enabled(traversal);
-        let per_instance = owner_collection
-            && !traversal.resolved.views.full.process.print.combine_brims.0
-            && traversal.resolved.views.full.process.print.print_sequence
-                != crate::ProcessPrintSequence::ByObject;
+        // The by-object emission shell keeps the owner-merged collection;
+        // every by-layer mode generates per-instance entries
+        // (Print.cpp:4188-4193, GCode.cpp:5991-6082).
+        let per_instance = traversal.resolved.views.full.process.print.print_sequence
+            != crate::ProcessPrintSequence::ByObject;
         let (entries, forbidden) = if per_instance {
             owner::append(
                 traversal,
                 object_index,
                 (&brim_area, &inner, &object_islands),
             )?
-        } else if owner_collection {
+        } else {
             owner::expand(
                 traversal,
                 object_index,
                 (&brim_area, &inner, &object_islands),
                 accumulated,
             )?
-        } else {
-            (
-                vec![owner::InstanceEntry {
-                    copy: 0,
-                    area: brim_area,
-                    islands: object_islands,
-                }],
-                bed_area::translate(inner, bed_area::plate_shift(traversal, object_index)),
-            )
         };
         Ok(Some((
             owner::Area {
                 entries,
                 per_instance,
-                owner_collection,
                 flow,
                 spacing,
                 resolution: grouping_resolution,
@@ -379,7 +373,7 @@ mod auto;
 mod bed_area;
 mod combined;
 mod speed;
-pub(super) use combined::{GroupBrim, combine, group_brims};
+pub(super) use combined::{GroupBrim, group_brims};
 mod emit;
 mod outline;
 mod owner;

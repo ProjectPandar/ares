@@ -43,7 +43,10 @@ pub(super) fn emit(
         chunk_perimeter_spacing,
     }: SkirtEmission<'_, '_>,
 ) -> Result<(), crate::SliceError> {
-    if skirt.as_ref().is_some_and(|plan| plan.group_count() > 0) {
+    if skirt
+        .as_ref()
+        .is_some_and(|plan| plan.per_object() && plan.group_count() > 0)
+    {
         return Ok(());
     }
     if let (Some(entry), Some(plan)) = (entries.first(), skirt) {

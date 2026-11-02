@@ -29,14 +29,10 @@ type AreaOutput = (
 
 pub(super) struct Area {
     pub(super) entries: Vec<InstanceEntry>,
-    /// `Print.cpp:3849-3862/:4326-4340, GCode.cpp:5991-6082`: per-instance
-    /// generation/emission exists only where the group machinery keeps
-    /// per-instance entries — uncombined (`combine_brims` off) by-layer
-    /// printing. ByObject consumes the owner-keyed `brimMap` (:1006) and
-    /// `combine_brims` merges touching instances' entities; both emit the
-    /// owner-merged collection.
+    /// Per-instance generation (Print.cpp:4188-4193, GCode.cpp:5991-6082)
+    /// runs for every by-layer mode; the by-object emission shell keeps
+    /// the owner-merged collection until its per-instance port.
     pub(super) per_instance: bool,
-    pub(super) owner_collection: bool,
     pub(super) flow: crate::project_slice::perimeters::types::Flow,
     pub(super) spacing: f32,
     pub(super) resolution: f64,
@@ -57,9 +53,7 @@ impl Area {
         } else {
             self.finish_merged(traversal, object_index, no_brim_area, tower_exclusions)?
         };
-        if area_all.is_empty()
-            || (self.owner_collection && instances.is_empty() && merged_paths.is_empty())
-        {
+        if area_all.is_empty() || (instances.is_empty() && merged_paths.is_empty()) {
             return Ok(None);
         }
         let covered_hull = crate::geometry::convex_hull(
@@ -70,8 +64,6 @@ impl Area {
         );
         Ok(Some(BrimPlan {
             area: area_all,
-            global: false,
-            owner_collection: self.owner_collection,
             instances,
             instance_areas,
             paths: merged_paths,
@@ -155,23 +147,11 @@ impl Area {
         no_brim_area: &[ExPolygon],
         tower_exclusions: &[ExPolygon],
     ) -> Result<AreaOutput, crate::SliceError> {
-        // Only the plate-frame entry paths carry per-instance areas for
-        // skirt grouping (Print.cpp:4195-4202): `append`/`expand`
-        // translate every map entry (Brim.cpp:78-84); the generation-time
-        // global-combine path stores one untranslated local entry, which
-        // is not plate-frame data.
-        let instance_areas = if self.owner_collection {
-            self.entries
-                .iter()
-                .filter(|entry| !entry.area.is_empty())
-                .map(|entry| InstanceArea {
-                    copy: entry.copy,
-                    area: entry.area.clone(),
-                })
-                .collect::<Vec<_>>()
-        } else {
-            Vec::new()
-        };
+        // Per-instance areas for skirt grouping come from per-entry
+        // masking (Brim.cpp:718-722,726-766 run per map entry), matching
+        // what the per-instance finish path records.
+        let instance_areas =
+            self.masked_instance_areas(traversal, object_index, no_brim_area, tower_exclusions)?;
         let merged = self
             .entries
             .iter()
@@ -193,12 +173,37 @@ impl Area {
         if brim_area.is_empty() {
             return Ok((Vec::new(), instance_areas, Vec::new(), Vec::new()));
         }
-        let merged_paths = if self.owner_collection {
-            self.infill(&brim_area, traversal)?
-        } else {
-            Vec::new()
-        };
+        let merged_paths = self.infill(&brim_area, traversal)?;
         Ok((Vec::new(), instance_areas, merged_paths, brim_area))
+    }
+
+    /// Brim.cpp:718-722,726-766 per entry: the per-instance areas
+    /// consumed by skirt grouping (Print.cpp:4195-4202).
+    fn masked_instance_areas(
+        &self,
+        traversal: &PreparedPostClassicTraversal,
+        object_index: usize,
+        no_brim_area: &[ExPolygon],
+        tower_exclusions: &[ExPolygon],
+    ) -> Result<Vec<InstanceArea>, crate::SliceError> {
+        let mut areas = Vec::new();
+        for entry in &self.entries {
+            let masked = self.masked(
+                traversal,
+                object_index,
+                entry.area.clone(),
+                &entry.islands,
+                no_brim_area,
+                tower_exclusions,
+            )?;
+            if !masked.is_empty() {
+                areas.push(InstanceArea {
+                    copy: entry.copy,
+                    area: masked,
+                });
+            }
+        }
+        Ok(areas)
     }
 
     /// Brim.cpp:718-722,726-766: the no-brim/tower masks and contact
@@ -211,29 +216,19 @@ impl Area {
     fn masked(
         &self,
         traversal: &PreparedPostClassicTraversal,
-        object_index: usize,
+        _object_index: usize,
         area: Vec<ExPolygon>,
         islands: &[ExPolygon],
         no_brim_area: &[ExPolygon],
         tower_exclusions: &[ExPolygon],
     ) -> Result<Vec<ExPolygon>, crate::SliceError> {
-        let brim_area = if self.owner_collection {
-            bed_area::clip_plate(
-                traversal,
-                self.logical_filament,
-                (area, no_brim_area.to_vec()),
-                tower_exclusions,
-                self.resolution,
-            )?
-        } else {
-            bed_area::clip(
-                traversal,
-                object_index,
-                self.logical_filament,
-                (area, no_brim_area.to_vec(), tower_exclusions),
-                self.resolution,
-            )?
-        };
+        let brim_area = bed_area::clip_plate(
+            traversal,
+            self.logical_filament,
+            (area, no_brim_area.to_vec()),
+            tower_exclusions,
+            self.resolution,
+        )?;
         if self.retain_contact {
             crate::brims::inner::retain_contact(brim_area, islands, self.spacing, self.resolution)
         } else {

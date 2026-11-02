@@ -34,6 +34,10 @@ struct SkirtGroup {
 
 pub(super) struct SkirtPlan {
     member_groups: Vec<SkirtGroup>,
+    /// `skirt_type == stPerObject`: per-chunk group emission
+    /// (`generate_object_skirt_group`, GCode.cpp:5976); stCombined emits
+    /// once at the plate level regardless of group membership.
+    per_object: bool,
     /// Plate-frame closed loops, outermost first (`Print.cpp:2985`).
     loops: Vec<Vec<Point>>,
     /// `_make_skirt` retains this outline even when skirt_loops is zero.
@@ -53,6 +57,12 @@ pub(super) struct SkirtPlan {
 impl SkirtPlan {
     pub(super) fn group_count(&self) -> usize {
         self.member_groups.len()
+    }
+
+    /// `skirt_type == stPerObject` (the group emission mode,
+    /// GCode.cpp:5976).
+    pub(super) fn per_object(&self) -> bool {
+        self.per_object
     }
 
     /// `find_skirt_brim_group_idx` (GCode.cpp:5956-5967): the group whose

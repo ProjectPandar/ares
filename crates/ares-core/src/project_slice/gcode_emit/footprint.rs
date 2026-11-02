@@ -52,25 +52,6 @@ fn object_bounds(object: &ProjectObject) -> Option<(f64, f64, f64, f64)> {
 
 /// `PrintApply.cpp:150`, `PrintObject.cpp:110,130`: scale translation and
 /// raw model center separately, then add the integer instance shift.
-pub(super) fn print_object_origin(
-    traversal: &PreparedPostClassicTraversal,
-    index: usize,
-) -> (f64, f64) {
-    let (resolved, group) = traversal.print_object_config(index);
-    let source = &traversal.project.objects()[resolved.source_object_index];
-    let center = crate::project_slice::centering::center(source, group, traversal.scale)
-        .expect("sliced print object has validated raw bounds");
-    let instance = &source.instances()[*group
-        .instance_indices
-        .first()
-        .expect("print group has a member")];
-    let shift = instance_shift(instance, center, traversal.scale);
-    (
-        traversal.scale.unscale(shift.x()),
-        traversal.scale.unscale(shift.y()),
-    )
-}
-
 pub(super) fn instance_shift(
     instance: &ProjectInstance,
     center: Point,
