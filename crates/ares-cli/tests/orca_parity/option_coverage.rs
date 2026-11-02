@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "classic_thin_hole_reach.rs"]
+mod classic_thin_hole_reach;
+
 #[path = "bambu_gap_fill_interleaving.rs"]
 mod bambu_gap_fill_interleaving;
 
