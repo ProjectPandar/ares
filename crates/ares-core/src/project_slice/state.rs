@@ -73,12 +73,12 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
 ) -> Result<ProjectSliceState, SliceError> {
     let project = project.select_plate(plate)?;
     let plate_id = project.first_plate_id();
-    // `OrcaSlicer.cpp:5710-5724`: unconditional — if no model-part instance
+    // `OrcaSlicer.cpp:6562-6573`: unconditional — if no model-part instance
     // is fully inside the plate's print volume, reject with the upstream
-    // -50 text (`Model.cpp:692-702 update_print_volume_state`).
+    // -50 text (`Model.cpp:839-852 update_print_volume_state`; text `OrcaSlicer.cpp:220`).
     if print_volume::count_inside_instances(&project)? == 0 {
         return Err(SliceError::NoSuitableObjects(
-            "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading."
+            "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."
                 .to_owned(),
         ));
     }

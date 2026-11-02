@@ -163,9 +163,10 @@ pub(super) fn slice_error_to_failure(
             "The selected printer is not compatible with the process preset in the 3mf.",
             String::new(),
         ),
-        // OrcaSlicer.cpp:5681-5690 selects the active plate; :5723 passes
-        // index+1 to record_exit_reson, and :433 writes that plate_id.
-        // The progress callback's m_plate_index (:218,:232) is separate.
+        // OrcaSlicer.cpp:6522-6531 selects the active plate; :6572 passes
+        // index+1 to record_exit_reson, and :552 writes that plate_id.
+        // The progress callback's m_plate_index (:305,:319) is separate.
+        // The reason is cli_errors[CLI_NO_SUITABLE_OBJECTS] (:220).
         SliceError::NoSuitableObjects(_) => family(
             -50,
             #[cfg(target_os = "linux")]
@@ -177,7 +178,7 @@ pub(super) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             0.0,
             #[cfg(target_os = "linux")]
-            "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading.",
+            "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume.",
             String::new(),
         ),
         SliceError::InvalidValuesInProject(detail) => family(
