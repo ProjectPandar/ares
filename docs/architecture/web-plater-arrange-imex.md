@@ -244,3 +244,49 @@ Every `file:line` is at `345efec64`. In ToolheadOffset and PerExtruder modes eac
   - Cases 2 and 3 differ only in the installed vendors, which pins the vendor test's observable effect.
   - Both X2D cases give the two nozzles one area (`extruder_printable_area` emptied), since several nozzles' shared area is not ported and the vendor test reads only `printer_model`.
 - **The kernel side** (`test_arrange.cpp:509-575`) is already ported in `tests/arrange/parameters.rs`.
+
+## A2c1: the IMEX zone layout
+
+Every `file:line` is at `345efec64`. An IMEX printer (IDEX, IQEX: several independently moving tools) splits a plate into the primary tool's zone, the Copy and Mirror zones of its secondaries, and carriage collision strips. The arranger kernel (A2a) takes the primary zone and the strips as input (`ImexArrangeZones`). Nothing in Ares computes them yet. This slice ports the pure layout function. Wiring it into the session (A2c2) follows it.
+
+### Upstream boundary
+- **`compute_imex_zone_layout`** (`libslic3r/IMEXZones.cpp:17-377`) and **`ImexZoneLayout`** (`IMEXZones.hpp:25-71`). From the printer config, the plate's mode and the process mode, it works out:
+  - the active mode (`:29-33`): the plate's own mode, else the process preset's when the plate is on Primary;
+  - the tool grid and the corner the primary occupies (`imex_tools_per_gantry`, `imex_gantry_count`, `imex_tool_layout`);
+  - the active tools with their roles (`:60-130`);
+  - zones sized by the active tools per axis, so an inactive tool donates its share (`:130-275`);
+  - the collision strips and margin bands (`:276-377`): `imex_nozzle_clearance_x` / `_y` and `imex_carriage_margin`; Mirror zones only; an aggregated gantry contributes the zone it paints.
+- **The `IMEXHelpers` it calls** (`IMEXHelpers.cpp`, `.hpp`):
+  - `imex_cfg_int` / `_bool` / `_float` (`:269-306`) and `imex_cfg_enum` (`.hpp:386-421`): a key absent from the config reads its `print_config_def` default.
+  - `parse_imex_active_tools` (`:327-349`), `group_imex_active_tools_by_gantry` (`:365-420`), `imex_primary_tool_for_mode` (`:422-455`).
+  - `find_imex_mode` (`:665-678`) over `imex_mode_names` / `imex_mode_active_tools`.
+  - `ImexRole` with its role letters (`.hpp:345-372`: P, C, M, S), and `kImexPrimaryMode` (`.hpp:27`).
+- **`ImexToolLayout`** (`PrintConfig.hpp:262-268`): FrontLeft, FrontRight, RearLeft, RearRight.
+
+### Ares destination
+- **`crates/ares-core/src/arrangement/imex_zones/`**, beside A2a's `imex.rs`. It is a new module with the layout and the helpers split by responsibility, each under 400 LOC.
+- **Public:** `compute_imex_zone_layout(&DynamicPrintConfig, plate_mode, process_mode, bed_extents) -> ImexZoneLayout`, `ImexZoneLayout`, `BoundingBoxf3` (`BoundingBoxf` is A2a's), and `IMEX_PRIMARY_MODE`. That is what the unit cases need.
+- The helpers stay crate-private. A2c2 and slicing will need some of them (`imex_primary_tool_for_mode`, `find_imex_mode`).
+- **The config:** the cases set keys through `DynamicPrintConfig::set_deserialize_strict`, over the registry entries the keys already have. Typing them in `ProjectSettings`, so a project's values reach the session, is A2c2's prerequisite, as A2b1 typed the volume keys.
+
+### Included and deferred
+- **Included:** the whole layout function, every role (Primary, Copy, Mirror, Span) with aggregated gantries, the helpers it calls, and `ImexToolLayout`.
+- **A2c2** (next):
+  - the typed IMEX keys;
+  - the plate's IMEX mode, read from its metadata;
+  - `imex_arrange_zones` and `ImexArrangeInput::read_config` (`IMEXArrange.cpp:65-90`);
+  - the arrange job's per-plate zones;
+  - `check_outside`'s IMEX branch (`imex_hull_violates`, `PartPlate.cpp:4615-4621`, with `ensure_imex_zones`).
+
+  The `ImexArranger` refusal in the session, if any, is lifted there.
+- **Deferred:**
+  - the ghosts (`calc_imex_ghosts`), the G-code viewer and slicing consumers (`Print.cpp:4531`, `compute_imex_slice_offset`);
+  - the zone rendering and colour themes;
+  - the mode buttons (`IMEXModesCtrl`);
+  - the other `IMEXHelpers` (physical extruder map, heaters, toolchanges; `test_imex_helpers.cpp`).
+
+### Oracle and RED
+- **Library-only and GUI-consumed**, so the oracle is upstream's unit tests: `tests/libslic3r/test_imex_zones.cpp`, all 14 cases with their sections, ported literally.
+- `make_cfg` (`:40-59`) becomes `DynamicPrintConfig::full_print_config()` plus `set_deserialize_strict` of the same keys, in their serialized forms. The `check_rect` / `check_box_xy` / `check_point` 1e-9 matchers are kept.
+- The cases go in `crates/ares-core/tests/arrange/imex_zones.rs`, registered in the arrange binary.
+- **Expected before GREEN:** every case stops at `todo!()`.
