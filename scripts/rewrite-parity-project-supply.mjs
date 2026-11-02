@@ -89,6 +89,14 @@ function run(command, args) {
   if (result.status !== 0) throw new Error(`${command} failed (${result.status})`);
 }
 
+function format(text, path) {
+  const result = spawnSync("rustfmt", ["--edition", "2024", "--emit", "stdout", "--config", "skip_children=true"], {
+    cwd: root, input: text, encoding: "utf8",
+  });
+  if (result.status !== 0) throw new Error(`cannot normalize source: ${relative(root, path)}: ${result.stderr}`);
+  return result.stdout;
+}
+
 function skeleton(text) {
   let normalized = text;
   for (const span of edits(text).filter((edit) => edit.kind === "constructor")) {
@@ -123,13 +131,17 @@ const summary = {
 console.log(JSON.stringify({ ...summary, apply, paths: selected.map((file) => relative(root, file.path)) }, null, 2));
 if (apply) {
   run("git", ["diff", "--quiet"]);
-  for (const file of selected) writeFileSync(file.path, file.after);
+  for (const file of selected) {
+    file.expected = format(file.after, file.path);
+    writeFileSync(file.path, file.expected);
+  }
   // rustc's own fixes remove orphaned Command imports, including grouped imports.
   run("cargo", ["fix", "-p", "ares-cli", "--test", "orca_parity", "--allow-dirty", "--allow-staged"]);
   run("cargo", ["fmt", "--all"]);
   for (const file of selected) {
-    const after = readFileSync(file.path, "utf8");
-    if (skeleton(file.before) !== skeleton(after)) {
+    const after = format(readFileSync(file.path, "utf8"), file.path);
+    writeFileSync(file.path, after);
+    if (skeleton(file.expected) !== skeleton(after)) {
       throw new Error(`non-mechanical code change: ${relative(root, file.path)}`);
     }
     if (after.split("\n").length - 1 >= 400) {
