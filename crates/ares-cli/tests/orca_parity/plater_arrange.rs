@@ -20,6 +20,8 @@ mod bed_exclusion;
 mod current_plate;
 #[path = "plater_arrange/imex.rs"]
 mod imex;
+#[path = "plater_arrange/plate_lock.rs"]
+mod plate_lock;
 #[path = "plater_arrange/wipe_tower.rs"]
 mod wipe_tower;
 use arranged::Arranged;
@@ -111,10 +113,16 @@ fn assert_scope_arranged_like_native(
         ArrangeScope::All => None,
         ArrangeScope::CurrentPlate(plate) => Some(plate),
     };
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("official v2.5.0-beta arrange oracle");
-    let input = rewrite_archive(
+    let input = edited_input(label, (base, edits));
+    let native = native_arranged(label, &input, settings, (cli, plate));
+    let mut session = PlaterSession::load(input).unwrap();
+    session.arrange(scope, settings).unwrap();
+    assert_eq!(Arranged::from_session(&session, plate), native, "{label}");
+}
+
+/// `base` with `edits` applied.
+fn edited_input(label: &str, (base, edits): (&str, &[Edit])) -> Vec<u8> {
+    rewrite_archive(
         &std::fs::read(repo_root().join(base)).unwrap(),
         |name, text| {
             let mut edited = None::<String>;
@@ -125,11 +133,24 @@ fn assert_scope_arranged_like_native(
             }
             edited
         },
-    );
+    )
+}
+
+/// Native's arrange of `input` with `settings`, the `cli` flags and, for a current-plate
+/// arrange, the plate it slices.
+fn native_arranged(
+    label: &str,
+    input: &[u8],
+    settings: ArrangeSettings,
+    (cli, plate): (&[&str], Option<usize>),
+) -> Arranged {
+    let runner = OrcaRunner::from_env()
+        .unwrap()
+        .expect("official v2.5.0-beta arrange oracle");
     let directory = runner.work.join(label);
     std::fs::create_dir_all(&directory).unwrap();
     let (input_path, output_path) = (directory.join("input.3mf"), directory.join("arranged.3mf"));
-    std::fs::write(&input_path, &input).unwrap();
+    std::fs::write(&input_path, input).unwrap();
     // The CLI keeps the distance automatic and allows several materials on a plate
     // (`OrcaSlicer.cpp:1670, 5973`).
     assert_eq!(settings.distance, 0.0);
@@ -162,10 +183,7 @@ fn assert_scope_arranged_like_native(
         &directory,
     )
     .unwrap();
-    let native = Arranged::from_native(&std::fs::read(&output_path).unwrap());
-    let mut session = PlaterSession::load(input).unwrap();
-    session.arrange(scope, settings).unwrap();
-    assert_eq!(Arranged::from_session(&session, plate), native, "{label}");
+    Arranged::from_native(&std::fs::read(&output_path).unwrap())
 }
 
 #[test]

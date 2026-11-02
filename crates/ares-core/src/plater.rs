@@ -10,6 +10,7 @@ mod eigen;
 mod min_sphere;
 mod mirror;
 mod plate_list;
+mod plate_lock;
 mod scale;
 mod selection;
 mod session;
