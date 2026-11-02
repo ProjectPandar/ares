@@ -157,6 +157,17 @@ fn check(label: &str) {
             skirt_blocks,
             "ares per-instance skirt grouping {root:?}"
         );
+        // Per-instance group-brim premise: ares must emit exactly as many
+        // ;TYPE:Brim blocks as the Native reference produced in this run
+        // (runtime cross-producer equality, not a frozen count).
+        assert_eq!(
+            std::str::from_utf8(gcode)
+                .unwrap()
+                .matches(";TYPE:Brim\n")
+                .count(),
+            brim_blocks,
+            "ares per-instance brim grouping {root:?}"
+        );
     }
     let api_comparison = api
         .as_ref()
