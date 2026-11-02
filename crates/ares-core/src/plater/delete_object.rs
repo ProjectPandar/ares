@@ -23,6 +23,13 @@ impl PlaterSession {
         Ok(())
     }
 
+    /// The Edit menu's "Delete All" (`Plater::priv::delete_all_objects_from_model`,
+    /// `Plater.cpp:10793-10821`; see `docs/architecture/web-plater-delete-all.md`). `InvalidInput`
+    /// without objects, where `MainFrame::can_delete_all` (`MainFrame.cpp:2128-2131`) is false.
+    pub fn delete_all_objects(&mut self) -> Result<(), SliceError> {
+        todo!()
+    }
+
     /// The loaded objects `delete_object` removed, by id.
     pub(super) fn deleted_objects(&self) -> Vec<u32> {
         self.loaded_instances
