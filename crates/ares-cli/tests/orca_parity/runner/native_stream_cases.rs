@@ -72,6 +72,8 @@ mod scarf_role_speed;
 mod seam_occlusion_object_affine;
 #[path = "seam_slope_travel.rs"]
 mod seam_slope_travel;
+#[path = "skirt_support_occupied_input.rs"]
+mod skirt_support_occupied_input;
 #[path = "template_elsif.rs"]
 mod template_elsif;
 #[path = "template_macro.rs"]
