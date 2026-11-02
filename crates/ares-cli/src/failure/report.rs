@@ -1,5 +1,21 @@
 use super::*;
 
+#[cfg(target_os = "linux")]
+impl CliFailure {
+    pub(crate) fn with_slicing_warnings(
+        mut self,
+        plate: u32,
+        warnings: Vec<ares_core::PrintWarning>,
+    ) -> Self {
+        if let Self::Family(family) = &mut self {
+            family
+                .warnings
+                .extend(crate::result_json::slicing_warnings(plate, warnings));
+        }
+        self
+    }
+}
+
 impl FamilyFailure {
     pub(super) fn flush_and_exit(self) -> ! {
         #[cfg(target_os = "linux")]

@@ -157,7 +157,7 @@ pub async fn slice_project_plate_processed(
 
 #[inline(never)]
 pub(crate) fn slice_source(
-    project: ProjectSource<'_>,
+    mut project: ProjectSource<'_>,
     metadata: GenerationMetadata,
     record_moves: bool,
     mut context: crate::SlicerContext,
@@ -166,6 +166,11 @@ pub(crate) fn slice_source(
     // upstream slices once per process, so `rand()` always sees the default
     // seed (`Fill.cpp:199-200`); reset the per-thread stream per slice.
     group_fills::reset_rand_state();
+    let mut sliced_plate = project.sliced_plate.take();
+    let project = ProjectSource {
+        sliced_plate: sliced_plate.as_deref_mut(),
+        ..project
+    };
     let staged = prepare_infill::surface_type_detection::prepare(
         perimeters::prepare_post_layer_region_perimeters(project, &mut context)?,
     )?;
@@ -196,8 +201,19 @@ pub(crate) fn slice_source(
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
     let mut filled = fill_entities::prepare(prepared)?;
     contour_z::prepare(&mut filled);
-    let support = match support_material::generate(&filled, &mut context) {
-        Ok(support) => support,
+    let warnings = match support_material::check_necessity(&filled) {
+        Ok(warnings) => warnings,
+        Err(error) => {
+            fill_entities::dispose(filled);
+            return Err(error);
+        }
+    };
+    if let Some(sliced_plate) = sliced_plate {
+        // CLI:7150-7160 records warnings before export; a later error keeps them.
+        sliced_plate.warnings.clone_from(&warnings);
+    }
+    let support_layers = match support_material::generate(&filled, &mut context) {
+        Ok(layers) => layers,
         Err(error) => {
             fill_entities::dispose(filled);
             return Err(error);
@@ -205,13 +221,13 @@ pub(crate) fn slice_source(
     };
     let islands = extrusion_islands::prepare(filled);
     let mut ordered = island_print_order::prepare(islands, top_surfaces);
-    ordered.support_layers = support.layers;
+    ordered.support_layers = support_layers;
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
     let mut output =
         consume_post_island_print_order(ordered, metadata, record_moves, &mut context)?;
-    output.warnings = support.warnings;
+    output.warnings = warnings;
     Ok(output)
 }
 

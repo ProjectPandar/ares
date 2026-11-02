@@ -13,14 +13,16 @@ pub(super) enum CliWarning {
         file: String,
         substitution: ares_core::ConfigSubstitution,
     },
+    /// `OrcaSlicer.cpp:7150-7160`: noncritical PrintObject step warnings.
+    SlicingWarningNonCritical { plate_id: u32, text: String },
 }
 
 /// One `sliced_plates` entry (`sliced_plate_info_t`, `OrcaSlicer.cpp:245-251`). The slice times
-/// are wall-clock seconds (`:7259-7260`), written as 0; no slicing warning is ported, so
-/// `warning_message` is empty.
+/// are wall-clock seconds (`:7259-7260`), written as 0.
 pub(super) struct SlicedPlateEntry {
     pub(super) id: u32,
     pub(super) triangle_count: usize,
+    pub(super) warning_message: String,
 }
 
 pub(super) struct ResultJson<'a> {
@@ -56,7 +58,7 @@ impl ResultJson<'_> {
             self.layer_height,
             self.plate_index,
             self.return_code,
-            self.sliced_plates_entry(),
+            self.sliced_plates_entry()?,
             self.sparse_infill_density,
             self.wall_loops,
             self.warnings_array()?,
@@ -70,23 +72,28 @@ impl ResultJson<'_> {
     }
 
     /// `j["sliced_plates"]`, only present once a plate is pushed (`:560-569`).
-    fn sliced_plates_entry(&self) -> String {
+    fn sliced_plates_entry(&self) -> Result<String, serde_json::Error> {
         if self.sliced_plates.is_empty() {
-            return String::new();
+            return Ok(String::new());
         }
         let entries = self
             .sliced_plates
             .iter()
             .map(|plate| {
-                format!(
+                Ok(format!(
                     "\t\t{{\n\t\t\t\"id\": {},\n\t\t\t\"sliced_time\": 0,\n\t\t\t\
                      \"sliced_time_with_cache\": 0,\n\t\t\t\"triangle_count\": {},\n\t\t\t\
-                     \"warning_message\": \"\"\n\t\t}}",
-                    plate.id, plate.triangle_count
-                )
+                     \"warning_message\": {}\n\t\t}}",
+                    plate.id,
+                    plate.triangle_count,
+                    serde_json::to_string(&plate.warning_message)?
+                ))
             })
-            .collect::<Vec<_>>();
-        format!("\t\"sliced_plates\": [\n{}\n\t],\n", entries.join(",\n"))
+            .collect::<Result<Vec<_>, serde_json::Error>>()?;
+        Ok(format!(
+            "\t\"sliced_plates\": [\n{}\n\t],\n",
+            entries.join(",\n")
+        ))
     }
 
     /// `j["warnings"]`: `[]`, or one sorted-key object per entry.
@@ -106,6 +113,11 @@ impl ResultJson<'_> {
                     serde_json::to_string(&substitution.new_value)?,
                     serde_json::to_string(&substitution.old_value)?,
                 )),
+                CliWarning::SlicingWarningNonCritical { plate_id, text } => Ok(format!(
+                    "\t\t{{\n\t\t\t\"class\": \"slicing_warning_non_critical\",\n\t\t\t\
+                     \"plate_id\": {plate_id},\n\t\t\t\"text\": {}\n\t\t}}",
+                    serde_json::to_string(text)?,
+                )),
             })
             .collect::<Result<Vec<_>, serde_json::Error>>()?;
         Ok(format!("[\n{}\n\t]", entries.join(",\n")))
@@ -123,12 +135,19 @@ pub(super) struct Success<'a> {
 
 impl Success<'_> {
     pub(super) fn write(self, file: &str, substitutions: Vec<ares_core::ConfigSubstitution>) {
+        let warning_message = self
+            .sliced_plate
+            .warnings
+            .last()
+            .map(|warning| warning.message.clone())
+            .unwrap_or_default();
         let warnings = substitutions
             .into_iter()
             .map(|substitution| CliWarning::ConfigValueSubstituted {
                 file: file.to_owned(),
                 substitution,
             })
+            .chain(slicing_warnings(self.plate, self.sliced_plate.warnings))
             .collect::<Vec<_>>();
         let _ = ResultJson {
             return_code: 0,
@@ -141,11 +160,27 @@ impl Success<'_> {
             sliced_plates: &[SlicedPlateEntry {
                 id: self.plate,
                 triangle_count: self.sliced_plate.triangle_count,
+                warning_message,
             }],
             warnings: &warnings,
         }
         .write(self.output);
     }
+}
+
+pub(super) fn slicing_warnings(
+    plate_id: u32,
+    warnings: Vec<ares_core::PrintWarning>,
+) -> impl Iterator<Item = CliWarning> {
+    warnings
+        .into_iter()
+        .filter_map(move |warning| match warning.level {
+            ares_core::WarningLevel::NonCritical => Some(CliWarning::SlicingWarningNonCritical {
+                plate_id,
+                text: warning.message,
+            }),
+            ares_core::WarningLevel::Critical => None,
+        })
 }
 
 /// `value` as `serde_json` pretty-prints it with tab indentation.

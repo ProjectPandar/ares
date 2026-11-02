@@ -28,8 +28,10 @@ pub struct CliUpwardMachine<'a> {
 /// The plate values of the CLI's success report (`OrcaSlicer.cpp:8126-8136` at v2.5.0-beta
 /// `345efec64`): `sliced_plate_info.triangle_count` (`:6576-6640`) and `sliced_info`'s
 /// `layer_height`, `wall_loops`, `sparse_infill_density` (`:6926-6931`).
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SlicedPlate {
+    /// `PrintObject` warnings captured before export, including on later failure.
+    pub warnings: Vec<crate::PrintWarning>,
     pub triangle_count: usize,
     /// The f32-stored value widened to f64.
     pub layer_height: f64,

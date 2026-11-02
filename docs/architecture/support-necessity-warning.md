@@ -1,8 +1,10 @@
 # Support-necessity warning — PrintObject source rewrite boundary
 
-Status: ARD approved. The core-only port is authorized while the public RED
-waits for its success-report writer prerequisite. Public RED and review remain
-required before any behavior-parity claim or slice completion.
+Status: ARD and public CLI RED approved. The core-only port was explicitly
+authorized while waiting for its success-report writer prerequisite; the real
+public RED now establishes missing warning fields in two successful reports.
+Producer and single-writer adapter GREEN work is authorized; qualification and
+review remain required before any behavior-parity claim or slice completion.
 Source: OrcaSlicer345efec64c7b95a05ce5cf96df0dde66a158835c.
 Initial analysis base: mainf4ea41332cdcb7eadf9adbc7f7c1936c0ad7e9c5.
 The RED commit must be based on the separately approved beta CLI warnings
@@ -202,6 +204,21 @@ Start with **one real fixture / one runtime Native public RED**, through an
 already-registered test leaf or dedicated public CLI integration test (no ROOT
 registry edit). Only add a source-required control when the first witness shows
 which guard branch is exercised. No horizontal bulk test suite or unit-after-code.
+
+## Approved adapter connection
+
+The success writer is the prerequisite boundary, not a second warning framework.
+The existing report-aware `SlicedPlate` holds the source warning snapshot before
+support generation/export, so the caller retains it on later slicing/export
+errors as well as success. `ProcessedGCode.warnings` exposes the same source
+records on the public core result. Neither is GCodeProcessor warning state.
+The adapter uses `CliWarning::SlicingWarningNonCritical { plate_id, text }` in
+its exhaustive single-writer match, appends it after load substitutions and sets
+`SlicedPlateEntry.warning_message` to the last source warning text
+(`OrcaSlicer.cpp:7143-7160`). JSON string escaping uses the existing serializer.
+No stderr output is introduced: the actual successful cantilever witness has
+empty stdout and stderr. The existing family-error report uses that same
+warning snapshot and writer; no generic SliceError wrapper or global callback.
 
 ## Included, deferred and exit gate
 

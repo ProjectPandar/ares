@@ -173,7 +173,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         {
             Ok(gcode) => gcode,
             Err(error) => {
-                return Err(slice_error_to_failure(
+                let failure = slice_error_to_failure(
                     error,
                     &args.output,
                     #[cfg(target_os = "linux")]
@@ -182,7 +182,11 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     // :5723/:433 records index+1 for the -50 result.
                     args.plate.unwrap_or(1),
                 )
-                .with_config_substitutions(&input_file, substitutions(&input)));
+                .with_config_substitutions(&input_file, substitutions(&input));
+                #[cfg(target_os = "linux")]
+                let failure =
+                    failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
+                return Err(failure);
             }
         };
         fs::write(&args.output, gcode)?;
@@ -233,14 +237,20 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(processed) => processed,
                         Err(error) => {
-                            return Err(slice_error_to_failure(
+                            let failure = slice_error_to_failure(
                                 error,
                                 &args.output,
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
                             )
                             .with_upward_report(upward_report)
-                            .with_config_substitutions(&input_file, substitutions(&input)));
+                            .with_config_substitutions(&input_file, substitutions(&input));
+                            #[cfg(target_os = "linux")]
+                            let failure = failure.with_slicing_warnings(
+                                args.plate.unwrap_or(1),
+                                sliced_plate.warnings,
+                            );
+                            return Err(failure);
                         }
                     };
                     fs::write(path, moves_csv::format(&processed.result))?;
@@ -263,14 +273,20 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(processed) => processed.gcode,
                         Err(error) => {
-                            return Err(slice_error_to_failure(
+                            let failure = slice_error_to_failure(
                                 error,
                                 &args.output,
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
                             )
                             .with_upward_report(upward_report)
-                            .with_config_substitutions(&input_file, substitutions(&input)));
+                            .with_config_substitutions(&input_file, substitutions(&input));
+                            #[cfg(target_os = "linux")]
+                            let failure = failure.with_slicing_warnings(
+                                args.plate.unwrap_or(1),
+                                sliced_plate.warnings,
+                            );
+                            return Err(failure);
                         }
                     }
                 }

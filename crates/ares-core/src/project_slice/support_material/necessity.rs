@@ -5,7 +5,9 @@ use crate::{
     project_slice::fill_entities::PreparedPostFillEntities,
 };
 
-pub(super) fn check(prepared: &PreparedPostFillEntities) -> Result<Vec<PrintWarning>, SliceError> {
+pub(in crate::project_slice) fn check(
+    prepared: &PreparedPostFillEntities,
+) -> Result<Vec<PrintWarning>, SliceError> {
     let horizontal = &prepared.predecessor.predecessor.predecessor.predecessor;
     let traversal = &horizontal.predecessor;
     let settings = &traversal.resolved.views.full;
