@@ -38,7 +38,7 @@ impl ProcessRegionSourceOptionsBuilder {
 }
 
 impl ProcessRegionSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 149] = REGION_OPTION_DECLARATION_ORDER;
+    pub const DECLARATION_ORDER: [&'static str; 151] = REGION_OPTION_DECLARATION_ORDER;
 }
 
 impl Default for ProcessRegionSourceOptions {

@@ -182,6 +182,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     &mut output,
                     fill,
                     layer.print_z,
+                    layer.height,
                     traversal.scale,
                 )?;
             }

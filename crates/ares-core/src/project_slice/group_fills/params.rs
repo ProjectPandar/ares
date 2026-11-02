@@ -36,6 +36,7 @@ pub(super) struct LayerContext<'a> {
     pub(super) initial_layer_width: FloatOrPercent,
     pub(super) model_rotation_offset: f32,
     pub(super) scale: CoordinateScale,
+    pub(super) resolution: f64,
 }
 
 pub(super) struct ProjectedLayer<'a> {
@@ -94,6 +95,7 @@ impl<'a> LayerContext<'a> {
                 .initial_layer_line_width,
             model_rotation_offset,
             scale: traversal.scale,
+            resolution: traversal.resolved.views.full.process.print.resolution.0,
         }
     }
 }

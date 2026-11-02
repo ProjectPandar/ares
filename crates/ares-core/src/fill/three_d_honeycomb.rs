@@ -1,23 +1,34 @@
-//! OrcaSlicer 2.4.2 `Fill/Fill3DHoneycomb.cpp` truncated-octahedron slice.
+//! OrcaSlicer beta `Fill/Fill3DHoneycomb.cpp` truncated-octahedron slice.
+
+mod grid;
+mod smoothing;
+mod tops;
+mod wave;
 
 use super::{
     checked_rotate::{rotate_points, rotate_points_with_trig},
     connect::{FillConnectionParams, connect_infill},
-    multiline_offset,
 };
 use crate::geometry::{
     BoundingBox, ClipperError, CoordinateScale, ExPolygon, Point, Polygon, Polyline,
-    douglas_peucker, intersection_open_polylines,
+    intersection_open_polylines,
 };
+
+const EPSILON: f64 = 1.0e-4;
 
 #[derive(Clone, Copy)]
 pub(crate) struct Params {
     pub(crate) z: f64,
+    pub(crate) layer_height: f64,
+    pub(crate) thickness_layers: u16,
     pub(crate) spacing: f64,
     pub(crate) overlap: f64,
     pub(crate) angle: f32,
     pub(crate) density: f32,
     pub(crate) multiline: i32,
+    pub(crate) complete_top: bool,
+    pub(crate) smooth_factor: f64,
+    pub(crate) resolution: f64,
     pub(crate) anchor_length: f32,
     pub(crate) anchor_length_max: f32,
     pub(crate) dont_sort: bool,
@@ -43,7 +54,7 @@ fn fill_component(
     params: Params,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let rotate = f64::from(params.angle.abs()) >= 1.0e-4;
+    let rotate = f64::from(params.angle.abs()) >= EPSILON;
     let expolygon = if rotate {
         rotate_expolygon(surface, -f64::from(params.angle))?
     } else {
@@ -51,54 +62,28 @@ fn fill_component(
     };
     let mut bounds =
         BoundingBox::from_polygon(expolygon.contour()).ok_or(ClipperError::CoordinateOutOfRange)?;
-    let scaled_spacing = params.spacing / scale.factor();
-    bounds.offset((5.0 * scaled_spacing) as i64);
-
-    let mut z_scale = 2.0_f64.sqrt();
-    let mut grid_size = scaled_spacing * ((z_scale + 1.0) * 0.5) * f64::from(params.multiline)
-        / f64::from(params.density);
-    let layer_height = 1.0 / scale.factor();
-    let mut layers_per_module = ((2.0 * grid_size) / (z_scale * layer_height) + 0.05).floor();
-    if params.density > 0.42 {
-        layers_per_module = 2.0;
-        grid_size = scaled_spacing * 1.1 * f64::from(params.multiline) / f64::from(params.density);
-        z_scale = 2.0 * grid_size / (layers_per_module * layer_height);
-    } else {
-        layers_per_module = layers_per_module.max(2.0);
-        z_scale = 2.0 * grid_size / (layers_per_module * layer_height);
-        grid_size = scaled_spacing * ((z_scale + 1.0) * 0.5) * f64::from(params.multiline)
-            / f64::from(params.density);
-        layers_per_module = ((2.0 * grid_size) / (z_scale * layer_height) + 0.05)
-            .floor()
-            .max(2.0);
-        z_scale = 2.0 * grid_size / (layers_per_module * layer_height);
-    }
-    let module = (4.0 * grid_size).round() as i64;
-    let aligned = Point::new(
+    let spacing = params.spacing / scale.factor();
+    bounds.offset((5.0 * spacing) as i64);
+    let mut request = grid_request(params, scale);
+    let module = (request.size * 2.0).round() as i64;
+    let minimum = Point::new(
         bounds.min().x().div_euclid(module) * module,
         bounds.min().y().div_euclid(module) * module,
     );
-    let minimum = Point::new(
-        bounds.min().x().min(aligned.x()),
-        bounds.min().y().min(aligned.y()),
-    );
-    let width = (bounds.max().x() - minimum.x()) as f64;
-    let height = (bounds.max().y() - minimum.y()) as f64;
-    let mut polylines = make_grid(
-        params.z / scale.factor() * z_scale,
-        grid_size,
-        width,
-        height,
-    )?;
+    request.width = (bounds.max().x() - minimum.x()) as f64;
+    request.height = (bounds.max().y() - minimum.y()) as f64;
+    let mut polylines = grid::make_grid(request);
     for polyline in &mut polylines {
         translate(polyline, minimum)?;
-        let points = std::mem::replace(polyline, Polyline::new(Vec::new())).into_points();
-        *polyline = Polyline::new(douglas_peucker(&points, 5.0 * params.spacing));
+        smoothing::smooth(
+            polyline,
+            params.smooth_factor,
+            params.resolution / scale.factor(),
+        );
     }
-    polylines = multiline_offset::apply(polylines, params.multiline, params.spacing, scale)?;
     let clip = expolygon_polygons(&expolygon);
     let mut polylines = intersection_open_polylines(&polylines, &clip)?;
-    let minimum_length = 0.8 * scaled_spacing;
+    let minimum_length = (0.8 * params.spacing) / scale.factor();
     polylines.retain(|polyline| polyline_length(polyline) >= minimum_length);
     if polylines.is_empty() {
         return Ok(Vec::new());
@@ -121,148 +106,33 @@ fn fill_component(
     Ok(connected)
 }
 
-fn make_grid(z: f64, grid: f64, width: f64, height: f64) -> Result<Vec<Polyline>, ClipperError> {
-    // Upstream `makeActualGrid` takes `size_t boundsX/boundsY` and
-    // `perpendPoints` takes `size_t offsetBase` (`Fill3DHoneycomb.cpp:130,
-    // :105`): the double bounds and grid bases truncate to integers before
-    // the vertex arithmetic, dropping the fractional grid offset.
-    let width = width as i64 as f64;
-    let height = height as i64 as f64;
-    let critical = critical_points(z, grid);
-    let cycle = (z + 0.5 * grid) % (2.0 * grid) / (2.0 * grid);
-    let mut output = Vec::new();
-    if cycle < 0.5 {
-        let mut direction = -1.0;
-        let mut x = 0.0;
-        while x <= width {
-            let xs = perpendicular_points(
-                &critical,
-                PerpendicularRequest {
-                    z,
-                    grid,
-                    length: height,
-                    base: x,
-                    direction,
-                },
-            );
-            let ys = collinear_points(grid, &critical, height);
-            output.push(points(xs, ys, direction > 0.0)?);
-            direction = -direction;
-            x += grid;
-        }
-    } else {
-        let mut direction = 1.0;
-        let mut y = grid;
-        while y <= height {
-            let xs = collinear_points(grid, &critical, width);
-            let ys = perpendicular_points(
-                &critical,
-                PerpendicularRequest {
-                    z,
-                    grid,
-                    length: width,
-                    base: y,
-                    direction,
-                },
-            );
-            output.push(points(xs, ys, direction < 0.0)?);
-            direction = -direction;
-            y += grid;
-        }
+fn grid_request(params: Params, scale: CoordinateScale) -> grid::Grid {
+    let mut z_scale = 2.0_f64.sqrt();
+    let multiline = params.multiline as usize;
+    let layers = usize::from(params.thickness_layers.max(1));
+    let mut size = (params.spacing / scale.factor()) * ((z_scale + 1.0) / 2.0) * multiline as f64
+        / f64::from(params.density);
+    let layer_height = params.layer_height / scale.factor();
+    let layers_per_module = ((size * 2.0) / (z_scale * layer_height) + 0.05).floor();
+    if f64::from(params.density) > 0.42 || layers_per_module < 2.0 {
+        size =
+            (params.spacing / scale.factor()) * 1.1 * multiline as f64 / f64::from(params.density);
+        z_scale = (size * 2.0) / (2.0 * layer_height);
     }
-    Ok(output)
-}
-
-fn points(x: Vec<f64>, y: Vec<f64>, reverse: bool) -> Result<Polyline, ClipperError> {
-    if x.len() != y.len() {
-        return Err(ClipperError::CoordinateOutOfRange);
-    }
-    let mut points = x
-        .into_iter()
-        .zip(y)
-        .map(|(x, y)| Point::new(x as i64, y as i64))
-        .collect::<Vec<_>>();
-    if reverse {
-        points.reverse();
-    }
-    Ok(Polyline::new(points))
-}
-
-fn critical_points(z: f64, grid: f64) -> Vec<f64> {
-    let mut output = vec![0.0];
-    let normalized = (tri_wave(z, grid) * 0.5).abs() / grid;
-    if normalized > 0.0 {
-        output.extend([
-            grid * normalized,
-            grid * (1.0 - normalized),
-            grid * (1.0 + normalized),
-            grid * (2.0 - normalized),
-        ]);
-    }
-    output
-}
-
-fn collinear_points(grid: f64, critical: &[f64], length: f64) -> Vec<f64> {
-    let mut output = vec![0.0];
-    let mut location = 0.0;
-    while location < length {
-        output.extend(critical.iter().map(|critical| location + critical));
-        location += 2.0 * grid;
-    }
-    output.push(length);
-    output
-}
-
-struct PerpendicularRequest {
-    z: f64,
-    grid: f64,
-    length: f64,
-    base: f64,
-    direction: f64,
-}
-
-fn perpendicular_points(critical: &[f64], request: PerpendicularRequest) -> Vec<f64> {
-    let PerpendicularRequest {
-        z,
-        grid,
-        length,
-        base,
-        direction,
-    } = request;
-    // Upstream `offsetBase` is `size_t`: the double grid position truncates
-    // before entering the vertex arithmetic (`Fill3DHoneycomb.cpp:105`).
-    let base = base as i64 as f64;
-    let mut output = vec![base];
-    let mut location = 0.0;
-    while location < length {
-        output.extend(
-            critical
-                .iter()
-                .map(|critical| base + troct_wave(*critical, grid, z) * direction),
-        );
-        location += 2.0 * grid;
-    }
-    output.push(base);
-    output
-}
-
-// Upstream `triWave` keeps the phase in a C `float` (f32) — the storage
-// rounding and fractional extraction happen in single precision
-// (`Fill3DHoneycomb.cpp:29-35`); f64 here shifts cut points by one
-// scaled unit after truncation.
-fn tri_wave(position: f64, grid: f64) -> f64 {
-    let mut t = (position / (2.0 * grid) + 0.25) as f32;
-    t -= t as i64 as f32;
-    (1.0 - (f64::from(t) * 8.0 - 4.0).abs()) * (grid * 0.25) + grid * 0.25
-}
-
-fn troct_wave(position: f64, grid: f64, z: f64) -> f64 {
-    let offset = tri_wave(z, grid) * 0.5;
-    let y = tri_wave(position, grid);
-    if y.abs() > offset.abs() {
-        y.signum() * offset
-    } else {
-        y * offset.signum()
+    let start = size / 2.0 + (params.layer_height / 2.0) / scale.factor();
+    grid::Grid {
+        z: (params.z / scale.factor()) * z_scale + start,
+        z_last: ((params.z - params.layer_height * multiline as f64 * layers as f64)
+            / scale.factor())
+            * z_scale
+            + start,
+        size,
+        width: 0.0,
+        height: 0.0,
+        complete_top: params.complete_top,
+        spacing: params.spacing / scale.factor(),
+        multiline,
+        layers,
     }
 }
 
@@ -323,7 +193,7 @@ fn polyline_length(polyline: &Polyline) -> f64 {
         .map(|points| {
             let x = (points[1].x() - points[0].x()) as f64;
             let y = (points[1].y() - points[0].y()) as f64;
-            x.hypot(y)
+            (x * x + y * y).sqrt()
         })
         .sum()
 }

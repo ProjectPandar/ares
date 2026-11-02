@@ -25,10 +25,12 @@ macro_rules! region_option_fields {
             solid_infill_direction => "solid_infill_direction": OrcaFloat = OrcaFloat(45.0),
             solid_infill_rotate_template => "solid_infill_rotate_template": OrcaString = string(""),
             symmetric_infill_y_axis => "symmetric_infill_y_axis": OrcaBool = OrcaBool(false),
+            infill_complete_top => "infill_complete_top": OrcaBool = OrcaBool(false),
             infill_shift_step => "infill_shift_step": OrcaFloat = OrcaFloat(0.4),
             sparse_infill_rotate_template => "sparse_infill_rotate_template": OrcaString = string(""),
             sparse_infill_density => "sparse_infill_density": Percent = Percent(20.0),
             sparse_infill_pattern => "sparse_infill_pattern": ProcessInfillPattern = ProcessInfillPattern::CrossHatch,
+            sparse_infill_smooth_factor => "sparse_infill_smooth_factor": Percent = Percent(0.0),
             lateral_lattice_angle_1 => "lateral_lattice_angle_1": OrcaFloat = OrcaFloat(-45.0),
             lateral_lattice_angle_2 => "lateral_lattice_angle_2": OrcaFloat = OrcaFloat(45.0),
             infill_overhang_angle => "infill_overhang_angle": OrcaFloat = OrcaFloat(60.0),
@@ -158,7 +160,7 @@ pub(crate) use region_option_fields;
 
 macro_rules! declare_region_option_order {
     ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
-        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 149] = [$($key),*];
+        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 151] = [$($key),*];
     };
 }
 

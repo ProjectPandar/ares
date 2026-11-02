@@ -122,10 +122,12 @@ fn compare(left: &SurfaceFillParams, right: &SurfaceFillParams) -> Ordering {
             left.symmetric_infill_y_axis
                 .cmp(&right.symmetric_infill_y_axis)
         })
+        .then_with(|| left.infill_complete_top.cmp(&right.infill_complete_top))
         .then_with(|| compare_f32(left.infill_lock_depth, right.infill_lock_depth))
         .then_with(|| compare_f32(left.skin_infill_depth, right.skin_infill_depth))
         .then_with(|| compare_f32(left.infill_overhang_angle, right.infill_overhang_angle))
         .then_with(|| left.gyroid_optimized.cmp(&right.gyroid_optimized))
+        .then_with(|| compare_f64(left.smooth_factor, right.smooth_factor))
 }
 
 fn compare_f32(left: f32, right: f32) -> Ordering {

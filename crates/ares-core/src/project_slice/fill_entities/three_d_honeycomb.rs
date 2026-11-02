@@ -11,10 +11,16 @@ use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, Lay
 pub(super) fn polylines(
     fill: &SurfaceFill,
     print_z: f64,
+    layer_height: f64,
     scale: CoordinateScale,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let params = Params {
         z: print_z,
+        layer_height,
+        thickness_layers: fill.representative.thickness_layers,
+        complete_top: fill.params.infill_complete_top,
+        smooth_factor: fill.params.smooth_factor,
+        resolution: fill.params.resolution,
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
         angle: fill.params.angle,
@@ -37,12 +43,13 @@ pub(super) fn append(
     output: &mut LayerFillEntities,
     mut fill: SurfaceFill,
     print_z: f64,
+    layer_height: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let expolygons = std::mem::take(&mut fill.expolygons);
     for expolygon in expolygons {
         fill.expolygons = vec![expolygon];
-        let polylines = polylines(&fill, print_z, scale)?;
+        let polylines = polylines(&fill, print_z, layer_height, scale)?;
         if polylines.is_empty() {
             continue;
         }

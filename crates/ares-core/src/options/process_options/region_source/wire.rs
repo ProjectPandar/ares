@@ -7,7 +7,7 @@ impl Serialize for ProcessRegionSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(149))?;
+        let mut map = serializer.serialize_map(Some(151))?;
         map.serialize_entry(
             "align_infill_direction_to_model",
             &self.align_infill_direction_to_model,
@@ -80,6 +80,7 @@ impl Serialize for ProcessRegionSourceOptions {
             "infill_combination_max_layer_height",
             &self.infill_combination_max_layer_height,
         )?;
+        map.serialize_entry("infill_complete_top", &self.infill_complete_top)?;
         map.serialize_entry("infill_direction", &self.infill_direction)?;
         map.serialize_entry("infill_lock_depth", &self.infill_lock_depth)?;
         map.serialize_entry("infill_overhang_angle", &self.infill_overhang_angle)?;
@@ -204,6 +205,10 @@ impl Serialize for ProcessRegionSourceOptions {
         map.serialize_entry(
             "sparse_infill_rotate_template",
             &self.sparse_infill_rotate_template,
+        )?;
+        map.serialize_entry(
+            "sparse_infill_smooth_factor",
+            &self.sparse_infill_smooth_factor,
         )?;
         map.serialize_entry("sparse_infill_speed", &self.sparse_infill_speed)?;
         map.serialize_entry("symmetric_infill_y_axis", &self.symmetric_infill_y_axis)?;

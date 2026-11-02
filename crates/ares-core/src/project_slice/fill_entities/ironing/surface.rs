@@ -78,6 +78,9 @@ pub(super) fn polylines(
         horiz_move: 0.0,
         infill_overhang_angle: 60.0,
         gyroid_optimized: false,
+        infill_complete_top: false,
+        smooth_factor: 0.0,
+        resolution: 0.0,
         filter_out_gap_fill: 0.0,
         gap_fill_target: crate::ProcessGapFillTarget::default(),
     };

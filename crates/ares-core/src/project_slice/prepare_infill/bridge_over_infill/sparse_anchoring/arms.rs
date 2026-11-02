@@ -188,6 +188,16 @@ pub(super) fn dispatch(
         SurfaceFillPattern::Configured(ProcessInfillPattern::ThreeDHoneycomb) => {
             let params = Honeycomb3dParams {
                 z,
+                layer_height: {
+                    let prepared = &traversal.objects[object_index].predecessor.predecessor;
+                    let prelude = &prepared.predecessor.predecessor.object;
+                    let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
+                    plan.layers[layer_index].height
+                },
+                thickness_layers: fill.representative.thickness_layers,
+                complete_top: false,
+                smooth_factor: fill.params.smooth_factor,
+                resolution: traversal.resolved.views.full.process.print.resolution.0,
                 spacing: fill.params.spacing,
                 overlap: 0.0,
                 angle: fill.params.angle,

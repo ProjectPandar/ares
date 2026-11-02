@@ -39,6 +39,10 @@ pub(super) fn project_surface(
     params.lateral_lattice_angle_2 = context.region.lateral_lattice_angle_2.0 as f32;
     params.infill_overhang_angle = context.region.infill_overhang_angle.0 as f32;
     apply_pattern_fields(params, context.region, context.scale, context.planned.id);
+    params.resolution = context.resolution;
+    if context.region.sparse_infill_pattern == ProcessInfillPattern::ThreeDHoneycomb {
+        params.infill_complete_top = context.region.infill_complete_top.0;
+    }
 
     match kind {
         RegionSurfaceKind::Top => {
@@ -95,6 +99,11 @@ pub(super) fn project_surface(
     } else {
         1
     };
+    if params.extrusion_role == ExtrusionRole::InternalInfill
+        && params.pattern == configured(ProcessInfillPattern::ThreeDHoneycomb)
+    {
+        params.smooth_factor = 0.01 * context.region.sparse_infill_smooth_factor.0;
+    }
     // FillAdaptive.cpp:296-309,344-354: retain the owning region's
     // configuration doubles before the extrusion Flow rounds them to f32.
     params.adaptive_line_spacing = if matches!(
@@ -208,6 +217,9 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
         horiz_move: 0.0,
         infill_overhang_angle: 60.0,
         gyroid_optimized: false,
+        infill_complete_top: false,
+        smooth_factor: 0.0,
+        resolution: 0.0,
         filter_out_gap_fill: 0.0,
         gap_fill_target: crate::ProcessGapFillTarget::Nowhere,
     }

@@ -189,7 +189,12 @@ pub(in crate::project_slice) fn surface_polylines(
         }
         ProcessInfillPattern::ThreeDHoneycomb => {
             let fill = surface_fill(request);
-            super::three_d_honeycomb::polylines(&fill, request.print_z, request.call.scale)
+            super::three_d_honeycomb::polylines(
+                &fill,
+                request.print_z,
+                request.layer_height,
+                request.call.scale,
+            )
         }
         // `tri-hexagon` maps to `ipStars` (`PrintConfig.cpp:238`).
         ProcessInfillPattern::TriHexagon => {
