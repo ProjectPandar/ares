@@ -24,7 +24,7 @@ use super::super::super::{
     anchored_polygon::scaled_flow_value,
     candidate_anchored_bridge::construct_candidate_anchored_bridge,
     candidate_boundary_polylines::prepare_candidate_boundary_polylines,
-    candidate_bridge_angle::determine_candidate_bridge_angle,
+    candidate_bridge_angle::{CandidateBridgeAngleInput, determine_candidate_bridge_angle},
     candidate_bridge_area::prepare_candidate_bridge_area,
     candidate_bridge_commit::{append_postprocessed_candidate, replace_candidate_layer},
     candidate_bridge_postprocessing::postprocess_candidate_bridge,
@@ -291,15 +291,15 @@ pub(super) fn prepare_candidates(
             !anchors.is_empty(),
         )
         .map_err(geometry_error)?;
-        let angle = determine_candidate_bridge_angle(
-            &area.area_to_be_bridge,
-            &anchors,
-            &boundaries,
+        let angle = determine_candidate_bridge_angle(CandidateBridgeAngleInput {
+            area_to_be_bridge: &area.area_to_be_bridge,
+            anchors: &anchors,
+            boundary_polylines: &boundaries,
             region,
-            input.model_rotation_rad,
+            model_rotation_rad: input.model_rotation_rad,
             configured_angle,
             scale,
-        );
+        });
         let initial = construct_candidate_anchored_bridge(
             &area.area_to_be_bridge,
             boundaries,

@@ -8,39 +8,21 @@ use super::{
     internal_bridge_angle::apply_internal_bridge_angle_override,
 };
 
-struct CandidateBridgeAngleInput<'a> {
-    area_to_be_bridge: &'a [Polygon],
-    anchors: &'a [Polyline],
-    boundary_polylines: &'a [Polyline],
-    region: &'a RegionOptions,
-    model_rotation_rad: f64,
-    configured_angle: Option<f64>,
-    scale: CoordinateScale,
+pub(in crate::project_slice) struct CandidateBridgeAngleInput<'a> {
+    pub(in crate::project_slice) area_to_be_bridge: &'a [Polygon],
+    pub(in crate::project_slice) anchors: &'a [Polyline],
+    pub(in crate::project_slice) boundary_polylines: &'a [Polyline],
+    pub(in crate::project_slice) region: &'a RegionOptions,
+    pub(in crate::project_slice) model_rotation_rad: f64,
+    pub(in crate::project_slice) configured_angle: Option<f64>,
+    pub(in crate::project_slice) scale: CoordinateScale,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "mirrors the source candidate-angle inputs without inventing ownership"
-)]
 pub(in crate::project_slice) fn determine_candidate_bridge_angle(
-    area_to_be_bridge: &[Polygon],
-    anchors: &[Polyline],
-    boundary_polylines: &[Polyline],
-    region: &RegionOptions,
-    model_rotation_rad: f64,
-    configured_angle: Option<f64>,
-    scale: CoordinateScale,
+    input: CandidateBridgeAngleInput<'_>,
 ) -> f64 {
     determine_candidate_bridge_angle_using(
-        CandidateBridgeAngleInput {
-            area_to_be_bridge,
-            anchors,
-            boundary_polylines,
-            region,
-            model_rotation_rad,
-            configured_angle,
-            scale,
-        },
+        input,
         determine_automatic_bridge_angle,
         apply_internal_bridge_angle_override,
     )
