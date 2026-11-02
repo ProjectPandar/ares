@@ -229,6 +229,17 @@ fn check(label: &str) {
     let api =
         api.unwrap_or_else(|error| panic!("Native-active input must slice: {error:?}; {root:?}"));
     fs::write(root.join("ares.api.gcode"), &api).unwrap();
+    // Per-instance group-brim premise: ares must emit exactly as many
+    // ;TYPE:Brim blocks as the Native reference produced in this run
+    // (runtime cross-producer equality, not a frozen count).
+    assert_eq!(
+        std::str::from_utf8(&api)
+            .unwrap()
+            .matches(";TYPE:Brim\n")
+            .count(),
+        native.matches(";TYPE:Brim\n").count(),
+        "ares per-instance brim grouping {root:?}"
+    );
     assert!(cli.status.success(), "{root:?}: {cli:?}");
     let cli_bytes = fs::read(&output).unwrap();
     let api_comparison = golden::compare_ordered_bytes_generator_only(&reference, &api);
