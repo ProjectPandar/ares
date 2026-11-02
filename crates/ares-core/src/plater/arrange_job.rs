@@ -13,7 +13,7 @@ mod polygon;
 mod prepare;
 mod wipe_tower;
 
-pub(super) use wipe_tower::TowerPositions;
+pub(super) use wipe_tower::{TowerPositions, check_positions_for_new_plate};
 
 pub(super) use polygon::convex_hull_2d;
 
@@ -214,6 +214,20 @@ impl PlaterSession {
         imex.finish(&mut items, &before, &unselected, &params);
         prepared.selected = keys.into_iter().zip(items).collect();
         fixed_gcc_sort_by(&mut prepared.selected, |a, b| a.1.itemid < b.1.itemid);
+        // `finalize` would create a plate on an emptied position list: refused before it changes
+        // anything, with the print-sequence locks released.
+        if current.is_none()
+            && prepared
+                .selected
+                .iter()
+                .any(|(_, ap)| self.plates.needs_new_plate(ap))
+            && let Err(error) = check_positions_for_new_plate(&positions)
+        {
+            for &plate in &uncompatible {
+                self.plates.plates[plate].locked = false;
+            }
+            return Err(error);
+        }
         let plates_before = self.plates.plates.len();
         self.finalize(prepared, current, &uncompatible);
         self.place_new_towers(&full, &mut positions, plates_before)?;

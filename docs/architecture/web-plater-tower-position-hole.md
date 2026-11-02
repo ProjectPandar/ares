@@ -18,3 +18,8 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The per-plate tower 
 1. **`add_plate`:** load `two-plates.3mf`, delete plate 0, then add a plate. `add_plate` returns `InvalidInput`, and the session keeps one plate.
 2. **"Arrange all":** the same project with both cubes scaled to 150 x 150 mm, so no two share a plate. Delete plate 0 (its cube goes to the unprintable area), then "arrange all". The arrange returns `InvalidInput`; every instance keeps its transform, and the session keeps one plate.
 - **Before GREEN:** both cases panic (index out of bounds) in `place_new_towers`.
+
+## GREEN
+- **`check_positions_for_new_plate`** (`plater/arrange_job/wipe_tower.rs`) returns the `InvalidInput` when either list is empty.
+- **`add_plate`** calls it before creating the plate.
+- **"Arrange all"** calls it after the kernel only when `PlateList::needs_new_plate` (the stepping of `create_plates_for` without creating anything) finds an item past the plate list. Its temporary print-sequence locks are released before it returns.

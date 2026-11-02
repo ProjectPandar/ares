@@ -222,6 +222,23 @@ impl PlateList {
         }
     }
 
+    /// Whether `create_plates_for` would create a plate for `ap`: its bed, stepped past the locked
+    /// plates, lies past the plate list.
+    pub(in crate::plater) fn needs_new_plate(&self, ap: &ArrangePolygon) -> bool {
+        if ap.bed_idx == -1 {
+            return false;
+        }
+        let mut bed_idx = ap.bed_idx;
+        for (index, plate) in self.plates.iter().enumerate() {
+            if plate.locked {
+                bed_idx += 1;
+            } else if bed_idx as usize <= index {
+                return false;
+            }
+        }
+        true
+    }
+
     /// `create_plate(false)` (`PartPlate.cpp:6585-6669`): a reflowed grid moves the plates but
     /// not their instances.
     fn create_unadjusted_plate(&mut self) -> Option<usize> {

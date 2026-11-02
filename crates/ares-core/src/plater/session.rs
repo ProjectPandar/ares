@@ -253,10 +253,11 @@ impl PlaterSession {
     /// tower position (`set_default_wipe_tower_pos_for_plate(new_index, true)`,
     /// `PartPlate.cpp:6644-6646`).
     pub fn add_plate(&mut self) -> Result<(), SliceError> {
+        let mut positions = self.tower_positions();
+        super::arrange_job::check_positions_for_new_plate(&positions)?;
         let new_index = self.plates.plates.len();
         self.plates.create_plate(&mut Model(&mut self.project));
         let full = DynamicPrintConfig::new(self.project.settings())?;
-        let mut positions = self.tower_positions();
         self.place_new_towers(&full, &mut positions, new_index)?;
         self.wipe_tower = Some(positions);
         Ok(())

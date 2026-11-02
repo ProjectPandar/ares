@@ -26,6 +26,20 @@ const EPSILON: f64 = 1e-4;
 /// The stored tower positions, `wipe_tower_x` and `wipe_tower_y`.
 pub(in crate::plater) type TowerPositions = (Vec<f64>, Vec<f64>);
 
+/// Creating a plate fills the position lists from `values.front()` (`PartPlate.cpp:6344-6345`),
+/// undefined behaviour on a list `delete_plate` emptied (`:6777-6780`); refused instead. See
+/// `docs/architecture/web-plater-tower-position-hole.md`.
+pub(in crate::plater) fn check_positions_for_new_plate(
+    positions: &TowerPositions,
+) -> Result<(), SliceError> {
+    if positions.0.is_empty() || positions.1.is_empty() {
+        return Err(SliceError::InvalidInput(
+            "no prime tower position is left for a new plate: deleting a plate emptied the list (PartPlate.cpp:6777-6780), and creating a plate reads its first entry (PartPlate.cpp:6344)".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
 /// `std::clamp(value, 0.0, hi)`.
 fn clamp(value: f64, hi: f64) -> f64 {
     if value < 0.0 {
