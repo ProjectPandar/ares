@@ -108,7 +108,7 @@ fn reordered_reference_child() {
     let bin = root.join("oracle.sh");
     fs::write(
         &bin,
-        "#!/bin/sh\nset -e\nif [ -f calls ]; then cp reference.gcode \"$4/plate_1.gcode\"; else cp first.gcode \"$4/plate_1.gcode\"; fi\nprintf x >> calls\n",
+        "#!/bin/sh\nset -e\nwhile [ \"$#\" -gt 0 ]; do\n  case \"$1\" in\n    --outputdir) output=$2; shift 2 ;;\n    *) shift ;;\n  esac\ndone\nif [ -f calls ]; then cp reference.gcode \"$output/plate_1.gcode\"; else cp first.gcode \"$output/plate_1.gcode\"; fi\nprintf x >> calls\n",
     )
     .unwrap();
     fs::set_permissions(&bin, fs::Permissions::from_mode(0o755)).unwrap();
