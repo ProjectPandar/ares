@@ -307,6 +307,8 @@ jobs:
           command -v g++
           test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
+      - name: Verify profile input fail-closed boundary
+        run: python3 tests/parity/profile-inputs/check.py
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
 
   parity-official:
@@ -416,4 +418,6 @@ jobs:
           command -v g++
           test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
+      - name: Verify profile input fail-closed boundary
+        run: python3 tests/parity/profile-inputs/check.py
       - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
