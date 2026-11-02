@@ -2,7 +2,9 @@
 
 ## Status and rewrite boundary
 
-Investigation and independent public RED, not a production port or GREEN claim.
+Component-filter port implemented after independent public RED and measured
+scope approval. Strict complete-output acceptance still awaits the separately
+owned preset/footer prerequisite; no full-output GREEN is claimed.
 The source is OrcaSlicer beta revision
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
@@ -127,7 +129,7 @@ and strict all-target Clippy. The limited motion-block GREEN exceptions granted
 to other fill slices do not apply here. Core changes, if later justified, must
 remain rendering-neutral and portable to browser WASM, Windows, macOS and Linux.
 
-## Measured trigger and proposed port scope
+## Measured trigger and approved port scope
 
 Read-only Native debugger captures and temporary Rust diagnostics now establish
 that the component/ring distinction is exercised in both the honeycomb count-two
@@ -172,7 +174,7 @@ byte-identical to the uninstrumented RED outputs. All temporary probes are
 removed; rebuilding the restored code reproduces the same complete bytes for
 all three fixtures. No diagnostic interface or production fallback is retained.
 
-The proposed production slice is only `PrintObject::bridge_over_infill`,
+The approved production slice is only `PrintObject::bridge_over_infill`,
 `PrintObject.cpp:3872–3886`: intersect expanded candidates into ExPolygon
 components; test unsupported overlap for the whole component including holes;
 retain or discard that whole component; flatten the retained components in
@@ -181,8 +183,12 @@ source order before the existing limiting-area union. The Rust destination is
 This replaces the flat-ring predicate; it is not an additional pattern-specific
 path. Keep offset arithmetic, anchors, automatic angle voting, overrides, bridge
 flow, reconstruction, final surface rewrite, fill projection and traversal
-unchanged. Subject-bounding-box clipping optimizations remain outside this
-correctness slice unless separately shown necessary.
+unchanged. The approved slice also includes the source subject-bounding-box
+clipping exactly at both intersections: the expanded-candidate bounds for deep
+infill, and each component's bounds for unsupported area, each inflated by
+`SCALED_EPSILON`. Reuse the existing bbox clipper and scale the source epsilon
+with `CoordinateScale`. The existing input struct carries that scale through a
+mechanical caller change; no caller geometry or direction behavior changes.
 
 The investigation and direct RED commits are replayed onto
 `44fb3e6912efec80b2a12e01df6a44045daf3651` before any GREEN implementation.
@@ -198,5 +204,33 @@ separately owned prerequisite. The existing count-two triangles fixture is a
 control with raw motion and M73 already exact on the original RED base, not a
 third demonstrated geometric failure. A future port must also run identical
 before/after bridge/fill breadth inventories with zero PASS-to-FAIL transitions,
-rustfmt and strict all-target Clippy. No product fix is included in these
-measurements or in this scope request.
+rustfmt and strict all-target Clippy. Measurements alone did not change
+production behavior; implementation is restricted to the approved component
+filter and bbox clipping unit above.
+
+## Post-port requalification
+
+Fresh read-only Native observations and temporary Rust observations agree
+exactly on the ordered candidate area, anchors, boundary polylines, and
+Rectilinear entry ExPolygon for both failing geometric cases. Candidate angles
+are exactly `3.9269908456133424` for honeycomb count two and
+`2.356194536926903` for triangles count one, including equal projected f32
+angles. Both now have four boundary polylines with identical point order; no
+angle or boundary difference remains in these observations. Full Native Flow
+fields were not measured, so no full Flow equality is inferred.
+
+Temporary observations were removed and rebuilt CLI outputs for all three
+fixtures are byte-identical to their uninstrumented post-port outputs. The
+triangles count-two control is also byte-identical before and after the port.
+The exact 235-test breadth inventory remains 67 PASS / 168 FAIL, with zero
+PASS-to-FAIL or FAIL-to-PASS transitions. Rustfmt and strict all-target Clippy
+pass without new suppressions.
+
+All three complete-output tests remain enabled and FAIL. Raw motion and M73
+are exact for all three; exhaustive raw differences contain only generator
+metadata and the two separately owned footer keys. The unchanged complete
+comparator's first differences are `compatible_process_expression_group` at
+line 18732 for honeycomb count two, line 6987 for triangles count one, and line
+10557 for triangles count two. `pellet_flow_coefficient` is the other footer
+residual. These diagnostics are not a complete-output GREEN exception. Full
+acceptance requires the preset-refresh prerequisite and a fresh strict run.

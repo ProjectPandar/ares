@@ -25,7 +25,7 @@ use super::super::super::{
     candidate_anchored_bridge::construct_candidate_anchored_bridge,
     candidate_boundary_polylines::prepare_candidate_boundary_polylines,
     candidate_bridge_angle::{CandidateBridgeAngleInput, determine_candidate_bridge_angle},
-    candidate_bridge_area::prepare_candidate_bridge_area,
+    candidate_bridge_area::{CandidateBridgeAreaInput, prepare_candidate_bridge_area},
     candidate_bridge_commit::{append_postprocessed_candidate, replace_candidate_layer},
     candidate_bridge_postprocessing::postprocess_candidate_bridge,
     candidate_collision_reconstruction::reconstruct_candidate_bridge_collision,
@@ -270,13 +270,14 @@ pub(super) fn prepare_candidates(
         let region = prelude.region_options(input);
         let flow = resolve_thick_solid_infill_bridge_flow(region, nozzles)?;
         let scaled_spacing = scaled_flow_value(flow.spacing, scale);
-        let area = prepare_candidate_bridge_area(
-            &candidate.new_polygons,
-            &deep_infill_area,
-            &internal_unsupported_area,
-            &expansion_area,
+        let area = prepare_candidate_bridge_area(CandidateBridgeAreaInput {
+            candidate_polygons: &candidate.new_polygons,
+            deep_infill_area: &deep_infill_area,
+            internal_unsupported_area: &internal_unsupported_area,
+            expansion_area: &expansion_area,
             scaled_spacing,
-        )
+            scale,
+        })
         .map_err(geometry_error)?;
         let Some(boundaries) =
             prepare_candidate_boundary_polylines(&area, &total_fill_area, scaled_spacing)
