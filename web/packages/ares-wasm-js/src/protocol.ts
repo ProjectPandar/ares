@@ -12,6 +12,7 @@ export type PlaterEdit =
   | { op: "mirror"; object: number; instance: number; axis: 0 | 1 | 2 }
   | { op: "addPlate" }
   | { op: "deletePlate"; index: number }
+  | { op: "lockPlate"; index: number; locked: boolean }
   | { op: "arrange"; plate: number | undefined; settings: ArrangeSettings };
 
 export type WorkerRequest =

@@ -1,8 +1,8 @@
 //! The GUI arrange job (`src/slic3r/GUI/Jobs/ArrangeJob.cpp` at v2.5.0-beta `345efec64`) on the
 //! plater session: `prepare`, `check_unprintable`, `process` and `finalize`
 //! (`:342-414, 532-599, 632-965`) over the plate list, running `arrangement::arrange`, with the
-//! prime tower and the IDEX/IQEX zones. Locked plates, per-object skirts, the BBL calibration strip and several nozzles'
-//! shared bed are not ported yet; projects needing them are rejected.
+//! prime tower, the IDEX/IQEX zones and locked plates. Per-object skirts, the BBL calibration
+//! strip and several nozzles' shared bed are not ported yet; projects needing them are rejected.
 
 mod finalize;
 mod imex;
@@ -53,6 +53,9 @@ pub struct ArrangeSettings {
     pub avoid_extrusion_cali_region: bool,
     pub align_to_y_axis: bool,
 }
+
+/// `prepare_partplate`'s warning for a locked plate (`ArrangeJob.cpp:548-552`).
+const LOCKED_PLATE: &str = "This plate is locked.\nCannot auto-arrange on this plate.";
 
 /// `MAX_NUM_PLATES` the job reserves exclusion areas on (`ArrangeJob.cpp:410`).
 const MAX_NUM_PLATES: i32 = 36;
@@ -143,11 +146,17 @@ impl PlaterSession {
         settings: ArrangeSettings,
     ) -> Result<(), SliceError> {
         let current = match scope {
-            ArrangeScope::All => {
-                prepare::check_plate_sequences(&self.project, &self.plates)?;
-                None
+            ArrangeScope::All => None,
+            ArrangeScope::CurrentPlate(plate) if plate < self.plates.plates.len() => {
+                // `prepare_partplate` (`ArrangeJob.cpp:540-552`): an empty plate arranges
+                // nothing, a locked one warns and arranges nothing. The warning notification is
+                // returned as the error.
+                let target = &self.plates.plates[plate];
+                if !target.instances.is_empty() && target.locked {
+                    return Err(SliceError::InvalidInput(LOCKED_PLATE.to_owned()));
+                }
+                Some(plate)
             }
-            ArrangeScope::CurrentPlate(plate) if plate < self.plates.plates.len() => Some(plate),
             ArrangeScope::CurrentPlate(plate) => {
                 return Err(SliceError::InvalidInput(format!(
                     "there is no plate {plate}"
@@ -165,15 +174,19 @@ impl PlaterSession {
         );
         let config = params::arrange_config(project_settings)?;
         let full = DynamicPrintConfig::new(project_settings)?;
-        let zones = self.plates.imex_zones(&self.project, &full);
-        let mut prepared = match current {
-            None => self.prepare_all(&full),
-            Some(plate) => self.prepare_partplate(plate, &full),
-        };
-        let aps: Vec<ArrangePolygon> = prepared.selected.iter().map(|(_, ap)| ap.clone()).collect();
         if needs_calibration_strip(&self.project, &params) {
             return Err(unsupported("around the first-layer scan region"));
         }
+        let zones = self.plates.imex_zones(&self.project, &full);
+        let (mut prepared, uncompatible) = match current {
+            None => {
+                let uncompatible =
+                    prepare::lock_uncompatible_plates(&self.project, &mut self.plates);
+                (self.prepare_all(&full), uncompatible)
+            }
+            Some(plate) => (self.prepare_partplate(plate, &full), Vec::new()),
+        };
+        let aps: Vec<ArrangePolygon> = prepared.selected.iter().map(|(_, ap)| ap.clone()).collect();
         let mut positions = self.tower_positions();
         let shown = self.shown_towers((&full, &zones), &mut positions)?;
         let mut unselected = match current {
@@ -220,7 +233,7 @@ impl PlaterSession {
         prepared.selected = keys.into_iter().zip(items).collect();
         fixed_gcc_sort_by(&mut prepared.selected, |a, b| a.1.itemid < b.1.itemid);
         let plates_before = self.plates.plates.len();
-        self.finalize(prepared, current);
+        self.finalize(prepared, current, &uncompatible);
         self.place_new_towers(&full, &mut positions, plates_before)?;
         self.wipe_tower = Some(positions);
         Ok(())

@@ -51,6 +51,8 @@ pub(super) struct Plate {
     pub(super) instances: BTreeSet<InstanceKey>,
     /// The loaded plate this one came from (its documents and per-plate data).
     pub(super) source: Option<usize>,
+    /// `PartPlate::m_locked` (`PartPlate.hpp:133`).
+    pub(super) locked: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -80,6 +82,7 @@ impl PlateList {
                 origin: origin(index, cols, size),
                 instances,
                 source: Some(index),
+                locked: false,
             })
             .collect::<Vec<_>>();
         let mut list = Self {
@@ -87,6 +90,7 @@ impl PlateList {
                 origin: [0.0; 2],
                 instances: BTreeSet::new(),
                 source: None,
+                locked: false,
             },
             plates,
             size,
@@ -219,6 +223,7 @@ impl PlateList {
             origin: origin(new_index, cols, self.size),
             instances: BTreeSet::new(),
             source: None,
+            locked: false,
         });
         self.cols = compute_colum_count(self.plates.len());
         if old_cols != cols {

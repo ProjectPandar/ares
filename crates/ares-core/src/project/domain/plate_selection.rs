@@ -116,6 +116,15 @@ impl Project {
             .and_then(|plate| super::super::plate_config::own_imex_mode(&plate.metadata))
     }
 
+    /// Whether loaded plate `source` (0-based) is locked (`plate_config::own_locked`).
+    pub(crate) fn plate_locked(&self, source: usize) -> bool {
+        self.documents
+            .model_settings
+            .plates
+            .get(source)
+            .is_some_and(|plate| super::super::plate_config::own_locked(&plate.metadata))
+    }
+
     /// The lowest plate id; on a selected view, the selected plate's id.
     pub(crate) fn first_plate_id(&self) -> u32 {
         self.plates

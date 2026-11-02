@@ -1,14 +1,14 @@
 //! `ArrangeJob::prepare_all` and `prepare_partplate` (`ArrangeJob.cpp:342-414, 532-599` at
 //! v2.5.0-beta `345efec64`): which instances each scope arranges, locks or sets aside.
 
-use super::{polygon, unsupported};
+use super::polygon;
+use crate::Project;
 use crate::arrangement::ArrangePolygon;
 use crate::options::ProcessPrintSequence;
 use crate::plater::PlaterSession;
 use crate::plater::plate_list::{InstanceKey, PlateList};
 use crate::plater::selection::instance_bounding_box;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
-use crate::{Project, SliceError};
 
 type Items = Vec<(InstanceKey, ArrangePolygon)>;
 
@@ -50,20 +50,20 @@ pub(super) fn real_print_sequence(
         .unwrap_or(project.settings().process.print.print_sequence)
 }
 
-/// `prepare_all` locks plates whose print sequence differs from the global one
-/// (`ArrangeJob.cpp:345-354`); plate locks are not ported.
-pub(super) fn check_plate_sequences(
-    project: &Project,
-    plates: &PlateList,
-) -> Result<(), SliceError> {
+/// `prepare_all`'s locks (`ArrangeJob.cpp:346-354`): each unlocked plate whose print sequence
+/// is not the global one is locked for the arrange. `finalize` unlocks the returned plates.
+pub(super) fn lock_uncompatible_plates(project: &Project, plates: &mut PlateList) -> Vec<usize> {
     let global = project.settings().process.print.print_sequence;
-    if (0..plates.plates.len())
-        .any(|index| plate_sequence(project, plates, index).is_some_and(|plate| plate != global))
-    {
-        Err(unsupported("plates with their own print sequence"))
-    } else {
-        Ok(())
+    let uncompatible: Vec<usize> = (0..plates.plates.len())
+        .filter(|&index| {
+            !plates.plates[index].locked
+                && plate_sequence(project, plates, index).is_some_and(|plate| plate != global)
+        })
+        .collect();
+    for &index in &uncompatible {
+        plates.plates[index].locked = true;
     }
+    uncompatible
 }
 
 /// Appends `ap` numbered by its place in `list` (`ap.itemid = cont.size()`).
@@ -88,14 +88,17 @@ impl PlaterSession {
             .collect()
     }
 
-    /// `prepare_all` without locked plates: the printable instances are selected.
+    /// `prepare_all`: the instances on locked plates are locked, the other printable ones
+    /// selected.
     pub(super) fn prepare_all(&self, config: &DynamicPrintConfig) -> Prepared {
         let mut prepared = Prepared::default();
         for (key, printable) in self.printable_keys() {
             let mut ap = polygon::instance_arrange_polygon(&self.project, key);
             // `ArrangeJob.cpp:368-370`.
             self.set_bed_exclusion_extruders_for_all_plates(&mut ap, key, config);
-            let list = if printable {
+            let list = if self.plates.lock_on_locked_plate(key, &mut ap) {
+                &mut prepared.locked
+            } else if printable {
                 &mut prepared.selected
             } else {
                 &mut prepared.unprintable

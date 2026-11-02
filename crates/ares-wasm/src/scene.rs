@@ -51,6 +51,9 @@ pub(crate) struct ScenePlate {
     /// The plate's origin in the plater scene; plater sessions only.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) origin: Option<[f64; 2]>,
+    /// `PartPlate::is_locked`; plater sessions only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) locked: Option<bool>,
     pub(crate) instances: Vec<[u32; 3]>,
 }
 
@@ -117,6 +120,7 @@ fn project_scene(project: &Project) -> SceneData {
         .map(|plate| ScenePlate {
             id: plate.id(),
             origin: None,
+            locked: None,
             instances: plate.instances().to_vec(),
         })
         .collect();

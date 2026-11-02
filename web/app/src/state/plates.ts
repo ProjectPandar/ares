@@ -53,6 +53,13 @@ export async function deletePlate(index: number) {
   applyLayout(layout, currentPlate >= index && currentPlate > 0 ? currentPlate - 1 : currentPlate);
 }
 
+/** The plate's lock icon (Plater.cpp:23414-23419): toggles the plate's lock. */
+export async function lockPlate(index: number, locked: boolean) {
+  const { plater, currentPlate } = useApp.getState();
+  const layout = await plater!.lockPlate(index, locked);
+  applyLayout(layout, currentPlate);
+}
+
 type Vec3 = [number, number, number];
 type Step = { kind: "move" | "rotate"; target: InstanceRef; vector: Vec3 };
 const steps: Step[] = [];

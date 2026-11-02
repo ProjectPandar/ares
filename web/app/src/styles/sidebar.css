@@ -89,15 +89,21 @@
 .object-part { padding-left: 40px; }
 .object-nested { padding-left: 20px; }
 .plate-row { font-weight: 600; }
-/* PartPlate arrange (plate_arrange) and delete (plate_close) icons. */
-.plate-arrange, .plate-delete {
+/* PartPlate arrange (plate_arrange), lock (plate_lock) and delete (plate_close) icons. */
+.plate-arrange, .plate-lock, .plate-delete {
   flex: none; width: 20px; height: 20px; padding: 0; border: none; border-radius: 3px; background: none;
   color: var(--text-dim); font-size: 14px; line-height: 1; cursor: pointer;
 }
-@media (hover: hover) { :is(.plate-arrange, .plate-delete):not(:disabled):hover { color: var(--text); background: var(--panel-sunken); } }
-:is(.plate-arrange, .plate-delete):disabled { opacity: 0.4; cursor: default; }
+@media (hover: hover) { :is(.plate-arrange, .plate-lock, .plate-delete):not(:disabled):hover { color: var(--text); background: var(--panel-sunken); } }
+:is(.plate-arrange, .plate-lock, .plate-delete):disabled { opacity: 0.4; cursor: default; }
 /* An image icon upstream: drawn outside the row's text. */
 .plate-arrange::before { content: "\21F2"; }
+/* The lock icons (plate_lock / plate_unlock), drawn in the button colour. */
+.plate-lock::before {
+  content: ""; display: block; width: 12px; height: 12px; margin: auto; background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M3.5 7h9v8h-9zM8 7V5a3 3 0 0 1 6 0v1h-1.5V5a1.5 1.5 0 0 0-3 0v2z%27/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.plate-lock[aria-pressed="true"]::before { mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M5 7V5a3 3 0 0 1 6 0v2h1.5v8h-9V7zm1.5 0h3V5a1.5 1.5 0 0 0-3 0z%27/%3E%3C/svg%3E"); }
 .plate-add {
   padding: 1px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--panel);
   color: var(--text); font: inherit; font-size: 11px; cursor: pointer;

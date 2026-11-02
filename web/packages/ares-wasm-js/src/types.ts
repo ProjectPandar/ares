@@ -38,6 +38,8 @@ export interface ScenePlate {
   id: number;
   /** The plate's origin in the plater scene (`PartPlateList` grid); plater session scenes only. */
   origin?: [number, number];
+  /** Whether the plate is locked (`PartPlate::is_locked`); plater session scenes only. */
+  locked?: boolean;
   instances: [number, number, number][];
 }
 

@@ -113,6 +113,14 @@ export class PlaterSession {
   }
 
   /**
+   * Locks or unlocks the plate at 0-based `index` (`PartPlateList::lock_plate`). "Arrange all" leaves
+   * a locked plate's instances where they are, and the plate's own arrange rejects.
+   */
+  lockPlate(index: number, locked: boolean): Promise<PlaterLayout> {
+    return this.#edit({ op: "lockPlate", index, locked });
+  }
+
+  /**
    * Arranges every plate, or with `plate` (0-based) that plate alone (`ArrangeJob`). Rejects with the
    * message when the project needs what is not ported; the plater then stays as it was.
    */

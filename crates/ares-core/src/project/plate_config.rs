@@ -114,6 +114,15 @@ pub(super) fn own_imex_mode(metadata: &[Metadata]) -> Option<&str> {
         .map(|item| item.value.as_str())
 }
 
+/// The plate's `locked` attribute (`bbs_3mf.cpp:4637-4640`), read with `std::boolalpha`: only
+/// "true" locks; the last one stored wins.
+pub(super) fn own_locked(metadata: &[Metadata]) -> bool {
+    metadata
+        .iter()
+        .rfind(|item| item.key == "locked")
+        .is_some_and(|item| item.value == "true")
+}
+
 fn parse_map_mode(value: &str) -> Option<ProjectFilamentMapMode> {
     match value.trim() {
         "Auto For Flush" | "Auto" => Some(ProjectFilamentMapMode::AutoForFlush),

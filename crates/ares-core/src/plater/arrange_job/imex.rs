@@ -7,16 +7,22 @@ use crate::plater::plate_list::PlateList;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 
 /// The arranger's beds: each arranged plate's primary zone and collision strips moved by the
-/// plate's origin, for the current plate alone or else every plate (plate locking is not ported).
-/// Arranging every plate adds plates.
+/// plate's origin, for the current plate alone or else every unlocked plate. Arranging every plate
+/// adds plates.
 pub(super) fn prepare_imex_zones(
     plates: &PlateList,
     zones: &[ImexZoneLayout],
     current: Option<usize>,
     full: &DynamicPrintConfig,
 ) -> ImexArrangeInput {
-    let arranged = current.map_or(0..zones.len(), |plate| plate..plate + 1);
+    let arranged: Vec<usize> = match current {
+        Some(plate) => vec![plate],
+        None => (0..zones.len())
+            .filter(|&plate| !plates.plates[plate].locked)
+            .collect(),
+    };
     let beds = arranged
+        .into_iter()
         .map(|plate| {
             let layout = &zones[plate];
             let primary = layout.primary_zone_box?;

@@ -108,14 +108,39 @@ impl PlateList {
         if selected {
             return false;
         }
-        let Some(index) = self
-            .plates
-            .iter()
-            .position(|plate| plate.instances.contains(&key))
-        else {
+        let Some(index) = self.holding_plate(key) else {
             ap.bed_idx = MAX_PLATES_COUNT;
             return true;
         };
+        self.move_to_plate_bed(ap, index);
+        true
+    }
+
+    /// `preprocess_arrange_polygon(..., true)` (`PartPlate.cpp:7617-7660`): an instance on a
+    /// locked plate is locked, moved to that plate's bed.
+    pub(in crate::plater) fn lock_on_locked_plate(
+        &self,
+        key: InstanceKey,
+        ap: &mut ArrangePolygon,
+    ) -> bool {
+        match self.holding_plate(key) {
+            Some(index) if self.plates[index].locked => {
+                self.move_to_plate_bed(ap, index);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// The first plate holding `key` (`contain_instance`).
+    fn holding_plate(&self, key: InstanceKey) -> Option<usize> {
+        self.plates
+            .iter()
+            .position(|plate| plate.instances.contains(&key))
+    }
+
+    /// The item on the bed of the plate at `index`, its translation made plate-local.
+    fn move_to_plate_bed(&self, ap: &mut ArrangePolygon, index: usize) {
         let index = index as i32;
         let (row, col) = (index / self.cols as i32, index % self.cols as i32);
         ap.bed_idx = index;
@@ -126,7 +151,6 @@ impl PlateList {
         let x = (ap.translation.x() as f64 - stride_x * f64::from(col) / SCALING_FACTOR) as i64;
         let y = (ap.translation.y() as f64 + stride_y * f64::from(row) / SCALING_FACTOR) as i64;
         ap.translation = Point::new(x, y);
-        true
     }
 
     /// `postprocess_bed_index_for_current_plate` (`PartPlate.cpp:7913-7928`): the first bed is
@@ -152,11 +176,18 @@ impl PlateList {
         self.unprintable.instances.clear();
     }
 
-    /// `postprocess_bed_index_for_selected` (`PartPlate.cpp:7833-7880`) without locked plates:
-    /// plates are created until the item's bed exists.
-    pub(in crate::plater) fn create_plates_for(&mut self, ap: &ArrangePolygon) {
-        if ap.bed_idx == -1 || (ap.bed_idx as usize) < self.plates.len() {
+    /// `postprocess_bed_index_for_selected` (`PartPlate.cpp:7833-7879`): the item's bed steps
+    /// past each locked plate, and plates are created until that bed exists.
+    pub(in crate::plater) fn create_plates_for(&mut self, ap: &mut ArrangePolygon) {
+        if ap.bed_idx == -1 {
             return;
+        }
+        for (index, plate) in self.plates.iter().enumerate() {
+            if plate.locked {
+                ap.bed_idx += 1;
+            } else if ap.bed_idx as usize <= index {
+                return;
+            }
         }
         while let Some(index) = self.create_unadjusted_plate() {
             if ap.bed_idx as usize <= index {
@@ -178,6 +209,7 @@ impl PlateList {
             origin: origin(new_index, cols, self.size),
             instances: BTreeSet::new(),
             source: None,
+            locked: false,
         });
         self.cols = compute_colum_count(self.plates.len());
         if old_cols != cols {

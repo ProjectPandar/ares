@@ -4,7 +4,7 @@ import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
 import { ObjectMenu } from "./ObjectMenu";
 import { selectObject } from "../state/actions";
 import { arrange } from "../state/arrange";
-import { addPlate, deletePlate, MAX_PLATES, selectPlate } from "../state/plates";
+import { addPlate, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
 import { useApp } from "../state/store";
 
 /** MenuFactory::get_volume_bitmaps, indexed by ModelVolumeType. */
@@ -84,6 +84,13 @@ function PlateNodes({ scene, object }: { scene: Scene; object: (object: SceneObj
                   void arrange(index);
                 }} />
             )}
+            {/* PartPlate lock icon (PartPlate.cpp:2629-2645): toggles the plate's lock. */}
+            <button className="plate-lock" aria-label={`Lock plate ${plate.id}`} aria-pressed={plate.locked === true}
+              title={plate.locked ? "Unlock current plate" : "Lock current plate"} disabled={slicing || arranging}
+              onClick={(event) => {
+                event.stopPropagation();
+                void lockPlate(index, !plate.locked);
+              }} />
             {/* PartPlate delete icon (plate_close), shown while the list has more than one plate. */}
             {scene.plates.length > 1 && (
               <button className="plate-delete" aria-label={`Delete plate ${plate.id}`} title="Remove this plate" disabled={slicing}

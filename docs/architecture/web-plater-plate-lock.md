@@ -67,3 +67,13 @@ This slice ports the lock and lifts that refusal. It extends the A3 arrange deci
   - Case 2 is refused ("plates with their own print sequence").
   - Case 3: a pile overlaps plate 2's tower.
   - Cases 4 and 5 fail on the `todo!()` skeleton of `lock_plate` / `PlaterPlate::locked`.
+
+## GREEN
+- **The lock is read by index.** `PlaterSession::is_plate_locked(plate)` mirrors `PartPlateList::is_locked(index)` (`PartPlate.hpp:1010`). It replaces the `PlaterPlate::locked` field the spec named, which could not be a `todo!()` skeleton without breaking every `plates()` caller. The wasm scene's plates carry `locked` from it.
+- **The warning notification becomes an error.** The plate's own arrange on a locked, non-empty plate returns `InvalidInput("This plate is locked.\nCannot auto-arrange on this plate.")`, upstream's exact text, and moves nothing. This maps upstream's warning notification (`ArrangeJob.cpp:548-552`) onto the session API, which has no notification channel; the web shows it as the arrange's error. An empty plate still arranges nothing, without an error, as `:540-546` returns first.
+- **Temporary locks.**
+  - `lock_uncompatible_plates` takes them right before `prepare_all`, and `finalize` releases them after the plates are rebuilt.
+  - When no item could be placed, `finalize` returns before the unlock (`:834-842`), as upstream's does, so those plates stay locked.
+  - The Ares-only calibration-strip refusal now runs before the locks are taken, so it cannot leave a plate locked.
+- **Shared plate-local move.** `preprocess_arrange_polygon`'s locked branch and `preprocess_arrange_polygon_other_locked` move an item onto its plate's bed the same way, so both use `PlateList::move_to_plate_bed`.
+- **Case 3 discriminates.** With the tower-bed skip removed, the case fails: a cube overlaps plate 2's tower.

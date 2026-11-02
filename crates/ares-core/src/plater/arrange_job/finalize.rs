@@ -31,8 +31,15 @@ fn apply(session: &mut PlaterSession, (object, instance): InstanceKey, ap: &Arra
 
 impl PlaterSession {
     /// `finalize` for "Arrange all" (`current` `None`) or the plate at `current`
-    /// (`only_on_partplate`). Ares has no non-virtual unselected items: no plate is locked.
-    pub(super) fn finalize(&mut self, prepared: Prepared, current: Option<usize>) {
+    /// (`only_on_partplate`), then the `uncompatible` plates `prepare_all` locked are unlocked
+    /// (`:953-955`). Nothing is applied, and nothing unlocked, when no item could be placed
+    /// (`:834-842`).
+    pub(super) fn finalize(
+        &mut self,
+        prepared: Prepared,
+        current: Option<usize>,
+        uncompatible: &[usize],
+    ) {
         let Prepared {
             mut selected,
             mut unprintable,
@@ -65,6 +72,9 @@ impl PlaterSession {
             apply(self, *key, ap);
         }
         self.rebuild_plates_after_arrangement();
+        for &plate in uncompatible {
+            self.plates.plates[plate].locked = false;
+        }
     }
 
     /// `rebuild_plates_after_arrangement(false, true, plate_index)` (`PartPlate.cpp:8382-8422`):

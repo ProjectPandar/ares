@@ -82,6 +82,8 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.addPlate();
     case "deletePlate":
       return session.deletePlate(edit.index);
+    case "lockPlate":
+      return session.lockPlate(edit.index, edit.locked);
     case "arrange":
       return session.arrange(edit.plate, JSON.stringify(edit.settings));
   }

@@ -101,7 +101,11 @@ impl PlaterSession {
         }
         let size = crate::project::plate_dimensions(settings);
         let height = settings.printer.remaining.printable_height.0 as i32;
-        let plates = PlateList::new(plates, size, height, shape);
+        let mut plates = PlateList::new(plates, size, height, shape);
+        // `load_from_3mf_structure` (`PartPlate.cpp:8559`).
+        for (index, plate) in plates.plates.iter_mut().enumerate() {
+            plate.locked = project.plate_locked(index);
+        }
         Self {
             input,
             project,

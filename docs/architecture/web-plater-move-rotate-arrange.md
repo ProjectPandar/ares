@@ -154,7 +154,7 @@ Deferred:
 - cut;
 - auto-orient (`Orient.cpp`);
 - instance copies (`duplicate`);
-- plate locking and plate-specific settings edits;
+- plate-specific settings edits (plate locking is in `web-plater-plate-lock.md`);
 - per-plate bed type and filament map;
 - the sequential-print collision warnings shown while dragging (`update_sequential_clearance`);
 - snapping to the grid (Ctrl);
@@ -350,7 +350,7 @@ The parallel candidate evaluation becomes a deterministic sequential loop that k
 **Deferred:**
 - **Belt printers** (`prepare_belt_regions` `:176-225` and the `is_belt` params): Ares has no belt slicing to verify against.
 - **Wrapping-detection exclude areas** (`enable_wrapping_detection`).
-- **Locked plates:** plate lock is deferred, so no plate is locked.
+- **Locked plates:** ported in `web-plater-plate-lock.md`.
 - **Not ported:** duplicate/fill-bed (`ModelArrange.cpp:77-106`), auto-orient, SLA arrange, the assemble-view arrange, and the CLI-only assemble path.
 
 **Dependency:** the v2.5.0-beta `PrintConfig` keys must exist in Ares first:

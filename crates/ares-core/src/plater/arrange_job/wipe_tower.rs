@@ -256,17 +256,23 @@ impl PlaterSession {
             positions: (&positions.0, &positions.1),
             zones,
         };
+        // Locked plates are skipped; the beds count the unlocked ones (`ArrangeJob.cpp:504-526`).
+        let mut unlocked = 0;
         for bed in 0..MAX_NUM_PLATES as usize {
             let valid = bed.min(count - 1);
+            if bed < count && self.plates.plates[valid].locked {
+                continue;
+            }
             let item = match shown.get(bed).copied().flatten() {
                 Some(tower) => Some(tower.arrange_polygon()),
                 None if need => Some(towers.polygon((valid, bed), extruder_ids.len(), None)?.0),
                 None => None,
             };
             if let Some(mut item) = item {
-                item.bed_idx = bed as i32;
+                item.bed_idx = unlocked;
                 items.push(item);
             }
+            unlocked += 1;
         }
         Ok(items)
     }

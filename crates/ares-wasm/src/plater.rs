@@ -158,6 +158,12 @@ impl PlaterSession {
         self.session.delete_plate(index)
     }
 
+    /// The plate's lock icon (`PartPlateList::lock_plate`): locks or unlocks the plate at `index`.
+    #[wasm_bindgen(js_name = lockPlate)]
+    pub fn lock_plate(&mut self, index: usize, locked: bool) -> Result<(), JsValue> {
+        self.session.lock_plate(index, locked).map_err(js_error)
+    }
+
     /// "Arrange" (`ArrangeJob`): every plate, or with `plate` (0-based) that plate alone.
     pub fn arrange(&mut self, plate: Option<usize>, settings_json: &str) -> Result<(), JsValue> {
         let scope = plate.map_or(ArrangeScope::All, ArrangeScope::CurrentPlate);
@@ -268,6 +274,11 @@ impl PlaterSession {
             .map(|(plate, id)| ScenePlate {
                 id,
                 origin: Some(plate.origin),
+                locked: Some(
+                    self.session
+                        .is_plate_locked(id as usize - 1)
+                        .expect("a listed plate"),
+                ),
                 instances: plate
                     .instances
                     .iter()
