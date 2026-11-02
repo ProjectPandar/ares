@@ -36,3 +36,8 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. On a printer with se
   4. **Session-only:** the second area moved off the first, `"300x0,556x0,556x256,300x256"`. The arrange returns the `InvalidInput` above.
 - **Web E2E** in `arrange.spec.ts`: "Arrange all" on the probe's input, compared with the runtime Native oracle.
 - **Expected before GREEN:** cases 1-3 and the E2E are refused with the "shared area of several nozzles" message. Case 4 gets that same message instead of the disjoint-areas one.
+
+## GREEN
+- **`get_shared_poly` is literal.** Each next area is the subject and the running result the clip (`intersection(extruer_poly, result)`), through `intersection_polygons_paths`, Ares's port of `_clipper(ctIntersection, …, NonZero)` (`ClipperUtils.cpp:722-729, 769-770`). Each intersection keeps its first polygon. One area runs no intersection and stays as it is, as before.
+- **Clipper2 result order, checked for the probe.** Upstream's vendored Clipper2 at `345efec64` was compiled with `c2_clip`'s setup (`ClipperUtils.cpp:394-402`: `Clipper64`, `PreserveCollinear(false)`, subject, clip, `Execute(Intersection, NonZero)`) on the X2D areas, scaled by truncation as `to_points` (`PrintConfig.cpp:13812-13818`) does. It returns one polygon, (256, 256) (20.5, 256) (20.5, 0) (256, 0) mm. Ares's intersection returns the same polygon with the same vertex order. The probe programs and their output are kept outside the repo.
+- **Undefined behaviour not ported.** For nozzle areas that share no area, upstream reads `result_polygon[0]` of an empty result. The port returns `InvalidInput("the nozzle areas share no printable area")` instead. Only the session-only case 4 builds such areas; the Native cases keep to areas that overlap.

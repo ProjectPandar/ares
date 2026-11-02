@@ -9,6 +9,8 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/arrange/", import.
 const CUBES = "tests/parity/byobject-perobject-multi-copy-brim/combined-brim.3mf";
 /** An Ender-3 project with a cube on each of two plates. */
 const TWO_PLATES = "tests/parity/custom-gcode-overview/two-plates.3mf";
+/** A Bambu Lab X2D with one object on filament 1. */
+const X2D = "tests/parity/generated-printer-ids/input.3mf";
 
 const MODEL = "3D/3dmodel.model";
 const OBJECTS = "Metadata/model_settings.config";
@@ -123,4 +125,25 @@ test("a plate's arrange icon arranges that plate like the OrcaSlicer v2.5.0-beta
   await expect(page.getByRole("treeitem", { name: /^Plate 2\b/ })).toHaveAttribute("aria-selected", "true");
   await page.screenshot({ path: `${artifacts}arrange-plate-2.png` });
   if (native) expect(await appArranged(page, 1)).toEqual(native);
+});
+
+test("Arrange all packs a two-nozzle printer into the nozzles' shared bed like the OrcaSlicer v2.5.0-beta CLI", async ({ page }) => {
+  test.setTimeout(300_000);
+  // A Bambu Lab X2D (nozzle areas X 0..256 and X 20.5..256), its object moved off the shared bed's centre.
+  const project = await open(page, "shared-bed", X2D, [
+    [MODEL, "transform=\"1 0 0 0 1 0 0 0 1 138.25 128 5\"", "transform=\"1 0 0 0 1 0 0 0 1 60 60 5\""],
+  ]);
+  const native = orcaArrange(project, FLAGS);
+  await page.getByRole("button", { name: "Arrange", exact: true }).click();
+  await popup(page).getByRole("button", { name: "Reset" }).click();
+  // The CLI flags' settings; the calibration-region option shows for Bambu Lab printers only.
+  for (const name of ["Auto rotate for arrangement", "Align to Y axis", "Avoid extrusion calibration region"]) {
+    if ((await option(page, name).count()) === 0) continue;
+    if (await option(page, name).isChecked()) await toggle(page, name);
+    await expect(option(page, name)).not.toBeChecked();
+  }
+  await popup(page).getByRole("button", { name: "Arrange", exact: true }).click();
+  await arranged(page);
+  await page.screenshot({ path: `${artifacts}shared-bed.png` });
+  if (native) expect(await appArranged(page)).toEqual(native);
 });

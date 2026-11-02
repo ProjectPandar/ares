@@ -1,8 +1,8 @@
 //! The GUI arrange job (`src/slic3r/GUI/Jobs/ArrangeJob.cpp` at v2.5.0-beta `345efec64`) on the
 //! plater session: `prepare`, `check_unprintable`, `process` and `finalize`
 //! (`:342-414, 532-599, 632-965`) over the plate list, running `arrangement::arrange`, with the
-//! prime tower, the IDEX/IQEX zones and locked plates. Per-object skirts, the BBL calibration
-//! strip and several nozzles' shared bed are not ported yet; projects needing them are rejected.
+//! prime tower, the IDEX/IQEX zones, locked plates and the nozzles' shared bed. Per-object skirts
+//! and the BBL calibration strip are not ported yet; projects needing them are rejected.
 
 mod finalize;
 mod imex;

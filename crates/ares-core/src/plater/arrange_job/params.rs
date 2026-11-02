@@ -5,7 +5,7 @@
 use super::ArrangeSettings;
 use crate::SliceError;
 use crate::arrangement::{ArrangeConfig, ArrangeParams, SCALING_FACTOR};
-use crate::geometry::{Point, Polygon};
+use crate::geometry::{Point, Polygon, intersection_polygons_paths};
 use crate::options::{
     FloatOrPercent, ProcessDraftShield, ProcessPrintSequence, ProcessSkirtType, ProjectSettings,
 };
@@ -75,16 +75,18 @@ pub(super) fn object_skirt_offset(settings: &ProjectSettings) -> Result<f32, Sli
     ))
 }
 
-/// `get_bed_shape(cfg, true)`: one nozzle area as it is, otherwise the printable area turned
-/// counter-clockwise.
+/// `to_points` (`PrintConfig.cpp:13812-13818`): each point scaled and truncated.
+fn to_points(points: &[crate::options::Point2d]) -> Vec<Point> {
+    points
+        .iter()
+        .map(|p| Point::new(scaled(p.x), scaled(p.y)))
+        .collect()
+}
+
+/// `get_bed_shape(cfg, true)` (`PrintConfig.cpp:13837-13864`): the nozzle areas' shared polygon,
+/// otherwise the printable area turned counter-clockwise.
 fn bed_shape(settings: &ProjectSettings) -> Result<Vec<Point>, SliceError> {
     let printer = &settings.printer.remaining;
-    let to_points = |points: &[crate::options::Point2d]| -> Vec<Point> {
-        points
-            .iter()
-            .map(|p| Point::new(scaled(p.x), scaled(p.y)))
-            .collect()
-    };
     match printer.extruder_printable_area.0.as_slice() {
         [] => {
             let mut area = printer.printable_area.0.clone();
@@ -93,11 +95,28 @@ fn bed_shape(settings: &ProjectSettings) -> Result<Vec<Point>, SliceError> {
             }
             Ok(to_points(&area))
         }
-        [area] => Ok(to_points(area)),
-        _ => Err(SliceError::InvalidInput(
-            "arranging on the shared area of several nozzles is not supported yet".to_owned(),
-        )),
+        [first, rest @ ..] => shared_poly(first, rest),
     }
+}
+
+/// `get_shared_poly` (`PrintConfig.cpp:13820-13835`): the first area, intersected with each next
+/// one as `intersection(next, result)`, keeping each intersection's first polygon. Upstream indexes
+/// the first polygon of an empty intersection, which is undefined behaviour; the port refuses it.
+fn shared_poly(
+    first: &[crate::options::Point2d],
+    rest: &[Vec<crate::options::Point2d>],
+) -> Result<Vec<Point>, SliceError> {
+    let mut result = Polygon::new(to_points(first));
+    for area in rest {
+        result = intersection_polygons_paths(&[Polygon::new(to_points(area))], &[result])
+            .expect("nozzle area intersection")
+            .into_iter()
+            .next()
+            .ok_or_else(|| {
+                SliceError::InvalidInput("the nozzle areas share no printable area".to_owned())
+            })?;
+    }
+    Ok(result.points().to_vec())
 }
 
 /// `get_real_skirt_dist`: the skirt distance and loops' width when the print has a skirt or a
