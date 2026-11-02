@@ -94,3 +94,7 @@ all-features wasm32 check。每人一个 heavy，浏览器窗口不启动新 hea
 Deferred：生产 plate origin/arrange/routing/API 修复、更多 plate/fixture 矩阵、
 CLI 空 plate 退出码 parity、共享策略/缓存抽象重构及其它 B 组。不改 `.config`、
 root `orca_parity.rs`、CLI63/retained/channels/marker/KSR；额外共享需求先协商。
+
+## Beta
+
+At OrcaSlicer v2.5.0-beta `345efec64` the empty-model throw is `Model.cpp:500-501` and its text ends with a period: "The supplied file couldn't be read because it's empty.". Ares and `empty_plate_one_uses_model_read_error` follow the beta.

@@ -32,3 +32,7 @@ Deferred: plate-not-found text, selecting all plates, globally empty archives, S
 Use the unchanged original `tests/parity/validation/print-bed-two-plates.3mf` (empty plate1/populated plate2) and its existing single-filament `-min` variant. Independent fresh Native `--slice 1` runs must establish read rejection250/-6, the exact path-prefixed detailed stderr and the distinct generic result.json diagnostic, with no G-code emitted. Only then compare public Ares `validate_project_plate`, unvalidated/validated slicing, and processed validated composition against the detailed Model message; retain verifiable input hashes, commands and complete results before assertions.
 
 Prewrite these public RED tests in a new test module; do not relabel the old O6 test that deliberately pinned its pre-correction text as the independent RED. Update that obsolete pin only in the later approved correction. Include the existing `-min` plate2 Native full-stream success control, preserve later outside-volume rejection, and run workspace nextest, strict Clippy/fmt/WASM and reference-enabled profile-entry gates before exact-hash review/integration.
+
+## Beta
+
+At OrcaSlicer v2.5.0-beta `345efec64` the throw is `Model.cpp:500-501` and its text ends with a period: "The supplied file couldn't be read because it's empty.". Ares follows the beta.
