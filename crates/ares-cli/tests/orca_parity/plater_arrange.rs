@@ -24,6 +24,8 @@ mod calibration_region;
 mod current_plate;
 #[path = "plater_arrange/imex.rs"]
 mod imex;
+#[path = "plater_arrange/object_skirt.rs"]
+mod object_skirt;
 #[path = "plater_arrange/plate_lock.rs"]
 mod plate_lock;
 #[path = "plater_arrange/shared_bed.rs"]

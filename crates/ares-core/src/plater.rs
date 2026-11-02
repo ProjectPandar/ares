@@ -5,6 +5,7 @@
 
 mod arrange_job;
 mod arrange_settings;
+mod current_plate;
 mod edits;
 mod eigen;
 mod min_sphere;
