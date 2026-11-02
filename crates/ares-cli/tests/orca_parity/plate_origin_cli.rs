@@ -37,12 +37,14 @@ fn circle_plate_origin_matches_native_empty_selected_plate() {
     .unwrap_err();
     assert_eq!(failure.kind, FailureKind::Process, "{failure}");
     let captured = failure.captured.unwrap();
-    assert_eq!(captured.code, Some(206));
+    // The beta slices plate 2, writes its G-code and then rejects it from gcode_check_result:
+    // CLI_GCODE_PATH_IN_UNPRINTABLE_AREA (-102, Utils.hpp:94; OrcaSlicer.cpp:7194-7204).
+    assert_eq!(captured.code, Some(154));
     let native_json = fs::read(native_dir.join("result.json")).unwrap();
     let parsed: serde_json::Value = serde_json::from_slice(&native_json).unwrap();
-    assert_eq!(parsed["return_code"], -50);
+    assert_eq!(parsed["return_code"], -102);
     assert_eq!(parsed["plate_index"], 2);
-    assert!(!native_dir.join("plate_2.gcode").exists());
+    assert!(native_dir.join("plate_2.gcode").exists());
     let output_path = artifacts.join("plate_2.gcode");
     let output = Command::new(env!("CARGO_BIN_EXE_ares"))
         .args(["slice", "--plate", "2", "-o"])
@@ -60,7 +62,7 @@ fn circle_plate_origin_matches_native_empty_selected_plate() {
     assert_eq!(
         output.status.code(),
         captured.code,
-        "Native -50/206 selected-plate rejection: {artifacts:?}"
+        "Native -102/154 unprintable-area rejection: {artifacts:?}"
     );
     assert_eq!(output.stdout, captured.stdout);
     assert_eq!(output.stderr, captured.stderr);
@@ -68,11 +70,11 @@ fn circle_plate_origin_matches_native_empty_selected_plate() {
     let ares_parsed: serde_json::Value = serde_json::from_slice(&ares_json).unwrap();
     assert_eq!(
         ares_parsed["plate_index"], parsed["plate_index"],
-        "Native -50 reports the actually selected plate: {artifacts:?}"
+        "Native -102 reports the actually selected plate: {artifacts:?}"
     );
     assert_eq!(
         result_comparison_bytes(&ares_json),
         result_comparison_bytes(&native_json)
     );
-    assert!(!output_path.exists());
+    assert!(output_path.exists());
 }
