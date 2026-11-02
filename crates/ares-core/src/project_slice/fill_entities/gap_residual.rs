@@ -16,6 +16,8 @@ use crate::{
 
 use super::{FillExtrusionEntity, geometry_error};
 
+mod insert;
+
 // The residual medial-axis gap pass runs after a full-density non-bridge fill
 // lays its extrusions: the area not covered by those extrusions (intersected
 // with the no-overlap domain) is opened, offset, and re-filled with
@@ -28,6 +30,7 @@ use super::{FillExtrusionEntity, geometry_error};
 // residual pass.
 pub(super) struct ResidualInput<'a> {
     pub(super) output_entities: &'a mut Vec<FillExtrusionEntity>,
+    pub(super) no_sort: bool,
     pub(super) no_overlap_expolygons: &'a [ExPolygon],
     pub(super) params: crate::project_slice::group_fills::SurfaceFillParams,
     pub(super) kind: RegionSurfaceKind,
@@ -38,6 +41,7 @@ pub(super) struct ResidualInput<'a> {
 pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError> {
     let ResidualInput {
         output_entities,
+        no_sort,
         no_overlap_expolygons,
         params,
         kind,
@@ -129,10 +133,24 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
     if polylines.is_empty() {
         return Ok(());
     }
+    // FillBase.cpp:353-356: only fixed-order collections interleave raw gaps.
+    if no_sort {
+        insert::append(&polylines, params.flow, scale, output_entities)
+    } else {
+        append_polylines(&polylines, params.flow, scale, output_entities)
+    }
+}
+
+fn append_polylines(
+    polylines: &[crate::geometry::ThickPolyline],
+    flow: crate::project_slice::perimeters::types::Flow,
+    scale: CoordinateScale,
+    output: &mut Vec<FillExtrusionEntity>,
+) -> Result<(), SliceError> {
     let GapFillCollection { entities } =
-        variable_width::convert_with_role(&polylines, params.flow, scale, ExtrusionRole::GapFill)
+        variable_width::convert_with_role(polylines, flow, scale, ExtrusionRole::GapFill)
             .map_err(|_| SliceError::InvalidInput(FLOW_ERROR.to_owned()))?;
-    output_entities.extend(entities.into_iter().map(FillExtrusionEntity::VariableWidth));
+    output.extend(entities.into_iter().map(FillExtrusionEntity::VariableWidth));
     Ok(())
 }
 

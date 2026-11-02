@@ -135,6 +135,7 @@ pub(super) fn append_configured(
             }
             super::gap_residual::append_residual(super::gap_residual::ResidualInput {
                 output_entities: &mut entities,
+                no_sort: true,
                 no_overlap_expolygons: &fill.no_overlap_expolygons,
                 params,
                 kind,
@@ -184,6 +185,7 @@ pub(super) fn append_configured(
         .collect::<Vec<_>>();
         super::gap_residual::append_residual(super::gap_residual::ResidualInput {
             output_entities: &mut entities,
+            no_sort: true,
             no_overlap_expolygons: &fill.no_overlap_expolygons,
             params,
             kind,

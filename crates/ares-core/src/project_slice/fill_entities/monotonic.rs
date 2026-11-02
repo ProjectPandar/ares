@@ -162,6 +162,10 @@ pub(super) fn append(
         },
         &call,
     )?;
+    let no_sort = matches!(
+        pattern,
+        ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
+    );
     for (expolygon, generated) in fill.expolygons.into_iter().zip(surfaces) {
         if generated.polylines.is_empty() {
             continue;
@@ -171,13 +175,7 @@ pub(super) fn append(
             generated.polylines,
             fill_params.extrusion_role,
             f64::from(generated.spacing),
-            (
-                matches!(
-                    pattern,
-                    ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
-                ),
-                true,
-            ),
+            (no_sort, true),
             scale,
         );
         let mut entities: Vec<FillExtrusionEntity> = polylines
@@ -195,19 +193,16 @@ pub(super) fn append(
             .collect();
         super::gap_residual::append_residual(super::gap_residual::ResidualInput {
             output_entities: &mut entities,
+            no_sort,
             no_overlap_expolygons: &no_overlap_expolygons,
             params: fill_params,
             kind: fill_kind,
             expolygon: &expolygon,
             scale,
         })?;
-        output.collections.push(FillExtrusionCollection {
-            entities,
-            no_sort: matches!(
-                pattern,
-                ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
-            ),
-        });
+        output
+            .collections
+            .push(FillExtrusionCollection { entities, no_sort });
     }
     Ok(())
 }

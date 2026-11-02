@@ -107,6 +107,7 @@ pub(super) fn append(
             .collect::<Vec<_>>();
         super::gap_residual::append_residual(super::gap_residual::ResidualInput {
             output_entities: &mut entities,
+            no_sort: fill_params.calibration_order,
             no_overlap_expolygons: &no_overlap_expolygons,
             params,
             kind: fill_kind,

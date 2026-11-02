@@ -1,8 +1,8 @@
 # Bambu gap-fill interleaving: fixed-order residual collections
 
-Status: fresh public RED qualified on the accepted spiral source port;
-awaiting the RED RR before implementation. No interleaving implementation
-or GREEN claim belongs to this RED commit.
+Status: literal insertion port and paired breadth qualification complete,
+explicitly NON-GREEN pending full-output parity and review. The original
+public RED remains unchanged; no complete GREEN or closure is claimed.
 
 ## Upstream owner and Rust boundary
 
@@ -104,6 +104,57 @@ staged execution tree and frozen binary are retained externally. Only
 this result note changed after execution; no postcommit rerun is claimed.
 Raw insertion operands/closed-gap choices remain unobserved, and this
 RED does not turn the printed reversal into a general producer proof.
+
+## Literal port and paired qualification
+
+The approved port replaces unconditional conversion in `gap_residual.rs`
+with the beta353-356 gate and `gap_residual/insert.rs`. It carries the
+existing no-sort flags into the residual pass at all seven construction
+sites: monotonic/monotonic-line, calibration plane path, concentric, and
+sortable line/locked-zag/honeycomb. No new pattern policy is introduced.
+The insertion implements the decisions above; closed-gap nearest vertices
+follow `MultiPoint.hpp:62-77`. Existing loops have identical entry/exit
+as `ExtrusionLoop::last_point` requires (`ExtrusionEntity.hpp:495`).
+
+A frozen 121-check existing fill/infill/gap/monotonic/concentric/plane-path
+family, including the dedicated RED and five spiral public checks, ran
+once before and once after in the same worktree with a dedicated target.
+Before and after are both **44 PASS / 77 FAIL / zero ignored**, with zero
+status flips and zero prior-PASS to FAIL. Each phase retains 239 Native
+command-status receipts. PASS counts include guards and are not blanket
+Native-parity credit. The six selected public witnesses each have two
+fresh stable Native exports and one API/CLI export, raw API/CLI equal.
+
+The external M73-command-only diagnostic now reaches these first remaining
+non-M73 differences (original Native/API line numbers):
+
+| Witness | Native/API line | Remaining observed records |
+| --- | --- | --- |
+| Dedicated and spiral velocity | 5012/5010 | `compatible_process_expression_group` versus `complete_print_exhaust_fan_speed` config footer |
+| Positive-SYNC | 5182/5181 | Same config-footer key difference |
+| Stock and fuzzy | 6992/6992 | `printer_agent = crealityprint` versus empty value |
+| Sequential | 13978/13978 | Outer wall: `G1 X158.853 Y100.21 E.32018` versus `G1 X169.273 Y89.79 E.32018` |
+
+Thus the first reversed Gap entries and nearby WIDTH/feed differences no
+longer lead these diagnostics; sequential still has a later wall-direction
+boundary. This is not a claim of complete geometry, footer or time parity.
+No additional record class was filtered, no private operands were dumped,
+and no adjacent wall/config/estimator/formatter repair was attempted.
+
+All six complete strict public tests still **FAIL**: velocity first M73
+at19, positive-SYNC at31, sequential at93, stock/fuzzy at83. Their M73
+records remain in the comparator. The estimator is separately owned; its
+six-case spiral-stack packet is supporting evidence, not fresh runtime
+credit on this port. Its E5 feed and secondary gap observations remain
+conditional and were not replayed in this family.
+
+Fmt and strict workspace/all-targets Clippy pass; tests, fixtures, ROOT,
+runners and comparator are byte-identical to the approved RED. The
+external bundle records both source trees and distinct frozen executables,
+all original results/contexts, static inventory/parser corrections and
+supporting source identities. Only this architecture result note changes
+after execution; no postcommit rerun is claimed. E5 remains the next
+separate follow-up after this port RR, not part of these 242 executions.
 
 ## Exit and deferrals
 
