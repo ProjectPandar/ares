@@ -1,6 +1,6 @@
 import type { SceneObject } from "@ares-slicer/wasm";
 import { useEffect, useRef } from "react";
-import { changeInstances, mirrorInstance } from "../state/plates";
+import { changeInstances, deleteObject, mirrorInstance } from "../state/plates";
 import { useApp } from "../state/store";
 
 /** MenuFactory::append_menu_item_transform's mirror items (GUI_Factories.cpp:1353-1363). */
@@ -28,8 +28,8 @@ const INSTANCE_ITEMS = [
 ] as const;
 
 /**
- * The object list's right-click menu, as far as ported: the instance items and the transform
- * submenu's "Mirror" items of the object menu (GUI_Factories.cpp:1765). They act on the object's first instance, as the object
+ * The object list's right-click menu, as far as ported: "Delete", the instance items and the
+ * transform submenu's "Mirror" items of the object menu (GUI_Factories.cpp:1765). They act on the object's first instance, as the object
  * panel does. Closes on a pick, Escape or a click elsewhere.
  */
 export function ObjectMenu({ objectId, position, onClose }: { objectId: number; position: [number, number]; onClose: () => void }) {
@@ -50,6 +50,15 @@ export function ObjectMenu({ objectId, position, onClose }: { objectId: number; 
   }, [onClose]);
   return (
     <div ref={menu} className="context-menu" role="menu" aria-label="Object menu" style={{ left: position[0], top: position[1] }}>
+      {/* MenuFactory::append_menu_item_delete (GUI_Factories.cpp:584-595). */}
+      <button type="button" role="menuitem" title="Delete the selected object" aria-keyshortcuts="Delete Backspace"
+        disabled={slicing || object < 0}
+        onClick={() => {
+          onClose();
+          void deleteObject(object);
+        }}>
+        Delete
+      </button>
       {INSTANCE_ITEMS.map(({ label, shortcut, tooltip, more }) => (
         <button key={label} type="button" role="menuitem" title={tooltip} aria-keyshortcuts={shortcut}
           disabled={slicing || !(more ? edits.add : edits.remove)}

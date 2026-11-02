@@ -110,7 +110,11 @@ fn rewrite_build(model: &str, session: &PlaterSession) -> String {
 /// The `<plate>` blocks of `model_settings.config` for the session plates:
 /// a loaded plate keeps its metadata, every plate lists its instances.
 fn rewrite_plates(settings: &str, session: &PlaterSession) -> String {
-    let first = settings.find("  <plate>").unwrap();
+    // A plate block can follow `</object>` on the same line.
+    let first = settings
+        .find("  <plate>")
+        .or_else(|| settings.find("<plate>"))
+        .unwrap();
     let last = settings.rfind("</plate>").unwrap() + "</plate>\n".len();
     let blocks = settings[first..last]
         .split_inclusive("</plate>\n")

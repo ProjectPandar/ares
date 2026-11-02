@@ -39,7 +39,7 @@ test("the object menu mirrors an instance about its centre and slices like OrcaS
   // ObjectList's right click selects the object and shows its menu (GUI_Factories.cpp:1353-1363).
   await page.getByTestId("object-list").getByRole("treeitem").nth(1).click({ button: "right" });
   const menu = page.getByRole("menu", { name: "Object menu" });
-  await expect(menu.getByRole("menuitem")).toHaveText(["Add instance", "Remove instance", "Along X Axis", "Along Y Axis", "Along Z Axis"]);
+  await expect(menu.getByRole("menuitem")).toHaveText(["Delete", "Add instance", "Remove instance", "Along X Axis", "Along Y Axis", "Along Z Axis"]);
   await page.screenshot({ path: `${artifacts}menu.png` });
   await menu.getByRole("menuitem", { name: "Along X Axis" }).click();
   await expect(menu).toHaveCount(0);

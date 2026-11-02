@@ -36,6 +36,8 @@ pub struct PlaterEdits {
     pub(crate) wipe_tower: Option<(Vec<f64>, Vec<f64>)>,
     /// The objects whose instances "Add instance" / "Remove instance" changed.
     pub(crate) instances: Vec<InstanceChange>,
+    /// The ids of the objects "Delete" removed.
+    pub(crate) deleted_objects: Vec<u32>,
 }
 
 impl PlaterEdits {
@@ -45,6 +47,7 @@ impl PlaterEdits {
         object_order: None,
         wipe_tower: None,
         instances: Vec::new(),
+        deleted_objects: Vec::new(),
     };
 
     pub(crate) fn transform(&self, object_id: u32, instance_id: u32) -> Option<Transform3d> {

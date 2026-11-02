@@ -113,6 +113,14 @@ export class PlaterSession {
     return this.#edit({ op: "decreaseInstances", object, num });
   }
 
+  /**
+   * The object menu's "Delete" (`Plater::priv::delete_object_from_model`): object `object` leaves the
+   * model and its plates; later objects move up one index.
+   */
+  deleteObject(object: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "deleteObject", object });
+  }
+
   /** Appends a plate to the grid (`PartPlateList::create_plate`). */
   addPlate(): Promise<PlaterLayout> {
     return this.#edit({ op: "addPlate" });

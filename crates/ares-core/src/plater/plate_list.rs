@@ -159,6 +159,18 @@ impl PlateList {
         }
     }
 
+    /// `notify_instance_removed(obj, -1)` (`PartPlate.cpp:7396-7455`): every instance of the object
+    /// leaves the plates, and `update_object_index` moves each later object's entries down by one.
+    pub(super) fn notify_object_removed(&mut self, object: usize) {
+        for plate in self.plates.iter_mut().chain([&mut self.unprintable]) {
+            plate.instances = std::mem::take(&mut plate.instances)
+                .into_iter()
+                .filter(|&(item, _)| item != object)
+                .map(|(item, instance)| (if item > object { item - 1 } else { item }, instance))
+                .collect();
+        }
+    }
+
     pub(super) fn notify_instance_update(&mut self, model: &impl PlateModel, key: InstanceKey) {
         let bbox = model.convex_hull_bounding_box(key);
         if let Some(index) = self

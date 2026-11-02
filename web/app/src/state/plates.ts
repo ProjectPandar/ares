@@ -115,6 +115,14 @@ export async function changeInstances(object: number, more: boolean) {
   applyLayout(await (more ? plater!.increaseInstances(object) : plater!.decreaseInstances(object)), currentPlate);
 }
 
+/** The object menu's "Delete" (Plater::priv::delete_object_from_model, Plater.cpp:10750-10791); the selection clears. */
+export async function deleteObject(object: number) {
+  const { plater, currentPlate } = useApp.getState();
+  const layout = await plater!.deleteObject(object);
+  useApp.setState({ selectedObject: null });
+  applyLayout(layout, currentPlate);
+}
+
 /** The object menu's "Mirror" along an axis (Plater::mirror). */
 export async function mirrorInstance(target: InstanceRef, axis: 0 | 1 | 2) {
   const { plater, currentPlate } = useApp.getState();

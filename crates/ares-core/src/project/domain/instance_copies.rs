@@ -1,6 +1,7 @@
-//! An object's instances edited by the plater's "Add instance" / "Remove instance"
+//! The model's objects and instances edited by the plater's "Add instance" / "Remove instance"
 //! (`ModelObject::add_instance()` / `delete_last_instance`, `Model.cpp:1554-1563, 1591-1594` at
-//! v2.5.0-beta `345efec64`). See `docs/architecture/web-plater-instance-copies.md`.
+//! v2.5.0-beta `345efec64`) and "Delete" (`Model::delete_object`, `:672-679`). See
+//! `docs/architecture/web-plater-instance-copies.md` and `web-plater-delete-object.md`.
 
 use super::plater_edits::object_offset;
 use super::{Project, ProjectInstance};
@@ -32,6 +33,11 @@ impl Project {
             });
         }
         object.instances.push(instance);
+    }
+
+    /// `Model::delete_object(idx)`.
+    pub(crate) fn delete_object(&mut self, object: usize) {
+        self.objects.remove(object);
     }
 
     /// `delete_last_instance`, with its imported copy.

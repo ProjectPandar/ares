@@ -39,3 +39,12 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The plater's object 
   3. **Session-only:** deleting a missing object returns `InvalidInput`.
 - **Web E2E** `plateDeleteObject.spec.ts`: delete a cube from the object menu, then "Slice plate", compared with the runtime Native oracle for the export.
 - **Expected before GREEN:** cases 1-3 fail on the `todo!()` skeleton of `delete_object`.
+
+## GREEN
+- **`PlaterSession::delete_object`** (`plater/delete_object.rs`).
+  - It runs `Project::delete_object` (`Model::delete_object`), then `PlateList::notify_object_removed`, the `-1` branch of `notify_instance_removed`: the object's keys leave every plate and the unprintable plate, and later objects' indices drop by one.
+  - The arrange orders of the object's id are dropped.
+  - Nothing else is reset, as upstream's `update()` / `object_list_changed()` reset nothing.
+- **`PlaterEdits::deleted_objects`** holds the loaded object ids missing from the session. `apply_plater_edits` removes them first, before the object order, the instance changes and the transforms.
+- **Web.** The object menu's "Delete" sits first. The web binds both Delete and Backspace on the selected object, whatever the platform; upstream binds Delete on Windows and Backspace elsewhere. `plateMirror.spec.ts` expects the six items. `plateDeleteObject.spec.ts` matches Native on both oracle legs.
+- **Test export.** `rewrite_plates` now also finds a plate block that follows `</object>` on the same line, as `combined-brim.3mf` writes it. The other fixtures' exports are unchanged.

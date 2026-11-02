@@ -168,6 +168,13 @@ impl PlaterSession {
             .map_err(js_error)
     }
 
+    /// The object menu's "Delete" (`Plater::priv::delete_object_from_model`): the object at
+    /// `object` leaves the model and its plates.
+    #[wasm_bindgen(js_name = deleteObject)]
+    pub fn delete_object(&mut self, object: usize) -> Result<(), JsValue> {
+        self.session.delete_object(object).map_err(js_error)
+    }
+
     /// "Delete plate" (`PartPlateList::delete_plate`); false for the sole plate.
     #[wasm_bindgen(js_name = deletePlate)]
     pub fn delete_plate(&mut self, index: usize) -> bool {

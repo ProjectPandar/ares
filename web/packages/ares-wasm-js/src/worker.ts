@@ -90,6 +90,8 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.increaseInstances(edit.object, edit.num);
     case "decreaseInstances":
       return session.decreaseInstances(edit.object, edit.num);
+    case "deleteObject":
+      return session.deleteObject(edit.object);
     case "arrange":
       return session.arrange(edit.plate, JSON.stringify(edit.settings));
   }

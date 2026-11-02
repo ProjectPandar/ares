@@ -39,6 +39,11 @@ impl Project {
     /// while `Model::plates_custom_gcodes` stays keyed by plate index
     /// (`PartPlateList::delete_plate`, `PartPlate.cpp:4554-4660`, leaves it).
     pub(crate) fn apply_plater_edits(&mut self, edits: &PlaterEdits) {
+        for id in &edits.deleted_objects {
+            if let Some(object) = self.objects.iter().position(|o| o.id() == *id) {
+                self.delete_object(object);
+            }
+        }
         if let Some(order) = &edits.object_order {
             self.order_objects(order);
         }

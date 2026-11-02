@@ -349,6 +349,7 @@ impl PlaterSession {
             ),
             wipe_tower: self.wipe_tower.clone(),
             instances: self.instance_changes(),
+            deleted_objects: self.deleted_objects(),
         }
     }
 

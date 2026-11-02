@@ -6,9 +6,35 @@ use super::PlaterSession;
 use crate::SliceError;
 
 impl PlaterSession {
-    /// `delete_object_from_model(object)`.
+    /// `delete_object_from_model(object)`: `Model::delete_object`, then
+    /// `notify_instance_removed(object, -1)`. The cut-object warning cannot apply: no session object
+    /// is cut. `InvalidInput` for no such object.
     pub fn delete_object(&mut self, object: usize) -> Result<(), SliceError> {
-        let _ = object;
-        todo!()
+        let id = self
+            .project
+            .objects()
+            .get(object)
+            .ok_or_else(|| SliceError::InvalidInput(format!("there is no object {object}")))?
+            .id();
+        self.project.delete_object(object);
+        self.plates.notify_object_removed(object);
+        self.arrange_orders
+            .retain(|&(object_id, _), _| object_id != id);
+        Ok(())
+    }
+
+    /// The loaded objects `delete_object` removed, by id.
+    pub(super) fn deleted_objects(&self) -> Vec<u32> {
+        self.loaded_instances
+            .keys()
+            .copied()
+            .filter(|id| {
+                !self
+                    .project
+                    .objects()
+                    .iter()
+                    .any(|object| object.id() == *id)
+            })
+            .collect()
     }
 }

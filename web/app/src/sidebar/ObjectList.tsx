@@ -5,7 +5,7 @@ import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
 import { instanceEdits, ObjectMenu } from "./ObjectMenu";
 import { selectObject } from "../state/actions";
 import { arrange } from "../state/arrange";
-import { addPlate, changeInstances, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
+import { addPlate, changeInstances, deleteObject, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
 import { useApp } from "../state/store";
 
 /** MenuFactory::get_volume_bitmaps, indexed by ModelVolumeType. */
@@ -120,14 +120,22 @@ export function ObjectList() {
   const scene = useApp((state) => state.scene);
   const selected = useApp((state) => state.selectedObject);
   const fileName = useApp((state) => state.file?.name);
-  // The "+" / "-" shortcuts of the instance items, on the selected object.
+  // The "+" / "-" shortcuts of the instance items and Delete / Backspace of "Delete", on the selected
+  // object.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (!isShortcut(event) || cmdDown(event) || event.altKey || (event.key !== "+" && event.key !== "-")) return;
+      if (!isShortcut(event) || cmdDown(event) || event.altKey) return;
       const { scene: current, selectedObject, slice } = useApp.getState();
       const index = current?.objects.findIndex(({ id }) => id === selectedObject) ?? -1;
+      if (index < 0 || slice.status === "slicing") return;
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        void deleteObject(index);
+        return;
+      }
+      if (event.key !== "+" && event.key !== "-") return;
       const more = event.key === "+";
-      if (index < 0 || slice.status === "slicing" || !instanceEdits(current!.objects[index])[more ? "add" : "remove"]) return;
+      if (!instanceEdits(current!.objects[index])[more ? "add" : "remove"]) return;
       event.preventDefault();
       void changeInstances(index, more);
     };
