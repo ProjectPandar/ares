@@ -92,6 +92,7 @@ fn slice_validated_profile_source(
     record_moves: bool,
     context: SlicerContext,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
+    request.overrides.validate_cli_config()?;
     with_profile_source(input.as_ref(), request, |mut source| {
         source.validate_print = true;
         if let Some(profile) = &mut source.profile {
