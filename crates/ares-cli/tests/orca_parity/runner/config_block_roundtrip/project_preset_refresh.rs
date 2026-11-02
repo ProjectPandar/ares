@@ -155,7 +155,7 @@ fn check(label: &str, authored: bool, dirty: bool, uptodate: bool, expected: [&s
         &json!({
             "label": label,
             "keys": KEYS,
-            "native": KEYS.map(|key| (&native[0][key]).clone()),
+            "native": KEYS.map(|key| native[0][key].clone()),
             "request": selection,
             "api": record,
         }),
@@ -164,7 +164,16 @@ fn check(label: &str, authored: bool, dirty: bool, uptodate: bool, expected: [&s
         panic!("public project-derived request: {error}; {:?}", runner.work)
     });
     let settings = serde_json::to_value(settings).unwrap();
-    for key in KEYS {
+    for key in KEYS.into_iter().chain([
+        "compatible_process_expression_group",
+        "pellet_flow_coefficient",
+        "filament_retract_after_wipe",
+        "filament_retract_length_toolchange",
+        "filament_retract_lift_above",
+        "filament_retract_lift_below",
+        "filament_retract_lift_enforce",
+        "filament_retract_restart_extra_toolchange",
+    ]) {
         assert_eq!(settings[key], native[0][key], "{key}; {:?}", runner.work);
     }
 }

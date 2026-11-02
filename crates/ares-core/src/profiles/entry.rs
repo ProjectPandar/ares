@@ -111,6 +111,12 @@ pub async fn profile_placed_project(
     request: ProfileSliceRequest<'_>,
 ) -> Result<crate::Project, SliceError> {
     with_profile_source(input.as_ref(), request, |source| {
+        if let Some(refresh) = source.refresh {
+            let mut project = crate::project_slice::load_profile_project(&source)?;
+            project.apply_plater_edits(source.edits);
+            refresh.place(&mut project);
+            return Ok(project);
+        }
         let Some(profile) = source.profile else {
             return Err(SliceError::InvalidInput(
                 "a selected profile is required".to_owned(),
@@ -126,6 +132,12 @@ pub fn validate_with_profiles(
     with_profile_source(input.as_ref(), request, |source| {
         if let Some(profile) = source.profile {
             crate::project_slice::validate_profile_source(&source, profile)?;
+        } else if source.refresh.is_some() {
+            let project = crate::project_slice::load_profile_project(&source)?;
+            project
+                .settings()
+                .validate_loaded_config(&project.documents().project_settings_raw, true)?;
+            crate::print::validate::validate_loaded_project(project, source.plate, None)?;
         }
         Ok(())
     })
@@ -250,6 +262,7 @@ fn with_load_settings_source<T>(
             placement,
             validate_print,
         }),
+        refresh: None,
         overrides,
         validate_print,
         upward: None,
@@ -289,6 +302,23 @@ pub(crate) fn with_edited_profile_source<T>(
         ));
     }
     let catalog = Catalog::from_json(catalog_json)?;
+    if let Some(uptodate) = super::project_refresh::selection(selection_json)? {
+        return body(ProjectSource {
+            bytes: input,
+            plate,
+            profile: None,
+            refresh: Some(super::ProjectPresetRefresh {
+                catalog: &catalog,
+                uptodate,
+                placement,
+            }),
+            overrides,
+            validate_print: false,
+            upward: None,
+            sliced_plate: None,
+            edits,
+        });
+    }
     let selection = selection(selection_json)?;
     let composed = catalog.compose(&selection)?;
     body(ProjectSource {
@@ -303,6 +333,7 @@ pub(crate) fn with_edited_profile_source<T>(
             placement,
             validate_print: false,
         }),
+        refresh: None,
         overrides,
         validate_print: false,
         upward: None,

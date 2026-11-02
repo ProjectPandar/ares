@@ -29,9 +29,14 @@ pub(super) struct ProjectSliceState {
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let (mut project, preparation) =
-        crate::project::load_project_with_preparation(source.bytes, source.overrides)?;
+    let (mut project, preparation) = match source.refresh {
+        Some(refresh) => refresh.load(source.bytes, source.overrides, source.validate_print)?,
+        None => crate::project::load_project_with_preparation(source.bytes, source.overrides)?,
+    };
     project.apply_plater_edits(source.edits);
+    if let Some(refresh) = source.refresh {
+        refresh.place(&mut project);
+    }
     if source.validate_print {
         super::validated::validate_post_process(&project)?;
     }

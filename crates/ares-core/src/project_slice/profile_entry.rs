@@ -135,6 +135,12 @@ pub(super) fn prepare_profile_slice(
 
 /// `BuildVolume::bed_center()` (`BuildVolume.hpp:83`): the printable-area
 /// polygon's bounding-box center.
+pub(crate) fn center_profile_project(project: &mut Project) {
+    let bed = bed_center(&project.settings().printer.remaining.printable_area);
+    project.center_instances_around_point(bed);
+    project.drop_instances_to_ground();
+}
+
 fn bed_center(printable_area: &crate::Point2dList) -> [f64; 2] {
     let Some(first) = printable_area.0.first() else {
         return [0.0, 0.0];

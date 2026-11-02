@@ -1,6 +1,6 @@
 # Project-derived preset refresh
 
-Status: proposed; architecture review required before production implementation.
+Status: accepted. The strict complete-config witness remains an enabled regression until the independent legacy-enum import-order dependency is integrated.
 
 ## Owning upstream boundary
 
@@ -52,6 +52,8 @@ The settings view and slicing entries must share the same preparation result. Ex
 `PrintConfig.cpp:3275+` defines `pellet_flow_coefficient` as `coFloats` with default `{0.4157}`; `Preset.cpp:1493` includes it in the filament preset. That does not make it unconditionally present in a loaded dynamic print config. `compatible_process_expression_group` likewise has dynamic presence: the CLI filament application may create indexed empty slots, while `PresetBundle` aggregation's `add_if_some_non_empty` has a different condition.
 
 Retained Native controls prove both keys can be absent when both are absent from the 3MF; a resolved filament preset can instead contribute the coefficient and an empty condition slot. Therefore neither key is added as an export default or by matching a fixture/preset name. Their production change follows actual preset application; validate an omission control as well as a resolved-filament witness before claiming footer closure.
+
+The preset default base also honors the registered `default_is_nil` state. A nullable override's numeric seed is not an applied override: materialize its source nil vector, then overlay actual supplied values. This preserves the existing exporter omission rule without introducing key-specific footer bans or changing registry defaults.
 
 ## Test-first qualification
 

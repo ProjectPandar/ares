@@ -4,6 +4,8 @@ mod composition;
 mod entry;
 mod import;
 mod load_settings;
+mod project_refresh;
+pub(crate) use project_refresh::ProjectPresetRefresh;
 
 mod fragment;
 mod inheritance;

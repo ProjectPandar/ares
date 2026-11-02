@@ -92,8 +92,13 @@ pub(super) fn identify(bin: &Path) -> Result<Producer, StageError> {
         .map(|key| (key, std::env::var(key).ok()))
         .into_iter()
         .collect::<std::collections::BTreeMap<_, _>>();
-    let components = json!({"schema":"native-cache-v2","native":native_hash,
+    let mut components = json!({"schema":"native-cache-v2","native":native_hash,
         "launcher":launcher_hash,"endpoint":endpoint_hash,"resources":resources_hash,"policy":policy,"parallelism":std::thread::available_parallelism().map_err(io)?.get()});
+    if let Some(supply) = super::application::project_supply()
+        .map_err(|error| StageError::new(Stage::Initialization, FailureKind::Io, error))?
+    {
+        components["project_preset_catalog"] = json!(supply.digest);
+    }
     let key = digest(&[b"producer-v2", &serde_json::to_vec(&components).unwrap()]);
     let runtime_environment = [
         "ORCA_REPLAY_CPU",

@@ -43,8 +43,8 @@ mod pressure_equalizer;
 mod profile;
 mod profile_entry;
 mod validated;
-pub(crate) use profile_entry::load_and_place;
 pub(crate) use profile_entry::validate_profile_source;
+pub(crate) use profile_entry::{center_profile_project, load_and_place};
 
 pub use source::{CliUpwardMachine, SlicedPlate};
 pub(crate) use validated::validate_post_process;
@@ -57,6 +57,11 @@ pub use validated::{
 /// the same load path `prepare_profile_slice` uses, exposed for the
 /// `profile_settings` view.
 pub(crate) fn load_profile_project(source: &ProjectSource<'_>) -> Result<Project, SliceError> {
+    if let Some(refresh) = source.refresh {
+        return refresh
+            .load(source.bytes, source.overrides, source.validate_print)
+            .map(|(project, _)| project);
+    }
     let Some(profile) = source.profile else {
         return Err(SliceError::InvalidInput(
             "a selected profile is required".to_owned(),
@@ -116,6 +121,7 @@ pub async fn slice_project_plate(
             bytes: project.as_ref(),
             plate,
             profile: None,
+            refresh: None,
             overrides,
             validate_print: false,
             upward: None,
@@ -143,6 +149,7 @@ pub async fn slice_project_plate_processed(
             bytes: project.as_ref(),
             plate,
             profile: None,
+            refresh: None,
             overrides,
             validate_print: false,
             upward: None,

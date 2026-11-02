@@ -15,6 +15,7 @@ mod plate_selection;
 mod plater_edits;
 use import_scope::ImportScope;
 pub(crate) use plate_selection::{compute_colum_count, plate_dimensions, plate_origin_at};
+mod preset_refresh;
 mod profile_input;
 mod volume_offsets;
 

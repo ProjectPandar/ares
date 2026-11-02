@@ -15,8 +15,16 @@ mod complete_block;
 mod definition_defaults;
 #[path = "config_block_roundtrip/nullable_vectors.rs"]
 mod nullable_vectors;
+#[path = "config_block_roundtrip/project_catalog_cli.rs"]
+mod project_catalog_cli;
+#[path = "config_block_roundtrip/project_catalog_cli_errors.rs"]
+mod project_catalog_cli_errors;
+#[path = "config_block_roundtrip/project_catalog_supply.rs"]
+mod project_catalog_supply;
 #[path = "config_block_roundtrip/project_preset_refresh.rs"]
 mod project_preset_refresh;
+#[path = "config_block_roundtrip/project_refresh_errors.rs"]
+mod project_refresh_errors;
 
 use super::{ExportedCase, OrcaRunner};
 use serde::{Deserialize, Serialize};

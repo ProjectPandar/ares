@@ -1,6 +1,7 @@
 mod compatible_machine;
 mod failure;
 mod moves_csv;
+mod project_presets;
 #[cfg(target_os = "linux")]
 mod result_json;
 
@@ -25,6 +26,12 @@ enum Commands {
 
 #[derive(Parser)]
 struct SliceArgs {
+    /// Complete preset catalog supplied explicitly for project-derived refresh
+    #[arg(long, conflicts_with_all = ["load_settings", "load_filaments", "resources_dir"])]
+    project_preset_catalog: Option<PathBuf>,
+    /// Refresh unlisted project values from the supplied system presets
+    #[arg(long, requires = "project_preset_catalog")]
+    uptodate: bool,
     #[arg(long)]
     options: Option<PathBuf>,
     /// 1-based plate number to slice for multi-plate 3MF projects
@@ -116,6 +123,9 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     };
     // The file name as the CLI received it (`m_input_files`), which the substitution report names.
     let input_file = args.input.to_string_lossy().into_owned();
+    if let Some(catalog) = &args.project_preset_catalog {
+        return project_presets::slice(&args, catalog, &input, &overrides).await;
+    }
     let load_settings = args
         .load_settings
         .as_deref()

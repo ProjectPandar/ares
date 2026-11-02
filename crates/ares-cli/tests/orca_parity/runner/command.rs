@@ -19,6 +19,17 @@ pub(super) fn run(
     bin: &Path,
     args: impl IntoIterator<Item = String>,
     envs: &[(&str, &str)],
+    limits: Limits<'_>,
+) -> Result<(), StageError> {
+    let args = super::application::native_arguments(args.into_iter().collect())
+        .map_err(|error| StageError::new(limits.stage, FailureKind::Io, error))?;
+    run_exact(bin, args, envs, limits)
+}
+
+pub(super) fn run_exact(
+    bin: &Path,
+    args: impl IntoIterator<Item = String>,
+    envs: &[(&str, &str)],
     Limits {
         stage,
         work,
