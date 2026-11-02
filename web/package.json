@@ -12,7 +12,7 @@
     "dev": "npm run build -w @ares-slicer/wasm && npm run build -w @ares-slicer/profiles && npm run dev -w ares-app",
     "lint": "oxlint packages app e2e pages",
     "typecheck": "npm run typecheck -w @ares-slicer/wasm && npm run typecheck -w ares-app && tsc -p tsconfig.json",
-    "prepare:e2e": "cargo build --release -p ares-cli && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build",
+    "prepare:e2e": "cargo build --release -p ares-cli && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && cargo build --release -p ares-core --example print_config_def && npm run build:wasm && npm run build && cargo nextest list -p ares-cli --test orca_parity -E 'test(=runner::config_block_roundtrip::config_block_encode_inverts_decode)'",
     "test:e2e": "npm run prepare:e2e && playwright test",
     "lighthouse": "node e2e/lighthouse.mjs",
     "build:pages": "npm run build:wasm && npm run build && node scripts/package-pages.mjs",
