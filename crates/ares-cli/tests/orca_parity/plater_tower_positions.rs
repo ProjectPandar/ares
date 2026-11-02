@@ -153,3 +153,69 @@ fn plater_deleted_plate_drops_its_prime_tower_position_like_native() {
         NEW_PLATE_TOWER,
     );
 }
+
+/// One cube on each of two plates of an Ender-3; the project stores one tower position.
+const TWO_PLATES: &str = "tests/parity/custom-gcode-overview/two-plates.3mf";
+/// The refusal for the undefined behaviour of `docs/architecture/web-plater-tower-position-hole.md`.
+const TOWER_POSITION_HOLE: &str = "no prime tower position is left for a new plate: deleting a plate emptied the list (PartPlate.cpp:6777-6780), and creating a plate reads its first entry (PartPlate.cpp:6344)";
+
+fn assert_tower_position_hole(result: Result<(), ares_core::SliceError>) {
+    assert!(
+        matches!(&result, Err(ares_core::SliceError::InvalidInput(message)) if message == TOWER_POSITION_HOLE),
+        "{result:?}"
+    );
+}
+
+#[test]
+fn plater_add_plate_refuses_an_emptied_tower_position_list() {
+    let input = std::fs::read(repo_root().join(TWO_PLATES)).unwrap();
+    let mut session = PlaterSession::load(input).unwrap();
+    // `delete_plate` erases plate 0's entry, the only one (`PartPlate.cpp:6777-6780`).
+    assert!(session.delete_plate(0));
+    assert_eq!(session.tower_positions(), (Vec::new(), Vec::new()));
+    assert_tower_position_hole(session.add_plate());
+    assert_eq!(session.plates().len(), 1);
+}
+
+#[test]
+fn plater_arrange_refuses_a_new_plate_on_an_emptied_tower_position_list() {
+    // Both cubes scaled to 150 x 150 mm, so no two share the 220 mm bed and the arrange needs a
+    // second plate (`postprocess_bed_index_for_selected`, `PartPlate.cpp:7833-7879`).
+    let input = rewrite_archive(
+        &std::fs::read(repo_root().join(TWO_PLATES)).unwrap(),
+        |name, text| {
+            (name == "3D/3dmodel.model").then(|| {
+                ["110", "374"].iter().fold(text.to_owned(), |text, x| {
+                    let from = format!("transform=\"1 0 0 0 1 0 0 0 1 {x} 110 5\"");
+                    assert!(text.contains(&from), "no {from}");
+                    text.replace(
+                        &from,
+                        &format!("transform=\"15 0 0 0 15 0 0 0 1 {x} 110 5\""),
+                    )
+                })
+            })
+        },
+    );
+    let mut session = PlaterSession::load(input).unwrap();
+    // Plate 0's cube moves to the unprintable area and stays arrangeable.
+    assert!(session.delete_plate(0));
+    let transforms = |session: &PlaterSession| {
+        [0, 1].map(|object| {
+            session
+                .instance_transform(object, 0)
+                .unwrap()
+                .to_column_major()
+        })
+    };
+    let before = transforms(&session);
+    let settings = ares_core::ArrangeSettings {
+        distance: 0.0,
+        enable_rotation: false,
+        allow_multi_materials_on_same_plate: true,
+        avoid_extrusion_cali_region: false,
+        align_to_y_axis: false,
+    };
+    assert_tower_position_hole(session.arrange(ares_core::ArrangeScope::All, settings));
+    assert_eq!(transforms(&session), before);
+    assert_eq!(session.plates().len(), 1);
+}
