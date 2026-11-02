@@ -32,11 +32,18 @@ impl CliCommand {
     }
 
     pub(crate) fn output(&mut self) -> io::Result<Output> {
-        // An explicitly supplied catalog is already a project-derived request.
-        let explicit = self
-            .0
-            .get_args()
-            .any(|arg| arg == "--project-preset-catalog");
+        let explicit = self.0.get_args().any(|arg| {
+            arg.to_str().is_some_and(|arg| {
+                matches!(
+                    arg.split_once('=').map_or(arg, |(flag, _)| flag),
+                    "--project-preset-catalog"
+                        | "--load-settings"
+                        | "--load-filaments"
+                        | "--resources-dir"
+                        | "--uptodate"
+                )
+            })
+        });
         if !explicit
             && let Some(supply) = super::project_presets::project_supply()
                 .map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error.to_string()))?
