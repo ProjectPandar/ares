@@ -8,6 +8,8 @@ mod mapped_nozzle;
 mod overlays;
 #[path = "nullable_vectors/scalar_authored.rs"]
 mod scalar_authored;
+#[path = "nullable_vectors/scalar_wire.rs"]
+mod scalar_wire;
 
 use serde_json::{Map, Value, json};
 

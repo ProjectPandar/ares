@@ -151,6 +151,31 @@ input-parser parity from a historical test comparing an authored scalar request
 to a canonical Native array. Any actual parser discrepancy remains a residual;
 rewriting test requests to source-kind arrays cannot hide it.
 
+## Scalar wire at the public typed boundary
+
+ConfigBase::load_from_json (Config.cpp:981-983) sends a JSON string directly to
+set_deserialize without requiring an array first. Config.cpp:596-611,626-695
+runs the owning legacy/deserialization rules; ConfigOptionFloatsTempl::deserialize
+(Config.hpp:932-956) and ConfigOptionBoolsTempl::deserialize_with_substitutions
+(Config.hpp:2016-2048) split the comma-separated wire into all positional values.
+A singleton string therefore creates a singleton vector; it does not authorize
+first-element flattening or scalar/vector output equivalence.
+
+The nullable vector newtypes must accept either that string wire or a typed
+sequence at the public ProcessRegionSourceOptions/ProjectSettings boundary.
+Reuse the existing per-kind wire decoder for string input; preserve the existing
+sequence deserialization and canonical full-array serialization. Limit this to
+the two nullable-vector types owning these three migrated fields. Other vector
+kinds, registry metadata and comparison contracts remain unchanged.
+
+The original scalar-authored load_project witness was insufficient: that importer
+normalizes raw settings before the newtypes deserialize, while direct public
+ProjectSettings parsing (also used by complete-output artifact consumers) reaches
+them without that normalization. Qualify both boundaries independently. Use the
+unchanged crosshatch-ordering/control.3mf input and its existing complete-output
+case, plus a Native-replayed public DTO tracer that checks each of its three
+scalar-authored values against the complete Native array.
+
 A neighboring typed-printer change owns bed_exclude_volumes,
 bed_exclude_volume_mode and extruder_bed_exclude_volumes. This slice does not
 change their declarations; shared schema/export files must retain those
