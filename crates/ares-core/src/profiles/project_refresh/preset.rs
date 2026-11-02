@@ -46,7 +46,12 @@ pub(super) fn refresh(
         .enumerate()
         .map(|(slot, name)| {
             let name = system_name(name, &inherited, slot + 1);
-            if name.is_empty() {
+            // CLI:2805–2807: a resolver miss keeps the imported filament slot.
+            if name.is_empty()
+                || catalog
+                    .selectable_position(ProfileKind::Filament, name)
+                    .is_none_or(|position| catalog.is_user_scope(position))
+            {
                 Ok(None)
             } else {
                 system_config(catalog, ProfileKind::Filament, name).map(Some)
