@@ -9,6 +9,7 @@ use shared_mesh::MeshPreparation;
 pub(crate) use shared_mesh::materialize_meshes;
 mod import_scope;
 mod instance;
+pub(crate) use instance::InstancePvs;
 mod instance_copies;
 mod plate_selection;
 mod plater_edits;
@@ -337,4 +338,7 @@ pub struct ProjectInstance {
     printable: bool,
     auto_drop: bool,
     transform: Transform3d,
+    /// `ModelInstance::print_volume_state` (`Model.hpp:1430`), `Inside` until the CLI's
+    /// `update_print_volume_state` stores it (`Model.hpp:1564`).
+    print_volume_state: InstancePvs,
 }

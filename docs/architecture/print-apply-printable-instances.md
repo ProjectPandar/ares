@@ -33,3 +33,13 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. Upstream prints only
 - Ares's plate-1 slice must equal it (ordered-bytes comparison, generator line excepted). Today Ares includes the outside instance and fails.
 
 **Breadth for GREEN:** a paired run of the plater and project families, base vs HEAD (0 PASS → FAIL), plus a full ares-cli/ares-core comparison noting every visible change.
+
+## GREEN
+- **Move-only split first.** The `impl ProjectInstance` block moved byte-identically into `domain/instance.rs`. The struct stays in `domain.rs`, so its private fields remain visible to the sibling modules that build and edit instances.
+- **The instance.**
+  - `ProjectInstance.print_volume_state` (`Model.hpp:1430`) starts `Inside` in both constructors (`:1564`).
+  - `Project::set_instance_print_volume_state` is the store (`Model.hpp:1551-1553`).
+  - `is_printable()` is printable and inside (`:1514`).
+  - The state enum `InstancePvs` (`Model.hpp:1408-1415`, without the never-produced `Limited`) now lives with the instance.
+- **The gate.** `update_print_volume_state(&mut Project)` (`project_slice/state/print_volume.rs`) replaces `count_inside_instances`. It computes `calc_print_volume_state` once per instance, stores it and returns the inside count. The `-50` test in `state.rs` is unchanged.
+- **The filter.** The print-object grouping (`effective_config/grouping.rs`) takes `is_printable()` instances for its transform groups and their members, the `Print::apply` boundary (`PrintApply.cpp:201`). An object left with none has no group and drops out, as at `:1958`.

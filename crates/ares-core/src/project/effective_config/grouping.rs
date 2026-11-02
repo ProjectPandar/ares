@@ -9,15 +9,16 @@ pub(crate) struct ProjectObjectTransformGroups {
 }
 
 impl ProjectObjectTransformGroups {
-    /// `PrintApply.cpp::print_objects_from_model_object`: each group's members
-    /// retain ModelObject instance order, independently of transform ordering.
+    /// `PrintApply.cpp::print_objects_from_model_object` (`:193-230`): each group's members, the
+    /// `is_printable()` instances (`:201`), retain ModelObject instance order, independently of
+    /// transform ordering.
     pub(crate) fn instance_indices(&self, object: &ProjectObject) -> Vec<Vec<usize>> {
         let mut members = vec![Vec::new(); self.transforms.len()];
         for (index, instance) in object
             .instances()
             .iter()
             .enumerate()
-            .filter(|(_, instance)| instance.printable())
+            .filter(|(_, instance)| instance.is_printable())
         {
             let transform = instance.transform().without_xy_translation();
             let group = self
@@ -54,7 +55,7 @@ pub(crate) fn group_print_object_transforms(objects: &[ProjectObject]) -> Groupe
         let mut transforms = object
             .instances()
             .iter()
-            .filter(|instance| instance.printable())
+            .filter(|instance| instance.is_printable())
             .map(|instance| instance.transform().without_xy_translation())
             .collect::<Vec<_>>();
         transforms.sort_by(transform_order);

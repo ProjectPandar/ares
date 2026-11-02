@@ -25,7 +25,7 @@ mod xml;
 mod xml_characters;
 
 pub(crate) use archive::{ArchiveLimits, PackagePath, ProjectArchive};
-pub(crate) use domain::SelectedProfile;
+pub(crate) use domain::{InstancePvs, SelectedProfile};
 pub use domain::{
     PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
     ProjectVolume, ProjectVolumeType,

@@ -4,7 +4,10 @@
 mod circle;
 mod height;
 
-use crate::{Point3d, Project, ProjectObject, SliceError, Transform3d, geometry::CoordinateScale};
+use crate::{
+    Point3d, Project, ProjectObject, SliceError, Transform3d, geometry::CoordinateScale,
+    project::InstancePvs,
+};
 use circle::fit_circle;
 
 /// `BuildVolume.hpp:106`: the plater-level epsilon.
@@ -17,14 +20,6 @@ pub(crate) enum ObjectState {
     Colliding,
     Outside,
     Below,
-}
-
-/// `Model.hpp:1240-1243`: instance-level aggregation of volume states.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum InstancePvs {
-    Inside,
-    PartlyOutside,
-    FullyOutside,
 }
 
 /// RANSAC-fitted circle in fixed coordinates (`BuildVolume.cpp:38-63`).
@@ -283,16 +278,27 @@ fn point_in_convex(hull: &[[f64; 2]], p: [f64; 2]) -> bool {
     })
 }
 
-/// `Model.cpp:2370-2379`: count instances with `InstancePvs::Inside`.
-pub(crate) fn count_inside_instances(project: &Project) -> Result<usize, SliceError> {
+/// `Model::update_print_volume_state` (`Model.cpp:839-852` at v2.5.0-beta `345efec64`) through
+/// `ModelObject::update_instances_print_volume_state` (`:2548-2562`): every instance stores its
+/// `calc_print_volume_state`, and the inside ones are counted.
+pub(crate) fn update_print_volume_state(project: &mut Project) -> Result<usize, SliceError> {
     let volume = PrintVolume::new(project)?;
+    let states: Vec<Vec<InstancePvs>> = project
+        .objects()
+        .iter()
+        .map(|object| {
+            object
+                .instances()
+                .iter()
+                .map(|instance| calc_print_volume_state(object, instance.transform(), &volume))
+                .collect()
+        })
+        .collect();
     let mut count = 0;
-    for object in project.objects() {
-        for instance in object.instances() {
-            if calc_print_volume_state(object, instance.transform(), &volume) == InstancePvs::Inside
-            {
-                count += 1;
-            }
+    for (object, states) in states.into_iter().enumerate() {
+        for (instance, state) in states.into_iter().enumerate() {
+            count += usize::from(state == InstancePvs::Inside);
+            project.set_instance_print_volume_state(object, instance, state);
         }
     }
     Ok(count)

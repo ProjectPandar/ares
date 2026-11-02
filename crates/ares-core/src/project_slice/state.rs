@@ -71,12 +71,12 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         &crate::ConfigOverrides,
     )>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let project = project.select_plate(plate)?;
+    let mut project = project.select_plate(plate)?;
     let plate_id = project.first_plate_id();
     // `OrcaSlicer.cpp:6562-6573`: unconditional — if no model-part instance
     // is fully inside the plate's print volume, reject with the upstream
     // -50 text (`Model.cpp:839-852 update_print_volume_state`; text `OrcaSlicer.cpp:220`).
-    if print_volume::count_inside_instances(&project)? == 0 {
+    if print_volume::update_print_volume_state(&mut project)? == 0 {
         return Err(SliceError::NoSuitableObjects(
             "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."
                 .to_owned(),
