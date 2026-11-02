@@ -40,13 +40,14 @@ pub(super) fn generate(
     } else {
         parameters.base_fill_pattern
     };
-    // Native precedence: (interface_angle + parity) ? -pi/4 : +pi/4.
+    // Beta adds the parity angle to the interface angle in f32.
     let angle = if roof {
-        if parameters.interface_angle + (layer_index & 1) as f32 != 0.0 {
-            -std::f32::consts::FRAC_PI_4
-        } else {
-            std::f32::consts::FRAC_PI_4
-        }
+        parameters.interface_angle
+            + if layer_index & 1 != 0 {
+                -std::f32::consts::FRAC_PI_4
+            } else {
+                std::f32::consts::FRAC_PI_4
+            }
     } else {
         parameters.base_angle
     };

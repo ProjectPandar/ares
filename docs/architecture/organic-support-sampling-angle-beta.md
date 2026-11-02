@@ -61,3 +61,14 @@ under a subsequent scope. Distance sampling, roof behavior, graph generation,
 organic drawing, skirt/seam, flow, geometry kernels, writer/progress, presets,
 and footer repairs are outside this slice. Remove temporary observations,
 rebuild, and verify complete-byte restoration before reporting results.
+
+## Bounded result
+
+The literal angle port restores the first support command and all 26913
+ordered positive-E XY commands tagged `Support` in this fixture. Seed counts
+are 83 in both implementations; draw-entry counts are 1140 in both. The first
+two installed support layers have ordered-identical path coordinates and flow,
+with 284 and 319 points respectively. No distance-sampler repair is included.
+The frozen 41-test inventory improves from 5 to 6 PASS with zero PASS-to-FAIL
+transitions. Complete output still fails at the separate M73 prefix; these
+support observations are not a complete-output parity exception.
