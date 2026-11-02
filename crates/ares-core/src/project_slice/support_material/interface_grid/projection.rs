@@ -34,7 +34,7 @@ pub(super) fn top(
         } else {
             &mut interface
         };
-        target.extend_from_slice(if input.snug {
+        target.extend_from_slice(if input.style == crate::ProcessSupportStyle::Snug {
             top.overhang_polygons.as_deref().unwrap()
         } else {
             &top.polygons

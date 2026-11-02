@@ -84,3 +84,23 @@ Accepted completion is geometry-scoped GREEN. The preset-refresh footer keys
 (`compatible_process_expression_group` and `pellet_flow_coefficient`) remain an
 explicit strict full-output residual until the preset-refresh slice supplies
 them. Do not mark either full-output target as PASS while that residual remains.
+
+### Observed result
+
+On base main `444364eaf`, the port makes all 30 Native pre-toolpath polygon
+records match, including object, source kind, Z, height, and bottom Z. The
+12 differing records now match. These captures come from the uninstrumented
+Rust executable; no product debug hook is retained.
+
+For both target fixtures, API and CLI outputs are byte-identical. With only the
+existing generator-identity header normalization, each entire prefix before
+`CONFIG_BLOCK_START` matches Native, including motion and M73 lines. The strict
+full-output residual remains the preset-refresh footer keys. Neither full-output
+target is reported as PASS, and no comparison assertion is changed.
+
+The 202-test support/raft family changes from 112 passed / 90 failed to
+114 passed / 88 failed, with zero PASS-to-FAIL changes. The two improvements are
+`brim_ears_explicit_width_support_no_brim_matches_native` and
+`support_ironing_raft_offset_native_strict_red`. Both runs use the same pinned
+Native authority and verified source profile resources. Rustfmt and strict
+workspace, all-target Clippy pass.

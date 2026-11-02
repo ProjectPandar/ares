@@ -9,6 +9,7 @@ use super::{
     intermediate_heights::{IntermediateLayer, SupportLayerType},
     toolpath_parameters::ToolpathParameters,
 };
+use crate::ProcessSupportStyle;
 use crate::geometry::{
     ClipperError, CoordinateScale, JoinType, Polygon, difference_polygons_paths,
     intersection_polygons_paths, mutable_polygon::smooth_outward, offset_paths,
@@ -16,7 +17,7 @@ use crate::geometry::{
 };
 
 pub(super) struct GridInterfacesInput<'a> {
-    pub(super) snug: bool,
+    pub(super) style: ProcessSupportStyle,
     pub(super) parameters: &'a ToolpathParameters,
     pub(super) scale: CoordinateScale,
     pub(super) counts: &'a InterfaceCounts,
@@ -40,6 +41,28 @@ pub(super) fn generate_grid_interface_layers(
     if bases.is_empty() || input.counts.top + input.counts.bottom == 0 {
         return Ok(output);
     }
+    // SupportCommon.cpp:220–233; SupportParameters.hpp:49–50 defines contacts as n > 0.
+    let organic = input.style == ProcessSupportStyle::Organic;
+    let top = if input.counts.top > 0 {
+        input.counts.top - 1
+    } else {
+        0
+    };
+    let bottom = if input.counts.bottom > 0 {
+        input.counts.bottom - if organic { 0 } else { 1 }
+    } else {
+        0
+    };
+    let counts = InterfaceCounts {
+        top,
+        bottom,
+        top_base: input.counts.top_base.min(top),
+        bottom_base: input.counts.bottom_base.min(bottom),
+    };
+    let input = &GridInterfacesInput {
+        counts: &counts,
+        ..*input
+    };
     let mut first_top = -1;
     let mut first_bottom = -1;
     for index in 0..bases.len() {
@@ -115,7 +138,7 @@ fn regularize(
 ) -> Result<Vec<Polygon>, ClipperError> {
     if polygons.is_empty() {
         Ok(polygons)
-    } else if input.snug {
+    } else if input.style != ProcessSupportStyle::Grid {
         let spacing = input
             .scale
             .scaled_delta(f64::from(input.parameters.interface_flow.spacing))

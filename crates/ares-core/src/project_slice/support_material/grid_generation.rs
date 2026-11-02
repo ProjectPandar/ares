@@ -195,7 +195,7 @@ pub(super) fn generate_grid_support_geometry(
     trim_top_contacts_by_bottom_contacts(&bottom.contacts, &mut tops)?;
     let interfaces = generate_grid_interface_layers(
         &GridInterfacesInput {
-            snug: input.grid.snug,
+            style: super::style::resolve(object.support_type, object.support_style),
             parameters: input.toolpath_parameters,
             scale: input.scale,
             counts: input.interface_counts,
