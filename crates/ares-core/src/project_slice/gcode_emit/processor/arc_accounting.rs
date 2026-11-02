@@ -1,6 +1,7 @@
 use super::motion::MotionState;
-use super::motion::arc::{arc_discretization_steps, parse_arc};
+use super::motion::arc::parse_arc;
 use super::motion_util::word;
+use crate::geometry::arc_welder::arc_discretization_steps;
 
 /// Upstream discretizes G2/G3 into `segments` internal G1s during
 /// processing (`GCodeProcessor::process_G2_G3`), each incrementing the g1

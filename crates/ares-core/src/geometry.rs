@@ -1,4 +1,5 @@
 mod agg_raster;
+pub(crate) mod arc_welder;
 mod bbox_clip;
 mod bounding_box;
 mod bridge_direction;
