@@ -84,6 +84,34 @@ If a required actual Native witness exposes a missing adjacent formatter or
 serialization prerequisite, stop and review that source boundary; do not add a
 special-case key, expected-string table or approximate numeric formatter.
 
+## Default-double stream equivalence qualification
+
+`Slic3r::format` creates a fresh Boost format and forwards ordinary doubles.
+Boost.Format's documented default stream state has precision6 and general
+rather than fixed floating-point mode. Its source makes that concrete:
+`boost/format/internals.hpp::stream_format_state::reset` sets precision6 with
+no floatfield flag; `parsing.hpp` returns for `%N%` without changing that
+state; `feed_args.hpp::put_last` inserts the argument with `os << x`.
+Read-only Boost1.86 headers from the reference build establish this source
+contract; they do not identify the official AppImage's exact Boost version.
+
+Pinned `Config.hpp:837-842::ConfigOptionFloat::serialize` likewise creates a
+fresh `std::ostringstream` and inserts the double. `Config.cpp:1564-1570`
+writes that serialized scalar string to the public settings export.
+`PrintConfig.cpp:4605-4611` defines `time_cost` as coFloat with minimum0.
+The existing public Rust encoder reaches `OrcaFloat::serialize:12-21`, which
+calls the exact `format_number` helper under review.
+
+Before the endpoint port, qualify finite integral/fractional, large/small,
+precision and notation-boundary samples using the real Native
+`--export-settings` and public `encode_config_value_by_key`. Keep actual
+Native strings as the expected values; no private formatter call, isolated
+C++ kernel, copied expected algorithm or string table. Persist all Native
+inputs/producer/settings and Rust comparison records. A mismatch stops the
+port for review; shared formatter changes are not silently pulled into scope.
+This establishes representative default-double stream equivalence, not a
+claim about every f64 bit pattern or unrelated localization behavior.
+
 ## Proposed execution after approval
 
 1. Freeze the original public range test/input and reproduce its actual Native

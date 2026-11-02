@@ -105,6 +105,50 @@ fn exported_definition(runner: &OrcaRunner, key: &str) -> Definition {
         })
 }
 
+/// Config.hpp:837-842 uses a fresh stream, as format.hpp's optionless Boost arguments do.
+/// Compare the real Native scalar text with the public encoder, not a private formatter.
+#[test]
+fn native_default_double_stream_spelling_matches_public_encoder() {
+    let mut samples = Vec::new();
+    for input in [
+        "10",
+        "0.5",
+        "1000000",
+        "0.00001",
+        "0.0001",
+        "123456.789",
+        "999999.5",
+        "3.4028234663852886e38",
+    ] {
+        let Some((runner, settings)) = native_settings(Some(("time_cost", input))) else {
+            return;
+        };
+        let native = settings["time_cost"]
+            .as_str()
+            .expect("Native coFloat settings export is its serialize() string");
+        let encoded = ares_core::encode_config_value_by_key("time_cost", input).unwrap();
+        let sample = serde_json::json!({
+            "input": input, "native": native, "ares": encoded,
+            "artifacts": runner.work,
+            "source": "ConfigOptionFloat::serialize; default double stream shared by Boost %N%",
+        });
+        std::fs::write(
+            runner.work.join("double-stream-spelling.json"),
+            serde_json::to_vec_pretty(&sample).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(encoded, native, "default double stream: {:?}", runner.work);
+        samples.push(sample);
+    }
+    std::fs::write(
+        crate::artifacts::root_from_env()
+            .unwrap()
+            .join("double-stream-equivalence.json"),
+        serde_json::to_vec_pretty(&samples).unwrap(),
+    )
+    .unwrap();
+}
+
 #[test]
 fn native_arc_fitting_enum_decodes_and_round_trips_public_options() {
     let Some((runner, native)) = native_defaults() else {
