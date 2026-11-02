@@ -7,12 +7,10 @@
 
 use ares_core::SliceError;
 
-use super::{STRIDE, assert_plate_like_native, export, load, slice_session};
-use crate::runner::{OrcaRunner, stages};
+use super::{STRIDE, assert_plate_like_native, export, load};
 
 /// Two 10 mm cubes on an Ender-3, by object: object 2 with two instances, object 3 with one.
 const CUBES: &str = "tests/parity/byobject-perobject-multi-copy-brim/combined-brim.3mf";
-const EMPTY: &str = "The supplied file couldn't be read because it's empty.";
 
 #[test]
 fn plater_delete_instance_keeps_the_plate_pairs_like_native() {
@@ -46,7 +44,9 @@ fn plater_delete_instance_refuses_a_missing_instance() {
 }
 
 /// Cross-plate membership stays literal: plate 1 keeps (0, 0) while the instance now in slot 0 sits
-/// on plate 2's area, and plate 2 keeps the dangling (0, 1).
+/// on plate 2's area, and plate 2 keeps the dangling (0, 1). Each plate's export lists object 2, so
+/// the import keeps it whole (`bbs_3mf.cpp:2215-2221`) and only the instance inside the plate's
+/// volume prints: plate 1 prints object 3, plate 2 the moved cube.
 #[test]
 fn plater_delete_instance_keeps_cross_plate_pairs_like_native() {
     let mut session = load(CUBES);
@@ -60,15 +60,7 @@ fn plater_delete_instance_keeps_cross_plate_pairs_like_native() {
     assert_eq!(plates[0].instances, vec![(0, 0), (1, 0)]);
     assert_eq!(plates[1].instances, vec![(0, 1)]);
     assert_plate_like_native("delete-instance-cross-plate", &session, 1);
-    // Plate 2 holds only the dangling pair: an empty model for the CLI read.
-    let error = std::panic::catch_unwind(|| slice_session(&session, 2)).unwrap_err();
-    assert!(
-        error
-            .downcast_ref::<String>()
-            .is_some_and(|message| message.contains(EMPTY)),
-        "plate 2 must fail the model read"
-    );
-    assert_native_read_error("delete-instance-cross-plate-2", &session, 2);
+    assert_plate_like_native("delete-instance-cross-plate-2", &session, 2);
 }
 
 /// The dangling pair is exported as upstream's writer emits it (`bbs_3mf.cpp:8580-8605`).
@@ -87,37 +79,4 @@ fn plater_delete_instance_exports_the_dangling_pair_like_upstream() {
     assert!(settings.contains(
         "<metadata key=\"object_id\" value=\"2\"/>\n      <metadata key=\"instance_id\" value=\"1\"/>\n      <metadata key=\"identify_id\" value=\"0\"/>"
     ));
-}
-
-/// Native `--slice <plate>` of the export fails with the model read error.
-fn assert_native_read_error(label: &str, session: &ares_core::PlaterSession, plate: u32) {
-    let Some(runner) = OrcaRunner::from_env().unwrap() else {
-        return;
-    };
-    let directory = tempfile::Builder::new()
-        .prefix(&format!("plater-{label}-"))
-        .tempdir_in(crate::artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
-    let path = directory.join("input.3mf");
-    let output = directory.join("native");
-    std::fs::write(&path, export(session)).unwrap();
-    std::fs::create_dir(&output).unwrap();
-    let error = stages::run(
-        runner.bin(),
-        [
-            "--slice".to_owned(),
-            plate.to_string(),
-            "--outputdir".to_owned(),
-            output.to_str().unwrap().to_owned(),
-            path.to_str().unwrap().to_owned(),
-        ],
-        stages::Stage::Slice,
-        &directory,
-    )
-    .unwrap_err();
-    assert_eq!(
-        error.captured.as_ref().unwrap().stderr,
-        format!("{}: {EMPTY}\n", path.display()).as_bytes()
-    );
 }
