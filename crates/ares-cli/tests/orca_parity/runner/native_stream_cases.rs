@@ -14,6 +14,9 @@ mod brim_first_layer_speed;
 #[path = "multiline_preoffset_crop.rs"]
 mod multiline_preoffset_crop;
 
+#[path = "cubic_trapezoidal.rs"]
+mod cubic_trapezoidal;
+
 #[path = "concentric_internal_start.rs"]
 mod concentric_internal_start;
 
