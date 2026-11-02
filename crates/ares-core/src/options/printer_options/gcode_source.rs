@@ -6,8 +6,8 @@ use std::fmt;
 use serde::{Deserialize, Deserializer, de::Visitor};
 
 pub use enums::{
-    ExtruderType, ExtruderTypes, NozzleType, NullableInts, NullableNozzleTypes, PrinterStructure,
-    RetractLiftEnforces, WipeTowerType, ZHopType, ZHopTypes,
+    ExtruderType, ExtruderTypes, ImexToolLayout, NozzleType, NullableInts, NullableNozzleTypes,
+    PrinterStructure, RetractLiftEnforces, WipeTowerType, ZHopType, ZHopTypes,
 };
 
 use super::super::{
@@ -51,6 +51,16 @@ declare_option_group! {
         machine_start_gcode => "machine_start_gcode": OrcaString = string("G28 ; home all axes\nG1 Z5 F5000 ; lift nozzle\n"),
         single_extruder_multi_material => "single_extruder_multi_material": OrcaBool = OrcaBool(true),
         manual_filament_change => "manual_filament_change": OrcaBool = OrcaBool(false),
+        // PrintConfig.cpp:7025-7146, declared at PrintConfig.hpp:1818-1828.
+        is_imex => "is_imex": OrcaBool = OrcaBool(false),
+        imex_gantry_count => "imex_gantry_count": OrcaInt = OrcaInt(1),
+        imex_tools_per_gantry => "imex_tools_per_gantry": OrcaInt = OrcaInt(2),
+        imex_nozzle_clearance_x => "imex_nozzle_clearance_x": OrcaFloat = OrcaFloat(30.0),
+        imex_nozzle_clearance_y => "imex_nozzle_clearance_y": OrcaFloat = OrcaFloat(30.0),
+        imex_carriage_margin => "imex_carriage_margin": OrcaFloat = OrcaFloat(0.0),
+        imex_tool_layout => "imex_tool_layout": ImexToolLayout = ImexToolLayout::FrontLeft,
+        imex_mode_names => "imex_mode_names": OrcaStrings = OrcaStrings(Vec::new()),
+        imex_mode_active_tools => "imex_mode_active_tools": OrcaStrings = OrcaStrings(Vec::new()),
         change_filament_gcode => "change_filament_gcode": OrcaString = string(""),
         change_extrusion_role_gcode => "change_extrusion_role_gcode": OrcaString = string(""),
         silent_mode => "silent_mode": OrcaBool = OrcaBool(false),
@@ -87,7 +97,7 @@ declare_option_group! {
 }
 
 impl PrinterGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 62] = [
+    pub const DECLARATION_ORDER: [&'static str; 71] = [
         "before_layer_change_gcode",
         "printing_by_object_gcode",
         "machine_end_gcode",
@@ -118,6 +128,15 @@ impl PrinterGCodeSourceOptions {
         "machine_start_gcode",
         "single_extruder_multi_material",
         "manual_filament_change",
+        "is_imex",
+        "imex_gantry_count",
+        "imex_tools_per_gantry",
+        "imex_nozzle_clearance_x",
+        "imex_nozzle_clearance_y",
+        "imex_carriage_margin",
+        "imex_tool_layout",
+        "imex_mode_names",
+        "imex_mode_active_tools",
         "change_filament_gcode",
         "change_extrusion_role_gcode",
         "silent_mode",

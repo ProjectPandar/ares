@@ -153,7 +153,7 @@ pub use {
     preset_metadata::PresetMetadata,
     printer_options::{
         AuthorizationType, BedExcludeVolumeMode, DefaultBedType, ExtruderType, ExtruderTypes,
-        ExtruderVariantLists, InputShaperType, MachineEnvelopeOptions, NozzleType,
+        ExtruderVariantLists, ImexToolLayout, InputShaperType, MachineEnvelopeOptions, NozzleType,
         NozzleVolumeType, NozzleVolumeTypes, NullableFloats, NullableInts, NullableNozzleTypes,
         PrintHostType, PrinterGCodeSourceOptions, PrinterModel, PrinterNotes, PrinterOptions,
         PrinterRemainingOptions, PrinterStructure, RetractLiftEnforces, ThumbnailDefinitions,

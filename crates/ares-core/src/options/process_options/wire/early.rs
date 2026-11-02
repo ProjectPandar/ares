@@ -163,6 +163,7 @@ where
         &region.hole_to_polyhole_threshold,
     )?;
     map.serialize_entry("hole_to_polyhole_twisted", &region.hole_to_polyhole_twisted)?;
+    map.serialize_entry("imex_parallel_mode", &object.imex_parallel_mode)?;
     map.serialize_entry(
         "independent_support_layer_height",
         &print.independent_support_layer_height,

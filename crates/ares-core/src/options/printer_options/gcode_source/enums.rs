@@ -27,6 +27,20 @@ macro_rules! nullable_enum_vector {
     };
 }
 
+/// `ImexToolLayout` (`PrintConfig.hpp:262-268`, keys `PrintConfig.cpp:751-756`): the corner T0 sits in.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ImexToolLayout {
+    #[default]
+    #[serde(rename = "front-left")]
+    FrontLeft,
+    #[serde(rename = "front-right")]
+    FrontRight,
+    #[serde(rename = "rear-left")]
+    RearLeft,
+    #[serde(rename = "rear-right")]
+    RearRight,
+}
+
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub enum NozzleType {
     #[default]

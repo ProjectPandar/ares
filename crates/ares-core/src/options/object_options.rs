@@ -1,5 +1,5 @@
 use super::{
-    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, Percent, ProcessBrimType,
+    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaString, Percent, ProcessBrimType,
     ProcessExtraBridgeLayer, ProcessGapFillTarget, ProcessInfillPattern,
     ProcessInternalBridgeFilter, ProcessObjectSourceOptions, ProcessPerimeterGenerator,
     ProcessSeamPosition, ProcessSlicingMode, ProcessSupportBasePattern,

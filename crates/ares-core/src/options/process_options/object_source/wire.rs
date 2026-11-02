@@ -7,7 +7,7 @@ impl Serialize for ProcessObjectSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(126))?;
+        let mut map = serializer.serialize_map(Some(127))?;
         map.serialize_entry("bridge_acceleration", &self.bridge_acceleration)?;
         map.serialize_entry("bridge_no_support", &self.bridge_no_support)?;
         map.serialize_entry(
@@ -54,6 +54,7 @@ impl Serialize for ProcessObjectSourceOptions {
         map.serialize_entry("flush_into_objects", &self.flush_into_objects)?;
         map.serialize_entry("flush_into_support", &self.flush_into_support)?;
         map.serialize_entry("gap_fill_target", &self.gap_fill_target)?;
+        map.serialize_entry("imex_parallel_mode", &self.imex_parallel_mode)?;
         map.serialize_entry("infill_jerk", &self.infill_jerk)?;
         map.serialize_entry(
             "initial_layer_acceleration",

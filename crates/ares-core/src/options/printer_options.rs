@@ -7,7 +7,7 @@ use super::option_group::OverlayOptionGroup;
 
 pub(crate) use gcode_source::PrinterGCodeSourceOptionsBuilder;
 pub use gcode_source::{
-    ExtruderType, ExtruderTypes, NozzleType, NullableInts, NullableNozzleTypes,
+    ExtruderType, ExtruderTypes, ImexToolLayout, NozzleType, NullableInts, NullableNozzleTypes,
     PrinterGCodeSourceOptions, PrinterStructure, RetractLiftEnforces, WipeTowerType, ZHopType,
     ZHopTypes,
 };

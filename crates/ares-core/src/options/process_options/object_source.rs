@@ -13,7 +13,7 @@ pub use enums::{
 };
 
 use super::super::{
-    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, Percent,
+    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaString, Percent,
     object_fields::{OBJECT_OPTION_DECLARATION_ORDER, object_option_fields},
     option_group::declare_option_group,
 };
@@ -37,7 +37,7 @@ impl ProcessObjectSourceOptionsBuilder {
 }
 
 impl ProcessObjectSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 126] = OBJECT_OPTION_DECLARATION_ORDER;
+    pub const DECLARATION_ORDER: [&'static str; 127] = OBJECT_OPTION_DECLARATION_ORDER;
 }
 
 impl Default for ProcessObjectSourceOptions {

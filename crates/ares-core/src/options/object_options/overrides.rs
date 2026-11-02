@@ -6,8 +6,8 @@ use serde::{
 use crate::SliceError;
 
 use super::{
-    FloatOrPercent, ObjectOptionOverrides, OrcaBool, OrcaFloat, OrcaInt, Percent, ProcessBrimType,
-    ProcessExtraBridgeLayer, ProcessGapFillTarget, ProcessInfillPattern,
+    FloatOrPercent, ObjectOptionOverrides, OrcaBool, OrcaFloat, OrcaInt, OrcaString, Percent,
+    ProcessBrimType, ProcessExtraBridgeLayer, ProcessGapFillTarget, ProcessInfillPattern,
     ProcessInternalBridgeFilter, ProcessPerimeterGenerator, ProcessSeamPosition,
     ProcessSlicingMode, ProcessSupportBasePattern, ProcessSupportInterfacePattern,
     ProcessSupportStyle, ProcessSupportType, object_option_fields,

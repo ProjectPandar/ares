@@ -7,7 +7,7 @@ impl Serialize for PrinterGCodeSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(62))?;
+        let mut map = serializer.serialize_map(Some(71))?;
         map.serialize_entry("auxiliary_fan", &self.auxiliary_fan)?;
         map.serialize_entry("bed_temperature_formula", &self.bed_temperature_formula)?;
         map.serialize_entry("before_layer_change_gcode", &self.before_layer_change_gcode)?;
@@ -39,6 +39,15 @@ impl Serialize for PrinterGCodeSourceOptions {
             "high_current_on_filament_swap",
             &self.high_current_on_filament_swap,
         )?;
+        map.serialize_entry("imex_carriage_margin", &self.imex_carriage_margin)?;
+        map.serialize_entry("imex_gantry_count", &self.imex_gantry_count)?;
+        map.serialize_entry("imex_mode_active_tools", &self.imex_mode_active_tools)?;
+        map.serialize_entry("imex_mode_names", &self.imex_mode_names)?;
+        map.serialize_entry("imex_nozzle_clearance_x", &self.imex_nozzle_clearance_x)?;
+        map.serialize_entry("imex_nozzle_clearance_y", &self.imex_nozzle_clearance_y)?;
+        map.serialize_entry("imex_tool_layout", &self.imex_tool_layout)?;
+        map.serialize_entry("imex_tools_per_gantry", &self.imex_tools_per_gantry)?;
+        map.serialize_entry("is_imex", &self.is_imex)?;
         map.serialize_entry("layer_change_gcode", &self.layer_change_gcode)?;
         map.serialize_entry("long_retractions_when_cut", &self.long_retractions_when_cut)?;
         map.serialize_entry("machine_end_gcode", &self.machine_end_gcode)?;

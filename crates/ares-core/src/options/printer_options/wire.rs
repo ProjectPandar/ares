@@ -7,7 +7,7 @@ impl Serialize for PrinterOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(135))?;
+        let mut map = serializer.serialize_map(Some(144))?;
         map.serialize_entry(
             "adaptive_bed_mesh_margin",
             &self.remaining.adaptive_bed_mesh_margin,
@@ -122,12 +122,27 @@ impl Serialize for PrinterOptions {
             &self.gcode.high_current_on_filament_swap,
         )?;
         map.serialize_entry("host_type", &self.remaining.host_type)?;
+        map.serialize_entry("imex_carriage_margin", &self.gcode.imex_carriage_margin)?;
+        map.serialize_entry("imex_gantry_count", &self.gcode.imex_gantry_count)?;
+        map.serialize_entry("imex_mode_active_tools", &self.gcode.imex_mode_active_tools)?;
+        map.serialize_entry("imex_mode_names", &self.gcode.imex_mode_names)?;
+        map.serialize_entry(
+            "imex_nozzle_clearance_x",
+            &self.gcode.imex_nozzle_clearance_x,
+        )?;
+        map.serialize_entry(
+            "imex_nozzle_clearance_y",
+            &self.gcode.imex_nozzle_clearance_y,
+        )?;
+        map.serialize_entry("imex_tool_layout", &self.gcode.imex_tool_layout)?;
+        map.serialize_entry("imex_tools_per_gantry", &self.gcode.imex_tools_per_gantry)?;
         map.serialize_entry("input_shaping_damp_x", &self.machine.input_shaping_damp_x)?;
         map.serialize_entry("input_shaping_damp_y", &self.machine.input_shaping_damp_y)?;
         map.serialize_entry("input_shaping_emit", &self.machine.input_shaping_emit)?;
         map.serialize_entry("input_shaping_freq_x", &self.machine.input_shaping_freq_x)?;
         map.serialize_entry("input_shaping_freq_y", &self.machine.input_shaping_freq_y)?;
         map.serialize_entry("input_shaping_type", &self.machine.input_shaping_type)?;
+        map.serialize_entry("is_imex", &self.gcode.is_imex)?;
         map.serialize_entry("layer_change_gcode", &self.gcode.layer_change_gcode)?;
         map.serialize_entry(
             "long_retractions_when_cut",

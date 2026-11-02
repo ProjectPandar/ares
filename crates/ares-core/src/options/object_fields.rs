@@ -127,6 +127,8 @@ macro_rules! object_option_fields {
             interlocking_depth => "interlocking_depth": OrcaInt = OrcaInt(2),
             interlocking_boundary_avoidance => "interlocking_boundary_avoidance": OrcaInt = OrcaInt(2),
             calib_flowrate_topinfill_special_order => "calib_flowrate_topinfill_special_order": OrcaBool = OrcaBool(false),
+            // PrintConfig.cpp:7121-7125, declared at PrintConfig.hpp:1437.
+            imex_parallel_mode => "imex_parallel_mode": OrcaString = OrcaString("primary".to_owned()),
         }
     };
 }
@@ -135,7 +137,7 @@ pub(crate) use object_option_fields;
 
 macro_rules! declare_object_option_order {
     ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
-        pub(crate) const OBJECT_OPTION_DECLARATION_ORDER: [&str; 126] = [$($key),*];
+        pub(crate) const OBJECT_OPTION_DECLARATION_ORDER: [&str; 127] = [$($key),*];
     };
 }
 
