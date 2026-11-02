@@ -8,6 +8,7 @@ pub use mesh::ProjectMesh;
 use shared_mesh::MeshPreparation;
 pub(crate) use shared_mesh::materialize_meshes;
 mod import_scope;
+mod instance_copies;
 mod plate_selection;
 mod plater_edits;
 use import_scope::ImportScope;

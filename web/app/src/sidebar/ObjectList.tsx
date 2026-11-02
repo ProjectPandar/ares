@@ -1,10 +1,11 @@
 import type { Scene, SceneObject, ScenePlate, VolumeType } from "@ares-slicer/wasm";
-import { Fragment, type ReactNode, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
+import { cmdDown, isShortcut } from "../shell/keys";
 import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
-import { ObjectMenu } from "./ObjectMenu";
+import { instanceEdits, ObjectMenu } from "./ObjectMenu";
 import { selectObject } from "../state/actions";
 import { arrange } from "../state/arrange";
-import { addPlate, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
+import { addPlate, changeInstances, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
 import { useApp } from "../state/store";
 
 /** MenuFactory::get_volume_bitmaps, indexed by ModelVolumeType. */
@@ -119,6 +120,20 @@ export function ObjectList() {
   const scene = useApp((state) => state.scene);
   const selected = useApp((state) => state.selectedObject);
   const fileName = useApp((state) => state.file?.name);
+  // The "+" / "-" shortcuts of the instance items, on the selected object.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!isShortcut(event) || cmdDown(event) || event.altKey || (event.key !== "+" && event.key !== "-")) return;
+      const { scene: current, selectedObject, slice } = useApp.getState();
+      const index = current?.objects.findIndex(({ id }) => id === selectedObject) ?? -1;
+      const more = event.key === "+";
+      if (index < 0 || slice.status === "slicing" || !instanceEdits(current!.objects[index])[more ? "add" : "remove"]) return;
+      event.preventDefault();
+      void changeInstances(index, more);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   if (!scene) return <div className="side-empty">No objects</div>;
   const node = (object: SceneObject, nested: boolean) => (
     <ObjectNode key={`${nested}-${object.id}`} object={object} selected={selected === object.id} nested={nested}

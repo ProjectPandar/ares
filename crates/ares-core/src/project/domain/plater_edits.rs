@@ -42,6 +42,17 @@ impl Project {
         if let Some(order) = &edits.object_order {
             self.order_objects(order);
         }
+        for change in &edits.instances {
+            let Some(object) = self.objects.iter().position(|o| o.id() == change.object_id) else {
+                continue;
+            };
+            while self.objects[object].instances.len() > change.kept {
+                self.remove_last_instance(object);
+            }
+            for &(identify_id, transform) in &change.copies {
+                self.add_instance(object, transform, identify_id);
+            }
+        }
         let updates =
             self.objects
                 .iter()
@@ -116,7 +127,10 @@ impl Project {
 
 /// `c` with `loaded · T(c) = imported`: `A·c = t_imported - t_loaded` for the shared linear part
 /// `A`, solved by Cramer's rule.
-fn object_offset(loaded: crate::Transform3d, imported: crate::Transform3d) -> crate::Point3d {
+pub(super) fn object_offset(
+    loaded: crate::Transform3d,
+    imported: crate::Transform3d,
+) -> crate::Point3d {
     let (m, t) = (loaded.as_matrix(), imported.as_matrix());
     let b = [0, 1, 2].map(|row| t[row][3] - m[row][3]);
     let determinant = loaded.linear_determinant();

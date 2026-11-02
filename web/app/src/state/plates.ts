@@ -109,6 +109,12 @@ export async function setInstancePosition(target: InstanceRef, axis: 0 | 1 | 2, 
   applyLayout(await plater!.setPosition(target.object, target.instance, axis, value), currentPlate);
 }
 
+/** "Add instance" / "Remove instance" (Plater::increase_instances / decrease_instances, Plater.cpp:19289-19364). */
+export async function changeInstances(object: number, more: boolean) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await (more ? plater!.increaseInstances(object) : plater!.decreaseInstances(object)), currentPlate);
+}
+
 /** The object menu's "Mirror" along an axis (Plater::mirror). */
 export async function mirrorInstance(target: InstanceRef, axis: 0 | 1 | 2) {
   const { plater, currentPlate } = useApp.getState();

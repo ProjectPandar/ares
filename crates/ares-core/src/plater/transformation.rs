@@ -1,8 +1,8 @@
-//! The `Geometry::Transformation` rotation edits arrange applies (`Geometry.cpp:395-516, 640-645`
+//! The `Geometry::Transformation` edits the plater applies (`Geometry.cpp:395-587, 640-645`
 //! at v2.5.0-beta `345efec64`): a matrix split into rotation and scale by Eigen's
 //! `computeRotationScaling`, a mirror kept on the axis needing the least rotation.
 
-use super::eigen::{euler_angles_210, rotation_transform};
+use super::eigen::{euler_angles_210, rotation_transform, scale_transform};
 use crate::Transform3d;
 use crate::geometry::{Matrix3, compute_rotation_scaling, jacobi_svd, multiply_transpose};
 
@@ -186,4 +186,52 @@ pub(super) fn synchronized(
 /// `Transformation::set_offset(const Vec3d&)`.
 pub(super) fn with_offset(transform: Transform3d, offset: [f64; 3]) -> Transform3d {
     affine(linear(transform), offset)
+}
+
+/// `Transformation::get_offset`.
+pub(super) fn get_offset(transform: Transform3d) -> [f64; 3] {
+    offset(transform)
+}
+
+/// `Transformation::get_scaling_factor` (`Geometry.cpp:513-517`): the extracted scale's diagonal,
+/// without signs.
+pub(super) fn scaling_factor(transform: Transform3d) -> [f64; 3] {
+    let scale = rotation_scale(transform).1;
+    [0, 1, 2].map(|axis| scale[axis][axis].abs())
+}
+
+/// `Transformation::set_scaling_factor(const Vec3d&)` (`Geometry.cpp:528-535`):
+/// `extract_rotation_matrix(m) * scale_transform(scaling_factor)`, the offset kept.
+pub(super) fn with_scaling_factor(transform: Transform3d, scaling_factor: [f64; 3]) -> Transform3d {
+    let rotation = rotation_scale(transform).0;
+    let scale = linear(scale_transform(scaling_factor));
+    affine(multiply(rotation, scale), offset(transform))
+}
+
+/// `Transformation::get_mirror` (`Geometry.cpp:550-554`): each extracted scale's sign.
+pub(super) fn mirror(transform: Transform3d) -> [f64; 3] {
+    let scale = rotation_scale(transform).1;
+    [0, 1, 2].map(|axis| scale[axis][axis] / scale[axis][axis].abs())
+}
+
+/// `Transformation::set_mirror(const Vec3d&)` (`Geometry.cpp:565-587`): a zero component reads as
+/// 1, any other as its sign; each extracted scale whose sign disagrees is flipped.
+pub(super) fn with_mirror(transform: Transform3d, mirror: [f64; 3]) -> Transform3d {
+    let copy = mirror.map(|value| {
+        let abs = value.abs();
+        if abs == 0.0 {
+            1.0
+        } else if abs != 1.0 {
+            value / abs
+        } else {
+            value
+        }
+    });
+    let (rotation, mut scale) = rotation_scale(transform);
+    for axis in 0..3 {
+        if scale[axis][axis] * copy[axis] < 0.0 {
+            scale[axis][axis] = -scale[axis][axis];
+        }
+    }
+    affine(multiply(rotation, scale), offset(transform))
 }

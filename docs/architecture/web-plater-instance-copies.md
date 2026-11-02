@@ -51,3 +51,17 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The plater's "+" and
   4. **Session-only:** "−" on a single instance and "+" on an object with a non-printable instance return `InvalidInput`.
 - **Web E2E** `plateInstances.spec.ts`: "Add instance" twice from the object menu, then "Slice plate", compared with the runtime Native oracle for the exported project.
 - **Expected before GREEN:** cases 1-4 fail on the `todo!()` skeleton of `increase_instances` / `decrease_instances`.
+
+## GREEN
+- **`plater/instances.rs`:** `increase_instances` / `decrease_instances` with upstream's enabling rules.
+  - "−" also refuses a `num` that would leave no instance: upstream turns that into removing the object, which the session does not port.
+  - The offset base reads the printable area's 2D bounding box.
+- **The composition is literal.** Starting from `Transform3d::IDENTITY`, the copy gets `with_offset`, `with_scaling_factor`, `with_rotation` and `with_mirror`, with the last instance's `get_offset`, `scaling_factor`, `rotation` and `mirror`. `plater/transformation.rs` gains the scaling-factor and mirror pairs (`Geometry.cpp:513-535, 550-587`).
+- **What case 3 proves.** Case 3 also asserts the extracted components through `PlaterSession::transformation_components`: rotation (0, 0, π/6), scaling factor (1, 1, 1) within 1e-9, and mirror exactly (−1, 1, 1), on the cube and on its copy. That composition is derived from `Geometry.cpp`, not witnessed by Native. Native's slice equality shows only that the composed copy slices identically.
+- **`Project::add_instance` / `remove_last_instance`** (`project/domain/instance_copies.rs`).
+  - A copy is a default instance: printable, no auto-drop.
+  - Its imported copy keeps the object's frame offset, instance 0's.
+  - Its identify id is the session's stand-in: one past the project's largest.
+- **`PlaterEdits::instances`** records, per changed object, the loaded instances it keeps and its copies. Slicing re-applies them before the transforms. The session tracks the kept count per object id, so an arrange's reordering does not matter.
+- **Plate registration:** `notify_instance_update` for each copy, and `PlateList::notify_instance_removed` (`PartPlate.cpp:7396-7425`) before each removal.
+- **Web.** The object menu has "Add instance" and "Remove instance" above "Mirror:", and the "+" / "−" keys act on the selected object. `plateMirror.spec.ts` now expects the menu's five items. `plateInstances.spec.ts` matches Native on both oracle legs.

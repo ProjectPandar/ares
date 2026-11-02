@@ -86,6 +86,10 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.lockPlate(edit.index, edit.locked);
     case "selectPlate":
       return session.selectPlate(edit.index);
+    case "increaseInstances":
+      return session.increaseInstances(edit.object, edit.num);
+    case "decreaseInstances":
+      return session.decreaseInstances(edit.object, edit.num);
     case "arrange":
       return session.arrange(edit.plate, JSON.stringify(edit.settings));
   }

@@ -99,6 +99,20 @@ export class PlaterSession {
     return this.#edit({ op: "mirror", object, instance, axis });
   }
 
+  /**
+   * "Add instance" (`Plater::increase_instances`): `num` copies of object `object`'s last instance,
+   * each moved by 5% of the larger bed side from the previous. Rejects when an instance is not
+   * printable.
+   */
+  increaseInstances(object: number, num = 1): Promise<PlaterLayout> {
+    return this.#edit({ op: "increaseInstances", object, num });
+  }
+
+  /** "Remove instance" (`Plater::decrease_instances`): object `object`'s last `num` instances. */
+  decreaseInstances(object: number, num = 1): Promise<PlaterLayout> {
+    return this.#edit({ op: "decreaseInstances", object, num });
+  }
+
   /** Appends a plate to the grid (`PartPlateList::create_plate`). */
   addPlate(): Promise<PlaterLayout> {
     return this.#edit({ op: "addPlate" });

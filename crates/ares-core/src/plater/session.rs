@@ -21,6 +21,9 @@ pub struct PlaterSession {
     pub(super) vendor_type: crate::profiles::VendorType,
     /// `PartPlateList::m_current_plate`.
     pub(super) current_plate: usize,
+    /// By object id: its instance count at load and how many of those loaded instances it keeps;
+    /// the instances past them are "Add instance" copies.
+    pub(super) loaded_instances: BTreeMap<u32, (usize, usize)>,
 }
 
 /// One plate of the session: its grid origin and instances.
@@ -104,6 +107,16 @@ impl PlaterSession {
         let size = crate::project::plate_dimensions(settings);
         let height = settings.printer.remaining.printable_height.0 as i32;
         let mut plates = PlateList::new(plates, size, height, shape);
+        let loaded_instances = project
+            .objects()
+            .iter()
+            .map(|object| {
+                (
+                    object.id(),
+                    (object.instances().len(), object.instances().len()),
+                )
+            })
+            .collect();
         // `load_from_3mf_structure` (`PartPlate.cpp:8559`).
         for (index, plate) in plates.plates.iter_mut().enumerate() {
             plate.locked = project.plate_locked(index);
@@ -117,6 +130,7 @@ impl PlaterSession {
             vendor_type: crate::profiles::VendorType::Unknown,
             // The plater selects plate 0 after loading (`Plater.cpp:10222, 10229`).
             current_plate: 0,
+            loaded_instances,
         }
     }
 
@@ -334,6 +348,7 @@ impl PlaterSession {
                     .collect(),
             ),
             wipe_tower: self.wipe_tower.clone(),
+            instances: self.instance_changes(),
         }
     }
 

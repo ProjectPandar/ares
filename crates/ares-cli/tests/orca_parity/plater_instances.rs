@@ -83,7 +83,20 @@ fn plater_add_instance_composes_a_rotated_mirrored_copy_like_native() {
         "transform=\"-0.866025404 -0.5 0 -0.5 0.866025404 0 0 0 1 110 110 5\"",
     );
     let cube = matrix(&session, 0);
-    session.increase_instances(0, 1).unwrap();
+    // The components the port extracts, before and after the copy.
+    for instance in [0, 1] {
+        if instance == 1 {
+            session.increase_instances(0, 1).unwrap();
+        }
+        let [rotation, scaling, mirror] = session.transformation_components(0, instance).unwrap();
+        let near = |a: [f64; 3], e: [f64; 3]| a.iter().zip(&e).all(|(a, e)| (a - e).abs() < 1e-9);
+        assert!(
+            near(rotation, [0.0, 0.0, std::f64::consts::FRAC_PI_6]),
+            "{rotation:?}"
+        );
+        assert!(near(scaling, [1.0, 1.0, 1.0]), "{scaling:?}");
+        assert_eq!(mirror, [-1.0, 1.0, 1.0]);
+    }
     assert_close(matrix(&session, 1), moved(cube, 11.0));
     assert_plate_like_native("instances-rotated-mirrored-copy", &session, 1);
 }

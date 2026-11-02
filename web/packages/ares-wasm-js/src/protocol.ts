@@ -14,6 +14,7 @@ export type PlaterEdit =
   | { op: "deletePlate"; index: number }
   | { op: "lockPlate"; index: number; locked: boolean }
   | { op: "selectPlate"; index: number }
+  | { op: "increaseInstances" | "decreaseInstances"; object: number; num: number }
   | { op: "arrange"; plate: number | undefined; settings: ArrangeSettings };
 
 export type WorkerRequest =

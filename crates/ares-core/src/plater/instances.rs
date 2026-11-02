@@ -2,19 +2,158 @@
 //! `Plater.cpp:19289-19364` at v2.5.0-beta `345efec64`). See
 //! `docs/architecture/web-plater-instance-copies.md`.
 
-use super::PlaterSession;
-use crate::SliceError;
+use super::edits::InstanceChange;
+use super::session::Model;
+use super::{PlaterSession, transformation};
+use crate::{SliceError, Transform3d};
+
+fn refused(what: &str) -> SliceError {
+    SliceError::InvalidInput(what.to_owned())
+}
+
+/// `GLCanvas3D::get_size_proportional_to_max_bed_size(0.05)` (`GLCanvas3D.cpp:6195-6199`): 0.05 ×
+/// the larger side of the build volume's 2D bounding box.
+fn offset_base(session: &PlaterSession) -> f64 {
+    let area = &session
+        .project
+        .settings()
+        .printer
+        .remaining
+        .printable_area
+        .0;
+    let (mut min, mut max) = ([f64::MAX; 2], [f64::MIN; 2]);
+    for point in area {
+        min = [min[0].min(point.x), min[1].min(point.y)];
+        max = [max[0].max(point.x), max[1].max(point.y)];
+    }
+    0.05 * (max[0] - min[0]).max(max[1] - min[1])
+}
 
 impl PlaterSession {
-    /// `increase_instances(num)` on the object at `object`.
+    /// `increase_instances(num)` on the object at `object`: `num` copies of its last instance's
+    /// offset (moved by `(i·o, i·o, 0)`), scaling factor, rotation and mirror
+    /// (`ModelObject::add_instance(offset, scaling, rotation, mirror)`, `Model.cpp:1573-1581`), each
+    /// registered with the plate it lands on. `InvalidInput` where `can_increase_instances` is
+    /// false (`Plater.cpp:15097-15107`): no such object, or a non-printable instance.
     pub fn increase_instances(&mut self, object: usize, num: usize) -> Result<(), SliceError> {
-        let _ = (object, num);
-        todo!()
+        let item = self
+            .project
+            .objects()
+            .get(object)
+            .ok_or_else(|| refused("there is no such object"))?;
+        if !item.instances().iter().all(|instance| instance.printable()) {
+            return Err(refused(
+                "an object with a non-printable instance cannot get more instances",
+            ));
+        }
+        let last = item.instances().last().expect("an instance").transform();
+        let (last_offset, scaling, rotation, mirror) = (
+            transformation::get_offset(last),
+            transformation::scaling_factor(last),
+            transformation::rotation(last),
+            transformation::mirror(last),
+        );
+        let base = offset_base(self);
+        let mut offset = base;
+        for _ in 0..num {
+            let position = [
+                last_offset[0] + offset,
+                last_offset[1] + offset,
+                last_offset[2],
+            ];
+            // `add_instance()` then `set_offset`, `set_scaling_factor`, `set_rotation`, `set_mirror`.
+            let mut transform = transformation::with_offset(Transform3d::IDENTITY, position);
+            transform = transformation::with_scaling_factor(transform, scaling);
+            transform = transformation::with_rotation(transform, rotation);
+            transform = transformation::with_mirror(transform, mirror);
+            let identify_id = self.next_identify_id();
+            self.project.add_instance(object, transform, identify_id);
+            let key = (object, self.project.objects()[object].instances().len() - 1);
+            self.plates
+                .notify_instance_update(&Model(&mut self.project), key);
+            offset += base;
+        }
+        Ok(())
     }
 
-    /// `decrease_instances(num)` on the object at `object`.
+    /// `decrease_instances(num)` on the object at `object`: its last `num` instances removed.
+    /// `InvalidInput` where `can_decrease_instances` is false (`Plater.cpp:15109-15118`): no such
+    /// object or a single instance; and where `num` would leave none, which upstream turns into
+    /// removing the object.
     pub fn decrease_instances(&mut self, object: usize, num: usize) -> Result<(), SliceError> {
-        let _ = (object, num);
-        todo!()
+        let item = self
+            .project
+            .objects()
+            .get(object)
+            .ok_or_else(|| refused("there is no such object"))?;
+        let count = item.instances().len();
+        if count <= 1 {
+            return Err(refused("an object with one instance cannot lose it"));
+        }
+        if count <= num {
+            return Err(refused("removing an object is not supported yet"));
+        }
+        let id = item.id();
+        for _ in 0..num {
+            let last = self.project.objects()[object].instances().len() - 1;
+            self.plates.notify_instance_removed((object, last));
+            self.project.remove_last_instance(object);
+            let (_, kept) = self.loaded_instances.get_mut(&id).expect("a loaded object");
+            *kept = (*kept).min(last);
+        }
+        Ok(())
+    }
+
+    /// `Transformation::get_rotation`, `get_scaling_factor` and `get_mirror` of an instance
+    /// (`Geometry.cpp:471-474, 513-517, 550-554`).
+    pub fn transformation_components(
+        &self,
+        object: usize,
+        instance: usize,
+    ) -> Result<[[f64; 3]; 3], SliceError> {
+        self.check(object, instance)?;
+        let transform = self.project.objects()[object].instances()[instance].transform();
+        Ok([
+            transformation::rotation(transform),
+            transformation::scaling_factor(transform),
+            transformation::mirror(transform),
+        ])
+    }
+
+    /// A copy's export identity, standing in for upstream's run-time `ObjectBase` id
+    /// (`bbs_3mf.cpp:8582-8605`): one past the largest identify id of the project.
+    fn next_identify_id(&self) -> u32 {
+        self.project
+            .objects()
+            .iter()
+            .flat_map(|object| object.instances())
+            .filter_map(|instance| instance.loaded_label_id())
+            .max()
+            .map_or(1, |id| id + 1)
+    }
+
+    /// The objects whose instances differ from the loaded ones.
+    pub(super) fn instance_changes(&self) -> Vec<InstanceChange> {
+        self.project
+            .objects()
+            .iter()
+            .filter_map(|object| {
+                let (at_load, kept) = self.loaded_instances.get(&object.id()).copied()?;
+                let copies: Vec<(u32, Transform3d)> = object.instances()[kept..]
+                    .iter()
+                    .map(|copy| {
+                        (
+                            copy.loaded_label_id().expect("a copy's identify id"),
+                            copy.transform(),
+                        )
+                    })
+                    .collect();
+                (kept < at_load || !copies.is_empty()).then_some(InstanceChange {
+                    object_id: object.id(),
+                    kept,
+                    copies,
+                })
+            })
+            .collect()
     }
 }

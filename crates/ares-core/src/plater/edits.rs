@@ -14,6 +14,15 @@ pub(crate) struct EditedPlate {
     pub(crate) instances: Vec<[u32; 3]>,
 }
 
+/// An object's instances after "Add instance" / "Remove instance": its first `kept` loaded
+/// instances, then `copies` as `(identify id, transformation)`, in order.
+#[derive(Clone, Debug)]
+pub(crate) struct InstanceChange {
+    pub(crate) object_id: u32,
+    pub(crate) kept: usize,
+    pub(crate) copies: Vec<(u32, Transform3d)>,
+}
+
 /// Instance transformations and plate map of an edited project; empty
 /// edits leave the loaded project unchanged.
 #[derive(Clone, Debug, Default)]
@@ -25,6 +34,8 @@ pub struct PlaterEdits {
     pub(crate) object_order: Option<Vec<u32>>,
     /// `wipe_tower_x`/`wipe_tower_y` of the project config, one entry per plate.
     pub(crate) wipe_tower: Option<(Vec<f64>, Vec<f64>)>,
+    /// The objects whose instances "Add instance" / "Remove instance" changed.
+    pub(crate) instances: Vec<InstanceChange>,
 }
 
 impl PlaterEdits {
@@ -33,6 +44,7 @@ impl PlaterEdits {
         plates: None,
         object_order: None,
         wipe_tower: None,
+        instances: Vec::new(),
     };
 
     pub(crate) fn transform(&self, object_id: u32, instance_id: u32) -> Option<Transform3d> {

@@ -152,6 +152,22 @@ impl PlaterSession {
         self.session.add_plate().map_err(js_error)
     }
 
+    /// "Add instance" (`Plater::increase_instances`): `num` copies of the object's last instance.
+    #[wasm_bindgen(js_name = increaseInstances)]
+    pub fn increase_instances(&mut self, object: usize, num: usize) -> Result<(), JsValue> {
+        self.session
+            .increase_instances(object, num)
+            .map_err(js_error)
+    }
+
+    /// "Remove instance" (`Plater::decrease_instances`): the object's last `num` instances.
+    #[wasm_bindgen(js_name = decreaseInstances)]
+    pub fn decrease_instances(&mut self, object: usize, num: usize) -> Result<(), JsValue> {
+        self.session
+            .decrease_instances(object, num)
+            .map_err(js_error)
+    }
+
     /// "Delete plate" (`PartPlateList::delete_plate`); false for the sole plate.
     #[wasm_bindgen(js_name = deletePlate)]
     pub fn delete_plate(&mut self, index: usize) -> bool {

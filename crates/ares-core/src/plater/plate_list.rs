@@ -151,6 +151,14 @@ impl PlateList {
 
     /// `PartPlateList::notify_instance_update` (`PartPlate.cpp:5039-5170`)
     /// for a moved or rotated instance.
+    /// `PartPlateList::notify_instance_removed(obj, instance)` (`PartPlate.cpp:7396-7425`): the
+    /// instance leaves the plate holding it and the unprintable plate.
+    pub(super) fn notify_instance_removed(&mut self, key: InstanceKey) {
+        for plate in self.plates.iter_mut().chain([&mut self.unprintable]) {
+            plate.instances.remove(&key);
+        }
+    }
+
     pub(super) fn notify_instance_update(&mut self, model: &impl PlateModel, key: InstanceKey) {
         let bbox = model.convex_hull_bounding_box(key);
         if let Some(index) = self
