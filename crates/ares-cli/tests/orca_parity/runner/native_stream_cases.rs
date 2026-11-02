@@ -56,6 +56,8 @@ mod m1020_bills_filament_change_without_tool_change;
 mod mk4_layer_change;
 #[path = "object_label_ids_without_exclusion.rs"]
 mod object_label_ids_without_exclusion;
+#[path = "organic_support_sampling_angle.rs"]
+mod organic_support_sampling_angle;
 #[path = "plane_path_low_density_top.rs"]
 mod plane_path_low_density_top;
 #[path = "processor_word_boundary.rs"]
