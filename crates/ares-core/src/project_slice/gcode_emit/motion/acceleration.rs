@@ -1,5 +1,7 @@
-//! Acceleration/jerk emission per flavor (`GCodeWriter.cpp:216-256,
-//! 324-348`).
+//! Acceleration/jerk emission per flavor (`GCodeWriter.cpp:428-481,
+//! 535-583`).
+
+use crate::gcode_writer::GCodeWriter;
 
 use super::{EmitState, format, jerk, travel::EPSILON};
 
@@ -48,8 +50,11 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
         crate::GCodeFlavor::Klipper => {
             let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
             if state.options.accel_to_decel_enable {
-                let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
-                line.push_str(&format!(" ACCEL_TO_DECEL={}", format::ostream(decel)));
+                GCodeWriter::append_klipper_accel_to_decel(
+                    &mut line,
+                    acceleration,
+                    state.options.accel_to_decel_factor,
+                );
                 if state.options.gcode_comments {
                     line.push_str(" ; adjust ACCEL_TO_DECEL");
                 }
@@ -75,7 +80,7 @@ pub(in crate::project_slice::gcode_emit) fn set_layer_acceleration_and_jerk(
 }
 
 /// Klipper merges acceleration and jerk into one `SET_VELOCITY_LIMIT` line
-/// (`GCodeWriter.cpp:324-348`, `GCode.cpp:7409-7412`); other flavors emit
+/// (`GCodeWriter.cpp:535-583`, `GCode.cpp:7409-7412`); other flavors emit
 /// separate acceleration and jerk commands.
 pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
     output: &mut Vec<u8>,
@@ -101,9 +106,11 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
     if acceleration != 0 && state.last_acceleration != Some(acceleration) {
         line.push_str(&format!(" ACCEL={acceleration}"));
         if state.options.accel_to_decel_enable {
-            // streams as a double with ostream's default 6-significant digits
-            let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
-            line.push_str(&format!(" ACCEL_TO_DECEL={}", format::ostream(decel)));
+            GCodeWriter::append_klipper_accel_to_decel(
+                &mut line,
+                acceleration,
+                state.options.accel_to_decel_factor,
+            );
         }
         state.last_acceleration = Some(acceleration);
         empty = false;
