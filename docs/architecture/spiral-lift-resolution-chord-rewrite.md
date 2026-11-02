@@ -1,7 +1,8 @@
 # Spiral lift: resolution-chord rewrite boundary
 
-Status: five public RED cases qualify both spiral branches on the approved
-Klipper stack; literal writer GREEN and family breadth are not yet executed.
+Status: literal writer port executed on the approved configuration stack;
+complete output remains NON-GREEN at residual Gap infill direction. No
+spiral, FillBase or FULL closure is claimed.
 
 ## Upstream owner and destinations
 
@@ -181,6 +182,47 @@ port: rerun its complete output and test whether the same-layer feed
 mismatch disappears. If it does, no cooling slice is needed; if it remains,
 request a separate attribution for `CoolingBuffer.cpp:989-1020`. Neither
 cooling nor FillBase is folded into the spiral writer commit.
+
+## Literal port execution and residual boundary
+
+The six prerequisite commits were restacked on merged main
+`f4ea41332cdcb7eadf9adbc7f7c1936c0ad7e9c5`, with six unchanged range-diff
+entries. Approved configuration fix `2a635ab54` is now
+`e015de3bedcf200feae6e70b0a05cce7a3e23045`; its source is unchanged.
+
+The writer now uses the single neutral ArcWelder helper for positive
+resolution, clamps8-128 locally and selects128 for zero resolution. It
+reuses the ordinary writer XYZ/IJ/F formatters unchanged, emits the optional
+comment on the feed line, interpolates current writer Z, and emits the exact
+final XY/Z point. Both branches use the existing Z-speed selection helper;
+the emitted feed is retained in motion state instead of overwritten by the
+callers' unconditional travel-speed assignment. No new configuration rule,
+shared formatter edit, kernel copy, precision waiver or legacy fallback.
+
+One fixed 15-test inventory ran once before and once afterward: the five
+complete public witnesses, seven existing lift-family checks and three
+public configuration controls. Both runs reported5PASS/10FAIL/0ignored,
+with zero status flips or prior-PASS to FAIL; each retained19 Native
+command-status records. The two by-object controls and all three config
+controls stayed passing. Three firmware controls retain their complete
+M73 failures. The Auto-lift query-frame and two-nozzle controls already
+failed Native witness premises before the port and still do; they do not
+establish family parity and their assertions were not weakened.
+
+All five target cases have stable Native replays and raw API/CLI equality.
+After the literal port, their external-only first non-M73 difference is a
+reversed Gap infill entry: velocity original lines436/435, positive-SYNC
+446/445, sequential920/920, stock/fuzzy915/916. The ordered diagnostic
+prefix includes the matching spiral; no additional record class is removed.
+The strict tests still fail with M73 retained, so this is **NON-GREEN**,
+not acceptance of a coordinate-only or filtered prefix. No FillBase edit
+is part of the writer commit. The full failures, WIDTH/feed differences,
+original-line maps and two baseline Native-premise failures remain in the
+external evidence bundle for a coordinated continuation ruling.
+
+Fmt and strict workspace/all-targets Clippy pass. The only post-execution
+change is this documentation result note; source/test postimages and the
+executed tree are pinned externally, with no postcommit rerun claim.
 
 ## Breadth, failure inventory and exit evidence
 

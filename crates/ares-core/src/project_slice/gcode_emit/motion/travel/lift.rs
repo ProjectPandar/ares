@@ -230,7 +230,6 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                     -dy / travel_distance * radius,
                     dx / travel_distance * radius,
                 );
-                state.current_feedrate = state.travel_feedrate;
                 true
             } else {
                 false
@@ -319,7 +318,6 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState, force_sp
         let radius = state.options.z_hop
             / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
         append_spiral(output, state, raised_z, radius, 0.0);
-        state.current_feedrate = state.travel_feedrate;
     } else {
         let feedrate = z_feedrate(state);
         let comment = if state.options.gcode_comments {
