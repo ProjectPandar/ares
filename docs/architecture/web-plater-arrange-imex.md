@@ -267,6 +267,7 @@ Every `file:line` is at `345efec64`. An IMEX printer (IDEX, IQEX: several indepe
 - **`crates/ares-core/src/arrangement/imex_zones/`**, beside A2a's `imex.rs`. It is a new module with the layout and the helpers split by responsibility, each under 400 LOC.
 - **Public:** `compute_imex_zone_layout(&DynamicPrintConfig, plate_mode, process_mode, bed_extents) -> ImexZoneLayout`, `ImexZoneLayout`, `BoundingBoxf3` (`BoundingBoxf` is A2a's), and `IMEX_PRIMARY_MODE`. That is what the unit cases need.
 - The helpers stay crate-private. A2c2 and slicing will need some of them (`imex_primary_tool_for_mode`, `find_imex_mode`).
+- **`compute_imex_slice_offset`** (`IMEXHelpers.cpp:634-643`) is ported in A2c1 only because the off-grid case (`test_imex_zones.cpp:405-434`) asserts it. Its slicing consumers stay deferred.
 - **The config:** the cases set keys through `DynamicPrintConfig::set_deserialize_strict`, over the registry entries the keys already have. Reading untyped keys this way is temporary: A2c2 types them in `ProjectSettings`, so a project's values reach the session (as A2b1 typed the volume keys), and that replaces it.
 
 ### Included and deferred
@@ -290,3 +291,48 @@ Every `file:line` is at `345efec64`. An IMEX printer (IDEX, IQEX: several indepe
 - `make_cfg` (`:40-59`) becomes `DynamicPrintConfig::full_print_config()` plus `set_deserialize_strict` of the same keys, in their serialized forms. The `check_rect` / `check_box_xy` / `check_point` 1e-9 matchers are kept.
 - The cases go in `crates/ares-core/tests/arrange/imex_zones.rs`, registered in the arrange binary.
 - **Expected before GREEN:** every case stops at `todo!()`.
+
+## A2c2: IMEX zones in the session's arrange and outside check
+
+Every `file:line` is at `345efec64`. A2a ported the arranger kernel (`ImexArranger`) and A2c1 the zone layout. The session's arrange still ignores IMEX, and its outside check has no IMEX branch. This slice wires the plates' zones in.
+
+### Upstream boundary
+- **Prerequisite: the typed IMEX keys.** The keys the layout and the arrange read are registered but not typed. `collect_config_entries` serializes only typed fields, so a project's values never reach the session's `DynamicPrintConfig`.
+  - Printer keys (`s_Preset_printer_options`, `Preset.cpp:1604-1607`; definitions `PrintConfig.cpp:7025-7141`): `is_imex`, `imex_gantry_count`, `imex_tools_per_gantry`, `imex_tool_layout` (enum `ImexToolLayout`), `imex_mode_names`, `imex_mode_active_tools`, `imex_nozzle_clearance_x` / `_y`, `imex_carriage_margin`.
+  - Process key (`s_Preset_print_options`, `:1483`): `imex_parallel_mode`.
+  - They are hand-declared in their option groups, as A2b1's prerequisite typed the volume keys. This replaces A2c1's temporary untyped reads.
+- **The plate's IMEX mode:**
+  - `PartPlate::get_imex_mode` (`PartPlate.cpp:457-465`) reads the plate config's `imex_parallel_mode`, else Primary. The 3MF plate metadata carries it (`bbs_3mf.cpp:381, 4669`).
+  - `get_effective_imex_mode` (`:467-485`) falls back to the process preset's mode while the plate is on Primary.
+- **The plate's zones**, `calc_imex_zones` (`:670-738`):
+  - `compute_imex_zone_layout(printer config, get_imex_mode(), the process preset's imex_parallel_mode, get_extents(m_shape))`. Here `m_shape` is the plate shape at the plate's position (`set_shape`, `:5150-5161`).
+  - The primary zone, the secondary boxes and the collision strips are kept.
+  - `ensure_imex_zones` (`:828-839`) recomputes them when the cache key (`:757-796`) changes. The session computes them where it needs them instead of caching.
+- **The arrange:**
+  - `ArrangeJob::prepare_imex_zones` (`ArrangeJob.cpp:601-629`) takes each arranged plate's primary zone and strips, moved by the plate origin. That is the current plate alone, or every unlocked plate; `adds_plates` is set for "arrange all".
+  - Then `ImexArrangeInput::read_config` (`IMEXArrange.cpp:75-90`) and `imex_arrange_zones` (`:65-73`).
+  - Around the kernel call (`ArrangeJob.cpp:743-746, 773-776`): `ImexArranger`'s bed shape, its keep-outs among the unselected items, and `finish` on the arranged items.
+- **The outside check:** `check_outside`'s IMEX branch (`PartPlate.cpp:4615-4621`). An instance whose hull meets a secondary zone box or a collision strip is outside (`imex_hull_violates`, `:1174-1178`; `imex_hull_violates_zones`, `IMEXHelpers.cpp:703-712`). A2b2's `outside.rs` gains it after the exclusion branches.
+
+### Ares destination
+- **Prerequisite commit:** the typed keys in the printer and process option groups, with `ImexToolLayout` as a config enum.
+- **`plater/plate_list/`:** the plate's mode (from the loaded plate metadata, Primary for an added plate), its effective mode, its zones, and the IMEX branch of `outside`.
+- **`plater/arrange_job/`:** `prepare_imex_zones` and the `ImexArranger` calls; `imex_arrange_zones` and `read_config` beside A2a's `arrangement::imex`.
+- **No new public surface.** The session reads the plate mode from the project, and the web sets no plate mode yet.
+
+### Included and deferred
+- **Included:** the typed keys, the plate and effective modes, the plate zones, the arrange wiring for both scopes, and the outside check's IMEX branch.
+- **Deferred:**
+  - Setting a plate's mode in the web (the mode buttons, `IMEXModesCtrl`, `set_imex_mode`).
+  - The ghosts.
+  - The tower's IMEX validation (`imex_wipe_tower_hull`).
+  - `imex_firmware_managed_zones` and the slicing and viewer consumers (`compute_imex_slice_offset`'s callers).
+  - Zone rendering.
+
+### Oracle and RED
+- **GUI-only.** The CLI arrange never builds an `ImexArranger` (`OrcaSlicer.cpp` has no use), and `ensure_imex_zones` returns without a plater, so Native cannot be the oracle. The kernel side is already pinned by `test_imex_arrange.cpp` (A2a).
+- **Session cases.** The fixture is `orca_cli_ender3.3mf` turned into a 1 x 2 IDEX by project edits, with a mode "parallel" = "0:P,1:M" and 5 mm clearance. Expectations are derived from the layout (A2c1) and `ImexArranger` (A2a):
+  1. The plate's metadata sets the mode; "arrange all" keeps the cube inside the primary zone, the left half clear of the strip.
+  2. The plate stays on Primary and the process preset names the mode: the effective mode applies, so the same result.
+  3. The outside check's IMEX branch, observed through the tower estimate as in A2b2. A second filament's cube sitting in the mirror zone is outside, so the plate holds only filament 1 and needs no tower.
+- **Expected before GREEN:** cases 1 and 2 arrange the cube across the bed centre (IMEX ignored). Case 3 sizes a tower for two filaments.
