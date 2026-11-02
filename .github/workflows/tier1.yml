@@ -96,6 +96,7 @@ jobs:
       - uses: Mic92/hestia@v3
         with:
           upstream-cache-filter: true
+          read-only: true
       - name: Build and export Native oracle
         run: |
           set -euo pipefail
@@ -168,6 +169,7 @@ jobs:
       - uses: Mic92/hestia@v3
         with:
           upstream-cache-filter: true
+          read-only: true
       - name: Restore current-run Native oracles
         uses: ./.github/actions/native-oracle-cache
         with:
@@ -311,6 +313,7 @@ jobs:
       - uses: Mic92/hestia@v3
         with:
           upstream-cache-filter: true
+          read-only: true
       - name: Restore current-run Native oracles
         uses: ./.github/actions/native-oracle-cache
         with:
@@ -440,6 +443,7 @@ jobs:
       - uses: Mic92/hestia@v3
         with:
           upstream-cache-filter: true
+          read-only: true
       - name: Restore current-run Native oracles
         uses: ./.github/actions/native-oracle-cache
         with:
