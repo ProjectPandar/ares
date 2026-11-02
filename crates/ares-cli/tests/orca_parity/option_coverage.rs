@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "bambu_gap_fill_interleaving.rs"]
+mod bambu_gap_fill_interleaving;
+
 #[path = "spiral_lift_arc_enabled.rs"]
 mod spiral_lift_arc_enabled;
 
