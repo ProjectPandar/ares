@@ -1,5 +1,6 @@
 //! Public RED for per-object skirts with support/raft footprints and layers.
 //! Upstream: Print.cpp:2669-2696; GCode.cpp:4311-4318,4398,4455-4485,5329-5335.
+//! Support projection: SupportCommon.cpp:220-233,305-354 at v2.5.0-beta.
 
 #[path = "per_object_skirt_support_raft/profile_input.rs"]
 mod profile_input;
@@ -211,7 +212,7 @@ fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8], root: &std::pa
             "cli_code": cli.status.code(),
             "cli_error": cli_result.as_ref().err(),
             "strict_parity_required": true,
-            "upstream": "Print.cpp:2669-2696; GCode.cpp:4311-4318,4398,4455-4485,5329-5335"
+            "upstream": "Print.cpp:2669-2696; GCode.cpp:4311-4318,4398,4455-4485,5329-5335; SupportCommon.cpp:220-233,305-354"
         }))
         .unwrap(),
     )
