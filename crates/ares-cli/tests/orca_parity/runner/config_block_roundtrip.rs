@@ -21,6 +21,8 @@ mod project_catalog_cli;
 mod project_catalog_cli_errors;
 #[path = "config_block_roundtrip/project_catalog_supply.rs"]
 mod project_catalog_supply;
+#[path = "config_block_roundtrip/project_filament_miss.rs"]
+mod project_filament_miss;
 #[path = "config_block_roundtrip/project_preset_refresh.rs"]
 mod project_preset_refresh;
 #[path = "config_block_roundtrip/project_refresh_errors.rs"]
