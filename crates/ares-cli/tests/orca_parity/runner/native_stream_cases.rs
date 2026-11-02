@@ -11,6 +11,9 @@ mod bridge_limiting_offset;
 #[path = "brim_first_layer_speed.rs"]
 mod brim_first_layer_speed;
 
+#[path = "multiline_preoffset_crop.rs"]
+mod multiline_preoffset_crop;
+
 #[path = "concentric_internal_start.rs"]
 mod concentric_internal_start;
 
