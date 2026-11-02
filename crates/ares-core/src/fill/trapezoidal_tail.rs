@@ -1,4 +1,4 @@
-//! `FillRectilinear.cpp:3344-3384`: shared trapezoidal fill post-row tail.
+//! `FillRectilinear.cpp:3429-3485`: shared trapezoidal fill post-row tail.
 use super::{
     checked_rotate::rotate_points,
     connect::{FillBoundary, FillConnectionParams, connect_infill_polygons},
@@ -13,9 +13,20 @@ pub(super) fn finish(
     rotated: ExPolygon,
     mut lines: Vec<Polyline>,
     params: MultilineFillParams,
-    angle: f64,
+    (angle, row_direction): (f64, [f64; 2]),
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
+    // The scoped zero-factor smoothing path returns before touching points
+    // (FillCornerSmoothing.cpp:296-302), before this centerline crop.
+    let d1 = (params.spacing / scale.factor()) as i64 * i64::from(params.multiline);
+    let expanded = offset_expolygon(&rotated, (d1 / 2) as f32, JoinType::Miter, 3.0)?;
+    let mut centerline_bounds = Vec::new();
+    for component in expanded {
+        let (contour, holes) = component.into_parts();
+        centerline_bounds.push(contour);
+        centerline_bounds.extend(holes);
+    }
+    lines = intersection_open_polylines(&lines, &centerline_bounds)?;
     // multiline_fill's spacing parameter is float, unlike Fill::spacing.
     lines = super::multiline_offset::apply(
         lines,
@@ -23,6 +34,25 @@ pub(super) fn finish(
         f64::from(params.spacing as f32),
         scale,
     )?;
+    for line in &mut lines {
+        let points = line.points_mut();
+        if points.len() <= 3 || points.first() != points.last() {
+            continue;
+        }
+        points.pop();
+        let dot = |index: usize| {
+            row_direction[0] * points[index].x() as f64
+                + row_direction[1] * points[index].y() as f64
+        };
+        let mut first = 0;
+        for index in 1..points.len() {
+            if dot(index) < dot(first) {
+                first = index;
+            }
+        }
+        points.rotate_left(first);
+        points.push(points[0]);
+    }
     let contraction = (-0.5 * params.spacing / scale.factor()) as f32;
     let mut contracted = offset_expolygon(&rotated, contraction, JoinType::Miter, 3.0)?;
     // Source :3350-3351 retains the original surface if contraction is empty.

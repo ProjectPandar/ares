@@ -22,6 +22,16 @@ pub(crate) fn fill_surface(
     // FillRectilinear.cpp:3065/3070: promote the float direction before pi/4.
     let angle = f64::from(params.angle) + std::f64::consts::FRAC_PI_4;
     let rotated = rotate_surface(surface, -angle)?;
+    let infill_layer = if geometry.thickness_layers > 0 {
+        geometry.layer_id / usize::from(geometry.thickness_layers)
+    } else {
+        geometry.layer_id
+    };
+    let row_direction = if infill_layer % 2 == 1 {
+        [0.0, 1.0]
+    } else {
+        [1.0, 0.0]
+    };
     let lines = rows::generate(params, geometry, scale);
-    finish(rotated, lines, params, angle, scale)
+    finish(rotated, lines, params, (angle, row_direction), scale)
 }

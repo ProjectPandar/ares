@@ -80,10 +80,11 @@ hidden by modifying the comparator or speculative fixes.
 2. Freeze the four exact inputs with SHA assertions and run public API/CLI full
    ordered-output tests with deterministic double Native replay. Commit RED
    before production changes.
-3. Port the approved contiguous block on the zero-factor path, then require
-   all four full outputs to pass before calling the change GREEN. If all four
-   still fail, report the first evidenced divergent step rather than guessing
-   another repair.
+3. Port the approved contiguous block on the zero-factor path. If all four
+   complete outputs still fail, report the first evidenced divergent step rather
+   than guessing another repair. The accepted ruling below records the explicit
+   exception for the separately owned footer prerequisite; it does not change
+   the complete-output tests or comparator.
 4. Rerun the same 13-case residual inventory before/after and report each
    transition; extend to the surrounding multiline family to measure breadth.
    Require zero PASS-to-FAIL in the measured inventory. Inherited failures remain
@@ -91,3 +92,36 @@ hidden by modifying the comparator or speculative fixes.
 5. Run rustfmt and all-target Clippy with warnings denied. Keep all diagnostic
    artifacts external. No additional Native debugger observations are allowed;
    standard Native parity tests remain authorized.
+
+## Accepted GREEN ruling and outstanding complete-output RED
+
+The user accepted the contiguous block port as GREEN after reviewing the four
+cases' exact ordered raw motion and M73 equality. This is an explicit acceptance
+of this source rewrite slice, **not** a claim that the four full-output tests
+pass. Those tests remain enabled and RED until the preset-refresh slice supplies both footer keys:
+`compatible_process_expression_group` and `pellet_flow_coefficient`.
+
+For all four frozen inputs, Native and Ares have identical ordered raw G0/G1/G2/G3
+and M73 records, with no feed, coordinate, role, order, or M73 normalization.
+The three S2 cases each have 16,566 such records on both sides; H2 has 17,407.
+Ares public API and CLI outputs are byte-identical in all four cases.
+Exhaustive raw line comparison finds only the existing permitted generator-line
+replacement and these two absent config-footer records:
+
+```text
+; compatible_process_expression_group = ""
+; pellet_flow_coefficient = 0.4157
+```
+
+The unchanged full comparator first fails at line 17051 for the three S2 cases
+and line 17980 for H2. No fill-block/body difference remains before the footer.
+The same 100-case breadth inventory is 5 PASS / 95 FAIL before and after, with
+zero PASS-to-FAIL, zero FAIL-to-PASS, and all 13 selected complete-output cases
+still FAIL. These are complete-output verdicts, not motion-only acceptance
+substitutes. Rustfmt and all-target Clippy with warnings denied pass.
+
+Do not add a footer overlay, weaken the comparator, ignore tests, or implement a
+local footer workaround. Keep this change on the multiline branch; the approved
+bridge-limiting-offset branch is independent and unchanged. The separately
+owned footer prerequisite must land before rerunning and claiming full-output
+GREEN for these tests. Nonzero smoothing remains outside this accepted slice.
