@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "aligned_seam_rotated_object.rs"]
+mod aligned_seam_rotated_object;
+
 #[path = "two_wall_inward_move.rs"]
 mod two_wall_inward_move;
 
