@@ -68,6 +68,10 @@ engines.
    the separate Organic generator. Contact generation, base generation, layer
    installation, and toolpath algorithms are outside this fix.
 
+Regularization also follows upstream `smooth_supports = support_style != smsGrid`
+(`SupportCommon.cpp:212`), extending Snug-only smoothing to all non-Grid styles,
+including Organic/tree styles.
+
 ## Verification
 
 Use the existing strict Native/API/CLI support and raft witnesses without
