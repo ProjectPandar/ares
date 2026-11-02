@@ -82,6 +82,10 @@ impl MotionState {
             return true;
         }
         if code.split_whitespace().next() == Some("SET_VELOCITY_LIMIT") {
+            if self.gcode_flavor == crate::GCodeFlavor::Klipper {
+                self.klipper_velocity_limit(code);
+                return true;
+            }
             // Klipper: ACCEL applies to print and travel moves alike; each
             // setter clamps the raw value to its own limit
             // (`GCodeProcessor.cpp:5287-5298`), and Klipper's travel limit is

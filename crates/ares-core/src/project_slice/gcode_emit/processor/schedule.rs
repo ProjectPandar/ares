@@ -1,6 +1,7 @@
 //! `GCodeProcessor::calculate_time` planner flush and delay accounting.
 
-use super::motion::{MotionBlock, MotionKind, RollingPlanner, Trapezoid};
+use super::motion::{KlipperConfig, MotionBlock, MotionKind, Planner, Trapezoid};
+use crate::GCodeFlavor;
 use std::collections::VecDeque;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -18,6 +19,7 @@ pub(super) struct PendingDelay {
 pub(super) struct FlushEvent {
     pub(super) block_count: usize,
     pub(super) delay: Option<PendingDelay>,
+    pub(super) klipper: KlipperConfig,
 }
 
 pub(super) struct Schedule {
@@ -35,8 +37,13 @@ pub(super) struct Schedule {
     pub(super) processed_blocks: usize,
 }
 
-pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> Schedule {
-    let mut planner = RollingPlanner::new();
+pub(super) fn scheduled_times(
+    blocks: &[MotionBlock],
+    events: &[FlushEvent],
+    flavor: GCodeFlavor,
+) -> Schedule {
+    let mut planner = Planner::new(flavor);
+    let klipper = flavor == GCodeFlavor::Klipper;
     // Blocks the final pass drops keep zero time and the zero trapezoid.
     let mut timed = vec![(0.0, Trapezoid::default()); blocks.len()];
     let mut pending = VecDeque::new();
@@ -50,7 +57,13 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
         while pushed < event.block_count {
             let batch = planner.push(&blocks[pushed]);
             pushed += 1;
-            record_batch(blocks, &mut timed, &mut emitted, batch, &mut pending);
+            record_batch(
+                blocks,
+                (&mut timed, &mut emitted),
+                batch,
+                &mut pending,
+                klipper,
+            );
             pushed_processed.push(emitted);
         }
         flush_starts.push(emitted);
@@ -64,18 +77,36 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
                 pending.push_back(delay);
             }
         }
-        let batch = planner.flush();
-        record_batch(blocks, &mut timed, &mut emitted, batch, &mut pending);
+        let batch = planner.flush(event.klipper);
+        record_batch(
+            blocks,
+            (&mut timed, &mut emitted),
+            batch,
+            &mut pending,
+            klipper,
+        );
         flush_ends.push(emitted);
     }
     while pushed < blocks.len() {
         let batch = planner.push(&blocks[pushed]);
         pushed += 1;
-        record_batch(blocks, &mut timed, &mut emitted, batch, &mut pending);
+        record_batch(
+            blocks,
+            (&mut timed, &mut emitted),
+            batch,
+            &mut pending,
+            klipper,
+        );
         pushed_processed.push(emitted);
     }
     let batch = planner.finish(!pending.is_empty());
-    record_batch(blocks, &mut timed, &mut emitted, batch, &mut pending);
+    record_batch(
+        blocks,
+        (&mut timed, &mut emitted),
+        batch,
+        &mut pending,
+        klipper,
+    );
 
     let trailing_delay = pending
         .into_iter()
@@ -94,10 +125,10 @@ pub(super) fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> 
 
 fn record_batch(
     blocks: &[MotionBlock],
-    timed: &mut [(f64, Trapezoid)],
-    emitted: &mut usize,
+    (timed, emitted): (&mut [(f64, Trapezoid)], &mut usize),
     mut batch: Vec<(f64, Trapezoid)>,
     pending: &mut VecDeque<PendingDelay>,
+    klipper: bool,
 ) {
     for (block, (time, _)) in blocks[*emitted..].iter().zip(&mut batch) {
         let Some(delay) = pending.front() else {
@@ -106,7 +137,11 @@ fn record_batch(
         if delay.target == DelayTarget::Any
             || delay.target == DelayTarget::ToolChange && block.kind == MotionKind::ToolChange
         {
-            *time = f64::from(*time as f32 + delay.seconds);
+            if klipper {
+                *time += f64::from(delay.seconds);
+            } else {
+                *time = f64::from(*time as f32 + delay.seconds);
+            }
             pending.pop_front();
         }
     }

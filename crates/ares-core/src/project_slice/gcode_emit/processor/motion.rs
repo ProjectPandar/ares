@@ -4,16 +4,19 @@ mod cached_feedrate;
 mod config_commands;
 mod firmware;
 mod homing;
+mod klipper_config;
+pub(super) use klipper_config::KlipperConfig;
 mod segment;
 
 mod limits;
 use super::motion_util::{MMMIN_TO_MMSEC, norm, word};
 use crate::options::GCodeFlavor;
 mod planner;
-pub(super) use planner::{RollingPlanner, Trapezoid};
+pub(super) use planner::{Planner, Trapezoid};
 use std::f64::consts::PI;
 
 pub(super) struct MotionState {
+    pub(super) klipper: KlipperConfig,
     pub(super) position: [f64; 3],
     pub(super) e_position: f64,
     pub(super) units: f32,
@@ -51,6 +54,7 @@ pub(super) struct MotionState {
 impl Default for MotionState {
     fn default() -> Self {
         Self {
+            klipper: KlipperConfig::default(),
             position: [0.0; 3],
             e_position: 0.0,
             units: 1.0,
@@ -98,6 +102,8 @@ pub(super) struct IndexedMotion {
 }
 
 pub(super) struct MotionBlock {
+    pub(super) klipper: KlipperConfig,
+    pub(super) virtual_motion: bool,
     pub(super) distance: f64,
     /// Raw axis deltas (upstream `AxisCoords delta_pos` doubles,
     /// `GCodeProcessor.hpp:392`).
@@ -359,6 +365,8 @@ impl MotionState {
         // planner's `prepare` in upstream order
         // (`GCodeProcessor.cpp:3993-4080`); the minimum-rate-selected F travels here.
         Some(MotionBlock {
+            klipper: self.klipper,
+            virtual_motion: false,
             distance,
             delta,
             speed: self.block_feedrate(e_delta),

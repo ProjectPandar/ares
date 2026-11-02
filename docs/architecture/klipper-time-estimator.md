@@ -53,6 +53,16 @@ of Klipper scheduling. The new private planner is selected from the existing
 `Schedule`, move IDs, time-cache, stop/prepare/layer accounting and actual-speed
 vertex consumers. Do not grow a second G-code parser or scheduling API.
 
+## VG1 dispatch amendment
+
+`GCodeProcessor.cpp::process_VG1:5845-6049` also queues blocks consumed by
+flavor-selected `calculate_time`. Preserve VG1's own centripetal/all-axis
+preparation, zero-default junction deviation and MCR budget, and lack of an
+automatic window flush. It is a prepared-block variant inside the Klipper
+planner, not a Marlin-planner fallback. Share the literal centripetal operation
+with non-Klipper G1 only where those source calculations coincide. VG1 is a
+source-literal, unwitnessed part of this port; no VG1 parity claim is made.
+
 ## Non-negotiable architectural decisions
 
 1. Port from the pinned source, including source operand precision/order and

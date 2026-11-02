@@ -102,6 +102,7 @@ impl Estimate {
                 events.push(FlushEvent {
                     block_count: blocks.len(),
                     delay: None,
+                    klipper: state.klipper,
                 });
             }
             if code.starts_with("M622") && word(code, 'J').unwrap_or(0.0).round() == 1.0 {
@@ -122,6 +123,7 @@ impl Estimate {
             if synchronizes_planner(code, measured_g29) {
                 events.push(FlushEvent {
                     block_count: blocks.len(),
+                    klipper: state.klipper,
                     delay: delay.map(|seconds| PendingDelay {
                         target: DelayTarget::Any,
                         seconds: seconds as f32,
@@ -138,13 +140,14 @@ impl Estimate {
                 let vertex = recorder.options_z.next_vertex();
                 recorder.tool_change(index + 1, filament, line_start);
                 recorder.options_z.block(vertex);
-                blocks.push(commands::tool_change_block());
+                blocks.push(commands::tool_change_block(state.klipper));
                 block_line_ids.push(g1_line_id);
                 remaining_internal.push(0);
                 cache_eligible.push(false);
                 prepare_stages.push(prepare_stage);
                 events.push(FlushEvent {
                     block_count: blocks.len(),
+                    klipper: state.klipper,
                     delay: Some(PendingDelay {
                         target: DelayTarget::ToolChange,
                         seconds: extra_time,
@@ -314,7 +317,7 @@ impl Estimate {
             flush_starts,
             pushed,
             processed_blocks,
-        } = scheduled_times(&blocks, &events);
+        } = scheduled_times(&blocks, &events, limits.gcode_flavor);
         let mut stop_times = StopTimes::new(&stop_events, &flush_starts, processed_blocks);
         let scheduled = options_z::Scheduled {
             times: &times,

@@ -1,4 +1,8 @@
 use super::{MotionBlock, MotionKind};
+mod centripetal;
+mod dispatch;
+mod klipper;
+pub(in crate::project_slice::gcode_emit::processor) use dispatch::Planner;
 mod junction;
 mod trapezoid;
 use junction::{junction_speed, max_allowable_speed};
@@ -198,22 +202,13 @@ fn prepare(
     // from double `atan2` cast to float, and the radius from the raw XY
     // deltas.
     if let Some(previous) = previous {
-        let previous_xy = xy_unit(previous.direction);
-        let current_xy = xy_unit(direction);
-        if let (Some(previous_xy), Some(current_xy)) = (previous_xy, current_xy) {
-            let difference_x = current_xy[0] - previous_xy[0];
-            let difference_y = current_xy[1] - previous_xy[1];
-            let difference = (difference_x * difference_x + difference_y * difference_y).sqrt();
-            if difference < 0.5 && difference > 0.000_01 {
-                let dot = previous_xy[0] * current_xy[0] + previous_xy[1] * current_xy[1];
-                let cross = previous_xy[0] * current_xy[1] - previous_xy[1] * current_xy[0];
-                let angle = f64::from(cross).atan2(f64::from(dot)) as f32;
-                let sin_half = ((1.0 - angle.cos()) * 0.5).sqrt();
-                let radius = ((delta[0] * delta[0] + delta[1] * delta[1]).sqrt() * 0.5
-                    / f64::from(sin_half)) as f32;
-                feedrate = feedrate.min(((block.centripetal_acceleration as f32) * radius).sqrt());
-            }
-        }
+        feedrate = centripetal::limit(
+            delta,
+            previous.direction,
+            direction,
+            block.centripetal_acceleration,
+            feedrate,
+        );
     }
     // Axis feedrates (`GCodeProcessor.cpp:4034-4041`): `feedrate * delta
     // * inv_distance` multiplies in double with a single float store; the
@@ -297,9 +292,4 @@ fn prepare(
     };
     (planned.time, planned.trapezoid) = block_time(planned);
     planned
-}
-
-fn xy_unit(direction: [f32; 4]) -> Option<[f32; 2]> {
-    let norm = (direction[0] * direction[0] + direction[1] * direction[1]).sqrt();
-    (norm > 0.0).then(|| [direction[0] / norm, direction[1] / norm])
 }

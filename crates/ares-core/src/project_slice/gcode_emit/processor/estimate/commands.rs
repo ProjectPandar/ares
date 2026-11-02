@@ -1,9 +1,11 @@
 use super::super::filament_change::unloads_filament;
-use super::super::motion::{MotionBlock, MotionKind};
+use super::super::motion::{KlipperConfig, MotionBlock, MotionKind};
 use super::{IndexedMotion, MoveRecorder, RecordedMotion, SeamDetector, word};
 
-pub(super) fn tool_change_block() -> MotionBlock {
+pub(super) fn tool_change_block(klipper: KlipperConfig) -> MotionBlock {
     MotionBlock {
+        klipper,
+        virtual_motion: false,
         distance: 0.0,
         delta: [0.0; 4],
         speed: 0.0,

@@ -40,6 +40,9 @@ impl MotionState {
             self.feedrate = f64::from(feedrate as f32 * MMMIN_TO_MMSEC);
         }
         let delta = std::array::from_fn(|axis| end[axis] - start[axis]);
-        self.segment_block(delta)
+        self.segment_block(delta).map(|mut block| {
+            block.virtual_motion = true;
+            block
+        })
     }
 }

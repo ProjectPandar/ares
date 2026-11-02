@@ -30,6 +30,8 @@ impl MotionState {
             self.travel_acceleration
         };
         Some(MotionBlock {
+            klipper: self.klipper,
+            virtual_motion: false,
             distance,
             delta,
             // The axis factor chain and centripetal limit run in the
