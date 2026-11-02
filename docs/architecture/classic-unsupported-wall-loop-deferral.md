@@ -1,8 +1,9 @@
 # Classic unsupported wall-loop deferral
 
-Status: approved Classic source boundary; commit this ARD before a frozen
-public RED of at most three cases, Native first and strict bytes. Submit
-the RED RR before any port; an unported prerequisite requires STOP.
+Status: approved Classic ARD committed before fixture work as
+`9f2e1658197effcb31bb554a38ae23ac97d56954`; frozen Native-first public
+qualification is complete (two strict REDs and one complete control PASS).
+Await RED review before any port; no production implementation yet.
 
 Base: `5910df8eb0c2a9cab5958a1dcce7fdb34d075ecb`.
 Upstream: OrcaSlicer beta `345efec64c7b95a05ce5cf96df0dde66a158835c`.
@@ -116,9 +117,9 @@ not a new feature-specific substitute.
 
 ## Required public RED and failure inventory
 
-There is no existing fresh qualified witness for this proposal. Do not
-claim one from older overhang or seam records. Proposed initial bounded
-inputs, only after ARD/scope approval:
+The initial bounded plan below was approved before fixture authorship.
+Fresh qualification is recorded in the following section; no older
+seam/overhang record is substituted for these actual runs.
 
 - Target: a Classic stepped ledge/island with at least one wholly
   overhang loop and an anchored wall stack, option enabled, wall order
@@ -133,16 +134,12 @@ inputs, only after ARD/scope approval:
   source touch distance of an anchored wall (possibly transitively), so
   it remains before infill rather than receiving the unanchored flag.
 
-First audit exact overhang-role/materialized operands and author the
-smallest one candidate; freeze its geometry/settings/hash and intended
-source premises before execution. The proposed RED budget is at most
-three fixed cases, each Native2 fresh stable / validated API1 / CLI1,
-with no retry, alternative producer, input search loop or debugger probe.
-At most three frozen cases are approved, Native first and strict bytes;
-freeze exact inputs before execution. No run is made in this ARD commit.
-If Native does not exercise the exact producer/consumer, or an earlier
-unrelated motion/role/config mismatch leads, preserve STOP and request
-ruling rather than hunting geometry or patching an adjacent boundary.
+The frozen RED budget was at most three cases, each Native2 fresh stable /
+validated API1 / CLI1, with no retry, alternative producer, input search
+loop or debugger probe. Exact inputs were frozen after the initial ARD
+commit and before execution. If a Native premise or prerequisite fails
+in any later authorized stage, preserve STOP rather than hunting geometry
+or patching an adjacent boundary.
 
 Verify actual full ordered island/region extrusion passes, not only TYPE
 labels or a raw metadata unit test. Wrong loop kind, mixed-role paths,
@@ -160,18 +157,61 @@ and full contexts; never a comparator waiver. No coordinate/count golden,
 loop sorting normalization or blanket reversal. Any surviving earlier
 first difference remains NON-GREEN and is reported.
 
+## Frozen Native-first public qualification
+
+Exactly three input-only cases were frozen after the ARD commit and
+before any Native execution. The deterministic stepped-solid generator
+checks manifold orientation and volume; meshes/settings/member hashes
+are retained in `tests/parity/classic-unsupported-wall-last/provenance.json`.
+
+| Case | Input SHA256 | Native premise at physical Z1.4 |
+| --- | --- | --- |
+| Unattached ledge, enabled, three walls | `2520f0f1d96e28c610c1ed40435ca268da45a8eea5c401cd727c6b1262e0a611` | Infill precedes every closed wholly-overhang wall loop |
+| Same ledge, disabled | `be3d9503721e1a2236064a7d80dacb6f90907b8a01acdbf5898ac159b84ef833` | Walls precede infill; complete strict output PASS |
+| Attached eight-wall stack, enabled | `2aad0f555101c289b8cd1698bddda7bb520c3bbac58f51b11e30311dc411149c` | Anchored inner wall, unsupported tail innermost-out, then infill |
+
+One frozen three-case run completed: Native6 fresh exports (three stable
+pairs), validated API3 and CLI3 completed, raw API/CLI identical per case;
+one strict PASS and two FAILs, zero ignored. Native premises are checked
+before API/CLI, and complete shoulder extrusion passes/closed-loop
+geometry were verified externally, not merely TYPE label presence.
+No raw private loop flags or attachment-wave operands were observed.
+
+The attached case first strictly fails at byte1712/line79: Native
+`G1 X103.632 Y103.632 E.42247`, API/CLI `M73 P17 R3`. Its external
+M73-command-only first difference is original716 on both streams:
+Native travel `G1 X116.925 Y116.925 Z1.8` versus API/CLI
+`G1 X119.775 Y119.775 Z1.8`, selecting the wrong first wall at the shoulder.
+The unattached case first strictly fails at byte1291/line58:
+`M73 P17 R3` versus `M73 P18 R3`. Externally its first non-M73 is
+Native423/API422: `G1 X108.291 Y108.291 Z1.8` versus
+`G1 X119.775 Y119.775 Z1.8`, selecting walls before the anchoring infill.
+Full unfiltered contexts, maps and all removed M73 records are retained;
+no Fword filter, coordinate/count golden or filtered acceptance.
+
+The disabled control passes the unchanged complete comparator, including
+M73, config/footer and trailing bytes. The two enabled cases are actual
+strict REDs on the proposed producer/consumer boundary; no unported
+prerequisite or API/CLI admission failure appeared in this frozen set.
+Neither earlier M73 record is attributed as an independent timing root.
+No production change, retry, extra probe, input variant, debugger, carrier
+trace or family run occurred. Fmt and strict workspace/all-targets Clippy
+pass. Only this result note changes after execution; no postcommit rerun
+is claimed. Submit this frozen RED RR before any implementation.
+
 ## Approval and verification sequence
 
-The Classic ARD/source boundary and named G-code consumer are approved.
-Commit this ARD first, then freeze and qualify at most three actual public
-RED cases; submit the RR before any literal port. No implicit delegation
-or unrelated queue write is authorized. Freeze Classic/wall-sequence/
+The Classic ARD/source boundary and named G-code consumer are approved,
+and the ARD was committed before the frozen three-case qualification.
+Submit the RED RR and await review before any literal port. No implicit
+delegation or unrelated queue write is authorized. Freeze Classic/wall-sequence/
 overhang/region-infill/wipe before/after breadth before edits, require
 zero prior-PASS to FAIL and report every flip and first remaining full/
 non-M73 difference. Complete GREEN requires M73-inclusive whole streams;
 COORD owns integration/FULL/closure. Preserve source/ELF/fixture/manifest
 identities and every invalid attempt.
 
-The approved narrow branch is not rebased or extended by this proposal.
-This ARD sits on the explicitly requested main5910 base and has no
-new runtime evidence, production/test edit or independent pipeline goal.
+The approved narrow branch is not rebased or extended by this slice.
+The initial ARD is based on the explicitly requested main5910; only the
+new public tests/input artifacts and qualification note were added after
+that commit. No production code or independent pipeline design is added.

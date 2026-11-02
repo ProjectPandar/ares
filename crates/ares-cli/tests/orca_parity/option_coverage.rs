@@ -6,6 +6,9 @@ mod classic_narrow_island_guard;
 #[path = "classic_thin_hole_reach.rs"]
 mod classic_thin_hole_reach;
 
+#[path = "classic_unsupported_wall_last.rs"]
+mod classic_unsupported_wall_last;
+
 #[path = "bambu_gap_fill_interleaving.rs"]
 mod bambu_gap_fill_interleaving;
 
