@@ -27,6 +27,7 @@ pub(in crate::project_slice) struct ClassicHierarchyRecord {
 pub(in crate::project_slice) struct PerimeterGeneratorLoop {
     pub(in crate::project_slice) polygon: Polygon,
     pub(in crate::project_slice) is_contour: bool,
+    pub(in crate::project_slice) is_thin_wall_hole: bool,
     pub(in crate::project_slice) is_smaller_width_perimeter: bool,
     pub(in crate::project_slice) depth: u16,
     pub(in crate::project_slice) children: Vec<PerimeterGeneratorLoop>,

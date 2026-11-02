@@ -35,6 +35,8 @@ pub(in crate::project_slice) struct PreparedOnionSurface {
     pub(in crate::project_slice) initial_loop_number: i32,
     pub(in crate::project_slice) effective_loop_number: i32,
     pub(in crate::project_slice) shells: Vec<RawShellDepth>,
+    /// First-shell hole order: normal offsets, then smaller-width offsets.
+    pub(in crate::project_slice) thin_wall_holes: Vec<bool>,
     pub(in crate::project_slice) last: Vec<ExPolygon>,
     pub(in crate::project_slice) gaps: Vec<ExPolygon>,
     /// `thin_walls` — carried from `PreparedTopSplitSurface` for the

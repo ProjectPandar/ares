@@ -51,6 +51,7 @@ fn prepare_object(
                         let nested = nest::nest(materialize::materialize(
                             surface.effective_loop_number,
                             &surface.shells,
+                            &surface.thin_wall_holes,
                         ));
                         PreparedHierarchySurface {
                             source_index: surface.source_index,

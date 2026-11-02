@@ -2,6 +2,8 @@ use crate::SliceError;
 
 use super::super::{top_split::PreparedPostClassicTopSplit, types::ClassicPreludeRecord};
 
+const INSET_OVERLAP_TOLERANCE: f64 = 0.4;
+
 #[derive(Clone, Copy, Debug)]
 pub(super) struct ValidatedOnionConfig {
     pub(super) sparse_infill_density: i32,
@@ -9,6 +11,7 @@ pub(super) struct ValidatedOnionConfig {
     pub(super) minimum_spacing: i64,
     pub(super) external_to_internal_spacing: i64,
     pub(super) perimeter_spacing: i64,
+    pub(super) gap_fill_room: f64,
 }
 
 pub(super) fn validate_project(
@@ -58,12 +61,17 @@ pub(super) fn validate_project(
 }
 
 fn from_prelude(density: i32, prelude: &ClassicPreludeRecord) -> ValidatedOnionConfig {
+    // PerimeterGenerator.cpp:1507,1714: nominal widths, before top-wall reduction.
+    let gap_fill_minimum = 0.2
+        * prelude.perimeter_width.min(prelude.external_width) as f64
+        * (1.0 - INSET_OVERLAP_TOLERANCE);
     ValidatedOnionConfig {
         sparse_infill_density: density,
         has_gap_fill: prelude.has_gap_fill,
         minimum_spacing: prelude.minimum_spacing,
         external_to_internal_spacing: prelude.external_to_internal_spacing,
         perimeter_spacing: prelude.perimeter_spacing,
+        gap_fill_room: 0.5 * (prelude.external_to_internal_spacing as f64 + gap_fill_minimum),
     }
 }
 

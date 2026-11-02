@@ -1,12 +1,13 @@
 mod config;
 mod iterate;
+mod thin_holes;
 mod types;
 
 pub(in crate::project_slice) use types::{
     ClassicOnionRecord, PostClassicOnionPrintObject, PreparedPostClassicOnion, RawShellDepth,
 };
 
-use crate::SliceError;
+use crate::{SliceError, geometry::CoordinateScale};
 
 use self::{config::ValidatedOnionConfig, iterate::IterationInput, types::PreparedOnionSurface};
 use super::{ClassicTopSplitRecord, PostClassicTopSplitPrintObject, PreparedPostClassicTopSplit};
@@ -26,7 +27,7 @@ pub(super) fn finish(
         .into_iter()
         .zip(validated)
         .map(|(predecessor, configs)| {
-            let records = prepare_object(&predecessor, &configs)?;
+            let records = prepare_object(&predecessor, &configs, scale)?;
             Ok(PostClassicOnionPrintObject {
                 predecessor,
                 records,
@@ -45,13 +46,14 @@ pub(super) fn finish(
 fn prepare_object(
     predecessor: &PostClassicTopSplitPrintObject,
     configs: &[Option<ValidatedOnionConfig>],
+    scale: CoordinateScale,
 ) -> Result<Vec<Option<ClassicOnionRecord>>, SliceError> {
     predecessor
         .records
         .iter()
         .zip(configs)
         .map(|(record, config)| match (record, config) {
-            (Some(record), Some(config)) => prepare_record(record, *config).map(Some),
+            (Some(record), Some(config)) => prepare_record(record, *config, scale).map(Some),
             (None, None) => Ok(None),
             _ => unreachable!("Task 22O.3 preflight slots must remain aligned"),
         })
@@ -61,11 +63,18 @@ fn prepare_object(
 fn prepare_record(
     record: &ClassicTopSplitRecord,
     config: ValidatedOnionConfig,
+    scale: CoordinateScale,
 ) -> Result<ClassicOnionRecord, SliceError> {
     let surfaces = record
         .surfaces
         .iter()
         .map(|surface| {
+            let thin_wall_holes = thin_holes::classify(
+                &surface.normal_first_offset,
+                &surface.smaller_first_offset,
+                config.gap_fill_room,
+                scale,
+            )?;
             let result = iterate::apply(IterationInput {
                 initial_loop_number: surface.initial_loop_number,
                 loop_number: surface.effective_loop_number,
@@ -79,6 +88,7 @@ fn prepare_record(
                 initial_loop_number: surface.initial_loop_number,
                 effective_loop_number: result.effective_loop_number,
                 shells: result.shells,
+                thin_wall_holes,
                 last: result.last,
                 gaps: result.gaps,
                 thin_walls: surface.thin_walls.clone(),

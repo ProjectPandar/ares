@@ -10,6 +10,7 @@ use super::{
 struct PendingParent {
     extrusion_loop: ExtrusionLoop,
     is_contour: bool,
+    is_thin_wall_hole: bool,
     depth: u16,
 }
 
@@ -50,7 +51,6 @@ struct GroupFrame<'a> {
     /// recomputed.
     chain: Vec<(usize, bool)>,
     next: usize,
-    reverse_thin_wall_hole: bool,
     pending_parent: Option<PendingParent>,
     output: ExtrusionEntityCollection,
 }
@@ -59,7 +59,6 @@ impl<'a> GroupFrame<'a> {
     fn new(
         mut nodes: Vec<ChainedLoopNode>,
         seeds: &'a [TraversalSeed],
-        reverse_thin_wall_hole: bool,
         thin_entities: Vec<ExtrusionEntity>,
         chain: Vec<(usize, bool)>,
     ) -> Self {
@@ -92,14 +91,13 @@ impl<'a> GroupFrame<'a> {
             entities,
             chain,
             next: 0,
-            reverse_thin_wall_hole,
             pending_parent: None,
             output: ExtrusionEntityCollection::default(),
         }
     }
 
     /// `begin_next` — returns the loop entity to descend into as
-    /// `Ok((children, child_seeds, child_order, rev))`, or `Err(entity,
+    /// `Ok((children, child_seeds, child_order))`, or `Err(entity,
     /// reverse)` for a thin-wall entity emitted directly (upstream
     /// `idx.first >= loops.size()` branch, `PerimeterGenerator.cpp:241-247`).
     fn begin_next(&mut self) -> Option<Result<LoopDescent<'a>, (ExtrusionEntity, bool)>> {
@@ -117,35 +115,24 @@ impl<'a> GroupFrame<'a> {
         };
         let extrusion_loop = ordered.extrusion_loop;
         let seed = &self.seeds[index];
-        let reverse_children_thin_wall_hole = self.seeds.len() == 1
-            && seed.is_contour
-            && seed.children.len() == 1
-            && !seed.children[0].is_contour
-            && seed.children[0].children.is_empty();
         let node = &mut self.nodes[index];
         let children = std::mem::take(&mut node.children);
         let child_order = std::mem::take(&mut node.child_order);
         self.pending_parent = Some(PendingParent {
             extrusion_loop,
             is_contour: seed.is_contour,
+            is_thin_wall_hole: seed.is_thin_wall_hole,
             depth: seed.depth,
         });
-        Some(Ok((
-            children,
-            seed.children.as_slice(),
-            child_order,
-            reverse_children_thin_wall_hole,
-        )))
+        Some(Ok((children, seed.children.as_slice(), child_order)))
     }
 }
 
-/// Children, child seeds, their precomputed chain order, and chain reversal of
-/// a loop entity to descend into.
+/// Children, child seeds and their precomputed chain order for a loop descent.
 type LoopDescent<'a> = (
     Vec<ChainedLoopNode>,
     &'a [TraversalSeed],
     Vec<(usize, bool)>,
-    bool,
 );
 
 pub(super) fn traverse_loops(
@@ -155,13 +142,7 @@ pub(super) fn traverse_loops(
     thin_entities: Vec<ExtrusionEntity>,
     root_order: Vec<(usize, bool)>,
 ) -> ExtrusionEntityCollection {
-    let mut frames = vec![GroupFrame::new(
-        roots,
-        seeds,
-        false,
-        thin_entities,
-        root_order,
-    )];
+    let mut frames = vec![GroupFrame::new(roots, seeds, thin_entities, root_order)];
     let mut completed: Option<ExtrusionEntityCollection> = None;
     loop {
         if let Some(mut children) = completed.take() {
@@ -174,11 +155,8 @@ pub(super) fn traverse_loops(
                 &mut parent.extrusion_loop,
                 wall_direction,
                 parent.is_contour,
-                frame.reverse_thin_wall_hole,
+                parent.is_thin_wall_hole,
             );
-            if frame.reverse_thin_wall_hole {
-                frame.output.entities.reverse();
-            }
             let is_contour = parent.is_contour;
             let parent = ExtrusionEntity::Loop(OrderedExtrusionLoop {
                 unsupported_distance: None,
@@ -200,11 +178,10 @@ pub(super) fn traverse_loops(
             .expect("the root frame remains until return")
             .begin_next()
         {
-            Some(Ok((children, child_seeds, child_order, reverse_children_thin_wall_hole))) => {
+            Some(Ok((children, child_seeds, child_order))) => {
                 frames.push(GroupFrame::new(
                     children,
                     child_seeds,
-                    reverse_children_thin_wall_hole,
                     Vec::new(), // thin walls only on the root frame
                     child_order,
                 ));

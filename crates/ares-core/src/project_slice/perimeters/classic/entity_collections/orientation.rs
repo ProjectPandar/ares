@@ -6,14 +6,13 @@ pub(in crate::project_slice) fn orient_loop(
     loop_: &mut ExtrusionLoop,
     wall_direction: ProcessWallDirection,
     is_contour: bool,
-    reverse_thin_wall_hole: bool,
+    is_thin_wall_hole: bool,
 ) {
     let counter_clockwise = match wall_direction {
         ProcessWallDirection::CounterClockwise => true,
         ProcessWallDirection::Clockwise => false,
     };
-    let source_wants_counter_clockwise =
-        counter_clockwise == (is_contour || reverse_thin_wall_hole);
+    let source_wants_counter_clockwise = counter_clockwise == (is_contour || is_thin_wall_hole);
     if is_counter_clockwise(loop_) != source_wants_counter_clockwise {
         reverse_loop(loop_);
     }
