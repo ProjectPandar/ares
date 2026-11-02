@@ -35,11 +35,13 @@ pub(crate) fn materialize_project_variants(
         });
     };
 
-    let printer_indices = index::resolve_printer_indices(&materialized, &active)?;
-    printer::materialize_variant_one(&mut materialized, &printer_indices)?;
-
+    // PrintApply.cpp:1423-1427: variant one shrinks the id/variant metadata,
+    // so resolve and materialize the stride-two values first.
     let printer_indices = index::resolve_printer_indices_for_variant_two(&materialized, &active);
     printer::materialize_variant_two(&mut materialized, &printer_indices)?;
+
+    let printer_indices = index::resolve_printer_indices(&materialized, &active)?;
+    printer::materialize_variant_one(&mut materialized, &printer_indices)?;
 
     let process_indices = index::resolve_process_indices(&materialized, &active)?;
     printer::materialize_process(&mut materialized, &process_indices)?;

@@ -46,8 +46,8 @@ pub(super) fn resolve_printer_indices_for_variant_two(
 ) -> Vec<usize> {
     physical_requests(&active.0)
         .map(|(requested_id, requested_variant)| {
-            // PrintApply.cpp:1167 invokes PrintConfig.cpp:9677–9681
-            // after variant-one has materialized the id/variant metadata.
+            // PrintApply.cpp:1425 selects variant two before variant one reduces
+            // the id/variant metadata used by get_index_for_extruder.
             get_index_for_extruder(
                 (requested_id, requested_variant),
                 Some(&source.printer.gcode.printer_extruder_id.0),
