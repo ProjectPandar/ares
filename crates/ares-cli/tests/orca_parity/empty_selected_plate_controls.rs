@@ -4,7 +4,7 @@ use ares_core::{ConfigOverrides, GenerationMetadata, SliceError, SlicerContext};
 use serde_json::json;
 use std::fs;
 
-const OUTSIDE: &str = "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading.";
+const OUTSIDE: &str = "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume.";
 
 #[test]
 fn empty_selected_plate_control_populated_plate_two_preserves_native_stream() {

@@ -143,7 +143,7 @@ async fn off_bed_instance_with_empty_plate_returns_upstream_error() {
     assert!(
         error
             .to_string()
-            .contains("One of the plate is empty or has no object fully inside it."),
+            .contains("The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."),
         "{error}"
     );
 }
@@ -202,7 +202,7 @@ async fn kobra3_matrix_fixture_returns_upstream_error() {
     assert!(
         error
             .to_string()
-            .contains("One of the plate is empty or has no object fully inside it."),
+            .contains("The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."),
         "{error}"
     );
 }
@@ -237,7 +237,7 @@ async fn circle_bed_model_outside_is_rejected() {
     assert!(
         error
             .to_string()
-            .contains("One of the plate is empty or has no object fully inside it."),
+            .contains("The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."),
         "{error}"
     );
 }
@@ -318,6 +318,6 @@ async fn circle_bed_cylinder_matches_native_no_suitable_rejection() {
     .unwrap_err();
     assert_eq!(
         error.to_string(),
-        "One of the plate is empty or has no object fully inside it. Please check that the 3mf contains no empty plate in Orca Slicer before uploading."
+        "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."
     );
 }
