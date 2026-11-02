@@ -1,12 +1,25 @@
 # Aligned-seam output for a rotated object's first layer
 
-Status: public RED only; no production port or GREEN authorization.
+Status: public regression; the original RED is closed by the reviewed
+TriangleMeshSlicer port integrated in source commit
+`3d11c2284553266db1113a353adc74eafcbbeeca`. No seam-placement production
+change or new seam strategy is part of this regression.
 
 ## Upstream boundary and Rust destination
 
 Upstream is OrcaSlicer v2.5.0-beta
-`345efec64c7b95a05ce5cf96df0dde66a158835c`,
-`src/libslic3r/GCode/SeamPlacer.cpp`:
+`345efec64c7b95a05ce5cf96df0dde66a158835c`.
+The causal producer boundary is `src/libslic3r/TriangleMeshSlicer.cpp`:
+
+- `coplanar_edges:169-240` classifies artificial triangulation junctions;
+  `chain_lines_by_triangle_connectivity:1180-1287`, especially1257-1262 and
+  1282-1287, suppresses those junctions while retaining real corners.
+  Rust destinations: `mesh_slicer/coplanar.rs`, `mesh_slicer/chaining.rs`,
+  and the coplanar carrier setup in `project_slice/raw_intersections.rs`.
+- The canonical raw-line tuple sort at623-635 stabilizes the input order
+  used by `make_loops`. Rust destination: `mesh_slicer.rs::slice_mesh_on_planes`.
+
+The downstream witness remains `src/libslic3r/GCode/SeamPlacer.cpp`:
 
 - `calculate_polygon_angles_at_vertices:260-308` and
   `process_perimeter_polygon:673-736` generate the ordered candidates and angles.
@@ -24,10 +37,11 @@ Upstream is OrcaSlicer v2.5.0-beta
   Rust destination: `alignment.rs::finalize_string:275-288` and the already
   ported `alignment/loop_normal.rs`; later loop splitting is in `placement.rs`.
 
-This is a source-cited parity witness, not a new Ares seam strategy. No existing
-destination is designated as a compatibility shell to replace until the first
-unequal Native/API producer is observed. In particular, this RED does not
-authorize another loop-normal port or a changed comparison policy.
+This is a source-cited parity regression, not a new Ares seam strategy.
+The observed unequal producer was the incoming ordered ring, before seam
+candidate construction. The accepted TriangleMeshSlicer rewrite replaced
+that earlier mismatch; no comparator, angle/visibility policy, loop-normal
+solver or compatibility shell is changed by this test.
 
 ## Non-negotiable decisions
 
@@ -40,18 +54,19 @@ authorize another loop-normal port or a changed comparison policy.
   through its stop-object terminal, including inherited entry wipe, both walls,
   bottom surface, XYZ/E, travel/feed, TYPE/WIDTH, M73 and all retract/wipe records.
   No filtering, tolerance, sorting, cyclic rotation or coordinate-only acceptance.
-- Save complete exports and the unfiltered first layer externally. Its two later
-  M73 relocations around the other object remain separately owned; focused
-  object equality is not whole-layer, whole-file or family closure.
+- Save complete exports and the unfiltered first layer externally. Preserve
+  the historical other-object M73 differences as historical evidence, not
+  filtered acceptance. The regression asserts complete-object equality;
+  whole-export validation receipts do not close unrelated families or FULL.
 - Preserve candidate order, ring origin, closing duplicate, raw numeric inputs,
   strict comparator priorities and the sharp branch. No max-Y preference,
   epsilon, score bias, forced candidate, geometry compensation or fallback.
 - No private solver test, copied planner expectation, diagnostic public API,
   production instrumentation or platform-specific repair. Any later core port
   must remain portable to browser WASM, Windows, macOS and Linux.
-- GREEN requires a separately reviewed causal source boundary and production
-  authorization. This document records the owning score and sharp functions;
-  it does not establish which producer must change.
+- Attribute closure to the reviewed TriangleMeshSlicer source boundary,
+  not to an inferred equal-score tie or a new seam repair. Any later core
+  change still requires its own source-cited causal review and authorization.
 
 ## Frozen input and observed qualification
 
@@ -80,22 +95,52 @@ first-wins tie. Its actual sharp-test and return checkpoints show candidate3,
 blend1.0 and current position`(0,-6.632662773132324,0.10000000149011612)`:
 the normal-field solver is bypassed for this target.
 
-Native internal rings, angles, visibility and scores remain unobserved. Do not
-assign a Native winner index or claim an angle, visibility, geometry or ordering
-producer as the cross-implementation cause from printed corners alone.
+A separately approved seeded observation, qualified against the complete
+saved official export with only generator-line normalization, observed Native's
+incoming ring:
+`[(0,6632662),(-6632661,0),(0,-6632661),(6632662,0),(0,6632662)]`.
+The historical API ring differs in origin and bottom Y before any candidate
+scoring. Native's actual sharp-test and return hit layer0/candidate0 at the
+top with blend1.0. Initial Native scores and initial-pick winner were not
+captured; no tie, angle or visibility cause is inferred.
+
+The earlier producer was confirmed as TriangleMeshSlicer coplanar-junction
+suppression and canonical raw-line sorting, already ported in
+`85f43af4528f463c07ceb48e25c7f729eb201005` and
+`81f82a49d766e7c47fae606bccf59b417463ca06`.
+A read-only first-layer trace on the latter source commit recorded eight
+raw segments becoming a four-corner, top-origin chained loop, then a final
+seam input exactly equal to Native's ring. A transient right-origin union
+contour did not persist into the final external loop. No ablation or further
+Native probe was needed or performed.
+
+## Merged-source regression qualification
+
+On source commit `3d11c2284553266db1113a353adc74eafcbbeeca`, tree
+`520e55cc10f92bbebfa31d131824ea199c8fe289`, the unchanged accepted RED test
+and fixture were overlaid without a production delta. One selected test ran
+in each of ordinary official and explicitly seeded modes: both passed,
+none ignored, no retry. Each mode generated two fresh Native exports with
+whole-export double stability before one public API call.
+
+Complete rotated-object equality passed in both modes, and the retained
+whole-export comparator also passed, preserving all M73 and other records.
+The closure is this public witness on the merged source, not a new seam core
+port, broad family/FULL certification or a substitute for the runtime oracle.
 
 ## Included and deferred
 
-Included: one public complete-object RED, runtime selected-plate Native double,
-strict output comparison, exact existing input and this upstream-boundary ARD.
+Included: one public complete-object regression, runtime selected-plate Native
+double, strict output comparison, exact existing input, and source-cited
+closure by the TriangleMeshSlicer port.
 
-Deferred: causal Native/Rust operand comparison, production changes, GREEN,
-all-layer/family/FULL closure, M73/timing, generic travel, raw junction WIDTH,
-sloped-Z, painting/PreciseSeam and unrelated geometry or score rewrites.
+Deferred: new production changes, all-layer/family/FULL closure, unrelated
+M73/timing, generic travel, raw junction WIDTH, sloped-Z, painting/PreciseSeam
+and unrelated geometry or score rewrites.
 
 The original API observer's epilogue-scope failure remains an INCOMPLETE attempt;
 the successful recovery does not relabel it. Both later offline50-layer grouping
 validators failed and that direction was stopped. No verified all50-object
-grouping or closure is claimed. The external evidence bundle for source
-commit `1cf2968d507837c300c761f04af2e8cde649430a` retains both the original
-incomplete attempt and the explicitly approved successful API recovery.
+grouping or closure is claimed. The source-commit-qualified external evidence
+bundle retains the original incomplete attempts, successful recovery, Native
+byte qualification, producer trace, and both merged-source regression runs.
