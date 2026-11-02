@@ -6,6 +6,9 @@ mod avoid_crossing_external_frame;
 mod bbl_type1_adhesiveness_categories;
 #[path = "bbl_type1_prime_tower_waypoints.rs"]
 mod bbl_type1_prime_tower_waypoints;
+#[path = "bridge_monotonic_entry.rs"]
+mod bridge_monotonic_entry;
+
 #[path = "bridge_limiting_offset.rs"]
 mod bridge_limiting_offset;
 #[path = "brim_first_layer_speed.rs"]
