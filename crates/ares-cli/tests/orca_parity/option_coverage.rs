@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "spiral_lift_resolution.rs"]
+mod spiral_lift_resolution;
+
 #[path = "aligned_seam_rotated_object.rs"]
 mod aligned_seam_rotated_object;
 

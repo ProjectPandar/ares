@@ -1,7 +1,7 @@
 # Spiral lift: resolution-chord rewrite boundary
 
-Status: architecture ready for review; public RED waits for the approved
-Klipper prerequisite. No production change or GREEN has been executed.
+Status: public RED qualified on the approved Klipper stack; literal writer
+GREEN and family breadth are not yet executed.
 
 ## Upstream owner and destinations
 
@@ -61,22 +61,18 @@ is inferred from the default-precision witnesses alone.
 
 ## One ArcWelder kernel, shared ownership coordination
 
-An existing Rust transcription lives at
-`gcode_emit/processor/motion/arc.rs::arc_discretization_steps:110-131`.
-It implements the same upstream radius/deviation EPSILON branch and ceil
-expression. Its consumers include processor arc targets and
-`processor/arc_accounting.rs`. Do not copy it into the writer.
+The unchanged ArcWelder transcription now lives at
+`geometry/arc_welder.rs::arc_discretization_steps`, with crate-private
+visibility. Processor arc targets and `processor/arc_accounting.rs` import
+it directly. The approved move `b9210ace94fb5e2851af8b93db42f77d742034a6`
+is restacked as `a68124fa557bde399d42b9eb2120a77f332c4ca5` without a
+semantic delta. Body/doc identity and the existing processor byte-output
+assertions were preserved; no second kernel or compatibility re-export.
 
-Proposed seam: relocate that implementation unchanged into a rendering-
-neutral `geometry` module, with one crate-private entry reused by both
-processor consumers and the spiral writer. Keep the writer's8-128 clamp
-outside the generic kernel. Update both existing consumers directly and
-remove the old processor-local definition; no compatibility re-export or
-second implementation. Preserve processor operation order and callers'
-existing tolerance values; no global exp/pow/arc-math rewrite or numeric bias.
-The exact neutral module placement and edits to the processor consumers
-need coordination with the shared geometry/processor owner before coding.
-No relocation is part of the current documentation-only branch state.
+The writer must use this one helper. Keep its8-128 clamp outside the
+generic kernel and preserve processor operation order, EPSILON branch and
+callers' existing tolerance values. No global exp/pow/arc-math rewrite or
+numeric bias. The approved relocation is not a writer behavior change.
 
 Reuse ordinary writer axis formatting. If a shared writer formatter must
 change rather than be called as-is, coordinate that diff before editing it.
@@ -122,6 +118,35 @@ or another producer, retain that full failure and request a coordinated
 stack/ruling. Do not call the slice GREEN, mask later records, broaden the
 spiral commit into FillBase, or claim a whole-file/family closure from a
 spiral-only diagnostic.
+
+## Qualified public RED on the approved prerequisite
+
+The approved Klipper tip is
+`9add9e077149d4f522f909b3fd3712803ebda9f1`, with its documentation
+predecessor `43178f2beb336184fe00c1925aa93d04d73bead2` above the original
+base. The architecture and helper commits were stacked onto that exact
+tip; both range-diff entries are unchanged.
+
+One ordinary selected run exercised the two frozen public cases, each
+with two fresh stable Native exports, one validated public API call and
+one CLI call. Both strict complete-output tests fail as RED, with M73
+fully retained, and API/CLI are raw-byte equal. The complete-output first
+differences remain velocity L19 `M73 P0 R8` versus `M73 P0 R7`, and
+positive-SYNC L46's earlier API `M73 P26 R5` placement.
+
+In the separately retained external M73-excluded diagnostic, the first
+remaining difference is the actual spiral in both: Native
+`G1 X106.695 Y112.876 Z.417` versus API/CLI
+`G1 X107.217 Y113.411 Z0.457143`. Velocity original lines are163/162;
+positive-SYNC is169/169. The ordered prefix before this spiral agrees in
+that diagnostic; no Klipper field or other record is additionally removed.
+The tests and shared strict comparator do not use this filter or a fixed
+coordinate/count oracle. No writer port or GREEN is part of qualification.
+
+The exact parent-plus-staged execution identity and full exports are in
+the external evidence bundle. This later documentation-only result note
+is not a postcommit runtime rerun. Full GREEN still includes M73 and every
+other record; an endpoint-only diagnostic cannot substitute for it.
 
 ## Breadth, failure inventory and exit evidence
 
