@@ -171,6 +171,7 @@ pub use plater::{
     slice_plater_plate, slice_plater_with_profiles,
 };
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};
+pub use print::warnings::{PrintWarning, SlicingNotificationType, WarningLevel};
 pub use print::{LayerRegion, Print, PrintLayer, PrintObject, PrintRegion, build_print_domain};
 pub use project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 

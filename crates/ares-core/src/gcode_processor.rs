@@ -219,6 +219,8 @@ pub struct PrintStatistics {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProcessedGCode {
     pub gcode: Vec<u8>,
+    /// PrintObject step warnings from the slice, not GCodeProcessor data.
+    pub warnings: Vec<crate::PrintWarning>,
     pub result: GCodeProcessorResult,
     /// `Print::print_statistics()` after export.
     pub print_statistics: PrintStatistics,

@@ -196,8 +196,8 @@ pub(crate) fn slice_source(
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
     let mut filled = fill_entities::prepare(prepared)?;
     contour_z::prepare(&mut filled);
-    let support_layers = match support_material::generate(&filled, &mut context) {
-        Ok(layers) => layers,
+    let support = match support_material::generate(&filled, &mut context) {
+        Ok(support) => support,
         Err(error) => {
             fill_entities::dispose(filled);
             return Err(error);
@@ -205,11 +205,14 @@ pub(crate) fn slice_source(
     };
     let islands = extrusion_islands::prepare(filled);
     let mut ordered = island_print_order::prepare(islands, top_surfaces);
-    ordered.support_layers = support_layers;
+    ordered.support_layers = support.layers;
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
-    consume_post_island_print_order(ordered, metadata, record_moves, &mut context)
+    let mut output =
+        consume_post_island_print_order(ordered, metadata, record_moves, &mut context)?;
+    output.warnings = support.warnings;
+    Ok(output)
 }
 
 fn extract_top_surfaces(

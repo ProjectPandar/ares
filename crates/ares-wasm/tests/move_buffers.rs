@@ -17,6 +17,7 @@ fn processed_buffers_preserve_ids_and_owned_data() {
         ..MoveVertex::default()
     };
     let mut output = SliceOutput::from_processed(ProcessedGCode {
+        warnings: Vec::new(),
         gcode: b"G1 X1\n".to_vec(),
         result: GCodeProcessorResult {
             moves: vec![MoveVertex::default(), vertex],
@@ -64,6 +65,7 @@ fn vertex_buffers_carry_libvgcode_layer_zs() {
         ..MoveVertex::default()
     };
     let mut output = SliceOutput::from_processed(ProcessedGCode {
+        warnings: Vec::new(),
         gcode: Vec::new(),
         result: GCodeProcessorResult {
             moves: vec![
@@ -100,6 +102,7 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
         ..MoveVertex::default()
     };
     let mut output = SliceOutput::from_processed(ProcessedGCode {
+        warnings: Vec::new(),
         gcode: Vec::new(),
         result: GCodeProcessorResult {
             moves: vec![

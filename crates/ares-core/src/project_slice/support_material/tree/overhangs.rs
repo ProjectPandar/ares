@@ -30,6 +30,7 @@ pub(super) enum OverhangType {
 }
 
 pub(super) struct SmartOverhangs<'a> {
+    pub(super) automatic: bool,
     object: &'a ObjectOptions,
     scale: CoordinateScale,
     extrusion_width: f64,
@@ -79,6 +80,7 @@ impl<'a> SmartOverhangs<'a> {
         }
         .min(89.0);
         Ok(Self {
+            automatic: matches!(object.support_type, crate::ProcessSupportType::TreeAuto),
             object,
             scale,
             extrusion_width,

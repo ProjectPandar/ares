@@ -3,7 +3,6 @@
 
 pub(super) use extrusion_path::{SupportExtrusionEntity, SupportExtrusionPath};
 pub(super) use install_layers::InstalledSupportLayer;
-pub(super) use project::generate;
 
 mod adhesion;
 mod base_layers;
@@ -27,6 +26,7 @@ mod intermediate_heights;
 mod ironing;
 mod layer_index;
 mod layer_input;
+mod necessity;
 mod overhang_clusters;
 mod overhangs;
 mod overlap_modulation;
@@ -43,3 +43,17 @@ mod top_contacts;
 mod tree;
 mod trim_object;
 mod trim_top_contacts;
+
+pub(super) struct GeneratedSupport {
+    pub(super) layers: Vec<Vec<InstalledSupportLayer>>,
+    pub(super) warnings: Vec<crate::PrintWarning>,
+}
+
+pub(super) fn generate(
+    prepared: &super::fill_entities::PreparedPostFillEntities,
+    context: &mut crate::SlicerContext,
+) -> Result<GeneratedSupport, crate::SliceError> {
+    let warnings = necessity::check(prepared)?;
+    let layers = project::generate(prepared, context)?;
+    Ok(GeneratedSupport { layers, warnings })
+}

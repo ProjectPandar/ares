@@ -94,6 +94,7 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
         })
         .collect();
     let mut output = SliceOutput::from_processed(ProcessedGCode {
+        warnings: Vec::new(),
         gcode: Vec::new(),
         result: GCodeProcessorResult {
             moves,

@@ -1,6 +1,8 @@
 # Support-necessity warning — PrintObject source rewrite boundary
 
-Status: SPEC/ARD and public RED before implementation.
+Status: ARD approved. The core-only port is authorized while the public RED
+waits for its success-report writer prerequisite. Public RED and review remain
+required before any behavior-parity claim or slice completion.
 Source: OrcaSlicer345efec64c7b95a05ce5cf96df0dde66a158835c.
 Initial analysis base: mainf4ea41332cdcb7eadf9adbc7f7c1936c0ad7e9c5.
 The RED commit must be based on the separately approved beta CLI warnings

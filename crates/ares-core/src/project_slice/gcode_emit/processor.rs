@@ -260,6 +260,7 @@ pub(super) fn process(
     processor_result.custom_gcode_times = estimate.custom_gcode_times;
     (
         crate::ProcessedGCode {
+            warnings: Vec::new(),
             gcode,
             result: processor_result,
             print_statistics,

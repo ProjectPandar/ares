@@ -2,7 +2,6 @@
 
 use super::{SmartOverhangs, overlaps};
 use crate::{
-    ProcessSupportType,
     geometry::{
         BoundingBox, ClipperError, JoinType, Point, Polygon, difference_ex, intersection_ex,
         offset_expolygon, offset_expolygons,
@@ -16,7 +15,7 @@ impl SmartOverhangs<'_> {
         layer_index: usize,
         elapsed_seconds: impl FnOnce() -> f64,
     ) -> Result<(), ClipperError> {
-        let automatic = matches!(self.object.support_type, ProcessSupportType::TreeAuto);
+        let automatic = self.automatic;
         let enforce_layers = self.object.enforce_support_layers.0 as usize;
         if !automatic && layer_index > enforce_layers {
             return Ok(());

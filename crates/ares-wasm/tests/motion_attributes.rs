@@ -49,6 +49,7 @@ fn motion_view_types_expose_processor_values_and_ranges() {
         ..MoveVertex::default()
     };
     let mut output = SliceOutput::from_processed(ProcessedGCode {
+        warnings: Vec::new(),
         gcode: Vec::new(),
         result: GCodeProcessorResult {
             moves: vec![
