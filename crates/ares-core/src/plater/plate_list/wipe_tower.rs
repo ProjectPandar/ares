@@ -6,6 +6,7 @@
 
 use super::PlateList;
 use crate::arrangement::ArrangePolygon;
+use crate::arrangement::imex_zones::ImexZoneLayout;
 use crate::geometry::{ExPolygon, JoinType, Point, Polygon, offset_paths};
 use crate::options::ProcessBrimType;
 use crate::plater::arrange_job::convex_hull_2d;
@@ -53,13 +54,14 @@ pub(in crate::plater) struct Relocation {
     pub(in crate::plater) overlaps_objects: bool,
 }
 
-/// The tower estimate's inputs: the plates, the model, the full config and the stored tower
-/// positions (`wipe_tower_x`, `wipe_tower_y`).
+/// The tower estimate's inputs: the plates, the model, the full config, the stored tower
+/// positions (`wipe_tower_x`, `wipe_tower_y`) and each plate's IMEX zones.
 pub(in crate::plater) struct Towers<'a> {
     pub(in crate::plater) plates: &'a PlateList,
     pub(in crate::plater) project: &'a Project,
     pub(in crate::plater) config: &'a DynamicPrintConfig,
     pub(in crate::plater) positions: (&'a [f64], &'a [f64]),
+    pub(in crate::plater) zones: &'a [ImexZoneLayout],
 }
 
 impl Towers<'_> {
@@ -72,7 +74,8 @@ impl Towers<'_> {
         use_global_objects: bool,
     ) -> Result<Footprint, SliceError> {
         let (plates, project, config) = (self.plates, self.project, self.config);
-        let mut extruders = plates.plate_extruders(index, project, config)?;
+        let inputs = (project, config, self.zones);
+        let mut extruders = plates.plate_extruders(index, inputs)?;
         let mut id = 1;
         while extruders.len() < plate_extruder_size {
             if !extruders.contains(&id) {
@@ -94,9 +97,7 @@ impl Towers<'_> {
         let global_layer_height = config.option("layer_height").float();
         let (mut max_height, mut layer_height) = (0.0_f64, f64::MAX);
         for (object_index, object) in project.objects().iter().enumerate() {
-            if !use_global_objects
-                && !plates.contains_any_totally(index, object_index, project, config)?
-            {
+            if !use_global_objects && !plates.contains_any_totally(index, object_index, inputs)? {
                 continue;
             }
             max_height =
@@ -136,9 +137,11 @@ impl Towers<'_> {
         for instance in 0..self.project.objects()[object_index].instances().len() {
             let key = (object_index, instance);
             if use_global_objects
-                || self
-                    .plates
-                    .contains_totally(index, key, self.project, self.config)?
+                || self.plates.contains_totally(
+                    index,
+                    key,
+                    (self.project, self.config, self.zones),
+                )?
             {
                 let (min, max) = instance_bounding_box(self.project, key);
                 height = height.max(max[2] - min[2]);

@@ -328,6 +328,7 @@ Every `file:line` is at `345efec64`. A2a ported the arranger kernel (`ImexArrang
   - The tower's IMEX validation (`imex_wipe_tower_hull`).
   - `imex_firmware_managed_zones` and the slicing and viewer consumers (`compute_imex_slice_offset`'s callers).
   - Zone rendering.
+  - `imex_hull_violates_zones`'s upstream unit cases (`test_imex_helpers.cpp:1110-1159`). The function stays crate-private.
 
 ### Oracle and RED
 - **GUI-only.** The CLI arrange never builds an `ImexArranger` (`OrcaSlicer.cpp` has no use), and `ensure_imex_zones` returns without a plater, so Native cannot be the oracle. The kernel side is already pinned by `test_imex_arrange.cpp` (A2a).
@@ -336,3 +337,12 @@ Every `file:line` is at `345efec64`. A2a ported the arranger kernel (`ImexArrang
   2. The plate stays on Primary and the process preset names the mode: the effective mode applies, so the same result.
   3. The outside check's IMEX branch, observed through the tower estimate as in A2b2. A second filament's cube sitting in the mirror zone is outside, so the plate holds only filament 1 and needs no tower.
 - **Expected before GREEN:** cases 1 and 2 arrange the cube across the bed centre (IMEX ignored). Case 3 sizes a tower for two filaments.
+
+### GREEN
+- **The oracle.** Upstream tests neither `prepare_imex_zones` nor `check_outside`'s IMEX branch, and Native never reaches them. The session cases (`plater_arrange/imex.rs`) are the oracle, with expectations derived from the layout (A2c1, pinned by `test_imex_zones.cpp`) and the arranger (A2a, pinned by `test_imex_arrange.cpp`). `imex_hull_violates_zones` has upstream unit cases (`test_imex_helpers.cpp:1110-1159`). The port keeps it crate-private, so those cases are deferred; case 3 reaches it through the session.
+- **Case 3** uses the two-filament cubes (`print-order-as-obj-list/class-default.3mf`), not `orca_cli_ender3.3mf`, since it needs a second filament's object. It compares the tower position after the re-clamp with the same plate whose moved cube prints with filament 1, and asserts that the Primary plate differs.
+- **The zones are computed once per pass.** `PlateList::imex_zones` computes every plate's layout (`calc_imex_zones`). The outside check, `contain_instance_totally` and the tower estimate read them through `OutsideInputs` and `Towers::zones`. An arrange computes them once; `place_new_towers` computes them again, once, because the arrange or "add plate" may have added plates.
+- **No separate effective mode.** `calc_imex_zones` passes the plate's own mode and the process preset's mode, and the layout's own fallback chooses (`IMEXZones.cpp:28-31`). `get_effective_imex_mode` only keys the cache.
+- **Plate mode.** `Project::plate_imex_mode` reads the plate metadata, including the pre-rename `ixex_parallel_mode` attribute (`bbs_3mf.cpp:381-385, 4668-4669`). It is not applied to the slicing config: the slicing consumers are deferred.
+- **`check_outside`.** A sinking instance that is not partly outside now reaches the IMEX branch, as upstream's `outside` flag does (`PartPlate.cpp:4548-4557, 4619-4621`).
+- **Prerequisite fix.** `imex_parallel_mode` is also listed in the combined process group's serializer, which `collect_config_entries` reads.

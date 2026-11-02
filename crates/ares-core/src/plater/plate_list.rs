@@ -3,13 +3,17 @@
 
 use std::collections::BTreeSet;
 
+use crate::Project;
+use crate::arrangement::imex_zones::ImexZoneLayout;
 use crate::project::{compute_colum_count, plate_origin_at};
+use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 
 #[path = "plate_list/arrange.rs"]
 mod arrange;
 mod exclusion_filaments;
 #[path = "plate_list/extruders.rs"]
 mod extruders;
+mod imex;
 mod outside;
 pub(super) use extruders::volume_extruders;
 #[path = "plate_list/tower_default.rs"]
@@ -20,6 +24,10 @@ pub(super) use wipe_tower::{Relocation, Towers};
 
 /// `(object index, instance index)`, the key of `PartPlate::obj_to_instance_set`.
 pub(super) type InstanceKey = (usize, usize);
+
+/// What `check_outside` reads besides the plates: the model, the full config and every plate's
+/// IMEX zones (`PlateList::imex_zones`), computed once per pass.
+pub(super) type OutsideInputs<'a> = (&'a Project, &'a DynamicPrintConfig, &'a [ImexZoneLayout]);
 
 /// A world bounding box `(min, max)`.
 pub(super) type BoundingBox = ([f64; 3], [f64; 3]);

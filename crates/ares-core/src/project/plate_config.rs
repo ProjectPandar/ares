@@ -100,6 +100,20 @@ pub(super) fn own_filament_map(
     (mode, map)
 }
 
+/// The plate's own `imex_parallel_mode` (`bbs_3mf.cpp:4668-4669`, which also takes the attribute's
+/// name from before the IMEX rename, `:381-385`); the last one stored wins.
+pub(super) fn own_imex_mode(metadata: &[Metadata]) -> Option<&str> {
+    metadata
+        .iter()
+        .rfind(|item| {
+            matches!(
+                item.key.as_str(),
+                "imex_parallel_mode" | "ixex_parallel_mode"
+            )
+        })
+        .map(|item| item.value.as_str())
+}
+
 fn parse_map_mode(value: &str) -> Option<ProjectFilamentMapMode> {
     match value.trim() {
         "Auto For Flush" | "Auto" => Some(ProjectFilamentMapMode::AutoForFlush),

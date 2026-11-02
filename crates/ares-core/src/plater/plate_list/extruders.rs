@@ -3,13 +3,12 @@
 //! `ModelVolume::get_extruders` (`Model.cpp:2690-2740`), and `contain_instance_totally` /
 //! `contain_any_instance_totally` (`PartPlate.cpp:4494-4521`) over `check_outside` (`outside.rs`).
 
-use super::{InstanceKey, PlateList};
+use super::{InstanceKey, OutsideInputs, PlateList};
 use crate::gcode_processor::CustomGCodeType;
-use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::{
     expand_mixed_filaments, has_any_mixed_filament,
 };
-use crate::{Project, ProjectObject, ProjectVolume, ProjectVolumeType, SliceError};
+use crate::{ProjectObject, ProjectVolume, ProjectVolumeType, SliceError};
 
 /// `ModelVolume::get_extruders`: the painted filaments, then the volume's own one.
 pub(in crate::plater) fn volume_extruders(
@@ -57,11 +56,9 @@ impl PlateList {
         &self,
         index: usize,
         key: InstanceKey,
-        project: &Project,
-        config: &DynamicPrintConfig,
+        inputs: OutsideInputs<'_>,
     ) -> Result<bool, SliceError> {
-        Ok(self.plates[index].instances.contains(&key)
-            && !self.outside(index, key, (project, config))?)
+        Ok(self.plates[index].instances.contains(&key) && !self.outside(index, key, inputs)?)
     }
 
     /// `contain_any_instance_totally`.
@@ -69,11 +66,10 @@ impl PlateList {
         &self,
         index: usize,
         object: usize,
-        project: &Project,
-        config: &DynamicPrintConfig,
+        inputs: OutsideInputs<'_>,
     ) -> Result<bool, SliceError> {
-        for instance in 0..project.objects()[object].instances().len() {
-            if self.contains_totally(index, (object, instance), project, config)? {
+        for instance in 0..inputs.0.objects()[object].instances().len() {
+            if self.contains_totally(index, (object, instance), inputs)? {
                 return Ok(true);
             }
         }
@@ -85,9 +81,9 @@ impl PlateList {
     pub(in crate::plater) fn plate_extruders(
         &self,
         index: usize,
-        project: &Project,
-        config: &DynamicPrintConfig,
+        inputs: OutsideInputs<'_>,
     ) -> Result<Vec<i32>, SliceError> {
+        let (project, config, _) = inputs;
         let mut extruders = Vec::new();
         if project.objects().is_empty() {
             return Ok(extruders);
@@ -114,7 +110,7 @@ impl PlateList {
         };
         let support = config.option("enable_support").bool() || global("raft_layers") > 0;
         for (object_index, object) in project.objects().iter().enumerate() {
-            if !self.contains_any_totally(index, object_index, project, config)? {
+            if !self.contains_any_totally(index, object_index, inputs)? {
                 continue;
             }
             for volume in object.volumes() {

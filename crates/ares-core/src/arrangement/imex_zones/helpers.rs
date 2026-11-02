@@ -3,7 +3,9 @@
 
 use std::collections::BTreeMap;
 
+use super::BoundingBoxf3;
 use crate::DynamicPrintConfig;
+use crate::geometry::{Polygon, intersection_polygons_paths};
 
 /// `MAXIMUM_EXTRUDER_NUMBER` (`libslic3r.h:70`).
 const MAXIMUM_EXTRUDER_NUMBER: i32 = 64;
@@ -155,4 +157,17 @@ pub(crate) fn find_imex_mode_active_tools(cfg: &DynamicPrintConfig, name: &str) 
         .position(|candidate| candidate == name)
         .and_then(|index| tools.strings().get(index).cloned())
         .unwrap_or_default()
+}
+
+/// `imex_hull_violates_zones` (`IMEXHelpers.cpp:703-712`): whether `hull`, scaled, meets any of
+/// `zones`.
+pub(crate) fn imex_hull_violates_zones(zones: &[BoundingBoxf3], hull: &Polygon) -> bool {
+    if hull.points().is_empty() {
+        return false;
+    }
+    zones.iter().any(|zone| {
+        !intersection_polygons_paths(&[zone.scaled_polygon()], std::slice::from_ref(hull))
+            .expect("IMEX zone intersection")
+            .is_empty()
+    })
 }

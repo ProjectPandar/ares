@@ -1,10 +1,11 @@
 //! The GUI arrange job (`src/slic3r/GUI/Jobs/ArrangeJob.cpp` at v2.5.0-beta `345efec64`) on the
 //! plater session: `prepare`, `check_unprintable`, `process` and `finalize`
 //! (`:342-414, 532-599, 632-965`) over the plate list, running `arrangement::arrange`, with the
-//! prime tower. Locked plates, per-object skirts, the BBL calibration strip and several nozzles'
+//! prime tower and the IDEX/IQEX zones. Locked plates, per-object skirts, the BBL calibration strip and several nozzles'
 //! shared bed are not ported yet; projects needing them are rejected.
 
 mod finalize;
+mod imex;
 mod nozzle_ids;
 mod params;
 mod polygon;
@@ -19,6 +20,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::PlaterSession;
 use super::plate_list::PlateList;
+use crate::arrangement::imex::ImexArranger;
 use crate::arrangement::{
     ArrangeParams, ArrangePolygon, Bed, SCALING_FACTOR, arrange, get_shrink_bedpts,
     update_arrange_params, update_selected_items_axis_align, update_selected_items_inflation,
@@ -163,6 +165,7 @@ impl PlaterSession {
         );
         let config = params::arrange_config(project_settings)?;
         let full = DynamicPrintConfig::new(project_settings)?;
+        let zones = self.plates.imex_zones(&self.project, &full);
         let mut prepared = match current {
             None => self.prepare_all(&full),
             Some(plate) => self.prepare_partplate(plate, &full),
@@ -172,9 +175,11 @@ impl PlaterSession {
             return Err(unsupported("around the first-layer scan region"));
         }
         let mut positions = self.tower_positions();
-        let shown = self.shown_towers(&full, &mut positions)?;
+        let shown = self.shown_towers((&full, &zones), &mut positions)?;
         let mut unselected = match current {
-            None => self.prepare_wipe_tower(&full, (&positions, &shown), &params, &aps)?,
+            None => {
+                self.prepare_wipe_tower((&full, &zones), (&positions, &shown), &params, &aps)?
+            }
             Some(plate) => shown[plate]
                 .iter()
                 .map(|tower| tower.arrange_polygon())
@@ -195,10 +200,23 @@ impl PlaterSession {
         update_selected_items_inflation(&mut items, &config, &mut params);
         update_unselected_items_inflation(&mut unselected, &config, &params);
         update_selected_items_axis_align(&mut items, &config, &params);
-        let bed = Bed::from_points(&get_shrink_bedpts(&config, &params));
+        // Keep the parts on IDEX/IQEX plates in their primary zones (`ArrangeJob.cpp:743-746`).
+        let imex = ImexArranger::new(
+            &imex::prepare_imex_zones(&self.plates, &zones, current, &full),
+            &params,
+            &get_shrink_bedpts(&config, &params),
+        );
+        let bed = Bed::from_points(&imex.bed_shape());
+        imex.add_keep_outs(&mut unselected);
         params.excluded_regions =
             exclusion_items(project_settings, &full, 1, (1.0 / SCALING_FACTOR) as i64);
+        let before = if imex.active() {
+            items.clone()
+        } else {
+            Vec::new()
+        };
         arrange(&mut items, &unselected, &bed, &params);
+        imex.finish(&mut items, &before, &unselected, &params);
         prepared.selected = keys.into_iter().zip(items).collect();
         fixed_gcc_sort_by(&mut prepared.selected, |a, b| a.1.itemid < b.1.itemid);
         let plates_before = self.plates.plates.len();

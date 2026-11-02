@@ -9,6 +9,7 @@ use std::collections::BTreeSet;
 
 use super::{MAX_NUM_PLATES, needs_wipe_tower, prepare};
 use crate::SliceError;
+use crate::arrangement::imex_zones::ImexZoneLayout;
 use crate::arrangement::{ArrangeParams, ArrangePolygon};
 use crate::geometry::{ExPolygon, JoinType, Point, Polygon, offset_paths};
 use crate::options::ProcessPrintSequence;
@@ -118,7 +119,7 @@ impl PlaterSession {
     fn printable_instance_size(
         &self,
         plate: usize,
-        config: &DynamicPrintConfig,
+        (config, zones): (&DynamicPrintConfig, &[ImexZoneLayout]),
     ) -> Result<usize, SliceError> {
         let mut size = 0;
         for &key in &self.plates.plates[plate].instances {
@@ -126,7 +127,7 @@ impl PlaterSession {
             if printable
                 && self
                     .plates
-                    .contains_totally(plate, key, &self.project, config)?
+                    .contains_totally(plate, key, (&self.project, config, zones))?
             {
                 size += 1;
             }
@@ -137,7 +138,7 @@ impl PlaterSession {
     /// The towers `reload_scene` shows, per plate, after it re-clamps each stored position.
     pub(super) fn shown_towers(
         &self,
-        config: &DynamicPrintConfig,
+        (config, zones): (&DynamicPrintConfig, &[ImexZoneLayout]),
         positions: &mut TowerPositions,
     ) -> Result<Vec<Option<ShownTower>>, SliceError> {
         let count = self.plates.plates.len();
@@ -155,7 +156,7 @@ impl PlaterSession {
                 .map_or(global_by_object, |sequence| {
                     sequence == ProcessPrintSequence::ByObject
                 });
-            if by_object && self.printable_instance_size(plate, config)? != 1 {
+            if by_object && self.printable_instance_size(plate, (config, zones))? != 1 {
                 continue;
             }
             if self.plates.plates[plate].instances.is_empty() {
@@ -166,6 +167,7 @@ impl PlaterSession {
                 project: &self.project,
                 config,
                 positions: (&positions.0, &positions.1),
+                zones,
             };
             let footprint = towers.footprint(plate, 0, false)?;
             if footprint.depth <= 0.0 {
@@ -229,7 +231,7 @@ impl PlaterSession {
     /// is needed.
     pub(super) fn prepare_wipe_tower(
         &self,
-        config: &DynamicPrintConfig,
+        (config, zones): (&DynamicPrintConfig, &[ImexZoneLayout]),
         (positions, shown): (&TowerPositions, &[Option<ShownTower>]),
         params: &ArrangeParams,
         selected: &[ArrangePolygon],
@@ -242,13 +244,17 @@ impl PlaterSession {
         let count = self.plates.plates.len();
         let mut extruder_ids = BTreeSet::new();
         for plate in 0..count {
-            extruder_ids.extend(self.plates.plate_extruders(plate, &self.project, config)?);
+            extruder_ids.extend(
+                self.plates
+                    .plate_extruders(plate, (&self.project, config, zones))?,
+            );
         }
         let towers = Towers {
             plates: &self.plates,
             project: &self.project,
             config,
             positions: (&positions.0, &positions.1),
+            zones,
         };
         for bed in 0..MAX_NUM_PLATES as usize {
             let valid = bed.min(count - 1);
@@ -273,6 +279,7 @@ impl PlaterSession {
         positions: &mut TowerPositions,
         first: usize,
     ) -> Result<(), SliceError> {
+        let zones = self.plates.imex_zones(&self.project, config);
         for plate in first..self.plates.plates.len() {
             let count = plate + 1;
             for values in [&mut positions.0, &mut positions.1] {
@@ -284,6 +291,7 @@ impl PlaterSession {
                 project: &self.project,
                 config,
                 positions: (&positions.0, &positions.1),
+                zones: &zones,
             };
             let [x, y] = towers.default_position(plate)?;
             set_at(&mut positions.0, plate, f64::from(x as f32));

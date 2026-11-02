@@ -7,11 +7,13 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::imex::BoundingBoxf;
 use crate::DynamicPrintConfig;
+use crate::geometry::{Point, Polygon};
 use grid::{Cell, Grid, Zones, secondary_cells, zone_roles};
 use helpers::{ImexRole, find_imex_mode_active_tools};
 
 mod grid;
 mod helpers;
+pub(crate) use helpers::imex_hull_violates_zones;
 
 /// `kImexPrimaryMode` (`IMEXHelpers.hpp:27`): the mode with no parallel tools.
 pub const IMEX_PRIMARY_MODE: &str = "primary";
@@ -21,6 +23,21 @@ pub const IMEX_PRIMARY_MODE: &str = "primary";
 pub struct BoundingBoxf3 {
     pub min: [f64; 3],
     pub max: [f64; 3],
+}
+
+impl BoundingBoxf3 {
+    /// `BoundingBox3Base::polygon(true)` (`BoundingBox.cpp:119-134`): the XY rectangle in scaled
+    /// coordinates, truncated.
+    pub(crate) fn scaled_polygon(&self) -> Polygon {
+        let point = |x: f64, y: f64| Point::new((x / 1e-6) as i64, (y / 1e-6) as i64);
+        let (min, max) = (self.min, self.max);
+        Polygon::new(vec![
+            point(min[0], min[1]),
+            point(max[0], min[1]),
+            point(max[0], max[1]),
+            point(min[0], max[1]),
+        ])
+    }
 }
 
 /// `ImexZoneLayout` (`IMEXZones.hpp:25-71`). Every list is empty and `primary_zone_box` unset

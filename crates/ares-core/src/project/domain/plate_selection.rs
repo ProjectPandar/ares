@@ -106,6 +106,16 @@ impl Project {
             })
     }
 
+    /// The own `imex_parallel_mode` of loaded plate `source` (0-based), as `PartPlate::config` holds
+    /// it (`plate_config::own_imex_mode`).
+    pub(crate) fn plate_imex_mode(&self, source: usize) -> Option<&str> {
+        self.documents
+            .model_settings
+            .plates
+            .get(source)
+            .and_then(|plate| super::super::plate_config::own_imex_mode(&plate.metadata))
+    }
+
     /// The lowest plate id; on a selected view, the selected plate's id.
     pub(crate) fn first_plate_id(&self) -> u32 {
         self.plates

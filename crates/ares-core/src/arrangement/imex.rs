@@ -7,6 +7,8 @@ use super::{
 };
 use crate::geometry::intersection_polygons_paths;
 
+mod input;
+
 /// The arranger's names for the keep-outs (`IMEXArrange.cpp:27-31`). `finish` leaves the fences
 /// out when it arranges a plate inside its zone, where the zone itself is the bed shape.
 const FENCE_NAME: &str = "IMEXOutsidePrimaryZone";

@@ -1,9 +1,10 @@
-//! `PartPlate::check_outside` (`PartPlate.cpp:4524-4625` at v2.5.0-beta `345efec64`) without its
-//! IMEX branch: the plate box test, the sinking volume test, and the bed exclusions, through the
-//! config regions the GUI reads (`:4562-4601`) or else the legacy area boxes (`:4603-4612`). See
-//! `docs/architecture/web-plater-arrange-imex.md`, "A2b2".
+//! `PartPlate::check_outside` (`PartPlate.cpp:4524-4625` at v2.5.0-beta `345efec64`): the plate box
+//! test, the sinking volume test, the bed exclusions, through the config regions the GUI reads
+//! (`:4562-4601`) or else the legacy area boxes (`:4603-4612`), and the IMEX zones
+//! (`:4615-4621`). See `docs/architecture/web-plater-arrange-imex.md`, "A2b2" and "A2c2".
 
-use super::{InstanceKey, PlateList};
+use super::{InstanceKey, OutsideInputs, PlateList};
+use crate::arrangement::imex_zones::imex_hull_violates_zones;
 use crate::bed_exclusion::intersection::{part_intersects, triangulated_prism_footprints, z_slab};
 use crate::bed_exclusion::{
     BedExcludeRegion, active_bed_exclude_volume_mode, get_bed_excluded_regions_by_extruder,
@@ -97,10 +98,39 @@ impl PlateList {
         &self,
         index: usize,
         key: InstanceKey,
+        (project, config, zones): OutsideInputs<'_>,
+    ) -> Result<bool, SliceError> {
+        let mut hull = None::<Polygon>;
+        let mut instance_hull = || {
+            hull.get_or_insert_with(|| {
+                let object = &project.objects()[key.0];
+                convex_hull_2d(object, object.instances()[key.1].transform())
+            })
+            .clone()
+        };
+        let origin = self.plates[index].origin;
+        if self.outside_plate_or_exclusions(origin, key, (project, config), &mut instance_hull)? {
+            return Ok(true);
+        }
+        // `imex_hull_violates` (`:1174-1178`) on the plate's secondary zones and collision strips.
+        let zones = &zones[index];
+        if zones.secondary_zone_boxes.is_empty() && zones.collision_zones.is_empty() {
+            return Ok(false);
+        }
+        let hull = instance_hull();
+        Ok(imex_hull_violates_zones(&zones.secondary_zone_boxes, &hull)
+            || imex_hull_violates_zones(&zones.collision_zones, &hull))
+    }
+
+    /// `check_outside` up to its IMEX branch.
+    fn outside_plate_or_exclusions(
+        &self,
+        origin: [f64; 2],
+        key: InstanceKey,
         (project, config): (&Project, &DynamicPrintConfig),
+        instance_hull: &mut impl FnMut() -> Polygon,
     ) -> Result<bool, SliceError> {
         let instance = instance_bounding_box(project, key);
-        let origin = self.plates[index].origin;
         let (mut min, max) = self.plate_box(origin);
         if instance.1[2] > min[2] {
             min[2] += instance.0[2];
@@ -120,14 +150,6 @@ impl PlateList {
         if !(0..3).all(|axis| min[axis] <= instance.0[axis] && instance.1[axis] <= max[axis]) {
             return Ok(true);
         }
-        let mut hull = None::<Polygon>;
-        let mut instance_hull = || {
-            hull.get_or_insert_with(|| {
-                let object = &project.objects()[key.0];
-                convex_hull_2d(object, object.instances()[key.1].transform())
-            })
-            .clone()
-        };
         let regions_by_extruder = get_bed_excluded_regions_by_extruder(config);
         let mode = active_bed_exclude_volume_mode(config);
         let offset = scaled_point(origin[0], origin[1]);
