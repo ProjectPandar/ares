@@ -68,6 +68,8 @@ The application wrapper authority is `src/libslic3r/ClipperUtils.cpp/.hpp` and
 | `Algorithm/RegionExpansion.cpp::wavefront_initial/wavefront_step/wavefront_clip`, `Support/SupportCommon.cpp::shrink_expolygon_with_contour_idx` | `geometry/region_expansion/propagate.rs`, `clipper/z_clip.rs` | Replace mutable Clipper1 offset options and orientation repairs with the matching beta overloads; preserve callers' higher-level traversal/recovery logic. |
 | `Fill/FillBase.cpp:2947–3004::multiline_fill` | `fill/multiline_offset.rs` | Replace the separate round/Clipper2Truncate emulation with the sole wrapper's float delta, miter joins and round cap tolerance; offset-list/spacing logic stays at the caller. |
 
+The unwitnessed, unfixed NaN miter-limit edge is `std::max(NaN, 2.0)` retaining NaN at `ClipperUtils.cpp:425` versus `f64::max` selecting `2.0` at `clipper/offset.rs:104`.
+
 Unused seed exception/decimal-scaling conveniences, unused rectangle/point
 queries, seed-only output builders, and unused PolyTree parent-query APIs are
 excluded rather than warning-suppressed. Integer engine ownership records and
