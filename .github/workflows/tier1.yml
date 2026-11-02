@@ -108,6 +108,15 @@ jobs:
         with:
           key: native-oracle-closure-${{ github.run_id }}-${{ matrix.variant }}
           path: ${{ runner.temp }}/native-oracle-caches/${{ matrix.variant }}
+      - name: Record actual Native publish receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NATIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 scripts/ci/native-oracle-cache-receipt.py \
+            --repo "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID" \
+            --head-sha "$NATIVE_HEAD_SHA" --ref "$GITHUB_REF" \
+            --variant "${{ matrix.variant }}" --wait-seconds 60
 
   native-cache-capacity:
     name: Native cache capacity
@@ -121,7 +130,7 @@ jobs:
       NATIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
-      - name: Verify actual single and paired automatic cache footprint
+      - name: Verify actual paired Native and whole-repository footprint
         run: |
           python3 scripts/ci/native-oracle-cache-budget.py \
             --repo "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID" \

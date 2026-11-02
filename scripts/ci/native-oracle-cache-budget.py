@@ -10,41 +10,12 @@ import re
 import sys
 import time
 import urllib.error
-import urllib.parse
-import urllib.request
 
-LIMIT = 10_000_000_000
+from native_oracle_actions import (
+    POOL_LIMITS, api, pages, repository_capacity, run_ref,
+)
 
-
-def api(repo, resource, parameters=None):
-    query = '?' + urllib.parse.urlencode(parameters) if parameters else ''
-    request = urllib.request.Request('https://api.github.com/repos/' + repo + resource + query, headers={
-        'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28',
-        'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
-    })
-    with urllib.request.urlopen(request, timeout=60) as response:
-        return json.load(response)
-
-
-def pages(repo, resource, field, parameters=None):
-    result = []
-    page = 1
-    while True:
-        data = api(repo, resource, (parameters or {}) | {'per_page':100, 'page':page})
-        result.extend(data[field])
-        if len(result) >= data['total_count']:
-            return result
-        if not data[field]:
-            raise ValueError('incomplete Actions metadata pagination')
-        page += 1
-
-
-def run_ref(run):
-    if run['event'] == 'push':
-        return 'refs/heads/' + run['head_branch']
-    if run['event'] == 'pull_request' and len(run['pull_requests']) == 1:
-        return f"refs/pull/{run['pull_requests'][0]['number']}/merge"
-    raise ValueError('run is not an unambiguous automatic push/pull_request run')
+LIMIT = POOL_LIMITS['native']
 
 
 def measure(repo, run, expected_head, expected_ref, variants):
@@ -78,7 +49,7 @@ def measure(repo, run, expected_head, expected_ref, variants):
     blockers.extend(f'missing/evicted exact-run key: {variant}' for variant in missing)
     size = None if blockers else sum(entry['size_in_bytes'] for entry in entries)
     if size is not None and size >= LIMIT:
-        blockers.append('single automatic run reaches/exceeds decimal 10GB')
+        blockers.append('single automatic Native run reaches/exceeds 5GB pool')
     return {
         'run_id':run['id'], 'attempt':run['run_attempt'], 'event':run['event'],
         'head_sha':run['head_sha'], 'ref':expected_ref, 'entries':entries,
@@ -131,8 +102,17 @@ def summary(report):
                   '|Variant|Cache ID|Actual bytes|Ref|', '|---|---:|---:|---|']
         lines += [f"|{entry['variant']}|{entry['id']}|{entry['size_in_bytes']}|{entry['ref']}|"
                   for entry in run['entries']]
-    lines += ['', f"Two-run verified bytes: {report.get('verified_size_in_bytes')}",
-              'Repository usage is context only; GitHub refreshes it approximately every five minutes.',
+    lines += ['', f"Two-run verified bytes: {report.get('verified_size_in_bytes')}"]
+    repository = report.get('repository', {})
+    lines += ['', '### Whole repository service-byte reconciliation',
+              'Working envelope: 8GB; reserved margin: 2GB. Unknown/missing/stale data BLOCKS.',
+              '|Family|Entries|Actual bytes|', '|---|---:|---:|']
+    lines += [f"|{name}|{group['count']}|{group['size_in_bytes']}|"
+              for name, group in repository.get('families', {}).items()]
+    lines += ['', '|Key|Cache ID|Actual bytes|Ref|Source run|', '|---|---:|---:|---|---|']
+    lines += [f"|{row['key']}|{row['id']}|{row['size_in_bytes']}|{row['ref']}|{row['source_run_id'] or 'UNKNOWN: ref/time only'}|"
+              for row in repository.get('entries', [])]
+    lines += ['', 'Usage endpoint may lag about five minutes; mismatched usage/list blocks.',
               '```json', json.dumps(report.get('repository_usage')), '```']
     lines += [f'- BLOCK: {reason}' for reason in report.get('blockers', [])]
     return '\n'.join(lines) + '\n'
@@ -149,8 +129,9 @@ def main():
     parser.add_argument('--wait-seconds', type=int, default=0)
     parser.add_argument('--report', type=Path)
     args = parser.parse_args()
-    report = {'schema':'native-actions-cache-capacity-v1', 'status':'BLOCK',
+    report = {'schema':'native-actions-cache-capacity-v2', 'status':'BLOCK',
               'verified_size_in_bytes':None, 'missing_variants':[], 'runs':[], 'blockers':[]}
+    protected_runs = {args.run_id}
     try:
         variants = json.loads(args.variants)
         if not re.fullmatch(r'[\w.-]+/[\w.-]+', args.repo):
@@ -164,17 +145,24 @@ def main():
             raise ValueError('current run source/ref identity mismatch')
         runs = paired(args.repo, current, args.head_sha, variants, args.wait_seconds) if args.pair else [
             measure(args.repo, current, args.head_sha, args.ref, variants)]
+        protected_runs.update(run['run_id'] for run in runs)
         report['runs'] = runs
         report['missing_variants'] = sorted({variant for run in runs for variant in run['missing_variants']})
         report['blockers'] = [f"run {run['run_id']}: {reason}" for run in runs for reason in run['blockers']]
         if not report['blockers']:
             report['verified_size_in_bytes'] = sum(run['verified_size_in_bytes'] for run in runs)
             if report['verified_size_in_bytes'] >= LIMIT:
-                report['blockers'].append('combined automatic Native footprint reaches/exceeds decimal 10GB')
-        report['repository_usage'] = api(args.repo, '/actions/cache/usage')
+                report['blockers'].append('combined automatic Native footprint reaches/exceeds 5GB pool')
         report['status'] = 'BLOCK' if report['blockers'] else 'PASS'
     except (OSError, ValueError, KeyError, TypeError, urllib.error.URLError) as error:
         report['blockers'].append(str(error))
+    try:
+        report['repository'] = repository_capacity(args.repo, protected_runs)
+        report['repository_usage'] = report['repository']['usage']
+        report['blockers'].extend(report['repository']['blockers'])
+    except (OSError, ValueError, KeyError, TypeError, urllib.error.URLError) as error:
+        report['blockers'].append('repository reconciliation unavailable: ' + str(error))
+    report['status'] = 'BLOCK' if report['blockers'] else 'PASS'
     report['observed_at_utc'] = datetime.now(timezone.utc).isoformat()
     report['limit_in_bytes'] = LIMIT
     report['scope'] = 'both automatic runs' if args.pair else 'one explicit run only'
