@@ -13,10 +13,10 @@ macro_rules! typed_vector {
 // Config.hpp:837/1015/1344/1878: numeric/bool vectors own is_nil,
 // unlike string, point and enum vectors. Newtype markers preserve JSON arrays.
 macro_rules! numeric_vector {
-    ($name:ident, $item:ty, $marker:ident) => {
+    ($name:ident, $item:ty, $marker:ident $(, $deserialize:literal)?) => {
         #[derive(Clone, Debug, Default, PartialEq, Deserialize)]
         #[serde(transparent)]
-        pub struct $name(pub Vec<$item>);
+        pub struct $name($(#[serde(deserialize_with = $deserialize)])? pub Vec<$item>);
 
         impl Serialize for $name {
             fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -30,12 +30,14 @@ numeric_vector!(OrcaBools, OrcaBool, CONFIG_OPTION_NUMERIC_VECTOR);
 numeric_vector!(
     OrcaBoolsNullable,
     Nullable<OrcaBool>,
-    CONFIG_OPTION_NULLABLE_VECTOR
+    CONFIG_OPTION_NULLABLE_VECTOR,
+    "super::nullable_vector::bools"
 );
 numeric_vector!(
     OrcaFloatsNullable,
     Nullable<OrcaFloat>,
-    CONFIG_OPTION_NULLABLE_VECTOR
+    CONFIG_OPTION_NULLABLE_VECTOR,
+    "super::nullable_vector::floats"
 );
 
 impl OrcaFloatsNullable {

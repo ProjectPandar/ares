@@ -1,3 +1,4 @@
+mod nullable_vector;
 mod opaque;
 mod point;
 mod scalar;
