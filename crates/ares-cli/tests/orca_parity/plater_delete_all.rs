@@ -13,7 +13,7 @@ use ares_core::SliceError;
 use super::{STRIDE, TWO_PLATES, export, load};
 use crate::runner::{OrcaRunner, stages};
 
-const MESSAGE: &str = "The supplied file couldn't be read because it's empty";
+const MESSAGE: &str = "The supplied file couldn't be read because it's empty.";
 
 #[test]
 fn plater_delete_all_empties_the_plates_and_fails_to_slice_like_native() {

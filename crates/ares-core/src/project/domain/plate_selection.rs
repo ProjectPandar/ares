@@ -41,12 +41,12 @@ impl Project {
         }
         objects.retain(|object| !object.instances.is_empty());
         if objects.is_empty() {
-            // Model.cpp:354-355 rejects an empty selected importer model.
+            // Model.cpp:500-501 (`read_from_file`) rejects an empty selected importer model.
             // The CLI adapter maps this to `CLI_NO_SUITABLE_OBJECTS`
             // (-50, Utils.hpp:61) with an empty stderr channel — the
             // payload only feeds the legacy `Error:` detail.
             return Err(SliceError::NoSuitableObjects(
-                "The supplied file couldn't be read because it's empty".to_owned(),
+                "The supplied file couldn't be read because it's empty.".to_owned(),
             ));
         }
         let mut documents = self.documents.clone_shallow();

@@ -1,4 +1,4 @@
-//! Selected 3MF importer projection -> Model.cpp:354-355 read exception.
+//! Selected 3MF importer projection -> Model.cpp:500-501 read exception.
 use std::fs;
 
 use ares_core::{ConfigOverrides, GenerationMetadata, SliceError, SlicerContext};
@@ -7,7 +7,7 @@ use sha2::{Digest, Sha256};
 
 use crate::runner::{OrcaRunner, stages};
 
-const MESSAGE: &str = "The supplied file couldn't be read because it's empty";
+const MESSAGE: &str = "The supplied file couldn't be read because it's empty.";
 const INPUT: &[u8] =
     include_bytes!("../../../../tests/parity/validation/print-bed-two-plates-min.3mf");
 const ORIGINAL: &[u8] =
@@ -134,7 +134,7 @@ fn verify(label: &str, input: &[u8], entry: Entry) {
     let matched = matches!(&actual, Err(SliceError::NoSuitableObjects(text)) if text == MESSAGE);
     fs::write(directory.join("result.json"), serde_json::to_vec_pretty(&json!({
         "label": label, "input_sha256": hash,
-        "source": "bbs_3mf.cpp:2059-2080,2351-2363; Model.cpp:354-355; OrcaSlicer.cpp:1874-1877",
+        "source": "bbs_3mf.cpp:2059-2080,2351-2363; Model.cpp:500-501; OrcaSlicer.cpp:1874-1877",
         "status": if matched { "PASS" } else { "DIVERGENT_MODEL_READ_ERROR" },
         "native": native, "native_stderr": String::from_utf8_lossy(&captured.stderr),
         "native_command_evidence": error.evidence, "expected_model_message": MESSAGE,

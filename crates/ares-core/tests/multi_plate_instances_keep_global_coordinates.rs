@@ -30,10 +30,10 @@ async fn empty_plate_one_uses_model_read_error() {
     )
     .await
     .unwrap_err();
-    // Selected importer projection is empty: Model.cpp:354-355 read error,
+    // Selected importer projection is empty: Model.cpp:500-501 read error,
     // not the later print-volume rejection. CLI exit parity remains deferred.
     assert_eq!(
         error.to_string(),
-        "The supplied file couldn't be read because it's empty"
+        "The supplied file couldn't be read because it's empty."
     );
 }
