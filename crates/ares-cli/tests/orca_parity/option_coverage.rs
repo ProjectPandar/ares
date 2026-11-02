@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "classic_narrow_island_guard.rs"]
+mod classic_narrow_island_guard;
+
 #[path = "classic_thin_hole_reach.rs"]
 mod classic_thin_hole_reach;
 
