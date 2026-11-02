@@ -24,6 +24,8 @@ mod current_plate;
 mod imex;
 #[path = "plater_arrange/plate_lock.rs"]
 mod plate_lock;
+#[path = "plater_arrange/shared_bed.rs"]
+mod shared_bed;
 #[path = "plater_arrange/wipe_tower.rs"]
 mod wipe_tower;
 use arranged::Arranged;
