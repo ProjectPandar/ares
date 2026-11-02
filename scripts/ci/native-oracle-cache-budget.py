@@ -12,17 +12,17 @@ import time
 import urllib.error
 
 from native_oracle_actions import (
-    POOL_LIMITS, api, pages, repository_capacity, run_ref,
+    ActionsMetadata, POOL_LIMITS, repository_capacity, run_ref,
 )
 
 LIMIT = POOL_LIMITS['native']
 
 
-def measure(repo, run, expected_head, expected_ref, variants):
+def measure(metadata, run, expected_head, expected_ref, variants):
     if run['head_sha'] != expected_head or run_ref(run) != expected_ref:
         raise ValueError('run source/ref identity mismatch')
     prefix = f"native-oracle-closure-{run['id']}-"
-    caches = pages(repo, '/actions/caches', 'actions_caches', {'key':prefix})
+    caches = metadata.pages('/actions/caches', 'actions_caches', {'key':prefix})
     expected = {prefix + variant:variant for variant in variants}
     entries = []
     missing = []
@@ -58,8 +58,8 @@ def measure(repo, run, expected_head, expected_ref, variants):
     }
 
 
-def producers_ready(repo, run, variants):
-    jobs = pages(repo, f"/actions/runs/{run['id']}/attempts/{run['run_attempt']}/jobs", 'jobs')
+def producers_ready(metadata, run, variants):
+    jobs = metadata.pages(f"/actions/runs/{run['id']}/attempts/{run['run_attempt']}/jobs", 'jobs')
     producers = [job for job in jobs if job['name'].startswith('oracle-')]
     names = [job['name'].removeprefix('oracle-') for job in producers]
     if set(names) - set(variants) or any(count > 1 for count in Counter(names).values()):
@@ -73,10 +73,10 @@ def producers_ready(repo, run, variants):
     return all(job['status'] == 'completed' and job['conclusion'] == 'success' for job in producers)
 
 
-def paired(repo, current, head, variants, wait_seconds):
+def paired(metadata, current, head, variants, wait_seconds):
     deadline = time.monotonic() + wait_seconds
     while True:
-        runs = pages(repo, f"/actions/workflows/{current['workflow_id']}/runs", 'workflow_runs', {'head_sha':head})
+        runs = metadata.pages(f"/actions/workflows/{current['workflow_id']}/runs", 'workflow_runs', {'head_sha':head})
         automatic = [run for run in runs if run['event'] in ('push', 'pull_request')]
         counts = Counter(run['event'] for run in automatic)
         if any(count > 1 for count in counts.values()):
@@ -84,9 +84,9 @@ def paired(repo, current, head, variants, wait_seconds):
         ready = counts == {'push':1, 'pull_request':1} and any(run['id'] == current['id'] for run in automatic)
         if ready:
             for run in automatic:
-                ready = producers_ready(repo, run, variants) and ready
+                ready = producers_ready(metadata, run, variants) and ready
         if ready:
-            return [measure(repo, run, head, run_ref(run), variants) for run in sorted(automatic, key=lambda item:item['id'])]
+            return [measure(metadata, run, head, run_ref(run), variants) for run in sorted(automatic, key=lambda item:item['id'])]
         if time.monotonic() >= deadline:
             raise ValueError('both automatic runs and their complete producer inventories are not ready')
         print('Waiting for both automatic producer matrices (read-only metadata).', file=sys.stderr, flush=True)
@@ -95,7 +95,8 @@ def paired(repo, current, head, variants, wait_seconds):
 
 def summary(report):
     lines = ['## Actual Native Actions cache capacity', '', f"Status: **{report['status']}**",
-             f'Decimal limit (strict): {LIMIT} bytes', '']
+             f'Decimal limit (strict): {LIMIT} bytes',
+             f"Metadata: {report.get('metadata_source')}; saved evidence is not live CI proof.", '']
     for run in report.get('runs', []):
         lines += [f"### {run['event']} run {run['run_id']} / attempt {run['attempt']}",
                   f"Verified archive bytes: {run['verified_size_in_bytes']}", '',
@@ -128,7 +129,10 @@ def main():
     parser.add_argument('--pair', action='store_true', help='require both automatic push + PR footprints')
     parser.add_argument('--wait-seconds', type=int, default=0)
     parser.add_argument('--report', type=Path)
+    parser.add_argument('--inventory-response', type=Path,
+                        help='explicit saved real REST responses for analysis, never network fallback')
     args = parser.parse_args()
+    metadata = ActionsMetadata(args.repo, args.inventory_response)
     report = {'schema':'native-actions-cache-capacity-v2', 'status':'BLOCK',
               'verified_size_in_bytes':None, 'missing_variants':[], 'runs':[], 'blockers':[]}
     protected_runs = {args.run_id}
@@ -140,11 +144,11 @@ def main():
             raise ValueError('empty/duplicate retained producer inventory')
         if any(not isinstance(value, str) or not re.fullmatch(r'[a-z0-9-]+', value) for value in variants):
             raise ValueError('invalid producer variant')
-        current = api(args.repo, f'/actions/runs/{args.run_id}')
+        current = metadata.get(f'/actions/runs/{args.run_id}')
         if current['head_sha'] != args.head_sha or run_ref(current) != args.ref:
             raise ValueError('current run source/ref identity mismatch')
-        runs = paired(args.repo, current, args.head_sha, variants, args.wait_seconds) if args.pair else [
-            measure(args.repo, current, args.head_sha, args.ref, variants)]
+        runs = paired(metadata, current, args.head_sha, variants, args.wait_seconds) if args.pair else [
+            measure(metadata, current, args.head_sha, args.ref, variants)]
         protected_runs.update(run['run_id'] for run in runs)
         report['runs'] = runs
         report['missing_variants'] = sorted({variant for run in runs for variant in run['missing_variants']})
@@ -157,12 +161,14 @@ def main():
     except (OSError, ValueError, KeyError, TypeError, urllib.error.URLError) as error:
         report['blockers'].append(str(error))
     try:
-        report['repository'] = repository_capacity(args.repo, protected_runs)
+        report['repository'] = repository_capacity(metadata, protected_runs)
         report['repository_usage'] = report['repository']['usage']
         report['blockers'].extend(report['repository']['blockers'])
     except (OSError, ValueError, KeyError, TypeError, urllib.error.URLError) as error:
         report['blockers'].append('repository reconciliation unavailable: ' + str(error))
     report['status'] = 'BLOCK' if report['blockers'] else 'PASS'
+    report['metadata_source'] = 'saved real responses (analysis only)' if args.inventory_response else 'live service'
+    report['evidence_captured_at_utc'] = metadata.captured_at_utc
     report['observed_at_utc'] = datetime.now(timezone.utc).isoformat()
     report['limit_in_bytes'] = LIMIT
     report['scope'] = 'both automatic runs' if args.pair else 'one explicit run only'

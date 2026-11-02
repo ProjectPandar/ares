@@ -8,7 +8,7 @@ import re
 import time
 import urllib.error
 
-from native_oracle_actions import api, pages, run_ref
+from native_oracle_actions import ActionsMetadata, run_ref
 
 
 def main():
@@ -26,13 +26,14 @@ def main():
     try:
         if not re.fullmatch(r'[\w.-]+/[\w.-]+', args.repo) or not re.fullmatch(r'[a-z0-9-]+', args.variant):
             raise ValueError('invalid repository/variant')
-        run = api(args.repo, f'/actions/runs/{args.run_id}')
+        metadata = ActionsMetadata(args.repo)
+        run = metadata.get(f'/actions/runs/{args.run_id}')
         if run['head_sha'] != args.head_sha or run_ref(run) != args.ref:
             raise ValueError('publish source/ref mismatch')
         key = f'native-oracle-closure-{args.run_id}-{args.variant}'
         deadline = time.monotonic() + args.wait_seconds
         while True:
-            entries = [row for row in pages(args.repo, '/actions/caches', 'actions_caches', {'key':key})
+            entries = [row for row in metadata.pages('/actions/caches', 'actions_caches', {'key':key})
                        if row['key'] == key]
             if entries or time.monotonic() >= deadline:
                 break

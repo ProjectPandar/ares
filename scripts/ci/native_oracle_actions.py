@@ -10,27 +10,47 @@ WORKING_LIMIT = 8_000_000_000
 POOL_LIMITS = {'native':5_000_000_000, 'hestia':1_500_000_000, 'other':1_500_000_000}
 
 
-def api(repo, resource, parameters=None):
-    query = '?' + urllib.parse.urlencode(parameters) if parameters else ''
-    request = urllib.request.Request('https://api.github.com/repos/' + repo + resource + query, headers={
-        'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28',
-        'Authorization':'Bearer ' + os.environ['GH_TOKEN'],
-    })
-    with urllib.request.urlopen(request, timeout=60) as response:
-        return json.load(response)
+class ActionsMetadata:
+    """Live REST access or explicitly selected saved responses, never fallback."""
 
+    def __init__(self, repo, inventory_response=None):
+        self.repo = repo
+        self.inventory_response = inventory_response
+        self.responses = None
+        self.captured_at_utc = None
 
-def pages(repo, resource, field, parameters=None):
-    result = []
-    page = 1
-    while True:
-        data = api(repo, resource, (parameters or {}) | {'per_page':100, 'page':page})
-        result.extend(data[field])
-        if len(result) == data['total_count']:
-            return result
-        if len(result) > data['total_count'] or not data[field]:
-            raise ValueError('incomplete/concurrently changed Actions metadata pagination')
-        page += 1
+    def get(self, resource, parameters=None):
+        if self.inventory_response is not None:
+            if self.responses is None:
+                document = json.loads(self.inventory_response.read_text())
+                if document['schema'] != 'native-actions-metadata-responses-v1' or document['repo'] != self.repo:
+                    raise ValueError('saved response schema/repository mismatch')
+                self.responses = document['responses']
+                self.captured_at_utc = document['captured_at_utc']
+            matches = [entry['response'] for entry in self.responses
+                       if entry['resource'] == resource and entry['parameters'] == (parameters or {})]
+            if len(matches) != 1:
+                raise ValueError('missing/duplicate saved public REST response: ' + resource)
+            return matches[0]
+        query = '?' + urllib.parse.urlencode(parameters) if parameters else ''
+        request = urllib.request.Request('https://api.github.com/repos/' + self.repo + resource + query, headers={
+            'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28',
+            'Authorization':'Bearer ' + os.environ['GH_TOKEN'],
+        })
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return json.load(response)
+
+    def pages(self, resource, field, parameters=None):
+        result = []
+        page = 1
+        while True:
+            data = self.get(resource, (parameters or {}) | {'per_page':100, 'page':page})
+            result.extend(data[field])
+            if len(result) == data['total_count']:
+                return result
+            if len(result) > data['total_count'] or not data[field]:
+                raise ValueError('incomplete/concurrently changed Actions metadata pagination')
+            page += 1
 
 
 def run_ref(run):
@@ -57,9 +77,9 @@ def family(key):
     return 'unknown', None
 
 
-def repository_capacity(repo, protected_runs):
-    caches = pages(repo, '/actions/caches', 'actions_caches')
-    usage = api(repo, '/actions/cache/usage')
+def repository_capacity(metadata, protected_runs):
+    caches = metadata.pages('/actions/caches', 'actions_caches')
+    usage = metadata.get('/actions/cache/usage')
     totals = dict.fromkeys(POOL_LIMITS, 0)
     families = {}
     entries = []

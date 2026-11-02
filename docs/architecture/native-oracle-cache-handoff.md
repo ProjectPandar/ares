@@ -103,6 +103,21 @@ another artifact or cache. Inner XZ/NAR sizes are diagnostic, not authority.
 The current real repository remains over budget with evicted suppliers. A
 successful implementation check of its BLOCK behavior does not unblock PR4.
 
+## Explicit saved-response analysis
+
+For local regression checks without credentials, the capacity CLI accepts
+`--inventory-response <path>`. The file is an explicitly selected primary input,
+not a network-error fallback. Its `native-actions-metadata-responses-v1` envelope
+contains repository, capture time and unmodified real public REST responses
+with exact resource/parameter records. Missing, duplicate or mismatched records
+BLOCK without a network request. The report/log/summary identifies this as
+**saved evidence analysis, not current live CI proof**.
+
+Without that explicit option, CI still requests the real service using its
+existing token; authentication/network failures BLOCK. CI does not pass saved
+responses. No token needs to be read, injected or printed for local analysis,
+and no private API mock, monkeypatch or copied gate algorithm is used.
+
 ## References
 
 - [Nix store export](https://nix.dev/manual/nix/latest/command-ref/nix-store/export)
