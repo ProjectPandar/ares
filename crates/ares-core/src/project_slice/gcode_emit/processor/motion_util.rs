@@ -3,6 +3,12 @@
 /// Parse a complete argument word like `GCodeReader.cpp:29-84`.
 /// A leading `+` carries no value: `fast_float::from_chars` rejects it.
 pub(super) fn word(code: &str, letter: char) -> Option<f64> {
+    precise_word(code, letter).map(|value| f64::from(value as f32))
+}
+
+/// `GCodeReader::precise_value`, selected by Klipper linear `process_G1`
+/// (`GCodeProcessor.cpp:5195-5202`), retains the parsed decimal double.
+pub(super) fn precise_word(code: &str, letter: char) -> Option<f64> {
     let code = code.split([';', '\r', '\n', '\0']).next()?;
     let mut result = None;
     for token in code
@@ -19,7 +25,7 @@ pub(super) fn word(code: &str, letter: char) -> Option<f64> {
         // A numeric prefix followed by another axis is not a word:
         // discard the whole token, then continue at the next word.
         if let Ok(value) = value.parse::<f64>() {
-            result = Some(f64::from(value as f32));
+            result = Some(value);
         }
     }
     result

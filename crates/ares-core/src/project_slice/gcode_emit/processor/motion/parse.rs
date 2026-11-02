@@ -1,6 +1,9 @@
-//! `GCodeProcessor` argument admission and linear/arc motion.
+//! `GCodeProcessor::process_G1` argument admission and linear/arc motion.
 use super::{MotionBlock, MotionKind, MotionState, arc, firmware, homing};
-use crate::project_slice::gcode_emit::processor::motion_util::{MMMIN_TO_MMSEC, norm, word};
+use crate::GCodeFlavor;
+use crate::project_slice::gcode_emit::processor::motion_util::{
+    MMMIN_TO_MMSEC, norm, precise_word, word,
+};
 use std::f64::consts::PI;
 
 impl MotionState {
@@ -51,33 +54,41 @@ impl MotionState {
         if !matches!(command, "G0" | "G1" | "G2" | "G3") {
             return None;
         }
-        if let Some(value) = word(code, 'F') {
-            self.feedrate = f64::from(value as f32 * MMMIN_TO_MMSEC);
+        let precise = self.gcode_flavor == GCodeFlavor::Klipper && matches!(command, "G0" | "G1");
+        let read = |letter| {
+            if precise {
+                precise_word(code, letter)
+            } else {
+                word(code, letter)
+            }
+        };
+        if let Some(value) = read('F') {
+            self.feedrate = if precise {
+                f64::from((value * f64::from(MMMIN_TO_MMSEC)) as f32)
+            } else {
+                f64::from(value as f32 * MMMIN_TO_MMSEC)
+            };
         }
         let old = self.position;
         let mut next = old;
         for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
-            let Some(value) = word(code, letter) else {
+            let Some(value) = read(letter) else {
                 continue;
             };
-            // `GCodeReader::GCodeLine::x() const { return m_axis[X]; }`
-            // returns FLOAT (`GCodeReader.hpp:70`): every axis word is
-            // f32-quantized before the position/delta math — the text
-            // 152.193 becomes 152.1929931640625, and the whole estimator
-            // chain (distances, axis feedrates, cruises) follows.
-            let value = f64::from(value as f32) * f64::from(self.units);
+            // Klipper linear G1 retains precise_value (cpp:5195-5202).
+            // Other paths keep the GCodeReader float-word quantization.
+            let value = value * f64::from(self.units);
             next[axis] = match self.relative {
                 true => old[axis] + value,
                 false => self.origin[axis] + value,
             };
         }
         let old_e = self.e_position;
-        let next_e =
-            match word(code, 'E').map(|value| f64::from(value as f32) * f64::from(self.units)) {
-                Some(value) if self.relative || self.e_relative => old_e + value,
-                Some(value) => self.origin[3] + value,
-                None => old_e,
-            };
+        let next_e = match read('E').map(|value| value * f64::from(self.units)) {
+            Some(value) if self.relative || self.e_relative => old_e + value,
+            Some(value) => self.origin[3] + value,
+            None => old_e,
+        };
         let e_delta = next_e - old_e;
         self.e_position = next_e;
         self.position = next;
