@@ -18,6 +18,8 @@ mod arrange_all;
 mod arranged;
 #[path = "plater_arrange/bed_exclusion.rs"]
 mod bed_exclusion;
+#[path = "plater_arrange/calibration_region.rs"]
+mod calibration_region;
 #[path = "plater_arrange/current_plate.rs"]
 mod current_plate;
 #[path = "plater_arrange/imex.rs"]
