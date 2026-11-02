@@ -7,7 +7,7 @@ against that tree. Differences vs the original 2.4.2 basis (source
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`) are recorded explicitly in the
 "Rebase differences" section.
 Base and explicit dependency: integrated main
-`6bba2bdda` (branch `processor/b19-cross-owner-brim-subtraction`).
+`6bba2bdda`.
 This is an independent repair of an already-supported uncombined brim path.
 The per-object combined-brim contact-component gap remains suspended.
 

@@ -4,7 +4,7 @@ Status: **SPEC REVIEW REQUEST — docs-only; implementation awaits approval**.
 All citations verified against the beta authority
 `345efec64c7b95a05ce5cf96df0dde66a158835c` (OrcaSlicer 2.5.0-beta),
 paths under `src/libslic3r`.
-Base: branch `processor/b19-cross-owner-brim-subtraction` @ `f4534628e`
+Base: `f4534628e`
 (integrated main `6bba2bdda`). This is the disposition of the 10 honest
 divergences left standing after the frozen-count premises were removed
 from the witness tests; it is a source-cited rewrite slice of
