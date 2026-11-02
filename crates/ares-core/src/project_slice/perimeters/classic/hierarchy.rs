@@ -52,6 +52,7 @@ fn prepare_object(
                             surface.effective_loop_number,
                             &surface.shells,
                             &surface.thin_wall_holes,
+                            &surface.narrow_wall_holes,
                         ));
                         PreparedHierarchySurface {
                             source_index: surface.source_index,

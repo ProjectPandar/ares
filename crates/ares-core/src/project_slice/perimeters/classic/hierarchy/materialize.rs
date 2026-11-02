@@ -8,6 +8,7 @@ pub(super) fn materialize(
     effective_loop_number: i32,
     shells: &[RawShellDepth],
     thin_wall_holes: &[bool],
+    narrow_wall_holes: &[bool],
 ) -> LoopBuckets {
     if effective_loop_number < 0 {
         return LoopBuckets {
@@ -20,21 +21,24 @@ pub(super) fn materialize(
         contours: vec![Vec::new(); count],
         holes: vec![Vec::new(); count],
     };
-    let mut thin_wall_holes = thin_wall_holes.iter();
+    let mut hole_flags = thin_wall_holes
+        .iter()
+        .copied()
+        .zip(narrow_wall_holes.iter().copied());
     for shell in shells {
         append_expolygons(
             &mut buckets,
             shell.depth,
             &shell.normal,
             false,
-            &mut thin_wall_holes,
+            &mut hole_flags,
         );
         append_expolygons(
             &mut buckets,
             shell.depth,
             &shell.smaller_width,
             true,
-            &mut thin_wall_holes,
+            &mut hole_flags,
         );
     }
     buckets
@@ -45,7 +49,7 @@ fn append_expolygons(
     depth: i32,
     expolygons: &[ExPolygon],
     smaller: bool,
-    thin_wall_holes: &mut std::slice::Iter<'_, bool>,
+    hole_flags: &mut impl Iterator<Item = (bool, bool)>,
 ) {
     let index = depth as usize;
     for expolygon in expolygons {
@@ -53,15 +57,22 @@ fn append_expolygons(
             polygon: expolygon.contour().clone(),
             is_contour: true,
             is_thin_wall_hole: false,
+            is_narrow_wall_hole: false,
             is_smaller_width_perimeter: smaller,
             depth: depth as u16,
             children: Vec::new(),
         });
         buckets.holes[index].extend(expolygon.holes().iter().cloned().map(|polygon| {
+            let (is_thin_wall_hole, is_narrow_wall_hole) = if depth == 0 {
+                hole_flags.next().unwrap()
+            } else {
+                (false, false)
+            };
             PerimeterGeneratorLoop {
                 polygon,
                 is_contour: false,
-                is_thin_wall_hole: depth == 0 && *thin_wall_holes.next().unwrap(),
+                is_thin_wall_hole,
+                is_narrow_wall_hole,
                 is_smaller_width_perimeter: smaller,
                 depth: depth as u16,
                 children: Vec::new(),

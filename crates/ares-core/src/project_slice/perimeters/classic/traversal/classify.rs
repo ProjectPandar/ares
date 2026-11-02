@@ -69,6 +69,7 @@ fn classify_node(
         depth: source.depth,
         is_contour: source.is_contour,
         is_thin_wall_hole: source.is_thin_wall_hole,
+        is_narrow_wall_hole: source.is_narrow_wall_hole,
         is_smaller_width_perimeter: source.is_smaller_width_perimeter,
         extrusion_role,
         loop_role,

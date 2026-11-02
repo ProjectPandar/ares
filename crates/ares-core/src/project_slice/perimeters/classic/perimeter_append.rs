@@ -131,15 +131,26 @@ fn transform_record(
         .into_iter()
         .enumerate()
         .map(|(index, mut surface)| {
+            let roots = &reorient.record.surfaces[index].roots;
+            // PerimeterGenerator.cpp:1861-1863: current first-depth contour tree.
+            let narrow_wall_hole_island = roots.len() == 1
+                && roots[0].children.len() == 1
+                && roots[0].children[0].is_narrow_wall_hole;
             // Steep-overhang reversal runs on each surface collection
             // right after `traverse_loops` (`PerimeterGenerator.cpp:1446-1453`).
             reorient::ReorientPlan::new(reorient.record, reorient.region).apply(
                 &mut surface.collection,
-                &reorient.record.surfaces[index].roots,
+                roots,
                 reorient.lower,
                 reorient.scale,
             );
-            transform_surface(surface, inactive, wall_sequence, layer_id)
+            transform_surface(
+                surface,
+                inactive,
+                wall_sequence,
+                layer_id,
+                narrow_wall_hole_island,
+            )
         })
         .collect();
     PreparedPerimeterAppendRecord { surfaces }
@@ -150,8 +161,14 @@ fn transform_surface(
     inactive: InactivePostCollectionBranches,
     wall_sequence: ProcessWallSequence,
     layer_id: usize,
+    narrow_wall_hole_island: bool,
 ) -> PreparedPerimeterAppendSurface {
-    reorder_walls(&mut source.collection, wall_sequence, layer_id);
+    reorder_walls(
+        &mut source.collection,
+        wall_sequence,
+        layer_id,
+        narrow_wall_hole_island,
+    );
     PreparedPerimeterAppendSurface {
         source_index: source.source_index,
         inactive,
@@ -216,6 +233,7 @@ fn reorder_walls(
     collection: &mut ExtrusionEntityCollection,
     sequence: ProcessWallSequence,
     layer_id: usize,
+    narrow_wall_hole_island: bool,
 ) {
     // `ExtrusionEntityCollection::reverse` (`ExtrusionEntityCollection.cpp:
     // 65-72`): reverse every non-loop entity in place, then reverse the
@@ -231,13 +249,13 @@ fn reorder_walls(
     }
     match sequence {
         ProcessWallSequence::InnerOuter => {}
-        // `PerimeterGenerator.cpp:1467` (`is_outer_wall_first` / first-layer
+        // `PerimeterGenerator.cpp:1864-1865` (`is_outer_wall_first` / first-layer
         // outer-brim reverse).
         ProcessWallSequence::OuterInner => reverse_collection(collection),
-        ProcessWallSequence::InnerOuterInner if layer_id == 0 => {}
+        ProcessWallSequence::InnerOuterInner if layer_id == 0 || narrow_wall_hole_island => {}
         ProcessWallSequence::InnerOuterInner => {
-            // `PerimeterGenerator.cpp:1470-1560` sandwich mode: reverse all
-            // entities external-to-internal (:1470), then `sandwich_reorder`
+            // `PerimeterGenerator.cpp:1867-1870`: eligible sandwich mode reverses
+            // entities external-to-internal (:1868), then `sandwich_reorder`
             // pulls first-internal ahead of second-internal+ and reorders
             // each island deepest-first.
             reverse_collection(collection);

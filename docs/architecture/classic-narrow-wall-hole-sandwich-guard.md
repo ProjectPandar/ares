@@ -1,7 +1,8 @@
 # Classic narrow-wall-hole sandwich eligibility guard
 
-Status: corrected fresh public RED qualified, awaiting RED review.
-Production remains unchanged; no classification/guard port or GREEN claim.
+Status: literal narrow-hole classification/guard port and strict public
+GREEN qualified; paired family has zero prior-PASS to FAIL. Await source-port
+review. This is not workspace/FULL or unrelated-family parity closure.
 
 ## Upstream boundary and clarified scope
 
@@ -138,7 +139,61 @@ before execution. The permitted corrected attempt ran once, with no retry,
 probe, variant, observer, family or E5 execution. Only this architecture
 result note changes afterward; no postcommit rerun is claimed.
 
-## Included, deferred and next gate
+## Literal port and strict GREEN qualification
+
+Approved RED `935d51d1e6e37b2e71ac2dcb57da0856d8f20b01` predates the
+production port. The existing reach classifier is byte-identical: onion
+configuration supplies the separate optional inner-wall room only for
+InnerOuterInner, and onion calls that classifier on the same unreduced
+normal first offset. Narrow flags follow normal/smaller hole order into
+PG loops and seeds, false on contours/deeper holes and other sequences.
+
+The current surface's nested first-depth roots implement exactly the
+one-root/one-child/child-narrow predicate. The guard skips both collection
+reverse and the sandwich call at physical layers above zero; outer-first
+and brim precedence are unchanged. `sandwich_reorder` is byte-exact,
+including its comments. Only the touched guard's stale citations change:
+outer-first1864-1865 and eligible sandwich1867-1870/reverse1868.
+Accepted thin-hole classifier/orientation, geometry kernels and other
+adjacent behavior remain unchanged.
+
+A frozen 124-check existing Classic/perimeter/wall-sequence/thin/narrow/
+seam family ran once before and once after in the same worktree with a
+dedicated target. **54 PASS / 70 FAIL → 55 PASS / 69 FAIL**, zero ignored,
+exactly one FAIL→PASS (this public target), zero prior-PASS to FAIL.
+Each phase retains 177 Native command-status receipts; guard/premise
+results remain visible, not blanket Native-parity credit.
+
+Per phase, the dedicated target has two fresh stable Native exports and
+one validated API/CLI export, raw API/CLI equal. The AFTER strict complete
+output is **GREEN**, not just an externally filtered prefix. Native,
+Native replay, API and CLI equal 51,593 bytes / 1,781 lines after the sole
+canonical generator normalization, SHA256
+`567116c7cab69982a93b4b4b5affb87b4a0fbd2b6b100900f5b5d35a9834d159`.
+All 46 M73 commands, ordered motion, roles/width/feed, wipe/retract,
+labels, config/footer, terminal whitespace and trailing bytes remain.
+There is **no remaining full or non-M73 first difference** on this input.
+
+All four physical layers now have identical Native/API closed CW hole,
+closed CCW enclosing contour, then closed Gap run, with exact saved
+extrusion-run/point/line identity. This verifies the full island order,
+including the reverse eligibility, not merely the first loop or TYPE
+labels. No private Native flag trace or new runtime probe was used.
+The original invalid-wire STOP and authorized corrected RED stay immutable.
+
+Fmt and strict workspace/all-targets Clippy pass; tests, fixture/generator,
+ROOT, runners and comparator are unchanged from the approved RED. Distinct
+frozen before/after ELFs, identical inventory and actual source trees were
+verified. Only this result note changes after execution; no postcommit
+rerun is claimed. No retry, extra variant/probe, family expansion, GDB,
+carrier trace, E5 run or implicit estimator/config overlay occurred.
+
+Main advanced to `5910df8eb` during qualification; this slice was qualified
+on its approved base. That base/pair is preserved without rebasing; later
+work uses the updated main, and approved branches rebase only on an explicit
+integration request.
+
+## Included, deferred and exit criteria
 
 Include only narrow classification, carrier and eligibility guard. The
 existing sandwich body/permutation, accepted thin-hole orientation, Flow,
@@ -146,9 +201,10 @@ geometry kernels, Arachne/brim/overhang logic, seam and G-code serializer,
 M73 estimator and config footer are separate and unchanged. No private
 operand trace or further runtime probes are part of this one-candidate RED.
 
-Submit ARD + fresh actual public RED RR before implementation. The RED
-phase permits one selected run: Native2/API1/CLI1, no retry, extra probe,
-variant, family or E5 run. Later agree a frozen before/after Classic and
-wall-sequence family with narrow/thin/wide controls and zero prior-PASS to
-FAIL. Complete GREEN requires all M73-inclusive records; new residuals
-remain NON-GREEN and are routed, not masked or silently absorbed.
+The approved ARD and corrected fresh RED preceded the declared literal
+port. Its strict GREEN and paired family evidence satisfy this slice's
+runtime gate; remaining 69 family failures and workspace/FULL integration
+stay separately owned. Preserve all source/executable/input identities
+and invalid attempts. Any later change needs its own source-cited boundary
+and approval; do not grow this guard into a sandwich-body rewrite or a
+new geometry/estimator/config policy.

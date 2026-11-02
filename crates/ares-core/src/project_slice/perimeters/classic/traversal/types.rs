@@ -111,6 +111,7 @@ pub(in crate::project_slice) struct TraversalSeed {
     pub(in crate::project_slice) depth: u16,
     pub(in crate::project_slice) is_contour: bool,
     pub(in crate::project_slice) is_thin_wall_hole: bool,
+    pub(in crate::project_slice) is_narrow_wall_hole: bool,
     pub(in crate::project_slice) is_smaller_width_perimeter: bool,
     pub(in crate::project_slice) extrusion_role: PendingExtrusionRole,
     pub(in crate::project_slice) loop_role: PendingLoopRole,

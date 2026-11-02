@@ -12,6 +12,7 @@ pub(super) struct ValidatedOnionConfig {
     pub(super) external_to_internal_spacing: i64,
     pub(super) perimeter_spacing: i64,
     pub(super) gap_fill_room: f64,
+    pub(super) inner_wall_room: Option<f64>,
 }
 
 pub(super) fn validate_project(
@@ -28,30 +29,26 @@ pub(super) fn validate_project(
                 .zip(&object.records)
                 .map(
                     |((input, prelude), top_split)| match (input, prelude, top_split) {
-                        (Some(input), Some(prelude), Some(_)) => Some((
-                            object
-                                .predecessor
-                                .object
-                                .region_options(input)
-                                .sparse_infill_density
-                                .0,
-                            prelude,
-                        )),
+                        (Some(input), Some(prelude), Some(_)) => {
+                            Some((object.predecessor.object.region_options(input), prelude))
+                        }
                         (None, None, None) => None,
                         _ => unreachable!("Task 22O.2 record slots must remain aligned"),
                     },
                 )
                 .collect::<Vec<_>>();
-            let densities = validate_densities(
-                records
-                    .iter()
-                    .map(|record| record.as_ref().map(|(density, _)| *density)),
-            )?;
+            let densities = validate_densities(records.iter().map(|record| {
+                record
+                    .as_ref()
+                    .map(|(region, _)| region.sparse_infill_density.0)
+            }))?;
             Ok(records
                 .into_iter()
                 .zip(densities)
                 .map(|(record, density)| match (record, density) {
-                    (Some((_, prelude)), Some(density)) => Some(from_prelude(density, prelude)),
+                    (Some((region, prelude)), Some(density)) => {
+                        Some(from_prelude(density, prelude, region.wall_sequence))
+                    }
                     (None, None) => None,
                     _ => unreachable!("validated density slots must remain aligned"),
                 })
@@ -60,7 +57,11 @@ pub(super) fn validate_project(
         .collect()
 }
 
-fn from_prelude(density: i32, prelude: &ClassicPreludeRecord) -> ValidatedOnionConfig {
+fn from_prelude(
+    density: i32,
+    prelude: &ClassicPreludeRecord,
+    wall_sequence: crate::ProcessWallSequence,
+) -> ValidatedOnionConfig {
     // PerimeterGenerator.cpp:1507,1714: nominal widths, before top-wall reduction.
     let gap_fill_minimum = 0.2
         * prelude.perimeter_width.min(prelude.external_width) as f64
@@ -72,6 +73,10 @@ fn from_prelude(density: i32, prelude: &ClassicPreludeRecord) -> ValidatedOnionC
         external_to_internal_spacing: prelude.external_to_internal_spacing,
         perimeter_spacing: prelude.perimeter_spacing,
         gap_fill_room: 0.5 * (prelude.external_to_internal_spacing as f64 + gap_fill_minimum),
+        // PerimeterGenerator.cpp:1713-1715: this reach exists only for sandwich order.
+        inner_wall_room: (wall_sequence == crate::ProcessWallSequence::InnerOuterInner).then_some(
+            prelude.external_to_internal_spacing as f64 + prelude.minimum_spacing as f64 / 2.0,
+        ),
     }
 }
 

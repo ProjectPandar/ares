@@ -75,6 +75,16 @@ fn prepare_record(
                 config.gap_fill_room,
                 scale,
             )?;
+            let narrow_wall_holes = if let Some(room) = config.inner_wall_room {
+                thin_holes::classify(
+                    &surface.normal_first_offset,
+                    &surface.smaller_first_offset,
+                    room,
+                    scale,
+                )?
+            } else {
+                vec![false; thin_wall_holes.len()]
+            };
             let result = iterate::apply(IterationInput {
                 initial_loop_number: surface.initial_loop_number,
                 loop_number: surface.effective_loop_number,
@@ -89,6 +99,7 @@ fn prepare_record(
                 effective_loop_number: result.effective_loop_number,
                 shells: result.shells,
                 thin_wall_holes,
+                narrow_wall_holes,
                 last: result.last,
                 gaps: result.gaps,
                 thin_walls: surface.thin_walls.clone(),
