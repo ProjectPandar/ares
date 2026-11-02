@@ -96,6 +96,37 @@ Clipper internals, surface preparation, flow, writer/time calculation, and
 preset/footer supply. Any remaining independent difference requires its own
 source boundary and review.
 
+## Measured first difference and approved port
+
+The paired-cylinder public RED first differs in sparse extrusion at line 105.
+A read-only Native capture of `make_gyroid_waves` records complete odd/even
+period vectors; a temporary Rust observation records the corresponding vectors.
+Their phase and tolerance match exactly, as do both period prefixes through π.
+Native ends the period at 2π; Rust ends it at 4. The first even knots after π
+are respectively `π + π/32` and `π + (4 - π)/8`. Applying the source vertical
+swap, coordinate cast, grid origin and instance shift maps those measured knots
+to the differing public endpoints. Thus period truncation explains the first
+difference; no flow or corner-smoothing repair is implicated. Optimized-out
+Native variables are not treated as captured values.
+
+The approved rewrite is limited to the standard branch's separate grid origin
+and spacing/multiline-inflated contour bounds, full-period construction,
+longitudinal bracketing without ordinate clamping, and extrema-indexed wave
+selection. Preserve the optimized branch's current bounds and behavior; do not
+extend this approval to its adjacent upstream changes. Keep the scalar field,
+multiline/crop/length-filter/connection tail and inverse rotation unchanged.
+Remove temporary observations and verify rebuilt complete-byte restoration.
+Freeze the existing gyroid test IDs before implementation, then rerun exactly
+that inventory. Full-output failures remain authoritative, including any
+remaining metadata/footer dependency.
+
+The paired-cylinder fixture passes the unchanged complete ordered Native/API/CLI
+comparison after this port, with sparse extrusion counts matching at 176.
+The frozen three-test gyroid inventory improves from zero passes to one, with
+zero PASS-to-FAIL transitions. Both existing ironing gyroid tests still fail;
+this is not an all-gyroid parity claim. An inventory with no prior passes does
+not demonstrate preservation of positive coverage.
+
 ## Review gate
 
 Submit this ARD and a genuinely discriminating public RED before a production

@@ -9,7 +9,7 @@ use waves::{
 
 use super::connect::{FillConnectionParams, connect_infill};
 use crate::geometry::{
-    ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polyline,
+    BoundingBox, ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polyline,
     intersection_open_polylines, offset_expolygon,
 };
 
@@ -47,8 +47,8 @@ pub(super) struct WaveContext {
 
 #[derive(Clone, Copy)]
 pub(super) struct WavePlacement {
-    width: f64,
-    height: f64,
+    minimum: f64,
+    maximum: f64,
     offset: f64,
     scale_factor: f64,
 }
@@ -84,47 +84,39 @@ fn fill_component(
     } else {
         surface.clone()
     };
-    let (mut minimum, mut maximum) = contour_bounds(rotated.contour());
+    let (minimum, maximum) = contour_bounds(rotated.contour());
     let density =
         (f64::from(params.density) * DENSITY_ADJUST / f64::from(params.multiline)).max(0.0);
     let distance = (params.spacing / scale.factor() / density) as i64;
-    // Upstream: `bb.merge(align_to_grid(bb.min, Point(2*M_PI*distance,
-    // 2*M_PI*distance)))` — the `Point(double, double)` ctor applies
-    // `std::round` (`Point.hpp:197`), not truncation.
+    // `Point(double, double)` rounds the grid module; the phase shift is
+    // scaled first, multiplied by ten, then truncated to coord_t.
     let period = (2.0 * std::f64::consts::PI * distance as f64).round() as i64;
-    minimum = Point::new(
+    let aligned = Point::new(
         minimum.x().div_euclid(period) * period,
         minimum.y().div_euclid(period) * period,
     );
-    // Upstream: `coord_t expand = 10 * (scale_(this->spacing))` — scale
-    // first, then multiply, then truncate (FillGyroid.cpp:309).
-    let expand = (10.0 * (params.spacing / scale.factor())) as i64;
-    minimum = Point::new(
-        minimum
+    let shift = (10.0 * (params.spacing / scale.factor())) as i64;
+    let origin = Point::new(
+        aligned
             .x()
-            .checked_sub(expand)
+            .checked_sub(shift)
             .ok_or(ClipperError::CoordinateOutOfRange)?,
-        minimum
+        aligned
             .y()
-            .checked_sub(expand)
+            .checked_sub(shift)
             .ok_or(ClipperError::CoordinateOutOfRange)?,
     );
-    maximum = Point::new(
-        maximum
-            .x()
-            .checked_add(expand)
-            .ok_or(ClipperError::CoordinateOutOfRange)?,
-        maximum
-            .y()
-            .checked_add(expand)
-            .ok_or(ClipperError::CoordinateOutOfRange)?,
-    );
-    // Upstream `ceil(bb.size()(0) / distance) + 1.` divides coord_t by coord_t —
-    // integer division (ceil is a no-op on the truncated quotient), so the
-    // wave extent is floor(size/distance) + 1, not the float-ceil result.
-    let width = ((maximum.x() - minimum.x()) / distance) as f64 + 1.0;
-    let height = ((maximum.y() - minimum.y()) / distance) as f64 + 1.0;
     let mut polylines = if params.gyroid_optimized {
+        let maximum = Point::new(
+            maximum
+                .x()
+                .checked_add(shift)
+                .ok_or(ClipperError::CoordinateOutOfRange)?,
+            maximum
+                .y()
+                .checked_add(shift)
+                .ok_or(ClipperError::CoordinateOutOfRange)?,
+        );
         // `gyroid_optimized` (FillGyroid.cpp:314-333): marching-squares on the
         // gyroid implicit field. `omega` shortens the vertical wavelength for
         // buckling resistance; XY period stays at baseline.
@@ -143,7 +135,7 @@ fn fill_component(
         let density_factor =
             (f64::from(params.density) * DENSITY_ADJUST / f64::from(params.multiline)).max(0.001);
         let period = 2.0_f32 * std::f32::consts::PI * params.spacing as f32 / density_factor as f32;
-        let bb = crate::geometry::BoundingBox::new(minimum, maximum);
+        let bb = BoundingBox::new(origin, maximum);
         // `GyroidField(bb, this->z, period, omega)` — `this->z` is the mm
         // height (FillGyroid.cpp:332); only the XY raster is scale-domain, the
         // Z frequency arg stays millimetres.
@@ -151,15 +143,15 @@ fn fill_component(
             super::gyroid_field::GyroidField::new(bb, params.z, period, omega as f32, scale);
         super::gyroid_field::get_gyroid_polylines(&field, scale)
     } else {
-        let mut polylines = make_gyroid_waves(
+        let bounds = BoundingBox::new(minimum, maximum)
+            .inflated((params.spacing * f64::from(params.multiline) / scale.factor()) as i64);
+        make_gyroid_waves(
             params.z / scale.factor(),
             density,
             params.spacing,
-            (width, height),
+            (bounds, origin),
             scale,
-        )?;
-        translate(&mut polylines, minimum)?;
-        polylines
+        )?
     };
     polylines = super::multiline_offset::apply(polylines, params.multiline, params.spacing, scale)?;
 
@@ -227,7 +219,7 @@ fn make_gyroid_waves(
     grid_z: f64,
     density: f64,
     spacing: f64,
-    (mut width, mut height): (f64, f64),
+    (bounds, origin): (BoundingBox, Point),
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let scale_factor = spacing / scale.factor() / density;
@@ -240,45 +232,44 @@ fn make_gyroid_waves(
         vertical: z_sin.abs() <= z_cos.abs(),
         tolerance,
     };
-    let (mut lower, mut upper, mut flip) = (0.0, height, true);
+    let mut lo = (
+        (bounds.min().x() - origin.x()) as f64 / scale_factor,
+        (bounds.min().y() - origin.y()) as f64 / scale_factor,
+    );
+    let mut hi = (
+        (bounds.max().x() - origin.x()) as f64 / scale_factor,
+        (bounds.max().y() - origin.y()) as f64 / scale_factor,
+    );
+    let (mut lower, mut flip) = (0.0, true);
     if context.vertical {
         flip = false;
         lower = -std::f64::consts::PI;
-        upper = width - std::f64::consts::FRAC_PI_2;
-        std::mem::swap(&mut width, &mut height);
+        std::mem::swap(&mut lo.0, &mut lo.1);
+        std::mem::swap(&mut hi.0, &mut hi.1);
     }
-    let odd = make_one_period(width, context, flip);
-    flip = !flip;
-    let even = make_one_period(width, context, flip);
+    let odd = make_one_period(context, flip);
+    let even = make_one_period(context, !flip);
+    let (mut f_min, mut f_max) = (f64::MAX, f64::MIN);
+    for point in odd.iter().chain(&even) {
+        f_min = f_min.min(point.1);
+        f_max = f_max.max(point.1);
+    }
     let mut output = Vec::new();
-    let mut offset = lower;
-    while offset < upper + EPSILON {
-        output.push(make_wave(
-            &odd,
+    let mut index = ((lo.1 - f_max - lower) / std::f64::consts::PI).ceil() as i32;
+    while lower + f64::from(index) * std::f64::consts::PI + f_min <= hi.1 {
+        let mut wave = make_wave(
+            if index % 2 == 0 { &odd } else { &even },
             WavePlacement {
-                width,
-                height,
-                offset,
+                minimum: lo.0,
+                maximum: hi.0,
+                offset: lower + f64::from(index) * std::f64::consts::PI,
                 scale_factor,
             },
-            context,
-            flip,
-        )?);
-        offset += std::f64::consts::PI;
-        if offset < upper + EPSILON {
-            output.push(make_wave(
-                &even,
-                WavePlacement {
-                    width,
-                    height,
-                    offset,
-                    scale_factor,
-                },
-                context,
-                flip,
-            )?);
-        }
-        offset += std::f64::consts::PI;
+            context.vertical,
+        )?;
+        translate(std::slice::from_mut(&mut wave), origin)?;
+        output.push(wave);
+        index += 1;
     }
     Ok(output)
 }

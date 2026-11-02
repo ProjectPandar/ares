@@ -5,9 +5,9 @@ use super::super::checked_rotate::{rotate_points, rotate_points_with_trig};
 use super::{EPSILON, WaveContext, WavePlacement};
 use crate::geometry::{ClipperError, ExPolygon, Line, Point, Polygon, Polyline};
 
-pub(super) fn make_one_period(width: f64, context: WaveContext, flip: bool) -> Vec<(f64, f64)> {
-    let limit = (2.0 * std::f64::consts::PI).min(width);
-    let mut points = Vec::new();
+pub(super) fn make_one_period(context: WaveContext, flip: bool) -> Vec<(f64, f64)> {
+    let limit = 2.0 * std::f64::consts::PI;
+    let mut points = Vec::with_capacity((limit / context.tolerance / 3.0).ceil() as usize);
     let mut x = 0.0;
     while x < limit - EPSILON {
         points.push((x, context.value(x, flip)));
@@ -38,34 +38,40 @@ pub(super) fn make_one_period(width: f64, context: WaveContext, flip: bool) -> V
 pub(super) fn make_wave(
     period_points: &[(f64, f64)],
     placement: WavePlacement,
-    context: WaveContext,
-    flip: bool,
+    vertical: bool,
 ) -> Result<Polyline, ClipperError> {
-    let mut points = period_points.to_vec();
-    let period = points.last().unwrap().0;
-    if placement.width != period {
-        points.pop();
-        let count = points.len();
-        loop {
-            let source = points[points.len() - count];
-            points.push((source.0 + period, source.1));
-            if points.last().unwrap().0 >= placement.width - EPSILON {
-                break;
-            }
-        }
-        points.push((placement.width, context.value(placement.width, flip)));
+    let period = period_points.last().unwrap().0;
+    let count = period_points.len() - 1;
+    let mut x0 = (placement.minimum / period).floor() * period;
+    let mut index = 0;
+    while index + 1 < count && x0 + period_points[index + 1].0 <= placement.minimum {
+        index += 1;
     }
-    points
-        .into_iter()
-        .map(|(mut x, mut y)| {
-            y = (y + placement.offset).clamp(0.0, placement.height);
-            if context.vertical {
-                std::mem::swap(&mut x, &mut y);
-            }
-            checked_point(x * placement.scale_factor, y * placement.scale_factor)
-        })
-        .collect::<Result<Vec<_>, _>>()
-        .map(Polyline::new)
+    let mut points =
+        Vec::with_capacity(((placement.maximum - x0) / period + 1.0) as usize * count + 1);
+    loop {
+        let (mut x, mut y) = (
+            x0 + period_points[index].0,
+            period_points[index].1 + placement.offset,
+        );
+        let last = x >= placement.maximum;
+        if vertical {
+            std::mem::swap(&mut x, &mut y);
+        }
+        points.push(checked_point(
+            x * placement.scale_factor,
+            y * placement.scale_factor,
+        )?);
+        if last {
+            break;
+        }
+        index += 1;
+        if index == count {
+            index = 0;
+            x0 += period;
+        }
+    }
+    Ok(Polyline::new(points))
 }
 
 pub(super) fn checked_point(x: f64, y: f64) -> Result<Point, ClipperError> {
