@@ -15,6 +15,8 @@ mod complete_block;
 mod definition_defaults;
 #[path = "config_block_roundtrip/nullable_vectors.rs"]
 mod nullable_vectors;
+#[path = "config_block_roundtrip/project_preset_refresh.rs"]
+mod project_preset_refresh;
 
 use super::{ExportedCase, OrcaRunner};
 use serde::{Deserialize, Serialize};
