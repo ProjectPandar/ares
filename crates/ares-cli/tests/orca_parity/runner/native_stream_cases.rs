@@ -60,6 +60,8 @@ mod object_label_ids_without_exclusion;
 mod organic_support_sampling_angle;
 #[path = "plane_path_low_density_top.rs"]
 mod plane_path_low_density_top;
+#[path = "printer_variant_order.rs"]
+mod printer_variant_order;
 #[path = "processor_word_boundary.rs"]
 mod processor_word_boundary;
 #[path = "project_settings_bool_wire.rs"]
