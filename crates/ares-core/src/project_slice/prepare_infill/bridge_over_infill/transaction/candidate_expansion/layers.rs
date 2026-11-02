@@ -258,13 +258,9 @@ pub(super) fn prepare_candidates(
             scaled_spacing,
         )
         .map_err(geometry_error)?;
-        let Some(boundaries) = prepare_candidate_boundary_polylines(
-            &area,
-            &total_fill_area,
-            scaled_spacing,
-            flow.spacing,
-        )
-        .map_err(geometry_error)?
+        let Some(boundaries) =
+            prepare_candidate_boundary_polylines(&area, &total_fill_area, scaled_spacing)
+                .map_err(geometry_error)?
         else {
             continue;
         };

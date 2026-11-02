@@ -7,21 +7,18 @@ struct CandidateBoundaryInput<'a> {
     candidate_area: &'a CandidateBridgeArea,
     total_fill_area: &'a [Polygon],
     scaled_spacing: Coord,
-    spacing: f32,
 }
 
 pub(in crate::project_slice) fn prepare_candidate_boundary_polylines(
     candidate_area: &CandidateBridgeArea,
     total_fill_area: &[Polygon],
     scaled_spacing: Coord,
-    spacing: f32,
 ) -> Result<Option<Vec<Polyline>>, ClipperError> {
     prepare_candidate_boundary_polylines_using(
         CandidateBoundaryInput {
             candidate_area,
             total_fill_area,
             scaled_spacing,
-            spacing,
         },
         |paths, delta| offset_paths(paths, delta, JoinType::Miter, MITER_LIMIT),
     )
@@ -38,18 +35,17 @@ where
         candidate_area,
         total_fill_area,
         scaled_spacing,
-        spacing,
     } = input;
     if candidate_area.area_to_be_bridge.is_empty() {
         return Ok(None);
     }
 
-    let total_delta = (1.3_f64 * scaled_spacing as f64) as f32;
+    let total_delta = 1.3_f32 * scaled_spacing as f32;
     debug_assert!(total_delta > 0.0);
     let total_boundaries = offset(total_fill_area, total_delta)?;
     let mut boundaries = into_closed_polylines(total_boundaries);
 
-    let limiting_delta = (0.3_f64 * f64::from(spacing)) as f32;
+    let limiting_delta = 0.3_f32 * scaled_spacing as f32;
     debug_assert!(limiting_delta > 0.0);
     let limiting_boundaries = offset(&candidate_area.limiting_area, limiting_delta)?;
     boundaries.extend(into_closed_polylines(limiting_boundaries));
