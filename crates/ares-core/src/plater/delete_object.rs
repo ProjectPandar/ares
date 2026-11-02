@@ -38,6 +38,13 @@ impl PlaterSession {
         Ok(())
     }
 
+    /// "Delete" with one instance selected (`Plater::remove_selected` → `Selection::erase`,
+    /// `Selection.cpp:1893-1996` at v2.5.0-beta `345efec64`; see
+    /// `docs/architecture/web-plater-delete-instance.md`). `InvalidInput` for no such instance.
+    pub fn delete_instance(&mut self, object: usize, instance: usize) -> Result<(), SliceError> {
+        todo!("delete instance {instance} of object {object}")
+    }
+
     /// The loaded objects `delete_object` removed, by id.
     pub(super) fn deleted_objects(&self) -> Vec<u32> {
         self.loaded_instances

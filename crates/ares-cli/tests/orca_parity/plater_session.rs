@@ -12,6 +12,8 @@ use crate::runner::{OrcaRunner, repo_root};
 mod brim_plate_origin;
 #[path = "plater_delete_all.rs"]
 mod delete_all;
+#[path = "plater_delete_instance.rs"]
+mod delete_instance;
 #[path = "plater_delete_object.rs"]
 mod delete_object;
 #[path = "plater_instances.rs"]
@@ -145,13 +147,19 @@ fn rewrite_plates(settings: &str, session: &PlaterSession) -> String {
                 "    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"false\"/>\n",
             ),
         }
+        // bbs_3mf.cpp:8580-8605: the object's id, the pair's instance index, and the instance's
+        // identify id, or 0 for a pair whose instance no longer exists.
         for (object, instance) in &plate.instances {
-            let item = &session.project().objects()[*object].instances()[*instance];
+            let object = &session.project().objects()[*object];
+            let identify_id = object
+                .instances()
+                .get(*instance)
+                .map_or(0, |item| item.loaded_label_id().unwrap());
             plates.push_str(&format!(
                 "    <model_instance>\n      <metadata key=\"object_id\" value=\"{}\"/>\n      <metadata key=\"instance_id\" value=\"{}\"/>\n      <metadata key=\"identify_id\" value=\"{}\"/>\n    </model_instance>\n",
-                item.object_id(),
-                item.instance_id(),
-                item.loaded_label_id().unwrap()
+                object.id(),
+                instance,
+                identify_id
             ));
         }
         plates.push_str("  </plate>\n");
