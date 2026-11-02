@@ -8,6 +8,7 @@ mod arrange_settings;
 mod current_plate;
 mod edits;
 mod eigen;
+mod instances;
 mod min_sphere;
 mod mirror;
 mod plate_list;

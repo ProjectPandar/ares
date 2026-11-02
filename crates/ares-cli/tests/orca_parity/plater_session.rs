@@ -8,6 +8,8 @@ use ares_core::{ConfigOverrides, GenerationMetadata, PlaterSession, PlaterSlice,
 use super::plater_archive::{attribute, rewrite_archive};
 use crate::runner::{OrcaRunner, repo_root};
 
+#[path = "plater_instances.rs"]
+mod instances;
 #[path = "plater_tower_positions.rs"]
 mod tower_positions;
 #[path = "plater_transform.rs"]
@@ -74,7 +76,21 @@ fn rewrite_build(model: &str, session: &PlaterSession) -> String {
         output.push_str(&item.replace(&old, &new));
         rest = &rest[end..];
     }
-    output.push_str(rest);
+    // The session's added instances ("Add instance"), each a build item of its object
+    // (`_add_build_to_model_stream` writes every instance).
+    let mut added = String::new();
+    for object in session.project().objects() {
+        let loaded = seen.get(&object.id()).map_or(0, |last| last + 1);
+        for instance in object.instances().iter().skip(loaded as usize) {
+            added.push_str(&format!(
+                "<item objectid=\"{}\" transform=\"{}\" printable=\"{}\"/>",
+                object.id(),
+                transform_attribute(session, object.id(), instance.instance_id()),
+                u8::from(instance.printable())
+            ));
+        }
+    }
+    output.push_str(&rest.replacen("</build>", &format!("{added}</build>"), 1));
     output
 }
 
