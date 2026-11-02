@@ -22,6 +22,19 @@ pub(super) fn tool_change_block(klipper: KlipperConfig) -> MotionBlock {
     }
 }
 
+/// `process_G1:5693-5706`: only a stored Seam restores the saved Vec3f endpoint.
+pub(super) fn associate_linear_seam(
+    seams: &mut SeamDetector,
+    extruding: bool,
+    position: &mut [f64; 3],
+) -> Option<[f32; 3]> {
+    let seam = seams.associate(extruding, *position);
+    if seam.is_some() {
+        *position = position.map(|value| f64::from(value as f32));
+    }
+    seam
+}
+
 /// The `Seam` vertex each arc segment's `process_G1` stores, if any; a
 /// seam-carrying or non-cacheable segment stays out of `g1_times_cache`.
 pub(super) fn arc_seams(

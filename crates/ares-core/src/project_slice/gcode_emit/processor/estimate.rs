@@ -206,7 +206,8 @@ impl Estimate {
                 let extruding = !state.wiping
                     && block.delta[3] > 0.0
                     && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
-                let seam_vertex = seams.associate(extruding, state.position);
+                let seam_vertex =
+                    commands::associate_linear_seam(&mut seams, extruding, &mut state.position);
                 // `g1_times_cache` is only populated for blocks whose
                 // `result.moves[block.move_id]` vertex is Extrude/Travel/
                 // Wipe — the Normal-mode vertex filter ahead of the push
