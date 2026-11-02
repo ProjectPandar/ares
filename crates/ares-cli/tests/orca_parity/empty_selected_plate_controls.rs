@@ -1,5 +1,8 @@
 //! Populated selection and later volume rejection must not migrate channels.
 use crate::runner::{OrcaRunner, stages};
+
+#[path = "print_volume_printable.rs"]
+mod printable;
 use ares_core::{ConfigOverrides, GenerationMetadata, SliceError, SlicerContext};
 use serde_json::json;
 use std::fs;
