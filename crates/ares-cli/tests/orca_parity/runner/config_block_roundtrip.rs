@@ -19,6 +19,8 @@ mod nullable_vectors;
 mod project_catalog_cli;
 #[path = "config_block_roundtrip/project_catalog_cli_errors.rs"]
 mod project_catalog_cli_errors;
+#[path = "config_block_roundtrip/project_catalog_cli_protocol.rs"]
+mod project_catalog_cli_protocol;
 #[path = "config_block_roundtrip/project_catalog_supply.rs"]
 mod project_catalog_supply;
 #[path = "config_block_roundtrip/project_filament_miss.rs"]
