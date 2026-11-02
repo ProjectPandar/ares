@@ -20,9 +20,10 @@ fn plater_delete_all_empties_the_plates_and_fails_to_slice_like_native() {
     let mut session = load(TWO_PLATES);
     session.select_plate(1).unwrap();
     session.lock_plate(1, true).unwrap();
-    // Off every plate: the unprintable plate holds it (PartPlateList::m_plate_list.back()).
+    // Below the grid, right of and below the unprintable plate's origin (the next grid cell,
+    // PartPlate.cpp:3942-3949), which then holds it (is_left_top_of, :2690-2708).
     session
-        .translate_instance(0, 0, [-2.0 * STRIDE, 0.0, 0.0])
+        .translate_instance(0, 0, [0.0, -2.0 * STRIDE, 0.0])
         .unwrap();
     assert_eq!(session.unprintable_instances(), vec![(0, 0)]);
     assert!(!session.project().plates_custom_gcodes().is_empty());
