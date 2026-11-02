@@ -7,12 +7,17 @@ use crate::SliceError;
 impl PlaterSession {
     /// `PartPlateList::select_plate`: makes the 0-based `plate` the current plate.
     pub fn select_plate(&mut self, plate: usize) -> Result<(), SliceError> {
-        let _ = plate;
-        todo!()
+        if plate >= self.plates.plates.len() {
+            return Err(SliceError::InvalidInput(format!(
+                "there is no plate {plate}"
+            )));
+        }
+        self.current_plate = plate;
+        Ok(())
     }
 
     /// `PartPlateList::get_curr_plate_index`.
     pub fn current_plate(&self) -> usize {
-        todo!()
+        self.current_plate
     }
 }

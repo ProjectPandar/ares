@@ -1,3 +1,4 @@
+pub(crate) mod object_skirt;
 pub(crate) mod validate;
 
 use crate::{

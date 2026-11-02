@@ -158,6 +158,12 @@ impl PlaterSession {
         self.session.delete_plate(index)
     }
 
+    /// Selecting a plate (`PartPlateList::select_plate`): the plate at `index` becomes current.
+    #[wasm_bindgen(js_name = selectPlate)]
+    pub fn select_plate(&mut self, index: usize) -> Result<(), JsValue> {
+        self.session.select_plate(index).map_err(js_error)
+    }
+
     /// The plate's lock icon (`PartPlateList::lock_plate`): locks or unlocks the plate at `index`.
     #[wasm_bindgen(js_name = lockPlate)]
     pub fn lock_plate(&mut self, index: usize, locked: bool) -> Result<(), JsValue> {

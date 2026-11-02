@@ -6,9 +6,7 @@ use super::ArrangeSettings;
 use crate::SliceError;
 use crate::arrangement::{ArrangeConfig, ArrangeParams, SCALING_FACTOR};
 use crate::geometry::{Point, Polygon, intersection_polygons_paths};
-use crate::options::{
-    FloatOrPercent, ProcessDraftShield, ProcessPrintSequence, ProcessSkirtType, ProjectSettings,
-};
+use crate::options::{FloatOrPercent, ProcessDraftShield, ProcessPrintSequence, ProjectSettings};
 
 /// `BED_SHRINK_SEQ_PRINT` (`Arrange.hpp:17`).
 const BED_SHRINK_SEQ_PRINT: f32 = 5.0;
@@ -62,17 +60,6 @@ pub(super) fn arrange_params(
         params.bed_shrink_y = BED_SHRINK_SEQ_PRINT;
     }
     params
-}
-
-/// `Print::object_skirt_offset` (`Print.cpp:5796-5799`) where it has no skirt to keep clear.
-pub(super) fn object_skirt_offset(settings: &ProjectSettings) -> Result<f32, SliceError> {
-    let print = &settings.process.print;
-    if print.skirt_loops.0 == 0 || print.skirt_type != ProcessSkirtType::PerObject {
-        return Ok(0.0);
-    }
-    Err(SliceError::InvalidInput(
-        "arranging around per-object skirts is not supported yet".to_owned(),
-    ))
 }
 
 /// `to_points` (`PrintConfig.cpp:13812-13818`): each point scaled and truncated.

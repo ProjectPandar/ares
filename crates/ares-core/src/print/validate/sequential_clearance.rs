@@ -1,13 +1,12 @@
 //! Print.cpp:613-930: sequential hull and vertical clearance validation.
 
-mod skirt;
-
 use crate::{
     ProcessPrintSequence, ProcessTimelapseType, Project, ProjectVolumeType, SliceError,
     geometry::{
         BoundingBox, CoordinateScale, JoinType, Point, Polygon, convex_hull,
         intersection_polygons_paths, offset_paths,
     },
+    print::object_skirt::{FirstObject, object_skirt_offset},
     project::effective_config::types::BoundedResolvedProjectConfig,
 };
 
@@ -22,6 +21,7 @@ pub(super) fn validate(
     project: &Project,
     resolved: &BoundedResolvedProjectConfig,
     plate_index: u32,
+    is_bbl: bool,
 ) -> Result<(), SliceError> {
     let settings = &resolved.views.full;
     if settings.process.print.print_sequence != ProcessPrintSequence::ByObject {
@@ -65,7 +65,12 @@ pub(super) fn validate(
     let short = instances
         .iter()
         .all(|i| i.height < settings.printer.remaining.nozzle_height.0);
-    let skirt = skirt::offset(resolved, short)?;
+    // `Print.cpp:917`: the print's `object_skirt_offset()`.
+    let first = resolved.objects.first().map(|first| FirstObject {
+        line_width: first.object.line_width,
+        support_filament: first.object.support_filament.0,
+    });
+    let (skirt, _) = object_skirt_offset(settings, first, short, is_bbl)?;
     let radius = settings.printer.remaining.extruder_clearance_radius.0;
     let distance = if short {
         2.0_f64.max(f64::from(skirt)) - 0.1

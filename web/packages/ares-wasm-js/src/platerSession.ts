@@ -113,6 +113,14 @@ export class PlaterSession {
   }
 
   /**
+   * Makes the plate at 0-based `index` the current plate (`PartPlateList::select_plate`), whose print
+   * "Arrange all" reads its per-object skirt offset from.
+   */
+  selectPlate(index: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "selectPlate", index });
+  }
+
+  /**
    * Locks or unlocks the plate at 0-based `index` (`PartPlateList::lock_plate`). "Arrange all" leaves
    * a locked plate's instances where they are, and the plate's own arrange rejects.
    */

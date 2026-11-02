@@ -7,6 +7,7 @@
 mod finalize;
 mod imex;
 mod nozzle_ids;
+mod object_skirt;
 mod params;
 mod polygon;
 mod prepare;
@@ -122,6 +123,8 @@ impl PlaterSession {
         let current = match scope {
             ArrangeScope::All => None,
             ArrangeScope::CurrentPlate(plate) if plate < self.plates.plates.len() => {
+                // The plate's arrange icon selects its plate first.
+                self.current_plate = plate;
                 // `prepare_partplate` (`ArrangeJob.cpp:540-552`): an empty plate arranges
                 // nothing, a locked one warns and arranges nothing. The warning notification is
                 // returned as the error.
@@ -143,7 +146,7 @@ impl PlaterSession {
         let mut params = params::arrange_params(
             project_settings,
             settings,
-            params::object_skirt_offset(project_settings)?,
+            self.current_print_skirt_offset()?,
             plate_sequence,
         );
         let config = params::arrange_config(project_settings)?;

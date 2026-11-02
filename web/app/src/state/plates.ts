@@ -16,6 +16,8 @@ export async function selectPlate(index: number) {
   const sliced = plateSlices[index];
   if (sliced?.toolpaths) await plater!.preview(index + 1);
   useApp.setState({ currentPlate: index });
+  // The worker runs requests in order, so an arrange after this reads the new current plate.
+  await plater!.selectPlate(index);
   if (sliced) setSliceResult(sliced, sliced.elapsedMs);
   else useApp.setState({ slice: { status: "idle" } });
 }
@@ -39,7 +41,9 @@ export function applyLayout(layout: PlaterLayout, currentPlate: number) {
 
 /** "Add plate" (Plater::priv::on_action_add_plate, Plater.cpp:10123-10136): appends a plate and selects it. */
 export async function addPlate() {
-  const layout = await useApp.getState().plater!.addPlate();
+  const { plater } = useApp.getState();
+  const added = await plater!.addPlate();
+  const layout = await plater!.selectPlate(added.plates.length - 1);
   applyLayout(layout, layout.plates.length - 1);
 }
 

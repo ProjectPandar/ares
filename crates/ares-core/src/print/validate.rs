@@ -216,14 +216,14 @@ pub(crate) fn validate_applied_project(
             });
         }
     }
-    sequential_clearance::validate(project, resolved, plate_number)?;
-    crate::project_slice::validate_print_height(project, resolved, plate_number)?;
-    extrusion_width::applied(resolved).map_err(into_validate)?;
     let bbl = project_is_bbl(
         settings,
         &project.documents().project_settings_raw,
         selected_printer,
     )?;
+    sequential_clearance::validate(project, resolved, plate_number, bbl)?;
+    crate::project_slice::validate_print_height(project, resolved, plate_number)?;
+    extrusion_width::applied(resolved).map_err(into_validate)?;
     validate_layer_templates(settings, bbl).map_err(into_validate)?;
     bed_filament::validate(
         settings,

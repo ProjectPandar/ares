@@ -13,6 +13,7 @@ export type PlaterEdit =
   | { op: "addPlate" }
   | { op: "deletePlate"; index: number }
   | { op: "lockPlate"; index: number; locked: boolean }
+  | { op: "selectPlate"; index: number }
   | { op: "arrange"; plate: number | undefined; settings: ArrangeSettings };
 
 export type WorkerRequest =

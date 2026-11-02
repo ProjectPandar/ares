@@ -19,6 +19,8 @@ pub struct PlaterSession {
     pub(super) wipe_tower: Option<super::arrange_job::TowerPositions>,
     /// `get_current_vendor_type` over the installed vendors (`set_installed_vendors`).
     pub(super) vendor_type: crate::profiles::VendorType,
+    /// `PartPlateList::m_current_plate`.
+    pub(super) current_plate: usize,
 }
 
 /// One plate of the session: its grid origin and instances.
@@ -113,6 +115,8 @@ impl PlaterSession {
             arrange_orders: BTreeMap::new(),
             wipe_tower: None,
             vendor_type: crate::profiles::VendorType::Unknown,
+            // The plater selects plate 0 after loading (`Plater.cpp:10222, 10229`).
+            current_plate: 0,
         }
     }
 
@@ -274,6 +278,11 @@ impl PlaterSession {
             }
         }
         self.wipe_tower = Some(positions);
+        // `PartPlate.cpp:6809-6815`: the current plate moves back past a deleted one at or
+        // before it.
+        if !(self.current_plate == index && index == 0) && self.current_plate >= index {
+            self.current_plate -= 1;
+        }
         true
     }
 
