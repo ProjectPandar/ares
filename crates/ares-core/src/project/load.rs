@@ -120,10 +120,12 @@ pub(crate) fn load_project_with_preparation(
     // deserialization: non-string/non-array JSON scalars never reach
     // `set_deserialize` and the key keeps its default (`Config.cpp:905-990`).
     project_settings_raw.drop_invalid_wire_scalars();
-    // The EnableSilent 3MF load rule (Model.cpp:259) substitutes unknown
-    // enum/bool wires on the EMBEDDED config before anything else consumes
-    // it; CLI overrides below merge through their own deserialization rule
-    // and are not silently substituted.
+    // `Config.cpp:596-617` (345efec64c7b): legacy rewriting precedes
+    // `set_deserialize_raw`'s EnableSilent substitution at680-695.
+    project_settings_raw.handle_legacy();
+    // The EnableSilent 3MF load rule substitutes unknown enum/bool wires
+    // on the legacy-normalized EMBEDDED config. Caller overrides below
+    // merge through their own deserialization rule and are not substituted.
     project_settings_raw.normalize_embedded_wire_substitutions();
     // CLI:1704 captures the old configuration before user edits.
     let preparation = crate::options::flush_matrix::PreparationContext::capture(
@@ -142,11 +144,11 @@ pub(crate) fn load_project_with_preparation(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
-    // `set_deserialize` runs `handle_legacy` on each option token before the
-    // typed builders run (Config.cpp:577-579), so the raw view — and the
-    // `Slic3r::validate` flat map — is post-legacy (e.g. `ironing_angle: -1`
-    // normalizes to `0`).
-    project_settings_raw.handle_legacy();
+    // Caller overrides are a later serialized write (`Config.cpp:602`);
+    // normalize their tokens without repeating an embedded-only load pass.
+    if !overrides.is_empty() {
+        project_settings_raw.handle_legacy();
+    }
     // The array branch of the same upstream load: joined string arrays bind
     // scalar options (`Config.cpp:945-1001`), so the validation flat map and
     // the typed builders see the bound scalar, not the array.

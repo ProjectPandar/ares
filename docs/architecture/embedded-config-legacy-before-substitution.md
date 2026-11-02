@@ -72,3 +72,26 @@ generator normalization beyond the existing line, or weakened comparator.
 Publish a separate configuration RR with public RED/GREEN evidence,
 breadth transitions, fmt/strict Clippy and explicit remaining full-output
 failures. Stack the separately authorized spiral implementation afterward.
+
+## Qualified configuration result
+
+The unchanged three public load witnesses moved from `Disabled` failures
+at `15acc53be7d9ce03c1256ede9c108b0f30db7a82` to three `Enabled` passes.
+The only production delta is the embedded/override ordering in `load.rs`;
+legacy rules, preset decoding, writer code and strict comparators are unchanged.
+
+The frozen 666-test inventory completed once before and once afterward:
+343 passed, 323 failed and zero ignored in each phase. There were **zero
+status flips and zero prior-PASS to FAIL**. These are test-status counts,
+not a claim that guard-returning or non-parity tests establish Native parity.
+Each phase retained858 Native command-status records; the same ordinary
+producer, reference flags, registered beta profile resources and filter were used.
+
+The three original enabled-spiral cases now have `enabled` in Native,
+API and CLI, stable Native replays and raw API/CLI equality. Their complete
+outputs still fail with M73 retained; the old G17/linearized mismatch is
+absent from the first remaining external non-M73 difference. This is
+configuration GREEN, not spiral/FillBase/FULL closure. All323 retained
+failures, exact execution trees, input/output identities, unchanged test
+postimages and lint receipts are in the external evidence bundle. This
+result note is a post-execution documentation-only delta, not a rerun.
