@@ -19,6 +19,9 @@ mod loaded_config_ranges;
 #[path = "plater_stl_session.rs"]
 mod plater_stl_session;
 
+#[path = "profile_cli_preflight.rs"]
+mod profile_cli_preflight;
+
 #[path = "preset_scalar_array_slice.rs"]
 mod preset_scalar_array_slice;
 #[path = "preset_scalar_loading.rs"]
