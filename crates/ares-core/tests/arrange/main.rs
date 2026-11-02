@@ -3,6 +3,7 @@
 //! shared builder in `support` is used.
 
 mod imex;
+mod imex_zones;
 mod parameters;
 mod placement;
 mod properties;

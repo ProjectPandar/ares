@@ -267,7 +267,7 @@ Every `file:line` is at `345efec64`. An IMEX printer (IDEX, IQEX: several indepe
 - **`crates/ares-core/src/arrangement/imex_zones/`**, beside A2a's `imex.rs`. It is a new module with the layout and the helpers split by responsibility, each under 400 LOC.
 - **Public:** `compute_imex_zone_layout(&DynamicPrintConfig, plate_mode, process_mode, bed_extents) -> ImexZoneLayout`, `ImexZoneLayout`, `BoundingBoxf3` (`BoundingBoxf` is A2a's), and `IMEX_PRIMARY_MODE`. That is what the unit cases need.
 - The helpers stay crate-private. A2c2 and slicing will need some of them (`imex_primary_tool_for_mode`, `find_imex_mode`).
-- **The config:** the cases set keys through `DynamicPrintConfig::set_deserialize_strict`, over the registry entries the keys already have. Typing them in `ProjectSettings`, so a project's values reach the session, is A2c2's prerequisite, as A2b1 typed the volume keys.
+- **The config:** the cases set keys through `DynamicPrintConfig::set_deserialize_strict`, over the registry entries the keys already have. Reading untyped keys this way is temporary: A2c2 types them in `ProjectSettings`, so a project's values reach the session (as A2b1 typed the volume keys), and that replaces it.
 
 ### Included and deferred
 - **Included:** the whole layout function, every role (Primary, Copy, Mirror, Span) with aggregated gantries, the helpers it calls, and `ImexToolLayout`.

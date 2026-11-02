@@ -7,6 +7,7 @@ mod arrange;
 mod arranger;
 mod exclusion_volume;
 pub mod imex;
+pub mod imex_zones;
 mod nest;
 mod nlopt;
 mod params;
