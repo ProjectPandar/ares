@@ -40,6 +40,13 @@ impl Project {
         self.objects.remove(object);
     }
 
+    /// "Delete All" (`delete_all_objects_from_model`, `Plater.cpp:10813, 10821`):
+    /// `model.clear_objects()` and `model.plates_custom_gcodes.clear()`.
+    pub(crate) fn delete_all_objects(&mut self) {
+        self.objects.clear();
+        self.plates_custom_gcodes.clear();
+    }
+
     /// `delete_last_instance`, with its imported copy.
     pub(crate) fn remove_last_instance(&mut self, object: usize) {
         let object = &mut self.objects[object];

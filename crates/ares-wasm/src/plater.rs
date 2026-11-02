@@ -183,6 +183,13 @@ impl PlaterSession {
         self.session.delete_object(object).map_err(js_error)
     }
 
+    /// The Edit menu's "Delete All" (`Plater::priv::delete_all_objects_from_model`): every object
+    /// leaves the model; the plates stay.
+    #[wasm_bindgen(js_name = deleteAllObjects)]
+    pub fn delete_all_objects(&mut self) -> Result<(), JsValue> {
+        self.session.delete_all_objects().map_err(js_error)
+    }
+
     /// "Delete plate" (`PartPlateList::delete_plate`); false for the sole plate.
     #[wasm_bindgen(js_name = deletePlate)]
     pub fn delete_plate(&mut self, index: usize) -> bool {

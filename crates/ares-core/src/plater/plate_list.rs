@@ -171,6 +171,15 @@ impl PlateList {
         }
     }
 
+    /// `PartPlateList::clear()` (`PartPlate.cpp:6454-6499`, `delete_plates` false): every plate and
+    /// the unprintable plate lose their instances; `PartPlate::clear` (`:4173-4184`) keeps the plates'
+    /// locks and settings.
+    pub(super) fn clear(&mut self) {
+        for plate in self.plates.iter_mut().chain([&mut self.unprintable]) {
+            plate.instances.clear();
+        }
+    }
+
     pub(super) fn notify_instance_update(&mut self, model: &impl PlateModel, key: InstanceKey) {
         let bbox = model.convex_hull_bounding_box(key);
         if let Some(index) = self

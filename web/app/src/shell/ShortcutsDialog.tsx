@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
-const ctrl = /Mac|iPhone|iPad/.test(navigator.userAgent) ? "\u2318+" : "Ctrl+";
+const mac = /Mac|iPhone|iPad/.test(navigator.userAgent);
+const ctrl = mac ? "\u2318+" : "Ctrl+";
 
 /**
  * KBShortcutsDialog::fill_shortcuts, limited to the shortcuts this app
@@ -29,6 +30,11 @@ const GROUPS: [string, [string, string][]][] = [
     ["R", "Gizmo rotate"],
     ["A", "Arrange all objects"],
     ["Shift+A", "Arrange objects on selected plates"],
+    // Shortcuts.cpp:33-41, 79-85.
+    [mac ? "Backspace" : "Delete", "Delete Selected"],
+    [`${ctrl}D`, "Delete All"],
+    ["+", "Add instance"],
+    ["-", "Remove instance"],
     ["Tab", "Switch between Prepare/Preview"],
   ]],
   ["Preview", [

@@ -6,7 +6,7 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The Edit menu's "Del
 - **The menu item** is the Edit menu's "Delete All", "Deletes all objects" (`MainFrame.cpp:3199-3201`).
   - It is enabled by `MainFrame::can_delete_all` (`:2128-2131`): the Prepare tab, and a model with objects.
   - Its shortcut is `Shortcut::DeleteAll`, Ctrl+D in the plater (`Shortcuts.cpp:80`), posting `EVT_GLTOOLBAR_DELETE_ALL` (`GLCanvas3D.cpp:4191`, bound at `Plater.cpp:8119`).
-- **`Plater::priv::delete_all_objects_from_model`** (`Plater.cpp:10793-10821`):
+- **`Plater::priv::delete_all_objects_from_model`** (`Plater.cpp:10793-10822`):
   - drops the G-code preview and result, the sequential-clearance overlay and the background process, all UI or slicing state;
   - `partplate_list.clear()` (`PartPlate.cpp:6454-6499`, `delete_plates` false) empties every plate's instances and keeps the plates, so the current plate stays;
   - `model.clear_objects()` removes every object;
@@ -32,9 +32,25 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The Edit menu's "Del
   - the undo snapshot.
 
 ## Oracle and RED
-- **Native for the end state.** After "Delete All" the exported project has no objects. Native slicing a plate with no objects fails with the model read error "The supplied file couldn't be read because it's empty" (`Model.cpp:354-355`), which `empty_selected_plate.rs` already compares. The session's slice of the emptied plate must fail the same way.
+- **Native for the end state.** After "Delete All" the exported project has no objects. Native slicing a plate with no objects fails with the model read error "The supplied file couldn't be read because it's empty." (`Model.cpp:500-501`), which `empty_selected_plate.rs` already compares. The session's slice of the emptied plate must fail the same way.
 - **Cases** in `plater_delete_all.rs`:
   1. `two-plates.3mf`, whose two plates carry custom G-code (colour changes, pauses, templates). "Delete All" leaves two empty plates, the current plate unchanged and no custom G-code. Plate 1's slice fails like Native's on the export (`NoSuitableObjects` with that message).
   2. **Session-only:** "Delete All" on an emptied session returns `InvalidInput`; a locked plate stays locked.
 - **Web E2E** `plateDeleteAll.spec.ts`: Ctrl+D on `two-plates.3mf`. The object list shows two plates without objects, and the shortcuts list shows the four entries.
 - **Expected before GREEN:** cases 1-2 fail on the `todo!()` skeleton of `delete_all_objects`.
+
+## GREEN
+- **Citations corrected.** `delete_all_objects_from_model` ends at `Plater.cpp:10822`. The model read error is `Model.cpp:500-501` (`read_from_file`, reached from `OrcaSlicer.cpp:1758`); `:354-355` is the STL branch at the beta.
+- **Message.** At the beta the read error ends with a period. A separate fix commit ported it: Ares's `NoSuitableObjects` text and the tests that hold it. With it, the four `empty_selected_plate` cases pass against the beta oracle.
+- **`PlaterSession::delete_all_objects`** (`plater/delete_object.rs`).
+  - `InvalidInput("there is no object to delete")` without objects.
+  - Otherwise it calls `PlateList::clear`, `Project::delete_all_objects` and clears the arrange orders.
+- **`PlateList::clear`** empties every plate and the unprintable plate. Locks, plate settings and the current plate stay, as `PartPlate::clear` (`PartPlate.cpp:4173-4184`) leaves them.
+- **`Project::delete_all_objects`** is `model.clear_objects()` and `model.plates_custom_gcodes.clear()` (`Plater.cpp:10813, 10821`).
+- **Deviation from the spec, accepted in review.** `PlaterEdits` gains no custom G-code field. With no objects every slice fails at the model read before custom G-code is used, and the session cannot add objects afterwards, so the field could not be observed. `deleted_objects` already lists every loaded id.
+- **Case 1** moves object 1 below the grid onto the unprintable plate, the next grid cell (`PartPlate.cpp:3942-3949`), which holds instances right of and below its origin (`is_left_top_of`, `:2690-2708`). A mutation that unlocks plates in `PlateList::clear` fails it at the lock assertion.
+- **Web.**
+  - wasm `deleteAllObjects`, through protocol, worker and client.
+  - `PreparePage` binds Ctrl+D (⌘+D on macOS), so the shortcut is off on Preview, while the model has objects and no slice runs. The selection clears.
+  - The shortcuts list shows "Delete Selected" (Backspace on macOS, Delete elsewhere: `DELETE_CHORD`, `Shortcuts.cpp:33-41`), "Delete All", "Add instance" and "Remove instance".
+  - `plateDeleteAll.spec.ts` presses Ctrl+D on Preview (no change) and on Prepare (two empty plates), then checks the list.

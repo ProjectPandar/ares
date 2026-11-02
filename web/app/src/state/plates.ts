@@ -123,6 +123,14 @@ export async function deleteObject(object: number) {
   applyLayout(layout, currentPlate);
 }
 
+/** The Edit menu's "Delete All" (Plater::priv::delete_all_objects_from_model, Plater.cpp:10793-10822); the selection clears. */
+export async function deleteAllObjects() {
+  const { plater, currentPlate } = useApp.getState();
+  const layout = await plater!.deleteAllObjects();
+  useApp.setState({ selectedObject: null });
+  applyLayout(layout, currentPlate);
+}
+
 /** "Set number of instances" (Plater::set_number_of_copies, Plater.cpp:19386-19406); 0 can remove the object. */
 export async function setNumberOfCopies(object: number, num: number) {
   const { plater, currentPlate } = useApp.getState();

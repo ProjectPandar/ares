@@ -27,7 +27,15 @@ impl PlaterSession {
     /// `Plater.cpp:10793-10821`; see `docs/architecture/web-plater-delete-all.md`). `InvalidInput`
     /// without objects, where `MainFrame::can_delete_all` (`MainFrame.cpp:2128-2131`) is false.
     pub fn delete_all_objects(&mut self) -> Result<(), SliceError> {
-        todo!()
+        if self.project.objects().is_empty() {
+            return Err(SliceError::InvalidInput(
+                "there is no object to delete".to_owned(),
+            ));
+        }
+        self.plates.clear();
+        self.project.delete_all_objects();
+        self.arrange_orders.clear();
+        Ok(())
     }
 
     /// The loaded objects `delete_object` removed, by id.
