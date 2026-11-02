@@ -32,28 +32,76 @@ with only the official substituter and `max-jobs=0`, then imports the Native
 objects and checks their NAR hashes against the producer manifest. An already
 present path must match that manifest too. There is no Native fallback.
 
-Hestia remains an optional producer-side reuse mechanism. Its manifest may
-reference evicted packs, so a successful producer job or hook registration is
-not evidence that a cache-only consumer can retrieve an output. Consumers use
-neither that manifest nor Hestia's NAR service for in-run suppliers.
+Hestia is a **read-only** optional producer-side reuse mechanism in Tier1,
+including its consumer jobs. No post-build uploads/drain may republish the same
+outputs into that optional pool. This action-input change does not alter host,
+quota or the existing GC workflow. Its manifest may reference evicted packs,
+so producer success is not consumer delivery proof. Consumers still use neither
+that manifest nor Hestia's NAR service for in-run Native suppliers.
 
-## Capacity gate
+## Capacity gate and receipts
 
 Account for every producer archive separately; counting a deduplicated union
 understates Actions cache usage. `native-oracle-variants.json` is the shared
 retained matrix/audit inventory (16 after B15's processor stable-pair retirement).
 
-The first beta CI is explicitly authorized to establish actual capacity. Its
-capacity job queries Actions service `size_in_bytes` for every exact-run key in
-both automatic push/pull-request runs and requires their combined archive bytes
-to be strictly below decimal10,000,000,000. Producer completion, cache presence,
-unique versions, refs and source identity are mandatory; missing/evicted entries
-are not zero. The job records each row and repository cache-usage context in its
-log/summary, without uploading another artifact or modifying cache policy.
+`native-oracle-cache-budget.py` requires a complete exact-key inventory of both
+automatic push/PR runs, successful supplier matrices and source/ref identity.
+Actual archive bytes for the pair must remain **below 5,000,000,000**. Missing,
+evicted, duplicate or unknown entries BLOCK; they are not zero.
 
-Inner XZ/NAR sizes and the historical2.4.2 bound are not beta capacity evidence.
-An unverified/excessive actual total blocks CI and REVIEW-REQUEST; no waiver,
-cache deletion or fallback transport can manufacture a pass.
+It also reconciles every live repository key through the Actions service:
+
+| Pool | Strict service-byte ceiling |
+|---|---:|
+| Native delivery, all refs/runs | 5,000,000,000 |
+| Optional Hestia packs/manifests | 1,500,000,000 |
+| Rust build/deploy, npm, Playwright acceleration | 1,500,000,000 |
+| Whole repository working envelope | 8,000,000,000 |
+
+The remaining 2,000,000,000 bytes below decimal10GB are reserved margin, not an
+additional upload allocation. Unknown key families/identity/size, incomplete or
+duplicate census rows, a stale usage/list reconciliation or an exhausted pool
+BLOCK. Cache REST does not expose creator runs for optional Hestia/Rust/npm
+entries: preserve UNKNOWN creator and exact ref/time context, count their bytes,
+and never fabricate source provenance. Native source identity is mandatory.
+
+After each actual Native cache publish, `native-oracle-cache-receipt.py` queries
+the exact run/variant/ref key and records run/attempt/head, cache ID/version,
+created time and actual archive bytes in the producer log and step summary.
+Missing/ambiguous metadata fails the producer step. `RECORDED` is a receipt,
+not a capacity pass or a guarantee the entry will survive eviction. The capacity
+job emits the complete per-key/family census to log/summary without uploading
+another artifact or cache. Inner XZ/NAR sizes are diagnostic, not authority.
+
+## Retention and admission rules — no automatic deletion
+
+- Protect the selected current automatic pair, its active consumers and approved
+  reruns. The gate blocks Native keys outside this protected run set, even if
+  total bytes happen to fit. That is a request for owner retention review,
+  **not** proof an outside key is safe to delete.
+- Retain all16 supplier variants and seed ELF/debug/source pairing until the
+  approved contract changes. A higher manifest generation does not prove packs
+  unreachable; optional acceleration is not automatically superseded.
+- Unique run keys otherwise accumulate. A replacement pair must have room for
+  its peak overlap before publication. Do not serialize whole workflows in a
+  way that deadlocks the paired push/PR capacity wait.
+- Removal of superseded exact IDs or deliberate optional-family retirement is
+  an irreversible external operation and requires the **human user's explicit
+  approval**. No script here deletes caches, invokes GC or changes quota.
+- The historical143-key Hestia proposal is not deletion authorization. Refresh
+  exact IDs/versions/ref/size, ownership/reachability and quiescent writers/
+  consumers before any separately approved retirement. Do not delete current
+  Native suppliers, main caches or other branches' acceleration implicitly.
+- Repository-wide writers share this envelope. This post-publication gate is
+  detection, **not a reservation, lock or atomic admission system**. Read-only
+  Tier1 inputs prevent future duplicate writes through that path but do not
+  reclaim existing entries or control other workflows. Explicit coordination
+  of publication windows and approved retention remains required; do not claim
+  a green future steady state until real service inventories and consumers pass.
+
+The current real repository remains over budget with evicted suppliers. A
+successful implementation check of its BLOCK behavior does not unblock PR4.
 
 ## References
 
