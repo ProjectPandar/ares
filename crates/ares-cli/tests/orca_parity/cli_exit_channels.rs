@@ -23,6 +23,11 @@ fn assert_family(case: &str, rejection: EarlyExit) {
     } else {
         fixture(&format!("{case}.3mf"))
     };
+    assert_channels(case, &project, &artifacts, rejection);
+}
+
+/// Native's stdout, stderr and complete result.json for `project`, and Ares's against them.
+fn assert_channels(case: &str, project: &Path, artifacts: &Path, rejection: EarlyExit) {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -32,8 +37,8 @@ fn assert_family(case: &str, rejection: EarlyExit) {
             "missing input must be absent before Native"
         );
     }
-    let native = runner.early_cli_reference(&project, rejection).unwrap();
-    let hit = runner.early_cli_reference(&project, rejection).unwrap();
+    let native = runner.early_cli_reference(project, rejection).unwrap();
+    let hit = runner.early_cli_reference(project, rejection).unwrap();
     assert_eq!(native.directory, hit.directory);
     assert_eq!(native.stdout, hit.stdout);
     assert_eq!(native.stderr, hit.stderr);
@@ -53,7 +58,7 @@ fn assert_family(case: &str, rejection: EarlyExit) {
     let output = Command::new(env!("CARGO_BIN_EXE_ares"))
         .args(["slice", "-o"])
         .arg(&gcode)
-        .arg(&project)
+        .arg(project)
         .output()
         .unwrap();
     fs::write(artifacts.join("stdout"), &output.stdout).unwrap();
@@ -83,12 +88,12 @@ fn assert_family(case: &str, rejection: EarlyExit) {
     assert!(!gcode.exists(), "early rejection must not export G-code");
 
     if matches!(rejection, EarlyExit::NotFound) {
-        fs::write(&project, b"input now exists").unwrap();
+        fs::write(project, b"input now exists").unwrap();
         let failure = runner
-            .early_cli_reference(&project, rejection)
+            .early_cli_reference(project, rejection)
             .err()
             .unwrap();
-        fs::remove_file(&project).unwrap();
+        fs::remove_file(project).unwrap();
         assert!(failure.to_string().contains("must remain absent"));
     }
 }
@@ -145,6 +150,62 @@ fn cli_exit_numeric_range_family_matches_native() {
 #[test]
 fn cli_exit_empty_plate_family_matches_native() {
     assert_family("empty-plate", EarlyExit::EmptyPlate);
+}
+
+/// The empty plate with an unknown `support_ironing_pattern` key: the 3MF load substitutes the
+/// default and reports it on stderr and as a `config_value_substituted` warning
+/// (`cli_report_config_substitutions`, OrcaSlicer.cpp:520-534, :1992) before the -50 rejection
+/// (:6562-6573) writes result.json.
+#[test]
+fn cli_exit_empty_plate_reports_a_substituted_value_like_native() {
+    let artifacts = tempfile::Builder::new()
+        .prefix("cli-early-substituted-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    let project = artifacts.join("empty-plate-substituted.3mf");
+    fs::write(
+        &project,
+        substituted(&fs::read(fixture("empty-plate.3mf")).unwrap()),
+    )
+    .unwrap();
+    assert_channels(
+        "empty-plate-substituted",
+        &project,
+        &artifacts,
+        EarlyExit::EmptyPlate,
+    );
+}
+
+/// `input` with `support_ironing_pattern` set to the unknown key `cross-zag`.
+fn substituted(input: &[u8]) -> Vec<u8> {
+    use std::io::{Cursor, Read, Write};
+    let mut reader = zip::ZipArchive::new(Cursor::new(input)).unwrap();
+    let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..reader.len() {
+        let mut file = reader.by_index(index).unwrap();
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        if file.name() == "Metadata/project_settings.config" {
+            let needle = r#""support_ironing_pattern": "rectilinear""#;
+            let text = String::from_utf8(bytes).unwrap();
+            assert!(
+                text.contains(needle),
+                "fixture must carry the rectilinear pattern"
+            );
+            bytes = text
+                .replacen(needle, r#""support_ironing_pattern": "cross-zag""#, 1)
+                .into_bytes();
+        }
+        writer
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+            )
+            .unwrap();
+        writer.write_all(&bytes).unwrap();
+    }
+    writer.finish().unwrap().into_inner()
 }
 
 #[test]
