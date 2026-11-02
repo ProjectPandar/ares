@@ -18,6 +18,8 @@ mod arranged;
 mod bed_exclusion;
 #[path = "plater_arrange/current_plate.rs"]
 mod current_plate;
+#[path = "plater_arrange/imex.rs"]
+mod imex;
 #[path = "plater_arrange/wipe_tower.rs"]
 mod wipe_tower;
 use arranged::Arranged;
