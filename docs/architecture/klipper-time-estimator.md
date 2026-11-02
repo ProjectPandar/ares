@@ -25,10 +25,11 @@ A repeatable RED must generate Native expectations at runtime from real inputs.
 The current `processor/schedule.rs:38` unconditionally instantiates
 `motion::RollingPlanner`; `motion/planner/mod.rs:109` runs the Marlin reverse/
 forward trapezoid planner, and `prepare` always uses classic axis/jerk rules.
-Changing just the final trapezoid integration would leave wrong block inputs.
-The first diagnostic E-only block already has different acceleration, so the
-source preparation/limits boundary is part of this slice, not an optional
-optimization after copying `plan_klipper`.
+Changing just the final trapezoid integration would leave Marlin block rules.
+Klipper block preparation/limits are part of this source slice, not an optional
+optimization after copying `plan_klipper`. Diagnostic raw Rust MotionBlock and
+post-cap Native TimeBlock snapshots are different representation stages; their
+raw acceleration values alone do not establish a mismatched final acceleration.
 
 ## Upstream owner and exact Rust destination
 
@@ -126,11 +127,11 @@ imported. New test registration stays in an already-registered leaf module.
    inspect every downstream strict first difference, never manufacture GREEN.
 4. Targeted Marlin/public processor controls, Klipper legacy/ratio/flush cases
    and the six original acceleration-literal cases must be run only within
-   separately approved bounded runtime scope. Task199 stays open until its
-   six strict results receive the timing-owner disposition; improving timing
-   alone does not close it. Gap-fill and spiral-lift differences remain with
-   their existing owners and are not fixed by this estimator slice.
-5. CPU15, jobs1, nextest rather than cargo test. fmt and workspace/all-target/
+   separately approved bounded runtime scope. The six Klipper acceleration-literal
+   cases stay open until their strict results receive the timing-owner disposition;
+   improving timing alone does not close them. Gap-fill and spiral-lift differences
+   remain with their existing owners and are not fixed by this estimator slice.
+5. Use nextest rather than cargo test. fmt and workspace/all-target/
    all-feature clippy `-D warnings` required. Keep all runtime dumps outside
    Git; no G-code, Native binaries, caches or computed Native goldens committed.
 

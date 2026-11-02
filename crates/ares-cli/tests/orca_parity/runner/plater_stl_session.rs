@@ -13,6 +13,9 @@ use ares_core::{
 
 const MACHINE: &str = "LH Stinger 0.4 nozzle";
 
+#[path = "klipper_time_estimator.rs"]
+mod klipper_time_estimator;
+
 struct Presets {
     catalog: String,
     selection: String,
