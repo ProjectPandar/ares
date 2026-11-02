@@ -200,7 +200,7 @@ pub use project::{
     project_config_substitutions,
 };
 pub use project_slice::{
-    CliProjectSliceRequest, CliUpwardMachine, slice_cli_project_plate_validated,
+    CliProjectSliceRequest, CliUpwardMachine, SlicedPlate, slice_cli_project_plate_validated,
     slice_project_plate_processed_validated, slice_project_plate_validated,
 };
 pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};

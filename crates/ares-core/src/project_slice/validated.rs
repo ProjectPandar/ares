@@ -32,6 +32,8 @@ pub struct CliProjectSliceRequest<'a> {
     pub overrides: &'a ConfigOverrides,
     pub record_moves: bool,
     pub upward: CliUpwardMachine<'a>,
+    /// Filled with the plate's success report values (`crate::SlicedPlate`).
+    pub sliced_plate: &'a mut crate::SlicedPlate,
 }
 
 pub async fn slice_cli_project_plate_validated(
@@ -45,6 +47,7 @@ pub async fn slice_cli_project_plate_validated(
         overrides,
         record_moves,
         upward,
+        sliced_plate,
     } = request;
     upward.report.clear();
     overrides.validate_cli_config()?;
@@ -56,6 +59,7 @@ pub async fn slice_cli_project_plate_validated(
             overrides,
             validate_print: true,
             upward: Some(upward),
+            sliced_plate: Some(sliced_plate),
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -80,6 +84,7 @@ pub async fn slice_project_plate_validated(
             overrides,
             validate_print: true,
             upward: None,
+            sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -105,6 +110,7 @@ pub async fn slice_project_plate_processed_validated(
             overrides,
             validate_print: true,
             upward: None,
+            sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,

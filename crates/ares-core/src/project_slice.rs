@@ -46,7 +46,7 @@ mod validated;
 pub(crate) use profile_entry::load_and_place;
 pub(crate) use profile_entry::validate_profile_source;
 
-pub use source::CliUpwardMachine;
+pub use source::{CliUpwardMachine, SlicedPlate};
 pub(crate) use validated::validate_post_process;
 pub use validated::{
     CliProjectSliceRequest, slice_cli_project_plate_validated,
@@ -119,6 +119,7 @@ pub async fn slice_project_plate(
             overrides,
             validate_print: false,
             upward: None,
+            sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -145,6 +146,7 @@ pub async fn slice_project_plate_processed(
             overrides,
             validate_print: false,
             upward: None,
+            sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,

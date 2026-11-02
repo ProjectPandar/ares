@@ -11,6 +11,8 @@ pub(crate) struct ProjectSource<'a> {
     /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
     pub(crate) validate_print: bool,
     pub(crate) upward: Option<CliUpwardMachine<'a>>,
+    /// The CLI's success report values, filled once the plate is set up.
+    pub(crate) sliced_plate: Option<&'a mut SlicedPlate>,
     /// Plater edits applied to the loaded model (empty for a plain slice).
     pub(crate) edits: &'a crate::plater::PlaterEdits,
 }
@@ -21,6 +23,18 @@ pub struct CliUpwardMachine<'a> {
     pub source: Option<crate::UpwardMachineSource>,
     pub input: crate::UpwardMachineInput<'a>,
     pub report: &'a mut Vec<String>,
+}
+
+/// The plate values of the CLI's success report (`OrcaSlicer.cpp:8126-8136` at v2.5.0-beta
+/// `345efec64`): `sliced_plate_info.triangle_count` (`:6576-6640`) and `sliced_info`'s
+/// `layer_height`, `wall_loops`, `sparse_infill_density` (`:6926-6931`).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct SlicedPlate {
+    pub triangle_count: usize,
+    /// The f32-stored value widened to f64.
+    pub layer_height: f64,
+    pub wall_loops: i32,
+    pub sparse_infill_density: f64,
 }
 
 #[derive(Clone, Copy)]
@@ -65,6 +79,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             upward: None,
+            sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
         }
     }
@@ -81,6 +96,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             upward: None,
+            sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
         }
     }

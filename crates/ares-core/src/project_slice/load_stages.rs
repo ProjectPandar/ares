@@ -8,8 +8,9 @@ use super::{
 };
 
 pub(super) fn prepare_post_closing(
-    project: ProjectSource<'_>,
+    mut project: ProjectSource<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
+    let sliced_plate = project.sliced_plate.take();
     let state::ProjectSliceState {
         project,
         resolved,
@@ -21,6 +22,19 @@ pub(super) fn prepare_post_closing(
     } else {
         state::prepare_project_source(project)?
     };
+    if let Some(sliced_plate) = sliced_plate {
+        // `OrcaSlicer.cpp:6576-6640, 6926-6931`: the plate's facets and `m_print_config` values, read
+        // as `Print::validate`'s failure families read them (`print/validate.rs`).
+        let settings = &resolved.views.full;
+        *sliced_plate = crate::SlicedPlate {
+            triangle_count: state::inside_triangle_count(&project)?,
+            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+            wall_loops: settings.process.region.wall_loops.0,
+            sparse_infill_density: f64::from(
+                settings.process.region.sparse_infill_density.0 as f32,
+            ),
+        };
+    }
     let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
     let max_gap_scaled = scale
         .checked_scale(2.0)

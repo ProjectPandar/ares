@@ -28,9 +28,8 @@ pub(super) struct FamilyFailure {
     #[cfg(target_os = "linux")]
     error_string: &'static str,
     upward_machines: Vec<String>,
-    /// `sliced_info.warnings` (`OrcaSlicer.cpp:505-518`): the `config_value_substituted` entries.
     #[cfg(target_os = "linux")]
-    warnings: Vec<(String, ares_core::ConfigSubstitution)>,
+    warnings: Vec<crate::result_json::CliWarning>,
     stderr: String,
     #[cfg(target_os = "linux")]
     output: PathBuf,
@@ -82,7 +81,12 @@ impl CliFailure {
             {
                 family.warnings = substitutions
                     .into_iter()
-                    .map(|substitution| (file.to_owned(), substitution))
+                    .map(
+                        |substitution| crate::result_json::CliWarning::ConfigValueSubstituted {
+                            file: file.to_owned(),
+                            substitution,
+                        },
+                    )
                     .collect();
             }
         }

@@ -181,7 +181,7 @@ pub async fn profile_settings(
 
 /// Model identity and preset files supplied by the native
 /// `--load-settings`/`--load-filaments` CLI lists.
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct LoadSettingsSliceRequest<'a> {
     pub filename: &'a str,
     pub settings: &'a [LoadSettingsFile<'a>],
@@ -189,6 +189,8 @@ pub struct LoadSettingsSliceRequest<'a> {
     pub plate: Option<u32>,
     pub overrides: &'a crate::ConfigOverrides,
     pub placement: Placement,
+    /// Filled with the plate's success report values (`crate::SlicedPlate`).
+    pub sliced_plate: &'a mut crate::SlicedPlate,
 }
 
 /// Slices through the project Print lifecycle with the loaded preset
@@ -218,6 +220,7 @@ fn with_load_settings_source<T>(
         plate,
         overrides,
         placement,
+        sliced_plate,
     } = request;
     if filename.is_empty() {
         return Err(SliceError::InvalidInput(
@@ -249,6 +252,7 @@ fn with_load_settings_source<T>(
         overrides,
         validate_print,
         upward: None,
+        sliced_plate: Some(sliced_plate),
         edits: &crate::plater::NO_EDITS,
     })
 }
@@ -301,6 +305,7 @@ pub(crate) fn with_edited_profile_source<T>(
         overrides,
         validate_print: false,
         upward: None,
+        sliced_plate: None,
         edits,
     })
 }

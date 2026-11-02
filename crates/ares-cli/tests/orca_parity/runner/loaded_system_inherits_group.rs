@@ -126,6 +126,7 @@ fn check(case: &str, repeat: u8) -> Recorded {
                 plate: None,
                 overrides: &ConfigOverrides::default(),
                 placement: ares_core::Placement::None,
+                sliced_plate: &mut ares_core::SlicedPlate::default(),
             },
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),

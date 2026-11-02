@@ -1,15 +1,29 @@
 #![cfg(target_os = "linux")]
 
 pub(crate) fn result_comparison_bytes(bytes: &[u8]) -> Vec<u8> {
-    // OrcaSlicer.cpp:5540/436 and :7104/437 serialize UTC elapsed seconds.
+    // OrcaSlicer.cpp:5540/436 and :7104/437 serialize UTC elapsed seconds, and so does every
+    // success-report plate entry (sliced_time / sliced_time_with_cache, :7259-7260 at the beta).
     let mut json = std::str::from_utf8(bytes).unwrap().to_owned();
     for field in ["prepare_time", "export_time"] {
         let prefix = format!("\"{field}\": ");
         let start = json.find(&prefix).unwrap() + prefix.len();
-        let digits = json[start..].bytes().take_while(u8::is_ascii_digit).count();
-        json.replace_range(start..start + digits, "0");
+        zero_digits(&mut json, start);
+    }
+    for field in ["sliced_time", "sliced_time_with_cache"] {
+        let prefix = format!("\"{field}\": ");
+        let mut from = 0;
+        while let Some(found) = json[from..].find(&prefix) {
+            let start = from + found + prefix.len();
+            zero_digits(&mut json, start);
+            from = start;
+        }
     }
     json.into_bytes()
+}
+
+fn zero_digits(json: &mut String, start: usize) {
+    let digits = json[start..].bytes().take_while(u8::is_ascii_digit).count();
+    json.replace_range(start..start + digits, "0");
 }
 
 #[test]

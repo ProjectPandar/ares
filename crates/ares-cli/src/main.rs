@@ -1,6 +1,8 @@
 mod compatible_machine;
 mod failure;
 mod moves_csv;
+#[cfg(target_os = "linux")]
+mod result_json;
 
 use std::fs;
 use std::io;
@@ -152,6 +154,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             .iter()
             .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
             .collect::<Vec<_>>();
+        let mut sliced_plate = ares_core::SlicedPlate::default();
         let gcode = match ares_core::slice_with_load_settings(
             &input,
             ares_core::LoadSettingsSliceRequest {
@@ -161,6 +164,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 plate: args.plate,
                 overrides: &overrides,
                 placement: ares_core::Placement::None,
+                sliced_plate: &mut sliced_plate,
             },
             ares_core::GenerationMetadata::default(),
             ares_core::SlicerContext::new(0),
@@ -181,11 +185,18 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 .with_config_substitutions(&input_file, substitutions(&input)));
             }
         };
-        eprint!(
-            "{}",
-            substitution_warnings(&input_file, &substitutions(&input))
-        );
         fs::write(&args.output, gcode)?;
+        report_success(
+            &input_file,
+            substitutions(&input),
+            #[cfg(target_os = "linux")]
+            result_json::Success {
+                output: &args.output,
+                plate: args.plate.unwrap_or(1),
+                sliced_plate,
+                upward_machines: &[],
+            },
+        );
         return Ok(());
     }
     let output = match extension {
@@ -195,6 +206,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             let (source, machine_full) =
                 compatible_machine::load(&input, args.resources_dir.as_deref())?;
             let mut upward_report = Vec::new();
+            let mut sliced_plate = ares_core::SlicedPlate::default();
             let upward = ares_core::CliUpwardMachine {
                 source,
                 input: ares_core::UpwardMachineInput::FetchOriginal(machine_full.as_deref()),
@@ -212,6 +224,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             overrides: &overrides,
                             record_moves: true,
                             upward,
+                            sliced_plate: &mut sliced_plate,
                         },
                         metadata,
                         context,
@@ -241,6 +254,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             overrides: &overrides,
                             record_moves: false,
                             upward,
+                            sliced_plate: &mut sliced_plate,
                         },
                         metadata,
                         context,
@@ -261,11 +275,19 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     }
                 }
             };
-            eprint!(
-                "{}",
-                substitution_warnings(&input_file, &substitutions(&input))
+            fs::write(&args.output, gcode)?;
+            report_success(
+                &input_file,
+                substitutions(&input),
+                #[cfg(target_os = "linux")]
+                result_json::Success {
+                    output: &args.output,
+                    plate: args.plate.unwrap_or(1),
+                    sliced_plate,
+                    upward_machines: &upward_report,
+                },
             );
-            gcode
+            return Ok(());
         }
         Some(extension) if extension == "stl" => {
             let options = args.options.ok_or_else(|| {
@@ -290,6 +312,19 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     fs::write(&args.output, output)?;
 
     Ok(())
+}
+
+/// The end of a successful 3MF slice: the load's substitution report on stderr
+/// (`cli_report_config_substitutions`, `OrcaSlicer.cpp:520-534`) and, on Linux, the success
+/// result.json.
+fn report_success(
+    file: &str,
+    substitutions: Vec<ares_core::ConfigSubstitution>,
+    #[cfg(target_os = "linux")] result: result_json::Success<'_>,
+) {
+    eprint!("{}", substitution_warnings(file, &substitutions));
+    #[cfg(target_os = "linux")]
+    result.write(file, substitutions);
 }
 
 /// The 3MF load's substitutions (`OrcaSlicer.cpp:1737-1758`). A project whose settings cannot be

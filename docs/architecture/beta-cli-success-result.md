@@ -46,3 +46,18 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The CLI writes resul
 ## RED
 1. A new success-channel test, `cli_success_result`. For the Ender-3 cube and `combined-brim.3mf`, it runs Native `--slice 1` and `ares slice --plate 1` and compares exit, stdout, stderr and the complete result.json through `result_comparison_bytes`. Both fail today: Ares writes no result.json.
 2. The helper's sliced-time normalization gets its own unit case, in the existing `native_wall_clock.rs` tests.
+
+## GREEN
+- **Core.**
+  - `ares_core::SlicedPlate { triangle_count, layer_height, wall_loops, sparse_infill_density }` is filled through a new `sliced_plate: &mut SlicedPlate` field on `CliProjectSliceRequest` and `LoadSettingsSliceRequest`, following `CliUpwardMachine.report`. `LoadSettingsSliceRequest` loses its unused `Clone, Copy` derive.
+  - `prepare_post_closing`, where both the plain and the profile path first hold the selected project and resolved settings, writes it.
+  - The triangle count is `inside_triangle_count` (`state/print_volume.rs`): the same `calc_print_volume_state` test as the -50 gate, summing the model-part volumes' facets for each inside instance. The settings are read as the validate families read them.
+- **CLI.**
+  - `result_json.rs` holds the one writer, `ResultJson`, filled by the failure families (`FamilyFailure::record_exit_reason`) and by `Success`.
+  - `CliWarning` is the exhaustive warnings element, with its one producer-backed variant.
+  - `sliced_plates` is written only when the report has a plate, as upstream adds the key only on the first push.
+  - After writing the G-code, a 3MF success prints the substitution lines and, on Linux, writes "Success.", the selected plate, one plate entry and the upward machines (none on the `--load-settings` path, which has no upward report).
+- **Test helper.** `result_comparison_bytes` zeroes every `sliced_time` and `sliced_time_with_cache`.
+- **Result** (beta oracle):
+  - `cli_success_result_matches_native_for_one_cube` and `cli_success_result_counts_triangles_per_instance_like_native` pass, as does the helper case.
+  - The warnings slice's set is unchanged.
