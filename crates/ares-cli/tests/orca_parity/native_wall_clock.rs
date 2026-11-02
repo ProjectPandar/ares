@@ -23,6 +23,20 @@ fn custom_gcode_json_comparison_ignores_only_wall_clock_values() {
     assert_eq!(result_comparison_bytes(native).as_slice(), actual);
 }
 
+/// The success report's per-plate `sliced_time` / `sliced_time_with_cache` are wall-clock seconds
+/// too (`OrcaSlicer.cpp:7259-7260`).
+#[test]
+fn success_json_comparison_ignores_every_sliced_time() {
+    let actual = br#"{"export_time": 0, "prepare_time": 0, "sliced_plates": [{"id": 1, "sliced_time": 0, "sliced_time_with_cache": 0, "triangle_count": 12}, {"id": 2, "sliced_time": 0, "sliced_time_with_cache": 0, "triangle_count": 3}]}"#;
+    let native = br#"{"export_time": 4, "prepare_time": 1, "sliced_plates": [{"id": 1, "sliced_time": 7, "sliced_time_with_cache": 2, "triangle_count": 12}, {"id": 2, "sliced_time": 15, "sliced_time_with_cache": 9, "triangle_count": 3}]}"#;
+    assert_eq!(result_comparison_bytes(native).as_slice(), actual);
+    let other_count = br#"{"export_time": 0, "prepare_time": 0, "sliced_plates": [{"id": 1, "sliced_time": 0, "sliced_time_with_cache": 0, "triangle_count": 13}, {"id": 2, "sliced_time": 0, "sliced_time_with_cache": 0, "triangle_count": 3}]}"#;
+    assert_ne!(
+        result_comparison_bytes(actual),
+        result_comparison_bytes(other_count)
+    );
+}
+
 #[test]
 fn custom_gcode_json_comparison_preserves_other_bytes() {
     let actual = br#"{"prepare_time": 0, "export_time": 0, "return_code": -100}"#;

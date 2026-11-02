@@ -6,6 +6,9 @@ use std::{fs, path::Path, process::Command};
 
 use crate::{native_wall_clock::result_comparison_bytes, runner::EarlyExit};
 
+#[path = "cli_success_result.rs"]
+mod success_result;
+
 fn fixture(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/parity/validation/cli-exit")
