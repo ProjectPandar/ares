@@ -170,7 +170,10 @@ pub(in crate::project_slice) fn surface_polylines(
             let fill = surface_fill(request);
             super::cubic::polylines(
                 &fill,
-                request.print_z,
+                super::cubic::LayerGeometry {
+                    print_z: request.print_z,
+                    layer_id: request.call.layer_id,
+                },
                 request.call.scale,
                 request.call.reference,
             )

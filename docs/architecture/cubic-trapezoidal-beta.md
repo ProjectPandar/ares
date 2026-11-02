@@ -80,3 +80,45 @@ Record this distinction in the port commit and this ARD. Require count-one
 raw-control PASS before and after, same-inventory fill breadth with zero
 PASS-to-FAIL, rustfmt and all-target Clippy with warnings denied. Intermediate
 Native observation budget remains zero; ordinary public replay is unchanged.
+
+## Executed port and qualification
+
+`fill/cubic_trapezoidal/envelope.rs` ports the five-line envelope without a
+new geometry abstraction. `rows.rs` emits the two levels in source order;
+zero-allocation iterator tiling preserves the nested source `j/i` order and
+first-tile index rule. The common frame uses the rotated surface contour for
+coverage and the shared `trapezoidal_tail::finish` unchanged. The owning fill
+seam supplies the symmetric PrintObject origin as the reference. Both ordinary
+fill generation and the sparse anchoring seam pass the planned layer ID and
+print z through `cubic::LayerGeometry`; count-one sweeps retain their arithmetic.
+
+After the lint-only context/iterator adjustment, fresh public execution gives:
+
+| Frozen input | Exact Native/Ares raw motion + M73 records | Control/target result |
+| --- | ---: | --- |
+| C2 | 16,629 / 16,629 | Exact ordered block GREEN |
+| C3 | 12,626 / 12,626 | Exact ordered block GREEN |
+| HC2 | 17,358 / 17,358 | Exact ordered block GREEN |
+| C1 | 4,876 / 4,876 | Raw control PASS before and after |
+
+Native double replay is stable for all four inputs. API and CLI output bytes
+are identical for all four, not merely their motion blocks. All four final
+Ares API/CLI files also equal the initial port candidate's corresponding files;
+C1's entire Ares files equal the pre-port files byte for byte.
+
+Exhaustive raw-line comparison leaves only the permitted generator line and
+the two footer records listed above. C2/C3/HC2 complete-output tests stay enabled
+and FAIL at footer lines 17118/13117/17941, respectively; the direct test run is
+1 raw-control PASS and 3 full-output FAIL, exit 100. C1's separately recorded
+full comparison also remains footer FAIL at line 5360. This commit's GREEN is
+only the explicitly authorized exact block qualification, not full parity.
+
+The final same-inventory breadth filter covers multiline, cubic, bridge,
+infill and plane-path names: 232 tests on each side, 59 PASS / 173 FAIL before
+and after, zero PASS-to-FAIL, zero FAIL-to-PASS, no inventory additions/removals.
+Both suites exit 100. Those whole-output verdicts are not converted into
+passes by the block result. Tests outside this bounded inventory are not
+claimed as passing. Final rustfmt and all-target Clippy with warnings denied
+pass without new lint suppressions. The initial Clippy nesting/argument-count
+failures are retained in external evidence and were fixed before the final
+reruns. There are no temporary probes or new Native intermediate observations.

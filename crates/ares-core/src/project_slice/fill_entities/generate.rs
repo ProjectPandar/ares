@@ -131,7 +131,10 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 super::cubic::append(
                     &mut output,
                     fill,
-                    layer.print_z,
+                    super::cubic::LayerGeometry {
+                        print_z: layer.print_z,
+                        layer_id: layer.id,
+                    },
                     traversal.scale,
                     object_reference,
                 )?;

@@ -13,6 +13,7 @@ pub(crate) mod checked_rotate;
 pub(crate) mod concentric_sparse;
 pub(crate) mod connect;
 pub(crate) mod cross_hatch;
+pub(crate) mod cubic_trapezoidal;
 pub(crate) mod grid_trapezoidal;
 pub(crate) mod gyroid;
 pub(crate) mod gyroid_field;

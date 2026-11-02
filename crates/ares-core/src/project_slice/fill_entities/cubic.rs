@@ -1,6 +1,6 @@
 //! Cubic sparse infill — `FillCubic::fill_surface`
-//! (`FillRectilinear.cpp:3506-3516`): three 60° scanline families shifted by
-//! `sqrt(0.5) * print_z` and connected as one pool.
+//! (`FillRectilinear.cpp:3603-3618`): count one retains three z-shifted
+//! scanline families; count greater than one dispatches trapezoidal mode 3.
 use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
 use crate::{
@@ -12,13 +12,19 @@ use crate::{
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
+#[derive(Clone, Copy)]
+pub(super) struct LayerGeometry {
+    pub(super) print_z: f64,
+    pub(super) layer_id: usize,
+}
+
 pub(super) fn polylines(
     fill: &SurfaceFill,
-    print_z: f64,
+    geometry: LayerGeometry,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
-    let shift = (std::f64::consts::FRAC_1_SQRT_2 * print_z) as f32;
+    let shift = (std::f64::consts::FRAC_1_SQRT_2 * geometry.print_z) as f32;
     // Raw upstream sweep bases {0, π/3, 2π/3}; the +π/2 frame offset from
     // `Fill::_infill_direction` (FillBase.cpp:329) is folded into
     // `params.angle` below to reproduce upstream's f32 accumulation order.
@@ -48,7 +54,21 @@ pub(super) fn polylines(
     };
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
-        polylines.extend(fill_surface(expolygon, params, &sweeps, scale).map_err(cubic_error)?);
+        let lines = if params.multiline > 1 {
+            crate::fill::cubic_trapezoidal::fill_surface(
+                expolygon,
+                params,
+                crate::fill::cubic_trapezoidal::SurfaceGeometry {
+                    layer_id: geometry.layer_id,
+                    thickness_layers: fill.representative.thickness_layers,
+                    print_z: geometry.print_z,
+                },
+                scale,
+            )
+        } else {
+            fill_surface(expolygon, params, &sweeps, scale)
+        };
+        polylines.extend(lines.map_err(cubic_error)?);
     }
     Ok(polylines)
 }
@@ -56,14 +76,14 @@ pub(super) fn polylines(
 pub(super) fn append(
     output: &mut LayerFillEntities,
     mut fill: SurfaceFill,
-    print_z: f64,
+    geometry: LayerGeometry,
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
     let expolygons = std::mem::take(&mut fill.expolygons);
     for expolygon in expolygons {
         fill.expolygons = vec![expolygon];
-        let polylines = polylines(&fill, print_z, scale, object_reference)?;
+        let polylines = polylines(&fill, geometry, scale, object_reference)?;
         if polylines.is_empty() {
             continue;
         }
