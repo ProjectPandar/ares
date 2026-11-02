@@ -46,6 +46,55 @@ If they cannot establish entry equality, report the evidence gap and request a
 bounded observation in an RR before running any Native observer. Current budget
 is zero. Standard public parity replay remains the authorized test mechanism.
 
+## Executed angle-selection mismatch before monotonic fill
+
+The Ares-only captures establish a difference before monotonic traversal:
+
+| Input | Candidate and rewrite angle (f64) | Monotonic entry angle (f32) |
+| --- | ---: | ---: |
+| Hilbert, compensation 0 | 4.7123887041029775 | 4.7123885 |
+| Hilbert, compensation 0.1 | 4.712388855299633 | 4.712389 |
+| Octagram, compensation 0.1 | 1.7671458676442586 | 1.7671459 |
+
+All three execute candidate layer 44 / region 0, with 5, 5, and 8 sparse
+anchors respectively. Lower layer 43 / the same region has one Internal square,
+no holes, contained strictly inside the candidate area. Thus the same-region
+sparse-overlap condition is true in the observed Ares data. Direction is 45
+degrees, sparse rotation template empty, model alignment disabled, model
+rotation zero, and internal bridge override zero.
+
+Upstream `PrintObject.cpp:3913–3942` first selects the lower-layer configured
+rotation for anchored Hilbert/Octagram with same-region sparse overlap. For
+these inputs, `Fill.cpp:84–91` returns `deg2rad(45)` for the empty template;
+adding `0.5 * PI` and normalizing gives `2.356194490192345`. The Ares
+`candidate_bridge_angle.rs` has no such branch: it invokes geometric detection
+unconditionally, and `automatic_bridge_angle.rs::pattern_adjustment` adds a
+Hilbert `PI/4` or Octagram `PI/16`. These are concrete source inconsistencies on
+the captured path, not a need for a numerical tolerance or a monotonic repair.
+Native's ordered bridge motions are diagonal, consistent with the configured
+selection, but no exact Native intermediate angle is claimed to be captured.
+
+The Ares bridge-over-infill output and monotonic entry retain the same ordered
+square and no holes: half-size 4,223,233 for compensation 0, and 4,323,233 for
+compensation 0.1. Metadata is InternalBridge, thickness -1, thickness_layers 1.
+Entry flow is width/height 0.38987178, spacing 0.4398718, mm3_per_mm
+0.11938051879405975, bridge true, density 100%, multiline 1. This is Ares-side
+transfer equality only. Equal Native serialized width/height does not prove
+all Native flow fields or polygons equal. Entry is already inconsistent in
+angle, so there is no basis to advance into monotonic graph traversal.
+
+The next repair boundary is the configured lower-region angle gate at
+`PrintObject.cpp:3913–3942` and its reached `Fill.cpp` rotation calculation,
+with the existing custom-angle override still applied afterwards at `3944+`.
+Do not hard-code 135 degrees: retain lower-layer ID, same-region sparse-overlap,
+real-anchor, template and model-alignment semantics, and the geometry fallback
+when that gate is inactive. Sampling resolution, contact restoration, and other
+adjacent turning-pattern behavior remain separate until independently required.
+
+All probes were temporary, restored, and emitted only to stderr. Their CLI
+outputs are byte-identical to the uninstrumented RED CLI outputs for all three
+inputs. No Native debugger or observation was run.
+
 ## Included and deferred behavior
 
 Include ordered bridge-over-infill output, angle and flow localization, followed
