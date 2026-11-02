@@ -12,6 +12,8 @@ use crate::runner::{OrcaRunner, repo_root};
 mod delete_object;
 #[path = "plater_instances.rs"]
 mod instances;
+#[path = "plater_number_of_instances.rs"]
+mod number_of_instances;
 #[path = "plater_tower_positions.rs"]
 mod tower_positions;
 #[path = "plater_transform.rs"]

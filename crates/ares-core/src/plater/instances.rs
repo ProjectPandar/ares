@@ -104,6 +104,12 @@ impl PlaterSession {
         Ok(())
     }
 
+    /// `Plater::set_number_of_copies` (`Plater.cpp:19386-19406`) with `num` copies.
+    pub fn set_number_of_copies(&mut self, object: usize, num: usize) -> Result<(), SliceError> {
+        let _ = (object, num);
+        todo!()
+    }
+
     /// `Transformation::get_rotation`, `get_scaling_factor` and `get_mirror` of an instance
     /// (`Geometry.cpp:471-474, 513-517, 550-554`).
     pub fn transformation_components(
