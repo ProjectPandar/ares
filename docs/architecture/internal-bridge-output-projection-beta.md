@@ -26,14 +26,15 @@ behavioral specification.
 ## Frozen public inputs
 
 The inputs are complete project byte streams, not reconstructed option lists.
-The fixture names below are planned for the independent RED, not already-added
-files. Saved results come from the cubic breadth run, not a fresh replay on this
-bridge-prerequisite parent.
+The fixtures live under `tests/parity/internal-bridge-output/`. Historical saved
+results came from the cubic breadth run; independent direct-target RED now
+executes all three fixtures on the bridge-prerequisite parent.
 
 | Fixture | Sparse pattern / count | SHA256 |
 | --- | --- | --- |
 | `honeycomb-count2.3mf` | honeycomb / 2 | `e43bf5ac79bcb39eae1cfeb0f2ab0d93b97627fb83368473bb1760f49e16a07c` |
 | `triangles-count1.3mf` | triangles / 1 | `58efc7d45f6ae6df74c711a7a7d5caa80f2cbf8e01ab0045039d0b3b9c0f8049` |
+| `triangles-count2.3mf` | triangles / 2 | `29cb5b6f383537a1c5da393bba66b3f5e61b83b01df3b1e52cdde2561bcc0c5e` |
 
 Both configure rectilinear top and internal-solid patterns, 30% sparse density,
 100% internal-bridge density, thick internal bridges, no model alignment,
@@ -46,6 +47,9 @@ bridge count is one even for the honeycomb count-two project.
 A historical triangles count-two test first requires equality for the count-one
 baseline and fails there. Its saved input is identical to the second fixture.
 It is not independent count-two coverage and must not serve as target evidence.
+The new count-two fixture changes only the `fill_multiline` project-setting value
+from `"1"` to `"2"`; every other decompressed ZIP entry and configuration field is
+unchanged. Its direct test has no count-one baseline assertion.
 
 ## Established facts and unknowns
 
@@ -113,7 +117,8 @@ No rectilinear/monotonic graph, path reversal, rounding heuristic, writer,
 footer/configuration, smoothing policy or unrelated sparse-fill repair is
 included. Turning-pattern scan refinement and contact restoration remain separate
 upstream slices; these two configured patterns do not activate those branches.
-Actual triangles count-two coverage requires its own directly executed target.
+The new triangles count-two target is directly executed; its result must remain
+separate from the historical baseline-only failure.
 
 Do not mutate the approved prerequisite branch or stack unapproved footer work.
 Any later production change needs a source-cited, localized scope and separate

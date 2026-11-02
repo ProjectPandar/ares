@@ -44,6 +44,8 @@ mod honeycomb_boundary_join_order;
 mod honeycomb_multiline_boundary_hooks;
 #[path = "initial_travel_uint.rs"]
 mod initial_travel_uint;
+#[path = "internal_bridge_output.rs"]
+mod internal_bridge_output;
 #[path = "island_visit_order.rs"]
 mod island_visit_order;
 #[path = "m1020_bills_filament_change_without_tool_change.rs"]
