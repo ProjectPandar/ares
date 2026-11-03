@@ -186,6 +186,44 @@ fn native_incomplete_exponent_float_vector_matches_public_decode_encode() {
 }
 
 #[test]
+fn native_float_or_percent_vector_retains_failed_value_and_percent() {
+    let key = "small_support_perimeter_speed";
+    let input = "bad%";
+    let Some((runner, settings)) = native_settings(Some((key, input))) else {
+        return;
+    };
+    let [native] = settings[key].as_array().unwrap().as_slice() else {
+        panic!(
+            "Native single input element changed shape: {:?}",
+            runner.work
+        );
+    };
+    let native = native.as_str().unwrap();
+    let decoded = ares_core::decode_config_value_by_key(key, input);
+    let encoded = match &decoded {
+        Ok(value) => ares_core::encode_config_value_by_key(key, value),
+        Err(error) => Err(error.to_owned()),
+    };
+    std::fs::write(
+        runner
+            .work
+            .join("float-or-percent-vector-public-result.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "key": key, "input": input, "native": native,
+            "public_decoded": decoded, "public_encoded": encoded,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        encoded,
+        Ok(native.to_owned()),
+        "Native vector extraction versus public decode/encode: {:?}",
+        runner.work
+    );
+}
+
+#[test]
 fn native_arc_fitting_enum_decodes_and_round_trips_public_options() {
     let Some((runner, native)) = native_defaults() else {
         return;
