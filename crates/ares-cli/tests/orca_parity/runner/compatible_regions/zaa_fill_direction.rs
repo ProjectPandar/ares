@@ -7,7 +7,7 @@ use crate::{
     runner::{ExportedCase, OrcaRunner},
 };
 use serde_json::json;
-use std::{fs, path::PathBuf, process::Command};
+use std::{fs, path::PathBuf};
 
 #[path = "zaa_fill_direction_input.rs"]
 mod input;
@@ -108,7 +108,7 @@ fn repeated(
         let solid_sha = fixture::hash(&serde_json::to_vec(&solid).unwrap());
         let outcome = parity::compare_case(&sliced);
         let root = outcome.artifacts.unwrap();
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .arg("slice")
             .arg("-o")
             .arg(root.join("cli.gcode"))

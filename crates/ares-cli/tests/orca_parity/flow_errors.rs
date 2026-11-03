@@ -54,7 +54,7 @@ fn positive_spacing_and_flow_generate_complete_gcode() {
         .build()
         .unwrap();
     let processed = runtime
-        .block_on(ares_core::slice_project_plate_processed(
+        .block_on(crate::runner::application::slice_project_plate_processed(
             INPUT,
             GenerationMetadata::default(),
             None,
@@ -113,7 +113,7 @@ fn validated_s1plus_keeps_minimum_width_first_error() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let result = runtime.block_on(ares_core::slice_project_plate_validated(
+    let result = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         INPUT,
         GenerationMetadata::default(),
         None,
@@ -152,7 +152,7 @@ fn verify_error(prefix: &str, overrides_json: &[u8], expected: &str) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let result = runtime.block_on(ares_core::slice_project_plate_processed(
+    let result = runtime.block_on(crate::runner::application::slice_project_plate_processed(
         INPUT,
         GenerationMetadata::default(),
         None,

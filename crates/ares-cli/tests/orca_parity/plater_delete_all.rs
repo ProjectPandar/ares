@@ -42,7 +42,7 @@ fn plater_delete_all_empties_the_plates_and_fails_to_slice_like_native() {
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_plater_plate(
+        .block_on(crate::runner::application::slice_plater_plate(
             &session,
             ares_core::PlaterSlice {
                 plate: Some(1),

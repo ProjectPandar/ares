@@ -2,7 +2,7 @@
 //! Fill.cpp:891-893, separately from sparse-only anchoring at :1403-1406.
 use crate::{self as parity, runner::OrcaRunner};
 use serde_json::json;
-use std::{fs, process::Command};
+use std::fs;
 
 #[path = "solid_pattern_fixture.rs"]
 mod fixture;
@@ -33,7 +33,7 @@ fn check(scope: Scope, low: bool) {
         let directory = outcome.artifacts.as_ref().unwrap();
         let (bridge_moves, solid_moves) = observe(&sliced.reference);
         let solid_sha = fixture::hash(solid_moves.join("\n").as_bytes());
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .arg("slice")
             .arg("-o")
             .arg(directory.join("cli.gcode"))

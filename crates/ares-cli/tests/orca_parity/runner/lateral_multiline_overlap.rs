@@ -3,7 +3,7 @@
 
 use super::OrcaRunner;
 use crate::runner;
-use std::{fs, process::Command};
+use std::fs;
 
 struct Case {
     name: &'static str,
@@ -71,7 +71,7 @@ fn compare(case: Case) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let api = runtime.block_on(ares_core::slice_project_plate_validated(
+    let api = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         case.input,
         ares_core::GenerationMetadata::deterministic(2026, 10, 15, 0, 0, 0),
         None,
@@ -84,7 +84,7 @@ fn compare(case: Case) {
         .and_then(|bytes| crate::golden::compare_ordered_bytes_generator_only(&native, bytes));
 
     let cli_output = root.join("ares.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&cli_output)
         .arg(&input)

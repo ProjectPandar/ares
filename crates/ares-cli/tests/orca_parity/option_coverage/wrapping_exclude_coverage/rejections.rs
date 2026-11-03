@@ -87,7 +87,7 @@ fn validated(project: &[u8]) -> Result<Vec<u8>, SliceError> {
     tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             project,
             GenerationMetadata::default(),
             None,
@@ -136,7 +136,7 @@ fn cli_rejection(root: &std::path::Path, native: &Value) {
     let directory = root.join("wrapping-cli");
     std::fs::create_dir_all(&directory).unwrap();
     let gcode = directory.join("plate_1.gcode");
-    let output = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&gcode)
         .arg(root.join("wrapping-fixed-placement/wrapping-input.3mf"))

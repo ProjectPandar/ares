@@ -193,7 +193,7 @@ async fn verify(fields: Value, expected_error: Option<&str>) {
     let native = stages::run(runner.bin(), args, stages::Stage::Slice, &directory);
     let overrides = ConfigOverrides::from_json(fields.to_string().as_bytes()).unwrap();
     let validation = ares_core::validate_project_plate(&exported.project, None, &overrides);
-    let sliced = ares_core::slice_project_plate_validated(
+    let sliced = crate::runner::application::slice_project_plate_validated(
         &exported.project,
         GenerationMetadata::default(),
         None,

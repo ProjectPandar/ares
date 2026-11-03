@@ -129,7 +129,7 @@ async fn compare(vendor_name: &str, printer: &str, expected: &str, loaded_error:
         .await
     } else {
         let project = fs::read(directory.join("native.3mf")).unwrap();
-        ares_core::slice_project_plate_validated(
+        crate::runner::application::slice_project_plate_validated(
             &project,
             GenerationMetadata::default(),
             None,

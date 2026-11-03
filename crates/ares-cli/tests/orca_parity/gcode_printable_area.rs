@@ -56,7 +56,7 @@ async fn timelapse_extrusion_outside_printable_area_rejects_after_processing() {
         json!({"result":result, "evidence":failure.evidence})
     });
     let overrides = ConfigOverrides::default();
-    let bytes = ares_core::slice_project_plate_validated(
+    let bytes = crate::runner::application::slice_project_plate_validated(
         INPUT,
         GenerationMetadata::default(),
         None,
@@ -64,7 +64,7 @@ async fn timelapse_extrusion_outside_printable_area_rejects_after_processing() {
         SlicerContext::new(0),
     )
     .await;
-    let processed = ares_core::slice_project_plate_processed_validated(
+    let processed = crate::runner::application::slice_project_plate_processed_validated(
         INPUT,
         GenerationMetadata::default(),
         None,

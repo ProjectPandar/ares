@@ -182,7 +182,7 @@ fn print_bed_compat_default_sentinel_exact_public_error_not_native_red() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let sliced = runtime.block_on(ares_core::slice_project_plate_validated(
+    let sliced = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         None,
@@ -242,7 +242,7 @@ fn print_bed_compat_pure_processing_remains_unvalidated_frozen_bytes() {
         .build()
         .unwrap();
     let gcode = runtime
-        .block_on(ares_core::slice_project_plate(
+        .block_on(crate::runner::application::slice_project_plate(
             super::bed_compatibility::INPUT,
             GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,

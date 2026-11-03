@@ -7,7 +7,6 @@ use serde_json::json;
 use std::{
     fs,
     io::{Cursor, Read, Write},
-    process::Command,
 };
 
 #[test]
@@ -32,7 +31,7 @@ fn zaa_sloped_roof_preserves_complete_xyz_output() {
         let outcome = parity::compare_case(&sliced);
         let directory = outcome.artifacts.as_ref().unwrap();
         let xyz = observe(&sliced.reference);
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .arg("slice")
             .arg("-o")
             .arg(directory.join("cli.gcode"))

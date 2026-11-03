@@ -10,7 +10,7 @@
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 const RAFT: &[u8] =
     include_bytes!("../../../../tests/parity/support-ironing-raft-offset/raft-two-layers.3mf");
@@ -65,7 +65,7 @@ fn strict_case(label: &str, input: &[u8], expected_sha: &str) {
         .build()
         .unwrap();
     let api = runtime
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             input,
             ares_core::GenerationMetadata::deterministic(2026, 10, 17, 0, 0, 0),
             None,
@@ -74,7 +74,7 @@ fn strict_case(label: &str, input: &[u8], expected_sha: &str) {
         ))
         .unwrap_or_else(|error| panic!("Ares API {label}: {error:?}"));
     let cli_path = directory.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&cli_path)
         .arg(directory.join("input.3mf"))

@@ -24,7 +24,7 @@ fn native_full_config_block_matches_complete_public_output() {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &project,
             GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,

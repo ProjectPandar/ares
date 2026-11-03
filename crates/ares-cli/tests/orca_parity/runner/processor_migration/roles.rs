@@ -130,7 +130,7 @@ async fn processed_role_filament_usage_matches_native_map() {
         return;
     };
     let (gcode, native) = footer_proof(&capture);
-    let output = ares_core::slice_project_plate_processed(
+    let output = crate::runner::application::slice_project_plate_processed(
         PROJECT.to_vec(),
         GenerationMetadata::default(),
         Some(1),

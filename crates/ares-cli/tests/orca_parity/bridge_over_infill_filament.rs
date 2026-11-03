@@ -112,7 +112,7 @@ fn assert_parity(input_bytes: &[u8], input_sha256: &str) {
     let actual_bytes = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             input_bytes,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),

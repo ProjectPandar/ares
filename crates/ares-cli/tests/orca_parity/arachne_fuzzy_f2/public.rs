@@ -6,7 +6,7 @@ pub(super) fn slice(project: &[u8], seed: u32) -> Result<Vec<u8>, ares_core::Sli
     tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,

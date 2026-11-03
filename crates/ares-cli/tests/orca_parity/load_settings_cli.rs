@@ -5,7 +5,7 @@
 //! runtime-Native reference whole-file (generator banner normalized).
 #![cfg(target_os = "linux")]
 
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 use serde_json::{Map, Value};
 
@@ -109,7 +109,7 @@ async fn load_settings_cli_ender3_whole_file() {
     let native = fs::read(directory.join("native-output/plate_1.gcode")).unwrap();
 
     // Same argv against the ares CLI binary.
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .current_dir(&directory)
         .args([
             "slice",

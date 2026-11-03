@@ -31,7 +31,7 @@
 
 #![cfg(target_os = "linux")]
 
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 use crate::native_wall_clock::result_comparison_bytes;
 
@@ -82,7 +82,7 @@ fn custom_gcode_pause_vars_mk4_matches_native() {
     );
 
     let retained = artifacts.join("plate_1.gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&retained)
         .arg(&fixture)

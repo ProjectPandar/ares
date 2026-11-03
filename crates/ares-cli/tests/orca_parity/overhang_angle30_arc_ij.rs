@@ -9,7 +9,7 @@
 
 use crate::{OrcaRunner, golden, runner::stages};
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 #[test]
 fn overhang_angle30_arc_ij() {
@@ -60,7 +60,7 @@ fn overhang_angle30_arc_ij() {
         "Native witness arc {root:?}"
     );
     let output = root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))
@@ -72,7 +72,7 @@ fn overhang_angle30_arc_ij() {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &bytes,
             ares_core::GenerationMetadata::default(),
             None,

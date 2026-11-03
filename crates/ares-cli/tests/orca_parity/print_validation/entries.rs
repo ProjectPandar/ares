@@ -12,13 +12,15 @@ fn processed_project_entry_rejects_missing_reset() {
     let result = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_processed_validated(
-            RELATIVE_INPUT,
-            GenerationMetadata::default(),
-            None,
-            &ConfigOverrides::default(),
-            SlicerContext::new(0),
-        ));
+        .block_on(
+            crate::runner::application::slice_project_plate_processed_validated(
+                RELATIVE_INPUT,
+                GenerationMetadata::default(),
+                None,
+                &ConfigOverrides::default(),
+                SlicerContext::new(0),
+            ),
+        );
     assert!(
         matches!(result, Err(SliceError::Validate { message: ref text, .. }) if text == RELATIVE_ERROR),
         "observed error: {:?}",

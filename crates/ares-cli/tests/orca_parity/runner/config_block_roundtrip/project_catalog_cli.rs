@@ -15,7 +15,7 @@ fn project_preset_catalog_cli_request_matches_native_applied_config() {
     std::fs::write(&project, &input).unwrap();
     let reference = native(&runner, &project, Some(&supply.join("native")), "reference");
     let output = runner.work.join("cli.gcode");
-    let cli = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .arg("slice")
         .arg("--plate")
         .arg("1")

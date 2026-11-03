@@ -1,6 +1,6 @@
 use super::super::native_stream_case;
 use crate::golden;
-use std::{fs, process::Command};
+use std::fs;
 
 const SOURCE: &[&str] = &[
     "FillRectilinear.cpp:3603-3618 FillCubic count dispatch",
@@ -63,7 +63,7 @@ fn cubic_count_one_matches_native_raw_motion_and_progress() {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,
@@ -73,7 +73,7 @@ fn cubic_count_one_matches_native_raw_motion_and_progress() {
         .unwrap();
     fs::write(reference.root.join("ares.api.gcode"), &api).unwrap();
     let cli_path = reference.root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&cli_path)
         .arg(reference.root.join("input.3mf"))

@@ -99,7 +99,7 @@ fn dump_cluster_case(case: parity::ParityCase) {
         .build()
         .expect("tokio runtime");
     match runtime.block_on(async {
-        ares_core::slice_project(
+        crate::runner::application::slice_project(
             &case.project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),

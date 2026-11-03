@@ -44,7 +44,7 @@ fn empty_selected_plate_control_populated_plate_two_preserves_native_stream() {
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate(
+        .block_on(crate::runner::application::slice_project_plate(
             input.as_slice(),
             GenerationMetadata::default(),
             Some(2),
@@ -106,7 +106,7 @@ fn empty_selected_plate_control_nonempty_outside_volume_keeps_later_error() {
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate(
+        .block_on(crate::runner::application::slice_project_plate(
             input.as_slice(),
             GenerationMetadata::default(),
             None,

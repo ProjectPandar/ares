@@ -143,7 +143,7 @@ fn flush_matrix_cli_reconstruction_no_trigger_keeps_malformed_matrix_rejected() 
         .build()
         .unwrap();
     let ares_error = runtime
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             &exported.project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),
@@ -198,7 +198,7 @@ fn flush_matrix_cli_reconstruction_scalar_four_cell_input_fails_exactly_at_the_c
         .keep();
     std::fs::write(directory.join("input.3mf"), &exported.project).unwrap();
     let retained = directory.join("plate_1.gcode");
-    let output = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&retained)
         .arg(directory.join("input.3mf"))

@@ -73,7 +73,7 @@ fn verify_context(model: &str, point_distance: &str, noise: &str) {
             .build()
             .unwrap();
         runtime
-            .block_on(ares_core::slice_project(
+            .block_on(crate::runner::application::slice_project(
                 &exported.project,
                 ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
                 ares_core::SlicerContext::new(seed),

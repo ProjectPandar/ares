@@ -32,7 +32,7 @@ fn rejected(extra: &[&str]) -> String {
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
-    let output = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .arg("slice")
         .args(extra)
         .arg("-o")

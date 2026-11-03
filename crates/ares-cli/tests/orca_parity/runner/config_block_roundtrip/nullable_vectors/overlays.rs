@@ -67,7 +67,7 @@ fn native_region_overlays_remap_variants_and_inherit_nil() {
             .enable_all()
             .build()
             .unwrap()
-            .block_on(ares_core::slice_project_plate_validated(
+            .block_on(crate::runner::application::slice_project_plate_validated(
                 &project,
                 GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
                 None,

@@ -41,7 +41,7 @@ async fn check(name: &str, overrides: &[u8]) {
     let input = inverse(text, true);
     let processed = ares_core::gcode_processor::process_gcode(&input, &settings(text), false, true);
     strict(&runner, &input, &reference, &processed.gcode);
-    let gcode = ares_core::slice_project_plate(
+    let gcode = crate::runner::application::slice_project_plate(
         PROJECT,
         GenerationMetadata::default(),
         Some(1),

@@ -3,7 +3,7 @@
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::json;
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 const TARGET: &[u8] =
     include_bytes!("../../../../tests/parity/interlocking-base/two-extruder-beam0.3mf");
@@ -120,7 +120,7 @@ fn check(label: &str, project: &[u8], expected_sha: &str, assert_two_tools: bool
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,
@@ -130,7 +130,7 @@ fn check(label: &str, project: &[u8], expected_sha: &str, assert_two_tools: bool
         .unwrap();
     fs::write(root.join("ares.api.gcode"), &api).unwrap();
     let output = root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&output)
         .arg(&input)

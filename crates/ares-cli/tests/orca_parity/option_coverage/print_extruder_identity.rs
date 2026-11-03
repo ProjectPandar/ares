@@ -145,7 +145,7 @@ async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
     assert!(native.contains(&format!(
         "\n; print_extruder_variant = {expected_variants}\n"
     )));
-    let result = ares_core::slice_project_plate(
+    let result = crate::runner::application::slice_project_plate(
         &project,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         None,

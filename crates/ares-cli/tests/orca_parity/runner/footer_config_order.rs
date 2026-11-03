@@ -107,7 +107,7 @@ async fn compare_tail(label: &str, project: &[u8], sha: &str) {
     assert_eq!(native_tails.len(), 1);
     let native = native_tails[0];
     std::fs::write(reference.root.join("native.post-config.gcode"), native).unwrap();
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 10, 31, 0, 0, 0),
         None,

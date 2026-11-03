@@ -4,7 +4,7 @@
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::json;
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 const INPUT: &[u8] =
     include_bytes!("../../../../tests/parity/per-object-skirt-brim-types/brim-ears.3mf");
@@ -51,7 +51,7 @@ fn per_object_skirt_brim_ears_red() {
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             INPUT,
             ares_core::GenerationMetadata::deterministic(2026, 10, 17, 0, 0, 0),
             None,
@@ -67,7 +67,7 @@ fn per_object_skirt_brim_ears_red() {
         .and_then(|gcode| golden::compare_ordered_bytes_generator_only(&native, gcode));
 
     let cli_path = root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&cli_path)
         .arg(&input)

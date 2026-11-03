@@ -6,7 +6,6 @@ use std::{
     io::{Cursor, Read, Write},
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
-    process::Command,
 };
 
 use crate::{
@@ -165,7 +164,7 @@ pub(super) fn compare_with(runner: &OrcaRunner, scripts: Option<Value>) -> (Path
         !marker.exists(),
         "Native CLI must not execute external scripts"
     );
-    let actual = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let actual = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(directory.join("ares.gcode"))
         .arg(&input)

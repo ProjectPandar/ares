@@ -3,7 +3,7 @@ use super::OrcaRunner;
 use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use serde_json::json;
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 macro_rules! case {
     ($name:ident, $input:literal) => {
@@ -51,7 +51,7 @@ async fn reject(runner: &OrcaRunner, label: &str, input: &[u8]) {
         super::stages::Stage::Slice,
         &root,
     );
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         None,
@@ -60,7 +60,7 @@ async fn reject(runner: &OrcaRunner, label: &str, input: &[u8]) {
     )
     .await;
     let cli_path = root.join("cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .arg("slice")
         .arg("-o")
         .arg(&cli_path)

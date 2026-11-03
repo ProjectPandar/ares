@@ -3,7 +3,7 @@
 use super::fixture;
 use super::*;
 use crate::runner::OrcaRunner;
-use std::{fs, process::Command};
+use std::fs;
 
 #[derive(Clone, Copy)]
 enum Case {
@@ -74,7 +74,7 @@ fn verify(case: Case) {
         .unwrap();
     let outcome = parity::compare_case(&sliced);
     let artifacts = outcome.artifacts.as_ref().unwrap();
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(artifacts.join("cli.gcode"))
         .arg(artifacts.join("input.3mf"))

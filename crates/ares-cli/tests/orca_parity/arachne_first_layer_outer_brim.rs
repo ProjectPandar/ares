@@ -31,7 +31,7 @@ async fn positive_outer_brim_prints_outer_wall_first() {
     )
     .unwrap();
 
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 10, 30, 0, 0, 0),
         None,

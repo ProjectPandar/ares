@@ -120,7 +120,7 @@ fn reference(
 }
 
 async fn slice(input: &[u8], plate: Option<u32>) -> Result<Vec<u8>, ares_core::SliceError> {
-    ares_core::slice_project_plate_validated(
+    crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         plate,

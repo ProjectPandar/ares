@@ -69,7 +69,7 @@ fn verify(width: &str) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let sliced = runtime.block_on(ares_core::slice_project_plate_validated(
+    let sliced = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         None,

@@ -8,7 +8,7 @@
 //! on this tip (findings recorded in the spec's deferred section).
 #![cfg(target_os = "linux")]
 
-use std::{fs, process::Command};
+use std::fs;
 
 use crate::{native_wall_clock::result_comparison_bytes, runner::EarlyExit};
 
@@ -70,7 +70,7 @@ fn spiral_vase_multi_copy_by_layer_rejected_like_native() {
     assert_eq!(code, -51, "{artifacts:?}");
 
     let gcode = artifacts.join("plate_1.gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&gcode)
         .arg(&project)
@@ -149,7 +149,7 @@ fn accepted_by_both(name: &str, project_bytes: &[u8]) {
         "{name}: Native must accept: {artifacts:?}"
     );
     let gcode = artifacts.join("ares.gcode");
-    let ares = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let ares = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&gcode)
         .arg(&project)

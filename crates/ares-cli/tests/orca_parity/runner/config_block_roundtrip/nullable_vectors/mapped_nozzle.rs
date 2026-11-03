@@ -127,7 +127,7 @@ fn native_nonzero_nozzle_slot_selects_public_outer_wall_feedrate() {
             .enable_all()
             .build()
             .unwrap()
-            .block_on(ares_core::slice_project_plate_validated(
+            .block_on(crate::runner::application::slice_project_plate_validated(
                 &project,
                 GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
                 None,
@@ -199,7 +199,7 @@ fn native_outer_wall_volumetric_placeholder_selects_physical_nozzle() {
             .enable_all()
             .build()
             .unwrap()
-            .block_on(ares_core::slice_project_plate_validated(
+            .block_on(crate::runner::application::slice_project_plate_validated(
                 &project,
                 GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
                 None,

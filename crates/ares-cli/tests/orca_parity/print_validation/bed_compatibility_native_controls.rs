@@ -83,7 +83,7 @@ fn print_bed_compat_native_selected_second_plate_reports_plate_two() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let sliced = runtime.block_on(ares_core::slice_project_plate_validated(
+    let sliced = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         Some(2),
@@ -128,7 +128,7 @@ fn print_bed_compat_native_initial_layer_zero_and_original_still_slice() {
         let runtime = tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap();
-        let sliced = runtime.block_on(ares_core::slice_project_plate_validated(
+        let sliced = runtime.block_on(crate::runner::application::slice_project_plate_validated(
             input,
             GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,

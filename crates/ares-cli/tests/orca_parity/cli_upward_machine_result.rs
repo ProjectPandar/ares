@@ -3,7 +3,7 @@
 //! incomplete channel comparison and a frozen Native result masking admission.
 #![cfg(target_os = "linux")]
 
-use std::{fs, process::Command};
+use std::fs;
 
 use crate::{
     native_wall_clock::result_comparison_bytes,
@@ -91,7 +91,7 @@ fn cli_custom_gcode_failure_preserves_nonempty_upward_machine_header() {
     let output_dir = root.join("ares");
     fs::create_dir(&output_dir).unwrap();
     let gcode = output_dir.join("plate_1.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&gcode)
         .arg(&input_path)

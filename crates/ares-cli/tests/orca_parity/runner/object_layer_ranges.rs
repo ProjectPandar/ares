@@ -175,7 +175,7 @@ fn reference(runner: &OrcaRunner, label: &str, input: &[u8], root: &std::path::P
 }
 
 async fn slice(input: &[u8]) -> Result<Vec<u8>, ares_core::SliceError> {
-    ares_core::slice_project_plate_validated(
+    crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         None,

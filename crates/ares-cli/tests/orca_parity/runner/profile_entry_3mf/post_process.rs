@@ -40,7 +40,7 @@ fn mk3s_post_process_rejection() {
     let error = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &result,
             ares_core::GenerationMetadata::default(),
             None,

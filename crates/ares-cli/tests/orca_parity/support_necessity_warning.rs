@@ -1,7 +1,7 @@
 //! `PrintObject.cpp:966-986,5289-5303` and `OrcaSlicer.cpp:7148-7160` at beta345efec64.
 //! A successful real slice reports the cantilever in result.json, not stderr.
 
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 use crate::{
     native_wall_clock::result_comparison_bytes,
@@ -69,7 +69,7 @@ fn cli_success_reports_support_necessity_like_native() {
         warning["text"]
     );
 
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "--plate", "1", "-o"])
         .arg(ares.join("plate_1.gcode"))
         .arg(&project)

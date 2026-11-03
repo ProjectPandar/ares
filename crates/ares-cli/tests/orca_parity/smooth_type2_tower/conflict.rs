@@ -74,7 +74,7 @@ fn smooth_type2_tower_path_conflict() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let actual = runtime.block_on(ares_core::slice_project(
+    let actual = runtime.block_on(crate::runner::application::slice_project(
         &exported.project,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         ares_core::SlicerContext::new(0),

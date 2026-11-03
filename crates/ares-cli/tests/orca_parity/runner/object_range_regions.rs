@@ -58,7 +58,7 @@ async fn object_range_wall_loops_changes_only_the_selected_constant_height_inter
     assert_eq!(zs.len(), 50);
     assert_eq!(zs[0], 0.2);
     assert_eq!(zs[49], 10.0);
-    let actual = ares_core::slice_project_plate_validated(
+    let actual = crate::runner::application::slice_project_plate_validated(
         INPUT,
         GenerationMetadata::default(),
         None,

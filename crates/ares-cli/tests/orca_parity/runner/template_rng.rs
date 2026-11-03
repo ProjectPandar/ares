@@ -63,7 +63,7 @@ fn seeded_template_file_start_has_no_rng_context() {
     let error = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             &exported.project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),
@@ -174,7 +174,7 @@ fn slice(project: &[u8], seed: u32) -> Vec<u8> {
     tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(seed),

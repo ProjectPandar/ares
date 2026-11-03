@@ -171,7 +171,7 @@ fn unchanged_classic_replays_byte_identical_with_complete_paired_bytes_and_hashe
         .build()
         .unwrap();
     let actual = runtime
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             &project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),

@@ -61,7 +61,7 @@ fn assert_plate_one_like_native(prefix: &str, input: &[u8]) {
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate(
+        .block_on(crate::runner::application::slice_project_plate(
             input,
             GenerationMetadata::default(),
             Some(1),

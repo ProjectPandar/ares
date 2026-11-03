@@ -6,7 +6,6 @@ use sha2::{Digest, Sha256};
 use std::{
     fs,
     io::{Cursor, Read, Write},
-    process::Command,
 };
 
 fn sha(bytes: &[u8]) -> String {
@@ -60,7 +59,7 @@ fn printer_technology_fff_control() {
     let outcome = crate::compare_case(&sliced);
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
     let root = outcome.artifacts.unwrap();
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(root.join("cli.gcode"))
         .arg(root.join("input.3mf"))
@@ -163,7 +162,7 @@ fn printer_technology_parsed_sla_rejection() {
     let native_stderr = String::from_utf8(captured.stderr.clone()).unwrap();
     // Utils.hpp:31 defines -7; compare the OS-visible status without remapping Ares.
     let native_code = if cfg!(unix) { 249 } else { -7 };
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(root.join("ares.gcode"))
         .arg(&path)
@@ -198,7 +197,7 @@ fn printer_technology_parsed_sla_rejection() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let api = runtime.block_on(ares_core::slice_project_plate_validated(
+    let api = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         &bytes,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         None,

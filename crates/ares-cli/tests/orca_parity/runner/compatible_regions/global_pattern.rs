@@ -6,10 +6,7 @@ use crate::{
 };
 use ares_core::{ConfigOverrides, GenerationMetadata, SliceError, SlicerContext};
 use serde_json::json;
-use std::{
-    io::{Cursor, Read, Write},
-    process::Command,
-};
+use std::io::{Cursor, Read, Write};
 
 #[test]
 fn global_top_grid_has_native_config_error() {
@@ -83,7 +80,7 @@ fn check(key: &str, value: &str) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let api = runtime.block_on(ares_core::slice_project_plate_validated(
+    let api = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         &project,
         GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         None,
@@ -93,7 +90,7 @@ fn check(key: &str, value: &str) {
     if let Ok(bytes) = &api {
         artifacts::write(&root.join("ares.gcode"), bytes).unwrap();
     }
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .arg("slice")
         .arg("-o")
         .arg(root.join("cli.gcode"))

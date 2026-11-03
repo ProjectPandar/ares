@@ -4,7 +4,7 @@ use crate::{
     runner::native_stream_case::{check, qualify},
 };
 use serde_json::json;
-use std::{fs, process::Command};
+use std::fs;
 
 const PROJECT: &[u8] =
     include_bytes!("../../../../../tests/parity/skirt-support-occupied-input/support-overhang.3mf");
@@ -31,7 +31,7 @@ fn support_interface_angle_first_move_matches_native() {
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             PROJECT,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,
@@ -41,7 +41,7 @@ fn support_interface_angle_first_move_matches_native() {
         .unwrap();
     fs::write(reference.root.join("ares.api.gcode"), &api).unwrap();
     let path = reference.root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&path)
         .arg(reference.root.join("input.3mf"))

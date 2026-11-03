@@ -16,7 +16,6 @@ use crate::{
     OrcaRunner, golden,
     runner::native_api_cli::{NativeCase, sha},
 };
-use std::process::Command;
 
 const MK4_BASE: &[u8] = include_bytes!("../../../../../tests/parity/mk4-layer-change/mk4base.3mf");
 const MK4_BASE_SHA: &str = "d0a4dfdb7f89120719b380a2995687a81a7e699025b8f3734349480bdebdc046";
@@ -36,7 +35,7 @@ fn mk4_layer_change_weight_total() {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &MK4_BASE,
             ares_core::GenerationMetadata::deterministic(2026, 10, 28, 0, 0, 0),
             None,
@@ -46,7 +45,7 @@ fn mk4_layer_change_weight_total() {
         .unwrap();
     std::fs::write(case.root.join("ares.api.gcode"), &api).unwrap();
     let cli_path = case.root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&cli_path)
         .arg(case.root.join("input.3mf"))

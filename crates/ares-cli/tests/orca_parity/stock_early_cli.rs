@@ -1,6 +1,6 @@
 #![cfg(target_os = "linux")]
 
-use std::{fs, process::Command};
+use std::fs;
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -82,7 +82,7 @@ fn compare(case: &cases::Case) {
     let receipt: Value = serde_json::from_slice(&receipt_bytes).unwrap();
     let native_exit = i32::try_from(receipt["exit"].as_i64().unwrap()).unwrap();
     let gcode = artifacts.join("plate_1.gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&gcode)
         .arg(&input)

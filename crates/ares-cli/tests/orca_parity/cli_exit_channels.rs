@@ -58,7 +58,7 @@ fn assert_channels(case: &str, project: &Path, artifacts: &Path, rejection: Earl
     .unwrap();
 
     let gcode = artifacts.join("gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&gcode)
         .arg(project)

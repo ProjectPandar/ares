@@ -36,7 +36,7 @@ fn assert_native_failure(case: &str) {
     )
     .unwrap();
     let retained = artifacts.join("plate_1.gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&retained)
         .arg(fixtures.join(format!("{case}.3mf")))

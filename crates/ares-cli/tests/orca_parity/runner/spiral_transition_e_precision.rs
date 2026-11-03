@@ -4,7 +4,6 @@
 use std::{
     fs,
     io::{Cursor, Read, Write},
-    process::Command,
 };
 
 use super::OrcaRunner;
@@ -90,7 +89,7 @@ fn compare(label: &str, input: Vec<u8>) {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &input,
             ares_core::GenerationMetadata::deterministic(2026, 10, 17, 0, 0, 0),
             None,
@@ -102,7 +101,7 @@ fn compare(label: &str, input: Vec<u8>) {
         .map_err(|error| format!("{error:?}"))
         .and_then(|bytes| crate::golden::compare_ordered_bytes_generator_only(&native, bytes));
     let cli_output = root.join("ares.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&cli_output)
         .arg(&input_path)

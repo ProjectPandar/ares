@@ -4,7 +4,7 @@
 //! control, and the `-5`/`-19` read-ordering RED.
 #![cfg(target_os = "linux")]
 
-use std::{fs, process::Command};
+use std::fs;
 
 use crate::load_settings_cli::{banner_normalized, stages_run};
 
@@ -76,7 +76,7 @@ fn load_settings_3mf_post_process_reject() {
     .unwrap();
 
     let gcode = artifacts.join("gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .current_dir(&artifacts)
         .args([
             "slice",
@@ -165,7 +165,7 @@ fn load_settings_3mf_compatible_whole_file() {
         ],
     );
     let native = fs::read(directory.join("native-output/plate_1.gcode")).unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .current_dir(&directory)
         .args([
             "slice",
@@ -235,7 +235,7 @@ fn load_settings_3mf_missing_file_post_process_order() {
     .unwrap();
 
     let gcode = artifacts.join("gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .current_dir(&artifacts)
         .args([
             "slice",

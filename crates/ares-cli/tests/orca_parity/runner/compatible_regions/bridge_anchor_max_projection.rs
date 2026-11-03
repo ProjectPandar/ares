@@ -5,7 +5,6 @@ use serde_json::json;
 use std::{
     fs,
     io::{Cursor, Read, Write},
-    process::Command,
 };
 
 use super::fixture::{self, Scope};
@@ -47,7 +46,7 @@ fn check(scope: Scope, extreme: &str) {
         let outcome = parity::compare_case(&sliced);
         let directory = outcome.artifacts.as_ref().unwrap();
         let (bridges, sparse) = roles(&sliced.reference);
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .arg("slice")
             .arg("-o")
             .arg(directory.join("cli.gcode"))

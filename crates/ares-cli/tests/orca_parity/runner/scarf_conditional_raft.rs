@@ -15,7 +15,7 @@ use crate::runner::{
     OrcaRunner, cache_identity, profile_entry, reference_enabled, repo_root, stages,
 };
 use serde_json::{Value, json};
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 const LABEL: &str = "taper-raft-40";
 
@@ -180,7 +180,7 @@ fn public_case(work: &Path, input: &[u8], native: &[u8]) -> Value {
     let input_path = directory.join("input.3mf");
     let cli_path = directory.join("cli.gcode");
     fs::write(&input_path, input).unwrap();
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&cli_path)
         .arg(&input_path)
@@ -191,7 +191,7 @@ fn public_case(work: &Path, input: &[u8], native: &[u8]) -> Value {
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             input,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,

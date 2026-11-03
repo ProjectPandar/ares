@@ -2,7 +2,7 @@
 
 use crate::{OrcaRunner, golden, runner::stages};
 use sha2::{Digest, Sha256};
-use std::{fs, path::PathBuf, process::Command};
+use std::{fs, path::PathBuf};
 
 pub(crate) struct NativeCase {
     pub(crate) root: PathBuf,
@@ -55,7 +55,7 @@ impl NativeCase {
             .enable_all()
             .build()
             .unwrap()
-            .block_on(ares_core::slice_project_plate_validated(
+            .block_on(crate::runner::application::slice_project_plate_validated(
                 &self.project,
                 metadata,
                 None,
@@ -66,7 +66,7 @@ impl NativeCase {
             fs::write(self.root.join("ares.api.gcode"), bytes).unwrap();
         }
         let cli_path = self.root.join("ares.cli.gcode");
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .args(["slice", "-o"])
             .arg(&cli_path)
             .arg(self.root.join("input.3mf"))

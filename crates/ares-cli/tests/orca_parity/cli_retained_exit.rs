@@ -50,7 +50,7 @@ fn run_cli(input: &Path, second: bool, artifacts: &Path) {
     } else {
         "plate_1.gcode"
     });
-    let mut command = Command::new(env!("CARGO_BIN_EXE_ares"));
+    let mut command = crate::runner::application::cli_command();
     command.arg("slice");
     if second {
         command.args(["--plate", "2"]);

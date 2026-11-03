@@ -138,7 +138,7 @@ fn compare(
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let actual = runtime.block_on(ares_core::slice_project_plate_validated(
+    let actual = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         None,
@@ -153,7 +153,7 @@ fn compare(
         Err(error) => json!({"error":format!("{error:?}")}),
     };
     let output = directory.join("plate_1.gcode");
-    let cli = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&output)
         .arg(&input)

@@ -2,7 +2,7 @@
 //! Fill.cpp:883-900, rather than the global preset's eight-pattern schema.
 use crate::{self as parity, runner::OrcaRunner};
 use serde_json::json;
-use std::{fs, process::Command};
+use std::fs;
 
 #[path = "top_pattern_fixture.rs"]
 mod fixture;
@@ -35,7 +35,7 @@ fn check(scope: Scope, low: bool) {
         let directory = outcome.artifacts.as_ref().unwrap();
         let (bridge_moves, top_moves) = observe(&sliced.reference);
         let top_sha = fixture::hash(top_moves.join("\n").as_bytes());
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .arg("slice")
             .arg("-o")
             .arg(directory.join("cli.gcode"))

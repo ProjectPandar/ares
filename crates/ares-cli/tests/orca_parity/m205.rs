@@ -91,7 +91,7 @@ fn check(name: &str, flavor: &str, rates: [&str; 2], setter: &str) {
     let processed = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_processed(
+        .block_on(crate::runner::application::slice_project_plate_processed(
             project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             Some(1),

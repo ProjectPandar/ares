@@ -27,7 +27,7 @@ fn single_cpu_slim_tree_concentric_hole_preserves_extrusion_direction() {
     let output = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             &case.project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),
@@ -59,7 +59,7 @@ fn single_cpu_slim_tree_roof_slice_does_not_suppress_retraction() {
     let output = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             &case.project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),
@@ -111,7 +111,7 @@ fn single_cpu_slim_tree_contained_travel_does_not_retract() {
     let output = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             &case.project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),

@@ -8,7 +8,7 @@
 //! (`:2585-2594,:2624-2647` semantics are in the adjudication; its REDs/! wait for the partial-list composite — worker5 boundary; `-16` upward! gate stays deferred).
 #![cfg(target_os = "linux")]
 
-use std::{fs, process::Command};
+use std::fs;
 
 use crate::runner::EarlyExit;
 
@@ -76,7 +76,7 @@ fn assert_load_settings_reject(case: &str, settings: &[&str], filaments: &[&str]
     .unwrap();
 
     let gcode = artifacts.join("gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .current_dir(&artifacts)
         .args([
             "slice",
@@ -165,7 +165,7 @@ fn assert_load_settings_accept(case: &str, settings: &[&str], filaments: &[&str]
     )
     .unwrap();
     let native = fs::read(directory.join("native-output/plate_1.gcode")).unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .current_dir(&directory)
         .args([
             "slice",

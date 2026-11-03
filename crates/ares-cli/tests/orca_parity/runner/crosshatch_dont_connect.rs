@@ -4,7 +4,7 @@ use crate::option_coverage::multiline_union::observation;
 use crate::runner::{CaseInputs, OrcaRunner, ParityCase, application, repo_root};
 use crate::{presets::VendorProfiles, runner};
 use serde_json::json;
-use std::{fs, process::Command};
+use std::fs;
 #[path = "crosshatch_dont_connect_inputs.rs"]
 mod inputs;
 
@@ -85,7 +85,7 @@ fn evaluate(case: &ParityCase) -> std::path::PathBuf {
         .build()
         .unwrap();
     let observed = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        runtime.block_on(ares_core::slice_project_plate_validated(
+        runtime.block_on(crate::runner::application::slice_project_plate_validated(
             &case.project,
             ares_core::GenerationMetadata::default(),
             None,
@@ -113,7 +113,7 @@ fn evaluate(case: &ParityCase) -> std::path::PathBuf {
             crate::golden::compare_ordered_bytes_generator_only(&case.reference, bytes)
         });
     let output = root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

@@ -6,7 +6,7 @@ use crate::{
         stages::{self, FailureKind, Stage},
     },
 };
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 #[test]
 fn circle_plate_origin_matches_native_empty_selected_plate() {
@@ -46,7 +46,7 @@ fn circle_plate_origin_matches_native_empty_selected_plate() {
     assert_eq!(parsed["plate_index"], 2);
     assert!(native_dir.join("plate_2.gcode").exists());
     let output_path = artifacts.join("plate_2.gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "--plate", "2", "-o"])
         .arg(&output_path)
         .arg(&input)

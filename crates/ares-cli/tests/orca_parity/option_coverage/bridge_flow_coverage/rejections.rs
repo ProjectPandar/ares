@@ -59,7 +59,7 @@ fn original_orca_and_ares_reject_zero_bridge_ratios() {
                 .unwrap();
         let validation = ares_core::validate_project_plate(&baseline.project, None, &overrides);
         assert_rejected(validation, &diagnostic);
-        let sliced = runtime.block_on(ares_core::slice_project_plate_validated(
+        let sliced = runtime.block_on(crate::runner::application::slice_project_plate_validated(
             &baseline.project,
             GenerationMetadata::default(),
             None,

@@ -7,7 +7,7 @@ use crate::{
     runner::{ExportedCase, OrcaRunner},
 };
 use serde_json::json;
-use std::{fs, path::PathBuf, process::Command};
+use std::{fs, path::PathBuf};
 
 #[path = "zaa_object_ironing_observe.rs"]
 mod observe;
@@ -162,7 +162,7 @@ fn repeated(runner: &mut OrcaRunner, case: Case) -> Vec<Recorded> {
         let non_ironing = observe::non_ironing(&sliced.reference);
         let outcome = parity::compare_case(&sliced);
         let root = outcome.artifacts.unwrap();
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .arg("slice")
             .arg("-o")
             .arg(root.join("cli.gcode"))

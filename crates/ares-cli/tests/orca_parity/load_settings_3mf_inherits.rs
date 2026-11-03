@@ -6,7 +6,7 @@
 //! never a link. RED: Ares resolves import chains today.
 #![cfg(target_os = "linux")]
 
-use std::{fs, process::Command};
+use std::fs;
 
 use crate::load_settings_3mf::load_settings_3mf_fixture;
 use crate::load_settings_cli::{banner_normalized, stages_run};
@@ -56,7 +56,7 @@ fn load_settings_3mf_user_inherits_whole_file() {
         ],
     );
     let native = fs::read(directory.join("native-output/plate_1.gcode")).unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .current_dir(&directory)
         .args([
             "slice",
@@ -134,7 +134,7 @@ fn load_settings_3mf_filament_inherits_no_chain() {
         ],
     );
     let native = fs::read(directory.join("native-output/plate_1.gcode")).unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .current_dir(&directory)
         .args([
             "slice",

@@ -88,7 +88,7 @@ fn print_applied_map_unchanged_recommendation_preserves_export_bytes() {
         .build()
         .unwrap();
     let gcode = runtime
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             super::RELATIVE_INPUT,
             metadata,
             None,

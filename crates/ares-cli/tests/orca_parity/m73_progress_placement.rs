@@ -71,7 +71,7 @@ fn m73_progress_lines_land_on_the_same_gcode_lines_as_native() {
         .build()
         .unwrap();
     let ares = runtime
-        .block_on(ares_core::slice_project(
+        .block_on(crate::runner::application::slice_project(
             PROJECT,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),

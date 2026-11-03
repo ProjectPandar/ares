@@ -1,6 +1,6 @@
 #![cfg(target_os = "linux")]
 
-use std::{fs, process::Command};
+use std::fs;
 
 use sha2::{Digest, Sha256};
 
@@ -76,7 +76,7 @@ fn compare(case: &str, historical_sha: &str) {
     )
     .unwrap();
     let retained = artifacts.join("plate_1.gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&retained)
         .arg(&input)

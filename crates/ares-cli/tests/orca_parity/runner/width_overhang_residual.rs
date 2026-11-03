@@ -61,7 +61,7 @@ async fn compare_object_layer(selection: Selection) {
         native,
     )
     .unwrap();
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 10, 31, 0, 0, 0),
         None,

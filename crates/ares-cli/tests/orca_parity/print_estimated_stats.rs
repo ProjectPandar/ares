@@ -9,7 +9,7 @@ fn processed(project: &[u8]) -> ares_core::ProcessedGCode {
     tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_processed(
+        .block_on(crate::runner::application::slice_project_plate_processed(
             project,
             ares_core::GenerationMetadata::default(),
             Some(1),

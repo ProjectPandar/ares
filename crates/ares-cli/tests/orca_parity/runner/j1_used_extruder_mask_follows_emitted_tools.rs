@@ -36,7 +36,7 @@ fn check(name: &str, input: &[u8], sha256: &str, expected_usage: [bool; 2]) {
         let actual = tokio::runtime::Builder::new_current_thread()
             .build()
             .unwrap()
-            .block_on(ares_core::slice_project(
+            .block_on(crate::runner::application::slice_project(
                 input,
                 ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
                 ares_core::SlicerContext::new(0),

@@ -30,7 +30,7 @@ async fn narrow_neck_uses_native_collinear_vertex_tolerance() {
     assert!(native.contains("M73 P64 R0\n"));
     assert!(native.contains(";WIPE_START\n"));
 
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 10, 31, 0, 0, 0),
         None,

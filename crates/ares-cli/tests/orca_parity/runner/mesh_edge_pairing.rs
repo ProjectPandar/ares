@@ -1,5 +1,5 @@
 //! TriangleMesh.cpp:520-613; TriangleMeshSlicer.cpp:1865-1889.
-use std::{fs, process::Command};
+use std::fs;
 
 use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use serde_json::json;
@@ -67,7 +67,7 @@ async fn compare(runner: &OrcaRunner, label: &str, input: &[u8]) {
         .unwrap()
         .reference;
     fs::write(root.join("orca.gcode"), &native).unwrap();
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         None,
@@ -76,7 +76,7 @@ async fn compare(runner: &OrcaRunner, label: &str, input: &[u8]) {
     )
     .await;
     let cli_path = root.join("cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .arg("slice")
         .arg("-o")
         .arg(&cli_path)
@@ -156,7 +156,7 @@ async fn rejected_orders_diagnostic_only() {
             super::stages::Stage::Slice,
             &root,
         );
-        let api = ares_core::slice_project_plate_validated(
+        let api = crate::runner::application::slice_project_plate_validated(
             input,
             GenerationMetadata::default(),
             None,
@@ -165,7 +165,7 @@ async fn rejected_orders_diagnostic_only() {
         )
         .await;
         let cli_path = root.join("cli.gcode");
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .arg("slice")
             .arg("-o")
             .arg(&cli_path)

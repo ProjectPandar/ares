@@ -73,7 +73,7 @@ async fn compare_range(label: &str, input: &[u8], expected_hash: &str, expected_
         .filter(|line| line.starts_with(";Z:") || line.starts_with(";HEIGHT:"))
         .collect::<Vec<_>>();
     assert_eq!(layers, expected_layers);
-    let actual = ares_core::slice_project_plate_validated(
+    let actual = crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         None,
@@ -165,7 +165,7 @@ async fn mixed_height_and_region_only_ranges_keep_the_unsupported_boundary() {
     let input = include_bytes!(
         "../../../../../tests/parity/validation/object-range-layer-height-mixed.3mf"
     );
-    let result = ares_core::slice_project_plate_validated(
+    let result = crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         None,

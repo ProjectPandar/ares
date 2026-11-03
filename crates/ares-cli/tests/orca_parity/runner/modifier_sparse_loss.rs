@@ -3,7 +3,7 @@
 use super::{ExportedCase, OrcaRunner, ParityCase, repo_root};
 use crate::runner;
 use serde_json::json;
-use std::{fs, process::Command};
+use std::fs;
 
 #[test]
 fn adaptive_without_modifier_matches_complete_native() {
@@ -93,7 +93,7 @@ fn evaluate(case: &ParityCase) -> std::path::PathBuf {
         .build()
         .unwrap();
     let result = runtime
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &case.project,
             ares_core::GenerationMetadata::default(),
             None,
@@ -111,7 +111,7 @@ fn evaluate(case: &ParityCase) -> std::path::PathBuf {
             crate::golden::compare_ordered_bytes_generator_only(&case.reference, bytes)
         });
     let output = root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

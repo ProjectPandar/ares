@@ -108,7 +108,7 @@ fn verify(label: &str, input: &[u8], expected_hash: &str) {
         .build()
         .unwrap();
     let sliced = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        runtime.block_on(ares_core::slice_project_plate_validated(
+        runtime.block_on(crate::runner::application::slice_project_plate_validated(
             input,
             GenerationMetadata::default(),
             None,

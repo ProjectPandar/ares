@@ -25,7 +25,7 @@ async fn two_wall_layer_preserves_native_inward_destination() {
     std::fs::write(reference.root.join("native.Z034.whole-layer.gcode"), native).unwrap();
     assert!(native.contains("G1 X164.855 Y179.87\n"));
 
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 10, 31, 0, 0, 0),
         None,

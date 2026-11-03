@@ -110,7 +110,7 @@ fn user_overrides_match_documented_project_settings_output() {
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate(
+        .block_on(crate::runner::application::slice_project_plate(
             &project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,

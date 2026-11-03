@@ -11,7 +11,6 @@ use sha2::Digest;
 use std::{
     fs,
     io::{Cursor, Read, Write},
-    process::Command,
 };
 
 #[test]
@@ -175,7 +174,7 @@ fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8], root: &std::pa
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             project,
             ares_core::GenerationMetadata::deterministic(2026, 10, 17, 0, 0, 0),
             None,
@@ -190,7 +189,7 @@ fn compare_case(runner: &OrcaRunner, label: &str, project: &[u8], root: &std::pa
         .map_err(|error| format!("API: {error:?}"))
         .and_then(|gcode| golden::compare_ordered_bytes_generator_only(&native, gcode));
     let cli_path = root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&cli_path)
         .arg(&input)

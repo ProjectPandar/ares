@@ -45,7 +45,7 @@ pub(super) fn verify(runner: &OrcaRunner, root: &Path, project: &[u8], keys: &[&
     )
     .unwrap_err();
     let native = error.captured.as_ref().unwrap();
-    let cli = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(directory.join("ares.gcode"))
         .arg(&input)
@@ -54,7 +54,7 @@ pub(super) fn verify(runner: &OrcaRunner, root: &Path, project: &[u8], keys: &[&
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let api = runtime.block_on(ares_core::slice_project_plate_validated(
+    let api = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         &project,
         ares_core::GenerationMetadata::default(),
         None,

@@ -81,7 +81,7 @@ fn verify_positive_override(label: &str, edits: Value) {
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             RELATIVE_INPUT,
             GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,

@@ -110,7 +110,7 @@ async fn processed_layer_templates_preserve_ordered_color_change_items() {
             .all(|volume| *volume > 0.0)
     );
     assert_eq!(output.result.custom_gcode_times.len(), 3);
-    let unrecorded = ares_core::slice_project_plate(
+    let unrecorded = crate::runner::application::slice_project_plate(
         PROJECT,
         GenerationMetadata::default(),
         Some(1),
@@ -351,7 +351,7 @@ async fn sync_delays_survive_color_and_pause_time_flushes() {
         4
     );
     assert_eq!(output.result.custom_gcode_times.len(), 3);
-    let unrecorded = ares_core::slice_project_plate(
+    let unrecorded = crate::runner::application::slice_project_plate(
         PROJECT,
         GenerationMetadata::default(),
         Some(1),

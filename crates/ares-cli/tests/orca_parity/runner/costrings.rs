@@ -99,7 +99,7 @@ async fn compare(label: &str, input: &[u8]) {
         .unwrap()
         .reference;
     fs::write(directory.join("native.gcode"), &reference).unwrap();
-    let actual = ares_core::slice_project_plate_validated(
+    let actual = crate::runner::application::slice_project_plate_validated(
         input,
         GenerationMetadata::default(),
         None,

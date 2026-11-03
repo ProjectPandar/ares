@@ -252,7 +252,7 @@ fn slice_session(session: &PlaterSession, plate: u32) -> Vec<u8> {
     tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_plater_plate(
+        .block_on(crate::runner::application::slice_plater_plate(
             session,
             PlaterSlice {
                 plate: Some(plate),

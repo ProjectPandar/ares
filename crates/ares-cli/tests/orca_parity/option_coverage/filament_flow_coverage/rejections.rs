@@ -63,7 +63,7 @@ fn original_orca_and_ares_reject_invalid_filament_ratio_and_diameter() {
         .unwrap();
         let validation = ares_core::validate_project_plate(&baseline.project, None, &overrides);
         assert_rejected(validation, &diagnostic);
-        let sliced = runtime.block_on(ares_core::slice_project_plate_validated(
+        let sliced = runtime.block_on(crate::runner::application::slice_project_plate_validated(
             &baseline.project,
             GenerationMetadata::default(),
             None,

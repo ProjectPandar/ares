@@ -27,7 +27,7 @@ async fn nearest_retains_exterior_identity_for_fully_overhanging_arachne_walls()
     assert!(!native.contains(";TYPE:Inner wall\n"));
     std::fs::write(reference.root.join("native.first_cap_object.gcode"), native).unwrap();
 
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 10, 31, 0, 0, 0),
         None,

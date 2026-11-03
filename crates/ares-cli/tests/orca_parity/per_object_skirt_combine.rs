@@ -137,7 +137,7 @@ fn check(label: &str) {
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &bytes,
             ares_core::GenerationMetadata::deterministic(2026, 10, 29, 0, 0, 0),
             None,

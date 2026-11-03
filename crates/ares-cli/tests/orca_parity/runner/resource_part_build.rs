@@ -6,7 +6,6 @@ use serde_json::{Value, json};
 use std::{
     fs,
     path::{Path, PathBuf},
-    process::Command,
 };
 
 #[test]
@@ -134,14 +133,14 @@ fn public_slice(work: &Path, fixtures: &Path, reference: &Value) -> Value {
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &input,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,
             &ares_core::ConfigOverrides::default(),
             ares_core::SlicerContext::new(0),
         ));
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(directory.join("cli.gcode"))
         .arg(&input_path)

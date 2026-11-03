@@ -124,7 +124,7 @@ fn compare_with(runner: &OrcaRunner, label: &str, ids: &[&str], physical: &[&str
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let public = runtime.block_on(ares_core::slice_project_plate_validated(
+    let public = runtime.block_on(crate::runner::application::slice_project_plate_validated(
         &project,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         None,

@@ -3,7 +3,7 @@
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{collections::BTreeMap, fs, process::Command};
+use std::{collections::BTreeMap, fs};
 
 macro_rules! cases {
     ($($test:ident => $label:literal),* $(,)?) => {
@@ -150,7 +150,7 @@ fn check(label: &str) {
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate_validated(
+        .block_on(crate::runner::application::slice_project_plate_validated(
             &bytes,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,
@@ -158,7 +158,7 @@ fn check(label: &str) {
             ares_core::SlicerContext::new(0),
         ));
     let output = root.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

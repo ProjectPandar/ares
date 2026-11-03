@@ -30,7 +30,7 @@ async fn scarf_keeps_fitted_seam_without_its_micrometre_neighbor() {
         "Native must remove the micrometre neighbor next to the retained seam"
     );
 
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 10, 31, 0, 0, 0),
         None,

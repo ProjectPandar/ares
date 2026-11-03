@@ -117,7 +117,7 @@ fn filament_map_cross_map_matches_native() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let Err(error) = runtime.block_on(ares_core::slice_project(
+    let Err(error) = runtime.block_on(crate::runner::application::slice_project(
         &out_of_range.project,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         ares_core::SlicerContext::new(0),

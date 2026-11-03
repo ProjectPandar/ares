@@ -100,7 +100,7 @@ fn verify(label: &str, input: &[u8], entry: Entry) {
     let actual = match entry {
         Entry::Validate => ares_core::validate_project_plate(input, Some(1), &overrides),
         Entry::Slice => runtime
-            .block_on(ares_core::slice_project_plate(
+            .block_on(crate::runner::application::slice_project_plate(
                 input,
                 GenerationMetadata::default(),
                 Some(1),
@@ -109,7 +109,7 @@ fn verify(label: &str, input: &[u8], entry: Entry) {
             ))
             .map(|_| ()),
         Entry::Validated => runtime
-            .block_on(ares_core::slice_project_plate_validated(
+            .block_on(crate::runner::application::slice_project_plate_validated(
                 input,
                 GenerationMetadata::default(),
                 Some(1),
@@ -118,13 +118,15 @@ fn verify(label: &str, input: &[u8], entry: Entry) {
             ))
             .map(|_| ()),
         Entry::Processed => runtime
-            .block_on(ares_core::slice_project_plate_processed_validated(
-                input,
-                GenerationMetadata::default(),
-                Some(1),
-                &overrides,
-                SlicerContext::new(0),
-            ))
+            .block_on(
+                crate::runner::application::slice_project_plate_processed_validated(
+                    input,
+                    GenerationMetadata::default(),
+                    Some(1),
+                    &overrides,
+                    SlicerContext::new(0),
+                ),
+            )
             .map(|_| ()),
     };
     let hash = Sha256::digest(input)

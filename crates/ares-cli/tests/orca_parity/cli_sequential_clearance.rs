@@ -40,7 +40,7 @@ fn run(case: &str, expected_code: i32) {
         fs::write(artifacts.join("native.gcode"), gcode).unwrap();
     }
     let gcode = artifacts.join("plate_1.gcode");
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "-o"])
         .arg(&gcode)
         .arg(&project)

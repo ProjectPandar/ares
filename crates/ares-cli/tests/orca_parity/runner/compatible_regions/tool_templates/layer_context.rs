@@ -1,6 +1,6 @@
 use crate::{self as parity, runner::OrcaRunner};
 use serde_json::json;
-use std::{fs, process::Command};
+use std::fs;
 
 #[path = "layer_context_fixture.rs"]
 pub(super) mod fixture;
@@ -50,7 +50,7 @@ fn layer_templates_render_current_logical_filament_vectors() {
         let native = observation::observe(std::str::from_utf8(&sliced.reference).unwrap());
         let actual = fs::read(directory.join("ares.gcode")).unwrap();
         let ares = observation::observe(std::str::from_utf8(&actual).unwrap());
-        let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+        let cli = crate::runner::application::cli_command()
             .arg("slice")
             .arg("-o")
             .arg(directory.join("cli.gcode"))

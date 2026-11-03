@@ -8,7 +8,7 @@ use crate::{
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 #[test]
 fn zero_density_internal_ceiling_matches_complete_native_output() {
@@ -111,7 +111,7 @@ fn check(density: &str, sparse_expected: bool) {
     );
     assert_eq!(outcome.status, "PASS", "{}; {directory:?}", outcome.detail);
     let actual = fs::read(directory.join("ares.gcode")).unwrap();
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::cli_command()
         .arg("slice")
         .arg("-o")
         .arg(directory.join("cli.gcode"))

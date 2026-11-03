@@ -39,7 +39,7 @@ async fn rotated_object_first_layer_aligned_seam_matches_native_output() {
     .unwrap();
     assert!(stability.is_none(), "Native replay is unstable: {root:?}");
 
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 11, 1, 0, 0, 0),
         Some(1),

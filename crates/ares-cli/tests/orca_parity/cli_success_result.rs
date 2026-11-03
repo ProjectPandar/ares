@@ -4,7 +4,7 @@
 //! stdout/stderr and writes result.json with "Success.", the plate's settings values and one
 //! `sliced_plates` entry whose `triangle_count` sums the model-part facets of each inside instance.
 
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 use crate::native_wall_clock::result_comparison_bytes;
 use crate::runner::{OrcaRunner, stages};
@@ -71,7 +71,7 @@ fn assert_success_like_native(label: &str, fixture: &str) {
                 .starts_with("command-")
         })
         .unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let output = crate::runner::application::cli_command()
         .args(["slice", "--plate", "1", "-o"])
         .arg(ares.join("plate_1.gcode"))
         .arg(&project)

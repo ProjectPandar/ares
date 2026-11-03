@@ -62,7 +62,7 @@ async fn compare_executable(label: &str, project: &[u8], sha: &str) {
     let native = native_blocks[0];
     assert!(native.contains(";TYPE:Brim\n"));
     std::fs::write(reference.root.join("native.executable.gcode"), native).unwrap();
-    let api = ares_core::slice_project_plate_validated(
+    let api = crate::runner::application::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 10, 31, 0, 0, 0),
         None,
