@@ -290,3 +290,40 @@ The initial ARD is based on the explicitly requested main5910. The literal
 port adds only the approved metadata/Classic producer/nullopt consumer;
 no independent pipeline design, root harness, runner, comparator, test or
 fixture change is included. Propose the separate `wipe_inward` ARD next.
+
+## Authorized restack onto main8612802fe
+
+The owner restacked the four approved commits onto
+`8612802fec12baeaa32600edb8e0f3795d3eeb95` on a separate branch,
+preserving the original branches. The new chain is `6a8576f00`,
+`ffc43b2c9`, `89248b8d9`, and `3c39d57ca`. The two doc commits are
+unchanged in the range-diff. The test commit preserves all three thin-hole,
+narrow-hole, and unsupported-wall module declarations. Production resolutions
+retain the new base's two additional region fields plus the deferral field
+(152 total), and pass the narrow predicate beside the unchanged deferral
+operands. The base's complete `reorder_walls` and sandwich functions are
+byte-identical; thin-hole onion/hierarchy/traversal/orientation logic is
+unchanged. The resulting perimeter-append module is 394 lines.
+
+Fresh immutable before/after worktrees and independent targets selected
+exactly 300 identical tests: the original 298 plus the main thin/narrow
+cases. Before: 138 PASS / 162 FAIL. After: 140 PASS / 160 FAIL. Exactly the
+two enabled deferral cases changed FAIL to PASS; zero prior PASS changed to
+FAIL, with no ignored tests. The three frozen input/test bodies are unchanged.
+Every dedicated case used fresh stable Native2 / validated API1 / CLI1 per
+phase, with raw API=CLI. All three AFTER complete streams agree, including
+M73, roles, extrusion/feed, footer, whitespace, and trailing bytes. Their
+canonical generator-only byte identities remain exactly the table above;
+full and external non-M73 first differences are NONE.
+
+The before/after ledgers retain 461 / 460 Native command receipts: 102
+exports each and 359 / 358 slices. The one fewer ordinary slice receipt is
+reported without inventing a cause or forcing equal invocation counts;
+dedicated Native pairs are complete. Both phases retain two code-238 and
+one code-205 receipts and all remaining family failures. This is not family
+or FULL closure. There was no runtime retry, extra probe, trace, variant,
+formatter/kernel change, or estimator overlay. A rejected global Cargo
+argument before compilation and an offline attempt to hash an already
+removed temporary settings file are preserved separately from runtime.
+Fmt and strict workspace/all-targets Clippy pass. This paragraph is a
+postexecution doc-only addition; no postcommit runtime rerun is claimed.
