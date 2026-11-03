@@ -94,7 +94,6 @@ pub(super) fn generate_grid_support_toolpaths(
                     parameters: input.parameters,
                     layer_id: layer.id,
                     print_z: layer.print_z,
-                    height: layer.height,
                     upper: upper.first(),
                     scale: input.scale,
                 },

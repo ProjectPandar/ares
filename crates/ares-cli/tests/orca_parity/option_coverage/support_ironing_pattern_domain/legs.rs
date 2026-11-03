@@ -60,11 +60,9 @@ fn support_ironing_pattern_quartercubic() {
     leg("quartercubic", "quartercubic");
 }
 
-/// Domain: 3D honeycomb ironing paths (`FillBase.cpp` ip3DHoneycomb).
-#[test]
-fn support_ironing_pattern_three_d_honeycomb() {
-    leg("3dhoneycomb", "3dhoneycomb");
-}
+// 3D honeycomb contact ironing is not a defined Native oracle. Its Ares-only
+// empty-component contract is covered separately; see
+// docs/architecture/support-ironing-fill-params-beta.md.
 
 /// Domain: tri-hexagon ironing paths (`PrintConfig.cpp:238` maps to ipStars).
 #[test]

@@ -64,7 +64,9 @@ fn fill_component(
         BoundingBox::from_polygon(expolygon.contour()).ok_or(ClipperError::CoordinateOutOfRange)?;
     let spacing = params.spacing / scale.factor();
     bounds.offset((5.0 * spacing) as i64);
-    let mut request = grid_request(params, scale);
+    let Some(mut request) = grid_request(params, scale) else {
+        return Ok(Vec::new());
+    };
     let module = (request.size * 2.0).round() as i64;
     let minimum = Point::new(
         bounds.min().x().div_euclid(module) * module,
@@ -106,7 +108,7 @@ fn fill_component(
     Ok(connected)
 }
 
-fn grid_request(params: Params, scale: CoordinateScale) -> grid::Grid {
+fn grid_request(params: Params, scale: CoordinateScale) -> Option<grid::Grid> {
     let mut z_scale = 2.0_f64.sqrt();
     let multiline = params.multiline as usize;
     let layers = usize::from(params.thickness_layers.max(1));
@@ -119,8 +121,13 @@ fn grid_request(params: Params, scale: CoordinateScale) -> grid::Grid {
             (params.spacing / scale.factor()) * 1.1 * multiline as f64 / f64::from(params.density);
         z_scale = (size * 2.0) / (2.0 * layer_height);
     }
+    // Fill3DHoneycomb.cpp:391-393 reaches triWave's undefined non-finite
+    // integer conversion; see support-ironing-fill-params-beta.md.
+    if !z_scale.is_finite() {
+        return None;
+    }
     let start = size / 2.0 + (params.layer_height / 2.0) / scale.factor();
-    grid::Grid {
+    Some(grid::Grid {
         z: (params.z / scale.factor()) * z_scale + start,
         z_last: ((params.z - params.layer_height * multiline as f64 * layers as f64)
             / scale.factor())
@@ -133,7 +140,7 @@ fn grid_request(params: Params, scale: CoordinateScale) -> grid::Grid {
         spacing: params.spacing / scale.factor(),
         multiline,
         layers,
-    }
+    })
 }
 
 fn rotate_expolygon(expolygon: &ExPolygon, angle: f64) -> Result<ExPolygon, ClipperError> {

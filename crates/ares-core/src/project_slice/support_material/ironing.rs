@@ -21,7 +21,6 @@ pub(super) struct IroningInput<'a> {
     pub(super) parameters: &'a ToolpathParameters,
     pub(super) layer_id: usize,
     pub(super) print_z: f64,
-    pub(super) height: f64,
     pub(super) upper: Option<&'a InstalledSupportLayer>,
     pub(super) scale: CoordinateScale,
 }
@@ -102,7 +101,8 @@ impl IroningSurface {
                 expolygon: region,
                 params,
                 thickness_layers: 1,
-                layer_height: input.height,
+                // SupportCommon.cpp:610-621 leaves FillParams::layer_height at zero.
+                layer_height: 0.0,
                 print_z: input.print_z,
                 call,
             };

@@ -1,12 +1,12 @@
 # Support-ironing fill parameters and the non-finite 3D-honeycomb domain
 
-Status: architecture approved; the public RED seam below incorporates the
-subsequent static-audit ruling. Production changes still require RED review.
+Status: architecture and public RED approved. The geometry owner has agreed to
+the corrected guard citations and the bounded implementation below.
 The baseline is
 `f8d715c4c2303b09fed72260d23997733221f2e4`; upstream is Orca beta
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
-## Decision proposed for review
+## Approved decision
 
 Keep two contracts distinct:
 
@@ -15,13 +15,13 @@ Keep two contracts distinct:
    physical support-layer height. Physical layer height and extrusion-flow
    height retain their existing meanings and values.
 2. **Undefined upstream kernel domain:** do not reproduce a non-finite
-   floating-to-integer conversion. For 3D honeycomb, propose checking the
+   floating-to-integer conversion. For 3D honeycomb, check the
    computed Z scale before constructing the grid request or entering
    `makeGrid`. If it is non-finite, return an empty polyline set for that fill
    component. This is an explicit Ares-defined behavior where upstream has no
    defined result, not a claim of Native geometry parity.
 
-The second decision is an ARD-only proposal awaiting approval. It must not
+The second decision is an approved Ares-defined domain policy. It must not
 become a physical-height fallback, a numeric clamp, a fixture-specific output
 replacement, an ignored assertion, or a timing correction.
 
@@ -41,8 +41,10 @@ The owning upstream files and functions are:
   `Fill3DHoneycomb::_fill_surface_single`: scale that height and compute the
   grid's Z scale. Density one necessarily selects the dense branch at
   lines 374–380; its zero denominator produces positive infinity.
-- The infinite grid Z reaches `makeGrid` at line 305, `makeZigZag` at
-  line 264, `getCriticalPoints` at line 79, and `triWave` at lines 43–44.
+- The call to `makeGrid` is at line 391, with Z arguments at lines 392–393.
+  Inside `makeGrid`, line 305 calls `makeZigZag`; line 264 inside `makeZigZag`
+  calls `getCriticalPoints`, which calls `triWave` at line 79. `triWave` is
+  defined at lines 43–44.
   `triWave` converts its non-finite floating value to `int`. Such a value
   cannot be represented in the destination integer type; this is undefined
   behavior under C++ [conv.fpint]. IEEE-defined division by zero does not
@@ -53,7 +55,7 @@ percentage, ironing flow, or ironing spacing cannot select the low-density
 branch for this call. A generic low-density 3D-honeycomb experiment therefore
 cannot stand in for a discriminating contact-ironing adapter RED.
 
-The proposed guard is on **computed non-finite Z scale**, not simply on zero
+The approved guard is on **computed non-finite Z scale**, not simply on zero
 layer height. In the generic low-density path, zero height can leave the
 initial Z scale finite even though `layersPerModule` becomes infinite. Do not
 reject or empty that path merely because an intermediate is infinite; its
@@ -70,7 +72,7 @@ reachable conversions require their own defined-domain qualification.
   argument into the kernel parameters. Do not globally zero object-infill
   requests; upstream `Fill.cpp` sets their physical height separately.
 - `crates/ares-core/src/fill/three_d_honeycomb.rs`, `grid_request` and
-  `fill_component`: if the proposed undefined-domain policy is approved,
+  `fill_component`: implement the approved undefined-domain policy and
   propagate the non-finite-Z-scale result as an empty component before
   `grid::make_grid`. No non-finite grid coordinates should be created merely
   to be converted or clamped later.
@@ -109,7 +111,7 @@ Reclassify the existing
 `support_ironing_pattern_three_d_honeycomb` Native-parity leg as UB-derived,
 not PASS and not a FULL OPEN. After review, remove that leg from the eligible
 Native-comparison registry in
-`crates/ares-cli/tests/orca_parity/option_coverage/support_ironing_pattern_domain.rs`
+`crates/ares-cli/tests/orca_parity/option_coverage/support_ironing_pattern_domain/legs.rs`
 and place a citation to this record beside the excluded class's explanation.
 Do not use an ignored test or a passing comparison exception. Retain historical
 artifacts; do not rewrite them as GREEN evidence.
@@ -137,7 +139,8 @@ that this component emits no ironing paths or extrusion. Verify nonempty
 support/interface output and preserve complete API replay outputs, input
 identity, and the contract observation before asserting the empty result.
 
-This test must fail on the current Ares behavior. Its expected empty component
+This test must fail on the RED baseline and pass after the approved port.
+Its expected empty component
 comes from the approved defined-domain policy, not from Native's undefined
 output. Do not invoke Native for this input or count the test as Native parity.
 Do not embed captured non-finite values, observed coordinates, or historical
@@ -159,12 +162,10 @@ Report that inventory delta separately, never as a FAIL-to-PASS improvement.
 
 ## Review and implementation gates
 
-The architecture and the revised Ares-defined RED seam are approved. Deliver
-that RED and the qualified negative controls separately; obtain review before
-implementation. Keep the geometry scope bounded to the cited UB chain and
-non-finite-Z-scale guard; confirm the geometry owner's exact citation agreement
-before guard implementation. No other geometry changes are authorized. A later
-port must preserve finite-domain behavior, use an identical eligible
+The architecture, revised Ares-defined RED, negative controls, and geometry
+owner's corrected guard citations are approved. Keep implementation bounded to
+the cited UB chain and non-finite-Z-scale guard. No other geometry changes are
+authorized. The port must preserve finite-domain behavior, use an identical eligible
 paired inventory with zero PASS-to-FAIL transitions, retain verifiable artifacts,
 and pass rustfmt and strict Clippy. Rust tests use `cargo nextest run`.
 
