@@ -59,10 +59,12 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
                 &traversal.resolved.views.full,
             )?;
             let mut block = Vec::new();
+            // The same `GCode.cpp:8342-8346` block, rendered again from the refreshed config:
+            // the sliced plate's tower entry.
             write_config_block(
                 &traversal.resolved.views,
                 &traversal.project.documents().project_settings_raw,
-                0,
+                traversal.project.current_plate_index(),
                 &mut block,
             )?;
             traversal.config_block = (!block.is_empty()).then_some(block);

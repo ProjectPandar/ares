@@ -99,10 +99,12 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     // as the machine/layer template placeholder source (`GCode.cpp` config
     // export), not only for Bambu Lab printers.
     let mut config_block = Vec::new();
+    // `wipe_tower_x`/`_y` echo the sliced plate's entry: `get_at(print.get_plate_index())`
+    // (`GCode.cpp:8342-8346` at v2.5.0-beta `345efec64`).
     write_config_block(
         &resolved.views,
         &project.documents().project_settings_raw,
-        0,
+        project.current_plate_index(),
         &mut config_block,
     )?;
     let config_block = (!config_block.is_empty()).then_some(config_block);

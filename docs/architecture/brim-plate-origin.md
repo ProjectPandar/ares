@@ -25,3 +25,12 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. Ares writes a per-ob
 - **`BrimPlan.plate_origin`** comes from `traversal.project.plate_origin()` for an owner's plan. A combined plan takes it from its template, the same plate.
 - **`BrimPlan::emit`** sets `(-plate_origin)`: upstream's `set_origin(0, 0)` plus the writer's plate offset. On plate 1 the origin is 0, so its brim bytes are unchanged.
 - **Result:** the plate-2 slice now matches Native through every move: brim, skirt, walls and every layer. The case still differs in the config block, where `wipe_tower_x`/`_y` echo plate 1's value. That is a separate literal fix (next commits).
+
+## The plate's tower position in the config block
+- **The bug.** The brim case's remaining difference was the config block's `; wipe_tower_x =` / `; wipe_tower_y =` line. Upstream writes `get_at(print.get_plate_index())` with three decimals, then the ordinary serialization (`GCode.cpp:8342-8346`). Ares's writer (`full_config.rs`) indexes by the plate it is given, but both callers passed 0.
+- **The two callers:**
+  - the state's config block (`project_slice/state.rs`);
+  - its re-render after an automatic filament-map refresh (`tool_ordering/recommend.rs`). Upstream renders this block once, at export, from the final config. `ToolOrdering.cpp:1291-1303` only updates the filament map it reads, so the re-render is the same `GCode.cpp` block.
+- **The fix.** Both callers pass `Project::current_plate_index()`, `Model::curr_plate_index` as plate selection sets it.
+- **RED** `plater_added_plate_echoes_its_own_tower_position_like_native`: plate 2 of the cubes-on-added-plate session, compared Native-first on those lines only.
+- **Result:** that case and the plate-2 brim case slice like Native.
