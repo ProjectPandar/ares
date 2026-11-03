@@ -1,6 +1,9 @@
 //! Geometry-only witnesses for beta `Fill3DHoneycomb.cpp:336–436`.
 //! The parent's full-stream assertion remains independent and unchanged.
 
+#[path = "honeycomb_geometry/height_thickness.rs"]
+mod height_thickness;
+
 use std::fs;
 
 use serde_json::{Value, json};
