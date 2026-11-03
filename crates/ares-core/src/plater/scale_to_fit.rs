@@ -21,11 +21,7 @@ impl PlaterSession {
         self.check(object, instance)?;
         match PrintVolume::new(&self.project)?.shape() {
             BedShape::Rectangle { .. } => {}
-            BedShape::Circle(_) => {
-                return Err(SliceError::InvalidInput(
-                    "scale to build volume is not ported for a circular bed".to_owned(),
-                ));
-            }
+            BedShape::Circle(_) => todo!("fit_circle of instance {instance} of object {object}"),
             BedShape::Convex { .. } | BedShape::Unported => return Ok(()),
         }
         let printer = &self.project.settings().printer.remaining;

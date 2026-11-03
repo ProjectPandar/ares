@@ -20,7 +20,8 @@ const TALL: f64 = 200.0;
 const PADDING: f64 = 0.02;
 const ENDER3_AREA: &str =
     "\"printable_area\": [\n\t\t\"0x0\",\n\t\t\"220x0\",\n\t\t\"220x220\",\n\t\t\"0x220\"\n\t]";
-const SCALE_TO_FIT_CIRCLE: &str = "scale to build volume is not ported for a circular bed";
+const SCALE_TO_FIT_MODIFIER: &str =
+    "scale to build volume on a circular bed needs every volume to be a model part";
 
 /// `base` with each `(entry, text, replacement)` applied.
 fn load_edited(base: &str, edits: &[(&str, &str, &str)]) -> PlaterSession {
@@ -153,24 +154,114 @@ fn plater_scale_to_fit_on_a_convex_bed_changes_nothing() {
     assert_plate_like_native("scale-to-fit-convex-bed", &session, 1);
 }
 
-/// `fit_circle` (`Selection.cpp:1534-1569`) is deferred: a 72-gon bed (`BuildVolume.cpp:46-75`)
-/// is refused.
-#[test]
-fn plater_scale_to_fit_refuses_a_circular_bed() {
-    let points: Vec<String> = (0..72)
-        .map(|index| {
-            let angle = f64::from(index) * std::f64::consts::TAU / 72.0;
-            format!(
-                "\"{:.4}x{:.4}\"",
-                110.0 + 100.0 * angle.cos(),
-                110.0 + 100.0 * angle.sin()
-            )
-        })
+/// The Ender-3 with a circular bed (`BuildVolume.cpp:46-75`): the 36 integer points exactly on the
+/// circle of radius 65 around (110, 110), in angle order, so the RANSAC circle is exactly that one.
+/// The largest gap undercuts by 0.65 mm, under the 3 mm limit.
+fn circular_bed(base: &str, area: &str) -> PlaterSession {
+    let mut points: Vec<(i32, i32)> = (-65..=65)
+        .flat_map(|x: i32| [-1, 1].map(|sign| (x, sign * (CIRCLE_RADIUS.pow(2) - x * x).isqrt())))
+        .filter(|&(x, y)| x * x + y * y == CIRCLE_RADIUS.pow(2))
         .collect();
-    let area = format!("\"printable_area\": [{}]", points.join(", "));
-    let mut session = load_edited(SINGLE, &[(PROJECT, ENDER3_AREA, &area)]);
+    points.sort_by(|a, b| {
+        f64::atan2(a.1.into(), a.0.into()).total_cmp(&f64::atan2(b.1.into(), b.0.into()))
+    });
+    points.dedup();
+    assert_eq!(points.len(), 36);
+    let area_points: Vec<String> = points
+        .iter()
+        .map(|(x, y)| format!("\"{}x{}\"", 110 + x, 110 + y))
+        .collect();
+    let circle = format!("\"printable_area\": [{}]", area_points.join(", "));
+    load_edited(base, &[(PROJECT, area, &circle)])
+}
+
+const CIRCLE_RADIUS: i32 = 65;
+
+/// A Size edit with the uniform toggle off.
+fn set_size(session: &mut PlaterSession, axis: usize, value: f64) {
+    session
+        .set_size(
+            0,
+            0,
+            ScaleEdit {
+                axis,
+                value,
+                uniform: false,
+            },
+        )
+        .unwrap();
+}
+
+#[test]
+fn plater_scale_to_fit_fills_the_printable_height_on_a_circular_bed_like_native() {
+    // `fit_circle` (`Selection.cpp:1534-1569`): the tall cube's enclosing circle is far inside the
+    // bed's, so `s = printable_height / max_z`; its centre goes to the bed circle's, on the bed.
+    let mut session = circular_bed(SINGLE, ENDER3_AREA);
+    make_tall(&mut session, (0, 0));
+    session.scale_to_fit(0, 0).unwrap();
+    let s = 250.0 / TALL;
+    assert_instance_transform(&session, (0, 0), fitted_at(s, [110.0, 110.0]));
+    assert_plate_like_native("scale-to-fit-circle-height", &session, 1);
+}
+
+#[test]
+fn plater_scale_to_fit_fills_the_bed_circle_with_a_wide_cube_like_native() {
+    // A 100 x 100 x 10 mm cube: its 2D hull's enclosing circle (`smallest_enclosing_circle_welzl`,
+    // `Circle.hpp:112-154`) is the diagonal's, inflated by `SCALED_EPSILON`, plus 0.01 mm, so
+    // `s = 65 / (50 sqrt 2 + 1e-4 + 0.01)`.
+    let mut session = circular_bed(SINGLE, ENDER3_AREA);
+    set_size(&mut session, 0, 100.0);
+    set_size(&mut session, 1, 100.0);
+    session.scale_to_fit(0, 0).unwrap();
+    let s = f64::from(CIRCLE_RADIUS) / (50.0 * std::f64::consts::SQRT_2 + EPS + 0.01);
+    assert_instance_transform(
+        &session,
+        (0, 0),
+        scaled_at([10.0 * s, 10.0 * s, s], [110.0, 110.0, 5.0 * s]),
+    );
+    assert_plate_like_native("scale-to-fit-circle-radius", &session, 1);
+}
+
+#[test]
+fn plater_scale_to_fit_centres_on_the_bed_circle_of_plate_two_like_native() {
+    // `plate_shift`: the current plate's centre (`PartPlate::get_center_origin`,
+    // `PartPlate.cpp:4266-4275`) minus `BuildVolume::bed_center()`, here plate 2's origin. The wide
+    // cube of the radius case, fitted on plate 2.
+    let mut session = circular_bed(SINGLE, ENDER3_AREA);
+    session.add_plate().unwrap();
+    let origin = session.plates()[1].origin;
+    session
+        .translate_instance(0, 0, [origin[0], origin[1], 0.0])
+        .unwrap();
+    session.select_plate(1).unwrap();
+    set_size(&mut session, 0, 100.0);
+    set_size(&mut session, 1, 100.0);
+    session.scale_to_fit(0, 0).unwrap();
+    let s = f64::from(CIRCLE_RADIUS) / (50.0 * std::f64::consts::SQRT_2 + EPS + 0.01);
+    assert_instance_transform(
+        &session,
+        (0, 0),
+        scaled_at(
+            [10.0 * s, 10.0 * s, s],
+            [origin[0] + 110.0, origin[1] + 110.0, 5.0 * s],
+        ),
+    );
+    assert_plate_like_native("scale-to-fit-circle-plate-two", &session, 2);
+}
+
+/// A modifier has no `GLVolume` convex hull (`3DScene.cpp:921-927`), which `fit_circle`
+/// dereferences: upstream undefined behaviour, refused instead.
+#[test]
+fn plater_scale_to_fit_refuses_a_modifier_on_a_circular_bed() {
+    // A cube with a modifier part (`adaptive-octree-spacing/baseline.3mf`) on the circular bed.
+    let mut session = circular_bed(
+        "tests/parity/adaptive-octree-spacing/baseline.3mf",
+        "\"printable_area\": [\n    \"0x0\",\n    \"256x0\",\n    \"256x256\",\n    \"0x256\"\n  ]",
+    );
+    let before = export(&session);
     assert!(matches!(
         session.scale_to_fit(0, 0),
-        Err(SliceError::InvalidInput(text)) if text == SCALE_TO_FIT_CIRCLE
+        Err(SliceError::InvalidInput(text)) if text == SCALE_TO_FIT_MODIFIER
     ));
+    assert!(export(&session) == before, "the session changed");
 }
