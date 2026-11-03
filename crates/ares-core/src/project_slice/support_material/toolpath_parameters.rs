@@ -5,7 +5,10 @@ use crate::project_slice::{
     perimeters::{flow::SupportFlows, types::Flow},
     raft::fill_params::RaftFillPattern,
 };
-use crate::{ObjectOptions, ProcessSupportBasePattern, ProcessSupportInterfacePattern};
+use crate::{
+    ObjectOptions, ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
+};
+use std::f32::consts::FRAC_PI_4;
 
 pub(super) struct ToolpathParameters {
     pub(super) first_layer_flow: Flow,
@@ -148,6 +151,37 @@ impl ToolpathParameters {
             base_fill_pattern,
             interface_fill_pattern,
             contact_fill_pattern,
+        }
+    }
+
+    /// `SupportParameters.hpp:308–329::support_interface_angle`.
+    pub(super) fn support_interface_angle(
+        &self,
+        object: &ObjectOptions,
+        interface_id: usize,
+    ) -> f32 {
+        match object.support_interface_pattern {
+            ProcessSupportInterfacePattern::Rectilinear => {
+                if super::style::resolve(object.support_type, object.support_style)
+                    == ProcessSupportStyle::Snug
+                {
+                    self.interface_angle - FRAC_PI_4
+                } else {
+                    self.interface_angle
+                }
+            }
+            ProcessSupportInterfacePattern::RectilinearInterlaced => {
+                self.interface_angle
+                    + if interface_id & 1 != 0 {
+                        FRAC_PI_4
+                    } else {
+                        -FRAC_PI_4
+                    }
+            }
+            ProcessSupportInterfacePattern::Grid => self.base_angle,
+            ProcessSupportInterfacePattern::Auto | ProcessSupportInterfacePattern::Concentric => {
+                self.interface_angle
+            }
         }
     }
 

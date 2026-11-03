@@ -14,8 +14,8 @@ use super::{
     toolpath_parameters::ToolpathParameters,
 };
 use crate::{
-    ObjectOptions, ProcessSupportInterfacePattern, ProcessSupportStyle, SliceError, SlicerContext,
-    geometry::CoordinateScale, project_slice::parameters::SlicingParameters,
+    ObjectOptions, SliceError, SlicerContext, geometry::CoordinateScale,
+    project_slice::parameters::SlicingParameters,
 };
 
 pub(super) struct ToolpathInput<'a> {
@@ -46,17 +46,9 @@ pub(super) fn generate_grid_support_toolpaths(
     let mut caches = Vec::with_capacity(layers.len() - n_raft_layers);
     for (index, layer) in layers.iter_mut().enumerate().skip(n_raft_layers) {
         let mut cache = indices.select(geometry, layer.print_z);
-        let interface_angle = if input.object.support_interface_pattern
-            == ProcessSupportInterfacePattern::RectilinearInterlaced
-            || (super::style::resolve(input.object.support_type, input.object.support_style)
-                != ProcessSupportStyle::Grid
-                && input.object.support_interface_pattern
-                    != ProcessSupportInterfacePattern::Rectilinear)
-        {
-            input.parameters.raft_interface_angle(layer.interface_id)
-        } else {
-            input.parameters.interface_angle
-        };
+        let interface_angle = input
+            .parameters
+            .support_interface_angle(input.object, layer.interface_id);
         let contact = cache.prepare_grid_contacts(
             geometry,
             ContactCacheInput {
