@@ -20,3 +20,8 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. Ares writes a per-ob
 - Ares writes the brim at global X and fails with `ToolpathOutsidePrintableArea`.
 
 **GREEN** is checked by the plate-2 slice equal to Native's (ordered bytes, generator line excepted), plus a paired FULL run (no PASS → FAIL).
+
+## GREEN
+- **`BrimPlan.plate_origin`** comes from `traversal.project.plate_origin()` for an owner's plan. A combined plan takes it from its template, the same plate.
+- **`BrimPlan::emit`** sets `(-plate_origin)`: upstream's `set_origin(0, 0)` plus the writer's plate offset. On plate 1 the origin is 0, so its brim bytes are unchanged.
+- **Result:** the plate-2 slice now matches Native through every move: brim, skirt, walls and every layer. The case still differs in the config block, where `wipe_tower_x`/`_y` echo plate 1's value. That is a separate literal fix (next commits).

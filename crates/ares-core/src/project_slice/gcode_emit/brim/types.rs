@@ -26,4 +26,7 @@ pub(crate) struct BrimPlan {
     pub(crate) spacing: f32,
     pub(crate) height: f32,
     pub(crate) mm3_per_mm: f64,
+    /// The plate origin the writer subtracts from every point (`Print.cpp:4010`,
+    /// `GCodeWriter.cpp:1114` at v2.5.0-beta `345efec64`).
+    pub(crate) plate_origin: (f64, f64),
 }
