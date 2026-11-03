@@ -25,3 +25,9 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. For `--slice N` the 
 
 ## Breadth
 A paired FULL run, base vs HEAD: no PASS → FAIL, and FAIL → PASS only where Native already keeps the whole object.
+
+## GREEN
+- **`Project::select_plate`, explicit plate:** the objects `selected_import_objects` keeps by object id, each with every instance.
+- **The plate-less view** keeps its listed-instance filter, now applied only on that path.
+- **The decision is geometric:** `update_print_volume_state` stores each instance's state, and the grouping prints only `is_printable()` ones.
+- **Result:** the derived fixture slices plate 1 like Native, all three cubes. The outside-copy case still passes.

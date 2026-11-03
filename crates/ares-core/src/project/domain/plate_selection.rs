@@ -23,22 +23,30 @@ impl Project {
             .iter()
             .copied()
             .collect::<std::collections::BTreeSet<_>>();
+        // `--slice N`: the importer keeps every instance of each object the plate lists
+        // (`bbs_3mf.cpp:2215-2221` at v2.5.0-beta `345efec64`); `Print::apply`'s `is_printable()`
+        // then prints the ones inside the plate's volume. The plate-less view keeps the first
+        // plate's listed instances.
         let mut objects = match plate {
             Some(_) => self.selected_import_objects(&self.plates[index]),
-            None => self.objects.clone(),
+            None => {
+                let mut objects = self.objects.clone();
+                for object in &mut objects {
+                    object
+                        .instances
+                        .retain(|instance| match instance.loaded_label_id() {
+                            Some(label) => identity.contains(&[
+                                instance.object_id(),
+                                instance.instance_id(),
+                                label,
+                            ]),
+                            // All-import views retain unassigned instances for the volume gate.
+                            None => true,
+                        });
+                }
+                objects
+            }
         };
-        for object in &mut objects {
-            object
-                .instances
-                .retain(|instance| match instance.loaded_label_id() {
-                    Some(label) => {
-                        identity.contains(&[instance.object_id(), instance.instance_id(), label])
-                    }
-                    // All-import views retain unassigned instances for the volume gate.
-                    // Explicit importer scopes already excluded absent object IDs.
-                    None => true,
-                });
-        }
         objects.retain(|object| !object.instances.is_empty());
         if objects.is_empty() {
             // Model.cpp:500-501 (`read_from_file`) rejects an empty selected importer model.
