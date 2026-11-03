@@ -127,13 +127,13 @@ impl MaterialSide<'_> {
             let segment = Vector::delta(next, previous);
             let samples = (segment.norm() / self.effective_offset).ceil() as usize;
             let samples = samples.max(1);
-            for sample in 1..=samples {
+            if !(1..=samples).all(|sample| {
                 let point = (Vector::from_point(previous)
                     + segment * (sample as f64 / samples as f64))
                     .point();
-                if !self.point_on_side(point, clearance) {
-                    return false;
-                }
+                self.point_on_side(point, clearance)
+            }) {
+                return false;
             }
             previous = next;
         }

@@ -30,23 +30,21 @@ impl Selection<'_> {
         let reversed = self.reversed();
         let margin = tolerance(self.effective_offset, 0.1, params.epsilon);
         let mut selected = preferred;
-        if let Some(translated) = translated {
-            if selected
+        if let Some(translated) = translated
+            && selected
                 .as_ref()
                 .is_none_or(|candidate| translated.support_score + margin < candidate.support_score)
-            {
-                selected = Some(translated);
-            }
+        {
+            selected = Some(translated);
         }
         let mut selected = selected.or(direct).or(alternate);
         let length_margin = tolerance(params.max_length, 0.1, params.epsilon);
-        if let Some(reversed) = reversed {
-            if selected
+        if let Some(reversed) = reversed
+            && selected
                 .as_ref()
                 .is_none_or(|candidate| longer(&reversed, candidate, length_margin, margin))
-            {
-                selected = Some(reversed);
-            }
+        {
+            selected = Some(reversed);
         }
         selected.map(|candidate| candidate.path)
     }
@@ -133,25 +131,26 @@ impl Selection<'_> {
             self.validator.target,
             params,
         )?;
-        let mut reversed = self.translated(&source, params.seam_end, params.seam_end, support);
+        let reversed = self.translated(&source, params.seam_end, params.seam_end, support);
         let margin = tolerance(params.max_length, 0.1, params.epsilon);
-        if reversed
+        if !reversed
             .as_ref()
             .is_none_or(|candidate| candidate.path_length + margin < params.max_length)
         {
-            let candidate = self.reverse_offset(&source, support);
-            if let Some(candidate) = candidate {
-                let score_margin =
-                    tolerance(params.offset.min(support.norm()), 0.1, params.epsilon);
-                if reversed
-                    .as_ref()
-                    .is_none_or(|current| longer(&candidate, current, margin, score_margin))
-                {
-                    reversed = Some(candidate);
-                }
-            }
+            return reversed;
         }
-        reversed
+        let Some(candidate) = self.reverse_offset(&source, support) else {
+            return reversed;
+        };
+        let score_margin = tolerance(params.offset.min(support.norm()), 0.1, params.epsilon);
+        if reversed
+            .as_ref()
+            .is_none_or(|current| longer(&candidate, current, margin, score_margin))
+        {
+            Some(candidate)
+        } else {
+            reversed
+        }
     }
 
     fn reverse_offset(&self, source: &[Point], support: Vector) -> Option<Candidate> {
