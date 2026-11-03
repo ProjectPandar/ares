@@ -1,6 +1,6 @@
 //! Scalar/vector operations and existing indexed queries used by WipePathHelpers.
 
-use crate::geometry::line_distance_tree::segment::distance_squared;
+use crate::geometry::line_distance_tree::query::segment_distance;
 use crate::geometry::{Line, LineDistanceTree, Point};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -106,18 +106,8 @@ pub(super) fn lines(points: &[Point]) -> Vec<Line> {
 }
 
 pub(super) fn project(line: Line, point: Point) -> (f64, Vector) {
-    let (distance, closest) = distance_squared(
-        [line.a.x() as f64, line.a.y() as f64],
-        [line.b.x() as f64, line.b.y() as f64],
-        [point.x() as f64, point.y() as f64],
-    );
-    (
-        distance,
-        Vector {
-            x: closest[0],
-            y: closest[1],
-        },
-    )
+    let (distance, closest) = segment_distance(line, point);
+    (distance, Vector::from_point(closest))
 }
 
 pub(super) struct Hit {
@@ -142,7 +132,10 @@ impl<'a> Distancer<'a> {
         Hit {
             distance: hit.squared_distance.sqrt(),
             index: hit.line_index,
-            point: project(self.lines[hit.line_index], point).1,
+            point: Vector {
+                x: hit.nearest_point[0],
+                y: hit.nearest_point[1],
+            },
         }
     }
     pub fn radius(&self, point: Point, radius: f64) -> Vec<usize> {

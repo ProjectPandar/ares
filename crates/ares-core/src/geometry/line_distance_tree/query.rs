@@ -166,7 +166,7 @@ fn exterior_delta(minimum: i64, maximum: i64, origin: f64) -> i64 {
     }
 }
 
-pub(super) fn segment_distance(line: Line, point: Point) -> (f64, Point) {
+pub(crate) fn segment_distance(line: Line, point: Point) -> (f64, Point) {
     let vx = (i128::from(line.b.x()) - i128::from(line.a.x())) as f64;
     let vy = (i128::from(line.b.y()) - i128::from(line.a.y())) as f64;
     let vax = (i128::from(point.x()) - i128::from(line.a.x())) as f64;
