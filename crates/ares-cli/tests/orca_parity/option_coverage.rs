@@ -3,6 +3,9 @@
 #[path = "arachne_unsupported_wall_last.rs"]
 mod arachne_unsupported_wall_last;
 
+#[path = "option_coverage/initial_bed_temperature.rs"]
+mod initial_bed_temperature;
+
 #[path = "classic_narrow_island_guard.rs"]
 mod classic_narrow_island_guard;
 
