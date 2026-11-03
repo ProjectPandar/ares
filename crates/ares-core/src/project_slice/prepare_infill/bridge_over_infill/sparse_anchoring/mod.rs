@@ -5,6 +5,7 @@ mod arms;
 mod arms_tail;
 mod honeycomb;
 mod linear;
+mod plane_path;
 
 use crate::{
     SliceError,

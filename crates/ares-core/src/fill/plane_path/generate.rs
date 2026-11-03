@@ -1,4 +1,9 @@
-use super::{PlanePathPattern, output::InfillPolylineOutput};
+use super::{
+    PlanePathPattern,
+    output::InfillPolylineOutput,
+    smoothing::{PolylineOutput, SmoothingPolylineOutput},
+};
+use crate::fill::corner_smoothing::{CornerSmoothing, sanitize_factor};
 use crate::geometry::{ClipperError, Point};
 
 #[expect(
@@ -11,15 +16,52 @@ pub(super) fn generate(
     min_y: i64,
     max_x: i64,
     max_y: i64,
-    resolution: f64,
+    smoothing: CornerSmoothing,
     output: &mut InfillPolylineOutput,
 ) -> Result<(), ClipperError> {
     match pattern {
-        PlanePathPattern::HilbertCurve => generate_hilbert(min_x, min_y, max_x, max_y, output),
+        PlanePathPattern::HilbertCurve => generate_path(
+            Generator::Hilbert([min_x, min_y, max_x, max_y]),
+            output,
+            smoothing,
+        ),
         PlanePathPattern::ArchimedeanChords => {
-            generate_archimedean(max_x, max_y, resolution, output)
+            generate_archimedean(max_x, max_y, smoothing.tolerance, output)
         }
-        PlanePathPattern::OctagramSpiral => generate_octagram(max_x, max_y, output),
+        PlanePathPattern::OctagramSpiral => {
+            generate_path(Generator::Octagram([max_x, max_y]), output, smoothing)
+        }
+    }
+}
+
+enum Generator {
+    Hilbert([i64; 4]),
+    Octagram([i64; 2]),
+}
+
+impl Generator {
+    fn generate(&self, output: &mut impl PolylineOutput) -> Result<(), ClipperError> {
+        match *self {
+            Self::Hilbert([min_x, min_y, max_x, max_y]) => {
+                generate_hilbert(min_x, min_y, max_x, max_y, output)
+            }
+            Self::Octagram([max_x, max_y]) => generate_octagram(max_x, max_y, output),
+        }
+    }
+}
+
+/// `FillPlanePath.cpp:340–361::generate_path`.
+fn generate_path(
+    generator: Generator,
+    output: &mut InfillPolylineOutput,
+    smoothing: CornerSmoothing,
+) -> Result<(), ClipperError> {
+    if sanitize_factor(smoothing.factor) == 0.0 {
+        generator.generate(output)
+    } else {
+        let mut output = SmoothingPolylineOutput::new(output, smoothing);
+        generator.generate(&mut output)?;
+        output.finish()
     }
 }
 
@@ -30,7 +72,7 @@ fn generate_hilbert(
     min_y: i64,
     max_x: i64,
     max_y: i64,
-    output: &mut InfillPolylineOutput,
+    output: &mut impl PolylineOutput,
 ) -> Result<(), ClipperError> {
     let required =
         (i128::from(max_x) + 1 - i128::from(min_x)).max(i128::from(max_y) + 1 - i128::from(min_y));
@@ -113,7 +155,7 @@ fn generate_archimedean(
 fn generate_octagram(
     max_x: i64,
     max_y: i64,
-    output: &mut InfillPolylineOutput,
+    output: &mut impl PolylineOutput,
 ) -> Result<(), ClipperError> {
     let maximum_radius = ((max_x as f64) * (max_x as f64) + (max_y as f64) * (max_y as f64)).sqrt()
         * 2.0_f64.sqrt()

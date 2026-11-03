@@ -27,6 +27,7 @@ pub(super) fn expolygon_polylines(
         angle: params.angle,
         multiline: params.multiline,
         resolution: 0.0125,
+        smooth_factor: params.smooth_factor,
         anchor_length: params.anchor_length,
         anchor_length_max: params.anchor_length_max,
         object_bounding_box: BoundingBox::from_expolygon(expolygon)
@@ -67,6 +68,7 @@ pub(super) fn append(
         angle: params.angle,
         multiline: params.multiline,
         resolution,
+        smooth_factor: params.smooth_factor,
         anchor_length: params.anchor_length,
         anchor_length_max: params.anchor_length_max,
         object_bounding_box,

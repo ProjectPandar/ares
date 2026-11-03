@@ -25,6 +25,7 @@ pub(super) fn polylines(
             angle,
             multiline: 1,
             resolution: 0.0125,
+            smooth_factor: 0.0,
             anchor_length: 1000.0,
             anchor_length_max: 1000.0,
             object_bounding_box: crate::geometry::BoundingBox::from_expolygon(area)

@@ -4,6 +4,7 @@ mod bounds;
 mod generate;
 mod ordering;
 mod output;
+mod smoothing;
 
 use bounds::Bounds;
 use output::InfillPolylineOutput;
@@ -11,6 +12,7 @@ use output::InfillPolylineOutput;
 use super::{
     checked_rotate::{rotate_points, rotate_points_with_trig},
     connect::{FillConnectionParams, connect_infill},
+    corner_smoothing::CornerSmoothing,
     multiline_offset,
 };
 use crate::geometry::{
@@ -35,6 +37,7 @@ pub(crate) struct PlanePathFillParams {
     pub(crate) angle: f32,
     pub(crate) multiline: i32,
     pub(crate) resolution: f64,
+    pub(crate) smooth_factor: f64,
     pub(crate) anchor_length: f32,
     pub(crate) anchor_length_max: f32,
     pub(crate) object_bounding_box: BoundingBox,
@@ -125,7 +128,10 @@ fn fill_component(
         min_y,
         max_x,
         max_y,
-        resolution,
+        CornerSmoothing {
+            factor: params.smooth_factor,
+            tolerance: resolution,
+        },
         &mut generated,
     )?;
     let points = generated.result();

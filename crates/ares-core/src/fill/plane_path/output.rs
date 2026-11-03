@@ -42,7 +42,7 @@ impl InfillPolylineOutput {
     }
 
     pub(super) fn add_point(&mut self, x: f64, y: f64) -> Result<(), ClipperError> {
-        let point = Point::new(self.scaled(x)?, self.scaled(y)?);
+        let point = self.scaled_point(x, y)?;
         let Some(bounds) = self.clip else {
             self.points.push(point);
             return Ok(());
@@ -71,6 +71,10 @@ impl InfillPolylineOutput {
 
     pub(super) fn result(self) -> Vec<Point> {
         self.points
+    }
+
+    pub(super) fn scaled_point(&self, x: f64, y: f64) -> Result<Point, ClipperError> {
+        Ok(Point::new(self.scaled(x)?, self.scaled(y)?))
     }
 
     fn scaled(&self, value: f64) -> Result<i64, ClipperError> {
