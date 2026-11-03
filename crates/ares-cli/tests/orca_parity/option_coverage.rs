@@ -3,6 +3,8 @@
 #[path = "arachne_unsupported_wall_last.rs"]
 mod arachne_unsupported_wall_last;
 
+#[path = "option_coverage/filament_is_mixed_echo.rs"]
+mod filament_is_mixed_echo;
 #[path = "option_coverage/initial_bed_temperature.rs"]
 mod initial_bed_temperature;
 
