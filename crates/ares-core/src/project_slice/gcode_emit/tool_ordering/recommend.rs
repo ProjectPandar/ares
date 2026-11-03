@@ -2,7 +2,10 @@
 use super::{OrderingScope, RaftSchedule, ToolOrdering, collect_layers, finish_layers};
 use crate::{
     ProcessPrintSequence, ProjectFilamentMapMode, SliceError,
-    options::{filament_map_recommend, refresh_filament_map, write_config_block},
+    options::{
+        filament_map_recommend, refresh_filament_map, update_static_filament_maps,
+        write_config_block,
+    },
     project_slice::{
         island_print_order::OrderedExtrusionLayer,
         perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -39,8 +42,22 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             &used,
             is_bbl,
         );
-        // ToolOrdering.cpp:1291-1303 updates config only for auto maps.
-        if changed
+        // ToolOrdering.cpp:3054–3084 also writes static maps in Manual mode.
+        let static_views = if !is_bbl
+            && traversal.resolved.views.full.process.print.print_sequence
+                == ProcessPrintSequence::ByLayer
+        {
+            update_static_filament_maps(
+                &mut traversal.resolved.filament_variant_checkpoint,
+                &traversal.resolved.views.full,
+                &traversal.project.documents().project_settings_raw,
+                &used,
+            )?
+        } else {
+            None
+        };
+        if static_views.is_some()
+            || changed
             || (traversal
                 .resolved
                 .views
@@ -53,11 +70,15 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
                     != traversal.resolved.views.full.project.gcode.filament_map)
         {
             // Print.cpp:3166-3200 refreshes from the PrintApply.cpp:1165-1172 checkpoint.
-            traversal.resolved.views = refresh_filament_map(
-                &traversal.resolved.filament_variant_checkpoint,
-                &traversal.resolved.views.full.project.gcode.filament_map,
-                &traversal.resolved.views.full,
-            )?;
+            traversal.resolved.views = if let Some(views) = static_views {
+                views
+            } else {
+                refresh_filament_map(
+                    &traversal.resolved.filament_variant_checkpoint,
+                    &traversal.resolved.views.full.project.gcode.filament_map,
+                    &traversal.resolved.views.full,
+                )?
+            };
             let mut block = Vec::new();
             // The same `GCode.cpp:8342-8346` block, rendered again from the refreshed config:
             // the sliced plate's tower entry.

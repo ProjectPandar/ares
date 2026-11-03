@@ -38,6 +38,8 @@ macro_rules! gcode_option_fields {
             filament => required_nozzle_hrc => "required_nozzle_HRC": OrcaInts,
             project => filament_map_mode => "filament_map_mode": ProjectFilamentMapMode,
             project => filament_map => "filament_map": OrcaInts,
+            project => filament_nozzle_map => "filament_nozzle_map": OrcaInts,
+            project => filament_volume_map => "filament_volume_map": OrcaInts,
             filament => filament_extruder_variant => "filament_extruder_variant": VariantStride,
             printer => support_object_skip_flush => "support_object_skip_flush": OrcaBool,
             printer => bed_temperature_formula => "bed_temperature_formula": BedTemperatureFormula,

@@ -122,7 +122,9 @@ pub(crate) use part_cooling_fan::{
     InternalBridgeFanSpeed, LayerRoleFanControl, PartCoolingFanRamp, PartCoolingFanRampConfig,
 };
 pub(crate) use project_variants::{MaterializedProjectVariants, materialize_project_variants};
-pub(crate) use project_variants::{mapped_extruder_id, refresh_filament_map};
+pub(crate) use project_variants::{
+    mapped_extruder_id, refresh_filament_map, update_static_filament_maps,
+};
 #[cfg_attr(not(test), allow(unused_imports))]
 pub(crate) use region_options::{
     RegionBase, RegionOptionOverrides, RegionOverrideSources, unescape_strings_cstyle,

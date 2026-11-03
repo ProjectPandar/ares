@@ -286,6 +286,17 @@ fn applied_filament_maps(
             .join(",");
         lines.retain(|(key, _)| key != "filament_nozzle_map");
         lines.push(("filament_nozzle_map".to_owned(), nozzles));
+        let volumes = settings
+            .project
+            .gcode
+            .filament_volume_map
+            .0
+            .iter()
+            .map(|value| value.0.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        lines.retain(|(key, _)| key != "filament_volume_map");
+        lines.push(("filament_volume_map".to_owned(), volumes));
     }
 }
 

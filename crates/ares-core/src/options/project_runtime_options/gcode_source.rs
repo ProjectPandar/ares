@@ -18,6 +18,8 @@ declare_option_group! {
         filament_ids => "filament_ids": OrcaStrings = OrcaStrings::default(),
         filament_map_mode => "filament_map_mode": ProjectFilamentMapMode = ProjectFilamentMapMode::AutoForFlush,
         filament_map => "filament_map": OrcaInts = ints(&[1]),
+        filament_nozzle_map => "filament_nozzle_map": OrcaInts = ints(&[1]),
+        filament_volume_map => "filament_volume_map": OrcaInts = ints(&[0]),
         retract_before_wipe => "retract_before_wipe": OrcaPercents = percents(&[100.0]),
         retraction_length => "retraction_length": OrcaFloats = floats(&[0.8]),
         retract_length_toolchange => "retract_length_toolchange": OrcaFloats = floats(&[10.0]),
@@ -35,11 +37,13 @@ declare_option_group! {
 }
 
 impl ProjectGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 17] = [
+    pub const DECLARATION_ORDER: [&'static str; 19] = [
         "deretraction_speed",
         "filament_ids",
         "filament_map_mode",
         "filament_map",
+        "filament_nozzle_map",
+        "filament_volume_map",
         "retract_before_wipe",
         "retraction_length",
         "retract_length_toolchange",

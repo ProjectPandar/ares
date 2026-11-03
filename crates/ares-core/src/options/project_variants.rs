@@ -1,5 +1,8 @@
 mod filament;
+mod filament_maps;
 mod filament_select;
+
+pub(crate) use filament_maps::update_static_filament_maps;
 mod index;
 mod printer;
 mod select;
