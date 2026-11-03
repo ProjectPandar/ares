@@ -3,7 +3,7 @@ use super::{
     filament::Filament, geometry::Shape, plan::Plan, result::ToolChangeResult, writer::Writer,
 };
 use crate::{
-    GCodeFlavor, ProjectSettings,
+    GCodeFlavor, ProcessWipeTowerWallType, ProjectSettings,
     geometry::{BoundingBox, CoordinateScale},
 };
 
@@ -39,6 +39,7 @@ pub(super) struct Generator<'a> {
     pub(super) rib_offset: [f32; 2],
     pub(super) brim_width: f32,
     pub(super) first_layer_bounds: Option<BoundingBox>,
+    pub(super) wall_skip_points: Vec<Vec<[f32; 2]>>,
 }
 
 impl<'a> Generator<'a> {
@@ -103,7 +104,21 @@ impl<'a> Generator<'a> {
             rib_offset: [0.0; 2],
             brim_width: 0.0,
             first_layer_bounds: None,
+            wall_skip_points: Vec::new(),
         }
+    }
+
+    /// `WipeTower2::use_gap_wall` (`WipeTower2.cpp:1029-1033`).
+    pub(super) fn use_gap_wall(&self) -> bool {
+        self.settings.process.print.prime_tower_skip_points.0
+            && self.settings.process.print.wipe_tower_wall_type != ProcessWipeTowerWallType::Cone
+    }
+
+    /// `WipeTower2::toolchange_entry_pos` (`WipeTower2.hpp:341-347`) without the non-SEMM
+    /// ramming offset.
+    pub(super) fn toolchange_entry_pos(&self, depth_traversed: f32) -> [f32; 2] {
+        let half = self.plan.perimeter_width / 2.0;
+        [half, half + depth_traversed]
     }
 
     pub(super) fn is_first_layer(&self) -> bool {

@@ -32,6 +32,9 @@ impl Generator<'_> {
         self.rib_width = self
             .rib_width
             .min(self.plan.depth.min(self.plan.width) / 2.0);
+        if self.use_gap_wall() {
+            self.compute_wall_skip_points();
+        }
         self.layer_index = 0;
         self.current_height = 0.0;
         if let Some(change) = self
@@ -68,6 +71,28 @@ impl Generator<'_> {
             }
         }
         Ok(result)
+    }
+
+    /// `WipeTower2::compute_wall_skip_points` (`WipeTower2.cpp:2453-2463`): a wall opening at
+    /// each toolchange's entry.
+    fn compute_wall_skip_points(&mut self) {
+        self.wall_skip_points = self
+            .plan
+            .layers
+            .iter()
+            .map(|layer| {
+                let mut depth_traversed = 0.0;
+                layer
+                    .changes
+                    .iter()
+                    .map(|change| {
+                        let entry = self.toolchange_entry_pos(depth_traversed);
+                        depth_traversed += change.required_depth;
+                        entry
+                    })
+                    .collect()
+            })
+            .collect();
     }
 
     /// `WipeTower2.cpp:2485-2507`: a rib tower prints square, keeping the planned purge area,

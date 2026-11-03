@@ -55,7 +55,7 @@ impl Generator<'_> {
         writer.speed_override_backup();
         writer.speed_override(100);
         writer.set_initial_position(
-            [bounds.lower[0], bounds.lower[1] + self.depth_traversed],
+            self.toolchange_entry_pos(self.depth_traversed),
             [self.plan.width, self.plan.depth],
             self.rotation,
         );

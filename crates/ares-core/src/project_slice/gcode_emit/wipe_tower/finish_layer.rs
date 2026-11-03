@@ -1,7 +1,7 @@
 //! `WipeTower2::finish_layer`: sparse/solid support, wall, brim and wipe path.
 use super::{
     generator::Generator,
-    geometry::{BoxCoordinates, ConeOptions, emit_wall, new_scale, unscaled},
+    geometry::{BoxCoordinates, ConeOptions, gaps, new_scale, unscaled},
     result::ToolChangeResult,
     writer::Writer,
 };
@@ -95,16 +95,28 @@ impl Generator<'_> {
                 let rib = self.settings.process.print.wipe_tower_wall_type
                     == ProcessWipeTowerWallType::Rib;
                 let wall = shape.wall_polygon(wall_bounds, rib, self.scale)?;
-                let filament = &self.filaments[self.current_tool];
-                emit_wall(
-                    &mut writer,
+                // `WipeTower2.cpp:2663-2676`: with the gap wall, the layer's skip points
+                // (none during the planning passes) open the wall.
+                let skip_points = match self.wall_skip_points.get(self.layer_index) {
+                    Some(points) if self.use_gap_wall() => points.as_slice(),
+                    _ => &[],
+                };
+                let (paths, wall) = gaps::split(
                     &wall,
+                    skip_points,
+                    self.plan.width,
+                    (2.5 * f64::from(self.plan.perimeter_width)) as f32,
+                    self.scale,
+                );
+                let filament = &self.filaments[self.current_tool];
+                writer.generate_path(
+                    &paths,
                     feedrate,
                     (filament.retract_length, filament.retract_speed * 60.0),
                     self.scale,
                 );
                 // `WipeTower2.cpp:2679-2684`: the shift that puts the first-layer rib wall's
-                // minimum corner at the tower position, from the un-gapped outline.
+                // minimum corner at the tower position.
                 if rib && self.is_first_layer() {
                     let bounds = crate::geometry::BoundingBox::from_polygon(&wall)
                         .expect("the rib wall has points");

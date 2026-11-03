@@ -5,10 +5,7 @@ pub(super) mod gaps;
 pub(super) use cone::{ConeOptions, cone_base};
 mod rounding;
 
-use super::writer::Writer;
-use crate::geometry::{
-    ClipperError, CoordinateScale, Point, Polygon, Polyline, union_polygons_paths,
-};
+use crate::geometry::{ClipperError, CoordinateScale, Point, Polygon, union_polygons_paths};
 
 #[derive(Clone, Copy)]
 pub(super) struct BoxCoordinates {
@@ -116,20 +113,6 @@ impl Shape {
         }
         Ok(wall)
     }
-}
-
-pub(super) fn emit_wall(
-    writer: &mut Writer,
-    polygon: &Polygon,
-    feedrate: f32,
-    retract: (f32, f32),
-    scale: CoordinateScale,
-) {
-    // The source skip-points caller supplies an empty vector, so its gap helper
-    // returns the original closed polygon (cpp 2530).
-    let mut points = polygon.points().to_vec();
-    points.push(points[0]);
-    writer.generate_path(&[Polyline::new(points)], feedrate, retract, scale);
 }
 
 pub(super) fn scaled(point: [f32; 2], scale: CoordinateScale) -> Point {

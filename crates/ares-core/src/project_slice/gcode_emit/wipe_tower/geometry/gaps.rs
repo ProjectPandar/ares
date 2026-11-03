@@ -1,6 +1,7 @@
-//! `WipeTower.cpp:228–244,329–508`: ray-selected wall-entry gaps.
+//! `construct_gap_for_skip_points` (`WipeTower.cpp:330-346, 422-708`, v2.5.0-beta `345efec64`):
+//! wall openings at ray-selected skip points.
 use super::scaled;
-use crate::geometry::{CoordinateScale, Point, Polygon, Polyline};
+use crate::geometry::{BoundingBox, CoordinateScale, Point, Polygon, Polyline};
 
 #[derive(Clone, Copy)]
 struct Vertex {
@@ -113,6 +114,49 @@ fn along(
     }
 }
 
+/// `add_extra_point` (`WipeTower.cpp:517-606`): the edge whose midpoint is nearest the bottom
+/// centre gains its midpoint and a point `scale_range` to either side of it.
+fn add_extra_point(polygon: &Polygon, scale_range: i32) -> Polygon {
+    let points = polygon.points();
+    let bounds = BoundingBox::from_polygon(polygon).expect("the wall has points");
+    let anchor = [
+        ((bounds.min().x() + bounds.max().x()) / 2) as f32,
+        bounds.min().y() as f32,
+    ];
+    let float = |p: Point| [p.x() as f32, p.y() as f32];
+    let mid = |a: [f32; 2], b: [f32; 2]| [(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5];
+    let (mut closest, mut min_distance) = (0, f32::MAX);
+    for i in 0..points.len() {
+        let m = mid(float(points[i]), float(points[(i + 1) % points.len()]));
+        let distance =
+            (anchor[0] - m[0]) * (anchor[0] - m[0]) + (anchor[1] - m[1]) * (anchor[1] - m[1]);
+        if distance < min_distance {
+            (closest, min_distance) = (i, distance);
+        }
+    }
+    let a = float(points[closest]);
+    let b = float(points[(closest + 1) % points.len()]);
+    let m = mid(a, b);
+    let to_a = [a[0] - m[0], a[1] - m[1]];
+    let to_b = [b[0] - m[0], b[1] - m[1]];
+    let len_a = (to_a[0] * to_a[0] + to_a[1] * to_a[1]).sqrt();
+    let len_b = (to_b[0] * to_b[0] + to_b[1] * to_b[1]).sqrt();
+    if f64::from(len_a) < 1e-4 || f64::from(len_b) < 1e-4 {
+        return polygon.clone();
+    }
+    let range = (scale_range as f32).min(len_a.min(len_b) * 0.9);
+    let round = |p: [f32; 2]| Point::new(p[0].round() as i64, p[1].round() as i64);
+    let offset =
+        |to: [f32; 2], len: f32| round([m[0] + to[0] / len * range, m[1] + to[1] / len * range]);
+    let mut result = points[..=closest].to_vec();
+    result.extend([offset(to_a, len_a), round(m), offset(to_b, len_b)]);
+    result.extend_from_slice(&points[closest + 1..]);
+    Polygon::new(result)
+}
+
+/// `construct_gap_for_skip_points` (`WipeTower.cpp:695-708`) and `remove_points_from_polygon`
+/// (`:610-693`): the wall paths left after cutting `range` either side of each skip point, and
+/// the polygon with the cut points inserted.
 pub(in crate::project_slice::gcode_emit::wipe_tower) fn split(
     polygon: &Polygon,
     gaps: &[[f32; 2]],
@@ -125,22 +169,19 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn split(
         points.push(points[0]);
         return (vec![Polyline::new(points)], polygon.clone());
     }
-    let left = gaps[0][0].abs() < width / 2.0;
-    let min_x = polygon.points().iter().map(|p| p.x()).min().unwrap();
-    let max_x = polygon.points().iter().map(|p| p.x()).max().unwrap();
-    let min_y = polygon.points().iter().map(|p| p.y()).min().unwrap();
-    let anchor = Point::new(if left { max_x } else { min_x }, min_y);
-    let start = polygon
-        .points()
-        .iter()
-        .enumerate()
-        .min_by_key(|(_, p)| {
-            let x = p.x() - anchor.x();
-            let y = p.y() - anchor.y();
-            i128::from(x) * i128::from(x) + i128::from(y) * i128::from(y)
-        })
-        .unwrap()
-        .0;
+    let polygon = add_extra_point(polygon, (f64::from(range) / scale.factor()) as i32);
+    let bounds = BoundingBox::from_polygon(&polygon).expect("the wall has points");
+    let anchor = Point::new((bounds.min().x() + bounds.max().x()) / 2, bounds.min().y());
+    let distance = |p: Point| {
+        let (x, y) = ((p.x() - anchor.x()) as f64, (p.y() - anchor.y()) as f64);
+        (x * x + y * y).sqrt()
+    };
+    let mut start = 0;
+    for (i, &p) in polygon.points().iter().enumerate().skip(1) {
+        if distance(p) < distance(polygon.points()[start]) {
+            start = i;
+        }
+    }
     let count = polygon.points().len();
     let points = (0..count)
         .map(|i| {
@@ -148,9 +189,13 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn split(
             [scale.unscale(p.x()) as f32, scale.unscale(p.y()) as f32]
         })
         .collect::<Vec<_>>();
-    let ray = if left { -1.0_f32 } else { 1.0 };
     let mut intersections = Vec::new();
     for (pair, &gap) in gaps.iter().enumerate() {
+        let ray = if gap[0].abs() < width / 2.0 {
+            -1.0_f32
+        } else {
+            1.0
+        };
         for edge in 0..count {
             let a = points[edge];
             let b = points[(edge + 1) % count];
