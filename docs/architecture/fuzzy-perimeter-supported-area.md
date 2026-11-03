@@ -67,3 +67,40 @@ Failure modes include incorrect closed/open classification; dropping the
 nonempty or unequal-position predicate; losing endpoint width; modifying
 closed-wall output; consumer admission failure or disagreement; and residual
 output differences originating in the separately deferred boundaries.
+
+## Open-path Arachne fuzzy mask expansion
+
+`src/libslic3r/Feature/FuzzySkin/FuzzySkin.cpp:750-754` owns expansion inside
+the Arachne `apply_fuzzy_skin` overload at upstream
+`345efec64c7b95a05ce5cf96df0dde66a158835c`. After the merged whole-line
+fast-path exit and before exclusion, support restriction and splitting,
+upstream expands every merged region mask only when `!closed`, using
+`ext_perimeter_flow.scaled_width() / 10`. `Flow.hpp:64` returns an integer
+scaled width: divide by integer ten before the float conversion required by
+`ClipperUtils.hpp:370::offset_ex`. Defaults are Miter and miter limit three
+(`ClipperUtils.hpp:32,40`). The arithmetic and source order remain unchanged.
+
+The Rust destination is only `arachne/fuzzy.rs::Regions::{prepare,apply}`.
+`prepare` receives the record's external-perimeter flow and scale; carry its
+scaled-width integer quotient as the per-group open-mask offset. In `apply`,
+after both fast-path exits and before `make_exclusive`, replace each local
+merged mask in order with the existing `offset_expolygons` result, using the
+quotient cast to f32, Miter/3.0, only for open extrusions. Persistent region
+entries, lower slices and input geometry are not mutated. The omitted upstream
+operation is an older-source compatibility shell, not an independent
+segmentation policy. No configuration or public API is added.
+
+Only this open-path expansion and its required width carrier are included.
+Closed masks, empty-mask semantics, fast paths, iteration/exclusion priority,
+support restriction and the terminal guard remain unchanged. Segment isolation
+(beta813-828) and source-index transfer (831-837) already preserve those local
+beta operations and remain outside this expansion. Whole-line closure
+arguments, noise/width floor/Ripple arithmetic, generic geometry kernels,
+Classic fuzzy, wall traversal/seam, caller sampling, writer, timing, footer and
+comparator behavior are deferred or unchanged.
+
+Failure modes include using the wrong owner-flow width; dividing after float
+conversion; changing join/miter policy; expanding after exclusion/support;
+changing closed or empty masks; mutating shared masks; residual segment/source-
+index or kernel differences; consumer admission/equality failure; and
+unintended movement or timing/footer changes outside this boundary.
