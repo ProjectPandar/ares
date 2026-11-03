@@ -1,7 +1,7 @@
 //! Selection composition: per-kind merge of loaded records onto the
 //! raw overlay (`update_full_config` per-key apply, `OrcaSlicer.cpp:2750-2812`).
 
-use std::collections::BTreeSet;
+use std::borrow::Cow;
 
 use super::super::{
     MergedProfile, ProfileFragment, ProfileKind, ProfileSelection,
@@ -117,27 +117,19 @@ impl Catalog {
             .selectable
             .get(&(kind, name.to_owned()))
             .ok_or_else(|| invalid(format!("selectable profile '{name}' was not found")))?;
-        let mut chain = Vec::new();
-        // The `--load-settings` entry never resolves `inherits`
-        // (`OrcaSlicer.cpp:1953-2010` loads each file's fields directly;
-        // `inherits` is a value, not a link): each import composes as
-        // its own single record. The preset-bundle/catalog entry keeps
-        // the full `PresetBundle` chain walk.
-        if self.direct_imports {
-            chain.push(position);
+        // Direct CLI files do not resolve preset links (OrcaSlicer.cpp:1953-2010).
+        let layers = if self.direct_imports {
+            vec![Cow::Borrowed(self.document(position))]
         } else {
-            self.collect_positions(position, &mut BTreeSet::new(), &mut chain)?;
-        }
-        let mut fragments = Vec::with_capacity(chain.len());
-        for position in chain {
-            let record = &self.records[position];
-            let (fragment, project) =
-                ProfileFragment::from_catalog_values(record.document.values())?;
+            self.resolved_layers(position)?
+        };
+        let mut fragments = Vec::with_capacity(layers.len());
+        for layer in layers {
+            let (fragment, project) = ProfileFragment::from_catalog_values(layer.values())?;
             fragments.push(fragment);
             runtime.overlay(project);
             raw.extend(
-                record
-                    .document
+                layer
                     .fields
                     .iter()
                     .filter(|(key, _)| super::raw::applies(kind, key))

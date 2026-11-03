@@ -2,6 +2,7 @@ mod chain;
 mod cli_metadata;
 mod compose;
 mod document;
+mod includes;
 mod model_info;
 mod preset_values;
 mod printer_models;

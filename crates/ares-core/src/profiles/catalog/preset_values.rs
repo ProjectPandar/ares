@@ -22,15 +22,15 @@ impl Catalog {
         position: usize,
         keys: &[&str],
     ) -> Result<BTreeMap<String, RawConfigValue>, SliceError> {
-        let chain = self.chain_positions(position)?;
+        let layers = self.resolved_layers(position)?;
         keys.iter()
             .map(|key| {
                 let definition = crate::options::registry::option_definition(key)
                     .ok_or_else(|| invalid(format!("unknown option '{key}'")))?;
-                let value = chain
+                let value = layers
                     .iter()
                     .rev()
-                    .find_map(|member| self.document(*member).fields.get(*key))
+                    .find_map(|layer| layer.fields.get(*key))
                     .cloned()
                     .unwrap_or_else(|| RawConfigValue::Text(definition.default_value.to_owned()));
                 Ok(((*key).to_owned(), value))

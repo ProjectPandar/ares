@@ -53,7 +53,7 @@ pub(super) struct ImportedProfiles {
 /// Transport-only original option values. Typed option builders still own
 /// interpretation; retaining these values also supplies config-export key/nil
 /// provenance without introducing dynamic serde_json values in production.
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub(in crate::profiles) struct ProfileDocument {
     #[serde(rename = "type", default)]
     pub kind: String,
@@ -62,8 +62,25 @@ pub(in crate::profiles) struct ProfileDocument {
     pub inherits: Option<String>,
     #[serde(default)]
     pub instantiation: Option<String>,
+    #[serde(rename = "include", default, deserialize_with = "deserialize_includes")]
+    pub includes: Vec<String>,
     #[serde(flatten)]
     pub fields: BTreeMap<String, RawConfigValue>,
+}
+
+fn deserialize_includes<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Vec<String>, D::Error> {
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Names {
+        One(String),
+        Many(Vec<String>),
+    }
+    Ok(match Names::deserialize(deserializer)? {
+        Names::One(name) => vec![name],
+        Names::Many(names) => names,
+    })
 }
 
 impl ProfileDocument {
