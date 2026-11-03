@@ -238,9 +238,13 @@ pub(in crate::options) fn collect_range_errors(
             let min = metadata.min.unwrap_or(-(f32::MAX) as f64);
             let max = metadata.max.unwrap_or(f32::MAX as f64);
             let serialized = serialize_value(&elements);
-            errors
-                .entry(key.clone())
-                .or_insert_with(|| format!("{serialized} not in range [{min:.6},{max:.6}]"));
+            errors.entry(key.clone()).or_insert_with(|| {
+                format!(
+                    "{serialized} not in range [{}, {}]",
+                    format_number(min),
+                    format_number(max)
+                )
+            });
         }
     }
     Ok(())
