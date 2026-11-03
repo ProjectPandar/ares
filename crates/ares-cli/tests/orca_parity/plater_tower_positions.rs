@@ -11,6 +11,9 @@ use super::super::plater_archive::{read_entry, rewrite_archive};
 use super::{STRIDE, export, slice_session};
 use crate::runner::{OrcaRunner, repo_root};
 
+#[path = "wipe_tower2_rib.rs"]
+mod wipe_tower2_rib;
+
 const TWO_FILAMENTS: &str = "tests/parity/print-order-as-obj-list/class-default.3mf";
 const PROJECT: &str = "Metadata/project_settings.config";
 /// A 20 mm rectangle-wall tower purging the prime volume, without a brim: 20 x 11.25 mm for two
