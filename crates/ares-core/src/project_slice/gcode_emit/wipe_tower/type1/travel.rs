@@ -12,7 +12,7 @@ pub(super) fn path(
     state: &motion::EmitState,
     context: timelapse::Context<'_>,
     scale: CoordinateScale,
-) -> Vec<Point> {
+) -> Result<Vec<Point>, crate::SliceError> {
     let mut start = [0.0_f32; 2];
     // GCodeProcessor.cpp:3021: complete motion lines and first X/Y word.
     for line in source
@@ -81,24 +81,6 @@ pub(super) fn path(
             high[a] = high[a].max(p[a]);
         }
     }
-    let mut bed_min = [i64::MAX; 2];
-    let mut bed_max = [i64::MIN; 2];
-    for p in &context
-        .traversal
-        .resolved
-        .views
-        .full
-        .printer
-        .remaining
-        .printable_area
-        .0
-    {
-        let p = local([p.x as f32, p.y as f32]);
-        for a in 0..2 {
-            bed_min[a] = bed_min[a].min(p[a]);
-            bed_max[a] = bed_max[a].max(p[a]);
-        }
-    }
     let end_local = local(end);
     // GCode.cpp:1513,8138: parsed G-code is in nozzle coordinates, unlike
     // tower points. It takes the plate origin, then gcode_to_point adds the
@@ -111,11 +93,12 @@ pub(super) fn path(
             + state.extruder_offset.1)
             / scale.factor()) as i64,
     ];
-    super::super::route::path_to_wipe_tower(
+    let bed = super::super::route::shared_printable_area(state, context, scale)?;
+    Ok(super::super::route::path_to_wipe_tower(
         start,
         end_local,
         [low, high],
-        [bed_min, bed_max],
+        &bed,
         scale,
-    )
+    ))
 }

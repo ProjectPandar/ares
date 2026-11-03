@@ -3,7 +3,7 @@ use super::{
     filament::Filament, geometry::Shape, plan::Plan, result::ToolChangeResult, writer::Writer,
 };
 use crate::{
-    GCodeFlavor, ProcessWipeTowerWallType, ProjectSettings,
+    GCodeFlavor, ProcessPrintSourceOptions, ProcessWipeTowerWallType, ProjectSettings,
     geometry::{BoundingBox, CoordinateScale},
 };
 
@@ -40,6 +40,11 @@ pub(super) struct Generator<'a> {
     pub(super) brim_width: f32,
     pub(super) first_layer_bounds: Option<BoundingBox>,
     pub(super) wall_skip_points: Vec<Vec<[f32; 2]>>,
+}
+
+/// `WipeTower2::use_gap_wall` (`WipeTower2.cpp:1029-1033`).
+pub(super) fn use_gap_wall(print: &ProcessPrintSourceOptions) -> bool {
+    print.prime_tower_skip_points.0 && print.wipe_tower_wall_type != ProcessWipeTowerWallType::Cone
 }
 
 impl<'a> Generator<'a> {
@@ -108,10 +113,8 @@ impl<'a> Generator<'a> {
         }
     }
 
-    /// `WipeTower2::use_gap_wall` (`WipeTower2.cpp:1029-1033`).
     pub(super) fn use_gap_wall(&self) -> bool {
-        self.settings.process.print.prime_tower_skip_points.0
-            && self.settings.process.print.wipe_tower_wall_type != ProcessWipeTowerWallType::Cone
+        use_gap_wall(&self.settings.process.print)
     }
 
     /// `WipeTower2::toolchange_entry_pos` (`WipeTower2.hpp:341-347`) without the non-SEMM

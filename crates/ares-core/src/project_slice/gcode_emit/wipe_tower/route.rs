@@ -1,14 +1,85 @@
-//! `GCode.cpp:594–710`: shorter squared-length route around the tower bbox.
-use crate::geometry::CoordinateScale;
+//! The tower-approach router `WipeTowerIntegration::generate_path_to_wipe_tower`
+//! (`GCode.cpp:881-999`, v2.5.0-beta `345efec64`) and the bed it plans against
+//! (`shared_printable_area`, `:1012-1020`): shorter squared-length route around the tower box.
+use super::super::{motion, timelapse};
+use crate::{
+    Point2d, SliceError,
+    geometry::{
+        CoordinateScale, Point as GridPoint, Polygon, intersection_polygons_paths, point_in_polygon,
+    },
+};
 type Point = [i64; 2];
 
-/// `WipeTowerIntegration::generate_path_to_wipe_tower`: the route from `start` to `end` around
-/// the `[low, high]` avoid box inflated by the routing clearance, inside the `[min, max]` bed.
+/// `contains(const Polygons&, const Point&, bool border_result)` (`Polygon.cpp:777-787`).
+pub(super) fn contains(polygons: &[Polygon], [x, y]: Point, border_result: bool) -> bool {
+    let mut inside = 0;
+    for polygon in polygons {
+        match point_in_polygon(GridPoint::new(x, y), polygon.points()) {
+            -1 => return border_result,
+            count => inside += count,
+        }
+    }
+    inside % 2 == 1
+}
+
+/// `shared_printable_area` (`GCode.cpp:1012-1020`): `Print::get_extruder_shared_printable_polygon`
+/// (`Print.cpp:5021-5034`) moved by the plate origin's object point.
+pub(super) fn shared_printable_area(
+    state: &motion::EmitState,
+    context: timelapse::Context<'_>,
+    scale: CoordinateScale,
+) -> Result<Vec<Polygon>, SliceError> {
+    let settings = &context.traversal.resolved.views.full;
+    let printer = &settings.printer.remaining;
+    let new_scale = |points: &[Point2d]| {
+        Polygon::new(
+            points
+                .iter()
+                .map(|p| {
+                    GridPoint::new((p.x / scale.factor()) as i64, (p.y / scale.factor()) as i64)
+                })
+                .collect(),
+        )
+    };
+    let areas = &printer.extruder_printable_area.0;
+    let shared = if settings.project.print.nozzle_diameter.0.len() < 2
+        || areas.is_empty()
+        || areas.iter().any(|area| area.len() < 3)
+    {
+        vec![new_scale(&printer.printable_area.0)]
+    } else {
+        areas[1..]
+            .iter()
+            .try_fold(vec![new_scale(&areas[0])], |shared, area| {
+                intersection_polygons_paths(&shared, &[new_scale(area)])
+            })
+            .map_err(|_| {
+                SliceError::InvalidInput("the shared printable area intersection failed".to_owned())
+            })?
+    };
+    let [dx, dy] = motion::tower::object_point_grid([0.0; 2], state, scale);
+    Ok(shared
+        .into_iter()
+        .map(|polygon| {
+            Polygon::new(
+                polygon
+                    .points()
+                    .iter()
+                    .map(|p| GridPoint::new(p.x() + dx, p.y() + dy))
+                    .collect(),
+            )
+        })
+        .collect())
+}
+
+/// `generate_path_to_wipe_tower` (`GCode.cpp:887-999`): the route from `start` to `end` around
+/// the `[low, high]` avoid box inflated by the routing clearance (`:881`). Without a route
+/// (an inflated corner not strictly inside the bed, `:893-901`) it is `end` alone.
 pub(super) fn path_to_wipe_tower(
     start: Point,
     end_local: Point,
     [mut low, mut high]: [Point; 2],
-    [bed_min, bed_max]: [Point; 2],
+    bed: &[Polygon],
     scale: CoordinateScale,
 ) -> Vec<Point> {
     let offset = (2.0 / scale.factor()) as i64;
@@ -17,10 +88,7 @@ pub(super) fn path_to_wipe_tower(
         high[a] += offset;
     }
     let points = [low, [high[0], low[1]], high, [low[0], high[1]]];
-    if points
-        .iter()
-        .any(|p| (0..2).any(|a| p[a] <= bed_min[a] || p[a] >= bed_max[a]))
-    {
+    if !points.iter().all(|&p| contains(bed, p, false)) {
         return vec![end_local];
     }
     let direction = if (end_local[0] - low[0]).abs() < (high[0] - low[0]) / 2 {

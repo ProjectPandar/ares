@@ -2,7 +2,9 @@
 use super::super::{
     motion, placeholders, pressure_advance, template, timelapse, tool_transition, value::Value,
 };
-use super::{filament::at, interface_temperature, postprocess, result::ToolChangeResult};
+use super::{
+    filament::at, interface_temperature, postprocess, result::ToolChangeResult, tower_gap,
+};
 use crate::SliceError;
 
 pub(super) struct Append<'a> {
@@ -68,7 +70,21 @@ pub(super) fn append(
             || ramming
             || settings.printer.gcode.tool_change_on_wipe_tower.0);
     if should_travel || state.layer_change_travel_pending {
-        motion::tower::travel_to(output, state, start, geometry)?;
+        let route = |state: &motion::EmitState| {
+            if result.priming || !state.last_position_defined {
+                return Ok(Vec::new());
+            }
+            let start_wipe_pos = motion::tower::object_point_grid(start, state, geometry.scale);
+            let route_start = [state.last_scaled_position.0, state.last_scaled_position.1];
+            tower_gap::waypoints(
+                state,
+                context,
+                [route_start, start_wipe_pos],
+                transform_wt2_pt,
+                geometry.scale,
+            )
+        };
+        motion::tower::travel_to(output, state, start, route, geometry)?;
     }
     if will_go_down {
         motion::tower::change_z(

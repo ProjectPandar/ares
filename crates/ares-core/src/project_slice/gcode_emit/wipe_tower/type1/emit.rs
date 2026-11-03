@@ -52,7 +52,7 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     let nozzle_change =
         !nozzle.gcode.is_empty() && settings.project.print.nozzle_diameter.0.len() > 1;
     if !result.priming && metadata.finish_first {
-        motion::tower::travel_to(output, state, start, geometry)?;
+        motion::tower::travel_to(output, state, start, |_| Ok(Vec::new()), geometry)?;
     }
     let current_z = state.writer_z.unwrap_or(0.0);
     let z = z.unwrap_or(current_z);
@@ -125,9 +125,9 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     let mut last_travel = Vec::new();
     if !source.is_empty() {
         let path = if settings.process.print.prime_tower_skip_points.0 {
-            travel::path(&change, change_start, state, context, geometry.scale)
+            travel::path(&change, change_start, state, context, geometry.scale)?
         } else {
-            vec![motion::tower::type1_travel_grid(
+            vec![motion::tower::object_point_grid(
                 change_start,
                 state,
                 geometry.scale,

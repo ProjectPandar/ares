@@ -34,14 +34,20 @@ pub(in crate::project_slice::gcode_emit) fn transition_retract(
     super::travel::transition_retract(output, state)
 }
 
+/// `GCode.cpp:1728-1733`: the travel to the tower, through the grid waypoints `route` plans
+/// from the position the retract's wipe leaves (`travel_to_tower_gap`).
 pub(in crate::project_slice::gcode_emit) fn travel_to(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     point: [f32; 2],
+    route: impl FnOnce(&EmitState) -> Result<Vec<[i64; 2]>, crate::SliceError>,
     geometry: LayerGeometry<'_>,
 ) -> Result<(), crate::SliceError> {
     retract(output, state);
     state.use_external_mp_once = true;
+    for [x, y] in route(state)? {
+        path::tower_travel(output, state, (x, y), geometry)?;
+    }
     let point = object_point(point, state, geometry.scale);
     path::tower_travel(output, state, point, geometry)?;
     travel::unlift(output, state);
@@ -185,7 +191,8 @@ pub(in crate::project_slice::gcode_emit) fn type1_travel(
     )
 }
 
-pub(in crate::project_slice::gcode_emit) fn type1_travel_grid(
+/// `wipe_tower_point_to_object_point` of a plate-frame tower point plus `plate_origin_2d`.
+pub(in crate::project_slice::gcode_emit) fn object_point_grid(
     point: [f32; 2],
     state: &EmitState,
     scale: CoordinateScale,
