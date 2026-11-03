@@ -119,6 +119,11 @@ to make a selected test green. Valid FloatsOrPercents controls must not regress.
 
 ## Deferred behavior and stop conditions
 
+**Immediate next slice:** `ConfigOptionFloatsOrPercentsTempl::deserialize`
+(`Config.hpp:1457-1479`) vector failure-value and percent-presence preservation
+versus the `decode.rs` FloatsOrPercents scalar-wrapper dispatch. It remains
+explicitly deferred from this approved helper-only exponent slice.
+
 Overflow/underflow, signed zero, hex floats, NaN/inf, grouping/locale, integer
 prefix extraction, new nullable kinds, FloatOrPercent-vector failure dispatch,
 Point/PointsGroups redesign, JSON shape/legacy normalization, typed numeric
