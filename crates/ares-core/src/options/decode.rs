@@ -258,7 +258,16 @@ pub fn decode_config_value(kind: OptionValueKind, serialized: &str) -> Result<St
         }
         (OptionValueKind::FloatsOrPercents, WireValue::Sequence(elements)) => {
             join_elements(&elements, |element| {
-                decode_config_value(OptionValueKind::FloatOrPercent, element)
+                if element.trim() == "nil" {
+                    return Err(format!("expected Orca float, got {element:?}"));
+                }
+                // Config.hpp:1457-1479 stores the extraction result even on failure.
+                let value = float_element(element);
+                Ok(float_or_percent_json(if element.contains('%') {
+                    FloatOrPercent::Percent(Percent(value))
+                } else {
+                    FloatOrPercent::Float(value)
+                }))
             })
         }
         (OptionValueKind::Floats, WireValue::Sequence(elements)) => {
