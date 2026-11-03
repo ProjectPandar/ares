@@ -163,8 +163,18 @@ async fn vendor_preset_includes_preserve_catalog_and_composition_variant_layout(
         .unwrap(),
     )
     .unwrap();
+    let preservation_failures = super::preset_include_controls::check_all().await;
+    fs::write(
+        runner.work.join("preservation-failures.json"),
+        serde_json::to_vec_pretty(&preservation_failures).unwrap(),
+    )
+    .unwrap();
     assert_eq!(
         observed, expected,
         "shared preset include resolution differs"
+    );
+    assert!(
+        preservation_failures.is_empty(),
+        "{preservation_failures:?}"
     );
 }
