@@ -4,8 +4,6 @@
 mod move_emit;
 mod waypoints;
 
-pub(super) use move_emit::travel_will_move_z;
-
 use super::dispatch;
 use super::retract;
 use super::route::{plan_route, polyline_length_scaled};
@@ -311,4 +309,21 @@ pub(super) fn emit_needs_travel(
         eager_lifted_travel,
         unclear_position_travel,
     ))
+}
+
+/// `GCodeWriter::will_move_z` (`GCodeWriter.cpp:916-928`): a lifted
+/// nozzle treats a target z inside `[pos - m_lifted, pos]` as a no-op;
+/// only without a positive lift does the bare `abs(delta) < EPSILON`
+/// shortcut apply.
+pub(in crate::project_slice::gcode_emit) fn travel_will_move_z(state: &EmitState, z: f64) -> bool {
+    let pos = state.writer_z.unwrap_or(state.layer_z);
+    if state.lifted_amount > 0.0 {
+        let nominal = pos - state.lifted_amount;
+        if z >= nominal && z <= pos {
+            return false;
+        }
+    } else if (pos - z).abs() < travel::EPSILON {
+        return false;
+    }
+    true
 }
