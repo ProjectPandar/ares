@@ -6,9 +6,12 @@ Status: approved original ARD
 Classic dependency onto main8612802fe and freshly qualified all three
 complete deferral cases with 300 paired tests and zero PASS-to-FAIL changes.
 Its published dependency tip is
-`bf70a3a0d9ba7a685303988c147ccc7d628ecaba`. The wipe ARD, RED and complete
-unconnected helper checkpoint are restacked separately; transport/execution
-is not connected and no fresh wipe runtime or GREEN is claimed here.
+`bf70a3a0d9ba7a685303988c147ccc7d628ecaba`. The wipe ARD, RED, helper
+commits and real transport/execution are restacked separately. Fresh
+qualification of source `024d77215` matches all three complete wipe streams,
+including M73, with 320 paired tests, one FAIL-to-PASS and zero PASS-to-FAIL.
+The historical RED observations below describe the pre-port checkpoint;
+this does not claim complete family or FULL closure.
 
 Base: `bf70a3a0d9ba7a685303988c147ccc7d628ecaba`, the requalified dependency
 tip, not a claim that it is already merged main. Original branches and the
@@ -231,8 +234,9 @@ The disabled control's four complete generator-only streams agree at
 `cf566ab42bb2c9255995a662752d0c8ef76152a3ffd1d5d1c6becf3a8cda6c49`,
 retaining48M73 records. The no-anchor control agrees at28377 bytes /937lines,
 SHA `8899818d9c85319daa2f0cf1f47415b998442009ffb38681cf8349ef97a5a3c2`,
-retaining28M73. Both include footer and terminal/trailing bytes. The enabled
-case remains strict RED; no family or FULL closure is claimed.
+retaining28M73. Both include footer and terminal/trailing bytes. At that
+pre-port checkpoint the enabled case was strict RED; no family or FULL
+closure was claimed.
 
 Fmt and strict workspace/all-targets Clippy pass. All test/source/input/list/
 producer/tree identities and the dedicated ELF were frozen before Native;
@@ -241,9 +245,9 @@ note changes after execution; no postcommit rerun is claimed.
 
 ## Implementation review gate
 
-Submit this actual RED RR and await approval before any implementation.
-The approved eventual port must be split into reviewable commits: complete
-source helper module(s) first, then GCode transport/execution. Every file
+The actual RED RR was approved before implementation. The port is split
+into reviewable commits: complete source helper modules and their source
+projection/nesting corrections first, then GCode transport/execution. Every file
 stays at most400LOC; no unused prefix stub, placeholder, epsilon tuning or
 independent wipe policy. Before/after runtime scope is agreed and frozen
 before production edits. The helper and transport split is not permission
@@ -259,3 +263,65 @@ footer and trailing whitespace. Normalize only the canonical generator
 line; any external M73-only diagnostic retains maps, all removed commands
 and full contexts and is never acceptance. No coordinate/count golden or
 private Native operand fiction. COORD owns integration/FULL/closure.
+
+## Separate wipe slice: fresh strict GREEN and paired scope
+
+After the approved dependency restack, the wipe chain is original-ARD
+`6bd0424b6`, frozen RED `181fc6bb3`, helpers `51bb3f6b5`, unreachable
+calibration doc `4e37ff0d4`, integer-projection correction `8da90a186`,
+bounded helper nesting `3221b474e`, and transport/execution `024d77215`.
+This remains a separate slice; it does not reopen or bundle the deferral
+rewrite. Original branches and evidence are preserved.
+
+The new scope was frozen before corrective helper/transport edits: exactly
+320 IDs, all original 318 plus the main thin/narrow cases. Independent
+immutable before/after worktrees, targets, test/CLI ELFs, tests/fixtures and
+producer identities were verified before and after execution. Each phase
+ran once, CPU16-23, jobs4, nextest1, Rayon1, offline/locked, with fresh
+ordinary producer resources/caches and cleared alternate runners/oracles.
+Before: 145 PASS /175 FAIL. After: 146 PASS /174 FAIL. Only the enabled
+Inner/Outer wipe case changed FAIL to PASS; zero prior PASS changed to FAIL,
+with zero ignored tests. The three deferral cases remain complete PASS;
+the main narrow PASS and accepted-OPEN thin FAIL statuses are preserved.
+
+Each phase used fresh stable Native6 / validated API3 / CLI3 for the three
+wipe inputs, with raw API=CLI. All four AFTER generator-only complete
+streams per case are equal, retaining every M73, ordered movement, role/
+wipe marker, E/feed, label/footer, whitespace and trailing byte:
+
+| Case | Bytes / lines | M73 | Complete SHA256 |
+| --- | --- | --- | --- |
+| Enabled Inner/Outer | 29987 /1017 | 49 | `5ea08b1d9073111a0f9ae3e038c7faffc812136b7c1d5ec50511fd205f80b431` |
+| Disabled control | 29877 /1009 | 48 | `cf566ab42bb2c9255995a662752d0c8ef76152a3ffd1d5d1c6becf3a8cda6c49` |
+| Single-wall/no anchor | 28377 /937 | 28 | `8899818d9c85319daa2f0cf1f47415b998442009ffb38681cf8349ef97a5a3c2` |
+
+The enabled output now has the same four observed immediate zero-E interior
+wipes as Native; both controls retain ordinary boundary wiping without
+interior offsets. These observations are not count/coordinate goldens.
+Every new full and external non-M73 first difference is NONE. Each phase
+retains 492 Native command receipts: 489 code0, two code238 and one code205.
+The remaining174 family failures and those process errors remain open;
+this is not full-family parity or integration/FULL closure.
+
+The source audit follows integer `Line::Scalar` through the floating AABB
+result tuple: the closest point is truncated before promotion to double.
+The helper reuses the existing integer query and nearest result. All shared
+geometry changes are visibility-only; kernel bodies are unchanged. The
+ordinary retraction file is equivalent after expanding its mechanical wipe
+movement extraction; the extracted movement tokens are identical. Existing
+loop-destination sampling/clipping/rotation is byte-identical. The new
+zero-length operation has no retraction/reset-E/restart-extra/Z-hop shell.
+The optional prefix is region/pass scoped, preseeds only already printed
+normal entities for deferred walls, and appends original entities after
+actual emission. Actual path width, source candidate order and atomic
+acceptance/rejection are retained.
+
+Fmt and strict workspace/all-targets Clippy pass; every changed module is
+at most400LOC. One initial connected-source Clippy attempt rejected five
+nesting/collapsible-if/type-complexity warnings; corrections preserved
+source evaluation order and preceded AFTER runtime. No suppression, EPS/
+margin/tie tuning, kernel/formatter/estimator change, runtime retry, probe,
+trace or input/producer variant occurred. The prior original-parent
+318-test BEFORE-only phase remains unpaired and earns no new-base credit.
+This note/status correction is the only postexecution tree change; no
+postcommit runtime rerun is claimed.
