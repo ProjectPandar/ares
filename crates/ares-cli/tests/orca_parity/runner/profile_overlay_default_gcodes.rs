@@ -8,14 +8,10 @@
 //! `before_layer_change_gcode` replaces the embedded script with the empty
 //! default (`OrcaSlicer.cpp:2750-2812`).
 
-use ares_core::{ConfigOverrides, Placement, ProfileSliceRequest};
-use serde_json::{Value, json};
+use ares_core::{ConfigOverrides, LoadSettingsFile, LoadSettingsSliceRequest};
+use serde_json::Value;
 
-use super::{
-    OrcaRunner,
-    profile_entry::{vendor, write_json},
-    stages,
-};
+use super::{OrcaRunner, profile_entry::write_json, stages};
 use crate::presets::VendorProfiles;
 
 /// The ten printer G-code keys `load_default_gcodes_to_config` creates
@@ -51,28 +47,21 @@ async fn profile_overlay_default_gcodes() {
     let machine = "Bambu Lab X1 Carbon 0.4 nozzle";
     let process = "0.20mm Standard @BBL X1C";
     let filament = "Bambu PLA Basic @BBL X1C";
-    let catalog = json!({
-        "vendors": [vendor(&profiles_root, "OrcaFilamentLibrary"), vendor(&profiles_root, "BBL")],
-        "imports": [],
-    });
-    let selection = json!({"machine": machine, "process": process, "filaments": [filament]});
     let directory = tempfile::Builder::new()
         .prefix("profile-default-gcodes-")
         .tempdir()
         .unwrap()
         .keep();
-    write_json(&directory.join("catalog.json"), &catalog);
-    write_json(&directory.join("selection.json"), &selection);
-    for (kind, fields) in [
+    let selected = [
         ("machine", profiles.machine(machine).unwrap()),
         ("process", profiles.process(process).unwrap()),
         ("filament", profiles.filament(filament).unwrap()),
-    ] {
-        write_json(
-            &directory.join(format!("{kind}.json")),
-            &Value::Object(fields),
-        );
-    }
+    ];
+    let settings_json = selected.map(|(kind, fields)| {
+        let value = Value::Object(fields);
+        write_json(&directory.join(format!("{kind}.json")), &value);
+        value.to_string()
+    });
     // The machine chain defines none of the three keys the embedded Ender-3
     // project supplies, so only the injected defaults may survive.
     let machine_fields = profiles.machine(machine).unwrap();
@@ -90,20 +79,31 @@ async fn profile_overlay_default_gcodes() {
 
     let input = include_bytes!("../../../../../tests/parity/validation/preset-json-ender3-0.2.3mf");
     std::fs::write(directory.join("input.3mf"), input).unwrap();
-    let catalog_json = catalog.to_string();
-    let selection_json = selection.to_string();
-    let overrides = ConfigOverrides::default();
-    let request = ProfileSliceRequest {
-        filename: "input.3mf",
-        catalog_json: &catalog_json,
-        selection_json: &selection_json,
-        plate: None,
-        overrides: &overrides,
-        placement: Placement::None,
-    };
-    let ares = ares_core::slice_with_profiles(
+    let settings = [
+        LoadSettingsFile {
+            label: "machine.json",
+            json: &settings_json[0],
+        },
+        LoadSettingsFile {
+            label: "process.json",
+            json: &settings_json[1],
+        },
+    ];
+    let filaments = [LoadSettingsFile {
+        label: "filament.json",
+        json: &settings_json[2],
+    }];
+    let ares = ares_core::slice_with_load_settings(
         input,
-        request,
+        LoadSettingsSliceRequest {
+            filename: "input.3mf",
+            settings: &settings,
+            filaments: &filaments,
+            plate: None,
+            overrides: &ConfigOverrides::default(),
+            placement: ares_core::Placement::None,
+            sliced_plate: &mut ares_core::SlicedPlate::default(),
+        },
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         ares_core::SlicerContext::new(0),
     )
