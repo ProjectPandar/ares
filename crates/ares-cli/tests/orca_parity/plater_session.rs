@@ -90,6 +90,20 @@ fn rewrite_build(model: &str, session: &PlaterSession) -> String {
             .entry(object_id)
             .and_modify(|count| *count += 1)
             .or_insert(0);
+        // A deleted instance's build item is not exported: the GUI writes one item per instance
+        // the object still has (`_add_build_to_model_stream`).
+        if !session
+            .project()
+            .objects()
+            .iter()
+            .filter(|o| o.id() == object_id)
+            .flat_map(|o| o.instances())
+            .any(|i| i.instance_id() == instance_id)
+        {
+            output.push_str(&rest[..start]);
+            rest = &rest[end + "/>".len()..];
+            continue;
+        }
         let old = format!("transform=\"{}\"", attribute(item, "transform"));
         let new = format!(
             "transform=\"{}\"",
@@ -104,7 +118,11 @@ fn rewrite_build(model: &str, session: &PlaterSession) -> String {
     let mut added = String::new();
     for object in session.project().objects() {
         let loaded = seen.get(&object.id()).map_or(0, |last| last + 1);
-        for instance in object.instances().iter().skip(loaded as usize) {
+        for instance in object
+            .instances()
+            .iter()
+            .filter(|instance| instance.instance_id() >= loaded)
+        {
             added.push_str(&format!(
                 "<item objectid=\"{}\" transform=\"{}\" printable=\"{}\"/>",
                 object.id(),

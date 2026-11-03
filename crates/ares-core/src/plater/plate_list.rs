@@ -43,6 +43,9 @@ pub(super) trait PlateModel {
     fn convex_hull_bounding_box(&self, key: InstanceKey) -> BoundingBox;
     /// `ModelInstance::set_offset(get_offset() + offset)`.
     fn translate(&mut self, key: InstanceKey, offset: [f64; 2]);
+    /// `PartPlate::valid_instance` (`PartPlate.cpp:595-605` at v2.5.0-beta `345efec64`): the pair
+    /// names an instance. A plate keeps a pair whose instance "Delete" removed.
+    fn valid_instance(&self, key: InstanceKey) -> bool;
 }
 
 #[derive(Clone, Debug)]
@@ -220,8 +223,15 @@ impl PlateList {
         }
         if move_instances {
             let offset = [0, 1].map(|axis| f64::from((origin[axis] - plate.origin[axis]) as i32));
-            for key in &plate.instances {
-                model.translate(*key, offset);
+            // `PartPlate::set_pos` skips an invalid pair (`PartPlate.cpp:4211-4212`).
+            let valid: Vec<InstanceKey> = plate
+                .instances
+                .iter()
+                .copied()
+                .filter(|&key| model.valid_instance(key))
+                .collect();
+            for key in valid {
+                model.translate(key, offset);
             }
         }
         plate.origin = origin;
@@ -302,7 +312,12 @@ impl PlateList {
             Self::set_origin(&mut self.unprintable, target, true, model);
         }
         let last = self.plates.len() - 1;
+        // `move_instances_to` (`PartPlate.cpp:5018-5031`): `intersect_instance` and `add_instance`
+        // refuse an invalid pair, so it is dropped.
         for key in deleted.instances {
+            if !model.valid_instance(key) {
+                continue;
+            }
             let bbox = model.convex_hull_bounding_box(key);
             if self.intersects(&self.plates[last], true, &bbox) {
                 self.plates[last].instances.insert(key);

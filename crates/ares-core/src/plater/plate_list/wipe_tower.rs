@@ -194,7 +194,10 @@ impl Towers<'_> {
         let mut obstacles = Vec::new();
         for &(object_index, instance) in &plate.instances {
             let object = &self.project.objects()[object_index];
-            let placed = &object.instances()[instance];
+            // `valid_instance` skips a pair whose instance is gone (`PartPlate.cpp:4040-4041`).
+            let Some(placed) = object.instances().get(instance) else {
+                continue;
+            };
             if !placed.printable() {
                 continue;
             }

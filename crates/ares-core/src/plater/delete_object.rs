@@ -42,7 +42,19 @@ impl PlaterSession {
     /// `Selection.cpp:1893-1996` at v2.5.0-beta `345efec64`; see
     /// `docs/architecture/web-plater-delete-instance.md`). `InvalidInput` for no such instance.
     pub fn delete_instance(&mut self, object: usize, instance: usize) -> Result<(), SliceError> {
-        todo!("delete instance {instance} of object {object}")
+        self.check(object, instance)?;
+        let item = &self.project.objects()[object];
+        // A lone instance is `is_single_full_object`: the object goes (`Selection.cpp:1898-1899`).
+        if item.instances().len() == 1 {
+            return self.delete_object(object);
+        }
+        // `del_subobject_from_object` (`GUI_ObjectList.cpp:3065, 3070`): `delete_instance` and
+        // `changed_object`. No plate is notified: every plate keeps its pairs, and the last
+        // one now names no instance.
+        let id = (item.id(), item.instances()[instance].instance_id());
+        self.project.delete_instance(object, instance);
+        self.arrange_orders.remove(&id);
+        Ok(())
     }
 
     /// The loaded objects `delete_object` removed, by id.

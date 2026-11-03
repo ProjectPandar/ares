@@ -4,9 +4,9 @@ import { cmdDown, isShortcut } from "../shell/keys";
 import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
 import { CopiesDialog } from "./CopiesDialog";
 import { instanceEdits, ObjectMenu } from "./ObjectMenu";
-import { selectObject } from "../state/actions";
+import { selectInstance, selectObject } from "../state/actions";
 import { arrange } from "../state/arrange";
-import { addPlate, changeInstances, deleteObject, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
+import { addPlate, changeInstances, deleteInstance, deleteObject, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
 import { useApp } from "../state/store";
 
 /** MenuFactory::get_volume_bitmaps, indexed by ModelVolumeType. */
@@ -21,23 +21,26 @@ const VOLUME_ICON: Record<VolumeType, string> = {
 /** ObjectDataViewModel object node; volumes become child nodes once there is more than one. */
 function ObjectNode({ object, name, selected, nested = false }: { object: SceneObject; name: string; selected: boolean; nested?: boolean }) {
   const [expanded, setExpanded] = useState(false);
-  const [menu, setMenu] = useState<[number, number] | null>(null);
+  const [menu, setMenu] = useState<{ at: [number, number]; instance?: number } | null>(null);
   const [copies, setCopies] = useState(false);
+  const selectedInstance = useApp((state) => (selected ? state.selectedInstance : null));
   const index = useApp((state) => state.scene?.objects.findIndex(({ id }) => id === object.id) ?? -1);
   const parts = object.volumes.length > 1 ? object.volumes : [];
   const printable = object.instances.some((instance) => instance.printable);
+  // ObjectDataViewModel's "Instances" node with an "Instance N" item each, for more than one.
+  const instances = object.instances.length > 1 ? object.instances : [];
   return (
     <>
-      <div role="treeitem" aria-selected={selected} aria-expanded={parts.length ? expanded : undefined}
+      <div role="treeitem" aria-selected={selected} aria-expanded={parts.length || instances.length ? expanded : undefined}
         className={`object-row${nested ? " object-nested" : ""}${selected ? " selected" : ""}${printable ? "" : " unprintable"}`}
         onClick={() => selectObject(selected ? null : object.id)}
         onContextMenu={(event) => {
           // ObjectList's right click selects the item, then shows its menu.
           event.preventDefault();
           selectObject(object.id);
-          setMenu([event.clientX, event.clientY]);
+          setMenu({ at: [event.clientX, event.clientY] });
         }}>
-        <button className={`object-expander${parts.length ? "" : " hidden"}`} aria-label="Toggle parts" tabIndex={-1}
+        <button className={`object-expander${parts.length || instances.length ? "" : " hidden"}`} aria-label="Toggle parts" tabIndex={-1}
           onClick={(event) => {
             event.stopPropagation();
             setExpanded(!expanded);
@@ -46,13 +49,30 @@ function ObjectNode({ object, name, selected, nested = false }: { object: SceneO
         <span className="object-name">{name}</span>
         {object.instances.length > 1 && <span className="object-count" title="Instances">×{object.instances.length}</span>}
       </div>
-      {menu && <ObjectMenu objectId={object.id} position={menu} onClose={() => setMenu(null)} onCopies={() => setCopies(true)} />}
+      {menu && <ObjectMenu objectId={object.id} instance={menu.instance} position={menu.at} onClose={() => setMenu(null)} onCopies={() => setCopies(true)} />}
       {copies && index >= 0 && <CopiesDialog object={index} count={object.instances.length} onClose={() => setCopies(false)} />}
       {expanded && parts.map((volume) => (
         <div key={volume.id} role="treeitem" className="object-row object-part" title={volume.type}
           onClick={() => selectObject(object.id)}>
           <OrcaIcon name={VOLUME_ICON[volume.type]} />
           <span className="object-name">{volume.name || `Part ${volume.id}`}</span>
+        </div>
+      ))}
+      {expanded && instances.length > 0 && (
+        <div role="treeitem" className="object-row object-part">
+          <span className="object-name">Instances</span>
+        </div>
+      )}
+      {expanded && instances.map((_, instance) => (
+        <div key={instance} role="treeitem" aria-selected={selectedInstance === instance}
+          className={`object-row object-part${selectedInstance === instance ? " selected" : ""}`}
+          onClick={() => selectInstance(object.id, instance)}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            selectInstance(object.id, instance);
+            setMenu({ at: [event.clientX, event.clientY], instance });
+          }}>
+          <span className="object-name">{`Instance ${instance + 1}`}</span>
         </div>
       ))}
     </>
@@ -129,12 +149,12 @@ export function ObjectList() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!isShortcut(event) || cmdDown(event) || event.altKey) return;
-      const { scene: current, selectedObject, slice } = useApp.getState();
+      const { scene: current, selectedObject, selectedInstance, slice } = useApp.getState();
       const index = current?.objects.findIndex(({ id }) => id === selectedObject) ?? -1;
       if (index < 0 || slice.status === "slicing") return;
       if (event.key === "Delete" || event.key === "Backspace") {
         event.preventDefault();
-        void deleteObject(index);
+        void (selectedInstance === null ? deleteObject(index) : deleteInstance(index, selectedInstance));
         return;
       }
       if (event.key !== "+" && event.key !== "-") return;

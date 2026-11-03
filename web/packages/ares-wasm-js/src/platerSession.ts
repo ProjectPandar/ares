@@ -121,6 +121,11 @@ export class PlaterSession {
     return this.#edit({ op: "deleteObject", object });
   }
 
+  /** "Delete" of one instance (`Plater::remove_selected`); a lone instance deletes its object. */
+  deleteInstance(object: number, instance: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "deleteInstance", object, instance });
+  }
+
   /** "Delete All" (`Plater::priv::delete_all_objects_from_model`): every object leaves; the plates stay. */
   deleteAllObjects(): Promise<PlaterLayout> {
     return this.#edit({ op: "deleteAllObjects" });

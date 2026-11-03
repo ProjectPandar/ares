@@ -8,10 +8,15 @@ use super::{Project, ProjectInstance};
 use crate::Transform3d;
 
 impl Project {
-    /// Appends a default instance (`new ModelInstance(this)`: printable) with `transform` and
-    /// `identify_id` as its export identity. Its imported copy keeps the object's frame offset,
-    /// instance 0's, as `set_instance_transform` keeps every instance's.
-    pub(crate) fn add_instance(&mut self, object: usize, transform: Transform3d, identify_id: u32) {
+    /// Appends a default instance (`new ModelInstance(this)`: printable) with `transform`,
+    /// `instance_id` and `identify_id` as its export identity. Its imported copy keeps the
+    /// object's frame offset, instance 0's, as `set_instance_transform` keeps every instance's.
+    pub(crate) fn add_instance(
+        &mut self,
+        object: usize,
+        transform: Transform3d,
+        [instance_id, identify_id]: [u32; 2],
+    ) {
         let object = &mut self.objects[object];
         let first = &object.instances[0];
         let frame = object
@@ -19,7 +24,6 @@ impl Project {
             .iter()
             .find(|imported| imported.instance_id == first.instance_id)
             .map(|imported| object_offset(first.transform, imported.transform));
-        let instance_id = object.instances.len() as u32;
         let instance = ProjectInstance::new(
             [object.id, instance_id, identify_id],
             true,
@@ -45,6 +49,16 @@ impl Project {
     pub(crate) fn delete_all_objects(&mut self) {
         self.objects.clear();
         self.plates_custom_gcodes.clear();
+    }
+
+    /// `ModelObject::delete_instance(idx)` (`Model.cpp:1583-1588`), with its imported copy: the
+    /// later instances move down one index.
+    pub(crate) fn delete_instance(&mut self, object: usize, instance: usize) {
+        let object = &mut self.objects[object];
+        let removed = object.instances.remove(instance);
+        object
+            .import_instances
+            .retain(|imported| imported.instance_id != removed.instance_id);
     }
 
     /// `delete_last_instance`, with its imported copy.

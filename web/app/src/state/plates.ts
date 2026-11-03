@@ -115,6 +115,14 @@ export async function changeInstances(object: number, more: boolean) {
   applyLayout(await (more ? plater!.increaseInstances(object) : plater!.decreaseInstances(object)), currentPlate);
 }
 
+/** "Delete" of one instance (Plater::remove_selected → ObjectList::del_subobject_from_object, GUI_ObjectList.cpp:2998-3073); the selection clears. */
+export async function deleteInstance(object: number, instance: number) {
+  const { plater, currentPlate } = useApp.getState();
+  const layout = await plater!.deleteInstance(object, instance);
+  useApp.setState({ selectedObject: null, selectedInstance: null });
+  applyLayout(layout, currentPlate);
+}
+
 /** The object menu's "Delete" (Plater::priv::delete_object_from_model, Plater.cpp:10750-10791); the selection clears. */
 export async function deleteObject(object: number) {
   const { plater, currentPlate } = useApp.getState();

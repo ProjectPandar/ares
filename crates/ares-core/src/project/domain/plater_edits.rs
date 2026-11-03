@@ -51,11 +51,15 @@ impl Project {
             let Some(object) = self.objects.iter().position(|o| o.id() == change.object_id) else {
                 continue;
             };
-            while self.objects[object].instances.len() > change.kept {
-                self.remove_last_instance(object);
+            while let Some(gone) = self.objects[object]
+                .instances
+                .iter()
+                .position(|instance| !change.kept.contains(&instance.instance_id))
+            {
+                self.delete_instance(object, gone);
             }
-            for &(identify_id, transform) in &change.copies {
-                self.add_instance(object, transform, identify_id);
+            for &(ids, transform) in &change.copies {
+                self.add_instance(object, transform, ids);
             }
         }
         let updates =

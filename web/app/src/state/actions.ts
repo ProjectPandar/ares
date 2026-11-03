@@ -59,6 +59,7 @@ export async function importFile(file: File) {
       plateSlices: {},
       typedSettings,
       selectedObject: null,
+      selectedInstance: null,
       overrides: {},
       slice: { status: "idle" },
     });
@@ -73,7 +74,12 @@ export async function importFile(file: File) {
 }
 
 export function selectObject(id: number | null) {
-  useApp.setState({ selectedObject: id });
+  useApp.setState({ selectedObject: id, selectedInstance: null });
+}
+
+/** Selects one instance item of the object `id`. */
+export function selectInstance(id: number, instance: number) {
+  useApp.setState({ selectedObject: id, selectedInstance: instance });
 }
 
 /** Slices the current plate ("Slice plate", BackgroundSlicingProcess::start in the worker). */

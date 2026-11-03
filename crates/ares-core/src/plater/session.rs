@@ -24,9 +24,8 @@ pub struct PlaterSession {
     pub(super) vendor_type: crate::profiles::VendorType,
     /// `PartPlateList::m_current_plate`.
     pub(super) current_plate: usize,
-    /// By object id: its instance count at load and how many of those loaded instances it keeps;
-    /// the instances past them are "Add instance" copies.
-    pub(super) loaded_instances: BTreeMap<u32, (usize, usize)>,
+    /// By object id: its instance ids at load; every other instance is an "Add instance" copy.
+    pub(super) loaded_instances: BTreeMap<u32, Vec<u32>>,
 }
 
 /// One plate of the session: its grid origin and instances.
@@ -47,6 +46,12 @@ impl PlateModel for Model<'_> {
     }
     fn convex_hull_bounding_box(&self, key: InstanceKey) -> BoundingBox {
         selection::instance_bounding_box(self.0, key)
+    }
+    fn valid_instance(&self, key: InstanceKey) -> bool {
+        self.0
+            .objects()
+            .get(key.0)
+            .is_some_and(|object| key.1 < object.instances().len())
     }
     fn translate(&mut self, key: InstanceKey, offset: [f64; 2]) {
         let mut rows = *self.0.objects()[key.0].instances()[key.1]
@@ -116,7 +121,11 @@ impl PlaterSession {
             .map(|object| {
                 (
                     object.id(),
-                    (object.instances().len(), object.instances().len()),
+                    object
+                        .instances()
+                        .iter()
+                        .map(|instance| instance.instance_id())
+                        .collect(),
                 )
             })
             .collect();
@@ -294,10 +303,17 @@ impl PlaterSession {
                 instances: plate
                     .instances
                     .iter()
-                    .filter_map(|(object, instance)| {
-                        let item = &self.project.objects()[*object].instances()[*instance];
-                        item.loaded_label_id()
-                            .map(|label| [item.object_id(), item.instance_id(), label])
+                    // A pair whose instance is gone is written with its object, its index and
+                    // `identify_id` 0 (`bbs_3mf.cpp:8580-8600`): it still lists the object on the
+                    // plate (`:2215-2221`) while naming no instance.
+                    .filter_map(|&(object, instance)| {
+                        let item = &self.project.objects()[object];
+                        match item.instances().get(instance) {
+                            Some(placed) => placed
+                                .loaded_label_id()
+                                .map(|label| [placed.object_id(), placed.instance_id(), label]),
+                            None => Some([item.id(), instance as u32, 0]),
+                        }
                     })
                     .collect(),
             })

@@ -66,8 +66,8 @@ impl PlaterSession {
             transform = transformation::with_scaling_factor(transform, scaling);
             transform = transformation::with_rotation(transform, rotation);
             transform = transformation::with_mirror(transform, mirror);
-            let identify_id = self.next_identify_id();
-            self.project.add_instance(object, transform, identify_id);
+            let ids = [self.next_instance_id(object), self.next_identify_id()];
+            self.project.add_instance(object, transform, ids);
             let key = (object, self.project.objects()[object].instances().len() - 1);
             self.plates
                 .notify_instance_update(&Model(&mut self.project), key);
@@ -95,13 +95,10 @@ impl PlaterSession {
             // behaviour in UI selection code, not ported.
             return self.delete_object(object);
         }
-        let id = item.id();
         for _ in 0..num {
             let last = self.project.objects()[object].instances().len() - 1;
             self.plates.notify_instance_removed((object, last));
             self.project.remove_last_instance(object);
-            let (_, kept) = self.loaded_instances.get_mut(&id).expect("a loaded object");
-            *kept = (*kept).min(last);
         }
         Ok(())
     }
@@ -163,23 +160,49 @@ impl PlaterSession {
             .map_or(1, |id| id + 1)
     }
 
+    /// A copy's instance id: one past every instance id the object had at load or has now, so a
+    /// copy never takes a loaded instance's identity.
+    fn next_instance_id(&self, object: usize) -> u32 {
+        let item = &self.project.objects()[object];
+        self.loaded_instances
+            .get(&item.id())
+            .into_iter()
+            .flatten()
+            .copied()
+            .chain(
+                item.instances()
+                    .iter()
+                    .map(|instance| instance.instance_id()),
+            )
+            .max()
+            .map_or(0, |id| id + 1)
+    }
+
     /// The objects whose instances differ from the loaded ones.
     pub(super) fn instance_changes(&self) -> Vec<InstanceChange> {
         self.project
             .objects()
             .iter()
             .filter_map(|object| {
-                let (at_load, kept) = self.loaded_instances.get(&object.id()).copied()?;
-                let copies: Vec<(u32, Transform3d)> = object.instances()[kept..]
+                let loaded = self.loaded_instances.get(&object.id())?;
+                let (kept, copies): (Vec<_>, Vec<_>) = object
+                    .instances()
+                    .iter()
+                    .partition(|instance| loaded.contains(&instance.instance_id()));
+                let kept: Vec<u32> = kept.iter().map(|instance| instance.instance_id()).collect();
+                let copies: Vec<([u32; 2], Transform3d)> = copies
                     .iter()
                     .map(|copy| {
                         (
-                            copy.loaded_label_id().expect("a copy's identify id"),
+                            [
+                                copy.instance_id(),
+                                copy.loaded_label_id().expect("a copy's identify id"),
+                            ],
                             copy.transform(),
                         )
                     })
                     .collect();
-                (kept < at_load || !copies.is_empty()).then_some(InstanceChange {
+                (kept != *loaded || !copies.is_empty()).then_some(InstanceChange {
                     object_id: object.id(),
                     kept,
                     copies,

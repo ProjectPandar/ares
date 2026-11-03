@@ -56,3 +56,37 @@ In `plater_delete_instance.rs`, the session-edit Native slice of the GUI export:
 5. **The dangling pair.** After case 1, `plates()` still lists `(0, 1)` on plate 1. The exported plate map carries its `<model_instance>` with `instance_id` 1 and `identify_id` 0, as upstream's writer emits it.
 
 Web E2E `plateDeleteInstance.spec.ts`: select "Instance 1" of the two-instance object, press Delete, then the list shows the object without an "Instances" node and the plate slices like Native.
+
+## GREEN
+- **Prerequisites stacked under this slice**, each its own reviewed chain:
+  - the `is_printable()` print-instance filter (`print-apply-printable-instances.md`);
+  - the selected-plate whole-object import (`selected-plate-object-import.md`);
+  - the per-object brim's plate origin and the config block's plate tower position (`brim-plate-origin.md`).
+- **`Project::delete_instance`** is `ModelObject::delete_instance` with its imported copy.
+- **`PlaterSession::delete_instance`:**
+  - `InvalidInput` for a missing pair;
+  - a lone instance goes to `delete_object`;
+  - otherwise the instance goes, along with its arrange order. No plate is told: every plate keeps its pairs, the dangling one included.
+- **Instance identities.**
+  - The session keeps each object's loaded instance ids.
+  - A copy takes one past every id the object has had, so it never takes a loaded instance's identity. That is unchanged for every sequence without a middle delete.
+  - `PlaterEdits` carries an object's surviving loaded ids and each copy's `[instance id, identify id]`.
+- **Plate readers follow upstream's range checks.**
+  - The edits' plate map writes a dangling pair as upstream's writer does: object, index, `identify_id` 0 (`bbs_3mf.cpp:8580-8600`). That entry is what lists the object on its plate for the import (`:2215-2221`).
+  - Skipped via `valid_instance` (`PartPlate.cpp:595-605`):
+    - `printable_instance_size` (`:4955-4956`);
+    - the tower obstacles (`wipe_tower_obstacles`, `:4040-4041`);
+    - a plate move (`PartPlate::set_pos`, `:4211-4212`).
+  - Dropped: when its plate is deleted (`move_instances_to`, `:5018-5031`, where `intersect_instance` and `add_instance` refuse it).
+  - The wasm plate layout skips it too.
+- **`changed_object`'s `ensure_on_bed(true)`** (`Model.cpp:1896-1921`) is not ported, because it cannot move anything in a state the session reaches.
+  - For a one-part object it shifts all instances by `-min_z` only when `min_z >= SINKING_Z_THRESHOLD` (-0.001, `Model.hpp:1967`) or `max_z < 0`.
+  - Every session edit ends in `do_move` / `do_rotate` / `do_scale`'s drop (`plater/selection.rs`), which puts each non-sinking instance's lowest point at 0 and leaves a sinking one below. So whichever instance is deleted, the remaining minimum is 0 (shift 0) or below the threshold, with `max_z >= 0` (no shift).
+  - Loaded instances come from GUI-saved projects, where loading already ran `ensure_on_bed`.
+  - Not covered: a hand-made 3MF whose instances are all lifted. The session does not port the load-time drop either.
+- **Web.**
+  - wasm `deleteInstance`, through protocol, worker and client.
+  - The object list shows an expanded multi-instance object's "Instances" node and "Instance N" items (`ObjectDataViewModel.cpp:136-145`); an item is selectable (`selectedInstance`).
+  - Delete/Backspace, and the object menu's "Delete" opened on an item, delete that instance.
+  - E2E `plateDeleteInstance.spec.ts`.
+- **Result:** the five cases pass, case 4 as written; the E2E slices like Native on both legs.

@@ -93,6 +93,8 @@ export interface AppState {
   loadingFile: boolean;
   loadError?: string;
   selectedObject: number | null;
+  /** The selected object's selected instance item, by index (ObjectList's itInstance). */
+  selectedInstance: number | null;
   /** Process option edits on top of the project config. */
   overrides: ConfigOverrides;
   slice: SliceState;
@@ -142,6 +144,7 @@ export const useApp = create<AppState>(() => ({
   typedSettings: null,
   loadingFile: false,
   selectedObject: null,
+  selectedInstance: null,
   overrides: {},
   slice: { status: "idle" },
   vendors: storedConfig.vendors,

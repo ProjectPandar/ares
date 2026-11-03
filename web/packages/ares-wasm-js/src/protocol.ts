@@ -16,6 +16,7 @@ export type PlaterEdit =
   | { op: "selectPlate"; index: number }
   | { op: "increaseInstances" | "decreaseInstances"; object: number; num: number }
   | { op: "deleteObject"; object: number }
+  | { op: "deleteInstance"; object: number; instance: number }
   | { op: "deleteAllObjects" }
   | { op: "setNumberOfCopies"; object: number; num: number }
   | { op: "arrange"; plate: number | undefined; settings: ArrangeSettings };

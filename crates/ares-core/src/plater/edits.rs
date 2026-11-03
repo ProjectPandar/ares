@@ -14,13 +14,14 @@ pub(crate) struct EditedPlate {
     pub(crate) instances: Vec<[u32; 3]>,
 }
 
-/// An object's instances after "Add instance" / "Remove instance": its first `kept` loaded
-/// instances, then `copies` as `(identify id, transformation)`, in order.
+/// An object's instances after "Add instance" / "Remove instance" / "Delete": the loaded
+/// instances it keeps, by instance id in order, then `copies` as
+/// `([instance id, identify id], transformation)`, in order.
 #[derive(Clone, Debug)]
 pub(crate) struct InstanceChange {
     pub(crate) object_id: u32,
-    pub(crate) kept: usize,
-    pub(crate) copies: Vec<(u32, Transform3d)>,
+    pub(crate) kept: Vec<u32>,
+    pub(crate) copies: Vec<([u32; 2], Transform3d)>,
 }
 
 /// Instance transformations and plate map of an edited project; empty

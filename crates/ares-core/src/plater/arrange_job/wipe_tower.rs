@@ -137,8 +137,11 @@ impl PlaterSession {
     ) -> Result<usize, SliceError> {
         let mut size = 0;
         for &key in &self.plates.plates[plate].instances {
-            let printable = self.project.objects()[key.0].instances()[key.1].printable();
-            if printable
+            // `valid_instance` skips a pair whose instance is gone (`PartPlate.cpp:4955-4956`).
+            let Some(instance) = self.project.objects()[key.0].instances().get(key.1) else {
+                continue;
+            };
+            if instance.printable()
                 && self
                     .plates
                     .contains_totally(plate, key, (&self.project, config, zones))?

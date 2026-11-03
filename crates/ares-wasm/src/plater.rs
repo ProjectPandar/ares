@@ -176,6 +176,15 @@ impl PlaterSession {
             .map_err(js_error)
     }
 
+    /// "Delete" with one instance selected (`Plater::remove_selected`): the instance leaves its
+    /// object; a lone instance takes the object with it.
+    #[wasm_bindgen(js_name = deleteInstance)]
+    pub fn delete_instance(&mut self, object: usize, instance: usize) -> Result<(), JsValue> {
+        self.session
+            .delete_instance(object, instance)
+            .map_err(js_error)
+    }
+
     /// The object menu's "Delete" (`Plater::priv::delete_object_from_model`): the object at
     /// `object` leaves the model and its plates.
     #[wasm_bindgen(js_name = deleteObject)]
@@ -323,11 +332,15 @@ impl PlaterSession {
                         .is_plate_locked(id as usize - 1)
                         .expect("a listed plate"),
                 ),
+                // A pair whose instance "Delete" removed names nothing to show.
                 instances: plate
                     .instances
                     .iter()
-                    .map(|&(object, instance)| {
-                        scene::instance_identity(&objects[object].instances()[instance])
+                    .filter_map(|&(object, instance)| {
+                        objects[object]
+                            .instances()
+                            .get(instance)
+                            .map(scene::instance_identity)
                     })
                     .collect(),
             })

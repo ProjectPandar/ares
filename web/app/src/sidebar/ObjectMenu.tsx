@@ -1,6 +1,6 @@
 import type { SceneObject } from "@ares-slicer/wasm";
 import { useEffect, useRef } from "react";
-import { changeInstances, deleteObject, mirrorInstance } from "../state/plates";
+import { changeInstances, deleteInstance, deleteObject, mirrorInstance } from "../state/plates";
 import { useApp } from "../state/store";
 
 /** MenuFactory::append_menu_item_transform's mirror items (GUI_Factories.cpp:1353-1363). */
@@ -32,8 +32,10 @@ const INSTANCE_ITEMS = [
  * transform submenu's "Mirror" items of the object menu (GUI_Factories.cpp:1765). They act on the object's first instance, as the object
  * panel does. Closes on a pick, Escape or a click elsewhere.
  */
-export function ObjectMenu({ objectId, position, onClose, onCopies }: {
+export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: {
   objectId: number;
+  /** Opened on an instance item: "Delete" removes that instance. */
+  instance?: number;
   position: [number, number];
   onClose: () => void;
   /** Opens the "Set number of instances" dialog. */
@@ -61,7 +63,7 @@ export function ObjectMenu({ objectId, position, onClose, onCopies }: {
         disabled={slicing || object < 0}
         onClick={() => {
           onClose();
-          void deleteObject(object);
+          void (instance === undefined ? deleteObject(object) : deleteInstance(object, instance));
         }}>
         Delete
       </button>
