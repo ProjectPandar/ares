@@ -3,6 +3,8 @@
 
 #[path = "honeycomb_geometry/height_thickness.rs"]
 mod height_thickness;
+#[path = "honeycomb_geometry/planar_smoothing.rs"]
+mod planar_smoothing;
 
 use std::fs;
 
