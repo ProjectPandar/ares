@@ -1,13 +1,19 @@
 # Wipe inward: printed support, atomic offset paths and execution
 
-Status: approved ARD `89d3d93eaf92d23ceeb781c93aae757fab56d815` on the
-preceding approved Classic GREEN `11598a73a3b080b12a0434dc6dab0e107958be89`.
-The separately approved frozen Native-first three-case RED qualification is
-complete: one strict RED and two whole-stream control PASSes. No production
-implementation has started; submit the RED RR and await review before porting.
+Status: approved original ARD
+`89d3d93eaf92d23ceeb781c93aae757fab56d815` and frozen RED
+`8181ea161bc789cce95929708f6cf18e5b89c950`. The owner restacked the
+Classic dependency onto main8612802fe and freshly qualified all three
+complete deferral cases with 300 paired tests and zero PASS-to-FAIL changes.
+Its published dependency tip is
+`bf70a3a0d9ba7a685303988c147ccc7d628ecaba`. The wipe ARD, RED and complete
+unconnected helper checkpoint are restacked separately; transport/execution
+is not connected and no fresh wipe runtime or GREEN is claimed here.
 
-Base: `11598a73a3b080b12a0434dc6dab0e107958be89`, the approved port tip, not a
-claim that it is already merged main. Upstream: OrcaSlicer beta
+Base: `bf70a3a0d9ba7a685303988c147ccc7d628ecaba`, the requalified dependency
+tip, not a claim that it is already merged main. Original branches and the
+original `11598a73a3b080b12a0434dc6dab0e107958be89` qualification remain
+preserved. Upstream: OrcaSlicer beta
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Context and owning source boundary
@@ -32,10 +38,15 @@ planner, a second G-code writer or an independent geometry policy:
   `wipe_inward_distance` FloatOrPercent, default50%, measured against the
   actual external path width. Reuse registry definitions and constraints;
   project the source values through region options and effective motion
-  options. Include the feature's calibration override at `GCode.cpp:3416`
-  (`wipe_inward=false`) through the existing calibration option adapter;
-  do not port or redesign an independent calibration pipeline. No new key,
-  preset refresh or unrelated legacy migration.
+  options. `GCode.cpp:3407-3420`, including the false override at3416,
+  applies only to `print.calib_mode()` PA-Line, PA-Pattern, PA-Tower,
+  Auto-PA-Line and Retraction-Tower jobs. The current Ares emitter/API
+  exposes no calibration mode or job admission; the owner confirmed that
+  this branch is explicitly unreachable, not an existing calibration
+  adapter to invent. Add no calibration bool, stub, hidden mode or new
+  pipeline. Recheck the effective region value at actual execution; any
+  later exposed calibration rewrite must supply the cited false override.
+  No new key, preset refresh or unrelated legacy migration.
 - `GCode/WipePathHelpers.hpp:12-18`, `.cpp:21-38::WipeInwardSupport::append`:
   region-scoped `printed_lines` and `inner_lines`. Append actual entity
   polyline lines after extrusion, using the source entity's `as_polyline()`
