@@ -23,6 +23,14 @@ The CLI reads only the requested catalog file for this supply. It does not searc
 
 A bare request with no catalog remains exactly the old branch, including its existing reporting/resource contract. There is no automatic promotion of bare slicing to project-derived mode, and no catch-and-retry fallback between modes. Old explicit profile selection retains its current replacement semantics.
 
+## Catalog slice reports
+
+`src/OrcaSlicer.cpp:6926–6931`, `:7150–7160` and `:8126–8136` own the plate settings snapshot, slicing warnings and final `record_exit_reson` success report. The catalog early return must preserve this report boundary, not merely the G-code output.
+
+The Rust catalog adapter threads the existing mutable `SlicedPlate` through `profiles/entry.rs` into `ProjectSource.sliced_plate`. Both ordinary and move-recording catalog requests run the same validated profile composition and single slice lifecycle. After writing the output, the adapter invokes the existing CLI `report_success`; slice failures retain the same substitution and slicing-warning reporting as the other CLI entries. This is a semantic integration adaptation, separate from generated test-call wiring.
+
+Do not load the project again, reconstruct report values from G-code, synthesize plate counts/settings, or change `result_json` serialization or its existing wall-clock-only test normalization. Core only exposes the existing report data channel; filesystem and terminal reporting remain in the CLI. The existing Native-first `cli_success_result` cube and per-instance controls must retain their complete stdout/stderr/result comparisons.
+
 ## Test-adapter supply
 
 Use an explicit, opt-in test transport `ARES_PARITY_PROJECT_PRESET_CATALOG=<PATH>`. This is test-adapter input, not a core environment lookup or a production preset-search policy. A present path is required to read successfully; an absent variable selects the unchanged bare-request contract. Do not use preset-name/fixture-name exceptions or retry on resolution failure.
