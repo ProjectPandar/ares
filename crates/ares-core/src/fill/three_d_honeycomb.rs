@@ -1,13 +1,13 @@
 //! OrcaSlicer beta `Fill/Fill3DHoneycomb.cpp` truncated-octahedron slice.
 
 mod grid;
-mod smoothing;
 mod tops;
 mod wave;
 
 use super::{
     checked_rotate::{rotate_points, rotate_points_with_trig},
     connect::{FillConnectionParams, connect_infill},
+    corner_smoothing,
 };
 use crate::geometry::{
     BoundingBox, ClipperError, CoordinateScale, ExPolygon, Point, Polygon, Polyline,
@@ -75,7 +75,7 @@ fn fill_component(
     let mut polylines = grid::make_grid(request);
     for polyline in &mut polylines {
         translate(polyline, minimum)?;
-        smoothing::smooth(
+        corner_smoothing::smooth(
             polyline,
             params.smooth_factor,
             params.resolution / scale.factor(),

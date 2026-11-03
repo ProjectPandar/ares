@@ -154,6 +154,8 @@ impl Filler {
                             spacing: self.spacing,
                             density,
                             multiline: 1,
+                            smooth_factor: 0.0,
+                            resolution: 0.0125,
                             angle: self.angle,
                             layer_index: 0,
                             thickness_layers: 1,

@@ -101,6 +101,8 @@ pub(super) fn honeycomb(
         spacing: spec.spacing,
         density: spec.density,
         multiline: 1,
+        smooth_factor: 0.0,
+        resolution: 0.0125,
         angle: spec.angle as f32,
         layer_index: 0,
         thickness_layers: 1,

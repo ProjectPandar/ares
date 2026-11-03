@@ -1,6 +1,6 @@
 //! `FillCornerSmoothing.cpp:71–191` bounded per-thread corner shapes.
 
-use super::super::EPSILON;
+use super::EPSILON;
 use super::{
     curve::{self, UnitCorner},
     vector::V,

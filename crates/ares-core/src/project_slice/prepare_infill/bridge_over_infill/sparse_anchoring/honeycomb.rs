@@ -24,6 +24,8 @@ pub(super) fn append(
         spacing: fill.params.spacing,
         density: (0.01 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
+        smooth_factor: fill.params.smooth_factor,
+        resolution: fill.params.resolution,
         angle: fill.params.angle,
         layer_index,
         thickness_layers: fill.representative.thickness_layers.max(1),

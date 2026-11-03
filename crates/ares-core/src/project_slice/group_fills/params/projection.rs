@@ -100,7 +100,7 @@ pub(super) fn project_surface(
         1
     };
     if params.extrusion_role == ExtrusionRole::InternalInfill
-        && params.pattern == configured(ProcessInfillPattern::ThreeDHoneycomb)
+        && matches!(params.pattern, SurfaceFillPattern::Configured(pattern) if pattern.is_smoothable(params.multiline))
     {
         params.smooth_factor = 0.01 * context.region.sparse_infill_smooth_factor.0;
     }

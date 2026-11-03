@@ -4,9 +4,10 @@ mod curve;
 mod shapes;
 mod vector;
 
-use super::EPSILON;
 use crate::geometry::{Point, Polyline};
 use vector::V;
+
+const EPSILON: f64 = 1.0e-4;
 
 pub(super) fn smooth(polyline: &mut Polyline, factor: f64, tolerance: f64) {
     let factor = if factor.is_finite() {

@@ -12,6 +12,7 @@ pub(crate) mod base_support;
 pub(crate) mod checked_rotate;
 pub(crate) mod concentric_sparse;
 pub(crate) mod connect;
+mod corner_smoothing;
 pub(crate) mod cross_hatch;
 pub(crate) mod cubic_trapezoidal;
 pub(crate) mod grid_trapezoidal;

@@ -107,6 +107,8 @@ pub(super) fn generate(
                     spacing,
                     density,
                     multiline: 1,
+                    smooth_factor: 0.0,
+                    resolution: 0.0125,
                     angle,
                     layer_index,
                     thickness_layers: 1,

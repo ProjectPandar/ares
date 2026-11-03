@@ -218,6 +218,37 @@ pub enum ProcessInfillPattern {
 }
 
 impl ProcessInfillPattern {
+    /// `PrintConfig.hpp::is_smoothable_infill_pattern` (181–199).
+    pub(crate) const fn is_smoothable(self, multiline: i32) -> bool {
+        match self {
+            Self::HilbertCurve
+            | Self::OctagramSpiral
+            | Self::Lightning
+            | Self::Honeycomb
+            | Self::ThreeDHoneycomb
+            | Self::Concentric
+            | Self::CrossHatch => true,
+            Self::Grid | Self::Triangles | Self::TriHexagon | Self::Cubic => multiline > 1,
+            Self::Monotonic
+            | Self::MonotonicLine
+            | Self::Rectilinear
+            | Self::AlignedRectilinear
+            | Self::ZigZag
+            | Self::CrossZag
+            | Self::LockedZag
+            | Self::Line
+            | Self::AdaptiveCubic
+            | Self::QuarterCubic
+            | Self::SupportCubic
+            | Self::LateralHoneycomb
+            | Self::LateralLattice
+            | Self::TpmsD
+            | Self::TpmsFk
+            | Self::Gyroid
+            | Self::ArchimedeanChords => false,
+        }
+    }
+
     /// `Fill::has_consistent_pattern` (`FillRectilinear.hpp:198,207,219`) —
     /// `FillZigZag`/`FillCrossZag`/`FillLockedZag` override it to `true`; the
     /// rectilinear/monotonic defaults are `false`. It gates the per-layer

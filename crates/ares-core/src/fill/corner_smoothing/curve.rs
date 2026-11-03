@@ -1,6 +1,6 @@
 //! `FillCornerSmoothing.cpp:37–156` quintic curves and equal-turn tangents.
 
-use super::super::EPSILON;
+use super::EPSILON;
 use super::vector::V;
 
 type Control = [V; 6];

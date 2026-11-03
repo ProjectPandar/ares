@@ -1,7 +1,7 @@
 //! `FillHoneycomb` port (`src/libslic3r/Fill/FillHoneycomb.cpp`):
 //! hexagonal-lattice sparse infill. Generates a vertical hex-cell lattice in
 //! pattern space, rotates it by the infill direction about the cell center,
-//! expands by multiline, clips to the surface, and chains the segments.
+//! rounds corners, expands by multiline, clips to the surface, and chains the segments.
 //!
 //! Used both for the emitted sparse fill and the bridge-over-infill anchor
 //! projection (upstream `Fill::new_from_type` generates real polylines for
@@ -9,7 +9,7 @@
 
 use crate::geometry::{
     BoundingBox, ClipperError, CoordinateScale, ExPolygon, Point, Polygon, Polyline,
-    douglas_peucker, intersection_open_polylines,
+    intersection_open_polylines,
 };
 
 /// Parameters carried into `fill_honeycomb` — subset of the surface-fill
@@ -25,6 +25,8 @@ pub(crate) struct HoneycombFillParams {
     pub(crate) density: f32,
     /// Multiline overlap count.
     pub(crate) multiline: i32,
+    pub(crate) smooth_factor: f64,
+    pub(crate) resolution: f64,
     /// Infill direction angle (radians) BEFORE `Fill::_infill_direction`
     /// adjustments (`+pi/2`, layer alternation).
     pub(crate) angle: f32,
@@ -194,10 +196,13 @@ pub(crate) fn fill_honeycomb(
                 ax.swap(0, 1);
                 x += distance;
             }
-            let p = rotate_polyline(&Polyline::new(pts), -direction, hex_center);
-            // Upstream passes unscaled spacing even though points are scaled.
-            let tol = 5.0 * params.spacing;
-            all_polylines.push(Polyline::new(douglas_peucker(p.points(), tol)));
+            let mut p = rotate_polyline(&Polyline::new(pts), -direction, hex_center);
+            super::corner_smoothing::smooth(
+                &mut p,
+                params.smooth_factor,
+                params.resolution / scale.factor(),
+            );
+            all_polylines.push(p);
         }
     }
     // `multiline_fill` — expand by the multiline overlap count.
