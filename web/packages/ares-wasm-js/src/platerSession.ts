@@ -71,6 +71,20 @@ export class PlaterSession {
     return this.#edit({ op: "setAbsoluteRotation", object, instance, axis, degrees });
   }
 
+  /**
+   * "Scale to build volume" (`Selection::scale_to_fit_print_volume`): the instance scales uniformly to
+   * fill the current plate's free build volume and is centred there; its object's other instances
+   * take the same scale. Refused on a circular bed, where it is not ported.
+   */
+  scaleToFit(object: number, instance: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "scaleToFit", object, instance });
+  }
+
+  /** Whether "Scale to build volume" is ported for the session's bed: every bed but a circular one. */
+  async scaleToFitPorted(): Promise<boolean> {
+    return (await this.#call({ kind: "platerScaleToFitPorted", sessionId: this.#sessionId })) as boolean;
+  }
+
   /** The instance's Scale (percent) and Size (mm) fields in world coordinates (`GizmoObjectManipulation`). */
   async scaleAndSize(object: number, instance: number): Promise<ScaleAndSize> {
     return (await this.#call({ kind: "platerScaleAndSize", sessionId: this.#sessionId, object, instance })) as ScaleAndSize;

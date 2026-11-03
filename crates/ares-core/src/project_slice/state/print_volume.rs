@@ -25,7 +25,7 @@ pub(crate) enum ObjectState {
 }
 
 /// RANSAC-fitted circle in fixed coordinates (`BuildVolume.cpp:38-63`).
-struct Circle {
+pub(crate) struct Circle {
     center: [f64; 2],
     radius: f64,
 }
@@ -34,7 +34,7 @@ struct Circle {
 /// `volume_state_bbox`; `Circle` and `Convex` test per transformed mesh
 /// vertex (`BuildVolume.cpp:384-410 object_state`); `Unported` (non-convex
 /// Custom) bypasses the check as a known gap recorded in the ARD.
-enum BedShape {
+pub(crate) enum BedShape {
     Rectangle { min: [f64; 2], max: [f64; 2] },
     Circle(Circle),
     Convex { hull: Vec<[f64; 2]> },
@@ -67,6 +67,11 @@ impl PrintVolume {
     /// shapes are `Unported`).
     pub(crate) fn new(project: &Project) -> Result<Self, SliceError> {
         Self::at(project, project.plate_origin())
+    }
+
+    /// `BuildVolume::type()`.
+    pub(crate) fn shape(&self) -> &BedShape {
+        &self.shape
     }
 
     /// The print volume of the plate at `origin`.

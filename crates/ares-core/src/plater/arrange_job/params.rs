@@ -89,7 +89,7 @@ fn bed_shape(settings: &ProjectSettings) -> Result<Vec<Point>, SliceError> {
 /// `get_shared_poly` (`PrintConfig.cpp:13820-13835`): the first area, intersected with each next
 /// one as `intersection(next, result)`, keeping each intersection's first polygon. Upstream indexes
 /// the first polygon of an empty intersection, which is undefined behaviour; the port refuses it.
-fn shared_poly(
+pub(in crate::plater) fn shared_poly(
     first: &[crate::options::Point2d],
     rest: &[Vec<crate::options::Point2d>],
 ) -> Result<Vec<Point>, SliceError> {

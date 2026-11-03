@@ -9,6 +9,7 @@ mod imex;
 mod nozzle_ids;
 mod object_skirt;
 mod params;
+pub(super) use params::shared_poly;
 mod polygon;
 mod prepare;
 mod wipe_tower;

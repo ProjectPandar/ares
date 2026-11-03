@@ -162,6 +162,12 @@ export async function mirrorInstance(target: InstanceRef, axis: 0 | 1 | 2) {
   applyLayout(await plater!.mirror(target.object, target.instance, axis), currentPlate);
 }
 
+/** The object menu's "Scale to build volume" (Plater::scale_selection_to_fit_print_volume). */
+export async function scaleToFit(target: InstanceRef) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.scaleToFit(target.object, target.instance), currentPlate);
+}
+
 /** A Scale field edit in percent (GizmoObjectManipulation::change_scale_value). */
 export async function setInstanceScale(target: InstanceRef, edit: ScaleEdit) {
   const { plater, currentPlate } = useApp.getState();

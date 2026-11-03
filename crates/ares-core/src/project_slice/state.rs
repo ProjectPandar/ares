@@ -9,7 +9,9 @@ use crate::{
 
 mod painted_fuzzy;
 mod print_volume;
-pub(crate) use print_volume::{global_bed_points, inside_triangle_count, instance_partly_outside};
+pub(crate) use print_volume::{
+    BedShape, PrintVolume, global_bed_points, inside_triangle_count, instance_partly_outside,
+};
 
 use super::{
     planning::plan_project,

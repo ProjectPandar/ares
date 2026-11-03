@@ -85,7 +85,7 @@ mod source;
 mod state;
 use source::ProjectBytes;
 pub(crate) use source::{ProfileInput, ProjectSource};
-pub(crate) use state::instance_partly_outside;
+pub(crate) use state::{BedShape, PrintVolume, instance_partly_outside};
 mod support_material;
 
 mod top_empty_layers;

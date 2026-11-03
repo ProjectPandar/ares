@@ -204,6 +204,12 @@ fn model_parts(project: &Project, object: usize) -> impl Iterator<Item = &crate:
 /// selected volume's local box corners through its world matrix
 /// (`GLVolume::transformed_bounding_box`).
 fn selection_bounding_box_center(project: &Project, key: InstanceKey) -> [f64; 3] {
+    let bbox = selection_bounding_box(project, key);
+    std::array::from_fn(|axis| 0.5 * (bbox.0[axis] + bbox.1[axis]))
+}
+
+/// `Selection::get_bounding_box()` (`Selection.cpp:2530`) of a full instance.
+pub(super) fn selection_bounding_box(project: &Project, key: InstanceKey) -> BoundingBox {
     let transform = instance_transform(project, key);
     let mut bbox = ([f64::MAX; 3], [f64::MIN; 3]);
     for volume in project.objects()[key.0].volumes() {
@@ -234,7 +240,7 @@ fn selection_bounding_box_center(project: &Project, key: InstanceKey) -> [f64; 3
             merge(&mut bbox, world.transform_point(point));
         }
     }
-    std::array::from_fn(|axis| 0.5 * (bbox.0[axis] + bbox.1[axis]))
+    bbox
 }
 
 /// The rotation pivot over every volume of the instance (`Selection.cpp:1188-1205`).

@@ -78,6 +78,8 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.setSize(edit.object, edit.instance, JSON.stringify(edit.edit));
     case "mirror":
       return session.mirror(edit.object, edit.instance, edit.axis);
+    case "scaleToFit":
+      return session.scaleToFit(edit.object, edit.instance);
     case "addPlate":
       return session.addPlate();
     case "deletePlate":
@@ -254,6 +256,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [undefined, []];
     case "platerAbsoluteRotation":
       return [[...sessions.get(request.sessionId)!.absoluteRotation(request.object, request.instance)], []];
+    case "platerScaleToFitPorted":
+      return [sessions.get(request.sessionId)!.scaleToFitPorted(), []];
     case "platerScaleAndSize": {
       const values = sessions.get(request.sessionId)!.scaleAndSize(request.object, request.instance);
       return [{ scale: [...values.subarray(0, 3)], size: [...values.subarray(3)] }, []];

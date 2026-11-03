@@ -53,3 +53,29 @@ The objects are first made tall (the ported Size Z edit, uniform off), so the fi
 6. **Circular bed.** The Ender-3 with a 72-gon `printable_area` gets the `InvalidInput` error.
 
 Web E2E `plateScaleToFit.spec.ts`: on case 1's project, right-click the object, choose "Scale to build volume", and plate 1 slices like Native on the exported session state.
+
+## Retargeted case 3
+The X2D case (two nozzle areas, X 0..256 and X 20.5..256) moved to the Ender-3 with one nozzle area, X 20..220. That still takes `get_build_volume(true)`'s shared branch, and Native slices the project (exit 0, the area in its config block).
+
+The X2D project slices differently from Native even unedited (its model printing time), a pre-existing gap in the whole-variant time config, which is still open. So the X2D two-area case is deferred. It comes back as a follow-up once that work lands. Until then, the intersection of several areas stays covered by the arrange's shared-bed cases, which use the same `shared_poly`.
+
+## GREEN
+- **`plater/scale_to_fit.rs`.**
+  - `PlaterSession::scale_to_fit` matches the bed type from the ported `BuildVolume` classification (`PrintVolume::shape`):
+    - **Rectangle** fits.
+    - **Circle** returns `InvalidInput`.
+    - **Convex and Custom (`Unported`)** return without a change.
+  - `exclude_boxes` reads `bed_exclude_area` four points at a time, at the plate origin.
+  - `free_print_volumes`, `fit_rectangle` and `fit` are literal ports.
+  - `fit` runs the ported `scale_and_drop` (a relative uniform scale), then `translate_instance` (`Selection::translate` and `do_move`). The translate takes Z from the scaled selection box.
+- **`PlateList::shared_build_volume`** is `get_build_volume(true)`. With nozzle areas it is the box of `shared_poly` of the areas moved by the plate origin; without them it is the plate box.
+- **`selection::selection_bounding_box`** is the whole `get_bounding_box()` box that the centre helper now reads.
+- **`PlaterSession::scale_to_fit_ported`** is false on a Circle bed only.
+- **Web.**
+  - wasm `scaleToFit` and `scaleToFitPorted`.
+  - The object menu's "Scale to build volume" acts on the instance item it was opened on, else the first instance. It is disabled where the fit is not ported.
+  - E2E `plateScaleToFit.spec.ts`. The mirror spec's exhaustive menu list gains the item.
+- **Deferred:**
+  - `fit_circle` (`Selection.cpp:1534-1569`, which needs `smallest_enclosing_circle_welzl` over the volumes' 3D convex hulls) is left to a follow-up slice.
+  - Multi-object selections.
+  - Undo.

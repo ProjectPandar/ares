@@ -1,6 +1,6 @@
 import type { SceneObject } from "@ares-slicer/wasm";
-import { useEffect, useRef } from "react";
-import { changeInstances, deleteInstance, deleteObject, mirrorInstance } from "../state/plates";
+import { useEffect, useRef, useState } from "react";
+import { changeInstances, deleteInstance, deleteObject, mirrorInstance, scaleToFit } from "../state/plates";
 import { useApp } from "../state/store";
 
 /** MenuFactory::append_menu_item_transform's mirror items (GUI_Factories.cpp:1353-1363). */
@@ -29,7 +29,7 @@ const INSTANCE_ITEMS = [
 
 /**
  * The object list's right-click menu, as far as ported: "Delete", the instance items and the
- * transform submenu's "Mirror" items of the object menu (GUI_Factories.cpp:1765). They act on the object's first instance, as the object
+ * transform submenu's "Mirror" items and "Scale to build volume" of the object menu (GUI_Factories.cpp:1765). They act on the object's first instance, as the object
  * panel does. Closes on a pick, Escape or a click elsewhere.
  */
 export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: {
@@ -45,6 +45,12 @@ export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: 
   const object = useApp((state) => state.scene?.objects.findIndex(({ id }) => id === objectId) ?? -1);
   const edits = instanceEdits(useApp((state) => state.scene?.objects.find(({ id }) => id === objectId)));
   const slicing = useApp((state) => state.slice.status === "slicing");
+  const plater = useApp((state) => state.plater);
+  // "Scale to build volume" is not ported for a circular bed (fit_circle, Selection.cpp:1534-1569).
+  const [fitPorted, setFitPorted] = useState(false);
+  useEffect(() => {
+    void plater?.scaleToFitPorted().then(setFitPorted);
+  }, [plater]);
   useEffect(() => {
     const close = (event: Event) => {
       if (event instanceof KeyboardEvent ? event.key === "Escape" : !menu.current?.contains(event.target as Node)) onClose();
@@ -96,6 +102,15 @@ export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: 
           {label}
         </button>
       ))}
+      {/* MenuFactory::append_menu_item_scale_selection_to_fit_print_volume (GUI_Factories.cpp:1189-1193, :1732). */}
+      <button type="button" role="menuitem" title="Scale an object to fit the build volume"
+        disabled={slicing || object < 0 || !fitPorted}
+        onClick={() => {
+          onClose();
+          void scaleToFit({ object, instance: instance ?? 0 });
+        }}>
+        Scale to build volume
+      </button>
     </div>
   );
 }

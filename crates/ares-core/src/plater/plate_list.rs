@@ -125,6 +125,50 @@ impl PlateList {
         }
     }
 
+    /// `PartPlate::get_build_volume(true)` (`PartPlate.cpp:5263-5282`) of the plate at `index`: the
+    /// box of the nozzle areas' shared polygon (`get_shared_poly` of the areas moved by the plate
+    /// origin, `set_shape` `:5150-5173`) when there are any, else the plate box.
+    pub(in crate::plater) fn shared_build_volume(
+        &self,
+        index: usize,
+        extruder_areas: &[Vec<crate::Point2d>],
+    ) -> Result<BoundingBox, crate::SliceError> {
+        let origin = self.plates[index].origin;
+        let [first, rest @ ..] = extruder_areas else {
+            return Ok(self.plate_box(origin));
+        };
+        let moved = |area: &Vec<crate::Point2d>| {
+            area.iter()
+                .map(|point| crate::Point2d {
+                    x: point.x + origin[0],
+                    y: point.y + origin[1],
+                })
+                .collect::<Vec<_>>()
+        };
+        let rest: Vec<_> = rest.iter().map(moved).collect();
+        let shared = super::arrange_job::shared_poly(&moved(first), &rest)?;
+        let unscale = |value: i64| value as f64 * crate::arrangement::SCALING_FACTOR;
+        let (mut min, mut max) = ([f64::MAX; 2], [f64::MIN; 2]);
+        for point in &shared {
+            for (axis, value) in [point.x(), point.y()].into_iter().enumerate() {
+                min[axis] = min[axis].min(unscale(value));
+                max[axis] = max[axis].max(unscale(value));
+            }
+        }
+        Ok((
+            [
+                min[0] - SCENE_EPSILON,
+                min[1] - SCENE_EPSILON,
+                -SCENE_EPSILON,
+            ],
+            [
+                max[0] + SCENE_EPSILON,
+                max[1] + SCENE_EPSILON,
+                f64::from(self.height) + SCENE_EPSILON,
+            ],
+        ))
+    }
+
     /// `PartPlate::get_build_volume` (`PartPlate.cpp:3280-3299`) of a plate at `origin`.
     fn plate_box(&self, origin: [f64; 2]) -> BoundingBox {
         let (min, max) = self.shape;
