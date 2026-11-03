@@ -78,6 +78,8 @@ mod seam_occlusion_object_affine;
 mod seam_slope_travel;
 #[path = "skirt_support_occupied_input.rs"]
 mod skirt_support_occupied_input;
+#[path = "support_interface_angle.rs"]
+mod support_interface_angle;
 #[path = "template_elsif.rs"]
 mod template_elsif;
 #[path = "template_macro.rs"]
