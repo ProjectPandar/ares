@@ -14,6 +14,8 @@ mod brim_plate_origin;
 mod delete_all;
 #[path = "plater_delete_instance.rs"]
 mod delete_instance;
+#[path = "plater_delete_instance_import.rs"]
+mod delete_instance_import;
 #[path = "plater_delete_object.rs"]
 mod delete_object;
 #[path = "plater_instances.rs"]
