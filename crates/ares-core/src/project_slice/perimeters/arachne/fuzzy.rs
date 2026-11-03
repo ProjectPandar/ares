@@ -277,9 +277,10 @@ fn rebuild(
             context,
         );
     }
-    // This assignment is upstream's multi-region behaviour (:811-812),
-    // distinct from the whole-line Ripple kernel, which stays open.
-    if let Some(first) = extrusion.junctions.first().copied() {
+    // Feature/FuzzySkin/FuzzySkin.cpp:855-858: only close closed extrusions.
+    if extrusion.is_closed
+        && let Some(first) = extrusion.junctions.first().copied()
+    {
         let last = extrusion
             .junctions
             .last_mut()
