@@ -8,6 +8,8 @@ use ares_core::{ConfigOverrides, GenerationMetadata, PlaterSession, PlaterSlice,
 use super::plater_archive::{attribute, rewrite_archive};
 use crate::runner::{OrcaRunner, repo_root};
 
+#[path = "plater_brim_plate_origin.rs"]
+mod brim_plate_origin;
 #[path = "plater_delete_all.rs"]
 mod delete_all;
 #[path = "plater_delete_object.rs"]
