@@ -1,0 +1,106 @@
+{
+  "cases": {
+    "attached-stack": {
+      "Native_output_embedded": false,
+      "all_non_settings_members_identical_to_source": true,
+      "geometry": {
+        "closed_oriented_manifold": true,
+        "lower_half_width_mm": 7.0,
+        "shoulder_height_mm": 1.2,
+        "signed_volume_mm3": 555.1999999999999,
+        "total_height_mm": 2.0,
+        "triangles": 68,
+        "upper_half_width_mm": 10.0,
+        "vertices": 36
+      },
+      "input_sha256": "60d723484161cd2fb56215cb6c2f4d7f2d63cc1fc36544206ac0b0a953f83f49",
+      "member_sha256": {
+        "3D/3dmodel.model": "5ca8e5e2f1b5ae905a4016c5ffb4327494ce49c1fa5e2a036db42c9ba26fac35",
+        "3D/Objects/cube10.stl_1.model": "596aeb5c206c8db52fbcd30ef6a7229be825835a87805fdcbd56c785ce5faa59",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "Metadata/model_settings.config": "0842c22f33e2c2c4c69014c8cd0f714ab3630e47f4d5b12248b8664f7b5fd652",
+        "Metadata/project_settings.config": "9db21eaf2a85840f05273514872c308d5dd845456f5128cbd4159a98af5cd5fe",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings_overrides": {
+        "unsupported_wall_last": "1",
+        "wall_generator": "arachne"
+      },
+      "source_input": "tests/parity/classic-unsupported-wall-last/attached-stack.3mf",
+      "source_input_sha256": "2aad0f555101c289b8cd1698bddda7bb520c3bbac58f51b11e30311dc411149c",
+      "wipe_inward": "0"
+    },
+    "disabled-control": {
+      "Native_output_embedded": false,
+      "all_non_settings_members_identical_to_source": true,
+      "geometry": {
+        "closed_oriented_manifold": true,
+        "lower_half_width_mm": 3.0,
+        "shoulder_height_mm": 1.2,
+        "signed_volume_mm3": 363.2,
+        "total_height_mm": 2.0,
+        "triangles": 68,
+        "upper_half_width_mm": 10.0,
+        "vertices": 36
+      },
+      "input_sha256": "d654a3484bb71e33cb40e6e8729193741944457cfcbdaab6d0b96d0ce88d66d7",
+      "member_sha256": {
+        "3D/3dmodel.model": "5ca8e5e2f1b5ae905a4016c5ffb4327494ce49c1fa5e2a036db42c9ba26fac35",
+        "3D/Objects/cube10.stl_1.model": "b92871729add50d0a1aaedd0c7d0608182b1bd3feca6d8f46424063fd56bc453",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "Metadata/model_settings.config": "944543845d718c787fc9f4fab7053b63e6a2d13ba4a41344bf4b6fee21c9fe36",
+        "Metadata/project_settings.config": "6516c72a927df9144a21ff66f6d338144c239950b46fc28611a37b05442f5abe",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings_overrides": {
+        "unsupported_wall_last": "0",
+        "wall_generator": "arachne"
+      },
+      "source_input": "tests/parity/classic-unsupported-wall-last/unattached-ledge.3mf",
+      "source_input_sha256": "2520f0f1d96e28c610c1ed40435ca268da45a8eea5c401cd727c6b1262e0a611",
+      "wipe_inward": "0"
+    },
+    "unattached-ledge": {
+      "Native_output_embedded": false,
+      "all_non_settings_members_identical_to_source": true,
+      "geometry": {
+        "closed_oriented_manifold": true,
+        "lower_half_width_mm": 3.0,
+        "shoulder_height_mm": 1.2,
+        "signed_volume_mm3": 363.2,
+        "total_height_mm": 2.0,
+        "triangles": 68,
+        "upper_half_width_mm": 10.0,
+        "vertices": 36
+      },
+      "input_sha256": "7d8f4a556c3e4f918d56518a29d3ad717f4ee92cc68d226adcaa5d0c555ed270",
+      "member_sha256": {
+        "3D/3dmodel.model": "5ca8e5e2f1b5ae905a4016c5ffb4327494ce49c1fa5e2a036db42c9ba26fac35",
+        "3D/Objects/cube10.stl_1.model": "b92871729add50d0a1aaedd0c7d0608182b1bd3feca6d8f46424063fd56bc453",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "Metadata/model_settings.config": "944543845d718c787fc9f4fab7053b63e6a2d13ba4a41344bf4b6fee21c9fe36",
+        "Metadata/project_settings.config": "1bfa818682eba8619288bb15a020db6168866b969573d46c366720744e208420",
+        "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+        "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+        "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+      },
+      "settings_overrides": {
+        "unsupported_wall_last": "1",
+        "wall_generator": "arachne"
+      },
+      "source_input": "tests/parity/classic-unsupported-wall-last/unattached-ledge.3mf",
+      "source_input_sha256": "2520f0f1d96e28c610c1ed40435ca268da45a8eea5c401cd727c6b1262e0a611",
+      "wipe_inward": "0"
+    }
+  },
+  "derivation": "Frozen Classic geometry, Arachne selection; disabled derives from the enabled ledge and differs only by unsupported_wall_last.",
+  "source": "PerimeterGenerator.cpp:1391-1455,3093-3111;GCode.cpp:8889-8933",
+  "upstream": "345efec64c7b95a05ce5cf96df0dde66a158835c"
+}

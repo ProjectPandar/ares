@@ -1,5 +1,8 @@
 //! Option-domain parity sweep against the Ender-3 smoke fixture.
 
+#[path = "arachne_unsupported_wall_last.rs"]
+mod arachne_unsupported_wall_last;
+
 #[path = "classic_narrow_island_guard.rs"]
 mod classic_narrow_island_guard;
 
