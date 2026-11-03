@@ -18,6 +18,51 @@ use crate::{
     },
 };
 
+// PrintConfig.cpp:11475-11488: all seven members share one typed resize.
+fn resize_mixed_filament_metadata(
+    raw: &mut ProjectSettingsRaw,
+    old_count: usize,
+    new_count: usize,
+) {
+    use crate::options::registry::{OptionValueKind, option_definition};
+
+    for key in [
+        "filament_is_mixed",
+        "filament_mixed_components",
+        "filament_mixed_sublayer_ratios",
+        "filament_mixed_gradient",
+        "filament_mixed_gradient_range",
+        "filament_mixed_gradient_curve",
+        "filament_mixed_gradient_per_part",
+    ] {
+        let definition = option_definition(key).unwrap();
+        let empty = match definition.kind {
+            OptionValueKind::Bools => RawConfigValue::Flag(false),
+            OptionValueKind::Strings => RawConfigValue::Text(String::new()),
+            _ => unreachable!("mixed metadata members are coBools or coStrings"),
+        };
+        let mut values = match raw.get(key) {
+            Some(RawConfigValue::List(values)) => values.clone(),
+            Some(_) => unreachable!("normalized vectors contain logical slots"),
+            None if definition.kind == OptionValueKind::Strings => {
+                crate::options::unescape_strings_cstyle(definition.default_wire_value)
+                    .unwrap()
+                    .into_iter()
+                    .map(RawConfigValue::Text)
+                    .collect()
+            }
+            None => definition
+                .default_wire_value
+                .split(',')
+                .map(|value| RawConfigValue::Text(value.to_owned()))
+                .collect(),
+        };
+        values.truncate(old_count);
+        values.resize(new_count, empty);
+        raw.insert(key.to_owned(), RawConfigValue::List(values));
+    }
+}
+
 impl Project {
     /// The CLI `filament_count` variable of `CLI::run`: the embedded
     /// project's `filament_settings_id` size (`current_filaments_name`,
@@ -34,6 +79,10 @@ impl Project {
         // OrcaSlicer.cpp:1769: the CLI's 3MF import reads this dynamic option
         // with create=true. STL --load-settings does not perform that read.
         let raw = &mut self.documents.project_settings_raw;
+        // OrcaSlicer.cpp:4243-4244: both arguments are loaded logical slots.
+        if filament_count > 0 {
+            resize_mixed_filament_metadata(raw, filament_count, filament_count);
+        }
         if !raw.contains_key("upward_compatible_machine") {
             raw.insert_strings(
                 "upward_compatible_machine",
