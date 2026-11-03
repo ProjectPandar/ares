@@ -11,7 +11,6 @@ mod category_depths;
 mod filament;
 mod finish_block;
 mod finish_layer;
-mod gaps;
 mod generate;
 mod generator;
 mod grid;

@@ -1,6 +1,6 @@
 //! `WipeTower.cpp:4248–4327`: generated Type1 wall, entry gaps and rib origin.
-use super::super::geometry::{BoxCoordinates, Shape};
-use super::{gaps, generator::Generator, writer::Writer};
+use super::super::geometry::{BoxCoordinates, Shape, gaps};
+use super::{generator::Generator, writer::Writer};
 use crate::geometry::{ClipperError, Polygon};
 
 impl Generator<'_> {

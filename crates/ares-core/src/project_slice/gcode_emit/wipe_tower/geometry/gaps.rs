@@ -1,5 +1,5 @@
 //! `WipeTower.cpp:228–244,329–508`: ray-selected wall-entry gaps.
-use super::super::geometry::scaled;
+use super::scaled;
 use crate::geometry::{CoordinateScale, Point, Polygon, Polyline};
 
 #[derive(Clone, Copy)]
@@ -113,7 +113,7 @@ fn along(
     }
 }
 
-pub(super) fn split(
+pub(in crate::project_slice::gcode_emit::wipe_tower) fn split(
     polygon: &Polygon,
     gaps: &[[f32; 2]],
     width: f32,
