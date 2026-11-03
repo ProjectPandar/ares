@@ -2,7 +2,7 @@
 
 use super::floating::NativeFloat;
 
-pub(super) fn distance_squared<F: NativeFloat>(
+pub(crate) fn distance_squared<F: NativeFloat>(
     a: [F; 2],
     b: [F; 2],
     origin: [F; 2],

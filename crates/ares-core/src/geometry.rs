@@ -11,7 +11,7 @@ mod coord;
 mod edge_grid;
 mod expolygon;
 mod line;
-mod line_distance_tree;
+pub(crate) mod line_distance_tree;
 mod line_split;
 pub(crate) mod marching_squares;
 pub(crate) mod medial_axis;

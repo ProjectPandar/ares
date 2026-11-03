@@ -1,11 +1,10 @@
 //! `PerimeterGenerator.cpp:1391-1455`: stable unsupported tail and attachment waves.
 
-use crate::geometry::{Line, LineDistanceTree, Point};
+use crate::geometry::{Line, LineDistanceTree};
 
 use super::super::{
-    chained_loops::ExtrusionLoop,
     entity_collections::{ExtrusionEntity, ExtrusionEntityCollection},
-    materialize::{ExtrusionPath, ExtrusionRole},
+    materialize::ExtrusionRole,
 };
 
 fn is_unsupported_loop(entity: &ExtrusionEntity) -> bool {
@@ -34,7 +33,7 @@ pub(super) fn apply(collection: &mut ExtrusionEntityCollection, touch_distance: 
             let Some(loop_) = entity.as_deref() else {
                 continue;
             };
-            if polyline(loop_).iter().any(|&point| {
+            if loop_.as_polyline().iter().any(|&point| {
                 distancer.nearest(point).unwrap().squared_distance.sqrt() < touch_distance
             }) {
                 collect_lines(loop_, &mut anchored);
@@ -52,60 +51,8 @@ pub(super) fn apply(collection: &mut ExtrusionEntityCollection, touch_distance: 
 }
 
 fn collect_lines(entity: &ExtrusionEntity, out: &mut Vec<Line>) {
-    out.extend(polyline(entity).windows(2).map(|points| Line {
+    out.extend(entity.as_polyline().windows(2).map(|points| Line {
         a: points[0],
         b: points[1],
     }));
-}
-
-fn polyline(entity: &ExtrusionEntity) -> Vec<Point> {
-    match entity {
-        ExtrusionEntity::Loop(loop_) => loop_polyline(&loop_.extrusion_loop),
-        ExtrusionEntity::Path(path) => path
-            .polyline
-            .points
-            .iter()
-            .map(|point| Point::new(point.x, point.y))
-            .collect(),
-        ExtrusionEntity::MultiPath(multi) => multipath_polyline(&multi.paths),
-    }
-}
-
-fn loop_polyline(loop_: &ExtrusionLoop) -> Vec<Point> {
-    // `ExtrusionLoop::as_polyline/polygon`: omit each path's last point,
-    // then close the polygon at its first point. Do not flatten join duplicates.
-    if !loop_.paths.iter().any(|path| {
-        path.polyline
-            .points
-            .windows(2)
-            .any(|pair| pair[0] != pair[1])
-    }) {
-        return Vec::new();
-    }
-    let mut points: Vec<_> = loop_
-        .paths
-        .iter()
-        .flat_map(|path| &path.polyline.points[..path.polyline.points.len() - 1])
-        .map(|point| Point::new(point.x, point.y))
-        .collect();
-    points.push(points[0]);
-    points
-}
-
-fn multipath_polyline(paths: &[ExtrusionPath]) -> Vec<Point> {
-    let Some(first) = paths.first() else {
-        return Vec::new();
-    };
-    let mut points = vec![Point::new(
-        first.polyline.points[0].x,
-        first.polyline.points[0].y,
-    )];
-    points.extend(paths.iter().flat_map(|path| {
-        path.polyline
-            .points
-            .iter()
-            .skip(1)
-            .map(|point| Point::new(point.x, point.y))
-    }));
-    points
 }

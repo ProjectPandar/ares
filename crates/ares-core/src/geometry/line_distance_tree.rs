@@ -5,7 +5,7 @@ mod intersections_mm;
 mod outside;
 mod query;
 mod radius;
-mod segment;
+pub(crate) mod segment;
 
 pub(crate) use floating::FloatLineDistanceTree;
 

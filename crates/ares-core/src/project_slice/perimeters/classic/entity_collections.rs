@@ -2,6 +2,7 @@
 // `PerimeterGenerator.cpp:230-280` and caller `1443-1450`.
 
 mod orientation;
+mod polyline;
 
 mod traverse;
 mod types;
