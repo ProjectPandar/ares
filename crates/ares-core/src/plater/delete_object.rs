@@ -23,6 +23,13 @@ impl PlaterSession {
         Ok(())
     }
 
+    /// The plate menu's "Delete All" (`Selection::remove_curr_plate`, `Selection.cpp:507-525` at
+    /// v2.5.0-beta `345efec64`; see `docs/architecture/web-plater-plate-delete-all.md`) on the
+    /// current plate.
+    pub fn delete_plate_objects(&mut self) -> Result<(), SliceError> {
+        todo!()
+    }
+
     /// The Edit menu's "Delete All" (`Plater::priv::delete_all_objects_from_model`,
     /// `Plater.cpp:10793-10821`; see `docs/architecture/web-plater-delete-all.md`). `InvalidInput`
     /// without objects, where `MainFrame::can_delete_all` (`MainFrame.cpp:2128-2131`) is false.

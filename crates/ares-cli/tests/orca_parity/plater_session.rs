@@ -24,6 +24,8 @@ mod instances;
 mod moves;
 #[path = "plater_number_of_instances.rs"]
 mod number_of_instances;
+#[path = "plater_plate_delete_all.rs"]
+mod plate_delete_all;
 #[path = "plater_tower_positions.rs"]
 mod tower_positions;
 #[path = "plater_transform.rs"]
