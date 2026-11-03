@@ -1,7 +1,8 @@
 # Support-ironing fill parameters and the non-finite 3D-honeycomb domain
 
-Status: proposal for review. This record does not authorize production changes
-or a RED fixture. The baseline is
+Status: architecture approved; the public RED seam below incorporates the
+subsequent static-audit ruling. Production changes still require RED review.
+The baseline is
 `f8d715c4c2303b09fed72260d23997733221f2e4`; upstream is Orca beta
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
@@ -118,42 +119,52 @@ same eligible inventory before and after a later port, and report the UB
 reclassification separately: removing an undefined case is not a FAIL-to-PASS
 transition or a new whole-case PASS.
 
-## Defined-domain adapter RED gate
+## Public Ares-defined RED and concentric controls
 
-The adapter RED must use a different, reachable support-ironing pattern that
-consumes fill-layer height and has a fully defined zero-height domain. Its
-selection must follow the geometry-owner static recommendation. That concrete
-recommendation and fixture qualification are **pending**; no pattern or fixture
-is approved by this proposal.
+The geometry-owner static audit found no safe height-consuming pattern under
+these support-ironing defaults: density one, `use_arachne` false, and classic
+`fill_surface`. The adapter's zero-versus-physical-height change is therefore
+not independently observable on a safe Native pattern. This supersedes the
+original request for a discriminating adapter-only Native RED. Do not invent
+one or add a diagnostic API to manufacture observability.
 
-A concentric/Arachne path is a candidate, not an established answer. Confirm
-actual factory dispatch and helper defaults: `FillParams::use_arachne` defaults
-to false, so a concentric name alone does not establish that the height-consuming
-Arachne branch is reached. Audit the selected branch's zero-height calculations
-and conversions before executing it as a Native oracle. If no defined,
-observable adapter case is found, return for review rather than adding a
-nondiscriminating test or a new diagnostic API.
+The approved RED instead exercises `slice_project_plate_validated` through a
+separate Ares-defined integration-test binary. Use the frozen input identified
+above with its support-ironing 3D-honeycomb selection. Ordinary object ironing
+and tower ironing are disabled in that input, so Ironing-role paths and
+extrusion belong to the support-ironing component. The defined contract is
+that this component emits no ironing paths or extrusion. Verify nonempty
+support/interface output and preserve complete API replay outputs, input
+identity, and the contract observation before asserting the empty result.
 
-Before writing the RED, name its existing public byte-API / CLI seam, selected
-pattern, source consumer, defined-domain argument, and observable mismatch.
-Qualify runtime Native double replay and API/CLI identity. The new test must
-fail on this baseline for the adapter discrepancy, not for a different default
-or an unrelated geometry residual. Preserve complete outputs and the unchanged
-complete comparator, including feeds, M73, metadata and footer, with only the
-established generator-comment exception.
+This test must fail on the current Ares behavior. Its expected empty component
+comes from the approved defined-domain policy, not from Native's undefined
+output. Do not invoke Native for this input or count the test as Native parity.
+Do not embed captured non-finite values, observed coordinates, or historical
+output bytes as expected results.
 
-Any later test of the proposed empty-component policy is an **Ares-defined
-behavior contract**, not a Native-parity test for the UB class. Keep that
-classification separate from FULL Native comparison counts. Do not embed
-captured non-finite values, observed coordinates, or historical output bytes as
-expected results for the undefined path.
+Use concentric raft and no-raft variants of the
+`support_ironing_raft_offset` family as the geometry-owner-recommended negative
+controls. Classic concentric is defined under these defaults and does not
+observe the layer-height adapter difference; these are preservation controls,
+not a claimed adapter RED. Qualify runtime Native double replay and complete
+API/CLI identity for those controls. Preserve feeds, M73, metadata and footer,
+with only the established generator-comment exception. Their complete Ares
+outputs must remain identical across the later port.
+
+Report the Ares-defined RED separately from the eligible Native comparisons.
+The old 3D-honeycomb Native leg is excluded by the UB classification during RED
+qualification and removed from the registry in the later reviewed GREEN slice.
+Report that inventory delta separately, never as a FAIL-to-PASS improvement.
 
 ## Review and implementation gates
 
-Send this ARD first. Obtain approval of the empty-component policy and the
-concrete defined-domain RED recommendation before test or production changes.
-Deliver the qualified RED separately and obtain review before implementation.
-A later port must preserve finite-domain behavior, use an identical eligible
+The architecture and the revised Ares-defined RED seam are approved. Deliver
+that RED and the qualified negative controls separately; obtain review before
+implementation. Keep the geometry scope bounded to the cited UB chain and
+non-finite-Z-scale guard; confirm the geometry owner's exact citation agreement
+before guard implementation. No other geometry changes are authorized. A later
+port must preserve finite-domain behavior, use an identical eligible
 paired inventory with zero PASS-to-FAIL transitions, retain verifiable artifacts,
 and pass rustfmt and strict Clippy. Rust tests use `cargo nextest run`.
 

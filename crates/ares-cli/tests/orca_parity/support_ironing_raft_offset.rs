@@ -16,6 +16,11 @@ const RAFT: &[u8] =
     include_bytes!("../../../../tests/parity/support-ironing-raft-offset/raft-two-layers.3mf");
 const NO_RAFT: &[u8] =
     include_bytes!("../../../../tests/parity/support-ironing/overhang-organic.3mf");
+const CONCENTRIC_RAFT: &[u8] = include_bytes!(
+    "../../../../tests/parity/support-ironing-raft-offset/raft-two-layers-concentric.3mf"
+);
+const CONCENTRIC_NO_RAFT: &[u8] =
+    include_bytes!("../../../../tests/parity/support-ironing-raft-offset/no-raft-concentric.3mf");
 
 fn sha(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
@@ -73,6 +78,7 @@ fn strict_case(label: &str, input: &[u8], expected_sha: &str) {
             ares_core::SlicerContext::new(0),
         ))
         .unwrap_or_else(|error| panic!("Ares API {label}: {error:?}"));
+    fs::write(directory.join("ares.api.gcode"), &api).unwrap();
     let cli_path = directory.join("ares.cli.gcode");
     let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
@@ -104,5 +110,25 @@ fn support_ironing_raft_offset_no_raft_control() {
         "no-raft-control",
         NO_RAFT,
         "9df149d8bda0fea5211def5c5057dfc00d7df1a439d99706b1e8a2b21d648010",
+    );
+}
+
+// Defined-domain controls for support-ironing-fill-params-beta.md; not a
+// discriminating oracle for the unobservable fill-layer-height adapter.
+#[test]
+fn support_ironing_raft_offset_concentric_raft_control() {
+    strict_case(
+        "concentric-raft-two-layers",
+        CONCENTRIC_RAFT,
+        "cf78104a71b11932f71c8f7beec843272ba93c56eb4ca00ba464e2b70a9ff69c",
+    );
+}
+
+#[test]
+fn support_ironing_raft_offset_concentric_no_raft_control() {
+    strict_case(
+        "concentric-no-raft",
+        CONCENTRIC_NO_RAFT,
+        "758fe244c6dc70a3357e663739c5aa20cbb0e3d2c3ef1532a8baf5ea4305799a",
     );
 }
