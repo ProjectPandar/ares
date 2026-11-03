@@ -166,6 +166,8 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) role_based_wipe_speed: bool,
     pub(in crate::project_slice::gcode_emit) wipe_speed: f64,
     pub(in crate::project_slice::gcode_emit) wipe_on_loops: bool,
+    pub(in crate::project_slice::gcode_emit) wipe_inward: bool,
+    pub(in crate::project_slice::gcode_emit) wipe_inward_distance: FloatOrPercent,
     pub(in crate::project_slice::gcode_emit) wipe_before_external_loop: bool,
     pub(in crate::project_slice::gcode_emit) wall_loops: i32,
     pub(in crate::project_slice::gcode_emit) nozzle_diameter: f64,

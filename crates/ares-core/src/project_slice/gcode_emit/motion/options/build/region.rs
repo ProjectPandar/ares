@@ -156,6 +156,10 @@ pub(in crate::project_slice::gcode_emit) fn apply(
         travel_speed,
     );
     options.wipe_on_loops = region.map_or(default.wipe_on_loops.0, |value| value.wipe_on_loops.0);
+    options.wipe_inward = region.map_or(default.wipe_inward.0, |value| value.wipe_inward.0);
+    options.wipe_inward_distance = region.map_or(default.wipe_inward_distance, |value| {
+        value.wipe_inward_distance
+    });
     options.wipe_before_external_loop = region
         .map_or(default.wipe_before_external_loop.0, |value| {
             value.wipe_before_external_loop.0

@@ -105,6 +105,8 @@ macro_rules! region_option_fields {
             seam_gap => "seam_gap": FloatOrPercent = FloatOrPercent::Percent(Percent(10.0)),
             role_based_wipe_speed => "role_based_wipe_speed": OrcaBool = OrcaBool(true),
             wipe_speed => "wipe_speed": FloatOrPercent = FloatOrPercent::Percent(Percent(80.0)),
+            wipe_inward => "wipe_inward": OrcaBool = OrcaBool(false),
+            wipe_inward_distance => "wipe_inward_distance": FloatOrPercent = FloatOrPercent::Percent(Percent(50.0)),
             wipe_on_loops => "wipe_on_loops": OrcaBool = OrcaBool(false),
             wipe_before_external_loop => "wipe_before_external_loop": OrcaBool = OrcaBool(false),
             precise_outer_wall => "precise_outer_wall": OrcaBool = OrcaBool(true),
@@ -161,7 +163,7 @@ pub(crate) use region_option_fields;
 
 macro_rules! declare_region_option_order {
     ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
-        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 152] = [$($key),*];
+        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 154] = [$($key),*];
     };
 }
 

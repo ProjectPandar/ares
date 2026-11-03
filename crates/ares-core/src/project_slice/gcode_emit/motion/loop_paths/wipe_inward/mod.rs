@@ -1,6 +1,7 @@
 //! `WipePathHelpers.cpp:677-884`: supported atomic wipe-path replacement.
 
 mod build;
+mod emit;
 mod math;
 mod offset;
 mod select;
@@ -9,6 +10,7 @@ mod support;
 mod validate;
 
 use crate::geometry::Point;
+pub(super) use emit::finish_loop;
 use math::{Distancer, lines};
 use select::Selection;
 use validate::Validator;

@@ -7,7 +7,7 @@ impl Serialize for ProcessRegionSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(152))?;
+        let mut map = serializer.serialize_map(Some(154))?;
         map.serialize_entry(
             "align_infill_direction_to_model",
             &self.align_infill_direction_to_model,
@@ -232,6 +232,8 @@ impl Serialize for ProcessRegionSourceOptions {
         map.serialize_entry("wall_sequence", &self.wall_sequence)?;
         map.serialize_entry("unsupported_wall_last", &self.unsupported_wall_last)?;
         map.serialize_entry("wipe_before_external_loop", &self.wipe_before_external_loop)?;
+        map.serialize_entry("wipe_inward", &self.wipe_inward)?;
+        map.serialize_entry("wipe_inward_distance", &self.wipe_inward_distance)?;
         map.serialize_entry("wipe_on_loops", &self.wipe_on_loops)?;
         map.serialize_entry("wipe_speed", &self.wipe_speed)?;
         map.serialize_entry(

@@ -1,15 +1,23 @@
-//! `GCode.cpp:8889-8933`, the `wipe_support == nullopt` perimeter passes.
+//! `GCode.cpp:8889-8933`, region-scoped perimeter passes and printed wipe support.
 
 mod multi_path;
 
-use super::{local_cursor, loop_paths, state::EmitState, state::LayerGeometry};
+use super::{
+    local_cursor, loop_paths, loop_paths::wipe_inward::WipeInwardSupport, state::EmitState,
+    state::LayerGeometry,
+};
 use crate::project_slice::{
     island_print_order::IslandPrintEntity, perimeters::classic::entity_collections::ExtrusionEntity,
 };
 
 pub(super) fn emit_perimeter(
     output: &mut Vec<u8>,
-    (entity, defer_unsupported, unsupported_loops_only): (&IslandPrintEntity, bool, bool),
+    (entity, defer_unsupported, unsupported_loops_only, mut wipe_support): (
+        &IslandPrintEntity,
+        bool,
+        bool,
+        Option<&mut WipeInwardSupport>,
+    ),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) -> Result<(), crate::SliceError> {
@@ -17,9 +25,7 @@ pub(super) fn emit_perimeter(
         unreachable!("perimeter phase contains only perimeter entities");
     };
     let selected = |entity: &ExtrusionEntity| {
-        let waits_for_infill = matches!(entity, ExtrusionEntity::Loop(loop_)
-            if loop_.extrusion_loop.print_after_infill);
-        !defer_unsupported || waits_for_infill == unsupported_loops_only
+        !defer_unsupported || waits_for_infill(entity) == unsupported_loops_only
     };
     if !collection.entities.iter().any(selected) {
         return Ok(());
@@ -50,16 +56,43 @@ pub(super) fn emit_perimeter(
         })
         .collect();
     for entity in collection.entities.iter().filter(|entity| selected(entity)) {
-        emit_entity(output, (entity, &region_perimeters), geometry, state)?;
+        emit_entity(
+            output,
+            (entity, wipe_support.as_deref()),
+            geometry,
+            state,
+            &region_perimeters,
+        )?;
+        if let Some(support) = wipe_support.as_deref_mut() {
+            support.append(entity);
+        }
     }
     Ok(())
 }
 
+pub(super) fn preseed_wipe_support(entity: &IslandPrintEntity, support: &mut WipeInwardSupport) {
+    let IslandPrintEntity::Perimeter(collection) = entity else {
+        unreachable!("perimeter phase contains only perimeter entities");
+    };
+    for entity in collection
+        .entities
+        .iter()
+        .filter(|entity| !waits_for_infill(entity))
+    {
+        support.append(entity);
+    }
+}
+
+fn waits_for_infill(entity: &ExtrusionEntity) -> bool {
+    matches!(entity, ExtrusionEntity::Loop(loop_) if loop_.extrusion_loop.print_after_infill)
+}
+
 fn emit_entity(
     output: &mut Vec<u8>,
-    (entity, region_perimeters): (&ExtrusionEntity, &[Vec<(i64, i64)>]),
+    (entity, wipe_support): (&ExtrusionEntity, Option<&WipeInwardSupport>),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
+    region_perimeters: &[Vec<(i64, i64)>],
 ) -> Result<(), crate::SliceError> {
     let mut loop_ = match entity {
         ExtrusionEntity::Loop(loop_) => loop_.clone(),
@@ -114,7 +147,11 @@ fn emit_entity(
     }
     loop_paths::emit(
         output,
-        (&loop_.extrusion_loop, loop_.unsupported_distance),
+        (
+            &loop_.extrusion_loop,
+            loop_.unsupported_distance,
+            wipe_support,
+        ),
         geometry,
         state,
         region_perimeters,

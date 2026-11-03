@@ -4,13 +4,12 @@ use std::borrow::Cow;
 
 use super::*;
 
-pub(super) fn append_inward_move(
-    output: &mut Vec<u8>,
+pub(super) fn post_loop_destination(
     paths: &[ExtrusionPath],
     clipping: (ExtrusionLoopRole, usize, f64),
     geometry: LayerGeometry<'_>,
-    state: &mut EmitState,
-) {
+    state: &EmitState,
+) -> Option<crate::geometry::Point> {
     let (loop_role, path_count, end_clip) = clipping;
     let original_paths = paths;
     let paths = &paths[..path_count];
@@ -20,25 +19,31 @@ pub(super) fn append_inward_move(
         || state.options.wall_loops <= 1
         || paths[0].polyline.points.len() < 2
     {
-        return;
+        return None;
     }
     let last_points = clipped_last(last, end_clip / geometry.scale.factor());
     if last_points.len() < 2 {
-        return;
+        return None;
     }
     let orientation = (
         loop_role == ExtrusionLoopRole::Hole,
         loop_is_counter_clockwise(original_paths),
     );
-    let Some(point) = inward_destination(
+    inward_destination(
         paths,
         &last_points,
         orientation,
         state.options.nozzle_diameter / geometry.scale.factor(),
         super::super::path::SOURCE_EPSILON_MM / geometry.scale.factor(),
-    ) else {
-        return;
-    };
+    )
+}
+
+pub(super) fn append_inward_move(
+    output: &mut Vec<u8>,
+    point: crate::geometry::Point,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
     let x = geometry.scale.unscale(point.x()) + state.origin.0 - state.extruder_offset.0;
     let y = geometry.scale.unscale(point.y()) + state.origin.1 - state.extruder_offset.1;
     let comment = if state.options.gcode_comments {

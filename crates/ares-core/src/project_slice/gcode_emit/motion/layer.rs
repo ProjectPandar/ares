@@ -2,7 +2,7 @@
 
 use super::{
     EmitState, LayerGeometry, MotionOptions, emit_fill_entity, emit_variable_width_entity,
-    local_cursor, perimeter,
+    local_cursor, loop_paths::wipe_inward::WipeInwardSupport, perimeter,
 };
 use crate::{
     SliceError,
@@ -158,7 +158,7 @@ where
         &mut crate::FloatOrPercent,
     ) -> (f64, bool, super::super::small_area::Gate),
 {
-    // GCode.cpp:8889-8933, with optional wipe support absent.
+    // GCode.cpp:8889-8933: support is local to this region and perimeter pass.
     for (&id, region) in regions {
         if !region.had_perimeters {
             continue;
@@ -175,10 +175,29 @@ where
             continue;
         }
         state.options.has_sparse_infill = density > 0.0;
+        let mut wipe_support = (state.options.wipe
+            && state.options.wipe_inward
+            && !state.options.wipe_inward_distance.is_non_positive()
+            && state.options.wipe_distance / geometry.scale.factor()
+                > super::path::SOURCE_EPSILON_MM / geometry.scale.factor())
+        .then(WipeInwardSupport::default);
+        if !is_infill_first
+            && unsupported_loops_only
+            && let Some(support) = wipe_support.as_mut()
+        {
+            for entity in &region.perimeters {
+                perimeter::preseed_wipe_support(entity, support);
+            }
+        }
         for entity in &region.perimeters {
             perimeter::emit_perimeter(
                 output,
-                (entity, !is_infill_first, unsupported_loops_only),
+                (
+                    entity,
+                    !is_infill_first,
+                    unsupported_loops_only,
+                    wipe_support.as_mut(),
+                ),
                 geometry,
                 state,
             )?;

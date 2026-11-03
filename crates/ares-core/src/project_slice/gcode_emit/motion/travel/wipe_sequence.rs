@@ -7,7 +7,7 @@ use super::super::format::{axis as format_axis, extrusion as format_extrusion};
 use super::super::state::EmitState;
 use super::effective_retraction_length;
 use super::retract_core::firmware_retract;
-use super::wipe_path::{WipePath, wipe_moves};
+use super::wipe_path::wipe_moves;
 
 /// Upstream's `retract()` executes its wipe + `reset_e` phases whenever
 /// invoked — even when the E delta is zero — provided an eligible wipe
@@ -89,11 +89,8 @@ pub(super) fn retract_and_wipe_impl(
     } else if !suppressed_tail {
         state.extruder.restart_extra = restart_extra;
     }
-    let WipePath {
-        segments,
-        retraction_distance,
-        distribution_distance,
-    } = wipe_moves(state);
+    let wipe = wipe_moves(state);
+    let retraction_distance = wipe.retraction_distance;
     let requested_before = retraction_length * state.options.retract_before_wipe;
     let remaining = retraction_length - requested_before;
     let wipe_speed = if state.options.role_based_wipe_speed {
@@ -166,67 +163,7 @@ pub(super) fn retract_and_wipe_impl(
         }
     }
     if has_wipe {
-        let wipe_start = if state.tags.is_bbl() {
-            "; WIPE_START\n"
-        } else {
-            ";WIPE_START\n"
-        };
-        output.extend_from_slice(wipe_start.as_bytes());
-        let speed_line = if cooling_marker {
-            format!("G1 F{};_WIPE\n", format_axis(wipe_speed * 60.0))
-        } else {
-            format!("G1 F{}\n", format_axis(wipe_speed * 60.0))
-        };
-        output.extend_from_slice(speed_line.as_bytes());
-        state.current_feedrate = wipe_speed * 60.0;
-        for (point, segment_length) in segments {
-            let retraction = during * (segment_length / distribution_distance);
-            // Orca's `extrude_to_xy` omits the E word when the wipe carries
-            // no retraction (`retract_before_wipe` = 100% leaves nothing to
-            // distribute during the wipe).
-            let line = if retraction > f64::EPSILON {
-                let retract = extrusion::coordinate(state, -retraction);
-                let comment = gcode_comment(state, " ; wipe and retract");
-                format!(
-                    "G1 X{} Y{} E{}{comment}\n",
-                    format_axis(point.x),
-                    format_axis(point.y),
-                    format_extrusion(retract)
-                )
-            } else {
-                let comment = gcode_comment(state, " ; wipe and retract");
-                format!(
-                    "G1 X{} Y{}{comment}\n",
-                    format_axis(point.x),
-                    format_axis(point.y)
-                )
-            };
-            output.extend_from_slice(line.as_bytes());
-            state.x = point.x;
-            state.y = point.y;
-            // Recover the scaled-int position the mm value came from
-            // (upstream wipe moves hold ints; mm→int round-trips are
-            // exact under round-to-nearest).
-            // `(point - m_origin) + extruder_offset` order
-            // (`GCode.cpp:8138-8144`).
-            state.last_scaled_position = (
-                ((point.x - state.origin.0 + state.extruder_offset.0) / state.scale_factor).round()
-                    as i64,
-                ((point.y - state.origin.1 + state.extruder_offset.1) / state.scale_factor).round()
-                    as i64,
-            );
-            state.last_position_defined = true;
-            state.wipe_start = Some(point);
-        }
-        let wipe_end = if state.tags.is_bbl() {
-            "; WIPE_END\n"
-        } else {
-            ";WIPE_END\n"
-        };
-        output.extend_from_slice(wipe_end.as_bytes());
-        // `Wipe::wipe` resets the stored path so a subsequent retract
-        // does not re-wipe the same path (`GCode.cpp:497`).
-        state.wipe_path.clear();
+        super::wipe_execute::emit(output, state, wipe, (during, wipe_speed, cooling_marker));
         // Upstream always calls the final `retract()` after the wipe —
         // it tops the extruder off to the full length whenever the
         // wipe carried less than the remaining distance

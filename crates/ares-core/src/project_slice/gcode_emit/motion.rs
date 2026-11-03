@@ -214,7 +214,7 @@ fn emit_variable_width_entity(
                 },
                 geometry.scale,
             );
-            loop_paths::emit(output, (&loop_, None), geometry, state, &[])
+            loop_paths::emit(output, (&loop_, None, None), geometry, state, &[])
         }
     }
 }

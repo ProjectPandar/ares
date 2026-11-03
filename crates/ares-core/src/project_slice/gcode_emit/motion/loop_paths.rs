@@ -1,7 +1,8 @@
 pub(super) mod adaptive_pa;
 mod inward;
 mod small_perimeter;
-use inward::{append_inward_move, ccw_angle, loop_is_counter_clockwise, path_length};
+pub(super) mod wipe_inward;
+use inward::{ccw_angle, loop_is_counter_clockwise, path_length};
 
 use super::{EmitState, LayerGeometry, format::axis as format_axis};
 use crate::project_slice::perimeters::classic::{
@@ -11,9 +12,10 @@ use crate::project_slice::perimeters::classic::{
 
 pub(super) fn emit(
     output: &mut Vec<u8>,
-    (loop_, unsupported_distance): (
+    (loop_, unsupported_distance, wipe_support): (
         &crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoop,
         Option<f32>,
+        Option<&wipe_inward::WipeInwardSupport>,
     ),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
@@ -58,10 +60,14 @@ pub(super) fn emit(
         state.adaptive_pa_flow = None;
         state.adaptive_pa_emitted = false;
         state.wipe_path = wipe_points(&scarf.wipe_paths, geometry);
-        append_inward_move(
+        wipe_inward::finish_loop(
             output,
-            &scarf.wipe_paths,
-            (loop_role, scarf.wipe_paths.len(), 0.0),
+            (
+                loop_,
+                &scarf.wipe_paths,
+                (loop_role, scarf.wipe_paths.len(), 0.0),
+                wipe_support,
+            ),
             geometry,
             state,
         );
@@ -131,10 +137,14 @@ pub(super) fn emit(
     state.adaptive_pa_flow = None;
     state.adaptive_pa_emitted = false;
     state.wipe_path = emitted_loop_path;
-    append_inward_move(
+    wipe_inward::finish_loop(
         output,
-        paths,
-        (loop_role, path_count, remaining_clip),
+        (
+            loop_,
+            paths,
+            (loop_role, path_count, remaining_clip),
+            wipe_support,
+        ),
         geometry,
         state,
     );
