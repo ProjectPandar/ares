@@ -1,5 +1,7 @@
 #[path = "nullable_vectors/defaults_nil.rs"]
 mod defaults_nil;
+#[path = "nullable_vectors/inner_wall_speed.rs"]
+mod inner_wall_speed;
 #[path = "nullable_vectors/input.rs"]
 mod input;
 #[path = "nullable_vectors/mapped_nozzle.rs"]
