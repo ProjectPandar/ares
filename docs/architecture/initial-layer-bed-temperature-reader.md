@@ -1,7 +1,7 @@
 # ARD: initial-layer bed-temperature reader for machine start
 
 This document defines the source-backed initial-layer bed-temperature reader
-boundary. Export compatibility snapshots and complete-output parity are
+boundary. The export compatibility snapshot and complete-output parity are
 separate concerns.
 
 ## Owning upstream boundary
@@ -69,6 +69,15 @@ fallback. Do not change indexed vector placeholders or generic parser syntax.
 
 ## Deferred and excluded
 
+The carried `first_layer_tools = ordering.layers.first().extruders` is literal
+only to the **non-sequential** producer in `Print.cpp:3800–3808`, which uses
+`layer_tools().front().extruders`. It is not a rewrite of the sequential
+producer. Deferred: `Print.cpp:3676–3691` sequential-print collection, which
+unions the first layer of each object's ToolOrdering and sorts/deduplicates the
+result. Also deferred: `expand_mixed_filaments`, the mixed-filament expansion
+of that used-filament set, tied to the separate `filament_is_mixed` slice.
+The two witnesses exercise the non-sequential, non-mixed producer only.
+
 `filament_is_mixed` is a separate small coBools resize/echo slice:
 `PrintConfig.cpp:3545` declaration and11481 resize. Its observed `0,0` versus
 `0` first difference is preserved, explicitly deferred, and not implemented
@@ -83,8 +92,8 @@ work. Existing custom-command scanning behavior is unchanged. Scoped reader pari
 ## Failure inventory and public acceptance contract
 
 The two authored inputs change only project settings of
-`chamber-used-extruder/chamber-t1-equal.3mf`; neither is a Native export.
-Input bytes and complete vector values are preserved.
+`chamber-used-extruder/chamber-t1-equal.3mf`; neither is a Native export. The
+input bytes and complete vector values are preserved.
 
 | Input | SHA256 | Recorded first difference |
 |---|---|---|
@@ -99,10 +108,13 @@ any test whose selected tool/usage/formula premises fail.
 
 Public E2E acceptance requires Native first plus exact replay under the
 existing generator-only normalization, successful public API, actual CLI
-exit0 and raw API=CLI. Unchanged strict whole-output comparisons retain exact
-first differences and raw bytes. Failed setup or Native premises do not
-establish reader parity. No Native-export-derived Ares inputs, tolerance or
-scalar/vector equivalence is permitted.
+exit0 and raw API=CLI. The labelled oracle compares executable start through
+the first M140/M190 and rendered uses of
+`bed_temperature_initial_layer_single`; it does not claim whole-output parity.
+Unchanged strict whole-output comparisons retain exact first differences and
+all raw bytes. Failed setup or Native premises do not establish reader parity. No
+Native-export-derived Ares inputs, tolerance or scalar/vector equivalence is
+permitted.
 
 Implementation changes only these readers and minimum context plumbing.
 Identical input bytes must retain the next strict first difference without

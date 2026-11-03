@@ -11,6 +11,8 @@ use super::super::{tool_ordering::ToolOrdering, value};
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct InitialFilaments {
     initial: usize,
+    initial_bed_temperature: i32,
+    first_layer_tools: Vec<usize>,
     non_support: usize,
     initial_hotend: i32,
     non_support_hotend: i32,
@@ -29,11 +31,23 @@ impl InitialFilaments {
         self.initial
     }
 
+    pub(in crate::project_slice::gcode_emit) fn initial_bed_temperature(&self) -> i32 {
+        self.initial_bed_temperature
+    }
+
+    pub(in crate::project_slice::gcode_emit) fn first_layer_tools(&self) -> &[usize] {
+        &self.first_layer_tools
+    }
+
     pub(in crate::project_slice::gcode_emit) fn non_support(&self) -> usize {
         self.non_support
     }
 
     pub(in crate::project_slice::gcode_emit) fn insert(&self, config: &mut value::Config) {
+        config.insert(
+            "bed_temperature_initial_layer_single",
+            value::Value::Integer(i64::from(self.initial_bed_temperature)),
+        );
         if let Some(used) = &self.used_extruders {
             config.insert("is_extruder_used", used.clone());
         }
@@ -145,8 +159,16 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
             filament_map.0.get(filament).map_or(0, |value| value.0 - 1)
         }
     };
+    let first_layer_tools = ordering
+        .layers
+        .first()
+        .map_or_else(Vec::new, |layer| layer.extruders.clone());
+    let initial_bed_temperature =
+        super::temperature::first_layer_bed_temperature(traversal, initial, &first_layer_tools);
     InitialFilaments {
         initial,
+        initial_bed_temperature,
+        first_layer_tools,
         non_support,
         initial_hotend: hotend(initial),
         non_support_hotend: hotend(non_support),

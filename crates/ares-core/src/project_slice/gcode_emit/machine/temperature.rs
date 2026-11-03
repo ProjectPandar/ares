@@ -5,7 +5,12 @@ use crate::{
 
 use super::super::temperature::append as append_nozzle_temperature;
 
-pub(super) fn first_layer_bed_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
+// GCode.cpp:3994-4003,5497-5513,5525-5530: preserve each reader's filament context.
+pub(super) fn first_layer_bed_temperature(
+    traversal: &PreparedPostClassicTraversal,
+    first_printing_filament: usize,
+    first_layer_tools: &[usize],
+) -> i32 {
     let settings = &traversal.resolved.views.full;
     use crate::ProjectBedType;
     let filament = &settings.filament.print;
@@ -33,8 +38,16 @@ pub(super) fn first_layer_bed_temperature(traversal: &PreparedPostClassicTravers
         .flat_map(|values| values.0.iter().map(|value| value.0))
         .collect::<Vec<_>>();
     match settings.printer.gcode.bed_temperature_formula {
-        crate::BedTemperatureFormula::FirstFilament => temps.first().copied().unwrap_or(0),
-        crate::BedTemperatureFormula::HighestTemp => temps.iter().copied().fold(0, i32::max),
+        crate::BedTemperatureFormula::FirstFilament => temps
+            .get(first_printing_filament)
+            .or_else(|| temps.first())
+            .copied()
+            .unwrap_or(0),
+        crate::BedTemperatureFormula::HighestTemp => first_layer_tools
+            .iter()
+            .filter_map(|&tool| temps.get(tool).or_else(|| temps.first()))
+            .copied()
+            .fold(0, i32::max),
     }
 }
 
@@ -46,13 +59,13 @@ pub(super) fn append_startup(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     machine_start_gcode: &str,
+    bed_temperature: i32,
 ) -> i32 {
     let flavor = traversal.resolved.views.full.printer.gcode.gcode_flavor;
     if flavor == GCodeFlavor::Klipper {
         return 0;
     }
 
-    let bed_temperature = first_layer_bed_temperature(traversal);
     if bed_temperature != 0 && !sets_temperature(machine_start_gcode, &["M140", "M190"], false) {
         output.extend_from_slice(
             format!(

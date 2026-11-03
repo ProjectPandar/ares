@@ -27,8 +27,10 @@ pub(in crate::project_slice::gcode_emit) fn initial_layer_nozzle_temperature(
 /// (`_print_first_layer_bed_temperature`, `GCode.cpp:3337`).
 pub(in crate::project_slice::gcode_emit) fn first_layer_bed_temperature(
     traversal: &PreparedPostClassicTraversal,
+    first_printing_filament: usize,
+    first_layer_tools: &[usize],
 ) -> i32 {
-    temperature::first_layer_bed_temperature(traversal)
+    temperature::first_layer_bed_temperature(traversal, first_printing_filament, first_layer_tools)
 }
 
 /// The first-line M73 placeholder consumed by the G-code processor
@@ -204,7 +206,12 @@ pub(super) fn append_start(
         }
     };
     state.start_gcode_filament = super::tool_transition::last_start_filament(&rendered);
-    let bed_cache = temperature::append_startup(output, traversal, &rendered);
+    let bed_cache = temperature::append_startup(
+        output,
+        traversal,
+        &rendered,
+        state.initial_filaments.initial_bed_temperature(),
+    );
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
     output.extend_from_slice(custom.as_bytes());
     temperature::append_chamber_startup(output, traversal, &rendered, state.extruders.ids());

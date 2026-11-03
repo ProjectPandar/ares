@@ -201,7 +201,11 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     // second layer already wrote it).
     let include_g10 = settings.printer.gcode.gcode_flavor == crate::GCodeFlavor::RepRapFirmware;
     let bed_set_by_gcode = machine_sets_temperature(&rendered, &["M140", "M190"], false);
-    let bed_temperature = super::super::machine::first_layer_bed_temperature(traversal);
+    let bed_temperature = super::super::machine::first_layer_bed_temperature(
+        traversal,
+        initial_extruder,
+        state.initial_filaments.first_layer_tools(),
+    );
     if bed_temperature != *bed_cache {
         // No `> 0` guard on the bed path: `set_bed_temperature` emits
         // M140 S0 when the cache holds a nonzero value (the nozzle path

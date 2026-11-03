@@ -349,29 +349,12 @@ fn insert_outer_wall_volumetric_speed(
     Ok(())
 }
 
-/// `bed_temperature_initial_layer[_single]` from the curr-bed-type
-/// first-layer key (`GCode.cpp:3020-3034`).
+/// Bed-type vector aliases (`GCode.cpp:3991-4003`). The scalar is installed
+/// from the export-initial filament context by `InitialFilaments::insert`.
 fn insert_bed_temperature_placeholders(config: &mut value::Config) {
     if let Some(value) = bed_type_first_layer_temperature(config) {
         config.insert("bed_temperature_initial_layer", value.clone());
         config.insert("first_layer_bed_temperature", value.clone());
-        let single = match config.get("bed_temperature_formula").map(Value::as_string) {
-            Some(formula) if formula == "by_first_filament" => {
-                value.index(0).and_then(|item| item.as_number())
-            }
-            _ => Some(
-                value
-                    .iter_list()
-                    .filter_map(|item| item.as_number())
-                    .fold(0.0, f64::max),
-            ),
-        };
-        if let Some(single) = single {
-            config.insert(
-                "bed_temperature_initial_layer_single",
-                Value::number(single),
-            );
-        }
     }
     if let Some(key) = bed_type_temperature_key(config)
         && let Some(value) = config.get(key).cloned()
