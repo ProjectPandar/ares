@@ -22,11 +22,11 @@ where
         .map_err(|error| error.to_string())
 }
 
-/// `std::istringstream >> double` semantics: parse the longest valid leading
-/// numeric token and ignore the rest (`"0.4;0.6"` decodes to `0.4`, matching
-/// how upstream presets carry `;`-joined values through `deserialize`).
-/// Returns `(value, extracted)` — since C++11 `[facet.num.get.virtuals]`
-/// Stage 3 sets the target to `0` when conversion fails.
+/// `Config.hpp:844-858,932-958` uses `std::istringstream >> double`:
+/// a complete numeric prefix leaves suffix text alone, but an accumulated
+/// exponent without digits fails instead of falling back to the mantissa.
+/// Returns `(value, extracted)` — `[facet.num.get.virtuals]` Stages 2/3
+/// commit the field and set the target to `0` on malformed conversion.
 fn cxx_float_prefix(value: &str) -> (f64, bool) {
     let value = value.trim();
     let bytes = value.as_bytes();
@@ -55,9 +55,10 @@ fn cxx_float_prefix(value: &str) -> (f64, bool) {
         while cursor < bytes.len() && bytes[cursor].is_ascii_digit() {
             cursor += 1;
         }
-        if cursor > exponent_start {
-            end = cursor;
+        if cursor == exponent_start {
+            return (0.0, false);
         }
+        end = cursor;
     }
     if !seen_digit {
         return (0.0, false);
