@@ -15,6 +15,7 @@ mod mirror;
 mod plate_list;
 mod plate_lock;
 mod scale;
+mod scale_to_fit;
 mod selection;
 mod session;
 mod slice;

@@ -8,6 +8,9 @@ use ares_core::{PlaterSession, ScaleEdit};
 
 use super::{SINGLE, assert_plate_like_native, load};
 
+#[path = "plater_scale_to_fit.rs"]
+mod scale_to_fit;
+
 /// One 10 mm cube object with two instances, at (90, 110, 5) and (130, 110, 5)
 /// (`tests/parity/plater-scale/generate.mjs`).
 const SIBLINGS: &str = "tests/parity/plater-scale/two-instances.3mf";
