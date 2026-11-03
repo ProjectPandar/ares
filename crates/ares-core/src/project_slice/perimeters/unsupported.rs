@@ -2,7 +2,7 @@
 
 use crate::geometry::{Line, LineDistanceTree};
 
-use super::super::{
+use super::classic::{
     entity_collections::{ExtrusionEntity, ExtrusionEntityCollection},
     materialize::ExtrusionRole,
 };

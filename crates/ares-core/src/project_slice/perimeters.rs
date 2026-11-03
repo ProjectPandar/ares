@@ -18,6 +18,7 @@ pub(super) mod flow;
 mod groups;
 pub(super) mod preflight;
 pub(super) mod types;
+pub(super) mod unsupported;
 
 pub(super) struct PreparedPostPerimeterInputs {
     pub(super) project: Project,

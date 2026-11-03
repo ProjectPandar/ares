@@ -4,7 +4,6 @@
 pub(in crate::project_slice) mod reorient;
 
 mod types;
-mod unsupported;
 
 pub(in crate::project_slice) use types::{
     AppendedPerimeterCollections, InactiveOuterBrimReordering, InactivePostCollectionBranches,
@@ -176,7 +175,10 @@ fn transform_surface(
         narrow_wall_hole_island,
     );
     if unsupported_wall_last {
-        unsupported::apply(&mut source.collection, touch_distance);
+        crate::project_slice::perimeters::unsupported::apply(
+            &mut source.collection,
+            touch_distance,
+        );
     }
     PreparedPerimeterAppendSurface {
         source_index: source.source_index,
