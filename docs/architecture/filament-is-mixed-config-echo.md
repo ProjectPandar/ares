@@ -44,6 +44,23 @@ CONFIG_BLOCK. `Config.hpp:1994–2003,2051–2059` serializes complete bool vect
 as comma-separated `0`/`1`. A two-slot default is `0,0`, even if only one slot
 actually prints.
 
+### Generic coStrings serialization
+
+`Config.hpp:1207–1209`, `ConfigOptionStrings::serialize`, delegates to
+`Config.cpp:99–147`, `escape_strings_cstyle`. Elements are separated by `;`.
+An empty element is unquoted in a multi-element vector, but a lone empty string
+is deliberately quoted to distinguish `[""]` from `[]`. Thus `[""]` is `""`,
+while `["",""]` is `;`. Existing quoting of spaces, tabs, separators, backslash,
+quotes and newlines remains type-owned.
+
+The generic Rust implementation already matches this rule:
+`options/config_export/value/strings.rs:19–44`, `serialize_string_vector` and
+`quote_string_vector_element`, quotes a lone empty only when count==1;
+`escape_string_vector_element` is also used by the raw coStrings renderer in
+`project/raw_settings.rs`. The observed `;` versus `""` is therefore a
+cardinality mismatch, not evidence of a generic serializer defect. No
+key-specific empty-string escaping or serializer change is warranted.
+
 ## Rust destination and scaffold replacement
 
 The seven declarations already exist in
