@@ -66,7 +66,7 @@ impl Planned {
         }
         Ok(Data {
             type1: false,
-            rib_offset: [0.0; 2],
+            rib_offset: generator.rib_offset,
             priming,
             changes,
             final_purge,

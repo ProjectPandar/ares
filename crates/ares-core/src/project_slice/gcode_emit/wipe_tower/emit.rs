@@ -27,13 +27,27 @@ pub(super) fn append(
     } = input;
     let tower = state.wipe_tower.as_ref().expect("active tower integration");
     let (position, angle) = (tower.position, tower.angle);
-    let (translation, rotation) = if result.priming {
-        ([0.0; 2], 0.0)
-    } else {
-        (position, angle)
+    let rib_offset = tower.data.rib_offset;
+    // `WipeTowerIntegration::transform_wt2_pt` (`GCode.cpp:1003-1007`): the tower-local rib
+    // offset rotates with the tower.
+    let transform_wt2_pt = |point: [f32; 2]| {
+        postprocess::transform(
+            [point[0] + rib_offset[0], point[1] + rib_offset[1]],
+            position,
+            angle,
+        )
     };
-    let start = postprocess::transform(result.start, translation, rotation);
-    let end = postprocess::transform(result.end, translation, rotation);
+    // Priming lines are absolute bed moves (`GCode.cpp:1673-1681`).
+    let (start, end, translation, rotation) = if result.priming {
+        (result.start, result.end, [0.0; 2], 0.0)
+    } else {
+        (
+            transform_wt2_pt(result.start),
+            transform_wt2_pt(result.end),
+            postprocess::transform(rib_offset, position, angle),
+            angle,
+        )
+    };
     let mut code = postprocess::moves(result, translation, rotation, &tower.offsets, tower.semm);
     motion::tower::unlift(output, state);
     let current_z = state.writer_z.unwrap_or(0.0);
@@ -182,7 +196,7 @@ pub(super) fn append(
         .wipe_path
         .iter()
         .filter(|_| !will_go_down)
-        .map(|&point| postprocess::transform(point, position, angle));
+        .map(|&point| transform_wt2_pt(point));
     motion::tower::finish(state, geometry.scale, end, wipe);
     if will_go_down {
         motion::tower::change_z(

@@ -1,10 +1,11 @@
 //! `WipeTower2::generate` and the five `save_on_last_wipe` planning simulations.
 use super::{
+    estimate::{EPSILON, align_ceil, limit_depth_by_height},
     generator::Generator,
     plan::{length_to_volume, wipe_depth},
     result::ToolChangeResult,
 };
-use crate::geometry::ClipperError;
+use crate::{ProcessWipeTowerWallType, geometry::ClipperError};
 
 impl Generator<'_> {
     pub(super) fn generate(&mut self) -> Result<Vec<Vec<ToolChangeResult>>, ClipperError> {
@@ -18,11 +19,16 @@ impl Generator<'_> {
             self.plan.plan_tower();
             self.current_height = 0.0;
         }
-        self.rib_length = self
-            .rib_length
-            .max((self.plan.depth * self.plan.depth + self.plan.width * self.plan.width).sqrt());
+        if self.settings.process.print.wipe_tower_wall_type == ProcessWipeTowerWallType::Rib {
+            self.square_rib_tower();
+        }
+        // `WipeTower2.cpp:2509-2514`: a negative extra length cannot shrink the ribs below the
+        // diagonal.
+        let diagonal =
+            (self.plan.depth * self.plan.depth + self.plan.width * self.plan.width).sqrt();
+        self.rib_length = self.rib_length.max(diagonal);
         self.rib_length += self.settings.process.print.wipe_tower_extra_rib_length.0 as f32;
-        self.rib_length = self.rib_length.max(0.0);
+        self.rib_length = diagonal.max(self.rib_length);
         self.rib_width = self
             .rib_width
             .min(self.plan.depth.min(self.plan.width) / 2.0);
@@ -62,6 +68,28 @@ impl Generator<'_> {
             }
         }
         Ok(result)
+    }
+
+    /// `WipeTower2.cpp:2485-2507`: a rib tower prints square, keeping the planned purge area,
+    /// and grows its ribs when it is shallower than the height-based minimum.
+    fn square_rib_tower(&mut self) {
+        let max_depth = self
+            .plan
+            .layers
+            .iter()
+            .fold(0.0_f32, |max_depth, layer| max_depth.max(layer.depth));
+        if f64::from(max_depth) > EPSILON {
+            self.plan.width = align_ceil(
+                (max_depth * self.plan.width).sqrt(),
+                self.plan.perimeter_width,
+            );
+            self.plan.replan_toolchanges(&self.filaments);
+            self.plan.plan_tower();
+        }
+        let min_depth = limit_depth_by_height(self.plan.height);
+        if f64::from(self.plan.depth) + EPSILON < f64::from(min_depth) {
+            self.rib_length = self.rib_length.max(min_depth * 2.0_f32.sqrt());
+        }
     }
 
     fn save_on_last_wipe(&mut self) -> Result<(), ClipperError> {

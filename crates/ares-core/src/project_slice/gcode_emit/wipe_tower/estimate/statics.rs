@@ -90,7 +90,7 @@ fn nozzle_change_perimeter_width(nozzle_diameter: f32) -> f32 {
 }
 
 /// `align_ceil`.
-fn align_ceil(value: f32, base: f32) -> f32 {
+pub(crate) fn align_ceil(value: f32, base: f32) -> f32 {
     (value / base).ceil() * base
 }
 

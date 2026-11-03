@@ -43,7 +43,7 @@ impl Data {
         if let Some(first) = brim.into_iter().next() {
             bottom = first;
         }
-        // Fresh Type2 generation leaves WipeTowerData::rib_offset at zero.
+        // The rib-offset translation of the bottom (`Print.cpp:7236`) is not ported.
         Ok(bottom)
     }
 

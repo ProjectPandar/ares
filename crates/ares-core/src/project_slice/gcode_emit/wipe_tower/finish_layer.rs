@@ -92,12 +92,9 @@ impl Generator<'_> {
                 },
             )?,
             ProcessWipeTowerWallType::Rib | ProcessWipeTowerWallType::Rectangle => {
-                let wall = shape.wall_polygon(
-                    wall_bounds,
-                    self.settings.process.print.wipe_tower_wall_type
-                        == ProcessWipeTowerWallType::Rib,
-                    self.scale,
-                )?;
+                let rib = self.settings.process.print.wipe_tower_wall_type
+                    == ProcessWipeTowerWallType::Rib;
+                let wall = shape.wall_polygon(wall_bounds, rib, self.scale)?;
                 let filament = &self.filaments[self.current_tool];
                 emit_wall(
                     &mut writer,
@@ -106,6 +103,17 @@ impl Generator<'_> {
                     (filament.retract_length, filament.retract_speed * 60.0),
                     self.scale,
                 );
+                // `WipeTower2.cpp:2679-2684`: the shift that puts the first-layer rib wall's
+                // minimum corner at the tower position, from the un-gapped outline.
+                if rib && self.is_first_layer() {
+                    let bounds = crate::geometry::BoundingBox::from_polygon(&wall)
+                        .expect("the rib wall has points");
+                    let factor = self.scale.factor() as f32;
+                    self.rib_offset = [
+                        -(bounds.min().x() as f32 * factor),
+                        -(bounds.min().y() as f32 * factor),
+                    ];
+                }
                 wall
             }
         };

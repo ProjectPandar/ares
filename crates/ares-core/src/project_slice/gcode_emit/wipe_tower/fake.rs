@@ -25,9 +25,13 @@ impl Data {
         let height_step = print.initial_layer_print_height.0 as f32;
         let angle = std::f32::consts::PI * print.wipe_tower_rotation_angle.0 as f32 / 180.0;
         let (sin, cos) = f64::from(angle).sin_cos();
+        // `Print.cpp:5610-5612`: the fake tower sits at the position plus the rib offset rotated
+        // into the bed frame.
+        let (sin_f, cos_f) = angle.sin_cos();
+        let [rib_x, rib_y] = self.rib_offset;
         let shift = [
-            scale_value(position[0] as f32),
-            scale_value(position[1] as f32),
+            scale_value(position[0] as f32 + (cos_f * rib_x - sin_f * rib_y)),
+            scale_value(position[1] as f32 + (sin_f * rib_x + cos_f * rib_y)),
         ];
         let place = |p: Point| {
             Point::new(

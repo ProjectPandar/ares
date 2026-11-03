@@ -82,6 +82,46 @@ impl Plan {
         if old_tool == new_tool {
             return;
         }
+        let first_layer_plan = self.first_layer == Some(layer_index);
+        let change = self.set_toolchange(
+            (old_tool, new_tool),
+            (height, volume),
+            first_layer_plan,
+            filaments,
+        );
+        self.layers[layer_index].changes.push(change);
+    }
+
+    /// The rib-square replan of every toolchange at its layer height, with the reduced wipe
+    /// volume (`WipeTower2.cpp:2495-2499`).
+    pub(super) fn replan_toolchanges(&mut self, filaments: &[Filament]) {
+        for index in 0..self.layers.len() {
+            let layer = &self.layers[index];
+            let first_layer_plan = self.first_layer == Some(index);
+            let changes = layer
+                .changes
+                .iter()
+                .map(|change| {
+                    self.set_toolchange(
+                        (change.old_tool, change.new_tool),
+                        (layer.height, change.wipe_volume),
+                        first_layer_plan,
+                        filaments,
+                    )
+                })
+                .collect();
+            self.layers[index].changes = changes;
+        }
+    }
+
+    /// `WipeTower2::set_toolchange` (`WipeTower2.cpp:2275`): the depth one toolchange reserves.
+    pub(super) fn set_toolchange(
+        &self,
+        (old_tool, new_tool): (usize, usize),
+        (height, volume): (f32, f32),
+        first_layer_plan: bool,
+        filaments: &[Filament],
+    ) -> ToolChange {
         let filament = &filaments[old_tool];
         let width = self.width - 3.0 * self.perimeter_width;
         let length = volume_to_length(
@@ -102,7 +142,7 @@ impl Plan {
             self.perimeter_width * self.extra_flow,
             height,
         );
-        let spacing = if self.first_layer == Some(layer_index) {
+        let spacing = if first_layer_plan {
             self.extra_flow
         } else {
             self.extra_spacing
@@ -114,7 +154,7 @@ impl Plan {
             spacing,
             width,
         );
-        self.layers[layer_index].changes.push(ToolChange {
+        ToolChange {
             old_tool,
             new_tool,
             required_depth: ramming_depth + wiping_depth,
@@ -122,7 +162,7 @@ impl Plan {
             first_wipe_line,
             wipe_volume: volume,
             wipe_volume_total: volume,
-        });
+        }
     }
 
     pub(super) fn plan_tower(&mut self) {

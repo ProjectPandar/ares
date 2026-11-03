@@ -36,6 +36,7 @@ pub(super) struct Generator<'a> {
     pub(super) used_until_layer: Vec<(f32, Vec<f32>)>,
     pub(super) rib_width: f32,
     pub(super) rib_length: f32,
+    pub(super) rib_offset: [f32; 2],
     pub(super) brim_width: f32,
     pub(super) first_layer_bounds: Option<BoundingBox>,
 }
@@ -99,6 +100,7 @@ impl<'a> Generator<'a> {
             used_until_layer: Vec::new(),
             rib_width: settings.process.print.wipe_tower_rib_width.0 as f32,
             rib_length: 0.0,
+            rib_offset: [0.0; 2],
             brim_width: 0.0,
             first_layer_bounds: None,
         }

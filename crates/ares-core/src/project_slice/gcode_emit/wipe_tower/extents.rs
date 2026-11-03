@@ -178,6 +178,13 @@ impl Data {
         let [x, y] = super::plate_position(print.traversal);
         let origin = print.traversal.project.plate_origin();
         let position = [x + origin.0, y + origin.1];
+        // `PrintExtents.cpp:155-158`: the composed transform translates by
+        // `position + R * rib_offset`.
+        let [rib_x, rib_y] = self.rib_offset.map(f64::from);
+        let translation = [
+            position[0] + (cos * rib_x - sin * rib_y),
+            position[1] + (sin * rib_x + cos * rib_y),
+        ];
         for result in self
             .changes
             .iter()
@@ -190,8 +197,8 @@ impl Data {
             occupied.tower(result, |[x, y]| {
                 let (x, y) = (f64::from(x), f64::from(y));
                 [
-                    cos * x - sin * y + position[0],
-                    sin * x + cos * y + position[1],
+                    cos * x - sin * y + translation[0],
+                    sin * x + cos * y + translation[1],
                 ]
             });
         }
