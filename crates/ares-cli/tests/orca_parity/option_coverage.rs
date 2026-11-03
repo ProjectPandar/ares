@@ -7,6 +7,8 @@ mod arachne_unsupported_wall_last;
 mod filament_is_mixed_echo;
 #[path = "option_coverage/filament_volume_map.rs"]
 mod filament_volume_map;
+#[path = "option_coverage/filament_volume_map_contrasts.rs"]
+mod filament_volume_map_contrasts;
 #[path = "option_coverage/initial_bed_temperature.rs"]
 mod initial_bed_temperature;
 
