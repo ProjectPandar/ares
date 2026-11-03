@@ -40,3 +40,15 @@ In `plater_plate_delete_all.rs`, the session-edit Native slice of the GUI export
 4. **Empty plate.** "Delete All" on an empty added plate changes nothing.
 
 Web E2E `platePlateDeleteAll.spec.ts`: right-click plate 2 of `two-plates.3mf`, choose "Delete All", and plate 1 slices like Native.
+
+## GREEN
+- **`PlaterSession::delete_plate_objects`** (`plater/delete_object.rs`).
+  - It selects every instance the current plate holds or overlaps, through the plate list's `holds_or_reaches` (`contain_instance || intersect_instance`) with the instance's convex-hull box.
+  - It walks the touched objects from the highest index down: `delete_object` when all their instances are selected, else `delete_instance` for each selected instance, highest first.
+  - An empty selection changes nothing.
+- **Web.**
+  - wasm `deletePlateObjects`.
+  - `PlateMenu`, "Plate menu" with "Delete All", opens on a plate row's right click. It is enabled while the model has objects and not slicing.
+  - `deletePlateObjects(index)` makes the plate current, deletes, and clears the selection.
+  - E2E `platePlateDeleteAll.spec.ts`.
+- **Result:** the four cases pass; the E2E slices like Native on both legs.

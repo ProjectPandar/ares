@@ -27,7 +27,29 @@ impl PlaterSession {
     /// v2.5.0-beta `345efec64`; see `docs/architecture/web-plater-plate-delete-all.md`) on the
     /// current plate.
     pub fn delete_plate_objects(&mut self) -> Result<(), SliceError> {
-        todo!()
+        // `get_volume_idxs_from_plate` (`Selection.cpp:2256`): every instance the plate contains
+        // or overlaps, whole.
+        let mut selected = std::collections::BTreeMap::<usize, Vec<usize>>::new();
+        for key in super::session::keys(&self.project) {
+            let bbox = super::selection::instance_bounding_box(&self.project, key);
+            if self.plates.holds_or_reaches(self.current_plate, key, &bbox) {
+                selected.entry(key.0).or_default().push(key.1);
+            }
+        }
+        // `erase()` (`:1893-1996`): an object with every instance selected goes whole, else its
+        // selected instances go; `delete_from_model_and_list` walks the items from the highest
+        // object and instance index down (`GUI_ObjectList.hpp:86-91`, `.cpp:4490-4558`).
+        for (object, instances) in selected.into_iter().rev() {
+            if instances.len() == self.project.objects()[object].instances().len() {
+                self.delete_object(object)?;
+            } else {
+                instances
+                    .into_iter()
+                    .rev()
+                    .try_for_each(|instance| self.delete_instance(object, instance))?;
+            }
+        }
+        Ok(())
     }
 
     /// The Edit menu's "Delete All" (`Plater::priv::delete_all_objects_from_model`,

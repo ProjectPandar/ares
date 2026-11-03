@@ -96,6 +96,8 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.deleteInstance(edit.object, edit.instance);
     case "deleteAllObjects":
       return session.deleteAllObjects();
+    case "deletePlateObjects":
+      return session.deletePlateObjects();
     case "setNumberOfCopies":
       return session.setNumberOfCopies(edit.object, edit.num);
     case "arrange":

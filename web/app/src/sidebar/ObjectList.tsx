@@ -4,6 +4,7 @@ import { cmdDown, isShortcut } from "../shell/keys";
 import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
 import { CopiesDialog } from "./CopiesDialog";
 import { instanceEdits, ObjectMenu } from "./ObjectMenu";
+import { PlateMenu } from "./PlateMenu";
 import { selectInstance, selectObject } from "../state/actions";
 import { arrange } from "../state/arrange";
 import { addPlate, changeInstances, deleteInstance, deleteObject, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
@@ -93,12 +94,18 @@ function PlateNodes({ scene, object }: { scene: Scene; object: (object: SceneObj
   const arranging = useApp((state) => state.arranging);
   const arrangeable = useApp((state) => state.arrange !== null);
   const outside = scene.objects.filter((item) => !scene.plates.some((plate) => onPlate(item, plate)));
+  const [plateMenu, setPlateMenu] = useState<{ plate: number; at: [number, number] } | null>(null);
   return (
     <>
       {scene.plates.map((plate, index) => (
         <Fragment key={plate.id}>
           <div role="treeitem" aria-selected={index === current} className={`object-row plate-row${index === current ? " selected" : ""}`}
-            onClick={() => void selectPlate(index)}>
+            onClick={() => void selectPlate(index)}
+            onContextMenu={(event) => {
+              // ObjectList shows the plate menu on a plate item's right click (GUI_ObjectList.cpp:1699).
+              event.preventDefault();
+              setPlateMenu({ plate: index, at: [event.clientX, event.clientY] });
+            }}>
             <span className="object-name">Plate {plate.id}</span>
             {/* PartPlate arrange icon (plate_arrange): makes the plate current and arranges it. */}
             {arrangeable && (
@@ -128,6 +135,7 @@ function PlateNodes({ scene, object }: { scene: Scene; object: (object: SceneObj
           {scene.objects.filter((item) => onPlate(item, plate)).map((item) => object(item, true))}
         </Fragment>
       ))}
+      {plateMenu && <PlateMenu plate={plateMenu.plate} position={plateMenu.at} onClose={() => setPlateMenu(null)} />}
       {outside.length > 0 && (
         <>
           <div role="treeitem" aria-selected={false} className="object-row plate-row">

@@ -132,6 +132,15 @@ export async function deleteObject(object: number) {
 }
 
 /** The Edit menu's "Delete All" (Plater::priv::delete_all_objects_from_model, Plater.cpp:10793-10822); the selection clears. */
+/** The plate menu's "Delete All" (Selection::remove_curr_plate, Selection.cpp:507-525) on plate `index`, made current first; the selection clears. */
+export async function deletePlateObjects(index: number) {
+  await selectPlate(index);
+  const { plater, currentPlate } = useApp.getState();
+  const layout = await plater!.deletePlateObjects();
+  useApp.setState({ selectedObject: null, selectedInstance: null });
+  applyLayout(layout, currentPlate);
+}
+
 export async function deleteAllObjects() {
   const { plater, currentPlate } = useApp.getState();
   const layout = await plater!.deleteAllObjects();
