@@ -16,7 +16,7 @@ pub(super) fn is_compatible(
         && a.wall_loops == b.wall_loops
         && a.wall_sequence == b.wall_sequence
         && a.is_infill_first == b.is_infill_first
-        && approx(a.inner_wall_speed.0, b.inner_wall_speed.0)
+        && a.inner_wall_speed.get_at(slot) == b.inner_wall_speed.get_at(slot)
         && a.outer_wall_speed.get_at(slot) == b.outer_wall_speed.get_at(slot)
         && float_or_percent_eq(a.small_perimeter_speed, b.small_perimeter_speed)
         && a.gap_infill_speed == b.gap_infill_speed

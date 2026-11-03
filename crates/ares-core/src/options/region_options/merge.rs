@@ -125,6 +125,15 @@ fn apply_overrides(
     }
     region_option_fields!(apply_fields);
 
+    if let Some(value) = &source.inner_wall_speed
+        && !options.inner_wall_speed.source_equals(value)
+    {
+        apply_nullable_vector(
+            &mut options.inner_wall_speed.0,
+            &value.0,
+            process_variant_indices,
+        );
+    }
     if let Some(value) = &source.outer_wall_speed
         && !options.outer_wall_speed.source_equals(value)
     {
@@ -208,7 +217,8 @@ macro_rules! apply_field {
             &mut $mask.inner_wall_filament_id,
         );
     };
-    // These three source-owned vectors use set_variant_override below, not replacement.
+    // These source-owned vectors use set_variant_override below, not replacement.
+    ($options:ident, $source:ident, $mask:ident, inner_wall_speed) => {};
     ($options:ident, $source:ident, $mask:ident, outer_wall_speed) => {};
     ($options:ident, $source:ident, $mask:ident, enable_overhang_speed) => {};
     ($options:ident, $source:ident, $mask:ident, slowdown_for_curled_perimeters) => {};

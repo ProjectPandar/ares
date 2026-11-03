@@ -52,7 +52,7 @@ pub(super) const MIDDLE_INDEPENDENT_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("inner_wall_flow_ratio", Float, "1"; true, false, "1"),
     definition!("inner_wall_jerk", Float, "9"; true, false, "9"),
     definition!("inner_wall_line_width", FloatOrPercent, "0"; true, false, "0"),
-    definition!("inner_wall_speed", Float, "60"; true, false, "60"),
+    definition!("inner_wall_speed", FloatsNullable, "60"; true, false, "60"),
     definition!("input_shaping_damp_x", Float, "0.1"; true, false, "0.1"),
     definition!("input_shaping_damp_y", Float, "0.1"; true, false, "0.1"),
     definition!("input_shaping_emit", Bool, "false"; true, false, "0"),

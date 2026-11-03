@@ -79,7 +79,7 @@ macro_rules! region_option_fields {
             outer_wall_filament_id => "outer_wall_filament_id": OrcaInt = OrcaInt(0),
             inner_wall_filament_id => "inner_wall_filament_id": OrcaInt = OrcaInt(0),
             inner_wall_line_width => "inner_wall_line_width": FloatOrPercent = FloatOrPercent::Float(0.0),
-            inner_wall_speed => "inner_wall_speed": OrcaFloat = OrcaFloat(60.0),
+            inner_wall_speed => "inner_wall_speed": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(60.0))]),
             wall_loops => "wall_loops": OrcaInt = OrcaInt(2),
             alternate_extra_wall => "alternate_extra_wall": OrcaBool = OrcaBool(false),
             minimum_sparse_infill_area => "minimum_sparse_infill_area": OrcaFloat = OrcaFloat(15.0),

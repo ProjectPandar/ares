@@ -75,11 +75,19 @@ pub(crate) fn parse_speed_options(
     )?)
     .with_first_layer_travel_speed(initial_layer_travel_speed)
     .with_travel_speed_z(travel_speed_z)
-    .with_internal_perimeter_speed(positive_number_or_string(
-        values,
-        "inner_wall_speed",
-        outer_wall_speed,
-    )?)
+    .with_internal_perimeter_speed(
+        values
+            .get("inner_wall_speed")
+            .map(|value| {
+                serde_json::from_value::<crate::options::OrcaFloatsNullable>(value.clone())
+                    .map(|speed| speed.get_at(0))
+                    .map_err(|error| {
+                        SliceError::InvalidInput(format!("invalid inner_wall_speed: {error}"))
+                    })
+            })
+            .transpose()?
+            .unwrap_or(60.0),
+    )
     .with_bridge_speed(bridge_options.bridge_speed_mm_s())
     .with_overhang_perimeter_speed(
         crate::options::overhang_speed::parse_overhang_perimeter_speed(

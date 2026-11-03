@@ -41,6 +41,12 @@ fn normalize_legacy_composite_options(
     thumbnails::normalize_legacy_thumbnails(&mut values)?;
     wiping_volumes::normalize_legacy_wiping_volumes(&mut values)?;
     sla::normalize_legacy_sla(&mut values)?;
+    // Config.cpp load_from_json/set_deserialize retains the full nullable vector.
+    if let Some(value) = values.get_mut("inner_wall_speed") {
+        let speed = serde_json::from_value::<super::OrcaFloatsNullable>(value.clone())
+            .map_err(|error| error.to_string())?;
+        *value = serde_json::to_value(speed).map_err(|error| error.to_string())?;
+    }
     Ok(values)
 }
 

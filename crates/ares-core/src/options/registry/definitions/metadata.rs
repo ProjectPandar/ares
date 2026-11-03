@@ -11308,7 +11308,7 @@ pub(crate) const METADATA: &[OptionMetadata] = &[
         full_width: false,
         is_code: false,
         readonly: false,
-        nullable: false,
+        nullable: true,
         height: None,
         width: None,
         ratio_over: None,

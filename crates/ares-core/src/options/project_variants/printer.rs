@@ -210,6 +210,12 @@ pub(super) fn materialize_process(
     settings: &mut ProjectSettings,
     indices: &[usize],
 ) -> Result<(), SliceError> {
+    settings.process.region.inner_wall_speed.0 = select_stride(
+        &settings.process.region.inner_wall_speed.0,
+        indices,
+        1,
+        "inner_wall_speed",
+    )?;
     settings.process.region.outer_wall_speed.0 = select_stride(
         &settings.process.region.outer_wall_speed.0,
         indices,

@@ -18,7 +18,7 @@ pub(super) fn find_max_speed(traversal: &PreparedPostClassicTraversal, object_in
     let object = source.object_overrides();
     let region = source.region_overrides();
     let speeds = [
-        global.region.inner_wall_speed.0,
+        global.region.inner_wall_speed.get_at(0),
         global.region.outer_wall_speed.get_at(0),
         global.region.sparse_infill_speed.0,
         global.region.internal_solid_infill_speed.0,
@@ -31,7 +31,10 @@ pub(super) fn find_max_speed(traversal: &PreparedPostClassicTraversal, object_in
             .into_iter()
             .fold(0.0, |max, speed| if speed > max { speed } else { max });
     }
-    let inner = region.inner_wall_speed.map_or(speeds[0], |speed| speed.0);
+    let inner = region
+        .inner_wall_speed
+        .as_ref()
+        .map_or(speeds[0], |speed| speed.get_at(0));
     let mut outer = if region.inner_wall_speed.is_some() {
         speeds[1] / speeds[0] * inner
     } else {

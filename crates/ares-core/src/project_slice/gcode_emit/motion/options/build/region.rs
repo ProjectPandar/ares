@@ -86,9 +86,11 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     options.first_layer_flow_ratio = region.map_or(default.first_layer_flow_ratio.0, |value| {
         value.first_layer_flow_ratio.0
     });
-    options.inner_wall_speed =
-        region.map_or(default.inner_wall_speed.0, |value| value.inner_wall_speed.0);
     let slot = options.nozzle_config_index;
+    options.inner_wall_speed = region.map_or_else(
+        || default.inner_wall_speed.get_at(slot),
+        |value| value.inner_wall_speed.get_at(slot),
+    );
     options.outer_wall_speed = region.map_or_else(
         || default.outer_wall_speed.get_at(slot),
         |value| value.outer_wall_speed.get_at(slot),

@@ -15,6 +15,7 @@ pub(super) struct Generator<'a> {
     pub(super) plan: Plan,
     pub(super) wipe_volumes: Vec<Vec<f32>>,
     pub(super) current_tool: usize,
+    perimeter_speed: f32,
     pub(super) layer_index: usize,
     pub(super) z: f32,
     pub(super) layer_height: f32,
@@ -55,6 +56,16 @@ impl<'a> Generator<'a> {
             .to_ascii_uppercase();
         let plan = Plan::new(settings, &filaments);
         let used_filament = vec![0.0; filaments.len()];
+        // WipeTower2.cpp:1062,1086-1087 / PrintConfig.cpp:140-147:
+        // snapshot the initial filament's physical-nozzle speed once.
+        let slot = settings
+            .project
+            .gcode
+            .filament_map
+            .0
+            .get(initial_tool)
+            .map_or(0, |id| (id.0 - 1) as usize);
+        let perimeter_speed = settings.process.region.inner_wall_speed.get_at(slot) as f32;
         Self {
             settings,
             scale,
@@ -63,6 +74,11 @@ impl<'a> Generator<'a> {
             plan,
             wipe_volumes,
             current_tool: initial_tool,
+            perimeter_speed: if perimeter_speed == 0.0 {
+                80.0
+            } else {
+                perimeter_speed
+            },
             layer_index: 0,
             z: 0.0,
             layer_height: 0.0,
@@ -200,8 +216,7 @@ impl<'a> Generator<'a> {
     }
 
     pub(super) fn perimeter_speed(&self) -> f32 {
-        let speed = self.settings.process.region.inner_wall_speed.0 as f32;
-        if speed == 0.0 { 80.0 } else { speed }
+        self.perimeter_speed
     }
 
     pub(super) fn infill_speed(&self) -> f32 {

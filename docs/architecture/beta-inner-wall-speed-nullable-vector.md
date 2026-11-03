@@ -138,25 +138,40 @@ do not edit the ROOT registry or resurrect retired width/structure tests.
    repeated successful Native output. Use distinct valid inner-wall speeds and
    demonstrate that cooling/volumetric/first-layer limits do not mask them.
    A Native export or internal resolver probe alone is not a runtime RED.
-4. **Override and reader controls.** Qualify original-index remapping, non-nil
-   singleton broadcast and nil inheritance. Include model-part/modifier/material/
-   layer-range application as supported by the same source path, selected-value
-   perimeter compatibility and column0 brim controls. Qualify the wipe-tower
-   initial-tool selection independently, including a later tool change, before
-   accepting its snapshot projection. Source-owned internal equality boundary
-   controls must not weaken any external exact comparison.
+4. **Override and literal reader coverage.** One config-overlay witness qualifies
+   original-index/nil inheritance: process columns19/23/37/53, object override
+   41/43/nil/47, physical2 selecting original column2. Nil must inherit37 rather
+   than selecting reduced-index43. Native/API selected inner feedrate observes
+   the effective config; this is not a whole-output assertion. The remaining
+   readers are **ported literal, covered only by regression FULL**:
+   - brim column0: `Model.cpp:3212–3213,3473–3474`;
+   - exact selected-value perimeter compatibility: `Layer.cpp:167`;
+   - initial-tool snapshot retained across later wipe-tower tools:
+     `GCode/WipeTower2.cpp:1062,1086–1087`.
+   No independent new witnesses for these three readers are included. This
+   coverage statement does not imply a directed proof of their path behavior.
+   Internal equality must not weaken any external exact comparison.
 5. **Public comparison contract.** Replay identical inputs against the
    original strict complete-output comparator where its whole-stream premise is
    satisfied, plus the complete DTO/wire/config and selected runtime channels.
    Channel-only assertions and inherited residuals are identified separately.
 
 Successful Native preconditions are required for qualified public comparisons.
-Failed setup or Native premises do not establish reader parity. If a nonzero nozzle or initial-tool witness cannot be independently
-qualified, the corresponding parity is not established; do not invent a selector or
-leave a permanent first-column shell just to compile.
+Failed setup or Native premises do not establish reader parity. If a nonzero-nozzle witness cannot be independently qualified, the corresponding parity is not established; do not invent a selector or leave a permanent
+first-column shell just to compile. The three literal-reader coverage limits
+in item4 apply separately; no directed initial-tool witness is implied.
 
 Artifacts must contain original 3MF hashes/bytes, Native repeated commands and
 statuses, oracle/CLI/test identities, source provenance, full requested/effective
 arrays, comparison receipts and unmodified strict output diagnostics. Runtime
 catalog supply uses only original pinned documents through the shared source-document
 adapter; bare requests stay genuine, including genuine errors.
+
+## Regression acceptance
+
+The full regression boundary retains the predecessor inventory and reports
+new IDs separately. Every predecessor PASS must remain PASS; inherited failures
+must retain their exact source-bound signatures or receive separate disposition.
+Public shape/selected-runtime-channel success alone is not complete-output
+parity, and regression FULL coverage is not a substitute for a claimed directed
+witness of a particular reader path.
