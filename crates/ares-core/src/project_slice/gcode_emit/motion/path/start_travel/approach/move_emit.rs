@@ -118,13 +118,25 @@ pub(super) fn emit_approach_move(
         // Pure XY while still lifted: upstream's no-Z-change branch calls
         // `travel_to_xy(to_2d(point))` WITHOUT the comment
         // (`GCodeWriter.cpp:771-780`).
-        travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
+        travel_emit::xy_with_comment(
+            output,
+            state,
+            (travel_x, travel_y),
+            state.travel_feedrate,
+            "",
+        );
         state.template_lifted = false;
     } else if state.lifted_amount > 0.0 && (lifted_for_travel || !travel_will_move_z(state, leg_z))
     {
         eager_lifted_travel = true;
         if !lifted_for_travel {
-            travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
+            travel_emit::xy_with_comment(
+                output,
+                state,
+                (travel_x, travel_y),
+                state.travel_feedrate,
+                "",
+            );
         } else {
             // The lifted nozzle travels at the raised destination —
             // when the pending-lift preliminary move didn't fit (short
@@ -222,8 +234,8 @@ pub(super) fn emit_approach_move(
         {
             travel_emit::xy_with_comment(
                 output,
-                travel_x,
-                travel_y,
+                state,
+                (travel_x, travel_y),
                 state.travel_feedrate,
                 first_travel_comment,
             );
@@ -283,15 +295,21 @@ pub(super) fn emit_approach_move(
         // EPSILON` — STRICTLY below 1e-4 (`GCodeWriter.cpp:927`,
         // `libslic3r.h:52`).
         if (leg_z - live_z).abs() < travel::EPSILON {
-            travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
+            travel_emit::xy_with_comment(
+                output,
+                state,
+                (travel_x, travel_y),
+                state.travel_feedrate,
+                "",
+            );
         } else if !state.positioned {
             // Unclear position: upstream's `travel_to_xyz` splits into
             // XY (with the travel comment) then a separate `_travel_to_z`
             // re-statement (`GCodeWriter.cpp:792-798, 753-764`).
             travel_emit::xy_with_comment(
                 output,
-                travel_x,
-                travel_y,
+                state,
+                (travel_x, travel_y),
                 state.travel_feedrate,
                 first_travel_comment,
             );
@@ -335,8 +353,8 @@ pub(super) fn emit_approach_move(
         // legs (`GCodeWriter.cpp:754-763`).
         travel_emit::xy_with_comment(
             output,
-            travel_x,
-            travel_y,
+            state,
+            (travel_x, travel_y),
             xy_feedrate,
             if first_position {
                 first_travel_comment

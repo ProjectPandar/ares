@@ -81,8 +81,8 @@ pub(super) fn emit_retracted_first_travel(
             // cooling rewrite drops it.
             travel_emit::xy_with_comment(
                 output,
-                travel_x,
-                travel_y,
+                state,
+                (travel_x, travel_y),
                 state.travel_feedrate,
                 first_travel_comment,
             );
@@ -118,8 +118,8 @@ pub(super) fn emit_retracted_first_travel(
     } else {
         travel_emit::xy_with_comment(
             output,
-            travel_x,
-            travel_y,
+            state,
+            (travel_x, travel_y),
             state.travel_feedrate,
             first_travel_comment,
         );

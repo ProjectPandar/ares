@@ -203,6 +203,7 @@ pub(in crate::project_slice) fn emit(
         initial_filaments,
         offset,
         origin,
+        xy_offset: traversal.project.plate_origin(),
         extruder_offset,
         scale_factor: traversal.scale.factor(),
         travel_feedrate: options.first_layer_travel_feedrate,

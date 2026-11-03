@@ -65,7 +65,6 @@ impl Area {
             spacing: self.flow.spacing,
             height: self.flow.height,
             mm3_per_mm: self.flow.mm3_per_mm,
-            plate_origin: traversal.project.plate_origin(),
         }))
     }
 

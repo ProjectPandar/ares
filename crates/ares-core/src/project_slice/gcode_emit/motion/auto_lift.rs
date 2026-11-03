@@ -118,9 +118,15 @@ impl AutoLift {
                 start.y() + (dy * ratio) as i64,
             );
         }
+        // `GCode.cpp:10643`: into the plate frame, `m_origin` less the writer's XY offset.
+        let [offset_x, offset_y] = state.xy_offset_f32();
         let offset = Point::new(
-            scale.checked_scale(state.origin.0).unwrap(),
-            scale.checked_scale(state.origin.1).unwrap(),
+            scale
+                .checked_scale(state.origin.0 - f64::from(offset_x))
+                .unwrap(),
+            scale
+                .checked_scale(state.origin.1 - f64::from(offset_y))
+                .unwrap(),
         );
         let translate = |point: Point| Point::new(point.x() + offset.x(), point.y() + offset.y());
         let (start, end) = (translate(start), translate(end));

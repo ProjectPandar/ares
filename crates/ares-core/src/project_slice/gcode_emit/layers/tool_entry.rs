@@ -126,15 +126,13 @@ pub(super) fn emit(
         )?;
     }
     let shift = bucket.instance.shift;
-    // Every emitted coordinate is plate-local: the per-object origin from
-    // the global instance shift loses the plate grid origin
-    // (`set_gcode_offset`, Print.cpp:2636-2638).
-    let (plate_origin_x, plate_origin_y) = traversal.project.plate_origin();
+    // `set_origin(unscale(offset))` (`GCode.cpp:7643`): the global instance shift; the writer
+    // subtracts the plate origin.
     motion::set_origin(
         state,
         (
-            traversal.scale.unscale(shift.x()) - plate_origin_x,
-            traversal.scale.unscale(shift.y()) - plate_origin_y,
+            traversal.scale.unscale(shift.x()),
+            traversal.scale.unscale(shift.y()),
         ),
     );
     // Raft chunks emit the materialized raft layer; the motion

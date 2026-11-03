@@ -49,9 +49,10 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// folding the extruder offset into `offset` first rounds one ULP
     /// differently across 0.0005 formatting boundaries (mHlqqz X149.029).
     pub(in crate::project_slice::gcode_emit) origin: (f64, f64),
-    /// Upstream uses origin zero while emitting skirt/brim, including the
-    /// travel before each loop. Stored cursors and wipe points stay local.
-    pub(in crate::project_slice::gcode_emit) plate_loop_origin: bool,
+    /// `GCodeWriter::m_x_offset`, `m_y_offset` (`GCodeWriter.hpp:204-205`): the plate origin
+    /// `set_gcode_offset` gives the writer (`Print.cpp:4000-4010`). `x`, `y` and `origin` stay
+    /// global; each writer move subtracts it.
+    pub(in crate::project_slice::gcode_emit) xy_offset: (f64, f64),
     pub(in crate::project_slice::gcode_emit) extruder_offset: (f64, f64),
     /// `m_curr_extruder_id != -1` (`GCode.cpp:8138-8144`): the extruder
     /// offset only applies to `gcode_to_point` write-backs once the
@@ -273,6 +274,11 @@ impl EmitState {
     /// `will_move_z` check (`GCode.cpp:4417`) both read this current Z.
     pub(in crate::project_slice::gcode_emit) fn record_z(&mut self, z: f64) {
         self.writer_z = Some(z);
+    }
+
+    /// `GCodeWriter::get_xy_offset` (`GCodeWriter.hpp:135`) narrows the offset to `Vec2f`.
+    pub(in crate::project_slice::gcode_emit) fn xy_offset_f32(&self) -> [f32; 2] {
+        [self.xy_offset.0 as f32, self.xy_offset.1 as f32]
     }
 }
 

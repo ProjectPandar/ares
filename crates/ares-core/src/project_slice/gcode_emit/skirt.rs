@@ -51,7 +51,6 @@ pub(super) struct SkirtPlan {
     /// Seam target angle in degrees (`skirt_start_angle`).
     start_angle_deg: f64,
     single_loop_draft_shield: bool,
-    plate_origin: (f64, f64),
 }
 
 impl SkirtPlan {
@@ -148,10 +147,9 @@ impl SkirtPlan {
         if layer.index >= self.layer_count || loops.is_empty() {
             return Ok(());
         }
-        // Print.cpp:2634-2637 -> GCode.hpp:218 -> GCodeWriter.cpp:608,
-        // 715-716,789,873 subtracts plate offset at the writer. Ares currently
-        // distributes that writer offset among path emitters; skirt needs it too.
-        motion::set_origin(state, (-self.plate_origin.0, -self.plate_origin.1));
+        // `generate_skirt` emits at `Point(0, 0)` (`GCode.cpp:5987`); the writer subtracts the
+        // plate origin.
+        motion::set_origin(state, (0.0, 0.0));
         let height = layer.height_mm as f32;
         let rounded_rectangle = 1.0 - 0.25 * std::f64::consts::PI;
         let mm3_per_mm = f64::from(

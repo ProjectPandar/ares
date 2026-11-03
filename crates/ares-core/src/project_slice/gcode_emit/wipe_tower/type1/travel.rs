@@ -48,7 +48,11 @@ pub(super) fn path(
         tower.position[0] + tower.data.rib_offset[0],
         tower.position[1] + tower.data.rib_offset[1],
     ];
+    // Tower and bed points take `plate_origin_2d` before `wipe_tower_point_to_object_point`
+    // (`GCode.cpp:1015-1018, 1513-1522`).
+    let plate_origin = state.xy_offset_f32();
     let local = |p: [f32; 2]| {
+        let p = [p[0] + plate_origin[0], p[1] + plate_origin[1]];
         [
             ((f64::from(p[0]) - state.origin.0) / scale.factor()).round() as i64,
             ((f64::from(p[1]) - state.origin.1) / scale.factor()).round() as i64,
@@ -108,11 +112,16 @@ pub(super) fn path(
     {
         return vec![end_local];
     }
-    // GCode.cpp:1013,8138: parsed G-code is in nozzle coordinates, unlike
-    // tower points. gcode_to_point adds the active nozzle offset and truncates.
+    // GCode.cpp:1513,8138: parsed G-code is in nozzle coordinates, unlike
+    // tower points. It takes the plate origin, then gcode_to_point adds the
+    // active nozzle offset and truncates.
     let start = [
-        ((f64::from(start[0]) - state.origin.0 + state.extruder_offset.0) / scale.factor()) as i64,
-        ((f64::from(start[1]) - state.origin.1 + state.extruder_offset.1) / scale.factor()) as i64,
+        ((f64::from(start[0]) + f64::from(plate_origin[0]) - state.origin.0
+            + state.extruder_offset.0)
+            / scale.factor()) as i64,
+        ((f64::from(start[1]) + f64::from(plate_origin[1]) - state.origin.1
+            + state.extruder_offset.1)
+            / scale.factor()) as i64,
     ];
     let direction = if (end_local[0] - low[0]).abs() < (high[0] - low[0]) / 2 {
         -1.0

@@ -59,10 +59,12 @@ pub(super) fn emit(
     // Upstream's writer does NOT know the Z after the start g-code
     // (`GCode.cpp:3139-3140`), so `writer_z` stays unset
     // (`GCode.cpp:5693`). The brim split target uses the nozzle XY
-    // the start g-code left — track it in live gcode coordinates.
+    // the start g-code left — track it in live gcode coordinates, plus the
+    // writer's plate offset (`GCode.cpp:4546-4548`).
     if let Some((x, y)) = trailing_gcode_xy(output) {
-        state.x = x;
-        state.y = y;
+        let [offset_x, offset_y] = state.xy_offset_f32();
+        state.x = x + f64::from(offset_x);
+        state.y = y + f64::from(offset_y);
     }
     Ok(())
 }

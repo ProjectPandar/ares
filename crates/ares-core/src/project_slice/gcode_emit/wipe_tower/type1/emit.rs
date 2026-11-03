@@ -129,7 +129,7 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
         } else {
             vec![motion::tower::type1_travel_grid(
                 change_start,
-                state.origin,
+                state,
                 geometry.scale,
             )]
         };

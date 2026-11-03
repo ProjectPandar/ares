@@ -187,8 +187,10 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     } else {
         dest_z
     };
-    let dx = target.x - state.x;
-    let dy = target.y - state.y;
+    // `GCodeWriter.cpp:1015-1016`: source and target less the plate offset.
+    let source = (state.x - state.xy_offset.0, state.y - state.xy_offset.1);
+    let dx = (target.x - state.xy_offset.0) - source.0;
+    let dy = (target.y - state.xy_offset.1) - source.1;
     // `GCodeWriter::travel_to_xyz` measures the XY distance with Eigen
     // `Vec2d::norm()` (`sqrt(dx*dx + dy*dy)`, `GCodeWriter.cpp:718`), not
     // `hypot`; the spiral points land on 6-significant-digit rounding
@@ -239,8 +241,8 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
             let slope = state.options.travel_slope_radians;
             if travel_distance > f64::EPSILON && rise > 0.0 && rise.atan2(travel_distance) < slope {
                 let slope_distance = rise / slope.tan();
-                let x = state.x + dx * slope_distance / travel_distance;
-                let y = state.y + dy * slope_distance / travel_distance;
+                let x = source.0 + dx * slope_distance / travel_distance;
+                let y = source.1 + dy * slope_distance / travel_distance;
                 // `travel_to_xyz` forwards the path comment on slope XYZ moves
                 // (`GCodeWriter.cpp:743`), unlike the standalone normal lift.
                 let comment = travel_comment;

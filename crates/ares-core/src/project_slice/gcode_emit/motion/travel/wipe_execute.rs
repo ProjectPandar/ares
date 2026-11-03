@@ -52,16 +52,16 @@ pub(super) fn emit(
             let comment = gcode_comment(state, " ; wipe and retract");
             format!(
                 "G1 X{} Y{} E{}{comment}\n",
-                format_axis(point.x),
-                format_axis(point.y),
+                format_axis(point.x - state.xy_offset.0),
+                format_axis(point.y - state.xy_offset.1),
                 format_extrusion(retract)
             )
         } else {
             let comment = gcode_comment(state, " ; wipe and retract");
             format!(
                 "G1 X{} Y{}{comment}\n",
-                format_axis(point.x),
-                format_axis(point.y)
+                format_axis(point.x - state.xy_offset.0),
+                format_axis(point.y - state.xy_offset.1)
             )
         };
         output.extend_from_slice(line.as_bytes());

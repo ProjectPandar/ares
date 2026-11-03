@@ -170,7 +170,6 @@ pub(in crate::project_slice::gcode_emit) fn group_brims(
                     spacing: template.spacing,
                     height: template.height,
                     mm3_per_mm: template.mm3_per_mm,
-                    plate_origin: template.plate_origin,
                 },
             })
         })

@@ -52,7 +52,12 @@ pub(super) fn append_inward_move(
         ""
     };
     output.extend_from_slice(
-        format!("G1 X{} Y{}{comment}\n", format_axis(x), format_axis(y)).as_bytes(),
+        format!(
+            "G1 X{} Y{}{comment}\n",
+            format_axis(x - state.xy_offset.0),
+            format_axis(y - state.xy_offset.1)
+        )
+        .as_bytes(),
     );
     state.x = x;
     state.y = y;

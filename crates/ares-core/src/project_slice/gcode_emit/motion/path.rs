@@ -101,26 +101,6 @@ fn emit_inner(
             (dx * dx + dy * dy).sqrt() * geometry.scale.factor()
         })
         .collect::<Vec<_>>();
-    // `generate_skirt` / `generate_object_brim` use origin zero
-    // (GCode.cpp:4411,4482,4499,5249). Restore their plate-space integer points
-    // before unscaling; keep local points for cursors and wipe storage.
-    let plate_space = matches!(properties.feature, "Skirt" | "Brim");
-    state.plate_loop_origin = plate_space;
-    let plate_points = plate_space.then(|| {
-        let origin = (
-            (state.origin.0 / geometry.scale.factor()).round() as i64,
-            (state.origin.1 / geometry.scale.factor()).round() as i64,
-        );
-        scaled_points
-            .iter()
-            .map(|&(x, y)| {
-                (
-                    geometry.scale.unscale(x + origin.0) - state.extruder_offset.0,
-                    geometry.scale.unscale(y + origin.1) - state.extruder_offset.1,
-                )
-            })
-            .collect::<Vec<_>>()
-    });
     let mut local_points = scaled_points
         .into_iter()
         .map(|(x, y)| (geometry.scale.unscale(x), geometry.scale.unscale(y)))
@@ -179,17 +159,15 @@ fn emit_inner(
         .map(|estimate| estimate.points);
     let points = processed.as_ref().map_or_else(
         || {
-            plate_points.unwrap_or_else(|| {
-                local_points
-                    .iter()
-                    .map(|&(x, y)| {
-                        (
-                            x + state.origin.0 - state.extruder_offset.0,
-                            y + state.origin.1 - state.extruder_offset.1,
-                        )
-                    })
-                    .collect::<Vec<_>>()
-            })
+            local_points
+                .iter()
+                .map(|&(x, y)| {
+                    (
+                        x + state.origin.0 - state.extruder_offset.0,
+                        y + state.origin.1 - state.extruder_offset.1,
+                    )
+                })
+                .collect::<Vec<_>>()
         },
         |points| {
             points
@@ -211,14 +189,10 @@ fn emit_inner(
     let Some(&(first_local_x, first_local_y)) = local_points.first() else {
         return Ok(());
     };
-    let (first_x, first_y) = if plate_space {
-        points[0]
-    } else {
-        (
-            first_local_x + state.origin.0 - state.extruder_offset.0,
-            first_local_y + state.origin.1 - state.extruder_offset.1,
-        )
-    };
+    let (first_x, first_y) = (
+        first_local_x + state.origin.0 - state.extruder_offset.0,
+        first_local_y + state.origin.1 - state.extruder_offset.1,
+    );
     start_travel::emit(
         output,
         state,

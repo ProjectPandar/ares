@@ -28,8 +28,11 @@ pub(super) fn append(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64,
         );
     } else {
         let z_start = state.writer_z.unwrap_or(state.layer_z);
-        let center_x = state.x + i;
-        let center_y = state.y + j;
+        // `GCodeWriter.cpp:1221-1222`: the plate offset comes off the writer position first.
+        let x = state.x - state.xy_offset.0;
+        let y = state.y - state.xy_offset.1;
+        let center_x = x + i;
+        let center_y = y + j;
         let radius = (i * i + j * j).sqrt();
         let resolution = state.options.arc_fitting_tolerance;
         let segments = if resolution > 0.0 {
@@ -37,7 +40,7 @@ pub(super) fn append(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64,
         } else {
             128
         };
-        let start_angle = (state.y - center_y).atan2(state.x - center_x);
+        let start_angle = (y - center_y).atan2(x - center_x);
         output.reserve(segments * 40);
         output.extend_from_slice(format!("G1 F{}{comment}\n", format_axis(feedrate)).as_bytes());
         for index in 1..segments {
@@ -50,7 +53,7 @@ pub(super) fn append(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64,
                 z_start + (raised_z - z_start) * progress,
             );
         }
-        append_point(output, state.x, state.y, raised_z);
+        append_point(output, x, y, raised_z);
     }
     state.current_feedrate = feedrate;
     state.record_z(raised_z);

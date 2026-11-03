@@ -201,7 +201,6 @@ impl SkirtPlan {
             layer_count,
             start_angle_deg,
             single_loop_draft_shield: print.single_loop_draft_shield.0,
-            plate_origin: traversal.project.plate_origin(),
         }))
     }
 }

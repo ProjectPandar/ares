@@ -64,9 +64,8 @@ impl BrimPlan {
     ) -> Result<(), crate::SliceError> {
         let origin = state.origin;
         // `emit_brim` sets `set_origin(0, 0)` (`GCode.cpp:6053` at v2.5.0-beta `345efec64`) and the
-        // writer subtracts the plate origin (`Print.cpp:4010`, `GCodeWriter.cpp:1114`); Ares folds
-        // that writer offset into the origin, as the skirt does.
-        motion::set_origin(state, (-self.plate_origin.0, -self.plate_origin.1));
+        // writer subtracts the plate origin (`Print.cpp:4010`, `GCodeWriter.cpp:1114`).
+        motion::set_origin(state, (0.0, 0.0));
         // GCode.cpp:6065-6079: an uncombined plan emits only the current
         // instance's paths (brimMapByInstance keyed `ObjectInstanceID`),
         // never the owner's merged set.

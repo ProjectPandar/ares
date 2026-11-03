@@ -42,7 +42,7 @@ pub(in crate::project_slice::gcode_emit) fn travel_to(
 ) -> Result<(), crate::SliceError> {
     retract(output, state);
     state.use_external_mp_once = true;
-    let point = local(point, state.origin, geometry.scale);
+    let point = object_point(point, state, geometry.scale);
     path::tower_travel(output, state, point, geometry)?;
     travel::unlift(output, state);
     travel::unretract(output, state);
@@ -111,16 +111,18 @@ pub(in crate::project_slice::gcode_emit) fn finish(
     end: [f32; 2],
     wipe: impl IntoIterator<Item = [f32; 2]>,
 ) {
-    // The discarded writer XY move does not subtract nozzle offsets.
-    state.x = f64::from(end[0]);
-    state.y = f64::from(end[1]);
-    state.last_scaled_position = local(end, state.origin, scale);
+    // The discarded writer XY move does not subtract nozzle offsets; it adds the plate origin
+    // (`GCode.cpp:1933-1934`).
+    let [origin_x, origin_y] = state.xy_offset_f32();
+    state.x = f64::from(end[0] + origin_x);
+    state.y = f64::from(end[1] + origin_y);
+    state.last_scaled_position = object_point(end, state, scale);
     state.last_position_defined = true;
     state.positioned = true;
     state.wipe_path = wipe
         .into_iter()
         .map(|point| {
-            let point = local(point, state.origin, scale);
+            let point = object_point(point, state, scale);
             arc::Point {
                 x: scale.unscale(point.0),
                 y: scale.unscale(point.1),
@@ -178,17 +180,17 @@ pub(in crate::project_slice::gcode_emit) fn type1_travel(
     path::tower_travel(
         output,
         state,
-        local(point, state.origin, geometry.scale),
+        object_point(point, state, geometry.scale),
         geometry,
     )
 }
 
 pub(in crate::project_slice::gcode_emit) fn type1_travel_grid(
     point: [f32; 2],
-    origin: (f64, f64),
+    state: &EmitState,
     scale: CoordinateScale,
 ) -> [i64; 2] {
-    let (x, y) = local(point, origin, scale);
+    let (x, y) = object_point(point, state, scale);
     [x, y]
 }
 
@@ -214,9 +216,13 @@ pub(in crate::project_slice::gcode_emit) fn type1_unretract(
     travel::unretract(output, state);
 }
 
-fn local(point: [f32; 2], origin: (f64, f64), scale: CoordinateScale) -> (i64, i64) {
+/// `wipe_tower_point_to_object_point` (`GCode.cpp:752-755`) of a plate-frame tower point plus
+/// `plate_origin_2d`, the `Vec2f` every tower caller adds (`GCode.cpp:1146-1945`).
+fn object_point(point: [f32; 2], state: &EmitState, scale: CoordinateScale) -> (i64, i64) {
+    let [origin_x, origin_y] = state.xy_offset_f32();
+    let point = [point[0] + origin_x, point[1] + origin_y];
     (
-        ((f64::from(point[0]) - origin.0) / scale.factor()).round() as i64,
-        ((f64::from(point[1]) - origin.1) / scale.factor()).round() as i64,
+        ((f64::from(point[0]) - state.origin.0) / scale.factor()).round() as i64,
+        ((f64::from(point[1]) - state.origin.1) / scale.factor()).round() as i64,
     )
 }

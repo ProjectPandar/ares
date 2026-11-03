@@ -47,8 +47,8 @@ pub(super) fn extrude_to_xyz(
     output.extend_from_slice(
         format!(
             "G1 X{} Y{}{} E{}{comment}\n",
-            format_axis(end.x),
-            format_axis(end.y),
+            format_axis(end.x - state.xy_offset.0),
+            format_axis(end.y - state.xy_offset.1),
             z_word,
             format_extrusion(value),
         )
@@ -75,8 +75,8 @@ pub(super) fn force_no_extrusion_segment(
     output.extend_from_slice(
         format!(
             "G1 X{} Y{}{comment}\n",
-            format_axis(end.x),
-            format_axis(end.y)
+            format_axis(end.x - state.xy_offset.0),
+            format_axis(end.y - state.xy_offset.1)
         )
         .as_bytes(),
     );
@@ -112,8 +112,8 @@ pub(super) fn linear_segment(
         output.extend_from_slice(
             format!(
                 "G1 X{} Y{}{comment}\n",
-                format_axis(end.x),
-                format_axis(end.y)
+                format_axis(end.x - state.xy_offset.0),
+                format_axis(end.y - state.xy_offset.1)
             )
             .as_bytes(),
         );
@@ -122,8 +122,8 @@ pub(super) fn linear_segment(
         output.extend_from_slice(
             format!(
                 "G1 X{} Y{} E{}{comment}\n",
-                format_axis(end.x),
-                format_axis(end.y),
+                format_axis(end.x - state.xy_offset.0),
+                format_axis(end.y - state.xy_offset.1),
                 format_extrusion(extrusion)
             )
             .as_bytes(),

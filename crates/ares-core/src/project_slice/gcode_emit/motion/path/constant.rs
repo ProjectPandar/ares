@@ -98,8 +98,8 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
                 output.extend_from_slice(
                     format!(
                         "{command} X{} Y{} I{} J{} E{}{comment}\n",
-                        format_axis(arc_segment.end.x),
-                        format_axis(arc_segment.end.y),
+                        format_axis(arc_segment.end.x - state.xy_offset.0),
+                        format_axis(arc_segment.end.y - state.xy_offset.1),
                         format_offset(arc_segment.center.x - arc_segment.start.x),
                         format_offset(arc_segment.center.y - arc_segment.start.y),
                         format_extrusion(extrusion)

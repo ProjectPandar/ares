@@ -42,8 +42,8 @@ pub(super) fn emit_detour_waypoints(
                 output.extend_from_slice(
                     format!(
                         "G1 X{} Y{} F{}\n",
-                        format_axis(point.x),
-                        format_axis(point.y),
+                        format_axis(point.x - state.xy_offset.0),
+                        format_axis(point.y - state.xy_offset.1),
                         format_axis(state.travel_feedrate)
                     )
                     .as_bytes(),
@@ -52,8 +52,8 @@ pub(super) fn emit_detour_waypoints(
                 output.extend_from_slice(
                     format!(
                         "G1 X{} Y{} Z{} F{}{route_comment}\n",
-                        format_axis(point.x),
-                        format_axis(point.y),
+                        format_axis(point.x - state.xy_offset.0),
+                        format_axis(point.y - state.xy_offset.1),
                         format_z(z),
                         format_axis(state.travel_feedrate)
                     )
@@ -73,8 +73,8 @@ pub(super) fn emit_detour_waypoints(
             output.extend_from_slice(
                 format!(
                     "G1 X{} Y{} F{}{route_comment}\n",
-                    format_axis(point.x),
-                    format_axis(point.y),
+                    format_axis(point.x - state.xy_offset.0),
+                    format_axis(point.y - state.xy_offset.1),
                     format_axis(state.travel_feedrate)
                 )
                 .as_bytes(),

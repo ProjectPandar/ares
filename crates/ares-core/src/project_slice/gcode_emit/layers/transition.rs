@@ -140,8 +140,8 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     output.extend_from_slice(
         format!(
             "G1 X{} Y{} Z{} F{}{comment}\n",
-            format_z(state.offset.0),
-            format_z(state.offset.1),
+            format_z(state.offset.0 - state.xy_offset.0),
+            format_z(state.offset.1 - state.xy_offset.1),
             format_z(destination_z),
             motion::tower::format_feedrate(feedrate)
         )

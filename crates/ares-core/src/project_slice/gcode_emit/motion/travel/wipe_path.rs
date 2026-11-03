@@ -65,17 +65,6 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
     let budget_distance = state.options.retraction_during_wipe_distance / state.scale_factor;
     let retraction_distance = total_length.min(budget_distance) * state.scale_factor;
     let mut clip = total_length - configured_distance;
-    // `set_origin(0, 0)` for skirt/brim changes the coordinate frame in
-    // which `Polyline::clip_end` truncates. Keep local storage, but cast
-    // the interpolated plate point before subtracting the integer origin.
-    let clip_origin = if state.plate_loop_origin {
-        (
-            (state.origin.0 / state.scale_factor).round() as i64,
-            (state.origin.1 / state.scale_factor).round() as i64,
-        )
-    } else {
-        (0, 0)
-    };
     // Upstream `Polyline::clip_end` math: squared comparison, sqrt divisor,
     // truncating cast (`Polyline.cpp:52-72`); the loop guard keeps the last
     // point (`Polyline.cpp:56-59` returns when the polyline empties).
@@ -88,8 +77,8 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
         if lsqr > clip * clip {
             let factor = clip / lsqr.sqrt();
             points.push((
-                ((last.0 + clip_origin.0) as f64 + vx * factor) as i64 - clip_origin.0,
-                ((last.1 + clip_origin.1) as f64 + vy * factor) as i64 - clip_origin.1,
+                (last.0 as f64 + vx * factor) as i64,
+                (last.1 as f64 + vy * factor) as i64,
             ));
             break;
         }
@@ -99,7 +88,7 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
         .windows(2)
         .map(|segment| {
             let length = scaled_distance(segment[0], segment[1]);
-            (unscaled_position(segment[1], clip_origin, state), length)
+            (unscaled_position(segment[1], state), length)
         })
         .collect::<Vec<_>>();
     // Upstream `Wipe::wipe` (`GCode.cpp:456-462`): `wipe_dist` stays the
@@ -141,13 +130,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn scaled_position(
     )
 }
 
-fn unscaled_position(point: (i64, i64), clip_origin: (i64, i64), state: &EmitState) -> arc::Point {
-    if state.plate_loop_origin {
-        return arc::Point {
-            x: (point.0 + clip_origin.0) as f64 * state.scale_factor - state.extruder_offset.0,
-            y: (point.1 + clip_origin.1) as f64 * state.scale_factor - state.extruder_offset.1,
-        };
-    }
+fn unscaled_position(point: (i64, i64), state: &EmitState) -> arc::Point {
     arc::Point {
         x: point.0 as f64 * state.scale_factor + state.origin.0 - state.extruder_offset.0,
         y: point.1 as f64 * state.scale_factor + state.origin.1 - state.extruder_offset.1,
