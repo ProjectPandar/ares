@@ -52,12 +52,15 @@ pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceErro
                 required_value(&instance.metadata, "identify_id")?,
                 "loaded label ID",
             )?;
-            if loaded_label_id == 0
-                || loaded_labels
+            // The importer reads `identify_id` unchecked (`bbs_3mf.cpp:4744` at v2.5.0-beta
+            // `345efec64`); 0 sets `loaded_id` to none (`:2497-2498`), so the entry lists its object
+            // on the plate and labels no instance. The GUI writes a dangling pair so (`:8580-8600`).
+            if loaded_label_id != 0
+                && loaded_labels
                     .insert((object_id, instance_id), loaded_label_id)
                     .is_some()
             {
-                return Err(invalid("invalid or repeated plate instance identity"));
+                return Err(invalid("repeated plate instance identity"));
             }
             instances.push([object_id, instance_id, loaded_label_id]);
         }

@@ -26,3 +26,9 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. After a middle insta
 2. The cross-plate delete: plate 1 (the moved instance left out by the print-volume filter) and plate 2 (listed only by the dangling entry).
 
 Today both fail at Ares's load.
+
+## GREEN
+- **`metadata.rs`:** an entry with `identify_id` 0 stays in the plate's list and records no label (`bbs_3mf.cpp:4744, 2497-2498`). A repeated labelled pair is still rejected, now as "repeated plate instance identity".
+- **`assemble.rs`:** the build-absent check is gone. A label naming an instance absent from the build is never looked up, as the `loaded_id` loop skips it (`:2466-2500`).
+- **Unchanged:** the object-level selection.
+- **Result:** both exports load, and every plate slices like Native.

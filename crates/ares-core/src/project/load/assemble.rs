@@ -168,19 +168,9 @@ fn project_domain_with_budget(
         loaded_instances.insert((item.object_id, instance_id));
     }
 
-    // Plate metadata must not reference build-absent instances (phantom
-    // entries), but build instances without plate metadata are allowed
-    // (kept for the geometric print-volume gate, upstream
-    // `ModelInstancePVS` loading).
-    if !metadata
-        .loaded_labels
-        .keys()
-        .all(|key| loaded_instances.contains(key))
-    {
-        return Err(invalid(
-            "plate metadata references an object or instance absent from the build",
-        ));
-    }
+    // A plate entry naming an instance absent from the build labels nothing: the `loaded_id` loop
+    // skips it ("invalid instance id", `bbs_3mf.cpp:2466-2500` at v2.5.0-beta `345efec64`). Build
+    // instances without plate metadata are kept for the geometric print-volume gate.
     metadata::validate_assemble(settings, &loaded_instances)?;
 
     let objects = order
