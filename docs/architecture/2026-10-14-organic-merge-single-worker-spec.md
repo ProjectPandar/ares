@@ -65,7 +65,7 @@ organic 生成器由所有走 TreeSupport3D 路径的 style 共用。现有比�
   `option_coverage/normal_support_output/style.rs` 中 tree style 触发项（测量阶段
   以 `workers()` 调用是否可达为准逐例标注）。
 
-关键事实：parity harness 中 Ares 测试二进制经 `/tmp/ares-pin-runner.sh`
+关键事实：parity harness 中 Ares 测试二进制经 `${TMP_ROOT}/ares-pin-runner.sh`
 （`exec taskset -c "$cpu"`）单核执行，`available_parallelism()` 已恒为 1——
 即**现有全部比对在 Ares 侧早已运行于 workers=1 形态**，改为常量 1 对 harness
 内输出是 no-op，现有 organic Native 比对不应因此翻转。改动后 Ares 输出不再

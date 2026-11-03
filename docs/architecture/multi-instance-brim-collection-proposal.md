@@ -8,7 +8,7 @@ Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Observed residual, not covered by the just-approved slice
 
-Fresh evidence `/tmp/ares-copies-premise-cf8597e18/discovery-report.json`.
+Fresh evidence `${TMP_ROOT}/ares-copies-premise-cf8597e18/discovery-report.json`.
 Official and seeded, independent fresh artifacts/cache, runtime Native FIRST,
 CPU18 actual descendant/thread masks checked, current canonical archived/hash
 checked, exact clean HEAD before/after. API rebuilt from exact hash and real
@@ -44,7 +44,7 @@ comparisons above are unchanged acceptance comparisons, not geometry tolerance
 or TYPE-count equality tests. No private Native ExPolygon trace is claimed.
 
 The original mismatch was also observed on exact main41f2c90f7 before stack24
-(`/tmp/ares-brim-control-main-premise/discovery-report.json`), and persists on
+(`${TMP_ROOT}/ares-brim-control-main-premise/discovery-report.json`), and persists on
 stack24 + approved global-combine chain. The latter consumer is gated OFF here
 (combine_brims0). `skirt/occupied.rs` has no changes between stack24 and this
 HEAD; last source owner change predates stack24. Thus the observed behavior is

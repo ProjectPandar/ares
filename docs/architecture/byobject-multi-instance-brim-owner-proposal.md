@@ -7,7 +7,7 @@ No production/test change committed; temporary guard probe restored byte-for-byt
 
 ## Frozen accepted ByObject family and Native-first evidence
 
-Evidence `/tmp/ares-byobject-owner-proposal-0577970d4/discovery-report.json`.
+Evidence `${TMP_ROOT}/ares-byobject-owner-proposal-0577970d4/discovery-report.json`.
 Derived from approved owner-collection cube fixture, retaining meshes/owners and
 Z scale0.4; freeze ByObject, object2 copies at X50/X125,Y110,Z2, object3 at
 X200,Y110,Z2. Centers are separated75 to avoid clearance/group-sharing blockers;

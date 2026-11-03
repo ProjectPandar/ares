@@ -88,8 +88,8 @@ Base official:650 tests,638 PASS/12 FAIL,1405.467s.
 Candidate official:650 tests,636 PASS/14 FAIL,1873.372s.
 Base controls used the RED executable SHA256
 `3b9e436103057f656ee12b62fc1ba95141bdba26669b927045093ac959217b1f`
-from `/tmp/ares-worker6-target`; its hash was rechecked after official ran.
-Candidate uses independent `/tmp/ares-worker6-green-target`.
+from `${TMP_ROOT}/ares-worker6-target`; its hash was rechecked after official ran.
+Candidate uses independent `${TMP_ROOT}/ares-worker6-green-target`.
 Its final amended-source parity executable SHA256 is
 `fae98cb5847783b56db45a9be5bbb1d72d4cb46344d49bec4435cd8a7a050b23`.
 Control script SHA256 is
@@ -102,13 +102,13 @@ Workspace compilation (`cargo nextest run --workspace --no-run`) passed.
 Execution `cargo nextest run --workspace --test-threads 16 --no-fail-fast`
 passed:8040 tests run,8040 PASS,9 skipped,549.698s,exit0. Logs are
 `/tmp/worker6-seam-{fmt,clippy,wasm,workspace-build,workspace}.log`.
-These checks use `CARGO_TARGET_DIR=/tmp/ares-worker6-green-target`,
+These checks use `CARGO_TARGET_DIR=${TMP_ROOT}/ares-worker6-green-target`,
 `CARGO_BUILD_JOBS=8`, `CARGO_INCREMENTAL=0`. Workspace is the ordinary Rust
 suite; real fresh Native comparisons are the separately recorded controls
 and paired rechecks, not inferred from optional reference tests returning
 without a configured Native runner in the ordinary workspace run.
 
-All controls use `/tmp/ares-parity-control-set-v2.sh` with16 test threads,
+All controls use `${TMP_ROOT}/ares-parity-control-set-v2.sh` with16 test threads,
 fresh cache roots and artifact directories. Only one heavy task runs at a
 time. Native timeouts remain inconclusive, missing reference environment
 remains failure, and known upstream UB remains non-PASS. No retry-selected
@@ -197,8 +197,8 @@ generation or Native invocation. These timeouts do not establish a slicing
 regression, but are not promoted to PASS.
 
 The paired base is an independent detached worktree
-`/tmp/ares-worker6-seam-paired-base` at the exact RED commit, with target
-`/tmp/ares-worker6-seam-paired-base-target`; candidate is the amended GREEN
+`${TMP_ROOT}/ares-worker6-seam-paired-base` at the exact RED commit, with target
+`${TMP_ROOT}/ares-worker6-seam-paired-base-target`; candidate is the amended GREEN
 worktree/target above. Each test is filtered by its exact nextest name,
 executed base then candidate serially with a fresh cache per leg, after
 the full official round ended. No other worker6 heavy task runs alongside.

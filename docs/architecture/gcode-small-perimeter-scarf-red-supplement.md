@@ -2,7 +2,7 @@
 
 Before applying GREEN, production is restored to main1cf47e9a7 plus rebased
 approved test/spec commits (HEAD5ebd8c60f). Pending GREEN diff is outside repo
-under `/tmp/ares-tiq2-loop-red/scarf-independent-red/pending-green.patch`.
+under `${TMP_ROOT}/ares-tiq2-loop-red/scarf-independent-red/pending-green.patch`.
 
 Source: `GCode.cpp:5808-5813,5896-5900,5919-5963,6515-6526,6564-6588`.
 The loop caller selects positive small speed; sloped `_extrude` must not lose

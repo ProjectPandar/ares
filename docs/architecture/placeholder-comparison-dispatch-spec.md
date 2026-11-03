@@ -38,6 +38,6 @@ Both positives must genuinely fail before implementation, then all pass in
 both official/seeded modes. Existing generated-by normalization only.
 
 Discovery receipts and inputs:
-`/home/indexyz/ares-coord/evidence/w5-a887-string-compare-discovery/` and
-`/home/indexyz/ares-coord/evidence/w5-a887-string-number-discovery/`.
+`${COORD_ROOT}/evidence/w5-a887-string-compare-discovery/` and
+`${COORD_ROOT}/evidence/w5-a887-string-number-discovery/`.
 Stack on approved a8870d1f6. No SPEC commit implementation or test changes.

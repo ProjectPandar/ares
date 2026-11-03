@@ -43,7 +43,7 @@ geometry-dependent state. The shell was only reachable end-to-end while
 flag is permanently `true` (`avoid_crossing.rs:226-228`).
 
 Instrumented experiment (evidence
-`~/.ares-evidence/worker4/rect-shell-probe/`): `detour_emission_ready`
+`${LOCAL_EVIDENCE_ROOT}/worker4/rect-shell-probe/`): `detour_emission_ready`
 forced to `false` in a scratch build, `detour-3parts.3mf`
 (`tests/parity/max-travel-detour`, `reduce_crossing_wall=1`, cap=0)
 sliced with the shell handling every routed travel.

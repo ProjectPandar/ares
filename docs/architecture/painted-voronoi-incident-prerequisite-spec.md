@@ -157,7 +157,7 @@ The cell/edge traversal is the same raw Boost1.86 header implementation at
 `voronoi_diagram.hpp:470-475`; this is not repaired/effective-Orca qualification.
 
 External evidence directory:
-`/tmp/ares-w1-incident-revision-9994670f4/`.
+`${TMP_ROOT}/ares-w1-incident-revision-9994670f4/`.
 It retains `raw-boost-literal-diagnostic.cpp`, `raw-boost-result.json`,
 `raw-boost-compile.log/.exit`, `raw-boost-run.exit` and
 `additional-literal-mismatch.json`. The source records direct cell incidents and
@@ -165,9 +165,9 @@ full incident cycles; the result includes every measured row. Reproduce without
 committing source/output into the repository:
 
 ```sh
-E=/tmp/ares-w1-incident-revision-9994670f4
+E=${TMP_ROOT}/ares-w1-incident-revision-9994670f4
 B=/nix/store/9z7sbmna2v65lrazl880srf9i2z4c49i-boost-1.86.0-dev/include
-D=$(mktemp -d /tmp/ares-raw-boost-reproduce-XXXXXX)
+D=$(mktemp -d ${TMP_ROOT}/ares-raw-boost-reproduce-XXXXXX)
 taskset -c 18 c++ -std=c++20 -O0 -I"$B" \
   "$E/raw-boost-literal-diagnostic.cpp" -o "$D/raw-boost"
 taskset -c 18 "$D/raw-boost" > "$D/result.json"
@@ -176,7 +176,7 @@ cmp "$E/raw-boost-result.json" "$D/result.json"
 
 Original compiler was GCC15.3.0. Header/source/result SHA256 bindings, all eight
 old/measured anchor and cycle rows, and proof of preserved assertions/fields are
-in `/tmp/ares-w1-incident-green-1a8c1b40f/literal-amendment-proof.json`.
+in `${TMP_ROOT}/ares-w1-incident-green-1a8c1b40f/literal-amendment-proof.json`.
 If external evidence is unavailable, reconstruct the diagnostic by the complete
 input/API/traversal method above; never replace it with Rust-derived goldens.
 No diagnostic C++ or Native/raw-Boost output is committed.

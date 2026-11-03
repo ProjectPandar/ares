@@ -35,7 +35,7 @@ and contact retention at **688–715** remain existing adjacent behavior.
 
 ## Evidence correcting the original hypothesis
 
-Evidence root: `/home/indexyz/ares-coord/evidence/w5-p1s-bylayer-brim-green`.
+Evidence root: `${COORD_ROOT}/evidence/w5-p1s-bylayer-brim-green`.
 Read-only CPU11 GDB entry traces, no production instrumentation:
 
 - `input-pretty-2.log`: Ares `from_area` first input = contour52 + hole12.

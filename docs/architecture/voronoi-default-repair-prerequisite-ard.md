@@ -35,7 +35,7 @@ pipeline, admit painting early, or merge an unused facade as a prerequisite.
 6. Every new phase begins with source-cited failure inventory/Native evidence.
    Infrastructure, absent tests, compile errors, historical hashes or optional
    omissions cannot count as RED/GREEN. Keep durable hash-audited artifacts under
-   `~/ares-evidence`; `/tmp` alone is insufficient retention.
+   `${EVIDENCE_ROOT}`; `/tmp` alone is insufficient retention.
 7. Portable core is byte/data-only on WASM/Windows/macOS/Linux. No debugger,
    filesystem, terminal or native runtime in production core; files stay <400LOC.
 8. Painted producer/consumer work remains paused until this independent slice

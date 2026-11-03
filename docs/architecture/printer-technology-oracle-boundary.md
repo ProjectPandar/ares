@@ -7,7 +7,7 @@ This is an investigation record, not a proposed Ares slicing pipeline milestone.
 
 ## Reproduction at16ac907b
 
-Evidence: `/tmp/ares-pi-option-technology-16ac907b.PwMJDp`.
+Evidence: `${TMP_ROOT}/ares-pi-option-technology-16ac907b.PwMJDp`.
 Reuse the frozen workspace archive from the verified16ac907b build, set
 `ARES_PARITY_OPTIONS=1 ARES_OPTION_KEYS=printer_technology`, and run
 `option_coverage` with the whole process pinned to CPU0.

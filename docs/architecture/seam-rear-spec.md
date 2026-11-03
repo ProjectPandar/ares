@@ -149,7 +149,7 @@ excluded, not a secondary proposal, fixture source or reason to bypass checks.
 
 ## Durable discovery
 
-`/home/indexyz/.ares-evidence/worker4/rear-seam-slice-proposal.md`;
+`${LOCAL_EVIDENCE_ROOT}/worker4/rear-seam-slice-proposal.md`;
 root `rear-seam-proposal-4351-vqtu`, final archive SHA
 `0e65748d97f19c688bea5012d77de117f1fe26383103f6a26b55c8a950552fc9`.
 Includes complete Native/CLI streams, rc/stdout/stderr, SHA/ZIP and delta proofs,

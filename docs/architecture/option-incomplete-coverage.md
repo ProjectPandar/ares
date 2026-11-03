@@ -5,8 +5,8 @@ Status: source-owned speed fix GREEN; branch review/integration pending.
 ## Inventory and non-negotiable decisions
 
 The16ac907b report contains225 INCOMPLETE domains, not225 mismatches.
-Full key/reason lists: `/tmp/ares-option-incomplete-225.md` and `.json`, from
-`/tmp/ares-pi-options-next-16ac907b.c5evSB/seeded/option-coverage-summary.md`.
+Full key/reason lists: `${TMP_ROOT}/ares-option-incomplete-225.md` and `.json`, from
+`${TMP_ROOT}/ares-pi-options-next-16ac907b.c5evSB/seeded/option-coverage-summary.md`.
 
 | Reason | Count |
 |---|---:|
@@ -29,7 +29,7 @@ records and INCOMPLETE status. Tower/AdaptivePA retain their other owners.
 ## Rejected skirt candidate
 
 A proposed skirt witness initially required one loop. Both references in
-`/tmp/ares-option-skirt-activation-red.9UjfCv` rejected that expectation.
+`${TMP_ROOT}/ares-option-skirt-activation-red.9UjfCv` rejected that expectation.
 Saved3MF readback shows the existing fixture already has two loops, two
 layers and a disabled draft shield. This is not missing activation or a
 production regression: the new expectation was unnecessary. Withdraw that
@@ -65,14 +65,14 @@ ironing fan candidate a07dd972 isolated on pi/ironing-fan-port.
    commit/push only the branch. Coordinator review and latest-main revalidation
    still precede integration; main remains frozen until explicit notification.
 
-RED captured on be2a2990 at `/tmp/ares-option-ironing-speed-red.F7eD2y`:
+RED captured on be2a2990 at `${TMP_ROOT}/ares-option-ironing-speed-red.F7eD2y`:
 both references exit100 because saved `ironing_type` is `no ironing`, not
 `top`. The one-line activation fix follows this evidence; production is
 unchanged at that checkpoint. Every existing case remains in the public test and matrix.
 
 ## Production RED and exact rewrite boundary
 
-The attempted GREEN at `/tmp/ares-option-ironing-speed-green.A58Xc2` instead
+The attempted GREEN at `${TMP_ROOT}/ares-option-ironing-speed-green.A58Xc2` instead
 exposed deterministic DIVERGENT output with both references. All2 matrix
 cases were strictly compared with0 rejection; each disagreed across3 native
 runs. The minimum case passed saved-value/active-extrusion witnesses but
@@ -95,7 +95,7 @@ The existing public complete-output RED is the production regression test.
 
 ## Final candidate verification
 
-`/tmp/ares-option-ironing-speed-fixed.xd31Ct` captures the fix on be2a2990.
+`${TMP_ROOT}/ares-option-ironing-speed-fixed.xd31Ct` captures the fix on be2a2990.
 Official and seeded each pass2 public active-path comparisons and21 matrix
 comparisons across8 domains. The matrix deliberately exits100:6 bounded
 PASS and2 INCOMPLETE speed domains,21 generated/compared,0 rejection,

@@ -99,7 +99,7 @@ independently and never claim an unreachable assertion executed.
 ## Discovery evidence, limits and deferred behavior
 
 Accepted discovery:
-`/home/indexyz/ares-evidence/w3-zhop-lift-readonly-3fbad615e/README.md`, manifest
+`${EVIDENCE_ROOT}/w3-zhop-lift-readonly-3fbad615e/README.md`, manifest
 `8851089c627c59fd2b958fa66898c86b84112636f85b9e7366ee72998a3ca8c6`.
 It observed Bottom's actual counters0..49: Native50 parent eager requests but
 one writer entry; Rust50 eager entries with BottomOnly still selected. Four

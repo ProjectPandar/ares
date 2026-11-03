@@ -12,7 +12,7 @@ Far/near geometry × control/minimum/brim × all/single-loop modes:
   (four divergent inputs).
 Triple draft+positive minimum+brim is intentionally absent and stays deferred.
 
-Native discovery `/tmp/ares-draft-compositions-spec-2f3uvK/` accepted24/24 two-
+Native discovery `${TMP_ROOT}/ares-draft-compositions-spec-2f3uvK/` accepted24/24 two-
 mode exports on sampled CPU18 with20 skirt Zs0.2..4.0. Minimum generation emits
 extra first-layer skirt loops per group; later single-loop layers emit less
 than20mm filament, not a per-layer top-up. Brim-aware near grouping changes2

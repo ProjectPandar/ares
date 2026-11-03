@@ -22,7 +22,7 @@ adaptation diffs and extraction hashes. No Rust/JS-generated expected timing/tex
 Use the pinned upstream source and nixpkgs paths, without changing Native patches:
 
 ```sh
-export ORCA_PROCGCODE_SOURCE=/tmp/ares-orca-procgcode-source
+export ORCA_PROCGCODE_SOURCE=${TMP_ROOT}/ares-orca-procgcode-source
 export ORCA_PROCGCODE_NIXPKGS=/nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source
 node tools/chain-probe/extract-marker-time.mjs --check
 raw=$(nix build --impure --cores 8 --no-link --print-out-paths -f tools/chain-probe/marker-time.nix)

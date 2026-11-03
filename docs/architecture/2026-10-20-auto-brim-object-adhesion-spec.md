@@ -110,4 +110,4 @@ Report RED before any production changes. Prospective GREEN remains limited to
 object adhesion preparation and WidthContext/width_mm; thermal stays group scoped.
 Any strict residual requires STOP rather than broadening the boundary.
 All evidence paths in this document are relative to the external discovery root:
-`/home/indexyz/ares-coord/evidence/worker2-material-rediscovery-20261020T224150/`.
+`${COORD_ROOT}/evidence/worker2-material-rediscovery-20261020T224150/`.

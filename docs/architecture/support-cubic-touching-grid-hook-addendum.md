@@ -115,7 +115,7 @@ deferred with no work authorized by this amendment.
 
 ## Durable evidence
 
-`/home/indexyz/ares-evidence/worker3/support-touching-grid-localization/`
+`${EVIDENCE_ROOT}/worker3/support-touching-grid-localization/`
 contains all original read roots, state JSONL, logs, outputs, available reader
 variants, symbol names and decoded assembly. Earlier overwritten scratch
 readers were not snapshotted per launch; do not claim exact reader provenance

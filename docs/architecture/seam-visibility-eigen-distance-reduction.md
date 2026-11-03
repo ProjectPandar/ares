@@ -30,11 +30,11 @@ Native 首层方孔候选 0 的 visibility 为 `1.600000023841858`，候选 2 �
 
 完整的 15 行逐候选绑定和离线回放证据保存在仓库外：
 
-- `/tmp/ares-none-travel/visibility-reduction-audit.json`：位置、Native/Rust/两种离线值、相同附近 ID 顺序的逐行核验。
-- `/tmp/ares-none-travel/offline-callsite-distance.json`：SHA256 `510c94a26aab4e05753a93567ac61af79797f4d730c2ce763a3ae1326af484e7`；对应 `offline_callsite_distance.py` 保持 KD-tree 与平面距离的原求值顺序，只改变该距离调用，结果与原离线回放逐字节相同。
-- `/tmp/ares-none-travel/native-selection-events.json`：SHA256 `9247cb5e84bbb76d15902c8898d596b87744d57b2d752a82e276b03de0634ff0`。
-- `/tmp/ares-none-travel/ares-visibility-events.json`：SHA256 `2cea89cb6bbf46ccef4b01f49fb777cf2ddf68bb1ec9015b5abb02f71972ebda`。
-- `/tmp/ares-none-travel/native-visibility-disasm.txt`：SHA256 `c8edc253a64cd9e45cd39496395a903ac270754d164c3c157a7f9738d98bb9d7`。
+- `${TMP_ROOT}/ares-none-travel/visibility-reduction-audit.json`：位置、Native/Rust/两种离线值、相同附近 ID 顺序的逐行核验。
+- `${TMP_ROOT}/ares-none-travel/offline-callsite-distance.json`：SHA256 `510c94a26aab4e05753a93567ac61af79797f4d730c2ce763a3ae1326af484e7`；对应 `offline_callsite_distance.py` 保持 KD-tree 与平面距离的原求值顺序，只改变该距离调用，结果与原离线回放逐字节相同。
+- `${TMP_ROOT}/ares-none-travel/native-selection-events.json`：SHA256 `9247cb5e84bbb76d15902c8898d596b87744d57b2d752a82e276b03de0634ff0`。
+- `${TMP_ROOT}/ares-none-travel/ares-visibility-events.json`：SHA256 `2cea89cb6bbf46ccef4b01f49fb777cf2ddf68bb1ec9015b5abb02f71972ebda`。
+- `${TMP_ROOT}/ares-none-travel/native-visibility-disasm.txt`：SHA256 `c8edc253a64cd9e45cd39496395a903ac270754d164c3c157a7f9738d98bb9d7`。
 
 这些是仓库外诊断证据，不是提交的 oracle fixture，也不替代公有 E2E GREEN；`unsupported_dist` 不参与本片的选点论证。
 

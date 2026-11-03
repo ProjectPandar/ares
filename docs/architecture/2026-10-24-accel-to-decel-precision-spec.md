@@ -33,7 +33,7 @@ versus Ares61.728; later merged ACCEL250 Native30.8642 versus Ares30.864.
 Two controls fullPASS, six fresh Native slices replaystable; exact6bc existing
 actual CLI. Native61.7283 reflects binary double arithmetic then ostream, not an
 exact decimal rounding policy. Discovery evidence
-`/home/indexyz/ares-evidence/w4-accel-to-decel-precision/PROPOSAL.md` and streams.
+`${EVIDENCE_ROOT}/w4-accel-to-decel-precision/PROPOSAL.md` and streams.
 No API/seeded/RED/FULL qualification inferred from discovery.
 
 SHA:

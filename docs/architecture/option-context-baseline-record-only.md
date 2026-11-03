@@ -32,10 +32,10 @@ Full bytes, M73/footer and producer/input receipts remain authoritative.
 
 ## Retained evidence and accounting
 
-Historical matrix: `/tmp/ares-matrix-main-5cde90c23-single-attempt/option-domains.json`,
+Historical matrix: `${TMP_ROOT}/ares-matrix-main-5cde90c23-single-attempt/option-domains.json`,
 SHA256 `f68c9d5be063060ba4a78c590bb1d7eb8e14c638012bfb5f955677c297804c71`.
 The source hash was rechecked during this read-only classification.
-Classification: `/tmp/ares-option-context-baseline-28/classification.json`,
+Classification: `${TMP_ROOT}/ares-option-context-baseline-28/classification.json`,
 including the original rows and current metadata plans, not new executions.
 
 The historical context group has **41 cases / 40 comparisons / 1 rejection**:

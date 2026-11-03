@@ -25,4 +25,4 @@ four controls pass in both official and seeded modes. This is not an inverted
 assertion or a recorded Native golden. The seam_gap sibling is excluded.
 
 Initial discovery and reproducible provenance:
-`/home/indexyz/ares-evidence/w3-fill-group-flow-ratio-spec-review/README.md`.
+`${EVIDENCE_ROOT}/w3-fill-group-flow-ratio-spec-review/README.md`.

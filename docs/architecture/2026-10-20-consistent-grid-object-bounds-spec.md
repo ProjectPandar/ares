@@ -192,7 +192,7 @@ Exact discovery input identities to freeze only after SPEC approval:
 | lockedzag | 0.8 | `e4d5d41399bdd49f59dee8942b84d0d72802f05651158eb9ec3268a1c76b7d6e` |
 
 
-`/home/indexyz/ares-evidence/w3-consistent-bounds-{zigzag,crosszag,lockedzag,rect}`
+`${EVIDENCE_ROOT}/w3-consistent-bounds-{zigzag,crosszag,lockedzag,rect}`
 and matching `-seeded` directories contain commands, producer hashes, exact
 inputs, effective requests, repeats and complete-output comparisons.
 `w3-consistent-bounds-localize/{native-entry,ares}-gdb.log` contains successful

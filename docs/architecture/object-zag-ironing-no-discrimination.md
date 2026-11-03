@@ -121,7 +121,7 @@ coverage. **NO-DISCRIMINATION; STOP.**
 
 ## Retained, repeatable evidence
 
-Root: `/tmp/ares-w1-object-zag-discrimination-845adf9d7/`
+Root: `${TMP_ROOT}/ares-w1-object-zag-discrimination-845adf9d7/`
 
 - `inputs/manifest.json`: all 48 frozen input SHA256s and complete member
   manifests; archives contain input only, no G-code.

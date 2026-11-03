@@ -68,8 +68,8 @@ been executed. Do not claim complete causal GREEN, Native seam internals,
 seeded confirmation, or that all earlier contour/hole divergences share it.
 The approved Classic append lower-slice discovery remains a separate boundary.
 
-Durable report: `/home/indexyz/.ares-evidence/worker4/layer0-populated-control-localization.md`.
-Archive: `/home/indexyz/.ares-evidence/worker4/layer0-populated-localization-evidence.tar.gz`,
+Durable report: `${LOCAL_EVIDENCE_ROOT}/worker4/layer0-populated-control-localization.md`.
+Archive: `${LOCAL_EVIDENCE_ROOT}/worker4/layer0-populated-localization-evidence.tar.gz`,
 SHA `6e9f2245a5e4430969fd55ea2e3b24aabb7cf5bddd87b2157a64fb07b376e09d`.
 It retains successful neutrality receipts and unsuccessful observer histories.
 ALL temporary hooks/registration/module were removed and clean status verified

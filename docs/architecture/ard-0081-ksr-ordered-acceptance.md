@@ -48,8 +48,8 @@ changed object IDs, which the current acceptance shell explicitly rewrites.
 ## Execution evidence
 
 The object-ID mutation gives witnessed RED (Nextest session95900, exit100,
-`/tmp/ares-ard81-id-sensitive-red.log`) then GREEN after replacing the gate
-(57187, exit0, `/tmp/ares-ard81-sensitive-green.log`). Final exact-code workspace
+`${TMP_ROOT}/ares-ard81-id-sensitive-red.log`) then GREEN after replacing the gate
+(57187, exit0, `${TMP_ROOT}/ares-ard81-sensitive-green.log`). Final exact-code workspace
 run83361 passes7459 tests with9 skips in262.197s; one obsolete structural
 golden was deleted. All-target workspace Clippy, fmt and diff checks pass;
 Clippy retains existing warnings. Windows/macOS/Linux CLI tests compile via
@@ -59,10 +59,10 @@ Release WASM build and wasm-bindgen generation both succeed.
 Actual Chromium runs18686 and51986 both fail the ordered browser gate at
 byte241011, line8134 column28: initialized Orca emits
 `G1 X132.718 Y95.588 E-.02097`, WASM emits `E-.02098`.
-Retained full browser files are `/tmp/ares-wasm-gcode-DKUMMk/browser.gcode`
-and `/tmp/ares-wasm-gcode-tGJ9LK/browser.gcode`; all non-generator bytes
+Retained full browser files are `${TMP_ROOT}/ares-wasm-gcode-DKUMMk/browser.gcode`
+and `${TMP_ROOT}/ares-wasm-gcode-tGJ9LK/browser.gcode`; all non-generator bytes
 replay identically between them. Final paired input/reference/output/identity
-are in `/tmp/ares-ksr-ordered-eahjbW`. This is a genuine browser parity RED,
+are in `${TMP_ROOT}/ares-ksr-ordered-eahjbW`. This is a genuine browser parity RED,
 not an accepted tolerance, and later path/control differences also remain.
 The passing native CLI gate does not establish browser or global completion.
 

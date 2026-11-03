@@ -74,7 +74,7 @@ Existing state/consumers and all approved RED fixtures/SPEC/helpers must freeze.
 ## Approved read-only discovery / actual first producer witness
 
 Authority root:
-`/home/indexyz/ares-evidence/w6-3fb-ironing-modifier-angle-ocd0lki0/`.
+`${EVIDENCE_ROOT}/w6-3fb-ironing-modifier-angle-ocd0lki0/`.
 DISCOVERY-RR.md, verification.json, verify-discovery.py and full streams/probes.
 
 Existing validation/modifier-wall-loops-classic.3mf: one cube plus existing

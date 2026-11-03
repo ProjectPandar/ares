@@ -3,7 +3,7 @@
 Status: docs-only SPEC, followed by separately committed Native-first public RED.
 Base4b3844e28711a6a1381ca847dbd390fe67f2347f.
 Branch worker6/zero-area-orientation-spec; independent worktree
-/home/indexyz/ares.worker6-readonly-4b384. CPU15, one job/test thread; no FULL.
+${WORKTREE_ROOT}/ares.worker6-readonly-4b384. CPU15, one job/test thread; no FULL.
 The approved occlusion chain20e41b63f remains frozen in its separate worktree.
 Production GREEN requires separate RED approval and authorization.
 
@@ -60,7 +60,7 @@ fresh scope review, not rounding/consumer/fuzzy-generation compensation.
 ## Qualified discovery and proof limits
 
 External authority:
-`/home/indexyz/ares-evidence/w6-4b-fuzzy-inward-5myipx2g/verification.json`.
+`${EVIDENCE_ROOT}/w6-4b-fuzzy-inward-5myipx2g/verification.json`.
 All raw arrays remain external; DISCOVERY-RR.md is a bounded summary.
 
 -77 Native/Rust inward calls have identical center/first/second point inputs.

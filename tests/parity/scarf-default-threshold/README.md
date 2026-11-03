@@ -55,6 +55,6 @@ cargo nextest run -p ares-cli --test orca_parity -E 'test(scarf_default_threshol
 ```
 
 The repeatable first-call artifacts are retained under
-`/tmp/ares-scarf-threshold/post-loop-3d65/` (input audit, gdb log reference,
+`${TMP_ROOT}/ares-scarf-threshold/post-loop-3d65/` (input audit, gdb log reference,
 reachability observation, frozen-control declarations and fresh-native-first).
 No panic probe was applied or committed; OrcaSlicer was not rebuilt.

@@ -61,7 +61,7 @@ with W2's branch, plus the brim suite over `polyline_chain.rs`.
 Probe evidence (diagnostic-only, not committed): instrumented native builds
 `/nix/store/rywgnj0hyp…-orca-slicer-chainorder-2.4.2` and
 `/nix/store/prkz5v382cjxz…-orca-slicer-chainorder-ei-2.4.2`; dumps and
-comparison scripts under `/tmp/ares-chainorder/` and `/tmp/w5-m73/*ei*.txt`.
+comparison scripts under `${TMP_ROOT}/ares-chainorder/` and `/tmp/w5-m73/*ei*.txt`.
 
 ## Reproduction
 

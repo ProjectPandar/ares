@@ -63,7 +63,7 @@ No new public or test-only production seam is added to force that branch.
 
 ## Executed classification (pre-implementation)
 
-Evidence `/tmp/ares-tiq2-loop-red/audit-final.json`: eight input/output/producer
+Evidence `${TMP_ROOT}/ares-tiq2-loop-red/audit-final.json`: eight input/output/producer
 Slice receipt bindings and model-byte invariance, audit exit0. Final registered
 controls have three intended REDs and five byte-PASS controls; no TIMEOUT.
 

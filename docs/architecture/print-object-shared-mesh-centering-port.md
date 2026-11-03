@@ -3,7 +3,7 @@
 Status: SPEC49cf8a57a approved; C1 then C2, independently RED/GREEN/review/full
 and merge. C2 begins after C1 closes; public load/selection changes need a new SPEC.
 Base: origin/main `023b742f26caab6c51df9ebb6db156d44792fc4b`.
-Worktree: `/tmp/ares-worker3-object-centering-spec`.
+Worktree: `${TMP_ROOT}/ares-worker3-object-centering-spec`.
 
 ## Owning upstream boundaries
 

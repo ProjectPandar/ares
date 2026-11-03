@@ -23,7 +23,7 @@ materialization. Input SHA256:
 `ab00b9040c3ccc1c10490a220880b87108aed7edd3a19926b8e7967f1287e506`.
 
 Discovery bundle:
-`/home/indexyz/ares-coord/evidence/w5-stock-multi-materialized/`;
+`${COORD_ROOT}/evidence/w5-stock-multi-materialized/`;
 `PROPOSAL-RR.md`, `0/verified.json`, input, raw streams, diffs and launch receipts
 are retained there. Official and seeded Native each succeed twice and agree
 apart from generated-by normalization; Ares succeeds twice with stable output.
@@ -192,7 +192,7 @@ paths or to global state. Preserve the W2 `mm3_per_mm` expression and leave
 `motion/skirt_brim.rs` untouched. Keep `brim.rs` below400 LOC.
 
 Pre-implementation Native-first supplemental RED discovery is retained under
-`/home/indexyz/ares-coord/evidence/w5-type1-t4-single-brim-ordered-discovery`:
+`${COORD_ROOT}/evidence/w5-type1-t4-single-brim-ordered-discovery`:
 stock enabled input, GUI-reachable outer-only brim20, tower(80,115), cube0
 no-brim override. Official and seeded Native/CLI exits are0; complete raw
 streams differ. Existing frozen public fixtures/tests remain unchanged.

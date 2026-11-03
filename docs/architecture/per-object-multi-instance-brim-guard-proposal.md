@@ -7,7 +7,7 @@ Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Native-first frozen accepted witness
 
-Evidence `/tmp/ares-perobject-copies-proposal-db443be4a/discovery-report.json`.
+Evidence `${TMP_ROOT}/ares-perobject-copies-proposal-db443be4a/discovery-report.json`.
 Frozen target derived from `tests/parity/multi-instance-brim/target.3mf` by ONLY
 skirt_type combined→perobject. Non-config ZIP members and all other settings
 verified identical. Same-input combined-skirt control retained.

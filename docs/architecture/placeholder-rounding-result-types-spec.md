@@ -33,5 +33,5 @@ in official and seeded modes. Half-tie round input also exercises upstream
 half-away behavior. Only existing generator identity/date normalization.
 
 Initial floor discovery provenance:
-`/home/indexyz/ares-coord/evidence/w5-808db-floor-discovery/PROPOSAL-RR.md`.
+`${COORD_ROOT}/evidence/w5-808db-floor-discovery/PROPOSAL-RR.md`.
 Stack on approved digits+int tip 808dbd460 for combined integration.

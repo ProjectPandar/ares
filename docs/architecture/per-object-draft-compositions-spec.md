@@ -66,7 +66,7 @@ Do not top up later layers or re-run the group budget in the emitter.
 
 ## Actual two-mode Native and current-main Ares evidence
 
-Root: `/tmp/ares-draft-compositions-spec-2f3uvK/`.
+Root: `${TMP_ROOT}/ares-draft-compositions-spec-2f3uvK/`.
 Twelve external pure 3MFs: far/near geometry × control/minimum/brim × all/single.
 Source is existing far-brim/near-brim input; only explicit draft, minimum, brim
 and single-loop settings vary. All other geometry, source IDs, singleton

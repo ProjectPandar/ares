@@ -32,5 +32,5 @@ implementation, in official and seeded modes. Existing generator identity/date
 normalization only. Both INPUT3MFs are real official Native CLI exports.
 
 Discovery source, hashes and replay evidence:
-`/home/indexyz/ares-coord/evidence/w5-7b2fd-int-discovery/PROPOSAL-RR.md`.
+`${COORD_ROOT}/evidence/w5-7b2fd-int-discovery/PROPOSAL-RR.md`.
 This slice stacks on approved digits GREEN 7b2fd6425 for joint integration.

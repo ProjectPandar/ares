@@ -42,6 +42,6 @@ reader storage/dist_E/other consumer rewrites and both previous spiral
 points remain outside scope. No FULL without a separate window.
 
 External discovery provenance:
-`/home/indexyz/ares-coord/evidence/w5-spiral-reader-float-distance/`.
+`${COORD_ROOT}/evidence/w5-spiral-reader-float-distance/`.
 Source arithmetic replay/GDB evidence there is diagnostic, not substituted
 for formal shared-checker public API/CLI RED evidence.

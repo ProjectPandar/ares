@@ -12,7 +12,7 @@ source-kernel diagnostic, not full Native Viewer/GL execution**: real
 `GCodeViewer.cpp:1682-1752` block (`tools/chain-probe/actual-speed-profile/`).
 
 ```sh
-export ORCA_PROCGCODE_SOURCE=/tmp/ares-orca-procgcode-source
+export ORCA_PROCGCODE_SOURCE=${TMP_ROOT}/ares-orca-procgcode-source
 export ORCA_PROCGCODE_NIXPKGS=/nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source
 node tools/chain-probe/extract-actual-speed-profile.mjs --check
 out=$(nix build --impure --cores 4 --max-jobs 1 --no-link --print-out-paths -f tools/chain-probe/actual-speed-profile.nix)

@@ -34,7 +34,7 @@ Discovery target firstdiffbyte6161: Native proceeds to Innerwall, Ares emits
 redundant `SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY=7` and later restores7.
 Three cleancontrols fullPASS,10Native slices5inputs replaystable (the fifth,
 7.0002, fails independently due precision and is explicitly excluded).
-Evidence `/home/indexyz/ares-evidence/w4-merged-jerk-tolerance/PROPOSAL.md`,
+Evidence `${EVIDENCE_ROOT}/w4-merged-jerk-tolerance/PROPOSAL.md`,
 results, clean-control and original streams. Exact062c existing CLI, CPU17.
 
 SHA inputs:

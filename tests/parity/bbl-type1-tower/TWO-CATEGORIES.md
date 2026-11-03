@@ -13,7 +13,7 @@ it. Selecting stock Support For PLA/PETG instead succeeds official and seeded.
 The candidate was produced by official Native --load-filaments against the
 accepted baseline and --export-3mf. Variant-aware preset flattening mirrors
 presets.rs; the retained preparation script records source selection. Evidence:
-/home/indexyz/ares-coord/evidence/w5-type1-two-category-support/.
+${COORD_ROOT}/evidence/w5-type1-two-category-support/.
 
 Input SHA25609d8037066427023093b02b068e7c29dd36acb27d9680d173f82925e6eb42f3a.
 Separate test module uses native_stream_case::check, complete ordered streams and

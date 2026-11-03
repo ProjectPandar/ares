@@ -79,7 +79,7 @@ No G-code was generated. Sources: `OrcaSlicer.cpp:2653–2654` reports/exits
 `CLI_PROCESS_NOT_COMPATIBLE`; `libslic3r/Utils.hpp:42` defines that code as -17.
 This is genuine upstream behavior, not missing Native or classification RED.
 The second planned `--export-3mf` invocation was not executed after the stop.
-Evidence: `/tmp/ares-pcp-embedded/admission/{input-receipt.json,native-slice/command.txt,native-slice/exit,native-slice/result.json}`.
+Evidence: `${TMP_ROOT}/ares-pcp-embedded/admission/{input-receipt.json,native-slice/command.txt,native-slice/exit,native-slice/result.json}`.
 The initial mistaken tower-enabled fixture was rejected during offline preflight
 before any Native invocation and is retained separately; no Native retry used it.
 
@@ -92,7 +92,7 @@ new matrix, not an unnoticed success-seeking retry of the failed sample. Further
 Native admission waits for re-approval of this revision. No new probe tools.
 
 Approved revised admission (existing Native only),
-`/tmp/ares-pcp-embedded/admission-r2`: both `--slice 0` and `--export-3mf`
+`${TMP_ROOT}/ares-pcp-embedded/admission-r2`: both `--slice 0` and `--export-3mf`
 exit0. Footer carries the exact serialized M/B/A/B sequence; the actual
 roundtrip `Metadata/project_settings.config` vector equals the requested
 ordered four elements. `native-observability.json` and command/load/input-member
@@ -119,7 +119,7 @@ After production advances, the test was rebuilt on `880a6c8d5` (candidate
 web/docs-only `b0b7905fa` git-only carry to `89d8c07d6`; the Native run uses the
 completed 880 archive, not an assertion that a new archive was built on b0.
 Read-only directed official run `4d38b40f-14f5-47f7-bcba-98476e2a5100`,
-`/tmp/ares-pcp-embedded/red-880-official`, admitted at load1=2.71<30 after
+`${TMP_ROOT}/ares-pcp-embedded/red-880-official`, admitted at load1=2.71<30 after
 worker6 END and before worker3 full START, 2 nextest threads, fresh cache/dir.
 No Native timeout or retries. Retained baseline plus **all seven revised cases**
 PASS public Ares typed/Serde checks, live Native footer presence, actual Native
@@ -157,7 +157,7 @@ unexecuted required values. Other bridge/filament/G2/G4/wrapping hooks remain.
 
 Directed official and seeded cold/warm runs each PASS both tests: bounded
 classification and selected-key unfiltered-value sweep. Evidence:
-`/tmp/ares-pcp-embedded/{green-first-official,green-official-hot,green-seeded-cold,green-seeded-hot}`.
+`${TMP_ROOT}/ares-pcp-embedded/{green-first-official,green-official-hot,green-seeded-cold,green-seeded-hot}`.
 Warm runs share only the original-project export cache; the footer slice and
 Native 3MF roundtrip commands are still live/fresh per witness. Do not claim
 these are cached Native fidelity results. The key-local module remains under
@@ -167,10 +167,10 @@ approval to push.
 
 ## Inventory evidence and honest coverage meaning
 
-`/tmp/ares-apa-g1-bridges/other-plan-inventory-audit.json` is an invariance audit,
+`${TMP_ROOT}/ares-apa-g1-bridges/other-plan-inventory-audit.json` is an invariance audit,
 not the full inventory: it records only the previous APA key delta. Its full
 associated plan file is
-`/tmp/ares-apa-g1-bridges/green-first-official/artifacts/option-domain-plans.json`.
+`${TMP_ROOT}/ares-apa-g1-bridges/green-first-official/artifacts/option-domain-plans.json`.
 There, this key is `coStrings`, source `PrintConfig.cpp:1832`, one baseline case
 with `value:null`, `declared_scope_complete:false`, omission
 `unbounded domain (string/point/blob) — baseline only`.
@@ -188,7 +188,7 @@ an absent/default case cannot substitute for explicit cases.
 ## Fixed witness matrix (declare before running)
 
 Use the established Native-produced classic `cube10.stl` single-logical-filament,
-no-prime-tower project retained in `/tmp/ares-pcp-embedded/admission/original.3mf`
+no-prime-tower project retained in `${TMP_ROOT}/ares-pcp-embedded/admission/original.3mf`
 (source: prior `case-1D75FV`, adaptive-pa/no-cooling). Keep its fixed process
 settings rather than claiming untouched profile defaults. Inject only this key
 in `Metadata/project_settings.config` for each

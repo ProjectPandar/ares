@@ -79,7 +79,7 @@ All roots are under /tmp. Merged full output: /tmp/worker6-stack-104d-full.sDQ4K
 Summary receipt: /tmp/worker3-first-layer-state-STOP-main104d.json.
 The roots, drivers, read-only snapshots, symbol/disassembly audit and summary
 are archived outside Git at:
-/home/indexyz/ares-evidence/worker3/first-layer-state-main104d-9y7stqky.tar.gz
+${EVIDENCE_ROOT}/worker3/first-layer-state-main104d-9y7stqky.tar.gz
 Archive SHA256:05d72fbd8d0f9da1fc74a2804056308316e1d0cf4a479eace3c202c8c5bbfc3b.
 No Native output is committed. This document's input hashes/counts/outcomes
 remain usable if /tmp's10-day cleanup removes supplementary roots.

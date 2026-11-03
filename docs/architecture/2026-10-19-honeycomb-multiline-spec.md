@@ -11,8 +11,8 @@ Using the existing input-only `tests/parity/cube10.stl` and the live
 `fill_multiline=2`, `sparse_infill_angle=45`, and `sparse_infill_density=20%`,
 Native was admitted and the strict whole-file comparison diverged in both
 modes. Official evidence is under
-`/home/indexyz/ares-evidence/w3-honeycomb-official2`; seeded evidence is under
-`/home/indexyz/ares-evidence/w3-honeycomb-seeded`. Each mode had three fresh
+`${EVIDENCE_ROOT}/w3-honeycomb-official2`; seeded evidence is under
+`${EVIDENCE_ROOT}/w3-honeycomb-seeded`. Each mode had three fresh
 Native runs; the target remained divergent on all three. The first difference
 is byte 83637 (line 3727): Native `G1 X114.003 Y111.205 E.08267`, Ares
 `G1 X114.003 Y111.205 E.08266`; neighboring motion is identical and both
@@ -24,8 +24,8 @@ outputs are 121942 bytes. The controls `fill_multiline=3` at 45 degrees and
 Localization used CPU12 GDB reads, without production probes. The auxiliary
 Native diagnostic build is not an oracle; strict admission/equality continues
 to use official and seeded Native runners. Diagnostic evidence is under
-`/home/indexyz/ares-evidence/w3-honey-native-entry/gdb.log` and
-`/home/indexyz/ares-evidence/w3-honey-current-red-gdb.log` (current RED's
+`${EVIDENCE_ROOT}/w3-honey-native-entry/gdb.log` and
+`${EVIDENCE_ROOT}/w3-honey-current-red-gdb.log` (current RED's
 freshly rebuilt test executable). Native diagnostic-source `Fill.cpp`,
 `FillBase.cpp`, and `FillHoneycomb.cpp` compare byte-identically to the pinned
 upstream checkout `8500fcdccaa10b5099ac20d252af3a7c560046f1`.

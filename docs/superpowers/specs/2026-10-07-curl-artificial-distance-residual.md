@@ -7,7 +7,7 @@ Supersedes the parked C1 residual from
 `pi/m853-wasm-moves`); this is the follow-up slice it predicted
 ("artificial distance 0.081 vs ~0 on seam-adjacent segments").
 
-Case: stock matrix Sermoon V1 cube10 (`/tmp/ares-stock-matrix-
+Case: stock matrix Sermoon V1 cube10 (`${TMP_ROOT}/ares-stock-matrix-
 028c758-seeded/case-6qvP0t/input.3mf`), the sole stock DIVERGENT at
 `clusters.md:301` (`curled_perimeter_slowdown` test target).
 

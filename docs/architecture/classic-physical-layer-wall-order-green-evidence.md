@@ -66,7 +66,7 @@ inside the primary29-test totals.
 
 ## Durable artifacts and rebasing
 
-Archives under `/home/indexyz/.ares-evidence/worker4/` (outside /tmp):
+Archives under `${LOCAL_EVIDENCE_ROOT}/worker4/` (outside /tmp):
 - `classic-layer-id-red-full9-aTog.tar.gz`, SHA256
   `194c166a5cf0282bb19f18fdbbddfa202d9a06e24068b1e4ac14f35e5357d6d5`;
 - `classic-layer-id-green-full9-BaHD.tar.gz`, SHA256

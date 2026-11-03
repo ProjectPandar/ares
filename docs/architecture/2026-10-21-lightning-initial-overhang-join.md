@@ -80,7 +80,7 @@ probes are retained/excluded. Exact INPUT to the initial offset was NOT
 captured, no causal counterfactual/whole-GREEN sufficiency or earliest
 possible upstream divergence is claimed. Same emission domains are NOT
 misrepresented as identical initial-offset input snapshots.
-Evidence `/home/indexyz/ares-coord/evidence/w5-4b-lightning-initial-overhang/`.
+Evidence `${COORD_ROOT}/evidence/w5-4b-lightning-initial-overhang/`.
 
 ## Included / deferred / exclusions
 

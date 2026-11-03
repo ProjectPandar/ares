@@ -79,7 +79,7 @@ execution/argument discrepancy. Both successful debugger full outputs
 match ordinary CLI outputs, no inferior calls/data/register writes.
 No complete time-cache causal reconstruction or whole-GREEN sufficiency
 is claimed before formal testing. Discovery evidence:
-`/home/indexyz/ares-coord/evidence/w5-firmware-absolute-literal-e/`.
+`${COORD_ROOT}/evidence/w5-firmware-absolute-literal-e/`.
 
 ## Included / deferred / exclusions
 

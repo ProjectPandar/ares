@@ -57,7 +57,7 @@ interfaces; no new regex dependency, escaping policy or name validation.
 ## Approved discovery / first producer proof
 
 External authority:
-`/home/indexyz/ares-evidence/w6-47821-object-label-name-nswzrbdw/`.
+`${EVIDENCE_ROOT}/w6-47821-object-label-name-nswzrbdw/`.
 DISCOVERY-RR.md,verification.json,verify-discovery.py,pair-proof.json and trace.
 
 Both inputs: one Classic/unpainted object, Marlin, exclude_object=1, interlocking/

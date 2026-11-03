@@ -2,7 +2,7 @@
 
 Input-only3MFs copied byte-for-byte from the accepted read-only discovery at
 main `47821c760d5ea86102a34bbc78c092bbaf381214`:
-`/home/indexyz/ares-evidence/w3-aligned-template-readonly-47821c760/official/`.
+`${EVIDENCE_ROOT}/w3-aligned-template-readonly-47821c760/official/`.
 No Native G-code, expected output snapshot or numerical Native oracle is stored.
 Only frozen input SHA identities appear in the thin shared-check tests.
 

@@ -51,7 +51,7 @@ rather than silently expanding this slice.
 
 ## 2. Deduplication before proposing
 
-Evidence: `/home/indexyz/ares-evidence/w4-custom-temperature-command-scan/`.
+Evidence: `${EVIDENCE_ROOT}/w4-custom-temperature-command-scan/`.
 `overlap-audit.json` records exact refs/ranges and file-history checks:
 
 | Frozen/pending owner | audited tip | temperature.rs changed in bounded stack? |
@@ -102,7 +102,7 @@ under generator-line normalization, BEFORE comparison to the existing exact-tip
 Ares CLI executable. Binary:
 `/tmp/w4-integration-5350c3b0a-full-official-target/debug/ares`, built and qualified
 at `957e963c3` before it was merged. Wrapper:
-`/home/indexyz/ares-coord/bin/orca-wrapper-inherit-cpu.sh`, official2.4.2.
+`${COORD_ROOT}/bin/orca-wrapper-inherit-cpu.sh`, official2.4.2.
 `probe.py` ran serially within CPU17 and `ARES_PIN_OFFSET=17`, exit0. No cargo
 build or FULL run was started. Inputs, complete streams, logs, ordered diffs,
 `probe.py`, results/hashes are stored under the evidence root.

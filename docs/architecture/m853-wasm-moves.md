@@ -82,13 +82,13 @@ exclude dummy and include phantom boundaries; counts are intentionally different
 
 ## Test evidence so far
 
-API-missing RED logs: `/tmp/ares-m853-convert-red.log` and
-`/tmp/ares-m853-wasm-buffers-red.log`. After implementation,23 vgcode/WASM
-tests pass (`/tmp/ares-m853-bindings-green.log`); targeted Clippy adds no
+API-missing RED logs: `${TMP_ROOT}/ares-m853-convert-red.log` and
+`${TMP_ROOT}/ares-m853-wasm-buffers-red.log`. After implementation,23 vgcode/WASM
+tests pass (`${TMP_ROOT}/ares-m853-bindings-green.log`); targeted Clippy adds no
 warnings. Existing handoff color conversion matches Color.cpp332–367,
 including invalid hex pairs remaining black before minimum-brightness clamp.
 
-Real Chrome151 E2E: `/tmp/ares-m853-browser.sCQLYR/artifacts/result.json`.
+Real Chrome151 E2E: `${TMP_ROOT}/ares-m853-browser.sCQLYR/artifacts/result.json`.
 Ender3:5564 moves/7347 vertices; KSR:635147 moves/823716 vertices; zero
 mismatches. Native oracle actually ran on the browser's emitted G-code,
 not on a native replacement slice. Full raw typed buffers, native CSV,
@@ -104,9 +104,9 @@ ARES_PROCGCODE_BIN=/absolute/orca-slicer \
 ARES_E2E_CHROME=/absolute/chrome node web/e2e/wasmMoves.mjs
 ```
 
-Full workspace validation `/tmp/ares-m853-wasm-gates.52EY0P`:7612 PASS,
+Full workspace validation `${TMP_ROOT}/ares-m853-wasm-gates.52EY0P`:7612 PASS,
 9 existing skips; Clippy/fmt/WASM check exit0. Clippy reports102 core-lib/103
-core-test/21 parity warnings, all in existing code, with no binding warnings. Full controls `/tmp/ares-m853-wasm-controls.iyzkqM`:seeded407/407
+core-test/21 parity warnings, all in existing code, with no binding warnings. Full controls `${TMP_ROOT}/ares-m853-wasm-controls.iyzkqM`:seeded407/407
 PASS; official399 PASS/8 accepted existing failures. Exact failure-name
 comparison adds/removes no names (`failure-comparison.json`). This is not
 an all-green official claim; no assertions or comparator bounds were relaxed.

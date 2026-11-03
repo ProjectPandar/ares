@@ -60,7 +60,7 @@ for factory Ender3 firmware or physical acceleration tuning.
 
 All six fresh Native discovery slices replay identically and all Native/CLI
 exits are zero. Discovery is not public API, seeded, RED or FULL qualification.
-Evidence: `/home/indexyz/ares-evidence/w4-repetier-travel-cache-gate/`, including
+Evidence: `${EVIDENCE_ROOT}/w4-repetier-travel-cache-gate/`, including
 `target-diff-audit.json`. The older deferred BBL travel=10000 observation is
 retained externally but is not needed as a public input in this slice.
 

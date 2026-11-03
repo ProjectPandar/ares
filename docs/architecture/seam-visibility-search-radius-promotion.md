@@ -33,11 +33,11 @@ Native `compute_global_occlusion` 模块相对地址 `0x100bd08–0x100bd56`：�
 
 仓库外证据：
 
-- `/tmp/ares-counterbore/native-first-layer-visibility/events.json`，SHA256 `d363339be59be567cb166338ba4b1b9628963af5d5902d880b127c7ea1ef74af`。
+- `${TMP_ROOT}/ares-counterbore/native-first-layer-visibility/events.json`，SHA256 `d363339be59be567cb166338ba4b1b9628963af5d5902d880b127c7ea1ef74af`。
 - 同目录 `factorial-replay.json`，SHA256 `f269acaacee0a74f416a16a4f16bd053c8a6a898637a9a136fbf0c1ae76a0db4`。
 - 同目录 `radius-replay.json`，SHA256 `05f7b9a97053a151795a94909ac6fc378bc880f0936a588303300fe60f10933f`。
 - 同目录 `global-occlusion-disasm.txt`，SHA256 `27e3ebf5772a89cede720195ea676d0ddb70276e6e88360b5278c3b75b38d31a`。
-- `/tmp/ares-counterbore/first-layer-visibility/ares-visibility-events.json`，SHA256 `3c2eb3b97c71337ae015bdb7ab9b6caec1fa6fc436e56e7dcd523d2efe05c4ea`。
+- `${TMP_ROOT}/ares-counterbore/first-layer-visibility/ares-visibility-events.json`，SHA256 `3c2eb3b97c71337ae015bdb7ab9b6caec1fa6fc436e56e7dcd523d2efe05c4ea`。
 
 所有 Native输出、maps、buffers、运行记录保留仓库外；无效的 optimized-out 探针不算证据，未初始化 unsupported 数据不参与论证。GDB exit0 不等于公有完整输出 PASS。
 

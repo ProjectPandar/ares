@@ -1,7 +1,7 @@
 # Zero-retraction wipe description: pure inputs
 
 Approved SPECa7e97736e7b5cba08c859bc13ec1efd4463627a5.
-Three input-only3MFs from /tmp/ares-wipe-realistic-discovery-BkOTyp/inputs;
+Three input-only3MFs from ${TMP_ROOT}/ares-wipe-realistic-discovery-BkOTyp/inputs;
 exact input/source hashes in manifest.json. No Native artifacts committed.
 
 before-50: retract_before_wipe50%/retraction_length0.8 ordinary control.

@@ -24,7 +24,7 @@ about displayed decimals or fine physical tuning. Other profile/geometry/templat
 unchanged. Repetier machine-limit gate false caches0 after approved base slice,
 so no clamp/roundingconfound. Target NativeM207X7.12345 vsAres7.123, firstdiff4911;
 controlsfullPASS,6freshNative slicesstable/allCLIexit0. Discoveryevidence
-`/home/indexyz/ares-evidence/w4-repetier-jerk-precision/PROPOSAL.md`, exact0bbCLI.
+`${EVIDENCE_ROOT}/w4-repetier-jerk-precision/PROPOSAL.md`, exact0bbCLI.
 No API/seeded/RED/FULLclaim inferred.
 
 SHA:

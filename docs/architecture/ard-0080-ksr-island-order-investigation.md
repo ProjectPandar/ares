@@ -28,20 +28,20 @@ acceptance remains open.
 
 Baseline is pushed commit `e676f3e23dff0d47053ed66088b8770ac351b055`.
 Original strict KSR replay16280 exits100/18.852s; complete pair
-`/tmp/ares-ard80-ksr-baseline/case-cim6Iv` first differs at M73 line9946.
+`${TMP_ROOT}/ares-ard80-ksr-baseline/case-cim6Iv` first differs at M73 line9946.
 
 External grid probes produce apparent REDs in under one second. A three-column,
 two-layer, two-wall fixture appears minimal under unrestricted native
 scheduling: removing any column, one layer, or one wall yields a passing
 full output in those exploratory runs. Strict cached replay of the three
-columns exits100, pair `/tmp/ares-ard80-minimal-strict-red/case-ZdT4q5`,
+columns exits100, pair `${TMP_ROOT}/ares-ard80-minimal-strict-red/case-ZdT4q5`,
 first difference line57 (`X165.169` versus `X135.169`). These are not accepted
 regressions: subsequent native repeats contradict deterministic RED.
 
 Five normal-affinity native runs at fixed seed0 include one different path
-order, retained in `/tmp/ares-ard80-native-normal-repeat`. Five CPU0 runs are
+order, retained in `${TMP_ROOT}/ares-ard80-native-normal-repeat`. Five CPU0 runs are
 identical and match complete Ares output, retained in
-`/tmp/ares-ard80-native-single-repeat`. The nine-column-grid CPU0 repeats
+`${TMP_ROOT}/ares-ard80-native-single-repeat`. The nine-column-grid CPU0 repeats
 also match complete Ares output. Thus no production sorting change can be
 justified by these grid probes. Debugger captures of all point-chain inputs
 and results, and final island contours, agree for that model. The failed
@@ -51,10 +51,10 @@ inferior exit; Rust captures also exit normally. All scripts live in /tmp.
 
 Five unrestricted full KSR native runs vary in estimated time and movements,
 including the same Z52 alternative selected by Ares. Five CPU0 full KSR runs
-are identical, retained at `/tmp/ares-ard80-ksr-native-single-repeat`.
+are identical, retained at `${TMP_ROOT}/ares-ard80-ksr-native-single-repeat`.
 This establishes stability for this input/build, not general scheduler
 independence. Strict replay28572 against the fresh single-CPU native output
-still exits100, pair `/tmp/ares-ard80-ksr-single-strict-red/case-oqh90Y`,
+still exits100, pair `${TMP_ROOT}/ares-ard80-ksr-single-strict-red/case-oqh90Y`,
 with the same first M73 difference. Movement-only localization still finds
 native travel `(150.165,101.366)` versus Ares `(135.165,86.366)` at Z52.
 Native normal run1 shares Ares's Z52 choice but first differs from Ares at
@@ -80,9 +80,9 @@ A closed two-layer base plate with three raised square posts and active
 `only_one_wall_top=1` gives a stable CPU0 RED. Disabling cooling exposes
 the movement difference directly instead of its derived minimum-layer
 speed difference. Five independent native runs are identical at
-`/tmp/ares-ard80-base-grid3-stability`; nine-post stability is retained at
-`/tmp/ares-ard80-base-grid9-stability`. Strict cached RED exits100/0.6s,
-pair `/tmp/ares-ard80-base-minimal-strict-red/case-yWPKqK`, first differs at
+`${TMP_ROOT}/ares-ard80-base-grid3-stability`; nine-post stability is retained at
+`${TMP_ROOT}/ares-ard80-base-grid9-stability`. Strict cached RED exits100/0.6s,
+pair `${TMP_ROOT}/ares-ard80-base-minimal-strict-red/case-yWPKqK`, first differs at
 line75: native `G1 X135.149 Y116.383 Z.6`, Rust
 `G1 X165.149 Y116.383 Z.6`. Removing the middle post loses this witness;
 removing either end reveals later seam differences instead, so do not claim
@@ -120,19 +120,19 @@ Original unchanged KSR input SHA256 remains
 `698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9`.
 After the sort removal, strict replay80223 exits0/46.307s against the retained
 initialized reference; complete pair is
-`/tmp/ares-ard80-ksr-after/case-V1WiUt`. Strict replay52146 against this
+`${TMP_ROOT}/ares-ard80-ksr-after/case-V1WiUt`. Strict replay52146 against this
 turn's stable CPU0 reference also exits0/28.569s, retained under
-`/tmp/ares-ard80-ksr-single-green`. Both compare every ordered byte except
+`${TMP_ROOT}/ares-ard80-ksr-single-green`. Both compare every ordered byte except
 the existing generator-line normalization, including M73 and all movements.
 Ares raw output is 6,321,724 bytes, SHA256
 `3869281da4157938bd0cd0752a068087145cc7d293b3cf725c91fa9987c77016`.
 
 The live initialized-object-ID self-replay retains two newly produced KSR
-outputs at `/tmp/ares-ard80-consumers/initialized-object-id-EKDM9d`.
+outputs at `${TMP_ROOT}/ares-ard80-consumers/initialized-object-id-EKDM9d`.
 Its self-replay test does not establish Ares parity by itself: separately
 feed both complete outputs into the unchanged strict comparator. Replay26137
 exits0/25.355s, two PASS pairs retained in
-`/tmp/ares-ard80-fresh-ksr-green`. Thus the earlier M73/Z52 mismatch is
+`${TMP_ROOT}/ares-ard80-fresh-ksr-green`. Thus the earlier M73/Z52 mismatch is
 resolved for this exact input and identified reference, not all printers or
 untouched official multithreaded output.
 
@@ -159,7 +159,7 @@ now strictly passes; true still diverges due to deferred
 INCOMPLETE. `printer_technology=FFF` passes; SLA is still converted to FFF
 by the external CLI application boundary and remains FAIL, not a tested SLA
 implementation. Full inputs/outputs and domain summary remain at
-`/tmp/ares-ard80-option-residuals`. No global domain completion is claimed.
+`${TMP_ROOT}/ares-ard80-option-residuals`. No global domain completion is claimed.
 
 ## Independent review outcome
 

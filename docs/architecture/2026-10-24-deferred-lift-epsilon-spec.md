@@ -127,7 +127,7 @@ makes no public API, seeded, RED, GREEN or FULL claim for this new slice.
 
 ## Evidence / ownership audit
 
-`/home/indexyz/ares-evidence/w4-deferred-lift-epsilon/`: `probe.py`, `probe.log`,
+`${EVIDENCE_ROOT}/w4-deferred-lift-epsilon/`: `probe.py`, `probe.log`,
 `results.json`, six input archives, per-case two Native logs/streams, actual Ares
 CLI stream/log, full `ordered.diff`, `overlap-audit.json`, `binary-provenance.json`.
 Probes were serial on CPU17, `ARES_PARITY_THREADS=1`, `ARES_PIN_OFFSET=17`,

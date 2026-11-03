@@ -37,5 +37,5 @@ residual requires STOP/report. Freeze tests/inputs/helpers; no FULL.
 Same-geometry raft2 countercontrol remains an external passing screen,
 not an extra formal fixture or dual-mode regression claim.
 Discovery/GDB evidence remains separate at
-`/home/indexyz/ares-coord/evidence/w5-478-raft-contact-first-flow/`,
+`${COORD_ROOT}/evidence/w5-478-raft-contact-first-flow/`,
 not substituted for formal shared-checker public API/CLI proof.

@@ -11,7 +11,7 @@ Native-success divergence remains unresolved**, separately tracked in
 that reported input. Fully specified missing-matrix reconstruction is the FM
 RED. Generic materialization RED moves to a separate slice.
 Predecessor VG1/UsedFilaments is integrated at `9e3e8183777d465f9134361eb26c0a27d82e82c7`.
-This is #55 / `X2D-FM` in `/tmp/ares-matrix-clusters.md`, independently owned by
+This is #55 / `X2D-FM` in `${TMP_ROOT}/ares-matrix-clusters.md`, independently owned by
 pi-lint. It is configuration preparation, not a processor timing patch or an
 Ares-designed purge pipeline.
 
@@ -29,7 +29,7 @@ Preserve the upstream one-filament exception and exact multi-filament error
 
 ## Evidence and qualification
 
-Historical case `/tmp/ares-vg1-red-artifacts-matrix/case-Uut51r/` binds the
+Historical case `${TMP_ROOT}/ares-vg1-red-artifacts-matrix/case-Uut51r/` binds the
 repository cube10 and two logical palette/map entries to the exported X2D
 profile, without VG1. Input `input.3mf` is15830bytes, SHA256
 `04c2a738e93d5d161943d7f29dba6141ee1f6c6cd90512cf6ecc8c97eeec2c8d`.
@@ -164,7 +164,7 @@ cannot be dropped merely to make the initial size error disappear.
 
 ## Coordinator UB ruling and dataset-index dependency (2026-10-07)
 
-Preserve `/tmp/ares-x2d-flush-matrix/green/seeded-focused/case-9whGha/`
+Preserve `${TMP_ROOT}/ares-x2d-flush-matrix/green/seeded-focused/case-9whGha/`
 unchanged as **upstream O8/UB adjacent**, not an Ares calculator numeric RED.
 Its scalar `nozzle_volume_type=[Standard]` has only one element for two nozzles.
 `OrcaSlicer.cpp:3460–3462` directly indexes `volume_types[eidx]` (and extruders),
@@ -207,7 +207,7 @@ cases (`distributions_and_shared_stream`, `raise3d_{dual,left,right}`) and three
 BBL SYNC cases (`positive_delay`, `without_sync`, `zero_delay`) retain Native/base
 `flush_volumes_matrix=0,0` and `flush_multiplier=0.3,1`; the unconditional rule
 incorrectly left a16-entry default matrix and multiplier0.3. Evidence is retained
-under `/tmp/ares-x2d-flush-matrix/fresh-d789-identified/candidate-seeded.log`
+under `${TMP_ROOT}/ares-x2d-flush-matrix/fresh-d789-identified/candidate-seeded.log`
 and `rebase-1b175/prior-failure-inventory.json`. Use their complete-stream
 comparisons, not new internal matrix assertions. This is source computation of
 diagonals, not zero padding or a restored export-only shell.
@@ -220,7 +220,7 @@ Source basis: `OrcaSlicer.cpp:3022–3047` creates the new Standard vector but
 never resizes the current vectors. `:3460–3462` uses unchecked source indices.
 `DynamicPrintConfig::update_values_to_printer_extruders` (`PrintConfig.cpp:9634ff`)
 is called later, not before this calculation. Retained same-input diagnostic
-`/tmp/ares-x2d-flush-matrix/trace/compact-aa.native.log` has flush computation
+`${TMP_ROOT}/ares-x2d-flush-matrix/trace/compact-aa.native.log` has flush computation
 at lines68–72, an actual garbage `ExtruderType=25276`, identical before/after
 matrix, and later update calls at lines126–128. The18 unique compact inputs
 are inventoried in `trace/predicate-input-inventory.json`; existing whole-byte
@@ -398,9 +398,9 @@ each with its verifiable evidence — gaps stated explicitly:
    ran the full default workspace on a tree containing this slice —
    e.g. the by-object merge `5c9e69226` ran workspace 8203 passed /
    6 skipped on its 104599195-rebased tree
-   (`/tmp/ares-w5-gates/ws-default-c10.log`, 2026-10-09) and the
+   (`${TMP_ROOT}/ares-w5-gates/ws-default-c10.log`, 2026-10-09) and the
    ares-wasm crate compiled clean on the same branch lineage
-   (`/tmp/ares-w5-gates/wasm-check-final.log`, 2026-10-08); the web
+   (`${TMP_ROOT}/ares-w5-gates/wasm-check-final.log`, 2026-10-08); the web
    browser gate ran on later main per coordinator confirmation
    (2026-10-09). The `310f5ae9a` bridge is
    `final/source-equality.json` (only `flush_matrix.rs` changed).
@@ -437,7 +437,7 @@ first normalize pass). Scalar UB inputs follow the closed O8 contract.
 4. After the coordinator's browser low-load window ends, run workspace
    `cargo nextest run --workspace`, strict workspace/all-target/all-feature
    Clippy, fmt, core+adapter WASM and current-base full seeded/official controls
-   using `/tmp/ares-parity-control-set-v2.sh`, including
+   using `${TMP_ROOT}/ares-parity-control-set-v2.sh`, including
    `ARES_PARITY_PROFILE_ENTRY_REFERENCE=1`. Preserve complete comparisons,
    unchanged-stream inventory and raw/stable processor oracles where required.
    Browser E2E is sequential base/candidate, workers1/retries0, load<20, under

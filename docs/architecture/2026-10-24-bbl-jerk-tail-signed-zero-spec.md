@@ -57,7 +57,7 @@ are unchanged.
 
 All six fresh Native discovery slices replay identically; all Native/CLI exits
 are zero. Discovery is not public API, seeded, RED or FULL qualification.
-Evidence: `/home/indexyz/ares-evidence/w4-bbl-jerk-tail-signed-zero/`, including
+Evidence: `${EVIDENCE_ROOT}/w4-bbl-jerk-tail-signed-zero/`, including
 `target-diff-audit.json`.
 
 ## RED seam and failure modes, before implementation

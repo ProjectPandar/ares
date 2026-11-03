@@ -51,7 +51,7 @@ No missing-resource/submodule fallback is used.
 
 ## Artifacts and reproduction
 
-Retained round root: `/tmp/ares-scarf-threshold/green-1a8/`.
+Retained round root: `${TMP_ROOT}/ares-scarf-threshold/green-1a8/`.
 
 - `seeded-comparison.json`, base/candidate seeded logs, source/head captures,
   fresh artifacts/cache trees.

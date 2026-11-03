@@ -86,7 +86,7 @@ audit raw artifacts independently instead of claiming unreachable assertions.
    rebase, merge or push is inferred from this SPEC.
 
 Discovery evidence is under
-`/home/indexyz/ares-evidence/w6-overall-chamber-probe-discovery-4h7m2n9p/`.
+`${EVIDENCE_ROOT}/w6-overall-chamber-probe-discovery-4h7m2n9p/`.
 Formal RED creates fresh evidence and does not borrow discovery verdicts or
 claim runtime type captures. The source-only max_print_z idea was excluded
 because its existing binding is already Integer. No browser/multicore claim.

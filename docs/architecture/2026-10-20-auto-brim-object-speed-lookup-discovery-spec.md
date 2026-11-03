@@ -20,7 +20,7 @@ The same object override with `no_brim` has matching Native/Ares whole output.
 ## Evidence before source localization
 
 Final external evidence root:
-`/home/indexyz/ares-coord/evidence/worker2-object-speed-discovery-20261020T171136/height100/`.
+`${COORD_ROOT}/evidence/worker2-object-speed-discovery-20261020T171136/height100/`.
 
 The source project is the repository's actual exported
 `tests/parity/mesh-edge-pairing/cube-control.3mf`, SHA256

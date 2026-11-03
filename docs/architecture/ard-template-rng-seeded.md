@@ -45,7 +45,7 @@ other stock failures, Creality and the paused adapter lint slice.
 
 ## Evidence and acceptance
 
-Pre-implementation diagnosis: `/tmp/ares-startup-template-rng-check.md`,31
+Pre-implementation diagnosis: `${TMP_ROOT}/ares-startup-template-rng-check.md`,31
 native runs. All six templates match frozen inputs; clock-seeded native output
 changes even with the old replay seed0 because its patch only affects FuzzySkin.
 
@@ -72,17 +72,17 @@ latest-main revalidation and ff-only integration.
 The new replay producer is
 `/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer`.
 Native six-fixture qualification is retained in
-`/tmp/ares-template-rng-native.85typtks`: seed0 repeats agree; seed1 changes
+`${TMP_ROOT}/ares-template-rng-native.85typtks`: seed0 repeats agree; seed1 changes
 purge coordinates and derived M73/first-layer timing. Those timing lines remain
 part of per-seed full-byte acceptance.
 
-`/tmp/ares-template-rng-red-corrected` records the pre-implementation RED:
+`${TMP_ROOT}/ares-template-rng-red-corrected` records the pre-implementation RED:
 seven native repeat checks pass before full-output Rust divergences; file-start
 also reproduces the unavailable-context discrepancy. An earlier run used the
 Orca/Ares comparator incorrectly for two native streams; it is not the RED
 basis. The correction uses the existing Orca normalization on both streams.
 
-`/tmp/ares-template-rng-green0` and `-green1` each pass all eight public E2Es,
+`${TMP_ROOT}/ares-template-rng-green0` and `-green1` each pass all eight public E2Es,
 including complete output, typed-distribution/shared-stream probes and job
 isolation. These are pre-latest-main results, not final integration approval.
 The existing397 controls also require old/new producer output identity evidence;

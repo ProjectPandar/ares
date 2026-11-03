@@ -8,7 +8,7 @@ Frozen original Native-exported qualified Prusa MK4 stock projects:
 | rear-target.3mf | 747a5ed4ac32c8d9d070ffd126f8da559a5d0c72554db84de203300a6dba2a47 |
 
 Original source evidence:
-`/home/indexyz/ares-evidence/w6-nonbbl-stock-baseline-ol75m7h7/`:
+`${EVIDENCE_ROOT}/w6-nonbbl-stock-baseline-ol75m7h7/`:
 mk4/project.3mf and rear/project.3mf,respectively. Not regenerated.
 Raw upstream overhang.obj was exported with actual flattened MK4 machine,
 process and filament. Native export/slice0 and effective stock IDs verified.

@@ -129,7 +129,7 @@ and merges. No production starts before separate SPEC and RED approvals.
 
 ## External evidence
 
-Under `/home/indexyz/ares-evidence/`:
+Under `${EVIDENCE_ROOT}/`:
 `w3-honey-anchoring-zaa-top6/` and `...-top6-seeded/` contain input SHA,
 commands, binary identities, Native repeats, strict results and footer
 admission. Target `role-observation.json` and `first-motion-context.json`

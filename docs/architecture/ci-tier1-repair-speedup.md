@@ -162,7 +162,7 @@ steps:
   - **PR 语义**：默认分支缓存对 PR 只读；PR 写自己 scope——与本
     workflow 无冲突。
 
-### 3.2 Native 产物清单（对照 `/tmp/ares-parity-control-set-v2.sh`）
+### 3.2 Native 产物清单（对照 `${TMP_ROOT}/ares-parity-control-set-v2.sh`）
 
 | env | 构建来源 | 模式 |
 |---|---|---|
@@ -193,7 +193,7 @@ $RUNNER_TEMP/parity-artifacts`（绝对路径、repo 外）+ `ARES_REQUIRE_ORCA=
 + `ARES_ROLE_ORACLE_LIVE=1` + seeded 的 `ARES_PARITY_SEEDED_REFERENCE=1`
 /`ORCA_REPLAY_SEED=0`/`ORCA_REPLAY_CPU=<n>`。
 CPU pin：本机用 `CARGO_TARGET_X86_64_..._RUNNER` + 仓外脚本；CI 改为
-仓内脚本 `scripts/ci/pin-runner.sh`（移植 `/tmp/ares-pin-runner.sh`，
+仓内脚本 `scripts/ci/pin-runner.sh`（移植 `${TMP_ROOT}/ares-pin-runner.sh`，
 5 行 taskset 逻辑），或 parity run 用 `--test-threads N` + 不 pin
 （seeded 连续流需单 CPU——**必须 pin**，故提交该脚本入仓）。
 AppImage 在 CI 需 `squashfs`/FUSE：ubuntu 镜像自带 fuse，用
@@ -366,7 +366,7 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
 
 ## Review correction: Native extraction ownership
 
-- Canonical `/tmp/ares-parity-control-set-v2.sh` official mode selects
+- Canonical `${TMP_ROOT}/ares-parity-control-set-v2.sh` official mode selects
   `/tmp/orca-wrapper-inherit-cpu.sh`, which delegates to the arachne worktree's
   host-exec wrapper, using shared `/tmp/orca-official-242/squashfs-root`.
   Seeded mode selects `scripts/orca-seeded-parity.sh`, not this AppImage wrapper.

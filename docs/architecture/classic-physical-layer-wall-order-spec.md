@@ -96,14 +96,14 @@ No Native patch/debugging, fallback, oracle changes or comparator weakening.
 ## Durable repeatable evidence
 
 Current classification/observables/handoff:
-`/home/indexyz/.ares-evidence/worker4/counterbore-surface-6e034.md`.
+`${LOCAL_EVIDENCE_ROOT}/worker4/counterbore-surface-6e034.md`.
 Raw39-case/input/harness archive `counterbore-surface-6e034-raw.tar.gz`, SHA256
 `8dd26d89805b4e2f5fc6039df82999b26bda5730e4df5882a1962c1c9de1341b`.
 Seed/chain probe archive `classic-m-memory-probe-yTGt.tar.gz`, SHA256
 `a4f7dbeb23054a90b65f9bd45632a7cab1ede4381f912eb40004317e9d8a2379`.
 Index/branch/sequence probe archive `classic-m-append-probe-AsUt.tar.gz`, SHA256
 `7e485d6eff14ecc5739f5b9b96db5861991ec5407dc61387e5cefee3f9dd74f8`.
-All archives reside in `/home/indexyz/.ares-evidence/worker4/`, outside /tmp.
+All archives reside in `${LOCAL_EVIDENCE_ROOT}/worker4/`, outside /tmp.
 They retain exact probe/replay patches, full output and equality receipts.
 All temporary probe hooks/module/CLI registrations were removed; worktree was
 clean before this docs-only proposal. No production correction is present.

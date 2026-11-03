@@ -1,7 +1,7 @@
 # Proposal: firmware zero-length layer-change lift parity
 
 Status: **DOCS-ONLY PROPOSAL / REVIEW-REQUEST**. New worktree
-`/home/indexyz/ares-worktrees/ares-worker1-travel-plate-discovery`, branch
+`${WORKTREE_ROOT}/ares-worker1-travel-plate-discovery`, branch
 `worker1/travel-plate-discovery-spec`, base exact main
 `8f6ce1660ccfaf95a6888b60c258047183d19ff0`. No production/test changes or local
 fix probe. Upstream source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`, read
@@ -12,7 +12,7 @@ perimeter/arachne/seam feature work. One gap found; discovery stops here.
 
 ## Frozen accepted witness and two whole-output PASS controls
 
-Evidence `/tmp/ares-w1-fw-layer-discovery-8f6ce1660/discovery-report.json`;
+Evidence `${TMP_ROOT}/ares-w1-fw-layer-discovery-8f6ce1660/discovery-report.json`;
 complete input/member hashes in `inputs/manifest.json`, motion attribution in
 `motion-attribution.json`. Base input-only committed fixture
 `tests/parity/gcode-flavor-admission/marlin2-wipe0.3mf`, SHA256

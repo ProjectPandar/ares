@@ -9,10 +9,10 @@ Accepted APA-R2 M NO-RED STOP remains separate.
 
 ## Verified discovery and fixture identity
 
-`/tmp/ares-byobject-skirt-discovery/discovery-report.json` retains fresh official
+`${TMP_ROOT}/ares-byobject-skirt-discovery/discovery-report.json` retains fresh official
 and seeded Native-first runs, input hashes, exact binaries/commands, sampled
 Native/public descendant/thread CPU18 affinity and public API/CLI comparisons.
-Canonical env archived from `/home/indexyz/ares-coord/bin/parity-control-set.sh`;
+Canonical env archived from `${COORD_ROOT}/bin/parity-control-set.sh`;
 no old official-wrapper/AppDir aliases. Production was unchanged.
 
 Source `tests/parity/per-object-skirt/disjoint.3mf`: two distinct objects at

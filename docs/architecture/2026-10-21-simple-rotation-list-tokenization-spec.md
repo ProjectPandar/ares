@@ -114,4 +114,4 @@ not filesystem/UI/terminal logic entering core.
 
 Sealed discovery, all five inputs, strict public outputs, actual return readers,
 GUI qualification and source/build/producer proof:
-`/home/indexyz/ares-evidence/w3-simple-rotation-readonly-3fbad615e/README.md`.
+`${EVIDENCE_ROOT}/w3-simple-rotation-readonly-3fbad615e/README.md`.

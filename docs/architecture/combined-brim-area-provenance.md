@@ -2,7 +2,7 @@
 
 RED `3c160a64bb7261babc0af6b495be294685654ad0`, parent stack
 `4351a644d6683555ae48e44ea7f898a66f75d585`. No production modification at
-barrier inspection. Runtime evidence `/tmp/ares-global-combined-brim-red-3c160a64b`.
+barrier inspection. Runtime evidence `${TMP_ROOT}/ares-global-combined-brim-red-3c160a64b`.
 
 ## Concrete producer/consumer trace
 

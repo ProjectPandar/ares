@@ -203,7 +203,7 @@ Post-review verification: 16 focused tests pass; release KSR 84 pass,
 `cargo nextest run --workspace --no-fail-fast`: 7302 passed, 2 failed,
 10 skipped. Both failures are existing pipeline wipe tests: the same
 failures reproduce in clean detached baseline 08dda8d1 at
-`/tmp/ares-concentric-baseline`, log `/tmp/concentric-baseline-wipe.log`.
+`${TMP_ROOT}/ares-concentric-baseline`, log `/tmp/concentric-baseline-wipe.log`.
 They are not waived for the overall parity goal; this slice does not
 claim a green full workspace. Final logs: `/tmp/concentric-review-green.log`,
 `/tmp/concentric-review-ksr.log`, `/tmp/concentric-review-oracle.log`,

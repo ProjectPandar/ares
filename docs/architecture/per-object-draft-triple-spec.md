@@ -84,7 +84,7 @@ its only rejection. Existing exclusions are only the preserved guard policies.
 
 ## Discovery facts and immutable public RED inputs
 
-Original root `/tmp/ares-draft-triple-native-G4zq1A/`:
+Original root `${TMP_ROOT}/ares-draft-triple-native-G4zq1A/`:
 pure inputs differ from approved composition brim inputs only by minimum20.
 Enabled, loops2/height1/distance6; OuterOnly width8/gap0/combine0; singleton,
 one filament/by-layer; uniform4mm objects/0.2mm layers, far and near layouts.
@@ -96,7 +96,7 @@ single has own smaller inner bounds/E. Two independent brim owners first only.
 Existing exact82d CLI4/4 exits1 UnsupportedProjectFeature("skirt_type per-object"),
 no G-code: all four demonstrably diverge, with triple still deferred correctly.
 
-Supplement root `/tmp/ares-draft-triple-mixed-jhXvqN/`:
+Supplement root `${TMP_ROOT}/ares-draft-triple-mixed-jhXvqN/`:
 only one object's model_settings brim_type=no_brim/brim_width=0 override differs
 from original triple inputs. Native16/16 accepted and honors override: one
 first-layer brim, no later brims,20 skirt Zs. Far2 separate budgets produce

@@ -116,7 +116,7 @@ not newly transacted GUI exports or unmodified factory presets. Both successful
 Native projects/slices demonstrate current admission,not forced compatibility.
 
 Discovery root
-`/home/indexyz/ares-evidence/w3-fan-flavor-discovery-9cfaf0d16/`:
+`${EVIDENCE_ROOT}/w3-fan-flavor-discovery-9cfaf0d16/`:
 final witnesses `kickstart-comments/inputs`;full commands/status/stdout/stderr,
 Native replays and API/CLI rawstreams,strict results and diagnostic hunks.
 Exactmain9cf Rust CLI/current-thread API binaries explicitly reused from prior

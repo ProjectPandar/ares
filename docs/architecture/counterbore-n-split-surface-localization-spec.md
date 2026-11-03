@@ -43,7 +43,7 @@ no production, tests or comparator changes have been made.
 ## Frozen public RED and capture identity
 
 W4 source evidence:
-/home/indexyz/.ares-evidence/worker4/counterbore-surface-6e034.md.
+${LOCAL_EVIDENCE_ROOT}/worker4/counterbore-surface-6e034.md.
 Frozen source root:/tmp/worker4-counterbore-bounded-o6df.
 STL SHA256:
 444935eac2493ed4f695e9fa635e8409fd4cad273ce817373a450c706bc9d807.
@@ -244,7 +244,7 @@ yet implemented or treated as universally guaranteed Native behavior.
 Archive (outside Git; includes valid, corrected and VOID roots, commands,
 full ordered state JSONL, source assembly, selected supplier headers, original
 public inputs/outputs, adapter-difference receipt and timing/agreement JSON):
-/home/indexyz/ares-evidence/worker3/counterbore-n-split-localization-20261014.tar.gz
+${EVIDENCE_ROOT}/worker3/counterbore-n-split-localization-20261014.tar.gz
 Bytes:380044; SHA256:3909c4bcebdea683f23a5cf1e996165b3c4b190c5dc5e8bda75d1a2abf826397.
 Cache directories and target binaries are excluded. No Native products enter
 Git. The committed stage table, input hash, stream hashes and correction

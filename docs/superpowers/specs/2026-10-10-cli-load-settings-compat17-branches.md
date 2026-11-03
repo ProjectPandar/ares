@@ -178,7 +178,7 @@ fires when a machine preset file comes in through `--load-settings`.
   `machine-inherits.json`, probe `/tmp/compat17-probe/`). Compat17
   fixtures ship flattened (`inherits:""`, parents inlined) so the
   adjudication itself is covered; the gap stays worker5's
-  composite/catalog slice. Recorded in `/tmp/ares-matrix-findings.md`.
+  composite/catalog slice. Recorded in `${TMP_ROOT}/ares-matrix-findings.md`.
 - **`use_relative_e_distances:"0"` pin.** Measured redundant: Native
   still exits 239 with the key removed from the process clone
   (probe `/tmp/compat17-probe/B`). Kept as an explicit pin, no parity

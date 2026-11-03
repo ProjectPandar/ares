@@ -23,7 +23,7 @@ The differing-height variant changes only the second build transform, not geomet
 or printer/filament/start G-code. Neither requires a private slicing API.
 
 The two-object X1C source is:
-`/home/indexyz/ares-coord/evidence/w5-type1-public-red-meYjMY/seeded-artifacts/bbl-type1-tower-disabled-UthxqY/input.3mf`.
+`${COORD_ROOT}/evidence/w5-type1-public-red-meYjMY/seeded-artifacts/bbl-type1-tower-disabled-UthxqY/input.3mf`.
 Derived zip entry timestamps are fixed to 1980-01-01; original witness bytes are
 preserved exactly.
 

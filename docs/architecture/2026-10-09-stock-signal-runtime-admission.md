@@ -213,7 +213,7 @@ invented, and five successes do not establish a crash-free producer.
 **Confirmed binary scope: seed-replay** (`59fb88a2...`) for the fresh audit,
 both failed runtime attempts and the historical `5cde90c23`/`829977606` stock
 snapshots. The `5cde90c23` binding is
-`/tmp/ares-matrix-main-5cde90c23-single-attempt/setup.json`; the current-stock
+`${TMP_ROOT}/ares-matrix-main-5cde90c23-single-attempt/setup.json`; the current-stock
 record explicitly identifies required seeded controls. Official directed runs
 were never reached by these stopped gate drivers. The inspected receipts do
 not establish the same twelve-case signals in the official binary, so this

@@ -20,8 +20,8 @@ The initial chunk was rebuilt with `vite build --sourcemap` into a scratch
 outDir; it has the same content hash, `index-C3T7tT2x.js`. Its minified bytes
 were attributed to sources through the sourcemap. The gzip column is each
 group's text compressed alone, so it is approximate and the rows do not sum to
-the total. Script: `/tmp/ares-gzip-probe/attribute.mjs`; output:
-`/tmp/ares-gzip-probe/attribution.txt`.
+the total. Script: `${TMP_ROOT}/ares-gzip-probe/attribute.mjs`; output:
+`${TMP_ROOT}/ares-gzip-probe/attribution.txt`.
 
 | gzip ≈ | raw | source |
 |---:|---:|---|

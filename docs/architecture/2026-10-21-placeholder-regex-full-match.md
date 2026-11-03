@@ -81,7 +81,7 @@ candidate. Earlier escape-containing exploration was rejected because
 Native export altered its escape, not treated as a parity case. The
 retained ASCII pair avoids that separate round-trip question.
 Discovery evidence:
-`/home/indexyz/ares-coord/evidence/w5-478r2-placeholder-regex-full-match/`.
+`${COORD_ROOT}/evidence/w5-478r2-placeholder-regex-full-match/`.
 
 ## Scope / exclusions / formal RED gate
 

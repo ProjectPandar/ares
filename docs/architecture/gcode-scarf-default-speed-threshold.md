@@ -7,7 +7,7 @@ worker1 integration. Browser gate is active; no heavy task was started.
 ## Source boundary
 
 Pinned OrcaSlicer revision: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Read from `/home/indexyz/ares/OrcaSlicer`, whose HEAD matches that revision.
+Read from `OrcaSlicer`, whose HEAD matches that revision.
 All upstream paths below are relative to `OrcaSlicer/src/libslic3r/`.
 
 | Source | Owning behavior |
@@ -139,7 +139,7 @@ After both spec approval and worker1 integration, fetch/rebase latest
    controls, including absolute/percentage scarf speed and a cap above role
    speed; reuse suitable existing controls rather than add shallow unit tests.
 5. Run `cargo fmt`, strict workspace/all-target/all-feature Clippy, workspace
-   nextest and wasm32 check using independent `/tmp/ares-worker6-target`.
+   nextest and wasm32 check using independent `${TMP_ROOT}/ares-worker6-target`.
    Respect browser holds, one heavy task at a time and 16 test threads.
 6. Run fresh same-round official and seeded parity control sets on candidate
    and base; candidate failure names must equal base or be a documented

@@ -105,13 +105,13 @@ public RED claims acceptance or a complete fix.
 ## External evidence
 
 - Native-first acceptance and public API/CLI preflight:
-  `/home/indexyz/ares-evidence/worker6/modifier-native.oQWrNm/`;
+  `${EVIDENCE_ROOT}/worker6/modifier-native.oQWrNm/`;
   aggregate `public-preflight.json`.
 - Exact RED official/seeded nextest logs, exits, comparison artifacts and
   process-affinity audit:
-  `/home/indexyz/ares-evidence/worker6/modifier-public-red.HjwbK4/`.
+  `${EVIDENCE_ROOT}/worker6/modifier-public-red.HjwbK4/`.
 - Read-only observations, scripts, unchanged-output audit and limitations:
-  `/home/indexyz/ares-evidence/worker6/modifier-localization/audit.json`;
+  `${EVIDENCE_ROOT}/worker6/modifier-localization/audit.json`;
   per-input `A-C*/final/{observations.json,gdb.log,observed.gcode}`.
 
 All generated products above remain outside the repository. No full/workspace

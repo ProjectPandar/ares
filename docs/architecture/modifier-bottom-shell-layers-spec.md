@@ -3,7 +3,7 @@
 Status: docs only, SPEC review requested. Worker3.
 Dependency: code-approved top slice `5fa60caaeeadc73d6c64972aa121b549907a1931`,
 awaiting stacked exclusive full. Its branch/worktree remain frozen unchanged.
-This document lives in separate worktree /tmp/ares-worker3-modifier-bottom-spec,
+This document lives in separate worktree ${TMP_ROOT}/ares-worker3-modifier-bottom-spec,
 branch pi/worker3-modifier-bottom-shell-spec, based on that candidate. After
 stack merge, carry only this new proposal onto the broadcast main before any
 implementation. No builds, tests, Native or fixtures are run/changed here.

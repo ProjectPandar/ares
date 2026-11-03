@@ -21,7 +21,7 @@ source_file=authored-input.3mf,source_object_id=0,source_volume_id=1,
 source_offset_x/y/z=0. This accepted bookkeeping follows bbs_3mf.cpp2214-2220
 MODEL_PART source fallback and7862-7869 conditional export. Physical one-field
 archive-only difference is NOT claimed. The original semantic audit remains at
-/home/indexyz/ares-evidence/w6-3fb-part-negative-region-u3_w7byu/.
+${EVIDENCE_ROOT}/w6-3fb-part-negative-region-u3_w7byu/.
 
 Classic/nearest,extruder_offset0x2,no arc/skirt/brim/EFC/scarf/ironing/painting.
 The corrected first producer is missing negative occlusion, NOT initial cursor,

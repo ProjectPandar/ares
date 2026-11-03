@@ -133,7 +133,7 @@ Print/PrintApply prerequisite to pi-tip after RNG integration, explicitly outsid
 this tower slice. Keep `raw_intersections.rs:290–305` unchanged. The membership
 witness was removed from the tower suite, not ignored; its source, helper patch,
 RED log and native artifact references are handed off at
-`/tmp/ares-tower-to-tip-centering/`. Multi-transform PrintObject preparation and
+`${TMP_ROOT}/ares-tower-to-tip-centering/`. Multi-transform PrintObject preparation and
 its centering correction remain a documented deferred dependency, not claimed
 Type2 coverage. Same-transform actual-copy ownership remains included.
 

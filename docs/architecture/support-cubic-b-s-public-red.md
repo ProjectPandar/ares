@@ -110,7 +110,7 @@ rerunning to hide a difference. Oracle wrapper SHA256
 1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3.
 
 Durable evidence JSON:
-/home/indexyz/ares-evidence/worker3/support-cubic-b-s-red/evidence.json,
+${EVIDENCE_ROOT}/worker3/support-cubic-b-s-red/evidence.json,
 SHA25697a405380ba0dc47b46160be0c9293957b3bb6f1ecac6e9852a765264470384e.
 Raw streams, projects, command receipts, affinity observations, logs, run script
 and range-diff are retained in a5f485f15-public-red.tar.gz in that directory,

@@ -1,7 +1,7 @@
 # Timelapse state and smooth Type2 selective rewrite
 
 Base: main `56e4da53`, after approved Adaptive PA integration. Worktree remains
-`/tmp/ares-pi-tower`; the next feature branch is
+`${TMP_ROOT}/ares-pi-tower`; the next feature branch is
 `pi/smooth-type2-timelapse-tower` to preserve the already published PA review
 history without force-pushing it.
 

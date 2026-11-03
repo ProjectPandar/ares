@@ -34,7 +34,7 @@ Fresh valid evidence root: `/tmp/worker4-counterbore-filled-red-fbNb`.
 Each mode has a separate `cache/`, `artifacts/`, `run.log`, `exit`.
 Corrected run reused the first run's compiled target only:
 `/tmp/worker4-counterbore-filled-red-bGXN/target`.
-START/END receipts were posted to `/tmp/ares-coord-inbox.log`.
+START/END receipts were posted to `${TMP_ROOT}/ares-coord-inbox.log`.
 
 | Case | official | seeded |
 | --- | --- | --- |
@@ -90,7 +90,7 @@ taskset -c 15 env CARGO_BUILD_JOBS=1 CARGO_INCREMENTAL=0 \
   -E 'test(counterbore_)' --no-fail-fast --test-threads 1
 ```
 
-Mode environment matches `/tmp/ares-parity-control-set-v2.sh`'s official or
+Mode environment matches `${TMP_ROOT}/ares-parity-control-set-v2.sh`'s official or
 seeded Native binary/resources selection, but **do not run that full script**.
 Official uses `/tmp/orca-wrapper-inherit-cpu.sh` and the approved official
 AppDir; seeded uses `scripts/orca-seeded-parity.sh`, producer

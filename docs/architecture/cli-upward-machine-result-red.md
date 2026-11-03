@@ -32,10 +32,10 @@ threads, actual launch load<60 recorded externally; 1test FAIL/exit100,
 Exact runtime input SHA:
 `023008f8fb816bf57abe76c5421eb9ad63850c51af1a8276d18150c5358ce593`.
 Authoritative log/admission/archive:
-`/tmp/ares-cli-upward/red-d4/`.
+`${TMP_ROOT}/ares-cli-upward/red-d4/`.
 Raw input/stock source/Native producer receipt and full channels:
-`/tmp/ares-cli-upward/red-d4/seeded/artifacts/cli-upward-machines-Z0lz6P/`.
-Machine audit `/tmp/ares-cli-upward/red-d4/seeded/audit.json` records exact
+`${TMP_ROOT}/ares-cli-upward/red-d4/seeded/artifacts/cli-upward-machines-Z0lz6P/`.
+Machine audit `${TMP_ROOT}/ares-cli-upward/red-d4/seeded/audit.json` records exact
 channel matches, metadata differences, input hash and exit. Original worker3
 A1 handoff remains distinct historical evidence; it was not rerun or relabeled
 as this test. Native production source read/fetch provenance must still be

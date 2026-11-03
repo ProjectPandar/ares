@@ -108,7 +108,7 @@ An initial old-main seeded base completed:651 tests,650 PASS,1 FAIL (D RED),
 controls after worker1's behavior change.
 
 Coordinator advanced main to `3d65ec24e` (small-loop/scarf caller speed).
-New base worktree `/tmp/ares-worker6-seam-D-base` is main plus the unchanged D
+New base worktree `${TMP_ROOT}/ares-worker6-seam-D-base` is main plus the unchanged D
 RED test, commit `c72ef9b1`. The only cherry-pick conflict was adjacent test
 module registration in `runner.rs`; both small_loop_speed and
 seam_layer_height modules were retained. No production conflict occurred.
@@ -222,7 +222,7 @@ Control script SHA256
 Each native producer remains single-CPU; no old timeout is counted as PASS.
 
 Ordinary workspace execution uses
-`CARGO_TARGET_DIR=/tmp/ares-worker6-green-target`, `CARGO_BUILD_JOBS=8`,
+`CARGO_TARGET_DIR=${TMP_ROOT}/ares-worker6-green-target`, `CARGO_BUILD_JOBS=8`,
 `CARGO_INCREMENTAL=0`, and
 `cargo nextest run --workspace --test-threads 16 --no-fail-fast`.
 Log: `/tmp/worker6-seam-D-workspace.log`. Its optional-reference tests returning

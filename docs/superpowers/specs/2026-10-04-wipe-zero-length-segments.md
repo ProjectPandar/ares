@@ -13,8 +13,8 @@ short-path EPSILON denominator. Defer clipping, writer/comment policy, other
 retraction behavior, wipe tower, timing and the six random-coordinate cases.
 
 Target frozen case-HJumeY, Prusa XL0.25. On31996f48 public replay is RED at
-line3318: missing `G1 X175.829 Y183.23`. Artifact `/tmp/ares-prusa-wipe-red` and
-immutable copies `/tmp/ares-prusa-wipe-replay`. Debugger confirms clipped
+line3318: missing `G1 X175.829 Y183.23`. Artifact `${TMP_ROOT}/ares-prusa-wipe-red` and
+immutable copies `${TMP_ROOT}/ares-prusa-wipe-replay`. Debugger confirms clipped
 points A=(-4171147,2229684),B=(-4171147,3229684),B with configured distance1e6.
 
 Require full target and fresh original CPU0 reference equality, known68+823

@@ -17,7 +17,7 @@ planner times and the WHOLE-print denominator used by M73, so the first M73
 mismatch precedes the first different motion. No M73/estimator repair is justified
 by this witness.
 
-Evidence root: `/tmp/ares-byobject-timing-readonly-2e3e37e22/`.
+Evidence root: `${TMP_ROOT}/ares-byobject-timing-readonly-2e3e37e22/`.
 Frozen `tests/parity/byobject-owner-brim/combined.3mf` SHA256
 `5467219291d3d177824fc4b7677605eb855707962ee9fd5d773db96dc15d9922`.
 Actual earlier official/seeded runs both retain combined strict FAIL at

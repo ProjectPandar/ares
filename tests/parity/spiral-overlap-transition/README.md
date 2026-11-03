@@ -28,7 +28,7 @@ both sides. Native's final259byte nonextruding passthrough chunk is
 omitted by old Rust state gate. No expected output is embedded in tests.
 
 Original exports/launches/source snapshots:
-`/home/indexyz/ares-coord/evidence/w5-spiral-overlap-transition/`.
+`${COORD_ROOT}/evidence/w5-spiral-overlap-transition/`.
 Reproduction: `$ORCA --slice 0 --outputdir /tmp/spiral-short positive.3mf`.
 Formal RED and SPEC need review before any GREEN production edit.
 No FULL is authorized; later FULL waits for an explicit merge window.

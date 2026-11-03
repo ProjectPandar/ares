@@ -24,5 +24,5 @@ machine_start_gcode must pass/fail respectively before implementation, then
 both pass in official/seeded modes through the shared strict comparator.
 Only existing generated-by identity/date normalization.
 Input hashes, provenance, actual line27 Native-0/Ares0 and replay evidence:
-`/home/indexyz/ares-coord/evidence/w5-ccf-negative-zero-discovery/PROPOSAL-RR.md`.
+`${COORD_ROOT}/evidence/w5-ccf-negative-zero-discovery/PROPOSAL-RR.md`.
 Stack on approved brace-output GREEN ccf1277b2.

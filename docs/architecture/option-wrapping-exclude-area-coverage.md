@@ -188,14 +188,14 @@ Both legs explicitly set `ARES_PARITY_OPTIONS=1` and
 `ARES_OPTION_KEYS=wrapping_exclude_area`. Base compares its one default stream
 successfully but retains INCOMPLETE and fails the unmodified sweep's completion
 assertion. Worker5's 895/895 run on 880a did not enable this sweep:
-`/tmp/ares-w5-gates/t2-seeded-cand.log:2182-2192` reports the test as PASS with
+`${TMP_ROOT}/ares-w5-gates/t2-seeded-cand.log:2182-2192` reports the test as PASS with
 explicit SKIPPED because ARES_PARITY_OPTIONS is disabled. That result is not
 credited as wrapping-domain coverage.
 
 All final evidence is outside the repository at
 `/tmp/worker6-wrapping-pairs-880a/`; four independent cold caches, two threads,
 load1 below 30 and no open browser window at every leg's start. START/END
-notifications are retained in `/tmp/ares-coord-inbox.log`.
+notifications are retained in `${TMP_ROOT}/ares-coord-inbox.log`.
 
 | Leg log | Result | Start load1 | Sweep |
 | --- | --- | --- | --- |

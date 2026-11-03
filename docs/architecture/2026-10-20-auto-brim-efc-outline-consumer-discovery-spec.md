@@ -31,7 +31,7 @@ select `elefant_foot_compensation_layers=1`.
 ## Native-first evidence before implementation
 
 Final root:
-`/home/indexyz/ares-coord/evidence/worker2-auto-efc-discovery-20261020T204057/`.
+`${COORD_ROOT}/evidence/worker2-auto-efc-discovery-20261020T204057/`.
 
 All8 Native invocations (4×official/seeded) and4 existing CLI invocations exit0,
 serial CPU13. Both Native modes have identical Brim bodies/hashes. Full-output

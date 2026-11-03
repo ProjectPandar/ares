@@ -34,5 +34,5 @@ positive `{max_print_z}` in GUI machine_start_gcode exercise the 1.2mm model.
 Shared Native stream comparator must pass control and fail positive before
 implementation (Native2/Ares1.2 line27), then pass both official/seeded modes.
 Existing generated-by normalization only. Evidence/input hashes:
-`/home/indexyz/ares-coord/evidence/w5-c072-max-print-z-discovery/PROPOSAL-RR.md`.
+`${COORD_ROOT}/evidence/w5-c072-max-print-z-discovery/PROPOSAL-RR.md`.
 Stack on approved mechanical grouping c072630b5.

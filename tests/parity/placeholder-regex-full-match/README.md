@@ -39,5 +39,5 @@ value.rs, DO NOT edit it. Any residual requires STOP/report. Freeze tests/
 inputs/helpers; no FULL. Extra !~/alternation/wildcard screens remain
 external, not new formal fixtures or dual-mode regression credit.
 Discovery evidence stays separate at
-`/home/indexyz/ares-coord/evidence/w5-478r2-placeholder-regex-full-match/`,
+`${COORD_ROOT}/evidence/w5-478r2-placeholder-regex-full-match/`,
 not substituted for formal shared-checker public API/CLI proof.

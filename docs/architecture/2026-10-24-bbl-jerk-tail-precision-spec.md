@@ -62,7 +62,7 @@ Input SHA256 values:
 - Z=0.45 target: `5eb57eb85313786b8b3f19cf8591771c2d79aeda963e571c619a20ba2fb18a52`
 - Z=2.5 control: `70db0f1afd38380c28f93b2d435b01120d49cb74a46cf3925c10ed6ddcf03afe`
 
-Discovery evidence is in `/home/indexyz/ares-evidence/w4-bbl-jerk-tail-precision/`,
+Discovery evidence is in `${EVIDENCE_ROOT}/w4-bbl-jerk-tail-precision/`,
 including `SPEC-PROPOSAL.md` and `isolated-diff-audit.json`. Eight fresh Native
 slices across four discovery inputs were replay-stable on CPU17. Discovery used
 the exact base-tip CLI; it does not qualify public API, seeded, RED or FULL tests.

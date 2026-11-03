@@ -28,13 +28,13 @@ capture order without a temporary-state narrative.
 ## Runtime causal observations
 
 The read-only inset observation is retained at
-`/home/indexyz/ares-evidence/worker3/support-touching-grid-inset-observation/20261015-130402`.
+`${EVIDENCE_ROOT}/worker3/support-touching-grid-inset-observation/20261015-130402`.
 At194256066, first anchoring Z9.2 and normal Z0.8 both receive the Native
 inset domain min(-9019688,-9019688), max(9019693,9019693). S-C0 still failed
 both modes at that point, satisfying the conditional hook-extension gate.
 
 The release Native hook observation is retained at
-`/home/indexyz/ares-evidence/worker3/support-touching-grid-hook-boundary-observation/`.
+`${EVIDENCE_ROOT}/worker3/support-touching-grid-hook-boundary-observation/`.
 The actual forward-query result is one top contour segment, id16 with15
 source lines, from(9019693,9019693) to(-9019688,9019693). No other hook was
 present for this query. Its collision limits forward to621767.7732422437;
@@ -53,7 +53,7 @@ raw API==CLI equality. Both Ares outputs have SHA256
 No Native output or expected geometry is committed.
 
 Durable directed evidence is recorded under
-`/home/indexyz/ares-evidence/worker3/support-touching-grid-green/`.
+`${EVIDENCE_ROOT}/worker3/support-touching-grid-green/`.
 The final REVIEW-REQUEST and its evidence JSON identify the exact final
 head, control selection/counts, gate exits and artifact hashes. They must
 include B-S's ten-case matrix, connector/anchor/Adaptive controls and

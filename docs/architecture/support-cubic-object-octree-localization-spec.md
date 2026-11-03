@@ -279,7 +279,7 @@ compile-RED distinction and native GLU supplier preflight are explicit.
 
 Evidence archive outside Git (all valid/partial/invalid roots, commands,
 ordered state, assembly, public four-case inputs/outputs and W6 carry proofs):
-/home/indexyz/ares-evidence/worker3/support-cubic-localization-20261014.tar.gz
+${EVIDENCE_ROOT}/worker3/support-cubic-localization-20261014.tar.gz
 Bytes:715107; SHA256:72dd6ab82acb207290ac86f9bd266ee5707a5df3eb2e3d3f95d974739f63f0ec.
 Compiler binaries and caches are excluded. No Native products enter Git.
 Committed value/count/hash summaries above survive /tmp's10day cleanup.

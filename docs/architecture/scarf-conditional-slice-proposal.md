@@ -122,7 +122,7 @@ proposals; no missing Ares stream is called equality/divergence evidence.
 
 ## Evidence and next gate
 
-External root `/home/indexyz/.ares-evidence/worker4/seam-deferrals-proposal-9d981-Sap6`.
+External root `${LOCAL_EVIDENCE_ROOT}/worker4/seam-deferrals-proposal-9d981-Sap6`.
 Contains frozen inputs, whole/ZIP SHAs, singleton delta, exact commands/rc/
 stdout/stderr/complete streams, activation+footer proof, unchanged comparator
 source inclusion/build receipt, base/current binary/source hashes, git-log and

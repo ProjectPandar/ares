@@ -25,7 +25,7 @@ assignment. No general mixed-material behavior is claimed here.
 ## Native-first evidence (completed, not public RED)
 
 Final root:
-`/home/indexyz/ares-coord/evidence/worker2-material-discovery-20261020T194111/final-single-filament-regroup/`.
+`${COORD_ROOT}/evidence/worker2-material-discovery-20261020T194111/final-single-filament-regroup/`.
 
 Source project is the merged
 `tests/parity/auto-brim-object-speed/auto_brim-global-only.3mf`, SHA256

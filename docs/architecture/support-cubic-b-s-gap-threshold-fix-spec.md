@@ -119,7 +119,7 @@ chaining, flow/E/ETA and G-code coordinate contracts remain deferred.
 
 ## Durable evidence
 
-/home/indexyz/ares-evidence/worker3/support-cubic-b-s-gap-localization/
+${EVIDENCE_ROOT}/worker3/support-cubic-b-s-gap-localization/
 localization-evidence.json SHA256
 7acca75e4c573f2598d30878ce3bc364a3829f2b127723cd7780ae200345e7ff.
 Archive s45-gap-root-cause.tar.gz in that directory, SHA256

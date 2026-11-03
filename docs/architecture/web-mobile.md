@@ -1,6 +1,6 @@
 # Web app on phones and tablets
 
-Status: in review. Branch `pi/web-mobile`. Task: `/tmp/ares-web-mobile-task.md`.
+Status: in review. Branch `pi/web-mobile`. Task: `${TMP_ROOT}/ares-web-mobile-task.md`.
 
 This is a web-shell slice. It ports no `libslic3r`/`libvgcode` behavior and
 changes no slicing, G-code, config or viewer-data output. The phone G-code is

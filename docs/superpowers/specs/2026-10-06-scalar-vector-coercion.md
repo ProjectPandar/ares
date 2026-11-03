@@ -1,6 +1,6 @@
 # Scalar→sequence coercion for vector-kind options in project_settings.config
 
-Matrix audit (main @ `028c758d3`, `/tmp/ares-matrix-clusters.md`): 12 TEXT_DIFF
+Matrix audit (main @ `028c758d3`, `${TMP_ROOT}/ares-matrix-clusters.md`): 12 TEXT_DIFF
 rows where the oracle coerces a bare JSON string scalar on a vector-kind
 option and continues; ares rejects during `ProjectSettings` typed deserialize
 with `invalid type: string "…", expected a sequence`.
@@ -89,7 +89,7 @@ load.
 - E2E artifact: exported case re-run of the 12 matrix rows post-fix —
   expected outcomes: SPARKX ×4 + E3NG ×5 now fail at O3-range/compat gates
   (or pass once O3 merges); Cubicon ×3 still rejected cleanly.
-  Artifact: `/tmp/ares-audit-errors3/results.tsv` rerun table.
+  Artifact: `${TMP_ROOT}/ares-audit-errors3/results.tsv` rerun table.
 
 ## Non-goals
 

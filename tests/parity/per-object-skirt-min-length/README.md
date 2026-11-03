@@ -6,7 +6,7 @@ Approved SPEC: `docs/architecture/per-object-skirt-minimum-length-spec.md`
 Eight exact inputs/hashes are in `manifest.json`. Each pair preserves the
 original disjoint/overlap/transitive/copies fixture's mesh, identities,
 transforms and other settings, changing only min_skirt_length 0 -> 20.
-Native discovery `/tmp/ares-skirt-min-length-allgroups-37UMhP/` accepted all
+Native discovery `${TMP_ROOT}/ares-skirt-min-length-allgroups-37UMhP/` accepted all
 16 serial official/seeded exports with sampled CPU18 affinity. Group counts
 remain 2/1/1/1. The two-loop controls each have 42 positive XY skirt segments;
 20mm inputs have extra loops and actual positive extrusion independently in

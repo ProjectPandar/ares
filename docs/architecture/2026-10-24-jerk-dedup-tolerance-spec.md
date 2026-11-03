@@ -99,7 +99,7 @@ no API, seeded, test-RED/GREEN or FULL acceptance claim for this new slice.
 
 ## Evidence and ownership
 
-`/home/indexyz/ares-evidence/w4-jerk-dedup-tolerance/`: `probe.py`, `probe.log`,
+`${EVIDENCE_ROOT}/w4-jerk-dedup-tolerance/`: `probe.py`, `probe.log`,
 `results.json`, five archives and per-case Native double streams/logs, actual
 Ares stream/log, complete `ordered.diff`, `overlap-audit.json`,
 `binary-provenance.json`. CPU17 serial, `ARES_PARITY_THREADS=1`,

@@ -5,7 +5,7 @@ Source boundary: `Fill/FillConcentric.cpp:92-100` and
 without initializing `min_length_factor` or `is_top_or_bottom_layer`.
 `Arachne/WallToolPaths.cpp::removeSmallLines` (:684-699) reads both fields.
 Native official traces retain a subnormal factor and non-Boolean byte values
-(`/tmp/ares-support-off-oracle-trace.log`, `/tmp/ares-official-small-confirm.log`).
+(`${TMP_ROOT}/ares-support-off-oracle-trace.log`, `${TMP_ROOT}/ares-official-small-confirm.log`).
 These are confirmed undefined inputs, not intentional random noise.
 
 The user permits a separate original test build that initializes confirmed

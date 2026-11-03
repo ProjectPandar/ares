@@ -71,7 +71,7 @@ GUI field references: `PrintConfig.cpp:5751`, `GUI/Tab.cpp:2705`.
 | target | tools2-minimum10.3mf | `cd9460b1c11e7dff39c5f1f4ffb60e9558489efd1edf7e3abb90ea3ff2a7caba` |
 
 External discovery/generator/manifest:
-`/home/indexyz/ares-coord/evidence/worker2-skirt-minlength-multitool-discovery-20261022T071537/`.
+`${COORD_ROOT}/evidence/worker2-skirt-minlength-multitool-discovery-20261022T071537/`.
 Input-only 3MFs are frozen without Native output or probes. All four must be
 referenced and SHA-asserted. No geometry/position or parameter tuning for parity.
 

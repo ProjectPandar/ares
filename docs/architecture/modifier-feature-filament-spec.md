@@ -59,7 +59,7 @@ around upstream region config, not authority to design different precedence.
 
 ## 2. Completed Native discovery (before SPEC)
 
-Durable root `/home/indexyz/.ares-evidence/worker4/modifier-feature-native-bBjU`.
+Durable root `${LOCAL_EVIDENCE_ROOT}/worker4/modifier-feature-native-bBjU`.
 All inputs frozen externally before any Native invocation, with full ZIP-entry
 hashes and deterministic derivation. They are slicing inputs, not stored oracle
 outputs. **No public API/CLI call and no production/test edit in discovery.**
@@ -121,7 +121,7 @@ and observations are retained. No Native retry-to-success or input substitution.
 Before adding any role to the public RED, fresh Native/public control was run
 in both modes at a2ff: API success, real CLI exit0, raw API==CLI, whole strict
 Native/API/CLI PASS through the unchanged golden.rs comparator. Evidence root:
-`/home/indexyz/.ares-evidence/worker4/modifier-control-public-okRS`.
+`${LOCAL_EVIDENCE_ROOT}/worker4/modifier-control-public-okRS`.
 No input or settings substitution was needed.
 
 Then the other five single-key positives were frozen from the exact control.
@@ -130,7 +130,7 @@ input retains its original SHA. Native qualification (both modes, CPU15) used
 actual FEATURE role, T1 selection, positive E and both segment endpoints inside
 X[133,138]/Y[118,138], plus output divergence vs the control. Every new leg exit0
 and complete footer; no input/case retry, no nonzero modifier extruder case.
-Evidence root `/home/indexyz/.ares-evidence/worker4/modifier-six-role-native-E9JO`.
+Evidence root `${LOCAL_EVIDENCE_ROOT}/worker4/modifier-six-role-native-E9JO`.
 
 | Feature key prefix | Actual FEATURE comment | Local T1 segments (each mode) | Eligible for public RED |
 |---|---|---|---|

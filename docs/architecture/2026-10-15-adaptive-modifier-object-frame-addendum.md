@@ -44,7 +44,7 @@ This is an observer-neutrality check, separate from the unchanged Ares/Native
 comparator in the public RED.
 
 Evidence directory:
-`/home/indexyz/ares-evidence/worker6/modifier-native-frame.lrCwDT/`.
+`${EVIDENCE_ROOT}/worker6/modifier-native-frame.lrCwDT/`.
 It contains `audit.json`, per-case `receipt.json`/`state.jsonl`/`gdb.log`,
 `reader.py`, and `symbols-clean.log` identifying the offset loads. All Native
 products remain outside Git. The earlier symbol-only type lookup returned

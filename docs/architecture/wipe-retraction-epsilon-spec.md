@@ -77,7 +77,7 @@ controls unchanged RED->GREEN. Existing wipe/retraction/comment/PA controls,
 reached option coverage, fmt/strict/WASM on exact final full hash/clean status.
 CPU18/jobs2/threads2, fresh serial official+seeded Native cache/artifacts, explicit
 owned target reuse, actual Native/thread affinity; canonical full oracle env
-from /tmp/ares-parity-control-set-v2.sh (including ARES_PROCGCODE_BIN).
+from ${TMP_ROOT}/ares-parity-control-set-v2.sh (including ARES_PROCGCODE_BIN).
 One START per batch; report first divergence/STOP, no per-case inbox noise.
 All files<=400LOC. Coordinator owns full/workspace/push/integration. Exclusive
 FULL freezes respected; no Nix GC/store deletion or independent oracle rebuild.

@@ -24,7 +24,7 @@ realintegervalues, no rounding/precisionconfound or UI/physicaltuningclaim.
 Targetfirstdiff1232Native standaloneSCV6vsAres7,2layer-boundarylines only;
 followingmergedcommandcorrect6bothsides. ControlsfullPASS,6freshNative slices
 stable/allCLI0. Exact13eCLI discovery; evidence
-`/home/indexyz/ares-evidence/w4-klipper-separate-jerk-xy-clamp/PROPOSAL.md`.
+`${EVIDENCE_ROOT}/w4-klipper-separate-jerk-xy-clamp/PROPOSAL.md`.
 No API/seeded/RED/FULLqualification inferred.
 SHAequal3a8b3f3fbbcbdc9b7b5eb1ee13e5e08533ae8e54d60fd814be46ff45b1c02114;
 Ytarget744139aab80a6f3ead834cdd93c47190bfab2e717c1e8ecd7a4da47e306eb542;

@@ -64,7 +64,7 @@ remained RED at line 222 (`M73 P46 R1` before versus after the same G1).
 The Ares raw output SHA remained
 `da4e1fc6b3cc1d32285dab67ec2e9d4d2643bf83c552e0c5829c108fc3b200ad`.
 Worker2's committed changes did not change this input's output.
-Evidence: `/tmp/ares-j1-mask/overlay-evidence/primary-first/`.
+Evidence: `${TMP_ROOT}/ares-j1-mask/overlay-evidence/primary-first/`.
 
 Read-only Nix GDB17.2 probes over that unmodified overlay and the pinned Native
 binary identify the **first real movement difference**, not merely M73:
@@ -90,7 +90,7 @@ binary identify the **first real movement difference**, not merely M73:
   No production logging, debugger state mutation or Native rebuild was used.
 
 Trace artifacts and checksum inventory:
-`/tmp/ares-j1-mask/j1c-trace/root-evidence.json`, `native-boundary.json`,
+`${TMP_ROOT}/ares-j1-mask/j1c-trace/root-evidence.json`, `native-boundary.json`,
 `ares-boundary.json`, `ares-hit.json`, `directions.json`, source scripts and
 raw debugger logs. The first direction probe stopped on an incorrect GDB
 Rust type name; `ares-direction-invalid-type.log` is retained as invalid

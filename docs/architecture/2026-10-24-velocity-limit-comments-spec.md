@@ -36,7 +36,7 @@ ACCEL250/ACCEL_TO_DECEL125 command and restoration500/250, Ares omits it.
 Four fresh Native slices replay-stable; actual exact-main CLI used. Verbose
 byte-fidelity only, not changed motion. Full output, generator-line normalization
 only; no masks. Discovery evidence
-`/home/indexyz/ares-evidence/w4-next-velocity-comments/` including ownership audit.
+`${EVIDENCE_ROOT}/w4-next-velocity-comments/` including ownership audit.
 
 ## Test-first plan / failures / exits
 

@@ -68,7 +68,7 @@ No travel=10000 archive belongs in this RED. A renamed-model BBL archive was
 not a clean control; use the genuine Ender3 archive instead.
 
 Discovery evidence:
-`/home/indexyz/ares-evidence/w4-bbl-separate-jerk-tail-gate/isolated/`, including
+`${EVIDENCE_ROOT}/w4-bbl-separate-jerk-tail-gate/isolated/`, including
 `target-diff-audit.json` and the selected control in `ender3-control/`.
 
 ## RED seam and failure modes, before production work

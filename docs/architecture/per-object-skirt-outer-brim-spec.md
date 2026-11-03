@@ -86,7 +86,7 @@ centering defects are reported to their owner, not repaired here.
 
 ## Native admission and actual-effect proof (completed; not Ares RED/GREEN)
 
-Evidence: `/tmp/ares-skirt-brim-native-ANfbTd/`.
+Evidence: `${TMP_ROOT}/ares-skirt-brim-native-ANfbTd/`.
 `head.txt` is the exact base above; `status-before.txt` and `status-after.txt`
 are empty. No cargo/nextest/nix build or Ares execution occurred.
 Official and seeded Native ran serially, outer CPU18; each case has fresh

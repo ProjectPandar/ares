@@ -11,7 +11,7 @@ is blocked on this family. Slice boundary per coordinator: implement the
 `change_filament_gcode` placeholder family only; SEMM `M104` emission,
 Type2 tower activation, and EXCLUDE_OBJECT outline differences are
 separate divergences owned elsewhere (see
-`/tmp/ares-matrix-clusters.md`).
+`${TMP_ROOT}/ares-matrix-clusters.md`).
 
 ## Upstream boundary
 
@@ -122,7 +122,7 @@ temperature overrides.
   only the `wipe_avoid_*` *placeholders* are in scope.
 - SEMM bare-`M104` per-toolchange emission and the
   `EXCLUDE_OBJECT_DEFINE` outline polygon (5- vs 6-vertex) — separate
-  divergences recorded in `/tmp/ares-matrix-clusters.md`, owner
+  divergences recorded in `${TMP_ROOT}/ares-matrix-clusters.md`, owner
   coordinator-assigned (not this slice).
 - Type2 tower activation (`normalize_fdm_2` `used_filaments` counting /
   `tool_ordering.has_wipe_tower`) — pi-tower.

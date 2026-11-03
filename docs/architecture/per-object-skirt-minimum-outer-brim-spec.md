@@ -66,7 +66,7 @@ combined-brim connectivity at Print.cpp:2920-2970 remains deferred.
 
 ## Actual current Ares difference (measured, not a fabricated RED)
 
-Evidence root: `/tmp/ares-skirt-min-brim-spec-oBAAYD/`.
+Evidence root: `${TMP_ROOT}/ares-skirt-min-brim-spec-oBAAYD/`.
 Only external probe inputs/scripts/artifacts were created. Repository was
 clean at exact base before/after Native runs, cargo build and public CLI probes.
 Native official/seeded modes ran serially, CPU18, fresh per-case cache/output.

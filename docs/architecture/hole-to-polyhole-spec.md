@@ -122,7 +122,7 @@ shell.
 
 ## Frozen RED witnesses (proposed)
 
-Fixture root: `~/.ares-evidence/worker4/polyhole-discovery/inputs/`
+Fixture root: `${LOCAL_EVIDENCE_ROOT}/worker4/polyhole-discovery/inputs/`
 (generated; `gen.py` in same root — 30×30×8 block, centered r=5 mm
 64-gon hole, fixture `project_settings.config`). One new
 `orca_parity/option_coverage/hole_to_polyhole.rs` test:

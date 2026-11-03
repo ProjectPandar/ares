@@ -5,7 +5,7 @@ Source: OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`,
 starting at9634. Spec:703658c84, `docs/architecture/generated-printer-id-materialization.md`.
 
 `input.3mf` is preserved byte-for-byte from
-`/tmp/ares-x2d-flush-matrix/green/generated-ids-legal-red/case-75aoF4/input.3mf`,
+`${TMP_ROOT}/ares-x2d-flush-matrix/green/generated-ids-legal-red/case-75aoF4/input.3mf`,
 SHA256 `600d0bdd7b626855411a6d85b342fc1fc0a0b85b6a676e998a742c429d7e9d08`.
 It is a constructed stock X2D/cube10 CLI fixture, not customer/GUI evidence.
 Historical test provenance:b39047a8884db752dbd702a4c67cbca763fc2cb3.

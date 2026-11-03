@@ -152,7 +152,7 @@ All unsuccessful roots/driver versions are retained and classified in
 /tmp/worker3-odd-order-probe-validity.json, not hidden by retries.
 
 All raw evidence, RED/gates, corrections and summaries are archived OUTSIDE
-Git at /home/indexyz/ares-evidence/worker3/
+Git at ${EVIDENCE_ROOT}/worker3/
 odd-order-sort-localization-1df965efc.tar.gz (343015 bytes), SHA256:
 ab1c8d4c88689ce52194417fe3435e8fa607029799d7f4979ccd06e81cd3494d.
 Input hashes, counts, outcomes and graph witness above survive /tmp cleanup.

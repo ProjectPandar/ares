@@ -316,7 +316,7 @@ existing Rust Tool-color lookup and web FeatureType/Filament totals must not reg
   pair was enabled, including all nine BBL cardinality fixtures, tag edge
   cases and three complete original-native M73/G-code byte oracles.
 - Both base and candidate used the coordinator's corrected
-  `/tmp/ares-parity-control-set-v2.sh`, including `profile_entry`, with
+  `${TMP_ROOT}/ares-parity-control-set-v2.sh`, including `profile_entry`, with
   fresh empty caches. Seeded: **561/561 each**. Official: base **552/561**,
   candidate **553/561**; both retain the same eight reference-environment
   failures. These are not represented as a fully passing official suite.
@@ -338,13 +338,13 @@ existing Rust Tool-color lookup and web FeatureType/Filament totals must not reg
   changed no assertions, timeouts, reference binaries or budgets. The real
   dynamic-value audit RED was fixed with typed transport before rerunning.
 
-Evidence: `/tmp/ares-colorchange-reference-43df7c95d/comparison.json` and
+Evidence: `${TMP_ROOT}/ares-colorchange-reference-43df7c95d/comparison.json` and
 `environment-failures.json`; repository-local
 `target/color-change-final-43df7c95d/` (gates, setup failures and build logs),
 `target/web-e2e/` (fresh browser artifacts), and
 `target/color-change-slice-oracle/` (raw/stable metadata and exact XYZ-bit
 sets). The base browser artifacts are under
-`/tmp/ares-web-filament-control/target/web-e2e/`.
+`${TMP_ROOT}/ares-web-filament-control/target/web-e2e/`.
 
 The eight official environment failures and approved diagnostic distinctions
 remain explicit. This Linux/Chrome verification is not a claim of native

@@ -17,7 +17,7 @@ The public RED imported SLA 3MF SHA
 `58e96bf776f0b54553372a09a697c601de39606c7818c92aa1584b6424d8787e`
 is rejected by both Native modes with249 and the above diagnostic; Ares CLI
 currently exits0 and emits G-code. Evidence:
-`/tmp/ares-printer-technology-red-baa2-59TjhG/`.
+`${TMP_ROOT}/ares-printer-technology-red-baa2-59TjhG/`.
 
 ## Minimal Rust boundary
 

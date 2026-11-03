@@ -46,7 +46,7 @@ Relevant parser/binding/test files are identical between the original double
 base47821c760 and integration basead5111f0b: this is incomplete closure against
 an old Ares compatibility binding, not new-main brim interaction.
 Diagnosis RR and qualifications:
-`/home/indexyz/ares-evidence/w6-vitrification-seven-tip-audit-6r4v_kz5/DIAGNOSIS-REVIEW-REQUEST.md`.
+`${EVIDENCE_ROOT}/w6-vitrification-seven-tip-audit-6r4v_kz5/DIAGNOSIS-REVIEW-REQUEST.md`.
 
 1. Commit this note before production edits. At this docs-only parent, run the
    unchanged vitrification module on CPU15/jobs1/threads1 with fresh oracle cache

@@ -50,7 +50,7 @@ Read-only debugger receipts show the same center, original angle rays and
 first segment for displacement. Independent arithmetic with the captured
 values reproduces Native `(106.655111, 106.097513)` and Rust
 `(106.717887, 106.107467)` exactly at printed precision. Evidence is external:
-`/home/indexyz/ares-evidence/w6-orthogonal-inward-readonly-finding.json`.
+`${EVIDENCE_ROOT}/w6-orthogonal-inward-readonly-finding.json`.
 Hypothesis: separating displacement from swapped angle rays removes the
 entire strict-output discrepancy, without touching voxel or wipe generation.
 This remains a hypothesis until fresh public RED/GREEN replay.

@@ -15,7 +15,7 @@ then compares public Ares API and CLI using the existing strict full-output
 comparator and raw API/CLI equality. Success, not rejection, is the assertion:
 baseline rejection is retained as RED evidence before any production edits.
 
-Native-only discovery: `/tmp/ares-skirt-brim-native-ANfbTd/`, 8/8 accepted,
+Native-only discovery: `${TMP_ROOT}/ares-skirt-brim-native-ANfbTd/`, 8/8 accepted,
 actual sampled descendant/thread affinity CPU18. Discovery is not public RED.
 Repeat public verification with `ARES_REQUIRE_ORCA=1` and the established
 Native environment, isolated target, fresh caches/artifacts; select

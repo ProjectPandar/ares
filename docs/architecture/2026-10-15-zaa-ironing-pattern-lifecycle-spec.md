@@ -5,7 +5,7 @@
 SPEC for review only; no Native or build run has been started. The candidate
 is based on main `2fe214545c1a50e88bf321b8221f0eba73a83ad8` plus the approved
 object-ironing ZAA chain `8c9a1bc94..32e111a06`. Worktree:
-`/home/indexyz/ares-worktrees/ares-worker2-zaa-ironing-pattern-lifecycle-spec`.
+`${WORKTREE_ROOT}/ares-worker2-zaa-ironing-pattern-lifecycle-spec`.
 
 The owning upstream boundary is `OrcaSlicer/src/libslic3r/Fill/Fill.cpp` in
 `Layer::make_ironing`:

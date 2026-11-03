@@ -47,7 +47,7 @@ the reader rejects an existing directory and cannot reuse an old snapshot.
 
 ```sh
 ARES_ROLE_ORACLE_LIVE=1 \
-CARGO_TARGET_DIR=/tmp/ares-worker6-green-target CARGO_BUILD_JOBS=8 \
+CARGO_TARGET_DIR=${TMP_ROOT}/ares-worker6-green-target CARGO_BUILD_JOBS=8 \
 cargo nextest run -p ares-core --test processed_role_filament_usage \
   --test-threads 16 --no-fail-fast
 ```

@@ -26,7 +26,7 @@ grown by half the width at both ends. Known differences from upstream:
    (`[z - r/2, z + r/2]`, no push-down for non-extrusions, `:948-950`). Extrusions
    occupy the same z span in both.
 2. No join angle: every cap is the `angle == 0` cap. Census of the existing segment-hw
-   oracle dumps (`/tmp/ares-estimation/segment-hw/angle-census.mjs`, Native
+   oracle dumps (`${TMP_ROOT}/ares-estimation/segment-hw/angle-census.mjs`, Native
    `hwaBits[2]`): non-zero angles on roles 30, marker-time 6, preset-slice 2645,
    slice 2444 vertices (Travel, Wipe and Extrude); color-change 0.
 3. Box cross-section instead of the camera-facing 8-vertex template.

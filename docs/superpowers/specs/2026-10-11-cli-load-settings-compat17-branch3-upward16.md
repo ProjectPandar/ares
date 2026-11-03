@@ -95,7 +95,7 @@ machine+process case through the upward gate / `-17`.
    runner cache module — assign to worker5 with the failure.rs row or
    hand to me; flagged, not assumed).
 3. **inherits parent-resolution gap** — recorded in
-   `/tmp/ares-matrix-findings.md`; worker5 owns (`Catalog`/`parse_file`
+   `${TMP_ROOT}/ares-matrix-findings.md`; worker5 owns (`Catalog`/`parse_file`
    boundary). Not touched here: fixtures stay flattened.
 
 ## Test plan (RED → GREEN)

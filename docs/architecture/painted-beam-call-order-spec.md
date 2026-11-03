@@ -62,7 +62,7 @@ admission. Existing unsupported fuzzy input remains unsupported.
 
 ## Frozen bounded discovery (not public RED acceptance)
 
-Evidence: `/home/indexyz/ares-evidence/worker1/painted-beam-discovery-2ed045a7f/`.
+Evidence: `${EVIDENCE_ROOT}/worker1/painted-beam-discovery-2ed045a7f/`.
 Reproduced existing frozen paint-color split/unpainted archives, changed only
 `Metadata/project_settings.config`; all geometry/paint/other members retained.
 Both pairs use width0.8mm, orientation22.5°, beam layers2, depth2, boundary

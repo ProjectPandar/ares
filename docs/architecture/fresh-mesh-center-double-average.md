@@ -64,9 +64,9 @@ unchanged upstream `Wipe::wipe` dE formula independently reproduces
 without any formatter defect or compensation.
 
 External producer report and raw debugger receipts:
-`/home/indexyz/ares-evidence/w6-stepped-wipe-centering-producer.json`.
+`${EVIDENCE_ROOT}/w6-stepped-wipe-centering-producer.json`.
 Fixed Native-first replays:
-`/home/indexyz/ares-evidence/w6-stepped-wipe-fixed-{official,seeded}/comparison.json`.
+`${EVIDENCE_ROOT}/w6-stepped-wipe-fixed-{official,seeded}/comparison.json`.
 No Native output or debug probe is committed. No GREEN has been attempted.
 
 ## Included and deferred behavior

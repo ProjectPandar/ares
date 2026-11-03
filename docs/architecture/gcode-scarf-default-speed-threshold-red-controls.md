@@ -70,7 +70,7 @@ behavior and all pre-existing expectations.
 
 The machine record `gcode-scarf-default-speed-threshold-red-record.json`
 binds manifests/receipts and observed live geometry. Retained local artifacts:
-`/tmp/ares-scarf-threshold/post-loop-3d65/{reachability-observation.json,
+`${TMP_ROOT}/ares-scarf-threshold/post-loop-3d65/{reachability-observation.json,
 fresh-native-first,rust-red}`; original GDB log
 `/tmp/pi-unified-exec-2195-b2005a89.log`. The unused panic proposal remains
 external only and did not enter any build or commit.

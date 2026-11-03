@@ -80,7 +80,7 @@ and report the first raw difference before expanding this SPEC.
 ## Native-first experiments (completed, not committed RED tests)
 
 Final evidence root:
-`/home/indexyz/ares-coord/evidence/worker2-next-skirt-brim-discovery-20261020T134127/final-no-support-no-tower/`.
+`${COORD_ROOT}/evidence/worker2-next-skirt-brim-discovery-20261020T134127/final-no-support-no-tower/`.
 
 Inputs derive from queued `auto-combined.3mf` (SHA256
 `a8d9731e66be1021eca82d50813fdfde685c6af70df72656c0f6119b6ef7e74c`).
@@ -125,8 +125,8 @@ CLI stderr/exit/G-code where successful, `summary.json`, and
 `first-layer-summary.json`. Scripts/probes/Native output stay outside Git.
 
 - Official: extracted2.4.2 via
-  `~/ares-coord/bin/orca-wrapper-inherit-cpu.sh`, explicit
-  `ORCA_APPDIR=~/ares-coord/orca-official-242/squashfs-root`.
+  `${COORD_ROOT}/bin/orca-wrapper-inherit-cpu.sh`, explicit
+  `ORCA_APPDIR=${COORD_ROOT}/orca-official-242/squashfs-root`.
 - Seeded: `scripts/orca-seeded-parity.sh`, seed0,
   `ORCA_REPLAY_CPU=13`, explicit `/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer`.
 - Every slicing/comparison command is wrapped in `taskset -c 13`, serial modes.

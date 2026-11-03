@@ -74,7 +74,7 @@ multiplier, unsupported guard, ID blacklist, output patch or legacy fallback.
 ## First producer and consumer evidence
 
 Read-only evidence root:
-`/home/indexyz/ares-evidence/w6-m73-d9-readonly/`.
+`${EVIDENCE_ROOT}/w6-m73-d9-readonly/`.
 `ordered-state-proof.json` and `spec-draft.md` retain the detailed measurements.
 
 - Identical first367 movement/homing commands, including feed-only/no-op IDs;
@@ -165,7 +165,7 @@ whole-stream line differences against current CLI (the three M73 displacement
 lines and Native `has_scarf_joint_seam=1` versus Ares 0); part none completely
 passes in both modes. This pair therefore enters the formal public RED matrix,
 not deferred and not admitted on a motion-only claim. Read-only evidence:
-`/home/indexyz/ares-evidence/w6-sloped-seam-volume-resume-v6hwqqx2/assessment.json`.
+`${EVIDENCE_ROOT}/w6-sloped-seam-volume-resume-v6hwqqx2/assessment.json`.
 Previous and interrupted-output directories were preserved; all 33 original
 files retain their SHA256. No public API qualification is claimed from discovery.
 

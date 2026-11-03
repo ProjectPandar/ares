@@ -45,8 +45,8 @@ comparator relaxation or skipped failing case.
 
 Baselinebd49f5fd: frozen Anycubic Kobra3 Max0.6 case-SzNoeB and0.8 case-7ivcdp
 are classic and both fail at the existing guard. RED
-`/tmp/ares-extra-overhang-red/replay-summary.json`; unchanged copied pairs in
-`/tmp/ares-extra-overhang-replay`. Add original-Orca active overhang step fixtures
+`${TMP_ROOT}/ares-extra-overhang-red/replay-summary.json`; unchanged copied pairs in
+`${TMP_ROOT}/ares-extra-overhang-replay`. Add original-Orca active overhang step fixtures
 before implementation to exercise actual generated paths, not only tiny stock
 geometric overhangs. Both enabled and disabled controls must be retained.
 

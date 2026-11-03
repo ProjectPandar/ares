@@ -18,7 +18,7 @@ or identify the suppressing gate. The speculative single-used-tool/front-layer
 ToolOrdering explanation was unproven; the measurements below supersede it.
 
 Original input:
-`/tmp/ares-orca-cache/19f06bc6065b3213/6e02aea054799098-fae0cc8012f785c5.3mf`,
+`${TMP_ROOT}/ares-orca-cache/19f06bc6065b3213/6e02aea054799098-fae0cc8012f785c5.3mf`,
 SHA256 `74ada1cbfe1e28ce7f52007bd4f77f80f3014488ee21fb580a27b7c3f172de3a`.
 
 ## Real enabled input and complete-output verification
@@ -99,7 +99,7 @@ which already-ported normalization predicate this TiQ2 input actually reached.
 
 ## Repeatable evidence, scope and limitations
 
-All Native products remain outside Git at `/tmp/ares-type2-activation/`:
+All Native products remain outside Git at `${TMP_ROOT}/ares-type2-activation/`:
 
 - `enabled.3mf`, `input-audit.json`: original/input/member hashes and reopened
   settings; unchanged non-config members verified.

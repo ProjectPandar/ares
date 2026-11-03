@@ -123,7 +123,7 @@ legacy fallbacks. Tier1 platforms remain required for any later Rust rewrite.
 
 The preflight STOP document commits first-layer counts, outcomes, input and
 output hashes, explains each void run, and references a144388-byte archive
-outside Git at /home/indexyz/ares-evidence/worker3/
+outside Git at ${EVIDENCE_ROOT}/worker3/
 first-layer-state-main104d-9y7stqky.tar.gz, SHA256
 05d72fbd8d0f9da1fc74a2804056308316e1d0cf4a479eace3c202c8c5bbfc3b.
 Native output stays outside Git; document new findings so /tmp cleanup cannot

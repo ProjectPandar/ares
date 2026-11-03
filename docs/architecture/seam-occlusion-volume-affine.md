@@ -50,7 +50,7 @@ Core remains platform-neutral for browser WASM, Windows, macOS and Linux.
 ## Qualified first-producer evidence
 
 External discovery and approved draft:
-`/home/indexyz/ares-evidence/w6-4b-zigzag-h40-oo1qibb6/`.
+`${EVIDENCE_ROOT}/w6-4b-zigzag-h40-oo1qibb6/`.
 `verification.json` binds the frozen pair and all proofs. Source arrays stay in
 external machine-readable files, not this SPEC or committed Native output.
 

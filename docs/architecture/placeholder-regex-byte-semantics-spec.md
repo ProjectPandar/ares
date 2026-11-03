@@ -35,4 +35,4 @@ relevant difference is the machine-start-G-code comment expression:
 - `"é" =~ /é/` (control)
 
 Evidence and input provenance are recorded in
-`/home/indexyz/ares-coord/evidence/w5-922-regex-unicode-DISCOVERY-RR.md`.
+`${COORD_ROOT}/evidence/w5-922-regex-unicode-DISCOVERY-RR.md`.

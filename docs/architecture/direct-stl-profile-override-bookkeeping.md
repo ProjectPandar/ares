@@ -41,4 +41,4 @@ Native 在运行时经 OrcaRunner 的相同 direct-STL recipe 和 `ARES_ORCA_CAC
 
 生产前冻结 no-override STL whole-output 控制及已有 3MF profile-overlay/mapping controls。独立 spec→fresh RED 审批→仅上述分支 GREEN→fresh directed、fresh matched seeded base/candidate、workspace nextest、严格 Clippy/WASM/fmt→独立 REVIEW→合入。使用 Rust1.99、每人一个 heavy、16 threads、CPU0/seed0/runs1、每例共享300s deadline 与 owned-descendant cleanup，预编译在 deadline 外，不重试至成功。
 
-仓库外只读比较/源码引用证据位于 `/tmp/ares-none-travel/footer/`。旧 first-difference 被 seam 修正消除不等于此完整输出已 GREEN；本片合入后 standalone seam 链必须 rebase 并重跑门禁，counterbore 四个硬失败继续留在后续本地分支。
+仓库外只读比较/源码引用证据位于 `${TMP_ROOT}/ares-none-travel/footer/`。旧 first-difference 被 seam 修正消除不等于此完整输出已 GREEN；本片合入后 standalone seam 链必须 rebase 并重跑门禁，counterbore 四个硬失败继续留在后续本地分支。

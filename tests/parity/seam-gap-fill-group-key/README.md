@@ -28,5 +28,5 @@ All five tests assert PASS; before the independently approved one-key GREEN,
 only seam20 fails in both official and seeded modes. No inverted assertion,
 Native G-code golden, ignored output, fallback or unsupported guard.
 
-Discovery: `/home/indexyz/ares-evidence/w3-seam-key-readonly-14017addf/README.md`.
-Source/nozzle proof: `/home/indexyz/ares-evidence/w3-seam-gap-key-spec-review/README.md`.
+Discovery: `${EVIDENCE_ROOT}/w3-seam-key-readonly-14017addf/README.md`.
+Source/nozzle proof: `${EVIDENCE_ROOT}/w3-seam-gap-key-spec-review/README.md`.

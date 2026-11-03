@@ -47,7 +47,7 @@ byte1845/line135: Native `_FORCE_RESUME_FAN_SPEED`, Ares blank followed by
 `; Change T0 -> T1 (layer -1 1/0)`.
 
 Frozen exact streams, input, manifest/error, usage witness and receipt:
-`/tmp/ares-j1-mask/findings/primary-after-mask/FINDING.md` and
+`${TMP_ROOT}/ares-j1-mask/findings/primary-after-mask/FINDING.md` and
 `finding.json`. Four fresh CPU0/seed0 Slice receipts,0TIMEOUT. Primary
 remains DIVERGENT; three authorized witness-only controls remain PASS.
 
@@ -88,7 +88,7 @@ Included:
   literal J1 printer name to invent a special startup rule.
 
 Deferred: wipe-progress/M73 residual
-`/tmp/ares-j1-mask/findings/wipe-progress/FINDING.md`; sequential ordering
+`${TMP_ROOT}/ares-j1-mask/findings/wipe-progress/FINDING.md`; sequential ordering
 lifecycle; generalized persistent custom user-variable state; template
 expression changes, numerical/time/cooling fixes, geometry, seam and
 unrelated toolchange policies. No marker stripping or injected output.

@@ -29,7 +29,7 @@ re-scaling drift remain deferred.
 
 Evidence D (owned, with full artifacts, raw/normalized/ordered-XY diffs, effective
 exports, input/output identities, commands and real exits):
-`/home/indexyz/ares.pi-subagents-route-review-fixes-0ebec5a-143e-s0-t0/target/route-review-evidence/`.
+`${WORKTREE_ROOT}/ares.pi-subagents-route-review-fixes-0ebec5a-143e-s0-t0/target/route-review-evidence/`.
 `D/replay.py` reuses the exact seven wave16 inputs and adds `internal-fan-50`,
 changing only one-wall's `internal_bridge_fan_speed` to `["50"]`. All eight
 references are fresh actual-AppImage executions, not copied/fake references.
@@ -162,7 +162,7 @@ simplification, shortest-direction or other rounding change is included.
 Coordinator approved validation-only preservation, not a commit/ref. Detailed
 state-transition artifacts, source findings and receipts are in the wave11
 section of `2026-09-08-route-boundary-parity.md` and the owned evidence directory
-`/home/indexyz/ares.pi-subagents-route-completion-8bfde2d-8d9b-s0-t0/target/route-completion-evidence/`.
+`${WORKTREE_ROOT}/ares.pi-subagents-route-completion-8bfde2d-8d9b-s0-t0/target/route-completion-evidence/`.
 The full1001-printer/legal-value/range/Tier1 goal and independent review remain
 open; bounded six-green output is not completion. Historical outcomes follow.
 
@@ -219,7 +219,7 @@ Closest-segment dedup, direction-formula and f32-distance experiments showed no
 output benefit and were reverted; offset/union arithmetic was not changed.
 
 Evidence directory:
-`/home/indexyz/.local/state/ares-parity/travel-fix-322a3890/`.
+`${HOME}/.local/state/ares-parity/travel-fix-322a3890/`.
 `ordered-differences.log` records all six destination differences and the
 insertion/reversal assertions. `candidate-vs-gt.diff` retains the full raw red
 diff: final candidate and reference each7966 lines, with94 aligned differing
@@ -272,7 +272,7 @@ and monotonicline values are rejected by both executables and do not count as
 coverage. Hole geometry was not available in this bounded fixture inventory.
 No exhaustive printer/option/Tier1 runtime acceptance is claimed.
 
-Full evidence: `/home/indexyz/.local/state/ares-parity/logical-cursor-e098f64/`;
+Full evidence: `${HOME}/.local/state/ares-parity/logical-cursor-e098f64/`;
 source-state audit and commands: `docs/superpowers/plans/2026-09-08-logical-cursor-parity.md`.
 All shipping probes in touched modules are removed. Untouched router/core probes
 and existing rectangle scaffolding remain explicit risks. No candidate commit
@@ -321,7 +321,7 @@ Nextest6791 pass/1 skipped; focused59 pass; CLI4 pass/2 fail; fmt/clippy/WASM
 compile checks exit0 (existing warnings). This is not browser/native-platform
 runtime acceptance, exhaustive printer/option coverage or producer parity.
 Evidence and detailed receipts: `2026-09-08-closest-line-extension.md` and
-`/home/indexyz/.local/state/ares-parity/2026-09-07-coordinator/wave5-route-writer/`.
+`${HOME}/.local/state/ares-parity/2026-09-07-coordinator/wave5-route-writer/`.
 
 ## Scaled-boundary continuation (wave10, partial; no candidate)
 

@@ -7,7 +7,7 @@ This proposal adds no tests, Native execution or production changes before appro
 
 Continue the roadmap's G4 `GCode::process_layer` rewrite after the merged machine-start and layer-template invocation contexts. This ports the remaining timelapse invocation argument, using existing parser/writer ownership.
 
-Source: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`, inspected at `/tmp/ares-orca-procgcode-source`.
+Source: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`, inspected at `${TMP_ROOT}/ares-orca-procgcode-source`.
 
 - `libslic3r/GCode.cpp:4667-4675`: non-BBL layer-start timelapse passes `m_writer.filament()->id()` to `placeholder_parser_process` at `4672-4674`.
 - `GCode.cpp:5145-5178`: `insert_timelapse_gcode` passes the same logical filament ID at `5167`; position clearing and last-Z adoption follow rendering at `5170-5178`.

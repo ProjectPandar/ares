@@ -8,10 +8,10 @@ OS gating. Existing Linux-only upstream result-file emission is unchanged.
 Product `de7fbc8e38e96c0f5627b62bcc77c0ee1a94f208` removes all added
 target_os conditions relative to main73e; no computation/resource-loading OS
 branch or Embedded downgrade remains. New check, strict Clippy, fmt and WASM
-checks each exited0 (`/tmp/ares-cli-upward/platform-fix/`). Direct seeded and
+checks each exited0 (`${TMP_ROOT}/ares-cli-upward/platform-fix/`). Direct seeded and
 official witness reruns each passed once, load9.18/9.46, threads2, preserving
 whole channels/result and no-Gcode assertions. New full raw ZIP/member/result
-and receipt audit: `/tmp/ares-cli-upward/green-platform-audit.json`. Windows and
+and receipt audit: `${TMP_ROOT}/ares-cli-upward/green-platform-audit.json`. Windows and
 macOS runtime execution was not performed on this Linux host. Workspace and
 standard independent full controls subsequently passed; see the d5b acceptance
 section below. The historical receipts
@@ -98,14 +98,14 @@ The existing first E2E witness alone does not certify additional source controls
 ## Fresh 73e GREEN receipts and remaining gates
 
 Production main advance invalidated all d4 engineering gates:
-`/tmp/ares-cli-upward/gates-b7/void-main-73e.json`. The incomplete d4 archive
+`${TMP_ROOT}/ares-cli-upward/gates-b7/void-main-73e.json`. The incomplete d4 archive
 was cancelled; it is not a completed archive or acceptance result. Compilation
 and lint errors were retained and fixed without suppression. Rebase was clean;
 worker5's -17 compatibility rejection is before upward report assignment.
 
 Fresh workspace/all-target/all-feature `cargo check`, strict Clippy `-D warnings`,
 fmt check and WASM-target check all exited 0. Logs and stage admissions:
-`/tmp/ares-cli-upward/gates-73e/`. Build jobs were 2; check/strict actual-start
+`${TMP_ROOT}/ares-cli-upward/gates-73e/`. Build jobs were 2; check/strict actual-start
 loads were below 30. This is not a workspace nextest/full-pair result.
 
 Per owner direction, final directed evidence uses **direct** cargo nextest, not
@@ -118,15 +118,15 @@ cargo nextest run -p ares-cli --test orca_parity \
 ```
 
 - Seeded: `207e3ab1-10b3-4053-a55e-0aee4abbae49`, 1 PASS, exit0,
-  actual-start load6.52. Root `/tmp/ares-cli-upward/green-73e-direct-seeded/`.
+  actual-start load6.52. Root `${TMP_ROOT}/ares-cli-upward/green-73e-direct-seeded/`.
 - Official: `87e6a036-2f9f-4b58-a5d3-c00ba7fd3c9c`, 1 PASS, exit0,
-  actual-start load7.88. Root `/tmp/ares-cli-upward/green-73e-direct-official/`.
+  actual-start load7.88. Root `${TMP_ROOT}/ares-cli-upward/green-73e-direct-official/`.
 
 Both retain runtime Native -100/nonempty upward, CLI156/-100, whole exact
 stdout/stderr/result JSON and no final G-code. Only existing integer
 prepare_time/export_time adaptation is used; downward remains absent. Input
 ZIP bytes and every member SHA, raw results and Native receipts are retained in
-`/tmp/ares-cli-upward/green-73e-direct-audit.json`. Fresh exported ZIP SHAs differ
+`${TMP_ROOT}/ares-cli-upward/green-73e-direct-audit.json`. Fresh exported ZIP SHAs differ
 from the original RED; each run compares its own exact input against live Native,
 not a frozen RED output. Original RED artifacts/assertions remain unchanged.
 
@@ -151,7 +151,7 @@ been performed or authorized by these GREEN receipts.
   advance contains only worker6 timelapse tests/docs. Clean rebase preserved
   production and approved witness assertions.
 - Workspace run `69138d92-039a-47e6-b881-fed21b4611e4`: 8289 PASS,
-  5 skipped, exit0; `/tmp/ares-cli-upward/workspace-de7-after-w6/`.
+  5 skipped, exit0; `${TMP_ROOT}/ares-cli-upward/workspace-de7-after-w6/`.
   The prior workspace interrupted for worker6 exclusive START remains VOID.
 
 Four standard full legs finished using the owner-directed worker6 `run.py`
@@ -166,7 +166,7 @@ counts are BASE922 and CAND923, not a filter forcing the older 919 count.
 | Seeded | 922/922 PASS, exit0 | 923/923 PASS, exit0 | both empty |
 | Official | 922/922 PASS, exit0 | 923/923 PASS, exit0 | both empty |
 
-Evidence root: `/tmp/ares-cli-upward/standard-d5-resources.ViAmJ7/`.
+Evidence root: `${TMP_ROOT}/ares-cli-upward/standard-d5-resources.ViAmJ7/`.
 `subset-audit.py`, `subset-audit.json`, `subset-audit.log` and exit0 verify the
 exact named BASE test set is contained in CAND, all existing statuses remain
 PASS, candidate-only failures are empty, and the sole new test is the approved

@@ -143,7 +143,7 @@ against the selected clean baseline. No independent Ares feature or legacy fallb
    byte streams accounted for; no unapproved ND exemption. Workspace nextest,
    strict clippy/fmt/WASM, actual SHA/commit bindings and every failed attempt kept.
 
-Before any Native/heavy launch inspect `/tmp/ares-coord-inbox.log` for unfinished
+Before any Native/heavy launch inspect `${TMP_ROOT}/ares-coord-inbox.log` for unfinished
 BROWSER-START; a browser reservation overrides low load. Directed permission and
 load/thread budget must be confirmed before execution; full pairs require <30,
 build8 and one owned heavy job. No Native work under this unapproved spec.

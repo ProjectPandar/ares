@@ -14,7 +14,7 @@ unconditional tests directly reuse the existing shared NativeCase lifecycle.
 
 Source: actual Native-exported existing authored overhang input for
 `infill_rotate_template::t24_sparse_list_control`; discovery provenance in
-`/home/indexyz/ares-evidence/w3-simple-rotation-readonly-3fbad615e/README.md`.
+`${EVIDENCE_ROOT}/w3-simple-rotation-readonly-3fbad615e/README.md`.
 Classic walls, one unpainted object, Rectilinear sparse/multiline1, monotonic
 solid patterns. Common GUI settings disable brim/skirt. All geometry,
 transforms and non-settings ZIP members remain exact to the same source.

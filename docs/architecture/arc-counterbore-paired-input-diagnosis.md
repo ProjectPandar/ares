@@ -10,7 +10,7 @@ Do not start its numeric repair: its mandatory input-equality gate failed.
 
 All execution used outer `taskset -c 15`, `CARGO_BUILD_JOBS=1`, test-threads1.
 Rust build used independent `/tmp/worker4-arc-paired-eyIt/target` (nextest no-run).
-START/END and probe SHA receipts are in `/tmp/ares-coord-inbox.log`.
+START/END and probe SHA receipts are in `${TMP_ROOT}/ares-coord-inbox.log`.
 No production, test assertion, geometry, breakpoint source, or comparator edits.
 No push. Temporary debugger scripts are outside the repo and never committed.
 

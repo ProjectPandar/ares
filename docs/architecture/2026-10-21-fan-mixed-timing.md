@@ -89,7 +89,7 @@ Unused relative-E starting values/sentinels differ and remain deferred.
 Both successful full debug outputs match CLI (Native only canonical
 identity/date normalization; Rust raw equality); no inferior writes/calls.
 Discovery evidence
-`/home/indexyz/ares-coord/evidence/w5-3fb-fan-mixed-timing/`.
+`${COORD_ROOT}/evidence/w5-3fb-fan-mixed-timing/`.
 
 Formal RED: two DIRECT native_stream_case::check calls reuse existing
 NativeCase double replay then complete validated API/bare CLI comparison.

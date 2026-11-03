@@ -27,7 +27,7 @@ complete RED/GREEN output comparison against the approved native build.
 
 Baseline is commit `50fe97a6edd65fbbed850771eb96aa7f91f5a73c`. Strict KSR
 replay exits100 in18.791s and retains complete input/native/Ares outputs in
-`/tmp/ares-ard79-ksr-ordered-current/case-YF3e5N`. Both normalized outputs
+`${TMP_ROOT}/ares-ard79-ksr-ordered-current/case-YF3e5N`. Both normalized outputs
 have6321717 bytes; the first difference is M73 placement at line9946.
 Ares raw output SHA256 remains
 `ee645de0861e0d780ab1aeed653f2b7b1520cd032daa1d5702c54a91b440093d`.
@@ -41,16 +41,16 @@ or only progress records remain different.
 Read-only Rust debugger runs finish normally and capture the20 input points,
 19 previous-layer boundary segments, and42 processed output points of this
 outer wall. The fourth processed point is local `(4.653836,-1.036605)` with
-speed50. Artifacts are `/tmp/ares-ard79-rust-overhang-input.log` and
-`/tmp/ares-ard79-rust-overhang-boundary.log`; complete diagnostic outputs are
+speed50. Artifacts are `${TMP_ROOT}/ares-ard79-rust-overhang-input.log` and
+`${TMP_ROOT}/ares-ard79-rust-overhang-boundary.log`; complete diagnostic outputs are
 retained separately. Their full raw diff contains only the generated-header
 timestamp change; movement and remaining records agree. The first native
 capture attempt stops on an optimized
 lambda variable and is excluded from causal evidence despite debugger
 exit0. The second exact-signature attempt also stops on an unavailable
 aggregate return address and is excluded. Third capture68259 completes0
-with a normal inferior exit; `/tmp/ares-ard79-native-overhang-sret.log` retains
-the structured capture and `/tmp/ares-ard79-native-sret-capture/plate_1.gcode`
+with a normal inferior exit; `${TMP_ROOT}/ares-ard79-native-overhang-sret.log` retains
+the structured capture and `${TMP_ROOT}/ares-ard79-native-sret-capture/plate_1.gcode`
 retains complete output. Its20 raw path points unscale to exactly the Rust
 input coordinates. Both return42 processed points, with three integer XY
 differences at indices3,8,32. Index3 is native `(4653837,-1036606)` versus
@@ -59,13 +59,13 @@ the estimator result, before downstream G-code coordinate formatting.
 Native previous-boundary capture81624 now completes0 with a normal inferior
 exit. All19 previous-boundary lines exactly equal Rust after unscaling.
 The native42 floating extended points are retained in
-`/tmp/ares-ard79-native-overhang-boundary.log`. Optimized Rust capture16069
+`${TMP_ROOT}/ares-ard79-native-overhang-boundary.log`. Optimized Rust capture16069
 cannot read the extended vector, and61443 cannot read the current point;
 both stop early and are excluded. Unoptimized diagnostic build51115
 completes0/17.90s, and capture56898 completes0 with a normal inferior exit.
 Its complete output differs from the optimized output only by the generated
 header timestamp. The optimized binary is frozen independently at
-`/tmp/ares-ard79-optimized-ares` with the previously verified SHA256.
+`${TMP_ROOT}/ares-ard79-optimized-ares` with the previously verified SHA256.
 
 The Rust extended intersection at index4 is `(4.059867,-0.442636)`, whereas
 native preserves `(4.059867949609615,-0.442636945390813)`. The following
@@ -90,13 +90,13 @@ Native current-boundary capture98098 finishes normally. Reducing its lofted
 outline to11 vertices preserves the failure; removing both orthogonal arms
 to a four-vertex bar loses it. The two-layer closed mirrored loft at ordinary
 input placement `(110,110.000105)` produces a complete strict RED in0.311s,
-pair `/tmp/ares-ard79-loft-public-red/case-n1g9K2`. This input position exposes
+pair `${TMP_ROOT}/ares-ard79-loft-public-red/case-n1g9K2`. This input position exposes
 the existing precision loss at the output rounding boundary; no production
 coordinate injection or comparator tolerance is introduced.
 
 Permanent live regression18041 finishes100/1.354s after all20 effective
 settings and XY input placement checks pass. Pair
-`/tmp/ares-ard79-permanent-public-red-output/case-9NZ2G7` differs at line209:
+`${TMP_ROOT}/ares-ard79-permanent-public-red-output/case-9NZ2G7` differs at line209:
 native `G1 X114.654 Y108.963 E.94471`, Rust
 `G1 X114.654 Y108.964 E.94473`. Early test setup failures for the incorrect
 `arc_fitting` option name and an inappropriate auto-drop Z assertion are
@@ -109,7 +109,7 @@ without quantizing hits before segmentation. Existing integer queries,
 speed bands, curl behavior and output scaling remain unchanged. General
 3D/scarf intersection behavior is outside this demonstrated XY slice.
 
-Regression73698 finishes0/1.425s at `/tmp/ares-ard79-public-green`, preserving
+Regression73698 finishes0/1.425s at `${TMP_ROOT}/ares-ard79-public-green`, preserving
 complete outputs with the unchanged ordered comparator. Clippy12304 and
 Tier-142572 finish0, covering all four core targets and the WASM adapter.
 Native wrapper SHA256 is
@@ -120,17 +120,17 @@ This is the separately approved initialized/seeded reference, not an untouched
 official build; the original official KSR fixture remains unchanged.
 
 Original strict KSR69601 finishes100/42.184s, complete pair
-`/tmp/ares-ard79-ksr-after-float-intersections/case-BV7aDL`. Both normalized
+`${TMP_ROOT}/ares-ard79-ksr-after-float-intersections/case-BV7aDL`. Both normalized
 streams contain6321717 bytes and still first differ at M73 line9946. A
 diagnostic traversal past progress records now reaches line221229/Z52 before
 the first movement mismatch: native travels to `(150.165,101.366)` and Rust
 to `(135.165,86.366)`, with different helical-lift I/J values. The earlier
 Z45.4 coordinate/E witness is gone; this diagnostic is not strict acceptance.
 Workspace72018 finishes0: 7460 PASS /9 skipped in256.939s, log
-`/tmp/ares-ard79-workspace.log`. Eight live complete-output consumers6493
-finish0/1.969s, with full artifacts at `/tmp/ares-ard79-public-consumers`.
+`${TMP_ROOT}/ares-ard79-workspace.log`. Eight live complete-output consumers6493
+finish0/1.969s, with full artifacts at `${TMP_ROOT}/ares-ard79-public-consumers`.
 The24 cached stepped fixtures also finish0/0.295s after the repair, retaining
-outputs at `/tmp/ares-ard79-step-postfix-replay-artifacts`.
+outputs at `${TMP_ROOT}/ares-ard79-step-postfix-replay-artifacts`.
 Fmt and diff checks finish0. Independent six-axis initial review finds no
 required production repair. Final independent six-axis review approves the
 ten-file patch with SHA256

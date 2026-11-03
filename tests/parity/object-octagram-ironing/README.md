@@ -51,7 +51,7 @@ tolerance, snapping, filtering or fallback. CPU18, fresh serial official and
 seeded roots/caches, exact clean hash and targeted gates only.
 
 Discovery repeat/activity evidence:
-`/tmp/ares-object-ironing-remaining-discovery-8f6ce1660/discovery-report.json`.
+`${TMP_ROOT}/ares-object-ironing-remaining-discovery-8f6ce1660/discovery-report.json`.
 The separate zag work remains blocked on discriminating Native toolpath-body
 geometry after excluding the config block, then a separate proposal/RED;
 its bbox must independently follow the real object lifecycle in

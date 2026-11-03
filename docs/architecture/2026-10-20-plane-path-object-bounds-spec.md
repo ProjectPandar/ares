@@ -159,7 +159,7 @@ alone reviews/merges; independent SPEC and RED approval precede next steps.
 
 ## External evidence
 
-`/home/indexyz/ares-evidence/w3-plane-path-compensated-bbox` plus `-seeded`,
+`${EVIDENCE_ROOT}/w3-plane-path-compensated-bbox` plus `-seeded`,
 `-rect[-seeded]`, `-arch[-seeded]`, `-oct[-seeded]` hold commands, exact inputs,
 producer hashes, repeats and strict results. Target `role-observation.json`
 records activity/entry motion. `w3-plane-path-bbox-localize/{native-gdb,

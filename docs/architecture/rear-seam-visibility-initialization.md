@@ -66,7 +66,7 @@ not just travel route. Complete strict outputs/differences retained unmasked.
 ## Read-only causal evidence, separated from host counterfactual
 
 Evidence root
-`/home/indexyz/ares-evidence/w6-nonbbl-stock-baseline-ol75m7h7/trace/`.
+`${EVIDENCE_ROOT}/w6-nonbbl-stock-baseline-ol75m7h7/trace/`.
 Final native-v2 and rust-v4 observers CPU15 serial,may-call-functions off,
 no inferior calls or writes,normal exit0,invalid probes0.
 Native trace uses seeded DWARF binary,NOT official binary;its full output equals

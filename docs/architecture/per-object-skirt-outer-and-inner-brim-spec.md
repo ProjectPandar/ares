@@ -43,7 +43,7 @@ shell around Print/Brim/GCode ownership, not a new brim/skirt pipeline.
 
 ## Completed bounded discovery (reported before this SPEC)
 
-Evidence `/tmp/ares-skirt-brim-disjunct-discovery/discovery-report.json`.
+Evidence `${TMP_ROOT}/ares-skirt-brim-disjunct-discovery/discovery-report.json`.
 Exact head e4ff7be92; CPU18 jobs2, all sampled Native/public threads mask18,
 current coordinator canonical archived/extracted, Native FIRST, fresh independent
 official and seeded roots/cache. Five combined-skirt controls were run FIRST;

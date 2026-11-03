@@ -59,7 +59,7 @@ No draft-specific UI, new geometry producer, or new Ares pipeline is included.
 
 ## Measured Native admission / effect and current Ares difference
 
-Evidence: `/tmp/ares-draft-shield-native-nF2vkY/`.
+Evidence: `${TMP_ROOT}/ares-draft-shield-native-nF2vkY/`.
 Exact base and empty before/after git status are recorded. Twelve pure external
 inputs retain original four geometry fixtures, changing only draft_shield and
 single_loop_draft_shield. Skirt height1/loops2/distance6; no brim/min0; uniform

@@ -88,7 +88,7 @@ it is not an exhaustive absence-of-UB claim for the entire Native process.
 
 Official producer command records name `/tmp/orca-wrapper-inherit-cpu.sh`,
 which delegates to `/tmp/orca-wrapper-fixed.sh`, then CPU1
-`/tmp/ares-pi-arachne/scripts/orca-parity.sh`, with
+`${TMP_ROOT}/ares-pi-arachne/scripts/orca-parity.sh`, with
 `ORCA_APPDIR=/tmp/orca-official-242/squashfs-root`.
 All three candidate command status records report exit0. No fresh execution
 was performed. The record establishes the historical wrapper/environment;

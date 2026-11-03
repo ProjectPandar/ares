@@ -21,8 +21,8 @@ connectors, generated odd-layer reversal, generic chaining algorithm, other
 patterns, bridge math, travel/cooling/M73 and extra-overhang perimeter logic.
 
 TDD: main7cfa0b33 public full-output replay0/2PASS for Qidi Q1 Pro0.2
-case-WE5l76 and X-Max4 0.2 case-b8PGl3. Inputs `/tmp/ares-qidi-replay`, RED
-`/tmp/ares-qidi-red/replay-summary.json`. An initial no_sort-only experiment
+case-WE5l76 and X-Max4 0.2 case-b8PGl3. Inputs `${TMP_ROOT}/ares-qidi-replay`, RED
+`${TMP_ROOT}/ares-qidi-red/replay-summary.json`. An initial no_sort-only experiment
 failed and regressed111 controls; it was reverted, revealing the separate
 upstream can_reverse contract. All failed experiment artifacts remain in the plan.
 

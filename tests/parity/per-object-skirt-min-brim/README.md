@@ -7,7 +7,7 @@ Hashes/source hashes and geometry/budget expectations are in `manifest.json`.
 Both pairs preserve the existing far/near singleton outer-brim inputs and all
 settings except min_skirt_length 0 -> 20. Brim remains outer_only/width8/gap0,
 combine_brims0; one filament, by-layer, skirt_loops2, no other deferred feature.
-Native discovery `/tmp/ares-skirt-min-brim-spec-oBAAYD/` accepted 8/8 two-mode
+Native discovery `${TMP_ROOT}/ares-skirt-min-brim-spec-oBAAYD/` accepted 8/8 two-mode
 exports on sampled CPU18, with real additional skirt motion independently for
 both far groups or once for the shared near group; two brim owners persist.
 The current-main CLI rejects positive inputs and admits the zero controls.

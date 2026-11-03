@@ -68,11 +68,11 @@ The comparison script reproduces the existing golden normalizer only.
 ## Fresh paired full control sets
 
 Original base and candidate have the same674-test inventory, including the
-seven new cases; the new-main pair has the same675-test inventory. Base is detached worktree `/tmp/ares-worker6-open-order-base` at RED;
+seven new cases; the new-main pair has the same675-test inventory. Base is detached worktree `${TMP_ROOT}/ares-worker6-open-order-base` at RED;
 candidate is worker6 at GREEN. Each round uses its own fresh Native cache.
 Targets are independent worker6 directories: base
-`/tmp/ares-worker6-seam-A-base-target`, candidate
-`/tmp/ares-worker6-green-target`. Parallelism:16 nextest threads,
+`${TMP_ROOT}/ares-worker6-seam-A-base-target`, candidate
+`${TMP_ROOT}/ares-worker6-green-target`. Parallelism:16 nextest threads,
 ARES_PARITY_THREADS=16, CARGO_BUILD_JOBS=8, CARGO_INCREMENTAL=0, one heavy task at a
 time. Both producers and process outcomes must be retained for each change.
 
@@ -126,7 +126,7 @@ with No such file or directory. This is **INCONCLUSIVE-infrastructure**;
 it is excluded from the valid base/candidate comparison, not counted PASS.
 The original log/cache/artifacts remain at their original evidence paths;
 the log is `/tmp/worker6-open-order-seeded-base-missing-upstream.log`.
-After restoring the same read-only link to `/home/indexyz/ares/OrcaSlicer`,
+After restoring the same read-only link to `OrcaSlicer`,
 the entire base round was repeated with independent `seeded-base-v2-cache`
 and `seeded-base-v2-artifacts` roots. No assertions, fixtures or production
 code changed. `/tmp/worker6-open-order-infra-retry.json` records this repair.

@@ -152,7 +152,7 @@ allow/expect/ignore, Native golden, inverted assertion, merge or push.
 
 ## Repeatable discovery evidence
 
-`/home/indexyz/ares-evidence/w3-fill-group-flow-ratio-spec-review/README.md`
+`${EVIDENCE_ROOT}/w3-fill-group-flow-ratio-spec-review/README.md`
 links the external runners, immutable inputs/commands/stdout/stderr, source
 and producer identities, complete comparison matrix, GDB transcripts and
 repeatable audits. All probes and audits use CPU12. No formal FULL or GREEN

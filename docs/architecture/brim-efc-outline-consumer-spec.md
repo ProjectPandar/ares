@@ -64,8 +64,8 @@ brim and outer-inner-brim; immutable source meshes/options/metadata retained
 except explicit OuterInner sequence, EFC0 or0.3, outline flag0 or1. Width4/gap0,
 EFC layers1/raft0, two Classic walls, no infill/top/bottom/support/tower/skirt.
 
-Exact Native root: /tmp/ares-brim-outline-native-exact-jIJ8p1/.
-Current-main CLI root: /tmp/ares-brim-outline-native-s58Yla/ares-cli/.
+Exact Native root: ${TMP_ROOT}/ares-brim-outline-native-exact-jIJ8p1/.
+Current-main CLI root: ${TMP_ROOT}/ares-brim-outline-native-s58Yla/ares-cli/.
 Native official+seeded serial **24/24** actual exports accepted, current-main
 CLI12/12exit0 with real output, using binary freshly built at exact29f4 from
 previous discovery and unchanged SHA. No admission/rejection-based fake diff.

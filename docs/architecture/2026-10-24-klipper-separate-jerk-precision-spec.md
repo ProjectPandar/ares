@@ -25,7 +25,7 @@ edgecase, no claim about displayeddecimals or physicaltuning recommendation.
 Target firstnormalizeddifferencebyte1237:Native standalone word7.12345,Ares7.123,
 onlyonecommandline. Two controls fullPASS;6freshNative slicesstable/allCLI0.
 Exactd0e8binaryused;discoveryevidence
-`/home/indexyz/ares-evidence/w4-klipper-separate-jerk-precision/PROPOSAL.md`.
+`${EVIDENCE_ROOT}/w4-klipper-separate-jerk-precision/PROPOSAL.md`.
 No API/seeded/RED/FULLclaim fromdiscovery.
 
 SHA:

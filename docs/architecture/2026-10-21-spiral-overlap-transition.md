@@ -75,7 +75,7 @@ SpiralVase semantics, NEVER force header3 or add a physical layer.
 M73 and all other final-output bytes remain in strict comparison.
 
 Source evidence:
-`/home/indexyz/ares-coord/evidence/w5-spiral-overlap-transition/` contains
+`${COORD_ROOT}/evidence/w5-spiral-overlap-transition/` contains
 actual inputs/export receipts, official1/official2/seeded streams, raw
 GDB captures, source-proof.json and SHA256 manifest. Final valid debugger
 runs preserve respective complete CLI outputs. No inferior calls or

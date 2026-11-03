@@ -80,7 +80,7 @@ syntheticpresetJSON/model substitution/new GUI-export transaction claim.
 Both fan_speedup_time and fan_kickstart0,so **FanMover is not active** and own
 frozenverbosefix is not a prerequisite. This is not its generated/split text.
 
-Evidence root `/home/indexyz/ares-evidence/w3-fill-discovery-9cfaf0d16/`,final
+Evidence root `${EVIDENCE_ROOT}/w3-fill-discovery-9cfaf0d16/`,final
 witness subroot `zero-top-flow-verbose/`. Allactualargv/status/stdout/stderr/
 Native replays/API+CLI streams/normalizer verdicts and diagnosticinventory kept.
 Exactmain9cf binaries explicitly reused with originalCargoJSONcore/Tokiorlib/

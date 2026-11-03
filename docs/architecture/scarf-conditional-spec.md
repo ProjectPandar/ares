@@ -194,6 +194,6 @@ next mode; no Native retries-to-success. Qualification4+formal10 is an
 explicit budget, not permission for broad discovery/full tests. Preserve all
 approved spRear ancestry; no stash/rebase/merge/push authorization implied.
 
-Discovery report /home/indexyz/.ares-evidence/worker4/scarf-conditional-slice-proposal-review.md;
+Discovery report ${LOCAL_EVIDENCE_ROOT}/worker4/scarf-conditional-slice-proposal-review.md;
 root seam-deferrals-proposal-9d981-Sap6, archive SHA
 173c422497330ecf7e9edab55e466b081da9b3147d8cf5897e4ce862c50e531f.

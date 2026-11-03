@@ -132,5 +132,5 @@ Commit RED separately from this docs-first commit, retain exact-tip commands,
 raw artifacts, input/member/hash/frozen-helper proof and submit RED RR. STOP for
 approval before GREEN. No whole-suite or cross-platform runtime qualification is
 claimed. Accepted discovery remains sealed at
-`~/ares-evidence/worker1/exhaust-used-extruder-discovery-6f6ef10f5/`; historical
+`${EVIDENCE_ROOT}/worker1/exhaust-used-extruder-discovery-6f6ef10f5/`; historical
 painted-stage status text is not retroactively rewritten by this milestone.

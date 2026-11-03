@@ -68,7 +68,7 @@ No M73, header, E, timing, configuration or trailing-line mask.
 
 ## Read-only proof and limits
 
-Evidence `/home/indexyz/ares-coord/evidence/w5-spiral-smooth-fixed-xy/`
+Evidence `${COORD_ROOT}/evidence/w5-spiral-smooth-fixed-xy/`
 contains actual exports, per-ZIP hashes, launches/full outputs, matching
 DWARF debugger scripts/raw snapshots and SHA256 manifest.
 

@@ -7,7 +7,7 @@ No Native execution, test implementation or production change before SPEC approv
 
 This advances the roadmap's bounded G4 ToolOrdering/GCode rewrite beyond the merged machine-start context. The adjacent layer-template owner was explicitly deferred in [the startup repair plan](option-g4-first-layer-start-template-repair.md). It does not add an Ares-owned sequencing or template pipeline.
 
-Source identity: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`, inspected in `/tmp/ares-orca-procgcode-source`.
+Source identity: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`, inspected in `${TMP_ROOT}/ares-orca-procgcode-source`.
 
 - `libslic3r/PrintConfig.cpp:1147-1154,4415-4422` declares `before_layer_change_gcode` and `layer_change_gcode`, both strings with empty defaults.
 - `libslic3r/GCode.cpp:4631-4641`, `GCode::process_layer`, renders the before-layer template before `change_layer`, passing **`m_writer.filament()->id()`** plus layer overrides.

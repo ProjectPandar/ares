@@ -23,10 +23,10 @@ orca-slicer --load-settings machine.json;process.json
 ```
 
 Exact export commands, flattened JSON and Native exit0 records remain external:
-`/home/indexyz/ares-evidence/w2-geometry-stock-20261024T224939/{k1,mk4}/bridge/`.
+`${EVIDENCE_ROOT}/w2-geometry-stock-20261024T224939/{k1,mk4}/bridge/`.
 K1 profile JSON is under
-`/home/indexyz/ares-evidence/w6-k1-voron-discovery-20261024T223329/flatten-Creality/`;
-MK4 under `/home/indexyz/ares-evidence/w6-nonbbl-stock-baseline-ol75m7h7/mk4/`.
+`${EVIDENCE_ROOT}/w6-k1-voron-discovery-20261024T223329/flatten-Creality/`;
+MK4 under `${EVIDENCE_ROOT}/w6-nonbbl-stock-baseline-ol75m7h7/mk4/`.
 Input hashes are asserted by the shared `native_stream_case` harness. Every
 formal invocation qualifies stable Native double replay before current public
 API/actual CLI and full ordered comparison; generator line only is normalized.
@@ -34,5 +34,5 @@ The MK4 control is not claimed to isolate Grid collection granularity.
 
 Read-only live trace proved matching grouped expolygons and all generated
 vertices, with Native collection entity counts[1,1] versus Ares[2]. Evidence:
-`/home/indexyz/ares-evidence/w2-grid-collection-trace-20261024T231048/`.
+`${EVIDENCE_ROOT}/w2-grid-collection-trace-20261024T231048/`.
 No probe or Native output belongs in this fixture directory.

@@ -77,7 +77,7 @@ comparison must not be inferred from official; it must be a real receipt.
 ## Evidence boundary
 
 The discovery predecessor is
-`/home/indexyz/ares-evidence/w6-direct-coInts-discovery-ck9j5lc3/`; its
+`${EVIDENCE_ROOT}/w6-direct-coInts-discovery-ck9j5lc3/`; its
 `SPEC-PROPOSAL.md`, source citations, Native2 receipts, API/CLI artifacts and
 strict STOP are prior read-only evidence only. This SPEC does not claim the
 unrun seeded target comparison from that discovery.

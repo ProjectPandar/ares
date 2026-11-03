@@ -2,7 +2,7 @@
 
 Status: SPEC rev.2 (pending REVIEW approval; no implementation yet)
 Branch: `w5-native-variant-a` (from `c22f5a81d`)
-Investigation artifacts under `/tmp/ares-w5-gates/nso/` (not committed).
+Investigation artifacts under `${TMP_ROOT}/ares-w5-gates/nso/` (not committed).
 
 ## Problem
 
@@ -117,7 +117,7 @@ Explicitly NOT modified:
 - `scripts/ci/pin-runner.sh` (W4-owned repo file; CI pin runner). `setarch -R` is not
   applied to the test binary — only to the Native oracle exec sites above, so no Ares
   process or unrelated test is affected.
-- Canonical full script `/tmp/ares-parity-control-set-v2.sh`: unchanged; it invokes the
+- Canonical full script `${TMP_ROOT}/ares-parity-control-set-v2.sh`: unchanged; it invokes the
   same wrappers, so its oracle becomes deterministic through them. Not touched before
   W4's `96eb17ccc` merges and this SPEC is approved.
 - **No Ares production or test code changes. No assertion, comparator, or golden-file

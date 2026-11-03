@@ -7,7 +7,7 @@ Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Fresh discovery after Slice 1
 
-`/tmp/ares-byobject-skirt-slice2-discovery`: official and seeded, CPU18, independent
+`${TMP_ROOT}/ares-byobject-skirt-slice2-discovery`: official and seeded, CPU18, independent
 Native caches/artifacts, canonical env archived from current coordinator path,
 Native first then same-input validated API/CLI, production unchanged.
 Existing disjoint fixture: two distinct objects at x80/x140,y110, height4,

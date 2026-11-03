@@ -33,15 +33,15 @@ must be reported without stripping it. Inputs and expectations were not tuned.
 
 Frozen independent residuals with exact inputs/outputs/first differences,
 hashes and Native receipts:
-- `/tmp/ares-j1-mask/findings/wipe-progress/FINDING.md`
-- `/tmp/ares-j1-mask/findings/filament-start-transition/FINDING.md`
+- `${TMP_ROOT}/ares-j1-mask/findings/wipe-progress/FINDING.md`
+- `${TMP_ROOT}/ares-j1-mask/findings/filament-start-transition/FINDING.md`
 
 The final test-only scope run has one primary complete-byte RED and three
 witness-only PASS. Do NOT interpret those PASS as complete-stream parity.
 Four fresh Slice receipts bind input/reference hashes, requested and actual
 CPU0/seed0, runs1, zero timeouts; compilation was outside each shared300s
 case deadline. No production code changed. First raw captures remain in
-`/tmp/ares-j1-mask/red/directed/`; scoped captures in `directed-scoped/`.
+`${TMP_ROOT}/ares-j1-mask/red/directed/`; scoped captures in `directed-scoped/`.
 
 Tests: `crates/ares-cli/tests/orca_parity/runner/j1_used_extruder_mask_follows_emitted_tools.rs`.
 Use the configured pinned Native/resources/artifact environment and:
@@ -74,4 +74,4 @@ primary complete-byte RED at byte3810/line222; zero-top travel RED; nonzero-top
 travel PASS. Three fresh Slice receipts, zero timeouts, strict workspace
 clippy/fmt exit0. No J1c production edit. Tracked machine record:
 `docs/architecture/gcode-runtime-used-extruder-mask-j1c-red-record.json`;
-full evidence `/tmp/ares-j1-mask/j1c-red/`.
+full evidence `${TMP_ROOT}/ares-j1-mask/j1c-red/`.

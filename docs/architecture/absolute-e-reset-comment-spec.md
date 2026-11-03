@@ -24,7 +24,7 @@ comment; retain flavor admission, M82/M83 bytes, order and reset count.
 
 COORD assigned this W1-owned discrepancy after merging both prior W1 stacks;
 base is current main `1a57f677f1ddbbf32ef14c319019da844a212d34`.
-W3 evidence is `/home/indexyz/ares-evidence/w3-pressure-discovery-bdb47cefe/`:
+W3 evidence is `${EVIDENCE_ROOT}/w3-pressure-discovery-bdb47cefe/`:
 README.md and verification.json record the admitted absolute-E verbose control
 at older base bdb47cefe, Native twice stable, validated API and CLI successful,
 raw API==CLI, whole difference byte1177,line48: annotated Native versus bare

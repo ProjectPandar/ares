@@ -147,7 +147,7 @@ independent SPEC and RED approvals.
 
 ## External receipts
 
-Under `/home/indexyz/ares-evidence/w3-tpmsd-anchoring-inset-`:
+Under `${EVIDENCE_ROOT}/w3-tpmsd-anchoring-inset-`:
 `top6-m2/`, `top7-m2/`, `top5-m2/`, `top6/` and matching `-seeded/` roots hold
 inputs, producer identities, commands, repeat streams and complete results.
 The target `role-observation.json` files localize activity without changing

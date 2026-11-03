@@ -66,7 +66,7 @@ repeats and all4-Native-first barrier. Initial issue2 and successful PI/6 rotati
 were ACTUALLY captured, not inferred from final issue0.
 
 Durable artifacts and exact receipts:
-`~/ares-evidence/worker1/voronoi-default-repair-red-9bbc/`.
+`${EVIDENCE_ROOT}/worker1/voronoi-default-repair-red-9bbc/`.
 Search was read-only discovery on SPECac538 plus working test-support edits,
 not exact-final-RED-hash qualification. Fresh runtime constructor RED remains a
 separate required gate after this test commit; no old capture is reused by it.

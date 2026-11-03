@@ -118,7 +118,7 @@ recorded in that same pass, over the same lines and the same motion state.
   and `tests/ksr_fdmtest_v4`. Artifact: `target/gcode-moves-oracle/*.csv`
   plus a diff summary.
 - G-code bytes unchanged: workspace nextest, official + seeded control set
-  (`/tmp/ares-parity-control-set.sh`) with no new FAIL.
+  (`${TMP_ROOT}/ares-parity-control-set.sh`) with no new FAIL.
 - Web E2E: Preview canvas shows the toolpaths. The layer slider changes the
   visible layer count. Screenshot artifact in `target/web-e2e/`.
 - Gates: fmt, workspace clippy with no new warnings, wasm32 build.
@@ -132,26 +132,26 @@ the handoff convert WIP is preserved on pi/m853-m854-rust, not included here.
 Candidate validation is on16c2dc90 (template RNG included). Workspace7608
 PASS/9 existing skips; Clippy132 core-lib/133 core-test/21 parity warnings,
 unchanged from this baseline; fmt and core/adapter WASM compile pass.
-Evidence: `/tmp/ares-m853-rng-gates.F6xjis`.
+Evidence: `${TMP_ROOT}/ares-m853-rng-gates.F6xjis`.
 
 New seeded reference controls407/407 PASS; official399 PASS/8 known failures,
 with exact failure-name equality against the accepted template-RNG baseline.
 No new official failure names. Evidence:
-`/tmp/ares-m853-rng-controls.9kn3aT/failure-comparison.json` and adjacent logs.
+`${TMP_ROOT}/ares-m853-rng-controls.9kn3aT/failure-comparison.json` and adjacent logs.
 The old official manual Slim failure is retained separately: main/candidate
 input and Ares bytes are identical, only native bytes differ. Coordinator
-accepted this reference fluctuation; proof `/tmp/ares-m853-slim-identity.json`,
-tracked externally in `/tmp/ares-parity-gaps.md`. Do not erase that old failure
+accepted this reference fluctuation; proof `${TMP_ROOT}/ares-m853-slim-identity.json`,
+tracked externally in `${TMP_ROOT}/ares-parity-gaps.md`. Do not erase that old failure
 or substitute its outputs into the fresh control run.
 
 Moves oracle rerun on the RNG base: Ender3 5564 moves, KSR635147 moves,
 zero out-of-tolerance fields,3/3 tests PASS (including integer comparator
-regression), evidence `/tmp/ares-m853-rng-moves.6uOG9F`. The comparator now
+regression), evidence `${TMP_ROOT}/ares-m853-rng-moves.6uOG9F`. The comparator now
 checks integer IDs as integers rather than lossy f32; RED/GREEN logs are
-`/tmp/ares-m853-integer-comparator-{red,green}.log`. Floating bounds remain
+`${TMP_ROOT}/ares-m853-integer-comparator-{red,green}.log`. Floating bounds remain
 unchanged: exact copied f32 fields,1ULP derived values,2ULP normal time.
 
-Oracle build identity: `/tmp/ares-m853-oracle-build.L4a7nd`, source8500fcdcc,
+Oracle build identity: `${TMP_ROOT}/ares-m853-oracle-build.L4a7nd`, source8500fcdcc,
 existing procgcode patch, output41b3inibhqsvbidsfkzmh9dw0ilplinl. No repeat
 oracle build after coordinator handoff. New seeded producer is1k0p5nlb…;
 old jqfsg42… baseline evidence is historical only. Latest main must be

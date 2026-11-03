@@ -41,7 +41,7 @@ SHA:
 - inactive7.6control:6b3c9d972c96f04cc849e3da9d67ff06679146d94b53e39819fb16916be4d152
 
 Discovery8Native slices4initial/activecasesstable,allCLIexit0,exact09296binary.
-Evidence `/home/indexyz/ares-evidence/w4-machine-jerk-rounding/PROPOSAL.md` and
+Evidence `${EVIDENCE_ROOT}/w4-machine-jerk-rounding/PROPOSAL.md` and
 originalstreams/ownershipaudit. No API/seeded/FULLclaim from discovery.
 
 ## RED-first failure modes / exits

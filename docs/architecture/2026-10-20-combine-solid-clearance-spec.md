@@ -149,7 +149,7 @@ G-code golden or output filtering. Only existing generator/date identity
 normalization; all M73/time/feedrate/E/wipe/retraction/footer bytes significant.
 
 Accepted discovery and producer/localization audits:
-`/home/indexyz/ares-evidence/w3-combine-solid-readonly-231bd11cc/README.md`.
+`${EVIDENCE_ROOT}/w3-combine-solid-readonly-231bd11cc/README.md`.
 The prior minimum-area7/7 PASS and combine-height6/6 PASS matrices remain
 bounded negative evidence; they do not authorize any adjacent change.
 
@@ -246,7 +246,7 @@ No claim of dual-mode GREEN or final acceptance is made; seeded/FULL remain
 unrun. Any later bounded attempt with a strict residual must again STOP/report.
 
 Residual diagnosis and exact snapshots:
-`/home/indexyz/ares-evidence/w3-combine-solid-residual-c810ef7d3-readonly/README.md`.
+`${EVIDENCE_ROOT}/w3-combine-solid-residual-c810ef7d3-readonly/README.md`.
 
 ## Approved GREEN3 amendment: configured Arachne nearest-point ties
 
@@ -352,4 +352,4 @@ allow/ignore, fallback, extra config, pipeline feature, FULL or integration is
 authorized. FULL/rebase/push remain COORD-owned window decisions.
 
 Read-only localization, producer/canonical checks and W4 boundary:
-`/home/indexyz/ares-evidence/w3-concentric-speed-residual-81318b506-readonly/README.md`.
+`${EVIDENCE_ROOT}/w3-concentric-speed-residual-81318b506-readonly/README.md`.

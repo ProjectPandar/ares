@@ -168,4 +168,4 @@ No tolerance, M73/E filtering, fallback, new allow/expect/ignore, Native
 golden, inverted assertion, unsupported guard, worker merge/push/stash.
 
 Evidence:
-`/home/indexyz/ares-evidence/w3-seam-gap-key-spec-review/README.md`.
+`${EVIDENCE_ROOT}/w3-seam-gap-key-spec-review/README.md`.

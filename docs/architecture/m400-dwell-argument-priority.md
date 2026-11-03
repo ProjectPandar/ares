@@ -77,7 +77,7 @@ Option<f64>::Some(65). Normal exits, may-call-functions off, no inferior calls/
 register/data writes, complete outputs unchanged from non-GDB. Invalid v1
 Native source5353 resolved5355/no sample and Rust empty-string-read probe are
 excluded. Evidence root:
-`/home/indexyz/ares-evidence/w6-d592-m400-discovery-w2aerqjx/`.
+`${EVIDENCE_ROOT}/w6-d592-m400-discovery-w2aerqjx/`.
 
 ## Formal RED and exit contract
 

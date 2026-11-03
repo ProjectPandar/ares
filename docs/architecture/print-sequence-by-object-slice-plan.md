@@ -302,7 +302,7 @@ tail (`GCode.cpp:3542`).
 Ares gap: the schedule merges same-object instances into one chunk, so
 the second copy prints without the inter-instance transition and the
 header/tail count says 62 instead of 124 (RED log
-/tmp/ares-w5-gates/m73-multi-red2.log).
+${TMP_ROOT}/ares-w5-gates/m73-multi-red2.log).
 
 Planned change (pending approval):
 1. Schedule: under by-object, keep one chunk per instance (per-instance

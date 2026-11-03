@@ -13,7 +13,7 @@ Classic, ByLayer, support/tower disabled, no skirts, combine_brims0, EFC flag0.
 GUI path: add a part, assign filaments, choose brim type.
 
 Frozen source generator/manifest/Native-first evidence:
-`/home/indexyz/ares-coord/evidence/worker2-material-rediscovery-20261020T224150/`.
+`${COORD_ROOT}/evidence/worker2-material-rediscovery-20261020T224150/`.
 The generator retains an old absolute source path; before replay, resolve the
 tracked source above and verify its SHA. It copies archive entries, adds the
 second component/part/relationship/mesh, and rewrites settings; stored ZIP CRC32.

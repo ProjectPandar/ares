@@ -53,7 +53,7 @@ Core remains platform-neutral for WASM/Windows/macOS/Linux; no I/O enters core.
 ## First producer evidence
 
 Read-only source-cited evidence root:
-`/home/indexyz/ares-evidence/w6-b9cc-interlock-params-j7321r01/`.
+`${EVIDENCE_ROOT}/w6-b9cc-interlock-params-j7321r01/`.
 Authoritative `downstream-proof.json` enumerates valid captures and checks.
 
 - All300 generator pre/post ordered layer/region polygon records are exact.

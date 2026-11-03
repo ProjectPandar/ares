@@ -520,7 +520,7 @@ Completed prerequisite order/exit: approve docs SPEC/ARD -> fresh real reachable
 constructor RED -> wrapper plus real consumer -> independently qualified exact
 GREEN, complete ordered effective arrays/states and consumer regressions,
 fmt/strict/WASM. No tolerance, repair suppression, FFI or backend fallback.
-Durable measured evidence is hash-verified under `~/ares-evidence/worker1/`;
+Durable measured evidence is hash-verified under `${EVIDENCE_ROOT}/worker1/`;
 old hashes are not new-base credit. No FULL/push/merge now; coordinator schedules
 broad validation. [SPEC](architecture/voronoi-default-repair-prerequisite-spec.md),
 [ARD](architecture/voronoi-default-repair-prerequisite-ard.md).

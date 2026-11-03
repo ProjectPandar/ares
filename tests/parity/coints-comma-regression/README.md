@@ -4,7 +4,7 @@ Frozen original Native-exported BBL discovery archive; do not regenerate.
 
 seam-variant.3mf SHA256:
 `3e392f7a34ea2b869722aa768ff729b51d1bf0c99d9f1be708671e618f06eebf`.
-Source `/home/indexyz/ares-bbl-option-discovery-7m2p9k4/seam.3mf`.
+Source `${WORKTREE_ROOT}/ares-bbl-option-discovery-7m2p9k4/seam.3mf`.
 
 The historical discovery label is seam variant; effective machine is BBL X1C,
 Classic walls, aligned seam. The one object contains two normal parts. Valid

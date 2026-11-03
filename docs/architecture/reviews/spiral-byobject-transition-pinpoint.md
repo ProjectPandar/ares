@@ -105,7 +105,7 @@ Ares（`transition.rs` 当前实现）：
 
 ## 4.1 W4 交叉证据（2026-10-25 通报）
 
-`/home/indexyz/ares-evidence/w4-m73-pinpoint/`：M73 位置类 B 已证实为
+`${EVIDENCE_ROOT}/w4-m73-pinpoint/`：M73 位置类 B 已证实为
 纯尾部总时差下游 —— Ares 序列总模拟时仅少 δ=35.3ms，全部来自本文三处
 尾部差异（travel Z7 vs Z6.2 + 缺失 `G1 Z.6`/`G1 Z.2`）；其重放实验在
 Native 自身行序列上 74/74 复现 M73 锚点，证明 Ares 进度插入模型与

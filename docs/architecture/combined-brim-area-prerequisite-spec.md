@@ -8,7 +8,7 @@ FULL24 is active; all probing was targeted CPU18, no full/workspace/merge.
 
 ## Premise reverified on exact main, not the pending W1 chain
 
-Fresh `/tmp/ares-brim-control-main-premise/discovery-report.json`: official and
+Fresh `${TMP_ROOT}/ares-brim-control-main-premise/discovery-report.json`: official and
 seeded Native FIRST, independent roots/cache, current coordinator canonical
 archived, current main API/CLI rebuilt, sampled descendants/threads pinned CPU18.
 Input SHAs retained. Native accepts all three inputs; Ares accepts all with raw

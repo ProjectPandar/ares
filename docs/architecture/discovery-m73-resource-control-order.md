@@ -39,7 +39,7 @@ append G-code and call it with move counters. This localizes the insertion owner
 **not the root cause** (timing/cache/counter attribution unproved). No Rust fix,
 new time tolerance, dropping/reordering M73, fixture tweak or comparator weakening.
 
-Evidence archive `/home/indexyz/.ares-evidence/worker4/resource-build-public-red-stop-c0yg.tar.gz`,
+Evidence archive `${LOCAL_EVIDENCE_ROOT}/worker4/resource-build-public-red-stop-c0yg.tar.gz`,
 SHA `39906c69dc4b6b80218e816cc890778ab51e1cc8a620b37a0975e3b42bfc9380`.
 Owner-directed next action for resource-build is new input SPEC review using an
 existing current-main strict-PASS control, not repair this discovery.

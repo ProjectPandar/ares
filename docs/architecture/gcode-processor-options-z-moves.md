@@ -17,7 +17,7 @@ was compared with the `procgcode` oracle (`tools/chain-probe/procgcode.nix`,
 verbatim `GCodeProcessor` plus the dump hook). The oracle ran with
 `--process-gcode --dump-moves` on the same G-code. The tolerances are the
 ones in `crates/ares-cli/tests/gcode_moves_oracle.rs`. The evidence is in
-`/tmp/ares-estimation/moves-discovery/r2/`.
+`${TMP_ROOT}/ares-estimation/moves-discovery/r2/`.
 
 | Fixture (`tests/parity/plate-custom-gcode-emission/`) | Rows oracle / Ares | Out-of-tolerance fields |
 |---|---|---|
@@ -33,7 +33,7 @@ The `color-change` fixture shows no difference. Why it is unaffected while
 not established yet. The GREEN probe records it, and it stays a guard case.
 
 **The oracle is consistent with Native.** The script
-`/tmp/ares-estimation/moves-discovery/native-check.sh` re-ran the oracle
+`${TMP_ROOT}/ares-estimation/moves-discovery/native-check.sh` re-ran the oracle
 on the official-AppImage `plate_1.gcode` that the `7e6340dde` directed
 parity run compared against.
 - **G-code lines:** for all 9 fixtures, the non-comment lines of the Native

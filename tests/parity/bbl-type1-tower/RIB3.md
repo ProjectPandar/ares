@@ -39,7 +39,7 @@ cast/multiply and unscale/cast results, formatting to20.220 vs20.221 locally,
 and then Y241.273 vs241.274 in the complete output. The shared fitter is not
 the cause of this witness; this is not a claim of universal fitter parity.
 
-Evidence: `/home/indexyz/ares-coord/evidence/w5-rib3-trace/`, including raw
+Evidence: `${COORD_ROOT}/evidence/w5-rib3-trace/`, including raw
 before/after integer/f64 arrays, debugger scripts and live writer values.
 Earlier Native-first exports are in `w5-type1-rib-length-discovery/`.
 

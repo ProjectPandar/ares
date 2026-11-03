@@ -63,7 +63,7 @@ slices replay identically and all CLI exits are zero. Discovery does not qualify
 public API, seeded, RED or FULL tests.
 
 Evidence and complete source inventory:
-`/home/indexyz/ares-evidence/w4-writer-function-inventory/`, especially
+`${EVIDENCE_ROOT}/w4-writer-function-inventory/`, especially
 scan-comment-witness/ and its witness-audit.json.
 
 ## Tests-only RED contract, before production work

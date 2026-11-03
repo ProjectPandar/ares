@@ -92,7 +92,7 @@ and report to their owner rather than fix resolution inside this slice.
 
 ## Native admission + real effect proof (completed; no Ares RED claim)
 
-Final evidence: `/tmp/ares-skirt-min-length-allgroups-37UMhP/`.
+Final evidence: `${TMP_ROOT}/ares-skirt-min-length-allgroups-37UMhP/`.
 `head.txt` is exact base above; before/after status files are empty. Official
 and seeded Native ran serially at outer CPU18, each input with fresh cache
 and artifacts; all **16/16** return_code/OS exits are 0. Sampled actual Native

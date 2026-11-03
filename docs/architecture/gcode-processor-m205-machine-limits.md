@@ -69,7 +69,7 @@ the authority, including M73 and printed estimated times. Four business cases
 are divergent; zero-rate and RRF configuration-reset controls match. The
 standalone Native processor versus slice-inline processor per-vertex time-bit
 diagnostic also failed the zero control (different initialization) and is
-**not comparable**. It is retained only in `/tmp/ares-m205-c457/red`, excluded
+**not comparable**. It is retained only in `${TMP_ROOT}/ares-m205-c457/red`, excluded
 from the RED commit and forbidden as a repair driver. No additional
 PAUSE_PRINT marker/seam is admitted. No diagnostic rounding patch or relaxed
 comparison is authorized.

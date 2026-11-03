@@ -26,13 +26,13 @@ cases (`template`, `custom`, `pause`, `mode-mismatch`) do not cover.
 ## Evidence
 
 - **Base:** at `57fea9498`, the moves discovery against the raw
-  `procgcode` oracle (`/tmp/ares-estimation/moves-discovery/r2/summary.txt`)
+  `procgcode` oracle (`${TMP_ROOT}/ares-estimation/moves-discovery/r2/summary.txt`)
   shows 5560 oracle rows against 5564 Ares rows, and 4304 `gcode_id`
   mismatches, the first at row 1140.
 - **After the GREEN:** at `683d5706f` (the same code as the approved
   `13f628158`), a release `ares slice --dump-moves` of `same-layer.3mf`,
   compared with the raw oracle under the M853 rules
-  (`/tmp/ares-estimation/same-layer-683/`), shows 5560/5560 rows,
+  (`${TMP_ROOT}/ares-estimation/same-layer-683/`), shows 5560/5560 rows,
   0 mismatches, and all columns bit-identical.
 
 ## Included and deferred

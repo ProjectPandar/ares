@@ -3,7 +3,7 @@
 Status: docs-only SPEC review request. Worker3. Base is code-approved bottom
 candidate `2fa5a5486d228a49f26ddb9512d8eac2cd190ed8`, awaiting stacked full.
 The bottom branch/worktree stays frozen. This proposal lives separately in
-/tmp/ares-worker3-mesh-edge-spec, branch pi/worker3-mesh-edge-pairing-spec.
+${TMP_ROOT}/ares-worker3-mesh-edge-spec, branch pi/worker3-mesh-edge-pairing-spec.
 Carry only this proposal onto the next broadcast main before implementation.
 No Native, build, test, fixture or production change is included here.
 Filament selectors remain reserved for W6; no skirt/counterbore overlap.

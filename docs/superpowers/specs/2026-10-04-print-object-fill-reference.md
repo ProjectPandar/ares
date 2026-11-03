@@ -32,13 +32,13 @@ remove it or silently broaden this repair into bridge behavior.
 ## Reproduction and failure chain
 
 Strict existing public byte replay on main7ac55555:
-`/tmp/ares-vendors-snapmaker-red/replay-summary.json` =0/1, first difference
+`${TMP_ROOT}/ares-vendors-snapmaker-red/replay-summary.json` =0/1, first difference
 M73 line80. Official CPU0 re-slice matches the frozen reference after generator
 normalization only. External GDB captures on z0.84 show identical rotated
 expanded contour vertices for all3 cubic families, but native reference0,0
 versus Rust1,0. Raw scanline endpoints already differ by one scaled unit,
 then anchor connections and travel lengths change; M73/cooling are downstream.
-Artifacts: `/tmp/ares-vendors-{native,rust}-cubic.{gdb,jsonl,log}`.
+Artifacts: `${TMP_ROOT}/ares-vendors-{native,rust}-cubic.{gdb,jsonl,log}`.
 No production debug probes are needed.
 
 ## Coordinator-approved slice scope
@@ -56,7 +56,7 @@ This approved scope does not alter any comparator, fixture, or failing assertion
 
 Keep public byte-input/output seam and existing strict ordered comparator.
 Before editing replay all60 Snapmaker and8 Qidi residuals on main, preserving
-RED artifacts under `/tmp/ares-vendors-fill-red`. After editing replay the same
+RED artifacts under `${TMP_ROOT}/ares-vendors-fill-red`. After editing replay the same
 unchanged68 inputs/references, classifying any remaining differences honestly.
 The mandatory tracer must be fully green, not merely movement-equivalent.
 Replay existing green stock controls using the same immutable reference data.

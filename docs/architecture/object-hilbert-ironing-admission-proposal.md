@@ -3,7 +3,7 @@
 Status: **PROPOSAL ONLY / DOCS-ONLY REVIEW-REQUEST**. Base exact main
 `8f6ce1660ccfaf95a6888b60c258047183d19ff0`; new branch
 `worker1/ironing-grid-discovery-spec`, worktree
-`/home/indexyz/ares-worktrees/ares-worker1-ironing-grid-discovery`.
+`${WORKTREE_ROOT}/ares-worker1-ironing-grid-discovery`.
 The directory/branch retain the first candidate's name; grid was rejected by
 source audit before runtime and is NOT proposed. No production/test code or fix
 probe. Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
@@ -11,7 +11,7 @@ probe. Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 ## Not already merged; not a stack-26 topic
 
 `git log origin/main` and path-specific log were checked on main8f6ce1660,
-archived under `/tmp/ares-w1-object-ironing-grid-discovery-8f6ce1660/`:
+archived under `${TMP_ROOT}/ares-w1-object-ironing-grid-discovery-8f6ce1660/`:
 `origin-main.txt`, `origin-main-ironing-log.txt`,
 `origin-main-object-ironing-path-log.txt`, `origin-main-hilbert-ironing-log.txt`.
 Existing `b9ebd140b` ports **support** Hilbert ironing, NOT object ironing.
@@ -25,7 +25,7 @@ keyword absence claim. No skirt/brim ByObject, region-speed, or firmware-lift wo
 ## Minimal input and observed divergence
 
 Verified receipt:
-`/tmp/ares-w1-object-ironing-grid-discovery-8f6ce1660/minimal-box-v2/discovery-report.json`.
+`${TMP_ROOT}/ares-w1-object-ironing-grid-discovery-8f6ce1660/minimal-box-v2/discovery-report.json`.
 Input-only frozen 3MFs/member hashes:
 `.../minimal-box-v2/inputs/{hilbert-active,rectilinear-control,hilbert-disabled-control}.3mf`
 and `manifest.json`. No Native output is committed. Target is one closed

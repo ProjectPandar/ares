@@ -82,13 +82,13 @@ the missing emission loop (items 8/11) observable at the very first
 diagnostic line; every downstream byte differs as a consequence.
 
 Evidence artifacts:
-`/tmp/ares-w5-gates/artifacts-byobj/case-*/` (input.3mf, orca.gcode,
+`${TMP_ROOT}/ares-w5-gates/artifacts-byobj/case-*/` (input.3mf, orca.gcode,
 ares.gcode, manifest.json; labels `by-object/ender3`,
 `by-object/kobra3`). Probe: the temporary diagnostic
 `orca_parity::runner::byobject_probe_tmp` (never committed), seeded
 native replay 2.4.2 seed 0, dedicated target
-`/tmp/ares-w5-gates/target-byobj`, cache
-`/tmp/ares-w5-gates/cache-byobj`, 16 threads, branch base 3c1a79941.
+`${TMP_ROOT}/ares-w5-gates/target-byobj`, cache
+`${TMP_ROOT}/ares-w5-gates/cache-byobj`, 16 threads, branch base 3c1a79941.
 Ares-as-by-layer equivalence with a native by-layer run of the same
 input was not byte-verified (no zip tooling in the environment to patch
 the input); the 50/62-layer counts and the missing emit loop make the

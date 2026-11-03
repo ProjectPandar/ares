@@ -28,7 +28,7 @@ Use the accepted official-exported stock X1C project, two cube10 objects,
 Bambu PLA Basic + Bambu PLA Matte, distinct AMS slots on one nozzle. Unchanged
 stock process/machine/filament templates. Input SHA256:
 `ab00b9040c3ccc1c10490a220880b87108aed7edd3a19926b8e7967f1287e506`.
-Evidence root `/home/indexyz/ares-coord/evidence/w5-stock-multi-materialized/`;
+Evidence root `${COORD_ROOT}/evidence/w5-stock-multi-materialized/`;
 `0/input.3mf`, `0/verified.json`, raw streams/receipts and
 `t1-t2-baseline-settings.json`. This is discovery evidence, not a registered RED.
 The slot-materialization and official re-export history is retained; do not

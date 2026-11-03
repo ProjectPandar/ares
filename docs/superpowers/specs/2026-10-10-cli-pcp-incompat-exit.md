@@ -9,7 +9,7 @@ A plain CLI slice of a 3MF whose embedded process declares
 system name is rejected by Native with `-17 CLI_PROCESS_NOT_COMPATIBLE`
 before any slicing. Ares currently slices it and exits 0.
 
-Admission evidence (worker1 handoff, `/tmp/ares-pcp-embedded/admission`):
+Admission evidence (worker1 handoff, `${TMP_ROOT}/ares-pcp-embedded/admission`):
 `native-slice/command.txt` runs `--slice 0 --outputdir <dir> input.3mf`;
 products are `exit 239` (≡ `-17` mod 256), stdout
 `run found error, return -17, exit...\n`, empty stderr, the sorted-key
@@ -77,7 +77,7 @@ products are `exit 239` (≡ `-17` mod 256), stdout
 `cli_exit_process_compatible_family_matches_native` running
 `assert_family("process-not-compatible", ProcessNotCompatible)` with the
 fixture `tests/parity/validation/cli-exit/process-not-compatible.3mf`
-(bytes pinned from `/tmp/ares-pcp-embedded/admission/input.3mf`).
+(bytes pinned from `${TMP_ROOT}/ares-pcp-embedded/admission/input.3mf`).
 RED = Ares exits 0 and exports G-code while Native exits 239 with the
 channels above. GREEN = exit byte, stdout, stderr, `result.json`
 (`result_comparison_bytes`) and no-G-code all identical.

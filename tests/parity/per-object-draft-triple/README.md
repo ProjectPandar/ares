@@ -4,8 +4,8 @@ SPEC5a7206e96 conditionally approved with RED coverage expanded to12 inputs:
 4 original both-brim triples plus8 mixed left-only/right-only ownership cases.
 Stacked on82d11ee6f; no changes to frozen parent or previous controls.
 
-Exact original inputs: /tmp/ares-draft-triple-native-G4zq1A/inputs (Native8/8).
-Exact mixed inputs: /tmp/ares-draft-triple-mixed-jhXvqN/inputs (Native16/16).
+Exact original inputs: ${TMP_ROOT}/ares-draft-triple-native-G4zq1A/inputs (Native8/8).
+Exact mixed inputs: ${TMP_ROOT}/ares-draft-triple-mixed-jhXvqN/inputs (Native16/16).
 SHA/source hashes and expected groups/brim-owner counts are in manifest.json.
 Only pure3MF inputs are committed, no Native outputs.
 

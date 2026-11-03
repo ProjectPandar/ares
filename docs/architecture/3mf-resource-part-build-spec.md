@@ -33,7 +33,7 @@ not an Ares-designed ZIP/scene pipeline or a general 3MF-conformance project.
 ## 2. Retained finding, and what it does not establish
 
 Frozen `loader-no-build-3mf-finding.md` and archive
-`/home/indexyz/.ares-evidence/worker4/lower-slices-admission-stop-CXWg.tar.gz`, SHA
+`${LOCAL_EVIDENCE_ROOT}/worker4/lower-slices-admission-stop-CXWg.tar.gz`, SHA
 `3d575de80a7ebaf18350119bb19eba06f0dc29974365cdce247e51d01d3f8c42`.
 Exact v1 contour.3mf SHA
 `871b1a88ee8813d468ee65d6a2a6b7e22097788d43d06c2e8a61f19481dce880`.
@@ -93,9 +93,9 @@ in official/run.log14837 and seeded/run.log14796, same main3ee8f272c.
 Raw retained streams were read offline: strict generator-only COMPLETE equality
 and raw API/CLI equality independently verified, retaining M73/all movement/footer.
 Official root:
-`/tmp/ares-full16-3ee8f-5ovWDK/official/artifacts/wipe-before-override-control-before50-4hqbHN`;
+`${TMP_ROOT}/ares-full16-3ee8f-5ovWDK/official/artifacts/wipe-before-override-control-before50-4hqbHN`;
 seeded root:
-`/tmp/ares-full16-3ee8f-5ovWDK/seeded/artifacts/wipe-before-override-control-before50-YOBX0W`.
+`${TMP_ROOT}/ares-full16-3ee8f-5ovWDK/seeded/artifacts/wipe-before-override-control-before50-YOBX0W`.
 Both API+CLI rawSHA
 `2e9e3d4a65a71c9e05b58792c78e3b21879b635ab219be0b212d39da7f58340d`;
 all normalized Native/API/CLI SHA
@@ -107,7 +107,7 @@ proof on the new pair is still mandatory after revised SPEC approval. No Native/
 API/CLI execution has been done on the new positive and no positive RED claimed.
 
 Proposal bytes/complete entry manifest/current-main raw proof copies are external
-under `/home/indexyz/.ares-evidence/worker4/resource-build-input-v2-proposal/`.
+under `${LOCAL_EVIDENCE_ROOT}/worker4/resource-build-input-v2-proposal/`.
 Do not overwrite committed e1de695aa fixtures until this revision is approved.
 
 ## 3. Exact Rust destination / behavior

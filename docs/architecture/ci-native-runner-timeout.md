@@ -36,7 +36,7 @@ No core/WASM process management is introduced.
 CI run 38333410520 attempt1, self-hosted workspace:
 `elapsed=4.888604235s`, `Timeout`, `kill=Ok(())`,
 `reap=Ok(Some(ExitStatus(unix_wait_status(9))))`.
-Log copied to `/tmp/ares-ci-timeout-evidence/ci-attempt1.log`.
+Log copied to `${TMP_ROOT}/ares-ci-timeout-evidence/ci-attempt1.log`.
 The capture contains both pre-timeout binary sentinels and no descendant
 late-output marker. A later official parity leg passed the lifecycle test.
 

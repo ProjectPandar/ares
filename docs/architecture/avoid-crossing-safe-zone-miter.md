@@ -27,7 +27,7 @@ polygon, contour, hole and integer vertex. Each target has two contours and
 three holes. No canonicalization, sorting, tolerance or rounding was used.
 Rust was observed twice per target with the same inputs.
 
-Evidence: `/home/indexyz/ares-evidence/w6-thin-preoffset-lslices-equality.json`.
+Evidence: `${EVIDENCE_ROOT}/w6-thin-preoffset-lslices-equality.json`.
 SHA256 of compact ordered coordinate arrays:
 
 - thin-auto-gap: `e0f21ef7a2eaede94ff9d969a668b8f0c4e72351e50c6b30dc61ecefb569dde5`
@@ -51,7 +51,7 @@ safe-zone corner contains `[-1769990, 541813]`; Rust instead has the bevel
 vertices `[-1769990, 70383]` and `[-1436639, 208462]`. Pre-offset inputs are
 exactly equal, while the offset's miter parameter explicitly differs from
 upstream. Receipts are linked from
-`/home/indexyz/ares-evidence/w6-thin-safezone-readonly-finding.json`.
+`${EVIDENCE_ROOT}/w6-thin-safezone-readonly-finding.json`.
 
 Hypothesis to test only after spec approval: restoring the source default
 miter limit restores safe-zone containment/routing and its downstream timing

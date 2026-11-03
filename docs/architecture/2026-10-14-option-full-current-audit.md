@@ -7,7 +7,7 @@ Date: 2026-10-14. Status: complete execution; **not global coverage PASS**.
 
 ## Reproducible execution and raw counts
 
-Canonical `/tmp/ares-parity-control-set-v2.sh` unchanged, SHA256
+Canonical `${TMP_ROOT}/ares-parity-control-set-v2.sh` unchanged, SHA256
 `7390a44bb957b35da12c9d1af68f0978b424f41bad6368ce21367d36b63edec7`.
 Each official/seeded leg used the following command, concurrently:
 
@@ -15,7 +15,7 @@ Each official/seeded leg used the following command, concurrently:
 env -i PATH="$PATH" HOME="$HOME" RUSTUP_TOOLCHAIN=1.99.0 \
  CARGO_BUILD_JOBS=2 NEXTEST_TEST_THREADS=2 ARES_PARITY_THREADS=2 \
  ARES_PARITY_OPTIONS=1 ARES_ORCA_CACHE_DIR="$root/cache" \
- /tmp/ares-parity-control-set-v2.sh \
+ ${TMP_ROOT}/ares-parity-control-set-v2.sh \
  "$mode" "$repo" "$root/target" "$root/artifacts"
 ```
 
@@ -23,7 +23,7 @@ No outer taskset/pin override; canonical owns per-test CPU pinning.
 No ARES_OPTION_KEYS/VALUES/PARITY_PATTERN or test filter. Independent fresh
 root/cache/target per leg, no base legs and no manual Native reruns.
 Preflight load1=1.02; repo/official/seeded each66 vendors/11895 referenced
-files/zero missing. START/END were posted to `/tmp/ares-coord-inbox.log`.
+files/zero missing. START/END were posted to `${TMP_ROOT}/ares-coord-inbox.log`.
 The unchanged official wrapper SHA256 is
 `1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3`.
 

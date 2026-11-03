@@ -9,7 +9,7 @@ SeamPlacer.cpp:1071-1077 `regions_with_perimeter` layer gate.
 | wall-classic.3mf | 482eb2e6a19b43a56cc13553dc9c8795ca9d4ccf9510743d45d236b547cab01d |
 
 Original source evidence:
-`/home/indexyz/ares-evidence/w3-geometry-discovery3-78d642702/thin-gap-j1/inputs/`
+`${EVIDENCE_ROOT}/w3-geometry-discovery3-78d642702/thin-gap-j1/inputs/`
 (wall-arachne.3mf, not regenerated). wall-classic.3mf is a dual-mode sibling:
 sole effective delta `wall_generator arachne->classic` in
 `Metadata/project_settings.config`; every other member byte-copied; rebuilt

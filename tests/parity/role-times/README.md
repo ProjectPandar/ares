@@ -12,7 +12,7 @@ diagnostic, not full Native Viewer/GL execution**: real `GCodeProcessor`,
 3638-3668` Feature Type cells (`tools/chain-probe/role-times/`).
 
 ```sh
-export ORCA_PROCGCODE_SOURCE=/tmp/ares-orca-procgcode-source
+export ORCA_PROCGCODE_SOURCE=${TMP_ROOT}/ares-orca-procgcode-source
 export ORCA_PROCGCODE_NIXPKGS=/nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source
 node tools/chain-probe/extract-role-times.mjs --check
 out=$(nix build --impure --cores 4 --max-jobs 1 --no-link --print-out-paths -f tools/chain-probe/role-times.nix)

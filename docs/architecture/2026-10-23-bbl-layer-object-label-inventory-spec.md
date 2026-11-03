@@ -9,7 +9,7 @@ Frozen print_order/retract branches are not dependencies and remain untouched.
 ## 1. Witness and precise diagnosis
 
 W5 supplied artifacts:
-`/home/indexyz/ares-coord/evidence/w5-type1-public-red-meYjMY/seeded-artifacts/bbl-type1-tower-disabled-UthxqY/`.
+`${COORD_ROOT}/evidence/w5-type1-public-red-meYjMY/seeded-artifacts/bbl-type1-tower-disabled-UthxqY/`.
 
 Input SHA256:
 `e78d0feba53df6318deb96929eb0620d5392f16a88832fb4ffd75969b853ed28`.
@@ -190,7 +190,7 @@ No new fallback, feature flag, marker mask, or stored Native G-code golden.
    run directed cases in both modes and coordinator-defined neighbour/FULL gates.
    All build/test jobs exclusive on CPU17, `ARES_PIN_OFFSET=17`,
    `CARGO_BUILD_JOBS=1`, `ARES_PARITY_THREADS=1`. FULL only through
-   `~/ares-coord/bin/parity-control-set.sh`, detached when long-running, complete
+   `${COORD_ROOT}/bin/parity-control-set.sh`, detached when long-running, complete
    logs and actual exit files. No ad-hoc oracle environment or disabled requirements.
 
 SPEC completion does not claim a fresh baseline reproduction, RED submission,

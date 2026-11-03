@@ -19,7 +19,7 @@ out-of-range options with native-identical `key: text`.
 ## Parity v2 (fresh caches)
 
 - **seeded**: 585/585 pass. Artifacts `/tmp/o3-parity-artifacts/seeded`.
-- **official** (rerun, fresh cache `/tmp/ares-orca-cache-v2-o3official-rerun-*`,
+- **official** (rerun, fresh cache `${TMP_ROOT}/ares-orca-cache-v2-o3official-rerun-*`,
   artifacts `/tmp/o3-parity-artifacts/official-rerun`, log
   `/tmp/o3-official-rerun.log`, run solo): 575 pass / 10 fail.
   **All 10 failures are name-identical to base `d789b0750` official

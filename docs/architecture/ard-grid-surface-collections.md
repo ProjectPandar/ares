@@ -44,7 +44,7 @@ therefore delayed until after left walls. Grouping and scanline geometry
 already agree in this witness.
 
 Repeatable external evidence (not committed Native output or probes):
-`/home/indexyz/ares-evidence/w2-grid-collection-trace-20261024T231048/`
+`${EVIDENCE_ROOT}/w2-grid-collection-trace-20261024T231048/`
 contains `SPEC-PROPOSAL.md`, Native/Ares live traces, exact vertex assertions,
 reproduction commands and output-equivalence checks. Initial decoder/probe
 failures are separately labeled and excluded from the final evidence.

@@ -43,7 +43,7 @@ coordinator review before latest-main revalidation and fast-forward merge.
 
 ## Result at aa52ef2b
 
-Evidence: `/tmp/ares-pi-ironing-geometry-aa52ef2b.B0go1P`.
+Evidence: `${TMP_ROOT}/ares-pi-ironing-geometry-aa52ef2b.B0go1P`.
 Official and seeded runs each pass6/6 domains,17/17 full comparisons, with
 zero rejected cases. All17 native outputs record `ironing_type=top`.
 Each reference has11 cases with positive-E XY ironing extrusion. Six limiting
@@ -52,7 +52,7 @@ or filament inset. These remain full-output comparisons, not skipped tests.
 Per-case observations are in `seeded-role-witness.json` and
 `official-role-witness.json`. There is no DIVERGENT to repair in this group.
 
-Final gates: `/tmp/ares-pi-option-activation-gates.tq7Dfs`.
+Final gates: `${TMP_ROOT}/ares-pi-option-activation-gates.tq7Dfs`.
 Workspace Nextest7595 PASS/9 existing skips (869.775s,8 test threads),
 all-target Clippy, rustfmt check and core/adapter WASM compilation all exit0.
 Clippy retains219 core-lib /220 core-test /21 parity warnings; no new lint

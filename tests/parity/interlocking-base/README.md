@@ -8,7 +8,7 @@ ordered generator-only comparisons are unchanged.
 On current main `8acb19cf7`, both modes show six PASS controls/admission checks
 and two genuine producer REDs: default two-extruder beam1 and boundary-zero
 beam1. Same-extruder beam1 already passes on main and is only a no-op control.
-Evidence: `/home/indexyz/ares-evidence/w6-clean-generator-red-{official,seeded}/run.log`.
+Evidence: `${EVIDENCE_ROOT}/w6-clean-generator-red-{official,seeded}/run.log`.
 
 The unresolved WIP inputs/tests for three-region beam1, odd-kernel, orthogonal
 wipe, auto-width gap and percent-width gap are deliberately not in this chain;

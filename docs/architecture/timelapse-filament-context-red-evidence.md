@@ -4,7 +4,7 @@ SPEC `20444a910` approved; base `afca7400a`. This commit contains only E2E tests
 
 ## Admission and reproduction
 
-Final RED root: `/tmp/worker2-timelapse-red.1zBoNI`; each mode has its own fresh Native cache and artifact root. Reproduce using the unmodified `/tmp/ares-parity-control-set-v2.sh` with seeded/official, jobs2/threads2, and nextest filter `test(timelapse_templates_render_current_logical_filament_vectors)`. Allocate fresh cache/root for every invocation; do not reuse the recorded cache.
+Final RED root: `/tmp/worker2-timelapse-red.1zBoNI`; each mode has its own fresh Native cache and artifact root. Reproduce using the unmodified `${TMP_ROOT}/ares-parity-control-set-v2.sh` with seeded/official, jobs2/threads2, and nextest filter `test(timelapse_templates_render_current_logical_filament_vectors)`. Allocate fresh cache/root for every invocation; do not reuse the recorded cache.
 
 The aggregate E2E runs six complete projects per mode. Native slicing succeeds, core API succeeds and CLI exits0 for all six. API/CLI raw outputs are equal. Each active Native stream has50 physical layers and100 executable timelapse blocks:50 direct layer-start and50 traditional tracked interludes. Both logical tools consume positive-XYE outer walls; both current slots occur. Current/upcoming wall-tool differences occur50 times in ordinary controls and54 in the handoff control.
 

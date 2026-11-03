@@ -165,4 +165,4 @@ No tolerance, output filtering, Native golden, inverted assertion, new
 allow/expect/ignore, unsupported guard, legacy fallback, worker merge/push.
 
 Evidence:
-`/home/indexyz/ares-evidence/w3-combine-infill-region-spec-review/README.md`.
+`${EVIDENCE_ROOT}/w3-combine-infill-region-spec-review/README.md`.

@@ -53,8 +53,8 @@ or penalty values. No new public API, mode, or independent Ares pipeline.
 
 ## Frozen read-only evidence and falsified downstream hypotheses
 
-Handoff: `/home/indexyz/ares-coord/evidence/w5-classic-detect-off-boundary-handoff.md`.
-Evidence root: `/home/indexyz/ares-evidence/w6-classic-detect-off-readonly/`.
+Handoff: `${COORD_ROOT}/evidence/w5-classic-detect-off-boundary-handoff.md`.
+Evidence root: `${EVIDENCE_ROOT}/w6-classic-detect-off-readonly/`.
 
 Fresh current-tip CLI retains the handed-off complete streams: detect1/extra1
 PASS, detect0/extra1 and detect0/extra0 each 26 Native/Ares differences. This

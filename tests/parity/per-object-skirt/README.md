@@ -16,7 +16,7 @@ adjacent expanded envelopes intersect while the endpoints alone do not.
 Native-first CPU18 official/seeded preflight produced exit0 on all four
 inputs, with positive XY skirt extrusions and distinct separated hulls
 in disjoint. Evidence is external:
-`/tmp/ares-skirt-native-witness-9BH3dU/{official,seeded}/<case>/`
+`${TMP_ROOT}/ares-skirt-native-witness-9BH3dU/{official,seeded}/<case>/`
 and `witness.json` there. No Native output is committed.
 
 The public test reruns Native before API/CLI, retains inputs, launch metadata,

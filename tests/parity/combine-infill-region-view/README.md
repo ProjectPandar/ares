@@ -29,4 +29,4 @@ strictly fail and five controls pass in both canonical modes. No inverted
 assertion, G-code golden, output filtering, fallback or unsupported guard.
 
 SPEC evidence:
-`/home/indexyz/ares-evidence/w3-combine-infill-region-spec-review/README.md`.
+`${EVIDENCE_ROOT}/w3-combine-infill-region-spec-review/README.md`.

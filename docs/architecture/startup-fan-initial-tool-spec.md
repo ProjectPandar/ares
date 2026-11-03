@@ -9,7 +9,7 @@ null-driven coverage proposal. No tests or production code are changed here.
 Separate test-only RED approval is requested; GREEN remains separately gated.
 
 Evidence root:
-`/home/indexyz/ares-evidence/worker1/startup-fan-initial-tool-discovery-957e963c3/`.
+`${EVIDENCE_ROOT}/worker1/startup-fan-initial-tool-discovery-957e963c3/`.
 `DISCOVERY-REPORT.md` SHA256
 `290bc2c8b1f1fd8f1b5714112ec210a008f23e6a1dc3390cc5bed70712f68bf1`;
 `DISCOVERY-AUDIT.json`, `LOCALIZATION.json`, `PUBLIC-PROVENANCE.json`, raw outputs,
@@ -123,7 +123,7 @@ raw streams and raw equality even when the whole comparator fails first.
   comparison still owns all bytes; no diagnostic deletion in the test oracle.
 
 CPU18 only, jobs1/test-threads1/parity-workers1. Use the unchanged canonical
-`/home/indexyz/ares-coord/bin/parity-control-set.sh` for directed qualification,
+`${COORD_ROOT}/bin/parity-control-set.sh` for directed qualification,
 strict fmt/check/workspace-all-target Clippy, WASM compile-only, nextest list and
 the exact selected preflight/public tests. Never cargo test or FULL here. Preserve
 all errors/artifacts/binaries; no chance retry. Record actual ELF/TID observations

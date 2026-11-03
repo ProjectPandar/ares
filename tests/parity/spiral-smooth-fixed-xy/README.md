@@ -16,7 +16,7 @@ is spiral_mode_smooth). No Native output/content constants in tests or
 manifest. All ordinary shared settings remain part of the frozen input.
 
 Discovery provenance/launches preserved in
-`/home/indexyz/ares-coord/evidence/w5-spiral-smooth-fixed-xy/`.
+`${COORD_ROOT}/evidence/w5-spiral-smooth-fixed-xy/`.
 No post-export JSON/mesh editing; export source generation is retained
 externally in original-export-receipts and w5-discover-smooth2.py.
 

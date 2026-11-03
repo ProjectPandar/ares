@@ -1,7 +1,7 @@
 # P1S ByLayer brim RED fixture
 
 `project.3mf` is a byte-for-byte copy of
-`/home/indexyz/ares-evidence/worker1/sequential-next-discovery-117f4ffe3/p1s-bylayer-feature-control/project.3mf`.
+`${EVIDENCE_ROOT}/worker1/sequential-next-discovery-117f4ffe3/p1s-bylayer-feature-control/project.3mf`.
 SHA256: `dcae275709dc16016c60308ae42d8523385dbabc18e5d31448f0baceb6e2d36a`.
 No project settings or mesh edits were made.
 

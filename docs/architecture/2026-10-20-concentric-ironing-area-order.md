@@ -1095,7 +1095,7 @@ comparator (only the generator line is normalised; no extra masks).
 
 ## Evidence
 
-`/home/indexyz/ares-evidence/w4-concentric-ironing-discovery-b49c63836/`
+`${EVIDENCE_ROOT}/w4-concentric-ironing-discovery-b49c63836/`
 
 - `evidence/fixture.3mf` (input), `evidence/native-seeded-run1.gcode`,
   `evidence/ares-main-9bbc63c93.gcode`, `evidence/diff-native-vs-ares.diff`,

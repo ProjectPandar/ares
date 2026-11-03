@@ -97,7 +97,7 @@ after the mandatory residual STOP and are not claimed as final gates.
 
 ## Durable evidence
 
-/home/indexyz/ares-evidence/worker3/support-cubic-b-s-residual/
+${EVIDENCE_ROOT}/worker3/support-cubic-b-s-residual/
 residual-evidence.json SHA256
 fdcbf3c141603757b7334ff4d953255c1609aedfbe07bf7f94bd1f0c5b698448.
 Archive1fc075c55-residual.tar.gz in the same directory, SHA256

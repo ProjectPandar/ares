@@ -11,7 +11,7 @@ no production change since it. Source pin `8500fcdccaa10b5099ac20d252af3a7c56004
 Prior source/input provenance and failure inventory:
 [multi-instance-brim-collection-proposal.md](multi-instance-brim-collection-proposal.md).
 Fresh discovery at exact clean cf8597e18:
-`/tmp/ares-copies-premise-cf8597e18/discovery-report.json`.
+`${TMP_ROOT}/ares-copies-premise-cf8597e18/discovery-report.json`.
 Native FIRST accepts all cases, both independent official/seeded modes, actual
 Native/public descendants and threads CPU18, API==CLI raw.
 

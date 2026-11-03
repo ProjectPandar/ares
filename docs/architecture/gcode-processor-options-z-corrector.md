@@ -42,7 +42,7 @@ different vertex is erased. The diagnostic `procgcode-stable-options.patch`
 already corrects that stale index; official Native does not. The `procgcode`
 oracle run with and without the tag shows the side effect in
 `moves`: an `internal_only` actual-speed vertex from G-code line 700 ends up
-at the back with Z 2.2 (`/tmp/ares-estimation/diag-same-layer/proc/`).
+at the back with Z 2.2 (`${TMP_ROOT}/ares-estimation/diag-same-layer/proc/`).
 Ares decides cache eligibility from each block's own motion and does not
 model either shift, so the set of M73-capable lines around the tag
 differs.

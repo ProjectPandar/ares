@@ -107,7 +107,7 @@ until this independent prerequisite is approved, qualified and integrated.
 ## 4. Durable measured evidence and RED candidate
 
 Canonical root (verified complete mirrors, NOT only temporary storage):
-`~/ares-evidence/worker1/voronoi-default-repair-spec-0ce6/`.
+`${EVIDENCE_ROOT}/worker1/voronoi-default-repair-spec-0ce6/`.
 `PATH-MAPPING.json` maps historical absolute `/tmp` prefixes to durable paths;
 `DURABLE-INVENTORY.json` verifies all1750 copied files /47,855,913 bytes with
 matching SHA256. No previous results are relabeled as this SPEC/base evidence.

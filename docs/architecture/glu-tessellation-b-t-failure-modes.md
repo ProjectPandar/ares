@@ -56,7 +56,7 @@ committed Native index orders/coordinates serve as expected values.
 Authored input JSON, generator and failure-mode inventory remain committed.
 
 The gate is ARES_PARITY_PROFILE_ENTRY_REFERENCE, also used by OrcaRunner;
-/tmp/ares-parity-control-set-v2.sh sets it to 1, together with
+${TMP_ROOT}/ares-parity-control-set-v2.sh sets it to 1, together with
 ARES_REQUIRE_ORCA=1. Optional unconfigured runs emit the shared explicit
 Native SKIPPED notice, never a parity claim. Required runs and enabled runs
 with missing Native binary/resources/artifact root/vendor sources/compiler
@@ -119,6 +119,6 @@ The original rejected frozen-order commit is replaced, not retained in the
 candidate chain; no authored input was changed.
 Receipts, compiler/source fingerprints, gate logs and runtime Native products
 are archived outside Git under
-/home/indexyz/ares-evidence/worker3/glu-tessellation-b-t-runtime-red/.
+${EVIDENCE_ROOT}/worker3/glu-tessellation-b-t-runtime-red/.
 Only this outcome summary is committed; no Native output coordinates/indices
 are copied into test expectations or repository artifacts.

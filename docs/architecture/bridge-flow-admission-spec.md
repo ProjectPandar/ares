@@ -41,7 +41,7 @@ must not be activated as a side effect. No independent allowlist/pipeline rule.
 
 ## Completed discovery and unified four-case public RED
 
-Runtime evidence /tmp/ares-bridge-flow-discovery-XfjEaw/discovery-report.json,
+Runtime evidence ${TMP_ROOT}/ares-bridge-flow-discovery-XfjEaw/discovery-report.json,
 exact approved SPEC HEAD66b05815b on approved00dc33bd8 implementation. Fresh
 serial official/seeded canonical ALL env, CPU18 actual Native/public threads,
 clean HEAD and input SHA receipts. No production edits during discovery.

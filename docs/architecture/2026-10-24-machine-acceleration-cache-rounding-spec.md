@@ -66,7 +66,7 @@ The initial raw machine-envelope command is not the writer's rounded body cache
 and remains unchanged.
 
 Discovery evidence is in
-`/home/indexyz/ares-evidence/w4-machine-acceleration-cache-rounding/writer-active/`.
+`${EVIDENCE_ROOT}/w4-machine-acceleration-cache-rounding/writer-active/`.
 Six fresh Native slices across the three active cases replay identically; all
 Native and CLI exits are zero. Discovery is not public API, seeded, RED or FULL
 qualification. Earlier inactive-cache nulls and a Native-rejected MakerWare

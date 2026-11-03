@@ -65,9 +65,9 @@ Read-only GDB confirms a matching path at Z=0.6:
   `(114.175001,113.775001)`, distance 0.64077946284349 mm, with threshold
   0.2 and `retracted=false`, `retracted_amount=0`.
 
-Evidence: `/home/indexyz/ares-evidence/w6-prewipe-fakepath-readonly-producer.json`.
+Evidence: `${EVIDENCE_ROOT}/w6-prewipe-fakepath-readonly-producer.json`.
 Fixed replay artifacts:
-`/home/indexyz/ares-evidence/w6-prewipe-fixed-{official,seeded}`.
+`${EVIDENCE_ROOT}/w6-prewipe-fixed-{official,seeded}`.
 These are discovery CLI receipts, not a substitute for the authorized public
 API RED. No Native output or probe is committed. No GREEN has been attempted.
 
@@ -90,10 +90,10 @@ The coordinator excluded this pair from formal RED until its GCodeProcessor /
 time-estimate insertion-point prerequisite is addressed in a separate slice.
 Do not search or change input settings to evade it.
 
-Frozen diagnostics: `/home/indexyz/ares-evidence/w6-w5-prewipe-handoff/` and
-`/home/indexyz/ares-evidence/w6-prewipe-min50-cli-control/exported.3mf`.
+Frozen diagnostics: `${EVIDENCE_ROOT}/w6-w5-prewipe-handoff/` and
+`${EVIDENCE_ROOT}/w6-prewipe-min50-cli-control/exported.3mf`.
 Residual/pair proof:
-`/home/indexyz/ares-evidence/w6-pre-external-matched-control-blocker.json`.
+`${EVIDENCE_ROOT}/w6-pre-external-matched-control-blocker.json`.
 No W5 diagnostic archive is submitted by the current RED. Restore the second
 formal target only after the independent prerequisite is fixed and authorized.
 

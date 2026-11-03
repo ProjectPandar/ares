@@ -64,7 +64,7 @@
 
 ## Stock 静态证据与可复查方式
 
-扫描上游 `resources/profiles/**/*.json` 的顶层显式字段；不合并 inheritance、不执行切片、不对 malformed 文件计成功。原始静态结果保存在本机 `/tmp/ares-unsupported-inventory/profile-explicit-values.json`；以下将影响排序所需证据内嵌，文档不依赖临时文件存在。
+扫描上游 `resources/profiles/**/*.json` 的顶层显式字段；不合并 inheritance、不执行切片、不对 malformed 文件计成功。原始静态结果保存在本机 `${TMP_ROOT}/ares-unsupported-inventory/profile-explicit-values.json`；以下将影响排序所需证据内嵌，文档不依赖临时文件存在。
 
 - `counterbore_hole_bridging`: none 306，partiallybridge 13；例 `WEMAKE3D/process/0.08mm Extra Fine @WEMAKE3D PhoenixProV1 0.3mm nozzle.json`。
 - `alternate_extra_wall`: 0 共335；`fuzzy_skin`: none 220、disabled_fuzzy 5；`interface_shells`: 0 共684；`zaa_enabled`: 无显式字段。未启用不是已解析所有继承配置的“绝不触发”。

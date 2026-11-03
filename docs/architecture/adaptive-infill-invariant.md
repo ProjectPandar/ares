@@ -89,7 +89,7 @@ remove other sparse pattern guards, or change region selection.
 
 ## Native-only preflight evidence (CPU18)
 
-Root `/tmp/ares-adaptive-infill-preflight-VSCkZ0/` contains reproducible
+Root `${TMP_ROOT}/ares-adaptive-infill-preflight-VSCkZ0/` contains reproducible
 input 3MFs, producer logs, exit-code files and output G-code. Inputs derive
 from the retained overhang parity fixture, changing only sparse pattern,
 20% density, and blank sparse/solid rotation templates. Export includes

@@ -34,7 +34,7 @@ not a newly submitted RED or a claim of Ares output parity.
 Raw evidence remains under the root above: `public-official/S-C0/` has both
 stderr streams and `official/S-C0/`, `seeded/S-C0/` have Native outputs.
 Durable archive directory:
-`/home/indexyz/ares-evidence/worker3/adaptive-object-region-spacing-preflight/`.
+`${EVIDENCE_ROOT}/worker3/adaptive-object-region-spacing-preflight/`.
 `native-and-public-stop-73e1956c6.tar.gz` SHA256:
 `825bd9b59b735f40cb0e44580609820f84e8bb76e37204fa60db2b94da62d1a3`.
 `STOP-evidence.json` SHA256:

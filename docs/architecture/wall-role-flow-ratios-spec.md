@@ -109,8 +109,8 @@ separately verified required split.
 
 ## Completed whole-block Native discovery
 
-Discovery root: `/tmp/ares-w1-gated-flow-discovery-v2-fffecfa38/`.
-Exact-final-spec rerun root: `/tmp/ares-w1-gated-flow-spec-reviewed-scope/`.
+Discovery root: `${TMP_ROOT}/ares-w1-gated-flow-discovery-v2-fffecfa38/`.
+Exact-final-spec rerun root: `${TMP_ROOT}/ares-w1-gated-flow-spec-reviewed-scope/`.
 Only the latter's completed `spec-review-audit.json` at the exact clean new
 commit is authoritative for renewed RR; earlier hashes are discovery, not
 new-hash gates. Both retain scripts, manifest, raw outputs, launch receipts,
@@ -160,7 +160,7 @@ paired-body/positive comparisons prove activation; they never substitute
 for public same-input whole-stream parity.
 
 The initial 0%-sparse attempt is preserved as **SPARSE-INACTIVE NON-GATE** at
-`/tmp/ares-w1-gated-flow-discovery-fffecfa38/`; it was a fixture fault, not
+`${TMP_ROOT}/ares-w1-gated-flow-discovery-fffecfa38/`; it was a fixture fault, not
 proof of equivalence. Corrected v2 explicitly activates sparse infill. All
 archive/member/geometry hashes and per-key retained settings are audited.
 No Ares API/CLI or public RED has been run for this revised slice yet.

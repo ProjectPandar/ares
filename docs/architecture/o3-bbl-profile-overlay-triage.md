@@ -255,4 +255,4 @@ the Ares bytes stayed identical across rounds:
   `G1 X113.244 Y113.297 F9000` — one native ND source, not per-case bugs.
 - Per-occurrence disposition evidence: input zip entries byte-identical,
   Ares output byte-identical, native reference byte-different
-  (`/tmp/ares-w5-gates/EVIDENCE-D5D2D6D7-final2.md`).
+  (`${TMP_ROOT}/ares-w5-gates/EVIDENCE-D5D2D6D7-final2.md`).

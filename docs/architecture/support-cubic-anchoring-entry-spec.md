@@ -143,7 +143,7 @@ The original grid assertions stay; no evidence currently justifies removal.
 
 Accepted first-unequal proof: `support-cubic-anchoring-inset-preflight-stop.md`
 (0fb0a0ac5) and durable root
-`/home/indexyz/ares-evidence/worker3/support-touching-grid-bbox-preflight/20261015-124632`.
+`${EVIDENCE_ROOT}/worker3/support-touching-grid-bbox-preflight/20261015-124632`.
 No new runtime experiments were run for this docs-only revision.
 Object-region spacing stays BLOCKED until S-C0 lands; A-C1/C2-C4 Inner-wall,
 Honeycomb/TPMS-D candidate omissions and multiline>1 expansion remain deferred.

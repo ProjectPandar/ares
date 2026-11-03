@@ -70,7 +70,7 @@ untested tag change will close all possible fan cases.
 ## Positive GUI witness and frozen inputs
 
 Accepted read-only diagnosis:
-`/home/indexyz/ares-evidence/w3-fan-positive-delay-readonly-ad5111f0b/README.md`,
+`${EVIDENCE_ROOT}/w3-fan-positive-delay-readonly-ad5111f0b/README.md`,
 manifest `87bf617358a0be11ad085fa6d95efb6b8205e2f8a19416a9a9ad1a0d297f4b71`.
 Copy the existing two input bytes exactly; no regeneration or output golden:
 

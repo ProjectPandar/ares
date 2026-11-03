@@ -80,7 +80,7 @@ this is NOT acceptance filtering or a claim all internal polygons match.
 Both debugger full outputs equal ordinary CLI; no inferior function,
 data/register write, may-call-functions off. No geometry/processor/seam
 fix follows from these observations. Discovery evidence stays separate:
-`/home/indexyz/ares-coord/evidence/w5-478-raft-contact-first-flow/`.
+`${COORD_ROOT}/evidence/w5-478-raft-contact-first-flow/`.
 
 ## Included / deferred / exclusions
 

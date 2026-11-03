@@ -124,7 +124,7 @@ or weakened expectations in RED. Include frozen input-only3MFs and their README.
 
 Accepted discovery, hashes, source/GUI citations, raw producers,24 Native +12
 CLI +12 independent API runs and four canonical diagnostic streams:
-`/home/indexyz/ares-evidence/w3-aligned-template-readonly-47821c760/README.md`.
+`${EVIDENCE_ROOT}/w3-aligned-template-readonly-47821c760/README.md`.
 Failed optimized readers and the initial76-vs75 priority-event labelling mistake
 are retained/excluded there; accepted readers use actual generation layer args.
 
@@ -166,4 +166,4 @@ CPU12. No FULL. Any residual means STOP, not adjacent repair.
 
 Read-only source map, actual parameters/stacks/vtable return, canonical streams
 and independently approved amendment RR:
-`/home/indexyz/ares-evidence/w3-aligned-class-angle-readonly-26c546350/README.md`.
+`${EVIDENCE_ROOT}/w3-aligned-class-angle-readonly-26c546350/README.md`.

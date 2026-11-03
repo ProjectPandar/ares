@@ -20,7 +20,7 @@ instances remain unchanged. Only the settings pair below varies; compensation
 layers explicitly1. Both options are real GUI settings, no malformed project.
 
 Evidence root:
-`/home/indexyz/ares-coord/evidence/worker2-ears-efc-discovery-20261020T214059/`.
+`${COORD_ROOT}/evidence/worker2-ears-efc-discovery-20261020T214059/`.
 
 | EFC amount / outline flag | Input SHA256 | Native / Ares Brim XY extrusion lines | Whole CLI output vs Native |
 |---|---|---|---|

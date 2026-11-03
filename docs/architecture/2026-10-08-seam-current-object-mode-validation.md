@@ -213,9 +213,9 @@ against the pre-rebase gated candidate `3ef1ada0b` is empty, retained in
 `/tmp/worker6-seam-A0-rebase-runtime-diff.log`. Main's intervening changes
 since D contain no crates/tests/scripts/Cargo/.config changes.
 
-Independent base worktree `/tmp/ares-worker6-seam-A-base` is RED96d1836ad;
-base target `/tmp/ares-worker6-seam-A-base-target`.
-Candidate target `/tmp/ares-worker6-green-target`.
+Independent base worktree `${TMP_ROOT}/ares-worker6-seam-A-base` is RED96d1836ad;
+base target `${TMP_ROOT}/ares-worker6-seam-A-base-target`.
+Candidate target `${TMP_ROOT}/ares-worker6-green-target`.
 Fresh same-round seeded controls completed: base662/663 PASS in179.894s,
 candidate663/663 PASS in127.975s, no timeout. Only the mixed seam witness
 changes FAIL→PASS; both siblings remain PASS. Logs
@@ -316,7 +316,7 @@ started only after the subsequent BROWSER-END. No other heavy task was
 started during that hold.
 
 Workspace command is `cargo nextest run --workspace --test-threads 16
---no-fail-fast`, with `CARGO_TARGET_DIR=/tmp/ares-worker6-green-target`,
+--no-fail-fast`, with `CARGO_TARGET_DIR=${TMP_ROOT}/ares-worker6-green-target`,
 `CARGO_BUILD_JOBS=8` and `CARGO_INCREMENTAL=0`. Optional-reference tests
 returning without Native environment in this ordinary workspace run do
 not replace the separate identified fresh Native comparisons above.

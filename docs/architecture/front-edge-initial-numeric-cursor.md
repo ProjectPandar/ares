@@ -83,8 +83,8 @@ changing only preferred reproduces corner2 versus1; raw runtime index and Native
 expf bit arithmetic are NOT claimed captured. Native DWARF was seeded debug,
 not official. Evidence is an input-owner proof, not validation of a code fix.
 
-Discovery root: /home/indexyz/ares-evidence/w6-92238-front-edge-nearest-br884s6n/
-Audit root: /home/indexyz/ares-evidence/w6-front-edge-owner-audit-pvpa3_kb/
+Discovery root: ${EVIDENCE_ROOT}/w6-92238-front-edge-nearest-br884s6n/
+Audit root: ${EVIDENCE_ROOT}/w6-front-edge-owner-audit-pvpa3_kb/
 The obsolete489/66/dd8 initial-cursor chain remains discarded. No ancestry,
 source patch, test migration or causal claim from that chain is inherited.
 The earlier negative-volume witness did not qualify cursor behavior; this new

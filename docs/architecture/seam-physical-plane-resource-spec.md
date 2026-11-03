@@ -152,8 +152,8 @@ source-owner request with a same-request public witness and qualified control.
 
 ## Durable evidence
 
-Report: `/home/indexyz/.ares-evidence/worker4/motion-owner-main41f2-review.md`.
-Root: `/home/indexyz/.ares-evidence/worker4/motion-owner-main41f2-a62u`.
+Report: `${LOCAL_EVIDENCE_ROOT}/worker4/motion-owner-main41f2-review.md`.
+Root: `${LOCAL_EVIDENCE_ROOT}/worker4/motion-owner-main41f2-a62u`.
 It retains first-motion localization, full positive/control Native/API/CLI
 streams, Native24-loop/split and four-layer-plan snapshots, Rust plan/loop/
 visibility snapshots, source hashes, exact replay and observer-neutrality checks.

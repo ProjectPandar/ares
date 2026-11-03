@@ -7,10 +7,10 @@ new RED, fresh Native run or GREEN is claimed. Base: main
 ## Exact witness and evidence limits
 
 Worker5 fixture, read-only:
-`/tmp/ares-worker5/tests/parity/validation/tiq2-dumbbell-long-loop.3mf`.
+`${TMP_ROOT}/ares-worker5/tests/parity/validation/tiq2-dumbbell-long-loop.3mf`.
 SHA256 `90288cb1f8904fc245a792be9cc8d30e5ea2762f6faff4b573d362fec231bc23`.
 Its bytes equal retained `input.3mf` in:
-`/tmp/ares-tiq2-loop-red/corrected-transport/03-long_loop_fragments/artifacts/case-dqJg9L/`.
+`${TMP_ROOT}/ares-tiq2-loop-red/corrected-transport/03-long_loop_fragments/artifacts/case-dqJg9L/`.
 
 That directory's `orca.gcode` SHA256 is
 `28d76e6b1a9c4bbe79c84782f9fc820fb63a3159fb823e9cdec6ece29af4b3df`;

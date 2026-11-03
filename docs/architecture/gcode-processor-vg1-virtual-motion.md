@@ -20,7 +20,7 @@ Same-input prefixes end on complete lines. At 8209 both totals narrowed to f32 a
 
 The complete stream has 762 VG1 lines, three per each of 254 transitions. A negative control replaces only those lines with blank lines, preserving every line id, other command, configuration and SYNC. Native then reports `21930.910156`, bit-identical after f32 parsing to Ares's original-stream total narrowed to f32. This closes the remaining full-stream timing discrepancy. Move-vertex `time0` first differs at 8271 by the opposite-sign five seconds; that attribution observation alone is not the missing-time cause.
 
-Repeatable original-input receipts, totals, prefix comparisons, move dumps, negative-control input and logs live under `/tmp/ares-x2d-time-next`. External X2D files remain forensic evidence, never repository fixtures or expected outputs.
+Repeatable original-input receipts, totals, prefix comparisons, move dumps, negative-control input and logs live under `${TMP_ROOT}/ares-x2d-time-next`. External X2D files remain forensic evidence, never repository fixtures or expected outputs.
 
 ## Dispatch: comments are not ordinary G1
 

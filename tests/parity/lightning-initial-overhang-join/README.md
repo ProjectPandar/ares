@@ -37,5 +37,5 @@ Per-polygon ExPolygon wrapping in that SAME call is explicitly deferred,
 as are all other joins/geometry/tree/cooling/processor/consumer changes.
 Any residual means STOP/report. Freeze tests/inputs/helpers. No FULL.
 External discovery geometry/GDB provenance stays separate in
-`/home/indexyz/ares-coord/evidence/w5-4b-lightning-initial-overhang/`,
+`${COORD_ROOT}/evidence/w5-4b-lightning-initial-overhang/`,
 not substituted for formal public shared-checker RED proof.

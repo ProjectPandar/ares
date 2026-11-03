@@ -42,7 +42,7 @@ adaptive0, comments1, Classic/scarf none, no tower/raft/support, cooling20s/min1
 wipe1/distance2, with the three retraction pairs below. Model remains existing
 admitted CSV but is inactive; PA/lookahead is not this repair's owner.
 
-Runtime root: `/tmp/ares-wipe-realistic-discovery-BkOTyp/`.
+Runtime root: `${TMP_ROOT}/ares-wipe-realistic-discovery-BkOTyp/`.
 External helper uses the **unmodified existing** golden::
 compare_ordered_bytes_generator_only by absolute source include, public
 slice_project_plate_validated plus real CLI. Exact main rlibs/CLI/helper/source

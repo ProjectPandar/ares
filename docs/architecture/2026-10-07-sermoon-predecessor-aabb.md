@@ -34,7 +34,7 @@ Probe binary `/nix/store/4zs39jdm6cg6xzrnlpwk3nmfm031pcxs-orca-slicer-2.4.2`;
 `52c9d8e2ffabca89472c67fbb019cc9e2486a6e402587668ee522097667a1873`.
 
 Run with `ORCA_REPLAY_SEED=0`, CPU 3 and staged input
-`/tmp/ares-orca-cache/defb366df2562374/3d02bff68752da9a-c07acddfbf16cc60.3mf`.
+`${TMP_ROOT}/ares-orca-cache/defb366df2562374/3d02bff68752da9a-c07acddfbf16cc60.3mf`.
 `/tmp/bottomline-replay-recheck/plate_1.gcode` equals
 `case-6qvP0t/orca.gcode` byte-for-byte after removing generated-by only.
 Probe `/tmp/bottomline-replay-recheck/lines.txt`:

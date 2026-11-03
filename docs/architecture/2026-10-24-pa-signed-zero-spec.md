@@ -96,7 +96,7 @@ This SPEC makes no public API/seeded/test-RED/GREEN/FULL qualification claim.
 
 ## Evidence / ownership audit
 
-`/home/indexyz/ares-evidence/w4-pa-signed-zero/`: `probe.py`, `probe.log`,
+`${EVIDENCE_ROOT}/w4-pa-signed-zero/`: `probe.py`, `probe.log`,
 `results.json`, six archives, per-case Native double streams/logs, actual Ares
 CLI stream/log, full `ordered.diff`, `overlap-audit.json`, `binary-provenance.json`.
 Serial CPU17, `ARES_PARITY_THREADS=1`, `ARES_PIN_OFFSET=17`, `OMP_NUM_THREADS=1`,

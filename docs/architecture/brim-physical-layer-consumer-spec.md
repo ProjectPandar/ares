@@ -7,7 +7,7 @@ Branch worker1/brim-physical-layer-spec; CPU18; coordinator-only integration.
 ## Mandatory dependency and ownership
 
 **Depends on W4 producer GREEN for SPEC137b3e01c, rebased1530a7148.**
-Read-only git show from /tmp/ares-pi-matrix-vendors also inspected doc729b94370,
+Read-only git show from ${TMP_ROOT}/ares-pi-matrix-vendors also inspected doc729b94370,
 whose conditional approval explicitly defers brim because no separate public
 brim RED existed. The older rebased SPEC still lists brim as included: that
 text does not override doc729b94370 or the coordinator's narrowed approval.
@@ -54,7 +54,7 @@ area, owner grouping, flow, path splitting, import or new scheduling policy.
 
 ## Runtime Native-backed discovery (current main, not public RED)
 
-Evidence root /tmp/ares-brim-physical-spec-k3SGqb/.
+Evidence root ${TMP_ROOT}/ares-brim-physical-spec-k3SGqb/.
 Original valid W4 M-v3 compatible later-owner archive input was extracted
 read-only from counterbore-m-v3-fresh-xIoL.tar.gz, preserving every mesh,
 modifier, transform, volume ID, model_instance and plate metadata. Four pure

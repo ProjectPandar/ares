@@ -32,7 +32,7 @@ failing positive, not a converted expected failure. Settings and Native motion a
 asserted by this runner; SHA freezes input settings, full output comparison
 is the parity oracle. The shared check requires configured Native.
 
-External discovery: /home/indexyz/ares-coord/evidence/w5-spiral-placement-gate/.
+External discovery: ${COORD_ROOT}/evidence/w5-spiral-placement-gate/.
 Read-only PG equality, pre-filter divergence and0vs6 placement calls are
 discovery proof, not a private seam used by these public tests. Inputs
 may be sliced independently with `$ORCA --slice 0 --outputdir /tmp/vase positive.3mf`.

@@ -3,9 +3,9 @@
 Status: spec for coordinator review (diagnosis + fix plan). No production
 change, no RED, no GREEN in this document. Base: main 3cad8b4c3. Inputs and
 dual streams are worker1's retained evidence, read-only:
-`/tmp/ares-tiq2-loop-red/corrected-transport/03-long_loop_fragments/`
+`${TMP_ROOT}/ares-tiq2-loop-red/corrected-transport/03-long_loop_fragments/`
 (input.3mf, native.gcode, ares.gcode, manifest) and the admitted record in
-`/tmp/ares-pi-lint/docs/architecture/gcode-small-perimeter-loop-speed-red-controls.md`
+`${TMP_ROOT}/ares-pi-lint/docs/architecture/gcode-small-perimeter-loop-speed-red-controls.md`
 ("Separate Dumbbell time discrepancy / handoff ARD").
 
 ## Observed first difference (worker1's admitted complete-byte DIVERGENT)

@@ -165,6 +165,6 @@ on `marlin2_junction_deviation` (`target/actual-speed/planner-red.log`); after
 the fix it is bit-exact (`planner-green.log`). profile_entry passed 26/26 on
 both official and seeded.
 
-Evidence: `/tmp/ares-actual-speed-rebased-8703fe7d6/` (`summary.txt`,
+Evidence: `${TMP_ROOT}/ares-actual-speed-rebased-8703fe7d6/` (`summary.txt`,
 `seeded-{main,branch}/run.log`, `seeded-bytediff.json`, produced by
-`/tmp/ares-actual-speed-bytediff.mjs`).
+`${TMP_ROOT}/ares-actual-speed-bytediff.mjs`).

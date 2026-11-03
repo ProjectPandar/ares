@@ -29,12 +29,12 @@ not absent globally; its missing loaded-entry consumption is the candidate gap.
 
 ## Authentic discovery, not M103 parity
 
-Prior bounded M103 discovery root /tmp/ares-makerware-discovery-fsM9rD:
+Prior bounded M103 discovery root ${TMP_ROOT}/ares-makerware-discovery-fsM9rD:
 Marlin2/wipe0+wipe1 Native/API/CLI full outputs PASS both modes; MakerWare/wipe0+
 wipe1 Native reject in both modes before slice, so no M103 RED. That STOP is
 accepted and remains closed. No runtime oracle bypass/admission relaxation.
 
-Explicitly authorized follow-up root /tmp/ares-makerware-admission-F3UXMq/
+Explicitly authorized follow-up root ${TMP_ROOT}/ares-makerware-admission-F3UXMq/
 admission-report.json, CPU18 fresh root, existing exact inputs:
 - makerware-wipe0 SHA26dfb65f65dce55b3aed63e6588374c48a6b37080900912649dadab796acb965
 - makerware-wipe1 SHAfbb5460de7dc2ed0a1c01da7ae90764faa20d360311b26dabfa3f633a08191f8

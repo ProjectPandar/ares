@@ -12,8 +12,8 @@ float-distance changes, contour construction, motion estimation and wipe logic.
 
 Targets: GigabotX2 case-Qqf4Pr, GigabotX2 XLT case-qJQXNf, TerabotX2 case-Yl6xxq,
 all1.75mm. On931691eb all3 are full-output DIVERGENT at
-`/tmp/ares-re3d-red/replay-summary.json`. Immutable inputs copied into
-`/tmp/ares-re3d-replay`. Existing cube10 fixture is a single minimal box; retain
+`${TMP_ROOT}/ares-re3d-red/replay-summary.json`. Immutable inputs copied into
+`${TMP_ROOT}/ares-re3d-replay`. Existing cube10 fixture is a single minimal box; retain
 printer/profile settings because they create the small final-layer inner hole.
 
 Require3/3 target equality, fresh original CPU0 references, retained68+823

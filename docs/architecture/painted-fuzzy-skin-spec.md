@@ -27,7 +27,7 @@ whole-polygon helper without real masks is not a complete rewrite of this slice.
 
 ## Discovery: actual reject, not silent ignore
 
-Evidence: /home/indexyz/ares-evidence/worker1/painted-fuzzy-discovery-92ce9b02c/.
+Evidence: ${EVIDENCE_ROOT}/worker1/painted-fuzzy-discovery-92ce9b02c/.
 Two stock inputs, all geometry/instances/preset container preserved from
 legacy-brim-ears/outer-only-legacy-disabled.3mf (SHA72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec).
 The stock one-filament cube has8vertices/12triangles. Both inputs change only

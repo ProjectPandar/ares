@@ -1,7 +1,7 @@
 # ARD — Native oracle availability policy (slice A)
 
 Status: Accepted — slice A, test infrastructure only.
-Owner: worker4. User task: `/tmp/ares-native-artifact-cleanup-task.md`.
+Owner: worker4. User task: `${TMP_ROOT}/ares-native-artifact-cleanup-task.md`.
 Audit base: `7fc1c69e3cf860dbfa9f93bbeb539f2acc8da127`.
 Slice A must receive its own exact-hash REVIEW/approval before slice B starts.
 
@@ -178,7 +178,7 @@ before code; do not add retrospective unit tests.
 
 ## Coordinator-owned gate edits (worker4 does NOT edit /tmp gate)
 
-`/tmp/ares-parity-control-set-v2.sh`: add `ARES_REQUIRE_ORCA=1` to the final
+`${TMP_ROOT}/ares-parity-control-set-v2.sh`: add `ARES_REQUIRE_ORCA=1` to the final
 `exec env` block, alongside CARGO_TARGET_DIR/CARGO_INCREMENTAL; both official
 and seeded inherit it. Preserve all reference-selector variables and identities.
 Keep16 threads per coordinator (ARES_PARITY_THREADS=16), not script default32.

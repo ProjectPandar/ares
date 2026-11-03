@@ -28,7 +28,7 @@ of the declared-boundary/sample scope; they never certify an unbounded side.
 
 The exact650-domain single-attempt matrix at5cde90c23 had224 INCOMPLETE rows,
 not224 Ares failures. The immutable row source and hash-bound classification are
-`/tmp/ares-option-numeric-224/classification.json`; execution base is integrated
+`${TMP_ROOT}/ares-option-numeric-224/classification.json`; execution base is integrated
 M205 `d0e8b64f9`.
 
 -196 historical numerical-omission rows:150 implicit upper sides;39 both sides;

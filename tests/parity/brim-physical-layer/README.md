@@ -3,7 +3,7 @@
 Approved SPECc5bd786ed, rebased2f5c43ee2 onto48ff6b184 after W4 producer40bd
 merged. Four unchanged discovery pure3MF hashes in manifest.json (base29 is
 input discovery provenance, not execution HEAD). Native runtime discovery:
-/tmp/ares-brim-physical-spec-k3SGqb/. No Native artifacts committed.
+${TMP_ROOT}/ares-brim-physical-spec-k3SGqb/. No Native artifacts committed.
 
 Classic/None counterbore/zero skirt, original compatible later-owner M-v3 scene
 preserved. OuterOnly8+InnerOuter is the divergent consumer; noBrimInnerOuter,

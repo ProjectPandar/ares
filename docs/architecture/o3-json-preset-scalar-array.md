@@ -58,7 +58,7 @@ The initial BBL/Ender-3 3MF drafts newly exposed embedded-script,
 model-label and CLI filament-variant metadata differences after the range
 failure was removed. Their pre-existing/unrelated status has not been
 established; they remain OPEN/UNTRIAGED. Inputs and first differing lines
-are retained in `/tmp/ares-matrix-clusters.md` (O3-BBL-PROFILE-ENTRY), with
+are retained in `${TMP_ROOT}/ares-matrix-clusters.md` (O3-BBL-PROFILE-ENTRY), with
 full input/catalog/output hashes in `/tmp/o3-bbl-new-differences.json`.
 Do not change those behaviors or normalize them out of G-code. The
 already-established non-BBL STL whole-file control isolates this

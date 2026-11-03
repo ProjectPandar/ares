@@ -8,7 +8,7 @@ Disable support and prime tower uniformly; set compensation layers1; vary only
 Input SHA256s are asserted in `brim_ears_consumes_efc_outline.rs`; all inputs referenced.
 
 Native-first evidence and replayable stored-ZIP settings generator:
-`/home/indexyz/ares-coord/evidence/worker2-ears-efc-discovery-20261020T214059/`.
+`${COORD_ROOT}/evidence/worker2-ears-efc-discovery-20261020T214059/`.
 The generator copies archive entries, rewrites project-settings JSON only,
 and writes per-entry CRC32. No Native output or probe is committed.
 Replay against verified source hash into fresh external inputs.

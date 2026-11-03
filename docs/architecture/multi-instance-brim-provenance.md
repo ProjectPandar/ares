@@ -3,7 +3,7 @@
 Status: source/input localization only; **no production edits** after approved
 RED `692698a5541308c1fda53139818cca1a262fad69`.
 SPEC ca3cab13b; production base cf8597e18. Exact RED artifacts:
-`/tmp/ares-multi-instance-brim-red-exact-692698a55/red-review-audit.json`.
+`${TMP_ROOT}/ares-multi-instance-brim-red-exact-692698a55/red-review-audit.json`.
 
 ## Verified producer and frame/lifetime chain
 

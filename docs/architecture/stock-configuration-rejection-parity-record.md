@@ -2,7 +2,7 @@
 
 Read base: `7a3216f677477d0603a959a18762d5a3ddcf8cb4`.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Evidence root: `/tmp/ares-stock-rejections-7a/`.
+Evidence root: `${TMP_ROOT}/ares-stock-rejections-7a/`.
 
 ## Decision and scope
 

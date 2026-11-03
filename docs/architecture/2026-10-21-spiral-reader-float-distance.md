@@ -91,7 +91,7 @@ no inferior calls/program memory/register writes. One failed broad
 function breakpoint also matched a lambda; incomplete capture excluded,
 retained transparently, then replaced by exact-source breakpoint.
 Durable evidence:
-`/home/indexyz/ares-coord/evidence/w5-spiral-reader-float-distance/`.
+`${COORD_ROOT}/evidence/w5-spiral-reader-float-distance/`.
 
 ## Included / deferred / exclusions
 

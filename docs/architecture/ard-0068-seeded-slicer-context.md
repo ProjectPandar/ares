@@ -55,7 +55,7 @@ The older Point2/STL fuzzy prototype remains outside this slice. The Context
 does not claim to control that temporary scaffold.
 
 libstdc++ GCC 15.3.0 distribution evidence is retained in
-`/tmp/ares-random-contract.NQYUkA/distribution-1000.log`: four independent seeds,
+`${TMP_ROOT}/ares-random-contract.NQYUkA/distribution-1000.log`: four independent seeds,
 1000 outputs each, two u32 draws per double (first low, second high),
 crossing multiple 624-word state updates. The corresponding Rust log matches
 all 4000 double bit patterns.
@@ -65,7 +65,7 @@ before claiming matching semantics across standard libraries.
 The pinned Nixpkgs build uses GCC 15.3.0 as well, confirmed by evaluating
 the exact pinned stdenv compiler version.
 
-The isolated seed-only source worktree is `/tmp/ares-orca-replay-source.u3RYzz`
+The isolated seed-only source worktree is `${TMP_ROOT}/ares-orca-replay-source.u3RYzz`
 at upstream 8500fcdcc, with only the entropy-to-seed substitution so far.
 Nix 2.4.2 derivation `xangh263swrdjfn0cw2zsi3r3pzwyrd8` built successfully;
 binary build ID is aac19f42f818cfb2fced55d820577bcac0db405a.
@@ -75,7 +75,7 @@ the wrapped ELF SHA256 is bb3576da4bbd0043da3558972932f2e872b2eae4ec9d1cb805b012
 The checked-in build recipe reproduces the same derivation with explicit inputs:
 
 ```sh
-task_source=$(mktemp -d /tmp/ares-orca-seed-source.XXXXXX)
+task_source=$(mktemp -d ${TMP_ROOT}/ares-orca-seed-source.XXXXXX)
 git -C OrcaSlicer worktree add --detach "$task_source" 8500fcdcc
 git -C "$task_source" apply --unidiff-zero "$PWD/scripts/orca-replay/seed-only.patch"
 ORCA_REPLAY_SOURCE="$task_source" \
@@ -87,9 +87,9 @@ Invoke only through `scripts/orca-seeded-parity.sh`, with explicitly selected
 `ORCA_REPLAY_BIN`, `ORCA_REPLAY_SEED` and `ORCA_REPLAY_CPU`; the official wrapper
 remains unchanged. The test artifact root must be fresh for each seeded run.
 Two fresh normal-affinity runs retained in
-`/tmp/ares-orca-seed-only-repeat.sG9ggq` differ in M73 positions and feedrates,
+`${TMP_ROOT}/ares-orca-seed-only-repeat.sG9ggq` differ in M73 positions and feedrates,
 not only timestamps. Two single-CPU-affinity runs in
-`/tmp/ares-orca-seed-only-single.c9chK7` differ only in the generator timestamp
+`${TMP_ROOT}/ares-orca-seed-only-single.c9chK7` differ only in the generator timestamp
 for this one classic cube fixture. This is narrow self-replay evidence, not
 general thread-independent replay or Ares/reference parity.
 

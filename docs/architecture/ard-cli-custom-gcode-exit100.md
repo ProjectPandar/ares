@@ -82,9 +82,9 @@ producer establish the wall-clock dependence; coordinator explicitly ruled it
 non-blocking for the separate seam REVIEW, not a production-radius regression.
 
 Six attempts, fresh caches, owned deadlines, raw JSON and receipts remain in
-`/tmp/ares-seam-radius/ginger-nd-edd/`; audit SHA256
+`${TMP_ROOT}/ares-seam-radius/ginger-nd-edd/`; audit SHA256
 `9c4e130eeeceeef7b39cacf8bdc749a94b79f735266cc64bf4910f14c30d0407`.
-Original strict gate records remain `/tmp/ares-seam-radius/green-083/`.
+Original strict gate records remain `${TMP_ROOT}/ares-seam-radius/green-083/`.
 A separately authorized test-only slice will normalize only prepare_time and
 export_time numeric values during the CLI JSON comparison, preserving every
 other byte and every other assertion. This finding does not implement that

@@ -33,8 +33,8 @@ storage must not be confused with exact decimal arithmetic.
 Evidence: immutable d2949771 full scan ended with 369 PASS / 279 INCOMPLETE /
 2 FAIL, 1638 generated, 1475 strictly compared and 9 rejected (1492.297s).
 Its results predate ARD-0060. Five-key reproduction retained 8 rejections in
-`/tmp/ares-bound-reject-repro.2y5hhO` (5.657s); single-key minimization in
-`/tmp/ares-bound-reject-minimal.tl0PxT` (3.289s) rejects 0.5 and 3.568 against
+`${TMP_ROOT}/ares-bound-reject-repro.2y5hhO` (5.657s); single-key minimization in
+`${TMP_ROOT}/ares-bound-reject-minimal.tl0PxT` (3.289s) rejects 0.5 and 3.568 against
 the original junction-deviation [0, 0.3] bounds. Requested process JSON agrees
 with the error, and source declares 0.f/0.3f, excluding injection overwrite
 and source/binary schema disagreement for that minimized case.

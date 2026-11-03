@@ -54,7 +54,7 @@ records match. Both controls match complete streams. All six fresh Native
 slices replay identically and all Native/CLI exits are zero. This discovery
 is not public API, seeded, RED or FULL qualification.
 
-Evidence: `/home/indexyz/ares-evidence/w4-bbl-pressure-advance-precedence/`,
+Evidence: `${EVIDENCE_ROOT}/w4-bbl-pressure-advance-precedence/`,
 including `target-diff-audit.json`. No non-BBL stock presets were explored.
 
 ## RED seam and failure modes, before implementation

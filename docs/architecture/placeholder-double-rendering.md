@@ -3,7 +3,7 @@
 Status: docs-only SPEC, then separately committed Native-first public RED.
 Base47821c760d5ea86102a34bbc78c092bbaf381214.
 Independent branch worker6/placeholder-double-render-spec; worktree
-/home/indexyz/ares.worker6-readonly-47821c760. CPU15, one job/test thread; no FULL.
+${WORKTREE_ROOT}/ares.worker6-readonly-47821c760. CPU15, one job/test thread; no FULL.
 Both approved W6 chains20e41b63f and8ddfa8ca5 stay frozen separately.
 Production GREEN requires separate RED approval and authorization.
 
@@ -58,7 +58,7 @@ integral-DOUBLE arm or redesign numeric representation to evade this boundary.
 ## Qualified discovery evidence and corrected scope
 
 External authority:
-`/home/indexyz/ares-evidence/w6-47821-placeholder-mwdl1xn9/`.
+`${EVIDENCE_ROOT}/w6-47821-placeholder-mwdl1xn9/`.
 `verification.json` binds the small pair, and `comparison.json` also retains the
 large positive. The discovery draft had deferred the integral-double branch;
 COORD explicitly SUPERSEDES that deferral with this unified owner boundary.

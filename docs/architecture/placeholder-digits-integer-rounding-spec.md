@@ -35,5 +35,5 @@ implementation and pass both afterward in official and seeded modes. Preserve
 whole-stream comparison and existing generated-by normalization only.
 
 Discovery provenance and exact input hashes:
-`/home/indexyz/ares-coord/evidence/w5-33afd-digits-discovery/PROPOSAL-RR.md`.
+`${COORD_ROOT}/evidence/w5-33afd-digits-discovery/PROPOSAL-RR.md`.
 No tests or implementation accompany this SPEC commit.

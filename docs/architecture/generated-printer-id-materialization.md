@@ -37,7 +37,7 @@ this spec before implementation.
 
 Test originally introduced in `b39047a8884db752dbd702a4c67cbca763fc2cb3` as
 `x2d_flush_matrix_incomplete_printer_id_map_uses_generated_variant_ids`.
-Retained input `/tmp/ares-x2d-flush-matrix/green/generated-ids-legal-red/case-75aoF4`
+Retained input `${TMP_ROOT}/ares-x2d-flush-matrix/green/generated-ids-legal-red/case-75aoF4`
 has two nozzle types, two ids, four variants and two variant groups. Identified
 Native succeeds; public `load_project`/`slice_project` on pre-FM base9e3 fails
 with `invalid Orca option printer_extruder_variant`. Same-input adapter evidence
@@ -54,12 +54,12 @@ assert the currently suspected mechanism as fact.
 Fresh RED on integrated FM main310f5ae9a retains the exact original input
 SHA600d0bdd7b626855411a6d85b342fc1fc0a0b85b6a676e998a742c429d7e9d08.
 Native succeeds; Ares reports `invalid Orca option printer_extruder_variant`.
-Receipt: `/tmp/ares-generated-printer-ids/red/admission.json` and
+Receipt: `${TMP_ROOT}/ares-generated-printer-ids/red/admission.json` and
 `artifacts/case-q0fVO4`. No test input/assertion/comparator modification.
 
 Read-only GDB against the identified seeded binary SHA59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff
 records actual `get_index_for_extruder` calls and their arrays/returns in
-`/tmp/ares-generated-printer-ids/trace/native.json`; `native-gdb.py`,
+`${TMP_ROOT}/ares-generated-printer-ids/trace/native.json`; `native-gdb.py`,
 `index-disassembly.txt` and `finding.json` preserve the repeatable probes/ABI.
 Trace Native output differs from the fresh RED Native stream only in its
 existing generator-clock line, not any config or motion byte.

@@ -90,7 +90,7 @@ attribute, and receives explicit Native environment and artifact destination.
 
 The old ignored browser consumer still compares the initialized frozen file
 when every Native dependency is absent. A retained actual Chromium capture
-from ARD-0082 (`/tmp/ares-wasm-gcode-dYmH9A/browser.gcode`) reproduces this:
+from ARD-0082 (`${TMP_ROOT}/ares-wasm-gcode-dYmH9A/browser.gcode`) reproduces this:
 the child completes the whole ordered comparison, writes comparison artifacts,
 and reports no SKIPPED. Its historical dated Ares generator line alone is
 adapted to the current undated Ares header contract; body bytes are untouched.

@@ -42,7 +42,7 @@ Non-negotiable decisions:
 
 ## Fresh diagnostic evidence
 
-Evidence root: `/tmp/ares-tiq2-line1265/`.
+Evidence root: `${TMP_ROOT}/ares-tiq2-line1265/`.
 Local branch `pi/tiq2-line1265-diagnosis` started at worker2's fetched head
 `693cc5e93461f31f49a196f76207cc4dc50b9f26`; worker2's worktree was read-only.
 

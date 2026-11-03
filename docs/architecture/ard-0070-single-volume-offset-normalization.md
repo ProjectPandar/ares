@@ -22,7 +22,7 @@ already have instances; do not add speculative internal validation.
 
 Evidence: the complete short-branch prism replay is RED at line 273
 (`0.394158` versus `0.394156`), retained in
-`/tmp/ares-concentric-prism-three-field-corrected.OkE1nK/case-QlGglr`.
+`${TMP_ROOT}/ares-concentric-prism-three-field-corrected.OkE1nK/case-QlGglr`.
 Native and Rust debugger captures show different fill input contours before
 Arachne. No native small line is removed in this case. All 110 transformed
 mesh vertices differ; the native composed translation is

@@ -40,5 +40,5 @@ Freeze tests/inputs/helpers for later GREEN. Precision/G91/line id/cache/
 viewer and other interpreter/consumer changes deferred. RED after SPEC
 requires review BEFORE production change; no FULL without window.
 Discovery/GDB evidence remains separate in
-`/home/indexyz/ares-coord/evidence/w5-firmware-absolute-literal-e/`,
+`${COORD_ROOT}/evidence/w5-firmware-absolute-literal-e/`,
 not substituted for formal public shared-checker proof.

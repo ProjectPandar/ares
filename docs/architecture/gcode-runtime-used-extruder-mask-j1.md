@@ -180,8 +180,8 @@ After approval:
    The primary role2 case MUST still assert complete bytes; if the mask fix
    exposes a later residual, report it unchanged and stop rather than strip
    any output. Frozen findings:
-   `/tmp/ares-j1-mask/findings/wipe-progress/FINDING.md` and
-   `/tmp/ares-j1-mask/findings/filament-start-transition/FINDING.md`.
+   `${TMP_ROOT}/ares-j1-mask/findings/wipe-progress/FINDING.md` and
+   `${TMP_ROOT}/ares-j1-mask/findings/filament-start-transition/FINDING.md`.
    By-object unchanged coverage here is witness-only, not full parity.
 4. Only after exact-hash RED approval implement the minimal runtime mask
    connection. Keep initial-tool expectations and stock template unchanged.

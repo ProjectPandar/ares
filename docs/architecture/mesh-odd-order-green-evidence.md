@@ -86,7 +86,7 @@ raw artifacts and machine-readable agreement audits. No Native output is
 committed. An archive outside Git preserves those summaries and raw evidence
 against /tmp cleanup, including the separately classified VOID root:
 
-/home/indexyz/ares-evidence/worker3/odd-order-green-7498165e0.tar.gz,
+${EVIDENCE_ROOT}/worker3/odd-order-green-7498165e0.tar.gz,
 3217964 bytes; SHA256
 abc22723f4e929fbdc69d432bc0f4f135a7db901d63721a49015c2f0530093ec.
 

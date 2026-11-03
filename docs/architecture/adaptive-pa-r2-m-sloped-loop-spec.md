@@ -46,7 +46,7 @@ they are not runtime RED and do not justify adding suppression assignments now.
 
 ## 2. Offline fixture inventory and requested producer scope
 
-Artifact: `/tmp/ares-adaptive-pa-r2/M-sloped-offline-fixture-inventory.json`
+Artifact: `${TMP_ROOT}/ares-adaptive-pa-r2/M-sloped-offline-fixture-inventory.json`
 contains original ZIP member hashes/settings. No Native/export/compile executed.
 
 - R1 `tests/parity/cube10.stl` +
@@ -205,7 +205,7 @@ there is no claimed runtime RED or implementation authorization now.
 
 - Admitted producer and same-loop heterogeneous/mixed-role/slope proof, or
   explicit missing-witness report with no fake coverage.
-- Six contexts official + `/tmp/ares-parity-control-set-v2.sh seeded` standard
+- Six contexts official + `${TMP_ROOT}/ares-parity-control-set-v2.sh seeded` standard
   mode with fresh caches/roots and actual Slice receipt/binary policies. Correct
   notification mode labels and verify mode independently from receipts. Native
   optional absence SKIP is not proof; required absence/nonzero/timeout FAIL.

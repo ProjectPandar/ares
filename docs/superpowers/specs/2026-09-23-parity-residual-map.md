@@ -2,7 +2,7 @@
 
 ## Measured state (dual-fresh oracle methodology)
 
-The `/tmp/ares-parity-fresh/` sweep corpus is stale on BOTH sides (stored
+The `${TMP_ROOT}/ares-parity-fresh/` sweep corpus is stale on BOTH sides (stored
 `orca.gcode` is one non-deterministic snapshot; stored `ares.gcode` predates
 the current binary). The only valid verdict regenerates BOTH: pass iff
 `diff(ares, oracle_run) ≤ max(2, oracle_self_diff)` across ≥2 oracle runs.

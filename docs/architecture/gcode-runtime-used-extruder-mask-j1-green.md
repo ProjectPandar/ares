@@ -64,7 +64,7 @@ other config/ZIP payloads unchanged. Control was frozen before Native.
 Each directed call used public slicing, fresh Native cache/artifacts,
 CPU0/seed0/runs1, prebuild outside its shared300s deadline and owned-descendant
 cleanup. Six receipt bindings and witness data are in
-`/tmp/ares-j1-mask/final-3c1/validation-audit.json`.
+`${TMP_ROOT}/ares-j1-mask/final-3c1/validation-audit.json`.
 
 ## Fresh full paired gates
 
@@ -112,7 +112,7 @@ Comparator-manifest stream/input audit (not the entire historical inventory):
   driver before matrices; its WASM child completed but the stopped parent
   had not collected exit. That driver was explicitly terminated after
   rebasing both source worktrees. Its partial evidence and checkpoint remain
-  `/tmp/ares-j1-mask/final-dc8/BROWSER-HOLD-CHECKPOINT.json`; it is not the
+  `${TMP_ROOT}/ares-j1-mask/final-dc8/BROWSER-HOLD-CHECKPOINT.json`; it is not the
   paired acceptance round and not a parity timeout.
 - Coordinator required fresh base/candidate on3c1: main's Arachne open-wall
   scan changes six narrow-neck cases FAIL→PASS, already included in both
@@ -127,7 +127,7 @@ Comparator-manifest stream/input audit (not the entire historical inventory):
 
 ## Durable review artifacts and reproduction
 
-Root `/tmp/ares-j1-mask/final-3c1/`:
+Root `${TMP_ROOT}/ares-j1-mask/final-3c1/`:
 `validation-audit.json`, `stream-invariance.json`, paired mode/variant
 `head.txt`, `exit`, `nextest.log`, full artifacts/cache receipts,
 `production.diff`, `rebased-production.diff`, directed process records,
@@ -137,7 +137,7 @@ Drivers: `run_all.sh`, `run_directed.py`, `audit.py`, `audit_streams.py`.
 Their output directories are intentionally create-once: reproduction must
 use new roots/caches, not overwrite or retry old attempts. Public test
 command is `cargo nextest run -p ares-cli --test orca_parity` with the pinned
-reference environment; full-mode helper `/tmp/ares-parity-control-set-v2.sh`
+reference environment; full-mode helper `${TMP_ROOT}/ares-parity-control-set-v2.sh`
 provides all current reference flags and artifact routing.
 
 No push before independent exact-hash combined review and coordinator

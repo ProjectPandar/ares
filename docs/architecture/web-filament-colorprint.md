@@ -46,7 +46,7 @@ recolor/restore and records a screenshot and JSON next to G-code hash artifacts.
 A Rust public-boundary fixture additionally covers sparse multi-tool ids,
 unused-tool statistics, every volume column, tool-color padding and reload.
 Its updated raw-volume/metadata contract failed before implementation
-(`/tmp/ares-filament-red.log`). Full browser specs and Rust/workspace/profile
+(`${TMP_ROOT}/ares-filament-red.log`). Full browser specs and Rust/workspace/profile
 reference gates must pass before review; no merge before coordinator approval.
 
 ### SEMM fixture evidence for the `01c0a5de8` rebase

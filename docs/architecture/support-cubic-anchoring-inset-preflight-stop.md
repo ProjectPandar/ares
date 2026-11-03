@@ -99,7 +99,7 @@ to coordinator before any future implementation; resolve ownership there.
 ## Durable evidence
 
 Root:
-`/home/indexyz/ares-evidence/worker3/support-touching-grid-bbox-preflight/20261015-124632`.
+`${EVIDENCE_ROOT}/worker3/support-touching-grid-bbox-preflight/20261015-124632`.
 It retains per-run readers, launch commands/environment and SHA, raw states,
 logs and generated outputs; `run.py` reproduces the read-only captures.
 The input SHA remains9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1.

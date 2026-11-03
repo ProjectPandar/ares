@@ -70,7 +70,7 @@ adjacent repairs. GREEN needs a later independent approval.
 ## Frozen two-input public E2E RED
 
 Accepted discovery root:
-`/home/indexyz/ares-evidence/w3-fan-speedup-sign-readonly-ad5111f0b/README.md`,
+`${EVIDENCE_ROOT}/w3-fan-speedup-sign-readonly-ad5111f0b/README.md`,
 manifest `e168427bef6b48379d45684ef15debe2c7fd3d2fe4f9e26d4807c1bed8e0393d`.
 Copy its final active/inputs-v2 input bytes, do not regenerate.
 

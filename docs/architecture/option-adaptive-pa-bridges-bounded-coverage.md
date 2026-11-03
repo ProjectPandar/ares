@@ -190,8 +190,8 @@ variant; including the initial independently captured Native yields two.
 Ares raw SHA both runs and the original failed case:
 `ed03e3a1d25f4a6a35da152aa1918e0cf8d21713745de91aa698ab98d16d43dd`.
 Original R1 .06 on af739's immutable binary also matches; input members exact.
-Evidence: `/tmp/ares-apa-g1-bridges/nd-diagnosis/{fixed-input-audit.json,original-and-main-control.json}`;
-first failure retained under `/tmp/ares-apa-g1-bridges/red-official`.
+Evidence: `${TMP_ROOT}/ares-apa-g1-bridges/nd-diagnosis/{fixed-input-audit.json,original-and-main-control.json}`;
+first failure retained under `${TMP_ROOT}/ares-apa-g1-bridges/red-official`.
 
 Coordinator explicitly ruled Native ND and authorized ONLY this .06 context to
 use the existing `compare_exported` bounded Native retry path. Keep all observed
@@ -204,7 +204,7 @@ harness GREEN. Other contexts retain their original strict path.
 ## Native-backed classification RED and harness GREEN checkpoint
 
 Accepted admission run `fb395a3f-47e4-4b7f-bf19-579cfdcbfdff`,
-`/tmp/ares-apa-g1-bridges/red-classification-official`: all nine full comparisons
+`${TMP_ROOT}/ares-apa-g1-bridges/red-classification-official`: all nine full comparisons
 and application/BR1/BR0 checks PASS, then only the classification assertion
 fails (INCOMPLETE versus PASS). Independent RED commit `70145c3f4`; the authorized
 pure-test main advance to `1b1c38eb9` was carried git-only to `c59d8132b` without
@@ -215,7 +215,7 @@ probe-max 2.0 labels, fixed dependency activation, applied-value receipts before
 Native reachability and full comparison, one bounded metadata row. Cold/hot
 seeded and official directed runs each PASS both the nine-context classification
 test and selected-key six-case unfiltered-value sweep. Evidence directories:
-`/tmp/ares-apa-g1-bridges/{green-first-official,green-hot-official,green-cold-seeded,green-hot-seeded}`.
+`${TMP_ROOT}/ares-apa-g1-bridges/{green-first-official,green-hot-official,green-cold-seeded,green-hot-seeded}`.
 Inventory audit `other-plan-inventory-audit.json`: 650 rows in each tree,
 only adaptive_pressure_advance_bridges differs; all other 649 rows exact.
 Targeted strict Clippy exit0. These checkpoints do not substitute for the final

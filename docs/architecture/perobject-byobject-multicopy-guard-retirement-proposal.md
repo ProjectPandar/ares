@@ -7,7 +7,7 @@ B production/test changes are NOT authorized or committed by this proposal.
 
 ## Fresh Native-first probe after A
 
-Evidence: `/tmp/ares-byobject-perobject-B-proposal-344320817/discovery-report.json`.
+Evidence: `${TMP_ROOT}/ares-byobject-perobject-B-proposal-344320817/discovery-report.json`.
 Fresh baseline AND guard-lift Native runs precede public API/real CLI in BOTH
 modes, serial CPU18 with independent roots/caches, canonical reference settings
 passed explicitly to Native AND public launches, actual descendant/thread masks

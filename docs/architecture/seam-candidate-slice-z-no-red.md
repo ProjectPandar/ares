@@ -62,7 +62,7 @@ Original append lower-slice discovery remains deferred, not resumed.
 
 Durable external reports: `single-control-motion-localization.md`,
 `single-control-first-motion.json`, `seam-project-entry-red-stop-y1PN.md` under
-`/home/indexyz/.ares-evidence/worker4/`. Original barrier archive
+`${LOCAL_EVIDENCE_ROOT}/worker4/`. Original barrier archive
 `seam-plane-public-red-stop-zTYK.tar.gz` SHA256
 `62e426a868fbdd2428bd5cc6388fbcf92f3e9098b547d985ff5df8da1a5bbd57`.
 Corrected-entry archive receipt is published with the review request. Complete

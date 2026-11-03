@@ -13,7 +13,7 @@ and all `case-LqoYic` artifacts. No ignored test or numeric fallback is added.
 ## Exact input and fresh observation
 
 Repository-cube10 X2D input:
-`/tmp/ares-x2d-flush-matrix/red/seeded/case-LqoYic/input.3mf`.
+`${TMP_ROOT}/ares-x2d-flush-matrix/red/seeded/case-LqoYic/input.3mf`.
 Original admission and input SHA remain in `red/admitted-red.json`.
 This is a **test-constructed input, not a real GUI-saved 3MF**: the test exports
 repository `tests/parity/cube10.stl` with the stock X2D machine/process/filament
@@ -38,7 +38,7 @@ clock line. This establishes repeatable observed output for these two runs,
 **not deterministic or defined C++ behavior**: the invalid enum value changes.
 
 Historical captured evidence (not a new-main run):
-`/tmp/ares-x2d-flush-matrix/rebase-458/original-input/` contains input and
+`${TMP_ROOT}/ares-x2d-flush-matrix/rebase-458/original-input/` contains input and
 source hashes, production diff, fresh build log/rlib hash, public API adapter
 result, actual Native outputs, stdout/stderr/debug logs and full two-run byte
 difference inventory. Ares error versus Native success remains an explicit
@@ -171,7 +171,7 @@ inputs, and explicitly inapplicable to the OOB invocation itself.
 ## Fresh-main verification and matrix record
 
 Machine-readable record: [o8-x2d-scalar-flush-context-record.json](o8-x2d-scalar-flush-context-record.json).
-Raw evidence: `/tmp/ares-o8-current-main-cbee/`. Source tree of `crates` is
+Raw evidence: `${TMP_ROOT}/ares-o8-current-main-cbee/`. Source tree of `crates` is
 `788f2899cad65edfba97ade4dc2bf3476065870f` on both fetched main and the
 approved spec HEAD; `git diff origin/main -- crates tests scripts` is empty.
 Fresh `cargo build -p ares-cli` succeeded; binary/input/log/output hashes and

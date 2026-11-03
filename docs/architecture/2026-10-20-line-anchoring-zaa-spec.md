@@ -150,7 +150,7 @@ need separate approval before subsequent steps.
 
 ## Evidence
 
-External `/home/indexyz/ares-evidence/w3-line-anchoring-zaa-` prefixes:
+External `${EVIDENCE_ROOT}/w3-line-anchoring-zaa-` prefixes:
 `top6/`, `top6-seeded/`, `top5/`, `top5-seeded/`, `top7/`, `top7-seeded/`
 contain frozen discovery input SHAs, commands, binary identities, Native
 repeats and complete-byte results. Target `role-observation.json` localizes

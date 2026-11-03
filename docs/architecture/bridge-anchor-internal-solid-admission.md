@@ -2,7 +2,7 @@
 
 Status: SPEC-REVIEW-REQUEST; source/documents only, no RED/production edit/run.
 Base `a120ebd5ce18a7c4e51c7502c2bc1faa8324cb06` (C2-T merged).
-Worktree `/tmp/ares-worker2-bridge-anchor-c2s`, branch
+Worktree `${TMP_ROOT}/ares-worker2-bridge-anchor-c2s`, branch
 `worker2/bridge-anchor-c2s`. C2-S requires its own approval, RED, GREEN and REVIEW.
 
 ## Owning upstream boundary

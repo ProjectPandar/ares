@@ -35,7 +35,7 @@ All final gates executed at test-only
 `304f49867b22dfbe18a50bd7c34a8fb474b2062d`, based on
 `da16b918566efcd13019a312022f675fe331badf`. Sixteen test threads/build jobs8;
 one heavy job at a time. Required runs used the then-current
-`/tmp/ares-parity-control-set-v2.sh` and separate fresh producer caches.
+`${TMP_ROOT}/ares-parity-control-set-v2.sh` and separate fresh producer caches.
 
 | Gate | Actual result |
 |---|---|

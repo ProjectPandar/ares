@@ -145,12 +145,12 @@ than accepting a semantically passing but per-ray linear mesh scan.
 ## Evidence and archive boundaries
 
 Accepted read-only audit:
-`/home/indexyz/ares-evidence/w6-candidate-nearest-audit-ioic_az3/`
+`${EVIDENCE_ROOT}/w6-candidate-nearest-audit-ioic_az3/`
 `NEAREST-INPUT-AUDIT-REVIEW-REQUEST.md`, `verification.json`, `verify-audit.py`,
 complete valid/invalid probes and host/live distinction. Fourteen normal-exit
 output-preserving observers:8valid/6excluded; no inferior calls/explicit writes.
 Initial cursor chain remains audit-only, not a dependency of this rewrite.
 
 New independent SPEC/RED evidence:
-`/home/indexyz/ares-evidence/w6-negative-occlusion-spec-red-j92rt3s0/`.
+`${EVIDENCE_ROOT}/w6-negative-occlusion-spec-red-j92rt3s0/`.
 No claim that an unimplemented negative-occlusion port fixes every later residual.

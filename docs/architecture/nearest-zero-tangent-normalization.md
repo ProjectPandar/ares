@@ -37,7 +37,7 @@ repair of the two-dimensional local division.
 Interlocking localization on baseline `fb9a4ecd5` plus the working port found
 matching input/output geometry before seam placement at the first remaining
 G-code difference. Runtime snapshots in
-`/home/indexyz/ares-evidence/w6-{native,ares}-layer44-seams.jsonl` show both
+`${EVIDENCE_ROOT}/w6-{native,ares}-layer44-seams.jsonl` show both
 implementations select the same concave candidate at
 (-5.95703077, -3.07977605), with local angle -1.57079601 and staggering false.
 The candidate range is [0,5); positions 0 and 4 are equal (closed contour).
@@ -54,7 +54,7 @@ output oracle.
 ## Witness refinement after the square-hole control
 
 The first ordinary 8×8 mm square-hole nearest case passes unchanged main;
-`/home/indexyz/ares-evidence/w6-zero-tangent-red-seeded/run.log` records 2/2
+`${EVIDENCE_ROOT}/w6-zero-tangent-red-seeded/run.log` records 2/2
 PASS with its existing AH1 control. It is not a RED and authorizes no
 production change. Refine the input to an authored 0.8×6.4 mm through-slot in
 the same 64×48×4 mm board, rotated 22.5 degrees. These are explicit physical
@@ -105,7 +105,7 @@ chain instead of inventing a standalone GREEN.
 On `aaf208139` with **no core production difference**, both official and seeded
 runs of the new relative-slot case fail while the unchanged AH1 control passes.
 Artifacts are
-`/home/indexyz/ares-evidence/w6-zero-tangent-relative-red-aaf-{official,seeded}/run.log`.
+`${EVIDENCE_ROOT}/w6-zero-tangent-relative-red-aaf-{official,seeded}/run.log`.
 The authored STL SHA is
 `a5107761081b7afefe1ba1952548876ca93aead50b0c858ae5fcc5b50b74f88f`.
 The API and CLI raw byte-equality assertion passes, but strict Native output

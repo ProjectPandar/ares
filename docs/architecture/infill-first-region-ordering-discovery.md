@@ -46,5 +46,5 @@ Deferred scope of the region-speed slice produces no additional
 Native-accepted, Ares-divergent gap: `is_infill_first` is already
 per-region correct, and the emit-time region-field surface is now
 single-sourced through `region::apply`. Discovery evidence under
-`/home/indexyz/.ares-evidence/worker4/infill-first-discovery/`
+`${LOCAL_EVIDENCE_ROOT}/worker4/infill-first-discovery/`
 (inputs, per-case gcode SHAs, native/ares outputs).

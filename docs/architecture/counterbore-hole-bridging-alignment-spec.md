@@ -6,7 +6,7 @@ Ares base: `96eb17ccc2805ce1d4f95045e452eb070e19f183`.
 Branch: `worker4/counterbore-hole-bridging`.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 All upstream paths below are relative to `OrcaSlicer/src/libslic3r/` at that pin,
-verified in clean `/tmp/ares-web-mobile/OrcaSlicer`. This is a source-cited
+verified in clean `${TMP_ROOT}/ares-web-mobile/OrcaSlicer`. This is a source-cited
 libslic3r rewrite slice, not a new Ares bridge pipeline.
 
 ## Gap and proposed scope

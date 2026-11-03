@@ -38,5 +38,5 @@ Send SPEC+RED RR then STOP: no GREEN/FULL/integration/main update here.
 This eighth independent chain integrates AFTER the seven frozen chains,
 only when a separate window and exact main are supplied.
 Discovery evidence stays separate at
-/home/indexyz/ares-coord/evidence/w5-3fb-fan-mixed-timing/;
+${COORD_ROOT}/evidence/w5-3fb-fan-mixed-timing/;
 it is NOT substituted for formal shared-checker API/CLI receipts.

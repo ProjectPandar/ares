@@ -36,7 +36,7 @@ Discovery's defined-behavior audit checked the non-null factory, initialized
 FillParams (role 0 short-circuits optional config reads), solid centered
 PlanePath domain and positive bounded Archimedean acos/spiral domain. Native
 success alone was not treated as a UB-safety proof. Discovery evidence:
-`/tmp/ares-object-archimedean-discovery-8f6ce1660/discovery-report.json`.
+`${TMP_ROOT}/ares-object-archimedean-discovery-8f6ce1660/discovery-report.json`.
 
 No production code or Native outputs are committed here. GREEN requires
 independent RED approval first. Before adding the Archimedean dispatch,

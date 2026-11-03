@@ -32,7 +32,7 @@ Copy exactly these accepted discovery archives into `tests/parity/chamber-used-e
 | chamber-t1-unused-t0-enabled.3mf | 80/30 | on/off | T1 | true RED: unused active T0 | dfd4b243129b813032b2828cb258e4e21e2d995e5894f80cc61f26197ba4643d |
 | chamber-t0-hot-used-control.3mf | 80/30 | on/on | T0 | used-hot control | cce1688b2dc25507c351f6c6d003816710fa45928ee55d0df170e70d53ae5af4 |
 
-Accepted evidence: `/home/indexyz/ares-evidence/worker1/chamber-get-at-discovery-53890b780/DISCOVERY-REPORT.md`, SHA256 `48f5b899c4923bf196dfd77012d30ad98ef5c9d14e6857c2b780a8e4a3680fb6`. Preserve its failures and get_at evidence unchanged.
+Accepted evidence: `${EVIDENCE_ROOT}/worker1/chamber-get-at-discovery-53890b780/DISCOVERY-REPORT.md`, SHA256 `48f5b899c4923bf196dfd77012d30ad98ef5c9d14e6857c2b780a8e4a3680fb6`. Preserve its failures and get_at evidence unchanged.
 
 ## Agreed public seam and failure inventory before tests
 

@@ -18,15 +18,15 @@ must not remain in core, which cannot own terminal or filesystem behavior.
 ## Evidence
 
 Revision8a52b2d2 targeted `sparse_infill_pattern=lightning` sweep:
-`/tmp/ares-lightning-8a52b2d2-repro.log`, terminal100,8.943s.
+`${TMP_ROOT}/ares-lightning-8a52b2d2-repro.log`, terminal100,8.943s.
 All three saved cases carry identical project SHA256
 `c786373034253980140ef933e004620df99149341ea2f4cc06578ab98512490c`.
 Full input/native/Ares/error/manifest artifacts remain under
-`/tmp/ares-lightning-8a52b2d2-repro/case-lOtXKj` and the two sibling cases.
+`${TMP_ROOT}/ares-lightning-8a52b2d2-repro/case-lOtXKj` and the two sibling cases.
 Saved comparator reference provenance is explicitly unknown, not invented.
 
 Two direct initialized native outputs are retained separately under
-`/tmp/ares-lightning-8a52b2d2-fresh/run-{0,1}/plate_1.gcode`, with native
+`${TMP_ROOT}/ares-lightning-8a52b2d2-fresh/run-{0,1}/plate_1.gcode`, with native
 command logs alongside. They replay identically and match the saved
 reference. Invocation uses the existing seeded replay wrapper, seed0,
 CPU0 and initialized binary at
@@ -61,7 +61,7 @@ public failing input and causal investigation.
 
 Independent native return-value capture at this exact function records
 145 calls and zero successful intersections in
-`/tmp/ares-lightning-ard83-native-intersections-final.log`; native exits0
+`${TMP_ROOT}/ares-lightning-ard83-native-intersections-final.log`; native exits0
 and its generated output matches the fresh native stream except generator.
 Thus this fixture does not exercise a successful returned intersection,
 and cannot validate endpoint/direction equivalence or nearest-hit distance
@@ -70,21 +70,21 @@ failed before execution; that zero-call log is not evidence. The corrected
 direct ELF invocation is the145-call evidence above.
 
 Native debugger capture under
-`/tmp/ares-lightning-ard83-native-tree.log` retains250 boundary records;
+`${TMP_ROOT}/ares-lightning-ard83-native-tree.log` retains250 boundary records;
 its generated output equals the original two native runs. Ares capture
-`/tmp/ares-lightning-ard83-tree-diagnostic.log` first differs after tree
+`${TMP_ROOT}/ares-lightning-ard83-tree-diagnostic.log` first differs after tree
 propagation42→41, introducing detached branches absent in native output.
 The native LD_PRELOAD rand/node captures are
-`/tmp/ares-lightning-ard83-native-{trace,nodes}.log`; the logger preserves
+`${TMP_ROOT}/ares-lightning-ard83-native-{trace,nodes}.log`; the logger preserves
 returned random values and native output. Actual128 random values agree,
 and unordered node geometry agrees, excluding RNG sequence as the cause.
 
 Changing only argument order yields full ordered output equality in
-`/tmp/ares-lightning-ard83-intersection-order.gcode`,128 matching ordered
+`${TMP_ROOT}/ares-lightning-ard83-intersection-order.gcode`,128 matching ordered
 random/node records and150 matching tree-stage records in the companion
 log. Temporary core diagnostics are removed before final verification.
 The public test at `option_coverage/lightning_output.rs` witnessed RED in
-3.040s (`/tmp/ares-lightning-ard83-public-red.log`); its paired complete
+3.040s (`${TMP_ROOT}/ares-lightning-ard83-public-red.log`); its paired complete
 artifacts are `.../ares-lightning-ard83-public-red/case-YA1B78`.
 The sweep's historical lightning nondeterminism exemption is removed.
 The regression additionally requires positive sparse-infill extrusion in
@@ -109,27 +109,27 @@ the actual call-order repair; broader inputs still need verification.
 After the review's motion-witness refinement, public regression and full
 26-value `sparse_infill_pattern` enum sweep pass2/2 in61.922s, with26/26
 strict comparisons and zero rejections. Complete artifacts and summary
-remain in `/tmp/ares-lightning-ard83-motion-green`; command log is the
+remain in `${TMP_ROOT}/ares-lightning-ard83-motion-green`; command log is the
 sibling `.log`. Enable `ARES_PARITY_LIGHTNING_REFERENCE=1` for the public
 regression, and `ARES_PARITY_OPTIONS=1 ARES_OPTION_KEYS=sparse_infill_pattern`
 without a value filter for the complete enum. Both use explicit artifact
 root, initialized replay wrapper and seed0/CPU0 as above.
 
 Shared initialized consumers pass10/10 in65.913s in
-`/tmp/ares-ard83-shared-consumers.log`: nine live Ares full-output cases
+`${TMP_ROOT}/ares-ard83-shared-consumers.log`: nine live Ares full-output cases
 and native KSR self-replay. Workspace before the final motion-witness
 refinement passes7460 tests,9 skips in260.453s. The final motion-witness
 workspace passes7460 tests,9 skips in257.213s in
-`/tmp/ares-ard83-workspace-motion.log`. Final all-target Clippy exits0 with existing warnings in
-`/tmp/ares-ard83-clippy-motion.log`; fmt and diff checks pass.
+`${TMP_ROOT}/ares-ard83-workspace-motion.log`. Final all-target Clippy exits0 with existing warnings in
+`${TMP_ROOT}/ares-ard83-clippy-motion.log`; fmt and diff checks pass.
 
 True Windows/macOS/Linux core builds exit0, with logs
-`/tmp/ares-ard83-{windows,macos,linux}.log`; release WASM exits0 in4m06s
+`${TMP_ROOT}/ares-ard83-{windows,macos,linux}.log`; release WASM exits0 in4m06s
 and wasm-bindgen exits0. Actual Chromium KSR tests pass2/2 in24.0s,
-retaining full output `/tmp/ares-wasm-gcode-oFTT8u/browser.gcode`.
+retaining full output `${TMP_ROOT}/ares-wasm-gcode-oFTT8u/browser.gcode`.
 An additional real Chromium run slices the original lightning input and
 strictly matches the fresh native stream except generator, retaining full
-input and paired outputs at `/tmp/ares-ard83-browser-lightning` (92650
+input and paired outputs at `${TMP_ROOT}/ares-ard83-browser-lightning` (92650
 browser bytes); log and temporary driver remain alongside outside the repo.
 The first Chromium launch failed on missing libglib before slicing; the
 successful runs supply the actual shared-library closure for this process.

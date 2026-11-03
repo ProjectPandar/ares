@@ -36,9 +36,9 @@ alone is not a completed repair.
 
 ## Causal evidence and selected repair
 
-Native diagnostic output `/tmp/ares-ksr-ordered-CeO4MG/ares.gcode` and actual
+Native diagnostic output `${TMP_ROOT}/ares-ksr-ordered-CeO4MG/ares.gcode` and actual
 WASM diagnostic output captured12 real layer-index2 spline/blend inputs.
-`/tmp/ares-ard82-spline-actual-replay.log` shows identical observations and
+`${TMP_ROOT}/ares-ard82-spline-actual-replay.log` shows identical observations and
 sample points but different weights. Replaying each captured input through
 the same actual spline/QR sources for native/WASM gives identical fits;
 feeding the other producer's weights reproduces that producer's changed fit.
@@ -50,7 +50,7 @@ the full native capture and original public Chromium RED outputs are retained.
 The wipe start differs BEFORE clipping: native(-312680,-20412517),
 WASM(-312678,-20412519), while both paths have no retained arc projection.
 
-Scalar replay `/tmp/ares-ard82-transcendental-probe.log` identifies
+Scalar replay `${TMP_ROOT}/ares-ard82-transcendental-probe.log` identifies
 `exp(0.9162646532058716f32)`: native bits401ffeef, WASM401ffeee.
 Real target seam weights differ as3f4132ef versus3f4132f1. Also real cubic
 blend ratios1043670509 and1043999504 produce WASM results one ulp below
@@ -71,8 +71,8 @@ production sources before the GREEN attempt. Native complete KSR passes
 35098/18.492s. Clean WASM output under Node passes the unchanged strict
 comparator71791/0.271s. Actual Chromium runs7685 and52983 both pass2/2
 tests (1.4m including Cargo lock, then25.1s); full outputs are retained at
-`/tmp/ares-wasm-gcode-dYmH9A/browser.gcode` and
-`/tmp/ares-wasm-gcode-LIFkkO/browser.gcode` and replay identically except
+`${TMP_ROOT}/ares-wasm-gcode-dYmH9A/browser.gcode` and
+`${TMP_ROOT}/ares-wasm-gcode-LIFkkO/browser.gcode` and replay identically except
 the generator line. Initialized and untouched official reference hashes
 are unchanged. This establishes this project's identified native/browser
 contract, not arbitrary libm equivalence or all-printer/default/domain parity.
@@ -89,7 +89,7 @@ it is not a producer RED. Corrected60159 with ARES_PARITY_ARTIFACT_ROOT
 passes10/10 in33.320s: nine live Ares full-output consumers and native KSR
 self-replay. Both newly generated KSR native streams also match actual clean
 Chromium output in complete ordered generator-line-only comparisons. Full
-fresh inputs/native outputs remain under `/tmp/ares-ard82-consumers`.
+fresh inputs/native outputs remain under `${TMP_ROOT}/ares-ard82-consumers`.
 Final immutable patch re-review remains pending.
 
 Immutable009d printer scan5535 terminates exit100 in2150.617s:978/1001
@@ -99,5 +99,5 @@ external artifacts. This is not untouched-profile or all-printer completion.
 Option scan89280 now terminates exit100 in3254.113s:386/650 bounded domains
 complete,1661 generated cases,1519 strictly compared,1 rejected.264 domains
 remain incomplete or failed. Full summary/artifacts are retained under
-`/tmp/ares-options-009d3b49-initialized`. This is the old immutable009d
+`${TMP_ROOT}/ares-options-009d3b49-initialized`. This is the old immutable009d
 producer, not verification of the pending seam math repair.

@@ -92,7 +92,7 @@ Split touched source when needed to remain<=400LOC; no duplicated harness/KD.
 ## Fixed inputs: no position fishing
 
 ALL9 inputs copied byte-for-byte from the previously paused discovery:
-/home/indexyz/ares-coord/evidence/worker2-perobject-combined-discovery-20261021T103537/
+${COORD_ROOT}/evidence/worker2-perobject-combined-discovery-20261021T103537/
 
 No new placement, brim width or process setting was tried. Source tracked GUI
 fixtures: tests/parity/per-object-auto-brim-admission/{near,far}-perobject-auto.3mf,
@@ -179,4 +179,4 @@ seeded2.4.2; every slicing command tasksetCPU13.
 Branch/source/test/helper/ref unchanged. No FULL, no builds or probe instrumentation.
 Coordinator authorized SPEC then RED only. Report exact RED before any GREEN;
 no production changes or FULL are authorized by this approval.
-Evidence root: /home/indexyz/ares-coord/evidence/worker2-combined-contact-resume-20261021T155517
+Evidence root: ${COORD_ROOT}/evidence/worker2-combined-contact-resume-20261021T155517

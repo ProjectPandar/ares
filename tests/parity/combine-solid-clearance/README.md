@@ -22,7 +22,7 @@ for the sparse15-on control instead of duplicating it here.
 
 Five ZIPs copied byte-for-byte from accepted read-only discovery, never
 regenerated for RED:
-`/home/indexyz/ares-evidence/w3-combine-solid-readonly-231bd11cc/official/<case>/input.3mf`.
+`${EVIDENCE_ROOT}/w3-combine-solid-readonly-231bd11cc/official/<case>/input.3mf`.
 Every non-settings ZIP member equals source; model_settings.config also
 unchanged (one ModelPart/no modifier). Only GUI project settings density,
 combination flag, internal-solid pattern and max combination height differ.

@@ -39,7 +39,7 @@ Baseline: `f45b8194144615c5322361826554c31ffe2fffd5`.
 Accepted classification RED was independently recorded at
 `4f100a4c5d5e1c9d7eb84581e0e2988565385682` on production880: all eight fidelity
 and full-output comparisons PASS; only INCOMPLETE versus PASS failed (exit100).
-Evidence `/tmp/ares-pcp-embedded/red-880-official/`. Historical originals are
+Evidence `${TMP_ROOT}/ares-pcp-embedded/red-880-official/`. Historical originals are
 not rewritten by subsequent rebases.
 
 GREEN promotes only the finite key-local plan, delegates that key’s sweep to
@@ -48,17 +48,17 @@ and exposes raw-action/typed-expectation/deferred-scope metadata. The touched
 key-local Rust file is 303LOC. Official/seeded cold/warm directed tests each
 PASS classification plus selected-key unfiltered-value sweep. Warm project
 export cache does not turn the per-case footer/export witnesses into frozen
-Native data. Evidence `/tmp/ares-pcp-embedded/green-{first-official,official-hot,seeded-cold,seeded-hot}/`.
+Native data. Evidence `${TMP_ROOT}/ares-pcp-embedded/green-{first-official,official-hot,seeded-cold,seeded-hot}/`.
 
 Final production a539 fresh-target gates: workspace **8278 PASS, 5 configured
 skips**, workspace/all-target/all-feature Clippy `-D warnings`, fmt and WASM
-check all exit0. `/tmp/ares-pcp-embedded/gates-a539/`. Owner authorized carry
+check all exit0. `${TMP_ROOT}/ares-pcp-embedded/gates-a539/`. Owner authorized carry
 onto f45's tests/docs-only advance. Earlier880/626/711 gate attempts are
 historical or explicitly VOID; no stale production-tree gate is substituted.
 
 ## Fresh full control pairs — retain original outcomes
 
-Root `/tmp/ares-pcp-embedded/final-f45-isolated/`. Independent empty target
+Root `${TMP_ROOT}/ares-pcp-embedded/final-f45-isolated/`. Independent empty target
 directories and completed archives, jobs2; distinct binary SHAs checked before
 execution:
 
@@ -111,7 +111,7 @@ two whole-output variants, after only the existing generated-by identity rule:
   `19adcc1ebb7f148b3464f6f8ed9065965ff79494796d2250387a70690a2b0684`.
 
 Authoritative machine evidence is
-`/tmp/ares-pcp-embedded/final-f45-isolated/nested-vertical-diagnosis.json`;
+`${TMP_ROOT}/ares-pcp-embedded/final-f45-isolated/nested-vertical-diagnosis.json`;
 `native-repeat-10/` retains every raw Native SHA, command, load admission,
 stdout/stderr, exit and complete output. Owner explicitly ruled Native
 nondeterministic from fourteen official samples/two variants, six stable Ares

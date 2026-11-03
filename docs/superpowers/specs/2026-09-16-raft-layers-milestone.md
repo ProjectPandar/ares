@@ -22,7 +22,7 @@ Goal: un-gate `raft_layers` (capabilities.rs rejects nonzero today) with
 byte-parity raft emission on the KSR sweep cases
 (`option/raft_layers/max` = 100, `option/raft_layers/seeded`),
 verified against the live 2.4.2 oracle artifact
-`/tmp/ares-parity-artifacts/case-u7sdch/orca.gcode`.
+`${TMP_ROOT}/ares-parity-artifacts/case-u7sdch/orca.gcode`.
 
 ## Upstream boundary (source-cited)
 

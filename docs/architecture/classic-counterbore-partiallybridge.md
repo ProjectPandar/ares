@@ -39,7 +39,7 @@ Nix GDB17.2，在固定seeded ELF上以符号和反汇编定位：
 
 输出raw SHA：plain `9c9c7044d519d189ec36aadf28d976d4c12b9671ef94669590455e2c6afcf650`；GDB `5c3c0336c1d84d6dd15298ea6218e962f107e1596bbb5838b0836397563beca1`。差异**仅唯一generated-by时间戳行**，按既定generator-only规则比较PASS；规范化SHA `2212400313b6d52f3ac880478b94b4f082015f740bc24f0732071370b6f32df8`。运动、M73、统计、footer未删减。
 
-证据根 `/tmp/ares-counterbore/reachability/`：`input-provenance.json`（profile父链和hash）、三个flattened JSON、`stepped-hole.stl`、`setup_input.py`、`native-disasm-address.txt`、`native-trace.py`、`native-trace.json`、`native-processes.json`、两个输出/原始stdout/stderr/command receipts、`audit_native.py`及`reachability-audit.json`。
+证据根 `${TMP_ROOT}/ares-counterbore/reachability/`：`input-provenance.json`（profile父链和hash）、三个flattened JSON、`stepped-hole.stl`、`setup_input.py`、`native-disasm-address.txt`、`native-trace.py`、`native-trace.json`、`native-processes.json`、两个输出/原始stdout/stderr/command receipts、`audit_native.py`及`reachability-audit.json`。
 
 原始无效探针/断言保留：最初overloaded symbol的disassemble表达式失败，改为地址反汇编；filament flatten遗漏base子目录，在首次Native运行前改为递归枚举。driver随后因把generated-by timestamp纳入raw equality、以及把caller误写为`process()`而断言失败；不重跑Native，另作离线audit按原有generator-only contract核验。不得把driver原始非零exit包装成正常成功或Rust parity结论。
 

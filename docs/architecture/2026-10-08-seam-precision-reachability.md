@@ -116,7 +116,7 @@ is reviewed.
   including both outputs for every PASS and DIVERGENT case, manifests,
   receipts, inputs, archived CLI probe, generator and nextest logs.
 
-Both rounds used `/tmp/ares-parity-control-set-v2.sh seeded`, independent
+Both rounds used `${TMP_ROOT}/ares-parity-control-set-v2.sh seeded`, independent
 fresh `worker6-seam-C-probe-v{1,2}-cache`, worker6's independent target,
 ARES_PARITY_THREADS=16, nextest16 threads, CARGO_BUILD_JOBS=8 and incremental0.
 The seeded Native binary SHA is

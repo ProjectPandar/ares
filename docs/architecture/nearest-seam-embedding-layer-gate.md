@@ -69,7 +69,7 @@ Original thin-gap-j1 Snapmaker J1 IDEX stock inputs, not regenerated:
 
 - `wall-arachne.3mf` SHA256
   `5f822b0761a325deb15795f82dedb9a7d03a8c40304ed389edaf4e4543b351c7`
-  (evidence root `/home/indexyz/ares-evidence/w3-geometry-discovery3-78d642702/thin-gap-j1/inputs/`).
+  (evidence root `${EVIDENCE_ROOT}/w3-geometry-discovery3-78d642702/thin-gap-j1/inputs/`).
 - Dual-mode sibling `wall-classic.3mf` SHA256
   `482eb2e6a19b43a56cc13553dc9c8795ca9d4ccf9510743d45d236b547cab01d`:
   sole effective delta `wall_generator arachne->classic` inside
@@ -77,7 +77,7 @@ Original thin-gap-j1 Snapmaker J1 IDEX stock inputs, not regenerated:
   zip with fixed 1980 timestamps. Native `--slice 0` exit 0, T0=40/T1=39,
   11367 lines.
 
-Causal record (evidence `/home/indexyz/ares-evidence/w3-arachne-thinwall-5e8be001f/`,
+Causal record (evidence `${EVIDENCE_ROOT}/w3-arachne-thinwall-5e8be001f/`,
 `w3-thinwall-stop-seam-handoff.md`, proposal rev 3): first divergence record
 60/61 at layer 45 (print_z 9.2 mm), entity e0 = object0/region0/entity0, a
 51-path widened inner loop `erPerimeter` under seam `nearest`. Structural
@@ -91,7 +91,7 @@ candidate intervals match because their ranges hold no hidden point (the first
 hidden-point interval is [88,108)).
 
 Public-RED diagnostics (saved artifacts
-`/home/indexyz/ares-evidence/w3-arachne-thinwall-5e8be001f/parity-artifacts/thin-gap-j1-seam-embedding-wall-arachne-SFXtn8/`):
+`${EVIDENCE_ROOT}/w3-arachne-thinwall-5e8be001f/parity-artifacts/thin-gap-j1-seam-embedding-wall-arachne-SFXtn8/`):
 strict first difference at byte 2150 line 150 is an M73/G0 ordering flip —
 early propagation, not repaired and not ignored (same early-propagation
 shape as the frozen rear-seam visibility pair at 89a18865e; the

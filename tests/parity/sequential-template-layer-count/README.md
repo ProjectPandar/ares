@@ -5,7 +5,7 @@ and `process_layer:4677–4684`. See
 [`sequential-template-layer-count-spec.md`](../../../docs/architecture/sequential-template-layer-count-spec.md).
 
 Both new inputs are byte-for-byte copies of approved readonly discovery
-`/home/indexyz/ares-evidence/worker1/sequential-next-discovery-117f4ffe3/`:
+`${EVIDENCE_ROOT}/worker1/sequential-next-discovery-117f4ffe3/`:
 
 | Input | Discovery case | SHA256 | Native template total |
 | --- | --- | --- | --- |

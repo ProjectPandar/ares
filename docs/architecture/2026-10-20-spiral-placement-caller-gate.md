@@ -80,7 +80,7 @@ configuration, movement or trailing-line mask is allowed.
 
 ## Read-only source proof
 
-External evidence `/home/indexyz/ares-coord/evidence/w5-spiral-placement-gate/`
+External evidence `${COORD_ROOT}/evidence/w5-spiral-placement-gate/`
 contains actual inputs, launches, full streams, raw snapshots and SHA256
 manifest. Original work root `/tmp/w5-discovery-d592-spiral3/`.
 

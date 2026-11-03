@@ -91,7 +91,7 @@ not inert config round trips. Diagnostic SequenceMatcher hunks are retained
 only for localization;they are not used to mask/sort/accept the full streams.
 
 Discovery root:
-`/home/indexyz/ares-evidence/w3-gcode-stock-discovery-9cfaf0d16/`.
+`${EVIDENCE_ROOT}/w3-gcode-stock-discovery-9cfaf0d16/`.
 Final witness subroot `compact-motion-no-fan/`;results/commands/statuses/full
 Native/API/CLI streams,exact build CargoJSON and API rlib provenance retained.
 Original date/generator-only normalization used,retaining all M73/time/fan/E/F/

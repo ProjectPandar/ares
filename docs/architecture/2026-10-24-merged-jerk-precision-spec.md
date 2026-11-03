@@ -32,7 +32,7 @@ Target7.0002 Native `SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY=7.0002`, Ares=7,
 first normalized difference byte6204. Equal7/exactmilli7.002 controls fullPASS.
 Six fresh Native slices stable on exact917ec actual CLI after EPSILON fix; all
 commands exit0. No API/seeded/FULL qualification claimed from discovery.
-Evidence `/home/indexyz/ares-evidence/w4-merged-jerk-precision/PROPOSAL.md` and
+Evidence `${EVIDENCE_ROOT}/w4-merged-jerk-precision/PROPOSAL.md` and
 original complete Native/CLI streams/diffs, CPU17/PIN17/threads1.
 
 InputSHA:

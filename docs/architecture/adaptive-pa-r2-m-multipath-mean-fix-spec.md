@@ -37,7 +37,7 @@ First difference: normalized byte3095, line153, Native `M900 K0.064` vs Ares
 `M900 K0.063`; line232 repeats it. All other ordered lines, including every XY/E
 move and adjacent `G1 F7200`, are exact. M900 is the native flavor-dependent PA
 command expressly admitted by the owner. Evidence/audit0:
-`/tmp/ares-adaptive-pa-r2/M-496-RED-audit.json` and `RED-REQUEST-M.md`.
+`${TMP_ROOT}/ares-adaptive-pa-r2/M-496-RED-audit.json` and `RED-REQUEST-M.md`.
 
 ## Source-localized value chain
 
@@ -79,7 +79,7 @@ command expressly admitted by the owner. Evidence/audit0:
 
 ## Offline numeric localization, with limits
 
-`/tmp/ares-adaptive-pa-r2/offline-pa-localization.json` compiles the unmodified
+`${TMP_ROOT}/ares-adaptive-pa-r2/offline-pa-localization.json` compiles the unmodified
 upstream AdaptivePAInterpolator/Pchip sources and unmodified Rust Model/Pchip/
 number modules into isolated numeric helpers. It uses the active input's exact
 CSV. This executes no Native slicing or workspace tests and patches no sources.

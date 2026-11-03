@@ -17,7 +17,7 @@ Four actual Native qualification commands at approved SPEC, official+seeded,
 CPU15, fresh cache/TMPDIR, before permanent RED: low0 slope moves/high48 in BOTH
 modes. High first slope `G1 X109.72 Y114.313 Z.23 E.0027 ; perimeter`, layer2
 Outer wall. Artifact root
-`/home/indexyz/.ares-evidence/worker4/scarf-conditional-qualification-5189-v1`.
+`${LOCAL_EVIDENCE_ROOT}/worker4/scarf-conditional-qualification-5189-v1`.
 Original control/positive Native48; positive first slope
 `G1 X109.72 Y113.938 Z.23 E.0027 ; perimeter`. Sharp0 is a source-predicate
 negative premise, checked by the formal Native run, not relabeled discovery.
