@@ -247,6 +247,13 @@ fn materialize_record(
                     region.overhang_reverse_internal_only.0,
                 );
             }
+            if region.unsupported_wall_last.0 {
+                super::super::unsupported::apply(
+                    &mut outcome.collection,
+                    1.5 * (spacings.ext_perimeter_spacing as f64)
+                        .max(spacings.perimeter_spacing as f64),
+                );
+            }
             perimeters.push(outcome.collection);
         }
         let boundary = walls::surface_infill_boundary(
