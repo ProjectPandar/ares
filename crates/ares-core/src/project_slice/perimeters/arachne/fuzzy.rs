@@ -27,6 +27,7 @@ pub(in crate::project_slice) struct Regions {
     pub(in crate::project_slice::perimeters) has_contour: bool,
     pub(in crate::project_slice::perimeters) has_hole: bool,
     supported: Option<Vec<ExPolygon>>,
+    open_mask_offset: i64,
 }
 
 impl Regions {
@@ -96,6 +97,7 @@ impl Regions {
             has_contour,
             has_hole,
             supported,
+            open_mask_offset: input.ext_perimeter_flow.scaled_width(scale) / 10,
         })
     }
 
@@ -157,6 +159,18 @@ impl Regions {
                 true,
             );
             return Ok(());
+        }
+        // Feature/FuzzySkin/FuzzySkin.cpp:750-754: cover open-path centerlines.
+        if !extrusion.is_closed {
+            for region in &mut merged {
+                region.mask = offset_expolygons(
+                    &region.mask,
+                    self.open_mask_offset as f32,
+                    JoinType::Miter,
+                    3.0,
+                )
+                .map_err(geometry_error)?;
+            }
         }
         make_exclusive(&mut merged)?;
         restrict_to_supported(&mut merged, self.supported.as_deref())?;
