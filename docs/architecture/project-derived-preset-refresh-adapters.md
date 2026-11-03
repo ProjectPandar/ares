@@ -31,6 +31,8 @@ The Rust catalog adapter threads the existing mutable `SlicedPlate` through `pro
 
 Do not load the project again, reconstruct report values from G-code, synthesize plate counts/settings, or change `result_json` serialization or its existing wall-clock-only test normalization. Core only exposes the existing report data channel; filesystem and terminal reporting remain in the CLI. The existing Native-first `cli_success_result` cube and per-instance controls must retain their complete stdout/stderr/result comparisons.
 
+The report also preserves the original machine's upward vector (`OrcaSlicer.cpp:1732–1769,2517–2536`), not the refreshed printer's values. Reuse `UpwardMachineSource::from_project`, the existing package identity/settings reader which does not build or copy mesh geometry. Catalog mode supplies no original-machine `machine_full` resource bytes and must not perform host-resource discovery; it selects the existing `Embedded` input. Thread the existing `CliUpwardMachine` through `ProjectSource.upward` so the current CLI report commit point owns both success and later-failure reporting. Do not precompute a report vector before that point or leak it on early load/config failure. The existing noncritical-support-warning control compares the complete report, including the original upward vector.
+
 ## Test-adapter supply
 
 Use an explicit, opt-in test transport `ARES_PARITY_PROJECT_PRESET_CATALOG=<PATH>`. This is test-adapter input, not a core environment lookup or a production preset-search policy. A present path is required to read successfully; an absent variable selects the unchanged bare-request contract. Do not use preset-name/fixture-name exceptions or retry on resolution failure.

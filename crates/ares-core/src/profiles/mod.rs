@@ -20,8 +20,9 @@ pub use composition::{
 };
 pub(crate) use entry::with_edited_profile_source;
 pub use entry::{
-    LoadSettingsSliceRequest, Placement, ProfileSettings, ProfileSliceRequest,
-    profile_placed_project, profile_settings, slice_with_load_settings, slice_with_profiles,
+    CliProfileSliceRequest, LoadSettingsSliceRequest, Placement, ProfileSettings,
+    ProfileSliceRequest, profile_placed_project, profile_settings,
+    slice_cli_with_profiles_validated, slice_with_load_settings, slice_with_profiles,
     slice_with_profiles_processed, slice_with_profiles_processed_validated,
     slice_with_profiles_validated, validate_load_settings_input, validate_with_profiles,
 };

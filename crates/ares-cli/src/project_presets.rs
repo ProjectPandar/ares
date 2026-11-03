@@ -61,26 +61,58 @@ pub(super) async fn slice(
     };
     let metadata = ares_core::GenerationMetadata::default();
     let context = ares_core::SlicerContext::new(0);
-    let result = if args.dump_moves.is_some() {
-        ares_core::slice_with_profiles_processed_validated(input, request, metadata, context)
-            .await
-            .map(|processed| (processed.gcode, Some(processed.result)))
-    } else {
-        ares_core::slice_with_profiles_validated(input, request, metadata, context)
-            .await
-            .map(|gcode| (gcode, None))
-    };
-    let (gcode, moves) = result.map_err(|error| {
-        slice_error_to_failure(
-            error,
-            &args.output,
+    let input_file = args.input.to_string_lossy();
+    let source = ares_core::UpwardMachineSource::from_project(input)
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
+    let mut upward_report = Vec::new();
+    let mut sliced_plate = ares_core::SlicedPlate::default();
+    let processed = match ares_core::slice_cli_with_profiles_validated(
+        input,
+        ares_core::CliProfileSliceRequest {
+            profile: request,
+            record_moves: args.dump_moves.is_some(),
+            sliced_plate: &mut sliced_plate,
+            upward: ares_core::CliUpwardMachine {
+                source,
+                input: ares_core::UpwardMachineInput::Embedded,
+                report: &mut upward_report,
+            },
+        },
+        metadata,
+        context,
+    )
+    .await
+    {
+        Ok(processed) => processed,
+        Err(error) => {
+            let failure = slice_error_to_failure(
+                error,
+                &args.output,
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            )
+            .with_upward_report(upward_report)
+            .with_config_substitutions(&input_file, crate::substitutions(input));
             #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        )
-    })?;
-    if let (Some(path), Some(moves)) = (&args.dump_moves, moves) {
-        fs::write(path, crate::moves_csv::format(&moves))?;
+            let failure =
+                failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
+            return Err(failure);
+        }
+    };
+    if let Some(path) = &args.dump_moves {
+        fs::write(path, crate::moves_csv::format(&processed.result))?;
     }
-    fs::write(&args.output, gcode)?;
+    fs::write(&args.output, processed.gcode)?;
+    crate::report_success(
+        &input_file,
+        crate::substitutions(input),
+        #[cfg(target_os = "linux")]
+        crate::result_json::Success {
+            output: &args.output,
+            plate: args.plate.unwrap_or(1),
+            sliced_plate,
+            upward_machines: &upward_report,
+        },
+    );
     Ok(())
 }

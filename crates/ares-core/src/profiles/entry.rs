@@ -72,7 +72,7 @@ pub async fn slice_with_profiles_validated(
     metadata: GenerationMetadata,
     context: SlicerContext,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_validated_profile_source(input, request, metadata, false, context)
+    slice_validated_profile_source(input, request, metadata, (false, None, None), context)
         .map(|output| output.gcode)
 }
 
@@ -82,18 +82,59 @@ pub async fn slice_with_profiles_processed_validated(
     metadata: GenerationMetadata,
     context: SlicerContext,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
-    slice_validated_profile_source(input, request, metadata, true, context)
+    slice_validated_profile_source(input, request, metadata, (true, None, None), context)
+}
+
+/// Selected profiles and the CLI's processing/report outputs.
+pub struct CliProfileSliceRequest<'a> {
+    pub profile: ProfileSliceRequest<'a>,
+    pub record_moves: bool,
+    pub sliced_plate: &'a mut crate::SlicedPlate,
+    pub upward: crate::CliUpwardMachine<'a>,
+}
+
+/// The validated profile entry with the existing CLI plate report channel
+/// (`OrcaSlicer.cpp:6926-6931,7150-7160,8126-8136`).
+pub async fn slice_cli_with_profiles_validated(
+    input: impl AsRef<[u8]>,
+    request: CliProfileSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext,
+) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
+    let CliProfileSliceRequest {
+        profile,
+        record_moves,
+        sliced_plate,
+        upward,
+    } = request;
+    upward.report.clear();
+    slice_validated_profile_source(
+        input,
+        profile,
+        metadata,
+        (record_moves, Some(sliced_plate), Some(upward)),
+        context,
+    )
 }
 
 fn slice_validated_profile_source(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    record_moves: bool,
+    (record_moves, sliced_plate, upward): (
+        bool,
+        Option<&mut crate::SlicedPlate>,
+        Option<crate::CliUpwardMachine<'_>>,
+    ),
     context: SlicerContext,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     request.overrides.validate_cli_config()?;
-    with_profile_source(input.as_ref(), request, |mut source| {
+    with_profile_source(input.as_ref(), request, |source| {
+        let mut source = ProjectSource {
+            sliced_plate,
+            upward,
+            ..source
+        };
         source.validate_print = true;
         if let Some(profile) = &mut source.profile {
             profile.validate_print = true;
