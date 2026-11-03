@@ -11,6 +11,8 @@ use super::super::plater_archive::{read_entry, rewrite_archive};
 use super::{STRIDE, export, slice_session};
 use crate::runner::{OrcaRunner, repo_root};
 
+#[path = "wipe_tower2_gap_wall.rs"]
+mod wipe_tower2_gap_wall;
 #[path = "wipe_tower2_rib.rs"]
 mod wipe_tower2_rib;
 
