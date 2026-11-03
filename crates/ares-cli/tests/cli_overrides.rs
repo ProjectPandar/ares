@@ -63,11 +63,10 @@ fn overrides_reject_malformed_value_token() {
 #[test]
 fn overrides_reject_out_of_range_value_with_upstream_bounds() {
     let temp = tempfile::tempdir().unwrap();
-    // The O3 `is_value_valid` loop (`PrintConfig.cpp:10521-10559`) reports
-    // the `[min,max]` bounds with 6 fraction digits. Native CLI
+    // Pinned beta 345efec64, PrintConfig.cpp:12689 uses Slic3r::format's
+    // general number formatting. Native beta argv
     // `--filament-max-volumetric-speed -1` emits this exact line under
-    // `Params in command line error:` (the unset max renders as the
-    // float-max sentinel `PrintConfig.cpp:10559` serializes).
+    // `Params in command line error:`; the unset max is the FLT_MAX sentinel.
     slice_with_overrides(
         r#"{"filament_max_volumetric_speed":"-1"}"#,
         &temp.path().join("out.gcode"),
@@ -75,8 +74,7 @@ fn overrides_reject_out_of_range_value_with_upstream_bounds() {
     .failure()
     .stderr(
         predicate::str::contains("Params in command line error").and(predicate::str::contains(
-            "filament_max_volumetric_speed: -1 not in range \
-                 [0.000000,340282346638528859811704183484516925440.000000]",
+            "filament_max_volumetric_speed: -1 not in range [0, 3.40282e+38]",
         )),
     );
 }
