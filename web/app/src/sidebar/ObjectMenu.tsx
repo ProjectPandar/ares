@@ -1,5 +1,5 @@
 import type { SceneObject } from "@ares-slicer/wasm";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { changeInstances, deleteInstance, deleteObject, mirrorInstance, scaleToFit } from "../state/plates";
 import { useApp } from "../state/store";
 
@@ -45,12 +45,6 @@ export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: 
   const object = useApp((state) => state.scene?.objects.findIndex(({ id }) => id === objectId) ?? -1);
   const edits = instanceEdits(useApp((state) => state.scene?.objects.find(({ id }) => id === objectId)));
   const slicing = useApp((state) => state.slice.status === "slicing");
-  const plater = useApp((state) => state.plater);
-  // "Scale to build volume" is not ported for a circular bed (fit_circle, Selection.cpp:1534-1569).
-  const [fitPorted, setFitPorted] = useState(false);
-  useEffect(() => {
-    void plater?.scaleToFitPorted().then(setFitPorted);
-  }, [plater]);
   useEffect(() => {
     const close = (event: Event) => {
       if (event instanceof KeyboardEvent ? event.key === "Escape" : !menu.current?.contains(event.target as Node)) onClose();
@@ -104,7 +98,7 @@ export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: 
       ))}
       {/* MenuFactory::append_menu_item_scale_selection_to_fit_print_volume (GUI_Factories.cpp:1189-1193, :1732). */}
       <button type="button" role="menuitem" title="Scale an object to fit the build volume"
-        disabled={slicing || object < 0 || !fitPorted}
+        disabled={slicing || object < 0}
         onClick={() => {
           onClose();
           void scaleToFit({ object, instance: instance ?? 0 });

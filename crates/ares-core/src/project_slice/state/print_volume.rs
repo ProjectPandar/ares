@@ -26,8 +26,8 @@ pub(crate) enum ObjectState {
 
 /// RANSAC-fitted circle in fixed coordinates (`BuildVolume.cpp:38-63`).
 pub(crate) struct Circle {
-    center: [f64; 2],
-    radius: f64,
+    pub(crate) center: [f64; 2],
+    pub(crate) radius: f64,
 }
 
 /// `BuildVolume.cpp:15-21`: the bed's classified shape. `Rectangle` uses
@@ -75,7 +75,10 @@ impl PrintVolume {
     }
 
     /// The print volume of the plate at `origin`.
-    fn at(project: &Project, (origin_x, origin_y): (f64, f64)) -> Result<Self, SliceError> {
+    pub(crate) fn at(
+        project: &Project,
+        (origin_x, origin_y): (f64, f64),
+    ) -> Result<Self, SliceError> {
         let printer = &project.settings().printer.remaining;
         let area = &printer.printable_area.0;
         let max_z = height::scene_limit(printer.printable_height.0);

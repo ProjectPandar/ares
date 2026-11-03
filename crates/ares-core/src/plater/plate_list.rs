@@ -125,6 +125,14 @@ impl PlateList {
         }
     }
 
+    /// `PartPlate::get_center_origin` (`PartPlate.cpp:4266-4275`) in X and Y: the centre of the plate's
+    /// shape box at its origin.
+    pub(in crate::plater) fn center_origin(&self, index: usize) -> [f64; 2] {
+        let origin = self.plates[index].origin;
+        let (min, max) = self.shape;
+        std::array::from_fn(|axis| ((min[axis] + origin[axis]) + (max[axis] + origin[axis])) / 2.0)
+    }
+
     /// `PartPlate::get_build_volume(true)` (`PartPlate.cpp:5263-5282`) of the plate at `index`: the
     /// box of the nozzle areas' shared polygon (`get_shared_poly` of the areas moved by the plate
     /// origin, `set_shape` `:5150-5173`) when there are any, else the plate box.

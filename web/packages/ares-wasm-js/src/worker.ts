@@ -256,8 +256,6 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [undefined, []];
     case "platerAbsoluteRotation":
       return [[...sessions.get(request.sessionId)!.absoluteRotation(request.object, request.instance)], []];
-    case "platerScaleToFitPorted":
-      return [sessions.get(request.sessionId)!.scaleToFitPorted(), []];
     case "platerScaleAndSize": {
       const values = sessions.get(request.sessionId)!.scaleAndSize(request.object, request.instance);
       return [{ scale: [...values.subarray(0, 3)], size: [...values.subarray(3)] }, []];

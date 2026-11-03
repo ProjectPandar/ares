@@ -38,6 +38,7 @@ All `file:line` at OrcaSlicer v2.5.0-beta `345efec64` (`ENABLE_ENHANCED_PRINT_VO
 - **Included:** Rectangle beds, with or without exclusion boxes and several nozzle areas; Convex and Custom beds, where nothing happens.
 - **Deferred:**
   - `fit_circle`. It needs `smallest_enclosing_circle_welzl` over the volumes' 3D convex hulls. On a Circle bed the session returns `InvalidInput("scale to build volume is not ported for a circular bed")` and the web disables the item, until a follow-up slice ports it.
+    Ported since by `web-plater-scale-to-fit-circle.md`, which removes the refusal and the disabling.
   - Multi-object selections (the `:1369` submenu).
   - The undo snapshot.
 

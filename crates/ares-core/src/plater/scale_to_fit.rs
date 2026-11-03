@@ -6,7 +6,11 @@ use super::PlaterSession;
 use super::plate_list::{BoundingBox, InstanceKey};
 use super::selection::{self, TransformationType};
 use crate::SliceError;
-use crate::project_slice::{BedShape, PrintVolume};
+use crate::arrangement::SCALING_FACTOR;
+use crate::geometry::enclosing_circle::smallest_enclosing_circle_welzl;
+use crate::geometry::{Point, convex_hull};
+use crate::project::ProjectVolumeType;
+use crate::project_slice::{BedShape, Circle, PrintVolume};
 
 /// `BuildVolume::SceneEpsilon` (`BuildVolume.hpp:110`).
 const SCENE_EPSILON: f64 = 1e-4;
@@ -15,13 +19,13 @@ const SCENE_EPSILON: f64 = 1e-4;
 type ExcludeBox = ([f64; 2], [f64; 2]);
 
 impl PlaterSession {
-    /// Fits one full instance into the current plate's free build volume. On a Circle bed it is
-    /// refused: `fit_circle` (`Selection.cpp:1534-1569`) is not ported.
+    /// Fits one full instance into the current plate's free build volume.
     pub fn scale_to_fit(&mut self, object: usize, instance: usize) -> Result<(), SliceError> {
         self.check(object, instance)?;
-        match PrintVolume::new(&self.project)?.shape() {
+        // `this->bed.build_volume()` (`Plater.cpp:11095`): the bed at the first plate.
+        match PrintVolume::at(&self.project, (0.0, 0.0))?.shape() {
             BedShape::Rectangle { .. } => {}
-            BedShape::Circle(_) => todo!("fit_circle of instance {instance} of object {object}"),
+            BedShape::Circle(circle) => return self.fit_circle((object, instance), circle),
             BedShape::Convex { .. } | BedShape::Unported => return Ok(()),
         }
         let printer = &self.project.settings().printer.remaining;
@@ -37,14 +41,6 @@ impl PlaterSession {
         };
         self.fit_rectangle((object, instance), &print_volumes);
         Ok(())
-    }
-
-    /// Whether `scale_to_fit` is ported for the bed: every bed but a Circle one.
-    pub fn scale_to_fit_ported(&self) -> Result<bool, SliceError> {
-        Ok(!matches!(
-            PrintVolume::new(&self.project)?.shape(),
-            BedShape::Circle(_)
-        ))
     }
 
     /// `fit_rectangle` (`Selection.cpp:1511-1532`): the volume giving the strictly largest
@@ -70,6 +66,98 @@ impl PlaterSession {
             });
             self.fit(key, best_s, offset);
         }
+    }
+
+    /// `fit_circle` (`Selection.cpp:1534-1569`): the selection's 2D hull points' enclosing circle and
+    /// hull height into the bed circle (`BuildVolume::circle()`, scaled) and printable height,
+    /// centred on the current plate's bed circle.
+    fn fit_circle(&mut self, key: InstanceKey, print_circle: &Circle) -> Result<(), SliceError> {
+        let print_circle_radius = unscale(print_circle.radius);
+        if print_circle_radius == 0.0 {
+            return Ok(());
+        }
+        let object = &self.project.objects()[key.0];
+        // A non-model-part volume has no `GLVolume` convex hull (`3DScene.cpp:921-927`), which
+        // upstream dereferences: undefined behaviour, refused.
+        if object
+            .volumes()
+            .iter()
+            .any(|volume| volume.volume_type() != ProjectVolumeType::ModelPart)
+        {
+            return Err(SliceError::InvalidInput(
+                "scale to build volume on a circular bed needs every volume to be a model part"
+                    .to_owned(),
+            ));
+        }
+        let instance = object.instances()[key.1].transform();
+        let mut points = Vec::new();
+        let mut max_z: f64 = 0.0;
+        for volume in object.volumes() {
+            // The hull mesh through the world matrix, its vertices stored as floats
+            // (`TriangleMesh::transform`); the 3D hull keeps every extreme vertex of the mesh.
+            let world = instance.then(volume.transform());
+            let vertices: Vec<[f64; 3]> = volume
+                .mesh()
+                .vertices()
+                .iter()
+                .map(|vertex| {
+                    let p = world.transform_point(*vertex);
+                    [p.x, p.y, p.z].map(|value| f64::from(value as f32))
+                })
+                .collect();
+            let (min_z, top_z) = vertices
+                .iter()
+                .fold((f64::MAX, f64::MIN), |(low, high), v| {
+                    (low.min(v[2]), high.max(v[2]))
+                });
+            max_z = max_z.max(top_z - min_z);
+            // `TriangleMesh::convex_hull` (`TriangleMesh.cpp:436-445`): `Point::new_scale`, truncating.
+            let projected: Vec<Point> = vertices
+                .iter()
+                .map(|v| Point::new(scaled(v[0]), scaled(v[1])))
+                .collect();
+            points.extend(convex_hull(&projected));
+        }
+        if points.is_empty() {
+            return Ok(());
+        }
+        let circle = smallest_enclosing_circle_welzl(&points);
+        // 1/100 mm on all sides against false out of print volume detections (`:1554-1555`).
+        let circle_radius = unscale(circle.radius) + 0.01;
+        if circle_radius == 0.0 || max_z == 0.0 {
+            return Ok(());
+        }
+        let printer = &self.project.settings().printer.remaining;
+        let printable_height = printer.printable_height.0;
+        let s = (print_circle_radius / circle_radius).min(printable_height / max_z);
+        let bbox = selection::selection_bounding_box(&self.project, key);
+        let sel_center: [f64; 3] = std::array::from_fn(|axis| 0.5 * (bbox.0[axis] + bbox.1[axis]));
+        let circle_center = [
+            unscale(circle.center[0]),
+            unscale(circle.center[1]),
+            0.5 * max_z,
+        ];
+        let offset: [f64; 3] =
+            std::array::from_fn(|axis| s * (circle_center[axis] - sel_center[axis]));
+        // The plate's bed is the same circle moved by its centre (`get_center_origin`) minus
+        // `BuildVolume::bed_center()`, the printable area's box centre.
+        let bed_center = bed_center(&printer.printable_area.0);
+        let plate_center = self.plates.center_origin(self.current_plate);
+        let plate_shift = [
+            plate_center[0] - bed_center[0],
+            plate_center[1] - bed_center[1],
+            0.0,
+        ];
+        let print_center = [
+            unscale(print_circle.center[0]),
+            unscale(print_circle.center[1]),
+            0.5 * printable_height,
+        ];
+        let translation = std::array::from_fn(|axis| {
+            (print_center[axis] + plate_shift[axis]) - (sel_center[axis] + offset[axis])
+        });
+        self.fit(key, s, translation);
+        Ok(())
     }
 
     /// `fit` (`Selection.cpp:1483-1509`): a world, relative, joint scale and `do_scale`, then a
@@ -164,4 +252,26 @@ fn ratio(volume_size: f64, box_size: f64) -> f64 {
     } else {
         0.0
     }
+}
+
+/// `unscale<double>`.
+fn unscale(value: f64) -> f64 {
+    value * SCALING_FACTOR
+}
+
+/// `coord_t(scale_(value))`.
+fn scaled(value: f64) -> i64 {
+    (value / SCALING_FACTOR) as i64
+}
+
+/// `BuildVolume::bed_center()` (`BuildVolume.hpp:87`): the centre of the printable area's box.
+fn bed_center(area: &[crate::Point2d]) -> [f64; 2] {
+    let (mut min, mut max) = ([f64::MAX; 2], [f64::MIN; 2]);
+    for point in area {
+        for (axis, value) in [point.x, point.y].into_iter().enumerate() {
+            min[axis] = min[axis].min(value);
+            max[axis] = max[axis].max(value);
+        }
+    }
+    std::array::from_fn(|axis| 0.5 * (min[axis] + max[axis]))
 }

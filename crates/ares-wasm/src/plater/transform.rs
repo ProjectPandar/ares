@@ -144,12 +144,6 @@ impl PlaterSession {
             .map_err(js_error)
     }
 
-    /// Whether "Scale to build volume" is ported for the bed: not on a circular one.
-    #[wasm_bindgen(js_name = scaleToFitPorted)]
-    pub fn scale_to_fit_ported(&self) -> Result<bool, JsValue> {
-        self.session.scale_to_fit_ported().map_err(js_error)
-    }
-
     /// The object menu's "Mirror" along `axis` (0 X, 1 Y, 2 Z) (`Plater::mirror`).
     pub fn mirror(&mut self, object: usize, instance: usize, axis: usize) -> Result<(), JsValue> {
         self.session

@@ -9,6 +9,7 @@ mod clipper2;
 mod convex_hull;
 mod coord;
 mod edge_grid;
+pub(crate) mod enclosing_circle;
 mod expolygon;
 mod line;
 pub(crate) mod line_distance_tree;

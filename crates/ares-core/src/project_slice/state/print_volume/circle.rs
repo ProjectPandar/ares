@@ -1,4 +1,5 @@
 //! BuildVolume.cpp:38-63 / Geometry/Circle.cpp:111-139.
+use crate::geometry::enclosing_circle::circle_center;
 use crate::{Point2d, slicer_context::Mt19937};
 
 use super::{Circle, SCENE_EPSILON};
@@ -15,7 +16,8 @@ pub(super) fn fit_circle(points: &[Point2d]) -> Option<Circle> {
     let mut minimum_error = f64::MAX;
     for _ in 0..20 {
         let [a, b, c] = sample_three(points.len(), &mut rng);
-        let center = circle_center(&points[a], &points[b], &points[c]);
+        let point = |index: usize| [points[index].x, points[index].y];
+        let center = circle_center(point(a), point(b), point(c), SCENE_EPSILON);
         let radius =
             points.iter().fold(0.0, |sum, p| distance(p, center) + sum) / points.len() as f64;
         let error = points.iter().fold(0.0_f64, |error, p| {
@@ -50,36 +52,6 @@ fn distance(p: &Point2d, center: [f64; 2]) -> f64 {
     let x = p.x - center[0];
     let y = p.y - center[1];
     (x * x + y * y).sqrt()
-}
-
-/// Geometry/Circle.hpp:12-32, including the collinear longest-pair branch.
-fn circle_center(a: &Point2d, b: &Point2d, c: &Point2d) -> [f64; 2] {
-    let bx = b.x - a.x;
-    let by = b.y - a.y;
-    let cx = c.x - a.x;
-    let cy = c.y - a.y;
-    let lb = bx * bx + by * by;
-    let lc = cx * cx + cy * cy;
-    let determinant = bx * cy - by * cx;
-    if determinant.abs() < SCENE_EPSILON {
-        let x = c.x - b.x;
-        let y = c.y - b.y;
-        let lbc = x * x + y * y;
-        let (first, last) = if lb > lc && lb > lbc {
-            (a, b)
-        } else if lc > lb && lc > lbc {
-            (a, c)
-        } else {
-            (b, c)
-        };
-        return [0.5 * (first.x + last.x), 0.5 * (first.y + last.y)];
-    }
-    let vx = lc * bx - lb * cx;
-    let vy = lc * by - lb * cy;
-    [
-        a.x + -vy / (2.0 * determinant),
-        a.y + vx / (2.0 * determinant),
-    ]
 }
 
 /// libstdc++15 stl_algo.h:5834-5900 forward-input selection sampling.

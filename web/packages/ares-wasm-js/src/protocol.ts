@@ -51,7 +51,6 @@ export type WorkerRequest =
   | { id: number; kind: "platerEdit"; sessionId: number; edit: PlaterEdit }
   | { id: number; kind: "platerAbsoluteRotation"; sessionId: number; object: number; instance: number }
   | { id: number; kind: "platerScaleAndSize"; sessionId: number; object: number; instance: number }
-  | { id: number; kind: "platerScaleToFitPorted"; sessionId: number }
   | { id: number; kind: "platerSetInstalledVendors"; sessionId: number; catalogId: number }
   | { id: number; kind: "platerArrangeSettings"; sessionId: number }
   | { id: number; kind: "platerShownArrangeSettings"; sessionId: number; settings: ArrangeSettings }
