@@ -219,3 +219,39 @@ fn plater_arrange_refuses_a_new_plate_on_an_emptied_tower_position_list() {
     assert_eq!(transforms(&session), before);
     assert_eq!(session.plates().len(), 1);
 }
+
+/// The config block's `wipe_tower_x`/`wipe_tower_y` lines: the fixed-precision entry of the sliced
+/// plate (`get_at(print.get_plate_index())`, `GCode.cpp:8342-8346`), then the ordinary
+/// serialization.
+fn tower_config_lines(gcode: &[u8]) -> Vec<String> {
+    std::str::from_utf8(gcode)
+        .unwrap()
+        .lines()
+        .filter(|line| {
+            line.starts_with("; wipe_tower_x = ") || line.starts_with("; wipe_tower_y = ")
+        })
+        .map(str::to_owned)
+        .collect()
+}
+
+#[test]
+fn plater_added_plate_echoes_its_own_tower_position_like_native() {
+    let session = cubes_on_added_plate();
+    let runner = OrcaRunner::from_env()
+        .unwrap()
+        .expect("official v2.5.0-beta slicing oracle");
+    let exported = runner
+        .fixture_case("plater/tower-echo-added-plate", export(&session))
+        .unwrap();
+    let native = tower_config_lines(
+        &runner
+            .slice_selected_plate_case(&exported, 2)
+            .unwrap()
+            .reference,
+    );
+    assert!(
+        native.contains(&"; wipe_tower_x = 15.000".to_owned()),
+        "Native: {native:?}"
+    );
+    assert_eq!(tower_config_lines(&slice_session(&session, 2)), native);
+}
