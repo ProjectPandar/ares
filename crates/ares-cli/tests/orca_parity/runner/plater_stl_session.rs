@@ -13,10 +13,14 @@ use ares_core::{
 
 const MACHINE: &str = "LH Stinger 0.4 nozzle";
 
+#[path = "plater_stl_session/fill_geometry.rs"]
+mod fill_geometry;
 #[path = "plater_stl_session/honeycomb_geometry.rs"]
 mod honeycomb_geometry;
 #[path = "klipper_time_estimator.rs"]
 mod klipper_time_estimator;
+#[path = "plater_stl_session/plane_path_smoothing.rs"]
+mod plane_path_smoothing;
 
 struct Presets {
     catalog: String,
