@@ -34,8 +34,18 @@ pub(in crate::project_slice::gcode_emit) fn transition_retract(
     super::travel::transition_retract(output, state)
 }
 
-/// `GCode.cpp:1728-1733`: the travel to the tower, through the grid waypoints `route` plans
-/// from the position the retract's wipe leaves (`travel_to_tower_gap`).
+/// `append_tcr2`'s approach retract (`GCode.cpp:1717-1728`), lifting with the configured hop type.
+pub(in crate::project_slice::gcode_emit) fn approach_retract(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    travel::retract_and_wipe(output, state);
+    travel::schedule_tower_approach(state);
+    state.extruder.retracted = true;
+}
+
+/// `GCode.cpp:1729-1733`, after the caller's retract: the travel to the tower, through the grid
+/// waypoints `route` plans from the position the retract's wipe leaves (`travel_to_tower_gap`).
 pub(in crate::project_slice::gcode_emit) fn travel_to(
     output: &mut Vec<u8>,
     state: &mut EmitState,
@@ -43,7 +53,6 @@ pub(in crate::project_slice::gcode_emit) fn travel_to(
     route: impl FnOnce(&EmitState) -> Result<Vec<[i64; 2]>, crate::SliceError>,
     geometry: LayerGeometry<'_>,
 ) -> Result<(), crate::SliceError> {
-    retract(output, state);
     state.use_external_mp_once = true;
     for [x, y] in route(state)? {
         path::tower_travel(output, state, (x, y), geometry)?;

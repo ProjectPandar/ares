@@ -52,6 +52,7 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     let nozzle_change =
         !nozzle.gcode.is_empty() && settings.project.print.nozzle_diameter.0.len() > 1;
     if !result.priming && metadata.finish_first {
+        motion::tower::retract(output, state);
         motion::tower::travel_to(output, state, start, |_| Ok(Vec::new()), geometry)?;
     }
     let current_z = state.writer_z.unwrap_or(0.0);

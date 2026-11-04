@@ -73,14 +73,30 @@ pub(in crate::project_slice::gcode_emit) fn schedule_retract_tail(
 /// `LiftType::NormalLift`; `auto_lift_type` is NormalLift outside
 /// spiral vase).
 pub(in crate::project_slice::gcode_emit::motion) fn schedule_normal(state: &mut EmitState) {
-    schedule_normal_with(state, false);
+    schedule_lazy(state, false, LiftMode::Normal);
 }
 
 pub(super) fn schedule_for_toolchange(state: &mut EmitState) {
-    schedule_normal_with(state, true);
+    schedule_lazy(state, true, LiftMode::Normal);
 }
 
-fn schedule_normal_with(state: &mut EmitState, toolchange: bool) {
+/// `append_tcr2`'s approach retract (`GCode.cpp:1717-1728`): the configured `z_hop_types`,
+/// `Auto` read as Spiral, once a filament is selected and the head position is clear;
+/// otherwise `NormalLift`.
+pub(in crate::project_slice::gcode_emit::motion) fn schedule_tower_approach(state: &mut EmitState) {
+    let mode = if state.extruder_selected && state.positioned {
+        match state.options.z_hop_type {
+            crate::ZHopType::Normal => LiftMode::Normal,
+            crate::ZHopType::Slope => LiftMode::Slope,
+            crate::ZHopType::Spiral | crate::ZHopType::Auto => LiftMode::Spiral,
+        }
+    } else {
+        LiftMode::Normal
+    };
+    schedule_lazy(state, false, mode);
+}
+
+fn schedule_lazy(state: &mut EmitState, toolchange: bool, mode: LiftMode) {
     if !toolchange
         && state.options.retraction_length <= 0.0
         && !state.options.use_firmware_retraction
@@ -94,7 +110,7 @@ fn schedule_normal_with(state: &mut EmitState, toolchange: bool) {
     if state.lifted_amount > 0.0 || state.pending_lift.is_some() {
         return;
     }
-    state.pending_lift = Some(LiftMode::Normal);
+    state.pending_lift = Some(mode);
 }
 
 /// The `LiftMode` a retract at this state schedules; shared with the

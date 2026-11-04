@@ -84,6 +84,7 @@ pub(super) fn append(
                 geometry.scale,
             )
         };
+        motion::tower::approach_retract(output, state);
         motion::tower::travel_to(output, state, start, route, geometry)?;
     }
     if will_go_down {
