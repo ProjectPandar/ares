@@ -1,9 +1,8 @@
 # SPEC C2-S: local internal-solid Grid admission
 
-Status: SPEC-REVIEW-REQUEST; source/documents only, no RED/production edit/run.
+Status: proposed SPEC; source/documents only, no RED/production edit/run.
 Base `a120ebd5ce18a7c4e51c7502c2bc1faa8324cb06` (C2-T merged).
-Worktree `${TMP_ROOT}/ares-worker2-bridge-anchor-c2s`, branch
-`worker2/bridge-anchor-c2s`. C2-S requires its own approval, RED, GREEN and REVIEW.
+C2-S requires its own RED and GREEN.
 
 ## Owning upstream boundary
 
@@ -39,14 +38,14 @@ Existing consumers remain unchanged: `options/region_options/metadata.rs:21-44`,
 `project_slice/group_fills/params/projection.rs:64-70` already select local
 ordinary-solid pattern separately from bridge pattern.
 
-W6 owns the Grid arm in `bridge_over_infill/sparse_anchoring/arms.rs:56-75`
+The Grid arm in `bridge_over_infill/sparse_anchoring/arms.rs:56-75`
 and the Grid-related candidate predicate/box work in
 `bridge_over_infill/transaction/candidate_expansion/layers.rs:65-78`.
-C2-S will not edit either file, their callers or shared Fill algorithms.
+belong to a separate slice. C2-S will not edit either file, their callers or shared Fill algorithms.
 Fixtures keep sparse_infill_pattern=rectilinear, density20 and top pattern
 valid, varying only local internal-solid metadata. The chosen Grid value is
 for ordinary solid fill, not sparse anchoring. If an actual mismatch requires
-any W6-owned change, stop and report a source-cited PLAN/ownership request.
+any change to those files, stop and report a source-cited PLAN request.
 Do not expand production scope based on the shared enum spelling.
 
 Included: public object/model-part internal-solid admission witness,
@@ -59,9 +58,8 @@ PLAN before changing any consumer or assertion.
 
 ## Public Native preflight and RED plan
 
-Only after this SPEC approval and an open directed window: official CPU13 /
-seeded CPU14; outer cargo/nextest/Native pinned, jobs2/threads2; independently
-fresh Native cache and artifact root each invocation. No full/workspace.
+After this SPEC: official and seeded runs, each with an independently
+fresh Native cache and artifact root per invocation.
 
 Export a public vendor-profile cube/solid-ceiling 3MF. Keep global
 internal-solid=monotonic, top=monotonicline, sparse=rectilinear/density20.
@@ -94,19 +92,17 @@ For admitted active Grid, observe exactly public
 UnsupportedProjectFeature("internal_solid_infill_pattern") on the baseline.
 Permanent expectations remain whole-output generator-only PASS and CLI/API
 raw equality; baseline must fail at that expectation. Save public input,
-Native/API/CLI streams and errors, status, raw SHA, launcher/producer receipt,
+Native/API/CLI streams and errors, status, raw SHA, launcher/producer record,
 role moves and activity before assertions. Commit public RED separately and
 report it before repair; no assertions are changed after production edits.
 Reuse the existing global-solid Grid rejection regression unchanged.
 
-## GREEN, review and scheduling
+## GREEN
 
-After RED review and repair authorization: delete only the selected gate /
+After RED: delete only the selected gate /
 newly unused import. Preserve grouping, role/pattern/rotation, error and
 write-back order. Unchanged finite assertions must pass both modes, followed
 by bridge/anchor regressions, option_coverage and strict/fmt/wasm32.
 Files stay <=400 LOC. No Unsupported guards, silent skip, ignore, suppression,
 debug output, regions[0], weaker comparison or committed Native artifact.
-Submit C2-S code REVIEW separately; heavy gates need explicit allocation.
-Current directed window ends01:40, then W3 C1 exclusive; execution waits for
-approved SPEC and an open window. Main merge/push remains coordinator-only.
+Land C2-S as a separate commit.

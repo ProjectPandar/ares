@@ -34,11 +34,11 @@ Current Rust registry: 164 numeric/bool vector candidate keys. This inventory cl
 
 `filament_ironing_flow`, `filament_retract_before_wipe`
 
-## Existing raw receipt audit
+## Existing raw stream audit
 
-1211 captured Native/Ares stream pairs inspected offline across seeded/official historical G4 full receipts and current RED. These are not fresh production-626 gates.
+1211 captured Native/Ares stream pairs inspected offline across seeded/official historical G4 full runs and the RED.
 Native empty numeric/bool footer lines: {}
 Ares empty/all-nil numeric/bool footer lines: {'other_layers_print_sequence': 1}
-Observed differing nil lines: 1. Details in `/tmp/worker2-g4-numeric-vector-nil-impact.json`.
+Observed differing nil lines: 1.
 
 String/point/group empty-vector controls are listed in the current RED input audit and are excluded from numeric/bool nil classification.

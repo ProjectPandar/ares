@@ -1,8 +1,8 @@
 # ARD: source-owned conditional scarf eligibility
 
-Status: proposed; docs-only [SPEC](scarf-conditional-spec.md), based on approved
-proposala30db87 and approved spRear9d981. Exact SPEC approval precedes RED;
-separate RED review precedes any production GREEN.
+Status: proposed; docs-only [SPEC](scarf-conditional-spec.md), based on
+proposal a30db87 and spRear 9d981. The SPEC precedes RED;
+a separate RED precedes any production GREEN.
 
 ## Source owner and decision
 
@@ -51,5 +51,4 @@ wrong behavior; introducing a positive-threshold bypass is equally unacceptable.
   residual whole mismatch means STOP. Scope does not absorb painting, new
   random/nearest arithmetic, scarf construction, travel, M73 or processor work.
 - Platform-neutral byte API, browser WASM and all desktop Tier1; private helpers
-  split before400LOC. CPU15 targeted only; coordinator owns full/workspace/
-  integration. RED integrates only with separately reviewed GREEN.
+  split before400LOC. RED integrates only with its separate GREEN.

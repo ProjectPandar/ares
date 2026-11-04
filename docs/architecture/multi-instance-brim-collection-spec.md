@@ -1,19 +1,12 @@
 # SPEC: PrintObject multi-instance brim area and collection
 
-Status: **SPEC-REVIEW-REQUEST**. Proposal `676e8deb15df58429275d19d01fd791958d94613`
-approved; this formal SPEC still requires review before public RED.
-Production base `cf8597e183d44bd24a28959e4dbd904d3a90512f` (approved global
-combined-brim chain). Proposal/SPEC are docs-only descendants of that exact base;
-no production change since it. Source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+Builds on the global combined-brim slice. Source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Observed input and exact contract
 
 Prior source/input provenance and failure inventory:
 [multi-instance-brim-collection-proposal.md](multi-instance-brim-collection-proposal.md).
-Fresh discovery at exact clean cf8597e18:
-`${TMP_ROOT}/ares-copies-premise-cf8597e18/discovery-report.json`.
-Native FIRST accepts all cases, both independent official/seeded modes, actual
-Native/public descendants and threads CPU18, API==CLI raw.
+Native FIRST accepts all cases, both independent official/seeded modes, API==CLI raw.
 
 Input has object2 instances (80,110,2)/(140,110,2) and object3 instance
 (110,110,2), all cube10.stl/Z scale0.4; ByLayer, one filament, outer_only width8,
@@ -28,11 +21,10 @@ gap0, combine_brims0, combined skirt2, no support/raft/tower.
   Ares inserts M73 P8 R10 where Native emits the next brim G1. Native still TWO
   brim blocks/Ares THREE. It is a second failing witness, NEVER a passing control.
 
-These observations persist after stack24/global-combine: combine_brims0 does
-not execute the approved global merge branch. No claim of a new independent
-Ares pipeline feature or defensive guard improvement. Coordinator approved this
-slice after checking its proposal; other workers' skirt/tower/support predicates
-and queued chains are not implementation targets.
+These observations persist after the global-combine port: combine_brims0 does
+not execute the global merge branch. No claim of a new independent
+Ares pipeline feature or defensive guard improvement. Other skirt/tower/support
+predicates are not implementation targets.
 
 ## Exact upstream ownership and Rust boundary
 
@@ -51,7 +43,7 @@ Port the following cohesive source lifecycle:
 3. Ordinary combine0 `Brim.cpp:964-977`: `makeBrimInfill` ONCE per PrintObject's
    complete area. Use existing source infill primitives :813-886. Different
    owners stay separate; this is NOT global union/cleanup into a single carrier.
-   Preserve the already-approved global branch :979-1018 unchanged in behavior.
+   Preserve the already-ported global branch :979-1018 unchanged in behavior.
 4. `GCode.cpp:4486-4531::generate_object_brim`: print the complete owner's/group's
    collection at origin0, erase emitted owner IDs, do not re-emit for later copies.
    Preserve group ownership/order from `Print.cpp:2847-2971` and call placement
@@ -72,7 +64,7 @@ Changes outside this boundary require STOP/amendment, not a speculative helper.
 
 ## Red-first sequence and admission gate
 
-After SPEC approval ONLY, freeze three input-only cases plus SHA/member manifest:
+Freeze three input-only cases plus SHA/member manifest:
 with-skirt target, no-skirt target, and width0 paired control. Public tests use
 OrcaRunner::from_env and Native generated at runtime FIRST; require Native
 acceptance, positive model extrusion, effective config, expected brim owner-block
@@ -84,17 +76,15 @@ must genuinely FAIL before GREEN; control must PASS. No assert-ne, divergent-is-
 success expectation, comparator relaxation, committed Native output, or M73 skip.
 Freeze exact input hashes; archive and compare all non-config members/settings.
 
-Fresh official/seeded roots/caches, actual descendant/thread CPU18, jobs2,
-threads2, canonical snapshot/hash/reference settings, exact clean hash before/
-after. Two genuine FAIL + one PASS expected per mode at public RED, then submit
-RED REVIEW-REQUEST and await independent approval before production.
+Fresh official/seeded roots/caches, canonical snapshot/hash/reference settings,
+exact clean hash before/after. Two genuine FAIL + one PASS expected per mode at
+public RED before production.
 
-After RED approval, first record owner-area/frame/instance and emitted-ID
+After RED, first record owner-area/frame/instance and emitted-ID
 provenance; only then implement the source lifecycle. All three cases must pass
 full comparison at exact GREEN hash, with width0 control raw API/CLI bytes stable
 RED→GREEN. Existing singleton/grouped brim/skirt/global-combine tests unchanged;
-run authorized targeted families, fmt, strict clippy, WASM. Submit GREEN
-REVIEW-REQUEST with durable artifact path and residual limitations, no merge/push.
+run targeted families, fmt, strict clippy, WASM. Report residual limitations.
 
 ## Non-negotiable scope, failure modes and STOP
 
@@ -114,10 +104,10 @@ outside the named owner boundary stay unchanged.
 M73 is an observed symptom, NOT permission for estimator changes. If a faithful
 owner-area/collection port leaves ANY residual whole-output difference (including
 M73), STOP/report with first difference and exact artifacts. Do not iterate on
-estimator, timing, normalization or another owner under this approval. Wrong
+estimator, timing, normalization or another owner under this slice. Wrong
 frame/owner, missing island, duplicated brim, changed singleton/control bytes,
 or unexpected skirt footprint are real full-output failures, not tolerated noise.
 If Native rejects or the input is undefined, NO-RED STOP for that witness;
 compiler/environment/affinity/preparation faults are NON-GATE, retained and never
 called parity RED. All-match discovery on a changed base means NO-RED STOP,
-not fabricated RED. FULL freeze remains targeted-only, no full/workspace runs.
+not fabricated RED.

@@ -4,11 +4,11 @@
 
 This is test-harness maintenance, not a production slicing/configuration rewrite. The boundary is `crates/ares-cli/tests/orca_parity/runner.rs::{from_env,orca_identity,export_case,slice_case,content_digest}` and cache-owned extracted helpers. Comparators, generator normalization, application verification, completeness and retry policy remain unchanged.
 
-The current identity hashes launcher bytes and environment strings, not actual Native/resources content; slice hits depend on `plate_1.gcode` existence rather than actual exported 3MF bytes. Historical manual_snug/manual_strong shared references have uncertain producer provenance; do not retrospectively classify their motion differences as M73-only. The coordinator's bounded correction is to bind producer and request content, not prohibit legitimate reuse or repair Native nondeterminism.
+The current identity hashes launcher bytes and environment strings, not actual Native/resources content; slice hits depend on `plate_1.gcode` existence rather than actual exported 3MF bytes. Historical manual_snug/manual_strong shared references have uncertain producer provenance; do not retrospectively classify their motion differences as M73-only. The bounded correction is to bind producer and request content, not prohibit legitimate reuse or repair Native nondeterminism.
 
 Resources are process inputs (`OrcaSlicer.cpp:7147-7174::CLI::setup`, including FHS roots; `:2053,2371,2412,2482,2874` reads packaged profiles/CLI config). The seed package's 20KB `bin/orca-slicer` ELF launcher is not its approximately68MB actual `bin/.orca-slicer-wrapped` image.
 
-## Approved cache semantics
+## Cache semantics
 
 - Pure content addressing: `<storage>/native-cache-v2/<producer-sha256>/<stage>/<request-sha256>/…`. No runner/run/base namespace, git SHA, timestamp or PID in the key. Identical content must hit across runners, runs and bases.
 - `ARES_ORCA_CACHE_DIR` remains a reusable storage root. With it unset, the existing private work directory remains storage. To require fresh production, specify a new cache directory; no new fresh switch.
@@ -45,5 +45,3 @@ Receipts contain key components, producer/resource paths, command evidence and o
 Confirmed seam: real `OrcaRunner` export/slice entrypoints and their captured subprocess outputs, not a private hash function. Before implementation prewrite: (1) identical producer/request across two runners hits; (2) unchanged wrapper but changed actual Native image misses; (3) any resource-file content change misses; (4) changed actual 3MF bytes with unchanged export request misses; (5) changed replay seed misses. Retain observable Native-call counts, complete output bytes and audit artifacts. No new-runner-must-miss or tamper tests.
 
 For real manual_snug/manual_strong acceptance, use the same storage root: run old base first, then new base. With identical producer/request keys the second run must hit and return byte-identical complete references; changed keys must miss. Use official/seeded producers distinctly, keep seed in identity, and report any genuine fresh parity RED. Run workspace nextest, strict all-target/all-feature Clippy, fmt/WASM, reference-enabled profile_entry and full official/seeded controls. Extract only cache-owned logic to keep changed modules below400LOC.
-
-Coordinator approved proceeding directly to TDD after these revisions; no second spec review is required. Implementation still requires final exact-hash review before integration.

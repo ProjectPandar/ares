@@ -249,7 +249,7 @@ at z∈[0,10]:
 The ares wiring's spacing formula and mesh frame are therefore correct
 per source; the remaining ares-vs-orca line-count gap (13 vs varying)
 must be inside the ares octree build/filler path. Next slice: run the
-ares pipeline on the /tmp/adp fixture, dump the generated sparse
+ares pipeline on the adaptive fixture, dump the generated sparse
 polylines, and diff against probe8's exact set to find the ares-side
 divergence.
 

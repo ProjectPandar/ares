@@ -14,7 +14,7 @@ Ares currently returns Value::Number for all three. This is a temporary
 compatibility shell: direct formatting can agree but arithmetic sees the
 wrong type. Replace those arms with Value::Integer, preserving existing
 integers and casting rounded floating results through upstream i32 int,
-following the approved int() slice. No arithmetic or value-model changes.
+following the int() slice. No arithmetic or value-model changes.
 
 ## Scope and exclusions
 
@@ -31,7 +31,3 @@ comments. Shared comparator control `{int(5.9) / 2}` must pass. Positive
 show a real Native/Ares byte difference before implementation and pass after,
 in official and seeded modes. Half-tie round input also exercises upstream
 half-away behavior. Only existing generator identity/date normalization.
-
-Initial floor discovery provenance:
-`${COORD_ROOT}/evidence/w5-808db-floor-discovery/PROPOSAL-RR.md`.
-Stack on approved digits+int tip 808dbd460 for combined integration.

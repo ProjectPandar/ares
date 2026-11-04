@@ -1,8 +1,6 @@
 # Per-extruder minimum skirt length budget SPEC
 
-Status: **COORDINATOR-APPROVED SPEC; RED only, no GREEN authorization**.
-Base: `0266b34949a6f9503002a3420e1c526cb745462b`.
-Branch: `worker2/skirt-minlength-multitool`.
+SPEC; RED only, no GREEN in this stage.
 
 ## Upstream rewrite boundary
 
@@ -36,8 +34,8 @@ upstream's per-used-extruder accumulation and switching semantics.
 `skirt/generate.rs` currently prepares only the first filament diameter/flow
 coefficient. The bounded preparation must supply coefficients for actual print
 extruders in source order, NOT configured filament-slot count or unused slots.
-Minimal existing tool-carrier wiring, if needed, requires reporting before edits.
-No new independent ordering or used-tool inference algorithm is authorized.
+Minimal existing tool-carrier wiring, if needed, is reported before edits.
+No new independent ordering or used-tool inference algorithm is included.
 
 Included: only minimum-length generation budget preparation, per-extruder
 accumulation and switching/last-iteration extension on the existing hull loop.
@@ -70,8 +68,6 @@ GUI field references: `PrintConfig.cpp:5751`, `GUI/Tab.cpp:2705`.
 | two-tool zero control | tools2-minimum0.3mf | `db9233ceef4f11ec285030264edd2f9231d504a0ec2c5d2e9c37af8f813e61d8` |
 | target | tools2-minimum10.3mf | `cd9460b1c11e7dff39c5f1f4ffb60e9558489efd1edf7e3abb90ea3ff2a7caba` |
 
-External discovery/generator/manifest:
-`${COORD_ROOT}/evidence/worker2-skirt-minlength-multitool-discovery-20261022T071537/`.
 Input-only 3MFs are frozen without Native output or probes. All four must be
 referenced and SHA-asserted. No geometry/position or parameter tuning for parity.
 
@@ -85,12 +81,12 @@ first layer106/68. Summed positive skirt E is44.03276/28.77536. The Native targe
 changes skirt geometry from the two-tool zero control, while Ares retains it.
 These are external diagnostic observations, not test result constants.
 
-Strict first difference is normalized byte723: M73P0R133 versusR132. Coordinator
-explicitly accepted this geometry-backed M73-leading failure provided all
+Strict first difference is normalized byte723: M73P0R133 versusR132. This
+geometry-backed M73-leading failure is accepted provided all
 controls pass complete bytes. No M73/time/geometry/metadata mask is permitted.
 No processor/time correction belongs in this source boundary.
 
-## SPEC → RED review gate
+## SPEC → RED gate
 
 1. Commit this docs-only SPEC before tests.
 2. Freeze the four input3MFs and use unchanged shared
@@ -99,14 +95,12 @@ No processor/time correction belongs in this source boundary.
    complete ordered generator-only comparisons plus raw API/CLI equality.
    Require actual T0/T1 via the existing flag for two-tool cases; no extra
    hard-coded Native geometry result assertions or expected-error assertions.
-3. CPU13, test-threads1, canonical directed runs in both modes. Expect target
+3. Canonical directed runs in both modes. Expect target
    strict FAIL and all three controls PASS; retain API/CLI status/comparisons,
    exact hashes and independent Native/API/CLI skirt geometry evidence externally.
-4. Report RED RR with exact commit and STOP. No GREEN now; public tests,
-   input SHA and helper/signature freeze before future authorized production work.
+4. Report RED with exact commit and STOP. No GREEN now; public tests,
+   input SHA and helper/signature freeze before future production work.
    Any strict residual later requires STOP rather than broadening this boundary.
-
-No FULL before an allocated W2 window. Coordinator owns review and merge.
 
 ## Print::extruders candidate refinement and deferred witness
 
@@ -119,7 +113,7 @@ tower tool when the concatenated size exceeds one, then finally sort/deduplicate
 The tower predicate ports `Print.cpp:3290-3301,3385-3388`. This same collector also
 supplies nonsoluble-support candidates; no second skirt-specific collector exists.
 
-Coordinator requested a GUI witness on production tip `6002cb666`: object uses
+A GUI witness on production tip `6002cb666`: object uses
 only filament1, default support selectors0, prime tower enabled, tower filament2,
 minimum skirt length10. The single-nozzle input was rejected by the existing Ares
 selector-validation boundary, which is deferred and must not be changed here.
@@ -129,14 +123,10 @@ the final five-nozzle/five-filament attempt instead exited239 with Native
 `run found error, return -17, exit...` in both modes, before Ares comparison.
 Final input SHA256:
 `5b18a86c8299a61dbab1657df9d67e3b88053e6fa0f20edb25e6a0688aa0d816`.
-Generation, preset provenance, input and both command artifacts are retained in
-external evidence `worker2-skirt-xl5-witness-20261022T153323`; earlier evidence is
-`worker2-skirt-support-default-red-20261022T151030` and
-`worker2-skirt-multinozzle-witness-20261022T152613`.
 
 These runs are not a budget RED and establish neither output equality nor a
-budget difference. Further toolchanger witness diagnosis is deferred. Coordinator
-explicitly authorized accepting this refinement as a literal source port with
+budget difference. Further toolchanger witness diagnosis is deferred. This refinement is
+accepted as a literal source port with
 the frozen four-case directed regressions and fresh dual-mode FULL, without a
 new RED witness. Temporary witness tests/inputs are removed from the branch;
 existing tests, fixtures and the shared helper remain frozen. No Native crash,

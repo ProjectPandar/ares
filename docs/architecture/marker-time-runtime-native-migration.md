@@ -1,8 +1,8 @@
 # ARD / spec: marker-time Native artifacts → runtime authority
 
-Status: **SPEC approved at c53de9921 with coordinator corrections; RED→GREEN→DELETE implemented, awaiting combined exact-hash REVIEW**. No production code or Native arithmetic changes. Every original consumer assertion remains intact; seven Native JSON/projections and four logs were deleted only after live GREEN.
+RED→GREEN→DELETE implemented. No production code or Native arithmetic changes. Every original consumer assertion remains intact; seven Native JSON/projections and four logs were deleted only after live GREEN.
 
-Analysis base: `104599195e032b8977f3cc4258625376b3704584`; worker1 branch `pi/marker-time-runtime-spec`. Subsequent test/docs-only main updates (including4e6417427) may be git-only rebased under coordinator carry authorization. This slice does not touch worker6 KSR/ender3-classic or worker4 cli-exit.
+This slice does not touch the KSR/ender3-classic or cli-exit migrations.
 
 ## 1. Upstream-first boundary and non-negotiable decisions
 
@@ -12,7 +12,7 @@ Upstream OrcaSlicer pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 - `slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp:192–268`: real `libvgcode::convert`; zero-duration inserted vertices and repeated G-code IDs retained.
 - `libvgcode/src/ViewerImpl.cpp:1461–1465`: extracted inclusive ordered f32 accumulation, from0.0f, current mode; extraction/adaptation manifest under `tools/chain-probe/marker-time/`.
 - `libslic3r/Utils.hpp:540–562` and `slic3r/GUI/GCodeViewer.cpp:452–454`: actual Native `get_time_dhms` + `%.3fs` formatting.
-- Tagged correction boundary: `GCodeProcessor.cpp:3291–3296,5962–6008`, `GCodeProcessor.hpp:693–706`, `LibVGCodeWrapper.cpp:215–238`; bounded authority already approved in `docs/architecture/web-colorchange.md:163+`.
+- Tagged correction boundary: `GCodeProcessor.cpp:3291–3296,5962–6008`, `GCodeProcessor.hpp:693–706`, `LibVGCodeWrapper.cpp:215–238`; bounded authority already defined in `docs/architecture/web-colorchange.md:163+`.
 
 This changes only **test authority provisioning** around already-ported public vgcode/WASM/display APIs. Existing frozen JSON/CSV/TSV readers are temporary test scaffolding, not a new Ares time pipeline. No production Rust/TS, new estimator, core timing/marker correction, f32 arithmetic, formatter, viewer selection, GL runtime, slicing or G-code/M73 changes.
 
@@ -26,7 +26,7 @@ Evidence: `tests/parity/marker-time/README.md`, `oracle.json`, `tagged-oracle.js
 |---|---|---|
 | `native.json` | Native executable from `tools/chain-probe/marker-time.nix`: real processor + LibVGCodeWrapper conversion + extracted f32 getter + actual Utils formatter. Historical `/nix/store/1fhccjjpi187yg45bchvg8935iwxywim-orca-slicer-marker-time-2.4.2/bin/orca-slicer`, SHA `ba90ceb881adb8bc6f0a26fdd87393b526104eb2b8bdfce3f11c21088c88f2c9`.71 converted vertices,6 synthetic numeric rows,48 formatting rows. | `$ARES_MARKER_TIME_BIN --process-gcode path.gcode --dump-moves <artifact>/moves.csv --dump-marker-time <artifact>/native.json` |
 | `oracle.json` | **JS provenance receipt, not another Native numeric oracle**. `marker-time-fixtures.mjs` writes executable SHA, extraction SHA, command/stdout, input/output SHA and71 count after Native succeeds; TSVs are mechanical projections of Native JSON. | `ARES_MARKER_TIME_BIN=<raw>/bin/orca-slicer node tools/chain-probe/marker-time-fixtures.mjs` (historically writes into the repository; GREEN must require external output directory instead). |
-| `tagged-oracle.json` | Historical curated provenance for raw/stable source-kernel pair and stable7347 TSV. Raw binary above; stable `marker-time-stable-options.nix`, historical `/nix/store/d9n5bs7mp9d3i7wlkcik81k47jpay8ir-orca-slicer-marker-time-stable-options-2.4.2/bin/orca-slicer`, SHA `a25bdaa55081992205c3c661e68649469f0aaf550c8ec1ccd414e75eefa24fd4`. Stable applies ONLY the already-approved marker-remap patch. | For EACH raw/stable binary: `<binary> --process-gcode <oracle-input.gcode> --dump-moves <artifact>/{raw,stable}.csv --dump-marker-time <artifact>/{raw,stable}.json`; pair runner `marker-time-pair.mjs <input> <artifact>` then `marker-time-bounds.mjs <artifact>`. |
+| `tagged-oracle.json` | Historical curated provenance for raw/stable source-kernel pair and stable7347 TSV. Raw binary above; stable `marker-time-stable-options.nix`, historical `/nix/store/d9n5bs7mp9d3i7wlkcik81k47jpay8ir-orca-slicer-marker-time-stable-options-2.4.2/bin/orca-slicer`, SHA `a25bdaa55081992205c3c661e68649469f0aaf550c8ec1ccd414e75eefa24fd4`. Stable applies ONLY the existing marker-remap patch. | For EACH raw/stable binary: `<binary> --process-gcode <oracle-input.gcode> --dump-moves <artifact>/{raw,stable}.csv --dump-marker-time <artifact>/{raw,stable}.json`; pair runner `marker-time-pair.mjs <input> <artifact>` then `marker-time-bounds.mjs <artifact>`. |
 
 Historical tagged input SHA `55ec96a28d3ac035d94d0923c5f3be53cb9d897963fc2b8a561b7291ef935f89`; overrides SHA `d74a0e48d9bad17b5b8aa33bcaad2d2e41003138a1b04e55d123f6a0c69caacd`. `marker_time_tagged.rs` generates this input via public `slice_project_plate_processed` using unchanged `orca_cli_ender3.3mf`/`tagged-overrides.json`, then the existing single `generated by Ares→OrcaSlicer` input adaptation. Preserve that adaptation and record BOTH input hashes; no other textual rewrite.
 
@@ -44,7 +44,7 @@ nix build --impure --cores 8 --no-link --print-out-paths -f tools/chain-probe/ma
 
 Build chain is `procgcode.nix` + `marker-time.patch` + source kernel; stable adds `procgcode-stable-options.patch`. Do not rebuild Native or change patches/extracted source in this migration. Existing outputs may be provisioned through `ARES_MARKER_TIME_BIN` / `ARES_MARKER_TIME_STABLE_BIN`; receipts identify actual executable hashes rather than trusting historical paths.
 
-## 3. Runtime ownership decision (proposed for REVIEW)
+## 3. Runtime ownership decision
 
 **Keep the comparisons in their existing crate/public-API seams**, not move them into ares-cli. No vgcode/wasm test may import/depend on ares-cli or OrcaRunner. No new crate/workspace member, production I/O, build.rs provisioning, or general oracle framework.
 
@@ -55,7 +55,7 @@ Build chain is `procgcode.nix` + `marker-time.patch` + source kernel; stable add
 
 Protocol: optional unset/unavailable Native or unavailable Node → visible `SKIPPED: ... Native comparison not executed`; require mode → FAIL. Configured empty/missing/non-executable Native path, bad output/schema, Native nonzero/timeout → FAIL in both modes; these are not missing-tool skips. For tagged tests BOTH binaries are required to run the full assertion body; no stable-only or raw-only success. Provenance oracle names refer only to fresh files; setting a path to frozen JSON is not provisioning a producer.
 
-Each consumer invocation uses a unique external artifact directory (configured parity artifact root or an isolated temp directory) and retains input, JSON/CSV/TSV projections, executable/extraction/input/output hashes, exact argv/environment, stdout/stderr/status. No shared repository/target output race, old-cache admission or auto-copy from frozen files. Bound Native raw/stable generation by one shared300s deadline, with owned-descendant cleanup; tool extraction and crate prebuild occur beforehand. One heavy16-thread stage per worker; BROWSER/Lighthouse HOLD blocks the next stage and owns immediate interruption cleanup.
+Each consumer invocation uses a unique external artifact directory (configured parity artifact root or an isolated temp directory) and retains input, JSON/CSV/TSV projections, executable/extraction/input/output hashes, exact argv/environment, stdout/stderr/status. No shared repository/target output race, old-cache admission or auto-copy from frozen files. Bound Native raw/stable generation by one shared300s deadline, with owned-descendant cleanup; tool extraction and crate prebuild occur beforehand.
 
 ## 4. Complete assertion/consumer inventory — zero deletions
 
@@ -72,11 +72,11 @@ Also retain executed `marker-time-bounds.mjs` checks: raw7348/stable7347; extra 
 
 Related frozen derivatives (`moves.csv`, `vertices.tsv`, `synthetic.tsv`, `tagged-stable.tsv`) are presently the real Rust dependencies. Merely deleting the three JSON files while continuing to read these projections would preserve the bypass and is NOT GREEN. All four consumer paths must switch to runtime outputs. DELETE MUST remove all seven Native JSON/projection files plus `red.log`, `format-red.log`, `transport-red.log`, `ui-red.log`; output/history is retained in git history and external evidence, not as non-authoritative repository copies. Keep only genuine inputs `path.gcode`, `tagged-overrides.json` and updated README in this fixture directory.
 
-## 5. REVIEW → RED → GREEN → DELETE
+## 5. SPEC → RED → GREEN → DELETE
 
-### REVIEW first
+### SPEC first
 
-Submit exact spec hash and source/provenance/assertion inventory. Explicitly approve the current public seams, shared tooling owner/Node dependency and derivative scope before test/runtime changes. No slicing/core/UI behavior changes.
+Fix the source/provenance/assertion inventory, the current public seams, shared tooling owner/Node dependency and derivative scope before test/runtime changes. No slicing/core/UI behavior changes.
 
 ### RED (one vertical seam at a time)
 
@@ -86,28 +86,27 @@ Submit exact spec hash and source/provenance/assertion inventory. Explicitly app
 
 ### GREEN
 
-Migrate the producer output destination, then one consumer seam at a time; exact fresh Native bits/text/control counts and full existing assertions pass. Preserve first failures; no retry-until-success or count/fixture tuning. Test missing binary in optional/required modes and configured invalid binary. Archive repeatable receipts. Rust tests remain native-host E2E adapters; ares-core/vgcode/wasm production stays browser-capable and platform-neutral. Windows/macOS host launches use portable Node APIs; diagnostics provisioning is explicit, absence is not a platform support claim.
+Migrate the producer output destination, then one consumer seam at a time; exact fresh Native bits/text/control counts and full existing assertions pass. Preserve first failures; no retry-until-success or count/fixture tuning. Test missing binary in optional/required modes and configured invalid binary. Keep repeatable provenance records. Rust tests remain native-host E2E adapters; ares-core/vgcode/wasm production stays browser-capable and platform-neutral. Windows/macOS host launches use portable Node APIs; diagnostics provisioning is explicit, absence is not a platform support claim.
 
-Run targeted `cargo nextest` integration tests, strict workspace all-target/all-feature Clippy, fmt check, WASM check and workspace nextest. Run targeted formatter Playwright with required Native and its missing-Native contracts; this numeric formatter test does not imply GL/UI visual parity. Browser suites requiring actual browser get coordinator low-load BROWSER-START/END handshakes and retain interrupted attempts as NOT evidence.
+Run targeted `cargo nextest` integration tests, strict workspace all-target/all-feature Clippy, fmt check, WASM check and workspace nextest. Run targeted formatter Playwright with required Native and its missing-Native contracts; this numeric formatter test does not imply GL/UI visual parity. Interrupted browser-suite attempts are NOT evidence.
 
 ### DELETE last
 
-Only after reviewed RED and fresh GREEN, delete `native.json`, `oracle.json`, `tagged-oracle.json`, `moves.csv`, `vertices.tsv`, `synthetic.tsv`, `tagged-stable.tsv`, `red.log`, `format-red.log`, `transport-red.log`, `ui-red.log`. Keep the hand-written header-free `path.gcode`, unchanged `tagged-overrides.json`, and update README to actual runtime commands/owner and external receipts. Search all consumers/tools/docs for broken paths and frozen fallback; repeat targeted required-Native and missing-Native/Node tests after deletion. A supplied fake frozen file must not satisfy live producer provisioning. No unrelated stale-file cleanup. RED and GREEN integrate together; DELETE may be a separate commit.
+Only after RED and fresh GREEN, delete `native.json`, `oracle.json`, `tagged-oracle.json`, `moves.csv`, `vertices.tsv`, `synthetic.tsv`, `tagged-stable.tsv`, `red.log`, `format-red.log`, `transport-red.log`, `ui-red.log`. Keep the hand-written header-free `path.gcode`, unchanged `tagged-overrides.json`, and update README to actual runtime commands/owner. Search all consumers/tools/docs for broken paths and frozen fallback; repeat targeted required-Native and missing-Native/Node tests after deletion. A supplied fake frozen file must not satisfy live producer provisioning. No unrelated stale-file cleanup. RED and GREEN integrate together; DELETE may be a separate commit.
 
 ## 6. Exit / deferred
 
-Exit: independently approved spec + archived missing-Native/Node RED; all original assertions preserved and fresh runtime Native-backed GREEN; visible optional SKIPPED and strict require FAIL; all seven Native JSON/projections and four logs deleted, genuine inputs retained; engineering gates, exact-hash REVIEW, authorized rebase/nonforceFF/remote verification.
+Exit: spec + missing-Native/Node RED; all original assertions preserved and fresh runtime Native-backed GREEN; visible optional SKIPPED and strict require FAIL; all seven Native JSON/projections and four logs deleted, genuine inputs retained; engineering gates pass.
 
 ## Runtime migration record
 
-- Coordinator confirmed RED `9ec51103b`: required missing Native silently passed old frozen vgcode assertions; new required/optional contracts failed. Subsequent transport, tagged and numeric formatter REDs likewise preserve the old PASS/new-contract FAIL. Initial formatter selector/color harness failures are retained separately, NOT Native/parity evidence.
-- Source unchanged: pinned raw diagnostic was provisioned using the existing `marker-time.nix`/eight-core build outside test deadlines; original executable SHA `ba90ceb881adb8bc6f0a26fdd87393b526104eb2b8bdfce3f11c21088c88f2c9` restored. No stable-for-raw substitution, Native patch or source-arithmetic edits.
+- RED: required missing Native silently passed old frozen vgcode assertions; new required/optional contracts failed. Subsequent transport, tagged and numeric formatter REDs likewise preserve the old PASS/new-contract FAIL. Initial formatter selector/color harness failures are retained separately, NOT Native/parity evidence.
+- Source unchanged: pinned raw diagnostic was provisioned using the existing `marker-time.nix` build outside test deadlines; original executable SHA `ba90ceb881adb8bc6f0a26fdd87393b526104eb2b8bdfce3f11c21088c88f2c9` restored. No stable-for-raw substitution, Native patch or source-arithmetic edits.
 - Fresh runtime gate: all nine Rust tests PASS/zero skips and numeric Playwright two PASS. Original 13 vgcode + two transport + seven tagged assertion sites and the formatter expect loop retained verbatim. Fresh tagged pair is 7348/7347 with unchanged five-field/phantom/order/full-prefix bounded-impact checks.
-- Test-only ownership: `tests/support/marker_time.rs` calls the shared Node producers; tempfile is dev-only. Production core/vgcode/WASM/display code unchanged. `marker-time-runner.mjs` owns one shared 300s deadline, descendants and failed receipts; short timeout/nonzero controls are protocol tests, NOT numerical Native evidence.
+- Test-only ownership: `tests/support/marker_time.rs` calls the shared Node producers; tempfile is dev-only. Production core/vgcode/WASM/display code unchanged. `marker-time-runner.mjs` owns one shared 300s deadline, descendants and failed-run records; short timeout/nonzero controls are protocol tests, NOT numerical Native evidence.
 - Missing/invalid controls: 14 Rust and eight numeric-browser isolated child controls verify visible optional Native/Node SKIPPED, strict required failure even CI, configured invalid/non-executable/empty paths and Native nonzero/zero-exit-without-output failure. No global env mutation or frozen output admission.
 - Before DELETE, strict workspace/all-target/all-feature Clippy, fmt, WASM checks exit0; default workspace 8204 PASS/six configured skips/exit0. Default environment is NOT full required-Native coverage. An offline historical-byte audit reports all raw Native JSON/CSV/TSV and tagged stable projection invariant; historical bytes never become runtime assertion input.
 - After these GREEN gates, physically deleted the exact seven JSON/projection files and four run logs. Kept only manual `path.gcode`, unchanged `tagged-overrides.json`, runtime README. Repeat after deletion: nine Rust PASS/zero skips, formatter two PASS. Consumer grep contains no reads of any deleted product; inventory paths are explicitly marked historical/deleted. First web typecheck found one new env inference error (fixed by typing the new subprocess env), plus missing installed existing axe dependency; locked npm ci provisioned that dependency without manifest/lock change. Full web typecheck and lint now exit0.
-- Repeatable logs, JSON results, lifecycle receipts and raw outputs live outside Git under `${TMP_ROOT}/ares-marker-time/` and printed unique `/tmp/marker-time-live-*` / `/tmp/marker-time-format-live-*` paths. Final latest-main browser gate, exact-hash combined REVIEW and authorized integration remain separate barriers; no RED-only merge or numerical waiver.
 
 
-Deferred: new timing/formatting algorithms, marker selections, extra numeric inputs, GL viewer/browser screenshot parity, new processor/slicer patches, full Native builds during tests, all KSR/ender3-classic/cli-exit migration, general oracle framework, and deletion of unrelated Native artifacts. Any new tagged difference outside the already-approved five fields/phantom boundary blocks this task; do not expand the exception.
+Deferred: new timing/formatting algorithms, marker selections, extra numeric inputs, GL viewer/browser screenshot parity, new processor/slicer patches, full Native builds during tests, all KSR/ender3-classic/cli-exit migration, general oracle framework, and deletion of unrelated Native artifacts. Any new tagged difference outside the existing five fields/phantom boundary blocks this task; do not expand the exception.

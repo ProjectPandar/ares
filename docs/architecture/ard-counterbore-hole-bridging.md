@@ -1,7 +1,6 @@
 # ARD — counterbore Filled geometry and lifecycle ownership
 
-Status: proposed for SPEC review; implementation and RED not yet authorized.
-Base: `96eb17ccc2805ce1d4f95045e452eb070e19f183`.
+Status: proposed. Implementation follows the SPEC and an independent public RED.
 Upstream: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Context
@@ -51,24 +50,22 @@ The owning upstream chain is:
 4. **Bound scope honestly.** This proposal includes classic Filled and preserves
    classic partial/None. Arachne's upstream `process_arachne:2123` call is
    deferred and stays explicitly unsupported where presently guarded. Keep
-   adjacent unsupported domains separate; obtain scope approval if needed.
+   adjacent unsupported domains separate; amend the scope if needed.
 5. **Keep platform and test boundaries.** Core remains byte-oriented and
    platform-neutral on WASM, Windows, macOS, Linux; Native and filesystem
    evidence belong to the CLI test adapter. Public `slice_with_profiles` or the
    existing project/load-settings API is the acceptance seam. Private stage
    geometry alone is not E2E parity. Complete ordered bytes retain all commands
    except established generator identity normalization.
-6. **Evidence precedes production.** SPEC approval → independent public RED →
-   RED approval → implementation. CPU15 single core for directed runs; no fulls
-   in this task. Fulls need separate explicit FULL-GO and global exclusivity.
-   Keep raw failed/timeout attempts and use the existing coordinator-mediated
+6. **Evidence precedes production.** SPEC → independent public RED →
+   implementation.
+   Keep raw failed/timeout attempts and use the existing
    Native Variant A protocol, never softened assertions or silent retries.
-   The canonical local wrapper was updated by W5 under approved Variant A
-   SPEC `6becaa454` after the base full: `/tmp/orca-wrapper-inherit-cpu.sh`
-   now invokes Native via `setarch -R` (verified SHA256
-   `1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3`,
-   previously reported prefix `391081d7…`). Record the actual wrapper SHA in every new run;
-   report any new deterministic mismatch after 14:22 immediately with that
+   The canonical local Native wrapper (Variant A SPEC `6becaa454`)
+   invokes Native via `setarch -R` (verified SHA256
+   `1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3`).
+   Record the actual wrapper SHA in every new run;
+   report any new deterministic mismatch with that
    SHA, rather than presuming it is Variant A.
 
 ## Rejected alternatives
@@ -87,7 +84,7 @@ The owning upstream chain is:
 
 The smallest correct slice crosses existing geometry, grouping and
 classification boundaries. This is necessary upstream lifecycle parity, not
-permission for unrelated refactoring. Review must approve the classic-only
+permission for unrelated refactoring. The scope is classic-only and requires
 scope and require actual nested-island/extra-fill reachability evidence before
 claiming those branches covered. No claim of Native reachability, Rust RED,
 GREEN or full option support is made by these docs.

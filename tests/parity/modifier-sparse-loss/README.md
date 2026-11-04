@@ -1,14 +1,12 @@
 # Modifier sparse-loss inputs
 
-Frozen authored W3 object-spacing preflight inputs, reused unchanged by W6
-under approved SPEC cae06ee57. These are slicing inputs, not Native output.
-The source recipe is `/tmp/worker3-object-spacing-inputs.py`; its full manifest
-is `/tmp/worker3-object-spacing-native-1tgobnaj/inputs/manifest.json`.
+Frozen authored object-spacing inputs, reused unchanged under SPEC cae06ee57.
+These are slicing inputs, not Native output.
 Geometry/part/plate packaging originates from tracked authored
 `tests/parity/validation/modifier-wall-loops-classic.3mf`; the recipe scales its
 body to 20x20x10 and replaces the modifier's wall-count option with sparse
 options. Machine/process/filament settings came from the prior runtime A45
-Creality Ender-3 project, as recorded in that manifest. No generated G-code,
+Creality Ender-3 project. No generated G-code,
 Native expected stream or historical oracle receipt is stored here.
 
 - A-C0: no modifier. SHA256 `d6ed45dca46d2b9f7a395df577083f37fb3f747e89b69be70eb956b9868484dd`.

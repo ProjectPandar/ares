@@ -4,14 +4,12 @@ Read-only `seed-replay` instrumentation extends `tiq2_order.nix`, which
 reconstructs the exact seeded-oracle base derivation. No route, retraction,
 simplification, or emission predicate is changed.
 
-## Qualified travel probe (2026-10-07 23:55Z)
+## Qualified travel probe
 
-`nix-build --cores 8 --max-jobs 1` completed successfully. Package:
+Package:
 `/nix/store/f6x1jr6wqd5lzwwp4c8h8cjpybjka8wr-orca-slicer-seed-replay-2.4.2`.
 The complete output is byte-identical to the seeded oracle after replacing
-only the generated-by banner. Receipt and full trace:
-`/tmp/tiq2-travel-qualified-20261007T2355Z/whole-file-oracle-comparison.json`
-and `native-travel.txt`. No stream filtering or tolerance was applied.
+only the generated-by banner. No stream filtering or tolerance was applied.
 
 The first-layer target has origin165,165, role1, raw start
 (6834938,-5461327), end(4301461,4301461), external=0/support=0,
@@ -56,9 +54,8 @@ lslices/safe-zone/internal/external polygons and output before/after the
 maximum-detour gate and external-coordinate translation.
 
 ```sh
-nix-build tools/orca-probes/tiq2_travel.nix --no-out-link \
-  --cores 8 --max-jobs 1 > /tmp/tiq2-travel-probe-store-path
-# Use the returned package path and a NEW output directory for every run.
+probe=$(nix-build tools/orca-probes/tiq2_travel.nix --no-out-link | tail -n 1)
+# Use a NEW output directory for every run.
 ORCA_REPLAY_BIN="$probe/bin/orca-slicer" ORCA_REPLAY_SEED=0 \
   ORCA_REPLAY_CPU="$cpu" ORCA_DUMP_TIQ2_TRAVEL="$out/native-travel.txt" \
   scripts/orca-seeded-parity.sh --slice 0 --outputdir "$out" \

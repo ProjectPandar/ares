@@ -1,14 +1,11 @@
 # Slice 2: separated per-object skirts under ByObject — execution SPEC
 
-Status: discovery complete on approved Slice 1 GREEN
-`c1780265dd00dfd9322ffc6bba734d335c5311fe`; public RED authorized by owner.
 Parent [two-slice SPEC](per-object-skirt-by-object-spec.md) remains authoritative.
 Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Fresh discovery after Slice 1
 
-`${TMP_ROOT}/ares-byobject-skirt-slice2-discovery`: official and seeded, CPU18, independent
-Native caches/artifacts, canonical env archived from current coordinator path,
+Official and seeded, independent Native caches/artifacts, canonical env,
 Native first then same-input validated API/CLI, production unchanged.
 Existing disjoint fixture: two distinct objects at x80/x140,y110, height4,
 one filament, no_brim, combine_brims0 (verified current source/runtime key),
@@ -25,8 +22,7 @@ investigate the shared-group rejection boundary. BOTH Native and Ares reject
 EARLIER at sequential clearance (Native -63/POSIX193; Ares
 SequentialPrintCollision). It is NOT a witness reaching `_make_skirt`'s shared
 SlicingError and NOT the admission RED. Do not claim shared-group source-branch
-reachability from this input. Retain its evidence; no clearance bypass or new
-geometry is authorized. Public RED uses the three admitted inputs above.
+reachability from this input. No clearance bypass or new geometry is included. Public RED uses the three admitted inputs above.
 
 ## Exact source / Rust boundary and constrained GREEN proposal
 
@@ -55,10 +51,10 @@ UnsupportedProjectFeature rejection for unsupported shared groups; do not claim
 that this compatibility guard fully ports Native's shared SlicingError type/map.
 This is a source-owned scope guard, not a new geometry grouping algorithm or
 fallback. Full shared-group diagnostic parity needs its own authentic reachable
-input and separate approval. If this placement exceeds owner scope, stop before
+input and a separate slice. If this placement exceeds scope, stop before
 GREEN rather than silently admitting shared groups.
 
-W5's tower/multi-filament and W2's support/raft disjuncts MUST remain unchanged.
+The tower/multi-filament and support/raft disjuncts MUST remain unchanged.
 No consumer reset, new ordering policy, geometry, brim or API changes.
 The emitter remains a temporary compatibility shell for Print/GCode concepts.
 
@@ -74,14 +70,13 @@ ordered Native/API/CLI equality and raw API==CLI. Target asserts that SAME stric
 equality and real API/CLI success, so pre-GREEN fails on actual unsupported API
 rejection; never inverted acceptance or divergence-is-success.
 
-Independent RED approval before ANY production patch. GREEN must retain inputs,
+RED precedes ANY production patch. GREEN must retain inputs,
 assertions, controls' raw bytes and comparator, preserve shared-group rejection,
-and rerun both modes fresh CPU18, existing ByObject/perobject controls and
-allocated fmt/strict/WASM. No full/workspace/push/merge; coordinator owns broad
-verification. Changed Rust <=400 LOC.
+and rerun both modes fresh, existing ByObject/perobject controls and
+fmt/strict/WASM. Changed Rust <=400 LOC.
 
 Failure inventory: Native invalid/clearance/shared input is not positive RED;
-missing product, wrong effective settings, env/compile/timeout/affinity faults
+missing product, wrong effective settings, env/compile/timeout faults
 are NON-GATE. Wrong group timing or second-group history is a real consumer
 failure requiring amendment, not global reset. Comment differences cannot be
 stripped. If all match, evidence-only NO-RED STOP. No broader unsupported input

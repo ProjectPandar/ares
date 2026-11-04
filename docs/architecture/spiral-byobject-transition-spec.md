@@ -1,11 +1,8 @@
 # By-object spiral per-object transition_out — source-cited spec
 
-Status: SPEC approved (coordinator ACK of the discovery proposal);
-freezes the boundary for a tests-only RED, then a bounded GREEN on a
-side branch from the W1 tip `a1a72362a` (not merged into the frozen
-window tip; append decision after the RR).
+Freezes the boundary for a tests-only RED, then a bounded GREEN.
 
-## Witness (discovery on tip `a1a72362a`, BBL A1 by-object spiral)
+## Witness (BBL A1 by-object spiral)
 
 `byobject-apart` — A1, `overhang.obj` printed first, then
 `cube_with_hole.obj`, `spiral_mode = 1`, `print_sequence = "by object"`
@@ -96,7 +93,7 @@ and is a symptom; it corrects itself once the pass exists.
   feed divergence).
 - Non-BBL re-verification beyond existing fixtures.
 
-## RED plan (tests-only, on branch `spiral-byobject-transition` at `a1a72362a`)
+## RED plan (tests-only)
 
 `crates/ares-cli/tests/orca_parity/spiral_byobject_transition.rs`,
 registered in the `case_support` grouped module (root `orca_parity.rs`
@@ -126,4 +123,4 @@ committed.
 | Stage | Gates |
 |---|---|
 | RED | the two cases above, official + seeded: witness fails only at the line-5 comparison; preflight passes; `cargo fmt`; strict clippy; directed nextest selection |
-| GREEN | witness byte-exact both modes; every `spiral_*` parity case plus this window's suites green in both modes (the plumbing removal must not disturb the schedule); `cargo fmt`; strict clippy; no FULL without COORD; side branch not merged into the frozen window tip without a COORD append decision |
+| GREEN | witness byte-exact both modes; every `spiral_*` parity case green in both modes (the plumbing removal must not disturb the schedule); `cargo fmt`; strict clippy |

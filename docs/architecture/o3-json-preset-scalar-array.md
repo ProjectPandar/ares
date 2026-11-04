@@ -1,6 +1,6 @@
 # O3 regression: numeric scalar arrays in JSON presets
 
-Status: candidate fix; verification in progress. No global scalar-shape relaxation.
+No global scalar-shape relaxation.
 
 ## Upstream boundary
 
@@ -56,21 +56,18 @@ raw scalar `"50"`.
 
 The initial BBL/Ender-3 3MF drafts newly exposed embedded-script,
 model-label and CLI filament-variant metadata differences after the range
-failure was removed. Their pre-existing/unrelated status has not been
-established; they remain OPEN/UNTRIAGED. Inputs and first differing lines
-are retained in `${TMP_ROOT}/ares-matrix-clusters.md` (O3-BBL-PROFILE-ENTRY), with
-full input/catalog/output hashes in `/tmp/o3-bbl-new-differences.json`.
+failure was removed. Whether they are pre-existing or unrelated has not
+been established; they remain open and are triaged in
+`o3-bbl-profile-overlay-triage.md`.
 Do not change those behaviors or normalize them out of G-code. The
 already-established non-BBL STL whole-file control isolates this
 `Config.cpp` scalar-array rewrite boundary without discarding the BBL
 discoveries.
 
-The historical test rewrite `76fca6664` is not a comparator relaxation:
+The test rewrite is not a comparator relaxation:
 Native still runs first, both `[50,50]` and `[50,60]` remain, the Native
 `[50]` control remains, and complete generated-by-only byte comparison is
-unchanged. The current rebased fixture commit is `dc82bbba5`; the additional
-legacy-order RED is `124338ea0` (formerly `6edc28af8`).
+unchanged.
 
 Lock the existing override cardinality rejection with a control, and run
-workspace nextest, clippy, fmt, wasm and sequential seeded/official v2 gates
-before implementation review.
+workspace nextest, clippy, fmt, wasm and sequential seeded/official v2 gates.

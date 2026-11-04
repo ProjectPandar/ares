@@ -1,13 +1,5 @@
 # PrintObject::combine_infill: restore a region-local layer view
 
-Status: SPEC-REVIEW-REQUEST; docs only on independent branch
-`worker3/combine-infill-region-spec`. Code/discovery base is the prepared W3
-nine-commit stack `ac3cc43869c49e7386bf74d413da9e69cd1c6b63`, not formal main
-acceptance. Main is `5317e1c09cbcee822df3ee12b99e9e265aab4643`.
-The saved nine-commit stack remains unchanged. Queue placement/integration is
-COORD-owned at W3's position; this document neither adds implementation to
-that ready stack nor starts a separate FULL/rebase/merge window.
-
 ## Owning upstream rewrite slice
 
 Pinned OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
@@ -139,30 +131,24 @@ retaining the cited actual layer_id0 predicate is part of this source slice.
 
 ## Staged plan and stop rule
 
-1. SPEC only: approve this exact upstream region-loop/input boundary and the
+1. SPEC only: this exact upstream region-loop/input boundary and the
    seven-case matrix. No production or public test edit in this commit.
-2. After independent SPEC approval, RED only: freeze the six existing new
+2. RED only: freeze the six existing new
    discovery ZIPs/SHA manifest and reuse the already-frozen canonical input.
    This is the third similar case suite: **first extract the shared case-runner
-   skeleton** from flow-ratio/seam-gap suites as requested in their review,
+   skeleton** from flow-ratio/seam-gap suites,
    retaining every existing assertion/input and Native/API/CLI raw hash.
    Reuse shared complete-output/producer checks; add only this suite's public
    admission/activity. Require2 target FAIL/5 control PASS per mode and all
-   prior suites unchanged; submit a separate RED RR without production edits.
-3. After independent RED approval, bounded production-only GREEN: restore
+   prior suites unchanged, without production edits.
+3. Bounded production-only GREEN: restore
    per-region physical-layer scheduling/mapping and actual layer_id0 skip,
    keep the frozen RED/harness/inputs unchanged and geometry/math consumers
    untouched. Any strict residual means **STOP/report**, not expanding into
    clearance/kernel/Flow/G-code/E/time repair or adding a fallback/guard.
 4. Gates: fmt, locked workspace/all-target clippy `-D warnings`, core+wasm
-   browser wasm32 check. Follow COORD's W3 branch/integration/window decision;
-   do not expand the saved ready nine-commit stack or start FULL unrequested.
-   Authorized final acceptance must use then-current main/exact clean final
-   hash, retained range-diff, fresh canonical official+seeded FULL with zero
-   FAIL/skipped; refresh exact-final-hash evidence if main advances.
+   browser wasm32 check. Final acceptance uses a fresh canonical official+seeded FULL with zero
+   FAIL/skipped.
 
 No tolerance, output filtering, Native golden, inverted assertion, new
-allow/expect/ignore, unsupported guard, legacy fallback, worker merge/push.
-
-Evidence:
-`${EVIDENCE_ROOT}/w3-combine-infill-region-spec-review/README.md`.
+allow/expect/ignore, unsupported guard, legacy fallback.

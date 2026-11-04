@@ -29,6 +29,5 @@ Real official Native-exported 3MFs use GUI machine_start_gcode comments:
 control `{2 + 2}`, positive `{"2" + 2}`. Shared complete Native stream
 comparator must pass control and genuinely fail positive before implementation,
 then pass both in official and seeded modes. Only existing generated-by
-identity/date normalization. Inputs/provenance/hashes/actual line27 difference:
-`${COORD_ROOT}/evidence/w5-184b-string-add-discovery/PROPOSAL-RR.md`.
-Stack on approved compare_op GREEN 184b4ab12 for combined integration.
+identity/date normalization. The positive case's first difference is at
+line 27. This builds on the compare_op dispatch slice.

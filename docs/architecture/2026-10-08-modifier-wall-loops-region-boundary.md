@@ -1,8 +1,5 @@
 # ARD: modifier wall-loop region ownership
 
-Status: proposed, source-only. Base merged70243e353. Sole-coordinator spec approval
-is required before Native probes, tests or production changes.
-
 ## Non-negotiable decisions
 
 1. Owner is libslic3r PrintObject.cpp::region_config_from_model_volume

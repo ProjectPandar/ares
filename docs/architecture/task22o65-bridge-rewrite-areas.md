@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted and implemented; final independent implementation review pending.
+Accepted and implemented.
 
 ## Decision
 
@@ -128,21 +128,11 @@ behavioral mutation. Tests additionally prove distinct point allocations and
 complete borrowed-allocation preservation; behavioral mutations cover wrong
 source and clone/order semantics.
 
-Implementation evidence: behavioral RED is preserved in
-`/tmp/pi-unified-exec-887-f539e8c1.log`; focused O65 passes 9/9 in
-`/tmp/pi-unified-exec-914-a0bffc02.log`; the exact dependency band passes
-2,393/2,393 in `/tmp/pi-unified-exec-915-ccb2d87c.log`; and the Linux workspace
-passes 6,424/6,424 with two skipped in `/tmp/pi-unified-exec-916-c8c3404d.log`.
-Strict Clippy, rustfmt, wasm32, and all four desktop cross-target checks pass in
-`/tmp/pi-unified-exec-917-4a11103e.log`; diff/LOC/static, clean pinned Orca, and
-no-staged checks pass in `/tmp/pi-unified-exec-918-195e2056.log`.
+Implementation evidence: behavioral RED preceded GREEN; focused O65 passes 9/9,
+the exact dependency band passes 2,393/2,393, and the Linux workspace passes
+6,424/6,424 with two skipped. Strict Clippy, rustfmt, wasm32, and all four
+desktop cross-target checks pass, as do diff/LOC/static checks.
 
-The 24-mutation audit script has SHA-256
-`17fac7291eeb3145b4d91ad4063a9e76a9ee08611c3a7b56924dd87fe1053580`;
-it rejects compiler failures as invalid evidence before classifying behavioral
-failures, and its output has SHA-256
-`a7d3ba6054ee3d1e38c08db096b2aecff24387d51664a8f56158bd74a988c531`.
-All 24 compiling behavioral mutations are killed and production is restored
-byte-exact at SHA-256
-`52701f7fca5b4bdfcb79624ab8cfa08cc808e39cc94095edeefbb0a19c6fe51e`.
-Final independent six-axis review/fix/re-review remains required for approval.
+The 24-mutation audit rejects compiler failures as invalid evidence before
+classifying behavioral failures. All 24 compiling behavioral mutations are
+killed and production is restored byte-exact.

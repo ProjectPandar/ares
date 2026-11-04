@@ -1,6 +1,6 @@
 # Web preview: libvgcode segment heights and widths (travel / wipe radius)
 
-Status: SPEC (awaiting COORD review). Rewrite slice of the height/width part of
+Rewrite slice of the height/width part of
 libvgcode `extract_pos_and_or_hwa` and of the `ViewerImpl` travels/wipes radius
 state, which together size every toolpath segment in the Native preview.
 
@@ -70,8 +70,7 @@ discovery shows no difference at all, I send NO-RED STOP (as for paths-bbox).
   slices) equal the
   oracle sizes of their start/end vertices.
 - GREEN gates: directed nextest, clippy strict, fmt, wasm32, web build/lint/typecheck,
-  gzip < 125000, browser desktop bundle/presetSlice/slice on 16,17 with
-  BROWSER-START/END; pixel baselines that move because travels widen are reported
+  gzip < 125000, browser desktop bundle/presetSlice/slice; pixel baselines that move because travels widen are reported
   with before/after crops, not re-thresholded.
 
 ## Failure modes enumerated before coding

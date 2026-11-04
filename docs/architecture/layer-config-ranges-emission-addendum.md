@@ -1,20 +1,10 @@
-# R addendum: current-region outer-wall speed during emission
+# Layer ranges addendum: current-region outer-wall speed during emission
 
-Status: SCOPE-REVIEW requested; no emission production change yet.
-R approved spec: [layer ranges](layer-config-ranges-slicing-spec.md).
-RED `556df7df2` is frozen. Local raw-slicing intermediate `ab0b36090` is not
-GREEN or merge-ready. Its library/public E2Es compile; the private raw unit
-fixture helper still needs a structural signature adapter before all-target
-compilation (no assertion reversal planned).
+Parent spec: [layer ranges](layer-config-ranges-slicing-spec.md).
 
 ## Actual post-admission result
 
-Outer-pinned fresh run on current production working tree:
-`/tmp/worker6-range-green-pinned.nZyWBl/{official,seeded}/{log,exit}`.
-Each: 4 PASS/6 FAIL, exit100. Root launcher and each nextest process record
-CPU affinity11 in `launcher-affinity` and per-mode `nextest-affinity`.
-Every Native/test/cargo process inherits the outer taskset11; test runner also
-pins11. Earlier unpinned-parent run `worker6-range-green.aDssVL` is trial only.
+Fresh official and seeded runs each report 4 PASS/6 FAIL.
 
 PASS: explicit density, explicit width, valid-profile region-only density,
 model-part volume/range width precedence. FAIL: explicit speed, profile mixed,
@@ -31,11 +21,8 @@ pass. Whole-byte comparisons remain unchanged and FAIL as recorded.
 | modifier-range | line809 M73 placement | Native line1540 F5840 vs Ares line1541 F4086; modifier/cooling attribution still to verify |
 
 The first-difference details above are observed official output; initialized
-also fails the same six cases. External motion-only diagnostic:
-`/tmp/worker6-range-green-pinned.nZyWBl/motion-diagnostic.json`. This inspection
+also fails the same six cases. The motion-only diagnostic
 is not an acceptance normalization: it only finds the later motion symptom.
-Local wrapper SHA256 is
-`1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3`.
 These are candidate deterministic differences, not Native Variant A or ND.
 
 ## Additional upstream/Rust boundary requested
@@ -72,14 +59,11 @@ Existing raw test helper `project_slice/tests/raw_support.rs::intersections`
 requires passing default FilamentRegionSourceOptions and logical_count1 to the
 expanded private raw intersection signature; no body assertion or expected
 result changes. Any further callback test adapters will preserve all assertion
-text. Actual expectation reversals/retirements require advance approval.
+text. Expectation reversals/retirements are out of scope.
 
-## Acceptance remains R's contract
+## Acceptance remains the parent spec's contract
 
 Keep all ten RED cases and byte/layer/motion-change assertions. No failed
-speed case is removed or recast as PASS. Re-run fresh official/seeded directed
-on CPU11 with outer taskset for cargo/nextest/Native; record affinity.
+speed case is removed or recast as PASS. Re-run fresh official/seeded directed.
 Also verify existing profile/height/wall_loops/modifier controls, then run
-strict/fmt/wasm and default workspace in authorized slots, canonical full only
-with explicit FULL-GO. Preserve existing missing-height rejection and external
-crash evidence; it never becomes an acceptance case.
+strict/fmt/wasm, default workspace and canonical full. Preserve existing missing-height rejection; it never becomes an acceptance case.

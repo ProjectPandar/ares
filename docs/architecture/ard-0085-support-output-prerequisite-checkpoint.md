@@ -62,8 +62,6 @@ claimed from these sampled active contexts.
 
 ## Checkpoint exit
 
-Require six-axis read-only approval of the immutable combined code/docs
-patch, resolving findings and re-reviewing before Conventional Commit/push.
-Approval applies only to this dependency checkpoint. Keep the pending
+This checkpoint covers only this dependency. Keep the pending
 ordinary-support regression, spec/plan and failure evidence beside it;
 do not mark ARD0084 or the overall goal complete.

@@ -1,7 +1,5 @@
 # ARD: `sparse/solid_infill_rotate_template` meta-language interpreter (scope C)
 
-Status: spec approved with conditions (revision 1 — all conditions folded in).
-
 ## Problem statement
 
 `sparse_infill_rotate_template` / `solid_infill_rotate_template` are

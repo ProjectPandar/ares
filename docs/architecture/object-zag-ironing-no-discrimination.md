@@ -1,17 +1,16 @@
 # Object Zag ironing: NO-DISCRIMINATION / STOP
 
-## Decision (2026-10-17)
+## Decision
 
 Native-only discovery found **NO-DISCRIMINATION** for ZigZag, CrossZag,
 and LockedZag in the bounded search below. Stop here: no Zag proposal,
-RED, admission change, or GREEN is authorized by these results. In particular,
+RED, admission change, or GREEN follows from these results. In particular,
 these inputs cannot detect a fake mapping of a Zag pattern to Rectilinear.
 This is not a universal equivalence claim for every geometry/configuration,
 and says nothing about ordinary sparse infill or support/raft behavior.
 
-The approved Octagram GREEN `845adf9d704118daaec4574af58bc1e8945ddf70`
-and its RED `9e429e0b1a6a13f25f2be78f837f5d59295dea7f` remain intact.
-The next authorized slice touching the ironing pattern selection should fold
+The Octagram ironing port and its RED remain intact.
+The next slice touching the ironing pattern selection should fold
 its guard and dispatch into one `match`; this discovery does not change it.
 
 ## Owning upstream boundary
@@ -64,10 +63,9 @@ code changed; this commit contains only this report.
 There were 12 probe cases: eight base footprints, three common ironing-angle
 variants, and one mesh-rotation variant. Each ran Rectilinear plus all three
 Zags, in official and seeded modes, with two independent Native processes:
-**12 × 4 × 2 × 2 = 192 successful slices**, serially on CPU18.
-Seeded runs set `ORCA_REPLAY_CPU=18`. Every invocation has its own output/cache
-root, launch receipt, input hash, Native binary hash, log, and descendant/
-all-thread affinity observations. Canonical reference environment is saved.
+**12 × 4 × 2 × 2 = 192 successful slices**, serially.
+Every invocation has its own output/cache root, input hash and Native binary
+hash.
 
 Each input is a closed, consistently oriented, connected 1mm-high prism built
 from a rectilinear cell union, with internal side faces omitted and shared
@@ -119,33 +117,3 @@ required body-discriminating witness. Do not turn this negative result into
 an Unsupported-expecting test or accept config-only differences as GREEN
 coverage. **NO-DISCRIMINATION; STOP.**
 
-## Retained, repeatable evidence
-
-Root: `${TMP_ROOT}/ares-w1-object-zag-discrimination-845adf9d7/`
-
-- `inputs/manifest.json`: all 48 frozen input SHA256s and complete member
-  manifests; archives contain input only, no G-code.
-- `discover.py`: deterministic mesh/input producer and serial Native runner.
-- `canonical.sh`, `affinity.py`: environment and process/thread sampler.
-- `official/`, `seeded/`: raw Native outputs, repeat outputs, receipts, logs,
-  exit codes, and affinity observations. Native output is **not committed**.
-- `discovery-report.json`, `analysis-audit.json`, `audit.py`: raw search result
-  and independent checks of all 192 slices, complete equality, activity,
-  actual geometry, input hashes, and CPU18 observations.
-- `discover.log`: all 12 comparisons and final NO-DISCRIMINATION.
-
-Two audit-only bookkeeping corrections are retained transparently. The
-initial offline audit incorrectly required seeded argv0 to be the hidden
-binary path; the immutable Nix C wrapper uses `--inherit-argv0`. Corrected
-identification accepts the exact public/hidden Native argv0, verifies the
-wrapper's embedded exec target and binary hashes, and requires observed
-Native worker threads. The original script/error and
-`audit-argv0-assumption-NON-GATE.txt` are preserved. No Native execution failed
-or output was changed. Also, the search report's initial bbox-install citation
-says line 1625; the exact pinned line is 1624, corrected explicitly in the
-independent audit and this report.
-
-Reproduction: use the recorded frozen inputs, exact Native wrappers/binaries
-and canonical environment; execute the recorded per-run launch commands on
-CPU18 into fresh roots. Then run the independent audit against those outputs.
-Do not rerun the producer over the retained evidence root.

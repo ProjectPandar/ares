@@ -1,10 +1,5 @@
 # M400 S/P argument-priority rewrite slice
 
-Status: docs-only SPEC; formal Native-first RED next. GREEN requires separate
-RED approval. Base d592d41459764d816c0199385a22b442006cba76, independent branch
-worker6/m400-priority-spec. Approved scarf/cache branch84c655626 stays frozen.
-No FULL/rebase window is open.
-
 ## Source ownership and Rust boundary
 
 This ports libslic3r behavior, not an independently designed timing pipeline.
@@ -76,8 +71,7 @@ caller process_M400; Rust normal return for exactly the target command is
 Option<f64>::Some(65). Normal exits, may-call-functions off, no inferior calls/
 register/data writes, complete outputs unchanged from non-GDB. Invalid v1
 Native source5353 resolved5355/no sample and Rust empty-string-read probe are
-excluded. Evidence root:
-`${EVIDENCE_ROOT}/w6-d592-m400-discovery-w2aerqjx/`.
+excluded.
 
 ## Formal RED and exit contract
 
@@ -86,17 +80,15 @@ Freeze exactly the three existing Native exports above. Tests must directly call
 `native_api_cli.rs::NativeCase`; no copied helper or normalizer. Check runner LOC
 before registration and keep every changed text file <400 lines.
 
-At the exact committed RED hash, run official/seeded targeted three-case sets,
-CPU11. Require Native2 stable BEFORE public byte API and real CLI. Preserve
+At the exact committed RED hash, run official/seeded targeted three-case sets.
+Require Native2 stable BEFORE public byte API and real CLI. Preserve
 complete ordered generator-only Native/API and Native/CLI comparisons plus raw
 API/CLI equality and successful runtime statuses. Never filter M73/time/motion.
 The target must genuinely fail and both controls completely pass. Audit raw
 artifacts independently on RED because NativeCase panics before its final raw
 assertion on a Native mismatch; do not claim that unreachable assertion ran.
 
-Sequence: docs-only SPEC -> test/input-only RED -> RR and STOP for approval ->
-production-only GREEN, if approved, limited to delays.rs M400 branch -> same
+Sequence: docs-only SPEC -> test/input-only RED ->
+production-only GREEN, limited to delays.rs M400 branch -> same
 formal matrix and neighboring dwell/SYNC/time regressions. Any strict residual
-means STOP. FULL/rebase require a later window; no push/self-merge.
-The isolated obsolete test deletion elsewhere remains unchanged/user decision
-pending. No modifications to approved84c branch or its evidence.
+means STOP.

@@ -1,6 +1,6 @@
 # ARD: Arachne fuzzy skin owns junctions and compatible-region effects
 
-Status: SPEC308583e3a approved with separate F1/F2 RED→GREEN→review slices.
+Status: accepted. SPEC 308583e3a with separate F1/F2 RED→GREEN slices.
 
 Owner: `PerimeterGenerator.cpp::process_arachne:2095,2125` and
 `traverse_extrusions:378–435`, with
@@ -26,16 +26,16 @@ Non-negotiable decisions:
 - A task owns its explicit-seed Context continuously. Reuse verified RNG/noise
   primitives, preserve draw order and real slice_z, keep core platform-neutral.
 - Strict parity and diagnostic stochastic admission are separate evidence.
-  The coordinator approved the seeded/official boundary; never disguise
+  The seeded/official boundary is fixed; never disguise
   official stochastic projections as complete byte parity.
-- Preserve every assertion not demonstrated broken. The closure ruling permits
+- Preserve every assertion not demonstrated broken. The closure decision permits
   F1 to remove the broken closing assertion, citing PerimeterGenerator.cpp:
   534–540, NDEBUG and the Native closure-width-audit.json in its commit message.
   Removing an adjacent-joint assertion requires demonstrated breakage; a
-  necessary downstream width repair requires source evidence and a ruling.
-  Retiring the one obsolete rejection test needs separate explicit approval.
+  necessary downstream width repair requires source evidence and a scope amendment.
+  Retiring the one obsolete rejection test is a separate explicit commit.
 - Keep each file <=400LOC; no new guards, fallback, skipped fuzzy geometry,
   probes, suppressions or committed Native outputs.
 
 See [SPEC](arachne-fuzzy-skin-spec.md) for citations, included/deferred behavior,
-public failure matrix and HOLD/resource gates.
+public failure matrix and gates.

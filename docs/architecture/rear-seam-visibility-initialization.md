@@ -1,8 +1,6 @@
 # Rear seam visibility initialization — source rewrite SPEC
 
-Status: bounded read-only causality confirmed; docs then tests-only public RED.
-Base a0c2c5724e798ca21cb2e2d5ef117055f7beef02 remains frozen. W6 owner approved;
-W2 seam config work is merged. NO production edit or GREEN authorized here.
+Bounded read-only causality is confirmed below; docs then tests-only public RED.
 
 ## Upstream boundary and mandatory semantics
 
@@ -32,8 +30,8 @@ context/overhang/embedding,comparators,stable sorting,alignment/spline math,
 loop splitting and final-position consumption. Preserve existing aligned,
 nearest,alignedback sampling,mesh frames,negative-volume all-hits BVH behavior,
 provenance and front bias. No per-ray linear scans or changed sampling scheme.
-Random is adjacent upstream behavior but DEFERRED:do not infer authorization
-for a separate random-seam change from the rear witness.
+Random is adjacent upstream behavior but DEFERRED:do not infer a separate
+random-seam change from the rear witness.
 
 No writer/time/M73,travel_to/origin/lift,processor/fan/tokenizer,brim/Type1,
 seam-gap state,formatter/evaluator,geometry or model/input repair. No fallback,
@@ -65,11 +63,8 @@ not just travel route. Complete strict outputs/differences retained unmasked.
 
 ## Read-only causal evidence, separated from host counterfactual
 
-Evidence root
-`${EVIDENCE_ROOT}/w6-nonbbl-stock-baseline-ol75m7h7/trace/`.
-Final native-v2 and rust-v4 observers CPU15 serial,may-call-functions off,
-no inferior calls or writes,normal exit0,invalid probes0.
-Native trace uses seeded DWARF binary,NOT official binary;its full output equals
+Debugger observers ran with may-call-functions off, no inferior calls or
+writes. Native trace uses seeded DWARF binary,NOT official binary;its full output equals
 original official Native after generator-line-only normalization. Rust output
 is raw byte-identical to original exacttipCLI. No perturbed execution accepted.
 
@@ -90,29 +85,22 @@ index1,matching LIVE Native. No geometry/order/context/flow/KD/alignment changes
 It does NOT execute a production candidate or validate spline/finalposition math
 or claim a full-output GREEN. HOST numerical replay is not mislabeled LIVE.
 
-verify-trace.py0 and HOST-replay.py preserve machine-readable receipts/hashes.
-Earlier optimized-out Native final probe and zero-hit Rust pre-align source
-locations are retained/excluded as incomplete attempts. Final valid probes use
-Native saved live candidate storage plus before/after alignment snapshots and
-Rust line132 pre-align/live visibility returns/line171 post-align snapshots.
-An initial Native/Native comparison mistakenly used Native/Ares helper mode;
-that receipt is excluded,replaced by actual Native-stability helper operation0.
+Valid probes use Native saved live candidate storage plus before/after alignment
+snapshots and Rust line132 pre-align/live visibility returns/line171 post-align
+snapshots.
 
-## Public RED and approval gates
+## Public RED gates
 
 After this docs-only commit,add two source-cited public cases in the existing
-W6 group using UNCHANGED native_stream_case::check→NativeCase,fixtureSHA,
+case group using UNCHANGED native_stream_case::check→NativeCase,fixtureSHA,
 (false,|_,_|{}). Baseline is positive control;target must be actual strict FAIL,
 not a caught expected-error success. Native2 FIRST,then real validated byteAPI
 and CLI;full ordered M73/time/motion/comments/metadata/footer retained.
 No masks/tolerances/frozen reference text/expected index assertion in public tests.
-Use CPU15 taskset,jobs1,threads1,official then seeded,independent empty caches.
-Because canonical target assertion panics before final rawassert/helper update,
+Run official then seeded with independent empty caches. Because canonical target assertion panics before final rawassert/helper update,
 independently verify actual saved API/CLI raw equality;never claim that later
-assertion ran on RED. Both strict raw API/CLI files remain evidence.
+assertion ran on RED.
 
-Report docsSPEC+tests-onlyRED with exact tips,Native2/public receipts/selection/
-ELF provenance/clean scope;HOLD. No production edit,GREEN,FULL,merge/push or
-integration implied. A later implementation requires explicit separate approval.
-If a different unexpected RED residual appears,STOP and report without repair.
-All changed text<400LOC;coauthor trailers required. No tests after production.
+The production port is a separate later GREEN. If a different unexpected RED
+residual appears,STOP without repair. All changed text<400LOC. No tests after
+production.

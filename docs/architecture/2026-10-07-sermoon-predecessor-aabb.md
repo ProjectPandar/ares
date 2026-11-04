@@ -33,11 +33,9 @@ Probe binary `/nix/store/4zs39jdm6cg6xzrnlpwk3nmfm031pcxs-orca-slicer-2.4.2`;
 `bin/.orca-slicer-wrapped` SHA256
 `52c9d8e2ffabca89472c67fbb019cc9e2486a6e402587668ee522097667a1873`.
 
-Run with `ORCA_REPLAY_SEED=0`, CPU 3 and staged input
-`${TMP_ROOT}/ares-orca-cache/defb366df2562374/3d02bff68752da9a-c07acddfbf16cc60.3mf`.
-`/tmp/bottomline-replay-recheck/plate_1.gcode` equals
-`case-6qvP0t/orca.gcode` byte-for-byte after removing generated-by only.
-Probe `/tmp/bottomline-replay-recheck/lines.txt`:
+Run with `ORCA_REPLAY_SEED=0` on the staged input. The probe plate G-code
+equals the seeded case oracle byte-for-byte after removing generated-by only.
+Probe lines:
 
 | index | line | squared distance | height |
 |---|---|---|---|
@@ -53,8 +51,7 @@ seed-replay producer's concentric initialization patch. Do not use its
 output as parity evidence.
 
 Core RED committed separately as `7baa7837`: native nextest observed
-`0.3261211 != oracle 0.166997`. Whole-file GREEN remains mandatory before
-review; M73 omission in the attribution test does not prove M73 parity.
+`0.3261211 != oracle 0.166997`. Whole-file GREEN remains mandatory; M73 omission in the attribution test does not prove M73 parity.
 
 ## Target GREEN
 
@@ -63,13 +60,11 @@ Raw CLI output for the original staged case equals its saved oracle
 including M73 (only generated-by normalized). Therefore the test
 comparator has been tightened: M73 filtering removed from both operands
 and from the native self-stability gate. Fresh-cache native nextest
-`sermoon_v1_whole_file` passes under that strict comparison (run
-776c1a68-9550-42f8-9e2f-d042da229906, log
-`/tmp/sermoon-whole-raw-green.log`). Main stock M73 reorder is therefore
+`sermoon_v1_whole_file` passes under that strict comparison. Main stock M73 reorder is therefore
 consistent with the fixed downstream motion timing, not a separately
 proven insertion defect on this case. Full controls remain required.
 
-## Review correction: shared XYZ writer
+## Correction: shared XYZ writer
 
 The follow-up ports `GCodeWriter.cpp:975-1000::extrude_to_xyz` into
 `motion/extrusion.rs`, shared by `scarf/emit.rs` and `path/variable.rs`.

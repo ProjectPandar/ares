@@ -33,7 +33,7 @@ legacy input; either public adapter leaves -1; adapters disagree; or downstream
 support/G-code still differs after normalization. A Native command failure is
 not a qualified RED. No invented truthiness or numeric/string coercions.
 
-Use the accepted49397 ledger's tree-wall-count failures as the before
-inventory, map B12 names explicitly, rerun only surviving affected failures
+Use the accepted baseline results' tree-wall-count failures as the before
+inventory, map current test names explicitly, rerun only surviving affected failures
 in both producers after GREEN, and report downstream failures honestly.
-No FULL, min relaxation, new ROOT registration or legacy engine fallback.
+No full parity run, min relaxation, new ROOT registration or legacy engine fallback.

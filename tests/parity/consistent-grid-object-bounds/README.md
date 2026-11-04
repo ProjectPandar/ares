@@ -1,6 +1,6 @@
 # Consistent-grid object reference bounds — input-only RED
 
-Approved SPEC `f12f35120`:
+SPEC `f12f35120`:
 `docs/architecture/2026-10-20-consistent-grid-object-bounds-spec.md`.
 Owner: `PrintObject.cpp:95-112` / `Print.hpp:347` -> `Fill.cpp` ->
 `FillRectilinear.cpp:2741-2807`, shared by ZigZag/CrossZag/LockedZag.
@@ -46,8 +46,6 @@ PlanePath target's two extra baseline records; total56 records per mode,
 112 both modes. Verify real target Sparse geometry differences externally
 against canonical references, not by inverted Ares-divergence assertions.
 
-No production change. Independent RED approval precedes bounded GREEN;
-any strict residual after that frame-only port means STOP/report. No graph,
-phase, locking, E/M73, kernel or generic compensation expansion. Queue remains
-W1 Voronoi -> W4 ironing -> other reviewed RRs. This RED requests no FULL or
-merge window.
+No production change. Any strict residual after the bounded frame-only
+GREEN port means STOP/report. No graph, phase, locking, E/M73, kernel or
+generic compensation expansion.

@@ -1,11 +1,9 @@
 # Parity Residuals Milestone — 4 FAIL domains + 146 INCOMPLETE harness gaps
 
-## Status: PLANNED (spec authored 2026-09-26; review cycle 3 in flight)
+## Status: PLANNED
 
-Current sweep state (`/tmp/parity-artifacts/option-coverage-summary.md`,
-post `ec96c3f8`): **500 PASS / 4 FAIL / 146 INCOMPLETE** across option
-domains; `ksr_fdmtest_v4` 84/84; all three completed review cycles
-fixed and verified.
+Current sweep state (post `ec96c3f8`): **500 PASS / 4 FAIL / 146
+INCOMPLETE** across option domains; `ksr_fdmtest_v4` 84/84.
 
 ## Objective
 
@@ -50,9 +48,8 @@ seeded probing is the maximum achievable coverage).
 - No `include!`/`include_bytes!`; files < 400 LOC; tests in `tests.rs`.
 - Commit + push per slice, docs riding with code.
 - Each FAIL-domain fix must verify its own option domain goes
-  byte-identical, not merely "fewer diffs" — oracle binaries at
-  `/tmp/medial-probe/*/bin/orca-slicer` and `scripts/orca-parity.sh`
-  remain the authority.
+  byte-identical, not merely "fewer diffs" — the oracle binaries driven
+  by `scripts/orca-parity.sh` remain the authority.
 
 ## Exit criteria
 
@@ -63,8 +60,8 @@ seeded probing is the maximum achievable coverage).
    family, `;WIDTH`, cooling-slowdown feedrates, and M73 alignment.
 4. INCOMPLETE count → 0: every domain either PASS or FAIL with real
    comparisons (no `value.is_none()`/empty-case plans).
-5. Independent review (gpt-reviewer or equivalent) re-verifies all
-   slices with a clean six-axis report.
+5. Independent six-axis review re-verifies all
+   slices with a clean report.
 
 ## Execution log
 
@@ -180,34 +177,25 @@ Plan and checks:
    sparse overlap contraction/expansion and an erased domain.
 3. Keep source files below 400 lines using a `concentric/finalize.rs`
    module, not inclusion macros.
-4. Run fmt, clippy, nextest and live Orca comparisons; independent review
-   must pass before commit/push with this documentation.
+4. Run fmt, clippy, nextest and live Orca comparisons before committing
+   with this documentation.
 
-Pre-split live evidence: `/tmp/parity-fix/option-coverage-summary.md`
-reports ironing_pattern 2/2 PASS; sparse_infill_pattern remains FAIL
+Pre-split live evidence: the option-coverage summary reports
+ironing_pattern 2/2 PASS; sparse_infill_pattern remains FAIL
 (first residual crosszag, M73 placement). KSR: 84 passed, 2 skipped.
 These scoped results do not establish all-option or all-printer parity.
-The sparse sweep also reports a concentric divergence at
-`/tmp/parity-fix/case-9nONGI/manifest.json` (`;WIDTH:0.449999`); crosszag
-is merely its summary's first failure, not its only failing value.
+The sparse sweep also reports a concentric divergence (`;WIDTH:0.449999`);
+crosszag is merely its summary's first failure, not its only failing value.
 
-Independent review found the missing `dont_adjust` propagation and a
-newly unused `Point` import. The split-neck test reproduced the pitch bug
-(`/tmp/concentric-split-red.log`); the implementation now passes the
-upstream flag explicitly: true for ironing, false for configured fill and
-sparse anchor projection. No global disabling of spacing adjustment.
+The `dont_adjust` propagation was missing. The split-neck test reproduced
+the pitch bug; the implementation now passes the upstream flag explicitly:
+true for ironing, false for configured fill and sparse anchor projection.
+No global disabling of spacing adjustment.
 
-Post-review verification: 16 focused tests pass; release KSR 84 pass,
-2 skipped; live ironing enum 2/2 strict comparisons pass. `cargo fmt
---check` and `cargo clippy` succeed (existing warnings remain). Full
-`cargo nextest run --workspace --no-fail-fast`: 7302 passed, 2 failed,
-10 skipped. Both failures are existing pipeline wipe tests: the same
-failures reproduce in clean detached baseline 08dda8d1 at
-`${TMP_ROOT}/ares-concentric-baseline`, log `/tmp/concentric-baseline-wipe.log`.
-They are not waived for the overall parity goal; this slice does not
-claim a green full workspace. Final logs: `/tmp/concentric-review-green.log`,
-`/tmp/concentric-review-ksr.log`, `/tmp/concentric-review-oracle.log`,
-`/tmp/concentric-workspace-full.log`.
+Verification: 16 focused tests pass; live ironing enum 2/2 strict
+comparisons pass. Two existing pipeline wipe tests fail; the same failures
+reproduce in clean detached baseline 08dda8d1. They are not waived for the
+overall parity goal; this slice does not claim a green full workspace.
 
 ## Wipe assertion follow-up
 
@@ -218,10 +206,9 @@ ported in `gcode_move_emit.rs`. The two pipeline wipe tests still expected
 suffix from their exact ordered-line assertions; keep all coordinates,
 feedrates, extrusion amounts, wipe commands, and ordering checks intact.
 No production movement change or source-text pinning test is added.
-Verify the eight wipe tests and full workspace, then independent review
-before committing these test corrections with this documentation.
-Result: `/tmp/wipe-assertion-workspace.log` records 7304 passed and
-10 skipped with no failures; fmt check and clippy also succeed. Skipped
+Verify the eight wipe tests and full workspace before committing these
+test corrections with this documentation. Result: the workspace passes
+with no failures. Skipped
 opt-in parity jobs remain explicit coverage gaps, not inferred passes.
 
 ## Sparse concentric fixed-width materialization slice
@@ -239,22 +226,17 @@ Plan: lock the 0.45mm nominal-width case to emitted 0.449999mm width,
 then reproduce the constant-width conversion with f32 scaled spacing,
 rounded-rectangle width reconstruction and `Flow::with_width`. Keep role,
 ring geometry, overlap and clipping unchanged. Validate focused tests,
-live sparse enum comparisons and KSR, then independent review and commit
-with these docs. Deferred: other sparse patterns, nonuniform variable
-width paths, raft/fuzzy residuals and broader option/printer coverage.
-Reference case `/tmp/parity-fix/case-9nONGI` contains missing WIDTH tags;
-it must be rerun rather than treated as current binary evidence.
+live sparse enum comparisons and KSR, then commit with these docs.
+Deferred: other sparse patterns, nonuniform variable width paths,
+raft/fuzzy residuals and broader option/printer coverage. The earlier
+concentric reference case contains missing WIDTH tags; it must be rerun
+rather than treated as current binary evidence.
 
-Verification: `/tmp/sparse-flow-red.log` records the width regression;
-`/tmp/sparse-flow-green.log` records 17 passes. Current live sweep
-`/tmp/sparse-flow-oracle.log` now reports concentric PASS, with 20/26
+Verification: the red test records the width regression; 17 focused tests
+pass after the fix. The live sweep now reports concentric PASS, with 20/26
 sparse pattern values passing and six divergent (crosszag, honeycomb,
 lightning, line, lockedzag, quartercubic). Thus the enum domain remains
-FAIL, not complete. `/tmp/sparse-flow-workspace.log`: 7305 passed,
-10 skipped; `/tmp/sparse-flow-ksr.log`: 84 passed, 2 skipped. Fmt and
-clippy succeed with existing warnings. Independent source review found
-no code issues; these completed run logs resolve its pending evidence
-note for the concentric slice only.
+FAIL, not complete.
 
 ## Quarter-cubic shift arithmetic slice
 
@@ -270,19 +252,15 @@ and printer/option coverage expansion.
 Plan: compare a small C++ arithmetic probe using Boost float constants
 against a separate Rust regression at z=1.2, 1.2000009 and 9.8; establish
 red, apply the source-equivalent computation, then run focused tests,
-KSR and live quarter-cubic output comparisons. Review independently
-before code-and-doc commit. Probe `/tmp/quarter-shift.cpp` yields period
+KSR and live quarter-cubic output comparisons. The probe yields period
 10855456 and dx2 scaled units 2330962, 2330961, 3750156 respectively
 (spacing 0.40707963705062866, density 0.15f, multiline 1).
 
 Results: red dx2 was 2.330956 versus expected 2.330962; focused nextest
-28 passed. `/tmp/quarter-shift-workspace.log`: 7306 passed, 10 skipped;
-`/tmp/quarter-shift-ksr.log`: 84 passed, 2 skipped. Fmt/clippy succeed.
-Current live sweep `/tmp/quarter-shift-oracle.log` confirms quartercubic
+28 passed. The live sweep confirms quartercubic
 PASS. The sparse enum still fails: crosszag, honeycomb, lightning, line,
 lockedzag and (newly observed in this run) tpmsfk. The latter's first
-mismatch is an Internal Bridge travel Y112.867 vs Y112.9 in
-`/tmp/parity-quarter-shift/case-kqy7Pi/manifest.json`; its cause remains
+mismatch is an Internal Bridge travel Y112.867 vs Y112.9; its cause remains
 unverified. Do not infer whole-enum success or nondeterminism from the
 previous run's tpmsfk PASS.
 
@@ -303,11 +281,11 @@ oracle fixture containing two swapped G1 lines from a real Ares slice.
 The line multiset is identical but motion order is not. Require DIVERGENT,
 exactly the configured two oracle calls, and complete paired byte artifacts.
 Also verify immediate exact equality and equality on the second reference.
-Run focused tests, workspace/KSR and a live lockedzag comparison, then obtain
-independent review before committing code and documentation together.
+Run focused tests, workspace/KSR and a live lockedzag comparison before
+committing code and documentation together.
 
-Diagnosis evidence: `/tmp/locked-repeat-counts.txt` records 44 fresh slices
-of the same `case-LOJH3N/input.3mf`; occurrences of `WIDTH:0.405676` vary
+Diagnosis evidence: 44 fresh slices of the same lockedzag input show
+occurrences of `WIDTH:0.405676` vary
 between 2, 3 and 4. Sequential samples were stable, concurrent samples were
 not. Existing domain probes reproduce identical triangular inputs and the
 short paths. `FillConcentricInternal.cpp:29-36` leaves members of
@@ -317,29 +295,24 @@ short paths. `FillConcentricInternal.cpp:29-36` leaves members of
 attribution; no speculative production short-line filter is added.
 The lockedzag production residual remains open.
 
-Red evidence: `/tmp/strict-reference-red.log` reports PASS instead of
+Red evidence: the old comparator reports PASS instead of
 DIVERGENT for reordered G1 lines, with envelope distance 0 and radius 0.
 Earlier summary PASS totals using that override are not proof of strict
 parity; they require re-verification with the corrected acceptance path.
 
-Verification: `/tmp/strict-reference-green.log` records four passing tests
-(three parent scenarios plus the subprocess entrypoint); the shell-driven
-mock scenarios are Unix-only. Platform-neutral strict comparator regressions
-remain shared. Workspace: 7310 passed, 10 skipped
-(`/tmp/strict-reference-workspace.log`); release KSR: 84 passed, 2 skipped
-(`/tmp/strict-reference-ksr.log`). Fmt and clippy complete successfully, with
-existing clippy warnings. Live lockedzag remains DIVERGENT after exactly
-three reference attempts (`/tmp/strict-reference-oracle.log` and
-`/tmp/parity-strict-reference/case-iXFOTg`); this expected residual is not
+Verification: four tests pass (three parent scenarios plus the subprocess
+entrypoint); the shell-driven mock scenarios are Unix-only.
+Platform-neutral strict comparator regressions remain shared. Live
+lockedzag remains DIVERGENT after exactly three reference attempts; this
+expected residual is not
 reported as a successful option domain. All touched Rust files are below
 400 lines; removal reduces `orca_parity.rs` from 484 to 352 lines.
 
 ## Adaptive cubic scaled-endpoint conversion slice
 
-The strict sparse sweep (`/tmp/strict-sparse-oracle.log`) finds 18 of 26
-values matching at least one reference within three attempts; adaptivecubic
-and supportcubic join the eight divergent values. Closest adaptive reference
-`/tmp/parity-strict-sparse/case-ifuYpy` differs only in one wipe E word:
+The strict sparse sweep finds 18 of 26 values matching at least one
+reference within three attempts; adaptivecubic and supportcubic join the
+eight divergent values. The closest adaptive reference differs only in one wipe E word:
 `-.38885` versus `-.38886`. Independent upstream pre-wipe probes expose
 integer endpoint differences before the wipe, so do not patch E formatting.
 
@@ -354,21 +327,16 @@ and oracle stability. The existing Rust generator remains the upstream
 compatibility boundary, not a newly designed fill pipeline.
 
 Plan: test raw generated endpoints at the recursive generator seam before
-clipping, observe rounded Y4363021 versus truncated Y4363020 (red log
-`/tmp/adaptive-trunc-red.log`), then apply conversion, run adaptive tests,
-strict adaptive/support-cubic live comparisons, workspace/KSR, fmt/clippy,
-and independent read-only review before code-plus-doc commit.
+clipping, observe rounded Y4363021 versus truncated Y4363020, then apply
+conversion, run adaptive tests, strict adaptive/support-cubic live
+comparisons, workspace/KSR and fmt/clippy before code-plus-doc commit.
 
-Results: focused adaptive tests 12 passed (`/tmp/adaptive-trunc-green.log`);
-workspace 7311 passed, 10 skipped (`/tmp/adaptive-trunc-workspace.log`);
-release KSR 84 passed, 2 skipped (`/tmp/adaptive-trunc-ksr.log`). Fmt and
-clippy pass with existing warnings. Both adaptivecubic and supportcubic now
-PASS strict ordered-byte comparisons (`/tmp/adaptive-trunc-oracle.log`,
-artifacts `/tmp/parity-adaptive-trunc`). The value-filtered option domain
+Results: focused adaptive tests 12 passed. Both adaptivecubic and
+supportcubic now PASS strict ordered-byte comparisons. The value-filtered
+option domain
 correctly stays INCOMPLETE because only 2/26 values were requested; this
 is not a complete sparse enum or all-options acceptance.
-A subsequent full strict enum run (`/tmp/adaptive-trunc-full-oracle.log`)
-again passes both affected values but reports 16 PASS / 10 DIVERGENT overall.
+A subsequent full strict enum run again passes both affected values but reports 16 PASS / 10 DIVERGENT overall.
 Concentric, cubic, lateral-honeycomb and triangles differ in this run despite
 previous exact matches. No causal attribution to this isolated adaptive
 change is established; preserve the run-specific results, not a cumulative

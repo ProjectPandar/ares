@@ -146,7 +146,7 @@ The executable-reference audit in crates/, scripts/, web/ and tests/ found zero
 remaining reads of the four deleted products. Architecture/history documents may
 still name retired products
 as evidence, without acting as reference readers. No production, shared cache,
-web's Ender3 roundtrip or worker4 consumer groups are changed. No new ignore,
+web's Ender3 roundtrip or other consumer groups are changed. No new ignore,
 probe, normalization rule, Native output or fixed output hash is introduced.
 
 ## Browser authority

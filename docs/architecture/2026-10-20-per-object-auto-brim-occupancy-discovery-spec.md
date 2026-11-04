@@ -1,15 +1,14 @@
 # Draft SPEC: AutoBrim footprints in per-object skirt groups
 
-Status: **DISCOVERY / SPEC DRAFT — no implementation authorization**.
-Discovery branch: `worker2/next-skirt-brim-discovery-spec`.
-Docs worktree base: `a5eb0f0356057fe9c62ec3319834f82b40a7731a`.
-Dependency: reviewed, queued AutoBrim chain ending at
+Discovery / SPEC draft; no implementation.
+Docs base: `a5eb0f0356057fe9c62ec3319834f82b40a7731a`.
+Dependency: AutoBrim chain ending at
 `c5ea87946cb8a0a08d483f158b89f2ff10e60228`; do not modify that chain here.
 This is a bounded `libslic3r` rewrite slice, not an Ares-designed pipeline.
 
 ## Architectural decisions and next boundary
 
-- Consume the existing AutoBrim producer only after its reviewed chain lands.
+- Consume the existing AutoBrim producer only after its chain lands.
   Port `Print::_make_skirt`'s consumption of per-object AutoBrim occupied areas,
   grouping, and independent brim ownership, not another auto-width formula.
 - Include ByLayer, `combine_brims=0`, single PLA filament, one instance per
@@ -44,7 +43,7 @@ not the explicit material/speed deferrals.
 Source paths are under `OrcaSlicer/src/libslic3r`:
 
 1. `Brim.cpp:260-305,448-530`: existing AutoBrim group width, per-polygon bump,
-   clamp and quantization produce the footprint. The queued chain owns this;
+   clamp and quantization produce the footprint. The AutoBrim chain covers this;
    this proposal neither recalculates nor broadens its supported inputs.
 2. `Print.cpp:2794-2819`: copy each object's hull across its instances and append
    the object's **plate-coordinate brim area contours** to occupied points.
@@ -79,10 +78,7 @@ and report the first raw difference before expanding this SPEC.
 
 ## Native-first experiments (completed, not committed RED tests)
 
-Final evidence root:
-`${COORD_ROOT}/evidence/worker2-next-skirt-brim-discovery-20261020T134127/final-no-support-no-tower/`.
-
-Inputs derive from queued `auto-combined.3mf` (SHA256
+Inputs derive from the AutoBrim chain's `auto-combined.3mf` (SHA256
 `a8d9731e66be1021eca82d50813fdfde685c6af70df72656c0f6119b6ef7e74c`).
 Mesh unchanged: two separately identified overhang objects, XY scale0.1/Z scale5.
 Far instance X=80/140; near X=80/88; Y=110. Settings explicitly disable support
@@ -117,40 +113,10 @@ Thus the near pair proves one skirt group with two independently placed brims,
 while the no-brim near control retains two groups. Mesh/placement identical
 within the near pair; Auto occupancy is the source of that group change.
 
-### Reproducibility / execution provenance
+## Proposed SPEC → RED → GREEN
 
-Evidence contains `generate-inputs.js`, `run.sh`, `summarize.js`, `first-layer.js`,
-`inputs/inputs.json`, exact input3MFs, per-case Native logs/result/G-code/exit,
-CLI stderr/exit/G-code where successful, `summary.json`, and
-`first-layer-summary.json`. Scripts/probes/Native output stay outside Git.
-
-- Official: extracted2.4.2 via
-  `${COORD_ROOT}/bin/orca-wrapper-inherit-cpu.sh`, explicit
-  `ORCA_APPDIR=${COORD_ROOT}/orca-official-242/squashfs-root`.
-- Seeded: `scripts/orca-seeded-parity.sh`, seed0,
-  `ORCA_REPLAY_CPU=13`, explicit `/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer`.
-- Every slicing/comparison command is wrapped in `taskset -c 13`, serial modes.
-  No cargo/Nix builds, worker threads, stress, CPU48–51 use, or modified sources.
-- Read-only existing Ares binary from the original AutoBrim worktree,
-  source head `c5ea87946cb8a0a08d483f158b89f2ff10e60228`, binary SHA256
-  `ba88fa3b6bd01bf017bf99f727b708a5e157b8c68f52ab0b3d52fd5170758999`.
-  Its source branch/HEAD is unchanged. It is **not** the discovery base's CLI.
-- This worktree has no initialized upstream submodule; source was read from
-  the original worktree's `OrcaSlicer` checkout at
-  `8500fcdccaa10b5099ac20d252af3a7c560046f1` without editing it. Cited file
-  hashes, Native binary hashes and Ares provenance are recorded.
-
-Replay into a **new** external root, after copying the four scripts there:
-`taskset -c 13 node <root>/generate-inputs.js <root>/inputs`, then
-`taskset -c 13 bash <root>/run.sh <root>` and
-`taskset -c 13 node <root>/first-layer.js <root>`.
-The generator reads the retained fixture in the original AutoBrim worktree;
-freeze that fixture and verify its hash before replay.
-
-## Proposed post-approval SPEC → RED → GREEN
-
-1. After the dependency lands, rebase this docs-only slice on current main and
-   reconfirm these Native observations before writing tests. Approval is needed.
+1. After the dependency lands, reconfirm these Native observations before
+   writing tests.
 2. RED freezes input-only cases for both distances and the no-brim/combined
    controls. No unused fixtures. Native through `OrcaRunner::from_env().unwrap()`
    with the standard required-oracle environment; no silent optional return.
@@ -162,9 +128,8 @@ freeze that fixture and verify its hash before replay.
    change is sufficient; first strict mismatch decides the bounded repair.
 4. Native/API/CLI near/far gates in both modes; existing explicit-brim families,
    small-diagonal AutoBrim and negative no-brim controls remain unchanged.
-   Final exact hash: fmt, clippy, wasm32 and coordinator-authorized dual-mode
-   canonical FULL, with fresh artifacts and assigned CPUs. No FULL during this
-   discovery. New RR and merge remain coordinator-only.
+   Final exact hash: fmt, clippy, wasm32 and dual-mode canonical FULL, with
+   fresh artifacts. No FULL during this discovery.
 
 ## Explicit exclusions / stop conditions
 
@@ -175,5 +140,5 @@ The accepted AutoBrim SPEC′ material/speed limitations remain unchanged, witho
 claiming general parity or adding an Unsupported guard to enforce this draft.
 Native rejection, empty brim motion, unchanged near group count, unexpected
 owner order, non-parity controls, or a first raw difference outside this boundary
-blocks RED/GREEN approval; do not weaken evidence or alter material_tables/M73
-handling. Only this draft document is committed on this discovery branch.
+blocks RED/GREEN; do not weaken evidence or alter material_tables/M73
+handling.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted, implemented, gate-verified, and unconditionally approved by final independent six-axis implementation review.
+Accepted and implemented.
 
 ## Decision
 
@@ -138,8 +138,7 @@ and output sorting.
 
 Final gates require focused and O43-O62 dependency Nextest, Linux workspace
 Nextest, strict Clippy, rustfmt, wasm32, x86_64/aarch64 Windows, x86_64/aarch64
-macOS, diff/LOC/static/clean-Orca/no-staged checks, then independent six-axis
-review and repair/re-review until unconditional approval.
+macOS, and diff/LOC/static/clean-Orca/no-staged checks.
 
 ## Implementation evidence
 

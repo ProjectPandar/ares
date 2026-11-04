@@ -11,7 +11,7 @@ OrcaSlicer 2.4.2 on the same project, while `ironing_pattern=rectilinear`
 
 Measured on `tests/parity/summary/time-cost.3mf` patched with
 `ironing_type=top`, `ironing_pattern=alignedrectilinear`,
-`gcode_label_objects=0` (seeded oracle, `ORCA_REPLAY_SEED=0`, CPU 15):
+`gcode_label_objects=0` (seeded oracle, `ORCA_REPLAY_SEED=0`):
 
 - Native: first diff at gcode line 12797 of `plate_1.gcode`; model time
   `6h 44m 55s`.
@@ -101,10 +101,9 @@ non-rectilinear patterns. No new pipeline, no new module.
 ## Deferred
 
 - `ironing_pattern=lateral-lattice` — first structural diff is a ~2 MB missing
-  block (`FillLateralLattice`), a separate fill-structure slice; evidence
-  `/tmp/w4-green-fk-seeded/ironing-pattern-lateral-lattice-xmdHui/`.
-- Support ironing (`support_ironing_pattern`) — W3 territory.
-- Brim (`brim_type`, `brim_ears`, `brim_separation`) — W2 territory.
+  block (`FillLateralLattice`), a separate fill-structure slice.
+- Support ironing (`support_ironing_pattern`) — separate slice.
+- Brim (`brim_type`, `brim_ears`, `brim_separation`) — separate slice.
 - `FillHoneycomb.hpp:53`'s `PI/3 * (idx % 3)` honeycomb angle progression is
   out of scope: the honeycomb ironing patterns are already byte-equal.
 - Non-ironing `FillAlignedRectilinear` surfaces (solid/top-surface infill filled
@@ -135,5 +134,4 @@ Extend the existing spec-driven coverage test
 - The `ironing_pattern` coverage suite (20 legs) green in both oracles.
 - `cargo fmt --check`, `cargo clippy -D warnings`, and
   `cargo check --target wasm32-unknown-unknown` clean.
-- FULL `orca_parity` both oracles with no new failures relative to main
-  `fb9a4ecd5`.
+- Full `orca_parity` in both oracles with no new failures.

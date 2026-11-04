@@ -1,7 +1,5 @@
 # ARD: upstream object layer-height profiles, not an Ares adaptive pipeline
 
-Status: Stage1 approved; Stage2 requires separate approval.
-
 ## Non-negotiable decisions
 
 1. Rewrite `libslic3r/Slicing.cpp::layer_height_profile_from_ranges`,
@@ -22,12 +20,12 @@ Status: Stage1 approved; Stage2 requires separate approval.
    their existing unsupported range boundary: upstream dereferences a missing
    `layer_height` option in Slicing.cpp:249 (`getFloat`), which is UB, not a
    default-height rule. Do not imitate UB or fabricate defaults; pure None keeps
-   its pre-existing behavior. Coordinator confirmed this bounded scope.
+   its pre-existing behavior.
 5. Retain all source ranges, including height-only entries, default gaps and
    empty tails: PrintApply.cpp::LayerRanges::assign (:342-395) and
    generate_print_object_regions (:958-1027) preserve their global cardinality.
    Equal-config get_create_region deduplicates PrintRegion, not those ranges.
-   The approved [spiral range slice](spiral-single-range-spec.md) corrects the
+   The [spiral range slice](spiral-single-range-spec.md) corrects the
    former height-only candidate filter through this one canonical assignment.
    PrintObjectSlice.cpp:194-222 selects its single-range spiral threshold or
    release multi-range base mode using that global count. Decision4's mixed
@@ -38,7 +36,7 @@ Status: Stage1 approved; Stage2 requires separate approval.
 6. ZAA exists in admitted OrcaSlicer2.4.2 libslic3r but is **not adaptive layer
    generation**. Its owners are `PrintObject::contour_z`, `ContourZ.cpp`, mesh
    ray queries and spatial extrusion paths. Retain its active-feature gate until
-   a separately approved source slice; do not treat existing box-inactive parity
+   a separate source slice; do not treat existing box-inactive parity
    as proof for active slope following.
 7. Keep byte-in/byte-out core platform-neutral (browserWASM/Windows/macOS/Linux),
    no direct file I/O, UI painting state, OpenGL, terminal or Native invocation.
@@ -59,4 +57,4 @@ Status: Stage1 approved; Stage2 requires separate approval.
 
 Read-only investigation only; no Native RED has yet run and no production Rust
 has changed. See the [port spec](../superpowers/specs/2026-10-08-object-layer-height-profiles.md)
-for exact source/destination ownership and approval/TDD milestones.
+for exact source/destination ownership and TDD milestones.

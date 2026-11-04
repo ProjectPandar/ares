@@ -1,9 +1,7 @@
 # PINPOINT — by-object inter-object travel Z 与次对象入场 hop 序列（A 下游子类）
 
-- 分支：`spiral-byobject-transition`（自 W1 冻结 tip `a1a72362a`）
-- 基线：SPEC `097db3559` → RED `4f52aa81b` → GREEN-1 `1440528a9`
 - 冻结输入：`two-object-by-object-apart.3mf`（sha `2dbf797d…7342`）
-- 状态：**只读定位完成，HOLD 待实现授权**（M73 位置类 B 归 W4，本文档不涉及）
+- 范围：只读定位（M73 位置类 B 不在本文档范围内）
 
 ## 1. 观测差异（GREEN-1 后残余的 A 下游子类）
 
@@ -89,7 +87,7 @@ Ares（`transition.rs` 当前实现）：
    相反：branch-3 后 `m_lifted=0`，次对象首路径 travel 自带 `G1 Z.6`/`G1 Z.2`
    入场 hop 对 —— Ares 因 lifted 预置而吞掉了它。
 
-## 4. GREEN-2 实现边界（待授权）
+## 4. GREEN-2 实现边界
 
 - 目标文件：`crates/ares-core/src/project_slice/gcode_emit/layers/transition.rs`（及
   若共享 travel 帮助器需要，最小触及 `motion` 模块）。
@@ -99,13 +97,13 @@ Ares（`transition.rs` 当前实现）：
   `lifted=true/lifted_amount` 预置，令次对象首路径恢复自身 hop 对。
 - 不变量：单对象 by-layer 场景无此切换块（`finished_objects==0`），零影响；
   回归集 33 测试必须全绿。
-- 验收（按 W4 交叉证据修订，见下）：尾部三微差异修复后，冻结输入
+- 验收（按 M73 交叉证据修订，见下）：尾部三微差异修复后，冻结输入
   双模式字节一致（除生成时间戳行），**witness 2/2 直接可达**，无需
   M73 侧改动。
 
-## 4.1 W4 交叉证据（2026-10-25 通报）
+## 4.1 M73 交叉证据
 
-`${EVIDENCE_ROOT}/w4-m73-pinpoint/`：M73 位置类 B 已证实为
+M73 位置类 B 已证实为
 纯尾部总时差下游 —— Ares 序列总模拟时仅少 δ=35.3ms，全部来自本文三处
 尾部差异（travel Z7 vs Z6.2 + 缺失 `G1 Z.6`/`G1 Z.2`）；其重放实验在
 Native 自身行序列上 74/74 复现 M73 锚点，证明 Ares 进度插入模型与
@@ -114,7 +112,6 @@ Native 等价。尾部修复后 δ→0，三处 M73 站点（native 1780/2469/32
 
 ## 5. 证据
 
-- gdb 追踪：`green-check/spiral-byobject-transition-byobject-apart-dHxWE9/gdb-z7/`
-  （`trace.cmd`/`trace.log` = travel_to_z 断点带；`trace2.cmd`/`trace2.log` =
-  travel_to_xyz 入口态 + 标签冲刷；seeded 复现 `ORCA_REPLAY_SEED=0`）。
-- 双侧字节：同目录 `../native.gcode` vs `../ares.api.gcode`（首差 byte 68897）。
+- gdb 追踪：travel_to_z 断点带；travel_to_xyz 入口态 + 标签冲刷；seeded 复现
+  `ORCA_REPLAY_SEED=0`。
+- 双侧字节：Native 与 Ares API 输出首差 byte 68897。

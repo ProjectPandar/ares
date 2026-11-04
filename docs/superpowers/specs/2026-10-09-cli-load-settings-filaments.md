@@ -1,6 +1,6 @@
 # Spec: CLI `--load-settings` / `--load-filaments` port slice
 
-Date: 2026-10-09 · Status: PROPOSED (awaiting coordinator review; no RED yet)
+Date: 2026-10-09 · Status: PROPOSED (no RED yet)
 Upstream: pinned OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`,
 `src/OrcaSlicer.cpp`, `src/libslic3r/PrintConfig.cpp`,
 `src/libslic3r/Config.cpp`, `src/libslic3r/Utils.hpp` (line numbers below

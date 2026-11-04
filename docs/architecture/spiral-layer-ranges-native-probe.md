@@ -1,15 +1,12 @@
 # Native probe: release spiral range branches
 
-Status: REVIEW-REQUEST evidence; no product or test edits.
-Base `2859763166e4a16e4aa4db5bc01380f9316d414f`;
-upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+Upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 See [the amended spec](spiral-single-range-spec.md).
 
-## Owner clarification and conclusion
+## Clarification and conclusion
 
 The initial conservative note treated the multi-range debug assertion as a
-rejection boundary. The owner explicitly superseded that interpretation:
-official2.4.2 is NDEBUG, so `assert(!spiral_mode)` is compiled out. Its
+rejection boundary. That interpretation is superseded: official2.4.2 is NDEBUG, so `assert(!spiral_mode)` is compiled out. Its
 multi-range body executes defined ordinary ranged slicing. Deterministic
 completed R1-like release runs are therefore literal-port authority.
 
@@ -65,7 +62,6 @@ difference solely to speed (the input also authors an explicit height range).
 
 Pinned ELF matches the existing seed-replay producer and matching separate
 debug info. Observers read parameters only; no inferior calls/config writes.
-All launches and observer processes were pinned to CPU18, serial, nice10.
 
 - C0 and R2: global vector count1, `[0, DBL_MAX]`, null config,
   one volume-region record; actual mode PositiveLargestContour, mode_below
@@ -87,7 +83,7 @@ observers with real parameter samples and complete output qualify this table.
 Official execution is direct, not debug-observed; source pin plus official
 replays and the matching seeded branch observation form the stated evidence.
 
-## Literal port proposal for review (not implemented)
+## Literal port proposal (not implemented)
 
 1. Replace guard2's blanket rejection with support for Native-completing,
    deterministic C0/R1/R2-like inputs. They are witnesses, not a shape whitelist.
@@ -108,15 +104,12 @@ replays and the matching seeded branch observation form the stated evidence.
    plus actual physical layers/Z/spiral motion. Include height-only/mixed-range
    regression controls for the assignment refactor. No normalization/tolerance
    changes, assertion waivers, scalar defaults or new public diagnostic APIs.
-6. GREEN only after review authorizes it: minimal existing-owner changes,
+6. GREEN: minimal existing-owner changes,
    both-mode directed strict parity, required-oracle non-parity and fmt/clippy.
    Inherited failures must be named, not relabeled as all green.
 
 ## Evidence outside the repository
 
-Input archives/XML manifest, all eighteen raw streams/argv/exits/hashes and
-GDB scripts/stdout/statuses are retained in the coordinator evidence directory.
-`input-manifest.json`, `probe-result.json`, `release-assessment.json`,
-`gdb-verified/` and `gdb-branches/` are the proof records. The original manifest's
-conservative R1 classification is historical and superseded by release-assessment;
-its input hashes and measured outputs are unchanged. No Native output is committed.
+The original conservative R1 classification is historical and superseded by
+the release assessment above; its input hashes and measured outputs are
+unchanged. No Native output is committed.

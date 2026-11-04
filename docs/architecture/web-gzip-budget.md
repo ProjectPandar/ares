@@ -1,8 +1,5 @@
 # Web initial JS gzip budget headroom
 
-Status: proposed (spec only, awaiting review). Branch `pi/web-gzip-budget` from
-`c4572b368`.
-
 ## Why this slice
 
 After `c4572b368` the initial JS (entry + modulepreloads) is 124,955 B gzip,
@@ -20,8 +17,7 @@ The initial chunk was rebuilt with `vite build --sourcemap` into a scratch
 outDir; it has the same content hash, `index-C3T7tT2x.js`. Its minified bytes
 were attributed to sources through the sourcemap. The gzip column is each
 group's text compressed alone, so it is approximate and the rows do not sum to
-the total. Script: `${TMP_ROOT}/ares-gzip-probe/attribute.mjs`; output:
-`${TMP_ROOT}/ares-gzip-probe/attribution.txt`.
+the total.
 
 | gzip ≈ | raw | source |
 |---:|---:|---|
@@ -74,24 +70,23 @@ Rejected or deferred alternatives:
    initial JS contains no `data:image/svg+xml`.
 3. **Headroom is lost silently:** the budget constant is unchanged. The new
    initial gzip is recorded in `target/web-e2e/bundle/result.json`, as today.
-4. **Review screenshots captured before the icons arrive:** the visual specs
+4. **Screenshots captured before the icons arrive:** the visual specs
    only produce artifacts and contain no pixel assertions. Their screenshots
-   are checked by eye in the review artifacts.
+   are checked by eye.
 
 ## RED-first plan and acceptance evidence
 
 1. **RED** (`test(web)`): in `bundle.spec.ts`, assert that no initial script
    contains `data:image/svg+xml`, plus the first-screen `img.orca-icon` load
    assertion. Expected failure: the `data:` assertion on the 73 inlined URLs;
-   the icon load assertion passes both before and after. Browser window with
-   BROWSER-START/END, filter `bundle.spec.ts`.
+   the icon load assertion passes both before and after. Filter
+   `bundle.spec.ts`.
 2. **GREEN** (`perf(web)`): the `?url&no-inline` query.
 3. **Gates:** `npm run build:wasm && npm run build`, typecheck, lint. Then the
-   full web E2E on the final HEAD in a quiet window (load1 < 20 at START, load
-   sampled throughout). No Rust or G-code change is expected; fmt, clippy and
+   full web E2E on the final HEAD. No Rust or G-code change is expected; fmt, clippy and
    `cargo nextest run --workspace` still run as a sanity gate.
 
-## Open question for review
+## Open question
 
 Is about 9.5 kB of headroom from the icon change alone enough, or should the
 lazy Preview route also be scheduled in this slice?

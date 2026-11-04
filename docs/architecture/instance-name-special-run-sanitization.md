@@ -1,12 +1,5 @@
 # Instance-name special-run sanitization
 
-Status: docs-only SPEC, then separately committed Native-first public RED.
-Base47821c760d5ea86102a34bbc78c092bbaf381214; independent branch
-worker6/instance-name-sanitize-spec. CPU15/jobs1/test-threads1; no FULL.
-Only SPEC+RED is authorized now; production GREEN requires separate approval.
-Earlier approved chains20e41b63f,8ddfa8ca5,360e9aa90 remain clean/frozen separately.
-COORD's eventual W6 window carries four chains; no current integration permission.
-
 ## Upstream owner / Rust destination / architectural decision
 
 This is a source-cited libslic3r string-operation rewrite, not an Ares object
@@ -51,14 +44,10 @@ interfaces; no new regex dependency, escaping policy or name validation.
 - No queued painted/side-cut, brim/EFC, combine-solid, Aligned-rectilinear GEOMETRY
   template identity, concentric sparse, spiral/processor, seam occlusion,
   zero-area winding or placeholder-double rendering changes.
-- Any strict residual during a separately authorized GREEN means STOP/review;
+- Any strict residual during GREEN means stop;
   do not broaden the boundary or modify tests/inputs/helpers/SPEC/comparators.
 
-## Approved discovery / first producer proof
-
-External authority:
-`${EVIDENCE_ROOT}/w6-47821-object-label-name-nswzrbdw/`.
-DISCOVERY-RR.md,verification.json,verify-discovery.py,pair-proof.json and trace.
+## Discovery / first producer proof
 
 Both inputs: one Classic/unpainted object, Marlin, exclude_object=1, interlocking/
 polyhole/brim/skirt/EFC OFF. Only logical GUI property ModelObject.name differs:
@@ -108,7 +97,7 @@ object). Dynamic live Native expected bytes, NO hardcoded Native output/name,
 M486 string, coordinate, mismatch expectation, exception-as-success or private
 sanitizer test. No Native G-code/golden output committed; inputs only.
 
-## Approval sequence / verification contract
+## Verification contract
 
 1. Docs-only SPEC commit, then input/test-only RED commit; production and the
    existing #[cfg(test)] module stay frozen. All changed text<400LOC.
@@ -118,10 +107,8 @@ sanitizer test. No Native G-code/golden output committed; inputs only.
 3. Target canonical panic occurs BEFORE final raw assertion/adapter update:
    independently inspect actual raw API/CLI files; do not claim the assertion ran.
 4. fmt and strict workspace/all-target clippy PASS; helpers/golden/tests/production
-   scope proof. Send SPEC+RED RR and STOP BEFORE GREEN; no FULL/rebase/push/merge.
-5. If separately authorized later, production-only function-body GREEN must make
+   scope proof.
+5. Production-only function-body GREEN must make
    the frozen pair fully pass in BOTH modes plus relevant existing object-label/
    exclusion neighbors and fmt/clippy/WASM gates. Do not add/change existing unit
    tests or claim unobserved universal name/firmware parity from these two cases.
-6. Four-chain W6 integration still requires explicit COORD window/main, preserved
-   refs and exact integrated-tip gates. Historical FULLs provide no new credit.

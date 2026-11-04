@@ -42,8 +42,8 @@ geometry-dependent state. The shell was only reachable end-to-end while
 `detour_emission_ready() = false`; the boundary router landed and the
 flag is permanently `true` (`avoid_crossing.rs:226-228`).
 
-Instrumented experiment (evidence
-`${LOCAL_EVIDENCE_ROOT}/worker4/rect-shell-probe/`): `detour_emission_ready`
+Instrumented experiment (evidence retained externally):
+`detour_emission_ready`
 forced to `false` in a scratch build, `detour-3parts.3mf`
 (`tests/parity/max-travel-detour`, `reduce_crossing_wall=1`, cap=0)
 sliced with the shell handling every routed travel.
@@ -93,7 +93,7 @@ today they're unreachable; the straight fallback is the bounded
 behavior-preserving choice. `use_external`/`use_external_mp_once`
 semantics are unchanged (outside this shell's boundary).
 `could_be_wipe_disabled` remains unmodeled (dead upstream consumer,
-per prior GREEN review).
+per prior GREEN).
 
 ## RED plan
 

@@ -1,12 +1,9 @@
 # ZAA ordinary LockedZag regional direction SPEC
 
-Status: SPEC-REVIEW-REQUEST, docs only. No Native/build/test run or RED
-claimed for this slice. Wait for approval before acceptance probes or tests.
+Docs only. No Native/build/test run or RED claimed for this slice.
 
-Base main c251aa6166bcc0270063fc6d2e41b84ab01a637d plus approved anchoring
-chain through0eadb58ff75e597b2c876f93cfbee8f99f89fdd3 (stack-15 candidate).
-The approved anchoring branch remains unchanged. Rebase onto its eventual
-main and audit range-diff before subsequent submission if it merges first.
+Builds on the anchoring slice through0eadb58ff75e597b2c876f93cfbee8f99f89fdd3,
+which remains unchanged.
 Upstream inspected: OrcaSlicer8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 ## Owning libslic3r boundary
@@ -68,11 +65,11 @@ assignment; support, raft and tower; new modifier, multi-object or Arachne
 witnesses; any LockedZag geometry/density/flow/width/phase defect. Do not
 change lock-region construction, clipping, residual gaps, sorting, motion,
 ZAA contour sampling, cooling or bridge candidate logic. Anchoring's flag
-is already handled by approved0eadb58ff and is not reopened here.
+is already handled by0eadb58ff and is not reopened here.
 
 ## Bounded Native acceptance and activity before public RED
 
-After approval, reuse the admitted input setup from
+Reuse the admitted input setup from
 option_coverage/fill_grid.rs::
 locked_zag_shifts_preserve_complete_output:30-39 and its compare
 helper:80 onward: existing wide slab height2.4mm, LockedZag40%, relative E,
@@ -86,7 +83,7 @@ and shared valid ZAA parameters (min_z0.05, minimize_perimeter_height35):
 2. ZAA enabled, dont_alternate true: proposed activity/RED case.
 3. ZAA disabled, dont_alternate true: conjunction control, included in RED.
 
-Use official CPU13 and seeded CPU14, outer taskset, jobs2/threads2, fresh
+Use official and seeded modes with a fresh
 Native cache/artifact root for each invocation; no full/workspace. Force
 two fresh Native references per case/mode (six per mode), with frozen ZIP
 metadata. Require successful complete Native exports and exact effective
@@ -100,7 +97,7 @@ stream; do not infer activity merely from a footer or estimated time.
 If Native rejects/crashes, controls diverge, repeats vary or no geometry
 witness exists, STOP and report; no widening or fabricated RED.
 
-## Public RED, GREEN and review gates
+## Public RED and GREEN gates
 
 Following accepted Native evidence, commit public E2E RED separately.
 Use input-only frozen SHA-pinned3MFs, OrcaRunner::from_env's existing
@@ -110,11 +107,11 @@ commit Native output. Assert active Sparse infill XY/E equality before
 whole-output parity, with both controls in the same RED commit. Expected
 true case FAIL, both controls PASS in both modes. If the divergence is
 outside this boundary, STOP and request localization rather than changing
-comparisons or repairing adjacent code. Submit exact RED hash before GREEN.
+comparisons or repairing adjacent code.
 
 GREEN then carries the one regional conjunction through the existing
 context; tests and comparisons remain unchanged. Require all three cases
 PASS both modes, raw-unchanged false/disabled controls, existing LockedZag
 shift/skin/skeleton-width controls, ZAA/fill-direction/anchoring controls,
 fmt, strict clippy and wasm32 on the exact clean hash. Files stay at most
-400LOC. Full/workspace/CI and merging remain coordinator-only.
+400LOC.

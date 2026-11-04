@@ -49,4 +49,4 @@ of each other while Ares produced the same direction twice. After
 the oracle's diagonal serpentine shape on the cube10 fixture. After the
 contour-direction fix the sweep case is byte-identical to official Orca
 2.4.2 — `option/sparse_infill_pattern/lockedzag` PASS
-(`/tmp/parity-sparse-final`, 26/26 values).
+(26/26 values).

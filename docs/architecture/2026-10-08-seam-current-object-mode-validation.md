@@ -1,10 +1,9 @@
 # Seam configuration and visibility belong to the current PrintObject
 
-Slices A0 and A implement the approved
+Slices A0 and A implement the
 [parameter-scope spec](gcode-seam-parameter-scope-and-visibility-order.md),
-original approval `4bea1d247`, A0 amendment approval `2076d208e`.
-All required gates are complete, subject to exact-hash merge review.
-The original baseline includes the approved D fix (`dbcd52d5a`); main
+original `4bea1d247`, A0 amendment `2076d208e`.
+The original baseline includes the D fix (`dbcd52d5a`); main
 `cdbfba4f9` changes web only, so evidence may be reused after rebase.
 B and C remain separate slices. The double-distance precision
 checkpoint is retained for C; this slice changes no distance formula.
@@ -41,8 +40,8 @@ are deferred; core remains platform-neutral.
 An isolated uncommitted A visibility-scope trial without A0 failed the same witness
 and left the complete Ares output SHA unchanged at
 `9e14003642f98b6003b5d385ca606ddacb934b4a2b592b6cec12d2bd678c64ef`.
-The trial was reverted; retained log `/tmp/worker6-seam-A-green.log` is a
-failed diagnostic, not GREEN. Per coordinator direction, A0 was implemented
+The trial was reverted; it is a
+failed diagnostic, not GREEN. A0 was implemented
 alone first. It fixed the initial difference but left a second-layer seam
 RED, documented below; it did not restore complete equality.
 
@@ -77,10 +76,9 @@ Wire values `aligned_back` and `back` are distinct
 The generic comparator manifests mark cached producer identity unknown;
 they are not used alone as provenance. Native-cache-v2 receipts bind each
 input request and output hash to the real producer. The9 receipts for RED,
-A0-only and joint GREEN are indexed in
-`/tmp/worker6-seam-A0-native-producer-record.json`. They use producer digest
+A0-only and joint GREEN use producer digest
 `ae933746dd2c805397c2a62d80973a94d0b190abeccfa907cec4760de7ca6caf`,
-seed0 and one pinned CPU per Native process.
+seed0.
 Native binary SHA256 is
 `59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`;
 resources SHA256 is
@@ -112,15 +110,8 @@ belongs to `nearest-target.stl`. This movement-only diagnostic attribution
 is not a separate comparator or a relaxed PASS criterion: the actual test
 always compares the complete output, including M73 and object-id comments.
 
-Evidence retained:
-`/tmp/worker6-seam-A-generate-inputs.py`,
-`/tmp/worker6-seam-A-input-manifest.json`,
-`/tmp/worker6-seam-A-probe-v1.rs`,
-`/tmp/worker6-seam-A-probe-record.json`,
-`/tmp/worker6-seam-A-probe.log`,
-and `/tmp/worker6-seam-A-probe-{cache,artifacts}`.
 The diagnostic external-manifest test was replaced before RED commit; no
-committed test depends on `/tmp` fixture paths.
+committed test depends on external fixture paths.
 
 Three copied inputs are frozen in `tests/parity/validation/`:
 
@@ -140,10 +131,8 @@ output, normalizing only the generated-by line.
 
 Standalone fresh seeded RED:2 PASS/1 FAIL,1.736s,nextest100.
 The mixed case is DIVERGENT; both sibling controls PASS.
-Log `/tmp/worker6-seam-A-red.log`; indexed manifests
-`/tmp/worker6-seam-A-red-record.json`. RED executable SHA256
+RED executable SHA256
 `a188cf86afdaf7b267dd0f078429c3e5f22014c3ea4a038e614a8e1fd084ff8a`.
-Mixed artifacts `/tmp/worker6-seam-A-red-artifacts/case-3HbZlL`.
 
 Whole-output first difference is byte2322,line105,column1:
 Native `G1 X120.31 Y106.31 E.22677`, Ares `M73 P60 R0`; Native emits that
@@ -166,8 +155,7 @@ does not by itself establish an independently reachable visibility defect.
 
 A0 boundary commit `5b42d7b47ccd2595ecea492d7146508df2fc6ad0` is not a
 whole-output GREEN. Fresh directed comparison gave2 PASS/1 DIVERGENT in
-2.953s; `/tmp/worker6-seam-A0-directed.log`, mixed artifacts
-`/tmp/worker6-seam-A0-directed-artifacts/case-OaQsu2`.
+2.953s.
 Both sibling controls PASS. The original M73/first-layer seam difference
 disappeared, but the first difference moved to byte4604, raw line212,
 column8: Native `G1 X89.599 Y112.057 Z.8` versus Ares
@@ -180,23 +168,21 @@ RED and A0-only Native outputs are byte-identical after removing only the
 generated-by line, normalized SHA256
 `c73fc2bafccbf853d6cfbb5760a7866113963d65d4e3db0405d1e21edeb7ed40`.
 Raw Native SHA changes only with that allowed header; both complete files
-are retained. `/tmp/worker6-seam-A0-only-record.json` binds both manifests
-and normalized Native identities. The residual is therefore an Ares change,
+are retained. The residual is therefore an Ares change,
 not a new oracle output. A's per-object visibility edit is tested on top of
 this retained A0-only boundary to establish whether it fixes the residual.
 
 ### Joint A0+A directed GREEN
 
 Adding only A's per-object bias correction on A0 restores3/3 PASS in1.485s.
-Log `/tmp/worker6-seam-A0-A-directed.log`; all three manifests retained in
-`/tmp/worker6-seam-A0-A-directed-record.json`. The mixed input's Ares raw
+The mixed input's Ares raw
 SHA256 is `ddbcb7a5dbf0333f77aca1b49e3fafee68009fad766dd833c57d5e37b52deb33`;
 the executable SHA256 is
 `efcb8ee320a52189f70a8d53f5fd206a36054e7fc80e314556d94a996ba9c2d4`.
 The mixed Native normalized SHA is again identical to the full hash
 recorded above. Both sibling Ares outputs are also byte-identical to RED.
 This single-source-boundary addition removes the A0-only second-layer
-residual, providing the approved attribution evidence for A. Neither
+residual, providing the attribution evidence for A. Neither
 partial fix alone passes the witness; both source boundaries are needed.
 
 | Producer state | Mixed fixture | Both sibling controls | First difference |
@@ -207,24 +193,18 @@ partial fix alone passes the witness; both source boundaries are needed.
 | A0+A | PASS | PASS | None, complete ordered bytes |
 
 The two boundaries have separate commits. After a zero-conflict rebase onto
-`cdbfba4f9`, RED is `e3b13c142`, approved amendment `609f61c61`, A0
+`cdbfba4f9`, RED is `e3b13c142`, amendment `609f61c61`, A0
 `c8c7b3410`, and A's joint GREEN `972cfbca0`. The runtime/test/fixture diff
-against the pre-rebase gated candidate `3ef1ada0b` is empty, retained in
-`/tmp/worker6-seam-A0-rebase-runtime-diff.log`. Main's intervening changes
+against the pre-rebase gated candidate `3ef1ada0b` is empty. Main's intervening changes
 since D contain no crates/tests/scripts/Cargo/.config changes.
 
-Independent base worktree `${TMP_ROOT}/ares-worker6-seam-A-base` is RED96d1836ad;
-base target `${TMP_ROOT}/ares-worker6-seam-A-base-target`.
-Candidate target `${TMP_ROOT}/ares-worker6-green-target`.
+The independent base is RED96d1836ad.
 Fresh same-round seeded controls completed: base662/663 PASS in179.894s,
 candidate663/663 PASS in127.975s, no timeout. Only the mixed seam witness
-changes FAIL→PASS; both siblings remain PASS. Logs
-`/tmp/worker6-seam-A0-{base,candidate}-seeded.log`; fresh cache and artifact
-roots have the corresponding `-cache` and `-artifacts` suffixes.
+changes FAIL→PASS; both siblings remain PASS.
 Official controls completed: base653/663 PASS in148.880s,
 candidate653/663 PASS in113.211s, no timeout. Both have10 raw failures,
-with two status/reason changes listed below. Logs and fresh roots follow
-`/tmp/worker6-seam-A0-{base,candidate}-official{.log,-cache,-artifacts}`.
+with two status/reason changes listed below.
 Workspace nextest passed8053/8053 with9 skipped in718.881s;
 WASM, final strict clippy and fmt passed; the earlier fmt line-wrap failure
 remains in its original log.
@@ -234,16 +214,13 @@ remains in its original log.
 | Case | Seeded base→candidate | Official base→candidate | Classification |
 |---|---|---|---|
 | `runner::seam_object_bias::aligned_back_object_does_not_bias_nearest_object` | FAIL→PASS | FAIL→PASS | A0+A complete-output fix |
-| `bridge_over_infill_filament::bridge_over_infill_multi_filament_x2d` | PASS→PASS | PASS→FAIL | INCONCLUSIVE-oracle-UB, coordinator accepted |
+| `bridge_over_infill_filament::bridge_over_infill_multi_filament_x2d` | PASS→PASS | PASS→FAIL | INCONCLUSIVE-oracle-UB |
 
-All other661 cases have unchanged raw status and reason. Machine-readable
-full failure sets and reason changes are retained in
-`/tmp/worker6-seam-A0-control-status-changes.json`, produced by
-`/tmp/worker6-seam-A0-compare-controls.py`. Seeded candidate failures are a
+All other661 cases have unchanged raw status and reason. Seeded candidate failures are a
 strict subset of base. Official raw failure sets are **not** a subset:
 the bridge X2D case is the sole candidate-only raw failure. It is not an
-Ares regression or a PASS; the coordinator explicitly accepted its known
-oracle-UB classification and requested the serial recheck below.
+Ares regression or a PASS; it keeps its known
+oracle-UB classification and was rechecked serially below.
 
 Candidate bridge X2D first asserted difference is byte57060,line1096
 (raw line1097): Native
@@ -251,20 +228,17 @@ Candidate bridge X2D first asserted difference is byte57060,line1096
 versus Ares's id0 line. Its complete asserted Ares SHA256 is
 `331827159281658d6baac34427836ee19fe89242c123fcb32ae3757ccd4ed79d`,
 identical to both sides of the accepted D report. Evidence is parsed from
-the actual candidate failure arrays in
-`/tmp/worker6-seam-A0-official-bridge-candidate-record.json`.
+the actual candidate failure arrays.
 The original base raw PASS is preserved; it does not establish an initialized
 Native oracle. This is the previously classified uninitialized
-`Print.hpp:582 m_id`, read at `:468–469`, not an invented Ares object ID or
-an O8-X2D-SCALAR attribution.
+`Print.hpp:582 m_id`, read at `:468–469`, not an invented Ares object ID.
 
 `narrowed_x2d_whole_file::narrowed_x2d_whole_file` remains FAIL
 on both sides. First asserted difference is byte57075,line1097 at the same
 id0 object label; Native IDs are9223372037920129024→4565949087785943040.
 The complete asserted Ares SHA256 is identical on both sides:
 `ff469e046fbd6f49e361bed645f184e5daed08366a9ce02d0f48a0dc26574543`.
-Actual failure arrays and both Native hashes are indexed in
-`/tmp/worker6-seam-A0-official-x2d-assertion-record.json`. It remains
+It remains
 INCONCLUSIVE-oracle-UB, never promoted to PASS.
 
 The other8 official failures are unchanged missing initialized-reference
@@ -284,8 +258,6 @@ environment (`NotPresent`), retained as FAIL:
 One fresh base→candidate single-test pair ran serially with independent
 fresh cache roots, forced real Native slicing and the same single-case
 filter. Base PASS in33.520s; candidate DIVERGENT in37.150s, no timeout.
-Logs `/tmp/worker6-seam-A0-bridge-{base,candidate}-recheck.log`; parsed record
-`/tmp/worker6-seam-A0-bridge-paired-recheck-record.json`.
 Candidate's first difference remains byte57060,line1096 at the id0 label.
 Its Native ID changes from the full-round13771850873779538142 to
 9223372037920129024, while its complete asserted Ares SHA remains the
@@ -293,80 +265,47 @@ identical `33182715…4ed79d` recorded above. This confirms Native variability
 at the known uninitialized member; it does not promote candidate to PASS.
 The original full-round results and recheck remain separate evidence.
 
-## Resource policy and workspace gates
+## Workspace gates
 
-All control runs use16 nextest threads and separate fresh cache/artifact
-roots, with one heavy task at a time. Initial input preparation and CLI
-compilation respected the browser hold; Native probing began only after
-BROWSER-END. Native timeout is INCONCLUSIVE, existing oracle UB remains
-non-PASS, and no retry may overwrite an original result. Every status and
-failure-reason change must be recorded before exact-hash REVIEW-REQUEST.
-
-The official wrapper fix at16:03 Asia/Singapore (08:03UTC) changed global
-CPU1 forcing into inheritance of the pinned runner CPU. Both full official
-runs and the serial recheck use this corrected wrapper, SHA256
-`391081d7f971e703efb6a72fe9ad7a7c406a11e220d8bf4bc9474e01437a9333`.
-Official Native binary SHA256 is
-`64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60`;
-control-script SHA256 is
-`a8ee8f379012d374eb05e63bf786c34957ad137501cde6a32c6de53fcd0e2fb6`.
-No old-wrapper timeout is promoted to PASS. BROWSER-START web s4-red2
-arrived during base seeded; that job continued, and candidate seeded
-started only after the subsequent BROWSER-END. No other heavy task was
-started during that hold.
-
-Workspace command is `cargo nextest run --workspace --test-threads 16
---no-fail-fast`, with `CARGO_TARGET_DIR=${TMP_ROOT}/ares-worker6-green-target`,
-`CARGO_BUILD_JOBS=8` and `CARGO_INCREMENTAL=0`. Optional-reference tests
+Workspace command is `cargo nextest run --workspace --no-fail-fast`. Optional-reference tests
 returning without Native environment in this ordinary workspace run do
 not replace the separate identified fresh Native comparisons above.
-The workspace result is8053 PASS,9 skipped,35 slow in718.881s;
-log `/tmp/worker6-seam-A0-workspace.log`.
+The workspace result is8053 PASS,9 skipped,35 slow in718.881s.
 
-The coordinator subsequently advanced main to `1a8c92f55` (CLI exit-code
-families, retained -102 metadata and the related SliceError fields) and
-explicitly ruled that G-code output is unchanged: seeded/official evidence
-may be reused, but strict clippy and this slice's directed tests must run
+Main subsequently advanced to `1a8c92f55` (CLI exit-code
+families, retained -102 metadata and the related SliceError fields), which
+leaves G-code output unchanged: seeded/official evidence
+is reused, but strict clippy and this slice's directed tests must run
 after rebase. The workspace run completed on the gated `cdbfba4f9` baseline
 before rebase, preserving its compiling source. Rebase onto `1a8c92f55`
 then completed with zero conflicts: final RED `b2852ea44`, spec `b91896cd3`,
 A0 `3d585ba51`, A joint GREEN `826db5ef2`. This slice's production/test/fixture
-diff against previously gated `972cfbca0` is empty, retained in
-`/tmp/worker6-seam-A0-post-main-slice-diff.log`. Post-rebase fresh Native
+diff against previously gated `972cfbca0` is empty. Post-rebase fresh Native
 directed tests passed3/3 in1.772s, with all three complete Ares output hashes
-identical to pre-rebase GREEN. Log
-`/tmp/worker6-seam-A0-post-rebase-directed.log`, manifests
-`/tmp/worker6-seam-A0-post-rebase-directed-record.json`, producer receipts
-under `/tmp/worker6-seam-A0-post-rebase-directed-cache/native-cache-v2/`.
+identical to pre-rebase GREEN.
 The new executable SHA256 is
 `1934150cd79c111639f43682d1ec0bb237cada99ba96c26328bcf743c3a9c294`.
-Post-rebase strict clippy passed in2m16s
-(`/tmp/worker6-seam-A0-clippy.log`); WASM check
-`cargo check -p ares-wasm --target wasm32-unknown-unknown` passed in37.43s
-(`/tmp/worker6-seam-A0-wasm.log`).
+Post-rebase strict clippy passed in2m16s; WASM check
+`cargo check -p ares-wasm --target wasm32-unknown-unknown` passed in37.43s.
 
 Final fmt initially required only a line wrap of the new current-object
 seam assignment. `cargo fmt --all` applied that formatting, amended into
 joint GREEN `d9d346effc1b88ba6382308e82332b7719f63e8c`.
 The entire runtime/test diff from the post-rebase directed candidate is
-this single line wrap, retained in `/tmp/worker6-seam-A0-format-only.diff`;
+this single line wrap;
 Native/workspace/WASM evidence is reused for this non-semantic change.
-Final strict clippy passed in1m22s and fmt passed, with exit0:
-`/tmp/worker6-seam-A0-final-clippy.log` and
-`/tmp/worker6-seam-A0-final-fmt.log`.
+Final strict clippy passed in1m22s and fmt passed, with exit0.
 
 | Final gate | Result |
 |---|---|
 | Fresh paired seeded | 662/663→663/663; sole mixed seam fix; no timeout |
-| Fresh paired official | 653/663→653/663; mixed seam fix and accepted X2D oracle-UB status change; no timeout |
+| Fresh paired official | 653/663→653/663; mixed seam fix and X2D oracle-UB status change; no timeout |
 | Workspace nextest | 8053 PASS,9 skipped |
 | Directed Native after main1a8c92f55 rebase | 3/3 whole-output PASS; all Ares hashes unchanged |
 | Strict workspace/all-target/all-feature clippy | PASS with `-D warnings`, repeated after formatting |
 | WASM ares-wasm check | PASS |
 | Final fmt and diff whitespace check | PASS |
 
-Log and structured-evidence SHA256 identities are indexed in
-`/tmp/worker6-seam-A0-evidence-index.json`. No failed original evidence was
+No failed original evidence was
 overwritten, no comparator/fixture/assertion was relaxed, and no private
 probe, new fallback, UB emulation or unrelated code cleanup was introduced.
-Push awaits coordinator approval of the exact final review commit.

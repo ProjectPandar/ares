@@ -1,6 +1,6 @@
 # Latched tool marker wait in `checkToolpathPreview` (SPEC)
 
-Status: SPEC, awaiting COORD review. Scope is the web E2E harness only. The
+Scope is the web E2E harness only. The
 completion signal it relies on already exists; no `ares-core`, `ares-wasm` or
 app code changes.
 
@@ -47,9 +47,6 @@ Not confirmed:
   cause, but the job does not record it.
 - Whether the final frame differs from `full`. No readback finished.
 
-The stack-9 occurrence was not re-analyzed because its artifacts are past
-retention.
-
 ## Deterministic completion signal (already in the app)
 
 After `End`, the chain is synchronous React state plus one posted render task:
@@ -88,7 +85,7 @@ expect(marked, "the latched tool marker draws at the last move").not.toBe(full);
 - The readback runs under the test timeout (`playwright.config.ts:12`, 300 s),
   like the existing unpolled digests at `:298` and `:137`.
 
-## Same hazard elsewhere (not changed without a ruling)
+## Same hazard elsewhere (not changed here)
 
 Every other `expect.poll(() => canvasDigest(page))` puts the readback under the
 same 5 s budget:
@@ -100,18 +97,18 @@ same 5 s budget:
 
 Each one needs its own proof that a busy or drawing signal precedes it. For
 example, camera zoom (`shortcuts.spec.ts:114`) passes through OrbitControls,
-not `aria-busy`. Proposal: fix `:324` now. COORD decides whether a follow-up
+not `aria-busy`. This change fixes `:324` only; a follow-up
 slice audits the rest call by call.
 
 ## Evidence plan
 
 1. Base (main, unmodified) vs head on the desktop project, `presetSlice.spec.ts`,
-   one worker. The browser process is pinned to a single CPU (16) to slow
+   `--workers=1`. The browser process is pinned to a single CPU to slow
    SwiftShader; `--repeat-each` is not used. Expected: base fails at `:324`
    with the pending-readback timeout when the readback goes over 5 s; head passes.
    If base passes under this pinning, report that as "not reproduced" and keep
    the trace timing as the evidence. The CPU budget is not changed to force a failure.
-2. Head on the normal 16,17 pinning: `presetSlice.spec.ts` and `slice.spec.ts` pass.
+2. Head on the normal two-CPU pinning: `presetSlice.spec.ts` and `slice.spec.ts` pass.
    The trace shows exactly one readback at `:324`.
 3. `npm run lint` and `npm run typecheck`.
 

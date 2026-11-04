@@ -1,18 +1,16 @@
 # Arachne available-candidate std::sort permutation: reachability and port spec
 
-Status: **DRAFT for coordinator review; no production implementation authorized by this document.**
+Status: proposed. No production implementation is part of this document.
 Baseline main `3c1a7994164082964407c7a0179694c5c25cb5b8`.
-Final docs checkout rebased without conflicts onto web-only main `8264d38ab`;
-coordinator authorized evidence reuse. No Rust behavior changed by rebase.
 Application source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 The previously deferred >16 permutation is now investigated separately from
-[the approved open-before-closed fix](arachne-open-wall-candidate-order.md).
+[the open-before-closed fix](arachne-open-wall-candidate-order.md).
 
 **Cardinality is REACHABLE**, including >16 open candidates. **Output RED is
 NOT FOUND in this finite nine-input domain.** These are separate conclusions;
 neither a universal output-equivalence proof nor UNREACHABLE is claimed.
 Do not implement the proposed port until an attributed real Native complete-byte
-RED exists and the coordinator approves the implementation scope.
+RED exists.
 
 ## Owning upstream boundary and current Rust destination
 
@@ -39,7 +37,6 @@ an upstream operation rewrite, not a new Ares pipeline or path optimizer.
 
 ## Executed public Native whole-output probes
 
-Original candidate plan is retained at `/tmp/worker6-sort16-red-candidates.md`.
 Two batches used public project bytes→Native output and Ares complete output
 via `OrcaRunner::rerun_reference` / `compare_case`, with unchanged generated-by
 normalization. All timing, M73, coordinates, role and config lines remain.
@@ -57,7 +54,7 @@ normalization. All timing, M73, coordinates, role and config lines remain.
 | comb-20 |20thin teeth on one connected backbone|PASS|
 
 Both batches completed all Native calls; no timeout/error/UB verdict occurs.
-Batch1 nextest4.585s, batch2 nextest2.859s, one temporary discovery test each.
+Each batch used one temporary discovery test.
 Six plus three comparison outcomes are individually recorded, not inferred
 from an empty/suppressed failure list. Input manifests retain NOT_RUN as their
 original preparation state; actual outcomes are in separate probe-records.
@@ -73,15 +70,15 @@ output labels or any other G-code bytes are filtered.
 
 The first harness attempt stopped before Native because the assertion used
 fuzzy enum `none` while the input's actual spelling is `disabled_fuzzy`.
-The corrected assertion verifies that exact existing value; the first log
-`/tmp/worker6-sort16-official-precondition.log` is preserved as a precondition
+The corrected assertion verifies that exact existing value; the first run is
+preserved as a precondition
 error, not RED. A fresh independent cache/artifact root was used afterward.
 
 ## Existing-binary observations establish cardinality, not output RED
 
-Following the coordinator's instruction, GDB was invoked through
+GDB was invoked through
 `nix shell nixpkgs#gdb -c gdb`, against the **existing official binary**;
-Orca was not rebuilt, patched or memory-mutated. Native remained single-CPU.
+Orca was not rebuilt, patched or memory-mutated.
 The ELF retains `process_arachne` and its dedicated introsort symbols but not
 source debug lines. Read-only register/memory interpretation is grounded in
 retained disassembly and `Arachne/utils/ExtrusionLine.hpp` field layout:
@@ -112,12 +109,12 @@ fresh Native outputs under generated-by normalization only. Raw SHA differences
 are retained rather than called equal. This rules out an unobserved debugger
 output change for these four replays, not general Native determinism.
 
-Evidence: `/tmp/worker6-sort16-gdb-summary.json`, four per-case GDB records,
-`/tmp/worker6-sort16-official.log`, `...official-open.log`, two probe records,
-input manifests and Native producer receipts. Nine input+raw-output hashes
-join exactly to fresh Native receipts. The frozen index and SHA are below.
-Temporary Rust harness/registration were removed after discovery; archived
-harness remains `/tmp/worker6-sort16-probe.rs`. No production Rust changed.
+Evidence: a GDB summary, four per-case GDB records, the official run outputs,
+two probe records,
+input manifests and Native producer identities. Nine input+raw-output hashes
+join exactly to fresh Native outputs. The frozen index and SHA are below.
+Temporary Rust harness/registration were removed after discovery.
+No production Rust changed.
 
 ## Proposed deterministic port, conditional on real output RED
 
@@ -173,20 +170,19 @@ observed rather than replaced with fabricated geometry outputs.
 A valid future RED must freeze actual Native/Ares whole outputs and first
 byte/line, retain any earlier M73 difference, and attribute the differing
 winner to the recorded sort permutation (rather than just source suspicion).
-Commit RED alone and notify before any production implementation. Then the
-approved port requires whole-output GREEN and fresh paired full seeded and
+Commit RED alone before any production implementation. Then the
+port requires whole-output GREEN and fresh paired full seeded and
 official controls, all state/reason changes, workspace/clippy/fmt/wasm checks.
 If the finite continuation still has no RED, report NO RED FOUND with its
 exact domain; do not label cardinality UNREACHABLE or implement without RED.
 
 ## Frozen evidence
 
-`/tmp/worker6-sort16-evidence-index.json`: nine matched Native cases,196 files;
+Evidence index: nine matched Native cases, 196 files;
 SHA256 `03306e26f000809ff8b93a09541835fa601ad7442fc9e8591634476ac06a3268`. Official executable SHA256:
 `64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60`.
-Cache receipts retain actual native/resources/launcher/process identity.
-Probe batch roots are `/tmp/worker6-sort16-official-v2-{cache,artifacts}` and
-`...official-v3-{cache,artifacts}`. Full workspace/seeded/clippy/wasm gates
-are not claimed for this docs-only result; last production remains main's
-approved open-before-closed slice. Final `cargo fmt --all -- --check` PASS (`/tmp/worker6-sort16-final-fmt.log`);
+Cache metadata retains actual native/resources/launcher/process identity.
+Full workspace/seeded/clippy/wasm gates
+are not claimed for this docs-only result; last production remains the
+open-before-closed slice. Final `cargo fmt --all -- --check` PASS;
 final staged diff check PASS. No production Rust or lasting test changes.

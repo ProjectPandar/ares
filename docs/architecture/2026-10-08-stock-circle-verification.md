@@ -2,7 +2,7 @@
 
 ## Boundary and commits
 
-Approved spec `4e9ce4d3b`; independently committed RED `5abf8ef04`;
+Spec `4e9ce4d3b`; independently committed RED `5abf8ef04`;
 GREEN `368bf6284`, based on `aaa89f76a`, then rebased unchanged onto
 `7a3216f67`: spec `7f6b5a869`, RED `5eb1f79fb`, GREEN `f8400605e`.
 GREEN's stable patch-id is identical before/after rebase:
@@ -14,13 +14,12 @@ Source owners and immutable numeric decisions:
 The full stock-circle archive (SHA256
 `446e19e8f8dc9443c68774bc31fca6d0187798e41031882919cf0930362be8f6`)
 is retained as `tests/parity/validation/print-volume-stock-circle-cylinder.3mf`.
-The core RED accepted G-code (`/tmp/worker3-o6-circle-red.log`), not a compile
-failure. GREEN asserts Native's exact -50 diagnostic. All seven O6 core E2E
+The core RED accepted G-code, not a compile
+failure. GREEN asserts Native's exact -50 diagnostic. All seven core E2E
 cases passed. No CLI production changes or CLI -50 assertions are included:
-worker4's family adapter is not yet merged into this base.
+the CLI family adapter is not yet merged into this base.
 
-Native's one fresh original slice, stdout/stderr/result.json and matched-symbol
-GDB receipts remain in `/tmp/worker3-o6-stock-circle/`. Both sparse original
+Both sparse original
 input-read crashes are archived separately in
 `tests/parity/validation/o6-circle-sparse-{input-read-failure,no-brim-input-read-failure}.3mf`;
 see `2026-10-08-o6-circle-native-input-read-failure.md`. They are non-parity
@@ -28,7 +27,7 @@ observations, not accepted slicing controls.
 
 ## Native-backed per-vertex acceptance supplement
 
-Reviewer-requested second input keeps the exact same stock archive entries,
+A second input keeps the exact same stock archive entries,
 mesh and settings, changing only the root build-item X translation from 0 to
 -0.1 mm. Center X is 50.9: every mesh vertex has radius at most 54.9 mm,
 while bbox corner (54.9,4) has radius 55.04552661206903 mm.
@@ -44,86 +43,71 @@ emission is now checked against runtime Native by the same-named byte-API E2E in
 and the complete generator-only assertion. The frozen G-code and mixed oracle
 receipt are removed; input-authoring fields alone remain in
 `tests/parity/validation/print-volume-stock-circle-inward.provenance.json`.
-Receipts `/tmp/worker3-o6-stock-circle-inward/{provenance.json,stdout.bin,stderr.bin,exit.code,output/result.json}`.
 When timelapse is restored, this same input must instead verify the exact
-final -102 diagnostic; CLI mapping remains worker4-owned.
+final -102 diagnostic; CLI mapping is separate.
 
 A construction failure is also retained, not hidden: the first archive
 replacement assertion encountered both component and build identity matrices,
 leaving a partial archive, and a shell without fail-fast mistakenly invoked
-Native on it (Unix 250 / -6, no G-code). Files/logs/result.json remain at
-`/tmp/worker3-o6-stock-circle-inward/construction-failure/`; this invalid archive
+Native on it (Unix 250 / -6, no G-code). This invalid archive
 is not the second-input oracle or a parity attempt on the validated 50.9 input.
 The corrected constructor restricts replacement to the build item and checks
 every ZIP entry and both geometric inequalities before Native execution.
 
 ## AAA-base final-source gates
 
-| Gate | Result | Receipt |
-| --- | --- | --- |
-| Workspace nextest | 8012/8012 PASS; nine existing skips | `/tmp/worker3-o6-circle-workspace-final.log` |
-| Full fresh seeded candidate | 623/623 PASS, zero skips | `/tmp/worker3-o6-circle-seeded-final.log` |
-| Fresh clean aaa seeded base | 623/623 PASS, zero skips | `/tmp/worker3-o6-circle-base-aaa-seeded.log` |
-| Normal output invariance | 529 vs 529 **raw SHA256 multisets identical** | `/tmp/worker3-o6-circle-seeded-final-byte-audit.json` |
-| Clippy workspace/all targets | `-D warnings`, zero warnings | `/tmp/worker3-o6-circle-clippy-final2.log` |
-| Rustfmt | PASS | `/tmp/worker3-o6-circle-fmt-final.log` |
-| Browser WASM check | PASS | `/tmp/worker3-o6-circle-wasm-final.log` |
+| Gate | Result |
+| --- | --- |
+| Workspace nextest | 8012/8012 PASS; nine existing skips |
+| Full fresh seeded candidate | 623/623 PASS, zero skips |
+| Fresh clean aaa seeded base | 623/623 PASS, zero skips |
+| Normal output invariance | 529 vs 529 **raw SHA256 multisets identical** |
+| Clippy workspace/all targets | `-D warnings`, zero warnings |
+| Rustfmt | PASS |
+| Browser WASM check | PASS |
 
 The raw-byte audit also records generator-only hashes, but raw equality is the
-stronger result; no M73 or motion/body lines are normalized. Audit script:
-`/tmp/worker3-o6-circle-byte-audit.py`. Both sides' per-artifact byte length,
-raw SHA256, path and test-binary identity are included in its JSON receipt.
-The clean base is a detached `/tmp/worker3-o6-circle-base-aaa` worktree, with
-its own target directory. Worker5's supplied artifact directory was inspected
-read-only but **not reused**: manifests reported revision `unknown`, and the
-current directory held 530 outputs versus final2's documented 529. No earlier
-e5 stock/seeded receipt is presented as an aaa gate.
+stronger result; no M73 or motion/body lines are normalized. Both sides' per-artifact byte length,
+raw SHA256, path and test-binary identity are audited. The clean base is a
+detached worktree with its own target directory.
 
 ## Rebased 7a3216f67 gates
 
-Fresh full seeded run, limited to 16 threads: **646/646 PASS**, zero skips,
-`/tmp/worker3-o6-circle-seeded-7a.log`. Its 541 outputs preserve all 529
+Fresh full seeded run: **646/646 PASS**, zero skips. Its 541 outputs preserve all 529
 common AAA outputs' **raw SHA256 multiplicities**, with no missing/changed
 old output; the twelve added files are `c1-threshold/*` controls introduced
-by main. The 541-vs-529 complete sets are **not** claimed equal. Receipt:
-`/tmp/worker3-o6-circle-seeded-7a-byte-audit.json`.
-Rebased workspace (16 threads): **8035/8035 PASS**, nine existing skips,
-`/tmp/worker3-o6-circle-workspace-7a.log`. Clippy workspace/all targets with
-`-D warnings`, fmt, and wasm32 all PASS:
-`/tmp/worker3-o6-circle-{clippy,fmt,wasm}-7a.log`.
-The prior source-boundary receipts above remain explicitly AAA-base evidence,
+by main. The 541-vs-529 complete sets are **not** claimed equal.
+Rebased workspace: **8035/8035 PASS**, nine existing skips. Clippy workspace/all targets with
+`-D warnings`, fmt, and wasm32 all PASS.
+The prior source-boundary results above remain explicitly AAA-base evidence,
 not fresh 7a results.
 
 ### Per-vertex supplement final gates (docs-only e96dbbacf rebase)
 
 GREEN `877d43725`, initial evidence `48efe7b60`, plus the separate per-vertex
-test/fixture commit; no additional production changes. After BROWSER-END,
-all requested gates ran serially with at most one heavy gate and 16 test threads:
+test/fixture commit; no additional production changes.
+All requested gates ran:
 
-- Supplemental test: **1/1 PASS**, `/tmp/worker3-o6-circle-inward-test-final.log`.
-- Workspace: **8036/8036 PASS**, nine existing skips,
-  `/tmp/worker3-o6-circle-inward-workspace.log`.
-- Clippy workspace/all targets `-D warnings`: **PASS**, zero warnings,
-  `/tmp/worker3-o6-circle-inward-clippy.log`.
-- Fmt check: **PASS**, `/tmp/worker3-o6-circle-inward-fmt.log`.
+- Supplemental test: **1/1 PASS**.
+- Workspace: **8036/8036 PASS**, nine existing skips.
+- Clippy workspace/all targets `-D warnings`: **PASS**, zero warnings.
+- Fmt check: **PASS**.
 
 No seeded/stock rerun was requested for this test-only supplement.
 
 ## Official control disposition
 
-### 2026-10-10 retained/O6 official Native nondeterminism disclosure
+### 2026-10-10 official Native nondeterminism disclosure
 - Labels: `normal-support/angle/45`, `tree-activation/tree_support_branch_distance/tree_slim/max`.
 - BASE711/CAND40b940 Ares raw SHA equal in both full runs and all ten repeats: `b18883ba163a8ec41b76a9ec668c7bd1f468af259867c3dccfd11d76c24e7d93` / `729be17caeca7906a8edef37c397a7e0381d5a9f389899ad6f9cdaf7f79b20ac`.
 - Native generator-only SHA (normal/tree): full BASE + ten repeats `e87f52a49bca34291fd2aca288711dee9222d0251dabc8d28188ca2ed03ebc94` / `94b0d8d2f2857c39ebd31b21abc9ad181075d6945eb72540d0981d6915a96dcd`; failed full CAND `e511b453770762149d2ec2b9eb8285ac9d7f71fcf51ec8090b694d731954e21c` / `537dcefb39d5c4ab6e351098e1780db6a4fbd27fa13d32a57d16381dbf31681d`.
 - Twelve input ZIP member inventories match exactly; ten directed runs PASS, but original official CAND remains 906/908, exit100, raw subset false.
-- Owner adjudicates Native-side nondeterminism unrelated to this slice; no extra normalization, fixture change or retry-to-green.
-- Report: `/tmp/worker4-native-support-repeat-report.md`; hashes/input proof: `/tmp/worker4-native-support-{repeat-summary,input-payload-proof}.json`.
+- Native-side nondeterminism is unrelated to this slice; no extra normalization, fixture change or retry-to-green.
 
 Fresh same-round candidate and clean aaa base each ran all 623 controls:
 **610 passed / 13 failed / zero skipped**, with exactly identical failed names.
-Logs `/tmp/worker3-o6-circle-official-{final,base}.log`; persisted Ares outputs
-506 vs 506 have identical raw SHA256 multisets, recorded in
-`/tmp/worker3-o6-circle-official-byte-audit.json`.
+Persisted Ares outputs
+506 vs 506 have identical raw SHA256 multisets.
 
 Five of those failures are Native Slice TIMEOUT on **both** sides:
 
@@ -133,15 +117,12 @@ Five of those failures are Native Slice TIMEOUT on **both** sides:
 - `option_coverage::tree_activation::explicit_organic_tip_legal_boundaries_and_native_rejection_are_distinct`
 - `option_coverage::tree_activation::organic_angle_and_normalized_grid_tip_preserve_complete_output`
 
-These remain **INCONCLUSIVE**, never PASS or byte mismatch. The full logs retain
-all failed attempt paths; the two tree inputs are verified to have the unchanged
-220×220 rectangular bed, with exact input hashes and command paths in
-`/tmp/worker3-o6-circle-official-tree-timeout-bed-proof.json`. The coordinator's
-official gate ruling accepts the equal same-round failure set for this bounded
+These remain **INCONCLUSIVE**, never PASS or byte mismatch. The two tree inputs are verified to have the unchanged
+220×220 rectangular bed. The official gate accepts the equal same-round failure set for this bounded
 circle slice; seeded complete bytes remain authoritative. No timeout is used
 as parity evidence, and no input is retried or altered to select a PASS.
 
-## Stock circle/custom-bed inventory and complete-byte receipts
+## Stock circle/custom-bed inventory and complete-byte results
 
 Both complete 1001-row scans finished, without fixture changes or retry-to-PASS.
 Final-source scan: **931 raw PASS / 51 ORCA_ERROR / 9 INPUT_REJECTED /
@@ -214,9 +195,6 @@ The persisted-input bed audit additionally covers all successful Native beds.
 | stock/SeeMeCNC/SeeMeCNC RostockMAX v4 1.0 nozzle | PASS | complete Ares/Native bytes equal |
 
 
-Full receipts: `/tmp/worker3-o6-circle-stock-aaa-final-artifacts/stock-printer-summary.json`,
-`/tmp/worker3-o6-circle-stock-bed-final.json`, and
-`/tmp/worker3-o6-circle-stock-source-bed-inventory.json`.
 The selector audit includes every persisted bed except exactly four
 axis-aligned bbox corners (a conservative superset of circle/custom beds).
 Generic cached-byte manifest producer fields say unknown; supplementary
@@ -226,4 +204,4 @@ Do not treat generic manifests alone as producer proof.
 
 Known Native selector UB must retain its non-PASS overlay irrespective of
 incidental successful byte matches. Timelapse source remains isolated and
-must rebase after this independent Model slice is approved and merged.
+must rebase after this independent Model slice is merged.

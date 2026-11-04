@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted, implemented, gate-verified, and independently reviewed.
+Accepted, implemented and gate-verified.
 
 ## Decision
 

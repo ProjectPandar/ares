@@ -1,22 +1,14 @@
 # SPEC-REQUEST: Brim.cpp inner-only hole brim
 
-## Status and roadmap selection
+## Roadmap selection
 
-Worker3, original SPEC based on main `5fc560ca0`; Claude approved `696cd308a`.
-The independent test-first commit is `063a161bc`; see
-[RED evidence](inner-only-brim-red-evidence.md). Exact-head engineering/full
-review remains required before merge.
+See [RED evidence](inner-only-brim-red-evidence.md) for the test-first record.
 
 Selected from roadmap **Current acceptance priorities: full acceptance (open)**:
 source-owned active dependencies and strict complete-output witnesses remain
 open even when PrintConfig registry milestones are DONE. `inner_only` needs
 an actual first-layer hole, not an empty selector/config-echo probe.
 M44's registry completion does not establish this runtime boundary's parity.
-
-The inbox at selection has worker1 on APA/sparse anchoring, worker2 on G4
-sequence, worker5 on preset inheritance, worker6 on multiline union/Stars,
-and worker4 on CI/oracle work. No inner-only brim claim was found. This slice
-does not change those destinations or their test registrations.
 
 ## Upstream ownership and exact Rust boundary
 
@@ -41,10 +33,10 @@ See [runtime ARD](ard-inner-only-brim-runtime-boundary.md).
 
 ## Current scaffold and migration
 
-Static evidence at `5fc560ca0`: `BrimPlan::generate` in
+Static evidence: `BrimPlan::generate` in
 `project_slice/gcode_emit/brim.rs:29-36` accepts only OuterOnly/BrimEars,
 so InnerOnly returns None. This is a candidate runtime gap, not a measured
-Native divergence; approval precedes admission and RED capture.
+Native divergence; the spec precedes admission and RED capture.
 
 Add the source-owned InnerOnly dispatch and area calculation to the existing
 project adapter. BrimPlan remains a temporary compatibility shell around
@@ -55,7 +47,7 @@ Do not silently fall back to outer-only or no-brim when the new path fails.
 The separate public `generate_brims` adapter currently approximates inner
 paths with `brims.rs::inner_brim_paths` bounding rectangles. That adapter and
 its square-coordinate assertions are explicitly deferred. Its replacement
-needs its own admitted boundary and test disposition; this SPEC authorizes
+needs its own admitted boundary and test disposition; this SPEC permits
 no assertion retirement and creates no runtime fallback to that scaffold.
 
 ## Included upstream behavior
@@ -100,15 +92,15 @@ do not remove its guard or fix an owned neighboring slice.
 7. Area is right but connection, travel, extrusion, time or full footer differs.
 8. No-hole/zero-width controls or existing outer/ear streams change.
 
-## Approved-phase test-first plan and acceptance
+## Test-first plan and acceptance
 
-1. After SPEC approval, author input-only 3MF fixtures and Native-backed
+1. Author input-only 3MF fixtures and Native-backed
    E2E tests before production code. Proposed finite cases: rectangular
    hole, concave hole, two holes, narrow-neck hole, positive gap0.1, width
    large enough to collapse a hole inset, width0, sub-pair width, and no-hole
    solid control. Reuse the original six N/O/E brim controls unchanged.
    Geometry, effective settings and archive members must be recorded.
-2. Execute seeded and official with canonical control-set-v2, jobs2/threads2,
+2. Execute seeded and official with canonical control-set-v2,
    fresh Native cache and artifact root for every run/mode. Preserve saved
    Native settings, complete Native/public API/real CLI G-code, first byte
    difference, first-layer erBrim XY/E witnesses and case outcomes.
@@ -125,12 +117,6 @@ do not remove its guard or fix an owned neighboring slice.
    strict Clippy, rustfmt, core/WASM wasm32 checks and a fresh clean-env
    workspace Nextest run. No filesystem/process/UI behavior in core; the
    same byte API remains usable on browser WASM, Windows, macOS and Linux.
-6. Exact-head REVIEW precedes full. Full is candidate seeded+official in
-   parallel, each fresh cache/root/target, canonical environment audited,
-   threads2/jobs2, start load<30, both0FAIL. START/END go to the inbox;
-   workspace coexistence follows the coordinator's single-slot allocation.
-   Latest-main rebase/carry and merge follow Claude's ruling; no automatic
-   push, merge or base registration from SPEC approval.
 
-The original SPEC submission was docs only. Endpoint completeness beyond these finite witnesses remains
+Endpoint completeness beyond these finite witnesses remains
 open; this slice does not close the seven-value brim_type domain globally.

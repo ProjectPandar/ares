@@ -1,12 +1,9 @@
 # Support-ironing fill parameters and the non-finite 3D-honeycomb domain
 
-Status: architecture and public RED approved. The geometry owner has agreed to
-the corrected guard citations and the bounded implementation below.
-The baseline is
-`f8d715c4c2303b09fed72260d23997733221f2e4`; upstream is Orca beta
+Status: Accepted. Upstream is Orca beta
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
-## Approved decision
+## Decision
 
 Keep two contracts distinct:
 
@@ -21,7 +18,7 @@ Keep two contracts distinct:
    component. This is an explicit Ares-defined behavior where upstream has no
    defined result, not a claim of Native geometry parity.
 
-The second decision is an approved Ares-defined domain policy. It must not
+The second decision is an Ares-defined domain policy. It must not
 become a physical-height fallback, a numeric clamp, a fixture-specific output
 replacement, an ignored assertion, or a timing correction.
 
@@ -55,7 +52,7 @@ percentage, ironing flow, or ironing spacing cannot select the low-density
 branch for this call. A generic low-density 3D-honeycomb experiment therefore
 cannot stand in for a discriminating contact-ironing adapter RED.
 
-The approved guard is on **computed non-finite Z scale**, not simply on zero
+The guard is on **computed non-finite Z scale**, not simply on zero
 layer height. In the generic low-density path, zero height can leave the
 initial Z scale finite even though `layersPerModule` becomes infinite. Do not
 reject or empty that path merely because an intermediate is infinite; its
@@ -72,7 +69,7 @@ reachable conversions require their own defined-domain qualification.
   argument into the kernel parameters. Do not globally zero object-infill
   requests; upstream `Fill.cpp` sets their physical height separately.
 - `crates/ares-core/src/fill/three_d_honeycomb.rs`, `grid_request` and
-  `fill_component`: implement the approved undefined-domain policy and
+  `fill_component`: implement the undefined-domain policy and
   propagate the non-finite-Z-scale result as an empty component before
   `grid::make_grid`. No non-finite grid coordinates should be created merely
   to be converted or clamped later.
@@ -82,7 +79,7 @@ around the cited `SupportCommon` / `FillParams` concepts. This slice separates
 those upstream call-specific parameters from physical layer data; it does not
 introduce an Ares-owned slicing pipeline or a new public configuration API.
 
-Coordinate the bounded guard with the geometry owner. Do not rewrite
+Keep the guard bounded. Do not rewrite
 `grid.rs`, waveform construction, tops, smoothing, connection, clipping,
 rotation, or integer-conversion algorithms. Defined finite-Z-scale behavior
 must remain unchanged on WASM, Windows, macOS, and Linux.
@@ -109,7 +106,7 @@ class.
 
 Reclassify the existing
 `support_ironing_pattern_three_d_honeycomb` Native-parity leg as UB-derived,
-not PASS and not a FULL OPEN. After review, remove that leg from the eligible
+not PASS and not an open full-parity case. Remove that leg from the eligible
 Native-comparison registry in
 `crates/ares-cli/tests/orca_parity/option_coverage/support_ironing_pattern_domain/legs.rs`
 and place a citation to this record beside the excluded class's explanation.
@@ -123,14 +120,14 @@ transition or a new whole-case PASS.
 
 ## Public Ares-defined RED and concentric controls
 
-The geometry-owner static audit found no safe height-consuming pattern under
+A static audit found no safe height-consuming pattern under
 these support-ironing defaults: density one, `use_arachne` false, and classic
 `fill_surface`. The adapter's zero-versus-physical-height change is therefore
 not independently observable on a safe Native pattern. This supersedes the
 original request for a discriminating adapter-only Native RED. Do not invent
 one or add a diagnostic API to manufacture observability.
 
-The approved RED instead exercises `slice_project_plate_validated` through a
+The RED instead exercises `slice_project_plate_validated` through a
 separate Ares-defined integration-test binary. Use the frozen input identified
 above with its support-ironing 3D-honeycomb selection. Ordinary object ironing
 and tower ironing are disabled in that input, so Ironing-role paths and
@@ -139,16 +136,15 @@ that this component emits no ironing paths or extrusion. Verify nonempty
 support/interface output and preserve complete API replay outputs, input
 identity, and the contract observation before asserting the empty result.
 
-This test must fail on the RED baseline and pass after the approved port.
+This test must fail on the RED baseline and pass after the port.
 Its expected empty component
-comes from the approved defined-domain policy, not from Native's undefined
+comes from the defined-domain policy, not from Native's undefined
 output. Do not invoke Native for this input or count the test as Native parity.
 Do not embed captured non-finite values, observed coordinates, or historical
 output bytes as expected results.
 
 Use concentric raft and no-raft variants of the
-`support_ironing_raft_offset` family as the geometry-owner-recommended negative
-controls. Classic concentric is defined under these defaults and does not
+`support_ironing_raft_offset` family as the negative controls. Classic concentric is defined under these defaults and does not
 observe the layer-height adapter difference; these are preservation controls,
 not a claimed adapter RED. Qualify runtime Native double replay and complete
 API/CLI identity for those controls. Preserve feeds, M73, metadata and footer,
@@ -157,15 +153,13 @@ outputs must remain identical across the later port.
 
 Report the Ares-defined RED separately from the eligible Native comparisons.
 The old 3D-honeycomb Native leg is excluded by the UB classification during RED
-qualification and removed from the registry in the later reviewed GREEN slice.
+qualification and removed from the registry in the later GREEN slice.
 Report that inventory delta separately, never as a FAIL-to-PASS improvement.
 
-## Review and implementation gates
+## Implementation gates
 
-The architecture, revised Ares-defined RED, negative controls, and geometry
-owner's corrected guard citations are approved. Keep implementation bounded to
-the cited UB chain and non-finite-Z-scale guard. No other geometry changes are
-authorized. The port must preserve finite-domain behavior, use an identical eligible
+Keep implementation bounded to the cited UB chain and non-finite-Z-scale guard.
+No other geometry changes are in scope. The port must preserve finite-domain behavior, use an identical eligible
 paired inventory with zero PASS-to-FAIL transitions, retain verifiable artifacts,
 and pass rustfmt and strict Clippy. Rust tests use `cargo nextest run`.
 

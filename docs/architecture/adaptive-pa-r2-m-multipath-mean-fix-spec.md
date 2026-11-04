@@ -1,11 +1,10 @@
 # APA-R2 M: standalone multipath PA mean correction — repair SPEC
 
-Status: **REVIEW REQUEST, not implementation authorization or M closure**.
+Status: proposed; not M closure.
 Parent: ARD-0104 / `adaptive-pa-deferred-r2-spec.md`. Upstream pin:
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Production base: `49686f943f4fab7c21d55d913b48986afed5e634`.
 Test-first RED: `87bafef63b53ab80503f8340d042fbcdd8fcd97e`.
-The RED stays unpushed; no production patch is included in this SPEC.
+No production patch is included in this SPEC.
 
 ## Non-negotiable boundary
 
@@ -36,8 +35,7 @@ exact. Static PA0.02, filament ratio0.98, print ratio1, comments0, marlin retain
 First difference: normalized byte3095, line153, Native `M900 K0.064` vs Ares
 `M900 K0.063`; line232 repeats it. All other ordered lines, including every XY/E
 move and adjacent `G1 F7200`, are exact. M900 is the native flavor-dependent PA
-command expressly admitted by the owner. Evidence/audit0:
-`${TMP_ROOT}/ares-adaptive-pa-r2/M-496-RED-audit.json` and `RED-REQUEST-M.md`.
+command for this flavor.
 
 ## Source-localized value chain
 
@@ -79,7 +77,7 @@ command expressly admitted by the owner. Evidence/audit0:
 
 ## Offline numeric localization, with limits
 
-`${TMP_ROOT}/ares-adaptive-pa-r2/offline-pa-localization.json` compiles the unmodified
+An offline numeric localization compiles the unmodified
 upstream AdaptivePAInterpolator/Pchip sources and unmodified Rust Model/Pchip/
 number modules into isolated numeric helpers. It uses the active input's exact
 CSV. This executes no Native slicing or workspace tests and patches no sources.
@@ -109,7 +107,7 @@ The first offline audit's string-rendering comparison failure is retained as
 v1-string-format-infra, corrected by comparing parsed rounded numbers; it is
 not parity RED and did not change any production comparator/model.
 
-## Minimal implementation proposed, after approval
+## Minimal implementation proposed
 
 - Reuse the existing scaled Point3 length-weighted helper at
   `motion/loop_paths/adaptive_pa.rs::mean(paths,0,scale)` for the currently
@@ -129,7 +127,7 @@ not parity RED and did not change any production comparator/model.
   **not** an equivalent predicate. No invented flag/zero-volume heuristic.
   Forced-no-extrusion producer admission/representation is deferred, not claimed
   covered by this bounded fix. If traces show such a child here, stop/re-spec.
-- No model/scanner/writer changes are justified by this RED. Stop for review if
+- No model/scanner/writer changes are justified by this RED. Stop and re-spec if
   measured inputs contradict reconstruction or the minimum fix exceeds this
   entity context boundary.
 
@@ -137,20 +135,19 @@ not parity RED and did not change any production comparator/model.
 
 1. Confirm exact source/localization and the admitted ordinary child domain via
    original-source read-only trace, preserving original full-output acceptance.
-2. After approved patch, fresh clippy/fmt, required official PA-off PASS, then
+2. After the patch, fresh clippy/fmt, required official PA-off PASS, then
    active full-file PASS on the **same** active input/member hashes/model,
    without expected-value edits. Enumerate all changed commands and prove no
-   new non-PA/movement/E difference. Preserve original RED binary and receipts.
+   new non-PA/movement/E difference. Preserve the original RED binary.
 3. Verify first-child/same-role suppression, role-change override and context
    teardown from traces; no unit tests added after production code. Existing
    test-first controls must remain unchanged. Additional E2E controls, if
    needed, are committed before code and require admitted upstream producers.
 4. Independent BASE/CAND artifacts/caches/binaries and standard parity/workspace/
-   strict/WASM gates follow owner queue/load/fixed-marker protocol. Latest-main
-   advances VOID gates; no integration/push without exact-hash approval.
+   strict/WASM gates.
 
 This fixes only the bounded standalone multipath slice. Mixed-role/sloped M
 residuals still need their own authentic evidence. A/R, calibration public-mode
 admission, Type1 tower reset, actual Type2 activation, equalizer algorithm,
-geometry and worker3/other producers are deferred. Parent `2863ef3ea` and M
+geometry and other producers are deferred. Parent `2863ef3ea` and M
 remain OPEN until their separately defined criteria are satisfied.

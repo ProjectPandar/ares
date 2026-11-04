@@ -6,13 +6,13 @@ Port OrcaSlicer v2.4.2 `8500fcdccaa10b5099ac20d252af3a7c560046f1`, not an Ares t
 
 Rust destination is exclusively `crates/ares-core/src/project_slice/gcode_emit/processor/`: estimate dispatch, motion state/block admission and planner, moves/schedule/export-cache attribution, and required filament/volume bookkeeping. New processor submodules may separate virtual-motion and flush accounting to remain at most 400 LOC. Existing processor and emitter-supplied statistics are temporary compatibility shells around those upstream concepts, not authority for a newly invented accounting model.
 
-Coordinator ruling includes `GCodeProcessor::post_process:993–1010` (material quantities from authoritative total-volume maps) and `process_used_filament:1147–1174` (canonical material-statistic export). Processor `UsedFilaments` is the sole volume source for all five public maps and material footer fields. Delete the superseded finish accounting and snapshot handoff; do not retain parallel accounting, comparison or a fallback. This source-required export is not an arbitrary footer correction. All non-VG1 reference footer bytes must remain unchanged, while VG1 changes must equal Native. Web ColorPrint legend and presetSlice E2E remain mandatory gates.
+The boundary also includes `GCodeProcessor::post_process:993–1010` (material quantities from authoritative total-volume maps) and `process_used_filament:1147–1174` (canonical material-statistic export). Processor `UsedFilaments` is the sole volume source for all five public maps and material footer fields. Delete the superseded finish accounting and snapshot handoff; do not retain parallel accounting, comparison or a fallback. This source-required export is not an arbitrary footer correction. All non-VG1 reference footer bytes must remain unchanged, while VG1 changes must equal Native. Web ColorPrint legend and presetSlice E2E remain mandatory gates.
 
-Do not modify `gcode_emit/{layers/boundary,motion/state,motion/travel}` or any emitter ordering, templates, bridge geometry, object labels, travel/lift order, or profile data. Those BBL ordering areas belong to pi-tip. A source-required volume prerequisite must stay in the processor; if that cannot be achieved, stop for a boundary decision rather than expanding the emitter scope.
+Do not modify `gcode_emit/{layers/boundary,motion/state,motion/travel}` or any emitter ordering, templates, bridge geometry, object labels, travel/lift order, or profile data. Those BBL ordering areas belong to a separate emitter ordering slice. A source-required volume prerequisite must stay in the processor; if that cannot be achieved, stop for a boundary decision rather than expanding the emitter scope.
 
 ## Admitted data before this spec
 
-At integrated SYNC main `cfc69df6525f9f726cd9d338d0899447ca8d2b9e`, processing the same original Native X2D stream gives Native `23298.746094` seconds versus Ares `21930.91064350919`. The Native producer is the supplied procgcode image; its parsed f32 total is used, not a rounded footer.
+After the SYNC slice, processing the same original Native X2D stream gives Native `23298.746094` seconds versus Ares `21930.91064350919`. The Native producer is the supplied procgcode image; its parsed f32 total is used, not a rounded footer.
 
 The source input's complete CONFIG_BLOCK is at lines 13–656. The oracle first applies CLI defaults, then `process_file` recognizes OrcaSlicer, loads this block, sets the BBL printer identity, and reapplies its configuration (`GCodeProcessor.cpp:2591–2641`). Prefixes retain that block; unknown Ares producer text is renamed only in forensic oracle copies, preserving command/configuration text and line ids.
 
@@ -20,7 +20,7 @@ Same-input prefixes end on complete lines. At 8209 both totals narrowed to f32 a
 
 The complete stream has 762 VG1 lines, three per each of 254 transitions. A negative control replaces only those lines with blank lines, preserving every line id, other command, configuration and SYNC. Native then reports `21930.910156`, bit-identical after f32 parsing to Ares's original-stream total narrowed to f32. This closes the remaining full-stream timing discrepancy. Move-vertex `time0` first differs at 8271 by the opposite-sign five seconds; that attribution observation alone is not the missing-time cause.
 
-Repeatable original-input receipts, totals, prefix comparisons, move dumps, negative-control input and logs live under `${TMP_ROOT}/ares-x2d-time-next`. External X2D files remain forensic evidence, never repository fixtures or expected outputs.
+External X2D files remain forensic evidence, never repository fixtures or expected outputs.
 
 ## Dispatch: comments are not ordinary G1
 
@@ -55,7 +55,7 @@ Deferred adjacent behavior: VM104/VM109, independent firmware features, general 
 
 Primary public seam: existing Orca parity runner through the byte-oriented slice API, with exact requested/applied settings verification, Native success, complete artifacts and full ordered-byte equality. Repository-owned small cube geometry and admitted BBL X1C/X2D profiles supply a minimal two-logical-filament transition. Keep bridge absent and M73 enabled. Supply only the minimum virtual exchange segment through existing user-template overrides when natural preset transitions bring unrelated emitter ownership into the case; require the exact VG1 bracket to be present in both complete outputs.
 
-The RED must fail specifically on processor timing/progress/statistics, not fixture application, Unsupported, Native setup, bridge or emitter movement ordering. A dual-filament request must demonstrably select/apply both filament identities. Do not call a single-material cube with two unused settings a dual-material RED. If a natural dual-material cube fails solely in pi-tip's ordering area, retain that failure separately and use an admitted template-based transition until the ordering chain is rebased, without relaxing bytes.
+The RED must fail specifically on processor timing/progress/statistics, not fixture application, Unsupported, Native setup, bridge or emitter movement ordering. A dual-filament request must demonstrably select/apply both filament identities. Do not call a single-material cube with two unused settings a dual-material RED. If a natural dual-material cube fails solely in the emitter ordering area, retain that failure separately and use an admitted template-based transition until the ordering chain is rebased, without relaxing bytes.
 
 Prewrite no-VG1 and zero-displacement VG1 controls, ordinary `;G1` and spaced `; VG1` non-command controls, direct VG1 dispatch, and same transition with SYNC T0/T5. Add public processed-result/oracle checks for absence of VG1 vertices, dummy-vertex attribution, following real-move endpoint/F state, both nozzle-volume split branches and flush/total statistics. Keep the existing move-comparator tolerances unchanged; compare copied f32 fields as bits and upstream f64 accumulated volume exactly. The oracle must receive the same full embedded settings rather than its bootstrap defaults. Any needed test-only statistics dump must be declared in the oracle provenance; no production probes.
 
@@ -63,15 +63,13 @@ Tests must assert the complete stream including every changed M73 and estimated-
 
 X2D is supplemental targeted validation: run the unchanged original inputs when current main can admit them without the separate bridge branch; additionally replay their complete original Native/Ares streams with identical configurations and require the VG1 missing-time discrepancy to disappear. Remaining emitter differences are reported independently, never hidden by the timing result. Do not commit original external models or generated G-code.
 
-## Implementation and integration sequence
+## Implementation sequence
 
-1. Submit this source-bounded spec for sole-coordinator exact-hash approval.
-2. Prewrite the admitted minimal public RED and neighboring controls, record failing current-base evidence and effective settings, and preserve all artifacts before processor edits.
-3. Port the ledger in source order with the minimum required state/volume dependencies. Keep modules at most 400 LOC and no direct I/O or host-only behavior in core. Production changes remain inside processor.
-4. Verify the minimal complete-byte cases, processed-result/oracle side effects, unchanged control streams, and X2D targeted accounting. No next speculative timing correction is bundled.
-5. Run workspace nextest, strict workspace/all-target/all-feature Clippy, fmt, core and adapter WASM checks; run complete current-base seeded and official controls, raw common-stream comparisons and explicit reference-enabled profile_entry GREEN.
-6. Request approval for the exact implementation hash; fresh fetch/rebase, applicable green gates, nonforce fast-forward main push and exact remote verification precede merge notification.
+1. Prewrite the admitted minimal public RED and neighboring controls, record failing current-base evidence and effective settings, and preserve all artifacts before processor edits.
+2. Port the ledger in source order with the minimum required state/volume dependencies. Keep modules at most 400 LOC and no direct I/O or host-only behavior in core. Production changes remain inside processor.
+3. Verify the minimal complete-byte cases, processed-result/oracle side effects, unchanged control streams, and X2D targeted accounting. No next speculative timing correction is bundled.
+4. Run workspace nextest, strict workspace/all-target/all-feature Clippy, fmt, core and adapter WASM checks; run complete current-base seeded and official controls, raw common-stream comparisons and explicit reference-enabled profile_entry GREEN.
 
-pi-tip's BBL ordering slice and this processor slice do not share production ownership. Whichever merges second must rebase on the first and rerun the **full** gates and current-base complete reference controls. Source disjointness does not waive validation because the emitted command sequence drives the processor.
+The BBL emitter ordering slice and this processor slice do not share production code. Whichever lands second must rerun the **full** gates and complete reference controls on top of the first. Source disjointness does not waive validation because the emitted command sequence drives the processor.
 
-Exit requires all included VG1 side effects, not merely matching total time, plus admitted full-byte RED/control parity and the sole coordinator's approval. If a side-effect prerequisite cannot be implemented within this boundary, stop and revise the spec with the coordinator instead of shipping a time-only approximation.
+Exit requires all included VG1 side effects, not merely matching total time, plus admitted full-byte RED/control parity. If a side-effect prerequisite cannot be implemented within this boundary, revise the spec instead of shipping a time-only approximation.

@@ -1,24 +1,22 @@
 # SPEC: Repetier GCodeProcessor cached feedrate
 
-Status: proposal, docs only; no Native/cargo/test/production execution.
-Base: `73e8e712e021d88ed136ba92f76bfd017477687a`.
+Status: Proposed.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
-## Selection and ownership
+## Selection and scope
 
 Source inspection predicts an independent processor difference: Native dispatches
 M401/M402 and restores its cached feedrate for Repetier; Ares MotionState accepts
 neither command and retains the latest G1 F speed. This is not an observed RED.
 The source-predicted candidate is independent of Triangles mode1, which remains
-blocked on worker5's polylines extraction. Do not modify that frozen RED branch.
+blocked on the polylines extraction.
 
-Inbox/source search finds no M401/M402 or CachedPosition owner. Exclude worker5's
-fill_entities/support ironing, worker2's anchor_projection, worker1's skirt,
-worker3's modifiers, worker4's counterbore and web's processor OPTIONS/Z move
-index repair. The web repair owns estimate/move-index bookkeeping; this proposal
-changes only non-motion command state in motion and a private child module.
-Shared test registration is limited to one dedicated module registration; report
-any ownership conflict before implementation.
+Source search finds no existing M401/M402 or CachedPosition port. Exclude
+fill_entities/support ironing, anchor_projection, skirt, modifiers, counterbore
+and the processor OPTIONS/Z move index repair, which owns estimate/move-index
+bookkeeping; this proposal changes only non-motion command state in motion and
+a private child module. Shared test registration is limited to one dedicated
+module registration.
 
 ## Upstream boundary
 
@@ -45,7 +43,7 @@ Current `project_slice/gcode_emit/processor/motion.rs:231-234` delegates config
 commands then discards commands outside its supported motion set. No M401/M402
 handling or cached feedrate exists in motion/config_commands.rs.
 
-After approved Native-backed RED, port the persistent cached-speed part into a
+After Native-backed RED, port the persistent cached-speed part into a
 new private `processor/motion/cached_feedrate.rs`, with minimum MotionState
 field/default/dispatch wiring. Preserve source f32 mm/s cache precision and
 FLT_MAX semantics; do not add a public API, alternate estimate loop, runtime
@@ -56,7 +54,7 @@ An optional cached f32 may represent the reset sentinel if observable behavior
 matches Native. Explicitly account for the sentinel rather than adding internal
 validation. No change to G1 numeric arithmetic, flavor routing or existing
 config commands. Keep motion.rs and every new file at most400 LOC; any necessary
-mechanical extraction needs a separate exact-text proof and prior report.
+mechanical extraction needs a separate exact-text proof.
 
 Public E2E destination: dedicated ares-cli orca_parity/runner module plus its
 private input helper. Use existing OrcaRunner export/slice_case caches and public
@@ -77,8 +75,7 @@ for a deferred input. Report unrelated failures before changing the controls.
 
 ## Native-first preflight and separate RED
 
-After approval, CPU11 outer taskset, jobs1/threads2, fresh Native cache/artifact
-root for each official/seeded leg. No full without explicit allocation.
+Fresh Native cache/artifact root for each official/seeded leg.
 
 Reuse a tracked authored prism STL and existing Ender-3 project/preset adapter.
 Override only gcode_flavor to repetier and a constant machine-start template;
@@ -127,6 +124,5 @@ Frozen RED comparisons and assertions remain unchanged. Both modes must pass
 all eight cases, with non-cache/inert raw Ares controls unchanged against RED.
 Report every unrelated changed raw stream. Gates: option_coverage whole group
 both modes, strict workspace/all-target/all-feature clippy(-D warnings), fmt,
-wasm32 and exact-hash self-hosted workspace; canonical full only by coordinator
-allocation. No ignore/allow/probe/guard or obsolete-test retirement without prior
-approval. This SPEC does not authorize implementation before review.
+wasm32 and the self-hosted workspace. No ignore/allow/probe/guard or
+obsolete-test retirement.

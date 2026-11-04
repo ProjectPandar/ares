@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted and completed after independent source/specification review; final six-axis review is recorded below.
+Accepted and completed.
 
 ## Decision
 
@@ -40,6 +40,6 @@ Register only private `mod candidate_boundary_polylines;` with ordinary test chi
 
 ## Completion evidence
 
-The removed actual-source driver built against fixed-MSVC-order archive SHA-256 `b643964e681e9435680b78fdd743dcb12c9c07cd16ef164e353d370add8132a1`. Driver/object/binary/output/link-command SHA-256 values are `577738d4c8f00879276ac7815afe6d9b0ca80e834fe67899df46cfe30ccbd532`, `a3b74f48e04fb41b61f6694b95b510571bdc78c978ed9d1bfbe79358690b7106`, `9762c5531a462913e3f0476ce42fb2a0ef4d2f8d7e94353b21ed60aa6abb1296`, `9fa3600b73ebe60ac821a2f9811b606aae85ad6f6a1ee797cc4c5ffd62bda320`, and `98f57cf5675fca7419790c1a5b16b5d4aa97ae208cbd6b76692bdc42c262333b`. Repeated runs were byte-identical. Exact literals freeze the empty gate, ordered total-before-limiting polylines, acute Miter/3 output, and source arithmetic `0x1.4ccccep+24`, `0x1.421f62p+2`, and `0x1.99999ap-4`.
+An actual-source driver built against the fixed-MSVC-order archive produced byte-identical repeated runs. Exact literals freeze the empty gate, ordered total-before-limiting polylines, acute Miter/3 output, and source arithmetic `0x1.4ccccep+24`, `0x1.421f62p+2`, and `0x1.99999ap-4`.
 
-Nineteen reversible gate/arithmetic/role/call/ownership/closure/order/error mutations were killed, including an explicit ascending output-sort mutation over a non-monotonic interleaved fixture. The final audit SHA-256 is `acaea31285ee8e548af408ae65f3b08d9c08966d181140e67283bd7dfd4555d1`; production restored byte-exact at SHA-256 `f803b04ba8db10fc611954883f34eef7cf11674871e9138ec5d2e016d0b4855a`. Final gates pass focused 10/10, dependency 718/718, workspace 6,378/6,378 with two skipped, strict Clippy, wasm32, x86_64/aarch64 Windows, x86_64/aarch64 macOS, rustfmt, diff/LOC/static checks, clean pinned Orca, and no staged files.
+Nineteen reversible gate/arithmetic/role/call/ownership/closure/order/error mutations were killed, including an explicit ascending output-sort mutation over a non-monotonic interleaved fixture. Production was restored byte-exact after each mutation. Final gates pass focused 10/10, dependency 718/718, workspace 6,378/6,378 with two skipped, strict Clippy, wasm32, x86_64/aarch64 Windows, x86_64/aarch64 macOS, rustfmt, diff/LOC/static checks, and clean pinned Orca.

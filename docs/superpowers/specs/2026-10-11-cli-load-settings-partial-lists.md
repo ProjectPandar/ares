@@ -17,8 +17,8 @@ accepts any subset — machine-only, process-only, or none (and
 filament-typed files validate and merge nothing, `:2101-2104`) —
 and a missing kind simply contributes no overlay: the embedded
 config of that kind is retained. Native accepts and slices
-machine-only + witness 3MF (handoff-verified; the E2E reference
-proves it at RED time). Worker4's compat17 branch-2 RED (machine
+machine-only + witness 3MF (the E2E reference proves it at RED
+time). The compat17 branch-2 RED (machine
 loaded, process embedded) is blocked on this gap.
 
 ## Upstream semantics (plain path)
@@ -33,7 +33,7 @@ loaded, process embedded) is blocked on this gap.
 - Missing kind: no overlay; the 3MF's embedded machine/process
   config stays. The `-17` compat gate (`:2575-2606`) adjudicates on
   whichever names ARE loaded (empty names skip that side) — that
-  loaded-names semantics is worker4's compat17 slice.
+  loaded-names semantics is the compat17 slice.
 - Duplicate machine/process → `-5` (`duplicate machine config
   file`, `:2034-2040` / `:2073-2079`); unknown type → `-5`
   (`:2099-2104`). Already ported.
@@ -62,26 +62,26 @@ loaded, process embedded) is blocked on this gap.
      retained).
 3. Keep duplicate/unknown-type `-5` behaviors unchanged.
 
-**Deferred** (explicit, with owner):
+**Deferred** (explicit):
 
 - STL input + partial lists (no embedded base; upstream failure
-  surface differs) — follow-up after native probing; owner worker5.
+  surface differs) — follow-up after native probing.
 - The BBL `machine_switch` `default_print_profile` completion
   (`:3053-3110`) and `up_config_to_date` re-fetch completion
-  (`:2369-2424`) — BBL branches outside the plain path; owner TBD
-  (worker1 profile domain when those branches land).
+  (`:2369-2424`) — BBL branches outside the plain path (profile domain
+  when those branches land).
 - The `-17` loaded-names adjudication for partially-loaded lists —
-  worker4 compat17 (depends on this slice).
+  compat17 slice (depends on this slice).
 - The `inherits` direct-read vs `Catalog::push_import` parent
-  resolution gap (worker4 compat17 finding) — separate slice after
-  this one, owner worker5 (compose).
+  resolution gap (compat17 finding) — separate compose slice after
+  this one.
 
 ## Addendum: machine-switch merge semantics (2026-10-11)
 
 The machine-only RED exposed three output-side semantics of the
-upstream `machine_switch` path; all three belong to this slice
-(coordinator ruling), while the `-17` rejection adjudication stays
-in `project_slice/compatibility.rs` (worker4):
+upstream `machine_switch` path; all three belong to this slice,
+while the `-17` rejection adjudication stays
+in `project_slice/compatibility.rs`:
 
 - **`(auto)` process rename** (`OrcaSlicer.cpp:2660-2702`, gated
   `is_bbl_3mf && machine_switch`): the retained embedded process

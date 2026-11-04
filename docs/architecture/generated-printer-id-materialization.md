@@ -1,11 +1,11 @@
 # Generated printer-id materialization: separate upstream rewrite slice
 
-## Status
+## Scope
 
-Implementation authorized after independent RED `e3e82da3155411dc87f0490686e3d91c6971d235`
-and the source/Native trace ruling below. Independent of X2D-FM (#55).
-The retained generated-id witness is a pre-existing base failure, not an FM
-calculator regression or a required FM GREEN dependency.
+Implementation follows an independent RED and the source/Native trace below.
+Independent of X2D-FM. The retained generated-id witness is a pre-existing
+base failure, not an FM calculator regression or a required FM GREEN
+dependency.
 
 Upstream v2.4.2 revision `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
@@ -35,32 +35,28 @@ this spec before implementation.
 
 ## Existing RED and admission requirement
 
-Test originally introduced in `b39047a8884db752dbd702a4c67cbca763fc2cb3` as
+Test originally introduced as
 `x2d_flush_matrix_incomplete_printer_id_map_uses_generated_variant_ids`.
-Retained input `${TMP_ROOT}/ares-x2d-flush-matrix/green/generated-ids-legal-red/case-75aoF4`
-has two nozzle types, two ids, four variants and two variant groups. Identified
-Native succeeds; public `load_project`/`slice_project` on pre-FM base9e3 fails
-with `invalid Orca option printer_extruder_variant`. Same-input adapter evidence
-is `green/generated-ids-base-same-input.txt` (no repository debug additions).
+The retained input has two nozzle types, two ids, four variants and two
+variant groups. Identified Native succeeds; public
+`load_project`/`slice_project` before the FM change fails with
+`invalid Orca option printer_extruder_variant` (no repository debug additions).
 
 Move the witness out of the FM acceptance module; preserve its old source and
-artifacts. Once this spec is approved, bind a separate durable E2E module and
-fresh base/main RED receipts before production edits. Establish whether metadata
+artifacts. Bind a separate durable E2E module and fresh RED receipts before
+production edits. Establish whether metadata
 reselection, incomplete ids or another source phase causes the error; do not
 assert the currently suspected mechanism as fact.
 
 ## Source/Native trace and admitted correction
 
-Fresh RED on integrated FM main310f5ae9a retains the exact original input
+Fresh RED after the FM change retains the exact original input
 SHA600d0bdd7b626855411a6d85b342fc1fc0a0b85b6a676e998a742c429d7e9d08.
 Native succeeds; Ares reports `invalid Orca option printer_extruder_variant`.
-Receipt: `${TMP_ROOT}/ares-generated-printer-ids/red/admission.json` and
-`artifacts/case-q0fVO4`. No test input/assertion/comparator modification.
+No test input/assertion/comparator modification.
 
 Read-only GDB against the identified seeded binary SHA59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff
-records actual `get_index_for_extruder` calls and their arrays/returns in
-`${TMP_ROOT}/ares-generated-printer-ids/trace/native.json`; `native-gdb.py`,
-`index-disassembly.txt` and `finding.json` preserve the repeatable probes/ABI.
+records actual `get_index_for_extruder` calls and their arrays/returns.
 Trace Native output differs from the fresh RED Native stream only in its
 existing generator-clock line, not any config or motion byte.
 
@@ -75,8 +71,7 @@ existing generator-clock line, not any config or motion byte.
    caller is `Print::apply` on the CLI path and the branch is defined behavior.
    Rust currently converts this miss to an error before materialization.
 
-Coordinator authorizes this exact variant-two `Print::apply` invocation to
-map the selector's None (upstream -1) to0 before stride-two materialization.
+Only this exact variant-two `Print::apply` invocation maps the selector's None (upstream -1) to0 before stride-two materialization.
 All other `resolve_printer_indices` invocations retain their existing error
 policy; process/filament/error-admission policies are not broadened. The shared
 selector itself returns None for no match and never implements negative→0.

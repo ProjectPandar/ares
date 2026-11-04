@@ -1,8 +1,7 @@
 # SPEC: bridge-over-infill anchor admission alignment
 
-Status: SPEC-REVIEW-REQUEST; no implementation or RED run yet.
-Base: `c22f5a81da41fce715b528268711393649daad66`.
-Worker2 branch: `worker2/bridge-anchor-guards`.
+Status: proposed SPEC; no implementation or RED run yet.
+Base commit: `c22f5a81da41fce715b528268711393649daad66`.
 
 ## Owning upstream boundary
 
@@ -48,7 +47,7 @@ have already been removed by prior merged slices. Preserve their behavior.
 | `bridge_over_infill_anchor_surface_kind` | Rejects the one current variant absent from its whitelist: `InternalVoid`. Slice A. |
 
 Do not fabricate an admitted public RED for a provably unreachable check.
-Slices B/C/D need their own evidence and SPEC approval; the inventory alone
+Slices B/C/D need their own evidence and SPEC; the inventory alone
 is not permission to remove checks without the requested TDD evidence.
 
 ## Slice A proposed first: InternalVoid anchor context
@@ -98,33 +97,30 @@ harness under `crates/ares-cli/tests/orca_parity/`. Build fixtures using public
    On baseline the active PASS assertion must fail because Ares returns
    `UnsupportedProjectFeature("bridge_over_infill_anchor_surface_kind")`.
 5. Save repeatable input, raw Ares/Native SHA, API/CLI output identity, witness
-   and comparison receipt in the run's fresh artifact root. Native outputs
+   and comparison record in the run's fresh artifact root. Native outputs
    stay outside Git. The same input must be used for Ares and Native.
 
 If the active public witness cannot be established, stop and report that
 fact before production edits. If removal exposes another missing upstream
 behavior, report it for a scoped PLAN amendment; do not bypass comparisons.
 
-Run official and seeded with fresh Native cache/artifact roots independently,
-`CARGO_BUILD_JOBS=2`, `NEXTEST_TEST_THREADS=2`, `ARES_PARITY_THREADS=2`.
-The canonical stable-options/dynamics oracles are awaiting restoration:
-no dependent directed test or full before the coordinator's RESTORED broadcast.
+Run official and seeded with fresh Native cache/artifact roots independently.
+The canonical stable-options/dynamics oracles must be restored before any
+dependent directed test or full parity run.
 No test has been run for this SPEC.
 
 Commit admitted RED separately and report its hash before GREEN. Keep all RED
 assertions/comparisons unchanged in GREEN. Add no UnsupportedProjectFeature
 replacement, silent error handling, guard fallback, suppression or ignore.
 
-### Slice A GREEN / review exit
+### Slice A GREEN exit
 
-- Active and controls PASS official + seeded, with Native receipts.
+- Active and controls PASS official + seeded.
 - Whole option_coverage official + seeded; changed files at most 400 LOC.
 - `cargo clippy --workspace --all-targets --all-features -- -D warnings`.
 - `cargo fmt --all --check`.
 - `cargo check --target wasm32-unknown-unknown -p ares-core -p ares-vgcode -p ares-wasm`.
-- Separate code REVIEW-REQUEST. Workspace/full only on coordinator allocation;
-  request exclusive full in inbox because this changes bridge-over-infill.
-- Exact approved hash only; no push before approval.
+- Full parity run, because this changes bridge-over-infill.
 
 ## Follow-on order (not bundled into Slice A)
 
@@ -143,5 +139,5 @@ public RED. NaN/Inf text rejection is not an admitted RED. If only malformed
 input or unreachable states can trigger a check, submit that result for an
 explicit decision rather than weakening TDD or labeling it GREEN.
 
-Each follow-on gets a separate SPEC, RED, code REVIEW and merge; no combined
+Each follow-on gets a separate SPEC, RED and commit; no combined
 seven-guard production commit.

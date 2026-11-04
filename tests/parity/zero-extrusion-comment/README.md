@@ -1,6 +1,6 @@
 # Ordinary zero-extrusion XY role-comment INPUT pair
 
-Approved SPEC7018a6d5f778e28825925311a503bc38cadfe9a9:
+SPEC7018a6d5f778e28825925311a503bc38cadfe9a9:
 `docs/architecture/2026-10-23-zero-extrusion-xy-role-comment-spec.md`.
 Pinned8500fcd GCodeWriter.cpp933–956::extrude_to_xy omits E at zero dE but still
 emits role comments under full_gcode_comment. GCode.cpp2038/7031–7036 supplies
@@ -30,5 +30,5 @@ no Nativeoutputs/hunkcount constants/private observers/goldens committed.
 No comment/M73/time/fan/E/F/wipe/start/end/config/footer mask,tolerance,
 inversion/ignore/rejection-as-success;originalgenerator/date normalization only.
 Target first mismatch panic may precede rawEqASSERT/wrapper-tail;independent
-raw-file equality is not a claim unreachable assertions ran. No GREEN yet.
-W2 flow call/helper explicitly untouched. All3W3chains await own singlewindow.
+raw-file equality is not a claim unreachable assertions ran.
+The flow call/helper is explicitly untouched.

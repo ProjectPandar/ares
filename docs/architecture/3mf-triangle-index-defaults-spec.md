@@ -1,16 +1,14 @@
 # SPEC: shared 3MF triangle vertex-index zero defaults
 
-Status: **APPROVED a1c1b81dac38fba08e170bc75ab3b8724755677f; public RED authorized.**
+Status: **accepted; public RED frozen.**
 Public RED freezes an input-only pair under `tests/parity/3mf-triangle-index-defaults`:
 positive SHA `a19533ceee3dea510848bf4ee578a3b48f5266139c79fd288ea15da546c8e20d`,
 control SHA `adb38ee8df9485a864135007753fb935aedf7883fe37f910109f20145f3c7be2`.
-The test generates Native references at runtime; no production change authorized.
-Base main `41f2c90f765d42c6620583121296bb61a2cb839c`, atop approved docs refresh
-`f82a77b6d1282e86eafd928d565533f09d8badae`. This is the triangle behavior
+The test generates Native references at runtime.
+This is the triangle behavior
 explicitly deferred by the shared vertex-coordinate SPEC, not the already
-merged resource build/item ignore slice. The approved SPEC was docs-only;
-this RED adds the frozen pair/public test only. No production change here.
-M73 remains deferred; full/workspace runs remain coordinator-owned.
+merged resource build/item ignore slice.
+M73 remains deferred.
 
 ## 1. Exact source owner and Rust destination
 
@@ -70,7 +68,7 @@ repeated indices, but the active import path above does not call it.
 degenerate normals and notes connectivity can justify slicing such triangles.
 Therefore this SPEC does not promise that Native repairs/removes every
 degenerate index-0 face. Runtime admission/output of a degenerating edit would
-need a separate bounded witness and scope approval.
+need a separate bounded witness and scope.
 
 Ares `model_xml.rs::Mesh::validate` checks finite vertices/unit-scaled values
 and index `< vertex_count`; it does not reject repeated-index faces there.
@@ -81,7 +79,7 @@ orientation, centering and annotations. Its signed-volume calculation `:73-96`
 handles zero norm without dividing by it; this is not a general mesh repair
 pass. Neither path should be changed to hide a triangle default defect.
 
-## 3. Approved pair/discovery budget (original plan; pair now frozen above)
+## 3. Input pair (original plan; pair now frozen above)
 
 Control: unchanged `tests/parity/wipe-before-override/control-before50.3mf`, SHA
 `adb38ee8df9485a864135007753fb935aedf7883fe37f910109f20145f3c7be2`.
@@ -93,19 +91,19 @@ All mesh vertices, face ordering/annotations/IDs, main build, other ZIP entries,
 settings/M73/transforms remain identical. No loaded JSONs or extra overrides.
 
 Only this v1 omission pair is proposed initially: positive + fresh repeat +
-control in official and seeded, **three Native slices per mode**, CPU15. The
+control in official and seeded, **three Native slices per mode**. The
 existing input has no explicit v2=0/v3=0 face; do not silently rotate/reindex
 triangles or substitute geometry just to create extra cases. v2/v3 default
 scope is source-backed by the same shared decoder and helper; separate fixtures
-or main-role mesh rewrites require another input approval. A resource-only
+or main-role mesh rewrites require another input. A resource-only
 positive exercises the decoder also used by main; no role partition is needed.
 
-After SPEC/input approval, freeze deterministic derivation and full archive/
-entry SHA manifest externally before runtime, and before any test commit. No
+Freeze deterministic derivation and full archive/
+entry SHA manifest before runtime, and before any test commit. No
 positive bytes or SHA were claimed at SPEC stage; the RED freeze above records
 both identities. Native `--slice 0 --outputdir <fresh>`
 on the same bare input, canonical official/seeded environments, fresh caches/
-TMPDIR/artifacts, CPU15/jobs1/threads1/load<60/START-END. Require complete exit0,
+TMPDIR/artifacts. Require complete exit0,
 authoritative output/footer, positive repeat determinism and expected control
 neutrality; no cached/export/load-only oracle or retry/input substitution.
 
@@ -113,12 +111,12 @@ The expected Native pair is neutral because zero was already explicit. This is
 **not** NO-RED by itself: the decisive comparison is Native versus Ares on the
 **same** input. If Native completes and Ares still rejects the missing field,
 that is an admission delta, despite pair neutrality. If same-input public
-behavior and whole outputs are equal, NO-RED STOP. Seek adjudication rather
-than repeat the former positive/control-neutrality interpretation error.
+behavior and whole outputs are equal, NO-RED STOP. Do not
+repeat the former positive/control-neutrality interpretation error.
 
-## 4. Public RED/control and GREEN gates (separate authorization)
+## 4. Public RED/control and GREEN gates
 
-Discovery first, then separate public test authorization. Use
+Discovery first, then the public test. Use
 `OrcaRunner::from_env()` else-return and existing reference-enabled gate; enabled
 tests always produce fresh Native at runtime and perform public validated
 `slice_project_plate_validated` + a real bare CLI. No Native-only PASS path,
@@ -130,11 +128,11 @@ calls before target assertions; require those same successful equality results.
 At pre-GREEN HEAD a missing-field rejection must make the public test **FAIL**;
 no `is_err`, `assert_ne`, expected-error or `divergent:true` passing branch.
 Missing Ares output means comparison NOT EVALUATED, not missing-output equality.
-Record both public calls/error receipts before the first failing assertion.
+Record both public calls/errors before the first failing assertion.
 
-Use the approved deterministic metadata/default overrides/plateNone/context0
+Use the deterministic metadata/default overrides/plateNone/context0
 contract; no hidden loaded settings. Retain M73, config, ordered motion/arcs,
-statistics/footer. RED review precedes production authorization, frozen tests
+statistics/footer. Frozen tests
 remain unchanged for GREEN. GREEN must make positive/repeat/control whole strict
 PASS with raw API==CLI in both modes, control unchanged; targeted 3MF/load
 regressions, fmt/strict clippy/WASM and byte-only Tier1 boundary preserved.
@@ -144,8 +142,8 @@ ANY residual G-code difference => STOP/report, no geometry/repair/M73 scope grow
 
 | Failure | Classification / required action |
 |---|---|
-| Frozen input/entry SHA drift or edit of nonzero index | STOP; not the approved semantics-preserving pair. |
-| Native nonzero, timeout, incomplete footer/snapshot | No valid oracle, NO-RED STOP; preserve receipts, no retry. |
+| Frozen input/entry SHA drift or edit of nonzero index | STOP; not the semantics-preserving pair. |
+| Native nonzero, timeout, incomplete footer/snapshot | No valid oracle, NO-RED STOP; preserve artifacts, no retry. |
 | Native repeat differs or explicit-zero/omitted-zero pair changes output | STOP/source adjudication; no normalization of behavior or mesh-repair expansion. |
 | Native accepts, Ares API/CLI rejects missing index | Admission delta; public target-success test must FAIL until GREEN. |
 | Same-input Native/API/CLI full equality | NO-RED STOP; no invented guard or forced failure. |

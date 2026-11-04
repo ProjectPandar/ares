@@ -1,11 +1,9 @@
-# SPEC-REQUEST: Brim.cpp OuterOnly contour and hole exclusion
+# Spec: Brim.cpp OuterOnly contour and hole exclusion
 
-## Status and roadmap selection
+## Roadmap selection
 
-Worker3; base main `5d1a77062`, after the approved combined-brim merge.
-Claude, the sole reviewer, approved SPEC a68680255. The original submission
-was documents only. Separate fixtures/tests now have admitted Native RED;
-[evidence](outer-only-brim-red-evidence.md) is reported before implementation.
+Follows the combined-brim port. Native RED
+[evidence](outer-only-brim-red-evidence.md) precedes implementation.
 
 Selected from roadmap **Current acceptance priorities: full acceptance (open)**:
 active brim selectors need source-owned, nonempty complete-output witnesses.
@@ -14,11 +12,7 @@ slice replaces that bounded project-runtime scaffold; it does not close the
 seven-value brim domain or global printer/Option acceptance.
 
 Production claims are limited to private brim modules and existing project
-BrimPlan dispatch. Coordinator records currently place worker1 in template/
-anchor work, worker2 in timelapse, worker6 in Stars geometry, worker5 in
-profiles, worker4 in CI/oracles and web in viewer data. No file owned by those
-slices is proposed here. Brim overlap with merged worker3 code is intentional
-and is reported in this SPEC request before any implementation.
+BrimPlan dispatch. Overlap with the existing combined-brim code is intentional.
 
 ## Upstream ownership and Rust destination
 
@@ -48,7 +42,7 @@ primitives and their global defaults remain untouched.
 
 ## Existing scaffold and replacement
 
-At base5d1, OuterOnly falls through BrimPlan's final branch: offset the complete
+Before this slice, OuterOnly falls through BrimPlan's final branch: offset the complete
 source ExPolygons by gap, offset that result by width, then subtract. Its
 exclusion is only the first offset; contact retention is applied only to
 InnerOnly/OuterAndInner. This is a static source-boundary mismatch, not a
@@ -100,8 +94,7 @@ volumes/groups/tools and cross-object contact composition remain deferred.
 So do public rectangular adapter repair/test retirement and further geometry
 kernel work. No template/timelapse, APA/anchor, profiles, Stars/multiline,
 CLI policy, oracle/CI, viewer, option registry or platform-specific core code.
-If admitted RED first fails in one of those owners, report it rather than
-repairing it under this SPEC.
+If RED first fails in one of those areas, it is not repaired under this SPEC.
 
 ## Failure inventory before tests or implementation
 
@@ -115,9 +108,9 @@ repairing it under this SPEC.
 8. Multi-island append order or shared-path emission changes unrelated bytes.
 9. Existing combined/inner/ear controls regress, or inactive widths emit brim.
 
-## Test-first plan and review exits
+## Test-first plan and exits
 
-1. After approval, author deterministic input-only 3MFs and Native-backed CLI
+1. Author deterministic input-only 3MFs and Native-backed CLI
    integration tests under `tests/parity/outer-only-brim` and
    `crates/ares-cli/tests/orca_parity/outer_only_brim.rs`, registered through
    existing `brim_bed_region.rs`. No top-level parity/case-helper restructuring.
@@ -136,29 +129,19 @@ repairing it under this SPEC.
    validated byte API and real CLI G-code, regional motion witnesses and first
    byte differences. Witnesses supplement unchanged generator-only ordered
    full-byte comparison; Native output is never checked in as fixture data.
-4. Run seeded/official with original control-set-v2, jobs2/threads2, load<30,
-   fresh cache/root every run. Existing InnerOnly/OuterAndInner/N/O/E and bed
+4. Run seeded/official with original control-set-v2 and a fresh cache/root
+   every run. Existing InnerOnly/OuterAndInner/N/O/E and bed
    controls retain their assertions/comparators; compare their raw Ares bytes
    against pre-implementation evidence, with hole behavior changes identified
    explicitly rather than claiming all existing OuterOnly bytes must freeze.
-5. Commit fixtures/tests plus admitted Native RED separately and report RED
-   to inbox before writing implementation. If existing no-hole controls change,
-   audit their exact source cause and report; do not weaken an assertion or
+5. Commit fixtures/tests plus admitted Native RED separately before writing
+   implementation. If existing no-hole controls change, audit their exact
+   source cause; do not weaken an assertion or
    invent a compatibility branch to restore a previous scaffold result.
-6. Implement only the approved source boundary. Changed Rust/new docs <=400
+6. Implement only the cited source boundary. Changed Rust/new docs <=400
    lines, no probes/ignore/suppression/regions[0], no unit tests written after
    implementation. Complete finite GREEN, directed both modes, strict/fmt/WASM.
-7. Workspace/full require explicit coordinator allocation. Use standard
-   workspace environment and canonical full environment with each full leg's
-   fresh cache/root/target, threads2 and load<30. Rebase/carry, Native anomaly
-   adjudication, code review and exact-hash merge approval remain Claude's
-   decisions. SPEC approval does not authorize push or merge.
 
-This is a source-cited proposal only; no Native outcome or implementation
-acceptance is claimed at submission.
-
-After approval and separate RED9c589662e report, the bounded port reaches
-finite GREEN47/47 in both modes. All138 existing/inactive raw Ares streams
-remain unchanged; see [GREEN evidence](outer-only-brim-green-evidence.md).
-Committed-head directed, code review, workspace/full and merge approval remain
-separate required gates.
+The bounded port reaches finite GREEN 47/47 in both modes. All 138
+existing/inactive raw Ares streams remain unchanged; see
+[GREEN evidence](outer-only-brim-green-evidence.md).

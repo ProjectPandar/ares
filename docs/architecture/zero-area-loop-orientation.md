@@ -1,11 +1,6 @@
 # Zero-area extrusion-loop orientation
 
-Status: docs-only SPEC, followed by separately committed Native-first public RED.
-Base4b3844e28711a6a1381ca847dbd390fe67f2347f.
-Branch worker6/zero-area-orientation-spec; independent worktree
-${WORKTREE_ROOT}/ares.worker6-readonly-4b384. CPU15, one job/test thread; no FULL.
-The approved occlusion chain20e41b63f remains frozen in its separate worktree.
-Production GREEN requires separate RED approval and authorization.
+SPEC, followed by a separately committed Native-first public RED.
 
 ## Upstream owner and Rust destination
 
@@ -55,13 +50,9 @@ M73, brim/EFC, painted/side-cut, combine-solid or concentric sparse. No changes 
 tests, inputs, helpers or normalizer during a future GREEN. Core stays neutral
 for WASM browsers, Windows, macOS and Linux; no filesystem/UI behavior enters core.
 Any full-output residual after the classification-only change requires STOP and
-fresh scope review, not rounding/consumer/fuzzy-generation compensation.
+a fresh scope, not rounding/consumer/fuzzy-generation compensation.
 
 ## Qualified discovery and proof limits
-
-External authority:
-`${EVIDENCE_ROOT}/w6-4b-fuzzy-inward-5myipx2g/verification.json`.
-All raw arrays remain external; DISCOVERY-RR.md is a bounded summary.
 
 -77 Native/Rust inward calls have identical center/first/second point inputs.
 - Unique zero-area call5 is at printZ1.2. Native's closed path has3 points and
@@ -103,7 +94,7 @@ target complete FAIL/control complete PASS, API success/CLI0, raw API=CLI.
 First strict difference is NON-M73 at canonical byte11554,line542,col10: the
 inward G1 XY. Preserve all M73, motion, time, metadata and footers in comparison.
 
-## Authorized RED and later approval gates
+## RED and GREEN gates
 
 Commit this docs-only SPEC first; then commit only two unchanged 3MF inputs,
 a test module and its registration. Tests must call unchanged
@@ -117,7 +108,6 @@ BEFORE real public byte API/CLI, both complete ordered comparisons, API success
 and CLI0. Canonical failure precedes the final raw assertion/adapter update on
 target: independently audit actual raw files, do not claim that assertion ran.
 Check fmt, strict workspace/all-target clippy, clean scope and changed text<400LOC.
-Send SPEC+RED RR and STOP BEFORE GREEN. No FULL, rebase, push or self-merge.
-A separately authorized future GREEN must freeze RED inputs/tests/SPEC/helpers,
-pass whole streams and source-adjacent Native gates, fmt/clippy/WASM; any residual
-must be reported. Integration FULL requires its own later explicit window.
+A separate future GREEN must freeze RED inputs/tests/SPEC/helpers, pass whole
+streams and source-adjacent Native gates, fmt/clippy/WASM; any residual must be
+reported.

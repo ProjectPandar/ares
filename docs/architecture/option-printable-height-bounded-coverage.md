@@ -1,9 +1,7 @@
 # Printable-height bounded coverage: proposed rewrite-boundary witnesses
 
-Status: selection approved after G2 `84f8fe274`; spec pending review.
-This authorizes read-only analysis and this document only, not Native execution,
-classification promotion or production edits. Worker3 owns this single key;
-APA (worker1), G4 tool mappings (worker2), wrapping (worker6) remain excluded.
+This spec covers this single key; APA, G4 tool mappings and wrapping remain
+excluded.
 
 ## Non-negotiable source and destination boundary
 
@@ -15,7 +13,7 @@ Pinned OrcaSlicer v2.4.2 source `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 | `PrintConfig.cpp:10530-10564` | Scalar range validation map; existing public loaded-validation API, no new validator |
 | `BuildVolume.hpp:105-113`, `BuildVolume.cpp:377-421` | Rectangle object/bbox containment; `SceneEpsilon=EPSILON`, zero-height sentinel disables the scene ceiling; `project_slice/state/print_volume.rs::PrintVolume` / `count_inside_instances` |
 | `Model.cpp:692-702,3423-3469`, `OrcaSlicer.cpp:5718-5726` | Instance print-volume classification; zero fully-inside instances exits -50 before apply; `project_slice/state.rs` existing unconditional gate |
-| `Print.cpp:1354-1396::Print::validate` | Generated-layer upper Z check, EPSILON and diagnostic selection; existing validated project entry / `print/validate.rs`; any missing parity is reported before authorizing a rewrite |
+| `Print.cpp:1354-1396::Print::validate` | Generated-layer upper Z check, EPSILON and diagnostic selection; existing validated project entry / `print/validate.rs`; any missing parity is reported before a rewrite |
 | `Print.cpp:833-930` | Active model-index sequential order; final instance initially uses printable_height with strict limit < max_z rejection; existing `print/validate/sequential_clearance.rs` |
 | `GCode.cpp:3045` (adjacent, deferred) | `max_print_height` placeholder is ConfigOptionInt, not floating; existing `project_slice/gcode_emit/placeholders.rs`; no new template witness in this slice |
 
@@ -44,7 +42,7 @@ height + EPSILON. Current Rust scene code reads a literal max_z and the applied
 validator does not visibly port that generated-layer branch. These are hypotheses
 requiring Native-backed validated API/CLI evidence, not permission to patch core
 or change diagnostics/classification. If a proposed control exposes a mismatch,
-retain it and stop for coordinator ruling before any production edit.
+retain it and stop for a source-owner ruling before any production edit.
 
 `EPSILON`/float conversions are source behavior, not comparator allowances.
 Record actual transformed mesh bounds, layer schedule and effective inputs before
@@ -57,7 +55,7 @@ Use the existing Ender-3 0.4 smoke export, one filament/nozzle, rectangular plat
 1 at its existing origin, cube10 at world Z 0..10, ordinary by-layer sequence.
 No supports/raft/skirt/draft shield/prime tower, no shrinkage compensation or
 custom variable layers, traditional timelapse and existing M73 policy. Keep XY
-comfortably inside; do not vary plate origins or reimplement worker4's XY gates.
+comfortably inside; do not vary plate origins or reimplement the existing XY gates.
 Verify that effective configuration and transforms remain exactly requested.
 All values below are candidates, not already observed success/rejection results.
 
@@ -116,10 +114,10 @@ receipt proves fixture precedent, not execution of these new requested heights.
 
 ## Harness boundary, RED/GREEN and exit gates
 
-After spec approval, new test-only code belongs in
+New test-only code belongs in
 `ares-cli/tests/orca_parity/option_coverage/printable_height.rs` with a child file
 if exceeding 400 LOC. Only minimal `domains.rs`/`tests.rs` wiring is anticipated.
-No sweep dispatch is preauthorized; any scientific-serialization application
+No sweep dispatch is included; any scientific-serialization application
 issue must be reported and justified key-locally first. Keep G2, bridge and
 filament-flow dispatch/admission unchanged, and prove all other 649 plans equal
 against the selected clean baseline. No independent Ares feature or legacy fallback.
@@ -140,25 +138,19 @@ against the selected clean baseline. No independent Ares feature or legacy fallb
    only whole generated-by lines; CLI result uses existing clock exemptions only.
 5. Isolated-target fresh seeded/official BASE–CAND controls, exact raw failed-name
    subset (continue candidate after baseline test failures), all common/new/changed
-   byte streams accounted for; no unapproved ND exemption. Workspace nextest,
-   strict clippy/fmt/WASM, actual SHA/commit bindings and every failed attempt kept.
-
-Before any Native/heavy launch inspect `${TMP_ROOT}/ares-coord-inbox.log` for unfinished
-BROWSER-START; a browser reservation overrides low load. Directed permission and
-load/thread budget must be confirmed before execution; full pairs require <30,
-build8 and one owned heavy job. No Native work under this unapproved spec.
+   byte streams accounted for; no unexplained ND exemption. Workspace nextest,
+   strict clippy/fmt/WASM.
 
 Deferred: nonrectangular/custom beds, XY origins/exclusions, arbitrary meshes,
 nonzero Z origins, shrinkage, painted/custom/variable schedules and independently
 forced last-layer overruns, post-GCodeProcessor multi-extruder height/path checks
 (`GCodeProcessor.cpp:1951,1992`), extruder_printable_height, mixed tools/SEMM,
 max_print_height template arithmetic, printer resizing/auto arrangement, SLA and UI. No schema-global physical safety
-claim. Milestone integration requires coordinator REVIEW-REQUEST/APPROVED and
-ordinary ff-only push; source/geometry/phase disparities remain blockers.
+claim. Source/geometry/phase disparities remain blockers.
 
-## Authorized zero-endpoint rewrite decision (RED 139a7d1dc)
+## Zero-endpoint rewrite decision
 
-- Native run `1efab6af-ee54-420f-9c80-19c3e4c23168` rejects the identical zero-height cube at generated-layer validation (-51/205); validated Ares and its CLI incorrectly reject earlier at scene admission (-50/206). Raw evidence remains `/tmp/worker3-printable-height-zero-red-v1-discrepancy.json`.
+- Native rejects the identical zero-height cube at generated-layer validation (-51/205); validated Ares and its CLI incorrectly reject earlier at scene admission (-50/206).
 - Non-negotiable: `BuildVolume.cpp:377-421` zero is unbounded only for scene containment; `Print.cpp:1354-1396` still checks generated layer pairs against the literal printable height plus `libslic3r.h:52` EPSILON. Do not apply the sentinel to Print or sequential limits.
-- Reuse the existing source-cited `project_slice::planning::plan_project`/layer pairs for Print validation, not mesh height, emitted G-code, legacy STL validation, or an independently designed schedule. New scene-height and generated-layer modules get minimal owner hooks; keep worker6 wrapping hooks intact.
-- The demonstrated fixed, unpainted, no-raft/no-shrinkage request is the GREEN obligation. Adjacent painted, material shrinkage, forced-overrun and mixed-tool witnesses remain deferred; no extra coverage claim follows from shared planner reuse. Full verification queues after worker6; no integration before review.
+- Reuse the existing source-cited `project_slice::planning::plan_project`/layer pairs for Print validation, not mesh height, emitted G-code, legacy STL validation, or an independently designed schedule. New scene-height and generated-layer modules get minimal owner hooks; keep the wrapping hooks intact.
+- The demonstrated fixed, unpainted, no-raft/no-shrinkage request is the GREEN obligation. Adjacent painted, material shrinkage, forced-overrun and mixed-tool witnesses remain deferred; no extra coverage claim follows from shared planner reuse.

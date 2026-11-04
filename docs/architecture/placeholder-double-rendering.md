@@ -1,12 +1,5 @@
 # PlaceholderParser unified double rendering
 
-Status: docs-only SPEC, then separately committed Native-first public RED.
-Base47821c760d5ea86102a34bbc78c092bbaf381214.
-Independent branch worker6/placeholder-double-render-spec; worktree
-${WORKTREE_ROOT}/ares.worker6-readonly-47821c760. CPU15, one job/test thread; no FULL.
-Both approved W6 chains20e41b63f and8ddfa8ca5 stay frozen separately.
-Production GREEN requires separate RED approval and authorization.
-
 ## Single upstream owner and exact Rust boundary
 
 This is a source-cited libslic3r PlaceholderParser rewrite slice, not an Ares
@@ -47,21 +40,19 @@ integral-DOUBLE arm or redesign numeric representation to evade this boundary.
   port the cited ALL-double operation, not an Ares-specific exponent patch.
 - Do not absorb GCodeProcessor/time/M73, writer coordinates, infill geometry or
   Aligned-rectilinear template identity. This is string rendering before the
-  processor. No queued painted/side-cut, brim/EFC, combine-solid, concentric
+  processor. No painted/side-cut, brim/EFC, combine-solid, concentric
   sparse, spiral, seam-occlusion or zero-area winding changes.
 - Core remains portable for WASM browser, Windows, macOS and Linux. No native
   process/libc/file I/O in core. No new unit tests after production code.
-- Any strict residual after the unified-double future correction means STOP
-  and fresh review, not a changed fixture, mask, Integer/String edit or scope
+- Any strict residual after the unified-double future correction means stop
+  and re-analysis, not a changed fixture, mask, Integer/String edit or scope
   widening. Preserve all test/helper/input/SPEC bytes during GREEN.
 
 ## Qualified discovery evidence and corrected scope
 
-External authority:
-`${EVIDENCE_ROOT}/w6-47821-placeholder-mwdl1xn9/`.
-`verification.json` binds the small pair, and `comparison.json` also retains the
+Discovery verification binds the small pair, and its comparison also retains the
 large positive. The discovery draft had deferred the integral-double branch;
-COORD explicitly SUPERSEDES that deferral with this unified owner boundary.
+this unified owner boundary supersedes that deferral.
 
 Both positives are GUI-reachable custom machine_start_gcode expressions in an
 appended COMMENT; the original startup program and physical printing stay intact.
@@ -103,7 +94,7 @@ Both positive/control pairs have the single machine_start_gcode delta, no G-code
 archive member, Native output or duplicate preexisting fixture SHA committed.
 Retain meaningful labels and one shared control; no input search to hide residuals.
 
-## Approval / verification sequence
+## Verification sequence
 
 1. Commit this docs-only SPEC, then input/test-only RED at an exact commit.
    Three direct calls to unchanged native_stream_case::check ->NativeCase,
@@ -117,10 +108,8 @@ Retain meaningful labels and one shared control; no input search to hide residua
    independently audit actual raw API/CLI files; do not claim that assertion ran.
    No copied engine, alternate normalizer, comment/M73/metadata mask or skip.
 4. fmt and strict workspace/all-target clippy must pass; all changed text<400LOC,
-   production/helpers unchanged. Send SPEC+RED RR and STOP BEFORE GREEN.
-5. If separately authorized, future production-only GREEN must unify both Number
+   production/helpers unchanged. GREEN is a separate step.
+5. Future production-only GREEN must unify both Number
    arms and pass all3 complete streams in BOTH modes, raw equality, appropriate
    existing placeholder/template consumers and fmt/clippy/WASM gates. No universal
    formatter or Integral/String parity claim beyond verified source behavior.
-6. No FULL, rebase, push or self-merge without a later explicit window. The two
-   frozen W6 chains and user loop-test keep-deleted decision remain untouched.

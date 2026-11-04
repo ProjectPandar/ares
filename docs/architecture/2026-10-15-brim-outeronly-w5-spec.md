@@ -1,11 +1,10 @@
 # SPEC: 单对象显式 OuterOnly brim（w=5）parity 片
 
-状态：SPEC-REVIEW-REQUEST（docs-only，含发现报告吸收）。
 本片 = 首个可 RED 切片：canon base + `brim_type=outer_only` +
 `brim_width=5`，单对象；跨对象 composition 边界经实证不可先于此片
 （见 §0）。
 
-## 0. 发现实证（official 2.4.2 vs ares caac760d4，CPU7/8）
+## 0. 发现实证（official 2.4.2 vs ares caac760d4）
 
 材料：canon base 改写（one=单对象 outer_and_inner w8；two=同 + 第二
 对象 @x150，岛间距 10mm、brim 各 8mm → 6mm 重叠；c-ooN=单对象
@@ -95,12 +94,11 @@ GREEN 仅限 RED 实测覆盖面）、canon base 打印配置。
 
 - Fixture：input-only `c-oo5.3mf`（canon base 仅改
   `brim_type=outer_only`、`brim_width=5`，见 §0 实证；随测试树
-  提交，**不含任何 native 产物**；native 参考输出
-  `/tmp/w5-brim2/n-c-oo5` 仅本地留档）。
+  提交，**不含任何 native 产物**）。
 - 腿：`option_coverage` 模式新腿（对齐 `fill_grid.rs::compare` 的
   `OrcaRunner::from_env()` 早退模式），`compare_case` 归一化
   byte-parity 断言，official + seeded 双模式。
-- 今日必红实证（caac760d4，CPU7/8）：归一化 diff 792 行；brim 段
+- 必红实证（caac760d4）：归一化 diff 792 行；brim 段
   E-move 数 native=254 vs ares=448；排序后 G 行仍差 680 行。
 
 ### "680 非排序伪差"的精确定义
@@ -113,13 +111,13 @@ GREEN 仅限 RED 实测覆盖面）、canon base 打印配置。
 拓扑本身分歧；但注意它**不区分**根因层次（面积差 vs 环生成差 vs
 连接合并差）——层次定位属 RED 阶段的分阶段探针工作（§3 候选）。
 
-## 5b. 审批范围与 GREEN 前置
+## 5b. RED 范围与 GREEN 前置
 
-本审批仅覆盖 **RED**（input-only `c-oo5.3mf` + option_coverage 腿）。
+本片仅覆盖 **RED**（input-only `c-oo5.3mf` + option_coverage 腿）。
 RED 后，分阶段探针定位必须产出 **SPEC amendment，指名所移植的
 唯一上游函数**（例：`connect_brim_lines:740-820` vs 环链
 `union_pt_chained_outside_in:839`/`chain_polylines:846` vs
-`optimize_polylines_by_reversing:724`），经 REVIEW 后方可动产品代码。
+`optimize_polylines_by_reversing:724`），之后方可动产品代码。
 实证线索：native 254 vs ares 448 brim E-move，指向缺失的合并/连接
 （connect_brim_lines 将端距 ≤2×spacing 的开放线合并为单折线）。
 

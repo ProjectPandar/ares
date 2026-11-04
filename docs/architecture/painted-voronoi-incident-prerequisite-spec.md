@@ -1,14 +1,11 @@
 # SPEC: standalone Boost1.86 Voronoi cell incident assignment
 
-Status: source-cited standalone SPEC → runtime Native RED → minimal GREEN slice.
-Integration base: current main; exact base and three commit hashes are recorded
-in each immutable qualification packet and RR. A main advance requires rebase
-and new exact-hash FULL evidence before review.
-This slice extracts the technically approved incident prerequisite from the
-unmerged painted development branch. Exactly three commits: this SPEC, the
-runtime RED harness with pure input fixtures, then production/literal GREEN.
-No painted production, public paint test, roadmap or painted-document dependency.
-RED is mergeable only with its GREEN; final FULL must have zero failures.
+Source-cited standalone SPEC → runtime Native RED → minimal GREEN slice.
+This slice extracts the incident prerequisite from the painted development
+work. Exactly three commits: this SPEC, the runtime RED harness with pure input
+fixtures, then production/literal GREEN. No painted production, public paint
+test, roadmap or painted-document dependency. RED lands only with its GREEN;
+full parity must have zero failures.
 
 ## 1. Source owner and Rust destination
 
@@ -37,12 +34,12 @@ Included: exact cell assignment port and minimal affected literal expectations.
 Deferred: sweep predicates, compaction changes, source categories, general Orca
 issue detection/rotation/repair equivalence, all painted producer/apply and
 public painted admission. The no-repair rectangle does not qualify repaired VD.
-Unmerged painted scaffolding is a temporary compatibility shell on its separate
-branch and is not carried into this slice.
+Unmerged painted scaffolding is a temporary compatibility shell kept separate
+and is not carried into this slice.
 
 ## 2. Earlier-write audit and invariant
 
-Recheck at exact extracted RED/GREEN hashes before qualification:
+Recheck at the RED and GREEN commits:
 
 | Boundary | Required finding |
 | --- | --- |
@@ -67,7 +64,7 @@ mismatch mean STOP/report, not an expanded backend repair.
 - Infinite-edge linkage/traversal regression: Arachne
   `arachne/trapezoidation/voronoi.rs:48`, medial axis
   `geometry/medial_axis/diagram.rs:72`, `annotate/propagate.rs:61` consume anchors;
-  complete fixed151 consumer selection and both FULL modes required.
+  complete fixed151 consumer selection and both full-parity modes required.
 - Missing/wrong source, ELF, debug, GDB/Python/ptrace or incomplete Native:
   infrastructure NON-GATE failure, not geometric RED or skip inside admission.
 - Source-category accessor collapses8/9: preserve raw category bits through
@@ -79,26 +76,25 @@ mismatch mean STOP/report, not an expanded backend repair.
   actual unmodified/no-issue returns; do not pretend repair-active coverage.
 - False RED/GREEN: Native completes before Rust construction, comparison mismatch
   must be real; never fabricate mismatch or treat infrastructure failure as RED.
-- Broad consumer regression: preserve all FULL tests/control refs; zero failures
+- Broad consumer regression: preserve all full-parity tests/control refs; zero failures
   required, no exemptions, name filters, tolerance or comparator/golden repairs.
 
 ## 4. Standalone runtime RED harness and pure input dependency
 
-Extract `196aaaeba` plus admission correction `cd5b67401` into one RED commit:
+The RED commit contains
 `crates/ares-cli/tests/voronoi_incident_native.rs`, helper
 `crates/ares-cli/tests/voronoi_incident/diagram.rs`,
 `tests/parity/voronoi-incident/{README.md,native.py,observe.py,raw.py}`, plus
 CLI dev dependency `boostvoronoi = { workspace = true }` and lock entry only.
 No production change. All changed Rust files below400LOC.
 
-The sole external fixture dependency is explicitly authorized at ORIGINAL paths,
-byte-for-byte from `bdfaa15f6`:
+The sole external fixture dependency is kept at its ORIGINAL paths, byte-for-byte:
 
 1. `tests/parity/paint-color/manifest.json`: frozen archive/member hashes,
    settings, per-tool activity and both-material layer counts.
 2. `tests/parity/paint-color/prepare.py`: deterministic standard-library input
    generator; native.py executes it, generating all three archives outside Git.
-3. `tests/parity/paint-color/painted-leaves.3mf`: authorized frozen input archive.
+3. `tests/parity/paint-color/painted-leaves.3mf`: frozen input archive.
 
 Actual generator disk input is existing main
 `tests/parity/interface-shells/two-region-prism.3mf`, checked by template hash.
@@ -107,14 +103,14 @@ painted-split are generated from template+manifest, not loaded from archives.
 No copied/renamed fixtures. No `paint_color.rs`, painted production code,
 encoding/geometry design records, painted README or docs/roadmap chain imported.
 Manifest historical paths/metadata remain byte-identical provenance, not a
-runtime dependency on the original worktree. Do not change frozen hashes.
+runtime dependency on the original location. Do not change frozen hashes.
 
 Native admission follows existing `tests/support/native_environment.rs`:
 missing OPTIONAL Orca config logs omission and returns; `ARES_REQUIRE_ORCA=1`
 hard-fails missing config. Inside admission `ARES_PYTHON_BIN` is required, no
 PATH fallback. Missing GDB/debug/source identity fails. No ignores/cfg parking.
 
-For each target run, two fresh actual seeded Native processes (seed0/CPU18)
+For each target run, two fresh actual seeded Native processes (seed0)
 execute50 MMU constructor returns each. Matching concrete Boost layouts/ABI,
 ELF/debug SHA and build identity verified. Independently decode raw arrays;
 require all100 finishes, exits0, pointer bounds, exact repeated input/diagrams,
@@ -129,11 +125,11 @@ RED must run under both official/seeded admission environments and genuinely
 fail after qualified Native completion at cell incident (not infrastructure).
 The exact-DWARF observer intentionally uses the pinned SEEDED ELF in both target
 runs; do not mislabel this as official effective-VD capture. Official and seeded
-FULL G-code consumers remain separate and mandatory. No committed Native arrays.
+full-parity G-code consumers remain separate and mandatory. No committed Native arrays.
 
 ## 5. Measured literal RED, then production-only GREEN
 
-The RED commit includes the technically approved raw Boost1.86 literal correction
+The RED commit includes the measured raw Boost1.86 literal correction
 in `crates/ares-core/src/geometry/tests/medial_axis/diagram.rs`: eight cell
 incident expectations and eight directly measured incident cycles. The unchanged
 first-wins backend must fail `task22o13_finite_multisite_topology_is_fully_literal`
@@ -156,56 +152,29 @@ sort, rotate, normalize or derive expected values from the Rust implementation.
 The cell/edge traversal is the same raw Boost1.86 header implementation at
 `voronoi_diagram.hpp:470-475`; this is not repaired/effective-Orca qualification.
 
-External evidence directory:
-`${TMP_ROOT}/ares-w1-incident-revision-9994670f4/`.
-It retains `raw-boost-literal-diagnostic.cpp`, `raw-boost-result.json`,
-`raw-boost-compile.log/.exit`, `raw-boost-run.exit` and
-`additional-literal-mismatch.json`. The source records direct cell incidents and
-full incident cycles; the result includes every measured row. Reproduce without
-committing source/output into the repository:
-
-```sh
-E=${TMP_ROOT}/ares-w1-incident-revision-9994670f4
-B=/nix/store/9z7sbmna2v65lrazl880srf9i2z4c49i-boost-1.86.0-dev/include
-D=$(mktemp -d ${TMP_ROOT}/ares-raw-boost-reproduce-XXXXXX)
-taskset -c 18 c++ -std=c++20 -O0 -I"$B" \
-  "$E/raw-boost-literal-diagnostic.cpp" -o "$D/raw-boost"
-taskset -c 18 "$D/raw-boost" > "$D/result.json"
-cmp "$E/raw-boost-result.json" "$D/result.json"
-```
-
-Original compiler was GCC15.3.0. Header/source/result SHA256 bindings, all eight
-old/measured anchor and cycle rows, and proof of preserved assertions/fields are
-in `${TMP_ROOT}/ares-w1-incident-green-1a8c1b40f/literal-amendment-proof.json`.
-If external evidence is unavailable, reconstruct the diagnostic by the complete
+The diagnostic records direct cell incidents and full incident cycles, built
+with GCC15.3.0 against the Boost1.86 headers. Reconstruct it by the complete
 input/API/traversal method above; never replace it with Rust-derived goldens.
 No diagnostic C++ or Native/raw-Boost output is committed.
 
 Freeze `test(arachne::) | test(geometry::tests::medial_axis)` fixed151 inventory
-before production edit. At immutable GREEN hash run:
+before production edit. At the GREEN commit run:
 - cargo fmt workspace and vendor file rustfmt checks;
 - strict cargo clippy core+CLI alltargets `-D warnings`;
 - cargo check ares-wasm browser target;
 - complete151 consumer tests with nextest, all pass;
 - two fresh independent mandatory Native-first complete-diagram runs, all match;
-- FULL official and seeded canonical `ares-cli::orca_parity`, no top-level name
+- full official and seeded canonical `ares-cli::orca_parity`, no top-level name
   filter or removed controls, **zero failures**. Existing optional omission
   logs remain explicit omissions, not Native successes.
 
-All commands/descendants CPU18, cargo jobs2/nextest threads2; external narrowly
-logged CPU-only KSR adapter permitted for its pre-existing hardcodedCPU0 endpoint.
-No repository launcher/seed/comparator changes. Archive exact canonical script,
-launches/env/CPU masks, complete names/outcomes, fresh cache and raw artifacts.
-Only current integration-base exact GREEN-hash FULL counts as merge evidence.
-Historical old painted-chain FULL/Native evidence is provenance, not replacement.
-Any newly required rebase invalidates old-hash final FULL; requalify exact hash.
+No repository launcher/seed/comparator changes.
 
 Account for whole retained outputs/hashes and any byte changes without added
 normalization or new parity credit. Explain Native stochastic diagnostic deltas
 as diagnostics, not strict equivalence. No Native golden/literal repair other
-than the explicitly authorized measured raw-Boost test correction above.
+than the measured raw-Boost test correction above.
 
-Independent RR required for the three-commit chain; ff-only exact reviewed hash.
-No partial RED merge, push or main integration by worker. Painted development
-remains on its original branch; painted final gates and cutting stay deferred,
-not a known-failure exemption in this standalone FULL.
+RED does not land without GREEN. Painted development remains separate; painted
+final gates and cutting stay deferred, not a known-failure exemption in this
+standalone full-parity run.

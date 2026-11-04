@@ -3,7 +3,7 @@
 Authored single-key witnesses derived from the Creality K1 (0.4 nozzle) stock
 system presets (flattened machine/process/filament configurations) and
 `OrcaSlicer/tests/data/overhang.obj`, exported through the official
-OrcaSlicer 2.4.2 CLI `--export-3mf` surface on CPU17. These are authored
+OrcaSlicer 2.4.2 CLI `--export-3mf` surface. These are authored
 discovery inputs, not factory preset bundles; the table records each single-key
 delta from the stock export.
 

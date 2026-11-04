@@ -46,6 +46,6 @@ differently by Native and Rust, and the resulting exact failing raw junction.
 No fixture, assertion, comparator or tolerance is changed for this port.
 
 Qualify the separate commit with rustfmt, workspace/all-target Clippy, and the
-frozen seeded directed witness using coordinator controls. Only a directed GREEN
-authorizes official FULL, seeded FULL and REQUIRE=1 workspace non-parity gates;
+frozen seeded directed witness. Only a directed GREEN
+qualifies official and seeded full parity and REQUIRE=1 workspace non-parity gates;
 audit every outcome flip before claiming qualification.

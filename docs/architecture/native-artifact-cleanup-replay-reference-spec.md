@@ -42,10 +42,9 @@ Production, `replay.rs`, shared caches, `.config`, KSR and
 consumer (`ordered_bytes_tests.rs:63`). Replay no longer reads it.
 Audit also found `ares-wasm/tests/encode_roundtrip.rs:28,163` actively reading
 `ender3.orca.gcode` for CONFIG_BLOCK values and browser round-trip cases.
-Coordinator disposition: after this migration, `encode_roundtrip.rs` is the
-original product's sole remaining consumer, owned by the web domain. Deletion
-of that 4,467-line product is **DEFERRED until pi-worker-web migrates this reader
-to runtime Native**. The replay README must record this remaining consumer and
+After this migration, `encode_roundtrip.rs` is the original product's sole
+remaining consumer, in the web domain. Deletion of that 4,467-line product is
+**DEFERRED until this reader migrates to runtime Native**. The replay README must record this remaining consumer and
 deletion dependency. Neither remaining product is a replay fallback after this
 migration. No WASM or KSR consumer is migrated or disabled in this slice.
 
@@ -106,10 +105,9 @@ behavior. Missing-dependency required controls fail before a warm cache can
 mask the dependency; optional genuine-reference tests visibly skip without
 fabrication, while transport and offline controls retain their assertions.
 Capture fresh paired seeded/official results and shared Ares raw hashes,
-then workspace, clippy `-D warnings`, fmt and wasm checks on the review base.
-Any current Native divergence is reported with complete evidence for coordinator
-disposition; comparator, assertions and hashes are not weakened.
+then workspace, clippy `-D warnings`, fmt and wasm checks.
+Any current Native divergence is reported with complete evidence; comparator, assertions and hashes are not weakened.
 
-All runtime Native output and diagnostics stay outside Git. Deferred behavior:
+Runtime Native output and diagnostics are not committed. Deferred behavior:
 KSR/classic product removal, WASM original product consumer migration, production
 replay provenance/schema changes, broader inventory and all-domain parity.

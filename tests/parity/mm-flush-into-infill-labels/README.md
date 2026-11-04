@@ -20,5 +20,5 @@ NOT marked should_panic or ignored.
 
 Run `cargo nextest run -p ares-cli --test orca_parity
 -E 'test(mm_flush_into_infill_labels)' --test-threads 1 --no-fail-fast`
-with the official or seeded coordinator environment, fresh cache/artifact
-directories and CPU11.
+with the official or seeded Native environment and fresh cache/artifact
+directories.

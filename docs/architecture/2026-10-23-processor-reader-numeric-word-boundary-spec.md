@@ -1,12 +1,8 @@
 # SPEC proposal: processor GCodeReader numeric-word boundary parity
 
-## Authority and exact base
+## Scope
 
-Docs-only ONE new SPEC on exact fresh main
-**9cfaf0d16f0f5c4bf5fb6bf6c62d1c54e0d94ecf**. No tests,fixtures or Rust changes
-are included. Discovery producers ran before this document commit against
-that clean exact base,CPU12. Request separate test-only RED authorization;
-this SPEC does not authorize production GREEN,FULL or integration.
+Docs-only SPEC. No tests,fixtures or Rust changes are included.
 
 ## Owning upstream rewrite slice
 
@@ -68,7 +64,7 @@ rejects the joined word**. Matching that source behavior is the goal,not
 claiming a firmware execution rule or rejecting the project at admission.
 Both fan_speedup_time and fan_kickstart remain0,so FanMover is not the owner.
 
-Final pair external to repository until RED approval:
+Final pair external to repository until RED:
 
 | Input | SHA256 |
 |---|---|
@@ -90,9 +86,7 @@ exception. Progress relocation/remaining-time differences are active outputs,
 not inert config round trips. Diagnostic SequenceMatcher hunks are retained
 only for localization;they are not used to mask/sort/accept the full streams.
 
-Discovery root:
-`${EVIDENCE_ROOT}/w3-gcode-stock-discovery-9cfaf0d16/`.
-Final witness subroot `compact-motion-no-fan/`;results/commands/statuses/full
+Final witness `compact-motion-no-fan/`;results/commands/statuses/full
 Native/API/CLI streams,exact build CargoJSON and API rlib provenance retained.
 Original date/generator-only normalization used,retaining all M73/time/fan/E/F/
 wipe/start/end/config/footer bytes. Independent script audits do not pretend
@@ -107,8 +101,8 @@ progress difference;removing leadtime to0 preserves it. That bounded reduction
 is in `compact-motion/` and final `compact-motion-no-fan/`,not a second proposed
 FanMover change. No parameter search,trial patch,debugger/Native rebuild or
 production instrumentation was used. Across all three probes:24actual Native
-slices,12validated API,12actual CLI,all runtime0 on CPU12;all repeated Native
-refs stable. Main Rust binaries built exactly9cf,not reused from older main.
+slices,12validated API,12actual CLI,all runtime0;all repeated Native
+refs stable.
 
 ## Included / deferred / nonnegotiable boundaries
 
@@ -118,8 +112,8 @@ parsing**,with existing numeric storage/promotion/call ordering intact.
 Destination starts with `processor/motion_util.rs::word`. Keep changes source
 literal;do not merely special-case the witness string or invent an independent
 validator/parser framework. Audit existing helper consumers before GREEN;
-if parity requires edits in frozen planner/cache/firmware or machine paths,
-STOP and request a scope amendment rather than silently expanding.
+if parity requires edits in planner/cache/firmware or machine paths,
+STOP rather than silently expanding.
 
 Deferred:general complete GCodeReader rewrite,lowercase/duplicate-word/unknown
 axis grammar,compact command opcodes,exponent/NaN/locale/new numerical behavior,
@@ -128,27 +122,17 @@ algorithms,fan/kickstart/startup/temperature policies,geometry/admission and
 all unrelated templates. Existing helper's other source semantics are not an
 excuse to change downstream algorithms or add fallback/rejection-as-success.
 
-Explicit exclusions:W1 startupfan/machine.rs;W4 machine/temperature.rs scanner;
-W5 wipe tower/brim;W2 frozen firmware literal-E/VG1 cache and other chains;W6
-frozen seam/ironing/sanitizer/defaultfloat/loop chains. Exact audited W2 range
-47821c760..515e959759f1357b34765fcb7fbe08e9b1630202 and W6
-ad5111f0b..26a87adfe0dfc04dbd4a79a652eb015a7194b385 have no destination-path
-change/history and no numeric-word-boundary SPEC ownership hits. Adjacent
-processor path ownership is acknowledged,not inferred safe from file absence
-alone;their documented goals/changed scopes are retained in ownership audit.
-
-## Next staged gates,only after approval
+## Next staged gates
 
 1. Freeze exact proved input bytes/SHA in test-only RED;two ordinary unchanged
    `native_stream_case::check` calls `(false,|_,_|{})`,complete ordered equality.
    Reproduce dual1controlPASS1genuine targetFAIL,not inverted/ignored tests.
-2. Send RED-RR before production. Keep full Native2-first success/stability,
+2. Keep full Native2-first success/stability,
    validated API/actual CLI success,raw equality,unchanged comparator. No M73,
    timing,E/F or config masks/goldens/tolerances/private-state assertions.
-3. Only separately authorized GREEN ports the reader lexical boundary,then
+3. GREEN ports the reader lexical boundary,then
    strict pair/control must both PASS without touching downstream policies.
-   Unexpected first-owner/residual →STOP. fmt/Clippy/nextest gates and any FULL
-   or integration need their own directed authority/exact base.
+   Unexpected first-owner/residual →STOP. fmt/Clippy/nextest gates.
 
 No tests or implementation accompany this docs-only SPEC;actual difference
 is already proven at exact main,not a static hypothesis or scaffold feature.

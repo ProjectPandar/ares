@@ -9,11 +9,9 @@ remain effective in native export and pass the unchanged whole-output
 comparison. Correct the production consumer to read the already resolved
 runtime configuration rather than the full machine defaults.
 
-Include the saved public sweep failure in before/after evidence and retain
-all paired files. Defer unrelated stock bounds/unsupported-feature and other
+Include the saved public sweep failure as a before/after case. Defer unrelated stock bounds/unsupported-feature and other
 option-domain gaps; they remain mandatory future source-cited slices.
 
-Acceptance: sensitive RED/GREEN complete domain, official and seeded CPU0
+Acceptance: sensitive RED/GREEN complete domain, official and seeded single-CPU
 native references with default-thread official control, workspace Nextest,
-fmt/Clippy, WASM compilation and independent six-axis review. Commit code
-and documentation together after review; this is not global completion.
+fmt/Clippy and WASM compilation. This is not global completion.

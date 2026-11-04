@@ -1,8 +1,5 @@
 # SPEC: zero-retraction wipe XY comment forwarding
 
-Status: **SPEC-REVIEW-REQUEST, docs only; no public RED/code authorized yet**.
-Base `caac760d464112b076821975b67232fdd0f14bf0`.
-Branch worker1/wipe-zero-retraction-comment-spec; CPU18/jobs2.
 Roadmap Range min/max/interior coverage remains OPEN; this is one source-owned
 consumer repair, not global option/domain completion or a new wipe pipeline.
 
@@ -42,15 +39,10 @@ adaptive0, comments1, Classic/scarf none, no tower/raft/support, cooling20s/min1
 wipe1/distance2, with the three retraction pairs below. Model remains existing
 admitted CSV but is inactive; PA/lookahead is not this repair's owner.
 
-Runtime root: `${TMP_ROOT}/ares-wipe-realistic-discovery-BkOTyp/`.
-External helper uses the **unmodified existing** golden::
-compare_ordered_bytes_generator_only by absolute source include, public
-slice_project_plate_validated plus real CLI. Exact main rlibs/CLI/helper/source
-identities, input/source SHA, launch/cache, complete Native/API/CLI streams,
-exit/stdout/stderr, effective footer and discovery-audit.json are retained.
-Official and seeded serial fresh Native caches/artifacts, **6/6 Native accepted**,
-API/CLI6/6admitted/raw API=CLI. Actual orca-slicer/thread CPU18 in both modes.
-Repository remained clean with no tests/production/Native artifacts committed.
+The discovery helper uses the **unmodified existing** golden::
+compare_ordered_bytes_generator_only, public slice_project_plate_validated plus
+real CLI. Official and seeded fresh Native runs: **6/6 Native accepted**,
+API/CLI6/6admitted/raw API=CLI.
 
 | Input / both modes | Native / Ares | Existing complete comparator |
 |---|---|---|
@@ -66,7 +58,7 @@ issue. Preserve the original complete differences; do not strip descriptions
 or change comments0 to hide the defect. Gate-level claim is these same-input
 whole-output differences, not proof that all possible residuals are comments.
 
-### Input-only fixtures to freeze after approval
+### Input-only fixtures
 
 | Case | retract_before_wipe | retraction_length | SHA256 |
 |---|---|---|---|
@@ -91,11 +83,11 @@ rounding, negative/overflow schema policy, percent parser/clamp changes, firmwar
 retraction, role-based wipe speed, toolchange/final wipe ordering, multi-filament
 mapping, travel-Z, cooling, adaptive PA models/scanner/reset and parent range
 coverage. Discovery stopped at first diff; unrun range cases are not PASS.
-No extra unsupported guards or implicit off-switch are authorized.
+No extra unsupported guards or implicit off-switch are added.
 
 ## Native RED -> GREEN acceptance design
 
-1. After SPEC approval commit tests + input-only fixtures first. Use
+1. Commit tests + input-only fixtures first. Use
    **OrcaRunner::from_env**, required-Native semantics and existing stages /
    public byte API + real CLI, not the external exploratory helper as a new
    committed harness. Retain fresh native result/launch/full output at runtime,
@@ -104,7 +96,6 @@ No extra unsupported guards or implicit off-switch are authorized.
    zero-E rows plus retained description for the two positives; ordinary control
    must actually extrude/retract during wipe. Complete existing comparator then
    yields2true FAIL+1PASS per mode; no rejection-as-success or comment filtering.
-   Independently review exact public RED before any production edit.
 3. Only the minimum source-comment forwarding change in the existing zero-E
    branch, no surrounding cleanup or threshold/math repair. If unchanged
    fixtures still show another first difference, stop/report for amendment.
@@ -113,10 +104,4 @@ No extra unsupported guards or implicit off-switch are authorized.
    wipe/retraction/comment-off/travel and relevant PA/cooling controls plus
    reached option_coverage. If comment-off needs a new witness, freeze it before
    code rather than add implementation-following tests afterward.
-5. CPU18/jobs2/threads2, serial fresh modes/cache/artifacts/explicit owned target,
-   exact full HEAD/clean status before+after legs, actual descendant/thread mask,
-   one START per batch then evidence END/review (no per-case inbox noise).
-   Obey exclusive FULL freezes. Same final hash strict/fmt/WASM, <=400LOC;
-   full/workspace only coordinator allocation, no push or Nix store deletion.
-
-Only this document is committed now. Await exact SPEC approval before RED.
+5. Same final hash strict/fmt/WASM, <=400LOC.

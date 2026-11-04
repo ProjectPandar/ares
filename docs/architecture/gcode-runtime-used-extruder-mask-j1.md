@@ -1,6 +1,5 @@
 # J1 startup: emitted-tool usage mask, not initial-tool selection
 
-Status: SPEC-REVIEW requested; no RED/GREEN implementation authorized yet.
 
 ## Source-owned rewrite boundary
 
@@ -41,20 +40,12 @@ not be silently changed while repairing this J1 by-layer case.
 
 ## Frozen finding and corrected diagnosis
 
-Finding baseline: `325ba112d1856d0178a4672068d3f8784afdf72e`.
-Current integrated baseline when this spec was written:
-`0164565498d3cc49f087611b56ec66608705d64a`.
-
-Retained evidence: `/tmp/worker6-seam-B-startup-finding.md` and
-`/tmp/worker6-seam-B-startup-finding/`. All eight checksum-bound files were
-read-only verified before planning this slice.
-
 - Input SHA256: `7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4`.
 - Native output: `a06ecd924edbb729836bb835db523f9c0dc0b87495aab74579cd108377f9253e`.
 - Ares output: `009ef1fb2409d7e34064a949ae04f6fbff5af22995f0824c6603bc0a62ed0129`.
 - Receipt binds this input and Native output, seeded Native59fb88a2…,
-  resources286fab66…, seed0, CPU17. This historical capture is not renamed
-  a fresh CPU0 run or substituted for the approved future RED.
+  resources286fab66…, seed0. This historical capture is not substituted
+  for the future RED.
 
 Both frozen streams already print `; --- initial_extruder: 1` and start
 with T1. Native renders `; --- T0: false`, Ares `; --- T0: true`; T1 is true
@@ -121,7 +112,7 @@ The shared base-placeholder builder currently also serves pre-ordering
 scaffolding as a temporary compatibility shell, not proof of upstream
 runtime parity. Do not expand J1 to redesign those phases or delete a
 collector still used outside the by-layer runtime-mask path. Keep those
-consumers unchanged unless a reviewed source boundary explicitly requires
+consumers unchanged unless a source-cited boundary explicitly requires
 otherwise; explain the precise installation point in the GREEN diff.
 
 Deferred:
@@ -137,18 +128,13 @@ Deferred:
 
 Do not hide an unrelated divergence discovered after the mask symptom is
 fixed. Retain complete bytes and report a separate residual; broader GREEN
-requires its own source-cited spec/RED approval.
+requires its own source-cited spec/RED.
 
 ## TDD and evidence gates
-
-No test/production implementation before SPEC-REVIEW approval. No new
-build or Native task until BROWSER-END.
 
 Confirmed seam: public project-byte slicing API / existing CLI parity
 harness, with real pinned OrcaSlicer references and complete output bytes.
 No private emitter access, panic instrumentation or Native rebuild.
-
-After approval:
 
 1. Freeze the original J1 input unchanged as the primary regression. Add
    a test-only E2E using the stock startup script and verify exact input
@@ -156,11 +142,10 @@ After approval:
    generated-by identity normalized; retain input, streams, manifest,
    command/deadline record and the mask/tool/flush witness.
 2. Establish fresh Native complete-byte RED on current clean production
-   BEFORE a fix: CPU0/seed0, runs1, fresh per-case cache, shared300s deadline,
-   owned-descendant cleanup. Prebuild outside the deadline with
-   CARGO_INCREMENTAL=0 and16-thread limits. Existing finding is supporting
-   evidence, not the independent RED gate. Submit test-only RED hash for
-   approval.
+   BEFORE a fix: seed0, runs1, fresh per-case cache, shared300s deadline,
+   owned-descendant cleanup. Prebuild outside the deadline. Existing finding
+   is supporting evidence, not the independent RED gate. Commit the RED
+   test-only.
 3. Freeze controls before their first Native comparisons: ordinary tool1
    only; actually-used tools1+2; and a sequential/by-object unchanged-output
    case. Prefer existing independently byte-green controls where they
@@ -168,7 +153,7 @@ After approval:
    comparison. If a required control has an unrelated residual, report it
    rather than relaxing assertions or promoting it to PASS.
 
-   **Coordinator ruling after the independent first RED run:** the three
+   **Decision after the independent first RED run:** the three
    frozen controls have unrelated existing whole-file differences. Role1
    and by-object first differ at byte2449/line165 (Native M73 P41 versus
    Ares WIPE_START); both-used first differs at byte2384/line189 (Native
@@ -179,22 +164,18 @@ After approval:
    perform a complete-byte comparison or label their whole streams PASS.
    The primary role2 case MUST still assert complete bytes; if the mask fix
    exposes a later residual, report it unchanged and stop rather than strip
-   any output. Frozen findings:
-   `${TMP_ROOT}/ares-j1-mask/findings/wipe-progress/FINDING.md` and
-   `${TMP_ROOT}/ares-j1-mask/findings/filament-start-transition/FINDING.md`.
+   any output. The frozen findings are the wipe-progress and
+   filament-start-transition residuals.
    By-object unchanged coverage here is witness-only, not full parity.
-4. Only after exact-hash RED approval implement the minimal runtime mask
+4. Only after the RED implement the minimal runtime mask
    connection. Keep initial-tool expectations and stock template unchanged.
 5. Fresh base/candidate full seeded, directed RED+controls, strict Clippy
    `-D warnings`, rustfmt, workspace nextest and WASM check. Because mask
-   metadata is shared by stateful templates, use fresh full official unless
-   the coordinator explicitly approves a source-justified subset.
+   metadata is shared by stateful templates, use fresh full official rather
+   than a subset unless a source-justified subset is documented.
 6. Compare named raw failure sets: candidate failures must be a subset of
    base, not merely an equal count. Audit same-input/payload output
    invariance, per-case receipt binding and RED/GREEN input invariance.
-7. Submit exact candidate hash and REVIEW-REQUEST. Fetch/rebase latest main,
-   satisfy current rebase gates, then nonforce fast-forward push only with
-   approval and independently confirm the remote hash.
 
 ## Exit criteria
 

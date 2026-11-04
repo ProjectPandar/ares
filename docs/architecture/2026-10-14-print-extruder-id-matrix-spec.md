@@ -1,8 +1,7 @@
 # Slice 3: account finite print_extruder_id witnesses in the option matrix
 
-Status: SPEC-REVIEW-REQUEST; documentation only, no RED or implementation.
-Base: audit96328f269 on executed f637b4122. Rebase to coordinator main before
-approved implementation; preserve the exact historical sweep evidence.
+Documentation only, no RED or implementation. Audit baseline 96328f269 on
+executed f637b4122; preserve the exact historical sweep evidence.
 
 ## Upstream rewrite boundary
 
@@ -55,7 +54,7 @@ credit a case only after its existing full comparison and Native materialized
 view assertions pass. A selected-value subset cannot certify the full scope.
 No credits from an absent runner or an unexecuted individual test.
 
-## RED before GREEN, after SPEC approval
+## RED before GREEN
 
 First commit a public matrix integration regression: request only
 print_extruder_id via the existing option sweep and assert its generated plan
@@ -64,14 +63,13 @@ matrix outcome to account six complete comparisons and the six case receipts.
 The current one-baseline INCOMPLETE row must fail the accounting expectation.
 Run existing six tests as positive Native controls in official and seeded.
 This is a harness/accounting RED, not an alleged new slicer behavioral RED.
-Report the RED commit and evidence before changing the generator/executor.
+Commit the RED before changing the generator/executor.
 
 GREEN connects the existing witnesses to the plan; keep all six standalone
 regressions and assertions. Stop on any Native rejection, changed materialized
 view, missing receipts or behavioral difference; do not repair production in
-this slice. Fresh root/cache/target per mode, outer taskset CPU13 or14,
-jobs2/threads2, only within coordinator's directed window. Gate fmt/strict
-clippy/wasm32 after approved GREEN; full/workspace require separate GO.
+this slice. Fresh root/cache/target per mode. Gate fmt/strict
+clippy/wasm32 after GREEN.
 
 ## Deferred and acceptance
 
@@ -82,5 +80,5 @@ is retained exactly, not generalized into an Ares fallback.
 
 Exit: six plan cases and six witnessed comparisons in each mode, explicit
 bounded scope/deferred metadata, no change to other domains, same existing
-full-output equality, dedicated review and coordinator-scheduled gates.
+full-output equality.
 The historical audit remains unchanged; later evidence reports a new hash.

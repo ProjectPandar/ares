@@ -1,9 +1,7 @@
 # ARD: Single-layer raft contact uses interface width, not flange width
 
-Status: docs-only SPEC authorized, then Native-first formal RED. STOP
-before GREEN without separate review approval. Independent base
-47821c760d5ea86102a34bbc78c092bbaf381214, not stacked on any of the five
-frozen W5 chains. No production change in this phase.
+Docs-only SPEC, then Native-first formal RED. Independent base
+47821c760d5ea86102a34bbc78c092bbaf381214. No production change in this phase.
 
 ## Upstream owner and non-negotiable Rust destination
 
@@ -26,7 +24,7 @@ already has correct interface_width_mm; materialize_layer in
 `gcode_emit/layers/raft_schedule.rs:144–153` correctly trusts plan width.
 Do not repair that consumer or override emitted WIDTH/E afterward.
 
-Future separately approved GREEN is ONLY width selection: apply the
+Future GREEN is ONLY width selection: apply the
 base-flange first-layer width only to a layer the upstream base pass
 actually emits, NOT Contact. Use existing layer-kind/base-flange identity,
 not shape, dimension, width-value or raft-count-specific exceptions.
@@ -79,32 +77,30 @@ All371 first-raft commanded XYZ moves agree in diagnostic correspondence;
 this is NOT acceptance filtering or a claim all internal polygons match.
 Both debugger full outputs equal ordinary CLI; no inferior function,
 data/register write, may-call-functions off. No geometry/processor/seam
-fix follows from these observations. Discovery evidence stays separate:
-`${COORD_ROOT}/evidence/w5-478-raft-contact-first-flow/`.
+fix follows from these observations.
 
 ## Included / deferred / exclusions
 
-Included after GREEN review ONLY the upstream Base-flange WIDTH predicate
+Included in GREEN ONLY the upstream Base-flange WIDTH predicate
 inside raft_layer_plans. No change to height or generic Flow. Existing
 correct geometry/spacing/density/angle/spec/interpreter/materializer remain
 untouched; no fallback to preserve a known-wrong Contact override.
 
-Avoid queued W1 painted/side-cut,W2 brim/EFC,W3 combine-solid/aligned-
-template,W4 concentric sparse,W5 spiral/processor/Lightning join,W6 zero-
+Avoid painted/side-cut,brim/EFC,combine-solid/aligned-
+template,concentric sparse,spiral/processor/Lightning join,zero-
 area/occlusion/medial/interlocking/nearest. SupportCommon also contains
 brim code but this slice is only raft contact flow, with brim disabled.
-Five approved W5 chains remain frozen and unconsumed. No dependencies,
+No dependencies,
 platform I/O, public API, new Rust module or unrelated cleanup.
 
-## Formal RED then review
+## Formal RED
 
 Two DIRECT main native_stream_case::check calls: raft0 control/raft1
 positive. Existing checker double-replays Native then delegates complete
 validated public API/bare CLI comparison to native_api_cli. No duplicate
 replay/normalization/JSON/orchestration, Native output constants/assertions,
 private seam, ignored/expected-failure test decoration or G-code snapshot.
-Input-only3MFs plus input manifest/README. CPU11/thread1/job1, official
+Input-only3MFs plus input manifest/README. Official
 then seeded controlPASS/positiveactualFAIL, stable repeats and complete
 retained public attempts. No masking or reduced ordered-byte comparator.
-Send SPEC+RED RR and STOP. No GREEN/FULL/rebase/integration/main update;
-later GREEN must freeze all tests/inputs/helpers and respect residual STOP.
+Later GREEN must freeze all tests/inputs/helpers and respect residual STOP.

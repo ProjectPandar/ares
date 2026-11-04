@@ -1,8 +1,7 @@
 # Web preview: libvgcode segment positions and join angles
 
-Status: SPEC `ffe2c63e6` APPROVED by COORD, split into two slices (see COORD ruling at
-the end). Follow-up rewrite slice to
-`web-segment-heights-widths.md` (chain `5e164a404..50ca38eb4`, stack-19). It ports the
+Split into two slices (see the ruling below). Follow-up rewrite slice to
+`web-segment-heights-widths.md`. It ports the
 rest of libvgcode `extract_pos_and_or_hwa` (the positions branch and the join angle)
 and the segment geometry that consumes them in the ES segments shader, which is the
 WebGL2 (GLSL ES 3.0) counterpart of the Native preview.
@@ -26,8 +25,7 @@ grown by half the width at both ends. Known differences from upstream:
    (`[z - r/2, z + r/2]`, no push-down for non-extrusions, `:948-950`). Extrusions
    occupy the same z span in both.
 2. No join angle: every cap is the `angle == 0` cap. Census of the existing segment-hw
-   oracle dumps (`${TMP_ROOT}/ares-estimation/segment-hw/angle-census.mjs`, Native
-   `hwaBits[2]`): non-zero angles on roles 30, marker-time 6, preset-slice 2645,
+   oracle dumps (Native `hwaBits[2]`): non-zero angles on roles 30, marker-time 6, preset-slice 2645,
    slice 2444 vertices (Travel, Wipe and Extrude); color-change 0.
 3. Box cross-section instead of the camera-facing 8-vertex template.
 
@@ -47,7 +45,7 @@ The box geometry, its `[z - height, z]` convention and the inline cap rule are d
 
 - ORCA z-fighting bias (`ViewerImpl.cpp:970-975`, `Shaders.hpp:93-96,137-138`): the
   desktop GL shader applies it, the ES shader (`ShadersES.hpp:143`) does not; the web
-  follows the ES shader. Question to COORD below.
+  follows the ES shader (see the ruling below).
 - ES `lighting()` (`:44-57`) and `decode_color`: the web fragment lighting is unchanged
   (separate rendering slice).
 - Options shader / option markers (`ShadersES.hpp:159-216`), cog/tool markers.
@@ -58,9 +56,8 @@ The box geometry, its `[z - height, z]` convention and the inline cap rule are d
 The segment-hw oracle (`tools/chain-probe/segment-hw-oracle.hpp`) already runs the
 verbatim kernel with `positions != nullptr` but dumps only the input `v.position`.
 One-field extension: also dump `positions[id]` bits (`positionOutBits`). That is a new
-derivation (about 42 min, CPU 16,17,20,21, ≤4 cores) replacing `yi8nyfhl…`; I will
-report the new store path so COORD can swap the gcroot, and `ARES_SEGMENT_HW_BIN` in
-`tier1.yml` (worker4) moves with it. Discovery compares, per fixture (roles,
+derivation replacing `yi8nyfhl…`; `ARES_SEGMENT_HW_BIN` in
+`tier1.yml` moves with it. Discovery compares, per fixture (roles,
 marker-time, color-change, presetSlice/slice plates), the Ares API output (current
 wasm `values` z and zero angle) with Native `positionOutBits` / `hwaBits[2]`; if no
 difference shows, NO-RED STOP.
@@ -75,9 +72,9 @@ difference shows, NO-RED STOP.
   oracle; pure read-out, no test switch.
 - GREEN gates as in the previous slice (directed nextest with `ARES_REQUIRE_ORCA=1`,
   strict clippy, fmt, wasm32, web build/lint/typecheck, gzip < 125000, browser desktop
-  bundle/presetSlice/slice/import/firstFrame/visual on 16,17 with BROWSER-START/END).
-  Every preview PNG moves (new cross-section); I report before/after crops and change
-  no threshold or baseline without COORD.
+  bundle/presetSlice/slice/import/firstFrame/visual).
+  Every preview PNG moves (new cross-section); before/after crops are compared and
+  no threshold or baseline changes.
 
 ## Failure modes enumerated before coding
 
@@ -90,20 +87,20 @@ difference shows, NO-RED STOP.
    the closer end).
 6. Positions transferred through f64 and drifting from the f32 bits.
 
-## COORD ruling (on `ffe2c63e6`)
+## Ruling
 
 - Slice A: Rust `positions` plus the join angle in ares-vgcode / ares-wasm
   (`ViewerImpl.cpp:928-934,945-952,979-980`) with the oracle extension, RED 1 and GREEN.
   No web geometry change and no preview baseline change in A.
-- Slice B (after A merges): ES segment geometry (`ShadersES.hpp:13-148`,
+- Slice B (after A): ES segment geometry (`ShadersES.hpp:13-148`,
   `SegmentTemplate.cpp:13-27`) in `toolpathMesh.ts`, RED 2 and every preview baseline
   move.
 - Bias: the ES shader is the WebGL target upstream ships, so the web follows it. The
   desktop ORCA bias (`ViewerImpl.cpp:970-975`, `Shaders.hpp:93-96,137-138`) is deferred.
 
-## Slice B addendum: ES segment geometry (SPEC, awaiting COORD review)
+## Slice B addendum: ES segment geometry
 
-Slice A merged in stack-19 (`5c7383991`). Slice B replaces the box shell in
+Slice B replaces the box shell in
 `web/app/src/viewport/toolpathMesh.ts` with the upstream WebGL2 segment draw.
 
 | Upstream | What it does | Ares destination |
@@ -117,7 +114,7 @@ Slice A merged in stack-19 (`5c7383991`). Slice B replaces the box shell in
 Data: the worker transfers slice A's `segmentPositions` and `segmentAngles` next to
 `heightsWidths`. `aStart`/`aEnd` come from `segmentPositions` (pushed down) instead of
 the raw `values`, and a new `aAngles` vec2 holds the angles of `id_a`/`id_b`. `aSize`
-keeps its layout, so the approved `data-segment-sizes` probe and its test do not change.
+keeps its layout, so the existing `data-segment-sizes` probe and its test do not change.
 The paths bounding box keeps the raw positions, as `GCodeViewer::load` does. Instance
 selection (types 8/9/10, zero-length skip), colours, layer/visibility filtering and
 `applyEnabled` are unchanged.
@@ -129,7 +126,7 @@ Deferred: ORCA bias (as ruled), option markers (`ShadersES.hpp:159-216`), cog/to
 markers, and the GL texture packing of positions/sizes (the web uses instanced
 attributes; the values per instance are the same).
 
-Deferred by COORD ruling on RED `0c3a5f021`: per-end segment color. Upstream colors
+Deferred to `web-segment-end-color.md`: per-end segment color. Upstream colors
 each end by its own vertex (`ShadersES.hpp:101,145`, `color_tex` at `id`); the web
 keeps one color per instance, that of the end vertex.
 
@@ -140,7 +137,7 @@ The e2e computes the expected value from the Native oracle `positionOutBits` and
 `hwaBits[2]` over the same instance selection, in `presetSlice` and `slice`. The
 scaffold adds `aAngles` filled with zeros and the probe, so RED fails on the hash
 (raw z and zero angles). The GLSL itself cannot be bit-checked against Native (no
-headless Native GL); it is a transcription of the cited lines, and I'll review it
+headless Native GL); it is a transcription of the cited lines, checked
 through before/after preview crops for every preview PNG. Thresholds stay unchanged.
 
 Failure modes: (1) vertex ids or template order wrong, giving missing or inside-out
@@ -149,15 +146,15 @@ space instead of world space; (4) `id`/`endpoint_pos` chosen per triangle instea
 `vertex_id < 4`; (5) the closer end swapped in FIX_TWISTING; (6) angles of the wrong
 end fed to the caps; (7) raw positions left in `aStart`/`aEnd`.
 
-Questions to COORD:
+Open questions:
 1. Lighting: the box normals disappear with the template, so the shader needs the
-   upstream normal anyway. I propose porting the ES `lighting()` and the pass-through
+   upstream normal anyway. Proposal: port the ES `lighting()` and the pass-through
    fragment (`:44-49,143-157`) in this slice rather than inventing a web normal.
-2. Probe: is the new `data-segment-geometry` read-out acceptable (it leaves the approved
+2. Probe: is the new `data-segment-geometry` read-out acceptable (it leaves the existing
    `data-segment-sizes` test untouched), rather than widening `data-segment-sizes` as
    the original SPEC text said?
 
-## Questions to COORD (answered above)
+## Earlier questions (answered by the ruling above)
 
 1. Bias: follow the ES shader (no bias) as above, or also port the desktop `hwa.w` bias?
 2. Scope: is the ES geometry port (template plus shader) acceptable in this slice, or

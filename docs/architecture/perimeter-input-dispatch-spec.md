@@ -1,17 +1,16 @@
 # Amended SPEC: loaded system-preset inherits_group ownership
 
-Status: **REVIEW-REQUEST: SPEC + fixture/budget proposal only**. No production edits
-or new runs authorized. Supersedes b7's undecided request-contract proposal.
-Seam v2 NO-RED closure stays accepted. Owning rewrite slice is preset group metadata
+SPEC + fixture/budget proposal. Supersedes the earlier undecided request-contract
+proposal. Seam v2 NO-RED closure stays accepted. Owning rewrite slice is preset group metadata
 and CLI loaded-source precedence, not seams, geometry or an Ares pipeline.
 
 ## 1. Identical-input witness
 
-Coordinator ruled Native and Ares must receive identical 3MF AND loaded JSONs.
-One authorized external check reused complete retained Native output and invoked
-existing `ares_core::slice_with_load_settings` +CLI --load-settings/--load-filaments,
+Native and Ares must receive identical 3MF AND loaded JSONs. One external check
+reused complete retained Native output and invoked existing
+`ares_core::slice_with_load_settings` +CLI --load-settings/--load-filaments,
 no extra overrides, matching generation metadata, plateNone/placementNone/seed0.
-No new Native command; existing mainc251 core/CLI artifacts reused, digests saved.
+No new Native command was needed.
 
 Unchanged v2 single.3mf SHA
 `5518edad86d3af4e8966a8235e0e782b0bc26edf5f56a579673865169595b974`;
@@ -82,8 +81,8 @@ push_import57-62 uses user holding scope. inheritance.rs::merge_metadata328-346
 retains both raw inherits and from. Group constructor collects every inherits
 without consulting from; compose inserts that group; overlay copies those slots
 into embedded metadata. Loaded system status must survive the CLI-specific
-handoff. General bundle/catalog parent grouping is not blanket-authorized to
-change; preserve its upstream semantics. These existing structures are temporary
+handoff. General bundle/catalog parent grouping does not change here; preserve
+its upstream semantics. These existing structures are temporary
 compatibility shells around PresetBundle/CLI metadata, not an independent policy.
 
 Required invariant: for explicitly loaded system files, corresponding inherits_group
@@ -91,7 +90,7 @@ slots are empty; for User/user preserve upstream parent policy; preserve positio
 order, embedded filament count and unloaded slots. Do not fix output by clearing
 all groups, deleting raw inherits, rewriting fixture JSONs or skipping the footer.
 
-## 4. Proposed fixture and fresh RED budget (approval required)
+## 4. Proposed fixture and fresh RED budget
 
 Retained single-control is now the **positive** for this different metadata slice;
 seam-control failure remains in history, not reclassified as a seam RED.
@@ -101,18 +100,17 @@ source argv and public request metadata; no Native products committed.
 Proposed control: same3MF/from=system/preset IDs/options/filament slots, with ONLY
 raw inherits strings blanked in the three loaded JSONs. Native system metadata
 should be invariant to those parent strings; current Ares is expected to agree
-for this control. This is a new narrowly defined control requiring explicit
-fixture approval; it has NOT run and byte equality is NOT claimed.
+for this control. This is a new narrowly defined control; byte equality is NOT
+claimed in advance.
 
 Proposed budget **three comparisons per mode**: exact positive, fresh positive
-repeat, blank-system-parent control; official then seeded, CPU15/jobs1/threads1,
-load<60 before builds/eachNative, fresh cache/artifact roots, START/END receipts.
-Require Native normalized complete repeat equality, public API/CLI raw equality,
+repeat, blank-system-parent control; official then seeded, fresh cache/artifact
+roots. Require Native normalized complete repeat equality, public API/CLI raw equality,
 control complete PASS and Native positive/control complete neutrality. Effective
 inherits_group divergence under identical requests is RED, not excluded admission.
-Freeze separate public test-only RED commit ->independent REVIEW-REQUEST before
-any production correction. Stop on no RED, control/admission/resource failure or
-changed source boundary. No retry or extra cases automatically approved.
+Freeze a separate public test-only RED commit before any production correction.
+Stop on no RED, control/admission/resource failure or changed source boundary.
+No retry or extra cases.
 
 Included only loaded system source metadata precedence/positional group fidelity.
 Deferred User/user matrix expansion, optional/unloaded-kind behavior changes,
@@ -120,8 +118,3 @@ vendor parent resolution, compatibility metadata, other config migrations,
 seam planes, geometry/order/brim/travel/M73/statistics and loader/lower discovery.
 No fallback/Unsupported guard, new resolver, core I/O or comparator weakening;
 WASM/Windows/macOS/Linux byte API separation remains unchanged.
-
-Evidence: external `identical-loaded-single-report.md`, F2JO/identical-input-check.json,
-unchanged whole comparator source and driver/binary/input digests. Full same-input
-external-check archive receipt is published with REVIEW-REQUEST. Earlier b7 source
-provenance and both failed harness histories remain preserved separately.

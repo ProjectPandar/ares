@@ -1,10 +1,7 @@
-# Painted side-layer cutting: approved SPEC / public RED
+# Painted side-layer cutting: SPEC / public RED
 
-Status: COORD approved the source boundary and authorized a new branch from
-`1045b17757156007156440257f18a0d9f3f5afe9`: docs-only SPEC commit first, then public
-success-required RED. **No GREEN, production changes, FULL, merge or push.**
-Original frozen painted branch/worktree remain unchanged. #90 integration stays
-separately gated on the explicit W1 turn.
+This stage is a docs-only SPEC followed by a public success-required RED on
+`1045b17757156007156440257f18a0d9f3f5afe9`. No production changes in this stage.
 
 ## Upstream owner, GUI surface and priority
 
@@ -124,10 +121,9 @@ Before/after commit audits preserve original1045 branch/tree, production, frozen
 fixtures/harness/comparator/controller, historical seals and original qualified
 binaries. Required fmt, locked/offline workspace checks, strict all-target Clippy,
 wasm32 core/vgcode/wasm and list/build gates bind the exact RED tip. Test execution
-uses cargo nextest on CPU18/jobs1/nextest1/parity1/CARGO_INCREMENTAL=0. Record
-filter exclusions and internal guards separately. No FULL or GREEN in this stage.
+uses cargo nextest with CARGO_INCREMENTAL=0. Record
+filter exclusions and internal guards separately. No GREEN in this stage.
 
-Exit now: docs-only SPEC/ARD/roadmap commit followed by independent public RED
+Exit: docs-only SPEC/ARD/roadmap commit followed by independent public RED
 commit; both modes each3target FAIL/1control PASS with retained complete API/CLI/
-Native artifacts and RED-RR for review. Future GREEN/integration/FULL need new
-explicit authorization. See [ARD](ard-painted-side-cut.md).
+Native artifacts. See [ARD](ard-painted-side-cut.md).

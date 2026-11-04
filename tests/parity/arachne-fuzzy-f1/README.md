@@ -1,6 +1,6 @@
 # Arachne fuzzy F1 inputs
 
-Approved SPEC308583e3a, with F1 single-group whole coverage and F2 mask/split
+SPEC308583e3a, with F1 single-group whole coverage and F2 mask/split
 separation. This folder contains input-only 3MFs, never Native output goldens.
 Generate from repo root with `python3 tests/parity/arachne-fuzzy-f1/generate.py`.
 ZIP timestamps/settings ordering and manifold edge/positive-volume checks are
@@ -26,7 +26,6 @@ count as strict Native parity PASS. No coordinate normalization or chance retry.
 The Context case additionally checks seed0/1 full replay, repeat0 after1 and
 independent jobs; CLI default seed0 is covered by the main matrix.
 
-Per-run fresh cache/root, CPU12 single-core, jobs2/threads2. Only the generic
-slice producer is used; stable-options/dynamics oracles are not needed.
-Full/workspace still HOLD. Input, commands, producer hashes, Native raw output,
+Per-run fresh cache/root. Only the generic
+slice producer is used; stable-options/dynamics oracles are not needed. Input, commands, producer hashes, Native raw output,
 API/CLI status/output and strict-vs-diagnostic evidence stay outside Git.

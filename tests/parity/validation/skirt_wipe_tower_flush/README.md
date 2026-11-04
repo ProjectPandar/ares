@@ -1,4 +1,4 @@
-# Per-object skirt x wipe tower RED fixtures (W5)
+# Per-object skirt x wipe tower RED fixtures
 
 - per-object-tower.3mf  sha256=d9ee50b057550861a5bcf7ef9fa62a90e08c54cb3c197ebf5255b6c4122e145b
   Derived from tests/parity/semm-ramming/R1.3mf
@@ -12,7 +12,7 @@
   `skirt_type per-object` — RED, must FAIL before GREEN.
 - per-object-tower-control.3mf  sha256=85aabacdd30857f74fc65c6d9580d6b6fcad1423c18141a05b0b7ebdce91d3ed
   same input with skirt_type=combined: native return_code 0 and raw
-  normalized diff=0 against Ares (verified CPU7,8 before the RED);
+  normalized diff=0 against Ares (verified before the RED);
   must PASS.
 
 ## Tool-change layer-boundary retract+wipe timing (GCode.cpp:5692-5697)
@@ -27,7 +27,7 @@
   divergence at normalized N:4933. RED, must FAIL before GREEN.
 - toolchange-wipe-control.3mf  sha256=85aabacdd30857f74fc65c6d9580d6b6fcad1423c18141a05b0b7ebdce91d3ed
   same input without flush_into_*: no wiping pass, native/Ares
-  byte-identical (raw normalized diff=0, CPU7,8); must PASS.
+  byte-identical (raw normalized diff=0); must PASS.
 
 ## Per-object skirt x flush_into_infill (Print.cpp:2784-2996; GCode.cpp:5330-5333)
 
@@ -37,7 +37,7 @@
   them) and groups per-object skirts around the tower obstacle; Ares
   rejects the input via the flush_into_infill guard disjunct. RED, must
   FAIL before the GREEN retires that disjunct. Guard-off probe:
-  normalized diff=0 (CPU7,8). flush_into_support and flush_into_objects
+  normalized diff=0. flush_into_support and flush_into_objects
   stay guarded — separate residuals (302-line support skirt placement;
   tool-change/print ordering).
 

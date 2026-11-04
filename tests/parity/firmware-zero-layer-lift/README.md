@@ -1,6 +1,5 @@
 # Firmware zero-length layer-change lift: Native-active RED
 
-Approved proposal `60f4b45154acdb760c7d03245c57855d9c5b94aa`, main base8f6ce1660.
 Source `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 GCode.cpp:5685-5718,7678-7704; GCodeWriter.cpp:1026-1046,626-648.
 
@@ -24,7 +23,7 @@ No M73 filtering or expected-divergence-as-success assertion.
 On baseline source, target genuinely FAILS at byte1168/line42: Native M73 P3 R20
 versus Ares M73 P3 R19, because later layer-change lifts are missing (Native75,
 Ares1). Both controls must whole-output PASS. Production is unchanged in RED.
-After independent RED review, only port the existing boundary lift predicate
+GREEN only ports the existing boundary lift predicate
 according to upstream needs_lift including use_firmware_retraction, with one
 predicate source; do not touch estimator/M73, geometry, travel policy or APIs.
-No Native outputs are committed. CPU18 targeted modes; no full/workspace runs.
+No Native outputs are committed.

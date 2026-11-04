@@ -1,12 +1,10 @@
 # SPEC proposal: FanMover verbose text preservation
 
-## Exact base, authority and observed difference
+## Exact base and observed difference
 
-Docs-only ONE proposal on current main
-**9cfaf0d16f0f5c4bf5fb6bf6c62d1c54e0d94ecf**. Independent discovery branch;
-approved/frozen processor-word GREEN9a4dfbe4d and its queued integration remain
-untouched. CPU12 only,single-thread public consumer/CLI/Native runs. No Rust,
-fixture/test,FULL,rebase or integration implementation accompanies this SPEC.
+Docs-only proposal on main
+**9cfaf0d16f0f5c4bf5fb6bf6c62d1c54e0d94ecf**. No Rust or
+fixture/test implementation accompanies this SPEC.
 
 Ordinary stock-origin Ender3 project,Verbose G-code ON in both inputs,
 GUI fan kick-start time **0(control)→0.5seconds(target)**:
@@ -90,8 +88,8 @@ Only necessary caller/config handoff is included:
 No new public configuration/global writer policy/helper framework/module.
 Do not edit `machine.rs`,global `GCodeWriter`,template expansion or processor
 parsers. Existing ordinary writer/cooling comments already match(controlPASS).
-If a future patch needs more than this private text/context adapter,STOP for
-scope review rather than widen into timing or other owners.
+If a future patch needs more than this private text/context adapter,STOP
+rather than widen into timing or other owners.
 
 ## GUI stock-origin witness provenance
 
@@ -100,7 +98,7 @@ Origin already official-exported INPUT
 b8bc9d8ab8db4eeaa21da61e759c64f230ddf4da800997424faf10fc53cfd298.
 Creality Ender-3 0.4nozzle /0.20mm Standard @Creality Ender3 0.4 /Creality Generic
 PLA;ordinary32-sided12×6mm cylinder,30×0.2mm layers,Classic2walls,15%crosshatch,
-3top/bottom,220CPLA. Existing official-export origin receipts/catalog names are
+3top/bottom,220CPLA. Existing official-export origin catalog names are
 retained by that fixture,not fabricated synthetic preset JSON.
 
 GUI Process→Others→G-code output→Verbose G-code,
@@ -115,15 +113,6 @@ These are GUI-reachable edits of an official-exported stock-origin project,
 not newly transacted GUI exports or unmodified factory presets. Both successful
 Native projects/slices demonstrate current admission,not forced compatibility.
 
-Discovery root
-`${EVIDENCE_ROOT}/w3-fan-flavor-discovery-9cfaf0d16/`:
-final witnesses `kickstart-comments/inputs`;full commands/status/stdout/stderr,
-Native replays and API/CLI rawstreams,strict results and diagnostic hunks.
-Exactmain9cf Rust CLI/current-thread API binaries explicitly reused from prior
-same-main discovery with matching original CargoJSON artifact/rlib+SHA receipts;
-**not a fresh-build claim or stale-main binary substitution**. All new Native/
-API/CLI producers are fresh serial CPU12 runs:8successfulNative,4API,4CLI0.
-
 One earlier Mach3 flavor probe was rejected by Native as invalidvalue before
 Ares;GUI source enum confirms it is commented out. Retain its1failedNative
 attempt/0API/0CLI as **UNQUALIFIED_NATIVE_REFUSAL**,not parityRED or a proposed
@@ -131,33 +120,26 @@ flavor repair. No retries on that input,no synthetic enabling/Native rebuild.
 The admitted verbose pair succeeded on first attempt;no numeric parameter
 search,trial production patch,debugger or instrumentation.
 
-## Nonnegotiable exclusions / ownership
+## Nonnegotiable exclusions
 
-Exclude W5Type1/tower,W1fuzzy/startupfan/machine.rs,W4temperature,W3frozen
-processor-word,W6template/bed/processor/exclude-name,W2skirt/brim/supportspeed.
+Exclude Type1/tower,fuzzy/startupfan/machine.rs,temperature,
+processor-word,template/bed/processor/exclude-name,skirt/brim/supportspeed.
 This is FanMover's raw generated/split text,not template evaluation or processor
-word tokenizing. Main9cf is used,not frozen9a4 or anyone else's unmerged chain.
+word tokenizing.
 
-279other-worker exact branch refs audited:0outstanding histories on primary
-helpers.rs destination. W2frozen range47821c760..515e95975 has adjacent
-fan_mover.rs/fan.rs timing changes,but its mixed-timing SPEC explicitly defers
-“synthesized fan comment/flavor/PWM-floor context,whitespace/raw rewriting”;
-full document retained. W6frozen rangead511..26a87 has no primary/adjacent
-changes. No claim that filename absence alone proves conceptual separation;
-known timing precision/split arithmetic is explicitly excluded here.
+Known timing precision/split arithmetic is explicitly excluded here.
 
 Also defer unadmitted Mach3/Machinekit and other flavor paths,PWM floor,
 fan parsing/number grammar,speedup sign/layer chunking/relative-E/XYZ mode,
 threshold/kickstart scheduling,all motion/rounding/arcs,geometry/admission.
-No fixes to these adjacent behaviors are authorized by a comment-text witness.
+No fixes to these adjacent behaviors are in scope for a comment-text witness.
 
-## Staged next gates,not implementation permission
+## Staged next gates
 
-After SPEC approval only:freeze exact proved bytes/SHA,two direct unchanged
+Freeze exact proved bytes/SHA,two direct unchanged
 native_stream_case checks `(false,|_,_|{})`,Native2FIRST stable→validated API/
 actualCLI0/rawAPIeqCLI/unmasked ordered equality. Reproduce dualcontrolPASS/
-targetgenuineFAIL and send test-onlyRED-RR. No inverted/ignored tests,Native
+targetgenuineFAIL in test-only RED. No inverted/ignored tests,Native
 output goldens,comment masks/tolerances or private-state assertion substitutes.
-Only separately approved GREEN ports both included literal text contracts;
+GREEN ports both included literal text contracts;
 all4differences must close,not just firstone. Unexpected owner/residual→STOP.
-Any FULL/rebase/integration requires its own authority. Stop after this SPEC-RR.

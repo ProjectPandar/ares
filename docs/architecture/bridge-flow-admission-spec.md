@@ -1,9 +1,9 @@
-# SPEC request: loaded bridge-flow strict-positive admission
+# SPEC: loaded bridge-flow strict-positive admission
 
-Status: **amended SPEC-REVIEW-REQUEST, docs only; four reproduced admission divergences**.
-Stacked approved00dc33bd85695f565b1356ccbe9db37ce8ba93e1 queuedstack17;
+Status: **proposed amended SPEC, docs only; four reproduced admission divergences**.
+Stacked on 00dc33bd85695f565b1356ccbe9db37ce8ba93e1;
 merged base3ee8f272c6d8e2db22dde9003a01afeb7201e36a.
-Rebase only after coordinator broadcasts merged main, without stash.
+Rebase onto merged main before integration.
 
 ## Upstream / Rust destination
 
@@ -41,10 +41,10 @@ must not be activated as a side effect. No independent allowlist/pipeline rule.
 
 ## Completed discovery and unified four-case public RED
 
-Runtime evidence ${TMP_ROOT}/ares-bridge-flow-discovery-XfjEaw/discovery-report.json,
-exact approved SPEC HEAD66b05815b on approved00dc33bd8 implementation. Fresh
-serial official/seeded canonical ALL env, CPU18 actual Native/public threads,
-clean HEAD and input SHA receipts. No production edits during discovery.
+Runtime discovery evidence is retained externally, taken on
+exact SPEC HEAD66b05815b on the 00dc33bd8 implementation. Fresh
+serial official/seeded canonical ALL env,
+clean HEAD and input SHA records. No production edits during discovery.
 
 | bridge/internal | Native both modes | Ares validated API / CLI both modes |
 |---|---|---|
@@ -69,7 +69,7 @@ control requires positive Native XY/E, effective flow1/1, publicAPI/CLI success,
 raw equality and unchanged generator-only whole-output comparator. Expected
 **three admission FAIL + one full-stream PASS per mode**. Do not relax errors,
 ignore a key, substitute any rejection, or change comparator/classification.
-Independent exact public RED review before any loading/validation production edit.
+The exact public RED lands before any loading/validation production edit.
 
 ## Original bounded discovery protocol (retained provenance)
 
@@ -80,7 +80,7 @@ settings combinations, (bridge_flow,internal_bridge_flow):
 Both keys explicitly present, no negative/NaN/range sweep or synthetic shape.
 
 Run fresh official+seeded Native first under current canonical ALL oracle env,
-CPU18/jobs2/threads2. Record exact input SHA, Native exit/result/stdout/stderr,
+run serially. Record exact input SHA, Native exit/result/stdout/stderr,
 matching error key(s), formatting and -18/shell238. For (0,0), require both keys
 and sorted source map diagnostics, not acceptance of any one rejection.
 Public validated API and realCLI follow for the same bytes even when Native
@@ -117,14 +117,14 @@ The original discovery's earlier-stage STOP is now resolved by this amendment:
 the bridge-key typed-loading boundary is explicitly included, not an excuse to
 broaden to unrelated parsing or pipeline behavior.
 
-After discovery review: tests first, frozen pureinput SHA, required Native
+After discovery: tests first, frozen pureinput SHA, required Native
 OrcaRunner::from_env/stages exact rejection/error/noGcode contract for positives;
 public validated API Err and CLI238/diagnostic/noGcode required. Control strict
-whole-stream comparison and API=CLI unchanged. Independent public RED approval
+whole-stream comparison and API=CLI unchanged. Public RED lands
 before minimal loaded-validation wiring. GREEN same inputs/assertions, exact
 Native/API/CLI admission parity, raw same-input control bytes unchanged plus
 existing loaded validation controls; fmt/strict <=400LOC exact clean fullhash.
 Canonical env archived/hashed at launch, fresh serial mode caches/artifacts,
-actual Native/thread CPU18. One batch START then divergence/STOP only. Respect
-exclusive freezes; no full/workspace/push/integration except coordinator. No Nix
+run serially. Stop at the first divergence.
+No Nix
 GC/store deletion/rebuild. This commit is docs only, no new runtime/tests/code.

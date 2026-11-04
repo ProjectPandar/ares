@@ -1,12 +1,9 @@
 # INCOMPLETE coverage: classification and activation audit
 
-Status: source-owned speed fix GREEN; branch review/integration pending.
-
 ## Inventory and non-negotiable decisions
 
-The16ac907b report contains225 INCOMPLETE domains, not225 mismatches.
-Full key/reason lists: `${TMP_ROOT}/ares-option-incomplete-225.md` and `.json`, from
-`${TMP_ROOT}/ares-pi-options-next-16ac907b.c5evSB/seeded/option-coverage-summary.md`.
+The seeded option-coverage report contains225 INCOMPLETE domains, not225
+mismatches.
 
 | Reason | Count |
 |---|---:|
@@ -28,8 +25,8 @@ records and INCOMPLETE status. Tower/AdaptivePA retain their other owners.
 
 ## Rejected skirt candidate
 
-A proposed skirt witness initially required one loop. Both references in
-`${TMP_ROOT}/ares-option-skirt-activation-red.9UjfCv` rejected that expectation.
+A proposed skirt witness initially required one loop. Both references
+rejected that expectation.
 Saved3MF readback shows the existing fixture already has two loops, two
 layers and a disabled draft shield. This is not missing activation or a
 production regression: the new expectation was unnecessary. Withdraw that
@@ -48,31 +45,28 @@ upstream concepts, not a new independently designed slicing pipeline.
 
 The option activation table already enables process `ironing_speed` and
 filament flow/spacing/inset, but omits `filament_ironing_speed`. Add only the
-missing `ironing_type=top` fixture dependency after public RED. Keep the
-ironing fan candidate a07dd972 isolated on pi/ironing-fan-port.
+missing `ironing_type=top` fixture dependency after public RED. The ironing
+fan candidate is a separate slice.
 
 ## Plan and acceptance
 
 1. Add a public saved3MF test over every existing filament-speed case. Verify
    applied values, `ironing_type=top`, actual positive relative-E XY ironing
    extrusion and strict whole-output comparison. No private emitter-only test.
-2. Capture both CPU0 references before changing activation. A missing enabler
+2. Capture both references before changing activation. A missing enabler
    is fixture RED, not yet an Ares production output mismatch.
 3. Add the enabler and repeat both references. Preserve all cases and the
    implicit-upper-bound INCOMPLETE verdict. Investigate any actual divergence
    against the cited owner before changing production.
-4. Run full workspace Nextest, Clippy, rustfmt and core/adapter WASM build;
-   commit/push only the branch. Coordinator review and latest-main revalidation
-   still precede integration; main remains frozen until explicit notification.
+4. Run full workspace Nextest, Clippy, rustfmt and core/adapter WASM build.
 
-RED captured on be2a2990 at `${TMP_ROOT}/ares-option-ironing-speed-red.F7eD2y`:
-both references exit100 because saved `ironing_type` is `no ironing`, not
+RED: both references exit100 because saved `ironing_type` is `no ironing`, not
 `top`. The one-line activation fix follows this evidence; production is
 unchanged at that checkpoint. Every existing case remains in the public test and matrix.
 
 ## Production RED and exact rewrite boundary
 
-The attempted GREEN at `${TMP_ROOT}/ares-option-ironing-speed-green.A58Xc2` instead
+The attempted GREEN instead
 exposed deterministic DIVERGENT output with both references. All2 matrix
 cases were strictly compared with0 rejection; each disagreed across3 native
 runs. The minimum case passed saved-value/active-extrusion witnesses but
@@ -95,20 +89,13 @@ The existing public complete-output RED is the production regression test.
 
 ## Final candidate verification
 
-`${TMP_ROOT}/ares-option-ironing-speed-fixed.xd31Ct` captures the fix on be2a2990.
 Official and seeded each pass2 public active-path comparisons and21 matrix
 comparisons across8 domains. The matrix deliberately exits100:6 bounded
 PASS and2 INCOMPLETE speed domains,21 generated/compared,0 rejection,
 0 DIVERGENT. Both incomplete domains still lack verified upper endpoints;
 this is not a claim that the225-domain inventory is closed.
 
-Workspace7596 PASS/9 existing skips (869.821s,8 threads); all-target Clippy,
-fmt check and core/adapter WASM compilation exit0. Existing Clippy counts
-remain219 core-lib,220 core-test and21 parity. WASM is compile-only evidence.
-The archive provenance records tracked Rust diff SHA256
-`f8aa7adeb01ee7690f71a092ee26263e391a398f40e1f651e7c4e5e15c1c5df1`
-and new public test SHA256
-`4113b56a1dcd0846416ddfa0677218405cdedb6bed7b339b7da8e3e97c4a4577`.
-All changed Rust files remain below400LOC. No skirt change, comparator
-relaxation, deleted existing assertion, unsupported guard or debug probe
-is included. Request coordinator branch review; do not push frozen main.
+Workspace Nextest, all-target Clippy, fmt check and core/adapter WASM
+compilation pass. WASM is compile-only evidence. All changed Rust files
+remain below400LOC. No skirt change, comparator relaxation, deleted existing
+assertion, unsupported guard or debug probe is included.

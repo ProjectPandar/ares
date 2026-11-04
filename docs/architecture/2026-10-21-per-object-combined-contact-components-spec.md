@@ -1,15 +1,11 @@
 # Draft SPEC: contact-connected brim components within per-object skirt groups
 
-Status: **COORDINATOR-APPROVED SPEC**. Original discovery was external/read-only.
-Authorized SPEC and RED branch: `worker2/combined-contact-components`.
-Original frozen branch `worker2/brim-ears-efc-outline` remains unchanged at
+Original discovery was external/read-only.
 
-e3eb8cbdb94460e81102b470788ec56b5fd26d5d
-
-Explicit dependency: approved but not yet integrated ordered owner-area/shared
-ShortestPath chain ending at that tip. Its original near-uncombined control now
+Explicit dependency: ordered owner-area/shared ShortestPath chain ending at
+e3eb8cbdb94460e81102b470788ec56b5fd26d5d. Its original near-uncombined control now
 matches complete output; this discovery is on that build, NOT current-main proof.
-W2 waits behind W6→W5→W3→W4; no rebase/FULL during this discovery.
+No FULL during this discovery.
 
 ## Single upstream owning boundary
 
@@ -38,8 +34,8 @@ pipeline or a whitelist-only admission feature.
   :4520-4537 selects matching grouped collections for the current object.
 
 Unchanged producer prerequisites: Brim.cpp:36-45,573-581 ordered assignment,
-662-713 masks/retention,836-875 infill and884-886 plate-coordinate entry; previously
-approved shared instance chain and owner subtraction must remain intact.
+662-713 masks/retention,836-875 infill and884-886 plate-coordinate entry; the existing
+shared instance chain and owner subtraction must remain intact.
 
 ## Exact Rust destination boundary
 
@@ -61,7 +57,7 @@ Under crates/ares-core/src/project_slice/gcode_emit:
   producer of skirt memberships. Group membership and brim-contact connectivity
   are distinct upstream concepts and must not be collapsed.
 - Minimal orchestration/signature wiring, if necessary to connect grouped brim
-  preparation after skirt membership exists, must be reported for authorization
+  preparation after skirt membership exists, must be reported
   before GREEN. Source-owned construction belongs in the above modules, not a
   growing independent orchestration layer. Keep occupied source owner areas for
   extents/grouping; do not replace them with merged emission paths/hulls.
@@ -91,8 +87,7 @@ Split touched source when needed to remain<=400LOC; no duplicated harness/KD.
 
 ## Fixed inputs: no position fishing
 
-ALL9 inputs copied byte-for-byte from the previously paused discovery:
-${COORD_ROOT}/evidence/worker2-perobject-combined-discovery-20261021T103537/
+ALL9 inputs copied byte-for-byte from the previously paused discovery.
 
 No new placement, brim width or process setting was tried. Source tracked GUI
 fixtures: tests/parity/per-object-auto-brim-admission/{near,far}-perobject-auto.3mf,
@@ -118,8 +113,8 @@ Only input3MFs may enter fixture directories, never Native outputs or probes.
 Existing CLI SHA256:
 a4cf14095dfdc8598498461b84a2e42d0a3385606227b7dbf0d97bdfd40f962d
 
-18 Native runs (9inputs×official/seeded) rc0;9 actualCLI runs. AllCPU13, serial,
-seededORCA_REPLAY_CPU13/seed0. No builds, test runs or independent API harness runs.
+18 Native runs (9inputs×official/seeded) rc0;9 actualCLI runs. Serial,
+seeded seed0. No builds, test runs or independent API harness runs.
 Generator-line-only whole-output comparison, with M73 and all metadata retained.
 
 | case | Native first-layer skirt/brim blocks | all positive Brim XY | all positive Skirt XY | CLI |
@@ -148,10 +143,10 @@ TYPE runs may collapse adjacent same-role object walls; do not infer missing
 objects from near-combined's final Outer wall TYPE run. Positive motions are real
 G1 with XY and E>0, not comments, travel or retraction.
 
-## Proposed approval sequence and stop conditions
+## Proposed sequence and stop conditions
 
-1. Coordinator approved this SPEC and public RED on a new branch based on the
-   explicit ordered-owner/shared-chain dependency above; original branch stays frozen.
+1. This SPEC and public RED build on the explicit ordered-owner/shared-chain
+   dependency above.
 2. Commit this source-cited SPEC; freeze3combinedinput3MFs and
    reuse6existingcontrol3MFs; reference all9 with SHA, no unused inputs.
 3. Public RED uses runner::native_stream_case::check UNCHANGED with
@@ -160,23 +155,10 @@ G1 with XY and E>0, not comments, travel or retraction.
    No copied harness, ignore/allow/inverted result or geometry/time masks.
    Expected each mode3targetFAIL+6controlPASS. Native positive near change and
    middle singleton proof are externally evidenced before compare; not magical
-   hard-coded result assertions. Report exact RED before requesting GREEN.
-4. GREEN only approved group component/ownership boundary plus separatelyapproved
-   minimal wiring. Inputs/tests/helper/assertions freeze. Any strict residual STOP;
+   hard-coded result assertions. RED precedes GREEN.
+4. GREEN only the group component/ownership boundary plus minimal wiring.
+   Inputs/tests/helper/assertions freeze. Any strict residual STOP;
    do not broaden into order/geometry routing/time repair or another Ares pipeline.
 5. Directed9legs + existing brim/skirt/Auto/Ears/per-object and multi-instance
    order regressions both modes; fmt, strict workspace all-target clippy, wasm32.
-   FULL only a future coordinator-allocated W2window, exact tip after rebase.
-
-## Replayable artifacts and audit
-
-This evidence root contains run.sh, retained generators,first-layer.js,verify.js,
-inputs/manifest, all caseNative stdout/stderr/exit/result/G-code, actualCLI outputs
-andguarderrors, first-layer-summary.json,verified.json,verification.txt,provenance.
-Replay uses a NEW external root with those same frozeninputs and scripts; do not
-regenerate/tune positions. Native wrappers explicitly select official2.4.2 or
-seeded2.4.2; every slicing command tasksetCPU13.
-Branch/source/test/helper/ref unchanged. No FULL, no builds or probe instrumentation.
-Coordinator authorized SPEC then RED only. Report exact RED before any GREEN;
-no production changes or FULL are authorized by this approval.
-Evidence root: ${COORD_ROOT}/evidence/worker2-combined-contact-resume-20261021T155517
+   FULL on the exact final tip.

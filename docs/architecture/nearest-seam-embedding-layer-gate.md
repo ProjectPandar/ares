@@ -1,15 +1,12 @@
 # Nearest-seam embedded-distance layer gate — source rewrite SPEC
 
-Status: bounded read-only causality confirmed; docs then tests-only public RED.
-Base `4af042def` (seam visibility mode gating already merged at that
-commit).
-Post-merge re-verification done: `alignment::prepare` keeps its `layers` argument
-(that base commit only widened `visibility` to `Option<&GlobalVisibility>`), the wrong
+Bounded read-only causality confirmed. Seam visibility mode gating is already
+ported. `alignment::prepare` keeps its `layers` argument
+(the visibility gating only widened `visibility` to `Option<&GlobalVisibility>`), the wrong
 predicate still sits at `preparation.rs` `embedding_layers`, and
 `OrderedExtrusionIsland.perimeter_regions` remains populated at seam-prepare
 time (`island_print_order.rs:26,164,188`) and is only later taken by
-`gcode_emit/layers/tool_buckets/object.rs:26`. NO production edit or GREEN
-authorized here.
+`gcode_emit/layers/tool_buckets/object.rs:26`.
 
 ## Upstream boundary and mandatory semantics
 
@@ -47,7 +44,7 @@ layer 45 both regions carry empty fill-surface roots, the gate reads false,
 The port slice restores the upstream layer predicate over ordered-layer
 islands: layer joins the embedding pass iff
 `islands.iter().flat_map(|isl| isl.perimeter_regions.iter().copied())
-.collect::<BTreeSet<_>>().len() > 1`. This is the coordinator-ACKed main plan
+.collect::<BTreeSet<_>>().len() > 1`. This follows the plan in
 (rev-2/rev-3 of `seam-nearest-multipath-loop-proposal.md`; record-surface
 forms were disproven or withdrawn there — including the round-1
 `!record.surfaces.is_empty()` predicate, which entity_collections' 1:1 surface
@@ -56,8 +53,7 @@ seeding would make always-true). `perimeter_regions` is fed by
 port of the upstream append boundary, so per-region collection non-emptiness
 matches `entities.size() > 0` including thin-wall-only regions and excluding
 gap fill. Included: this predicate swap only. Deferred: everything else
-(formula, comparator, walk, split, alignment, the visibility mode gating
-landed at 4af042def).
+(formula, comparator, walk, split, alignment, the visibility mode gating).
 
 No writer/time/M73, travel/origin/lift, processor/fan/tokenizer, brim, seam
 config, formatter or geometry changes. No fallback, feature flag or hardcoded
@@ -68,8 +64,7 @@ Native seam index.
 Original thin-gap-j1 Snapmaker J1 IDEX stock inputs, not regenerated:
 
 - `wall-arachne.3mf` SHA256
-  `5f822b0761a325deb15795f82dedb9a7d03a8c40304ed389edaf4e4543b351c7`
-  (evidence root `${EVIDENCE_ROOT}/w3-geometry-discovery3-78d642702/thin-gap-j1/inputs/`).
+  `5f822b0761a325deb15795f82dedb9a7d03a8c40304ed389edaf4e4543b351c7` (thin-gap-j1 inputs).
 - Dual-mode sibling `wall-classic.3mf` SHA256
   `482eb2e6a19b43a56cc13553dc9c8795ca9d4ccf9510743d45d236b547cab01d`:
   sole effective delta `wall_generator arachne->classic` inside
@@ -77,8 +72,7 @@ Original thin-gap-j1 Snapmaker J1 IDEX stock inputs, not regenerated:
   zip with fixed 1980 timestamps. Native `--slice 0` exit 0, T0=40/T1=39,
   11367 lines.
 
-Causal record (evidence `${EVIDENCE_ROOT}/w3-arachne-thinwall-5e8be001f/`,
-`w3-thinwall-stop-seam-handoff.md`, proposal rev 3): first divergence record
+Causal record (proposal rev 3): first divergence record
 60/61 at layer 45 (print_z 9.2 mm), entity e0 = object0/region0/entity0, a
 51-path widened inner loop `erPerimeter` under seam `nearest`. Structural
 layer content, island assignment, emission order and tool order are
@@ -90,8 +84,7 @@ value is 0 (gate false). Upstream seam vertex local (-5.000,-8.934) world
 candidate intervals match because their ranges hold no hidden point (the first
 hidden-point interval is [88,108)).
 
-Public-RED diagnostics (saved artifacts
-`${EVIDENCE_ROOT}/w3-arachne-thinwall-5e8be001f/parity-artifacts/thin-gap-j1-seam-embedding-wall-arachne-SFXtn8/`):
+Public-RED diagnostics:
 strict first difference at byte 2150 line 150 is an M73/G0 ordering flip —
 early propagation, not repaired and not ignored (same early-propagation
 shape as the frozen rear-seam visibility pair at 89a18865e; the
@@ -103,7 +96,7 @@ same layer as the causal record. Raw API and CLI outputs are byte-equal
 cmp-verified because the canonical assertion panics before the final
 helper update on RED.
 
-## Public RED and approval gates
+## Public RED gates
 
 Tests-only RED after this docs commit: two source-cited public cases
 (`wall-arachne`, `wall-classic`) via the UNCHANGED
@@ -115,15 +108,11 @@ fails, otherwise it stays as the dual-mode positive control). Full ordered
 comparison retains M73/time/motion/comments/metadata/footer; no masks,
 tolerances, frozen reference text or expected seam index in public tests.
 
-Run gates: CPU12 taskset, jobs 1, threads 1, CARGO_INCREMENTAL=0. Official
+Run gates: CARGO_INCREMENTAL=0. Official
 Native sliced twice FIRST (replay determinism enforced by the unchanged
 harness), then validated byte API and real CLI. Existing orca_parity
 neighbors (including the rear-seam visibility pair) must stay PASS. Because the canonical
 target assertion panics before the final raw helper update, independently
 confirm the saved API/CLI raw equality; never claim later assertions ran on
 RED.
-
-Report docs SPEC + tests-only RED with exact tips, Native2/public receipts,
-clean scope; HOLD. No production edit, GREEN, merge/push or integration
-implied. Implementation requires explicit separate approval. If a different
-unexpected RED residual appears, STOP and report without repair.
+If a different unexpected RED residual appears, stop and report without repair.

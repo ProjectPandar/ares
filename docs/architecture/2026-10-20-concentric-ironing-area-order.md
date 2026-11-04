@@ -188,8 +188,7 @@ Consequence: the deviation is inside the Ares clipper union/intersection output
 ordering, not after the clipper — so route (b) resolves to route (a): compare
 Ares' `create_out_rec` call order for this layer against the order the upstream
 engine would produce. That comparison is the next step and needs the temporary
-Ares instrumentation (or an equivalent runtime probe), which is not started
-without approval.
+Ares instrumentation (or an equivalent runtime probe).
 
 ### Two-pass structure verified; the deviation is already in pass 1
 
@@ -572,7 +571,7 @@ rule itself, `fill_entities/ironing.rs`, the clipper, and any post-hoc reorderin
    "neither side picks the nearest, therefore one stack per call" was built on a wrong
    value and is withdrawn.
 
-2. **Structure (as the coordinator required, full G-code, not just ironing blocks).**
+2. **Structure (full G-code, not just ironing blocks).**
    Lines 257,200-257,380 were classified move by move in both files: the run pattern is
    identical on both sides (`travel` + a couple of meta lines + `extrude`, repeated),
    with **no wall or infill segment anywhere between block #11 and block #12**, and the
@@ -728,7 +727,7 @@ ironing entity grouping seam, but it is **not yet pinned to a line**.
 
 ### Probe (ii): island assignment is skewed, but a residual remains (STOP)
 
-Probe (ii) as approved — temporary instrumentation in
+Probe (ii) — temporary instrumentation in
 `project_slice/extrusion_islands.rs:117-139` keyed by the layer index threaded through
 `assign_layer`, printing `(layer, island, region, cidx, first_point, ents, no_sort, slices)`
 (reverted; `git diff` empty). On the diverging layer (layer index 42, `slices=9`):
@@ -770,7 +769,7 @@ count, and confirm where the 30 collections are actually consumed.
 
 ### Three-point probe (same run, same layer key): the `is_ironing_entity` hypothesis is REFUTED
 
-Final approved probe — one run, one layer key (`extrusion_islands.rs` layer index from `enumerate`,
+Final probe — one run, one layer key (`extrusion_islands.rs` layer index from `enumerate`,
 `layer.rs` `state.layer_index`), printing the assignment site, the bucketing site and every
 `emit_infills` entry (temporary; reverted; `git diff` empty). Instrumented totals: 2248 assignment
 rows, 460 bucketing rows, 90 call entries; the two layer numberings overlap (both reach ~98), so they
@@ -797,14 +796,14 @@ So on this layer `is_ironing_entity` classifies **correctly**: 20 ironing collec
 `layer.rs:56` deciding from `collection.entities.first()` versus `GCode.cpp:6217-6219` filtering per
 entity — **is refuted as the cause here**: there is no split and no misclassification on the
 diverging layer. The `n` histogram quoted in the previous revision came from a different run without a
-layer key and is not comparable, as the coordinator noted.
+layer key and is not comparable.
 
 Also retired: "Ares hands the chain a single entity in most calls" cannot explain this layer.
 
 What survives, and what is now unaccounted for:
 
 - Ares does pool all 20 ironing collections of island 8 into ONE `chain_infill` /
-  `chained_path_from` call on this layer, which matches the Native structure the coordinator cited
+  `chained_path_from` call on this layer, which matches the Native structure
   (one `extrude_infill(ironing)` call covering the two stacks).
 - Therefore the ordering difference must be inside the chain construction's **input order** or its
   distance rule, not in bucketing, not in island assignment, and not in call granularity.
@@ -814,7 +813,7 @@ I cannot reduce that to a line from the evidence in hand: the 20 `first_point` v
 starts that the G-code shows at 15 mm apart (y 88.715 vs 103.715) under the offset I can justify, so
 I cannot yet state which of the 20 is emitted first and why.
 
-Per the coordinator's condition ("若证实 … 则写入 SPEC 作为 GREEN 边界后报告；否则 STOP") the
+Per the decision condition ("若证实 … 则写入 SPEC 作为 GREEN 边界后报告；否则 STOP") the
 hypothesis is **not** confirmed, so this is a STOP with no boundary declared.
 
 ### G-code ring-order comparison: same stacks, swapped groups; nearest candidate taken by neither side
@@ -859,7 +858,7 @@ y): `cidx=29 y=113.587`, `cidx=30 y=113.277` (distance ≈ 30.9, the closest of 
 **Neither side takes y≈113.3**, which matches the earlier finding that `Y113.269` is globally nearest
 and taken by neither.
 
-Combined with the coordinator's reading of `ExtrusionEntityCollection.hpp` (`no_sort` ⇒
+Combined with the reading of `ExtrusionEntityCollection.hpp` (`no_sort` ⇒
 `can_reverse() == false`, `chained_path_from` returns as-is, `first_point`/`last_point` =
 `entities.front()`/`back()`), the surviving candidate is that the **storage order of the rings inside
 a stack differs between the sides** (consistent with the 12 earlier "first/last swapped" stacks), which
@@ -870,11 +869,11 @@ polyline append order vs `fill_entities/ironing.rs`), reversing the earlier excl
 But the evidence in hand cannot confirm it: the emitted starts are 42.2 / 33.1 from the head while Ares'
 own stored first points include a 30.9 candidate that neither side emits, so I cannot demonstrate that
 the ranking input is the stored `first_point` rather than something applied upstream. **Not confirmed
-⇒ STOP**, no boundary declared, per the coordinator's condition.
+⇒ STOP**, no boundary declared.
 
 ### Final round: the endpoint SETS differ -> boundary is on the generation side
 
-Approved probe, run once at `state.layer_z == 52.0` (temporary; reverted; `git diff` empty), printing at
+Probe, run once at `state.layer_z == 52.0` (temporary; reverted; `git diff` empty), printing at
 the `chain_infill` entry the entity count, each `FillExtrusionCollection`'s `(first_point,last_point)`,
 every contained path's `(first,last)`, and the post-chain order:
 
@@ -920,7 +919,7 @@ points shifts where the contiguity boundaries fall, which produces exactly this 
 15 mm offset. The first run-order difference is at run index 251 (native `88.715 -> 83.269`, ares
 `103.715 -> 98.269`), as recorded in the previous revision.
 
-Per the coordinator's decision rule — **sets differ ⇒ boundary is on the generation side** — the boundary
+Per the decision rule — **sets differ ⇒ boundary is on the generation side** — the boundary
 is the **ironing ring storage order produced by the Fill side**:
 
 - upstream: `Fill.cpp` `FillConcentric::_fill_surface_single` + `make_ironing` (`Fill.cpp:1650-1731`)
@@ -934,14 +933,14 @@ This **reverses** the earlier exclusion of `fill_entities/ironing.rs`. Not the b
 are provably identical or inert, and the disagreement is already present in the stored ring order that
 reaches the emitter.
 
-Residual to settle when GREEN is authorised: the exact upstream append order inside
+Residual to settle for GREEN: the exact upstream append order inside
 `FillConcentric::_fill_surface_single`/`make_ironing` (which ring is appended first and in which
 direction) versus Ares' concentric ring emission, at the level of the 182-ring collection.
 
-### GREEN precondition (agreed with the coordinator; not yet executed)
+### GREEN precondition
 
-The coordinator supplied the upstream basis that decides *which* generation-side boundary a GREEN must
-target. `Fill.cpp:1715-1731` loops over `ironing_areas` and calls `fill_surface` **once per expolygon**,
+The upstream basis decides *which* generation-side boundary a GREEN must
+target: `Fill.cpp:1715-1731` loops over `ironing_areas` and calls `fill_surface` **once per expolygon**,
 pushing one `no_sort` `ExtrusionEntityCollection` per area. Therefore, before any GREEN is written, one
 unambiguous check is required:
 
@@ -952,12 +951,11 @@ unambiguous check is required:
     `FillConcentric::_fill_surface_single`, i.e. the polyline append order that `make_ironing`
     (`Fill.cpp:1650-1731`) stores into the collection.
 
-Only after that answer is fixed may the RED be written and the GREEN bounded. Discovery stops here; the
-next action is gated on the W4 worker window.
+Only after that answer is fixed may the RED be written and the GREEN bounded. Discovery stops here.
 
-### Window result: the boundary is now pinned (single area, ring order)
+### Result: the boundary is now pinned (single area, ring order)
 
-Three facts closed the discovery, all measured inside the W4 window on top of
+Three facts closed the discovery, all measured on top of
 main `d592d4145`:
 
 1. **Grouping granularity is identical.** Upstream `Fill.cpp:1714-1731` loops
@@ -1064,7 +1062,7 @@ actual    G1 X162.816 Y103.715 F60000
   the generator line is normalised, no extra masks.
 - `control-rectilinear` and the other ironing legs keep passing.
 
-## RED plan (ready; runs in the worker window)
+## RED plan
 
 Scope: one new leg in `crates/ares-cli/tests/orca_parity/option_coverage/ironing_pattern.rs`,
 plus the five controls, full-output strict comparison through the existing harness
@@ -1092,16 +1090,3 @@ comparator (only the generator line is normalised; no extra masks).
 - Ironing coverage suite green in both oracles with no leg weakened.
 - `cargo fmt --check`, `cargo clippy -D warnings`, wasm32 check clean.
 - FULL both oracles green on the final hash.
-
-## Evidence
-
-`${EVIDENCE_ROOT}/w4-concentric-ironing-discovery-b49c63836/`
-
-- `evidence/fixture.3mf` (input), `evidence/native-seeded-run1.gcode`,
-  `evidence/ares-main-9bbc63c93.gcode`, `evidence/diff-native-vs-ares.diff`,
-  `evidence/block-order-analysis.txt`
-- `repeat/{seeded,official}/conc-{1,2}/` — two fresh runs per oracle
-- `canonical-official/run{1,2,3}/` + `canonical-official/SUMMARY.txt` — the
-  canonical-producer determinism check (masked shas, mask classes explained)
-- `gdb/*.gdb` — read-only probes, including the ones that establish why the
-  intermediate read is blocked in this build

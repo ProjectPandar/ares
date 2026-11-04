@@ -1,8 +1,8 @@
 # ARD: range-dependent PrintRegion rewrite
 
-Status: approved Stage2 first slice: explicit-height wall_loops region ranges.
+Scope: Stage2 first slice: explicit-height wall_loops region ranges.
 
-1. New coordinator Stage2 means **region-override ranges**, not the painted-profile
+1. Stage2 means **region-override ranges**, not the painted-profile
    Stage2 named in the earlier height-profile proposal. Painted profile remains
    separately deferred, along with SlicingAdaptive and activeZAA.
 2. Owning upstream module is PrintApply.cpp::LayerRanges and
@@ -30,9 +30,8 @@ Status: approved Stage2 first slice: explicit-height wall_loops region ranges.
 6. Core remains bytes-only/platform-neutral on browserWASM/Windows/macOS/Linux.
    No I/O/UI/OpenGL/terminal, no independent slicing in CLI/WASM adapters, no
    candidate crate or extensible strategy. Reuse existing mesh slicing and flows.
-7. Approval → independent Native runtime RED → test-first GREEN → fresh required
-   gates → coordinator review → ff-only push. No production or runtime probe
-   in this spec-only change; no ignored test or broadened byte normalization.
+7. Independent Native runtime RED → test-first GREEN. No production or runtime
+   probe in this spec-only change; no ignored test or broadened byte normalization.
 
 8. G-code template total_layer_count uses the export's physical print-Z count:
    GCode.cpp:2487-2529 derives m_layer_count from object/support layer Z values,

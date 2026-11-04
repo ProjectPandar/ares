@@ -51,11 +51,11 @@ unqualified unless closed by the unchanged affected witness subset.
 
 ## Before/after accounting
 
-Use the accepted49397 dual ledger as the before authority. Select only failed
+Use the accepted dual-mode baseline results as the before authority. Select only failed
 cases whose captured failure mentions the arc Boolean decode or its
-requested/effective mismatch. Map to B12 surviving/new test names explicitly;
+requested/effective mismatch. Map to surviving/new test names explicitly;
 record deleted cases rather than resurrecting them. After GREEN run only that
 affected subset in both modes, reporting pass/fail and remaining failure
-boundaries, plus the new RED. No FULL or comparator/domain relaxation.
+boundaries, plus the new RED. No full parity run or comparator/domain relaxation.
 A downstream failure after eliminating an arc blocker is progress, not a
 manufactured PASS or complete feature qualification.

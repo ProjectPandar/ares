@@ -2,12 +2,11 @@
 
 Source ownership/destination and included/deferred: ARD-0102. Keep the
 original automatic Tree default fixture and full-output assertion. Add raw
-Grid/Snug values at the same approved 3MF seam with saved value readback and
+Grid/Snug values at the same 3MF seam with saved value readback and
 native support extrusion witness; compare entire output, not branch identity.
 
 Run seeded and untouched official references in the matched single-CPU
-domain by applying taskset to the Ares Nextest process, not only Orca.
-Preserve distinct default-worker evidence; do not silently rewrite its status.
+domain, applying the same CPU affinity to the Ares test process, not only Orca.
+Keep default multi-worker results distinct from the single-CPU domain.
 No production slicing, worker policy, fixture or comparator change.
-Verify workspace Nextest, fmt/Clippy/WASM, independent six-axis review, then
-commit tests and docs together and push the matrix branch only.
+Verify workspace Nextest, fmt/Clippy and WASM.

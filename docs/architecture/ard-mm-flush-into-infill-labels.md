@@ -1,9 +1,9 @@
 # ARD: MM flush_into_infill object-label envelope (wiping two-pass)
 
-Status: **SPEC + RED / REVIEW-REQUEST / HOLD**.
-Base: main `78d642702b9c1497d658b04d5478ba0d5dd86483`.
+Status: proposed. SPEC + RED.
+Base commit: main `78d642702b9c1497d658b04d5478ba0d5dd86483`.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1` (seed-replay source).
-GREEN is not authorized at this SPEC stage.
+GREEN is a separate slice.
 
 ## Witness
 
@@ -83,7 +83,7 @@ at the next append and as the stale layer-end stop id. The base control has
 `is_anything_overridden=false` (0 `; PURGING FINISHED`, single pass) and
 passes, confirming the single-pass path is already correct.
 
-## Included rewrite (proposed GREEN, not yet authorized)
+## Included rewrite (proposed GREEN)
 
 Mirror `GCode.cpp:5482–5493` in the BBL stop path: when arming the stop
 label, if the pending object start has not been flushed, drop it and do not
@@ -123,9 +123,9 @@ registered in `object_emission_cases.rs`, using `native_stream_case::check`:
 - control `base.3mf` (SHA `8e09d0d1…`, flush_into_infill=0): same machinery,
   asserts no `; PURGING FINISHED`; expected PASS now.
 
-Selector `test(mm_flush_into_infill_labels)`, CPU11/taskset/threads1, fresh
+Selector `test(mm_flush_into_infill_labels)`, fresh
 cache/artifact directories, official and seeded modes. No Native output is
 committed; input 3MFs are committed byte-for-byte from the discovery
-evidence. After RED approval, GREEN must keep this selector fully green in
+evidence. After RED, GREEN must keep this selector fully green in
 both modes with fresh caches, plus fmt/clippy/wasm32 gates; any other
 residual (including M73/timing) → STOP and report, never mask or broaden.

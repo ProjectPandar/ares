@@ -1,25 +1,23 @@
 # Option slices 2 and 4: bounded master and filament identity witnesses
 
-Status: proposed, docs only; implementation waits for Grid merge and approval.
-Preparation base: Grid `f637b4122ead7b24c9eea52dce7a10dc042ae1cd`, stacked on
-accepted W5 `22ba08ab1`. Rebase onto main after Grid/audit merge before RED.
+Status: Proposed.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Evidence and ownership
 
-The approved option audit `96328f269` scanned Grid f637 in both modes:
+The option audit `96328f269` scanned both modes:
 651 domains, official642 PASS/8 INCOMPLETE/1 FAIL, seeded646/4/1.
 `master_extruder_id` and `filament_self_index` each have one None baseline,
 zero injected values, and INCOMPLETE in both modes. Their schema has no
 numeric range proving arbitrary integer values safe. The baseline result
 is not an active consumer witness or an unbounded-domain completeness proof.
 Source ledger: `2026-10-14-option-full-current-audit.md`, Source-cited slice
-inputs 2/4; original reports remain under `/tmp/worker2-option-full-103wd7e0`.
+inputs 2/4.
 This document proposes bounded harness coverage, not new core functionality.
 
-Worker6 owns only these two keys. Worker2 owns print_extruder_id,
-post_process and fuzzy coverage; worker1 owns printer_technology. No changes
-to their cases, inventory/exclusions, runner/cache, CI or production code.
+This slice covers only these two keys. print_extruder_id, post_process,
+fuzzy and printer_technology coverage, inventory/exclusions, runner/cache, CI
+and production code are out of scope.
 The current Ares mapping/variant machinery is the existing temporary shell
 around the cited libslic3r consumers; this slice measures it, not redesigns it.
 
@@ -40,7 +38,7 @@ around the cited libslic3r consumers; this slice measures it, not redesigns it.
 Rust production boundaries, read-only: options/filament_map_recommend.rs,
 options/project_variants, and existing tool-ordering/G-code consumers.
 The already ported apply_used_tpu_map is the candidate consumer; no extension
-of FilamentGroup optimization, wipe tower or physical-tool emission is authorized.
+of FilamentGroup optimization, wipe tower or physical-tool emission is included.
 
 Proposed public context: existing BBL H2D two0.4mm Standard-nozzle input,
 one by-layer cube10, two real used logical filaments (TPU wall1, PLA infill2),
@@ -128,7 +126,7 @@ active High Flow nozzle, exotic stride or arbitrary vector shapes are included.
 Do not relabel a malformed-vector refusal as an acceptance witness. If valid
 F21/F2211 is rejected, reset by import, or cannot produce active consumption,
 STOP and report the bounded domain unclosed. A true Ares difference also
-stops here; production changes need a separate authorization.
+stops here; production changes belong to a separate slice.
 
 Harness destinations: new option_coverage/filament_self_index.rs and
 same-prefix helpers, narrow domains/sweep registration; no change to the
@@ -137,7 +135,7 @@ production materializer, existing print_extruder_identity consumers or its asser
 ## Separate RED/GREEN and exact accounting
 
 Implement master first, then self-index, each with separate Native-backed
-RED/GREEN commits and review. No code before this SPEC approval or Grid merge.
+RED/GREEN commits.
 RED must first prove requested/effective input, accepted runtime Native and
 complete public comparison plus actual consumer evidence. Then the new
 key-local completeness test expects PASS while main actually reports
@@ -148,7 +146,7 @@ GREEN only wires the demonstrated finite cases into that key's domain and
 sweep dispatch. Keep schema metadata intact, mark bounded source context and
 explicit deferred dimensions. Other649 plans must be fingerprint-identical
 when both keys are complete; compare all other plans separately per slice.
-Request approval in this SPEC to update the existing self-index negative
+This SPEC updates the existing self-index negative
 expectation in numeric_metadata_tests.rs: !provably_legal/omission.is_some()
 becomes a positive bounded-case/metadata expectation once Native proves the
 scope. This is an expectation update, not removal; all other assertions stay.
@@ -156,9 +154,7 @@ Any additional existing assertion retirement is reported before changing it.
 
 ## Runs and exit conditions
 
-No builds/Native executions for this proposal. Future directed runs require
-an open window, outer taskset CPU11 including cargo/nextest/Native witnesses,
-CARGO_BUILD_JOBS=1 and threads2, fresh target/cache/artifact root each run.
+Directed runs use a fresh target/cache/artifact root each run.
 Use existing native_environment: required missing dependencies FAIL;
 optional visibly SKIPPED, never frozen fallback. Test fixtures are inputs;
 Native G-code, exports, process results and receipts remain outside git.
@@ -166,10 +162,9 @@ Native G-code, exports, process results and receipts remain outside git.
 For each slice: two-mode fresh RED, two-mode GREEN and repeated fresh-cache
 verification, exact key-local sweep (ARES_PARITY_OPTIONS=1 plus that key),
 entire option_coverage group including all non-Native tests in both modes,
-strict Clippy/fmt/wasm32, and coordinator-scheduled exact-hash CI workspace.
+strict Clippy/fmt/wasm32, and the CI workspace.
 Use the unchanged whole-output comparator; only its existing generator-line
 normalization. Publish input hashes, first active Native change, applied and
 materialized identities, full comparison/line counts and raw invariance of
 all other callers. No new exclusions, ignores, suppressions or retries to
-hide divergence. Full requires a separate explicit allocation; none requested
-or launched by this docs-only proposal. Merge only after exact-hash approval.
+hide divergence.

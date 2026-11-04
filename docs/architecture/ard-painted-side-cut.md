@@ -1,7 +1,7 @@
 # ARD — one consumed upstream painted side-cut operation
 
-Status: COORD-approved SPEC boundary; docs then public RED only. No GREEN/FULL
-or change to the frozen1045b1775 branch/worktree is authorized.
+Status: accepted SPEC boundary; docs then public RED only. No GREEN
+or change to the frozen 1045b1775 branch is part of this slice.
 
 `MultiMaterialSegmentation.cpp1144–1168` at8500fcdcc ports one side-cut operation,
 with its2169–2181 gate/order and2197–2207 wrapper. The Rust destination is private
@@ -35,4 +35,4 @@ Rejected: painted+beam first (different owner); tooltip clamping or subtracting
 width-depth (wrong source); width-only partial helper (artificially splits one
 operation); post-merge trimming/new registry (wrong seam). See
 [SPEC](painted-side-cut-spec.md) for included/deferred behavior, selected matrix,
-verification, artifact requirements and separate later authorization gates.
+verification, artifact requirements and separate later gates.

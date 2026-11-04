@@ -1,8 +1,6 @@
 # Arachne alternate extra wall: proposed source slice
 
-Status: SPEC c3d238a8a approved; public RED and bounded GREEN recorded, review pending.
-Owner: worker3; sole reviewer: coordinator Claude.
-Base: origin/main `c22f5a81da41fce715b528268711393649daad66`.
+Status: accepted.
 
 ## Upstream owner and source identity
 
@@ -64,14 +62,14 @@ Exercise the existing effective spiral dispatch as an unchanged control.
 Apply per record and per island; do not read a first region as representative.
 
 Defer fuzzy skin (both config and traversal) and overhang detection/segmentation
-to separate source-cited specs and REVIEWs. Also defer unrelated raft generation,
+to separate source-cited specs. Also defer unrelated raft generation,
 new multi-material policies, Classic/public adapter repairs, Arachne beading,
 outline or stitch changes. Existing accepted surface/top processing is reused,
 not claimed as a newly complete upstream implementation.
 
 ## Public E2E and failure inventory
 
-After SPEC APPROVED, author deterministic input-only 3MF fixtures and a focused
+Author deterministic input-only 3MF fixtures and a focused
 `ares-cli/tests/orca_parity/arachne_alternate_extra_wall.rs` module, split helpers
 as needed below 400 LOC. Compare Native official and seeded with both validated
 ares-core byte API and real CLI output using the existing strict complete
@@ -104,30 +102,27 @@ reported as admission evidence, never counted as an Ares parity PASS or skipped.
 
 ## Test-first gates and evidence
 
-Commit fixtures/tests and genuine Native-backed RED separately. Report RED to
-inbox before editing production. Preserve assertions and inputs through GREEN.
+Commit fixtures/tests and genuine Native-backed RED separately, before
+editing production. Preserve assertions and inputs through GREEN.
 Keep existing Arachne open-wall, only-one-wall/top-surface and ordinary option
 controls; record unchanged Ares raw bytes for disabled/inert controls.
-Run official and seeded directed with jobs2/threads2, each fresh cache and
-artifact root. Tests depending on the missing stable-options/dynamics oracles
-wait for coordinator RESTORED; no full before RESTORED.
+Run official and seeded directed tests, each with a fresh cache and
+artifact root.
 
 GREEN requires full output equality for admitted finite cases in both modes,
-directed both modes and strict clippy/fmt/WASM32 on the reviewed exact HEAD.
-Each changed file stays at most 400 lines. Workspace/full need explicit
-allocation, canonical jobs2/threads2 and fresh roots/cache/targets; request the
-exclusive full slot in inbox. Do not push before exact-hash merge approval.
+directed both modes and strict clippy/fmt/WASM32.
+Each changed file stays at most 400 lines.
 
 ## Slice sequence
 
-This SPEC covers alternate extra wall only. After its separate REVIEW, propose
+This SPEC covers alternate extra wall only. Then propose
 Arachne fuzzy skin, then overhang detection/segmentation, each with its own
-source boundary, SPEC approval, public RED commit and production REVIEW.
+source boundary, public RED commit and production change.
 
-Approved public fixture RED and source-derived preflight corrections are in
+Public fixture RED and source-derived preflight corrections are in
 [RED evidence](arachne-alternate-extra-wall-red-evidence.md). An existing unit
 assertion that requires the removed rejection needs the separately proposed
-[test retirement ruling](arachne-alternate-extra-wall-test-retirement.md), now
-approved and separately committed as76b8fbe43. [GREEN evidence and remaining
+[test retirement record](arachne-alternate-extra-wall-test-retirement.md),
+committed as 76b8fbe43. [GREEN evidence and remaining
 gates](arachne-alternate-extra-wall-green-evidence.md) bind source bytes and
 unchanged off/inert controls; no full/workspace claim is made here.

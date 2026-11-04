@@ -1,12 +1,12 @@
 # Direct-STL profile override 的 CLI bookkeeping 边界
 
-状态：已批准的独立 seam 前置片；不包含 seam 或 counterbore 生产修改。
+范围：独立 seam 前置片；不包含 seam 或 counterbore 生产修改。
 
 ## Finding
 
 OrcaSlicer source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`。
 
-公有 `ares_core::slice_with_profiles` 在 STL 输入带非空 overrides 时，借用 3MF profile overlay，误执行“将 BBL 3MF 所有 filament 映射到同一 preset”的 bookkeeping 分支。原始 stock profile＋唯一 `counterbore_hole_bridging=none` 覆盖使 Ares footer 的 process slot 变成 `enable_prime_tower`；独立 Native direct-STL 输出的该 slot 为空。这不是 seam 路由差异，也不是 5128 的 `Print::apply` 单次归一化回归：旧 counterbore RED 的原始 Ares 流在首次 line100 travel 差异之后已经保留相同 footer 缺陷。协调者已将此既有问题裁定为独立 STL 前置片，不由 worker2 接手。
+公有 `ares_core::slice_with_profiles` 在 STL 输入带非空 overrides 时，借用 3MF profile overlay，误执行“将 BBL 3MF 所有 filament 映射到同一 preset”的 bookkeeping 分支。原始 stock profile＋唯一 `counterbore_hole_bridging=none` 覆盖使 Ares footer 的 process slot 变成 `enable_prime_tower`；独立 Native direct-STL 输出的该 slot 为空。这不是 seam 路由差异，也不是 5128 的 `Print::apply` 单次归一化回归：旧 counterbore RED 的原始 Ares 流在首次 line100 travel 差异之后已经保留相同 footer 缺陷。此既有问题作为独立 STL 前置片处理。
 
 ## 上游来源与为何 Native 为空
 
@@ -27,7 +27,7 @@ Native direct-STL recipe 为 `--load-settings machine.json;process.json --load-f
 
 唯一生产边界：`Project::from_stl_with_profiles`（原 `crates/ares-core/src/project/domain/profile_input.rs`，为满足文件≤400LOC，STL constructor 分出至 `profile_input/stl.rs`）。原非空 overrides 分支把空 embedded view 传给 `overlay::merged_profile_raw`，复用其 3MF slot 重建及 mapping 行为；`overlay.rs:159–190` 根据 single preset 禁用 tower，:328–351 `different_settings_slot` 将 `enable_prime_tower` 写入 slot0。这里是错误兼容壳，不是新的 Ares 配置合成设计。
 
-替换为与本函数已支持的 no-override STL 路径相同的已组合配置/raw 起点。此起点不仅是稀疏 `profile.profile_raw`：`profiles/composition.rs:186–211` 向 typed `project` 注入 selected print/printer/filament IDs、filament map/IDs/self-index 与 print compatibility。两条 STL 分支使用同一份 `profile.settings.project` 来源，在分支前把这些 composition-owned 字段合入共同 raw；不在反序列化后旁路补字段。Native 在 `OrcaSlicer.cpp:2048,2088,3152–3158,3175–3180` 写入 loaded preset identities，`:3613–3615` 再 `m_print_config.apply(m_extra_config,true)`（command-line options override loaded files）。非空用户 overrides 按此最后应用顺序写入共同 raw，保留 `handle_legacy` 与 typed deserialize/resolve，然后继续原 STL import、模型身份、placement、validation 与 slicing 生命周期。coStrings 的 logical List/中央 export escape 由 worker3 的通用边界修复拥有：本片只调用 `insert_strings`，不改共享 helper、不保留 `insert_string_slots` alias、不手写替代转义路径。
+替换为与本函数已支持的 no-override STL 路径相同的已组合配置/raw 起点。此起点不仅是稀疏 `profile.profile_raw`：`profiles/composition.rs:186–211` 向 typed `project` 注入 selected print/printer/filament IDs、filament map/IDs/self-index 与 print compatibility。两条 STL 分支使用同一份 `profile.settings.project` 来源，在分支前把这些 composition-owned 字段合入共同 raw；不在反序列化后旁路补字段。Native 在 `OrcaSlicer.cpp:2048,2088,3152–3158,3175–3180` 写入 loaded preset identities，`:3613–3615` 再 `m_print_config.apply(m_extra_config,true)`（command-line options override loaded files）。非空用户 overrides 按此最后应用顺序写入共同 raw，保留 `handle_legacy` 与 typed deserialize/resolve，然后继续原 STL import、模型身份、placement、validation 与 slicing 生命周期。coStrings 的 logical List/中央 export escape 由通用边界修复拥有：本片只调用 `insert_strings`，不改共享 helper、不保留 `insert_string_slots` alias、不手写替代转义路径。
 
 不得调用 3MF overlay 进行 direct-STL override 合成。不得新增格式 flag、fallback、并行 raw/config 状态，或在 footer 强制清空 token。STL 输入应继承原 profile raw 明确携带的 metadata；缺省 grouped key 由原配置导出器 `options/config_export/writer.rs:212–220` 按 CLI slot 个数输出默认空 vector。3MF 的 embedded slot、mapping、颜色/timelapse 语义不变。
 
@@ -39,6 +39,6 @@ Included：仅 direct-STL＋非空 overrides 的合成起点纠正，保留原 o
 
 Native 在运行时经 OrcaRunner 的相同 direct-STL recipe 和 `ARES_ORCA_CACHE_DIR` 生成，绑定 producer/seed/resources/实际 STL 与 flattened profile bytes；不提交 Native 产物或过程记录。完整输出 comparator 仅规范化 generated-by identity，保留 footer、movement、M73、统计；不接受 witness-only GREEN。
 
-生产前冻结 no-override STL whole-output 控制及已有 3MF profile-overlay/mapping controls。独立 spec→fresh RED 审批→仅上述分支 GREEN→fresh directed、fresh matched seeded base/candidate、workspace nextest、严格 Clippy/WASM/fmt→独立 REVIEW→合入。使用 Rust1.99、每人一个 heavy、16 threads、CPU0/seed0/runs1、每例共享300s deadline 与 owned-descendant cleanup，预编译在 deadline 外，不重试至成功。
+生产前冻结 no-override STL whole-output 控制及已有 3MF profile-overlay/mapping controls。
 
-仓库外只读比较/源码引用证据位于 `${TMP_ROOT}/ares-none-travel/footer/`。旧 first-difference 被 seam 修正消除不等于此完整输出已 GREEN；本片合入后 standalone seam 链必须 rebase 并重跑门禁，counterbore 四个硬失败继续留在后续本地分支。
+旧 first-difference 被 seam 修正消除不等于此完整输出已 GREEN。

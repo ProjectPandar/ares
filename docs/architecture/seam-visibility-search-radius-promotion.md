@@ -1,6 +1,6 @@
 # SeamPlacer 可见性样本搜索半径的双精度求值边界
 
-状态：待独立 spec 审批；仅只读诊断结论与验证边界，无生产编辑、RED 实施或 GREEN 声明。
+本文记录只读诊断结论与验证边界。
 
 ## 上游所有权与不可协商决策
 
@@ -31,26 +31,18 @@ Rust 目的地仅为 `crates/ares-core/src/project_slice/seam_placement/visibili
 
 Native `compute_global_occlusion` 模块相对地址 `0x100bd08–0x100bd56`：前序 `divss/mulss/divss`，然后 `cvtss2sd`（0x100bd2b）、`divsd`（0x100bd2f）、`sqrtsd`（0x100bd40）、`cvtsd2ss`（0x100bd4b）、写入 radius（0x100bd4f），与上述 C++ 类型提升边界一致。
 
-仓库外证据：
-
-- `${TMP_ROOT}/ares-counterbore/native-first-layer-visibility/events.json`，SHA256 `d363339be59be567cb166338ba4b1b9628963af5d5902d880b127c7ea1ef74af`。
-- 同目录 `factorial-replay.json`，SHA256 `f269acaacee0a74f416a16a4f16bd053c8a6a898637a9a136fbf0c1ae76a0db4`。
-- 同目录 `radius-replay.json`，SHA256 `05f7b9a97053a151795a94909ac6fc378bc880f0936a588303300fe60f10933f`。
-- 同目录 `global-occlusion-disasm.txt`，SHA256 `27e3ebf5772a89cede720195ea676d0ddb70276e6e88360b5278c3b75b38d31a`。
-- `${TMP_ROOT}/ares-counterbore/first-layer-visibility/ares-visibility-events.json`，SHA256 `3c2eb3b97c71337ae015bdb7ab9b6caec1fa6fc436e56e7dcd523d2efe05c4ea`。
-
 所有 Native输出、maps、buffers、运行记录保留仓库外；无效的 optimized-out 探针不算证据，未初始化 unsupported 数据不参与论证。GDB exit0 不等于公有完整输出 PASS。
 
 ## 独立 RED / GREEN 边界
 
 Included：上述搜索半径求值边界，及冻结首层带孔输入的公有完整输出端到端验证。
 
-Deferred：292 个非附近 sample visibility 差异的独立归属诊断、其他 double/float 调用、KD 搜索/遍历、sampler/raycast、counterbore Bridges/Filled/Arachne、travel 及所有其他 worker 所有权边界。
+Deferred：292 个非附近 sample visibility 差异的独立归属诊断、其他 double/float 调用、KD 搜索/遍历、sampler/raycast、counterbore Bridges/Filled/Arachne、travel 及其他切片边界。
 
-spec 审批后才开始独立 RED：在最新获准 main 上新增 standalone seam 完整输出测试，复用冻结首层 STL/stock 父链及 public `ares_core::slice_with_profiles`，不携带 counterbore GREEN 生产代码。**main 的 preflight 当前对任何带孔 partial 配置无条件拒绝，因此本片申请独立 `counterbore_hole_bridging=none` 控制**，Native/Ares 同时使用该覆盖并分别比较自己的完整 footer；不修改、不重命名、不计入原 counterbore 首层 partial 控制，不用它代替该控制 GREEN。上游 `PerimeterGenerator.cpp:1731–1735` 在 None 时立即返回，而 partial 在没有 lower_slices 时也不进入 surface rewrite，故 None 只绕开 main 的尚未支持 partial 守卫，不改变本片的几何/seam 所有权。独立 None 控制需要 fresh Native RED 验证其 radius、候选与原 partial 诊断一致，且完整输出确实在同一 seam/travel 症状失败；若不符则保留结果、重新裁定，不调 fixture、不以 guard 拒绝充当目标 RED。
+独立 RED：新增 standalone seam 完整输出测试，复用冻结首层 STL/stock 父链及 public `ares_core::slice_with_profiles`，不携带 counterbore GREEN 生产代码。**main 的 preflight 当前对任何带孔 partial 配置无条件拒绝，因此本片使用独立 `counterbore_hole_bridging=none` 控制**，Native/Ares 同时使用该覆盖并分别比较自己的完整 footer；不修改、不重命名、不计入原 counterbore 首层 partial 控制，不用它代替该控制 GREEN。上游 `PerimeterGenerator.cpp:1731–1735` 在 None 时立即返回，而 partial 在没有 lower_slices 时也不进入 surface rewrite，故 None 只绕开 main 的尚未支持 partial 守卫，不改变本片的几何/seam 所有权。独立 None 控制需要 fresh Native RED 验证其 radius、候选与原 partial 诊断一致，且完整输出确实在同一 seam/travel 症状失败；若不符则保留结果、重新确定范围，不调 fixture、不以 guard 拒绝充当目标 RED。
 
 Native 必须通过 OrcaRunner 的 direct-STL recipe（arrange0/slice0）、运行时新生成并绑定 `ARES_ORCA_CACHE_DIR`；共享 Native availability contract，无 silent skip。仅规范化 generated-by identity，运动、M73、统计、footer 全保留。已有独立 seam None/solid、STL footer 及其他匹配控制不得改断言或调 fixture。
 
-RED 独立批准后才编辑半径表达式。GREEN 需要首层及既有控制完整 PASS、匹配基线/候选 seeded 原始流与失败集审计、`cargo nextest run --workspace`、严格 Clippy、rustfmt、WASM 检查及独立 REVIEW。一次每 worker 单 heavy、16线程，Native CPU0/seed0/runs1、新缓存、共享300s deadline与 owned-descendant cleanup，prebuild不计入deadline，不重试至成功。
+RED 独立提交后才编辑半径表达式。GREEN 需要首层及既有控制完整 PASS、匹配基线/候选 seeded 原始流与失败集审计、`cargo nextest run --workspace`、严格 Clippy、rustfmt、WASM 检查。Native seed0、新缓存，不重试至成功。
 
-counterbore 分支 `pi/classic-counterbore-green-local` 的 `047d0918d02977ad8259976731d647cd452cf35a` 保持 5PASS+1RED、不改实现或断言。此前置片独立合入后才 rebase counterbore 并重新验证。离线数值回放不是 E2E GREEN，本文不授权生产编辑。
+counterbore 切片保持 5PASS+1RED、不改实现或断言；本前置片完成后再重新验证 counterbore。离线数值回放不是 E2E GREEN。

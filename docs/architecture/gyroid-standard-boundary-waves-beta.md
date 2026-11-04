@@ -1,9 +1,6 @@
 # Standard gyroid boundary waves in beta
 
-## Status and source boundary
-
-Investigation and public RED qualification only. No production port is included
-or authorized by this record. Start from main `f4ea41332`.
+## Source boundary
 
 Upstream revision: `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 The owning unit is `src/libslic3r/Fill/FillGyroid.cpp`:
@@ -15,7 +12,7 @@ parametric branch of `FillGyroid::_fill_surface_single`.
 Rust destinations are `crates/ares-core/src/fill/gyroid.rs` and
 `crates/ares-core/src/fill/gyroid/waves.rs`. Existing width/height-based wave
 placement is a temporary compatibility shell around the upstream gyroid concept,
-not an Ares-owned pattern design. A future approved rewrite would replace it,
+not an Ares-owned pattern design. A future rewrite would replace it,
 not retain it as a second implementation or fallback.
 
 ## Source comparison
@@ -94,9 +91,9 @@ existing shared setup must not be silently changed by a future standard-branch
 port. Also deferred: multiline offset internals, base joining/connection,
 Clipper internals, surface preparation, flow, writer/time calculation, and
 preset/footer supply. Any remaining independent difference requires its own
-source boundary and review.
+source boundary.
 
-## Measured first difference and approved port
+## Measured first difference and port
 
 The paired-cylinder public RED first differs in sparse extrusion at line 105.
 A read-only Native capture of `make_gyroid_waves` records complete odd/even
@@ -109,11 +106,11 @@ to the differing public endpoints. Thus period truncation explains the first
 difference; no flow or corner-smoothing repair is implicated. Optimized-out
 Native variables are not treated as captured values.
 
-The approved rewrite is limited to the standard branch's separate grid origin
+The rewrite is limited to the standard branch's separate grid origin
 and spacing/multiline-inflated contour bounds, full-period construction,
 longitudinal bracketing without ordinate clamping, and extrema-indexed wave
 selection. Preserve the optimized branch's current bounds and behavior; do not
-extend this approval to its adjacent upstream changes. Keep the scalar field,
+extend this port to its adjacent upstream changes. Keep the scalar field,
 multiline/crop/length-filter/connection tail and inverse rotation unchanged.
 Remove temporary observations and verify rebuilt complete-byte restoration.
 Freeze the existing gyroid test IDs before implementation, then rerun exactly
@@ -126,13 +123,3 @@ The frozen three-test gyroid inventory improves from zero passes to one, with
 zero PASS-to-FAIL transitions. Both existing ironing gyroid tests still fail;
 this is not an all-gyroid parity claim. An inventory with no prior passes does
 not demonstrate preservation of positive coverage.
-
-## Review gate
-
-Submit this ARD and a genuinely discriminating public RED before a production
-port. Name the exercised upstream functions, distinguish measurements from
-hypotheses, and disclose all remaining complete-output failures. Future GREEN
-requires approved scope, source-local implementation, identical before/after
-breadth with zero PASS-to-FAIL transitions, rustfmt and strict all-target Clippy,
-changed Rust files below 400 lines, and full-output qualification without
-borrowing another slice's limited GREEN exception.

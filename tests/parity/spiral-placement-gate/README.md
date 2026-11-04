@@ -3,7 +3,7 @@
 Source: GCode.cpp::GCode::extrude_loop5769–5775, both configured
 !spiral_mode AND description==perimeter. SPECf477f9b3c maps the latter
 to existing Rust Perimeter-collection/Loop-only dispatch. No production
-change is part of RED; GREEN awaits COORD review, FULL awaits window.
+change is part of RED.
 
 These three archives are INPUTS only, not embedded expected outputs:
 actual official CLI exports copied unchanged. manifest.json pins whole
@@ -32,8 +32,8 @@ failing positive, not a converted expected failure. Settings and Native motion a
 asserted by this runner; SHA freezes input settings, full output comparison
 is the parity oracle. The shared check requires configured Native.
 
-External discovery: ${COORD_ROOT}/evidence/w5-spiral-placement-gate/.
-Read-only PG equality, pre-filter divergence and0vs6 placement calls are
+External read-only PG equality, pre-filter divergence and0vs6 placement calls are
 discovery proof, not a private seam used by these public tests. Inputs
-may be sliced independently with `$ORCA --slice 0 --outputdir /tmp/vase positive.3mf`.
+may be sliced independently with `$ORCA --slice 0 --outputdir "$OUT/vase" positive.3mf`,
+where `OUT` is an external directory.
 No production arithmetic, movement or processor flag fix belongs in RED.

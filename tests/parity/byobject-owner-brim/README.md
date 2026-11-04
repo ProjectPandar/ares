@@ -1,6 +1,5 @@
 # ByObject ordinary owner brim prerequisite — public RED
 
-Approved proposal: `7ef22b64446dca03bed5088349ae04a70213a72e`.
 Source pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 Source ownership: `Print.cpp:2465-2467,2520-2530` sequences instances while
@@ -24,16 +23,14 @@ has one skirt block, no-skirt has none, width0 control has no brim and one skirt
 All cases require validated API/real CLI success, raw API==CLI, and unchanged
 complete `golden::compare_ordered_bytes_generator_only` equality to Native.
 
-Expected authentic RED on parent proposal source in both modes: combined fails
+Expected authentic RED in both modes: combined fails
 at byte3509/line123 (Native skirt G1, Ares M73); no-skirt fails at byte1607/line67
 (Native first brim point X114.334/Y100.314, Ares X42.008/Y98.284). Width0 control
 passes complete ordered equality. No inverted assertion, M73 filtering,
 comparator relaxation, tolerance or estimator change. Do not assert divergence
 as success. Preserve the ByObject perobject-skirt guard (stage B deferred);
-this RED exercises only the approved ordinary-owner prerequisite A.
+this RED exercises only the ordinary-owner prerequisite A.
 
-CPU18/jobs2/threads2, separate fresh official/seeded cache and artifact roots,
-canonical reference environment and actual descendant/thread affinity audit.
-Independent RED approval is required before production GREEN. Any residual
-whole-output divergence after the faithful owner port means STOP/report, not
-estimator repair. No full/workspace, merge or push.
+Use separate fresh official/seeded cache and artifact roots and the canonical
+reference environment. Any residual whole-output divergence after the faithful
+owner port means STOP/report, not estimator repair.

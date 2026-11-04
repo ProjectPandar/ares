@@ -26,11 +26,11 @@ collection; subtract filled area from accumulated fill surfaces while preserving
 fill_no_overlap semantics. Preserve upstream truncation, ordering and expression
 semantics even when surprising (including the boolean min-distance assignment).
 
-Bridge ownership was explicitly confirmed by coordinator: port only
+Bridge scope: port only
 `BridgeDetector.hpp:122-126` polygons→floating-edges adapter locally inside the
 perimeter module. Reuse existing `geometry::detect_bridging_direction`; do not
-change it. If its shared algorithm needs correction, stop and coordinate with
-pi-tower before edits. Existing clipping, offsets, hull, medial-axis and AABB
+change it. If its shared algorithm needs correction, that is a separate bridge
+slice. Existing clipping, offsets, hull, medial-axis and AABB
 helpers are reused; do not duplicate these core algorithms.
 
 ## Deferred
@@ -44,14 +44,10 @@ comparator relaxation or skipped failing case.
 ## TDD and acceptance
 
 Baselinebd49f5fd: frozen Anycubic Kobra3 Max0.6 case-SzNoeB and0.8 case-7ivcdp
-are classic and both fail at the existing guard. RED
-`${TMP_ROOT}/ares-extra-overhang-red/replay-summary.json`; unchanged copied pairs in
-`${TMP_ROOT}/ares-extra-overhang-replay`. Add original-Orca active overhang step fixtures
+are classic and both fail at the existing guard. Add original-Orca active overhang step fixtures
 before implementation to exercise actual generated paths, not only tiny stock
 geometric overhangs. Both enabled and disabled controls must be retained.
 
-Require strict full ordered-byte equality, original Orca2.4.2 CPU0 reference,
+Require strict full ordered-byte equality, original Orca2.4.2 single-CPU reference,
 stock target2 and known68+823 controls, workspace Nextest/fmt/default Clippy/
-actual core+adapter WASM build, clean probe-free diff, source-cited receipts and
-coordinator approval. Coordinator explicitly thawed main; Qidi integrated as
-e865eb2a after full revalidation onb64b1d90. This branch now starts ate865eb2a.
+actual core+adapter WASM build and a clean probe-free diff.

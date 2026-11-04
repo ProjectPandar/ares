@@ -1,8 +1,7 @@
 # PROPOSAL: conditional scarf smoothness eligibility
 
-Status: **PROPOSAL ONLY / REVIEW-REQUEST**, not a SPEC or RED. Discovery base
-approved spRear GREEN `9d9814418e1481114d05cb65848ed723869ac2ce`. Preserve that
-stack25 chain. No production/test/fixture/comparator edit; await proposal approval.
+Status: Proposed.
+No production/test/fixture/comparator edit.
 
 ## ONE observed gap, not a hypothetical feature
 
@@ -76,29 +75,26 @@ No seam geometry, travel, front-clip, speed, clocks or schema redesign is propos
 conditional smoothness eligibility, with optional overhang threshold disabled.
 Do not silently absorb unsupported_dist production/propagation, or mistake its
 penalty field for raw distance. Prior seam audits explicitly defer that handoff.
-Before a SPEC can authorize GREEN it must resolve how the adjacent nonzero-
+Before a SPEC can admit GREEN it must resolve how the adjacent nonzero-
 overhang predicate remains source-faithful; independently qualify/source any
-necessary dependency, or STOP/report. Do not introduce a permanent threshold0
+necessary dependency, or stop. Do not introduce a permanent threshold0
 special-case/fallback, enable all conditional scarves without the predicate,
 or claim this one input qualifies nonzero-overhang behavior. No such design or
-new guard is authorized by this PROPOSAL. Scarf path generation, painted seam
+new guard is part of this PROPOSAL. Scarf path generation, painted seam
 rules and new random/nearest behavior remain outside the selected gap.
 
-## Already-done / queue / UB check
+## Already-done / UB check
 
-Fresh fetch1641: origin/main41f2c90f765d42c6620583121296bb61a2cb839c,
-origin/ci/stack-244351a644d6683555ae48e44ea7f898a66f75d585; no materialized stack25
-ref. Checked authoritative coordinator-approved queued heads9d9814418,
-cf8597e18,2a37ae4a3,4c778efa5,c3d801b4b,d569edcbe,4b4798ecf,0266b8ef4,5014c8345
-via scoped git log4351..head and each scarf source snapshot: ALL still contain
-`|| options.scarf.conditional`, and none adds the smoothness predicate.
+At discovery time (main `41f2c90f765d42c6620583121296bb61a2cb839c`) every
+pending scarf source snapshot still contained
+`|| options.scarf.conditional`, and none added the smoothness predicate.
 
 Main/base scarf history already includes3a4324d95 active scarf,
 016456549 default-speed cap,765ae4964 front-clip positive seam-gap gate,
 48ea1d7d8 contour-Z kernel. All-branch `git log -G` on conditional/smoothness/
 angle in scarf owner finds only the initial3a4324d95 blanket bypass. Existing
 work is explicitly acknowledged, not mislabeled as missing scarf implementation.
-W2's queued4c778efa5 "painted" change is painted BRIM admission, not painted
+Pending painted work is painted BRIM admission, not painted
 seam selection. Scarf rounding/front-clip work is already in this base; no
 second proposal for it. Prior option-coverage PASS is not parity proof for this
 active setting combination; this concrete complete positive now diverges.
@@ -120,21 +116,20 @@ random positive): both Native0/CLI0/complete whole PASS. Not proposed on arithme
 suspicion. Painted XML admission and other nearest residuals are not secondary
 proposals; no missing Ares stream is called equality/divergence evidence.
 
-## Evidence and next gate
+## Evidence and next step
 
-External root `${LOCAL_EVIDENCE_ROOT}/worker4/seam-deferrals-proposal-9d981-Sap6`.
-Contains frozen inputs, whole/ZIP SHAs, singleton delta, exact commands/rc/
+Discovery evidence contains frozen inputs, whole/ZIP SHAs, singleton delta,
+exact commands/rc/
 stdout/stderr/complete streams, activation+footer proof, unchanged comparator
-source inclusion/build receipt, base/current binary/source hashes, git-log and
-queue source snapshots. Four actual Native calls total (random pair+selected
-conditional pair), CPU15, per-input fresh cache/TMPDIR, load<60 before build/
-every Native, START/END receipts; no Native retries, cargo core/workspace runs,
-production edits, merge/push or stashes. Existing exact9d981 CLI reused with its
+source inclusion/build receipt, base/current binary/source hashes.
+Four actual Native calls total (random pair+selected
+conditional pair), per-input fresh cache/TMPDIR; no Native retries or
+production edits. Existing exact9d981 CLI reused with its
 frozen GREEN build/hash evidence; no claim that this discovery is formal API+
 CLI/seeded RED. Proposal documents only, not permanent fixtures/tests or SPEC.
 
-Request review of this ONE source-cited gap. Only after explicit APPROVED may a
-bounded SPEC/dependency decision be written; public Native-first frozen RED and
-separate bounded GREEN remain later review gates. If the optional dependency
-cannot be safely bounded, STOP rather than expanding the pipeline or inventing
-a fallback. Approved spRear chain remains preserved and queued for stack25.
+Next step: a bounded SPEC/dependency decision for this ONE source-cited gap;
+public Native-first frozen RED and
+separate bounded GREEN follow. If the optional dependency
+cannot be safely bounded, stop rather than expanding the pipeline or inventing
+a fallback.

@@ -1,7 +1,6 @@
 # Spec: admit `infill_anchor_max < 0.05` as upstream `dont_connect`
 
-**Status**: spec pending review. Source-cited rewrite slice; no code change in
-this commit.
+Source-cited rewrite slice.
 
 ## 1. Problem statement
 
@@ -55,7 +54,7 @@ emitted path for these inputs (asserted indirectly by whole-output equality —
 upstream emits chained polylines only).
 
 **Deferred**: Stars/multiline infill interactions are explicitly excluded —
-worker6 owns the in-flight multiline/Stars slice; this slice fixes
+multiline/Stars is a separate slice; this slice fixes
 `fill_multiline` = 1 and uses only the rectilinear family dispatch at
 `FillRectilinear.cpp:3366`. Solid/bridging surfaces force
 `anchor_length(_max) = 1000` upstream (`Fill.cpp:975-977`), so
@@ -91,5 +90,5 @@ assertion weakening, no comparator change.
 ## 5. Non-goals
 
 - No change to `connect_infill` semantics for `anchor_length_max >= 0.05`.
-- No admission/ordering work in worker6's multiline/Stars scope.
+- No admission/ordering work in the multiline/Stars scope.
 - No `unsupported()` plumbing refactor; other guards untouched.

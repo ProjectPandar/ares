@@ -1,15 +1,15 @@
 # ARD: Separate resource-part admission from main-model build semantics
 
-Status: boundary approved at c6a9e152a; owner-amended
+Status: accepted at c6a9e152a; the amended
 [SPEC](3mf-resource-part-build-spec.md) uses canonical slicing, not export/load-only.
-Main3ee8f272c has advanced/freeze lifted. First RED e1de695aa was rejected for
-control G-code divergence. This docs-only input revision requires approval before
-any new runtime. Independent qualified test-only RED review precedes production.
+First RED e1de695aa was rejected for
+control G-code divergence. This input revision precedes
+any new runtime. A qualified test-only RED precedes production.
 
 ## Upstream owner / Rust boundary
 
 Orca8500fcdcc `libslic3r/Format/bbs_3mf.cpp::_BBS_3MF_Importer::ObjectImporter`
-loads relationship-selected resource parts before the main model. Active worker
+loads relationship-selected resource parts before the main model. Active resource-load
 path1780-1817, extract_object_model993 onward and object XML parser5715-5779 feed
 resource handlers5612-5687. Those handlers do not dispatch build/item; end_model
 5323-5327 adds no build requirement. The main parser separately dispatches item
@@ -44,21 +44,21 @@ shells around ObjectImporter/imported resource identities, not a new Ares loader
   flag); EACH enabled official/seeded invocation always executes fresh Native→
   public end to end. No Native-only early return, external reference injection or
   reuse of FULL16 output as the new runtime baseline.
-- Approved RED is the specific Ares resource-build admission error versus complete
+- The RED is the specific Ares resource-build admission error versus complete
   Native G-code. CLI must confirm the same admission cause. A missing Ares stream
   is not raw byte equality, G-code PASS or an invented ordered-stream difference.
   Historical failed discovery admission remains separately classified.
 - Every admitted Ares leg uses API/CLI raw equality and the unchanged strict full
   generator-only comparison, retaining movement/arcs/M73/statistics/footer and
   effective-config differences. Repeat/control neutrality remains mandatory.
-- After separately approved GREEN, ANY residual G-code difference means STOP and
+- After GREEN, ANY residual G-code difference means STOP and
   report the complete streams/first difference. No downstream scope growth,
   comparator weakening, fixture substitution or metadata filtering to get PASS.
-- Boundary approved ->docs-only seam amendment ->Native-first public test-only
-  RED after MAIN-ADVANCE/FREEZE LIFTED ->independent exact-hash RED review ->
-  separate production approval. Old control failure is NOT approved RED; new
-  control must strict-PASS, positive missing-build error is the real admission
-  RED. No Native/nextest before input revision approval or during any new freeze.
+- Boundary ->docs-only seam amendment ->Native-first public test-only
+  RED ->separate production commit.
+  Old control failure is NOT the RED; the new
+  control must strict-PASS, and the positive missing-build error is the real admission
+  RED.
 
 ## Deferred / trade-off
 

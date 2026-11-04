@@ -1,7 +1,5 @@
-# Native 清理 B：BBL 对象 / 换料边界两例
+# Native 清理：BBL 对象 / 换料边界两例
 
-owner worker6；整体 B 与共享 runner/cache owner worker4。
-基线 `cdf8b27ae`；交接 `/tmp/worker4-to-worker6-bbl-boundary-handoff.md`。
 本片仅迁移测试参照来源，不修改生产行为、配置或公开 API。
 
 ## 上游边界
@@ -26,7 +24,7 @@ owner worker6；整体 B 与共享 runner/cache owner worker4。
 
 保留两例公开 `slice_project_plate` 调用：`GenerationMetadata::default()`、plate None、
 `ConfigOverrides::default()`、`SlicerContext::new(0)`。不重导出项目、不改模板或覆写以
-适应 fresh Native。历史注释中的 stock-template 扩展不是本片授权范围。
+适应 fresh Native。历史注释中的 stock-template 扩展不在本片范围内。
 
 两例原测试只有完整逐行相等和总行数相等断言，没有另设 marker 子集断言。
 迁移后仍比较每个有序行及完整长度；唯一归一保持原
@@ -42,39 +40,35 @@ M624/M625、unique labels、M73/header/footer、retract/wipe/hop/fan 与 CONFIG_
 新增 `crates/ares-cli/tests/orca_parity/runner/native_bbl_boundary_migration.rs`；
 如需 helper，仅同前缀或同名子目录，各文件不超过 400 行。`runner.rs` 只新增该模块注册，
 采用现有显式 path attribute 风格。不动 cache/custom_gcode.rs、shared cache.rs、
-`.config`、root orca_parity.rs、生产 API 或 worker4 其它 B 组。
+`.config`、root orca_parity.rs、生产 API 或其它迁移组。
 
 当前 runner 未提供可直接复用的 `fixture_reference`；jerk/SEMM 的 `check` 是其私有完整
 测试 helper，不为本片改造。新子模块在本例工作目录按原文件名写入原项目，构造既有
 `ExportedCase` 并直接调用 `OrcaRunner::slice_case`，无需共享接口变更。
 复用现有 slice-v2 input SHA/producer/resource/replay identity、锁、staging/publish、
 receipt/hash 与 `ARES_ORCA_CACHE_DIR`。不新增缓存、预热、GDB/map 或测试顺序依赖。
-`OrcaRunner::from_env` 沿用片 A 的 native_environment：required 缺依赖 FAIL，optional
+`OrcaRunner::from_env` 沿用既有 native_environment：required 缺依赖 FAIL，optional
 缺依赖可见 SKIPPED；配置无效、执行/解析/比较错误均 FAIL，缓存命中也不绕过依赖检查。
 
 删除两份 core 测试入口与两份冻结 Native：
 `validation/bbl-object-boundary-expected.gcode` 和
 `validation/bbl-toolchange-boundary-expected.gcode`（路径相对 `tests/parity/`）。
 两份 3MF 保留原字节。契约写在本文和新测试文件头，不新增共享 validation README。
-Native/Ares 输出、cache receipts、stdout/stderr 和比较报告只存仓库外 artifacts/cache，
-不提交 Native 产物，不改名为输入、常量或 JSON。
+不提交 Native/Ares 输出、cache receipts、stdout/stderr、比较报告或 Native 产物，不改名为输入、常量或 JSON。
 
 Included：两例测试适配层与 Native 来源迁移、删除冻结输出、原整流断言保持。
-Deferred：生产边界逻辑修复、stock 换料模板增补、其它 B 组及共享 runner/cache 扩展。
+Deferred：生产边界逻辑修复、stock 换料模板增补、其它迁移组及共享 runner/cache 扩展。
 若实际发现接口缺口或 fresh Native 非确定性，保留证据先报告，不调整输入或放宽断言。
 
 ## RED / GREEN 与验收
 
-沿用已批准 jerk/SEMM 的真实依赖 RED：单独提交删除两份冻结输出，保留旧 core reader；
-RESUME 后定向运行原两例，确认因旧 reader 的 ENOENT 失败，保留原始日志与 exit。
+沿用 jerk/SEMM 的真实依赖 RED：单独提交删除两份冻结输出，保留旧 core reader；
+定向运行原两例，确认因旧 reader 的 ENOENT 失败，保留原始日志与 exit。
 这是迁移依赖 RED，不宣称 Native/Ares 算法分叉。GREEN 再迁两例至 CLI 并删除旧入口，
-直接使用不变 3MF 的真实运行时 Native 验证整流；RED/GREEN 同分支一起提审。
+直接使用不变 3MF 的真实运行时 Native 验证整流；RED/GREEN 同分支一起提交。
 
 required 冷运行独立空缓存，两例均须真实 Native 完成且整流 PASS；热运行复用同一缓存，
 两例均 PASS、slice trace 均 hit、缓存文件 SHA 不变且无新增 slice entry。
 fresh v2 base/cand seeded 与 official 各用独立缓存，保留完整原始结果及共同 Ares raw SHA。
 严格 candidate-failure-subset 比较不放宽；出现 Native 非确定性则逐例附同输入/producer/
-Ares raw/首差审计交协调者裁定。随后 workspace nextest、strict clippy、fmt、wasm 检查，
-完成后以 exact hash REVIEW-REQUEST，批准后 rebase/ff-only push。
-每次最多一个 heavy、16 threads、独立 target。spec 未批准不改实现；当前浏览器窗口
-不启动 Native/nextest/heavy，等待明确 RESUME。
+Ares raw/首差审计逐例报告。随后 workspace nextest、strict clippy、fmt、wasm 检查。

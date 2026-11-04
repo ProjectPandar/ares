@@ -1,10 +1,9 @@
 # SPEC: coBool/coEnums 未知值静默替换——Config.cpp:654-672 剩余分支
 
-状态：SPEC-REVIEW-REQUEST（只读调研 + docs-only；未改代码）。
-来源：enum 标量切片（APPROVED 284c7180e）批准条件中"enum vectors/
+来源：enum 标量切片（284c7180e）中"enum vectors/
 Bool 须另有 Native 证据"的后续。**Native 证据已采齐**（§1）。
 
-## 1. Native 证据（官方 2.4.2，pristine overhang-organic fixture，CPU7/8）
+## 1. Native 证据（官方 2.4.2，pristine overhang-organic fixture）
 
 ### coBool（`support_ironing`，基线 "1"）
 | 输入 | rc | ironing E | sha（去时间戳） | echo |

@@ -17,9 +17,9 @@ staggering, interlocking geometry and thin-area arithmetic. The existing
 nearest runtime is a temporary compatibility shell around SeamPlacer, not an
 Ares-owned policy. No new public API, fallback, tolerance or guard is needed.
 
-## Difference from W5's mesh-normal repair
+## Difference from the mesh-normal repair
 
-W5 GREEN `aaf208139` (original `c92919ebd`) changes only
+The mesh-normal repair changes only
 `seam_placement/mesh.rs::Vec3::normalized`, used by three-dimensional mesh
 normal/occlusion sampling, owned by `TriangleSetSampling.cpp:67` and Eigen
 `src/Core/Dot.h:92-102`. This slice does not call or modify that method.
@@ -28,16 +28,15 @@ It concerns the separate two-dimensional `(f32,f32)` closure inside
 `dir_to_middle` at `GCode/SeamPlacer.cpp:1584-1587`. A repeated closing point,
 not a zero-area mesh face, supplies its zero tangent. Both bugs share Eigen's
 normalization semantics but have distinct call sites and failure mechanisms.
-After W5 merges, rerun this unchanged RED on the updated main before claiming
+With that repair in place, rerun this unchanged RED before claiming
 an independent witness; changed occlusion scores must not be mistaken for a
 repair of the two-dimensional local division.
 
 ## Observed failure mechanism
 
-Interlocking localization on baseline `fb9a4ecd5` plus the working port found
+Interlocking localization found
 matching input/output geometry before seam placement at the first remaining
-G-code difference. Runtime snapshots in
-`${EVIDENCE_ROOT}/w6-{native,ares}-layer44-seams.jsonl` show both
+G-code difference. Layer-44 runtime seam snapshots show both
 implementations select the same concave candidate at
 (-5.95703077, -3.07977605), with local angle -1.57079601 and staggering false.
 The candidate range is [0,5); positions 0 and 4 are equal (closed contour).
@@ -53,9 +52,8 @@ output oracle.
 
 ## Witness refinement after the square-hole control
 
-The first ordinary 8×8 mm square-hole nearest case passes unchanged main;
-`${EVIDENCE_ROOT}/w6-zero-tangent-red-seeded/run.log` records 2/2
-PASS with its existing AH1 control. It is not a RED and authorizes no
+The first ordinary 8×8 mm square-hole nearest case passes unchanged main
+(2/2 PASS with its existing AH1 control). It is not a RED and justifies no
 production change. Refine the input to an authored 0.8×6.4 mm through-slot in
 the same 64×48×4 mm board, rotated 22.5 degrees. These are explicit physical
 model dimensions (the beam-width/angle scale of the observed short concave
@@ -68,7 +66,7 @@ witness, do not relabel a passing candidate as RED.
 ## Arrangement check for the slot candidate
 
 The whole-board rotation candidate also passes unchanged main (2/2);
-`w6-zero-tangent-slot-red-seeded/run.log` is a passing control, not RED.
+it is a passing control, not RED.
 A debugger check of that exported input's first-layer candidates shows an
 axis-aligned slot, so the export's `export-v2/arrange-1` recipe did not retain
 the intended relative slot angle. It selected candidate 3, not the duplicated
@@ -81,8 +79,8 @@ candidates as test expected output.
 
 ## Standalone RED requirement and plan
 
-This prerequisite must have a Native-observable RED on **main aaf208139**,
-including W5's mesh-normal repair,
+This prerequisite must have a Native-observable RED with
+the mesh-normal repair in place,
 without any interlocking code or fixture. Use the existing authored
 `tests/parity/multiline-union/holed-prism.stl`, ordinary aligned rectilinear
 fill, classic two-wall perimeters and `seam_position=nearest`. Add only that
@@ -100,19 +98,17 @@ well. Do not weaken assertions if this candidate does not isolate the defect;
 find another source-owned public witness or keep the fix in the interlocking
 chain instead of inventing a standalone GREEN.
 
-## Observed post-W5 standalone RED
+## Observed standalone RED after the mesh-normal repair
 
-On `aaf208139` with **no core production difference**, both official and seeded
+With **no core production difference**, both official and seeded
 runs of the new relative-slot case fail while the unchanged AH1 control passes.
-Artifacts are
-`${EVIDENCE_ROOT}/w6-zero-tangent-relative-red-aaf-{official,seeded}/run.log`.
 The authored STL SHA is
 `a5107761081b7afefe1ba1952548876ca93aead50b0c858ae5fcc5b50b74f88f`.
 The API and CLI raw byte-equality assertion passes, but strict Native output
 has 6579 lines versus Ares's 6573. The first differing move is line 587:
 Native `G1 X108.424 Y106.459 Z.8`, Ares `G1 X108.831 Y106.29 Z.8`, before
 returning to Z0.4. This is a public G-code witness independent of interlocking
-and still present after W5's three-dimensional repair. The test expected
+and still present after the three-dimensional repair. The test expected
 output remains runtime Native, not these recorded diagnostic literals.
 
 The exact filter for both prescribed control scripts was
@@ -124,5 +120,5 @@ fixture, input SHA, raw equality and all strict comparisons unchanged.
 After observing RED, GREEN may change production code only: replace the local
 normalizer with the existing source-cited helper. Re-run the exact same test
 and controls, require clippy **zero warnings**, rustfmt, then official and
-seeded FULL with 0 FAIL on the exact final hash based on `aaf208139`. No raw
-inherited WIP commits belong in this clean prerequisite chain.
+seeded full suites with 0 FAIL. No raw
+inherited WIP commits belong in this clean prerequisite slice.

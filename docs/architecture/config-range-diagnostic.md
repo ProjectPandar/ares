@@ -1,7 +1,5 @@
 # PrintConfig generic numeric-range diagnostic — source rewrite proposal
 
-Status: proposal only; approval required before implementation.
-Base: `5910df8eb0c2a9cab5958a1dcce7fdb34d075ecb`.
 Upstream: OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Owning upstream boundary
@@ -51,7 +49,7 @@ Reuse the already imported `crate::options::format_number`, implemented in
 `options/config_types/scalar.rs:319-345`, for the existing six-significant-digit
 stream-style number spelling, subject to the real Native witness. Do not
 introduce another formatter, route through G-code emission, or rewrite that
-shared helper without evidence and separate scope review. Keep formatting lazy
+shared helper without evidence and a separate scope. Keep formatting lazy
 inside the existing first-error insertion.
 
 The remaining collector and `serialize_value` stay the current compatibility
@@ -81,7 +79,7 @@ Deferred, and not silently redesigned:
   new report channels, CI/cache changes or another slicing pipeline.
 
 If a required actual Native witness exposes a missing adjacent formatter or
-serialization prerequisite, stop and review that source boundary; do not add a
+serialization prerequisite, stop at that source boundary; do not add a
 special-case key, expected-string table or approximate numeric formatter.
 
 ## Default-double stream equivalence qualification
@@ -100,7 +98,7 @@ fresh `std::ostringstream` and inserts the double. `Config.cpp:1564-1570`
 writes that serialized scalar string to the public settings export.
 `PrintConfig.cpp:4605-4611` defines `time_cost` as coFloat with minimum0.
 The existing public Rust encoder reaches `OrcaFloat::serialize:12-21`, which
-calls the exact `format_number` helper under review.
+calls the exact `format_number` helper.
 
 Before the endpoint port, qualify finite integral/fractional, large/small,
 precision and notation-boundary samples using the real Native
@@ -108,14 +106,14 @@ precision and notation-boundary samples using the real Native
 Native strings as the expected values; no private formatter call, isolated
 C++ kernel, copied expected algorithm or string table. Persist all Native
 inputs/producer/settings and Rust comparison records. A mismatch stops the
-port for review; shared formatter changes are not silently pulled into scope.
+port; shared formatter changes are not silently pulled into scope.
 This establishes representative default-double stream equivalence, not a
 claim about every f64 bit pattern or unrelated localization behavior.
 
-## Proposed execution after approval
+## Proposed execution
 
 1. Freeze the original public range test/input and reproduce its actual Native
-   RED on the approved base. No private tests, copied expected algorithm or
+   RED. No private tests, copied expected algorithm or
    committed computed golden. Do not change ROOT or the original comparator.
 2. Port only the source-owned rendering clause and qualify that same full
    public comparison GREEN. No Native rebuild, error-code/tolerance change,
@@ -123,8 +121,7 @@ claim about every f64 bit pattern or unrelated localization behavior.
 3. Retain the neighboring CLI-channel controls and compare baseline statuses;
    report any independent baseline failures rather than count them GREEN.
 4. Run fmt and workspace/all-target/all-feature clippy `-D warnings`; keep
-   touched source files below400LOC and submit GREEN evidence for review.
+   touched source files below400LOC.
 
 This is a bounded `PrintConfig.cpp` rewrite slice replacing a specific
 non-source-literal scaffold behavior, not a self-designed Ares pipeline goal.
-No production/test change is authorized by this proposal itself.

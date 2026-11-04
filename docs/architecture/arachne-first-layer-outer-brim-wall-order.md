@@ -1,8 +1,8 @@
 # Arachne first-layer outer-brim wall ordering
 
-Status: selected source-cited rewrite and public witness. The first bounded
+Status: proposed. Selected source-cited rewrite and public witness. The first bounded
 Native qualification is stable and observes exterior-first walls; public API
-sensitivity is required before RED review. Production is unchanged.
+sensitivity is required before a public RED. Production is unchanged.
 
 ## Upstream boundary
 
@@ -52,7 +52,7 @@ Open MultiPath transfer at `:595` is also outside the closed-loop prerequisite.
 
 ## Proposed public qualification
 
-The witness is the approved ordinary two-wall Arachne prism, inner/outer wall
+The witness is the ordinary two-wall Arachne prism, inner/outer wall
 sequence, changed only to OuterOnly brim width 3 and disabled one-wall reduction.
 Input SHA-256: `c844cc32b42f635ed24e494c01492c70727d28c7bcbade92b19a7951512f3f1c`.
 The first physical layer has no preceding-layer overhang score, so the known
@@ -71,6 +71,6 @@ no inner wall, an unobserved brim override, a different seam/C2 numeric gap or
 unsupported brim import is not a production RED.
 
 The Native-only qualification precedes repository test/fixture edits; production
-must remain unchanged until a public RED is reviewed. No angle/string/normal change
-or comparator relaxation may be absorbed. Coordinator combined C2 verification
+must remain unchanged until a public RED exists. No angle/string/normal change
+or comparator relaxation may be absorbed. Combined C2 verification
 of the previous Nearest witness is external evidence, not this candidate's budget.

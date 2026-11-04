@@ -1,7 +1,7 @@
 # ARD: beta overhang sampling by effective printing state
 
 Status: focused runtime witnesses GREEN; bounded official20-case sample
-passes before and after. Batch FULL remains separate. Later batch only, not B13.
+passes before and after. Full parity remains separate.
 Authority: OrcaSlicer v2.5.0-beta,
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
@@ -149,13 +149,13 @@ The current Rust `cooling/role_fans.rs` unconditionally emits on BASE and has
 no corresponding deduplication of the actual requested fan state. The immutable
 input's equal baseline and overhang speeds make this boundary observable.
 
-The coordinator authorizes the physical-state follow-up below. No cooling code
+The physical-state follow-up below is in scope. No cooling code
 was changed when this dependency was qualified. Do not hide the mismatch by
 filtering output commands or weakening the block comparator. Force-resume fan
 output is a distinct source branch and must not be deduplicated by a generic
 textual-command filter.
 
-## Authorized physical fan-state follow-up (before its implementation)
+## Physical fan-state follow-up (before its implementation)
 
 The first implementation commit contains only the ExtrusionProcessor/GCode
 sampling/consumer port and explicitly retains the one-line fan RED. A second
@@ -184,9 +184,9 @@ unused public reset API or change pressure-equalizer/feedrate algorithms.
 
 Every intermediate commit must pass fmt and strict all-target Clippy with no
 introduced suppressions. Because this state affects fan lines outside the
-witness, before HANDOFF run an official bounded sample of20 cooling/fan cases
-whose beta-ledger status is current-PASS, record their ledger provenance and
-exact selectors, and report all results. No FULL or new baseline classification.
+witness, run an official bounded sample of20 cooling/fan cases
+whose beta-baseline status is current-PASS, record their baseline provenance and
+exact selectors, and report all results. No full parity or new baseline classification.
 
 ## Implemented focused result
 
@@ -201,7 +201,7 @@ pass without introduced suppressions.
 
 This is exact scoped GREEN, not a full-stream or global regression claim. The
 original seven full-stream comparators remain strict. The required bounded
-regression sample is complete below; batch FULL remains the integration gate.
+regression sample is complete below; full parity remains the integration gate.
 
 ## Bounded official regression result
 
@@ -228,7 +228,7 @@ first-overhang witness still requires and passes every one of its498 bytes.
 
 ## Test-first acceptance and execution
 
-The approved immutable input SHA
+The immutable input SHA
 `7688c5eaac8bb610fae4e92863474c85262d9f83f64737ba17f5574c6b635866`
 already activates the source boundary. At the collinear GREEN checkpoint,
 first Native overhang object block ordinal3/5 is498 bytes versus API571, with
@@ -244,10 +244,10 @@ coordinate assertions or masked diagnostics.
 3. Run the first-overhang witness and independent supported-layer witness; only
    complete-block equality establishes their GREEN. Record unresolved strict
    full-stream dependencies honestly.
-4. Run owned directed geometry/tour cases, fmt and strict workspace/all-target
-   Clippy. No FULL, seeded/broad sweep or baseline-ledger rerun.
+4. Run directed geometry/tour cases, fmt and strict workspace/all-target
+   Clippy. No full parity, seeded/broad sweep or baseline rerun.
 
 Every new or growing file stays below400 LOC; helper arguments<=5 via actual
 source context structs/tuples, nesting<=4, complexity<=15, function lines<=100.
 No `#[allow]` or `#[expect]` in any intermediate commit. New implementation
-commits retain the required coauthor trailer and belong only to the later batch.
+commits stay separate from this slice.

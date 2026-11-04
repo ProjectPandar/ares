@@ -1,6 +1,6 @@
 # Auto-lift current-plate query frame
 
-Status: A-only docs-first SPEC, awaiting review before tests-only RED. Each phase ends with REVIEW-REQUEST/HOLD; GREEN needs a separate review decision. Stack on the frozen sequential label-flush tip without modifying or requalifying that worktree.
+Status: proposed. Docs-first SPEC precedes tests-only RED; GREEN is a separate phase. Stack on the frozen sequential label-flush tip without modifying or requalifying it.
 
 ## Source-owned boundary
 
@@ -16,17 +16,17 @@ The existing AutoLift module is a temporary compatibility shell around the cited
 
 ## Included and deferred behavior
 
-Included only: restore the upstream current-plate query translation, distinct from nozzle coordinates, and verify its existing Spiral and complete-output consequences. The original witness has zero writer plate offset, so upstream origin-minus-plate-offset is the existing plate-relative origin. Do not introduce new plate-offset plumbing or silently broaden this fix into a multi-plate/cache-domain port; a conflicting frame on the reviewed destination is a STOP requiring scope review.
+Included only: restore the upstream current-plate query translation, distinct from nozzle coordinates, and verify its existing Spiral and complete-output consequences. The original witness has zero writer plate offset, so upstream origin-minus-plate-offset is the existing plate-relative origin. Do not introduce new plate-offset plumbing or silently broaden this fix into a multi-plate/cache-domain port; a conflicting frame on the destination is a STOP requiring scope revision.
 
 Deferred/unchanged: overhang detection, holes/cache geometry, layer-window arithmetic, fallback Auto behavior, explicit lift modes, wipe/retract, output-coordinate conversion, writer formatting, processor timing/cache/progress insertion, configuration and other vendors. The early M73 discrepancy on this witness is a downstream consequence of the missing spiral's total time, not an independent B implementation slice. Fix no M73 bytes directly.
 
-W3-owned tokenizer (`processor/motion_util.rs`), verbose fan (`fan_mover` and `layers/fan_setup.rs`), and zero-E (`motion/extrusion.rs`) stay untouched. Report unexpected overlap rather than folding it into this change. Core remains platform-neutral for WASM/browser, Windows, macOS and Linux; no new file I/O, terminal, viewer or adapter behavior.
+The tokenizer (`processor/motion_util.rs`), verbose fan (`fan_mover` and `layers/fan_setup.rs`), and zero-E (`motion/extrusion.rs`) stay untouched. Report unexpected overlap rather than folding it into this change. Core remains platform-neutral for WASM/browser, Windows, macOS and Linux; no new file I/O, terminal, viewer or adapter behavior.
 
 ## Public witness and genuine RED
 
-Use the original stock Bambu Lab P1S 0.4-nozzle two-object **ByLayer** project, without changing its exported settings, geometry, placement or extruder offset to manufacture isolation. Native export and two fresh stable Native slices/replay precede any public API/CLI slice in each approved official/seeded mode. CPU18, serial execution, build/test/runner thread controls1.
+Use the original stock Bambu Lab P1S 0.4-nozzle two-object **ByLayer** project, without changing its exported settings, geometry, placement or extruder offset to manufacture isolation. Native export and two fresh stable Native slices/replay precede any public API/CLI slice in each official/seeded mode, run serially.
 
-Use the existing `runner::native_stream_case` public whole-output seam and unchanged comparator. At the exact reviewed tests-only commit require successful Native/API/CLI calls, raw API==CLI, and a real complete-output mismatch. Production remains byte-identical to the SPEC parent. Admission errors, unstable Native replay, or an unrelated first difference are STOPs, not RED.
+Use the existing `runner::native_stream_case` public whole-output seam and unchanged comparator. At the exact tests-only commit require successful Native/API/CLI calls, raw API==CLI, and a real complete-output mismatch. Production remains byte-identical to the SPEC parent. Admission errors, unstable Native replay, or an unrelated first difference are STOPs, not RED.
 
 Native-activity and behavioral assertions must establish:
 
@@ -35,12 +35,12 @@ Native-activity and behavioral assertions must establish:
 3. Native has the early sequence `G0 X125 Y260.0\nG0 Z-1.01\nG0 X131 F211\nG0 X124\nM73 P29 R13\n`, without the extra `M73 P28 R13` inserted before `G0 X131 F211` by the pre-fix public outputs.
 4. The public result must match the Native spiral and early progress bytes, and pass the complete comparator. RED must fail behaviorally on the unmodified production implementation, not through a synthetic failure or expected-error wrapper.
 
-Assertions diagnose the witness, never replace full-output acceptance. Do not filter progress, compare only motion, recompute geometry in tests, alter comparator normalization or add a writer/M73 workaround. Store complete Native/API/CLI streams, replay/comparison receipts, exact executable provenance and repeatable artifacts outside the architecture decision document.
+Assertions diagnose the witness, never replace full-output acceptance. Do not filter progress, compare only motion, recompute geometry in tests, alter comparator normalization or add a writer/M73 workaround. Store complete Native/API/CLI streams, replay/comparison records, exact executable provenance and repeatable artifacts outside the architecture decision document.
 
 ## Sequence and exit criteria
 
-1. Commit this SPEC, its concise source/scope ARD and roadmap entry only; submit REVIEW-REQUEST and wait. No test or production changes in SPEC.
-2. After SPEC ACK, add the genuine public tests-only RED described above. Qualify and submit RED REVIEW-REQUEST, then wait before any production change.
-3. After RED ACK, GREEN changes only the query-coordinate translation in `AutoLift::crosses_overhang` to upstream origin minus writer plate XY offset. Keep tests and comparator unchanged. Require the original public witness to pass completely in the same modes, with raw API==CLI, correct spiral and no extra early P28R13. Any residual mismatch is STOP, not acceptable GREEN.
-4. Run rustfmt/clippy after edits and selected `cargo nextest run` gates after test/production changes, with serial CPU18/thread controls1. No `cargo test` default, FULL, integration, rebase, merge or push. Report platform compile checks separately from runtime qualification; claim no unexecuted platform coverage.
-5. Each phase is a separate conventional commit with the required co-author trailer, preserved evidence and REVIEW-REQUEST/HOLD. Keep the earlier sequential label-flush stack and localization/search seals unchanged.
+1. Commit this SPEC, its concise source/scope ARD and roadmap entry only. No test or production changes in SPEC.
+2. Then add the genuine public tests-only RED described above, before any production change.
+3. GREEN changes only the query-coordinate translation in `AutoLift::crosses_overhang` to upstream origin minus writer plate XY offset. Keep tests and comparator unchanged. Require the original public witness to pass completely in the same modes, with raw API==CLI, correct spiral and no extra early P28R13. Any residual mismatch is STOP, not acceptable GREEN.
+4. Run rustfmt/clippy after edits and selected `cargo nextest run` gates after test/production changes. No `cargo test` default. Report platform compile checks separately from runtime qualification; claim no unexecuted platform coverage.
+5. Each phase is a separate conventional commit. Keep the earlier sequential label-flush stack and localization/search seals unchanged.

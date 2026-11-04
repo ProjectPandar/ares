@@ -27,8 +27,5 @@ is line3 total layer number Native3/Ares2; body input is two layers on
 both sides. Native's final259byte nonextruding passthrough chunk is
 omitted by old Rust state gate. No expected output is embedded in tests.
 
-Original exports/launches/source snapshots:
-`${COORD_ROOT}/evidence/w5-spiral-overlap-transition/`.
-Reproduction: `$ORCA --slice 0 --outputdir /tmp/spiral-short positive.3mf`.
-Formal RED and SPEC need review before any GREEN production edit.
-No FULL is authorized; later FULL waits for an explicit merge window.
+Reproduction, with `OUT` an external directory:
+`$ORCA --slice 0 --outputdir "$OUT/spiral-short" positive.3mf`.

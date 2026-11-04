@@ -122,7 +122,7 @@ regression and four current-spacing assertions remain acceptance controls.
 ## Reproducible execution and acceptance
 
 `TreeSupport3D.cpp::merge_influence_areas` reads native arena concurrency to
-choose its first bucket size. The approved CPU-0 replay restricts both the
+choose its first bucket size. The single-core replay restricts both the
 actual Ares test process and immutable Orca runtime to the same domain.
 Production worker derivation remains intact. Keep official default multiworker
 results and first substantive differences in the plan; do not choose a
@@ -131,7 +131,7 @@ convenient variant or claim default-worker byte determinism.
 SlicerContext owns source-required randomness and first-call connection costs;
 no global RNG/process-static mutable cache, filesystem, terminal or native UI
 belongs in ares-core. The selected official build remains immutable. A separate
-approved seeded/initialized build supplies reproducible evidence alongside it.
+seeded/initialized build supplies reproducible evidence alongside it.
 
 Acceptance is public project bytes to complete G-code, excluding only the
 generator line. Preserve the original KSR width fixture/assertion, full-output

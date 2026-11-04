@@ -1,20 +1,17 @@
 # GREEN addendum: create_edge_map endpoint-only reference sort
 
-Status: SPEC-REVIEW-REQUEST; no production change. Follows approved
-localization SPEC5b7cb9878 and public RED1df965efc7648d5b1debc193ceb1733e8d5ec38c.
-Base main104d8497097dc7239ad63f7a69f3b418b699b3e8.
+Follows the localization SPEC and the public odd-order admission RED.
 
-## Bounded localization result and durable RED
+## Bounded localization result and RED
 
-Window:2026-10-14 17:42:01 to17:59:43 Asia/Singapore,1061.99 seconds,
-under the approved3600s cap. Stop at the first proven data divergence;
+Localization stopped at the first proven data divergence;
 no downstream raw-line/loop investigation or implementation was started.
 
 RED official/seeded each:2 controls PASS,1 expected FAIL. Odd-rotated Native
 result-100/Unix156, stderr Errors, no G-code; Ares API/CLI emits SHA
 99521ddc83fa146da43b50d88271afb586afc95f2c046f875089130fb6afc6b4.
 Odd-reverse typed-error/no-output and odd-original strict Native0 controls
-PASS. strict/fmt/wasm32 all exit0 on RED head1df965efc. These are new
+PASS. strict/fmt/wasm32 all exit0 on the RED head. These are new
 admission assertions; existing diagnostic/13 admitted assertions stay intact.
 
 Odd-rotated input SHA256:
@@ -68,7 +65,7 @@ observed genuine collection difference precedes the export predicate:
 Native first8 layers empty/last2 populated; Ares all10 populated. No claim
 of a missing GCode validation or Native nondeterminism is made.
 
-## Concrete minimal production request
+## Concrete minimal production change
 
 Only modify crates/ares-core/src/mesh_slicer/topology.rs:
 
@@ -79,7 +76,7 @@ Only modify crates/ares-core/src/mesh_slicer/topology.rs:
    partner logic, distinct pair/singleton IDs and range checks unchanged.
 
 No new generic sorter, stdlib module, fallback, platform cfg or option is
-requested. The existing helper in geometry/clipper/ordering/gcc.rs remains
+introduced. The existing helper in geometry/clipper/ordering/gcc.rs remains
 untouched. It implements the fixed GNU introsort/final-insertion operation
 already used elsewhere in main: threshold16, depth2*floor(log2(n)), median
 pivot, right recursion/left iteration, heap fallback and insertion passes.
@@ -95,7 +92,7 @@ The source comparator is endpoint-only; this is more than ELF compiler-comment
 attribution. It does NOT pin an exact per-TU GCC/header release or establish
 that every Native build/standard library has identical tie order.
 
-Approval requested here explicitly selects the existing fixed GNU helper as
+This addendum explicitly selects the existing fixed GNU helper as
 compatibility supplier for the CURRENT pinned canonical producers. The
 implementation must demonstrate complete sorted-use and per-face-ID agreement
 with BOTH actual producers for the saved witnesses. If the existing helper
@@ -104,7 +101,7 @@ switch algorithms. Further supplier/source changes need another SPEC.
 
 ## Required GREEN evidence and deferred scope
 
-After approval, keep production in its own commit, then verify:
+Keep production in its own commit, then verify:
 
 - Both-mode public rejection gates become GREEN: odd-rotated produces the
   existing InvalidInput empty-first-layer error and CLI1/no G-code naturally.
@@ -119,7 +116,7 @@ After approval, keep production in its own commit, then verify:
   STOP with that residual witness; do not expand into chaining here.
 - Retained topology/intersection/chaining controls and strict/fmt/wasm32 pass
   on the candidate; Rust files<=400LOC. No assertion weakening or retirement
-  is proposed. Workspace/full need explicit allocation and review.
+  is proposed.
 
 Deferred: changes to pairing policy, facet interpolation, connectivity/exact/
 gap passes,2mm closing threshold, import/load/selection, perimeter or infill
@@ -134,29 +131,11 @@ Exception.hpp:44 labels the aggregate Errors, which is the ACTUAL stderr.
 OrcaSlicer.cpp:6286-6291 records-100. The proposed geometry port lets the
 already implemented Rust schedule.rs:219-246 check fire; no new error guard.
 
-## Evidence preservation and probe corrections
-
-Summary:/tmp/worker3-odd-order-earliest-divergence.json; RED root:
-/tmp/worker3-odd-order-admission-red-5_ur7fxz. Valid snapshots:
-worker3-odd-order-geometry-tkpxqkpa (initial input/IDs),
-worker3-odd-order-sort-seam-6caq355q (Native before/after sort),
-worker3-odd-order-sort-confirm-mvmi62fd (official + positive Native controls),
-worker3-odd-order-rust-sort-line-a8sn3zr7 (actual Rust post-sort).
+## Probe corrections
 
 Rust sort-helper entry inspection attempts encountered breakpoint expression
 errors or an inlined helper with no standalone address. Ares legs with those
 inspection failures are not used as sorted/ID witnesses. Native legs in the
 same roots remain separately valid. The final Rust source-line breakpoint
 reads the live `uses` vector; no noinline/build-flag/source-probe change.
-All unsuccessful roots/driver versions are retained and classified in
-/tmp/worker3-odd-order-probe-validity.json, not hidden by retries.
-
-All raw evidence, RED/gates, corrections and summaries are archived OUTSIDE
-Git at ${EVIDENCE_ROOT}/worker3/
-odd-order-sort-localization-1df965efc.tar.gz (343015 bytes), SHA256:
-ab1c8d4c88689ce52194417fe3435e8fa607029799d7f4979ccd06e81cd3494d.
-Input hashes, counts, outcomes and graph witness above survive /tmp cleanup.
-
-All runs CPU12 outer taskset, directed jobs1/threads2, fresh cache/artifacts,
-START/END inbox; freeze instructions override runs immediately. No full,
-workspace, push or production before this GREEN addendum is approved.
+Unsuccessful probe attempts are classified, not hidden by retries.

@@ -1,6 +1,6 @@
 # Shared mesh C2 input fixtures
 
-Approved SPEC5d0f9f2d9; source: bbs_3mf.cpp4867-5052,
+SPEC5d0f9f2d9; source: bbs_3mf.cpp4867-5052,
 Model.cpp1241-1307/2600-2617/2821-2824. These ZIPs contain authored input only.
 `generate.py` reproduces deterministic archives from `orca_cli_ender3.3mf`.
 `provenance.json` records base/input SHA, actual parameter changes and settings.
@@ -40,7 +40,7 @@ Their hashes exactly match the retained Native preflight inputs:
 - local-id-bfs: omit only the root component's self p:path. This is the local-ID
   BFS control; the original literal-ID nested-bfs input remains unchanged.
 
-The original nested fixture's expected imported volume count is one, approved
+The original nested fixture's expected imported volume count is one, verified
 separately against bbs_3mf.cpp:4867-4891. Its equality assertion and ordered
 comparison remain strict. Five new public E2Es cover the four contract groups,
 including both default and explicit requests on the same authored input.
@@ -48,7 +48,4 @@ The shared helper now records Native/API/CLI products before asserting imported
 membership, preserving the exact prior membership assertions and comparator.
 Selected-view assertions additionally check unassigned exclusion, owner widths,
 and retention when selecting None on an already selected view.
-
-At authoring time the directed window is closed: no compilation or oracle run,
-and no RED/GREEN claim for these new tests. Fresh official and seeded runs are
-required after the coordinator reopens the CPU12 window, before production.
+Fresh official and seeded runs are required before production changes.

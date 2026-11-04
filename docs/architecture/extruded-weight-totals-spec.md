@@ -1,8 +1,7 @@
 # Extruded weight/volume template totals — source-cited spec
 
-Status: SPEC approved (coordinator ACK 2026-10-25); freezes the boundary for
-the tests-only RED, then a bounded GREEN on the W1 branch chain
-(base tip `d340f9c84`).
+Status: Accepted; freezes the boundary for the tests-only RED, then a
+bounded GREEN.
 
 ## Witness (discovery on main `5e8be001f`, stock Prusa MK4 hole scene)
 
@@ -56,7 +55,7 @@ MK4 stock `before_layer_change_gcode` renders
   and `weight = volume * density * 0.001` (`GCode.cpp:1686`) — upstream's
   shape, no diameter field or recomputation round-trip.
 
-Not the queued `motion/scan.rs`, `format.rs`, brim/*, jerk,
+Not `motion/scan.rs`, `format.rs`, brim/*, jerk,
 seam_placement/alignment, config value.rs, fill_entities/grid.rs, or
 `config_export/writer.rs`.
 
@@ -65,7 +64,7 @@ seam_placement/alignment, config value.rs, fill_entities/grid.rs, or
 Only the `extrusion_totals` construction (and the two `layer_gcode.rs`
 consumer lines) changes: `ExtrusionTotals` carries `crossection` instead
 of `diameter`, the values come from the typed `MotionOptions` fields. No
-template-engine, statistics footer, M201 consumer, or queued-file changes.
+template-engine, statistics footer, M201 consumer, or other-file changes.
 
 ## Included / deferred
 
@@ -91,9 +90,3 @@ cover the template block markers and the exact Native `M201`/`M74` values
 per case; Native is generated at runtime and never committed; missing
 Native fails the test. Exit RED: control PASS, both targets FAIL with the
 frozen first-difference bytes, in official and seeded modes.
-
-## Operating constraints
-
-CPU18 `taskset`, threads 1, no FULL, no rebase/merge/push; docs commit then
-tests-only RED commit on `w1/unknown-key-config-block` at `d340f9c84`; one
-REVIEW-REQUEST then HOLD.

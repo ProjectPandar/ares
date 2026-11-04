@@ -1,6 +1,6 @@
 # Compatible WIPE tags: upstream boundary and API contract
 
-Status: WIPE scope and runtime CLI/API boundary approved.
+Status: Accepted (WIPE scope and runtime CLI/API boundary).
 Upstream: OrcaSlicer `8500fcdcc`, `src/libslic3r/GCode/GCodeProcessor.{hpp,cpp}`.
 
 ## Source conclusions
@@ -36,7 +36,7 @@ compatibility shell around upstream GCodeProcessor. No second processor loop,
 role-cache formula change, new configuration or independent timing model.
 
 There is no current public arbitrary-G-code processor entry; public
-slice_project_plate_processed accepts project geometry. The coordinator-directed
+slice_project_plate_processed accepts project geometry. The chosen
 CLI E2E boundary requires minimal normal API exposure in the already-public
 `ares_core::gcode_processor` module:
 
@@ -74,7 +74,7 @@ and command capture. Identity includes input bytes, actual Native ELF,
 reader/launcher recipe and producer context; hits validate output SHA receipts.
 Only test inputs and test/probe code are committed. Native maps, move CSVs,
 metadata/result JSON and stdout/stderr stay in ARES_ORCA_CACHE_DIR/runtime
-artifacts. Main's old Native products belong to worker4's cleanup.
+artifacts. Main's old Native products belong to a separate cleanup slice.
 
 The only slicing input is the existing
 `tests/parity/validation/kobra3-centered/0.8.3mf`. Each CLI test requests a
@@ -116,4 +116,4 @@ Acceptance requires a separately observed Native behavioral RED before the
 WIPE correction, directed controls, fresh paired seeded/official comparison
 (candidate failures a subset of base, all transitions explained), workspace
 nextest, strict clippy, fmt and wasm32. Evidence and execution history remain
-outside this specification; review precedes push.
+outside this specification.

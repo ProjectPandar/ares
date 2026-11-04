@@ -1,7 +1,7 @@
 # Slice A: public InternalVoid witness cannot be established
 
-Status: stopped before RED/GREEN; coordinator ruling requested.
-Approved SPEC: `d643736b0`.
+Status: stopped before RED/GREEN; resolved by the deletion decision below.
+SPEC: `d643736b0`.
 Audited production base: `c22f5a81da41fce715b528268711393649daad66`.
 No production edits, test edits, Native invocation or test run.
 
@@ -52,7 +52,7 @@ Therefore the surface-kind UnsupportedProjectFeature return is unreachable
 through the current public slicing path. Geometry minimization or public
 configuration changes cannot produce the requested active rejection without
 adding a new preceding surface-producing behavior or altering internal records.
-Neither operation belongs to the approved Slice A.
+Neither operation belongs to Slice A.
 
 ## Upstream distinction and boundary
 
@@ -65,26 +65,26 @@ activation; `:3943-3944` appends the difference as `stInternalVoid`.
 
 Ares has no `clip_fill_surfaces` / `infill_only_where_needed` source symbol
 in its current core. Porting this upstream stage is an adjacent milestone,
-explicitly deferred by the approved SPEC. This report does not propose to
+explicitly deferred by the SPEC. This report does not propose to
 silently omit it, restore voids by retagging, or weaken the whole-output oracle.
 The existing pre-external-surfaces creation of voids does not invalidate the
 proof: step 3 removes those before the anchor guard.
 
-## Requested coordinator ruling
+## Requested decision
 
-Classify this guard as proven unreachable on the current public path and rule
+Classify this guard as proven unreachable on the current public path and decide
 whether its deletion may proceed directly under the same proof policy given
 for B/C/D, with ordinary public regressions after RESTORED. Alternatively,
-retain it until a separately approved `clip_fill_surfaces` port creates a
+retain it until a separate `clip_fill_surfaces` port creates a
 public active witness. No production deletion is included in this report.
 
 Native stable-options/dynamics restoration remains pending. No failed setup,
 private record injection, unsupported return caused by another guard, or
 already passing public case is labeled RED.
 
-## Coordinator ruling and upstream static gate
+## Deletion decision and upstream static gate
 
-RULING `f586ddc40` accepts direct deletion without a fabricated public RED.
+Decision `f586ddc40` accepts direct deletion without a fabricated public RED.
 The upstream source check resolves the earlier adjacent-stage suggestion:
 
 - `PrintObjectSlice.cpp:22`: `PrintObject::infill_only_where_needed` is
@@ -99,7 +99,7 @@ Thus upstream also produces no `stInternalVoid` before bridge-over-infill
 through this public path. A port of the disabled clipping stage would be a
 no-op here; it is not required to establish parity or justify this deletion.
 
-The authorized production change removes the surface-kind check and its
+The production change removes the surface-kind check and its
 unused surface parameter/import. The caller keeps its aligned-slot invariant
 but binds only the remaining input. All other checks, generation, rewrite
 order and comparisons remain as before. No tests/assertions are removed.

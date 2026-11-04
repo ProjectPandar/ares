@@ -2,10 +2,10 @@
 
 ## Decision and source boundary
 
-Final coordinator ruling: **all twelve cases are docs only; no new runtime
+Decision: **all twelve cases are docs only; no new runtime
 test is admitted**. The proposed three-case admission was first reduced after
 MyToolChanger 0.8 crashed, then withdrawn entirely after XL 5T 0.6 crashed.
-Even fail-closed directed tests would randomly turn other workers' gates red
+Even fail-closed directed tests would randomly turn unrelated gates red
 because the Native producer itself crashes nondeterministically. No retry,
 crash skip, assertion relaxation, preset repair or crash emulation is introduced.
 The existing stock selector, runner, cache recipe and production code are unchanged.
@@ -27,9 +27,8 @@ ordering or numeric exemptions. Native signal/nonzero exit fails closed:
 shared visible SKIP; required Native absence fails closed before artifact-root
 access. No Native-generated 3MF/G-code/result products are committed.
 The withdrawn tests cited vendor sources and used the existing stock runner;
-no parallel selector/cache/registry or production fix was introduced. Their
-failed execution commits and raw attempts remain preserved outside the final
-docs-only branch. No new test from this audit remains on the review branch.
+no parallel selector/cache/registry or production fix was introduced.
+No new test from this audit remains.
 
 Deferred: all other historical signals, crash emulation, Native argv interface
 expansion, preset repair and any new production rewrite behavior. The initial proposed admission was
@@ -43,18 +42,6 @@ Seed-replay Native wrapped binary SHA-256:
 `59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`.
 Public Ares CLI was freshly built at that HEAD, then run once for each stable
 case. No repository edits preceded these measurements.
-
-External receipts (not committed products):
-
-- `/tmp/worker3-signal12-runtime-current/report.json`: primary twelve-case audit,
-  original command/status/channels, products and separately bound debugger runs.
-- `/tmp/worker3-signal12-current-selection.json`: unchanged current stock selections.
-- `/tmp/worker3-signal12-stability/report.json`: six cases, three Native runs each,
-  identical input SHA per case, each raw/generator-only G-code SHA, exits, and
-  stable-only Ares CLI bindings/comparisons.
-- `/tmp/worker3-signal12-readonly-review.json`: consolidated read-only conclusion.
-- `/tmp/worker3-signal12-stability.py`: bounded coordinator-requested measurement;
-  two additional runs, not retry-until-PASS.
 
 Every interrupted/failed/crashed attempt remains evidence. Instrumented debugger
 success cannot replace or explain the uninstrumented primary signal. No primary
@@ -99,8 +86,8 @@ The unchanged selector chose, respectively:
 
 Initial MyToolChanger 0.2, Creator 5 Pro 0.4, and XL 5T 0.25 primary slices
 were SIGSEGV with no G-code. Fresh stack owner remains **unknown** because the
-separately instrumented debugger runs exited normally. Per coordinator, no
-further probes or tests. The three intermittent SIG11 rows above also remain
+separately instrumented debugger runs exited normally. No
+further probes or tests were run. The three intermittent SIG11 rows above also remain
 docs only; successful sibling attempts do not erase their failures.
 
 Cubicon xCeler-I, xCeler-Mini and xCeler-Plus 0.4 all abort during Native CLI
@@ -126,9 +113,9 @@ and owning source, **not read from a saved live `opt_key` local**:
 
 Saved logs contain backtrace arguments, not `opt_key`/`values` local dumps;
 those sessions have exited. Uncaptured locals cannot be recovered from these
-logs. No new gdb probe was run after coordinator prohibited it.
+logs. No new gdb probe was run.
 
-**Ares behavior: N/A**, by coordinator ruling. Native crashed at the
+**Ares behavior: N/A**. Native crashed at the
 `--load-settings`/`--load-filaments` argv-loading interface and produced no 3MF;
 Ares CLI has no corresponding interface surface. Neither literal unsupported
 argv observation nor public-profile API reinterpretation is used to invent
@@ -137,32 +124,25 @@ same-input semantics. No Cubicon test or production change is admitted here.
 ## Runtime seeded follow-up: MyToolChanger 0.8 admission withdrawn
 
 The first directed test execution at actual candidate `c8aef8746`, based on
-`d491b01b5`, failed closed. Nextest run
-`6ad87039-6a0d-4337-a7b1-5d4d334896dd` exited 100: Creator 5 0.4 and XL 5T 0.6
+`d491b01b5`, failed closed. The run exited 100: Creator 5 0.4 and XL 5T 0.6
 passed whole-output comparisons, but MyToolChanger 0.8 Native slicing received
 SIGSEGV (signal 11, reported core dumped), with **empty stdout and stderr**.
 No Ares comparison ran for that failed case. No crash retry, skip, debugger
 probe or assertion weakening followed.
 
-First failed runtime attempt:
-`/tmp/worker3-stock-signal-three-gates-v2-cand-seeded-artifacts/orca-runner-EB6Rnn/command-glsOyz`.
-Its immutable `command.json`, `status.json`, `stdout.bin` and `stderr.bin` are
-retained; log:
-`/tmp/worker3-stock-signal-three-gates-v2-directed-seeded.log`.
 This is a fresh runtime export, not another run of the earlier frozen 3MF.
 At the case-observation level, MyToolChanger 0.8 now has **1 SIGSEGV in 4
 observations** (the earlier three successful measurements plus this attempt).
 Do not relabel the historical three-run same-input result or claim that all
 four exported input files were byte-identical.
 
-Coordinator withdrew the unmerged MyToolChanger 0.8 test admission and made
-it **docs only**. Removing that newly added test implements withdrawal, not
+The unmerged MyToolChanger 0.8 test admission was withdrawn and made
+**docs only**. Removing that newly added test implements withdrawal, not
 relaxation of an admitted assertion. At that intermediate decision only Creator 5 0.4 and XL 5T 0.6 retained
 runtime tests and their unchanged one-reference, fail-closed whole-byte
 assertions; the later final decision below withdraws those too. The first gate driver stopped after this failure; no official or
 full-pair runs followed it. The earlier compile-only interruption for adding
-the shared pre-artifact availability guard is separately preserved in
-`/tmp/worker3-stock-signal-three-gates.interruption.json` and is not a Native
+the shared pre-artifact availability guard is separate and is not a Native
 failure retry.
 
 ## Revised two-case gates: XL 5T 0.6 runtime failure
@@ -173,13 +153,9 @@ all-features clippy, rustfmt and WASM compilation exited 0; default workspace
 nextest passed **8235 tests, 5 skipped**, exit 0. Default Native omissions
 are visible SKIPs, not Native parity evidence.
 
-The fresh-cache seeded directed run
-`1ac4c5d9-83b7-4501-a5e3-1f2bbc262c52` exited 100: Creator 5 0.4 passed the
+The fresh-cache seeded directed run exited 100: Creator 5 0.4 passed the
 whole-output assertion, but XL 5T 0.6 Native slicing received SIGSEGV (signal
 11, reported core dumped), with empty stdout/stderr and no Ares comparison.
-First XL failed attempt:
-`/tmp/worker3-stock-signal-two-gates-seeded-artifacts/orca-runner-QQVPIf/command-3z2iF4`;
-raw log: `/tmp/worker3-stock-signal-two-gates-directed-seeded.log`.
 The driver stopped; official directed testing was **not executed**.
 No retry, crash skip, debugger probe or assertion weakening followed.
 
@@ -187,15 +163,9 @@ XL's case observations now include three successful frozen-input measurements,
 one earlier successful runtime seeded comparison and this fresh-export runtime
 failure: **1 crash in 5 observations**, not five byte-identical project inputs.
 The historical three-run result remains historical; it cannot override this
-actual gate failure. Coordinator then withdrew the entire proposed test slice:
+actual gate failure. The entire proposed test slice was then withdrawn:
 XL and Creator 5 are now docs only alongside the other ten cases, and both
-new runtime tests are removed from the final review branch.
-
-Launch bindings, exits and raw logs are retained under
-`/tmp/worker3-stock-signal-two-gates-*`. Full pairing is carried only under the
-coordinator's explicit pure test/documentation ruling, not described as executed
-at this candidate. Subsequent git-only rebase to tests/docs main `a96afc3aa`
-is also authorized carry, not revised-HEAD execution evidence.
+new runtime tests are removed.
 
 ## Creator 5 success counts and binary scope
 
@@ -203,22 +173,18 @@ Creator 5 0.4 has **five successful Native seeded observations** in this bounded
 follow-up: the initial audit slice, two frozen-input repeats, the three-case
 runtime gate and the revised two-case runtime gate. Three Ares complete-output
 comparisons passed: one public CLI run and the two runtime core comparisons.
-The corresponding runtime artifact cases are `case-CvRwbX` under
-`/tmp/worker3-stock-signal-three-gates-v2-cand-seeded-artifacts` and
-`case-MaEMcs` under `/tmp/worker3-stock-signal-two-gates-seeded-artifacts`.
 These successes do not erase the older Creator 5 SIGSEGV rows in both the
 `5cde90c23` and `829977606` stock audits. No official success observation is
 invented, and five successes do not establish a crash-free producer.
 
 **Confirmed binary scope: seed-replay** (`59fb88a2...`) for the fresh audit,
 both failed runtime attempts and the historical `5cde90c23`/`829977606` stock
-snapshots. The `5cde90c23` binding is
-`${TMP_ROOT}/ares-matrix-main-5cde90c23-single-attempt/setup.json`; the current-stock
+snapshots. The current-stock
 record explicitly identifies required seeded controls. Official directed runs
-were never reached by these stopped gate drivers. The inspected receipts do
+were never reached by these stopped gate drivers. The inspected records do
 not establish the same twelve-case signals in the official binary, so this
 record **does not claim crashes were verified in both binaries**. No additional
-Native run is authorized or performed to fill that evidence gap.
+Native run is performed to fill that evidence gap.
 
 ## Official failure-subset bookkeeping
 
@@ -229,14 +195,3 @@ mode still reach their original assertions. Official failure-subset comparisons
 must no longer treat those eight setup panics as slicer failures; the exact-name
 subset rule and preserved substantive Native nondeterminism evidence remain
 unchanged. A visible SKIP is not Native parity execution.
-
-## Docs-only exit criteria
-
-Withdraw the entire unmerged runtime-test slice; retain only this audit and
-its roadmap decision on the review branch. Run rustfmt and default workspace
-on that docs-only tree, then submit REVIEW-REQUEST. Preserve all original
-execution refs, signals, raw exits and previously passed lint/WASM/workspace
-results without calling a failed Native gate GREEN. No fresh Native execution,
-full pairing rerun or production change is part of this final docs-only scope.
-Any git-only rebase carries evidence under the coordinator's explicit ruling
-and must not be described as execution at rebased HEAD.

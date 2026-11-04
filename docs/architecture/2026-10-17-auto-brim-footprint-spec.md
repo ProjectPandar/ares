@@ -2,18 +2,15 @@
 
 ## Premise result
 
-The active fixture is `/tmp/w2-auto-probe-0.1-5-10.3mf`: two separated objects,
+The active fixture has two separated objects,
 XY scale 0.1 and Z scale 5, `brim_type=auto_brim`, `brim_width=10`,
 `skirt_type=perobject`, `combine_brims=0`, one filament/instance, and no
 support, raft, or tower. To isolate Auto from the per-object admission guard,
-the same bytes were changed only to `skirt_type=combined`:
-`/tmp/w2-auto-probe-combined.3mf`.
+the same bytes were changed only to `skirt_type=combined`.
 
-On the combined input Native official rc0 is
-`/tmp/w2-auto-combined-native-off-8nEp`; seeded rc0 is
-`/tmp/w2-auto-combined-native-seed-m7ZR`. Both emit two Brim blocks and two
-Skirt blocks. Current Ares on the already-admitted combined path returns rc0 at
-`/tmp/w2-auto-combined-ares-I3B7`, but emits zero Brim blocks (two Skirt blocks).
+On the combined input Native official and seeded modes both return rc0. Both
+emit two Brim blocks and two Skirt blocks. Current Ares on the already-admitted
+combined path returns rc0 but emits zero Brim blocks (two Skirt blocks).
 Thus the owner is Auto brim width/geometry, not the per-object guard. The
 per-object Auto admission remains a later slice after this geometry slice.
 
@@ -45,7 +42,7 @@ the cited volume-group calculation, feed the existing BrimPlan, and let
 The public RED uses the combined Auto input, Native through `OrcaRunner`, and
 asserts Native rc0, active Brim and Skirt blocks, then unchanged strict whole
 output equality for API and CLI. It must fail now on the missing Auto Brim
-geometry in both official CPU13 and seeded CPU14 modes. The GREEN must port
+geometry in both official and seeded modes. The GREEN must port
 only the cited Auto width/dispatch behavior into the existing brim plan; no
 per-object admission, combine-brims, instance-count, or tower/flush changes
 are included. Because AutoBrim is the default, GREEN gates include the RED,

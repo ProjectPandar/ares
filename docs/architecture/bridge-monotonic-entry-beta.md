@@ -16,9 +16,9 @@ The Rust destination is
 `transaction/surface_rewrite.rs`, `internal_bridge_surfaces.rs`, and the reached
 candidate/commit helpers. Existing Ares staged records are compatibility shells
 around the upstream surface transactions, not a separate pipeline design.
-This branch stacks on the approved bridge-limiting-offset tip `a3182a424`,
+This branch stacks on the bridge-limiting-offset tip `a3182a424`,
 which owns the same `PrintObject` transaction and its corrected boundary units.
-The parent was subsequently rewritten for the approved one-line ARD hygiene
+The parent was subsequently rewritten for a one-line ARD hygiene
 change to `c904de255`; this branch was rebased onto that equivalent-code tip.
 Do not modify the independent multiline branch.
 
@@ -44,9 +44,9 @@ entry flow or surface equality. No Native intermediate snapshots exist for
 these three inputs. The older layer-67 observation is a different input and is
 not equality evidence here. Ares-side probes and static source comparison may
 localize a concrete mismatch, but must not be described as Native observations.
-If they cannot establish entry equality, report the evidence gap and request a
-bounded observation in an RR before running any Native observer. Current budget
-is zero. Standard public parity replay remains the authorized test mechanism.
+If they cannot establish entry equality, report the evidence gap and define a
+bounded observation before running any Native observer.
+Standard public parity replay remains the test mechanism.
 
 ## Executed angle-selection mismatch before monotonic fill
 
@@ -97,7 +97,7 @@ All probes were temporary, restored, and emitted only to stderr. Their CLI
 outputs are byte-identical to the uninstrumented RED CLI outputs for all three
 inputs. No Native debugger or observation was run.
 
-## Approved configured-angle port
+## Configured-angle port
 
 Port `PrintObject.cpp:3913–3942` as one unit. Resolve the candidate's owning
 region and its lower-layer record by stable region index (the Rust equivalent
@@ -141,13 +141,13 @@ used. The standard public Native double replay is unchanged.
 Include ordered bridge-over-infill output, angle and flow localization, followed
 by the monotonic entry only if its inputs match. A later repair must cite the
 specific reached upstream operation and preserve its arithmetic and ordering.
-No production change is authorized merely by this investigative boundary.
+This investigative boundary alone does not justify a production change.
 
 Defer plane-path generation changes, global path reversal, generic collinear
 cleanup, geometry backend replacements, footer workarounds, arc/writer changes,
 and any unproven adjacent bridge/filter discrepancy. Geometry primitive changes
-require their owning worker's coordination. Native builds and new Native
-observations are not authorized by this document.
+coordinate with the geometry slices. Native builds and new Native
+observations are out of scope for this document.
 
 ## Verification gate
 
@@ -159,10 +159,10 @@ observations are not authorized by this document.
    angle, spacing and flow using temporary diagnostics only. Preserve evidence
    externally; remove all probes before any production commit.
 4. Do not advance to monotonic traversal on presumed entry equality. If Native
-   entry equality is unproven, submit an RR identifying the precise missing
+   entry equality is unproven, report the precise missing
    observation rather than guessing a fix.
 5. A proven repair needs a separate commit, the three complete-output results,
    same-inventory bridge/fill regression transitions, rustfmt and all-target
    Clippy with warnings denied. Do not weaken feed/M73/footer acceptance or
    ignore failing tests. Inherited failures remain failures unless an explicit
-   acceptance ruling states otherwise.
+   acceptance decision states otherwise.

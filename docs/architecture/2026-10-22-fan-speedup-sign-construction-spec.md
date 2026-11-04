@@ -1,10 +1,10 @@
 # Signed FanMover construction handoff — source-owned SPEC
 
-## Stage and owner
+## Stage
 
-COORD accepted discovery and authorized docs-first SPEC → test-only RED on exact
-main `ad5111f0b4135eaa2ad88ea78ac7230200808941`. This commit is SPEC only;
-separate RED follows. No production code, GREEN, FULL or integration is authorized.
+Docs-first SPEC → test-only RED on main
+`ad5111f0b4135eaa2ad88ea78ac7230200808941`. This commit is SPEC only;
+separate RED follows. No production code.
 
 Pinned upstream: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 This is a **libslic3r parent-to-FanMover constructor rewrite slice**, not a new
@@ -65,13 +65,11 @@ kickstart state machine, slow-fan removal, role policies, custom G-code barriers
 flavor/PWM formatting), cooling/ironing/geometry, timer/M73 repair, public option
 validation and flat SliceOptions compatibility. No global writer guard, fallback
 or empirical numeric correction. An eventual residual means STOP/report, not
-adjacent repairs. GREEN needs a later independent approval.
+adjacent repairs. GREEN is a later independent step.
 
 ## Frozen two-input public E2E RED
 
-Accepted discovery root:
-`${EVIDENCE_ROOT}/w3-fan-speedup-sign-readonly-ad5111f0b/README.md`,
-manifest `e168427bef6b48379d45684ef15debe2c7fd3d2fe4f9e26d4807c1bed8e0393d`.
+Discovery manifest `e168427bef6b48379d45684ef15debe2c7fd3d2fe4f9e26d4807c1bed8e0393d`.
 Copy its final active/inputs-v2 input bytes, do not regenerate.
 
 Origin is tracked `tests/parity/modifier-bottom-shell/classic-four.3mf`, SHA
@@ -104,12 +102,11 @@ one fan command relocated66 lines. Those are discovery facts, **not expected
 output constants** in tests. Initial100%-fan negative/failed ZIP preparation
 remain discovery history, not extra formal cases or a way to waive failures.
 
-## Exit and approval barrier
+## Exit
 
 Commit this document alone, then separate test-only RED commit with the two
-frozen inputs. On the exact clean RED tip run official and seeded directed2:
+frozen inputs. On the RED tip run official and seeded directed:
 expect1 control PASS and1 real strict output FAIL per mode, stable successful
 Native and successful raw-equal API/CLI. An oracle failure/rejection is not RED.
 Target comparison may panic before wrapper-tail; do not claim that tail ran.
-Run fmt and locked all-target Clippy, retain actual full logs/exits/provenance,
-submit RR, **stop before any production code**. No FULL/rebase/merge authorized.
+Run fmt and locked all-target Clippy; no production code in this stage.

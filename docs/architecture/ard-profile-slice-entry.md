@@ -1,7 +1,7 @@
 # ARD draft: profile-based slicing interface
 
-Status: **STL entry + bundle import + compatibility merged; 3MF overlay entry
-in review (branch `pi/profile-3mf-entry`)**.
+Status: accepted. STL entry, bundle import and compatibility are merged; 3MF overlay entry
+follows.
 
 ## Printer listing and the processed profile entry (2026-10-06)
 
@@ -80,21 +80,21 @@ exports a native 3MF and compares full ordered output against the native
 per-slot tail preservation, count rejection, unconditional
 `print_compatible_printers`, and the single-preset prime-tower rule.
 
-Status: **interface approved (2026-10-05); native RED before implementation**.
-Coordinator confirmed source-defined expression error=true with diagnostics and
+Interface decision (2026-10-05): native RED before implementation.
+Source-defined expression error=true with diagnostics and
 required loadScene filename. Update web callers in the same candidate. Record a
 real BBL filtering E2E duration including catalog parsing; do not add handle caches.
 Commit this ARD with the implementation.
 
-Base before rebase: `16c2dc90`; review base: `19e24fa8`, branch `pi/profile-slice-entry`.
+Base before rebase: `16c2dc90`; rebased onto `19e24fa8`.
 The M853 rebase preserves its optional processed-move result: profile/ordinary
 slicing request G-code only; `slice_project_plate_processed` retains move recording.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
-## Current bounded review slice
+## Current bounded slice
 
-This candidate implements the STL selected-profile entry and five-argument WASM
-transport, not completion of task24. Selected-profile 3MF remains rejected by
+This slice implements the STL selected-profile entry and five-argument WASM
+transport. Selected-profile 3MF remains rejected by
 `load_model` rather than flattened or routed through a legacy fallback. Compatibility,
 archive import, loadScene/web filename migration and BBL filtering timing remain
 planned; the milestone exit criteria below are not yet met.
@@ -195,7 +195,7 @@ pub fn load_scene(input: Vec<u8>, filename: String) -> Result<SceneData, JsValue
 
 JS receives strings containing JSON, Uint8Array G-code, or the existing SceneData.
 The slicing export returns a Promise; the other exports are synchronous.
-The coordinator approved the five-parameter slicing export after an exact-version
+The five-parameter slicing export follows an exact-version
 wasm-bindgen probe confirmed the six-parameter draft violates the project's
 Clippy arity limit. No lint suppression or threshold change is permitted.
 `options_json` is `{plate?: number, seed: number}`: Rust deserializes it into a
@@ -344,5 +344,5 @@ After interface confirmation: write the source-cited spec/plan and concrete fail
 inventory, establish public native full-output RED (same model and system JSON via
 `--load-settings`), then implement. Validate complete `ordered_bytes_generator_only`,
 workspace Nextest, fmt, default Clippy warning delta, actual wasm32 core/WASM builds,
-and full official/seeded controls. Follow exact-candidate review/approval and
+and full official/seeded controls. Follow
 latest-main revalidation before fast-forward integration.

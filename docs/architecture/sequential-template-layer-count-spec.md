@@ -1,11 +1,6 @@
-# Sequential template total layer count — approved SPEC
+# Sequential template total layer count — SPEC
 
-## Authority and upstream boundary
-
-COORD approved this source-cited rewrite slice above frozen W1
-`117f4ffe372590ee833915ca271f3023dfc9b33e`, after W5. Commit docs first, then
-formal tests-only RED; submit one combined REVIEW-REQUEST and HOLD. GREEN is
-not part of this submission. No FULL, integration, rebase, merge or push.
+## Upstream boundary
 
 Pinned OrcaSlicer `8500fcdcc` `src/libslic3r/GCode.cpp::_do_export:2484–2528`
 sets `m_layer_count` by print mode: sequential printing accumulates each
@@ -27,8 +22,8 @@ Do not add a counter or change its computation, scheduling, instance traversal,
 layer numerators, placeholder evaluator, stock templates, or formatting.
 Only that field initializer may change in later GREEN, with frozen RED tests.
 Keep file-start/header counts, compatible-tail code, role caches, geometry,
-writer, processor and M73 placement untouched. No W3 tokenizer/fan/zero-E,
-W4 jerk/format/acceleration or W6 `value.rs` changes.
+writer, processor and M73 placement untouched. No tokenizer/fan/zero-E,
+jerk/format/acceleration or `value.rs` changes.
 
 ## Public Native-first E2E seam and frozen witnesses
 
@@ -50,7 +45,7 @@ A1 target input SHA256:
 `b436ba663498652206663fb1f276c7d972f09b5b6fccad15e1d998aeeb53e138`.
 Original P1S input SHA256:
 `f22c2132032860447369a3b8d29291230108f20ef1030cb532447cfb90ae31dd`.
-The A1 ByLayer input is copied byte-for-byte from approved discovery and frozen
+The A1 ByLayer input is copied byte-for-byte from discovery and frozen
 with its SHA256 in the test/fixture README. All use real stock layer templates,
 the unchanged overhang/hole dual-object geometry and labels 45/56. No synthetic
 template or geometry is introduced. The P1S fixture is reused, not regenerated.
@@ -68,15 +63,13 @@ complete comparisons pass. Formal RED must reproduce, not rely on discovery.
 - API/CLI failure or unequal raw streams: not a genuine count-only RED.
 - Compound differences: retain the complete comparison; stop and request review,
   never mask motion/timing/M73 differences to obtain a count-only result.
-- Wrong selection/cache/CPU: record exact selected tests and commit, fresh
-  mode-specific caches, requested jobs/test/Rayon/OMP/TBB/parity controls 1,
-  and observed CPU18 affinity. Do not claim Native total OS thread count 1.
+- Wrong selection/cache: record exact selected tests and commit, and use fresh
+  mode-specific caches.
 
 Run directed official and seeded modes serially on exact RED. Each mode must
 select exactly three tests: one genuine target failure and two control passes.
 Retain both Native replays, public streams, complete comparisons and commands.
-Run rustfmt and strict workspace/all-target Clippy. Submit docs+RED once and
-HOLD. Later authorized GREEN must pass the identical matrix and comparator,
+Run rustfmt and strict workspace/all-target Clippy. Later GREEN must pass the identical matrix and comparator,
 with raw API==CLI and no unrelated production diff. Linux dual-mode runtime
 evidence is not Windows/macOS/browser-WASM runtime qualification; the eventual
 private scalar handoff introduces no platform API or file/terminal behavior.

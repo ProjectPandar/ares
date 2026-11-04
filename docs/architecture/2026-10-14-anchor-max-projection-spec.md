@@ -1,8 +1,7 @@
 # D-M: local infill_anchor_max projection admission
 
-Status: SPEC-REVIEW-REQUEST; docs only, no Native admission claimed.
-Base: main 5a9687ac020962f254b6262f2184f3345025c70f.
-This narrows the previously approved D proposal in
+Docs only, no Native admission claimed. Against main
+5a9687ac020962f254b6262f2184f3345025c70f. This narrows the earlier D proposal in
 bridge-anchor-float-projection-admission.md to maximum projection only.
 The C2-T/C2-S and option-matrix slices are already merged.
 
@@ -42,11 +41,11 @@ the cited upstream FillParams boundary, not an independent numeric policy.
 
 Deferred: the adjacent infill_anchor finiteness gate (D-A), any scalar/schema
 changes, saturation/clamping, Fill algorithm rewrites, arbitrary numeric
-admission, W4 counterbore, and changes to shared rotation/Grid/arm code.
+admission, counterbore, and changes to shared rotation/Grid/arm code.
 If deleting the selected check exposes a Fill mismatch, report it and request
 a separate source-cited repair PLAN; do not expand the implementation.
 
-## Public RED plan, after SPEC approval
+## Public RED plan
 
 1. Use the existing positive-density rectilinear solid-ceiling fixture family
    (infill_anchor_negative.rs / infill_anchor_dont_connect.rs). Keep global
@@ -63,19 +62,17 @@ a separate source-cited repair PLAN; do not expand the implementation.
    failure is the exact infill_anchor_max unsupported result. Never call
    Native rejection, a crash, timeout, setup failure, or absent role a RED.
 4. If Native rejects/crashes/times out or no repeatable active witness exists,
-   STOP and report actual evidence for a ruling. Do not delete the guard,
+   STOP and report actual evidence. Do not delete the guard,
    infer unreachability, invent a numeric policy or weaken assertions.
 
-Only after the RED report and repair approval: attempt the selected gate
+Only after the RED: attempt the selected gate
 removal, keep RED assertions unchanged, and run active/ordinary controls plus
 existing bridge/anchor regressions in both modes and strict/fmt/wasm32.
 Each file stays <=400 lines. Comparator, retries, exception predicates and
 Native RNG remain unchanged; no Native products are committed.
 
-## Scheduling / review
+## Scheduling
 
-Official CPU13, seeded CPU14, outer taskset on cargo/nextest/Native,
-jobs2/threads2; fresh root/cache/target per Native run. No full/workspace
-without coordinator GO. SPEC approval precedes probes or RED implementation;
-RED and GREEN remain separate commits/reviews. Coordinator alone merges.
+Official and seeded use a fresh root/cache/target per Native run. The SPEC
+precedes probes or RED implementation; RED and GREEN remain separate commits.
 No production, tests, Native or build runs were made for this proposal.

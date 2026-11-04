@@ -1,8 +1,7 @@
 # Fresh mesh centering: widen bbox endpoints before averaging
 
-Status: docs-only SPEC REVIEW-REQUEST. No production, test or fixture change.
-Stack parent: reviewed safe-zone `0699507534806d594099a772600e58a8d087ed6e`.
-Branch: `worker6/mesh-center-f64-spec`. No FULL window requested.
+Status: docs-only SPEC. No production, test or fixture change.
+Builds on the safe-zone slice.
 
 ## Owning source and exact Rust destination
 
@@ -63,10 +62,6 @@ unchanged upstream `Wipe::wipe` dE formula independently reproduces
 `-0.08885462680130957` versus `-0.08885501193382397`, explaining the printed E
 without any formatter defect or compensation.
 
-External producer report and raw debugger receipts:
-`${EVIDENCE_ROOT}/w6-stepped-wipe-centering-producer.json`.
-Fixed Native-first replays:
-`${EVIDENCE_ROOT}/w6-stepped-wipe-fixed-{official,seeded}/comparison.json`.
 No Native output or debug probe is committed. No GREEN has been attempted.
 
 ## Included and deferred behavior
@@ -89,7 +84,7 @@ regresses a control, stop and report it; do not silently broaden the slice.
 
 ## Public RED matrix and shared runner
 
-After separate test authorization, freeze only the three missing input-only
+Freeze only the three missing input-only
 external variants below. Preserve their exact archived bytes; their generator
 script and original Native receipts remain outside Git. Reuse existing base
 controls instead of copying them, and use `runner/native_stream_case.rs`
@@ -115,17 +110,12 @@ No ignores, skips, probes, Native snapshots, allow/expect or comparator changes.
 
 ## Sequence and gates
 
-1. Review this docs-only source boundary and producer evidence first.
-2. With separate authorization, commit fresh Native-first public RED/controls
+1. Fix this docs-only source boundary and producer evidence first.
+2. Commit fresh Native-first public RED/controls
    in both modes; discovery's CLI-only receipts are not a substitute for API RED.
 3. Production-only GREEN is confined to `mesh_prepare.rs::center_shift` and
    its directly corrected comment. All complete target/control streams must
    pass before claiming completion. No unit tests written after production.
 4. Changed files remain below 400 lines; fmt and workspace/all-target clippy
    with `-D warnings` clean; preserve all four Tier-1 platform boundaries.
-5. Reviewed endpoint → inward → safe-zone stack remains queued and unchanged.
-   This spec does not start or request FULL. Current queue is W4 → W2 → W3
-   full stack → W6 → W5. Integration rebases onto then-current main and requires
-   exact-final-hash dual FULL 0 FAIL/0 skipped under coordinator authorization.
-6. No push, stash, self-merge, stale-base exemption or extra CPU authorization.
-   All commits retain the required coauthor.
+5. The endpoint → inward → safe-zone stack remains unchanged.

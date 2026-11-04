@@ -1,19 +1,10 @@
 # SPEC: complete consumed painted MMU rewrite, projection / graph first
 
-Status: docs-only SPEC RR; discovery accepted, RED/GREEN NOT authorized yet.
-Base: main 3e862584d86bd1e00f19f5b581773dd9e20fd6c2.
 Upstream: Orca8500fcdccaa10b5099ac20d252af3a7c560046f1.
 Source paths are relative to src/libslic3r/; Rust paths to crates/ares-core/src/.
 Non-negotiable decisions: [ARD](ard-painted-projection-graph.md).
 
-## 1. Authority, complete landing unit and current gap
-
-COORD accepted #90 discovery and resolved packaging, acceptance and radius lookup.
-This SPEC records those dispositions, superseding the earlier unmerged execution
-conditions where they conflict. It does not authorize RED before independent
-SPEC approval, nor GREEN before independent RED approval and GREEN instruction.
-Historical f894/0ce6 approvals are not new-tip measurements or authority to import
-the old painted chain.
+## 1. Complete landing unit and current gap
 
 The source-owned landing unit is MultiMaterialSegmentation.cpp::segmentation_by_painting
 1955–2194 plus multi_material_segmentation_by_painting2197–2207, consumed by
@@ -30,17 +21,16 @@ geometry::voronoi::build is reused; it does not close this painted gap.
 
 ## 2. Accepted discovery, not acceptance or new-hash qualification
 
-At base3e862, the unchanged shared native.py/observe.py/raw.py captured four
-fresh seeded Native processes on CPU18 before Ares source comparison:
+The unchanged shared native.py/observe.py/raw.py captured four
+fresh seeded Native processes before Ares source comparison:
 
-| Frozen input | Native PIDs | Complete raw-decoded VD | Ordered input groups | Repaired | Model XYE T0/T1 |
-|---|---|---:|---:|---:|---:|
-| leaves | 3565532,3566113 | 100 | 1 | 0 | 3321/861 |
-| split | 3566837,3567344 | 100 | 30 | 98 | 3674/900 |
+| Frozen input | Complete raw-decoded VD | Ordered input groups | Repaired | Model XYE T0/T1 |
+|---|---:|---:|---:|---:|
+| leaves | 100 | 1 | 0 | 3321/861 |
+| split | 100 | 30 | 98 | 3674/900 |
 
 Both have48 dual-material layers; each Native process has real layer_idx0..49.
-Complete Native generator-only replays match. Outer29/30 and driver204/204
-thread samples are all18. Caller stack is PrintObjectSlice.cpp1224→apply877→
+Complete Native generator-only replays match. Caller stack is PrintObjectSlice.cpp1224→apply877→
 MMS2207→segmentation2127/2153→build_graph1555→Voronoi.cpp28. Actual context is
 3facet states,width0,depth0,beamfalse,TopAndBottomYes. Source/debug/ELF admission
 remains exact seeded59fb88…/de449c…/BuildIDbdbbf4… with pinned source8500.
@@ -49,8 +39,7 @@ These are **seeded-only VD observations**, not official DWARF/output, projection
 final MMUGraph/side-region or public GREEN equivalence. GREEN-period read-only
 GDB may locate projection/graph/side residuals; such phase observations are
 **diagnostics only**, never acceptance and never private-entry tests. They need
-not be a prerequisite for public RED. The disclosed pyc audit preparation fault
-and corrected exit0 audit remain in the immutable discovery evidence, not RED.
+not be a prerequisite for public RED.
 
 ## 3. 含义明确的源 owner → 私有 Rust 目的地
 
@@ -130,7 +119,7 @@ unsupported painted compositions remain fail-closed until separately reviewed.
 
 ## 6. Resolved packaging and gate placement
 
-1. Source-ordered discovery/design RRs are DOCUMENT checkpoints: projection,
+1. Source-ordered discovery/design reviews are document checkpoints: projection,
    painted_lines/contour_color, MMU graph, top/bottom, merge, real apply. They are
    not private-entry acceptance tests or standalone production landing units.
 2. Production lands as ONE complete consumed-chain integration unit. On-branch
@@ -143,14 +132,12 @@ unsupported painted compositions remain fail-closed until separately reviewed.
    crate/public pipeline API, alternate engine or hidden fallback. The existing
    oversized roadmap is only updated with this milestone, not expanded Rust code.
 4. Final fmt, cargo clippy --workspace --all-targets -- -D warnings, core/vgcode/
-   adapter wasm32 and BOTH official/seeded canonical FULL execute on the exact
-   integration-tip hash in a separately assigned window. A phase check or old-tip
-   result cannot substitute. This docs-only SPEC/RED schedule grants NO FULL;
-   W2 owns the current window. No worker push/merge without explicit authority.
+   adapter wasm32 and BOTH official/seeded canonical full parity runs execute on the exact
+   integration-tip hash. A phase check or old-tip result cannot substitute.
 
 ## 7. Acceptance RED: public NativeCase whole stream, not phase acceptance
 
-After independent SPEC approval, add public tests through existing CLI parity
+Add public tests through existing CLI parity
 runner::native_stream_case::check and NativeCase public byte-in/API/actual-CLI
 seam. Use unchanged native_stream_case/golden comparison semantics: two actual
 Native replays, only one generator-line normalization, COMPLETE ordered bytes,
@@ -195,11 +182,10 @@ provide the initial RED; no extra GUI case is mandatory merely for test counts.
 - Phase projection/MMUGraph/side GDB is GREEN-time read-only DIAGNOSTICS only.
   Do not add private-entry phase tests or require phase parity as acceptance.
 
-After independently accepted RED and explicit GREEN authorization, port the
+After the accepted RED, port the
 complete chain test-first against these public tests. Final GREEN requires all6
 public legs succeed, full ordered Native equality/raw API==CLI and preserved
-malformed/namespace/support/interlocking/regional regressions. No result is
-reported here for a RED that has not yet been written/run on its own exact hash.
+malformed/namespace/support/interlocking/regional regressions.
 
 ## 8. Mandatory radius multimap and pre-code failure inventory
 
@@ -222,6 +208,6 @@ rollback errors; wrong slab/state/filament axes; incomplete merge/apply, self-tr
 or double ownership; simple-object bypass, dropped producer output or premature
 admission; any comparison filtering/tolerance or post-hoc isolated predicate tests.
 
-Any FINAL bit/topology gap or missing active source behavior means STOP/RR,
+Any FINAL bit/topology gap or missing active source behavior means STOP and report,
 not vendor patches, field ignores, tolerance, fallback or synthetic error-PASS.
 Core remains portable byte/data-only on browserWASM/Windows/macOS/Linux.

@@ -5,9 +5,8 @@
 This spec continues the bounded convergence wave defined by
 `2026-09-08-parity-convergence.md` and `2026-09-26-parity-residuals-milestone.md`
 on the same fixed upstream baseline: OrcaSlicer `v2.4.2`,
-commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`, oracle executable
-`/tmp/orca-official-242/squashfs-root/bin/orca-slicer` driven through
-`scripts/orca-parity.sh` (`ORCA_APPDIR=/tmp/orca-official-242/squashfs-root`).
+commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`, with the official
+oracle executable driven through `scripts/orca-parity.sh`.
 
 ## Scope
 
@@ -167,8 +166,7 @@ Remaining divergence clusters (post-c82f20eb sweep):
   profile-specific `travel_slope` interplay.
 
 Update (post-`c82f20eb` instrumented-upstream verification): the
-upstream build tree at
-`ares-parity/2026-09-07-coordinator/wave9-upstream-boundary` has been
+instrumented upstream build tree has been
 re-realized (`nix copy` restored GC'd deps; `CPLUS_INCLUDE_PATH`/`LIBRARY_PATH`
 recreate the erased nix env) and now carries two env-gated dumps:
 `ORCA_DUMP_SEAMPT` (SeamPlacer.cpp:1624 — chosen `seam_point`/`pos`/
@@ -353,7 +351,7 @@ to find where `rate_succ` semantics diverge.
 ## 2026-09-29 (equalizer verdict)
 
 Compiled upstream `adjust_volumetric_rate` verbatim standalone
-(/tmp/equalizer_test.cc) and fed it ares's dumped skirt rates: upstream's
+and fed it ares's dumped skirt rates: upstream's
 algorithm marks 19/28 modified — identical to ares. The equalizer
 segmentation is NOT the divergence; both sides split these lines.
 
@@ -660,10 +658,9 @@ clipper offset shrink output ring orientation relative to upstream
 `shrink()`/`offset()` return values, or zigzag chain linking parity
 inside `map_infill_end_point_to_boundary` construction).
 
-### Status 2026-09-29 — review loop converged, milestone-scale remains
+### 2026-09-29 — milestone-scale remains
 
-Review verdict: OK with notes (reviewer run 22ea146a). Fixed in this
-round: ported `GCodeWriter::set_input_shaping` into the project emit
+Fixed in this round: ported `GCodeWriter::set_input_shaping` into the project emit
 path (`gcode_emit/machine/envelope.rs`) — M593/SET_INPUT_SHAPER were
 never emitted; corrected `marlin`/`marlin2` flavor mapping so
 input-shaping cases actually exercise the branch; `enable_support`

@@ -1,8 +1,8 @@
 # Spec: ten stock vendor catalog/compatibility runtime conclusions
 
-Status: source-only proposal, await sole-coordinator review before tests or
-production changes. Implements the coordinator's libslic3r-boundary ruling,
-not the previously observed difference between Native and Ares CLI argv surfaces.
+Status: source-only proposal. Follows the libslic3r catalog/compatibility
+boundary, not the previously observed difference between Native and Ares CLI
+argv surfaces.
 Historical VENDOR_INCOMPLETE rows and Native diagnostics remain non-PASS inputs
 to this proposal; no public Core runtime mismatch is yet demonstrated.
 
@@ -56,7 +56,7 @@ entries or aliases. Retain manifest/file hashes and selected stock metadata.
 Every admitted test first checks the shared native_environment guard. Missing
 optional Native prints visible SKIPPED before artifact-root access; required
 absence fails closed. Use OrcaRunner::from_env and its declared/identified
-producer plus existing stages::run capture. No frozen Native receipt/output
+producer plus existing stages::run capture. No frozen Native record/output
 or committed Native product may satisfy the test.
 
 For nine incompatibility rows:
@@ -71,7 +71,7 @@ For nine incompatibility rows:
    case work directory. Capture the expected early failure and complete
    command/status/stdout/stderr/result.json/00000.log there. These failures do
    not publish a successful export cache entry or create a3MF; no new success
-   cache schema or worker4 cli_result recipe modification is needed.
+   cache schema or cli_result recipe modification is needed.
 3. Admit an incompatible conclusion only if that **same invocation** has an
    actual non-signal process exit239, result return_code -17 and log diagnostic
    from the source-owned2652 `process not compatible with printer` branch.
@@ -113,20 +113,17 @@ input-read or signal), lost log, missing result, hand-authored false, comparing
 Core missing-name with a filesystem exit code, and invoking private internals
 instead of the public profiles API.
 
-After spec approval, write tests first and run required Native conclusions on
+Write tests first and run required Native conclusions on
 latest actual tree. Keep unchanged genuine public-API RED before any production
 change. If Core disagrees, port only missing Preset/PresetBundle behavior in the
 existing compatible/catalog owner; no CLI guard or unrelated pipeline work.
 If all ten agree, deliver tests/docs-only closure and retain original raw stock
 VENDOR_INCOMPLETE status (not valid slicing PASS).
 
-Do not touch worker4's active cli_exit_channels/cli_result cache. #30's eight
--50/-19 cases remain independent. No heavy job until coordinator schedules it;
-one heavy job at a time,16threads/build8, obey browser pauses. Proposed final
-gates: strict workspace clippy/fmt, default no-ARES workspace with visible skips,
-required seeded/official ten-case directed runs; production changes need the
-coordinator's latest-main workspace/paired gates as assigned.
+Do not touch the cli_exit_channels/cli_result cache. #30's eight -50/-19 cases
+remain independent. Final gates: strict workspace clippy/fmt, default no-ARES
+workspace with visible skips, required seeded/official ten-case directed runs;
+production changes also need latest-main workspace/paired gates.
 
 Conclude with source ownership, actual run-to-commit bindings and retained
-failed/inconclusive attempts → REVIEW-REQUEST → sole APPROVED → latest
-fetch/rebase and ordinary ff-only push. No implementation has started.
+failed/inconclusive attempts. No implementation has started.

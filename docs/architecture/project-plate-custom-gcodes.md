@@ -1,6 +1,6 @@
 # Project load: plate custom G-codes (slice A)
 
-Status: spec for review. Code starts after approval. It is the data source
+Status: Proposed. It is the data source
 for slice B, the legend Custom G-code overview
 (`web-custom-gcode-overview.md`).
 
@@ -65,7 +65,7 @@ none of the 146 tracked `.3mf` fixtures contains the entry.
 - **Bad input:** a missing required attribute or a non-numeric `type` at
   this system boundary. Ares returns `SliceError::InvalidInput`.
   Upstream's `ptree::get` throws there and the load fails; the oracle
-  confirms that on one fixture and the review lists the error text.
+  confirms that on one fixture.
 
 ## RED-first plan and evidence
 
@@ -75,7 +75,7 @@ none of the 146 tracked `.3mf` fixtures contains the entry.
    `:365-366` mode check, it writes `model.plates_custom_gcodes` as JSON to
    a path from an env var: per key, the mode, then each item's `print_z`
    (`%.17g`), type, extruder, color and extra. Then it exits. The probe is
-   built with Nix (`--cores 4 --max-jobs 1`), pinned and gcrooted. The env
+   built with Nix and pinned. The env
    var is `ARES_PLATE_CUSTOM_GCODES_BIN`.
 2. **Fixtures:** `tests/parity/plate-custom-gcodes/*.3mf`, made by a
    committed Node script from `tests/parity/orca_cli_ender3.3mf` plus an XML
@@ -99,12 +99,12 @@ none of the 146 tracked `.3mf` fixtures contains the entry.
 5. **Gates:** this is a production advance, but it changes no G-code.
    - Rust: fmt, clippy `-D warnings`, the wasm32 build, and `nextest -p
      ares-core -p ares-cli` for the new test with the producer.
-   - The workspace run and the full official/seeded pair, as you schedule
-     them. Identical `ares.gcode` is expected for every case.
+   - The workspace run and the full official/seeded pair. Identical
+     `ares.gcode` is expected for every case.
 
 ## Open question
 
 1. **Where B gets the list.** B receives it from A's
    `Project::curr_plate_custom_gcodes()` through the wasm slice adapter.
    The transport (on the processed output, or read from the project the
-   worker already holds) is decided and cited in B's spec, not here.
+   browser Web Worker already holds) is decided and cited in B's spec, not here.

@@ -1,12 +1,12 @@
 # Diagnostic: rotated-instance over-merge in the print-toolpath sharing port
 
-Follow-up to the approved shared-entity reversal carryover chain
+Follow-up to the shared-entity reversal carryover chain
 (`5e583f8da` → `b7dcaa169`); this is a corrective slice of that port, not a
 new Ares feature.
 
 ## Witness
 
-`/tmp/w5-x/target-rotinst.3mf` (not yet frozen): the crosshatch-ordering RED
+The crosshatch-ordering RED
 target with the second build item's transform rotated 90° about Z
 (`transform="0 -1 0 1 0 0 0 0 1 170 110 0.5"`), first item unchanged.
 OrcaSlicer 2.4.2 official vs Ares `b7dcaa169`:
@@ -37,7 +37,7 @@ if (object1->trafo().matrix() != object2->trafo().matrix())
 PrintObjects with different trafos never share layers, even when their model
 volumes are identical (`PrintApply.cpp:138-172` creates one PrintObject per
 distinct instance trafo modulo XY shift; the sharing dedup then refuses
-cross-trafo pairs). The approved port's `ProjectObject::shares_print_toolpaths`
+cross-trafo pairs). The port's `ProjectObject::shares_print_toolpaths`
 (`crates/ares-core/src/project/domain/sharing.rs`) and its equivalence table
 (`2026-10-18-crosshatch-infill-ordering-divergence.md`, GREEN boundary
 addendum) omitted this row: two instances of one mesh that differ by a

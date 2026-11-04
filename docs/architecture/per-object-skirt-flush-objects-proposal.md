@@ -1,9 +1,8 @@
 # Proposal: per-object skirt x flush_into_objects — object-wipe tool ordering residual
 
-Status: PROPOSAL (probe-only; no production commit; guard restored)
-Base: `0266b8ef470384465587d52c8a0fd9dded84d98a`
+Status: Proposed (probe-only; guard retained)
 
-## Probe (Native first, CPU7,8, frozen input)
+## Probe (Native first, frozen input)
 
 `pf-obj2` = R1 SEMM base (prime tower, 2 filaments) with
 `skirt_type=perobject`, `flush_into_objects=1`:

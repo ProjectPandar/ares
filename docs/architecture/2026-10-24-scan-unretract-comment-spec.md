@@ -1,15 +1,10 @@
 # SPEC: ordinary scan-unretract source comment
 
-Base: `5aa5b395011777910114562386995bf531d62954`.
-The coordinator authorized docs SPEC plus tests-only RED, followed by a review
-request and HOLD. GREEN is NOT authorized by this stage. No FULL run.
+## Source boundary
 
-## Ownership and source boundary
-
-The coordinator checked all frozen W1 (`3b85a2e84`), W5, W6 and W4 tips: none
-changed scan.rs. W1 is HOLD with no reservation. W4 is explicitly assigned ONLY
-the ordinary non-firmware E-restore comment in that file. This does not authorize
-changing adjacent lift/travel/origin, E gates, state or firmware behavior.
+This slice covers ONLY the ordinary non-firmware E-restore comment in scan.rs.
+It does not change adjacent lift/travel/origin, E gates, state or firmware
+behavior.
 
 `OrcaSlicer/src/libslic3r/GCode.cpp:4782-4789` runs retract, M976/M400 and
 unretract during BBL first-layer inspection.
@@ -25,7 +20,7 @@ emits E/F and a newline without this comment. The existing local reconstruction
 is a compatibility shell around the cited writer operation, not an independently
 designed scan pipeline.
 
-If a later GREEN is authorized, append the literal suffix under the existing
+GREEN appends the literal suffix under the existing
 gcode_comments option in that block only. Preserve the E/F strings, current
 delta guard, firmware branch, feedrate assignment and all state transitions.
 No shared helper, generic unretract refactor or travel-call replacement.
@@ -38,7 +33,7 @@ value.rs and time estimates. No masks or processor compensation.
 ## Inventory and minimal real project witness
 
 The preceding inventory covers 47 writer functions and one formatter helper,
-with approved-test evidence separated from repository presence and discovery.
+with test evidence separated from repository presence and discovery.
 The power-loss Disable probe itself had matching power-loss commands. Its
 commented BBL case revealed the unrelated scan-unretract omission; this slice
 is NOT a power-loss fix.
@@ -59,16 +54,11 @@ at normalized byte 71178, line 1435, immediately after M976 S1 P1 / M400 P100:
 Native `G1 E.8 F1800 ;  ; unretract`, Ares `G1 E.8 F1800`.
 The COMPLETE target diff is this one nonzero-E comment. Line counts and every
 M73 record match. Both controls match complete streams, all six fresh Native
-slices replay identically and all CLI exits are zero. Discovery does not qualify
-public API, seeded, RED or FULL tests.
-
-Evidence and complete source inventory:
-`${EVIDENCE_ROOT}/w4-writer-function-inventory/`, especially
-scan-comment-witness/ and its witness-audit.json.
+slices replay identically and all CLI exits are zero.
 
 ## Tests-only RED contract, before production work
 
-Freeze only the three approved archives and add direct calls to existing
+Freeze only the three archives and add direct calls to existing
 native_stream_case. Fresh Native replay qualifies first. Callbacks read the
 saved BBL, scan and comment settings, then locate the actual inspection block.
 With scan enabled, qualify M976 followed by M400 and the subsequent ordinary
@@ -90,8 +80,8 @@ scan block, confusing firmware/zero-E with the nonzero ordinary restore, or
 refactoring lift/state while fixing text. These failure modes are recorded
 before any production implementation.
 
-CPU17 taskset/PIN17, one build job and one parity thread. Run fmt/diff checks,
-commit tests-only RED with required trailer, execute the three cases in both
-modes and submit SPEC/RED review request. Preserve normal group separators,
-root registries and the 400-line Rust file limit. HOLD before GREEN; no FULL,
-merge, push, stash, new consumer abstraction or owner-scope expansion.
+Run fmt/diff checks,
+commit tests-only RED, execute the three cases in both
+modes. Preserve normal group separators,
+root registries and the 400-line Rust file limit. No
+new consumer abstraction or scope expansion.

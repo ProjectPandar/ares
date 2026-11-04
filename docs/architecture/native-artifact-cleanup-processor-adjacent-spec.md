@@ -1,7 +1,6 @@
-# Native 清理 B：processor 邻接组
+# Native 清理：processor 邻接组
 
-owner worker6；整体 B、runner/cache 策略 owner worker4。
-基线 `ab55a0e0ce1c9c196914e9007a508b19b43f0784`。本文仅提审迁移边界，未授权生产行为修改。
+本文仅定义迁移边界，不包含生产行为修改。
 
 ## 决策与源码边界
 
@@ -18,7 +17,7 @@ owner worker6；整体 B、runner/cache 策略 owner worker4。
 | --- | --- |
 | hpp:887,905,914-915，cpp:2592-2665、2685-2716，apply_config/process_file/finalize(false) | CLI runner 调既有 Native processor 可执行文件；不更改公开 Rust processor API。 |
 | cpp:1539-1553、1641-1648、3237-3319、5430-5436、6022-6031，UsedFilaments/color-change/pause/custom/SYNC/statistics | CLI color-change E2E 保留事件顺序、体积及时间原始值断言。 |
-| hpp:678-705 OptionsZCorrector；cpp:5962-6007 calculate_time 实际速度插点 | 保留已批准 raw 与 stable-options 双 oracle 对照；明确标签，不将诊断修正版称为未修改上游。 |
+| hpp:678-705 OptionsZCorrector；cpp:5962-6007 calculate_time 实际速度插点 | 保留既有 raw 与 stable-options 双 oracle 对照；明确标签，不将诊断修正版称为未修改上游。 |
 | cpp:480-572、5031-5060、5630-5706、5771-5812、5842-5885、5962-5997；hpp:194-217 MoveVertex | CLI motion E2E 对逐顶点 PA/acceleration/jerk/actual_feedrate/Normal time 做 f32 位级比较。 |
 
 ## 一对一迁移与不可放宽的断言
@@ -66,17 +65,17 @@ motion 显式要求 `ARES_PROCGCODE_DYNAMICS_BIN`，所有前置复用 A 的 nat
 required 缺依赖 FAIL、optional 具名 SKIPPED；已配置无效、执行/解析/比较失败始终失败。
 不从 PATH 或 nix shell 选工具，不重编 Native，不依赖其它测试预热。
 
-保留现有已批准诊断：stable-options 仅做 OptionsZCorrector 插点索引 remap；
+保留现有诊断：stable-options 仅做 OptionsZCorrector 插点索引 remap；
 dynamics 基于它，另将未初始化 PA 设 0，并按 PrintConfig slicing 路径的 flavor gate 对齐
 DynamicPrintConfig 的 travel acceleration（cpp:2116-2119 vs 2445 附近）。
 分别记录实际可执行文件路径/SHA、现有 patch 身份；不把这些诊断身份与官方 Native 混称。
 
-与 worker4 对齐后接入其 B custom-G-code cache 边界；不复制缓存框架，不擅改其模块。
+接入既有 custom-G-code cache 边界；不复制缓存框架，不擅改其模块。
 若该边界不支持多诊断 producer/output recipe，先报告接口缺口，再最小接线。
 请求 key/receipt 必须区分输入原始字节、处理 recipe、raw/stable/dynamics 实际可执行文件
 路径与 SHA、patch 身份、既有 producer/resources/环境策略；每套输出完整列明 JSON/CSV/
 stdout/stderr 的 SHA。复用锁、staging/原子发布、命中校验；失败不发布成功缓存。
-shared runner 注册冲突只保留双方注册，不覆盖 worker4 其它组。
+shared runner 注册冲突只保留双方注册，不覆盖其它组。
 
 ## 删除、保留与验收
 
@@ -84,15 +83,14 @@ shared runner 注册冲突只保留双方注册，不覆盖 worker4 其它组。
 `.rle`、`.time.rle`、`.actual-speed.rle`；README 改为 runtime 契约。
 `tests/parity/color-change/*.gcode` 是短手写输入而非 Native 生成输出，保留，含 web
 colorChangeOracle.mjs 使用的 zero-before。`oracle-cardinality.json` 为旧 Native 摘要，
-确认无代码消费者并与 worker4 交接后删除；原 cardinality 断言留在原测试逻辑中。
-不删除 shared native_policy_checks helper 或其它 worker 的消费者，不改 web/生产 processor。
+确认无代码消费者后删除；原 cardinality 断言留在原测试逻辑中。
+不删除 shared native_policy_checks helper 或其它消费者，不改 web/生产 processor。
 
 Included：测试 I/O/参照来源迁移、旧产物删除、原断言完整保留。Deferred：修复上游 UB/
-OptionsZCorrector、改变统计/运动算法、Stealth 额外覆盖、其它 B 组及 browser generator 迁移。
-若运行时 Native 暴露新差异，冻结外部证据并报告，不扩大 normalization 或放宽断言。
+OptionsZCorrector、改变统计/运动算法、Stealth 额外覆盖、其它迁移组及 browser generator 迁移。
+若运行时 Native 暴露新差异，保留证据并报告，不扩大 normalization 或放宽断言。
 
 迁移先写 E2E/故障清单（错 producer、cache 混用、缺依赖、事件丢失、逐顶点 bits 漂移），
 再迁接线；不为行为不变的清理伪造算法 RED。定向全场景、冷/热缓存、required/optional
 策略证据、fresh seeded/official base/cand（共同 Ares G-code SHA 不变，cand failures ⊂ base）、
-workspace nextest、strict clippy、fmt、wasm 全通过后提审。证据仅保留 runtime/cache；
-Git 只保留输入、代码及结论性文档，不添加 Native G-code/JSON/CSV/RLE/log。
+workspace nextest、strict clippy、fmt、wasm 全通过。仓库只保留输入、代码及结论性文档，不添加 Native G-code/JSON/CSV/RLE/log。

@@ -79,8 +79,7 @@ After correction, fail-closed cases must fail and a successful partial compariso
 must retain verifiable paired bytes. Fresh independent Orca execution, command
 exit codes, output paths, build identities, Nextest, fmt, Clippy and diff/LOC
 checks accompany the commit. Docs land only with tested harness code.
-Medium read-only scouts and high isolated writers operate under coordinator
-scope authority. Final acceptance requires independent six-axis review of
+Final acceptance requires independent six-axis review of
 source fidelity, domain/default coverage, complete-output oracle sensitivity,
 artifact/build reproducibility, regression correctness, and architecture/
 portability/maintainability. Findings require bounded fixes, original+changed

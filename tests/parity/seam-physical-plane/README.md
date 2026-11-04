@@ -2,8 +2,7 @@
 
 Upstream pin8500fcdcc, `GCode/SeamPlacer.cpp::gather_seam_candidates:1014-1040`
 consumes physical `Layer::slice_z` from `PrintObjectSlice.cpp:24-75`.
-[SPEC](../../../docs/architecture/seam-physical-plane-resource-spec.md) approved
-7941b381d; rebased docs74ad5aba8 on exact stack24 4351a644d by owner unblock.
+[SPEC](../../../docs/architecture/seam-physical-plane-resource-spec.md).
 
 Positive is unchanged original d951 resource-build control. Control changes only
 modifier part3 sparse density50%→20%, equal to parent normalpart; one ZIP payload
@@ -25,5 +24,4 @@ difference is third-layer inner hole-wall travel at raw1198, then XY extrusion12
 The M73 boundary is a total-denominator symptom. The port changes only the seam
 caller's physical plane input and deletes its region-height scan helper. Any
 remaining whole-file mismatch must STOP, not expand to M73/scoring/perimeters.
-Run official and seeded with fresh caches/artifacts/TMPDIR, CPU15/jobs1/threads1,
-load<60 before builds/every Native, START/END receipts; no full/workspace runs.
+Run official and seeded with fresh caches/artifacts/TMPDIR.

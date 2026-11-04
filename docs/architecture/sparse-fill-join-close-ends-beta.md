@@ -18,12 +18,12 @@ semantic boundary, preserving collection and flow boundaries.
 
 ## Acceptance
 
-Reapply the existing honeycomb ordered layer-two sparse-motion RED to main
-after B14 integration, demonstrate RED before production changes, then require
+Reapply the existing honeycomb ordered layer-two sparse-motion RED,
+demonstrate RED before production changes, then require
 exact scoped ordered runtime-Native parity. Retain the complete-output
 comparator unchanged. Check earlier hook, Hilbert and object-ID witnesses;
 run rustfmt and all-target Clippy. No Native G-code or diagnostic binary is
-committed. External evidence retained outside the repository.
+committed.
 
 ## Deferred
 

@@ -16,9 +16,7 @@ for stock preset inheritance flattening; load machine/process with Native
 `--load-settings`, filament with `--load-filaments`, unchanged OBJ, then
 `--arrange 1 --export-3mf`. For target request only process spiral_mode=1
 before export. Native normalization changes wall/top/infill/retraction too;
-do not describe exported archives as differing in just one key. Full original
-argv/presets/inputs and streams are retained in worker1 mk4-{default,spiral}-
-hole-discovery-1a57f677f evidence directories. GUI ConfigManipulation.cpp:
+do not describe exported archives as differing in just one key. GUI ConfigManipulation.cpp:
 345–378 supplies source-constructive reachability only, not a live GUI save.
 
 Run `orca_parity_spiral_hole_native_preflight` in both official/seeded modes
@@ -27,5 +25,3 @@ native_stream_case seam, with no added helper or private oracle. Then run
 the two new public tests plus existing
 `spiral_placement_gate_cw_rectangle_regression`. Complete output comparison
 allows only the repository's generator line; audit raw API==CLI additionally.
-Set CPU18, CARGO_BUILD_JOBS=1, ARES_PARITY_THREADS=1 and test-threads1.
-This is bounded nextest selection, not authorization for FULL.

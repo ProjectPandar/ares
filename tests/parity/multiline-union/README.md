@@ -1,6 +1,6 @@
 # Multiline union inputs
 
-These ASCII STL meshes are authored geometry, copied unchanged from worker6's
+These ASCII STL meshes are authored geometry, copied unchanged from the
 Stars RED inputs; neither is a Native output. `prism.stl` is a64x48x4mm centered
 box; `holed-prism.stl` has an8x8mm centered through-hole. Runtime controls export
 3MF settings and generate references through OrcaRunner slice_case, outside git.

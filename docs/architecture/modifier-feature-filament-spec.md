@@ -1,11 +1,8 @@
 # SPEC: modifier-volume per-feature filament identifiers
 
-Status: **SPEC APPROVED a2ffbb77bcf205b657e70f17245b38c9b78cd2d2; public RED authorized with per-role witnesses.**
 The RED extension below records control preflight and all-six Native qualification.
-No guard or production change in the RED; GREEN needs separate approval.
-Base `d84ad64aea77e21610f0a780d729b6ca0c5c3f95` (approved triangle chain,
-queued for coordinator merge). The original SPEC was docs-only. This RED adds
-six independent public tests and input-only 3MF/SHA fixtures, no production edit. No full/workspace run. This ports an upstream region-config slice,
+No guard or production change in the RED; GREEN is a separate step. The RED adds
+six independent public tests and input-only 3MF/SHA fixtures, no production edit. This ports an upstream region-config slice,
 not an Ares-owned slicing pipeline. [ARD](ard-modifier-feature-filament.md).
 
 ## 1. Source owner, precedence, and destination
@@ -50,8 +47,7 @@ Rust boundary already contains much of this rewrite:
 | `options/region_options/merge.rs::resolve`, `FeatureFilamentOverrideMask`, `apply_overrides`, `apply_feature` | Already expresses clear modifier mask, inherited parent, feature-before-base-extruder fallback and normalization. Reuse the source-cited resolver, do not invent a modifier-only material engine. |
 
 The prospective production boundary is **only this six-key modifier feature
-filament admission gate**, after a qualifying public RED and separate GREEN
-approval. No other guards may be touched. **Owner condition: only branches with
+filament admission gate**, after a qualifying public RED and a separate GREEN. No other guards may be touched. **Retirement condition: only roles with
 their own public RED witness may retire.** All six have now qualified in Native
 below, but each still needs its own public RED; no blanket guard retirement.
 No resolver rewrite is currently justified. Existing scaffolding remains only a compatibility shell
@@ -59,7 +55,6 @@ around upstream region config, not authority to design different precedence.
 
 ## 2. Completed Native discovery (before SPEC)
 
-Durable root `${LOCAL_EVIDENCE_ROOT}/worker4/modifier-feature-native-bBjU`.
 All inputs frozen externally before any Native invocation, with full ZIP-entry
 hashes and deterministic derivation. They are slicing inputs, not stored oracle
 outputs. **No public API/CLI call and no production/test edit in discovery.**
@@ -84,8 +79,8 @@ to both inputs. Modifier `extruder` is absent, hence no modifier base fallback.
   modifier part3. Pair differs in model_settings.config only; settings/geometry
   identical. No arrangement, hidden loaded JSONs or per-case overrides.
 
-CPU15, official + seeded canonical wrappers, bare `--slice 0 --outputdir`, fresh
-case/mode cache/TMPDIR/directories, load<60 before each Native, START/END receipts.
+Official + seeded canonical wrappers, bare `--slice 0 --outputdir`, fresh
+case/mode cache/TMPDIR/directories.
 Exactly four Native slices; all exit0, full CONFIG_BLOCK_END footer, no timeout,
 signal or observed rejection. No case/input retry or fallback.
 
@@ -116,21 +111,19 @@ after the two official legs. Pure offline re-observation added the donor's
 proof before running the still-unexecuted seeded legs once. Initial script/log
 and observations are retained. No Native retry-to-success or input substitution.
 
-## 3. Approved extension: control first, then six role-qualified RED inputs
+## 3. Extension: control first, then six role-qualified RED inputs
 
 Before adding any role to the public RED, fresh Native/public control was run
-in both modes at a2ff: API success, real CLI exit0, raw API==CLI, whole strict
-Native/API/CLI PASS through the unchanged golden.rs comparator. Evidence root:
-`${LOCAL_EVIDENCE_ROOT}/worker4/modifier-control-public-okRS`.
+in both modes: API success, real CLI exit0, raw API==CLI, whole strict
+Native/API/CLI PASS through the unchanged golden.rs comparator.
 No input or settings substitution was needed.
 
 Then the other five single-key positives were frozen from the exact control.
 Each adds only that role's filament_id=2 inside modifier part3; the same sparse
-input retains its original SHA. Native qualification (both modes, CPU15) used
+input retains its original SHA. Native qualification (both modes) used
 actual FEATURE role, T1 selection, positive E and both segment endpoints inside
 X[133,138]/Y[118,138], plus output divergence vs the control. Every new leg exit0
 and complete footer; no input/case retry, no nonzero modifier extruder case.
-Evidence root `${LOCAL_EVIDENCE_ROOT}/worker4/modifier-six-role-native-E9JO`.
 
 | Feature key prefix | Actual FEATURE comment | Local T1 segments (each mode) | Eligible for public RED |
 |---|---|---|---|
@@ -150,17 +143,17 @@ Six independent `modifier_feature_filament_*_matches_native` tests share a
 bounded helper: from_env/reference gate; fresh runtime Native control, whole
 public control first; fresh positive Native and local T1 qualification; then
 execute positive API+real CLI before target success assertions. Each role has
-its own artifact/error receipt and own failing assertion rather than a loop
+its own artifact/error record and own failing assertion rather than a loop
 that stops at the first role. Per-role targeted runs stop on a control failure;
 no test/comparator/guard fallback. No GREEN branch may retire until its own
-public RED is reviewed. Native all-role admission/effect is not public parity.
+public RED exists. Native all-role admission/effect is not public parity.
 
 ## 4. Public RED plan and gate (original contract, retained)
 
-First review this source boundary/discovery; do not treat successful Native-only
-discovery as a public RED. Freeze the exact pair/manifest in git only for the
-separately reviewed test. Every enabled run must generate fresh Native control/
-positive (and an approved repeat if required), then execute validated public
+Do not treat successful Native-only
+discovery as a public RED. Freeze the exact pair/manifest in the repository only for the
+separate test. Every enabled run must generate fresh Native control/
+positive (and a repeat if required), then execute validated public
 `slice_project_plate_validated` and real bare CLI on identical bare bytes.
 Use established from_env/reference gate; no Native-only pass, historical cache
 oracle, external reference injection or export/load-only substitute.
@@ -179,17 +172,17 @@ equality. T1/locality assertions supplement, not replace whole-stream parity.
 Native positive/control divergence is discovery qualification, not a weakened
 Native-vs-Ares comparator. Retain M73/config/motion/arcs/statistics/footer.
 
-Separate GREEN authorization after RED review. Frozen test/inputs/comparator
+GREEN is a separate step after RED. Frozen test/inputs/comparator
 stay unchanged; both modes must become whole strict PASS with raw API==CLI and
 unchanged control. Targeted modifier/3MF/load regression plus fmt/strict clippy/
-WASM remain the exit gates; coordinator alone schedules full/workspace/merge.
+WASM remain the exit gates.
 
 ## 5. Included / deferred and failure inventory
 
 Included source contract: modifier inherits parent region, its explicit positive
 feature ID beats same-scope base extruder fallback, zero/absent semantics and
 final normalization remain as the existing upstream/Rust resolver. Initial
-runtime proof/public RED initially concerned sparse only; the approved extension
+runtime proof/public RED initially concerned sparse only; the extension
 now supplies six separately qualified role cases, all with modifier extruder
 absent. Nonzero modifier extruder remains unprobed and is not added here.
 No new six-role engine, new material system, tool scheduler, painting engine or
@@ -208,7 +201,7 @@ No unrelated M73/config/geometry repairs to obtain a qualifying control.
 | Pair changes non-target metadata/config/geometry | STOP: redo review, not runtime tweaking. |
 | Public control not whole strict PASS/raw-identical | RED invalid; report first difference, do not alter other guards/comparator. |
 | Positive same-input public equality already holds | NO-RED STOP; do not force a failure. |
-| Positive public rejection with complete Native/control | Target-success test FAIL; preserve both API/CLI receipts. |
+| Positive public rejection with complete Native/control | Target-success test FAIL; preserve both API/CLI outputs. |
 | Missing public stream | NOT EVALUATED for raw/whole comparison. |
 | GREEN leaves scheduling/role/motion/footer difference | STOP; no downstream repair or feature-family expansion. |
 | Nonzero modifier extruder case contradicts inherited-mask precedence | Requires separate bounded evidence; do not invent an Ares-specific precedence. |

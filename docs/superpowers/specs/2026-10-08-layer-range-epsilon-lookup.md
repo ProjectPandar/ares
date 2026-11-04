@@ -1,8 +1,7 @@
 # Epsilon-aware complex layer-range lookup rewrite
 
-Status: coordinator approved spec `2998d7147`; production followed independent
-runtime Native RED. Baseline is merged Stage2 `083cb1862`. This is an independent
-libslic3r source slice, not an expansion of an Ares-owned range pipeline.
+Status: accepted; production followed independent runtime Native RED. Builds on
+Stage2. This is an independent libslic3r source slice, not an expansion of an Ares-owned range pipeline.
 Architecture: [lookup boundary ARD](../../architecture/2026-10-08-layer-range-epsilon-boundary.md).
 
 ## Owning source and Rust boundary
@@ -49,7 +48,7 @@ normalization is intended.
 Deferred: MM/fuzzy painting consumers at PrintObjectSlice.cpp:884–903 and
 :1047–1053, their parallel segmentation pipelines, spiral+layer ranges,
 other region-option families, multifilament, painted profiles, SlicingAdaptive,
-and active ZAA. New helper availability does not authorize these consumers.
+and active ZAA. New helper availability does not bring these consumers into scope.
 Do not imitate C++ assertion/crash behavior or invent defaults for missing
 range heights. Every Native witness retains explicit legal layer_height.
 
@@ -62,7 +61,7 @@ actual float slice Z; restarting an iterator incorrectly; wrong near-boundary
 volume mapping; destabilizing source region IDs; hiding Native rejection or
 assertion failure behind an unsupported assertion.
 
-1. After approval, derive a legal constant-height, explicit wall_loops range
+1. Derive a legal constant-height, explicit wall_loops range
    witness from the admitted Stage2 archive, with existing supported overlapping
    volumes or a negative/modifier volume that **actually forces complex routing**
    at the boundary. First prove its no-range/far-from-boundary Native controls;
@@ -104,14 +103,11 @@ Fresh same-main ordered full required seeded base/candidate, full workspace
 nextest, all-target/all-feature clippy with warnings denied, rustfmt, and
 core/WASM all-feature browser target check; bind complete common-byte audit
 and every changed/new stream to input identities. Disclose missing baseline
-new-test coverage and all non-PASS attempts. Coordinator is sole reviewer;
-explicit approval precedes fetch/rebase and ordinary ff-only push.
+new-test coverage and all non-PASS attempts.
 
-One heavy per worker, 16 test threads, build jobs 8; respect browser pauses.
-No stash. Native outputs, runtime receipts and diagnostics stay outside the
-repository; commit only approved fixture/source and conclusion-only docs.
+Native outputs, runtime records and diagnostics stay outside the repository;
+commit only fixture/source and conclusion-only docs.
 
-At spec submission `2998d7147`, evidence was source reading only: no new fixture,
-runtime probe, test or production edit existed for this slice. Subsequent
-runtime evidence and exact run bindings are recorded in the epsilon
-verification ARD.
+At spec time, evidence was source reading only: no new fixture, runtime probe,
+test or production edit existed for this slice. Subsequent runtime evidence is
+recorded in the epsilon verification ARD.

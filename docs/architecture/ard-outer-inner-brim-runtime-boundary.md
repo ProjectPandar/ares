@@ -1,6 +1,6 @@
 # ARD: Brim.cpp combined outer/inner runtime boundary
 
-Status: SPEC53b22ddc9 approved by Claude; REDb35dc2bd5 reported before code.
+Status: accepted. SPEC 53b22ddc9; RED b35dc2bd5 precedes code.
 
 ## Source and destination
 
@@ -10,7 +10,7 @@ area construction, exclusions and contact policy. `tryExPolygonOffset` /
 Rust destination: private `brims/combined.rs`, the shared hole calculation in
 `brims/inner.rs`, and existing project `BrimPlan::generate` dispatch.
 
-## Non-negotiable approved decisions
+## Non-negotiable decisions
 
 1. Port explicit OuterAndInner for one object/instance/volume/group/tool.
    The existing BrimPlan is a compatibility shell around those upstream
@@ -26,9 +26,9 @@ Rust destination: private `brims/combined.rs`, the shared hole calculation in
    offset-default change, posthoc ordering fix or rectangular fallback.
 5. Keep existing InnerOnly, OuterOnly and ear assertions/comparators intact.
    Public rectangular adapter retirement, EFC, support, painting, automatic
-   widths and multi-object/tool composition need separate approved scopes.
+   widths and multi-object/tool composition need separate scopes.
 6. Input-only fixtures and admitted Native/API/CLI full-byte RED precede the
-   production port in a separate commit, reported to inbox. Regional XY/E
+   production port in a separate commit. Regional XY/E
    witnesses cannot replace the full comparison. Core remains platform-neutral;
    Native processes and repeatable artifacts live only in CLI tests.
 

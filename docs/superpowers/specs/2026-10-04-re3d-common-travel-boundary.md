@@ -11,12 +11,9 @@ candidate and the existing two-intersection replacement. Defer other routing,
 float-distance changes, contour construction, motion estimation and wipe logic.
 
 Targets: GigabotX2 case-Qqf4Pr, GigabotX2 XLT case-qJQXNf, TerabotX2 case-Yl6xxq,
-all1.75mm. On931691eb all3 are full-output DIVERGENT at
-`${TMP_ROOT}/ares-re3d-red/replay-summary.json`. Immutable inputs copied into
-`${TMP_ROOT}/ares-re3d-replay`. Existing cube10 fixture is a single minimal box; retain
+all1.75mm. On931691eb all3 are full-output DIVERGENT. Existing cube10 fixture is a single minimal box; retain
 printer/profile settings because they create the small final-layer inner hole.
 
-Require3/3 target equality, fresh original CPU0 references, retained68+823
+Require3/3 target equality, fresh original single-CPU references, retained68+823
 controls and extra-overhang stock/active-step controls, workspace Nextest, fmt,
-default Clippy and real core+adapter WASM build. Coordinator review before
-latest-main rebase, revalidation and ff-only integration. No comparison waiver.
+default Clippy and real core+adapter WASM build. No comparison waiver.

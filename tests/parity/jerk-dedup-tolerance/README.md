@@ -1,10 +1,8 @@
 # Writer jerk approximate-dedup public RED inputs
 
 Source `GCodeWriter.cpp:255-260`, `libslic3r.h:52,306-309`.
-Approved SPEC `docs/architecture/2026-10-24-jerk-dedup-tolerance-spec.md`.
-The test stack sits on approved frozen lift tip `2692155a9`; its production tree
-is unchanged by these RED tests. Temperature `a5cc569c0` remains a separate frozen
-chain until the coordinator's combined integration window.
+SPEC `docs/architecture/2026-10-24-jerk-dedup-tolerance-spec.md`.
+Production code is unchanged by these RED tests.
 
 All inputs derive from stock `orca_cli_ender3.3mf` with prime tower disabled.
 The equal-control sets these real process settings to7:

@@ -1,8 +1,7 @@
 # SupportCubic B-S S45 residual: localization amendment
 
-Status: STOP / SPEC-REVIEW-REQUEST, docs only; not GREEN or merge-ready.
-The approved B-S RED e27170322 and B-T chain remain prerequisites to a single
-stacked merge. No partial merge or additional production change is requested.
+Localization amendment; not GREEN. The B-S RED and B-T slice remain
+prerequisites; no additional production change is proposed here.
 
 ## Frozen attempt and public evidence
 
@@ -15,27 +14,18 @@ center before rotation, keeping double coordinates separate from mesh casts.
 This explains the implementation boundary, not a claim that all intermediate
 Native/Ares state has now been measured equal.
 
-Initial commit9e7a175fe had an internal private-module import error; root
-/tmp/worker3-support-b-s-green-fzk3bpu6 exit101, zero Native/tests, not GREEN.
-The sole visibility fix27535f18d reexports the existing bridge candidate type
-only inside project_slice. Per coordinator ruling, only these two production
-commits were squashed into1fc075c55415294b9a3161e4c049e303f3be73fb.
-Tested27535f18d and squashed1fc075c55 have identical tree
-238e354e025e5886b1c55aac7a5e86082c9db6ac; git diff exit0.
-RED/B-T/docs history was untouched. The production commit builds; no dead_code
-warnings occurred during the actual non-test CLI/core compilation.
+The existing bridge candidate type is re-exported only inside project_slice.
+The production change builds without dead_code warnings in the non-test
+CLI/core compilation.
 
-Fresh root /tmp/worker3-support-b-s-green-nmjt0eon, Rust1.99.0/default test
-opt1, CPU12 outer taskset, jobs1/threads2, distinct fresh Native cache/artifacts
-per mode. Official15.575s and seeded22.745s: each10 tests,9 PASS/1 FAIL,
-nextest100. No retry or comparator/fixture/assertion edits. All40 Native
-export/slice commands exit0 and reaped; all20 public APIs admitted/CLI exit0;
+With distinct fresh Native cache/artifacts per mode, official and seeded each
+run 10 tests: 9 PASS/1 FAIL. No retry or comparator/fixture/assertion edits.
+All 40 Native export/slice commands exit0; all 20 public APIs admitted/CLI exit0;
 API and CLI raw SHA identical per case, with matching layer markers/line counts.
-All67 sampled descendants used CPU12, including28 sampled actual Native jobs.
 
 S50/S125/SAUTO now strict PASS in both modes. The six unchanged controls
 A45/A50/A125/AAUTO/R1/L1 strict PASS in both modes, with all12 API and CLI
-raw outputs identical to their approved RED baselines. Every regenerated input
+raw outputs identical to their RED baselines. Every regenerated input
 has identical uncompressed ZIP members to RED; only export timestamps differ.
 
 S45 remains a deterministic complete-output FAIL in both modes. First difference
@@ -43,7 +33,7 @@ is byte64438, layer13 (print_z2.6, height0.2), line2607, X rounding. Both modes
 have5425 lines. Outside the existing generated-by metadata distinction, there
 is exactly one differing raw G-code line. The original RED first difference
 was layer4/line1418; that difference is gone. This is partial progress, never
-a parity PASS. No new guard, emitter rounding fix or tolerance is authorized.
+a parity PASS. No new guard, emitter rounding fix or tolerance is in scope.
 
 Official S45 input SHA
 fe76c98e5e3e4d698968bb81a1a76a91ef81b1faa433af26138131342b6b16cf;
@@ -53,14 +43,13 @@ Inputs/reference streams are runtime artifacts, not committed Native outputs.
 
 ## Proposed bounded read-only localization
 
-Request one60min window starting with the first observation, CPU12 only.
 Use the established read-only GDB flow and the frozen S45 projects above;
 one fresh Native official and seeded capture each, plus the already compiled
 Ares CLI. No source probes, inferior calls/writes, numeric substitutions,
 sorting/chaining changes, Native rebuild or store deletion. Record actual
 inferior exit status and preserved stdout/stderr, not just GDB exit status.
 Unavailable optimized locals remain unavailable rather than reconstructed
-and claimed as actual observations. No new tests are needed for this window.
+and claimed as actual observations. No new tests are needed for this localization.
 
 Find the earliest measured divergence in this ordered chain:
 
@@ -89,20 +78,7 @@ the cited libslic3r boundary. No new API or pipeline is proposed.
 
 Exit: report first measured divergence with exact source ownership and a
 minimal source-cited implementation amendment before changing production.
-If the mismatch is outside object preparation, submit that separate upstream
-boundary for approval. If not located within60min, STOP with observations;
-no indefinite expansion, retries or downstream patch to manufacture GREEN.
-Strict/fmt/WASM and B-T directed rerun remain pending; they were not launched
-after the mandatory residual STOP and are not claimed as final gates.
-
-## Durable evidence
-
-${EVIDENCE_ROOT}/worker3/support-cubic-b-s-residual/
-residual-evidence.json SHA256
-fdcbf3c141603757b7334ff4d953255c1609aedfbe07bf7f94bd1f0c5b698448.
-Archive1fc075c55-residual.tar.gz in the same directory, SHA256
-772383d8c613bd915af340a8a68f75e9bbf2eb448cd7fb3f38b0588a1a10981c.
-It retains complete projects/streams/comparisons/command receipts, affinity
-observations, run logs, squash proof and the initial compile failure. Targets
-and caches are excluded. All /tmp roots are preserved. This committed summary
-survives tmpfiles cleanup without freezing Native outputs in Git.
+If the mismatch is outside object preparation, it becomes a separate upstream
+boundary. If not located, STOP with observations; no indefinite expansion,
+retries or downstream patch to manufacture GREEN. Strict/fmt/WASM and the B-T
+directed rerun are not claimed as final gates.

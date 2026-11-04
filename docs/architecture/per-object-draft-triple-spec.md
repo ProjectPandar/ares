@@ -1,9 +1,5 @@
 # SPEC: remaining triple draft / positive minimum / outer brim
 
-Status: **SPEC-REVIEW-REQUEST; docs only; no RED or production change**.
-New branch worker1/draft-triple-spec stacked on
-`82d11ee6f75bb52a2a006db0d15b72277c5b444a`.
-Frozen worker1/draft-compositions-spec must not move. Coordinator-only integration.
 
 ## Upstream boundary and exact proposed change
 
@@ -29,7 +25,7 @@ generate.rs: remove ONLY the remaining D && M && B term, where D is non-disabled
 draft, M is nonzero minimum and B is any materialized BrimPlan. Keep the original
 resolved.objects.len()>1 and every other guard term byte-identical. Do not add
 a new guard, error, fallback, comparison rule or configuration restriction.
-Removal is conditional on review of the complete newly admitted categorical
+Removal is conditional on the complete newly admitted categorical
 matrix below. Do not claim that the four public RED inputs alone prove it.
 
 Existing source ports must be reused, not duplicated:
@@ -54,7 +50,7 @@ only changes D=true,M=true,B=true. Positive-loop per-object plus multiple source
 objects is the existing outer gate. Legal draft enum states are Disabled/Enabled;
 legal min_skirt_length is nonnegative (registry metadata min0; options.rs skirt
 range parser); therefore legal M=true is positive, not negative/NaN policy.
-No numeric/schema validation changes are authorized.
+No numeric/schema validation changes are included.
 
 Other existing terms independently reject prime tower, sequential ordering,
 multiple filaments, support/raft, tower corners, and any generated brim with
@@ -72,20 +68,19 @@ This checks both a group first member with brim and first member without brim.
 |---|---|
 | both-brim × far/near × full/single | original4 inputs, official+seeded8/8 accepted |
 | left-only/right-only × far/near × full/single | supplemental8 inputs, official+seeded16/16 accepted |
-| no brim (B=false), no minimum (M=false) | existing approved composition/draft controls, unchanged admission |
+| no brim (B=false), no minimum (M=false) | existing composition/draft controls, unchanged admission |
 
 This is categorical branch coverage, not enumeration of every real minimum,
 brim width or mesh. Parameter magnitude and object/group cardinality remain
 source-owned generic loops/convex hull/fixed-point algorithms already ported;
-no numeric/scene-specific implementation or guard is authorized. If review
-identifies another newly reachable source branch, removal is blocked until
+no numeric/scene-specific implementation or guard is included. If another
+newly reachable source branch is identified, removal is blocked until
 Native evidence covers it; do not silently declare it deferred while removing
 its only rejection. Existing exclusions are only the preserved guard policies.
 
 ## Discovery facts and immutable public RED inputs
 
-Original root `${TMP_ROOT}/ares-draft-triple-native-G4zq1A/`:
-pure inputs differ from approved composition brim inputs only by minimum20.
+Original inputs differ from the existing composition brim inputs only by minimum20.
 Enabled, loops2/height1/distance6; OuterOnly width8/gap0/combine0; singleton,
 one filament/by-layer; uniform4mm objects/0.2mm layers, far and near layouts.
 Native8/8 accepted, actual20 positive-motion skirt Zs0.2..4.0, far2 groups/near1.
@@ -93,23 +88,16 @@ First-layer per-group skirt E far20.10565 each, near23.31296; single later
 far3.87567 / near5.71919 (<20), so minimum is generation budget, not a later
 layer top-up. First layer all/single skirt+brim motion identical; every later
 single has own smaller inner bounds/E. Two independent brim owners first only.
-Existing exact82d CLI4/4 exits1 UnsupportedProjectFeature("skirt_type per-object"),
+Existing Ares CLI4/4 exits1 UnsupportedProjectFeature("skirt_type per-object"),
 no G-code: all four demonstrably diverge, with triple still deferred correctly.
 
-Supplement root `${TMP_ROOT}/ares-draft-triple-mixed-jhXvqN/`:
-only one object's model_settings brim_type=no_brim/brim_width=0 override differs
+Supplemental inputs: only one object's model_settings brim_type=no_brim/brim_width=0 override differs
 from original triple inputs. Native16/16 accepted and honors override: one
 first-layer brim, no later brims,20 skirt Zs. Far2 separate budgets produce
 20.10565 and21.36385 first E (order swaps); near shared group first E20.62989/
 20.62991. Single later far3.87567/2.41445, near5.04847/5.04851. Source/brim-owner
 masks do not duplicate group emission or turn minimum into a brim budget.
-
-Both roots retain exact input/source hashes, wrappers/binaries/launch,
-full Native results/G-code/logs, affinity and per-Z witness summaries.
-Fresh official/seeded exports serial on actual sampled Native/thread CPU18,
-zero violations; head/status receipts confirm frozen82d unchanged. CLI binary
-was reused from accepted82d gate, no new build. Discovery is not public RED,
-strict parity or permission to implement. No Native output is committed.
+Discovery is not public RED or strict parity. No Native output is committed.
 
 | Four immutable public RED inputs | SHA256 |
 |---|---|
@@ -118,13 +106,12 @@ strict parity or permission to implement. No Native output is committed.
 | near-triple-all | `93d9c5a3f78b1e9ee83d374304af75fce9b78cf878669fa7eb334d9fb266d41d` |
 | near-triple-single | `9e932b03701e81fb8fcb469df0d9acb53619ea3a43f533c200372d7a44f2e158` |
 
-## Approval chain and exit gates
+## Exit gates
 
-1. Approve this docs-only SPEC and categorical coverage before committing RED.
-   Public RED commits exactly the four original pure inputs above with strict
+1. Public RED commits exactly the four original pure inputs above with strict
    Native-first API+CLI success assertions; expected4guardFAIL per mode, not
    rejection-as-success. Parent composition12 tests/controls unchanged.
-2. Independent RED review before GREEN. Only existing draft term removed;
+2. Only existing draft term removed;
    first raw differences drive source-minimal repair, no speculative port rewrite.
 3. GREEN: same-input complete ordered Native/API/CLI strict comparison and raw
    API/CLI equality; physical lifetime, local first-layer minimum, later own
@@ -134,8 +121,5 @@ strict parity or permission to implement. No Native output is committed.
 4. Preserve all prior composition12/draft12/min+brim4/min8/brim4/group4 and
    combined/single/zero-loop controls/related option domains; raw control bytes
    unchanged from RED. Fixtures/assertions/comparator/classification immutable.
-5. Exact submitted hash/clean before+after each directed leg/strict/fmt/WASM,
-   CPU18/jobs1/threads2, serial Native modes/fresh caches/artifacts/explicit target
-   ownership, actual descendant/thread affinity, START/END and freeze compliance.
-   <=400LOC; mechanical split before growth. Full/workspace only allocated
-   windows; no worker pushes. Frozen parent untouched; new branch only.
+5. Directed legs, strict clippy, fmt and WASM pass with serial Native modes
+   and fresh caches/artifacts. <=400LOC; mechanical split before growth.

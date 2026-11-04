@@ -21,9 +21,7 @@ for the sparse15-on control instead of duplicating it here.
 |solid100-one-layer|100%|1|monotonic|0.2|PASS control|
 
 Five ZIPs copied byte-for-byte from accepted read-only discovery, never
-regenerated for RED:
-`${EVIDENCE_ROOT}/w3-combine-solid-readonly-231bd11cc/official/<case>/input.3mf`.
-Every non-settings ZIP member equals source; model_settings.config also
+regenerated for RED. Every non-settings ZIP member equals source; model_settings.config also
 unchanged (one ModelPart/no modifier). Only GUI project settings density,
 combination flag, internal-solid pattern and max combination height differ.
 
@@ -38,7 +36,7 @@ e5cf9a53a47f9e3a4413a4b2f3f81895fc9bf48b08a5993151e17c4a409458b9  solid100-rect.
 80910d21602bb78ca36df0f5771064b041d768016294deccfdbdf4c60c251791  solid100-one-layer.3mf
 ```
 
-Tests reuse unchanged W3 case_runner/complete: frozen hash/project admission,
+Tests reuse the unchanged shared case_runner/complete: frozen hash/project admission,
 two fresh canonical Native references plus public API and CLI per case,
 repeat stability and API/CLI raw equality, effective Native GUI footers,
 positive Internal solid activity, sparse presence/absence and0.4 combined
@@ -48,11 +46,10 @@ No Native G-code golden, tolerance, output filter, new ignore/allow/expect,
 unsupported guard, fallback or inverted failing-target assertion. No
 production change belongs in RED. Preserve all existing44 selected cases.
 
-Run via cargo nextest, both canonical official and seeded0 modes, CPU12,
+Run via cargo nextest, both canonical official and seeded0 modes,
 ARES_REQUIRE_ORCA=1, fresh caches/artifacts, selector `test(anchoring_zaa)`.
 Expected RED:3 strict FAIL/47 PASS per mode after adding these six cases.
 Full M73/time/feedrate/E/wipe/retraction/footer bytes remain significant;
-normalize only existing generator/date identity. No FULL without COORD's
-explicit after-W2 integration window. Freeze these inputs/tests/helpers during
-future approved GREEN; any strict residual after the bounded arithmetic port
+normalize only existing generator/date identity. These inputs/tests/helpers
+stay frozen during GREEN; any strict residual after the bounded arithmetic port
 means STOP/report, never adjacent kernel or G-code repair.

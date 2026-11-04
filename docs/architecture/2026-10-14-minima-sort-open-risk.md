@@ -43,5 +43,5 @@ Native oracle（official 2.4.2）为 GCC/libstdc++ 构建，`std::sort` 的
 
 ## 关联
 
-- 修复与证据：`w5-ironing-line` 链（`5493fbb5e..ce51d9ee1`）
+- 修复与证据：`5493fbb5e..ce51d9ee1`
 - 残余 SPEC：`2026-10-14-clipper-equal-scanline-intersection-order-spec.md`

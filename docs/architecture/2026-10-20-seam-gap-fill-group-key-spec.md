@@ -1,10 +1,7 @@
 # SurfaceFillParams: seam-gap loop clipping is owner data, not group identity
 
-Status: SPEC-REVIEW-REQUEST; docs only. Discovery code base is content-approved
-flow-ratio GREEN `14017addf9250d71d8a6fc468df1dff67f6b441f`, not formal main
-acceptance. Main remains `a5eb0f0356057fe9c62ec3319834f82b40a7731a`.
-Queue: W1 → W4 → consistent-grid → flow-ratio → any subsequently approved
-slice. This requests SPEC review only, no FULL or merge window.
+Docs only. Discovery code base is the flow-ratio GREEN
+`14017addf9250d71d8a6fc468df1dff67f6b441f`.
 
 ## Owning upstream rewrite boundary
 
@@ -112,12 +109,12 @@ TYPE. Keep all progress/feedrate/E/wipe/retraction/time bytes; neither
 progress formatting nor perimeter generation is the repair boundary.
 
 This target's input and both stream hashes are unchanged from the b49
-observation. It was explicitly excluded from the approved flow-ratio port;
+observation. It was explicitly excluded from the flow-ratio port;
 this independent slice does not reopen or broaden that GREEN.
 
 ## Source-localized runtime proof
 
-Existing seeded Native/DWARF, CPU12, read-only GDB:
+Existing seeded Native/DWARF, read-only GDB:
 
 - Before filler creation, target has one Bottom group, owner0/IDs[0,1], one
   merged expolygon. Effective regional seam configs are10%/20%.
@@ -149,23 +146,18 @@ The common comparator affects existing fill families, whose current owner
 transport/consumers remain untouched; no concentric or anchoring kernel port
 may be silently added to close a residual.
 
-1. SPEC only: approve this exact source/owner/nozzle boundary and five-case
+1. SPEC only: this exact source/owner/nozzle boundary and five-case
    matrix. No public RED or production change in this commit.
-2. After independent SPEC approval, RED only: freeze input ZIPs/SHA manifest,
+2. RED only: freeze input ZIPs/SHA manifest,
    reuse shared fresh Native/public API/CLI repeat/complete checks, preserve
    every existing assertion and prior input. Require1 target FAIL/4 controls
-   PASS per mode and prior suites unchanged; submit a separate RED RR.
-3. After independent RED approval, GREEN only: delete the single comparison
+   PASS per mode and prior suites unchanged.
+3. GREEN only: delete the single comparison
    term, keep RED/harness/inputs frozen. Any strict residual after this bounded
    port means STOP/report, not a kernel/E/time/nozzle/projection/other-key fix.
 4. Gates: fmt, locked workspace/all-target clippy `-D warnings`, browser
-   wasm32 core+wasm check. Follow the queue; when authorized, rebase onto
-   then-current main with range-diff and run fresh canonical official/seeded
-   FULL on the exact clean final hash, CPU20–23/threads4, zero FAIL/skipped.
-   If main advances, rebase and rerun final-hash acceptance.
+   wasm32 core+wasm check, then fresh canonical official/seeded FULL on the
+   exact clean final hash with zero FAIL/skipped.
 
 No tolerance, M73/E filtering, fallback, new allow/expect/ignore, Native
-golden, inverted assertion, unsupported guard, worker merge/push/stash.
-
-Evidence:
-`${EVIDENCE_ROOT}/w3-seam-gap-key-spec-review/README.md`.
+golden, inverted assertion or unsupported guard.

@@ -1,11 +1,8 @@
 # M205 processor machine-limit mutation rewrite
 
-## Status and owning source boundary
+## Owning source boundary
 
-Worker1, source-cited spec approved as `fa78fb34afa6df850742df777bff4d33e917cd23`.
-Rebased before RED onto integrated base
-`c4572b368a85e7c5dc445503b03880035b7358e3`; upstream revision
-`8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+Upstream revision `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 Owner: `OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:5236–5265`,
 `GCodeProcessor::process_M205`, not emitter geometry, a firmware implementation
@@ -64,15 +61,13 @@ processed result. Same admitted fixture/options go to identified Native CLI.
 Compare **complete ordered output bytes**, excluding only generated-by header,
 plus M73/footer values. No timings-only comparator or numerical adjustment.
 
-Coordinator admission ruling: the six same-project full-byte comparisons are
-the authority, including M73 and printed estimated times. Four business cases
+The six same-project full-byte comparisons are the authority, including M73 and printed estimated times. Four business cases
 are divergent; zero-rate and RRF configuration-reset controls match. The
 standalone Native processor versus slice-inline processor per-vertex time-bit
 diagnostic also failed the zero control (different initialization) and is
-**not comparable**. It is retained only in `${TMP_ROOT}/ares-m205-c457/red`, excluded
-from the RED commit and forbidden as a repair driver. No additional
-PAUSE_PRINT marker/seam is admitted. No diagnostic rounding patch or relaxed
-comparison is authorized.
+**not comparable**. It is excluded from the RED commit and must not drive the
+repair. No additional PAUSE_PRINT marker/seam is admitted. No diagnostic
+rounding patch or relaxed comparison is allowed.
 
 ## Test-first failure inventory and RED plan
 
@@ -112,25 +107,21 @@ ignores, relaxed comparator, numerical patch, retries-until-success or legacy
 fallback. Fix one admitted vertical behavior at a time, keep original RED
 inputs/assertions and intermediate results.
 
-Required gates on current main: focused original RED + controls; seeded and
-fresh official full parity controls; explicit profile_entry controls;
+Required gates: focused original RED + controls; seeded and
+official full parity controls; explicit profile_entry controls;
 `cargo nextest run --workspace`; strict all-target/all-feature Clippy and fmt;
 wasm32 core/adapter check/release plus required WASM/API integration evidence.
 Seeded must all PASS. Official acceptance uses exact failure-name equality
-against a fresh matching base, with no automatic ND waiver; any exception needs
-coordinator review and complete-byte evidence. Record the single-attempt oracle
-policy explicitly. Honor browser quiet windows for new heavy work.
+against a matching base, with no automatic ND waiver; any exception needs
+complete-byte evidence. Record the single-attempt oracle policy explicitly.
 
 Compare unchanged common raw Ares streams; inventory any intentional new M205
 outputs and baseline differences. Enumerate stock printers with nonzero minimum
 rate configuration and retain old/new Ares raw output identities per printer.
 Any changed stream requires a same-input new-Ares/Native complete-byte PASS,
 not merely an expected-time explanation or relaxed comparison.
-Do not bundle worker3's C1/Sermoon, SLA,
+Do not bundle C1/Sermoon, SLA,
 Native crashes, Top Only reference sensitivity or Option-domain range work.
 
-When verified/approved, update the roadmap's existing low-priority process_M205
-paragraph to integrated status with source/commit/evidence links, without
-confusing it with historical milestone M205 (line-width registry). Exact-hash
-review, approval, fresh main verification, nonforce FF and independent remote
-confirmation precede integration. The224 domain follow-up starts afterward.
+Do not confuse this processor slice with historical milestone M205
+(line-width registry).

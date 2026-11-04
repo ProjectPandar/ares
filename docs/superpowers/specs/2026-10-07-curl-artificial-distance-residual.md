@@ -1,14 +1,12 @@
 # Spec: curled-perimeter slowdown residual — `artificial_distance_to_curled_lines` input set
 
-Status: draft for coordinator review
+Status: draft
 Supersedes the parked C1 residual from
 `docs/superpowers/specs/2026-10-06-curled-perimeter-slowdown.md`
-(whose loop-entity collect fix merged at `17074f39`+`417495df` on
-`pi/m853-wasm-moves`); this is the follow-up slice it predicted
+(whose loop-entity collect fix is merged); this is the follow-up slice it predicted
 ("artificial distance 0.081 vs ~0 on seam-adjacent segments").
 
-Case: stock matrix Sermoon V1 cube10 (`${TMP_ROOT}/ares-stock-matrix-
-028c758-seeded/case-6qvP0t/input.3mf`), the sole stock DIVERGENT at
+Case: stock matrix Sermoon V1 cube10, the sole stock DIVERGENT at
 `clusters.md:301` (`curled_perimeter_slowdown` test target).
 
 ## Acceptance contract (non-negotiable)
@@ -66,7 +64,7 @@ eliminate, prove native ND with repeated upstream runs, or split.
 ## Verified-equal (upstream probe dumps exist — the C1 blocker is
 resolved; no DEBUG_FILES build needed)
 
-`/tmp/curldump.txt` (Oct 6) was produced by an upstream oracle build
+The curl dump was produced by an upstream oracle build
 patched in the nix expression (`tools/orca-probes/curlp.nix` +
 `spdin.nix` style `postPatch` `substituteInPlace` — the patch lives in
 the oracle build recipe only, never in Ares production code). It dumps
@@ -75,7 +73,7 @@ upstream's `estimate_malformations` per-segment inputs and the
 
 - CurledLine set: orca layer=1 keeps h = 0.2057/0.2613/0.3054/0.3054/
   0.2980/0.3003/0.3129/0.3003 above the 0.1 tolerance; ares' current
-  collect (`/tmp/curl-ares.log`, same case) yields
+  collect (same case) yields
   0.20566/0.26134/0.30537/0.30543/0.29798/0.30029/0.31291/0.30029 —
   **the same segments, f32 last-digit drift only**. The collect fix
   landed; the residual is NOT in `curled_height`.
@@ -187,7 +185,7 @@ message or the slice's evidence notes:
   oracle build recipes (`tools/orca-probes/*.nix`) only.
 - Intermediate white-box RED: an `ares-core` test that calls
   `artificial_distance` and `line_distance_tree` directly with inputs
-  taken from `/tmp/curldump.txt` — commit the minimal needed excerpt
+  taken from the upstream curl dump — commit the minimal needed excerpt
   as a checked-in fixture (the ARTD records for the diverging
   segments + their candidate `(line,h,d2)` tuples), recording the
   source file's sha256 and provenance in the fixture header. Assert

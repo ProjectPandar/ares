@@ -1,13 +1,7 @@
-# SPEC RR: complete gated role-flow block
+# SPEC: complete gated role-flow block
 
-Status: **REVISED SPEC-REVIEW-REQUEST; supersedes rejected narrow spec
-fffecfa38. No public RED or production implementation yet.** Base: merged
-main `445648072103587a9d60d85f1c4fb4425056ae18` (stack-27, FULL27
-1636/1636 both modes). Branch: `worker1/wall-flow-discovery-spec`.
-Original pre-rebase spec is preserved at `worker1/wall-flow-spec-pre-stack27`.
-Coordinator owns integration; rebase only on announced advances and refresh
-exact-hash evidence before RR. Interlocking remains shelved/W6; junction
-deviation remains queued. Neither belongs to this slice.
+This revised spec supersedes an earlier narrow two-role spec. Interlocking and
+junction deviation do not belong to this slice.
 
 ## Owning upstream boundary: one block, not two independent features
 
@@ -98,7 +92,7 @@ Port the complete block into the **existing**
    bottom/internal-bridge flow behavior outside this block. Do not stack new
    emission multipliers on the old sparse/solid/first-layer pre-baked values.
    Any grouping/parameter changes needed to preserve ownership must be
-   source-cited and reviewed before implementation; no silent coalescing drift.
+   source-cited before implementation; no silent coalescing drift.
 
 These Ares structs are temporary compatibility shells around `_extrude` and
 writer concepts, not a new Ares flow engine. No new algorithms, parameters,
@@ -108,13 +102,6 @@ split first if necessary. **Do not touch ironing.rs (399 LOC)** without its
 separately verified required split.
 
 ## Completed whole-block Native discovery
-
-Discovery root: `${TMP_ROOT}/ares-w1-gated-flow-discovery-v2-fffecfa38/`.
-Exact-final-spec rerun root: `${TMP_ROOT}/ares-w1-gated-flow-spec-reviewed-scope/`.
-Only the latter's completed `spec-review-audit.json` at the exact clean new
-commit is authoritative for renewed RR; earlier hashes are discovery, not
-new-hash gates. Both retain scripts, manifest, raw outputs, launch receipts,
-actual Native ELF/all-thread affinity, repeat and activity audits.
 
 **Every one of the eight roles has an achievable simple Native-active
 witness**, including overhang. No unwitnessed role is proposed for porting.
@@ -152,20 +139,18 @@ legs retain the non-unit settings in config and keep the complete body equal
 to their units. Genuine feedrate/M73/statistics changes are retained.
 
 Completed discovery: **60/60 successful Native slices** = 15 inputs x
-2 modes x 2 independent processes, fresh serial roots/caches, canonical env,
-seeded CPU18, actual Native ELF and all sampled descendant threads CPU18.
+2 modes x 2 independent processes, fresh caches, canonical env.
 Complete repeats/cross-mode outputs match after only generator identity/
 timestamp normalization, retaining config/M73/statistics/order. Discovery
 paired-body/positive comparisons prove activation; they never substitute
 for public same-input whole-stream parity.
 
-The initial 0%-sparse attempt is preserved as **SPARSE-INACTIVE NON-GATE** at
-`${TMP_ROOT}/ares-w1-gated-flow-discovery-fffecfa38/`; it was a fixture fault, not
-proof of equivalence. Corrected v2 explicitly activates sparse infill. All
+The initial 0%-sparse attempt left sparse infill inactive; it was a fixture
+fault, not proof of equivalence. Corrected v2 explicitly activates sparse infill. All
 archive/member/geometry hashes and per-key retained settings are audited.
 No Ares API/CLI or public RED has been run for this revised slice yet.
 
-## Proposed public E2E RED, only after SPEC approval
+## Proposed public E2E RED
 
 Freeze the exact 15 v2 input-only archives and complete manifests into the
 existing parity layout; never commit Native outputs. For **each** role leg,
@@ -187,25 +172,22 @@ fully covers the block, STOP NO-RED rather than manufacture a failure.
 
 If an authentic RED is blocked by a fixture/geometry/support preparation
 fault outside this block, preserve the fault as NON-GATE, cite the owning
-source and obtain a revised approved boundary. No port of an unwitnessed
+source and revise the boundary. No port of an unwitnessed
 role, no suppression or silently shortened two-role implementation. Any
 future proposed additional role requires its own Native-first RED evidence.
 
-After independent exact-clean-committed RED approval only: implement the
-whole block in the owning lifecycle. GREEN requires all 15 same-input full
-comparisons in both modes, raw API=CLI, retained control and already-passing
-role bytes, unchanged geometry, no duplicate sparse/solid/first-layer factors,
-and actual API flow activity consistent with Native. Preserve complete
-Native repeats and real process/thread affinity receipts.
+After the committed RED: implement the whole block in the owning lifecycle.
+GREEN requires all 15 same-input full comparisons in both modes, raw API=CLI,
+retained control and already-passing role bytes, unchanged geometry, no
+duplicate sparse/solid/first-layer factors, and actual API flow activity
+consistent with Native.
 
-CPU18, jobs2/nextest threads2, targeted runs only; serial official/seeded,
-fresh caches/artifacts, required Native and all canonical references. Exact
-hash fmt, strict core+CLI all-target clippy and WASM checks accompany runtime
-RED/GREEN review. No full/workspace/push/merge. No comparator changes, body/
-config/M73 filtering, tolerances, sorting, estimator repair, or paired input
-substitution. Coordinator owns integration.
+Official/seeded runs use fresh caches, required Native and all canonical
+references. Exact-hash fmt, strict core+CLI all-target clippy and WASM checks
+accompany runtime RED/GREEN. No comparator changes, body/config/M73 filtering,
+tolerances, sorting, estimator repair, or paired input substitution.
 
-## Included / deferred and approval boundary
+## Included / deferred
 
 Included: all eight role branches, first-layer inside the same gate, exact
 brim/skirt exceptions, current object/region ownership, arithmetic order,
@@ -218,6 +200,3 @@ Arachne/scarf/arc/spiral composition witnesses, and non-unit print-flow
 composition coverage. Deferred coverage is **not** an exemption from the
 shared role/gate semantics. No role algorithm should be redesigned to make
 this slice pass. Unanticipated ownership changes require an amendment.
-
-Request independent revised SPEC review; wait for owner approval before
-public RED, and independent RED approval before production GREEN.

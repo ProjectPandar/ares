@@ -1,10 +1,10 @@
 # Internal bridge output and fill projection
 
-## Status and rewrite boundary
+## Rewrite boundary
 
 Component-filter port implemented after independent public RED and measured
-scope approval. Strict complete-output acceptance still awaits the separately
-owned preset/footer prerequisite; no full-output GREEN is claimed.
+scope localization. Strict complete-output acceptance still depends on the separate
+preset/footer prerequisite; no full-output GREEN is claimed.
 The source is OrcaSlicer beta revision
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
@@ -88,9 +88,9 @@ observation is available for these inputs.
    preexisting candidate topology from a direction-voting or projection defect.
    A topology repair requires evidence that the component/ring distinction is
    actually exercised, not just a plausible static mismatch. If that distinction
-   is inactive, return a localization RR rather than porting it as a speculative
+   is inactive, report the localization rather than porting it as a speculative
    fix for these inputs.
-4. Request bounded authorization before any Native intermediate observation.
+4. Native intermediate observations must be bounded and explicit.
    Final G-code is not a substitute for that evidence. Temporary Rust probes,
    if used for follow-up localization, must be removed and byte restoration
    verified; they are not product interfaces.
@@ -122,14 +122,13 @@ upstream slices; these two configured patterns do not activate those branches.
 The new triangles count-two target is directly executed; its result must remain
 separate from the historical baseline-only failure.
 
-Do not mutate the approved prerequisite branch or stack unapproved footer work.
 Any later production change needs a source-cited, localized scope and separate
 port commit, same-inventory breadth with zero PASS-to-FAIL transitions, rustfmt
 and strict all-target Clippy. The limited motion-block GREEN exceptions granted
 to other fill slices do not apply here. Core changes, if later justified, must
 remain rendering-neutral and portable to browser WASM, Windows, macOS and Linux.
 
-## Measured trigger and approved port scope
+## Measured trigger and port scope
 
 Read-only Native debugger captures and temporary Rust diagnostics now establish
 that the component/ring distinction is exercised in both the honeycomb count-two
@@ -174,7 +173,7 @@ byte-identical to the uninstrumented RED outputs. All temporary probes are
 removed; rebuilding the restored code reproduces the same complete bytes for
 all three fixtures. No diagnostic interface or production fallback is retained.
 
-The approved production slice is only `PrintObject::bridge_over_infill`,
+The production slice is only `PrintObject::bridge_over_infill`,
 `PrintObject.cpp:3872–3886`: intersect expanded candidates into ExPolygon
 components; test unsupported overlap for the whole component including holes;
 retain or discard that whole component; flatten the retained components in
@@ -183,29 +182,26 @@ source order before the existing limiting-area union. The Rust destination is
 This replaces the flat-ring predicate; it is not an additional pattern-specific
 path. Keep offset arithmetic, anchors, automatic angle voting, overrides, bridge
 flow, reconstruction, final surface rewrite, fill projection and traversal
-unchanged. The approved slice also includes the source subject-bounding-box
+unchanged. The slice also includes the source subject-bounding-box
 clipping exactly at both intersections: the expanded-candidate bounds for deep
 infill, and each component's bounds for unsupported area, each inflated by
 `SCALED_EPSILON`. Reuse the existing bbox clipper and scale the source epsilon
 with `CoordinateScale`. The existing input struct carries that scale through a
 mechanical caller change; no caller geometry or direction behavior changes.
 
-The investigation and direct RED commits are replayed onto
-`44fb3e6912efec80b2a12e01df6a44045daf3651` before any GREEN implementation.
-Fresh requalification there still yields three complete-output FAILs, with all
+Before the GREEN implementation, fresh requalification still yields three complete-output FAILs, with all
 Native double replays equal and all API/CLI pairs byte-identical. Complete Ares
 bytes for each input are unchanged from the original RED. The count-two triangles
 fixture still differs only at the generator and the two known footer keys, so
-the preset/footer prerequisite is not satisfied for these frozen inputs on this
-base. Do not repair or mask that prerequisite inside the component port, and do
+the preset/footer prerequisite is not satisfied for these frozen inputs. Do not repair or mask that prerequisite inside the component port, and do
 not label the port GREEN while the complete-output gate remains unsatisfied.
-Require all three complete-output targets to pass after an approved port and its
-separately owned prerequisite. The existing count-two triangles fixture is a
+Require all three complete-output targets to pass after the port and its
+separate prerequisite. The existing count-two triangles fixture is a
 control with raw motion and M73 already exact on the original RED base, not a
 third demonstrated geometric failure. A future port must also run identical
 before/after bridge/fill breadth inventories with zero PASS-to-FAIL transitions,
 rustfmt and strict all-target Clippy. Measurements alone did not change
-production behavior; implementation is restricted to the approved component
+production behavior; implementation is restricted to the component
 filter and bbox clipping unit above.
 
 ## Post-port requalification
@@ -228,7 +224,7 @@ pass without new suppressions.
 
 All three complete-output tests remain enabled and FAIL. Raw motion and M73
 are exact for all three; exhaustive raw differences contain only generator
-metadata and the two separately owned footer keys. The unchanged complete
+metadata and the two separate footer keys. The unchanged complete
 comparator's first differences are `compatible_process_expression_group` at
 line 18732 for honeycomb count two, line 6987 for triangles count one, and line
 10557 for triangles count two. `pellet_flow_coefficient` is the other footer

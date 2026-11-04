@@ -1,25 +1,17 @@
 # Latest-main Option matrix: complete execution and remaining scope audit
 
-Actual run: clean main `acf100550e1e6db0ebef2a5202ea462713835362`, nextest
-`a141e533-0dda-4e0a-921c-119679de9ef3`, exit100. Fresh required seeded
-Native cache/artifact root, no option/value filters,16threads/build8.
+Actual run: clean main `acf100550e1e6db0ebef2a5202ea462713835362`, exit100.
+Fresh required seeded Native cache, no option/value filters.
 650 domains:621PASS/28INCOMPLETE/1FAIL;1642 cases generated,1640strictly
 compared,1640PASS, **zero DIVERGENT**. Remaining cases: one application-stage
 failure and one Native rejection. This is not global coverage PASS.
 
 Independent full-stream reread of all1640 manifests confirms Native/Ares bytes
 equal after removing only the entire generated-by line. Actual inputs and raw
-SHA256s remain in manifests; per-stream normalized hashes/equality and all29
-remaining-domain records are `/tmp/worker3-option-full-current-audit.json`.
+SHA256s remain in manifests.
 Generic manifest producer fields marked unknown remain unknown; explicit
 run/control/native-cache receipts supply separate producer provenance. No
 historical summary rows were merged and no failure was retried to PASS.
-
-After execution, coordinator-authorized tests/docs/data-only main updates were
-inspected: acf→2becb00a5 production-src diff empty; git-only rebase to
-`2becb00a539cf8d49bd858b94d99aa67fa5b3251`. Matrix remains actualacf execution,
-not a new run at2bec. Deleted ender3.orca.gcode has no consumer in the Option
-runner/cache adapters inspected here.
 
 ## Classification (all non-complete domains)
 
@@ -114,8 +106,8 @@ behavior/provenance work unless independent public-API runtime RED establishes
 a missing cited consumer. They must preserve current raw statuses and full
 failed attempts; successful controls compare complete streams.
 
-Coordinator next requested a fresh all-printer stock matrix on latest main and
-first-difference clustering; historical823/100/66/10/2 counts are not current
+A fresh all-printer stock matrix on latest main with first-difference
+clustering is a separate follow-up; historical823/100/66/10/2 counts are not current
 results. That separate run must have a fresh pinned commit/cache/artifact root
 and retain crash/UB/read/vendor failures separately. No production change or
 new Option test has been made by this audit.

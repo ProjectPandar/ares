@@ -1,6 +1,6 @@
 # Green plan: concentric ironing ring order (`FillConcentric::_fill_surface_single`)
 
-Status: PLAN — awaiting coordinator approval. No production change in this document.
+Status: PLAN. No production change in this document.
 Boundary pinned by RED `944c70418` on main `d592d4145`.
 
 ## Upstream rules (source-cited, all verified in this tree)
@@ -57,7 +57,7 @@ This is the same probe discipline used for discovery, and it is the only way to 
 
 - The Arachne/`ThickPolylines` overload (`FillConcentric.cpp:79-150`) and `FillConcentricInternal.cpp` — not reachable from ironing.
 - `is_infill_first` per-region semantics: already byte-identical to Native on `two-region-prism.3mf`; not a gap (measured this window).
-- The unmerged stack-25 per-region speed emission (`GCode.cpp:6136/6163`) — owned by the stack-25 branch, must not be duplicated here.
+- The separate unmerged per-region speed emission (`GCode.cpp:6136/6163`) must not be duplicated here.
 - Any change to the clipper kernel itself (`geometry/clipper/*`) beyond what Step 0 proves necessary.
 - 3mf fixture regeneration: the frozen input SHA is pinned by the RED.
 

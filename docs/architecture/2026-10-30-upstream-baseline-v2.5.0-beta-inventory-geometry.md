@@ -10,8 +10,8 @@ All upstream paths below have prefix `src/libslic3r/`; statuses are Git `M`/`A`/
 coverage or 2.5.0 qualification. `not ported` includes new files, native-only APIs
 and helpers without an identified source-port owner; a similarly named type or
 comment alone is not evidence of a port. Deleted files retain their old owner
-when present. The geometry owner is the proposed sole upstream-file owner; deferred rows
-are tracking ownership, not approval to implement those features.
+when present. Deferred rows
+are tracking entries, not a mandate to implement those features.
 
 Rows: **269**. Every listed Rust path was checked at the planning base.
 

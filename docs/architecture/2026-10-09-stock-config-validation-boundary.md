@@ -1,7 +1,7 @@
 # ARD: bounded stock config-validation ownership
 
-Status: proposed source-only, awaiting sole-coordinator spec approval.
-Base c3e84118a. No runtime probe, test or production change under this slice.
+Status: proposed source-only. No runtime probe, test or production change
+under this slice.
 
 ## Non-negotiable decisions
 
@@ -19,21 +19,21 @@ Base c3e84118a. No runtime probe, test or production change under this slice.
    not permission to create another registry/validator or widen API scope.
 4. Loaded-config ordered aggregate errors and applied-print width errors are
    distinct upstream phases. Compare authoritative detailed stderr/metadata,
-   not generic CLI error descriptions. CLI transport/exit mapping is worker4.
+   not generic CLI error descriptions. CLI transport/exit mapping is a
+   separate adapter slice.
 5. Historical evidence establishes leads, not current runtime RED. The mixed-
    nozzle Snapmaker record already reports payload parity on7a; do not ignore
    that result or relabel its reconstructed selection as original bytes.
    Failed-Export inputs cannot be claimed original archived replay inputs.
-6. With spec approval, fresh public-API mismatch must precede any production
+6. A fresh public-API mismatch must precede any production
    edit. If existing behavior is equal, deliver conclusion-only evidence;
    **no forced implementation**. Preserve first attempts and inconclusive cases.
 7. No preset repairs/default invention, expected Unsupported assertions,
    fixture-specific exceptions, retry-to-PASS, crash imitation or new fallback.
    Success controls use complete output with generated-by whole-line-only
-   normalization. Native outputs/receipts remain/tmp; inputs only may be committed.
+   normalization. Native outputs are not committed; inputs only may be committed.
 8. Source/binary/input/commit/run bindings remain explicit. Raw stock ORCA_ERROR
    status is not rewritten as valid-stream PASS because a rejection matches.
-   Approval and gates precede merge; no new Native/testing before spec approval.
 
 ## Source identities and failure-sensitive seams
 

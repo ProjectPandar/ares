@@ -9,7 +9,7 @@ Non-negotiable decisions for the unknown-key CONFIG_BLOCK milestone
    Hand-written white/black key lists in `writer.rs` are forbidden.
 2. **Single-file production boundary.** The GREEN edit touches only the
    `options/config_export/writer.rs` raw-echo loop. `config_export/value.rs`
-   is owned by the queued W6 window and must remain untouched.
+   is out of scope and must remain untouched.
 3. **Legacy rules frozen.** The `handle_legacy` cleared-key behavior
    (`Config.cpp:576–590`) keeps the existing `EXPLICIT_RULES` semantics
    byte-for-byte; no rule is added, removed, or reordered in this milestone.

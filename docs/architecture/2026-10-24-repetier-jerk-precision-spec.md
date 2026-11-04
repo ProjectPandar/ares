@@ -1,8 +1,5 @@
 # SPEC: Repetier temporary jerk M207 ostream precision
 
-Base0bb7523bfb2a0a4a93064be53d4a42e6c66e14b7; coordinator ACK authorizes SPEC →
-Native-first public RED → one-field GREEN → REVIEW-REQUEST/hold, no FULL.
-
 ## Upstream rewrite boundary
 
 `OrcaSlicer/src/libslic3r/GCodeWriter.cpp:262,272-285::set_jerk_xy` uses plain
@@ -13,19 +10,17 @@ format::ostream, not new formatter/helper/configpolicy. This writer shell follow
 upstream, not an independent Ares quantization rule.
 Included: ONLY Repetier M207 field axis→ostream. Deferred: cache/clamp/tolerance/
 flavorgate, comments, other flavors, formatter implementation, acceleration,
-processor/templates/allotherowners. Klipper separate set_jerk_xy precision is a
-known next-proposal candidate, expressly NOT included here.
+processor/templates/all other owners. Klipper separate set_jerk_xy precision is
+a separate follow-up, expressly NOT included here.
 
 ## Reachable evidence
 
 StockEnder3/toweroffRepetier, sole real default_jerk option varies7/7.12345/7.125.
 GUI Tab2566/PrintConfig3289-3296 coFloatmin0; valid saved floats, no assertion
 about displayed decimals or fine physical tuning. Other profile/geometry/templates
-unchanged. Repetier machine-limit gate false caches0 after approved base slice,
+unchanged. Repetier machine-limit gate false caches 0,
 so no clamp/roundingconfound. Target NativeM207X7.12345 vsAres7.123, firstdiff4911;
-controlsfullPASS,6freshNative slicesstable/allCLIexit0. Discoveryevidence
-`${EVIDENCE_ROOT}/w4-repetier-jerk-precision/PROPOSAL.md`, exact0bbCLI.
-No API/seeded/RED/FULLclaim inferred.
+controlsfullPASS,6freshNative slicesstable/allCLIexit0.
 
 SHA:
 - integer7:dd456257226ef4563c4742764fee803e47fc459568f31da39f59413441e6d626
@@ -42,7 +37,7 @@ all timing/config/footer included; no Nativeoutputscommitted.
 Failureclasses:fixed3vs6significant,wrongcommand/flavor,cache/admission/clamp
 change,globalformatterchange or accidentalKlipperfix. Commit REDbeforeproduction,
 onlytargetFAIL/twocontrolsPASS bothmodes/Native replay+API==CLI qualify.
-GREEN one existingformattercall,tests/inputsfrozen. CPU17PIN17jobs1threads1
-serialofficialthenseeded,fmt/workspacealltargetclippy/3directedbothPASS,
-reviewhold. NoFULL/merge/push/lint suppressions;groupregistrationno squeeze,
-all touchedRust≤400LOC. Preserve allpreviousapprovedslices unchanged.
+GREEN one existingformattercall,tests/inputsfrozen. Official then
+seeded, fmt/workspace all-target clippy/3 directed both PASS.
+No lint suppressions; group registration without squeeze,
+all touched Rust ≤400 LOC. Preserve all previous slices unchanged.

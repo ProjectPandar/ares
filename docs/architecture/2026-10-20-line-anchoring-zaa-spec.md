@@ -1,7 +1,7 @@
 # Line bridge-over-infill anchoring: regional ZAA direction
 
-Status: SPEC-REVIEW-REQUEST; discovery only, no public RED or production edit.
-Base: approved/merged main `27888e2d41429621fe4966018f75d686f9e3e8e7`.
+Discovery only, no public RED or production edit.
+Base main `27888e2d41429621fe4966018f75d686f9e3e8e7`.
 
 ## Owning upstream boundary
 
@@ -27,7 +27,7 @@ Upstream OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
   algorithms are not being re-ported.
 - `PrintObject.cpp:2751,2848-2936,3242-3251` consumes projected sparse anchors
   to choose internal bridge geometry; this establishes downstream ownership,
-  not authorization to change bridge-angle selection.
+  not a mandate to change bridge-angle selection.
 
 Rust destination: only the ordinary `ProcessInfillPattern::Line` parameter
 assembly in `project_slice/prepare_infill/bridge_over_infill/
@@ -42,14 +42,14 @@ configuration/context API or an arbitrary first region.
 
 ## Independent Native witness
 
-Input provenance: the approved authored Honeycomb anchoring mesh/profile
+Input provenance: the authored Honeycomb anchoring mesh/profile
 bundle (`tests/parity/honeycomb-anchoring-zaa/top6-enabled-flag1.3mf`).
 Keep all input ZIP members and metadata; change sparse pattern to `line`
 and multiline to1. Vary only the regional ZAA bits and top-shell count after
 that. Direction45, sparse20%, layer0.2 and the 10mm model stay fixed. These
 are external discovery inputs, not yet committed public fixtures.
 
-Both canonical official and seeded modes, CPU12, execute two fresh Native
+Both canonical official and seeded modes execute two fresh Native
 references per input. All repeats and normalized cross-mode Native bytes
 agree. All runs admit Line/multiline1 and effective flags in the full footer.
 The unchanged generator-only whole-file comparison gives:
@@ -112,7 +112,7 @@ acceptance; debugger outputs are not oracles.
 
 ## Separate RED then bounded GREEN
 
-Only after this SPEC is approved, freeze five input-only public cases:
+Freeze five input-only public cases:
 top6 enabled1/flag1 target; top6 enabled1/flag0 and enabled0/flag1 conjunction
 controls; top5/top7 enabled1/flag1 even-phase controls. Retain the diagnostic
 00 case externally. No committed Native outputs or probes.
@@ -123,8 +123,7 @@ motion, two fresh Native references, stable repeats and raw public API/CLI
 equality. Reuse the existing strict whole-file comparator **including M73 and
 feedrates**. Discovery currently covers CLI, not new public API acceptance.
 Expected RED: only top6 target FAIL, four controls PASS per mode. Freeze that
-RED independently, run both modes on its exact clean hash, then request
-approval before production. No inverted assertions or optional silent skips.
+RED independently and run both modes on its exact clean hash before production. No inverted assertions or optional silent skips.
 
 GREEN only carries the anchoring printing region's conjunction into the
 ordinary Line `LineFillParams` literal. The current arms378LOC has room for
@@ -144,17 +143,4 @@ means STOP and report, not broaden the fix.
 GREEN gates on the exact final hash: fmt, workspace all-target clippy with
 `-D warnings`, wasm32, new and existing Line/ZAA/anchoring controls in both
 modes, then canonical official and seeded FULL with fresh caches/artifacts,
-zero FAIL/skipped, `ARES_PIN_OFFSET=20 ARES_PARITY_THREADS=4` (CPU20-23).
-Compilation/probes CPU12. Coordinator alone reviews/merges; SPEC and RED
-need separate approval before subsequent steps.
-
-## Evidence
-
-External `${EVIDENCE_ROOT}/w3-line-anchoring-zaa-` prefixes:
-`top6/`, `top6-seeded/`, `top5/`, `top5-seeded/`, `top7/`, `top7-seeded/`
-contain frozen discovery input SHAs, commands, binary identities, Native
-repeats and complete-byte results. Target `role-observation.json` localizes
-motion without changing the strict verdict. `localize/` holds Native/Ares
-read-only debugger logs. `spec-review/matrix-audit.json` and the external
-`w3-line-anchoring-zaa-audit.py` recheck repeat/cross-mode results and the
-source ZIP/settings boundary. No RED test or production change is included.
+zero FAIL/skipped.

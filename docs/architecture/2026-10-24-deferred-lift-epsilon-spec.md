@@ -1,8 +1,5 @@
 # SPEC: `GCodeWriter::travel_to_xyz` deferred-lift EPSILON gate
 
-Status: discovery / SPEC-RR only; no RED or implementation authorization.
-Base: `9cfaf0d16f0f5c4bf5fb6bf6c62d1c54e0d94ecf`.
-
 ## Owning upstream boundary
 
 This is a source-cited Rust rewrite correction, not a new Ares travel policy.
@@ -84,7 +81,7 @@ normal output precision, separating the writer branch gate from formatting.
 
 ## Included / deferred behavior
 
-Included, after separate approval:
+Included:
 
 - Port the exact `abs(m_to_lift) > 1e-4` consumption boundary, including equality.
 - Retain a scheduled subthreshold amount/pending state as upstream does when
@@ -98,9 +95,9 @@ Included, after separate approval:
 Deferred: eager lift, spiral-vase special lift, general `will_move_z` redesign,
 new lift storage/API, AutoLift geometry, clipping/routing, retract/wipe policy,
 processor parsing/time algorithms, templates, bed, startup fan, fuzzy, tower,
-skirt/brim/support speed, and all other workers' reserved slices. No changes to
-`motion/state.rs` or W4's frozen temperature scanner. If the bounded rewrite
-requires changing these deferred owners, stop and report before expanding.
+skirt/brim/support speed. No changes to `motion/state.rs` or the
+temperature scanner. If the bounded rewrite requires changing these
+deferred owners, stop and report before expanding.
 
 No epsilon is to be invented from formatter precision or Rust machine epsilon.
 The existing enum/boolean shell must be evaluated against the upstream numeric
@@ -108,11 +105,11 @@ state semantics, not strengthened into an Ares-owned interpretation.
 
 ## Proposed RED and exit criteria (not executed)
 
-After SPEC approval, freeze SHA-pinned inputs and Native-first
+Freeze SHA-pinned inputs and Native-first
 `native_stream_case::check` cases: below/equal targets plus zero/above/default
 controls. Qualify fresh Native replay and Native branch-shape observations,
 then compare complete public API and CLI streams with the unchanged comparator.
-Official then seeded on CPU17/PIN17, jobs1/threads1. No Native constants/goldens,
+Official then seeded. No Native constants/goldens,
 input-specific branches, order masks or altered generator normalization.
 
 Failures to pin before implementation: `<` instead of `<=` boundary; clearing
@@ -120,32 +117,5 @@ unconsumed pending state; first-position bypass; ordinary layer-change split
 using scheduled rather than consumable state; regressions for zero and above
 threshold; treating M73 consequences as an independent processor fix.
 
-Freeze RED-RR before requesting GREEN. Only after separate GREEN authorization:
-all directed cases pass both modes, fmt and workspace all-target clippy pass,
-and coordinator-authorized exact integration-tip dual FULL passes. This document
-makes no public API, seeded, RED, GREEN or FULL claim for this new slice.
-
-## Evidence / ownership audit
-
-`${EVIDENCE_ROOT}/w4-deferred-lift-epsilon/`: `probe.py`, `probe.log`,
-`results.json`, six input archives, per-case two Native logs/streams, actual Ares
-CLI stream/log, full `ordered.diff`, `overlap-audit.json`, `binary-provenance.json`.
-Probes were serial on CPU17, `ARES_PARITY_THREADS=1`, `ARES_PIN_OFFSET=17`,
-`OMP_NUM_THREADS=1`, standard official inherited-affinity wrapper with setarch.
-
-Discovery binary `/tmp/w4-temperature-red-target/debug/ares`, built at frozen
-`a5cc569c05857121af80533679c801f6258b9cb5`; its entire motion subtree is identical
-to SPEC base main9cfaf0d16. This is disclosed CLI discovery, not an exact-main
-build qualification. The frozen temperature slice does not affect these spaced
-stock templates. No build or production change was needed for discovery.
-
-Preproposal audit: candidate paths have no overlap with W5 Type1 work/proposal,
-W1 fuzzy qualified/startup-fan green, W6 frozen six-chain, W2 skirt/support state
-and seam scope, or W2 frozen515e95975. A327-ref worker1/2/3/6 + W5 architecture
-scan found no `m_to_lift`/EPSILON or subepsilon deferred-lift SPEC reservation.
-W3 processor-word work is excluded explicitly; this slice owns writer branch
-selection only, not processor input parsing. Exact audited tips and changed
-paths are retained in `overlap-audit.json`; historical unrelated worker branches
-are not permission to touch their currently reserved areas.
-
-Stop after SPEC-RR. No production or test/fixture edits accompany this proposal.
+Exit: all directed cases pass both modes, fmt and workspace all-target
+clippy pass, and the full parity suite passes.

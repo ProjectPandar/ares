@@ -16,7 +16,7 @@ No expected output or Native result constants/assertions/snapshots.
 Two direct native_stream_case::check tests reuse main double Native
 replay then native_api_cli validated API/bare CLI whole-byte comparison.
 No copied replay/normalization/JSON/orchestration or private output seam.
-CPU11/thread1/job1,ARES_REQUIRE_ORCA=1,explicit official/seeded Native
+ARES_REQUIRE_ORCA=1,explicit official/seeded Native
 environments with retained artifact roots. Target:
 
 ```
@@ -25,19 +25,17 @@ cargo nextest run -p ares-cli --test orca_parity --no-fail-fast \
 ```
 
 Require whole controlPASS/substring positiveactualFAIL in both modes,
-stable repeats, then review BEFORE production change. Only existing
+stable repeats before production change. Only existing
 canonical generated-by identity/date normalization; no comment/M73/time/
 header/E/XY/config/trailing-line mask/tolerance. No ignored or expected-
 failure flags. Environment-disabled tests are NOT evidence. Shared checker
 retains full streams/launches/both public comparison errors.
 
-Future separately approved GREEN ONLY whole-subject regex comparisons
+GREEN covers ONLY whole-subject regex comparisons
 through anchored compile ^(?:pattern)$ using existing crate, with existing
 negation and alternation semantics. No first-unanchored-span shortcut.
-Dialect/Unicode/escaping/errors/other users/rendering deferred; W6 owns
-value.rs, DO NOT edit it. Any residual requires STOP/report. Freeze tests/
-inputs/helpers; no FULL. Extra !~/alternation/wildcard screens remain
-external, not new formal fixtures or dual-mode regression credit.
-Discovery evidence stays separate at
-`${COORD_ROOT}/evidence/w5-478r2-placeholder-regex-full-match/`,
-not substituted for formal shared-checker public API/CLI proof.
+Dialect/Unicode/escaping/errors/other users/rendering deferred; value.rs is
+unchanged. Any residual requires STOP/report. Tests/inputs/helpers are frozen.
+Extra !~/alternation/wildcard screens remain external, not new formal fixtures
+or dual-mode regression credit. Discovery evidence is not substituted for
+formal shared-checker public API/CLI proof.

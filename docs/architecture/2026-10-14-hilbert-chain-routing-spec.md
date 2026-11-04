@@ -1,7 +1,6 @@
 # SPEC: HilbertCurve ironing 残余根因——plane-path 链序走了兼容缝（候选 B 成立，候选 A 排除）
 
-状态：SPEC-REVIEW-REQUEST（docs-only；全部探针已还原）。
-前置：残余诊断 SPEC（`1ef58fe0d`，已批）判定首差疑在 A=intersection_pl 或
+前置：残余诊断 SPEC（`1ef58fe0d`）判定首差疑在 A=intersection_pl 或
 B=chain。本片完成裁定并给出修复边界。
 
 ## 1. 候选 A 排除（vendored 逐组件对拍，逐字节）
@@ -64,10 +63,3 @@ greedy2/2ex 端口自身的 tie 行为，届时以其为独立诊断对象）。
   有既有 parity 测试覆盖，改动需以之为门。
 - `chain_polylines_multifragment` 在其他调用点的存续另行评估（不在
   本片）。
-
-## 5. 证据副本
-
-`/tmp/w5-hilbert-probe/`：clipdump.log（STAGE2 逐组件 dump）、
-vclip{1,2}.out（vendored 逐组件输出）、V{1,2}.seq/A{1,2}.seq
-（cmp 一致）、ares-trace.log（CREATE/PRE/POST 事件 trace 3436 条，
-本轮未再需要逐事件对比即在中途以集合/序列一致收案）。

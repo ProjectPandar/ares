@@ -1,9 +1,6 @@
 # Object OctagramSpiral ironing: standalone frozen RED
 
-Conditionally approved proposal:
-`dce718354eca59d3e4c69fbc06693d1af1f5411c`, Octagram ONLY.
-RED stacks directly on approved Archimedean GREEN
-`05bf7628cf58ecee5227010e93241d7f55e1f0d5`; no approved chain is rebased.
+Scope: Octagram ONLY.
 ZigZag/CrossZag/LockedZag are NOT covered or admitted by these tests.
 
 Owner: upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`,
@@ -41,21 +38,18 @@ active target must genuinely FAIL at UnsupportedProjectFeature(ironing_pattern),
 not pass by asserting rejection; both controls must wholePASS in both modes.
 Native outputs are runtime artifacts, not committed expectations.
 
-Independent RED approval precedes GREEN. GREEN must reuse the already split
+GREEN must reuse the already split
 shared PlanePath helper with `PlanePathPattern::OctagramSpiral` and the SAME
-parameters as approved Hilbert/Archimedean. No second generator, bbox source,
+parameters as Hilbert/Archimedean. No second generator, bbox source,
 new guard, parser expansion or support/raft change. Preserve both controls'
-raw API/CLI bytes from RED to GREEN and prior approved ironing outputs.
+raw API/CLI bytes from RED to GREEN and prior ironing outputs.
 Residual whole-output mismatch means STOP/report, not M73/timing repair,
-tolerance, snapping, filtering or fallback. CPU18, fresh serial official and
-seeded roots/caches, exact clean hash and targeted gates only.
+tolerance, snapping, filtering or fallback.
 
-Discovery repeat/activity evidence:
-`${TMP_ROOT}/ares-object-ironing-remaining-discovery-8f6ce1660/discovery-report.json`.
 The separate zag work remains blocked on discriminating Native toolpath-body
 geometry after excluding the config block, then a separate proposal/RED;
 its bbox must independently follow the real object lifecycle in
-`Fill.cpp::make_ironing`. W3 confirmed support/raft's ±1mm dummy bbox_object
+`Fill.cpp::make_ironing`. Support/raft's ±1mm dummy bbox_object
 (`SupportCommon.cpp:1456`) is a DIFFERENT source: no alignment is required,
 and it must not replace the real object bbox or create a second object-bbox
 producer.

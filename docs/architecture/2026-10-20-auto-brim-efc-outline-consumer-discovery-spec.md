@@ -1,8 +1,6 @@
 # Draft SPEC: AutoBrim consumes the post-elephant-foot bottom outline
 
-Status: **NATIVE-FIRST DISCOVERY / SPEC-REVIEW-REQUEST**, no code authorized.
-Branch/worktree: `worker2/brim-next-native-discovery` /
-`~/ares.worker2-brim-next-native-discovery`.
+Native-first discovery; no code in this document.
 Docs base: merged `e81afae89a4874af3c5556a592c3d5a1d121055c`.
 This ports a `libslic3r::Brim` outline consumer, not filling, ironing, seam,
 scarf, Arachne, Voronoi, or a new Ares pipeline feature.
@@ -30,11 +28,8 @@ select `elefant_foot_compensation_layers=1`.
 
 ## Native-first evidence before implementation
 
-Final root:
-`${COORD_ROOT}/evidence/worker2-auto-efc-discovery-20261020T204057/`.
-
-All8 Native invocations (4×official/seeded) and4 existing CLI invocations exit0,
-serial CPU13. Both Native modes have identical Brim bodies/hashes. Full-output
+All8 Native invocations (4×official/seeded) and4 existing CLI invocations exit0.
+Both Native modes have identical Brim bodies/hashes. Full-output
 discovery comparison replaces only the generated-by line, not M73/motion or
 geometry. API/nextest was not run and no public test/comparator was edited.
 
@@ -64,15 +59,14 @@ Native output. Scripts stay outside Git; no builds/FULL occurred in discovery.
 
 ### Read-only CLI provenance and prerequisite
 
-The shared existing CLI build target currently contains the queued exact-group
+The existing CLI build contains the exact-group
 candidate `fb70752b954851de99a7629312846dae045cccc7`, binary SHA256
 `856dc6cf4b15b60b0444f96e97213d1e52109c3bcd092f1ba517bb5e00a3ab65`.
-This is **not** falsely labeled as an exact merged-main CLI. It is used read-only;
-no queued source, branch, tracked file or build target was modified here.
-The selected inputs have a single group, whereas that queued change repairs
+This is **not** falsely labeled as an exact merged-main CLI. It is used read-only.
+The selected inputs have a single group, whereas the exact-group change repairs
 assignment across groups;3 inactive controls match completely. Still, before
 committing RED reconfirm on the then-current merged main or explicitly stack
-on the approved exact-group dependency. Source evidence below also shows the
+on the exact-group dependency. Source evidence below also shows the
 same AutoBrim EFC exclusion on merged `e81afae89`. No claim of current-main
 API RED is made from this exploratory binary observation alone.
 
@@ -105,7 +99,7 @@ Current Rust under `crates/ares-core/src/project_slice/gcode_emit`:
 
 - `brim/outline.rs::efc_enabled` deliberately restricts accepted brim types to
   explicit outer/inner/both/painted. Its comment leaves AutoBrim/btEar deferred.
-  The approved active Native witness now supplies AutoBrim admission evidence.
+  The active Native witness now supplies AutoBrim admission evidence.
 - `brim.rs::BrimPlan::generate` already obtains `efc_bottom` and calls
   `outline::select`, but AutoBrim ignores that selected `source` and iterates
   `volume_groups` via `brim/auto.rs::auto_group_area` on original `group.slices`.
@@ -128,18 +122,18 @@ width-vs-post-EFC-per-polygon operands distinct exactly as upstream does.
 
 Deferred: BrimEars/NoBrim gate expansion, painted-ear behavior, support/raft/tower,
 object-wide material eligibility, combined-brim ownership, new grouping or EFC
-geometry algorithms, and all other workers' fill/ironing/seam/Arachne/Voronoi
+geometry algorithms, and all other fill/ironing/seam/Arachne/Voronoi
 boundaries. Do not add Unsupported guards, fallback to raw slices on error,
 magic coordinate offsets or a flag beyond the actual upstream setting.
 
-No production edits before approval/public RED. GREEN only production code,
+No production edits before public RED. GREEN only production code,
 RED/helper/fixtures/docs frozen. Every file<=400LOC and core remains platform
 neutral (WASM/Windows/macOS/Linux); no I/O/UI behavior in core. Stop on a first
 strict residual outside this consumer boundary; do not weaken or normalize it.
 
-## Proposed post-approval SPEC → RED → GREEN
+## Proposed SPEC → RED → GREEN
 
-1. Rebase docs to the required dependency/current main; reconfirm all4 Native
+1. Reconfirm all4 Native
    observations and exact CLI source hash. Resolve the binary-provenance caveat
    above, not by assuming single-group equivalence constitutes final evidence.
 2. Commit public4case input-only RED reusing merged `runner/native_api_cli.rs`.
@@ -153,19 +147,5 @@ strict residual outside this consumer boundary; do not weaken or normalize it.
    compensation producer or unrelated routing. Retain explicit/painted EFC,
    Auto small-diagonal, exact-group and object-speed controls unchanged.
 4. Directed dual-mode evidence, fmt, wasm32 and
-   `cargo clippy --workspace --all-targets -- -D warnings`; inherit the W3 lint
-   fix during rebase rather than duplicate it. Final exact-tip dual canonical
-   FULL only in coordinator-allocated W2 window. No FULL during discovery/queue.
-   Merge/push coordinator-only; docs-only RR now.
-
-## CPU/replay provenance
-
-All Native/CLI/analysis commands serial `taskset -c13`; seeded explicit seed0,
-`ORCA_REPLAY_CPU=13`, existing seed-only wrapper/binary. Official explicit2.4.2
-extracted appdir/wrapper. Only CPU13, no stress or competing workerCPU use.
-Original `Brim.cpp` was read from the original AutoBrim worktree's ignored
-upstream checkout; this worktree has no local checkout/resources link.
-Replay into a new external root: copy3scripts, verify retained source/binary
-hashes, run `taskset -c13 node <root>/generate-inputs.js <root>/inputs` and
-`taskset -c13 bash <root>/run.sh <root>`; inspect manifest/summary. Only this
-SPEC document enters Git; queued exact-group chain is unchanged.
+   `cargo clippy --workspace --all-targets -- -D warnings`. Final exact-tip dual
+   canonical FULL. No FULL during discovery.

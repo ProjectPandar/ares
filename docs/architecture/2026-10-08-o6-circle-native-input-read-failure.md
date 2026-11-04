@@ -10,12 +10,10 @@ Do not use this receipt to change the printable-area detector or imitate a crash
 ## Exact input and reproduction
 
 - Source: `crates/ares-core/tests/plateless_instances_hit_no_suitable_objects_gate.rs::circle_bed_cylinder_bbox_outside_vertices_inside`.
-- Persisted input: `/tmp/worker3-circle-area-native-admitted/input.3mf`.
 - SHA256: `82a5d8d342c8599251edf886aea67092610d3638781818d452ff14a718f1e225`.
 - Producer ELF SHA256: `59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`;
   Build-ID `bdbbf4336095c2ce6283fc5441e1e56fbf595b99`.
 - Fresh admitted execution: exit 139, no exported G-code.
-- Logs: `/tmp/worker3-circle-area-native-admitted/{stdout.bin,stderr.bin,exit.code,gdb-symbols.log}`.
 - Symbol-matched stack: `std::string::_M_assign` → `CLI::run:1700` → `main:7543`.
   This is the input configuration/settings-string assignment region
   (`OrcaSlicer/src/OrcaSlicer.cpp:1699-1704`), before slicing.
@@ -23,13 +21,11 @@ Do not use this receipt to change the printable-area detector or imitate a crash
   stack does not reach `get_extruder_variant_string` or CLI selector access at 3462.
 
 The first launcher failed before Native execution because `ORCA_REPLAY_BIN`
-was not declared. Its files remain in `/tmp/worker3-circle-area-repro/` and are
-not a Native verdict. The admitted run is separate; debugger executions are
+was not declared; that attempt is not a Native verdict. The admitted run is separate; debugger executions are
 stack diagnostics, not retries promoted to parity results.
 
 ## Read-only configuration comparison
 
-Receipt: `/tmp/worker3-circle-area-native-admitted/config-audit.json`.
 The synthetic archive has eight project settings. All three IDs are present:
 `printer_settings_id="Kobra 3"`, `print_settings_id="Std"`, and
 `filament_settings_id=["PLA"]`. It lacks `printer_model`,
@@ -50,8 +46,7 @@ proven root cause. This slice does not repair the synthetic fixture constructor.
 
 The one-field child changes only `brim_type=no_brim`, SHA256
 `f41bddbe88422d1991ccd905fc3e068f7a61a307de2509ab12e172cb610112ef`.
-Its fresh admitted execution also exited 139 without G-code; logs are
-`/tmp/worker3-circle-no-brim-native/{stdout.bin,stderr.bin,exit.code}`.
+Its fresh admitted execution also exited 139 without G-code.
 Neither sparse archive is an accepted Native slicing control. The original
 constructor is not repaired by this slice.
 

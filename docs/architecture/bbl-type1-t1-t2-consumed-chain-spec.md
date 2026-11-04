@@ -1,9 +1,9 @@
 # SPEC: T1–T2 BBL Type1 activation and consumed planning chain
 
-Status: docs/SPEC review request only. Owner W5. Milestone approved and committed
+Status: proposed; docs/SPEC only. Milestone committed
 as `8a22fa596`; see [Type1 ARD](ard-bbl-type1-wipe-tower-port.md).
-No public RED or production work authorized yet. Original W5 window stack stays
-frozen at `55a81063b`; this specification lives on the separate docs branch.
+No public RED or production work is part of this SPEC. The earlier stack stays
+frozen at `55a81063b`; this specification lives on a separate docs branch.
 Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`, paths below relative to
 `OrcaSlicer/src/libslic3r`.
 
@@ -18,7 +18,7 @@ T1 and T2 constitute one consumed preparation chain, not standalone public
 features. Its output must feed the actual `generate_new` consumer and existing
 schedule/runtime/footprint consumers through subsequent T3/T4 work. No dormant
 planner facade, public planning API, dead fields or Type2 substitute qualifies.
-T1/T2 may be reviewed as source/design checkpoints, but cannot be integrated or
+T1/T2 may be checked as source/design checkpoints, but cannot be integrated or
 called GREEN while public whole-stream RED remains. T3/T4 are explicit required
 completion dependencies, not permission to implement them under this SPEC.
 
@@ -28,8 +28,8 @@ Use the accepted official-exported stock X1C project, two cube10 objects,
 Bambu PLA Basic + Bambu PLA Matte, distinct AMS slots on one nozzle. Unchanged
 stock process/machine/filament templates. Input SHA256:
 `ab00b9040c3ccc1c10490a220880b87108aed7edd3a19926b8e7967f1287e506`.
-Evidence root `${COORD_ROOT}/evidence/w5-stock-multi-materialized/`;
-`0/input.3mf`, `0/verified.json`, raw streams/receipts and
+Discovery evidence (retained externally) includes
+`0/input.3mf`, `0/verified.json`, raw streams/records and
 `t1-t2-baseline-settings.json`. This is discovery evidence, not a registered RED.
 The slot-materialization and official re-export history is retained; do not
 silently substitute a different preset flattening/export path for public RED.
@@ -146,31 +146,31 @@ wrapping, sparse and non-BBL Type1 paths are not covered by this baseline.
 Their implementation/qualification remains in the parent milestone inventory;
 no runtime restriction or claim of complete Type1 parity follows from this SPEC.
 
-## Public RED plan — permission still required
+## Public RED plan
 
-After SPEC approval, register the accepted input through existing CLI parity
+After this SPEC, register the accepted input through existing CLI parity
 NativeCase/`native_stream_case::check(..., (false, |_, _| {}))` conventions.
 Compare complete ordered Native/API/actual CLI streams and raw API==CLI; require
 Native success first. Input hash only, never checked-in Native outputs or expected
 G-code constants. No private planner tests as an acceptance substitute.
 
 Baseline public RED must reproduce missing Type1 output in official then seeded
-with separate fresh caches and retained raw streams, launch receipts and exits.
+with separate fresh caches and retained raw streams, launch records and exits.
 If exporting through the shared fixture path changes the accepted input, stop
 for qualification rather than silently claiming the old input's evidence.
 A second GUI prime-volume variant and prime-tower-disabled control require
 fresh Native qualification before registration; their status is unmeasured,
 not predetermined RED/PASS. No literal probes or template overrides.
 
-Freeze approved RED tests before production. Do not turn whole-output failure
+Freeze RED tests before production. Do not turn whole-output failure
 into an expected-failure PASS, mask headers/timing, or assert just G29/tower
 markers. Residual label/geometry/template differences are blockers to whole
 GREEN, not reasons to widen this SPEC silently.
 
 ## Exit and deferred work
 
-This docs stage exits with reviewed source inventory and exact SPEC hash only.
-Later T1/T2 review requires real connected producer/consumer implementation,
+This docs stage exits with the source inventory and exact SPEC hash only.
+Later T1/T2 work requires real connected producer/consumer implementation,
 not an unused planning library; final milestone GREEN requires T3 emission and
 T4 live geometry with complete Native parity. No partial activation merges.
 
@@ -178,9 +178,9 @@ T3 owns writer/toolchange/finish, `append_tcr` and `is_finish_first`;
 T4 owns generated bbox/rib/outer-wall/hull and live consumers. Neither may be
 faked to make preparation appear complete. Preview-only metadata, multi-transform
 PrintObject preparation and unrelated placeholder fixes remain deferred as in
-ARD-0105. Coordinate shared skirt/brim/chamber edits with their owners.
+ARD-0105. Shared skirt/brim/chamber edits stay coordinated with those slices.
 
-CPU11 serial; `cargo nextest` only when RED is authorized, official→seeded
+Serial execution; `cargo nextest` only from the RED phase on, official→seeded
 fresh caches. Final production validation includes fmt, strict workspace/all-
-target Clippy, browser-WASM and coordinator-window FULL at exact integrated tip.
-No tests, production edits, FULL, rebase, push or merge for this SPEC request.
+target Clippy, browser-WASM and full parity at the exact integrated tip.
+No tests, production edits, rebase or merge for this SPEC.

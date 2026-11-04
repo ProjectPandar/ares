@@ -1,8 +1,7 @@
 # G4 other-layer sequence-count bounded coverage
 
-Status: bounded GREEN; fresh gates and the sole owner-adjudicated Native outlier are recorded in [the review receipt](g4-sequence-review.md). Historical request/RED sections below remain chronological evidence, not the current status.
-Base: merged G4 Manual-map `ee277389dfa0fe8664caa2bf490ddf0cdda3d362`.
-This is a narrower next vertical under the approved six-key G4 source boundary,
+Bounded GREEN; the sole adjudicated Native outlier is recorded in [the sequence review](g4-sequence-review.md). RED sections below remain chronological evidence.
+This is a narrower next vertical under the six-key G4 source boundary,
 not a new Ares tool-ordering pipeline.
 
 ## Selection and non-negotiable ownership
@@ -16,8 +15,8 @@ reconstruction; ramming needs active Type2 SEMM; by-object masks need the
 sequential-object lifecycle (`GCode.cpp:3297-3316`). Those five alternatives
 remain deferred, not silently credited through this simpler fixture.
 
-No worker5 `--load-settings`, profile overlay/application-stack work, new CLI
-flags or worker1 PCP/string serialization changes. No shared Native rebuild,
+No `--load-settings`, profile overlay/application-stack work, new CLI
+flags or PCP/string serialization changes. No shared Native rebuild,
 new Native oracle, speed/time/travel/restate changes, or by-object mask port.
 
 ## Source-cited rewrite boundary
@@ -34,7 +33,7 @@ listed under `crates/ares-cli/tests/orca_parity/option_coverage`.
 | `libslic3r/GCode/ToolOrdering.cpp:1320-1362` (`reorder_extruders_for_minimum_flush_volume` / `get_custom_seq`) | Layer index+1 matches inclusive range; reverse traversal means last matching row wins. Settled first layer remains locked when `!reorder_first_layer`; non-BBL maps are grouped as physical0. Custom sequence is passed to the existing minimum-flush ordering algorithm, not an independent scheduler. Rust: `tool_ordering/reorder.rs` plus `reorder/groups.rs`. |
 | `libslic3r/GCode/ToolOrdering.cpp:498-513` (`apply_first_layer_order`) | First-layer configured order compares **zero-based** tool IDs. Keep this dependency distinct from the one-based other-layer rows; Rust: `tool_ordering/first_layer.rs::apply_configured_order`. |
 | `libslic3r/Format/bbs_3mf.cpp:344-346,4428-4435,7943-7957` | Plate metadata stores/reads first-layer sequence, other-layer vector and count separately. Rust: `project/plate_config.rs::apply_plate_config_overrides`; test binding only changes these requested owner fields. |
-| `OrcaSlicer.cpp:5979` | Native applies plate config over print config. This is an upstream source citation, not authorization to change CLI settings/overlay behavior. Same bound ZIP goes to both slicers. |
+| `OrcaSlicer.cpp:5979` | Native applies plate config over print config. This is an upstream source citation, not a change to CLI settings/overlay behavior. Same bound ZIP goes to both slicers. |
 
 `first_layer_sequence_choice` / `other_layers_sequence_choice` enum definitions
 are `PrintConfig.cpp:1125-1147`. Retain Customize as coherent fixture metadata,
@@ -42,7 +41,7 @@ but do not pretend that enum text proves consumption: the cited runtime owner
 reads the plate vector/count. GUI choice conversion is outside this slice.
 
 Existing Ares imports and custom-sequence code are compatibility shells around
-these upstream owners. Initial implementation authorization is test/harness
+these upstream owners. Initial implementation scope is test/harness
 only. If live Native admission exposes an Ares consumer defect, preserve that
 RED and request an exact source-boundary production extension before repair.
 Do not rewrite `solve.rs`, create a parallel sequence scheduler or normalize
@@ -51,7 +50,7 @@ away a mismatch.
 ## Finite context and canonical requests
 
 One Ender-3 0.4mm nozzle, relative extrusion, SEMM, two distinguishable PLA
-logical filaments (colours differ, temperatures211/223 after approved revision), Manual physical map
+logical filaments (colours differ, temperatures211/223 after the revision below), Manual physical map
 `[1,1]`, coherent Standard selector, baseline identity `[1,2]` and four-cell
 supplied flush matrix. Identity/variant classification is not promoted here.
 No support, raft, skirt or prime tower; cube10,
@@ -117,18 +116,18 @@ G4 observer; the whole-output comparator sees everything except its existing
 generated-by-banner normalization.
 
 Save requested/exported/bound bytes, typed/effective/application proofs,
-per-layer ordered-extrusion records, fresh cache/command receipts, complete
+per-layer ordered-extrusion records, complete
 streams and SHA sets. Do not commit Native G-code goldens or synthesize Native
 sequence answers from Rust's implementation.
 
 ## Admission, RED and bounded GREEN contract
 
-After exact spec approval, first run an actual live Native-backed vertical RED
+First run an actual live Native-backed vertical RED
 on the existing INCOMPLETE plan: retain all canonical/control comparisons and
 consumer assertions before the terminal bounded-classification expectation.
 If Native application, execution, observation or complete comparison fails
 first, preserve artifacts and report that stage, not a made-up metadata RED.
-No consumer repair or classification promotion is pre-authorized by this spec.
+No consumer repair or classification promotion is part of this spec.
 
 Only after all three canonical requests AND both controls have correct actual
 consumption and exact whole outputs may the single count plan gain source-cited
@@ -140,25 +139,19 @@ all deferred behaviors. All other plans, including four merged Manual maps and
 four still-unexecuted G4 keys, remain unchanged.
 
 Required directed seeded/official fresh cold + repeat/cache-hit runs report
-actual Summary/exit/case counts and preserve every attempt. Native start needs
-load1<30,2threads, no browser overlap and coordinator queue permission; held
-startup is not RED. Default-env workspace (unset ARES_*), strict all-targets /
+actual Summary/exit/case counts and preserve every attempt. Default-env workspace (unset ARES_*), strict all-targets /
 all-features Clippy, fmt and WASM core/vgcode/adapter must pass. If production
 later changes, fresh new-tree gates and complete fresh base/candidate seeded /
 official pairs are mandatory. Even for harness-only promotion, use the common
 acceptance controls and exact-name failure comparison, raw common-input SHA
-sets and distinct/repeated capture inventory. Report ND to the owner; no
-implicit waiver, tolerance or comparator change. Review binds exact final hash;
-latest allowed rebase then non-force FF push only after APPROVED.
+sets and distinct/repeated capture inventory. Report ND explicitly; no
+implicit waiver, tolerance or comparator change.
 
-## Temperature fixture revision — approved
+## Temperature fixture revision
 
-The originally approved fixture above fixed 211/233; the owner approved this
-revision to 211/223 after retaining the rejection below.
-On production base `626ed1738`, standalone Native export succeeded
-(`/tmp/worker2-g4-sequence-626-export-validation.HMwcXl`, exit0), but the single
-fresh E2E (`/tmp/worker2-g4-sequence-626-fresh-e2e.k8K9V3`, run
-`1239a398-31c7-4b75-94a7-4db0b2241bcd`) stopped at Native Slice -62/exit194:
+The original fixture fixed 211/233; it was revised to 211/223 after the
+rejection below. Standalone Native export succeeded (exit0), but the single
+fresh E2E stopped at Native Slice -62/exit194:
 both actual PLA recommended ranges are `[190,230]`, and 233 is outside the
 other filament's range. This is admitted upstream validation, not Ares RED.
 
@@ -168,9 +161,8 @@ bounds (`1092-1102`). The by-layer caller gathers actual used filament fields
 at `1217-1240`; `Print::validate` invokes it for one nozzle/multiple filaments
 and sets `STRING_EXCEPT_FILAMENTS_DIFFERENT_TEMP` at `1273-1277`.
 `OrcaSlicer.cpp:6077-6078` maps this to `CLI_FILAMENTS_DIFFERENT_TEMP` (-62).
-These lines also match the seeded replay source used for the receipt.
 
-**Approved sole spec change:** fixture nozzle and initial-layer temperatures
+**Sole spec change:** fixture nozzle and initial-layer temperatures
 211/**223**, rather than 211/233. Retain the same two PLA presets, their actual
 recommended `[190,230]` ranges, distinct colors, one Standard nozzle, Manual
 map, role allocation, first-layer order, all count/vector requests and controls.
@@ -178,18 +170,16 @@ Both 211 and 223 lie within both ranges; temperature distinction is retained.
 No production changes, preference override, range widening, guard bypass,
 comparator normalization or new consumer scope is permitted.
 
-Owner approved the revision; retain the original -62 as a rejection witness.
+The original -62 remains a rejection witness.
 Audit both actual preset/project temperature arrays and mutual
 bounds offline, then perform one standalone export **and slice** admission
 validation on the bound count0 input before one fresh E2E on the current
-production tree. Preserve the -62 receipt and every subsequent raw artifact;
+production tree. Preserve the -62 result and every subsequent raw artifact;
 export alone does not certify slice validation or sequence consumption.
 
-## Type-owned vector footer GREEN extension — approval requested
+## Type-owned vector footer GREEN extension
 
-Production RED accepted by owner: candidate `24ffe3628` on production
-`626ed1738`, fresh seeded run `3566b0df-5299-4c45-ac76-088a6e5f66da`, root
-`/tmp/worker2-g4-sequence-role-fresh-e2e.PwYHy6`. Count0/1/2 whole outputs and
+Production RED from a fresh seeded run: Count0/1/2 whole outputs and
 all consumer assertions passed. Empty-vector control stopped at byte157227,
 line6442: Ares emits one extra 33-byte `; other_layers_print_sequence = \n`
 line in CONFIG; Native omits it. Reverse-row control and final classification
@@ -247,16 +237,14 @@ nonempty vectors containing a nonnil member must remain byte-for-byte stable.
 This is broader than one key and does not certify all empty inputs slice-legal.
 
 Offline audit of 1211 retained paired streams from historical seeded/official
-G4 full receipts plus current RED finds zero Native empty numeric/bool echo
+G4 full runs plus current RED finds zero Native empty numeric/bool echo
 lines; the only Ares empty/all-nil line found is this current sequence RED.
-Those historical observations are NOT fresh production-626 acceptance gates.
+Those historical observations are not fresh acceptance gates.
 The six other empty-vector keys in all four current inputs remain present and
 identical in Native/Ares: `extruder_ams_count`,
 `parallel_printheads_bed_exclude_areas`, `post_process` (Strings),
 `extruder_printable_area` (PointsGroups), `head_wrap_detect_zone`,
 `wrapping_exclude_area` (Points). Their existing PASS output must remain intact.
-Machine-readable evidence: `/tmp/worker2-g4-numeric-vector-nil-impact.json`
-and `/tmp/worker2-g4-sequence-empty-vector-impact-audit.json`.
 
 Before production edits, write a bounded type-table regression witness:
 empty, all nil, mixed nil+nonnil, ordinary nonempty numeric/bool vectors;
@@ -267,10 +255,10 @@ false/zero must not become nil; mixed vectors must not disappear; nullable
 sentinels must retain their semantics; raw fallback must not resurrect nil;
 semantic serde markers must not change ordinary JSON array representation.
 
-Only after owner approval AND full-queue END implement the type-owned repair.
+Implement the type-owned repair after this witness.
 Run unchanged five-case directed E2E: keep consumer assertions before terminal
 classification. If all five whole/consumer witnesses pass and only INCOMPLETE
-remains, request metadata/sweep GREEN separately. Seeded/official cold/hit and
+remains, land metadata/sweep GREEN separately. Seeded/official cold/hit and
 fresh engineering/full base-candidate gates remain required for production
 changes, including raw common-input SHA inventory and literal ND adjudication.
 No stripping output, nil-key exemptions or guard changes.

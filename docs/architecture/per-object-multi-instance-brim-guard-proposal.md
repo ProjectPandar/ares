@@ -1,13 +1,10 @@
 # SLICE-PROPOSAL: retire the ByLayer per-object multi-instance brim guard
 
-Status: **PROPOSAL ONLY / REVIEW-REQUEST**. No committed production or public
-RED changes. Probe base `db443be4a89aa8422ce9dc66c1aaf311767fa563` includes
-approved ordinary owner collection and global-combine chains, queued stack25.
+The probe base includes the ordinary owner collection and global-combine chains.
 Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Native-first frozen accepted witness
 
-Evidence `${TMP_ROOT}/ares-perobject-copies-proposal-db443be4a/discovery-report.json`.
 Frozen target derived from `tests/parity/multi-instance-brim/target.3mf` by ONLY
 skirt_type combined→perobject. Non-config ZIP members and all other settings
 verified identical. Same-input combined-skirt control retained.
@@ -27,18 +24,14 @@ and control. Target API returns exact
 Combined control passes complete ordered Native/API/CLI comparison with raw
 API==CLI. This is an admission divergence, not a new XY/path failure.
 
-## Explicitly authorized temporary guard-only experiment
+## Temporary guard-only experiment
 
 After accepted Native baseline, locally removed ONLY
 `|| group.instance_indices.len() != 1` in `skirt/generate.rs` and changed the
 now-unused tuple binding to `(object, _)`. No geometry/emitter/other guard change.
-Exact temporary diff is `probe/guard-only.patch`, SHA256
-`fe3698c75b6168b34c782223a3ae303c0b8f06c7eb8916ea39feb5d2935d50e6`.
 
-This was an uncommitted DIRTY discovery probe on exact base db443be4a, NOT
-claimed as a clean-hash public GREEN or production authorization. Build receipts,
-source hash, full dirty porcelain before/after each case and binary hashes are
-retained. Fresh probe Native was run FIRST again in each mode, then public
+This was an uncommitted discovery probe, NOT claimed as a public GREEN.
+Fresh probe Native was run FIRST again in each mode, then public
 validated API and real CLI using the probe build and unchanged full comparator.
 
 **Results in BOTH official/seeded modes:**
@@ -49,12 +42,8 @@ validated API and real CLI using the probe build and unchanged full comparator.
 - Native and API both retain TWO brim blocks, ONE skirt block.
 
 No concrete residual output divergence after lifting the guard was observed.
-All Native/public descendant/thread samples CPU18, separate fresh roots/cache,
-current canonical snapshot/hash/reference variables verified. This is not a
-NONE/Native-rejected result. Original production source was restored byte for
-byte from its archived baseline and git porcelain verified empty BEFORE this
-proposal. A restoration build resets the reusable target to the clean source;
-probe receipts remain separate and clearly labeled, never parity gate evidence.
+This is not a NONE/Native-rejected result. Original production source was
+restored before this proposal; probe results are never parity gate evidence.
 
 ## Owning upstream boundary and why no geometry repair is proposed
 
@@ -79,7 +68,7 @@ restriction with no corresponding ByLayer upstream singleton-instance rule.
 The observed local experiment shows this slice can be **guard retirement + RED**,
 not another geometry, M73, estimator or bounds repair.
 
-## Bounded retirement and review sequence
+## Bounded retirement sequence
 
 Scope is explicitly **ByLayer**. The experiment removed the term wholesale only
 for probing this input; it does NOT justify silently admitting ByObject copies.
@@ -92,22 +81,19 @@ previous SPEC and remains unproved. All other predicate terms, especially
 combine_brims, non-whitelisted brim types, support/raft/tower/flush and sequential
 shared-group constraints, stay unchanged. No new fallback/error/diagnostic.
 
-After proposal/SPEC approval: freeze these two input-only cases with SHA/member
-manifest in the repo, write public runtime Native-FIRST RED asserting full
-ordered Native equality for target AND passing control, raw API==CLI and source
-config/owner/skirt anchors. Target must truly FAIL on the current unsupported
-API/CLI result; never pass because divergence exists. No Native outputs committed.
-Submit independent RED REVIEW-REQUEST before permanently changing the guard.
+Freeze these two input-only cases with SHA/member manifest in the repo, write
+public runtime Native-FIRST RED asserting full ordered Native equality for target
+AND passing control, raw API==CLI and source config/owner/skirt anchors. Target
+must truly FAIL on the current unsupported API/CLI result; never pass because
+divergence exists. No Native outputs committed.
 
-Then source-bounded ByLayer guard retirement only, exact clean hash, both modes
-CPU18/jobs2/threads2, fresh roots/caches, canonical/reference and actual affinity
-audit. Target and control must both strictly PASS; control raw bytes remain
-stable. Preserve owner/global-combine tests and existing perobject skirt/brim
-families, fmt/strict/WASM and <=400 LOC. No comparator changes or new normalization.
-Any residual whole divergence after the minimal retirement means STOP/report,
-not another patch. If a new base already admits and fully matches the target,
-report NO-RED STOP; do not fabricate a RED.
+Then source-bounded ByLayer guard retirement only, in both modes. Target and
+control must both strictly PASS; control raw bytes remain stable. Preserve
+owner/global-combine tests and existing perobject skirt/brim families,
+fmt/strict/WASM and <=400 LOC. No comparator changes or new normalization.
+Any residual whole divergence after the minimal retirement means stop and
+report, not another patch. If the base already admits and fully matches the
+target, there is no RED; do not fabricate one.
 
 Deferred: ByObject copies, combine_brims1+perobject, other brim modes/holes,
-new placements/overlap, support/raft/tower/multi-filament. No broad/full/workspace
-runs, merge or push during freeze. No further production/test work before review.
+new placements/overlap, support/raft/tower/multi-filament.

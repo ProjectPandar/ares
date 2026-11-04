@@ -28,7 +28,5 @@ Real official-exported INPUT3MFs use GUI Machine start G-code comments:
 
 Shared complete Native stream comparison must pass control and fail both
 positives before implementation, then pass all three in official and seeded
-modes. Only existing generated-by identity/date normalization. Input provenance,
-SHA256 and observed line27 differences are retained in
-`${COORD_ROOT}/evidence/w5-6a2e-minmax-discovery/PROPOSAL-RR.md`.
-Stack on approved rounding GREEN 6a2e96e1f for joint W5 integration.
+modes. Only existing generated-by identity/date normalization. This slice
+builds on the rounding result-type GREEN.

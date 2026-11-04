@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted, implemented, gate-verified, and independently approved.
+Accepted and implemented.
 
 ## Decision
 
@@ -69,19 +69,12 @@ stay below 400 LOC.
 
 ## Verification evidence
 
-Independent source/specification review rejected the initial f64 threshold,
-ambiguous accumulator/precondition domain, and incomplete Eigen/test boundary;
-the main thread repaired each item before RED, and re-review approved
-unconditionally. The compiling RED failed 0/9. Literal expectations came from
+The compiling RED failed 0/9. Literal expectations came from
 a temporary standalone C++ driver using the actual pinned O50/orientation,
 scaled, Eigen, pattern, and verbatim reduction dependencies; Rust tests retain
 no runtime oracle dependency. Final gates pass focused 9/9, dependency 622/622,
 workspace 6,282/6,282, warning-denying workspace Clippy, rustfmt, core/browser
-wasm32, diff/LOC/static audits. The pinned checkout is clean and temporary artifacts were removed. The first
-implementation review found that the final-winner assertion could not kill the
-synthetic upper-wrap branch. The main thread extracted the production
-per-candidate accumulator into a read-only test seam, froze its pinned weighted
-sum/score/mean, and proved the branch-deletion mutation fails before restoring
-SHA-256 `edc0cbfe2fca30a84740ec75e8e2b6a7b1c7c8eff70f35f36c99abf298a3af11`.
-All gates were rerun after repair, and the final read-only six-axis re-review
-approved unconditionally with no remaining repair item.
+wasm32, diff/LOC/static audits. Because the final-winner assertion alone could
+not kill the synthetic upper-wrap branch, the production per-candidate
+accumulator is exposed as a read-only test seam with its pinned weighted
+sum/score/mean frozen, and the branch-deletion mutation fails.

@@ -1,8 +1,7 @@
 # Source-cited object layer-height profile rewrite slices
 
-Status: Stage1 approved; Stage2/automatic-adaptive/ZAA implementation not approved.
-Investigation baseline: main d9b642191 (Option report docs merge). No Rust edits,
-no Native/runtime attempts, no claimed RED/GREEN. Browser pause respected.
+Status: Stage1 accepted; Stage2/automatic-adaptive/ZAA implementation not in scope.
+No Rust edits, no Native/runtime attempts, no claimed RED/GREEN.
 
 Architecture: [object-profile ARD](../../architecture/2026-10-08-object-layer-height-profile-boundary.md).
 Priority: **range layer_height → imported painted profile → separate activeZAA**.
@@ -47,7 +46,7 @@ G-code callers. Pass source object data at production planning time, not a fake
 empty source in a compatibility wrapper. Existing internal planning tests can be
 changed test-first to the same interface rather than preserving an obsolete API.
 
-## Stage1 — object range layer_height (first approval/implementation slice)
+## Stage1 — object range layer_height (first implementation slice)
 
 ### Included source semantics
 
@@ -80,7 +79,7 @@ Painted import/selection, automatic adaptive generation, smoothing/UI tools,
 texture generation and activeZAA are deferred. Unrelated slicing behavior does
 not get refactored. Existing public external-input limits remain.
 
-Coordinator confirmed the stage1 boundary: **mixed Some/None ranges retain
+Stage1 boundary: **mixed Some/None ranges retain
 UnsupportedProjectFeature("layer_config_ranges")** because the absent option
 is directly dereferenced upstream (UB). No implicit default or UB imitation.
 Pure None range collections preserve their pre-existing region-only behavior.
@@ -98,7 +97,7 @@ no-range controls. Mixed-range semantics must either receive a source-defined
 RED/GREEN witness before accepting them or be called out as an unresolved scope
 blocker; removing a blanket gate cannot silently create unsupported acceptance.
 
-### Test-first RED construction (after spec approval + BROWSER-END)
+### Test-first RED construction
 
 1. Preserve a known complete seededNative FDM 3mf control (box, stable single
    nozzle/profile, no activeZAA), bind input/Native ELF/source/seed/policy hashes.
@@ -129,12 +128,11 @@ blocker; removing a blanket gate cannot silently create unsupported acceptance.
 Primary and legal boundary witnesses are strict full-byte GREEN; unmodified
 fixed-height controls retain exact bytes. Native-rejected inputs remain explicit
 non-PASS. Fresh same-round rebased base/candidate seeded full gate, targeted
-cases, workspace nextest (16 parity threads), cargo clippy, cargo fmt, browserWASM
-check, and any coordinator-required official gate pass/are honestly reported.
-Existing official carry-forward follows coordinator policy. No ignored tests,
-value filters or retries-to-PASS. Review before normal ff-only push.
+cases, workspace nextest, cargo clippy, cargo fmt, browserWASM check, and the
+official gate pass/are honestly reported. No ignored tests, value filters or
+retries-to-PASS.
 
-## Stage2 — imported painted layer_height_profile (separate approval)
+## Stage2 — imported painted layer_height_profile (separate slice)
 
 Current `project/load.rs:66-70` records only case-insensitive file presence in
 `ProjectDocuments`; presence is not parsed per-object data and currently blocks
@@ -194,8 +192,6 @@ activeZAA Native RED. No ZAA production code or capability removal in stages1/2.
 
 ## Runtime discipline
 
-Do not start Native/heavy gates during BROWSER-START; no work delegated. If a
-Native failure requires debugger evidence, use `nix shell nixpkgs#gdb -c gdb ...`
+If a Native failure requires debugger evidence, use `nix shell nixpkgs#gdb -c gdb ...`
 on the **existing admitted binary**, without rebuilding OrcaSlicer for diagnosis.
-Current document is source-read evidence only, not runtime proof. Submit spec
-for coordinator review; no implementation until explicitly approved.
+Current document is source-read evidence only, not runtime proof.

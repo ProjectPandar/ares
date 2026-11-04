@@ -1,7 +1,7 @@
 # Honeycomb bridge-over-infill anchoring: regional ZAA direction
 
-Status: SPEC-REVIEW-REQUEST; discovery only, no RED or production changes.
-Base: approved main `1d0508fd1d4b29169dcddc57f7c6014acf3ddbc5`.
+Discovery only, no RED or production changes.
+Base main `1d0508fd1d4b29169dcddc57f7c6014acf3ddbc5`.
 
 ## Source boundary, not a new slicing pipeline
 
@@ -39,7 +39,7 @@ private `sparse_anchoring/honeycomb.rs` leaf, preserving other arms.
 
 ## Native-first discovery and first differing intermediate
 
-Use the approved authored Honeycomb multiline target mesh/profile bundle:
+Use the authored Honeycomb multiline target mesh/profile bundle:
 multiline2, angle45, density20%, layer height0.2. The discovery modifies
 only the two regional ZAA bits and, for layer-phase activity, top shell
 count. Input-only ZIP members and metadata are preserved except the
@@ -92,11 +92,11 @@ progress from cached elapsed time divided by whole-file machine time, so
 changed later travel/bridge paths can affect earlier progress placement.
 The no-M73 diagnostic stream is used only to locate motion ownership,
 never as an acceptance comparator. No progress, cooling or time-estimator
-changes are authorized; a remaining delta after the bounded port means STOP.
+changes are in scope; a remaining delta after the bounded port means STOP.
 
 ## RED, GREEN and non-negotiable boundaries
 
-After SPEC approval, freeze input-only top6 target and both conjunction
+Freeze input-only top6 target and both conjunction
 controls (enabled/flag0, disabled/flag1); retain the confirmed top7/top8
 enabled/flag1 phase controls. Public API and CLI must
 agree in raw bytes. Require effective flags, positive Internal Bridge,
@@ -123,21 +123,3 @@ witness. Do not change or fold Line anchoring into this Honeycomb chain.
 Mandatory gates: fmt, workspace all-target clippy with `-D warnings`, wasm32,
 all new and existing Honeycomb/ZAA controls in both modes, then canonical
 exact-hash FULL in both modes with fresh artifacts/cache and zero FAIL.
-Compilation/probes CPU12; FULL `ARES_PIN_OFFSET=20`,
-`ARES_PARITY_THREADS=4` (CPU20-23). Submit RR; coordinator alone reviews
-and merges. No production starts before separate SPEC and RED approvals.
-
-## External evidence
-
-Under `${EVIDENCE_ROOT}/`:
-`w3-honey-anchoring-zaa-top6/` and `...-top6-seeded/` contain input SHA,
-commands, binary identities, Native repeats, strict results and footer
-admission. Target `role-observation.json` and `first-motion-context.json`
-record localization without changing the strict verdict.
-`w3-honey-anchoring-zaa-discovery1/`, `...-top7-seeded/`,
-`...-top8/` and `...-top8-seeded/` are the phase controls.
-`w3-honey-anchoring-zaa-localize/{seeded-native-gdb,ares-gdb}.log` record the
-entry parameters. The seeded debugger uses the actual reference executable
-with existing matching DWARF; no diagnostic build or gcroot was created.
-The old auxiliary diagnostic path had been garbage-collected and was not
-rebuilt or used as an oracle. Only the canonical live runners supply parity.

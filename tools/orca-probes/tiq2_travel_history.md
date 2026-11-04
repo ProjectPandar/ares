@@ -4,13 +4,11 @@ Read-only extension `tiq2_travel_history.nix` of the qualified travel family.
 It logs first-layer `init_layer`, internal construction/reconstruction input,
 and cached output. No route or cache predicate is changed.
 
-## Qualified result (2026-10-08)
+## Qualified result
 
-Build `--cores 8 --max-jobs 1` completed (1471 exit0); exact-fixture seeded
-slice1472 exit0. Package:
+The build and the exact-fixture seeded slice both exit 0. Package:
 `/nix/store/dn62si3vdhklizgyd0zljdvpljrnngza-orca-slicer-seed-replay-2.4.2`.
-Artifacts `/tmp/tiq2-history-qualified-20261008T0049Z/` contain full G-code,
-trace, run log and `whole-file-oracle-comparison.json`. Complete bytes equal
+Complete bytes equal
 seed oracle `1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv` after ONLY replacing the
 generated-by banner. Both816581 normalized bytes, SHA256
 `8e417e46deaef9e48f9390cf9ae0412b7977722b7722fdfcf56c2eb7cd467001`.
@@ -60,5 +58,4 @@ reinitializing on support→object restoration; inheriting model top surfaces
 into SupportLayer's empty-region boundary. Do not hardcode0.4, tweak a
 waypoint, add a fixture guard or change Clipper/router rounding.
 
-Rust travel fix is still pending. Browser pause blocks new heavy RED/GREEN
-runs; no skipped or initialization-failed test is counted as coverage.
+No skipped or initialization-failed test is counted as coverage.

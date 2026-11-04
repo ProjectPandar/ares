@@ -38,7 +38,7 @@ normalizing only one independently validated generator timestamp line. Missing
 and existing non-file paths must be irrelevant after deletion; dump paths must
 neither be created nor modified. No global test environment mutation is allowed.
 
-The small project fixture is copied byte-for-byte from the Coordinator anchor
+The small project fixture is copied byte-for-byte from the anchor fixture
 (SHA256 `200980b8217b4a5f0dfb8022e0a837c662c15fcaaaeca7d7a545eb7be250a63d`).
 The verified pre-fix binary (base `431fb361`) is labelled baseline evidence, not
 current-build identity. Preserve raw baseline/candidate/real Orca outputs,

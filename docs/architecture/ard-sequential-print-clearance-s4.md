@@ -1,8 +1,8 @@
-# SPEC-REQUEST — S4 Print::validate sequential clearance Rust rewrite
+# SPEC — S4 Print::validate sequential clearance Rust rewrite
 
-Status: APPROVED by coordinator; implementation follows independent current-source
-RED. Base96577fff7. Worker4 owns S4 validation only. Worker5
-owns by-object G-code emission, order/transition changes; do not edit emit.
+Status: accepted; implementation follows independent current-source
+RED. Base 96577fff7. This slice covers S4 validation only; by-object G-code
+emission and order/transition changes are a separate slice; do not edit emit.
 
 ## Upstream source / exact boundary
 
@@ -66,7 +66,7 @@ existing contract rather than inventing fake empty geometry or a fallback.
   area, there may be collisions when printing." Preserve upstream evaluation
   order; no all-pairs alphabetic sort/dedup or early first-object proxy.
 - Active order is model object_index sort826-829, NOT disabled# if0 arrangement
-  sort740-824. Do not mutate emission ordering or arrange_order (worker5 owns it).
+  sort740-824. Do not mutate emission ordering or arrange_order.
 - Vertical870-928: inspect instances in that model order; reverse-inflate the
   horizontal bbox by half_radius+skirt_offset for current Y span; overlap with
   any later inflated Y bbox (>0 strict) sets limit rod height. Otherwise use lid
@@ -97,8 +97,8 @@ S4_first/S4_second, actual package relationships and ids distinct; print_sequenc
 must be upstream serialized "by object" (not "by_object"), skirt_loops0 to
 isolate the initial minimal witnesses; tower off. Other clearance fields stock.
 
-Fresh seed0/cpu1 existing Native /tmp/worker4-s4-native-Y8RAZn, session3318 exit0
-capture driver /tmp/worker4-s4-capture.cjs. Per-input/binary SHA/args receipts,
+Fresh seed0 single-core captures with the existing Native, exit0 session.
+Per-input/binary SHA/args metadata,
 whole channels/result.json retained; no native rebuild.
 1. close:10mm cubes at(110,110)/(125,110), gap5mm. Unix193; exact stderr
    "S4_second is too close to others, and collisions may be caused.\n".
@@ -113,7 +113,7 @@ Every rejection stdout "run found error, return -63, exit...\n"; exact full JSON
 return_code-63,plate_index1,layer_height0.20000000298023224,wall_loops2,
 sparse_infill_density15.0 and generic cpp150 error_string; no final G-code.
 Prior-built Ares binary (bff-based -100 gates, SHA recorded) accepts all four
-exit0: /tmp/worker4-s4-ares-prior-built.json. This is a baseline runtime witness,
+exit0. This is a baseline runtime witness,
 NOT current main/new RED hash execution; independent current-source RED follows.
 
 Authoring setup-invalid attempts retained/excluded: invalid enum serialized to
@@ -122,9 +122,9 @@ shared_mesh_centering; missing package relationship caused Native to ignore the
 second object. Canonical Y8RAZn has distinct source files/ids+relationships, both
 Native rejection and Ares successful slicing; none of setup attempts count RED.
 
-## TDD / gates / approval workflow
+## TDD / gates / workflow
 
-After approval land this spec and native fixture/receipts with independent RED:
+Land this spec and the native fixture with independent RED:
 process E2E exact193/stdout/stderr/full JSON/no final export, plus passing far/low,
 last-tall/ByLayer/single-instance and rod-vs-lid discriminating controls.
 Add radius contact(-0.1), rotated/mirrored and per-object skirt/excluded-area
@@ -133,7 +133,7 @@ production. Geometry failures listed above; no unit tests written after code.
 GREEN is typed geometry/diagnostic/CLI mapping only; preserve RED separately.
 Affected validate API/process E2Es and existing CLI family guards, fmt, clippy
 workspace/all-target-Dwarnings, actual CLIwasm32-Dwarnings; workspace nextest.
-Fresh base/candidate seeded + official under latest coordinator change contract,
-16threads/buildjobs2/incremental0, one heavy job, independent targets/caches.
+Fresh base/candidate seeded + official runs with
+independent targets/caches.
 Same-label raw/Native comparisons, real per-group exit codes and setup/NativeND
-residual disclosure. Exact-hash REVIEW, coordinator approval, ff-only push.
+residual disclosure. Land fast-forward only.

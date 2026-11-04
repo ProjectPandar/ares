@@ -1,11 +1,10 @@
 # SPEC: ArchimedeanChords support ironing——plane-path 三连第三片
 
-状态：SPEC-REVIEW-REQUEST（只读调研 + docs-only）。
-前置：OctagramSpiral 片（`a7670d2b8`，已批）的结构原样复用。
-基线：`a7670d2b8`（不含 HilbertCurve RED `c126da004`——按协调裁定独立
+前置：OctagramSpiral 片（`a7670d2b8`）的结构原样复用。
+基线：`a7670d2b8`（不含 HilbertCurve RED `c126da004`——独立
 分支搁置）。
 
-## 1. Native 证据（官方 2.4.2，pristine fixture，canonical 键，CPU7）
+## 1. Native 证据（官方 2.4.2，pristine fixture，canonical 键）
 
 | `support_ironing_pattern` | rc | ironing E | 全文 sha（去时间戳行） |
 |---|---|---|---|

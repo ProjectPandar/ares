@@ -1,8 +1,5 @@
 # SPEC: physical Layer::slice_z handoff for the resource-control seam witness
 
-Status: **SPEC-REVIEW-REQUEST, docs only**. Base main
-`41f2c90f765d42c6620583121296bb61a2cb839c`; rebase only after stack-24
-MAIN-ADVANCE. No permanent RED or production correction is authorized yet.
 [ARD](ard-seam-physical-plane-resource.md).
 
 ## Upstream boundary and Rust destination
@@ -38,7 +35,7 @@ Positive is the **unchanged original resource-build control**:
 `d951edca050a77d6bf7a0c90a14de35ceac8804104af7bb5d3cc2e40ad67157c`.
 Fresh official Native bare `--slice 0 --outputdir`, public
 `slice_project_plate_validated` with default overrides, and real bare CLI all
-admit at main41f2. API==CLI raw SHA:
+admit. API==CLI raw SHA:
 `14261facd18982eb5cf5212b642cbb36c08596d722bfceba3e5be0ee8462c79f`.
 Both whole-file generator-only strict comparisons FAIL byte5217/line224 at
 M73 P67 R2. No streams are missing and M73 remains in the comparator.
@@ -84,11 +81,10 @@ Corrected visibility is bit-exact for32/67 points, maximum absolute residual
 4.76837158203125e-7; no visibility rewrite/tolerance is proposed. This is
 counterfactual attribution, NOT an executed production GREEN or whole-output PASS.
 
-The prior M73 premise is closed by owner: Native total457.6746216522006 equals
+The prior M73 premise is closed: Native total457.6746216522006 equals
 Ares replay of the complete Native stream exactly; Ares own stream totals
 457.70780961899436. The earlier M73 boundary is a total-denominator symptom.
 Do not port/change GCodeProcessor, move IDs, buffering, M73 formatting or clocks.
-W3's different input/opposite symptom has not been diagnosed here.
 
 ## Minimal-delta passing control
 
@@ -99,11 +95,10 @@ Only `Metadata/model_settings.config` differs: modifier part3
 All mesh/model/relationship/global-setting entries are byte-identical.
 This removes the effective modifier-region distinction, not the modifier mesh.
 
-One fresh official bare Native invocation at main41f2 completed. The unchanged
+One fresh official bare Native invocation completed. The unchanged
 whole-file generator-only comparator reports Native/API PASS and Native/CLI
-PASS; API==CLI raw PASS. All three complete streams/receipts are retained.
-No alternate control search or retry-to-success occurred. Seeded control/RED
-execution is proposed for the separately approved test phase, not claimed here.
+PASS; API==CLI raw PASS. No alternate control search or retry-to-success occurred.
+Seeded control/RED execution belongs to the test phase, not claimed here.
 
 ## Included, deferred and replacement boundaries
 
@@ -124,42 +119,28 @@ The older [v2 seam closure](seam-candidate-slice-z-no-red.md) remains NO-RED;
 its rejected fixtures/tests/entries are not reopened or merged. This is a new
 source-owner request with a same-request public witness and qualified control.
 
-## Approval gates and predicted RED
+## Gates and predicted RED
 
-1. Exact-hash SPEC approval first. All probes stay outside git; no permanent
-   fixtures/tests or production edits before approval. MAIN-ADVANCE then fetch
-   and rebase docs; report changed premises rather than silently updating them.
+1. All probes stay outside git; no permanent fixtures/tests or production edits
+   before the RED.
 2. Proposed bounded public RED: one paired control/positive test per mode,
    fresh official then seeded. Per mode: Native control→public API+real CLI
    complete whole PASS/raw equality, then fresh Native positive→both public
-   calls/receipts before assertions. Positive must assert success/raw equality
+   calls before assertions. Positive must assert success/raw equality
    and both complete strict comparisons. Predict whole strict FAIL at the
-   existing M73 boundary on41f2, with the line1198 motion witness retained.
+   existing M73 boundary, with the line1198 motion witness retained.
    Missing streams mean NOT EVALUATED, not equality or a valid RED.
-3. Proposed budget: four Native commands total (control+positive per mode),
-   CPU15/jobs1/nextest threads1, fresh per-mode caches/artifacts/TMPDIR,
-   load<60 before builds/every Native, START/END receipts and complete effective
-   snapshots. Freeze exact two inputs/SHA-entry manifest and test-only commit;
+3. Four Native commands total (control+positive per mode), fresh per-mode
+   caches/artifacts and complete effective snapshots. Freeze exact two inputs/SHA-entry manifest and test-only commit;
    no Native output, debugger/probe or modified comparator in git.
-4. Separate RED approval then GREEN authorization for the handoff only. Rerun
+4. GREEN covers the handoff only. Rerun
    frozen whole RED/control in both modes. Prediction: restored candidate8
    restores the three affected hole-wall starts, removes the motion/time delta
    and therefore the M73 symptom without touching M73. This prediction still
    requires complete whole-file verification; residual differences mean STOP.
 5. Targeted seam/compatible-region regressions, fmt, strict scoped clippy,
-   core+WASM adapter checks and changed Rust files≤400LOC. Coordinator alone
-   schedules full/workspace and integration; FULL24 FREEZE remains active.
+   core+WASM adapter checks and changed Rust files≤400LOC.
 
-## Durable evidence
-
-Report: `${LOCAL_EVIDENCE_ROOT}/worker4/motion-owner-main41f2-review.md`.
-Root: `${LOCAL_EVIDENCE_ROOT}/worker4/motion-owner-main41f2-a62u`.
-It retains first-motion localization, full positive/control Native/API/CLI
-streams, Native24-loop/split and four-layer-plan snapshots, Rust plan/loop/
-visibility snapshots, source hashes, exact replay and observer-neutrality checks.
-Two additional read-only Native runs are complete and equal to the accepted
-Native premise under the existing Orca generator normalizer. Successful Rust
-observers preserve raw API output. Partial Rust observers (anonymous enum field
-and optimized-out loop/record arguments) and compile-only disassembly mistakes
-are retained/excluded; none is counted as a public PASS/RED. Archive SHA is
-published with the external report and exact-hash review request.
+Two additional read-only Native runs are equal to the accepted Native premise
+under the existing Orca generator normalizer. Successful Rust observers preserve
+raw API output; no observer run is counted as a public PASS/RED.

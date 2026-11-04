@@ -1,7 +1,7 @@
 # ARD: CLI `--load-settings` / `--load-filaments` (native argv parity)
 
-Status: PROPOSED — spec + ARD only; no production change until the spec is
-approved and the E2E RED lands.
+Status: proposed. Spec + ARD only; no production change until the
+E2E RED lands.
 
 ## Decision
 

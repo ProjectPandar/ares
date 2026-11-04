@@ -1,7 +1,7 @@
 # filament_map / filament_ramming_parameters legal coverage cases
 
-Status: spec for coordinator review (case authoring per ARD-0025). No
-production change. Base: main ec17814fd. The option-coverage sweep marked
+Status: spec (case authoring per ARD-0025). No
+production change. The option-coverage sweep marked
 these three keys INCOMPLETE ("required legal cases not all compared")
 because their inventory plans authored zero cases; this slice authors the
 missing legal-domain cases for two of them and records the third.
@@ -89,8 +89,8 @@ Both cases are therefore implemented as dedicated runner E2E tests
    generated tool-change purges reach ~66mm past the anchor).
 
 If the ramming case is DIVERGENT/ARES_ERROR: record the first difference
-and report for assignment (the wipe tower region belongs to worker2) —
-not fixed in this slice.
+and report it (the wipe tower region is a separate slice) — not fixed in
+this slice.
 
 ## Acceptance
 

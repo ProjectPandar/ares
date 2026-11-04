@@ -1,15 +1,14 @@
 # AdaptiveCubic configuration spacing and float octree bounds
 
-Status: SPEC proposal; production not authorized.
-Base: 6e0349d9f6da4c0dfdae3cedb26ef9cc0a98e412 (stack-7).
+Status: proposed.
 Upstream: OrcaSlicer 8500fcdccaa10b5099ac20d252af3a7c560046f1.
 This supersedes the spacing-only Slice A acceptance boundary in SPEC59762910d.
-The old cd9d5e0f2 test candidate is archived and will not be merged or reused
-with its SupportCubic legs. No new production or tests are included in this doc.
+The old cd9d5e0f2 test candidate is not merged or reused with its SupportCubic
+legs.
 
-## Ruling and proven selection
+## Proven selection
 
-The coordinator narrowed the slice after runtime attribution proved A45's full
+The slice is narrowed because runtime attribution proved A45's full
 output closes only when configuration spacing and float bbox precision are
 combined. Included pattern is AdaptiveCubic, one printing region per object.
 SupportCubic is a separate Slice B, including its unresolved S45 failure.
@@ -21,21 +20,20 @@ consumer (PrintObject.cpp:977,1006-1007), and build_octree's float mesh bbox
 construction are temporary compatibility shells around these unported numerical
 boundaries; this is not a new Ares-owned slicing pipeline.
 
-Inbox audit: no competing AdaptiveCubic numerical port. W2 owns ZAA/Polyline3,
-W3 mesh-edge/first-layer collection order, W4 counterbore, W1 skirt/draft shield,
-W5 enum import, web OptionsZCorrector. Their behavioral boundaries are excluded.
-W2's mechanical fill carrier work can affect types/projection signatures; rebase
-and preserve that layout before production, report any structural adapters before
-committing them. Do not touch anchor_projection.rs or surface pattern admission.
+Adjacent boundaries (ZAA/Polyline3, mesh-edge/first-layer collection order,
+counterbore, skirt/draft shield, enum import, OptionsZCorrector) are excluded.
+Mechanical fill carrier changes can affect types/projection signatures; preserve
+that layout before production and keep any structural adapters separate.
+Do not touch anchor_projection.rs or surface pattern admission.
 
 ## Native-backed attribution, before RED selection
 
-Existing-binary CPU11 experiments on exact public candidate inputs are retained
+Experiments with the existing binary on exact public candidate inputs are retained
 outside the repository:
-- /tmp/worker6-adaptive-spacing-red.mUVyz6: original runtime Native official and
+- Original runtime Native official and
   seeded, public validated API/CLI comparisons. Native accepts all requests.
-- /tmp/worker6-adaptive-frame-attribution.3Q7vMQ/exact-report.json: A45 and S45.
-- /tmp/worker6-adaptive-frame-attribution.3Q7vMQ/variants-report.json: A50/A125/AAUTO.
+- Exact attribution report: A45 and S45.
+- Variants report: A50/A125/AAUTO.
 
 Native was never altered or rebuilt. The existing Ares process received only
 independently observed Native spacing, bbox max size and bbox center, applied to
@@ -136,7 +134,7 @@ triangle vertices or alter triangle insertion in this slice.
 
 Every modified/new file <=400 LOC. No UnsupportedProjectFeature guard, test-only
 production hook, fallback, ignored test, suppressed lint, or new external crate.
-No SupportCubic production changes or guard/assertion reversal is authorized.
+No SupportCubic production changes or guard/assertion reversal is included.
 
 ## Included and deferred
 
@@ -154,17 +152,16 @@ Any residual requiring another boundary is reported before widening scope.
 
 ## New RED, GREEN and gates
 
-After SPEC approval create a new public CLI E2E module, with four Adaptive RED
+Create a new public CLI E2E module, with four Adaptive RED
 legs above and Rectilinear/AlignedRectilinear count1 full-stream controls. Runtime
 OrcaRunner export/slice, fresh cache/root, Native exported settings verification,
 public validated API plus CLI whole ordered-byte equality, line counts and layer
 schedule. Only authored inputs go into git; Native captures stay outside it.
 Do not cherry-pick cd9d5e0f2 or retain its Support test registrations.
 
-Commit RED separately, run both modes on exact clean HEAD, report it for approval
-before production. Then independent GREEN with the same fixtures/assertions;
+Commit RED separately and run both modes on exact clean HEAD before
+production. Then independent GREEN with the same fixtures/assertions;
 none of the debugger substitutions become acceptance behavior. Report any
 non-RED raw output changes and preserve SupportCubic control raw bytes.
-Final exact HEAD: CPU11 jobs1/threads2, directed+whole option_coverage both modes,
-strict clippy/fmt/wasm32. Default workspace/CI/full only on coordinator assignment;
-full requires FULL-GO. No push without exact-hash authorization.
+Final exact HEAD: directed+whole option_coverage both modes,
+strict clippy/fmt/wasm32, and the full parity suite.

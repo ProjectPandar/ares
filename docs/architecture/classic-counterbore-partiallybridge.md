@@ -1,10 +1,8 @@
 # Classic counterbore `partiallybridge` — source-cited rewrite spec
 
-状态：spec 与独立 RED 已批准；本地 Bridges 候选已编译，完整 GREEN 门禁待执行。
-
 ## 不可协商边界
 
-Ares 分析基线 `4cd752d2fbae0510d5d9547a8b4a9d4aa99fa6a1`。OrcaSlicer source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`，工作树干净。此片移植 `libslic3r::PerimeterGenerator::process_no_bridge` 的 `chbBridges` 行为，不设计新的 Ares bridge pipeline，不在 G-code 层补洞。
+OrcaSlicer source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`。此片移植 `libslic3r::PerimeterGenerator::process_no_bridge` 的 `chbBridges` 行为，不设计新的 Ares bridge pipeline，不在 G-code 层补洞。
 
 上游责任链：
 
@@ -15,7 +13,7 @@ Ares 分析基线 `4cd752d2fbae0510d5d9547a8b4a9d4aa99fa6a1`。OrcaSlicer source
 
 Rust归属：`project_slice/perimeters/classic/` 的 prelude（上游 `all_surfaces` 改写必须发生在简化和 wall生成之前）、对应 infill-boundary / perimeter grouping的fill surface交接。现有 `classic/preflight.rs:111` 对非None+任一hole的一刀切拒绝是临时兼容壳，须由**真实上游 gating 与处理**替代。使用已存在的整数几何、安全offset、BridgeDetector移植边界；不新增平行 region/surface 状态模型。
 
-不触碰 worker5 by_object、worker3 layer ranges、worker2 TiQ2/travel、worker6 role filament；不修改数值阈值、M73、cooling、wipe、seam或上游生产源码。
+不触碰 by_object、layer ranges、TiQ2/travel、role filament；不修改数值阈值、M73、cooling、wipe、seam或上游生产源码。
 
 ## 已证明的 Native reachability（不是 Rust RED）
 
@@ -28,7 +26,7 @@ Rust归属：`project_slice/perimeters/classic/` 的 prelude（上游 `all_surfa
 
 在首次Native运行前冻结 binary STL：外边24mm正方形，0≤Z≤0.32mm为8mm方孔，0.32≤Z≤0.52mm为4mm方孔，XY中心(150,150)。24 vertices / 48 triangles / 72无向edges，每edge恰好两次使用，正有向体积275.84mm³。输入 SHA256：`1274c56d97fd205740505d88f077971c7ffe79f1552df78a4e7432de557e465e`。两层取样Z为0.16、0.42，第二层新增的孔周围环带提供 unsupported counterbore跨度。
 
-两个不同目的的单次Native运行（plain一次、read-only GDB诊断一次，未重试）：CPU0、seed0、16threads环境、fresh/no cache，共享300s deadline及owned-descendant清理；实际总8.257s，两个进程exit0，零TIMEOUT。无Native重编译或生产instrumentation。
+两个不同目的的单次Native运行（plain一次、read-only GDB诊断一次）：seed0、fresh/no cache，两个进程exit0。无Native重编译或生产instrumentation。
 
 Nix GDB17.2，在固定seeded ELF上以符号和反汇编定位：
 
@@ -38,10 +36,6 @@ Nix GDB17.2，在固定seeded ELF上以符号和反汇编定位：
 - layer1：height0.2、slice_z0.42000000000000004、lower slices非空（56bytes / 一个ExPolygon）、partial hits1；函数内fill surface vector由0增加到192bytes。spacing457079、external width419999，均为实际scaled参数。
 
 输出raw SHA：plain `9c9c7044d519d189ec36aadf28d976d4c12b9671ef94669590455e2c6afcf650`；GDB `5c3c0336c1d84d6dd15298ea6218e962f107e1596bbb5838b0836397563beca1`。差异**仅唯一generated-by时间戳行**，按既定generator-only规则比较PASS；规范化SHA `2212400313b6d52f3ac880478b94b4f082015f740bc24f0732071370b6f32df8`。运动、M73、统计、footer未删减。
-
-证据根 `${TMP_ROOT}/ares-counterbore/reachability/`：`input-provenance.json`（profile父链和hash）、三个flattened JSON、`stepped-hole.stl`、`setup_input.py`、`native-disasm-address.txt`、`native-trace.py`、`native-trace.json`、`native-processes.json`、两个输出/原始stdout/stderr/command receipts、`audit_native.py`及`reachability-audit.json`。
-
-原始无效探针/断言保留：最初overloaded symbol的disassemble表达式失败，改为地址反汇编；filament flatten遗漏base子目录，在首次Native运行前改为递归枚举。driver随后因把generated-by timestamp纳入raw equality、以及把caller误写为`process()`而断言失败；不重跑Native，另作离线audit按原有generator-only contract核验。不得把driver原始非零exit包装成正常成功或Rust parity结论。
 
 ## Included / deferred
 
@@ -62,11 +56,11 @@ Nix GDB17.2，在固定seeded ELF上以符号和反汇编定位：
 
 本片不是只缩小一个if：先真实移植Bridges行为，再把兼容壳中的宽泛拒绝替换为同上游作用域一致的判定。不能“upper layer有holes就放行”却仍未处理mask。
 
-## RED 计划与公有测试 seam（spec批准后）
+## RED 计划与公有测试 seam
 
 预定测试入口：`ares_core::slice_with_profiles`，原始catalog+selection+相同STL、`Placement::None`、默认ConfigOverrides、确定性metadata/context；Native独立flatten同一原始stock父链并执行 `--load-settings machine;process --load-filaments filament --arrange 0 --slice 0`。不使用private emitter或test-only生产API。需要CLI适配时只调用已有公有profile API。
 
-第一条tracer bullet为上述原始输入的**完整G-code比较**：预期Native成功，当前Ares在 `counterbore_hole_bridging` 前置守卫拒绝。这是待执行的RED预期，当前未声称Rust已运行。必须保存actual错误、Native输出、输入/profile hashes、实际应用配置和producer receipt。
+第一条tracer bullet为上述原始输入的**完整G-code比较**：预期Native成功，当前Ares在 `counterbore_hole_bridging` 前置守卫拒绝。这是待执行的RED预期，当前未声称Rust已运行。必须保存actual错误、Native输出、输入/profile hashes和实际应用配置。
 
 生产编辑前冻结控制及其独立Native期望：
 
@@ -76,15 +70,14 @@ Nix GDB17.2，在固定seeded ELF上以符号和反汇编定位：
 4. 两层无孔plate：不会进入hole bridge gate；保持既有行为。
 5. 同一mesh中多个独立islands（非by-object实例），覆盖surface split/append顺序、metadata与group填充交接；不新增自主排序。
 
-控制的几何、stock链及唯一覆盖必须在其首次Native运行前冻结。只允许generated-by identity规范化；不得转成startup或movement-only witness。若Native/配置验证发现不合法，保留无效尝试，先提审修正范围，不能调fixture追GREEN。
+控制的几何、stock链及唯一覆盖必须在其首次Native运行前冻结。只允许generated-by identity规范化；不得转成startup或movement-only witness。若Native/配置验证发现不合法，保留无效尝试，先修正范围，不能调fixture追GREEN。
 
-独立RED批准前不写生产代码；至少区分原始primary守卫拒绝、no-op控制的基线失败、None/无孔控制已有PASS。诊断GDB证据仅辅助source reachability，不取代公有API端到端断言。
+RED前不写生产代码；至少区分原始primary守卫拒绝、no-op控制的基线失败、None/无孔控制已有PASS。诊断GDB证据仅辅助source reachability，不取代公有API端到端断言。
 
-## GREEN / fresh validation / REVIEW
+## GREEN / fresh validation
 
-1. 精确hash spec审批 → 独立RED审批 → 最小source-cited移植；新Rust模块≤400LOC。
+1. spec → 独立RED → 最小source-cited移植；新Rust模块≤400LOC。
 2. 原始RED/控制在fresh Native缓存下验证整文件结果；retain raw失败与TIMEOUT，禁止retry-until-success。
-3. 匹配最新Rust main的base/candidate，各跑完整seeded和official控制集（不selector缩窄），每worker一个heavy、16threads、browser hold可阻止下一作业；300s单casedeadline及owned-descendant清理，预编译在deadline外，`CARGO_INCREMENTAL=0`。
+3. 匹配最新Rust main的base/candidate，各跑完整seeded和official控制集（不selector缩窄）；300s单case deadline及owned-descendant清理，预编译在deadline外，`CARGO_INCREMENTAL=0`。
 4. `cargo clippy`（约定strict workspace/all-targets/all-features）、`cargo fmt`、WASM及约定nextest范围；只报告确实执行的gate，workspace使用 `cargo nextest run --workspace` 而非cargo test。
 5. 比较相同input/config的stream invariance、失败名集合及期望changed set；保留此前未修复的官方失败，不把其视为本片GREEN。Rust生产main更新要求新matched验证；docs/web-only update须tree/diff证明才能carry evidence。
-6. 提交独立REVIEW后才允许production nonforce FF push并核验remote hash。此文档与Native诊断不构成GREEN、REVIEW批准或production push授权。

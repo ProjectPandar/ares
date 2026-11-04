@@ -1,6 +1,6 @@
 # Loaded-system inherits_group public parity fixture
 
-Approved SPEC: `6c38e182fd8f22388833cc55b225c26dbb805dab`.
+SPEC: `6c38e182fd8f22388833cc55b225c26dbb805dab`.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Owners: PresetBundle.cpp::construct_full_config69-236, CLI::run system source
 metadata2038-2047/2079-2086, group2838-2842/2981-2985/2189-2193/3161-3163,
@@ -40,6 +40,5 @@ Artifacts: fresh per-leg source copies, full native/ares/cli.gcode, native
 cache producer/request receipts and command status/stdout/stderr, complete config
 maps/digests/comparator results in loaded-system-result.json, plus three-leg
 loaded-system-summary.json. Run via canonical official/seeded environment with
-ARES_PARITY_PROFILE_ENTRY_REFERENCE=1, ARES_REQUIRE_ORCA=1, fresh artifact/cache
-roots, CPU15/jobs1/nextestthreads1 and load<60 before each build/Native call.
-STOP after approved test-only RED and request review; no production correction.
+ARES_PARITY_PROFILE_ENTRY_REFERENCE=1, ARES_REQUIRE_ORCA=1 and fresh
+artifact/cache roots. This is a test-only RED; no production correction.

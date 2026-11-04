@@ -1,22 +1,16 @@
 # OuterOnly contour/mask: admitted Native RED
 
-Approved SPEC `a68680255`; production remains base `5d1a77062`.
+SPEC `a68680255`.
 Source: Brim.cpp:448-570,661-711,903-904 and ClipperUtils.hpp default Miter3.
 No production edits precede this separate fixtures/tests/RED commit.
 
 ## Reproducible protocol and admission
 
-Artifact root: `/tmp/worker3-outer-only-brim-red-p00xxw62`.
-`evidence-summary.json` contains every input/member and producer/output SHA,
-commands, admission, comparison and movement counts. `results.json` and each
-mode's `nextest.log` retain the original nonzero nextest outcome.
-Driver: `/tmp/worker3-outer-only-brim-red-driver.py`.
-
-Original control-set-v2, jobs2/threads2, load<30 and fresh cache/artifacts per
-mode. Filter: `test(outer_only_) | test(outer_inner_) | test(inner_only_) |
+Original control-set-v2 and fresh cache/artifacts per mode. Filter:
+`test(outer_only_) | test(outer_inner_) | test(inner_only_) |
 test(legacy_brim_) | test(brim_bed_)`, all features, success output immediate.
-Seeded: 47 tests, **39 PASS / 8 FAIL**, exit100, 39.425s.
-Official: 47 tests, **39 PASS / 8 FAIL**, exit100, 26.402s.
+Seeded: 47 tests, **39 PASS / 8 FAIL**, exit100.
+Official: 47 tests, **39 PASS / 8 FAIL**, exit100.
 All eight failures are the new active OuterOnly cases. The 36 unchanged
 combined/inner/N/O/E/bed controls pass, as do three new no-hole/inactive controls.
 Strict test-target Clippy -D warnings and fmt pass.
@@ -58,5 +52,4 @@ and CLI, and all raw streams are retained.
 
 The seven hole cases expose the whole-ExPolygon OuterOnly scaffold; the eighth
 exposes omitted final contact retention. These observed boundaries match the
-approved replacement. Production may start only after this RED commit is
-reported to inbox; workspace/full still need explicit allocation.
+specified replacement.

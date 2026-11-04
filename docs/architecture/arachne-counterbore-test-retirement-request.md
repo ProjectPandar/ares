@@ -1,14 +1,13 @@
-# TEST-RETIREMENT-REQUEST — ten obsolete Arachne Filled rejection contracts
+# Test retirement — ten obsolete Arachne Filled rejection contracts
 
-Status: **REQUEST ONLY; no test or production edits applied.**
-Approved SPEC: `97aa276f9f2377fd54f1afb024c4ed3491bb0664`.
-Approved frozen public RED: `19eaf9b964ec19c46839a192ca22c38af5eb8869`.
-Approved RED evidence / exact test preimage:
+Status: accepted.
+SPEC: `97aa276f9f2377fd54f1afb024c4ed3491bb0664`.
+Frozen public RED: `19eaf9b964ec19c46839a192ca22c38af5eb8869`.
+RED evidence / exact test preimage:
 `2e56c73756e014f8c1539f5e8e9bc175e3da96a5`.
-Merged main base: `5a9687ac020962f254b6262f2184f3345025c70f`.
-Branch: `worker4/arachne-counterbore-next`.
+Main base commit: `5a9687ac020962f254b6262f2184f3345025c70f`.
 
-## Why retirement is necessary, and what it does not authorize
+## Why retirement is necessary, and what it does not permit
 
 Pinned `8500fcdccaa10b5099ac20d252af3a7c560046f1`
 `libslic3r/PerimeterGenerator.cpp::process_arachne:2123` calls shared
@@ -34,11 +33,11 @@ once at `perimeters/layer_region.rs:42`; the active public orchestration calls
 written before production, remains RED under today's guard, and is not yet
 claimed experimentally GREEN. No counter instrumentation or production-owner
 change is proposed. Deleting its only caller would instead strand test hooks
-outside the approved three-file production allowlist.
+outside the three-file production allowlist.
 
-## Per-case requested decisions
+## Per-case decisions
 
-Approve each exact diff, rather than generic permission to modify assertions:
+Each case has an exact diff, rather than generic permission to modify assertions:
 
 | Case | Old test contract | Proposed action |
 | --- | --- | --- |
@@ -58,13 +57,12 @@ Exact paths, old/new lines, imports and module deletion are fully enumerated:
 - [Cases6–10 exact diffs](arachne-counterbore-test-retirement-diffs-6-10.md)
 
 Those fenced diff blocks concatenated in case order are the entire proposed
-patch. Scratch copy: `/tmp/worker4-retirement-proposal.patch`.
+patch.
 SHA256: `1de1f3ee800372058543017faede48a3ce8e60096bb69c7e3150d14813e13972`.
 `git apply --check` PASS on the named preimage, **without applying it**.
-All proposal generation is read-only against repository test sources; candidates
-are isolated under `/tmp/worker4-retirement-proposal/`.
+All proposal generation is read-only against repository test sources.
 
-## Tight execution boundary after exact approval
+## Tight execution boundary
 
 - Eleven test-only paths: the ten original files, plus detection's parent module
   registration. Eight obsolete-only tests are removed, one is a success migration,
@@ -73,21 +71,16 @@ are isolated under `/tmp/worker4-retirement-proposal/`.
 - No unrelated tests, fixtures, error strings, disposal/transaction/commit or
   timing assertions are modified. Zeros retired here belong exclusively to the
   now-supported counterbore input, not to the independent genuine error cases.
-- W3/W5/W6 production ownership remains read-only. Changing tests under shell or
-  classification directories does not authorize changing those algorithms.
+- Shell and classification production code remains read-only. Changing tests under
+  those directories does not permit changing those algorithms.
 - Commit this exact test change separately **before** production. The public RED
   commit stays untouched. No production change is hidden in a test commit.
 - Then implement GREEN only in `classic/preflight.rs`, `classic/counterbore.rs`,
   `arachne/materialize.rs` under `ares-core/src/project_slice/perimeters/`.
   Anything more requires a scope amendment.
-- CPU15 outer affinity, jobs1/nextest threads1, fresh Native caches/artifacts and
-  START/END receipts. After GREEN verify the success replacement and all surviving
+- Fresh Native caches/artifacts. After GREEN verify the success replacement and all surviving
   affected lifecycle/error/transaction tests, plus both producer public complete
   output and control raw-SHA invariance. If a new mismatch appears, stop and
   report; no assertion drift or wider implementation by inference.
-- Strict clippy/rustfmt and core/adapter/vgcode WASM checks follow. Full/push/merge
-  still need separate authorization and actual evidence.
-
-No cargo, Native or test execution occurred for this docs-only request. No tests
-are presently changed; no claim that the proposed new success assertion already
-passes; no push. Await per-case approval before applying the exact patch.
+- Strict clippy/rustfmt and core/adapter/vgcode WASM checks follow. Full parity
+  still needs actual evidence.

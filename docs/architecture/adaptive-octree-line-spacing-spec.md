@@ -1,6 +1,6 @@
 # Adaptive octree line-spacing source semantics SPEC
 
-Status: proposed, docs only. Base: `origin/main=41f2c90f765d42c6620583121296bb61a2cb839c` plus carried collinear STOP docs `87e0fe2b9` and guard STOP note. No Native run, RED, or production edit is authorized by this commit.
+Status: proposed.
 
 ## Upstream boundary
 
@@ -41,7 +41,7 @@ Ares currently keys its Adaptive octree cache per local spacing in
 spacing in `adaptive/line_spacing.rs:6-28`, and receives region-local values
 from `group_fills/params/projection.rs:100-109`. Support trees are independently
 prepared in `adaptive/preparation.rs:41-46,71-80`; Support is a second RED
-candidate, never a control. W6's coordinate transforms and
+candidate, never a control. The octree coordinate transforms and
 `build_object_octree` remain outside this slice.
 
 The planned fix replaces per-region spacing keys with the source-derived
@@ -50,7 +50,7 @@ kind separation and cache ownership. No bridge-triangle behavior changes.
 
 ## Fixtures, discovery, and RED plan
 
-After SPEC approval, freeze new authored fixtures and a SHA manifest before
+Freeze new authored fixtures and a SHA manifest before
 any test commit. Each fixture changes exactly one variable:
 
 1. **Adaptive density RED:** the concrete bridge-free prism above, two regions
@@ -69,7 +69,7 @@ any test commit. Each fixture changes exactly one variable:
    RED candidate, never a control.
 
 For every fixture, perform the per-layer `stInternalSolid` empty check above
-before Native. Native official and seeded runs use CPU12 and fresh cache and
+before Native. Native official and seeded runs use fresh cache and
 artifact roots. Record exit, stderr/result JSON, output SHA, region settings,
 and first spacing/tree divergence. Native refusal is classified, not RED.
 
@@ -86,7 +86,7 @@ Included: per-object Adaptive/Support density and extrusion-width averaging
 (`FillAdaptive.cpp:314-350`), shared upstream region-0 multiline semantics
 (`:352-354`), Ares spacing/cache/preparation destinations, and the separated
 single-variable fixture families. Deferred: bridge triangles
-(`PrintObject.cpp:1006-1007`), W6 octree coordinate transforms, hook/chain
+(`PrintObject.cpp:1006-1007`), octree coordinate transforms, hook/chain
 behavior, multiline geometry expansion, object-region spacing beyond this
 source-derived tree spacing, Honeycomb/TPMS-D anchoring, and public contracts.
 If no valid Native-admitted spacing divergence is found, stop with NO-RED.

@@ -1,8 +1,7 @@
 # #7 Stock config-validation parity slice
 
-Status: proposed source-only spec, awaiting sole-coordinator approval.
-Base `c3e84118aae8ae4e08eabb3a113d1793f0c00be6`; no new Native probes,
-tests or production changes. Historical errors are admission leads, not new
+Status: proposed source-only spec; no new Native probes, tests or production
+changes. Historical errors are admission leads, not new
 runtime RED or proof that current Core differs.
 
 ## Upstream boundary and purpose
@@ -22,7 +21,7 @@ profile-entry orchestration. Reuse these owners and their ordered error map;
 no parallel validator, new API/crate, blanket stock rejection or fixture-specific
 policy. Existing orchestration is a temporary compatibility shell only where
 it does not yet match the named upstream phase. This spec does not assume any
-such mismatch exists or authorize a production change without independent RED.
+such mismatch exists or justify a production change without independent RED.
 
 ## Exact historical cohort, messages and source lines
 
@@ -45,11 +44,11 @@ including ordered keys, whitespace, numeric formatting and trailing LF.
 | Creality CR-10 SE0.2, Ender-3 0.2, Ender-3 Pro0.2, Ender-3 S1 Plus0.2, Ender-3 V3 KE0.2, Ender-3 V3 SE0.2; LONGER LK10(0.2), LK10 Plus(0.2) (8) | `Too small line width` | Print.cpp:1549 ordinary-width error and1687 bridge-width error; traversal1662–1691 determines the actual first failing key/branch for each fresh input |
 
 The shared minimum-width text alone does not identify which of the two source
-branches executed. After approval the input's effective options/used-nozzle
+branches executed. The input's effective options/used-nozzle
 mapping must establish the branch and first failing key; never invent it from
 exit205. Loaded-config invocation/frame is OrcaSlicer.cpp:3647–3653; applied
 Print validation is a different phase. CLI transport/status classification stays
-with worker4, not this core slice. Source text explains these historical
+with the CLI adapter, not this core slice. Source text explains these historical
 non-crash errors; fresh admission still must confirm phase and complete payload.
 
 Source SHA256 checked locally:
@@ -67,9 +66,9 @@ original failed-Export archive. Preserve this label; do not advertise a remainin
 Snapmaker gap merely from the older report's open observation.
 
 The20 failed-Export rows lack original exported3MF/staging presets in the
-historical cache. After approval, use the unchanged stock catalog selector,
+historical cache. Use the unchanged stock catalog selector,
 record machine/process/filament identities and serialize the effective config
-before validation using an approved input-capture test seam; reconstructed
+before validation using an existing input-capture test seam; reconstructed
 selection is not an original-byte replay. Do not repair presets, change default
 filament selection, substitute AliZ/other material by hand or tune a valid case.
 If original selection cannot be reproduced, classify it INCONCLUSIVE instead of
@@ -93,7 +92,7 @@ absolute-E reset validations are already separately recorded INPUT_REJECTED,
 not this ORCA_ERROR cohort. No expansion to spiral, MM/fuzzy, adaptive, ZAA,
 material metadata or new option families.
 
-## Approval-gated TDD and acceptance
+## TDD and acceptance
 
 Failure inventory before any isolated test: wrong selection/provenance; wrong
 validation phase; nil-int sentinel confused with nullable-float NaN; wrong vector
@@ -103,9 +102,10 @@ zero auto-valid/equality boundary mishandled; support/bridge enablement or key-
 major region traversal wrong; nonzero Native failure mistaken for parity PASS;
 crash mislabeled validation; historical result attributed to current HEAD.
 
-After spec approval only:
+Plan:
 1. Admit each unchanged/reconstructed input once with exact commit, input,
-   settings/catalog/binary/resources/argv/seed/CPU/status/output hashes under/tmp.
+   settings/catalog/binary/resources/argv/seed/status/output hashes outside the
+   repository.
    Capture full rejection stderr/result metadata and no produced success G-code.
    Signal/UB/read/vendor/timeout outcomes are excluded, retained and non-PASS.
 2. Compare existing public Core validation and validated slicing against the
@@ -117,18 +117,15 @@ After spec approval only:
    **no production patch**. If mismatch exists, commit the unchanged failing
    public-API E2E/input first, then port only the cited missing validator behavior
    in its existing Rust owner; rerun unchanged RED→GREEN. A new source boundary
-   or input-capture mechanism beyond existing seams requires revised approval.
+   or input-capture mechanism beyond existing seams requires a revised spec.
 4. Preserve failed attempts; never retry-to-PASS, alter input to obtain a desired
    failure, widen API validation-only scope to CLI/model checks, or reorder core
    stages to reproduce a Native crash. No new stock whole-sweep result is claimed
    from a28-row report, and rejection parity does not turn ORCA_ERROR into raw
    valid-input PASS.
 5. For production changes run fresh ordered same-main seeded pair/common whole-
-   byte audit, required-Native workspace, clippy/fmt and core+WASM checks. For
-   docs/test-only conclusion explicitly ask coordinator which gates/carry-forward
-   are required. One heavy job16threads/build8 and obey browser pauses.
-6. Source-cited conclusion/ARD and /tmp receipt → sole REVIEW → APPROVED →
-   fetch/rebase/ordinary ff-only push. No new execution before this spec approval.
+   byte audit, required-Native workspace, clippy/fmt and core+WASM checks.
+6. Source-cited conclusion/ARD.
 
 Exit: all admitted rows have independently bound phase/payload matches or an
 honest excluded/inconclusive disposition; success controls unchanged; no claim

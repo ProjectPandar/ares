@@ -1,6 +1,6 @@
 # Ordered cross-owner brim area subtraction rewrite SPEC
 
-Status: **SPEC REVIEW REQUEST — docs-only; RED awaits approval**.
+Docs-only SPEC; RED follows.
 Rebased on the beta authority `345efec64c7b95a05ce5cf96df0dde66a158835c`
 (OrcaSlicer 2.5.0-beta); every line number and semantic below was re-checked
 against that tree. Differences vs the original 2.4.2 basis (source
@@ -11,7 +11,7 @@ Base and explicit dependency: integrated main
 This is an independent repair of an already-supported uncombined brim path.
 The per-object combined-brim contact-component gap remains suspended.
 
-Slice order (coordinator decision): the **per-instance brim granularity**
+Slice order: the **per-instance brim granularity**
 slice lands first as the prerequisite — beta's `brimAreaMap` is
 instance-keyed and the claimed-area loop (`Brim.cpp:953-958`) reads that
 keying directly — then the subtraction ports as the verbatim map-level loop.
@@ -41,7 +41,7 @@ under `OrcaSlicer/src/libslic3r`.
 The new rewrite slice is specifically the previously missing **ordered cumulative
 area subtraction** at `Brim.cpp:953-958`, not another offset or brim-width
 formula and not a new Ares pipeline. The remaining rows constrain where the
-port belongs in the existing upstream sequence; they are not authorization to
+port belongs in the existing upstream sequence; they are not a mandate to
 redesign adjacent behavior.
 
 ## Rebase differences vs the 2.4.2 basis
@@ -79,7 +79,7 @@ but present in the sequence: belt-printer early return (`:941-948`),
 skirt-grouping footprints (`:991-996`), islands Douglas-Peucker + plate shift
 (`Print.cpp:3863-3866`).
 7. **Chain citation updated.** `chain_print_object_instances` lives at
-`ShortestPath.cpp:2533-2576`; the machinery ranges cited by the approved
+`ShortestPath.cpp:2533-2576`; the machinery ranges cited by the
 revision (`92-418, 1007-1011, 2015-2041` on 2.4.2) sit at `64-175` and the
 `:418` union-find merge in beta; `KDTreeIndirect.hpp` and
 `MutablePriorityQueue.hpp` are whole-file ports whose 2.4.2 sub-ranges
@@ -122,7 +122,7 @@ Required preparation semantics:
    carrier or new skirt-group admission as a shortcut.
 
 If minimal call-site wiring is needed to supply generation order, document it
-for review before implementation; this SPEC does not authorize broad changes to
+before implementation; this SPEC does not cover broad changes to
 orchestration, time estimation, path routing or test assertions.
 Core remains platform-neutral and byte/API-oriented across browser WASM,
 Windows, macOS and Linux; no I/O or terminal behavior enters core.
@@ -193,13 +193,12 @@ Same existing C++ processor applied to both original G-code streams reports
 anchor elapsed50.00978956s for each, but final totals185.065676/185.608442s;
 `GCodeProcessor.cpp:1251-1257` uses final total in percent calculation, yielding
 27/26 at that anchor. Future extra brim motion explains earlier progress shift.
-Auxiliary processor metadata/resource limitations are recorded in its RR; it
-is diagnostic evidence, not replacement official slicing or Ares runtime data.
+This auxiliary processor run is diagnostic evidence, not replacement official slicing or Ares runtime data.
 All acceptance comparisons must retain M73 and every motion/metadata byte.
 
-## SPEC → RED → GREEN review gates
+## SPEC → RED → GREEN gates
 
-1. Submit this docs-only SPEC RR; no test or production edits before approval.
+1. This docs-only SPEC precedes any test or production edits.
 2. RED reuses **`runner::native_stream_case::check` unchanged**, six frozen cases
    above, namespace/source references plus SHA. Single tool, so assert_two_tools
    is false. Its Native double replay must pass before public API and real CLI
@@ -208,21 +207,20 @@ All acceptance comparisons must retain M73 and every motion/metadata byte.
    and407/470 observations are retained as external Native-first evidence, not
    hand-coded expected result constants or private-geometry assertions.
 3. Expect target strict FAIL and5control PASS in each mode. Report exact RED,
-   Native replay and API/CLI statuses before requesting GREEN authorization.
-4. GREEN only production area preparation within the approved boundary; tests,
+   Native replay and API/CLI statuses before GREEN.
+4. GREEN only production area preparation within the cited boundary; tests,
    fixture inputs, helper and assertions freeze. Strict residual STOP: report
    first full-output difference, do not widen into M73/time/travel/combined work.
 5. Directed target/controls plus neighboring brim/skirt regression in both modes,
    fmt, workspace all-target clippy with -Dwarnings, wasm32. Canonical dual FULL
-   only in a future coordinator-allocated window, exact tip after rebase.
+   on the exact final tip.
 
-All present work is docs-only; no FULL/build/source changes.
-Coordinator owns review/merge. Combined-brim SPEC remains suspended until this
-supported uncombined control is repaired and independently reviewed.
+Combined-brim SPEC remains suspended until this
+supported uncombined control is repaired.
 
-## Approved revision: reuse one source-faithful instance chain
+## Revision: reuse one source-faithful instance chain
 
-Coordinator authorized this revision after the attempted owner subtraction hit
+This revision follows the attempted owner subtraction hitting a
 strict residual; attempted `020062154` is **not** an accepted GREEN. Runtime
 probe evidence is external, retained outside the repository
 (runtime order-probe archive, 2026-10-21).
@@ -265,13 +263,13 @@ seeded `[15,220]` result `[0,1]`, matching Native before emission reversal.
 Also correct accumulation granularity: all of one owner's instances must read
 the same earlier-owner accumulator; in beta this is carried by the map-level
 claimed-area loop (`Brim.cpp:953-958`) after the instance loop and cumulative
-`brim_area` extension (`:631-633`, 2.4.2 `:578-581`). Previously approved
+`brim_area` extension (`:631-633`, 2.4.2 `:578-581`). The
 minimal batch orchestration call and mechanical empty-accumulator
 direct-test argument remain in scope. Batch output remains keyed by original
 object index.
 
 Final GREEN is one production commit covering the delegation/deletion, ordered
-owner subtraction and approved wiring; superseded attempt is retained only as
+owner subtraction and wiring; superseded attempt is retained only as
 evidence. Public RED tests, six frozen inputs and helper/signature remain frozen.
 No new tests, KD implementation, guard, fallback or result constants.
 
@@ -279,6 +277,6 @@ Expanded directed gates in BOTH modes: the six fixed owner cases; neighboring
 brim/skirt/Auto/Ears/per-object cases; multi-object and multi-instance ordering
 cases exercising `layers/instances.rs` callers. Then fmt, workspace all-target
 clippy with `-D warnings`, wasm32. Any strict residual requires STOP before
-further edits. No FULL until another coordinator-allocated window. Combined
+further edits. Combined
 components,
 progress/time fixes and all other deferred behavior remain excluded.

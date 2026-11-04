@@ -17,6 +17,5 @@ TY2alA,HoYp3R,1Bg0jk. Native0 repeats, native1 and full public Rust RED/GREEN
 for all six must be recorded. Exercise real/mixed args and distribution edges
 through an additional real-template E2E probe. No production code before RED.
 
-Exit: four gates plus full official/seeded coordinator controls no new FAIL;
-full generator-only ordered bytes, retained artifacts, new store path/SHA
-reported immediately, exact-hash REVIEW-REQUEST then approval protocol.
+Exit: four gates plus full official/seeded controls with no new FAIL and
+full generator-only ordered bytes.

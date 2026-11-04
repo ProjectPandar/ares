@@ -1,6 +1,6 @@
 # ARD: consume initial filament identity for startup fan-off
 
-Status: proposed, docs-only SPEC-RR on main957e963c3. No implementation authority.
+Status: proposed, docs-only SPEC on main957e963c3.
 
 ## Evidence-led context
 
@@ -28,10 +28,10 @@ companion SPEC and immutable external discovery report/audit/localization.
    normalization rule or production output rewrite. No hardcoded Native goldens.
 5. Future tests must precede any production change and exercise actual public
    validated API/CLI through existing native-stream seams. No unit/private helper
-   substitute. Separate RED and GREEN authority remain required.
-6. W2/W5/W6/W4 scopes and adjacent W3 fan-buffer work remain separate. Later minimal
-   shared orchestration/registration changes require coordination, not ownership of
-   their tool-ordering, timing, temperature, label or adhesion policies.
+   substitute. Separate RED and GREEN remain required.
+6. Adjacent tool-ordering, timing, temperature, label, adhesion and fan-buffer
+   work remains separate. Later minimal shared orchestration/registration changes
+   must not absorb those policies.
 
 ## Alternatives rejected / consequences
 
@@ -40,4 +40,4 @@ identity, use logical slot0 as a fallback, change the tool ordering, or waive th
 two omitted commands. Existing identity and serialization already suffice.
 The discovery proves the narrow stock startup mismatch, not all fan/filament/
 platform parity. Preserve every artifact and sampled-ELF coverage limitation;
-CPU18 serial controls do not prove a complete process/thread census.
+serial controls do not prove a complete process/thread census.

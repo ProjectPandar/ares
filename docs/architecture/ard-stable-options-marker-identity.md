@@ -5,17 +5,17 @@
 > called at `GCodeProcessor.cpp:8132`), and `6715afd49` ports the missing
 > queued-block decrement (`GCodeProcessor.cpp:5346-5352`). Raw Native beta is
 > the complete authority; the `procgcode-stable-options` patch/nix pair and
-> the stable witnesses were retired on `processor/b15-stable-options-retirement`.
+> the stable witnesses were retired in a later slice.
 
 ## Source boundary
 
 Upstream pin: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-This slice ports the approved correction in
+This slice ports the correction in
 `tools/chain-probe/procgcode-stable-options.patch:8-30`, around
 `GCodeProcessor.cpp:5951-6008` actual-speed insertion and
 `GCodeProcessor.hpp:688-705` pending-marker relocation.
 
-`docs/architecture/web-colorchange.md:128-189` approves stable pending-marker
+`docs/architecture/web-colorchange.md:128-189` specifies stable pending-marker
 identity for viewer moves rather than the upstream stale-index defect.
 `web-marker-time.md:119-129` retains unmodified official G-code/M73 authority.
 The correction is not a nondeterminism workaround: three raw Native runs of
@@ -66,17 +66,17 @@ Deferred: other processor corrections, planner/M73 redesign, marker matching
 by G-code ID, GL viewer runtime, and broad processor cleanup. The raw move
 authority described in `gcode-processor-options-z-moves.md` remains applicable
 to export-cache membership only; its public-move authority is superseded by
-the approved stable-marker exception above.
+the stable-marker exception above.
 
 ## Existing RED and verification
 
-The authorized RED is
+The RED is
 `ares-wasm::marker_time_tagged::tagged_normal_time_matches_every_stable_native_vertex`:
 on the rebased MK4 tip it fails at line70, Rust7348 versus stable Native7347,
 with input SHA256
 `55ec96a28d3ac035d94d0923c5f3be53cb9d897963fc2b8a561b7291ef935f89`.
 Run it with `ARES_REQUIRE_ORCA=1` and both live marker-time producers.
-Restore contradictory raw-pinned tagged controls to the approved stable
+Restore contradictory raw-pinned tagged controls to the stable
 authority before implementation, retaining their raw captures and exact
 bounded-difference assertions.
 
@@ -85,8 +85,8 @@ Normal elapsed bits, plus the Native raw/stable bounded-impact proof. Run
 full official and seeded G-code parity, full non-parity with required live
 oracles, fmt and strict clippy.
 The corrected initialized stable-dynamics diagnostic is a GC-rooted local
-oracle built from `tools/chain-probe/procgcode-dynamics.patch` and the approved
-`tools/chain-probe/procgcode-stable-options.patch`; its hash and patch receipt
+oracle built from `tools/chain-probe/procgcode-dynamics.patch` and
+`tools/chain-probe/procgcode-stable-options.patch`; its hash and patch record
 remain outside Git. It is not an unmodified upstream parity claim.
 Report any baseline failures by exact binary/test name; do not claim an
 all-green workspace when baseline failures remain.

@@ -2,10 +2,9 @@
 
 ## Stage and source boundary
 
-COORD authorized SPEC → RED on exact main
-`0266b34949a6f9503002a3420e1c526cb745462b`. This document is the SPEC commit;
-tests/inputs follow separately. GREEN requires independent approval after RED.
-No production change, FULL, rebase or integration is authorized by this stage.
+SPEC → RED on main `0266b34949a6f9503002a3420e1c526cb745462b`. This document
+is the SPEC commit; tests/inputs follow separately. GREEN is a separate step
+after RED. No production change in this stage.
 
 Pinned OrcaSlicer source: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 The owner is **libslic3r GCode::retract's parent can_lift predicate**, not an
@@ -81,7 +80,7 @@ setting. Each target changes only element0 of retract_lift_enforce:
 |top-only related target|Top Only|bd42ee78a736e7916ae8b4c549c8c52f45c6522b89214d1029d2701b9039bc77|
 |top-and-bottom related target|Top and Bottom|792645d56b67be089d137bc95ce7b76827fbef882782774c235ddc3974ec63c3|
 
-RED seam, explicitly approved: existing
+RED seam: existing
 `runner::native_stream_case::check`, which performs Native double replay before
 public `slice_project_plate_validated` and actual ares CLI, then complete ordered
 bytes comparison. Four direct calls, no duplicated harness/normalizer/helper.
@@ -98,8 +97,7 @@ independently and never claim an unreachable assertion executed.
 
 ## Discovery evidence, limits and deferred behavior
 
-Accepted discovery:
-`${EVIDENCE_ROOT}/w3-zhop-lift-readonly-3fbad615e/README.md`, manifest
+Discovery manifest
 `8851089c627c59fd2b958fa66898c86b84112636f85b9e7366ee72998a3ca8c6`.
 It observed Bottom's actual counters0..49: Native50 parent eager requests but
 one writer entry; Rust50 eager entries with BottomOnly still selected. Four
@@ -108,27 +106,25 @@ unreadable Native writer-Z and unreliable Rust pending enum display were
 excluded. These are diagnostic facts, not expected G-code constants in tests.
 
 The complete first failure was time/M73-related, with later extra lift commands;
-it is not permission to repair an estimator or mask progress. W4's class.3mf
+it is not permission to repair an estimator or mask progress. The earlier class.3mf
 clue was full-stream negative for the explicitly tried0%/50% overlap and
 precise_z_height1 inputs; do not conflate it with this eager-parent witness.
 
 Deferred: global writer guards, curve/angle/height mathematics, lazy-lift rules,
 new feature/counter classification, generic toolchange/wrapping behavior,
 spiral-vase, geometry/perimeters/Arachne/avoid/ironing, estimator changes and
-other workers' scopes. No empirical numerical correction or adjacent cleanup.
+other slices' scopes. No empirical numerical correction or adjacent cleanup.
 
-## Stage exit / next approval barrier
+## Stage exit
 
 1. Commit this SPEC alone, then commit test/input-only RED separately.
-2. Run both modes on the exact clean RED tip, CPU12/jobs1/threads1, fresh
-   sequential mode artifact/cache roots; preserve actual Native command/status/
-   input/output identities and all public raw artifacts.
+2. Run both modes on the RED tip with fresh sequential mode artifact/cache
+   roots.
 3. Run rustfmt and locked workspace/all-target Clippy; compile core+wasm for
    wasm32-unknown-unknown. Report actual gate results, never pretend browser run.
-4. Submit RED RR with one passing control and three intended strict failures
-   per mode, production/helper hashes unchanged. **Stop before GREEN**.
+4. Expect one passing control and three intended strict failures per mode,
+   production/helper hashes unchanged.
 
-After independent RED approval, GREEN must close every frozen full stream and
-preserve controls under the existing shared checker, plus the approved neighbor
-scope and platform gates. Any residual means STOP/report, not adjacent repair.
-No early FULL/rebase/merge; queued aligned/simple chains remain frozen.
+After RED, GREEN must close every frozen full stream and preserve controls
+under the existing shared checker, plus the neighbor scope and platform gates.
+Any residual means STOP/report, not adjacent repair.

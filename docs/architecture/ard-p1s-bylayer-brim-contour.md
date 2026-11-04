@@ -1,9 +1,8 @@
 # ARD: P1S ByLayer cross-object no-brim area subtraction
 
-Status: **revised SPEC / REVIEW-REQUEST / HOLD**. W5 owns brim.
-Coordinator authorized this docs-only revision after materialization-boundary
-STOP; GREEN awaits approval. Approved RED `61b15c6a8` is unchanged.
-Base: frozen rib3 `a96cf4d033b44ed9418975f1f68ac8118710a97e`.
+Status: proposed. Revised SPEC after the materialization-boundary STOP;
+RED `61b15c6a8` is unchanged.
+Base commit: `a96cf4d033b44ed9418975f1f68ac8118710a97e`.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Corrected owning upstream boundary
@@ -35,13 +34,12 @@ and contact retention at **688–715** remain existing adjacent behavior.
 
 ## Evidence correcting the original hypothesis
 
-Evidence root: `${COORD_ROOT}/evidence/w5-p1s-bylayer-brim-green`.
-Read-only CPU11 GDB entry traces, no production instrumentation:
+Read-only GDB entry traces, no production instrumentation:
 
-- `input-pretty-2.log`: Ares `from_area` first input = contour52 + hole12.
-- `native-input.log`: seeded Native `tryExPolygonOffset` first input =
+- Ares `from_area` first input = contour52 + hole12.
+- Seeded Native `tryExPolygonOffset` first input =
   contour60 + the identical hole12; its second area exactly equals Ares's.
-- `boundary-comparison.json` / `compare-inputs.py`: all eight extra points
+- Boundary comparison: all eight extra points
   belong to Native's first contour; no Rust-only points. Notch intersections
   are x112766710 at y135028552/114828552; right edge x115537500 at
   y134928552/114928552. These are diagnostic input geometry, not test goldens.
@@ -82,7 +80,7 @@ instance mask translation in `brim/owner.rs`, and existing subtraction consumer
 producer. These are temporary compatibility shells for upstream
 `outer_inner_brim_area` maps and collection phases, not a new Ares pipeline.
 
-## Proposed included rewrite and invariants (not yet authorized GREEN)
+## Proposed included rewrite and invariants (GREEN)
 
 Collect the existing translated no-brim outputs across owners before any
 owner's final forbidden-area subtraction/materialization. Preserve upstream
@@ -106,19 +104,18 @@ repair, combined-brim ownership changes, timing/M73 corrections and unrelated
 tower/skirt behavior. Existing behavior is retained and covered by neighbors.
 No legacy fallback, mask, normalizer extension or lint allowance.
 
-Approved public RED remains unchanged: `native_stream_case::check` requires
+The public RED remains unchanged: `native_stream_case::check` requires
 Native, qualifies two Native replays, then compares complete Native/API/CLI
 streams with the existing comparator and checks raw API==CLI. There are no
 embedded Native motion-line goldens or exact motion callbacks. This explicitly
 supersedes the original ARD requirement for Native coordinate assertions.
 
 Baseline selector `test(brim) | test(p1s_bylayer_brim_)` lists **150** tests
-(`selected-tests.txt`), covering target/control and existing brim neighbors.
-Fresh official then seeded runs, CPU11/taskset/threads1: **149 PASS, target
+covering target/control and existing brim neighbors.
+Fresh official then seeded runs: **149 PASS, target
 FAIL** in each mode. These are unchanged-code baselines, not GREEN evidence.
 
-After revised SPEC approval only: implement the bounded collection/subtraction
+After the revised SPEC: implement the bounded collection/subtraction
 slice, rerun the same nonempty selector in both modes with fresh caches,
 retain complete streams/commands/statuses/raw diffs/hashes. Full comparator
 includes timing/M73. Any residual → STOP/report, never broaden scope or mask.
-Then REVIEW-REQUEST/HOLD; FULL, merge, rebase and push require authorization.

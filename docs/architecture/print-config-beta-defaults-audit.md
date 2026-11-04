@@ -60,7 +60,7 @@ Before tests were written, two official and two seeded Native settings exports
 were checked: exact2.5.0-beta producer version, all three defaults present,
 and all four complete settings JSON files byte-identical. This qualification
 is only for the selected historical input and these constructor observations;
-it is not a FULL or active mixed/prime execution qualification.
+it is not an active mixed/prime execution qualification.
 
 ## Wider audit obligations
 
@@ -102,9 +102,8 @@ enum, not a Boolean with broadened truthiness. `silent_mode` is removed.
 2. Add only the three targeted runtime-Native tests, then verify attributable
    missing/default/type REDs in required mode against official and seeded beta.
 3. Run rustfmt, strict Clippy and scope/diff audits. Do not implement GREEN here.
-4. Keep the separate dual-FULL ledger gated on explicit `B11-FULL-DONE`.
 
-## Approved definition-only GREEN
+## Definition-only GREEN
 
 The follow-up ports only the three declarations above into the default and
 metadata tables, growing the public export675 ->678 without changing any old
@@ -118,8 +117,7 @@ The full generator currently rejects beta's unrelated `printer_agent.plugin_type
 Do not fix that parser or regenerate other beta records in this slice. An
 external selected-input invocation keeps the existing parser/renderer intact,
 feeds only the three exact source blocks and produces the formatted records;
-insert only those records at their sorted positions. Retain the failed full
-attempt and selected-renderer receipt externally. The existing generated metadata
+insert only those records at their sorted positions. The existing generated metadata
 table is exempt from the module-length split; handwritten modules remain below
 400 LOC.
 
@@ -127,7 +125,7 @@ Registering a key also makes authored raw settings eligible for config-block
 write-back. Therefore add `prime_volume_mode` to the existing writer ban list,
 matching beta `GCode.cpp:8287`. Do not merely rely on its absence from the static
 CONFIG_BLOCK key list. No typed mixed-filament execution, normalization, active
-Saving/Fast behavior or other beta definition is included. The approved three
+Saving/Fast behavior or other beta definition is included. The three
 public REDs are unchanged; verify only those cases plus fmt and strict Clippy.
 
 ## Tower-estimate prime-volume definition follow-up

@@ -1,7 +1,5 @@
 # Sequential origin-hop writer-frame parity SPEC
 
-Status: approved docs phase, above frozen W1 `759bde3`; implementation remains separately authorized only for the GREEN slice.
-
 ## Upstream source boundary
 
 This is a source-cited rewrite slice of OrcaSlicer `GCode.cpp`, pinned at `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
@@ -19,7 +17,7 @@ The formal RED target is the stock-offset P1S ByObject two-object scene. It must
 
 1. the same scene with only `extruder_offset` changed from `0x2` to `0x0`;
 2. the existing A1 ByObject control;
-3. existing approved sequential ByLayer and auto-lift adjacent controls.
+3. existing sequential ByLayer and auto-lift adjacent controls.
 
 The stock-offset target is expected to fail as a compound whole-stream comparison: the 2mm Y origin hop and the earlier M73 relocation are both retained. A complete comparator failure is required; no masked or partial comparison is acceptable. The zero-offset same-scene control is expected to pass and is diagnostic, not an alternate acceptance target.
 
@@ -31,4 +29,4 @@ If GREEN leaves any M73 residual, STOP immediately: do not weaken comparison or 
 
 ## Deferred behavior
 
-M73 ownership beyond the approved hop consequence, broader skirt behavior, generic travel planning, multi-tool/tower behavior, and other W3/W4/W6 owner boundaries are deferred. This SPEC is not an independently designed Ares pipeline.
+M73 ownership beyond the hop consequence, broader skirt behavior, generic travel planning, multi-tool/tower behavior, and other adjacent owner boundaries are deferred. This SPEC is not an independently designed Ares pipeline.

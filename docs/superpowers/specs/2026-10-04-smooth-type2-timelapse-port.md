@@ -1,10 +1,5 @@
 # Timelapse state and smooth Type2 selective rewrite
 
-Base: main `56e4da53`, after approved Adaptive PA integration. Worktree remains
-`${TMP_ROOT}/ares-pi-tower`; the next feature branch is
-`pi/smooth-type2-timelapse-tower` to preserve the already published PA review
-history without force-pushing it.
-
 Owning sources and destination decisions are in ARD-0105. Included work:
 
 1. Reproduce stock BBL H2S / P1P / P1S first-travel Z-restatement differences
@@ -22,15 +17,14 @@ Owning sources and destination decisions are in ARD-0105. Included work:
    and unloading configurations. The plan records source sub-boundaries and
    their required E2E witnesses before production implementation.
 
-Coordinator explicitly selected complete activation before integrated review:
-no standalone unconnected writer/geometry completion claims. Several commits
-may implement the slice, but every REVIEW-REQUEST must cover a complete
-activated path with official and seeded full-output evidence and no new guard.
+Complete activation is required: no standalone unconnected writer/geometry
+completion claims. Several commits may implement the slice, but each must cover
+a complete activated path with official and seeded full-output parity and no
+new guard.
 
 Deferred/unclaimed: independent Type1 tower algorithms, exhaustive printer/
 option coverage, hardware operation and native Windows/macOS runtime evidence.
-Shared Type1-header data required by Type2 is included. Coordinator-approved
-exceptions are recorded with source consumers in ARD-0105: the Type1-only finish
+Shared Type1-header data required by Type2 is included. Exceptions are recorded with source consumers in ARD-0105: the Type1-only finish
 flag, GUI extrusion color tag, and unread result/writer timing bookkeeping are
 deferred until their consumers are ported. Command tool identity (including
 RepRap M572), geometry, filament accounting and processed G-code timing remain
@@ -38,12 +32,11 @@ included. These exclusions do not
 permit guards or silent omission of active Type2 source behavior; do not weaken
 fixtures or comparisons to make a partial generator appear complete.
 
-The coordinator separately assigned multi-transform PrintObject preparation
-and `PrintObject.cpp:85–114` centering to pi-tip after RNG integration. This
-is a general Print/PrintApply prerequisite, not part of the tower slice.
+Multi-transform PrintObject preparation and `PrintObject.cpp:85–114`
+centering are a separate slice. This is a general Print/PrintApply prerequisite, not part of the tower slice.
 `raw_intersections.rs:290–305` stays unchanged. Its native-accepted RED witness
-is handed off, not part of the tower suite; see ARD-0105 for retained evidence.
+is not part of the tower suite; see ARD-0105.
 Same-transform actual-copy ownership remains included.
 
-The BBL state repair may be reviewed as an independently green prerequisite;
+The BBL state repair may land as an independently green prerequisite;
 it must not be represented as completion of the Type2 tower port.

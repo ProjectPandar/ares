@@ -1,12 +1,8 @@
 # Counterbore hole bridging alignment SPEC — classic sacrificial layer
 
-Status: **SPEC-REVIEW-REQUEST; docs only, no RED run or implementation yet.**
-
-Ares base: `96eb17ccc2805ce1d4f95045e452eb070e19f183`.
-Branch: `worker4/counterbore-hole-bridging`.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-All upstream paths below are relative to `OrcaSlicer/src/libslic3r/` at that pin,
-verified in clean `${TMP_ROOT}/ares-web-mobile/OrcaSlicer`. This is a source-cited
+All upstream paths below are relative to `OrcaSlicer/src/libslic3r/` at that pin.
+This is a source-cited
 libslic3r rewrite slice, not a new Ares bridge pipeline.
 
 ## Gap and proposed scope
@@ -24,14 +20,12 @@ Classic `PartiallyBridged` already has a real port:
 `classic/counterbore.rs::process`, lines 22–66, dispatched from
 `classic/prelude.rs:73`; its current mode gate is at lines 33–35.
 [Previous partial-bridge spec](classic-counterbore-partiallybridge.md) explicitly
-left Filled and Arachne deferred. Its historical validation settings are not
-permission to run tests under this task's CPU/full constraints.
+left Filled and Arachne deferred.
 
 **Proposed bounded slice:** implement classic `sacrificiallayer/chbFilled`,
 including its perimeter → region fill → surface classification responsibility
 chain. Preserve None and classic partiallybridge. Arachne remains explicitly
-unsupported on the existing guarded domain; review must confirm this scope
-before RED. Do not describe this slice as complete support for all enum modes
+unsupported on the existing guarded domain. Do not describe this slice as complete support for all enum modes
 and wall generators.
 
 ## Exact upstream ownership
@@ -95,9 +89,8 @@ Rust module stays below 400 lines; do not refactor unrelated stages.
   `bridge_anchor_offset = min(bridged_infill_margin, perimeter_spacing,
   ext_perimeter_width)` (`:1774`), then clamp to original surface
   (`:1778–1801`). At this pinned source `:1736` initializes the margin from
-  `scale_(BRIDGE_INFILL_MARGIN)` (`libslic3r.h:89`, constant 1). Approval
-  clarification confirmed this constant-derived margin at the existing pin;
-  retain the named upstream margin and do not invent a config option.
+  `scale_(BRIDGE_INFILL_MARGIN)` (`libslic3r.h:89`, constant 1). Retain
+  the named upstream margin and do not invent a config option.
 - Remove only holes with a nonempty wall band that has no lower support;
   supported holes stay holes. Preserve no-increment-after-erase behaviour
   (`:1803–1825`).
@@ -113,9 +106,8 @@ Rust module stays below 400 lines; do not refactor unrelated stages.
 
 - Arachne counterbore handling (`process_arachne:2123`) for both non-None modes.
   Keep its current rejection explicit; no classic fallback or silent ignore.
-  Arachne is the next counterbore slice, owned by W4: separately specify its
-  dispatch/pre-wall mutation and both non-None modes, then public Native RED;
-  do not leave it as an unowned backlog item.
+  Arachne is the next counterbore slice: separately specify its
+  dispatch/pre-wall mutation and both non-None modes, then public Native RED.
 - Expanding presently unsupported interface-shell, spiral, modifier, raft or
   multi-material domains merely to satisfy this slice. Preserve supported
   existing behaviour; if a proposed fixture needs one of these, stop and request
@@ -124,9 +116,9 @@ Rust module stays below 400 lines; do not refactor unrelated stages.
   bridge-over-infill or extra-bridge-layer changes. Counterbore addition is not
   permission to implement adjacent pipeline features.
 
-## Public Native-backed RED plan (after SPEC approval)
+## Public Native-backed RED plan
 
-No tests run in this docs-only task. Before production edits, enumerate failures:
+Before production edits, enumerate failures:
 wrong enum/dispatch; guard-only acceptance; contour convexity/filter mismatch;
 unsupported hole retained or supported hole removed; lost nested island;
 extra fill dropped in group split or classification; changed surface ordering;
@@ -134,8 +126,8 @@ None/partial/no-op regressions; and a fixture never reaching the Filled branch.
 
 Use the existing public `ares_core::slice_with_profiles` and the Native adapter
 in `crates/ares-cli/tests/orca_parity/runner/counterbore_partiallybridge.rs` as
-precedent, not a test-only core seam. Add a separate Filled test module after
-approval. Use the original WEMAKE3D PhoenixProV1 0.4mm machine/process and Generic
+precedent, not a test-only core seam. Add a separate Filled test module.
+Use the original WEMAKE3D PhoenixProV1 0.4mm machine/process and Generic
 PLA catalog/selection/parent-chain provenance already frozen in
 `tests/parity/counterbore-partiallybridge/`. Flatten the same profiles only for
 Native CLI settings; use `Placement::None` and deterministic metadata/context.
@@ -165,29 +157,24 @@ not invent an API to expose private stage output. Confirm reachability with a
 read-only Native trace/geometry witness if complete-output comparison cannot
 identify it. Diagnostics supplement, never replace, public E2E assertions.
 
-Each case saves input/config/profile hashes, exact commands, binary identities,
-raw Native G-code/stdout/stderr, Ares G-code or exact error JSON, comparison first
-byte/line, exit/timeout and duration receipts in a fresh artifact root. Compare
-**complete ordered G-code**, allowing only the established generated-by identity
+Each case saves input/config/profile hashes, raw Native G-code/stdout/stderr,
+Ares G-code or exact error JSON and comparison first byte/line in a fresh
+artifact root. Compare **complete ordered G-code**, allowing only the established generated-by identity
 normalization; retain movement, M73, statistics and footer. No goldens generated
 from Ares. No movement-only checks, skip, new ignore, thresholds or assertions
 weakened. Assert PASS eventually; base guard errors are RED, not passing tests.
 
-Directed Native/Ares execution is CPU15 single core (`taskset -c 15`),
-`CARGO_BUILD_JOBS=1`, `NEXTEST_TEST_THREADS=1`, isolated target/cache/artifact
-roots and process ownership. Use `cargo nextest run` with only this directed
-slice; preserve existing case deadline and descendant cleanup. Pause at another
-worker's EXCLUSIVE-FULL START. **No full/workspace run; later full requires
-explicit FULL-GO and one globally active full.**
+Directed Native/Ares execution uses isolated target/cache/artifact roots and
+process ownership. Use `cargo nextest run` with only this directed slice;
+preserve existing case deadline and descendant cleanup.
 
-## Approval and exit sequence
+## Exit sequence
 
-1. SPEC + [ARD](ard-counterbore-hole-bridging.md) review confirms scope and RED
-   matrix. Then public RED evidence review; no production changes before it.
+1. SPEC + [ARD](ard-counterbore-hole-bridging.md) fix scope and RED matrix.
+   Public RED precedes any production change.
 2. Port exact Filled responsibility chain, then original RED and controls fresh
-   in official and seeded modes on CPU15 single core. Preserve all failures.
+   in official and seeded modes. Preserve all failures.
 3. If Native Variant A occurs: identical Ares SHA and Native fresh ×3 PASS
-   evidence, then coordinator adjudication; never silently accept or retry loop.
+   evidence before adjudication; never silently accept or retry loop.
 4. After implementation, strict clippy, rustfmt and WASM checks plus directed
-   evidence; request FULL-GO separately. Main advances require rebase and
-   appropriately fresh evidence. This document is not GREEN or merge approval.
+   evidence, then the full suite.

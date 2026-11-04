@@ -1,12 +1,10 @@
 # Exhaust-fan speed reduction over writer-used extruders
 
-## Authority and sequence
+## Sequence
 
-Base main `6f6ef10f537749067f71cd064f077bb1e6aefa34`, new branch
-`worker1/exhaust-used-extruder`. COORD accepted readonly discovery #101 and
-authorized #102 docs-first SPEC → #103 public success-required RED. Commit this
-SPEC/ARD/roadmap before adding tests or inputs. RED review precedes any separately
-authorized GREEN. No production changes, FULL, merge or push in this stage.
+Docs-first SPEC, then public success-required RED. Commit this
+SPEC/ARD/roadmap before adding tests or inputs. RED precedes any GREEN.
+No production changes in this stage.
 
 ## Owning upstream boundary
 
@@ -49,8 +47,8 @@ nonzero-only and multiple-used tool witnesses, support/custom-tool/wipe-tower
 runtime qualification, registry redesign, all other cooling/fan/temperature
 behavior and platform runtime qualification. These registry participants remain
 part of the source contract; lack of extra witnesses is not permission to replace
-the writer set with a model-only approximation. No W2 skirt, W3 z-hop, W4
-print_order, W5 processor-M73 or W6 seam-occlusion changes. No native backend,
+the writer set with a model-only approximation. No skirt, z-hop,
+print_order, processor-M73 or seam-occlusion changes. No native backend,
 dependency, fallback, error inversion, lint suppression or dormant consumer.
 
 ## GUI reachability and frozen input matrix
@@ -111,26 +109,20 @@ Failure inventory:
 Native-only preflight qualifies these same four inputs in each mode before any
 public Ares leg, retaining SHA/activity/replay artifacts. Then run exactly the
 four public tests per mode. No other tests become acceptance owners and no
-duplicate control archive/preparer is introduced. All model activity counts,
-PIDs, affinity observations and first-difference coordinates are observations,
+duplicate control archive/preparer is introduced. All model activity counts
+and first-difference coordinates are observations,
 not new hardcoded Native expectations or extra E2E/performance credit.
 
 ## Stage exit and verification
 
-CPU18, build jobs1, nextest threads1, parity workers1, assigned pin offset18;
-locked/offline Rust1.99 and incremental disabled. Independent target preserves
-old CLI binaries. Verify fmt and strict workspace/all-target Clippy, compile
+Verify fmt and strict workspace/all-target Clippy, compile
 checks and wasm32 compile-only; list exact tests before native runs. Canonical
-official/seeded controller is directed by exact nextest filters, never FULL.
+official/seeded controller is directed by exact nextest filters.
 Separate fresh caches; both Native-only preflights finish globally before public
 tests. Expected RED matrix per mode: preflight PASS, `unused-high` FAIL at strict
 parity, three controls PASS. Distinguish nextest skips/filter exclusions/internal
-guards. Native background TIDs are not evidence of parallel CPU execution or
-proof of total threadcount1; record actual task masks and any limitations.
+guards.
 
-Commit RED separately from this docs-first commit, retain exact-tip commands,
-raw artifacts, input/member/hash/frozen-helper proof and submit RED RR. STOP for
-approval before GREEN. No whole-suite or cross-platform runtime qualification is
-claimed. Accepted discovery remains sealed at
-`${EVIDENCE_ROOT}/worker1/exhaust-used-extruder-discovery-6f6ef10f5/`; historical
-painted-stage status text is not retroactively rewritten by this milestone.
+Commit RED separately from this docs-first commit, with input/member/hash/
+frozen-helper proof, and stop before GREEN. No whole-suite or cross-platform
+runtime qualification is claimed.

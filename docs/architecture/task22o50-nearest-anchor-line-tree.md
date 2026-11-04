@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted, implemented, gate-verified, and independently approved.
+Accepted and implemented.
 
 ## Decision
 
@@ -70,9 +70,6 @@ the implementation. Final verification passes focused 8/8, dependency
 613/613, and workspace 6,273/6,273 Nextest, warning-denying workspace Clippy,
 rustfmt, core/browser wasm32, diff, LOC, and static audits. Every O50 Rust file
 is below 400 LOC and the implementation contains no source-splitting include
-macro. The first implementation review found that centroid construction had
-incorrectly skipped the source f64 multiply and that branch/arithmetic tests
-were under-discriminating. The main thread repaired the conversion, added
-pinned QuickSelect, centroid, fixed-accumulator, and named-interface witnesses,
-and reran every gate before re-review. The final read-only six-axis re-review
-approved unconditionally with no remaining repair item.
+macro. Centroid construction keeps the
+source f64 multiply, and pinned QuickSelect, centroid, fixed-accumulator, and
+named-interface witnesses discriminate the branch and arithmetic behavior.

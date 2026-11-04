@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted and completed. Independent source/specification and final six-axis reviews approved the implementation.
+Accepted and implemented.
 
 ## Decision
 

@@ -1,6 +1,6 @@
 # TPMS-D anchoring surface contraction inputs
 
-Input-only3MFs for approved SPEC `4500c1adf`.
+Input-only3MFs for SPEC `4500c1adf`.
 Upstream: `Fill.cpp:1477-1497` sparse anchoring calls base
 `FillBase.cpp:105-118` contraction before `FillTpmsD.cpp:101-160`.
 
@@ -28,7 +28,6 @@ Honeycomb/Line cases remain unchanged passing controls.
 
 Top6/multiline2 first discovered difference is bridge E.05321/E.05322;
 top7/multiline2 retains the following-layer wipe E-.3025/E-.30251. No last-
-decimal tolerance or formatting fix is accepted. Only after separate RED
-approval may GREEN restore the anchoring base contraction; any remaining
-strict residual then means STOP/report, not scope expansion. GREEN merge
-follows the coordinator's W2-priority queue.
+decimal tolerance or formatting fix is accepted. GREEN restores the anchoring
+base contraction; any remaining strict residual then means STOP/report, not
+scope expansion.

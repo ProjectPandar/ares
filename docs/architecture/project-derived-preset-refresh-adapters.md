@@ -1,6 +1,6 @@
 # Addendum: explicit project-preset bytes in adapters
 
-Status: accepted with runtime-generation, uniform-supply and inventory-delta conditions. Companion to `project-derived-preset-refresh.md`; the approved core contract is unchanged.
+Status: Accepted, with runtime-generation, uniform-supply and inventory-delta conditions. Companion to `project-derived-preset-refresh.md`; the core contract is unchanged.
 
 ## Source boundary
 
@@ -41,7 +41,7 @@ When supplied, the adapter reads these catalog bytes and invokes the existing pu
 
 Change only input supply in the existing cases. Keep assertion bodies, fixtures, the strict whole-output comparator, normalization allowances, and Native preconditions unchanged. No exported-default or G-code snapshots enter production. An unavailable supplied preset is an error, not permission to skip a case or replace its input.
 
-## Runtime producer and FULL profile
+## Runtime producer and full parity profile
 
 The documented public producer step is:
 
@@ -54,19 +54,19 @@ export ARES_PARITY_PROJECT_PRESET_CATALOG="$PRESET_SUPPLY/catalog.json"
 
 The catalog and staged tree are runtime artifacts: never committed, never a golden, never hand-edited. Test adapters derive the required Native data directory as the sibling `native` directory of the supplied `catalog.json`; missing supply artifacts are errors, not a reason to search elsewhere. Before relying on the staged tree, run at least one existing case twice through Native (current bare installation versus isolated staged `--datadir`) and require unchanged complete output under the existing comparator.
 
-The FULL profile must set `ARES_PARITY_PROJECT_PRESET_CATALOG` from this producer. Supply applies uniformly through the shared adapter, never by fixture or preset name. When the key is absent, original cases run in bare mode and may fail normally: they are not skipped, passed, or excused because the key is missing. Assertions, fixtures and comparator stay unchanged.
+The full parity profile must set `ARES_PARITY_PROJECT_PRESET_CATALOG` from this producer. Supply applies uniformly through the shared adapter, never by fixture or preset name. When the key is absent, original cases run in bare mode and may fail normally: they are not skipped, passed, or excused because the key is missing. Assertions, fixtures and comparator stay unchanged.
 
-Report the pass/fail delta across the entire registered inventory with the key absent and present, not only the directed cases. Keep deliberate missing-preset errors visible; do not repair them with hand-authored catalog entries or fallback. The integration owner receives the producer command, env contract, source hashes, tested tree and complete delta ledger. Directed checks alone do not establish FULL acceptance.
+Report the pass/fail delta across the entire registered inventory with the key absent and present, not only the directed cases. Keep deliberate missing-preset errors visible; do not repair them with hand-authored catalog entries or fallback. Directed checks alone do not establish full-inventory acceptance.
 
 ## Reproducible mechanical wiring
 
 `node scripts/rewrite-parity-project-supply.mjs` prints a read-only replacement manifest for the current base. `node scripts/rewrite-parity-project-supply.mjs --apply` applies only qualified callee/CLI-constructor substitutions, asks `cargo fix -p ares-cli --test orca_parity --allow-dirty --allow-staged` to remove newly orphaned imports, runs rustfmt, and rejects unexpected changed paths, non-mechanical code changes, or files reaching 400 LOC. ROOT `orca_parity.rs` is outside the scanned directory and is never edited. Helper logic lives behind the existing `runner::application` namespace so the 399-line runner registry need not grow.
 
-Integrate the logic first. Apply the generated caller patch last, on the accepted integration base after other pending test changes land. Regenerate from the script instead of manually rebasing the old caller patch. During development, prove it only on the separate verification branch. Put the generated caller changes into exactly one mechanical commit containing only callee/constructor renames and orphan-import removal; keep helper, CLI, producer, script and documentation logic in other commits.
+Integrate the logic first. Apply the generated caller patch last, after other pending test changes land. Regenerate from the script instead of manually rebasing the old caller patch. Put the generated caller changes into exactly one mechanical commit containing only callee/constructor renames and orphan-import removal; keep helper, CLI, producer, script and documentation logic in other commits.
 
 The validator independently rustfmt-normalizes the exact rename-only expected text before comparison, preserving literal-token identity. It explicitly formats selected include fragments as well as ordinary modules; Cargo's module discovery alone does not cover lexical includes. Source partitions retain their original module scope and test IDs.
 
-Before/after that mechanical commit, run the entire FULL inventory with the supply key absent on the same logic/dependency tree and require identical pass/fail IDs, not just equal totals. Keep newly added test IDs in both runs; separately identify any differences from an older integration inventory. Then run with the key present and retain the complete pass/fail delta. Absence never skips or passes a case. This is an integration acceptance gate, not a claim established by directed checks.
+Before/after that mechanical commit, run the entire full parity inventory with the supply key absent on the same logic/dependency tree and require identical pass/fail IDs, not just equal totals. Keep newly added test IDs in both runs; separately identify any differences from an older integration inventory. Then run with the key present and retain the complete pass/fail delta. Absence never skips or passes a case. This is an integration acceptance gate, not a claim established by directed checks.
 
 ## RED and verification gates
 
@@ -74,4 +74,4 @@ Before coding the CLI flag, add a runnable public CLI RED after a successful Nat
 
 Implementation modules belong in `crates/ares-cli/src/` for filesystem/argument work and the existing nested parity runner modules for test input supply. Split handwritten modules before 400 LOC. New adapter code must delegate refresh/placement/slicing to core, not reconstruct effective settings.
 
-Develop the owned production range on the accepted merged integration base. For breadth, create a separate owned verification branch/worktree containing the approved multiline and cubic source dependencies; do not mutate their approved refs or replay dependencies already merged in that base. Inventory the requested three multiline and six footer-only cases by exact test names and input hashes, record any overlap explicitly, then run both Native modes with the explicit supply transport. Report the actual tested combined tree separately from the production tip. No FULL run or whole-suite acceptance is claimed by this slice.
+For breadth, verify on a tree that also contains the multiline and cubic source dependencies. Inventory the requested three multiline and six footer-only cases by exact test names and input hashes, record any overlap explicitly, then run both Native modes with the explicit supply transport. Report the actual tested combined tree separately from the production tip. No whole-suite acceptance is claimed by this slice.

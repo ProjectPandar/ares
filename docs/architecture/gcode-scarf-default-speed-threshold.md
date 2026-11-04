@@ -1,8 +1,5 @@
 # Scarf default speed: one upstream small-perimeter decision
 
-Status: worker6 source analysis and proposed spec for coordinator review.
-No production or test changes; implementation requires spec approval and
-worker1 integration. Browser gate is active; no heavy task was started.
 
 ## Source boundary
 
@@ -30,7 +27,6 @@ No new crate, public API, I/O, UI, terminal or viewer behavior is needed.
 
 ## Current evidence and conclusion
 
-Worker6 base is `3cad8b4c3a5ab52d38d853655ceef74d1b783b1f`.
 `scarf.rs:64–68` sums per-path XY lengths after converting each to mm;
 `:89` passes that length into `scarf_speed`; `:210–227` returns
 `small_perimeter_speed` when the mm threshold passes, before resolving the
@@ -40,32 +36,16 @@ The local threshold branch is structurally outside its upstream owner.
 However, **small-loop speed bypassing scarf cap is correct upstream behavior**:
 the loop caller already supplies positive speed, so `_extrude` skips the
 entire default-role/scarf selection. A low scarf cap alone is not a valid
-post-worker1 RED case.
+RED case once the caller preselection is in place.
 
-Read-only worker1 context:
+Related context:
 
 - `docs/architecture/gcode-small-perimeter-loop-speed-preselection.md` owns
   complete-loop caller selection and speed transport.
-- `docs/architecture/gcode-small-perimeter-scarf-red-supplement.md` explicitly
-  defers this local mm shortcut; its RED concerns caller speed and ramping.
-- Pending `loop_paths/small_perimeter.rs` compares complete scaled length,
+- `loop_paths/small_perimeter.rs` compares complete scaled length,
   resolves zero and filters positive speed. `loop_paths.rs` passes that
-  selection to scarf members. Pending `features.rs` uses `slope.speed` only
+  selection to scarf members. `features.rs` uses `slope.speed` only
   when requested caller speed is absent.
-
-These pending files are observations, not an immutable approved base. Recheck
-their actual merged revision before RED. Read-only SHA256 identities:
-
-```text
-scarf.rs (worker6):
-dd52537da08049a82901b5b0c2c97b088e2e0032fbd5fb8118acb9abd4e2698d
-features.rs (worker1):
-c096e53f4a5cdfacf921f4b41b2bd7d3e94e128fb180ccc4fe88887c0274d883
-loop_paths.rs (worker1):
-b0abb61f174b765a727765bff005465de28e665164c10e2225d6c11aeb19fe5a
-loop_paths/small_perimeter.rs (worker1):
-5479f31754836abd71daa31fa9b399052613edcf92a2ff9f80e8500460e59a2c
-```
 
 After that caller rewrite, ordinary positive small-loop selections mask the
 local shortcut. The remaining candidate is disagreement between the scaled
@@ -87,7 +67,7 @@ side `10000274` has that scalar perimeter, but actual slicing geometry,
 materialization, summation and exported config must establish reachability.
 Do not label that constructed scalar as a measured sliced loop.
 
-If a real case reaches this direction of disagreement, worker1's caller
+If a real case reaches this direction of disagreement, the loop caller
 supplies no override, but the local shortcut substitutes small speed instead
 of the upstream default scarf cap. The reverse disagreement is masked by a
 positive caller override. Other geometry/3D length differences have not been
@@ -97,26 +77,25 @@ validated and are not added to this slice.
 
 1. The complete-loop caller is the sole owner of small-perimeter selection.
    Default scarf speed only resolves the role-relative scarf setting and cap.
-2. After approval and worker1 merge, remove the local threshold early return
+2. Remove the local threshold early return
    and remove the now-unused `loop_length` argument from `scarf_speed`.
    Keep `build`'s length calculation: slope geometry still needs it.
 3. Preserve positive caller speed bypassing the scarf cap. Do not replace
    it with `min(small_speed, scarf_speed)` or reinterpret units elsewhere.
-4. Do not change `features.rs`, `materialized`, `path` or `loop_paths` while
-   worker1 owns them. The planned production edit is confined to `scarf.rs`.
+4. Do not change `features.rs`, `materialized`, `path` or `loop_paths`.
+   The planned production edit is confined to `scarf.rs`.
 5. Leave default slope ramp/raft behavior, zero role-speed handling, geometry,
    clipping, E precision, cooling, flow and formatter semantics outside this
    slice. Any independent discrepancy stays visible in the byte comparison.
 
 Included: the `GCode.cpp:6515–6526` default scarf speed boundary and removal
 of duplicate small-loop selection there. Deferred: loop speed ownership and
-transport (worker1), independent ramp/raft issues, conditional scarf geometry,
+transport, independent ramp/raft issues, conditional scarf geometry,
 mixed-role scarf geometry and broader speed-pipeline work.
 
-## RED, GREEN and review gates
+## RED and GREEN
 
-After both spec approval and worker1 integration, fetch/rebase latest
-`origin/main`; first verify that merged caller behavior matches this analysis.
+First verify that the caller preselection behavior matches this analysis.
 
 1. Build a real public byte-input classic scarf case and freeze its exported
    input/config. Establish a sliced complete-loop length and a threshold that
@@ -131,22 +110,18 @@ After both spec approval and worker1 integration, fetch/rebase latest
    executable/resources/input/output identities and raw artifacts with the
    repeatable command. A feedrate witness supplements the complete assertion.
 3. Commit RED separately. If no reachable case proves this shortcut's symptom,
-   report that limit to the coordinator and do not implement GREEN. A scalar
+   do not implement GREEN. A scalar
    probe, private emitter test or unrelated earlier difference is insufficient
    evidence that this candidate is a real regression.
-4. Implement only the approved removal, then require the exact same complete
+4. Implement only the removal, then require the exact same complete
    Native comparison to pass. Retain ordinary small-loop and non-small scarf
    controls, including absolute/percentage scarf speed and a cap above role
    speed; reuse suitable existing controls rather than add shallow unit tests.
 5. Run `cargo fmt`, strict workspace/all-target/all-feature Clippy, workspace
-   nextest and wasm32 check using independent `${TMP_ROOT}/ares-worker6-target`.
-   Respect browser holds, one heavy task at a time and 16 test threads.
-6. Run fresh same-round official and seeded parity control sets on candidate
-   and base; candidate failure names must equal base or be a documented
-   subset. Record identities, timeouts and exact artifacts; timeout is no verdict.
-7. Submit the exact hash for review and wait for approval before any push.
-   Rebase latest main, rerun required checks, then only fast-forward push.
+   nextest and wasm32 check.
+6. Run official and seeded parity control sets on candidate and base;
+   candidate failure names must equal base or be a documented subset.
 
-This spec does not assert E2E divergence, test success or implementation
-authorization. It establishes the upstream mismatch in ownership, the usual
-masking after worker1, and the evidence required before a behavioral fix.
+This spec does not assert E2E divergence or test success. It establishes the
+upstream mismatch in ownership, the usual masking by the loop caller, and the
+evidence required before a behavioral fix.

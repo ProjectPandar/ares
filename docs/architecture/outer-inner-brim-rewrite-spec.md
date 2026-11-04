@@ -1,11 +1,9 @@
-# SPEC-REQUEST: Brim.cpp OuterAndInner project brim
+# Spec: Brim.cpp OuterAndInner project brim
 
-## Status and roadmap selection
+## Roadmap selection
 
-Worker3; base main `10058be78`, after the approved inner-only merge.
-Claude approved SPEC53b22ddc9. A separate admitted Native fixtures/tests RED
-precedes implementation; see [RED evidence](outer-inner-brim-red-evidence.md).
-Claude remains the sole reviewer.
+A separate admitted Native fixtures/tests RED precedes implementation; see
+[RED evidence](outer-inner-brim-red-evidence.md).
 
 Selected from roadmap **Current acceptance priorities: full acceptance (open)**:
 active selector dependencies need source-owned, nonempty complete-output
@@ -13,12 +11,8 @@ witnesses. The inner-only slice deliberately deferred OuterAndInner; this
 proposal closes only its bounded real-project runtime path, not the full
 seven-value brim domain or printer/Option acceptance.
 
-Current other owners: worker1 anchor/APA, worker2 layer-template filament
-context, worker5 profiles/catalog, worker6 multiline/Stars geometry, worker4
-CI/oracles, and web viewer data. The proposed production paths are confined
-to brim modules; their intended overlap with merged worker3 brim code was
-reported to the coordinator before implementation. No other's runtime file
-or top-level `orca_parity.rs` / `case_helpers.rs` registration is changed.
+The proposed production paths are confined to brim modules. No other runtime
+file or top-level `orca_parity.rs` / `case_helpers.rs` registration is changed.
 
 ## Upstream ownership and Rust destination
 
@@ -43,7 +37,7 @@ candidate crate, geometry default or native dependency enters core.
 
 ## Existing scaffold and migration
 
-At base10058, the actual project `BrimPlan::generate` accepts OuterOnly,
+Before this slice, the actual project `BrimPlan::generate` accepts OuterOnly,
 InnerOnly and BrimEars, while OuterAndInner returns None. This is a static
 runtime-gap hypothesis; no Native divergence is claimed before admission.
 
@@ -93,7 +87,7 @@ AutoBrim, automatic/painted inner ears, EFC-compensated outlines, supports,
 towers, multi-object/multi-instance/multi-group/multi-tool composition and
 cross-object contacts remain deferred. So do the rectangular public adapter
 and any existing test retirement. No anchor/APA, layer-template, profile,
-multiline/Clipper kernel, CLI policy, CI or web changes are authorized.
+multiline/Clipper kernel, CLI policy, CI or web changes are included.
 A RED whose first cause belongs there must be reported, not repaired here.
 
 ## Failure inventory before tests or code
@@ -110,7 +104,7 @@ A RED whose first cause belongs there must be reported, not repaired here.
 
 ## Test-first plan and exit conditions
 
-1. After SPEC approval, author input-only deterministic 3MF fixtures and
+1. Author input-only deterministic 3MF fixtures and
    Native-backed CLI integration tests. Proposed cases: rectangle hole,
    concave hole, two holes, narrow-neck hole, gap0.1, collapsed hole inset,
    two footprint islands in one volume, no-hole, width0, sub-pair width.
@@ -121,25 +115,20 @@ A RED whose first cause belongs there must be reported, not repaired here.
    Native settings, commands, full Native/API/real CLI output, first byte
    difference and regional witnesses. All three engines must admit the input
    before a runtime mismatch qualifies as RED. No Native output is a fixture.
-3. Run both modes with unchanged canonical control-set-v2, jobs2/threads2,
-   load<30 and fresh Native cache/artifact root each run. Keep full generator-
+3. Run both modes with unchanged canonical control-set-v2 and a fresh
+   Native cache each run. Keep full generator-
    only comparisons; witnesses are additional evidence, never acceptance
    substitutes. Reuse all existing inner-only and N/O/E controls unchanged.
-4. Commit fixtures/tests and real RED separately; report the RED evidence to
-   inbox before writing production code. If a fixture is inactive or rejected,
+4. Commit fixtures/tests and real RED separately before writing production
+   code. If a fixture is inactive or rejected,
    report/reshape it within the scope rather than removing an unrelated guard.
-5. Implement only the cited boundary after that report. Preserve every existing
+5. Implement only the cited boundary after that RED. Preserve every existing
    assertion/comparator; no probes, ignore, suppression, regions[0] or fallback.
    Changed Rust/new docs stay <=400 lines. No unit test is added after code.
 6. Verify finite full-byte GREEN, both directed groups, strict/fmt/WASM and the
-   default workspace. Workspace/full wait coordinator allocation; full starts
-   only on explicit FULL-GO with canonical per-leg fresh cache/root/target.
-   Rebase/carry, Native instability adjudication and final merge remain Claude's
-   decisions; SPEC approval does not authorize push or merge.
+   default workspace.
 
-The original SPEC submission was docs only. Separate REDb35dc2bd5 was reported
-to inbox before production edits. Finite GREEN now passes25/25 in both modes,
+Finite GREEN passes25/25 in both modes,
 including all ten combined cases and fifteen unchanged controls. Each of the
 nine InnerOnly controls has byte-identical API and CLI output against RED in
-both modes (36 raw stream comparisons). Latest-head directed/engineering,
-workspace, full and exact code/merge review remain separate required gates.
+both modes (36 raw stream comparisons).

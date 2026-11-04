@@ -1,9 +1,7 @@
 # Pre-external wipe: emit the upstream force-no-extrusion path
 
-Status: SPEC approved; formal matrix narrowed by coordinator after an
-independent matched-control residual. Native-first RED precedes production.
-Parent: reviewed W6 stack tip `261c076794c07c2fd07686550dfb9ba94c5a414d`.
-Branch: `worker6/pre-external-retract-spec`. No FULL window requested.
+The formal matrix is narrowed after an independent matched-control residual.
+Native-first RED precedes production.
 
 ## Owning upstream boundary
 
@@ -65,37 +63,30 @@ Read-only GDB confirms a matching path at Z=0.6:
   `(114.175001,113.775001)`, distance 0.64077946284349 mm, with threshold
   0.2 and `retracted=false`, `retracted_amount=0`.
 
-Evidence: `${EVIDENCE_ROOT}/w6-prewipe-fakepath-readonly-producer.json`.
-Fixed replay artifacts:
-`${EVIDENCE_ROOT}/w6-prewipe-fixed-{official,seeded}`.
-These are discovery CLI receipts, not a substitute for the authorized public
-API RED. No Native output or probe is committed. No GREEN has been attempted.
+These are discovery observations, not a substitute for the public
+API RED. No Native output or probe is committed.
 
-## Deferred W5 order/Z diagnostic and prerequisite
+## Deferred order/Z diagnostic and prerequisite
 
-The real exported W5 scarf/min-50 witness is **not in this slice's formal
+The real exported scarf/min-50 witness is **not in this slice's formal
 matrix**. It is retained outside Git as a diagnostic: Native finishes the fake
 path at `X119.775 Y100.225` before the real scarf-head travel to `Y100.305 Z0.2`,
 whereas the temporary pending marker consumes the finish after that travel.
 After GREEN, confirm motion order/Z alignment with GDB/ordered motion records
 and report the result, explicitly not as whole-output acceptance.
 
-The coordinator-requested matched min-50 gate-off control was produced directly
+The matched min-50 gate-off control was produced directly
 by official Native CLI `--wipe-before-external-loop=0 --export-3mf`; its only
 ZIP payload/JSON difference is the wipe switch, with min-50 preserved. However,
 both modes expose an independent complete-stream discrepancy: `M73 P29 R18`
 is inserted before rather than after the first two SparseInfill moves at
 line 5757. It remains a strict FAIL, not a PASS control or a normalization rule.
-The coordinator excluded this pair from formal RED until its GCodeProcessor /
+This pair is excluded from formal RED until its GCodeProcessor /
 time-estimate insertion-point prerequisite is addressed in a separate slice.
 Do not search or change input settings to evade it.
 
-Frozen diagnostics: `${EVIDENCE_ROOT}/w6-w5-prewipe-handoff/` and
-`${EVIDENCE_ROOT}/w6-prewipe-min50-cli-control/exported.3mf`.
-Residual/pair proof:
-`${EVIDENCE_ROOT}/w6-pre-external-matched-control-blocker.json`.
-No W5 diagnostic archive is submitted by the current RED. Restore the second
-formal target only after the independent prerequisite is fixed and authorized.
+No diagnostic archive is submitted by the current RED. Restore the second
+formal target only after the independent prerequisite is fixed.
 
 ## Included source behavior and non-negotiable boundaries
 
@@ -141,10 +132,10 @@ or wipe path after the hop; regressing the disabled/short-hop controls;
 correcting timing independently of actual motions. Cover through the public
 seam before production; no unit tests written after the implementation.
 
-## Review sequence, size and integration gates
+## Sequence, size and gates
 
-1. Review this docs-only source boundary/evidence before test or code changes.
-2. Separately authorize and commit genuine Native-first public RED/controls in
+1. Establish this source boundary/evidence before test or code changes.
+2. Commit genuine Native-first public RED/controls in
    both modes, reusing shared harness and existing control archives.
 3. Production-only GREEN ports the fake-path boundary above and makes the
    formal target and every complete control stream match. Afterwards record
@@ -155,9 +146,5 @@ seam before production; no unit tests written after the implementation.
    frozen raw-output invariance evidence. No mixed refactor/behavior commit.
 5. fmt and workspace/all-target clippy `-D warnings` clean. Preserve browser
    WASM/native core separation; no filesystem/UI/terminal behavior in core.
-6. Reviewed endpoint → inward → safe-zone → mesh-center stack stays unchanged
-   and queued. No FULL is started/requested by this SPEC. Current order is
-   W4 → W2 → W3 full stack → W6 → W5; integration later requires authorized
-   then-current-main rebase and exact-hash dual FULL 0 FAIL/0 skipped.
-7. No stash, push, self-merge, stale-base exemption, new allow/expect/ignore,
-   fallback or committed Native output. Required coauthor on every commit.
+6. The endpoint → inward → safe-zone → mesh-center behavior stays unchanged.
+7. No new allow/expect/ignore, fallback or committed Native output.

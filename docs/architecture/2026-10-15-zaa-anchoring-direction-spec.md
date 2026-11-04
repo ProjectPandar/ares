@@ -1,13 +1,10 @@
 # ZAA sparse-anchoring fill-direction SPEC
 
-Status: SPEC-REVIEW-REQUEST; source/docs only. No Native/build/test run,
-public RED or production edit in this submission. Run no discovery/RED
-inside the coordinator's FULL14 exclusive window.
+Source/docs only. No Native/build/test run, public RED or production edit
+in this document.
 
-Base main caac760d464112b076821975b67232fdd0f14bf0 plus approved W2 chains
-through58f963c54c2f2b5d2bdd46fc3eea45b8cde13833, queued for stack-14.
-This separate branch preserves that approved candidate. Rebase onto its
-merged main before the next submission when the coordinator broadcasts it.
+Builds on the ordinary-fill ZAA chain
+through58f963c54c2f2b5d2bdd46fc3eea45b8cde13833.
 Upstream inspected: OrcaSlicer8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 ## Owning source boundary and current gap
@@ -46,7 +43,7 @@ project_slice/prepare_infill/bridge_over_infill/sparse_anchoring:
 
 The downstream candidate_expansion/layers.rs passes each candidate's lower
 layer to this generator. The ordinary fill_entities path already carries
-the regional conjunction in approved58f963c54; that repair intentionally
+the regional conjunction in58f963c54; that repair intentionally
 left this separate anchoring constructor at false. No new runtime witness
 of the anchoring discrepancy is claimed by the previous ordinary-fill RED.
 
@@ -98,8 +95,7 @@ whole-output parity. Preserve all existing controls and name residual gaps.
 
 ## Native admission/activity before the public RED
 
-Only outside FULL14 and later exclusive windows, use CPU13 official and
-CPU14 seeded, jobs2/threads2 and new Native root/cache/output per invocation.
+Use official and seeded modes with new Native root/cache/output per invocation.
 Start from the existing admitted positive-density internal-ceiling input
 setup in bridge_over_infill_zero_density.rs (cube10,20% Rectilinear sparse
 fill, classic walls, support/tower disabled). Prepare only input bytes and
@@ -122,7 +118,7 @@ complete-output fail-on-head, with a passing false control. If Native rejects,
 crashes, is unstable, or Ares already matches complete output, STOP and
 report; do not alter numeric policy, comparator or expected results.
 
-## Independent public E2E RED, after SPEC approval
+## Independent public E2E RED
 
 Build an input-only fixture from the admitted ceiling/profile setup; do not
 run another test's whole-output assertion or derive geometry from an Ares
@@ -146,25 +142,20 @@ Retain input/native/API/CLI SHA, exact first difference, roles, geometry and
 cache paths in external repeatable artifacts. Record geometric discrepancy
 even when progress accounting is the first whole-output difference.
 
-Submit the test-only RED hash and both modes' admission/activity/failure
-evidence for review before production GREEN. If minimal scoped wiring
+The test-only RED with both modes' admission/activity/failure evidence
+lands before production GREEN. If minimal scoped wiring
 cannot satisfy unchanged assertions later, STOP before broadening scope.
 
-## Gates and scheduling
+## Gates
 
-After accepted RED and separate GREEN authorization, require three public
+After accepted RED, GREEN requires three public
 cases both modes, ordinary ZAA direction and modifier/sloped-roof controls,
 existing bridge/anchor and rotation-template/fixed-angle controls. False
 and disabled controls retain their original raw Ares bytes. Run fmt, strict
 core/CLI-test clippy and wasm32 check; every file <=400 LOC. No suppression,
 ignore/debug macro, guard/fallback, regions[0] or weakened assertion.
 
-Only directed work on CPU13/14 with outer taskset and jobs2/threads2;
-full/workspace remain coordinator-only. Do not begin Native/cargo/nextest
-inside FULL14. Abort/VOID owned runs on later EXCLUSIVE FULL START and wait
-for END. No push. This SPEC submission runs no build, test or Native job.
-
-## Authorized bounded ceiling amendment after the initial NO-WITNESS
+## Bounded ceiling amendment after the initial NO-WITNESS
 
 The initial10mm cube has Native Internal Bridge on one-based layer46;
 its supporting object layer is index44, an even layer. Both flag states

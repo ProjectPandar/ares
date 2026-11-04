@@ -1,11 +1,11 @@
 # procgcode-dynamics oracle on raw OptionsZCorrector semantics
 
-Status: SPEC (COORD ruling "marlin2", 2026-10-14). Oracle-side fix only; no
-Ares production code and no test assertion changes.
+Status: Proposed. Oracle-side fix only; no Ares production code and no test
+assertion changes.
 
 ## Problem
 
-`runner::adjacent_motion::marlin2_option_moves` failed in FULL10 and FULL11
+`runner::adjacent_motion::marlin2_option_moves` failed in full parity runs
 (official and seeded) at `adjacent_motion.rs:198` ("vertex identities") once
 the OptionsZ moves chain (`13f628158`) landed in the stack.
 
@@ -17,8 +17,8 @@ the OptionsZ moves chain (`13f628158`) landed in the stack.
 re-targets the pending `m_move_id` after `calculate_time` inserts actual-speed
 vertices. That is the corrected, diagnostic-only behavior.
 
-The ruling is that Ares targets **raw** Native, stale index included. The
-diff in the FULL11 log is exactly that difference and nothing else: 352
+Ares targets **raw** Native, stale index included. The
+observed diff is exactly that difference and nothing else: 352
 identity differences in two runs, one per marker. For the pause marker
 (gcode 381) the corrected oracle moves the marker to index 550, while raw
 semantics move the stale-index element `192/10/1` there. The custom marker
@@ -60,31 +60,29 @@ semantics move the stale-index element `192/10/1` there. The custom marker
    therefore changes with item 1, and the `native-oracle-build` matrix job
    rebuilds it. No `tier1.yml` edit is needed, and the `ARES_PROCGCODE_DYNAMICS_BIN`
    wiring at `tier1.yml:152/269/374` stays the same.
-5. COORD updates the canonical control set to the new store path.
+5. The canonical control set is updated to the new store path.
 
 ## Deferred / unchanged
 
-- `procgcode-stable-options` is retired (`processor/b15-stable-options-retirement`):
+- `procgcode-stable-options` is retired:
   beta upstreamed the correction (`GCodeProcessor.hpp:1105-1116`), the patch
   no longer applies to the beta tree, and its former users compare against
   raw Native beta.
 - `merged-oracle` (the marker-time binaries) keeps stable-options. It doesn't
-  feed `ARES_PROCGCODE_DYNAMICS_BIN`, so changing it is a separate ruling.
+  feed `ARES_PROCGCODE_DYNAMICS_BIN`, so changing it is a separate decision.
 - Stealth mode (ARD-0052).
 
 ## Evidence plan
 
-These run after FULL11 END, with CPU16/17 pinning and the window checked.
-
 1. **Verification:** run the raw procgcode `--dump-moves` on
-   `orca-runner-UlKqYM/oracle-input.gcode` and compare `(gcode_id, type,
-   internal_only)` with the Ares identities in the FULL11 log. Expected: equal.
+   the oracle input G-code and compare `(gcode_id, type,
+   internal_only)` with the Ares identities. Expected: equal.
    Also run the current dynamics binary, which should differ at exactly the
    352 indices.
 2. **New derivation:** build it, record the store path and sha256 of
    `.orca-slicer-wrapped`, and diff its `--dump-move-dynamics` identities
    against raw `--dump-moves` on the same input. Expected: equal.
-3. **Fail on base** at `29f4a49c1` (pre-GREEN Ares) with the new oracle:
+3. **Fail on base** (pre-GREEN Ares) with the new oracle:
    `marlin2_option_moves` fails with the `:198` vertex-identities assertion.
 4. **Pass at head:** with the new oracle, `-E 'test(/runner::adjacent_motion::/)'`
    passes, and so do `gcode_moves_oracle`, `runner::adjacent_color`, fmt,

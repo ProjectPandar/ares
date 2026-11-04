@@ -1,4 +1,4 @@
-# CI Tier 1 修复 / 提速 / skipped 处理方案（worker4，SPEC v2 待批准）
+# CI Tier 1 修复 / 提速 / skipped 处理方案
 
 范围：`.github/workflows/`。不改断言语义、不新增 `#[ignore]`、不提交
 Native 产物。runner 为 org 级 ephemeral VM
@@ -22,23 +22,21 @@ GitHub REST API）；不能以短 retention 或末尾独立 cleanup job 替代�
 
 ## 1. 失败清单与根因（不变）
 
-- run 38145688037：`embedded_script_whole_file` 2 测试读
+- `embedded_script_whole_file` 2 测试读
   `repo_root()/OrcaSlicer/resources/profiles` 失败（os error 2）。
   native job 无 OrcaSlicer checkout → 环境缺资源，非回归；fail-fast
   掩盖其余 7712 测试。
-- **第二处环境缺失（step1 run 38147360608 发现）**：wasm job 的
+- **第二处环境缺失**：wasm job 的
   `project-slice.spec.mjs` 设置 `ARES_REQUIRE_ORCA=1` 并透传
   `ARES_KSR_INITIALIZED_{BIN,NATIVE_BIN,RESOURCES_DIR}`——CI 未提供 →
   `browser_output_matches_initialized_orca_242_ordered_bytes` 红。
   结论：wasm job 同样需要 ksr-initialized Native（复用
   native-oracle-build 输出的 hestia substitute，不需重复构建）。
-- 历史 3s 失败（38142910641 等）：ubuntu-latest billing，切
+- 历史 3s 失败：ubuntu-latest billing，切
   self-hosted 已解决。
 
-**已执行（step1，批准部分）**：分支 `worker4/ci-tier1-fix` @ c6b36592d，
-native job 加 OrcaSlicer sparse checkout（`resources/profiles` +
-`src/libslic3r`，pin v2.4.2 `8500fcdcc`）+ `nextest --no-fail-fast`；
-CI run 38147360608 验证中。
+**第一步**：native job 加 OrcaSlicer sparse checkout（`resources/profiles` +
+`src/libslic3r`，pin v2.4.2 `8500fcdcc`）+ `nextest --no-fail-fast`。
 
 ## 2. Job 拓扑（v2）
 
@@ -93,7 +91,7 @@ CI 未设即 skip 的那批，必须全部注入使其真跑）**：
 | `ARES_MARKER_TIME_BIN` | `tools/chain-probe/marker-time.nix` | markerTimeFormat/Native |
 | `ARES_MARKER_TIME_STABLE_BIN` | `marker-time-stable-options.nix` | toolPosition |
 | `ARES_PRINT_STATISTICS_BIN` | `print-statistics.nix` | estimation/summary |
-| `ARES_KSR_INITIALIZED_*` | ksr-initialized.nix（原 wasm browser 测试需要；web e2e 是否还用待核 —— project-slice.spec 语义并入哪支 spec 需 w2D 确认） | 旧 browser 路线 |
+| `ARES_KSR_INITIALIZED_*` | ksr-initialized.nix（原 wasm browser 测试需要；web e2e 是否还用待核 —— 需确认 project-slice.spec 语义并入哪支 spec） | 旧 browser 路线 |
 | `ORCA_SLICER_DIR` | checkout 的 `OrcaSlicer/`（web job 已有 sparse checkout） | profiles/presetImport |
 | `ORCA_REPLAY_SEED=0` | 固定 | estimation |
 
@@ -108,14 +106,14 @@ AppImage 解包步骤（与 parity-official 共用同一解包脚本
 
 | 旧 spec（project-slice.spec.mjs） | web/e2e 对应 |
 |---|---|
-| browser project route emits complete finite KSR G-code（KSR initialized Native 对比） | 无直接对应——web 有 profileSlice/presetSlice（official AppImage oracle），但 **KSR initialized 路线的 browser 对比仅此一处**。删除会丢失该覆盖，除非 w2D 已在 web/ 重写等价 spec |
+| browser project route emits complete finite KSR G-code（KSR initialized Native 对比） | 无直接对应——web 有 profileSlice/presetSlice（official AppImage oracle），但 **KSR initialized 路线的 browser 对比仅此一处**。删除会丢失该覆盖，除非已在 web/ 重写等价 spec |
 | bindings expose no internal checkpoint hooks | 无（旧 export audit 的 spec 版） |
 | repeated project slicing identical bytes | 无直接对应 |
 
 **裁决（v4）**：旧 `crates/ares-wasm/tests/browser` 不在 CI 中保留；
-其独有的 KSR initialized 浏览器对比由 **w2D 移植到 web/e2e**，移植
-合入后 w2D 提交删除旧目录（no legacy）。本分支不删该目录，仅将
-web job 切到 web/ 工作区；删除与移植是 w2D 提交的依赖项。
+其独有的 KSR initialized 浏览器对比**移植到 web/e2e**，移植合入后
+删除旧目录（no legacy）。本变更不删该目录，仅将 web job 切到 web/
+工作区；删除依赖于移植完成。
 
 - 三个 job 并行；`native` 不注入任何 `ARES_*` parity env（普通 workspace
   标准环境，SKIPPED 仍按 stderr 显式记录）。
@@ -162,12 +160,12 @@ steps:
   - **PR 语义**：默认分支缓存对 PR 只读；PR 写自己 scope——与本
     workflow 无冲突。
 
-### 3.2 Native 产物清单（对照 `${TMP_ROOT}/ares-parity-control-set-v2.sh`）
+### 3.2 Native 产物清单（对照 parity control set v2）
 
 | env | 构建来源 | 模式 |
 |---|---|---|
 | `ARES_ORCA_BIN` + `ORCA_REPLAY_*` | `scripts/orca-replay/build.nix`（seed-only.patch，`ORCA_REPLAY_SOURCE`=上游 checkout、`ORCA_REPLAY_NIXPKGS`=pinned nixpkgs） | seeded |
-| `ARES_ORCA_BIN`/`ARES_ORCA_NATIVE_BIN`/`ARES_ORCA_RESOURCES_DIR` | 官方 OrcaSlicer v2.4.2 AppImage 下载 + `--appimage-extract` → `squashfs-root`（等价本机 `/tmp/orca-official-242`） | official |
+| `ARES_ORCA_BIN`/`ARES_ORCA_NATIVE_BIN`/`ARES_ORCA_RESOURCES_DIR` | 官方 OrcaSlicer v2.4.2 AppImage 下载 + `--appimage-extract` → `squashfs-root` | official |
 | `ARES_PROCGCODE_BIN` | `tools/chain-probe/procgcode.nix` + procgcode.patch | 两 job 共用 |
 | `ARES_PROCGCODE_STABLE_BIN` | `tools/chain-probe/procgcode-stable-options.nix` | 共用 |
 | `ARES_PROCGCODE_DYNAMICS_BIN` | `tools/chain-probe/procgcode-dynamics.nix` | 共用 |
@@ -182,7 +180,7 @@ steps:
 用 `pkgs.fetchFromGitHub`/`fetchTarball` pin **nixpkgs 具体 commit**。
 不同 rev → orca-slicer 依赖版本可能漂移，seeded 模式逐字节 parity 有
 漂移风险。**需要确定等价 rev**：从本机 `nixos-unstable` channel
-snapshot 反查（spec 批准后我定位 rev 写入 workflow pin）。
+snapshot 反查，定位 rev 写入 workflow pin。
 
 ### 3.4 env 注入
 
@@ -192,10 +190,9 @@ OPTIONS}`（后三个按 seeded/official 各取）+ `ARES_PARITY_ARTIFACT_ROOT=
 $RUNNER_TEMP/parity-artifacts`（绝对路径、repo 外）+ `ARES_REQUIRE_ORCA=1`
 + `ARES_ROLE_ORACLE_LIVE=1` + seeded 的 `ARES_PARITY_SEEDED_REFERENCE=1`
 /`ORCA_REPLAY_SEED=0`/`ORCA_REPLAY_CPU=<n>`。
-CPU pin：本机用 `CARGO_TARGET_X86_64_..._RUNNER` + 仓外脚本；CI 改为
-仓内脚本 `scripts/ci/pin-runner.sh`（移植 `${TMP_ROOT}/ares-pin-runner.sh`，
-5 行 taskset 逻辑），或 parity run 用 `--test-threads N` + 不 pin
-（seeded 连续流需单 CPU——**必须 pin**，故提交该脚本入仓）。
+CPU pin：CI 用仓内脚本 `scripts/ci/pin-runner.sh` 作为
+`CARGO_TARGET_X86_64_..._RUNNER`（seeded 连续流需单 CPU——**必须 pin**，
+故提交该脚本入仓）。
 AppImage 在 CI 需 `squashfs`/FUSE：ubuntu 镜像自带 fuse，用
 `--appimage-extract` 无需挂载。
 
@@ -282,7 +279,7 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
 ### B.3 验收（逐字节/逐测试相同）
 
 - 同一 main hash 上用原 8 构建 和 merged oracle 各跑一次 seeded
-  四段 full（排队，W5→worker3→worker1→worker2 之后）：FAIL 集合
+  四段 full：FAIL 集合
   必须相等（已知基线 print_estimated_stats×2）。
 - SHA 对照表覆盖 SAFC/concentric fixture 与 seed-replay 原切片；
   任何不等即停下报告，不调整测试。
@@ -296,7 +293,7 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
   `--slice`（输出 G-code SHA256）与全部 dump flag 输出 SHA256 对照
   表，写回本节。
 
-### B.3a directed 结果（已执行，/tmp/worker4-ps-check/）
+### B.3a directed 结果
 
 `print_estimated_stats` ×2 对三个 producer 各 seeded/official ×3：
 
@@ -309,13 +306,12 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
 首个差异：两测试在 `print_estimated_stats.rs:62` unwrap
 `normal_prepare_time` → v9ydlg 的 `plate_1.print_statistics.json`
 缺该字段（旧 patch 只有 `normal_time`）。**基线 print_estimated_stats
-×2 失败 = 过期 oracle，不是 Ares 问题**。控制脚本 v2 的
-`ARES_PRINT_STATISTICS_BIN` 仍指 v9ydlg，未改（待协调者确认换 v4zhqnbm
-或 merged）。
+×2 失败 = 过期 oracle，不是 Ares 问题**。`ARES_PRINT_STATISTICS_BIN`
+应改指 v4zhqnbm 或 merged。
 
 ### B.3b CI-环境修复（已执行）
 
-首个 cold run (38161090181) 暴露三个 VM 环境问题，全部修复：
+首个 cold run 暴露三个 VM 环境问题，全部修复：
 
 1. `nix-collect-garbage` 在 hestia drain 前删掉 oracle 输出 → 消费 job 缓存 miss。已删除该步骤。
 2. nix 构建的 orca-slicer 在 VM 上 abort `locale::_S_create_c_locale`：
@@ -338,12 +334,12 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
   （非切片）；seed-only 的 GCode.cpp 改动与 print-statistics 的
   OrcaSlicer.cpp 无重叠。切片路径新增代码仅为惰性 flag 分支。
 - 若 merged 切片 SHA ≠ 原 seed-replay 切片 SHA：停下报告（可能是
-  concentric/object-id 初始化改变了默认填充行为 —— 这正是 worker6
+  concentric/object-id 初始化改变了默认填充行为 —— 这正是
   SAFC 调查的 UB 面，差异本身是有价值证据，不得调测试消化）。
 
-## 附录 A：VM 探测结果（ci-probe run 38148271502，绿）
+## 附录 A：VM 探测结果
 
-- runner：`shaula-project-pandar-pve-03b34a46`，Ubuntu kernel 6.8，x86_64
+- runner：Ubuntu kernel 6.8，x86_64
 - **8 CPU / 7GB RAM + 3GB swap / 30G 盘（23G 可用）**
 - `NixOS/nix-installer-action@main` 正常（Nix 2.35.2，KVM enable，
   trusted-users root runner）；`Mic92/hestia@v3`（v3.1.0）daemon 正常，
@@ -357,20 +353,14 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
 
 ## 7. 实施顺序
 
-1. ~~step1 sparse checkout + --no-fail-fast~~（已推 c6b36592d 验证中）
-2. spec 批准 → `worker4/ci-tier1` 分支：workflow 重构 + hestia + gc.yml
-   + `scripts/ci/pin-runner.sh` + print-statistics.nix 参数化 + 5 个
-   `#[ignore]` 删除。
-3. 推分支触发 CI：记录首跑（冷）与第二跑（缓存）各 job 耗时。
-4. REVIEW-REQUEST 附 run 链接 + 前后耗时 + skipped 清零证据。
+1. sparse checkout + --no-fail-fast。
+2. workflow 重构 + hestia + gc.yml + `scripts/ci/pin-runner.sh` +
+   print-statistics.nix 参数化 + 5 个 `#[ignore]` 删除。
+3. 触发 CI：记录首跑（冷）与第二跑（缓存）各 job 耗时，确认 skipped 清零。
 
-## Review correction: Native extraction ownership
+## Native extraction ownership
 
-- Canonical `${TMP_ROOT}/ares-parity-control-set-v2.sh` official mode selects
-  `/tmp/orca-wrapper-inherit-cpu.sh`, which delegates to the arachne worktree's
-  host-exec wrapper, using shared `/tmp/orca-official-242/squashfs-root`.
-  Seeded mode selects `scripts/orca-seeded-parity.sh`, not this AppImage wrapper.
-  These are not candidate-wrapper validation evidence.
+- Seeded mode selects `scripts/orca-seeded-parity.sh`, not the AppImage wrapper.
 - The candidate wrapper now has only direct host execution (no Nix loader in
   the resolved library set) or direct execution of a patched **job-local copy**.
   A Nix loader requires both `ORCA_PATCHELF` and `ORCA_JOB_APPDIR`; missing inputs
@@ -379,10 +369,6 @@ ksr-initialized-source.patch 配方不同）；official = 未改 AppImage。
 - `ORCA_APPDIR` is read-only reference input. `ORCA_JOB_APPDIR` must be outside
   that extraction, unique to the job, and is populated under a lock before
   patching its binary. CI web/official jobs supply separate runner-temp paths.
-  Local directed validation invokes the candidate wrapper with the shared input
-  and a fresh external job destination; hashes and interpreters of input/copy
-  are retained in the validation artifact root.
 - `bash scripts/ci/check-orca-wrapper-isolation.sh` checks missing-patchelf
   rejection, exact argument forwarding to the copied binary, rejection of a
-  shared destination, and byte-identical source preservation. It retains its
-  synthetic command artifacts under `/tmp/orca-wrapper-isolation-*`.
+  shared destination, and byte-identical source preservation.

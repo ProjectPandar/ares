@@ -1,14 +1,10 @@
 # SLICE-PROPOSAL: ByObject multi-instance brim owner collections
 
-Status: **PROPOSAL ONLY / REVIEW-REQUEST**. Base exact clean
-`0577970d4f8a5f34d26389949238eac9ffe35586` (approved ByLayer guard chain queued
-stack25). Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-No production/test change committed; temporary guard probe restored byte-for-byte.
+Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Frozen accepted ByObject family and Native-first evidence
 
-Evidence `${TMP_ROOT}/ares-byobject-owner-proposal-0577970d4/discovery-report.json`.
-Derived from approved owner-collection cube fixture, retaining meshes/owners and
+Derived from the owner-collection cube fixture, retaining meshes/owners and
 Z scale0.4; freeze ByObject, object2 copies at X50/X125,Y110,Z2, object3 at
 X200,Y110,Z2. Centers are separated75 to avoid clearance/group-sharing blockers;
 all settings/ZIP member hashes retained. One filament, outer_only brim8/gap0,
@@ -37,15 +33,12 @@ raw API==CLI. The no-skirt first point is direct brim path/order evidence,
 independent of the earlier M73 first differences. Complete comparisons remain
 unmodified; never remove/reorder M73 or call this a passing timing diagnostic.
 
-## Local uncommitted guard-only probe: NOT guard retirement alone
+## Guard-only probe: NOT guard retirement alone
 
-After Native acceptance was established, locally removed ONLY the remaining
+After Native acceptance was established, a local probe removed ONLY the remaining
 ByObject && instance_indices.len()!=1 disjunct and its now-orphaned comment/binding.
 No change to brim planning, sequencing, emitter, other guards or comparator.
-Exact uncommitted patch `probe/guard-only.patch`, SHA256
-`979bc7d7bd98fc4d416e4ea43bf792e1c0e407fdfef2e6aea2e992365a1199ec`.
-This is DIRTY discovery on base0577970d4, NOT public clean-hash RED/GREEN proof.
-Native FIRST again, separate fresh probe roots/caches and rebuilt API/CLI.
+This is discovery only, NOT public RED/GREEN proof.
 
 The perobject-brim input now slices, but FAILS complete comparison in BOTH modes:
 byte1296/line48, Native `G92 E0`, Ares `M73 P5 R12` before that same G92.
@@ -59,12 +52,6 @@ Thus the remaining guard is not the only divergence. Removing it alone is
 NOT GREEN. No estimator repair is proposed; M73 is an observed symptom with
 unproved causality. A source-faithful owner port must pass the whole comparison,
 or STOP/report rather than changing estimator, timing or normalization.
-
-Source restored byte-for-byte and clean porcelain verified before this document;
-restoration build resets reusable CLI target to clean source. Actual Native/
-public descendant+thread masks CPU18, serial independent modes, exact clean base
-and dirty-patch identity, canonical archive/hash/all reference settings recorded.
-No Native outputs in Git; all output evidence stays in the scratch evidence root.
 
 ## Owning source and exact remaining Rust mismatch
 
@@ -99,14 +86,13 @@ that lifecycle across `layers/transition.rs` sequential origin changes.
 `skirt/generate.rs` retains the separate explicit ByObject multiplicity guard.
 These are source compatibility consumers, not a new Ares-owned pipeline.
 
-## Recommended prerequisite split (approval requested, no implementation)
+## Recommended prerequisite split
 
 **A. ByObject ordinary owner-area/collection port FIRST.** Public Native-active
 RED on accepted combined-brim (and no-skirt failing localizer), with same-input
 combined width0 strict PASS control. Freeze input-only SHA/member manifests;
 assert positive Native model/brim activity and full ordered Native equality for
-all public cases, raw API==CLI. RED must genuinely fail, independent review
-before production. Then extend the EXISTING source ordinary-owner preparation/
+all public cases, raw API==CLI. RED must genuinely fail before production. Then extend the EXISTING source ordinary-owner preparation/
 emitted-ID lifecycle to ByObject, preserving per-copy model order/interludes,
 plate-frame area/bounds and all current ByLayer/global-combine behavior. No new
 pipeline, copy-count geometry workaround, fallback, estimator or guard widening.
@@ -117,13 +103,12 @@ currently FAILS and cannot honestly be a passing prerequisite control for this
 admission slice. After A GREEN, repeat the frozen perobject guard-lift discovery.
 Only if complete comparison matches, propose Native-active public unsupported
 RED + newly passing combined control, then minimal guard retirement. Do not
-claim today's dirty probe is green or combine unrelated policy/diagnostics.
+claim the guard-only probe is green or combine unrelated policy/diagnostics.
 
-Both stages remain source-cited and separately reviewed. ByLayer owner/global
+Both stages remain source-cited and separate. ByLayer owner/global
 and brim/skirt/per_object families stay unchanged and must pass targeted gates,
-CPU18/jobs2/threads2, exact clean hashes and fresh mode evidence, fmt/strict/WASM,
-files <=400 LOC. Any residual whole-output divergence after a faithful owner
+fresh mode evidence, fmt/strict/WASM, files <=400 LOC. Any residual whole-output divergence after a faithful owner
 port means STOP/report and scope amendment, NOT estimator work. Deferred:
 shared-group error parity, combine1+perobject, overlap/touching/new geometries,
 other brim modes/holes, support/raft/tower/multi-filament. No assertion about
-unreached SlicingError behavior. No full/workspace, merge or push during freeze.
+unreached SlicingError behavior.

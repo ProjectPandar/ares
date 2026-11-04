@@ -1,11 +1,9 @@
 # C2 dependency: Native import identity and selected-load contracts
 
-Status: SPEC-REVIEW-REQUEST, docs only. Further implementation is stopped.
-Base: origin/main3543ac3e52c1b614effdf30724e604dcdd54134b.
-Prototype: a07c7c3cb732b3ffeb6ea5970a9bcc387bf55423 (rebased c704edebf).
-The nine carried commits have range-diff9/9 `=`; ares-core trees are identical.
+Status: Proposed. Further implementation waits on this contract.
+Prototype: a07c7c3cb732b3ffeb6ea5970a9bcc387bf55423.
 
-The C2 approval required: “公共 load/selection 契约改动须另 SPEC”. Two
+The C2 spec required: “公共 load/selection 契约改动须另 SPEC”. Two
 Native-backed selection witnesses and the surviving literal-ID mismatch now
 show why that condition applies. C2 is **not GREEN**: both directed modes have
 36/37 PASS, with `c2_nested_bfs` deterministically failing. All fourteen C1
@@ -14,8 +12,7 @@ change has been used to conceal these failures.
 
 This dependency ports `_BBS_3MF_Importer` model identity/materialization and
 the CLI's selected import prefix. It does not add an independent pipeline.
-Source tree:
-`/nix/store/hxvv0g1qlw9lwimj2km3ghxphrl9p4qf-orca-slicer-2.4.2-seed-replay-source`.
+Source tree: OrcaSlicer 2.4.2 seed-replay source.
 libslic3r references are relative to `src/libslic3r`.
 
 ## Source boundaries and concrete differences
@@ -47,8 +44,7 @@ if it changes the loaded bounding box.
 
 ## Evidence: original failures and every setup retained
 
-Aggregate: `/tmp/worker3-centering-c2-green-7rrm77oh/defect-evidence.json`.
-The tested head is c704edebf; the rebased production tree is unchanged.
+The tested head is c704edebf.
 The parent RED4334347e4 remains intact; initial strict import errors and their
 test-only cleanup also remain recorded. These new preflights are geometry and
 admission witnesses, **not strict parity PASS counts**.
@@ -60,36 +56,29 @@ admission witnesses, **not strict parity PASS counts**.
    The direct leaf is present; the literal explicit-self-path branch is not
    found in Native's main-model ID namespace. The case and every assertion
    remain in Git unchanged.
-2. `/tmp/worker3-centering-c2-local-bfs-preflight-6hld2ipt`:
+2. Local-BFS preflight:
    change **only** that component's p:path from explicit self-path to absent.
    Native official/seeded exit0,36 endpoints, X[119.31,179.69]. Prototype
    matches those bounds; the preserved C1 producer gives X[122.31,179.69].
    This independently exercises actual local-ID BFS order and shared-owner
    geometry. It does not replace or void the original failing input.
-3. `/tmp/worker3-centering-c2-unassigned-owner-preflight-z06bmkoi`:
+3. Unassigned-owner preflight:
    start with committed implicit-shared input; only make owner object2
    nonprintable and remove its plate1 instance metadata. Geometry, settings,
    IDs and the printable later object stay unchanged. Both Native modes and
    preserved C1 give Xmax179.69; prototype gives176.69. All producers exit0.
    This is a new3mm candidate regression caused by an excluded owner priming
    the all-object cache, not Native instability.
-4. `/tmp/worker3-centering-c2-default-scope-preflight-qz3765z5`:
+4. Default-scope preflight:
    start with committed two-plate input; swap object/label plate membership
    and put the owner at globalX374 on plate2, later object atX155 on plate1.
    Both Native modes give first-plate Xmax176.69 for --slice0 and179.69 for
    --slice1. Prototype default and explicit --plate1 both give179.69.
    Thus default/all-import and explicit/plate-import cannot share one scope.
 
-Each root retains input SHA, exact authoring changes, launch env/commands,
-producer SHA, fresh per-producer cache/artifacts, stdout/stderr and G-code.
-The C1 executable was copied only after its SHA matched the CLI producer in
-the public RED receipt; prototype producers match the tested implementation.
-Official wrapper SHA is1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3.
-The first two launch attempts for item3 stopped before any producer START:
-an overly broad nextest preflight and then ps-field parsing were corrected.
-They generated no Native/Ares results and are not counted as executions.
+Each preflight uses fresh per-producer cache/artifacts.
 
-## Requested public semantics
+## Public semantics
 
 Keep public signatures, borrowed mesh accessors, settings/custom-G-code
 selection, plate numbering and error types. `load_project(bytes)` remains an
@@ -102,10 +91,10 @@ before geometry preparation and placement.
 For an explicitly selected import, objects absent from that plate's Native
 object-ID membership are excluded, including unassigned/nonprintable owners.
 This deliberately changes the current public selected-view membership; it is
-the precise selection-contract change requested here. Preserve the existing
+the precise selection-contract change specified here. Preserve the existing
 assigned-instance view filtering, world coordinates and original-source
 provenance needed by C1. A selected view remains restricted to its available
-plate; this does not authorize selecting a removed plate or resetting origins.
+plate; this does not allow selecting a removed plate or resetting origins.
 
 Represent the scope explicitly in private import provenance, rather than
 infer it from the number of plates. Already materialized/placed views must
@@ -118,7 +107,7 @@ plate metadata needed for global grid origin and later state selection;
 do not call the final one-plate view selector twice or reset curr_plate_index.
 `profile_placed_project`'s explicit-plate object set consequently becomes the
 Native scoped loaded model instead of today's all-object placed model. This
-observable change is also requested; unrelated profile/settings resolution,
+observable change is also intended; unrelated profile/settings resolution,
 compatibility and validation error ordering are outside this SPEC.
 
 `load_project` volumes must reflect Native importer IDs, including the
@@ -127,12 +116,11 @@ leaves. Keep package authorization/validation separate; do not reinterpret a
 missing archive file, malformed transform or unknown option as an absent
 Native ID. No legacy canonical-ID fallback is permitted.
 
-**Requested ruling on the no-silent-skip rule:** permit only the exact
-source-cited absent-ID branch of `_generate_current_object_list`, with this
-Native-admitted witness. This is an importer materialization contract, not
-permission to skip a feature, oracle comparison or test. If that branch is
-not approved, keep C2 stopped; do not manufacture geometry or an Unsupported
-guard to avoid the discrepancy.
+**No-silent-skip rule:** only the exact source-cited absent-ID branch of
+`_generate_current_object_list`, with this Native-admitted witness, may skip.
+This is an importer materialization contract, not permission to skip a
+feature, oracle comparison or test. Do not manufacture geometry or an
+Unsupported guard to avoid the discrepancy.
 
 ## Rust boundary and included/deferred behavior
 
@@ -162,16 +150,14 @@ explicit-self-path input. Both modes retain strict complete output comparisons.
 Public loaded/selected geometry and profile placement are separately observable
 seams; exercise a relocated explicit plate and A,B,A on one loaded Project.
 
-Request approval to correct only the original nested fixture manifest's
+Correct only the original nested fixture manifest's
 expected imported volume_count from2 to1, based on Native triangle_count12
 and the cited BFS branch. Keep its equality assertion and ordered comparator
 fully intact; this corrects a hand-authored Ares-graph assumption, not Native
 output. Every other existing assertion stays. Any further obsolete contract
-test needing changes must be listed for a separate request before editing it.
+test needing changes must be listed separately before editing it.
 
 Then implement this import-contract dependency in its own production commit,
-with no change to the approved fresh/shared offset algorithm. Keep files at
-most400LOC, no probes/allow/ignore/regions[0]/normalization. CPU12 directed
-requires an open coordinator window, jobs2/threads2 and fresh roots per run.
-Strict/fmt/wasm and the complete C2+C1 matrix must pass before code review.
-Allocated workspace/full and exact-hash approval are still required; no push.
+with no change to the specified fresh/shared offset algorithm. Keep files at
+most400LOC, no probes/allow/ignore/regions[0]/normalization. Directed runs use
+fresh roots per run. Strict/fmt/wasm and the complete C2+C1 matrix must pass.

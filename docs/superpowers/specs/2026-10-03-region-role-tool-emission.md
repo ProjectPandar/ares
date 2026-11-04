@@ -111,7 +111,7 @@ final single/first largest area or retained resampled original when empty.
 Adjacent rounding, closest-line and region-flow gaps are not bundled into
 this slice without their own public output evidence.
 
-Status: approved next milestone; mainline baseline body gap reproduced.
+The mainline baseline body gap is reproduced.
 Architecture: [ARD-0094](../../architecture/ard-0094-region-role-tool-ordering-and-writer-state.md).
 
 ## Contract and upstream ownership
@@ -132,7 +132,7 @@ Defer adjacent M1020/M600 selection, processor arc-discretization/units
 and wipe-tower accounting to output-evidenced slices; retain their existing
 behavior without claiming those boundaries are complete. Keep the original
 baseline/modifier complete acceptance unchanged and add a native-first
-saved3MF footer-output tracer at the same approved public seam.
+saved3MF footer-output tracer at the same public seam.
 
 The existing-vertex seam slice ports `GCode/SeamPlacer.cpp::place_seam`
 1624–1627 and `ExtrusionEntity.cpp::ExtrusionLoop::split_at_vertex`182–225,
@@ -184,7 +184,7 @@ It already exercises public 3MF import, effective configuration and complete
 baseline/modifier output. Do not change its fixtures or complete-output
 assertions to accommodate the implementation.
 
-Both official and independently seeded Orca, with approved single-CPU replay,
+Both official and independently seeded Orca, with single-CPU replay,
 must pass that test. Retain default-multiworker reference evidence without
 claiming deterministic default-multiworker parity.
 
@@ -228,10 +228,7 @@ passing. Do not claim this closes the following multi-tool criteria.
 - The other 46 activated finite Normal/Tree/region controls remain passing.
 - Workspace nextest, clippy, fmt, WASM check/release and browser KSR complete
   output pass; Windows/macOS core checks pass without claiming native runtime.
-- Independent six-axis review closes source parity, public evidence,
-  architecture/maintainability, performance, platform boundaries and scope.
-- Code and corresponding documents commit/push together in verified slices;
-  no tool-only scaffolding or broken intermediate runtime commits.
+- No tool-only scaffolding or broken intermediate runtime commits.
 
 This is not an all-printers, all-options or wipe-tower completion claim.
 

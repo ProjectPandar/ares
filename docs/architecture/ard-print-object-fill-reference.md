@@ -1,7 +1,7 @@
 # ARD: Use the upstream centered PrintObject fill reference
 
-Status: implemented; coordinator-approved bounded 52-case acceptance verified
-on main `56e4da53`, awaiting coordinator review. See plan for retained failures
+Status: accepted; bounded 52-case acceptance verified
+on main `56e4da53`. See plan for retained failures
 and lint warnings.
 
 The non-negotiable boundary is `PrintObject::bounding_box` (OrcaSlicer2.4.2

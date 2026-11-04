@@ -21,4 +21,4 @@ Non-negotiable decisions (spec: `spiral-vase-admission-spec.md`).
 5. **E2E-only verification.** No unit tests; the three cases above are the
    sole verification.
 6. **Boundary hygiene.** Only `print/validate.rs` changes in GREEN; the file
-   stays ≤400 LOC; queued and W1-touched files are untouched.
+   stays ≤400 LOC; other files are untouched.

@@ -1,8 +1,7 @@
 # GCodeProcessor: OptionsZCorrector side effects on `GCodeProcessorResult::moves`
 
-Status: SPEC approved (5c538e11e). COORD ruling (b): `custom`,
-`mode-mismatch` and `pause` join `template` in the RED. If the GREEN does
-not close one of them, work stops and the case is reported, not dropped.
+Decision: `custom`, `mode-mismatch` and `pause` join `template` in the RED.
+If the GREEN does not close one of them, the case is reported, not dropped.
 
 This is the "slice C" deferral of
 `docs/architecture/gcode-processor-options-z-corrector.md`: that slice
@@ -12,12 +11,11 @@ the viewer reads.
 
 ## Finding
 
-Discovery on main `57fea9498`. For each fixture, `ares slice --dump-moves`
+For each fixture, `ares slice --dump-moves`
 was compared with the `procgcode` oracle (`tools/chain-probe/procgcode.nix`,
 verbatim `GCodeProcessor` plus the dump hook). The oracle ran with
 `--process-gcode --dump-moves` on the same G-code. The tolerances are the
-ones in `crates/ares-cli/tests/gcode_moves_oracle.rs`. The evidence is in
-`${TMP_ROOT}/ares-estimation/moves-discovery/r2/`.
+ones in `crates/ares-cli/tests/gcode_moves_oracle.rs`.
 
 | Fixture (`tests/parity/plate-custom-gcode-emission/`) | Rows oracle / Ares | Out-of-tolerance fields |
 |---|---|---|
@@ -32,10 +30,9 @@ The `color-change` fixture shows no difference. Why it is unaffected while
 `pause` (which also flushes in `process_custom_gcode_time`) is affected is
 not established yet. The GREEN probe records it, and it stays a guard case.
 
-**The oracle is consistent with Native.** The script
-`${TMP_ROOT}/ares-estimation/moves-discovery/native-check.sh` re-ran the oracle
-on the official-AppImage `plate_1.gcode` that the `7e6340dde` directed
-parity run compared against.
+**The oracle is consistent with Native.** The oracle was re-run on the
+official-AppImage `plate_1.gcode` that the directed parity run compared
+against.
 - **G-code lines:** for all 9 fixtures, the non-comment lines of the Native
   file and of the Ares file are identical.
 - **Oracle on Native vs oracle on Ares:** identical CSVs, 0 mismatches, the
@@ -117,8 +114,8 @@ allowlist below).
 
 **Deferred:**
 - **`custom`, `mode-mismatch`, `pause`:** they have the same mechanism and
-  are expected to pass with this GREEN. They become tests in the same RED
-  only if COORD agrees; otherwise they are a follow-up test-only slice.
+  are expected to pass with this GREEN and join the same RED (see the
+  decision above).
 - **`same-layer`:** two events, and the row count differs by 4. That fits
   the "resolved vertex untimed means no splits" path (`:484-488`), which
   `template` does not exercise. If it is not fixed by this GREEN, it gets
@@ -147,8 +144,7 @@ with plate `None`. The file grows by about 12 LOC, to about 244.
 - directed `-E test(plate_custom_gcode_emission)`, official and seeded
   (12/12, since the G-code bytes must not change);
 - fmt, `nextest -p ares-core`, wasm32 clippy, and `clippy --workspace`;
-- the canonical full that COORD assigns, because this is an ares-core
-  production change.
+- a full parity run, because this is an ares-core production change.
 
 ## Ways it could fail
 
@@ -165,7 +161,7 @@ with plate `None`. The file grows by about 12 LOC, to about 244.
 - **Performance.** The Log is already built on every pass, so the resolved
   index costs one lookup per block.
 
-## Allowlist (needs COORD OK)
+## Allowlist
 
 | File | Edit |
 |---|---|

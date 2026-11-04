@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted and implemented. Independent source/specification review approved the boundary before RED; implementation review is recorded after the verification evidence below.
+Accepted and implemented.
 
 ## Decision
 

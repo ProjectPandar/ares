@@ -1,42 +1,28 @@
 # Proposal: per-object skirt groups, first bounded rewrite slice
 
-Status: **SPEC APPROVED — first bounded slice; production waits for W3 C1 merge**.
-Base: main `296b060186fc90590e23238145a27fa4805c59e7`.
-Proposal preparation ran no cargo, nextest or Native and changed no production.
+## Non-negotiable scope and sequencing
 
-## Coordinator ruling and non-negotiable sequencing
-
-The first slice is approved for single-filament by-layer printing, no
+The first slice covers single-filament by-layer printing, no
 brim/support/raft/tower/draft, `min_skirt_length=0`, including disjoint,
 overlap, transitive and copies cases. The existing `skirt.rs:64-73` guard
 may only be narrowed to deferred conditions (brim/support/raft/tower/draft,
 minimum-skirt extension, sequential or multiple filaments). Add **no new
 UnsupportedProjectFeature**. Never use combined-mode fallback.
 
-W3 C1 (`f60fa32c1` / `adac7ff06`) changes both `skirt.rs` and
-`skirt/occupied.rs`. Before C1 merges into main, only this SPEC and RED
-fixtures/tests may be committed; production implementation, including its
-preparatory split, waits for the merge. Rebase onto merged C1 and inspect
-its ownership/geometry contract before editing. Split affected production
-files before semantic edits if needed to keep every changed file <=400 LOC.
-RED execution needs an open directed window and CPU18 outer pinning.
-Native acceptance **and real per-object skirt output** must be established
+The object-centering C1 change touches both `skirt.rs` and
+`skirt/occupied.rs`; production implementation, including its preparatory
+split, builds on that change and its ownership/geometry contract. Split
+affected production files before semantic edits if needed to keep every
+changed file <=400 LOC. Native acceptance **and real per-object skirt output** must be established
 before claiming RED; no admission-only or combined-skirt witness suffices.
 
-## Assignment / collision check
+## Producer boundary
 
-The coordinator inbox was searched for skirt/skirt_type/per-object skirt and
-current worker claims. No skirt claim was found. Known active slices remain
-W2 bridge-anchor C2, W3 centering C2, W4 counterbore, W5 interface_shells,
-and web viewer/browser work. Ask coordinator to reserve this proposal before
-implementation; absence of a matching inbox entry is not exclusive authority.
-
-W3 ownership is important: this proposal consumes existing resolved
+This proposal consumes existing resolved
 PrintObject identity and already-transformed hulls. It does not alter group
 resolution, raw intersections, object centering, instance transforms or
-exclusion labels. Any RED exposing that producer's defect is reported to W3,
-not repaired inside the skirt slice. Rebase onto merged producer fixes before
-GREEN if required.
+exclusion labels. Any RED exposing that producer's defect belongs to the
+centering slice, not repaired inside the skirt slice.
 
 ## Upstream source boundary
 
@@ -82,7 +68,7 @@ Rust destination:
   the first member of a group emits it once at the correct layer/object
   boundary, matching `generate_object_skirt_group` ownership.
 - A new public parity test module under `ares-cli/tests/orca_parity/`, with
-  registration only after approval. Split edited modules before >400 LOC;
+  minimal registration. Split edited modules before >400 LOC;
   do not move unrelated motion/centering code.
 
 ## Included — smallest useful source slice
@@ -113,13 +99,11 @@ option policy, stop and request a scope decision before implementation.
   `Print.cpp:3779+`; multiextruder ownership/tool ordering.
 - Different per-object skirt start angles, minimum-filament extra loops,
   draft-shield lifetime, raft/support height interactions.
-- W3 object-group centering, source identity and instance transform rewrite;
+- Object-group centering, source identity and instance transform rewrite;
   consume its contract only. No counterbore, interface-shell, anchor or web
   changes are included.
 
-## RED plan (not executed)
-
-After SPEC approval and a CPU18 directed allocation:
+## RED plan
 
 1. Export repeatable 3MFs with two simple printable prisms, single filament,
    positive skirt loops, by-layer order, all deferred features disabled.
@@ -144,18 +128,12 @@ After SPEC approval and a CPU18 directed allocation:
 Success: source-owned groups, unchanged controls, all admitted scoped inputs
 strictly matching both reference modes. New failures in deferred combinations
 must remain explicit limitations, not inflated parity claims. Gate with
-strict/fmt/WASM, then request exclusive canonical full and any workspace
-slot separately. START/END go to inbox; merge is coordinator-only.
+strict/fmt/WASM and workspace checks.
 
 ## Remaining dependency checks / stop conditions
 
-The coordinator approved the initial by-layer/no-obstacle grouping scope.
-Retain the existing guard for all listed deferred conditions; do not add
-new Unsupported errors. Await W3 C1 main merge before any production split
-or change, then rebase and consume its contract only. If exact full-output
-skirt ordering still depends on W3 C2, report that dependency and wait rather
-than touching W3 resolution/centering files.
-
-At SPEC commit no Native RED, GREEN or execution evidence is claimed.
-Next authorized work is RED fixture/test preparation only; execution still
-requires a directed CPU18 window and Native witness first.
+The scope is the initial by-layer/no-obstacle grouping. Retain the existing
+guard for all listed deferred conditions; do not add new Unsupported errors.
+Consume the object-centering C1 contract only. If exact full-output skirt
+ordering still depends on centering C2, report that dependency rather than
+touching resolution/centering files.

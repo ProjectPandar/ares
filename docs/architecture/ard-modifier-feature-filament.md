@@ -1,6 +1,6 @@
 # ARD: modifier feature filament overrides use upstream region config
 
-Status: **SPEC APPROVED a2ffbb77b; public RED authorized with per-role witnesses.**
+Status: accepted. SPEC a2ffbb77b; public RED with per-role witnesses.
 Associated [SPEC](modifier-feature-filament-spec.md). No production/guard change
 in this RED. Whole strict public control passed in both modes before extension;
 all six individual roles now have their own Native local-T1 qualification.
@@ -22,9 +22,9 @@ base modifier extruder policy. Painting behavior is deferred, not reassigned.
 The exact admission boundary is `project/effective_config/candidates.rs`'s
 six-key `first_unsupported_modifier_key` guard. `project/region_graph.rs` and
 `options/region_options/merge.rs` remain the source-cited destinations around it.
-Only separately authorized GREEN can retire any of those six branches;
+Only a separate GREEN can retire any of those six branches;
 unrelated guards remain untouched. No resolver rewrite is justified by a guard
-alone. Each branch may retire only with its own reviewed public RED. The initial
+alone. Each branch may retire only with its own public RED. The initial
 sparse witness is now extended by five independently Native-qualified role cases;
 no unqualified role is admitted by this matrix. Keep any unqualified guard branch.
 This remains neither an all-combination parity claim nor nonzero-extruder proof.
@@ -33,7 +33,7 @@ This remains neither an all-combination parity claim nor nonzero-extruder proof.
 
 Frozen control/positive share accepted modifier geometry plus complete donor
 two-filament settings; only modifier sparse_infill_filament_id=2 differs. Four
-Native CPU15 legs accept, diverge, and positive has780 spatially local T1 sparse
+Native legs accept, diverge, and positive has780 spatially local T1 sparse
 segments in each mode. An initial comment-dialect observer defect was corrected
 offline on the same G-code, not by rerunning Native or changing the input.
 

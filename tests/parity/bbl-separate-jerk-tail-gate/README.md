@@ -3,10 +3,9 @@
 Source: `GCodeWriter.cpp:298-299::set_jerk_xy`. The BBL Z/E suffix follows all
 flavor branches, before the optional comment and newline. Specification:
 `docs/architecture/2026-10-24-bbl-separate-jerk-tail-gate-spec.md`.
-Base: `17ec2e082`. This tests-only RED does not change production code.
 
-Native admits the BBL/Repetier saved configuration. The coordinator explicitly
-accepted that cross-family boundary as in scope. This is not a claim that stock
+Native admits the BBL/Repetier saved configuration, so that cross-family
+boundary is in scope. This is not a claim that stock
 Bambu hardware runs Repetier or a recommendation to use this printer setup.
 
 BBL cases derive from the existing GUI-generated BBL one-object archive; the
@@ -43,7 +42,5 @@ comments placed before the tail; or hiding unrelated travel/time differences.
 The travel=10000 M202 discrepancy is explicitly deferred and that archive is
 not included. Do not rename a BBL model to manufacture a non-BBL control.
 
-Freeze these tests and archives before GREEN. The later port only moves the
-existing suffix after flavor selection, reuses precision two and preserves
-upstream tail/comment/newline order. CPU17/PIN17, jobs=1 and threads=1; no FULL.
-Send one combined SPEC/RED review request, then hold before production changes.
+The port only moves the existing suffix after flavor selection, reuses
+precision two and preserves upstream tail/comment/newline order.

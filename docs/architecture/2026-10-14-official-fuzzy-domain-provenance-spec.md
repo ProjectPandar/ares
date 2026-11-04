@@ -1,10 +1,8 @@
 # Slice 6: retain the fuzzy nondeterminism reason in incomplete outcomes
 
-Status: revised SPEC-REVIEW-REQUEST; docs only. This replaces the wider
-13fdb3d94 proposal following the coordinator's scope ruling.
-Order: approved slice3, approved slice5, then this slice, each separately
-RED → GREEN → REVIEW-REQUEST. Wait for W6 to merge and rebase onto main
-before any RED; this document starts no Native/cargo runs.
+Revised SPEC; docs only. This replaces the wider 13fdb3d94 proposal with a
+narrower scope. Order: slice3, slice5, then this slice, each separately
+RED → GREEN. This document starts no Native/cargo runs.
 
 ## Upstream ownership and existing evidence
 
@@ -46,7 +44,7 @@ No production slicing or random-stream implementation is included.
 
 ## Public RED before GREEN
 
-After SPEC approval and the required rebase, add a public directed regression
+Add a public directed regression
 asserting the four fuzzy domains' external detail text retains the oracle
 nondeterminism reason whenever an actual outcome has excused cases, including
 compared==0. The existing noise_type wording already reports that reason;
@@ -79,9 +77,7 @@ No new fixtures, seeded-oracle changes, RNG/geometry ports, statistical
 comparison or inventory/exclusion changes. Existing42-attempt attribution
 stays in the audit and is not reimplemented here.
 
-Directed execution only within the coordinator's window, outer taskset
-CPU13/14, CARGO_BUILD_JOBS=2 and NEXTEST_TEST_THREADS=2, fresh root/cache/target
-for each mode. Full/workspace still require explicit GO. After GREEN run
+Directed execution uses a fresh root/cache/target for each mode. After GREEN run
 paired directed and required strict clippy/fmt/wasm32; keep files <=400 lines.
 Exit: unchanged domain statuses/counts and acceptance, complete ND detail
-on actual excused outcomes, correct upstream comment, separate code REVIEW.
+on actual excused outcomes, correct upstream comment.

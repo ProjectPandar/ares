@@ -1,9 +1,6 @@
 # Direct coInts placeholder identity — source-cited SPEC
 
-Status: docs-first SPEC. This branch is based on the approved combined W6 tip
-`84c793c6acb76fd949bf4de9f08473e3a9f19574`. It is not a GREEN or integration
-commit. Upstream pin is
-`8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+Upstream pin is `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Upstream owner and exact Rust destination
 
@@ -41,13 +38,12 @@ formatter, runtime placeholder bindings, vector selection, nil handling,
 coInt scalar options, nullable Ints, floats, percentages, enums, strings,
 assignment lifecycle, or any global numeric retyping. Integral doubles remain
 Numbers. No name-specific formatter branch, validation, fallback, tolerance,
-mask, changed expectation, or new pipeline is allowed. W3 frozen files have no
-scope overlap.
+mask, changed expectation, or new pipeline is allowed.
 
 ## Frozen public RED witness
 
 The existing exported 3MF inputs from the read-only discovery are copied
-byte-for-byte into this branch's evidence; no regeneration is allowed:
+byte-for-byte; no regeneration is allowed:
 
 - control: `temperature_vitrification=["110"]`
 - target: `temperature_vitrification=["-123456789"]`
@@ -62,7 +58,7 @@ The public test must use unchanged `runner::native_stream_case::check` through
 comparison, and no hardcoded expected output. It must run Native2 stability
 before API and CLI. Both official and seeded modes must be executed with fresh
 stage caches: control PASS and target actual strict FAIL. The target seeded
-comparison must not be inferred from official; it must be a real receipt.
+comparison must not be inferred from official; it must actually run.
 
 ## Deferred sequence
 
@@ -71,17 +67,7 @@ comparison must not be inferred from official; it must be a real receipt.
    production code, or expected values. Run official and seeded; each must show
    Native2 stable, control PASS, target FAIL, API/CLI raw equality, and the
    strict first difference. Stop if either mode differs from this matrix.
-3. Submit a REVIEW-REQUEST and HOLD. Do not implement GREEN, run FULL, or widen
-   the destination boundary until separately authorized.
+3. GREEN must not widen the destination boundary.
 
-## Evidence boundary
-
-The discovery predecessor is
-`${EVIDENCE_ROOT}/w6-direct-coInts-discovery-ck9j5lc3/`; its
-`SPEC-PROPOSAL.md`, source citations, Native2 receipts, API/CLI artifacts and
-strict STOP are prior read-only evidence only. This SPEC does not claim the
-unrun seeded target comparison from that discovery.
-
-All changed text must remain below400LOC and retain required trailers. No
-merge, push, main update, browser or multicore runtime claim is part of this
-SPEC.
+All changed text must remain below400LOC. No browser or multicore runtime claim
+is part of this SPEC.

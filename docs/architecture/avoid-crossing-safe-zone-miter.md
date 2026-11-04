@@ -27,15 +27,15 @@ polygon, contour, hole and integer vertex. Each target has two contours and
 three holes. No canonicalization, sorting, tolerance or rounding was used.
 Rust was observed twice per target with the same inputs.
 
-Evidence: `${EVIDENCE_ROOT}/w6-thin-preoffset-lslices-equality.json`.
+Evidence (thin pre-offset lslices equality) is retained externally.
 SHA256 of compact ordered coordinate arrays:
 
 - thin-auto-gap: `e0f21ef7a2eaede94ff9d969a668b8f0c4e72351e50c6b30dc61ecefb569dde5`
 - thin-percent-gap: `742ce651f704ced5727edbfca1c663c344f93cbfa4e542398a978f55a25be0ec`
 
-Captured on `e6e5ca55d4d16a2d61a925eb05cf3c0fef219fca`, after the already
-reviewed endpoint-contact and inward-displacement slices. Those two slices
-remain unchanged and queued; the original WIP branch is untouched.
+Captured on `e6e5ca55d4d16a2d61a925eb05cf3c0fef219fca`, after the
+endpoint-contact and inward-displacement slices. Those two slices
+remain unchanged; the original WIP branch is untouched.
 
 ## Observed divergence and bounded hypothesis
 
@@ -50,10 +50,9 @@ returns a straight route without entering the boundary router. Native's
 safe-zone corner contains `[-1769990, 541813]`; Rust instead has the bevel
 vertices `[-1769990, 70383]` and `[-1436639, 208462]`. Pre-offset inputs are
 exactly equal, while the offset's miter parameter explicitly differs from
-upstream. Receipts are linked from
-`${EVIDENCE_ROOT}/w6-thin-safezone-readonly-finding.json`.
+upstream. The read-only finding is retained externally.
 
-Hypothesis to test only after spec approval: restoring the source default
+Hypothesis to test after this spec: restoring the source default
 miter limit restores safe-zone containment/routing and its downstream timing
 consequences. Whole-output GREEN for both targets is required; a smaller
 feedrate or travel difference is not completion.
@@ -67,7 +66,7 @@ No special case for thin input names, width modes, tools or region counts.
 
 Explicitly deferred: **`avoid_crossing/boundary.rs` retains its miter limit 2**.
 It has a different source/consumer boundary and needs an independent witness;
-this spec does not authorize a search-and-replace of miter constants.
+this spec does not permit a search-and-replace of miter constants.
 Also deferred: interlocking thin morphology, nozzle/flow resolution,
 intersection predicates, writer state, inward cast order, cooling arithmetic,
 normalization and new Unsupported/fallback behavior. If the one-parameter
@@ -77,7 +76,7 @@ change leaves a residual, stop and report it without broadening this slice.
 
 Confirmed seams remain Native CLI twice, validated byte-in/options core API,
 and real Ares CLI. Reuse `runner/native_stream_case.rs` rather than copy its
-assertions. Reuse archives already on the reviewed stack. Bring the two
+assertions. Reuse archives already on the stack. Bring the two
 input-only targets and the missing three-region beam1 control unchanged from
 the WIP branch; do not copy already-present control archives.
 No Native output is committed.
@@ -96,7 +95,7 @@ Native double-replay stability, frozen SHA checks and API/CLI raw equality.
 
 Three-region is already strictly equal on the clean generator, not a new RED
 or a behavior fix claimed here. Its input may be added unchanged if it is not
-yet present on the integration stack; do not duplicate its beam0 control.
+yet present on the stack; do not duplicate its beam0 control.
 
 Failure modes: a beveled hole corner changes safe containment; an unnecessary
 straight travel replaces Native's detour; route-length changes perturb cooling
@@ -106,22 +105,20 @@ just the first changed line. Preserve launch/input/output/comparison artifacts.
 No ignores, test skips, new allow/expect, probes, altered comparators or silent
 fallbacks may be used to satisfy the matrix.
 
-## Review sequence and integration gates
+## Sequence and integration gates
 
-This is a **docs-only SPEC request** on `worker6/thin-safezone-spec`, based on
-the already reviewed endpoint + inward stack. It does not request or start a
-FULL window and does not advance either reviewed branch reference.
+This is a **docs-only SPEC**, based on
+the endpoint + inward stack. It does not advance either branch reference.
 
-1. Approve this spec and its pre-offset equality evidence first.
-2. With separate authorization, commit fresh runtime Native-first RED for the
+1. Land this spec and its pre-offset equality evidence first.
+2. Then commit fresh runtime Native-first RED for the
    two targets and three PASS controls, in both modes, using shared runner.
 3. Production-only GREEN may change only the safe-zone offset miter parameter.
    Both targets and all controls must wholly pass in both modes; otherwise stop.
 4. Changed files stay below 400 lines; fmt and workspace/all-target clippy
    with `-D warnings` must be clean; preserve browser WASM/native separation.
-5. Endpoint + inward keep their coordinator queue position. Integration must
-   rebase onto then-current main and obtain exact-final-hash official and
-   seeded FULL with 0 FAIL/0 skipped before an integration RR. This spec
-   grants no earlier-baseline exemption, extra CPU or competing FULL window.
-6. No stash, push or self-merge. Keep all Native/GDB evidence outside Git and
-   the required coauthor on each commit.
+5. Integration must
+   rebase onto then-current main and pass exact-final-hash official and
+   seeded full parity with 0 FAIL/0 skipped. This spec
+   grants no earlier-baseline exemption.
+6. Keep all Native/GDB evidence outside Git.

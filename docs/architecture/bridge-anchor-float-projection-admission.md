@@ -1,8 +1,8 @@
 # SPEC D: local anchor FloatOrPercent projection admission
 
-Status: SPEC-REVIEW-REQUEST, docs only; Native admission unproven.
-Base `96eb17ccc2805ce1d4f95045e452eb070e19f183`; independent of CODE-APPROVED
-A/C1/B candidate `18d59a638`, which stays frozen for its full queue.
+Status: proposed SPEC, docs only; Native admission unproven.
+Base commit `96eb17ccc2805ce1d4f95045e452eb070e19f183`; independent of the
+A/C1/B candidate `18d59a638`, which stays frozen.
 
 ## Owning source and audited distinction
 
@@ -36,13 +36,13 @@ complete output can establish a usable RED.
 Destination: existing
 `project_slice/prepare_infill/bridge_over_infill/transaction/anchor_projection.rs`,
 with `sparse_anchoring/projected.rs` and existing Fill connect consumers only
-if their behavior is proven missing and a repair PLAN is separately approved.
+if their behavior is proven missing and a repair PLAN is separately accepted.
 The admission shell must not introduce a new Ares numeric policy around
 upstream FloatOrPercent projection.
 
 D-M first: maximum projection check. D-A second: anchor projection check,
 with a finite maximum so the earlier maximum check cannot mask it. Separate
-public RED, repair commit and code REVIEW for each; no combined deletion.
+public RED and repair commit for each; no combined deletion.
 
 Included: bounded finite public values that Native truly accepts and completes.
 Initial repair is deletion of only the selected gate if sufficient. Preserve
@@ -52,7 +52,7 @@ layer-range/height-profile work, defaulting/clamping policy, geometry redesign.
 
 ## Native preflight inputs (not admitted cases yet)
 
-After SPEC APPROVED and an available directed window, use object/model-part
+After this SPEC, use object/model-part
 3MF metadata overrides on a positive-density rectilinear solid-ceiling fixture.
 Keep the loaded global anchors ordinary and valid. Check the exact inserted
 local key and finite string, input byte identity, unchanged ZIP member hashes,
@@ -78,7 +78,7 @@ finite public input and no setup failure. If Native crashes, times out,
 rejects, or invokes release behavior that cannot establish repeatable complete
 output, stop and report; do not define a guessed output or turn off assertions.
 Natural repetition, if needed for deterministic admission, uses fresh roots
-and the same assigned single CPU; no artificial CPU-load experiments.
+and the same single-core domain.
 
 ## Public RED / repair gate
 
@@ -86,10 +86,10 @@ For a Native-admitted completed case, Ares' public call must reject at the
 selected exact `infill_anchor_max` or `infill_anchor` unsupported return.
 The test expects existing strict whole-output Native/API/CLI parity; baseline
 failure is recorded as RED on its own commit with unchanged future assertions.
-Keep original raw input/output SHA and producer receipts outside Git.
+Keep original raw input/output SHA and producer records outside Git.
 
 If no admitted candidate reaches the gate, submit the actual admission finding
-for a ruling before implementation; do not claim either guard unreachable
+for a decision before implementation; do not claim either guard unreachable
 merely because these few probe values fail upstream.
 
 After accepted RED, delete only the selected rejection if that matches upstream
@@ -100,10 +100,9 @@ regions or substitute fallback patterns/lengths.
 
 ## Validation and scheduling
 
-Official CPU13 / seeded CPU14, jobs2/threads2, independent fresh Native cache
-and artifact root every run; no experiments/Native/cargo during exclusive full.
+Official and seeded runs use an independent fresh Native cache
+and artifact root every run.
 Selected active/control and existing bridge/anchor comparisons must PASS both
 modes; strict clippy/fmt/wasm32 green, each file at most 400 LOC. No new ignore,
 allow/expect suppression, dbg/println, regions[0], weaker assertion, or committed
-Native artifact. Workspace/full only on explicit allocation, per-slice code
-REVIEW, exact-hash push only after APPROVED. No run has started for this SPEC.
+Native artifact. Land per slice. No run has started for this SPEC.

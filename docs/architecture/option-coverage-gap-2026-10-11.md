@@ -1,6 +1,6 @@
 # PrintConfig option-coverage gaps — 2026-10-11
 
-Status: offline source/test audit; no Native run, compilation, stock resweep,
+Method: offline source/test audit; no Native run, compilation, stock resweep,
 or new parity verdict. Ares snapshot: `e6e9af34d74753ac04d65c093efdc1b1280d66cf`.
 Scope: **live FFF print/process, printer and filament input definitions** in
 `OrcaSlicer/src/libslic3r/PrintConfig.cpp`; test boundary:
@@ -87,8 +87,8 @@ be incomplete, inert or unexecuted, which is a separate audit.
 | Brim / legacy setting | `brim_ears` :1751, coBool | `Brim.cpp:455-460,536-554` uses **brim_type**, not this standalone bool | Registered but no live exact-key slicing reader found; do not invent brim behavior |
 | Support / obsolete setting | `tree_support_with_infill` :6550, coBool | `PrintConfig.cpp::handle_legacy:8263` discards key | Legacy-ignore admission gap, NOT missing active support-fill algorithm |
 | Project/plate serialization | `enable_filament_dynamic_map` :2518, coBool | `Format/bbs_3mf.cpp:376,4554-4556` plate metadata importer | No live exact-key ToolOrdering/GCode consumption found; report storage gap, no dynamic optimizer design |
-| Preset resolution | `inherits` :4183, coString | `Preset.hpp:319-334`; `Preset.cpp:1783-1786,2148`; `PresetBundle.cpp:203,236` | Behavior-bearing composition, not GUI-only metadata; worker5 owns gap, do not duplicate |
-| Preset aggregation | `inherits_group` :4193, coStrings | `PresetBundle.cpp:97-236,2006`; legacy rename `PrintConfig.cpp:8100` | Same worker5-owned boundary; no new worker3 implementation claim |
+| Preset resolution | `inherits` :4183, coString | `Preset.hpp:319-334`; `Preset.cpp:1783-1786,2148`; `PresetBundle.cpp:203,236` | Behavior-bearing composition, not GUI-only metadata; separate preset-inheritance slice, do not duplicate |
+| Preset aggregation | `inherits_group` :4193, coStrings | `PresetBundle.cpp:97-236,2006`; legacy rename `PrintConfig.cpp:8100` | Same preset-inheritance boundary; no new implementation claim here |
 
 `brim_ears` also appears as an **enum wire value** for `brim_type` (:427,1697).
 That does not exercise the separately registered coBool. A lexical grep alone
@@ -157,10 +157,10 @@ at11424 is not an input option. Do not inflate gap counts with any of them.
 
 ## Next slice priority and scope decision
 
-The only strict N keys with active nontrivial logic are worker5-owned inherits
-composition; remaining N keys are storage/legacy slots. It would be incorrect
+The only strict N keys with active nontrivial logic are the inherits
+composition (a separate slice); remaining N keys are storage/legacy slots. It would be incorrect
 to manufacture a new GCode algorithm to satisfy a “largest N group” request.
-For worker3, propose **GCode printer-parameter/physical-identity coverage** from
+Propose **GCode printer-parameter/physical-identity coverage** from
 B (`printer_extruder_id`, `physical_extruder_map`) as the highest-impact
 remaining directory-local authoring gap: variant selection affects per-tool
 retraction/motion across layers, while physical identity exposes startup,
@@ -169,10 +169,9 @@ layer/timelapse and processor contexts. This is a source-based priority,
 
 Next is SEMM ramming sweep integration (already tested outside this directory);
 then nozzle dataset sweep integration (also already tested); do not reopen
-master A1/A2 or worker5 inherits. Native crash clusters remain separate.
+master A1/A2 or inherits. Native crash clusters remain separate.
 
 Chosen coverage spec:
 [printer/physical identity](option-printer-physical-identity-coverage-spec.md).
-Both proposed input families remain **unadmitted** until Native runs after
-approval. No coverage cases, core changes, experiments, heavyweight gates or
-Native build were executed for this audit. Spec approval is required first.
+Both proposed input families remain **unadmitted** until Native runs. No coverage cases, core changes, experiments, heavyweight gates or
+Native build were executed for this audit.

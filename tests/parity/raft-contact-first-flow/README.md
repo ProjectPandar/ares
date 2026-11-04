@@ -15,7 +15,7 @@ expected-output snapshots or Native output content constants/assertions.
 Two direct native_stream_case::check tests reuse main double Native
 replay then native_api_cli validated API/bare CLI whole-byte comparison.
 No copied replay/normalization/JSON/orchestration or private output seam.
-CPU11/thread1/job1,ARES_REQUIRE_ORCA=1,explicit official/seeded Native
+ARES_REQUIRE_ORCA=1,explicit official/seeded Native
 environments with retained artifact roots. Target:
 
 ```
@@ -24,18 +24,17 @@ cargo nextest run -p ares-cli --test orca_parity --no-fail-fast \
 ```
 
 Require raft0 controlPASS/raft1 positiveactualFAIL in both modes with
-stable repeats, then review BEFORE production change. Only existing
+stable repeats before production change. Only existing
 canonical generated-by identity/date normalization; no M73/header/width/
 E/time/geometry/config/trailing-line mask or tolerance. No ignore or
 expected-failure flags. Environment-disabled tests are NOT evidence.
 Shared checker retains full streams/launches/both public comparison errors.
 
-Future separately approved GREEN ONLY width selection: flange width
+GREEN covers ONLY width selection: flange width
 belongs to an actual emitted Base flange, not first Contact. Flow/height/
 spacing/density/angle/spec/geometry and all other behavior deferred. Any
-residual requires STOP/report. Freeze tests/inputs/helpers; no FULL.
+residual requires STOP/report. Tests/inputs/helpers are frozen.
 Same-geometry raft2 countercontrol remains an external passing screen,
 not an extra formal fixture or dual-mode regression claim.
-Discovery/GDB evidence remains separate at
-`${COORD_ROOT}/evidence/w5-478-raft-contact-first-flow/`,
-not substituted for formal shared-checker public API/CLI proof.
+Discovery/GDB evidence is not substituted for formal shared-checker public
+API/CLI proof.

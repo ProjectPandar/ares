@@ -1,12 +1,6 @@
 # Proposed slice: high-valence mesh edge pairing
 
-Status: docs-only SPEC review request. Worker3. Base is code-approved bottom
-candidate `2fa5a5486d228a49f26ddb9512d8eac2cd190ed8`, awaiting stacked full.
-The bottom branch/worktree stays frozen. This proposal lives separately in
-${TMP_ROOT}/ares-worker3-mesh-edge-spec, branch pi/worker3-mesh-edge-pairing-spec.
-Carry only this proposal onto the next broadcast main before implementation.
 No Native, build, test, fixture or production change is included here.
-Filament selectors remain reserved for W6; no skirt/counterbore overlap.
 
 ## Remaining difference and owning source
 
@@ -67,7 +61,7 @@ creating four oriented uses. Fixed-height by-layer, one tool/object/instance,
 ordinary Classic walls, no support/brim/skirt/tower/painting. Compare with an
 input having identical world coordinates but distinct indices on that edge.
 
-After SPEC approval and an open CPU12 directed window, require official/seeded
+Require official/seeded
 Native exit0/result0 on both inputs, then public core/CLI strict output and typed
 mesh_topology rejection on the shared-edge input. Admission is a hypothesis,
 not a claimed result in this doc. If Native rejects, repairs it differently,
@@ -90,8 +84,8 @@ slicer dispatch mode is unchanged; don't add a new public input contract.
 ## RED, retirement and verification
 
 Inputs are deterministic generators/provenance only. Commit public Native-backed
-RED separately and report it before GREEN. All runtime executions outer taskset
-CPU12, jobs1/threads2, fresh Native cache/artifact root per run, START/END inbox.
+RED separately and report it before GREEN. All runtime executions use a
+fresh Native cache/artifact root per run.
 Record original input SHA, Native exit/result, full G-code SHA, API/CLI equality
 and first strict mismatch. Only existing generator-line comparison is permitted;
 no geometric normalization, probes, retries, ignored tests or Native products
@@ -100,8 +94,7 @@ modes and obtain the agreed seam; public E2E is the default proof.
 
 Existing negative tests in mesh_slicer/tests/topology.rs and dispatch.rs expect
 this blanket guard. Inventory their exact assertions after RED, including the
-collapsed-facet expectation, and request separate precise retirement approval;
+collapsed-facet expectation, and retire them only as a separate, precise test change;
 do not delete their unrelated budget/dispatch/manifold assertions automatically.
 GREEN must prove the complete source pairing consumer, not just guard removal.
-Run directed both modes, retained affected tests and strict/fmt/wasm before
-REVIEW. Workspace/full and push require coordinator allocation.
+Run directed both modes, retained affected tests and strict/fmt/wasm.

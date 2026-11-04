@@ -1,9 +1,9 @@
 # Unknown-key CONFIG_BLOCK echo — source-cited spec
 
-Status: SPEC approved (coordinator ACK 2026-10-25); this document freezes the
-boundary for the tests-only RED, then a bounded GREEN.
+This document freezes the boundary for the tests-only RED, then a bounded
+GREEN.
 
-## Witness (discovery on main `5e8be001f`, CPU18 serial)
+## Witness (discovery on main `5e8be001f`)
 
 Stock Bambu Lab P1S 0.4 ByLayer plate (`overhang.obj` + `cube_with_hole.obj`)
 with exactly one added project-settings key
@@ -72,8 +72,8 @@ semantics (alias before/after canonical, multiple aliases) remain deferred.
 
 Included: the writer.rs raw-loop definition-table gate; RED witnesses below.
 
-Deferred: value serialization/spelling (`config_export/value.rs` is owned by
-the queued W6 window and must not be touched), vector Floats verbatim-echo
+Deferred: value serialization/spelling (`config_export/value.rs` is not
+touched), vector Floats verbatim-echo
 semantics, legacy rename/bookkeeping rules (unchanged), upstream's
 unrecognized-key reporting side channel (Ares has no substitution context),
 machine-start/custom G-code content, and all geometry-generation behavior.
@@ -100,9 +100,3 @@ line) in official and seeded modes, API/CLI success with byte-equal outputs,
 unchanged complete comparator, `cargo fmt` and strict Clippy clean. GREEN
 later flips the target to PASS with the control and all frozen parity tests
 unchanged.
-
-## Operating constraints
-
-CPU18 `taskset`, all threads 1, no FULL, no rebase/merge/push; branch
-`w1/unknown-key-config-block` off main `5e8be001f`; docs commit then tests-only
-RED commit; one REVIEW-REQUEST then HOLD.

@@ -1,12 +1,9 @@
 # SPEC: divergent draft-shield minimum and outer-brim legs
 
-Status: **SPEC-REVIEW-REQUEST — docs only; no RED/code authorized**.
-Base: `57fea94989ff362129d0e53da0c35c298822f689`.
-Branch: `worker1/draft-compositions-spec`. CPU18; coordinator-only merge/push.
 This is a bounded composition of existing libslic3r rewrite slices, not a new
 Ares pipeline, extrusion policy or obstacle API.
 
-## Discovery ruling / exact included legs
+## Discovery result / exact included legs
 
 Only the two independently measured divergent legs are proposed:
 
@@ -66,18 +63,14 @@ Do not top up later layers or re-run the group budget in the emitter.
 
 ## Actual two-mode Native and current-main Ares evidence
 
-Root: `${TMP_ROOT}/ares-draft-compositions-spec-2f3uvK/`.
 Twelve external pure 3MFs: far/near geometry × control/minimum/brim × all/single.
 Source is existing far-brim/near-brim input; only explicit draft, minimum, brim
 and single-loop settings vary. All other geometry, source IDs, singleton
 instances, transforms and options remain. Width8/gap0/combine0 when brim;
 loops2/height1/distance6, uniform 4mm objects/0.2mm physical layers.
 
-Official+seeded ran serially, fresh case caches/artifacts, exact base clean
-before/after; **24/24** return_codes/OS exits0. Native inputs/wrapper/binary SHA,
-launch, logs, full G-code/result, per-Z witness and aggregate witness-summary
-are retained. Actual sampled Native/thread masks18, zero violations. Relative-E
-markers and exact input SHA were checked; each layer has real positive XY
+Official+seeded ran serially with fresh case caches/artifacts; **24/24**
+return_codes/OS exits0. Relative-E markers and exact input SHA were checked; each layer has real positive XY
 skirt movement, not just admitted settings. Every case has20 skirt Zs0.2..4.0.
 
 | Leg (both modes) | Groups far/near per Z | First-layer E mm/group | Second-layer all -> single E mm/group | Brim |
@@ -93,9 +86,7 @@ leg B proves brim-aware grouping (near2 ->1) plus independent first-layer brims
 and continued shield lifetime. TYPE blocks are group emissions, not loop counts.
 Export clips seams, so emitted-E target comparison is not the budget definition.
 
-Current-main CLI was freshly built at exact base Rust1.99.0/jobs1/CPU18,
-CARGO_INCREMENTAL=0, explicit owned target reuse; build exit0, head/status
-receipts and binary SHA retained. Twelve CLI probes (sampled actual masks18):
+The then-current CLI was freshly built with Rust1.99.0. Twelve CLI probes:
 4 controls exit0; **all8 A/B inputs exit1** with
 Error: UnsupportedProjectFeature("skirt_type per-object"), no G-code. Thus both
 proposed legs demonstrably diverge, rather than being guessed from the guard.
@@ -142,10 +133,10 @@ Under crates/ares-core/src/project_slice/gcode_emit/:
 
 These remain temporary compatibility shells where they differ from cited
 Print/GCode behavior. First raw difference determines the smallest source-
-cited interaction repair; no speculative motion/producer refactor. Stop/report
-identity, centering, layer producer or wider-boundary problems to the owner.
+cited interaction repair; no speculative motion/producer refactor. Identity,
+centering, layer producer or wider-boundary problems need their own spec.
 
-## Deferred / approval and exit gates
+## Deferred and exit gates
 
 Deferred: triple draft+positive-min+brim, non-singleton brim ownership,
 combine_brims, auto/inner/ears/mixed brim policies, support/support-brim/raft,
@@ -153,9 +144,9 @@ tower, sequential/multifilament ordering, nonuniform angles, zero-loop draft,
 new placement or variable-height producer logic. No new guard enforcement
 beyond strictly narrowing the current term and preserving existing policies.
 
-1. SPEC approval before any RED. Independently commit twelve exact pure inputs
+1. Independently commit twelve exact pure inputs
    and public Native-first API+CLI success tests; expected4controlsPASS+
-   8A/BguardFAIL each mode. Review RED before GREEN; no rejection-as-success.
+   8A/BguardFAIL each mode. RED precedes GREEN; no rejection-as-success.
 2. Fresh two-mode gates preserve full streams, exact input SHA, per-Z real
    motion, generation-budget/inner-loop facts and first-layer brim ownership.
    GREEN requires existing strict ordered Native/API/CLI comparisons with only
@@ -163,9 +154,6 @@ beyond strictly narrowing the current term and preserving existing policies.
 3. Preserve control raw bytes RED->GREEN, all previous draft12/min+brim4/min8/
    brim4/group4/combined/single/zero-loop controls and relevant option domains.
    No fixture/assertion deletion/relaxation or classifier/comparator edits.
-4. Exact submitted HEAD/clean status before/after each CPU18 serial leg/gate,
-   jobs1/threads2, fresh Native caches/artifacts, explicit owned target policy,
-   actual descendant/thread masks, START/END inbox; obey full freezes.
-5. Source-cited minimal code only after reviewed RED; <=400 LOC, mechanical
-   splits before growth. Final-hash strict/fmt/WASM; full/workspace windows
-   separately authorized. No worker push. Only docs-only SPEC is submitted now.
+4. Fresh Native caches/artifacts for each serial leg/gate.
+5. Source-cited minimal code only after RED; <=400 LOC, mechanical
+   splits before growth. Strict Clippy/fmt/WASM.

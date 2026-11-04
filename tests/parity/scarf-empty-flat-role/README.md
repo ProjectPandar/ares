@@ -1,9 +1,9 @@
 # Remaining-flat scarf role parity
 
-Approved boundary: ExtrusionEntity.hpp485 ExtrusionLoop::role;
+Boundary: ExtrusionEntity.hpp485 ExtrusionLoop::role;
 ExtrusionEntity.cpp471–505,550–554 ExtrusionLoopSloped construction and
 clip_front; GCode.cpp5940–5949 whole-loop/oversized minimum-length cap.
-SPEC55d40a766 re-establishes approvedfafec2987. Rust destination is only
+SPEC55d40a766. Rust destination is only
 scarf.rs::build's role predicate; geometry and clipping arithmetic stay.
 
 Five actual official CLI exports copied byte-for-byte from the original
@@ -32,13 +32,10 @@ is an active assertion, not movement-only acceptance. GREEN: all5 cases
 must completely pass in official and seeded, raw API=CLI. NativeCase
 keeps every stream, CLI logs and comparison.json under artifact root.
 
-Prior authorized local-probe GDB proves positive crop80000 scaled units
-versus old29840001.6, control remains8000000. Its evidence is not a new
-current-main integration claim. Authorized pre-window gates are targeted
-dual mode, fmt, workspace/all-target clippy -Dwarnings and browser WASM.
-No FULL/integration RR; window rebase/FULL remains separate. Temporary
-lintfaf4ff649 must be dropped because its original231bd11cc is on main.
+A local-probe GDB run proves positive crop80000 scaled units
+versus old29840001.6, control remains8000000. Its evidence is not a
+current-main integration claim. Gates are targeted dual mode, fmt,
+workspace/all-target clippy -Dwarnings and browser WASM.
 
 Reachability can be repeated with the official CLI:
-`$ORCA --slice 0 --outputdir /tmp/scarf-role-positive positive.3mf`.
-Original export/slice/repeat receipts: /tmp/w5-next-entire-min1/verified.json.
+`$ORCA --slice 0 --outputdir "$OUT/scarf-role-positive" positive.3mf`.

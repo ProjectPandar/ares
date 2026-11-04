@@ -1,20 +1,15 @@
 # ZAA ContourZ repair PLAN
 
-Status: PLAN-REVIEW-REQUEST; RED6d2b6f37a APPROVED by coordinator.
 RED candidate:6d2b6f37a0b0115f0880599bacef5247fc351020.
-Base main:de1211be5067d0eb6f709602a1299a0854c89145.
-SPEC06a8bd6fe and RED6d2b6f37a approved; no production changes.
-Must not implement before coordinator approves an exact committed PLAN.
+SPEC06a8bd6fe; no production changes.
 
 RED6d2b6f37a is independently committed and reported before this PLAN:
-officialCPU13 and seededCPU14 each have disabled strict PASS and enabled
+official and seeded modes each have disabled strict PASS and enabled
 expected RED (nextest100). Enabled Native is complete with418 positive XYZ
 extrusions; API rejects zaa_enabled, CLI exits1 with the same named error.
-Final fresh roots: /tmp/worker2-zaa-red-official.qqyF7Q and
-/tmp/worker2-zaa-red-seeded.i7z8wL. Inputs and disabled raw API/CLI streams
+Inputs and disabled raw API/CLI streams
 are unchanged by test-helper lifetime/lint corrections. Test strict clippy
-and fmt exit0. External immutable-hash proof and original streams are indexed
-by /tmp/worker2-zaa-red-evidence.json; no Native products are committed.
+and fmt exit0. No Native products are committed.
 
 ## Source ownership and CPU determinism
 
@@ -30,7 +25,7 @@ floating-point reduction. Layer/object-level concurrency is deferred, not
 required for the first port. Any later concurrency must not change ordering,
 selected face or geometric results.
 
-## Modules and data changes requiring approval
+## Modules and data changes
 
 1. project_slice/contour_z.rs is the stage owner. Small files beneath
    contour_z/mesh.rs, tree.rs, ray.rs, path.rs and entities.rs split mesh
@@ -68,8 +63,8 @@ selected face or geometric results.
    Ordinary noncontoured motion must remain byte-identical.
 7. capabilities.rs removes only the zaa_enabled rejection and compiler-
    proven orphan predicate helpers after paths can actually render. Retire
-   the now-obsolete capability rejection unit assertion only with separate
-   exact-diff/upstream-cited coordinator permission. Existing behavior tests
+   the now-obsolete capability rejection unit assertion only with a separate
+   exact-diff/upstream-cited change. Existing behavior tests
    and all RED assertions remain intact.
 
 ## Risks and tests before production
@@ -77,7 +72,7 @@ selected face or geometric results.
 Public RED must prove disabled whole-output PASS, enabled active Native XYZ,
 and Ares API/CLI capability rejection on the same bytes. If disabled differs,
 STOP: do not mask a different Fill/perimeter gap to force this RED through.
-After approved PLAN: preserve source tests; first turn the admitted public
+After the PLAN: preserve source tests; first turn the admitted public
 RED strictly GREEN. Retain input/footer/roles/SHA and enabled E/Z streams.
 Further tests written before any respective extension cover wall-minimum
 clamps, no-hit, transformed object frame, ironing E exception, first-layer
@@ -86,9 +81,7 @@ and simplify. These are public Native E2E at the agreed slice seams; numeric
 kernel isolated tests require their own written failure inventory first.
 Do not add broad guard deletions, new guards, fallback or weak comparators.
 If exact source-cited carrier edits require scope changes, stop for PLAN
-amendment. All local runs CPU13/14, jobs2/threads2 and fresh Native roots;
-workspace/full only on coordinator GO. Strict/fmt/wasm exact hash before
-code REVIEW; coordinator alone pushes or merges.
+amendment. Strict/fmt/wasm exact hash before code review.
 
 ## Exact carrier/consumer change inventory
 
@@ -106,26 +99,26 @@ code REVIEW; coordinator alone pushes or merges.
 
 The carrier migration may require mechanical changes across fill construction
 files and existing test literals to supply unchanged Z=0/z_contoured=false.
-It does not authorize behavioral assertion edits. Submit any test-contract
+It does not include behavioral assertion edits. Submit any test-contract
 retirement exact diff separately before applying it. Files approaching400LOC
 are split by the named source concern; do not add lint suppression.
 
-Included and deferred behavior remain the approved SPEC's boundaries.
+Included and deferred behavior remain the SPEC boundaries.
 Generic mesh/path algorithms replace the capability scaffold; there is no
 wedge shortcut, shape whitelist, new feature guard or silent omitted role.
 First validation is the finite ordinary-layer witness; additional interactions
 are deferred as coverage cases, not silently replaced with different behavior.
 
-## Implementation sequence after approval
+## Implementation sequence
 
 1. Port deterministic Tree3f/IndexedMesh query and contour entity stage;
    carry source path metadata. Test seams/failure inventory exist before code.
 2. Propagate XYZ through carriers, simplify/seam/clip and emission in one
    source-bounded repair; no intermediate guard-only GREEN claim.
-3. Only then remove the capability rejection, with separately approved
+3. Only then remove the capability rejection, with separate
    retirement of its obsolete private-test contract. Keep public RED intact.
 4. Verify the exact GREEN hash in both Native modes, preserve disabled bytes,
-   then strict/fmt/wasm and code REVIEW. No production before PLAN approval.
+   then strict/fmt/wasm and code review.
 
 ## Concrete ray-query layout and source traversal
 
@@ -172,8 +165,8 @@ whitelist; real contouring replaces the current capability scaffold.
 
 Private tests/capabilities.rs::zaa_requires_a_provably_inactive_axis_aligned_box
 and its now-unreferenced test helpers are a separate retirement request,
-not implicitly approved by this PLAN. Exact diff/source citations must be
-approved before changing that test. RED6d2b6f37a assertions remain intact.
+not part of this PLAN. Exact diff/source citations must be
+reviewed before changing that test. RED6d2b6f37a assertions remain intact.
 
 ## Estimated LOC and file split budget
 
@@ -214,4 +207,4 @@ ExtrusionPath literals in53 files, and PathProperties literals in11 files
 not permission for algorithm refactors. Preserve all ordinary XY sequences,
 roles, flow/height/width, reversibility, fitting semantics and collection
 order. Constructor test literals may need the unchanged default flag/Z to
-compile; no behavioral assertion deletion/weakening is authorized.
+compile; no behavioral assertion deletion/weakening is allowed.

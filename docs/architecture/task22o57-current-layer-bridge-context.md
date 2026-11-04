@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted, implemented, gate-verified, and independently reviewed before RED.
+Accepted and implemented.
 
 ## Decision
 

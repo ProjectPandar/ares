@@ -1,9 +1,6 @@
-# Native 清理 B：processor 子片
+# Native 清理：processor 子片
 
-状态：主体 spec 已批准（2e142621）；本次补充 worker4 核对的 gdb/runner 边界。
-owner worker6，整体 B 与 runner 策略 owner worker4。
-盘点基线：`2385598402cf9e341df7de798d04c268f254cd51`。
-片 A 合入前仅提交本文；实现须基于已合入 A，复用其 required/optional 策略。
+本文补充 gdb/runner 边界。实现基于片 A，复用其 required/optional 策略。
 
 ## 决策与上游边界
 
@@ -24,9 +21,9 @@ owner worker6，整体 B 与 runner 策略 owner worker4。
 | cpp:2087-2122,2348-2350 apply_config | machine envelope、flavor、float filament-load 参数进入既有 processor |
 
 Rust 目标：`crates/ares-cli/tests/orca_parity/runner/` 下按 role、replay、stop
-分文件接入现有测试入口；复用 `runner/cache/processor.rs`，与 worker4 协调其扩展。
+分文件接入现有测试入口；复用 `runner/cache/processor.rs` 并按需扩展。
 唯一必要的生产边界扩展在 `ares-core` 现有公开 `gcode_processor::process_gcode`
-薄委托：`post_process` 是整体 B 唯一获准的生产 API 例外，owner worker6。
+薄委托：`post_process` 是本迁移唯一的生产 API 例外。
 现有 Estimate/processor 仍是上游 GCodeProcessor 的兼容壳，不增加第二循环。
 不改变 slicing、估时、seam、filament accounting 或标签语义。
 
@@ -107,7 +104,7 @@ PausePrint 和其相对运动位置，然后由既有 processor 重建 P/R/C。
 传入该 launcher，不允许它自行选择 gdb。launcher/gdb 路径均进入 cache key 与 receipt。
 选择的普通 Native producer 与 pinned gdb producer 身份分别记录，不能把两者混称。
 
-由 worker4 所有的 runner/cache 实现约定决定最终接线；在现有 processor cache 增加模式，
+由既有 runner/cache 实现约定决定最终接线；在现有 processor cache 增加模式，
 不另造缓存框架。key 必须区分实际输入字节、slice/process 模式、选板/命令 recipe、
 实际 ELF、reader/launcher、显式 launcher/gdb 路径和既有 producer/resource/replay 身份。
 slice 模式的 G-code/map、process 模式的 map/CSV/metadata 按各自产品集发布；沿用
@@ -123,7 +120,7 @@ optional 缺失打印带 caller 的 `SKIPPED:`，明确比较未执行，不能�
 不能用缓存掩盖缺 Native/gdb；不新增隐式 oracle 替代品。
 迁移后取消旧 `ARES_ROLE_ORACLE_LIVE` opt-in：12 例默认执行运行时 Native 比较，
 不新增二级 selector；缺普通 Native 配置时仍遵循上述 A 的 required/optional 策略。
-最终 nextest 输出策略和 mandatory 门禁环境由 worker4/协调者统一配置。
+最终 nextest 输出策略和 mandatory 门禁环境统一配置。
 
 ## 两个旧 ignored envelope 诊断
 
@@ -136,7 +133,7 @@ ARES_ENVELOPE_FIXTURES 读取外部 orca.gcode，无仓库内对应切片输入/
 12 个迁移 PASS，不新加 ignore，不用 anchor 冒充它们，不用外部 frozen 输出替代输入。
 恢复条件：找到原 3MF/配置与身份，随后另行恢复 CLI mandatory E2E，保持原 envelope
 完整字节断言。原断言契约仍在本文记录：实际 machine/flavor/load，inverse 后全字节相等。
-该处理意见需本 spec 审批，不将删除 ignored 入口隐瞒为覆盖增加。
+不将删除 ignored 入口隐瞒为覆盖增加。
 
 ## 删除与保留边界
 
@@ -149,14 +146,14 @@ ARES_ENVELOPE_FIXTURES 读取外部 orca.gcode，无仓库内对应切片输入/
 
 保留原 3MF、overrides 与手写 `classification-injected.gcode`；SHA256SUMS 仅保留输入身份，
 README 改为 runtime oracle 契约。旧 reproduce.py 的历史外部 patch/source-copy 流程不作为
-新测试前置；与 worker4 核对引用后移除 obsolete frozen-output 复现入口，保留结论性说明。
+新测试前置；核对引用后移除 obsolete frozen-output 复现入口，保留结论性说明。
 web 的 colorChangeOracle.mjs 是 runtime 生成器，不在本子片重写其行为。
 
 移除原 core Native 测试模块/入口及由本迁移导致无人引用的 replay_config_tests helper；
 used_filaments 中两个纯手写 G-code 核心测试保留，公开 API 的纯手写测试保留。
 WASM role-filament 测试只比较公开输出 JSON、8-key 及 take 的所有权，不读这些冻结
-文件，继续保留。其它 config-export、geometry、motion/color-change Native 消费者归
-worker4 整体 B；本片不擅自扩张覆盖范围。删除前再次搜索全仓消费者，存在共享读取则先交接。
+文件，继续保留。其它 config-export、geometry、motion/color-change Native 消费者属于
+其它迁移组；本片不擅自扩张覆盖范围。删除前再次搜索全仓消费者，存在共享读取则先报告。
 
 ## 验收结论条件
 
@@ -169,4 +166,4 @@ Native replay 形成缺入口/后处理缺失 RED，false 路径仍须行为零�
 和 optional 可见 skip。记录旧→新测试对应关系及两个 deferred 诊断，不能单凭 PASS 总数
 声称等价。定向、fresh seeded/official base/candidate、workspace nextest、strict clippy、
 fmt、wasm 全通过，公共 slicing G-code SHA 不变；ND/负载问题按既有规则保留原证据。
-所有 Native 及比较产物只留 runtime/cache，提审时审计 Git diff 不含新 Native 产物。
+所有 Native 及比较产物只留 runtime/cache，提交不含新 Native 产物。

@@ -1,16 +1,7 @@
 # PrintObject::combine_infill: scaled-width clearance arithmetic
 
-Latest status: COORD accepted #49 and coordinated W4, authorizing a separate
-SPEC revision then caller-only GREEN3 as specified in the final amendment.
-Candidates c810ef7d3 and 81318b506 failed strict exits and are not independently
-integrable. Earlier review-only stage descriptions below remain historical;
-the final amendment records the current bounded authority, not GREEN acceptance.
-Original SPEC on `worker3/combine-solid-clearance-spec`, based on
+Candidates c810ef7d3 and 81318b506 failed strict exits. Original SPEC based on
 merged main `231bd11ccae4ac26304aa89772a1e5c4b2fd532c`.
-COORD accepted the six-case Native discovery and source boundary and authorized
-this SPEC followed by a separate RED. GREEN requires independent RED review;
-no implementation or FULL is authorized by this document. Integration is
-COORD-owned, queued after W2; no worker rebase/merge/push/window is implied.
 
 ## Owning upstream rewrite slice
 
@@ -108,8 +99,8 @@ changed motion is physical5/Inner wall feedrate. Do not filter these effects.
 
 The confirmed test seam is fresh canonical Native versus public byte-in/
 options-to-byte-output API and CLI, not private numerical unit tests. RED must
-reuse main `NativeCase` or the existing W3 `case_runner`/`complete` lifecycle;
-no copied runner, second normalizer or assertion policy. Reusing W3 preserves
+reuse main `NativeCase` or the existing `case_runner`/`complete` lifecycle;
+no copied runner, second normalizer or assertion policy. Reusing it preserves
 both fresh repeats and their producer records before complete assertions.
 Admission asserts one model part/no modifier and GUI values; effective
 Native footer and positive solid/sparse activity demonstrate active inputs.
@@ -117,16 +108,15 @@ No previous assertion, case/input or helper behavior may be weakened.
 
 ## Non-negotiable decisions and stage exits
 
-1. SPEC commit is documentation only, parented on231bd11cc. Per COORD's
-   discovery approval, RED may follow as a separate commit; no production
-   edit before its independent review.
+1. SPEC commit is documentation only, parented on231bd11cc. RED follows as a
+   separate commit; no production edit before RED.
 2. RED freezes the five existing target/control ZIPs and reuses the identical
    sparse control. Register six complete-output cases through shared lifecycle.
    Require3 intended strict FAIL/3 PASS per official/seeded mode, all prior44
    selected cases PASS, repeat stability/API-CLI raw equality and retained
    existing Native/API/CLI hashes/assertions. Preserve command/status/binary/
-   input/output receipt links and repeatable artifacts; report RED to COORD.
-3. Only after RED approval, GREEN changes **process.rs clearance arithmetic
+   input/output links and repeatable artifacts.
+3. After RED, GREEN changes **process.rs clearance arithmetic
    only**, using truncated Flow scaled_widths and float operations in upstream
    order. Freeze SPEC/RED/helpers/inputs. Keep the current pattern predicate,
    per-region views, actual layer-id0 skip, height cap/count/area thresholds,
@@ -136,9 +126,7 @@ No previous assertion, case/input or helper behavior may be weakened.
    max-height arithmetic, Flow grouping fields, E/wipe/retraction/feedrate/
    cooling/time/progress. No adjacent port or unsupported-feature guard.
 5. Gates: `cargo fmt --all --check`; locked workspace/all-target Clippy with
-   `-D warnings`; locked core+wasm browser wasm32 check. CPU12 selected work,
-   `CARGO_BUILD_JOBS=1 CARGO_INCREMENTAL=0`; no FULL until COORD releases the
-   after-W2 integration window. Later acceptance needs then-current main,
+   `-D warnings`; locked core+wasm browser wasm32 check. Later acceptance needs then-current main,
    preserved per-stage range-diff and exact clean final-hash fresh official+
    seeded FULL with zero FAIL/skipped; refresh if main advances.
 
@@ -148,14 +136,12 @@ feature flag, new allow/expect/ignore, tolerance, inverted assertion, Native
 G-code golden or output filtering. Only existing generator/date identity
 normalization; all M73/time/feedrate/E/wipe/retraction/footer bytes significant.
 
-Accepted discovery and producer/localization audits:
-`${EVIDENCE_ROOT}/w3-combine-solid-readonly-231bd11cc/README.md`.
 The prior minimum-area7/7 PASS and combine-height6/6 PASS matrices remain
-bounded negative evidence; they do not authorize any adjacent change.
+bounded negative evidence; they do not justify any adjacent change.
 
 ## Read-only residual amendment: physical height is not extrusion height
 
-COORD approved RED d09e00530 and the one-expression clearance port only.
+RED d09e00530 covers the one-expression clearance port only.
 Candidate c810ef7d3 changes process.rs3+/4−, with all tests/inputs/helpers
 frozen. fmt/all-target Clippy/browser wasm32 checks pass, but official selected
 runtime remains47PASS/3strictFAIL (185.692s), with the same first differences
@@ -163,7 +149,7 @@ as RED. Monotonic/rectilinear raw outputs are unchanged; concentric changes
 without closing its first feedrate difference. The strict stop fired before
 seeded; no FULL or broader implementation followed. C810 is **not GREEN**.
 
-COORD then authorized one read-only diagnosis and this documentation amendment.
+One read-only diagnosis followed.
 Existing candidate/official binaries only; no production/test/input edit,
 Native rebuild/source instrumentation, seeded execution or FULL.
 
@@ -227,7 +213,7 @@ Current Rust mismatch:
 - `arachne/wall_toolpaths.rs:68-71` consumes the supplied height for the
   width-from-spacing calculation, matching the cited downstream source owner.
 
-### Proposed next slice — review only, no implementation authorization
+### Proposed next slice
 
 Restore only the upstream **FillParams physical-layer-height handoff** through
 existing `fill_entities/generate.rs` (already owns `PlannedLayer.height`), both
@@ -239,28 +225,25 @@ surface thickness: do not change Flow.height, combined thickness/count,
 spacing/width/volume, kernel/beading math, phase/graph or emitted HEIGHT/E/time.
 
 This is not permission to extend c810 or quietly replace its failed scope.
-COORD must independently approve the revised source boundary and RED strategy
-before any further production edit. Approved six GUI cases and shared strict
-lifecycle remain frozen; new controls or RED changes require separate approval.
+The revised source boundary and RED strategy need independent review
+before any further production edit. The six GUI cases and shared strict
+lifecycle remain frozen; new controls or RED changes are separate.
 No claim of dual-mode GREEN or final acceptance is made; seeded/FULL remain
 unrun. Any later bounded attempt with a strict residual must again STOP/report.
 
-Residual diagnosis and exact snapshots:
-`${EVIDENCE_ROOT}/w3-combine-solid-residual-c810ef7d3-readonly/README.md`.
+## GREEN3 amendment: configured Arachne nearest-point ties
 
-## Approved GREEN3 amendment: configured Arachne nearest-point ties
-
-COORD accepted the #49 read-only conclusion, independently verified Point.cpp
-last-tie behavior and the existing pub(crate) helper, and coordinated W4.
-Authorization: commit this SPEC revision separately, then change only the
+The read-only conclusion verified Point.cpp
+last-tie behavior and the existing pub(crate) helper.
+Scope: commit this SPEC revision separately, then change only the
 standard Arachne finalize caller to reuse that helper and delete orphan
 nearest_to. Helper/tests/inputs/ironing/union remain frozen. This is not GREEN
-acceptance or a FULL/rebase/integration window.
+acceptance.
 
 ### Stage result and read-only correction
 
-Authorized GREEN2 transports physical height through the three approved adapters
-and includes exactly ten approved fixture-argument adaptations. fmt/all-target
+GREEN2 transports physical height through the three adapters
+and includes exactly ten fixture-argument adaptations. fmt/all-target
 Clippy/browser wasm32 pass. Official selected50 is49PASS/1FAIL (138.158s): both
 monotonic/rectilinear tests close strictly; concentric remains byte11014/line487,
 Native `G1 F2154`, Ares `G1 F2160`. Seeded, post-change neighbors/core units and
@@ -317,39 +300,36 @@ inferior function call or seeded runtime occurred. Static seeded DWARF type
 reads do not execute a seeded inferior. No universal toolpath parity or proof
 that changing this one choice closes the entire RED is claimed.
 
-### W4 overlap and coordinated caller-only boundary
+### Concentric overlap and caller-only boundary
 
-W4's Step0 owns ordinary Polylines/ironing `FillConcentric.cpp:9-71`, including
-`union_pt_chained_outside_in`43 and nearest-start49. W3's measured call is the
-separate ThickPolylines overload120 after Arachne. W3 has **not** measured or
-modified W4's union/order boundary, or FillConcentricInternal in this diagnosis.
+The separate concentric-ironing slice covers ordinary Polylines/ironing `FillConcentric.cpp:9-71`, including
+`union_pt_chained_outside_in`43 and nearest-start49. This measured call is the
+separate ThickPolylines overload120 after Arachne. This diagnosis has **not** measured or
+modified that union/order boundary, or FillConcentricInternal in this diagnosis.
 
 There IS shared upstream semantic ownership: both call `Point::nearest_point_index`.
 Moreover existing Rust `fill/concentric_sparse.rs:23-44::nearest_point_index`
 already ports last-equal selection, used by the plain-ring path127 and ironing
 through `fill_entities/ironing.rs:136`. The configured Arachne adapter instead
-has the duplicate incompatible private selector. This semantic overlap has been coordinated with W4 by COORD. Do not alter
-the shared helper or W4's worktree; if W4 later changes the same file, handle
+has the duplicate incompatible private selector. Do not alter
+the shared helper; if the concentric-ironing slice later changes the same file, handle
 any rebase conflict explicitly rather than overwriting its work.
 
-The authorized Rust destination is exclusively
+The Rust destination is exclusively
 `fill_entities/concentric/finalize.rs`: reuse the existing source-ported
 `fill::concentric_sparse::nearest_point_index` at the standard Arachne call and
 remove the now-orphan private `nearest_to`, rather than introduce another helper.
 Leave that shared helper itself, the internal-origin selector, distance helper,
 ring union, Arachne/beading, closedness gate, clipping, shortest-traverse order,
-Flow/physical height, extrusion, speeds/cooling/timing/M73 unchanged. This approved source-owner boundary permits only the named caller change;
+Flow/physical height, extrusion, speeds/cooling/timing/M73 unchanged. This source-owner boundary permits only the named caller change;
 no kernel, helper or adjacent repair is included.
 
 GREEN3 must preserve the existing six GUI cases and
-strict helpers/inputs, all prior44 controls, the ten authorized mechanical unit
+strict helpers/inputs, all prior44 controls, the ten mechanical unit
 adaptations, and complete-byte assertions. Run the frozen six cases plus prior44 controls on the exact clean tip in
 fresh official+seeded selected checks, plus concentric/ironing/Arachne
 neighbors, with unchanged
 producer identities and the three required gates. Any remaining strict residual
 again means STOP/report. No tolerance, filter, golden, inverted assertion,
-allow/ignore, fallback, extra config, pipeline feature, FULL or integration is
-authorized. FULL/rebase/push remain COORD-owned window decisions.
-
-Read-only localization, producer/canonical checks and W4 boundary:
-`${EVIDENCE_ROOT}/w3-concentric-speed-residual-81318b506-readonly/README.md`.
+allow/ignore, fallback, extra config, pipeline feature is
+included.

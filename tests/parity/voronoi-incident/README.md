@@ -2,7 +2,7 @@
 
 Source-owned prerequisite: matching Boost1.86 `voronoi_diagram.hpp::_build:470-475`
 → `vendor/boostvoronoi/src/diagram/diagram_impl.rs::finish:136-144`.
-Approved plan: `docs/architecture/painted-voronoi-incident-prerequisite-spec.md`.
+Plan: `docs/architecture/painted-voronoi-incident-prerequisite-spec.md`.
 This test does not qualify full Orca issue-detection/rotation parity or public
 painted admission. It compares ONE actual rectangle geometry, repeated50 times
 in each of two fresh seeded Native processes, against the workspace backend.
@@ -65,7 +65,7 @@ exactly one CPU; its actual ID is recorded and used for `ORCA_REPLAY_CPU` and
 all observer thread-mask checks. Any singleton CPU chosen by `taskset` or the
 nextest pin-runner is valid. All wrapper returns must be unmodified,
 no-repair-needed/no-issue; no repair-active claim. This is seeded-only VD
-observation; later FULL G-code consumer qualification still requires both modes.
+observation; later G-code consumer qualification still requires both modes.
 
 Rust serializes ALL ordered cell/source/raw-category/color/incident, exact f64
 vertex bits/color/incident, and edge adjacency/classification/finite fields.
@@ -82,7 +82,6 @@ qualification receipt, Rust test binary hash/PID, every Rust diagram and strict
 comparison result. Native output is NEVER committed. A failing run is preserved,
 not overwritten by a rerun. No dependency on historical `/tmp` scripts/dumps.
 
-Before-code failure inventory is the approved SPEC section3; this RED harness
-adds no production vendor/core changes. FULL both-mode baseline/consumer runs
-belong to the separate exact-hash qualification gate, not this test's parity
-claim. Public painted XML remains fail-closed and cutting remains blocked.
+Before-code failure inventory is the SPEC section3; this RED harness
+adds no production vendor/core changes. Both-mode baseline/consumer runs are
+not part of this test's parity claim. Public painted XML remains fail-closed and cutting remains blocked.

@@ -33,7 +33,3 @@ GUI Machine start G-code input comment `{digits(2.4, 1)}` is the control;
 The shared Native stream comparator must expose the positive mismatch before
 implementation and pass both afterward in official and seeded modes. Preserve
 whole-stream comparison and existing generated-by normalization only.
-
-Discovery provenance and exact input hashes:
-`${COORD_ROOT}/evidence/w5-33afd-digits-discovery/PROPOSAL-RR.md`.
-No tests or implementation accompany this SPEC commit.

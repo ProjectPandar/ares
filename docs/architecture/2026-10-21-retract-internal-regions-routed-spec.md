@@ -1,7 +1,6 @@
 # SPEC — `needs_retraction` internal-region suppression on the ROUTED travel polyline
 
-Status: SPEC only (no implementation). Branch `w4/retract-internal-regions-routed`, base `3fbad615e`.
-Author: W4. Read-only discovery preceded this SPEC; the GDB evidence in §2 is what fixes the boundary.
+Status: SPEC only (no implementation). Read-only discovery preceded this SPEC; the GDB evidence in §2 is what fixes the boundary.
 
 ## 1. Upstream boundary (source of truth)
 
@@ -254,13 +253,12 @@ detour cap and the retraction decision from §3 all keep their current shape.
 
 1. **`chunk_slices` consumers.** `brim_emit` (`layers/brim_emit.rs:22`) and `tower` (`layers/tower.rs:18`)
    still receive object-local slices. Whether that is a latent defect for them, or whether they re-apply the
-   placement elsewhere, is **not investigated and not changed here** (coordinator decision on Q1). If it is
+   placement elsewhere, is **not investigated and not changed here**. If it is
    a defect, it is a separate slice with its own RED.
 2. **`m_external` bbox invalidation.** Upstream re-checks
    `!(bbox.contains(start) && bbox.contains(end))` per travel (`:1266-1272`); Ares builds the external
    boundary once per entry (`route.rs:38`) and only the internal boundary has a bbox test
-   (`avoid_crossing.rs:103-104`). Included only if a residual difference after §8 is traced to it
-   (coordinator decision on Q3).
+   (`avoid_crossing.rs:103-104`). Included only if a residual difference after §8 is traced to it.
 3. The object set stays chunk-scoped (`entries`) rather than print-wide
    (`layer.object()->print()->objects()`). Identical on this fixture (all three objects are in one chunk);
    not changed here.
@@ -271,4 +269,4 @@ detour cap and the retraction decision from §3 all keep their current shape.
 2. The `reduce_crossing_wall=0` sole-key control stays byte-strict.
 3. `arachne` suite and the avoid-crossing / `reduce_crossing_wall` / multi-object / multi-instance parity
    cases show no regression.
-4. `cargo fmt` and `cargo clippy --all-targets` clean; CPU 17, `--test-threads 1`.
+4. `cargo fmt` and `cargo clippy --all-targets` clean.

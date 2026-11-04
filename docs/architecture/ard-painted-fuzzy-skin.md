@@ -1,7 +1,7 @@
 # ARD: GUI fuzzy painting is a consumed upstream region rewrite
 
-Status: proposed; independent SPEC approval required before public RED.
-Base/frozen beam tip:92ce9b02c. Upstream:8500fcdccaa10b5099ac20d252af3a7c560046f1.
+Status: proposed; the SPEC precedes public RED.
+Base beam tip: 92ce9b02c. Upstream: 8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 ## Non-negotiable decisions
 
@@ -34,9 +34,9 @@ Base/frozen beam tip:92ce9b02c. Upstream:8500fcdccaa10b5099ac20d252af3a7c560046f
 9. First runtime domain is the exact stock classic/Ripple single-face pair.
    MMU+fuzzy, beam+fuzzy, Arachne-painted, nonzero XY and broader domains remain
    deferred. Existing global-fuzzy support is preserved, not rewritten arbitrarily.
-10. SPEC approval→public RED RR→separate GREEN instruction. Core stays portable,
+10. SPEC→public RED→separate GREEN. Core stays portable,
     memory/bytes only; no fallback/backend/API redesign. Files≤400, no include
-    tricks. No FULL/rebase/merge/push here or unfreezing92ce; integration is separate.
+    tricks. Integration is separate.
 
 ## Rejected shortcuts
 

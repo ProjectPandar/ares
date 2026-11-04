@@ -4,8 +4,7 @@ Source owner: pinned OrcaSlicer8500fcdcc `GCode.cpp::_do_export:2484–2528,2890
 and `process_layer:4677–4684`. See
 [`sequential-template-layer-count-spec.md`](../../../docs/architecture/sequential-template-layer-count-spec.md).
 
-Both new inputs are byte-for-byte copies of approved readonly discovery
-`${EVIDENCE_ROOT}/worker1/sequential-next-discovery-117f4ffe3/`:
+Both new inputs are byte-for-byte copies of read-only discovery projects:
 
 | Input | Discovery case | SHA256 | Native template total |
 | --- | --- | --- | --- |
@@ -32,10 +31,9 @@ cargo nextest run -p ares-cli --test orca_parity \
   --no-fail-fast --test-threads 1
 ```
 
-Qualification runs the coordinator canonical official and seeded entry points
-serially under CPU18 with fresh per-mode caches, jobs/parity/Rayon/OMP/TBB
-controls1, preserving commands, actual affinity, Native replay receipts, both
+Qualification runs the canonical official and seeded entry points serially
+with fresh per-mode caches, preserving commands, Native replay records, both
 public G-code streams and full comparison JSON. RED expects the ByObject test
 to fail the actual full comparator at byte55433/line1278 (`1/81` vs `1/50`),
 while both ByLayer controls pass. The target is never expected-error inverted.
-Later GREEN must pass these same tests unchanged. No FULL/integration here.
+Later GREEN must pass these same tests unchanged.

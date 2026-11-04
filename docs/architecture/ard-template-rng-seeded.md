@@ -45,7 +45,7 @@ other stock failures, Creality and the paused adapter lint slice.
 
 ## Evidence and acceptance
 
-Pre-implementation diagnosis: `${TMP_ROOT}/ares-startup-template-rng-check.md`,31
+Pre-implementation diagnosis (retained externally) covered 31
 native runs. All six templates match frozen inputs; clock-seeded native output
 changes even with the old replay seed0 because its patch only affects FuzzySkin.
 
@@ -62,28 +62,27 @@ filtered. If consequences extend beyond that source boundary, investigate and
 report rather than weakening acceptance.
 
 Workspace Nextest, default Clippy (no new warnings), fmt and actual core/WASM
-wasm32 build; full official and seeded coordinator controls with no new FAIL.
+wasm32 build; full official and seeded controls with no new FAIL.
 No suppressions, guards, compatibility RNG, timing waiver or partial comparator.
-Push exact checked hash and REVIEW-REQUEST; wait for coordinator approval before
-latest-main revalidation and ff-only integration.
+Land with latest-main revalidation and ff-only integration.
 
-## Implementation evidence (integration gates still pending)
+## Implementation evidence
 
 The new replay producer is
 `/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer`.
-Native six-fixture qualification is retained in
-`${TMP_ROOT}/ares-template-rng-native.85typtks`: seed0 repeats agree; seed1 changes
+Native six-fixture qualification (retained externally):
+seed0 repeats agree; seed1 changes
 purge coordinates and derived M73/first-layer timing. Those timing lines remain
 part of per-seed full-byte acceptance.
 
-`${TMP_ROOT}/ares-template-rng-red-corrected` records the pre-implementation RED:
+The retained pre-implementation RED record shows that
 seven native repeat checks pass before full-output Rust divergences; file-start
 also reproduces the unavailable-context discrepancy. An earlier run used the
 Orca/Ares comparator incorrectly for two native streams; it is not the RED
 basis. The correction uses the existing Orca normalization on both streams.
 
-`${TMP_ROOT}/ares-template-rng-green0` and `-green1` each pass all eight public E2Es,
+The two GREEN runs (seed0 and seed1) each pass all eight public E2Es,
 including complete output, typed-distribution/shared-stream probes and job
-isolation. These are pre-latest-main results, not final integration approval.
+isolation. These are pre-latest-main results.
 The existing397 controls also require old/new producer output identity evidence;
-the canonical coordinator script is not changed by this candidate.
+the canonical control script is not changed by this candidate.

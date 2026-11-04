@@ -11,8 +11,8 @@ perimeters; covered fill is subtracted from accumulated fill surfaces; no-overla
 fill geometry stays as the original source computes it. Keep the existing
 classic stage ownership and move semantics, not a parallel Ares pipeline.
 
-The local BridgeDetector.hpp:122-126 adapter is authorized by coordinator;
-shared `geometry::detect_bridging_direction` belongs to pi-tower and is read-only
+The local BridgeDetector.hpp:122-126 adapter is in scope;
+shared `geometry::detect_bridging_direction` is read-only
 for this slice. Reuse geometry helpers and signed lower-contour distance semantics.
 Use classic-prelude cached expanded lower polygons, not raw slices (cpp:1177).
 Move the existing convex-hull helper unchanged to shared geometry rather than
@@ -23,5 +23,5 @@ quirks speculatively. Arachne integration is outside the current classic slice.
 Public complete3MF→G-code comparison is the regression boundary. Active extra-wall
 geometry and disabled controls must exist before production edits. Frozen stock
 pairs stay read-only. Keep all failed runs; no filtered timing acceptance, guard
-bypass or post-hoc deleted assertions. Main was explicitly thawed; the approved
-Qidi prerequisite integrated ase865eb2a before implementation resumed.
+bypass or post-hoc deleted assertions. The
+Qidi prerequisite integrated as e865eb2a before implementation resumed.

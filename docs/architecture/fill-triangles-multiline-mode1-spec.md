@@ -1,11 +1,8 @@
 # SPEC: Triangles sparse multiline trapezoidal mode1
 
-Status: proposed; docs only, Native/cargo/test/production runs not started.
-Base: `5a9687ac020962f254b6262f2184f3345025c70f`.
+Status: proposed; docs only.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Worker6's approved Rectilinear candidate 54809dcfb stays frozen and is not
-modified by this independent proposal. Carry this doc onto the coordinator's
-assigned main/stack base before implementation; no implicit merge authorization.
+The Rectilinear multiline dispatch is not modified by this independent proposal.
 
 ## Selection and ownership
 
@@ -15,18 +12,14 @@ ordinary three-sweep multiline filler for every count. Grid mode0, Stars mode2
 and shared Positive/numeric prerequisites are already merged. This is a
 candidate Native difference, not an observed fresh RED or reopened stock failure.
 
-Inbox review found no competing Triangles mode1 claim. Worker5's approved
-support-ironing Triangles uses count1/full-density support parameters; this
-proposal does not touch support/ironing or its adapter. Worker1 owns skirt,
-worker3 modifier shells, worker4 counterbore, worker2 anchor projection and
-web OptionsZCorrector. All those boundaries are excluded.
+The support-ironing Triangles path uses count1/full-density support parameters;
+this proposal does not touch support/ironing or its adapter. Skirt, modifier
+shells, counterbore, anchor projection and OptionsZCorrector boundaries are
+excluded.
 
-Worker5's later inbox handoff at 12:18:26 also reserves a mechanical polylines
-extraction from fill_entities/grid.rs and triangles.rs. This is not a competing
-mode1 implementation, but it overlaps the destination file. Before production,
-wait for that shared extraction to merge or obtain coordinator-approved owner
-handoff; rebase and identify the preserved Triangles generator seam in the new
-layout. Do not implement against or overwrite worker5's in-flight version.
+A mechanical polylines extraction from fill_entities/grid.rs and triangles.rs
+overlaps the destination file. Before production, that shared extraction must
+land first; identify the preserved Triangles generator seam in the new layout.
 
 The one adjacent shared-file proposal is only the Triangles arm in
 `prepare_infill/bridge_over_infill/sparse_anchoring/arms.rs`, plus the existing
@@ -99,8 +92,7 @@ Do not add a rejection, silent fallback or ignore for these deferred inputs.
 
 ## Fresh RED and controls
 
-After approval and an assigned directed window, outer taskset CPU11,
-jobs1/threads2, fresh Native cache/artifact root per mode. Reuse tracked authored
+Use a fresh Native cache/artifact root per mode. Reuse tracked authored
 prism/holed-prism STL inputs from `tests/parity/multiline-union`, existing
 Ender-3 presets and the public runtime fixture approach; Native streams and
 exports stay outside git. Verify every requested effective option before slicing.
@@ -135,6 +127,5 @@ All attributable REDs must become complete API/CLI PASS in both modes; preserve
 all count1/G2/S2/R1 control Ares raw bytes (API and CLI) across RED/GREEN and
 report any unrelated changed stream. Tests/assertions/comparator stay unchanged.
 Run whole option_coverage both modes plus strict workspace/all-target/all-feature
-clippy(-D warnings), fmt and wasm32; exact-hash self-hosted workspace/canonical
-full follow coordinator queue. No ignore, allow, probe, new Unsupported guard,
+clippy(-D warnings), fmt and wasm32. No ignore, allow, probe, new Unsupported guard,
 untracked Native output in git or independent Ares pipeline redesign.

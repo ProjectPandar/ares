@@ -1,6 +1,6 @@
 # Arachne closed exterior inset identity
 
-Status: bounded RED qualification only on the approved combined geometry/walls
+Status: proposed. Bounded RED qualification only on the combined geometry/walls
 baseline. No production change or parity closure is claimed.
 
 ## Upstream rewrite boundary
@@ -49,11 +49,11 @@ the complete cap object block strictly with runtime official beta. API/import
 failure, missing fully-overhanging exterior, unstable Native output, unchanged
 seam behavior or a different geometry/width-clipping residual is not an isolated
 production RED for this metadata transfer. Preserve such failed qualifications
-and stop or use only the second authorized input; never compensate numerically.
+and stop or use only the second input; never compensate numerically.
 
 At most two distinct inputs. Geometry C2 and shared small-chain dispatch are now
-in the approved source base, but their presence does not itself prove isolation.
+in the source base, but their presence does not itself prove isolation.
 A positive metadata witness still requires successful API execution and a visible
 exterior/seam-identity difference. No private planner tests, copied expectations,
 new diagnostic APIs, sorted/rotated contours, tolerances, forced corners or fixture
-rules. Native artifacts stay external. A public RED/RR precedes any source port.
+rules. Native artifacts stay external. A public RED precedes any source port.

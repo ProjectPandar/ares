@@ -2,7 +2,7 @@
 
 Status: complete executable-block parity GREEN for the three public witnesses;
 original seven full-stream comparisons remain OPEN at the shared footer boundary.
-Later batch only, not frozen B13. Authority: OrcaSlicer v2.5.0-beta,
+Authority: OrcaSlicer v2.5.0-beta,
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Owning upstream boundary and Rust destination
@@ -79,9 +79,9 @@ goldens, fixture branches or new fixtures are committed.
 3. Add Brim only to the first-layer-like speed predicate. No other production
    change; prove exact executable-block equality on all three inputs. If progress
    remains RED, stop and retain OPEN rather than narrowing the comparator.
-4. Run the original owned directed cases, fmt and strict workspace/all-target
+4. Run the original directed cases, fmt and strict workspace/all-target
    Clippy. Preserve both island and both width scoped GREENs. Report the seven
-   full-stream residuals honestly; no FULL, seeded sweep or ledger rerun.
+   full-stream residuals honestly; no full parity run, seeded sweep or baseline rerun.
 
 ## Runtime RED qualification before the port
 
@@ -112,7 +112,7 @@ The offset trio advances from progress line32 to the common configuration/footer
 boundary at lines1638/1639; the other four complete API streams are byte-unchanged.
 No original strict comparison is relabeled GREEN. Fmt and strict workspace/
 all-target Clippy pass, with no new suppression. The perimeter-only slowdown ramp
-and all unrelated production logic remain unchanged. No FULL or ledger rerun.
+and all unrelated production logic remain unchanged. No full parity or baseline rerun.
 
 Included: the first-layer and over-raft speed-selection leaf, with inherited
 wipe/progress effects observed through the existing consumers. No separate
@@ -123,4 +123,4 @@ new configuration modes, geometry/Clipper changes, footer/config/statistics and
 any independently exposed progress residual. No additional instrumentation.
 
 All files remain below400 LOC; helper arguments<=5, no new suppression in any
-intermediate commit. Keep the required coauthor trailer and later-batch queue.
+intermediate commit.

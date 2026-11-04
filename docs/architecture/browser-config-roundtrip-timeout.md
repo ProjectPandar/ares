@@ -1,7 +1,5 @@
 # Browser config round-trip: compile prerequisite before the test clock
 
-Status: root cause and repair boundary approved; implementation/qualification pending.
-Base: `5910df8eb0c2a9cab5958a1dcce7fdb34d075ecb`.
 Upstream: OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Existing source-owned witness
@@ -44,7 +42,7 @@ and preview-server shutdown do not explain this reproduction: respectively
 3.642834seconds, not reached, and not reached. Historical CI timeout messages
 match, but unavailable historical traces do not prove their inner phases.
 
-## Approved minimal repair
+## Minimal repair
 
 At the end of existing `web/package.json::prepare:e2e`, compile/discover the
 **same target, profile, features, filter and build environment** as the spec's

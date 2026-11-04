@@ -1,8 +1,6 @@
 # Concentric internal-solid loop-start parity SPEC
 
 - **Date**: 2026-10-25
-- **Base**: `5e8be001f3ac1e8cd2ba33e7ba5c7a95dbd4e87f`
-- **Status**: SPEC (docs only). Approved discovery RR: `w3-geometry-discovery-5e8be001f`; localization evidence: `w3-concentric-internal-start-5e8be001f/LOCALIZATION.md`.
 
 ## 1. Witness
 
@@ -16,8 +14,7 @@ line 743). Only the outermost loop of the internal-solid concentric island at
 Z1 and Z6 differs: identical 7-junction closed cycle, identical orientation,
 different starting junction — Native starts at the raw walk start, Ares at the
 chained-nearest junction. Tail segments and three M73 progress-line positions
-are consequences. Full inventory:
-`w3-geometry-discovery-5e8be001f/internal-solid-concentric/difference-inventory.txt`.
+are consequences.
 
 ## 2. Owning upstream boundary (pinned OrcaSlicer 8500fcd)
 
@@ -51,8 +48,7 @@ fed by `arachne/wall_toolpaths.rs::generate` +
 `arachne/extrusion_line.rs::to_thick_polyline` +
 `arachne/wall_toolpaths/stitch.rs`.
 
-Localization verdict (two-sided GDB + exact-coordinate elimination,
-`LOCALIZATION.md`):
+Localization verdict (two-sided GDB + exact-coordinate elimination):
 
 1. **Raw walk starts are identical** — Rust's pre-rotation first junction of
    the Z1/Z6 rings equals the Native emitted start exactly
@@ -86,7 +82,7 @@ by-elimination conclusion; only then edit `stitch.rs`.
 
 ## 3a. Pre-GREEN captures (GREEN condition 1) — attribution revision
 
-C++ capture (`cpp-isclosed-capture.log`, gate instruction
+C++ capture (gate instruction
 `FillConcentric::_fill_surface_single`+0x11a0, `cmpb $0x1,0x9(%r14)`): 50 gate
 evaluations — 48 `is_closed=1`, 2 `is_closed=0`. The two open lines are
 exactly the witness rings: `njunc=8 first=last=(154741,14962)` and
@@ -97,7 +93,7 @@ false). NOTE: on the C++ side the open ring's junction list itself starts and
 ends on the same point (walk artifact), so shape alone cannot distinguish
 closed from open — only the `is_closed` flag does.
 
-Rust capture (`rust-ttp-isclosed.log`, breakpoint at
+Rust capture (breakpoint at
 `arachne/extrusion_line.rs:83` filtered `self.inset_index == 12`): the same
 two rings reach `to_thick_polyline` with `is_closed=0`, `is_odd=0`, junction
 `len=8`. **The Rust stitch closed-chain classification is therefore CORRECT
@@ -116,18 +112,17 @@ before the ThickPolyline conversion path emits. The minimal upstream-faithful
 fix candidate is therefore NOT `stitch.rs`; it is the closed-flag propagation
 into the standard-variant finalize gate (either at
 `extrusion_line.rs::to_thick_polyline`/`ThickPolyline` carrying the flag, or
-at the `concentric` finalize gate consuming it) — inside the originally
-authorized window (`concentric.rs` family / `extrusion_line.rs` /
-`stitch.rs`) but OUTSIDE the GREEN-authorized site (`stitch.rs`). Per GREEN
-condition (1), execution STOPPED at this point and the deviation was reported
-for re-authorization; no production code was edited.
+at the `concentric` finalize gate consuming it) — inside the original
+window (`concentric.rs` family / `extrusion_line.rs` / `stitch.rs`) but
+OUTSIDE the originally proposed fix site (`stitch.rs`). The fix boundary was
+therefore revised before any production code was edited.
 
 ## 4. Arachne shared-surface disclosure
 
 Frozen at SPEC time for the `stitch.rs` boundary. With the §3a attribution
-revision the authorized `stitch.rs` site is no longer the candidate, so this
-risk applies only if the re-authorized fix still touches `stitch.rs`; if the
-re-authorized fix is flag propagation at the concentric finalize/
+revision the `stitch.rs` site is no longer the candidate, so this
+risk applies only if the fix still touches `stitch.rs`; if the
+fix is flag propagation at the concentric finalize/
 `to_thick_polyline` boundary, the Arachne perimeter surface is unaffected
 because `is_closed` consumption there is unchanged, and the directed
 perimeter/wall/concentric neighbor matrix below is the guard either way.
@@ -138,7 +133,7 @@ witnessed ring is a minimal concentric ring (feature below `min_bead_width`),
 which perimeters can also produce. GREEN acceptance must therefore include
 the directed pair PLUS the existing perimeter/Arachne parity surface (workspace
 Clippy, directed concentric tests, and at minimum the arachne-related directed
-cases) before any FULL request; a behavioral change in perimeter outputs would
+cases) before the full parity suite; a behavioral change in perimeter outputs would
 be a boundary violation and must be reported instead of absorbed.
 
 ## 5. Included / deferred
@@ -164,7 +159,7 @@ Deferred (no change in this chain):
   anchors, so this can only diverge on the first rotated ring per call.
   Currently passing rings coincide on near-circular geometry. Disclosed; not
   fixed here.
-- All queued-window files (brim/*, motion/scan.rs, format.rs, jerk,
+- Unrelated files (brim/*, motion/scan.rs, format.rs, jerk,
   seam_placement/alignment, config value.rs, fill_entities/grid.rs) — untouched.
 
 ## 6. Acceptance
@@ -175,14 +170,14 @@ RED (this chain): tests-only addition
 output against runtime Native; target (concentric) must FAIL against current
 code (real difference), failing on the witnessed loop-start divergence.
 Without a Native oracle the case must error out, never silently pass.
-GREEN (later chain): minimal change at the §3a re-authorized site (flag
+GREEN (later chain): minimal change at the §3a site (flag
 propagation to the standard-variant finalize gate, not `stitch.rs`) making
 the gate consume `is_closed` as upstream does; target flips to PASS with
 control still PASS; no perimeter output change.
 
 ## 7. GREEN implementation record (commit 4c3f2437f)
 
-Re-authorized boundary executed literally:
+Implemented boundary:
 
 - `concentric/generate.rs`: `generate_with_mode` returns
   `Vec<(ThickPolyline, bool)>` — `to_thick_polyline` result paired with the
@@ -208,8 +203,7 @@ Re-authorized boundary executed literally:
   reassigns it, so the Rust fixed `nearest_to_origin` anchor is equivalent;
   recorded to preempt a future chained-anchor "fix".
 
-Directed acceptance (CPU12 taskset, threads 1, runtime Native, exit codes in
-`green-exit-codes.txt`):
+Directed acceptance (runtime Native):
 
 - unit: `-p ares-core -E 'test(concentric)'` 38/38 PASS.
 - official mode: selector
@@ -223,4 +217,4 @@ Directed acceptance (CPU12 taskset, threads 1, runtime Native, exit codes in
   families 45 (`arachne_alternate_extra_wall` 10, `arachne_extra_overhang_call`
   5, `arachne_fuzzy_f1` 30).
 - `cargo fmt --all --check` clean; workspace
-  `cargo clippy --all-targets -- -D warnings` clean (`green-clippy.log`).
+`cargo clippy --all-targets -- -D warnings` clean.

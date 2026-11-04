@@ -1,6 +1,6 @@
 # ColorChange processor oracle fixtures
 
-These checked-in G-code inputs probe the approved
+These checked-in G-code inputs probe the
 [`web-colorchange` spec](../../../docs/architecture/web-colorchange.md).
 They are native processor inputs, not an alternative slicing/emission path.
 Future slice/browser fixtures must use existing user G-code template overrides.
@@ -54,9 +54,9 @@ may be updated merely to match an Ares or browser observation.
 The probe audits only the source's vector reads. It does **not** execute the
 commented-out GUI table, claim a native GUI crash, silently fill missing
 volumes, or zip/truncate records. An out-of-bounds index is evidence that the
-source display join needs a coordinator ruling before its Rust port.
+source display join needs an explicit decision before its Rust port.
 
-## Native outcome and approved display boundary
+## Native outcome and display boundary
 
 The historical Native probe matched all nine cardinalities in the source-derived
 table above. Its frozen JSON summary has been removed; the CLI runtime E2E
@@ -64,7 +64,7 @@ table above. Its frozen JSON summary has been removed; the CLI runtime E2E
 compares the original nine handwritten templates embedded in real slices against
 explicit raw/stable processor diagnostics. Native output and receipts stay in
 OrcaRunner runtime/cache directories. Five fixtures require out-of-bounds
-volume indices in the upstream display join. The coordinator approved:
+volume indices in the upstream display join. The decision is:
 preserve raw statistics and ColorPrint segments; Rust reports partial usage
 unavailable when a required volume index is absent, and the frontend displays
 that status instead of guessing or partially returning usage rows. A no-change
@@ -94,4 +94,4 @@ caps retain the existing probe recipe. Raw `.json`, move `.csv`, logs and
 `report.json` record commands, fixture hashes, native executable/patch hashes,
 counts and any would-be out-of-bounds GUI volume indices. The probe accepts a
 different output directory; input files always come from this checked-in
-fixture directory, never `/tmp`.
+fixture directory, never an external temporary directory.

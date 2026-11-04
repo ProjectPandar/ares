@@ -67,6 +67,6 @@ Before final GREEN qualification, add public slicing/export coverage of resolved
 
 Included: byte-supplied named printer/process/filament refresh, defaults and inheritance, dirty-key protection, missing-key fill, applied presence, and existing public API lifecycle integration. No fixture-specific constants or output snapshots.
 
-Deferred: CLI/browser catalog acquisition UI, printer switching, replacement-preset adjudication, layout-engine rewrites, the other scalar-to-vector migrations, arc-fitting investigation, unrelated exporter gaps, and FULL acceptance. Existing explicit-selection and bare-project APIs retain their current contract; they are not fallback paths for an unsuccessful project-derived request.
+Deferred: CLI/browser catalog acquisition UI, printer switching, replacement-preset adjudication, layout-engine rewrites, the other scalar-to-vector migrations, arc-fitting investigation, unrelated exporter gaps, and full-parity acceptance. Existing explicit-selection and bare-project APIs retain their current contract; they are not fallback paths for an unsuccessful project-derived request.
 
-Implementation gate: submit this ARD and public RED evidence for review before any GREEN production edit.
+Implementation gate: this ARD and public RED evidence precede any GREEN production edit.

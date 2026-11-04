@@ -18,37 +18,26 @@ removed because upstream directly intersects the offset result.
 
 ## Evidence and plan
 
-Official-reference artifacts `/tmp/parity-official-restored/case-3jtTHp`
-show sparse paths outside the correct domain (X115.693 instead of inside
+Official-reference artifacts show sparse paths outside the correct domain (X115.693 instead of inside
 X114.126). The generator rotated its scanlines but clipped/connected against
 the original polygon, unlike the upstream local expolygon rotated in place.
 The emitter also omitted the shared FillBase offset. Before the correction,
-a translated asymmetric rectangle yields no paths in the actual fill seam
-(`/tmp/line-frame-red.log`).
+a translated asymmetric rectangle yields no paths in the actual fill seam.
 
 Plan: regress translated asymmetric geometry at three angles/two scales,
 correct the source boundaries and arithmetic, verify erased domains and
-overlap behavior, run official line oracle and workspace/KSR/fmt/clippy,
-then independent six-axis review and code+docs commit/push. Preserve any
-remaining strict mismatch rather than weakening the comparator.
+overlap behavior, run official line oracle and workspace/KSR/fmt/clippy.
+Preserve any remaining strict mismatch rather than weakening the comparator.
 
-## Verification and review
+## Verification
 
-Official filtered line comparison passes (`/tmp/line-frame-oracle.log`),
-while its partial option domain correctly remains INCOMPLETE. The complete
-26-value run (`/tmp/line-frame-full.log`) records 22 PASS / 4 DIVERGENT:
-crosszag, Lightning, lockedzag and tpmsfk remain unresolved. Paired output
-bytes are retained in `/tmp/parity-line-frame` and `/tmp/parity-line-full`.
-Workspace `/tmp/line-frame-workspace.log`: 7330 passed / 10 skipped;
-KSR `/tmp/line-frame-ksr.log`: 84 passed / 2 skipped. Clippy completes with
-existing warnings, fmt/diff checks pass. Existing solid-density spacing
-adjustment and adjusted-flow propagation gaps are not fixed by this slice.
+Official filtered line comparison passes, while its partial option domain
+correctly remains INCOMPLETE. The complete 26-value run records 22 PASS /
+4 DIVERGENT: crosszag, Lightning, lockedzag and tpmsfk remain unresolved.
+Existing solid-density spacing adjustment and adjusted-flow propagation
+gaps are not fixed by this slice.
 
-Reviewer a6a92130 requested a connection-specific regression: bounds alone
-cannot detect missing concatenation. The test now requires a connected
-multi-column path. Reverting only containment to the original coordinate
-frame makes it fail (`/tmp/line-connection-red.log`, no connected columns);
-restoring the correction passes both tests (`/tmp/line-connection-green.log`).
-Production code is identical to that used for the full validation above.
-Independent follow-up reviewer 739c12da confirmed the connection regression
-closes P2 and returned OK for this scoped correction, not full parity.
+Bounds alone cannot detect missing concatenation, so the test also requires
+a connected multi-column path. Reverting only containment to the original
+coordinate frame makes it fail (no connected columns); restoring the
+correction passes both tests. This is a scoped correction, not full parity.

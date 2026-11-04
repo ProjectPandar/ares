@@ -1,13 +1,9 @@
 {
   "schema": "j1c-red-v1",
-  "rust_base": "ff40fd2e77864f054ee5ab34be1f75d701ed1e66",
-  "source_before_test_only": "c1be291cc",
   "production_modified": false,
   "rows": [
     {
       "status": "DIVERGENT",
-      "directory": "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output",
-      "witness": "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output/artifacts/j1-runtime-used-mask-zuoqrR/usage-witness.json",
       "data": {
         "ares": {
           "initial_extruder": 1,
@@ -26,8 +22,7 @@
         "assertion_scope": "complete bytes; generated-by identity only; M73/footer retained",
         "complete_comparison": [
           "DIVERGENT",
-          "first difference at byte 3810 (line 222, column 1; expected 38416 bytes, actual 38536 bytes)\ncontext:\n  line 221: \"G1 X152.475 Y96.475 E.34876\"\n  line 222: expected \"M73 P46 R1\"; actual \"G1 X159.525 Y96.475 E.34876\"\n  line 223: expected \"G1 X159.525 Y96.475 E.34876\"; actual \"M73 P46 R1\"",
-          "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output/artifacts/case-cu0W7E"
+          "first difference at byte 3810 (line 222, column 1; expected 38416 bytes, actual 38536 bytes)\ncontext:\n  line 221: \"G1 X152.475 Y96.475 E.34876\"\n  line 222: expected \"M73 P46 R1\"; actual \"G1 X159.525 Y96.475 E.34876\"\n  line 223: expected \"G1 X159.525 Y96.475 E.34876\"; actual \"M73 P46 R1\""
         ],
         "input_sha256": "7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4",
         "native": {
@@ -45,7 +40,6 @@
         },
         "native_sha256": "7ae276a300844261e81ab666fe26fcecad2b0c7832051b83e5d01c823a3ae585"
       },
-      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
       "producer": {
         "components": {
           "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
@@ -61,18 +55,8 @@
           "schema": "native-cache-v2"
         },
         "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
-        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
         "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
-        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
-        "runtime_environment": {
-          "HOME": "/home/indexyz",
-          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
-          "ORCA_APPDIR": null,
-          "ORCA_LIB_CACHE": null,
-          "ORCA_REPLAY_CPU": "0",
-          "XDG_CACHE_HOME": null,
-          "XDG_CONFIG_HOME": null
-        }
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer"
       },
       "process": {
         "name": "j1_by_layer_role2_usage_matches_complete_output",
@@ -87,14 +71,11 @@
             "3971472": "373064106"
           }
         },
-        "elapsed_seconds": 2.101013956591487,
-        "directory": "/tmp/ares-j1-mask/j1c-red/directed/00-j1_by_layer_role2_usage_matches_complete_output"
+        "elapsed_seconds": 2.101013956591487
       }
     },
     {
       "status": "PASS",
-      "directory": "/tmp/ares-j1-mask/j1c-red/directed/01-j1c_nonzero_top_layers_travel_control",
-      "witness": "/tmp/ares-j1-mask/j1c-red/directed/01-j1c_nonzero_top_layers_travel_control/artifacts/j1-top-surface-lifecycle-kf5wl2/travel-witness.json",
       "data": {
         "ares_sha256": "09e8987c3e4cead31b71438e893f1ab3f10379b4801590ebdc2eaed4cb732f17",
         "ares_travel": [
@@ -167,7 +148,6 @@
         ],
         "scope": "final-layer G0/G1 XY travels only; complete primary remains separately asserted"
       },
-      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/01-j1c_nonzero_top_layers_travel_control/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/f40b167aa256418274134643c007bcaf029c8241af3e3633632f9e424e223ab6/receipt.json",
       "producer": {
         "components": {
           "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
@@ -183,18 +163,8 @@
           "schema": "native-cache-v2"
         },
         "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
-        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
         "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
-        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
-        "runtime_environment": {
-          "HOME": "/home/indexyz",
-          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
-          "ORCA_APPDIR": null,
-          "ORCA_LIB_CACHE": null,
-          "ORCA_REPLAY_CPU": "0",
-          "XDG_CACHE_HOME": null,
-          "XDG_CONFIG_HOME": null
-        }
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer"
       },
       "process": {
         "name": "j1c_nonzero_top_layers_travel_control",
@@ -208,14 +178,11 @@
             "3971509": "373064307"
           }
         },
-        "elapsed_seconds": 1.7346763690002263,
-        "directory": "/tmp/ares-j1-mask/j1c-red/directed/01-j1c_nonzero_top_layers_travel_control"
+        "elapsed_seconds": 1.7346763690002263
       }
     },
     {
       "status": "RED",
-      "directory": "/tmp/ares-j1-mask/j1c-red/directed/02-j1c_zero_top_layers_travel_has_no_stale_top_holes",
-      "witness": "/tmp/ares-j1-mask/j1c-red/directed/02-j1c_zero_top_layers_travel_has_no_stale_top_holes/artifacts/j1-top-surface-lifecycle-PG1LTp/travel-witness.json",
       "data": {
         "ares_sha256": "da4e1fc6b3cc1d32285dab67ec2e9d4d2643bf83c552e0c5829c108fc3b200ad",
         "ares_travel": [
@@ -270,7 +237,6 @@
         ],
         "scope": "final-layer G0/G1 XY travels only; complete primary remains separately asserted"
       },
-      "receipt": "/tmp/ares-j1-mask/j1c-red/directed/02-j1c_zero_top_layers_travel_has_no_stale_top_holes/native-cache/native-cache-v2/e4e94beb887fe1c60bd16f468e34ebc6de376df4dc3d68b599b679b7f3ad0fe3/slice/0c1c7b1879f6ee67fcf2a3362127d7eec61a06cf33a9d6669c440c2de0bc2128/receipt.json",
       "producer": {
         "components": {
           "endpoint": "5bad40eaf04002cb883e5d62d181ae7bec2048246e40b0259ecab57985ec886d",
@@ -286,18 +252,8 @@
           "schema": "native-cache-v2"
         },
         "endpoint_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer",
-        "launcher_path": "/tmp/ares-pi-lint/scripts/orca-seeded-parity.sh",
         "native_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/.orca-slicer-wrapped",
-        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
-        "runtime_environment": {
-          "HOME": "/home/indexyz",
-          "LD_LIBRARY_PATH": "/tmp/ares-j1-mask/target/debug/deps:/tmp/ares-j1-mask/target/debug:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib:/home/indexyz/.rustup/toolchains/1.99.0-x86_64-unknown-linux-gnu/lib:/nix/store/p5c2hfgw9pipp2vd0xvxjmly99nbsdki-pipewire-1.6.8-jack/lib",
-          "ORCA_APPDIR": null,
-          "ORCA_LIB_CACHE": null,
-          "ORCA_REPLAY_CPU": "0",
-          "XDG_CACHE_HOME": null,
-          "XDG_CONFIG_HOME": null
-        }
+        "resources_path": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer"
       },
       "process": {
         "name": "j1c_zero_top_layers_travel_has_no_stale_top_holes",
@@ -311,8 +267,7 @@
             "3971544": "373064477"
           }
         },
-        "elapsed_seconds": 1.625868537928909,
-        "directory": "/tmp/ares-j1-mask/j1c-red/directed/02-j1c_zero_top_layers_travel_has_no_stale_top_holes"
+        "elapsed_seconds": 1.625868537928909
       }
     }
   ],

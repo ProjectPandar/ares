@@ -1,6 +1,6 @@
 # FloatsOrPercents: non-nil vector extraction and percent preservation
 
-Status: source-audited proposal only. No runtime or production/test change.
+Source-audited proposal.
 
 ## Owning upstream PrintConfig / Config boundary
 
@@ -74,7 +74,7 @@ rejection; do not reinterpret nil as an ordinary failed numeric element0.
 **Not claimed:** parity of key-based nullable nil decoding. That existing
 missing representation stays explicitly deferred. No fallback to0 for nil,
 key-name exception, new nullable metadata routing or silently changed schema.
-If review requires full nullable-key parity in this slice, expand the source
+If full nullable-key parity is required in this slice, expand the source
 ARD before any RED or production implementation.
 
 ## Included non-nil behavior
@@ -92,13 +92,13 @@ ARD before any RED or production implementation.
 - Do not force all failed conversions to zero: overflow/underflow/hex/locale
   and other helper limitations are not repaired by a vector dispatch change.
 
-The proposal starts on main53948dd6a620adf843860c3c6d3b0b72008273ad. That base
-still contains the earlier exponent helper; its separately approved exponent
+The proposal starts from a base that
+still contains the earlier exponent helper; its separate exponent
 repair is not silently cherry-picked here. The proposed `bad%` witness has no
 numeric prefix and does not depend on incomplete-exponent semantics. Do not add an
 exponent-failure case before its source dependency is integrated and routed.
 
-## Proposed public Native-first proof after approval
+## Proposed public Native-first proof
 
 1. Before production code, add one E2E in the existing config-block round-trip
    subtree, reusing Native settings export/project mutation and producer
@@ -110,10 +110,10 @@ exponent-failure case before its source dependency is integrated and routed.
    decode-by-key plus encode-by-key must be compared with that observed token.
    Persist both Results before asserting; do not hardcode a zero-percent
    expected string or copy the deserializer into the test.
-3. If Native rejects or normalizes before this class is reached, stop/review
+3. If Native rejects or normalizes before this class is reached, stop and revisit
    the witness instead of inventing a key, private C++/stdlib kernel, Native
    rebuild or substitute diagnostic. No missing-Native or zero-selection pass.
-4. Submit the real RED and scope audit before production. After code approval,
+4. The real RED and scope audit precede production. Then
    change only the non-nil vector dispatch; qualify absolute/percent success,
    failed extraction with/without percent, and scalar failure unchanged.
    Preserve nil non-coercion only as a public generic-path non-regression;
@@ -123,8 +123,7 @@ exponent-failure case before its source dependency is integrated and routed.
    comparators, retain control status deltas, fmt/all-target/all-feature clippy
    and wasm32 checks. Capture repeatable source/input/producer/command/status/
    export/public-result artifacts; never commit generated Native goldens.
-6. Keep files below400 lines and source/Rust destinations explicit; submit
-   GREEN review before publication. No runtime is granted by this proposal.
+6. Keep files below400 lines and source/Rust destinations explicit.
 
 ## Deferred behavior and stop conditions
 
@@ -150,4 +149,4 @@ nil accidentally coerced to0; percent flag lost on numeric failure; scalar
 failure policy unintentionally changed; Native token normalized earlier;
 no actual Native execution; expected token fabricated; full control output
 filtered; predecessor/helper dependency silently pulled in. Any exercised
-prerequisite outside the boundary stops for review rather than broadening code.
+prerequisite outside the boundary stops the slice rather than broadening code.

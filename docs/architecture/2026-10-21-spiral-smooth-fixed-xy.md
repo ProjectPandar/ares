@@ -1,8 +1,7 @@
 # ARD: Smooth Spiral XY serialization matches GCodeLine::set
 
-Status: SPEC approved; Native-first RED authorized, GREEN requires separate
-review approval. Base89560ca66ff8418bcf175d573df299955f9a216f. Independent
-branch, NOT stacked on the spiral-overlap transition chain.
+Status: Accepted SPEC; Native-first RED, then a separate GREEN. Independent of
+the spiral-overlap transition chain.
 
 ## Upstream owner and exact Rust destination
 
@@ -68,10 +67,6 @@ No M73, header, E, timing, configuration or trailing-line mask.
 
 ## Read-only proof and limits
 
-Evidence `${COORD_ROOT}/evidence/w5-spiral-smooth-fixed-xy/`
-contains actual exports, per-ZIP hashes, launches/full outputs, matching
-DWARF debugger scripts/raw snapshots and SHA256 manifest.
-
 80 Native X/Y setter calls from SpiralVase, all decimal_digits3;80 Rust
 format_axis calls from smooth_line. The first values align at the Native
 f32 boundary and the source owns the fixed-vs-trimmed difference. Final
@@ -90,7 +85,7 @@ chain8afae25af is separate, frozen and not consumed by this branch.
 
 ## Included / deferred
 
-Included after GREEN approval: source-faithful f32-boundary fixed3 XY
+Included in GREEN: source-faithful f32-boundary fixed3 XY
 serialization and deletion of only newly orphaned local trim helper.
 No new public API/dependency/platform I/O or Rust module over400LOC.
 
@@ -98,11 +93,11 @@ Deferred/excluded: nine low-bit input differences and geometry arithmetic;
 Point2/global quantization; smoothing projection/resampling/short-move or
 flow math; Z/E/general writer formatting; processor/cache flags; M73 or
 output-normalizer changes. Also exclude all overlap transition state/
-branch/passthrough/header behavior, W2 brim/skirt, W1 painted/MMS, W6
-medial/interlocking, W3 combine-solid clearance and W4 stack25 scope.
+branch/passthrough/header behavior, brim/skirt, painted/MMS,
+medial/interlocking and combine-solid clearance.
 No coordinate-, value-, shape- or layer-specific special case/fallback.
 
-## Formal RED then review before GREEN
+## Formal RED before GREEN
 
 Freeze the two actual exported3MFs as INPUTS only with SHA/per-entry
 manifest and provenance. Two tests DIRECTLY call existing main
@@ -113,9 +108,7 @@ or expected-failure test; SHA freezes settings and full comparison is
 oracle. Preserve full artifacts and both public attempts on RED.
 
 Official/seeded RED: controlPASS/positiveactualFAIL, stable Native replay.
-Send REVIEW-REQUEST and STOP awaiting explicit GREEN approval. Future
-GREEN must keep all tests/input/helpers frozen, prove strict equality and
+Future GREEN must keep all tests/input/helpers frozen, prove strict equality and
 C++-compatible f32 fixed/tie behavior without widening numeric scope.
-No implementation or GREEN sufficiency is claimed here. FULL only under
-an explicit later window; no discovery cache or GDB proof is formal
-public-API or exact-main integration evidence.
+No implementation or GREEN sufficiency is claimed here; no discovery cache
+or GDB proof is formal public-API evidence.

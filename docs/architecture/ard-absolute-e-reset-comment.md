@@ -18,13 +18,12 @@ Non-negotiable constraints:
 - Do not extend paint_color activity or used_extruder_case: tool-selection
   witnesses are not this slice's seam. Preserve failed cce75f02f and its STOP
   packet/binaries; no new scanner/helper, input or shared-activity changes.
-- Keep W3's ownership exclusion, older-base provenance and rejected Native
+- Keep the older-base provenance and rejected Native
   attempt visible. Source-derived GUI reachability is not a live-save claim.
 - SPEC→tests-only actual RED→minimal GREEN; root remains400 through existing
   grouped registration. No production edits before demonstrated RED.
 - No extra fallback, private-helper oracle, pressure-equalizer behavior, other
   reset_e call sites, new crate or owner-adjacent cleanup.
-- No FULL until COORD opens the later integration window. Review and hold now.
 
 Included behavior is only conditional comment serialization. Adjacent reset_e
 state/force/other-caller behavior is deferred; existing Ares code there remains

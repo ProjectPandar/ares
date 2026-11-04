@@ -59,5 +59,4 @@ The behavioral RED retained `Internal`; the minimal implementation fixed the
 stable two-kind removal. Focused tests pass 3/3, the workspace passes
 6,457/6,457 with two skipped, strict Clippy/rustfmt and all five portability
 checks pass, and 15/15 compiling collection/order mutations are killed with
-byte-exact production restoration. Independent six-axis review approved after
-the full contour-and-ordered-holes snapshot repair, with no remaining item.
+byte-exact production restoration.

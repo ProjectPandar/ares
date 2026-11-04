@@ -1,10 +1,7 @@
 # SPEC: per-object first-layer extrusion admission for the odd-rotated gap
 
-Status: docs-only, SPEC review requested; no RED or production change here.
-Base: approved mesh candidate98cb4dfbc5ad4a93b3ed33602383460586f73def.
-That candidate remains frozen for stacked full. This document lives on the
-separate pi/worker3-first-layer-extrusion-gap-spec branch. Rebase this branch
-onto the eventual merged main before implementation; no push is authorized.
+Status: docs-only SPEC; no RED or production change here.
+Builds on the mesh edge ordering candidate.
 
 ## Owning upstream boundary
 
@@ -58,8 +55,7 @@ indexed edge; odd-rotated moves the first seven triangles to the end.
 
 Ares odd-rotated raw G-code SHA256 in BOTH modes:
 99521ddc83fa146da43b50d88271afb586afc95f2c046f875089130fb6afc6b4.
-Producer checkpoint9856c12b07aecb90295400cbba7fdaf404a53bb0; docs-only
-review head98cb4dfbc. The admitted matrix passes13/13 each mode with full
+The admitted matrix passes13/13 each mode with full
 ordered generator-header-only comparison and API/CLI raw equality; three
 manifold controls are byte-identical to RED d5d5bdcc1. Diagnostics are not
 strict parity PASS. No retry-to-PASS or extra output normalization was used.
@@ -79,15 +75,7 @@ text is attributed through the unique GCode.cpp throw/aggregate chain, not
 verbatim stderr. This proves differing layer/extrusion state at export;
 it does not prove std::sort alone is the cause.
 
-Retained roots: /tmp/worker3-mesh-edge-green-tnjm_ze7/{evidence.json,
-GREEN-receipt.json}; /tmp/worker3-first-layer-gap-readonly-audit.json;
-/tmp/worker3-edge-native-logfile-ycvz867g/evidence.json;
-/tmp/worker3-edge-native-order-risk-xz5652uy/triangle-multiset-audit.json.
-Official wrapper SHA256:
-1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3.
-Canonical seeded replay uses seed0. These root paths are supplementary;
-the input hashes, outcomes, first-layer observation and G-code hash above
-remain in Git even after daily10-day tmpfiles cleanup.
+Canonical seeded replay uses seed0.
 
 ## Preflight gate and implementation STOP
 
@@ -109,7 +97,7 @@ TriangleMesh.cpp:520-613 or TriangleMeshSlicer.cpp:1383-1482/1865-1889.
 No sorting replay, make_loops rewrite, empty-layer retagging, dropping emitted
 paths, fixture-specific branch or mesh_topology guard is included here.
 
-## RED and exit plan after SPEC approval
+## RED and exit plan
 
 1. Commit a separate public Native rejection RED for exact odd-rotated:
    both modes must return Native-100/Errors/no G-code while current Ares
@@ -128,9 +116,8 @@ paths, fixture-specific branch or mesh_topology guard is included here.
    preserving all existing assertions and the raft compatibility mapping.
 4. Successful closure requires odd-rotated future_gap=false from the
    correct upstream state/predicate, both-mode admitted13/13 byte parity,
-   negative-control typed errors/no-output, strict/fmt/wasm32 and review.
+   negative-control typed errors/no-output and strict/fmt/wasm32.
    An independent geometry SPEC, if needed, owns that closure instead.
 
-All runs require CPU12 outer taskset, jobs1/threads2 directed, fresh Native
-cache/artifact roots and START/END inbox. No full/workspace without allocation;
-no production before approval, no test retirement without separate request.
+All runs require fresh Native cache/artifact roots; no test retirement is part
+of this slice.

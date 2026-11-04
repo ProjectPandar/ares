@@ -1,9 +1,5 @@
 # GCodeProcessor sloped-loop seam lifecycle and effective scarf flag
 
-Status: COORD-approved rewrite scope; docs-only SPEC first. Public RED is next;
-production GREEN must wait for a separate approval of the RED RR. Base is
-`d9d01e2e86ecdb3005e1c4be604b6fd913fa9f9b`. No FULL window is open.
-
 ## Upstream boundary
 
 This is a Rust rewrite slice of OrcaSlicer libslic3r, not an Ares time model.
@@ -31,7 +27,7 @@ This is a Rust rewrite slice of OrcaSlicer libslic3r, not an Ares time model.
    (`TimeMachine::calculate_time:484–488,:574`) then associate a Seam vertex with
    the block. Export cache lookup (`:1241–1252,:1458–1471`) remains a consumer.
 
-The effective flag is an approved necessary dependency of this SAME slice,
+The effective flag is a necessary dependency of this SAME slice,
 not a separately deferred prerequisite: without it this witness cannot turn green.
 
 ## Exact Rust destination and single owner
@@ -72,10 +68,6 @@ No new public option, candidate crate, platform I/O, geometry guess, duration
 multiplier, unsupported guard, ID blacklist, output patch or legacy fallback.
 
 ## First producer and consumer evidence
-
-Read-only evidence root:
-`${EVIDENCE_ROOT}/w6-m73-d9-readonly/`.
-`ordered-state-proof.json` and `spec-draft.md` retain the detailed measurements.
 
 - Identical first367 movement/homing commands, including feed-only/no-op IDs;
   353 shared completed-command boundaries match by command and exact endpoint.
@@ -164,14 +156,12 @@ Fresh official/seeded Native2 is stable for both inputs. Part external has four
 whole-stream line differences against current CLI (the three M73 displacement
 lines and Native `has_scarf_joint_seam=1` versus Ares 0); part none completely
 passes in both modes. This pair therefore enters the formal public RED matrix,
-not deferred and not admitted on a motion-only claim. Read-only evidence:
-`${EVIDENCE_ROOT}/w6-sloped-seam-volume-resume-v6hwqqx2/assessment.json`.
-Previous and interrupted-output directories were preserved; all 33 original
-files retain their SHA256. No public API qualification is claimed from discovery.
+not deferred and not admitted on a motion-only claim. No public API
+qualification is claimed from discovery.
 
 The full RED matrix is four cases: two strict targets and two sole-key complete
 PASS controls. Object/layer-range any_of behavior is STILL required in the
-implementation: these witnesses do not authorize a default/volume-only subset.
+implementation: these witnesses do not justify a default/volume-only subset.
 
 ## Included / deferred and architecture constraints
 
@@ -189,8 +179,5 @@ All changed text files must be <400 LOC. Runner responsibilities were already
 split; any later registration growth must respect that boundary without copying
 logic. Core remains byte-oriented and portable to WASM/Windows/macOS/Linux.
 
-Sequence: this docs-only commit -> genuine public RED commit/RR -> STOP for COORD
-approval -> production-only GREEN if separately authorized. Any strict residual
-means STOP, not comparator filtering or a partial-GREEN claim. FULL waits for a
-new window. The isolated obsolete test deletion remains unchanged with the
-user's decision still pending. No push or self-merge.
+Sequence: genuine public RED -> production-only GREEN. Any strict residual
+means stop, not comparator filtering or a partial-GREEN claim.

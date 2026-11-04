@@ -2,13 +2,8 @@
   "case": "O8-X2D-SCALAR",
   "status": "UB_ADJACENT",
   "parity_pass": false,
-  "handling_contract": "APPROVED 78b1007ed44c7a3d3db49271dc50a9b97c8e4d87",
-  "main": "cbee8353998283332cb838f2be3b41b826d8ef66",
-  "source_head": "78b1007ed44c7a3d3db49271dc50a9b97c8e4d87",
-  "crates_tree": "788f2899cad65edfba97ade4dc2bf3476065870f",
   "production_changes": 0,
   "original_input": {
-    "path": "/tmp/ares-o8-current-main-cbee/input.3mf",
     "bytes": 15828,
     "sha256": "b980548a6170e454a0b0701c115aecbae3441487c35b92fcd64e8c50b50595b2"
   },
@@ -61,13 +56,11 @@
     "error": "Flush volumes matrix do not match to the correct size!",
     "gcode_emitted": false,
     "binary": {
-      "path": "/tmp/ares-vg1-red-target/debug/ares",
       "bytes": 254992312,
       "sha256": "6aba323605f13cf5ea77c4f40f3051012c49e10a80d0e62754056d81b6f4c687"
     },
     "entry": "slice_project_plate_validated via fresh cargo-built CLI, default overrides/context0",
     "evidence": {
-      "path": "/tmp/ares-o8-current-main-cbee/ares.stderr",
       "bytes": 78,
       "sha256": "ba70f586d1263399c7fdb7165c89472aa6911b76c426ab223a1a03d16cd4dd4a"
     }
@@ -81,11 +74,9 @@
     },
     "resources": "/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/share/OrcaSlicer",
     "seed": 0,
-    "cpu": 4,
     "invocations": 1,
     "cache": "none; direct fresh invocation",
     "output": {
-      "path": "/tmp/ares-o8-current-main-cbee/native/output/plate_1.gcode",
       "bytes": 164031,
       "sha256": "e9ce8823980c96883d0765af083c6a39c27102a3ad7cb4e300cbc1b1421e8395"
     },
@@ -96,7 +87,6 @@
     ],
     "numeric_values_are_observations_not_expectations": true,
     "evidence": {
-      "path": "/tmp/ares-o8-current-main-cbee/native/00000.log",
       "bytes": 24552,
       "sha256": "073f1ea58ec7ea2399a56a3f6257746ab7a0c68ff8fda72f6a2cefc8f658a1c7"
     }
@@ -104,7 +94,6 @@
   "valid_size_scalar_control": {
     "classification": "ARES_SAFE_PRESERVATION_ONLY_NOT_NATIVE_PARITY",
     "input": {
-      "path": "/tmp/ares-o8-current-main-cbee/valid-size-scalar-control.3mf",
       "bytes": 15787,
       "sha256": "f99d7f40dcab00f2fddf29af5c388820a677e954903d75e1c0e996504b7d5d57"
     },
@@ -114,7 +103,6 @@
     "matrix": "; flush_volumes_matrix = 0,42,43,0,0,143,144,0",
     "multiplier": "; flush_multiplier = 0.3,1",
     "output": {
-      "path": "/tmp/ares-o8-current-main-cbee/valid-size-scalar-control.gcode",
       "bytes": 163997,
       "sha256": "25bbb6cdea53effb4c858be13bea5243502dbc55519d5b106351139409b3ff3b"
     },
@@ -127,33 +115,23 @@
     "no_global_scalar_rejection": true,
     "no_broadcast_or_matrix_padding": true
   },
-  "historical_evidence": "/tmp/ares-x2d-flush-matrix/rebase-458/original-input/results.json",
-  "reproduce": {
-    "build": "CARGO_TARGET_DIR=/tmp/ares-vg1-red-target CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=2 cargo build -p ares-cli",
-    "ares": "/tmp/ares-vg1-red-target/debug/ares slice /tmp/ares-o8-current-main-cbee/input.3mf -o /tmp/ares-o8-current-main-cbee/ares.gcode",
-    "native": "ORCA_REPLAY_BIN=/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2/bin/orca-slicer ORCA_REPLAY_SEED=0 ORCA_REPLAY_CPU=4 scripts/orca-seeded-parity.sh --debug 4 --slice 0 --outputdir /tmp/ares-o8-current-main-cbee/native/output /tmp/ares-o8-current-main-cbee/input.3mf"
-  },
   "related_stock_cases": {
     "status": "UB_ADJACENT",
     "parity_pass": false,
     "upstream_boundary": "same O8-X2D-SCALAR unchecked CLI selector indexing at OrcaSlicer.cpp:3462",
     "matrix_snapshot": "5cde90c23 single-attempt",
-    "ares_main": "879163bac",
     "ares_binary_sha256": "bc077cd818fd7b8c4619a74c9795acfe72ae492328c36c07f512d59ab86c4604",
     "shape_difference": "one colour/palette; four/five nozzles; singleton extruder_type and nozzle_volume_type, versus original two-colour X2D non-diagonal dependencies",
-    "coordinator_disposition": "Ares exit0/G-code accepted; no new scalar rejection; retain upstream-bug classification and parity_pass=false",
-    "evidence": "/tmp/worker3-o8-stock-ares-879/report.json",
+    "disposition": "Ares exit0/G-code accepted; no new scalar rejection; retain upstream-bug classification and parity_pass=false",
     "native_debug": {
       "derivation": "72d4hac8qmg5p9m22v2kifbp1hkxjk63",
       "source": "/nix/store/g3wj93lyhjsvc32fmgvw0cdbd6191q55-orca-slicer-2.4.2-seed-replay-source",
       "raw_binary_sha256": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
       "build_id": "bdbbf4336095c2ce6283fc5441e1e56fbf595b99",
       "seed": 0,
-      "cpu": 3,
       "invocations_per_input": 1,
       "observed_sigsegv": 1,
       "observed_normal_exits": 12,
-      "crash_stack": "/tmp/worker3-native-crash-triage/4/gdb.log",
       "frames": [
         "PrintConfig.cpp:604 get_extruder_variant_string: invalid enum0xe63fab60",
         "PrintConfig.cpp:9034 get_index_for_extruder: extruder_id3",
@@ -174,7 +152,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/4861d353df6973ad4cc75eae64a0de6b21b81b7b3ae093fe87034eb513e6ad44/bf72fc390f686faf-61a4b9a3d8681a10.3mf",
           "sha256": "f0abc1f55d5fdfc86390b29c3609d5eb7fc97f34f0227b0b850456a4c93dfd29",
           "unchanged": true
         },
@@ -187,8 +164,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/3/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/0.gcode",
           "nativeRawSha256": "f3347853e4b103faea41c64632e9646d93163b7a6edbedb6d73d3c83c8cb20a4",
           "aresRawSha256": "e3fca07b1ba1f17b3cd384f4d09d7506fefff775659d53b2902031739e9ad6e0",
           "nativeNormalizedSha256": "5b7922296774877f4be0f22b3d5953d466a0a862a01c5aaeb3c4920fb82c08ca",
@@ -204,7 +179,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/9d112324640a134811c7449ea0b9dd94ad05ea4feff9082d9feb1f2fbeeae621/0e21357eb7abccca-500fefd5a6d0612f.3mf",
           "sha256": "7e45e278971e8212d10edc897966b499aa9b7bd13ee08e73005b203f14906cef",
           "unchanged": true
         },
@@ -224,7 +198,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/80b50a4c783e9ac5cf1eabdcb7117648c2088f19347391423dfaf25f3cc35ca6/ef356eaadc8c2eea-e93e9ac970aaecbb.3mf",
           "sha256": "ff3fa85a191c1ad8919e605f351ad46298d0254cecb15d1565691fed3926ba97",
           "unchanged": true
         },
@@ -237,8 +210,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/5/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/2.gcode",
           "nativeRawSha256": "25ef51dd98e8c60eab6af5e55643e0aaca27fb6d1509ce81aa6c98fe49fe0f1f",
           "aresRawSha256": "e1e81f82876957c4f0b22b5560a8e640ac961e6d58694859bab9f5f752a2a2e1",
           "nativeNormalizedSha256": "4589dee2619f3b66ff3ef6813b12eb0f11ea4da204fcabe5c02319ddd7a7d3d0",
@@ -254,7 +225,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/0c474b6d3883d386000d2ebfc5220f2d88a37e64a7f879669afd7a59feda0b13/45e268104b0317d7-20c5a23305fd6220.3mf",
           "sha256": "7fac65b32736e2dc8ce6bdcac21f59b33b429f4921976309810233549b015464",
           "unchanged": true
         },
@@ -267,8 +237,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/6/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/3.gcode",
           "nativeRawSha256": "ba9a025175bc770605ee426d00441c6aad6c657dcce1cca8396c51b9be6adb3e",
           "aresRawSha256": "ad12ca64d6d5cf4e79b666cbe4d3b6039b8e390a44c5b4e9f7ed2d634e495da0",
           "nativeNormalizedSha256": "1ee1303fd6f0ac262670e96e62e548c5af823f8c9e7935dbb67ba8f19db48ed8",
@@ -284,7 +252,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/2e4ab81d525526d914f7a4d59bc8229fdb820162f1e7e3599b9e82f6df501e1b/ba2e8803da4356e8-724c0a003cb8e0ed.3mf",
           "sha256": "351b1bca871b4163ffb28a85cacc4b3d8504ad5d428374594285ab2d1e306274",
           "unchanged": true
         },
@@ -297,8 +264,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/7/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/4.gcode",
           "nativeRawSha256": "5fe66f563679a472ba571a26819d897d391ee241653ef073d9cdcfe40cbc8fc2",
           "aresRawSha256": "3fde5f10291b31331610a08d1ffac13591b5601e2b1cb33014c5fb3dad5a5d4f",
           "nativeNormalizedSha256": "bcc72159a8472ff5a747820368e91e68b5a67b6690f871b8378f00a346c50754",
@@ -314,7 +279,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/b984d1b8d08fd63aea485606d04d21548911226236da6402c65badd2bf8aaf3c/fd4aeb40cf7c3cc1-710ed2789863a0a1.3mf",
           "sha256": "852d96e3e09e554976f70612c74f2125de41fa832bbe06acaa6e522ca9812a01",
           "unchanged": true
         },
@@ -327,8 +291,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/8/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/5.gcode",
           "nativeRawSha256": "83f6801937e899e4ea3f10770c2508d7ef88574db04db1017bc48904921907c3",
           "aresRawSha256": "351444db3fe6f15680d4a7db6e103b0a1c7b424842476044ab4efeb5729ff6bd",
           "nativeNormalizedSha256": "d16d49d717461065bff937fcfadedbfa5eb7d871fd9eebdeda3c477b561377ee",
@@ -344,7 +306,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/436b6b2be0150cac6fe25e9dbfd4f3b39d5901d3e2857ff8697df9b179c38573/87bb140c7c920776-8126dec3bddbe1a6.3mf",
           "sha256": "b7fdb944d4de1a84e35afa2275600a96044be4b44e170e3ecc93743076e49293",
           "unchanged": true
         },
@@ -357,8 +318,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/9/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/6.gcode",
           "nativeRawSha256": "73a2b403046afe36c1b4c3da559de75c89cd3e37d11ef7e1762a1c437e13fe68",
           "aresRawSha256": "e4152bc2279052dea26e428ba5d8300a07a30c6fdba0f2d0b8cd8dd6c199a88e",
           "nativeNormalizedSha256": "a93b7bf55120a85525087c7c22bf03e2246d38518d9cf8515908b0f3e5e855fd",
@@ -374,7 +333,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/c47a686a46dabc4c1cd0994f7fc2d85943b088b36c951e51a13958494a7e53ad/73c003ca694aa1f1-b5ad042d06c181fb.3mf",
           "sha256": "36e22c4901a17bf972ce1c2ec754bb382c4a76f33a831c60322e9b184eda0186",
           "unchanged": true
         },
@@ -387,8 +345,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/10/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/7.gcode",
           "nativeRawSha256": "3bccf13efbda33d0116223d73add0b84366ecba8b9d85ee8ff05c6c03e97b519",
           "aresRawSha256": "52c327de5ddec1c7bbee8cb9b08a2e619254fba329fd8e75785136773ab07943",
           "nativeNormalizedSha256": "225942d85f0e8ba575d99974817ea439a67f96d7085cdab7c69c45d4b328d93e",
@@ -404,7 +360,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/08ad7b48f9b85a7fd4a252c8d97c20247b7858a3fb63c8999b4f54aa0288c8af/d4030518863e1444-8a054a7f7e680877.3mf",
           "sha256": "4aee6ff5ff348c69edd006c9555b21014fe54d8a77be167058eb007794ed79ed",
           "unchanged": true
         },
@@ -417,8 +372,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/11/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/8.gcode",
           "nativeRawSha256": "b2922de63f058bfd908a768e7c25f2df4d4da048251cd3800800be696a8e9fcb",
           "aresRawSha256": "a7fdefcae1aaa60bd7c6b27d45718d9efec9eea4ef10bef15f4d685319c6af16",
           "nativeNormalizedSha256": "ad3ae2d451962af0e6ae83f14d0c97d6e860b3843022324110f20c68aba02076",
@@ -434,7 +387,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/d40a1207a3b80fdd056e47401deadc26b8b4a70d390e827ac8814f32c1b438b6/4fae5fe6697ed994-fdbee19ee4910761.3mf",
           "sha256": "e4e0a2e859808459da0b739650997064d6e515e862e9de9c46745694ea1efe4f",
           "unchanged": true
         },
@@ -447,8 +399,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/12/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/9.gcode",
           "nativeRawSha256": "1f5cf7dfc9b4a628019879aef13d13eef75bcaf98a488907c469ac4480dc32ff",
           "aresRawSha256": "522c13d1ff8377db1bafbc4bf223af14fd806c09af2a82ff5f0c5ed974576c2f",
           "nativeNormalizedSha256": "9f8b447d2d821f69ff2d332be09c3b03c34d2fea2585a0f45f7e11ba39f413d5",
@@ -464,7 +414,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/c2570cc8cd4c8c26d85b6a1e62aa0b7deb941ff2942767f76de7ddfadfb82210/690f0a3d6dc781e7-81062b4d4b01b198.3mf",
           "sha256": "bfce4c0da4dfd618ebd595331c07919fd2dfc267f5b6995b838587daa71685bd",
           "unchanged": true
         },
@@ -477,8 +426,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/13/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/10.gcode",
           "nativeRawSha256": "3fa9c70bc891de24ec185b66d2daab83b2f37b6bb5d3632c63c1a98b7f049496",
           "aresRawSha256": "a4cd5fdcab15851972d36b23e73c6e93a77d0db3213d6a314d9a73262009e07f",
           "nativeNormalizedSha256": "2dad2b59b0da5db8ecae39b5c4991d7a05b31f579e64489bf243232082578568",
@@ -494,7 +441,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/d88d02da43457296a1396c889a629d473e51ccad7c1f0d4ea41520d1e779b61d/6d4fdf1365cbea36-9fd0426c27c16bda.3mf",
           "sha256": "053ecd7fc9eb02285916abf70d86c2fa0cc0f54610f7d0164406793eac50d330",
           "unchanged": true
         },
@@ -507,8 +453,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/14/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/11.gcode",
           "nativeRawSha256": "61d22fbcfd46294d277f51034fbcb0a5837b8aee35866ed191771f251ed9ca70",
           "aresRawSha256": "b614ced0637f20e0735c447b98f4836f5977a671001664def6c0a141c9c40a32",
           "nativeNormalizedSha256": "cbe08f9e6e49dfcb5e155ef87343ccf526ccb6317ae5174d90fe8724a132763e",
@@ -524,7 +468,6 @@
         "status": "UB_ADJACENT",
         "parity_pass": false,
         "input": {
-          "path": "/tmp/ares-matrix-main-5cde90c23-single-attempt/native-cache/native-cache-v2/b96a05e165f29d60e61907a86d0536210a79244fa09e624732eaa190897ca466/export/b323fe9ed640e12add7092fb7072a6f733f72301636386c91c3c9229c17c39d4/4d7c26688bf8d66a-95c44d0b386be684.3mf",
           "sha256": "e6c6240a3af6ddbe02ca023340f244b52a3a16900673af5a5054e051f6cef915",
           "unchanged": true
         },
@@ -537,8 +480,6 @@
         "comparison": {
           "status": "EQUAL_GENERATOR_ONLY",
           "parity_pass": false,
-          "nativePath": "/tmp/worker3-native-crash-triage/15/native-output/plate_1.gcode",
-          "aresPath": "/tmp/worker3-o8-stock-ares-879/12.gcode",
           "nativeRawSha256": "39c05be8e5f415e292b4ad214f120d022fbbfad9df62917722bda08fa31ebdd5",
           "aresRawSha256": "e567d334138763cbb964d9a1ae6fa8830a846ed2b9c832b0b017d20cf619b690",
           "nativeNormalizedSha256": "54da40cdb16151efe8e98fbc20ed5568796ff501b1e2a43448de2d3d77a46c68",
@@ -551,5 +492,5 @@
       }
     ]
   },
-  "resolution": "Approved safe-Rust UB disposition verified on main; not Native numerical parity. Preserve original RED/history. No production correction required."
+  "resolution": "Safe-Rust UB disposition verified; not Native numerical parity. Preserve original RED/history. No production correction required."
 }

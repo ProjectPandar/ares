@@ -13,16 +13,14 @@ There may be repeated records from constructor and sort/build passes;
 retain their order and do not conflate them.
 
 ```sh
-nix-build tools/orca-probes/tiq2_order.nix --no-out-link \
-  --cores 8 --max-jobs 1 > /tmp/tiq2-probe-store-path
-probe=$(tail -n 1 /tmp/tiq2-probe-store-path)
-mkdir -p /tmp/tiq2-order-probe
+out=$(mktemp -d)
+probe=$(nix-build tools/orca-probes/tiq2_order.nix --no-out-link | tail -n 1)
 sha256sum tests/parity/validation/tiq2-type2-enabled.3mf "$probe/bin/orca-slicer"
 ORCA_REPLAY_BIN="$probe/bin/orca-slicer" ORCA_REPLAY_SEED=0 \
   ORCA_REPLAY_CPU="$(awk '/Cpus_allowed_list/{split($2,a,/[-,]/);print a[1]}' /proc/self/status)" \
-  ORCA_DUMP_TIQ2_ORDER=/tmp/tiq2-order-probe/native-order.txt \
+  ORCA_DUMP_TIQ2_ORDER="$out/native-order.txt" \
   scripts/orca-seeded-parity.sh --slice 0 \
-  --outputdir /tmp/tiq2-order-probe tests/parity/validation/tiq2-type2-enabled.3mf
+  --outputdir "$out" tests/parity/validation/tiq2-type2-enabled.3mf
 ```
 
 Expected input SHA:
@@ -35,10 +33,9 @@ byte equality before accepting any state record as a core-test expectation.
 
 Validated seed-replay probe
 `/nix/store/5v0gz2rkj0pb5yifwdvcjnilhg3azabl-orca-slicer-seed-replay-2.4.2`
-equals oracle `1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv` at seed=0/CPU=0:
+equals oracle `1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv` at seed=0 on a single CPU:
 816585 normalized bytes, SHA256
 `8d6aec0a422bb8e7bf8de622ec2630a5e46f14aaf8d9ddbe0a3486ad0b18dda4`.
-Receipt: `/tmp/tiq2-seeded-probe-20261007T210508Z/whole-file-oracle-comparison.json`.
 The second normalization call enters objects=1/used=1/enable=1 and exits
 enable=0/changed=enable_prime_tower; the first objects=0/used=0 call preserves
 enable=1. The Print gate then records enable=0/has_tower=0. The footer still

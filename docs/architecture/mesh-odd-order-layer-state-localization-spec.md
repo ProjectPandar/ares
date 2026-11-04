@@ -1,10 +1,8 @@
 # SPEC: localize odd-order mesh connectivity to layer-geometry divergence
 
-Status: docs-only SPEC-REVIEW-REQUEST after first-layer SPEC7975ff214 STOP.
-Base main104d8497097dc7239ad63f7a69f3b418b699b3e8; approved mesh-edge
-pairing is merged. No production or test assertion change accompanies this
-proposal. First-layer predicate attribution is recorded separately in
-first-layer-collection-state-preflight-stop.md (commit62f3f5527).
+Mesh-edge pairing is already ported. No production or test assertion change
+accompanies this proposal. First-layer predicate attribution is recorded
+separately in first-layer-collection-state-preflight-stop.md.
 
 ## Problem and proven limit
 
@@ -41,7 +39,7 @@ face-order sensitivity alone.
 4. Layer.hpp:101/207/295 and GCode.cpp:1771-1778 are downstream observation
    boundaries. They remain unchanged. If loops already match but collection
    generation differs later, STOP and identify the actual downstream owner;
-   this SPEC does not authorize guessing a PerimeterGenerator patch.
+   this SPEC does not permit guessing a PerimeterGenerator patch.
 
 ## Rust destination and existing scaffold
 
@@ -53,11 +51,11 @@ raw_intersections.rs, chained_intersections.rs, looped_intersections.rs as
 transport shells. These represent the cited upstream mesh/line/loop data,
 not an independent Ares slicing pipeline.
 
-This request authorizes a public RED plus read-only localization ONLY.
+This SPEC covers a public RED plus read-only localization ONLY.
 It does not yet name a production fix because the first divergent seam is
 unproven. After localization, propose a narrow source-cited GREEN addendum
 naming the exact owner/function and affected Rust files. Until that addendum
-is approved, sorting, pairing, interpolation, chaining and transport are
+exists, sorting, pairing, interpolation, chaining and transport are
 all unchanged. Keep the already merged opposite-first pairing semantics.
 
 ## Hypotheses and discriminating evidence
@@ -82,7 +80,7 @@ Stop at the earliest proven divergent seam. Read all owning regions/volumes
 and retain source identities; no regions[0], normalization of ordering,
 empty-path substitution or fixture-specific filtering.
 
-## Native admission and public RED plan after approval
+## Native admission and public RED plan
 
 1. Use the exact odd-rotated input as a separately committed rejection RED:
    both Native modes must produce-100/Errors/no G-code; current public Ares
@@ -93,19 +91,19 @@ empty-path substitution or fixture-specific filtering.
    Native0 control and all13 admitted mesh-edge strict tests. Do not change
    the existing diagnostic collector to count this rejection as output parity.
    Retire an existing assertion only after a separate exact request.
-3. In CPU12 read-only preflight, capture the actual mesh/planes, face-edge
+3. In a read-only preflight, capture the actual mesh/planes, face-edge
    IDs, raw ordered lines, connectivity polygons/open polylines, exact-pass
    and gap-pass results for these same inputs. Work forward only until the
    earliest divergence; no independent C++ replay or code probes.
 4. Compare actual producers. If std::sort is implicated, prove the relevant
    implementation/source identity rather than relying on ELF compiler
    comments or a convenient local header. A generic new sorting module or
-   assumed stable tie policy is not authorized by this SPEC; unresolved
+   assumed stable tie policy is not permitted by this SPEC; unresolved
    implementation identity requires another STOP/addendum.
-5. Report localized source witness and request the small GREEN addendum.
-   Subsequent approved GREEN must naturally yield the correct first-layer
+5. Report the localized source witness in a small GREEN addendum.
+   The subsequent GREEN must naturally yield the correct first-layer
    state, future_gap=false, both-mode13/13 admitted raw-output controls and
-   strict/fmt/wasm32, followed by review and allocated full.
+   strict/fmt/wasm32, followed by a full run.
 
 ## Included and deferred behavior
 
@@ -119,18 +117,8 @@ import/load/selection API changes, CLI exit-code redesign, broader stochastic
 oracle behavior or edits to unrelated print features. No feature flags or
 legacy fallbacks. Tier1 platforms remain required for any later Rust rewrite.
 
-## Durable evidence and execution rules
+## Execution rules
 
-The preflight STOP document commits first-layer counts, outcomes, input and
-output hashes, explains each void run, and references a144388-byte archive
-outside Git at ${EVIDENCE_ROOT}/worker3/
-first-layer-state-main104d-9y7stqky.tar.gz, SHA256
-05d72fbd8d0f9da1fc74a2804056308316e1d0cf4a479eace3c202c8c5bbfc3b.
-Native output stays outside Git; document new findings so /tmp cleanup cannot
-remove the only record. Actual debugger exit is not a parity result.
-
-All live runs: CPU12 outer taskset, jobs1/threads2 directed, fresh Native
-cache/artifact roots, START/END inbox. No run during exclusive freeze;
-terminate the whole driver/debugger/Native tree when instructed. No full or
-workspace without allocation, no push, no implementation before addendum
-approval. The submitted SPEC is docs-only.
+Native output is not committed. Actual debugger exit is not a parity result.
+All live runs use fresh Native cache/artifact roots. No implementation before
+the GREEN addendum.

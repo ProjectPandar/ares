@@ -1,8 +1,5 @@
 # TiQ2: rewrite the `GCode::extrude_loop` small-perimeter speed boundary
 
-Status: diagnosis/spec for coordinator review only. No approved RED/GREEN or
-production implementation. Local diagnostic probes have been removed, not
-committed. Implementation waits for worker2 integration and refreshed main.
 
 ## Owning upstream boundary and architectural decisions
 
@@ -42,26 +39,12 @@ Non-negotiable decisions:
 
 ## Fresh diagnostic evidence
 
-Evidence root: `${TMP_ROOT}/ares-tiq2-line1265/`.
-Local branch `pi/tiq2-line1265-diagnosis` started at worker2's fetched head
-`693cc5e93461f31f49a196f76207cc4dc50b9f26`; worker2's worktree was read-only.
-
-Immutable input copied from
-`/tmp/tiq2-phase-support-aaa-seeded/case-5YcqzB/input.3mf`:
+Immutable input SHA256:
 `0435346ed81fff32acdae7a3a3f2c9e880f4f1efe37d99d3427833836b901942`.
 
-One fresh Ares execution and one fresh seeded Native execution, CPU0/seed0,
-explicit executable/resources identities, no cache, no retry; 16-thread
-limits. One shared 300-second whole-case deadline with owned-process cleanup.
-Both exit0; elapsed2.297595594s; zero TIMEOUT. This is diagnosis, not RED/GREEN.
-
-Bindings/captures:
-- `fresh/identity.json`, `fresh/result.json`, per-command JSON and raw channels;
-- `fresh/audit.json`, `fresh/resources-identity.json`;
-- `diagnostic-probes.diff`, `diagnostic-probes-final.diff`;
-- `fresh/ares-stderr.bin`, `cooling-pre-0.gcode`, `cooling-post-0.gcode`;
-- `fresh/core.json.gcode`, `fresh/native/plate_1.gcode`;
-- `run_fresh.py`, `audit_fresh.cjs`, build/Clippy/fmt/resource-audit evidence.
+One fresh Ares execution and one fresh seeded Native execution, seed0,
+explicit executable/resources identities, no cache, no retry. This is
+diagnosis, not RED/GREEN.
 
 The historical line1265 symptom is located by WIDTH0.38292 and its first move
 `X169.811 Y169.854`, not a hard-coded line number (fresh Ares speed line1264).
@@ -139,7 +122,7 @@ lengths; its constant branch uses raw scaled segment lengths
 `motion/path/variable.rs` and `constant.rs`. Incorrect suppression of the
 variable branch therefore changes the length basis despite identical printed
 XYZ. Do not patch E precision, geometry, flow ratios or formatting to hide it.
-Verify the E consequence through the restored branch after approval.
+Verify the E consequence through the restored branch.
 
 Both retraction/wipe totals are exactly4mm in1e-5 units:
 Native `390015+2237+3874+3874=400000`;
@@ -150,7 +133,7 @@ last-feedrate redistribution; not evidence of a separate retract-total bug.
 The complete-byte fresh result remains **DIVERGENT**. Excluding only the
 generated-by identity line, the first difference is earlier, byte11101,
 normalized line439: Native travel X169.4 versus Ares X169.344. Preserve this
-raw evidence and leave the travel boundary with worker2. No reference retry,
+raw evidence and leave the travel boundary to its own slice. No reference retry,
 status promotion, comparator relaxation or automatic nondeterminism exception.
 M73 and the entire footer remain authoritative.
 
@@ -195,14 +178,13 @@ line439 travel, loop ordering, geometry or E calculation to fix this slice.
 
 Included: loop-only applicability, whole-loop length, default versus explicit
 speed, eligible perimeter roles, zero/percentage resolution and unchanged
-later speed stages. Deferred: worker2 phase/travel work, unrelated geometry,
+later speed stages. Deferred: phase/travel work, unrelated geometry,
 seam/curl algorithm changes, independent E numerical patches, CLI exit
 families, matrix promotion, other unproven overhang discrepancies.
 
-## RED/GREEN and exit criteria after approval
+## RED/GREEN and exit criteria
 
-Wait for worker2 integration; fetch/rebase onto latest main (coordinator has
-announced circle-volume main3b6e0ebdd). Write RED before implementation.
+Write RED before implementation.
 
 1. Lock the unchanged TiQ2 input and fresh producer/input/output receipt
    identities. Demonstrate multipath wrongly chooses36 and the target
@@ -211,15 +193,13 @@ announced circle-volume main3b6e0ebdd). Write RED before implementation.
    long multipath loop with a short fragment; explicit speed; bridge-role
    exclusion; threshold endpoints; zero and percentage speed. No new shallow
    unit tests after implementation, fixture tuning or ignored assertions.
-3. Implement only the approved caller-boundary rewrite. Verify actual Native
+3. Implement only the caller-boundary rewrite. Verify actual Native
    target45/76 and E/wipe output via full-byte evidence, not speed-only PASS.
    Keep any independent discrepancy open rather than widening the fix.
-4. Fresh same-round seeded/official gates on the rebased main with explicit
-   identities/caches/CPU/seed, runs1 and deadlines; compare exact failure names
-   and unchanged streams. Any travel nondeterminism ruling requires separate
-   coordinator approval and exact evidence, not count equality.
+4. Fresh same-round seeded/official gates with explicit
+   identities/caches/seed, runs1 and deadlines; compare exact failure names
+   and unchanged streams. Any travel nondeterminism classification requires
+   exact evidence, not count equality.
 5. Workspace nextest, fmt, strict Clippy and Tier1/WASM gates; no lint waiver.
-   Exact-hash review before any nonforce FF push and independent confirmation.
 
-No RED/GREEN, implementation commit or push is authorized by this diagnosis
-alone. Review this spec first; diagnostic probes remain external/local-only.
+Diagnostic probes remain external and are not committed.

@@ -1,6 +1,6 @@
 # ARD: Brim.cpp OuterOnly contour and hole-mask boundary
 
-Status: SPEC a68680255 approved by Claude; separate Native RED precedes code.
+Status: accepted. SPEC a68680255; separate Native RED precedes code.
 
 ## Source and destination
 
@@ -25,10 +25,9 @@ reuse of current reversed-hole, bed clipping, contact and path producers.
    own other fragments, and shared path emission; no G-code postprocessing.
 5. One object/instance/volume/group/tool with non-nested footprint islands;
    support/EFC/painting/auto modes, cross-object policy and public rectangular
-   adapter/assertion retirement require separate approved scopes.
-6. Admitted Native/API/CLI fixtures+RED are a separate commit reported before
+   adapter/assertion retirement require separate scopes.
+6. Admitted Native/API/CLI fixtures+RED are a separate commit before
    implementation. Existing assertions/full comparator stay intact. Core
    stays platform-neutral; Native process/artifact handling stays in CLI tests.
-7. Approval of this SPEC alone grants no workspace/full allocation or push.
 
 [SPEC, source citations, failure inventory and exits](outer-only-brim-hole-mask-spec.md).

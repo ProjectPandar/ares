@@ -1,7 +1,6 @@
 # GCodeProcessor role filament usage: source boundary and RED design
 
-Status: SPEC REVIEW REQUEST; no production implementation or RED run yet.
-Audited main: `96577fff7` (2026-10-08). Upstream source boundary:
+Upstream source boundary:
 `OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.{hpp,cpp}` and the data
 consumption in `OrcaSlicer/src/slic3r/GUI/GCodeViewer.cpp`.
 
@@ -125,7 +124,7 @@ JSON and logs. The map snapshot must come from Native memory, not a separate
 Rust/Python implementation of the formula. Do not mutate Native state or use
 the corrected-options diagnostic binary as a replacement for raw Native.
 If reliable extraction cannot be established, report an oracle blocker and
-stop before production changes; no diagnostic Native rebuild is authorized.
+stop before production changes; no diagnostic Native rebuild is allowed.
 
 Proposed fixtures and failure signals (RED tests precede implementation):
 
@@ -155,12 +154,11 @@ result equal. Add WASM projection and browser FeatureType assertions against
 the same Native-derived usage records, including visibility toggles and metric
 display, in the RED before their production changes.
 
-## Acceptance and review sequence
+## Acceptance sequence
 
-After spec approval: establish the live Native map extraction, freeze fixtures
-and commit RED alone; notify its hash. Then implement the narrowly scoped GREEN.
-Run the focused Native result comparisons and existing color-change coverage,
-fresh paired seeded/official controls (candidate failures a subset of base,
-all transitions explained), workspace nextest, strict clippy, fmt and wasm32
-checks. Browser checks respect the coordinator's browser window and workload
-limits. Retain repeatable artifacts and request review before any push.
+Establish the live Native map extraction, freeze fixtures and commit RED
+alone. Then implement the narrowly scoped GREEN. Run the focused Native result
+comparisons and existing color-change coverage, paired seeded/official
+controls (candidate failures a subset of base, all transitions explained),
+workspace nextest, strict clippy, fmt and wasm32 checks. Retain repeatable
+artifacts.

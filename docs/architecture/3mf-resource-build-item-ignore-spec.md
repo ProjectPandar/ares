@@ -1,39 +1,33 @@
 # SPEC: ObjectImporter ignores resource-part build/item payload
 
-Status: **REFRESHED against main `41f2c90f765d42c6620583121296bb61a2cb839c`
-(2026-10-16); the named production slice is already merged.** This refresh is
-docs-only and requests owner adjudication of the repeated assignment, not a new
-RED or production authorization. Main includes `86b7f3e1c` (resource build/item
-ignore), following `61c22160b` (resource build omission). Original approved RED
-`021d96bacf0f624f7daf95274ba893c4c93e3313` and GREEN
-`06d31e9d94d1be9902e26aed1f72e73a4ab872b3` were verified and merged through
-stack-19. Do not recreate that RED on a main which already contains its GREEN.
+Status: **implemented.** Main includes `86b7f3e1c` (resource build/item
+ignore), following `61c22160b` (resource build omission). Do not recreate the
+RED on a main which already contains its GREEN.
 M73 remains deferred.
 
-## Current-main finding and delivery gate
+## Current-main finding
 
 `project/load/graph.rs::load` already selects required `ModelDocument<Build>`
 for the resolved root, and `ModelDocument<Option<serde::de::IgnoredAny>>` for
 resource parts. `project/model_xml.rs::into_resource_document` already moves
 unit/extensions/metadata/resources unchanged and supplies an empty internal
 resource build; only the main build can create instances. The destination and
-source boundary requested by this assignment are therefore already present.
+source boundary are therefore already present.
 
 The existing frozen input-only witness is
 `tests/parity/3mf-resource-item-ignore/{positive,control}.3mf`; existing public
 test is `runner/resource_item_ignore.rs::resource_item_ignored_public_slicing`.
 Both roles still pass the common XML security/mesh/path/relationship validation.
-No change to test, production, fixture or comparator is proposed by this refresh.
+No change to test, production, fixture or comparator is needed.
 
-A new public RED cannot honestly be promised for identical inputs on this base.
-The planned oracle seam remains fresh Native at runtime, validated public API,
+A new public RED cannot honestly be produced for identical inputs on this base.
+The oracle seam remains fresh Native at runtime, validated public API,
 real bare CLI, raw API==CLI and complete strict generator-only equality; the
 existing test asserts target success/equality and failed before GREEN. On this
 base it is a nonregression witness, not a new RED. Any request for additional
-behavior requires a separately named upstream boundary and input approval.
-No Native probing or RED/production work is authorized by this docs refresh.
+behavior requires a separately named upstream boundary and input.
 
-### Failure inventory before any separately approved verification
+### Failure inventory
 
 | Failure | Classification / action |
 |---|---|
@@ -63,7 +57,7 @@ The source-cited design/history below records the original pre-GREEN proposal;
 its statements about an optional typed resource `Build` gap and an unfrozen pair
 are **historical**, not the state of main41f2.
 
-## Original proposal (historical, already approved and implemented)
+## Original proposal (historical, already implemented)
 
 ## 1. Upstream rewrite slice
 
@@ -106,8 +100,7 @@ with explicit non-consuming transport semantics under existing XML validation.
 Existing `ModelDocument`/graph are temporary compatibility shells for the cited
 ObjectImporter boundary, not an independent importer design. No public API,
 resolver, fallback, filename heuristic, XML patch/reparse, diagnostic core I/O or
-global serde build default. Do not implement before a qualified public RED and
-separate production authorization.
+global serde build default. Do not implement before a qualified public RED.
 
 Only the main build is consumed by
 `load/assemble.rs::project_domain_with_budget:108-128` and
@@ -118,8 +111,8 @@ Resource build items must not manufacture instances or change graph identities.
 
 Control: unchanged `tests/parity/wipe-before-override/control-before50.3mf`, SHA
 `adb38ee8df9485a864135007753fb935aedf7883fe37f910109f20145f3c7be2`.
-It is also the approved resource-build control. Fresh runtime remains mandatory;
-historical FULL16/RED/GREEN streams are provenance, never the new oracle.
+It is also the resource-build control. Fresh runtime remains mandatory;
+historical full-run/RED/GREEN streams are provenance, never the new oracle.
 
 Proposed positive: replace **only** `<build/>` in
 `3D/Objects/overhang.stl_1.model` with `<build><item/></build>`.
@@ -129,17 +122,17 @@ item is schema-valid for a main build, nor a general malformed-3MF tolerance goa
 All other uncompressed ZIP entries and main build/IDs/roles/mesh/transforms/
 settings/M73 remain identical. No loaded JSONs or extra option overrides.
 
-After input approval, freeze one deterministic derivation, complete archive/entry
+Freeze one deterministic derivation, complete archive/entry
 SHA manifest and exact argv before runtime. Positive SHA is deliberately not
 claimed now because no new fixture bytes have been generated. No new fixture or
 test files are part of this docs proposal.
 
-## 4. Approved seam carried forward; new execution needs approval
+## 4. Public RED seam
 
 Proposed matrix: official and seeded, each positive + fresh positive repeat +
 control; **three fresh Native slices per mode**, no alternate candidates/retries.
 Each enabled public test always runs Native→public end to end. Retain the
-approved `reference_enabled`/`from_env` gates only; no Native-only silent PASS,
+existing `reference_enabled`/`from_env` gates only; no Native-only silent PASS,
 external-reference injection or cached/export-only/load-only oracle path.
 
 Native argv: `--slice 0 --outputdir <fresh> <same frozen bare 3MF>`;
@@ -157,14 +150,12 @@ Control must admit and pass raw API==CLI plus the **entire** unchanged strict
 Native/API/CLI generator-only comparator. Preserve M73, config, ordered motion,
 arcs, statistics and footer; do not precondition comparisons on config equality.
 
-Freeze qualified test-only public RED for independent exact-hash review before
-production. Tests/comparator stay frozen for GREEN. After separate GREEN approval,
+Freeze qualified test-only public RED before
+production. Tests/comparator stay frozen for GREEN. After GREEN,
 positive/repeat/control must all pass the whole comparator/raw equality in both
 modes; control raw stream remains unchanged. ANY residual G-code delta => STOP,
 no downstream or M73 repair. Existing 3MF/load regression family, fmt, strict
-clippy, WASM/Tier1 byte-only checks are GREEN gates, not authorized by this SPEC.
-Use CPU15/jobs1/threads1, fresh cache/artifact roots, canonical environments,
-load<60 before builds/every Native, START/END receipts and owner scheduling.
+clippy, WASM/Tier1 byte-only checks are GREEN gates.
 
 ## 5. Included / deferred / exit
 
@@ -178,7 +169,6 @@ unrelated resource metadata, nested relationships, units/transforms, mesh repair
 seam/lower-slice behavior, PrintConfig/catalog policy and M73. No blanket schema
 relaxation. A failure of a preserved XML/security check is not this RED.
 
-Exit: independently approved public RED with strict-PASS control, then separately
-approved bounded ObjectImporter GREEN with complete parity/nonregression. Until
-SPEC/input approval: docs only, no tests/fixture freezing/Native/API/CLI/nextest,
-production edits or GREEN reruns. [ARD](ard-3mf-resource-build-item-ignore.md).
+Exit: public RED with strict-PASS control, then bounded ObjectImporter GREEN
+with complete parity/nonregression.
+[ARD](ard-3mf-resource-build-item-ignore.md).

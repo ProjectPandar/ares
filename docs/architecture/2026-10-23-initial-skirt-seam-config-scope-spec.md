@@ -4,7 +4,7 @@
 
 Port only the `seam_gap` field of OrcaSlicer's current `GCode::m_config` state
 (upstream revision `8500fcdccaa10b5099ac20d252af3a7c560046f1`). This is not a
-new skirt policy or a generic m_config framework. Original approved RED41423c412
+new skirt policy or a generic m_config framework. Original RED41423c412
 and its two input SHAs remain frozen. Its fixture is **per-object skirt**, not
 combined: the original SPEC/discovery description of the envelope was wrong.
 The first observed skirt residual is still valid, but the owning call path is
@@ -46,8 +46,6 @@ first closed-loop endpoint, NOT a later skirt. Existing attempt fixes all eight
 skirt loop endpoints in that fixture but leaves brim reading eager options50%.
 This does not prove that all later skirts should use defaults: the previous
 instance's last region in this fixture happens to make those endpoints match.
-Diagnosis retained externally in
-`worker2-skirt-seam-state-diagnosis-20261023T043438/DIAGNOSIS-REVIEW-REQUEST.md`.
 
 ## Rust destination and narrow scope
 
@@ -65,9 +63,9 @@ A later GREEN may model ONLY current seam_gap, preserving the above apply
 sequence and skirt/brim reads. Do not create a general mutable m_config engine,
 change other motion options, wall seam geometry, scarf/seam-slope, travel, cooling,
 M73/time, tool-changing, validation, geometry clipping or tests. Audit exact
-existing region-application carriers before implementation and report required
+existing region-application carriers before implementation and identify required
 wiring first. Do not add default-vs-region guards or compatibility fallbacks.
-The current layer-index default-gap patch6e1adca05 is unapproved and must be
+The current layer-index default-gap patch6e1adca05 is rejected and must be
 replaced, not retained as a parallel policy.
 
 ## Frozen original RED
@@ -83,7 +81,7 @@ Do not edit original tests, fixtures, SHA assertions, helper or callback.
 
 ## Additional state-vs-default witness and RED gate
 
-Coordinator authorized this docs revision followed by an ADDITIONAL test-only
+This docs revision is followed by an ADDITIONAL test-only
 RED on top of attempted6e1adca05. Preserve the existing chain explicitly; that
 attempt is not a successful GREEN. Derive two new GUI inputs from the same
 far-uncombined seed, retaining geometry, transforms and placement. Keep object2
@@ -99,11 +97,9 @@ one new target and one new control; no copied harness/extra callbacks/guards/
 expected-error assertions or masks. Register as a child of an existing module;
 DO NOT move/include the root test registry. Keep all files<=400LOC.
 
-Exact new RED tip: CPU13, build jobs1, test threads1, PIN_OFFSET13 and replayCPU13;
-both modes serial with independent fresh empty caches. Require Native double
+On the new RED tip, both modes run serially with independent fresh empty caches. Require Native double
 replay success, one genuine strict target failure and one complete control pass,
 successful public API/actual CLI generation and raw API/CLI equality. Compare
 complete ordered generator-line-only streams; no M73/time/travel/metadata masks.
-Run fmt and workspace all-targets clippy, submit SPEC-revision/RED RR and STOP.
-No production edits or FULL until RR approval. W2 integration notification has
-immediate priority; prior017a9876b chain remains frozen separately.
+Run fmt and workspace all-targets clippy. No production edits in the RED stage;
+prior017a9876b chain remains separate.

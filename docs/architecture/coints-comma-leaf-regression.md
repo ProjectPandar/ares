@@ -1,8 +1,8 @@
 # coInts comma-list regression addendum
 
-Status: approved bounded correction, docs first, then public RED before GREEN.
-Base a98b1af62be068efd40996301cbf311c8099ef92 includes approved coInts404177d8c
-and overall-chamber integer writeback. Keep their other behavior unchanged.
+Bounded correction: docs first, then public RED before GREEN. Builds on the
+coInts integer identity port and overall-chamber integer writeback; keep their
+other behavior unchanged.
 
 ## Source-owned failure
 
@@ -52,17 +52,15 @@ CLI launch, no RED CLI or raw-equality assertion execution is claimed.
 
 1. Commit this addendum without production edits.
 2. Freeze the original input plus one public case; run actual official+seeded
-   RED with fresh stage caches on CPU15/jobs1/test-threads1. Preserve panic logs
-   and Native replay receipts; no inferred mode result.
+   RED with fresh stage caches; no inferred mode result.
 3. Commit minimal Ints-only leaf splitting correction separately. Run the same
    full ordered generator comparisons in both modes. Retain M73/time/motion/
    comments/metadata/footer: no masks/tolerances/expected changes.
 4. If the fixed variant has ANY different strict residual, STOP immediately,
    preserve it and report; do not repair its seam/travel/other behavior here.
-5. Static fmt/clippy alltargets/portable compile on final verified candidate;
-   REVIEW-REQUEST/HOLD. No FULL/integration/merge/push inferred.
+5. Static fmt/clippy alltargets/portable compile on final verified candidate.
 
-All changed text<400LOC, required coauthor trailers, no tests after production.
-W1/W3/W4/W5 owners and previous frozen sources remain untouched except the
-explicitly approved private value.rs splitter. Discovery scripts' unrelated
-preparation failures are not evidence against Native or substitutes for RED.
+All changed text<400LOC, no tests after production. Previous frozen sources
+remain untouched except the private value.rs splitter. Discovery scripts'
+unrelated preparation failures are not evidence against Native or substitutes
+for RED.

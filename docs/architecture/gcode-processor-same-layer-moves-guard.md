@@ -25,15 +25,12 @@ cases (`template`, `custom`, `pause`, `mode-mismatch`) do not cover.
 
 ## Evidence
 
-- **Base:** at `57fea9498`, the moves discovery against the raw
-  `procgcode` oracle (`${TMP_ROOT}/ares-estimation/moves-discovery/r2/summary.txt`)
-  shows 5560 oracle rows against 5564 Ares rows, and 4304 `gcode_id`
-  mismatches, the first at row 1140.
-- **After the GREEN:** at `683d5706f` (the same code as the approved
-  `13f628158`), a release `ares slice --dump-moves` of `same-layer.3mf`,
-  compared with the raw oracle under the M853 rules
-  (`${TMP_ROOT}/ares-estimation/same-layer-683/`), shows 5560/5560 rows,
-  0 mismatches, and all columns bit-identical.
+- **Before the moves slice:** the moves discovery against the raw
+  `procgcode` oracle shows 5560 oracle rows against 5564 Ares rows, and 4304
+  `gcode_id` mismatches, the first at row 1140.
+- **After the moves slice:** a release `ares slice --dump-moves` of
+  `same-layer.3mf`, compared with the raw oracle under the M853 rules, shows
+  5560/5560 rows, 0 mismatches, and all columns bit-identical.
 
 ## Included and deferred
 
@@ -50,15 +47,14 @@ cases (`template`, `custom`, `pause`, `mode-mismatch`) do not cover.
 
 ## TDD note
 
-The guard is added after the GREEN it protects, so there is no failing RED on
-this branch. Instead, the test runs and fails on base `29f4a49c1`, a scratch run with nothing
-committed, and is shown to pass at the branch head. Both results are
-attached to the REVIEW-REQUEST. The test, its assertions and the M853
-tolerance rules are unchanged from the four existing cases.
+The guard is added after the GREEN it protects, so there is no failing RED
+commit. Instead, the test is run (without committing) on a tree from before
+the moves slice, where it fails, and passes with the moves slice. The test,
+its assertions and the M853 tolerance rules are unchanged from the four
+existing cases.
 
 ## Gates
 
-Before the REVIEW-REQUEST, at the exact head:
 - `gcode_moves_oracle` 8/8, with the procgcode oracle.
 - fmt, plus strict clippy and wasm32 clippy.
-- The new test fails on `29f4a49c1` (scratch, CPUs 16,17).
+- The new test fails on a tree from before the moves slice.

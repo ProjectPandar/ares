@@ -45,11 +45,10 @@ and G-code config, not browser observations. It checks headers, values, swatches
 recolor/restore and records a screenshot and JSON next to G-code hash artifacts.
 A Rust public-boundary fixture additionally covers sparse multi-tool ids,
 unused-tool statistics, every volume column, tool-color padding and reload.
-Its updated raw-volume/metadata contract failed before implementation
-(`${TMP_ROOT}/ares-filament-red.log`). Full browser specs and Rust/workspace/profile
-reference gates must pass before review; no merge before coordinator approval.
+Its updated raw-volume/metadata contract failed before implementation. Full
+browser specs and Rust/workspace/profile reference gates must pass.
 
-### SEMM fixture evidence for the `01c0a5de8` rebase
+### SEMM fixtures
 
 `tests/parity/orca_cli_ender3.3mf` and
 `tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf`, ZIP member
@@ -57,15 +56,12 @@ reference gates must pass before review; no merge before coordinator approval.
 `"single_extruder_multi_material": "1"`. The Ender3 browser output also
 serializes `; single_extruder_multi_material = 1`; the LH profile-entry
 3MF/STL and profile-slice outputs do too. `ironing_type` in these outputs is
-`no ironing`. Because the E2E fixtures enable SEMM, the pre-`01c0a5de8`
-browser result is not used as the final gate: rebuild and run the full browser
-suite on that rebase, even though these particular fixtures use one filament.
+`no ironing`. The E2E fixtures therefore enable SEMM, even though these
+particular fixtures use one filament.
 
-### Nonempty-plate evidence for the `8d57c4832` rebase
+### Nonempty plates
 
-The coordinator permits the successful `01c0a5de8` browser comparison to be
-retained after this empty-plate-error-only change, provided the actual slice
-selections are nonempty. The SPA slices `scene.plates[0]?.id`
+The actual slice selections are nonempty. The SPA slices `scene.plates[0]?.id`
 (`web/app/src/state/actions.ts`, `presets.ts`); the package consumer and profile
 slice page omit the plate argument, selecting the first plate. Native fixture
 oracles explicitly select plate 1.
@@ -83,5 +79,4 @@ The remaining sliced inputs are `tests/parity/cube10.stl` or the native-exported
 (`crates/ares-cli/tests/orca_parity/runner/profile_entry_3mf.rs:54-83, 209-238`).
 Sidebar/config edits preserve these model/plate assignments. The full browser
 suite asserts successful slices and compares the resulting G-code to native
-outputs; it does not select an empty plate. The later rebase still requires
-fresh fmt/clippy/nextest/reference and wasm/lib/app builds.
+outputs; it does not select an empty plate.

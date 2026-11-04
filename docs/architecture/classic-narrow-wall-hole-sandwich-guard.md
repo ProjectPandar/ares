@@ -1,9 +1,5 @@
 # Classic narrow-wall-hole sandwich eligibility guard
 
-Status: literal narrow-hole classification/guard port and strict public
-GREEN qualified; paired family has zero prior-PASS to FAIL. Await source-port
-review. This is not workspace/FULL or unrelated-family parity closure.
-
 ## Upstream boundary and clarified scope
 
 Pinned beta `345efec64c7b95a05ce5cf96df0dde66a158835c`,
@@ -66,11 +62,6 @@ any nearby citation update must be checked against this pinned source.
 
 ## Real public RED candidate
 
-Base: accepted constant-equal thin-hole port
-`e11f6231518053ebcfcec9da97dfcf77623f6502` on the accepted spiral/gap stack.
-The previous 117-check paired qualification belongs to its pre-constant
-source; no new source runtime credit is inferred from that amendment.
-
 Input `tests/parity/classic-narrow-island-guard/narrow-tube.3mf`, SHA256
 `01b634386258e99d65c8de97f2c47578917388c3b259a32128a5e09125bba372`.
 Its deterministic input-only generator uses a closed oriented faceted
@@ -107,13 +98,11 @@ or filtered acceptance. No raw Native reach/flag observation is claimed.
 
 The prior 1.5mm candidate used an invalid wall-sequence spelling. Its
 Native footer reverted to InnerOuter, the premise callback stopped before
-API/CLI, and no RED credit was claimed. The full failed attempt and input
-remain immutable externally. The corrected candidate was separately
-approved: only the exact enum token and inner radius8.5→8.55 changed;
-all other settings and ZIP members except the mesh are byte-identical.
-No iterative geometry search or automatic retry followed that STOP.
+API/CLI, and no RED credit was claimed. In the corrected candidate only
+the exact enum token and inner radius8.5→8.55 changed; all other settings
+and ZIP members except the mesh are byte-identical.
 
-One corrected selected run completed with Native2 fresh stable complete
+The corrected run completed with Native2 fresh stable complete
 exports, validated API1 and CLI1, raw API/CLI identical. At physical
 Z0.4,0.6,0.8, Native has exactly two nested closed Outer-wall boundary
 runs followed by one closed Gap-infill run, with no Inner-wall runs:
@@ -133,16 +122,9 @@ These are travels selecting different first walls on the next layer;
 subsequent full runs prove the order above. No fixed coordinates/counts
 are test goldens, and no other record class was omitted externally.
 
-Fmt and strict workspace/all-targets Clippy pass. Fresh dedicated target,
-frozen ELF, source tree and exact corrected input delta were verified
-before execution. The permitted corrected attempt ran once, with no retry,
-probe, variant, observer, family or E5 execution. Only this architecture
-result note changes afterward; no postcommit rerun is claimed.
-
 ## Literal port and strict GREEN qualification
 
-Approved RED `935d51d1e6e37b2e71ac2dcb57da0856d8f20b01` predates the
-production port. The existing reach classifier is byte-identical: onion
+The public RED predates the production port. The existing reach classifier is byte-identical: onion
 configuration supplies the separate optional inner-wall room only for
 InnerOuterInner, and onion calls that classifier on the same unreduced
 normal first offset. Narrow flags follow normal/smaller hole order into
@@ -158,11 +140,10 @@ Accepted thin-hole classifier/orientation, geometry kernels and other
 adjacent behavior remain unchanged.
 
 A frozen 124-check existing Classic/perimeter/wall-sequence/thin/narrow/
-seam family ran once before and once after in the same worktree with a
-dedicated target. **54 PASS / 70 FAIL → 55 PASS / 69 FAIL**, zero ignored,
-exactly one FAIL→PASS (this public target), zero prior-PASS to FAIL.
-Each phase retains 177 Native command-status receipts; guard/premise
-results remain visible, not blanket Native-parity credit.
+seam family ran before and after the port. **54 PASS / 70 FAIL → 55 PASS /
+69 FAIL**, zero ignored, exactly one FAIL→PASS (this public target), zero
+prior-PASS to FAIL. Guard/premise results remain visible, not blanket
+Native-parity credit.
 
 Per phase, the dedicated target has two fresh stable Native exports and
 one validated API/CLI export, raw API/CLI equal. The AFTER strict complete
@@ -179,19 +160,9 @@ closed CCW enclosing contour, then closed Gap run, with exact saved
 extrusion-run/point/line identity. This verifies the full island order,
 including the reverse eligibility, not merely the first loop or TYPE
 labels. No private Native flag trace or new runtime probe was used.
-The original invalid-wire STOP and authorized corrected RED stay immutable.
 
-Fmt and strict workspace/all-targets Clippy pass; tests, fixture/generator,
-ROOT, runners and comparator are unchanged from the approved RED. Distinct
-frozen before/after ELFs, identical inventory and actual source trees were
-verified. Only this result note changes after execution; no postcommit
-rerun is claimed. No retry, extra variant/probe, family expansion, GDB,
-carrier trace, E5 run or implicit estimator/config overlay occurred.
-
-Main advanced to `5910df8eb` during qualification; this slice was qualified
-on its approved base. That base/pair is preserved without rebasing; later
-work uses the updated main, and approved branches rebase only on an explicit
-integration request.
+Tests, fixture/generator, ROOT, runners and comparator are unchanged from
+the RED.
 
 ## Included, deferred and exit criteria
 
@@ -201,10 +172,8 @@ geometry kernels, Arachne/brim/overhang logic, seam and G-code serializer,
 M73 estimator and config footer are separate and unchanged. No private
 operand trace or further runtime probes are part of this one-candidate RED.
 
-The approved ARD and corrected fresh RED preceded the declared literal
-port. Its strict GREEN and paired family evidence satisfy this slice's
-runtime gate; remaining 69 family failures and workspace/FULL integration
-stay separately owned. Preserve all source/executable/input identities
-and invalid attempts. Any later change needs its own source-cited boundary
-and approval; do not grow this guard into a sandwich-body rewrite or a
+The ARD and corrected fresh RED preceded the declared literal port. Its
+strict GREEN and paired family evidence satisfy this slice's runtime gate;
+remaining 69 family failures are out of scope. Any later change needs its
+own source-cited boundary; do not grow this guard into a sandwich-body rewrite or a
 new geometry/estimator/config policy.

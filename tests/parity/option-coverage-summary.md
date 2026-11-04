@@ -575,7 +575,7 @@
 | PASS | thumbnails_format | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:7129 |  |
 | PASS | time_cost | coFloat | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3883 |  |
 | PASS | time_lapse_gcode | coString | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4424 |  |
-| INCOMPLETE | timelapse_type | coEnum | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5879 | required legal cases not all compared; 1: Slice/Process: unsuccessful Orca process; evidence Some("/tmp/parity-artifacts/orca-runner-wpEHtd/command-l4ZI6p") |
+| INCOMPLETE | timelapse_type | coEnum | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5879 | required legal cases not all compared; 1: Slice/Process: unsuccessful Orca process |
 | PASS | tool_change_on_wipe_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5995 |  |
 | PASS | top_bottom_infill_wall_overlap | coPercent | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4161 |  |
 | PASS | top_shell_layers | coInt | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6730 |  |

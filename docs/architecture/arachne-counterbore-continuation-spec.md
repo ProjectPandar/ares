@@ -1,8 +1,6 @@
 # SPEC — Arachne non-None counterbore continuation on merged main
 
-Status: **SPEC REVIEW REQUEST; docs only, before RED refresh or production.**
-Base: `5a9687ac020962f254b6262f2184f3345025c70f` (stack-3).
-Branch: `worker4/arachne-counterbore-next`, fresh from that exact main.
+Status: proposed. Docs only, before RED refresh or production.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Binding decisions: [ARD](ard-arachne-counterbore-continuation.md).
 
@@ -11,14 +9,14 @@ Binding decisions: [ARD](ard-arachne-counterbore-continuation.md).
 The previous public matrix at `9af8025a1` established successful Native slicing
 but eight exact Ares `UnsupportedProjectFeature("counterbore_hole_bridging")`
 REDs: Bridges/Filled × stepped-hole, first-layer-hole, straight-hole, two-islands.
-Those tests stay archived on `worker4/arachne-counterbore` at `819f7e1a4` and were
+Those tests stay archived at `819f7e1a4` and were
 not merged as permanently failing tests.
 
 Its additional None baseline G2 mismatch was diagnosed to the wrong infill
 resolution argument, not ArcFitter. The separate prerequisite is merged in this
 main: `ArachneRecordConfig.scaled_resolution` reaches the normal infill boundary;
 wall-input reduction remains distinct. The isolated public None test is now
-registered in `runner/arachne_counterbore_none.rs`. Stack-3 full official and
+registered in `runner/arachne_counterbore_none.rs`. Full official and
 seeded each1217/1217 and self-hosted CI passed. Reuse that main-owned None control;
 do not duplicate it, change its assertions or reimplement its correction.
 
@@ -61,12 +59,11 @@ Only these files under `crates/ares-core/src/project_slice/perimeters/`:
 
 No extra state/API/module relocation, pipeline design, fallback, region[0], new
 Unsupported or core I/O. Changed modules remain below400LOC. Any insufficient
-scope requires exact owner amendment before another production file is touched.
+scope requires an exact scope amendment before another production file is touched.
 
 Read-only: `classic/prelude.rs`, groups/recovery/types, Arachne config/walls/fuzzy/
 ordering, Fill/grid, geometry/ArcFitter, classification/interface_shells and
-centering/placement. W3/W5/W6 ownership fences remain unchanged despite their
-candidates now being merged. Browser WASM/Windows/macOS/Linux share core logic.
+centering/placement. Browser WASM/Windows/macOS/Linux share core logic.
 
 Included: Bridges/Filled common geometry, mutation/metadata/order, correct
 Arachne wall generation, counterbore-fill survival, first-layer/no-unsupported
@@ -76,7 +73,7 @@ new wall/bridge/fuzzy/Fill algorithms. Existing recovery port is not proof that
 all recovery branches are publicly reachable; two independent islands do not
 close the nested-island gap.
 
-## Public RED refresh plan after SPEC approval
+## Public RED refresh plan
 
 Reuse frozen STLs and parent-chain provenance in
 `tests/parity/counterbore-partiallybridge/`: WEMAKE3D PhoenixProV1 0.4mm stock
@@ -92,7 +89,7 @@ control. Preserve eventual PASS assertions and original helper byte comparison.
 No permanently failing branch is submitted for merge: these frozen REDs stay on
 this feature branch until their GREEN is implemented. Keep tests/fixture commit
 separate from production. Any assertion evolution needs exact rationale/diff
-approval rather than silent threshold or normalization changes.
+rationale rather than silent threshold or normalization changes.
 
 Expected new-main directed verdict:
 - Eight non-None hole cases: exact counterbore guard RED after Native success.
@@ -107,25 +104,23 @@ config-footer-only activation. It is not an Ares acceptance filter or complete
 branch-coverage claim. Preserve all inputs/settings hashes, producer/wrapper
 identity, Native exit/log/timing, Native/Ares G-code or exact error, first byte
 difference, metadata/context and cleanup. No retry-until-green or historical
-Variant-A assumption; immediately report deterministic mismatches.
+Variant-A assumption; report deterministic mismatches.
 
-Run only after explicit SPEC and directed-window approval, outer CPU15, jobs1,
-nextest test-threads1, fresh Native cache/artifacts, mode-sequential execution
-and START/END inbox. Full requires separate FULL-GO/exclusivity; no workspace
-or full test run during RED refresh. No push.
+Run with fresh Native cache/artifacts and mode-sequential execution; no
+workspace or full test run during RED refresh.
 
 ## Ten old capability/lifecycle reject assertions
 
 The pre-existing ten Arachne Filled rejection assertions still live on main.
-SPEC approval does **not** authorize weakening/deleting/migrating them. After
-public RED, submit each exact test diff and changed contract for coordinator
-approval and a separate test commit before GREEN. Preserve unrelated disposal,
+This SPEC does **not** weaken/delete/migrate them. After
+public RED, record each exact test diff and changed contract
+in a separate test commit before GREEN. Preserve unrelated disposal,
 zero-invocation and commit assertions; do not replace them with invented guards.
 
-## Exit and review sequence
+## Exit sequence
 
-SPEC review → fresh new-main public RED → separately approved exact lifecycle
+Fresh public RED → separately recorded exact lifecycle
 assertion diffs → bounded source-cited GREEN → public official/seeded full-byte
-parity, raw control invariance, strict/fmt/WASM → CODE REVIEW → FULL-READY request.
-Merge requires actual new-main full/CI evidence and exact approval. A passed
+parity, raw control invariance, strict/fmt/WASM.
+Merge requires actual full/CI evidence. A passed
 resolution prerequisite does not imply non-None counterbore is already supported.

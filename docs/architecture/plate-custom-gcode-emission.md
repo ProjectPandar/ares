@@ -1,6 +1,6 @@
 # Plate custom G-code emission (slice C)
 
-Status: spec for review. Code starts after approval. This is the deferred
+This is the deferred
 **Emission** item of `project-plate-custom-gcodes.md` (slice A). Slice A
 loads `Model::plates_custom_gcodes`, and slice B shows them in the legend.
 No slice yet puts a tick into the G-code, so an Ares slice of a project with
@@ -72,10 +72,7 @@ below must confirm it byte for byte before GREEN relies on it.
   show Native times without any web change. Single-load (slice B's
   deferral) stays deferred.
 
-## Allowlist and ownership
-
-ares-core production edits need this spec's approval, and the slice ends
-with an exclusive canonical full (official and seeded).
+## Allowlist
 
 | File | Edit |
 |---|---|
@@ -91,23 +88,17 @@ with an exclusive canonical full (official and seeded).
 | `tools/chain-probe/plate-custom-gcode-emission-fixtures.mjs` | new fixture writer (same form as slice A's) |
 | `docs/architecture/plate-custom-gcode-emission.md`, `docs/roadmap.md` | this spec, status line |
 
-**Read-only and conflict notes:**
-- **W3 centering.**
-  - `crates/ares-core/src/project/load.rs`: read-only. Slice A's
-    `Project::curr_plate_custom_gcodes()` is the only input.
-  - `layers/drive.rs`: the single added field above is the only edit. It
-    sits inside the `boundary::append` call, and no other drive.rs line
-    changes. If W3 rewrites that call first, I rebase onto it and re-add the
-    one field. If W3 needs that call site exclusively, the alternative is to
-    pass the item through `Boundary` from the phase; that also needs a
-    drive.rs line, so COORD rules the order.
-- **W1 skirt.** `gcode_emit/skirt.rs`, `layers/skirt_schedule.rs`,
+**Read-only notes:**
+- `crates/ares-core/src/project/load.rs`: read-only. Slice A's
+  `Project::curr_plate_custom_gcodes()` is the only input.
+- `layers/drive.rs`: the single added field above is the only edit. It
+  sits inside the `boundary::append` call, and no other drive.rs line
+  changes.
+- `gcode_emit/skirt.rs`, `layers/skirt_schedule.rs`,
   `layers/skirt_emit.rs`: read-only, no edit. `schedule.rs` is shared with
-  the skirt schedule (`:284-291`), but my one call sits after `:292`, away
-  from W1's lines.
-- **Full triggers.** `project_slice/state.rs`, `print/validate.rs` and
-  `plate_selection` are not touched. The full is still required because
-  this is an ares-core production change.
+  the skirt schedule (`:284-291`); the one new call sits after `:292`.
+- `project_slice/state.rs`, `print/validate.rs` and `plate_selection` are
+  not touched.
 
 ## Native RED plan
 
@@ -175,7 +166,4 @@ before the RED counts.
 | Stage | Gates |
 |---|---|
 | RED | the cases above, official + seeded, assertion failures only |
-| GREEN | the same cases pass in both modes; `cargo fmt`, strict clippy, wasm32; nextest `ares-core` + `ares-cli` directed; the canonical exclusive full (official + seeded, jobs2/threads2, fresh cache) with 0 new failures. Workspace per COORD |
-
-Every stage runs on the assigned CPUs inside a directed window, with
-START/END in the inbox.
+| GREEN | the same cases pass in both modes; `cargo fmt`, strict clippy, wasm32; nextest `ares-core` + `ares-cli` directed; the full parity suite (official + seeded, fresh cache) with 0 new failures; workspace |

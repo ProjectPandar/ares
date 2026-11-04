@@ -1,6 +1,6 @@
-# Proposed retirement of the obsolete Arachne alternate rejection test
+# Retirement of the obsolete Arachne alternate rejection test
 
-Status: coordinator approved retiring this one obsolete test after RED8989e26eb.
+Status: accepted; retires this one obsolete test after RED 8989e26eb.
 
 The existing test is
 `crates/ares-core/src/project_slice/tests/perimeters/arachne/config.rs`,
@@ -12,11 +12,11 @@ and expects layer 1 configuration to return
 That assertion describes the scaffold being replaced, not an upstream rejection.
 `PerimeterGenerator.cpp::process_arachne:2131–2134` admits this combination and
 increments the loop count. Lines 2136–2144 and 2163–2175 apply the existing
-overrides and generator counts after it. The approved SPEC requires deleting
+overrides and generator counts after it. The SPEC requires deleting
 the production guard; leaving this rejection assertion would require retaining
 the forbidden guard or failing workspace by design.
 
-Approved concrete change:
+Concrete change:
 
 - Delete this obsolete test function and its now-unused `Percent` import.
 - Preserve every other existing assertion, fixture and comparator.
@@ -28,9 +28,7 @@ Approved concrete change:
 The first Native preflight confirmed odd-layer wall crossings 4→6 for the
 ordinary positive-density prism and independent-island crossings 8→12, while
 Ares returned exactly the above UnsupportedProjectFeature. Density 0.5 was
-Native-admitted and inert but rejected by Ares. Raw preflight evidence remains
-outside Git at `/tmp/worker3-arachne-alternate-red-sui9f3ez`.
+Native-admitted and inert but rejected by Ares.
 
-This is a request to replace an obsolete negative contract with upstream
-positive public coverage; it does not authorize weakening a parity assertion.
-Coordinator explicitly selected “批准退役这一过时拒绝测试” on 2026-10-13.
+This replaces an obsolete negative contract with upstream
+positive public coverage; it does not weaken a parity assertion.

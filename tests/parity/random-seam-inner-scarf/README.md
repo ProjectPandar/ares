@@ -13,15 +13,14 @@ per-extruder `wipe = ["0"]` setting, avoiding two separate retraction
 mismatches rather than filtering output.
 
 The source-cited boundary and read-only GDB evidence are in
-[the approved SPEC](../../../docs/architecture/2026-10-20-random-seam-inner-scarf-spec.md).
-The last-edge guard remains unchanged per the approval amendment.
-This witness depends on the separately approved staggered interpolation
+[the SPEC](../../../docs/architecture/2026-10-20-random-seam-inner-scarf-spec.md).
+The last-edge guard remains unchanged per the spec amendment.
+This witness depends on the separate staggered interpolation
 fix; it is NOT the previous slice_z12.5 staggered witness.
 
-## Formal pre-window contract
+## Formal contract
 
-COORD authorized preparation on e81afae89 after the stagger chain.
-The W2 helper is now merged: tests directly reuse
+Tests directly reuse
 `runner/native_api_cli.rs::NativeCase`, without copying either helper,
 manual Native/API/CLI flow or the borrowed PROFILE_ENTRY gate. Native
 availability is the only environment condition, like main's NativeCase
@@ -44,20 +43,16 @@ with the generator line removed):
 
 The positive pins Native's complete witness line as a premise. After
 the bounded fix, require both COMPLETE outputs to pass in both modes;
-any residual mismatch blocks scope expansion. The approved isolated
-local probe's read-only GDB record matched all100 random selections and
-the target final Y f32 bits3225649160. That earlier proof remains local
-probe evidence, not a fresh current-main integration claim. Pre-window
-checks are targeted dual-mode plus fmt/clippy/wasm; exact-main rebase and
-FULL remain deferred until the W5 window.
+any residual mismatch blocks scope expansion. The isolated local probe's
+read-only GDB record matched all100 random selections and the target final
+Y f32 bits3225649160. That proof remains local probe evidence, not a
+current-main integration claim.
 
 Native export/slice reachability can be independently repeated with
 an official Orca CLI (`$ORCA`), writing outside the repository:
 
-    "$ORCA" --export-3mf /tmp/scarf-positive-exported.3mf positive.3mf
-    "$ORCA" --slice 0 --outputdir /tmp/scarf-positive positive.3mf
+    "$ORCA" --export-3mf "$OUT/scarf-positive-exported.3mf" positive.3mf
+    "$ORCA" --slice 0 --outputdir "$OUT/scarf-positive" positive.3mf
 
-Run these commands from this fixture directory, with distinct output
-locations for control. The original export and dual-mode discovery
-receipt is `/tmp/w5-real-combos/scarf-discovery-result.json`.
-No FULL runs are authorized while this chain is queued.
+Run these commands from this fixture directory with `OUT` set to an
+external directory, using distinct output locations for control.

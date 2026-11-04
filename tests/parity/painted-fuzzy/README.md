@@ -1,6 +1,6 @@
 # Stock GUI painted fuzzy-skin public RED
 
-Upstream8500fcdccaa10b5099ac20d252af3a7c560046f1; approved SPEC2dc9cdd57:
+Upstream8500fcdccaa10b5099ac20d252af3a7c560046f1; SPEC:
 `docs/architecture/painted-fuzzy-skin-spec.md` (includes failure inventory).
 Owners: bbs_3mf canonical carrier → PrintApply actual regions → fuzzy wrapper of
 segmentation_by_painting → PrintObjectSlice apply → classic FuzzySkin masked apply.
@@ -37,8 +37,8 @@ Target comparison.json may lack case because the success assertion stops earlier
 bind its identity via the already-written native-replay.json and frozen input SHA.
 
 Qualification must run the Native-only preflight in both official/seeded modes
-before ANY public test calls, CPU18/jobs1/parity threads1. Replays/control/resource
-failures STOP/non-gate; no normalization expansion or retries. No FULL here.
+before ANY public test calls. Replays/control/resource failures STOP/non-gate;
+no normalization expansion or retries.
 
 Tests register under painted_cases::painted_fuzzy, via a grouping submodule.
 Existing test paths remain unchanged; root registry397LOC, no squeezed blank lines.

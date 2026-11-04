@@ -1,7 +1,6 @@
 # Web preview: Summary view
 
-Status: approved (`eea439ac6`); data-source ruling option A. Branch `pi/web-summary` from
-`042fe5687`.
+Data-source ruling: option A.
 
 ## Slice selection
 
@@ -95,7 +94,7 @@ output.
 1. **Probe:** `tools/chain-probe/print-statistics.nix` builds a probe from the
    2.4.2 source of the seeded replay producer (`1k0p5nlb…`, source store path
    `g3wj93ly…-orca-slicer-2.4.2-seed-replay-source`; its `GCode.cpp` and
-   `OrcaSlicer.cpp` match `OrcaSlicer/src`), with `--cores 8`. It patches the CLI after export to dump
+   `OrcaSlicer.cpp` match `OrcaSlicer/src`). It patches the CLI after export to dump
    `print.print_statistics()` (the four fields, `%.17g`) plus the normal time
    into the `--outputdir`. Its output is never committed: tests run it
    through `OrcaRunner` (`ARES_PRINT_STATISTICS_BIN`, cached under
@@ -122,8 +121,8 @@ output.
 6. **Gates:** fmt, clippy `-D warnings`, `cargo nextest run --workspace`. The
    seeded full set and official same-round base/candidate run, plus
    profile_entry, because core changes; the expectation is identical
-   ares.gcode bytes per case. Then web build and lint, and the full web E2E in
-   a quiet window. `bundle.spec` must still pass with the new code in the
+   ares.gcode bytes per case. Then web build and lint, and the full web E2E.
+   `bundle.spec` must still pass with the new code in the
    lazy chunk only.
 
 ## Ways it could fail (checked by the evidence above)
@@ -140,11 +139,10 @@ output.
 
 ## Web slice: Summary combo entry and legend rows
 
-Status: approved, with the view type ruling below. Branch
-`pi/web-summary-legend` from `574cbdfd6`. Web plus the ares-wasm adapter's
-`VIEW_TYPES`; no ares-core or ares-vgcode change.
+Web plus the ares-wasm adapter's `VIEW_TYPES`, with the view type ruling
+below; no ares-core or ares-vgcode change.
 
-The core part above is merged (`c3e84118a..8a0116f54`). The legend
+The core part above is in place. The legend
 estimation footer slice (`web-estimation.md`) delivers
 `Toolpaths.estimation` with `totalUsedFilament`, `totalWeight`, `totalCost`
 (`PrintStatistics`) and `time` (`modes[Normal].time`). ares-vgcode already
@@ -157,7 +155,7 @@ by `viewTypes()`. The web app has no Summary entry and no Summary rows.
 View type ruling: `VIEW_TYPES` gains `ViewType::Summary` first (`EViewType`
 order, `GCodeViewer.cpp:1076-1077`). `crates/ares-wasm/src` is production
 Rust (the wasm adapter), but orca_parity does not depend on ares-wasm, so the
-exclusive full is waived.
+full reference run is not needed.
 
 | Upstream | What | Ares destination |
 |---|---|---|
@@ -202,7 +200,7 @@ The wasm tests that pin `view_types()` (`crates/ares-wasm/tests/actual_speed.rs`
 `motion_attributes.rs`) expect Summary first; on the old `VIEW_TYPES` that is an
 assertion failure. Their other assertions are unchanged.
 
-Gates (ruled): fmt, clippy `--workspace --all-targets -D warnings`, wasm32
+Gates: fmt, clippy `--workspace --all-targets -D warnings`, wasm32
 check, `nextest -p ares-wasm -p ares-vgcode`; web build, lint and
-typecheck; the web RED window; browser base and candidate with identical
-arguments (the full web E2E). No workspace and no exclusive full.
+typecheck; browser base and candidate with identical
+arguments (the full web E2E). No workspace or full reference run.

@@ -1,8 +1,8 @@
 # Preview Actual Speed / Actual Flow — source-cited rewrite spec
 
-Status: approved at `667d92a0f` (extend the existing dynamics probe; the
-profile table/plot is a roadmap deferral; core RED/GREEN bit-exact per vertex;
-zero G-code change proven by seeded full raw bytes on both trees). Base: `6ff32f927` (motion attributes merged).
+Decisions: extend the existing dynamics probe; the profile table/plot is a
+roadmap deferral; core RED/GREEN bit-exact per vertex; zero G-code change
+proven by seeded full raw bytes.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Paths below are relative to `OrcaSlicer/` unless prefixed with a crate/web path.
 
@@ -102,10 +102,10 @@ Deferred to their own slices:
 5. **Gates.** fmt, clippy `-D warnings`, `cargo nextest run --workspace`,
    CLI/WASM/app builds (`npm run build:wasm` before `npm run build`),
    typecheck, lint, the seeded full set and profile_entry groups (G-code bytes
-   unchanged), the full browser run with BROWSER-START/END, and initial JS gzip
+   unchanged), the full browser run, and initial JS gzip
    strictly below 125,000 B.
 
-## Open questions for review
+## Open questions
 
 1. Should the oracle extension replace the dynamics probe (new header, E2E
    updated in the RED commit) or be a separate `procgcode-actual-speed` probe?
@@ -151,20 +151,11 @@ Ruling A applied:
   hard-coded the replaced f64 formula (`3.535533866420067`). It now expects
   the upstream f32 value (`3.535533905029297`).
 
-## G-code byte changes (seeded full set, rebased on `5cde90c23`)
+## G-code byte changes
 
-The seeded full set (control-set-v2, fresh caches, seeded native
-`1k0p5nlb…-orca-slicer-seed-replay-2.4.2`) ran on main `5cde90c23` and on
-branch `8703fe7d6`; both passed 597/597. For every case label, the multiset of
-`ares.gcode` sha256s is identical between main and branch (517/517 case
-manifests, 13 `DIVERGENT` generator-only manifests on each side).
+**Per-case byte changes: none.** Across the seeded full set, every case's
+`ares.gcode` is identical with and without the JD port, so the native-match
+proof for the planner fix is the per-vertex time assertion above. Before the
+fix it mismatched native `time0` on `marlin2_junction_deviation`; after the
+fix it is bit-exact.
 
-**Per-case byte changes: none.** The JD port changes no seeded output, so the
-native-match proof for the planner fix is the per-vertex time assertion above. Before the fix it mismatched native `time0`
-on `marlin2_junction_deviation` (`target/actual-speed/planner-red.log`); after
-the fix it is bit-exact (`planner-green.log`). profile_entry passed 26/26 on
-both official and seeded.
-
-Evidence: `${TMP_ROOT}/ares-actual-speed-rebased-8703fe7d6/` (`summary.txt`,
-`seeded-{main,branch}/run.log`, `seeded-bytediff.json`, produced by
-`${TMP_ROOT}/ares-actual-speed-bytediff.mjs`).

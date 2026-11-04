@@ -1,18 +1,14 @@
 # Dumbbell nearest seam: Gaussian distance normalization
 
-Status: worker6 read-only source-cited spec for review. No production change,
-new RED, fresh Native run or GREEN is claimed. Base: main
-`b364a111de16597df7a06790721c4ea40159f86f`.
+Status: read-only source-cited spec. No production change,
+new RED, fresh Native run or GREEN is claimed.
 
 ## Exact witness and evidence limits
 
-Worker5 fixture, read-only:
-`${TMP_ROOT}/ares-worker5/tests/parity/validation/tiq2-dumbbell-long-loop.3mf`.
+Fixture `tests/parity/validation/tiq2-dumbbell-long-loop.3mf`,
 SHA256 `90288cb1f8904fc245a792be9cc8d30e5ea2762f6faff4b573d362fec231bc23`.
-Its bytes equal retained `input.3mf` in:
-`${TMP_ROOT}/ares-tiq2-loop-red/corrected-transport/03-long_loop_fragments/artifacts/case-dqJg9L/`.
 
-That directory's `orca.gcode` SHA256 is
+The retained Native `orca.gcode` SHA256 is
 `28d76e6b1a9c4bbe79c84782f9fc820fb63a3159fb823e9cdec6ece29af4b3df`;
 `ares.gcode` SHA256 is
 `8efeef41011b0c792970f7d8d9564efc96743c30ce6a706dc87c8cb37ac78d9d`.
@@ -28,7 +24,7 @@ left neck endpoint; Ares starts at the right. The surrounding extrusion
 sequence is cyclically reordered accordingly. This is a geometry/order
 symptom, independent of where an M73 marker is inserted.
 
-The coordinator's handoff calls this layer3. In these exact retained bytes,
+The original report calls this layer3. In these exact retained bytes,
 line103 is the **second** `;LAYER_CHANGE`, followed by `;Z:0.4`; line148 begins
 `;Z:0.6`. Use raw line121, XY and Z-header to identify this witness rather
 than silently treating differing layer-number conventions as equivalent.
@@ -37,7 +33,7 @@ are not a direct capture of the seam selector's internal last-pos input.
 
 Full-file first difference is earlier: manifest reports byte1718, line81,
 Native `M73 P67 R0` versus Ares `G1 X119.69 Y113.69 E.22677`.
-Worker5 owns that timing investigation; its M73/wipe differences may be
+That timing investigation is separate; its M73/wipe differences may be
 downstream consequences of the same seam selection error. No independent
 time-model root cause is established here. The manifest marks reference producer
 identity unknown/cached; therefore these artifacts establish the observed
@@ -140,33 +136,28 @@ Non-negotiable: no coordinate special case, new tie-breaker, epsilon score
 comparison, candidate sorting, legacy fallback, fixture repair, private test
 emitter API, ignored assertion or comparator relaxation. Keep core neutral
 to WASM/browser, Windows, macOS and Linux; no filesystem/terminal probes in
-production. Do not alter worker1/worker5's files or implementation branches.
+production.
 
-## Plan and verification after spec approval
+## Plan and verification
 
-1. Rebase latest main and recheck helper/call sites. Copy the exact fixture
-   from worker5's branch into worker6's tree, verify its SHA256, and do not
-   edit worker5's files. Coordinate the possibly related M73 observation.
-   Capture a fresh identified Native/public-byte-API execution with
+1. Recheck helper/call sites on latest main. Use the exact fixture and verify
+   its SHA256. Capture a fresh identified Native/public-byte-API execution with
    exact input/producer/resources/output hashes and owned-process deadlines.
    Do not rerun until a preferred seam appears.
 2. Before production edits, commit an independent real E2E RED comparing the
    complete output, normalizing only the generated-by line. Keep the original
    fixture unchanged. The travel XY witness supplements that full assertion;
    the old cached manifest and scalar checks do not substitute for RED.
-3. Apply only the approved Gaussian correction. Check whether this same input
+3. Apply only the Gaussian correction. Check whether this same input
    now selects Native's left endpoint. Require complete bytes for GREEN; if
-   M73 or other differences remain, retain DIVERGENT and coordinate ownership
-   rather than promote a seam-only comparison to whole-file PASS.
-   After the correction, notify worker5 to recheck his M73/wipe witnesses;
-   identical causality must be established by output evidence, not assumed.
+   M73 or other differences remain, retain DIVERGENT rather than promote a
+   seam-only comparison to whole-file PASS. After the correction, recheck the
+   M73/wipe witnesses; identical causality must be established by output
+   evidence, not assumed.
 4. Reuse existing nearest/concave/rectangle and other seam-mode E2E controls.
    Preserve candidate-order exact ties and non-nearest behavior. No shallow
    unit test after implementation. If isolated arithmetic testing is needed,
    record its failure inventory and write it before the production edit.
 5. Run fmt, strict workspace/all-target/all-feature Clippy, workspace nextest,
    wasm32 check and fresh same-round seeded/official candidate/base control
-   sets with independent worker6 target/artifacts. Honor browser holds and
-   one-heavy-task/16-thread rules; compare exact failure names and artifacts.
-6. Request exact-hash review, await approval, then rebase/revalidate and push
-   only fast-forward. This spec authorizes no implementation by itself.
+   sets; compare exact failure names and artifacts.

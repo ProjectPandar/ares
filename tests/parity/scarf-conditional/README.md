@@ -9,16 +9,14 @@ No expected Ares error, threshold fallback or new pipeline.
 
 Reproduce inputs/whole and ZIP-entry SHAs: `python3 generate.py`. Uses the frozen
 seam-rear aligned prism with original ZIP metadata. Control/positive are byte-exact
-approved discovery inputs. Sharp changes only positive angle0→155. Taper retains
+discovery inputs. Sharp changes only positive angle0→155. Taper retains
 bottom/z and scales top XY1.15 about base centroid(0,-5/3); low/high differ ONLY
 scarf_overhang_threshold1%→100%, conditional1/angle0 otherwise identical.
 
-Four actual Native qualification commands at approved SPEC, official+seeded,
-CPU15, fresh cache/TMPDIR, before permanent RED: low0 slope moves/high48 in BOTH
+Four actual Native qualification commands, official+seeded, fresh
+cache/TMPDIR, before permanent RED: low0 slope moves/high48 in BOTH
 modes. High first slope `G1 X109.72 Y114.313 Z.23 E.0027 ; perimeter`, layer2
-Outer wall. Artifact root
-`${LOCAL_EVIDENCE_ROOT}/worker4/scarf-conditional-qualification-5189-v1`.
-Original control/positive Native48; positive first slope
+Outer wall. Original control/positive Native48; positive first slope
 `G1 X109.72 Y113.938 Z.23 E.0027 ; perimeter`. Sharp0 is a source-predicate
 negative premise, checked by the formal Native run, not relabeled discovery.
 
@@ -33,9 +31,7 @@ Missing output/admission/activity premise failure is STOP/NOT EVALUATED, not RED
 Unchanged generator-only whole comparator includes M73/arcs/statistics/config/
 footer. Native slope counts are activation evidence ONLY, never a filtered oracle.
 
-Run only with live Native profile-entry gate, fresh canonical official+seeded
-roots, CPU15/jobs1/nextestthreads1, load<60, START/END receipts; classify official
-before seeded, no retries-to-success. Exact RED must be reviewed before separate
-GREEN authorization. Owner's additional GREEN gate: ALL seam + scarf + core-seam
-families in BOTH modes; any residual whole mismatch means STOP. Full/workspace/
-integration remains coordinator-only; RED integrates only with GREEN.
+Run only with live Native profile-entry gate and fresh canonical official+seeded
+roots; classify official before seeded, no retries-to-success. GREEN additionally
+requires ALL seam + scarf + core-seam families in BOTH modes; any residual whole
+mismatch means STOP.

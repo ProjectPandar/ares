@@ -1,15 +1,15 @@
 # Modifier-volume PrintRegionConfig admission for object ironing
 
-## Status and observed delta
+## Observed delta
 
-SPEC for review only; no production edits. Base is main `2fe214545c1a50e88bf321b8221f0eba73a83ad8` plus approved object-ironing chain `8c9a1bc94..32e111a06`. Existing frozen inputs and evidence are under `/tmp/worker2-zaa-ironing-lifecycle-root`.
+SPEC only; no production edits. Builds on the object-ironing chain `8c9a1bc94..32e111a06`.
 
 Native accepts the input-only 3MF with a `modifier_part` carrying per-volume
 `ironing_pattern`, `ironing_angle`, and `zaa_*` metadata. On the
 no-replacement control (global Concentric ironing, modifier part present),
 Native emits 584 Ironing segments while Ares emits zero; Ares API and CLI
 produce the same zero-Ironing output. This is a silent modifier-volume
-PrintRegionConfig admission/integration gap, before the approved
+PrintRegionConfig admission/integration gap, before the
 `Fill.cpp:1630-1640` lifecycle can be exercised.
 
 ## Upstream boundary
@@ -62,20 +62,19 @@ fallbacks, layer-range configs, ironing flow/speed policy, and any comparator
 or output workaround. No silent skip or fallback may be introduced. Files stay
 under 400 LOC.
 
-## Native-first / RED plan after approval
+## Native-first / RED plan
 
 Use the existing frozen three inputs: mixed Concentric parent plus
 modifier-part Rectilinear angle45/ZAA=true, mixed-disabled, and global
 Concentric no-replacement. Native evidence is already recorded. Re-run Ares
-API+CLI only after SPEC approval on CPU13/14, with fresh roots and unchanged
-inputs. The controls must emit their Native Ironing streams; the mixed case
+API+CLI with fresh roots and unchanged inputs. The controls must emit their Native Ironing streams; the mixed case
 must retain the modifier region and reach the existing lifecycle boundary.
 
 If controls still emit zero Ironing, classify the admission gap and submit a
 public test-only RED that asserts modifier-region effective settings and
 whole-output Ironing presence before unchanged strict comparison. If controls
 pass and only mixed differs at lifecycle direction, stop this slice and return
-to `9a113e6d5`. No production edit before RED approval.
+to `9a113e6d5`. No production edit before RED.
 
 ## Addendum: primary silent skip localization
 
@@ -99,6 +98,6 @@ The primary fix target is therefore this dispatch seam and its record-to-region
 selection, before `fill_entities/ironing.rs:43-66` and before the deferred
 `Fill.cpp:1630-1640` replacement lifecycle. The fix must preserve one ironing
 operation per applicable top-surface region, carry each resolved RegionOptions,
-and retain the existing no-fallback behavior. The already-approved lifecycle
+and retain the existing no-fallback behavior. The lifecycle
 SPEC remains deferred until this admission path emits Ironing for modifier
 inputs. No production edits or instrumentation are included in this addendum.

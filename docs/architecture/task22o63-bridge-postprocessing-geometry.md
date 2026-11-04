@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted, implemented, and unconditionally approved by independent six-axis review.
+Accepted and implemented.
 
 ## Decision
 
@@ -117,14 +117,9 @@ wrong factor/join/miter, swapped/omitted/repeated morphology, skipped/reordered
 booleans, safety booleans, reversed operands, stale bridge in expansion diff,
 ignored errors, angle/boundary corruption, and output sorting.
 
-Implementation evidence: behavioral RED is preserved in
-`/tmp/pi-unified-exec-860-f869a7b3.log`; focused O63 passes 7/7 in
-`/tmp/pi-unified-exec-869-2383c455.log`; the exact dependency band passes
-2,378/2,378 in `/tmp/pi-unified-exec-870-79ef9908.log`; and the Linux workspace
-passes 6,409/6,409 with two skipped in `/tmp/pi-unified-exec-871-c0d6ee0e.log`.
-Strict Clippy, rustfmt, wasm32, and all four desktop cross-target checks pass in
-`/tmp/pi-unified-exec-872-a8511bed.log`; diff/LOC/static, clean pinned Orca, and
-no-staged checks pass in `/tmp/pi-unified-exec-874-d641501b.log`.
+Implementation evidence: focused O63 passes 7/7; the exact dependency band
+passes 2,378/2,378; and the Linux workspace passes 6,409/6,409 with two skipped.
+Strict Clippy, rustfmt, wasm32, and all four desktop cross-target checks pass.
 
 The primary 21-mutation audit has SHA-256
 `43c9bb0cfb4e02fbb03d72fc56c7895e9aa87fc581aca1b20c5f915527eec7c1`;
@@ -132,4 +127,3 @@ the supplemental four-mutation safety/repeated/order audit has SHA-256
 `2c59d4335e06418309840c212d03c88ad4d20ece2ef8a8a3b1076e01c535a62c`.
 All 25 mutations are killed and production is restored byte-exact at SHA-256
 `29f279cf391dbf2f09936164fd8184531303227d67c974e6a5a44fa6b7160b4b`.
-Final independent read-only six-axis implementation review approved unconditionally with no repair item or residual risk.

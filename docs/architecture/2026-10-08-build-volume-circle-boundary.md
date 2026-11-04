@@ -21,10 +21,9 @@ rewrite and exits.
   processed-G-code -102 family. No input-specific exception or new guard.
 - Sparse synthetic input-read crashes are separately classified, not parity
   oracles; retain their artifacts without repairing their constructor here.
-- Keep timelapse changes isolated until this slice is independently RED/GREEN,
-  gated, reviewed and merged. Rebase that slice afterward.
+- Keep timelapse changes isolated from this slice.
 
-Debugger witness `/tmp/worker3-o6-stock-circle/gdb-geometry.log`: fitted radius
+Debugger witness: fitted radius
 54999990.378506288 in fixed coordinates, near-zero center, mesh vertex
 [4,0,-5] transformed by translation [51,0,5] to [55,0,0], Circle type. The
 Native float effective radius is below 55 mm; the current mm epsilon changes

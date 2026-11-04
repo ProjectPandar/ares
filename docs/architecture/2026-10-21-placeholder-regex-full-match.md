@@ -1,9 +1,7 @@
 # ARD: Placeholder regex comparisons require a whole-subject match
 
-Status: docs-only SPEC authorized, then Native-first formal RED. STOP
-before GREEN without separate review approval. Independent base
-47821c760d5ea86102a34bbc78c092bbaf381214; six previous W5 chains frozen,
-unconsumed. No production change in this phase.
+Docs-only SPEC, then Native-first formal RED. Independent base
+47821c760d5ea86102a34bbc78c092bbaf381214. No production change in this phase.
 
 ## Upstream owner and non-negotiable Rust destination
 
@@ -16,8 +14,8 @@ Ares scripting-language or infill-template feature.
 Rust destination ONLY
 `crates/ares-core/src/project_slice/gcode_emit/expression.rs:148–157`,
 Parser::parse_compare's RegexMatch/RegexNotMatch branch. Current
-Regex::is_match searches for any matching SUBSTRING. Future separately
-approved GREEN must compile an anchored pattern **^(?: + pattern + )$**
+Regex::is_match searches for any matching SUBSTRING. Future
+GREEN must compile an anchored pattern **^(?: + pattern + )$**
 with the existing regex crate, testing existence of a full-span match,
 then retain the existing negation. No new engine/helper/public API or
 string-specific case/fallback. Do not inspect only the first unanchored
@@ -25,7 +23,7 @@ match's span: a|abc on abc must still succeed, as Native does.
 
 Non-negotiable deferrals: dialect/Unicode/escaping/error text, other
 operators/functions/regex users/caching/config parsing and all rendering.
-**Do not touch value.rs**: W6 owns its double-rendering chain. No attempt
+**Do not touch value.rs**: its double-rendering chain is a separate slice. No attempt
 to solve that separate behavior as part of this comparison slice.
 Any strict residual after future bounded GREEN requires STOP/report,
 not scope expansion, output normalization or a different regex engine.
@@ -80,28 +78,25 @@ source-call semantics and repeatable whole-output gap localize this
 candidate. Earlier escape-containing exploration was rejected because
 Native export altered its escape, not treated as a parity case. The
 retained ASCII pair avoids that separate round-trip question.
-Discovery evidence:
-`${COORD_ROOT}/evidence/w5-478r2-placeholder-regex-full-match/`.
 
 ## Scope / exclusions / formal RED gate
 
-Included after GREEN review only whole-subject RegexMatch/RegexNotMatch
+Included in GREEN only whole-subject RegexMatch/RegexNotMatch
 comparison with anchored compile and unchanged negation. Everything else
 above deferred, especially value.rs and other users' regex semantics.
 No global rendering/formatting/error/default changes or new dependency.
 
-Avoid all queued W1 painted/sidecut,W2 brim/EFC,W3 combine-solid/aligned
-infill-template,W4 concentric sparse,W5 spiral/processor/Lightning join/
-raft Contact width,W6 zero-area/occlusion/medial/interlocking/nearest/
-value rendering. This is machine G-code PlaceholderParser, not W3's
-aligned sparse-infill template. Six frozen tips remain untouched.
+Avoid painted/sidecut,brim/EFC,combine-solid/aligned
+infill-template,concentric sparse,spiral/processor/Lightning join/
+raft Contact width,zero-area/occlusion/medial/interlocking/nearest/
+value rendering. This is machine G-code PlaceholderParser, not the
+aligned sparse-infill template.
 
 Two DIRECT main native_stream_case::check calls for actual exported
 positive/control. Existing helper double-replays Native then delegates
 complete validated API/bare CLI comparison to native_api_cli. No copied
 replay/normalization/JSON/orchestration, Native output constants/assertions,
 private seam, ignored/expected-failure decoration or G-code snapshot.
-Input-only3MFs + input manifest/README. CPU11/thread1/job1, official then
+Input-only3MFs + input manifest/README. Official then
 seeded controlPASS/positiveactualFAIL with stable repeats and complete
-public attempts. Send SPEC+RED RR and STOP before GREEN/FULL. Later GREEN
-freezes tests/inputs/helpers. No rebase/integration/main update here.
+public attempts. Later GREEN freezes tests/inputs/helpers.

@@ -1,9 +1,8 @@
 # ARD: Lightning initial-overhang offset join parity
 
-Status: docs-only SPEC authorized, then formal Native-first RED. STOP
-before GREEN without separate review approval. Independent base
-4b3844e28711a6a1381ca847dbd390fe67f2347f; not stacked on the four frozen
-W5 spiral/processor chains. This phase contains no production change.
+Docs-only SPEC, then formal Native-first RED. Independent base
+4b3844e28711a6a1381ca847dbd390fe67f2347f; independent of the
+spiral/processor chains. This phase contains no production change.
 
 ## Upstream owner and non-negotiable Rust destination
 
@@ -17,7 +16,7 @@ Rust destination ONLY
 `crates/ares-core/src/fill/lightning/generator.rs:193`,
 Generator::generate_initial_internal_overhangs, the explicit
 JoinType::Square argument of the initial-overhang offset_expolygons call.
-Future separately approved GREEN is ONLY **Square→Miter**, retaining3.0.
+Future GREEN is ONLY **Square→Miter**, retaining3.0.
 The current square argument is an inaccurate shell for upstream's
 specific call, not an Ares-owned geometry policy to preserve.
 
@@ -80,34 +79,32 @@ probes are retained/excluded. Exact INPUT to the initial offset was NOT
 captured, no causal counterfactual/whole-GREEN sufficiency or earliest
 possible upstream divergence is claimed. Same emission domains are NOT
 misrepresented as identical initial-offset input snapshots.
-Evidence `${COORD_ROOT}/evidence/w5-4b-lightning-initial-overhang/`.
 
 ## Included / deferred / exclusions
 
 Included ONLY the source-faithful join argument at that ONE initial-
-overhang shrink call, after future GREEN approval, with limit3 unchanged.
+overhang shrink call, in future GREEN, with limit3 unchanged.
 Everything else deferred: per-polygon ExPolygon wrapping/aggregation,
 initial-offset input provenance gaps, other joins/deltas/precision,
 DistanceField sampling/sorting, trees/propagation/nearest/random order,
 clipping/connection, bridge previews, output speed/cooling/time/M73,
 normalization, source consumers and general geometry defaults.
 
-Avoid queued W1 painted/side-cut, W2 brim/EFC, W3 combine-solid,
-W4 concentric sparse, W5 spiral/processor, W6 seam occlusion. This is a
+Avoid painted/side-cut, brim/EFC, combine-solid,
+concentric sparse, spiral/processor, seam occlusion. This is a
 Lightning initial-overhang join, not solid combination, concentric,
-seam/cache or processor work. Four previous W5 tips remain frozen and
-unconsumed. No dependencies/platform I/O/new Rust module or cleanup.
+seam/cache or processor work. No dependencies/platform I/O/new Rust module or cleanup.
 
-## Formal RED then review before GREEN
+## Formal RED before GREEN
 
 Two DIRECT main native_stream_case::check calls, Grid control/Lightning
 positive. Existing checker double-replays Native then delegates complete
 validated API/bare CLI comparison to native_api_cli. No duplicate replay,
 normalization/JSON/orchestration, Native content constants/assertions,
 expected-failure/ignored decoration or G-code output snapshots.
-Input-only3MFs plus input manifest/README. CPU11/thread1/job1, official
+Input-only3MFs plus input manifest/README. Official
 then seeded controlPASS/positiveactualFAIL with complete retained public
 attempts and stable repeats. Only existing single canonical generated-by
 identity/date normalization; NO M73/header/E/time/motion/config/trailing-
-line mask, numeric tolerance or output sorting. Send SPEC+RED RR and
-STOP. No GREEN/FULL/rebase/integration/main update in this phase.
+line mask, numeric tolerance or output sorting.
+No GREEN in this phase.

@@ -1,21 +1,15 @@
 # ColorChange / M600 preview — source-cited rewrite spec
 
-Status: approved and fast-forwarded to main at `70323c9a7`.
-Spec approval: `d5f91a6c0`. Full gate checkpoint: `96f91ff28`, based on
-`43df7c95d`; the final stop-time unwrap removal in `70323c9a7` passed focused
-M73 byte tests (3/3), fmt and workspace clippy under the approved review scope.
-
-Implementation constraints from approval: core changes are processor parsing
+Implementation constraints: core changes are processor parsing
 and statistics only; slicing/emission behavior is out of scope. Tagged slice
 fixtures use existing user G-code templates. Native cardinality inputs live
-in `tests/parity/color-change/`, not `/tmp`. Removing caller
+in `tests/parity/color-change/`. Removing caller
 `color_print_colors` requires a breaking `!` commit and `web/README.md` notice.
-The coordinator explicitly permits one data-initialization exception in
+One data-initialization exception is permitted in
 `finish/accounting.rs`: initialize the new color-volume vector to empty;
 no algorithm, control-flow or G-code output change there.
 
-Predecessor: Filament/ColorPrint `9b5db6d7a`, approved and fast-forwarded to
-`main` and `pi/web-ui`. Upstream source revision:
+Predecessor: the Filament/ColorPrint slice. Upstream source revision:
 `OrcaSlicer` `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 All upstream paths below are relative to `OrcaSlicer/`.
 
@@ -118,16 +112,16 @@ Two important upstream limitations are explicit:
   out-of-bounds reads for zero-before (1 volume / 2 time records), zero-between
   (2 / 3), zero-after (1 / 2), and zero-only/support-only (0 / 2); normal is
   3 / 3. See `tests/parity/color-change/oracle-cardinality.json`.
-  **Approved Known difference:** preserve raw statistics and ColorPrint
+  **Known difference:** preserve raw statistics and ColorPrint
   segments; if a required volume index is absent, Rust reports partial usage
   unavailable and TS displays that status instead of a guessed partial table.
   Do not zero-fill, truncate, partially return misleading usage rows, or invent
   event/volume associations. No-change prints with no time records need no
   volume reads and do not trigger this status.
 
-## Approved OptionsZCorrector diagnostic distinction
+## OptionsZCorrector diagnostic distinction
 
-The operator approved retaining stable pending-marker identity rather than
+The port retains stable pending-marker identity rather than
 reproducing an upstream stale-index defect. `GCodeProcessor.cpp:3291-3296`
 calls `OptionsZCorrector::set` before custom-time synchronization inserts
 actual-speed vertices (`:5962-6008`). The latter remaps pending time blocks,
@@ -154,9 +148,9 @@ generator/timestamp normalization) and every M73 line remain byte-compared
 with the unmodified official slicer. No tolerances are enlarged and no failing
 assertion is dropped.
 
-## Known difference: tagged marker Time (approved)
+## Known difference: tagged marker Time
 
-For the Time row, the **stable native source-kernel** (only the approved
+For the Time row, the **stable native source-kernel** (only the
 marker-remap patch above) is authoritative. This is actual native conversion
 plus the extracted `ViewerImpl::get_estimated_time_at` kernel, not execution
 of the full GL viewer. Ares's real processed-slice → vgcode → WASM output
@@ -190,7 +184,7 @@ back to marker 790 in stable; the relocated marker's prefix also reflects
 its changed place in the sequence. Subsequent ordered f32 additions propagate
 the offset to the complete tail (`0.039794921875s`). Both native streams'
 full prefix recurrences were checked; no tail was omitted. This bounded
-propagation is explicitly approved, not a general timing tolerance or an XYZ
+propagation is an explicit exception, not a general timing tolerance or an XYZ
 waiver. Any difference outside these boundaries must stop validation.
 
 Reproduction: `marker-time-stable-options.nix`, `marker-time-pair.mjs`, and
@@ -198,18 +192,12 @@ Reproduction: `marker-time-stable-options.nix`, `marker-time-pair.mjs`, and
 `tests/parity/marker-time/tagged-overrides.json` input; integration test
 `crates/ares-wasm/tests/marker_time_tagged.rs` now generates raw/stable Native
 JSON and `stable.tsv` into a printed unique external artifact directory at runtime
-(see `tests/parity/marker-time/README.md`). The former committed Native projections
-and run logs were removed after live GREEN; they remain in git history, never a
-fallback. Historical full records, correspondence,
-first differences/counts and propagation evidence are retained under
-`target/marker-time-final-9e/tagged-time/normal/` and
-`target/marker-time-stable-proof/`. Diagnostics print bounded summaries, not
-large assertion diffs. The initial ordinal comparison and exit 137 are
-retained as failed diagnostic evidence, not silently retried to pass.
+(see `tests/parity/marker-time/README.md`). Diagnostics print bounded summaries, not
+large assertion diffs.
 
 ## M73 C stop-time postprocessing boundary
 
-Operator-approved follow-up: port Normal-mode `GCodeProcessor` stop registration
+Follow-up: port Normal-mode `GCodeProcessor` stop registration
 (`GCodeProcessor.cpp:5715`), eligible cached-block elapsed updates (`:576-579`),
 initial stop placeholder (`:1098-1101`), and next-stop / last-minute export
 (`:1260-1293`). This only adds `stop_times` and M73 C output; it must not change
@@ -223,12 +211,10 @@ may already have flushed a stop's G1 ID, leaving its native stop time at zero.
 Reuse the existing cache elapsed and its next entry for last-minute decisions;
 never recalculate them. Preserve first-match updates for repeated G1 stop IDs.
 
-Tests-only RED commit `4d686d5ba` (originally `057e0636`) contains three complete official G-code
+The RED tests contain three complete official G-code
 oracles (SYNC, ordinary fractional last-minute, and pre-model stop), with exact
-M73 and full-byte comparisons. Source-cited GREEN is `7f07fceb8`. Before
-merge, run both official and seeded full reference suites including
-`profile_entry`, plus all web gates. All color-change case changes must match
-native. The later merger with lint's VG1 timing work must rebase and rerun.
+M73 and full-byte comparisons. All color-change case changes must match
+native.
 
 ## Existing scaffold replacement
 
@@ -297,56 +283,8 @@ existing Rust Tool-color lookup and web FeatureType/Filament totals must not reg
    browser specs and add focused coverage, rather than replace them. Save
    screenshots, native/Rust JSON comparison, generated G-code SHA256 and
    bundle JSON under `target/web-e2e/color-change/`.
-5. **Exit and review.** On fetched `origin/main`, run fmt, workspace clippy
+5. **Exit.** Run fmt, workspace clippy
    with `-D warnings`, workspace nextest, native `test(profile_entry)`
    reference group, WASM/lib/app builds, typecheck/lint and the entire browser
    suite. Record exact source-cited tolerances and Known differences. No
-   inherited browser waiver for this behavior change. For another suspected
-   load failure, report evidence and seek the coordinator's control-run
-   ruling; do not retry until green. Send REVIEW-REQUEST with commit and
-   artifacts; merge only after APPROVED.
-
-## Final verification checkpoint (2026-10-07)
-
-- Core/vgcode/CLI reference checkpoint `06fc4be9d`; final code `96f91ff28`
-  changes only WASM transport to typed `Serialize` views. No dynamic-value
-  allowlist changes. The path-scoped reference-source diff is empty.
-- `cargo fmt --check`, workspace/all-target clippy with `-D warnings`,
-  workspace nextest: **7,935 passed, 9 skipped**. The raw/stable processor
-  pair was enabled, including all nine BBL cardinality fixtures, tag edge
-  cases and three complete original-native M73/G-code byte oracles.
-- Both base and candidate used the coordinator's corrected
-  `${TMP_ROOT}/ares-parity-control-set-v2.sh`, including `profile_entry`, with
-  fresh empty caches. Seeded: **561/561 each**. Official: base **552/561**,
-  candidate **553/561**; both retain the same eight reference-environment
-  failures. These are not represented as a fully passing official suite.
-- The extra base failure, `tree-support/auto/hybrid/overhang`, meets the
-  operator's ND rule: base/candidate **raw Ares bytes are identical**, SHA256
-  `6f9a9ab3bf60d7987356befe5106df6c6a0453e9baa21a409ac4fac3939ebe1a`.
-  Native outputs differ beyond generator metadata: `M73 P3 R25` changes
-  insertion point. No rerun-to-pass was used.
-- WASM, library and app builds, typecheck and lint completed for both trees.
-  Full low-load browser runs: **14/14 base**, **15/15 candidate**, one valid
-  invocation each. Initial JS gzip: base **124,949 B**, candidate
-  **124,953 B**, strictly below 125,000 B. Filament legend and `presetSlice`
-  are included. ColorChange checks use three original-native byte oracles,
-  source records, missing usage, view restoration, reload and non-overlap.
-- Setup-only failures are retained, not counted as validation: candidate
-  reference artifacts initially violated the external-directory rule;
-  browser collection initially lacked three archived generated input
-  fixtures; an audit filter initially selected zero tests. Corrected setup
-  changed no assertions, timeouts, reference binaries or budgets. The real
-  dynamic-value audit RED was fixed with typed transport before rerunning.
-
-Evidence: `${TMP_ROOT}/ares-colorchange-reference-43df7c95d/comparison.json` and
-`environment-failures.json`; repository-local
-`target/color-change-final-43df7c95d/` (gates, setup failures and build logs),
-`target/web-e2e/` (fresh browser artifacts), and
-`target/color-change-slice-oracle/` (raw/stable metadata and exact XYZ-bit
-sets). The base browser artifacts are under
-`${TMP_ROOT}/ares-web-filament-control/target/web-e2e/`.
-
-The eight official environment failures and approved diagnostic distinctions
-remain explicit. This Linux/Chrome verification is not a claim of native
-Windows/macOS execution. Lint's VG1/UsedFilaments integration remains owned by
-lint; the later merger must rebase and rerun the required gates.
+   inherited browser waiver for this behavior change.

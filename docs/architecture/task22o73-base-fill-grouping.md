@@ -289,33 +289,17 @@ Final exact-tree verification passed:
   `cargo fmt --all -- --check`, and `git diff --check` passed;
 - all six Tier-1 checks passed: core and adapter WASM, core Windows x86_64 and
   aarch64, and core macOS x86_64 and aarch64;
-- the staged path count was zero, neither Cargo manifest nor `Cargo.lock`
-  changed, and the forbidden-production and lifecycle/static scans were clean;
+- neither Cargo manifest nor `Cargo.lock` changed, and the forbidden-production and lifecycle/static scans were clean;
 - pinned OrcaSlicer was clean at exact commit
   `8500fcdccaa10b5099ac20d252af3a7c560046f1`;
 - every changed or new Rust file stayed below 400 LOC: the maximum changed file
   was `project_slice.rs` at 381 LOC and the maximum new production shard was
-  `group_fills/params/projection.rs` at 369 LOC; and
-- independent source/specification and standards rereviews closed
-  unconditionally.
+  `group_fills/params/projection.rs` at 369 LOC.
 
 Thirty-one compiling behavioral mutations were killed and byte-exactly
 restored. One additional compiling contour/hole insertion-order mutation
 survived because it is behaviorally equivalent for normalized valid
-ExPolygons; it is recorded as an equivalent survivor, not as a kill. The
-restored production SHA-256 values are:
-
-| production file | SHA-256 |
-|---|---|
-| `project_slice/group_fills.rs` | `1e0c8bb628a7e587fc5a8adbb81313083db49af5c33c9c075e7bef018683f5d3` |
-| `project_slice/group_fills/coalesce.rs` | `71b16ca2b2d4024cd597bd8c48964bf55e9fd8b86d49d43c82fd0fa18d1491ae` |
-| `project_slice/group_fills/params.rs` | `7a3b73dd1d12a0df6dbaa53f32d04c20ebe2388f4ffa7cff79031c57d9282088` |
-| `project_slice/group_fills/params/locked.rs` | `dbba0d22889347f61b11024bdcda9345cbe7340d3054bc89d5b0f287007bf020` |
-| `project_slice/group_fills/params/projection.rs` | `9fac547764b34d70434db46a854ef46a2cc796d6d1aa60c967adb1a2fbf00638` |
-| `project_slice/group_fills/priority.rs` | `83df27b3d976b4b5701d8a061f16a03447f6d7d3cbff8b19d99dfd82937eb4dd` |
-| `project_slice/group_fills/types.rs` | `2916cc6bdd2f02175c14ca4fafc1265866b65f675a4b0bbf47edd81b160e7eb3` |
-| `project_slice/perimeters/flow.rs` | `7d5138ef9c369f2872ad184e89ebd21e18eaf2867a730e1ed99bce1fe566ace3` |
-| `project_slice/perimeters/flow/fill.rs` | `43837d725862a580d325cb2c53eb9ceb37fe1ca37121dfd67832066b3763ca6c` |
+ExPolygons; it is recorded as an equivalent survivor, not as a kill.
 
 Every new or changed Rust source file must remain below 400 LOC. The module is
 implemented as a small facade plus `types`, `params`,

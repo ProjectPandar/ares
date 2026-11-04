@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted, implemented, and unconditionally approved by independent six-axis review.
+Accepted and implemented.
 
 ## Decision
 
@@ -117,17 +117,13 @@ boundary polylines cannot leak through the result type; verify raw geometry is
 not an operand; and ban map/cross-layer access. These observationally equivalent
 or unavailable-input variants are not claimed as behavioral mutation kills.
 
-Implementation evidence: behavioral RED is preserved in
-`/tmp/pi-unified-exec-876-b2329fda.log`; focused O64 passes 6/6 in
-`/tmp/pi-unified-exec-884-54e20970.log`; the exact dependency band passes
-2,384/2,384 in `/tmp/pi-unified-exec-880-75a1a03f.log`; and the Linux workspace
-passes 6,415/6,415 with two skipped in `/tmp/pi-unified-exec-881-6a229124.log`.
-Strict Clippy, rustfmt, wasm32, and all four desktop cross-target checks pass in
-`/tmp/pi-unified-exec-883-6b204268.log`; diff/LOC/structural/static, clean pinned
-Orca, and no-staged checks pass in `/tmp/pi-unified-exec-884-54e20970.log`.
+Implementation evidence: behavioral RED preceded the implementation; focused O64
+passes 6/6; the exact dependency band passes 2,384/2,384; and the Linux workspace
+passes 6,415/6,415 with two skipped. Strict Clippy, rustfmt, wasm32, and all four
+desktop cross-target checks pass; diff/LOC/structural/static, clean pinned Orca,
+and no-staged checks pass.
 
 The 16-mutation audit has SHA-256
 `e88f94d334a4a758574e27bd65dd58d0d9736c4b535be0a658f387930fadbae8`.
 All mutations are killed and production is restored byte-exact at SHA-256
 `f55a4087e91a6f376186e3922977ca9ad79381b7a2a01a5d2bcd68ccbc7029ce`.
-Final independent read-only six-axis implementation review approved unconditionally with no repair item or residual risk.

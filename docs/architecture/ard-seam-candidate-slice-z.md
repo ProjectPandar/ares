@@ -1,7 +1,7 @@
 # ARD: Seam candidates borrow the physical Layer::slice_z
 
-Status: proposed; exact-hash [SPEC](seam-candidate-slice-z-spec.md) review required.
-Base main c251aa616. No production or permanent RED test approval implied.
+Status: proposed; see [SPEC](seam-candidate-slice-z-spec.md).
+Base main c251aa616. No production change or permanent RED test is implied.
 
 ## Source owner
 
@@ -29,7 +29,7 @@ layer_slice_zs:51-66 and seam_placement.rs::apply_objects:136-138, not a new pip
   Unrelated lower-slice, brim, motion, region and loader boundaries stay deferred.
 - Observed candidate z0 versus Native slice_z is a handoff witness, not a promise
   that changing it alone produces complete parity. A separately frozen public
-  RED and approval must precede production. Residual differences require a ruling.
+  RED must precede production. Residual differences require a separate decision.
 - Acceptance remains complete ordered G-code through the platform-neutral
   byte API and CLI, with only established generator identity normalization.
   Failed admissions/observer ABI checks and interrupted legs are not parity REDs.

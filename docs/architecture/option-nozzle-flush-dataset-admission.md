@@ -1,10 +1,7 @@
 # Nozzle dataset six-case Native admission
 
-Actual execution: `3d6de0318ee3534c54fda1bb0c4790cd8a0f9cbc`.
 All six standard seeded Native launches exit0/result0, non-VOID.
-Raw commands, input/member proofs, complete outputs and binary hashes:
-`/tmp/worker3-dataset-admission-v1`; diagnostic differences:
-`output-source-audit.json`. No Native output golden is committed.
+No Native output golden is committed.
 
 Fixed source input comes from the unchanged existing
 `x2d_flush_matrix_standard_predictor_hit_matches_native` test. All other ZIP
@@ -47,4 +44,4 @@ Diagnostic command-only classification is not an acceptance comparator.
 Every CLI E2E still compares each complete validated API and real CLI output
 against freshly produced Native with the unchanged strict comparator. Existing
 `x2d_flush_matrix` assertions remain untouched. Production mismatches stop for
-worker2/coordinator authorization rather than unilateral repair.
+source-owner review rather than unilateral repair.

@@ -1,7 +1,6 @@
 # FillAlignedRectilinear sparse multiline dispatch
 
 Status: SPEC proposal; no Native admission or RED claimed.
-Base: `104d8497097dc7239ad63f7a69f3b418b699b3e8` (stack-6).
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Selection and ownership
@@ -14,11 +13,9 @@ Ares enables the existing multiline implementation only for Rectilinear.
 This is a source-derived candidate, not an observed whole-output difference.
 Fresh Native acceptance and a real sparse first difference are prerequisites.
 
-Inbox ownership audit after FULL 6 found no AlignedRectilinear multiline claim.
-W2 owns anchor projection/ZAA, W3 first-layer mesh geometry, W4 counterbore,
-W1 skirt and W5 enum import; web owns processor OptionsZCorrector. Their files
-are excluded. The prior shared polylines extraction is already merged.
-Triangles is also merged; its approved branch remains unchanged.
+Anchor projection/ZAA, first-layer mesh geometry, counterbore, skirt, enum
+import and processor OptionsZCorrector are excluded. The prior shared polylines
+extraction is already merged. Triangles is also merged and remains unchanged.
 
 ## Upstream boundary
 
@@ -50,7 +47,7 @@ Both existing consumers use this predicate:
 for anchoring. No caller change is planned; no edit to anchor_projection.rs.
 The current by-lines adapter is a temporary compatibility shell only for the
 unported aligned sparse count>1 branch; count1/full-density paths remain intact.
-If RED attribution requires other behavior, stop and request scope approval.
+If RED attribution requires other behavior, stop and amend the scope.
 
 Deferred: Line/Zag dispatch, ZAA/Polyline3, bridge classification, new angle or
 reference-point behavior, shared offset/union/numerics, fill schema changes,
@@ -91,18 +88,14 @@ Native rejection or rewriting a requested value is reported, not silently
 substituted. Require Native acceptance in official and seeded plus a real main
 whole-output mismatch with sparse attribution. If all candidates agree, report
 NO RED FOUND and stop without production changes. RED is a separate tests/input
-commit, reviewed before GREEN. Do not submit generated Native outputs.
+commit, preceding GREEN. Do not submit generated Native outputs.
 
 ## Acceptance
 
-After SPEC approval, directed runs use outer taskset CPU11, jobs1/threads2,
-load<60 and fresh artifact/cache directories for every run. Record exact HEAD,
-clean status, producer identities, acceptance, first difference and raw hashes.
-Keep all comparisons and controls. GREEN must make the two modes fully equal;
+Directed runs use fresh artifact/cache directories for every run. Keep all comparisons and controls. GREEN must make the two modes fully equal;
 count1 and non-RED controls must have byte-identical Ares raw outputs to RED.
 
 Run whole option_coverage in both modes, strict clippy, fmt and wasm32 on final
 HEAD, with every changed file <=400 LOC. Canonical sweep without
 ARES_PARITY_OPTIONS is visibly SKIPPED and Native-not-executed, per its existing
-contract. Default-environment workspace/CI and canonical full follow coordinator
-scheduling; full requires explicit FULL-GO. No push without exact-hash approval.
+contract.

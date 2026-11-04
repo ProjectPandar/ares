@@ -1,9 +1,9 @@
-# Approved ZAA PLAN90381524d: stage-one kernel failure inventory
+# ZAA PLAN90381524d: stage-one kernel failure inventory
 
 Write before isolated kernel tests and production. Public RED6d2b6f37a already
 proves the Native/application gap; these isolated tests do not replace it.
-Coordinator allows Tree3f/IndexedMesh/contour now, not fill carrier migration.
-Fill migration waits W5 zag/W6 Triangles stack main, gets its own mechanical
+This stage covers Tree3f/IndexedMesh/contour, not fill carrier migration.
+Fill migration follows the zag and Triangles changes, gets its own mechanical
 commit and both-mode evidence, and preserves Vec capacity/no per-point copies.
 
 Source: AABBTreeIndirect.hpp Tree3f/build/QuickSelect/first-hit;
@@ -32,4 +32,4 @@ than reimplementing the algorithm in expected values. Rebuild the same tree
 and compare complete nodes/results to catch unstable topology; construction
 and recursion are serial with no available_parallelism. Public Native E2E
 remains the eventual strict whole-output authority. No new guards/fallback,
-assertion weakening, suppressions, full/workspace or pushes.
+assertion weakening or suppressions.

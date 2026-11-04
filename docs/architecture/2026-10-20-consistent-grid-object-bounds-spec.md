@@ -1,9 +1,7 @@
 # Consistent-grid object bounds: FillRectilinear source slice
 
-Status: SPEC-REVIEW-REQUEST, Native-first discovery only. Base/current main:
+Native-first discovery only. Base main:
 `a5eb0f0356057fe9c62ec3319834f82b40a7731a`. No public RED or production edit.
-Queue: main is frozen for W1 Voronoi, then W4 ironing; this RR queues behind
-those workers and requests neither a merge window nor a FULL run.
 
 ## Owning upstream boundary
 
@@ -35,14 +33,14 @@ pipeline or rewrite graph traversal, crosszag phase, or locking behavior.
 
 ## Source-driven independent Native witness
 
-Keep the approved authored10mm object/profile ZIP bundle unchanged outside
+Keep the authored10mm object/profile ZIP bundle unchanged outside
 settings. Classic, single object/instance, direction45, sparse20%, multiline1,
 layer0.2, top6, ZAA0/0. Only sparse pattern and XY contour compensation vary.
 No mesh/geometry search. +0.8 is chosen from the existing source grid-snapping
 boundary below, not by searching arbitrary shapes. +0.1 is a below-boundary
 control; the same generic compensation on Rectilinear is another control.
 
-All8 inputs use two fresh canonical Native references per mode, CPU12:
+All8 inputs use two fresh canonical Native references per mode:
 32 Native streams total, repeat/cross-mode normalized bytes identical.
 Effective Native pattern/compensation/multiline/top/ZAA footers are admitted.
 
@@ -117,7 +115,7 @@ alone supply the strict verdict. A bbox-only port's closure is not yet claimed.
 ## Exact Rust destination, included and deferred behavior
 
 Reuse the already ported `fill_entities/stars_bounds.rs::{object,extended}`
-model-size boundary from the approved PlanePath chain. Do not duplicate its
+model-size boundary from the PlanePath chain. Do not duplicate its
 mesh/ModelPart/float/no-offset-transform/truncate/halve calculations.
 
 Included behavior: the raw model frame for all three consistent classes in
@@ -152,7 +150,7 @@ The observed classic single-instance witness is not a new support guard.
 
 ## Separate RED then bounded GREEN
 
-After independent SPEC approval only, freeze these8 input-only ZIPs with
+Freeze these8 input-only ZIPs with
 SPEC SHA pins (external matrix index holds exact identities). Reuse shared
 public sparse-fill repeats/producers/strict acceptance and existing bbox
 activity checks as applicable; no cloned harness and no weakened old Sparse
@@ -164,21 +162,19 @@ Discovery currently covers CLI, not new public API RED acceptance.
 Expected RED per mode:3 targets FAIL,5 controls PASS; existing19 shared tests
 remain PASS, including all PlanePath controls. No fixed Native golden,
 filter/tolerance, inverted Ares-divergence assertion, ignore/allow/expect or
-UnsupportedProjectFeature addition. Separate RED approval precedes production.
+UnsupportedProjectFeature addition. RED precedes production.
 
 GREEN changes only frame provenance at the two adapters and necessary orphan
 helper removal. Tests/harness/inputs are frozen; preserve every existing
 passing control. **Any strict residual means STOP/report**, not expanding into
 parity/traversal, locking, E formatting, generic compensation or M73 fixes.
-Exact current-main final hash must pass fmt, locked workspace/all-target clippy
+The exact final hash must pass fmt, locked workspace/all-target clippy
 `-D warnings`, core/wasm wasm32, both-mode targeted cases and canonical fresh
-FULL CPU20-23/threads4 with0 FAIL/skipped. CPU12 compilation/probes.
-Rebase/range-diff and repeat final-hash FULL if main advances. W1 then W4
-retain merge priority; this SPEC makes no claim to their window.
+FULL with0 FAIL/skipped.
 
-## External evidence
+## Discovery inputs
 
-Exact discovery input identities to freeze only after SPEC approval:
+Exact discovery input identities to freeze:
 
 | Pattern | XY compensation | SHA256 |
 |---|---|---|
@@ -191,12 +187,5 @@ Exact discovery input identities to freeze only after SPEC approval:
 | lockedzag | 0 | `1ff705f79f4b97bdc6e8e8d80bb56d7412e7bbc3c4ad2293a2d0af3b4988cf03` |
 | lockedzag | 0.8 | `e4d5d41399bdd49f59dee8942b84d0d72802f05651158eb9ec3268a1c76b7d6e` |
 
-
-`${EVIDENCE_ROOT}/w3-consistent-bounds-{zigzag,crosszag,lockedzag,rect}`
-and matching `-seeded` directories contain commands, producer hashes, exact
-inputs, effective requests, repeats and complete-output comparisons.
-`w3-consistent-bounds-localize/{native-entry,ares}-gdb.log` contains successful
-first-argument probes. `w3-consistent-bounds-spec-review/{matrix-audit,
-activity-audit,derived-grid-threshold}.json` and external
-`w3-consistent-bounds-audit.py` provide repeatable checks. No public fixture,
+No public fixture,
 RED, production edit or FULL is included in this SPEC stage.

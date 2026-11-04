@@ -1,6 +1,6 @@
 # B-T GREEN: original GLU source map
 
-Approved RED7942e79ad uses a runtime original glu-libtess supplier. This
+The RED uses a runtime original glu-libtess supplier. This
 production port replaces the missing private geometry operation; it does not
 change Support preparation, octree inputs, bridge-candidate ownership or
 public load/selection contracts. B-S remains the real pipeline consumer.
@@ -50,30 +50,27 @@ retained in tessellation/LICENSE and source module headers.
 
 ## Verification and staging
 
-A rapid driver compiled the actual kernel source on CPU12, then regenerated
+A rapid driver compiled the actual kernel source, then regenerated
 Native expectations from the original C kernel for every authored input:
 18/18 ordered coordinate-bit matches, including holes, combine crossings and
-101-vertex cache flush. Root /tmp/worker3-glu-kernel-green-f6zag709 retains
-requests and both runtime outputs. This is diagnostic evidence; the approved
-19 nextest comparisons and exact-head gates are still required.
+101-vertex cache flush. This is diagnostic evidence; the 19 nextest
+comparisons are still required.
 
-The independent B-T operation has no production caller until B-S. Coordinator
-has approved stacking separately committed/reviewed B-T and B-S
-rather than adding a dummy consumer, exposing unrelated internals, adding a
-cfg exclusion or suppressing dead_code. No B-S implementation is authorized
-by this B-T GREEN. Non-test strict gates remain deferred until the real B-S consumer joins this stack.
+The independent B-T operation has no production caller until B-S. B-T and B-S
+are committed separately and stacked, rather than adding a dummy consumer,
+exposing unrelated internals, adding a cfg exclusion or suppressing dead_code.
+No B-S implementation is part of this B-T GREEN. Non-test strict gates remain
+deferred until the real B-S consumer joins this stack.
 
 CI self-hosted native and parity jobs now check gcc/g++, and sparse checkouts
 include original deps_src/glu-libtess. Both canonical-mode CI parity jobs run
 the 19 core comparisons with their mandatory Native environment before CLI
-parity, so the runtime C supplier build is actually exercised. The canonical
-local full script is unchanged. No workspace/full/push is run by this worker.
+parity, so the runtime C supplier build is actually exercised.
 
-The first formal GREEN at bd759a6c2 passed official19/19 and seeded19/19
+The first formal GREEN passed official19/19 and seeded19/19
 runtime-Native nextest comparisons (21 Native executions per leg, including
-A–B–A). Root /tmp/worker3-glu-formal-green-3hnnfvx8 retains compiler/raw/bit
-artifacts. Actual-kernel WASM check passed. Strict kernel lint found a manual
+A–B–A). Actual-kernel WASM check passed. Strict kernel lint found a manual
 swap; it is replaced with Vec::swap in a following commit, preserving the
 source swap and RNG pivot exactly. No assertion/input/oracle changes.
 Kernel and core gates remain distinguished: isolated kernel strict/WASM do
-not claim whole-core strict while the approved B-S consumer is absent.
+not claim whole-core strict while the B-S consumer is absent.

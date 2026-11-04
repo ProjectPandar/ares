@@ -18,7 +18,7 @@ No expected G-code snapshots or private Native oracle.
 Two DIRECT native_stream_case::check calls reuse NativeCase double replay
 then complete validated API/bare CLI comparison. No copied helper/replay/
 normalization/orchestration, ignored/expected-failure tags or tolerance.
-CPU11/thread1/job1, ARES_REQUIRE_ORCA=1, explicit official then seeded
+ARES_REQUIRE_ORCA=1, explicit official then seeded
 Native environments and retained artifact roots:
 
 ```
@@ -33,10 +33,7 @@ NO M73/header/time/E/XY/fan/comment/config/trailing-line masks/sorting.
 M73 is output; first-M73 failure is legitimate strict RED, not permission
 to ignore it or patch time totals. Source block caches already match.
 
-External evidence ID `w5-multimat-vg1-export-arc-cache` retains exports/
-launches/settings/diagnostics. Such source-counter diagnostics are NOT
-formal public API/CLI acceptance evidence. Freeze tests/inputs/helpers/
-docs after RED; any later bounded GREEN residual requires STOP/report.
-Send SPEC+RED RR then STOP, no production/GREEN/FULL/rebase/integration.
-Ninth chain is based on frozen eighth tip d0ebd29ad; all prior approved
-tips remain unchanged. No new candidate crate/dependency/pipeline.
+External source-counter diagnostics are NOT formal public API/CLI
+acceptance evidence. Tests/inputs/helpers/docs are frozen after RED; any
+later bounded GREEN residual requires STOP/report. No new candidate
+crate/dependency/pipeline.

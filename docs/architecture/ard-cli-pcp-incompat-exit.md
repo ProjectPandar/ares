@@ -14,7 +14,7 @@ Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
    reads already-parsed embedded values (`printer_settings_id`,
    `print_settings_id`, `inherits_group`, `print_compatible_printers`).
    No serialization/write changes; 3MF `print_compatible_printers`
-   serialization fidelity stays worker1's ownership.
+   serialization fidelity is a separate slice.
 3. **Typed error, family exit.** Rejection is a dedicated
    `SliceError::ProcessNotCompatible` mapped in `ares-cli/src/failure.rs`
    to the `-17` family (stdout line, empty stderr, sorted-key

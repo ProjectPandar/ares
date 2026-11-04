@@ -2,10 +2,10 @@
 
 ## Status and source ownership
 
-SPEC only, based on main92238c87148e9e2fe42c355ac76b60a27c527a0d.
+SPEC only.
 This is a source-cited Rust rewrite slice, not an Ares-designed pipeline.
-No production implementation is authorized by this document. Public RED follows
-in a separate test/input-only commit; GREEN/FULL require coordinator approval.
+No production implementation is part of this document. Public RED follows
+in a separate test/input-only commit.
 
 Upstream pin8500fcdccaa10b5099ac20d252af3a7c560046f1:
 - libslic3r/Point.hpp:277 default Point3 numeric zero;
@@ -37,14 +37,14 @@ existence of a numeric cursor with its defined-for-travel status.
 5. No fallback to writer coordinates for undefined numeric state; no feature
    flags, legacy compatibility branch, special-case fixture or cached answer.
 6. Keep integer cursor arithmetic/rounding and deterministic iteration, with no
-   new per-path allocation or dependence on worker count. All changed text<400LOC.
+   new per-path allocation or dependence on thread count. All changed text<400LOC.
 
 Included: source cursor initialization, unconditional origin translation and
 faithful numeric/defined state plumbing required by existing consumers.
 Deferred: seam candidate geometry/scoring/visibility, negative occlusion, region
 Boolean, painting, routing, retraction/lift policy, processor/time, print_order,
-and the separately frozen volume-affine and other approved chains. A mechanical
-consumer migration is not authorization to redesign those consumers or loosen
+and the separately frozen volume-affine and other chains. A mechanical
+consumer migration is not a reason to redesign those consumers or loosen
 assertions. If the minimal owner correction cannot pass the witness unchanged,
 STOP and report rather than patching downstream scoring/travel/time.
 
@@ -83,9 +83,7 @@ changing only preferred reproduces corner2 versus1; raw runtime index and Native
 expf bit arithmetic are NOT claimed captured. Native DWARF was seeded debug,
 not official. Evidence is an input-owner proof, not validation of a code fix.
 
-Discovery root: ${EVIDENCE_ROOT}/w6-92238-front-edge-nearest-br884s6n/
-Audit root: ${EVIDENCE_ROOT}/w6-front-edge-owner-audit-pvpa3_kb/
-The obsolete489/66/dd8 initial-cursor chain remains discarded. No ancestry,
+The obsolete earlier initial-cursor chain remains discarded. No ancestry,
 source patch, test migration or causal claim from that chain is inherited.
 The earlier negative-volume witness did not qualify cursor behavior; this new
 positive/front-edge pair and new audit are the sole evidence for this slice.
@@ -97,14 +95,12 @@ Use runner::native_stream_case::check -> NativeCase directly, signature
 archives and SHA. Native2 stable FIRST precedes real byte API/CLI, whole ordered
 generator-only comparison retains M73, time, motion, comments, metadata/footer.
 No skips, expected rejection, tolerance, guard or Native-derived expected stream.
-Target should genuinely fail, control pass in each authorized directed mode.
+Target should genuinely fail, control pass in each directed mode.
 Independently audit actual raw API/CLI equality; target canonical panic may
 precede final raw assertion/adapter update and must be disclosed as such.
 
-RED RR includes both-mode receipts, clean scope/ancestry and input/SHA audit,
-fmt and strict workspace/all-target clippy, all changed text<400LOC. No production
-change or unit-test migration in the RED phase. After explicit GREEN approval,
-verify unchanged public pair first, then authorized adjacency/wasm compile/FULL
-on the exact final tip; never credit an earlier or later integration tip.
-Integration window instructions preempt this independent work. No rebase/merge/
-push, frozen-chain modification or callback adaptation is implied by this SPEC.
+RED includes both-mode input/SHA audit, fmt and strict workspace/all-target
+clippy, all changed text<400LOC. No production change or unit-test migration in
+the RED phase. For GREEN, verify the unchanged public pair first, then adjacency
+and wasm compile on the exact final tip. No frozen-chain modification or callback
+adaptation is implied by this SPEC.

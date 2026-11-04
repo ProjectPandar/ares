@@ -2,8 +2,7 @@
 
 ## Status and supersession
 
-SPEC-REVIEW-REQUEST, docs only, on main3ee8f272c plus the approved S-C0 RED
-c15b29c60 and localization documents. Production remains unchanged.
+This revision builds on the S-C0 RED c15b29c60 and localization documents.
 This revision makes the earlier anchoring entry operation the first boundary.
 It supersedes the implementation order of SPEC37145ce12 and addendum a11e509bd:
 fix/re-observe this input operation first. The hook extension is conditional
@@ -40,10 +39,8 @@ The current helper is a temporary shell around the upstream base/pattern
 entry boundary; replace its direct unmodified-domain forwarding. Do not add
 an independent Ares geometry stage or a global anchoring wrapper.
 
-W6 owns the same file's `build_object_octree` coordinate work and may use
-`fill/adaptive/octree.rs` for that work. Neither is in this patch. The
-functions do not overlap: whichever chain lands second rebases; report a
-conflict before resolving any shared-file production hunk.
+The same file's `build_object_octree` coordinate work and
+`fill/adaptive/octree.rs` are not in this patch; the functions do not overlap.
 
 ## Included operation and exact arithmetic
 
@@ -107,17 +104,17 @@ are not ruled out by this source-only presence audit and remain deferred.
 
 ## RED reuse, sequence and residual gate
 
-Reuse EXACT approved S-C0 authored input SHA256
+Reuse EXACT S-C0 authored input SHA256
 9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1
-and its approved public test c15b29c60 unchanged in assertions/comparator.
+and its public test c15b29c60 unchanged in assertions/comparator.
 It exercises runtime official/seeded Native, `slice_project_plate_validated`,
 real CLI, strict whole-output comparison and raw API==CLI equality. Its
 current panic is a real failure, never an accepted result or parity PASS.
 No new isolated test or frozen Native output is needed for this revision.
 
-After SPEC approval:
+Sequence:
 
-1. Implement only the anchoring inset, plus the already requested stable
+1. Implement only the anchoring inset, plus stable
    test-comment wording: describe CLI/API evidence order without current
    state/history. No assertion weakening or test retirement.
 2. Re-observe the first anchoring filler/connector input against Native:
@@ -125,7 +122,7 @@ After SPEC approval:
    parity in both modes before attributing any residual to hooks.
 3. If any earlier intermediate still differs, STOP at that first difference.
    Only if the entry inset is correct and a downstream residual remains,
-   activate the approved a11e509bd hook-localization extension. Identify its
+   activate the a11e509bd hook-localization extension. Identify its
    actual limiting collision candidate/expression before editing hooks;
    no trial-and-error production changes or simultaneous speculative fixes.
 4. GREEN acceptance remains full S-C0 strict equality plus unchanged B-S
@@ -133,17 +130,13 @@ After SPEC approval:
    controls, Adaptive controls and strict/fmt/wasm32. A residual means STOP,
    not normalized comparison, retries, skipped input or new rejection.
 
-All runtime/build commands use outer taskset CPU12; directed jobs1/threads2,
-canonical mode/common variables and fresh Native cache/artifact roots each
-run, START/END to inbox. Full/workspace/CI/push/merge remain coordinator-only.
+Runs use canonical mode/common variables and fresh Native cache/artifact roots.
 No unsafe, new allow/expect, probes, guards, fallback or panic swallowing.
 The original grid assertions stay; no evidence currently justifies removal.
 
 ## Evidence and deferred work
 
 Accepted first-unequal proof: `support-cubic-anchoring-inset-preflight-stop.md`
-(0fb0a0ac5) and durable root
-`${EVIDENCE_ROOT}/worker3/support-touching-grid-bbox-preflight/20261015-124632`.
-No new runtime experiments were run for this docs-only revision.
+(0fb0a0ac5).
 Object-region spacing stays BLOCKED until S-C0 lands; A-C1/C2-C4 Inner-wall,
 Honeycomb/TPMS-D candidate omissions and multiline>1 expansion remain deferred.

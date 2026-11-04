@@ -1,10 +1,9 @@
 # B-T isolated RED: failure modes before tests
 
-Status: failure-mode inventory written before any B-T test/oracle/production
-code. Coordinator approved isolated RED for this geometry sub-slice; public
-S45 end-to-end output proof belongs to the later Support preparation slice.
-Base29f4a49c18139925fec238d31d2fdb6b790fbc30, approved SPEC3d863ce63
-rebased456fd2a2b with range-diff1/1 `=`. No production implementation here.
+Failure-mode inventory written before any B-T test/oracle/production code.
+This geometry sub-slice uses an isolated RED; public S45 end-to-end output
+proof belongs to the later Support preparation slice. No production
+implementation here.
 
 ## Source supplier audit
 
@@ -31,8 +30,8 @@ fixture branch or guessed emission reorder is permitted for GREEN.
 
 ## Rust seam and compile RED
 
-Ares geometry is crate-private in geometry.rs. With the coordinator's
-isolated-test ruling, B-T tests live under geometry/tessellation/tests.rs;
+Ares geometry is crate-private in geometry.rs. As isolated tests, B-T tests
+live under geometry/tessellation/tests.rs;
 geometry/tessellation.rs contains test registration only in RED, and
 geometry.rs registers the module. No new public API is needed for this RED.
 The desired private source operation is triangulate_expolygon_3d:
@@ -46,7 +45,7 @@ admission is collected independently; expectations are generated at test time. N
 empty result, Unsupported guard, ignore/cfg skip or normalized tolerance is
 introduced to fabricate a runtime failure. RED cannot merge without GREEN.
 
-## Runtime Native oracle (replaces rejected ea0745186)
+## Runtime Native oracle (replaces a rejected frozen-order oracle)
 
 Every enabled test compiles tests/parity/glu-tessellation/native_oracle.cpp
 against the original OrcaSlicer/deps_src/glu-libtess sources at runtime.
@@ -56,7 +55,7 @@ committed Native index orders/coordinates serve as expected values.
 Authored input JSON, generator and failure-mode inventory remain committed.
 
 The gate is ARES_PARITY_PROFILE_ENTRY_REFERENCE, also used by OrcaRunner;
-${TMP_ROOT}/ares-parity-control-set-v2.sh sets it to 1, together with
+the parity control-set script sets it to 1, together with
 ARES_REQUIRE_ORCA=1. Optional unconfigured runs emit the shared explicit
 Native SKIPPED notice, never a parity claim. Required runs and enabled runs
 with missing Native binary/resources/artifact root/vendor sources/compiler
@@ -93,16 +92,14 @@ Native S45 observations remain provenance/hand-off, not a B-T slice PASS.
 | F15 | Cached convex and sweep paths differ | Native callback primitive + ordered triples per case |
 
 Run Native preflight before finalizing the authored cases; remove no Native-accepted
-failure mode without coordinator ruling. A rejected input is explicitly
+failure mode without a documented reason. A rejected input is explicitly
 not a parity RED. Compare ordered coordinates exactly; area/count/orientation
 may supplement but never replace ordered equality. Generated vertices need
 source-derived identities distinct from submitted vertices, not invented
 nearest-coordinate matching or sorting. Do not weaken any existing assertion.
 
 RED commit follows this inventory commit. Report Native outcomes and precise
-Rust compile RED with exact hash; no Rust algorithm GREEN until reviewed.
-All compile/Native/nextest processes CPU12 outer taskset, jobs1/threads2,
-fresh run root; no full/workspace allocation or push. Freeze overrides runs.
+Rust compile RED.
 
 ## Revised RED verification summary
 
@@ -115,10 +112,8 @@ Fmt and strict clippy of the independent oracle test passed. Required-gate
 negative checks for missing profile-entry flag, artifact root and Native
 binary each failed (nextest100), without a SKIPPED result.
 The initial SHA-format helper compilation error is excluded from RED evidence.
-The original rejected frozen-order commit is replaced, not retained in the
-candidate chain; no authored input was changed.
-Receipts, compiler/source fingerprints, gate logs and runtime Native products
-are archived outside Git under
-${EVIDENCE_ROOT}/worker3/glu-tessellation-b-t-runtime-red/.
-Only this outcome summary is committed; no Native output coordinates/indices
+The original rejected frozen-order commit is replaced, not retained; no
+authored input was changed. Receipts, compiler/source fingerprints, gate logs
+and runtime Native products are not committed. Only this outcome summary is
+committed; no Native output coordinates/indices
 are copied into test expectations or repository artifacts.

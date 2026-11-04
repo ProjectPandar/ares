@@ -1,6 +1,6 @@
 # adaptive_infill: prove the lookup guard unreachable, remove only that guard
 
-## Decision requested
+## Decision
 
 This slice removes an obsolete **internal-invariant** error branch, not an
 option-admission restriction. The sole literal `adaptive_infill` guard is
@@ -8,8 +8,6 @@ option-admission restriction. The sole literal `adaptive_infill` guard is
 that has passed the preceding traversal stage. Native preflight proves the
 adaptive configuration itself is reachable; it does **not** prove the
 missing-resolved-object branch is reachable.
-
-Base: `origin/main 6a6587f8f`. Production/tests unchanged at SPEC submission.
 
 ## Upstream ownership and Rust destination
 
@@ -87,10 +85,9 @@ These require independent source-cited specs and Native-backed RED cases.
 Do not mix them with deletion of the missing-object invariant error branch,
 remove other sparse pattern guards, or change region selection.
 
-## Native-only preflight evidence (CPU18)
+## Native-only preflight evidence
 
-Root `${TMP_ROOT}/ares-adaptive-infill-preflight-VSCkZ0/` contains reproducible
-input 3MFs, producer logs, exit-code files and output G-code. Inputs derive
+Preflight inputs are reproducible 3MFs. Inputs derive
 from the retained overhang parity fixture, changing only sparse pattern,
 20% density, and blank sparse/solid rotation templates. Export includes
 real sparse infill, not just schema admission:
@@ -102,31 +99,27 @@ real sparse infill, not just schema admission:
 | seeded | adaptivecubic | 0 | 63 |
 | seeded | supportcubic | 0 | 63 |
 
-Commands: outer `taskset -c 18`, `--slice 0 --outputdir <fresh-dir>
-<pattern.3mf>`; official `/tmp/orca-wrapper-inherit-cpu.sh` with explicit
-`ORCA_APPDIR`; seeded `scripts/orca-seeded-parity.sh` with canonical replay
-binary, seed0 and replayCPU18. START/END receipts recorded in inbox. No
-Ares execution or parity success is claimed by this preflight. Native
+Commands: `--slice 0 --outputdir <fresh-dir> <pattern.3mf>` with the official
+producer and the seeded replay producer (seed0).
+No Ares execution or parity success is claimed by this preflight. Native
 outputs remain outside Git.
 
-## Verification / RED boundary ruling requested
+## Verification / RED boundary
 
 An E2E RED that triggers this missing lookup through legal public input
 would contradict the ownership proof above. Do not manufacture a malformed
 internal state, weaken assertions, or pretend Native pattern admission is
-RED for an unreachable branch. Request the coordinator's invariant-removal
-exception (W2 precedent): source proof plus unchanged public E2E behavior
+RED for an unreachable branch. Verification uses the invariant-removal
+approach: source proof plus unchanged public E2E behavior
 before/after, rather than a false failing public guard case.
 
-After APPROVED: baseline and candidate public slicing cases with printable
+Verification: baseline and candidate public slicing cases with printable
 adaptive cubic objects (including nonprintable earlier source groups and
 multiple instances to exercise retained source indices), official+seeded
 strict Native comparison where established parity holds. No support/scaffold
 behavior port is included. If baseline reveals a deferred scaffold mismatch,
-preserve/report it for scope ruling; do not expand production or normalize
-it away. Keep every existing assertion unless separately approved.
+preserve/report it; do not expand production or normalize
+it away. Keep every existing assertion.
 
-Then strict clippy/fmt/WASM, authorized serialized workspace and separately
-requested exclusive canonical full. Record source proofs, exact artifact
-paths, and residual risks. No worker main push command: coordinator alone
-merges after approval.
+Then strict clippy/fmt/WASM, workspace and full parity runs. Record source
+proofs and residual risks.

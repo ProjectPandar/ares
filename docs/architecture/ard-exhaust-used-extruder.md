@@ -1,10 +1,10 @@
 # ARD: preserve writer-used extruder membership in exhaust-fan reductions
 
-## Context and authority
+## Context
 
-COORD accepted discovery #101 on main6f6ef10f5 and authorized docs-first #102
-SPEC followed by #103 success-required public RED. This records non-negotiable
-architecture, not GREEN authority. [SPEC](exhaust-used-extruder-spec.md) owns the
+Discovery is accepted on main 6f6ef10f5; a docs-first
+SPEC is followed by a success-required public RED. This records non-negotiable
+architecture. [SPEC](exhaust-used-extruder-spec.md) owns the
 matrix, failure inventory, validation and included/deferred behavior.
 
 ## Decision
@@ -21,7 +21,7 @@ Use the existing authoritative writer-used ID owner: source provenance is
 `Print.cpp:522–547`. A separate list reconstructed from positive model moves
 would lose support/custom-tool/wipe-tower participation and is forbidden as a
 general production substitute. Private context handoff must be traced and
-reviewed before GREEN; no registry redesign or print_order change is authorized.
+checked before GREEN; no registry redesign or print_order change is in scope.
 
 Preserve capability/master/phase gates, source get_at indexing, eligible zero
 speed, max/PWM conversion `GCodeWriter.cpp:1157–1171`, flavor and command order,
@@ -44,10 +44,10 @@ target must genuinely fail while three controls pass. No expected-error PASS.
 
 ## Deferred and consequences
 
-SPEC and tests are separate commits; all implementation waits for RED review
-and explicit GREEN. Defer nonzero-only/multiple-used/support/custom-tool runtime
-witnesses, adjacent fan/temperature work, other workers' skirt/z-hop/print_order/
-processor-M73/seam-occlusion work, FULL and platform runtime qualification.
+SPEC and tests are separate commits; all implementation waits for RED
+and a separate GREEN. Defer nonzero-only/multiple-used/support/custom-tool runtime
+witnesses, adjacent fan/temperature work, separate skirt/z-hop/print_order/
+processor-M73/seam-occlusion work, full parity and platform runtime qualification.
 Rust destination remains portable API logic, without filesystem/terminal/UI or
 backend dependency. No public API expansion, unit tests, dormant consumer,
 second registry, safety fallback or unrelated cleanup is justified by this slice.

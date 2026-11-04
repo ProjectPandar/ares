@@ -1,8 +1,8 @@
 # Slice C1 SPEC/proof: exhaustive sparse-pattern admission
 
-Status: SPEC-REVIEW-REQUEST for direct deletion; no C1 production edit.
+Status: proposed SPEC for direct deletion; no C1 production edit.
 Base enum inventory: `c22f5a81da41fce715b528268711393649daad66`.
-Independent slice from the proof-authorized surface-kind deletion (Slice A).
+Independent slice from the proof-backed surface-kind deletion (Slice A).
 
 ## Proof
 
@@ -37,7 +37,7 @@ implementation; it has no equivalent always-false admission rejection.
 Reuse Ares' existing typed dispatch in `sparse_anchoring/arms.rs` and
 `arms_tail.rs`. The upstream selected-surface logic remains authoritative.
 
-Included, if approved: delete only the exhaustive sparse-pattern whitelist
+Included: delete only the exhaustive sparse-pattern whitelist
 and its unreachable unsupported return. Do not replace it with a default
 pattern, new unsupported gate, error masking, or dispatcher rewrite.
 `ProcessInfillPattern` remains imported for the separate top/solid checks.
@@ -50,17 +50,16 @@ The existing validator is a temporary compatibility shell. Removing this
 redundant list does not grow a separate Ares pipeline or change the owning
 upstream dispatch boundary.
 
-## Validation and review
+## Validation
 
-Request coordinator ruling under the accepted unreachable-check policy:
+Decide under the accepted unreachable-check policy:
 direct deletion without fabricating a public RED. This proof is static,
 not a passing/failed E2E result. No deletion is included in this document.
 
-After authorization and RESTORED, run existing bridge/anchor and sparse-pattern
+After the decision and RESTORED, run existing bridge/anchor and sparse-pattern
 option_coverage regressions official+seeded with fresh per-run Native cache
-and artifact roots, jobs2/threads2. Strict clippy, fmt and wasm32 must pass.
-Then submit C1's independent code REVIEW; heavy workspace/full only by queue
-allocation, no push before approval. All assertions/comparators remain intact.
+and artifact roots. Strict clippy, fmt and wasm32 must pass.
+C1 lands as its own commit. All assertions/comparators remain intact.
 
 ## Other slice audit still open
 
@@ -78,11 +77,11 @@ A schema-bounded percent near FLT_MAX, multiplied by spacing then narrowed,
 may overflow; check Native admission and actual float projection after oracle
 restoration. No unreachable-proof or deletion is claimed for D at this stage.
 
-## Coordinator ruling / implementation
+## Deletion decision / implementation
 
-RULING `1e5ee06c3` accepts this exhaustive proof and authorizes direct deletion
+Decision `1e5ee06c3` accepts this exhaustive proof and permits direct deletion
 of the sparse-pattern guard as a commit separate from Slice A. The production
 change removes only that always-false rejection; the existing per-pattern
 Fill dispatch and other checks are preserved. No fabricated RED or assertion
 change is involved. Slice A and C1 may share one post-RESTORED directed run
-and one code REVIEW-REQUEST, while retaining distinct implementation commits.
+while retaining distinct implementation commits.

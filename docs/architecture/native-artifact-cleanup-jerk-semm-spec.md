@@ -1,6 +1,5 @@
-# Native 清理 B：jerk / SEMM 整流三例
+# Native 清理：jerk / SEMM 整流三例
 
-owner worker6；整体 B 与 runner/cache 策略 owner worker4。基线 `7770aee5a`。
 本片仅迁移测试的 Native 参照来源，不改变生产行为或公开 API。
 
 ## 上游边界与目标
@@ -44,7 +43,7 @@ Rust 测试目标为
 
 ## Runtime、缓存和删除边界
 
-每例通过 `OrcaRunner::from_env` 接入片 A 的 `tests/support/native_environment`：
+每例通过 `OrcaRunner::from_env` 接入共享的 `tests/support/native_environment`：
 `ARES_REQUIRE_ORCA=1` 下缺依赖 FAIL；optional 缺依赖输出可见 SKIPPED；
 已配置无效、执行失败、解析失败或输出不等始终 FAIL。不自写 skip，不从 PATH 选 Native。
 以原输入文件名和字节写入本例工作目录，构造既有 `ExportedCase`，调用 `slice_case`。
@@ -68,17 +67,16 @@ Deferred：新增 jerk/温度行为、其它 validation 迁移、生产修复、
 
 ## RED 与验收契约
 
-先单独提交真实迁移 RED：删除上述三份冻结输出，原 core 测试仍保留；浏览器 RESUME 后
+先单独提交真实迁移 RED：删除上述三份冻结输出，原 core 测试仍保留；
 定向运行三例，证明真实执行因旧 frozen reader 的文件缺失失败，保留失败日志。
 这证明参照来源仍未迁移，不宣称发生 Native/Ares 算法差异，不提交伪造参照。
 再 GREEN 将三例迁入 CLI，删除旧入口，使用同输入运行时 Native，保持原测试名与全部比较。
 
 required 冷运行用独立空 cache，三个测试均须真实 Native 完成且整流相等；热运行复用同一
 cache，三个测试仍通过，slice trace 为 hit，receipt/产物 SHA 不变且无新增 slice entry。
-required 缺依赖与 optional SKIPPED 由共享片 A 策略生效，不能把 skip 当作比较 PASS。
+required 缺依赖与 optional SKIPPED 由共享 native_environment 策略生效，不能把 skip 当作比较 PASS。
 
-RESUME 后每人最多一个 heavy、16 threads、独立 target，运行 fresh v2 base/cand seeded
+运行 fresh v2 base/cand seeded
 与 official，保留比较器原始状态及共同 Ares raw SHA；失败集合须满足既定控制集规则，
-有 oracle 非确定性则逐例原样报告并交协调者裁定。随后 workspace nextest、strict
-workspace/all-targets/all-features clippy、fmt 与 wasm check，全证据完成后 REVIEW-REQUEST。
-spec 未批准不改实现；浏览器窗口期间不启动 Native/nextest/heavy。
+有 oracle 非确定性则逐例原样报告。随后 workspace nextest、strict
+workspace/all-targets/all-features clippy、fmt 与 wasm check。

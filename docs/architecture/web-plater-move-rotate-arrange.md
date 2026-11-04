@@ -1,8 +1,5 @@
 # Plater edits: move, rotate, auto-arrange and multi-plate slicing
 
-Status: spec for review. Branch `web/plate-move-multiplate` (from main
-`05e4d6b97`). No implementation yet.
-
 This slice ports the OrcaSlicer 2.4.2 (pinned `8500fcdcc`) plater model
 edits: instance move and rotate, the plate list, auto-arrange, and per-plate
 slicing. The edits are ports of `libslic3r` (`Model`, `Geometry::Transformation`,
@@ -243,7 +240,7 @@ Every file stays at 400 lines or fewer. The arrange port is the largest piece:
 libnest2d is about 8.5k lines of headers, with only the used placer,
 selection and traits ported, plus about 0.8k lines of NLopt.
 
-## Decisions (coordinator review)
+## Decisions
 
 - D1 (Q1). Arrange (commits 7-8) is a separate follow-up PR. It is not started
   until the upstream version arrange should track is decided (the 2.4.2 oracle
@@ -259,12 +256,12 @@ selection and traits ported, plus about 0.8k lines of NLopt.
   - every core commit starts with a Native parity RED;
   - the derived-transform check in the E2E imports no Ares code;
   - files stay at 400 lines or fewer;
-  - Native runs are serial on CPUs 4-7;
+  - Native runs are serial;
   - the full ares-core suite runs whenever core changes.
 
 ## Auto-arrange on OrcaSlicer v2.5.0-beta (supersedes the 2.4.2 arrange design)
 
-Coordinator decision: auto-arrange ports OrcaSlicer **v2.5.0-beta at
+Decision: auto-arrange ports OrcaSlicer **v2.5.0-beta at
 `345efec64c7b95a05ce5cf96df0dde66a158835c`** (release/v2.5.0), not 2.4.2 and
 not main. This section replaces the arrange parts above: "Upstream sources >
 Auto-arrange", the arrange port under "Design", the arrange oracle under
@@ -390,7 +387,7 @@ There is no seeded leg: arrange has no random stream. Tie order comes from runni
 | A3 | ArrangeJob and the PartPlateList pre/post-processing on `PlaterSession` | Official v2.5.0-beta CLI end-to-end cases |
 | A4 | wasm + web arrange buttons and settings | `arrange.spec.ts` against the same CLI oracle |
 
-### Kernel port boundaries (A1, coordinator review)
+### Kernel port boundaries (A1)
 
 Where upstream has no defined behaviour, or a precision Rust does not offer, the port does the following:
 
@@ -509,7 +506,7 @@ A3b cases:
 6. A by-object print with one object.
 7. The prime tower disabled (control).
 
-**A3b port boundaries (coordinator decisions).** Every `file:line` is at `345efec64`.
+**A3b port boundaries.** Every `file:line` is at `345efec64`.
 - **Config reads.** The estimate reads an untyped `DynamicPrintConfig` through `option_of` (`GCode/WipeTowerEstimate.cpp:31-39`): the stored value, else the key's declared default. The port has one helper for it, `estimate/config.rs`. It reads the composed settings by key (`collect_config_entries`), falls back to the default in the public `PrintConfigDef` registry, and parses by the registry's declared type (`decode_config_value`). The plate list and the arrange job read every tower key through it. No key is typed in core for this slice.
 - **Instances a plate holds whole.** `contain_instance_totally` (`PartPlate.cpp:4494-4508`) excludes `instance_outside_set`, which `check_outside` (`:4545-4625`) maintains.
   - Ported: the plate-box containment, and the sinking branch through `BuildVolume` and `calc_print_volume_state`. The outside test is evaluated when needed; upstream refreshes the set on every add.
@@ -657,8 +654,7 @@ The ported code follows the GUI job. These differences are listed so that a mism
 
 ## STL plater session (core slice before commit 5)
 
-Coordinator decision: approved as its own source-cited core slice, RED then
-GREEN.
+This is its own source-cited core slice, RED then GREEN.
 
 **Upstream (2.4.2, `8500fcdcc`):**
 - `Plater::priv::load_files` loads an STL into the `Model`.
@@ -673,7 +669,7 @@ GREEN.
 
 **Native oracle:** the official and seeded CLI with `--load-settings`/`--load-filaments` and `--arrange 0`, on cube10 pre-positioned where the session puts it (the `orca_parity_profile_entry_stl_center_placement` pattern). The case is first unedited, then after a raised move.
 
-## Follow-ups (accepted deviations, coordinator review of commit 6)
+## Follow-ups (accepted deviations)
 
 - **Rotate ring snapping:** `GLGizmoRotate::on_dragging` snaps the angle within the inner snap regions (`SnapRegionsCount` 8, `GLGizmoRotate.cpp:24, 102-120`). The web ring turns freely.
 - **Relative rotation fields:** upstream "Rotate (relative)" shows the rotation accumulated since the tool opened and rotates by the edit's difference (`GizmoObjectManipulation.cpp:960-1000`, `change_rotation_value`). The web fields rotate by the entered value and show 0 again.

@@ -1,8 +1,8 @@
 # ARD: source-owned spRear comparison and alignment
 
-Status: proposed, docs only. [SPEC](seam-rear-spec.md) requires exact-hash
-approval before RED. Base approved GREEN4dbba4fc09b4b84033797ab83f2941e5d8484b95;
-not permission to change production, tests or fixtures yet.
+Status: proposed, docs only. The [SPEC](seam-rear-spec.md) precedes RED.
+Base GREEN 4dbba4fc09b4b84033797ab83f2941e5d8484b95;
+no production, test or fixture change yet.
 
 ## Owner and decision
 
@@ -22,7 +22,7 @@ not an alternative algorithm to retain. This is a libslic3r rewrite slice.
 - Native rear comparison is not a standalone max-Y vertex rotation: earlier
   priorities, equal-Y scoring, similarity and fitted seam positions remain
   meaningful. No basic-perimeter first_max_y helper or new shortcut/fallback.
-- Reuse the approved physical-layer plane handoff, existing candidates and
+- Reuse the physical-layer plane handoff, existing candidates and
   spline. No second planner, scoring pipeline, core I/O, public diagnostic
   API, geometry/travel/processor changes or new defensive guard.
 - Type/overhang/embedding ordering remains source-owned. No invented paint
@@ -32,11 +32,11 @@ not an alternative algorithm to retain. This is a libslic3r rewrite slice.
   control whole-PASS and back positive whole-FAIL on4351 are discovery, not
   relabeled API/seeded/on4dbb evidence. Formal RED verifies the actual new base.
 - Whole-byte oracle retains M73/arcs/config/statistics/footer; first M73
-  difference is not an authorization to modify clocks. First Native motion
-  witness and complete public receipts are required; missing is NOT EVALUATED.
-- SPEC approval→frozen public RED REVIEW→separate bounded GREEN REVIEW. Actual
+  difference is not permission to modify clocks. First Native motion
+  witness and complete public results are required; missing is NOT EVALUATED.
+- SPEC→frozen public RED→separate bounded GREEN. Actual
   Native control PASS, positive target FAIL, and both public calls/results
   before assertions; after GREEN, residual whole mismatch means STOP/report.
 - Keep API logic platform-neutral for browser WASM and all desktop Tier1.
-  CPU15 targeted only; no full/workspace/merge/push. RED integrates only with
-  its GREEN, under coordinator control. Approved4dbb ancestry stays intact.
+  RED integrates only with
+  its GREEN. The 4dbb ancestry stays intact.

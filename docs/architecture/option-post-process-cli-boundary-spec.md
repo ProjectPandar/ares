@@ -1,7 +1,5 @@
 # post_process: bounded CLI admission and execution-ownership spec
 
-Date: 2026-10-10. Status: approved spec `6a7a293ea`; ordinary CLI witnesses verified.
-Base: `a539f1ff03f0094a856ac9fedeb742ee42877746`.
 This is a source-cited admission/data rewrite slice, not a new Ares
 script-running feature. The original spec audit was entirely offline.
 
@@ -50,27 +48,24 @@ script-running feature. The original spec audit was entirely offline.
   CLI-compatibility admission shell in the validated loading routes, not an
   execution facility or a reason to reject every pure byte API.
 - `ares-cli`: owns filenames, filesystem I/O and typed-error-to-exit/channels
-  mapping. **If** an external script runner is ever separately approved,
+  mapping. **If** an external script runner is ever added,
   its only destination is a native CLI filesystem adapter, after exported
   file materialization; not core, not WASM and not an implicit invocation of
-  untrusted profile content. This spec authorizes no such runner.
+  untrusted profile content. This spec adds no such runner.
 - Current slice's test destination:
   `crates/ares-cli/tests/orca_parity/option_coverage/post_process.rs`, with
   narrowly owned classification hook if justified by runtime proof; reuse
-  existing Native runner/adapters. Any source-admission disparity stops for
-  approval before production changes. Core API/variant changes require a
+  existing Native runner/adapters. Any source-admission disparity is resolved
+  before production changes. Core API/variant changes require a
   separate decision. Keep other option hooks untouched and files <=400 LOC.
 
 ## Ares scaffold audit (observations, not runtime findings)
 
-2026-10-10 disposition: combined 3MF + load-settings tracer is retained on
-`pi/post-process-load-settings-3mf-red` (`c4a9afa20`) but excluded from this
-slice's merge branch. Native -19/237 versus Ares's explicit unsupported-route
-exit1 is real runtime disagreement; it is **blocked-by load-settings-3mf**,
-owned by worker5, not permission to alter that entry guard here. Initial
-`f60235f7f` failure occurred before either slicer and is not a behavioral RED.
-Report `/tmp/worker4-post-process-tracer-v2-disposition.md`. This slice now
-closes ordinary embedded nonempty / `[""]` / `[]` CLI witnesses first.
+The combined 3MF + load-settings tracer is excluded from this slice. Native
+-19/237 versus Ares's explicit unsupported-route exit1 is real runtime
+disagreement; it is **blocked-by load-settings-3mf**, not permission to alter
+that entry guard here. This slice closes ordinary embedded nonempty / `[""]` /
+`[]` CLI witnesses first.
 
 - `options/process_options/print_source.rs:32` stores `OrcaStrings`, empty
   default; wire/export and registry retain the option. No execution found.
@@ -84,7 +79,7 @@ closes ordinary embedded nonempty / `[""]` / `[]` CLI witnesses first.
 - `profiles/entry.rs:181-234` constructs the load-settings ProjectSource
   with `validate_print=false`; CLI's loaded-settings route calls it. This
   could leave embedded nonempty scripts unguarded relative to the Native
-  `:1682` admission phase. This is **unproven**, not an authorized fix: test
+  `:1682` admission phase. This is **unproven**, not a fix in scope: test
   the identical 3MF with/without external settings first. Conversely a
   script introduced only by external settings must not be rejected merely
   because the final composed list is nonempty if Native admits it.
@@ -92,7 +87,7 @@ closes ordinary embedded nonempty / `[""]` / `[]` CLI witnesses first.
   either execution or nonempty-vector admission; do not promote it to
   exhaustive PASS over arbitrary executable strings.
 
-## Included bounded E2E witnesses (after approval only)
+## Included bounded E2E witnesses
 
 Use one eligible rectangular-bed stock baseline and the existing 3MF member
 adapter. Retain original export and verify model/config ZIP payloads except
@@ -123,21 +118,15 @@ private defensive checks or alter accepted serialization speculatively.
 
 ## Ordinary CLI witness execution
 
-Actual `b9e802ed1e51c5a15241a0b09e21b7cb7865fc30`, seeded and official
-fresh caches: each **3/3 PASS**, two test threads. Nonempty owned command and
+Seeded and official fresh caches: each **3/3 PASS**. Nonempty owned command and
 `[""]` both match Native -19/Unix237, exact channels/full JSON/plate0,
 no export and absent execution marker. `[]` matches successful complete
 G-code bytes, generator-only normalization. Same authored 3MF input is used
 for both slicers; every non-post_process setting and other ZIP payload is
 proved unchanged. No core/CLI production changes were required.
-Evidence: `/tmp/worker4-post-process-bounded-v2-{seeded,official}{.log,-status,-paths}`.
 External script execution remains INCOMPLETE, and the combined load-settings
-RED stays on its blocked branch; neither is promoted by these six PASS tests.
-Initial ordinary harness compile101 (`b337896da`, incorrect assumption that
-`stages::run` returns captured output) is preserved as an engineering failure,
-not RED. Test-only fix reads the existing file-backed status/channel receipts.
-Clippy CLI parity test allfeatures `-D warnings` passed on `b9e802ed1`;
-initial fmt failed only module ordering, corrected with no behavior change.
+case stays blocked; neither is promoted by these six PASS tests. The harness
+reads the existing file-backed status/channel receipts.
 
 ## TDD, failure modes and evidence
 
@@ -165,13 +154,10 @@ not exhaustive `coStrings` execution parity. Arbitrary commands, argument
 parsing, permissions, failure stderr, script order, Windows perl/batch,
 `.pp`/renaming/upload host behavior and normative_check=false are deferred.
 No new adapter flag/runner is introduced to reach those deferred branches.
-External process execution remains INCOMPLETE until a separately approved
+External process execution remains INCOMPLETE until a separate
 adapter/source-runtime oracle slice supplies that boundary. Full legal
 scope must not be fabricated from these witnesses.
 
-Exit: approved bounded metadata meaning, all requested source-specific
-Native E2E witnesses or explicit unresolved disparities, other option plans
-unchanged, existing stock -19/CLI regressions retained, owner-scheduled
-fresh engineering and paired full gates on the applicable production tree.
-This spec itself does not authorize heavy runs; obtain the normal queue /
-load / browser-window permission before any later test execution.
+Exit: bounded metadata meaning, all requested source-specific Native E2E
+witnesses or explicit unresolved disparities, other option plans unchanged,
+and existing stock -19/CLI regressions retained.

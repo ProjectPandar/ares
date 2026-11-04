@@ -1,6 +1,6 @@
 # ARD — distinguish Arachne wall-input and infill-boundary resolution
 
-Status: proposed; [SPEC](arachne-infill-boundary-resolution-spec.md).
+Status: accepted; [SPEC](arachne-infill-boundary-resolution-spec.md).
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Source-owned contract
@@ -22,7 +22,7 @@ fitter or connector to compensate for this earlier contract violation.
 
 - Preserve two policies at their exact source call sites; do not globally change
   `surface_simplify_resolution`, wall input, fuzzy masks, or geometry helpers.
-- Approved adjustment: retain the already computed `scaled_resolution` in
+- Adjustment: retain the already computed `scaled_resolution` in
   `ArachneRecordConfig` (`arachne/config.rs`), and pass `config.scaled_resolution`
   from `arachne/materialize.rs`. These are the only production files allowed.
   Do not duplicate the EPSILON floor calculation or invert the reduced scalar;
@@ -43,4 +43,4 @@ fitter or connector to compensate for this earlier contract violation.
 The earlier fitter-only prerequisite is superseded, not implemented. This is a
 bounded Rust rewrite alignment of an upstream argument handoff, not a pipeline
 feature or tolerance tuning designed for one mesh. Complete-output GREEN and
-control invariance remain unverified until the approved change is executed.
+control invariance remain unverified until the change is executed.

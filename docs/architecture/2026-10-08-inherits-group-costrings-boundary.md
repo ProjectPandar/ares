@@ -1,6 +1,6 @@
 # Embedded coStrings import/export parity boundary
 
-Status: approved prerequisite to the approved range-region port. The original
+Status: prerequisite to the range-region port. The original
 range fixture and strict comparison remain unchanged.
 
 ## Source-owned conclusion
@@ -114,6 +114,5 @@ byte equality; full seeded differences in any of the other 33 coStrings options
 must be explained per option and proved Native-correct, not called incidental
 or hidden by a hash multiset summary. Unchanged motion/M73 and typed logical
 string values remain invariant. No retry-to-PASS or fixture exceptions.
-Coordinator review/approval before
-ordinary ff-only push. Then rebase the paused region-range port and resume its
-unchanged whole-output comparator; fixing this prerequisite is not Stage2 GREEN.
+The region-range port then resumes its unchanged whole-output comparator;
+fixing this prerequisite is not Stage2 GREEN.

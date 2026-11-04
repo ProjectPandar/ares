@@ -1,7 +1,5 @@
 # Spec: process_layer print_wipe_extrusions two-loop emission order for wiping-pass objects
 
-Slice status: DRAFT (awaiting review)
-Base: `4b4798ecff1652a94a02bdfc866b443807311d9d`
 Upstream boundary: `OrcaSlicer/src/libslic3r/GCode.cpp:5318-5360` —
 `GCode::process_layer`'s `print_wipe_extrusions` two-loop structure
 (`:5326-5360`), with `generate_object_skirt_group` called inside the
@@ -10,7 +8,7 @@ wiping loop (`:5336-5338` -> `:4465-4485`), object labels `:5349` and
 (`:5327-5328`). Support footprints enter the per-object skirt grouping
 at `Print.cpp:2865-2899`.
 
-## Cause (discovery-approved)
+## Cause
 
 Upstream, for each extruder/layer with `is_anything_overridden`:
 
@@ -55,9 +53,9 @@ sub-symptoms (label/PURGING triple position; Skirt block displacement,
 ## Exit criteria (blast radius: all wiping-pass output)
 
 - RED FAIL at the RED hash, PASS at the GREEN hash (canonical
-  official+seeded, targeted, CPU7,8).
-- GREEN gate includes the FULL tower/wipe/toolchange/skirt families
+  official+seeded, targeted).
+- GREEN gate includes the full tower/wipe/toolchange/skirt families
   both modes at the exact GREEN hash.
 - fmt/clippy/wasm clean; no file over 400 LOC.
 - If GREEN shows the skirt-ownership and label-order fixes are
-  independent, split into separate slices per the coordinator's rule.
+  independent, split into separate slices.

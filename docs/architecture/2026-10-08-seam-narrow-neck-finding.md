@@ -1,7 +1,7 @@
 # Narrow-neck first-layer perimeter ordering finding
 
 Status: independent observed Native/Ares path divergence; next-slice diagnosis
-pending coordinator review of the C/C1 reachability report. No fix or new
+follows the C/C1 reachability report. No fix or new
 implementation spec is included in this finding. Baseline `016456549`.
 
 All six inputs have `wall_generator=arachne`, neck_half_width0.25mm, one
@@ -18,7 +18,7 @@ difference is filtered from the whole-file verdict.
 
 ## C0-neck0.25-r0
 
-Input: [C0-neck0.25-r0.3mf](/tmp/worker6-seam-C-inputs/C0-neck0.25-r0.3mf).
+Input: `C0-neck0.25-r0.3mf`.
 SHA256: `6c5c67976071ea79e663b8a4d428f3f51202b3fb9821a49fbe6b9da1f399a07d`.
 
 first difference at byte 847 (line 32, column 7; expected 26891 bytes, actual 26750 bytes).
@@ -36,11 +36,9 @@ First differing path: layer1, Z0.2. Native raw line64 `G1 X107.945 Y110`; Ares r
 Native: open narrow-neck Arachne perimeter, `G1 X107.945 Y110` → `G1 X112.037 Y110 E.13751`.
 Ares: closed Arachne lobe perimeter, `G1 X100.31 Y113.69` → `G1 X100.31 Y113.69 E.22678`.
 
-Complete outputs and comparator manifest: `/tmp/worker6-seam-C-probe-v1-artifacts/case-4VPV09`.
-
 ## C0-neck0.25-r17
 
-Input: [C0-neck0.25-r17.3mf](/tmp/worker6-seam-C-inputs/C0-neck0.25-r17.3mf).
+Input: `C0-neck0.25-r17.3mf`.
 SHA256: `98e80f92caedbee7824eb587e026f6e786d9a02b2a0af7c8f88726b688af560d`.
 
 first difference at byte 1398 (line 63, column 7; expected 26808 bytes, actual 26840 bytes).
@@ -58,11 +56,9 @@ First differing path: layer1, Z0.2. Native raw line63 `G1 X108.051 Y109.404`; Ar
 Native: open narrow-neck Arachne perimeter, `G1 X108.051 Y109.404` → `G1 X111.966 Y110.601 E.13867`.
 Ares: closed Arachne lobe perimeter, `G1 X106.713 Y112.854` → `G1 X106.713 Y112.854 E.07727`.
 
-Complete outputs and comparator manifest: `/tmp/worker6-seam-C-probe-v1-artifacts/case-cUSq3P`.
-
 ## C0-neck0.25-r43
 
-Input: [C0-neck0.25-r43.3mf](/tmp/worker6-seam-C-inputs/C0-neck0.25-r43.3mf).
+Input: `C0-neck0.25-r43.3mf`.
 SHA256: `87833a359652053d8b8208485deb16db6e135eca625864d33e758da1f9a37eef`.
 
 first difference at byte 1398 (line 63, column 7; expected 26797 bytes, actual 26829 bytes).
@@ -80,11 +76,9 @@ First differing path: layer1, Z0.2. Native raw line63 `G1 X108.51 Y108.61`; Ares
 Native: open narrow-neck Arachne perimeter, `G1 X108.51 Y108.61` → `G1 X111.503 Y111.402 E.13867`.
 Ares: closed Arachne lobe perimeter, `G1 X105.794 Y111.124` → `G1 X105.794 Y111.124 E.07727`.
 
-Complete outputs and comparator manifest: `/tmp/worker6-seam-C-probe-v1-artifacts/case-pLYW2Z`.
-
 ## nearest-control-neck0.25-r0
 
-Input: [nearest-control-neck0.25-r0.3mf](/tmp/worker6-seam-C-inputs/nearest-control-neck0.25-r0.3mf).
+Input: `nearest-control-neck0.25-r0.3mf`.
 SHA256: `ce5caae069fdf344382fc395f1ec85f576623bd33fbe483706a9b980705bcc41`.
 
 first difference at byte 847 (line 32, column 7; expected 26803 bytes, actual 26739 bytes).
@@ -102,11 +96,9 @@ First differing path: layer1, Z0.2. Native raw line63 `G1 X107.945 Y110`; Ares r
 Native: open narrow-neck Arachne perimeter, `G1 X107.945 Y110` → `G1 X112.037 Y110 E.13751`.
 Ares: closed Arachne lobe perimeter, `G1 X107.69 Y113.69` → `G1 X107.69 Y113.69 E.07724`.
 
-Complete outputs and comparator manifest: `/tmp/worker6-seam-C-probe-v2-artifacts/case-ZzBRJe`.
-
 ## nearest-control-neck0.25-r17
 
-Input: [nearest-control-neck0.25-r17.3mf](/tmp/worker6-seam-C-inputs/nearest-control-neck0.25-r17.3mf).
+Input: `nearest-control-neck0.25-r17.3mf`.
 SHA256: `3e33655889bf7acc578d2a36f4b10611b23119f3a827f9f88bd51cea53612cb9`.
 
 first difference at byte 847 (line 32, column 7; expected 26795 bytes, actual 26838 bytes).
@@ -124,11 +116,9 @@ First differing path: layer1, Z0.2. Native raw line62 `G1 X108.051 Y109.404`; Ar
 Native: open narrow-neck Arachne perimeter, `G1 X108.051 Y109.404` → `G1 X111.966 Y110.601 E.13867`.
 Ares: closed Arachne lobe perimeter, `G1 X108.87 Y105.796` → `G1 X108.87 Y105.796 E.22678`.
 
-Complete outputs and comparator manifest: `/tmp/worker6-seam-C-probe-v2-artifacts/case-KdrhAr`.
-
 ## nearest-control-neck0.25-r43
 
-Input: [nearest-control-neck0.25-r43.3mf](/tmp/worker6-seam-C-inputs/nearest-control-neck0.25-r43.3mf).
+Input: `nearest-control-neck0.25-r43.3mf`.
 SHA256: `82b1200bdbedba3ec487dbbf3ab61f75b9fdc4fd1ffe5a06ad33d1f4f3d05601`.
 
 first difference at byte 1386 (line 62, column 6; expected 26785 bytes, actual 26817 bytes).
@@ -146,8 +136,6 @@ First differing path: layer1, Z0.2. Native raw line62 `G1 X108.51 Y108.61`; Ares
 Native: open narrow-neck Arachne perimeter, `G1 X108.51 Y108.61` → `G1 X111.503 Y111.402 E.13867`.
 Ares: closed Arachne lobe perimeter, `G1 X110.827 Y105.726` → `G1 X110.827 Y105.726 E.22678`.
 
-Complete outputs and comparator manifest: `/tmp/worker6-seam-C-probe-v2-artifacts/case-f1jkJL`.
-
 ## Upstream boundary for the next diagnosis
 
 Pinned upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
@@ -158,9 +146,3 @@ selection; `GCode.cpp:6131–6146` emits region perimeters in their stored
 order. These are source leads for the next slice, not a completed causal
 trace. Ares perimeter materialization/traversal and entity emission need
 comparison before any spec or production edit.
-
-Machine-readable per-case input/first difference/layer/path details:
-`/tmp/worker6-seam-C-narrow-neck-finding.json`.
-All six fresh Native producer receipts and whole output hashes are joined
-in `/tmp/worker6-seam-C-producer-join.json` and pinned by the original
-165-file `/tmp/worker6-seam-C-evidence-index.json`.

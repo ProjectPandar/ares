@@ -7,14 +7,12 @@ Disable support and prime tower uniformly; set compensation layers1; vary only
 `elefant_foot_compensation=0|0.3` × `brim_use_efc_outline=0|1`.
 Input SHA256s are asserted in `brim_ears_consumes_efc_outline.rs`; all inputs referenced.
 
-Native-first evidence and replayable stored-ZIP settings generator:
-`${COORD_ROOT}/evidence/worker2-ears-efc-discovery-20261020T214059/`.
-The generator copies archive entries, rewrites project-settings JSON only,
+Native-first evidence and the replayable stored-ZIP settings generator are
+kept externally. The generator copies archive entries, rewrites project-settings JSON only,
 and writes per-entry CRC32. No Native output or probe is committed.
 Replay against verified source hash into fresh external inputs.
 
-Explicit dependency: approved AutoBrim EFC tip
-`14d90d03f8e1188cf4305a1ac712239179a7678f`, including exact-group `fb70752b9`.
+Explicit dependency: the AutoBrim EFC and exact-group ports.
 Public tests use merged `runner/native_api_cli.rs`, actual CLI + public API,
 unchanged strict complete comparison and raw API/CLI equality; no M73 mask.
 Native actual ear brim and skirt extrusion checked before comparison.

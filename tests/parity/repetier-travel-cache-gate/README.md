@@ -2,9 +2,8 @@
 
 Source: `GCodeWriter.cpp:49-52::apply_print_config`. The travel cache requires
 both `use_mach_limits` and separate-travel support. Repetier supports M202 but
-is excluded from machine-cache admission. The approved specification is
+is excluded from machine-cache admission. The specification is
 `docs/architecture/2026-10-24-repetier-travel-cache-gate-spec.md`.
-Base: `33ed13702`. This tests-only RED does not change production code.
 
 All cases derive from the genuine GUI-generated `orca_cli_ender3.3mf`, disable
 the prime tower, and set `default_acceleration=1000`,
@@ -40,8 +39,6 @@ Marlin2/RRF limits; changing rounding or print caches; inactive below-cap target
 confusing raw envelope with body output; or hiding downstream differences.
 The older BBL travel10000 archive is not included.
 
-Freeze inputs/tests before GREEN. The authorized port only adds the existing
-local `use_mach_limits` conjunction to the initializer in assemble.rs. Keep the
-rounding, flavor set and zero branch; no helper or travel execution changes.
-CPU17/PIN17, jobs=1 and threads=1; no FULL. Submit a combined SPEC/RED review
-request and hold before production changes.
+The port only adds the existing local `use_mach_limits` conjunction to the
+initializer in assemble.rs. Keep the rounding, flavor set and zero branch; no
+helper or travel execution changes.

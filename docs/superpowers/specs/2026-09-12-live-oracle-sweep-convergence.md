@@ -1046,7 +1046,7 @@ island per layer and most vendor defaults keep arc fitting on.
 
 ## Estimator ground-truth infrastructure revived; id-alignment confounded (#171)
 
-The patched GT oracle (ORCA_DUMP_TIMES, /tmp/orca-gt/result-times) was
+The patched GT oracle (ORCA_DUMP_TIMES) was
 revived and dumped per-block times for the ksr arc-on fixture (304108
 blocks) plus a filament_map_mode=Manual copy (304169) alongside ares'
 ARES_DUMP_ELAPSED dumps (304237). Verdict on method: id-equality
@@ -1064,7 +1064,7 @@ be produced.
 
 ## Estimator ground-truth infrastructure revived; id-alignment confounded (#171)
 
-The patched GT oracle (ORCA_DUMP_TIMES, /tmp/orca-gt/result-times) was
+The patched GT oracle (ORCA_DUMP_TIMES) was
 revived and dumped per-block times for the ksr arc-on fixture (304108
 blocks) plus a filament_map_mode=Manual copy (304169) alongside ares'
 ARES_DUMP_ELAPSED dumps (304237). Verdict on method: id-equality
@@ -1652,7 +1652,7 @@ OPEN (next unit): the KSR full-stream cache counts still disagree
 ~134K extra GT arc segments (~10/arc over 13,368 arcs). The first
 divergence is before the arcs (id 6: ares +289s vs GT +260s at the
 G29/tool region — limits must carry machine_load 29 for the KSR
-effective value). Reproduce: build /tmp/ksr-replay.limits from the
+effective value). Reproduce: build a replay limits file from the
 3mf + machine preset, run replay vs ARES_DUMP_ELAPSED, diff caches;
 use REPLAY_TRACE_G1 to dump one arc's segment count on each side.
 
@@ -1923,7 +1923,7 @@ libstdc++, then re-run the cell dump comparison — 93/124 must drop
 to 0/124 before the downstream (graph order → toolpath order →
 WIDTH comments) can converge. All instrumentation for this
 verification loop is already committed (ARES_DUMP_CELLS + the
-SkeletalTrapezoidation.cpp probe build in /tmp/medial-probe).
+SkeletalTrapezoidation.cpp probe build).
 
 ## Vendored boostvoronoi + libstdc++ introsort: STRUCTURAL fix landed (2026-09-17 l)
 
@@ -2161,7 +2161,7 @@ fill-path PRE/POST simplify points; replaying upstream's iterative DP
 (MultiPoint.cpp:164) over the ares PRE points reproduces ares's POST on all
 108 blocks — ares's DP is upstream-faithful, so orca's PRE point set for
 that path must differ (likely a path-split at the kept point). Upstream
-probe: /tmp/medial-probe/simppre.nix dumps LayerRegion::simplify_path /
+probe: simppre.nix dumps LayerRegion::simplify_path /
 simplify_multi_path PRE points (scaled ints) for the per-path diff.
 
 ## Spiral vase transition_out + change_layer Z + GCodeLine::set port (2026-09-18 w)
@@ -2200,7 +2200,7 @@ run with `--test-threads=1`.
 ## bottom_hilbert PRE-dump: path SPLIT structure differs, output converges to 1 line (2026-09-18 x)
 
 The simppre upstream probe (LayerRegion::simplify_path / simplify_multi_path
-entry, /tmp/medial-probe/simppre.nix → simppreresult) vs the ares
+entry, simppre.nix) vs the ares
 ARES_DUMP_SIMPLIFY hook on option/bottom_surface_pattern/hilbertcurve:
 
 - Identical lattice step (0.3771/0.5757/1.6283 segments on both sides) and
@@ -2240,7 +2240,7 @@ contention, serial (--test-threads=1) is authoritative.
 
 ## Estimator block-level ground truth via ORCA_DUMP_BLOCKS probe (2026-09-18 z)
 
-New upstream probes (nix, /tmp/medial-probe/): g1cache.nix dumps the full
+New upstream probes (nix): g1cache.nix dumps the full
 g1_times_cache (id elapsed) from finalize; orcablocks.nix dumps per-block
 `g1_id dist cruise accel entry exit safe time` from calculate_time.
 New ares hook: ARES_DUMP_PLANNER (the planner dump previously collided
@@ -2587,7 +2587,7 @@ same family as the iQ TiQ8 layer-change position. NOTE: sweep summaries
 must be treated as stale until the next full re-slice; individual
 DIVERGENT rows need fresh-oracle verification before hunting.
 
-## Fresh-oracle verification of representative DIVERGENT rows (2026-09-18 rr)
+## Fresh-oracle verification of representative DIVERGENT rows (2026-09-18)
 
 Fresh-oracle reruns of 7 sampled rows (stale-artifact protocol from qq):
 - ER20 0.8 (M73 row): 36 lines — M73 one-line shifts (f32 knife).
@@ -2986,7 +2986,7 @@ simplify epsilon (surface_simplify_resolution), or medial_axis pruning
 of a ~0.1mm-corner region.
 
 DECISIVE probes built (committed methodology):
-- ORCA_DUMP_SLOW (/tmp/medial-probe/slowprobe.nix → slowproberesult):
+- ORCA_DUMP_SLOW (slowprobe.nix):
   per-layer SLOW total/max/tgt/nonadj + per-line SLW len/feed/time —
   layer 2 oracle: total=5.858593 nonadj=0.147408 n=25 with slow feed
   41.9982 (F2520); ares layer 2 has 2 extra lines (adjustable 0.2904
@@ -3012,7 +3012,7 @@ RPR/RP dumps). The divergence is the per-path ClipperOffset: the
 reconstruction polygon (a spiked square — corner caps from the trace
 detour path) offsets to ONE 20-gon in native ClipperLib
 (pieces=1, area 6.5853488e13, verified with a standalone
-/tmp/offtest.cpp build of deps_src/clipper/clipper.cpp) but TWO
+offtest.cpp build of deps_src/clipper/clipper.cpp) but TWO
 pieces (20-gon + spurious 12-gon spike fragment) in the ares. The
 spurious fragment survives the ares's Positive-union; ClipperLib's
 pftPositive Execute drops it (negative/degenerate winding).
@@ -3020,7 +3020,7 @@ ALSO FIXED en route: split.rs rotate now uses fast_round_up
 (libslic3r.h:413: floor(a+0.5), 0.49999999999999994 special case),
 not round-half-away.
 NEXT: Rust unit repro with the 52-point polygon (recorded in
-/tmp/offtest.cpp); fix the ares offset's Positive union/spike contour
+offtest.cpp); fix the ares offset's Positive union/spike contour
 generation until 1 piece; then the MK4S narrow=4 collapses to 2, the
 slowdown factors re-align (F2520/F2560), and the M73/M74 anchors
 follow. Probes: sect2result (ORCA_DUMP_SECT SEC+RP), nsplitresult
@@ -4490,7 +4490,7 @@ oracle rejects — both were `unsuccessful Orca process` INCOMPLETE rows because
 ares accepted inputs the oracle refuses. The `(?m)` multi-line flag matches
 boost's per-line `^`/`$` behaviour on the multi-line gcode templates.
 
-## Fresh post-fix sweep (2026-09-22 lxiii) — `${TMP_ROOT}/ares-parity-fresh/`
+## Fresh post-fix sweep (2026-09-22 lxiii)
 
 Full `orca_parity_option_coverage` sweep after the scalar-array tolerance +
 nozzle_volume_type + firmware-retraction/absolute-E fixes:
@@ -4632,7 +4632,7 @@ related tests pass, 0 failures.
 
 #### raft polygons now match oracle byte-for-byte (lxvii — probe-verified)
 
-Oracle probe dump (`/tmp/raftprobe.nix`, `ORCA_DUMP_RAFT`) of
+Oracle probe dump (`raftprobe.nix`, `ORCA_DUMP_RAFT`) of
 `generate_raft_base` confirms ares's raft polygons are now EXACT:
 - `first_layer` = 8-vertex chamfered square `±9150587/±7979014` — ares
   produces `(±9.151,±7.979)` identical
@@ -4785,7 +4785,7 @@ dump to pin the exact contour/segment. Structural `X118.601` is the sheath-adjac
 `emit_loops_in_band`/`take_next` coverage edge (upstream `FillBase.cpp:1955,2280-2420`).
 
 ### lxxviii. raft residual — inner-contour do_miter chamfer vertices ~4-15 units off (post-bcb98cdf)
-Built oracle probe `/tmp/filldump.nix` dumping `connect_base_support`'s `polylines_out`
+Built oracle probe `filldump.nix` dumping `connect_base_support`'s `polylines_out`
 (`ORCA_DUMP_CONNECT`, `FillBase.cpp` final-assembly tail). Aligned ares `ARES_CONN_DUMP`
 (pre-rotate). Oracle connect extents `{7482048×49, 10443907×25, 10443896×24, 8601200,
 9874100}`; ares `{8601213×2, 7482046×98, 10443915×100}` — ares runs connect 2×
@@ -5308,7 +5308,7 @@ SCALED_EPSILON`) gate — added it, **no change** (3609 diff): the vertical
 arches all satisfy the gate in this case. Reverted (no-effect change). Chain
 histogram confirmed: oracle `n=86`/`n=79` vs ares `n=88` — ares connects one
 extra infill line into the n=86 chain AND misses upstream's n=79 chain.
-Upstream probe `/tmp/connprobe-bin` (ORCA_DUMP_CONN) + ares ARES_CONN_DUMP now
+Upstream probe (ORCA_DUMP_CONN) + ares ARES_CONN_DUMP now
 dump per-chain topology. NEXT: per-`take_next` decision trace — dump
 (cp1,cp2,consumed,merged) at each take on both sides, find first divergent
 pairing. Likely in select_support_arches cost ordering or connect_t_joints
@@ -6203,7 +6203,7 @@ and `height`=`mm3_per_mm(first_layer)` — a `spacing`/`height` field crossing.
 Baseline 3609 held; tests green; committed through `bec2020b`.
 
 ### clxxx. Full-sweep mass triage — divergence class histogram (2026-09-23)
-Whole `${TMP_ROOT}/ares-parity-fresh` sweep re-measured: 2021 cases with both
+Whole fresh sweep re-measured: 2021 cases with both
 `ares.gcode`+`orca.gcode`. Diff-line histogram (vs oracle, `generated by`
 filtered, diff-count ≤2 = pass):
 - **pass(≤2): 1244 (61.5%)**
@@ -6235,7 +6235,7 @@ and ordering classes are the highest-leverage remaining targets but both are
 probe-cycle-bound (10–25 min oracle builds), same cost class as §clxxix.
 
 ### clxxxi. bare-F cooling feedrate LOCALIZED to an extra _EXTRUDE_SET_SPEED block
-ORCA_CBDUMP probe (`/tmp/cbdump.nix` → `/tmp/cbdump-bin`, instrumented
+ORCA_CBDUMP probe (`cbdump.nix`, instrumented
 `CoolingBuffer::calculate_layer_slowdown` after `sort_lines_by_decreasing_
 feedrate` at `CoolingBuffer.cpp:657`, dumps per-line `type/len/feedrate/time/
 time_max/adjustable` + `n_lines_adjustable`/`total`/`nonadj` per layer).
@@ -6437,7 +6437,7 @@ oracle's raw ints → `total_length`/`retraction_distance`/per-segment
 residual). HYPOTHESIS: drop the re-round of `wipe_path[1:]` (use the raw
 scaled ints oracle uses) — but only if ares's `wipe_path` mm values are
 guaranteed `int·scale` round-trips. ORCA_WIPEDUMP probe building
-(`/tmp/wipeprobe.nix`, WIPECALL len/wipedist/wspeed + WSEG slen/dE/bx/by) to
+(`wipeprobe.nix`, WIPECALL len/wipedist/wspeed + WSEG slen/dE/bx/by) to
 compare oracle `wipe_dist`/`length`/`slen`/`dE` against ares's before changing.
 
 ### cxci. wipe-E residual isolated: clipped wipe-path endpoint ~3 scaled units
@@ -6618,8 +6618,8 @@ FillLateralLattice), tpmsd/tpmsfk (FillTpmsD/FillTpmsFK MarchingSquares),
 lightning (FillLightning Lightning::Generator) — no ares scaffolding exists for
 any of these.
 
-§ccii — INDEPENDENT REVIEW (reviewer agent, read-only, six-axis) returned a
-prioritized fix list. Applied this turn (commits f24d0ca2, 7c9e735f):
+§ccii — A read-only six-axis review returned a
+prioritized fix list. Applied (commits f24d0ca2, 7c9e735f):
 - concentric anchoring REWRITTEN: density was passed as percent (should be
   0..1 fraction → 100x spacing bug), offsets were double-divided by
   scale.factor(), nearest_point_index picked FIRST min not LAST-improving,

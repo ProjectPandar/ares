@@ -33,9 +33,9 @@ Emission sites (`OrcaSlicer/src/libslic3r`):
   (`project_slice/gcode_emit/machine/envelope.rs:99-106`); this slice
   is only the FIRST-LAYER re-emission.
 
-## Native observations (official 2.4.2, CPU-pinned)
+## Native observations (official 2.4.2)
 
-Base: `semm-ramming/R1.3mf` (Ender marlin, machine
+Input: `semm-ramming/R1.3mf` (Ender marlin, machine
 `machine_max_junction_deviation = 0.08`), overrides per leg.
 
 | leg | overrides | native body |

@@ -1,8 +1,6 @@
 # Web preview: legend Custom G-code overview (slice B)
 
-Status: spec for review. It depends on slice A
-(`project-plate-custom-gcodes.md`). Code starts after both are approved and
-A is merged.
+It depends on slice A (`project-plate-custom-gcodes.md`).
 
 ## Upstream boundary
 
@@ -117,8 +115,7 @@ no computation beyond the existing time formatter.
    adaptations (in `kernel.diff`) are the function wrappers and an
    `imgui.time(custom_gcode_time)` record before the time text. For each
    item it writes the three cell texts and the time as f32 bits, plus the
-   layer zs and Normal times. It is built with Nix (`--cores 4
-   --max-jobs 1`), pinned and gcrooted. The env var is
+   layer zs and Normal times. It is built with Nix. The env var is
    `ARES_CUSTOM_GCODE_OVERVIEW_BIN`; the test also needs
    `ARES_PLATE_CUSTOM_GCODES_BIN`.
 2. **Fixtures:** a B-only fixture,
@@ -157,7 +154,7 @@ no computation beyond the existing time formatter.
    in one other view. It then slices the tick-free project and asserts the
    block is absent. RED fails because the block is missing. If the getter
    is part of the public worker API, `web/e2e/consumer/types.ts` gains the
-   exact row shape, which is listed separately in the review.
+   exact row shape, which is listed separately.
 6. **Web GREEN:** the table is implemented. The artifacts are the oracle
    JSON, the expected and actual rows, and dark, light and phone legend
    screenshots.

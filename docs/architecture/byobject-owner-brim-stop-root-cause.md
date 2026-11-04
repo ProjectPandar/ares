@@ -1,11 +1,7 @@
 # ByObject owner brim STOP — read-only root cause
 
-Status: **ROOT-CAUSE REVIEW-REQUEST, docs only**. Failed candidate
-`2e3e37e22fd4b4b9e9b2b13334c955a929224be2` remains NOT GREEN. Parent public RED
-`741d5a572c1eef31544107567adade24d249a67f`; upstream
-`8500fcdccaa10b5099ac20d252af3a7c560046f1`. B guard unchanged. FULL25 freeze
-acknowledged: no rebase/integration or full/workspace runs. New probes are
-CPU18 targeted reads on this candidate, not stack25 qualification.
+Upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`. The ordinary-owner
+candidate is NOT GREEN; the perobject ByObject guard is unchanged.
 
 ## Finding: stale logical cursor, NOT an independent estimator prerequisite
 
@@ -17,7 +13,6 @@ planner times and the WHOLE-print denominator used by M73, so the first M73
 mismatch precedes the first different motion. No M73/estimator repair is justified
 by this witness.
 
-Evidence root: `${TMP_ROOT}/ares-byobject-timing-readonly-2e3e37e22/`.
 Frozen `tests/parity/byobject-owner-brim/combined.3mf` SHA256
 `5467219291d3d177824fc4b7677605eb855707962ee9fd5d773db96dc15d9922`.
 Actual earlier official/seeded runs both retain combined strict FAIL at
@@ -45,11 +40,7 @@ it is not a fresh seeded root-cause run or a claim of whole-output parity.
    output. Read-only Rust GDB additionally observes its real export elapsed/total
    and brim cursor. Both GDB Ares runs remain raw-byte identical too.
 
-Primary artifacts: `native-on-native.csv`, `ares-on-native.csv`,
-`ares-actual-slice.csv`, `cumulative-by-original-move.csv`,
-`official-slice-time-cache.json`, `ares-export-time-window.json`,
-`ares-stale-cursor.json`, `first-divergence.json`, `gdb-equivalence.json`.
-The cumulative CSV retains original move order with f32 block times widened
+Cumulative times retain original move order with f32 block times widened
 and accumulated in f64; display gcode IDs are metadata, not invented cache IDs.
 
 ## First elapsed-time change and actual path difference
@@ -128,27 +119,25 @@ Upstream ownership is explicit:
 - `GCode.cpp:4499,5769-5775`: switch brim to plate origin; non-perimeter loop
   splits at last_pos. Native therefore splits from plate(200,110), yielding Y110.
 
-## Next boundary for approval, not implementation
+## Next boundary
 
 This evidence does **not** warrant an independent GCodeProcessor timing slice.
-Amend A's destination to include the existing
+Amend the owner-collection slice destination to include the existing
 `layers/transition.rs::emit` logical-cursor consumer of `GCode::travel_to` /
 `set_last_pos`, alongside the already attempted ordinary owner lifecycle. Preserve
 incoming-local/plate/extruder frame semantics; do not add a second cursor policy,
 copy-dependent start override, fallback or estimated-time/M73 adjustment.
-Existing public Native-active A REDs and width0 control remain the acceptance
-boundary; retain the B guard. Re-run whole comparisons before any family gates.
-Any residual after that source-faithful cursor correction still means STOP.
-No production continuation is performed by this report.
+Existing public Native-active owner-collection REDs and width0 control remain
+the acceptance boundary; retain the perobject guard. Re-run whole comparisons
+before any family gates. Any residual after that source-faithful cursor
+correction still means STOP.
 
-Forensic preparation caveats retained in `reader-non-gates.txt`: a blanket join
+Forensic caveats: a blanket join
 of final MoveVertex display-gcode IDs to raw cache IDs was rejected at60 entries
 (rendered vertex attribution is not raw cache attribution); use the ACTUAL
 Native cache and direct Rust export observations above. A public Native/Ares
 comparator cannot compare Native-vs-Native (requires one Ares generator); that
 provenance attempt was rejected, not relaxed. Raw Native diff inventory proves
 only timestamp line2 differs. These were reader/provenance faults, not public
-gates or evidence of an estimator defect. Production sources and comparator
-remain byte-for-byte unchanged from the failed candidate; no full/workspace,
-merge/push or unapproved rebase. Scope of same-input parity is this fixture,
+gates or evidence of an estimator defect. Scope of same-input parity is this fixture,
 not a universal assertion about the processor.

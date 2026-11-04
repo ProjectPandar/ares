@@ -47,7 +47,7 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. The Edit menu's "Del
   - Otherwise it calls `PlateList::clear`, `Project::delete_all_objects` and clears the arrange orders.
 - **`PlateList::clear`** empties every plate and the unprintable plate. Locks, plate settings and the current plate stay, as `PartPlate::clear` (`PartPlate.cpp:4173-4184`) leaves them.
 - **`Project::delete_all_objects`** is `model.clear_objects()` and `model.plates_custom_gcodes.clear()` (`Plater.cpp:10813, 10821`).
-- **Deviation from the spec, accepted in review.** `PlaterEdits` gains no custom G-code field. With no objects every slice fails at the model read before custom G-code is used, and the session cannot add objects afterwards, so the field could not be observed. `deleted_objects` already lists every loaded id.
+- **Deviation from the spec.** `PlaterEdits` gains no custom G-code field. With no objects every slice fails at the model read before custom G-code is used, and the session cannot add objects afterwards, so the field could not be observed. `deleted_objects` already lists every loaded id.
 - **Case 1** moves object 1 below the grid onto the unprintable plate, the next grid cell (`PartPlate.cpp:3942-3949`), which holds instances right of and below its origin (`is_left_top_of`, `:2690-2708`). A mutation that unlocks plates in `PlateList::clear` fails it at the lock assertion.
 - **Web.**
   - wasm `deleteAllObjects`, through protocol, worker and client.

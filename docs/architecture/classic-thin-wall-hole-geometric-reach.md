@@ -1,8 +1,8 @@
 # Classic thin-wall-hole geometric reach
 
-Status: literal thin-hole classification/transport/orientation port qualified,
-explicitly NON-GREEN pending complete parity and source-port review. The
-approved public RED remains unchanged; no complete GREEN is claimed.
+The literal thin-hole classification/transport/orientation port is
+explicitly NON-GREEN pending complete parity. The public RED remains
+unchanged; no complete GREEN is claimed.
 
 ## Upstream owner
 
@@ -70,7 +70,6 @@ accepted spiral/gap ports, M73 estimator and config footer remain separate.
 
 ## Exact public RED
 
-Base accepted source stack `94c678d2252abb1b55fc9f3930e13c80eecdb146`.
 Reuse unchanged `tests/parity/spiral-lift-arc-enabled/sequential.3mf`,
 SHA256 `baa6c8d352d5e62c400cc450d50de643ce868fcc619a71352748f89aabe7aab1`.
 No fixture copy/setting edit or minimization variant is needed.
@@ -80,7 +79,7 @@ stable generator-only equality, then validated public API1 and CLI1.
 Native settings premise: Classic, ccw, two walls, one-wall-top enabled,
 InnerOuter and the real cube-with-hole object. No coordinate/count pins.
 ROOT, shared runner, comparator and previous/retired registrations stay
-unchanged. One selected run only; no retry, extra probe or family run.
+unchanged.
 
 Prior saved qualification identifies a later Outer-wall difference at
 original13978 on both streams, object `cube_with_hole.obj id:1 copy 0`,
@@ -100,14 +99,12 @@ and complete unfiltered contexts. It never determines test acceptance.
 
 Actual private seed topology and Native reach booleans were not observed
 in the prior read-only localization. They must not be invented from the
-printed role. A bounded Ares-only carrier trace is authorized if needed
-before the fix, but no trace is planned in this unchanged-production RED.
-Any such trace is scratch evidence, not committed instrumentation.
+printed role. A bounded Ares-only carrier trace may be used before the
+fix; any such trace is scratch, not committed instrumentation.
 
 ## Fresh qualification
 
-One selected, nonignored ordinary public run on the accepted base finished
-with the expected strict FAIL. Two fresh Native complete exports are stable
+The ordinary public run finished with the expected strict FAIL. Two fresh Native complete exports are stable
 with generator-only normalization; validated API and CLI exports completed
 and are raw-byte identical. The first full difference is byte2475/line93:
 Native `;WIPE_START`, API/CLI `M73 P10 R18`. This remains a test failure.
@@ -116,14 +113,7 @@ The separately retained external M73-command-only diagnostic first differs
 at original13978 in both streams, diagnostic13870/byte363740/column6,
 with the wall endpoints described above. Both preceding printed starts
 remain `(158.853,89.79)`. No Fword or other record class was omitted.
-Original-line maps, all removed M73 commands and full contexts are retained
-in the external evidence bundle. Printed coordinates are not test goldens.
-
-There was no carrier trace, private-operand observation, input variant,
-extra probe, family run, retry or production change. A fresh dedicated
-target, frozen ELF and exact source tree were verified before execution.
-Fmt and strict workspace/all-targets Clippy pass. Only this architecture
-result note changes after execution; no postcommit rerun is claimed.
+Printed coordinates are not test goldens.
 
 ## Literal port and paired perimeter qualification
 
@@ -139,10 +129,9 @@ as fallback. Arachne's existing helper call operands are unchanged; only
 the shared boolean parameter's name now describes the source property.
 
 A frozen 117-check existing perimeter/Classic/seam/thin-hole family ran
-once before and once after in the same worktree with a dedicated target.
-Both phases are **48 PASS / 69 FAIL / zero ignored**, with zero flips and
-zero prior-PASS to FAIL. Each phase retains 170 Native command-status
-receipts. Guard/premise results remain visible; these PASS counts are
+before and after the port. Both phases are **48 PASS / 69 FAIL / zero
+ignored**, with zero flips and zero prior-PASS to FAIL. Guard/premise
+results remain visible; these PASS counts are
 not blanket Native-parity credit. The dedicated public target has two
 fresh stable Native exports and one validated API/CLI export per phase,
 with raw API/CLI identity.
@@ -153,30 +142,18 @@ now original15055 in both streams, diagnostic14945/byte403792/column19:
 Native `; printer_agent = crealityprint`, API/CLI `; printer_agent = `.
 The ordered non-M73 prefix includes matching wall edges, seam-gap closing,
 wipe and subsequent motion before this config footer. No additional
-record class was omitted; full original-line maps, removed commands and
-complete contexts remain in the external evidence bundle.
+record class was omitted.
 
 The full strict test still **FAILS** at original93/byte2475: Native
 `;WIPE_START`, API/CLI `M73 P10 R18`. M73 remains in the comparator and
-separately owned; the footer remains in the existing config queue. No
-estimator/config/formatter patch, optional carrier trace, GDB, input
-variant, retry, extra probe, family expansion or E5 repeat occurred.
-Narrow-hole/sandwich behavior remains deferred, not claimed ported.
-
-Fmt and strict workspace/all-targets Clippy pass. All production postimages
-match the executed AFTER tree, with distinct frozen before/after ELFs and
-identical test inventory. Tests, fixtures, ROOT, runners and comparator
-are unchanged. Only this architecture result note changes postexecution;
-no postcommit rerun or complete GREEN/FULL/integration claim is made.
+is a separate boundary, as is the config footer. Narrow-hole/sandwich
+behavior remains deferred, not claimed ported. Tests, fixtures, ROOT,
+runners and comparator are unchanged.
 
 ## Exit criteria and remaining gates
 
-ARD/public RED `118424f36f906283177a9a3b13ba63b799b0b70f` was approved
-before production edits; the declared source boundary and paired family
-are qualified above. Preserve all source/executable/manifests, original
-failures and any invalid attempts. Complete GREEN still requires the full
-M73-inclusive output; any estimator/config prerequisite must be named and
-approved explicitly. Report new boundaries instead of broadening scope or
-waiving records. E5 was separately qualified after the accepted gap port,
-with its former feed discrepancy gone; it was not rerun here, and no cooling
-slice belongs to this thin-hole rewrite.
+The ARD/public RED preceded production edits; the declared source boundary
+and paired family are qualified above. Complete GREEN still requires the
+full M73-inclusive output; any estimator/config prerequisite must be named
+explicitly. Report new boundaries instead of broadening scope or waiving
+records. No cooling slice belongs to this thin-hole rewrite.

@@ -1,12 +1,12 @@
 # F1 Native closure and minimum-width preflight
 
-Status: Native-only diagnostics; closure contract ruled by coordinator below.
-SPEC308583e3a and its F1/F2 split are approved. F1 production remains unchanged.
+Status: Native-only diagnostics; closure contract decided below.
+SPEC 308583e3a defines the F1/F2 split. F1 production remains unchanged.
 
-Root `/tmp/worker3-fuzzy-f1-native-preflight-00nkklq5` retains all inputs,
+The preflight run retains all inputs,
 commands/environments, producer hashes, exits, complete raw G-code and stderr.
 `closure-width-audit.json` records public emitted-path diagnostics. Both legs
-run sequentially on CPU12 with fresh cache/root; no full/workspace or probes.
+run sequentially with fresh cache/root; no full/workspace or probes.
 
 Official and seeded each ran31 cases:29 exit0 with G-code,2 exit156 without
 G-code. The two width diagnostic cases use Classic noise, thickness2 and
@@ -17,7 +17,7 @@ and Flow.cpp::rounded_rectangle_extrusion_spacing:200–210, not a new Ares clam
 The two cases are removed from the repository parity matrix and retained only
 as raw preflight inputs/artifacts outside Git. No Ares guard is added for them.
 
-## Closure finding for coordinator ruling
+## Closure finding
 
 The prism is a watertight single model part,4 layers,2 walls, explicit
 seam_gap0, no support/skirt/brim/spiral/scarf. Disabled/none controls have8
@@ -42,8 +42,8 @@ of private junctions. Together with the source branch difference, they identify
 a release/debug contract conflict needing a decision before F1 production.
 Do not append a synthetic closing segment (would change the strict Native
 stream), retag a closed line as open, remove or conditionally suppress the
-assertion without explicit approval, or call a failed debug slice parity PASS.
-Coordinator ruling: Native release behavior is authoritative; the upstream
+assertion without an explicit decision, or call a failed debug slice parity PASS.
+Decision: Native release behavior is authoritative; the upstream
 assertions at:536–540 are compiled out under NDEBUG, and the TODO at:534–535
 explicitly admits disconnected paths in practice. Emit the same open Ripple
 loop, without a synthetic closing segment or retagging. In the F1 production
@@ -52,8 +52,7 @@ this legitimate input; also delete the adjacent-path joint assertion only if
 independently demonstrated broken. Keep every debug assertion not broken.
 That production commit message and the SPEC addendum must cite
 PerimeterGenerator.cpp:534–540, NDEBUG and closure-width-audit.json. This is
-distinct from the old Unsupported unit retirement request. No production
-assertion has been modified yet; alternate integration still precedes F1 GREEN.
+distinct from the old Unsupported unit retirement.
 
 ## Diagnostic projection revision
 

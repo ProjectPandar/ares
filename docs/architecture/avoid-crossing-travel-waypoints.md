@@ -1,9 +1,9 @@
 # Avoid-crossing travel waypoint correction (scoped work plan)
 
-## Latest disposition: wave17 independent-review P1 corrections
+## Latest disposition: route P1 corrections
 
 Base `c90d3598ba2b023d9fb3cde8be0b83cfe2954da7`; scope is only the two
-independent route-review P1s. Upstream remains read-only Orca2.4.2 commit
+route P1 findings. Upstream remains read-only Orca2.4.2 commit
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 - `Polyline.hpp:59–65::append(Point)` can return a singleton for equal integer
@@ -27,9 +27,8 @@ unchanged. Existing unavailable-geometry rectangle scaffolding is not expanded
 or accepted as parity. External/support/multi-region routing and logical
 re-scaling drift remain deferred.
 
-Evidence D (owned, with full artifacts, raw/normalized/ordered-XY diffs, effective
-exports, input/output identities, commands and real exits):
-`${WORKTREE_ROOT}/ares.pi-subagents-route-review-fixes-0ebec5a-143e-s0-t0/target/route-review-evidence/`.
+Evidence D (retained externally, with full artifacts, raw/normalized/ordered-XY diffs, effective
+exports, input/output identities, commands and real exits).
 `D/replay.py` reuses the exact seven wave16 inputs and adds `internal-fan-50`,
 changing only one-wall's `internal_bridge_fan_speed` to `["50"]`. All eight
 references are fresh actual-AppImage executions, not copied/fake references.
@@ -42,13 +41,13 @@ two-walls623, translated770, solid-monotonicline1251, wipe-off699,
 solid-rectilinear770, one-wall436, internal-fan-50 436. Effective exports confirm
 explicit internal fan50 in both producers. No tolerance or fallback reference.
 
-Validation receipts in `D/logs/` (each command has a finite900s timeout):
+Validation logs in evidence D (each command has a finite900s timeout):
 `01-tdd-red` exit100,5 passed/3 expected failures; `02-tdd-green` exit0,24 passed;
 `03-core-full` exit0,6831 passed/3 skipped,246.979s; `05-wasm` exit0,compile-only;
 `06-fresh-references` exit0,8 actual Orca executions; `07-cli-focused` exit0,6/6;
 `08-clippy` exit0,existing warnings; `09-full-replay` exit0,8/8 complete-green
-and stable repeats; `10-fmt` and `11-fmt-check` exit0. Receipt04 failed exit127
-because `python3` was absent from PATH; receipt06 reran with the explicit Nix
+and stable repeats; `10-fmt` and `11-fmt-check` exit0. Log04 failed exit127
+because `python3` was absent from PATH; log06 reran with the explicit Nix
 Python executable. `12-audit`, `13-diff-check` and `14-empty-index` exit0:
 original seven input archives are exact; the new archive differs only in the
 explicit fan setting; touched Rust modules are at most263 physical lines.
@@ -56,8 +55,7 @@ No failed/skipped/unexecuted case counts as coverage.
 
 This bounded eight-artifact pass does **not** complete the full1001-printer,
 default/legal-Boolean/Enum/range or Tier1 runtime goal. BrowserWASM is compile-
-only; Windows/macOS runtime validation remains open. Independent review and
-publication/main merge remain Coordinator-owned.
+only; Windows/macOS runtime validation remains open.
 
 ## Historical disposition: wave16 bounded seven-artifact parity
 
@@ -73,13 +71,13 @@ route regression failed before the correction; unavailable-boundary and captured
 Z1.6/twin/shortest-direction behavior remain covered and unchanged.
 
 That correction achieved exact436/436 ordered XY and removed all M73/time
-differences, leaving only a missing `M106 S255` at reference line4950. Coordinator
-then authorized a small fan-owner correction. At layer65, Internal Bridge END
+differences, leaving only a missing `M106 S255` at reference line4950. A small
+fan-path correction followed. At layer65, Internal Bridge END
 follows an equal-speed Outer wall overhang START. `CoolingBuffer.cpp:780,851–869,
 984–1006` suppresses the START request but unconditionally emits on END. Rust
 now preserves that END force through deferred conditional fan resolution without
 changing speed selection. A separate source-named regression first failed.
-Coordinator also authorized removing the touched cooling owner's two pre-existing
+The correction also removes the touched cooling module's two pre-existing
 filesystem/environment diagnostic blocks; fresh full output remains byte-neutral.
 
 All seven contexts now match complete fresh actual-Orca artifacts after only
@@ -97,9 +95,8 @@ This is a bounded libslic3r rewrite candidate, not completion of the user's
 BrowserWASM is compile-only; Windows/macOS runtime validation is not claimed.
 Known logical re-scaling drift, external/support/multi-region routing and existing
 rectangle compatibility scaffolding remain deferred. No libvgcode behavior changes.
-Skipped/rejected/unexecuted cases count for no coverage. Independent six-axis
-review and publication/main-merge approval remain Coordinator-only. Detailed plan
-and receipts: `2026-09-08-route-boundary-parity.md`. Older dispositions below are
+Skipped/rejected/unexecuted cases count for no coverage. Detailed plan
+and records: `2026-09-08-route-boundary-parity.md`. Older dispositions below are
 historical, not current failures.
 
 ## Historical disposition: wave14 shortest-direction partial, no candidate
@@ -123,20 +120,20 @@ not inference from formatted commands. The known one-unit cursor drift remains
 separate and unmodified. Six other contexts remain completely green and all
 seven corrected repeats are stable under generator-only normalization.
 
-Coordinator approved validation-only partial preservation, no commit/ref.
+This was preserved as a validation-only partial, no commit/ref.
 Full core Nextest6806 passed/1 skipped; focused core69 passed including Z1.6
 and three new direction tests; CLI4 passed/2 required failures. Fmt/clippy/WASM
-compile exit0 (existing warnings). Evidence: this wave14 worktree's
-`target/route-shortest-evidence/`, with full artifacts, effective exports,
+compile exit0 (existing warnings). Evidence (retained externally):
+full artifacts, effective exports,
 raw/normalized diffs, command exits, hashes and complete partial patch. Full
-1001-printer/legal-domain/range/Tier1 runtime parity and independent six-axis
-review remain open. This bounded improvement is not completed route parity.
+1001-printer/legal-domain/range/Tier1 runtime parity
+remains open. This bounded improvement is not completed route parity.
 
 ## Historical disposition: wave11 cast-only partial, no candidate
 
 The exact26-file route partial was restored on37159663, followed by the three
 wave10 boundary fixes. Fresh actual-AppImage output reproduced six full-green
-contexts and one-wall RED443/436 before the two authorized edits. Casting the
+contexts and one-wall RED443/436 before the two edits. Casting the
 normal displacement before integer addition matches
 `AvoidCrossingPerimeters.cpp:335–346` and is retained. Adding integer-equal
 consecutive suppression at the final router collection was tested and **reverted**:
@@ -159,11 +156,11 @@ Readonly follow-up also found different neighbor selection in
 at index+1 even for backward search; Rust starts index-1. No neighbor-selection,
 simplification, shortest-direction or other rounding change is included.
 
-Coordinator approved validation-only preservation, not a commit/ref. Detailed
-state-transition artifacts, source findings and receipts are in the wave11
-section of `2026-09-08-route-boundary-parity.md` and the owned evidence directory
-`${WORKTREE_ROOT}/ares.pi-subagents-route-completion-8bfde2d-8d9b-s0-t0/target/route-completion-evidence/`.
-The full1001-printer/legal-value/range/Tier1 goal and independent review remain
+This was preserved as validation-only, not a commit/ref. Detailed
+state-transition artifacts and source findings are in the wave11
+section of `2026-09-08-route-boundary-parity.md`; the evidence directory is
+retained externally.
+The full1001-printer/legal-value/range/Tier1 goal remains
 open; bounded six-green output is not completion. Historical outcomes follow.
 
 This wave is not full-output parity acceptance. The external seam is committed
@@ -213,20 +210,19 @@ The unchanged exact all-XY regression remains red at six existing destination
 commands. Three subsequent sparse-infill XY sequences (20 positions each) are
 exact reversals, verified from full output bytes. Source owner for follow-up is
 `GCode::extrude_infill` / `ExtrusionEntityCollection::chained_path_from`, not the
-owned detour router. Coordinator explicitly stopped this lane at that boundary:
+detour router. Work stopped at that boundary:
 no commit or candidate branch until the combined required regression passes.
 Closest-segment dedup, direction-formula and f32-distance experiments showed no
 output benefit and were reverted; offset/union arithmetic was not changed.
 
-Evidence directory:
-`${HOME}/.local/state/ares-parity/travel-fix-322a3890/`.
+Evidence directory (retained externally):
 `ordered-differences.log` records all six destination differences and the
 insertion/reversal assertions. `candidate-vs-gt.diff` retains the full raw red
 diff: final candidate and reference each7966 lines, with94 aligned differing
 lines (not merely travel). Core nextest6791 passed/1 skipped; focused core2
 passed; exact CLI nextest failed (exit100); fmt and changed-crate all-target
 clippy exited0 with existing warnings. Broader preset/option replay and additional
-reference variants are not run in this stopped partial lane. Core full-suite
+reference variants are not run in this stopped partial. Core full-suite
 validation preceded the final source-comment-only clarification; final CLI and
 clippy were re-run afterward. Existing rectangle fallback and probes in the
 untouched router remain explicit delivery risks, not accepted parity behavior.
@@ -272,7 +268,7 @@ and monotonicline values are rejected by both executables and do not count as
 coverage. Hole geometry was not available in this bounded fixture inventory.
 No exhaustive printer/option/Tier1 runtime acceptance is claimed.
 
-Full evidence: `${HOME}/.local/state/ares-parity/logical-cursor-e098f64/`;
+Full evidence is retained externally;
 source-state audit and commands: `docs/superpowers/plans/2026-09-08-logical-cursor-parity.md`.
 All shipping probes in touched modules are removed. Untouched router/core probes
 and existing rectangle scaffolding remain explicit risks. No candidate commit
@@ -315,13 +311,13 @@ are stable. Full diffs against actual Orca, restored partial and preserved
 published-base executable, effective settings and hashes are retained. Illegal
 sparse monotonic values are not counted or rerun as coverage.
 
-Coordinator explicitly directed validation-only completion and a partial patch:
+This was completed as validation-only with a partial patch:
 no commit or candidate ref. No required assertion was weakened. Full-core
 Nextest6791 pass/1 skipped; focused59 pass; CLI4 pass/2 fail; fmt/clippy/WASM
 compile checks exit0 (existing warnings). This is not browser/native-platform
 runtime acceptance, exhaustive printer/option coverage or producer parity.
-Evidence and detailed receipts: `2026-09-08-closest-line-extension.md` and
-`${HOME}/.local/state/ares-parity/2026-09-07-coordinator/wave5-route-writer/`.
+Evidence and detailed records: `2026-09-08-closest-line-extension.md`
+(artifacts retained externally).
 
 ## Scaled-boundary continuation (wave10, partial; no candidate)
 
@@ -334,7 +330,7 @@ without unscaling/rescaling. `get_boundary(layer,float)` at1099–1134 uses
 plain `union_ex`, not the safety-offset union. The boundary unit now matches
 all four±4715068 corners exactly (red±4715077 before correction).
 
-A Coordinator-approved, temporary stderr-only instrument of the corrected CLI
+A temporary stderr-only instrument of the corrected CLI
 proves those values reach the actual Z1.6 request. The complete instrumented
 artifact equals the corrected production artifact after independently validated
 generator-line normalization. Sources were restored byte-for-byte afterward;
@@ -348,7 +344,7 @@ The remaining raw corner is4714997 in Rust versus4714998 upstream:
 `get_polygon_vertex_offset/get_middle_point_offset` (upstream335–346)
 cast the displacement before adding the integer point; Rust
 `router/path_shape.rs::{vertex_offset,middle_point_offset}` casts the sum.
-This is a diagnosed next seam, not an authorized rounding correction here.
+This is a diagnosed next seam, not a rounding correction made here.
 
 Both implementations preserve two identical corners with do-not-remove
 false/true through `simplify_travel`. The qualified upstream FINAL contains
@@ -363,10 +359,10 @@ that independent arithmetic remains deferred.
 Fresh actual-AppImage replay now has six complete-artifact passes: anchor770,
 two-walls623, translated770, solid-monotonicline1251, wipe-off699 and
 solid-rectilinear770. The latter two were already green in the restored partial
-on this newer published base; this lane must not claim credit for those M73
+on this newer published base; this partial does not claim credit for those M73
 fixes. Only one-wall remains red443/436, with motion/M73/time differences.
 Three new separate boundary/route behavior tests preserve the qualified exact
 expectations; the boundary is green and both raw-route assertions remain red.
-Coordinator directed partial preservation without commit/candidate. Full
-printer/option/range coverage, Tier1 runtimes and independent acceptance remain
-open. Plan and validation receipts: `2026-09-08-route-boundary-parity.md`.
+Preserved as a partial without commit/candidate. Full
+printer/option/range coverage and Tier1 runtimes remain
+open. Plan and validation records: `2026-09-08-route-boundary-parity.md`.

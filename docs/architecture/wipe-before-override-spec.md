@@ -1,10 +1,6 @@
-# SPEC request: before-wipe small-positive override dispatch
+# SPEC: before-wipe small-positive override dispatch
 
-Status: **conditional SPEC-REVIEW-REQUEST; no Native RED yet**.
-Stacked on approved b91d9bd97b0655727242f163ac1691ed91654b0b, queued stack15;
-merged base remains c251aa6166bcc0270063fc6d2e41b84ab01a637d.
-Do not integrate this document as approval for its parent's runtime assumptions.
-Rebase only after coordinator broadcasts merged main, without stash.
+Conditional spec; no Native RED yet.
 
 ## One upstream owner / exact Rust boundary
 
@@ -18,7 +14,7 @@ GCode.cpp:350-361 Wipe::calculateWipeRetractionLengths can produce a small
 positive before amount when the during budget is slightly smaller than the
 remaining full length. GCode.cpp:7659-7663 passes that before amount to the
 writer with before_wipe=true. This producer/call chain is context only: do not
-change its budget/geometry or reopen the now-approved :330/:337 early returns.
+change its budget/geometry or reopen the already ported :330/:337 early returns.
 Writer _retract:1025 onward / Extruder::retract:75-84 consume effective length
 and existing retracted amount; their math/state ownership is not being redesigned.
 
@@ -31,7 +27,7 @@ Native divergence proves this exact branch; preserve no-wipe consumption.
 Static arithmetic difference is not a RED, and absence of an internal check is
 not itself a bug. This is a bounded upstream consumer rewrite, no Ares pipeline.
 
-## Native-first discovery proposed after approval
+## Proposed Native-first discovery
 
 Use existing admitted input-only overhang 3MF, mesh/non-config bytes unchanged.
 Fix length0.8, before0%, wipe1, wipe_speed30mm/s, retraction_speed60mm/s,
@@ -66,16 +62,13 @@ No generic fallback/guard abstraction, new config rejection, comparator
 normalization or separate emitter. Upstream's existing parameter-selection
 semantics are source behavior, not permission to add defensive fallback paths.
 
-After discovery review: tests first with frozen pure input SHA, actual Native
+After discovery: tests first with frozen pure input SHA, actual Native
 witness, OrcaRunner::from_env/stages required-Native mode, public API and realCLI
-complete ordered comparison; commit no Native output. Independent exact public
-RED approval before code. Freeze admitted positive and passing controls; if
-another difference emerges outside dispatch, stop for amendment, not scope creep.
+complete ordered comparison; commit no Native output. Public RED precedes code.
+Freeze admitted positive and passing controls; if another difference emerges
+outside dispatch, stop for amendment, not scope creep.
 GREEN: exact inputs/assertions, full parity both modes, raw same-input controls
-unchanged plus existing wipe/retraction/comment controls, fmt/strict/WASM exact
-full clean hash; <=400LOC files. CPU18/jobs2/threads2 serial official+seeded fresh
-Native caches/artifacts, explicit owned target reuse, actual descendant/thread
-affinity, canonical ALL oracle env including procgcode. One batch START then
-first-live-divergence/STOP, no per-case inbox noise. Respect exclusive FULL freezes;
-coordinator owns full/workspace/push/integration; no Nix GC/store deletion.
-Only this document now; no new runtime/tests/production changes.
+unchanged plus existing wipe/retraction/comment controls, fmt/strict/WASM on the
+exact final hash; <=400LOC files. Fresh official+seeded Native runs with the
+canonical oracle environment including procgcode; stop at the first live
+divergence.

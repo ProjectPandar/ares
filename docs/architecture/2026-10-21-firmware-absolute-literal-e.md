@@ -1,8 +1,6 @@
 # ARD: Firmware retract simulation forwards literal E words
 
-Status: docs-only SPEC authorized; formal Native-first RED follows.
-GREEN requires separate review approval. Independent base
-89560ca66ff8418bcf175d573df299955f9a216f, not stacked on any approved
+Docs-only SPEC; formal Native-first RED follows. Independent of the
 spiral chain. No production change in this phase.
 
 ## Upstream owner and non-negotiable Rust boundary
@@ -25,7 +23,7 @@ Rust destination ONLY
 branch pre-adds state.e_position to the configured E word. That extra
 reinterpretation is an incorrect compatibility shell around process_G1.
 
-Future approved GREEN must pass the literal configured E into the
+Future GREEN must pass the literal configured E into the
 existing fake G1 in either E mode and let existing MotionState::motion
 interpret it normally. No new mode/origin handling, alternate estimator,
 legacy fallback, feature flag or output-mask workaround. Rename local
@@ -78,8 +76,7 @@ proof that Native ignores G10. Final actual setter/caller capture proves
 execution/argument discrepancy. Both successful debugger full outputs
 match ordinary CLI outputs, no inferior calls/data/register writes.
 No complete time-cache causal reconstruction or whole-GREEN sufficiency
-is claimed before formal testing. Discovery evidence:
-`${COORD_ROOT}/evidence/w5-firmware-absolute-literal-e/`.
+is claimed before formal testing.
 
 ## Included / deferred / exclusions
 
@@ -94,12 +91,12 @@ G91/other dialects, line id, cache, viewer/role behavior, generic motion/
 G92/config parsing, block classification/feedrates/time integration.
 No integer-/mode-/shape-specific exception or fallback to known-wrong E.
 
-Avoided: brim/skirt, painted/MMS, combine-solid/concentric, W4 ranges,
-medial/interlocking/SeamPlacer nearest, W6 seam-cache/scarf flags, all
+Avoided: brim/skirt, painted/MMS, combine-solid/concentric, ranges,
+medial/interlocking/SeamPlacer nearest, seam-cache/scarf flags, all
 three spiral points. Their frozen chains are not modified or consumed.
 No new dependencies, platform I/O, public API or independent pipeline.
 
-## Formal RED then review before GREEN
+## Formal RED then GREEN
 
 Two DIRECT native_stream_case::check calls. Existing helper double
 replays Native then delegates complete validated API/bare CLI comparison
@@ -107,10 +104,9 @@ to native_api_cli. No copied normalization/replay/JSON/orchestration,
 Native output content constants/assertions, ignored/expected-failure
 flags or G-code snapshots. Freeze only actual3MF INPUTS + input manifest/
 README. Require official/seeded controlPASS/positiveactualFAIL and stable
-Native repeats, CPU11/thread1/job1 with complete retained receipts.
+Native repeats.
 
 Strict ordered bytes permit ONLY existing canonical generated-by
 identity/date line, no M73/time/header/E/motion/config/trailing-line mask
-or numeric tolerance. Send RED RR and STOP before GREEN/FULL; later GREEN
-must freeze tests/inputs/helpers. No integration/rebase/main update or
-preemptive module-registration conflict resolution in this phase.
+or numeric tolerance. Later GREEN
+must freeze tests/inputs/helpers.

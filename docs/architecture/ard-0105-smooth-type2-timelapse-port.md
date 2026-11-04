@@ -31,7 +31,7 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
 - Tower activation, occupancy, placeholders, travel/wipe handoff, final unload
   and Adaptive PA reset integration belong to the cited upstream boundary.
   A matching first tower block alone is not completion.
-- Coordinator selected complete Type2 activation before integrated review.
+- Complete Type2 activation is in scope.
   Type2 multi-tool partitions, raft-gap tower layers and rectangle/cone/rib
   branches are included, not deferred behind the historical same-tool plan.
   Any activated source branch must be accounted for explicitly; no new
@@ -40,9 +40,9 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
   `WipeTower.hpp` result/geometry data needed by Type2 are included. Preserve
   source printer-type dispatch rather than introducing an Ares capability
   filter. Same-tool fixtures alone cannot validate the integrated slice.
-- Writer/geometry commits are not independently reviewable completion:
-  preserve their private Rust boundary, connect their consumers before a
-  review request, and verify complete E2E output. Do not manufacture a public
+- Writer/geometry commits are not independent completion:
+  preserve their private Rust boundary, connect their consumers before
+  landing, and verify complete E2E output. Do not manufacture a public
   API or retain dead code merely to publish an isolated component.
 - Purge assignment retains original extrusion-collection identity across the
   existing island flattening and tool buckets. `ToolOrdering.cpp:1620–1826`
@@ -68,9 +68,6 @@ Restore source state transitions, not hard-coded duplicate Z instructions.
   still be exercised by reference witnesses; it must not invent Type2 arcs.
 - Tests use exported project bytes and complete output through the existing
   CLI parity harness. Keep official and seeded evidence separate.
-- Every green slice is pushed for coordinator Claude review. Stop after
-  `REVIEW-REQUEST`; only a matching approval permits rebase/revalidation and
-  fast-forward integration. No external review programs.
 
 ## Consumer audit and source gates
 
@@ -128,21 +125,20 @@ That pre-existing gate restricts each ModelObject to one PrintObject transform
 and matches it against the first ModelInstance. Removing it alone is not a port:
 `PrintObject.cpp:85–114` owns first-instance raw bounds and Z-rotation correction
 of the centering offset, which must be retained through slicing, support, seam,
-copy placement and first-layer geometry. The coordinator assigned this general
-Print/PrintApply prerequisite to pi-tip after RNG integration, explicitly outside
+copy placement and first-layer geometry. This general
+Print/PrintApply prerequisite is a separate slice after RNG integration, explicitly outside
 this tower slice. Keep `raw_intersections.rs:290–305` unchanged. The membership
-witness was removed from the tower suite, not ignored; its source, helper patch,
-RED log and native artifact references are handed off at
-`${TMP_ROOT}/ares-tower-to-tip-centering/`. Multi-transform PrintObject preparation and
+witness was removed from the tower suite, not ignored.
+Multi-transform PrintObject preparation and
 its centering correction remain a documented deferred dependency, not claimed
 Type2 coverage. Same-transform actual-copy ownership remains included.
 
-## Coordinator-approved deferred metadata
+## Deferred metadata
 
 These fields and their pure bookkeeping are deferred from this byte-output
 rewrite slice. Port them with their consumers when required, not through dummy
-reads or a new public API solely to silence diagnostics. The coordinator approved
-this boundary after the `944c0459` rebase; full G-code comparisons stay unchanged.
+reads or a new public API solely to silence diagnostics. This boundary
+holds after the `944c0459` rebase; full G-code comparisons stay unchanged.
 
 - Shared `ToolChangeResult::is_finish_first` is read by Type1 `append_tcr`
   (`GCode.cpp:755`), not Type2 `append_tcr2` (1118 onward). Defer the shared

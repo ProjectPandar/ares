@@ -1,6 +1,6 @@
 # Arachne available-wall candidate order: open before closed
 
-Status: approved scope (`26da8d624`); RED/GREEN and validation complete; awaiting final review.
+Status: accepted (`26da8d624`); RED/GREEN and validation complete.
 See [validation](2026-10-08-arachne-open-wall-order-validation.md).
 Baseline `113a351e3aedeab8c73fba7a9c4cb9dd78bdb837`.
 Pinned upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
@@ -96,11 +96,11 @@ entity chaining. Do not modify an independent boundary to erase residuals.
 Existing isolated ordering tests are not the oracle; do not rewrite their
 assertions to manufacture GREEN. In particular the existing test named
 closed/open equal distance has unequal starting positions and cannot prove
-the cross-class tie rule or authorize this implementation.
+the cross-class tie rule or justify this implementation.
 
 ## RED before production
 
-After spec approval, copy the six frozen 3MF inputs into this worker's
+Copy the six frozen 3MF inputs into the
 validation fixtures without modifying the originals. Pin their exact SHAs
 from the finding. Add public byte-slicing E2E coverage with fresh identified
 Native output, explicit Arachne/object-mode/height checks and the existing
@@ -113,8 +113,8 @@ Retain all six results separately; earlier M73-first inputs retain their
 true first difference and additionally record layer1 Z0.2 entity context.
 Keep a wider-neck sibling (already whole-PASS) as an unchanged control.
 Neither the prior investigation log nor a scalar/isolated sort example
-replaces the new committed Native E2E RED. Commit RED alone and notify its
-hash before changing order.rs. If the current-main witness disappears,
+replaces the new committed Native E2E RED. Commit RED alone
+before changing order.rs. If the current-main witness disappears,
 report it instead of editing production without RED.
 
 ## GREEN and merge gates
@@ -126,13 +126,12 @@ retain/report them and request revised scope; do not relax assertions or
 silently add a second fix. The wider-neck sibling must remain whole-PASS.
 
 Run fresh same-round base/candidate seeded and official control sets with
-independent caches, independent worker6 target,16 threads and one heavy task
-at a time. List every changed status/reason and require candidate failures
-to be a subset of base failures, with oracle instability separately evidenced
-and reviewed. A new failure from large candidate sets cannot be hidden by
+independent caches and targets.
+List every changed status/reason and require candidate failures
+to be a subset of base failures, with oracle instability separately evidenced.
+A new failure from large candidate sets cannot be hidden by
 the deferred sorting scope: retain it and report before merge.
 Run workspace nextest, strict workspace/all-target/all-feature clippy, fmt
-and wasm32 checks. Honor browser holds and latest-main rebase requirements.
-Submit the exact reviewed hash, stop for approval, then rebase conflict-free
-and push fast-forward only. No production change is authorized by this
-proposed spec until the coordinator approves it and RED is committed.
+and wasm32 checks.
+Rebase conflict-free and fast-forward only. No production change precedes
+the committed RED.

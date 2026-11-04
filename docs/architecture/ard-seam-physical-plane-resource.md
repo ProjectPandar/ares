@@ -1,8 +1,8 @@
 # ARD: source-owned physical plane handoff, resource-control witness
 
-Status: proposed, docs only; exact-hash
-[SPEC](seam-physical-plane-resource-spec.md) approval is required before RED.
-Base main41f2; no production authorization. The old v2 NO-RED closure stands.
+Status: proposed, docs only; the
+[SPEC](seam-physical-plane-resource-spec.md) precedes RED.
+Base main 41f2; no production change. The old v2 NO-RED closure stands.
 
 ## Owner and decision
 
@@ -31,11 +31,10 @@ This is a libslic3r rewrite handoff, not an Ares-owned seam/pipeline design.
 - M73 postprocessing is CLOSED as unqualified for this witness. Complete strict
   comparison retains every M73/motion/arc/statistics/footer byte; no filtering
   or tolerance. Restored choices are an offline prediction, not whole GREEN.
-- Public RED requires complete Native→API+real CLI success receipts and raw
+- Public RED requires complete Native→API+real CLI success and raw
   API==CLI before target-equality assertions. The50→20 density-only control
-  must whole-PASS. SPEC→RED approval→separate GREEN authorization remains.
+  must whole-PASS. SPEC→RED→separate GREEN.
 - Existing v2 rejected ancestry stays excluded. Residual owners are reported,
   not silently repaired. No committed probes, new API or core file I/O; preserve
   browser WASM/Windows/macOS/Linux portability.
-- MAIN-ADVANCE precedes rebase; FREEZE permits only pinned CPU15 targeted work.
-  Coordinator owns all full/workspace scheduling, merges and pushes.
+- Rebase onto the advanced main before RED.

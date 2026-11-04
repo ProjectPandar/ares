@@ -1,6 +1,6 @@
 # Slice B SPEC/proof: nonpositive sparse-density guard
 
-Status: SPEC-REVIEW-REQUEST for direct deletion; no B production edit.
+Status: proposed SPEC for direct deletion; no B production edit.
 Audited base: `c22f5a81da41fce715b528268711393649daad66`.
 
 ## Effective-region proof, not just the global schema
@@ -48,7 +48,7 @@ Source commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 The admission function is a temporary compatibility shell around these ports.
 Its unreachable error does not own density semantics.
 
-## Proposed minimal change if approved
+## Proposed minimal change
 
 Delete only `if sparse_infill_density <= 0 { unsupported(...) }` in the anchor
 validator. Preserve region normalization, the caller's existing zero-density
@@ -56,21 +56,20 @@ selection, real grouped-fill behavior, geometry and every other check.
 Do not add a new unsupported gate, silently discard an entire zero-density
 region, invent anchors, or move validation into another internal layer.
 The now-adjacent gyroid support comment belongs to the old pattern context;
-remove it only if the coordinator considers it orphaned by the earlier C1
+remove it only if it is orphaned by the earlier C1
 whitelist removal; it carries no executable behavior.
 
 Deferred: C2 top/solid role enum overrides, D anchor-length float projection,
 all fill algorithms and density normalization changes. This proof is not a
-public RED, nor authorization to remove B before the coordinator's ruling.
+public RED, nor by itself a decision to remove B.
 
-## Verification / review exit
+## Verification exit
 
-After approval and RESTORED: existing zero-density, mixed-region and no-bridge
+After RESTORED: existing zero-density, mixed-region and no-bridge
 public cases plus existing bridge/anchor regressions official+seeded. Fresh
-Native cache and artifact root per mode/run, jobs2/threads2; unchanged
+Native cache and artifact root per mode/run; unchanged
 whole-output API/CLI comparisons. Strict clippy, fmt and wasm32 must pass.
-Separate B implementation commit/code review; heavy gates only on coordinator
-allocation, no push before approval. Preserve every existing assertion.
+Separate B implementation commit. Preserve every existing assertion.
 
 ## C2/D investigation status
 
@@ -85,9 +84,9 @@ A finite f64 carrier can overflow when narrowed/projected to f32. Native
 release acceptance/output must be measured after RESTORED; no D proof or
 production change is proposed here.
 
-## Coordinator ruling and B behavior gate
+## Deletion decision and B behavior gate
 
-RULING `20229a3d6` accepts deletion of the unreachable density rejection in
+Decision `20229a3d6` accepts deletion of the unreachable density rejection in
 its own commit. Remove the orphaned pattern-support comment with this block.
 This does not complete B: upstream `PrintObject.cpp:2521` considers `stInternal`
 unsupported for density zero, while only Fill produces no sparse polylines.
@@ -108,12 +107,12 @@ Persist input, Native/Ares bytes, hashes and comparison artifacts externally.
 Use official and seeded after RESTORED with per-run fresh cache/root.
 Any mismatch is B's actual RED and must be preserved before porting the
 missing upstream behavior; matching cases become regression controls.
-The caller and candidate logic are unchanged by the authorized deletion.
+The caller and candidate logic are unchanged by the deletion.
 
-### Public ceiling regression results (before rebase to W4)
+### Public ceiling regression results (before rebase)
 
 On deletion head `b3ca141c4`, the new public tests ran against both real Native
-modes on CPU13/CPU14, jobs2/threads2, independently fresh cache/artifact roots.
+modes with independently fresh cache/artifact roots.
 After correcting the worktree's missing vendor resource link (first attempt
 was setup failure, not RED), all 11 selected tests PASS in both modes:
 3 ceiling cases and 8 existing bridge/anchor cases.
@@ -129,9 +128,9 @@ continue bypasses only admission validation, not candidate gathering or the
 subsequent anchor-generator call. The existing port preserves the upstream
 zero-density ceiling behavior verified here.
 
-Receipts join exact public input SHA and Native output SHA to the live
-producer. Official receipts use wrapper SHA
+Records join exact public input SHA and Native output SHA to the live
+producer. Official records use wrapper SHA
 `1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3`
-(`setarch -R`); no deterministic new mismatch appeared. External evidence:
-`/tmp/worker2-bridge-density-controls-evidence.json`. This is evidence for
+(`setarch -R`); no deterministic new mismatch appeared. External evidence
+is retained outside Git. This is evidence for
 actual `b3ca141c4` plus the recorded test-source SHA, not a run on future main.

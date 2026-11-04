@@ -2,10 +2,8 @@
 
 ## Status and source boundary
 
-SPEC for review only; no Native or build run has been started. The candidate
-is based on main `2fe214545c1a50e88bf321b8221f0eba73a83ad8` plus the approved
-object-ironing ZAA chain `8c9a1bc94..32e111a06`. Worktree:
-`${WORKTREE_ROOT}/ares-worker2-zaa-ironing-pattern-lifecycle-spec`.
+SPEC only; no Native or build run has been started. Builds on the
+object-ironing ZAA chain `8c9a1bc94..32e111a06`.
 
 The owning upstream boundary is `OrcaSlicer/src/libslic3r/Fill/Fill.cpp` in
 `Layer::make_ironing`:
@@ -40,7 +38,7 @@ The owning upstream boundary is `OrcaSlicer/src/libslic3r/Fill/Fill.cpp` in
   the regional direction suppression.
 
 PrintConfig.cpp:4298-4308 restricts `ironing_pattern` to Rectilinear and
-Concentric. The approved Ares implementation already handles those two
+Concentric. The Ares implementation already handles those two
 patterns in `fill_entities/ironing.rs:55-125` and carries the regional ZAA bit
 at `:127-149`, but its `Input` is consumed one region at a time and has no
 upstream equivalent of the sorted span/replacement lifecycle.
@@ -51,7 +49,7 @@ The future rewrite destination is `crates/ares-core/src/project_slice/
 fill_entities/ironing.rs`, with only the minimum grouping/state seam needed to
 mirror the cited `Layer::make_ironing` lifecycle. Existing Concentric and
 Monotonic generators remain the geometry carriers; no new Ares-owned ironing
-pipeline is proposed. The approved `dont_alternate_fill_direction` assignment
+pipeline is proposed. The `dont_alternate_fill_direction` assignment
 and its FillBase direction kernel remain unchanged.
 
 Included in this slice: a two-region, one-object fixture where adjacent
@@ -70,17 +68,16 @@ bridge/anchoring inset behavior, and any independent ironing flow/speed or
 CoolingBuffer difference. No change to the comparator or existing assertions.
 Keep every changed Rust file <=400 LOC.
 
-## Native-first plan after SPEC approval
+## Native-first plan
 
-Use one frozen input-only 3MF derived from the approved wide-slab provenance,
+Use one frozen input-only 3MF derived from the wide-slab provenance,
 with two printing regions and the same mesh/profile members. Region A uses
 Rectilinear ironing plus ZAA flag false; Region B uses Concentric ironing plus
 ZAA flag true. Add a mirrored control with both regions' ZAA disabled and a
 single-pattern control with both regions Rectilinear. Keep topmost ironing,
 fixed ZIP timestamps, classic wall0 relative E and no modifiers/support.
 
-Run official CPU13 and seeded CPU14, outer taskset including all subprocesses,
-jobs2/threads2, canonical environment, two fresh Native references per case
+Run official and seeded with the canonical environment, two fresh Native references per case
 and mode. Record effective options, sorted region/span role order, whole output
 and per-span Ironing XY/E streams, repeat/cross-mode normalized hashes and
 non-Ironing XYZ/E invariance. Native must accept all cases, remain stable, and
@@ -94,4 +91,4 @@ Only after an active witness: submit a separate test-only RED using
 Controls must PASS and the mixed-pattern case must fail at the localized
 pattern/span boundary in both modes. Production GREEN requires only the
 upstream lifecycle seam, existing ZAA/fill-direction/anchoring controls and
-strict/fmt/wasm gates. Full/workspace/CI/merge remain coordinator-only.
+strict/fmt/wasm gates.

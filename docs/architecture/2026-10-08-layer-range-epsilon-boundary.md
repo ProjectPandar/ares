@@ -1,6 +1,6 @@
 # ARD: epsilon-aware complex layer-range boundary
 
-Status: coordinator approved the independent follow-up to merged Stage2 `083cb1862`.
+Status: independent follow-up to merged Stage2 `083cb1862`.
 
 1. Own the rewrite at PrintObjectSlice.cpp::layer_range_first (244–255),
    ::layer_range_next (258–266), and their complex slices_to_regions caller
@@ -23,7 +23,7 @@ Status: coordinator approved the independent follow-up to merged Stage2 `083cb18
    guard assertion, crash imitation, golden Native output, or relaxed comparison.
 6. All production behavior stays platform-neutral inside core. New helper
    module size/scope must stay narrow; use an advancing iterator, not cloned
-   configs or repeated graph construction. Source-only spec approval precedes
-   independent runtime RED, production GREEN, gates, review, and ff-only merge.
+   configs or repeated graph construction. A source-only spec precedes
+   independent runtime RED and production GREEN.
 
 See [epsilon lookup spec](../superpowers/specs/2026-10-08-layer-range-epsilon-lookup.md).

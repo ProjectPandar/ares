@@ -6,7 +6,7 @@ Expanded multi-tool validation has a confirmed RED baseline/modifier input:
 the GCode adapter lacks GCode.cpp4971-5075 role/region-to-extruder bucketing
 and5241/5308 traversal/set_extruder. Header count-as-ID is a separate defect,
 not the body fix. The original inherited-second-filament test and complete
-comparator remain unchanged. The user approved this full source port as the
+comparator remain unchanged. This full source port is the
 next independent milestone after the baseline body gap was reproduced on
 `94d33b59`; the old modifier input was rejected rather than supported.
 The current batch is explicitly single-tool; its support witnesses cannot
@@ -757,11 +757,10 @@ that domain, not a new guard or silently substituted arithmetic.
 - Existing passing slicing projects remain passing; no UnsupportedProjectFeature
   guard or silent omission is accepted as the implementation.
 - fmt, Clippy, nextest workspace no-fail-fast and Tier-1 builds/browser checks
-  run on final code. Independently review all six original dimensions, repair
-  findings and re-review before each eligible code-plus-docs commit/push.
+  run on final code.
 
-Native reference nondeterminism remains explicit; retain variants and request
-any additional reference-policy authority instead of weakening the comparator.
+Native reference nondeterminism remains explicit; retain variants instead of
+weakening the comparator.
 
 ## Wall restrictions slice
 
@@ -965,8 +964,8 @@ no manual sample point or relaxed comparison.
 Organic worker-domain comparison: `TreeSupport3D.cpp::merge_influence_areas`
 uses `tbb::this_task_arena::max_concurrency()` to select geometry-affecting
 bucket sizes. Destination is `tree/organic/merge_areas.rs`, with the worker
-input from `generation.rs::workers`. Included: reproducible CPU0 validation
-must apply the authorized domain to both test process and immutable Orca;
+input from `generation.rs::workers`. Included: reproducible single-CPU validation
+must apply the same CPU domain to both test process and immutable Orca;
 keep production worker derivation unchanged. Deferred: default multiworker
 reproducibility and all-platform runtime coverage. Keep original complete
 output assertions, default-domain artifacts and all existing controls.

@@ -20,25 +20,23 @@ Its bare absolute-E `G92 E0` is a temporary compatibility shell around the cited
 upstream preamble/reset_e serialization. Replace only its missing conditional
 comment; retain flavor admission, M82/M83 bytes, order and reset count.
 
-## Evidence intake and authority
+## Evidence intake
 
-COORD assigned this W1-owned discrepancy after merging both prior W1 stacks;
-base is current main `1a57f677f1ddbbf32ef14c319019da844a212d34`.
-W3 evidence is `${EVIDENCE_ROOT}/w3-pressure-discovery-bdb47cefe/`:
-README.md and verification.json record the admitted absolute-E verbose control
-at older base bdb47cefe, Native twice stable, validated API and CLI successful,
+The discrepancy was found during pressure-equalizer discovery
+at an older base: the admitted absolute-E verbose control
+had Native twice stable, validated API and CLI successful,
 raw API==CLI, whole difference byte1177,line48: annotated Native versus bare
-Ares reset. W3 correctly excluded it from PressureEqualizer ownership and did
-not patch it. This is inherited evidence, not fresh exact-main qualification;
+Ares reset. It was excluded from PressureEqualizer ownership and not patched
+there. This is inherited evidence, not fresh exact-main qualification;
 the new public RED must reproduce it on the new base before production changes.
 
-Use unchanged W3 stock archives, no new geometry, pressure-rate changes or
+Use unchanged stock pressure-discovery archives, no new geometry, pressure-rate changes or
 compatibility bypass. All controls use slope0; no PressureEqualizer port is
 included. Absolute-E inputs already remove the incompatible before-layer G92
 through the GUI-editable template; preserve that admitted input, and preserve
-W3's rejected earlier attempt rather than treating it as parity RED.
+the rejected earlier attempt rather than treating it as parity RED.
 
-| New frozen label | W3 source | SHA256 |
+| New frozen label | Source archive | SHA256 |
 |---|---|---|
 | absolute-verbose | absolute-e-admitted/inputs/control.3mf | 9911f8075c51e6e9481132c2c4c5457ec494addf984740811a1c8896c9c3219f |
 | absolute-quiet | absolute-e-no-comments/inputs/control.3mf | 908b9d9ebb69b852bcba5d3c52d364b245350fdab31d067c0cdf69082cefbfde |
@@ -51,7 +49,7 @@ it is a mode control, not an archive differing by exactly one setting.
 ## Public RED and GREEN contract
 
 Call existing native_stream_case::check / qualify directly with the three
-unchanged W3 archives. The Native validator closure checks only the upstream
+unchanged archives. The Native validator closure checks only the upstream
 precondition: absolute-verbose contains `G92 E0 ; reset extrusion distance`;
 absolute-quiet and relative-verbose do not. Qualify reference and replay in both
 modes globally before public execution. Whole ordered Native/API/CLI comparison
@@ -59,13 +57,12 @@ remains the existing oracle, not this precondition check.
 
 Do not use or extend paint_color activity or used_extruder_case: they witness
 tool selection and are the wrong seam for a reset-comment slice. The failed
-cce75f02f predecessor, original SPEC and binaries remain preserved in STOP
-evidence and a retained branch. COORD authorized this tests-only seam correction,
+cce75f02f predecessor is not reused. This is a tests-only seam correction,
 not a new scanner/helper or changes to activity, inputs, runners or comparators.
 Register plainly inside existing case_support; root is already400LOC and must
 not grow. No private-helper substitute.
 
-On CPU18, jobs/test/parity controls1, both official and seeded: fresh independent
+In both official and seeded modes: fresh independent
 Native reference/replay and comment precondition checks for all three cases
 finish globally before public execution. Require actual validated API and real
 CLI success plus raw API==CLI. Compare entire ordered output with only the
@@ -83,13 +80,12 @@ Failure inventory, before writing tests/production:
    must fail the whole ordered oracle, not be hidden by semantic assertions.
 5. Unstable replay, changed input hashes, wrong Native comment precondition or
    raw API/CLI inequality stops qualification.
-6. Root/module over400LOC, trailer omission or owner-adjacent edits stop review.
+6. Root/module over400LOC or adjacent edits stop review.
 
 Commit SPEC first, tests-only RED second; record both-mode RED artifacts before
-the smallest production GREEN. Retain evidence and binary copies at each stage.
+the smallest production GREEN.
 Run fmt, strict workspace/all-target Clippy, WASM compile and directed cases;
-nextest list must change only by the new plain registrations. Send REVIEW-REQUEST
-and hold. No FULL/rebase/merge/push; integration window is scheduled separately.
+nextest list must change only by the new plain registrations.
 
 ## Included and deferred upstream behavior
 

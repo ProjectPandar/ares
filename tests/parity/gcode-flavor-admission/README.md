@@ -13,6 +13,6 @@ withoutGcode. CurrentacceptedAresAPI/CLI outputs are trueadmissionRED, not
 expected-success rejection or missingM103streamcomparison.
 Marlin2control Native/publicAPI/CLI success, strictwholegenerator-onlycomparator
 and rawAPI=CLI. No borrowedreference/normalization/tolerance/reclassification.
-Expected2admissionFAIL+1PASS/mode. IndependentREDreviewbeforeloadedvalidation
-wiring. SameinputcontrolrawAPI/CLI unchangedforGREEN. Runtimefullstreams/error
-receipts/inputhash/settings/nativeidentity retained externally CPU18canonicalenv.
+Expected2admissionFAIL+1PASS/mode before loaded validation wiring.
+SameinputcontrolrawAPI/CLI unchangedforGREEN. Runtimefullstreams/error
+records/inputhash/settings/nativeidentity retained externally canonicalenv.

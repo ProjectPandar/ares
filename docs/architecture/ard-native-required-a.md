@@ -1,9 +1,8 @@
 # ARD — Native oracle availability policy (slice A)
 
-Status: Accepted — slice A, test infrastructure only.
-Owner: worker4. User task: `${TMP_ROOT}/ares-native-artifact-cleanup-task.md`.
-Audit base: `7fc1c69e3cf860dbfa9f93bbeb539f2acc8da127`.
-Slice A must receive its own exact-hash REVIEW/approval before slice B starts.
+Status: accepted — slice A, test infrastructure only.
+Audit base commit: `7fc1c69e3cf860dbfa9f93bbeb539f2acc8da127`.
+Slice A lands before slice B starts.
 
 ## Decision and boundary
 
@@ -153,7 +152,7 @@ spec, moving core external-oracle work to CLI E2E without weakening assertions.
 
 ## Failure modes / accepted TDD seam
 
-Seam proposed for approval: invoke the real test executable in a child process
+Seam: invoke the real test executable in a child process
 with isolated env and an exact existing test selector; inspect child exit and
 captured diagnostics. The parent test never mutates env used by parallel tests.
 This verifies externally observable test-policy behavior, not private helpers.
@@ -176,16 +175,15 @@ contracts only and must be labeled as such. Preserve independent RED commit,
 then minimal GREEN, then repeat exact process probes. New tests are written
 before code; do not add retrospective unit tests.
 
-## Coordinator-owned gate edits (worker4 does NOT edit /tmp gate)
+## Parity control gate environment
 
-`${TMP_ROOT}/ares-parity-control-set-v2.sh`: add `ARES_REQUIRE_ORCA=1` to the final
+The parity control-set gate adds `ARES_REQUIRE_ORCA=1` to its final
 `exec env` block, alongside CARGO_TARGET_DIR/CARGO_INCREMENTAL; both official
 and seeded inherit it. Preserve all reference-selector variables and identities.
-Keep16 threads per coordinator (ARES_PARITY_THREADS=16), not script default32.
 No cache/input/Native comparison flags or normalization changes.
 
 Workspace gates: add `ARES_REQUIRE_ORCA=1` to env before
-`cargo nextest run --workspace --test-threads 16`, while also supplying the full
+`cargo nextest run --workspace`, while also supplying the full
 Native/procgcode resources/identity/reference-selector env already used by the
 corresponding controls. Its additional shared environment must include
 ARES_PROCGCODE_DYNAMICS_BIN, ARES_ROLE_ORACLE_LIVE=1 and ARES_GDB_BIN.
@@ -193,13 +191,13 @@ Mandatory mixed checks have no exemptions. Keep the role reader's existing
 pinned raw ELF/SHA and runtime libraries; it must not reinterpret the selected
 seeded/official ELF using different ABI assumptions. Per-test role input/output
 remains locally supplied, not a global resource substitution.
-Preserve actual replay seed0/runner one-CPU policy and Native ELF receipts.
+Preserve the actual replay seed 0 single-core policy and Native ELF identities.
 Optional visibility demo: no required flag, nextest success-output immediate.
 Mandatory absence demo: `env -u ARES_ORCA_NATIVE_BIN ARES_REQUIRE_ORCA=1 ...`
 with the other prerequisites retained and real selected test, expect exit nonzero
 and exact missing-key message. Do not turn expected failure into suite pass proof.
 
-## Exit gates / review sequencing
+## Exit gates and sequencing
 
 No new production logic. clippy workspace/all-target-Dwarnings, fmt, actual CLI
 wasm32-Dwarnings and workspace nextest mandatory-mode all-green (9 intentional
@@ -212,7 +210,7 @@ never relaxed. Record env policies, artifacts, logs and candidate/base hashes.
 Result equality is not enough: mandatory-mode absence demonstration must fail,
 and optional absence demonstration must visibly declare no parity assertion.
 
-Then exact-hash independent slice-A REVIEW→approval→ff-only push→notify.
+Then land slice A fast-forward only.
 Only afterward write slice-B deletion/runtime/cache/gdb migration spec.
 Mandatory role/dynamics/gdb prerequisites are part of the gate contract:
 availability failures cannot be exempted because a frozen golden is present.

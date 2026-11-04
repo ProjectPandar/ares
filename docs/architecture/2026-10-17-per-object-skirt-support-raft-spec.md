@@ -51,15 +51,15 @@ outermost-first loop order, flow, seam clipping, and per-group emission. No new
 support or raft geometry policy is introduced; this is the missing admission
 boundary around already-present footprint inputs.
 
-## Deferred and ownership boundaries
+## Deferred boundaries
 
-W5 owns the wipe-tower/multi-filament disjuncts in this guard:
+The wipe-tower/multi-filament disjuncts in this guard are a separate slice:
 `enable_prime_tower`, non-`ByLayer` print sequence, and more than one filament
 diameter. They remain unchanged. Brim eligibility (`combine_brims`, brim type,
 instance count), tower-corner input, draft-shield behavior, sequential printing,
 and any raft geometry beyond the existing `skirt_points` carrier are also
 deferred. This slice must not alter `occupied::items` semantics, grouping
-algorithms, or any guard owned by another worker.
+algorithms, or any guard belonging to another slice.
 
 The GREEN must also port the upstream emission coverage. `GCode.cpp:4398`
 derives the first-layer decision from raft layers, `:4311-4318` lets raft layers
@@ -71,7 +71,7 @@ chunks.
 
 ## Native RED plan
 
-After SPEC approval, freeze three input-only 3MFs with identical machine and
+Freeze three input-only 3MFs with identical machine and
 skirt settings and two objects in `PerObject` mode. Every input must explicitly
 set `brim_type=no_brim`, `combine_brims=0` (`PrintConfig.cpp:1744`), one
 filament, `ByLayer`, no prime tower, and one instance per object so the result
@@ -82,7 +82,7 @@ is attributable only to this slice:
 2. a raft-positive case (`raft_layers>0`) that exercises the raft skirt points
    and raft/support-only emission chunks; this setting intentionally trips both
    admission disjuncts;
-3. a control with support disabled and `raft_layers=0`, while all W5 and other
+3. a control with support disabled and `raft_layers=0`, while all tower/filament and other
    disjuncts are false.
 
 Add an extra, separately reported control: one object with per-object skirt and
@@ -94,8 +94,8 @@ guard/emission result.
 Each case must be accepted by Native. The public test will use
 `OrcaRunner::from_env()` and compare complete API and CLI output to Native with
 the unchanged strict comparator; the control must pass and each positive case
-must fail at the current unsupported guard. Run official on CPU13 and seeded on
-CPU14, with fresh roots/cache/target and the canonical environment. The test
+must fail at the current unsupported guard. Run official and seeded with fresh
+roots/cache/target and the canonical environment. The test
 must record the first divergence and classify it as admission, omitted
 support/raft footprint, group membership, instance shift, or unrelated output;
 it must not commit Native artifacts or weaken assertions. If Native rejects,
@@ -113,5 +113,4 @@ accounting at `4311-4318`); API and CLI diverge; or the control changes. A RED i
 only when the control is strict-equal and the positive Native witness is active.
 Production work is limited to the two guard disjuncts above plus that
 raft/support-layer emission change (`tool_entry.rs:92-112`,
-`object_skirt.rs:28`) and follows a separate approved GREEN. No RED,
-production edit, or broad gate starts before SPEC approval.
+`object_skirt.rs:28`) and follows a separate GREEN.

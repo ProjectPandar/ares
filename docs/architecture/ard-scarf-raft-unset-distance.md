@@ -1,6 +1,6 @@
 # ARD: raft conditional scarf without a previous-layer distance
 
-Status: owner-approved deterministic policy, 2026-10-29. Supersedes only the
+Status: accepted deterministic policy, 2026-10-29. Supersedes only the
 first-object-over-raft guard amendment in `scarf-conditional-spec.md`; it does
 not redefine the remaining conditional scarf port.
 
@@ -21,9 +21,9 @@ field is undefined in C++; the source does not specify a numerical value.
 Repeated Native admission at 5% and 40% does **not** prove the field is zero.
 It observes the comparison outcome for the pinned binary and fixtures only.
 
-## Approved decision and Rust boundary
+## Decision and Rust boundary
 
-The owner explicitly approves defining the absent selected support distance as
+The absent selected support distance is defined as
 `0.0` at
 `crates/ares-core/src/project_slice/gcode_emit/motion/scarf/eligibility.rs`.
 Delete the corresponding raft + active conditional scarf rejection in
@@ -64,4 +64,4 @@ Rust introduces no uninitialized read and the policy is platform-independent.
    generator normalization, then run the scarf/seam directed families.
 4. Run workspace non-parity tests, fmt and clippy. Report inherited base
    failures separately; do not claim an all-green gate without their removal
-   or an approved integration base. Retain logs and repeatable artifacts.
+   or a clean integration base. Retain repeatable artifacts.

@@ -1,8 +1,5 @@
 # SPEC: per-group minimum skirt filament length
 
-Status: **SPEC-REVIEW-REQUEST — no production/tests authorized**.
-Base: `de1211be5067d0eb6f709602a1299a0854c89145`.
-Branch: `worker1/per-object-skirt-min-length-spec`.
 This extends one deferred `libslic3r` boundary, not an Ares pipeline design.
 
 ## Non-negotiable decisions / bounded scope
@@ -19,12 +16,11 @@ This extends one deferred `libslic3r` boundary, not an Ares pipeline design.
   extra loops' eventual reach or invent new collision validation.
 - Only narrow the existing minimum-length rejection term for this no-brim
   slice. Preserve `resolved.objects.len()>1` and every other deferred term,
-  including the already-approved singleton/uncombined outer-brim predicate.
+  including the existing singleton/uncombined outer-brim predicate.
   Positive minimum **combined with brim** remains deferred within the retained
   minimum-length term; zero-minimum brim controls stay admitted unchanged.
   Do not introduce a new guard/error or combined-skirt fallback.
-- No implementation or public-test changes before SPEC approval. Native-first
-  public RED precedes GREEN and is separately reviewed. Keep all original
+- Native-first public RED precedes GREEN. Keep all original
   inputs/assertions; no comparator, verify_value, matrix classification,
   skip/fallback or Native-output commits. Changed files <=400 LOC; split
   mechanically before any semantic growth beyond that bound.
@@ -88,18 +84,12 @@ only the single-filament branch is ported/admitted.
 
 These modules are temporary compatibility shells only where they do not
 match the cited upstream behavior. Stop on producer identity/centering gaps
-and report to their owner rather than fix resolution inside this slice.
+rather than fix resolution inside this slice.
 
 ## Native admission + real effect proof (completed; no Ares RED claim)
 
-Final evidence: `${TMP_ROOT}/ares-skirt-min-length-allgroups-37UMhP/`.
-`head.txt` is exact base above; before/after status files are empty. Official
-and seeded Native ran serially at outer CPU18, each input with fresh cache
-and artifacts; all **16/16** return_code/OS exits are 0. Sampled actual Native
-process/thread masks are 18, zero violations. Per-case inputs, wrapper/native
-hashes, commands, logs, complete G-code/result and `witness.json` are retained;
-aggregate `witness-summary.json` and `inputs/manifest.json` are repeatable
-artifacts. No cargo/nextest/nix build or Ares execution occurred.
+Official and seeded Native ran serially, each input with fresh cache
+and artifacts; all **16/16** return_code/OS exits are 0.
 
 Each pair retains the corresponding original per-object skirt input's mesh,
 source object identity, transforms, instance membership and all options.
@@ -144,14 +134,14 @@ merged/copies evidence proves shared ownership does not multiply emissions.
 | copies-0 | `df8489398e315dc878290af18d97f04ac8e3745d21a75858f276378a5890b05c` |
 | copies-20 | `7a6a8896755bd308289fd314a4cadb748c44f1df421467ebda2d2acdb07998f9` |
 
-## Post-approval public RED / GREEN and exits
+## Public RED / GREEN and exits
 
 1. Commit these eight pure inputs/hashes and public API+CLI parity tests before
    production edits. Native-first fresh official/seeded runs must reproduce
    group ownership and extra positive skirt extrusion before Ares assertions.
    Expected baseline: 4 zero controls PASS, 4 positive cases FAIL at existing
    `UnsupportedProjectFeature("skirt_type per-object")`, both modes. This is
-   source-predicted; **public RED is not yet executed**. Review RED separately.
+   source-predicted.
 2. GREEN requires Native strict full ordered G-code comparisons using only
    existing generator-metadata treatment, raw API/CLI equality, actual extended
    group motion and unchanged zero-control bytes. No rejection-as-success,
@@ -159,14 +149,9 @@ merged/copies evidence proves shared ownership does not multiply emissions.
 3. Retain original four no-brim grouping tests, already merged brim tests,
    combined/single/zero-loop controls and relevant option-domain controls.
    Positive-minimum+brim stays deferred; no widening through the independent
-   already-approved brim term. Report first raw differences before repairs.
-4. Exact submitted HEAD and clean status before/after both serial modes;
-   explicit isolated target/reuse policy, fresh Native caches/artifacts, CPU18,
-   jobs1/threads2 and actual descendant/thread affinity audit. START/END inbox
-   records and immutable original evidence. Stop for exclusive-full freezes.
-5. Same-final-hash strict clippy/fmt/WASM checks; no core I/O/UI/platform leak.
-   Canonical full and workspace nextest need separately scheduled coordinator
-   authorization. No worker pushes/merges. Stop and request a scope ruling if
+   existing brim term. Report first raw differences before repairs.
+4. Both serial modes use fresh Native caches/artifacts.
+5. Strict clippy/fmt/WASM checks; no core I/O/UI/platform leak. Stop if
    only narrowing the existing term cannot represent this boundary.
 
 ## Deferred adjacent source behavior
@@ -176,5 +161,3 @@ brim), support/raft height interactions, tower obstacle groups, draft lifetime,
 sequential shared-skirt validation, multiextruder budgets/tool ordering,
 nonuniform group-member start angles. No option schema rewrite, placement
 planner, source identity/transform changes or new Ares-owned pipeline.
-Only this source-cited SPEC is submitted for approval; no public RED/GREEN,
-full/workspace, or production changes are claimed.

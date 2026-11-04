@@ -5,11 +5,10 @@ C/C1 whole-file RED; no production edits. This is a bounded search result,
 not a proof over other meshes, layer counts or region layouts. The three
 initial divergences remain DIVERGENT, with separate failing controls.
 
-Approved spec: C of
+Spec: C of
 [gcode-seam-parameter-scope-and-visibility-order.md](gcode-seam-parameter-scope-and-visibility-order.md),
-including C1 supplement approved as `768e32a43`, rebased unchanged to
-`8509119ec`. Production baseline is `016456549` (scarf-speed fix), with a
-zero-conflict rebase before this round. Upstream is pinned to
+including C1 supplement `768e32a43`. Production baseline is `016456549`
+(scarf-speed fix). Upstream is pinned to
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Source audit and unchanged boundary
@@ -35,7 +34,7 @@ promotion into the double sum. Actual Layer.height remains double per D.
 Changing candidate storage to double, or changing only the final cast,
 would not match the owning source boundary. Neither formula was edited.
 
-The approved audit-only adjacent findings remain deferred: inside uses a
+The audit-only adjacent findings remain deferred: inside uses a
 rescaled integer candidate in Ares versus double outside() upstream;
 unsupported_dist is stored/returned separately at `.cpp:1092,1563` but is
 not an independent Ares LayerPlan field. No RED means no absorption of
@@ -99,39 +98,17 @@ are `GCode.cpp:6131–6146` (region perimeter emission order),
 The six cases are separately frozen in
 [the narrow-neck finding](2026-10-08-seam-narrow-neck-finding.md), with each
 input SHA, complete first difference, path layer and observed path type.
-Diagnosis and a source-cited fix spec are the next slice, after this report
-is reviewed.
+Diagnosis and a source-cited fix spec are the next slice.
 
-## Reproducible evidence and disposition
+## Disposition
 
-- `/tmp/worker6-seam-C-input-manifest-v1.json`:22 input recipes and hashes.
-- `/tmp/worker6-seam-C-input-manifest-v2.json`:three nearest controls.
-- `/tmp/worker6-seam-C-probe-record-v{1,2}.json`:all statuses, first differences
-  and retained artifact paths. The input's original NOT_RUN field records
-  preparation state; the outer record's status is the executed verdict.
-- `/tmp/worker6-seam-C-producer-join.json`:25/25 input SHA and Native output
-  SHA joined to their fresh Native producer receipts; Ares output/executable
-  hashes are retained alongside them.
-- `/tmp/worker6-seam-C-evidence-index.json`:165 files pinned by SHA256,
-  including both outputs for every PASS and DIVERGENT case, manifests,
-  receipts, inputs, archived CLI probe, generator and nextest logs.
-
-Both rounds used `${TMP_ROOT}/ares-parity-control-set-v2.sh seeded`, independent
-fresh `worker6-seam-C-probe-v{1,2}-cache`, worker6's independent target,
-ARES_PARITY_THREADS=16, nextest16 threads, CARGO_BUILD_JOBS=8 and incremental0.
 The seeded Native binary SHA is
 `59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`;
 resources SHA is
 `286fab66becc4c87ebb72dc8e66ec9d515e7f440d530bacebeb1f51407bb8a69`.
-Producer digest is
-`ae933746dd2c805397c2a62d80973a94d0b190abeccfa907cec4760de7ca6caf`;
-Ares test executable SHA is
-`d9a1bd0a6bef52c7635681ed5c9d137540befb8c8213040c57470070d3958939`.
-The comparator manifest alone marks producer identity unknown; the separate
-matched fresh receipt establishes the producer for each result.
 
-No production or lasting Rust test changes remain. Per the approved no-RED
+No production or lasting Rust test changes remain. Per the no-RED
 rule, skip C/C1 implementation in this tested domain and retain the
-independent narrow-neck finding for coordinator assignment. No GREEN,
+independent narrow-neck finding as a separate slice. No GREEN,
 workspace gate or official control set is claimed for this docs-only slice.
 A future implementation still needs an attributable real Native RED.

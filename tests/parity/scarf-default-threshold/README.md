@@ -1,7 +1,7 @@
 # Scarf default-speed threshold fixtures
 
 Source slice: OrcaSlicer8500fcdccaa10b5099ac20d252af3a7c560046f1,
-`GCode.cpp:5808-5813,6515-6526`; approved spec
+`GCode.cpp:5808-5813,6515-6526`; spec
 `docs/architecture/gcode-scarf-default-speed-threshold.md`.
 
 `boundary.3mf` is a public byte-input Creality Ender-3 classic one-wall scarf
@@ -25,10 +25,10 @@ The measured scaled length40001096 exceeds the scaled limit40001095.99999999;
 the per-member XY-mm length40.001096 equals the local limit40.001096. Native
 therefore leaves caller speed default and caps scarf to min(120,50%*120)=60.
 
-The first fresh CPU0/seed0, single-attempt CLI E2E captured a real complete-byte
+The first fresh seed0, single-attempt CLI E2E captured a real complete-byte
 RED: Native non-first outer-wall F3600/F7200, Ares F2160/F7200. Only generated-by
 identity was normalized; M73/footer retained. First byte difference1059/line42
-is M73 P57 versus P56. No unrelated time/progress repair is authorized.
+is M73 P57 versus P56. No unrelated time/progress repair is in scope.
 
 ## Frozen controls
 
@@ -48,13 +48,10 @@ small-loop/ramp control; its expectations are not changed.
 Rust E2Es in `crates/ares-cli/tests/orca_parity/runner/scarf_default_threshold.rs`
 call the public project byte slicing API through the existing full-byte
 parity runner and retain per-case speed-witness JSON, input/output streams,
-manifest and Native receipt. Run with a configured Native parity environment:
+manifest and Native launch record. Run with a configured Native parity environment:
 
 ```
 cargo nextest run -p ares-cli --test orca_parity -E 'test(scarf_default_threshold)'
 ```
 
-The repeatable first-call artifacts are retained under
-`${TMP_ROOT}/ares-scarf-threshold/post-loop-3d65/` (input audit, gdb log reference,
-reachability observation, frozen-control declarations and fresh-native-first).
 No panic probe was applied or committed; OrcaSlicer was not rebuilt.

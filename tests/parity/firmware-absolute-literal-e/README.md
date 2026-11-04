@@ -20,7 +20,7 @@ snapshots or Native content constants/assertions in tests/manifest.
 Two direct native_stream_case::check tests reuse main's double Native
 replay and native_api_cli validated API/bare CLI complete comparisons.
 No copied replay/normalization/JSON/orchestration or private output seam.
-CPU11/thread1/job1, ARES_REQUIRE_ORCA=1 and explicit official/seeded Native
+ARES_REQUIRE_ORCA=1 and explicit official/seeded Native
 reference environments and artifact roots. Target:
 
 ```
@@ -36,9 +36,6 @@ normalization; ONLY existing generated-by identity/date normalization.
 No ignore/expected-failure decoration. Disabled environment is NOT proof.
 Shared helper retains complete streams/launch/comparison errors.
 
-Freeze tests/inputs/helpers for later GREEN. Precision/G91/line id/cache/
-viewer and other interpreter/consumer changes deferred. RED after SPEC
-requires review BEFORE production change; no FULL without window.
-Discovery/GDB evidence remains separate in
-`${COORD_ROOT}/evidence/w5-firmware-absolute-literal-e/`,
-not substituted for formal public shared-checker proof.
+Tests/inputs/helpers stay frozen for GREEN. Precision/G91/line id/cache/
+viewer and other interpreter/consumer changes deferred. External discovery/GDB
+evidence is not substituted for formal public shared-checker proof.

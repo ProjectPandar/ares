@@ -1,8 +1,7 @@
 # ARD: Preserve ObjectImporter zero defaults for resource vertices
 
-Status: **PROPOSED**, docs only. Associated
-[SPEC](3mf-resource-vertex-defaults-spec.md). No execution or production
-authorization.
+Status: proposed. Docs only. Associated
+[SPEC](3mf-resource-vertex-defaults-spec.md).
 
 Orca `bbs_3mf.cpp::_BBS_3MF_Importer::_handle_start_vertex:3772-3782` and
 `ObjectImporter::_handle_object_start_vertex:5485-5495` both send absent x/y/z
@@ -23,5 +22,5 @@ versus successful Ares API/CLI with raw equality and the unchanged strict whole
 generator-only comparator. A rejection is evidence of the defect and must make
 the test fail, not pass. The control uses the same equality assertions.
 
-Input, fixture, Native, and public execution remain deferred until SPEC approval;
+Input, fixture, Native, and public execution follow the SPEC;
 M73 and unrelated model behavior remain deferred.

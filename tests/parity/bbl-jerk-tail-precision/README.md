@@ -2,7 +2,6 @@
 
 Source: `GCodeWriter.cpp:298-299`, defaultfloat with precision two.
 Specification: `docs/architecture/2026-10-24-bbl-jerk-tail-precision-spec.md`.
-Base: frozen `2e848a33e`. This RED contains no production changes.
 
 The existing GUI-generated BBL one-object project has its tower disabled and
 `default_jerk=9` in all cases. The target changes only the saved machine Z jerk
@@ -18,7 +17,7 @@ motion settings, not a claim about GUI decimal display or recommended tuning.
 
 Three direct calls use the existing `native_stream_case` seam. After fresh Native
 replay qualification, callbacks inspect body M205 suffix words against the real
-saved input values. All authorized values have at most two significant digits,
+saved input values. All admitted values have at most two significant digits,
 so their ordinary input-derived text is an independent expectation. This checks
 leading-zero preservation without calling the Ares formatter. It is not a test
 of every rounding or exponent corner. No hardcoded Native coordinates, output
@@ -38,4 +37,3 @@ single ostream implementation, not duplicate it or patch only the prefix.
 Expected RED: target fails, both controls pass in official and seeded modes;
 Native replay, callbacks and raw API/CLI equality qualify. Tests and inputs freeze
 before GREEN. Group registration preserves normal separators and root registries.
-No FULL is authorized. Submit a RED review request and hold before production.

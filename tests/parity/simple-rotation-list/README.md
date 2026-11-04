@@ -1,6 +1,6 @@
 # Simple rotation list input-only fixtures
 
-Frozen byte copies of the five approved discovery inputs. No Native G-code,
+Frozen byte copies of the five discovery inputs. No Native G-code,
 expected numerical output or golden stream is stored here. The five thin
 unconditional tests directly reuse the existing shared NativeCase lifecycle.
 
@@ -13,8 +13,7 @@ unconditional tests directly reuse the existing shared NativeCase lifecycle.
 |meta-space-control.3mf|`+45 +90`|1e23f416cc2deb8824981740a4a59cd3cb3dd50700b954b235cffbdb8d0d2220|
 
 Source: actual Native-exported existing authored overhang input for
-`infill_rotate_template::t24_sparse_list_control`; discovery provenance in
-`${EVIDENCE_ROOT}/w3-simple-rotation-readonly-3fbad615e/README.md`.
+`infill_rotate_template::t24_sparse_list_control`.
 Classic walls, one unpainted object, Rectilinear sparse/multiline1, monotonic
 solid patterns. Common GUI settings disable brim/skirt. All geometry,
 transforms and non-settings ZIP members remain exact to the same source.
@@ -28,7 +27,7 @@ reject this ordinary GUI input. Tab is an additional whitespace case.
 
 Meta-space is a parser-boundary control; editing its literal spelling in GUI
 may canonicalize separators via the other Field.cpp branch. It is not the
-primary literal GUI-authored witness, and does not authorize meta changes.
+primary literal GUI-authored witness, and does not cover meta changes.
 
 Owning upstream: `Fill.cpp:206-210`, `Config.hpp:868-890`; meta branch at
 `Fill.cpp:63-68` is distinct. Future boundary is only simple-list tokenization/

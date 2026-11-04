@@ -1,12 +1,9 @@
-# F1/F2 reachable group dependency: approved development stack
+# F1/F2 reachable group dependency: development stack
 
-F1 public RED a31c6142c is complete. The coordinator now permits F1 GREEN
-development before alternate merges, with directed runs on CPU12 only.
-This development branch is temporarily stacked on pending alternate032ed1133;
-its rebase conflicts were roadmap text and parity module registration only.
-Both approved entries/modules survive; no production conflict was resolved.
+F1 public RED a31c6142c is complete. F1 GREEN development proceeds
+before alternate merges.
 
-The approved SPEC requires a ruling for a reachable multi-group dependency
+The SPEC requires a decision for a reachable multi-group dependency
 that prevents a clean F1 boundary. Its bans on owner-only configuration,
 silently omitted fuzzy geometry and new Unsupported guards remain binding.
 
@@ -35,28 +32,28 @@ single-group fast path; its else branch starts effect merging at696–710 and
 ordered LineSplit reconstruction at744–814. Those are exactly F2's deferred
 production boundary, not a different F1 interpretation of a first region.
 
-## Accepted ruling791a9fbe9
+## Accepted decision 791a9fbe9
 
 Bring the minimum required F2 masks/ordered-split dependency into the development
 sequence before opening the public F1 entry. First commit/report separate
 multi-group Native-backed RED, then port that already-source-cited boundary.
 Keep F1 noise/junction and F2 mask/split production changes in distinct commits
-and review them separately on the complete public GREEN stack. Do not merge or
+and keep them separate on the complete public GREEN stack. Do not merge or
 declare partial public F1 GREEN while valid multi-group inputs are unhandled.
 
-The coordinator accepted this change to independent F1 GREEN sequencing:
+This changes independent F1 GREEN sequencing:
 F2 public Native RED is committed/reported first, F1 noise/junction production
 is its own commit, then F2 group masks/ordered split production is its own commit.
-Review/canonical full happen once on the complete stack; F1/F2 merge together.
-CPU12 only for directed runs. No guard is tightened or added,
+Full parity runs once on the complete stack; F1/F2 merge together.
+No guard is tightened or added,
 no configuration is discarded, and no compatibility rule is changed here.
-The independently approved obsolete test retirement proceeds separately.
+The obsolete test retirement proceeds separately.
 
-## F1 production closure ruling
+## F1 production closure decision
 
 PerimeterGenerator.cpp:534-540 contains the disconnected-path TODO and
-closing assert, compiled out under NDEBUG. Native release evidence in
-`/tmp/worker3-fuzzy-f1-native-preflight-00nkklq5/closure-width-audit.json`
+closing assert, compiled out under NDEBUG. Native release evidence
+(`closure-width-audit.json`)
 admits Ripple gaps 0.320306 / 0.200202 mm. F1 removes only the closing
 debug_assert from traverse.rs and emits the same open sampled loop;
 point-count and adjacent-path joint assertions remain. No closure repair

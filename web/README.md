@@ -204,7 +204,7 @@ The local files include:
 The oracles are external binaries named by environment variables: `ORCA_APPDIR`
 above, and `ARES_PROCGCODE_BIN` for the OrcaSlicer `GCodeProcessor` build
 (`tools/chain-probe/procgcode.nix`) that checks the toolpath preview.
-`ARES_MARKER_TIME_STABLE_BIN` selects the approved marker-only variant of the
+`ARES_MARKER_TIME_STABLE_BIN` selects the marker-only variant of the
 real-conversion/native source-kernel probe
 (`tools/chain-probe/marker-time-stable-options.nix`) for exact Time text. It is not full native
 viewer execution. A variable

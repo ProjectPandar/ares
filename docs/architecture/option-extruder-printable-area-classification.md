@@ -1,7 +1,6 @@
 # extruder_printable_area: bounded grouped-point coverage classification
 
-Status: SPEC-REQUEST. Worker6 owns this test-harness slice. Base main
-`4cfdb2be8`. No production port or full geometry-domain acceptance is claimed.
+Test-harness slice. No production port or full geometry-domain acceptance is claimed.
 
 ## Upstream boundary
 
@@ -111,7 +110,7 @@ with no value filter reports all admitted cases strictly compared; fresh
 seeded base/candidate comparison confirms common Ares raw G-code unchanged;
 default-environment workspace, control targeted tests, strict clippy, fmt and
 wasm check. Preserve previous full-matrix rows as latest-observed, not a new
-full execution. Submit RED+GREEN with failed RED logs and green evidence.
+full execution.
 
 ## Deferred
 
@@ -121,4 +120,4 @@ multi-nozzle group indexing, filament/physical maps, shared-bed arrangement,
 per-head excluded zones, -102 emitted-path rejection, wrapping/timelapse,
 SEMM/tool ordering, numeric G3/G2 domain work, and CLI printer_technology.
 Any fresh production divergence blocks this classification-only slice and is
-reported with its source owner. Type2 enable=1 remains worker2's boundary.
+reported with its source boundary. Type2 enable=1 is a separate boundary.

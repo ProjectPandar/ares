@@ -1,7 +1,7 @@
 # Seam B: region nozzle angle-arm reachability search
 
 Status: NO RED FOUND in the bounded input search below; no production
-change. This does not prove universal unreachability. The approved rewrite
+change. This does not prove universal unreachability. The rewrite
 boundary remains section B of
 [gcode-seam-parameter-scope-and-visibility-order.md](gcode-seam-parameter-scope-and-visibility-order.md).
 Baseline: `325ba112d1856d0178a4672068d3f8784afdf72e`.
@@ -55,11 +55,8 @@ the complete-file verdict or remove earlier M73 differences.
 ## Frozen independent initial-tool finding
 
 The earlier v2 single-region stock-startup input independently exposes
-initial-tool selection with equal nozzle diameters. Coordinator requested
-that it be preserved for separate assignment:
-`/tmp/worker6-seam-B-startup-finding.md`, with read-only evidence directory
-`/tmp/worker6-seam-B-startup-finding/` and eight-file `checksums.json`.
-Input SHA256:
+initial-tool selection with equal nozzle diameters; it is preserved as a
+separate finding. Input SHA256:
 `7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4`.
 True first difference: line18, Native `M73 P0 R2`, Ares `M73 P0 R3`.
 Startup diagnosis: Native T1 purge targetX324; Ares selects T0 before T1
@@ -67,16 +64,9 @@ and purges towardX0. Upstream ownership is `GCode.cpp:2765–2780,2845–2846`
 and `ToolOrdering::first_extruder`, not SeamPlacer. Simplified startup inputs
 above do not replace or overwrite this finding.
 
-## Evidence and disposition
+## Disposition
 
-`/tmp/worker6-seam-B-reachability-evidence-index.json` pins178 files including
-inputs, Native/Ares outputs, comparator manifests, probe source, per-round
-records and logs. Round records/manifests are
-`/tmp/worker6-seam-B-region-{record,manifest}-v{2,3,4,5,6}.json`;
-logs are `/tmp/worker6-seam-B-regions-v{2,3,4,5,6}.log`.
-The comparator records preserve every first difference and artifact path.
-
-Per the approved no-RED rule, defer B production changes and report the
+Per the no-RED rule, defer B production changes and report the
 bounded search rather than manufacture a RED or fix unrelated behavior.
 No GREEN or full-workspace/official gate is claimed: this slice contains
 only the investigation report. A future B implementation still requires a

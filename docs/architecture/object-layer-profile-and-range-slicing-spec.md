@@ -1,9 +1,7 @@
 # Object layer profiles and range-aware volume slicing
 
-Status: SPEC-REVIEW requested; implementation and Native runs not started.
-Base: `c22f5a81da41fce715b528268711393649daad66`.
 Upstream: checked OrcaSlicer revision `8500fcdcc`.
-Owner: worker6; two independently reviewed RED/GREEN slices below.
+Two independent RED/GREEN slices below.
 
 ## Boundary and ordering decision
 
@@ -111,17 +109,17 @@ Included after P:
 Missing-height ranges when no valid stored profile survives selection reach
 upstream UB (`Slicing.cpp:249`). They are not acceptance witnesses. The prior
 ARD's mixed-range restriction is not globally declared solved; its remaining
-UB boundary needs a coordinator decision before retirement. No new rejection,
-silent acceptance or guessed normal-height rule is authorized here.
+UB boundary needs an explicit decision before retirement. No new rejection,
+silent acceptance or guessed normal-height rule is introduced here.
 
 ## Public E2E RED design
 
 Inputs are authored 3MF projects, committed with provenance and input hashes;
-Native output, receipts and diagnostics stay outside the repository. Use the
+Native output and diagnostics are not committed. Use the
 existing CLI `OrcaRunner::slice_case` cache and public core validated byte API,
 plus the CLI where the case tests an import/validation result. Each execution
-uses a fresh Native cache and artifact root, required dependency policy, jobs2
-and threads2. Compare complete ordered G-code bytes with only the existing
+uses a fresh Native cache and artifact root and required dependency policy.
+Compare complete ordered G-code bytes with only the existing
 generated-by normalization, never a footer/polygon-only comparison.
 
 | P controls | Independent observable |
@@ -149,12 +147,12 @@ be reported before widening scope; do not make them pass by weakening tests.
 | R5: multipart and modifier crossing a Z boundary | Per-volume occupancy and parent mapping, whole output |
 | R6: range value conflicts with volume value | Upstream range-last precedence, whole output |
 
-P and R each have a separate RED then GREEN commit and review. Main GREEN
+P and R each have a separate RED then GREEN commit. Main GREEN
 is not established by a private layer-vector unit test or by Ares success
 alone; Native official and seeded must both demonstrate their real result.
 Existing pure Rust assertions are retained unless their rejected feature is
 the specific supported behavior; then migrate to positive E2E assertions and
-list every expectation change during review.
+list every expectation change.
 
 ## Included/deferred and acceptance
 
@@ -170,7 +168,5 @@ E2Es; default-env workspace; strict all-target/all-feature clippy; fmt check;
 core/vgcode/wasm wasm32 check. Run full option_coverage both modes if any
 inventory/plan/sweep registration is changed. Audit raw-output changes, with
 non-profile/non-range controls byte-identical and any other changes reported.
-Fresh canonical full requires RESTORED and explicit coordinator exclusive
-allocation, jobs2/threads2; no full or missing-oracle-dependent directed run
-before restoration. Submit exact-hash REVIEW with source/RED/GREEN and all
-artifact paths; push only the hash approved by the coordinator.
+Fresh canonical full requires the oracle to be available; no full or
+missing-oracle-dependent directed run otherwise.

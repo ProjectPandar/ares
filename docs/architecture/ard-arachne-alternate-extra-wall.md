@@ -1,6 +1,6 @@
 # ARD: Arachne alternate extra wall count ownership
 
-Status: proposed; implementation awaits SPEC APPROVED.
+Status: accepted.
 
 The owning algorithm is OrcaSlicer `PerimeterGenerator.cpp::process_arachne`,
 2131–2144 and 2163–2175, with regeneration consumers at 2224–2244.
@@ -13,7 +13,7 @@ Non-negotiable decisions:
 - Preserve effective per-record spiral dispatch; do not invent a project-wide
   Arachne fallback or select the first region for all records.
 - Replace only the alternate-extra-wall rejection with its upstream behavior.
-  Fuzzy and overhang changes remain separate review slices.
+  Fuzzy and overhang changes remain separate slices.
 - Reuse the existing Arachne generator and typed wall/infill consumers.
   The separate public wall-count helper is compatibility scaffolding outside
   this slice and does not define the project count contract.

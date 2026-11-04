@@ -1,7 +1,6 @@
 # SeamPlacer occlusion object-affine precision
 
-Status: approved source-cited rewrite slice; separate public RED and narrow GREEN.
-Base `4a711490bcd22ebdeb4669cee04f7ae1520bce8b`.
+Status: source-cited rewrite slice; separate public RED and narrow GREEN.
 Upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Owning source and exact destination
@@ -52,13 +51,13 @@ All four literal callsites in `SeamPlacer.cpp` were inspected:
 | Source | Existing Rust mapping | Disposition |
 |---|---|---|
 | :640, per-volume MODEL_PART or NEGATIVE_VOLUME | Same volume loop in `mesh.rs`, `volume.transform().transform_point(vertex)` then `as f32` | Already f64 at this boundary; leave unchanged for both buckets |
-| :661, merged positive+negative mesh object transform | `mesh.rs` final object loop currently uses `transform_point_f32` | This approved call only; it naturally covers the combined mesh, not a new negative-volume branch |
+| :661, merged positive+negative mesh object transform | `mesh.rs` final object loop currently uses `transform_point_f32` | This call only; it naturally covers the combined mesh, not a new negative-volume branch |
 | :723, painted enforcers, double `obj_transform * mv->get_matrix()` | No corresponding painted-facet gather/transform consumer in the current seam mesh/candidate shell | Adjacent unported behavior; no painting or transform implementation in this slice |
 | :728, painted blockers, same composed double matrix | Same absent painted-facet gather boundary | Deferred; no edit or parity claim |
 
 This continues the object-stage deferral explicitly recorded in
 [the volume-affine slice](seam-occlusion-volume-affine.md). Do not rewrite that
-historical volume-only authorization or broaden this new object-only approval.
+historical volume-only scope or broaden this new object-only scope.
 
 ## Accepted causal witness and public seam
 
@@ -79,9 +78,8 @@ sample visibility are identical; iteration order alone reproduces the rounded
 visibility and champion flip. Three layers do not form a six-seam alignment
 string; projection/split receive already different choices.
 
-The approved clockwise-rectangle deletion was separately replayed atop the
-older discovery base and left this witness's entire raw Ares output unchanged.
-That finding is not substituted for a new-base RED or integrated-chain FULL.
+The clockwise-rectangle deletion was separately replayed and left this
+witness's entire raw Ares output unchanged.
 
 Use unchanged `runner::native_stream_case::check -> native_api_cli::NativeCase`:
 Native2 stable FIRST, actual validated byte API and bare CLI, complete ordered
@@ -92,7 +90,5 @@ Commit input/test-only RED first and observe genuine strict FAIL in official
 and seeded modes. The helper writes both outputs/comparisons before its API
 panic; independently verify raw files on RED without claiming its final raw
 assertion ran. Then commit production-only GREEN. Require full same-input
-PASS and dual-mode seam neighbors, rustfmt and all-target clippy before review.
-Retain all raw replay/cache/process/comparison artifacts outside Git, shared
-persistent Native cache, REQUIRE_ORCA1, CPU12 threads1/jobs1/incremental0.
-No FULL, merge or push is part of this authorization.
+PASS and dual-mode seam neighbors, rustfmt and all-target clippy.
+Retain all raw replay/cache/process/comparison artifacts outside Git.

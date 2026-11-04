@@ -1,7 +1,7 @@
 # Classic small-loop exact chaining
 
-Status: bounded public qualification only. Wait for the shared geometry exact
-solver before implementation; do not duplicate the dynamic program.
+Bounded public qualification only. Implementation depends on the shared
+geometry exact solver; do not duplicate the dynamic program.
 
 ## Owning upstream boundary
 
@@ -28,7 +28,7 @@ The shared Rust owner is geometry's exact kernel being supplied for chain_points
 Point-only calls are the coincident-endpoint special case; open paths require
 paired entry/exit points, allowed reversal flags and optional start. Do not fake
 those by flattening endpoints into independent points. Inspect the supplied
-shared contract before wiring this adapter; request owner alignment if required.
+shared contract before wiring this adapter.
 
 ## Included and deferred behavior
 
@@ -63,5 +63,5 @@ Failure to observe the proposed ordering is not a production RED.
 
 Limit this qualification to at most two distinct inputs. No solver code before
 the geometry shared commit; no sorting, forced tie keys, contour rotation,
-comparison tolerances or fixture-specific production changes. Public RED and
-review precede any source-port GREEN.
+comparison tolerances or fixture-specific production changes. Public RED
+precedes any source-port GREEN.

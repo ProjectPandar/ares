@@ -1,22 +1,14 @@
 # Proposal: Native-reachable object Hilbert ironing admission
 
-Status: **PROPOSAL ONLY / DOCS-ONLY REVIEW-REQUEST**. Base exact main
-`8f6ce1660ccfaf95a6888b60c258047183d19ff0`; new branch
-`worker1/ironing-grid-discovery-spec`, worktree
-`${WORKTREE_ROOT}/ares-worker1-ironing-grid-discovery`.
-The directory/branch retain the first candidate's name; grid was rejected by
+Proposal only. The first candidate (grid) was rejected by
 source audit before runtime and is NOT proposed. No production/test code or fix
 probe. Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
-## Not already merged; not a stack-26 topic
+## Not already ported
 
-`git log origin/main` and path-specific log were checked on main8f6ce1660,
-archived under `${TMP_ROOT}/ares-w1-object-ironing-grid-discovery-8f6ce1660/`:
-`origin-main.txt`, `origin-main-ironing-log.txt`,
-`origin-main-object-ironing-path-log.txt`, `origin-main-hilbert-ironing-log.txt`.
 Existing `b9ebd140b` ports **support** Hilbert ironing, NOT object ironing.
 Existing `723fc302f` supplies object concentric ironing; later regional ZAA/span
-lifecycle changes retain the object pattern guard. At this exact main,
+lifecycle changes retain the object pattern guard. Currently,
 `fill_entities/ironing.rs:105-110` admits only Rectilinear/Concentric and returns
 `UnsupportedProjectFeature("ironing_pattern")` for object Hilbert. This is direct
 source evidence that object Hilbert admission is not merged, rather than a log
@@ -24,11 +16,8 @@ keyword absence claim. No skirt/brim ByObject, region-speed, or firmware-lift wo
 
 ## Minimal input and observed divergence
 
-Verified receipt:
-`${TMP_ROOT}/ares-w1-object-ironing-grid-discovery-8f6ce1660/minimal-box-v2/discovery-report.json`.
-Input-only frozen 3MFs/member hashes:
-`.../minimal-box-v2/inputs/{hilbert-active,rectilinear-control,hilbert-disabled-control}.3mf`
-and `manifest.json`. No Native output is committed. Target is one closed
+Input-only frozen 3MFs (`hilbert-active`, `rectilinear-control`,
+`hilbert-disabled-control`) with member hashes. No Native output is committed. Target is one closed
 10x10x1 mm box,8 vertices/12 consistently oriented triangles, centered110,110,
 5 layers at.2mm. No modifiers, no support/raft/tower, no brim/skirt. Preserve
 existing source fixture's valid XML namespace declarations; change only its mesh
@@ -41,9 +30,8 @@ and project ironing/top-shell settings. All cases share top_shell_layers1.
 | disabled CONTROL | no ironing / hilbertcurve | `bb4e77a4ae9ac8c374b130ad3632c27b980d6c6161c4c7db38db93b614378253` |
 
 Controls each differ by ONE project-config field only; all mesh/other ZIP members
-are identical. Native FIRST, fresh serial official/seeded CPU18 roots/caches,
-canonical references explicit for Native AND public API/real CLI; actual sampled
-Native/public descendants/threads pinned18; clean source exact8f6ce1660.
+are identical. Native FIRST, fresh serial official/seeded roots/caches,
+canonical references explicit for Native AND public API/real CLI.
 
 In BOTH modes:
 
@@ -102,7 +90,7 @@ used as proof: source inputs/initializers/short-circuit consumers were checked.
 Contrast rejected grid: `FillRectilinear.cpp:2999` asserts !full_infill while
 ironing sets density1; it is deliberately NOT proposed.
 
-## Rust destination and requested next review barrier
+## Rust destination
 
 Source boundary is **object `Layer::make_ironing` pattern dispatch**, not a new
 ironing pipeline. Destination:
@@ -112,18 +100,17 @@ plane-path generator under `fill` and preserving object bounding-box/solid-domai
 layer parity, clipping/ordering and erIroning flow semantics. Existing
 rectilinear/concentric branches remain intact; the unsupported guard is a
 TEMPORARY compatibility shell to retire only for this cited pattern after public
-Native-active RED review. Do not blindly delete the whole guard or silently map
+Native-active RED. Do not blindly delete the whole guard or silently map
 to rectilinear. Do not promise all other known InfillPattern values from this
 single witness; they remain deferred and must be source-audited separately.
 
-Approval requested for test-only RED of the frozen target+two controls before
+Test-only RED of the frozen target+two controls precedes
 ANY production port. Native must positively iron, print all5 model layers and
 retain hilbertcurve config; whole ordered comparison and raw API==CLI required
 for accepted outputs. Target's admission failure is genuine RED. Independent RED
-approval precedes GREEN; no local production fix performed. Preserve control
+precedes GREEN. Preserve control
 raw API/CLI RED→GREEN, require complete strict target parity or STOP.
-No code/fixture/Native-output commits here; input repro stays in verified scratch
-with hashes. CPU18 only, no full/workspace runs, merge/push or old-branch rebase.
+No Native-output commits.
 
 Forensic preparation retained separately, never promoted to gate:
 initial top_shell_layers0 probes had no Native Ironing (not a witness); enabling

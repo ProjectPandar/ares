@@ -1,10 +1,5 @@
 # Object Archimedean Chords ironing: frozen Native-active RED
 
-Approved proposal: `841b1775f2ade7209ae464996709af357feecb9e`.
-The test-only RED stacks directly on approved object-Hilbert GREEN
-`3678fe64e9f635033710a57c6113c422c3b10c5b`, without rebasing that chain.
-Discovery was performed on main `8f6ce1660ccfaf95a6888b60c258047183d19ff0`.
-
 Owner: OrcaSlicer pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`,
 `Fill.cpp:1611-1640,1705-1731`, `FillBase.cpp:61`,
 `FillPlanePath.cpp:69-200`. This is object ironing, not support/raft.
@@ -35,14 +30,11 @@ assertion. Both single-field controls must wholePASS in both modes.
 Discovery's defined-behavior audit checked the non-null factory, initialized
 FillParams (role 0 short-circuits optional config reads), solid centered
 PlanePath domain and positive bounded Archimedean acos/spiral domain. Native
-success alone was not treated as a UB-safety proof. Discovery evidence:
-`${TMP_ROOT}/ares-object-archimedean-discovery-8f6ce1660/discovery-report.json`.
+success alone was not treated as a UB-safety proof.
 
-No production code or Native outputs are committed here. GREEN requires
-independent RED approval first. Before adding the Archimedean dispatch,
+No production code or Native outputs are committed here. Before adding the Archimedean dispatch,
 mechanically split existing 400-LOC `ironing.rs` (e.g. move PlanePath dispatch
 to `ironing/plane_path.rs`), preserving behavior. Reuse the single existing
 `fill::plane_path` implementation; do not copy a generator or broaden other
 patterns. Preserve controls' raw API/CLI bytes RED to GREEN. Any residual
 whole-output mismatch means STOP, not M73/timing repair or filtering.
-CPU18; fresh serial official/seeded caches and artifacts; targeted gates only.

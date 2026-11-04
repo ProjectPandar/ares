@@ -1,31 +1,18 @@
 # Wipe inward: printed support, atomic offset paths and execution
 
-Status: approved original ARD
-`89d3d93eaf92d23ceeb781c93aae757fab56d815` and frozen RED
-`8181ea161bc789cce95929708f6cf18e5b89c950`. The owner restacked the
-Classic dependency onto main8612802fe and freshly qualified all three
-complete deferral cases with 300 paired tests and zero PASS-to-FAIL changes.
-Its published dependency tip is
-`bf70a3a0d9ba7a685303988c147ccc7d628ecaba`. The wipe ARD, RED, helper
-commits and real transport/execution are restacked separately. Fresh
-qualification of source `024d77215` matches all three complete wipe streams,
-including M73, with 320 paired tests, one FAIL-to-PASS and zero PASS-to-FAIL.
-The historical RED observations below describe the pre-port checkpoint;
-this does not claim complete family or FULL closure.
+Status: Accepted. The port matches all three complete wipe streams, including
+M73. The historical RED observations below describe the pre-port checkpoint;
+this does not claim complete family closure.
 
-Base: `bf70a3a0d9ba7a685303988c147ccc7d628ecaba`, the requalified dependency
-tip, not a claim that it is already merged main. Original branches and the
-original `11598a73a3b080b12a0434dc6dab0e107958be89` qualification remain
-preserved. Upstream: OrcaSlicer beta
-`345efec64c7b95a05ce5cf96df0dde66a158835c`.
+Upstream: OrcaSlicer beta `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Context and owning source boundary
 
-The approved unsupported-loop consumer intentionally ports
+The unsupported-loop consumer intentionally ports
 `GCode.cpp:8889-8933` as `wipe_support == nullopt`. Its prior prerequisite
 STOP identified the missing optional support and wipe-offset consumer.
-The explicit disposition deferred that entire behavior to this one slice;
-it did not authorize a dead prefix stub or silently enabled approximation.
+That entire behavior is deferred to this one slice, not to a dead prefix
+stub or silently enabled approximation.
 
 Current Ares `wipe_inward` / `wipe_inward_distance` are registry metadata
 only. Existing `loop_paths/inward.rs` implements the separate
@@ -44,8 +31,8 @@ planner, a second G-code writer or an independent geometry policy:
   options. `GCode.cpp:3407-3420`, including the false override at3416,
   applies only to `print.calib_mode()` PA-Line, PA-Pattern, PA-Tower,
   Auto-PA-Line and Retraction-Tower jobs. The current Ares emitter/API
-  exposes no calibration mode or job admission; the owner confirmed that
-  this branch is explicitly unreachable, not an existing calibration
+  exposes no calibration mode or job admission, so this branch is
+  explicitly unreachable, not an existing calibration
   adapter to invent. Add no calibration bool, stub, hidden mode or new
   pipeline. Recheck the effective region value at actual execution; any
   later exposed calibration rewrite must supply the cited false override.
@@ -120,7 +107,7 @@ Non-negotiable source semantics:
 - Keep preferred, alternate, translated, direct and incoming-wall reverse
   candidates, their exact construction/validation order, strict score and
   length margins, and equal-case preference. These are the upstream
-  algorithm's branches, not authorization for an Ares fallback or heuristic.
+  algorithm's branches, not license for an Ares fallback or heuristic.
 - When no candidate is accepted, retain the ordinary stored wipe path
   unchanged, exactly as the source does. Do not fabricate a short inward
   move, reverse all paths, tune a tie epsilon or force an extra wipe.
@@ -142,7 +129,7 @@ new crate or public scheduling API:
    do not duplicate raw-option lookups or add parallel option policy.
 2. `gcode_emit/motion/layer.rs`'s current regional perimeter-pass adapter:
    own the optional support context per source region/pass; preseed only the
-   already emitted normal walls for the deferred pass. Keep the approved
+   already emitted normal walls for the deferred pass. Keep the existing
    first-layer/region selection and unsupported-loop filtering unchanged.
 3. `motion/perimeter.rs`'s existing entity dispatcher and `loop_paths.rs`:
    transport the optional context and append after real emission. Preserve
@@ -166,7 +153,7 @@ orientation after clipping/scarf, nearest/intersection query units and
 rounding, actual path width and the zero-length writer call. If a distinct
 unported prerequisite beyond this named chain appears, STOP and report
 before changing another source boundary. This proposal does not silently
-resolve such a prerequisite or authorize a debug carrier trace.
+resolve such a prerequisite or add a debug carrier trace.
 
 ## Included, deferred and public qualification gate
 
@@ -180,11 +167,10 @@ producer remains deferred, not implicitly implemented by wipe support.
 Also defer seam-selection/scarf solver changes, `wipe_on_loops` geometry,
 overhang/support generation, Flow/arc/formatter changes, ordinary travel
 policy, cooling/estimator/M73 fixes, preset/config-footer repairs and UI
-controls. Preserve the approved Classic deferral port and disabled/nullopt
+controls. Preserve the Classic deferral port and disabled/nullopt
 behavior; no legacy mode, silent ignore or independent wipe policy.
 
-After ARD approval, the separate budget authorized at most three inputs.
-They were frozen before Native execution: unchanged base30x30x.8 box
+The public witness uses at most three inputs. They were frozen before Native execution: unchanged base30x30x.8 box
 geometry with hollow walls, enabled Inner/Outer with earlier inner support,
 an otherwise identical disabled control, and an enabled single-wall case
 with no possible earlier inner-wall anchor. Only `wipe_inward` differs in
@@ -196,7 +182,7 @@ already printed walls and infill/deferred pass order, not private candidate
 scores or TYPE-only assertions. Native2 fresh stable then validatedAPI1 /
 CLI1 per agreed input, no retry/producer switch/geometry search or probe.
 A failed premise or earlier unrelated first difference means STOP, not
-another candidate. RED RR and approval precede literal implementation.
+another candidate. The RED precedes literal implementation.
 
 ## Frozen public RED and ordinary-path controls
 
@@ -235,18 +221,12 @@ The disabled control's four complete generator-only streams agree at
 retaining48M73 records. The no-anchor control agrees at28377 bytes /937lines,
 SHA `8899818d9c85319daa2f0cf1f47415b998442009ffb38681cf8349ef97a5a3c2`,
 retaining28M73. Both include footer and terminal/trailing bytes. At that
-pre-port checkpoint the enabled case was strict RED; no family or FULL
-closure was claimed.
+pre-port checkpoint the enabled case was strict RED; no family closure was
+claimed.
 
-Fmt and strict workspace/all-targets Clippy pass. All test/source/input/list/
-producer/tree identities and the dedicated ELF were frozen before Native;
-ELF remained unchanged through all three cases. Only this qualification
-note changes after execution; no postcommit rerun is claimed.
+## Implementation gate
 
-## Implementation review gate
-
-The actual RED RR was approved before implementation. The port is split
-into reviewable commits: complete source helper modules and their source
+The RED preceded implementation. The port is split into separate commits: complete source helper modules and their source
 projection/nesting corrections first, then GCode transport/execution. Every file
 stays at most400LOC; no unused prefix stub, placeholder, epsilon tuning or
 independent wipe policy. Before/after runtime scope is agreed and frozen
@@ -256,38 +236,24 @@ to claim GREEN for unconnected source or spend another Native budget.
 Later frozen paired breadth must include disabled/zero-distance/no-wipe,
 inner-first/outer-first, holes/contours, mixed/variable-width paths, Auto
 width, seam gaps/scarf, `wipe_on_loops` interaction, first layer, region /
-extruder ownership and the three approved deferral cases. Follow agreed
-bounded existing tests; no unannounced family expansion. Require0P→F and
+extruder ownership and the three deferral cases. Follow the bounded
+existing tests; no unannounced family expansion. Require0P→F and
 M73-inclusive whole ordered bytes, including E/feed, markers, labels,
 footer and trailing whitespace. Normalize only the canonical generator
 line; any external M73-only diagnostic retains maps, all removed commands
 and full contexts and is never acceptance. No coordinate/count golden or
-private Native operand fiction. COORD owns integration/FULL/closure.
+private Native operand fiction.
 
-## Separate wipe slice: fresh strict GREEN and paired scope
+## Strict GREEN
 
-After the approved dependency restack, the wipe chain is original-ARD
-`6bd0424b6`, frozen RED `181fc6bb3`, helpers `51bb3f6b5`, unreachable
-calibration doc `4e37ff0d4`, integer-projection correction `8da90a186`,
-bounded helper nesting `3221b474e`, and transport/execution `024d77215`.
 This remains a separate slice; it does not reopen or bundle the deferral
-rewrite. Original branches and evidence are preserved.
+rewrite. Only the enabled Inner/Outer wipe case changes FAIL to PASS; no
+prior PASS changes to FAIL. The three deferral cases remain complete PASS.
 
-The new scope was frozen before corrective helper/transport edits: exactly
-320 IDs, all original 318 plus the main thin/narrow cases. Independent
-immutable before/after worktrees, targets, test/CLI ELFs, tests/fixtures and
-producer identities were verified before and after execution. Each phase
-ran once, CPU16-23, jobs4, nextest1, Rayon1, offline/locked, with fresh
-ordinary producer resources/caches and cleared alternate runners/oracles.
-Before: 145 PASS /175 FAIL. After: 146 PASS /174 FAIL. Only the enabled
-Inner/Outer wipe case changed FAIL to PASS; zero prior PASS changed to FAIL,
-with zero ignored tests. The three deferral cases remain complete PASS;
-the main narrow PASS and accepted-OPEN thin FAIL statuses are preserved.
-
-Each phase used fresh stable Native6 / validated API3 / CLI3 for the three
-wipe inputs, with raw API=CLI. All four AFTER generator-only complete
-streams per case are equal, retaining every M73, ordered movement, role/
-wipe marker, E/feed, label/footer, whitespace and trailing byte:
+The three wipe inputs use fresh stable Native / validated API / CLI with raw
+API=CLI. All generator-only complete streams per case are equal, retaining
+every M73, ordered movement, role/wipe marker, E/feed, label/footer,
+whitespace and trailing byte:
 
 | Case | Bytes / lines | M73 | Complete SHA256 |
 | --- | --- | --- | --- |
@@ -298,10 +264,7 @@ wipe marker, E/feed, label/footer, whitespace and trailing byte:
 The enabled output now has the same four observed immediate zero-E interior
 wipes as Native; both controls retain ordinary boundary wiping without
 interior offsets. These observations are not count/coordinate goldens.
-Every new full and external non-M73 first difference is NONE. Each phase
-retains 492 Native command receipts: 489 code0, two code238 and one code205.
-The remaining174 family failures and those process errors remain open;
-this is not full-family parity or integration/FULL closure.
+Remaining family failures stay open; this is not full-family parity.
 
 The source audit follows integer `Line::Scalar` through the floating AABB
 result tuple: the closest point is truncated before promotion to double.
@@ -316,12 +279,6 @@ normal entities for deferred walls, and appends original entities after
 actual emission. Actual path width, source candidate order and atomic
 acceptance/rejection are retained.
 
-Fmt and strict workspace/all-targets Clippy pass; every changed module is
-at most400LOC. One initial connected-source Clippy attempt rejected five
-nesting/collapsible-if/type-complexity warnings; corrections preserved
-source evaluation order and preceded AFTER runtime. No suppression, EPS/
-margin/tie tuning, kernel/formatter/estimator change, runtime retry, probe,
-trace or input/producer variant occurred. The prior original-parent
-318-test BEFORE-only phase remains unpaired and earns no new-base credit.
-This note/status correction is the only postexecution tree change; no
-postcommit runtime rerun is claimed.
+Every changed module is at most400LOC. Clippy corrections preserve source
+evaluation order. No suppression, EPS/margin/tie tuning or
+kernel/formatter/estimator change is used.

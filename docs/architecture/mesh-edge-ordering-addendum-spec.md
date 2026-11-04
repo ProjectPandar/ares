@@ -1,26 +1,24 @@
 # Mesh-edge addendum: Native rejection attribution and accepted-input RED
 
-Status: docs-only SPEC supplement, review requested. Original SPEC49c31802f,
-rebased357786fc7 on main de1211be5067d0eb6f709602a1299a0854c89145,
-range-diff1/1 '='. No public RED, production, existing assertion or push change.
+Docs-only SPEC supplement. No public RED, production or existing assertion change.
 This supersedes the earlier speculative standalone sort-replay proposal;
 no isolated replay/compiler experiment is requested by this addendum.
 
 ## Native observations and retained input revisions
 
-First root: /tmp/worker3-edge-native-preflight-t8_h596m/evidence.json.
+First preflight:
 Two closed prisms sharing a vertical indexed edge ->4 uses; identical world
 geometry with split indices; shared faces original/reversed/interleaved/rotated.
 Official/seeded each5/5 exit0/result0. All ten outputs share generator-only SHA
 6480e4c1a1ec8b2cc275cd1b090bcf415d6a7ddfc5957f265264aed0b0927aec.
 
-Second root: /tmp/worker3-edge-native-order-risk-xz5652uy/evidence.json.
+Second preflight:
 The planned coverage risks motivated explicit input revisions:
 
 - Cube control: one closed prism,2 uses per ordinary edge.
 - Odd inputs: one cube plus a nonzero-area face on its vertical edge ->3 uses;
   original/reverse/rotate have identical vertices and oriented triangle multiset.
-  triangle-multiset-audit.json confirms all SHA330216f23d9abd53fc505c21b68756767131e237e750233fcf69dd12901e6e74.
+  A triangle-multiset audit confirms all SHA330216f23d9abd53fc505c21b68756767131e237e750233fcf69dd12901e6e74.
 - Six-use: duplicate the first prism's faces in the first tracer, with
   original/reverse/rotate order, preserving world coordinates.
 - Collapsed diagnostic: append (0,0,0) to the first tracer, preserving its body.
@@ -36,9 +34,9 @@ No data was overwritten, and no command was repeated to seek a PASS variant.
 Original stdout: `run found error, return -100, exit...`; stderr: `Errors`.
 The same channels/results persist with existing Native logging enabled:
 
-- /tmp/worker3-edge-native-failure-logs-kort1uyl/evidence.json changes only
+- A run that changes only
   --debug3; without a log sink it prints no additional exception detail.
-- /tmp/worker3-edge-native-logfile-ycvz867g/evidence.json changes only --debug5
+- A run that changes only --debug5
   plus --logfile to a fresh per-case native-trace.log. Original input SHA is
   unchanged, fresh cache/artifacts each run; this is attribution, not retry-to-PASS.
 
@@ -78,7 +76,7 @@ mesh connectivity and export. It does NOT prove std::sort alone is responsible;
 triangle traversal/make_loops can also be order-sensitive. No Native instability,
 new Ares rejection or portable replay of -100 is claimed.
 
-Per coordinator direction, strict public RED contains ONLY Native-admitted
+Strict public RED contains ONLY Native-admitted
 inputs: first tracer five cases; cube control; odd-original; six-use
 original/reverse/rotate. Keep odd-reverse/odd-rotated in external diagnosis and
 manifest admission classification, not in parity tests requiring success.
@@ -98,7 +96,7 @@ Inputs/generator/provenance and RED are a separate commit before production.
 Keep TriangleMesh.cpp:create_edge_map520-563 and its_face_edge_ids_impl565-613
 as the owner; TriangleMeshSlicer.cpp:1865-1902/1982 and make_loops1383-1482 are
 existing consumers. Rust target remains mesh_slicer/topology.rs, with existing
-chaining transport unchanged unless separately reviewed.
+chaining transport unchanged unless separately specified.
 
 C++ compares only endpoints and std::sort is not stable; Rust presently adds
 face/local-edge order. First/even-valence accepted permutations show no public
@@ -108,13 +106,11 @@ If an accepted-input GREEN comparison exposes a mapping/order discrepancy that
 requires a sort or make_loops rewrite, STOP for source-cited proof/addendum
 before that change. A blanket guard deletion alone is never GREEN.
 
-Read-only audit receipts are retained: official ELF comments GCC14.2/clang18.1.3,
+Read-only audit: official ELF comments GCC14.2/clang18.1.3,
 seeded GCC15.3/clang21.1.8, both libstdc++; these do not pin per-TU header versions.
 Available GNU15.3 stl_algo.h:88/1806-1822/1851-1858/1876-1908 documents median,
 threshold16, introsort/heap fallback/final insertion. No compiler replay,
-Native patch/probe or new sort module is authorized by these observations.
+Native patch/probe or new sort module follows from these observations.
 
-After revised admission-boundary approval, continue CPU12 jobs1/threads2 with
-fresh roots, START/END inbox. Separate exact negative-test retirement after RED;
-no assertion edits now. Strict/fmt/wasm and public gates remain mandatory;
-workspace/full and push await allocation. Original STOP and all roots are kept.
+Continue with fresh roots. Separate exact negative-test retirement after RED;
+no assertion edits now. Strict/fmt/wasm and public gates remain mandatory.

@@ -1,6 +1,6 @@
 # CLI 3MF + `--load-settings`: `-17` adjudication branches 1–2 (loaded printer name)
 
-Bounded follow-up slice to worker5's `2026-10-10-cli-3mf-load-settings.md`
+Bounded follow-up slice to `2026-10-10-cli-3mf-load-settings.md`
 (deferred item: "four-branch `-17` adjudication under load-settings,
 branches 1–2"). Ports the upstream loaded-names semantics so the
 `-17 CLI_PROCESS_NOT_COMPATIBLE` gate (`exit 239` on the CLI side) also
@@ -18,7 +18,7 @@ fires when a machine preset file comes in through `--load-settings`.
   for `config_from == "system"`, else the file's `inherits` value
   (`:2041-2046`). A second machine file exits
   `CLI_CONFIG_FILE_ERROR` (`:2035-2038`) — load-order/duplicate handling
-  is worker5's CLI-adapter domain, not this slice.
+  is the CLI-adapter domain, not this slice.
 - `:2073-2098` — a `process`-type file sets `new_process_name`,
   `new_process_system_name` (same system/inherits rule), and
   `new_print_compatible_printers =
@@ -47,7 +47,7 @@ fires when a machine preset file comes in through `--load-settings`.
     contains `new_printer_system_name`.
   - Branch 3 (`:2595-2604`) — only `new_process_name`: deferred.
   - Branch 4 (`:2605-2620`) — no loaded names: already ported by
-    worker5's plain-3MF `-17` slice
+    the plain-3MF `-17` slice
     (`2026-10-10-cli-pcp-incompat-exit.md`,
     `project_slice/compatibility.rs::reject_incompatible_process`).
 - Machine-switch relaxation (`:2624-2647`): when the branch did not
@@ -68,13 +68,13 @@ fires when a machine preset file comes in through `--load-settings`.
   `result.json` with
   `"error_string": "The selected printer is not compatible with the
   process preset in the 3mf."` and `"return_code": -17`
-  (channels per worker5's `cli-pcp-incompat-exit` spec, same family).
+  (channels per the `cli-pcp-incompat-exit` spec, same family).
 
 ## Ares destination
 
 - `crates/ares-core/src/project_slice/compatibility.rs` — extend the
-  existing `reject_incompatible_process` module (lands with worker5's
-  plain-3MF slice; this slice must not recreate it on its own branch).
+  existing `reject_incompatible_process` module (lands with the
+  plain-3MF slice; this slice must not recreate it).
   Add the adjudication-input record the four branches consume:
 
   ```rust
@@ -95,12 +95,12 @@ fires when a machine preset file comes in through `--load-settings`.
   `new_printer_name == current_printer_name` gate on the
   machine-switch relaxation for branch 2. Existing
   `SliceError::ProcessNotCompatible` is reused; the `-17` failure
-  family in `ares-cli/failure.rs` is worker5's, untouched here.
+  family in `ares-cli/failure.rs` is untouched here.
 
 - Inputs derivation lives in `compatibility.rs` too: a narrow
   `PresetDescriptor { name, system_name, compatible_printers }`
-  sourced from worker5's composed load-settings metadata
-  (`composed`/`ProfileInput` — the composition API is worker5's
+  sourced from the composed load-settings metadata
+  (`composed`/`ProfileInput` — the composition API is a separate
   boundary; this slice only reads the descriptors it already
   produces). Embedded-side values keep using
   `project.documents().project_settings_raw` with the existing
@@ -110,7 +110,7 @@ fires when a machine preset file comes in through `--load-settings`.
   `reject_incompatible_process` call site gains the composite dispatch:
   profile-less path keeps the branch-4 function; when the source
   carries load-settings descriptors, route to the new adjudication.
-  No CLI-adapter or file-ordering change (worker5 boundary).
+  No CLI-adapter or file-ordering change (CLI-adapter boundary).
 
 ## Included
 
@@ -126,8 +126,8 @@ fires when a machine preset file comes in through `--load-settings`.
 - The `:2624-2647` relaxation only insofar as it gates branch 2
   (`new_printer_name != current_printer_name` ⇒ compatible, no `-17`
   from this slice).
-- Machine-switch `upward_compatible_printers` reads **reuse worker1's
-  `project/upward_machine.rs`** once merged (owner addendum): this
+- Machine-switch `upward_compatible_printers` reads **reuse
+  `project/upward_machine.rs`** once merged: this
   slice adds no second parser; until that module exists the witness
   fixtures simply avoid the non-empty upward path (see case 4).
 - E2E RED witness: same argv on Native vs Ares, all channels
@@ -146,7 +146,7 @@ fires when a machine preset file comes in through `--load-settings`.
      name than embedded → both accept (upstream `machine_switch`;
      fixtures chosen so `upward_compatible_printers` is empty or
      contains the new system name, keeping the deferred `-16` path out
-     of the witness — the list itself comes from worker1's
+     of the witness — the list itself comes from the
      `project/upward_machine.rs` reader, not a new parse here).
 - Native exit/channel fixtures generated at runtime; only input
   fixtures (crafted 3MF + preset JSONs) are committed.
@@ -162,12 +162,12 @@ fires when a machine preset file comes in through `--load-settings`.
   exports (`:2659-2690`) — export-path concern, not CLI slice gating.
 - CLI adapter `--load-settings` file list parsing, duplicate-file
   `CLI_CONFIG_FILE_ERROR`, and read-ordering vs the 3MF block —
-  worker5 boundary (`OrcaSlicer.cpp:1953-2024`, `:1682-1690`).
+  CLI-adapter boundary (`OrcaSlicer.cpp:1953-2024`, `:1682-1690`).
 - `-18/-19/-51` validation family interactions; unchanged.
 
 ## Deferred parity gaps (measured 2026-10-10)
 
-- **`inherits` resolution in `--load-settings` files (worker5
+- **`inherits` resolution in `--load-settings` files (composite/catalog
   boundary).** Native `load_config_file` reads the `inherits` field
   directly as `new_printer_system_name` (`OrcaSlicer.cpp:2081-2086`)
   without resolving a preset parent; Ares `parse_file`→`Catalog`
@@ -175,27 +175,27 @@ fires when a machine preset file comes in through `--load-settings`.
   (`from:"user"`, `inherits:"<system name>"`) exits with
   `InvalidInput("profile inheritance cycle")` where Native adjudicates
   `-17` (measured: Native 239 vs Ares non-239 on
-  `machine-inherits.json`, probe `/tmp/compat17-probe/`). Compat17
+  `machine-inherits.json`). Compat17
   fixtures ship flattened (`inherits:""`, parents inlined) so the
-  adjudication itself is covered; the gap stays worker5's
-  composite/catalog slice. Recorded in `${TMP_ROOT}/ares-matrix-findings.md`.
+  adjudication itself is covered; the gap stays with the
+  composite/catalog slice.
 - **`use_relative_e_distances:"0"` pin.** Measured redundant: Native
-  still exits 239 with the key removed from the process clone
-  (probe `/tmp/compat17-probe/B`). Kept as an explicit pin, no parity
+  still exits 239 with the key removed from the process clone.
+  Kept as an explicit pin, no parity
   gap.
 
 ## Schedule
 
-- Implementation (RED first) starts only after **both** worker5's
-  3MF+load-settings slice and worker1's `project/upward_machine.rs`
-  land on main. Before that, only non-Native artifacts may be
-  committed (input fixture JSONs/3MF, no receipts).
+- Implementation (RED first) depends on **both** the
+  3MF+load-settings slice and `project/upward_machine.rs`. Before
+  that, only non-Native artifacts may be committed (input fixture
+  JSONs/3MF).
 
 ## Controls
 
 - No `dbg!`/`println!`, no `#[ignore]`, no assertion weakening; the
   RED must compile and run on the runtime comparison runner.
-- No changes to worker5's `composition`/`load_settings` modules,
+- No changes to the `composition`/`load_settings` modules,
   `failure.rs` family table, or CLI arg handling.
 - RED first: witness cases fail on Ares (today branch-1/2 inputs
   take the branch-4 path or pass silently) before production change.

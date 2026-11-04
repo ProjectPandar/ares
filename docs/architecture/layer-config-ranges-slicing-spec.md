@@ -1,11 +1,8 @@
 # Slice R: layer-range configuration and volume slicing
 
-Status: SPEC-REVIEW requested; docs only, no R implementation or Native run.
-Upstream revision: `8500fcdcc`. Preparation base: P code-approved
-`09ada165654097fd446569a16c314fef85ec87d3`, based on main `c22f5a81d`.
-Implementation base will be main after W4 `96eb17ccc`, W3 alternate and P merge.
-This refines [the approved P/R boundary](object-layer-profile-and-range-slicing-spec.md)
-and does not authorize P merge or replace its remaining canonical gates.
+Upstream revision: `8500fcdcc`.
+This refines [the P/R boundary](object-layer-profile-and-range-slicing-spec.md)
+and does not replace its remaining canonical gates.
 
 ## Dependency and owning boundary
 
@@ -21,7 +18,7 @@ missing, top-mismatched or first-height-mismatched profiles do not.
 The current Rust range generator skips None heights. That scaffold is not
 Native authority for the missing-option route. R must not use it to claim
 acceptance or invent a normal-height default. The existing rejection remains
-for this unresolved route, per coordinator ruling. Native behavior and whether
+for this unresolved route. Native behavior and whether
 an earlier stage actually inserts a height option will be investigated below.
 
 ## Source and Rust destination
@@ -72,12 +69,11 @@ Included:
 Deferred:
 
 - Missing height when profile regeneration is required: retain existing
-  rejection pending the dedicated Native evidence and coordinator ruling.
+  rejection pending dedicated Native analysis.
 - Spiral mode with multiple range regions (`PrintObjectSlice.cpp:213` assertion),
   ZAA, mesh-adaptive profile generation, painted multimaterial/tool mapping,
   new support algorithms and unrelated volume-transform/shared-mesh admission.
-- P's independent no-profile precise-Z/shrinkage finding, recorded at
-  `/tmp/worker6-profile-precise-shrink-finding/finding.json`.
+- P's independent no-profile precise-Z/shrinkage finding.
 
 No new whitelist, Unsupported guard, public diagnostic API, regions[0],
 legacy fallback or independent Ares pipeline is part of R. New private files
@@ -90,7 +86,7 @@ Use authored 3MF input with source provenance/input SHA only. Use existing
 and seeded compare every ordered output byte through the unchanged
 `compare_ordered_bytes_generator_only`; assert exact layer Z/HEIGHT sequences
 and boundary-specific observable path/E/F changes in addition, not instead.
-Native products, gdb data and receipts stay outside the repository.
+Native products and gdb data are not committed.
 
 | Witness | Contract |
 |---|---|
@@ -105,16 +101,16 @@ Native products, gdb data and receipts stay outside the repository.
 Run runtime Native first. Native rejection, timeout, nondeterminism or unrelated
 Ares differences are reported before changing input context or scope. A passing
 control is not labeled RED; main must fail the new public comparison/admission.
-R gets its own RED then GREEN and review after P merge, not folded into P.
-Any expectation reversal or retirement of an existing assertion needs advance
-coordinator approval, with its exact old/new text and source reason. No blanket
-approval of guard tests is inferred from this spec. Other assertions remain.
+R gets its own RED then GREEN after P, not folded into P.
+Any expectation reversal or retirement of an existing assertion must state its
+exact old/new text and source reason. No blanket retirement of guard tests is
+implied by this spec. Other assertions remain.
 
 ## Missing-height diagnostic probe (not acceptance)
 
 During R, capture one identical authored input with a missing height and no
 valid retained profile, official and seeded each three times, sequential fresh
-cache/artifact roots on CPU11. Keep every outcome; no retries or cherry-picking.
+cache/artifact roots. Keep every outcome; no retries or cherry-picking.
 Record exit/diagnostic, layer vector, whole-output SHA if emitted, producer
 identity and original/exported project member bytes. This is observation, not
 PASS or authority for an undefined path.
@@ -124,21 +120,17 @@ Trace whether the imported ModelConfig has a layer_height option when
 substitutes one or the direct dereference sees null. If needed, use the existing
 Native binaries via explicitly configured gdb (nix invocation for diagnostic
 use where allowed); do not rebuild Native. Report observed determinism and
-source path to coordinator, who decides retirement. No production change to
-this missing-height boundary precedes that ruling.
+source path before any retirement decision. No production change to
+this missing-height boundary precedes that decision.
 
-## Gates and merge sequence
+## Gates
 
-Docs approval first, then P merges after W4/W3 and canonical full approval.
-Rebase R onto that main; no R code before R SPEC approval. Directed runs use
-CPU11, jobs2/threads2, load<60 and new cache/artifact root every invocation.
-Wait for RESTORED for any missing-oracle-dependent test or canonical full.
+P lands before R. Directed runs use a new cache/artifact root every invocation.
 
 R acceptance: official/seeded directed including existing profile/range E2Es;
 default-env workspace; strict all-target/all-feature clippy; fmt; core/vgcode/
-wasm wasm32 check; canonical candidate-only full in an explicitly granted slot.
+wasm wasm32 check; canonical candidate-only full.
 If inventory/domain/sweep registration changes, include option_coverage entire
 group (including non-Native tests) in both modes. Audit raw-output changes;
 non-range controls stay byte-identical and every other changed stream is
-reported. Submit exact rebased hash and evidence for REVIEW; push only after
-exact-hash APPROVED, fast-forward only.
+reported.

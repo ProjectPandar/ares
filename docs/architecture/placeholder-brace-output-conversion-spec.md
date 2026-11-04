@@ -29,6 +29,4 @@ Real official Native-exported INPUT3MFs use GUI machine_start_gcode comments:
 control `{999999.0}`, positive `{1000000.0}`. Shared complete stream comparator
 must pass control and genuinely fail positive before implementation (line27
 Native1e+06 / Ares1000000), then pass both official/seeded modes. Existing
-generated-by identity/date normalization only. Provenance/input hashes:
-`${COORD_ROOT}/evidence/w5-ebfb-double-text-discovery/PROPOSAL-RR.md`.
-Stack on approved max_print_z GREEN ebfbf309d for combined integration.
+generated-by identity/date normalization only.

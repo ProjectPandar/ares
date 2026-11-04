@@ -1,7 +1,7 @@
 # SPEC: OuterAndInner 单对象 brim parity——support no-brim mask 推广至 combined 分支
 
-状态：SPEC-REVIEW-REQUEST（docs-only）。承接已批 brim 链
-（`da3c31320`，stack-15 排队）；本片为 roadmap OuterOnly/OuterAndInner
+承接 brim 链
+（`da3c31320`）；本片为 roadmap OuterOnly/OuterAndInner
 延后项的下一片。
 
 ## 1. 上游边界（file:function:lines）
@@ -27,15 +27,15 @@
 `brims::combined::area`）与 InnerOnly 臂（:113）未注入**——上游
 `:590-634` 是类型无关的，两臂缺同源行为。
 
-Discovery（`/tmp/w5-brim2/one.3mf`：canon base +
+Discovery（canon base +
 `brim_type=outer_and_inner`、`brim_width=8`、tree(manual)+organic
-support，official 2.4.2 vs ares，CPU7/8）：
+support，official 2.4.2 vs ares）：
 - 归一化 diff **1496 行**；brim E-move native 571 vs ares 919；
 - native brim bbox X[98.14,121.497] Y[97.647,122.353]——Y 与 ares
   方环一致（±12.35），**X 左侧被 support mask 裁去 0.5mm**（ares
   未裁，输出对称方环 X[97.647,122.353]）；
 - 对象底面无孔（ares lslices[0][0] holes=0）→ inner 分支贡献为
-  空，分歧全部来自 outer 环的 mask 缺失——与已批链同根因、同
+  空，分歧全部来自 outer 环的 mask 缺失——与既有链同根因、同
   mask、不同分支。
 
 ## 3. 纳入 / 延后

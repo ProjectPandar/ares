@@ -1,7 +1,6 @@
 # TPMS-D sparse anchoring: base surface contraction
 
-Status: SPEC-REVIEW-REQUEST; independent discovery only, no public RED or
-production changes. Base/current main:
+Independent discovery only, no public RED or production changes. Against main
 `8acb19cf79998fbff7fe873d803690bd5c5d8ec7`.
 
 ## Upstream owner and exact Rust boundary
@@ -39,7 +38,7 @@ do not redesign the shared kernel or duplicate another pipeline adapter.
 
 ## Native-first bounded witness
 
-Use the previously approved authored Honeycomb anchoring mesh/profile
+Use the previously authored Honeycomb anchoring mesh/profile
 bundle as input provenance (10mm model, direction45, sparse20%, layer0.2).
 Change only pattern to `tpmsd`, multiline, top-shell count, and the two ZAA
 bits to0. Keep all other metadata/ZIP members. ZAA is disabled because
@@ -110,7 +109,7 @@ acceptance evidence. Canonical fresh references alone supply the verdict.
 
 ## Separate RED / GREEN contract
 
-Only after SPEC approval, freeze four SHA-pinned input-only3MFs from the
+Freeze four SHA-pinned input-only3MFs from the
 matrix: retain both observed multiline2 targets plus phase/count controls.
 Reuse the existing shared `runner/anchoring_zaa` frozen/verify/run_once/
 observer harness with dataset-specific case/expectation data; do not copy
@@ -121,7 +120,7 @@ Internal Bridge at physical `51 - top`, unchanged ordinary Sparse motion,
 two fresh Native references, stable repeats, and raw public API/CLI equality
 before unchanged strict whole-output equality. Expected RED in each mode:
 two target FAIL and two controls PASS. All existing Honeycomb/Line cases remain
-controls. Submit exact clean RED hash for separate review before production.
+controls. Commit the clean RED separately before production.
 
 GREEN only applies `(-0.5 * spacing / scale.factor()) as f32` and the existing
 Miter3.0 offset/error mapping before the TPMS-D anchoring kernel, iterating
@@ -139,21 +138,7 @@ Do not add allow/expect, skip paths or UnsupportedProjectFeature guards.
 
 Exact GREEN gates: fmt, workspace all-target clippy `-D warnings`, wasm32,
 new cases + existing TPMS-D rotation/multiline/anchoring/Honeycomb/Line controls
-in both modes, then canonical dual-mode FULL with fresh cache/artifacts,
-zero FAIL/skipped, `ARES_PIN_OFFSET=20 ARES_PARITY_THREADS=4` (CPU20-23).
-Compilation/probes CPU12. Rebase on current main and regenerate exact-hash
-FULL if it advances. Coordinator alone reviews/merges; no production before
-independent SPEC and RED approvals.
+in both modes, then canonical dual-mode full suite with fresh cache/artifacts,
+zero FAIL/skipped. No production before the independent SPEC and RED.
 
-## External receipts
-
-Under `${EVIDENCE_ROOT}/w3-tpmsd-anchoring-inset-`:
-`top6-m2/`, `top7-m2/`, `top5-m2/`, `top6/` and matching `-seeded/` roots hold
-inputs, producer identities, commands, repeat streams and complete results.
-The target `role-observation.json` files localize activity without changing
-the strict verdict. `localize/native-first-gdb.log` and
-`localize/ares-params-gdb.log` show the first domain mismatch and live settings.
-`spec-review/matrix-audit.json` plus external `...-audit.py` verify matrix,
-repeat/cross-mode and ZIP/settings boundaries. The extra official multiline1
-phase checks remain diagnostic receipts. No public tests/inputs or production
-code are committed in this SPEC.
+No public tests/inputs or production code are committed in this SPEC.

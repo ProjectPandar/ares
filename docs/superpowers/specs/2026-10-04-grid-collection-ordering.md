@@ -21,13 +21,12 @@ connectors, generated odd-layer reversal, generic chaining algorithm, other
 patterns, bridge math, travel/cooling/M73 and extra-overhang perimeter logic.
 
 TDD: main7cfa0b33 public full-output replay0/2PASS for Qidi Q1 Pro0.2
-case-WE5l76 and X-Max4 0.2 case-b8PGl3. Inputs `${TMP_ROOT}/ares-qidi-replay`, RED
-`${TMP_ROOT}/ares-qidi-red/replay-summary.json`. An initial no_sort-only experiment
+case-WE5l76 and X-Max4 0.2 case-b8PGl3. An initial no_sort-only experiment
 failed and regressed111 controls; it was reverted, revealing the separate
-upstream can_reverse contract. All failed experiment artifacts remain in the plan.
+upstream can_reverse contract.
 
 Acceptance: unchanged strict generator-only ordered comparator yields2/2Qidi,
 68/68 focused vendor inventory,823/823prior-PASS controls and8/8original official
-CPU0 references. Workspace Nextest, fmt, default Clippy and actual core+adapter
+single-CPU references. Workspace Nextest, fmt, default Clippy and actual core+adapter
 WASM build must pass; existing warnings remain visible. No probe, tolerance,
-new skip or deleted assertion. Coordinator approval precedes ff-only integration.
+new skip or deleted assertion.

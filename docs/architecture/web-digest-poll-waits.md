@@ -1,6 +1,6 @@
 # Canvas digest polls on the draw completion signal (SPEC)
 
-Status: SPEC, awaiting COORD review. This is the follow-up to
+This is the follow-up to
 `web-latched-marker-wait.md`, which converted the poll at `toolpathPreview.ts:324`.
 The scope is the web E2E harness only. No `ares-core`, `ares-wasm` or app code
 changes, and no timeout, retry or threshold changes.
@@ -14,8 +14,8 @@ reads back the WebGL canvas. Under `expect.poll`, that readback runs inside the
 default 5 s `expect` budget (`playwright.config.ts` sets no `expect.timeout`).
 CI run 38614639446 showed that one SwiftShader readback can take longer than
 5 s. The poll then fails with "Timeout 5000ms exceeded while waiting on the
-predicate" even though the view is correct. On d7ef4517c, a CPU-16-only run
-reproduced this at `:324`; see the REVIEW-REQUEST for 622464bc1. All 17 polls
+predicate" even though the view is correct. A single-CPU run
+reproduced this at `:324`. All 17 polls
 have the same exposure.
 
 The poll only helps if the frame could still change after `canvasDigest`'s
@@ -89,8 +89,7 @@ that, the conversion adds the missing state assertion before the read. The
 existing locator gets `toHaveAttribute("aria-pressed", ...)`:
 `seams`/`"true"` at `:272` and `outerWall`/`"true"` at `:335`. This matches how
 sites 4, 5 and 8 already work. It adds an assertion and changes no comparison,
-input or expected value. COORD's approval is requested explicitly because it is
-an assertion addition.
+input or expected value.
 
 ## Ways the conversion could fail (checked before the code)
 
@@ -108,7 +107,7 @@ an assertion addition.
      input, and `zoomBy` calls `controls.update()` in the handler.
 
    The poll would absorb a late frame; a single read would not. The evidence
-   must show these sites pass on 16,17 and under CPU-16-only pinning. If one
+   must show these sites pass on two CPUs and on a single CPU. If one
    fails, that site stays a poll and gets reported. No fallback is added.
 3. **Async colors.** `useViewColors` feeds the viewport only while `moves` is
    null, which does not happen at these sites after the first apply. Only the
@@ -129,15 +128,15 @@ an assertion addition.
 - `mobile`/`worker.mobile` specs. They have no digest polls.
 - App code, timeouts and pixel thresholds.
 
-## Evidence plan (after approval, outside FULL14)
+## Evidence plan
 
 1. **RED-free test commit.** This is a flake fix with no new behavior, so there
    is no RED. Each site's comparison and message stay the same; the only
    assertion additions are the two `aria-pressed` checks for sites 6 and 9.
-2. **Head, desktop, 1 worker, tier1 web env, CPU 16,17, `--trace=on`.** Run
+2. **Head, desktop, `--workers=1`, tier1 web env, two CPUs, `--trace=on`.** Run
    `presetSlice`, `slice`, `shortcuts` and `colorChange`. Each converted site
    must show exactly one canvas `evaluate` in the trace.
-3. **Same specs with the whole browser tree on CPU 16 only.** Head must pass.
+3. **Same specs with the whole browser tree on a single CPU.** Head must pass.
    Base gets one run per spec, reported as observed with no repeats; a base
    pass is reported as "not reproduced".
 4. **Checks.** `npm run lint`, `npm run typecheck` and the web build.

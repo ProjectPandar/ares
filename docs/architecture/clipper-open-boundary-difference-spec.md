@@ -31,7 +31,7 @@ already has `cursor` / `first_scaled` coord_t), matching the upstream
 
 ## Evidence
 
-Probe: `tests` leg `ironing-pattern-triangles` (3mf `/tmp/w4-gap-probe/ip-triangles.3mf`),
+Probe: `tests` leg `ironing-pattern-triangles`,
 travel `(-26974622,-5898597) → (-23006254,-5898597)` in native Clipper
 scaled coords (same plate offset in both — offset `(133.039205, 115.992105)`).
 
@@ -99,7 +99,7 @@ endpoint or vertex emission).
 ## Earlier (superseded) analysis
 
 The clip polygon fed to `diff_pl` was previously believed byte-identical
-in both engines (clip side is: verified via gdb dump vs `W4DBG-D`
+in both engines (clip side is: verified via gdb dump vs Ares debug
 instrumentation). The subject side was NOT identical — that was the
 hidden 1-unit divergence.
 
@@ -164,9 +164,8 @@ hidden 1-unit divergence.
 
 - RED: the already-failing ironing legs (`alignedrectilinear`, `cubic`,
   `grid`, `lateral-honeycomb`, `lateral-lattice`, `quartercubic`, `tpmsfk`,
-  `tri-hexagon`, `triangles` in `option_coverage/ironing_pattern.rs`, RED
-  `8df488c1f`) are the witness — no new synthetic engine unit tests.
+  `tri-hexagon`, `triangles` in `option_coverage/ironing_pattern.rs`)
+  are the witness — no new synthetic engine unit tests.
 - GREEN: engine fix + the two kept rewrites; FULL both modes (engine change
   has wide blast radius — seeded + official `cargo nextest run --workspace`
-  with `test-threads = "num-cpus"` per `.config/nextest.toml` ... under CPU15,
-  `CARGO_BUILD_JOBS=1`).
+  with `test-threads = "num-cpus"` per `.config/nextest.toml`).

@@ -1,15 +1,13 @@
 # Timelapse witness: source-cited G-code printable-area rejection
 
 Date: 2026-10-07. Status: proposed; implementation not started.
-Base: main `e5fe2bba8`. CLI `-102` mapping is worker4's next slice after
-`-100`; it is not implemented by this spec's owner.
+CLI `-102` mapping is a separate CLI-adapter slice after `-100`; it is not
+implemented by this spec.
 
 ## Observed missing boundary
 
 Preserved `option/timelapse_type/1` input SHA256:
 `67a27bafcda838742db058b1edb812055c9470608e47dc83a314357a8e9b233d`.
-Input path and Native command are bound in
-`/tmp/worker3-option-two-classification.json`.
 
 Historical Native did export `plate_1.gcode`, then returned `-102`
 (`CLI_GCODE_PATH_IN_UNPRINTABLE_AREA`, Utils.hpp:74). Its stderr was empty;
@@ -25,8 +23,7 @@ and writes G-code. Binary SHA256:
 output SHA256:
 `8e4a35544f1597ae5198ba189f10622de290a4adf94ae1a7e25c27839cdba6d8`.
 Build, argv, input/output hashes, exit and public `--dump-moves` artifact
-are saved in `/tmp/worker3-timelapse-area-red/`. This is a diagnostic
-witness, **not the separately committed/native-run RED gate**.
+were retained externally. This is a diagnostic witness, **not the separately committed/native-run RED gate**.
 
 The existing core has model/build-volume eligibility and Print validation,
 but no corresponding processed-G-code `gcode_check_result` decision.
@@ -85,8 +82,7 @@ Model, retained 167943 G-code bytes (raw SHA256
 `cabb272d646a6404e88db9af3c1e7dd8966173aff96afb60b856a744948e1f4a`),
 then returned -102 / Unix154. Input-authoring provenance is retained in
 `tests/parity/validation/o6-stock-circle-inward.provenance.json`; historical
-Native captures remain `/tmp/worker3-o6-stock-circle-inward/`, not as repository
-oracles. The same-named byte-API E2E now acquires complete retained bytes from
+Native captures remain outside the repository, not as repository oracles. The same-named byte-API E2E now acquires complete retained bytes from
 runtime Native in `crates/ares-cli/tests/orca_parity/cli_retained_exit.rs`.
 The circle slice proved whole-byte emission equality before the export check
 was ported; the timelapse RED must retain that assertion against the error's
@@ -132,9 +128,9 @@ Concrete result/check destination:
    and the complete already-generated `gcode: Vec<u8>`, transferring ownership
    rather than copying the stream. Native preserves the exported output file
    on -102; losing its bytes in core would drop upstream behavior. Core still
-   performs no file I/O; worker4 owns writing the retained bytes and mapping
+   performs no file I/O; the CLI adapter writes the retained bytes and maps
    the CLI status. All four Tier1 platforms share this pure byte/data boundary.
-6. worker4 owns typed-error→`-102` CLI mapping and adapter error/status
+6. The CLI adapter owns typed-error→`-102` CLI mapping and adapter error/status
    tests. This slice must not duplicate it or change unrelated mappings.
    Until that dependent slice merges, core rejection is verified separately
    from CLI status; the generic CLI path is not final `-102` parity.

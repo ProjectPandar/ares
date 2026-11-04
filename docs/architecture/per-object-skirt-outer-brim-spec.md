@@ -1,8 +1,6 @@
 # SPEC: explicit outer brim in multi-object per-object skirt groups
 
-Status: **SPEC-REVIEW-REQUEST — no production or test code authorized**.
-Base: `73e8e712e021d88ed136ba92f76bfd017477687a`.
-Branch: `worker1/per-object-skirt-brim-spec`.
+SPEC on `73e8e712e021d88ed136ba92f76bfd017477687a`.
 This is a bounded `libslic3r` rewrite slice, not an Ares pipeline feature.
 
 ## Non-negotiable decisions
@@ -20,10 +18,10 @@ This is a bounded `libslic3r` rewrite slice, not an Ares pipeline feature.
 - Preserve the original existing guard predicate `resolved.objects.len()>1`.
   Only narrow its brim term for the admitted source-owned subset; do not
   broaden other rejection terms or introduce general option policy.
-- No code before approval. After approval: Native-first public RED before
+- Native-first public RED before
   GREEN; no assertion weakening, classifier/comparator changes, skipped cases,
   or Native-output commits. Files remain <=400 LOC; split mechanically first
-  if necessary. Merge/push is coordinator-only.
+  if necessary.
 
 ## Owning upstream boundary
 
@@ -86,14 +84,12 @@ centering defects are reported to their owner, not repaired here.
 
 ## Native admission and actual-effect proof (completed; not Ares RED/GREEN)
 
-Evidence: `${TMP_ROOT}/ares-skirt-brim-native-ANfbTd/`.
-`head.txt` is the exact base above; `status-before.txt` and `status-after.txt`
-are empty. No cargo/nextest/nix build or Ares execution occurred.
-Official and seeded Native ran serially, outer CPU18; each case has fresh
+Discovery ran against the exact SHA above.
+No cargo/nextest/nix build or Ares execution occurred.
+Official and seeded Native ran serially; each case has fresh
 cache/artifact directories, exact input, command, wrapper/binary/input hashes,
-Native `result.json`, complete G-code, stdout/stderr log and affinity samples.
-All 8 return_code/OS exits were 0. Sampled Native descendant/thread masks were
-18 with zero violations. `witness-summary.json` and per-case `witness.json`
+Native `result.json`, complete G-code and stdout/stderr log.
+All 8 return_code/OS exits were 0. The per-case witnesses
 retain real positive-E XY skirt **and brim** motion, not just config legality.
 
 Inputs derive from the retained disjoint fixture (source SHA
@@ -120,12 +116,12 @@ independent brim emissions**. Far brim remains 2 groups. This proves admission,
 actual brim/skirt effect and the intended merge path; it is not a full parity
 claim. Brim TYPE blocks are emission blocks, not asserted loop counts.
 
-## Post-approval RED and GREEN gates
+## RED and GREEN gates
 
 1. Commit the exact four witness inputs/hashes and a public parity test module
    before production edits. No committed Native outputs. Record paired real
    motion witnesses, role ordering and input hashes as repeatable artifacts.
-2. Fresh official/seeded CPU18 Native runs first. For far/near brim inputs,
+2. Fresh official/seeded Native runs first. For far/near brim inputs,
    current public API and CLI must fail at the retained
    `UnsupportedProjectFeature("skirt_type per-object")`; controls must pass.
    That rejection is source-predicted, **not yet executed or claimed RED**.
@@ -137,13 +133,10 @@ claim. Brim TYPE blocks are emission blocks, not asserted loop counts.
 4. Retain prior four per-object grouping fixtures, existing combined/zero-loop
    controls, single-object skirt_type domain, and existing explicit-brim
    controls unchanged. Report first raw differences before any wider repair.
-5. CPU18 directed serial modes, fresh Native caches/artifacts, explicit target
-   policy and actual descendant/thread affinity audit. Log exact submitted
+5. Directed serial modes, fresh Native caches/artifacts and explicit target
+   policy. Log exact submitted
    HEAD and clean status before/after each leg; no stale hash labels.
-6. Strict clippy, fmt, WASM checks on the final hash. Canonical full and
-   workspace nextest require separately allocated coordinator windows; do not
-   start them with SPEC approval alone. START/END and exact evidence paths go
-   to the inbox. Stop for any exclusive-full freeze.
+6. Strict clippy, fmt, WASM checks on the final hash.
 
 ## Deferred / stop conditions
 
@@ -155,4 +148,4 @@ in for that producer. No automatic brim decisions, mixed brim policy or combined
 brim connectivity rewrite. If the bounded subset cannot be admitted by only
 narrowing the existing brim term, request a scope decision rather than add a
 new guard/error. No UI/filesystem logic enters core; WASM remains a required
-platform boundary. Only this SPEC is submitted for approval.
+platform boundary.

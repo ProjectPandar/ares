@@ -1,7 +1,6 @@
 # Resource build/item ignore — frozen public slicing witness
 
-Approved SPEC `cbd9b2c86a2cf3a3154d947d722092a4d8fa90cd` (rebased docs
-`2dbf947b55a4de7aa08e25d4b68c913500a61669`), separately authorized public RED.
+SPEC `cbd9b2c86a2cf3a3154d947d722092a4d8fa90cd`.
 Orca source8500fcdccaa10b5099ac20d252af3a7c560046f1:
 `Format/bbs_3mf.cpp::ObjectImporter` active workers1780-1817 and resource
 start/end dispatch5612-5687 do not dispatch build/item; main item3893-3909 is
@@ -43,9 +42,8 @@ with CLIexit1 samecause versus Native complete G-code. No Ares output means
 raw equality/comparison null/NOT EVALUATED, never missing-output equality PASS.
 Assertions require eventual correct behavior, not permanently expected errors.
 
-Run official and seeded with CPU15/jobs1/nextestthreads1, fresh cache/artifact/
-TMPDIR and canonical environments; load<60 before builds/every Native, START/END.
-Use `cargo nextest run -p ares-cli --test orca_parity -E
+Run official and seeded with fresh cache/artifact/TMPDIR and canonical
+environments. Use `cargo nextest run -p ares-cli --test orca_parity -E
  'test(resource_item_ignored_public_slicing)' --test-threads 1`.
 Any control/full-output difference => STOP/report, no retries/input substitutions.
-RED review precedes separate production authorization. No M73 work.
+No M73 work.

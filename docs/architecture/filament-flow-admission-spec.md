@@ -1,9 +1,7 @@
 # SPEC request: loaded filament-flow-ratio validation discovery
 
-Status: docs-only SPEC-REVIEW-REQUEST. No Native execution or implementation
-is authorized by this document. Stacked on approved clearance GREEN
-`df5f13e92def40a5f9ecdbd4b0dc462ce6875768`; wait for broadcast MAIN-ADVANCE
-and rebase without stash before any newly approved runtime work.
+Status: docs-only SPEC. No implementation is part of this document. Builds on
+the clearance admission GREEN.
 
 ## Upstream boundary and Rust destination
 
@@ -30,11 +28,11 @@ with `InvalidInput("filament_flow_ratio contains invalid value")` and is used
 by flow construction. Discovery must determine whether that error occurs before
 loaded validation for the public validated entry. Different error type/map/exit
 from Native is a real admission divergence, not equivalent rejection.
-This SPEC authorizes discovery only; if typed loading blocks the intended
+This SPEC covers discovery only; if typed loading blocks the intended
 consumer, report the exact call path and seek a source-cited amendment before
 any parser change. No global positive-parser relaxation or error-string patch.
 
-## Bounded discovery, only after approval
+## Bounded discovery
 
 Use the admitted clearance control input with all four clearance values positive,
 bridge ratios 1/1, identical geometry and all non-config ZIP member bytes.
@@ -47,16 +45,14 @@ Record effective ratio and positive XY/E in accepted controls.
 
 Native-first, then same-input validated API and real CLI even for Native rejects.
 Record exact errors, exit codes, no-output status, input hashes, source pin,
-canonical environment archive/hash and actual Native descendant/thread affinity.
-CPU18, jobs2/threads2; serial official and seeded with separate fresh Native
-caches/artifacts, required Native and all canonical references/oracle paths.
+Serial official and seeded runs with separate fresh Native caches/artifacts.
 Expected zero diagnostic is `filament_flow_ratio: invalid value 0`, but live
-Native serialization is authoritative. A different diagnostic requires review,
-not assertion normalization or borrowed control G-code for rejected inputs.
+Native serialization is authoritative. A different diagnostic is not resolved by
+assertion normalization or borrowed control G-code for rejected inputs.
 
 All inputs equivalent: evidence-only NO-RED STOP; no passing-only test slice.
 Native rejection versus Ares acceptance or earlier InvalidInput/CLI1: report
-real divergence and exact ownership/call path for RED authorization. Never
+real divergence and exact ownership/call path for the RED. Never
 fabricate a RED from environment, compilation, or witness faults.
 
 ## Included, deferred, and acceptance
@@ -67,11 +63,8 @@ mixed vectors, nullable/nil/NaN/negative values, profile cardinality/inheritance
 flow generation, `print_flow_ratio`, spiral validation, and every adjacent rule.
 No new guards, clamping, fallback, independent pipeline, or runtime artifact commits.
 
-After discovery approval only: frozen input-only fixtures and public test-first
-RED, independent RED approval, then minimal GREEN consumer if source boundaries
-permit. Check existing ares-core zero-rejection and zero-acceptance assertions
-before GREEN review; preserve coverage at the owning layer. Preserve pure
-processed lifecycle and accepted same-input raw control bytes RED to GREEN.
-Targeted tests only as allocated; fmt/strict on exact clean final hash, changed
-Rust files <=400 LOC. No full/workspace/merge/push; coordinator owns integration.
-Honor active freezes and do not start Native before SPEC approval.
+After discovery: frozen input-only fixtures and public test-first RED, then
+minimal GREEN consumer if source boundaries permit. Check existing ares-core
+zero-rejection and zero-acceptance assertions before GREEN; preserve coverage at
+the owning layer. Preserve pure processed lifecycle and accepted same-input raw
+control bytes RED to GREEN. Changed Rust files <=400 LOC.

@@ -3,65 +3,26 @@
 ## Status
 
 Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.32
-are released. O28 implements the bounded ClipperZ-backed
-`Algorithm::wave_seeds` prerequisite; its final reviews approved and exact-SHA
-Tier-1 run `31156094839` passed at
-`be334375be871eb12ca98c98d889b65a92d13a37`. O29 source-taking propagation was
-released as implementation commit `55c2c23` and documentation commit `118f6a7`;
-its exact-SHA Tier-1 run `31168584784` passed all format, WASM/browser, Linux,
-Windows, and macOS jobs at
-`118f6a72b33926efe41ced1c931f9a51b26b2945`. O29 added no lifecycle wiring;
-the current local lifecycle progression is summarized at the end of this
-status section.
-O30 direct supplied-seed `propagate_waves_ex` was released as commits
-`0a19939`/`6ccb145`; exact-SHA Tier-1 run `31184069746` passed all five jobs at
-`6ccb145dbb1867e5724538fb071795a7fd4179f0`. O31 source/scalar
-`propagate_waves_ex` composition was released as commits `7113f7c`/`1f89dd3`;
-exact-SHA Tier-1 run `31196271880` passed all five jobs at
-`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`. O32 `expand_expolygons` was
-released as commits `2e7168f`/`699f02b`; exact-SHA Tier-1 run `31213611275`
-passed all five jobs, including both browser runs, at
-`699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O33 expansion merging was released
-as commits `b9e65fd`/`0f6f801`; exact-SHA Tier-1 run `31228800274` passed all
-five jobs, including both browser runs, at
-`0f6f80130d28c0cc629e8561e46d187b137a8206`. O34
-`expand_merge_expolygons` was released as commits `f499058`/`25460c2`;
-exact-SHA Tier-1 run `31259140846` passed all five jobs, including both browser
-runs, at `25460c2abfc5bf94104f41b05df5af2dfac419ee`. O35
-`expand_merge_surfaces` was released as commits `984bc01`/`c6f23ce`;
-exact-SHA Tier-1 run `31269521736` passed all five jobs and both browser runs at
-`c6f23ce1a9350ca76241d007f804f3fcfa22c352`. O36 bridge-zone expansion was
-released as commits `b546e6f`/`3e927ed`; exact-SHA Tier-1 run `31280579891`
-passed all five jobs and both browser runs at
-`3e927ed569d3db8d6f5c08b7843fb049fcc86412`. O37 bridge grouping was released
-as commits `a0caa5a`/`4d83d15`; exact-SHA Tier-1 run `31291016394` passed all
-five jobs and both browser executions at
-`4d83d15832c7905d7ea9727d14c07c5a75eb7312`. O38 direct bridge-direction
-selection was released as commits `04920e0`/`2d6154d`; exact-SHA Tier-1 run
-`31303115603` passed all five jobs and both browser executions at
-`2d6154d401c3c954bed69de6ba631a53af05f1a3`. O38 remains crate-private and
-inactive. O39 was released as commits `2038e93`/`c84119e`; exact-SHA Tier-1
-run `31317150231` passed all five jobs and both browser executions at
-`c84119ee6871a176ec94117bc16f7e402c9caf96`. O39 is the bounded
+are implemented. O28 implements the bounded ClipperZ-backed
+`Algorithm::wave_seeds` prerequisite. O29 source-taking propagation added no
+lifecycle wiring; the current lifecycle progression is summarized at the end of
+this status section. O30 implements direct supplied-seed `propagate_waves_ex`,
+O31 source/scalar `propagate_waves_ex` composition, O32 `expand_expolygons`,
+O33 expansion merging, O34 `expand_merge_expolygons`, O35
+`expand_merge_surfaces`, O36 bridge-zone expansion, O37 bridge grouping, and
+O38 direct bridge-direction selection. O38 remains crate-private and inactive.
+O39 is the bounded
 `detect_bridge_directions` composition at `LayerRegion.cpp:262-308`, preserving
 the supplied-order forward anchor cursor, source-width boundary casts,
 contour/hole order, scaled-epsilon Miter-3 expansion, non-recombining open-path
 difference, unchanged-scale O38 call, direct errors, and
-`PI + atan2(y,x)` assignment. Its repaired fresh-cycle RED, 14/14 focused
-GREEN, original-Orca multi-bridge/missing-boundary helper matrix, reviewed
-literals/pointer ownership, M01-M28 campaign, exact restoration, and both
-implementation rereviews pass. Complete exact-final-byte native/WASM/static/
-rollback verification passes; both local Playwright attempts failed before test
-execution on missing `libglib-2.0.so.0`, and neither was treated as a pass. The
-later exact-SHA run supplies the required browser evidence. O39 remains
-inactive. O40 locally implements the next `merge_bridges` boundary at
+`PI + atan2(y,x)` assignment. O39 remains
+inactive. O40 implements the next `merge_bridges` boundary at
 `LayerRegion.cpp:310-351`, including source-to-expansion association, root-
 group collection, per-group Miter-3 flat closing, and bottom-bridge surface
 materialization. Its focused tests and independent pinned-Orca closing oracle
-pass; after repairing the initial review's rustfmt, coverage, and citation
-findings, the same six-dimensional thread approved O40 with zero findings. It
-remains inactive and unreleased. O35-O41 add no Option or lifecycle wiring.
-The current local O42 activates external-surface processing after O26, O43
+pass. It remains inactive. O35-O41 add no Option or lifecycle wiring.
+The current O42 activates external-surface processing after O26, O43
 activates internal-bridge candidate discovery after O42, O71 consumes that
 candidate state through the admitted first internal-bridge transaction, and
 O72 applies the infill-combination identity gate. Public slicing consumes and
@@ -562,13 +523,6 @@ order, exact defaults and all 30 fixture overrides, concrete field types, all
 enum domains, both float-or-percent categories, arbitrary valid vector
 lengths, direct non-default dispatch for all 149 fields, strict owner and shape
 rejection, child 149-key bytes, and flat parent 275-key bytes and order.
-Reviewed verification passes 24 focused object/region tests, all 4,246
-workspace tests with three configured skips, the 22-test dynamic-value audit
-with one configured skip, warning-denying workspace all-target Clippy,
-rustfmt, both `ares-core` and `ares-wasm` WASM checks, and the diff whitespace
-gate. Two independent frozen-byte code reviews, an independent documentation
-review, and the primary-agent review approve this boundary under the
-user-approved temporary OpenCode bypass.
 
 ### Task 11: remaining process raw source
 
@@ -831,16 +785,6 @@ all seven nullable vectors, arbitrary valid lengths, keyed invalid shapes,
 duplicate and unknown keys, lexical wire order, raw structured strings, and
 the aggregate boundary.
 
-Reviewed local verification passes all 14 focused tests, 62 adjacent typed
-printer/process tests, all 4,274 workspace tests with three configured skips,
-and the 22-test dynamic-value audit with one configured skip. Warning-denying
-`ares-core` all-target Clippy, rustfmt, native `ares-core`, both `ares-core`
-and `ares-wasm` WASM checks, tracked and untracked whitespace checks, and the
-physical-LOC gate are green; the largest changed Rust module is 280 lines.
-Independent fixed-source, TDD-plan, wrapper, inventory, frozen-byte quality,
-and final specification reviews approve the slice under the user-approved
-temporary OpenCode bypass.
-
 ### Task 13: remaining filament raw sources
 
 The remaining filament raw slice is fixed to OrcaSlicer v2.4.2 commit
@@ -942,16 +886,6 @@ fixture cardinalities and overrides, strict enums, every-field dispatch,
 invalid shapes, arbitrary cardinalities, standalone lexical maps, and the flat
 122-key parent bytes. The adjacent Task 12 matrix passes all 14 tests while
 retaining its exact standalone 53-key child boundary.
-
-Reviewed local verification passes all 4,296 workspace tests with three
-configured skips and the 22-test dynamic-value audit with one configured skip.
-Warning-denying workspace all-target Clippy, rustfmt, native `ares-core`, both
-`ares-core` and `ares-wasm` WASM checks, tracked and untracked whitespace
-checks, and the physical-LOC gate are green; the largest changed Rust module is
-283 lines. Independent upstream, RED-test, final-specification, code-quality,
-and frozen-byte reviews approve the slice under the user-approved temporary
-OpenCode bypass. The exact pushed commit remains subject to the five-job Tier 1
-gate before downstream implementation proceeds.
 
 ### Task 14: project/runtime residual raw options
 
@@ -1120,20 +1054,6 @@ substitution, scaled `flush_volumes_matrix`, duplicate plate-indexed
 consumer migration plus final dynamic compatibility-parser removal to Tasks
 20A-20E.
 
-TDD first ran the frozen focused RED twice and failed only on the planned
-missing Task 14 interfaces. The implemented matrix passes 23 focused tests,
-107 adjacent typed-option tests, all 4,319 workspace tests with three
-configured skips, and the 22-test dynamic-value audit with one configured
-skip. Rustfmt, warning-denying workspace all-target Clippy, native
-`ares-core`, `ares-core` and `ares-wasm` WASM checks, release WASM generation,
-the generated-binding real-3MF Playwright test, tracked and untracked
-whitespace checks, the forbidden-dynamic scan, exact ownership audit, and the
-under-400-physical-LOC gate are green; the largest changed Rust file is 290
-lines. Independent final specification and code-quality reviews approve the
-frozen implementation under the user-authorized temporary OpenCode bypass.
-Commit `dc47e069ede1caa307411d63ba29f78784630494` and five-job Tier 1 run
-`29253342315` are green and satisfy the Task 15 entry gate.
-
 ### Task 15: effective object options
 
 Task 15 is fixed to OrcaSlicer v2.4.2 commit
@@ -1206,15 +1126,6 @@ active sizing, and object association Task 19B; config export Task 19C; and
 consumer migration/removal Tasks 20A-20E. Geometry, slicing, G-code generation,
 and final `ksr_fdmtest_v4` byte parity are not claimed by Task 15.
 
-All six sequential slice filters are green for inventory/base identity,
-ordered metadata, sparse projection, clamps, normalization, and the real
-fixture. Each slice received independent specification and quality approval,
-and the complete pre-documentation 28-file Task 15 diff has fresh literal
-`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Commit
-`4fbb61282cdb73160414d2d9f67edacf61ba2e42` is pushed, and exact-SHA Tier 1
-run `29273332261` is green across format, Ubuntu/Linux, WASM, macOS, and
-Windows. This satisfies the Task 16 entry gate.
-
 ### Task 16: effective region options
 
 Task 16 is fixed to OrcaSlicer v2.4.2 commit
@@ -1266,13 +1177,7 @@ final ironing selection. G-code projection remains Task 17; active sizing,
 association, and cardinality errors remain Task 19B; consumer migration remains
 Tasks 20A-20E. Modifier graph construction, region deduplication, geometry,
 slicing, G-code generation, and final byte parity remain deferred.
-
-All seven sequential TDD slices received independent specification and quality
-approval. The frozen 34-file whole diff also received literal
-`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Task 16 is released as
-pushed commit `2651c6376d0cc8229876471d0a4d5c6f98f84314`; exact-SHA Tier 1
-run `29286285164` is green across format, Ubuntu/Linux, WASM, macOS, and
-Windows. Task 16 does not claim complete slicing or G-code parity.
+Task 16 does not claim complete slicing or G-code parity.
 
 ### Task 17: registered pre-normalization GCodeConfig projection
 
@@ -1346,12 +1251,6 @@ evaluation remains Task 28; document assembly remains Task 29. Geometry,
 slicing, generated G-code bytes, and complete `ksr_fdmtest_v4` parity remain
 deferred.
 
-All four Task 17 slices and the frozen whole implementation have independent
-specification and quality approval. Task 17 is released as pushed commit
-`18e7065856bee306cd643ffe359023758a60befe`; exact-SHA Tier 1 run
-`29294487109` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
-That release gate completed before Task 18 implementation began.
-
 ### Task 18: strict typed ProjectSettings load
 
 Task 18 is fixed to OrcaSlicer v2.4.2 commit
@@ -1403,15 +1302,8 @@ remain Task 19B; Task 19C owns only the effective `FullPrintConfig` G-code
 20A-20E, and complete `ksr_fdmtest_v4` slicing/G-code byte parity remains
 deferred.
 
-Slices 18.1-18.3 received their applicable independent per-slice reviews;
-Slice 18.4 passed its verification-only isolation gate. The frozen whole
-implementation then received independent whole-specification and whole-quality
-approval. The real-3MF native and browser paths reach the existing
-`ProjectSlicingIncomplete` boundary only after typed load succeeds. Task 18 is
-released as pushed commit `a2714d4a6a197c5e10aec1b686e80e9b66794fd6`;
-exact-SHA Tier 1 run `29298974173` is green across format, Ubuntu/Linux, WASM,
-macOS, and Windows. That release gate completed before Task 19A implementation
-began.
+The real-3MF native and browser paths reach the existing
+`ProjectSlicingIncomplete` boundary only after typed load succeeds.
 
 ### Task 19A: typed legacy conversion across project inputs
 
@@ -1484,19 +1376,8 @@ As part of the whole-task boundary, obsolete checkout-dependent Orca
 source-text pinning tests, exact source-line assertions, and generator mutation
 probes were removed. The committed 653-row semantic option inventory and its
 fixed-commit deterministic generator remain; regeneration is byte-identical to
-the committed artifact. Fixed-source checks for the excluded aliases remain
-review evidence rather than committed source-pinning tests.
-
-All five Task 19A slices received independent specification and quality
-approval after their RED/GREEN cycles. The frozen 49-path pre-documentation
-implementation received literal `WHOLE SPEC VERDICT: APPROVE` and
-`WHOLE QUALITY VERDICT: APPROVE`. Fresh local evidence passes 61 typed-legacy
-tests, 160 adjacent tests, all 4,484 workspace tests with two configured skips,
-the dynamic-value audit, rustfmt, warning-denying Clippy, native and WASM
-checks, browser proof, and fixed-source exclusion scans. Task 19A is released
-as pushed commit `0e85302416904d0de604b969afd7f546fb8b3c1a`;
-exact-SHA Tier 1 run `29313932330` is green across format, Ubuntu/Linux, WASM,
-macOS, and Windows. That release gate completed before Task 19B.1A began.
+the committed artifact. Fixed-source checks for the excluded aliases are not
+committed source-pinning tests.
 
 ### Task 19B.1A: typed active variant materialization
 
@@ -1561,22 +1442,10 @@ Ares option/slicing scaffold remains a temporary compatibility shell until the
 later source-cited orchestration replaces it, and the real project still
 returns `ProjectSlicingIncomplete` through core and browser WASM.
 
-All four TDD slices recorded genuine RED/GREEN evidence and culminated in
-19/19 focused tests. The frozen thirteen-path implementation manifest
-`96aa793696240f6d1a33d795e5e1ea308ee61a648fd2469d20263f98494d066b`
-received independent specification-compliance, code-quality, and OpenCode
-`VERDICT: APPROVE`; 235/235 adjacent typed tests, the 22/22 dynamic audit,
-rustfmt, Clippy, fixture hashes, forbidden scans, and sub-400-LOC checks also
-passed. Task 19B.1A was released as commit
-`da896a98719a621ad87a2317c23f1d27f0a3c6e5`; exact-SHA Tier 1 run
-`29330209222` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
-
 Task 19B.1B's export/runtime split and nullable retract overlay, Task 19B.2's
 model-option classification plus optional layer-config import and association,
 and Task 19B.3's normalization plus source-ordered effective-project
-orchestration are released. Task 19C's config export was released as commit
-`656b32f987827b29d08010802ba03ef6ba822980`; exact-SHA Tier 1 run
-`29457461048` is green. Tasks 20A-20E retain consumer migration and
+orchestration are implemented, as is Task 19C's config export. Tasks 20A-20E retain consumer migration and
 compatibility-parser removal. Geometry, slicing, complete G-code generation,
 metadata, post-processing, and normalized `ksr_fdmtest_v4` byte parity remain
 deferred.
@@ -1633,16 +1502,10 @@ dynamic JSON or native I/O boundary.
 The focused typed matrix passes 13/13 tests, the adjacent project/G-code
 matrix passes 79/79, and the dynamic-value audit passes 22/22. The real 3MF
 fixture and two-map test prove full/runtime differences and original-source
-rematerialization. Frozen implementation manifest
-`eb06ab4a08293acf2b89b4e026fc52ac02887118eb1845dae50048456cc5eedd`
-received independent whole `SPEC_COMPLIANCE`, `CODE_QUALITY`, and OpenCode
-`VERDICT: APPROVE` decisions. Public project slicing is deliberately not wired
+rematerialization. Public project slicing is deliberately not wired
 and still returns `ProjectSlicingIncomplete`; the core/browser boundary and
 full G-code parity remain incomplete by design.
 
-Task 19B.1B was released as commit
-`8e09be79881c6365100fac06ed064f487c75fb85`; exact-SHA Tier 1 run
-`29345005311` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 Task 19B.2 retains model/layer configuration association; Task 19B.3 retains
 normalization and source-ordered orchestration; Task 19C retains config export;
 and Task 20E retains the remaining dynamic compatibility removal.
@@ -1714,16 +1577,6 @@ lexicographically while finite negative, reversed, gapped, and overlapping
 ranges remain raw. Invalid XML, attributes, ordinals, bounds, keys, and values
 return bounded contextual errors.
 
-The frozen 73-entry implementation manifest
-`2b80a68423b3476a7f83676393d72bc6129c6f1ce9f15654cea50a2dd7496eb7`
-received independent whole `SPEC COMPLIANCE`, whole `CODE QUALITY`, and
-OpenCode default-model `VERDICT: APPROVE` decisions. Independent verification
-passed the 125/125 focused matrix, 4545/4545 workspace tests with two configured
-skips, the 22/22 dynamic audit with one configured skip, rustfmt, warning-denying
-Clippy, native/WASM checks, release WASM and wasm-bindgen, the real-project
-browser test, fixture hashes, forbidden scans, diff validation, and the
-sub-400-LOC audit.
-
 The real KSR project now reaches these typed domain owners through public
 loading, but public slicing intentionally still returns
 `ProjectSlicingIncomplete`; the complete CLI golden remains configured skipped.
@@ -1732,9 +1585,7 @@ object/volume/material/layer precedence, and the first production calls to the
 typed configuration transforms. Task 19C retains config serialization; Tasks
 20A-20E retain consumer migration and compatibility removal. Geometry,
 toolpaths, G-code generation, and complete normalized KSR byte parity remain
-open. Task 19B.2 was released as commit
-`d5a50bd64b7ebe048c80919edc6028b57f83fefa`; exact-SHA Tier 1 run
-`29391775108` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+open.
 
 ### Task 19B.3: effective project configuration resolution
 
@@ -1821,21 +1672,6 @@ real slicing consumer exists. No reference G-code bytes or facts are used as
 direct Task 19B.3 expectations; the unchanged complete CLI golden remains only
 a configured-skipped regression contract.
 
-The frozen 51-entry implementation manifest
-`23CCB91EC4BE509E43EDECEFD864B83B9D7CB2B5C4DA2F0FF08020F52A8D5DEB`
-received independent whole `SPEC COMPLIANCE`, whole `CODE QUALITY`, and fresh
-OpenCode `VERDICT: APPROVE` decisions with no findings. Verification passed the
-180/180 focused matrix, 4625/4625 workspace tests with two configured skips,
-the 22/22 dynamic audit with one configured skip, the 5/5 CLI contract with one
-configured golden skip, the 5/5 WASM contract, and the real-project browser
-test. Rustfmt, warning-denying Clippy, native/WASM checks, release WASM,
-wasm-bindgen, fixture hashes, forbidden scans, diff validation, and the
-sub-400-LOC audit also passed. The independent spec reviewer additionally ran
-its broader 195/195 focused selection.
-
-Task 19B.3 was released as commit
-`99fb0beba0a48603cb7875591cf77d02c26fb525`; exact-SHA Tier 1 run
-`29444150217` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 Task 19C retains effective config-block serialization. Tasks 20A-20E retain
 consumer migration and dynamic compatibility removal. Project
 material documents, modifier-parent and painted-region geometry, and per-plate
@@ -1908,13 +1744,7 @@ special case.
 Task 19C also removes the remaining executable source-path/line/symbol pinning
 assertions from the project inventory test while retaining its behavioral
 ownership, type, default, projection, wire-shape, legacy-conversion, and fixture
-agreement checks. The 39-path implementation received independent whole spec,
-whole code-quality, and default-model OpenCode `VERDICT: APPROVE` decisions.
-Fresh pre-documentation verification passed 29/29 config-export tests, 389/389
-project tests, 4654/4654 workspace tests with two configured skips, 15/15 CLI
-tests with the complete KSR golden as the sole CLI skip, the native/WASM build
-matrix, and the real-project browser test; warning-denying Clippy and the
-sub-400-LOC audit also passed.
+agreement checks.
 
 This task does not slice geometry, generate toolpaths, assemble the complete
 G-code document, emit generated-by metadata, estimate time, post-process
@@ -1922,9 +1752,6 @@ output, migrate Tasks 20A-20E consumers, or remove their dynamic compatibility
 shells. Project material documents, unsupported painted/modifier sources,
 selected-plate public plumbing beyond the source default, metadata and adapter
 assembly, and final normalized `ksr_fdmtest_v4` byte parity remain deferred.
-Task 19C was released as commit
-`656b32f987827b29d08010802ba03ef6ba822980`; exact-SHA Tier 1 run
-`29457461048` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 
 ### Task 20A.1: typed profile fragment, inheritance, and composition
 
@@ -1995,9 +1822,7 @@ reaches `ProjectSlicingIncomplete` after the released Task 19C config writer.
 Profile discovery and management, alias/Semver/compatibility evaluation,
 remaining Task 20A consumers, Tasks 20B-20E, geometry, toolpaths, G-code,
 generated-by metadata, post-processing, adapters, and complete normalized KSR
-parity remain deferred. Task 20A.1 was released as commit
-`e0c50564283744b3dd3388eeaa10f624a492ff1f`; exact-SHA Tier 1 run
-`29488449752` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+parity remain deferred.
 
 ### Task 20A.2: typed filament variant-aware inheritance
 
@@ -2037,9 +1862,7 @@ writer.
 Printer and process variants, stride-two behavior, profile-to-project wiring,
 the remaining Task 20A work and Tasks 20B-20E, geometry, toolpaths, G-code,
 generated-by metadata, post-processing, metadata byte parity, and complete
-normalized KSR parity remain deferred. Task 20A.2 was released as commit
-`4281e913b8eeaaeb6111cbefdf06f896f5c611aa`; exact-SHA Tier 1 run
-`29520118127` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+normalized KSR parity remain deferred.
 
 ### Task 22A: typed slicing parameters and fixed layer planning
 
@@ -2083,7 +1906,7 @@ IDs, `height = hi - lo`, `print_z = hi`, and midpoint `slice_z`. A single
 project-wide budget permits exactly 100,000 materialized records and rejects
 the next one; it is a generic input resource limit, not fixture data.
 
-Using only `ksr_fdmtest_v4.project.3mf`, the approved implementation prepares
+Using only `ksr_fdmtest_v4.project.3mf`, the implementation prepares
 one planned print object with 460 complete records. Its first record is
 `(id=0,height=0.2,print_z=0.2,slice_z=0.1)` and its final print-Z bits are
 `0x4057000000000036`. The released Task 19C config block remains exactly 49,004
@@ -2094,9 +1917,6 @@ planning; it emits no placeholder or successful G-code.
 
 Variable/adaptive layers, modifier geometry, Clipper behavior, paths and G-code,
 generated metadata, and successful full KSR parity remain explicitly deferred.
-Task 22A was released as commit
-`91fc19f1dbfc85d21431791d2d5acb78af818671`; exact-SHA Tier 1 run
-`29543841835` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 
 ### Task 22B: scaled raw mesh intersections
 
@@ -2129,7 +1949,7 @@ print-object centering groups, explicit/shared mesh reuse, nonidentity shrink,
 and normalized edge groups with more than two uses are gated before unsupported
 work can be approximated.
 
-Using only the committed 3MF, the approved implementation retains one
+Using only the committed 3MF, the implementation retains one
 model-part volume with 6,109 vertices, 12,234 triangles, 18,351 normalized
 shared edges, 460 layer slots, and 116,472 directed raw lines. The
 source-semantic and deterministic Ares-order fixed-width encodings have SHA-256
@@ -2159,9 +1979,7 @@ time estimation, and post-processing remain later slices. Embedded/external
 presets, CLI overrides, UI behavior, any Ares-owned alternative pipeline, and
 final normalized KSR parity are also explicitly deferred. Supported requests
 still return `ProjectSlicingIncomplete`, but only after the private raw state is
-built. Task 22B was released as commit
-`455a0d12a9c6ac48f6e2796669b4300a6a6190a2`; exact-SHA Tier 1 run
-`29610017653` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+built.
 
 ### Task 22C: triangle-connectivity slice chaining
 
@@ -2299,9 +2117,7 @@ its Task 22D contour result: 460 layers, 3,288 polygons, 116,472 points, and the
 same face-order and normalized hashes remain. Archive-level process, object
 override, and spiral-threshold mutations prove that the behavior is assembled
 from 3MF Options rather than fixture identity. Production still returns
-`ProjectSlicingIncomplete`; no placeholder G-code is emitted. The implementation
-passed the focused, workspace, native and WASM checks, browser-real-3MF,
-code-quality, default-model, and independent six-dimensional review gates.
+`ProjectSlicingIncomplete`; no placeholder G-code is emitted.
 
 ### Task 22F: safe Clipper 6 pre-closing union
 
@@ -2342,9 +2158,7 @@ The complete KSR pre-closing encoding is 1,645,481 bytes with SHA-256
 `209c6149c93994cc3ae6fa8e2f8f43dc9875b1b07b2320da9e67d8a2c43ab6e2`:
 2,891 contours, 397 holes, and 99,260 points. Exact representative layers
 0, 46, and 459 and the first hole-bearing layer match the corrected fixed
-source oracle, and repeat runs are byte-identical. Task 22F has 50 focused
-tests, passes the workspace, native, WASM, browser, code-quality,
-default-model, and independent six-dimensional gates, and leaves both committed
+source oracle, and repeat runs are byte-identical. Task 22F leaves both committed
 fixtures unchanged. Production deliberately still returns
 `ProjectSlicingIncomplete`; no placeholder or reference-derived G-code is
 emitted, so complete normalized KSR parity is not claimed.
@@ -2387,10 +2201,8 @@ empty layers, and metadata retention without a fixture identity branch.
 The complete KSR post-closing encoding is 1,644,681 bytes with SHA-256
 `29ffb501c54190dd4336cc1371fc5e480c5b87ac6a8184366bd072bf5cb90919`:
 one object, one volume, 460 layers, 2,890 contours, 395 holes, and 99,212
-points. Native and browser executions are byte-identical and repeatable, both
-committed fixtures remain unchanged, and all focused, full native, WASM,
-browser, code-quality, default-model, and independent six-dimensional review
-gates pass. Production deliberately still returns `ProjectSlicingIncomplete`;
+points. Native and browser executions are byte-identical and repeatable, and both
+committed fixtures remain unchanged. Production deliberately still returns `ProjectSlicingIncomplete`;
 no placeholder or reference-derived G-code is emitted, so complete normalized
 KSR parity is not claimed.
 
@@ -2428,9 +2240,7 @@ mutation selects 336 layers from slot 21 onward while preserving Regular slot
 569 contours, 127 holes, and 41,012 points. These archives change Options only
 inside the complete 3MF and prove there is no fixture or fixed-layer branch.
 
-Task 22H passes focused and full native, WASM/browser, structural, code-quality,
-default-model, and independent six-dimensional review gates. Both committed
-fixtures remain unchanged. Production executes the selector and still returns
+Both committed fixtures remain unchanged. Production executes the selector and still returns
 `ProjectSlicingIncomplete`; no placeholder or reference-derived G-code is
 emitted, so complete normalized KSR parity is not claimed.
 
@@ -2493,7 +2303,7 @@ parity. Raw `resolution` consumers in brim, fill, perimeter, arc fitting, and
 G-code remain deferred, as do cross-ExPolygon/cross-volume negative and
 modifier composition, regions, surfaces, perimeters, fill, supports,
 toolpaths, G-code assembly, metadata, and post-processing. Task 22J must begin
-with a separately approved source-cited slice of the adjacent
+with a separate source-cited slice of the adjacent
 `PrintObjectSlice.cpp` volume-to-region composition boundary.
 
 ### Task 22J: single-range volume region composition
@@ -2559,7 +2369,7 @@ Multi-range chains, material and painted segmentation, the ten neighboring
 usage gates, support-region graph construction, top trimming, conical
 overhang, XY and elephant-foot compensation, `make_slices`, surface
 classification, perimeters, fill, support generation, toolpaths, G-code,
-metadata, and post-processing remain deferred to separately approved upstream
+metadata, and post-processing remain deferred to separate upstream
 slices. Production still returns `ProjectSlicingIncomplete`; no placeholder or
 reference-derived G-code is emitted, and normalized KSR G-code parity is not
 claimed.
@@ -2621,7 +2431,7 @@ G-code assembly, metadata, and post-processing remain deferred. The next
 source audit must start at the `1204-1206` caller sequence, classify
 cancellation separately, and bound `apply_conical_overhang` together with its
 `make_overhang_printable*` Option ownership before another implementation
-slice is approved.
+slice.
 
 ### Task 22L: conical-overhang region projection
 
@@ -3085,13 +2895,11 @@ succeeds does it move O13/O11/O10/O5 ownership, retaining surviving medial
 allocations, attaching gap entities, and cloning or subtracting the onion
 `last` fill remainder. Error cleanup iteratively consumes untouched O13 state.
 Public slicing reaches O14 once and intentionally remains
-`ProjectSlicingIncomplete`. Tier-1 run `30900710846`, Windows job
-`91964102127`, first recorded post-O20 integration aborts in the O11
-closed-boolean-tree constrained-stack test (`86.033s`) and this O14
-open-offset/variable-width constrained-stack test (`47.523s`): both aborted at
-64 KiB with `0xc00000fd` / OS error 1001 after 4,175 preceding passes. After
-raising only those two tests, exact-SHA rerun `30904949178`, Windows job
-`91977766653`, advanced to O15 and exposed the same 64-KiB floor in aggregate-
+`ProjectSlicingIncomplete`. On Windows, the O11
+closed-boolean-tree constrained-stack test and this O14
+open-offset/variable-width constrained-stack test both aborted at
+64 KiB with `0xc00000fd` / OS error 1001. After
+raising only those two tests, O15 exposed the same 64-KiB floor in aggregate-
 union and final-top-union cleanup. Project-slice constrained-stack tests now
 share one test-only baseline: 64 KiB on Unix and 256 KiB on Windows. Every
 10,000-node predecessor witness and iterative cleanup assertion remains
@@ -3117,12 +2925,7 @@ and geometry work is staged before moving O14/O13/O11/O10/O5 ownership, and
 the public lifecycle intentionally remains `ProjectSlicingIncomplete`.
 
 The O15 KSR structure is pinned at
-`136197013209006370081121271251125478104`. The 49 focused O15 tests and geometry
-regressions, 5,540 workspace Nextest tests with 2 skipped, strict Clippy,
-workspace/native and both WASM checks, formatting, diff, LOC,
-forbidden-pattern, dependency, and staging audits pass. The final independent
-six-dimensional implementation rereview and OpenCode rereview both returned
-`VERDICT: APPROVE`.
+`136197013209006370081121271251125478104`.
 
 The activated `apply_extra_perimeters` body and Arachne-only helper beginning
 at `PerimeterGenerator.cpp:1695` remain deferred.
@@ -3146,12 +2949,7 @@ multi-compatible-region branch and active `process_no_bridge` body deferred.
 
 The O16 KSR checkpoint is
 `-169716507603417685621692788651154411580`, with totals
-`[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 1112]`. Fourteen focused O16
-tests, 192 O1/O10-O16 regressions, and 5,554 workspace Nextest tests with 2
-skipped pass together with strict Clippy, workspace/native and both WASM
-checks, formatting, diff, LOC, forbidden-pattern, source-pinning, dependency,
-and staging audits. The final independent six-dimensional implementation
-review and OpenCode review both returned `VERDICT: APPROVE`.
+`[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 1112]`.
 
 Public slicing reaches O16 once and intentionally remains
 `ProjectSlicingIncomplete`.
@@ -3182,14 +2980,8 @@ earlier precedence.
 The O17 KSR checkpoint is
 `-126362407653399901571400348049652748978`, with totals
 `[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 5388, 519, 6, 666, 4197, 1294,
-113, 6, 48, 1127, 5388, 517, 85886, 1294, 168, 46011]`. Forty-three focused
-O17 tests, 178 O1-O17 regressions, and 5,597 workspace Nextest tests with 2
-skipped pass with strict Clippy, workspace/native and both WASM checks,
-formatting, diff, LOC, forbidden-pattern, source-pinning, dependency, and
-staging audits. ZIP repack/non-slicing rename invariance and the exact component
-X-scale/elephant-foot span relation distinguish fixture hardcoding. The final
-independent six-dimensional implementation rereview and OpenCode rereview both
-returned `VERDICT: APPROVE`.
+113, 6, 48, 1127, 5388, 517, 85886, 1294, 168, 46011]`. ZIP repack/non-slicing rename invariance and the exact component
+X-scale/elephant-foot span relation distinguish fixture hardcoding.
 
 Public slicing reaches O17 once and intentionally remains
 `ProjectSlicingIncomplete`.
@@ -3210,9 +3002,8 @@ retain identity. `RegionSurfaceKind::InternalSolid = 5` is non-bridge. The typed
 global print `spiral_mode` is now rejected in early capabilities before O17,
 closing the threshold-masked record-local bypass while direct tests preserve
 the upstream pass guards. Six obsolete unsupported-spiral checkpoint-pinning
-tests were deleted rather than retained as legacy expectations. Tier-1 run
-`30900710846`, WASM job `91964102068`, confirmed the stale six-pair browser
-matrix failed at its first spiral-activated pair with
+tests were deleted rather than retained as legacy expectations. The stale
+six-pair browser matrix failed at its first spiral-activated pair with
 `unsupported project feature: spiral_mode`. The browser N matrix therefore
 excludes the three spiral-activated historical pairs and keeps the supported
 alignment, signed-zero, and generator contexts.
@@ -3220,14 +3011,9 @@ alignment, signed-zero, and generator contexts.
 The inactive KSR 5/3/15% options preserve checksum
 `-126362407653399901571400348049652748978`; O18 totals are
 `[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 5388, 519, 6, 666, 4197, 1294,
-113, 6, 48, 1127, 5388, 517, 85886, 1294, 168, 46011, 0, 0]`. Seventeen focused
-O18 tests, 209 O10-O18 regressions, and 5,607 workspace tests with 2 skipped
-pass with native, strict Clippy, both WASM, formatting, diff, LOC,
-forbidden-pattern, dependency, pinning-removal, and staging gates. Active
+113, 6, 48, 1127, 5388, 517, 85886, 1294, 168, 46011, 0, 0]`. Active
 project/global and model-part overrides freeze literal 113 top, 6 bottom, 48
-bottom-bridge, and 1,127 internal transitions. The final independent
-six-dimensional implementation rereview and OpenCode rereview both returned
-`VERDICT: APPROVE`.
+bottom-bridge, and 1,127 internal transitions.
 
 Task 22O.19 ports caller `PrintObject.cpp:595-596` and the single-region cache
 population at `PrintObject.cpp:2008-2027,2111-2149`. Each aligned O18 record
@@ -3249,12 +3035,7 @@ Public slicing reaches O19 once and intentionally remains
 `148296943860974241781127169756103364063`, totals
 `[1, 460, 0, 460, 572, 713, 1227, 60370, 2512]`, and first/later scaled
 spacings `[457079, 377079]`. The active cache contains exactly 572 top, 713
-bottom, and 1,227 hole paths. Twenty-one focused O19 tests, 310 O10-O19
-regressions, and 5,630 workspace tests with 2 skipped pass with strict Clippy,
-native all-target, both WASM, formatting, diff, LOC, forbidden-pattern,
-dependency, source-pinning, and staging gates. The final independent
-six-dimensional implementation rereview and OpenCode rereview both returned
-`VERDICT: APPROVE`.
+bottom, and 1,227 hole paths.
 
 Task 22O.20 ports the single-region projection gather at
 `PrintObject.cpp:2153-2278`, stopping before internal-surface trimming at line
@@ -3297,12 +3078,7 @@ current-versus-stopped spacing, every geometry failure site, exhaustive
 alignment/identity rejection, recursive ownership of both predecessor tree
 families, an active later-object transactional failure, constrained-stack
 cleanup, typed 3MF/model-part options, ZIP/name invariance, component scaling,
-and independent KSR parses. All 355 O10-O20 regressions and 5,678 workspace
-tests with 2 skipped pass with strict Clippy, native all-target, both WASM,
-formatting, diff, LOC, forbidden-pattern, dependency, source-pinning, and
-staging gates;
-the pushed commit additionally requires
-the Tier-1 native matrix and complete browser-WASM job.
+and independent KSR parses.
 
 The next source boundary begins at internal-surface trimming in
 `PrintObject.cpp:2334`; regularization, horizontal shells, external-surface
@@ -3350,11 +3126,7 @@ Independently parsed KSR runs guard the O19 checksum
 `-86220837291247746226319093859583939318`, totals
 `[1, 460, 0, 460, 7704, 104680]`, and ordered event totals
 `[460, 460, 460, 460, 259]` for safety offset, safety intersection, ordinary
-difference, empty gate, and reached solid-append site. Forty-two focused O21
-tests, 386 explicit O10-O21 regressions, and 5,717 workspace tests with 2
-skipped pass; native all-target check and strict all-feature Clippy are clean.
-Post-review compiling mutation REDs cover the complete final 11 adapter, 10
-record, and 21 integration filters before byte-exact production restoration.
+difference, empty gate, and reached solid-append site.
 
 The next rewrite boundary is regularization beginning at
 `PrintObject.cpp:2344`. O19-O21 sidecars remain temporary source-compatibility
@@ -3404,14 +3176,7 @@ before freezing O22 checksum
 `[1, 460, 0, 460, 632, 632, 128, 34557]` for objects, slots, `None`, `Some`,
 ExPolygons, contours, holes, and points, ordered events
 `[259, 259, 259, 259]`, and exact-radii digest
-`-119839535044106185061007902266478724784`. Eleven direct and 22 integration
-O22 tests pass; 346 explicit O10-O22 regressions and 5,750 workspace tests with
-2 skipped pass. Strict all-target/all-feature Clippy is clean. Compiling
-post-implementation mutation REDs remove the `1.05_f32` factor and fail 4 of 11
-direct tests plus 2 of 22 integration tests. Supplemental mutations fail all 5
-alignment tests, the public lifecycle witness, and the genuine later-slot
-transaction witness before current tuple-signature production artifacts are
-restored byte-exactly and affected/full GREEN gates rerun.
+`-119839535044106185061007902266478724784`.
 
 The exact next rewrite boundary starts with `object_volume` and neighbor/tiny
 area filtering at `PrintObject.cpp:2369`. Horizontal shells, external surfaces,
@@ -3462,16 +3227,6 @@ expansion, protection difference, and empty gate. The LargeBed scale witness is
 `[1221399551, 150000, 1209170944, 799999, 1229148144, 1365946746,
 1385985605, 4621819117588971520]`, retaining truncating `scaled(8.0) = 799999`.
 
-Eighteen direct and 29 integration O23 tests pass, as do 393 explicit O10-O23
-regressions and 5,797 workspace tests with 2 skipped. Native all-target check,
-strict all-target/all-feature Clippy, four WASM checks, optimized default and
-feature browser-WASM builds/export audit, and two 9-test Playwright runs are
-green. Ten required compiling behavioral mutations are killed by their
-intended witnesses, followed by byte-exact production restoration and GREEN
-reruns. Formatting, diff, dependency, forbidden-pattern, staging, and LOC
-audits pass; every Rust file is below 400 LOC and every O23 shard is at most 270
-LOC.
-
 The exact next rewrite boundary is
 `intersection_ex(polygonsInternal, regularized_shell)` at
 `PrintObject.cpp:2402`. Fill-surface mutation, `InternalVoid`, horizontal
@@ -3520,15 +3275,8 @@ record-sequence digest is
 Thirty-one focused tests cover empty, disjoint, partial, full-cover, multiple,
 holed, nested, mixed-winding, metadata, ordering, InternalVoid, provenance, all
 inherited alignment, transactionality, ownership, cleanup, lifecycle,
-metamorphism, and repeatable KSR evidence. The exact-source parent regression
-set passes 149/149 and workspace Nextest passes 5,827 tests with 2 skipped.
-Thirteen planned compiling mutations
-and the reviewer-added retained-scale mutation are killed by their intended witnesses; the
-commutative role-only intersection reversal is retained honestly as an
-equivalent control, and final production restoration is byte-exact. Repository
-Nextest, native/strict Clippy, Tier-1 WASM, browser-WASM/Playwright, formatting,
-LOC, forbidden-pattern, dependency, rollback, staging, independent-review, and
-exact-commit CI evidence are the release gate recorded with the implementation.
+metamorphism, and repeatable KSR evidence. The commutative role-only
+intersection reversal is an equivalent mutation control.
 
 The next source-cited rewrite boundary is the
 `PrintObject::prepare_infill` call to `discover_horizontal_shells` at
@@ -3579,17 +3327,6 @@ zero, and prepare/disposal counts are exactly one. A typed archive mutation
 independently promotes all 1,281 Internal surfaces across 460 matching records,
 ending with Internal/InternalSolid totals `0/1856` while preserving the full
 allocation graph.
-
-Forty-two focused O25/shared-option tests, 191 explicit O21-O25 regressions,
-and 5,856 workspace tests with 2 skipped pass. Fourteen compiling behavioral
-mutations cover parsing, one-based planned-index matching, density independence,
-transactionality, inherited alignment, holed geometry, full nested ownership,
-cleanup, lifecycle precedence, metamorphism, active typed archives, real KSR,
-and executed browser-WASM numeric boundaries. Native and strict Clippy checks,
-four WASM checks, optimized default/feature export audits, two 10-test
-Playwright runs, formatting, LOC, dependency, forbidden-pattern, rollback, and
-byte-exact mutation restoration are green. Both independent six-dimensional
-review paths are approved; exact pushed-SHA Tier-1 CI remains the release gate.
 
 The next source boundary is the EnsureAll early return at
 `PrintObject.cpp:3974-3976`. All horizontal-shell surface gathering, layer and
@@ -3643,20 +3380,14 @@ dirty records. It freezes surface digest
 `55371787254720044626064449746884984931`, event digest
 `71433667081695804905700384637078674080`, and 5,469 ordered geometry events.
 
-Forty-five final O26-focused tests plus six opening and one surface-template
-test pass; the complete workspace passes 5,908 tests with 2 skipped. Thirty-three
-compiling behavioral mutations are killed and production is restored before
-final formatting, native check, and strict Clippy gates. Controlled production
+Controlled production
 witnesses prove a later source gathers an exact external fragment rebuilt by an
 earlier source, every ordered failure retains an identical original/sidecar
 fingerprint with zero commits, clean inner geometry and all O19-O24 sidecars
 retain allocations, and a geometry-equal production rebuild is still dirty.
 Resolved archive/model-part witnesses independently vary count, thickness,
-density, both flow owners, scale, and non-slicing names. Optimized native and
-browser-WASM checks, export audit, and two 11-test Playwright executions cover
-the unchanged `sliceProject` boundary. Final independent six-dimensional and
-default-model OpenCode reviews approve O26; the exact pushed-SHA Tier-1 matrix
-remains its release gate.
+density, both flow owners, scale, and non-slicing names. The `sliceProject`
+boundary is unchanged.
 
 The next cited rewrite boundary is the `prepare_infill` call to
 `PrintObject::process_external_surfaces` immediately after
@@ -3697,17 +3428,7 @@ Twenty-one O27-focused tests freeze six end-type cases, five bit-exact
 parameter cases, nine propagation cases, and the bbox constructor. They cover
 Normal and LargeBed scales, open/closed/multi-step complete paths, holes,
 contiguous and separated groups, strict bbox truncation, Positive versus
-NonZero, clockwise sign/reversal, and three range-failure sites. Twenty-eight
-compiling mutations cover precision/reassociation/scale, group order, staged
-steps, and error operation order as well as the geometry branches. The complete
-geometry regression passes 77
-tests and the workspace passes 5,929 tests with 2 skipped. Native all-target
-check, strict workspace Clippy, four wasm32 checks, optimized WASM/export
-audit, two 11-test Playwright runs, formatting, LOC, dependency,
-forbidden-pattern, unchanged-lifecycle, and rollback audits are green. The
-independent six-dimensional reviewer approved after its repair/re-review loop,
-and the separate default-model OpenCode reviewer returned
-`VERDICT: APPROVE`. Exact pushed-SHA Tier-1 remains the release gate. ARD-0024
+NonZero, clockwise sign/reversal, and three range-failure sites. ARD-0024
 remains accepted and unchanged.
 
 O27 is not an external-surface lifecycle stage and changes no KSR checkpoint.
@@ -3745,26 +3466,10 @@ permutation with no geometry or index tie-break.
 Twenty-five focused Z tests, 39 focused wave-seed tests, 211 Clipper tests, and
 53 RegionExpansion tests freeze complete ordered XYZ/ID/XY vectors, debug and
 release divergence, ordinary 2-D equivalence, O27 handoff, and lifecycle
-inactivity. The full workspace passes 5,994 tests twice with 2 skipped. All 23
-specified behavioral mutations plus a strict shortest-edge mutation are killed
-and followed by restored GREEN runs. Pinned debug/`NDEBUG` C++ diagnostics
+inactivity. Pinned debug/`NDEBUG` C++ diagnostics
 cover inside, crossing, hole, split, multiple-ID, overlapping-fallback, and the
 release-only shared-vertex case; the accepted ARD-0024 MSVC comparator literals
-cover comparator-equivalent groups over 32. Original compiling-RED chronology
-is unavailable and is recorded as a limitation rather than reconstructed.
-
-Native check, strict all-feature Clippy, formatting, four wasm32 checks, two
-optimized WASM builds, export and syntax audits, and two 11-test Playwright
-runs are green. Static audits prove the file boundary, LOC limits, no staged
-files, no new dependency or forbidden construct, and no lifecycle/API change.
-A disposable exact-state rollback returns cleanly to predecessor
-`f361bb73b558b4e50bfa4fa712afcd63df44ba9f` and leaves the primary worktree
-byte-for-byte unchanged. Final documented-state independent six-dimensional
-and separate default-model OpenCode reviews both return `VERDICT: APPROVE`.
-Implementation commit `7eb0d27` and documentation commit `be33437` are pushed;
-exact-SHA Tier-1 run `31156094839` passed Linux, macOS, Windows, formatting,
-WASM, export, and two browser executions at
-`be334375be871eb12ca98c98d889b65a92d13a37`.
+cover comparator-equivalent groups over 32.
 
 O28 remains a geometry prerequisite and changes no KSR checkpoint or G-code
 byte. The next bounded source boundary is the source-taking
@@ -3789,41 +3494,18 @@ using the same retained explicit `CoordinateScale`.
 
 Complete composition evidence includes the compact and sorted/unsorted ordered
 vectors and full scalar polygons with 16 Normal-scale points and 128
-LargeBed-scale points. The final composition filter passes 5/5 and the complete
-RegionExpansion filter passes 58/58. Ten runtime mutations are killed/restored,
-one differently typed signature mutation is compiler-rejected, and source
-inspection—not a false behavioral mutation claim—confirms exactly one scalar
+LargeBed-scale points. The scalar wrapper makes exactly one scalar
 builder call followed by exactly one parameter-wrapper call. The frozen
 six-argument scalar signature has one function-scoped, reasoned
 `#[expect(clippy::too_many_arguments)]` because the workspace threshold is five;
-no lint `allow` was added. Final allowed-Rust LOC are 172 (`propagate.rs`), 55
-(`region_expansion.rs`), 150 (`geometry.rs`), 5 (test root), and 264
-(`composition.rs`).
-
-The original compiling RED artifact is truthfully bounded: the earlier
-eight-test `/tmp/task22o29-red-focused-all.txt` has seven empty-stub assertion
-failures and one `scalar_scale_outputs_differ` pass while both wrapper stubs
-returned empty because that test compared explicit pipelines. The final shard
-was subsequently consolidated and strengthened into five tests, including
-valid discovery before propagation failure. It has no fresh chronological RED.
-Mutation kills and restored GREEN runs are post-hoc recurrence evidence, not
-original RED evidence.
+no lint `allow` was added.
 
 O29 introduces no new architecture decision and leaves ARD-0024 unchanged. It
 adds no option, public export, lifecycle wiring, checkpoint, persisted state, or
 G-code byte; public slicing remains on O26 and returns
 `ProjectSlicingIncomplete`. Rollback removes only O29 wrappers, private
 reexports/signature assertions, composition tests/registration, and O29 docs,
-retaining O27, O28, and the O26 lifecycle. The restored final local state
-passes composition 5/5, RegionExpansion 58/58, O26 lifecycle 3/3, workspace
-5,999/5,999 with 2 skipped, native all-target check, warning-denying Clippy,
-rustfmt, four WASM checks, two optimized WASM builds, export/syntax audits, two
-11/11 Playwright runs, static audits, and disposable rollback. Final
-documented-state independent six-dimensional and default-model OpenCode
-rereviews both return literal `VERDICT: APPROVE`. O29 was released as
-implementation commit `55c2c23` and documentation commit `118f6a7`; exact-SHA
-Tier-1 run `31168584784` passed all format, WASM/browser, Linux, Windows, and
-macOS jobs at `118f6a72b33926efe41ced1c931f9a51b26b2945`.
+retaining O27, O28, and the O26 lifecycle.
 
 The next bounded source boundary is direct supplied-seed
 `propagate_waves_ex` at `Algorithm/RegionExpansion.cpp:480-503`. Its source
@@ -3831,7 +3513,7 @@ scalar overload, expansion/merge helpers, external-surface
 processing, fill generation, toolpaths, seams, motion, G-code, and
 post-processing remain deferred.
 
-Task 22O.30 locally ports the direct supplied-seed boundary at
+Task 22O.30 ports the direct supplied-seed boundary at
 `Algorithm/RegionExpansion.cpp:480-503` and `RegionExpansion.hpp:85-92` into
 crate-private `RegionExpansionEx` and `propagate_waves_ex`. It reuses unchanged
 O27 propagation and the sole ARD-0024 indexed NonZero `union_ex` kernel. The
@@ -3841,59 +3523,33 @@ complete hole/island topology, and IDs.
 
 Complete pinned-source vectors cover a natural one-seed/two-contour hole,
 multi-island output, boundary/source transitions, comparator conflict,
-release-unsorted adjacency, zero output, and direct error precedence. The
-focused shard passes 6/6 in debug and release; RegionExpansion passes 64/64,
-PolyTree 6/6, O26 lifecycle 3/3, and workspace 6,005/6,005 with 2 skipped.
-Sixteen runtime mutations are killed, one type-shape mutation is
-compiler-rejected, and the two oracle-demonstrated semantic survivors
-(Positive for valid positive-clipped material and repeated singleton union) are
-reported rather than misclassified. Native/WASM/browser gates are green and
-final LOC are 74, 218, 62, 156, 6, and 263.
+release-unsorted adjacency, zero output, and direct error precedence. Two
+oracle-demonstrated semantic mutation survivors (Positive for valid
+positive-clipped material and repeated singleton union) are equivalent.
 
 O30 adds no architecture decision, public export, Option, lifecycle,
 checkpoint, persisted state, KSR golden change, or G-code byte. Public slicing
-continues to return `ProjectSlicingIncomplete`. Exact static and disposable
-rollback gates are green; final independent six-dimensional and default-model
-OpenCode implementation reviews both return literal `VERDICT: APPROVE`.
-O30 was released as commits `0a19939`/`6ccb145`; exact-SHA Tier-1 run
-`31184069746` passed all five jobs at
-`6ccb145dbb1867e5724538fb071795a7fd4179f0`.
+continues to return `ProjectSlicingIncomplete`.
 
 Task 22O.31 ports source/scalar `propagate_waves_ex` at
 `RegionExpansion.cpp:506-520` and `RegionExpansion.hpp:94-100`. The private
 wrapper performs exactly one parameter build, sorted O28 seed discovery with
 the built tiny expansion and same explicit scale, and unchanged O30 delegation.
-Its five-test shard passes debug/release and complete RegionExpansion passes
-69/69; nine runtime mutations are killed, one signature mutation is compiler
-rejected, and one discovery-scale focused survivor is disclosed with exact
-forwarding fixed by structural audit. O31 adds no architecture decision,
+O31 adds no architecture decision,
 public export, Option, lifecycle, checkpoint, persisted state, KSR golden
-change, or G-code byte. It was released as commits `7113f7c`/`1f89dd3`;
-exact-SHA Tier-1 run `31196271880` passed all five jobs at
-`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`.
+change, or G-code byte.
 
-Task 22O.32 locally ports `expand_expolygons` at
+Task 22O.32 ports `expand_expolygons` at
 `RegionExpansion.cpp:522-534` and `RegionExpansion.hpp:102-108`. The private
 helper preallocates `src.len()` raw-polygon slots, delegates once to O29 with
 unchanged scalar inputs and explicit scale, and moves every returned polygon to
 its source-ID slot. Empty slots, complete point topology, source-index slot
 order, and per-slot propagation order are preserved; boundary IDs are discarded
-exactly as upstream. The five-test shard passes debug/release; RegionExpansion
-passes 74/74. Thirteen runtime mutations are killed, two type-shape mutations
-are compiler-rejected, and structural equivalences are disclosed. Initial
-independent and default-model OpenCode reviews approve. After a test-only
-Clippy repair, workspace Nextest passes 6,015/6,015 with 2 skipped; native,
-WASM build/export/syntax, static, and exact-O31 rollback gates are green. Local
-Chromium cannot launch because `libglib-2.0.so.0` is absent, so exact-SHA CI
-must pass the two browser runs. O32 adds no architecture decision, public
+exactly as upstream. O32 adds no architecture decision, public
 export, Option, lifecycle, checkpoint, persisted state, KSR golden change, or
-G-code byte. Final independent six-dimensional and default-model OpenCode
-reviews both approve. Implementation/documentation commits `2e7168f`/`699f02b`
-were pushed; exact-SHA Tier-1 run `31213611275` passed all five jobs, including
-both browser runs, at `699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O32 is
-released.
+G-code byte.
 
-Task 22O.33 locally ports `merge_expansions_into_expolygons` at
+Task 22O.33 ports `merge_expansions_into_expolygons` at
 `RegionExpansion.cpp:536-587` and `RegionExpansion.hpp:110-111`. The private
 helper sorts movable records by source ID through O28's fixed-MSVC index
 permutation, moves untouched sources unchanged, appends source contour and holes
@@ -3901,101 +3557,37 @@ after expansion polygons, applies the fixed unscaled 10/Miter/3 safety-offset
 union, and uses the O28 AABB sampler with explicit scale to retain the
 source-connected component. It adds no new engine, architecture decision,
 Option, public export, lifecycle, checkpoint, persistence, adapter, golden
-expectation, or G-code byte.
+expectation, or G-code byte. Debug/`NDEBUG` C++ oracle output is
+byte-identical.
 
-The chronological stub RED produced ten meaningful failures and one equivalent
-pass. After review repaired a missing true-zero witness and the temporary C++
-oracle's moved-buffer defect, focused debug/release pass 13/13,
-RegionExpansion passes 87/87, and corrected debug/`NDEBUG` oracle output is
-byte-identical. Thirteen runtime mutations are killed, one signature mutation
-is compiler-rejected, and four structural/equivalent survivors are disclosed.
-Repaired independent and default-model OpenCode initial implementation reviews
-approve. A test-only function-pointer type alias repair resolved Clippy, then
-the complete exact candidate was rerun: focused debug/release 13/13, AABB 8/8,
-O32 5/5, RegionExpansion 87/87, PolyTree 6/6, offset 58/58, lifecycle 3/3,
-workspace 6,028/6,028 with 2 skipped, native lint/format, four WASM checks, two
-optimized builds, export, and JavaScript syntax gates pass. Both local browser
-attempts fail before test code only because `libglib-2.0.so.0` is unavailable;
-exact-SHA CI must pass both runs. Final static audit passes, and disposable
-exact-O32 rollback proves candidate/primary byte identity while passing
-RegionExpansion 74/74, PolyTree 6/6, and lifecycle 3/3. After repairing exact
-oracle inputs and stale release text, the complete suite was rerun and final
-independent and default-model OpenCode rereviews both approved.
-Implementation/documentation commits `b9e65fd`/`0f6f801` were pushed;
-exact-SHA Tier-1 run `31228800274` passed all five jobs, including both browser
-runs, at `0f6f80130d28c0cc629e8561e46d187b137a8206`. O33 is released.
-
-Task 22O.34 locally ports `expand_merge_expolygons` at
+Task 22O.34 ports `expand_merge_expolygons` at
 `RegionExpansion.hpp:113` and `RegionExpansion.cpp:589-594`. The private
 composition borrows the full source vector for O29, propagates O29 errors before
 any merge work, then moves the original source and complete ordered expansion
 records into O33 with the same explicit scale. It adds no builder, direct seed
 call, ordering step, clone, shortcut, validation, public export, Option,
 lifecycle, checkpoint, persistence, adapter, golden expectation, or G-code
-byte.
+byte. Two behaviorally equivalent scale substitutions and one
+valid-O29-unreachable O33-error swallowing mutation are equivalent survivors.
+The helper is placed after O33 and has multiple-source, multiple-hole
+ordering/ownership coverage.
 
-The historical stub run reported 0/5, with only four failures attributable to
-the empty body; the deleted fifth failed in direct O29 setup. The replacement
-non-empty handoff witness is recorded only as post-body recurrence/GREEN
-evidence. Focused debug/release pass 5/5 and RegionExpansion passes 92/92. Six
-runtime mutations are killed, one signature mutation is compiler-rejected, and
-two behaviorally equivalent scale substitutions plus one
-valid-O29-unreachable O33-error swallowing survivor are truthfully disclosed.
-Post-mutation
-restoration and the initial static audit pass. The default-model OpenCode
-initial review approved, while independent review required physical placement
-after O33 and non-vacuous multiple-source, multiple-hole ordering/ownership
-evidence. Both repairs are present and verified. The repaired exact candidate
-passes focused debug/release 5/5, O29 5/5, O33 13/13, RegionExpansion 92/92,
-PolyTree 6/6, offset 58/58, lifecycle 3/3, workspace 6,033/6,033 with 2 skipped,
-check, warning-denying Clippy, rustfmt, four WASM checks, two optimized builds,
-export, and JavaScript syntax. Both local Playwright attempts fail before test
-code only because Chromium cannot load `libglib-2.0.so.0`; exact-SHA CI retains
-both runs. Disposable exact-O33 rollback proves candidate/primary byte identity
-and the 87/6/58/3 baseline suites. The repaired candidate's independent
-six-dimensional and default-model OpenCode rereviews both approve.
-Implementation/documentation commits `f499058`/`25460c2` were pushed;
-exact-SHA Tier-1 run `31259140846` passed all five jobs, including both browser
-runs, at `25460c2abfc5bf94104f41b05df5af2dfac419ee`. O34 is released.
-
-Task 22O.35 locally ports `LayerRegion.cpp:147-163,166-171,439-484` and
+Task 22O.35 ports `LayerRegion.cpp:147-163,166-171,439-484` and
 `ClipperUtils.hpp:19,27,407-408`. The inactive private helper performs ordered
 move extraction for one surface kind, one O29 call per zone with post-success
 flags and wrapping boundary rebasing, one O33 merge, explicit Miter/3 closing,
 conditional zone differences, and output materialization with Orca metadata
 defaults plus the supplied bridge angle. Selected source records retain their
 metadata with empty moved geometry; nonmatching point-buffer ownership remains
-unchanged.
+unchanged. Four equivalent miter/rebasing/scale mutations are structural
+survivors.
 
-After two test-only pre-RED repairs with both stubs unchanged, the authoritative
-compiling RED ran 13 tests with two truthful equivalent passes and 11 intended
-failures. Focused debug/release pass 13/13; offset 62/62, O29 5/5, O33 13/13,
-O34 5/5, and RegionExpansion 92/92 also pass. Fourteen runtime mutations are
-killed, one signature mutation is compiler-rejected, and four equivalent
-miter/rebasing/scale mutations are truthfully retained as structural survivors.
-Exact restoration, warning-denying focused Clippy, rustfmt, LOC/private
-visibility/forbidden audits, and both initial independent/default-model
-OpenCode reviews pass.
-
-The complete documented implementation candidate passes focused debug/release
-13/13, offset 62/62, O29 5/5, O33 13/13, O34 5/5, RegionExpansion 92/92,
-PolyTree 6/6, lifecycle 3/3, workspace Nextest 6,046/6,046 with 2 skipped,
-all native/static/WASM/build/export gates, and exact-O34 rollback with
-5/92/6/58/3 baseline suites. Both local Playwright attempts fail before test
-code only because Chromium cannot load `libglib-2.0.so.0`; they are not passes
-and exact-SHA CI retains both runs. Final independent six-dimensional and
-default-model OpenCode implementation reviews both approve with no required
-changes.
-
-Implementation/documentation commits `984bc01`/`c6f23ce` were pushed;
-exact-SHA Tier-1 run `31269521736` passed all five jobs and both browser
-executions at `c6f23ce1a9350ca76241d007f804f3fcfa22c352`. O35 is released but
-remains inactive. It adds no Option, public API, lifecycle, adapter, golden
+O35 remains inactive. It adds no Option, public API, lifecycle, adapter, golden
 expectation, or G-code byte; its partial mutation order must be contained by a
 future staged owned caller. Public slicing still consumes O26 and returns
 `ProjectSlicingIncomplete`.
 
-Task 22O.36 locally ports pinned `LayerRegion.cpp:353-356,358-393`. Its
+Task 22O.36 ports pinned `LayerRegion.cpp:353-356,358-393`. Its
 translation-unit-local, inactive crate-private helper composes O28 sorted seed
 discovery and O30 ExPolygon propagation across ordered O35 `ExpansionZone`s,
 rebases both boundary-ID streams by the full prior-zone ExPolygon domain,
@@ -4004,35 +3596,17 @@ anchors and expansions. Explicit `CoordinateScale`, `u32` casts, and
 `wrapping_add` preserve Ares' platform-neutral replacement for Orca's implicit
 scale and C++ `unsigned` behavior.
 
-The compiling empty-stub RED failed 0/6. Focused debug/release pass 6/6; O35,
-O28, O30, O31, RegionExpansion, external-surface, PolyTree, offset, and O26
-lifecycle regressions pass 13/39/6/5/92/15/6/62/3. The exact pinned Orca CLI
-sliced the KSR input successfully in a disposable environment; original-helper
-Debug/NDEBUG vectors are byte-identical and match complete committed Rust
-literals. The one-at-a-time campaign has 13 runtime kills, two compiler
-rejections, and two truthful sorted/scale equivalent survivors. Exact
-restoration, rustfmt, LOC/private visibility, and both initial independent and
-default-model reviews pass. A final-review test-only repair now explicitly
-proves nonempty O28 output before first/later O30 errors; production and the
-flag/no-partial assertions are unchanged, and the shard is 295 LOC.
+Original-helper Debug/NDEBUG vectors are byte-identical and match complete
+committed Rust literals. Tests explicitly prove nonempty O28 output before
+first/later O30 errors.
 
-The repaired complete candidate passes O36 debug/release 6/6, focused suites
-13/39/6/5/92/15/6/62/3, workspace 6,052 passed with 2 skipped, native lint/
-format, four WASM checks, two optimized builds, export/JavaScript audits, and
-exact-O35 rollback 13/92/6/62/3. Both local Playwright runs remain pre-test
-`libglib-2.0.so.0` launch failures, not passes. Both final implementation
-rereviews approve.
-
-Implementation/documentation commits `b546e6f`/`3e927ed` were pushed;
-exact-SHA Tier-1 run `31280579891` passed all five jobs and both browser
-executions at `3e927ed569d3db8d6f5c08b7843fb049fcc86412`. O36 is released but
-remains inactive. It changes no Option, public lifecycle, adapter, golden
+O36 remains inactive. It changes no Option, public lifecycle, adapter, golden
 expectation, or G-code byte. Public slicing still consumes O26 and returns
 `ProjectSlicingIncomplete`. The next source boundary is `Bridge`, `group_id`,
 and `get_grouped_bridges` at `LayerRegion.cpp:174-260`; bridge direction/merge
 and `process_external_surfaces` orchestration remain deferred.
 
-Task 22O.37 locally ports pinned `LayerRegion.cpp:174-260`: the source-shaped
+Task 22O.37 ports pinned `LayerRegion.cpp:174-260`: the source-shaped
 `Bridge` record, literal parent traversal, and adjacent-window overlap grouping.
 The inactive crate-private implementation moves ordered source ExPolygons,
 retains expansion-end sentinels and absent angles, caches contour-only bounds,
@@ -4040,28 +3614,14 @@ ignores holes, and evaluates each ordered pair through equal-source, exact
 inclusive bbox, and one fallible NonZero contour intersection before lower-root
 union. It returns the raw, non-normalized parent forest.
 
-The initialization-only stub compiled and ran ten tests with six body-dependent
-failures and four disclosed stub-equivalent passes. The pinned original-Orca CLI
-sliced the KSR project to a disposable nonempty G-code that was deleted without
-content ingestion; its linked original helper passed 45 assertions and emitted
-byte-identical Debug/`NDEBUG` vectors matching complete Rust literals. The
-repaired candidate passes O37 debug/release 10/10 and focused O36/O35/O28/O30/
-RegionExpansion/external-surface/PolyTree/boolean-path/offset/O26 suites
-6/13/39/6/92/25/15/11/62/3. A private pair-helper extraction fixes Clippy
-nesting without changing tests or source order; warning-denying Clippy and
-rustfmt pass. The post-repair exact-byte campaign kills thirteen runtime
-mutations, compiler-rejects two, truthfully records one bbox-comparison
-equivalent survivor, and restores all five hashes. Body/test shards are 96/289
-LOC, and both repaired initial implementation reviews approve.
+The linked original helper emits byte-identical Debug/`NDEBUG` vectors matching
+complete Rust literals. One bbox-comparison mutation is an equivalent survivor.
 
-Implementation/documentation commits `a0caa5a`/`4d83d15` were pushed;
-exact-SHA Tier-1 run `31291016394` passed all five jobs and both browser
-executions at `4d83d15832c7905d7ea9727d14c07c5a75eb7312`. O37 is released but
-remains crate-private and inactive. It changes no Option, lifecycle, adapter,
+O37 remains crate-private and inactive. It changes no Option, lifecycle, adapter,
 golden expectation, or G-code byte. Public slicing still consumes O26 and
 returns `ProjectSlicingIncomplete`.
 
-Task 22O.38 locally ports pinned `BridgeDetector.hpp:75-119`,
+Task 22O.38 ports pinned `BridgeDetector.hpp:75-119`,
 `PrincipalComponents2D.hpp:12-20` / `PrincipalComponents2D.cpp:8-138`,
 `Line.hpp:180`, and the cited Eigen 5.0.1 normalization boundary. The inactive
 crate-private helper preserves explicit request-local scale, source-associated
@@ -4072,32 +3632,14 @@ reproduces the audited MSVC STL 14.44 FNV/hash-double, eight-bucket, occupied-
 bucket front insertion, unique-emplace, 8-to-64 growth, and rehash-group
 iteration target without host hash order or a platform branch.
 
-The return-only stub compiled 18 tests with one shape-equivalent pass and 17
-body-dependent failures. Fresh pinned-Orca E2E metadata records success and a
-nonzero 6,338,289-byte disposable G-code deleted without content ingestion.
-Debug/`NDEBUG` helper output is byte-identical, and the repaired independent
-MSVC model supplies complete behavior-named ordering vectors. A test-only local
-type alias resolves warning-denying Clippy without an allowance. The final
-one-at-a-time record kills fourteen runtime mutations, compiler-rejects one,
-and truthfully discloses four bounded equivalent survivors; contaminated early
-mutation evidence is excluded. Production hashes restore exactly. Focused
-debug/release pass 18/18, O37/O36 pass 10/6, complete geometry passes 442/442,
-Clippy/rustfmt pass, and both repaired initial implementation rereviews approve.
+Debug/`NDEBUG` helper output is byte-identical, and the independent MSVC model
+supplies complete behavior-named ordering vectors.
 
-The exact documented candidate passes focused debug/release, complete geometry
-and bounded predecessor regressions, workspace Nextest 6,080/6,080 with two
-skipped, all-target check, warning-denying Clippy, rustfmt, four WASM checks,
-two optimized builds, bindgen/export/JavaScript audit, static audit, and exact-
-O37 rollback. Both local Playwright attempts failed before test code because
-Chromium could not load `libglib-2.0.so.0`; neither was treated as a pass.
-Implementation/documentation commits `04920e0`/`2d6154d` were pushed;
-exact-SHA Tier-1 run `31303115603` passed all five jobs and both browser
-executions at `2d6154d401c3c954bed69de6ba631a53af05f1a3`. O38 is released but
-remains crate-private and inactive. It changes no typed Option, lifecycle,
+O38 remains crate-private and inactive. It changes no typed Option, lifecycle,
 adapter, fixture branch, golden expectation, or G-code byte. Public slicing
 still consumes O26 and returns `ProjectSlicingIncomplete`.
 
-Task 22O.39 locally implements the exact source-cited composition at pinned
+Task 22O.39 implements the exact source-cited composition at pinned
 `LayerRegion.cpp:262-308`. The crate-private helper borrows O36 anchors and
 zones, mutates only O37 bridge angles, and calls O38 after supplied-order anchor
 lookup, contour/hole conversion, exact `(1e-4 / scale.factor()) as f32`
@@ -4106,22 +3648,10 @@ forward cursor, source-width cast/wrapping behavior, direct Clipper error order,
 earlier-angle commit, unchanged stored contour and hole buffers, and
 `PI + atan2(y,x)` without lifecycle activation.
 
-The repaired fresh-cycle RED contains 11 body-dependent failures and two
-stub-equivalent passes; final focused debug/release is 14/14. The pinned
-Debug/`NDEBUG` helper matrix is byte-identical with 12 passing assertions and
-explicit multiple-bridge/missing-boundary coverage. Complete repeated/multi
-literals, contour/hole pointer identity, M01-M28 mutation coverage, exact
-restoration, and both implementation rereviews pass. Complete exact-final-byte
-native/WASM/static/exact-O38 rollback verification also passes, including
-workspace Nextest 6,094/6,094 with two skipped and warning-denying Clippy. Both
-local Playwright attempts failed before test execution on missing
-`libglib-2.0.so.0`; neither was treated as a pass. Implementation/documentation
-commits `2038e93491de89e33f12ecb5379132a013bfc996` /
-`c84119ee6871a176ec94117bc16f7e402c9caf96` were pushed, and exact-SHA Tier-1
-run `31317150231` passed all five jobs and both browser executions at the
-documentation SHA. O39 is released but inactive.
+The pinned Debug/`NDEBUG` helper matrix is byte-identical with explicit
+multiple-bridge/missing-boundary coverage. O39 remains inactive.
 
-Task 22O.40 locally implements the source-cited `merge_bridges` boundary at
+Task 22O.40 implements the source-cited `merge_bridges` boundary at
 `LayerRegion.cpp:310-351`. The crate-private function consumes O37/O39 bridge
 records and sorted O36 expansion records, resolves every bridge to its root,
 flattens each member contour then holes and matching expansion contours/holes,
@@ -4131,30 +3661,18 @@ removes the C++ iterator field and uses temporary contiguous source ranges;
 pointer identity, partial mutation, and malformed internal inputs are not API
 contracts.
 
-The compiling stub RED failed the first emitted-surface assertion. Eight O40
-behavior tests pass, including exact contour/hole/order output from an
+Eight O40 behavior tests cover exact contour/hole/order output from an
 independently compiled pinned-Orca Debug/`NDEBUG` flat-closing oracle and a
-three-bridge case that detects accidental global closing. O35-O40 focused
-regressions pass 69/69; workspace Nextest passes 6,101/6,101 with two skipped;
-warning-denying Clippy, rustfmt, native/wasm32 checks, diff, LOC, include, and
-fixture-branch audits pass. The public normalized KSR golden still fails at the
-pre-core CLI `--options` requirement. The same six-dimensional review thread
-approved the repaired candidate with zero findings. O40 remains crate-private,
-inactive, and unreleased. `expand_bridges_detect_orientations` at
+three-bridge case that detects accidental global closing. The public normalized
+KSR golden still fails at the pre-core CLI `--options` requirement. O40 remains
+crate-private and inactive. `expand_bridges_detect_orientations` at
 `LayerRegion.cpp:395-437`, external-surface lifecycle integration, Options,
 adapters, and downstream G-code remain deferred.
 
 Six O41 tests cover the sorted zone-major composition, exact no-op and mixed
 surface ownership, default output metadata, selective zone clipping, and first
-and later expansion-error mutation order. Focused O41 passes 6/6 and all
-external-surface regressions pass 53/53; workspace warning-denying Clippy,
-rustfmt, diff, and LOC checks pass. The normalized KSR probe remains the
+and later expansion-error mutation order. The normalized KSR probe remains the
 expected RED at the CLI `--options` boundary.
-
-Workspace Nextest passes 6,107/6,107 with two skipped. The initial independent
-review requested the direct sorting and first/later error-ledger tests; after
-those repairs and complete gate reruns, the same six-dimensional reviewer
-approved O41 without remaining findings.
 
 ## Task 22O.41 bridge-orientation orchestration boundary
 
@@ -4187,15 +3705,9 @@ Lower-layer covered-area caching is not part of this boundary because the
 pinned active callee does not read it. Public slicing advances through O42 and
 still terminates explicitly at the next missing upstream stage.
 
-The repaired boundary is covered by 19/19 focused O42 tests, 72/72 complete
-external-surface tests, and a 119/119 O24-O26/O40-O42 regression band. Public
-activation and disposal are observed through `slice_project`; all 460 KSR
-records carry independent traversal evidence; and a real 3MF minimum-area
-mutation changes controlled adapter output. Workspace Nextest passes
-6,126/6,126 with 27 slow and two skipped, while warning-denying Clippy,
-rustfmt, WASM, diff, LOC, and include audits pass. The final independent
-standards, specification, and upstream-parity re-review returned unconditional
-approval with no findings.
+Public activation and disposal are observed through `slice_project`; all 460
+KSR records carry independent traversal evidence; and a real 3MF minimum-area
+mutation changes controlled adapter output.
 
 ## Task 22O.43 internal-bridge candidate successor boundary
 
@@ -4214,15 +3726,9 @@ CrossHatch substitution. An aligned empty lower record contributes empty
 geometry; absent physical lower links are skipped. Geometry failures consume
 and dispose the unobservable predecessor rather than cloning it for rollback.
 
-The repaired boundary passes O43 35/35, the O24-O26/O40-O43 band 154/154, and
-workspace Nextest 6,161/6,161 with 27 slow and two skipped. Warning-denying
-workspace Clippy, rustfmt, WASM, and static audits pass. Candidate discovery is
-therefore available to the next exact `bridge_over_infill` rewrite slice, but
-public slicing remains explicitly incomplete and the normalized golden remains
-RED at the pre-core CLI contract.
-
-The final independent standards and specification/upstream reviews approve
-the repaired O43 boundary unconditionally with no remaining findings.
+Candidate discovery is available to the next exact `bridge_over_infill`
+rewrite slice, but public slicing remains explicitly incomplete and the
+normalized golden remains RED at the pre-core CLI contract.
 
 ## Task 22O.44 boundary-connection dependency
 
@@ -4236,10 +3742,7 @@ MSVC 14.44 control flow without a host sort or added tie-break.
 
 This is intentionally a dependency, not another prepared-project checkpoint.
 It does not consume O43, call the legacy infill scaffold, parse configuration,
-or alter the public lifecycle. The 41 focused tests, 76-test dependency band,
-194-test predecessor band, 6,201-test workspace run, warning-denying Clippy,
-rustfmt, WASM, static audits, restored Orca harnesses, and repaired independent
-reviews pass. The public KSR path remains terminal after O43 until a later
+or alter the public lifecycle. The public KSR path remains terminal after O43 until a later
 source-cited slice ports complete CrossHatch generation and its anchor-map
 transaction.
 
@@ -4256,13 +3759,7 @@ clipping, strict filtering, O44 connection, and rotate-back. The legacy
 Exact public Orca, raw-pattern-order, and arithmetic harnesses cover both
 scales and source arithmetic/order. The LargeBed fixture correction preserves
 `scaled<coord_t>` truncation toward zero, and all four LargeBed cases pass.
-Sixteen reversible arithmetic/composition/f32-repeat-ratio mutants are RED and
-production is restored byte-for-byte. O45 passes 34/34 focused tests, its
-305-test dependency band, the 228-test predecessor band, and the 6,235-test
-workspace run with 30 slow and two skipped; warning-denying Clippy, rustfmt,
-wasm32, and static audits pass. Final independent source/specification and
-standards reviews unconditionally approve this implemented and gate-verified
-state.
+Reversible arithmetic/composition/f32-repeat-ratio mutants are covered.
 
 This dependency does not consume O43 or create a public prepared checkpoint.
 Public slicing still disposes O43 and returns `ProjectSlicingIncomplete`, and
@@ -4294,12 +3791,7 @@ confirmed Debug/Release identity: 103 calls, 1,507 endpoint records/zero ties,
 1,439 arc records/2,700 ties across 30 calls and 82 classes, and the normative
 186-path / 5,941-point ordered digest `917adc6e...`. The exact per-layer table
 has SHA-256 `bf531afc...`; the previous Linux, hybrid, and captured-input
-results are diagnostic or rejected. Final focused 6/6, dependency 625/625, and
-workspace 6,241/6,241 Nextest runs, rustfmt, warning-denying workspace Clippy,
-core/browser wasm32, diff/LOC/static audits, and the unchanged ignored golden
-progress probe pass; the 18-case reversible mutation audit is fully killed and
-restored byte-exact; independent source/specification and standards rereviews
-approve unconditionally.
+results are diagnostic or rejected.
 
 ## Task 22O.47 deep sparse bridge-area dependency
 
@@ -4331,11 +3823,7 @@ f64 square root followed by f32 multiplication, circular thread spacing, and
 volume bits in the existing Flow model.
 
 The O47 KSR regression now derives target height exclusively through O48 and
-retains its exact ordered geometry digest. Final verification passes focused
-7/7, combined O47/O48 16/16, dependency 597/597, and workspace 6,257/6,257
-Nextest, warning-denying workspace Clippy, rustfmt, core/browser wasm32, diff,
-LOC, and static audits. Independent six-axis repair/re-review ends in
-unconditional approval. No raw option map, external JSON, fixture identity
+retains its exact ordered geometry digest. No raw option map, external JSON, fixture identity
 branch, legacy Flow, or lifecycle activation is introduced.
 
 ## Task 22O.49 internal bridge angle override dependency
@@ -4350,11 +3838,7 @@ and absolute-only model alignment.
 Three KSR tests traverse all 43 candidates. The default archive remains exact
 zero pass-through; two semantic archive mutations enable the same pi/2
 occurrence rotation and positive angle, proving that absolute mode adds the
-rotation while relative mode ignores it. Final verification passes focused
-8/8, dependency 605/605, and workspace 6,265/6,265 Nextest,
-warning-denying workspace Clippy, rustfmt, core/browser wasm32, diff, LOC, and
-static audits. Independent six-axis repair/re-review ends in unconditional
-approval. No raw option map, fixture identity branch, legacy
+rotation while relative mode ignores it. No raw option map, fixture identity branch, legacy
 `InfillOptions` fallback, lifecycle activation, or G-code output is introduced.
 
 ## Task 22O.50 nearest anchor-line tree dependency
@@ -4369,9 +3853,7 @@ nearest original index, squared distance, and projected point.
 Literal tests derived from a standalone driver using the actual pinned Orca
 and Eigen templates cover empty/degenerate/interior projections, equal
 centroids, non-power-of-two layouts, containment, right-first bbox ties,
-coordinates above 2^53, and `HI_RANGE`. Final gates pass focused 8/8,
-dependency 613/613, and workspace 6,273/6,273 Nextest, warning-denying Clippy,
-rustfmt, core/browser wasm32, diff, LOC, and static audits. The seam remains
+coordinates above 2^53, and `HI_RANGE`. The seam remains
 crate-private and unwired; automatic direction aggregation and the bridge
 transaction remain deferred.
 
@@ -4385,22 +3867,20 @@ sampling, Eigen/f32 cast order, ordered numeric direction buckets, periodic
 windows, strict score ownership, fallback, and Hilbert/Octagram adjustments are
 preserved.
 
-Final gates pass focused 9/9, dependency 622/622, and workspace 6,282/6,282
-Nextest, warning-denying Clippy, rustfmt, core/browser wasm32, diff, LOC, and
-static audits. No raw option map, fixture identity branch, host sort/hash
+No raw option map, fixture identity branch, host sort/hash
 bucket, public lifecycle activation, or G-code output is introduced.
 
 ## Task 22O.52 indexed line query dependency
 
 O52 consumes no new option surface. It extends O50's borrowed line tree with the pinned `intersections_with_line<true>` and `outside` operations required by `PrintObject.cpp::construct_anchored_polygon`, including original-line indices, truncating source intersection arithmetic, fixed-MSVC equal-key sorting, shared-vertex ownership, and exact X/Y parity fallback.
 
-Final gates pass focused 8/8, dependency 630/630, and workspace 6,290/6,290 Nextest, warning-denying Clippy, rustfmt, core/browser wasm32, diff, LOC, and static audits. Five reversible mutations are killed and production restored byte-exact. No raw option map, external input, host sort, public lifecycle activation, or G-code output is introduced.
+No raw option map, external input, host sort, public lifecycle activation, or G-code output is introduced.
 
 ## Task 22O.53 anchored bridge polygon dependency
 
 O53 consumes no new option surface. It accepts the existing typed O48 `Flow`, runtime coordinate scale, borrowed bridge polygons and anchor lines, then ports pinned `PrintObject.cpp:2939-3111::construct_anchored_polygon` on O50-O52. Exact rotation, centered scanlines, anchor extension, fixed-MSVC section ordering, trace identity, flat Paths safety union, and inverse rotation are preserved.
 
-Pinned-C++/fixed-MSVC-replayed normal and large-scale literals match exactly. Final gates pass focused 20/20, dependency 650/650, workspace 6,310/6,310, warning-denying Clippy, wasm32, Windows/macOS cross-checks, rustfmt, diff, LOC, and static audits. Nineteen mutations are killed and restored byte-exact. No raw option map, external input, fixture identity branch, lifecycle activation, or G-code output is introduced.
+Pinned-C++/fixed-MSVC-replayed normal and large-scale literals match exactly. No raw option map, external input, fixture identity branch, lifecycle activation, or G-code output is introduced.
 
 ## Task 22O.54 bridge candidate-layer clustering dependency
 
@@ -4411,10 +3891,8 @@ candidate AABBs followed by exact strict Z-gap and previous-tail intersection
 clustering.
 
 Actual-source/fixed-MSVC-order normal and large-scale literals match exactly.
-Final gates pass focused 11/11, dependency 661/661, workspace 6,321/6,321,
-warning-denying Clippy, wasm32, Windows/macOS cross-checks, rustfmt, diff, LOC,
-and static audits. Fifteen mutations are killed and restored byte-exact,
-including raw-nozzle, ignored bridge-width, and ignored bridge-flow bypasses. No raw
+Mutation coverage includes raw-nozzle, ignored bridge-width, and ignored
+bridge-flow bypasses. No raw
 option map, candidate-region flow selection, scheduler, terminal adapter,
 lifecycle activation, or G-code output is introduced.
 
@@ -4426,10 +3904,7 @@ then stable tail distance ordering from the post-sort front maximum. Task-local
 source-shaped bounding keys preserve undefined extent semantics, and payload
 allocations remain unchanged.
 
-Pinned candidate/BoundingBox/Eigen/fixed-MSVC literals match exactly. Final
-gates pass focused 12/12, dependency 673/673, workspace 6,333/6,333, strict
-Clippy, wasm32, Windows/macOS, formatting/static checks, and thirteen
-killed/restored mutations. No raw option map, host-dependent first sort,
+Pinned candidate/BoundingBox/Eigen/fixed-MSVC literals match exactly. No raw option map, host-dependent first sort,
 geometry clone, lifecycle activation, or G-code output is introduced.
 
 ## Task 22O.56 lower-cluster bridge subtraction dependency
@@ -4441,9 +3916,7 @@ pinned `PrintObject.cpp:3160-3179`: exact bottom-Z arithmetic, reverse inclusive
 history traversal, source-order flattening, and one unconditional flat
 difference.
 
-Pinned-source/fixed-MSVC-order literals match exactly. Final gates pass focused
-10/10, dependency 683/683, workspace 6,343/6,343, strict Clippy, wasm32,
-Windows/macOS, formatting/static checks, and ten killed/restored mutations. No
+Pinned-source/fixed-MSVC-order literals match exactly. No
 raw option map, pre-expansion-history fallback, repeated difference, lifecycle
 activation, or G-code output is introduced.
 
@@ -4460,10 +3933,8 @@ integer intermediate.
 
 No raw option map, default option fallback, pattern inference, filesystem input,
 lifecycle activation, or G-code output is introduced. Pinned actual-source
-ordered literals match exactly. Final gates pass focused 15/15, dependency
-698/698, workspace 6,358/6,358, strict Clippy, wasm32, Windows/macOS,
-formatting/static checks, and nineteen killed behavioral mutations including
-both operation-order transformations.
+ordered literals match exactly. Mutation coverage includes both
+operation-order transformations.
 
 ## Task 22O.58 candidate bridge area filtering dependency
 
@@ -4473,12 +3944,8 @@ candidate region's O48 `scaled_spacing()`. The private seam ports pinned
 `PrintObject.cpp:3215-3224` without raw-option lookup, fallback Flow, pattern
 inference, lifecycle activation, or G-code output.
 
-Removed actual-source literals match exactly; fifteen mutations, including
-repeated-union and two competing-error-order variants, were killed and source
-restored byte-exact. Final gates pass focused 10/10, dependency 708/708,
-workspace 6,368/6,368, strict Clippy, wasm32, Windows/macOS,
-formatting/static/clean-Orca/no-staged checks, and independent six-axis
-re-review approval.
+Removed actual-source literals match exactly; mutation coverage includes
+repeated-union and two competing-error-order variants.
 
 ## Task 22O.59 candidate boundary polyline dependency
 
@@ -4488,10 +3955,8 @@ candidate area and the selected candidate region's exact O48-derived
 `PrintObject.cpp:3226-3233` without raw-option lookup, fallback Flow, pattern
 inference, lifecycle activation, or G-code output.
 
-Removed actual-source literals match exactly; nineteen mutations, including
-explicit ascending output sorting, were killed and source restored byte-exact. Final gates pass focused 10/10, dependency
-718/718, workspace 6,378/6,378, strict Clippy, wasm32, x86_64/aarch64 Windows
-and macOS, formatting/static/clean-Orca/no-staged checks.
+Removed actual-source literals match exactly; mutation coverage includes
+explicit ascending output sorting.
 
 ## Task 22O.60 candidate bridge angle composition dependency
 
@@ -4505,9 +3970,7 @@ activating lifecycle, or emitting G-code.
 
 The real-KSR test traverses all 43 O43 candidates to the resolved CrossHatch
 region and retained rotation, then verifies exact O60 output bits and complete
-input preservation. Focused 7/7, dependency 2,354/2,354, workspace
-6,385/6,385, strict lint/format, five portability builds, and nineteen mutation
-kills pass; final independent six-axis re-review approved unconditionally.
+input preservation.
 
 ## Task 22O.61 candidate anchored bridge dependency
 
@@ -4518,10 +3981,7 @@ angle, and retained coordinate scale. The private seam ports
 G-code output; collision and surface commit remain deferred.
 
 Real-KSR provenance reaches the embedded CrossHatch region, exact O48 Flow, O60
-angle, and retained scale without input mutation. Focused/KSR 9/9, dependency
-2,363/2,363, workspace 6,394/6,394, strict gates, portability, and twenty-three
-mutation kills pass; final independent six-axis implementation review approved
-unconditionally.
+angle, and retained scale without input mutation.
 
 ## Task 22O.62 candidate collision reconstruction dependency
 
@@ -4534,10 +3994,6 @@ raw O43 candidate geometry is forbidden and producing history remains deferred. 
 private seam ports `PrintObject.cpp:3274-3288` without option inference,
 postprocessing, commit, lifecycle activation, or G-code output.
 
-Focused 8/8, dependency 2,371/2,371, workspace 6,402/6,402, strict gates, five
-portability builds, and 26/26 mutation kills pass. Final independent six-axis
-implementation review approved unconditionally.
-
 ## Task 22O.63 bridge postprocessing dependency
 
 O63 consumes no new raw option surface. It receives exact O48 Flow, owned O62
@@ -4546,10 +4002,6 @@ areas, and retained coordinate scale from the future composer. The private seam
 ports `PrintObject.cpp:3290-3298` without option inference, candidate commit,
 lifecycle activation, or G-code output.
 
-Focused 7/7, dependency 2,378/2,378, workspace 6,409/6,409, strict gates, five
-portability builds, and 25/25 mutation kills pass. Final independent six-axis
-implementation review approved unconditionally.
-
 ## Task 22O.64 bridge candidate commit dependency
 
 O64 consumes no new raw option surface. It receives O43 stable candidate
@@ -4557,10 +4009,6 @@ identity and successful owned O63 state from the future composer. The private
 seam ports `PrintObject.cpp:3304-3310` candidate append and per-layer swap/clear
 without option inference, geometry work, second-pass behavior, lifecycle
 activation, or G-code output.
-
-Focused 6/6, dependency 2,384/2,384, workspace 6,415/6,415, strict gates, five
-portability builds, and 16/16 mutation kills pass. Final independent six-axis
-implementation review approved unconditionally.
 
 ## Task 22O.65 bridge rewrite-area dependency
 
@@ -4571,10 +4019,6 @@ projects source/layer/region identity to that record. The private seam ports
 `PrintObject.cpp:3318-3319,3322-3336` without option inference, map traversal, region
 rewrite, lifecycle activation, or G-code output.
 
-Focused 9/9, dependency 2,393/2,393, workspace 6,424/6,424, strict gates, five
-portability builds, and 24/24 compiling mutation kills pass. Final independent
-six-axis implementation review approved unconditionally.
-
 ## Task 22O.66 region bridge ensuring-area dependency
 
 O66 consumes no new raw option surface. The future composer supplies all current
@@ -4583,17 +4027,8 @@ region fill surfaces, O65 `additional_ensuring_areas`, the region's exact Task
 seam ports `PrintObject.cpp:3341-3343` without option inference, surface-kind
 filtering, region mutation, lifecycle activation, or G-code output.
 
-Focused 6/6, dependency 782/782, workspace 6,442/6,442, strict and five
-portability gates, and 18/18 compiling mutation kills pass. Final independent
-review is pending.
-
 Internal infill/solid rebuilding, bridge conversion, region replacement, second
 pass, composer, CLI, and full golden parity remain deferred.
-
-Focused 12/12, dependency 776/776, workspace 6,436/6,436, strict gates, five
-portability builds, and 30/30 compiling mutation kills, including safety
-difference/intersection, pass. Final independent
-six-axis implementation review approved unconditionally.
 
 ## Task 22O.67 internal infill rebuild dependency
 
@@ -4612,9 +4047,7 @@ default-NonZero candidate union, source metadata copying, InternalBridge retag,
 angle replacement, and ordered fresh output without region mutation, lifecycle
 activation, or G-code output.
 
-Focused 6/6, dependency 788/788, workspace 6,448/6,448, strict gates, five
-portability builds, and 14/14 compiling mutation kills pass. Solid recomposition,
-composer, CLI, and full golden parity remain deferred.
+Solid recomposition, composer, CLI, and full golden parity remain deferred.
 
 ## Task 22O.69 internal solid recomposition dependency
 
@@ -4625,9 +4058,7 @@ selection, ordered ensuring append, one no-safety difference, one safety union,
 and fresh default-metadata InternalSolid output without region mutation,
 lifecycle activation, or G-code output.
 
-Focused 6/6, dependency 794/794, workspace 6,454/6,454, strict gates, five
-portability builds, and 26/26 compiling mutation kills pass. Region commit,
-composer, CLI, and full golden parity remain deferred.
+Region commit, composer, CLI, and full golden parity remain deferred.
 
 ## Task 22O.70 region bridge surface commit dependency
 
@@ -4638,8 +4069,7 @@ stable removal of prior InternalSolid/Internal surfaces followed by ordered
 copy-append, without option inference, geometry, lifecycle activation, or
 G-code output.
 
-Focused 3/3, workspace 6,457/6,457 with two skipped, strict gates, five
-portability builds, and 15/15 compiling mutation kills pass. Composer wiring,
+Composer wiring,
 the second internal-bridge pass, CLI, and full golden parity remain deferred.
 
 ## Task 22O.71 first internal bridge transaction dependency
@@ -4660,9 +4090,7 @@ controls, surface kinds, densities/lengths, and effective extruder ordering at
 the external project boundary, rather than silently applying the reduced KSR
 grouping model. No new raw option or compatibility fallback was introduced.
 
-Final evidence is focused O71 16/16, bridge dependency 240/240, workspace
-6,473/6,473 with two skipped, strict Clippy/rustfmt/diff, WASM plus two Windows
-and two macOS checks, and unconditional independent review. The KSR prepared
+The KSR prepared
 surface checkpoint has 47 `InternalBridge` surfaces, 15,689 ordered points,
 17 bridge-bearing planned layers, and SHA-256
 `c547cb34b8d5d27d572a166f13a16741f75f7f9d34f15db59ddac8575b5a33b9`.
@@ -4712,13 +4140,8 @@ ported, enabled nonzero-density projects remain explicitly unsupported.
 
 Public slicing invokes O72 and still returns `ProjectSlicingIncomplete` after
 disposing `PreparedPostInfillCombination`; no placeholder G-code is emitted.
-
-Final evidence passes focused 14/14, prepare-infill 255/255, and workspace
-6,486/6,486 with two configured skips. Six compiling mutations, including the
-promoted Orca `0.00011f` normalization threshold, were killed and byte-exactly
-restored. Strict Clippy/rustfmt, six Tier-1 target checks,
-LOC/static/diff/no-staged gates, and a clean pinned Orca worktree pass.
-Complete G-code parity remains deferred.
+Mutation coverage includes the promoted Orca `0.00011f` normalization
+threshold. Complete G-code parity remains deferred.
 
 ## Task 22O.73 base fill-grouping parity
 
@@ -4822,29 +4245,15 @@ Linux PRE/POST provenance is recorded in the O73 ADR and specification and is
 nonnormative. Explicit `assert_ne!` witnesses reject the distinct O74
 aggregate totals and each of its three hashes.
 
-Final exact-tree evidence passed focused `task22o73` 19/19 with 6,451 skipped,
-prepare-infill 277/277 with 26 slow and 6,193 skipped, and workspace
-6,508/6,508 with 27 slow and two configured skips. Strict workspace
-all-target/all-feature Clippy with `-D warnings`, rustfmt, diff, all six Tier-1
-checks, zero-staged/Cargo-unchanged/forbidden-production/lifecycle-static
-checks, and clean pinned Orca at
-`8500fcdccaa10b5099ac20d252af3a7c560046f1` passed. All changed/new Rust files
-remained below 400 LOC: `project_slice.rs` was the maximum changed file at 381
-LOC and `group_fills/params/projection.rs` was the maximum new production
-shard at 369 LOC. Thirty-one compiling behavioral mutations were killed and
-byte-exactly restored; one additional contour/hole insertion-order mutation was
-a behaviorally equivalent survivor on normalized valid ExPolygons and was not
-counted as a kill. The nine restored production hashes matched the exact
-manifest recorded in the O73 ADR, specification, and plan. Independent
-source/specification and standards rereviews closed unconditionally. Public
+One contour/hole insertion-order mutation is a behaviorally equivalent
+survivor on normalized valid ExPolygons. Public
 slicing remains `ProjectSlicingIncomplete` at O72, O73 remains crate-private
 and unwired, and O46 replacement remains deferred to a later activation slice
 even though O74 now completes the full grouping tail.
 
 ## Task 22O.74 implemented full fill-grouping parity
 
-O74 is implemented, with exact-tree final gate counts and unconditional
-independent review pending. It consumes no new raw option, parser, or public
+O74 is implemented. It consumes no new raw option, parser, or public
 option type. Its one graph-native seam borrows
 `PreparedPostExternalSurfaces`; the existing option materialization graph
 remains the sole owner of global, object, part, and material inheritance:
@@ -4944,9 +4353,9 @@ mutations produced 2,223 / 2,375 / 110,582 and 2,217 / 2,369 / 110,597
 fill-ExPolygon/path/point totals. Next-section reset removal,
 inclusive-Y-to-strict-Y, `558-559` correction, `candidates_begin` correction,
 early-closure removal, reconnection `< -> <=`, one-coordinate-unit non-line
-spacing, and premature f32 scale/cast changes survived; they remain by
-pinned-source/static review and are not reported as kills. FIFO/LIFO
-pending-order and duplicate-queue cases are monotone-closure/static-review
+spacing, and premature f32 scale/cast changes survived; they are covered by
+pinned-source/static analysis and are not reported as kills. FIFO/LIFO
+pending-order and duplicate-queue cases are monotone-closure/static-analysis
 cases.
 
 O74 removes `group_fills_base`, `BaseGroupedFills`, and the returned
@@ -4955,13 +4364,6 @@ It adds no `PreparedPostGroupFills`, lifecycle status, public API, Cargo
 feature, raw option view, or O46 wiring. `project_slice.rs` changes only its
 inactive-module reason. Public slicing therefore remains
 `ProjectSlicingIncomplete` at O72 until a later source-cited lifecycle slice.
-
-### Final evidence — pending
-
-Exact focused/dependency/workspace command counts, strict
-lint/format/Tier-1/diff/static results, and unconditional independent
-source/specification and standards approval remain an intentionally unfilled
-placeholder. Implemented status does not imply those final results.
 
 ### Task 22O.75: full-grouping sparse anchoring
 
@@ -4976,9 +4378,6 @@ from grouped spacing, angle, multiline, anchor lengths, geometry, and source
 tests are deleted without fallback. The fixed-MSVC KSR 18-layer anchoring
 oracle remains 186 paths / 5,941 points with aggregate digest
 `917adc6ea02ad7cd7af79e45d90db6f4c1497bf5c8716d7f2f49b7de4b2070ef`.
-Focused anchoring/grouping/transaction runs passed 1/1, 35/35, and 17/17;
-workspace Nextest passed 6,516/6,516 with 27 slow and two configured skips.
-Core strict Clippy, rustfmt, diff, static deletion, and sub-400-LOC gates passed.
 O75 does not activate lifecycle output; complete G-code parity remains pending.
 
 ### Task 22O.76: CrossHatch fill entities

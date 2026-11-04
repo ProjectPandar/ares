@@ -1,18 +1,13 @@
 # master_extruder_id — bounded TPU preferred-nozzle rewrite
 
-Status: **SPEC / awaiting coordinator approval**. Worker3 owns this key by explicit
-assignment. No implementation, cargo, Native, nix build, full or browser execution
-is authorized by this document. The current worker4 full remains exclusive.
-
 ## Offline audit and provenance
 
 Audited Ares tree: `711b96bd256c2d780eac5dc4227427f9e2feb7f2`.
 Upstream: OrcaSlicer 2.4.2 source commit
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`, accessed through `OrcaSlicer/`.
-The worker6 audit `/tmp/worker6-option-current-audit-2026-10-10.md` calls this
-key OPEN_PLANNER, one baseline case, scope incomplete. Its historical
-INCOMPLETE is not a new execution result. This slice does not select PCP,
-`timelapse_type`, `printer_technology`, or another worker's claimed key.
+The option audit classifies this key as OPEN_PLANNER, one baseline case, scope
+incomplete. That historical INCOMPLETE is not a new execution result. This slice
+does not select PCP, `timelapse_type`, `printer_technology`, or another key.
 
 | Owning upstream boundary | Included meaning |
 | --- | --- |
@@ -49,19 +44,19 @@ It must not guess actual usage from the presence of a configured `TPU` string.
 The fixed admitted fixture must show both logical filaments actually extruding.
 A native-only config comment or a Rust helper test cannot supply that evidence.
 
-**Production seam gate:** no edits to worker2's G4 sequence/footer files or any
-shared hook are authorized. In particular do not modify `phases.rs`, shared
+**Production seam gate:** no edits to the G4 sequence/footer files or any
+shared hook. In particular do not modify `phases.rs`, shared
 option-domain dispatch/sweep/runner hooks, G4 fixture helpers, or footer writers
 under this spec alone. If legal runtime RED needs a used-layer handoff or a map
 refresh at one of those seams, submit the exact files, upstream call timing and
-proposed ownership split to the coordinator before touching them. Do not add a
+proposed ownership split before touching them. Do not add a
 parallel scheduler, broad material scan, fallback mapping or unchecked bypass
 instead. The narrow pure operation alone does not close runtime parity.
 
 Harness destination: new standalone
 `crates/ares-cli/tests/orca_parity/option_coverage/master_extruder_id.rs`, or a
-coordinator-assigned registration seam. No helper visibility changes or shared
-routing edits before that ownership is explicitly assigned. Existing G4 inputs
+dedicated registration seam. No helper visibility changes or shared
+routing edits. Existing G4 inputs
 may be read as shape references, but their builders remain untouched.
 
 ## Included bounded witnesses
@@ -89,7 +84,7 @@ countercontrol is needed to prevent broadening the TPU trigger; its ordinary
 non-TPU final map is not asserted from this audit. Retain its Native observation
 and do not port the optimizer to make that countercontrol pass within this slice.
 If source-correct routing of that countercontrol needs the deferred optimizer or
-a shared seam, stop for coordinator scope disposition rather than weaken it.
+a shared seam, stop for a scope decision rather than weaken it.
 
 The Manual pair may differ in serialized `master_extruder_id`; require Native/Ares
 whole-output equality for each input, not equality of C1 and C2 files. For active
@@ -100,7 +95,7 @@ filter. Footer-only variation is insufficient.
 
 ## Test-first admission and implementation gates
 
-1. After spec approval and an assigned nonexclusive window, perform Native
+1. Perform Native
    admission with complete identical-input bindings in seeded and official modes.
    Save final ZIP/member SHAs, requested/loaded project and plate settings, material
    and selector vectors, exact command/env/binary identity, stdout/stderr/status,
@@ -110,22 +105,22 @@ filter. Footer-only variation is insufficient.
    witnesses before calling a result production RED. Required Native absence
    fails closed; optional absence is an explicit skip, never Native proof.
    Any printability, material-temperature, export, palette or UB-adjacent failure
-   remains an admission blocker, with original artifacts retained. Report it;
-   no retry fixture mutation, guard removal or output tolerance without approval.
+   remains an admission blocker. No retry fixture mutation, guard removal or
+   output tolerance.
 3. Commit standalone E2E RED before production. Compare the real validated public
    API and actual CLI against Native on the same project. Separate metadata,
    application, admission and production failures. A genuine mismatch needing
-   production or a shared seam requires coordinator ruling first.
-4. Implement only the approved source operation and assigned adapter boundary.
+   production or a shared seam requires a scope decision first.
+4. Implement only the source operation and its adapter boundary.
    No production correction is promised before legal RED. If all legal cases
-   already match, request a harness-only disposition, not a manufactured failure.
+   already match, keep the slice harness-only rather than manufacture a failure.
 5. Canonical plan admission is a subsequent key-local decision, not implicit:
    retain existing baseline and every other plan unchanged. Do not globally mark
    this integer domain complete or replace the baseline fixture with these Auto
-   contexts. Any shared registration edit must first receive its assigned seam.
-6. For an approved implementation, run new-tree `cargo nextest run --workspace`,
-   workspace all-target/all-feature strict Clippy, fmt and core/WASM adapter checks
-   serially in the assigned budget. Fresh seeded/official base/candidate controls
+   contexts.
+6. For an implementation, run new-tree `cargo nextest run --workspace`,
+   workspace all-target/all-feature strict Clippy, fmt and core/WASM adapter checks.
+   Fresh seeded/official base/candidate controls
    must retain the exact failure-name subset rule, compare all common complete
    outputs and disclose raw changes, multiplicities and extra Native captures.
    Ignore only entire generated-by G-code lines; retain existing CLI wall-clock
@@ -137,8 +132,7 @@ material actually used; master one/zero-base confusion; shell ignores TPU
 complement; Manual recomputed accidentally; configured-but-unused TPU triggers
 shortcut; recommendation occurs at wrong phase or variants are not refreshed;
 Native effective map is not observable; unrelated complete-output mismatch.
-Every failure blocks the corresponding claim; preserve logs and actual commit
-bindings, including failed/void attempts.
+Every failure blocks the corresponding claim.
 
 ## Deferred and non-negotiable decisions
 
@@ -154,9 +148,8 @@ This is a source-cited `libslic3r` rewrite slice, not a new Ares grouping design
 No legacy fallback. Core remains platform-neutral on WASM, Windows, macOS and
 Linux; filesystem/Native fixture work stays in CLI tests. New files stay below
 400 LOC. Do not touch the already oversized `project_slice.rs`; a later required
-touch must first receive the previously agreed module split.
+touch must first split that module.
 
-Exit: legal admitted branch controls, committed test-first evidence, approved
-source-owned correction (if needed), complete-output parity and engineering/full
-controls on the actual execution hash, with all deferred behavior explicit.
-The present docs-only submission has **none** of those runtime gate claims.
+Exit: legal admitted branch controls, committed test-first evidence,
+source-owned correction (if needed), complete-output parity and engineering
+controls, with all deferred behavior explicit.

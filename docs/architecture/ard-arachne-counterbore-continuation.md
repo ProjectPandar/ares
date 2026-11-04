@@ -21,8 +21,8 @@ Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
   `classic/counterbore.rs` and `arachne/materialize.rs` under
   `ares-core/src/project_slice/perimeters/`. More owner files need an amendment.
 - Preserve original fuzzy mask domain (`Feature/FuzzySkin/FuzzySkin.cpp:415–473`),
-  group discovery order, source metadata and RNG draws. No W3 centering, W5
-  interface-shell/classification, W6 grid/Fill, Arachne backend/config or shared
+  group discovery order, source metadata and RNG draws. No centering,
+  interface-shell/classification, grid/Fill, Arachne backend/config or shared
   recovery edits within this slice.
 - Keep byte-oriented platform-neutral API behavior on all four Tier1 platforms;
   Native execution/evidence stay in the CLI test adapter. No new stage/public
@@ -30,7 +30,7 @@ Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 - Preserve source gate/no-op distinctions for None, lower slices and absent
   unsupported coverage; margin is the pinned upstream constant, not a new option.
 - Public source-backed RED precedes production. Ten old rejection/lifecycle
-  assertion changes need per-case exact-diff approval and a separate test commit.
+  assertion changes need per-case exact diffs and a separate test commit.
   No assertion weakening, geometry replacement, ignored tests or comparator change.
 
 ## Consequences / deferred proof
@@ -39,5 +39,5 @@ The eight archived guard REDs are refreshed against merged main and stay on the
 feature branch until GREEN. The merged main-owned None control is reused unchanged.
 Nested-island-in-hole and compatible-multiregion public reachability remain explicit
 coverage gaps; independent two-island geometry proves neither. Any unexpected
-new-main mismatch stops implementation for source-owner review rather than
+new-main mismatch stops implementation for source-owner analysis rather than
 silently expanding the three-file allowance.

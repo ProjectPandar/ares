@@ -29,4 +29,4 @@ Non-negotiable decisions (spec: `spiral-vase-object-start-z-spec.md`).
 6. **E2E-only verification.** No unit tests; the RED cases are the sole
    verification.
 7. **Boundary hygiene.** Only the two mechanism sites may change in
-   GREEN; queued and W1-touched files are untouched.
+   GREEN; other files are untouched.

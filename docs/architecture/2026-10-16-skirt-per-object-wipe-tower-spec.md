@@ -1,7 +1,7 @@
 # SPEC(提案): per-object skirt × wipe tower——移除 skirt per-object 守卫的
 wipe/prime tower 支路（Print.cpp::_make_skirt per-object 分支）
 
-状态：SPEC-DRAFT v2（docs-only；v1 `c29885bf0` 被拒后修订：并入
+状态：SPEC-DRAFT v2（docs-only；相对 v1 `c29885bf0` 并入
 prime tower、修正引用、补 guard 延后项与 GCode.cpp 发射源、加
 combined control 预证前提）。承接：现有
 `gcode_emit/skirt/generate.rs:37-53` 的 per-object 守卫在
@@ -59,7 +59,7 @@ fixture 在 GREEN 后仍撞守卫。
 
 - `generate.rs`：删除守卫中 `!tower_corners.is_empty()`、
   `filament_diameter.len() > 1`、`enable_prime_tower` 三个条件
-  （**W2 拥有同守卫的 support/raft disjuncts——只删本片三条**）；
+  （**同守卫的 support/raft disjuncts 不在本片——只删本片三条**）；
   tower_corners 作为障碍项进入 per-object 分组；同时**新增**延后守卫（见 §4）；
 - `member_groups.rs`：`Group` 增发射语义；`merge` 遵循
   `:2874-2880`——仅发射组扩张 envelope；合并结果丢弃无发射成员
@@ -95,7 +95,7 @@ fixture 在 GREEN 后仍撞守卫。
 
 - 对象级 support / raft、print_sequence != ByLayer、combine_brims
   跨对象 brim 合组（`make_group_brims` `:2898-2971`）——既有守卫
-  disjuncts 保留（W2 拥有 support/raft 项）；
+  disjuncts 保留（support/raft 项不在本片）；
 - **新增守卫**：`min_skirt_length > 0 && filament_diameter.len() > 1`
   （上游 extruder 轮换 `:2745-2760` vs ares 单一 `e_per_path_mm`
   `generate.rs:104-111`）；**wiping pass 发射**：上游在
@@ -115,7 +115,7 @@ fixture 在 GREEN 后仍撞守卫。
 
 ## 5. 测试先行（TDD）
 
-- discovery 前提（先于 RED，CPU7,8，≤4 迭代）：**先证明
+- discovery 前提（先于 RED，≤4 迭代）：**先证明
   combined + tower + 2 耗材 control 双引擎归一化 byte-equal**（现有
   combined 路径含 tower_corners 已并入单组 hull），再采 per-object
   native oracle（tower 紧邻/远离两形态确认合并与独立行为）；

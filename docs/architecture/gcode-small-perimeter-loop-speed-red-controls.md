@@ -1,7 +1,6 @@
 # Small-loop independent RED control admission
 
-Approved spec: `6cf6cde7a37f72a9c92cc713dae2525338b6b1af`.
-Control base: main `3b6e0ebdd4143bb7559a480da916cab2bae58e7b`.
+Spec: `gcode-small-perimeter-loop-speed-preselection.md`.
 This plan is frozen before Native execution; no production implementation.
 
 Public E2E seam: Native CLI export/slice plus `ares_core::slice_project_plate`
@@ -63,8 +62,8 @@ No new public or test-only production seam is added to force that branch.
 
 ## Executed classification (pre-implementation)
 
-Evidence `${TMP_ROOT}/ares-tiq2-loop-red/audit-final.json`: eight input/output/producer
-Slice receipt bindings and model-byte invariance, audit exit0. Final registered
+Eight input/output/producer Slice receipt bindings and model-byte invariance
+are audited. Final registered
 controls have three intended REDs and five byte-PASS controls; no TIMEOUT.
 
 | Case | Native / Ares non-first feedrate | Classification |
@@ -78,7 +77,7 @@ controls have three intended REDs and five byte-PASS controls; no TIMEOUT.
 | explicit skirt | 4800 / 4800 | complete-byte PASS |
 | unchanged existing overhang loft | role-speed12000 witness; byte-identical | byte-PASS control; long-loop **short eligible fragment** coverage remains INCOMPLETE |
 
-The coordinator explicitly accepts equality as part of the source slice:
+Equality is explicitly part of the source slice:
 port the scaled-coordinate macro/comparison in the loop caller. Do not
 change/tune mm values, add an epsilon, or patch geometry/numerical code.
 The existing path-length mm comparison is not the source-owned predicate.
@@ -115,14 +114,11 @@ test restructuring also introduced the fixed loft overhang50/30/20/15 keys
 in common settings (disabled for all other cases): model bytes and active
 parameters remain unchanged. Consequently final verification has seven new
 input/producer-bound cache misses (one Native Slice each) and only the loft
-cache hit, not the predicted all-hit round. These actual statuses are preserved
-in `audit-final.json`; the directory name `final-cached-verification` is not
-a claim of eight hits or fresh Native provenance for the loft. Three intended
-REDs remain RED; this round did not tune models/active samples to get GREEN. The first parser erroneously counted
-CHANGE_LAYER rather than actual LAYER_CHANGE; original failed logs remain
-and corrected parsing uses the same Native outputs. Rust1.96 admission failures
-from external cwd are preserved separately; pinned1.99 fixes that driver,
-without Native retries. The shared-target lock attempt is also excluded.
+cache hit, not the predicted all-hit round; this is not a claim of fresh
+Native provenance for the loft. Three intended REDs remain RED; this round
+did not tune models/active samples to get GREEN. The first parser erroneously
+counted CHANGE_LAYER rather than actual LAYER_CHANGE; corrected parsing uses
+the same Native outputs.
 
 ### Separate Dumbbell time discrepancy / handoff ARD
 
@@ -137,18 +133,16 @@ Owning independent boundary is time-estimation/progress scheduling
 (`GCodeProcessor` post-processing and Rust
 `project_slice/gcode_emit/processor/{time,schedule}`), not small-loop caller
 selection. This record identifies first evidence, not a completed diagnosis
-of every downstream difference. The coordinator will assign it separately.
+of every downstream difference. It is handled as a separate slice.
 Do not change time estimation, M73 placement/footer, comparator or the
 Dumbbell fixture in this slice. It is removed from this slice's registered
-RED controls; original model/input/complete streams/receipt remain under
-`corrected-transport/03-long_loop_fragments/`. 本片 RED 不依赖该差异。
+RED controls. 本片 RED 不依赖该差异。
 
 ## Directed execution and records
 
-Fresh isolated caches; explicit Native/resources identity; seed0 and CPU0;
+Fresh isolated caches; explicit Native/resources identity; seed0;
 ARES_ORCA_RUNS1. One attempt/case, shared whole-case deadline300s with owned
 process/descendant termination and partial captures; TIMEOUT overrides PASS.
-Only one heavy task at a time, build/runtime/test limits16 threads.
 
 Persist input, source model, settings request, Native channels/metadata,
 producer/cache receipts, complete Native/Ares streams and comparator detail.
@@ -156,4 +150,4 @@ Non-first-layer feedrate witnesses must pass independently of comparison;
 wrong witness or unreachable topology is INCOMPLETE coverage, never a
 substitute for RED. Preserve every original failed run without a reference retry.
 TiQ2's complete-byte receipt and line439 travel are excluded from this
-independent control slice and await worker2 merge/rebase.
+independent control slice and belong to the travel slice.

@@ -1,8 +1,7 @@
-# Adaptive endpoint-touch handling — approved Rust rewrite slice
+# Adaptive endpoint-touch handling — Rust rewrite slice
 
-Base: `4a711490bcd22ebdeb4669cee04f7ae1520bce8b`.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Status: COORD approved RED+GREEN after read-only PINPOINT on fe346c6d6.
+Status: accepted. RED+GREEN after read-only pinpoint on fe346c6d6.
 
 ## Owning source and non-negotiable boundary
 
@@ -93,8 +92,4 @@ whole-byte PASS, then adaptive/supportcubic/fill neighbors in both modes,
 `cargo fmt` and workspace/all-target clippy. Native identity/date is the sole
 normalization; do not mask M73/F/E/XYZ/comments/time/footer/config echo.
 
-CPU18, build/nextest/RAYON/OMP/TBB/ARES_PARITY_THREADS1, persistent shared
-Native cache and REQUIRE_ORCA1. No FULL, remaining24 discovery continuation,
-merge or push. Preserve the earlier frozen fe/3241 branches. Submit a sealed
-REVIEW-REQUEST with precise selected/filtered counts and unique exact
-`Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` trailers.
+Use the persistent shared Native cache and REQUIRE_ORCA=1.

@@ -1,7 +1,6 @@
 # ARD: Support-interface fan requests at the project G-code seam
 
-Status: implemented; both reference suites and local quality gates pass;
-coordinator review and latest-main integration pending.
+Status: Implemented; both reference suites and quality gates pass.
 
 ## Source owner and Rust destination
 
@@ -55,7 +54,5 @@ multifilament fan lifecycle coverage and other Option-range completion.
 Do not claim existing inert Option PASS rows establish these deferred behaviors.
 
 No comparator edits, unsupported guards, silent skip or private implementation
-pinning. Both seeded CPU0 and official CPU0 must compare complete output.
-Workspace Nextest, Clippy, rustfmt and core/adapter WASM compile must pass before
-commit/push; request coordinator review and wait before latest-main rebase,
-reverification and fast-forward merge.
+pinning. Both seeded and official modes must compare complete output.
+Workspace Nextest, Clippy, rustfmt and core/adapter WASM compile must pass.

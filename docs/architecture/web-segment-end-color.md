@@ -1,8 +1,7 @@
 # Web: per-end segment color (libvgcode ES segment shader)
 
-Status: SPEC (docs only). This is the slice that was deferred in
-`web-segment-positions-angles.md` (COORD ruling on RED `0c3a5f021`). No RED and no
-production code until COORD approves this spec.
+This is the slice that was deferred in
+`web-segment-positions-angles.md`.
 
 ## Upstream boundary (OrcaSlicer `8500fcdcc`)
 
@@ -41,8 +40,8 @@ Deferred:
 
 ## Discovery (Native-first, read-only)
 
-I ran this over the existing Native dumps from the stack-21 reverify run
-(`segment-hw/native.json` and `moves.csv` of `presetSlice` and `slice`). I used the
+This was measured over existing Native dumps
+(`segment-hw/native.json` and `moves.csv` of `presetSlice` and `slice`), with the
 same instance selection as the web: types 8/9/10, with zero-length instances skipped.
 
 | Input | Instances | Feature Type key differs between ends | height | width | fan | temperature | feedrate |
@@ -54,7 +53,7 @@ same instance selection as the web: types 8/9/10, with zero-length instances ski
 - **Layer Height:** the ends differ on hundreds of instances in both inputs, so the RED uses this view.
 - **Speed:** almost no instances differ (0 and 3), so it is not used.
 
-### Revision: RGB-end measurement (COORD ruling (a))
+### Revision: RGB-end measurement
 
 The raw values above count instances whose ends are travel, wipe or option vertices.
 Those are drawn in fixed colors, so raw differences do not imply RGB differences. The
@@ -73,7 +72,7 @@ so Layer Height cannot carry the RED. The oracle header therefore also dumps the
 Native RGB-end count. If every count were 0, the slice would close as NO-RED. No
 dedicated fixture is added.
 
-Rebuilt oracle `pilsk1xa…` (gcroot `orca-segment-colors-2.4.2`), default visibility:
+Rebuilt oracle `pilsk1xa…` (`orca-segment-colors-2.4.2`), default visibility:
 
 | Input | Instances | featureType | height | speed | width | volumetricFlowRate | fanSpeed | temperature |
 |---|---|---|---|---|---|---|---|---|
@@ -82,7 +81,7 @@ Rebuilt oracle `pilsk1xa…` (gcroot `orca-segment-colors-2.4.2`), default visib
 
 All three Speed instances are travel→travel (vertices 3→4, 7339→7340, 7342→7343):
 `get_vertex_color` colors travel by feedrate in Speed (`ViewerImpl.cpp:1472,1489-1491`);
-the other range views give travel the fixed option color. COORD ruling: **Speed RED,
+the other range views give travel the fixed option color. Decision: **Speed RED,
 slice only, with Travel shown**. Travel visibility changes the speed range
 (`update_color_ranges` takes travel feedrates only when Travels is visible,
 `:1860-1863`), so the oracle also dumps `speedTravels` = Speed with
@@ -108,7 +107,7 @@ For each vertex, `--dump-segment-colors <json>` writes the RGB of `get_vertex_co
 under `featureType`, `height`, `speed`, `width`, `volumetricFlowRate`, `fanSpeed` and
 `temperature`, with the default visibility (all roles shown,
 Seams only among the options; the web default), and under `speedTravels` with Travels
-also visible. Native outputs stay outside Git. COORD gcroots each store path.
+also visible. Native outputs stay outside Git.
 
 ## RED (after a scaffold) and control
 
@@ -141,7 +140,7 @@ The existing `data-segment-sizes` and `data-segment-geometry` read-outs and test
 not change.
 
 The GLSL change cannot be bit-checked against Native, because there is no headless
-Native GL. I will review it through before/after crops of every preview PNG at the
+Native GL. It is checked through before/after crops of every preview PNG at the
 true base (an exact before-run). Pixel thresholds stay unchanged. Feature Type previews
 should be pixel-identical; range views should change only where Native ends differ (travel in Speed with Travel shown).
 
@@ -155,9 +154,9 @@ should be pixel-identical; range views should change only where Native ends diff
 6. Option markers break because they share `applyVertexColors` but have no `aStartColor`.
 7. The `normalized` flag is missing on `aStartColor`, so the color is 255× too bright.
 8. The instance selection in the test and the mesh differ (count mismatch in the read-out).
-9. A Native-vs-Ares per-vertex Speed color mismatch unrelated to the ends (range or `get_color_at` drift in `viewer/colors.rs`). The RED would then fail for a different reason. If that happens, I will report it to COORD as a separate finding and not fix it in this slice.
+9. A Native-vs-Ares per-vertex Speed color mismatch unrelated to the ends (range or `get_color_at` drift in `viewer/colors.rs`). The RED would then fail for a different reason. If that happens, it is reported as a separate finding and not fixed in this slice.
 10. The Native visibility differs from the web's: the RED compares against `speedTravels` only after the Travel row is asserted pressed, and the controls only at the default (asserted unpressed). The web default `visibleOptions` stays the Seams-only default.
-11. Gzip: the change adds only a few shader lines and stays under 125,000 B. I will check it at GREEN.
+11. Gzip: the change adds only a few shader lines and stays under 125,000 B. It is checked at GREEN.
 
 ## Exit criteria
 

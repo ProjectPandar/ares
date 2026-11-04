@@ -1,6 +1,5 @@
 # print_sequence=by_object: upstream boundary inventory and Ares status
 
-Date: 2026-10-08. Worker5. Spec-first review draft; **no production change**.
 
 ## Scope
 
@@ -81,15 +80,8 @@ layers), Ares prints both objects per layer (50 / 62 layers). This is
 the missing emission loop (items 8/11) observable at the very first
 diagnostic line; every downstream byte differs as a consequence.
 
-Evidence artifacts:
-`${TMP_ROOT}/ares-w5-gates/artifacts-byobj/case-*/` (input.3mf, orca.gcode,
-ares.gcode, manifest.json; labels `by-object/ender3`,
-`by-object/kobra3`). Probe: the temporary diagnostic
-`orca_parity::runner::byobject_probe_tmp` (never committed), seeded
-native replay 2.4.2 seed 0, dedicated target
-`${TMP_ROOT}/ares-w5-gates/target-byobj`, cache
-`${TMP_ROOT}/ares-w5-gates/cache-byobj`, 16 threads, branch base 3c1a79941.
-Ares-as-by-layer equivalence with a native by-layer run of the same
+The probe was a temporary uncommitted diagnostic against the seeded
+native replay 2.4.2 seed 0. Ares-as-by-layer equivalence with a native by-layer run of the same
 input was not byte-verified (no zip tooling in the environment to patch
 the input); the 50/62-layer counts and the missing emit loop make the
 fallback conclusion structural, not incidental.

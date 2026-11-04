@@ -6,9 +6,7 @@ Status: proposed. Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 `ares-cli/src/main.rs` rejects `--load-settings`/`--load-filaments` with a
 3MF input (`--load-settings with 3MF input is not supported yet`, exit 1).
-Native supports the combination: worker4's witness
-(`/tmp/worker4-post-process-load-settings-tracer-v2*`,
-source `c4a9afa2`) runs
+Native supports the combination: the post-process load-settings witness runs
 `--slice 0 --load-settings machine.json;process.json --load-filaments
 filament-0.json --outputdir <dir> input.3mf` and returns **-19
 `CLI_POSTPROCESS_NOT_SUPPORTED`** (exit 237, `result.json`
@@ -49,7 +47,7 @@ currently exits 1 with the guard message.
 Both run against the same argv shape as the witness and fail today on
 the guard (exit 1):
 
-1. **Rejection witness** (`load_settings_cli.rs`): pins worker4's
+1. **Rejection witness** (`load_settings_cli.rs`): pins the
    witness bytes (`input.3mf`, `machine.json`, `process.json`,
    `filament-0.json` under `tests/parity/validation/load-settings-3mf/`);
    Native (cached `cli-result` reference extended with the
@@ -113,9 +111,8 @@ BLOCKED and not merged (the guard stays).
 - Ordering nuance (known divergence, deferred): upstream reads
   load-settings files after the 3MF block, so a missing preset file
   plus an embedded `post_process` yields `-19`; Ares reads preset files
-  in the CLI adapter first (`-5` `CLI_CONFIG_FILE_ERROR`). Follow-up
-  owner: worker5 CLI-adapter slice porting the `OrcaSlicer.cpp`
-  file-read ordering (`:1682-1690` before `:1953-2024`).
+  in the CLI adapter first (`-5` `CLI_CONFIG_FILE_ERROR`). Follow-up:
+  a CLI-adapter slice porting the `OrcaSlicer.cpp` file-read ordering (`:1682-1690` before `:1953-2024`).
 - Positive full-slice byte-parity control is included in this slice
   (see E2E REDs); what stays deferred is only the `-17` loaded-names
   semantics for the composite path (branches 1–2 above).
@@ -126,7 +123,7 @@ BLOCKED and not merged (the guard stays).
   assertion weakening; the RED must compile.
 - Native exit code/channels are generated at runtime; only the input
   fixture is committed.
-- No changes to worker1's PCP serialization or sweep files.
+- No changes to the PCP serialization or sweep files.
 
 ## Addendum: `-5`/`-19` read-ordering slice (2026-10-11)
 

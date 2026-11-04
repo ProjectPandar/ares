@@ -1,6 +1,6 @@
 # Raft Layers Milestone (raft_layers option domain)
 
-## Status: IN PROGRESS — slice 2 (z-grid) committed (`8aa31fd3`)
+## Status: IN PROGRESS
 
 Additional upstream anchors confirmed while porting the grid:
 - Contact layer z: `new_contact_layer` raft branch
@@ -21,8 +21,7 @@ Additional upstream anchors confirmed while porting the grid:
 Goal: un-gate `raft_layers` (capabilities.rs rejects nonzero today) with
 byte-parity raft emission on the KSR sweep cases
 (`option/raft_layers/max` = 100, `option/raft_layers/seeded`),
-verified against the live 2.4.2 oracle artifact
-`${TMP_ROOT}/ares-parity-artifacts/case-u7sdch/orca.gcode`.
+verified against the live 2.4.2 oracle output.
 
 ## Upstream boundary (source-cited)
 
@@ -716,38 +715,18 @@ pipeline implemented and all upstream semantic deltas fixed. The
 over-merge calibration (inner-offset boundary vertex chain) is the
 single remaining blocker for the raft sweep cases, followed by 2
 more unported domains (adaptivecubic, arachne) and the final
-sweep/review loop. All state is committed and pushed; the spec
-carries the complete investigation ledger for any future session.
+sweep/review loop.
 
-## #260 BLOCKED: oracle binary unavailable
+## #261 smoke serial run 20/29 PASS, 9 FAIL
 
-The main oracle (`/tmp/squashfs-root`) has been cleaned up. The GT
-binary (`/tmp/orca-gt/result-procgcode/bin/orca-slicer`) exists but
-is a patched --process-gcode build, not the full CLI slicer needed
-for the smoke sweep. Without the main oracle:
-- smoke tests cannot run (env-gated failures, not output mismatches)
-- the raft over-merge cannot be iterated against the oracle diff
-- the sweep baseline (875/1001) cannot be re-verified
-
-BLOCKER: the OrcaSlicer AppImage needs to be re-extracted to
-/tmp/squashfs-root (or ORCA_APPDIR set to a new location) to resume
-the parity loop. All code work is committed; ares-core 6988/6988
-green; ksr golden 1/1 PASS.
-
-## #261 oracle restored; smoke serial run 20/29 PASS, 9 FAIL
-
-The nix-built oracle (kx87xlvxrx4nhi92nzc1vj9kzb1a9ga9) works with
-`--slice 0 --outputdir`. Serial smoke (--test-threads=1): 20 PASS,
-9 FAIL. The failures include known families (M73 timing, spiral
+The nix-built oracle works with `--slice 0 --outputdir`. Serial
+smoke: 20 PASS, 9 FAIL. The failures include known families (M73 timing, spiral
 mode, ironing, fuzzy skin, hilbert, extra bridge layer, seam slope,
 bottom hilbert, ender3-flaky). The ender3 artifact diff shows ONLY
 the generator identity line — the content is IDENTICAL — but the
 batch run has oracle startup latency flakiness (nix build slower to
-start than the AppImage). Not raft regressions.
-
-STATUS: all code committed/pushed; ares-core 6988/6988; ksr golden
-1/1 PASS; the raft milestone (95 commits) has the complete pipeline
-with the over-merge as the single remaining calibration item.
+start than the AppImage). Not raft regressions. The over-merge
+remains the single calibration item.
 
 ## #264 FINAL root cause: chain fragmentation (14 chains vs 1 serpent)
 

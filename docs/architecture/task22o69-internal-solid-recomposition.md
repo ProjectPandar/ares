@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted and implemented after independent pre-RED approval.
+Accepted and implemented.
 
 ## Upstream boundary
 
@@ -71,11 +71,10 @@ modules; `include!` and `include_bytes!` are forbidden for source splitting.
 
 ## Evidence
 
-Behavioral RED: `/tmp/task22o69-behavioral-red.log`. Implementation passes
+A behavioral RED preceded the implementation. Implementation passes
 focused 6/6, dependency 794/794, workspace 6,454/6,454 with two skipped,
 warning-denying Clippy, rustfmt, wasm32 core/WASM, and x86_64/aarch64 Windows and
 macOS checks. All 26 compiling mutations are killed; production restores to
 SHA-256 `d170b25cb69d48a4befba3cb766eede5387109308ce0452961b3dc174f4bde3d`,
 and the mutation output SHA-256 is
 `c32353f173f79f84aaa67ace8bb15243071a2f80d67498b88dbeaf3c6c05d91e`.
-Independent six-axis implementation review approved with no blockers or major repairs.

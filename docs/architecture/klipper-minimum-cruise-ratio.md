@@ -1,6 +1,6 @@
 # Klipper acceleration-to-deceleration suffix rewrite
 
-Status: scoped implementation plan; runtime RED precedes production edits.
+Scoped implementation plan; runtime RED precedes production edits.
 
 ## Non-negotiable source boundary
 
@@ -69,7 +69,7 @@ SET_VELOCITY_LIMIT ACCEL=2000 ACCEL_TO_DECEL=500 MINIMUM_CRUISE_RATIO=0.75
 ```
 
 These are cited command examples, not committed Native output goldens. All
-runtime Native outputs, replay receipts, original-input hashes and comparison
+runtime Native outputs, replay records, original-input hashes and comparison
 artifacts stay external. Preserve the original test names and whole-output
 assertions; do not modify ROOT registrations or weaken failure policies.
 
@@ -105,11 +105,11 @@ no missing selected tests or altered assertions may manufacture zero regressions
   repaired command exposes a later strict whole-output difference, report that
   residual without claiming full-case parity or masking it to reach GREEN.
 - Fmt, workspace/all-target clippy with denied warnings, and precise diff checks
-  accompany the RR. No local Native rebuild, FULL or multicore matrix.
+  must pass.
 
 ## Executed outcome
 
-On the pinned base, the fresh six-case run reproduced all six missing-suffix
+The fresh six-case run reproduced all six missing-suffix
 first differences. The explicitly selected 122-test CLI family (including the
 six and temporary seventh diagnostic) completed before and after the port:
 **39 PASS / 83 FAIL / 0 ignored on both runs, zero PASS-to-FAIL**. No existing
@@ -125,17 +125,16 @@ not a role-only replacement for the strict test boundary.
 **None of the six strict complete-output tests is GREEN.** Their new first
 differences are M73 timing/placement: sequential-origin line110, stock support
 line110, fuzzy stock line110, E5Max line90, sync-none line90 and sync-zero line85.
-Those failures remain visible and belong to the timing owner. The seventh
+Those failures remain visible and belong to the M73 timing slice. The seventh
 exact d8 input keeps its original line19 M73 P0 R8 versus R7 first difference;
 its literal acceleration suffix now matches. No M73 line was filtered.
 
 The temporary seventh harness/registration/input were removed after the family
 comparison and are not part of the committed slice. Retired internal writer
-tests were not restored. Detailed runtime ledgers, actual fresh sync input SHAs,
-full G-code and first-difference artifacts remain outside Git. Do not interpret
+tests were not restored. Do not interpret
 this source-correct literal suffix port as full-case parity closure.
 
 Deferred: GCodeProcessor M73 timing, FillBase gap insertion/order, geometry,
 configuration semantics and unrelated writer features. Their earlier or later
-complete-output differences remain independent owner work, not justification
+complete-output differences remain independent slices, not justification
 for changing this slice's comparison boundary.

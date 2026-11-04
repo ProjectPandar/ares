@@ -1,27 +1,19 @@
 # S-C0: connect_infill touching-grid admission
 
-## Status and priority
+## Priority
 
-SPEC-REVIEW-REQUEST, docs only, based on main
-98a2bfc325b2a06ba4e8b95b9719acd827e2f8f1. No production or test change.
-This slice precedes the blocked object-region spacing slice. SPEC approval
-and a separately reviewed public RED are required before production edits.
-The accepted STOP report is commit 3be5e7af1, in
-`docs/architecture/adaptive-object-region-spacing-preflight-stop.md` on
-`worker3/adaptive-object-region-spacing-spec`; that branch remains unchanged.
+This slice precedes the blocked object-region spacing slice. A public RED is
+required before production edits.
 
 ## Established public failure and frozen input
 
-Reuse the exact authored S-C0 input from
-`/tmp/worker3-object-spacing-native-1tgobnaj/inputs/S-C0.3mf`:
-SHA256 `9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1`.
+Reuse the exact authored S-C0 input, SHA256 `9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1`.
 It is a single-region, no-modifier SupportCubic control: 20x20x10 object,
 Classic two walls, 0.2mm layers, density30%, sparse width0.45mm, multiline1,
 three top/bottom layers, anchors400%/20mm, without support/brim/skirt.
-Its profile and packaging provenance and generator are in the STOP archive;
-no input tuning or regenerated variant replaces these frozen bytes.
+No input tuning or regenerated variant replaces these frozen bytes.
 
-On exact main98a2, the public `slice_project_plate_validated` API helper
+The public `slice_project_plate_validated` API helper
 and the real `ares slice` CLI both exit101 at
 `crates/ares-core/src/fill/connect/touching.rs:48`:
 `assertion failed: grid_contains(&grid, trace_start)`.
@@ -29,17 +21,8 @@ The helper calls the public API with default metadata/overrides, plate None,
 and SlicerContext seed0. Its exit101 is a process panic, not an API error.
 Native official and seeded both exit0 and produce complete S-C0 G-code;
 each has 1323 Sparse-infill XY/E moves. These are preflight observations,
-not a newly submitted RED or a claim of Ares output parity.
-
-Raw evidence remains under the root above: `public-official/S-C0/` has both
-stderr streams and `official/S-C0/`, `seeded/S-C0/` have Native outputs.
-Durable archive directory:
-`${EVIDENCE_ROOT}/worker3/adaptive-object-region-spacing-preflight/`.
-`native-and-public-stop-73e1956c6.tar.gz` SHA256:
-`825bd9b59b735f40cb0e44580609820f84e8bb76e37204fa60db2b94da62d1a3`.
-`STOP-evidence.json` SHA256:
-`40d65bc0921a4118f827d8794bafdd1385c7cd1af3dd7e8fbe38d2584f8d81f6`.
-Only authored input/generator may enter git; Native outputs remain runtime evidence.
+not a RED or a claim of Ares output parity. Only authored input/generator may
+enter git; Native outputs are generated at runtime.
 
 ## Upstream owner and Rust destination
 
@@ -86,7 +69,7 @@ Include S-C0 public admission and the source-owned touching trace/grid
 semantics responsible for its panic. First compare ordered connector inputs,
 clipped segment, spacing/distances, completed trace coordinates, bbox before
 and after grid creation, and visited cells against release Native. Use
-bounded read-only localization on CPU12; preserve input and output hashes.
+bounded read-only localization; preserve input and output hashes.
 
 Native's release asserts are compiled out under NDEBUG, including the
 FillBase and EdgeGrid containment asserts. This fact alone does not prove
@@ -96,39 +79,36 @@ before entering it. Do not declare the caller assertion the sole root cause
 until the actual upstream operands and release traversal have been checked.
 If operands differ, port the first differing source expression. If they
 match and release Native legitimately traverses beyond the asserted bbox,
-report that evidence and the exact debug-assert removal scope for review.
+report that evidence and the exact debug-assert removal scope.
 Do not expand the bbox, clamp endpoints, skip a path, catch the panic, add
 an admission guard, change spacing, or alter connector ordering to force PASS.
 If the first divergence is outside this source boundary, STOP for an addendum.
 
 ## RED then GREEN and acceptance
 
-After SPEC approval, commit the exact S-C0 authored input plus provenance
+Commit the exact S-C0 authored input plus provenance
 and a public E2E RED separately. Run Native official and seeded at test time;
 require successful completion and compare generated output strictly using
 the existing comparator. Exercise both public API and real CLI: success and
 complete output are asserted, so the current exit101 remains a real failure.
 Do not assert panic as desired behavior or use normalization/retries.
 Record API/CLI status, stderr, raw output SHA and runtime Native result/SHA.
-RED evidence must be approved before GREEN.
+The RED precedes GREEN.
 
 GREEN must make the same frozen S-C0 succeed through both public surfaces
 and pass strict output comparison in both modes. Preserve existing connector,
 AdaptiveCubic and SupportCubic controls; report any residual as STOP instead
 of broadening production scope. Existing assertions are otherwise untouched;
-any required test retirement needs separate approval. No new suppressions,
+any required test retirement is a separate decision. No new suppressions,
 unsafe code, probes, fixture predicates or fallback. Rust files stay <=400LOC.
-Run directed tests via outer taskset CPU12, jobs1/threads2, fresh Native cache
-and artifact roots per mode/run, START/END in inbox. Final strict clippy,
-fmt and wasm32 checks run on the exact submitted hash. Full/workspace remain
-coordinator-only; no push or merge is authorized by this SPEC.
+Run directed tests with fresh Native cache and artifact roots per mode/run.
+Final strict clippy, fmt and wasm32 checks run on the exact submitted hash.
 
 ## Separate deferred findings
 
 A-C1 and A-C2/C3/C4 show earlier Inner-wall output differences against Native,
 before the intended sparse-spacing boundary; A-C0 passed. Their cause has
-not been established. Preserve all original inputs/roots and the STOP report;
-these differences are a separate deferred finding, with no work in this slice.
+not been established. Preserve all original inputs; these differences are a separate deferred finding, with no work in this slice.
 
 Object-region adaptive/support spacing remains BLOCKED until this S-C0 slice
 lands. Afterwards re-evaluate its controls before resuming that SPEC. Neither

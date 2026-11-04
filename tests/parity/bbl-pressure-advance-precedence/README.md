@@ -3,16 +3,14 @@
 Source: `GCodeWriter.cpp:370-392::set_pressure_advance`: negative PA is omitted;
 otherwise BBL command selection precedes flavor-specific selection. SPEC:
 `docs/architecture/2026-10-24-bbl-pressure-advance-precedence-spec.md`.
-Base: `a567f40f4`. This tests-only RED does not change production code.
 
 Every input derives from the existing GUI-generated BBL one-object project,
 retains BBL identity, disables the tower and sets `default_jerk=9`,
 `travel_acceleration=6000`, and `pressure_advance=0.02`. Only saved flavor or
 PA enable flag varies. No geometry, template, temperature or fan changes are
-made. This is not a non-BBL stock-preset survey or W6 discovery work.
+made. This is not a non-BBL stock-preset survey.
 
-Native accepts BBL/Repetier, and the coordinator accepted that admitted boundary
-as in scope. No factory Bambu/Repetier hardware or firmware recommendation is
+Native accepts BBL/Repetier, and that admitted boundary is in scope. No factory Bambu/Repetier hardware or firmware recommendation is
 claimed; no writer state is manufactured.
 
 | Input | Flavor / PA | SHA256 |
@@ -45,6 +43,4 @@ reset state mutation, non-BBL command regressions, template-command confusion,
 and hiding downstream output. Additional flavors, signed-zero and rounding
 variants are outside this RED.
 
-Freeze inputs/tests before GREEN. The later change only moves the existing BBL
-match arm before flavor arms. CPU17/PIN17, jobs=1 and threads=1; no FULL. Send a
-combined SPEC/RED review request, then hold before production changes.
+The port only moves the existing BBL match arm before flavor arms.

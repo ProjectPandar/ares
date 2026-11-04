@@ -1,7 +1,6 @@
 # Spec: flush_into_objects object-wipe semantics — wiping marks and layer tool lists
 
-Status: DRAFT (awaiting review) — discovery amendment recorded below
-Base: `0266b8ef470384465587d52c8a0fd9dded84d98a`
+Status: DRAFT — discovery amendment recorded below
 Upstream boundary: `ToolOrdering.cpp` `WipingExtrusions::is_overriddable`
 (:1586-1596), `mark_wiping_extrusions` (:1613-1755, dedicated-object
 ordering :1627-1636, perimeters-then-infill passes :1641-1700),
@@ -10,7 +9,7 @@ extruder-list construction in `ToolOrdering::compute`
 (`ToolOrdering.cpp:197-240`, `handle_dontcare_extruder`) that the
 marking feeds.
 
-## Witness (probe, native first, CPU7,8, frozen input)
+## Witness (probe, native first, frozen input)
 
 `pf-obj2` = R1 SEMM base (prime tower, 2 filaments, by-layer) with
 `skirt_type=perobject`, `flush_into_objects=1` (both objects):

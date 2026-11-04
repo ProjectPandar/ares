@@ -1,12 +1,12 @@
 # PrintObject centering C1 inputs
 
 Source: Model.cpp1586-1599, PrintObject.cpp93-130, PrintApply.cpp138-170.
-Approved SPEC49cf8a57a; public validated byte API and real CLI are the seams.
+SPEC49cf8a57a; public validated byte API and real CLI are the seams.
 Native official/seeded full ordered generator bytes are the oracle.
 The supplemental rotation-exclusion case cites GCode.cpp8084-8118/5348-5372
 for per-group and per-copy labels; only exclude_object is activated. Inputs only;
 all Native products and launch/comparison receipts go to external artifact roots.
-Regenerate on CPU12 from repository root with `generate.py`; provenance records
+Regenerate from repository root with `generate.py`; provenance records
 base/input SHA, transform membership, and checked effective settings.
 
 Failure inventory before production: rejecting multiple groups; using the first

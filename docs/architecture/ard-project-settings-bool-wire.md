@@ -1,7 +1,7 @@
 # ARD — project_settings.config boolean wire forms (loader parity)
 
-Status: SPEC (docs-only). No production code changes in this slice.
-Authorization: coordinator, 2026-10-26, following the
+Status: proposed. SPEC (docs-only). No production code changes in this slice.
+Follows the
 `staggered_inner_seams` seam-scan pinpoint.
 
 ## Non-negotiable decision
@@ -80,7 +80,7 @@ Deferred: JSON number scalars (same upstream else-branch family; no witness),
 preset documents (`print_setting_*`/`machine_settings_*` embedded presets use
 `load_from_json` too — same mechanism, follow-up if a stock fixture ever
 carries non-string wires), CLI override grammar, vector-bool options, and any
-GREEN implementation (separate authorization).
+GREEN implementation (separate slice).
 
 ## RED witness
 
@@ -100,8 +100,8 @@ Controls already on record (same project, official mode, native double
 replay stable): `"1"` stock and `""`/`"0"` probes are full-output PASS — the
 divergence is isolated to the JSON-boolean wire form.
 
-## Exit criteria for this assignment
+## Exit criteria for this slice
 
-docs SPEC + tests-only RED (dual mode, CPU13, threads1), registered in the
-parity suite group file; REVIEW/HOLD. GREEN (loader classification change)
-and FULL runs require separate authorization.
+Docs SPEC + tests-only RED (dual mode), registered in the
+parity suite group file. GREEN (loader classification change)
+and full parity runs are a separate slice.

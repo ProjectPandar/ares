@@ -1,6 +1,6 @@
 # Web Feature Type legend: per-role and travel estimated times
 
-Status: SPEC (awaiting COORD review). Rewrite slice of `libvgcode` `ExtrusionRoles`
+Rewrite slice of `libvgcode` `ExtrusionRoles`
 and the `ViewerImpl::load` travel-time accumulator, consumed by the upstream
 Feature Type legend Time/% columns.
 
@@ -73,8 +73,7 @@ it is extended, not duplicated.
   like `colorRanges.ts`). Fails on the missing cells.
 - GREEN: port + wasm transfer + legend cells. Gates: directed nextest
   (`extrusion_roles`, existing `viewer` tests), clippy strict, fmt, wasm32 build,
-  web build/lint/typecheck, gzip < 125000, browser desktop `presetSlice`/`slice`
-  on 16,17 with BROWSER-START/END.
+  web build/lint/typecheck, gzip < 125000, browser desktop `presetSlice`/`slice`.
 
 ## Failure modes enumerated before coding
 

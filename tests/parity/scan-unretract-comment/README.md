@@ -4,11 +4,8 @@ Source: `GCode.cpp:4782-4789` calls the scan restore;
 `GCodeWriter.cpp:1056-1081` passes `" ; unretract"` to emit_comment, whose prefix
 in `GCodeWriter.hpp:266-269` produces the literal `" ;  ; unretract"` suffix.
 SPEC: `docs/architecture/2026-10-24-scan-unretract-comment-spec.md`.
-Base: `5aa5b3950`. This tests-only RED does not change production code.
 
-The coordinator confirmed scan.rs is unchanged in all frozen worker tips, W1
-is HOLD without reservation, and W4 may later change only this ordinary
-non-firmware E-restore comment. GREEN is not authorized by this stage. No lift,
+The port changes only this ordinary non-firmware E-restore comment. No lift,
 travel/origin, state, zero-E, firmware, fan, brim or configuration code changes.
 
 All inputs derive from the existing GUI-generated BBL one-object project,
@@ -41,6 +38,3 @@ No Native output references are committed.
 Failure modes were written before implementation: omitted comment, normalized
 double separator, comment emitted when disabled, wrong restore context,
 firmware/zero-E confusion or a lift/state refactor hidden in a text fix.
-
-Freeze inputs/tests before any later GREEN. CPU17 taskset/PIN17, jobs=1 and
-threads=1; no FULL. Submit docs SPEC plus tests-only RED for review and HOLD.

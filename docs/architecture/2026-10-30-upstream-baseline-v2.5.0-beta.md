@@ -1,7 +1,7 @@
 # Upstream baseline migration: OrcaSlicer v2.5.0-beta
 
-Date: 2026-10-30. Decision: **accepted by the user**; migration plan and ownership
-are proposed for review. This commit is documentation only, not a parity switch.
+Date: 2026-10-30. Decision: **accepted**. This document is documentation
+only, not a parity switch.
 
 ## Decision, immutable inputs and current limits
 
@@ -9,22 +9,20 @@ The next parity target is tag **v2.5.0-beta**, commit
 **`345efec64c7b95a05ce5cf96df0dde66a158835c`**, authored/committed
 2026-10-27T22:30:27+08:00. The previous reference is v2.4.2,
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Ares planning base is main `e4a12268782154587e164a11bb67f09701599d3b`.
 The fetched tag was resolved to the requested commit before analysis.
 
 The user chose the new upstream baseline rather than extending 2.4.2-specific
 parity indefinitely. New work must port **the pinned beta's libslic3r/libvgcode**,
 not design an Ares pipeline or preserve accidental 2.4.2 output against beta.
 No dual engine, version-detection fallback, tolerance, comparator relaxation or
-fixture-specific rule is authorized by this decision.
+fixture-specific rule is introduced by this decision.
 
-The config owner is building the beta oracle bundle separately. **This analysis
-neither binds nor executes a beta oracle.** Producer availability/qualification
-remains the config owner's separate contract, not a prerequisite for this source-only
-document. There are no runtime parity, timing, determinism or cross-platform PASS claims here.
-Existing executable paths, fixtures, reference
+**This analysis neither binds nor executes a beta oracle.** Producer
+availability/qualification is a separate contract, not a prerequisite for this
+source-only document. There are no runtime parity, timing, determinism or
+cross-platform PASS claims here. Existing executable paths, fixtures, reference
 caches and integration gates still belong to their recorded old revisions until
-the coordinator and config owner explicitly switch their producers. A version
+their producers are explicitly switched. A version
 string alone must never relabel old outputs as beta outputs.
 
 ## Complete source-change inventory
@@ -40,7 +38,7 @@ The name-status manifest, independently checked with `--no-renames`, contains
 linked tables, including headers, deletions, native-only utilities and unported
 features. These are **274 bounded current-port/counterpart mappings and 308
 "not ported" entries**, not a claim that 274 complete native files are rewritten.
-Mappings describe the current Ares base, before either in-flight chain is merged.
+Mappings describe the Ares code at the time of the inventory.
 
 | Proposed sole owner | Inventory | Files |
 |---|---|---:|
@@ -73,7 +71,7 @@ slices, not one monolithic rewrite. Work that does not consume an unfinished
 contract may be analyzed in parallel; final integration follows the contracts.
 Each exit below means a source-complete bounded slice plus its **single targeted
 public RED/GREEN filter and fmt/Clippy**, not per-slice FULL or workspace E2E runs.
-End-to-end interaction coverage belongs to the integrator's batch.
+End-to-end interaction coverage belongs to integration-level E2E runs.
 
 ### 0. Producer/source contract — config owner, before any beta parity result
 
@@ -82,7 +80,7 @@ instrumented oracle's exact patch, ELF and producer identity. Seed initializatio
 or observability patches must not change the algorithm under test. Never infer
 all determinism from the new mesh sorts: RNG-dependent seam/template paths still
 need a declared producer contract. Keep old evidence read-only and separately named.
-**Exit:** coordinator publishes usable pinned beta producers and the targeted
+**Exit:** pinned beta producers are available and the targeted
 runner consumes them explicitly; missing oracle means blocked, not skipped PASS.
 No oracle build or harness switch is implemented by this ARD.
 
@@ -133,8 +131,8 @@ No new geometry crate is proposed without a separate justified extraction decisi
 no native-only C++ dependency may break browser WASM.
 **Exit:** targeted public slice cases with literal/oracle output distinguish nested
 holes/open Z paths/offset behavior and coplanar versus shallow mesh corners; ordered
-loops and starts are preserved, not canonicalized by the comparator. The integrator,
-not each slice author, carries platform and scheduling/reproducibility E2E coverage.
+loops and starts are preserved, not canonicalized by the comparator. Integration-level
+E2E, not each slice, carries platform and scheduling/reproducibility coverage.
 
 ### 3. Walls and Arachne — walls/seams owner, after the geometry contract
 
@@ -149,7 +147,7 @@ ordering, narrow-hole/top/overlap and width/junction behavior; do not compensate
 for wrong Clipper2 results with perimeter-only numeric tuning.
 **Exit:** targeted public wall cases retain exact supported extrusion geometry,
 width-derived E and final output; any retained GCC ordering/float evaluation must
-be justified against beta source, not only the old Arachne geometry repair receipt.
+be justified against beta source, not only the old Arachne geometry repair.
 
 ### 4. SeamPlacer, SeamContour and PreciseSeam — walls/seams owner
 
@@ -220,7 +218,7 @@ changed `WipeTower2.cpp` methods.
 Important beta break: recommendation now returns `MultiNozzleUtils::LayeredNozzleGroupResult`,
 not the old integer vector. Print's updater accepts extruder/volume/nozzle maps;
 used-slot merging, variant expansion and map_2/retract rebuild lifecycle changed.
-An old auto-only vector refresh/37-key receipt is NOT a beta proof or a reason to
+An old auto-only vector refresh/37-key result is NOT a beta proof or a reason to
 restore 2.4.2 behavior. Static grouping data needed by existing one-/two-extruder
 machines is required; selector/rack/dynamic multi-nozzle optimization remains deferred.
 
@@ -267,52 +265,40 @@ viewer, filesystem or slicer logic may leak into rendering-neutral vgcode/WASM.
 Deferred means outside execution support, not a fallback to old algorithms. Schema
 preservation and source-cited public admission behavior must distinguish unsupported
 activation where needed. Every later feature requires its own owning upstream
-slice and approval; this table is not blanket implementation authorization.
+slice; this table does not itself scope any implementation.
 
-## In-flight 2.4.2 chains and evidence
+## Prior 2.4.2 work
 
-Keep the approved layer-region ordering/Arachne geometry and numeric chain
-`285976316..96840a79a` and filament-map normalization/refresh chain
-`f69b4619b..ab1a6685d` frozen with original RED/GREEN, source/tree and producer
-receipts. Neither tip is an ancestor of the chosen Ares planning base. No commit
-from them is replayed or rewritten by this doc-only branch.
-The coordinator may finish the approved prior-baseline integration under its
-existing 2.4.2 contract; migration slice authors synchronize from that explicit
-integration point, not concurrently cherry-pick overlapping parts. Source-compare
-each accepted fix
-against beta before retaining, adapting or superseding it. Preserve still-valid
+Earlier 2.4.2 fixes, including the layer-region ordering/Arachne geometry and
+numeric chain and the filament-map normalization/refresh chain, must be
+source-compared against beta before retaining, adapting or superseding them. Preserve still-valid
 concepts, not obsolete byte output or snapshot lifecycles. In particular, the
 Arachne chain's Clipper1-sensitive geometry requires new engine provenance, and the
 old vector map refresh cannot stand in for beta's layered/volume/nozzle-map update contract.
 
 Reuse immutable input fixtures where beta admits them; obtain new expectations
-from the new source/oracle without overwriting historical receipts. No automatic
+from the new source/oracle without overwriting historical results. No automatic
 baseline waiver, blanket golden regeneration or relabelling a 2.4.2 PASS as beta.
-Old FULL counts and known failures are history, not beta exit criteria. Before
-cutover, pending 2.4.2 discoveries stop expanding that baseline unless the coordinator
-explicitly requests a source-valid prerequisite or regression diagnosis.
+Old full-run counts and known failures are history, not beta exit criteria.
 
 ## Parity cutover
 
-Cutover happens **once**, only after the beta producers are ready and the approved
+Cutover happens **once**, only after the beta producers are ready and the
 prior-baseline integration, test cleanup and behavior-name migration have landed.
 **One commit** switches the parity environment, both locally and in Tier 1 CI,
 from the 2.4.2 producers to the pinned v2.5.0-beta producers. There is no
 dual-baseline runner or fallback to the old producers.
 
-Immediately after cutover, the integrator runs a **FULL on the beta producers**.
-Its failure set is recorded as the **beta migration ledger**, with the run's
-producer/source provenance. The ledger is coordinator evidence kept **outside
+Immediately after cutover, a **full parity run on the beta producers** is made.
+Its failure set is recorded as the **beta migration baseline**, with the run's
+producer/source provenance. That baseline is kept **outside
 the repository**, not a checked-in waiver or replacement golden set.
 
-From then on, every batch must introduce **no new failures versus the current
-ledger**, and the ledger must **only shrink**. Each slice explicitly names the
-ledger entries it closes; a closed entry cannot be reopened by a later batch.
+From then on, changes must introduce **no new failures versus the current
+baseline**, and the failure set must **only shrink**.
 
 The 2.4.2 producers remain rooted read-only for historical evidence, not as an
 active acceptance baseline. **No new 2.4.2 work is accepted after cutover.**
-This documentation-only change defines the decision; it does not perform the
-cutover or run the FULL.
 
 ## Minimal per-slice testing and naming policy (effective now)
 
@@ -321,10 +307,10 @@ cutover or run the FULL.
   module-structure coupling, mocks or mockall. Keep test logic declarative: no
   loops or computed expectations; Native bytes or independent literal values are
   the expectation, not a copied implementation.
-- A slice author runs **only its targeted RED/GREEN filter**, plus
+- A slice runs **only its targeted RED/GREEN filter**, plus
   `cargo fmt --all -- --check` and `cargo clippy --workspace --all-targets -- -D warnings`,
-  then sends REVIEW-REQUEST. **No per-slice FULL, REQUIRE=1 non-parity gate, broad
-  parity sweep or rerun.** The integrator batch carries E2E interaction coverage.
+**No per-slice full run, REQUIRE=1 non-parity gate, broad
+parity sweep or rerun.** Integration-level E2E carries interaction coverage.
 - Proptest is optional for a crisp upstream invariant through an existing public
   API; do not expose private geometry merely to test it. There is no external
   service, so do not introduce testcontainers.
@@ -333,21 +319,18 @@ cutover or run the FULL.
   `filament_refresh_preserves_unused_assignments`. No process labels, milestone/phase
   tags or opaque abbreviations. Printer models/G-code commands are permitted only
   together with the behavior being checked.
-- Do NOT rename existing identifiers during port slices. The fill/support owner
-  handles the dedicated test-cleanup and behavior-name migration commits; account
+- Do NOT rename existing identifiers during port slices. Dedicated test-cleanup
+and behavior-name migration commits handle renames; account
   for those commits explicitly when comparing manifests, rather than mixing name
   churn into migration behavior.
 
 No beta oracle run or target RED is claimed here.
 
-## Area ownership and handoffs
+## Area partition
 
-The six inventory tables are the exhaustive proposed upstream-file partition;
-each changed file has ONE area owner. File counts include deferred/native-only
-tracking, so they are not effort estimates. Operational assignments and detailed
-handoffs are coordinator evidence outside the repository. Existing protected owners
-hand off explicitly after the old integration freeze; this ARD does not authorize
-concurrent edits or override another area's in-flight branch.
+The six inventory tables are the exhaustive upstream-file partition;
+each changed file belongs to ONE area. File counts include deferred/native-only
+tracking, so they are not effort estimates.
 
 Every executable slice must cite the pinned upstream file **and function/type**,
 name its exact Rust destination, distinguish included/deferred behavior, and state

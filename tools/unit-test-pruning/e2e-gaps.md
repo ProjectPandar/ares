@@ -5,8 +5,8 @@ Production regions never executed by the seeded E2E corpus
 profraw attribution). Region ranges are `startLine:col-endLine:col` from
 `llvm-cov export` on the instrumented ares-core test binary
 (`ares_core-3eb8b8deb188e29f`). For each gap, the upstream OrcaSlicer
-`libslic3r` function and the option needed to reach it are listed so the
-coordinator can add E2E oracle cases after pruning finishes.
+`libslic3r` function and the option needed to reach it are listed so
+E2E oracle cases can be added after pruning finishes.
 
 ## project_slice/prepare_infill/combine_infill
 

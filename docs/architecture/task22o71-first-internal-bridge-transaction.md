@@ -88,8 +88,7 @@ must create one with source metadata and final geometry while consuming the
 candidate predecessor. Follow-up tests freeze candidate-key scheduling,
 ordering, ownership/disposal, unsupported-pattern behavior, repeatability, and
 the full committed KSR surface snapshot. Exit also requires workspace Nextest,
-strict Clippy/rustfmt, Tier-1 portability builds, LOC/static checks, and an
-independent six-axis review/repair loop.
+strict Clippy/rustfmt, Tier-1 portability builds, and LOC/static checks.
 
 ## Verification evidence
 
@@ -113,6 +112,4 @@ Every changed or added Rust file is below 400 LOC (maximum 372; maximum new
 O71 shard 362); the O71 slice contains no source-splitting include macro,
 TODO/FIXME marker, stale dead-code allowance, platform I/O, or staged file.
 The pinned OrcaSlicer worktree is clean at
-`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Independent source, logic,
-standards, spec, test, ownership, and lifecycle re-reviews all approved the
-repaired final tree without a remaining item.
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`.

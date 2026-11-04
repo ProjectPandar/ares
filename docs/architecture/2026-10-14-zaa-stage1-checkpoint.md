@@ -1,9 +1,8 @@
 # ZAA stage1: deterministic ray kernel and perimeter contour checkpoint
 
-Base main104d8497097dc7239ad63f7a69f3b418b699b3e8. SPEC06a8 / RED6d2b6f37a /
-repair PLAN90381524d approved; later staged condition permits contour now
-and requires separate mechanical fill migration after W5/W6 main (satisfied).
-This checkpoint is not whole-feature GREEN or merge-ready. The capability
+SPEC06a8 / RED6d2b6f37a / repair PLAN90381524d. The staged condition permits
+contour now and requires a separate mechanical fill migration.
+This checkpoint is not whole-feature GREEN. The capability
 rejection remains; FillExtrusionPath and motion XYZ/E are not activated.
 
 Included source boundaries: AABBTreeIndirect.hpp Tree3f, median-of-three
@@ -31,14 +30,9 @@ Before production, isolated failure inventory and six analytic tests were
 written. Tests prove nearest/backface/absent/nonpositive hit, equal-distance
 left precedence, repeatable complete tree topology, original junctions,
 far/no-hit inactivity, top/wall height bounds and ironing's separate bound.
-CPU13 nextest filter project_slice::contour_z::tests:::6/6 PASS,7077 skipped;
-root /tmp/worker2-zaa-stage1-kernel-tests-root. No workspace/full was run.
-Core all-target/all-feature strict clippy passed before the final source
-length-order correction; exact committed checkpoint checks follow separately.
-The interrupted FULL6 check is VOID and is not included as gate evidence.
 
 Next: dedicated FillExtrusionPath -> Polyline3/fitting mechanical-only commit,
 source defaultZ0/flagfalse, owned-buffer/capacity preservation, no per-point
 allocation/clone. Verify whole-output behavior in both Native modes. Then
-activate fill contour and source GCode XYZ/E/travel branches, with separately
-approved obsolete-capability-test retirement before deleting the guard.
+activate fill contour and source GCode XYZ/E/travel branches, with separate
+obsolete-capability-test retirement before deleting the guard.

@@ -1,16 +1,14 @@
 # ARD: BBL Type1 wipe-tower rewrite milestone proposal
 
-## Status, ownership and priority
+## Status and priority
 
-W5 owns this coordinator-accepted stock parity gap. This document proposes
-source slices; it does not authorize tests or implementation. The existing W5
-integration stack remains frozen at `55a81063b7613f83f5b59f4b10aa503457589163`.
-Docs are isolated on `w5/type1-milestone-proposal`. Separate approvals are
-required for SPEC, public RED, GREEN and integration/FULL.
+Status: proposed. This document covers an accepted stock parity gap and proposes
+source slices; tests and implementation follow separate SPEC, public RED and
+GREEN commits.
 
 Prioritize the missing tower for stock BBL AMS prints before further literal
 placeholder edge cases. Follow [ARD-0105](ard-0105-smooth-type2-timelapse-port.md)
-for existing shared integration ownership, not its independent Type2 algorithm.
+for existing shared integration boundaries, not its independent Type2 algorithm.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`; all source paths below
 are relative to `OrcaSlicer/src/libslic3r`.
 
@@ -22,10 +20,8 @@ unchanged. Official Native exported the two-slot project after slot metadata
 materialization. Input SHA256:
 `ab00b9040c3ccc1c10490a220880b87108aed7edd3a19926b8e7967f1287e506`.
 
-Discovery bundle:
-`${COORD_ROOT}/evidence/w5-stock-multi-materialized/`;
-`PROPOSAL-RR.md`, `0/verified.json`, input, raw streams, diffs and launch receipts
-are retained there. Official and seeded Native each succeed twice and agree
+The discovery bundle retains input, raw streams, diffs and launch metadata.
+Official and seeded Native each succeed twice and agree
 apart from generated-by normalization; Ares succeeds twice with stable output.
 Both issue 25 T1 commands; Native has 101 WIPE_TOWER_START blocks, Ares none.
 The unmodified stock start template yields Native
@@ -141,7 +137,7 @@ binding seams. Replace absent Type1 producer data, not downstream formatting.
 Included: actual generated bbox, rib offset, rotation/plate translation,
 brim/cone corners and convex hull; retain model/support/skirt/brim contributions.
 Type2's absent outer_wall must not be generalized to Type1. Coordinate with
-other brim/skirt/chamber owners before shared-file changes; do not absorb their
+other brim/skirt/chamber slices before shared-file changes; do not absorb their
 independent algorithms into this milestone.
 Deferred: rendering triangle meshes and UI preview only; a live geometry
 consumer cannot be deferred merely because it originally used a mesh.
@@ -153,7 +149,7 @@ full Native/API/CLI equality, not a patched G29 assertion, is the exit.
 
 The non-final consumed checkpoint is `fcf71a9cc`. Its frozen public witnesses
 remain full-stream RED. The retained raw diff shows brim arc I/J/E differences
-and G29 X `9.75224` versus `9.75223`; neither is assigned to W4.
+and G29 X `9.75224` versus `9.75223`; neither belongs to this slice.
 
 `WipeTower.cpp:3171::finish_layer_new` calls `offset(outer_wall,
 scaled(spacing))`. `Point.hpp:664–669` selects integer `coord_t` output for
@@ -175,7 +171,7 @@ consumers. Do not change the G29 template, formatter or bbox to compensate.
 
 ## T4 outer-wall carrier and Brim exclusion handoff
 
-Coordinator authorizes `Print.cpp:3565–3571,5171–5224` and
+`Print.cpp:3565–3571,5171–5224` and
 `Brim.cpp:651–659` as a separate consumed slice. Preserve every nonempty
 print-Z outer-wall row as closed polylines, not just its bounding box. The
 first map entry supplies the bbox (the source empty-map branch is a zero-point
@@ -188,11 +184,10 @@ Pass tower exclusion polygons explicitly from orchestration through
 `BrimPlan::generate_all/generate` and the existing bed-area geometry seam.
 Append them to the forbidden areas once those areas are in the plate frame,
 before the bed-border mask and area difference, never to already generated
-paths or to global state. Preserve the W2 `mm3_per_mm` expression and leave
+paths or to global state. Preserve the existing `mm3_per_mm` expression and leave
 `motion/skirt_brim.rs` untouched. Keep `brim.rs` below400 LOC.
 
-Pre-implementation Native-first supplemental RED discovery is retained under
-`${COORD_ROOT}/evidence/w5-type1-t4-single-brim-ordered-discovery`:
+Pre-implementation Native-first supplemental RED discovery covers:
 stock enabled input, GUI-reachable outer-only brim20, tower(80,115), cube0
 no-brim override. Official and seeded Native/CLI exits are0; complete raw
 streams differ. Existing frozen public fixtures/tests remain unchanged.
@@ -214,13 +209,13 @@ shared travel planner, or fixture nozzle offsets to compensate.
 
 ## Scope and qualification gates
 
-1. Approve this docs proposal, then source-cited SPEC for the consumed chain
+1. Source-cited SPEC for the consumed chain
    with explicit reachable branch inventory. T1→T2→T3→T4 is dependency order;
    partially activated Type1 is never a release or integration boundary.
 2. Author public E2E RED before production edits, using existing NativeCase /
    `native_stream_case::check(..., (false, |_, _| {}))`; retain input hashes,
-   official then seeded fresh Native caches and Native-success receipts.
-   Freeze approved tests after genuine RED. No committed Native outputs,
+   official then seeded fresh Native caches and Native-success checks.
+   Freeze tests after genuine RED. No committed Native outputs,
    expected byte constants, ignores or private-entry substitutes.
 3. Qualify GUI variants rather than inventing gaps. Additional Type1 branches
    (different adhesiveness/soluble categories, rib walls, support/raft,
@@ -228,18 +223,17 @@ shared travel planner, or fixture nozzle offsets to compensate.
    before a complete Type1 claim. X1C discovery alone does not certify them.
    Source-reachable branches may not be hidden by new rejection guards; if a
    dependency prevents the selected chain, STOP and request a scope decision.
-4. Implement only after RED approval. Reuse Type2 seams with regression coverage
+4. Implement only after RED. Reuse Type2 seams with regression coverage
    and preserve all live downstream consumers. No emission-only or bounds-only
    milestone exit. Any remaining complete-stream difference is unresolved.
 5. Exit: stock baseline and qualified variants whole-PASS official and seeded,
    ordered public API/CLI comparisons with raw API==CLI, unchanged Type2
    regressions, fmt, strict workspace/all-target Clippy, browser-WASM check,
-   and coordinator-scheduled complete nextest validation on exact final tip.
-   CPU11 serial, separate fresh Native caches, official→seeded; retain raw
+   and complete nextest validation on the exact final tip.
+   Use separate fresh Native caches, official→seeded; retain raw
    streams, input SHA, commands, exit codes and verifiable artifact locations.
-   FULL/rebase/push/merge require coordinator authority; none run for this docs RR.
 
 Deferred projects: general multi-transform PrintObject preparation (ARD-0105),
 GUI/rendering, standalone Type2 redesign and unrelated placeholder arithmetic.
-These are not excuses to suppress reachable Type1 behavior. Existing W5's nine
-approved placeholder slices retain their independent frozen integration window.
+These are not excuses to suppress reachable Type1 behavior. The existing nine
+placeholder slices remain independent.

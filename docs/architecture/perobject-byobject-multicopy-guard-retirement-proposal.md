@@ -1,17 +1,15 @@
 # B proposal: retire ByObject perobject-skirt owner multiplicity guard
 
-Status: **DOCS-ONLY REVIEW-REQUEST / PROPOSAL ONLY**. Base exact approved A GREEN
-`344320817d78b96cbc7005fac426e913d127c8cd`, queued stack26, not locally integrated
-or rebased. Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-B production/test changes are NOT authorized or committed by this proposal.
+Status: Proposed.
+Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+This proposal makes no B production/test changes.
 
 ## Fresh Native-first probe after A
 
-Evidence: `${TMP_ROOT}/ares-byobject-perobject-B-proposal-344320817/discovery-report.json`.
 Fresh baseline AND guard-lift Native runs precede public API/real CLI in BOTH
-modes, serial CPU18 with independent roots/caches, canonical reference settings
-passed explicitly to Native AND public launches, actual descendant/thread masks
-sampled CPU18. Do not reuse the pre-A failed probe as current evidence.
+modes, serial with independent roots/caches, canonical reference settings
+passed explicitly to Native AND public launches. Do not reuse the pre-A failed
+probe as current evidence.
 
 Reuse the frozen accepted input-only family from the earlier A/B proposal:
 2 owners / 3 instances X50,125,200,Y110,Z2, scale0.4, spacing75, ByObject,
@@ -54,13 +52,10 @@ On A344320817, BOTH modes now give **3/3 COMPLETE unchanged ordered Native/API/C
 PASS**, raw API==CLI. Target has Native/API TWO owner brim blocks / TWO skirt
 blocks. Both controls retain IDENTICAL raw API AND CLI bytes baseline→probe.
 No M73 filtering, snaps, tolerance, fallback or equality inversion. This is DIRTY
-probe evidence, **not a clean B GREEN**, and does not replace authentic reviewed RED.
+probe evidence, **not a clean B GREEN**, and does not replace an authentic RED.
 
-Source restored byte-for-byte. Restoration build/fmt/strict clippy exit0; restored
-CLI SHA256 `6d399d05ed02f1ff70f8fd7ff3762f2415e9e1a3e15bc88e3214f466190c85f8`
-is BIT-IDENTICAL to the clean baseline executable. `restoration-audit.json`
-records this; no lifted guard remains in the reusable cargo target. No B family
-or full/workspace runs, new WASM run, rebase, merge or push during FULL25 freeze.
+Source restored byte-for-byte; the restored CLI is bit-identical to the clean
+baseline executable.
 
 ## Owning upstream rewrite slice and exact Rust destination
 
@@ -88,22 +83,22 @@ tower/flush and ByObject shared-group guards. Preserve `skirt/occupied.rs`,
 `skirt/member_groups.rs`, `layers/object_skirt.rs`, ordinary owner expansion,
 plate-frame emission and cursor consumers unchanged. No API/parser widening.
 
-## Requested next barrier
+## Next step
 
-Approve this B source boundary/frozen family for a test-only public RED commit:
+A test-only public RED commit for this B source boundary/frozen family:
 three named cases, Native FIRST, Native positive activity above, target accepted
 output expected (therefore genuine Unsupported failure on clean A), controls
 complete PASS, unmodified `golden::compare_ordered_bytes_generator_only`, raw
 API==CLI for accepted outputs. Commit input-only fixtures/SHA/member manifests,
-never Native outputs. Independent RED approval before minimal production guard
-retirement; probe PASS must not be substituted for either review barrier.
+never Native outputs. RED precedes minimal production guard retirement; probe
+PASS must not be substituted for it.
 
-After that authorization, GREEN must first pass all three cases BOTH modes,
+GREEN must first pass all three cases BOTH modes,
 then targeted brim/skirt/per_object/sequence/ByObject/wipe families BOTH modes,
-fmt/strict/WASM, exact clean hashes, CPU18/jobs2/threads2 and files<=400 LOC.
-Controls' raw API/CLI must remain RED→GREEN stable. ANY residual is STOP/report,
-not permission for estimator/exporter work or adjacent geometry changes.
+fmt/strict/WASM and files<=400 LOC.
+Controls' raw API/CLI must remain RED→GREEN stable. Any residual is not
+permission for estimator/exporter work or adjacent geometry changes.
 Deferred: new brim-kind/holes-specific parity claims (witness here is outer_only),
 shared-group error parity, combine1+perobject admission, new overlap/touching
 geometries, support/raft/tower/multifilament. Existing supported kind policy is
-not expanded. A remains approved; B remains guarded pending the above process.
+not expanded. B remains guarded until the RED/GREEN above lands.

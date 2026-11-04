@@ -30,7 +30,7 @@ print-region external-wall nozzle selection, first object default width and
 existing Flow construction/scaled spacing semantics. It must preserve upstream
 print-region/object ordering, not substitute the currently emitting object or
 its region. Before any GREEN implementation, audit the existing Rust carriers
-for that order and report required mechanical wiring for approval.
+for that order and report required mechanical wiring.
 
 Deferred: independent wall/perimeter/infill flow algorithms, skirt flow,
 painted-brim behavior, brim owner ordering/contact components, support/tower
@@ -60,25 +60,18 @@ uses321+478. The first strict residual is an earlier skirt-position move because
 brim occupied footprints feed the skirt hull. Target walls legitimately change;
 no claim that complete target/control streams should match. These counts are
 external diagnostic evidence, not hard-coded result assertions.
-
-Discovery evidence is external
-`worker2-brim-flow-discovery-20261022T192823/DISCOVERY-REVIEW-REQUEST.md`.
 No M73, timing, travel, geometry or metadata masks are permitted.
 
-## SPEC → RED gate (current authorization ends here)
+## SPEC → RED gate
 
 1. Commit this docs-only SPEC before adding tests or fixtures.
 2. Add exactly the two frozen 3MFs and two public tests. Reuse unchanged
    `runner::native_stream_case::check` with `(false, |_, _| {})`; no new harness,
    duplicated runner, geometry callback, guard, fallback or expected-error test.
-3. On the exact RED tip run both modes, CPU13 only, build jobs1, test threads1,
-   PIN_OFFSET13 and seeded replay CPU13; each mode uses a fresh empty cache.
+3. On the RED tip run both modes; each mode uses a fresh empty cache.
    Require Native double replay success, one strict target failure and one whole
    stream control pass. Retain public API and real CLI comparison evidence,
    CLI exit status and raw API/CLI equality. No assertion weakening.
 4. Run `cargo fmt --check` and `cargo clippy --workspace --all-targets -- -D warnings`.
-5. Submit RED RR and STOP. Do not write production code or run FULL without new
-   authorization. Freeze tests, fixtures, SHA values and shared helper for any
-   later GREEN. Coordinator owns review/merge; W2 integration-window notification
-   interrupts this work immediately. Keep the previously approved skirt chain
-   frozen in its separate worktree.
+5. Do not write production code in the RED stage. Freeze tests, fixtures, SHA
+   values and shared helper for any later GREEN.

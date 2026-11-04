@@ -9,8 +9,7 @@ A plain CLI slice of a 3MF whose embedded process declares
 system name is rejected by Native with `-17 CLI_PROCESS_NOT_COMPATIBLE`
 before any slicing. Ares currently slices it and exits 0.
 
-Admission evidence (worker1 handoff, `${TMP_ROOT}/ares-pcp-embedded/admission`):
-`native-slice/command.txt` runs `--slice 0 --outputdir <dir> input.3mf`;
+Admission evidence: the Native command runs `--slice 0 --outputdir <dir> input.3mf`;
 products are `exit 239` (≡ `-17` mod 256), stdout
 `run found error, return -17, exit...\n`, empty stderr, the sorted-key
 `result.json` below, and no G-code:
@@ -28,8 +27,8 @@ products are `exit 239` (≡ `-17` mod 256), stdout
 }
 ```
 
-`input-receipt.json` records the input identity (members + SHA256);
-`input.3mf` is the pinned fixture source.
+The admission `input.3mf` (identity recorded by members + SHA256) is the
+pinned fixture source.
 
 ## Upstream boundary (source-cited, pin `8500fcdcc`)
 
@@ -77,7 +76,7 @@ products are `exit 239` (≡ `-17` mod 256), stdout
 `cli_exit_process_compatible_family_matches_native` running
 `assert_family("process-not-compatible", ProcessNotCompatible)` with the
 fixture `tests/parity/validation/cli-exit/process-not-compatible.3mf`
-(bytes pinned from `${TMP_ROOT}/ares-pcp-embedded/admission/input.3mf`).
+(bytes pinned from the admission `input.3mf`).
 RED = Ares exits 0 and exports G-code while Native exits 239 with the
 channels above. GREEN = exit byte, stdout, stderr, `result.json`
 (`result_comparison_bytes`) and no-G-code all identical.
@@ -90,7 +89,7 @@ channels above. GREEN = exit byte, stdout, stderr, `result.json`
 - System-name fallback: empty `inherits_group` slot ⇒ preset's own name.
 - Exact channel bytes: stdout line, empty stderr, sorted-key
   `result.json`, POSIX exit `239`, no G-code export.
-- Fixture pinned to the admission input (identity in `input-receipt.json`).
+- Fixture pinned to the admission input (identity by members + SHA256).
 
 ## Deferred
 
@@ -106,14 +105,14 @@ channels above. GREEN = exit byte, stdout, stderr, `result.json`
   ported for catalog composition in
   `ares-core/src/profiles/compatible.rs`; not a CLI concern here.
 
-## Boundary with worker1 (PCP serialization fidelity)
+## Boundary with PCP serialization fidelity
 
-Worker1 owns writing `print_compatible_printers` into 3MF serialization
-fidelity. This slice only **reads** the embedded
+Writing `print_compatible_printers` into 3MF serialization is a separate
+slice. This slice only **reads** the embedded
 `print_compatible_printers` / `inherits_group` values at load time and
 contains no serialization, export, or `orca_block_keys` changes. If the
 RED surfaces a serialization defect in the fixture path, it is reported
-to worker1 rather than fixed here.
+to that slice rather than fixed here.
 
 ## Controls
 

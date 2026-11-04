@@ -1,7 +1,6 @@
 # Proposed slice: FillGrid multiline trapezoidal mode0
 
-Status: approved boundary; public Native-backed RED accepted, GREEN in validation.
-Base: `296b060186fc90590e23238145a27fa4805c59e7`.
+Status: Accepted boundary; public Native-backed RED accepted.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Selection and ownership
@@ -10,22 +9,18 @@ Choose the deferred Grid multiline dispatch finding from
 [the multiline union boundary](fillbase-multiline-clipper2-union.md), rather
 than reopening the closed stock matrix. Historical G2 is a real whole-output
 DIVERGENT, not a guard or an attributable union RED. Its old observation is
-Native/Ares line18 `M73 P0 R45` / `M73 P0 R46`, retained at
-`/tmp/worker6-union-numerics-trial.yr9Ms7/control-audit.json`. It is not fresh
+Native/Ares line18 `M73 P0 R45` / `M73 P0 R46`. It is not fresh
 acceptance evidence for this base.
 
-Offline inbox audit found no other active claim to `FillGrid::fill_surface`
-mode0 or its Grid generator. Previous worker6 notices explicitly deferred it
-until the shared multiline union and Stars slices merged; both are now main.
-Audit: `/tmp/worker6-grid-mode0-owner-audit.json`.
+`FillGrid::fill_surface` mode0 was deferred until the shared multiline union
+and Stars slices merged; both are now main.
 
-Do not touch W2 bridge-anchor C2 projection/admission, W3 centering C2/model
-assembly, W4 counterbore, W5 interface_shells, or web/CI. The one adjacent
-W2-area target is the **Grid arm only** in sparse_anchoring/arms.rs, required
+Do not touch bridge-anchor projection/admission, centering/model assembly,
+counterbore, interface_shells, or web/CI. The one adjacent bridge-anchor
+target is the **Grid arm only** in sparse_anchoring/arms.rs, required
 because upstream calls the same FillGrid generator for anchoring and emission.
-This is not authorization to alter transaction/anchor_projection.rs, bridge
-classification, loaded-config admission or any other pattern arm. Ask the
-coordinator before implementation if an active owner also needs that Grid arm.
+This slice does not alter transaction/anchor_projection.rs, bridge
+classification, loaded-config admission or any other pattern arm.
 
 Per-object skirts were considered but not selected: their new per-instance
 emission hook would intersect the ongoing centering consumer work.
@@ -59,7 +54,7 @@ The Grid arm in
 `project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/arms.rs`
 also uses the ordinary two-sweep generator for every count.
 
-Proposed changes after approval and fresh RED:
+Proposed changes after fresh RED:
 
 - New private `fill/grid_trapezoidal.rs` with a separate rows file if needed;
   each file <=400 LOC. Port mode0 setup and rows literally. No new crate,
@@ -77,7 +72,7 @@ Proposed changes after approval and fresh RED:
   keep their existing path and do not compute this additional box.
 - Sparse anchoring: only the Grid arm in arms.rs and the existing bbox
   eligibility predicate in transaction/candidate_expansion/layers.rs:65-78.
-  The coordinator approved this actual call-site correction; sparse_anchoring/mod.rs
+  This is the actual call-site correction; sparse_anchoring/mod.rs
   already threads the box and layer id and remains unchanged. Feed the actual current
   object, layer id and representative thickness_layers to the same mode0
   generator as emission. Do not recalculate a regional/surface bbox or use
@@ -123,8 +118,8 @@ brim/skirt disabled and templates fixed. No arrange-based change to hide a
 mismatch. Assert G2-C2 really reaches combined sparse layers; if it does not,
 report before altering or dropping that witness.
 
-For each official and seeded run, use fresh cache/root, taskset CPU11, explicit
-jobs2/threads2, and the current canonical producers. Native success/output
+For each official and seeded run, use fresh cache/root and the current
+canonical producers. Native success/output
 must exist before asserting public validated Ares API and CLI success. Compare
 complete ordered bytes/line count with the unchanged generated-by-only
 comparator, layer Z/HEIGHT and meaningful sparse extrusion presence. Retain
@@ -132,25 +127,20 @@ whole first difference plus first sparse-layer diagnostic externally; M73 is
 never removed from acceptance. Count1 controls must be whole-output PASS;
 active controls must show Native sparse motion changed, not only CONFIG_BLOCK.
 
-A separate RED commit must record a main296 failure against an accepted Native
+A separate RED commit must record a main failure against an accepted Native
 stream in both modes. Do not reuse the historical G2 observation as current
 RED. If all nine are already equal, report NO RED FOUND and stop. Any Native
 refusal, request rewriting or unrelated deterministic Ares difference is a
 blocking observation, not a reason to weaken controls or change context.
-GREEN is a separate production commit. Existing assertion reversals/retirements
-require advance approval; this proposal requests none.
+GREEN is a separate production commit. No existing assertion is reversed or
+retired by this slice.
 
-## Exit and coordination
+## Exit
 
 After fresh finite GREEN: complete option_coverage group in both modes,
 including non-Native tests, existing Stars seven + union ten controls both
 modes, and existing Grid count1 controls. Audit raw bytes for every non-RED
-caller; any change stops for coordinator review. Strict Clippy, fmt, wasm32,
-and default-environment workspace must pass in allocated slots. Files stay
+caller; any change stops the slice. Strict Clippy, fmt, wasm32,
+and default-environment workspace must pass. Files stay
 <=400 LOC, no allow/expect/ignore/probes or Native output commits.
-
-Request explicit FULL-GO only after the engineering/directed prerequisites;
-canonical candidate-only official+seeded full uses the unchanged control script,
-fresh per-leg resources, jobs2/threads2 and exact START/END inbox markers.
-Report the exact reviewed HEAD and all evidence; merge only after APPROVED.
-This document defines the approved boundary, not final acceptance evidence.
+This document defines the boundary, not final acceptance evidence.

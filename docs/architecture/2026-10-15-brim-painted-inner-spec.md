@@ -1,7 +1,7 @@
 # SPEC(提案): btPainted inner 调用点（Brim.cpp:551）——painted ears 补全（discovery-only）
 
 状态：SPEC-DRAFT（docs-only，未跑 Native）。承接：btPainted outer
-GREEN `cbe4ccda3`（已批，入 stack-19 队列）——painted 当前仅移植
+GREEN `cbe4ccda3`——painted 当前仅移植
 outer 调用点 `:537`；EFC snap（`:392-404`）需 EFC 轮廓链
 （`use_brim_efc_outline` `:56-62` + `closest_point_on_matching_island`
 + EFC 调整轮廓整体独立），discovery 成本高，故先选 inner 调用点。
@@ -27,7 +27,7 @@ outer 调用点 `:537`；EFC snap（`:392-404`）需 EFC 轮廓链
 gap-offset 环差集；**无 holes 处理、无 inner 盘**。带孔对象 +
 painted 点在孔内时，孔内盘环完全缺失——预期强分歧（RED 好造）。
 
-## 3. Discovery 计划（Native-first，CPU7,8，≤4 迭代）
+## 3. Discovery 计划（Native-first，≤4 迭代）
 
 fixture：复用 InnerOnly 片已验证的腔体 mesh（`pocket6`：孔 ±2 开底、
 z=3.5 封顶；normal(auto) support 落腔 31 处）+ `brim_type=painted`

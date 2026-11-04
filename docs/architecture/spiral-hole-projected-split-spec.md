@@ -1,7 +1,7 @@
 # Spiral hole projected-split rewrite SPEC
 
-Status: COORD authorized SPEC → tests-only RED → minimal GREEN → review/hold.
-Stack base: frozen reset-comment `83e2e4f090a54f64fd17e4895db735f7c8f8057f`.
+Sequence: SPEC → tests-only RED → minimal GREEN.
+Built on frozen reset-comment `83e2e4f090a54f64fd17e4895db735f7c8f8057f`.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Upstream-first boundary
@@ -62,9 +62,8 @@ stock/CW controls. Both mode failures must be real test failures.
 GREEN removes only the role exclusion and its newly unused import. All cases
 in both modes must pass Native/API/CLI complete comparisons and raw API==CLI.
 Run cargo fmt, workspace/all-target clippy, workspace checks and browser WASM
-check under CPU18/jobs1. Preserve binaries, failed attempts and raw evidence.
-No FULL; rebase/merge/push wait for the single W1 window after W5. Submit
-REVIEW-REQUEST and hold. Do not amend the frozen reset commits/branch.
+check. Preserve binaries, failed attempts and raw evidence.
+Do not amend the frozen reset commits.
 
 Included: configured spiral projected split for perimeter holes, including
 bottom layers. Deferred: orientation redesign, SpiralVase filter arithmetic,

@@ -1,20 +1,16 @@
 # O8-X2D-SCALAR: unresolved original flush-context divergence
 
-## Status and owner
+## Classification
 
-**UB_ADJACENT, worker1 (formerly pi-lint).** Coordinator approved handling
-contract `78b1007ed44c7a3d3db49271dc50a9b97c8e4d87`; verified on main
-`cbee8353998283332cb838f2be3b41b826d8ef66`, without production changes.
+**UB_ADJACENT.** The handling contract below is verified without production
+changes.
 This resolves the safe-input disposition, not Native numerical parity. Native
 success is an observed result of the UB invocation, never a parity PASS.
-Preserve the admitted test-only RED `65336cb594253ca0c4b54942719927cdf4c24bd8`
-and all `case-LqoYic` artifacts. No ignored test or numeric fallback is added.
+Preserve the admitted test-only RED. No ignored test or numeric fallback is added.
 
 ## Exact input and fresh observation
 
-Repository-cube10 X2D input:
-`${TMP_ROOT}/ares-x2d-flush-matrix/red/seeded/case-LqoYic/input.3mf`.
-Original admission and input SHA remain in `red/admitted-red.json`.
+Repository-cube10 X2D input (SHA `b980548a…`).
 This is a **test-constructed input, not a real GUI-saved 3MF**: the test exports
 repository `tests/parity/cube10.stl` with the stock X2D machine/process/filament
 profiles through Native CLI, binds two logical filaments, then rewrites
@@ -23,8 +19,6 @@ four-entry matrix) and adds explicit end-G-code tool switches. It is not a
 cropped customer GUI project. O8-X2D-SCALAR is scheduled after FM; genuine GUI
 provenance, if subsequently established for another reproducer, raises priority.
 
-Historical source base `d789b0750` includes `458938aa4`; candidate test-only HEAD
-`304bda1ebd9a1984f3cf9f01270424298c57f4fc` plus uncommitted FM preparation.
 Public `slice_project` on the exact original bytes returns
 `Flush volumes matrix do not match to the correct size!` after the dependency
 coverage rule preserves the original matrix: this two-colour input needs
@@ -37,11 +31,7 @@ show `unsupported NozzleVolumeType=30898` and `=6` respectively, between
 clock line. This establishes repeatable observed output for these two runs,
 **not deterministic or defined C++ behavior**: the invalid enum value changes.
 
-Historical captured evidence (not a new-main run):
-`${TMP_ROOT}/ares-x2d-flush-matrix/rebase-458/original-input/` contains input and
-source hashes, production diff, fresh build log/rlib hash, public API adapter
-result, actual Native outputs, stdout/stderr/debug logs and full two-run byte
-difference inventory. Ares error versus Native success remains an explicit
+Ares error versus Native success remains an explicit
 unresolved behavioral difference.
 
 ## Owning upstream boundary and Rust destination
@@ -59,7 +49,7 @@ Revision `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 
 Rust destination is the existing raw project/CLI preparation context and
 `ares-core/src/options/flush_matrix.rs`, not emitter geometry or a new pipeline.
-This follow-up must first define an approved source-owned handling contract for
+This follow-up must first define a source-owned handling contract for
 this undersized input. Preserving cells with unresolved dataset dependencies
 alone does not solve the original parity difference.
 Do not derive that contract from observed numeric values, emulate UB, relax the
@@ -67,9 +57,8 @@ matrix guard, or silently replace the original input with a complete vector.
 
 ## Undefined-read boundary and proposed handling contract
 
-This contract is **coordinator-approved**. It is not permission to emulate UB
+This contract is not permission to emulate UB
 or a declaration that the original Native-output parity difference is fixed.
-Current integrated base is `cbee8353998283332cb838f2be3b41b826d8ef66`.
 
 ### What is undefined, and what is not
 
@@ -102,13 +91,13 @@ A one-element vector is not globally illegal: O3 loading validation, option
 serialization and other source `get_at` consumers remain valid and authoritative.
 Only a calculator invocation needing the unavailable per-nozzle selector is
 outside the defined upstream domain. Native's changing invalid enums30898/6,
-coincidentally equal reconstructed values and seed/CPU pinning do not turn UB
+coincidentally equal reconstructed values and seed pinning do not turn UB
 into defined arithmetic or a reproducible contract. Return status0 is likewise
 not evidence of a valid index. No new global scalar-option rejection is implied.
 
 ### Proposed disposition: preserve, never synthesize
 
-Keep the already approved dependency rule at the shared byte/options boundary:
+Keep the existing dependency rule at the shared byte/options boundary:
 
 1. Retain the original raw option shape, old/new preparation context and supplied
    matrix. No automatic Standard extension, `get_at` substitution at the
@@ -128,7 +117,7 @@ Keep the already approved dependency rule at the shared byte/options boundary:
 4. Classify the original Native-success/Ares-error result as **source-UB input,
    unsupported automatic reconstruction**, not Native-output parity PASS.
    Preserve the admitted RED, both Native outputs, first UB boundary and Ares
-   outcome. Only an explicit coordinator disposition can close tracking#56 as
+   outcome. Only an explicit disposition can close this case as
    a documented unsupported-input contract; it must not claim numerical parity.
 5. A caller can explicitly supply per-nozzle types (e.g. two Standard entries)
    through the existing configuration interface. That is a **different effective
@@ -144,18 +133,18 @@ loader bypass, compatibility fallback, emitter patch or configurable UB mode.
 
 ### Spec-first verification and exit decision
 
-After exact-hash spec approval, capture a fresh current-main same-input public
+Capture a fresh current-main same-input public
 API outcome with input/source/build hashes and Native producer/resource identity.
 One source/Native trace establishes actual vector sizes and call location; do
 not retry until a desired garbage enum appears. Already preserved UB executions
 remain diagnostic evidence and are not a valid expected-G-code oracle.
 
-Before any necessary production edit, separately bind tests to the approved
+Before any necessary production edit, separately bind tests to the
 public bytes/options seam: original-input **defined rejection** (not a parity
 claim), an explicit fully specified selector control using Native full bytes,
 and supplied-valid-matrix preservation. This must not delete/relax/ignore the
 historical parity RED or reuse the same label to turn its verdict into PASS.
-If current code already implements the approved handling, prefer no production
+If current code already implements the handling, prefer no production
 change; record its verified behavior and close only by explicit disposition.
 Otherwise new test-only RED precedes the minimal source-precondition correction.
 
@@ -171,11 +160,8 @@ inputs, and explicitly inapplicable to the OOB invocation itself.
 ## Fresh-main verification and matrix record
 
 Machine-readable record: [o8-x2d-scalar-flush-context-record.json](o8-x2d-scalar-flush-context-record.json).
-Raw evidence: `${TMP_ROOT}/ares-o8-current-main-cbee/`. Source tree of `crates` is
-`788f2899cad65edfba97ade4dc2bf3476065870f` on both fetched main and the
-approved spec HEAD; `git diff origin/main -- crates tests scripts` is empty.
-Fresh `cargo build -p ares-cli` succeeded; binary/input/log/output hashes and
-reproduction commands are recorded. No production or test changes required.
+Fresh `cargo build -p ares-cli` succeeded; binary/input/output hashes are
+recorded. No production or test changes required.
 
 On byte-identical original input, the public validated byte/options entry
 through the fresh CLI returns exactly the existing matrix-size error, exit1,
@@ -208,18 +194,15 @@ as O8-X2D-SCALAR, not thirteen independent Rust failures. All are recorded in
 under `related_stock_cases`, with **UB_ADJACENT / parity_pass=false**.
 No original scalar RED, source option, guard, or comparator was changed.
 
-Evidence snapshot: the authoritative single-attempt matrix at `5cde90c23`.
-The saved thirteen 3MF inputs were replayed without editing their bytes.
-Fresh Ares observation uses main `879163bac`, its existing cargo-built CLI,
-and binds the input/binary/output hashes in
-`/tmp/worker3-o8-stock-ares-879/report.json`.
+Source: the single-attempt option matrix. The saved thirteen 3MF inputs were
+replayed without editing their bytes. Fresh Ares observation uses the existing
+cargo-built CLI and binds the input/binary/output hashes in the record.
 
 The exact seed-replay producer `72d4hac8qmg5p9m22v2kifbp1hkxjk63` was
 rebuilt to realize its existing separate-debug output. Raw Native SHA remains
 `59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`;
 Build-ID `bdbbf4336095c2ce6283fc5441e1e56fbf595b99` matches the debug file.
-Source is `/nix/store/g3wj93lyhjsvc32fmgvw0cdbd6191q55-orca-slicer-2.4.2-seed-replay-source`.
-One seed0/CPU3 gdb invocation per input was retained, with output directories
+One seed0 gdb invocation per input was retained, with output directories
 remapped only to avoid overwriting original evidence. MyToolChanger0.8
 SIGSEGV backtrace: `get_extruder_variant_string` at `PrintConfig.cpp:604`,
 negative enum bits `0xe63fab60`; `get_index_for_extruder` at9034 with
@@ -231,40 +214,37 @@ oracle recovery or a new numerical contract.
 These stock configurations have four/five nozzle entries, but singleton
 `extruder_type` and `nozzle_volume_type`, and one colour/palette entry.
 All thirteen Ares runs exit0 and emit G-code; none returns the original
-X2D matrix-size error. This difference was reported and explicitly accepted
-by the coordinator: do not add rejection just to match the two-colour case.
+X2D matrix-size error. This difference is explicitly accepted:
+do not add rejection just to match the two-colour case.
 The original X2D witness needs unavailable selectors for non-diagonal cells;
 a singleton selector is not itself globally illegal. Preserve each input's
 actual shape and observed result, rather than claiming identical error behavior.
 
 For the twelve normal Native outputs, complete-byte comparisons with their
 Ares outputs normalize **only the generated-by line**: **12 equal, 0 unequal**.
-Raw/normalized hashes, byte lengths and paths are recorded per row; there is
+Raw/normalized hashes and byte lengths are recorded per row; there is
 no first differing line. The SIGSEGV row has no comparison. These are observed
 success-stream equalities, **not parity PASS**: all thirteen rows retain
 `parity_pass=false` because the Native execution crosses the undefined
 per-nozzle selector read. No retries, fixture repair, numeric expectations,
 production change, or scalar rejection were introduced.
 
-Raw stacks/commands/receipts: `/tmp/worker3-native-crash-triage/`.
 Cubicon's three export aborts are separate and not included in this group;
 their reconstructed-input backtraces remain a separate follow-up.
 
-## Closure: documented unsupported-input contract (coordinator ruling 2026-10-09)
+## Closure: documented unsupported-input contract
 
 Closed as a **documented unsupported-input contract**. Native's success on
 the original input depends on the out-of-bounds per-nozzle selector read
 (`OrcaSlicer.cpp:3457-3462`) and is not a parity PASS; Ares reports the
 upstream error verbatim at the unchanged size guard
 (`GCode.cpp:5596-5614`), exit 1, no G-code. `UB_ADJACENT`,
-`parity_pass=false`, the admitted RED `65336cb5` and every `case-LqoYic`
-artifact are retained unchanged. No UB emulation, matrix-guard relaxation,
+`parity_pass=false` and the admitted RED are retained unchanged. No UB emulation, matrix-guard relaxation,
 `-1→0` import, vector extension or numeric expectation was introduced.
 
-Current-main re-verification (`a105509fb`, zero production change since
-`cbee8353`): the preserved input bytes (SHA `b980548a…`) through the fresh
+Re-verification with zero production change: the preserved input bytes (SHA `b980548a…`) through the fresh
 public CLI return exactly `Flush volumes matrix do not match to the correct
-size!`, exit 1, no output (`/tmp/x2d-official-probe/o8-{stdout,stderr}.log`).
+size!`, exit 1, no output.
 
 Pinned controls (`runner/x2d_flush_matrix.rs`):
 
@@ -281,21 +261,21 @@ predicate fires for the changed one-entry type vector
 (`OrcaSlicer.cpp:3340-3351`), so Native crosses the undefined
 per-nozzle selector read (`:3457-3462`) and rebuilds — the seeded
 replay produced `0,102,186,0,0,339,621,0` (coincidentally the defined
-[Standard,Standard] values; `/tmp/vg1-two-filament-EtKlB8`) — while
+[Standard,Standard] values) — while
 the observed Ares run preserved the supplied matrix and scaled it once
 (`0,42,43,0,0,143,144,0`). The input is outside the defined upstream
 domain on both sides, so neither behavior is asserted as a contract
-(coordinator review 2026-10-09: pinning Ares's own behavior on a UB
-input would fix self-designed behavior against the rewrite gate).
+(pinning Ares's own behavior on a UB input would fix self-designed
+behavior against the rewrite gate).
 
 ## Included, deferred and exit
 
 Included: original-input fresh-main E2E RED, precise current/new context and
-source prerequisite tracing, and an explicitly reviewed resolution contract.
+source prerequisite tracing, and an explicit resolution contract.
 Deferred: changes to the now-integrated generic generated-id materialization,
 timing, flush emission, geometry, UI, arbitrary input canonicalization and broad UB policy.
 
-Before production, get coordinator approval for the specific resolution contract
+Before production, define the specific resolution contract
 and retain a separately bound RED. Exit requires an accepted disposition of the
 original same-input Native-success/Ares-error difference, complete byte evidence,
 unchanged controls and ordinary Tier1/lint/workspace gates. An FM GREEN covering

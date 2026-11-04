@@ -1,7 +1,7 @@
-# B retained-output / O6 inward-circle runtime Native reference slice
+# Retained-output / O6 inward-circle runtime Native reference slice
 
-Status: approved; runtime diagnosis authorized the production amendment below.
-Owner worker4; retained migration plus the source-cited CLI plate-origin rewrite.
+Retained migration plus the source-cited CLI plate-origin rewrite; runtime
+diagnosis motivated the production amendment below.
 
 ## Owning upstream boundary
 
@@ -62,7 +62,7 @@ remain exact. Raw saved capture/receipt/cold-hot comparison is unnormalized.
 Extend the existing runner/cache/cli_result.rs ResultKind with bounded retained
 -102/default-first and -102/explicit-second recipes (finite plate choice, not
 arbitrary flags/exits). Expose only necessary pub(crate) retained reference helper.
-No alternate cache, no changes to worker6 cache/plate_selection.rs or its row,
+No alternate cache, no changes to cache/plate_selection.rs or its row,
 no global stages::run loosen, no new producer or Native build/prewarm.
 
 Command --slice0 on original input, --slice2 on the existing transformed input.
@@ -115,12 +115,12 @@ No new plan/milestone.
   assertions and production code remain untouched. ares-cli tests can call
   the same ares_core byte API; no native/file IO enters core library.
 - root orca_parity module registration, own cache/cli_result recipe implementation
-  and necessary own public enum/adapter exports only; no worker6 registerchanges.
+  and necessary own public enum/adapter exports only; no other registration changes.
 - Six product deletions, one input-only provenance document, source-cited existing
   docs + thisspec conclusion. Files stay <=400; move proof if structural split.
 
 Deferred: marker fixed-build last group, channel-result unrelated families,
-worker6 KSR/replay/processor/plate adapters, production errorcodebit4/predicates,
+KSR/replay/processor/plate adapters, production errorcodebit4/predicates,
 CLI extra flags/success families and other input datasets. No Native recompilation.
 
 ## Independent runtime RED → GREEN → deletion
@@ -129,7 +129,7 @@ First standalone policy regression launches EXACT old full retained CLI test
 with required1/NativeBINunset, requires running1 selector and named Native
 failure. Old frozen case currently succeeds, so parent ACTUALLY FAILS at runtime;
 compile errors/fixture-notfound are NOT RED. Commit/log independently, neveramend/
-squash RED. This approval does not authorize any production bug fix.
+squash RED. The RED includes no production bug fix.
 
 Then move cases and fetch runtime Native with selected identity as above. Same
 core byteAPI must remain exact on a live Native execution; do not turn its Err or
@@ -146,18 +146,15 @@ actual failure and sameinput/raw/receipt evidence; no freeze/retry/mask workarou
   of same-round baselineFAIL names, not count-based inference; saved common
   AresRAW and Nativecanon audit, direct retained whole bytes saved independently.
 - Default candidate workspace nextest, workspacealltargetsallfeaturesclippy-Dwarnings,
-  actualCLIwasmclippy-Dwarnings, ares-wasmwasmcheck, fmt per coordinator gates.
+  actualCLIwasmclippy-Dwarnings, ares-wasmwasmcheck, fmt.
 - Required cold/hot/availability capture and proof defaultfirst vsselectedsecond
   request/output identity remain different, JSON/Gcode semantically sameplate.
-- One heavy jobs2/inc0/16threads, honor BROWSER/quiet and exact-parent stop rules.
-  Source fixed while running; full v2 private producer env includes stats/KSR vars.
-- Exact executedhashes/caches/artifacts/ND restrictions, explicit authorizedcarry
-  for git-only main rebases, REVIEW+notify/APPROVED/ff-onlypush+notify.
+- Source fixed while running; full v2 private producer env includes stats/KSR vars.
 
-Do not implement or delete until this bounded spec is approved. This is retained
-Native test artifact elimination, not completion of all B or marker authorization.
+This is retained Native test artifact elimination, not completion of all Native
+artifact cleanup or marker work.
 
-## Approved production amendment: runtime plate2 discovery
+## Production amendment: runtime plate2 discovery
 
 The original selected-plate transform X131.9 is a legal two-plate project, but
 Native actually returns -50/206, plate_index2, without export. Its old -102
@@ -173,7 +170,7 @@ not Ares's bbox-derived132. The Rust destination is existing core
 project/domain/plate_selection.rs::plate_grid_origin: replace bbox computation
 entirely, preserving point order and integer truncation for all bed shapes.
 No circle special case, dual path or new API. The count==0 typed -50 variant in
-project_slice/state.rs belongs to worker3 and is not changed by this slice.
+project_slice/state.rs is a separate slice and is not changed here.
 
 The retained -102 selected-plate case now derives X=-1.3 (=Native origin-0.1),
 with the same valid bbs_3mf.cpp:1593-1613,4404-4406,4489-4502,4665,4689-4700
@@ -182,12 +179,12 @@ actual Native --slice2 drives complete retained output and JSON comparisons.
 The original X131.9 remains the separate production -50 regression.
 
 Production changes require new-tree default workspace, complete seeded and
-official pairs compared by test name, lint/fmt/WASM gates and coordinated web
+official pairs compared by test name, lint/fmt/WASM gates and web
 browser verification of shared WASM plate selection. Prior tests-only carry
 cannot replace these production gates. Other retained/core assertions, the six
 output deletions and the two new bounded retained recipes remain as specified.
 
-## Approved writer-offset supplement
+## Writer-offset supplement
 
 Live Native selected-plate2 retained E2E in independent tests-only commit
 `0a9c3ecd0` exposed skirt motion X differences of1.2 and consequent first-layer
@@ -204,12 +201,12 @@ prefix/mask, cache or early API changes. The existing private skirt unit fixture
 gets zero plate origin only; its assertions are unchanged, no new unit tests.
 No other path-type offset is modified without live runtime evidence.
 
-The coordinator requires complete production gates and coordinated web browser
-verification before deleting the six frozen products and submitting review.
+Complete production gates and web browser verification precede deleting the
+six frozen products.
 
-## Approved selected -50 CLI metadata supplement
+## Selected -50 CLI metadata supplement
 
-After worker3's count==0 NoSuitableObjects port, runtime RED `f18b8b25c`
+After the count==0 NoSuitableObjects port, runtime RED `f18b8b25c`
 compares actual Native --slice2 -50/206 against Ares: status/channels match,
 but Ares's old family adapter hardcodes plate_index1 instead of Native2.
 The full JSON comparison remains mandatory, with no index rewriting.

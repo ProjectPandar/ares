@@ -1,17 +1,12 @@
 # SPEC: BBL global label inventory and per-layer skip envelopes
 
-Date: 2026-10-23. Status: source-cited SPEC for coordinator review only.
-Base: `2ed045a7f235a592ca5332ece6fdd21b685837e1`.
-Branch: `w4/layer-object-label-ids`.
+Date: 2026-10-23. Status: source-cited SPEC.
 No implementation, new tests, fixture modifications, or slicing runs in this slice yet.
 Frozen print_order/retract branches are not dependencies and remain untouched.
 
 ## 1. Witness and precise diagnosis
 
-W5 supplied artifacts:
-`${COORD_ROOT}/evidence/w5-type1-public-red-meYjMY/seeded-artifacts/bbl-type1-tower-disabled-UthxqY/`.
-
-Input SHA256:
+Witness input SHA256 (from the Type1 tower-disabled public RED):
 `e78d0feba53df6318deb96929eb0620d5392f16a88832fb4ffd75969b853ed28`.
 Settings: stock Bambu Lab X1 Carbon 0.4 nozzle, two printable build items,
 `enable_prime_tower=0`, `print_sequence=by layer`, `print_order=default`,
@@ -19,10 +14,10 @@ Settings: stock Bambu Lab X1 Carbon 0.4 nozzle, two printable build items,
 `exclude_object=0`, `support_object_skip_flush=0`. Model metadata retains
 `identify_id` values 45 and 56.
 
-Stored Native double replay succeeds (`native-replay.json`). API and CLI outputs
+Stored Native double replay succeeds. API and CLI outputs
 are identical to each other; both fail the strict comparator at normalized byte
 223, line 6: expected `; model label id: 45,56`, actual `; model label id: 45`.
-This is W5's stored evidence, not a fresh reproduction at this branch's base.
+This is stored evidence, not a fresh reproduction at this branch's base.
 
 | Stored stream | Native | Ares API / CLI |
 |---|---:|---:|
@@ -160,7 +155,7 @@ at existing insert sites; eight-byte global-index encoding; empty-template
 separation; preservation of existing per-object and per-filament mask behaviour.
 Prime-tower-disabled stock X1C is the first witness, not a new tower pipeline.
 
-Deferred: W5's Type1 wipe-tower generation/export, toolchange/flush scheduling,
+Deferred: Type1 wipe-tower generation/export, toolchange/flush scheduling,
 print_order/retract work, new geometry/label allocation, GUI object management,
 non-BBL exclusion redesign, browser/UI, and independent calibration workflow
 support. Inspect existing calibration representation before implementation;
@@ -169,7 +164,7 @@ than pretending ordinary project settings represent a calibration job. Exact-64
 encoder discrepancy needs separate Native characterization before coverage claim.
 No new fallback, feature flag, marker mask, or stored Native G-code golden.
 
-## 5. RED-first plan (requires coordinator approval)
+## 5. RED-first plan
 
 1. Reproduce the supplied same input at exact base with canonical official and
    seeded environment; confirm Native double replay and public API/CLI difference.
@@ -186,12 +181,9 @@ No new fallback, feature flag, marker mask, or stored Native G-code golden.
    empty-template envelopes, extra single-object/non-BBL envelopes, misplaced
    blocks or writer-position changes. Use source-cited public stream tests first;
    do not write isolated unit tests after implementation.
-5. After RED RR approval, port the shared inventory and membership/envelope slice;
-   run directed cases in both modes and coordinator-defined neighbour/FULL gates.
-   All build/test jobs exclusive on CPU17, `ARES_PIN_OFFSET=17`,
-   `CARGO_BUILD_JOBS=1`, `ARES_PARITY_THREADS=1`. FULL only through
-   `${COORD_ROOT}/bin/parity-control-set.sh`, detached when long-running, complete
-   logs and actual exit files. No ad-hoc oracle environment or disabled requirements.
+5. After RED, port the shared inventory and membership/envelope slice;
+   run directed cases in both modes and neighbour/FULL gates. FULL only through
+   the canonical parity control-set runner. No ad-hoc oracle environment or disabled requirements.
 
 SPEC completion does not claim a fresh baseline reproduction, RED submission,
 GREEN implementation, or parity beyond the supplied stored witness.

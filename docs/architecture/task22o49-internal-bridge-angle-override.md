@@ -2,9 +2,8 @@
 
 ## Status
 
-Accepted, implemented, gate-verified, and independently approved. Five
-focused arithmetic/branch tests and three real-KSR provenance/mutation tests
-pass; the repair/re-review loop has no remaining finding.
+Accepted and implemented. Five focused arithmetic/branch tests and three
+real-KSR provenance/mutation tests pass.
 
 ## Decision
 

@@ -1,29 +1,15 @@
 # Full option matrix audit on f637b4122: two Native modes
 
-Actual execution: `f637b4122ead7b24c9eea52dce7a10dc042ae1cd` (W6 Grid,
-stacked on W5 `22ba08ab1`). Clean detached worktree for both complete runs;
-this audit adds documentation/data only and does not repair code or comparator.
+Actual execution: `f637b4122ead7b24c9eea52dce7a10dc042ae1cd`. This audit adds documentation/data only and does not repair code or comparator.
 Date: 2026-10-14. Status: complete execution; **not global coverage PASS**.
 
 ## Reproducible execution and raw counts
 
-Canonical `${TMP_ROOT}/ares-parity-control-set-v2.sh` unchanged, SHA256
+Canonical parity control-set script unchanged, SHA256
 `7390a44bb957b35da12c9d1af68f0978b424f41bad6368ce21367d36b63edec7`.
-Each official/seeded leg used the following command, concurrently:
-
-```sh
-env -i PATH="$PATH" HOME="$HOME" RUSTUP_TOOLCHAIN=1.99.0 \
- CARGO_BUILD_JOBS=2 NEXTEST_TEST_THREADS=2 ARES_PARITY_THREADS=2 \
- ARES_PARITY_OPTIONS=1 ARES_ORCA_CACHE_DIR="$root/cache" \
- ${TMP_ROOT}/ares-parity-control-set-v2.sh \
- "$mode" "$repo" "$root/target" "$root/artifacts"
-```
-
-No outer taskset/pin override; canonical owns per-test CPU pinning.
 No ARES_OPTION_KEYS/VALUES/PARITY_PATTERN or test filter. Independent fresh
 root/cache/target per leg, no base legs and no manual Native reruns.
-Preflight load1=1.02; repo/official/seeded each66 vendors/11895 referenced
-files/zero missing. START/END were posted to `${TMP_ROOT}/ares-coord-inbox.log`.
+Repo/official/seeded each66 vendors/11895 referenced files/zero missing.
 The unchanged official wrapper SHA256 is
 `1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3`.
 
@@ -49,14 +35,8 @@ universal string/vector/numeric range. No new exclusion/filter was introduced.
 
 ## Evidence, reread and classification
 
-Fresh root: `/tmp/worker2-option-full-103wd7e0`, legs `official` and `seeded`.
-Each leg retains nextest.log/exit, artifacts/option-coverage-summary.md,
-option-domain-plans.json, numeric-boundaries.json, width-domains.json,
-application proofs and original case/runner/cache/export receipts.
-Root preflight.json records executable/resource/file identities; process-
-environment-evidence.json records actual command/env and unpinned outer CPUs.
-Generic manifests' unknown producer/revision fields remain unknown; separate
-run/cache receipts supply provenance rather than rewriting those fields.
+Legs `official` and `seeded`. Generic manifests' unknown producer/revision
+fields remain unknown.
 
 Independent offline reread verified3504 option-labeled generic captures:
 3462PASS/42DIVERGENT attempts, all recorded file SHA values checked. Reread
@@ -69,8 +49,6 @@ captures include standalone controls and matrix witnesses;3504/98 are
 artifact-attempt counts, **not**1703 generated-case counts. Raw compared
 counts above come from the matrix outcomes and include specialized witnesses.
 
-External audit files under root/audit: audit-results.json, case-attempts-*.csv,
-native-retry-attribution.json and specialized-whole-stream-reread.json.
 All Native3MF/G-code/process logs remain external and are not committed.
 Committed CSVs contain every domain and raw detail/reason/source definition:
 [domains01](2026-10-14-option-full-data/domains-01.csv),
@@ -165,11 +143,8 @@ INCOMPLETE in both modes. Baseline byte equality is not vector/index/script
 coverage. See the remaining CSV for per-key deferred behavior.
 
 **printer_technology:** both original requested machine JSON files contain
-SLA. Export receipts report successful Native Export, but exported3MF
-Metadata/project_settings.config contains FFF. Exact requested preset,
-exported project and receipts were copied to root/audit-failures/
-printer-technology/{official,seeded} with SHA attribution in root/
-printer-technology-{mode}-attribution.json. The failure occurs at
+SLA. Native Export succeeds, but exported3MF
+Metadata/project_settings.config contains FFF. The failure occurs at
 Application/ApplicationMismatch before Native SLA slicing or Ares slicing.
 It reproduces the old harness application mismatch, not a missing SLA port.
 PrintConfig.cpp:8866-8883 validates FFF and returns no SLA errors; CLI resolved
@@ -250,7 +225,7 @@ None baselines. Filament self-index has active companion injections too.
 Next proposals should integrate or accurately account these bounded tests,
 not duplicate them or infer an absent implementation from INCOMPLETE.
 
-## Source-cited slice inputs for review, not implementation approval
+## Source-cited slice inputs
 
 1. **Technology application-phase fixture (test-only):** own
    PrintConfigDef::init_common_params and DynamicPrintConfig::validate,
@@ -276,7 +251,7 @@ not duplicate them or infer an absent implementation from INCOMPLETE.
    :9805+. Proposed option_coverage/filament_self_index.rs with finite
    multi-filament/variant inputs, active consumer proof and raw full outputs.
    Defer arbitrary indices/vector shapes and production changes without RED.
-5. **post_process bounded admission:** continue the existing approved
+5. **post_process bounded admission:** continue the existing
    [CLI boundary spec](option-post-process-cli-boundary-spec.md), owned by
    PrintConfigDef::init_fff_params:5068-5079 and
    GCode/PostProcessor::run_post_process_scripts:238-377. Existing test destination
@@ -300,8 +275,8 @@ not an invented Ares production fix or weaker comparator. Their actual
 owners are Feature/FuzzySkin/FuzzySkin.cpp random_value/get_noise_module and
 fuzzy_polyline/fuzzy_extrusion_line. No unexcused Ares byte discrepancy was
 established here, so the proposed list starts with source-owned witness and
-harness admission slices. Each slice requires separate SPEC review before
-implementation; this audit authorizes none and preserves all raw failures.
+harness admission slices.
+This audit preserves all raw failures.
 
 Source PrintConfig.cpp SHA256:
 `f635101adb6da3ee657656c6fcaa9449871b7c17446b5e2eb59b560a0eb836aa`,

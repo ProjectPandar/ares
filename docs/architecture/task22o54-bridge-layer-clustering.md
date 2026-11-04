@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted and implemented. Independent pre-RED review approved the source boundary; implementation repair/re-review evidence is recorded below.
+Accepted and implemented.
 
 ## Decision
 

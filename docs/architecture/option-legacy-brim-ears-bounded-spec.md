@@ -1,10 +1,8 @@
-# SPEC-REQUEST: legacy brim_ears boolean versus active brim_type
+# Legacy brim_ears boolean versus active brim_type
 
 ## Claim and upstream boundary
 
-Request ownership of bounded option-coverage evidence for the standalone
-`brim_ears` boolean. Current coordination inbox shows only the historical
-no-case audit, not an active claim; coordinator must confirm before execution.
+Bounded option-coverage evidence for the standalone `brim_ears` boolean.
 Do not conflate this key with the `brim_type = brim_ears` enum value.
 
 Source owners:
@@ -18,7 +16,7 @@ Source owners:
 Rust destination boundaries already exist in `ares-core/src/options.rs`
 (`brim_options`), `options/brim` parsing and `brims/ears.rs`. These remain
 compatibility shells around upstream Brim concepts, not an Ares-owned adhesion
-pipeline. This request initially changes only CLI E2E/sweep evidence.
+pipeline. This slice initially changes only CLI E2E/sweep evidence.
 
 ## Included six-input matrix
 
@@ -41,20 +39,18 @@ contradiction before writing acceptance tests. Whole output can still differ
 in CONFIG_BLOCK; do not assert byte equality across bool inputs or filter the
 main comparator. Ear-selector versus no-brim must show real first-layer brim
 motion; outer-only versus ears should distinguish actual contour behavior.
-If the simple cube fails to distinguish geometry, report and seek spec/input
-revision rather than weakening a witness or silently changing the input.
+If the simple cube fails to distinguish geometry, revise the spec/input
+rather than weakening a witness or silently changing the input.
 
 ## Acceptance and deferred behavior
 
 Native first, then six test-first CLI E2Es, each complete validated API and real
 CLI output versus live Native using unchanged strict comparator and existing
 wall-clock exemptions. Add value-bearing authored boolean plans with bounded
-sweep dispatch. Direct GREEN is valid. Pure test-only gates require owner policy
-confirmation for two modes/fresh cache + strict/fmt/wasm32/full waiver.
+sweep dispatch. Direct GREEN is valid.
 
 Defer painted/manual ear positions, holes, multiple objects, complex contour
 simplification, angle/detection grids and all production geometry changes.
-Any mismatch stops for source-attributed operation-level report and separate
-production ownership/approval. No fallback, guard, tolerance, disabled assertion
-or new adhesion scheduler is authorized. No Native/Cargo/implementation before
-SPEC approval; preserve actual-hash failed/VOID evidence.
+Any mismatch stops for a source-attributed operation-level report and a
+separate production slice. No fallback, guard, tolerance, disabled assertion
+or new adhesion scheduler.

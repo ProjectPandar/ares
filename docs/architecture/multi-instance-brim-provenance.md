@@ -1,9 +1,6 @@
-# Multi-instance brim provenance barrier and destination amendment request
+# Multi-instance brim provenance barrier and destination amendment
 
-Status: source/input localization only; **no production edits** after approved
-RED `692698a5541308c1fda53139818cca1a262fad69`.
-SPEC ca3cab13b; production base cf8597e18. Exact RED artifacts:
-`${TMP_ROOT}/ares-multi-instance-brim-red-exact-692698a55/red-review-audit.json`.
+Source/input localization only; **no production edits** after the public RED.
 
 ## Verified producer and frame/lifetime chain
 
@@ -42,7 +39,7 @@ whole divergence after a faithful owner port remains a mandatory STOP.
   explicit, retain per-owner occupied areas and avoid changing global-combine
   behavior. Do not re-use global_brim_done for each ordinary owner.
 
-## Necessary destination addition: request approval BEFORE production
+## Necessary destination addition before production
 
 SPEC's explicit Rust destination list omitted this existing consumer:
 `crates/ares-core/src/project_slice/gcode_emit/footprint/first_layer.rs`.
@@ -57,14 +54,14 @@ right-hand extent to212 rather than Native's actual extent152. A plate-frame
 owner hull would likewise be shifted twice. This is a static consumer-frame
 contradiction, not an external-input defensive check.
 
-Requested narrow amendment: allow adapting ONLY the above existing footprint
+Narrow amendment: allow adapting ONLY the above existing footprint
 bounds/hull consumers to recognize the ordinary multi-instance owner collection,
 consume its already-expanded occupied bounds/hull ONCE in the correct frame,
 and retain existing singleton/global-combine behavior. This implements exactly
 the already-cited `Brim.cpp:914-956` owner bounds/footprint boundary, not a new
 milestone, estimator feature, pipeline stage or guard. No M73/estimator changes.
 No new geometry, public API, validation policy or fallback. Other destinations
-remain exactly those in approved SPEC; per-object multi-copy skirt guard stays.
+remain exactly those in the SPEC; per-object multi-copy skirt guard stays.
 
 A minimal representation may retain whole-owner footprint relative to first
 instance and separate plate-frame emission paths; whichever private form is
@@ -74,7 +71,7 @@ truthfully claiming complete owner bounds. Coordinate snapping or a copy-count
 workaround is not a port. Source/global-combine RED must remain green.
 
 No production implementation started: per SPEC's explicit rule that changes
-outside named destinations require STOP/amendment. Await approval for this
-single caller-file addition, then proceed to owner-area/collection port and
+outside named destinations require STOP/amendment. This single caller-file
+addition precedes the owner-area/collection port and
 exact-hash public target/no-skirt/width0/global-combine checks. Residual strict
-whole divergence still means STOP/report; FULL freeze remains targeted-only.
+whole divergence still means STOP/report.

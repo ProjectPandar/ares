@@ -2,8 +2,7 @@
 
 ## Status
 
-Accepted, implemented, gate-verified, and unconditionally approved by final
-independent six-axis review.
+Accepted, implemented, and gate-verified.
 
 ## Decision
 
@@ -100,7 +99,7 @@ source/binary/output SHA-256 values are
 `8798eb7e4e54ed9aaea02585964e4a9d7adec4ebb54e1110e042921fd0fccac9`,
 `25fc36028f2c2b3384778b79548a2a5cced8b271ba6d43a5211c41a13497bb00`, and
 `16ac2589cef529d0215ef9401e5df7add1c13190c1a8db4edc48e26b494754f1`.
-O51/O49 retain their separately approved actual-source numeric oracles.
+O51/O49 retain their own actual-source numeric oracles.
 
 Nineteen branch/source/pattern/order/line/forwarding/call/normalization mutations
 were killed after the source-exact two-pass reservation repair. Audit SHA-256 is

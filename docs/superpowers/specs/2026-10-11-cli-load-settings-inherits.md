@@ -3,9 +3,9 @@
 Upstream: `OrcaSlicer.cpp:1953-2010` `load_config_file`, pin `8500fcdcc`.
 Rust boundary: `ares-core` `profiles::catalog` import path
 (`push_import` → `insert` → `merge`/`collect_positions`) consumed by
-`profiles::load_settings::compose_load_settings`; findings entry
-"2026-10-11 --load-settings inherits gap" (owner worker5, from
-worker4 compat17 whose fixtures were flattened to avoid it).
+`profiles::load_settings::compose_load_settings`; closes the
+"--load-settings inherits gap" found by the compat17 slice, whose
+fixtures were flattened to avoid it.
 
 ## Problem
 
@@ -49,7 +49,7 @@ the `missing_parent` skip machinery stays vendor-only.
    directly (`:1953-2010`), `inherits` is consumed as a value only —
    the system name for `from: user` files wherever the merge consumes
    it (the partial-list `machine_switch` append; the `-17` gate's
-   name plumbing stays worker4's `compatibility.rs` interface).
+   name plumbing stays in the `compatibility.rs` interface).
 2. RED A `orca_parity_load_settings_3mf_user_inherits_whole_file`:
    fixture `user-machine.json` = witness `machine.json` with
    `"from": "user"` and
@@ -81,11 +81,11 @@ the `missing_parent` skip machinery stays vendor-only.
 4. Duplicate-machine/process and unknown-type `-5` behaviors are
    unchanged.
 
-**Deferred** (explicit, with owner):
+**Deferred** (explicit):
 
 - User-preset process files with absent parents — same boundary
   change covers them mechanically; an E2E control waits for its own
-  fixture if the matrix needs one (worker5 follow-up).
+  fixture if the matrix needs one (follow-up).
 - `inherits`-key echo for `from: system` files and the
   `different_settings_to_system`/`inherits_group` bookkeeping for
   user imports beyond what the RED references show.

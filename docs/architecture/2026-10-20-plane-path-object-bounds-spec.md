@@ -1,7 +1,7 @@
 # PlanePath sparse object bounds after XY compensation
 
-Status: SPEC-REVIEW-REQUEST; Native-first discovery only. No public RED or
-production edit. Base/current main:
+Native-first discovery only. No public RED or
+production edit. Base main:
 `9c097e3c41d066c996fa85114cf44fe5e109fa14`.
 
 ## Source boundary, not an Ares pipeline design
@@ -32,13 +32,13 @@ another fill algorithm or an independently designed geometry pipeline.
 
 ## Independent witness and bounded controls
 
-Reuse the approved authored anchoring mesh/profile bundle (10mm model,
+Reuse the authored anchoring mesh/profile bundle (10mm model,
 classic, single object/instance, direction45, sparse20%, multiline1,
 layer0.2, top6, no ZAA). Preserve all input ZIP members. Vary only sparse
 pattern and `xy_contour_compensation` after that common setup.
 
 Both canonical official and seeded modes use two fresh Native references
-per input, CPU12. All repeat and cross-mode complete normalized bytes agree:
+per input. All repeat and cross-mode complete normalized bytes agree:
 
 | Sparse pattern | XY compensation | input SHA256 | outcome, both modes |
 |---|---|---|---|
@@ -125,11 +125,11 @@ transform/bounds controls must stay exact; new complex-transform, modifier,
 shrinkage, Arachne/multi-object bounds algorithms are deferred, not new guards.
 No shared PlanePath generator, rotation/ceil/shift formula, clipping, chaining,
 multiline, ordering, flow/E, bridge-angle, M73/time/cooling, support/raft or
-independent pipeline design change is authorized.
+independent pipeline design change is in scope.
 
 ## Separate RED then bounded GREEN
 
-After SPEC approval only, freeze five SHA-pinned input-only cases from the
+Freeze five SHA-pinned input-only cases from the
 matrix. Reuse existing runner/artifact/golden infrastructure for public API
 and CLI; do not clone a full harness or weaken the existing anchoring tests'
 Sparse-equality invariant, which is not the invariant of this emitted-fill
@@ -142,8 +142,8 @@ Expected RED: Hilbert+0.1 FAIL and all four controls PASS in both modes,
 including the other PlanePath patterns. Retain the initial-solid-layer motion
 control. Keep M73/feedrates/E and all bytes under the existing comparator.
 No fixed Native output, tolerance, inverted assertions, ignored tests or
-UnsupportedProjectFeature/allow/expect additions. Submit exact clean RED hash
-for separate approval before production.
+UnsupportedProjectFeature/allow/expect additions. RED lands on an exact clean hash
+before production.
 
 GREEN only changes bbox provenance at the two named PlanePath consumers and
 the reused source base-box helper extraction. Preserve every other value,
@@ -153,17 +153,6 @@ non-RED output change means STOP/report, not widen the fix.
 Exact-final-hash gates: fmt, workspace all-target clippy `-D warnings`, wasm32,
 new and existing PlanePath/Stars/consistent-grid/anchoring controls in both
 modes, then canonical official/seeded FULL with fresh artifacts/cache and
-zero FAIL/skipped, CPU20-23/threads4. Compilation/probes CPU12. Confirm current
-main and merge queue before FULL; rebase/re-run if main advances. Coordinator
-alone reviews/merges; independent SPEC and RED approval precede next steps.
+zero FAIL/skipped.
 
-## External evidence
-
-`${EVIDENCE_ROOT}/w3-plane-path-compensated-bbox` plus `-seeded`,
-`-rect[-seeded]`, `-arch[-seeded]`, `-oct[-seeded]` hold commands, exact inputs,
-producer hashes, repeats and strict results. Target `role-observation.json`
-records activity/entry motion. `w3-plane-path-bbox-localize/{native-gdb,
-ares-clean-gdb}.log` record the bbox input mismatch.
-`w3-plane-path-bbox-spec-review/matrix-audit.json` and external
-`w3-plane-path-bbox-audit.py` verify repeat/cross-mode and ZIP/settings scope.
 No RED/public fixture/production change is part of this SPEC.

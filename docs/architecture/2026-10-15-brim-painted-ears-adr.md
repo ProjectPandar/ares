@@ -1,6 +1,6 @@
 # ADR: btPainted ears GREEN 分层（SPEC cab32de92 addendum）
 
-RED `dcd14e055`（btPainted w5）授权的 GREEN 分层与各层上游边界。
+RED `dcd14e055`（btPainted）对应的 GREEN 分层与各层上游边界。
 原则：每层一个 production commit，均 ≤400 LOC/文件，最终 RED 双模式
 转绿且控制组仍绿，无 partial guard。
 

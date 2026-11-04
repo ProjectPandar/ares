@@ -1,9 +1,8 @@
 # SPEC — CLI compatible-machine result metadata
 
-Status: approved at `d8b155d79`; **upward merges first**, downward is a
-separate later RED/GREEN checkpoint under this same SPEC.
-This document ports an upstream CLI metadata slice, not an Ares-owned slicing
-pipeline. The SPEC commit does not itself establish RED/GREEN evidence.
+**Upward lands first**; downward is a separate later RED/GREEN checkpoint
+under this same SPEC. This document ports an upstream CLI metadata slice,
+not an Ares-owned slicing pipeline.
 
 ## 1. Upstream ownership and observed residual
 
@@ -12,22 +11,21 @@ Primary owner is `src/OrcaSlicer.cpp`, with configuration and geometry inputs
 from existing libslic3r concepts; the adapter's cross-platform filesystem and
 platform-specific output behavior stay outside ares-core.
 
-The owner reports worker3 master A1's stock **Bambu Lab H2D 0.4 nozzle**
-input with upward target **Bambu Lab H2D Pro 0.4 nozzle** as the live residual.
-Its -100 channel depends on worker3's unmerged `SliceError::Slicing` layer.
-Exact handoff: `/tmp/worker3-master-A1-worker1-upward-compatible-handoff.md`;
-input SHA `6ac0d84efe4010ee563aebb4a17f13c4f15af896377e693c0125ef5e507f4b67`.
-Do not relabel Pro as its input machine, or call this execution on our main.
+The master-extruder A1 stock **Bambu Lab H2D 0.4 nozzle** input with upward
+target **Bambu Lab H2D Pro 0.4 nozzle** is the live residual (input SHA
+`6ac0d84efe4010ee563aebb4a17f13c4f15af896377e693c0125ef5e507f4b67`).
+Its -100 channel depends on a not-yet-landed `SliceError::Slicing` layer.
+Do not relabel Pro as its input machine.
 
-Owner subsequently ruled **do not import worker3's unmerged layer**. The first
-independent upward witness must instead use main's existing
+That layer is not imported here. The first independent upward witness must
+instead use main's existing
 `SliceError::CustomGCode`/-100 channel on a BBL stock H2D/H2D Pro machine with
 nonempty upward data and a fixed custom-G-code error. Require runtime Native
 -100 plus nonempty upward metadata; independently prove current Ares's same
 exit/stdout/stderr before accepting the missing-header-only RED. Preserve
-worker3's original A1 assertions unchanged; after upward merges, worker3 rebase
-can close that original header residual without bundling grouping/map changes.
-Neither historical receipt nor a failed Native admission establishes our RED.
+the original A1 assertions unchanged; after upward lands, the master-extruder
+slice can close that original header residual without bundling grouping/map
+changes. A failed Native admission does not establish our RED.
 
 Current Ares has the typed input option
 `PrinterRemainingOptions::upward_compatible_machine`, and
@@ -150,13 +148,13 @@ printer settings, or eagerly attach future-stage values to early errors.
 An error at profile-source load before2656 has no copied upward report. An
 error during downward checking may already have upward but not downward.
 
-Owner's bounded upward checkpoint requires only the approved first CLI E2E
+The bounded upward checkpoint requires only the first CLI E2E
 witness, comparing complete runtime Native and Ares channels/result JSON.
 Coverage of source paths1769/2301/2385/2534 remains a subsequent CLI E2E
 requirement, not an isolated/unit-test substitute. Future witnesses must exercise
 the public source controls and compare runtime Native outputs in full; absent
-public controls remain deferred. This does **not** authorize implementing
-unrelated up-to-date overlays or worker5 compatibility decisions merely to
+public controls remain deferred. This does **not** include implementing
+unrelated up-to-date overlays or compatibility decisions merely to
 exercise a branch. No four-branch acceptance claim is made by this checkpoint.
 
 ### ares-cli: resources/filesystem and JSON serialization only
@@ -170,7 +168,7 @@ For an active downward public path, use only source-owned downward-check/
 downward-settings controls, not a user-supplied final output vector.
 
 Use one existing error/report route for ordinary and dump-moves/selected-profile
-entries. Empty/default context must preserve already-approved early error bytes.
+entries. Empty/default context must preserve existing early error bytes.
 Success-side result.json expansion, sliced_plates, new error families/codes,
 up-to-date profile overlay implementation and standalone GUI downward-check
 mode are adjacent behavior, not license to grow this slice. A bounded early-
@@ -188,10 +186,10 @@ report transport, using supplied source data/existing geometry. The H2D Pro
 proof of both directions.
 
 The active downward calculation is a separate RED/GREEN checkpoint within
-this approved source slice. **Do not certify downward support from an empty
+this source slice. **Do not certify downward support from an empty
 control or omit it from a completion claim.** If the existing all-plate/tower
-preparation or resource entry cannot expose the source-owned input, report that
-checkpoint BLOCKED to the owner for an explicit narrower follow-up; do not
+preparation or resource entry cannot expose the source-owned input, mark that
+checkpoint BLOCKED with an explicit narrower follow-up; do not
 invent dimensions, add fallback selection or silently mark it GREEN.
 
 Deferred adjacent behavior: arbitrary preset compatibility filtering/-17,
@@ -201,7 +199,7 @@ runtime, and global option/domain completion. Existing Ares entries remain
 temporary compatibility shells wherever the cited upstream prefix is absent;
 they are not an alternative pipeline design.
 
-## 5. Test-first failure model and approval gates
+## 5. Test-first failure model and gates
 
 Before implementation, write source-backed E2E failures for these risks:
 
@@ -221,34 +219,26 @@ Before implementation, write source-backed E2E failures for these risks:
 7. Missing/invalid configured Native falsely marked SKIP, partial channels
    accepted, or normalization removing the new fields to make comparison pass.
 
-First RED: use the owner-revised independent stock BBL custom-G-code error
-witness on main; runtime pinned Native must prove -100 plus nonempty upward.
+First RED: use the independent stock BBL custom-G-code error witness; runtime pinned Native must prove -100 plus nonempty upward.
 Prove matching exit family/stdout/stderr first,
 then retain full result.json bytes with the missing fields as the only intended
 repair boundary. If other semantic discrepancies occur, diagnose instead of
 calling them this slice's RED. Do not delete either field in the comparator.
 
-After owner-approved SPEC and independently committed genuine RED, implement
-core calculation/stage transport plus CLI writer. Keep worker3's original
+After an independently committed genuine RED, implement core
+calculation/stage transport plus CLI writer. Keep the original A1
 assertions and the whole result comparison; only existing integer prepare_time/
 export_time adaptation is allowed. Then add bounded active-downward RED before
 its implementation; cover surviving/rejected/all-rejected, multiple plates,
 exclusion/wrapping and multi-extruder/tower source conditions with fixed inputs.
 Use public CLI E2E with complete runtime Native comparison as the primary
-verification mechanism. For this bounded upward checkpoint only the approved
-first witness is required. Missing source controls remain subsequent E2E work;
+verification mechanism. For this bounded upward checkpoint only the first
+witness is required. Missing source controls remain subsequent E2E work;
 do not add implementation-following isolated/unit tests as substitute coverage.
 
-Retain repeatable external artifacts: original input and every ZIP member SHA,
-profile/discovery bytes and SHA, original/selected machine identity, source
-branch/reached-stage receipt, Native producer/commands/load/cache receipts,
-stdout/stderr, process exits, full result files and comparisons. No new native
-probe/kernel tool or committed Native product is needed. Required Native
-absence/invalidity is FAIL; optional absence is visibly SKIPPED.
+No new native probe/kernel tool or committed Native product is needed.
+Required Native absence/invalidity is FAIL; optional absence is visibly
+SKIPPED.
 
-Run new-tree workspace via cargo nextest, strict Clippy/fmt/WASM and the required
-full independent BASE/CAND seeded/official controls under owner scheduling;
-verify distinct binary SHAs before pairs, keep every raw difference and all
-nonexecution disclosure. Exact-hash independent owner approval precedes push.
-The SPEC approval is not approval of a RED result, an unimplemented source
-branch, a downward deferral or the final product.
+Run workspace via cargo nextest, strict Clippy/fmt/WASM and the full
+independent BASE/CAND seeded/official controls; keep every raw difference.

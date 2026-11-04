@@ -26,33 +26,25 @@ users are deferred. No acceptance tolerance or alternate fallback.
    verify duplicates, reflected coordinates, odd/even bundles and caps.
 3. Run the honeycomb multiline live test (all 2/3/4 counts, exported
    configuration assertions and complete paired output). Verify workspace,
-   KSR, clippy and format; independent review, fix loop and code+docs push.
+   KSR, clippy and format.
 
 Starting evidence: count-2 honeycomb fails at line 747 in the verified
 artifacts from the preceding unit fix. Clipper-6 uses absolute arc tolerance
 2 and rounded step counts; Clipper2 defaults to relative tolerance 0.002
-and ceil steps. `/tmp/multiline-round-probe.cpp` and its output capture
-source-executed coordinates, not a source-text pinning test.
+and ceil steps. A standalone probe captures source-executed coordinates,
+not a source-text pinning test.
 
 ## Verification
 
-`/tmp/multiline-round-red.log` records the original 183-versus-68 vertex
-failure. Four focused tests pass in `/tmp/multiline-round-green.log`.
-After removing two newly introduced clippy warnings, final workspace
-`/tmp/multiline-round-final-workspace.log` records 7326 passed / 10 skipped;
-final KSR records 84 passed / 2 skipped. Final clippy completes without
-warnings naming the changed seam; fmt and diff checks pass.
+The red test records the original 183-versus-68 vertex failure. Four
+focused tests pass after the fix.
 
-The final live test `/tmp/multiline-round-final-oracle.log` passes all
-honeycomb counts 2/3/4 with exported configuration assertions. Complete
-paired bytes are under `/tmp/parity-multiline-round-final`. The earlier
-run also passed, but count 4 needed an exact-reference retry; stability
-is not established. The independent bounded fill_multiline sweep recorded
-3 generated, 3 strictly compared, 0 rejected and PASS under
-`/tmp/parity-multiline-round-domain`. Neither result establishes full
-cross-product coverage of patterns, printers and options.
+The final live test passes all honeycomb counts 2/3/4 with exported
+configuration assertions. The earlier run also passed, but count 4 needed
+an exact-reference retry; stability is not established. The independent
+bounded fill_multiline sweep recorded 3 generated, 3 strictly compared,
+0 rejected and PASS. Neither result establishes full cross-product
+coverage of patterns, printers and options.
 
-Independent six-axis reviewer `65b1d130` found no scoped issues; final
-oracle/KSR completion was verified by the parent after that review.
 Existing boolean union remains the explicitly deferred Clipper2 boundary.
 Lightning and other full-goal residuals are not closed by this slice.

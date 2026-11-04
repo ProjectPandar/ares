@@ -1,7 +1,7 @@
 # Diagnostic: crosshatch sparse-infill path ordering divergence (the "micro-island")
 
 Status: diagnosis amended after two instrumented-boundary rounds (below).
-Supersedes the M73 placement drift amendment in `50366ffa2` (rejected): the M73
+Supersedes the M73 placement drift amendment in `50366ffa2`: the M73
 drift was a downstream symptom of this divergence, not an export-walk bug.
 
 ## AMENDMENT (second probe round — corrected owner)
@@ -55,13 +55,8 @@ Ares destination boundary (corrected):
 
 GREEN requirements: literal port of the carryover semantics (no epsilon or
 constant tuning); RED `532fbc1d7` pins unchanged; regression must include
-W2's `auto-brim-material-pla` fixture (same-source divergence) combined
-with W2's branch, plus the brim suite over `polyline_chain.rs`.
-
-Probe evidence (diagnostic-only, not committed): instrumented native builds
-`/nix/store/rywgnj0hyp…-orca-slicer-chainorder-2.4.2` and
-`/nix/store/prkz5v382cjxz…-orca-slicer-chainorder-ei-2.4.2`; dumps and
-comparison scripts under `${TMP_ROOT}/ares-chainorder/` and `/tmp/w5-m73/*ei*.txt`.
+the `auto-brim-material-pla` fixture (same-source divergence), plus the brim
+suite over `polyline_chain.rs`.
 
 ## Reproduction
 
@@ -156,7 +151,7 @@ in this slice; the M73 drift disappears once this ordering divergence is fixed.
 ## GREEN boundary addendum (upstream sharing group + ledger semantics)
 
 The carryover's enabling boundary, added to the upstream owner list after the
-first GREEN review round:
+first GREEN round:
 
 - `Print.cpp:2200-2251` `is_print_object_the_same` / `do_slicing` grouping:
   the FIRST print object of an identical group slices; every later identical

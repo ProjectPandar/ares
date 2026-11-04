@@ -35,7 +35,7 @@ Every `file:line` is at OrcaSlicer v2.5.0-beta `345efec64`. "Delete" with one in
   - An object with more than one instance shows an "Instances" node with "Instance N" items (`ObjectDataViewModel.cpp:136-145`).
   - An instance item is selectable. Delete/Backspace and the object menu's "Delete" on it delete that instance. On the object row they still delete the object.
 
-## Decision (review)
+## Decision
 - **Cross-plate objects are ported literally, option (a).** When an object's instances sit on different plates, a plate keeps `(obj, k)` after a middle delete while the instance now in slot k is on another plate. This is defined behaviour, and Native slicing the GUI export witnesses it.
 - **The dangling `(obj, n-1)` pair is kept,** since the 3MF export bytes are a public output. No reader deviates.
 
@@ -58,7 +58,7 @@ In `plater_delete_instance.rs`, the session-edit Native slice of the GUI export:
 Web E2E `plateDeleteInstance.spec.ts`: select "Instance 1" of the two-instance object, press Delete, then the list shows the object without an "Instances" node and the plate slices like Native.
 
 ## GREEN
-- **Prerequisites stacked under this slice**, each its own reviewed chain:
+- **Prerequisites stacked under this slice**, each its own chain:
   - the `is_printable()` print-instance filter (`print-apply-printable-instances.md`);
   - the selected-plate whole-object import (`selected-plate-object-import.md`);
   - the per-object brim's plate origin and the config block's plate tower position (`brim-plate-origin.md`).

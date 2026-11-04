@@ -1,10 +1,8 @@
 # SPEC: 未知 enum 键的静默默认替换——Config 反序列化边界对齐
 
-状态：SPEC-REVIEW-REQUEST（stacked 窗口只读调研 + docs-only；未改代码）。
-来源：zag-ironing RED 期间发现的解析分歧（协调裁定单独立项，排在该
-切片后）。Native 证据已按指示先行采集。
+来源：zag-ironing RED 期间发现的解析分歧（单独立项）。Native 证据先行采集。
 
-## 1. Native 证据（官方 2.4.2，pristine overhang-organic fixture，CPU7）
+## 1. Native 证据（官方 2.4.2，pristine overhang-organic fixture）
 
 | 输入 `support_ironing_pattern` | rc | ironing E 行 | 全文 sha（去时间戳行） | gcode 配置回显 |
 |---|---|---|---|---|

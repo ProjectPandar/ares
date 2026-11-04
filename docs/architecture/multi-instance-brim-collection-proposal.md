@@ -1,17 +1,12 @@
 # SLICE-PROPOSAL: PrintObject multi-instance brim area collections
 
-Status: proposal only; Native/public discovery complete, awaiting SPEC approval.
-No new test or production change. Base inspected exactly
-`cf8597e183d44bd24a28959e4dbd904d3a90512f` (approved global-combine chain queued
-stack25), atop `4351a644d6683555ae48e44ea7f898a66f75d585` stack24.
+Proposal only; Native/public discovery complete. No new test or production change.
 Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
-## Observed residual, not covered by the just-approved slice
+## Observed residual, not covered by the global-combine slice
 
-Fresh evidence `${TMP_ROOT}/ares-copies-premise-cf8597e18/discovery-report.json`.
 Official and seeded, independent fresh artifacts/cache, runtime Native FIRST,
-CPU18 actual descendant/thread masks checked, current canonical archived/hash
-checked, exact clean HEAD before/after. API rebuilt from exact hash and real
+current canonical archived/hash checked. API rebuilt from exact hash and real
 CLI both used. Comparator unchanged, complete ordered output, API==CLI raw.
 
 Original copies input SHA256:
@@ -43,13 +38,9 @@ Brim block counts/bounds are supplementary localization only. Whole ordered
 comparisons above are unchanged acceptance comparisons, not geometry tolerance
 or TYPE-count equality tests. No private Native ExPolygon trace is claimed.
 
-The original mismatch was also observed on exact main41f2c90f7 before stack24
-(`${TMP_ROOT}/ares-brim-control-main-premise/discovery-report.json`), and persists on
-stack24 + approved global-combine chain. The latter consumer is gated OFF here
-(combine_brims0). `skirt/occupied.rs` has no changes between stack24 and this
-HEAD; last source owner change predates stack24. Thus the observed behavior is
-not already supplied by main/stack24/global-combine. Coordinator should check
-other queued worker ownership before assigning implementation.
+The original mismatch also persists with the global-combine slice, whose
+consumer is gated OFF here (combine_brims0). Thus the observed behavior is not
+already supplied by the global-combine port.
 
 ## Owning upstream slice, not an Ares feature or guard widening
 
@@ -86,41 +77,40 @@ collection bookkeeping. `orchestration.rs::emit` is the existing preparation
 seam. Rewrite these compatibility shells toward the source keyed owner-area
 map and per-owner emission lifecycle; no independent pipeline or public API.
 
-## Proposed bounded work after approval
+## Proposed bounded work
 
 A cohesive rewrite of **per-PrintObject instance-expanded brim area → occupied
 footprint and ordinary brim collection** for this accepted combine0 fixture.
-Retain/reuse the just-approved source global-combine implementation; it is not
+Retain/reuse the source global-combine implementation; it is not
 permission to unify the ordinary owner maps. Preserve separate occupied
 footprints and source frame transforms, clipping/contact, per-owner infill-once
 and once-only emission. Reuse current source infill/geometry primitives, not a
 copy-count-specific coordinate offset. All changed Rust files <=400 LOC; small
 private brim files may hold this existing source responsibility if necessary.
 
-After approved SPEC: freeze original copies-control + same-input width0 control
+After the SPEC: freeze original copies-control + same-input width0 control
 as input-only 3MF/SHA/member manifests; public runtime Native-first RED asserts
 TARGET whole Native/API/CLI strict equality and genuinely FAILS. Control asserts
 full equality and raw API==CLI too. No passing-because-divergent expectation.
-Capture both independent modes at exact clean hashes, CPU18/jobs2/threads2.
+Capture both independent modes at exact clean hashes.
 Preserve passing control raw bytes RED→GREEN. Localizer may be frozen as a
-separate genuine failing case only if review includes its source boundary;
-it is not to be misrepresented as a control. Independent RED approval before
+separate genuine failing case only if its source boundary is included;
+it is not to be misrepresented as a control. Independent RED before
 production; source provenance/area-owner lifecycle before GREEN. Existing
 singleton/grouped brim/skirt and global-combine families remain unchanged.
-Required fmt/strict/WASM and coordinator-authorized targeted runs only.
+Required fmt/strict/WASM and targeted runs only.
 
 The no-skirt M73 first difference is transparently OPEN. It may follow from
 changed source collection length/order, but that has NOT been proved. No M73,
-estimator, parser, comparator or timing-specific repair is authorized by this
+estimator, parser, comparator or timing-specific repair is part of this
 proposal. If source-faithful area/owner implementation leaves that or any other
 whole-output divergence, STOP/report and request amendment or split before
 changing another owner. No claim that repairing occupied hull alone is GREEN.
 
 Deferred: perobject-skirt multi-instance admission (retain existing guard),
-ByObject, combine1+copies expansion beyond current approved behavior,
+ByObject, combine1+copies expansion beyond current ported behavior,
 inner/auto/ears/painted brim, overlapping/touching copies/other shapes, support,
 raft/tower/multiple filament. No arbitrary fallback, defensive check, acceptance
 guard expansion, coordinate snap, output normalization or invented diagnostic.
 Native rejection/undefined input would be NO-RED STOP; preparation/compiler/
-affinity/witness faults are NON-GATE, never parity evidence. FULL freeze remains:
-no full/workspace, merge or push. This proposal does not alter the queued chain.
+affinity/witness faults are NON-GATE, never parity evidence.

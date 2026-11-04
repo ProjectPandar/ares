@@ -1,6 +1,6 @@
 # C2-T PLAN correction: validate canonical legacy pattern tokens
 
-Status: PLAN-REVIEW-REQUEST after STOP `320fb0757`; source inspection only.
+Status: proposed PLAN after STOP `320fb0757`; source inspection only.
 No Native, cargo or nextest runs. Existing tests/production are untouched.
 
 ## Source comparison
@@ -43,7 +43,7 @@ The STOP matrix has three Anycubic presets with the extra invalid value
 zig-zag message on both modes. Raw-string validation sees a pre-normalized
 compatibility-shell representation where upstream sees a canonical enum.
 
-## Proposed correction, requiring approval before code
+## Proposed correction
 
 Rust destination: `options/validation/helpers.rs::validate_pattern_option`.
 This helper is used only for the four global infill-pattern checks.
@@ -62,18 +62,17 @@ Unifying those storage/typed paths is deferred and requires its own source
 slice and public RED; it cannot delete/change the existing preservation
 assertions in this repair.
 
-Unapplied concrete proposed diff: `/tmp/worker2-c2t-legacy-validation-proposal.patch`.
-Only the helper changes, in addition to the already-approved top guard
+The concrete proposed diff is retained externally (unapplied).
+Only the helper changes, in addition to the accepted top guard
 removal and loaded global validation call. No new tests after production;
 the unchanged public O3 matrix is the existing RED for this normalization
 boundary. Keep both existing C2-T public RED commits unchanged.
 
-## Gates and schedule
+## Gates
 
-After PLAN approval and W6 full END/open directed window: CPU13 official /
-CPU14 seeded, outer taskset, jobs2/threads2, fresh cache/artifact roots;
+Official and seeded runs with
+fresh cache/artifact roots;
 rerun finite7, option_coverage220, bridge/anchor11 and actual
 runner::profile_entry loaded-config17. Strict/fmt/wasm must pass.
 Any other existing result change triggers STOP again, no assertion edits.
-Then code REVIEW and FULL-READY; full requires explicit FULL-GO, main merges
-remain coordinator-only. No execution during the exclusive window.
+Then full parity before integration.

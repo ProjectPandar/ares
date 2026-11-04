@@ -87,6 +87,6 @@ The E2E test qualifies two ordered Native streams, asserts the rendered
 toolchange block (`; Change Tool0 -> Tool1 (layer 0)`, `G1 F21000`,
 `M109 S220 T1`, `T1 S1 L0 D0`) and that both tools are used, then
 compares the complete public API and CLI output with the canonical
-comparator, against official and seed0 replay Native, CPU17/thread1.
+comparator, against official and seed0 replay Native.
 RED must fail because Ares rejects the block at the first `;`; GREEN must
 preserve whole-stream equality.

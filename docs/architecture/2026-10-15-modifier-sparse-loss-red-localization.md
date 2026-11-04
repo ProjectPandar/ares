@@ -1,14 +1,14 @@
 # Modifier sparse loss: public RED and coordinate-frame STOP
 
-Status: RED observed; no production change; GREEN blocked on ownership ruling.
-Approved boundary: [modifier sparse-loss specification](2026-10-15-adaptive-noop-modifier-fill-loss-spec.md).
+RED observed; no production change; GREEN needs a scope decision.
+Boundary: [modifier sparse-loss specification](2026-10-15-adaptive-noop-modifier-fill-loss-spec.md).
 
 ## Exact tree and public result
 
 Main is `3ee8f272c6d8e2db22dde9003a01afeb7201e36a`.
-The approved spec rebases to `412eb7067`; public RED is the separate
+The spec is at `412eb7067`; public RED is the separate
 `c488128e8ab3bb86d653fe50b58c799c7daafdde` commit. Its production-source diff
-against main is empty. The three W3-authored input archives retain their frozen
+against main is empty. The three authored input archives retain their frozen
 SHA values; no Native output or observation is committed.
 
 Both modes use runtime `OrcaRunner::slice_case`, the public
@@ -32,15 +32,12 @@ The first missing positive sparse path is physical layer 4, Z0.8: Native
 These diagnostics do not narrow the whole-output comparator.
 
 Canonical environment SHA is
-`e0a6d9ce027d6ae7147a4993951e5541809aceeb7ad60f22f945e9a3a6a5fb99`;
-only the nextest runner is replaced with the assigned CPU11 runner. Outer
-cargo/nextest/Native run under taskset CPU11, jobs1/threads2, with a fresh cache
-and artifact root per mode. The sampler records all six actual Native process
-identities at affinity 11, with zero violations.
+`e0a6d9ce027d6ae7147a4993951e5541809aceeb7ad60f22f945e9a3a6a5fb99`,
+with a fresh cache and artifact root per mode.
 
 ## First unequal observed intermediate
 
-Read-only GDB observes the existing accepted main FULL16 CLI binary. The
+Read-only GDB observes the existing main CLI binary. The
 observed G-code is raw-byte identical to its ordinary CLI execution for each
 input; there are no inferior calls, assignments, or source instrumentation.
 
@@ -93,27 +90,13 @@ cube center. The current caller comment assumes layer surfaces share this
 world frame; these modifier witnesses violate that assumption. The measured
 root translation and unchanged local surfaces identify a coordinate-frame
 handoff problem, rather than absence of sparse polygons in the observed
-region/group handoff. This does not authorize removing a translation globally:
+region/group handoff. This does not justify removing a translation globally:
 other input coordinate frames and SupportCubic remain outside this evidence.
 
-**STOP:** the approved W6 slice excludes Adaptive preparation/tree/frame
-changes, which overlap W3's Adaptive ownership. Keep the public RED frozen;
-do not implement a speculative region/grouping repair. Request coordinator
-ownership/scope adjudication before any GREEN. Neither this document nor the
+**STOP:** the modifier sparse-loss slice excludes Adaptive preparation/tree/frame
+changes. Keep the public RED frozen; do not implement a speculative
+region/grouping repair. The scope must be decided before any GREEN. Neither this document nor the
 public RED claims acceptance or a complete fix.
 
-## External evidence
-
-- Native-first acceptance and public API/CLI preflight:
-  `${EVIDENCE_ROOT}/worker6/modifier-native.oQWrNm/`;
-  aggregate `public-preflight.json`.
-- Exact RED official/seeded nextest logs, exits, comparison artifacts and
-  process-affinity audit:
-  `${EVIDENCE_ROOT}/worker6/modifier-public-red.HjwbK4/`.
-- Read-only observations, scripts, unchanged-output audit and limitations:
-  `${EVIDENCE_ROOT}/worker6/modifier-localization/audit.json`;
-  per-input `A-C*/final/{observations.json,gdb.log,observed.gcode}`.
-
-All generated products above remain outside the repository. No full/workspace
-run, Native rebuild, assertion reversal, comparator change, or push is part of
-this RED investigation.
+All generated products remain outside the repository. No Native rebuild,
+assertion reversal or comparator change is part of this RED investigation.

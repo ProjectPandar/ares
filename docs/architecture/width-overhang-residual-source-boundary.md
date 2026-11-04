@@ -6,8 +6,7 @@ Authority: OrcaSlicer v2.5.0-beta
 `345efec64c7b95a05ce5cf96df0dde66a158835c`, with its Clipper2 dependency
 `09f1baceae892df95ea07250dbb6b6d3dedd3d2b` (2.0.1).
 
-This follow-up starts from the accepted B12-restacked geometry tip. It is a
-source-cited rewrite slice, not an independently designed slicing or movement
+This follow-up is a source-cited rewrite slice, not an independently designed slicing or movement
 pipeline. No production change is justified merely because the retained test
 is grouped under clipping geometry.
 
@@ -53,7 +52,7 @@ Ranked predictions before experiments:
 
 ## Localized ownership before repair
 
-The approved bounded Ares-only trace is complete and removed. Its full API output
+The bounded Ares-only trace is complete and removed. Its full API output
 was byte-identical to the uninstrumented RED, and both source files were restored
 byte-for-byte before production work.
 
@@ -94,14 +93,11 @@ no-regression GREEN is claimed by this directed slice.
 
 The remaining cited boundary is `ExtrusionProcessor.hpp:50–355` plus
 `GCode.cpp:9538–9643`, including effective-speed/fan predicate transport and
-fan-only segmented-versus-path-wide emission. The coordinator has authorized
-this follow-on consumer slice after the independent collinear slice below.
-Keep the first-overhang block OPEN until its complete bytes match; never remove
+fan-only segmented-versus-path-wide emission. It is a follow-on consumer slice
+after the independent collinear slice below. Keep the first-overhang block OPEN until its complete bytes match; never remove
 fan/progress/movement records to declare GREEN.
 
-## Later-batch commit and acceptance boundaries
-
-Neither follow-up belongs to frozen B13.
+## Commit and acceptance boundaries
 
 1. Freeze a separate public RED for the **last Native object block** of this
    immutable input, with Native activation proving it follows the overhang block
@@ -128,7 +124,7 @@ The original seven full-stream comparators and parity ROOT remain unchanged.
 The beta printing-state sampling/consumer ARD is recorded separately in
 [beta-overhang-printing-state-sampling.md](beta-overhang-printing-state-sampling.md).
 The source sampler/GCode consumer commit `eb9672f1b` preserves one final fan-line
-RED. Its subsequent authorized physical fan-state deduplication ports
+RED. Its subsequent physical fan-state deduplication ports
 `CoolingBuffer.cpp:1066–1071` together with constructor/reset, layer/tool baseline
 updates and the distinct force-resume branch. It makes the complete first Native
 overhang object block byte-equal at498 bytes while retaining all351 bytes of the
@@ -138,10 +134,10 @@ pass. No record is masked or removed by the comparator.
 The required bounded20-case official sample passes20/20 before and after the
 physical-state slice, with no oracle skips or introduced failures. Selection
 and coverage limits are recorded in the follow-on ARD: this is not20 strict
-Native stream comparisons. The final11 owned directed cases retain four scoped
+Native stream comparisons. The final11 directed cases retain four scoped
 GREENs and seven strict full-stream REDs. Width advances to a first mismatch at
 configuration/footer line236; its complete movement prefix now matches. Full-
-stream completion and batch no-new-failure claims remain separate.
+stream completion remains separate.
 
 ## Non-negotiable production boundary
 
@@ -160,14 +156,14 @@ strategies and unrelated configuration/feed/progress/statistics remain deferred
 unless this public witness demonstrates their owning boundary is required.
 Do not treat an upstream pure memo as independent slicing logic.
 
-## Approved RED-first seam and localization contract
+## RED-first seam and localization contract
 
 The already agreed seam remains the validated public API and CLI against the
 runtime official beta producer, stable double replay and the unchanged strict
 whole-stream comparator. Keep that original case RED until it actually passes;
 footer/config residuals are not erased.
 
-The approved additional seam compares the complete
+The additional seam compares the complete
 first Native object-layer block containing the overhang-wall role, including its
 initial travel, all moves/E/feeds/M73/fan/width/role metadata. Select the Native
 block ordinal, then compare the API block at that same ordinal; never search the
@@ -175,7 +171,7 @@ API for a later convenient matching feature. Expected bytes come only from the
 runtime oracle, not source-generated expectations or committed output fragments.
 Use only the same immutable input and existing native-stream grouping, not ROOT.
 
-A bounded Ares-only read-only debugger capture or one tagged trace is approved,
+A bounded Ares-only read-only debugger capture or one tagged trace is permitted,
 local only and never committed. Check offset/Arachne construction and ClipperZ
 conversion before attributing the persistent corner mismatch to emission. The
 capture may inspect variable-width clipping and estimator input/output boundaries for the two affected layers, never instrument Native. Capture
@@ -186,5 +182,4 @@ cannot replace the official public RED or establish GREEN.
 Freeze the qualified focused RED before production code. Acceptance must show
 its complete block byte-equal to Native and changed complete API bytes, while
 retaining and reporting the original full-stream result and all foreign-owner
-residuals. Run only the directed owned cases and required fmt/strict all-target
-Clippy; no FULL/broad or beta-ledger baseline rerun.
+residuals. Run the directed cases and required fmt/strict all-target Clippy.

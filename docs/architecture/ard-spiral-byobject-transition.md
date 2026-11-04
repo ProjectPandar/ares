@@ -20,13 +20,13 @@ Non-negotiable decisions (spec: `spiral-byobject-transition-spec.md`).
    the witness reuses the committed admission fixture; no Native
    artifacts committed.
 5. **Side-branch isolation.** The chain lives on
-   `spiral-byobject-transition` from the W1 tip `a1a72362a`; it is not
-   merged into the frozen window tip and not pushed; appending is a
-   separate COORD decision after the RR.
+   `spiral-byobject-transition` from `a1a72362a`; it is not
+   merged into the frozen tip; appending is a
+   separate decision.
 6. **E2E-only verification.** No unit tests; the RED cases are the sole
    verification.
 7. **Boundary hygiene.** GREEN touches `layers/object_entry.rs` (the
    expression) plus the orphaned plumbing removal across
    `layers/schedule.rs`, `layers.rs`, `layers/tool_entry.rs`,
-   `layers/drive.rs`; queued and W1-touched files are otherwise
+   `layers/drive.rs`; other files are otherwise
    untouched.

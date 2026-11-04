@@ -1,8 +1,7 @@
 # Support ironing with raft offset: Native divergence proposal
 
-Status: `SPEC-REVIEW-REQUEST` (docs only; no production change or RED). Base is
-`origin/main` `8f6ce1660ccfaf95a6888b60c258047183d19ff0`; the stack-25 queue was
-checked and contains no owner for this runtime boundary. The existing ordinary
+Docs only; no production change or RED. Against
+`8f6ce1660ccfaf95a6888b60c258047183d19ff0`. The existing ordinary
 support-ironing pattern dispatch and the earlier Grid NO-RED probe are merged;
 this is a distinct raft/ironing interaction.
 
@@ -19,7 +18,7 @@ project settings to enable two raft layers and ordinary support:
 
 The resulting frozen input SHA-256 is
 `e361fd095b95efe469220c3927d209538abdfaee1d206220c7d836c86ef78934`.
-Native was run first on CPU12 with fresh cache/output roots in both modes:
+Native was run first with fresh cache/output roots in both modes:
 
 | mode | result | Native G-code SHA |
 |---|---|---|
@@ -99,8 +98,8 @@ to the Grid filler. Thus the first differing Y is a Grid start-phase caused by
 missing `bbox_object`, not by support-layer Z/height or clipping.
 
 The RED commit is `1ff3656f5bbb82849ac8826eb8917037187f252f` and adds the
-frozen target fixture plus a no-raft control. Both official and seeded pinned
-runs used fresh cache/artifact roots on CPU12 with jobs/threads 1. Each mode
+frozen target fixture plus a no-raft control. Both official and seeded
+runs used fresh cache/artifact roots. Each mode
 reports the control PASS and the target strict comparison FAIL at the same
 first motion/M73 boundary (Native `G1 X115.15 Y114.85 E.03153` versus Ares
 `M73 P12 R23` at line 631; the earlier travel difference is

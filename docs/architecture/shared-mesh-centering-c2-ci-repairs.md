@@ -1,8 +1,8 @@
 # C2 CI repairs: artifacts and explicit-plate fixture admission
 
-CI run38480861032 self-hosted reported two public test failures at
-C2 headaef0fb40f. These repairs change tests/authored inputs only.
-The approved C2 importer/centering/sharing production patch stays unchanged.
+CI reported two public test failures after C2. These repairs change
+tests/authored inputs only. The C2 importer/centering/sharing production patch
+stays unchanged.
 
 ## Artifact root without an oracle environment
 
@@ -20,20 +20,18 @@ Invalid configured roots still fail instead of falling back.
 
 Original `tests/parity/validation/kobra3-centered/0.8.3mf` SHA:
 `0dc37a07daedf1aa01a48832a2ff3b4e70f6e367075274391e42884a98db1b0c`.
-`git show 96328f269:<path>` has the same bytes/SHA. No truncation, replacement
+The main-branch file has the same bytes/SHA. No truncation, replacement
 or fixture mutation occurred. It builds object2 but its plate1 has no
 model_instance membership.
 
 `_BBS_3MF_Importer::_load_model_from_file`, bbs_3mf.cpp:2058-2082, selects
 obj_inst_map object-ID membership before generating volumes. Plate creation
 still records an empty plate (:4652-4666); membership is populated at :4698.
-The approved positive explicit import therefore excludes this unassigned
+The positive explicit import therefore excludes this unassigned
 object. Re-admitting it would undo the accepted C2 selected-load contract.
 
-Fresh CPU12 official and seeded admission witnesses, each with separate
-cache/artifact directories:
-`/tmp/worker3-c2-ci-role-preflight-e17utvr1/evidence.json`.
-Both modes produce identical admission decisions:
+Fresh official and seeded admission witnesses, each with separate
+cache/artifact directories, produce identical admission decisions:
 
 | Input/request | Native result |
 | --- | --- |
@@ -58,10 +56,8 @@ validation-contract change is part of this repair.
 ## Verification boundary
 
 Re-run the two existing failing tests in a standard env without any ARES_*
-variables, using CPU12/jobs1 and the independent worker3 target. This exercises
-the exact missing-root workspace path and the positive explicit-plate WASM
-adapter path. Capture logs and retained selection.json externally. Then verify
-strict/fmt/wasm32; coordinator owns CI/workspace/full and all pushes.
+variables. This exercises the exact missing-root workspace path and the positive
+explicit-plate WASM adapter path. Then verify strict/fmt/wasm32.
 
 ## Same positive-input requirement in runtime role migration
 
@@ -69,7 +65,7 @@ strict/fmt/wasm32; coordinator owns CI/workspace/full and all pushes.
 input with Some(1), while tools/chain-probe/role-filament-map.py:115 produces
 Native --slice0. Its optional Native path was unavailable in workspace, so this
 consumer did not fail in the self-hosted job. It would encounter the same
-approved explicit-import rejection in full. Switch only its PROJECT input path
+explicit-import rejection in full. Switch only its PROJECT input path
 to the complete fixture. Preserve Some(1), every whole-stream, footer/map and
 f64-bit assertion, producer scripts and cache policy. For this single assigned
 object, all-import and explicit import have the same owner/geometry.

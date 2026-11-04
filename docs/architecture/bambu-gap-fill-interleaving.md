@@ -1,7 +1,7 @@
 # Bambu gap-fill interleaving: fixed-order residual collections
 
 Status: literal insertion port and paired breadth qualification complete,
-explicitly NON-GREEN pending full-output parity and review. The original
+explicitly NON-GREEN pending full-output parity. The original
 public RED remains unchanged; no complete GREEN or closure is claimed.
 
 ## Upstream owner and Rust boundary
@@ -58,7 +58,7 @@ Any newly exposed earlier boundary is reported, not silently absorbed.
 
 ## Real public RED and strict acceptance
 
-Base: accepted literal spiral source port
+Base commit: accepted literal spiral source port
 `b83400af103301442d570833842287bda700e964`, explicitly NON-GREEN.
 Use the unchanged velocity project, SHA256
 `d8f74deff1274800b04f021ba812c5fb84c1629e45981653218963e2cc3a1e37`,
@@ -81,7 +81,7 @@ M73 remains separately owned by the Klipper estimator rewrite. An external
 M73-only diagnostic may locate this first remaining endpoint difference,
 with complete exports, removed records and original-line maps retained.
 It does not alter the strict failing test or establish a timing-only cause.
-Any estimator prerequisite stack must be explicitly approved; no permanent
+Any estimator prerequisite stack is a separate decision; no permanent
 mask or independent estimator/cooling patch is part of interleaving.
 
 ## Fresh qualification
@@ -107,7 +107,7 @@ RED does not turn the printed reversal into a general producer proof.
 
 ## Literal port and paired qualification
 
-The approved port replaces unconditional conversion in `gap_residual.rs`
+The port replaces unconditional conversion in `gap_residual.rs`
 with the beta353-356 gate and `gap_residual/insert.rs`. It carries the
 existing no-sort flags into the residual pass at all seven construction
 sites: monotonic/monotonic-line, calibration plane path, concentric, and
@@ -121,7 +121,7 @@ family, including the dedicated RED and five spiral public checks, ran
 once before and once after in the same worktree with a dedicated target.
 Before and after are both **44 PASS / 77 FAIL / zero ignored**, with zero
 status flips and zero prior-PASS to FAIL. Each phase retains 239 Native
-command-status receipts. PASS counts include guards and are not blanket
+command-status records. PASS counts include guards and are not blanket
 Native-parity credit. The six selected public witnesses each have two
 fresh stable Native exports and one API/CLI export, raw API/CLI equal.
 
@@ -143,28 +143,28 @@ and no adjacent wall/config/estimator/formatter repair was attempted.
 
 All six complete strict public tests still **FAIL**: velocity first M73
 at19, positive-SYNC at31, sequential at93, stock/fuzzy at83. Their M73
-records remain in the comparator. The estimator is separately owned; its
+records remain in the comparator. The estimator is a separate slice; its
 six-case spiral-stack packet is supporting evidence, not fresh runtime
 credit on this port. Its E5 feed and secondary gap observations remain
 conditional and were not replayed in this family.
 
 Fmt and strict workspace/all-targets Clippy pass; tests, fixtures, ROOT,
-runners and comparator are byte-identical to the approved RED. The
+runners and comparator are byte-identical to the RED. The
 external bundle records both source trees and distinct frozen executables,
 all original results/contexts, static inventory/parser corrections and
 supporting source identities. Only this architecture result note changes
 after execution; no postcommit rerun is claimed. E5 remains the next
-separate follow-up after this port RR, not part of these 242 executions.
+separate follow-up after this port, not part of these 242 executions.
 
 ## Exit and deferrals
 
-Submit ARD plus the fresh public RED RR before implementation. This RED
+Land ARD plus the fresh public RED before implementation. This RED
 phase has one selected run: Native2/API1/CLI1, no retry, observer, operand
 dump, input variant or family run. Failed attempts remain immutable.
 The exact execution tree and repeatable artifacts belong to the external
 evidence bundle, not committed Native G-code.
 
-A later authorized literal port requires the complete public output to
+A later literal port requires the complete public output to
 pass, M73 included, and a frozen before/after fill-family inventory with
 zero prior-PASS to FAIL. Preserve any remaining failure and report its
 owning source instead of declaring local direction-only GREEN.

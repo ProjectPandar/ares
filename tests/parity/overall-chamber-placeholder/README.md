@@ -17,8 +17,6 @@ all other ZIP member payloads are byte-identical. Both exported archives were
 accepted by the official Native CLI. Dynamic Native references, not hardcoded
 expected output, determine complete public stream parity.
 
-Discovery files:
-`${EVIDENCE_ROOT}/w6-overall-chamber-probe-discovery-4h7m2n9p/{control,target}.3mf`.
 No new slicing or printer behavior is requested. The included custom comment
 isolates the upstream derived ConfigOptionInt identity without masking the rest
 of the generator stream. Formal public tests retain all M73/time/motion/comments/

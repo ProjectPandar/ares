@@ -56,8 +56,8 @@ git grep -n -I -F 'ender3-classic.orca.gcode' -- . ':(exclude)OrcaSlicer/**'
 | `docs/architecture/native-artifact-cleanup-replay-reference-spec.md:41` | P1 retention decision |
 | `tests/parity/replay/README.md:38` | Runtime/retention contract |
 
-Classic remains tracked for worker4's KSR migration. The original
-`ender3.orca.gcode` remains for the separately owned web/encode-roundtrip
+Classic remains tracked for the KSR migration. The original
+`ender3.orca.gcode` remains for the separate web/encode-roundtrip
 migration. Neither product nor any KSR/web reader is writable in P2.
 
 ## Input contract to retain
@@ -94,14 +94,14 @@ Use a repository-external tracked-file absence inventory as the deletion RED:
 it fails while the report is tracked and passes after removal. Add no Rust
 path-existence test. Before and after removal, run the four existing
 `brim_bed_region_kobra3_{02,04,06,08}_outer_matches_native` tests in required
-mode against real Native; preserve logs and paired artifacts outside Git.
+mode against real Native; preserve logs and paired artifacts.
 Audit protected input/provenance SHA values, unchanged Rust assertions, and the
-final consumer search. Run default-environment workspace, clippy, and fmt for
-review. No deletion-only gate waiver is assumed from earlier groups.
+final consumer search. Run default-environment workspace, clippy, and fmt.
+No deletion-only gate waiver is assumed from earlier groups.
 
-Fresh seeded/official pairing is proposed unnecessary for this report/README
-only deletion, subject to coordinator approval of this spec; no production or
+Fresh seeded/official pairing is unnecessary for this report/README
+only deletion; no production or
 test execution path changes. Historical report cleanup does not resolve any
 other Native artifact group. Brim algorithms, plate transforms, runtime runner
-strategy, KSR, web CONFIG_BLOCK consumers, and worker4's remaining B groups are
-deferred and retain their current owners.
+strategy, KSR, web CONFIG_BLOCK consumers, and the remaining artifact groups are
+deferred.

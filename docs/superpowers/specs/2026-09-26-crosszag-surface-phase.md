@@ -20,20 +20,20 @@ No new pipeline or tolerance acceptance.
 
 Official CrossZag differs in layer-3 internal solid fill phase, then top
 surface phase. Raw sticky sparse-pattern controls were copied directly into
-Monotonic runtime params. `/tmp/crosszag-current.diff` preserves the output.
+Monotonic runtime params.
 
 Plan: red test at the actual raw-to-runtime control conversion covering all
 six callers, signed phase and enabled/disabled symmetry; preserve group
 metadata and its original behavioral test. Gate the conversion, run official
-full-output comparisons, workspace/KSR/fmt/clippy, obtain independent review,
-then commit code and docs together.
+full-output comparisons, workspace/KSR/fmt/clippy, then commit code and
+docs together.
 
-## Review correction
+## Raw-group correction
 
-The initial approach reset raw group fields. Reviewer 48e80bba correctly
-blocked that approach: it broke the existing ARD contract and its test. The
-parent restored projection, sticky assignment and the original grouped
-sidecar test exactly. The implementation now changes only the runtime
+The initial approach reset raw group fields. That approach was
+rejected: it broke the existing ARD contract and its test. Projection,
+sticky assignment and the original grouped sidecar test are restored
+exactly. The implementation now changes only the runtime
 conversion boundary. Earlier phase-helper tests and validation of that
 rejected approach are not acceptance evidence for the final patch; final
 runtime tests and gates are rerun. The raw group is never mutated by this

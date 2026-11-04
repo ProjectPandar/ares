@@ -1,18 +1,16 @@
 # SPEC: conditional scarf smoothness and its overhang dependency
 
-Status: **SPEC REVIEW-REQUEST / docs only**. Proposal approved at
-`a30db87fbfd9a7955244ac41449df79754271448`, direct parent approved spRear
-GREEN9d9814418e1481114d05cb65848ed723869ac2ce. No RED/production permission until
-exact SPEC approval. [ARD](ard-scarf-conditional.md).
+Follows the [scarf-conditional proposal](scarf-conditional-slice-proposal.md);
+direct parent is the spRear port. [ARD](ard-scarf-conditional.md).
 
-## Owner amendment: first-object-over-raft Native UB (2026-10-17)
+## Amendment: first-object-over-raft Native UB (2026-10-17)
 
 Superseded on 2026-10-29 **only for the absent-distance policy** by the
-[owner-approved raft distance decision](ard-scarf-raft-unset-distance.md).
+[raft distance decision](ard-scarf-raft-unset-distance.md).
 The historical guard rationale below remains evidence of the undefined source
 boundary; the new decision does not claim that Native's field is zero.
 
-After approved REDbdb36e092, owner authorizes ONE narrow explicit admission error:
+After the RED, this slice adds ONE narrow explicit admission error:
 `raft_layers>0 && conditional scarf active && scarf_overhang_threshold>0` →
 `SliceError::UnsupportedProjectFeature`, key `scarf_overhang_threshold`.
 Conditional scarf active means configured scarf type is not None and conditional
@@ -22,9 +20,9 @@ so API and CLI, modifiers/defaults/overrides have the same result. Comment cites
 Native SeamPlacer.hpp59-70 (uninitialized field), SeamPlacer.cpp1092/1563 and
 GCode.cpp5787-5791 (first-object-over-raft consumption). No scalar is fabricated,
 no print/object index is changed. All other defined cases remain the source port.
-This is an explicitly authorized Native-UB guard, not a threshold-only fallback.
+This is an explicit Native-UB guard, not a threshold-only fallback.
 A new RED-side UB witness is NOT required. GREEN gate is ALL seam+scarf+core-seam
-families BOTH modes at the exact hash; residual whole mismatch=STOP. Frozen RED
+families BOTH modes; residual whole mismatch=STOP. Frozen RED
 stays unchanged. This amendment supersedes the earlier blanket no-new-guard rule
 ONLY for this conjunction; other unassigned-field paths still STOP/report.
 
@@ -37,7 +35,7 @@ cannot be safely deferred in production: removing the bypass and ignoring that
 guard would incorrectly enable scarves on unsupported seams; retaining a new
 positive-threshold bypass would invent a fallback. Therefore include its minimum
 raw-distance producer/selected-candidate handoff/config projection, with its own
-Native ACTIVE/INACTIVE qualification before permanent RED. This does NOT authorize
+Native ACTIVE/INACTIVE qualification before permanent RED. This does NOT include
 unrelated candidate-score/embedding precision work or a new slicing pipeline.
 
 ## Source ownership → exact Rust boundaries
@@ -82,7 +80,7 @@ visibility bias and spRear comparator/fit remain frozen.
   reads Layer::id, while PrintObjectSlice.cpp57 starts IDs after raft layers.
   Any currently admitted source path that can consume an unassigned raw field
   must STOP/report before GREEN, not acquire a fabricated zero/new guard or
-  silent scarf disable. This does not authorize raft/support or UB-case work.
+  silent scarf disable. This does not include raft/support or UB-case work.
 - For an empty preceding distance tree, +infinity is the explicit upstream
   AABBTreeLines.hpp333-337 result, not a new defensive fallback. Preserve the
   strict source predicate (infinite unsupported distance cannot pass it).
@@ -112,9 +110,9 @@ query/outside APIs for the raw field; do not globally rewrite geometry or change
 old penalty/embedding results. Changed Rust files≤400LOC; split source-owned
 private eligibility/distance helpers rather than growing the current scarf file.
 
-## Actual approved discovery (not formal RED)
+## Discovery (not formal RED)
 
-Exact production base9d981, fresh official Native FIRST + same-hash real bare
+Fresh official Native FIRST + same-hash real bare
 CLI, original closed6-vertex/8-triangle10x10x0.8mm prism,4 layers/one object/part/
 filament/Classic2walls, aligned, support/brim/tower off. External scarf, inner0,
 entire0,start10%,length10,steps10,angle0,overhang0%.
@@ -134,14 +132,14 @@ entire0,start10%,length10,steps10,angle0,overhang0%.
   loop arms/nozzle0.4/positive10steps10mm/start0.1; optional overhang read disabled
   by0%. This qualifies smoothness, NOT the newly included nonzero dependency.
 
-History/queue and prior-port/UB audit remain in the approved proposal. This SPEC
-adds no claim that new taper inputs or API/seeded executions have happened yet.
+Prior-port/UB audit remains in the proposal. This SPEC adds no claim that new
+taper inputs or API/seeded executions have happened yet.
 
-## SPEC → qualified frozen public RED → separately authorized GREEN
+## SPEC → qualified frozen public RED → GREEN
 
-1. Exact SPEC REVIEW-REQUEST (these docs only), then await approval. No permanent
-   test/fixture or production change in this phase; no Native launch required.
-2. After approval, fixed nonzero-dependency qualification budget: FOUR Native
+1. SPEC (these docs only). No permanent test/fixture or production change in
+   this phase; no Native launch required.
+2. Fixed nonzero-dependency qualification budget: FOUR Native
    commands, official+seeded low/high pair, before permanent RED. New sibling of
    the SAME6v/8triangle prism: retain bottom vertices, scale top XY by1.15 about
    base triangle centroid (z unchanged), four layers and all original settings;
@@ -154,8 +152,7 @@ adds no claim that new taper inputs or API/seeded executions have happened yet.
    STOP/report: no parameter/mesh search, repeated Native, threshold invention
    or silent zero-only implementation. Actual observed counts/first blocks freeze
    into the later RED; no fabricated numeric expectation.
-3. Freeze FIVE public cases and exact manifest at a production-unchanged RED hash
-   for review:
+3. Freeze FIVE public cases and exact manifest at a production-unchanged RED commit:
    original conditional0 control; original conditional1/angle0 positive;
    original conditional1/angle155 sharp negative control; qualified taper low1%
    inactive control and high100% active dependency positive. Retain original
@@ -175,25 +172,19 @@ adds no claim that new taper inputs or API/seeded executions have happened yet.
    fails or a stream is missing: STOP, NOT EVALUATED where appropriate, no RED
    laundering or input replacement. Strict comparisons retain M73/motion/arcs/
    statistics/config/footer, unchanged golden.rs normalization only.
-5. Exact RED REVIEW-REQUEST and separate GREEN authorization. Port ONLY the cited
+5. GREEN: port ONLY the cited
    source decision/helper/raw-data handoff; frozen RED unchanged. Both active
    positives and all controls must become complete whole PASS/raw API==CLI in
    both modes with Native ACTIVE/INACTIVE states preserved. Residual whole
    failure after bounded port means STOP/report, not a clock/geometry fix.
-6. Exact GREEN REVIEW-REQUEST: targeted existing scarf/slope/PA/seam families,
+6. GREEN verification: targeted existing scarf/slope/PA/seam families,
    including nonconditional and sharp-corner controls, previous physical-plane/
    spRear; audit actual Native gates/outcomes (not nominal skips), scoped fmt,
    strict core+CLI-tests clippy, core+adapter WASM, changed Rust≤400LOC. Browser
-   WASM/Windows/macOS/Linux logic remains byte-API/platform-neutral. Coordinator
-   owns full/workspace scheduling/integration; RED merges ONLY with GREEN.
+   WASM/Windows/macOS/Linux logic remains byte-API/platform-neutral. RED lands
+   ONLY with GREEN.
 
-All execution CPU15/jobs1/nextestthreads1; fresh per-mode/per-phase cache/artifacts/
-TMPDIR; load<60 before builds/EVERY Native, START/END receipts and complete command/
-status snapshots; complete each mode's qualification/comparison audit before the
-next mode; no Native retries-to-success. Qualification4+formal10 is an
-explicit budget, not permission for broad discovery/full tests. Preserve all
-approved spRear ancestry; no stash/rebase/merge/push authorization implied.
-
-Discovery report ${LOCAL_EVIDENCE_ROOT}/worker4/scarf-conditional-slice-proposal-review.md;
-root seam-deferrals-proposal-9d981-Sap6, archive SHA
-173c422497330ecf7e9edab55e466b081da9b3147d8cf5897e4ce862c50e531f.
+Use fresh per-mode/per-phase cache/artifacts; complete each mode's
+qualification/comparison audit before the next mode; no Native
+retries-to-success. Qualification4+formal10 is an explicit budget, not
+permission for broad discovery/full tests.

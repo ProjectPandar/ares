@@ -1,6 +1,5 @@
 # J1c: avoid-crossing top-fill-surface lifecycle
 
-Status: SPEC-REVIEW requested; no J1c production change or GREEN claim.
 
 ## Upstream boundary and non-negotiable decisions
 
@@ -52,19 +51,15 @@ Existing test:
 `j1_by_layer_role2_usage_matches_complete_output` in
 `crates/ares-cli/tests/orca_parity/runner/j1_used_extruder_mask_follows_emitted_tools.rs`.
 The complete-byte comparator keeps M73, stats and footer; only generated-by
-identity is normalized. Three other J1 cases remain coordinator-approved
-**witness-only** controls, not complete-byte parity claims.
+identity is normalized. Three other J1 cases remain **witness-only**
+controls, not complete-byte parity claims.
 
-Mask `df56e12f0fe3fad0e071cbb717f830ff9dbd8ca6` and J1b
-`7b8dbd4877148b78a660ce4ce1e5b4d3062450b1` remain separate commits.
-Coordinator-directed overlay on worker2's committed
-`5f23e5b44433e6b68806d048e3042b42fadbcac8` yielded
-`36d2a8c7b89b90c80716cafbdd9b1efd1785bbef`. The single fresh primary comparison
-remained RED at line 222 (`M73 P46 R1` before versus after the same G1).
-The Ares raw output SHA remained
-`da4e1fc6b3cc1d32285dab67ec2e9d4d2643bf83c552e0c5829c108fc3b200ad`.
-Worker2's committed changes did not change this input's output.
-Evidence: `${TMP_ROOT}/ares-j1-mask/overlay-evidence/primary-first/`.
+The mask and J1b changes remain separate commits. With the concurrent
+avoid-crossing support-spacing changes overlaid, the single fresh primary
+comparison remained RED at line 222 (`M73 P46 R1` before versus after the
+same G1). The Ares raw output SHA remained
+`da4e1fc6b3cc1d32285dab67ec2e9d4d2643bf83c552e0c5829c108fc3b200ad`;
+those changes did not change this input's output.
 
 Read-only Nix GDB17.2 probes over that unmodified overlay and the pinned Native
 binary identify the **first real movement difference**, not merely M73:
@@ -89,13 +84,8 @@ binary identify the **first real movement difference**, not merely M73:
 - GDB Ares output is byte-identical to the uninstrumented overlay output.
   No production logging, debugger state mutation or Native rebuild was used.
 
-Trace artifacts and checksum inventory:
-`${TMP_ROOT}/ares-j1-mask/j1c-trace/root-evidence.json`, `native-boundary.json`,
-`ares-boundary.json`, `ares-hit.json`, `directions.json`, source scripts and
-raw debugger logs. The first direction probe stopped on an incorrect GDB
-Rust type name; `ares-direction-invalid-type.log` is retained as invalid
-probe evidence, not acceptance evidence. Debugger calls are diagnostic-only,
-not substituted for fresh public-API E2E receipts.
+Debugger calls are diagnostic-only, not substituted for fresh public-API E2E
+receipts.
 
 The source chain matches the observed extra holes:
 `project_slice.rs:161–170` extracts Top immediately after classification;
@@ -119,14 +109,14 @@ snapshot to `motion/path/avoid_crossing/boundary.rs:150–168` for subtraction.
    change `fill_surfaces::prepare_record`, shortest direction, intersection
    arithmetic, safe-zone tests, boundary inset, max-detour, wipe, seam,
    cooling or processor time/export insertion rules.
-3. Before GREEN, independently approve the existing complete-byte primary
-   RED as the J1c symptom and a frozen test-only lifecycle supplement: retain
+3. Before GREEN, establish the existing complete-byte primary RED as the J1c
+   symptom and add a frozen test-only lifecycle supplement: retain
    the original zero-top case and a separately frozen nonzero-top control
    to witness that genuinely surviving Top regions are still avoided.
    Any additional control is frozen before its first Native call and uses
    public slicing callers; no private-emitter test API.
-4. Implement a separate J1c commit only after exact-hash SPEC and RED
-   approval. Keep touched Rust files ≤400 LOC; extract only the affected
+4. Implement a separate J1c commit after the RED. Keep touched Rust files
+   ≤400 LOC; extract only the affected
    top-surface helper if the surgical edit would exceed the limit.
 
 ## Deferred behavior and ownership
@@ -135,36 +125,31 @@ Do not fix the pre-existing float-distance or collinear-intersection gaps,
 external-planner lifecycle gaps, support default-spacing rules, by-object
 ordering, candidate collector, or any independent route/Numerical issue.
 M73 progress and cooling are downstream symptoms: no insertion-rule change
-is authorized. Whole-file GREEN is still mandatory; if fixing the proven
+is allowed. Whole-file GREEN is still mandatory; if fixing the proven
 boundary lifecycle leaves another difference, freeze it and seek a new
 source-cited boundary rather than expanding this repair silently.
 
-**Worker2 function overlap:** its `avoid_crossing.rs::route` and
+**Function overlap:** the concurrent `avoid_crossing.rs::route` and
 `avoid_crossing/boundary.rs::Boundary::build` support-spacing changes were
 inspected read-only. This spec does **not** propose touching either function
 or file; it corrects the upstream fill-surface owner supplying them. If GREEN
-work discovers that either shared function needs an edit, stop, amend this
-spec with the exact shared function, and wait for worker2's integration before
-rebasing and editing. Coordinator assigned J1c to worker1 after overlay RED.
+work discovers that either shared function needs an edit, amend this spec
+with the exact shared function before editing.
 
 ## Exit gates
 
 - Unchanged primary input becomes **whole-file GREEN**, including all M73,
   stats/footer, and the frozen three startup witnesses remain exact.
-- Fresh approved directed lifecycle controls demonstrate zero-top removal
-  and preservation of surviving Top surfaces; CPU0/seed0, runs1, no reused
+- Fresh directed lifecycle controls demonstrate zero-top removal
+  and preservation of surviving Top surfaces; seed0, runs1, no reused
   Native result cache, prebuild outside a shared 300s case deadline, retain
   errors and owned-descendant cleanup receipts.
-- Rebase latest main before push (coordinator announced `bff9cb1b0`, including
-  worker5's tool-ordering physical-extruder placeholder change). Our full
-  seeded selection includes BBL/multi-extruder cases, so fresh same-round
-  latest-main base/candidate seeded runs are required; do not carry stale
-  seeded results across that behavior change. Preserve independent mask,
-  J1b and J1c commits through rebase.
-- Strict clippy, rustfmt, WASM and coordinator-required workspace/official
-  gates; candidate named failures ⊆ matched base. Follow the current browser
-  hold and single-heavy-worker policy. No failing-test bypass or timeout
-  promoted to parity.
-- Independent exact-hash final review, approved nonforce fast-forward push
-  and independently confirmed remote hash. The unrelated legitimate
-  non-GREEN matrices and witness-only limitations remain reported honestly.
+- The full seeded selection includes BBL/multi-extruder cases, so base and
+  candidate seeded runs must come from the same round on the same base; do
+  not carry stale seeded results across a behavior change. Preserve
+  independent mask, J1b and J1c commits.
+- Strict clippy, rustfmt, WASM and workspace/official gates; candidate named
+  failures ⊆ matched base. No failing-test bypass or timeout promoted to
+  parity.
+- The unrelated legitimate non-GREEN matrices and witness-only limitations
+  remain reported honestly.

@@ -1,9 +1,6 @@
 # Printer variant apply order: beta CLI rewrite slice
 
-## Status and owning source
-
-ARD and public RED only; submit their review record before a production port.
-Base: `5910df8eb0c2a9cab5958a1dcce7fdb34d075ecb`.
+## Owning source
 
 Orca beta source: `345efec64c7b95a05ce5cf96df0dde66a158835c`:
 
@@ -102,13 +99,13 @@ Explicitly defer:
 - Preset/default refresh, FilamentGroup optimization, writer changes,
   arc fitting, ironing geometry, timing/M73, and footer compatibility work.
 
-## Review and verification gates
+## Verification gates
 
 Keep ARD, public RED, and any later production port in separate commits.
-Deliver the ARD/RED review record before GREEN; do not use a temporary
-production edit to demonstrate sensitivity in this phase.
+Do not use a temporary production edit to demonstrate sensitivity in the
+RED phase.
 
-A later approved ordering port must make the focused API/CLI vector match
+A later ordering port must make the focused API/CLI vector match
 Native, retain the same frozen test inventory and complete comparator, and
 report every full-case result and observable change. The model-ironing
 case may remain FAIL because deferred configuration differences persist;

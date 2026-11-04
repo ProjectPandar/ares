@@ -1,12 +1,9 @@
 # Tool-position Time row — source-cited thin-display spec
 
-Status: approved at `75c08a84`; implementation proceeds RED → GREEN.
-Oracle approval additionally requires the source/adapted diff and hashes to be
-committed, with only member/parameter adaptations. Notify the coordinator's
-inbox before browser E2E and run it in a low-load window; send BROWSER-END on
-every success, failure or interruption. The later approved tagged-Time ruling
-is recorded in [ColorChange Known difference](web-colorchange.md#known-difference-tagged-marker-time-approved).
-Base: approved ColorChange chain `70323c9a7`.
+Implementation proceeds RED → GREEN.
+The oracle additionally requires the source/adapted diff and hashes to be
+committed, with only member/parameter adaptations. The tagged-Time ruling
+is recorded in [ColorChange Known difference](web-colorchange.md#known-difference-tagged-marker-time).
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Paths below are relative to `OrcaSlicer/` unless prefixed with a crate/web path.
 
@@ -44,7 +41,7 @@ inclusive lookup and this row. No additional processor fields are required.
 1. **No core change.** Do not touch timing arithmetic, stop registration, M73,
    `UsedFilaments`, G-code generation, slicing, or the native-marker correction.
    Existing processor times are inputs. If a native timing discrepancy blocks
-   the display oracle, report it to the coordinator; do not fix it here.
+   the display oracle, report it; do not fix it here.
 2. **Three distinct terms:** a vertex duration is `PathVertex::times[mode]`;
    elapsed time is the inclusive prefix through the selected vertex; the
    property-window vertex is the existing Rust-selected `window_vertex`, not
@@ -118,17 +115,17 @@ there is no production or oracle fallback.
 
 For each selected native vertex emit identity, duration/prefix **f32 bits**,
 mode, and the exact final Time text. Assert Rust bits and browser text against
-these records. Tagged geometry cases retain the approved raw/stable marker
+these records. Tagged geometry cases retain the raw/stable marker
 pair and complete difference-set rule; the stable patch remains marker-only.
 Stable source-kernel vertex IDs and bits are authoritative for Ares. Retain
 both native streams; align raw/stable by G-code ID, explicitly accounting for
-phantoms and bounded elapsed propagation as documented in the approved Known
+phantoms and bounded elapsed propagation as documented in the Known
 difference. Differences outside that boundary still require an explicit ruling;
 the existing XYZ exception is not a blanket timing waiver.
 Generated G-code/M73 use the unmodified official slicer, never that patch.
 Keep all RED inputs and source-kernel fixture outputs reproducible and committed.
 
-## Implementation sequence after approval
+## Implementation sequence
 
 1. Provision source-kernel oracle and failure fixtures; commit tests-only RED.
 2. Port the inclusive query/prefix data and selected-vertex timing record into
@@ -138,18 +135,18 @@ Keep all RED inputs and source-kernel fixture outputs reproducible and committed
 4. Check first/middle/last selection, seams, filters, reverse navigation,
    reload, both themes and expanded-table non-overlap. Preserve screenshots,
    native records, raw G-code hashes and bundle evidence.
-5. Fetch/rebase main before review. Run fmt, all-target workspace clippy with
+5. Run fmt, all-target workspace clippy with
    `-D warnings`, workspace nextest (including dynamic-value audit), WASM/lib/
-   app builds, typecheck/lint and fresh low-load full base/candidate browser
-   suites once each. Include Filament/ColorChange and `presetSlice`. Follow
-   the coordinator's then-current full native reference protocol; do not
+   app builds, typecheck/lint and fresh full base/candidate browser
+   suites once each. Include Filament/ColorChange and `presetSlice`. Run the
+   full native reference suite; do not
    inherit a waiver for code changes or erase a RED by retrying.
 
 ## Exit / deferred behavior
 
 Exit requires source-cited numeric and formatting parity, unmodified G-code
 and M73, no initial-bundle regression or budget change, green Rust/browser
-checks, explicit evidence for any approved oracle ND, and coordinator approval.
+checks, and explicit evidence for any accepted oracle ND.
 Production files approaching 400 LOC must be split within the changed boundary.
 
 Deferred: Acceleration/Jerk/Pressure Advance recording/display, actual-speed

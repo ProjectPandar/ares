@@ -1,11 +1,11 @@
 # ARD 0109: NP beta vgcode viewer-time and path-split kernels at 345efec64
 
-Assignment #290, Stage 2, after the Stage 1 extractor re-pin (`f416e1718`).
+Stage 2, after the Stage 1 extractor re-pin (`f416e1718`).
 All ports are source-cited rewrite slices of OrcaSlicer
 `345efec64c7b95a05ce5cf96df0dde66a158835c` (the pinned upstream source
 checkout of that commit); no Ares-owned pipeline design.
 
-## Slice 1 — marker-time layer-seeded cache (approved 2a)
+## Slice 1 — marker-time layer-seeded cache
 
 - Upstream: `src/libvgcode/src/ViewerImpl.cpp:1189-1213` (build),
   `:990-992` (reset), `:1717-1732` (`get_estimated_time_at` layer-seeded
@@ -34,7 +34,7 @@ checkout of that commit); no Ares-owned pipeline design.
   semantics. The merged-oracle binaries used by the parity env are prebuilt
   and unaffected.
 
-## Slice 2 — starts_path acceleration/jerk path splits (approved 2a-prereq)
+## Slice 2 — starts_path acceleration/jerk path splits
 
 - Upstream: `src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp:227-240` —
   `starts_path` additionally splits when `prev.acceleration != curr.acceleration`
@@ -48,11 +48,11 @@ checkout of that commit); no Ares-owned pipeline design.
   at `f416e1718` fails the count gate 71 (Ares) vs 72 (Native).
 - Included: predicate change only; no vertex layout change.
 
-## Slice 3 — tagged fixture raw/stable retirement (coordinator disposition)
+## Slice 3 — tagged fixture raw/stable retirement
 
 - Provisioned the beta raw marker-time binary (345efec64 + the raw patch set
   only: procgcode.patch, marker-time.patch, the beta layer-seeded kernel and
-  the cache-rebuilding oracle header) rooted in the coordinator gcroots.
+  the cache-rebuilding oracle header), rooted against garbage collection.
 - Control: the 2.4.2-era raw/stable pair still diverges on the tagged input
   (7279/7278, extra raw phantom vertices); the beta raw binary and the beta
   merged oracle are byte-identical on the same input, and beta carries no
@@ -77,7 +77,7 @@ checkout of that commit); no Ares-owned pipeline design.
   The comparator stays 7478; porting the flushed-trapezoid split is the
   next kernel slice, not a fixture change.
 
-## Deferred — belt-printer get_layers_zs (per coordinator decision)
+## Deferred — belt-printer get_layers_zs
 
 - `src/slic3r/GUI/GCodeViewer.cpp` `get_layers_zs()` gained a belt branch:
   if `m_belt_layer_zs` is non-empty, the slider/colour-change Zs come from the
@@ -93,4 +93,4 @@ checkout of that commit); no Ares-owned pipeline design.
 - Comparators and test semantics unchanged; each kernel is its own
   RED→GREEN commit with the RED run recorded before the port.
 - No `#[allow]`/`#[expect]`; clippy/rustfmt clean; no probes or Native
-  instrumentation beyond the approved harnesses above.
+  instrumentation beyond the harnesses above.

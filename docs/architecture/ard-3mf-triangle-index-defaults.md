@@ -1,7 +1,7 @@
 # ARD: shared triangle defaults precede unchanged mesh validation
 
-Status: **PROPOSED, docs only**, associated
-[SPEC](3mf-triangle-index-defaults-spec.md). No runtime/test/production approval.
+Status: proposed. Docs only, associated
+[SPEC](3mf-triangle-index-defaults-spec.md).
 
 ## Source owner and destination
 
@@ -30,11 +30,11 @@ serde policy. Existing DTOs remain transport shells for the named importers.
   Ares equality is NO-RED. Both public calls precede failing target assertions.
 - Controls assert whole equality too. No inverted passing assertions, missing-
   output equality, comparator weakening or M73 filtering. Separate discovery,
-  frozen public RED review and production approval; any residual difference STOP.
+  frozen public RED and separate production commit; any residual difference STOP.
 
 ## Alternatives rejected / deferred
 
 A general mesh-repair port would obscure the scalar-default owner. A role DTO
 split lacks upstream justification. Reindexing an input to synthesize v2/v3
-zero cases changes more than the approved first pair. Those are not part of this
+zero cases changes more than the selected first pair. Those are not part of this
 milestone. M73 discovery and all unrelated loader/config/geometry work stay deferred.

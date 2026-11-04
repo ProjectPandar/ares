@@ -13,11 +13,9 @@ overlap1, transitive1, copies1. Copies at x80/140 share object2; object3
 at x110 lies inside their occupied convex hull. Transitive has x80/99/118:
 adjacent expanded envelopes intersect while the endpoints alone do not.
 
-Native-first CPU18 official/seeded preflight produced exit0 on all four
+Native-first official/seeded preflight produced exit0 on all four
 inputs, with positive XY skirt extrusions and distinct separated hulls
-in disjoint. Evidence is external:
-`${TMP_ROOT}/ares-skirt-native-witness-9BH3dU/{official,seeded}/<case>/`
-and `witness.json` there. No Native output is committed.
+in disjoint. No Native output is committed.
 
 The public test reruns Native before API/CLI, retains inputs, launch metadata,
 witness, raw streams/errors and strict comparisons in external artifacts.

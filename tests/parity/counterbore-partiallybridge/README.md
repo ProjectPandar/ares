@@ -17,8 +17,8 @@ Native references are generated at runtime through OrcaRunner's cached
 Complete-output assertions normalize only generated-by identity and retain
 movement, M73, statistics and footer. No Native outputs or execution records
 are committed. The remaining generated geometry is reserved input for the
-independently approved counterbore slice; its four failing RED tests are not
-part of the seam integration branch.
+separate counterbore slice; its four failing RED tests are not part of the
+seam slice.
 
 Source boundaries:
 - `docs/architecture/direct-stl-profile-override-bookkeeping.md`
@@ -26,8 +26,7 @@ Source boundaries:
 
 # Classic counterbore partiallybridge fixtures
 
-Source spec: `docs/architecture/classic-counterbore-partiallybridge.md`, approved
-at `1beb75e459712fab95cb7a5e7835dffc95740b30`.
+Source spec: `docs/architecture/classic-counterbore-partiallybridge.md`.
 
 All geometry is frozen before the RED Native runs. `generate.py` reproduces the
 binary STLs and `geometry-manifest.json`; every undirected mesh edge is used
@@ -74,7 +73,7 @@ written before the parity assertion in `counterbore-result.json` and, for errors
 Run via `cargo nextest run -p ares-cli --test orca_parity -E 'test(counterbore_)'`
 with `ARES_PARITY_PROFILE_ENTRY_REFERENCE=1` and the normal Native harness
 environment. Prebuild outside the shared300s per-case deadline. Use fresh Native
-cache/artifact roots, CPU0/seed0, runs1, one heavy job and16 threads. The independent
+cache/artifact roots and seed0. The independent
 `orca_parity_seam_visibility_eigen_distance_complete_output` RED reuses the
 unchanged None-control input and full-output assertion under
 `docs/architecture/seam-visibility-eigen-distance-reduction.md`. No GREEN is

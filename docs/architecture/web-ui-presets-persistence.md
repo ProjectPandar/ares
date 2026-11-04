@@ -1,7 +1,5 @@
 # Web sidebar: preset persistence, filament grouping, plate/nozzle, dual extruder
 
-Status: approved by coordinator review; implementing. Branch `web/ui-presets-persistence`.
-
 This is a web GUI slice under ARD-0106: it ports `src/slic3r/GUI` sidebar
 behavior of OrcaSlicer 2.4.2 (pinned `8500fcdcc`). Slicing stays in
 `ares-core`. The sidebar's choices reach the slice only as project-config
@@ -64,8 +62,7 @@ Design:
   filament name that is missing from the catalog is dropped, the same way
   `select_preset_by_name_strict` drops it.
 - The old `ares.theme`, `ares.mode`, `ares.gcodeWindow` and `ares.vendors` keys
-  are removed and not migrated (AGENTS: no legacy fallback). The coordinator
-  allowed dropping old entries.
+  are removed and not migrated (AGENTS: no legacy fallback).
 - Writes happen when a selection action runs (`selectPrinter`,
   `selectFilament`, bed type, and so on), mirroring `export_selections` after
   each `update_presets`. There is no write-on-every-render.
@@ -314,8 +311,7 @@ Each spec writes screenshots plus a JSON record under `target/web-e2e/<spec>/`.
 
 Also run: `npm run lint`, `npm run typecheck`. When Rust is touched, also run
 `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
-and `cargo nextest run -p ares-wasm`. Heavy work is pinned with
-`taskset -c 4-7 nice -n 10` and `CARGO_BUILD_JOBS=4`.
+and `cargo nextest run -p ares-wasm`.
 
 ## Commits (order)
 
@@ -347,7 +343,7 @@ whose compatible presets are none of those (e.g. the X1C 0.2 nozzle, whose
 filaments are `… @BBL X1C 0.2 nozzle`) lists only user presets until
 filaments are added in the dialog.
 
-## Decisions (coordinator review of the spec)
+## Decisions
 
 - D1 (Q1). The installed filament set hides combo items, as upstream
   `is_visible` does. A fresh install is seeded from the printer model's

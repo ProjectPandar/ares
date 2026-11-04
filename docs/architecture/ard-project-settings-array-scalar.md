@@ -1,10 +1,10 @@
-# Project-settings array-valued scalar — approved Rust rewrite slice
+# Project-settings array-valued scalar — Rust rewrite slice
 
 Source RED parent:
 `1f784dbae58dd1f27c51c688e68176a85623dbe9` (main=aecea85be lineage).
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Status: COORD approved chained RED→GREEN after the sealed read-only PINPOINT
-(`support-pinpoint-array-scalar-aecea85be`, seal `2b400a5f...a943c2`).
+Status: accepted. Chained RED→GREEN after the read-only pinpoint
+(`support-pinpoint-array-scalar-aecea85be`).
 
 ## Owning source and non-negotiable boundary
 
@@ -88,11 +88,11 @@ JSON key loop — every remaining project_settings key is silently skipped and
 `load_from_json` still returns success** (`Config.cpp:994-998`). That
 break-and-skip-of-remaining-keys behavior is **not ported by this chain**;
 Ares keeps rejecting malformed arrays at the same boundary. Recorded as
-deferred pending a COORD decision, because porting it would change behavior
+deferred pending a separate decision, because porting it would change behavior
 for every key following a malformed entry, not just the malformed one.
 
 Additional deferred edges of the same upstream branch (all out of the
-approved witness scope):
+selected witness scope):
 
 - Plain-string lenience: upstream's istringstream semantics also accept a
   comma-suffixed plain string (`"42,77"`) on numeric scalar options. Ares

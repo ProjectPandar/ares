@@ -1,7 +1,7 @@
 # S-C0 touching-grid public RED
 
-Approved SPEC37145ce12. Frozen authored input, copied byte-for-byte from
-`/tmp/worker3-object-spacing-native-1tgobnaj/inputs/S-C0.3mf`.
+SPEC37145ce12. Frozen authored input, copied byte-for-byte from the
+object-spacing preflight input `S-C0.3mf`.
 SHA256: `9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1`.
 
 Single-region Classic two-wall 20x20x10 object, SupportCubic30%, width0.45,

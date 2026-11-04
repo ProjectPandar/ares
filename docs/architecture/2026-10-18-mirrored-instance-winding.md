@@ -2,7 +2,7 @@
 
 ## Witness
 
-`/tmp/w5-x/target-mirror.3mf` (not yet frozen): the crosshatch-ordering RED
+The crosshatch-ordering RED
 target with the second build item's transform mirrored in X
 (`transform="-1 0 0 0 1 0 0 0 1 170 110 0.5"`), first item unchanged.
 OrcaSlicer 2.4.2 official vs Ares `5df60edc0`:
@@ -71,7 +71,7 @@ native first inner-wall order (body coordinates: the loop's first segment
 leftwards along the bottom edge first) plus the whole-output strict compare
 (DIVERGENT until GREEN). Controls: the existing four legs stay PASS.
 
-## Amendment (approved 2026-10-18): owner corrected to SeamPlacer occlusion mesh
+## Amendment: owner corrected to SeamPlacer occlusion mesh
 
 The GREEN round falsified the slicing-boundary premise as the *observable*
 owner: flipping triangles at `raw_intersections.rs` fires (det=-1e12 on the

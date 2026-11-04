@@ -33,6 +33,3 @@ relevant difference is the machine-start-G-code comment expression:
 
 - `"é" =~ /./` (expected to expose the byte/scalar mismatch)
 - `"é" =~ /é/` (control)
-
-Evidence and input provenance are recorded in
-`${COORD_ROOT}/evidence/w5-922-regex-unicode-DISCOVERY-RR.md`.

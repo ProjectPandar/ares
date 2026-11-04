@@ -1,7 +1,7 @@
 # ARD: source-owned painted MMU / beam call order
 
-Status: proposed with SPEC RR; not production authority.
-Base2ed045a7f; upstream8500fcdcc.
+Status: proposed.
+Base 2ed045a7f; upstream 8500fcdcc.
 
 ## Decision
 
@@ -15,7 +15,7 @@ Rust ownership remains private project_slice load_stages handoffs and existing
 region_slices::{painted,interlocking}. Move the actual consumer once, including
 unpainted objects; no shadow registry, duplicate early/late paths, public API,
 geometry replacement or fallback. Remove only painted+beam's fail-closed check
-once the real post-MMU consumer is implemented under GREEN authorization.
+once the real post-MMU consumer is implemented in GREEN.
 Fuzzy annotation support is not part of this decision.
 
 ## Non-negotiable evidence gates
@@ -28,9 +28,9 @@ observations are not public acceptance. Existing active unpainted beam behavior
 is a regression obligation even though the new unpainted discovery pair is
 single-material and beam-inactive.
 
-All scope expansion or underlying generator residuals stop for review. Preserve
+All scope expansion or underlying generator residuals stop for a scope decision. Preserve
 historical seals; no rewriting old painted carrier/RED work as new evidence.
-CPU18, one job/test/parity worker; exact-tip final FULL requires separate window.
+Exact-tip final full parity is a separate step.
 Portable core, files≤400LOC; WASM compile is not browser runtime qualification.
 
 See [SPEC](painted-beam-call-order-spec.md) for upstream citations, destinations,

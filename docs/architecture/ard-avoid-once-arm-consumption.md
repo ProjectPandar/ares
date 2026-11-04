@@ -1,7 +1,7 @@
 # ARD: `disable_once` arm/consumption ordering (avoid-crossing entry gate)
 
-Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`. Status: SPEC (approved
-boundary for tests-only RED; GREEN separately authorized).
+Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`. Status: accepted
+(tests-only RED boundary; GREEN separate).
 
 ## Boundary being ported
 
@@ -64,7 +64,7 @@ post-wipe re-plan detour (6 intermediate vertices on the fixture hole contour
 plus the destination) while Ares emits one direct segment. Bilateral gdb
 traces confirmed the planning-slot/reset/re-plan ordering.
 
-## GREEN boundary (authorized separately; upstream literal order only)
+## GREEN boundary (separate; upstream literal order only)
 
 1. Consume `avoid_crossing_disabled_once`/`use_external_mp_once` immediately
    after the first planning slot, before `retract::decide` — the `:7429-7431`
@@ -92,5 +92,4 @@ emission differences, and any residual beyond the first stable difference.
 ## Exit criteria
 
 Dual-mode (official + seeded) strict comparator PASS on the RED target at the
-GREEN tip under CPU13/threads1, with existing suites unchanged (scope of any
-re-run per separate authorization).
+GREEN tip, with existing suites unchanged.

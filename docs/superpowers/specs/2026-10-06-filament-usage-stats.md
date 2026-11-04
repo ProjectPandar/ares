@@ -1,6 +1,6 @@
 # Spec: GCodeProcessorResult filament-usage statistics (web Filament view)
 
-Status: draft for coordinator review (v2 — structure aligned to upstream)
+Status: draft (structure aligned to upstream)
 
 ## Upstream source boundary
 

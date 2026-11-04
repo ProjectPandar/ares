@@ -1,6 +1,6 @@
 # G4: bounded tool and multi-filament option coverage
 
-Status: approved source slice; only the four coherent Manual `filament_map`
+Only the four coherent Manual `filament_map`
 cases are GREEN. The other five keys remain INCOMPLETE and unexecuted.
 
 ## Bounded conclusion
@@ -13,12 +13,12 @@ The original singleton-selector input remains preserved as O8 UB_ADJACENT.
 Automatic grouping, arbitrary vector/project shapes, by-object mask production
 and the other five G4 contracts are not promoted by this result.
 
-Review evidence and the owner's Native-only nondeterminism adjudication are
+The Native-only nondeterminism adjudication is
 recorded in `g4-manual-map-review.md`; raw failures remain visible and the
 whole-output comparator is unchanged.
-Worker2 owns the six keys below. Base main `016dfc86f`. This is a harness
-admission slice around upstream configuration consumers, not permission to
-change production ToolOrdering, WipeTower, GCode or CLI normalization.
+This slice covers the six keys below. It is a harness
+admission slice around upstream configuration consumers, not a change to
+production ToolOrdering, WipeTower, GCode or CLI normalization.
 
 ## Source boundary
 
@@ -175,8 +175,8 @@ Native-backed E2E RED: explicit admitted requests, application and consumer
 proofs, strict full-stream comparison, then expected bounded PASS. Existing
 baseline-only metadata must fail the final expectation. If application,
 Native execution or bytes fail earlier, preserve the original artifacts and
-report the exact stage/first difference to the coordinator. Do not relabel a
-real Ares discrepancy as a metadata RED; no production fix is authorized.
+report the exact stage/first difference. Do not relabel a
+real Ares discrepancy as a metadata RED; no production fix is in scope.
 
 GREEN only authors these six plans and activates/verifies their owned inputs.
 Change the `filament_map` / `filament_self_index` negative metadata assertions
@@ -191,7 +191,7 @@ report exact generated/compared/rejected counts; no value filter, short-circuit
 or metadata promotion around an unexecuted case. Context-only controls outside
 canonical plan values are enumerated separately. Save repeatable input,
 requested/exported/effective proofs, per-layer/tool/flush/ramming observations,
-raw streams, comparator and cache receipts as runtime artifacts, not Native
+raw streams and comparator output as runtime artifacts, not Native
 G-code goldens. Missing Native uses shared requiredFAIL/optionalvisibleSKIPPED.
 
 Inventory diff must prove that only these six plans changed; preserve all

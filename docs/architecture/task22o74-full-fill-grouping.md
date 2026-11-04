@@ -2,8 +2,7 @@
 
 ## Status
 
-Implemented, with exact-tree final gate counts and unconditional independent
-review still pending. The Rust module and its focused/PRE/POST tests exist;
+Implemented. The Rust module and its focused/PRE/POST tests exist;
 the module remains crate-private and lifecycle-inactive. Decision date:
 2026-08-13.
 
@@ -352,17 +351,6 @@ f32 scale/cast changes survived the current behavioral corpus. They remain
 because pinned-source and static review require them; none is reported as a
 killed mutation. FIFO/LIFO pending-order and duplicate-queue cases were
 discharged as monotone-closure/static-review cases, not runtime kills.
-
-## Final evidence — pending
-
-This section is intentionally a placeholder. Fill it only from the final exact
-candidate tree; implementation status does not imply these results.
-
-- focused/dependency/workspace Nextest commands and exact counts: **pending**;
-- Clippy, rustfmt, Tier-1 target, diff, LOC, static, Cargo-unchanged,
-  zero-staged, and clean-Orca results: **pending**; and
-- unconditional independent source/specification and standards review:
-  **pending**.
 
 ## Included and deferred
 

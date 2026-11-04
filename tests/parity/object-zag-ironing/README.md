@@ -2,10 +2,9 @@
 
 ## Authority and source boundary
 
-The owner's follow-up accepts the NO-DISCRIMINATION result at
-`3248dc0f6ee2040b0d9b28df8318c1ff8ca34298` as this chain's spec and explicitly
-authorizes three-pattern RED/GREEN on approved Octagram GREEN
-`845adf9d704118daaec4574af58bc1e8945ddf70`. It supersedes the spec's former
+The NO-DISCRIMINATION result at
+`3248dc0f6ee2040b0d9b28df8318c1ff8ca34298` is this chain's spec and covers
+three-pattern RED/GREEN on top of Octagram. It supersedes the spec's former
 STOP/body-discrimination prerequisite for this slice only. The prior
 192-slice result remains true: these are source-defined equivalent ironing
 paths, not evidence of a new Zag algorithm or a body-discriminating witness.
@@ -71,14 +70,12 @@ Failure modes, established before adding this test code:
 RED validation selects the three new target legs plus the existing Octagram
 rectilinear and disabled controls. Expected RED is **3 authentic admission
 FAIL + 2 complete-output PASS in each mode**; successful control raw API/CLI
-bytes must remain equal to approved GREEN 845adf9d7. Do not treat unexpected
+bytes must remain equal to the Octagram GREEN output. Do not treat unexpected
 failure, timeout, missing resources, compile/audit failure or skipped Native
-as an authentic RED. Native repeats precede public calls per test; all actual
-Native/public descendants and threads stay on CPU18. Use fresh serial official
-and seeded roots/caches, `ORCA_REPLAY_CPU=18`, jobs2/nextest threads2.
+as an authentic RED. Native repeats precede public calls per test. Use fresh
+serial official and seeded roots/caches.
 
-Production GREEN waits for independent RED approval. Afterwards run all legs
-and targeted Hilbert/Arch/ironing/infill regressions in both modes on the exact
-clean GREEN hash, plus fmt, strict clippy and WASM checks. Keep successful
-controls and approved Hilbert/Arch/Octagram raw outputs stable. Any residual
+After GREEN, run all legs and targeted Hilbert/Arch/ironing/infill regressions
+in both modes, plus fmt, strict clippy and WASM checks. Keep successful
+controls and Hilbert/Arch/Octagram raw outputs stable. Any residual
 complete-output difference is STOP/report, not permission for other repairs.

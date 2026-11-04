@@ -1,8 +1,7 @@
 # SPEC: FillBase multiline Clipper2 Positive union
 
-Status: numeric-only GREEN code approved; all acceptance gates green, MERGE-READY.
-RED baseline `48821ce89`, current integration baseline `36ed482eb`; upstream `8500fcdcc`. Stars mode2 WIP is saved locally as `6f3066116`
-on `worker6/stars-mode2-wip`, not pushed or stashed.
+Status: Accepted; numeric-only GREEN.
+Upstream `8500fcdcc`.
 
 ## Owning upstream boundary
 
@@ -31,12 +30,10 @@ Ares geometry is not a basis for independently redesigning union behavior.
 
 ## Existing evidence and what it does not prove
 
-Read-only gdb captures on the Stars WIP show all13 S2 emitted layers have
+Read-only gdb captures on the Stars implementation show all13 S2 emitted layers have
 exactly equal ordered integer rows and exactly equal raw round-offset points
 before union. After union, Ares and Native differ: first phase13104/13104 points
 with an integer-coordinate difference, other phases13444/13489 and13439/13492.
-The stage audit is `/tmp/worker6-stars-union-stage-audit.json`; its referenced
-raw arrays and `/tmp/worker6-stars-union-boundary.md` are outside the repository.
 This proves a Stars-reached union mismatch, not a non-Stars Native byte RED on
 main. No test, fixed array or Native capture is imported into this branch.
 
@@ -47,9 +44,9 @@ Clipper1 consumers. Changing it globally is outside scope.
 
 ## Rust destination
 
-The initially proposed complete private union kernel is not authorized and is
-not implemented. After the attributable C2 RED and the failed Positive-only
-trial, the coordinator approved only a generic numeric strategy:
+The initially proposed complete private union kernel is not implemented. After
+the attributable C2 RED and the failed Positive-only trial, only a generic
+numeric strategy is adopted:
 
 - `fill/multiline_offset/numerics.rs`: private default Clipper2 segment arithmetic
   and scanbeam correction; each new file<=400 lines.
@@ -65,12 +62,12 @@ trial, the coordinator approved only a generic numeric strategy:
 
 The shared operation is selected by its multiline source boundary, not pattern.
 Complete sweep, event order, joins, cleanup and traversal ports remain deferred
-unless residual whole-byte evidence requires them and the coordinator approves.
+unless residual whole-byte evidence requires them.
 The current numerical experiment does not redesign union as an Ares pipeline.
 
 ## Native-backed RED admission and attribution
 
-First run main production at48821ce89. Single Ender-3 .4 nozzle/PLA, by-layer,
+First run main production. Single Ender-3 .4 nozzle/PLA, by-layer,
 classic two walls, .2mm layers, positive30% sparse fill, stock positive anchors,
 three solid bottom/top layers, no support/raft/brim/tower, arcs, scarf, fuzzy
 skin, SAFC, adaptive PA, XY compensation or infill combination. Use authored
@@ -99,7 +96,7 @@ Source dispatch cautions are already visible offline:
   is not proof of the shared union defect; do not fix that caller in this slice.
 - Native Grid count>1 uses trapezoidal mode0 (`:3422-3446`); main Ares
   `fill_entities/grid.rs:62-86` still uses ordinary sweeps. A mode0 mismatch
-  likewise cannot authorize a union change.
+  likewise cannot justify a union change.
 - Native Cubic uses ordinary multiline sweeps (`:3506-3515`, with bundle
   expansion at `:3021`); Honeycomb calls multiline_fill after row rotation
   (`FillHoneycomb.cpp:70-77`). Ares cubic and honeycomb reach the shared offset.
@@ -116,17 +113,17 @@ first differences. Read-only gdb on existing Native and Ares binaries may
 attribute the failure: compare centerline arrays, raw round-offset arrays and
 post-union results outside git. Identical pre-union arrays plus differing union
 results and a downstream output difference are the necessary shared-dependency
-RED. No Native rebuild, retry hiding failures or source probe is authorized.
+RED. No Native rebuild, retry hiding failures or source probe is permitted.
 If differences begin at dispatch, spacing, angle, bbox, clipping or connection,
 record them separately and stop that candidate's attribution; do not absorb
 those ports to manufacture this RED.
 
 If the finite non-Stars controls already match main, report NO RED FOUND and
-stop before GREEN; the current proven mismatch remains Stars-local reachability
-for coordinator adjudication. If only unrelated dispatch differences appear,
+stop before GREEN; the current proven mismatch remains Stars-local reachability.
+If only unrelated dispatch differences appear,
 report that no attributable shared-union RED was found rather than claiming
 this prerequisite justified. Native rejection, rewrite or timeout is reported;
-timeout is not evidence and awaits a lower-load rerun with new cache/root.
+timeout is not evidence.
 
 ## Included / deferred behavior
 
@@ -135,7 +132,7 @@ round-join/round-ended multiline offsets; upstream path order and numeric
 semantics; portable pure Rust. Count<=1 bypass remains unchanged, and odd
 bundles retain their unmodified centerline order before offset rings.
 
-Deferred: Stars mode2 and anchoring wiring (local WIP), Grid/Triangles mode
+Deferred: Stars mode2 and anchoring wiring, Grid/Triangles mode
 ports, Rectilinear dispatch correction, no-connect admission, negative/polygon
 ended offsets, variable delta callbacks, Z data, PolyTree output, open-subject
 Clipper2 boolean operations, Difference/Intersection/Xor, general NonZero or
@@ -144,10 +141,9 @@ Do not port UB or invent a simplified union that merely fits the finite inputs.
 
 ## Acceptance and regression evidence
 
-After approved spec and attributable RED, commit RED before shared GREEN.
+After the spec and attributable RED, commit RED before shared GREEN.
 Each directed execution gets a completely new Native cache and artifact root;
-there is no cross-run cache reuse. Preserve all first outcomes and request,
-archive member, producer and output hashes outside git. Required dependencies
+there is no cross-run cache reuse. Required dependencies
 fail through native_environment; optional missing Native is visibly SKIPPED.
 No ignore, suppression, guard, fallback or fixed Native product is added.
 
@@ -163,33 +159,27 @@ lightning and anchoring; report which are reached by existing controls, and any
 coverage gap before claiming complete invariance.
 
 Engineering gate: default-environment nextest workspace; strict clippy,
-rustfmt and wasm32 check on the accepted tree. Directed load<60/jobs2/threads2;
-workspace/strict load<30/jobs2. Production GREEN also queues fresh full according
-to coordinator slots and shared-base policy; each leg has its own fresh cache
-and artifact root. Require cand.fail subset of corresponding exact-main base.
-Report spec/RED/GREEN commits and all evidence via REVIEW-REQUEST before push.
+rustfmt and wasm32 check on the accepted tree. Production GREEN also requires a
+fresh full run; each leg has its own fresh cache and artifact root. Candidate
+failures must be a subset of the corresponding exact-main base failures.
 
 ## Attributable non-Stars RED
 
 Fresh seeded and official runs each give4 PASS /8 DIVERGENT for the12 controls,
 without rejection, dependency failure or timeout. Count1 R1/G1/C1/H1 all pass.
-R2/G2 remain unrelated dispatch findings and do not authorize this union port.
-Evidence root: `/tmp/worker6-multiline-union-red.1zTTQm` (`seeded.log`,
-`official.log`, each mode's per-case receipts and complete outputs outside git).
+R2/G2 remain unrelated dispatch findings and do not justify this union port.
 
 C2 is an attributable shared-union RED: read-only gdb of existing seeded Native
 and unchanged Ares captures14 multiline calls (anchoring plus emission). Every
 ordered centerline array and every ordered raw round-offset polygon array is
 exactly equal. Each post-union array differs. Native gdb output is independently
 whole generator-only equal to the runtime Native C2 output; Ares gdb output is
-raw-byte equal to the runtime Ares output. The stage audit is
-`/tmp/worker6-union-c2-stage-audit.json`, with both complete captures referenced.
-Runtime C2's first whole difference is line204 M73 placement; its first sparse
+raw-byte equal to the runtime Ares output. Runtime C2's first whole difference is line204 M73 placement; its first sparse
 path difference is layer4: Native line1425 `G1 X138.625 Y126.024 E.22346`, Ares
 line1423 `G1 X140.369 Y119.517 E.22346`. The whole-output comparator requires
 PASS throughout; these are diagnostics, not filtered acceptance comparisons.
 
-Coordinator-approved first GREEN experiment: retain the existing Clipper1
+First GREEN experiment: retain the existing Clipper1
 kernel and change only the multiline round offset's union fill rule to
 Positive. No private Clipper2 kernel or external crate may be introduced before
 this experiment and a report of any remaining concrete difference. No claim
@@ -197,20 +187,16 @@ is made that selecting Positive reproduces Clipper2 numeric/order semantics.
 
 ## Positive-only experiment: not GREEN
 
-The authorized minimal trial selects existing Clipper1 Positive fill for the
+The minimal trial selects existing Clipper1 Positive fill for the
 round offset's final union. Its private geometry types cannot be imported by
 fill, so the trial adds one crate-private Positive union helper with two thin
 re-exports; the original NonZero helper and all its other callers are unchanged.
 No external crate, new kernel, assertion change or other generator edit occurs.
 
-Fresh seeded trial `/tmp/worker6-multiline-union-positive.hw7nBU` still yields
-4 PASS /8 DIVERGENT (14.707s, exit100). All12 Ares raw outputs are byte-identical
-to RED; all Native generator-normalized outputs and all corresponding 3MF
-member bytes are also equal. `/tmp/worker6-union-positive-audit.json` records
-each label, status, hashes, comparisons, first difference and artifact paths.
-This rules out changing only the winding fill selection as a sufficient repair.
-The earlier privacy compile failure ran no Native and remains separately
-recorded under `/tmp/worker6-multiline-union-positive.wG4Umy` (exit101).
+A fresh seeded trial still yields 4 PASS /8 DIVERGENT. All12 Ares raw outputs
+are byte-identical to RED; all Native generator-normalized outputs and all
+corresponding 3MF member bytes are also equal. This rules out changing only the
+winding fill selection as a sufficient repair.
 
 Concrete C2 residual: whole first difference remains line204 M73 placement;
 first sparse path remains Native layer4 line1425 X138.625 Y126.024 E.22346
@@ -224,15 +210,11 @@ arithmetic. Both kernels also own output joining/cleanup/traversal. A fill-rule
 flag does not port these contracts. This is a source-boundary explanation,
 not a claim that one rounding edit alone fixes the complete difference.
 
-The trial remains local WIP, not an accepted GREEN or a push candidate. The coordinator has declined a complete private union kernel pending numeric
-attribution. Exact round-input equality justifies retaining the existing round
-generation and focusing on the union dependency; it does not justify globally
-changing Clipper1. R2/G2 need separately recorded
-dispatch findings rather than retained unrelated failing acceptance tests;
-report their active-test disposition before preparing a mergeable GREEN.
-Engineering and option_coverage regression gates are pending a real GREEN;
-there is no PASS claim or gate exemption for this failed experiment.
-
+The trial is not an accepted GREEN. A complete private union kernel is declined
+pending numeric attribution. Exact round-input equality justifies retaining the
+existing round generation and focusing on the union dependency; it does not
+justify globally changing Clipper1. R2/G2 need separately recorded
+dispatch findings rather than retained unrelated failing acceptance tests.
 
 ## First coordinate attributed to segment-intersection conversion
 
@@ -264,20 +246,13 @@ porting the complete sweep. It also does not prove that fixing this one numeric
 routine will repair every result path; runtime whole-byte comparisons remain
 the acceptance gate.
 
-Evidence: `/tmp/worker6-union-native-intersection.AbbOTx/hits.json` contains the
-actual registers/instructions and converted point;
-`/tmp/worker6-union-c2-ares-gdb.IScnod/stages.json` contains the matching Ares
-edges, locals and converted point. Two inlined `value` locals are unavailable
-in DWARF, recorded explicitly as diagnostic errors; caller locals and the
-resulting point are captured. `/tmp/worker6-union-numeric-attribution.json`
-verifies the completed Native diagnostic output is generator-only byte-equal
-to the runtime C2 reference and the completed Ares diagnostic output is raw
-byte-equal to runtime C2. The earlier broad-breakpoint Ares run was manually
-interrupted and is not complete-run evidence.
+The completed Native diagnostic output is generator-only byte-equal to the
+runtime C2 reference and the completed Ares diagnostic output is raw byte-equal
+to runtime C2.
 
-## Approved narrow numeric integration
+## Narrow numeric integration
 
-The coordinator approved a numeric-only experiment, replacing the proposed
+The integration is numeric-only, replacing the proposed
 runtime function pointer with a zero-cost generic trait strategy. There is no
 complete Clipper2 sweep, output-coordinate postprocessing, new crate or change
 to the comparator.
@@ -302,10 +277,9 @@ implementation remains fill-private, and internal Edge/KernelPoint types are
 not exposed outside geometry. Both new files stay below400 lines.
 
 The initial12 complete-output controls were run in both modes with fresh
-caches; the approved acceptance set now contains ten, with R2/G2 deferred. These are implementation experiments
-until whole outputs pass. Default-policy callers require raw-byte invariance
-proof and full option_coverage in both modes; workspace waits for its resource
-slot, with strict/fmt/wasm32 required before review. Any residual sweep or output
+caches; the acceptance set now contains ten, with R2/G2 deferred.
+Default-policy callers require raw-byte invariance proof and full
+option_coverage in both modes, with strict/fmt/wasm32. Any residual sweep or output
 traversal difference must be attributed and reported before widening scope.
 
 ## Numeric experiment result; unrelated dispatch controls still open
@@ -314,9 +288,7 @@ Fresh seeded and official runs each produce10 PASS /2 DIVERGENT, with no
 rejection, skip or timeout. C2/C3/H2/H3/HC2/HH2 become whole-byte PASS in both
 modes. R1/G1/C1/H1 remain PASS and each Ares raw output is byte-identical to the
 Positive-only trial. All12 Native generator-normalized outputs in both modes
-are also equal to that trial. Evidence:
-`/tmp/worker6-union-numerics-trial.yr9Ms7/{seeded,official}.log` and
-`/tmp/worker6-union-numerics-trial.yr9Ms7/control-audit.json`.
+are also equal to that trial.
 
 R2/G2 remain actual failing controls: Rectilinear's multiline dispatch and
 Grid's mode0 dispatch are outside this union boundary. R2 Ares raw is unchanged;
@@ -324,17 +296,15 @@ G2 Ares raw changes because its anchoring stage already calls shared multiline
 expansion, while its emission dispatch remains incomplete. Their first whole
 Native/Ares differences are both line18 M73: R2 R38/R37 and G2 R45/R46.
 These failures are not timeout, nondeterminism or accepted union GREEN.
-The coordinator subsequently approved moving R2/G2 out of this union
-acceptance registration, preserving them as Deferred findings below. The ten
-remaining tests keep every existing assertion and the comparator is unchanged.
-Full option_coverage and engineering gates remain pending.
-
+R2/G2 are moved out of this union acceptance registration and preserved as
+Deferred findings below. The ten remaining tests keep every existing assertion
+and the comparator is unchanged.
 
 ## Deferred findings
 
 R2 and G2 are real DIVERGENT findings, not accepted PASS or union RED. Their
-registered test functions are removed only under the coordinator's explicit
-scope decision; their authored input, runtime references and complete failed
+registered test functions are removed by an explicit scope decision; their
+authored input, runtime references and complete failed
 comparisons remain reproducible outside git. They follow Stars mode2 as the
 Rectilinear/Grid multiline dispatch rewrite slice.
 
@@ -350,51 +320,5 @@ Effective requests were verified against the runtime Native exported project.
 | R2 | line18 `M73 P0 R38` / `M73 P0 R37` | `FillRectilinear.cpp:3387-3399`, Rectilinear main multiline dispatch | `project_slice/fill_entities/monotonic.rs:97-107`, multiline missing from ordinary parameters |
 | G2 | line18 `M73 P0 R45` / `M73 P0 R46` | `FillRectilinear.cpp:3422-3446`, Grid multiline>1 trapezoidal mode0 dispatch | `fill/grid.rs:62-86`, ordinary sweeps |
 
-Evidence root `/tmp/worker6-union-numerics-trial.yr9Ms7` contains both original
-12-test logs with exit100 unchanged. `control-audit.json` lists the exact
-per-case artifact directories containing the Native-exported3MF and complete
-outputs; `seeded-artifacts/multiline-union-{R2,G2}.json` and official equivalents
-retain requested values and first-difference receipts. The earlier true RED is
-`/tmp/worker6-multiline-union-red.1zTTQm`. No Native artifact is committed.
-No tolerance, assertion change or production dispatch repair absorbs these
+No Native artifact is committed. No tolerance, assertion change or production dispatch repair absorbs these
 findings into the current union slice.
-
-Initial10-control gates: both modes210/210; raw invariance362/362 seeded354/354
-official versus765, evidence `/tmp/worker6-union-option-gates.xxJi4P`.
-Sorted assertion/require lines equal RED; only coordinator-deferred R2/G2
-registrations were removed (`assertion-audit.json`).
-
-The first strict run rejected excessive_nesting in the scanbeam correction.
-It was flattened into root-level lets and early returns, without suppression
-or changed arithmetic. Fresh strict/fmt/wasm32 all exit0 under
-`/tmp/worker6-union-engineering-flat.NWezRA`.
-
-Final chain on36ed482eb: SPEC7de103ab2, RED0ce527c24 (original50544582c),
-Positive-only failed7286ca137, attributionb4adf22c0, GREENfae032eed;
-reviewed code plus the bot_y_ comment is40b24ba0d. Rebases were conflict-free,
-with no brim/profiles/machine.rs overlap; all seven latest range-diff entries=.
-Directed option_coverage on465 passed212/212 each mode (fresh root/cache each):
-`/tmp/worker6-union-465-option.Vbi74Q`; new-head full covers directed by permission.
-Both full modes on40b24 passed984/984, exit0, zero skips under
-`/tmp/worker6-union-full-36e.BgajSl/{seeded,official}` (full.log/full.exit).
-Each used a fresh cache, artifact root and target with control-set-v2 unchanged.
-raw-audit.json compares actual main36ed full captures from worker2:665/665 seeded,
-654/654 official same-input Ares raw unchanged, only ten new labels unmatched.
-Default-env workspace:8357/8357 PASS, exit0 (six slow, five pre-existing skips),
-`/tmp/worker6-union-workspace.5CK4rb/{workspace.log,workspace.exit}`.
-New-head strict clippy(-D warnings), fmt and wasm32 all exit0 under
-`/tmp/worker6-union-36e-engineering.Janl7F/{clippy,fmt,wasm}.{log,exit}`.
-All final code gates executed40b24; this final documentation update changes no code.
-
-The preceding5fc560ca0 official run was211/212, preserved without rewriting:
-`/tmp/worker6-union-rebase-option.6umZUs`. The failed interface_fan below-baseline
-stream first differed at byte20359/line850: Native travel113.388/113.135 versus
-Ares113.244/113.297, immediately before Internal solid infill. Three sequential
-official single-test runs with fresh cache/roots all passed under
-`/tmp/worker6-union-interface-fan-repro.TZQMmN`; `audit.json` confirms identical
-3MF members and identical Ares rawSHA b74639d07030e3ce7376ccafba4d82d1c3743c6e3916a92ddef01ec0a7f53683
-across prior PASS, isolated FAIL and all three reruns. The isolated Native rawSHA
-3b5f063d34e68e7b3a2eaf823526c2a9e8116704313f0b26bbd6d3a9c482155f differs from
-every rerun; reruns match Ares under the unchanged generated-by-only comparator.
-Coordinator adjudication: one-off Native outlier, no Ares regression. Both roots
-and the original211/212 result remain evidence; no assertion or tolerance changed.

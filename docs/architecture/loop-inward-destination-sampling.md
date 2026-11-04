@@ -1,6 +1,6 @@
 # Loop inward destination sampling
 
-Status: tagged OPEN — source-correct NON-GREEN port, blocked on M73 placement.
+Tagged OPEN — source-correct NON-GREEN port, blocked on M73 placement.
 
 ## Upstream boundary
 
@@ -58,7 +58,7 @@ this record. Its test, ROOT entrypoint, producer selection and fixture bytes
 remain unchanged by the source port. No probe, private planner test, mock or
 copied solver expectation is introduced.
 
-The separately approved source-correct port covers only literal destination
+The source-correct port covers only literal destination
 sampling and caller/cursor semantics. Support-offset wipe-inward optimization,
 generic routing, travel-count differences, M73/statistics, raw junction widths,
 seam compensation and geometry-kernel policies remain deferred. No rounding
@@ -76,9 +76,9 @@ whole-layer assertion stay unchanged, including M73. No mask or GREEN claim.
 The adjacent anchor travel-count observation changes from Ares774 to846,
 with Native836: FAIL-to-FAIL. This is an accepted observed consequence, not a
 travel-count fix, clean parity result or root-cause claim. The original travel
-assertions remain intact. Publication of the source-correct NON-GREEN port
-requires the authorized broader before/after audit to show zero PASS-to-FAIL
-transitions and to list every status change.
+assertions remain intact. The source-correct NON-GREEN port
+requires a broader before/after audit showing zero PASS-to-FAIL
+transitions and listing every status change.
 
-Neither this source-correct acceptance nor the tagged OPEN status closes the
+Neither this source-correct acceptance nor the tagged OPEN state closes the
 whole layer, whole file, routing family or writer/time issue.

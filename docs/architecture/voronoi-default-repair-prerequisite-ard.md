@@ -1,7 +1,7 @@
 # ARD: preserve the effective default Voronoi wrapper, not raw-Boost parity
 
-Status: proposed, docs-only. [Source boundary and review gates](voronoi-default-repair-prerequisite-spec.md).
-Upstream8500fcdcc; planning base9bbc63c93; measured witness remains bound to0ce6.
+Status: proposed. [Source boundary and gates](voronoi-default-repair-prerequisite-spec.md).
+Upstream8500fcdcc.
 
 ## Decision
 
@@ -34,13 +34,12 @@ pipeline, admit painting early, or merge an unused facade as a prerequisite.
    Native effective records; public XML rejection is not this RED.
 6. Every new phase begins with source-cited failure inventory/Native evidence.
    Infrastructure, absent tests, compile errors, historical hashes or optional
-   omissions cannot count as RED/GREEN. Keep durable hash-audited artifacts under
-   `${EVIDENCE_ROOT}`; `/tmp` alone is insufficient retention.
+   omissions cannot count as RED/GREEN.
 7. Portable core is byte/data-only on WASM/Windows/macOS/Linux. No debugger,
    filesystem, terminal or native runtime in production core; files stay <400LOC.
 8. Painted producer/consumer work remains paused until this independent slice
-   is integrated. Its approved phase order and one-complete-unit integration
-   requirement are unchanged. No FULL/push/merge under docs-only authorization.
+   is integrated. Its phase order and one-complete-unit integration
+   requirement are unchanged.
 
 ## Consequence
 
@@ -48,4 +47,4 @@ Source-exact predicates and effective ownership cost more than simply rotating
 all inputs or retrying a raw builder. That is necessary upstream parity, not
 permission for tolerances, normalization, new fallback policy or broad unrelated
 refactors. Any unsupported backend API/predicate/consumer requirement causes a
-new bounded STOP and review, not scope inflation.
+new bounded STOP, not scope inflation.

@@ -1,10 +1,8 @@
 # ZAA follow-up survey and modifier-region slice-Z SPEC
 
-Status: SPEC-REVIEW-REQUEST; no new Native or Ares run, no production edit.
-Base: approved ZAA GREEN e34e8eed3db406ee862d7ec5d9ba1d59b2bc1845,
-queued for stack-10 on main29f4a49c18139925fec238d31d2fdb6b790fbc30.
-This docs-only branch leaves the approved candidate unchanged. Rebase onto
-stack-10's eventual main before RED; keep all earlier GREEN witnesses.
+SPEC only; no new Native or Ares run, no production edit. Builds on ZAA GREEN
+e34e8eed3db406ee862d7ec5d9ba1d59b2bc1845 and leaves it unchanged; keep all
+earlier GREEN witnesses.
 Upstream inspected: OrcaSlicer8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 ## Read-only survey: evidence versus hypotheses
@@ -50,7 +48,7 @@ slice consumes the existing Ares region graph without redesigning it.
 
 ## Rust destination and included behavior
 
-Production repair, only after separately reviewed public RED:
+Production repair, only after a separate public RED:
 
 - project_slice/planning.rs::zaa_min_z reduces enabled RegionOptions from
   ResolvedProjectObject.all_regions, matching the upstream iteration domain.
@@ -73,8 +71,7 @@ compatibility shells around PrintObject/PrintRegion, not a new pipeline.
 
 ## Public E2E RED plan and admission conditions
 
-After SPEC approval and an open directed window, CPU13 official/CPU14 seeded,
-outer taskset, jobs2/threads2, each leg fresh cache/root/target:
+Official and seeded legs, each with a fresh cache/root/target:
 
 1. Reuse the admitted roof geometry and compatible-regions modifier fixture
    construction. Change model geometry only into the proven sloped roof;
@@ -102,11 +99,11 @@ outer taskset, jobs2/threads2, each leg fresh cache/root/target:
    plan-entry assertions. If all cases match, retain regression controls and
    report the disproved runtime hypothesis before any production change.
 
-After RED approval, make the bounded reduction repair, preserve RED assertions,
+After RED, make the bounded reduction repair, preserve RED assertions,
 then run those cases both modes plus existing ZAA/compatible-region controls,
 strict clippy/fmt/wasm. Production/module files remain <=400 lines; split new
 E2E fixture/proof files only as needed. Native artifacts are external and
-repeatable, never committed. Full/workspace/CI/merge belong to coordinator.
+repeatable, never committed.
 
 ## Non-negotiable decisions
 

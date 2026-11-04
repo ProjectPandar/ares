@@ -1,10 +1,9 @@
 # Object Rectilinear ironing regional ZAA direction: Native-first slice
 
-## Status and source boundary
+## Source boundary
 
-SPEC for review; no runtime RED claimed yet. Base main3ee8f272c plus approved
-Line67c563557 and Honeycomb bf7355039df32a523f489b31e3c0164453d57259.
-Approved branches remain unchanged; separate worker2/zaa-object-ironing-direction-spec.
+No runtime RED claimed yet. Builds on the Line67c563557 and Honeycomb
+bf7355039df32a523f489b31e3c0164453d57259 slices, which remain unchanged.
 
 The owning libslic3r boundary is Layer::make_ironing, not support ironing:
 
@@ -33,7 +32,7 @@ already implements the bit; no kernel change is proposed.
 
 ## Rust destination and scope
 
-If Native activity and public RED earn approval, replace only that false
+If Native activity and public RED confirm the gap, replace only that false
 initializer in project_slice/fill_entities/ironing.rs with the conjunction
 of Input.region's two existing ZAA options, citing Fill.cpp:1631. Keep the
 current ironing adapter as a temporary compatibility shell around the cited
@@ -47,14 +46,14 @@ allocations, guards, fallback, schema changes or comparator modifications.
 
 Deferred: the pattern-replacement/reset lifecycle at Fill.cpp:1633-1642,
 mixed/multiple ironing regions and grouping, Concentric/other ironing
-patterns, support ironing, raft/tower, bridge anchoring (including W3's
+patterns, support ironing, raft/tower, bridge anchoring (including the
 Honeycomb inset candidate), all other pattern direction propagation, and
 any independent ironing geometry/flow/time issue. Existing public assertions
-and the approved Line/Honeycomb branches remain unchanged.
+and the Line/Honeycomb slices remain unchanged.
 
-## Bounded Native-first discovery after SPEC approval
+## Bounded Native-first discovery
 
-Sole input geometry/profile provenance: the approved Line/Honeycomb frozen
+Sole input geometry/profile provenance: the Line/Honeycomb frozen
 wide slab2.4mm (same mesh/profile members, classic, wall0, relative E).
 Use Concentric sparse/top/bottom/internal-solid patterns and density100%,
 top/bottom shell counts2 with thickness0, empty sparse/solid rotation
@@ -68,8 +67,7 @@ enabled-ZAA/flag0, enabled-ZAA/flag1, disabled-ZAA/flag1.
 This combination must earn Native acceptance; prior fixture admission is
 not evidence that these added ironing settings are already aligned.
 
-CPU13 official and CPU14 seeded, outer taskset including probes, jobs2/
-threads2, canonical environment and no new test switches. Two fresh Native
+Official and seeded modes, canonical environment and no new test switches. Two fresh Native
 references/case/mode,12total; separate new cache/output roots. Record input
 SHA, effective options/footer, repeat/cross-mode normalized whole-output SHA
 and modal XYZ/relative-E role observations. No full/workspace.
@@ -95,10 +93,8 @@ After a live witness, separate test-only RED with3frozen SHA-pinned input-only
 3MFs, OrcaRunner::from_env Some/else-return, public API+CLI. Assert Native
 undirected Ironing activity, exact active-layer Ironing XY/E before unchanged
 strict whole-output checks. Both controls and fresh repeat checks belong in
-RED. Expected2PASS/1FAIL each mode. No Native artifacts committed. Submit
-exact RED hash/evidence and wait for approval before production.
+RED. Expected2PASS/1FAIL each mode. No Native artifacts committed.
 
 Later GREEN: all3cases both modes, whole ZAA/compatible_regions family,
 existing ironing/fill-direction/anchoring controls raw-unchanged, fmt,
-strict clippy and wasm32 on exact clean hash. Full/workspace/CI/merge remain
-coordinator-only. Respect every exclusive freeze. No push.
+strict clippy and wasm32 on exact clean hash.

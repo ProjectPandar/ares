@@ -46,10 +46,10 @@ both streams must match Native with the existing complete ordered-byte,
 generator-only comparator. Keep inputs, commands, Native/replay streams,
 API/CLI streams and comparison JSON as repeatable artifacts.
 
-Counterfactual evidence in the interlocking worktree already shows that
+Counterfactual evidence from the interlocking work already shows that
 restoring main's router breaks the beam-0 control at line 728 while the
 closest-lines port passes. This is only preliminary evidence: reproduce RED
-on clean `1d0508fd1` with no interlocking production changes before GREEN.
+with no interlocking production changes before GREEN.
 The single-volume control must stay green.
 
 GREEN changes only the two production files above. Any unrelated failure
@@ -58,9 +58,8 @@ unsupported guards. Do not claim an independent RED for unobservable cleanup.
 
 ## Acceptance
 
-- Clean spec → frozen Native/API/CLI RED → production-only GREEN on latest
-  coordinator-required main (`1d0508fd1`, unless superseded).
+- Clean spec → frozen Native/API/CLI RED → production-only GREEN on latest main.
 - Both focused modes pass, no changed Rust file above 400 lines.
 - `cargo fmt --check` and workspace all-target clippy with `-D warnings` pass.
-- Both official and seeded complete FULL suites have zero failures on the
-  exact final commit; only then send REVIEW-REQUEST. No stash, push or merge.
+- Both official and seeded complete full suites have zero failures on the
+  exact final commit.

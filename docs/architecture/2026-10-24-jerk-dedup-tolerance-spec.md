@@ -1,8 +1,5 @@
 # SPEC: `GCodeWriter::set_jerk_xy` approximate-value deduplication
 
-Status: discovery / SPEC-RR only. Base `9cfaf0d16f0f5c4bf5fb6bf6c62d1c54e0d94ecf`.
-No production, test or committed-input changes accompany this proposal.
-
 ## Upstream boundary and Rust destination
 
 This is a source-cited writer rewrite correction, not an Ares jerk policy.
@@ -63,7 +60,7 @@ still be emitted, not suppressed unconditionally.
 
 ## Included and deferred upstream behavior
 
-After separate approval, port the exact default-precision `is_approx` admission
+Port the exact default-precision `is_approx` admission
 rule in `set_jerk_xy`: strict absolute difference below1e-4; preserve the0.01
 lower gate and do not update the cache on a suppressed request. Do not compare
 formatted text, rounded/clamped jerk or accumulate suppressed deltas into cache.
@@ -72,18 +69,17 @@ Use the source-owned tolerance; no formatter-precision or invented relative test
 Deferred: `GCodeWriter::set_accel_and_jerk` (`GCodeWriter.cpp:311-350`, Klipper
 merged path), acceleration, jerk serialization, machine clamp correctness,
 processor word parsing/time algorithms, pressure advance, templates/bed/exclude
-name, fan/fuzzy/tower/skirt/brim/support speed, and every reserved worker slice.
-No changes to the frozen W4 temperature or lift chains/const/state/approach files.
+name, and fan/fuzzy/tower/skirt/brim/support speed.
+No changes to the temperature or lift chains/const/state/approach files.
 The fact that the source tolerance has the same numerical value as lift EPSILON
-does not authorize editing that frozen area. If shared-constant access requires
-coordination, handle it only after approval, not by rewriting frozen commits.
+does not justify editing that area.
 
 ## Proposed RED and exits (not run)
 
-After SPEC approval: SHA-pinned Native-first public API+CLI RED for the target
+SHA-pinned Native-first public API+CLI RED for the target
 and equal/above/within-both controls. Use unchanged `native_stream_case::check`:
 fresh Native replay and semantic callback before complete unmasked strict stream
-comparison. Official then seeded, CPU17/PIN17/jobs1/threads1. No Native outputs,
+comparison. Official then seeded. No Native outputs,
 coordinate constants, comparison masks or helper changes committed.
 
 Failures to pin before implementation: too-small/relative/rounded tolerance;
@@ -92,31 +88,5 @@ post-clamp rather than requested values. Do not assert decimal7.0001 as an exact
 binary threshold: subtraction from7 has floating rounding. Any exact-edge test
 must respect upstream binary arithmetic rather than inventing decimal equality.
 
-Freeze RED-RR, then request separate GREEN authorization. Proposed eventual exit:
-all directed full streams pass both modes, fmt and workspace all-target clippy
-pass, plus only coordinator-authorized integration-tip FULL. This document makes
-no API, seeded, test-RED/GREEN or FULL acceptance claim for this new slice.
-
-## Evidence and ownership
-
-`${EVIDENCE_ROOT}/w4-jerk-dedup-tolerance/`: `probe.py`, `probe.log`,
-`results.json`, five archives and per-case Native double streams/logs, actual
-Ares stream/log, complete `ordered.diff`, `overlap-audit.json`,
-`binary-provenance.json`. CPU17 serial, `ARES_PARITY_THREADS=1`,
-`ARES_PIN_OFFSET=17`, `OMP_NUM_THREADS=1`, `RAYON_NUM_THREADS=1`, official inherited
-CPU wrapper with setarch. No builds were needed for discovery.
-
-Existing discovery CLI `/tmp/w4-temperature-red-target/debug/ares` built at
-`a5cc569c05857121af80533679c801f6258b9cb5`; entire motion subtree tree-identical to
-SPEC base main9cfaf0d16. Frozen lift is not in that binary; stock0.4 lift and
-spaced start temperatures isolate this candidate from both frozen slices.
-No exact-main rebuild qualification is implied.
-
-Preproposal audit: `motion/jerk.rs` unchanged in W5 Type1 work/proposal, W1 fuzzy
-qualified/startup fan, W6 frozen six-chain, W2 skirt/support/seam scope and frozen
-515e95975, and both W4 frozen chains. A328-ref worker1/2/3/6 + W5 architecture
-scan found no jerk tolerance/dedup/is_approx/epsilon SPEC reservation. Exact tips,
-merge bases and overlap results retained in evidence. W3 processor-word owner is
-explicitly excluded: this proposal changes writer-command admission only.
-
-Stop after SPEC-RR; await approval before adding public RED or implementation.
+Exit: all directed full streams pass both modes, fmt and workspace all-target
+clippy pass, and the full parity suite passes.

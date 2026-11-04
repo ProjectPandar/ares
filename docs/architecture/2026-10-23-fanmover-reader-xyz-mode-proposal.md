@@ -1,11 +1,10 @@
-# SPEC-RR PROPOSAL: FanMover GCodeReader XYZ mode compatibility
+# SPEC PROPOSAL: FanMover GCodeReader XYZ mode compatibility
 
 ## Status / exact base
 
-**PROPOSAL only — no implementation/test code or Native run authorized yet.**
-COORD requested one source-cited libslic3r/GCode parity slice,checked against
-current main **acbb65b6961475c37b29466b306634c1694c8f13**.
-New branch worker3/gcode-proposal-acbb65b69;no production changes.
+**PROPOSAL only — no implementation/test code or Native run yet.**
+One source-cited libslic3r/GCode parity slice,checked against
+main **acbb65b6961475c37b29466b306634c1694c8f13**;no production changes.
 Stock10 test-only f650049d0 remains separate/unmerged with sealed evidence.
 
 Pinned upstream source:8500fcdccaa10b5099ac20d252af3a7c560046f1.
@@ -58,7 +57,7 @@ crates/ares-core/src/project_slice/gcode_emit/fan_mover/motion.rs and the
 associated reader-state slot in fan_mover.rs. Existing FanMover/scaffold remains
 a temporary compatibility shell around cited upstream GCode/FanMover+GCodeReader.
 
-Included after independent RED/implementation approval:
+Included after independent RED/implementation:
 - mirror upstream's lack of G90/G91 mode effect in this **private reader**;
 - for the existing supported XYZ motion path,preserve raw-axis previous/current
   values and raw-minus-prior distance used by FanMover's existing time buffer;
@@ -67,7 +66,7 @@ Included after independent RED/implementation approval:
 - do not change emitted custom G-code text or how actual printer/core/template
   motion state tracks G90/G91. No firmware-facing semantic reinterpretation.
 
-The implementation shape is not pre-approved;first evidence must demonstrate
+The implementation shape is not predetermined;first evidence must demonstrate
 which private tracker operations are observable. Do not use a global reader or
 writer policy override. Platform-neutral core boundary stays pure API/bytes,
 portable to browser WASM,Windows,macOS,Linux,no filesystem/UI/Native/GDB in core.
@@ -106,7 +105,7 @@ Proposed two-input qualification (not generated/run at this stage):
   fan commands and changes no geometry. Preserve existing layer_change_gcode.
 - Control fan_speedup_time=0;target=+3. Pair differs ONLY that scalar after
   common GUI template is fixed. No synthetic machine/process/filament presets.
-- CPU12/jobs1/threads1,fresh evidence roots;official then seeded0. Per input:
+- Fresh evidence roots;official then seeded0. Per input:
   actual Native slice twice and complete normalized replay stability first.
   Native must accept project/template and produce complete G-code/footer.
 - Only then run public validated API+actual CLI at exact acbb-derived tip;
@@ -126,13 +125,13 @@ formal two direct unchanged native_stream_case::check calls `(false,|_,_|{})`;
 no Native output goldens/private counter assertions/inversion/ignore/fallback.
 Formal dual modes should show1PASS1genuineFAIL before any implementation.
 Reuse existing shared checker/normalizer;preserve unexecuted-tail honesty when
-target API equality panics. Exact directed/gate evidence then separate RR.
+target API equality panics.
 
-## Request
+## Scope
 
-Approve bounded Native-first qualification of this ONE private-reader source
-slice and,if proven,the docs-first/formalRED stages separately as COORD chooses.
-Do **not** infer GREEN/code authorization from this proposal. No Native/Ares
-producer run,fixture generation,core/test implementation or FULL has occurred.
+Bounded Native-first qualification of this ONE private-reader source slice
+and,if proven,the docs-first/formalRED stages separately. This proposal is not
+a GREEN/code plan. No Native/Ares producer run,fixture generation or core/test
+implementation has occurred.
 This proposal checks acbb state and defines a falsifiable source-owned E2E plan;
 it is not a claim of a new already-reproduced production defect.

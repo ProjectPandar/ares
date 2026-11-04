@@ -1,21 +1,19 @@
 # Gated role-flow input-only fixtures
 
-Approved whole-block specification: `4701b06a025ab81b20a2ea73becf26a2cb4d36df`,
+Whole-block specification:
 `docs/architecture/wall-role-flow-ratios-spec.md`. Upstream source pin
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`,
 `libslic3r/GCode.cpp:6485-6507` (all eight roles and gated first-layer rule).
 
-These 15 archives are exact copies of the approved Native-discovery inputs.
+These 15 archives are exact copies of the Native-discovery inputs.
 `manifest.json` freezes full archive/member SHA256, retained settings and
 independently observed Native positive-role counts. `geometry-manifest.json`
 records the three simple closed/oriented genus-0 models. No Native output is
 committed. The initial 0%-sparse attempt is NOT used.
 
-Native evidence at approved spec hash:
-`${TMP_ROOT}/ares-gated-flow-spec-reviewed-scope/spec-review-audit.json`:
-60 successful Native slices, official/seeded, two independent processes each,
-CPU18 actual ELF/all sampled threads, complete generator-only repeat and
-cross-mode equality including config/M73/statistics/order.
+Native discovery evidence: 60 successful Native slices, official/seeded, two
+independent processes each, complete generator-only repeat and cross-mode
+equality including config/M73/statistics/order.
 
 | Input | Role setting / purpose |
 |---|---|
@@ -47,18 +45,17 @@ requires the validated byte-in API and real CLI to succeed, raw API=CLI, and
 unchanged whole ordered generator-only comparisons against the same-input
 Native output. No expected-failure assertions or production changes.
 
-Owner ruling after `bdf7a651e`: `sparse070` is an existing-parity regression
-guard, because Ares already gates and pre-bakes sparse flow in
+`sparse070` is an existing-parity regression guard, because Ares already gates and pre-bakes sparse flow in
 `group_fills/params/projection.rs` and `fill_entities/flow.rs`. Its official
 strict full comparison PASS is not an inverted RED. All tests still require
-success and complete equality; `classification` in the manifest/launch receipt
+success and complete equality; `classification` in the manifest/launch record
 only records runtime expectations, never changes an assertion.
 
 Unit, gate-off and sparse guards are expected to PASS. A candidate RED that
 passes must be recorded and reclassified as another guard, not forced to fail.
 Stop on a guard FAIL or an infrastructure/evidence fault. Final RED comprises
 the actual failing legs plus all guards, with the complete matrix rerun in
-both modes at the final committed classification hash before review. This
-protects existing pre-baked sparse/solid behavior when GREEN folds the whole
-block into the single consumer without double multiplication. No GREEN is
-authorized by a target PASS.
+both modes at the final committed classification. This protects existing
+pre-baked sparse/solid behavior when GREEN folds the whole block into the
+single consumer without double multiplication. A target PASS alone does not
+justify a GREEN change.

@@ -1,12 +1,8 @@
 # ZAA ordinary Line regional direction SPEC
 
-Status: SPEC-REVIEW-REQUEST, docs only. No Native/build/test run or RED
-claimed for this slice. Wait for approval before acceptance probes/tests.
+Docs only. No Native/build/test run or RED claimed for this slice.
 
-Base main98a2bfc325b2a06ba4e8b95b9719acd827e2f8f1 plus approved LockedZag
-chain through9baf769c635209fe7b4361478a36c24fb37131a7 (queued stack-16).
-The approved candidate branch remains frozen at9baf769c6. If stack-16 merges
-first, rebase this SPEC onto its main and audit range-diff before proceeding.
+Builds on the LockedZag slice through9baf769c635209fe7b4361478a36c24fb37131a7.
 Upstream inspected:OrcaSlicer8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 ## Owning libslic3r boundary
@@ -42,7 +38,7 @@ to false, and expolygon_polylines builds LineFillParams without that member.
 The already-ported rectilinear and LockedZag paths use the canonical
 resolved_object.all_regions[fill.region_id] conjunction.
 
-Production boundary, only after separately reviewed public RED:
+Production boundary, only after public RED:
 - Add the scalar runtime member to LineFillParams and apply it solely to
   the existing layer-angle condition, matching FillBase.cpp:311-313.
 - In fill_entities/generate.rs, build the existing regional SurfaceCall
@@ -86,19 +82,18 @@ Existing rectilinear/LockedZag/anchoring behavior must remain byte-unchanged.
 
 ## Bounded Native acceptance/activity before public RED
 
-After approval, use the existing admitted fill_grid LockedZag wide-slab
+Use the existing admitted fill_grid LockedZag wide-slab
 setup (height2.4mm,40% sparse, relative E, classic, wall_loops0) only as input
 provenance. Preserve its mesh and profile members. Change sparse pattern to
 line and top/bottom shell counts to0, with thickness0, to avoid solid ceilings
 and keep this ordinary-Line slice separate from deferred bridge anchoring.
 Use empty sparse/solid rotation templates, infill direction45. This new
 combination must earn Native acceptance; it is not claimed already admitted.
-No alternative geometry search or fixture widening is authorized by this SPEC.
+No alternative geometry search or fixture widening is in scope.
 
 Prepare three cases with shared valid min_z0.05 and
 minimize_perimeter_height35:enabled-ZAA/flag0,enabled-ZAA/flag1,
-disabled-ZAA/flag1. Use fixed ZIP metadata. On CPU13 official and CPU14 seeded,
-outer taskset, jobs2/threads2, force2 fresh references/case/mode (6/mode)
+disabled-ZAA/flag1. Use fixed ZIP metadata. In official and seeded modes, force2 fresh references/case/mode (6/mode)
 with new Native cache/output roots. Record effective options, complete footer,
 input SHA and repeat/crossmode normalized output/Sparse XY/E evidence.
 
@@ -120,8 +115,7 @@ convention, API+CLI, exact active-layer Sparse start/end XY+relative E
 assertion before unchanged strict whole-output assertions. Both controls
 belong in the RED commit. Retain fresh Native repeats and self-contained
 Native flag0/1 activity checks; no Native outputs committed. Expected two
-controls PASS and enabled-flag1 FAIL in both modes. Send exact RED hash for
-review before production.
+controls PASS and enabled-flag1 FAIL in both modes.
 
 Localize the first differing motion to Sparse extrusion/its entry travel.
 If an earlier progress/time difference exists, retain it in the comparator
@@ -132,5 +126,4 @@ this named boundary to force a RED/GREEN result.
 GREEN requires all three cases PASS official+seeded, unchanged raw controls,
 existing Line pattern/angle/bridge controls, whole ZAA/compatible_regions and
 LockedZag/anchoring controls, fmt, strict clippy and wasm32 on exact clean
-hash. Full/workspace/CI/merge remain coordinator-only. Observe every exclusive
-freeze; no new Native/build runs until explicitly released.
+hash.

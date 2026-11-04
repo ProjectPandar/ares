@@ -1,40 +1,33 @@
 # Arachne fuzzy skin: proposed junction rewrite slice
 
-Status: SPEC308583e3a and group-dependency ruling791a9fbe9 approved; RED first.
-Worker3; coordinator Claude is the sole reviewer.
-Draft base: origin/main `c22f5a81da41fce715b528268711393649daad66`.
-Separate worktree/branch from the code-approved alternate candidate6a7d842bc.
-Implementation must await this SPEC approval and the alternate integration
-sequence; rebase the eventual candidate to the then-current main first.
+Status: accepted. SPEC 308583e3a and group-dependency decision 791a9fbe9; RED first.
 
-## Approved execution split and order
+## Execution split and order
 
-Coordinator approved the stochastic oracle distinction and required two slices:
+The stochastic oracle distinction requires two slices:
 
 - F1: single-group whole coverage, all noise variants and three modes, Ripple,
   raw source eligibility, Context/draw sequence and actual slice_z. Only F1's
   small production boundary lands after its own public RED and alternate merge.
 - F2: compatible multi-group effect masks, identical-effect merge/priority and
-  LineSplit ordered splits. Separate fixtures/RED, production GREEN and REVIEW.
+  LineSplit ordered splits. Separate fixtures/RED and production GREEN.
 
-Neither slice inherits acceptance from the other. Until alternate closes
-W4 merge→rebase→FULL-GO→canonical full→rebased REVIEW→APPROVED→ff push, only
-single-core Native closure/min-width preflight and F1 fixtures/public RED may
-proceed. F1/F2 production remains untouched; full/workspace HOLD.
+Neither slice inherits acceptance from the other. Until alternate extra wall
+is merged, only
+Native closure/min-width preflight and F1 fixtures/public RED may
+proceed.
 No F1 partial implementation may silently treat multiple groups as one, discard
 non-owner configurations or add a new Unsupported guard. Any reachable
-multi-group dependency preventing a clean F1 boundary needs coordinator ruling.
+multi-group dependency preventing a clean F1 boundary needs an explicit decision.
 
-Latest coordinator execution ruling permits F1 GREEN development while alternate
-032ed1133 waits for W5 merge/approval. Directed runs use CPU12 single core only;
-the exclusive full window belongs to worker6. This supersedes the earlier
-development HOLD, not the merge order. The reachable multi-group dependency is
+F1 GREEN development may proceed before the alternate extra wall
+merge.
 documented in [F1/F2 boundary addendum](arachne-fuzzy-f1-group-boundary-addendum.md)
-for the accepted coordinator ruling before production integration. Its order is:
+before production integration. Its order is:
 commit/report F2 public Native RED, commit F1 noise/junction production, commit
-F2 masks/LineSplit production, then review/canonical full once on the complete
+F2 masks/LineSplit production, then full parity once on the complete
 stack. F1 and F2 merge together; no partial F1 merge. The earlier independent
-F1 GREEN/review sequencing is superseded by this dependency ruling.
+F1 GREEN sequencing is superseded by this dependency decision.
 
 ## Upstream ownership and source identity
 
@@ -62,7 +55,7 @@ OrcaSlicer v2.4.2 owns this behavior:
 Local checked source SHA256s:
 `PerimeterGenerator.cpp`: `45e0a6c56df0acf4e66ae82ae7a4aa4792dc558fb263a12b1211438de47b7de6`;
 `Feature/FuzzySkin/FuzzySkin.cpp`: `6508c0a268fc15f1a2e6742c7e5c6e03c9a41ee4f24f73dfe70375a45f73e20c`.
-The local source includes the already-authorized seed-replay initialization
+The local source includes the seed-replay initialization
 at random_value:28; record official versus replay producer identity separately.
 Do not claim that official accepts ORCA_REPLAY_SEED or has identical entropy.
 The ignored OrcaSlicer symlink stays outside Git.
@@ -143,10 +136,10 @@ Consume group has_fuzzy_skin/has_fuzzy_hole for simplification and reversal.
 In the overhang reversal branch, preserve the exact source has_fuzzy_skin
 conjunction before its contour/hole cases (PerimeterGenerator.cpp:422–428),
 not an independently designed "any fuzzy wall reverses" rule. General overhang
-detection/clipping guard removal is a separate later REVIEW; this slice only
+detection/clipping guard removal is a separate later slice; this slice only
 supplies the fuzzy flags and already-supported consumers it requires.
 
-## Random context and oracle contract proposed for approval
+## Random context and oracle contract
 
 Extend the existing [ARD-0068](ard-0068-seeded-slicer-context.md) Context ownership
 to real Arachne junction consumption: task-local Mt19937, explicit seed,
@@ -170,7 +163,7 @@ Proposed E2E evidence split, following the existing seeded-context distinction:
   explicitly not strict Native parity PASS. Do not normalize random coordinates,
   retry until chance matches, or claim a shared reproducible random stream.
 
-Coordinator explicitly accepted this stochastic oracle boundary with308583e3a,
+This stochastic oracle boundary is accepted with 308583e3a,
 consistent with existing ARD-0068. If all active
 official stochastic cases must be raw-byte identical without a reproducible
 producer/seed, report that gate unresolved; never weaken the strict comparator
@@ -178,8 +171,8 @@ or present the diagnostic projection as full parity.
 
 ## Public test-first plan and failure inventory
 
-After SPEC approval, write deterministic input-only 3MFs and public Native/API/
-CLI tests first, commit actual RED separately and report inbox before production.
+Write deterministic input-only 3MFs and public Native/API/
+CLI tests first, and commit actual RED separately before production.
 Use a small finite matrix that shares meshes but keeps these failures witnessed:
 
 1. Closed prism with External/Hole/All/AllWalls and disabled/none controls;
@@ -202,28 +195,28 @@ Use a small finite matrix that shares meshes but keeps these failures witnessed:
 Before declaring RED, preflight Native admission and actual open/closed path
 behavior. Ripple223–291 does not contain the random branch's endpoint repair;
 PerimeterGenerator.cpp:534–540 still asserts closed-loop connectivity. The
-coordinator's closure ruling below resolves the demonstrated release/debug
+closure decision below resolves the demonstrated release/debug
 discrepancy; preserve every assertion not demonstrated broken and never invent
 a closing segment.
 Preflight modes near low-width boundaries: keep the exact scaled integer floor;
 if Native admits behavior needing a downstream variable-width consumer repair,
-cite that owner and seek scope approval rather than adding an arbitrary clamp.
+cite that owner and amend the scope rather than adding an arbitrary clamp.
 No speculative unit test, implementation-derived expected RNG or saved Native
 golden replaces the public artifact comparison. Finite F1 RED excludes F2
 mask/split acceptance; no multi-group result is presented as F1 GREEN.
 
 The old `active_fuzzy_skin_fails_closed` unit in project_slice/tests/perimeters/
 arachne/traverse.rs asserts precisely the rejection to be removed. After public
-RED, submit a source-cited retirement request and wait for explicit permission;
-if approved, retire it alone in a separate commit citing source and RED hash.
+RED, record a source-cited retirement and
+retire it alone in a separate commit citing source and RED hash.
 Every other assertion and existing fixture/comparator stays untouched.
 
 ## Gates, exclusions and sequencing
 
-F1 closure addendum (explicit coordinator ruling,2026-10-13):
+F1 closure addendum:
 PerimeterGenerator.cpp:534–540's disconnected-path TODO and NDEBUG release
 semantics make the Native-admitted open Ripple loop authoritative. Evidence:
-`/tmp/worker3-fuzzy-f1-native-preflight-00nkklq5/closure-width-audit.json`.
+`closure-width-audit.json`.
 F1's production commit removes the mirrored closing debug assertion broken by
 that input; adjacent-joint assertion removal additionally requires demonstrated
 breakage. Preserve all other assertions, no invented closure/retag. Cite those
@@ -237,11 +230,6 @@ new painting import, public/Classic fuzzy feature expansion and general overhang
 guard removal. No Ares-authored pipeline, new Unsupported guard, fallback or
 success with omitted fuzzy geometry is allowed.
 
-All changed/new files <=400LOC; jobs2/threads2, fresh Native cache and artifact
-root per run. Processor-dependent runs wait RESTORED. Strict clippy, fmt and
-WASM32 core/adapter must pass. Workspace/full remain HOLD and need explicit
-allocation; full uses the coordinator's current canonical environment, separate
-fresh target/cache/root per leg and an exclusive inbox request. No push.
-Review this feature separately; alternate merge remains W4→rebase→FULL-GO→
-full→rebased REVIEW-REQUEST→APPROVED→ff push. This doc-only branch changes none
-of that candidate's source or hash.
+All changed/new files <=400LOC; fresh Native cache and artifact
+root per run. Strict clippy, fmt and
+WASM32 core/adapter must pass.

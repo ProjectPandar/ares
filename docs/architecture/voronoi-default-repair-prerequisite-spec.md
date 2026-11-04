@@ -1,23 +1,18 @@
 # SPEC: default Voronoi detection and rotation-repair prerequisite
 
-Status: SPECac538 independently approved by COORD; RED authorized on9bbc.
-Additional conditions: reuse the merged `tests/parity/voronoi-incident` environment/
+Conditions: reuse the merged `tests/parity/voronoi-incident` environment/
 observer/driver in place; inherit `ORCA_REPLAY_CPU`, `ARES_ORCA_DEBUG_DIR` and
 `ARES_GDB_BIN`; runtime-only Native records, no duplicate harness/host defaults.
 A bounded read-only search of merged inputs must report actual MedialAxis
-repair-active reachability honestly. GREEN requires targeted consumer regressions
-AND the final coordinator-scheduled FULL before integration; current work is RED
-only. New main notifications do not relabel this branch's evidence.
-Planning base: `9bbc63c937a7383a639317e40a95e15ad2bdefd7`.
+repair-active reachability honestly. GREEN requires targeted consumer regressions.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 All source paths below are relative to `src/libslic3r/`.
 [Non-negotiable decisions](voronoi-default-repair-prerequisite-ard.md).
 
 ## 1. Why this source slice blocks painted MMU
 
-The independently approved painted SPECf894 and public RED0ce6 remain on their
-5317 branch. Coordinator paused that program after its read-only graph evidence
-found a REAL repair-active case. Incident fix5317 changes cell anchors, not
+The painted MMU program is paused because its read-only graph evidence found a
+REAL repair-active case. Incident fix5317 changes cell anchors, not
 `Geometry::VoronoiDiagram`'s default detection/rotation repair. Raw Boost builder
 success is not equivalent to the effective diagram returned to the caller.
 
@@ -99,33 +94,20 @@ chaining algorithms defer, as does
 `MedialAxis.cpp:462-472` downstream morphological-closing retry. Keep the existing
 caller error contract on unsuccessful construction; do not claim that deferred
 closing behavior or all MedialAxis parity. If active qualification needs it,
-STOP for an independently reviewed extension rather than silently choosing raw
+STOP for a separate extension rather than silently choosing raw
 geometry. Deferred likewise: painted carrier/registry/projection/graph/slabs/
 merge/apply/admission, cutting, new UI or G-code behavior. Painted stays paused
-until this independent prerequisite is approved, qualified and integrated.
+until this independent prerequisite is qualified and integrated.
 
-## 4. Durable measured evidence and RED candidate
+## 4. Measured witness and RED candidate
 
-Canonical root (verified complete mirrors, NOT only temporary storage):
-`${EVIDENCE_ROOT}/worker1/voronoi-default-repair-spec-0ce6/`.
-`PATH-MAPPING.json` maps historical absolute `/tmp` prefixes to durable paths;
-`DURABLE-INVENTORY.json` verifies all1750 copied files /47,855,913 bytes with
-matching SHA256. No previous results are relabeled as this SPEC/base evidence.
+All150 actual effective diagrams were independently decoded from saved bytes.
+Split's one observed full G-code matches ordinary same-input Native using the
+unchanged existing comparator; this is NOT an independent split repeat. No
+backend replay or Rust geometric RED was measured in this stopped attempt; the
+painted public rejection RED is not this prerequisite's constructor RED.
 
-Inside `ares-w1-painted-projection-phase-0ce6/`: `BEFORE-CODE.md`,
-`provenance.json` (exact ELF/debug/source13 hashes), read-only observer/source,
-`STOP-WRAPPER-REPAIR-GAP.json`, split Native1 `capture/call-0002/record.json`,
-raw arrays/layout, entry/finish thread masks and caller stack, Native G-code/
-launch/exit logs, `STOP-audit-result.json` and artifact inventories. All150 actual
-effective diagrams were independently decoded from saved bytes. Split's one
-observed full G-code matches ordinary same-input Native using the unchanged
-existing comparator; this is NOT an independent split repeat. Infrastructure
-preparation failures are retained NON-GATE. No backend replay or Rust geometric
-RED was measured in this stopped attempt; approved RED0ce6 is public rejection,
-not this prerequisite's constructor RED.
-
-After SPEC approval, separately commit a test-first, runtime-generated RED on
-its exact hash. Prefer this frozen `painted-split` reachable Native witness;
+Commit a test-first, runtime-generated RED separately. Prefer this frozen `painted-split` reachable Native witness;
 keep the ordinary unpainted/leaves controls. New actual Native repeats must
 show `REPAIR_SUCCESSFUL` on the same whole ordered input and identical complete
 effective arrays. Use the actual default constructor in the real MMU caller;
@@ -143,7 +125,7 @@ bits/color and ordered edge/topology/flags against Native. Never use compile
 failure, malformed/painted XML rejection, synthetic expected-error success,
 debug-field ignores, tolerance or normalization as the prerequisite RED. If
 current Rust unexpectedly matches, report it; do not manufacture a failure or
-expand fixture search without owner approval. Future state assertions must
+expand fixture search silently. Future state assertions must
 exercise the source facade, not assertions against copied Native metadata.
 
 Before tests/implementation enumerate failure modes: missed/default-disabled
@@ -152,20 +134,17 @@ rotation/rounding/angle order drift; incorrect endpoint mapping; residual colors
 failed repair hidden by raw fallback; local/raw ownership confusion; incorrect
 filtered/exact predicate decisions; changed consumer output; stale/omitted Native.
 
-## 5. Review and exit gates
+## 5. Exit gates
 
-Docs-only SPEC/ARD -> independently reviewed fresh reachable constructor RED ->
-minimal source rewrite plus existing consumer -> independent exact-hash GREEN.
-The present Native witness authorizes no implementation. Retain exact frozen
+SPEC/ARD -> fresh reachable constructor RED -> minimal source rewrite plus
+existing consumer -> GREEN.
+Retain exact frozen
 archives/member/settings hashes, explicit Python/environment configuration,
 actual singleton parent CPU propagation and raw output. Require fresh independent
 Native repaired and no-repair repeats before Rust results; no cached credit.
 
 Exit: complete ordered effective-diagram equality, wrapper state/dispatch and
-endpoint-remap parity on the approved Native witness set; real MedialAxis
-consumer regression evidence plus approved targeted VD/annotation/Arachne and
-support consumers, fmt, strict Clippy and WASM. On a broader prerequisite or
-backend gap STOP; no alternative engine, field weakening or cfg/allow parking.
-Any FULL/workspace or integration-window validation requires coordinator
-scheduling; no FULL/push/merge now. Final integrated exact-hash evidence is not
-inherited from old hashes. CPU18/jobs2/threads2 is the current bounded allocation.
+endpoint-remap parity on the Native witness set; real MedialAxis consumer
+regression evidence plus targeted VD/annotation/Arachne and support consumers,
+fmt, strict Clippy and WASM. On a broader prerequisite or backend gap STOP; no
+alternative engine, field weakening or cfg/allow parking.

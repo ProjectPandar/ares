@@ -1,10 +1,7 @@
 # Arachne extra-overhang perimeter application — source rewrite SPEC
 
-Status: approved source boundary45ab3be48, W5 CPU7–8. Historical discovery
-used main5317e1c09cbcee822df3ee12b99e9e265aab4643. Pre-window preparation
-is separately authorized on e81afae89 after the approved W5 chains.
-Formal RED must precede the missing-call/visibility-only GREEN. No helper
-copy, FULL or integration RR is authorized by this preparation.
+Historical discovery used main5317e1c09cbcee822df3ee12b99e9e265aab4643.
+Formal RED must precede the missing-call/visibility-only GREEN.
 
 ## 1. Upstream boundary and Rust destination
 
@@ -40,19 +37,13 @@ whose missing behavior should be preserved.
 
 ## 2. Reachable Native-exported witness
 
-Artifact root: `/tmp/w5-overhang-isolate1/`.
-Reproducer: `/tmp/w5-overhang-isolate.py`.
-Reference repeat/seeded verification: `/tmp/w5-overhang-isolate-verify.py`.
-
 Geometry comes from the existing
 `tests/parity/arachne-alternate-extra-wall/stepped-top-off.3mf` model,
 rotated180 degrees about X: build diagonal `(1,-1,-1)`, translation
 `(110,110,0.6)`. This is an ordinary GUI model rotation, producing a
 stepped overhang, not malformed geometry or a synthetic option type.
-`/tmp/w5-inverted-step-input.3mf` records the input transformation.
 Every retained fixture below is a fresh **official CLI-exported3MF**,
-then sliced from that export with exit0. The CLI launch/log receipts,
-exported project and complete output are retained per case.
+then sliced from that export with exit0.
 
 Common isolation settings: Arachne, three walls, Aligned seam,
 stagger OFF, scarf NONE, wipe OFF, detect-overhang-wall ON,
@@ -81,7 +72,7 @@ M73 nor any other non-generator line is removed in acceptance checks.
 
 ## 3. Repeatability and controls
 
-`verified.json` and `/tmp/w5-overhang-isolate-verify.log` show fresh official
+Fresh official
 repeat and seeded runs of the positive and four controls:10/10 expected
 outcomes. Native official, repeated official and seeded COMPLETE outputs
 match after only the established single generator identity/date line is
@@ -98,12 +89,12 @@ match Ares completely in both modes:
 The old stagger binary6c3038b32 and the local role-only probe based on
 main5317 produce identical complete normalized streams for these cases.
 The role-only probe changes only empty-flat scarf clipping; scarf is OFF
-here. This witness does not depend on pending W5 random/stagger/role work.
+here.
 These are discovery CLI observations, NOT formal public-API test evidence.
 
 ## 4. Read-only GDB: first unequal intermediate
 
-Native: seeded binary with its DWARF, source mapping and seed0/CPU7.
+Native: seeded binary with its DWARF, source mapping and seed0.
 Break at `PerimeterGenerator::apply_extra_perimeters` entry and observe
 return using a finish breakpoint. Ares: break at
 `arachne/materialize.rs:258`, after ordinary island materialization.
@@ -183,24 +174,22 @@ portability. New/extracted Rust files stay below400 lines.
   configuration footer line, separately in Native and Ares. Do not call
   this an extra-application failure or assume the Arachne cause fixes it.
   Its later read-only handoff proved all6 ordered PG wall records equal;
-  W6 now owns the separate SeamPlacer overhang-precision candidate.
   Do not reopen that parked candidate or change seam/travel here.
 - No changes to Classic geometry, medial-axis/bridge-direction numeric
   behavior, arc fitting or unrelated existing helper limitations.
 - No infill-combination, `Fill.cpp::group_fills`, `SurfaceFillParams`,
-  infill pattern changes, or W3-owned grouping work.
-- No W6-owned seam, fake-wipe, inward, travel/retraction lifecycle work.
-- No enum/random/scarf changes, FULL precheck or merge-window use.
+  infill pattern changes, or grouping work.
+- No seam, fake-wipe, inward, travel/retraction lifecycle work.
+- No enum/random/scarf changes changes.
 
 ## 7. Formal implementation and acceptance plan
 
-After SPEC review, pre-window preparation is separately authorized:
+Plan:
 
 1. Use main's merged `runner/native_api_cli.rs::NativeCase` public API/CLI
-   and complete Native stream seam. Do not copy W2/W6 helpers or hand-write
+   and complete Native stream seam. Do not hand-write
    another runner. Native availability is the only environment condition,
    like main's NativeCase users; no borrowed/private reference gate.
-   Then-current-main rebase and FULL remain reserved for the W5 window.
 2. Commit formal RED: these real exported fixtures, manifest/provenance,
    both reference modes, public-API bytes and CLI complete-stream checks.
    The positive must fail before production edits; four controls pass.
@@ -211,5 +200,3 @@ After SPEC review, pre-window preparation is separately authorized:
    the shared API/CLI harness; reproduce the equal input GDB snapshot,
    now Native/Ares4-entity output and cut fill contour at layer2.
 5. Run fmt, workspace/all-target clippy, targeted nextest and wasm check.
-   Exact-hash dual FULL occurs ONLY when COORD explicitly authorizes the
-   queued W5 merge window; no FULL is requested or claimed by this SPEC.

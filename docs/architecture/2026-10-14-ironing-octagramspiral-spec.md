@@ -1,10 +1,9 @@
 # SPEC: OctagramSpiral support ironing——plane-path 三连第一片
 
-状态：SPEC-REVIEW-REQUEST（只读调研 + docs-only）。
-来源：CrossHatch 合入后按协调指示的 plane-path 三片之首（W6 survey：
+来源：CrossHatch 合入后 plane-path 三片之首（survey：
 Native exit0/E=1527，Ares exit1 守卫；Rectilinear 已等）。
 
-## 1. Native 证据（官方 2.4.2，pristine fixture，canonical 键，CPU7）
+## 1. Native 证据（官方 2.4.2，pristine fixture，canonical 键）
 
 | `support_ironing_pattern` | rc | ironing E | 全文 sha（去时间戳行） |
 |---|---|---|---|

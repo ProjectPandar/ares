@@ -1,17 +1,14 @@
 # Timelapse traditional insertion: bounded repair PLAN extension
 
-Status: APPROVED `1f79cf081`; implemented in the bounded GREEN candidate.
-Original SPEC `20444a910`, admitted RED `2ceaa08bf` on base `afca7400a`.
-
-Finite GREEN: `/tmp/worker2-timelapse-green.83W74O/green-evidence.json`, seeded6/6 PASS (nextest12.544s), official6/6 PASS (9.724s). Native/API/CLI whole output and all existing RED assertions match; active cases have100 blocks over50 layers. Test files remain byte-identical to RED. Whole option_coverage and engineering gates follow on the committed candidate; workspace/full require coordinator allocation.
+Finite GREEN: seeded 6/6 and official 6/6 PASS. Native/API/CLI whole output and all existing RED assertions match; active cases have100 blocks over50 layers. Test files remain byte-identical to RED.
 
 Reset audit: `layers.rs:292-295,369` groups entries by physical Z and invokes `boundary::append` once before tool/object visits; `boundary.rs:232` calls `advance_for_layer`, whose existing line50 reset is source-cited to `GCode.cpp:4653`. No reset-point production edit is needed.
 
-## Why the preapproved render repair is insufficient
+## Why the render-only repair is insufficient
 
 The unchanged six-case Native/API/CLI suite admits every project. Native emits100 blocks over50 physical layers (one direct and one traditional each); Ares emits150. Explicit211/223 commands already render correctly in RED but still fail complete output at line212 because Ares emits an extra traditional block for the second cube/tool visit.
 
-The preapproved render-only trial is preserved as `/tmp/worker2-timelapse-minimum-render-only.patch`, with artifacts at `/tmp/worker2-timelapse-minimum-trial.dDa7Bq`. It fixes implicit current-slot temperature selection while retaining the independently failing insertion count. This is not GREEN; there is no comparison relaxation or Native-variant exemption.
+The render-only trial fixes implicit current-slot temperature selection while retaining the independently failing insertion count. This is not GREEN; there is no comparison relaxation or Native-variant exemption.
 
 The original [SPEC](timelapse-filament-context-spec.md) says: “Do not expand production scope if this argument-only change cannot repair admitted cases.” Therefore the missing lifecycle rule requires this explicit extension before implementation. No option_coverage/workspace/full exit claim follows from the failed trial.
 
@@ -28,7 +25,7 @@ Rust already has `EmitState.has_insert_timelapse_gcode`, documented as the upstr
 
 Proposed production boundary stays in **`gcode_emit/timelapse.rs` only**:
 
-1. Retain the preapproved `render_for_filament(..., state.extruders.active_id())` call.
+1. Retain the `render_for_filament(..., state.extruders.active_id())` call.
 2. In `append_traditional`, return false when disabled **or the existing per-layer insertion flag is already true**.
 3. After the existing successful `append_and_track` call, set the existing flag true, then return true in the current order.
 
@@ -38,8 +35,8 @@ No new state, helper, public API, scheduling algorithm, defensive validation or 
 
 Keep the committed six-case RED suite and all existing assertions/comparisons unchanged. Require both modes to pass complete Native/API/CLI output, raw API/CLI equality, executable implicit/explicit M104 context, both logical wall tools and current/upcoming distinction. The same source assertions require two phases per physical layer, exposing incorrect reset lifetime or premature suppression.
 
-Reuse vendor/empty controls to prove non-trigger preservation. Add no fixture or assertion workaround to hide the second-tool callback. Report any further mismatch before expanding scope again.
+Reuse vendor/empty controls to prove non-trigger preservation. Add no fixture or assertion workaround to hide the second-tool callback. Stop on any further mismatch before expanding scope again.
 
-After finite GREEN: whole option_coverage both modes with fresh caches/artifacts, strict workspace/all-targets/all-features Clippy, fmt, wasm32 core/vgcode/wasm; code REVIEW, then explicitly allocated workspace/full. All nextest jobs2/threads2. No heavy run or push without coordinator allocation/approval.
+After finite GREEN: whole option_coverage both modes with fresh caches/artifacts, strict workspace/all-targets/all-features Clippy, fmt, wasm32 core/vgcode/wasm, then workspace and full parity runs.
 
 BBL-specific admission, wipe-tower/safe-position completeness, physical-ID corrections and by-object scheduling remain deferred. The shared rule is source-owned; this extension claims finite runtime evidence only for the admitted non-BBL I3 direct/traditional recipe.

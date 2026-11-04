@@ -1,6 +1,5 @@
-# Native 清理 B：Arachne default-prisms 参照迁移
+# Native 清理：Arachne default-prisms 参照迁移
 
-owner worker6；整体 B / 共享 runner/cache owner worker4。基线 `d639fab1c`。
 本片迁移 Native 测试参照，不实现 Arachne 算法或修改生产行为。
 
 ## 上游边界与 Rust 目标
@@ -75,10 +74,10 @@ Arachne 或当前行数的结论。
 唯一删除的 Native 产物为 `tests/parity/arachne/default-prisms.orca.gcode`。
 删除旧 Native reader 和 ignored 入口；保留 strict 文件与 active 注册。
 不改生产、公开 API、共享 CLI result/custom_gcode/cache、`.config`、root
-orca_parity、共享 README 或 worker4 的 CLI63/channels/retained/marker/KSR。
+orca_parity、共享 README 或其它 CLI63/channels/retained/marker/KSR 迁移。
 
 Included：active 布局参照运行时迁移、纯 strict 合同保持 active、冻结输出删除，
-旧 ignored 项按协调者裁定转为本文 DEFERRED。Deferred：生产算法与完整整流 parity。
+旧 ignored 项转为本文 DEFERRED。Deferred：生产算法与完整整流 parity。
 
 ## 验收
 
@@ -87,10 +86,9 @@ RED 单独提交删除冻结输出、保留旧 active reader；定向运行 acti
 RED，不宣称 Arachne 算法差异。GREEN 迁移后布局与 strict 均 active PASS。
 required 独立空缓存冷跑与同缓存热跑均须真实 Native 布局 PASS，热跑 hit，
 同 cache entry/reference SHA 不变；热缓存缺 Native required FAIL、optional
-可见 SKIPPED，不计 Native parity PASS。全部日志和原始输出存仓库外。
+可见 SKIPPED，不计 Native parity PASS。原始输出不提交。
 
 fresh v2 base/candidate seeded 与 official 独立缓存，列出所有状态变化及共同
 Ares raw SHA；严格失败子集检查不放宽，Native 波动逐例报告。不以旧冻结输出
 替代 fresh Native。随后 required workspace nextest、strict clippy、fmt、wasm
-门禁，以 exact hash REVIEW；批准后 rebase/ff-only push。每人一个 heavy、
-16 threads、独立 target，浏览器暂停时不启动新 heavy。spec 未批准不改实现。
+门禁。

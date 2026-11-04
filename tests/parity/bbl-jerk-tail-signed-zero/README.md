@@ -3,7 +3,6 @@
 Source: `GCodeWriter.cpp:58-59` copies raw Z/E jerk caches; `298-299` streams
 them with precision two and retains negative zero. SPEC:
 `docs/architecture/2026-10-24-bbl-jerk-tail-signed-zero-spec.md`.
-Base: `55c625b99`. This tests-only RED does not change production code.
 
 Every input derives from the existing GUI-generated BBL one-object archive,
 keeps stock marlin flavor and BBL identity, disables the tower, and sets
@@ -35,7 +34,7 @@ records. Public runs must qualify independently.
 Failure modes were written before implementation: erasing negative zero,
 changing positive zero or nonzero/default-six formatting, confusing equality
 with sign equality, fixing one caller instead of the shared source boundary,
-or modifying owned axis/extrusion/zero-E/configuration paths.
+or modifying unrelated axis/extrusion/zero-E/configuration paths.
 
 Freeze these tests and archives before GREEN. The later change only preserves
 sign in the existing shared ostream zero branch. Because all callers share it,
@@ -44,7 +43,5 @@ including jerk, acceleration, velocity limit, square corner, ACCEL_TO_DECEL,
 Repetier, Klipper, expression/placeholder and coordinate-label consumers, plus
 fixed PA signed-zero cases. See the SPEC's inventory and STOP contract. Any new
 residual requires an immediate report, not wider edits or masks. No new public
-default-six signed-zero witness is claimed by this three-case RED.
-
-CPU17/PIN17, jobs=1 and threads=1; no FULL or non-BBL stock survey. Submit one
-combined SPEC/RED review request and hold before production changes.
+default-six signed-zero witness is claimed by this three-case RED, and no
+non-BBL stock survey is included.

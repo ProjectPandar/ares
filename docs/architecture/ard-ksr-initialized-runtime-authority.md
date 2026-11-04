@@ -16,7 +16,7 @@ configuration checks and never runs Native. No production pipeline changes.
 
 ## Preflight conclusion
 
-Two serial fresh captures use the unchanged KSR input, seed zero, CPU zero,
+Two serial fresh captures use the unchanged KSR input, seed zero, single-core affinity,
 and the historical initialized wrapper and ELF. Both executable SHA values
 match their recorded identities, and both captures succeed.
 
@@ -31,9 +31,9 @@ match their recorded identities, and both captures succeed.
   on line 3; original block is 49005 bytes and first differs at block line 76.
 
 Complete producer identity, commands, raw captures, all three hash classes and
-first differences are retained outside Git in
-`/tmp/worker6-ksr-p3-preflight/hash-audit.json` and its capture directories.
-No Native output or generated receipt is added to the repository.
+first differences are retained outside Git in a hash audit and its capture
+directories.
+No Native output or generated metadata is added to the repository.
 
 ## Reconstructible producer source
 
@@ -60,10 +60,9 @@ Instantiation with the reconstructed source reproduces exact derivation
 `4n1w0b6jgnfcwb6m9jfssndribyyg3v6-orca-slicer-seed-replay-2.4.2.drv`,
 whose package output is
 `jqfsg42f6xzq3krnf5scm6w4g1z4kz4c-orca-slicer-seed-replay-2.4.2`.
-The existing package remains protected by
-`/tmp/worker6-ksr-initialized-producer-root`.
+The existing package remains protected by a garbage-collection root.
 [tools/README](../../tools/README.md) records the reconstruction and
-instantiate-only commands. No realization is authorized by this decision.
+instantiate-only commands. This decision does not realize the package.
 
 ## Consumer contract
 
@@ -71,11 +70,11 @@ All Ares-versus-reference comparisons migrate to freshly generated initialized
 Native output with the unchanged complete ordered generator-only comparator.
 CONFIG_BLOCK comparisons use runtime block bytes directly, without introducing
 a replacement fixed hash. Any Ares/runtime Native mismatch remains a real RED
-and must be reported; no tolerance or output masking is authorized.
+and must be reported; no tolerance or output masking is permitted.
 
 Assertions authenticating only a disappearing frozen file may disappear with
-that file: historical raw/normalized hashes, frozen line count, receipt/output
-identity, and original CONFIG_BLOCK size/hash self-checks. The deletion review
+that file: historical raw/normalized hashes, frozen line count, producer/output
+identity, and original CONFIG_BLOCK size/hash self-checks. The deletion
 must list their exact original assertion text and individual deletion reasons.
 Input SHA/package assertions and all Ares-versus-Native behavior assertions
 remain. The original CONFIG_BLOCK hash is never rebound to the initialized
@@ -90,14 +89,14 @@ attribute, and receives explicit Native environment and artifact destination.
 
 The old ignored browser consumer still compares the initialized frozen file
 when every Native dependency is absent. A retained actual Chromium capture
-from ARD-0082 (`${TMP_ROOT}/ares-wasm-gcode-dYmH9A/browser.gcode`) reproduces this:
+from ARD-0082 reproduces this:
 the child completes the whole ordered comparison, writes comparison artifacts,
 and reports no SKIPPED. Its historical dated Ares generator line alone is
 adapted to the current undated Ares header contract; body bytes are untouched.
 This is a missing-dependency policy RED, not fresh browser GREEN evidence.
-Audit and child logs are outside Git at
-`/tmp/worker6-ksr-p3-browser-policy-red/`; policy result is exit100.
+Audit and child logs are retained outside Git;
+policy result is exit100.
 The new browser consumer must generate Native through initialized
 `OrcaRunner::slice_case`, visibly skip when dependencies are optional and
 absent, fail when required, and require an actual browser capture once Native
-is available. Fresh Chromium runs remain mandatory before final deletion review.
+is available. Fresh Chromium runs remain mandatory before final deletion.

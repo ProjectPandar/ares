@@ -1,10 +1,7 @@
 # ARD: scarf clipping must use the remaining flat-loop role
 
-Status: approved boundary fafec2987; pre-window implementation separately
-authorized on e81afae89. Historical diagnosis used main5317e1c09 and
-branch w5-scarf-empty-flat-role-spec. This slice is independent of the
-random/stagger math although those approved chains precede it in the
-preparation stack. No FULL or integration RR is authorized.
+Historical diagnosis used main5317e1c09. This slice is independent of the
+random/stagger math.
 
 ## Owning upstream boundary
 
@@ -87,7 +84,7 @@ Filtering to movements was used ONLY to locate this diagnostic witness;
 the actual acceptance comparison remains the complete byte stream.
 This changes actual XY motion and scarf coverage, not merely formatting.
 
-The observations use approved staggered GREEN `6c3038b32` and its isolated,
+The observations use staggered GREEN `6c3038b32` and its isolated,
 uncommitted random-arithmetic probe. Their complete outputs are identical
 for ALL five cases: aligned seam and stagger OFF remove those dependencies.
 The owning `scarf.rs` file is also byte-identical to main `5317e1c09`
@@ -119,19 +116,6 @@ The passing control has a flat path and correctly takes 40% in both.
 This falsifies earlier-placement and pre-crop-length hypotheses for this
 witness. No normalization, rounding, flow or formatting change is justified.
 
-Evidence root: `/tmp/w5-next-entire-min1/`:
-
-- `discovery-summary.json`: bounded settings, complete input/ZIP hashes,
-  dual-mode outcomes, first physical difference and GDB snapshots.
-- `verified.json`: full difference lists and fresh Native launch/artifact
-  directories; each case retains `exported.3mf`, Native and Ares streams.
-- `{native,ares}[-control]-clip-snapshot.{gdb,py,json,log}`:
-  actual read-only positive/control captures.
-- `/tmp/w5-next-entire-verify.py`: repeatable fresh Native verification;
-  preserves previous artifacts by creating a new directory per invocation.
-
-    taskset -c 7,8 /nix/store/60m4rxhg2fldqaak400c0lry96ijrzqn-python3-3.13.13/bin/python3 /tmp/w5-next-entire-verify.py
-
 ## Included rewrite / non-negotiable scope
 
 1. In `scarf.rs::build`, select the clipping role from remaining `flats`:
@@ -149,7 +133,7 @@ Deferred: random/stagger math; scarf eligibility/conditional behavior;
 other loop-role or geometry changes; wipe-before-outer and the separate
 wipe-retraction E witnesses from discovery; formatting and time estimation.
 
-## RED → GREEN plan after separate authorization
+## RED → GREEN plan
 
 - RED freezes the actual five CLI-exported projects above, whole-file
   and per-ZIP-entry manifests, and effective settings. Use the merged
@@ -166,5 +150,4 @@ wipe-retraction E witnesses from discovery; formatting and time estimation.
   80000 scaled units and control must remain at 8000000. Stop and report
   any residual before expanding scope.
 - Run rustfmt, clippy and Tier-1 WASM checks after implementation.
-  FULL only at the assigned W5 merge slot, on the then-current rebased
-  exact hash, never as a waiting/precheck activity.
+  FULL runs on the exact final hash.

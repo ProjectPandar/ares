@@ -6,9 +6,9 @@ Status: proposed. No new witness has been executed. Candidate settings below are
 
 Authority is OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`. This proposal starts at `8612802fec12baeaa32600edb8e0f3795d3eeb95`, which contains the accepted 3D-honeycomb rewrite and its public geometry witnesses.
 
-Qualify the integrated implementation without rewriting its accepted history. Do not restore the older generator to manufacture a fresh RED for behavior already corrected by that rewrite. This proposal's settings and observation plan require approval before execution.
+Qualify the integrated implementation without rewriting its accepted history. Do not restore the older generator to manufacture a fresh RED for behavior already corrected by that rewrite.
 
-This is qualification of the `libslic3r` rewrite boundary below. It introduces neither a fill algorithm nor an Ares-owned pipeline. No production change is proposed. A new mismatch requires source localization and a separately reviewed RED/fix boundary.
+This is qualification of the `libslic3r` rewrite boundary below. It introduces neither a fill algorithm nor an Ares-owned pipeline. No production change is proposed. A new mismatch requires source localization and a separate RED/fix boundary.
 
 ## Source contract
 
@@ -54,18 +54,18 @@ The existing ordinary centered witness supplies the uncombined control. Reuse th
 
 ## Qualification sequence and evidence
 
-1. After approval, run Native-first admission for these six candidates. Retain effective settings, the positioned input, successful official command/status receipts and complete output. Native failure, an empty target role or public API rejection disqualifies that candidate. Do not relabel it as a geometry RED.
+1. Run Native-first admission for these six candidates. Retain effective settings, the positioned input, successful official command status and complete output. Native failure, an empty target role or public API rejection disqualifies that candidate. Do not relabel it as a geometry RED.
 2. Obtain valid typed Native entry observations for physical height, spacing, density, multiline and thickness count. Bind any diagnostic Native build to the official stream by generator-only equality before using its internal observations. Capture a cover-transition witness for each cover case. An optimized-out value or guessed layout cannot qualify a branch.
 3. Reconcile those observations with `Surface::thickness`, `thickness_layers`, both `makeGrid` Z arguments and the corresponding Rust handoff. Preserve scalar types and source arithmetic. Do not add committed instrumentation or a public geometry API.
-4. Add the admitted cases through the existing public plater geometry harness. Extend its test artifacts only as needed to retain the case-specific height/count/transition evidence. Keep the approved ordered lexical motion/mode oracle unchanged, including extrusion amounts. No coordinate normalization, numerical tolerance, sorting or selected-layer-only comparison is allowed.
-5. Compare on the approved integrated prerequisite. If the cases already pass, close this as tests-and-documentation qualification. Do not manufacture RED/GREEN history or add a speculative product fix. A genuine new mismatch stops at its first source-owned operation for a separate review.
+4. Add the admitted cases through the existing public plater geometry harness. Extend its test artifacts only as needed to retain the case-specific height/count/transition evidence. Keep the existing ordered lexical motion/mode oracle unchanged, including extrusion amounts. No coordinate normalization, numerical tolerance, sorting or selected-layer-only comparison is allowed.
+5. Compare on the integrated prerequisite. If the cases already pass, close this as tests-and-documentation qualification. Do not manufacture RED/GREEN history or add a speculative product fix. A genuine new mismatch stops at its first source-owned operation for a separate slice.
 
 ## Exit criteria
 
 - All six admitted public witnesses match complete ordered geometry, with active branch evidence. Report selected, filtered, rejected and unqualified cases separately. Do not claim six qualified cases if any activation proof is missing.
-- The original seven geometry witnesses stay passing. Freeze the relevant honeycomb/fill inventory on the approved execution revision and require zero PASS-to-FAIL transitions. Preserve known Native ironing crashes as baseline classifications.
+- The original seven geometry witnesses stay passing. Freeze the relevant honeycomb/fill inventory on the execution revision and require zero PASS-to-FAIL transitions. Preserve known Native ironing crashes as baseline classifications.
 - Rerun the original strict case on that execution revision. Report first strict and first non-M73 differences, including feedrates, without changing its assertion. Geometry qualification is not full-stream parity.
-- Retain complete streams, input/settings hashes, typed observations, command/status receipts and repeatable verification scripts outside the repository.
+- Retain complete streams, input/settings hashes, typed observations, command/status records and repeatable verification scripts outside the repository.
 - Use nextest for Rust tests, formatting and strict workspace/all-target Clippy. Build `ares-core` and `ares-wasm` for `wasm32-unknown-unknown`. Changed files remain at most 400 lines without new suppressions.
 
 ## Deferred boundaries

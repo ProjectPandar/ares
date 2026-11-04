@@ -1,9 +1,5 @@
 # SPEC: machine print-acceleration cache ties-to-even rounding
 
-Base: `90d8d566796fe2b07f0568126d876bfdd2fc0240`.
-The coordinator authorized docs SPEC followed by public RED, with one combined
-review request and a hold before GREEN. No FULL run is authorized.
-
 ## Upstream boundary and architectural constraints
 
 `OrcaSlicer/src/libslic3r/GCodeWriter.cpp:38-41::apply_print_config` converts the
@@ -21,7 +17,7 @@ cache conversions currently call `rounded_acceleration`, which uses
 is a temporary compatibility shell for the cited upstream writer cache, not an
 independently designed acceleration pipeline.
 
-After RED review, change only those three conversions to `round_ties_even`,
+Change only those three conversions to `round_ties_even`,
 keeping their current u32 cache type, flavor admission, positive-limit filtering
 and minimum. Do not create a shared lrint helper, refactor the existing jerk
 conversion from `0bb7523bf`, or change the generic `rounded_acceleration` helper.
@@ -29,11 +25,11 @@ The travel cache uses upstream `std::round` and must remain unchanged. Preserve
 process/object rounding, raw machine-envelope output, cache suppression and
 emitter control flow.
 
-Deferred: processor limits and time estimates, W1 auto_lift/M73, W3 tokenizer,
-fan and zero-E, and W6 value.rs/coInts. No changes to those owned files, masks,
+Deferred: processor limits and time estimates, auto_lift/M73, the tokenizer,
+fan and zero-E, and value.rs/coInts. No changes to those files, masks,
 processor compensation, new abstractions or unrelated numeric validation.
 The three-cache source boundary includes Klipper X/Y conversion, but this RED
-uses the approved common extruding-cache witness, not additional axis cases.
+uses the common extruding-cache witness, not additional axis cases.
 
 ## Saved project and Native witness
 
@@ -65,16 +61,13 @@ cache correction, report it rather than expanding this slice or hiding it.
 The initial raw machine-envelope command is not the writer's rounded body cache
 and remains unchanged.
 
-Discovery evidence is in
-`${EVIDENCE_ROOT}/w4-machine-acceleration-cache-rounding/writer-active/`.
 Six fresh Native slices across the three active cases replay identically; all
-Native and CLI exits are zero. Discovery is not public API, seeded, RED or FULL
-qualification. Earlier inactive-cache nulls and a Native-rejected MakerWare
-probe are disclosed in the proposal and are not added to this test slice.
+Native and CLI exits are zero. Earlier inactive-cache nulls and a Native-rejected
+MakerWare probe are not added to this test slice.
 
 ## RED seam and failure modes, written before implementation
 
-Freeze the three approved archives. Use direct calls to the existing
+Freeze the three archives. Use direct calls to the existing
 `native_stream_case` public Native/API/CLI seam. Fresh Native replay must qualify
 first. A Native callback reads the saved cap and initial-layer request from the
 input and checks the first body M204 S field against the upstream ties-even
@@ -86,8 +79,8 @@ Compare complete Native/API/CLI output in official and seeded modes, retaining
 M73, headers, configuration and footers with only the existing generator-line
 normalization. Require raw API/CLI equality. Commit no Native reference outputs.
 Expected RED: the target fails at the writer command; both controls pass; all
-fresh Native replays and input-derived callbacks qualify. Send a combined SPEC
-and RED review request and hold before production changes.
+fresh Native replays and input-derived callbacks qualify. Commit RED before
+production changes.
 
 Failure modes: even-half versus odd-half conversion; silently inactive body
 cache; changing generic process or travel rounding; confusing raw envelope data
@@ -95,8 +88,8 @@ with the writer cache; changing flavor/minimum admission; and masking M73
 movement. The controls and Native callbacks establish reachability and source
 semantics independently of the Ares implementation.
 
-After RED review: the minimal three-conversion GREEN only, with RED tests and
-inputs unchanged. CPU17, PIN17, one build job and one parity thread; fmt,
+GREEN: the minimal three-conversion change only, with RED tests and
+inputs unchanged; fmt,
 workspace all-target clippy, and the same three cases in official then seeded
 mode. Preserve normal group registration, root registries and the 400-line Rust
-file limit. Submit a GREEN review request and hold. No FULL, merge or push.
+file limit.

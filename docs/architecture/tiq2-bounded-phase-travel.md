@@ -69,12 +69,10 @@ on both base and candidate, with no skipped cases. After J1's Top-input
 change, affected Type2 seeded groups were rerun and pass6/6. Latest workspace
 passes8100/8100 with9 skipped; no tests were deleted. Clippy workspace/all-targets/
 all-features-Dwarnings, fmt and wasm32 core+adapter pass. Checks use separate
-targets, fresh caches, explicit Native producer/resources and16 threads.
+targets, fresh caches and explicit Native producer/resources.
 
 Official full controls have the same failure names on base and candidate.
-The coordinator's2026-10-08 16:03 wrapper correction removed forcedCPU1
-contention. Earlier Native timeouts are INCONCLUSIVE. A paired recheck with
-the corrected wrapper has no timeouts: change_filament_flush_blocks passes
+A paired recheck has no timeouts: change_filament_flush_blocks passes
 on both; narrowed_x2d_whole_file and bridge_over_infill_multi_filament_x2d
 fail on both, with no candidate-only names. This establishes bounded
 no-new-failure evidence, not stock or complete TiQ2 parity.

@@ -1,10 +1,8 @@
 # ARD: random seam position arithmetic exposed by inner-wall scarf
 
-Status: approved SPEC (68037322e, amendment96a4bdec2: retain last-edge
-guard). Pre-window preparation authorized on e81afae89 after the approved
-stagger chain. Historical branch w5-random-scarf-spec was based on queued
-6c3038b32 (main a5eb0f035); the preparation stack carries its unchanged
-production scope as bf8834744. No FULL is authorized.
+Status: Accepted SPEC (68037322e, amendment96a4bdec2: retain last-edge
+guard). Follows the stagger chain; originally based on 6c3038b32 (main
+a5eb0f035), carried with unchanged production scope as bf8834744.
 
 ## Native-first, normally reachable witness
 
@@ -36,25 +34,17 @@ Exported control and positive differ in exactly ONE ZIP payload,
 
   Raw line 20461 (20460 after removing the generator line).
 
-Evidence root: `/tmp/w5-real-combos/`:
-`scarf-{inner,ctl}-nowipe/exported.3mf`, `export.log`, `native.log`,
-`seeded.log`, Native/Ares complete G-code;
-`scarf-discovery-result.json` records fixture/ZIP/G-code hashes,
-retained settings and exact differences. Recheck with the existing
-Python executable:
-
-    taskset -c 7,8 /nix/store/60m4rxhg2fldqaak400c0lry96ijrzqn-python3-3.13.13/bin/python3 /tmp/w5-real-combos/check-scarf.py
+Discovery recorded fixture/ZIP/G-code hashes, retained settings and exact
+differences.
 
 No repository fixture/test or production change is part of this SPEC.
 
 ## Read-only GDB trace: earliest observed unequal intermediate
 
-CPU affinity was 7-8 throughout. Native is seed-replay binary
+Native is seed-replay binary
 `1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-...` with its matching DWARF debug
-output; Ares is `/tmp/w5-targets/rs-red1/debug/ares`, commit
+output; Ares is the RED debug build at commit
 `6c3038b32`. No inferior function calls or memory/register writes.
-Scripts/logs/JSONL captures are `scarf-{native,ares}-{target,random,...}`
-under the evidence root.
 
 The investigation followed writer delta backwards through scarf segment
 geometry to random placement. For the target layer, matched by seed
@@ -151,6 +141,5 @@ mismatches; those remain deferred and are not assumed to share a cause.
   and writer delta. Both complete-output tests must pass. These are
   requirements to verify, NOT a claim that the proposed fix is already
   sufficient; if any mismatch remains, stop and trace before expanding.
-- No FULL during discovery/SPEC. After implementation and at the assigned
-  merge slot, rebase to then-current main and obtain exact-hash official
-  and seeded FULL plus rustfmt, clippy and wasm32 evidence.
+- After implementation, obtain exact-hash official and seeded full-suite
+  plus rustfmt, clippy and wasm32 evidence on current main.

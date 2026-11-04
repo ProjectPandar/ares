@@ -1,9 +1,8 @@
 # Stage2: source-owned region-override object ranges
 
-Status: proposed; coordinator spec review required before implementation.
-Baseline b1f65d40dfd205c2ec354f331e2a4fcdee05990c includes approved/merged
-Stage1 explicit height-only ranges. **This new assignment calls region ranges
-Stage2; it does not authorize the previously proposed painted-profile Stage2.**
+Status: proposed. Builds on merged Stage1 explicit height-only ranges.
+**This spec calls region ranges Stage2; it does not cover the previously
+proposed painted-profile Stage2.**
 Architecture: [range-region ARD](../../architecture/2026-10-08-range-dependent-print-region-boundary.md).
 This is a libslic3r Rust rewrite, not an Ares-designed segmentation feature.
 
@@ -38,7 +37,7 @@ region table, PostRegionPrintObject and downstream flows unless the source port
 requires the associated range lookup. Do not introduce a parallel region registry
 or resolve options from scratch while emitting G-code.
 
-## Included implementation slice (after approval)
+## Included implementation slice
 
 1. Preserve source LayerRanges partition/precedence and existing Stage1
    height-only mapping. Supply source range index/config to candidate resolution;
@@ -62,7 +61,7 @@ or resolve options from scratch while emitting G-code.
    complex-layer path, preserving negative volumes, modifier parent chains and
    same-region merging. Allocate each region's layer array once for object-wide
    layer count; inactive interval layers are empty, not absent or renumbered.
-6. Remove raw range rejection for approved explicit-height + region-override
+6. Remove raw range rejection for explicit-height + region-override
    collections once Native RED→GREEN proves the entire path. Preserve mixed/
    missing height UB boundary, unrelated centering/shared-mesh gates, painted
    profile and activeZAA rejection. Do not enable unsupported option families
@@ -99,7 +98,7 @@ oracles, and do not change their existing Rust rejection in this stage.
 
 ## TDD plan and independent RED (not yet run)
 
-Approved public seam: bytes→ares_core::slice_project_plate_validated→full G-code.
+Public seam: bytes→ares_core::slice_project_plate_validated→full G-code.
 Native CLI slice of the identical archive is independent oracle; config export,
 region/layer diagnostics are supplemental artifacts, never substitutes for bytes.
 Failure modes to cover before the relevant production change:
@@ -108,7 +107,7 @@ before volume/material; duplicate configs receiving new IDs; wrong first/slice_z
 boundary; ghost modifier bbox; wrong complex-layer range; region flow/tool choice
 not following selected configuration; loss of empty layers/stable identities.
 
-1. After spec approval and no browser pause, derive from a known Native-admitted
+1. Derive from a known Native-admitted
    tall single-model FDM archive; preserve every existing member except added
    range XML. Constant nominal/first height, explicit legal layer_height on range,
    interior wall_loops override clearly different from default. Use enough layers
@@ -116,7 +115,7 @@ not following selected configuration; loss of empty layers/stable identities.
    rather than the short Stage1 seam fixture so wall-loop changes are observable.
 2. Existing seeded2.4.2 Native must exit0 and emit full stream; prove loaded range
    association and changed wall-loop paths inside but not outside. Bind input,
-   actual argv, executable/resources/source/seed/CPU, command/status and complete
+   actual argv, executable/resources/source/seed, command/status and complete
    Native bytes. Current Ares must fail its existing range capability boundary
    on the **same bytes**. Commit failing full-output E2E before production edits.
 3. Minimal source GREEN for primary, then new independent Native witnesses and
@@ -128,7 +127,7 @@ not following selected configuration; loss of empty layers/stable identities.
    witness before changing that path; no assumption based on scalar parity.
 4. Every successful fixture compares whole Native/Ares bytes with only the whole
    generated-by line normalized. Retain all inputs/statuses/raw streams/hash
-   receipts. Native rejection, crash or timeout is disclosed non-PASS, not
+   records. Native rejection, crash or timeout is disclosed non-PASS, not
    fixture filtering, repaired input, retry-to-PASS or Rust crash emulation.
 5. Replace obsolete unsupported assertions before code. Prefer integration/E2E
    over new internal unit tests; any unavoidable isolated test first documents
@@ -139,20 +138,18 @@ not following selected configuration; loss of empty layers/stable identities.
 Stage1 four ranged full-output fixtures, mixed control and seam-height control
 remain GREEN; no-range baseline outputs unchanged. New legal region-range cases
 match complete bytes across boundaries and modifiers. Fresh same-round exact
-main base/candidate full seeded plus targeted cases, workspace nextest16 threads,
-clippy -D warnings, cargo fmt, browserWASM compile, and coordinator-required
-same-round official or explicitly approved carry-forward. Base absent new tests
+main base/candidate full seeded plus targeted cases, workspace nextest,
+clippy -D warnings, cargo fmt, browserWASM compile, and same-round official
+comparison. Base absent new tests
 is disclosed, not counted coverage. New Ares-only failures block completion.
 Report complete common raw-byte preservation and each legitimate changed/new
 stream, source owners, first differences and residual non-PASS outcomes.
-Coordinator is sole reviewer; approval before rebase and ordinary ff-only push.
 
-One heavy job per worker, independent targets/caches,16 threads/buildjobs8;
-respect browser pauses. Debug only existing Native with
+Use independent targets/caches. Debug only existing Native with
 `nix shell nixpkgs#gdb -c gdb ...`, never rebuild OrcaSlicer for diagnosis.
 
 ## Current evidence
 
 Read-only source investigation; no Native probes, fixture/test or production
 Rust changes. PrintApply.cpp and PrintObjectSlice.cpp match the admitted2.4.2
-seeded source by SHA256 (ARD). Stage1 is merged; proposed Stage2 awaits review.
+seeded source by SHA256 (ARD). Stage1 is merged; Stage2 is proposed.

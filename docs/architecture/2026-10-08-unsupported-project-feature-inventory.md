@@ -2,11 +2,11 @@
 
 ## 审计边界与不可协商决策
 
-- Ares 快照：`b1f65d40dfd205c2ec354f331e2a4fcdee05990c`（HEAD = origin/main；初始盘点 `de57be8b0` 后，已 fast-forward 并复核 worker3 height-only range 更新）。上游：`8500fcdccaa10b5099ac20d252af3a7c560046f1`，`OrcaSlicer` 工作树干净。下文行号绑定这些快照，不代表后续 main。
-- 仅分析 `crates/ares-core/src`；不修改 Rust、fixture、断言或其它 worker 的代码，不运行 Native、编译或重型矩阵。本记录不是 spec 批准、RED、GREEN 或运行时 reachability 证明。
+- Ares 快照：`b1f65d40dfd205c2ec354f331e2a4fcdee05990c`。上游：`8500fcdccaa10b5099ac20d252af3a7c560046f1`，`OrcaSlicer` 工作树干净。下文行号绑定这些快照，不代表后续 main。
+- 仅分析 `crates/ares-core/src`；不修改 Rust、fixture 或断言，不运行 Native、编译或重型矩阵。本记录不是 spec、RED、GREEN 或运行时 reachability 证明。
 - 排除错误枚举 / Display、测试引用及转发 helper 的重复计数：**17 个生产错误构造位置，展开 helper 后为 31 个拒绝 / 错误映射位置**。这不是 31 个尚未实现的功能：包含不可达枚举分支、内部一致性检查和几何库错误映射。
 - 后续只能移植明确的 `libslic3r` 边界；不得删守卫后直接宣称支持，不得 classic fallback、重新设计 Ares pipeline 或把无效配置域当正常功能补齐。
-- worker5 `by_object`、worker3 layer ranges、worker2 `tiq2`、worker6 role filament 保留所有权；相关项只记账、不立新实现任务。尤其不以 iQ TiQ2 preset 作为本轮下一片的 fixture。
+- `by_object`、layer ranges、`tiq2`、role filament 属于其它切片；相关项只记账、不立新实现任务。尤其不以 iQ TiQ2 preset 作为本轮下一片的 fixture。
 
 ### 证据等级 / 工作量
 
@@ -14,7 +14,7 @@
 
 ## 用户影响排序
 
-1. **优先提审：classic counterbore `partiallybridge`**。存在 13 份明确 stock process 文件；任何带 hole 的 perimeter surface 都被当前前置守卫拦住，范围甚至比上游实际需要处理的 unsupported bridge 更宽。适合先冻结合法 stock 配置和两层阶梯孔几何，再提交独立 spec / RED。
+1. **优先：classic counterbore `partiallybridge`**。存在 13 份明确 stock process 文件；任何带 hole 的 perimeter surface 都被当前前置守卫拦住，范围甚至比上游实际需要处理的 unsupported bridge 更宽。适合先冻结合法 stock 配置和两层阶梯孔几何，再提交独立 spec / RED。
 2. **常见模型复用 / modifier / 可变层高**：共享 mesh、不同实例变换、本地 wall/top/bottom modifier 及层高 profile 的用户影响大；其中非层高/mixed layer ranges、role filament、by-object 邻接域由既有 owner 继续推进；显式 height-only layer ranges 已在 b1f65d40d 支持，不再计作缺口。非流形 STL 也常见，但不能把所有非流形输入都假定为 Native 可切；需先定修复 / edge indexing 边界。
 3. **Arachne 用户功能**：fuzzy skin（两道守卫）和 alternate extra wall；前者 M/L，后者较小 S/M。stock 显式值均未启用，但常见 UI 操作可触发。
 4. **条件式 infill / 配置兼容风险**：旋转 metalanguage、极小 anchor_max、特殊 top/solid pattern、interface shells、per-object skirt、Z contouring。另发现 pinned upstream 将 legacy `zig-zag` 迁移为 `rectilinear`，Ares 明确保留 ZigZag；应单列配置加载诊断，而不是称为缺少 concentric ironing。它可能影响 stock 组合，尚未运行证明，不作为本次已确认回归。
@@ -28,18 +28,18 @@
 |---|---|---|---|---|---|
 | 01 P1 | `project_slice/perimeters/classic/preflight.rs:111` | `counterbore_hole_bridging != None`，且任一 perimeter surface 有 hole；无需先证明 hole 下方缺支撑 | `PerimeterGenerator.cpp:1728` `process_no_bridge`，classic 调用 `:1214`；filled 还涉及 `PrintObject.cpp:1581` | WEMAKE3D 13 个 process 显式 `partiallybridge`；带孔功能件常见；无孔控制不触发 | L；先切 Bridges 模式 |
 | 02 P1 | `project_slice/raw_intersections.rs:323` | 任一非空 volume `has_mesh_shared()`，或重复 `(source_model_path, volume.id)` | `Model.hpp:864` `get_mesh_shared_ptr`、`Model.cpp:1708` `center_around_origin`、`PrintObject.cpp:85–130` 构造 / center offset | 非打印机选项；导入共享 mesh / 克隆模型可触发 | L；by-object 邻接协调 |
-| 03 P1/R | `project_slice/raw_intersections.rs:295` | 同一 resolved object 的 `print_objects` 数量不是 1 | `PrintApply.cpp:133–148` `PrintObjectTrafoAndInstances` 变换分组；`PrintObject.cpp:85` 构造 | 多实例不同旋转/缩放，而非单纯 XY 平移；常见模型工作流 | L；worker5 邻接，不立项 |
+| 03 P1/R | `project_slice/raw_intersections.rs:295` | 同一 resolved object 的 `print_objects` 数量不是 1 | `PrintApply.cpp:133–148` `PrintObjectTrafoAndInstances` 变换分组；`PrintObject.cpp:85` 构造 | 多实例不同旋转/缩放，而非单纯 XY 平移；常见模型工作流 | L；by_object 邻接，不立项 |
 | 04 P1/R | `project_slice/raw_intersections.rs:308` | 唯一 print object 的 fixed-XY transform 不等于第一个 source instance 的去 XY 平移 transform | 同上；`PrintObject.cpp:110–130` center offset / instance shift | 同一模型首实例与保留的可打印分组不一致时；不是任何普通平移都拒绝 | L；与 03 同片 |
-| 05 P1/R | `project/effective_config/candidates.rs:154` | **ParameterModifier volume** 携带受限 override；不是全局 process 配置。检测顺序 wall_loops、top_shell_layers、bottom_shell_layers、sparse_infill_filament_id、internal_solid_filament_id、top_surface_filament_id、bottom_surface_filament_id、outer_wall_filament_id、inner_wall_filament_id | `PrintApply.cpp:757–772,1032–1088` modifier / parent region；`PrintObject` / `LayerRegion` region 切分 | modifier 增强局部结构常见；九个 key 共用一处错误，首个 key 遮住后续项 | wall/top/bottom L；六个 filament key 留 worker6 |
-| 06 P1/R | `project_slice/capabilities.rs:13` | `has_painted_layer_height_profile` | `PrintObject.cpp:3805` `update_layer_height_profile`；`Slicing.cpp:807` `generate_object_layers` | 非 stock printer 字段；用户可变层高绘制常见 | L；worker3 层高邻接 |
-| 07 D/R | `project_slice/capabilities.rs:26` | 同一 resolved source object 的 ranges **同时含有**带 layer_height 与不带 layer_height 的条目，返回 `layer_config_ranges` | `Slicing.cpp:234` `layer_height_profile_from_ranges` 的层高读取 | **纯显式 height-only ranges 已支持**；mixed ranges仍保留缺失 option / 无可移植 oracle 边界，不再称一般层高缺口 | 先诊断；worker3，禁止 UB 仿真 |
-| 08 P1/R | `project_slice/raw_intersections.rs:284` | range 缺少 layer_height **或**带非默认 region overrides；纯显式 height-only ranges 放行 | `PrintApply.cpp` range→region；`Slicing.cpp:234` 层高部分 | 剩余非层高 region range / mixed ranges；不再把所有非空 range都列为失败 | L；worker3 |
+| 05 P1/R | `project/effective_config/candidates.rs:154` | **ParameterModifier volume** 携带受限 override；不是全局 process 配置。检测顺序 wall_loops、top_shell_layers、bottom_shell_layers、sparse_infill_filament_id、internal_solid_filament_id、top_surface_filament_id、bottom_surface_filament_id、outer_wall_filament_id、inner_wall_filament_id | `PrintApply.cpp:757–772,1032–1088` modifier / parent region；`PrintObject` / `LayerRegion` region 切分 | modifier 增强局部结构常见；九个 key 共用一处错误，首个 key 遮住后续项 | wall/top/bottom L；六个 filament key 留 role filament 切片 |
+| 06 P1/R | `project_slice/capabilities.rs:13` | `has_painted_layer_height_profile` | `PrintObject.cpp:3805` `update_layer_height_profile`；`Slicing.cpp:807` `generate_object_layers` | 非 stock printer 字段；用户可变层高绘制常见 | L；layer ranges 层高邻接 |
+| 07 D/R | `project_slice/capabilities.rs:26` | 同一 resolved source object 的 ranges **同时含有**带 layer_height 与不带 layer_height 的条目，返回 `layer_config_ranges` | `Slicing.cpp:234` `layer_height_profile_from_ranges` 的层高读取 | **纯显式 height-only ranges 已支持**；mixed ranges仍保留缺失 option / 无可移植 oracle 边界，不再称一般层高缺口 | 先诊断；禁止 UB 仿真 |
+| 08 P1/R | `project_slice/raw_intersections.rs:284` | range 缺少 layer_height **或**带非默认 region overrides；纯显式 height-only ranges 放行 | `PrintApply.cpp` range→region；`Slicing.cpp:234` 层高部分 | 剩余非层高 region range / mixed ranges；不再把所有非空 range都列为失败 | L |
 | 09 P1/D | `mesh_slicer/topology.rs:121` | 同一无向 vertex-index edge 使用数 >2 | `TriangleMesh.cpp` `TriangleMesh::repair`；`TriangleMeshSlicer.cpp` mesh edge / facet slicing | 打印机无关；非流形/重复面模型常见，但 Native 是否可修复需输入级证明 | XL；修复与 slicer topology 分片 |
 | 10 P2 | `project_slice/perimeters/arachne/config.rs:65` | Arachne record 的 fuzzy config 对 `(layer_id, inset=0, contour=true)` `should_fuzzify` | `Feature/FuzzySkin/FuzzySkin.cpp:476,685` `should_fuzzify` / Arachne `apply_fuzzy_skin`；`PerimeterGenerator.cpp:2093` `process_arachne` | 显式 stock skin 未启用；Arachne + 表面纹理 UI 操作触发 | M/L；与 11 同片 |
 | 11 P2 | `project_slice/perimeters/arachne/traverse.rs:109` | 非空 junction extrusion 的实际 layer/inset/contour 被 `should_fuzzify` 命中；open path 视为 contour | 同上 Arachne variable-width junction fuzzifier；`PerimeterGenerator.cpp:387` 调用 | 不能只去掉 10；实际 path/inset 判定也要移植，classic 已有 fuzzifier不代表此处完成 | M/L |
 | 12 P2 | `project_slice/perimeters/arachne/config.rs:69` | `alternate_extra_wall=true`、奇数 layer、sparse density >0 | `PerimeterGenerator.cpp:2131–2133` `process_arachne` loop_number；上游还判断 `!m_spiral_vase` | 335 个显式 stock 字段均为 0；用户 strength 设置可触发；classic 已支持 | S/M |
 | 13 P2 | `project_slice/prepare_infill/surface_type_detection/preflight.rs:16` | `interface_shells=true` 且一个 layer candidate 的 model_parts 数 >1 | `PrintObject.cpp:1530–1721` `detect_surfaces_type` 的 per-region current/upper/lower surfaces | 684 份 stock 显式 0；多材料接触面增强设置可触发；单 part 不被此守卫拒绝 | L；filament owner 协调 |
-| 14 P2 | `project_slice/gcode_emit/skirt.rs:69` | skirt layer_limit >0、loops >0、非 Combined；PerObject 仅在 resolved objects=1 被接受 | `Print.cpp:2646` `_make_skirt`，`:2784–2977` 分组 / per-object；GCode skirt 调度 | 58 份显式 stock 均 combined；多对象 per-object skirt 常用但非默认 | M/L；明确只含 by-layer，避 worker5 |
+| 14 P2 | `project_slice/gcode_emit/skirt.rs:69` | skirt layer_limit >0、loops >0、非 Combined；PerObject 仅在 resolved objects=1 被接受 | `Print.cpp:2646` `_make_skirt`，`:2784–2977` 分组 / per-object；GCode skirt 调度 | 58 份显式 stock 均 combined；多对象 per-object skirt 常用但非默认 | M/L；明确只含 by-layer，避 by_object |
 | 15 P2/D | `project_slice/fill_entities/ironing.rs:52` | ironing enabled、存在 ironing areas，pattern 既非 Concentric 也非 Rectilinear；在 spacing 检查之前拒绝 | `Fill/Fill.cpp:1507,1624–1640` `Layer::make_ironing` / `Fill::new_from_type`；`PrintConfig.cpp:8201–8207` legacy migration | **concentric 已支持**。217 stock 显式 legacy zig-zag，5 rectilinear，4 concentric；legacy alias + 开启 ironing 是需证明的风险，不能把原始字符串当 Native 最终 enum | 诊断 S；真正其它合法 filler M/L |
 | 16 P2/D | `project_slice/support_material/ironing.rs:74` | 有待 ironing support-contact polygons，并在上层裁剪后处理 region，pattern 非 Rectilinear / Concentric | `Support/SupportCommon.cpp:1879` contact ironing filler；同上 legacy migration | **concentric 已支持**；stock 两处 zig-zag、五处 rectilinear；还需启用 support ironing / contact 几何 | 诊断 S；新增 filler M/L |
 | 17 P2 | `project_slice/group_fills/params/projection/rotation.rs:24` | sparse/solid template 非空，不能解析为逗号/空白分隔的 f64 列表 | `Fill/Fill.cpp:52` `calculate_infill_rotation_angle`，稀疏/实心调用 `:935–941,1134–1136` | stock 显式 template 都空；用户相对旋转、层/Z范围、重复、一次性 metalanguage 可触发；不是所有非空模板都失败 | M/L；与 23/24 同片 |
@@ -64,7 +64,7 @@
 
 ## Stock 静态证据与可复查方式
 
-扫描上游 `resources/profiles/**/*.json` 的顶层显式字段；不合并 inheritance、不执行切片、不对 malformed 文件计成功。原始静态结果保存在本机 `${TMP_ROOT}/ares-unsupported-inventory/profile-explicit-values.json`；以下将影响排序所需证据内嵌，文档不依赖临时文件存在。
+扫描上游 `resources/profiles/**/*.json` 的顶层显式字段；不合并 inheritance、不执行切片、不对 malformed 文件计成功。以下将影响排序所需证据内嵌，文档不依赖临时文件存在。
 
 - `counterbore_hole_bridging`: none 306，partiallybridge 13；例 `WEMAKE3D/process/0.08mm Extra Fine @WEMAKE3D PhoenixProV1 0.3mm nozzle.json`。
 - `alternate_extra_wall`: 0 共335；`fuzzy_skin`: none 220、disabled_fuzzy 5；`interface_shells`: 0 共684；`zaa_enabled`: 无显式字段。未启用不是已解析所有继承配置的“绝不触发”。
@@ -94,7 +94,7 @@ print(counts)
 
 完整来源定位：`git grep -n UnsupportedProjectFeature <快照> -- crates/ares-core/src`，再展开生产 helper调用，排除 tests 和 `lib.rs:264,287`。表中 upstream实际行号来自 pinned tree，不机械复制 Rust 内的历史行号注释。
 
-## 推荐下一片：classic counterbore partiallybridge（提审草案，非实现授权）
+## 推荐下一片：classic counterbore partiallybridge（草案）
 
 ### Source-first / destination
 
@@ -106,11 +106,11 @@ print(counts)
 ### Spec / RED 必须先回答
 
 1. 冻结WEMAKE3D stock process的完整继承/打印机兼容解析和已应用配置，证明为classic + Bridges；静态13份文件不是运行时证据。
-2. 冻结有lower-layer支撑且有unsupported孔边界的阶梯孔3MF。Native正常切片、公有Ares API明确在此守卫拒绝；保存输入hash、配置、producer receipt、完整输出；不调整fixture以获得GREEN。
+2. 冻结有lower-layer支撑且有unsupported孔边界的阶梯孔3MF。Native正常切片、公有Ares API明确在此守卫拒绝；保存输入hash、配置、完整输出；不调整fixture以获得GREEN。
 3. 控制：同输入选None、无孔、全支撑直通孔、首层无lower_slices、多个islands；桥检测/安全offset边界在Native能验证后再定期望。不允许把hole本身当桥检测结果。
-4. Spec与独立RED批准后才GREEN；完整G-code只规范generated-by identity，保留movement/M73/stats/footer。运行协调遵守browser hold、每worker一个heavy、16threads、fresh Native缓存和共享300s deadline。
-5. 若stock继承选择并非classic，或Native不能得到预期行为，先更新提审证据/范围，不擅自接管Arachne或进行数值修补。备选小片是Arachne alternate extra wall，不是扩大counterbore范围。
+4. Spec与独立RED之后才GREEN；完整G-code只规范generated-by identity，保留movement/M73/stats/footer。
+5. 若stock继承选择并非classic，或Native不能得到预期行为，先更新证据/范围，不擅自接管Arachne或进行数值修补。备选小片是Arachne alternate extra wall，不是扩大counterbore范围。
 
 ### 退出标准
 
-原始RED变为公有API整文件parity；所有控制保留各自预先冻结的完整比较范围；审查确认source-cited行为与deferred守卫分离，无其它worker模块变更。行为改变后的matched base/candidate directed、seeded、official和约定Rust/WASM gates重新验证；已有官方失败只可报告同集合保留，不宣称全GREEN。本盘点未执行这些gate，也没有授权main push。
+原始RED变为公有API整文件parity；所有控制保留各自预先冻结的完整比较范围；确认source-cited行为与deferred守卫分离，无其它模块变更。行为改变后的matched base/candidate directed、seeded、official和约定Rust/WASM gates重新验证；已有官方失败只可报告同集合保留，不宣称全GREEN。本盘点未执行这些gate。

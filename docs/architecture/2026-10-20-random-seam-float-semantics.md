@@ -1,9 +1,8 @@
 # ARD: staggered seam interpolation f32 semantics
 
-Status: approved source boundary (original revised SPEC c3c30003d);
-pre-window preparation separately authorized on main e81afae89. The
+Status: Accepted source boundary (original revised SPEC c3c30003d). The
 historical diagnosis below used base a5eb0f035 and superseded the
-random-position hypothesis in 4cbbb68d0 / 26d895d98. No FULL is authorized.
+random-position hypothesis in 4cbbb68d0 / 26d895d98.
 
 ## Witness and falsified hypothesis
 
@@ -11,8 +10,7 @@ random-position hypothesis in 4cbbb68d0 / 26d895d98. No FULL is authorized.
 `seam_position: "random"`, `staggered_inner_seams: "1"`.
 RED `5b99cbf0c` fails against both official and seeded Native at line
 9865: `G1 X100.675 Y118.143 E.0392` versus Ares `E.03921`.
-API and bare CLI agree. Receipts:
-`/tmp/w5-rs-red1-{off,seed}-art/orca-runner-*/random-staggered/public/public-result.json`.
+API and bare CLI agree.
 
 The original attribution to random.rs's ratio-form random selection was
 falsified: replacing it with `edge.vector.normalized() * picked` did
@@ -20,14 +18,12 @@ NOT change the Ares output SHA or the failed comparison. That uncommitted
 trial was discarded. Identical printed XY does not establish a seam ULP
 difference; the previous SPEC's inference was unjustified.
 
-## Read-only GDB evidence (CPU 7-8)
+## Read-only GDB evidence
 
 Native: seed-replay `/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2`,
 matching debug output `bms1pq7n8cmzjc2zpgnjybzs1vrfz6rq-…-debug`.
-Ares: RED binary `/tmp/w5-targets/rs-red1/debug/ares`.
+Ares: the RED debug build.
 No inferior function calls, memory/register writes or behavior patches.
-Scripts and JSONL captures are under `/tmp/w5-x/random-*-trace.*`,
-`random-*-split.*`, and `random-*-stagger.*`.
 
 100 random selections matched by seed bits + start index, not thread
 arrival order. For the failing layer (slice_z 12.5, output Z12.6),
@@ -87,7 +83,7 @@ The current scaffold interpolates on integer coordinates using a f32
 ratio promoted to f64, then casts to i64. It omits the upstream
 unscale-to-f32 and rescale boundaries and changes arithmetic order.
 
-## Approved included behavior
+## Included behavior
 
 Port the cited interpolation exactly: unscale endpoints, cast each
 coordinate to f32, compute f32 vector distance and `(b-a)*depth/dist`
@@ -113,7 +109,7 @@ selection. Reuse existing helpers; no new normalization helper.
 Reuse the existing dual-Native RED test. Before declaring GREEN, show
 that the corrected staggered point matches Native and that the SAME
 whole-output API/CLI test passes in both modes. If not, stop and trace
-the next downstream boundary without speculative changes. Final merge
-requires current-main exact-hash official/seeded FULL, fmt, clippy and
+the next downstream boundary without speculative changes. Final acceptance
+requires current-main exact-hash official/seeded full-suite, fmt, clippy and
 wasm32 checks. This remains a source-cited upstream rewrite slice, not
 an Ares-owned seam or G-code design.

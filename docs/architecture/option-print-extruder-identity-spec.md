@@ -1,8 +1,6 @@
 # print_extruder_id: bounded process-variant identity spec
 
-Date: 2026-10-10. Status: proposed; coordination and approval required.
-Base: merged post_process tests/docs `f45b8194144615c5322361826554c31ffe2fffd5`.
-Offline audit only; no compile, Native probe, process execution or heavy gate.
+Status: Proposed.
 
 ## Source owner (not physical nozzle selection)
 
@@ -33,7 +31,7 @@ another composition caller. CLI process replacement/composition sites
 uses the same pair. Direct `--print-extruder-id` injection is not an oracle
 for this nocli option.
 
-## Rust destination and coordination fence
+## Rust destination and scope fence
 
 Existing typed `options/region_fields.rs` stores `OrcaInts([1])`; wire,
 registry and config export already retain the key. The actual materialization
@@ -45,17 +43,15 @@ upstream-compatibility shell, not a new Ares nozzle-routing design.
 `ares-cli/tests/orca_parity/option_coverage/print_extruder_identity.rs`, using
 public byte/CLI slicing plus complete Native output/config receipts. No
 new core API/helper, production state, or mapping service. Any proven source
-parity disagreement stops for a separately approved production scope.
+parity disagreement stops for a separate production scope.
 
-Worker3 owns `master_extruder_id` admission/physical tool selection. Freeze
+`master_extruder_id` admission/physical tool selection is out of scope. Freeze
 master ID, filament map, physical extruder map, printer ID/variant vectors,
 nozzle geometry and actual filament assignment across this slice. Do not
-edit worker3's fixtures, shared routing guards, tool-transition or used-layer
-selection. `project_variants/index.rs` is read-only unless owner grants a
-precise nonoverlapping process-ID boundary after runtime RED. Worker5's
-variant-miss and load-settings ownership also stays untouched. Obtain a
-coordinator ownership acknowledgement before starting tests or promoting
-any shared sweep/domain hook; offline audit itself changes none of them.
+edit master-extruder fixtures, shared routing guards, tool-transition or used-layer
+selection. `project_variants/index.rs` is read-only unless runtime RED proves
+a precise nonoverlapping process-ID boundary. Variant-miss and load-settings
+behavior also stays untouched.
 
 ## Included context-bound candidates
 
@@ -93,7 +89,7 @@ do not invent a demand that every ID variation must change extrusion.
 
 ## Deferred and evidence requirements
 
-Deferred: worker3 master admission, physical/printer/filament map semantics,
+Deferred: master admission, physical/printer/filament map semantics,
 GUI preset editing, generic process-preset replacement/inheritance, all
 unbounded integer/vector permutations, Windows/native installer variation,
 new CLI flag for nocli data, and active routing/geometry/G-code algorithm
@@ -113,5 +109,3 @@ producer identity/argv/channels/status/config view/input ZIP payload SHA and
 whole G-code. Required missing Native is named FAIL; optional absence visibly
 SKIP. No golden, parser/comparator relaxation, extra output normalization,
 private defensive validation, fallback or new cache. Keep files <=400 LOC.
-After approval, probes obey no-full/load<60/two-thread windows and yield to
-full START; engineering/full gates follow owner queue and current tree.

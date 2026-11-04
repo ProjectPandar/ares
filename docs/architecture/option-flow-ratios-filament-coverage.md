@@ -1,10 +1,10 @@
 # Bounded flow-ratio and filament-diameter option coverage
 
-Status: all four bounded contracts verified in separate RED→GREEN slices.
+All four bounded contracts are verified in separate RED→GREEN slices.
 Latest full observation
 is [the current option audit](2026-10-09-option-full-current-audit.md): these
 four domains are INCOMPLETE. This proposal does not claim a fresh 650-domain
-execution. G2 belongs to worker3; APA bridge options belong to worker1.
+execution. G2 and APA bridge options are separate slices.
 
 ## Upstream boundary
 
@@ -46,7 +46,7 @@ Existing core counterparts remain unchanged:
 `extrusions/options/accessors.rs` filament-area and role multipliers,
 `extrusions/options/hardware.rs`, and existing options validation. No production
 API, cache recipe, comparison normalization, routing, or general context
-framework is authorized. A real Ares/Native difference is retained and reported
+framework is introduced. A real Ares/Native difference is retained and reported
 before classification promotion or any production work.
 
 ## Included finite contracts
@@ -92,7 +92,7 @@ Two vertical sub-slices: bridge ratios, then filament ratio/diameter. Each has
 a separately committed runtime Native-backed RED before harness GREEN. RED
 executes all requested successful full-byte comparisons and activation checks,
 then fails the existing INCOMPLETE classification expectation. A byte failure
-comes first and remains a real RED requiring coordinator review.
+comes first and remains a real RED reported explicitly.
 
 GREEN promotes only the proven keys and records the bounded context/deferred
 scope in summary metadata. Selected-key sweeps must execute every authored
@@ -115,8 +115,8 @@ Required seeded/official cold and hot directed tests, rejection witnesses and
 unfiltered selected sweeps; fresh base/candidate seeded and official controls
 with common Ares raw hashes and all status changes listed. Default environment
 workspace, strict clippy, fmt and wasm check. Native dependencies use shared
-native_environment: optional visible SKIPPED, required FAIL. All Native output
-and receipts remain outside the repository. No Native rebuilds.
+native_environment: optional visible SKIPPED, required FAIL. No Native output is
+committed. No Native rebuilds.
 
 Deferred: nullable/inherited filament entries, multiple filaments/nozzles,
 SEMM/tool ordering, object/region/range overrides, pellet coefficient conversion,
@@ -133,8 +133,7 @@ Native complete output, witnesses positive extrusion in the intended role,
 then fails the four INCOMPLETE classification assertions. Its fifth test
 passes the two zero-value rejection witnesses: Native Export returns -18
 (Unix status 238), matching both public Ares validation and validated slicing.
-Earlier test-observer failures are retained outside the repository and are not
-claimed as RED evidence. GREEN `b8da6c998` promotes only these two bounded plans;
+Earlier test-observer failures are not claimed as RED evidence. GREEN `b8da6c998` promotes only these two bounded plans;
 no production code, Native artifacts, or comparison normalization changes.
 
 Metadata expectations add `provably_legal=true`, `omission=None`, and exact
@@ -159,18 +158,11 @@ In both controls the only existing-test change is
 The five added tests PASS: external bridge thick, external bridge thin,
 internal bridge thick, internal bridge thin, and zero bridge-ratio rejection.
 There are no candidate-only failures, common Native generator-normalized SHA
-changes, or common manifest-status changes. Official base/candidate started
-at load1 26.78/29.19, below the required 30 threshold, using fresh separate
-caches. Default-environment workspace passes 8248/8248 (five existing skipped);
+changes, or common manifest-status changes. Official base/candidate used fresh
+separate caches. Default-environment workspace passes 8248/8248 (five existing skipped);
 strict workspace clippy, fmt, and core/wasm wasm32 checks pass.
 
-Evidence remains outside the repository:
-`/tmp/worker6-flow-bridge-red/r3/seeded.log`,
-`/tmp/worker6-flow-bridge-red/r3/stream-audit.json`, and
-`/tmp/worker6-flow-bridge-green/{directed-audit,plan-diff,seeded-comparison,official-comparison}.json`;
-engineering logs and original exit codes are in the same GREEN directory.
-Later-main changes follow the coordinator's test/docs-only evidence-carry
-rule; rebase is required before merge. Filament ratio and diameter remain
+Filament ratio and diameter remain
 unpromoted at the bridge slice's boundary; their subsequent evidence follows.
 
 ## Filament-ratio and diameter conclusion
@@ -182,8 +174,7 @@ INCOMPLETE classification assertions fail. The third test passes: Native
 rejects ratio `[0]` and diameter `[0.99999]` at Export with -18 (Unix 238);
 diagnostics match both public Ares validation and validated slicing. No
 request is rejected unexpectedly or rewritten to a different numeric value.
-The RED starts at load1 54.13, with two test threads and a fresh cache, under
-the coordinator's universal directed-run threshold of 60; no timeout occurs.
+The RED uses a fresh cache; no timeout occurs.
 
 GREEN `073a12d43` changes only these two harness plans and their sweep hook.
 Their metadata expectations add `provably_legal=true`, `omission=None`, and
@@ -215,15 +206,11 @@ Strict candidate-failure-subset checks pass unchanged in both controls.
 There are no candidate-only failures or Ares byte differences. Seeded has no
 Native content changes; official has this one Native-only change.
 
-Full-pair starting loads are 22.95/28.11 (seeded) and 23.67/23.36 (official),
-all below 30, with separate fresh caches. Default-environment workspace passes
+Full pairs use separate fresh caches. Default-environment workspace passes
 8256/8256 (five existing skipped); strict workspace clippy, fmt, and core/wasm
 wasm32 checks pass. Production code, cache recipes, input fixtures and
 comparison normalization are unchanged; no Native output is committed.
 
-External evidence:
-`/tmp/worker6-flow-filament-red/{seeded.log,stream-audit.json}` and
-`/tmp/worker6-flow-filament-green/{directed-audit,plan-diff,seeded-comparison,official-comparison,support-blocker-native-audit}.json`.
-Original logs and exit codes remain alongside these audits. Completion closes
+Completion closes
 only the finite single-filament contracts above; all listed adjacent behavior
 remains deferred.

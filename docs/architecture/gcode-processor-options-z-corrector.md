@@ -1,9 +1,9 @@
 # GCodeProcessor: OptionsZCorrector vertex shift and M73 cache eligibility
 
-Status: implemented (see GREEN). The RED (the `same-layer` case moved out
-of slice C, `docs/architecture/plate-custom-gcode-emission.md`) is merged
-together with this slice's GREEN. The RED needs slice C merged first,
-because without slice C's emission the fixture has no `;CUSTOM_GCODE` tag.
+Status: implemented (see GREEN). The RED is the `same-layer` case moved out
+of slice C, `docs/architecture/plate-custom-gcode-emission.md`. It depends on
+slice C, because without slice C's emission the fixture has no
+`;CUSTOM_GCODE` tag.
 
 ## Finding
 
@@ -42,7 +42,7 @@ different vertex is erased. The diagnostic `procgcode-stable-options.patch`
 already corrects that stale index; official Native does not. The `procgcode`
 oracle run with and without the tag shows the side effect in
 `moves`: an `internal_only` actual-speed vertex from G-code line 700 ends up
-at the back with Z 2.2 (`${TMP_ROOT}/ares-estimation/diag-same-layer/proc/`).
+at the back with Z 2.2.
 Ares decides cache eligibility from each block's own motion and does not
 model either shift, so the set of M73-capable lines around the tag
 differs.
@@ -75,8 +75,7 @@ The probe adds `ORCA_OPTZ_PROBE` stderr tracing to `TimeMachine::calculate_time`
 `moves[move_id]`, cached or not), `GCodeProcessor::calculate_time` (actual-speed
 insertions per flush) and `OptionsZCorrector::set`/`update` (the index and
 type of the erased vertex). It runs `--slice 0` on `same-layer` and the
-by-layer control, pinned to one assigned CPU. The patch and its output are
-not committed.
+by-layer control. The patch and its output are not committed.
 
 **What it must explain.** The two Native `same-layer` outputs share their
 body bytes. Only two M73 lines move, both on layer Z 2, 27 to 55 lines
@@ -142,7 +141,4 @@ Stealth mode.
 | Stage | Gates |
 |---|---|
 | RED | `same-layer`, official + seeded, assertion failure at the M73 line |
-| GREEN | `same-layer` passes in both modes; slice C's other cases and the processor/estimation parity tests do not regress; `cargo fmt`, strict clippy, wasm32; directed nextest `ares-core` + `ares-cli`; canonical exclusive full (official + seeded) with 0 new failures |
-
-Each stage runs on the assigned CPUs inside a directed window, with
-START/END in the inbox.
+| GREEN | `same-layer` passes in both modes; slice C's other cases and the processor/estimation parity tests do not regress; `cargo fmt`, strict clippy, wasm32; directed nextest `ares-core` + `ares-cli`; full parity (official + seeded) with 0 new failures |

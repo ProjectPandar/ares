@@ -1,6 +1,6 @@
 # ARD: Brim.cpp inner-only runtime boundary
 
-Status: SPEC `696cd308a` approved by Claude. Tests/RED precede implementation.
+Status: accepted. SPEC `696cd308a`. Tests/RED precede implementation.
 
 ## Source and observed boundary
 
@@ -11,7 +11,7 @@ At main5fc560ca0 the actual project `BrimPlan::generate` excludes InnerOnly.
 The independent public LayerContours adapter's rectangular hole paths are
 not that observed runtime call stack and are not Native parity evidence.
 
-## Non-negotiable approved decisions
+## Non-negotiable decisions
 
 1. Rewrite the named upstream project boundary, not a new adhesion pipeline.
    A private `ares-core::brims::inner` owns hole-area geometry; the existing
@@ -33,5 +33,5 @@ not that observed runtime call stack and are not Native parity evidence.
    platforms. Native execution and artifacts belong solely in CLI tests.
 
 Broader brim selectors, EFC, painting, multi-object composition and all other
-workers' destinations remain outside this decision. Expansion requires a
-revised source-cited SPEC and Claude's approval before implementation.
+other destinations remain outside this decision. Expansion requires a
+revised source-cited SPEC before implementation.

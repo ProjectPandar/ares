@@ -1,8 +1,6 @@
 # interface_shells Alignment Slice — ARD/SPEC
 
-Status: SPEC (pending REVIEW approval; docs only, no implementation yet)
-Branch: `w5-interface-shells` (from `032ed1133`)
-Task: remove the last `interface_shells` rejection and align with upstream
+Scope: remove the last `interface_shells` rejection and align with upstream
 OrcaSlicer 2.4.2 semantics for multi-region (multi-part) layers.
 
 ## Current Ares state and rejection point
@@ -104,8 +102,7 @@ All inside `crates/ares-core/src/project_slice`:
 - GREEN: full pipeline byte-parity vs the determinized official Native oracle
   (setarch wrapper, 47d636ea5) for official, and the seeded oracle for the
   seeded leg.
-- Directed legs on CPU7 single core, threads2, fresh cache/artifact per run;
-  no fulls without FULL-GO.
+- Directed legs use a fresh cache/artifact per run.
 
 ## Gates
 

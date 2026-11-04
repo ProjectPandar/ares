@@ -1,18 +1,15 @@
 # Arachne alternate extra wall: public Native RED
 
-SPEC `c3d238a8a` approved. Production is unchanged from main `c22f5a81d`.
+Production is unchanged from main `c22f5a81d`.
 Input-only fixtures and public tests precede the guard removal.
 
 ## Run and admission
 
-Final RED root: `/tmp/worker3-arachne-alternate-red-h477fxoh`.
-`plan.json`, each leg's `run.log`/`results.json`, and `evidence-summary.json`
-record commands, clean environment, input/test/binary hashes and case results.
-Canonical control-set-v2 selects `test(arachne_alternate_)`, jobs2/threads2,
+Each leg records commands, clean environment, input/test/binary hashes and
+case results. The suite selects `test(arachne_alternate_)` with
 RUSTUP_TOOLCHAIN=1.99.0; each leg has a fresh Native cache and artifact root.
 This finite test calls the generic official/seeded slice producer directly;
-it does not invoke the missing stable-options/dynamics processors. Full and
-processor-dependent directed remain RESTORED-gated, and full needs allocation.
+it does not invoke the missing stable-options/dynamics processors.
 
 Official: 10 paired tests, 2 PASS / 8 FAIL, 9.866 seconds, exit100.
 Seeded: 10 paired tests, 2 PASS / 8 FAIL, 11.178 seconds, exit100.
@@ -46,8 +43,7 @@ The positive prism, zero-wall and two-island controls also emit sparse infill.
 
 ## Input preflight retained
 
-The first uncommitted test draft is retained at
-`/tmp/worker3-arachne-alternate-red-sui9f3ez`; it is not the final RED gate.
+The first uncommitted test draft is not the final RED gate.
 Native showed that stepped layer4 is non-topmost and regains the full count
 through `PerimeterGenerator.cpp:2240–2244`, and spiral includes transition-out
 with normalized alternate0. Correct the draft's independent expectations to
@@ -63,4 +59,4 @@ differs only in the alternate setting, with identical mesh/container members.
 No Native G-code or output artifacts enter Git. Strict clippy for the test
 target and rustfmt pass; broad engineering/coverage gates follow GREEN.
 The obsolete negative unit assertion remains unchanged pending its explicit
-[retirement ruling](arachne-alternate-extra-wall-test-retirement.md).
+[retirement record](arachne-alternate-extra-wall-test-retirement.md).

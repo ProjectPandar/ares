@@ -1,6 +1,5 @@
 # SPEC: HilbertCurve ironing 残余——首差定位与修复边界（诊断片）
 
-状态：SPEC-REVIEW-REQUEST（docs-only；诊断探针已全部还原，工作树净）。
 前置：HilbertCurve RED `c126da004`（GREEN 未达成，STOP 报告在案）。
 
 ## 0. 引注勘误（诊断中发现的既有提交事实错误）
@@ -18,9 +17,8 @@ center shift，注释写 min-corner）。两处 byte-parity 结果不受影响
 - ares temp 探针（未提交、已还原，`git diff`=0 证明）在
   `fill/plane_path.rs::fill_component` 分层 dump：
   STAGE1=generate 原始折线、STAGE2=`intersection_open_polylines` 后、
-  STAGE3=chain+回转变换后（世界坐标）；dump 副本存
-  `/tmp/w5-hilbert-probe/stages.log`（343 片段 ×2 expolygon）。
-- native 侧从 canonical oracle gcode（`/tmp/w5-h-art/…hilbertcurve…/case`）
+  STAGE3=chain+回转变换后（世界坐标）；dump 共 343 片段 ×2 expolygon。
+- native 侧从 canonical oracle gcode
   按 travel 切分提取折线集。
 - 同空间（gcode mm）集合对拍：点多重集、折线多重集、计数。
 
@@ -46,8 +44,7 @@ center shift，注释写 min-corner）。两处 byte-parity 结果不受影响
 
 - **站点 A**（上游 `ClipperUtils.hpp::intersection_pl` → clipper
   开放折线裁剪的交点/切点序）：与已修的 `fix_intersection_order`
-  等键序族同源。对拍法：vendored Clipper6 + intersection_pl（复用
-  /tmp/clip6trace harness）喂 ares STAGE1 原始折线 + 收缩后
+  等键序族同源。对拍法：vendored Clipper6 + intersection_pl 喂 ares STAGE1 原始折线 + 收缩后
   expolygon，比 native 片段集（需 gdb 断点或 vendored 全链取得）。
 - **站点 B**（上游 `ShortestPath.hpp::chain_polylines`）：贪心最近端
   + reversal 选择。对拍法：同一片段集（ares STAGE2）喂 vendored

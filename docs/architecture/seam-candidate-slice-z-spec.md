@@ -1,7 +1,5 @@
 # SPEC: Preserve physical Layer::slice_z in seam candidates
 
-Status: **REVIEW-REQUEST, docs only**. Base `c251aa6166bcc0270063fc6d2e41b84ab01a637d`.
-No production correction or permanent RED test is authorized by this document.
 See [ARD](ard-seam-candidate-slice-z.md). This is a source-cited rewrite handoff,
 not a new Ares seam algorithm or slicing pipeline.
 
@@ -37,7 +35,7 @@ Source hashes of the inspected copies (SHA256):
 
 ## 2. Witness and limits of attribution
 
-Approved read-only localization used only immutable v2 `populated-control`:
+Read-only localization used only immutable v2 `populated-control`:
 input SHA `b2f1e2676b6e2ab5ede4a0a9f731115ce19ed5861dcbe337b5608d5dd988811c`.
 Both implementations have four physical layers, empty R0, occupied R1, owner1.
 Layer0 generator contours/holes match ordered integer coordinates exactly.
@@ -61,19 +59,10 @@ complete Native output under established generator-only normalization;
 binary SHA `64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60`
 was unchanged. Extra Native seam observation failed an observer ABI guard:
 no complete G-code/barrier, partial seam frames excluded, no retry-to-success.
-A preceding Ares compile-only diagnostic failure is retained separately.
-
 Thus the plane handoff discrepancy is witnessed, but correcting it has NOT
 been executed. Do not claim complete causal GREEN, Native seam internals,
 seeded confirmation, or that all earlier contour/hole divergences share it.
-The approved Classic append lower-slice discovery remains a separate boundary.
-
-Durable report: `${LOCAL_EVIDENCE_ROOT}/worker4/layer0-populated-control-localization.md`.
-Archive: `${LOCAL_EVIDENCE_ROOT}/worker4/layer0-populated-localization-evidence.tar.gz`,
-SHA `6e9f2245a5e4430969fd55ea2e3b24aabb7cf5bddd87b2157a64fb07b376e09d`.
-It retains successful neutrality receipts and unsuccessful observer histories.
-ALL temporary hooks/registration/module were removed and clean status verified
-before rebasing/creating this docs-only branch directly from current main.
+The Classic append lower-slice discovery remains a separate boundary.
 
 ## 3. Included and deferred behavior
 
@@ -97,30 +86,25 @@ per-region heights, guessed raft offsets, fallback or a new guard. No new
 public API, retained diagnostic I/O, fixture substitutions or comparator edits.
 Core remains byte/options to byte output on WASM/Windows/macOS/Linux.
 
-## 4. Test-first approval and acceptance plan
+## 4. Test-first acceptance plan
 
-1. Obtain exact-hash SPEC approval before tests/production. Proposed bounded
-   public RED set uses only frozen v2 populated-control and single-control;
-   no new geometry/options. Fresh official then seeded roots, CPU15/jobs1/
-   nextest threads1, load<60 before builds/Native, inbox START/END. Per mode:
-   positive, fresh positive repeat, single-region control (3 comparisons).
-   This proposed new-slice budget requires approval; old discovery budget is
-   not silently reset or extended. Honor exclusive freezes; never delete Nix stores.
+1. The bounded public RED set uses only frozen v2 populated-control and
+   single-control; no new geometry/options. Fresh official then seeded roots.
+   Per mode: positive, fresh positive repeat, single-region control
+   (3 comparisons).
 2. Freeze a **separate test-only commit** using `ares_core::slice_with_profiles`
    and the CLI adapter, complete ordered G-code and established generator-only
    normalization. Native commands must exit0/complete snapshots with effective
    settings verified. API/CLI outputs must agree. Positive must reproduce a
    deterministic genuine full-output RED; single-region control must PASS.
    Input bytes/mesh/options/transforms stay frozen; no Native products committed.
-3. Request independent RED approval before the two-file handoff correction.
-   No accounting-only merge or reuse of PASS N-one cases as RED. Stop/report
+3. Commit RED before the two-file handoff correction.
+   No accounting-only merge or reuse of PASS N-one cases as RED. Stop on
    admission/control failures, NO RED FOUND, or a changed first boundary.
-4. After RED approval, change only the cited runtime input and caller. First
+4. Then change only the cited runtime input and caller. First
    rerun exact RED/control and repeat in both modes, then existing seam-mode
    and compatible-region controls. Retain movement/arcs/M73/statistics/footer.
-   If whole-output RED remains, stop and request an amendment; do not repair
+   If whole-output RED remains, stop and amend this spec; do not repair
    adjacent seam scoring/motion to force GREEN or reinterpret stage parity as PASS.
 5. Verify scoped core nextest, cargo fmt, strict clippy, wasm32 clippy and LOC<400.
-   Use cargo nextest, not cargo test, as the Rust test entry. Archive repeatable
-   complete artifacts outside /tmp; submit exact-hash REVIEW-REQUEST.
-   Coordinator owns full scheduling, push and merge.
+   Use cargo nextest, not cargo test, as the Rust test entry.

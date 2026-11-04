@@ -2,19 +2,14 @@
 
 ## Disposition
 
-STOP under the condition attached to approved addendum a11e509bd.
 This is a real earlier data difference, not equivalent bbox definitions.
-No production edits, hook fix, assertion deletion, fixture/test changes or
-GREEN claim. Frozen public RED c15b29c60 remains intact and can merge only
-with GREEN. Object-region spacing stays BLOCKED and Inner-wall is deferred.
+Object-region spacing stays blocked and Inner-wall is deferred.
 
 ## Matched calls and first unequal intermediate
 
-Read-only gdb on CPU12 compared the exact frozen S-C0 at public Ares binary
-c15b29c60 and release official Native. The worktree is a11e509bd (only a
-subsequent doc commit). Both runs use fresh cache/artifact/output roots.
-The readers are snapshotted before launch, enforce CPU12, and make no inferior
-calls/writes. Both have zero inspection errors; Native exits0, Ares exits101.
+Read-only gdb compared the exact frozen S-C0 case on the public Ares binary
+and release official Native. The readers make no inferior calls/writes.
+Both have zero inspection errors; Native exits0, Ares exits101.
 
 The first connector invocation is NOT the ordinary Z0.8 emission call.
 It is the preparatory bridge-over-infill sparse-anchoring call at Z9.2,
@@ -78,34 +73,21 @@ Rust source under `crates/ares-core/src/project_slice/`:
 - `prepare_infill/bridge_over_infill/sparse_anchoring/arms.rs::dispatch`
   routes AdaptiveCubic/SupportCubic to `adaptive::anchoring_lines`.
 
-## Required ordering and ownership coordination
+## Required ordering
 
-The first missing operation above must be reviewed before changing the
-later `add_hook` collision limits. No hook edits are authorized by this STOP
-report, and no out-of-bbox assert should be removed to conceal these inputs.
-A follow-up proposal would port the source base-fill entry inset for the
+The first missing operation above must be fixed before changing the
+later `add_hook` collision limits, and no out-of-bbox assert should be
+removed to conceal these inputs.
+A follow-up would port the source base-fill entry inset for the
 anchoring helper with Native's default overlap0 and completed-float delta,
 iterate all offset components, then re-observe its generated polylines.
-This document does not authorize that implementation or claim it closes RED.
 Do not alter ordinary append output, unrelated patterns, octree coordinates,
 sorting, public contracts or comparison requirements as part of that fix.
 
-The required Rust destination is `fill_entities/adaptive.rs::anchoring_lines`.
-W6 owns `fill_entities/adaptive.rs::build_object_octree` coordinate work
-(and `fill/adaptive/octree.rs` when evidence requires it). No edit has been
-made to either place or their shared file. Report this same-file destination
-to coordinator before any future implementation; resolve ownership there.
+The required Rust destination is `fill_entities/adaptive.rs::anchoring_lines`,
+which shares its file with the `build_object_octree` coordinate work
+(and `fill/adaptive/octree.rs`).
 
-## Durable evidence
-
-Root:
-`${EVIDENCE_ROOT}/worker3/support-touching-grid-bbox-preflight/20261015-124632`.
-It retains per-run readers, launch commands/environment and SHA, raw states,
-logs and generated outputs; `run.py` reproduces the read-only captures.
 The input SHA remains9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1.
 Native output matches the public official reference line-for-line except
-its generator date line2; no motion/configuration change. The first Ares
-stack and both pre/post-operation contours are in the JSONL files.
-`STOP-evidence.json` SHA256:
-8eddc79a2d8898fa1f73e43daf244af18558f42da7677b28efa0d45e38b6a553.
-No Native output is committed. All runtime jobs have ended.
+its generator date line2; no motion/configuration change.

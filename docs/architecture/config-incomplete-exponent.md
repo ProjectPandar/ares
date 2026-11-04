@@ -1,6 +1,6 @@
 # Configuration floating extraction: committed-exponent failure
 
-Status: proposal only. No runtime evidence or implementation is claimed.
+Proposal. No runtime evidence or implementation is claimed.
 
 ## Owning upstream boundary
 
@@ -74,7 +74,7 @@ Linux, with no file/process/terminal/UI behavior or new API.
 This is not strict whole-token validation: rejecting all trailing junk would
 contradict the cited upstream stream use.
 
-## Adjacent source mismatch requiring explicit review disposition
+## Adjacent source mismatch requiring explicit disposition
 
 `ConfigOptionFloatsOrPercentsTempl::deserialize:1457-1479` also ignores failbit
 and stores `{value, percent-presence}`. The Rust FloatsOrPercents public branch
@@ -86,12 +86,12 @@ claim is made for that wrapper; nullable FloatOrPercent representation is
 also outside this proposal.
 
 Recommended scope is the extraction primitive only, with that wrapper
-explicitly deferred to a separate source-cited slice. Before implementation,
-review must accept this boundary or request an expanded ARD. Do not add a
+explicitly deferred to a separate source-cited slice. Widening it requires
+an expanded ARD. Do not add a
 kind/key exception, suppress failbit, or silently fix vector/nullable schema
 to make a selected test green. Valid FloatsOrPercents controls must not regress.
 
-## Proposed Native-first public proof after approval
+## Proposed Native-first public proof
 
 1. Before production code, add one bounded public E2E in the existing config
    round-trip test subtree, without touching the top-level parity ROOT.
@@ -100,7 +100,7 @@ to make a selected test green. Valid FloatsOrPercents controls must not regress.
 2. First candidate: `machine_max_speed_x` with `1e+`. Native should export the
    source vector failure value while current public Rust decoding should
    retain the mantissa. Capture actual Native before asserting a real RED;
-   if the witness is rejected or normalized earlier, stop and review rather
+   if the witness is rejected or normalized earlier, stop rather
    than substitute a private parser/kernel, canned diagnostic or mock.
 3. Request a bounded set of malformed forms (`1e`, `1e+`, `1E-`, `1e%`) and
    complete/plain controls (`1e2`, `1e-2tail`, `10`, `0.5`). Obtain expected
@@ -109,20 +109,20 @@ to make a selected test green. Valid FloatsOrPercents controls must not regress.
    percent-vector and independent-coordinate public controls before claiming
    those caller boundaries. Record exact executable/input/source/command/
    exit/stdout/stderr/export data and public results. No missing-Native pass.
-5. After approved RED, port only the source-derived exponent failure clause;
+5. After the RED, port only the source-derived exponent failure clause;
    repeat strict public comparisons, compare control statuses to their
    recorded baseline, and retain verifiable artifacts. Do not claim every
    caller or platform if its witness was not executed.
 6. Run fmt and workspace/all-target/all-feature clippy with warnings denied;
    keep changed files below400 lines, preserve original tests/comparators/
-   missing-Native policy, and submit GREEN review before publishing.
+   missing-Native policy.
 
 ## Deferred behavior and stop conditions
 
 **Immediate next slice:** `ConfigOptionFloatsOrPercentsTempl::deserialize`
 (`Config.hpp:1457-1479`) vector failure-value and percent-presence preservation
 versus the `decode.rs` FloatsOrPercents scalar-wrapper dispatch. It remains
-explicitly deferred from this approved helper-only exponent slice.
+explicitly deferred from this helper-only exponent slice.
 
 Overflow/underflow, signed zero, hex floats, NaN/inf, grouping/locale, integer
 prefix extraction, new nullable kinds, FloatOrPercent-vector failure dispatch,
@@ -136,5 +136,4 @@ Failure inventory before tests: Native option/witness not reached; config
 normalization changes the token; scalar/vector failure policy confused;
 complete exponent or valid suffix regresses; percent/nil handling changes;
 unwitnessed shared caller assumed green; zero selection/missing Native; lost
-producer/input identity. No new tests, production edit, Native/Rust build,
-qualification runtime or push is authorized by this document itself.
+producer/input identity.

@@ -1,7 +1,5 @@
-# SPEC RR: painted MMU → beam interlocking call order
+# SPEC: painted MMU → beam interlocking call order
 
-Status: bounded discovery complete; request independent SPEC approval before public RED.
-No production edits or RED authorization implied. Base `2ed045a7f235a592ca5332ece6fdd21b685837e1`.
 Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 [Non-negotiable decisions](ard-painted-beam-call-order.md).
 
@@ -10,8 +8,7 @@ Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Legacy #70–#73 carrier/RED/segmentation work is superseded by merged public RED
 `8c25b6741`, complete consumed MMU `f569a2cea`, review fixes `4b9269ccc`,
 complete-unit SPEC `29df9fc13`, and side-cut SPEC/GREEN `2be465ff3`/`85552bc43`.
-All are ancestors of this base. Do not revive old parser rejection or rewrite
-historical sealed branches. This new slice covers only the deferred MMU+beam
+Do not revive old parser rejection. This new slice covers only the deferred MMU+beam
 combination and its owning upstream call-order handoff.
 
 Paths below are under `OrcaSlicer/src/libslic3r/`:
@@ -38,7 +35,7 @@ and boundary avoidance. All selected values are within those option ranges.
 
 Paths below are under `crates/ares-core/src/project_slice/`:
 - Remove the early `region_slices::interlocking::apply` call from
-  `load_stages.rs::prepare_post_regions:120–125` in separately authorized GREEN.
+  `load_stages.rs::prepare_post_regions:120–125` in GREEN.
 - Invoke that SAME existing private consumer once for each real resolved
   print-object context after `prepare_post_painted` has applied MMU and before
   `compensation.rs::prepare_post_compensation` begins compensation. Prefer a
@@ -54,7 +51,7 @@ Paths below are under `crates/ares-core/src/project_slice/`:
   registry identities/ordinary-vs-strict exports, and actual apply output.
 - Existing `region_slices/interlocking/{mod,micro,thin,voxel}.rs` remains the
   source-owned implementation. Do not change its geometry algorithms merely
-  to force this test GREEN. A new algorithmic discrepancy requires STOP/RR.
+  to force this test GREEN. A new algorithmic discrepancy requires a stop.
 
 The fuzzy stage remains in its upstream conceptual position between MMU and
 interlocking; this slice does not add a fuzzy producer, dummy function or new
@@ -62,12 +59,11 @@ admission. Existing unsupported fuzzy input remains unsupported.
 
 ## Frozen bounded discovery (not public RED acceptance)
 
-Evidence: `${EVIDENCE_ROOT}/worker1/painted-beam-discovery-2ed045a7f/`.
 Reproduced existing frozen paint-color split/unpainted archives, changed only
 `Metadata/project_settings.config`; all geometry/paint/other members retained.
 Both pairs use width0.8mm, orientation22.5°, beam layers2, depth2, boundary
 avoidance0; pair members differ only in beam enable. Width/depth side-cut
-settings remain zero. Inputs/member/settings provenance is in `inputs.json`.
+settings remain zero.
 
 | Case | Archive SHA256 |
 |---|---|
@@ -86,19 +82,13 @@ movement goldens or a requirement to match fixed counts. Beam setting readback
 and identical paired geometry provide source-active configuration evidence;
 no private geometry capture or interactive GUI/cross-platform proof claimed.
 
-Four real Ares CLI calls using the FULL-qualified identical-tree binary:
+Four real Ares CLI calls:
 painted beam-on rejects `painted beam compositions` (exit1), while the other
 three cases succeed and match complete Native bytes in each mode with only
 existing generator-line allowance. This is discovery of current boundary,
 not expected-error PASS, API qualification or public RED.
 
-Initial discovery driver stopped after the first CLI control because it used
-the Native generator regex on the Ares header. Raw diff was the generator line
-only; continuation used the exact Ares pattern in existing golden.rs, retained
-all prior outputs and launched no extra Native processes. Both logs/exits are
-retained; failure is not semantic RED or successful gate credit.
-
-## Test-first RED plan after SPEC approval
+## Test-first RED plan
 
 Use existing shared public NativeCase/native_stream_case and activity helpers;
 no copied process harness or new comparator. Freeze only necessary target input
@@ -111,7 +101,7 @@ Global Native-first: both modes, each selected frozen input, reference/replay
 before ANY API/CLI call. Require positive model XY AND positive extrusion for
 both painted materials, beam-setting readback, repeat equality, and paired beam
 activity without hardcoded Native counts or output filtering. Retain every raw
-stream and launch/resource/affinity identity. Then run public success-required
+stream and launch/resource identity. Then run public success-required
 full ordered comparisons against API and real CLI, raw API==CLI unchanged.
 
 Expected actual RED: painted+beam must FAIL public success/output assertion;
@@ -119,7 +109,6 @@ beam-off and existing controls must PASS. Unsupported is not an expected-error
 success condition. Any Native/resource/replay/activity/control failure is
 STOP/non-gate. Preserve CLI output/error even if API rejects. No private-entry
 phase acceptance, should_panic, mocks, tolerances, extra normalizations or goldens.
-Submit RED RR and wait for explicit GREEN authority.
 
 ## Pre-code failure inventory and acceptance
 
@@ -132,10 +121,8 @@ claims based only on selectors or inactive interfaces; hidden comparator change.
 GREEN later must change only literal ordering + combination-specific rejection,
 with mechanical call adaptation; pass frozen public whole-output cases in both
 modes and existing painted, side-cut, conical, unpainted interlocking controls.
-No production implementation before independently reviewed RED and GREEN go.
-Final exact-tip fmt, strict all-target Clippy, WASM compile and dual canonical
-FULL require separately assigned integration window. CPU18/jobs1/test-threads1/
-ARES_PARITY_THREADS1. Files≤400LOC; no include tricks or new crate/public API.
+fmt, strict all-target Clippy and WASM compile must pass.
+Files≤400LOC; no include tricks or new crate/public API.
 
 Deferred: fuzzy painting and combined annotations; new support/raft/tower/custom
 multi-object domain expansion; UI/cache framework; geometry backend changes;

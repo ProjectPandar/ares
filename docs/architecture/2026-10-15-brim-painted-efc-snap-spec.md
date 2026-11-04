@@ -2,8 +2,7 @@
 补全收官片
 
 状态：SPEC-DRAFT（docs-only）。承接：btPainted outer GREEN
-`cbe4ccda3`（stack-19 已并）与 inner GREEN `f0ff95af3f`（stack-20
-已并）——二者均把 `:392-404` 的 EFC snap 记为延后项。本片即该
+`cbe4ccda3` 与 inner GREEN `f0ff95af3f`——二者均把 `:392-404` 的 EFC snap 记为延后项。本片即该
 延后项：painted ear 圆心吸附到 EFC 调整后的底层轮廓。
 
 ## 1. 上游边界（源：`OrcaSlicer/src/libslic3r/Brim.cpp`）
@@ -86,7 +85,7 @@
 
 ## 5. 测试先行（TDD）
 
-- discovery（Native-first，CPU7,8，≤4 迭代）：pocket/方板类对象 +
+- discovery（Native-first，≤4 迭代）：pocket/方板类对象 +
   painted 点 + EFC 开启，native vs ares 盘心坐标对拍定值
   （吸附距离 = EFC 补偿量附近的顶点距离）；
 - RED：input-only fixture + 双腿（snap on/off）test-only commit；

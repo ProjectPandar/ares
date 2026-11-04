@@ -1,7 +1,6 @@
 # SpiralVase final transition E precision
 
 Status: SPEC proposal, docs only; no RED or production change.
-Owner: worker6. Base: `origin/main` 41f2c90f7.
 
 ## Boundary
 
@@ -48,15 +47,14 @@ slice rather than weakening its assertion.
 
 RED is a dedicated runtime-Native CLI E2E module with one test per target and
 control, strict comparator unchanged, no committed Native output, no ignore,
-and no tolerance. Runs are pinned to CPU11 with fresh roots and caches. The
+and no tolerance. Runs use fresh roots and caches. The
 first differing line and the parsed float E, accumulated float length, factor,
 and formatted five-digit output will be retained in the evidence report.
 
 ## Deferred
 
 Layer-config-range admission and its spiral/Regular versus
-PositiveLargestContour scheduling remain deferred to the paused prerequisite
+PositiveLargestContour scheduling remain deferred to the prerequisite
 slice. Geometry producers, `SpiralVase.cpp` path gating beyond the cited
 boundary, absolute-E behavior, and unrelated generic extrusion rounding are
-out of scope. No production edit is authorized before a public RED is
-reviewed.
+out of scope. No production edit precedes a public RED.

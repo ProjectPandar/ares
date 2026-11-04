@@ -1,7 +1,7 @@
 # SPEC: Klipper ACCEL_TO_DECEL ostream serialization
 
-Base frozen6bc322919827b502fcd389927b272b3e1ea20174. Coordinator ACK authorizes
-SPEC → public Native-first RED → two-call GREEN → REVIEW-REQUEST/hold. No FULL.
+Against6bc322919827b502fcd389927b272b3e1ea20174:
+SPEC → public Native-first RED → two-call GREEN.
 
 ## Source-owned boundary
 
@@ -17,7 +17,7 @@ Included: switch both calls from axis to ostream. Deferred: multiplication/
 division order, arithmetic precision, clamp/cache/admission, enable gates,
 comments, neighboring fields, formatter implementation and all other owners.
 The first standalone layer-start difference and later merged bridge difference
-must both be covered. Prior approved slices remain unchanged.
+must both be covered. Prior slices remain unchanged.
 
 ## Witness / GUI provenance
 
@@ -32,9 +32,8 @@ Target first normalized differencebyte1240: Native ACCEL500 ACCEL_TO_DECEL61.728
 versus Ares61.728; later merged ACCEL250 Native30.8642 versus Ares30.864.
 Two controls fullPASS, six fresh Native slices replaystable; exact6bc existing
 actual CLI. Native61.7283 reflects binary double arithmetic then ostream, not an
-exact decimal rounding policy. Discovery evidence
-`${EVIDENCE_ROOT}/w4-accel-to-decel-precision/PROPOSAL.md` and streams.
-No API/seeded/RED/FULL qualification inferred from discovery.
+exact decimal rounding policy.
+No API/seeded/RED qualification inferred from discovery.
 
 SHA:
 - factor50:a1c7580b4a1e596fa8fdd72ba2301d95b6b6539a2cd74e9ee612f6d930c6091d
@@ -57,8 +56,8 @@ consumer, changing arithmetic order or caches, decimal tie assumptions, changing
 neighboring fields/comments/enable handling. Source review must verify same
 expression before/after; do not hardcode observed61.7283.
 
-CPU17/PIN17/jobs1/threads1, official then seeded. RED only targetfails/twocontrols
+Official then seeded. RED only targetfails/twocontrols
 PASS, Native replay/callback/API==CLI qualify. Commit RED before production.
 GREEN only two format calls; tests/inputs frozen. fmt/workspaceall-targetclippy,
-three cases bothmodes PASS, REVIEW-REQUEST/hold. No FULL/merge/push, no helper/
+three cases bothmodes PASS. No helper/
 lint suppression, group registry/no squeezing, all touched Rust≤400LOC.

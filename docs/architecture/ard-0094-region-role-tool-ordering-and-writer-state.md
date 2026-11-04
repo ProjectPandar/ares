@@ -373,7 +373,7 @@ and further printer/option matrices remain separate source-cited slices. They
 are not claimed supported by this limited closure. Required common upstream
 behavior encountered by the selected fixture cannot be silently deferred.
 
-The user approved this as the next independent milestone after mainline
+This is the next independent milestone after mainline
 regression attribution. An isolated `94d33b59` production snapshot reproduces
 the baseline's missing printing-body transitions; the modifier input instead
 hits that mainline's existing density rejection. The Normal/Tree merge scope

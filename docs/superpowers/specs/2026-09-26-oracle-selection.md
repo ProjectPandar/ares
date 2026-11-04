@@ -23,8 +23,8 @@ store fallback. Preserve exact argument forwarding and library assembly.
 Regress missing selection and an explicitly selected executable using the
 actual shell wrapper. Restore the official Ubuntu2404 x86-64 v2.4.2
 AppImage, check its published release SHA-256, extract outside the repo,
-and rerun strict comparisons. Run workspace/KSR, fmt/clippy and independent
-review, then commit code and docs together.
+and rerun strict comparisons. Run workspace/KSR and fmt/clippy, then commit
+code and docs together.
 
 Excluded: inventing output normalization, claiming toolchain equivalence,
 modifying upstream, or treating configuration selection alone as full
@@ -42,30 +42,21 @@ Extract with `--appimage-extract`, then explicitly set:
 ```sh
 export ORCA_APPDIR=/path/to/squashfs-root
 ARES_PARITY_OPTIONS=1 ARES_OPTION_KEYS=sparse_infill_pattern \
-  ARES_PARITY_ARTIFACT_ROOT=/tmp/parity-official \
+  ARES_PARITY_ARTIFACT_ROOT=/path/to/parity-official \
   cargo nextest run -r -p ares-cli --test orca_parity option_coverage
 ```
 
-The downloaded asset and release metadata for this run are retained under
-/tmp/orca-official-242 and /tmp/orca-release-242.json. This pins a binary
-artifact, not source text or Rust module structure.
+This pins a binary artifact, not source text or Rust module structure.
 
 ## Evidence
 
 The first test attempt incorrectly hid bash from Command's executable
 lookup by replacing PATH; discard that failure as implementation evidence.
-After fixing the test, `/tmp/orca-wrapper-valid-red.log` runs against the
-old wrapper and fails with exit 0 instead of required 127. The corrected
-wrapper passes both tests in `/tmp/orca-wrapper-valid-green.log`.
+After fixing the test, it runs against the old wrapper and fails with
+exit 0 instead of required 127. The corrected wrapper passes both tests.
 
 The verified official asset extracts and executes successfully. Its full
-sparse-pattern sweep records 21 PASS / 5 DIVERGENT in
-`/tmp/orca-official-restored.log`; full paired bytes are under
-`/tmp/parity-official-restored`. Crosszag, Lightning, line, lockedzag and
-tpmsfk remain divergent. This does not prove that instrumentation caused
-earlier failures or that passing patterns are stable across all runs.
-KSR remains 84 passed / 2 skipped (`/tmp/orca-selection-ksr.log`).
-Final workspace (`/tmp/orca-selection-final-workspace.log`) records 7328
-passed / 10 skipped. Final clippy completes with existing warnings; fmt
-and diff checks pass. Independent six-axis reviewer f855d435 identified
-no code fixes; the parent verified final gates after the review.
+sparse-pattern sweep records 21 PASS / 5 DIVERGENT. Crosszag, Lightning,
+line, lockedzag and tpmsfk remain divergent. This does not prove that
+instrumentation caused earlier failures or that passing patterns are
+stable across all runs.

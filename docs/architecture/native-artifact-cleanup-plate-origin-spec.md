@@ -1,6 +1,5 @@
-# Native 清理 B：O6 selected plate 2 参照迁移
+# Native 清理：O6 selected plate 2 参照迁移
 
-owner worker6；整体 B / 共享缓存 owner worker4。基线 `0588388e7`。
 本片只迁移 `plate_two_min_slices_like_native` 的 Native 参照生命周期，
 保留 plate 2 身份和完整输出合同，不修改 plate-origin 生产行为。
 
@@ -49,7 +48,7 @@ Native 缺失也必须运行这个 core case。
 ## 显式 plate 2 的既有缓存 recipe
 
 当前 `runner/cache.rs::cached_slice` 固定 `--slice 0` 和 `plate_1.gcode`，
-不适用于本例。使用交接明确授权的新 `runner/cache/plate_selection.rs`，
+不适用于本例。使用新的 `runner/cache/plate_selection.rs`，
 `cache.rs` 仅增加这一模块注册；不改已有 `slice_case`、processor、custom_gcode
 或 CLI result recipe。新方法接收既有 `ExportedCase` 和显式 plate 选择，
 本片调用值固定为 2，不创造另一套 fixture/cache 框架。
@@ -81,19 +80,18 @@ O6 两例：plate 2 切片后因缺参照失败；空 plate 1 控制继续通过
 
 required 冷/热各跑迁移例，核对真实命令 `--slice 2`、exit 0、`plate_2.gcode`、
 request 中 selection 2、同 entry 与整份 Native SHA，验证 hit 不绕过缺依赖
-检查；原始输出和 receipts 外存。单独运行纯 core 空 plate 1 case，确认无 gate。
+检查；原始输出和 receipts 不提交。单独运行纯 core 空 plate 1 case，确认无 gate。
 
 以最新生产 main 做 fresh base/cand v2 seeded + official，逐项列状态变化，
-严格失败子集比较保留真实退出码，并核对共同 Ares raw SHA。`058` 为 tests-only，
-允许按协调者裁定沿用 `083` 之后证据，但不沿用旧 `08a` raw；若 main 有新生产
-改动，刷新基线及必要门禁。Native 波动先保留原失败和双侧证据报协调者裁定。
-工程门禁：定向、workspace nextest（16 threads）、strict clippy
+严格失败子集比较保留真实退出码，并核对共同 Ares raw SHA。若 main 有新生产
+改动，刷新基线及必要门禁。Native 波动先保留原失败和双侧证据并逐例报告。
+工程门禁：定向、workspace nextest、strict clippy
 workspace/all-targets/all-features `-D warnings`、fmt、core/vgcode/wasm
-all-features wasm32 check。每人一个 heavy，浏览器窗口不启动新 heavy。
+all-features wasm32 check。
 
 Deferred：生产 plate origin/arrange/routing/API 修复、更多 plate/fixture 矩阵、
-CLI 空 plate 退出码 parity、共享策略/缓存抽象重构及其它 B 组。不改 `.config`、
-root `orca_parity.rs`、CLI63/retained/channels/marker/KSR；额外共享需求先协商。
+CLI 空 plate 退出码 parity、共享策略/缓存抽象重构及其它迁移组。不改 `.config`、
+root `orca_parity.rs`、CLI63/retained/channels/marker/KSR；额外共享需求先报告。
 
 ## Beta
 

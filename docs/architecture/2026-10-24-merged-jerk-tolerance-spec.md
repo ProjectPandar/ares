@@ -1,8 +1,6 @@
 # SPEC: merged Klipper jerk approximate equality
 
-Base frozen comment `062c0bedd7fdfc6911b824dba1ca0d9b997e8fe8`.
-Coordinator ACK: SPEC → public Native-first RED → minimal GREEN → review/hold.
-No FULL. No formatting-precision correction in this slice.
+No formatting-precision correction in this slice.
 
 ## Source owner and non-negotiable rewrite boundary
 
@@ -20,7 +18,7 @@ in `motion/travel/lift.rs:12` cites upstream. No helper/constant/visibility API.
 Deferred: formatting, separate jerk writer, acceleration/clamps/comments/cache
 policy, processor/templates/fan/tower and all other slices. In particular the
 separate7.0002 serialization mismatch is NOT a control for this slice or fixed
-here. It remains recorded in external evidence for the next proposal.
+here; it is a separate follow-up.
 
 ## Reachable evidence
 
@@ -34,8 +32,6 @@ Discovery target firstdiffbyte6161: Native proceeds to Innerwall, Ares emits
 redundant `SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY=7` and later restores7.
 Three cleancontrols fullPASS,10Native slices5inputs replaystable (the fifth,
 7.0002, fails independently due precision and is explicitly excluded).
-Evidence `${EVIDENCE_ROOT}/w4-merged-jerk-tolerance/PROPOSAL.md`,
-results, clean-control and original streams. Exact062c existing CLI, CPU17.
 
 SHA inputs:
 - equal7:173b2cd1e4d549de65953512f9d8d3d853f3753f68ff0546b0be63368987a78b
@@ -57,8 +53,8 @@ wrong relative/non-strict test. No decimal7.0001 exact boundary assumption.
 Review source to retain clamp-before-comparison and suppress-before-cache;
 public byte tests alone cannot prove private cache invariants.
 
-CPU17/PIN17/jobs1/threads1 official then seeded. Commit RED when only target
+Official then seeded. Commit RED when only target
 fails; qualify Native replay/callback and raw API==CLI. GREEN modifies only the
 strict comparison/import, leaving frozen tests/inputs and comment suffix intact.
-fmt/workspaceall-targetclippy and fourcases bothmodes must pass, then
-REVIEW-REQUEST/hold. No FULL/merge/push, no new helpers/lint suppressions.
+fmt/workspaceall-targetclippy and fourcases bothmodes must pass. No new
+helpers/lint suppressions.

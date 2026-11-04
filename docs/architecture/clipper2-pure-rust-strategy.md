@@ -1,6 +1,6 @@
 # Pure-Rust Clipper2 boundary strategy
 
-Status: **approved before implementation**. Target: OrcaSlicer
+Status: **Accepted**. Target: OrcaSlicer
 v2.5.0-beta, `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 This is a source-rewrite strategy, not a parity or platform PASS claim.
 
@@ -117,9 +117,9 @@ owning upstream function segment; do not add fallback branches to make a split
 convenient. The Clipper1-only private tests and their now-orphaned helpers,
 registrations and sort-trace observer are removed where retirement makes them
 uncompilable; their legacy engine/state/error contracts are not reconstructed for
-tests. The approved public geometry witnesses and runtime comparators remain
-unchanged. Strict all-target Clippy is required before implementation handoff,
-independently of the separately scheduled source-private-test deletion batch.
+tests. The public geometry witnesses and runtime comparators remain
+unchanged. Strict all-target Clippy is required for the implementation,
+independently of the separate source-private-test deletion.
 Current helper correspondence:
 
 | Rust helper boundary | Pinned source segment |
@@ -226,7 +226,7 @@ subsequent slice. Do not bundle walls, fill, support, configuration, GUI, file I
 ClipperD convenience APIs, rectangle clipping or triangulation not needed by this
 wrapper boundary. No new public geometry API solely for testing.
 
-After spec approval, first commit a targeted **public RED** witness through an
+First commit a targeted **public RED** witness through an
 existing public slicing/path API or CLI parity case, with immutable beta-oracle
 bytes or independent literal expectations. Select explicit nested/touching-hole,
 collinear/spike, offset-threshold/arc-cap, and coincident/new-intersection Z cases;
@@ -234,14 +234,12 @@ new tests contain no private-module calls, mocks, loops or computed expectations
 Source-only diagnostic probes may localize failures but cannot replace the public
 RED or claim official application parity. New case/function/fixture names describe
 behavior; existing names are not renamed by this slice. Any required instrumented producer must
-be separately identified and approved; old producer outputs cannot become beta
+be separately identified; old producer outputs cannot become beta
 expectations by relabeling.
 
 Then port the source boundary, run only the selected RED/GREEN filter,
 `cargo fmt --all -- --check` and
-`cargo clippy --workspace --all-targets -- -D warnings`, and submit the
-implementation REVIEW-REQUEST. Preserve ordered outputs and exact assertions;
+`cargo clippy --workspace --all-targets -- -D warnings`. Preserve ordered
+outputs and exact assertions;
 unresolved unrelated migrations are reported, not hidden by skips or tolerances.
-Browser WASM/native integration and FULL gates belong to the integrator after
-cutover. This document authorizes neither a FULL run nor implementation before
-strategy review.
+Browser WASM/native integration and full-suite gates follow cutover.

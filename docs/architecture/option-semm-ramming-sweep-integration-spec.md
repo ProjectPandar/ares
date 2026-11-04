@@ -1,7 +1,6 @@
-# SEMM ramming profile sweep integration — approval spec
+# SEMM ramming profile sweep integration — spec
 
-Status: **PROPOSED; no heavy task before approval**.
-Date:2026-10-11. Base main:6e4c6c843 (test-only advance, not production).
+Status: Proposed.
 Next priority from [gap audit](option-coverage-gap-2026-10-11.md).
 
 ## Source-owned goal, not a new ramming implementation
@@ -18,11 +17,11 @@ sweep domain or compare both original and swapped inputs through validated API
 and real CLI. Preserve that test and every current assertion.
 
 This slice is test/accounting only unless a newly admitted witness identifies
-an actual upstream port mismatch. Any production correction needs separate
-owner approval naming the specific upstream operation and Rust destination.
+an actual upstream port mismatch. Any production correction needs its own
+spec naming the specific upstream operation and Rust destination.
 No invented optimizer, tower geometry algorithm, extra validation/fallback,
-material scheduling/build, Native golden or acceptance tolerance is authorized.
-Worker2's wipe-tower production ownership remains unchanged.
+material scheduling/build, Native golden or acceptance tolerance is in scope.
+Wipe-tower production code is not changed by this slice.
 
 ## Exact upstream owners / destination boundary
 
@@ -49,13 +48,12 @@ Preserve stock single-extruder commands and loading/cooling parameters.
 Prime tower anchored150/150 inside220×220 bed; no support/raft/TPU, fixed
 seed/generator metadata and unchanged geometry/tool ordering.
 
-Offline retained original input at
-`/tmp/worker3-master-full-496-v1-seeded-cand-artifacts/case-PhFtBr/input.3mf`
+An offline retained original sweep input
 shows `single_extruder_multi_material=1`, `enable_filament_ramming=1`,
 `enable_prime_tower=1`, `purge_in_prime_tower=1`, both requested profiles,
 filament_map1/1, one0.4 nozzle. This is a **historical input recipe**, not a
 fresh admission/golden or proof for the new matrix. Record its hash/source if
-reused, then run fresh Native against the exact rewritten bytes after approval.
+reused, then run fresh Native against the exact rewritten bytes.
 Do not build a second exporter: retain the admitted two-object3MF and patch
 only permitted config fields using existing CLI test fixture conventions.
 
@@ -105,7 +103,7 @@ claim: this is only the declared bounded set in the admitted context.
 
 These are proposed requests, **not newly executed Native facts**. All seven
 must be freshly admitted; if Native rejects tower footprint, crashes, or fails
-to activate the intended path, preserve every stream/receipt and request a
+to activate the intended path, preserve every stream and write a
 revised spec. Do not silently change tower placement, models, purge volume,
 profile strings or expected outcome to rescue the case.
 
@@ -114,7 +112,7 @@ merely config serialization or a different comment. R1/R4 must demonstrate
 Native width-dependent ramming path/E motion.
 
 Native admission at actual664b387d8 found both off cases succeed but differ
-in795 extrusion-motion XY lines. Approved correction: C1/C2 require no Ramming
+in795 extrusion-motion XY lines. Corrected obligation: C1/C2 require no Ramming
 comments and no unload ramming E fragment, **not equal overall motion**.
 WipeTower2.cpp:1643-1645 computes profile line_width/y_step unconditionally
 before do_ramming (:1655; local guard :1657); :1834-1844 retains y_step in the
@@ -125,12 +123,10 @@ Motion extraction is only supplementary activation proof. Every individual
 Native/API/CLI acceptance comparison remains the **entire ordered GCode**,
 including config headers; no sections are dropped to compare off controls.
 
-## Test-first implementation after approval
+## Test-first implementation
 
-1. Sequential fresh Native admission under load<60/jobs2/threads2. Before each
-   start, last exact exclusive START must have END; watch new exact markers,
-   kill owned process groups and retain VOID on exclusivity. Pin standard
-   producer/seed/CPU and record actual repo/input/binary hashes.
+1. Sequential fresh Native admission. Pin standard producer/seed and record
+   actual repo/input/binary hashes.
 2. Commit admitted input3MF/provenance only (never Native output goldens), then
    bounded E2Es at validated public byte API and real CLI seams. Write tests
    before any production correction. Compare original and swapped cases fully,
@@ -146,16 +142,14 @@ including config headers; no sections are dropped to compare off controls.
 4. Keep existing `runner/filament_map_ramming.rs` and all its original Native
    toolchange/block count/swap/Ares comparison assertions. Prefer input-only
    fixture reuse, leaving that runner test unchanged. Any unavoidable mechanical
-   input-helper move must be separately authorized/compilable and preserve
+   input-helper move must be compilable on its own and preserve
    every assertion; no duplicate production or exporter path.
 5. Run seven named cases plus selected authored sweep with standard seeded and
-   official references, fresh per-mode artifacts/caches, load<60/jobs2/threads2.
+   official references, fresh per-mode artifacts/caches.
    If divergence appears, report exact first difference and upstream owner;
-   no production change until a separate operation-specific owner approval.
-6. Engineering under load<30/jobs2/threads2: workspace nextest --no-fail-fast,
-   5400s; strict workspace/alltargets/allfeatures Clippy, fmt, core/WASM.
-   Full or any test-only carry requires new explicit owner authority; do not
-   inherit the prior6e4 full waiver automatically. No push without exact approval.
+   no production change without a separate operation-specific spec.
+6. Engineering: workspace nextest --no-fail-fast; strict
+   workspace/alltargets/allfeatures Clippy, fmt, core/WASM.
 
 Repeatable artifacts per case: input/hash + full-settings/ZIP control proof,
 Native producer/command/exit/signal/stdout/stderr/result, complete Native,
@@ -180,7 +174,4 @@ Deferred: arbitrary malformed profile text/GUI curve semantics after pipe,
 invalid bounds, all filament counts/vector broadcasts, non-SEMM/multitool
 ramming, tower types/geometry generalization, mixed diameter/materials,
 Auto mapping/TPU, cooling algorithm changes, nozzle dataset predictor sweep,
-worker5 inherits and Native crash clusters. No new Ares ramming policy.
-
-**Approval requested:** this7-request Native admission/test-first sweep
-integration only. Until approved, remain offline/0heavy/0production changes.
+inherits and Native crash clusters. No new Ares ramming policy.

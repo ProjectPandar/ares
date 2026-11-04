@@ -1,6 +1,6 @@
 # Spec: emit-path `estimate_extrusion_quality` speed divergence
 
-Status: C1 implementation GREEN, full gates in progress. Authoritative
+Status: C1 implementation GREEN. Authoritative
 boundary/evidence: `docs/architecture/2026-10-07-sermoon-predecessor-aabb.md`.
 The residual was indexed AABB predecessor selection, not inserted
 annotation points. Raw output now matches including M73; its test filter
@@ -11,7 +11,7 @@ Origin: the C1 curled-perimeter residual
 
 ## Retraction of prior conclusions
 
-- **The oct-6 `/tmp/curldump.txt` is VOIDED as oracle evidence**.
+- **The earlier curl dump is VOIDED as oracle evidence**.
   Its ARTD `line=` candidates (fine-grained 1.161mm CurledLines)
   cannot be reproduced by any current binary — fresh probes of
   BOTH `pkgs.orca-slicer` 2.4.2 AND the
@@ -53,7 +53,7 @@ offset, intersections, segmentation), `path.width`/`path.height`,
 `speed_sections`, `all_lines_in_radius` results, or
 `calculate_speed`.
 
-## Evidence protocol (coordinator-mandated)
+## Evidence protocol
 
 Every probe output must record the oracle binary's store path or
 sha AND its gcode on the reference case must first be verified
@@ -64,8 +64,7 @@ Oracle binaries used for this spec:
 - seeded: `/nix/store/1k0p5nlbs3zsfdcy08g3y5fb7bcm1qrv-orca-slicer-seed-replay-2.4.2`
   (built from replay source `OrcaSlicer`
   HEAD 8500fcdcc; ORCA_REPLAY_SEED=0).
-- official: `/tmp/orca-official-242/squashfs-root` (OrcaSlicer
-  2.4.2 AppImage extraction).
+- official: OrcaSlicer 2.4.2 AppImage extraction.
 - probe builds: `tools/orca-probes/spdin-src.nix` and
   `tools/orca-probes/lastspd.nix` (nix postPatch instrumented
   builds of the replay source; each verified byte-identical on
@@ -125,8 +124,7 @@ artificial_distance formula (verified), other matrix cases.
 ## Verified emit-path mechanism (probe evidence, byte-consistent binary)
 
 Two new probes on the byte-verified replay-source binary
-(`/tmp/spd-orca`, `/tmp/lspd-orca`; gcode diffed byte-identical to
-`case-6qvP0t/orca.gcode` before use):
+(gcode diffed byte-identical to `case-6qvP0t/orca.gcode` before use):
 
 1. **`spdin` probe** — per-seg `curr/next/art/spd` inside
    `estimate_extrusion_quality`: ares' `art`, `curr`, `next`
@@ -221,8 +219,8 @@ In: slope-path speed emission + `extrusion_feedrate` bookkeeping
 C1 byte-compare flip; probe recipes `tools/orca-probes/
 {spdin-src,lastspd}.nix` committed with provenance.
 Out: collect path, junction density, artificial_distance formula
-(all verified at parity); TiQ2 skirt/wall split (pi-tower —
-revisit if same root after this lands); F750-vs-F729 scarf speed
+(all verified at parity); TiQ2 skirt/wall split (revisit if same
+root after this lands); F750-vs-F729 scarf speed
 value (adjacent residual if it persists after the emit fix).
 
 ## Implementation status (partial GREEN)
@@ -297,7 +295,7 @@ annotation port inside `CurlTracker::collect` per the earlier
 directive (reuse `BoundaryContext` machinery), then rerun the
 whole-file test.
 
-## Coordinator question resolution — evidence alignment
+## Evidence alignment
 
 The earlier "n=5 identical" claim compared only `curled_lines`
 GEOMETRY and only at layer 1. The byte-verified curl dump
@@ -364,20 +362,19 @@ traversal. Investigate exact nearest-line tie selection before any
 annotation implementation. Do not replace the scan with an arbitrary
 last-match heuristic.
 
-Recheck artifacts: /tmp/ann-recheck/points.txt and run.log.
 Oracle ann binary: /nix/store/njdmyaqagqyzdsjiwx66fkwyl6729bip-orca-slicer-2.4.2
 (actual bin/.orca-slicer-wrapped SHA256
 9d8ece38317be0f32e4952974ed2e07ff091a6ea7f1dbe52b6a774c01420842e).
 Curl oracle: /nix/store/kv5pcc97ack7c1fpmvni44bm5ffp4hm2-orca-slicer-2.4.2
 (actual executable SHA256
 f2fc2624b21b7c3384c20177d6154e27841520c01d20a4b56a3960f1c1bc9d0a);
-its /tmp/curl2.txt records layer-2 corner h=0.166997.
+its curl dump records layer-2 corner h=0.166997.
 Both probe outputs were checked against case-6qvP0t/orca.gcode before use.
 
 Core RED run (before nearest-line implementation):
 `cargo nextest run -p ares-core sermoon_layer_two_corner_height_matches_oracle`
-failed with `layer-2 corner height 0.3261211 != oracle 0.166997`.
-Log: `/tmp/sermoon-corner-red.log`; nextest exit code 100.
+failed with `layer-2 corner height 0.3261211 != oracle 0.166997`
+(nextest exit code 100).
 The fixture collects three five-point square loops (layer 0 half-side
 4.345001, layers 1/2 half-side 4.645001), width 0.61, height 0.2.
 This isolates predecessor selection/rollover/decay without the CLI.

@@ -1,6 +1,6 @@
 # Stock profile provenance: beta cutover
 
-Status: approved test-data cutover; not a slicer GREEN or ledger closure.
+Status: Accepted test-data cutover; not a slicer GREEN.
 
 ## Decision and upstream boundary
 
@@ -57,15 +57,13 @@ case identities, and whole-stream generator-only comparisons stay intact.
 The shared document has 28 consumers: 15 Arachne/visibility cases, six classic
 Bridges/None controls, five classic Filled cases, and two direct-STL
 bookkeeping cases. Observations use all 28 before and after on the same
-approved production-overlay tree. The test-data commit itself has the
-unoverlaid parent `663340839e4e21928c8b0f562428623fb3311957`; overlay production
-changes are not included in it.
+production tree. The test-data commit does not include production changes.
 
-## Deferred behavior and evidence limits
+## Deferred behavior
 
 The separate `classic-layer-id/profile-provenance.json` copy and its matrix
 are excluded despite their identical old digest. Do not globally replace
-that digest or rewrite historical v2.4.2 receipts.
+that digest or rewrite historical v2.4.2 data.
 
 Beta filament schema changes are not semantically inert. New admission,
 Native-premise, or output failures after this prerequisite are observations,

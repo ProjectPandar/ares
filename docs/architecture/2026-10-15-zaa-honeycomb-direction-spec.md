@@ -1,11 +1,9 @@
 # Ordinary Honeycomb regional ZAA direction: Native-first slice
 
-## Status and upstream boundary
+## Upstream boundary
 
-SPEC for review; no runtime defect is claimed before the Native witness.
-Base main: 3ee8f272c6d8e2db22dde9003a01afeb7201e36a, stacked on approved
-Line direction 67c5635575cac53d531adc6428810bb87b242623. Its branch remains
-unchanged. This SPEC lives on worker2/zaa-honeycomb-direction-spec.
+No runtime defect is claimed before the Native witness. Builds on the
+Line direction slice 67c5635575cac53d531adc6428810bb87b242623.
 
 The owning rewrite boundary is libslic3r's ordinary surface-fill direction:
 
@@ -31,10 +29,10 @@ This is a source-level candidate, not yet a demonstrated public RED.
 
 ## Rust destination, included and deferred
 
-If discovery and public RED are approved, carry the existing SurfaceCall
+If discovery and public RED confirm the gap, carry the existing SurfaceCall
 conjunction from fill_entities/generate.rs into the ordinary Honeycomb
 adapter, through HoneycombFillParams into the direction condition in
-fill/honeycomb.rs. Reuse the context already present after the approved
+fill/honeycomb.rs. Reuse the context already present after the
 Line hoist; do not introduce another region lookup or a new context type.
 The adapter is a temporary compatibility shell for the cited Fill lifecycle.
 No new Ares-owned fill pipeline or algorithm is proposed.
@@ -59,9 +57,9 @@ plus existing Honeycomb parameter constructors in sparse_anchoring/arms.rs,
 non_organic/toolpaths/fill.rs and core Honeycomb tests. Each file stays<=400;
 no assertion changes, allocation/copy growth, guards or fallback paths.
 
-## Bounded acceptance and activity discovery after SPEC approval
+## Bounded acceptance and activity discovery
 
-Use the approved Line input-only wide slab as sole geometry/profile source:
+Use the Line input-only wide slab as sole geometry/profile source:
 height2.4mm, sparse40%, classic, wall_loops0, relative E, top/bottom shell
 counts/thickness0, empty sparse/solid rotation templates, infill direction45.
 Change only sparse pattern to honeycomb, preserving mesh/profile members and
@@ -69,12 +67,9 @@ fixed ZIP metadata. Three cases share valid min_z0.05 and perimeter-height35:
 enabled-ZAA/flag0, enabled-ZAA/flag1, disabled-ZAA/flag1.
 This combination must earn Native acceptance; source similarity is not proof.
 
-CPU13 official and CPU14 seeded, outer taskset including probes, jobs2 and
-threads2, unchanged canonical oracle/reference environment except assigned
-CPU pinning. Two fresh Native references per case per mode (12 total), each
+Official and seeded modes, unchanged canonical oracle/reference environment. Two fresh Native references per case per mode (12 total), each
 with a fresh cache/artifact root. Record input SHA, effective options, complete
 footer, repeat/cross-mode normalized whole output and per-layer Sparse XY/E.
-No full/workspace; obey every exclusive freeze and oracle-path policy.
 
 Require positive Sparse paths on object layers with index%3=1 and2, and no
 Internal Bridge role. Require a real Native flag0/flag1 geometry difference
@@ -89,21 +84,20 @@ matches. STOP/report if Native rejects/crashes, repeats vary, controls fail,
 bridge output appears or unrelated motion differences block localization.
 No fixture search/widening or ordinary-sparse promotion of deferred contexts.
 
-## Public RED and subsequent GREEN review gates
+## Public RED and subsequent GREEN gates
 
 Only after a live witness, separate test-only RED: three frozen SHA-pinned
 input-only3MFs, OrcaRunner::from_env Some/else-return convention, public
 API+CLI, repeat/activity checks. Assert exact active-layer Sparse XY/E before
 unchanged strict whole-output assertions. Include both controls in RED;
-expect two PASS/one FAIL each mode. Commit no Native output. Submit exact
-RED hash and receipts before production.
+expect two PASS/one FAIL each mode. Commit no Native output. RED lands before
+production.
 
 First differing motion must localize to Sparse extrusion or its entry travel.
 Retain progress/cooling differences in the whole-output comparator, with
 source attribution if they precede that motion. Unrelated deltas require
-STOP/localization ruling, not comparator edits or scope expansion.
+STOP/localization, not comparator edits or scope expansion.
 
 Later GREEN: three public cases plus ZAA/compatible_regions and ordinary
 Honeycomb/support-ironing/anchoring controls, both modes; raw-byte invariance
 for existing controls, fmt, strict clippy and wasm32 on exact clean hash.
-Full/workspace/CI/merge remain coordinator-only. No push.

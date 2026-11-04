@@ -1,7 +1,5 @@
 # SPEC: machine XY jerk writer cache rounding
 
-Base frozen09296fa680452baf6d883cedb6b4d2d4455347a3. Coordinator ACK authorizes
-SPEC → Native-first public RED → XY-cache-only GREEN → REVIEW-REQUEST/hold.
 No FULL. No raw config/header/Z/E/acceleration changes.
 
 ## Non-negotiable upstream rewrite boundary
@@ -40,9 +38,7 @@ SHA:
 - active7.6target:4ea82ec44a0d1c7527800e666c7a294c71b717fb90a1c361d09f82dff00241d7
 - inactive7.6control:6b3c9d972c96f04cc849e3da9d67ff06679146d94b53e39819fb16916be4d152
 
-Discovery8Native slices4initial/activecasesstable,allCLIexit0,exact09296binary.
-Evidence `${EVIDENCE_ROOT}/w4-machine-jerk-rounding/PROPOSAL.md` and
-originalstreams/ownershipaudit. No API/seeded/FULLclaim from discovery.
+Discovery: 8 Native slices over 4 initial/active cases stable, all CLI exit 0.
 
 ## RED-first failure modes / exits
 
@@ -57,8 +53,8 @@ rounding withwrongflavorgate,roundingheader/Z/E/acceleration,changingconsumer
 clamps. Publicinputs pin non-tie7.6 and gate-in behavior; source review must also
 verify ties-even and falsegate0 explicitly, not infer from these bytes.
 
-CPU17/PIN17/jobs1/threads1 serialofficialthenseeded:onlytargetexpectedFAIL,
+Official then seeded: only target expected FAIL,
 controlsPASS/Nativecallback+replay+API==CLIqualify. Commit REDbeforeproduction.
 GREEN onlyXYcacheconstruction; freezeREDtests/inputs. fmt/workspaceall-target
-clippy/3casesbothmodesPASS thenreview/hold. NoFULL/merge/push;groupregistration
+clippy/3 cases both modes PASS. Group registration
 withoutsqueeze,touchedRust≤400LOC.

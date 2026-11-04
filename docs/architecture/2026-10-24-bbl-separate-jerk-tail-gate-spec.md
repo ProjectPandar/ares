@@ -1,8 +1,6 @@
 # SPEC: BBL jerk Z/E tail after flavor selection
 
-Base: `17ec2e0820b5749e68d93f5180b0d52573f529e1`.
-The coordinator authorized docs SPEC and public RED with one combined review
-request. Hold before GREEN; no FULL run is authorized.
+Docs SPEC and public RED; no GREEN or FULL in this stage.
 
 ## Source boundary and non-negotiable decisions
 
@@ -14,9 +12,9 @@ then a newline. The preceding upstream TODO acknowledges the gate placement;
 this slice ports the literal current structure, not a speculative TODO fix.
 
 Rust destination: `gcode_emit/motion/jerk.rs::set`. Its BBL tail is currently
-inside only the ordinary M205 arm. After RED review, move the existing tail
+inside only the ordinary M205 arm. After RED, move the existing tail
 outside the flavor match, with flavor prefix first, optional BBL Z/E tail next,
-then the upstream comment and newline. Reuse the approved
+then the upstream comment and newline. Reuse the existing
 `format::ostream_with_precision(value, 2)` calls. No new formatting algorithm,
 command-builder abstraction, cache mutation, flavor/model predicate, or global
 emission redesign. Preserve the existing prefix formatting and clamp behavior.
@@ -26,17 +24,17 @@ writer operation. The rewrite goal is source parity, not an Ares pipeline.
 Included: the placement of the existing BBL suffix and source-ordered final
 comment/newline. Deferred: other comment policies, PA precedence, raw headers,
 model/tag inference, firmware validation, acceleration, travel and time code.
-Do not touch W1 auto_lift/M73, W3 tokenizer/fan/zero-E or W6 value.rs/coInts files.
+Do not touch auto_lift/M73, tokenizer/fan/zero-E or value.rs/coInts files.
 
 This is independent of the accepted Repetier XY-clamp bounded null. Repetier
 X/Y caches remain zero under the flavor gate, while upstream initializes the
-raw Z/E caches unconditionally. No cache changes are authorized here.
+raw Z/E caches unconditionally. No cache changes are included here.
 
 ## Admitted saved configuration
 
 The target combines a saved BBL printer-model identity with Repetier flavor.
-Native accepts and slices this archive. The coordinator explicitly confirmed
-that Native-admitted archives are in scope, even for this cross-family case.
+Native accepts and slices this archive. Native-admitted archives are in
+scope, even for this cross-family case.
 There is no claim that factory Bambu hardware runs Repetier, or that this is a
 recommended printer profile. Do not manufacture writer state or override model
 admission to create the witness.
@@ -67,13 +65,9 @@ request isolates the tail without filtering output or changing travel code.
 No travel=10000 archive belongs in this RED. A renamed-model BBL archive was
 not a clean control; use the genuine Ender3 archive instead.
 
-Discovery evidence:
-`${EVIDENCE_ROOT}/w4-bbl-separate-jerk-tail-gate/isolated/`, including
-`target-diff-audit.json` and the selected control in `ender3-control/`.
-
 ## RED seam and failure modes, before production work
 
-Freeze only the three approved archives. Add direct calls to the existing
+Freeze only the three discovery archives. Add direct calls to the existing
 `native_stream_case` Native/API/CLI seam. Fresh Native replay qualifies first.
 Callbacks read the input printer identity, flavor and Z/E values, then inspect
 Native body jerk commands for the matching prefix and BBL tail. Expectations
@@ -86,17 +80,14 @@ the unchanged generator-line normalization only. Keep all M73, headers,
 configuration and footers; require raw API==CLI. Observations are not filters.
 No Native reference outputs may be committed. Expected RED: BBL/Repetier target
 fails at the omitted tail; stock BBL and Ender3/Repetier controls pass; Native
-replay and callbacks qualify. Commit RED, submit the combined SPEC/RED review
-request and hold before production changes.
+replay and callbacks qualify. RED precedes production changes.
 
 Failure modes: a suffix gated only by M205; accidental tails on non-BBL commands;
-changes to the approved two-digit formatter, prefix/clamps or cache state;
+changes to the existing two-digit formatter, prefix/clamps or cache state;
 comments appearing before the tail; and masking unrelated travel/time output.
-Only the three approved clean cases are added; Klipper-specific public witnesses
-and additional comment variants require separate authorization.
+Only the three clean cases are added; Klipper-specific public witnesses
+and additional comment variants are separate slices.
 
-After RED approval: minimal source-placement GREEN, tests and inputs frozen;
-CPU17/PIN17, one build job and one parity thread, fmt, workspace all-target
+After RED: minimal source-placement GREEN, tests and inputs frozen; fmt, workspace all-target
 clippy and the same three cases in official then seeded mode. Preserve normal
-group separators, root registries and the 400-line Rust file limit. Submit a
-GREEN review request and hold. No FULL, merge, push or stash.
+group separators, root registries and the 400-line Rust file limit.

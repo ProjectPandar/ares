@@ -1,20 +1,15 @@
 # Arc prerequisite paired diagnosis — STOP: different inputs
 
-Status: **DIAGNOSTIC REVIEW REQUEST; no production/comparator changes.**
-Branch head during execution: `4a7c29960` on main `e46f44462`.
-Rebase from `325ea6983` retained all three commits with range-diff `=`.
+Status: diagnostic; no production/comparator changes.
 The former fitter-only prerequisite is **not proven responsible** for this RED.
 Do not start its numeric repair: its mandatory input-equality gate failed.
 
-## Authorized execution / trace authority
+## Execution and trace constraints
 
-All execution used outer `taskset -c 15`, `CARGO_BUILD_JOBS=1`, test-threads1.
-Rust build used independent `/tmp/worker4-arc-paired-eyIt/target` (nextest no-run).
-START/END and probe SHA receipts are in `${TMP_ROOT}/ares-coord-inbox.log`.
 No production, test assertion, geometry, breakpoint source, or comparator edits.
-No push. Temporary debugger scripts are outside the repo and never committed.
+Temporary debugger scripts are outside the repo and never committed.
 
-Approved read-only probe sequence:
+Read-only probe sequence:
 - `892df024...d89f87aa`: Native/Rust GDB scripts; Native succeeded, Rust initial
   source-line breakpoint selected an inline closure without `points` scope.
 - `58bb705c...f19c0ad8`: select outer `simplify_points` frame; variables available,
@@ -22,7 +17,7 @@ Approved read-only probe sequence:
 - `a8efa6da...1ab3ad1a`: read inferior memory only; finally obtained raw point and
   fitting records. No write_memory, set var, inferior call or source mutation.
 
-Native trace root: `/tmp/worker4-arc-paired-eyIt`.
+Native trace:
 Full diagnostic `native/plate_1.gcode` equals the frozen seeded None stream under
 established generator-only normalization; witness
 `native-full-output-equivalence.json` says `equal: true`. No motion-only gate.
@@ -33,8 +28,7 @@ Both traces use existing seeded ELF, not a patched producer. The trace captured
 against every captured arc's simplified integer start/end and bounds/type;
 raw bytes are retained and padding bytes are not treated as semantic hashes.
 
-Final Rust trace root: `/tmp/worker4-arc-rust-memory-BcZy`.
-Files: `ares-trace.jsonl`, `ares-gdb.log`, `probe.sha256`, `paired-input-stop.json`.
+Final Rust trace: `ares-trace.jsonl`, `probe.sha256`, `paired-input-stop.json`.
 The unchanged public None test reproduces the identical byte6053/line256 arc RED.
 137 post-fit records were captured. Multiple inline breakpoint locations produce
 380 pre records; do not compare global call ordinals to Native. No optimized-out
@@ -74,7 +68,7 @@ Post-fit target arcs both have retained start57/end59 after DP, but centers diff
 
 This directly ties the paired records to the saved G2 mismatch, but **does not
 prove either fitter is correct on the other's input**. Because input differs,
-no hypothesis1 candidate/radius numeric modification is authorized.
+no hypothesis1 candidate/radius numeric modification is justified.
 
 ## Owning input path / next source boundary
 
@@ -101,16 +95,16 @@ Arachne's earlier inner contour (`PerimeterGenerator.cpp:2148–2176,2475–2533
 `Arachne/WallToolPaths.cpp::getInnerContour:779`) is a possible antecedent boundary
 supplier. Current traces alone do not identify whether first drift occurs there,
 in fill contour preparation, or during copying/rotation. No connector or Arachne
-module is authorized for production edits by the fitter-only allowlist.
+module is in scope for production edits under the fitter-only allowlist.
 
-## Requested coordinator decision
+## Decision
 
-Record this as a falsified fitter-only gate and STOP. Request a separately owned
-**read-only monotonic input-provenance follow-up**, with paired contour inputs and
+Record this as a falsified fitter-only gate and STOP. Follow up with a
+**read-only monotonic input-provenance investigation**, with paired contour inputs and
 emitted connector points at the functions above to locate the first drift.
-This report does not request or authorize a Fill/grid production edit; coordinate
-with W6 ownership before a separate source-cited implementation scope. W3 centering
-and W5 interface-shell owners remain read-only too. If the actual differing
+This report does not cover a Fill/grid production edit; that needs
+a separate source-cited implementation scope. Centering
+and interface-shell code remain read-only too. If the actual differing
 contours originate earlier, report that exact upstream boundary before a further
 scope amendment. Keep the complete None RED, all geometry and assertions frozen.
 No additional runtime, fitter repair, counterbore GREEN or old guard migration

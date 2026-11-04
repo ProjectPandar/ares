@@ -1,7 +1,7 @@
 # First Arachne perimeter slice — executed red, NOT parity coverage
 
 OrcaSlicer 2.4.2 upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Runtime `/tmp/squashfs-root/bin/orca-slicer`, SHA256
+Runtime: the extracted AppImage `squashfs-root/bin/orca-slicer`, SHA256
 `64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60`.
 
 Selected actual defaults, without any option overrides:
@@ -28,8 +28,7 @@ the input presets/meshes, effective config and output bytes.
 
 The initial Prusa MK3S actual-default attempt exported but the AppImage refused
 to slice its `post_process:[""]` (CLI -19, process exit237). It was NOT counted
-as coverage or silently edited. Supervisor approved switching to this Snapmaker
-selection. Its empty default post-process string exports naturally as `[]`.
+as coverage or silently edited; this Snapmaker selection replaced it. Its empty default post-process string exports naturally as `[]`.
 
 ## Regression
 

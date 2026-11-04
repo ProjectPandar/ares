@@ -1,18 +1,16 @@
-# X2D-FM: source-owned dual-nozzle flush-matrix preparation
+# X2D source-owned dual-nozzle flush-matrix (FM) preparation
 
-## Status and decision
+## Decision
 
-Approved boundary, revised after source tracing and coordinator's system-boundary
-ruling (2026-10-07). Production is uncommitted and not accepted; initial RED
-`65336cb5` remains historical evidence but its undersized scalar type vector
+Boundary revised after source tracing and a system-boundary ruling. The initial
+RED `65336cb5` remains historical evidence but its undersized scalar type vector
 is not a defined-input calculator acceptance witness. **Its original Ares-error /
 Native-success divergence remains unresolved**, separately tracked in
 [O8-X2D-SCALAR](o8-x2d-scalar-flush-context.md); this slice must not claim to fix
 that reported input. Fully specified missing-matrix reconstruction is the FM
 RED. Generic materialization RED moves to a separate slice.
 Predecessor VG1/UsedFilaments is integrated at `9e3e8183777d465f9134361eb26c0a27d82e82c7`.
-This is #55 / `X2D-FM` in `${TMP_ROOT}/ares-matrix-clusters.md`, independently owned by
-pi-lint. It is configuration preparation, not a processor timing patch or an
+This is configuration preparation, not a processor timing patch or an
 Ares-designed purge pipeline.
 
 Upstream revision: OrcaSlicer v2.4.2
@@ -29,7 +27,7 @@ Preserve the upstream one-filament exception and exact multi-filament error
 
 ## Evidence and qualification
 
-Historical case `${TMP_ROOT}/ares-vg1-red-artifacts-matrix/case-Uut51r/` binds the
+A historical forensic case binds the
 repository cube10 and two logical palette/map entries to the exported X2D
 profile, without VG1. Input `input.3mf` is15830bytes, SHA256
 `04c2a738e93d5d161943d7f29dba6141ee1f6c6cd90512cf6ecc8c97eeec2c8d`.
@@ -105,8 +103,8 @@ algorithms. Their matrix consumers already exist in
 `gcode_emit/tool_ordering/{collect,reorder}.rs` and `wipe_tower/planning.rs`;
 this slice changes their prepared input only, not their ordering/emission code.
 If the exact upstream preparation context cannot be preserved by this narrow
-call (e.g. original/new preset identity lost), stop and revise the boundary with
-coordinator; do not guess the predicate from matrix length or printer name.
+call (e.g. original/new preset identity lost), stop and revise the boundary;
+do not guess the predicate from matrix length or printer name.
 
 ## Failure inventory and test-first acceptance
 
@@ -139,7 +137,7 @@ Discriminating cases:
 6. Multiplier prefix preservation, second-nozzle1 default, explicit two
    multipliers and rounding boundary; no double-scaling in runtime or export.
 7. Existing single-nozzle/single-palette controls, H2D/X1C/X2D valid inputs and
-   approved VG1/UsedFilaments/ColorChange controls remain unchanged unless an
+   existing VG1/UsedFilaments/ColorChange controls remain unchanged unless an
    identified Native preparation difference requires a source-owned change.
 
 Each end-to-end run retains project bytes/SHA, actual Native command and
@@ -151,7 +149,7 @@ footer heuristic, comparator relaxation, retry-until-success, ignored tests or
 unknown-producer cache admission. Base/candidate common Ares streams are also
 compared byte-for-byte without normalization. A new motion/ordering divergence
 is reported with its first difference and source owner; this spec does not
-preapprove repairing it in pi-tip's paths.
+include repairing it.
 
 ## Deferred boundary
 
@@ -162,10 +160,9 @@ new crates or Native UB emulation. The calculator's **upstream** prediction miss
 branch is included behavior, not a legacy Ares fallback. Required dependencies
 cannot be dropped merely to make the initial size error disappear.
 
-## Coordinator UB ruling and dataset-index dependency (2026-10-07)
+## UB ruling and dataset-index dependency
 
-Preserve `${TMP_ROOT}/ares-x2d-flush-matrix/green/seeded-focused/case-9whGha/`
-unchanged as **upstream O8/UB adjacent**, not an Ares calculator numeric RED.
+Preserve the scalar-input seeded case unchanged as **upstream O8/UB adjacent**, not an Ares calculator numeric RED.
 Its scalar `nozzle_volume_type=[Standard]` has only one element for two nozzles.
 `OrcaSlicer.cpp:3460–3462` directly indexes `volume_types[eidx]` (and extruders),
 with no vector broadcasting. Reading entry1 is out of bounds; the observed
@@ -173,8 +170,7 @@ Native second-head dataset0 behavior is undefined. Native's652/172 and the
 observed Rust900/120 are retained evidence, **not correct-value contracts**.
 Do not add a scalar-input expected-value assertion or emulate Native UB.
 
-Coordinator explicitly approved changing dataset-dependent witnesses because
-of this **UB input**, not to obtain a pass: specify both nozzle-volume types as
+Dataset-dependent witnesses change because of this **UB input**, not to obtain a pass: specify both nozzle-volume types as
 `[Standard,Standard]`, omit the matrix, and invoke the legitimate missing-matrix
 rebuild branch. Palette/dataset inputs are taken from the pinned upstream data,
 not selected by runtime outcome. Keep complete-stream comparisons. Under the
@@ -189,7 +185,7 @@ existing generic materialization issue rather than an FM regression. Its RED
 must move to a separately source-cited spec; FM does not depend on repairing
 that generic boundary. No generic mapping API or emitter change is included.
 
-## Defined boundary and predicate correction (coordinator ruling)
+## Defined boundary and predicate correction
 
 At the external configuration boundary, inspect the cells to be calculated.
 Only a cell using the colour calculator needs a nozzle's type/dataset; if any
@@ -206,9 +202,7 @@ lookup. Seven existing full-output REDs prove this: four seeded template-RNG
 cases (`distributions_and_shared_stream`, `raise3d_{dual,left,right}`) and three
 BBL SYNC cases (`positive_delay`, `without_sync`, `zero_delay`) retain Native/base
 `flush_volumes_matrix=0,0` and `flush_multiplier=0.3,1`; the unconditional rule
-incorrectly left a16-entry default matrix and multiplier0.3. Evidence is retained
-under `${TMP_ROOT}/ares-x2d-flush-matrix/fresh-d789-identified/candidate-seeded.log`
-and `rebase-1b175/prior-failure-inventory.json`. Use their complete-stream
+incorrectly left a16-entry default matrix and multiplier0.3. Use their complete-stream
 comparisons, not new internal matrix assertions. This is source computation of
 diagonals, not zero padding or a restored export-only shell.
 
@@ -219,25 +213,23 @@ matrix validation and the exact existing error remain unchanged.
 Source basis: `OrcaSlicer.cpp:3022–3047` creates the new Standard vector but
 never resizes the current vectors. `:3460–3462` uses unchecked source indices.
 `DynamicPrintConfig::update_values_to_printer_extruders` (`PrintConfig.cpp:9634ff`)
-is called later, not before this calculation. Retained same-input diagnostic
-`${TMP_ROOT}/ares-x2d-flush-matrix/trace/compact-aa.native.log` has flush computation
-at lines68–72, an actual garbage `ExtruderType=25276`, identical before/after
-matrix, and later update calls at lines126–128. The18 unique compact inputs
-are inventoried in `trace/predicate-input-inventory.json`; existing whole-byte
-controls, not new internal scalar-value assertions, cover their preservation.
-`case-9whGha` remains untouched. Boundary preservation applies to unresolved calculator dependencies, not source
+is called later, not before this calculation. A retained same-input Native
+trace shows the flush computation, an actual garbage `ExtruderType=25276`,
+identical before/after matrix, and later update calls. For the18 unique compact
+inputs, existing whole-byte controls, not new internal scalar-value assertions,
+cover their preservation. Boundary preservation applies to unresolved calculator dependencies, not source
 constants, and is not a legacy numeric fallback or an excuse to waive regressions.
 
 The outer colour predicate at `:3340–3351` requires an actual project colour
 option, not a later typed default. Sparse STL profile documents without
-`filament_colour` must not reconstruct. Same-input seeded diagnostic
-`trace/profile/00000.log` never enters flush calculation; the four existing
+`filament_colour` must not reconstruct. A same-input seeded diagnostic never
+enters flush calculation; the four existing
 profile-entry whole-byte REDs show Native's original16-entry matrix versus the
 erroneous reconstructed0. Check raw option presence before using typed colours;
 do not add printer-name, AMS or matrix-length predicates.
 
 
-## Short-lived old/new preparation context (coordinator-approved)
+## Short-lived old/new preparation context
 
 `OrcaSlicer.cpp:1704` captures the input nozzle count and current type option at
 load time; `:3022–3047` compares this old side with the new CLI configuration
@@ -256,8 +248,7 @@ not compensate with shape/name heuristics. Source-independent multiplier resize
 runs before declining unresolved calculator dependencies, matching `:3412–3465`.
 The existing `processed_color_change/inactive-tool` public E2E stays unchanged
 and must become GREEN: its override legitimately changes nozzle count and
-colours and supplies an8-entry matrix. Retain its prior matrix-size RED from
-`fresh-d789-identified/workspace.log`. No new internal-value assertions.
+colours and supplies an8-entry matrix. No new internal-value assertions.
 
 Dependency inspection reads support flags with the source's `get_at` semantics
 (`:3473–3475`, `Config.hpp:624–627,1892`); it never broadcasts selectors or
@@ -267,7 +258,7 @@ source's explicit support/colour count equality check (`:3412–3418`). This kee
 the public API's supplied valid matrix intact when its extra inactive tool has
 no complete selector context; no padding of flag or selector vectors is added.
 
-## Review boundary correction: generated ids and calculator reachability
+## Boundary correction: generated ids and calculator reachability
 
 The generic generated-printer-id rewrite remains exclusively in spec
 `703658c84`; FM must consume a complete materialized id map, not implement
@@ -296,29 +287,24 @@ variants must decline reconstruction; complete maps must retain exact selection
 and output; diagonal/support-only matrices must still compute without ids;
 multiplier prefix resizing must precede a dependency decline. Existing focused
 whole-output E2Es and all x2d_flush_matrix witnesses remain unchanged.
-The follow-up review requires a new full seeded v2 run after BROWSER-END:
-compare every common case's raw Ares bytes against the previous 594-test
-candidate, inventory and explain any changes, and require seeded all PASS.
-Focused/source-equality evidence alone cannot prove this stricter guard inert.
-Official need not rerun; retain its previously accepted evidence.
+A full seeded run must compare every common case's raw Ares bytes against the
+previous candidate, inventory and explain any changes, and require seeded all
+PASS. Focused/source-equality evidence alone cannot prove this stricter guard
+inert.
 
-## Official-mode whole-file case disposition (coordinator ruling 2026-10-09)
+## Official-mode whole-file case disposition
 
 The two official-control failures (`bridge_over_infill_multi_filament`,
 `bridge_over_infill_multi_filament_x2d`, `narrowed_x2d_whole_file`) are
 not byte divergences: both trees fail with `StageError::Timeout` — under
 the official control set's 32-way parallelism the appimage wrote only
-53KB of the 6.4MB stream before the shared 300s stage timeout killed it
-(`/tmp/narrowed-x2d-whole-file-rqnfpn/orca/plate_1.gcode.tmp`, command
-evidence `/tmp/narrowed-x2d-whole-file-rqnfpn/command-kCX0RF`, bridge
-counterpart `/tmp/bridge-multi-i4pIxg/command-kKsHJu`). Standalone the
-same fixtures complete quickly: narrowed X2D 4.2s unpinned / 12-13s
-pinned to one CPU, K3M 0.6s (probes under `/tmp/x2d-official-probe/`).
+53KB of the 6.4MB stream before the shared 300s stage timeout killed it.
+Standalone the same fixtures complete quickly: narrowed X2D 4.2s unpinned /
+12-13s single-core, K3M 0.6s.
 
 The stock official appimage additionally labels objects from an
-uninitialized id: three probes on the same input and CPU pin produced
-`id:0` twice and `id:9223372037920129024` once (1424 label lines,
-`/tmp/x2d-official-probe/{out,out1,out2}/plate_1.gcode`). The `id:0`
+uninitialized id: three probes on the same input produced
+`id:0` twice and `id:9223372037920129024` once (1424 label lines). The `id:0`
 run is byte-identical to the seeded reference modulo the `; generated
 by` banner (diff: 0 lines); the garbage-id run differs only in those
 label lines. The seeded replay binary initializes ids (the
@@ -339,28 +325,18 @@ would be reused by other cases and set a relaxation precedent):
 
 This is tests-only; no production or comparator change.
 
-## Closure record: exit-condition evidence (coordinator-approved plan, 2026-10-09)
+## Closure: exit conditions
 
-Landed chain on main: RED `ab6d7d2e1` → GREEN `e0134bcd7` → review
-fixes `f14c02af6`/`0c6e3ccf8` → dependency rule `310f5ae9a` → generated-id
-reselection RED `1c3a64a59` → GREEN `cbee83539`. Roadmap exit conditions,
-each with its verifiable evidence — gaps stated explicitly:
-
-1. **Fresh same-input Native RED (hash).** Admitted RED `ab6d7d2e1`
-   (`red/admitted-red.json`: base `9e3e81837`, spec tree `33f240f3`,
-   seeded `case-LqoYic` + official `case-bMQWtU`, verified native-cache-v2
-   receipts, input SHA `b980548a…`, reference SHA `b566726656…`).
-   Qualification: that input is the scalar UB shape later reclassified by
-   the O8 contract and retired from acceptance; the accepted
-   fully-specified missing-matrix shape is exercised by the live control
-   `x2d_flush_matrix_missing_matrix_rebuilds_without_nozzle_type_change`
-   (test-lineage RED at `256d17990`, flipped GREEN by `e0134bcd7`).
+1. **Fresh same-input Native RED.** The original admitted RED input is the
+   scalar UB shape later reclassified by the O8 contract and retired from
+   acceptance; the accepted fully-specified missing-matrix shape is exercised
+   by the live control
+   `x2d_flush_matrix_missing_matrix_rebuilds_without_nozzle_type_change`.
 2. **Prepared nozzle-major matrices exactly equal.** The live controls
    assert the full-line bytes against complete Native output:
    rebuild `0,102,186,0,0,339,621,0`; preserved custom
    `0,42,42,0,0,210,210,0` after one [0.3,1] scaling; multiplier
-   prefix `0.3` + second-head default `1`. Whole-output PASS in the
-   seeded run below. **High Flow end-to-end landed (2026-10-09):**
+   prefix `0.3` + second-head default `1`. **High Flow end-to-end:**
    RED `147948913` exposed that Ares errored
    `invalid Orca option filament_extruder_variant` where Native slices
    — the variant-miss policies were not ported. GREEN `3c8ba32e4`
@@ -373,45 +349,15 @@ each with its verifiable evidence — gaps stated explicitly:
    byte-exact: nozzle_flush_dataset=2,2, matrix
    0,102,186,0,0,339,621,0, activate_air_filtration_during_print=1,0
    via the id-position index.
-3. **Complete G-code equality.** Seeded v2 full run at `310f5ae9a`:
-   **594/594 PASS, zero skipped** (`review-e0134/final/seeded-v2.log`);
-   focused 48/48 incl. all x2d cases. Raw Ares byte comparison against
-   the previous 594-run candidate: **500/500 complete streams
-   identical** (`final/previous-candidate-raw-byte-comparison.json`).
-   Current main (`b3f8894fd`-lineage, 104599195-rebased tree): seeded
-   full 830/830 PASS (2026-10-09) incl. the x2d family; x2d_flush_matrix
-   11/11 after the O8 closure fixup.
-4. **Nontrigger rejection and control bytes preserved.**
+3. **Nontrigger rejection and control bytes preserved.**
    `x2d_flush_matrix_no_trigger_keeps_malformed_matrix_rejected`
    (Native reject + exact Ares error, both live);
    `x2d_flush_matrix_unchanged_nozzle_types_preserve_custom_matrix`
    (custom matrix retained, scaled once); seven seeded template-RNG and
    BBL SYNC controls retained `flush_volumes_matrix=0,0` /
-   multiplier `0.3,1` per the diagonal ruling (`fresh-d789-identified`,
-   `rebase-1b175/prior-failure-inventory.json`).
-5. **Reference/workspace/Tier1 gates.** At `310f5ae9a`: seeded 594/594,
-   focused 48/48, strict clippy/fmt (`review-e0134/final/clippy.log`).
-   The workspace/WASM/browser trio was recorded on the e0134-era
-   candidate (`final-21c-ctx`, `final-b610/REVIEW.md`: workspace
-   7969/7969, WASM32/release/web builds, browser 15 PASS) and is
-   **covered by later main gates**: every post-e0134 production merge
-   ran the full default workspace on a tree containing this slice —
-   e.g. the by-object merge `5c9e69226` ran workspace 8203 passed /
-   6 skipped on its 104599195-rebased tree
-   (`${TMP_ROOT}/ares-w5-gates/ws-default-c10.log`, 2026-10-09) and the
-   ares-wasm crate compiled clean on the same branch lineage
-   (`${TMP_ROOT}/ares-w5-gates/wasm-check-final.log`, 2026-10-08); the web
-   browser gate ran on later main per coordinator confirmation
-   (2026-10-09). The `310f5ae9a` bridge is
-   `final/source-equality.json` (only `flush_matrix.rs` changed).
-6. **Coordinator exact-hash approval.** Spec admission: tree `33f240f3`
-   (bound in `admitted-red.json`). GREEN review: exact candidate
-   `310f5ae9a2c1ee510e89396335d876629eac86a4` per
-   `review-e0134/REVIEW.md` (supersedes the e0134bcd7 request); the
-   commit is on main. The coordinator's own approval ledger is outside
-   this repository — the hashes above are the reviewable objects.
+   multiplier `0.3,1` per the diagonal ruling.
 
-Boundary-table ↔ module checklist (static, 2026-10-09):
+Boundary-table ↔ module checklist:
 `OrcaSlicer.cpp:1708-1718,3022-3047` → `flush_matrix/context.rs`;
 `:3340-3351` predicate, `:3412-3465` resize/dataset, `:3467-3503`
 recompute → `options/flush_matrix.rs` (191 LOC); `FlushVolCalc.cpp` +
@@ -428,24 +374,16 @@ first normalize pass). Scalar UB inputs follow the closed O8 contract.
 
 ## Sequence, validation and exit
 
-1. Submit this spec and wait for exact-hash coordinator approval.
-2. On fresh current main prewrite the minimal admitted RED/control set; record
+1. On current main write the minimal admitted RED/control set first; record
    fresh raw/seeded/official producer provenance and failing base evidence.
    Commit tests separately. Unknown-producer historical evidence stays labeled.
-3. Implement only the source ledger/preparation seam, with no emitter patches.
+2. Implement only the source preparation seam, with no emitter patches.
    Require complete seeded output equality and expose official failures honestly.
-4. After the coordinator's browser low-load window ends, run workspace
-   `cargo nextest run --workspace`, strict workspace/all-target/all-feature
-   Clippy, fmt, core+adapter WASM and current-base full seeded/official controls
-   using `${TMP_ROOT}/ares-parity-control-set-v2.sh`, including
+3. Run `cargo nextest run --workspace`, strict workspace/all-target/all-feature
+   Clippy, fmt, core+adapter WASM and full seeded/official controls, including
    `ARES_PARITY_PROFILE_ENTRY_REFERENCE=1`. Preserve complete comparisons,
    unchanged-stream inventory and raw/stable processor oracles where required.
-   Browser E2E is sequential base/candidate, workers1/retries0, load<20, under
-   an explicitly coordinated window; do not run heavy jobs during web's window.
-5. GREEN commit stays separate from RED. Request sole coordinator exact-hash
-   review with source citations, all-case artifacts and every retained failure.
-   Fresh fetch/rebase and affected full gates precede nonforce FF integration;
-   verify remote main and notify.
+4. GREEN commit stays separate from RED.
 
 Exit requires preparation trigger correctness, exact recomputed values and
 nozzle layout, source-prescribed nontrigger rejection, one export scaling,

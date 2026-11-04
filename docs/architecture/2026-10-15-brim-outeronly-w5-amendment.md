@@ -1,8 +1,7 @@
 # SPEC AMENDMENT: c-oo5 RED 分阶段探针定位——support no-brim 裁剪 + 分节顺序
 
-状态：AMENDMENT-REVIEW-REQUEST（docs-only，第 2 版，按裁决改为两个
-子片）。修订 `2026-10-15-brim-outeronly-w5-spec.md`（RED `b4bfe77b`
-已批准，其全文件 byte-parity 断言**不变**）。依据：分阶段只读探针
+第 2 版，改为两个子片。修订 `2026-10-15-brim-outeronly-w5-spec.md`（RED `b4bfe77b`
+的全文件 byte-parity 断言**不变**）。依据：分阶段只读探针
 （temp env 探针已还原，工作树净）。
 
 ## 1. 探针结论（逐阶段排除）
@@ -22,7 +21,7 @@
     （26 段弧，四角各一簇），实测 254 E-move。
   - ares 无该裁剪，输出完整方环（对称方 bbox，448 E-move）。
 
-## 2. 子片 (1)：support no-brim 裁剪（待批复后实施）
+## 2. 子片 (1)：support no-brim 裁剪
 
 **唯一上游函数**：`Brim.cpp:outer_inner_brim_area:421-725` 的
 support no-brim 块 `:590-634`——`stInnerNormal`（`:597-605`
@@ -54,14 +53,7 @@ GREEN（子片 2）：将 brim 发射移至 support 之前以对齐
 
 GREEN 总门 = 未改动的 RED 双模式通过。
 
-## 3. 探针材料
-
-- temp 探针副本 `/tmp/w5-brim-probe-brim.rs.bak`（已还原并
-  `diff` 验证一致，`git status` 净）；
-- gcode 对拍数据：`/tmp/w5-oo5-red/case-Zsb5A0/{orca,ares}.gcode`
-  （official 模式 RED 运行产物，本地留档）。
-
-## 5. REVIEW 修订（2e99a2e7d findings）
+## 5. 修订（2e99a2e7d）
 
 - (1) 已修（001f9f067）：tool_entry.rs 的 layer-state 赋值
   （layer_index/active_layer_print_z/on_first_layer/
@@ -77,10 +69,10 @@ GREEN 总门 = 未改动的 RED 双模式通过。
 
 ## 6. AMENDMENT v3：残余定位（外部探针）
 
-已批准的探针范围：`makeBrimInfillImpl:836-877` 残余。结论：**残余
+探针范围：`makeBrimInfillImpl:836-877` 残余。结论：**残余
 主项不是 makeBrimInfillImpl，而是 mask 多边形源**。
 
-证据（c-oo5，探针副本 /tmp/w5-brim-probe3.txt，已还原）：
+证据（c-oo5）：
 - 环弧中段顶点**逐字节相同**（如 native/ares 共有
   118.192/117.935、117.722/118.375、116.613/119.025 序列）——
   `tryExPolygonOffset` 阶梯 + DP 一致；

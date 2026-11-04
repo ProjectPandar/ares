@@ -1,7 +1,6 @@
-# SPEC request: wipe retraction EPSILON early-return consumer
+# SPEC: wipe retraction EPSILON early-return consumer
 
-Status: **conditional SPEC-REVIEW-REQUEST; no runtime RED established**.
-Baseline c251aa6166bcc0270063fc6d2e41b84ab01a637d (FULL14 merged).
+Conditional spec; no runtime RED established.
 
 ## Source-owned boundary
 
@@ -15,7 +14,7 @@ Orca upstream GCode.cpp:313-361, Wipe::calculateWipeRetractionLengths:
 Extruder.cpp:168-172, retract_before_wipe factor clamp [0,1] supplies the fraction.
 libslic3r.h:52 owns EPSILON=1e-4. GCode.cpp retract() call chain and
 Wipe::wipe:426-490 consume the result; GCodeWriter.cpp:933-952 owns E omission
-and comment emission. These are context, not authorization to grow the scope.
+and comment emission. These are context, not scope to grow into.
 
 Rust destination: project_slice/gcode_emit/motion/travel/wipe_sequence.rs,
 retract_and_wipe_impl's requested_before/remaining/during calculation, currently
@@ -39,7 +38,7 @@ PA, travel/loop selection, schema domain coverage, upstream late during-budget
 EPSILON rounding and any additional residual encountered. Such a residual needs
 an amendment, not a wider repair inside this slice.
 
-## Proposed Native-first discovery and RED design after approval
+## Proposed Native-first discovery and RED design
 
 Use the existing admitted input-only overhang 3MF from the merged wipe-comment
 fixtures. Mesh bytes unchanged, static PA/adaptive0, Classic/no scarf/tower,
@@ -59,7 +58,7 @@ using actual Native movement/E and source context, not comments/rejection/timeou
 If inputs reject, lose intended effective value, never reach wipe, or complete
 outputs match, report evidence and STOP; do not invent a RED or scanner fix.
 The committed Native RED fixture set is selected ONLY from genuinely divergent
-admitted candidates with the unchanged controls after discovery review.
+admitted candidates with the unchanged controls.
 
 Public RED tests first, input-only fixtures with frozen SHA; use
 **OrcaRunner::from_env** and existing export stages / required Native;
@@ -68,19 +67,13 @@ actual WIPE_START/END positive-XY path/E-presence witnesses before public API an
 real CLI admission and the unmodified golden::compare_ordered_bytes_generator_only
 complete-output comparison. Each positive must fail because of that actual
 stream difference; controls must pass. Never normalize comments/E or weaken
-classification/verify_value/comparator. Independent exact RED review is required
-before production. If no positive survives, no test-only submission is mergeable.
+classification/verify_value/comparator. If no positive survives, no test-only
+submission is mergeable.
 
-GREEN only after that approval: minimum source-parity tuple change; exact frozen
-inputs/assertions, complete Native/API/CLI parity and raw API=CLI; same-input raw
-controls unchanged RED->GREEN. Existing wipe/retraction/comment/PA controls,
-reached option coverage, fmt/strict/WASM on exact final full hash/clean status.
-CPU18/jobs2/threads2, fresh serial official+seeded Native cache/artifacts, explicit
-owned target reuse, actual Native/thread affinity; canonical full oracle env
-from ${TMP_ROOT}/ares-parity-control-set-v2.sh (including ARES_PROCGCODE_BIN).
-One START per batch; report first divergence/STOP, no per-case inbox noise.
-All files<=400LOC. Coordinator owns full/workspace/push/integration. Exclusive
-FULL freezes respected; no Nix GC/store deletion or independent oracle rebuild.
+GREEN: minimum source-parity tuple change; exact frozen inputs/assertions,
+complete Native/API/CLI parity and raw API=CLI; same-input raw controls
+unchanged RED->GREEN. Existing wipe/retraction/comment/PA controls, reached
+option coverage, fmt/strict/WASM on the exact final hash. Fresh official+seeded
+Native runs; report first divergence/STOP. All files<=400LOC.
 
-Only this source-cited SPEC is submitted now, with no tests/production/runtime
-changes. The prior zero-E-comment slice is merged and is not being reopened.
+The prior zero-E-comment slice is merged and is not being reopened.

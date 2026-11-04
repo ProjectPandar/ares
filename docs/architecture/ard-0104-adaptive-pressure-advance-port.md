@@ -34,7 +34,7 @@ including notation selection after rounding.
 
 Tests use the user-requested public exported-3MF/full-G-code seam. Keep the
 existing generator-only comparator unchanged and retain each paired stream.
-Official CPU0 and separately identified seeded references must not share caches.
+Official and separately identified seeded references must not share caches.
 Historical WIP evidence is provenance, not verification of the port.
 
 This supersedes WIP ARD-0037 for this worktree. Tower planning/reset integration
@@ -43,8 +43,8 @@ hardware operation and exhaustive printer/option coverage remain unclaimed.
 
 ## Deferred upstream boundaries (explicitly verified present, not yet ported)
 
-Worker1's [APA-R2 continuation SPEC](adaptive-pa-deferred-r2-spec.md) is awaiting
-approval for the remaining source-cited witness groups. R1 already verified a
+The [APA-R2 continuation SPEC](adaptive-pa-deferred-r2-spec.md) covers
+the remaining source-cited witness groups. R1 already verified a
 bounded uniform-width same-role sloped loop; the historical inventory below is
 not a claim that every listed mechanism is still wholly absent. Calibration
 mode admission, source-specific resets and unexercised residuals remain OPEN.

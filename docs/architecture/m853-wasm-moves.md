@@ -1,6 +1,6 @@
 # M853 second Rust slice: convert and thin WASM move exposure
 
-Base92d12470. Source owner: OrcaSlicer8500fcdcc,
+Source owner: OrcaSlicer8500fcdcc,
 `src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp::convert`191–268,
 role/type conversions70–145, color conversion55–67; destination
 `ares-vgcode::convert`. This is the rendering-neutral mapping into upstream
@@ -10,7 +10,7 @@ libvgcode GCodeInputData/PathVertex, not a new slicing or preview pipeline.
 
 - Keep existing byte-returning WASM slicing entry points unchanged. Add
   sliceProjectPlateProcessed returning SliceOutput. Web integration and
-  deletion of temporary TS conversion belong to worker-web after this lands.
+  deletion of temporary TS conversion are a separate web slice.
 - Core's existing processed slice API is the only slicing/recording owner.
 - Convert skips initial dummy move and inserts upstream phantom path starts
   at previous position with zero time when type/role/flow changes.
@@ -37,15 +37,13 @@ libvgcode GCodeInputData/PathVertex, not a new slicing or preview pipeline.
    public processed entry. Expose settings through existing core API only.
 3. Browser E2E calls actual compiled WASM with Ender3 and KSR projects.
    Use returned G-code with the existing --process-gcode --dump-moves oracle.
-   Compare all19 raw fields using approved exact integers/copied f32,
+   Compare all19 raw fields using exact integers/copied f32,
    1ULP derived fields and2ULP time; preserve full CSV/diff artifacts.
    Verify phantom mapping independently against oracle records as well.
    Missing oracle is not passing browser evidence.
 4. Run workspace Nextest, Clippy(no added warnings), fmt, WASM compile,
    browser E2E and official/new-seeded controls. Known8 official failures
    remain visible and name-compared, never omitted or called PASS.
-5. Commit/push and REVIEW-REQUEST; latest-main checks/ff only after approval.
-   Notify coordinator on integration; TS conversion stays until then.
 
 ## Implemented binding contract
 
@@ -80,15 +78,14 @@ InternalBridge, Brim), so callers must use the vocabulary of each handle.
 Raw records include dummy/internal-only/Seam records. Converted vertices
 exclude dummy and include phantom boundaries; counts are intentionally different.
 
-## Test evidence so far
+## Test evidence
 
-API-missing RED logs: `${TMP_ROOT}/ares-m853-convert-red.log` and
-`${TMP_ROOT}/ares-m853-wasm-buffers-red.log`. After implementation,23 vgcode/WASM
-tests pass (`${TMP_ROOT}/ares-m853-bindings-green.log`); targeted Clippy adds no
+API-missing RED preceded implementation. After implementation,23 vgcode/WASM
+tests pass; targeted Clippy adds no
 warnings. Existing handoff color conversion matches Color.cpp332–367,
 including invalid hex pairs remaining black before minimum-brightness clamp.
 
-Real Chrome151 E2E: `${TMP_ROOT}/ares-m853-browser.sCQLYR/artifacts/result.json`.
+Real Chrome151 E2E:
 Ender3:5564 moves/7347 vertices; KSR:635147 moves/823716 vertices; zero
 mismatches. Native oracle actually ran on the browser's emitted G-code,
 not on a native replacement slice. Full raw typed buffers, native CSV,
@@ -104,9 +101,9 @@ ARES_PROCGCODE_BIN=/absolute/orca-slicer \
 ARES_E2E_CHROME=/absolute/chrome node web/e2e/wasmMoves.mjs
 ```
 
-Full workspace validation `${TMP_ROOT}/ares-m853-wasm-gates.52EY0P`:7612 PASS,
+Full workspace validation:7612 PASS,
 9 existing skips; Clippy/fmt/WASM check exit0. Clippy reports102 core-lib/103
-core-test/21 parity warnings, all in existing code, with no binding warnings. Full controls `${TMP_ROOT}/ares-m853-wasm-controls.iyzkqM`:seeded407/407
+core-test/21 parity warnings, all in existing code, with no binding warnings. Full controls:seeded407/407
 PASS; official399 PASS/8 accepted existing failures. Exact failure-name
 comparison adds/removes no names (`failure-comparison.json`). This is not
 an all-green official claim; no assertions or comparator bounds were relaxed.
@@ -116,7 +113,5 @@ gcode_id as u32 in takeIds(), including phantom vertices copied from curr.
 The large16777217 unit case and both browser oracle projections explicitly
 exercise lossless IDs. No web temporary conversion code was deleted.
 
-Browser rendering UI integration remains worker-web-owned. After coordinator
-approval, rebase latest main and revalidate before ordinary fast-forward
-integration. Notify coordinator only after that integration so web can remove
-its temporary conversion. M854 remains a separate next slice.
+Browser rendering UI integration is a separate web slice, which also removes
+the temporary conversion. M854 remains a separate next slice.

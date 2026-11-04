@@ -2,19 +2,16 @@
 
 ## Disposition
 
-Docs-only SPEC amendment request on approved public RED c15b29c60, based on
-main3ee8f272c. No production edit, assertion removal, input change or GREEN
-claim. The original SPEC37145ce12 requires STOP if the first divergence is
-outside its connector/grid boundary. This observation triggers that clause.
-RED must merge only with an approved GREEN. Do not remove the touching-grid
-assert merely because upstream release assertions are compiled out.
+Docs-only SPEC amendment for the public S-C0 RED. The original SPEC
+requires stopping if the first divergence is outside its connector/grid
+boundary; this observation triggers that clause. Do not remove the
+touching-grid assert merely because upstream release assertions are compiled out.
 
 ## Frozen observation
 
 Exact S-C0 SHA256 remains
 9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1.
-Read-only gdb used the built c15b29c60 Ares CLI and canonical official Native,
-outer taskset CPU12, fresh cache/artifact/output directories for every run.
+Read-only gdb used the built Ares CLI and canonical official Native.
 No inferior calls/writes, probes, code edits or compilation were needed.
 
 Ares fails on layer_index3, print_z0.8, from
@@ -29,7 +26,6 @@ Native's 1246 observed calls to the touching visitor's specialized grid
 walker all have endpoints inside its bbox. The source-line breakpoint attempt
 was unresolved and is excluded from this claim; symbol-entry captures and
 source/assembly-validated argument layouts supply the actual trace evidence.
-The full ordered visitor cell records are external evidence.
 
 For the second connector invocation, both sides have bbox
 (-9019688,-9019688)..(9019693,9019693), spacing0.40707963705062866mm, and ten
@@ -87,18 +83,18 @@ limits Native's forward length and which source-owned candidate is absent
 or evaluated differently in Ares. Port that specific operation, including
 its source precision/cast order; do not treat the observed scalar as a
 constant, patch this fixture, or assume the visible tie/cast differences are
-the sufficient fix. Stop for further review if the cause requires geometry,
-ordering or caller changes beyond these functions.
+the sufficient fix. If the cause requires geometry, ordering or caller
+changes beyond these functions, the boundary must be revisited.
 
 ## RED reuse, failure modes and acceptance
 
-Reuse the approved frozen public S-C0 RED unchanged. First failure modes to
+Reuse the frozen public S-C0 RED unchanged. First failure modes to
 check are missing mutable connected segments, missing other-hook collision,
 incorrect excluded source-line identity, finite query extent, thick-line
 clearance, reverse-query condition, scaled-float completion and displacement
 cast order. Check actual data before choosing an implementation.
 
-After amendment approval, retain grid assertions unless equivalent Native
+Retain grid assertions unless equivalent Native
 trace evidence justifies a separately explained removal. Preserve release
 cell visitation and ordered edge processing; do not enlarge bbox, clamp or
 skip traces, catch panic, or add guards. No frozen Native expected output,
@@ -107,22 +103,13 @@ The requested stable test comment belongs in the GREEN commit: describe
 CLI/API evidence capture order without referencing the current panic.
 
 Require S-C0 strict whole-output and raw API==CLI checks in both modes, then
-existing B-S ten-case and connector/Adaptive controls, strict/fmt/wasm32 on
-CPU12. If the earlier input difference or any output residual remains, STOP
-instead of broadening the patch. No full/workspace/push without coordinator.
-Object-region spacing stays BLOCKED. A-C1/C2-C4 Inner-wall remains separately
-deferred with no work authorized by this amendment.
+existing B-S ten-case and connector/Adaptive controls, strict/fmt/wasm32.
+If the earlier input difference or any output residual remains, do not
+broaden the patch. Object-region spacing stays blocked. A-C1/C2-C4
+Inner-wall remains separately deferred.
 
-## Durable evidence
+## Observed runs
 
-`${EVIDENCE_ROOT}/worker3/support-touching-grid-localization/`
-contains all original read roots, state JSONL, logs, outputs, available reader
-variants, symbol names and decoded assembly. Earlier overwritten scratch
-readers were not snapshotted per launch; do not claim exact reader provenance
-for every exploratory run. The capture interpretations above identify the
-successful symbol/read layouts separately from the unresolved line attempt.
 All observed Native runs completed result0 and match the original public
 reference line-for-line except the generator date on line2; no motion or
 configuration differences. Ares read runs reproduce the original exit101.
-`STOP-evidence.json` SHA256:
-3f059907da8769d5029fda044c391eee0e6483ecf62c04302849feb187245b10.

@@ -1,8 +1,7 @@
 # SeamPlacer spRear public RED
 
-Approved [SPEC](../../../docs/architecture/seam-rear-spec.md)
-3dbb48c0bc3a5e297d3b3e466347e6514bf7197d, implementation base approved
-physical-plane GREEN4dbba4fc09b4b84033797ab83f2941e5d8484b95.
+[SPEC](../../../docs/architecture/seam-rear-spec.md); builds on the
+physical-plane seam port.
 
 One closed10x10x0.8mm triangular prism,6 vertices/8 triangles,4 layers,
 one object/part/filament,Classic2walls; support/brim/tower off. The original
@@ -26,9 +25,7 @@ records that exact Native block plus API/CLI counterparts before assertions;
 this localized observation does not replace the complete comparator. Discovery
 positive first whole difference was byte451/line18 M73P0R1 versusP0R2; actual
 frozen-hash results must re-verify, not relabel discovery. M73 is a motion-duration
-symptom, not authorized scope. Any changed premise means STOP, no input swap.
+symptom, not in scope. Any changed premise means STOP, no input swap.
 
-Run official and seeded with CPU15/jobs1/nextestthreads1, fresh per-mode
-cache/artifacts/TMPDIR, load<60 before builds/every Native and START/END receipts.
-Four Native commands total for the paired witness. No full/workspace runs.
-RED REVIEW precedes separate bounded GREEN; RED merges only with its GREEN.
+Run official and seeded with fresh per-mode cache/artifacts/TMPDIR.
+Four Native commands total for the paired witness.

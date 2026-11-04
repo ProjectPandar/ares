@@ -1,22 +1,22 @@
 # ARD: source-faithful painted MMU as one consumed landing unit
 
-Status: COORD execution dispositions recorded; paired SPEC awaits independent approval.
-Base3e862584d86bd1e00f19f5b581773dd9e20fd6c2, upstream8500fcdcc.
+Status: proposed; execution decisions recorded; paired SPEC follows.
+Base 3e862584d86bd1e00f19f5b581773dd9e20fd6c2, upstream 8500fcdcc.
 [Source boundaries and destination](painted-projection-graph-spec.md).
 
 Default VD repair is integrated, but that does not supply the painted producer.
 PostRegion and shared registry types remain temporary upstream PrintObject/
 LayerRegion compatibility shells, not an Ares-owned painting pipeline. Because
 partial producers lack the complete real consumption chain on main, source-order
-review checkpoints are documentary; production lands only as a fully consumed unit.
+checkpoints are documentary; production lands only as a fully consumed unit.
 
-## Non-negotiable decisions resolved by COORD
+## Non-negotiable decisions
 
 1. Port MultiMaterialSegmentation.cpp's projection, painted_lines/contour_color,
    MMU graph, top/bottom1181–1472, merge1825–1870, producer1955–2194/wrapper2197–2207
    and PrintObjectSlice.cpp apply874–1030/caller1207–1224 as ONE integration unit.
-   Stage discovery/design RRs retain source order. Branch stage commits may be
-   reviewed, but each must cargo check on its own committed tree. No allow/expect/
+   Stage discovery/design notes retain source order. Branch stage commits may be
+   separate, but each must cargo check on its own committed tree. No allow/expect/
    cfg parking, fake consumer, dormant public entry, unused facade or uncommitted
    later-stage build proof. Each implementation/document file <=400LOC; only the
    already-oversized roadmap retains its existing exception.
@@ -37,7 +37,7 @@ review checkpoints are documentary; production lands only as a fully consumed un
    RED, not an inverted error-PASS. No private-entry phase acceptance tests.
 5. Projection/MMUGraph/side Native GDB observation is only read-only GREEN-time
    diagnostic localization, never an acceptance gate. Current base's seeded-only
-   ctor observations and old approvals/runs retain actual hash/time/identity;
+   ctor observations and old runs retain actual hash/identity;
    they do not become phase GREEN or official VD/DWARF equivalence.
 6. MUST port Point.hpp506–659 ClosestPointInRadiusLookup radius multimap semantics:
    duplicate-preserving equal_range, source corner/neighbors/ties, find strict
@@ -47,10 +47,10 @@ review checkpoints are documentary; production lands only as a fully consumed un
    admitted effective Voronoi wrapper unchanged, never raw fallback or vendor fixes.
 7. Exact complete integration tip receives fmt, workspace/all-target Clippy with
    -D warnings, core/vgcode/adapter wasm32 and actual official+seeded canonical
-   FULL in an explicitly assigned window; old/phase hashes are not credit. W2's
-   current window allows no W1 FULL. SPEC approval precedes RED; independently
-   accepted RED and separate GREEN instruction precede implementation. No push
-   or merge without authority; no suppression, field ignore, tolerance or fallback.
+   full parity; old/phase hashes are not credit.
+   SPEC precedes RED; an
+   accepted RED and separate GREEN precede implementation.
+   No suppression, field ignore, tolerance or fallback.
 
 Cut/width-depth1144–1168, painted+beam, fuzzy, UI/cache and unused debug/legacy
 helpers stay deferred; active source behavior cannot be a zero-only stub.

@@ -7,11 +7,10 @@ Matrix finding (bridge_over_infill multi-filament E2E, X2D fixture
 `tool_transition::change::dynamic::insert` (port of `GCode.cpp:7858-7898`)
 never registers those keys, so the template renders `L`/`T`/`P` values
 from the *static* config (all-zero / wrong) or fails — the X2D lint case
-is blocked on this family. Slice boundary per coordinator: implement the
+is blocked on this family. Slice boundary: implement the
 `change_filament_gcode` placeholder family only; SEMM `M104` emission,
 Type2 tower activation, and EXCLUDE_OBJECT outline differences are
-separate divergences owned elsewhere (see
-`${TMP_ROOT}/ares-matrix-clusters.md`).
+separate divergences.
 
 ## Upstream boundary
 
@@ -122,10 +121,9 @@ temperature overrides.
   only the `wipe_avoid_*` *placeholders* are in scope.
 - SEMM bare-`M104` per-toolchange emission and the
   `EXCLUDE_OBJECT_DEFINE` outline polygon (5- vs 6-vertex) — separate
-  divergences recorded in `${TMP_ROOT}/ares-matrix-clusters.md`, owner
-  coordinator-assigned (not this slice).
+  divergences (not this slice).
 - Type2 tower activation (`normalize_fdm_2` `used_filaments` counting /
-  `tool_ordering.has_wipe_tower`) — pi-tower.
+  `tool_ordering.has_wipe_tower`) — separate slice.
 - `wipe_avoid_pos_x` real value (`get_wipe_avoid_pos_x` over the rotated
   tower bbox) — only needed when a template uses it AND a tower exists;
   register 0.0 otherwise as upstream does pre-tower.
@@ -151,6 +149,5 @@ temperature overrides.
 ## Ordering
 
 Merges before the `bridge_over_infill` impl (`ac64d15cc`) lands; the
-bridge E2E then verifies byte-identical on the X2D fixture. pi-tip's
-O6 two-plates fixture test (branch `pi/o6-original-fixture-e2e`) is
-cherry-picked at bridge merge time and must turn green.
+bridge E2E then verifies byte-identical on the X2D fixture. The original
+two-plates fixture test lands with the bridge change and must turn green.

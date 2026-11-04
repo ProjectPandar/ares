@@ -1,8 +1,7 @@
 # Spiral vase object-start Z-only line — source-cited spec
 
-Status: SPEC approved (coordinator ACK of proposal r2, mechanism-level);
-freezes the boundary for the tests-only RED, then a bounded GREEN on the
-W1 branch chain (base tip `2a20c7dff`). Lifts the single-object part of
+This SPEC freezes the boundary for the tests-only RED, then a bounded GREEN.
+It lifts the single-object part of
 the BBL spiral emission deferral recorded in
 `spiral-vase-admission-spec.md`.
 
@@ -94,17 +93,16 @@ identically: 1.0/1.0/0.800.
   to align the flag lifetime with `GCode.cpp:5708`/`:6367-6385`
   (cleared only at the `_extrude` guard / `travel_to`'s 2-point path)
   and the after-`M624` line order.
-- **Caution (review condition)**: the dedup may exist to mask
+- **Caution**: the dedup may exist to mask
   over-emission of Z-only lines elsewhere. GREEN must run every
   `spiral_*` parity case in both Native modes; any regression must be
   root-caused to the real producer — restoring the dedup is forbidden.
 - Forbidden: any "if spiral, insert `G1 Z`" special-case outside the two
   mechanism sites.
 
-Not the queued `motion/scan.rs`, `format.rs`, brim/*, jerk,
-seam_placement/alignment, `config_export/value.rs` (W6),
-`fill_entities/grid.rs`; not the W1-touched
-`options/config_export/writer.rs`, `gcode_emit/motion/state.rs`,
+Not `motion/scan.rs`, `format.rs`, brim/*, jerk,
+seam_placement/alignment, `config_export/value.rs`,
+`fill_entities/grid.rs`, `options/config_export/writer.rs`, `gcode_emit/motion/state.rs`,
 `gcode_emit/layer_gcode.rs`.
 
 ## Included
@@ -149,11 +147,11 @@ byte equality); no Native artifacts committed.
   of the set-splice `0.600`); wrong placement (before the `M624` marker)
   or wrong F-form; regressions on traveling layers or the admission
   guards; over-emission on non-spiral layers (the masked-producer
-  scenario the review condition warns about).
+  scenario the dedup caution warns about).
 
 ## Gates
 
 | Stage | Gates |
 |---|---|
 | RED | the three cases above, official + seeded: witness and z_hop=0 fail only at the Ares byte comparison (first difference byte 81880/81702); preflight passes; `cargo fmt`; strict clippy; directed nextest selection |
-| GREEN | both cases byte-exact in both modes; every `spiral_*` parity case still green in both modes (regressions root-caused, dedup stays removed); `cargo fmt`; strict clippy; no FULL without COORD |
+| GREEN | both cases byte-exact in both modes; every `spiral_*` parity case still green in both modes (regressions root-caused, dedup stays removed); `cargo fmt`; strict clippy |

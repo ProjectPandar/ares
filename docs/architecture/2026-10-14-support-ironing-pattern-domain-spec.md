@@ -1,8 +1,5 @@
 # SPEC: support_ironing_pattern 全域分派（对齐 Native 3MF 载入域）
 
-状态：SPEC-REVIEW-REQUEST（只读调研 + CPU7 实证探测完成；未改代码）。
-裁定来源：协调裁定 W5 做此备选 slice（per-object skirt 归 W1/W3）。
-
 ## 1. 上游精确引用
 
 - `PrintConfig.cpp:6565-6573`：`support_ironing_pattern` coEnum 定义，
@@ -31,7 +28,7 @@
 路径不按 enum_values 拒值——任意合法 InfillPattern 名直达
 `Fill::new_from_type` 并产生对应图案的 ironing（下表实证）。
 
-## 2. Ares 现状与实证矩阵（CPU7 探测，/tmp/isfix/ir/）
+## 2. Ares 现状与实证矩阵
 
 - `object_fields.rs:68`：`support_ironing_pattern: ProcessInfillPattern`
   （通用枚举，serde 接受全域）——与 native 3MF 宽容载入一致。
@@ -162,7 +159,7 @@ supportcubic/cubic/lightning/3dhoneycomb/lateral-lattice 等，若 ironing
 路径不按 enum_values 拒值——任意合法 InfillPattern 名直达
 `Fill::new_from_type` 并产生对应图案的 ironing（下表实证）。
 
-## 2. Ares 现状与实证矩阵（CPU7 探测，/tmp/isfix/ir/）
+## 2. Ares 现状与实证矩阵
 
 - `object_fields.rs:68`：`support_ironing_pattern: ProcessInfillPattern`
   （通用枚举，serde 接受全域）——与 native 3MF 宽容载入一致。

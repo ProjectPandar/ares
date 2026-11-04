@@ -1,7 +1,7 @@
 # printer_technology GREEN addendum: resolved FFF admission
 
-Approved scope after public RED `baa2b41ad`; base audit `96328f269`.
-This supplement is committed before any production edit.
+Scope after the public RED. This supplement is committed before any production
+edit.
 
 ## Source boundary and admission rule
 
@@ -16,8 +16,7 @@ SLA error map remains distinct from this resolved technology admission.
 The public RED imported SLA 3MF SHA
 `58e96bf776f0b54553372a09a697c601de39606c7818c92aa1584b6424d8787e`
 is rejected by both Native modes with249 and the above diagnostic; Ares CLI
-currently exits0 and emits G-code. Evidence:
-`${TMP_ROOT}/ares-printer-technology-red-baa2-59TjhG/`.
+currently exits0 and emits G-code.
 
 ## Minimal Rust boundary
 
@@ -41,7 +40,7 @@ All changed files remain <=400LOC.
 ## Verification and exclusions
 
 Before production changes, extend the existing SLA RED to require shared
-public API rejection and browser-WASM adapter rejection at the approved
+public API rejection and browser-WASM adapter rejection at the
 project slicing seam; no post-hoc unit tests. Use the same admitted Native
 input, record typed API result, CLI status/diagnostic, and adapter result.
 Keep FFF strict Native/API/CLI full-output + raw equality controls unchanged.
@@ -51,6 +50,4 @@ Keep the original machine-SLA→effectiveFFF historical ApplicationMismatch
 FAIL as recorded; its expected-mismatch regression is not SLA admission.
 No `verify_value`, comparator, matrix status/classification or SLA slicing
 changes. No parser move/precedence repair, unrelated option checks, fallback
-or new Unsupported guard. CPU18 outertaskset, jobs1, isolated target/fresh
-artifacts; official+seeded serial, START/END and review receipts. Full and
-workspace need separate authorization. Coordinator alone merges; no push.
+or new Unsupported guard. Official and seeded modes both run.

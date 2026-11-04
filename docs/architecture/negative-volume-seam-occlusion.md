@@ -1,9 +1,7 @@
 # Negative-volume occlusion for seam visibility
 
-## Status and upstream rewrite boundary
+## Upstream rewrite boundary
 
-SPEC only; implementation requires separate public RED review and GREEN approval.
-Independent base `0266b34949a6f9503002a3420e1c526cb745462b`.
 OrcaSlicer2.4.2 source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 This is a source-cited libslic3r negative-occlusion rewrite slice, not a new Ares
 visibility/Boolean pipeline. No code from abandoned cursor candidate dd8a8ca02
@@ -60,7 +58,7 @@ belongs in this core rewrite; browserWASM/Windows/macOS/Linux stay Tier1.
    prune nonintersecting nodes, test only reached leaves, retain hit IDs and t.
    NO linear scan over every triangle per ray and NO linear fallback; do not
    rebuild a tree per query. Sorting collected hits by t matches source behavior.
-4. Reuse hit storage across rays at the source work-unit/worker boundary, as the
+4. Reuse hit storage across rays at the source work-unit/thread boundary, as the
    C++ blocked-range loop does. Avoid allocating a fresh hit vector per ray or
    copying entire meshes per query. Preserve source epsilon and arithmetic;
    do not add a face-ID tie-break or numeric tolerance as a parity workaround.
@@ -78,12 +76,12 @@ reverse sign-counter visibility and existing interpolation into candidate data.
 This is the complete missing negative branch, not merely appending its triangles
 while retaining first-hit visibility.
 
-Deferred/frozen: initial generator cursor, routing/lift/retraction, W4 print_order,
+Deferred/frozen: initial generator cursor, routing/lift/retraction, print_order,
 actual negative diff_ex/region graph, perimeter topology/order, seam candidate
 positions/scoring/kdtree selection, painting, fan/skirt/brim types, processor/time,
 and broader multi-tool behavior. The separately frozen20e41 volume-affine precision
 slice is not cherry-picked or widened here. The accepted integral-transform input
-keeps this boundary separable; integration remains coordinator-owned.
+keeps this boundary separable.
 
 ## Qualified runtime witness and corrected attribution
 
@@ -92,7 +90,7 @@ Accepted existing GUI normal-part to negative-part pair from
 nearest seam, no arc/skirt/brim/EFC/scarf/ironing/painting. Freeze original Native
 input-only exports; no generated Native G-code or expected output constants.
 The GUI type change also derives six source_* provenance omissions through
-bbs_3mf.cpp2214-2220/7862-7869, explicitly audited and coordinator-accepted.
+bbs_3mf.cpp2214-2220/7862-7869, explicitly audited and accepted.
 
 Whole-output target first difference is NON-M73 byte78/line3: Native modeltime
 3m45s/Core3m44s,total11m1s; first unequal motion109/raw1337 NativeX127.25 vs
@@ -118,9 +116,9 @@ Native gathers negative surfaces/all-hits; Rust filters them out and lacks that
 branch. Normal/direct-offset controls do not exercise this missing operation;
 earlier six direct case-mode comparisons PASS, not universal cursor parity.
 
-## Public RED and subsequent approval gates
+## Public RED and subsequent gates
 
-After this SPEC, add tests/input+SHA only using the approved existing
+After this SPEC, add tests/input+SHA only using the existing
 `runner::native_stream_case::check -> native_api_cli::NativeCase` seam. Dynamic
 Native2 FIRST, actual validated byte API and real CLI, unchanged whole generator-
 only ordered comparison and actual raw equality. Normal control must completePASS;
@@ -133,24 +131,18 @@ retained API/CLI bytes without claiming those assertions executed. Freeze the
 same accepted input bytes and document export-derived bookkeeping, not a false
 physical one-field-only archive claim.
 
-Run official/seeded targeted nextest sequentially on CPU15/jobs1/threads1,
+Run official/seeded targeted nextest sequentially with
 independent initially empty caches, retain complete Native/API/CLI artifacts.
 Run rustfmt and strict workspace/all-target clippy; changed text files stay<400.
-Commit docs-only SPEC then tests/input-only RED and send RR. GREEN, adjacency,
-wasm32 compilation/performance evidence and exact-tip FULL require separate
-coordinator approval; no browser-runtime or FULL credit at this phase.
+Commit docs-only SPEC then tests/input-only RED. GREEN, adjacency,
+wasm32 compilation/performance evidence and full-suite runs follow separately;
+no browser-runtime or full-suite credit at this phase.
 Future performance review must verify BVH pruning/all-hits storage reuse rather
 than accepting a semantically passing but per-ray linear mesh scan.
 
-## Evidence and archive boundaries
+## Audit boundaries
 
-Accepted read-only audit:
-`${EVIDENCE_ROOT}/w6-candidate-nearest-audit-ioic_az3/`
-`NEAREST-INPUT-AUDIT-REVIEW-REQUEST.md`, `verification.json`, `verify-audit.py`,
-complete valid/invalid probes and host/live distinction. Fourteen normal-exit
-output-preserving observers:8valid/6excluded; no inferior calls/explicit writes.
+The read-only nearest-input audit used fourteen normal-exit output-preserving
+observers (8 valid/6 excluded); no inferior calls/explicit writes.
 Initial cursor chain remains audit-only, not a dependency of this rewrite.
-
-New independent SPEC/RED evidence:
-`${EVIDENCE_ROOT}/w6-negative-occlusion-spec-red-j92rt3s0/`.
 No claim that an unimplemented negative-occlusion port fixes every later residual.

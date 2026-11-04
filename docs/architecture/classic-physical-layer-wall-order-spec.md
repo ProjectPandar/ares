@@ -1,10 +1,7 @@
 # SPEC: Classic physical-layer wall ordering for compatible-region owners
 
-Status: approved at `137b3e01c80efc042e6abb627320267408d054ef`, with
-coordinator's conditional brim scope restriction: brim is explicitly deferred
-because no separate Native-backed public brim RED has been established.
-Base main: `57fea94989ff362129d0e53da0c35c298822f689`.
-Diagnostic HEAD: `cda563f81db3f03ef4851bc2bf79f35559ea359c`.
+Brim is explicitly deferred because no separate Native-backed public brim RED
+has been established.
 
 ## Upstream rewrite boundary
 
@@ -27,13 +24,13 @@ See [ARD](ard-classic-physical-layer-wall-order.md).
 
 Only acceptance REDs: `m-later-owner-classic-sacrificiallayer` (Filled) and
 `m-later-owner-classic-none`. Frozen public `slice_with_profiles` comparisons
-on main6e034 have Native exit0 and true full-stream divergence in both official
+have Native exit0 and true full-stream divergence in both official
 and seeded modes. Both first differ at byte2283/line106: Native travel
 `X138.164 Y143.539 Z.72`, Ares `X142.418 Y141.501 Z.72`.
 Native first extrusion loop is Inner hole radius9.681317; Ares first is
 Outer contour radius10.750010. Startup/skirt are unchanged.
 
-On main57fea949, Ares-only public replay and two temporary in-memory probe
+Ares-only public replay and two temporary in-memory probe
 producers all preserve BOTH complete Ares streams byte-for-byte against frozen
 Ares output; no new Native run is claimed. Seed tree is
 contour0→contour1→hole1→hole0; first points respectively
@@ -49,7 +46,7 @@ predicting the observed first contour. Function-level discrepancy is
 
 ## Record-index use audit and scope
 
-Bounded grep/read audit on diagnostic HEAD:
+Bounded grep/read audit:
 `ffgrep index perimeter_append.rs`, `ffgrep enumerate classic/`,
 `ffgrep 'layer_id.*index|layer_id.*record_index|index == 0|record_index == 0'
 perimeters/`, and `ffgrep lower_slices perimeters/`, followed by full relevant
@@ -57,7 +54,7 @@ callee reads. This is not an assertion that the entire repository is defect-free
 
 | Consumer | Disposition |
 | --- | --- |
-| `transform_object:81` index==0 for first-layer OuterOnly brim | DEFERRED by conditional approval: no Native-backed public RED specific to this consumer; leave predicate unchanged in this slice. |
+| `transform_object:81` index==0 for first-layer OuterOnly brim | DEFERRED: no Native-backed public RED specific to this consumer; leave predicate unchanged in this slice. |
 | `transform_object:99` index passed as layer_id; `reorder_walls:222–223` first-layer sandwich gate | INCLUDED: principal two-RED correction. |
 | `transform_object:92` `traversal.lower_slices(index)` | DEFERRED, explicit adjacent identity misuse: `traversal.rs:166–191` expects physical/planned layer index, subtracts1 and steps region-major slots by physical layer count. Do not silently repair in this slice. Need its own overhang-reversal/lower-layer public RED and ownership amendment; actual layer ID and planned layer index must not be conflated, including raft offsets. |
 | Record lookup `traversal.records[index]`, `region_options(traversal,index)`, input records[record_index] | RETAIN record index: aligned region-major record slots, not layer IDs. |
@@ -66,19 +63,18 @@ callee reads. This is not an assertion that the entire repository is defect-free
 | `classify_inactive` and `ReorientPlan` layer identity | Already sourced from traversal branch; no change. |
 | `traversal::prepare_object` enum record_index; infill-boundary and chained/entity collection alignment | Retain slot lookup; traversal explicitly copies input.layer_id/planned_layer_index. No additional proven physical-ID substitution identified in this bounded audit. |
 
-Deferred: N-split Arachne Filled (W3 Native observations), grouping/owner
+Deferred: N-split Arachne Filled, grouping/owner
 selection, imports/centering, classifier/fill, Arachne ordering, loop nesting,
 chaining algorithms, sandwich permutation, lower-slice handoff and raft policy.
 No Native patch/debugging, fallback, oracle changes or comparator weakening.
 
-## Test-first implementation and exit gate (after approval)
+## Test-first implementation and exit gate
 
 1. Freeze exact two valid M-v3 inputs/options/transforms and complete ordered
-   public REDs in a separate test/evidence commit. Preserve failed M-v1/v2 and
-   interrupted VOID histories; do not substitute geometry or archive parts.
-2. Run fresh official then seeded directed RED on approved current main,
-   CPU15/jobs1/nextest threads1/fresh caches, before production edits. Existing
-   assertions stay intact; any retirement requires separate exact approval.
+   public REDs in a separate test commit. Do not substitute geometry or
+   archive parts.
+2. Run fresh official then seeded directed RED with fresh caches before
+   production edits. Existing assertions stay intact.
 3. Correct ONLY actual layer-ID operand passed to sandwich ordering.
    Leave index==0 brim predicate and lower_slices(index) unchanged and explicitly
    deferred. Retain record-slot lookups and upstream reorder math/geometry.
@@ -88,22 +84,6 @@ No Native patch/debugging, fallback, oracle changes or comparator weakening.
    incompatible controls; existing26 counterbore controls. First-layer brim
    is NOT an implemented consumer in this slice: any future inclusion requires
    a separate Native-backed public RED demonstrating its own divergence and
-   an owner-approved scope amendment before code.
+   a scope amendment before code.
 5. Directed core/CLI tests via cargo nextest; cargo fmt --check, cargo clippy,
-   WASM check and platform-neutral byte API invariance. Coordinator alone owns
-   full runs/push/merge and exact-hash approval. Honor exclusive freezes/VOID.
-
-## Durable repeatable evidence
-
-Current classification/observables/handoff:
-`${LOCAL_EVIDENCE_ROOT}/worker4/counterbore-surface-6e034.md`.
-Raw39-case/input/harness archive `counterbore-surface-6e034-raw.tar.gz`, SHA256
-`8dd26d89805b4e2f5fc6039df82999b26bda5730e4df5882a1962c1c9de1341b`.
-Seed/chain probe archive `classic-m-memory-probe-yTGt.tar.gz`, SHA256
-`a4f7dbeb23054a90b65f9bd45632a7cab1ede4381f912eb40004317e9d8a2379`.
-Index/branch/sequence probe archive `classic-m-append-probe-AsUt.tar.gz`, SHA256
-`7e485d6eff14ecc5739f5b9b96db5861991ec5407dc61387e5cefee3f9dd74f8`.
-All archives reside in `${LOCAL_EVIDENCE_ROOT}/worker4/`, outside /tmp.
-They retain exact probe/replay patches, full output and equality receipts.
-All temporary probe hooks/module/CLI registrations were removed; worktree was
-clean before this docs-only proposal. No production correction is present.
+   WASM check and platform-neutral byte API invariance.

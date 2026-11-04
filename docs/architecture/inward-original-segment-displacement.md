@@ -38,19 +38,18 @@ stream different, report the residual; do not broaden silently or claim GREEN.
 
 ## Runtime discovery and falsifiable hypothesis
 
-On the approved clean-generator main, the frozen orthogonal-grid input has
+With the clean generator, the frozen orthogonal-grid input has
 one first difference at byte 100825, line 5137. It is the writer-only inward
 move before `;WIPE_START`, not a retracting wipe segment:
 
 - Native: `G1 X106.655 Y106.098`.
 - Rust: `G1 X106.718 Y106.107`.
 
-Read-only debugger receipts show the same center, original angle rays and
+Read-only debugger captures show the same center, original angle rays and
 `(is_hole, counter_clockwise) = (true, true)`. Native retains the original
 first segment for displacement. Independent arithmetic with the captured
 values reproduces Native `(106.655111, 106.097513)` and Rust
-`(106.717887, 106.107467)` exactly at printed precision. Evidence is external:
-`${EVIDENCE_ROOT}/w6-orthogonal-inward-readonly-finding.json`.
+`(106.717887, 106.107467)` exactly at printed precision.
 Hypothesis: separating displacement from swapped angle rays removes the
 entire strict-output discrepancy, without touching voxel or wipe generation.
 This remains a hypothesis until fresh public RED/GREEN replay.
@@ -59,7 +58,7 @@ This remains a hypothesis until fresh public RED/GREEN replay.
 
 Use the already agreed public seams: Native CLI twice per input, validated
 byte-in/options core API, and real Ares CLI. Freeze the unchanged input-only
-`orthogonal-grid-beam1.3mf` from `worker6/interlocking-wip` with SHA
+`orthogonal-grid-beam1.3mf` from the interlocking WIP with SHA
 `afed0f4f4417916d2963363754bc45ef1300f6bbc2d6dfbcc9d52cf751a0c312`.
 Use the original default beam1 and single-volume frozen inputs as PASS
 controls, preserving their SHA and existing complete comparisons.
@@ -74,28 +73,23 @@ normalizer. Keep launch/input/output/comparison artifacts outside Git.
 No ignored tests, Native output, probes, new allow/expect, unsupported guards,
 fallbacks, comparator changes or hand-authored output expectations.
 
-## Review sequence and acceptance
+## Sequence and acceptance
 
-Branch `worker6/inward-displacement` is ordered after the approved
-endpoint-contact chain `3b446a687`, itself based on
-`a5eb0f0356057fe9c62ec3319834f82b40a7731a`. Its RED commit moves the endpoint
+This slice follows the endpoint-contact slice. Its RED commit moves the endpoint
 and inward Native/API/CLI harness into a shared runner without changing
 assertions. Both suites reuse existing `interlocking-base` control inputs
 instead of storing duplicate archives. No endpoint production change or old
 WIP history is included in the inward commits.
 
-1. Commit this spec and send SPEC REVIEW-REQUEST before tests/implementation.
-2. After spec review, freeze the target and PASS controls; observe and commit
+1. Commit this spec before tests/implementation.
+2. Freeze the target and PASS controls; observe and commit
    genuine Native-first public runtime RED in official and seeded modes.
 3. Production-only GREEN changes only displacement selection in `inward.rs`.
    Both target streams and controls must wholly match; partial improvement
    is not completion. Existing interlocking-base controls must remain PASS.
 4. Changed files stay below 400 lines; fmt and
    `cargo clippy --workspace --all-targets -- -D warnings` must be clean.
-5. Integration follows the coordinator queue. Rebase to then-current main and
-   run both complete FULL modes at the exact final hash, each zero failures
-   and zero skipped. Earlier-baseline results cannot waive that gate.
-6. No stash, push or self-merge; every commit includes the required coauthor.
+5. Both complete suite modes must pass with zero failures and zero skipped.
 
 Other unresolved WIP cases remain outside this slice. No claim of complete
 interlocking or general inward-move parity follows from this bounded repair.

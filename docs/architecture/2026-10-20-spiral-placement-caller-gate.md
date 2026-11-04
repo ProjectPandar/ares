@@ -1,8 +1,6 @@
 # ARD: configured spiral mode bypasses perimeter SeamPlacer placement
 
-Status: SPEC approved by COORD; formal RED authorized, GREEN requires
-separate review approval. Base d592d41459764d816c0199385a22b442006cba76.
-Owner W5, emitter/placement, not W6's GCodeProcessor seam cache/scarf flag.
+Scope: emitter/placement, not the GCodeProcessor seam cache/scarf flag.
 
 ## Upstream boundary and Rust correspondence
 
@@ -80,10 +78,6 @@ configuration, movement or trailing-line mask is allowed.
 
 ## Read-only source proof
 
-External evidence `${COORD_ROOT}/evidence/w5-spiral-placement-gate/`
-contains actual inputs, launches, full streams, raw snapshots and SHA256
-manifest. Original work root `/tmp/w5-discovery-d592-spiral3/`.
-
 - All six complete ordered raw PG wall records EXACT, including scaled
   vertices/cyclic origin, roles/inset/loop role and flow metadata.
 - SpiralVase enabled flags both `[false,true,true,true,true,true]`;
@@ -104,19 +98,19 @@ Restoring the gate alone has NOT been tested or claimed sufficient.
 
 ## Included / deferred
 
-Included after separate GREEN approval: uniform configured-spiral caller
+Included in GREEN: uniform configured-spiral caller
 bypass, removing its shape-specific shell, preserving perimeter-only
 structural dispatch and existing orientation/projected split behavior.
 No new public API, dependency, I/O, fallback or Rust file over400LOC.
 
-Deferred: W6 processor flags/cache; W2 brim/EFC/material; W3 combine-solid
-and Arachne heights; W4 ironing; W1 Voronoi. Also deferred: SpiralVase
+Deferred: processor flags/cache; brim/EFC/material; combine-solid
+and Arachne heights; ironing; Voronoi. Also deferred: SpiralVase
 smoothing/taper/short-segment arithmetic, travel/wipe/retraction lifecycle,
 ordinary seam ranking, random/hash/stagger math, conditional scarf and
 nonspiral rectangle cleanup. This is a cited libslic3r caller-gate rewrite,
 not an independently designed Ares pipeline.
 
-## Formal RED then separately authorized GREEN
+## Formal RED then GREEN
 
 Freeze control/positive and CW-axis rectangle actual exports as INPUTS
 only, with hashes/provenance. Reuse main's unmodified
@@ -127,9 +121,7 @@ Native availability only, no borrowed reference gate/helper copy.
 
 Dual official/seeded RED must show control/CW PASS and positive FAIL at
 the real motion premise, no ignored tests or expected-failure conversion.
-Runner module remains below400LOC. Send REVIEW-REQUEST and WAIT for
-approval before production changes. Future GREEN must make spiral eager
+Runner module remains below400LOC. Future GREEN must make spiral eager
 placement count zero universally, preserve ordinary placement, and keep
 CW passing via uniform gate. Residual mismatch blocks scope expansion.
-FULL only in a separately authorized window; no discovery probe is
-formal public-API or current-main integration evidence.
+No discovery probe is formal public-API or current-main integration evidence.

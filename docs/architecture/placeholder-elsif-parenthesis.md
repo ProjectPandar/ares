@@ -49,6 +49,6 @@ Commit the input fixture only, never Native output.
 The E2E test first qualifies two ordered Native streams, asserts that the
 55 C heat commands and exactly one `M106 P3 S150` are present, then compares
 the complete public API and CLI output with the canonical comparator.
-The same test runs against official and seed0 replay Native, CPU17/thread1.
+The same test runs against official and seed0 replay Native.
 The RED must fail because Ares omits the fan command; GREEN must preserve
 whole-stream equality, not merely satisfy a substring check.

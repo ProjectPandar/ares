@@ -95,9 +95,9 @@ object-ID nondeterminism does not grant this distinct fixture an exception.
 The failing public API was independently observed in GDB entering the
 cardinality owner with map length 2, diameter count 1, and nozzle count 1;
 that owner returns the reported `InvalidInput` before slicing. RED precedes
-any production edit. Canonical FULL qualification remains coordinator-owned.
+any production edit.
 
-For the BATCH-8 regression, the existing input-rejection and two TiQ2 canonical
+For the TiQ2 regression, the existing input-rejection and two TiQ2 canonical
 checks are mandatory official+seeded controls alongside the overlong-map witness;
 no assertions or fixture bytes change. A Native GDB probe at
 `Print::update_filament_maps_to_config` confirms the TiQ2 auto-map update runs
@@ -133,12 +133,11 @@ its configuration. The canonical Native-double-replay/public-API/CLI witness
 must assert Native diameter count 2, colour count 1 and map `[1]`, then compare
 complete output with the existing generator-line-only comparator. Run the witness
 with genuine official and seeded producers, without an opt-in or seeded-only
-skip. Preserve the pre-fix RED and subsequent GREEN receipts separately.
+skip.
 
 The older `bookkeeping_export` test is **not** an official agreement claim:
 its lines 22-25 return with `seeded-only reference` unless the seeded-reference
 environment is active. Its official PASS therefore skips the Native comparison.
 Keep that existing guard unchanged and exercise its four subcases in seeded mode;
 only the new unguarded frozen witness establishes a real official comparison.
-Retain all earlier filament-map, admission and TiQ2 controls, then run both FULL
-inventories and the REQUIRE=1 workspace gate with explicit producer provenance.
+Retain all earlier filament-map, admission and TiQ2 controls.

@@ -20,6 +20,5 @@ hardware execution. No guard or skipped active fixture counts as parity.
 Acceptance: one tracer at a time, failing before implementation and passing
 complete ordered G-code afterward. Expand from constant PA to nonconstant
 multi-acceleration, numeric prefixes, invalid models, cooling/overhang and
-activation controls. Run the official 2.4.2 CPU0 binary and separate seeded
-reference with fresh artifact roots; run workspace Nextest, Clippy, rustfmt and
-WASM compilation before commit/push. Rebase latest main before integration.
+activation controls. Run the official 2.4.2 single-CPU binary and separate seeded
+reference; run workspace Nextest, Clippy, rustfmt and WASM compilation.

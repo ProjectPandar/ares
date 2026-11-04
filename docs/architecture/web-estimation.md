@@ -1,6 +1,6 @@
 # Web preview: legend estimation footer
 
-Status: spec for review. Ruling S1; code starts after approval. The next slice
+The next slice
 after this one is S2, the ToolPosition actual-speed profile.
 
 ## Upstream boundary
@@ -21,7 +21,7 @@ of it.
 | `Utils.hpp:494-537` `short_time`, `:540-562` `get_time_dhms` | Time text | TS display port. The f32 dhms decomposition already exists in `toolPositionFormat.ts::formatMarkerTime`; it is factored out and reused |
 | `GCodeViewer.cpp:128-150` `format_compact_weight` | Weight text | existing `LegendFilament.tsx` port |
 
-## Scope rules (coordinator ruling)
+## Scope rules
 
 - The ares-core change is limited to that statistics port: one f32 field set
   from an already computed value. It changes no slicing and no G-code bytes;
@@ -30,9 +30,8 @@ of it.
   `takePrintStatistics`) and the new field. It has no logic.
 - Core and wasm form one commit pair (RED, then GREEN). Web forms a separate
   pair (RED, then GREEN).
-- This is a production advance. Before merging it needs workspace, strict
-  and the full official/seeded pair, queued after worker4 (queue w6 → w3 →
-  w4).
+- This is a production advance. It needs workspace, strict and the full
+  official/seeded pair.
 
 ## Included and deferred
 
@@ -79,8 +78,7 @@ of it.
 1. **Native oracle, generated at runtime and never stored.** Extend
    `tools/chain-probe/print-statistics.patch` to also write
    `es.modes[0].prepare_time` (`%.9g`) into `plate_1.print_statistics.json`.
-   The probe is rebuilt with Nix (`--cores 8 --max-jobs 1`) as a queued heavy
-   job, and its output stays in the `ARES_ORCA_CACHE_DIR` cache.
+   The probe is rebuilt with Nix, and its output stays in the `ARES_ORCA_CACHE_DIR` cache.
 2. **Fixtures:** `tests/parity/summary/{time-cost,unused-filament}.3mf`.
    Native `prepare_time > 0` and `stealth_time == 0` are asserted.
    If neither fixture has a nonzero prepare stage, the BBL preset-slice 3MF
@@ -107,8 +105,7 @@ of it.
    - Rust: fmt, clippy `-D warnings`, `cargo nextest run --workspace`, and
      the wasm32 build.
    - Parity: workspace, strict and the full official/seeded base/candidate
-     pair (queued), with identical G-code bytes expected.
-   - Web: build and lint, then the full browser base/candidate pair in a
-     quiet window (inbox clear, load1 < 20, no full run active). The window
-     rebuilds wasm on the current main. Screenshot diffs must stay in the
+     pair, with identical G-code bytes expected.
+   - Web: build and lint, then the full browser base/candidate pair, with
+     wasm rebuilt on the current main. Screenshot diffs must stay in the
      known categories plus the legend footer.

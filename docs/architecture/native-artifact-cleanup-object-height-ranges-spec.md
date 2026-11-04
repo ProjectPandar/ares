@@ -1,7 +1,6 @@
-# Native 清理 B：object layer-height ranges 冻结 fallback
+# Native 清理：object layer-height ranges 冻结 fallback
 
-owner worker6；共享 runner/cache owner worker4；基线 `c5a70eecf`。
-协调者已确认 worker3 释放 `runner/object_layer_height_ranges.rs` 及同前缀
+本片接管 `runner/object_layer_height_ranges.rs` 及同前缀
 adapter；其 complex/range_lookup/region 生产代码与 modifier wall 测试不在本片。
 本片只迁移 Native 参照生命周期，不改变 layer range 或 seam 行为。
 
@@ -42,7 +41,7 @@ M73、travel、seam、footer；不增加归一、容差、排序、过滤或只�
 `3cfaef750f9eb7c2a1baae910fd919ae63339364f2269907aa5116cd7ace6c1f`。
 另四份输入及来源契约见下节。删除四份 `.native-emitted.gcode`（共 3501 行）及对应
 四份 `.oracle.json`；不删除其他组产物，不改共享 README、runner/root 注册、cache、
-生产 API、.config 或 worker4 的 CLI63/retained/channels/marker/KSR。
+生产 API、.config 或其它 CLI63/retained/channels/marker/KSR 迁移。
 
 ## 保留的手写输入/来源契约
 
@@ -120,7 +119,7 @@ M73、travel、seam、footer；不增加归一、容差、排序、过滤或只�
 构造既有 `ExportedCase` 并调用 `slice_case`。不使用目前绕过命中的 `rerun_reference`，
 不修改 cache recipe。producer/Native/launcher/resources/replay/input SHA、lock、
 staging、receipt、publish 与完整输出哈希验证都归现有缓存所有；无第二缓存或预热。
-成功运行保留 Native/Ares raw、结果、cache trace/receipt；全部只存仓库外。
+成功运行保留 Native/Ares raw、结果、cache trace/receipt；均不提交。
 
 ## 真实迁移 RED 与验收
 
@@ -136,7 +135,7 @@ GREEN 后四例 required cold/hot 均实际运行，验证原输入 SHA、完整
 warm cache 下 required 缺 Native仍 FAIL；optional exact child 可见 SKIPPED 并无伪参照。
 mixed 纯控制在缺 Native 环境仍 active、精确错误不变。
 
-fresh 同轮 v2 seeded/official base→cand，16 线程、独立 target/cache，逐项列出状态变化，
-共同 Ares raw 不变且候选失败集合为基线子集；Native 波动须独立证据及协调者裁定，
-不放宽严格比较。worker3 若先合入会改变本组输出的生产范围，以新 main 刷新配对和定向。
-workspace nextest、strict clippy、fmt、wasm 全绿后 REVIEW-REQUEST；批准前不 push。
+fresh 同轮 v2 seeded/official base→cand，独立 target/cache，逐项列出状态变化，
+共同 Ares raw 不变且候选失败集合为基线子集；Native 波动须独立证据并逐例报告，
+不放宽严格比较。若相邻生产变更改变本组输出，以新 main 刷新配对和定向。
+workspace nextest、strict clippy、fmt、wasm 须全绿。

@@ -42,17 +42,14 @@ Included: public 3MF option-domain exports, requested value and dependency
 readback, positive native support extrusion, option-sensitive native support
 movement witnesses, and unchanged strict complete G-code comparisons.
 Ranges retain generated min/max/seeded interiors; styles retain all values.
-Use matched Ares/reference CPU domains per ARD-0102; preserve earlier RED.
+Use matched Ares/reference execution domains per ARD-0102; preserve earlier RED.
 No production worker policy, comparator or existing fixture change.
 
-Closure follows the user's bounded-checkpoint update: preserve genuine tip
+Closure follows the bounded-checkpoint scope: preserve genuine tip
 minimum fill-connection RED assertions and evidence, without representing
 the activation correction as complete Tree option output parity. Production
 connector repair is not implemented in this checkpoint. Full quality gates
 remain mandatory; opt-in reference failures are reported separately.
 
 Deferred: unrelated printer/Option failures, all-platform runtime and
-cross-worker equivalence. User updates the terminal gate to feature-branch
-commit/push, synchronization with latest origin/main, final full validation
-and fast-forward main push. Preserve the user's dirty main worktree by using
-a separate clean worktree. Pause afterward; do not start another slice.
+cross-worker equivalence.

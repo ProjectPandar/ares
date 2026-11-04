@@ -1,11 +1,7 @@
 # Equivalent ironing-region span collection
 
 Status: docs-only SPEC, then separately committed registered public RED.
-Base3fbad615e334a283596d0e6acff921f1d02804c6; new independent branch
-worker6/ironing-equivalent-span-spec. CPU15, Cargo jobs1, test threads1; no FULL.
-Production GREEN is NOT authorized by this SPEC+RED task.
-Earlier approved4chains20e41 ->8dd ->360e9 ->0fb8 remain clean/frozen separately;
-their existing W6 integration order/window authorization does not change.
+Production GREEN is out of scope for this SPEC+RED.
 
 ## Upstream owner / exact Rust boundary
 
@@ -55,7 +51,7 @@ feeding the SAME existing clip/filler boundary. No new public API/framework.
    expense of Layer::make_ironing parity.
 7. No legacy fallback, ignored residual, unsupported guard, input workaround,
    fixture/test/helper/normalizer edit during future GREEN. If any strict
-   residual remains, STOP and request review instead of broadening scope.
+   residual remains, STOP instead of broadening scope.
 8. Core stays platform-neutral WASM/browser, Windows, macOS, Linux. No native
    process, file I/O, dependency, UI/viewer or terminal behavior added to core.
 
@@ -69,13 +65,9 @@ No generic solid/sparse grouping, combine-solid, Arachne, aligned-rectilinear
 geometry-template identity, painted/side-cut, brim/EFC, spiral, seam occlusion,
 zero-area winding, placeholder-double or instance-name sanitizer changes.
 No unit tests added/modified; the sole new public seam is the Native pair below.
-Existing state/consumers and all approved RED fixtures/SPEC/helpers must freeze.
+Existing state/consumers and all existing RED fixtures/SPEC/helpers must freeze.
 
-## Approved read-only discovery / actual first producer witness
-
-Authority root:
-`${EVIDENCE_ROOT}/w6-3fb-ironing-modifier-angle-ocd0lki0/`.
-DISCOVERY-RR.md, verification.json, verify-discovery.py and full streams/probes.
+## Read-only discovery / actual first producer witness
 
 Existing validation/modifier-wall-loops-classic.3mf: one cube plus existing
 modifier (no new geometry). Classic/unpainted; interlocking/brim/skirt/EFC/arc OFF;
@@ -137,9 +129,7 @@ No generated G-code/golden output committed, only input3MFs.
    generator-only comparator. Target panic is BEFORE final raw assertion and
    post-adapter: independently audit raw equality, do NOT claim that assertion ran.
 4. fmt and strict workspace/all-target clippy PASS; scope/chronology/input-identity
-   proof and REVIEW-REQUEST, then STOP BEFORE GREEN, no FULL/rebase/push/merge.
-5. Only after separate authorization may a production-only span/areas correction
+   proof, then STOP BEFORE GREEN.
+5. A later production-only span/areas correction must
    run frozen pair and appropriate ironing neighbors plus fmt/clippy/WASM gates.
    No source/fixture/normalizer expansion to conceal residuals.
-6. Existing4chains and W6 integration order unchanged; no automatic fifth-chain
-   or main integration credit until its own authorization and exact-tip gates.

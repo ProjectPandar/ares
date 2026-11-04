@@ -1,6 +1,6 @@
 # Wipe retraction EPSILON early-return inputs
 
-SPEC1d04191391379a1164d7af49e6547c9d9d7317f4; merged basec251aa616.
+SPEC1d04191391379a1164d7af49e6547c9d9d7317f4.
 Eight exact input-only3MFs frozen from external discoveryRLzHmG; source/input
 SHA256 in manifest.json. No Native artifacts/expected G-code committed.
 All existing admitted overhang mesh/other options unchanged: wipe1/distance2,
@@ -26,6 +26,5 @@ OrcaRunner::from_env/stages; actual effectiveconfig/WIPE_START-END XY+E gates,
 then publicAPI+realCLIsuccess and unchanged generator-only whole comparator.
 Runtime full Native/API/CLI artifacts retain witness/launch/compared bytes;
 input hashes/settings assertions frozen. CanonicalALLoracleenv including
-ARES_PROCGCODE_BIN, freshserialofficialseeded CPU18jobs2threads2.
-Independent RED review before production; no epsilon/parser/classifier change
-in this commit. Sameinputcontrols rawAPI/CLI must stay unchanged for GREEN.
+ARES_PROCGCODE_BIN, freshserialofficialseeded. No epsilon/parser/classifier
+change. Sameinputcontrols rawAPI/CLI must stay unchanged for GREEN.

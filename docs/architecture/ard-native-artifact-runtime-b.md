@@ -1,13 +1,13 @@
 # Native artifact cleanup — slice B
 
-Status: DRAFT for approval. Overall owner worker4; processor sub-slice worker6.
+Status: proposed.
 Prerequisite: accepted Native-required slice A. This specification records
 migration boundaries and non-negotiable outcomes, not execution logs or a plan.
 
 ## Decision
 
 Do not commit Native-derived G-code, stdout/stderr, result JSON, maps, CSV,
-TSV/RLE projections, receipts, diagnostic logs or snapshots. Commit only source
+TSV/RLE projections, run metadata, diagnostic logs or snapshots. Commit only source
 inputs, preset references, command recipes and source-cited expected contracts.
 Generate Native references during each test's execution via existing OrcaRunner,
 cache under ARES_ORCA_CACHE_DIR with actual input/producer/command identities,
@@ -20,49 +20,49 @@ No core/WASM production filesystem, subprocess, terminal or Native dependencies.
 No stored Native output renamed as a fixture input, copied into Rust constants,
 compressed, embedded in JSON or moved to another tracked directory.
 
-The only production API exception is worker6's approved explicit post_process
+The only production API exception is an explicit post_process
 parameter on the existing gcode_processor::process_gcode thin delegate,
 corresponding to GCodeProcessor.hpp:915 finalize(bool post_process) and
 cpp:2715-2716 run_post_process. It delegates the same processor loop, retains
 false-path behavior and threads typed loading delay only for true replay.
-Other production changes require a separate reviewed exception, not this spec.
+Other production changes require a separate exception, not this spec.
 
-## Ownership and cited source boundaries
+## Cited source boundaries
 
-worker6 exclusively owns runner/cache/processor.rs (including same-process
+The processor sub-slice covers runner/cache/processor.rs (including same-process
 GDB slice mode and explicit GDB identity), tools/chain-probe/role-filament-map.sh,
 new runner/processor_migration*.rs, the12 processor cases and their listed
-Native products, and process_gcode(post_process). worker4 must not edit these
-files concurrently. Shared extension requirements are interface requests to
-worker6/coordinator, not authorization for a second writer. Worker4 owns the
-other reference recipes/consumers. The adjacent processed_color_change/native.rs
+Native products, and process_gcode(post_process). Only one change stream edits these
+files at a time; shared extension requirements are interface contracts, not a
+second writer. The remaining reference recipes/consumers form the main slice.
+The adjacent processed_color_change/native.rs
 family and processed_motion_attributes.rs (including dynamics RLE migration)
-are also worker6-owned, with their own spec-first review. worker4 does not edit
+belong to the processor sub-slice, with their own spec-first slice. The main slice does not edit
 these groups or the shared core policy helper in parallel. If processor CSV/kernel
 products need a shared adapter change, agree the writer and contract before
 implementing.
 
 Reference processor spec: docs/architecture/native-artifact-cleanup-processor-spec.md,
-initial approved2e142621, with coordinator-required explicit-GDB correction.
+initial 2e142621, with the explicit-GDB correction.
 Its12 active case mappings, whole replay streams, M73 C/P/R and role f64 bits
 are authoritative. The two source-less ignored envelope diagnostics remain
-explicitly deferred as approved there; they are not counted as migrated PASS.
+explicitly deferred there; they are not counted as migrated PASS.
 
-Inventory source: worker6 /tmp/worker6-core-native-gcode-inventory.md, snapshot
-238559840:15 frozen-output consumer modules/24 active+3 existing ignored tests,
-plus adjacent live color-change/dynamics consumers. This is a handoff reference;
-consumer classifications are recorded below so a temporary file is not required
-for future implementation. Processor group is owned by worker6, not worker4.
+Inventory snapshot
+238559840: 15 frozen-output consumer modules/24 active+3 existing ignored tests,
+plus adjacent live color-change/dynamics consumers.
+Consumer classifications are recorded below so a temporary file is not required
+for future implementation.
 
-| Group | Upstream concept and preserved Rust test seam | Owner |
+| Group | Upstream concept and preserved Rust test seam | Slice |
 | --- | --- | --- |
-| role map/cache, seam/envelope, color-stop | GCodeProcessor cpp:1621-1649,4192-4230,981-1290; public process_gcode + processed slicing;12 source-mapped cases | worker6 |
-| slicing validation/boundaries/jerk/SEMM/plate geometry | Print::validate, PrintObject transformed hull, GCode object/tool transitions and machine limits; existing public byte-in slicing/error APIs, moved core Native consumers to CLI | worker4 |
-| KSR configuration + full stream | PrintConfig/GCode CONFIG_BLOCK writer, existing bounded full/runtime export and public slice seam; no runtime-value omission/duplicate-assignment loss | worker4 |
-| CLI channels/failures | OrcaSlicer.cpp error dispatch/result.json; exact exit/channel/JSON/export artifact inventory | worker4 |
-| color-change/raw-stable/dynamics | GCodeProcessor store_move_vertex/process_file/options correction; existing public processed slicing/API | worker6, adjacent spec-first sub-slice |
-| marker time/kernel + web consumers | LibVGCodeWrapper::convert, ViewerImpl.cpp:1461-1465 ordered f32 source kernel, Utils::get_time_dhms; pure viewer/WASM APIs, runtime test oracle products | worker4, coordinate web owner before touching web |
-| avoid-crossing/replay | Existing source-cited travel paths and processor replay; existing CLI full ordered comparator | worker4 |
+| role map/cache, seam/envelope, color-stop | GCodeProcessor cpp:1621-1649,4192-4230,981-1290; public process_gcode + processed slicing;12 source-mapped cases | processor |
+| slicing validation/boundaries/jerk/SEMM/plate geometry | Print::validate, PrintObject transformed hull, GCode object/tool transitions and machine limits; existing public byte-in slicing/error APIs, moved core Native consumers to CLI | main |
+| KSR configuration + full stream | PrintConfig/GCode CONFIG_BLOCK writer, existing bounded full/runtime export and public slice seam; no runtime-value omission/duplicate-assignment loss | main |
+| CLI channels/failures | OrcaSlicer.cpp error dispatch/result.json; exact exit/channel/JSON/export artifact inventory | main |
+| color-change/raw-stable/dynamics | GCodeProcessor store_move_vertex/process_file/options correction; existing public processed slicing/API | processor, adjacent spec-first sub-slice |
+| marker time/kernel + web consumers | LibVGCodeWrapper::convert, ViewerImpl.cpp:1461-1465 ordered f32 source kernel, Utils::get_time_dhms; pure viewer/WASM APIs, runtime test oracle products | main, coordinated with the web frontend |
+| avoid-crossing/replay | Existing source-cited travel paths and processor replay; existing CLI full ordered comparator | main |
 
 ## Existing cache is the single reference authority
 
@@ -88,16 +88,16 @@ Three bounded recipes are needed inside that cache boundary:
    processor cache. slice+gdb returns plate G-code and map/footer from the SAME
    inferior run; process mode returns map/CSV/metadata for its actual input.
    Ordinary Native slicing followed by a second map replay cannot stand in
-   for worker6's same-process footer proof. Named modes have distinct product
+   for the same-process footer proof. Named modes have distinct product
    sets and distinct recipes, not optional-product guessing.
 
-Processor extension key and receipt include actual input SHA, mode, selected
+Processor extension key and cache metadata include actual input SHA, mode, selected
 plate, command recipe, pinned reader hash, launcher identity if any, actual
 pinned Native ELF hash and actual GDB binary hash, plus existing chosen
 producer/resources/replay policy. GDB must be explicit ARES_GDB_BIN; no nix shell
 package-environment resolution, PATH substitution or implicit alternative.
 If a launcher is necessary it must be explicitly pinned and hashed into key
-and receipt. Current role-filament-map.sh's nix-shell wrapper must be replaced,
+and metadata. Current role-filament-map.sh's nix-shell wrapper must be replaced,
 not copied to a new untracked fallback. Reader ELF/SHA/map offsets, node count,
 ordered unique roles/reset/exit checks remain unchanged. Chosen slice producer
 and pinned GDB producer are separately named, never represented as the same ELF.
@@ -134,14 +134,14 @@ not checked-in transformed Native tables or fake JS-calculated Native expectatio
 ## Artifact/consumer migrations
 
 The companion inventory enumerates individual tracked product paths and owners.
-Delete each product only with its consumer rewired (or approved deferred ignored
+Delete each product only with its consumer rewired (or a recorded deferred ignored
 case disposition). Input .3mf/.stl, user overrides, original source excerpts,
 source extraction manifests, manual G-code and pinned recipe code remain inputs.
-Native command receipts containing historical input/output hashes become runtime
-receipts; retain command arguments as a source recipe, not a timestamped receipt.
+Native command metadata containing historical input/output hashes becomes runtime
+metadata; retain command arguments as a source recipe, not a timestamped record.
 Historical RED/capture logs stay outside Git; preserve conclusion-only README/ARD.
 
-Worker4 core Native families moving to CLI include overhang_wall_jerk,
+Core Native families moving to CLI include overhang_wall_jerk,
 e5max_klipper_jerk, semm_m104, o6_plate_origin/o6_print_volume, bbl_object_boundary,
 bbl_toolchange_boundary, exclude_outline and arachne_default_prisms. Keep existing
 public API/control branches, including -102 retained rejected bytes and exact
@@ -153,7 +153,7 @@ Keep pure full/runtime sentinel/nullable/duplicate semantics in core with source
 owning manual inputs, and put Native comparison at the public emitted CONFIG_BLOCK
 CLI seam. Do not delete internal view-difference assertions merely because the
 public seam cannot inspect the private collector. If exact equivalent coverage
-cannot be split without a second production API, stop for review rather than
+cannot be split without a second production API, stop rather than
 inventing that API. Existing fixed-length/digest/assignment contracts remain;
 fresh reference mismatch is evidence, not reason to regenerate constants.
 
@@ -180,7 +180,7 @@ Marker-time files retain handwritten path.gcode, tagged-overrides and source
 extraction inputs. Runtime kernel generation obtains Native converted vertices,
 synthetic kernel numeric cases and native formatting values; TSV projections
 are runtime products. Preserve all ordered f32 bits, phantom/repeated ids,
-reverse/filter/reload properties and approved raw/stable bounded difference
+reverse/filter/reload properties and recorded raw/stable bounded difference
 sets. Add explicit ARES_MARKER_TIME_BIN / ARES_MARKER_TIME_STABLE_BIN to the
 required gate environment before deleting products; absent tools are blockers,
 not a reason to derive Native expected strings from Rust/JS.
@@ -192,7 +192,7 @@ The historical raw marker-kernel path recorded in marker-time/oracle.json,
 is not available in the current environment. The stable marker executable
 /nix/store/d9n5bs7mp9d3i7wlkcik81k47jpay8ir-orca-slicer-marker-time-stable-options-2.4.2/bin/orca-slicer
 exists. Raw is not substitutable by stable. Before this group is implemented,
-coordinator must authorize/provision the existing marker-time.nix source-kernel
+provision the existing marker-time.nix source-kernel
 recipe (pinned upstream8500fcdcc and ORCA_PROCGCODE_NIXPKGS) or supply a verified
 raw binary. No diagnostic Native rebuild is launched by this specification.
 Kernel source excerpt extraction remains read-only checked, not a production fix.
@@ -201,7 +201,7 @@ KSR initialized-reference.json records a historical seeded wrapper/ELF identity
 separate from the current official/seed-only producer. Existing fixed output/
 CONFIG_BLOCK hash contracts cannot silently be rebound to a different Native
 build. Attempt a fresh runtime capture with the retained exact input and explicit
-producer, then report any hash/stream disagreement for a producer-boundary ruling;
+producer, then report any hash/stream disagreement for a producer-boundary decision;
 do not rewrite pinned expectations or claim all same-version binaries equivalent.
 These prerequisites are named blockers for their groups, not optional exemptions
 or a reason to start deletion ahead of runtime assertion proof.
@@ -213,25 +213,25 @@ counts alone do not establish equivalence. Migration is infrastructure/reference
 change, not a fabricated production algorithm RED. Before implementation write
 real E2E controls exposing missing fixture/runtime reference, wrong mode/input,
 cache-hit missing tool, corrupt product and expected nonzero Native capture.
-The worker6 API true-path separately needs real Native replay RED before code.
+The processor API true-path separately needs real Native replay RED before code.
 
-Verify fresh and warm cache with independent-test execution, actual output SHA
+Verify fresh and warm cache with independent-test execution, actual output SHAs
 receipts and unchanged verdicts; no prior test/prewarm dependency. Run required
 missing tool demos and optional visible SKIPPED demos. All related Native cases
 must actually compare when full env supplied; no secondary opt-in escapes.
 
-Fresh latest-main seeded/official base→candidate serial16threads/jobs2 with
+Fresh latest-main seeded/official base→candidate runs with
 independent caches/artifacts, raw Ares streams unchanged, per-test name/outcome
 audit; disclose inherited seed-only setup/ND separately with same-label raw and
 Native generator-only hashes. workspace nextest, strict workspace/all-target
 clippy, fmt, actualCLIwasm checks all pass. Browser/kernel consumer changes also
-require their owner's existing full assertions; do not shrink browser coverage.
+require their existing full assertions; do not shrink browser coverage.
 
 Final Git audit finds no Native-derived output files or compile-time products
 in any consumer, not merely no generated-by G-code headers. No missing consumers,
 no outputs copied into constants, no newly ignored tests, no production drift
-outside worker6's single approved API exception. Delete obsolete reproduction
+outside the single post_process API exception. Delete obsolete reproduction
 output-copy paths only after references are audited. Preserve manual input list
-and source-derived semantics. Conclude with separate exact-hash B REVIEW;
-processor sub-slice is reviewed/owned by worker6 with shared cache integration
+and source-derived semantics. The processor sub-slice
+lands separately, with shared cache integration
 serialized under one writer per worktree.

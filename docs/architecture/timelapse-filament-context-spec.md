@@ -1,13 +1,12 @@
 # Timelapse template current-filament context: SPEC
 
-Status: SPEC APPROVED `20444a910`, worker2; base `afca7400a`. Approved PLAN extension `1f79cf081` adds the source-owned per-layer traditional insertion flag check/set, as recorded in [the repair PLAN](timelapse-once-per-layer-repair-plan.md).
-This proposal adds no tests, Native execution or production changes before approval.
+Status: Accepted. The PLAN extension `1f79cf081` adds the source-owned per-layer traditional insertion flag check/set, as recorded in [the repair PLAN](timelapse-once-per-layer-repair-plan.md).
 
 ## Upstream ownership and Rust boundary
 
 Continue the roadmap's G4 `GCode::process_layer` rewrite after the merged machine-start and layer-template invocation contexts. This ports the remaining timelapse invocation argument, using existing parser/writer ownership.
 
-Source: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`, inspected at `${TMP_ROOT}/ares-orca-procgcode-source`.
+Source: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 - `libslic3r/GCode.cpp:4667-4675`: non-BBL layer-start timelapse passes `m_writer.filament()->id()` to `placeholder_parser_process` at `4672-4674`.
 - `GCode.cpp:5145-5178`: `insert_timelapse_gcode` passes the same logical filament ID at `5167`; position clearing and last-Z adoption follow rendering at `5170-5178`.
@@ -39,15 +38,14 @@ For active cases record each emitted M104, current logical writer, physical laye
 
 Failure inventory: exporter loss/rejection; collapsed vector or physical/logical confusion; no actual second-tool extrusion; scalar current_extruder correct while implicit vector remains slot0; upcoming-tool mistaken for invocation writer; duplicate timelapse phases misclassified; vendor reset removed; command-only witness hiding later travel changes; Native nondeterminism mistaken for Ares regression.
 
-Native admission is mandatory before calling a mismatch RED. Save input ZIP-member hashes, loaded/exported options, Native/API/CLI raw output, independent observations and original complete comparison results in repeatable artifacts. Use the existing generator-only strict comparator and raw API/CLI equality. No assertion deletion or comparator relaxation. If phase admission or finite project parity requires unrelated repair, stop and report it.
+Native admission is mandatory before calling a mismatch RED. Save input ZIP-member hashes, loaded/exported options, Native/API/CLI raw output, independent observations and original complete comparison results in repeatable artifacts. Use the existing generator-only strict comparator and raw API/CLI equality. No assertion deletion or comparator relaxation. If phase admission or finite project parity requires unrelated repair, stop and specify it separately.
 
-## Approval and exit gates
+## Exit gates
 
-1. SPEC approval, then finite E2E tests and admitted RED in a separate commit; report before production edits.
-2. Submit repair PLAN for approval: one render invocation argument, preserving all surrounding order and behavior.
+1. Finite E2E tests and admitted RED in a separate commit before production edits.
+2. Repair PLAN: one render invocation argument, preserving all surrounding order and behavior.
 3. GREEN finite six cases and whole option_coverage in seeded/official modes; strict workspace/all-targets/all-features Clippy, fmt and wasm32 core/vgcode/wasm.
-4. Code review, coordinator-assigned fresh workspace/full, accepted rebase-carry and explicit exact-hash merge approval.
 
-Every directed/full invocation uses fresh Native cache/artifact root, jobs2/threads2; full legs use fresh targets and unmodified control-set-v2. Heavy runs need explicit allocation and load<30. Native variants retain raw failures and require coordinator attribution/adjudication.
+Every directed/full invocation uses a fresh Native cache/artifact root; full legs use fresh targets and unmodified control-set-v2. Native variants retain raw failures and require attribution.
 
-Proposed claims: `gcode_emit/timelapse.rs`, existing CLI `tests/orca_parity/runner/compatible_regions/tool_templates.rs` registration and new `tool_templates/timelapse_context*.rs` leaves, plus these docs. Reuse admitted fixture code where visibility permits; any necessary test-only visibility change must be stated in the RED diff. No existing assertions change; each Rust file stays at most400 lines. No production overlap with current anchor, brim, profiles, multiline geometry, CI or viewer slices. Claude remains the sole reviewer.
+Touched files: `gcode_emit/timelapse.rs`, existing CLI `tests/orca_parity/runner/compatible_regions/tool_templates.rs` registration and new `tool_templates/timelapse_context*.rs` leaves, plus these docs. Reuse admitted fixture code where visibility permits; any necessary test-only visibility change must be stated in the RED diff. No existing assertions change; each Rust file stays at most400 lines. No production overlap with current anchor, brim, profiles, multiline geometry, CI or viewer slices.

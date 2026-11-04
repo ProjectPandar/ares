@@ -1,10 +1,9 @@
 # SPEC: LockedZag（及 ZigZag/CrossZag）support ironing——±1mm 假盒锚与"死锁区域"正名
 
-状态：SPEC-REVIEW-REQUEST（stacked 窗口只读调研 + docs-only；未改代码）。
-来源：APPROVED 73157556c 后协调指定下一守卫项调研（原假设：锁区域
+来源：73157556c 后的下一守卫项调研（原假设：锁区域
 `Fill.cpp:1309`）。**调研推翻了该假设**，本 SPEC 以实测证据改写边界。
 
-## 1. 核心发现（实测，CPU7/8，官方 native 2.4.2）
+## 1. 核心发现（实测，官方 native 2.4.2）
 
 - fixture `overhang-organic.3mf`（sparse=crosshatch 还原基线）：
   - `support_ironing_pattern=locked-zag` → 719 ironing E 行，
@@ -77,14 +76,14 @@
    symmetric/π/2 差异，§2）；oracle `4eb488251bff`。
 3. RED：三模式 ironing 腿（现守卫 → 失败）+ sparse locked-zag/
    crosszag 回归控制（如已有 sparse 平价腿则引用，否则 CLI 前后
-   对照）。锁定顺序：先 LockedZag（协调指定项），ZigZag/CrossZag
-   随同机制解锁，同切片或拆分由裁定。
+   对照）。锁定顺序：先 LockedZag，ZigZag/CrossZag
+   随同机制解锁，同切片或拆分。
 4. GREEN 验收：新增腿官方+seeded 双模式逐字节；既有 19 腿零回归；
    strict clippy/fmt/wasm 于 exact HEAD。
 
 ## 6. 边界声明
 
-- 不碰 `fill_entities/triangles.rs`（W6 预留）。
+- 不碰 `fill_entities/triangles.rs`。
 - 不改 sparse locked-zag extrusion 路径（`fill_entities/locked_zag.rs`）
   与 group_fills 锁收集。
 - 不引入 PrintObject bbox 管道（上游该调用点用的是常量假盒）。

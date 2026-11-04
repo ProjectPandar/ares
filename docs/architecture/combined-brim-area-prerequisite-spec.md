@@ -1,17 +1,12 @@
 # SPEC request: global combined-brim area consumer prerequisite
 
-Status: **DOCS-ONLY SPEC-REVIEW-REQUEST**, discovery only completed; no public RED
-or production authorization. Fresh branch `worker1/brim-combine-prereq-spec` from
-`origin/main 41f2c90f765d42c6620583121296bb61a2cb839c`, as explicitly assigned.
+Discovery only; no public RED yet.
 Upstream source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-FULL24 is active; all probing was targeted CPU18, no full/workspace/merge.
 
-## Premise reverified on exact main, not the pending W1 chain
+## Premise verified on main
 
-Fresh `${TMP_ROOT}/ares-brim-control-main-premise/discovery-report.json`: official and
-seeded Native FIRST, independent roots/cache, current coordinator canonical
-archived, current main API/CLI rebuilt, sampled descendants/threads pinned CPU18.
-Input SHAs retained. Native accepts all three inputs; Ares accepts all with raw
+Official and seeded Native FIRST, independent roots/cache, current main
+API/CLI rebuilt. Native accepts all three inputs; Ares accepts all with raw
 API==CLI. Whole-file comparisons use the existing generator-only normalization.
 
 - combine_brims1 / outer_only / combined skirt: first strict difference
@@ -77,7 +72,7 @@ model-local↔global geometry; preserve that existing bed/coordinate convention.
 every stored per-object path. The only project_slice combine_brims reference
 on this base is the skirt unsupported guard, not a make_brim merge.
 
-Prospective minimal port after authentic public RED approval: retain the existing
+Prospective minimal port after an authentic public RED: retain the existing
 source-owned pre-infill per-object areas at the current brim preparation seam,
 apply ONLY the cited global gate's union/cleanup/infill and deterministic carrier
 semantics, then feed the existing emitters/skirt footprint consumers. Keep
@@ -97,7 +92,7 @@ upstream path arithmetic/other owner is necessary, stop for amendment.
 
 ## Planned public Native-oracle RED and control
 
-After SPEC approval only: freeze combine1 failing input plus its combine0 paired
+Freeze combine1 failing input plus its combine0 paired
 control as input-only 3MFs with SHA/member manifest. Native generated at runtime
 FIRST with OrcaRunner::from_env; assert acceptance, saved/effective configuration,
 actual brim extrusion and ordinary skirt/model output. Same input then validated
@@ -108,12 +103,11 @@ never replace, full-file comparison. No Native outputs in Git.
 
 Localize full changed brim commands and source area/cleanup/infill/carrier mapping
 without changing fixture/model/comments/resolution. Preserve original RED output
-and do not assume a single 0.001 formatting fix. Independent RED review before
-production. Same accepted control's raw API/CLI bytes must remain unchanged
+and do not assume a single 0.001 formatting fix. RED precedes production.
+Same accepted control's raw API/CLI bytes must remain unchanged
 RED→GREEN. Existing ordinary brim and combined/perobject skirt controls remain
-unchanged. Fresh serial official+seeded CPU18 jobs2/threads2, separate caches/
-artifacts, canonical archive/hash, actual Native affinity, exact clean hash,
-allocated fmt/strict/WASM. Broad gates only coordinator-authorized.
+unchanged. Fresh official+seeded with separate caches/artifacts and
+fmt/strict/WASM.
 
 ## Failure inventory / scope / deferred prerequisites
 
@@ -132,5 +126,4 @@ perobject skirt combine_brims admission, group-local combined brims, ByObject,
 inner/auto/ears/painted/support brims, multiple filaments, touching/overlapping
 geometries beyond this input and new producer geometry. Keep combine_brims and
 multi-instance perobject guards untouched even if this prerequisite is repaired.
-Current pending W1/W2/W5 guard conflicts are coordinator-owned and not part of
-this main-based source slice. No full/workspace/merge/push during FULL24.
+Other pending guard changes are not part of this source slice.

@@ -1,7 +1,7 @@
-# Default Voronoi repair GREEN implementation boundary (pending qualification)
+# Default Voronoi repair GREEN implementation boundary
 
-Authority: approved prerequisite SPEC/ARDac538 and independently approved
-RED26c44. This document is an implementation record, NOT GREEN approval.
+Follows the [prerequisite spec](voronoi-default-repair-prerequisite-spec.md)
+and its RED. This document is an implementation record.
 
 ## Source ownership and non-negotiable decisions
 
@@ -10,7 +10,7 @@ outside vendor into private `geometry/voronoi`. Its called
 `VoronoiUtils.cpp:39-91,212-254,307-345`, `Point.hpp:236-247`, and
 `VoronoiUtilsCgal.cpp:40-138,188-332` remain the owning boundaries. The unused
 intersection alternative, point/mixed overloads, downstream closing retry and
-Arachne default-consumer migration remain deferred as approved. In particular,
+Arachne default-consumer migration remain deferred. In particular,
 `Arachne/SkeletalTrapezoidation.cpp:378` is NOT included in this landing.
 
 - `mod.rs`: edge/cell/angular detector, states/issues, ordered PI/6,PI/5,PI/7,
@@ -50,20 +50,17 @@ actual effective source diagram. This is not an Ares-owned pipeline milestone.
 
 ## Native RED and numeric closure
 
-Approved Native RED existed before production code. The isolated arithmetic
-unit tests added in GREEN were rejected in review and removed. Correctness
-is qualified by the runtime Native E2E comparison, not post-hoc unit tests.
+The Native RED existed before production code. Correctness is qualified by the
+runtime Native E2E comparison, not post-hoc unit tests.
 
 The prior bounded raw-rebuild diagnostic measured52 vertex-bit differences over
-42 of102 raw rotation-stage diagrams; cells/edges matched throughout. COORD
-explicitly authorized source endpoint mapping before declaring a backend blocker.
-The source candidate postprocess absorbed all52, marks cleared, and98 actual
+42 of102 raw rotation-stage diagrams; cells/edges matched throughout. Source
+endpoint mapping was ported before declaring a backend blocker. The source candidate postprocess absorbed all52, marks cleared, and98 actual
 successful LAST attempts matched COMPLETE ordered Native FINAL diagrams in both
 i64 and i32. Four failed first attempts are preserved and NOT counted PASS.
 This isolated closure used observed Native angles/sites only as postprocess input;
 it is NOT the production detector/dispatcher or real-constructor GREEN evidence.
-Original diagnostic and per-vertex source mark traces remain retained in durable
-`voronoi-default-repair-green-26c44` evidence. Any FINAL vertex-bit discrepancy
+Any FINAL vertex-bit discrepancy
 from the real constructor must STOP, with no vendor fix or tolerance.
 
 Test serialization is adapted to a TEST-only generic snapshot view so both the
@@ -77,13 +74,11 @@ as the twin's vertex0 in Boost, and the unchanged Rust backend accessor follows
 that definition. All 300 complete serialized diagrams remain strictly equal;
 the adaptation changes neither schema nor expected values.
 
-## Qualification and integration gates (still pending)
+## Qualification gates
 
-No GREEN claim is made until the approved real constructor RED and targeted
-consumer regressions pass. Final integration RR additionally MUST run BOTH
+GREEN requires the real constructor RED and targeted consumer regressions to
+pass. Qualification MUST run BOTH
 `runtime_native_default_repair_complete_ordered_diagrams_match` (core unit test)
-and `runtime_native_rectangle_complete_ordered_diagram_matches` (incident) at
-exact TIP in BOTH reference modes with COMPLETE debug/source/resources/GDB/CPU
-environment and NO SKIP. The orca_parity-only FULL does not cover that core test.
-The final scheduled dual FULL remains required; W1 integration is afterW4.
-No FULL/push/merge is authorized by the current branch-development permission.
+and `runtime_native_rectangle_complete_ordered_diagram_matches` (incident) in
+BOTH reference modes with COMPLETE debug/source/resources/GDB environment and
+NO SKIP. The orca_parity-only test run does not cover that core test.

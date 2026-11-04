@@ -1,20 +1,14 @@
 # Proposal: firmware zero-length layer-change lift parity
 
-Status: **DOCS-ONLY PROPOSAL / REVIEW-REQUEST**. New worktree
-`${WORKTREE_ROOT}/ares-worker1-travel-plate-discovery`, branch
-`worker1/travel-plate-discovery-spec`, base exact main
-`8f6ce1660ccfaf95a6888b60c258047183d19ff0`. No production/test changes or local
-fix probe. Upstream source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`, read
-from the existing pinned Orca checkout, not copied into the new worktree.
+Status: **DOCS-ONLY PROPOSAL**. No production/test changes or local
+fix probe. Upstream source pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 Scope is travel / retract-before-layer-change ONLY. No brim/skirt/sequence,
 perimeter/arachne/seam feature work. One gap found; discovery stops here.
 
 ## Frozen accepted witness and two whole-output PASS controls
 
-Evidence `${TMP_ROOT}/ares-w1-fw-layer-discovery-8f6ce1660/discovery-report.json`;
-complete input/member hashes in `inputs/manifest.json`, motion attribution in
-`motion-attribution.json`. Base input-only committed fixture
+Base input-only committed fixture
 `tests/parity/gcode-flavor-admission/marlin2-wipe0.3mf`, SHA256
 `d0d89d6d9bab58cc0738cc558bbc5d92b766b4cb4980055defa4aca2afd42071`.
 Geometry/placement/model members unchanged: one overhang model, ByLayer,
@@ -33,8 +27,7 @@ observed independently. No perimeter/seam settings changed.
 Only project_settings.config differs among cases: each control changes exactly
 ONE field from target. Input-only ZIPs contain no G-code. Frozen before Native
 runs. All Native runs first, fresh serial official/seeded roots/caches, canonical
-references explicitly passed to Native AND public launches, actual sampled
-Native/API/CLI descendants/threads CPU18. Exact source clean8f6ce1660 throughout.
+references explicitly passed to Native AND public launches.
 
 BOTH modes give Native CLI0, public API success, actual CLI0, raw API==CLI for
 ALL cases. Two controls each PASS the COMPLETE unchanged ordered Native/API/CLI
@@ -86,22 +79,20 @@ estimator/exporter or general retraction-policy changes. Existing scaffolding
 is only the source compatibility shell whose missing firmware condition is being
 replaced. Preserve all non-firmware and first-layer behavior.
 
-## Requested next barrier, not implementation authorization
+## Next step: public RED
 
-Approve frozen family/source boundary for test-only Native-first public RED:
+Frozen family/source boundary for test-only Native-first public RED:
 Native successful output,75 layers/positive model extrusion, G10/G11 activity
 and75 normal lifts for target, controls active as configured, then success/raw
 API==CLI and complete `golden::compare_ordered_bytes_generator_only` equality.
 Target must genuinely FAIL on clean baseline; both controls must whole-output
 PASS. Freeze input-only SHA/member manifests; never commit Native outputs.
-Independent RED approval BEFORE production GREEN. Current discovery did NOT
+RED lands BEFORE production GREEN. Current discovery did NOT
 modify code or use a temporary correction to claim clean GREEN.
 
 GREEN must pass the complete three-case comparison BOTH modes, controls' raw
 API/CLI RED→GREEN stable, related travel/lift/retract/layer-change/firmware
-families BOTH modes, fmt/strict clippy/WASM, exact clean hash, CPU18/jobs2/threads2,
-changed Rust files<=400 LOC. Any residual divergence means STOP/report rather
+families BOTH modes, fmt/strict clippy/WASM, changed Rust files<=400 LOC. Any residual divergence means STOP/report rather
 than adjacent work. Deferred: other lift modes/flavors, new templates, support,
 raft, multi-filament/toolchange and broader firmware behavior. No claims about
-brim/skirt/sequence/perimeter/arachne/seam parity from this witness. No full or
-workspace test runs, rebase of the old A/B branch, merge or push.
+brim/skirt/sequence/perimeter/arachne/seam parity from this witness.

@@ -1,13 +1,12 @@
 # print_sequence=by_object: port slice plan (S1–S3)
 
-Date: 2026-10-08. Worker5. Plan for review — **no production code in
-this submission**. Companion to the inventory
+Companion to the inventory
 ([print-sequence-by-object-inventory.md](print-sequence-by-object-inventory.md)).
 
 Scope note: the sequential clearance validations (inventory items 16-18,
 `Print::sequential_print_clearance_valid` Print.cpp:613-840, the vertical
 check Print.cpp:841ff, the validate integration Print.cpp:1298) are
-**assigned to worker4** and are not part of this plan.
+not part of this plan.
 
 Ordering principle: upstream dependency order. Every slice is a port of
 named upstream functions/lines; sequential printing must reproduce the
@@ -108,14 +107,14 @@ object's own count. Fails today (one global count).
 ## Not in this plan
 
 S4 (the `Print::validate` sequential clearance checks, inventory items
-16-18) — **owner: worker4**; this plan neither scopes nor schedules it.
+16-18); this plan neither scopes nor schedules it.
 
 ## Sequencing and gates
 
-S1 → S2 → S3 (S4 runs under worker4 independently). S2/S3 assume the S1
+S1 → S2 → S3 (S4 is independent). S2/S3 assume the S1
 loop. Every slice: source-cited spec note in this file, RED first
 (failing on the native comparison), fresh seeded base/cand before merge,
-clippy `-D warnings`, fmt, and the review gates. All fixture machinery
+clippy `-D warnings` and fmt. All fixture machinery
 already exists (`export_case_multi`).
 
 ## S1 implementation map (staged, not yet landed)
@@ -174,7 +173,7 @@ Wiring notes (observed, for the driver author):
   and take `.back()`; add `ToolOrdering::last_extruder()` in
   `statistics` alongside `collect` if absent.
 
-## S2 spec (staged for review)
+## S2 spec
 
 Upstream boundary: the per-instance transition inside the by-object
 loop, `GCode.cpp:3300-3372`, between the ordering rebuild (:3289-3297)
@@ -282,7 +281,7 @@ object, so no current fixture exercises this branch; if a future fixture
 does (stepped z, modifier stacks), add a RED case asserting the
 deduplicated total before touching the count.
 
-## SPEC-REQUEST: by-object chunks per print-object instance
+## Spec: by-object chunks per print-object instance
 
 Under `print_sequence = by object`, upstream iterates print-object
 INSTANCES, not objects (`GCode.cpp:3279-3302`:
@@ -301,10 +300,9 @@ tail (`GCode.cpp:3542`).
 
 Ares gap: the schedule merges same-object instances into one chunk, so
 the second copy prints without the inter-instance transition and the
-header/tail count says 62 instead of 124 (RED log
-${TMP_ROOT}/ares-w5-gates/m73-multi-red2.log).
+header/tail count says 62 instead of 124.
 
-Planned change (pending approval):
+Planned change:
 1. Schedule: under by-object, keep one chunk per instance (per-instance
    layer list + per-instance transition boundary); by-layer grouping
    unchanged.
@@ -495,9 +493,7 @@ ecommit each:
 
 Acceptance: ender3 / kobra3 / single_object_two_instances all PASS
 (seeded, byte-exact); by-layer guards re-verified by the full seeded
-control set after the rebase. One clippy-hygiene commit (`8ae49a00f`)
-clears pre-existing findings on the branch (dead skirt_height
-binding, map_or, range loop, nested metadata rewrite).
+control set.
 
 Known deferred nuance: `begin_path_travel`'s first-layer branch keys
 on `state.layer_index == 0` (global) while upstream uses

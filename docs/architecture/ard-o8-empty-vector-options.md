@@ -56,7 +56,7 @@ Native 使用权威 seed-replay derivation
 `72d4hac8qmg5p9m22v2kifbp1hkxjk63` 的 separate-debug 输出，原 binary
 SHA256 `59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff`，
 Build-ID `bdbbf4336095c2ce6283fc5441e1e56fbf595b99` 与调试文件匹配。
-三个重建输入各执行一次 seed0/CPU3 gdb，均复现 SIGABRT 和相同 stderr：
+三个重建输入各执行一次 seed0 单核 gdb，均复现 SIGABRT 和相同 stderr：
 
 ```text
 terminate called after throwing an instance of 'Slic3r::ConfigurationError'
@@ -79,9 +79,6 @@ Native 输入的逐字节公共 API 重放。既有检测无缺口，按裁定�
 带 key 的类型化错误。通用 CLI 错误路径保持不变；原生 abort 与 Ares
 结构化拒绝不能宣称 CLI stdout/stderr/退出状态逐字节相等。
 
-重建 preset/model SHA、原命令与新参数、每例 gdb 栈与 log SHA：
-`/tmp/worker3-cubicon-gdb/report.json`；保存输入：
-`/tmp/worker3-cubicon-reconstructed/Cubicon*`。有效重建日志：
-`/tmp/worker3-cubicon-bounded.log`（3 个 ORCA_ERROR，保留 sweep exit100，
-不是 GREEN coverage）；Ares 回归日志：
-`/tmp/worker3-cubicon-ares-existing-tests.log`。
+重建 preset/model SHA、原命令与新参数、每例 gdb 栈与日志均保存在仓库外；
+有效重建运行产生 3 个 ORCA_ERROR，保留 sweep exit100，
+不是 GREEN coverage。

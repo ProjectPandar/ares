@@ -1,7 +1,7 @@
 # ARD: Preserve CLI loaded-system group metadata semantics
 
-Status: proposed [SPEC/fixture/budget](perimeter-input-dispatch-spec.md) review only.
-Seam v2 NO-RED closure remains accepted. No production edit authorized.
+Status: proposed. [SPEC/fixture/budget](perimeter-input-dispatch-spec.md).
+Seam v2 NO-RED closure remains accepted. No production edit in this slice.
 
 ## Source owner / destination
 
@@ -22,7 +22,7 @@ Do not blanket-change general bundle/catalog semantics to match the CLI route.
 
 - Identical input includes model AND loaded JSONs. Bare3MF-versusloadedNative
   comparisons were harness mismatch, not the five-key config-resolution bug.
-- One authorized same-request Ares API+CLI check now matches all five keys and
+- One same-request Ares API+CLI check now matches all five keys and
   raw API/CLI output. Only actual inherits_group remains different: Native empty
   three slots versus Ares system parent names. Preserve this metadata REDcandidate;
   do not suppress footer to manufacture NO-RED.
@@ -32,8 +32,8 @@ Do not blanket-change general bundle/catalog semantics to match the CLI route.
 - Effective-config divergence under identical request remains observable RED;
   do not require equal actual config before RED. Whole ordered output must pass,
   retaining all motion/arcs/M73/statistics/footer under generator-only normalization.
-- Separate SPEC/fixture/budget approval ->fresh public test-only RED ->independent
-  approval precedes production. External retained-Native witness is not a fresh
+- Separate SPEC/fixture/budget ->fresh public test-only RED ->
+  production. External retained-Native witness is not a fresh
   paired/seeded RED test. No retries or added cases follow automatically.
 - General vendor inheritance, defaults, compatibility metadata, seam geometry,
   dispatch/order/brim/travel are deferred. No new resolver/API, fallback, guard,

@@ -1,9 +1,8 @@
 # Fresh full stock matrix and non-PASS ownership
 
 Actual clean execution: `829977606fee7eef40809b69922b8db13bd425cc`, docs-only
-successor of main2becb00a5; nextest0970c9b2-402c-463a-bf97-c6d17ecbe9f7,
-exit100,2065.904s. Required seeded controls, fresh cache/artifact root,
-16threads/build8; no retries or input/preset repairs.
+successor of main2becb00a5; exit100. Required seeded controls, fresh
+cache/artifact root; no retries or input/preset repairs.
 
 | Raw status | Current | Historical baseline | Delta |
 |---|---:|---:|---:|
@@ -23,7 +22,7 @@ are not promoted to valid-stream PASS by a matching Core rejection.
 
 Twenty loaded-config Export238(-18) plus eight minimum-width Slice205(-51)
 are the #7 cohort already independently checked with public APIs. Their old
-28-case execution bindings remain in the approved #7 conclusion; this stock
+28-case execution bindings remain in the #7 conclusion; this stock
 sweep stops on Native errors and does not freshly compare Ares on these rows.
 
 Remaining25:
@@ -73,21 +72,12 @@ substitute or repair a preset. These remain incomplete, not validator errors.
 
 ## Next bounded slice and provenance
 
-Coordinator selected all13 defined residual errors for a source-only spec;
-reuse #97 custom_gcode_reference/CLI tests and worker4's postprocess/eligibility
-runner/cache owners. Do not edit worker4's active cli_exit_channels or cli_result
-cache files without coordination. All result.json comparisons use shared
+All13 defined residual errors are selected for a source-only spec;
+reuse #97 custom_gcode_reference/CLI tests and the existing postprocess/eligibility
+runner/cache. All result.json comparisons use shared
 native_wall_clock::result_comparison_bytes, ignoring only prepare_time/export_time;
 stdout/stderr and every other result byte remain exact.
 
-Machine record `/tmp/worker3-stock-full-current-audit.json` retains current
-counts, all72 non-PASS rows, captures/status and empty divergence clusters.
-Full original summary/cache/commands/streams remain under
-`/tmp/worker3-stock-full-current-{artifacts,cache}`; run commit/main/status/log/exit
-receipts remain external. No failed attempt discarded.
-
-After completion git-only rebase to main60d2e54aa produced0235fba7203; main
-includes production avoid-crossing nudge changes. Coordinator explicitly
-permits test/docs-only evidence carry-forward: this report remains bound to
+No failed attempt discarded. This report remains bound to
 829/2bec, not execution after TiQ2. Subsequent13-case E2Es must execute on their
 actual latest commit. No production change follows from this report.

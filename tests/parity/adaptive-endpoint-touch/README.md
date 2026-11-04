@@ -13,6 +13,6 @@ footer/config echo remain checked; API==CLI raw equality is separate.
 
 Run via `cargo nextest run -p ares-cli --test orca_parity -E
 'test(orca_parity_adaptive_endpoint_touch_a1)'` under the canonical official
-and seeded environments with CPU18, threads1, persistent shared Native cache
+and seeded environments with persistent shared Native cache
 and `ARES_REQUIRE_ORCA=1`. Retained outputs and replay/comparison JSON are the
 repeatable external artifacts. See `docs/architecture/ard-adaptive-endpoint-touch.md`.

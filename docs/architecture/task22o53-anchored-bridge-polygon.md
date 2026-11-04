@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented and verified after independent source/specification review; final independent implementation re-review is the remaining milestone gate.
+Implemented and verified.
 
 ## Decision
 

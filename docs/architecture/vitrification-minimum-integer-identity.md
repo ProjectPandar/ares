@@ -1,6 +1,6 @@
 # Vitrification minimum placeholder integer identity
 
-## Approved source-owned follow-up
+## Source-owned follow-up
 
 This is a bounded libslic3r rewrite correction to the placeholder-double chain,
 not a new Ares template policy. Upstream pin:
@@ -26,8 +26,8 @@ guard, saturation, fallback, or unsigned conversion. No generic Config retyping.
 Preserve each site's existing value selection and evaluation. Adjacent existing
 writer-extruder/minimum-vs-first-element selection behavior is deferred; this
 slice ports the scalar integer identity, not a claim of full multi-tool lifecycle
-parity. The explicit approval extends the earlier double-render-only constructor
-freeze at these two named bindings only. All other constructors remain unchanged.
+parity. This extends the earlier double-render-only constructor freeze at these
+two named bindings only. All other constructors remain unchanged.
 
 ## Existing RED and minimal correction
 
@@ -45,25 +45,10 @@ all-Number precision-six formatter exposed a preexisting Number binding.
 Relevant parser/binding/test files are identical between the original double
 base47821c760 and integration basead5111f0b: this is incomplete closure against
 an old Ares compatibility binding, not new-main brim interaction.
-Diagnosis RR and qualifications:
-`${EVIDENCE_ROOT}/w6-vitrification-seven-tip-audit-6r4v_kz5/DIAGNOSIS-REVIEW-REQUEST.md`.
 
-1. Commit this note before production edits. At this docs-only parent, run the
-   unchanged vitrification module on CPU15/jobs1/threads1 with fresh oracle cache
-   and retain the expected strict RED. No FULL on the old integration base.
-2. Separately commit only the two integer writebacks. Leave Number formatter,
-   Integer/String arms, generic parser, helpers, tests, input and expectations
-   unchanged. Preserve the coauthor trailer and changed text<400LOC.
-3. Show the same existing module GREEN at the fix tip. Stop on any new residual;
-   passing this narrow module does not establish whole-template parity.
-4. Respect integration queue W5 -> W1 -> W6. When W6 receives its window, compose
-   the six frozen chains plus this follow-up onto current mainafcb6aa7c or newer;
-   keep the mechanical callback adapter in a separate commit. Preserve original
-   frozen refs, context-only range-diff exceptions and complete evidence.
-5. On the NEW integration exact tip run fmt, strict clippy all targets, then
-   fresh-cache official and seeded canonical FULL sequentially on CPU15 with
-   test-threads1/jobs1. First strict residual STOP. No borrowing failed26a's
-   gates or prior full results; send RR, do not self-merge/push.
+The correction changes only the two integer writebacks. Number formatter,
+Integer/String arms, generic parser, helpers, tests, input and expectations stay
+unchanged. Passing this narrow module does not establish whole-template parity.
 
 Core remains platform-neutral Rust; no filesystem, process, terminal or native
 formatting dependency is added. No browser runtime or multicore claim.

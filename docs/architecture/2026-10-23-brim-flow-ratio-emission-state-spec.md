@@ -31,7 +31,7 @@ behavior must be matched even if a user might expect owner-local multiplication.
 
 ## Rust destination and existing scaffold replacement
 
-Base this third W2 slice on approved seam-state GREEN
+Base this slice on the seam-state GREEN
 `43e10f4c8ce0ba08c209c9cdf313a2459a43e99d`. Extend the existing current-config
 state in `project_slice/gcode_emit/motion/state.rs::EmitState` with ONLY the
 current object `brim_flow_ratio`; do not introduce a parallel configuration
@@ -53,14 +53,14 @@ Potential direct destinations: existing initialization in `orchestration.rs`,
 layer-object apply boundary in `layers/boundary.rs`/its caller, per-instance
 object apply in `layers/tool_entry.rs`, base `brim.rs` flow storage and existing
 `motion/skirt_brim.rs` emission. Choose only the necessary existing call sites
-following the carrier audit; this list does not authorize unrelated refactoring.
-Keep files<=400LOC. If a broader state model is needed, STOP for approval.
+following the carrier audit; this list does not cover unrelated refactoring.
+Keep files<=400LOC. If a broader state model is needed, STOP.
 
 ## Included and deferred behavior
 
 Included: initialization, layer-first object apply, per-instance object apply,
 region non-interference and erBrim emission-time ratio multiplication, extending
-only the approved EmitState current-config mechanism. Preserve existing
+only the existing EmitState current-config mechanism. Preserve existing
 print/filament flow factors, first-layer exclusions, path geometry, integer/f32
 flow conversions and Native multiplication order after inspecting the emitter.
 
@@ -92,31 +92,23 @@ Native/CLI generator-only equality in both modes; target first strict difference
 is actual erBrim filament E, Native `.01583` versus Ares `.01979`, sameXY/F.
 Each brim has471 positiveXYmoves; only flow differs. Native double replay and
 both Native modes agree. These are external diagnostics, not test constants.
-Evidence: `worker2-brim-flow-ratio-proposal-20261023T082536`.
 
 This gap is not fixed by the parent seam-gap-only state or frozen skirt
 minimum-length chain017a9876b. Inputs use uniform seam_gap10% and
-min_skirt_length0; those source exclusions are recorded in proposal evidence.
+min_skirt_length0; those source exclusions are recorded in discovery evidence.
 
-## Staged review contract
+## Staged contract
 
-1. Commit this docs-only SPEC and submit SPEC RR. No test/production changes
-   before the separate review step requested by coordinator.
-2. After SPEC review, add exactly two input-only 3MFs and two public cases using
+1. Commit this docs-only SPEC. No test/production changes in that commit.
+2. Add exactly two input-only 3MFs and two public cases using
    unchanged `runner::native_stream_case::check` with `(false, |_, _| {})`.
    Register through existing `runner.rs` (currently393LOC), not root registry
    migration/include. Freeze original seam tests/inputs and all new SHA values.
-3. Exact RED tip: CPU13, build jobs1, PIN_OFFSET13, PARITY_THREADS1, replayCPU13;
-   serial official/seeded with independent fresh empty caches. Require each
+3. Exact RED tip: serial official/seeded with independent fresh empty caches. Require each
    mode one strict genuine target failure and one complete control pass, Native
    double replay, successful public API/actual CLI, raw API/CLI equality. Retain
    artifacts; compare complete ordered bytes with only generator-line handling.
    No M73/time/travel/geometry/metadata masks, extra geometry callbacks or magic
-   result constants. Run fmt and strict all-targets clippy, submit RED RR, STOP.
-4. Only after RED review implement minimal GREEN with tests/inputs/helper frozen.
-   Follow authorized gate sequence and report any residual immediately. FULL
-   only when coordinator authorizes its window; never duplicate control runs.
-5. Three W2 chains (seam-state parent, this ratio slice, and separate minimum-
-   skirt017a9876b) integrate together onto then-current main in the notified W2
-   window. Necessary adapters remain separate mechanical commits. Coordinator
-   owns review/merge; integration notification interrupts this work immediately.
+   result constants. Run fmt and strict all-targets clippy.
+4. After RED, implement minimal GREEN with tests/inputs/helper frozen.
+   Report any residual immediately; never duplicate control runs.

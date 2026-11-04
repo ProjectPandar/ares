@@ -2,8 +2,7 @@
 
 ## Status
 
-Accepted, implemented, gate-verified, and unconditionally approved by final
-independent six-axis implementation review.
+Accepted, implemented, and gate-verified.
 
 ## Decision
 
@@ -104,7 +103,7 @@ Normal/LargeBed `scale_(10)` bits. Driver source/binary/output SHA-256 values ar
 `e6710df487466d3258790f6be55782990554fc5034920add69892a555dd85a78`,
 `edfcb578e3b9ee43ed7490119734f36fdd051e15cc9a23174c00c590f51087ad`, and
 `1b5db0f377afd362e0dff95e45a97f1190cc07990dfa97343059e6706e1fc6d8`;
-O53 retains its independently approved exact geometry oracle.
+O53 retains its exact geometry oracle.
 
 Twenty-three gate/append/role/arithmetic/replace/line/forwarding/output and
 production-wiring mutations were killed; audit SHA-256 is

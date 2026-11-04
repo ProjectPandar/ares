@@ -1,19 +1,14 @@
 # SPEC request: ByObject transition comments, then per-object skirt
 
-Status: **AMENDED DOCS-ONLY SPEC-REVIEW-REQUEST**. Supersedes rejected
-`e62717af079c5a03b4b802442325269156e358b7`. Owner ruled two independent slices,
-in order; no public RED or production edits before the corresponding approval.
-Base `41f2c90f765d42c6620583121296bb61a2cb839c`; pinned Orca source
+Two independent slices, in order. Discovery ran on
+`41f2c90f765d42c6620583121296bb61a2cb839c`; pinned Orca source
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Accepted APA-R2 M NO-RED STOP remains separate.
 
 ## Verified discovery and fixture identity
 
-`${TMP_ROOT}/ares-byobject-skirt-discovery/discovery-report.json` retains fresh official
-and seeded Native-first runs, input hashes, exact binaries/commands, sampled
-Native/public descendant/thread CPU18 affinity and public API/CLI comparisons.
-Canonical env archived from `${COORD_ROOT}/bin/parity-control-set.sh`;
-no old official-wrapper/AppDir aliases. Production was unchanged.
+Discovery retains fresh official
+and seeded Native-first runs, input hashes, exact binaries/commands and public
+API/CLI comparisons. Production was unchanged.
 
 Source `tests/parity/per-object-skirt/disjoint.3mf`: two distinct objects at
 x80/x140,y110, height4; one filament; skirt2/height1; no_brim; combine_brims0;
@@ -64,7 +59,7 @@ No travel/retract/lift algorithm, scheduling, skirt guard, model, or formatter
 numeric changes. Existing emitter is a compatibility shell for these GCode/
 GCodeWriter calls, not an independent Ares transition policy.
 
-Public Native-oracle RED, after amendment approval: freeze the already failing
+Public Native-oracle RED: freeze the already failing
 ByObject/combined comments-on input as input-only 3MF with SHA manifest; runtime
 Native FIRST, then strict complete ordered Native/API/CLI equality and raw
 API==CLI. Assert three transition anchors (uncommented safety Z, normal-lift
@@ -74,11 +69,11 @@ Control: same ByObject/combined input with comments-off, also strict whole-outpu
 comparison, plus existing `crates/ares-cli/tests/orca_parity/runner/
 print_sequence_by_object.rs` tests unchanged. Comments-off is an explicit paired
 control, NOT a substitute for comments-on or a way to hide the bug.
-If the off control has another failure, retain it and seek ruling before GREEN.
+If the off control has another failure, retain it and resolve it before GREEN.
 
-Only independently approved RED permits minimal Slice 1 GREEN. Same inputs and
-assertions; controls raw bytes RED→GREEN unchanged. Slice 1 must be GREEN and
-reviewed before Slice 2 implementation. No incidental skirt admission repair.
+Slice 1 GREEN is minimal and follows its RED. Same inputs and
+assertions; controls raw bytes RED→GREEN unchanged. Slice 1 must be GREEN
+before Slice 2 implementation. No incidental skirt admission repair.
 
 ## Slice 2 AFTER Slice 1 GREEN: perobject skirt × ByObject
 
@@ -107,8 +102,8 @@ Proposed Rust boundary:
 ONLY its sequence disjunct; existing grouping and
 `crates/ares-core/src/project_slice/gcode_emit/layers/{object_skirt,drive}.rs`
 remain source-owned consumers, not a new sequential pipeline. Shared-group
-admission must stay guarded as above. W5 owns tower/multi-filament disjuncts;
-W2 owns support/raft: leave all of those unchanged.
+admission must stay guarded as above. Tower/multi-filament and support/raft
+disjuncts stay unchanged.
 
 Public RED: target ByObject/perobject input above, Native first at runtime;
 assert Native acceptance, two skirt blocks, and second block AFTER the
@@ -117,26 +112,24 @@ its object extrusion. Bind distinct object IDs/order and positive skirt XY/E;
 strict whole Native/API/CLI equality, raw API==CLI. Before GREEN must fail on
 real Ares unsupported rejection. Controls: ByLayer/perobject and now-fixed
 ByObject/combined, both strict whole equality. Keep shared-group rejection
-covered; exact fixture/test scope requires owner review before RED.
+covered.
 
 ## Failure inventory and gates (both independent slices)
 
 Invalid clearance/shared groups, unsupported export, absent Native product or
 wrong settings: stop; no admission bypass. Missing input/env/compiler faults,
-timeout/cancel/affinity violation: NON-GATE, never parity RED. Wrong comments or
+timeout/cancel: NON-GATE, never parity RED. Wrong comments or
 order remain full-output failures; no comment stripping, comparator/tolerance/
 classification relaxation. No expected output copied from Ares. If already
 matching, NO-RED STOP rather than a passing-only repair. If scope exceeds cited
 consumer boundaries, request amendment before touching production.
 
-Each slice: test-first frozen input-only manifest, independent public RED review,
-then minimal GREEN, unchanged tests/inputs, fresh serial official+seeded CPU18
-jobs2/threads2, exact clean hash, existing relevant controls and allocated
-fmt/strict/WASM, changed Rust <=400 LOC. Coordinator owns full/workspace and
-integration; no push/merge. No Native outputs in Git.
+Each slice: test-first frozen input-only manifest, public RED,
+then minimal GREEN, unchanged tests/inputs, fresh serial official+seeded runs,
+exact clean hash, existing relevant controls and
+fmt/strict/WASM, changed Rust <=400 LOC. No Native outputs in Git.
 
 Deferred: shared-group SUPPORT (rejection stays), repeated copies of one object,
 extra skirt-height/draft/minimum combinations, brim, support/raft, tower/multiple
 filaments and geometry/placement/clearance rewrites. Existing architecture stands;
-no new architecture or ARD needed. This amendment changes docs only; recorded
-Native discovery predates it and no RED/production edits have been made.
+no new architecture or ARD needed.

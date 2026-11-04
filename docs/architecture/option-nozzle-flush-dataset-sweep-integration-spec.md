@@ -1,11 +1,9 @@
-# SPEC-REQUEST: bounded nozzle_flush_dataset sweep integration
+# Spec: bounded nozzle_flush_dataset sweep integration
 
 ## Decision requested
 
 Claim `nozzle_flush_dataset` value-bearing option-coverage integration only.
 Existing `runner/x2d_flush_matrix.rs` coverage is retained, not declared missing.
-The coordination inbox contains historical baseline-only inventory notes, but
-no active claim for this key. Coordinator must confirm ownership before work.
 
 ## Source-owned boundary
 
@@ -53,11 +51,9 @@ those adjacent cases remain unchanged.
    using the unchanged strict comparator and wall-clock exemptions.
 4. Register authored value-bearing plans and bounded sweep dispatch for this
    key. Do not modify the existing `x2d_flush_matrix` assertions.
-5. Run both modes with fresh caches, strict Clippy, fmt and wasm32. Obtain the
-   coordinator's explicit workspace/full policy for the actual candidate hash.
+5. Run both modes with fresh caches, strict Clippy, fmt and wasm32.
 
 Direct GREEN is valid. Any production mismatch first stops for an operation-
-level source-cited report and ownership authorization; this request does not
-permit repairing worker2's tower/flush production. Preserve all failed Native
-admissions, setup errors and interrupted/VOID runs at actual execution hashes.
-No new Native/Cargo work or implementation starts before SPEC approval.
+level source-cited report; this request does not repair the tower/flush
+production. Preserve all failed Native admissions, setup errors and
+interrupted/VOID runs.

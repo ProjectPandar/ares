@@ -71,7 +71,7 @@ CLI strings the probe used: `monotonic`, `monotonicline`, `alignedrectilinear`,
 `concentricinternal` is gated to internal-solid surfaces upstream
 (`FillBase.cpp:72` "BBS: for internal solid infill only") and is **not reachable
 through `ironing_pattern`**; `zigzag`/`crosszag`/`lockedzag`/`crosshatch`/`concentric`
-already implemented (W1's chain) — `crosshatch` returns a real block count.
+already implemented — `crosshatch` returns a real block count.
 
 ## Spec — mapping `ProcessInfillPattern` → Rust fill entry point
 
@@ -137,8 +137,7 @@ rename the existing one to a generic coverage module):
   `UnsupportedProjectFeature` (matching its current contract; Native SIGSEGV is
   upstream breakage, not a parity target).
 - Existing patterns (rectilinear, concentric, hilbertcurve, archimedeanchords,
-  octagramspiral, zigzag, crosszag, lockedzag) must stay byte-equal — covered by
-  W1's chain.
+  octagramspiral, zigzag, crosszag, lockedzag) must stay byte-equal.
 
 ## Deferred
 
@@ -148,19 +147,16 @@ rename the existing one to a generic coverage module):
   fill-ordering, not retraction/wipe:
   - `alignedrectilinear` seeded first diff at line 12799
     (`G1 X100.547 Y138.336 F60000` ordering divergence; 6,952,636 vs
-    6,949,849 bytes) — evidence:
-    `/tmp/w4-green-fk-seeded/ironing-pattern-alignedrectilinear-lP9Twb/`
+    6,949,849 bytes)
   - `lateral-lattice` seeded first diff at line 12705 with a ~2MB missing
     block (9,899,728 vs 7,905,407 bytes) — a separate
-    `FillLateralLattice`-family slice, not an ironing-delegation issue —
-    evidence: `/tmp/w4-green-fk-seeded/ironing-pattern-lateral-lattice-xmdHui/`
+    `FillLateralLattice`-family slice, not an ironing-delegation issue
   Both legs are removed from the coverage test and deferred to separate
   FillRectilinear-family rewrite slices.
 - `fill_entities/ironing.rs:121-230` flow (area/inset/angle/nozzle selection,
   `iron_everything`/`iron_completely` paths) is already byte-equal per probing.
-- Support ironing (`support_ironing_pattern`) is W3's territory and stays out of
-  scope.
-- Brim (`brim_type`, `brim_ears`, `brim_separation`) is W2's territory.
+- Support ironing (`support_ironing_pattern`) stays out of scope.
+- Brim (`brim_type`, `brim_ears`, `brim_separation`) is a separate slice.
 - The `f->overlap`, `f->z`, `f->layer_id`, `f->bounding_box` and
   `dont_alternate_fill_direction` channeling already exist in the current
   `ironing.rs` call sites — reuse them unchanged.

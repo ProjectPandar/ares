@@ -1,9 +1,8 @@
 # ARD: FanMover mixed-precision timing rewrite
 
-Status: authorized docs-only SPEC, then input-only formal RED; STOP before
-GREEN without review. Independent base3fbad615e334a283596d0e6acff921f1d02804c6.
-This eighth W5 chain follows the seven frozen approved chains at integration;
-none is stacked, rebased or modified here. No FULL/integration authorization.
+Status: docs-only SPEC, then input-only formal RED before GREEN. Independent
+base3fbad615e334a283596d0e6acff921f1d02804c6. Seven earlier FanMover chains
+are not modified here.
 
 ## Upstream owner and exact Rust boundary
 
@@ -41,7 +40,7 @@ Preserve float split percentage/products and existing E5/XY3 output.
 No downstream formatter/tolerance/special-case E correction.
 
 All other files/behavior DEFERRED. Existing private float timing consumers
-live in fan.rs/helpers.rs; this phase DOES NOT authorize editing them.
+live in fan.rs/helpers.rs; this phase DOES NOT edit them.
 If a later two-file type port needs coordinated changes outside these
 files to preserve upstream narrowing, STOP/report for explicit boundary
 clarification, not silent scope expansion or blanket widening.
@@ -50,9 +49,9 @@ Defer epsilon/threshold policy, scheduling/control-flow/order, role gates,
 arc handling, relative-E state/sentinels, kickstart behavior, synthesized
 fan comment/flavor/PWM-floor context, whitespace/raw rewriting, config,
 processor/viewer, global GCodeReader/GCodeWriter, seam and travel logic.
-No dependency/helper/public API/new pipeline/fallback. W6 value.rs and
-W4 GCode.cpp::needs_retraction remain untouched; all seven prior W5
-chains frozen. Any future strict residual requires STOP/report.
+No dependency/helper/public API/new pipeline/fallback. value.rs and
+GCode.cpp::needs_retraction remain untouched; the seven prior chains are
+unchanged. Any future strict residual requires STOP/report.
 
 ## Ordinary GUI sole-key frozen actual INPUT pair
 
@@ -88,17 +87,15 @@ patched-production counterfactual or proof of whole-GREEN sufficiency.
 Unused relative-E starting values/sentinels differ and remain deferred.
 Both successful full debug outputs match CLI (Native only canonical
 identity/date normalization; Rust raw equality); no inferior writes/calls.
-Discovery evidence
-`${COORD_ROOT}/evidence/w5-3fb-fan-mixed-timing/`.
 
 Formal RED: two DIRECT native_stream_case::check calls reuse existing
 NativeCase double replay then complete validated API/bare CLI comparison.
-CPU11/thread1/job1, official then seeded. Require stable Native references,
+Official then seeded. Require stable Native references,
 controlPASS/targetactualFAIL with both public attempts retained; no setup
 failure or environment-disabled case counted. No duplicated harness,
 Native output constants/assertions/snapshots, ignored/expected-failure flags.
 Only existing generated-by identity/date normalization; NO M73/header/time/
 fan/E/XY/comment/config/trailing-line mask, sorting or numeric tolerance.
 
-Freeze RED tests/inputs/helpers/docs before later GREEN. Send SPEC+RED RR
-then STOP. No production implementation, FULL, rebase or main update here.
+Freeze RED tests/inputs/helpers/docs before later GREEN. No production
+implementation here.

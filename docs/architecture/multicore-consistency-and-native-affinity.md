@@ -1,7 +1,6 @@
 # ARD：多核一致性与 Ares / Native 分离绑核
 
-状态：方案 RR，待批准；此提交只有文档，不引入并行或实现门禁。
-优先级：PR4 优先；实现、资源分配和门禁执行均另行批准。
+本文只有文档，不引入并行或实现门禁。
 
 ## 1. 决定与范围
 
@@ -121,7 +120,7 @@ metadata、seed和语义环境。工作目录按次顺序复用固定路径，�
 `taskset` 的 CPU 数指可用逻辑 CPU 数；记录拓扑，但不将两个 SMT 线程冒称两个
 物理核。分配来自显式授权 CPU 集与继承 affinity 的交集，不调用 `nproc --all`
 扩大权限。少于16个授权 CPU 时全量门禁明确 BLOCK，不能降级、超售一个CPU
-冒充16CPU或跳过。当前仅单 CPU 的工作许可只允许方案/实现预检，不授权实跑矩阵。
+冒充16CPU或跳过。
 
 ## 6. Native 缺失不产生空集通过
 
@@ -166,7 +165,7 @@ Native producer components。在 Ares 使用 K CPU后，这个值不再代表 Na
 
 基础设施先准备两种明确运行模式，当前仍可保持既有单CPU默认。
 **第一个引入并行的切片合入时，批次 FULL 与对应 CI FULL 必须同时切到 Ares
-多CPU作为默认，并从此一直如此。** K由协调者在该切片前确定，建议4；不能把
+多CPU作为默认，并从此一直如此。** K在该切片前确定，建议4；不能把
 nextest测试并发数当作 K，也不能在红时退回 Ares1CPU取得合入证据。
 Native仍为每调用1CPU，官方/seeded两套比较和缺supplier失败政策保持。
 
@@ -178,7 +177,7 @@ WASM、Windows、macOS公共API不因这个Linux门禁引入TBB/native runtime�
 
 每次产出可重放的请求CAS、coverage ledger、构建/source身份、每次实际mask、
 命令/outcome、产物长度/hash、首差异及最终summary。批次证据保存在调用方指定的
-仓库外目录；CI子集保留机器可读summary/日志与复现命令，不借PR4 Native cache
+仓库外目录；CI子集保留机器可读summary/日志与复现命令，不借Native cache
 塞测试输出，不改额度/删除cache。产物写入或要求的发布失败不能计作通过。
 
 关联：[实施计划](multicore-consistency-gates-plan.md)、

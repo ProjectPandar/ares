@@ -1,16 +1,15 @@
 # Printer technology: native oracle boundary
 
-Status: classified as reference unavailable (`ORCA_ERROR`) by coordinator;
+Status: classified as reference unavailable (`ORCA_ERROR`);
 SLA is excluded from further execution, not counted as a parity PASS.
 No Rust implementation change.
 This is an investigation record, not a proposed Ares slicing pipeline milestone.
 
 ## Reproduction at16ac907b
 
-Evidence: `${TMP_ROOT}/ares-pi-option-technology-16ac907b.PwMJDp`.
 Reuse the frozen workspace archive from the verified16ac907b build, set
 `ARES_PARITY_OPTIONS=1 ARES_OPTION_KEYS=printer_technology`, and run
-`option_coverage` with the whole process pinned to CPU0.
+`option_coverage`.
 Official and seeded references run serially and both exit100:
 2 values generated,1 strictly compared,0 rejected; SLA requests export FFF.
 The bounded domain remains FAIL; this is not evidence of complete coverage.
@@ -22,8 +21,7 @@ preset injection and an explicit sibling-preset FFF override.
 A one-variable experiment adds `--printer-technology SLA` to the same export
 command with unchanged preset files/model. Both official and seeded binaries
 exit249 (native -7), printing `invalid printer_technology`. Changing only that
-argument to FFF succeeds with exit0 on both. Logs and output paths are under
-`direct-cli-tech/`; historical reference/stock evidence was not modified.
+argument to FFF succeeds with exit0 on both.
 
 ## Source explanation
 
@@ -43,7 +41,7 @@ argument to FFF succeeds with exit0 on both. Logs and output paths are under
 
 ## Decision and deferred work
 
-On coordinator instruction, record SLA as reference-side `ORCA_ERROR`
+Record SLA as reference-side `ORCA_ERROR`
 (native -7) and skip further SLA execution. Do not implement SLA. This explicit,
 evidenced exclusion supersedes the earlier unresolved application-failure
 classification; keep the original raw reports unchanged. FFF's successful
@@ -52,7 +50,7 @@ Do not whitelist SLA as equivalent to FFF or classify it as a passing comparison
 No unsupported guard is added to Ares; the failure occurs before Ares slicing
 and is not in `gcode_emit/cooling`.
 Do not patch the official reference or invent an Ares SLA pipeline to make a
-report green. A future SLA rewrite would require a separately approved,
+report green. A future SLA rewrite would require a separate,
 source-cited libslic3r boundary and a reference/output contract that actually
 supports it. Keep this native-oracle limitation explicit while pursuing other
 option groups. No comparator, activation or production Rust file was changed.

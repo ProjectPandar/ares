@@ -1,10 +1,10 @@
 # SPEC — Arachne infill-boundary resolution prerequisite
 
-Status: **SPEC APPROVED; implementation strategy adjusted by the operator below.**
+Status: accepted.
 Base main for the mergeable prerequisite: `96328f269`.
-`worker4/arachne-infill-resolution` retains only the extracted None public RED,
+The prerequisite branch retains only the extracted None public RED,
 with its original assertions/helper unchanged except the isolated matrix path;
-`048cdb619` precedes approved production cherry-pick `c33e781dd`.
+`048cdb619` precedes production cherry-pick `c33e781dd`.
 The eight non-None REDs stay registered only on the original counterbore branch.
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 This supersedes the proposed ArcFitter/Circle production prerequisite, whose
@@ -36,25 +36,24 @@ That shared prelude value intentionally represents reduced wall-input tolerance.
 
 ## Paired diagnostic evidence (read-only GDB)
 
-All runs: outer CPU15, jobs1/test-threads1, independent compilation target,
-new Native caches/artifacts for each diagnostic. START/END and script hashes
-were posted to inbox under explicit and standing read-only probe approvals.
+Each diagnostic used an independent compilation target and
+new Native caches/artifacts.
 No inferior writes, set var, function calls, source patches, assertion changes
 or comparator changes. Each diagnostic Native full stream equals the frozen
 seeded None stream with established generator-only normalization.
 
-1. `/tmp/worker4-arc-paired-eyIt` Native fit trace and
-   `/tmp/worker4-arc-rust-memory-BcZy` Rust trace show different pre-fit input:
+1. The Native fit trace and
+   the Rust trace show different pre-fit input:
    105 versus106 points; first difference index58; saved G2 I/J reproduced.
    Thus do not numerically tune ArcFitter to the different input.
-2. `/tmp/worker4-fill-input-ssfo`: Native `FillRectilinear::fill_surface_by_lines`
+2. Native `FillRectilinear::fill_surface_by_lines`
    Bottom surface entry has contour4/hole28; Rust `rectilinear::fill_surface`
    has identical contour4 but hole32. Drift already precedes monotonic connection.
    `FillBase::connect_infill` is not the first divergent handoff.
-3. `/tmp/worker4-inner-contour-me15/native-inner.jsonl` and
-   `/tmp/worker4-inner-rust-cTHU/ares-inner.jsonl`: both raw generated inner
+3. The Native and Rust inner-contour traces:
+   both raw generated inner
    contour calls are **ordered-integer identical** (polygons12/32 then4/52).
-4. `/tmp/worker4-simplify-input-WZt1/same-geometry-wrong-tolerance.json`:
+4. Same-geometry simplification trace:
    Native `ExPolygon::simplify_p` from `process_arachne` and Rust
    `simplify_expolygon_polygons` from `surface_infill_boundary` receive exactly
    identical contour12/hole32 at the first layer, but Native tolerance12000
@@ -65,11 +64,11 @@ seeded None stream with established generator-only normalization.
 The source mismatch is now proven: a wall-specific tolerance was reused at an
 infill-boundary call whose upstream contract uses the unreduced member value.
 Whether correcting that single handoff resolves **all** complete-output bytes
-must still be verified after approval; no speculative GREEN claim is made here.
+must still be verified; no speculative GREEN claim is made here.
 
-## Minimal implementation scope requested
+## Minimal implementation scope
 
-**Approved implementation adjustment: production allowlist is
+**Implementation adjustment: production allowlist is
 `arachne/config.rs` and `arachne/materialize.rs` only**, under the perimeter
 boundary above. Preserve `validate_record`'s already computed unreduced
 `scaled_resolution` as `ArachneRecordConfig.scaled_resolution`, corresponding to
@@ -86,7 +85,7 @@ The existing common prelude is a temporary compatibility shell around upstream
 flow/geometry concepts; it must not redefine the meaning of the infill member
 resolution just because its stored scalar has a convenient name.
 
-W3 centering, W5 interface_shells/classification, W6 grid/Fill files are read-only.
+Centering, interface_shells/classification and grid/Fill files are read-only.
 This proposal introduces no region[0], new Unsupported, fallback, arc disable,
 geometry substitution, tolerance relaxation, G-code patch or alternate comparer.
 The core remains platform-neutral and byte-oriented on all Tier1 platforms.
@@ -111,7 +110,7 @@ changing classic controls unnecessarily; and broadening into connector/fitter
 code when one scalar is insufficient. If any unresolved parity remains, STOP and
 report the next exact mismatch rather than modifying the deferred owners.
 
-After exact SPEC approval:
+Sequence:
 1. Make the single source-cited argument correction in a distinct production
    commit, after the already frozen RED. No existing assertion changes.
 2. Fresh official and seeded directed public None must PASS the entire output,
@@ -120,11 +119,10 @@ After exact SPEC approval:
    classic controls must stay PASS, with their recorded raw Ares hashes invariant.
 3. Read-only paired fill simplification must now receive12000 for this fixture;
    keep wall input at2400. Evidence is supplemental, not the acceptance seam.
-4. Explicitly authorized strict clippy, rustfmt, core/adapter WASM gates; document
-   actual scopes and outcomes. Full/workspace run requires separate permission,
-   exclusivity and FULL-GO. No push without exact APPROVED.
+4. Strict clippy, rustfmt, core/adapter WASM gates; document
+   actual scopes and outcomes.
 
 Exit: source handoff aligned, public None complete output GREEN in both producers,
-controls invariant and Tier1 gates accepted. Then request review before returning
+controls invariant and Tier1 gates accepted. Then return
 to counterbore Bridges/Filled GREEN. Nested-island/multiregion gaps and separate
-exact-diff approval for the ten guard assertion changes remain outstanding.
+exact diffs for the ten guard assertion changes remain outstanding.

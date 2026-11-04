@@ -1,7 +1,6 @@
 # Z contouring: remove the live zaa_enabled capability gap
 
-Status: SPEC-REVIEW-REQUEST, Native preflight complete; no Rust/test changes.
-Base: de1211be5067d0eb6f709602a1299a0854c89145.
+Native preflight complete; no Rust/test changes.
 Upstream OrcaSlicer:8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 ## Actual gap and Native-first evidence
@@ -11,9 +10,9 @@ cannot be proven an inactive axis-aligned box. A sloped-roof wedge fails
 is_axis_aligned_box: its roof vertices include an intermediate Z value and
 its roof normal has both horizontal and vertical components. Global
 zaa_enabled=1 reaches this live guard through resolved model-part regions.
-This is a slicing capability gap, not a missing matrix receipt.
+This is a slicing capability gap, not a missing matrix entry.
 
-Before this SPEC, Native official onCPU13 and seeded onCPU14 each sliced
+Before this SPEC, Native official and seeded each sliced
 that wedge with zaa_enabled=0 and1, then repeated both inputs with fresh
 cache/root/target. All8 invocations exited0 with CONFIG_BLOCK_END. Their
 exact same-input results are:
@@ -39,16 +38,7 @@ in zaa_enabled. The transformed model has a sloped upper surface and a flat
 bed-contact bottom. This is a small triangular mesh, not a synthetic
 unsupported config or an algorithm approximation.
 
-Retained external evidence (not committed Native products):
-
-- /tmp/worker2-zaa-native-official.bj5xtpb3
-- /tmp/worker2-zaa-native-seeded.c8pq5425
-- /tmp/worker2-zaa-native-evidence.json
-- /tmp/worker2-zaa-native-preflight.py (driver; offline decimal-token recount
-  in evidence includes the Native formatter's leading-dot numbers).
-
-Every run retains input3MF, stdout/stderr, raw G-code and XYZ evidence;
-producer.json retains exact wrapper/ELF/source hashes and base commit.
+Native products are not committed.
 No Ares public RED has been run yet: rejection is established by the current
 source predicate and will be verified in its independent RED commit.
 
@@ -104,11 +94,11 @@ interactions and arbitrary topology. Their algorithms must not be replaced
 by new Unsupported guards, shape whitelists, silent skips or fallback.
 If implementation requires a larger boundary than above, stop for revised
 PLAN; do not claim generic coverage or silently change adjacent algorithms.
-W3 modifier logic, W1 skirt and W4 counterbore are untouched.
+Modifier logic, skirt and counterbore are untouched.
 
-## Independent public RED and review sequence
+## Independent public RED sequence
 
-After SPEC approval, commit a public E2E test first using the witnessed same
+Commit a public E2E test first using the witnessed same
 input bytes. Assert Native acceptance/footer and active XYZ roles, then call
 public Ares API and CLI and require existing strict whole-output PASS.
 Expected current RED is UnsupportedProjectFeature("zaa_enabled") / CLI
@@ -117,14 +107,11 @@ if it already mismatches, STOP and report the separate gap before repair.
 Keep inputs, API/CLI results and all streams as repeatable external artifacts.
 Native cannot be represented by an expected rejection for this live feature.
 
-Report RED separately, then obtain repair PLAN approval for stage/carrier
-changes before production. Existing unit tests asserting the obsolete
-capability rejection require an exact-diff retirement request; do not change
-assertions without approval. GREEN must preserve disabled control bytes,
+Report RED separately, then plan stage/carrier changes before production.
+Existing unit tests asserting the obsolete capability rejection are retired
+only by an exact diff. GREEN must preserve disabled control bytes,
 strictly match both Native modes, and retain the enabled XYZ/height/E witness.
 No comparator normalization/weakening or new suppression is permitted.
 
-Run directed only onCPU13 official/CPU14 seeded, outer taskset, jobs2/threads2,
-fresh root/cache/target and START/END inbox entries. After repair: directed
-both modes plus strict clippy/fmt/wasm on the exact hash, REVIEW-REQUEST;
-workspace/full/CI only after coordinator allocation. No push by worker2.
+Run directed official and seeded with fresh root/cache/target. After repair:
+directed both modes plus strict clippy/fmt/wasm on the exact hash.

@@ -1,10 +1,10 @@
 # ZAA prerequisite: mechanical fill Polyline3 migration
 
-## Approved boundary
+## Boundary
 
 This is the separate mechanical prerequisite of repair PLAN
-90381524dd2bfdf862998e678b7b2dbc7bfcc411. It starts after W5 zag and W6
-Triangles were merged in main 104d8497097dc7239ad63f7a69f3b418b699b3e8,
+90381524dd2bfdf862998e678b7b2dbc7bfcc411. It starts after the zag and
+Triangles changes were merged in main 104d8497097dc7239ad63f7a69f3b418b699b3e8,
 as a standalone prerequisite on main
 57fea94989ff362129d0e53da0c35c298822f689. The branch contains no live-ZAA
 RED, Tree3f/contour kernel commit or contour stage caller. Those remain on
@@ -55,8 +55,8 @@ The existing capability guard and its old private assertion remain unchanged.
 
 Run existing fill-grid/zag, Triangles multiline, multiline union, local
 internal-solid Grid and support-ironing pattern regressions in both Native
-modes with the strict whole-output assertions intact. Each mode uses CPU13 or
-CPU14, jobs2/threads2, and fresh Native cache/artifact/target directories.
+modes with the strict whole-output assertions intact. Each mode uses fresh
+Native cache/artifact/target directories.
 Also run existing fill/materialize/chaining/simplification core tests,
-strict clippy, fmt and wasm checks. Runtime evidence belongs in external
-artifact roots and the coordinator inbox, never in the repository.
+strict clippy, fmt and wasm checks. Runtime evidence is never committed to
+the repository.

@@ -1,9 +1,7 @@
 # ZAA non-alternating object-fill direction SPEC
 
-Status: SPEC-REVIEW-REQUEST; docs only, no RED or production edits authorized.
-Base: main caac760d464112b076821975b67232fdd0f14bf0 plus the approved modifier
-slice-Z chain ending f500b9b3b601f2b8276b452b9e2b226fc890a40e. The approved
-branch remains frozen; this separate branch adds only this document.
+Docs only, no RED or production edits. Builds on the modifier slice-Z
+chain ending f500b9b3b601f2b8276b452b9e2b226fc890a40e.
 Upstream: OrcaSlicer8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 ## Owning upstream boundary
@@ -32,7 +30,7 @@ behavior; this is not permission to rotate all pattern outputs globally.
 
 ## Measured public discrepancy, before implementation
 
-Read-only discovery exact head f500b9b3b, CPU13 official and CPU14 seeded,
+Read-only discovery at f500b9b3b, official and seeded,
 used the existing admitted classic rectilinear sloped-roof input, with
 zaa_enabled=1, minZ0.05 and minimize_perimeter_height35. Only the requested
 boolean changes between the false control and true probe. No Native
@@ -53,10 +51,7 @@ Native `G1 X113.553 Y105.98 E.03085` versus Ares
 switched; Ares extrusion geometry stays identical. Thus the witness is
 active and is not merely config footer or progress accounting.
 
-Evidence root: /tmp/worker2-option-range-discovery.QgyNme, specifically
-first-divergence-report.json, manifest.json, partial-matrix.csv and both
-mode/zaa_dont_alternate_fill_direction-{false,true} directories. The input
-SHA for true is
+The input SHA for true is
 74e654dac354007fb5eac279efdbc39e168f8ec8544d870fb628fb4c06fb1218.
 
 ## Exact Rust destination and bounded behavior
@@ -122,12 +117,11 @@ infills/rotation.rs is a different existing adapter; this slice must not
 rewrite it speculatively when the witnessed path is fill_entities ->
 fill/rectilinear. No claim of complete boolean/pattern matrix coverage.
 If the bounded path is insufficient for the public RED, STOP and report
-before broadening the approved scope or changing any assertion.
+before broadening the scope or changing any assertion.
 
 ## Public Native RED design: input-only fixture
 
-After SPEC approval, add the public E2E RED in its own test-only commit;
-submit the exact RED hash/evidence for review before production GREEN.
+Add the public E2E RED in its own test-only commit before production GREEN.
 Use OrcaRunner::from_env().unwrap() with the repository's
 `let Some(runner) = ... else { return; };` convention. Required-oracle
 gates set ARES_REQUIRE_ORCA=1 so absence cannot silently pass the gate.
@@ -160,19 +154,16 @@ Keep public fixture construction separate from comparison so GREEN can
 satisfy unchanged assertions. Unexpected Native rejection, inactivity or
 non-repeatability is STOP, not a new numeric or admission policy.
 
-## GREEN gates, after separate authorization
+## GREEN gates
 
-Port only the approved runtime bit after accepted RED. Re-run true/false
+Port only the runtime bit after accepted RED. Re-run true/false
 both official and seeded on the exact hash; preserve the false control's
 raw Ares bytes. Add an input-only disabled-ZAA/flag-true control before
 production if needed to pin the two-option conjunction. Existing ZAA
 modifier and sloped-roof directed controls must stay green; bridge and
 fixed-angle controls must retain their source semantics.
 
-All Native/cargo/nextest commands use outer taskset on assigned CPU13/14,
-CARGO_BUILD_JOBS=2, NEXTEST_TEST_THREADS=2, fresh Native cache/artifact root
-per run. No full/workspace without coordinator assignment. Freeze/VOID
-immediately on EXCLUSIVE FULL START. Gates: fmt, strict clippy for core
+All Native runs use a fresh Native cache/artifact root per run. Gates: fmt, strict clippy for core
 and the CLI test target, wasm32 check; every file <=400 lines. No guards,
 regions[0], debug macros, suppressions, ignored tests, comparator changes,
-assertion weakening, push or unsolicited production edit.
+assertion weakening or unsolicited production edit.

@@ -20,7 +20,7 @@ shell for the upstream grammar; this is not a new template pipeline.
 
 ## Diagnostic result (Native-first, official and seed0 replay)
 
-Probes appended to the baseline `machine_start_gcode` (CPU17):
+Probes appended to the baseline `machine_start_gcode`:
 
 | Dead-branch expression | Native result |
 | --- | --- |
@@ -65,7 +65,7 @@ the baseline. Commit the input fixture only, never Native output.
 The E2E test first qualifies two ordered Native streams, asserts the ten
 marker lines show the live arms (`7`, `8`, `9` pattern), then compares
 the complete public API and CLI output with the canonical comparator.
-The same test runs against official and seed0 replay Native,
-CPU17/thread1. The RED must fail because Ares rejects the dead-branch
+The same test runs against official and seed0 replay Native.
+The RED must fail because Ares rejects the dead-branch
 division; GREEN must preserve whole-stream equality, not merely survive
 the probes.

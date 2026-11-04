@@ -15,10 +15,8 @@ payloads except Metadata/project_settings.config (whose sole-key delta
 is spiral_mode_smooth). No Native output/content constants in tests or
 manifest. All ordinary shared settings remain part of the frozen input.
 
-Discovery provenance/launches preserved in
-`${COORD_ROOT}/evidence/w5-spiral-smooth-fixed-xy/`.
-No post-export JSON/mesh editing; export source generation is retained
-externally in original-export-receipts and w5-discover-smooth2.py.
+No post-export JSON/mesh editing; discovery provenance and export source
+generation are retained externally.
 
 Two tests in orca_parity/spiral_smooth_fixed_xy.rs call existing
 native_stream_case::check DIRECTLY: two Native launches per case with
@@ -32,7 +30,7 @@ Formal RED must show off-controlPASS/on-positiveFAIL in both reference
 modes and stable Native replays. This is a textual-formatting gap, not
 changed numeric motion/material; nine numeric low-bit input differences
 are deferred. No numeric normalization may turn the positive into PASS.
-Run CPU11/thread1/job1 with ARES_REQUIRE_ORCA=1, appropriate official or
+Run with ARES_REQUIRE_ORCA=1, appropriate official or
 seeded Native reference environment, artifact roots, and filter:
 
 ```
@@ -40,7 +38,6 @@ cargo nextest run -p ares-cli --test orca_parity --no-fail-fast \
   --test-threads 1 -E 'test(spiral_smooth_fixed_xy_)'
 ```
 
-Do not treat an environment-disabled test as parity evidence. RED after
-SPEC requires review before any production change. Future GREEN freezes
-these inputs/tests/helpers; no widening to geometry/Point2/header/
-processor/overlap state or shape-specific workaround. No FULL here.
+Do not treat an environment-disabled test as parity evidence. GREEN keeps
+these inputs/tests/helpers frozen; no widening to geometry/Point2/header/
+processor/overlap state or shape-specific workaround.

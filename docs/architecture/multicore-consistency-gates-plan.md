@@ -1,12 +1,10 @@
 # 多核一致性基础设施实施方案
 
-状态：方案 RR；批准前不改代码、不采集全量、不运行多核矩阵。
 约束见 [ARD](multicore-consistency-and-native-affinity.md)，本计划不授权并行化算法。
-PR4优先，使用独立文档/实现分支，不向 PR4 混入此基础设施。
 
 ## 一、当前事实与明确边界
 
-基于 Ares `4978f3036` 调查，实施前同步当时已批准的 main：
+调查结论：
 
 - `ares-cli/src/main.rs::Commands` 只有 `Slice`；已有 options、overrides、plate、
   resources、load-settings、load-filaments和dump-moves入口，没有3MF导出。
@@ -141,10 +139,10 @@ cache验收分为两种、官方与seeded均做：
 删除cacheidentity字段。FULL需要Native，缺supplier或实际Native不是1CPU则失败。
 
 基础设施先不改默认FULL核数。第一处并行切片落地时，同批次将FULL默认Ares K
-设为大于1（建议4，待协调者最终确认），之后永久保持；Native继续1CPU。
+设为大于1（建议4），之后永久保持；Native继续1CPU。
 两道门禁的批次证据必须随该并行切片一起进入合入审查。
 
-## 七、TDD 与实施顺序（批准后）
+## 七、TDD 与实施顺序
 
 |切片|先写/运行的真实公共 RED 场景|最小 GREEN / 证据|
 |---|---|---|
@@ -161,12 +159,12 @@ expectation。新增名称描述行为，不重命名现有case/fixture。编排
 
 格式/检查：变动Rust后使用 `cargo fmt --all -- --check`、
 `cargo clippy --workspace --all-targets -- -D warnings`；定向Rust测试用nextest。
-作者不自行跑FULL或Native sweep。全量、16CPU矩阵及Native身份对照由获授权的
-资源/集成任务执行；证据缺失就是阻断，不靠文档宣称完成。
+全量、16CPU矩阵及Native身份对照由独立的集成运行执行；证据缺失就是阻断，
+不靠文档宣称完成。
 
-## 八、文档 RR 与实现退出标准
+## 八、实现退出标准
 
-本次RR只审ARD、范围、两个门禁、轻量捕获与ledger、Native身份保持策略、
+本文档覆盖ARD、范围、两个门禁、轻量捕获与ledger、Native身份保持策略、
 未来默认切换规则；无运行门禁或已支持并行的主张。
 
 实现退出需同时具备：全部调用来源闭合的corpus/ledger、独立可复现请求与报告、

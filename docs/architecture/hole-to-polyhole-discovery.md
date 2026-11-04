@@ -1,8 +1,5 @@
 # Discovery: `hole_to_polyhole` region option — parsed but never applied
 
-Status: PROPOSAL (docs-only; no code). Discovery on main `8f6ce1660`.
-Evidence root: `${LOCAL_EVIDENCE_ROOT}/worker4/polyhole-discovery/`.
-
 ## Upstream source boundary
 
 - `OrcaSlicer/src/libslic3r/PrintObjectSlice.cpp:847` — inside
@@ -44,8 +41,7 @@ consulted independently.
 
 ## Repro (Native FIRST)
 
-Fixture `${LOCAL_EVIDENCE_ROOT}/worker4/polyhole-discovery/inputs/`
-(generated, `gen.py`): 30x30x8 mm block with a centered r=5 mm
+Generated fixture (`gen.py`): 30x30x8 mm block with a centered r=5 mm
 64-gon cylindrical hole, single object, copied
 `project_settings.config` from `two-region-prism.3mf`.
 

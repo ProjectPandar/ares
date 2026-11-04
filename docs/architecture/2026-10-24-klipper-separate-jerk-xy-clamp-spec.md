@@ -1,8 +1,5 @@
 # SPEC: separate Klipper set_jerk_xy XY scalar clamp
 
-Base13e6964485185d1d0f62e5a1f00b06933fb0d35d. CoordinatorACK authorizes SPEC →
-Native-first public RED → Klipper-arm-only GREEN → review/hold. NoFULL.
-
 ## Source-owned boundary
 
 `OrcaSlicer/src/libslic3r/GCodeWriter.cpp:263-270::set_jerk_xy` Klipper clamps
@@ -13,8 +10,8 @@ X-clampedx. Existing clamp_xy(state,jerk) implements sourceXYsequence for merged
 caller; reuse unchanged. Existing Ares shell must follow upstream writer, not a
 new safetyfallback/policy. Included onlyKlipperarmvalue; no newhelper.
 Deferred: sharedclampimplementation,cache/tolerance/limits/formatting/comments,
-mergedwriter,Repetierotherflavors,processor/template/fan/otherowners. Coordinator
-noted sameRepetierdefectclass asNEXTproposalonly; doNOTfoldin.
+merged writer, Repetier/other flavors, processor/template/fan/other owners. The
+same Repetier defect class is a separate follow-up; do NOT fold it in.
 
 ## Witness and reachability
 
@@ -23,9 +20,7 @@ Sole-keytargetY6;controlXY8and symmetricX6. GUI Tab5634-5635 machineXYjerk;
 realintegervalues, no rounding/precisionconfound or UI/physicaltuningclaim.
 Targetfirstdiff1232Native standaloneSCV6vsAres7,2layer-boundarylines only;
 followingmergedcommandcorrect6bothsides. ControlsfullPASS,6freshNative slices
-stable/allCLI0. Exact13eCLI discovery; evidence
-`${EVIDENCE_ROOT}/w4-klipper-separate-jerk-xy-clamp/PROPOSAL.md`.
-No API/seeded/RED/FULLqualification inferred.
+stable/all CLI 0. Exact 13e CLI discovery.
 SHAequal3a8b3f3fbbcbdc9b7b5eb1ee13e5e08533ae8e54d60fd814be46ff45b1c02114;
 Ytarget744139aab80a6f3ead834cdd93c47190bfab2e717c1e8ecd7a4da47e306eb542;
 Xcontrol289bbdd4c40fc49f1c5eafcceaa890de41ddb01d19fe66a2b1699a6ea7397032.
@@ -41,6 +36,6 @@ wrongmergedpath/otherflavorchange,formatterregression. Reviewsourcecacheorder;
 publiccases do not prove everyprivatecachetransition/nonpositivecase.
 CommitREDbeforeproduction,onlytargetFAIL/twocontrolsPASSbothmodes/Nativequal+
 API==CLI. GREENONLYexistingclamp_xy reuse inKlipperarm,tests/inputsfrozen.
-CPU17PIN17jobs1threads1officialthenseeded/fmt/workspacealltargetclippy/3cases
-bothPASS,REVIEW-REQUEST/HOLD.NoFULL/merge/push/suppressions;groupnosqueeze/files≤400.
-ExplicitlyavoidW1auto_lift.rsandprocessorM73/time-estimate.
+Official then seeded/fmt/workspace all-target clippy/3 cases
+both PASS. No suppressions; group without squeeze/files ≤400.
+Explicitly avoid auto_lift.rs and processor M73/time-estimate.

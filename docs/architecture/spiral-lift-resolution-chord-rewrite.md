@@ -1,8 +1,8 @@
 # Spiral lift: resolution-chord rewrite boundary
 
-Status: literal writer port executed on the approved configuration stack;
-complete output remains NON-GREEN at residual Gap infill direction. No
-spiral, FillBase or FULL closure is claimed.
+Status: literal writer port implemented;
+complete output remains different at residual Gap infill direction. No
+spiral, FillBase or whole-family closure is claimed.
 
 ## Upstream owner and destinations
 
@@ -56,28 +56,27 @@ are adjacent boundaries: no typed high-precision carrier was found in the
 current motion options, and registry presence alone does not prove active
 support. This slice must not claim their parity, silently implement a
 second default, or redesign global formatting/admission. Any expansion of
-that scope requires an explicit owning source/config boundary and review.
+that scope requires an explicit owning source/config boundary.
 The active ordinary formatter must remain exact; no whole-method closure
 is inferred from the default-precision witnesses alone.
 
-## One ArcWelder kernel, shared ownership coordination
+## One ArcWelder kernel, shared ownership
 
 The unchanged ArcWelder transcription now lives at
 `geometry/arc_welder.rs::arc_discretization_steps`, with crate-private
 visibility. Processor arc targets and `processor/arc_accounting.rs` import
-it directly. The approved move `b9210ace94fb5e2851af8b93db42f77d742034a6`
-is restacked as `a68124fa557bde399d42b9eb2120a77f332c4ca5` without a
+it directly. The move `a68124fa557bde399d42b9eb2120a77f332c4ca5` has no
 semantic delta. Body/doc identity and the existing processor byte-output
 assertions were preserved; no second kernel or compatibility re-export.
 
 The writer must use this one helper. Keep its8-128 clamp outside the
 generic kernel and preserve processor operation order, EPSILON branch and
 callers' existing tolerance values. No global exp/pow/arc-math rewrite or
-numeric bias. The approved relocation is not a writer behavior change.
+numeric bias. The relocation is not a writer behavior change.
 
-Reuse ordinary writer axis formatting. If a shared writer formatter must
-change rather than be called as-is, coordinate that diff before editing it.
-Do not touch the separately owned Klipper helper/callers at
+Reuse ordinary writer axis formatting. A shared writer formatter change
+rather than an as-is call needs its own boundary.
+Do not touch the separate Klipper helper/callers at
 `GCodeWriter.cpp:475-481,428-471,536-583` or Rust acceleration emitters.
 
 ## Evidence and public RED gate
@@ -98,9 +97,8 @@ Frozen public input candidates, unchanged ZIP bytes:
 - positive-SYNC SHA256
   `182857ce98b97df3d76968284532f516779822d2c2eb7601b0522438990b4af2`.
 
-Wait for the explicitly approved Klipper branch/commit, then stack this
-source-boundary branch on it. Do not independently fix the prerequisite.
-Only then qualify public Native/API/CLI RED cases, using fresh ordinary
+This slice builds on the Klipper prerequisite; do not independently fix the
+prerequisite. Only then qualify public Native/API/CLI RED cases, using fresh ordinary
 Native double stability and the validated public API plus CLI complete
 exports. Register new tests through `option_coverage.rs`, not the root
 harness, and preserve all retired registrations.
@@ -110,23 +108,19 @@ generator-line normalization. M73 may first differ because total time
 reflects later geometry; an external diagnostic may identify the first
 non-M73/motion difference without changing the test. It must be this
 spiral-lift boundary after the Klipper prerequisite, not an ignored earlier
-unrelated difference. If another earlier non-M73 boundary appears, report
+unrelated difference. If another earlier non-M73 boundary appears, attribute
 it before porting. No silent extra record filter or input variant.
 
 GREEN must pass complete output, M73 included. If the literal spiral port
-moves the first difference to the separately owned FillBase residual gap
-or another producer, retain that full failure and request a coordinated
-stack/ruling. Do not call the slice GREEN, mask later records, broaden the
+moves the first difference to the separate FillBase residual gap
+or another producer, retain that full failure and attribute it to its
+owning slice. Do not call the slice GREEN, mask later records, broaden the
 spiral commit into FillBase, or claim a whole-file/family closure from a
 spiral-only diagnostic.
 
-## Qualified public RED on the approved prerequisite
+## Qualified public RED on the Klipper prerequisite
 
-The approved Klipper tip is
-`9add9e077149d4f522f909b3fd3712803ebda9f1`, with its documentation
-predecessor `43178f2beb336184fe00c1925aa93d04d73bead2` above the original
-base. The architecture and helper commits were stacked onto that exact
-tip; both range-diff entries are unchanged.
+The Klipper prerequisite is `9add9e077149d4f522f909b3fd3712803ebda9f1`.
 
 One ordinary selected run exercised the two frozen public cases, each
 with two fresh stable Native exports, one validated public API call and
@@ -135,7 +129,7 @@ fully retained, and API/CLI are raw-byte equal. The complete-output first
 differences remain velocity L19 `M73 P0 R8` versus `M73 P0 R7`, and
 positive-SYNC L46's earlier API `M73 P26 R5` placement.
 
-In the separately retained external M73-excluded diagnostic, the first
+In an external M73-excluded diagnostic, the first
 remaining difference is the actual spiral in both: Native
 `G1 X106.695 Y112.876 Z.417` versus API/CLI
 `G1 X107.217 Y113.411 Z0.457143`. Velocity original lines are163/162;
@@ -144,10 +138,7 @@ that diagnostic; no Klipper field or other record is additionally removed.
 The tests and shared strict comparator do not use this filter or a fixed
 coordinate/count oracle. No writer port or GREEN is part of qualification.
 
-The exact parent-plus-staged execution identity and full exports are in
-the external evidence bundle. This later documentation-only result note
-is not a postcommit runtime rerun. Full GREEN still includes M73 and every
-other record; an endpoint-only diagnostic cannot substitute for it.
+Full GREEN still includes M73 and every other record; an endpoint-only diagnostic cannot substitute for it.
 
 ## Arc-enabled public RED qualification
 
@@ -173,22 +164,19 @@ stock/fuzzy322/321: Native `G17`, then
 linearized XYZ points. This directly qualifies
 `GCodeWriter.cpp:1262-1274`, not a formatter-only or later gap witness.
 The two disabled-arc cases qualify the resolution-chord segment branch
-at1227-1259. Both branches remain inside the approved writer slice.
+at1227-1259. Both branches remain inside the writer slice.
 Across the two selected runs: five expected strict failures, Native10,
 API5 and CLI5, with no retry, observer, writer port or family claim.
 
 A separate E5 check is deferred until after the FillBase gap-direction
 port: rerun its complete output and test whether the same-layer feed
 mismatch disappears. If it does, no cooling slice is needed; if it remains,
-request a separate attribution for `CoolingBuffer.cpp:989-1020`. Neither
+it needs a separate attribution for `CoolingBuffer.cpp:989-1020`. Neither
 cooling nor FillBase is folded into the spiral writer commit.
 
 ## Literal port execution and residual boundary
 
-The six prerequisite commits were restacked on merged main
-`f4ea41332cdcb7eadf9adbc7f7c1936c0ad7e9c5`, with six unchanged range-diff
-entries. Approved configuration fix `2a635ab54` is now
-`e015de3bedcf200feae6e70b0a05cce7a3e23045`; its source is unchanged.
+The configuration fix is `e015de3bedcf200feae6e70b0a05cce7a3e23045`.
 
 The writer now uses the single neutral ArcWelder helper for positive
 resolution, clamps8-128 locally and selects128 for zero resolution. It
@@ -216,15 +204,11 @@ reversed Gap infill entry: velocity original lines436/435, positive-SYNC
 prefix includes the matching spiral; no additional record class is removed.
 The strict tests still fail with M73 retained, so this is **NON-GREEN**,
 not acceptance of a coordinate-only or filtered prefix. No FillBase edit
-is part of the writer commit. The full failures, WIDTH/feed differences,
-original-line maps and two baseline Native-premise failures remain in the
-external evidence bundle for a coordinated continuation ruling.
+is part of the writer commit.
 
-Fmt and strict workspace/all-targets Clippy pass. The only post-execution
-change is this documentation result note; source/test postimages and the
-executed tree are pinned externally, with no postcommit rerun claim.
+Fmt and strict workspace/all-targets Clippy pass.
 
-## Breadth, failure inventory and exit evidence
+## Breadth, failure inventory and exit criteria
 
 After a qualified RED and literal port, freeze the same before/after family
 inventory. Initial existing candidates: auto-lift query-frame public case,
@@ -245,8 +229,7 @@ instrumentation, tolerance, score bias or legacy fallback.
 
 Exit requires the public RED to become full GREEN, Native stability,
 API/CLI parity, agreed family breadth with zero prior-PASS to FAIL,
-processor consumers unchanged by helper relocation, fmt/strict Clippy,
-and a source-cited RR. Exact runtime receipts belong to the external
-evidence bundle; docs-only preparation is not RED/GREEN qualification.
+processor consumers unchanged by helper relocation and fmt/strict Clippy.
+Docs-only preparation is not RED/GREEN qualification.
 Core logic stays an API on browser WASM, Windows, macOS and Linux, without
 filesystem/UI/terminal behavior, a new crate or an independent Ares pipeline.

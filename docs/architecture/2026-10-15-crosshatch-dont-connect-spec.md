@@ -1,7 +1,6 @@
 # CrossHatch sparse dont_connect admission
 
-Status: SPEC-REVIEW-REQUEST; no Native run or production edit yet.
-Base: `c251aa6166bcc0270063fc6d2e41b84ab01a637d` (stack-14).
+No Native run or production edit yet.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Owning upstream boundary
@@ -42,7 +41,6 @@ assertion, with a source reference to FillBase.hpp:52 and FillBase.cpp:1820-1828
 The shared connector, pattern geometry, ordering, multiline offset, clipping,
 rotation, flow and emission code remain unchanged. The existing entry check is
 an Ares compatibility scaffold, not an upstream restriction.
-This SPEC requests approval in advance for that assertion retirement.
 No existing test assertion is proposed for reversal or removal.
 
 ## Included and deferred behavior
@@ -54,19 +52,18 @@ and unchanged connected-mode controls.
 
 Defer all other patterns, ironing, negative/nonfinite anchors, percent-length
 coverage, heterogeneous regions, new connection algorithms and pattern numeric
-changes. In particular, do not edit W2's anchor_projection/anchoring-direction
-files, W3's SupportCubic, W4's seam slice_z, W5's support/brim or LockedZag,
-W1's skirt/brim/wipe, or web's processor/browser code. Past W5 CrossHatch
+changes. In particular, do not edit anchor_projection/anchoring-direction
+files, SupportCubic, seam slice_z, support/brim or LockedZag,
+skirt/brim/wipe, or processor/browser code. Past CrossHatch
 ironing work is merged; this proposal does not change ironing dispatch.
 
-The previously reported LockedZag density finding is not this slice: W5 owns
-it and has already shown the initial density is overwritten by the per-bucket
+The previously reported LockedZag density finding is not this slice: it
+has already been shown the initial density is overwritten by the per-bucket
 values (FillRectilinear.cpp:3902/3924); its public 15% probes had no RED.
 
 ## Native-first public RED
 
-After SPEC approval, run only directed on CPU11, outer taskset, jobs1/threads2,
-within coordinator windows and current load limits; no full/workspace run.
+Run only directed tests; no full/workspace run.
 Each mode uses a fresh artifact/cache root and the canonical producer identities.
 
 Use the tracked authored `tests/parity/multiline-union/prism.stl`, SHA256
@@ -97,7 +94,7 @@ Commit/report the public RED separately before any GREEN. Keep all admitted
 RED legs and all control assertions. Any residual after the bounded removal
 means STOP and a new source-localization report, not a larger silent change.
 
-## Acceptance and review
+## Acceptance
 
 At the exact final clean hash: eight legs official+seeded, the entire
 option_coverage group in both modes including non-Native tests, strict workspace
@@ -107,6 +104,5 @@ change or coordinate sorting. Canonical absent ARES_PARITY_OPTIONS sweep is
 reported explicitly as visible SKIPPED / Native-not-executed.
 
 Any shared primitive change or existing unrelated raw-output change stops the
-slice for coordinator review. No new guards, ignores, suppressions, probes,
-public APIs or Native artifacts; files stay at most 400 LOC. Full/workspace
-execution remains coordinator-only, after code review and explicit allocation.
+slice. No new guards, ignores, suppressions, probes,
+public APIs or Native artifacts; files stay at most 400 LOC.

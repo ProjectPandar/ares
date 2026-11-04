@@ -1,14 +1,9 @@
 # TiQ2-M73: time-machine placement divergence on the Dumbbell long-loop case
 
-Status: spec for coordinator review (diagnosis + fix plan). No production
-change, no RED, no GREEN in this document. Base: main 3cad8b4c3. Inputs and
-dual streams are worker1's retained evidence, read-only:
-`${TMP_ROOT}/ares-tiq2-loop-red/corrected-transport/03-long_loop_fragments/`
-(input.3mf, native.gcode, ares.gcode, manifest) and the admitted record in
-`${TMP_ROOT}/ares-pi-lint/docs/architecture/gcode-small-perimeter-loop-speed-red-controls.md`
-("Separate Dumbbell time discrepancy / handoff ARD").
+Diagnosis and fix plan for the Dumbbell long-loop case recorded in the
+small-perimeter loop-speed RED controls ("Separate Dumbbell time discrepancy").
 
-## Observed first difference (worker1's admitted complete-byte DIVERGENT)
+## Observed first difference (admitted complete-byte DIVERGENT)
 
 native.gcode lines 80-82 vs ares.gcode lines 80-82 (both 849→851 lines total,
 identical perimeter moves and E values):
@@ -71,8 +66,7 @@ Diagnosis plan (each step falsifiable):
    construction for the same moves (acceleration/jerk selection per move
    type, `TimeBlock` fields) to identify the divergent component.
 4. The fix ports only the divergent component; the whole-file comparison of
-   this exact case is the RED (already admitted by worker1's retained
-   receipt) and the GREEN proof.
+   this exact case is the RED (already admitted) and the GREEN proof.
 
 ## Root cause located: most_used_physical_extruder_id hardcodes logical 0
 
@@ -92,7 +86,7 @@ physical 0 (`E0`). This is a real Ares port gap: per-layer most-used
 extruder tracking is missing in the layer-change/timelapse placeholder
 path.
 
-Fix (after SPEC-REVIEW): track the layer's most-used logical extruder
+Fix: track the layer's most-used logical extruder
 (extrusion-per-extruder accounting in the layer-change path, mirroring
 upstream `most_used_extruder`) and pass it to
 `physical_extruder_id_for_logical` instead of the hardcoded 0, in BOTH the
@@ -118,9 +112,9 @@ Ares port: the same whole-print count over the tool-ordering layers
 (each layer's extruder set via `filament_map`, deduped, mapped 0-based),
 argmax `>=`; the result feeds `physical_extruder_id_for_logical` in the
 layer-change/timelapse placeholders. Implementation requires plumbing the
-count through the tool-ordering → placeholder path (next window).
+count through the tool-ordering → placeholder path.
 
-Precision (coordinator-confirmed): `GCode.cpp:3342` calls
+Precision: `GCode.cpp:3342` calls
 `cal_most_used_extruder` on the per-object-order ToolOrdering and `:3422`
 on the global one; `:3690/:3791` pass each ordering's own
 `get_most_used_extruder()` into `process_layer`. The Ares port must
@@ -137,7 +131,7 @@ ordering to count. When that slice lands, the sequential emit path must
 recompute `most_used_extruder` from its own object ordering — not reuse
 the schedule's global one.
 
-## Diagnosis result (coordinator-ruled): seam-rooted, slice suspended
+## Diagnosis result: seam-rooted
 
 The wipe/retract position divergence is a DOWNSTREAM symptom of the layer-3
 seam placement, not a wipe-algorithm difference. Measured loop endpoints
@@ -150,26 +144,23 @@ seam placement, not a wipe-algorithm difference. Measured loop endpoints
   STOPS at the right neck end), then a single `G1 X111.043 Y110.4 E-.5`.
 
 The endpoints differ by exactly the neck width (X107.957 vs X112.043,
-mirrored across the bed center): case (b) of the coordinator's split. Root
-cause = worker6's seam-placement port bug (`seam_placement.rs:34` gauss
+mirrored across the bed center). Root
+cause = a seam-placement port bug (`seam_placement.rs:34` gauss
 denominator e^(e−1) instead of e−1, distance penalty shrunk ≈8.24×), which
 also explains the mirrored layer-3 travel target. The whole-file M73
 placement divergence (and the ≈171 ms total-time delta from the different
 wipe paths) sits downstream of it.
 
-Slice SUSPENDED pending worker6's seam fix; ROOT CAUSE CONFIRMED AND FIXED
-at main 117cd7edd (worker6's seam_placement.rs gauss denominator e^(e−1) →
-e−1). Re-verified TWICE after the fix:
-1. main 117cd7edd: whole-file PASS.
-2. main 3d65ec24e (worker1 small-perimeter loop-only preselection + scarf
-   caller speed merged): whole-file PASS again — the re-centering and M73
-   placement remain byte-identical to native after the loop-speed change.
-The whole-file RED stays unmerged (duplicate coverage of the seam fix's own
-gates); this spec and the diagnosis record are the surviving docs.
+The root cause was fixed in `seam_placement.rs` (gauss denominator
+e^(e−1) → e−1). After the fix the whole file passes, including after the
+small-perimeter loop-only preselection and scarf caller speed change — the
+re-centering and M73 placement remain byte-identical to native. The
+whole-file RED is not kept separately (duplicate coverage of the seam fix's
+own tests).
 
 ## Explicit non-goals (unchanged)
 
-- No change to small-loop caller selection (worker1's slice owns it).
+- No change to small-loop caller selection (owned by the small-perimeter slice).
 - No comparator relaxation; the retained complete-byte DIVERGENT stays.
 - No M73 mask/footer changes; `time_in_minutes`/truncation stay.
-- No seam fix in this slice (worker6 owns SeamPlacer).
+- No seam fix in this slice (SeamPlacer is a separate slice).

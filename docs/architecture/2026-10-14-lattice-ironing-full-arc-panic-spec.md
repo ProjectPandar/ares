@@ -1,14 +1,11 @@
 # SPEC: lateral_lattice ironing 退化轮廓 panic——上游 take 全弧语义对齐
 
-状态：SPEC-REVIEW-REQUEST（FULL 5 窗口内只读调研 + docs-only；未改代码）。
-来源：support_ironing_pattern v3 收官登记（GREEN 119c3a0f6 守卫臂注释 +
-协调裁定）；原则：Ares 不得 panic。
+来源：support_ironing_pattern v3 收官登记（GREEN 119c3a0f6 守卫臂注释）；原则：Ares 不得 panic。
 
 ## 1. 复现
 
 - fixture：`tests/parity/support-ironing/overhang-organic.3mf` +
-  `support_ironing=1` + `support_ironing_pattern=lateral-lattice`（probe
-  工件 /tmp/isfix/ir/dbg-lateral-lattice/）。
+  `support_ironing=1` + `support_ironing_pattern=lateral-lattice`。
 - ares CLI exit 101：
   `panicked at crates/ares-core/src/fill/connect/contour.rs:142:
    assertion 'left != right' failed (left: 169, right: 169)`。
@@ -73,12 +70,12 @@ end_point_index` 的退化全弧。sparse lateral_lattice 未触发是间距宽�
 
 ## 6. 边界声明
 
-- 本切片不触碰 `fill_entities/triangles.rs`（W6 预留）。
+- 本切片不触碰 `fill_entities/triangles.rs`。
 - 修复仅删一条 debug 断言 + 增测试腿；不改 `append_full`/`take_full_arc`
   逻辑本体。
 
-> **批准附加条件（APPROVED 3628342ac 后补，2026-10-14）**：
-> 1) 实现基于 FULL 5 合入后的新 main（含 dd548091e）。
+> **附加条件（3628342ac）**：
+> 1) 实现基于含 dd548091e 的 main。
 > 2) GREEN 同时把 `LateralLattice` 从 `support_ironing_pattern` 的
 >    v3 守卫列表移除（仅收窄），分派臂路由既有
 >    `lateral_lattice::polylines` 入口——与本 SPEC 删断言同属一个

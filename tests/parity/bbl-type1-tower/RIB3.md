@@ -1,7 +1,6 @@
 # Type1 extra-rib-length segment-unscale RED
 
 Source pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Baseline: merged `bdb47cefe5d7851ff0e17e12d40425a1fd43bcfa`.
 
 `rib3.3mf` is the existing `enabled.3mf` with only the decoded project setting
 `wipe_tower_extra_rib_length` changed from `0` to `3` mm. All other archive
@@ -17,7 +16,7 @@ cargo nextest run -p ares-cli --test orca_parity --no-fail-fast \
   -E 'test(bbl_type1_prime_tower_waypoints_rib3_segment_unscale) | test(bbl_type1_prime_tower_waypoints_enabled)'
 ```
 
-Run via the coordinator official/seeded environment, CPU11 and threads1.
+Run via the official/seeded Native environment.
 Expected baseline: target FAIL, enabled control PASS in each mode. Native
 source, not a literal coordinate assertion, supplies the expected full output.
 
@@ -39,9 +38,8 @@ cast/multiply and unscale/cast results, formatting to20.220 vs20.221 locally,
 and then Y241.273 vs241.274 in the complete output. The shared fitter is not
 the cause of this witness; this is not a claim of universal fitter parity.
 
-Evidence: `${COORD_ROOT}/evidence/w5-rib3-trace/`, including raw
-before/after integer/f64 arrays, debugger scripts and live writer values.
-Earlier Native-first exports are in `w5-type1-rib-length-discovery/`.
+The raw before/after integer/f64 arrays, debugger scripts and live writer
+values are kept as external evidence.
 
-This commit is test-only RED. No production conversion, shared geometry,
-formatter, comparator or registry changes. GREEN requires further approval.
+This RED has no production conversion, shared geometry, formatter, comparator
+or registry changes.

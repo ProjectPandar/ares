@@ -1,8 +1,6 @@
 # Spiral vase multi-copy by-layer admission — source-cited spec
 
-Status: SPEC approved (coordinator ACK 2026-10-25); freezes the boundary for
-the tests-only RED, then a bounded GREEN on the W1 branch chain
-(base tip `a62041e78`).
+This spec freezes the boundary for the tests-only RED, then a bounded GREEN.
 
 ## Witness (discovery on main `28539c7fb`, BBL A1 two-object scene)
 
@@ -41,11 +39,11 @@ Stable across both Native modes; admission class, not an unknown-key echo.
   the `validate` fixture family).
 - `print/validate.rs` stays under 400 LOC.
 
-Not the queued `motion/scan.rs`, `format.rs`, brim/*, jerk,
-seam_placement/alignment, `config_export/value.rs` (W6), or
-`fill_entities/grid.rs`; not the W1-touched `config_export/writer.rs`,
-`gcode_emit/motion/state.rs`, `gcode_emit/layer_gcode.rs`; no W3 geometry or
-W5 flush/wipe surface.
+Not `motion/scan.rs`, `format.rs`, brim/*, jerk,
+seam_placement/alignment, `config_export/value.rs`,
+`fill_entities/grid.rs`, `config_export/writer.rs`,
+`gcode_emit/motion/state.rs` or `gcode_emit/layer_gcode.rs`; no geometry or
+flush/wipe surface.
 
 ## Included
 
@@ -66,10 +64,9 @@ W5 flush/wipe surface.
   acceptance only; the witnesses' own assertions stay full channel and
   `result.json` equality.
 
-## RED plan (tests-only, on `a62041e78`)
+## RED plan (tests-only)
 
-Fixtures under `tests/parity/spiral-vase-admission/` (see the README there;
-frozen SHAs in the review request):
+Fixtures under `tests/parity/spiral-vase-admission/` (see the README there):
 
 | Case | Base edit | Expectation |
 |---|---|---|
@@ -93,4 +90,4 @@ no Native artifacts committed; complete comparator untouched.
 | Stage | Gates |
 |---|---|
 | RED | the three cases above, official + seeded: witness fails only at the Ares admission assertion; guards pass |
-| GREEN | witness passes both modes byte-exact on channels + `result.json`; guards still accepted; `cargo fmt`; strict clippy; nextest `ares-cli` directed; no FULL without COORD |
+| GREEN | witness passes both modes byte-exact on channels + `result.json`; guards still accepted; `cargo fmt`; strict clippy; nextest `ares-cli` directed |

@@ -1,8 +1,6 @@
-# SPEC RR: consumed GUI painted fuzzy-skin rewrite
+# SPEC: consumed GUI painted fuzzy-skin rewrite
 
-Status: bounded discovery confirms admission rejection; request independent SPEC
-approval before public RED. No production edits, RED or GREEN authorized here.
-Discovery/base:92ce9b02c9f3e1e332347350fa199128209ba974 (frozen accepted beam tip).
+Bounded discovery confirms admission rejection.
 Upstream:8500fcdccaa10b5099ac20d252af3a7c560046f1.
 [Non-negotiable ARD](ard-painted-fuzzy-skin.md).
 
@@ -27,7 +25,6 @@ whole-polygon helper without real masks is not a complete rewrite of this slice.
 
 ## Discovery: actual reject, not silent ignore
 
-Evidence: ${EVIDENCE_ROOT}/worker1/painted-fuzzy-discovery-92ce9b02c/.
 Two stock inputs, all geometry/instances/preset container preserved from
 legacy-brim-ears/outer-only-legacy-disabled.3mf (SHA72bc653d1eee964032dc2a8a33f7c6cd070685e9a8385e9f3d083584281673ec).
 The stock one-filament cube has8vertices/12triangles. Both inputs change only
@@ -65,17 +62,10 @@ The Model XML allowlist rejects canonical paint_fuzzy_skin before serde/slicing;
 Triangle has no fuzzy carrier field. No target equality or expected-error PASS
 claimed. API calls0; this is discovery, not public RED.
 
-Initial driver stopped after the first successful Native reference because the
-activity parser default expected an explicit T selection. Continuation uses its
-already-existing initial_tool=0 parameter for this one-filament stock project,
-reuses that exact raw Native/process receipt without rerun, then completes the
-remaining7 Native and2 CLI. Original script/log/exit1 and continuation exit0
-retained. This is an observer stop, not unstable Native or semantic gate credit.
-CPU18/jobs1/thread controls1; actual Native TIDs measured separately, not called1.
-A byte-frozen copy of qualified70e51b4e2 CLI was reused; core/CLI source/lock tree
-identities equal92ce9b02c. No fresh exact-tip build or API qualification claim.
+The activity parser default expects an explicit T selection; the discovery uses
+its existing initial_tool=0 parameter for this one-filament stock project.
 
-## Included complete consumed behavior for later authorized GREEN
+## Included complete consumed behavior for GREEN
 
 - Recognize only canonical unprefixed paint_fuzzy_skin without weakening other
   XML namespaces/unknown-attribute checks. Decode/carry real annotation data via
@@ -108,7 +98,7 @@ of the cited functions, not a model-specific workaround. Existing consumers and
 stock global-fuzzy controls must retain their meanings. Core is byte-oriented,
 portable memory/data only; filesystem/terminal remain in adapters.
 
-## Public RED after independent SPEC approval
+## Public RED
 
 Freeze these exact inputs; reuse shared NativeCase/native_stream_case and existing
 comparator/process seams. Reference/replay/settings/positive model extrusion and
@@ -119,8 +109,7 @@ process harness or a fabricated tool-selection command in the output stream.
 Tests require real validated API AND real CLI success, full ordered per-input
 Native/API/CLI comparisons and raw API==CLI. The current rejection must FAIL the
 success assertion, not become an expected-error PASS. Preserve both API error and
-CLI status/output on rejection. Unpainted must PASS. Then submit RED RR and wait
-for explicit GREEN authority; no production edits before that approval.
+CLI status/output on rejection. Unpainted must PASS.
 
 Pre-code failure inventory: ignoring canonical attribute; admission-only patch;
 wrong None/Disabled rule; codec/tree or shared-index loss; wrong wrapper caps/state
@@ -129,10 +118,11 @@ applied to the whole polygon; missing mask merge/split; duplicate interlocking;
 wrong compensation gate; Native stochastic/replay/control/affinity failure;
 header normalization expanded; fabricated success or platform/runtime claims.
 
-Any Native/control/resource/replay failure STOPs as non-gate. Genuine algorithmic
-residual outside the cited boundary needs STOP/RR, not backend/normalization fixes.
+Any Native/control/resource/replay failure is a non-gate failure. Genuine
+algorithmic residual outside the cited boundary needs a boundary revision, not
+backend/normalization fixes.
 
-## Deferred / authority and exit
+## Deferred and exit
 
 Defer MMU+fuzzy and fuzzy+beam inputs, Arachne-painted masks, support/raft/tower/
 custom/multi-object expansion, nonzero XY-compensation combinations,
@@ -143,9 +133,5 @@ reviewed. Their future owning ParentType::PaintedRegion source remains cited,
 not claimed qualified here. No new public phase API, pipeline, geometry backend,
 registry, fallback or unrequested file I/O.
 
-Exit stages: SPEC approved → exact-input success-required public RED → independent
-RED approval and GREEN instruction → complete consumed slice → content review.
-Later exact-tip fmt/strict all-target Clippy/WASM compile/directed regression and
-canonical dual FULL require their assigned integration authority/window. Files
-≤400LOC, no include tricks. No production/test edits or FULL in this docs request.
-The frozen beam stack92ce9b02c and its W1 integration window remain independent.
+Exit stages: exact-input success-required public RED → complete consumed slice.
+Files ≤400LOC, no include tricks.

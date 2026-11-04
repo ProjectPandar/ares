@@ -1,9 +1,7 @@
 # ARD: Port GCodeReader float XY distance to the spiral reader
 
-Status: docs-only SPEC authorized; Native-first RED follows. No GREEN
-until separate review approval. Independent base
-89560ca66ff8418bcf175d573df299955f9a216f, not stacked on either approved
-spiral overlap8afae25af or fixed-XYb4d5eade7 chain.
+Docs-only SPEC; Native-first RED follows. Independent of the
+spiral overlap8afae25af and fixed-XYb4d5eade7 chains.
 
 ## Source owner and non-negotiable rewrite boundary
 
@@ -24,7 +22,7 @@ subtracts decimal f64 coordinates and calls f64 hypot, casting the
 result later during float accumulation. That does NOT reproduce the
 owning source boundary.
 
-Future GREEN, if authorized, must narrow EACH coordinate operand to f32
+Future GREEN must narrow EACH coordinate operand to f32
 BEFORE subtraction, compute f32 x*x+y*y, then sqrt with f32 result.
 Do not use hypot, f64 subtraction then narrow, wider products/sum,
 manual rounding, epsilon or progress snapping. Existing wider
@@ -90,8 +88,6 @@ Successful Native/Rust debugger full outputs equal ordinary CLI outputs;
 no inferior calls/program memory/register writes. One failed broad
 function breakpoint also matched a lambda; incomplete capture excluded,
 retained transparently, then replaced by exact-source breakpoint.
-Durable evidence:
-`${COORD_ROOT}/evidence/w5-spiral-reader-float-distance/`.
 
 ## Included / deferred / exclusions
 
@@ -106,25 +102,23 @@ Deferred: parser/reader storage rewrite, E semantics, wider public API,
 Smooth projection/Point2 quantization and the9 prior low-bit samples,
 other consumer behavior, thresholds/resolution gates/clamp policy,
 Z/E/general formatting and flow formulas. Do not claim this slice resolves
-those independent numeric observations or authorize caller cleanup.
+those independent numeric observations or caller cleanup.
 
-The two approved spiral points remain excluded: transition_out state/
+The two spiral points remain excluded: transition_out state/
 if-else priority/passthrough/header counts, and fixed3 format_axis/orphan
-trim deletion. Also exclude W2 brim/skirt, W1 painted/MMS, W6 medial/
-interlocking, W3 combine-solid clearance, W4 stack25. No processor/header/
+trim deletion. Also exclude brim/skirt, painted/MMS, medial/
+interlocking and combine-solid clearance. No processor/header/
 normalizer work, shape/value/symmetry special case, dependency/platform I/O
 or new module. All future strict residuals require STOP/report, not scope
 expansion or output masking.
 
-## Formal RED then review
+## Formal RED
 
 Two tests DIRECTLY reuse main native_stream_case::check, which double
 replays Native and delegates complete validated API/bare CLI comparison
 to main native_api_cli. No duplicated runner/replay/normalization/JSON,
 Native content constants/assertions, expected-failure flags or snapshots.
 Native-first controlPASS/positiveactualFAIL in official and seeded,
-CPU11/thread1/job1 with complete streams and launch/comparison receipts.
-Freeze actual exported3MFs plus input manifest/README. Send RED RR and
-STOP before GREEN/FULL. Later GREEN must preserve tests/inputs/helpers.
-Known orca_parity.rs registration conflicts among three independent
-spiral chains are mechanical integration-window work, not solved here.
+with complete streams.
+Freeze actual exported3MFs plus input manifest/README. Later GREEN must
+preserve tests/inputs/helpers.

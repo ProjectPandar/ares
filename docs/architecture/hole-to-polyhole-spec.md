@@ -1,7 +1,6 @@
 # SPEC: `hole_to_polyhole` — convert circular holes to polyholes
 
-Approved proposal: `cfa2302b4` (`docs/architecture/hole-to-polyhole-discovery.md`).
-Base: main `8f6ce1660`. All bounds are upstream-cited; no Ares-owned
+Proposal: `docs/architecture/hole-to-polyhole-discovery.md`. All bounds are upstream-cited; no Ares-owned
 pipeline design.
 
 ## Upstream source
@@ -122,8 +121,7 @@ shell.
 
 ## Frozen RED witnesses (proposed)
 
-Fixture root: `${LOCAL_EVIDENCE_ROOT}/worker4/polyhole-discovery/inputs/`
-(generated; `gen.py` in same root — 30×30×8 block, centered r=5 mm
+Generated fixture (`gen.py` — 30×30×8 block, centered r=5 mm
 64-gon hole, fixture `project_settings.config`). One new
 `orca_parity/option_coverage/hole_to_polyhole.rs` test:
 

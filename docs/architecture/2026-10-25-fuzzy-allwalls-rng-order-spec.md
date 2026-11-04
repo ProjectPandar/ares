@@ -1,7 +1,6 @@
 # Fuzzy skin `allwalls` seeded-RNG consumption order (SPEC)
 
-Date: 2026-10-25 · Status: SPEC + tests-only RED (frozen), awaiting review ·
-Base: main `28539c7fbe3e14c8f48a90803ec49b172396ffba`
+Date: 2026-10-25
 
 ## Upstream boundary (OrcaSlicer 2.4.2)
 
@@ -104,7 +103,7 @@ inner depth-1 contour walls):
 RED state on main: test 1 fails with the first ordered-byte difference at the
 layer-2 inner wall; tests 2-4 pass in their respective modes.
 
-## GREEN constraints (pre-approved scope)
+## GREEN constraints
 
 - Change ONLY the classic-path fuzzification call order in
   `project_slice/perimeters/classic/*`: consume the shared fuzz RNG exactly as

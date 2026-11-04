@@ -19,8 +19,7 @@ This is an upstream rewrite slice, not a new Ares acceptance policy. The old
 
 ## Evidence and required behavior
 
-The full stock-template input is
-`/tmp/worker3-o6-stock-circle/stock-circle-cylinder.3mf`, SHA256
+The full stock-template input is `stock-circle-cylinder.3mf`, SHA256
 `446e19e8f8dc9443c68774bc31fca6d0187798e41031882919cf0930362be8f6`.
 It uses Rolohaun Delta Flyer Refit 0.4 / 0.20mm Standard / Generic PLA stock
 configuration unchanged (637 keys, `auto_brim`, width 5). The original cylinder
@@ -51,8 +50,8 @@ rejects with a different -102 diagnostic).
 Include circle fitting, classification tolerances (0.005 vertex distance,
 3-mm edge-midpoint undercut), coordinate scale/unscale order, circle containment
 and epsilon/f32 semantics needed by this Model gate. Keep the existing -50
-core diagnostic and error contract; reuse worker4's adapter family mapping if
-merged, otherwise report the separate adapter dependency. No CLI changes in
+core diagnostic and error contract; reuse the CLI adapter family mapping if
+present, otherwise report the separate adapter dependency. No CLI changes in
 this slice.
 
 Defer extruder-specific BuildVolume shape extensions not exercised here,
@@ -71,8 +70,8 @@ Native input-read crashes.
 
 1. Commit a separate RED using this exact full stock input. Require the exact
    -50 diagnostic through the public core slicing API; retain the admitted
-   Native stdout/stderr/result.json and source/debug receipts. No retry-to-PASS.
-2. Port the cited circle boundary and pass RED. Change the old O6 complete-slice
+   Native stdout/stderr/result.json and source/debug records. No retry-to-PASS.
+2. Port the cited circle boundary and pass RED. Change the old complete-slice
    circle test to the Native-backed rejection, not an ignored or broadened test.
 3. Run workspace nextest, clippy without new warnings, fmt, wasm32, full seeded
    and official controls; normal successful output comparisons normalize only
@@ -80,7 +79,3 @@ Native input-read crashes.
 4. Retain both sparse synthetic Native input-read failures (original and
    no-brim child) separately, with their hashes/stack, `parity_pass=false`.
    Neither is an acceptance oracle. Do not repair that fixture constructor.
-
-The timelapse source is paused in a named stash and a byte-hashed snapshot at
-`/tmp/worker3-timelapse-paused-source/`; no non-GREEN production commit is used
-as this slice's base.

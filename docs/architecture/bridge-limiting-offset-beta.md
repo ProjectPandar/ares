@@ -53,12 +53,12 @@ Commit this decision before a public-API complete-output RED, then commit the
 minimal source port separately. Use the standard parity harness and its ordered
 complete-output comparator; do not filter roles, normalize feeds/M73, or accept
 unordered geometry. Retain raw outputs and repeatable artifacts externally.
-Standard test Native runs are authorized; additional Native debugger/observer
-runs are not. Use CPU 56–59 and four build jobs.
+Standard test Native runs are in scope; additional Native debugger/observer
+runs are not.
 
 The representative must genuinely pass before calling this GREEN. Any inherited
 full-output mismatch remains a failure and must be reported, not weakened.
-Before approval, require bridge/infill-family and the `9f6ee320d` baseline
+Before landing, require bridge/infill-family and the `9f6ee320d` baseline
 comparison with zero PASS-to-FAIL transitions, plus rustfmt and all-target Clippy
-with warnings denied. A failure blocks completion rather than authorizing a
+with warnings denied. A failure blocks completion rather than justifying a
 second speculative repair.

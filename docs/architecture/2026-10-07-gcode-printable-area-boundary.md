@@ -30,13 +30,13 @@ renderer feature.
   renamed output (`GCode.cpp:2186-2194`, `OrcaSlicer.cpp:6209-6227`);
   `flush_and_exit:398-413` removes only model backup directories, not that
   file (`Model.cpp:1001-1012`). Core has no filesystem/terminal side effects;
-  worker4 owns writing failure bytes and CLI mapping on native adapters.
+  native adapters write failure bytes and own CLI mapping.
   This pure owned-byte boundary works on WASM, Windows, macOS and Linux.
-- CLI `-102` mapping is worker4's separate adapter slice. Until merged,
-  core rejection and CLI status are distinct evidence claims.
+- CLI `-102` mapping is a separate adapter slice. Core rejection and CLI
+  status are distinct evidence claims.
 - Commented bit4/arc checks and non-rejecting viewer filament-limit data
   are deferred. Successful outputs remain strict generator-only byte
   comparisons; Native rejection cannot be declared success-stream PASS.
 
 The [spec](../superpowers/specs/2026-10-07-gcode-printable-area-rejection.md)
-binds the witness, failure inventory, TDD controls and review gates.
+binds the witness, failure inventory and TDD controls.

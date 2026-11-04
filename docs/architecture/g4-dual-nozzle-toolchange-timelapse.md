@@ -1,9 +1,8 @@
 # G4 dual-nozzle traditional timelapse at logical tool changes
 
-Status: bounded four-map whole-output/consumer GREEN; production-containing
-workspace and strict gates passed. Review scope excludes the other five G4 keys.
-The source ownership and deferred behavior below remain binding; acceptance
-receipts and the Native-only ordering adjudication are in `g4-manual-map-review.md`.
+Status: bounded four-map whole-output/consumer GREEN. Scope excludes the other
+five G4 keys. The source ownership and deferred behavior below remain binding;
+verification and the Native-only ordering observation are in `g4-manual-map-review.md`.
 This is a `libslic3r/GCode.cpp` lifecycle rewrite, not a new G-code pipeline.
 The original six-key harness specification remains
 [the G4 coverage boundary](option-g4-tool-multifilament-coverage.md).
@@ -101,9 +100,7 @@ the mapping domain. A mapping metadata RED is separate from production RED.
 
 The first admission had two nozzles but `nozzle_volume_type=[Standard]`.
 Its original input SHA256 is
-`c5f3aed4318e10409c91092e069f5a4b7af0db6f14741b10938b6c7b69fa06ac`, retained
-with complete streams in
-`/tmp/worker2-g4-mapping-red-seeded.lzEc6h/artifacts/case-0PA6vS/`.
+`c5f3aed4318e10409c91092e069f5a4b7af0db6f14741b10938b6c7b69fa06ac`.
 This input reaches the existing
 [O8 UB_ADJACENT selector boundary](o8-x2d-scalar-flush-context.md):
 `OrcaSlicer.cpp:3351` triggers reconstruction from old/new type-vector shape,

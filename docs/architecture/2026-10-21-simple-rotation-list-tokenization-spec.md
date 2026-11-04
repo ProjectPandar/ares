@@ -1,10 +1,8 @@
 # Simple rotation lists: comma items are not whitespace-separated angles
 
-Status: COORD approved the source-cited discovery and authorized this docs-only
-SPEC followed by a separate five-input RED on an independent branch from main
-`3fbad615e334a283596d0e6acff921f1d02804c6`. No GREEN or integration authority.
-CPU12, jobs1, threads1; RED review-request then STOP. The approved aligned
-chain758b remains frozen; its separate integration queue/window is unchanged.
+Docs-only SPEC following the source-cited discovery, followed by a separate
+five-input RED from main `3fbad615e334a283596d0e6acff921f1d02804c6`. No GREEN.
+The aligned chain758b is unchanged.
 
 ## Owning upstream slice and exact Rust boundary
 
@@ -21,7 +19,7 @@ Pinned OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 
 The sole future Rust destination is
 `ares-core/src/project_slice/group_fills/params/projection/rotation.rs::simple_rotation_angle`
-(lines47-63 at the approved base), limited to **simple-list tokenization/trim**
+(lines47-63 at the base), limited to **simple-list tokenization/trim**
 and correction of its misleading comment attributing `[\s,]+` to upstream
 ConfigOptionFloats. This existing adapter is a temporary compatibility shell
 around the cited upstream interpreter, not an Ares-owned parser/pipeline goal.
@@ -80,8 +78,8 @@ for `infill_rotate_template::t24_sparse_list_control`. Classic walls,
 Rectilinear sparse, multiline1, monotonic solid surfaces; common GUI settings
 turn brim/skirt off. Between cases the sole variable is
 `sparse_infill_rotate_template`; geometry/transforms/non-settings ZIP members
-remain exact. No painted, aligned, Arachne wall-generator or queued worker
-behavior is a proposed change. No mesh/position/density tuning.
+remain exact. No painted, aligned or Arachne wall-generator behavior is a
+proposed change. No mesh/position/density tuning.
 
 Use five thin unconditional direct calls to unchanged
 `native_stream_case::check` / shared NativeCase. Freeze input SHAs and source
@@ -103,15 +101,10 @@ Do not claim an unexecuted adapter/tail assertion was reached.
    three PASS. Fresh Native double replay first, stable hashes/repeats, actual
    public API/CLI whole-output results and independently checked raw equality.
    Preserve actual binary/command/status/input/output evidence without fictional
-   cache receipts. No run of FULL, rebase, merge, push or implementation.
-3. Run fmt and locked workspace/all-target Clippy-Dwarnings after test edits.
-   CPU12/jobs1/threads1/incremental0, fresh per-mode caches/artifacts. Send
-   SPEC+RED content RR then STOP for independent review and new GREEN authority.
+   cache receipts. No implementation in this stage.
+3. Run fmt and locked workspace/all-target Clippy-Dwarnings after test edits,
+   with fresh per-mode caches/artifacts.
 
 All core changes remain future-only. Tier1 WASM/browser, Windows, macOS and
 Linux boundaries are unchanged; this is source-owned string interpretation,
 not filesystem/UI/terminal logic entering core.
-
-Sealed discovery, all five inputs, strict public outputs, actual return readers,
-GUI qualification and source/build/producer proof:
-`${EVIDENCE_ROOT}/w3-simple-rotation-readonly-3fbad615e/README.md`.

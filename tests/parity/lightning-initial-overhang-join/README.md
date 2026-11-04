@@ -15,7 +15,7 @@ expected-output snapshots or Native content constants/assertions.
 Two direct native_stream_case::check tests reuse main double Native
 replay and native_api_cli validated API/bare CLI whole-byte comparison.
 No copied replay/normalization/JSON/orchestration or private output seam.
-CPU11/thread1/job1, ARES_REQUIRE_ORCA=1 and explicit official/seeded Native
+ARES_REQUIRE_ORCA=1 and explicit official/seeded Native
 reference environments with retained artifact roots. Target:
 
 ```
@@ -24,7 +24,7 @@ cargo nextest run -p ares-cli --test orca_parity --no-fail-fast \
 ```
 
 Require Grid controlPASS/Lightning positiveactualFAIL in both modes,
-stable repeats, then review BEFORE production change. FIRST strict diff
+stable repeats before production change. FIRST strict diff
 is M73 placement; geometry divergence is independently PRE-EMISSION.
 Never mask M73 to reach a later discrepancy or manufacture PASS. Only
 existing generated-by identity/date normalization, no time/header/E/XY/
@@ -32,10 +32,9 @@ config/trailing-line mask/tolerance. No ignore/expected-failure flags.
 Environment-disabled tests are NOT evidence. Shared checker preserves
 complete streams/launches/comparison errors for both public attempts.
 
-Future GREEN, separately approved, ONLY Square→Miter with3.0 unchanged.
+GREEN covers ONLY Square→Miter with3.0 unchanged.
 Per-polygon ExPolygon wrapping in that SAME call is explicitly deferred,
 as are all other joins/geometry/tree/cooling/processor/consumer changes.
-Any residual means STOP/report. Freeze tests/inputs/helpers. No FULL.
-External discovery geometry/GDB provenance stays separate in
-`${COORD_ROOT}/evidence/w5-4b-lightning-initial-overhang/`,
-not substituted for formal public shared-checker RED proof.
+Any residual means STOP/report. Tests/inputs/helpers are frozen.
+External discovery geometry/GDB provenance is not substituted for formal
+public shared-checker RED proof.

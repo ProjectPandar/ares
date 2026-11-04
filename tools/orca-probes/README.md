@@ -15,13 +15,13 @@ Build: `nix-build tools/orca-probes/NAME.nix --no-out-link`, run the result's
 For probing Ares internals on another branch (e.g. an O3 fix not yet on
 main), use a detached temp worktree plus a local-only integration test:
 
-1. `git worktree add --detach ${TMP_ROOT}/ares-probe-<worker> <branch-or-commit>`
+1. `git worktree add --detach <probe-dir> <branch-or-commit>`
 2. Write `crates/ares-core/tests/zz_tmp_probe.rs`: build a
    `ProfileSliceRequest` from a saved runner directory's
    `catalog-array.json`/`selection.json`/model, call `profile_settings`,
    `profile_placed_project`, or `slice_with_profiles`, and `println!` the
    typed fields or emitted lines of interest.
-3. `cd ${TMP_ROOT}/ares-probe-<worker> && CARGO_TARGET_DIR=<main worktree>/target
+3. `cd <probe-dir> && CARGO_TARGET_DIR=<main worktree>/target
    cargo nextest run -p ares-core --test zz_tmp_probe --no-capture`
    (shared target dir avoids a second full build).
 4. Delete the test file and `git worktree remove --force` when done.

@@ -1,9 +1,7 @@
-# Adaptive anchor offset-line construction — approved Rust rewrite slice
+# Adaptive anchor offset-line construction — Rust rewrite slice
 
-Base: `c28afff253d282aeb7aad87cd2ebd5f3942e9a8f` (current main; rebased by
-COORD after BATCH-4 merges).
 Upstream pin: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-Status: COORD approved chained RED→GREEN after the read-only stage2 PINPOINT.
+Status: accepted. Chained RED→GREEN after the read-only stage-2 pinpoint.
 
 ## Owning source and non-negotiable boundary
 
@@ -57,9 +55,9 @@ appears in the `Line::intersection` `cast<coord_t>` results
 `(6814649,3437123)` vs `(6814650,3437123)`. The endpoint-touch midpoint is
 not involved (minimum target-pair endpoint distance ≈489988 ≫ 1200).
 
-On plain c28 (before the endpoint-touch batch merges) the same strict
+On plain c28 (before the endpoint-touch slice lands) the same strict
 whole-stream comparison fails earlier (first recorded mismatch L772), which
-is consistent with the still-unmerged BATCH-4 endpoint-touch content; the
+is consistent with the still-unmerged endpoint-touch content; the
 RED registers the strict comparison only and pins no mismatch location.
 
 ## Failure modes to guard

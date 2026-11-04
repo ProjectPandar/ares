@@ -1,7 +1,5 @@
 # Concentric sparse multiline: preserve nominal spacing and coordinate units
 
-Status: SPEC proposed; no production changes. Base: `48ff6b184b4681e30a855b0ffed42873c36d0f27`.
-
 ## Upstream boundary
 
 Upstream checkout: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
@@ -30,14 +28,11 @@ its derived offset. The public caller is
 
 ## Native-first survey
 
-CPU11, outer taskset, existing main CLI from FULL12, fresh per-case roots/cache,
+Existing main CLI, fresh per-case roots/cache,
 no builds, no retries. Both official (wrapper `1689a2ff...`) and seeded producer
 `1k0p5...`, seed 0, accepted every input (exit 0).
 
-Evidence: `/tmp/worker6-concentric-survey.kln54hvl/report.json` and
-`/tmp/worker6-concentric-classic-survey.so_yd47x/report.json`.
-The latter changes only `wall_generator` to `classic`; results are identical.
-Actual Native affinity samples: 30 and 41 respectively, all CPU11.
+A second survey changes only `wall_generator` to `classic`; results are identical.
 
 | Sparse density / multiline | Native | Ares | Retained whole-output first difference, both modes |
 | --- | --- | --- | --- |
@@ -73,12 +68,12 @@ Native `G1 X132.878 Y95.122 E1.51782`, Ares `... E1.51781`.
 Both accept it, and Classic gives the same result. This is frozen as an independent
 flow/geometry precision finding, not a PASS control or permission to change flow.
 The Arachne full-density constructor and its known initialization boundary remain
-outside this slice. Support, ironing (worker5), Adaptive/SupportCubic (worker3),
+outside this slice. Support, ironing, Adaptive/SupportCubic,
 brim, OptionsZ replay and ZAA motion are not touched.
 
 ## RED, GREEN and acceptance
 
-After approval, add public CLI/API runtime Native E2E cases for the three sparse
+Add public CLI/API runtime Native E2E cases for the three sparse
 multiline requests above in both modes. Use the authored prism input and existing
 OrcaRunner runtime export/fixture adapter; commit no Native products. Assert
 successful validated API and CLI admission, complete ordered bytes and line counts
@@ -88,26 +83,23 @@ and TPMS-D 45-degree controls; do not relabel the known Concentric count1 failur
 
 GREEN changes only the spacing ownership/unit handling described above. Any
 residual whole-file difference, including the independent E precision signature,
-requires STOP and coordinator review; no tolerance or comparator changes.
+requires STOP and review; no tolerance or comparator changes.
 Then exact-HEAD directed official+seeded, complete option_coverage in both modes,
 non-RED raw invariance, strict clippy, fmt and wasm32. Files stay <=400 LOC.
-Full/workspace remain coordinator-only. No push without exact-hash approval.
 
 ## Proposed amendment: preserve density and ring-pitch expression types
 
-Status: amendment pending approval. The spacing-only trial `b94b93053` is NOT
-GREEN: both modes are 0/3, though all API/CLI calls now accept. Evidence:
-`/tmp/worker6-concentric-green.Qo0bBh/residual-audit.json` and
-`/tmp/worker6-concentric-STOP.md`. No assertion/comparator changes.
+The spacing-only trial `b94b93053` is NOT
+GREEN: both modes are 0/3, though all API/CLI calls now accept.
+No assertion/comparator changes.
 
-The coordinator authorized bounded observation after STOP. Existing binaries
+Bounded observation followed the STOP. Existing binaries
 were observed with gdb only; no source instrumentation, Native rebuild, memory
 writes or expression substitutions. The initial absolute-address Native attempt
 failed to insert a PIE breakpoint and is not evidence. Successful runs resolve
-breakpoints after exec. Every observed Native inferior records affinity CPU11.
+breakpoints after exec.
 
-C30M2 observation: `/tmp/worker6-concentric-diagnose.rkrl8m01/report.json`,
-`native-values.json`, `rust-paths.json`, `pre-multiline-diff.json`.
+C30M2 observation:
 Native normalized output equals the unchanged trial reference; Ares raw output
 is exactly unchanged. At physical layer 4 (Native `layer_id=3`, Z0.8):
 
@@ -151,7 +143,7 @@ The Rust capture at index 0 belongs to a separate projection call, so the
 emission comparison uses capture index 1, whose outer ring matches Native.
 Projection caller alignment is deferred, not relabeled as matching.
 
-Count1 observation: `/tmp/worker6-concentric-diagnose.rrc7_fjq/report.json`.
+Count1 observation:
 It uses the frozen count1 input, not a replacement control. Native normalized
 output remains identical to its survey; candidate Ares raw is exactly identical
 to main's frozen output. The same density discrepancy is present. Native
@@ -161,14 +153,14 @@ has already been closed. Its E1.51782/E1.51781 finding remains a FAIL.
 
 Requested scope: add the Concentric-specific density conversion and exact
 integer/f32 ring-pitch/half-spacing expressions above to the existing slice.
-No implementation has been made for this amendment. Keep `b94b93053` unpushed.
-The earlier count1 raw-unchanged requirement needs an explicit exception if this
-amendment is approved: this shared arithmetic necessarily changes count1 ring
+No implementation has been made for this amendment.
+The earlier count1 raw-unchanged requirement needs an explicit exception for this
+amendment: this shared arithmetic necessarily changes count1 ring
 coordinates. Proposed replacement acceptance is an additional public runtime
 Native count1 witness with strict whole bytes, not a rebound hash or tolerance.
-No existing test assertion would be altered. Confirm this exception before code.
+No existing test assertion would be altered.
 
-After approval, freeze the additional count1 RED before implementing this numeric
+Freeze the additional count1 RED before implementing this numeric
 chain; retain all three original RED cases. Any remaining diff requires STOP,
 including C45M2's layer-17 non-sparse path mismatch (first Native geometry line
 6005 X140.571/Y133.201 versus Ares X141.05/Y133.201), which is not proven to be
@@ -178,22 +170,21 @@ then run non-RED raw auditing and the previously specified gates.
 
 ## Proposed amendment: Concentric sparse anchoring calls Fill::fill_surface
 
-Status: pending approval; numeric candidate `7f016498c` remains NOT GREEN.
+Numeric candidate `7f016498c` remains NOT GREEN.
 It is rebased cleanly onto `caac760d4` (all six range-diff entries `=`).
 Its exact-HEAD public tests give 3/4 in both modes: C30M1/2/3 whole-byte PASS,
 C45M2 FAIL. Original RED cases and all assertions remain unchanged.
 
 ### Plain-main comparison and correction to the prior interpretation
 
-Fresh CPU11 official+seeded evidence:
-`/tmp/worker6-concentric-main-c45.jij3ltgy/report.json`.
-Same C45M2 input bytes, main binary built at exact `caac760d4` by FULL13.
+Fresh official+seeded evidence:
+Same C45M2 input bytes, main binary built at exact `caac760d4`.
 Native accepts (exit0); main still exits154 / -102, so main is NOT a parity PASS.
 In retained physical-layer-17 output, however, main's Internal Bridge travel
 is `G1 X140.571 Y133.201 F9000`, exactly the Native point. Candidate has
 `G1 X141.05 Y133.201 F9000`. Native and main's following bridge moves also agree
-at this initial sequence; candidate's are tilted. Six actual Native samples,
-all CPU11; no retries or builds. The numeric trial's Native normalized stream
+at this initial sequence; candidate's are tilted. Six actual Native samples;
+no retries or builds. The numeric trial's Native normalized stream
 is identical to this fresh Native stream.
 
 Therefore the residual is NOT present at this point on plain main. The previous
@@ -229,9 +220,7 @@ This also corrects the earlier caller inventory: besides locked_zag.rs:35,
 this anchoring Concentric arm is an additional f32-product caller. The earlier
 inventory focused on emission callers; locked_zag remains a separate finding.
 
-Read-only existing-binary gdb evidence:
-`/tmp/worker6-concentric-diagnose.4xitirmn/report.json`, `native-values.json`,
-`rust-paths.json`. Native normalized output and candidate raw output are exactly
+Read-only existing-binary gdb evidence: Native normalized output and candidate raw output are exactly
 unchanged by observation. Call-stack classification distinguishes the anchoring
 call from emitted calls (no positional inference):
 
@@ -259,7 +248,7 @@ No edits to transaction/anchor_projection.rs, bridge angle, candidate geometry,
 BridgeDetector, routing, other pattern arms, or locked_zag.
 
 Keep all four public RED witnesses and their exact whole-byte comparison.
-On approval, make a separate production commit, rerun all four in official+seeded
-on CPU11, then follow the existing option_coverage/non-RED raw/strict/fmt/wasm gates.
+Make a separate production commit, rerun all four in official+seeded,
+then follow the existing option_coverage/non-RED raw/strict/fmt/wasm gates.
 Any residual requires STOP and another ruling. No assertion removal, hash rebinding,
 normalization expansion, fallback, Native rebuild or committed Native artifact.

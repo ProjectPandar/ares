@@ -1,9 +1,9 @@
 # SPEC C2: local top/solid pattern admission in bridge anchor preparation
 
-Status: SPEC-REVIEW-REQUEST, docs only; no input/test/production edit or run.
+Status: proposed SPEC, docs only; no input/test/production edit or run.
 Base `96eb17ccc2805ce1d4f95045e452eb070e19f183`.
-Separate docs worktree/branch `worker2/bridge-anchor-c2d-spec`; approved A/C1/B
-candidate `18d59a638` remains unchanged in its own worktree/full queue.
+The A/C1/B
+candidate `18d59a638` remains unchanged.
 
 ## Source boundary and audit finding
 
@@ -36,25 +36,24 @@ independent of the owning upstream surface/Fill stage.
 
 C2-T first: local `top_surface_pattern=grid`, otherwise normal sparse and solid
 patterns. Native must admit this public input before removing its top-pattern
-anchor gate. C2-S follows in its own RED/GREEN/code REVIEW: local
+anchor gate. C2-S follows in its own RED/GREEN: local
 `internal_solid_infill_pattern=grid` with valid top pattern. Do not combine both
 production guard removals in one repair commit.
 
 Included: only the selected role gate and proven missing behavior in its
-existing Fill consumer, if a separately reviewed repair PLAN requires it.
+existing Fill consumer, if a separate repair PLAN requires it.
 Initial repair proposal is deletion of that selected gate only; no assumptions
 that existing arbitrary-role Grid output already matches Native.
 
 Deferred: other patterns beyond the bounded Grid witness, anchor floats (D),
 new surface kinds, Fill algorithm redesign, rotations, density, materials,
-layer-range slicing/height-profile work (owned by W6), brim, plate selection.
-Other already-approved A/C1/B removals are not part of this new slice.
+layer-range slicing/height-profile work, brim, plate selection.
+Other A/C1/B removals are not part of this new slice.
 
 ## Public Native admission preflight, then RED
 
-Only after SPEC APPROVED and an open directed window. No runs during an
-exclusive full; official CPU13 / seeded CPU14, jobs2/threads2, independently
-fresh Native cache/artifact root each invocation.
+After this SPEC: official and seeded runs, each with an independently
+fresh Native cache/artifact root per invocation.
 
 Use public 3MF exported from an existing vendor profile and a solid ceiling
 fixture. Keep the project-level top/solid configuration valid. Insert one
@@ -83,13 +82,13 @@ For an admitted active case, the public Ares call must be observed rejecting
 exactly `UnsupportedProjectFeature("top_surface_pattern")` or, in the second
 slice, `"internal_solid_infill_pattern"`. The permanent expectation remains
 whole-output generator-only PASS; the baseline fails that expectation. Keep
-all raw streams, error, input/Native/Ares SHA, producer/launcher receipt and
+all raw streams, error, input/Native/Ares SHA, producer/launcher record and
 CLI result in external artifacts before asserting. Submit RED as its own
 commit. If Native rejects, or another Ares failure precedes this guard, stop
 and report the actual result; it is not this slice's admitted RED.
 
 If the active witness cannot be established, submit the admission/schema
-finding for a ruling, not a whitelist deletion justified by a passing control.
+finding for a decision, not a whitelist deletion justified by a passing control.
 
 ## GREEN and exit
 
@@ -101,7 +100,6 @@ amendment before expanding the production boundary.
 Unchanged active/control assertions and whole-output API/CLI comparisons
 must PASS both modes. Run selected bridge/anchor regressions, requested
 option_coverage cases and strict clippy/fmt/wasm32. Files at most 400 LOC.
-One code REVIEW per role slice. Heavy workspace/full requires explicit queue
-allocation/FULL-GO; no push without exact-hash APPROVED.
+One commit per role slice; full parity before integration.
 No new unsupported guard, silent error skipping, suppression, ignore, probe
 short-circuit, regions[0], assertion weakening or committed Native outputs.

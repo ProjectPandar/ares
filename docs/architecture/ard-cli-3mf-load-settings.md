@@ -18,7 +18,7 @@ Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 3. **The adapter's preset-file read stays first (known divergence,
    deferred).** The missing-preset-file ordering nuance (`-5` before
    `-19`, versus upstream's reverse) is deferred, not accepted: the
-   follow-up worker5 CLI-adapter slice ports the `OrcaSlicer.cpp`
+   follow-up CLI-adapter slice ports the `OrcaSlicer.cpp`
    file-read ordering (`:1682-1690` before `:1953-2024`).
 4. **Two E2E REDs, both witness-derived.** The rejection witness pins
    the `-19` channels; the positive compatible case (embedded

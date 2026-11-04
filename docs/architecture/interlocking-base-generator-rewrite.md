@@ -37,8 +37,8 @@ behavior enters core.
   empty geometry as an error result. No guessed 0.42 width, default-on-error,
   no-clipping fallback, new unsupported guard, lint suppression or probe.
 
-This branch starts at current main, not by replaying old WIP production
-commits. Existing main rectilinear integer conversion and approved nearest /
+This slice does not replay old WIP production commits. Existing rectilinear
+integer conversion and nearest /
 closest-lines fixes are reused unchanged. No duplicate constructor-truncation
 proposal or old WIP architecture records are included.
 
@@ -58,9 +58,9 @@ contract only if its fresh Native admission and RED are established before
 implementation. Input hashes and existing assertions remain unchanged.
 
 Only tests made green by this producer slice and original PASS controls enter
-this review chain. The five still-failing WIP cases (three-region beam-1,
+this slice. The five still-failing WIP cases (three-region beam-1,
 odd kernel, orthogonal wipe, thin-auto gap, thin-percent gap), their inputs,
-and broad WIP history remain solely on `worker6/interlocking-wip`. Their
+and broad WIP history are excluded. Their
 remaining parity work is deferred, not fixed by normalization or guards.
 No claim of full multi-region/odd-kernel/wipe/width-gap parity follows from
 this base slice. CUBE/DIAMOND kernels, nonplanar voxel-line consumers and
@@ -68,7 +68,7 @@ UI/runtime integration are likewise deferred.
 
 ## Sequence / acceptance
 
-1. Commit this source-cited spec on current main.
+1. Commit this source-cited spec.
 2. Commit only admitted frozen input E2Es after observing actual main RED.
 3. Implement production-only source rewrite in already-separated modules;
    do not import old guessed-width/error-swallowing code or its history.
@@ -76,6 +76,5 @@ UI/runtime integration are likewise deferred.
    extraction is pure movement, separate from behavior, with body/byte
    invariance evidence; no unrelated refactor.
 5. fmt clean and `cargo clippy --workspace --all-targets -- -D warnings`
-   clean. Both complete official and seeded FULL suites must have zero
-   failures on the exact final hash based on the then-current main.
-6. Only then send REVIEW-REQUEST. No stash, push or self-merge.
+   clean. Both complete official and seeded suites must have zero
+   failures.

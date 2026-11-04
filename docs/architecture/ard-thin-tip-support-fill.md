@@ -15,7 +15,7 @@ Non-negotiable decisions:
 - Retain both existing public thin-tip RED assertions until full output is
   equal. Timing changes do not excuse a support path difference.
 - Diagnostics use external debugger/artifacts, not committed debug probes.
-- Official and seeded comparisons use matching CPU0 runtime domains. Cached
+- Official and seeded comparisons use matching runtime domains. Cached
   replay shortens diagnosis but is not fresh original-Orca acceptance.
 - Existing graph/adapters are compatibility shells around the cited source
   concepts, not authority for new pipeline behavior. Scope excludes concurrent

@@ -1,12 +1,11 @@
 # SPEC: printer_technology application-phase bounded domain (slice 1)
 
-Status: REVIEW REQUEST; docs only, no implementation authority requested for
-SLA slicing. Base: `96328f269d64165c02296ba9924f5c6ee972777c` on the dedicated
-`worker1/printer-technology-spec` branch, separate from skirt RED.
+Docs-only SPEC; no SLA slicing implementation. Specified on
+`96328f269d64165c02296ba9924f5c6ee972777c`.
 Originating audit: `96328f269`,
-`2026-10-14-option-full-current-audit.md` in this branch's
+`2026-10-14-option-full-current-audit.md` in
 `docs/architecture/`.
-The original execution was `f637b4122`, not this SPEC's branch HEAD.
+The original execution was `f637b4122`.
 No build, Native invocation or comparator change was made for this SPEC.
 
 ## Immutable observed failure
@@ -18,7 +17,7 @@ verification failed with `Application/ApplicationMismatch` before Native
 SLA slicing or Ares slicing. Original domain status stays **FAIL** in both
 modes. This is not evidence of a missing Ares SLA algorithm.
 
-Retained root: `/tmp/worker2-option-full-103wd7e0/`:
+Retained discovery evidence:
 
 - `printer-technology-{official,seeded}-attribution.json` identifies exact
   requested JSON, exported 3MF, command and cache receipt paths.
@@ -84,7 +83,7 @@ export or SLA slicing witness is claimed.
 
 Source exposes alternate parsing channels: a typed SLA CLI option or imported
 3MF config can make the local resolved technology non-FFF. However, absent an
-authorized experiment these are proposed **parsed-non-FFF rejection probes**,
+observed experiment these are proposed **parsed-non-FFF rejection probes**,
 not observed admitted cases. On the active `:3627-3633` path an actually
 resolved SLA should be rejected, not admitted. The enum and validate's empty
 error map cannot substitute for that missing runtime witness.
@@ -100,7 +99,7 @@ invent a non-FFF admission fixture or relabel FFF export as one.
 This is a Native **application/admission** test slice around the cited CLI
 source boundary, not an Ares-owned pipeline feature or SLA port.
 
-Destination after separate approval:
+Destination:
 `crates/ares-cli/tests/orca_parity/option_coverage/printer_technology.rs`,
 existing `runner/application.rs` verification, and existing matrix
 `domains/sweep/summary` accounting only where required to record the bounded
@@ -139,8 +138,8 @@ Assert Native reaches the technology rejection (not an earlier unknown-option,
 invalid-preset or schema error); assert Ares CLI on the same input has the
 same exit code and diagnostic. If this parity assertion fails it is a public
 RED, not an expected-Ares-failure PASS. No diagnostic weakening or
-exit-code remapping is authorized. If platforms expose different process
-status representations, document the observation and request a ruling;
+exit-code remapping is permitted. If platforms expose different process
+status representations, document the observation;
 do not silently treat distinct values as equivalent.
 
 Use retained evidence before adding duplicate tests. Until the parsed SLA
@@ -151,13 +150,11 @@ Deferred: SLA slicing/geometry/resin config, SLAFullPrintConfig port,
 production CLI parser repair, changing machine/process move semantics,
 absence/default and conflicting-technology cases, technology precedence
 redesign, broad inventory exclusions and universal
-technology support. Any production repair needs its own approved public RED.
+technology support. Any production repair needs its own public RED.
 No normalization of SLA to FFF in the requested-value checker, no silent skip,
 no fallback, no weakened comparator and no core filesystem/process behavior.
 
-## Test-first / verification plan — not run in this docs-only assignment
-
-After implementation SPEC approval and a directed allocation:
+## Test-first / verification plan
 
 1. Reuse/pin the original both-mode requested JSON/export/receipt hashes.
    A focused application test must first demonstrate the existing exact
@@ -173,8 +170,8 @@ After implementation SPEC approval and a directed allocation:
    technology-bearing input; persist stdout/stderr/status and require exact
    matching exit code and technology-rejection diagnostic. Ares acceptance,
    wrong exit code or different diagnostic is RED. No SLA slicing is
-   authorized, and a JSON field alone does not prove actual parsing.
-4. Stop for review if non-FFF is genuinely admitted contrary to the active
+   in scope, and a JSON field alone does not prove actual parsing.
+4. Stop if non-FFF is genuinely admitted contrary to the active
    source branch, or if producer/source identity differs. Report no admitted
    witness when rejection is the observed boundary; retain incomplete
    dimensions rather than manufacture coverage.
@@ -184,6 +181,4 @@ After implementation SPEC approval and a directed allocation:
 
 Artifacts include command/producer hashes, input JSON and 3MF, requested/
 effective ledger, status/stage receipts, exact original mismatch text and
-all produced full streams. Gates/fulls need explicit scheduling; no builds
-or Native executions have occurred in this assignment. Implementation and
-execution wait for approval plus a directed CPU18 window. Coordinator-only merge.
+all produced full streams.

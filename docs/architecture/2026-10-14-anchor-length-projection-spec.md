@@ -1,11 +1,10 @@
 # D-A: remaining local projected-anchor admission
 
-Status: SPEC-REVIEW-REQUEST; source reading/docs only. No Native probe run.
-Docs branch base: main 5a9687ac020962f254b6262f2184f3345025c70f.
-Approved D-M dcbd3a084 is frozen awaiting stacked full/CI in its own worktree.
+Source reading/docs only. No Native probe run. Against main
+5a9687ac020962f254b6262f2184f3345025c70f. D-M dcbd3a084 is a separate slice.
 This proposal narrows the remaining half of the earlier D SPEC99a7b9373.
-Before implementation, carry onto the main containing D-M or a base explicitly
-assigned by the coordinator; this docs branch does not duplicate its repair.
+Implementation builds on the main containing D-M; this docs branch does not
+duplicate its repair.
 
 ## Upstream owner and unproved runtime discrepancy
 
@@ -45,14 +44,14 @@ Initial repair would remove only that rejection; if insufficient, STOP and
 request a source-cited repair PLAN before touching another consumer.
 
 Deferred: FloatOrPercent/schema changes, global extreme acceptance, new
-clamping/defaults, Fill algorithms, max semantics beyond D-M, W6 linear.rs,
-W4 counterbore, rotation/Grid/arms and region/layer-range redesign.
+clamping/defaults, Fill algorithms, max semantics beyond D-M, linear.rs,
+counterbore, rotation/Grid/arms and region/layer-range redesign.
 No inf/NaN literal strings, fallback, silently skipped geometry or comparator
 change can substitute for an accepted finite public input.
 
 ## Native-first preflight and independent public RED
 
-After approval and a directed window, use the admitted solid-ceiling family
+Use the admitted solid-ceiling family
 with sparse rectilinear20%, ordinary global anchors, finite max=20, and local
 object/model-part anchor=-1e39. Probe -1e39% independently. Pair absolute and
 percentage cases with finite local -1 / -50% controls already supported by
@@ -69,14 +68,13 @@ report evidence; do not infer unreachable behavior or invent numeric policy.
 Only an admitted completed witness may become RED. The public E2E test must
 require existing strict whole-stream Native/API/CLI parity, recording the exact
 Ares failure rather than expecting Unsupported as a passing contract. Commit
-RED separately and report before repair. Reuse the existing solid-ceiling
+RED separately before repair. Reuse the existing solid-ceiling
 fixture through its owning module; no duplicate fixture module or new generic
 fixture framework. Intended test file: runner/compatible_regions/
 bridge_anchor_length_projection.rs, child of the existing solid-pattern tests.
 
-After RED review/repair approval: run finite controls/new witnesses and existing
+After RED: run finite controls/new witnesses and existing
 bridge/anchor regressions in both modes, prove ordinary raw controls unchanged,
-and pass strict/fmt/wasm. Files <=400 lines. Official CPU13 / seeded CPU14,
-outer taskset on cargo/nextest/Native, jobs2/threads2, fresh root/cache/target.
-Full/workspace only with coordinator GO; coordinator owns CI/merge/push.
+and pass strict/fmt/wasm. Files <=400 lines. Official and seeded each use a
+fresh root/cache/target.
 No code, tests, builds or Native runs are included in this docs-only proposal.

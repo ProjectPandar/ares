@@ -1,13 +1,13 @@
 # Bounded wrapping-exclude-area option coverage
 
-Status: implemented bounded harness and authorized wrapping-admission port; production-tree gates passed, review pending.
+Status: implemented bounded harness and wrapping-admission port.
 The historical [full Option audit](2026-10-09-option-full-current-audit.md)
 records `wrapping_exclude_area` INCOMPLETE, baseline-only with no injection.
 The preceding harness excluded it, citing a rectangle rejection without
 establishing its context. This slice is not a fresh full Option audit.
-The coordinator approved this selection: single nozzle, single filament,
-no tower, by-layer. Initially harness-only; after the fixed-pose Native -64 / Ares acceptance RED,
-the coordinator authorized the production wrapping-admission port described below.
+Selected context: single nozzle, single filament, no tower, by-layer.
+Initially harness-only; after the fixed-pose Native -64 / Ares acceptance RED,
+the slice added the production wrapping-admission port described below.
 
 ## Source boundary
 
@@ -52,7 +52,7 @@ standard start/end templates and complete M73/footer bytes.
 Canonical detection-enabled requests use one string per point (`"XxY"`),
 with an actual empty array for the empty list, matching ConfigOptionPoints
 vserialize. The existing generic harness array carrier uses one string for a
-whole authored value; authorize a key-only `bounds.rs::case` conversion here,
+whole authored value; this slice adds a key-only `bounds.rs::case` conversion,
 without changing any other coPoints key. Requests:
 
 - Empty point list.
@@ -90,9 +90,8 @@ rejection, invoke script/template motion, or mask a mismatch with a capability
 guard. Retain the original enabled-export arrange rejection as an additional
 -50 control: verify its relocated footprint and actual CLI result.json, and
 require the identical Ares validated-slice diagnostic. It is not a Print hull
-rejection witness. Any actual Ares acceptance/error/byte discrepancy remains RED and is
-reported for coordinator ownership. The authorized Print admission repair below
-closes the observed fixed-pose rejection discrepancy.
+rejection witness. Any actual Ares acceptance/error/byte discrepancy remains RED.
+The Print admission repair below closes the observed fixed-pose rejection discrepancy.
 
 ## Harness destination, RED and GREEN
 
@@ -111,10 +110,9 @@ with canonical enable=1 context and separate rejection controls. Verify the
 650-plan diff changes only this key; preserve all other expectations and
 negative controls, and separately report any required expectation update.
 
-GCode tool_transition/emit_helpers neighbors belong to worker2. If RED points
-there, freeze evidence and report for transfer; do not change their production
-paths. The observed Print hull-admission difference is covered only by the authorized
-production slice below.
+GCode tool_transition/emit_helpers neighbors are out of scope; do not change
+their production paths. The observed Print hull-admission difference is covered
+only by the production slice below.
 
 ## Acceptance and deferred scope
 
@@ -122,9 +120,7 @@ Required seeded/official directed cold/hot, fresh unfiltered selected-key
 sweep and full base/candidate controls; list every status change and common
 complete Ares raw hashes. Native-only variation needs separate input/producer/
 output evidence. Default-environment workspace, strict clippy, fmt, wasm.
-Directed Native runs: load1<60, two threads; timeouts invalid and retained for
-lower-load rerun. Full pairs: load1<30, one heavy job, 16 threads. Shared
-native_environment optional visible SKIPPED / required FAIL policy applies.
+Shared native_environment optional visible SKIPPED / required FAIL policy applies.
 
 Deferred: towers, SEMM, multiple nozzles/filaments, physical mappings and G4
 IDs; by-object/G2 clearance, nonzero plate origins, extra plates/instances,
@@ -134,7 +130,7 @@ placeholders, APA, GUI warning policy, commented processor collision code,
 and legacy STL postprocessing. Emission scaffolding remains unchanged; this slice establishes only the cited
 project/Print boundary's finite contract.
 
-## Authorized production admission slice
+## Production admission slice
 
 The fixed-pose RED invokes Native `Print.cpp:932-979/1304-1310`, which rejects
 with -64/192 and the exact clumping diagnostic; Ares public validation accepts
@@ -158,7 +154,7 @@ Native-backed RED precedes production. GREEN must compare public validation,
 validated slicing and CLI status/channels/result.json, retain whole successful
 streams, and close only this key's harness classification. Fresh workspace and
 full seeded/official base/candidate controls run on the production tree, with
-raw changes listed; full-pair queue is after worker4. Earlier positive streams
+raw changes listed. Earlier positive streams
 are directed evidence only, not a substitute for the final production gates.
 
 ## Directed GREEN observations
@@ -170,52 +166,15 @@ match Native, using only the shared prepare/export wall-clock normalization
 for result.json. The separately arranged -50 control remains active.
 
 Seeded and official each completed cold and hot directed runs, and separate
-canonical sweep runs, under `/tmp/worker6-wrapping-green`. Every run exited 0;
-no timeout was counted. Each producer/temperature has eleven full successful
+canonical sweep runs. Each producer/temperature has eleven full successful
 streams in the directed tests (ten enable/disable witnesses plus the disabled
 intersection control) and five in the sweep, totaling 64 comparisons with only
 the existing generated-by normalization. Declared request values must equal
 the five runtime witnesses. No existing numeric-metadata lock asserted this
-key; other keys' expectation assertions remain unchanged. The final 650-plan diff and production-tree gates below complete the acceptance
-evidence; these earlier directed runs do not substitute for them.
+key; other keys' expectation assertions remain unchanged. Only wrapping
+changes among the 650 option plans; the other 649 are identical, and the five
+canonical arrays equal the runtime witnesses.
 
-## Final production-tree review evidence
-
-Base is `880a6c8d5`; candidate execution is `1bd8a5ce4` on `b0b7905fa`
-(the intervening commit changes only web documentation). Base executes its own
-production **and test tree**, not candidate tests against base production.
-Both legs explicitly set `ARES_PARITY_OPTIONS=1` and
-`ARES_OPTION_KEYS=wrapping_exclude_area`. Base compares its one default stream
-successfully but retains INCOMPLETE and fails the unmodified sweep's completion
-assertion. Worker5's 895/895 run on 880a did not enable this sweep:
-`${TMP_ROOT}/ares-w5-gates/t2-seeded-cand.log:2182-2192` reports the test as PASS with
-explicit SKIPPED because ARES_PARITY_OPTIONS is disabled. That result is not
-credited as wrapping-domain coverage.
-
-All final evidence is outside the repository at
-`/tmp/worker6-wrapping-pairs-880a/`; four independent cold caches, two threads,
-load1 below 30 and no open browser window at every leg's start. START/END
-notifications are retained in `${TMP_ROOT}/ares-coord-inbox.log`.
-
-| Leg log | Result | Start load1 | Sweep |
-| --- | --- | --- | --- |
-| `seeded-base.log` | 894/895 PASS; exit100 | 10.37 | Only FAIL: INCOMPLETE, 1 generated / 1 compared / 0 rejected |
-| `seeded-cand.log` | 898/898 PASS; exit0 | 4.92 | PASS, 5 generated / 5 compared / 0 rejected |
-| `official-base.log` | 894/895 PASS; exit100 | 2.27 | Only FAIL: INCOMPLETE, 1 generated / 1 compared / 0 rejected |
-| `official-cand.log` | 898/898 PASS; exit0 | 29.30 | PASS, 5 generated / 5 compared / 0 rejected |
-
-The complete `option-coverage-summary.md` and `option-domain-plans.json` are
-in each leg's `*-artifacts` directory. `plan-diff.json` proves that only
-wrapping changes among 650 plans; the other 649 are identical, and the five
-canonical arrays equal the runtime witnesses. Each candidate's dedicated
-wrapping evidence retains ten enabled/disabled full-stream controls, fifty
-layers, marker counts, the disabled intersection full-stream control, the
-fixed-pose API/CLI -64 rejection and the separately arranged -50 rejection.
-CLI channels and result metadata remain exact apart from the shared
-prepare/export wall-clock normalization.
-
-Both `seeded-comparison.json` and `official-comparison.json` retain all original
-statuses and strict subset results; their companion comparison exits are 0.
 Every test-status change, in both modes, is:
 
 - `option_coverage::sweep::option_coverage`: FAIL → PASS.
@@ -223,24 +182,4 @@ Every test-status change, in both modes, is:
 - `option_coverage::wrapping_exclude_coverage::rejections::original_orca_and_ares_reject_arranged_wrapping_object_outside_bed`: absent → PASS.
 - `option_coverage::wrapping_exclude_coverage::rejections::original_orca_and_ares_reject_wrapping_polygon_intersection`: absent → PASS.
 
-Candidate failures are empty, a strict subset of each base's singleton sweep
-failure. Common input identities use complete ZIP member-name/member-byte SHA
-sets, preserving repeated captures. Seeded has 601 common label/input keys
-(617 → 632 full-stream captures); official has 590 (606 → 621 captures).
-Every common Ares **raw** SHA set is unchanged, with no Ares normalization.
-Every common Native generated-by-normalized SHA set and manifest status is
-also unchanged; no nondeterminism adjudication is needed in this round. The
-only base-only key is the superseded default wrapping baseline; sixteen
-candidate-only keys per producer are eleven dedicated wrapping controls plus
-the five canonical sweep inputs, all complete-stream PASS. Native producer
-component sets are identical between each mode's base and candidate:
-`producer-components-audit.json` records all receipt components.
-
-Fresh default-environment `default-workspace.log`: 8270/8270 PASS, five existing
-nextest skips, exit0. `clippy.log` (workspace/all-targets/all-features,
--D warnings), `fmt.log` and `wasm.log` (core+wasm wasm32) all exit0. Default
-workspace began on 4ff5a2164/880a and carries across the authorized docs-only
-rebase; strict and full pairs ran on 1bd8a5ce4/b0b. No old production-tree
-full evidence is carried. The paused ee277 workspace was terminated, and the
-later ee277 attempt was terminated on production main advancement; both
-INTERRUPTED records and original logs remain, neither credited.
+Every common Ares raw output is unchanged, with no Ares normalization.

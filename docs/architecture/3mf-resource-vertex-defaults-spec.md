@@ -1,9 +1,7 @@
 # SPEC: 3MF importer zero-defaults missing vertex coordinates
 
-Status: **PROPOSED, docs only; no runtime or fixture authorization.** Follows
-approved resource build/item GREEN `37ec261a4bf3dd95d1e1442aaffb8d3df48ea21b`
-in stack-19. No Native/API/CLI/nextest runs until this SPEC is approved. M73
-discovery remains deferred.
+Status: **proposed.** Follows the resource build/item port
+`37ec261a4bf3dd95d1e1442aaffb8d3df48ea21b`. M73 discovery remains deferred.
 
 ## Upstream boundary
 
@@ -43,7 +41,7 @@ non-finite rejection, triangle index checks, XML namespace/entity/security
 limits, and main-model behavior unless the upstream boundary proves it shared.
 Do not add fallback parsing, XML rewriting, filename heuristics, broad serde
 defaults, diagnostic I/O, or a public API. Keep the resource/main role seam
-introduced by the approved resource build-item port.
+introduced by the resource build-item port.
 
 The current `Vertex` DTO is already the shared boundary; do not split it by
 role. A field-level default is justified by both cited upstream handlers. The
@@ -54,20 +52,19 @@ current triangle index requirements and propose them separately with their own
 Native-first witness. This deferral does not narrow the vertex behavior to one
 role.
 
-## Proposed input and gates (not frozen)
+## Proposed input and gates
 
-Use the exact current-main control-before50 pair from the approved resource
-fixture family only after SPEC approval. The proposed positive may remove exactly
+Use the exact current-main control-before50 pair from the resource
+fixture family. The proposed positive may remove exactly
 one vertex coordinate attribute from a resource model entry; because the decoder
 is shared, this same positive exercises the production code path used by both
 roles, while Native confirms the resource-role behavior. A future main-role
 positive is not required to justify a separate DTO: source ownership is shared.
 Preserve every other ZIP entry and byte. Freeze complete entry SHA manifest and
-reproducer before any test commit. No fixture or test is authorized by this
-document.
+reproducer before any test commit.
 
 Native-first official and seeded, fresh `--slice 0 --outputdir`, positive,
-repeat, control; CPU15 and canonical environments. Require Native exit0,
+repeat, control; canonical environments. Require Native exit0,
 complete footer, and full generator-only normalized neutrality before public
 calls. Then validated `slice_project_plate_validated` plus real bare CLI on the
 same inputs. Public RED, if observed, must assert the target Native-equivalent
@@ -76,10 +73,9 @@ never encode `is_err` or `assert_ne` as a passing RED. Controls assert equality
 too. If Native does not complete or differs, stop with NO-RED; do not substitute
 inputs or retry.
 
-After a separately authorized RED, a production GREEN must keep every complete
+After RED, a production GREEN must keep every complete
 Native/API/CLI stream equal, preserve M73/config/motion/arcs/statistics/footer,
 and pass targeted existing 3MF/load regressions, fmt, strict clippy, and WASM.
-No full/workspace runs under an active coordinator freeze.
 
 ## Included / deferred
 

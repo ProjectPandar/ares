@@ -30,7 +30,6 @@ parity and raw API/CLI equality, not merely successful admission.
 With the established official Orca environment and artifact root configured:
 
 ```sh
-CARGO_BUILD_JOBS=1 ARES_PARITY_THREADS=1 ARES_REQUIRE_ORCA=1 \
-  taskset -c 15 cargo nextest run --no-fail-fast \
+ARES_REQUIRE_ORCA=1 cargo nextest run --no-fail-fast \
   -E 'test(per_object_skirt_combine)'
 ```

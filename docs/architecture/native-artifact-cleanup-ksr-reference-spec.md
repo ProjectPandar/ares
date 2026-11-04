@@ -13,8 +13,7 @@ Read-only audit uses `git -C OrcaSlicer ls-files -z`, compares every tracked
 upstream `.gcode` and `.3mf` SHA, and checks same-name entries. Neither KSR
 G-code nor classic has a same-name or identical upstream G-code. Upstream's
 only tracked G-code resources are `ams_load.gcode` and `ams_unload.gcode`;
-these are not KSR references. Audit receipt stays outside Git at
-`/tmp/worker6-ksr-p3-source-audit.json`.
+these are not KSR references.
 
 | File | SHA-256 | Classification |
 | --- | --- | --- |
@@ -131,7 +130,7 @@ CONFIG_BLOCK fixed hashes are not rebound: preflight must demonstrate their
 exact equality before migrating those assertions. Report each fixed raw,
 normalized and CONFIG_BLOCK hash's actual reproducibility. A different timestamp
 alone is not body divergence. Any producer/body/fixed-contract disagreement
-blocks that consumer's deletion pending coordinator ruling; preserve its
+blocks that consumer's deletion pending a separate decision; preserve its
 original assertions and evidence. No tolerance increase,
 object-ID masking, or producer relabeling.
 
@@ -139,7 +138,7 @@ The real migration RED is a controlled optional child with missing Native:
 current frozen consumers still consume products/write comparison artifacts;
 new runtime consumers must visibly skip before doing so. Required missing
 Native must fail before a warm cache hit. Policy tests use tempdir when no
-external root is set. Keep all RED outputs outside Git.
+external root is set. RED outputs are not committed.
 
 ## Exit and deferred scope
 
@@ -153,6 +152,6 @@ warnings, fmt and WASM checks. Pre-existing Native nondeterminism or browser
 byte divergence must be reported, not normalized away.
 
 Deferred: all production slicing/configuration changes, historical mesh-authoring
-reconstruction, web's Ender3 encode-roundtrip group, worker4's CLI exit/retained/
+reconstruction, web's Ender3 encode-roundtrip group, the CLI exit/retained/
 O6 -102/marker groups, shared cache recipes and new Native builds. This is
 reference lifetime cleanup around upstream exports, not a new Ares pipeline.

@@ -43,9 +43,8 @@ one with `[2]`, assigned wholly to the left island. Right sparse infill is
 therefore delayed until after left walls. Grouping and scanline geometry
 already agree in this witness.
 
-Repeatable external evidence (not committed Native output or probes):
-`${EVIDENCE_ROOT}/w2-grid-collection-trace-20261024T231048/`
-contains `SPEC-PROPOSAL.md`, Native/Ares live traces, exact vertex assertions,
+Repeatable external evidence (not committed Native output or probes)
+contains Native/Ares live traces, exact vertex assertions,
 reproduction commands and output-equivalence checks. Initial decoder/probe
 failures are separately labeled and excluded from the final evidence.
 
@@ -59,7 +58,7 @@ support/raft surface behavior, island assignment/emission ordering, travel,
 seam/rear, brim, scan algorithms, cooling, processor time and M73 generation.
 No broad Ares pipeline, geometry workaround or comparator relaxation.
 
-## Authorized SPEC → tests-only RED gate
+## SPEC → tests-only RED gate
 
 Freeze two genuine stock exported projects without golden G-code: K1 bridge
 as target and MK4 bridge as passing machine control. The MK4 control is not
@@ -69,11 +68,11 @@ exit0, raw API/CLI equality and complete ordered bytes with generator-line-only
 normalization. Register together under the existing Grid test group; keep
 changed Rust modules below400 lines.
 
-Run only the directed pair serially on CPU13, threads1, in official and seeded
+Run only the directed pair serially, in official and seeded
 modes with separate fresh caches/artifacts. Expected RED: K1 fails strict
 output comparison; MK4 passes. Preserve K1's leading M73 difference (known
 byte2844/line124) rather than filtering it; independent collection trace
 explains its physical cause. Tests require success, not expected-error or
 expected-failure assertions. No copied harness, magic output constants or
-Native output committed. Publish RED evidence and HOLD. GREEN and FULL are
-not authorized by this SPEC/RED assignment.
+Native output committed. GREEN and full parity are
+a separate slice.

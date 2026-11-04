@@ -1,11 +1,10 @@
 # Per-instance skirt/brim group assembly and emission SPEC
 
-Status: **SPEC REVIEW REQUEST — docs-only; implementation awaits approval**.
+Status: proposed.
 All citations verified against the beta authority
 `345efec64c7b95a05ce5cf96df0dde66a158835c` (OrcaSlicer 2.5.0-beta),
 paths under `src/libslic3r`.
-Base: `f4534628e`
-(integrated main `6bba2bdda`). This is the disposition of the 10 honest
+This is the disposition of the 10 honest
 divergences left standing after the frozen-count premises were removed
 from the witness tests; it is a source-cited rewrite slice of
 `Print::_make_skirt` grouping and `GCode` group emission, not an

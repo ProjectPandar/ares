@@ -1,10 +1,8 @@
 # Draft SPEC: AutoBrim object-config maximum speed lookup
 
-Status: **NATIVE-FIRST DISCOVERY / SPEC-REVIEW-REQUEST**, no code authorized.
-Branch/worktree: `worker2/auto-brim-object-speed-discovery` /
-`~/ares.worker2-auto-brim-object-speed-discovery`.
+Native-first discovery; no code in this document.
 Docs base: `5317e1c09cbcee822df3ee12b99e9e265aab4643`.
-Dependency: queued AutoBrim geometry/harness chain ending `cb2f0b4be`, with
+Dependency: AutoBrim geometry/harness chain ending `cb2f0b4be`, with
 optional adjacent admission chain ending `7d2783203`. Neither chain changed.
 This is a source-cited `libslic3r` rewrite slice, not an Ares pipeline feature.
 
@@ -18,9 +16,6 @@ only a configuration/header difference or a non-observable internal formula.
 The same object override with `no_brim` has matching Native/Ares whole output.
 
 ## Evidence before source localization
-
-Final external evidence root:
-`${COORD_ROOT}/evidence/worker2-object-speed-discovery-20261020T171136/height100/`.
 
 The source project is the repository's actual exported
 `tests/parity/mesh-edge-pairing/cube-control.3mf`, SHA256
@@ -128,7 +123,7 @@ including key presence/outer override precedence and the nonpositive branch.
 RED coverage must include the active ratio witness, its three controls, and
 Native-first explicit outer-override/other-role cases before claiming general
 lookup parity. Current discovery proves the ratio failure only, not every
-edge case of findMaxSpeed. No implementation is authorized by this draft.
+edge case of findMaxSpeed. No implementation is included in this draft.
 
 ## Included / deferred behavior and stop conditions
 
@@ -149,38 +144,19 @@ unrepresented config-key distinction, or a first mismatch outside this lookup
 blocks implementation. Do not patch unrelated routing/speed resolution or
 weaken existing assertions. Keep each file<=400 lines and Tier1/WASM boundaries.
 
-## Proposed post-approval SPEC → RED → GREEN
+## Proposed SPEC → RED → GREEN
 
-1. Rebase docs onto the landed dependency/current main; reconfirm final inputs
-   and explicit outer-override/remaining-role controls Native-first on CPU13.
+1. Reconfirm final inputs and explicit outer-override/remaining-role controls
+   Native-first.
 2. Commit public Native/API/CLI tests before production. Freeze only referenced
    input3MFs, assert their hashes and active Brim motion, then compare full bytes
    with the unchanged `compare_ordered_bytes_generator_only` and API/CLI raw
-   equality. Use the shared runner helper selected at integration. Require the
+   equality. Use the shared runner helper. Require the
    object-inner Auto target to FAIL while the three demonstrated controls PASS
    in both modes; log actual differences, not only max-speed calculations.
 3. GREEN changes production only in the cited upstream lookup/carrier boundary;
    no tests/docs edits, constants to force the witnessed loop count, new guards,
    skip behavior, or committed Native output. Retain all AutoBrim/small-diagonal
    and per-object admission regressions unchanged.
-4. Final directed dual-mode evidence, fmt, clippy, wasm32 and an explicitly
-   coordinator-authorized exact-hash dual FULL window. No FULL during discovery.
-   Review/merge only by coordinator; existing queued chains remain untouched.
-
-## Evidence provenance and replay
-
-All slicing and analysis was serial `taskset -c 13`; seeded sets
-`ORCA_REPLAY_CPU=13`, seed0, explicit seed-only Native binary. Official uses the
-explicit extracted2.4.2 wrapper/appdir. No compilation, load generation, FULL,
-or CPU48–51 use occurred. External artifacts contain input/output/log/exit,
-`generate-inputs.js`, `run.sh`, `summarize.js`, `summary.json`, `brim-bounds.json`,
-`verification.txt`, source/binary hashes and pre-doc clean status.
-Existing read-only Ares executable was built for the queued admission source
-`7d27832031e6c06bf0db7c7bcaf8ff7299040cb0`, SHA256
-`600b6645fe1635c5276dc23b6cd834c935e91dec1cc7b677d2e6804b1aa81241`.
-It is not the discovery main's pre-AutoBrim binary. No queued tracked file changed.
-
-Replay into a new external root: copy generator/runner/summarizer there, then
-`taskset -c 13 node <root>/generate-inputs.js <root>/inputs` and
-`taskset -c 13 bash <root>/run.sh <root>`; inspect `summary.json` and verify the
-source project/binary hashes first. Only this SPEC document enters Git.
+4. Final directed dual-mode evidence, fmt, clippy, wasm32 and an exact-hash
+   dual FULL. No FULL during discovery.

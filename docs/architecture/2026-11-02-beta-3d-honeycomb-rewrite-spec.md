@@ -1,6 +1,6 @@
 # Beta 3D honeycomb rewrite slice
 
-Status: proposed for review; implementation requires approval of this boundary and its geometry-scoped oracle.
+Status: proposed.
 
 ## Authority and acceptance boundary
 
@@ -60,7 +60,7 @@ The core stays rendering-neutral and browser-WASM capable, without filesystem, t
 ## RED plan
 
 1. Preserve the original cube STL, selected LH presets, profile-entry gate and strict plater test. Record its failure on the implementation base before product changes; do not relabel it PASS or suppress its timing/footer residuals.
-2. Add separate centered and moved plater geometry witnesses using the same public session/profile APIs and official Native commands. Each keeps its own input, effective settings, raw Native/API output, command receipts and hashes.
+2. Add separate centered and moved plater geometry witnesses using the same public session/profile APIs and official Native commands. Each keeps its own input, effective settings, raw Native/API output, commands and hashes.
 3. The new scoped oracle compares complete ordered motion records: exact lexical `G0/G1/G2/G3` commands and their non-feedrate motion operands, including XYZE and arc operands when present. It excludes M73, pure feedrate-setting records and non-geometric metadata only in this explicitly named geometry witness. Keep `G20/G21/G90/G91/G92/M82/M83` coordinate/extrusion mode records unchanged in that ordered witness. It does not sort, parse/round coordinates, translate paths, reverse rings or use tolerances. The original byte comparator is untouched.
 4. The centered witness must reproduce the first Z=1.0 XY gap above. Assert the whole ordered geometry stream, not only that coordinate or a selected matching window. Keep layer/role context in failure artifacts.
 5. Run the existing 3D-honeycomb option/domain parity cases with their actual reference gates enabled. Do not confuse validation cases with successful sparse-fill Native witnesses.
@@ -72,7 +72,7 @@ No committed diagnostic hooks or general comparator framework are proposed. The 
 
 - The new centered and moved geometry witnesses pass against official beta Native, including closure of the first Z=1.0 XY gap and all later ordered motion geometry.
 - The beta-specific density, multiline, cover and smoothing witnesses pass. Unexercised branches are not described as qualified.
-- The frozen implementation-base selector `test(honeycomb) | test(fill) | test(plater_stl_session)` selects 117 existing tests and filters out 2061. The sorted test-name list has SHA256 `9e62b5743e48a36560e7a7ea87c1de4f048bf13e93b27344fab77f6b52096070`. Include any additional existing 3D-honeycomb cases found by source registration. Inventory is not a test result. Record required oracle switches and actual command receipts for oracle-bearing tests.
+- The frozen implementation-base selector `test(honeycomb) | test(fill) | test(plater_stl_session)` selects 117 existing tests and filters out 2061. The sorted test-name list has SHA256 `9e62b5743e48a36560e7a7ea87c1de4f048bf13e93b27344fab77f6b52096070`. Include any additional existing 3D-honeycomb cases found by source registration. Inventory is not a test result. Record required oracle switches and actual commands for oracle-bearing tests.
 - Compare that exact family before/after: **zero PASS-to-FAIL**. Report unchanged failures, improvements, selected tests and filtered tests separately. Do not count an inactive reference gate as a Native PASS.
 - Rerun the unchanged strict plater test after geometry GREEN and report its first non-M73 difference from the complete streams. Explicitly report whether the initial Z=1.0 `F938`/`F946` gap closes, including any cooling slowdown change derived from corrected path length. Excluding feedrates from the geometry oracle does not exclude this check from the slice. If it remains, identify the source-owned cause and ownership before proposing a separate residual. Do not silently omit or automatically defer it.
 - Keep the original strict plater assertion and report every remaining failure, including timing re-measured after the separate Klipper TimeMachine port lands and preset-footer differences. Geometry-scoped GREEN is not full-output GREEN.
@@ -85,4 +85,4 @@ The input's first five G1 commands are byte-identical before any honeycomb path.
 
 These measurements describe the original qualification base. The paired Native diagnostic produces exactly the official Native stream after generator normalization and selects Klipper planning (`minimum_cruise_ratio=0.5`). The Klipper TimeMachine Rust port belongs to a separate slice and is already in integration verification. Re-measure timing and the strict-stream residual after that port lands. Do not carry the historical planner-dispatch diagnosis forward as a claim about the current implementation. Its upstream boundary is `GCode/GCodeProcessor.cpp:505::TimeMachine::plan_klipper`, `:576::TimeMachine::calculate_time`, and flavor dispatch `:8058`.
 
-That is an independent timing slice, not a consequence to repair by changing honeycomb coordinates or progress-line placement. Detailed timing captures remain external for its owner. No timing implementation is included in this specification.
+That is an independent timing slice, not a consequence to repair by changing honeycomb coordinates or progress-line placement. No timing implementation is included in this specification.

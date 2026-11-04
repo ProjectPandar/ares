@@ -5,8 +5,7 @@ Matrix finding (lint's ARES_UNSUPPORTED entry): multi-filament input with
 `bridge_over_infill_anchor_extruder_order`
 (`prepare_infill/bridge_over_infill/transaction/anchor_projection.rs:96-99`);
 native slices it and emits G-code (verified: seeded orca on
-`${TMP_ROOT}/ares-print-bed-native/input-multi-used.3mf` → 6.7 MB
-`plate_1.gcode`, no error).
+`input-multi-used.3mf` → 6.7 MB `plate_1.gcode`, no error).
 
 ## Upstream boundary
 
@@ -67,9 +66,9 @@ upstream semantics make unnecessary.
 1. RED: flip the `top_surface_filament_id: 2` case in
    `task22o71_unported_anchor_group_params_fail_without_fallback` to assert
    success — fails while the guard stands.
-2. E2E: `ares slice ${TMP_ROOT}/ares-print-bed-native/input-multi-used.3mf`
+2. E2E: `ares slice input-multi-used.3mf`
    produces G-code; byte-compare against seeded-orca
-   `/tmp/bridge-orca-out/plate_1.gcode` (modulo header timestamp) — expected
+   `plate_1.gcode` (modulo header timestamp) — expected
    identical if the transaction is otherwise parity-complete, or a bounded
    diff counted and reported if prior pipeline drift exists on this input.
 3. Full gates: `cargo nextest run --workspace`, clippy, fmt, wasm check;

@@ -1,7 +1,6 @@
 # ARD: `infill_anchor < 0` admission — upstream negative-anchor domain
 
-Status: spec for review (coordinator-approved scope B of the
-`anchor_projection.rs` admission-defect class). Follow-on to
+Scope B of the `anchor_projection.rs` admission-defect class. Follow-on to
 `infill-anchor-dont-connect.md`.
 
 ## Problem statement
@@ -44,8 +43,7 @@ value propagates to the ported connect backends with no further change.
   already-supported rectilinear-family sparse patterns.
 - Deferred: patterns under the `sparse_infill_pattern` guard; the
   `calculate_infill_rotation_angle` template interpreter (`Fill.cpp:52-190`,
-  spec slice C); `sparse_infill_density = 0` (candidate A, deferred by
-  coordinator).
+  spec slice C); `sparse_infill_density = 0` (candidate A, deferred).
 
 ## Verification plan
 

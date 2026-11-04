@@ -2,9 +2,8 @@
 
 Source: `GCodeWriter.cpp:38-41::apply_print_config` uses `std::lrint` for the
 machine extruding limit and Klipper X/Y limits. Under normal rounding this is
-nearest with ties to even. The approved specification is
+nearest with ties to even. The specification is
 `docs/architecture/2026-10-24-machine-acceleration-cache-rounding-spec.md`.
-Base: `90d8d5667`. This tests-only RED does not change production code.
 
 The existing GUI-generated `orca_cli_ender3.3mf` has its tower disabled. All
 cases set `default_acceleration=1000` and `initial_layer_acceleration=500` to
@@ -36,9 +35,6 @@ The target's later timing changes are disclosed, not masked or patched.
 Failure modes were documented before production work: ties-even versus half-up,
 inactive body cache, confusing raw envelope and writer cache, changing process
 or travel rounding, changing flavor/minimum admission, or masking M73 movement.
-No extra Klipper axis witnesses are introduced. After RED approval, only three
-conversions inside `machine_acceleration_limit` may change. Do not refactor the
-generic helper, travel cache, earlier jerk conversion or owned W1/W3/W6 files.
-
-Freeze these inputs and tests before GREEN. CPU17, PIN17, jobs=1 and threads=1;
-o FULL. Send the combined SPEC/RED review request and hold before production.
+No extra Klipper axis witnesses are introduced. Only three conversions inside
+`machine_acceleration_limit` change; the generic helper, travel cache and
+earlier jerk conversion are untouched.

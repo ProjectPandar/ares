@@ -1,9 +1,8 @@
 # SPEC: HilbertCurve support ironing——plane-path 三连第二片
 
-状态：SPEC-REVIEW-REQUEST（只读调研 + docs-only）。
-前置：OctagramSpiral 片（`a7670d2b8`，已批）建立的结构原样复用。
+前置：OctagramSpiral 片（`a7670d2b8`）建立的结构原样复用。
 
-## 1. Native 证据（官方 2.4.2，pristine fixture，canonical 键，CPU7）
+## 1. Native 证据（官方 2.4.2，pristine fixture，canonical 键）
 
 | `support_ironing_pattern` | rc | ironing E | 全文 sha（去时间戳行） |
 |---|---|---|---|

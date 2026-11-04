@@ -1,8 +1,6 @@
 # SPEC: BBL pressure-advance command precedence
 
-Base: `a567f40f43831019fb4646a481e311c1017fdb0f`.
-The coordinator authorized docs SPEC and public RED with one combined review
-request. Hold before GREEN; no FULL run is authorized.
+Docs SPEC and public RED; no GREEN or FULL in this stage.
 
 ## Source owner and architectural constraints
 
@@ -15,7 +13,7 @@ Repetier and generic command-selection chain. The fixed-PA caller is in
 
 Rust destination: `gcode_emit/pressure_advance.rs::command`. The current
 negative guard is correct, but the BBL guard follows the Klipper, RRF and
-Repetier arms. After RED approval, move ONLY that existing BBL arm before the
+Repetier arms. After RED, move ONLY that existing BBL arm before the
 flavor-specific arms. Preserve every command string, `format_pa`, negative
 handling, append/enable logic and reset/adaptive state. No new formatter,
 helper, tag predicate, command builder or public configuration behavior.
@@ -24,8 +22,8 @@ The current emitter is a compatibility shell for this cited upstream writer
 operation; the rewrite is not an independently designed PA pipeline. Included:
 branch precedence only. Deferred: other public flavor witnesses, numeric
 precision, signed zero, adaptive PA, reset scheduling, bool/int admission and
-firmware-policy validation. No W1 auto_lift/M73, W3 tokenizer/fan/zero-E or
-W6 value.rs/coInts edits. This is a directed BBL-only slice, not W6's non-BBL
+firmware-policy validation. No auto_lift/M73, tokenizer/fan/zero-E or
+value.rs/coInts edits. This is a directed BBL-only slice, not the non-BBL
 stock-preset survey. No masks or processor compensation.
 
 ## Admitted BBL-only saved-project witness
@@ -54,12 +52,11 @@ records match. Both controls match complete streams. All six fresh Native
 slices replay identically and all Native/CLI exits are zero. This discovery
 is not public API, seeded, RED or FULL qualification.
 
-Evidence: `${EVIDENCE_ROOT}/w4-bbl-pressure-advance-precedence/`,
-including `target-diff-audit.json`. No non-BBL stock presets were explored.
+No non-BBL stock presets were explored.
 
 ## RED seam and failure modes, before implementation
 
-Freeze only the three approved archives. Add direct calls to the existing
+Freeze only the three discovery archives. Add direct calls to the existing
 `native_stream_case` Native/API/CLI seam. Fresh Native replay qualifies first.
 Callbacks read BBL identity, PA enable flag and PA value from saved settings,
 then inspect Native override-command records. Enabled BBL cases must use the
@@ -74,18 +71,16 @@ using the existing generator-line normalization only. Include timing, headers,
 configuration and footers; require raw API==CLI. Callback observations are not
 filters. Commit no Native outputs. Expected RED: BBL/Repetier target fails on
 the selected command; stock BBL and disabled BBL/Repetier controls pass; replay
-and input-derived callbacks qualify. Submit a combined SPEC/RED review request
-and hold before production changes.
+and input-derived callbacks qualify. RED precedes production changes.
 
 Failure modes: flavor-first instead of BBL-first selection; accidentally
 enabling disabled PA; changing the existing formatter or negative guard;
 mutating reset/adaptive state; altering non-BBL commands; confusing custom PA
 commands with generated overrides; or hiding downstream output. Do not add
-unapproved flavor, signed-zero, rounding or adaptive variants to this RED.
+other flavor, signed-zero, rounding or adaptive variants to this RED.
 
-After RED approval: only move the existing BBL match arm, with tests and inputs
-unchanged. CPU17/PIN17, one build job and one parity thread; fmt, workspace
+After RED: only move the existing BBL match arm, with tests and inputs
+unchanged. fmt, workspace
 all-target clippy and the same three directed cases in official then seeded
 mode. Preserve normal registration separators, root registries and the 400-line
-Rust file limit. Submit GREEN review request and hold. No FULL, merge, push or
-stash.
+Rust file limit.

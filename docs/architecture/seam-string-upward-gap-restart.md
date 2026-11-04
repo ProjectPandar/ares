@@ -1,6 +1,6 @@
 # Seam-string reversal after an upward gap
 
-Status: bounded RED qualification only; no production change. Target upstream is
+Bounded RED qualification only; no production change. Target upstream is
 OrcaSlicer beta `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Upstream and Rust boundary
@@ -19,8 +19,7 @@ concepts, not a new seam algorithm or authority to tune fitting thresholds.
 
 ## Preserved failed qualification and new input
 
-The old af0177a5a two-input STOP remains unchanged. Fresh input1 on the combined
-5b80490e2 base still had Native rear-interior placement but API opposite-corner
+The earlier two-input STOP remains unchanged. A fresh first input still had Native rear-interior placement but API opposite-corner
 placement. It is explicitly NOT a restart RED. It is not relabelled as fixed by
 C2 or by this new comparison.
 
@@ -32,12 +31,10 @@ confounding while keeping fitted targets on the edge rather than invoking a new
 normal-projection policy. It is a single fixed geometry, not a parameter sweep.
 Input SHA-256: `be46fa7a81ee17aef5019dc3e341b1264e7261c551a60cbce91849842521c02e`.
 
-Native exports ran before the cutover steer on 5b80490e2; their source identity is
-preserved. Evaluation of those saved outputs establishes stable double replay
+Native exports ran before the beta cutover; their source identity is preserved. Evaluation of those saved outputs establishes stable double replay
 and an interior rear-edge start at (107.050,115.430), followed by the unique peak
 at (107.029,115.431), with nine extrusion segments at Z4.4. No Native output is
-committed. A new public API comparison is authorized on restacked b389b5301; no
-claim turns the earlier Native run into an execution at this new commit.
+committed. A new public API comparison runs on the current code; no claim turns the earlier Native run into an execution at this new commit.
 
 ## Decision boundary
 
@@ -49,8 +46,8 @@ skip control flow. Preserve the complete original object block comparison,
 including feed and every motion; no computed fitted expectation or private
 string-count probe substitutes for runtime Native.
 
-If the single authorized comparison does not discriminate on the owned decision,
-park this slice with both input dispositions and request the next delta/new budget.
+If the single comparison does not discriminate on the owned decision, park this
+slice with both input dispositions.
 No further input, production intervention, forced corner, tolerance, contour
 rotation/sorting, synthetic flag or projection correction. A qualified public RED
-and review are required before any source-only GREEN. No broader/FULL or seeded run.
+is required before any source-only GREEN. No broader full-parity or seeded run.

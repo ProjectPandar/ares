@@ -1,14 +1,12 @@
 # Discovery: per-region `is_infill_first` ordering — no gap
 
-Base: `8f6ce1660ccfaf95a6888b60c258047183d19ff0` (main, stack-24+25).
-Scope: the two consumers explicitly deferred by the approved
-`c9b841fcf` (region-speed emission apply, `GCode.cpp:6136/6163`) chain
+Scope: the two consumers explicitly deferred by the
+region-speed emission apply slice (`GCode.cpp:6136/6163`)
 — `is_infill_first` (`:6137-6141`) and the overhang-band refresh.
 
 ## Result: NOT a divergence
 
-Native 2.4.2 (official AppDir, `--slice 0 --outputdir`, CPU15, load
-guarded) on `tests/parity/interface-shells/two-region-prism.3mf`
+Native 2.4.2 (official AppDir, `--slice 0 --outputdir`) on `tests/parity/interface-shells/two-region-prism.3mf`
 patched with `<metadata key="is_infill_first" value="1"/>` inside
 `<part id="2">`:
 
@@ -36,15 +34,13 @@ region apply path) and does not gate this ordering.
 ## Overhang-band refresh
 
 `enable_overhang_speed` + `overhang_speed_bands` are written by
-`region::apply` in `c9b841fcf` (approved, pending stack-26 merge);
+`region::apply`;
 per-path band selection consumes `state.options` at emit. No separate
-deferred mechanism remains on main once that chain lands.
+deferred mechanism remains.
 
 ## Conclusion
 
 Deferred scope of the region-speed slice produces no additional
 Native-accepted, Ares-divergent gap: `is_infill_first` is already
 per-region correct, and the emit-time region-field surface is now
-single-sourced through `region::apply`. Discovery evidence under
-`${LOCAL_EVIDENCE_ROOT}/worker4/infill-first-discovery/`
-(inputs, per-case gcode SHAs, native/ares outputs).
+single-sourced through `region::apply`.

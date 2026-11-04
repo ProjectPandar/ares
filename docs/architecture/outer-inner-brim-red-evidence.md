@@ -1,8 +1,6 @@
 # OuterAndInner brim: admitted Native RED
 
-SPEC53b22ddc9 approved by Claude. This is the separate fixtures/tests RED;
-no production code is changed. Tested docs HEAD53b22ddc9 on main10058be78
-with the accompanying test working tree, before implementation.
+This is the separate fixtures/tests RED; no production code is changed.
 
 ## Reproducible inputs and public seams
 
@@ -22,14 +20,7 @@ the unchanged acceptance check for API and CLI.
 
 ## Results and artifacts
 
-Root: `/tmp/worker3-outer-inner-brim-red-hvev4urh`.
-Both seeded and official ran25:17 PASS/8 FAIL, raw exit100, no ignored tests.
-Each run used unmodified control-set-v2 jobs2/threads2, start load<30 and new
-Native cache/artifact root. Input/settings/commands, Native producer SHA,
-full Native/API/CLI streams, witnesses and comparisons are retained per case.
-`results.json` records launches and summaries; `evidence-summary.json` records
-all20 admissions and exact mismatches. Test-target strict Clippy passed before
-execution; `/tmp/worker3-outer-inner-red-clippy.log`. Formatting/diff checks pass.
+Both seeded and official modes ran 25 tests: 17 PASS/8 FAIL, no ignored tests.
 
 Positive first-layer Brim motion counts are identical in both modes:
 
@@ -54,9 +45,8 @@ above independently establish the missing active regions.
 
 ## Source-owned next step
 
-`BrimPlan::generate` excludes OuterAndInner at the tested head. The approved
+`BrimPlan::generate` excludes OuterAndInner at the tested head. The
 Brim.cpp:448-570,661-711 area port should admit it, preserve outer contour-only
 Round/re-quantized width, inner original-width Miter3, omit both conditional
 masks, and reuse objectIsland/contact/shared paths. Shared hole extraction
-must preserve the nine InnerOnly outputs. This RED is committed and reported
-to inbox before that production implementation is written.
+must preserve the nine InnerOnly outputs.

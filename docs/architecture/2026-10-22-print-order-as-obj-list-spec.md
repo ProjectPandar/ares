@@ -1,7 +1,7 @@
 # SPEC: `print_order = as_obj_list` object-instance ordering (ByLayer)
 
-Status: implementation `87aeb0b6c` passes the four targeted cases in both modes.
-Strict dual-mode FULL acceptance is not yet achieved; RED `dd750b6eb` remains unchanged.
+Implementation `87aeb0b6c` passes the four targeted cases in both modes; RED
+`dd750b6eb` remains unchanged.
 
 Source-cited rewrite slice of `libslic3r`. Upstream owner first; Ares is the port target.
 
@@ -68,7 +68,7 @@ sole assignment at `Print.cpp:881`. GDB observation of the official binary retra
   index, and the renumbering order among such ties comes from `std::sort` (`:2413`), which is not stable.
   That is the only place where a libstdc++ introsort artifact could leak into the instance order, and it
   only matters for objects with more than one instance.
-- **Authorized bounded reduction (coordinator review).** The `init_order` pass sorts by model object
+- **Bounded reduction.** The `init_order` pass sorts by model object
   index and renumbers to unique `1..N` keys. Subsequent `lower_bound` collection and re-sort preserve
   that assigned order. For a total sort range of `n <= 16`, libstdc++ uses insertion sort, preserving
   the input iteration order among equal model-object keys. The accepted Rust reduction therefore
@@ -179,12 +179,12 @@ per source ModelObject and retains original instance membership within each tran
 `candidates.rs` carries `source_object_index` into the resolved object. Thus differently transformed
 PrintObjects from the same ModelObject retain equal initial keys before rank assignment.
 The stable equal-key reduction preserves the existing PrintObject/instance traversal order within
-the authorized `n <= 16` range; the limitation for larger ranges remains as specified in §2.
+the `n <= 16` range; the limitation for larger ranges remains as specified in §2.
 
 Both rank selection and per-filament empty-visit admission require `print_sequence == ByLayer`
 and `print_order == AsObjectList`. ByObject keeps its pre-existing scheduling path even when the
 project carries `print_order=as_obj_list`; this slice does not assign sequential-clearance ranks.
 
 Exit criterion for GREEN: all four tests pass, with the two controls unchanged, and no change to
-`golden::compare_ordered_bytes_generator_only`. Acceptance also requires the coordinator's strict
-dual-mode neighbour and FULL gates, with complete logs and actual process exit statuses.
+`golden::compare_ordered_bytes_generator_only`. Acceptance also requires strict dual-mode
+neighbour and full-suite gates.

@@ -6,7 +6,7 @@ The existing Rust destinations are `tree/organic/generation.rs::workers`,
 `pathing.rs` and `merge_areas.rs`. This is an existing source-owned execution
 input, not a newly designed Ares pipeline or tunable geometry policy.
 
-Reproducible CPU0 comparisons must restrict the Ares test process as well as
+Reproducible single-core comparisons must restrict the Ares test process as well as
 the reference process. Restricting only Orca gives different merge inputs.
 Keep the native available_parallelism derivation and browser one-worker branch;
 do not pin production to one worker, change outputs or relax the comparator.

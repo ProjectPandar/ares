@@ -25,7 +25,7 @@ normalizer/JSON code or private output shortcut. Strict ordered bytes
 allow ONLY existing generated-by identity/date normalization, never
 M73/time/header/E/motion/config/trailing-line masking or tolerances.
 
-CPU11/thread1/job1, ARES_REQUIRE_ORCA=1 and proper official/seeded Native
+ARES_REQUIRE_ORCA=1 and proper official/seeded Native
 reference environment, repeatable artifact roots. Filter:
 
 ```
@@ -34,14 +34,12 @@ cargo nextest run -p ares-cli --test orca_parity --no-fail-fast \
 ```
 
 Formal RED requires controlPASS/positiveactualFAIL with stable repeats
-in both modes, then review BEFORE production code. All streams/launches/
+in both modes before production code. All streams/launches/
 comparison errors remain in shared-helper artifacts. No ignored or
 expected-failure test decoration. Disabled environment is NOT evidence.
 Freeze tests/inputs/helpers for any future GREEN; field types/parsing/
 reader storage/dist_E/other consumer rewrites and both previous spiral
-points remain outside scope. No FULL without a separate window.
+points remain outside scope.
 
-External discovery provenance:
-`${COORD_ROOT}/evidence/w5-spiral-reader-float-distance/`.
-Source arithmetic replay/GDB evidence there is diagnostic, not substituted
-for formal shared-checker public API/CLI RED evidence.
+External source arithmetic replay/GDB discovery evidence is diagnostic, not
+substituted for formal shared-checker public API/CLI RED evidence.

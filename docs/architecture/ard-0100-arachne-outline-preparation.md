@@ -43,8 +43,8 @@ guessing or independent new transition algorithm.
   spatial-query ordering where they affect geometry. Do not substitute an
   all-pairs near-intersection scan for upstream SparseLineGrid.
 - Keep core platform-neutral. Diagnostic debugger scripts remain external;
-  remove any temporary core probes before review/commit.
-- Acceptance stays at the previously approved public3MF-to-complete-G-code
+  remove any temporary core probes before commit.
+- Acceptance stays at the existing public 3MF-to-complete-G-code
   seam. No private source-pinning regression, comparator widening, fixture
   modification or unsupported-success replacement.
 

@@ -1,17 +1,10 @@
 # SeamPlacer: parameter scope, layer height and visibility operation order
 
-Status: original D/A/B/C spec approved; A0 amendment approved `2076d208e`.
-D is merged. A0/A share the coordinator-accepted Native RED
-`96d1836ad1a8f473f9809548f3cb6375bbdcf7f2` and joint GREEN validation in
+A0/A share one Native RED and joint GREEN validation in
 [the current-object report](2026-10-08-seam-current-object-mode-validation.md).
-B/C remain separate slices.
-Original spec base: main
-`117cd7eddfc8a4fdc64c2ab576f46f7714650069`.
-Owner: worker6. Execute in order **D → A0 → A → B → C**;
+B/C remain separate slices. Execute in order **D → A0 → A → B → C**;
 each implemented boundary requires committed whole-output Native RED and GREEN,
 with the A0/A attribution and split rule below.
-The coordinator may approve this document once; that does not waive any
-slice's reachability, RED, verification or exact-hash merge review gate.
 
 ## Upstream boundary and common decisions
 
@@ -124,12 +117,12 @@ introduced.
 Deferred: other MotionOptions fields currently derived from the first
 object/region, generalized object configuration application, parsing and
 resolution, tool scheduling, support/skirt/brim behavior, and the separate
-visibility bias boundary A below. This authorization removes the
+visibility bias boundary A below. This slice removes the
 first-element substitution for seam_position only.
 
-### Accepted RED, attribution and split gate
+### RED, attribution and split gate
 
-The coordinator accepts RED `96d1836ad` for A0+A. Its three E2E tests retain
+A0+A share one RED. Its three E2E tests retain
 the complete mixed-object fixture, both-Nearest control and single-AlignedBack
 control. Fresh Native comparison gave two PASS and one DIVERGENT. For the
 mixed fixture, the first normalized difference is byte2322, raw line105:
@@ -143,7 +136,7 @@ complete output SHA (`9e14003642f98b6003b5d385ca606ddacb934b4a2b592b6cec12d2bd67
 and did not fix this RED. That trial was reverted. It establishes masking
 in this fixture, not that visibility scope is correct or unreachable.
 
-After this amendment is approved, implement A0 alone first and rerun the
+Implement A0 alone first and rerun the
 unchanged three whole-file tests with fresh Native output. If A0 alone
 restores complete equality, commit and validate A0 as its own GREEN; do
 not include A's visibility edit. Then seek an independent reachable Native
@@ -188,7 +181,7 @@ object labels/ordering and from C. Do not suppress object-id comment
 differences; classify an unstable Native object-id oracle separately.
 GREEN must match the complete mixed-object Native output. After A0 is
 correct, follow its split gate above: a fixture already made PASS by A0
-cannot independently authorize A's production edit.
+cannot independently justify A's production edit.
 
 ## B — angle arm comes from the region's external flow nozzle
 
@@ -265,7 +258,7 @@ their witness cannot be constructed.
 
 ### C1 — signed-distance precision chain audit (2026-10-08)
 
-Coordinator expanded C to audit the `_dist` double chain after D. This is
+C is expanded to audit the `_dist` double chain after D. This is
 separate from C's visibility accumulation order and needs its own Native
 RED attribution before any distance implementation changes.
 
@@ -291,7 +284,7 @@ explicit mul_add and hypot), reduces with f32::min, then returns f32.
 f32. Upstream `.cpp:1086–1097` instead keeps signed distance double through
 the addition, and stores each final overhang/embedded value as float. The
 `0.65f * flow_width` term remains f32 before double promotion; actual layer
-height remains double and tan(float) retains the reviewed D policy.
+height remains double and tan(float) retains the D policy.
 
 The audit also identifies two adjacent boundaries, not automatic fixes:
 Ares determines inside from a rescaled integer candidate whereas upstream
@@ -306,7 +299,7 @@ and final assignment sites. Preserve candidate f32 storage, region/contour
 association, source endpoint ordering and D's actual layer height. Port
 segment arithmetic/rounding from Line.hpp rather than globally replacing
 f32 types or inventing a generic geometry API. No production edit without
-an attributable complete Native RED and approval of this added boundary.
+an attributable complete Native RED for this added boundary.
 
 RED preparation: use nearest-mode sheared/rotated single-object Dumbbell
 siblings to exclude AlignedBack accumulation bias, preserve first/regular
@@ -318,36 +311,31 @@ unattributed seam difference is not either sub-slice's RED. If neither
 arithmetic issue is observable, retain the bounded UNREACHABLE disposition
 above; do not edit both formulas together in search of a passing result.
 
-## Per-slice TDD, artifacts and merge gates
+## Per-slice TDD and artifacts
 
-1. After this spec is approved, rebase/recheck the current slice on latest
-   main, including earlier merged slices. Never reuse another slice's RED,
-   except the coordinator-authorized A0+A witness under its attribution gate.
-   Keep worker1's small-loop/scarf region untouched until its merge signal.
+1. Recheck the current slice on top of the earlier merged slices. Never
+   reuse another slice's RED, except the shared A0+A witness under its
+   attribution gate. Keep the small-loop/scarf region untouched.
 2. Build/retain exact 3MF witnesses with CLI-side fixture construction only;
    compare the public byte slicing API against freshly generated identified
    Native. Only `; generated by` may be normalized. Record input, output,
    Native binary/resources/wrapper and Ares executable hashes, first byte
    and raw line difference, command receipts and process deadlines.
-3. Commit RED separately before production edits and notify its hash. No
+3. Commit RED separately before production edits. No
    unsupported input, Native timeout, UB or nondeterministic oracle result
    may be called the slice's successful RED. First explain unexpected
    producer changes; do not select a favorable retry or weaken assertions.
-4. Implement only that approved source boundary. Require complete-byte
+4. Implement only that source boundary. Require complete-byte
    GREEN for the same input. If timing, wipe or other residual differences
    remain, report them; do not turn a seam-only assertion into GREEN.
 5. For each implemented slice, run fmt, strict workspace/all-target/all-
    feature clippy, workspace nextest and wasm32 check. Run same-round fresh
-   seeded and official base/candidate controls with independent caches,
-   worker6 target and16 threads; list every status and reason change and
-   require no unexplained candidate-only failure. Keep raw Native timeout
-   INCONCLUSIVE and oracle nondeterminism non-PASS. Use the corrected
-   official wrapper inheriting the pinned single CPU, not the old CPU1
-   wrapper; any infrastructure change must be recorded on both sides.
-6. Honor BROWSER-START/END and one-heavy-task limits. Request exact-hash
-   review with the evidence report. Await approval, rebase conflict-free
-   and push fast-forward only. Notify worker5 if a new slice changes his
-   seam/wipe/M73 witness. Scarf is assigned to worker1 and outside this owner.
+   seeded and official base/candidate controls with independent caches;
+   list every status and reason change and require no unexplained
+   candidate-only failure. Keep raw Native timeout INCONCLUSIVE and oracle
+   nondeterminism non-PASS. Any infrastructure change must be recorded on
+   both sides.
+6. Scarf is outside this slice.
 
 No preemptive helper framework, generic seam API, unit tests after
 implementation, unrelated cleanup or Ares-owned pipeline design is included.

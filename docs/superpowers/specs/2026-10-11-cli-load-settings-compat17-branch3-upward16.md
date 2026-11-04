@@ -1,8 +1,8 @@
 # Spec: `--load-settings` -17 branch 3 + `-16` upward gate (compat17 continuation)
 
-Continues `2026-10-10-cli-load-settings-compat17-branches.md` (merged as
-`c6e01dcf2` on `355cbaa49`). Owns the adjudication verdict only; the
-compatible-path outputs stay worker5's partial-list slice.
+Continues `2026-10-10-cli-load-settings-compat17-branches.md`. Owns the
+adjudication verdict only; the compatible-path outputs stay in the partial-list
+slice.
 
 ## Upstream boundary
 
@@ -28,17 +28,17 @@ compatible-path outputs stay worker5's partial-list slice.
   iterated for `machine` files; a machine file whose name differs from
   `current_printer_system_name` exits `CLI_CONFIG_FILE_ERROR` (-5);
   the file's `upward_compatible_machine` replaces the embedded vector
-  (worker1 `UpwardMachineInput::UpToDateFiles` already ports this,
+  (`UpwardMachineInput::UpToDateFiles` already ports this,
   `project/upward_machine.rs:96-142`).
 - `OrcaSlicer.cpp:2650-2654` + `Utils.hpp:42` — `-17` rejection channel
   (already landed for branches 1-2).
 - `OrcaSlicer.cpp:2597-2606`, `:3050-3051`, `:3056-3070` — compatible-path
   outputs (auto rename, `compatible_printers` append, slot-0
-  `different_settings_to_system`) — **worker5 boundary, deferred**.
+  `different_settings_to_system`) — **partial-list slice boundary, deferred**.
 
 ## Correction to merged branch-1 slice
 
-`c6e01dcf2` applies the `machine_switch` accept unconditionally on
+The merged branch-1 slice applies the `machine_switch` accept unconditionally on
 `new_printer_name != current_printer_name`. Upstream (`:2625-2627`)
 auto-accepts only when `new_process_name` is empty; with a process
 file present the verdict still needs the upward-vector hit (non-empty
@@ -78,25 +78,22 @@ machine+process case through the upward gate / `-17`.
   `prepare_profile_slice`'s gate. Keep the same `select` code path —
   no parallel parser.
 - `SliceError` gains `NewMachineNotSupported` (variant only; the CLI
-  family row is worker5's `failure.rs`, see Dependencies).
+  family row is in `failure.rs`, see Dependencies).
 
 ## Dependencies (boundary, do not implement)
 
-1. **worker5 partial-list composition** — machine-only or process-only
+1. **Partial-list composition** — machine-only or process-only
    `--load-settings` lists must compose before branches 2/3 are
    reachable (`ProfileSelection::new` currently requires all three).
-   Landed as `worker5:1fa28b56f→…` — needs main merge, then my two
-   archived REDs (`/tmp/worker4-compat17-with-b2.rs`) restore + GREEN.
-2. **worker5 `failure.rs`** — family row mapping
+   Once merged, the two archived branch-2 REDs are restored + GREEN.
+2. **CLI `failure.rs`** — family row mapping
    `SliceError::NewMachineNotSupported` → `-16`/240 with
    `cli_errors[CLI_3MF_NEW_MACHINE_NOT_SUPPORTED]` stderr and
    `record_exit_reson` JSON shape; plus test-runner
    `EarlyExit::NewMachineNotSupported` (test-side enum is in the shared
-   runner cache module — assign to worker5 with the failure.rs row or
-   hand to me; flagged, not assumed).
-3. **inherits parent-resolution gap** — recorded in
-   `${TMP_ROOT}/ares-matrix-findings.md`; worker5 owns (`Catalog`/`parse_file`
-   boundary). Not touched here: fixtures stay flattened.
+   runner cache module; flagged, not assumed).
+3. **inherits parent-resolution gap** — belongs to the `Catalog`/`parse_file`
+   boundary. Not touched here: fixtures stay flattened.
 
 ## Test plan (RED → GREEN)
 
@@ -111,7 +108,7 @@ embedded `upward_compatible_machine` currently empty).
   → slices; banner-normalized whole-file vs native.
 - `branch2_reject`/`branch2_machine_switch_accept` — restore from the
   archived RED file verbatim; machine-switch accept asserts whole-file
-  bytes *only if* worker5's output slice (`:2597-2606` rename, `:3050-3051`
+  bytes *only if* the partial-list output slice (`:2597-2606` rename, `:3050-3051`
   append) is on main; otherwise assert exit 0 + nonempty gcode and
   defer byte-assertion.
 - `branch1_switch_reject` — machine+process list: machine names a
@@ -131,18 +128,18 @@ embedded `upward_compatible_machine` currently empty).
   (`:2625-2627` sets compatible before the upward scan; upward hit
   only flips `machine_upwards`, `:2633`).
 - Baseline re-assert: embedded-nonempty case already covered by
-  `cli_upward_machine_result.rs` tests (worker1) — reuse
+  `cli_upward_machine_result.rs` tests — reuse
   `UpwardMachineInput::UpToDateFiles`, no new parsing.
 
 ## Deferred
 
 - `machine_upwards` downstream effects (`OrcaSlicer.cpp` post-gate
   consumers of the flag and the `:2659-2680` `new_preset` rewrite /
-  `:3050-3051` append / `:3056-3070` slot-0 marker) — worker5
+  `:3050-3051` append / `:3056-3070` slot-0 marker) — the
   partial-list slice; the adjudication may compute the flag but does
   not emit those outputs.
 - `-16` `-15` neighboring families (e.g. `CLI_CONFIG_FILE_ERROR`
-  inside the `UpToDateFiles` loop) — already owned by worker1's
+  inside the `UpToDateFiles` loop) — already owned by the
   `upward_machine.rs` surface; reused, not re-implemented.
 
 ## Controls
@@ -150,12 +147,10 @@ embedded `upward_compatible_machine` currently empty).
 - No `dbg!`/`println!`, no `#[ignore]`; REDs must compile and fail on
   the runtime comparison runner (`load_settings_early_reference` with
   the new `EarlyExit` variant).
-- No edits to worker5's `composition`/`load_settings` domain,
+- No edits to the `composition`/`load_settings` domain,
   `failure.rs` family table, or CLI adapter arg handling (the
   `CliUpwardMachine` wiring in `profiles/entry.rs` is core-side).
 - `-17` channel byte-shape stays `record_exit_reson`-identical; `-16`
   follows `cli_errors[CLI_3MF_NEW_MACHINE_NOT_SUPPORTED]`.
 - File ≤ 400 LOC; clippy `-D warnings`, fmt, wasm32 check,
-  directed + workspace + four-leg full (base = current main at merge).
-- Marker discipline: coordination messages never quote the exclusive
-  start/end marker strings inside prose.
+  directed + workspace + four-leg full.

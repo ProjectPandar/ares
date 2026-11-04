@@ -1,7 +1,6 @@
 # ARD: overlapping spiral entry and final-layer transitions
 
-Status: SPEC approved; formal RED authorized, GREEN requires separate
-review approval. Base89560ca66ff8418bcf175d573df299955f9a216f, ownerW5.
+Status: Accepted SPEC; formal RED, then a separate GREEN.
 
 ## Upstream owner and Rust destination
 
@@ -26,7 +25,7 @@ policy to preserve. Replace the global exclusion with independent final
 state and make extrusion branches mutually exclusive in Native order.
 Reuse existing passthrough handling and concatenation. Merely deleting
 !transition_in while retaining two extrusion ifs would introduce wrong
-finishing XY/E copies and is NOT the approved rewrite.
+finishing XY/E copies and is NOT the intended rewrite.
 
 No new height/layer-count/shape condition or fallback. No header or
 processor patch. No new Ares pipeline or public API.
@@ -74,33 +73,29 @@ LAYER_CHANGE chunks and calls header::finalize_layer_count. Thus line3
 SpiralVase semantics, NEVER force header3 or add a physical layer.
 M73 and all other final-output bytes remain in strict comparison.
 
-Source evidence:
-`${COORD_ROOT}/evidence/w5-spiral-overlap-transition/` contains
-actual inputs/export receipts, official1/official2/seeded streams, raw
-GDB captures, source-proof.json and SHA256 manifest. Final valid debugger
-runs preserve respective complete CLI outputs. No inferior calls or
-memory/register writes. Internal fan-marker mapping is diagnostic only,
+Source evidence: final valid debugger runs preserve respective complete CLI
+outputs. No inferior calls or memory/register writes. Internal fan-marker mapping is diagnostic only,
 not final-output acceptance filtering. Failed optimized-local/empty-string
 reader attempts are not counted as successful proof. Exploratory absoluteE
 case was rejected by Native due inherited G92E0 and is not a parity case.
 
 ## Included / deferred
 
-Included after GREEN approval: independent entry/final state, Native
+Included in GREEN: independent entry/final state, Native
 if/else-if extrusion priority, existing transition passthrough copying
 and new+transition concatenation. Preserve arithmetic, normal moves,
 physical layer schedule, marker ownership and already-fixed placement
 gate. Stop/report any residual rather than expand scope. No new helper,
 public API, dependency, I/O or Rust file over400LOC.
 
-Deferred/excluded: W2 brim/skirt; W1 painted/MMS; W6 medial_axis and
-interlocking; W3 combine-solid clearance; W4 stack25. Also no
+Deferred/excluded: brim/skirt; painted/MMS; medial_axis and
+interlocking; combine-solid clearance. Also no
 GCodeProcessor seam/scarf cache/flags or layer interpretation change,
 header special case, physical scheduling/height/epsilon patch, flow
 numeric rewrite, spiral smoothing/resampling, travel/retract/wipe change,
 absoluteE G-code cleanup or further placement work.
 
-## Formal RED plan and approval boundary
+## Formal RED plan
 
 Freeze the two actual exports with whole/per-ZIP hashes and sole-key
 manifest. Tests directly call main's native_stream_case::check with
@@ -111,9 +106,9 @@ Only the existing canonical generator identity/date normalization;
 no M73, header, comments, E, timing, motion or trailing-line mask.
 
 ExactRED official/seeded must show actual positiveFAIL and controlPASS,
-with stable repeated Native streams. Send REVIEW-REQUEST, await explicit
-GREEN approval before modifying production. Future GREEN requires both
+with stable repeated Native streams, before modifying production. Future
+GREEN requires both
 complete modesPASS and preservation of extrusion priority/no extra XY
-copy. Targeted neighbors/static/WASM and FULL are separate authorization
-steps; no FULL is authorized here. Discovery CLI/debugger proof is not
-formal public-API RED/GREEN or integration evidence.
+copy. Targeted neighbors/static/WASM and full-suite checks are separate
+steps. Discovery CLI/debugger proof is not formal public-API RED/GREEN
+evidence.

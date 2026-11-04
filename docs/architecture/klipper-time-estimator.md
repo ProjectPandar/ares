@@ -1,8 +1,6 @@
 # Klipper TimeMachine estimator rewrite — ARD and RED plan
 
-Status: proposed; specification and public RED only. No production port yet.
 Upstream: OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`.
-Rust baseline: `44fb3e6912efec80b2a12e01df6a44045daf3651`.
 This is a source-cited `libslic3r` rewrite slice, not a new Ares planner design.
 
 ## Domain and observed boundary
@@ -101,9 +99,7 @@ fixture and the already-provisioned pinned Native binaries:
   --dump-moves` adapter on identical bytes. This isolates the processor from
   later slicer geometry differences without weakening the Plater comparison.
   Assert actual normal motion times from the Native CSV, never a private
-  planner/block call or cached temporary diagnostic JSON. Save both outputs,
-  input/settings identity, full mismatch report and source/binary identities
-  outside Git. Original `M73` records need not be removed for this read-only
+  planner/block call or cached temporary diagnostic JSON. Original `M73` records need not be removed for this read-only
   public processor seam (`post_process=false`).
 
 Failure inventory:
@@ -131,20 +127,19 @@ imported. New test registration stays in an already-registered leaf module.
 1. Pin source/main/fixture/preset and Native identities; record real generation
    command. Write this ARD before any test/production edit, then freeze a
    bounded public RED. No numeric literals from diagnostic JSON as assertions.
-2. Submit SPEC/RED RR and wait before production changes. The RR must identify
-   exact observed failure and any harness/environment prerequisite separately.
-3. If implementation is approved: first port only the confirmed full Klipper
+2. Identify the exact observed failure and any harness/environment prerequisite
+   separately before production changes.
+3. First port only the confirmed full Klipper
    source boundary above. Rerun the same processor and Plater public tests;
    inspect every downstream strict first difference, never manufacture GREEN.
 4. Targeted Marlin/public processor controls, Klipper legacy/ratio/flush cases
-   and the six original acceleration-literal cases must be run only within
-   separately approved bounded runtime scope. The six Klipper acceleration-literal
-   cases stay open until their strict results receive the timing-owner disposition;
+   and the six original acceleration-literal cases must be run within a
+   bounded runtime scope. The six Klipper acceleration-literal
+   cases stay open until their strict results are resolved by the timing slice;
    improving timing alone does not close them. Gap-fill and spiral-lift differences
-   remain with their existing owners and are not fixed by this estimator slice.
+   remain separate slices and are not fixed by this estimator slice.
 5. Use nextest rather than cargo test. fmt and workspace/all-target/
-   all-feature clippy `-D warnings` required. Keep all runtime dumps outside
-   Git; no G-code, Native binaries, caches or computed Native goldens committed.
+   all-feature clippy `-D warnings` required. No G-code, Native binaries, caches or computed Native goldens committed.
 
 Deferred: new stealth-mode public data APIs, other firmware planner changes,
 viewer/UI behavior, source slicer geometry/FillBase/spiral-lift emission,

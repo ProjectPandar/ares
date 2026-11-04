@@ -1,7 +1,7 @@
 # Slice 5: post_process bounded CLI admission versus matrix baseline
 
-Status: SPEC-REVIEW-REQUEST; docs only. Base audit96328f269/f637b4122.
-This narrows accounting for the existing approved
+Docs only; audit baseline 96328f269/f637b4122.
+This narrows accounting for the existing
 [CLI-boundary spec](option-post-process-cli-boundary-spec.md), not permission
 to implement script execution or revive its deferred load-settings tracer.
 
@@ -57,10 +57,10 @@ comparisons; do not turn unexpected INPUT_REJECTED into PASS.
 
 Proposed bounded-domain PASS means all three declared CLI contracts passed;
 it does not mean three G-code comparisons. External script execution remains
-explicitly deferred/uncovered in metadata and audit. Approval must encompass
-this comparison-count meaning before replacing baseline accounting.
+explicitly deferred/uncovered in metadata and audit. This comparison-count
+meaning must be settled before replacing baseline accounting.
 
-## Public RED and GREEN, only after SPEC approval
+## Public RED and GREEN
 
 Submit a separate public matrix-accounting RED with original three Native
 CLI tests as controls in official and seeded modes. The selected post_process
@@ -73,12 +73,11 @@ exact diagnostic and full output comparators. Fail missing outputs/receipts,
 wrong return/plate/channels, unexpected acceptance/rejection or a marker
 appearing; stop and report rather than modify assertions or production.
 If accounting needs shared outcome-format changes that affect other domains,
-submit the exact additional diff for approval first.
+submit the exact additional diff separately first.
 
-Directed CPU13/14 via outer taskset, jobs2/threads2, fresh roots/cache/targets,
-only when coordinator opens the window. Required later gates: paired directed
-including the three controls and option coverage; strict/fmt/wasm32; full or
-workspace only on explicit GO. No runs accompany this documentation commit.
+Directed runs use fresh roots/cache/targets. Required later gates: paired
+directed including the three controls and option coverage; strict/fmt/wasm32.
+No runs accompany this documentation commit.
 
 ## Deferred boundary
 
@@ -91,6 +90,6 @@ The matrix must not silently skip this key on unsupported test platforms:
 retain an explicit unresolved domain if these witnesses cannot execute.
 Do not add runtime UnsupportedProjectFeature guards or independent flags.
 
-Exit: approved bounded semantics, three consumed contracts with explicit
+Exit: bounded semantics, three consumed contracts with explicit
 comparison kinds and truthful uncovered dimensions, source-cited metadata,
 unchanged unrelated outcomes and comparators, independent code review.

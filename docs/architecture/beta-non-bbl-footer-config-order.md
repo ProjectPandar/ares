@@ -2,7 +2,7 @@
 
 Status: seven complete post-config tails are runtime GREEN after the literal
 ordering port. Original seven full streams remain OPEN inside config schema.
-Later batch. Authority: OrcaSlicer v2.5.0-beta,
+Authority: OrcaSlicer v2.5.0-beta,
 `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Owning upstream boundary and Rust destination
@@ -121,15 +121,15 @@ The final bounded owned21 run has14 scoped PASSes and seven retained strict
 full-stream REDs. All original APIs admit, CLI exits0, rawAPI==CLI and official
 replays are stable. Each strict case advances eight lines into config, first
 missing the same beta adaptive-infill key; the keyset/type/legacy work remains
-with the config owner. Existing island/width/executable-block GREENs are retained.
+with the config slice. Existing island/width/executable-block GREENs are retained.
 Fmt and strict workspace/all-target Clippy pass; no suppression, new fixture,
-probe, FULL, seeded sweep or ledger reclassification is introduced.
+probe, full parity run, seeded sweep or baseline reclassification is introduced.
 
 BBL/header and optional-block skip behavior are source-audited preservation
 boundaries; these seven inputs activate the non-BBL emitted-config branch, not
 direct BBL or config-skipped coverage. No additional fixture/probe is included.
-No FULL, seeded sweep or beta-ledger classification rerun. No extra crate or
+No full parity run, seeded sweep or beta-baseline classification rerun. No extra crate or
 platform I/O: production stays in the platform-neutral emission adapter.
 
 Files stay below400LOC, helper arguments<=5, no new #[allow]/#[expect] in any
-intermediate commit; keep the required coauthor trailer and later-batch queue.
+intermediate commit.

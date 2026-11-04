@@ -1,6 +1,6 @@
 # Aligned-seam output for a rotated object's first layer
 
-Status: public regression; the original RED is closed by the reviewed
+Status: public regression; the original RED is closed by the
 TriangleMeshSlicer port integrated in source commit
 `3d11c2284553266db1113a353adc74eafcbbeeca`. No seam-placement production
 change or new seam strategy is part of this regression.
@@ -57,7 +57,7 @@ solver or compatibility shell is changed by this test.
 - Save complete exports and the unfiltered first layer externally. Preserve
   the historical other-object M73 differences as historical evidence, not
   filtered acceptance. The regression asserts complete-object equality;
-  whole-export validation receipts do not close unrelated families or FULL.
+  whole-export validation does not close unrelated families or the full suite.
 - Preserve candidate order, ring origin, closing duplicate, raw numeric inputs,
   strict comparator priorities and the sharp branch. No max-Y preference,
   epsilon, score bias, forced candidate, geometry compensation or fallback.
@@ -66,7 +66,7 @@ solver or compatibility shell is changed by this test.
   must remain portable to browser WASM, Windows, macOS and Linux.
 - Attribute closure to the reviewed TriangleMeshSlicer source boundary,
   not to an inferred equal-score tie or a new seam repair. Any later core
-  change still requires its own source-cited causal review and authorization.
+  change still requires its own source-cited causal analysis.
 
 ## Frozen input and observed qualification
 
@@ -78,8 +78,8 @@ It holds an unrotated cube and a45-degree cube centered at110,95.5 on plate1;
 `option_coverage::aligned_seam_rotated_object::rotated_object_first_layer_aligned_seam_matches_native_output`.
 
 Prior qualification on `1cf2968d5` established
-official Native double stability. A separately authorized same-ELF API recovery
-reused those outputs with explicit reused receipts, adding no Native stability
+official Native double stability. A same-ELF API recovery
+reused those outputs, adding no Native stability
 credit. Its completed166805B API output exactly matches the retained Browser
 witness SHA256
 `317f955f709f8ae0fb1e55285a57778aadf453906afa253475443d2873e17f16`.
@@ -95,7 +95,7 @@ first-wins tie. Its actual sharp-test and return checkpoints show candidate3,
 blend1.0 and current position`(0,-6.632662773132324,0.10000000149011612)`:
 the normal-field solver is bypassed for this target.
 
-A separately approved seeded observation, qualified against the complete
+A seeded observation, qualified against the complete
 saved official export with only generator-line normalization, observed Native's
 incoming ring:
 `[(0,6632662),(-6632661,0),(0,-6632661),(6632662,0),(0,6632662)]`.
@@ -126,7 +126,7 @@ whole-export double stability before one public API call.
 Complete rotated-object equality passed in both modes, and the retained
 whole-export comparator also passed, preserving all M73 and other records.
 The closure is this public witness on the merged source, not a new seam core
-port, broad family/FULL certification or a substitute for the runtime oracle.
+port, broad family/full-suite certification or a substitute for the runtime oracle.
 
 ## Included and deferred
 
@@ -134,7 +134,7 @@ Included: one public complete-object regression, runtime selected-plate Native
 double, strict output comparison, exact existing input, and source-cited
 closure by the TriangleMeshSlicer port.
 
-Deferred: new production changes, all-layer/family/FULL closure, unrelated
+Deferred: new production changes, all-layer/family/full-suite closure, unrelated
 M73/timing, generic travel, raw junction WIDTH, sloped-Z, painting/PreciseSeam
 and unrelated geometry or score rewrites.
 

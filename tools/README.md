@@ -9,7 +9,7 @@ existing historical source store path. Prepare a clean source tree from Git
 and apply the four-file patch, from the repository root:
 
 ```sh
-ksr_source=$(mktemp -d /tmp/ksr-initialized-source.XXXXXX)
+ksr_source=$(mktemp -d)
 git -C OrcaSlicer archive 8500fcdccaa10b5099ac20d252af3a7c560046f1 | tar -C "$ksr_source" -xf -
 git -C "$ksr_source" apply "$PWD/tools/orca-probes/ksr-initialized-source.patch"
 nix-hash --type sha256 --base32 "$ksr_source"
@@ -34,8 +34,7 @@ Verified derivation:
 `/nix/store/4n1w0b6jgnfcwb6m9jfssndribyyg3v6-orca-slicer-seed-replay-2.4.2.drv`.
 Its package output is
 `/nix/store/jqfsg42f6xzq3krnf5scm6w4g1z4kz4c-orca-slicer-seed-replay-2.4.2`.
-No realization or compilation is part of this verification. The existing
-package is protected by GC root `/tmp/worker6-ksr-initialized-producer-root`.
+No realization or compilation is part of this verification.
 
 The historical source patch seeds FuzzySkin and initializes `PrintObject::m_id`
 and two concentric-fill parameters. It leaves `GCode.cpp`'s placeholder RNG

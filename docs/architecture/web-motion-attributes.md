@@ -1,12 +1,9 @@
 # Preview Acceleration / Jerk / Pressure Advance — source-cited rewrite spec
 
-Status: approved at `3b7c0e493` with rulings below; implementation proceeds
-RED → GREEN. The ares-core processor part is its own RED/GREEN pair, verified
-vertex-by-vertex bit-exactly against the procgcode oracle, and must prove zero
-G-code output change (full v2 references identical on both trees). Touching
-shared processor files (`used_filaments`, `virtual_motion`) requires notifying
-the coordinator first.
-Base: `b61061fc3` (marker-time merged).
+Implementation proceeds RED → GREEN, with the rulings below. The ares-core
+processor part is its own RED/GREEN pair, verified vertex-by-vertex
+bit-exactly against the procgcode oracle, and must prove zero G-code output
+change (full v2 references identical on both trees).
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Paths below are relative to `OrcaSlicer/` unless prefixed with a crate/web path.
 
@@ -58,7 +55,7 @@ all three (`crates/ares-wasm/src/moves.rs:213-214`, stride-16 `PA,acceleration,j
 - Ranges, colors, palette, visibility rules and G-code bytes / M73 are
   unchanged; this slice only fills data that was zero.
 
-## Rulings (approved)
+## Rulings
 
 1. **Indeterminate initial Pressure Advance — UB-adjacent, not ported.** `GCodeProcessor.hpp:822`
    declares `float m_pressure_advance;` and neither `reset()` nor the
@@ -84,7 +81,7 @@ all three (`crates/ares-wasm/src/moves.rs:213-214`, stride-16 `PA,acceleration,j
 1. **Oracle.** New `tools/chain-probe/procgcode-dynamics.{nix,patch}` on top of
    the existing procgcode probe: `--dump-move-dynamics <csv>` writes
    `gcode_id,type,internal_only,pressure_advance,acceleration,jerk` with
-   `%.9g` for all `result.moves`, plus the Q1 initialisation if approved.
+   `%.9g` for all `result.moves`, plus the ruling-1 initialisation.
    Source/adapted diffs and hashes are committed.
 2. **Processor fixtures** (`tests/parity/motion-attributes/*.gcode` + overrides),
    each processed by Ares and the oracle and compared by gcodeId/occurrence:
@@ -115,7 +112,7 @@ all three (`crates/ares-wasm/src/moves.rs:213-214`, stride-16 `PA,acceleration,j
    window vertex; dark/light screenshots and a CSV artifact.
 5. **Gates.** fmt, clippy `-D warnings`, `cargo nextest run --workspace`,
    CLI/WASM/app builds, typecheck, lint, full v2 seeded/official references
-   (G-code bytes unchanged), full browser pair with BROWSER-START/END,
+   (G-code bytes unchanged), full browser pair,
    initial JS gzip strictly below 125,000 B.
 
 ## Included / deferred

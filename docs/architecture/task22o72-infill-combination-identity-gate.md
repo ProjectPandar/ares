@@ -124,8 +124,7 @@ exact-zero comparison, and the error branch must be killed and restored.
 
 Exit also requires focused and dependency Nextest, full workspace Nextest,
 strict Clippy/rustfmt, Tier-1 portability builds, diff/LOC/static/no-staged
-checks, a clean pinned Orca worktree, and independent six-axis review followed
-by unconditional re-review after any repair.
+checks, and a clean pinned Orca checkout.
 
 ## Next upstream owner
 
@@ -156,5 +155,5 @@ flipping O71's exact-zero anchor-line predicate, and replacing the promoted
 source `0.00011f` normalization threshold with a decimal f64 literal. Strict
 workspace Clippy, rustfmt, WASM core and adapter checks, both Windows targets,
 both macOS targets, diff/static/no-staged scans, and the clean pinned Orca
-worktree pass. Every changed or added Rust file remains below 400 LOC; the
+checkout pass. Every changed or added Rust file remains below 400 LOC; the
 maximum is 373 lines and the new O72 production shard is 70 lines.

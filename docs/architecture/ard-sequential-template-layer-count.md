@@ -1,9 +1,9 @@
 # ARD: reuse upstream mode-dependent template layer total
 
-## Status and ownership
+## Status and source
 
-COORD-approved SPEC, docs then formal RED above frozen `117f4ffe3`;
-one REVIEW-REQUEST/HOLD before GREEN. Owning source: pinned OrcaSlicer
+Status: accepted SPEC, docs then formal RED above frozen `117f4ffe3`;
+RED precedes GREEN. Owning source: pinned OrcaSlicer
 `8500fcdcc` `GCode.cpp::_do_export:2484–2528` (`m_layer_count`) and `:2890`
 (`total_layer_count` placeholder), consumed by layer templates at `:4677–4684`.
 Rust boundary: private `gcode_emit/orchestration.rs::emit`, existing
@@ -23,8 +23,7 @@ Rust boundary: private `gcode_emit/orchestration.rs::emit`, existing
    raw API/CLI equality and successful exits are mandatory even for RED.
 5. Commit docs before tests. Later GREEN changes exactly one initializer and
    no tests, fixtures, helpers, comparator, runner or neighboring comments.
-6. CPU18, serial controls1; record actual affinity separately from requested
-   thread limits. No FULL/integration/rebase/merge/push in this phase.
+6. No full parity or integration in this phase.
 
 ## Deferred and consequences
 

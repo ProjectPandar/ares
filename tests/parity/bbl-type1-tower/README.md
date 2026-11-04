@@ -10,8 +10,7 @@ Bambu PLA Basic and Bambu PLA Matte in two AMS slots on the same nozzle.
 Original discovery exported two objects from tests/parity/cube10.stl, selected
 stock presets and materialized two-slot project vectors before official Native
 re-export. No machine or filament template injection. Provenance/scripts and
-raw discovery are retained in
-`${COORD_ROOT}/evidence/w5-stock-multi-materialized/`.
+raw discovery are retained externally.
 
 `disabled.3mf` changes only the GUI Prime tower → Enable setting:
 Metadata/project_settings.config enable_prime_tower "1" → "0". JSON formatting

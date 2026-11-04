@@ -1,6 +1,6 @@
 # Seam-gap fill-group key input witnesses
 
-Approved SPEC `0b5aa964a`, owning Orca8500fcd `Fill.cpp::SurfaceFillParams::operator<`
+SPEC `0b5aa964a`, owning Orca8500fcd `Fill.cpp::SurfaceFillParams::operator<`
 and owner-region clipping assignment at1279. Production computation/consumers
 remain unchanged during RED.
 
@@ -24,9 +24,6 @@ not extrusion width/spacing. Tests do not inspect private grouping state:
 they reuse shared fresh Native/API/CLI repeats and strict complete-output
 assertions, with public input/footer/positive Bottom activity admission.
 
-All five tests assert PASS; before the independently approved one-key GREEN,
+All five tests assert PASS; before the one-key GREEN,
 only seam20 fails in both official and seeded modes. No inverted assertion,
 Native G-code golden, ignored output, fallback or unsupported guard.
-
-Discovery: `${EVIDENCE_ROOT}/w3-seam-key-readonly-14017addf/README.md`.
-Source/nozzle proof: `${EVIDENCE_ROOT}/w3-seam-gap-key-spec-review/README.md`.

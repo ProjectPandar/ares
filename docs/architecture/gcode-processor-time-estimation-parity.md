@@ -31,7 +31,7 @@ Given identical effective printer configuration and complete G-code motion/comma
 
 ## Admission and failure matrix before implementation
 
-Use repository-owned minimal geometry (initially cube10.stl), current main, declared actual Native image/resources, seeded byte authority, exact effective settings verification and complete artifacts. External `/tmp/x2d-narrow{3,4}.3mf` and their outputs are forensic evidence only, never committed fixtures or test expectations. Do not require the separate bridge port or execute another agent's production branch as current main.
+Use repository-owned minimal geometry (initially cube10.stl), current main, declared actual Native image/resources, seeded byte authority, exact effective settings verification and complete artifacts. External X2D narrow models and their outputs are forensic evidence only, never committed fixtures or test expectations. Do not require the separate bridge port or execute another unmerged production branch as current main.
 
 Potential failures to discriminate:
 
@@ -51,4 +51,4 @@ Potential failures to discriminate:
 4. Prewrite an independently observable RED and passing neighboring controls before production edits. Preserve full ordered-byte assertions and make block/time evidence repeatable. A failure caused by unrelated production ownership is not relabeled as this RED.
 5. Implement only the source-bounded correction and remove only orphans it creates. Modules must remain≤400LOC. Run workspace nextest, strict all-target/all-feature Clippy, fmt and WASM, current-base full seeded/official controls and unchanged complete common streams. Official ND may be classified only under the documented two-condition harness rule; no retries to erase genuine failures.
 
-Exit: the admitted minimal timing/progress RED and its neighboring controls pass, the first upstream divergence is eliminated, all applicable gates are verified, and the sole coordinator approves the exact implementation hash before integration.
+Exit: the admitted minimal timing/progress RED and its neighboring controls pass, the first upstream divergence is eliminated, and all applicable gates are verified.

@@ -1,8 +1,5 @@
 # SPEC: merged Klipper square-corner velocity ostream serialization
 
-Base frozen `917ec39dde89d5f439d96b769f61b978b7018dc0`; coordinator ACK authorizes
-SPEC → Native-first public RED → one-field GREEN → review/hold, no FULL.
-
 ## Source boundary / non-negotiable decisions
 
 `OrcaSlicer/src/libslic3r/GCodeWriter.cpp:315-337::set_accel_and_jerk` creates a
@@ -18,7 +15,7 @@ writer is a compatibility shell for this upstream writer boundary.
 Included: only replace that field's `axis` call with `ostream`. Deferred:
 ACCEL_TO_DECEL and other numeric fields, formatter implementation, machine
 clamps, command admission/EPSILON/cache ordering, comment suffix, separate jerk
-writers, and all other owned regions. No new helper, precision option, mask,
+writers, and all other regions. No new helper, precision option, mask,
 legacy fallback or lint suppression. Prior comment/EPSILON slices remain intact.
 
 ## Evidence / reachability
@@ -30,10 +27,8 @@ settings, not a GUI display precision or physical tuning claim.
 
 Target7.0002 Native `SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY=7.0002`, Ares=7,
 first normalized difference byte6204. Equal7/exactmilli7.002 controls fullPASS.
-Six fresh Native slices stable on exact917ec actual CLI after EPSILON fix; all
-commands exit0. No API/seeded/FULL qualification claimed from discovery.
-Evidence `${EVIDENCE_ROOT}/w4-merged-jerk-precision/PROPOSAL.md` and
-original complete Native/CLI streams/diffs, CPU17/PIN17/threads1.
+Six fresh Native slices stable on the actual CLI after the EPSILON fix; all
+commands exit0.
 
 InputSHA:
 - equal7:173b2cd1e4d549de65953512f9d8d3d853f3753f68ff0546b0be63368987a78b
@@ -53,9 +48,9 @@ admission; changing command count/cache; replacing global formatter or adjacent
 fields; losing exactmilli/equal outputs. Preserve field/word shape and existing
 clamp/EPSILON/source order; no new validation policy.
 
-CPU17/PIN17/jobs1/threads1 serial official then seeded: target expected RED,
+Official then seeded: target expected RED,
 two controls fullPASS, Native replay/callback/rawAPI==CLI qualify. Commit RED
 before production. GREEN only one formatter call; inputs/tests frozen unchanged.
-fmt/workspaceall-targetclippy and three cases bothmodes must pass; submit
-REVIEW-REQUEST and hold, no FULL/merge/push. Group registration without squeeze,
+fmt/workspaceall-targetclippy and three cases bothmodes must pass.
+Group registration without squeeze,
 all touched Rust files≤400LOC.

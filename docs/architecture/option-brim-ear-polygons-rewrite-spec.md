@@ -1,24 +1,20 @@
 # SPEC-REQUEST: source-owned brim ear polygon rewrite
 
-## Authorization and RED
+## RED
 
-Coordinator assigned the ownerless legacy brim scaffold to worker3 after
-`71a3a0485156049ef47a5853dcc77dc0ae6e246b` seeded E0/E1 and ear sweep failed.
-Native six-case admission at b09dd730d proves bool0/1 changes only config echo.
+The legacy brim scaffold is addressed here after seeded E0/E1 and ear sweep
+failed. Native six-case admission proves bool0/1 changes only config echo.
 N0/N1/O0/O1 whole API/CLI comparisons passed. E0/E1 have genuine full-output
 RED: first difference byte453/line18, Native `M73 P0 R9`, Ares `R8`; lengths
 116002 versus100730. This is the first difference, not a complete root cause.
-Raw input, Native, API and real CLI evidence remains under
-`/tmp/worker3-brim-directed-v1-seeded-artifacts` and original failed log.
 
-No production implementation starts before approval of this request.
-Approved scope amendment: **auto btEar only**. Painted make_brim_ears is entirely
+Scope: **auto btEar only**. Painted make_brim_ears is entirely
 deferred to a separate source-cited, test-first slice; no painted production
 code or transport/API changes belong here.
 
 ## Upstream owners and Rust destinations
 
-Runtime correction accepted by coordinator: validated project slicing is owned
+Runtime correction: validated project slicing is owned
 by `project_slice/gcode_emit/brim.rs::BrimPlan::generate` (currently BrimEars
 returns None), not the square adapter. GREEN adds its BrimEars branch calling
 the shared `brims/ears` kernel; the old adapter calls the same kernel, with no
@@ -87,14 +83,14 @@ the cited shared operation is necessary and its unchanged-output controls pass.
 
 ## Test split and acceptance
 
-Preserve complete original six-case RED evidence at actual71a hash.
+Preserve complete original six-case RED evidence.
 Mechanically separate N0/N1/O0/O1 and non-ear authored sweep as independent
 always-GREEN test-only commits. Run fresh two-mode directed + strict/fmt/wasm32
-and obtain exact-hash review before merging that lane. Its catalog describes
+for those commits. Its catalog describes
 only non-ear coverage, never labels the omitted ear behavior PASS/closed.
 
 Keep E0/E1 and ear sweep in an explicit RED commit on the production chain.
-That RED does not merge independently. GREEN restores all six complete
+That RED does not land independently. GREEN restores all six complete
 comparisons and ear sweep without skips, guards, disabled assertions or
 filtered acceptance. Existing E0/E1 first-layer witnesses (443 Native brim
 extrusion commands) and bool-neutrality controls remain intact. Tests for any
@@ -103,8 +99,5 @@ record Native input proofs and complete outputs, not hardcoded output goldens.
 
 Verify both standard seeded and official live Native, complete validated API
 and real CLI using unchanged compare_ordered_bytes_generator_only. Run strict
-Clippy/fmt/wasm32, clean workspace --no-fail-fast (5400s, jobs2/threads2) and
-fresh BASE/CAND seeded+official exclusive full four legs. Production full queues
-after worker5 and relative to worker1 by coordinator readiness adjudication.
-Exact-hash approval precedes ordinary ff merge; production main advances VOID
-old gates unless coordinator explicitly grants a carry. No stash or force.
+Clippy/fmt/wasm32, clean workspace --no-fail-fast and
+fresh BASE/CAND seeded+official exclusive full four legs.

@@ -1,6 +1,6 @@
 # Region-local infill combination inputs
 
-Approved SPEC `b7327c79a`, pinned Orca8500fcd
+SPEC `b7327c79a`, pinned Orca8500fcd
 `PrintObject.cpp::combine_infill:4169-4237`. The RED covers the region-local
 layer view/reset/actual layer-id0 skip; projection, geometry/math and Flow/
 G-code consumers remain unchanged.
@@ -24,9 +24,6 @@ canonical case directly reuses
 The third similar suite uses the extracted shared case-runner (frozen read,
 ZIP metadata, admission/repeat/activity/complete lifecycle), backed by the
 unchanged complete.rs Native/API/CLI producer and strict full-output oracle.
-Every test asserts PASS. Before the independently approved GREEN, two targets
+Every test asserts PASS. Before GREEN, two targets
 strictly fail and five controls pass in both canonical modes. No inverted
 assertion, G-code golden, output filtering, fallback or unsupported guard.
-
-SPEC evidence:
-`${EVIDENCE_ROOT}/w3-combine-infill-region-spec-review/README.md`.

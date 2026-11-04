@@ -1,12 +1,11 @@
 # Object-wide AutoBrim adhesion rewrite SPEC
 
-Status: **COORDINATOR-APPROVED SPEC**. Original discovery was external/read-only.
-Explicit dependency: approved ears-EFC tip
+Original discovery was external/read-only.
+Explicit dependency: ears-EFC tip
 `0688f83a6ff33c6de6e061b5bc93cf11f6c89ead`, including AutoEFC `14d90d03f`
 and exact-group `fb70752b9`. SPEC and public RED stack on that tip.
-No rebase or FULL before the W2 integration window.
 Source baseline main `231bd11cc`; runtime is explicitly **not an exact-main binary**:
-existing approved `0688f83a6` CLI, SHA256 in provenance.txt, including approved
+existing `0688f83a6` CLI, including
 exact-group/AutoEFC/EarsEFC fixes. This is a dependency-stack witness that removes
 the old group-assignment confound, not a claim of new public RED on main.
 
@@ -36,11 +35,11 @@ selection group-scoped. Do not simply take the max coefficient, first filament,
 last group, or all configured/unused filament slots. This replaces the temporary
 group-only adhesion carrier with the cited upstream concept, not a new pipeline.
 
-Included if authorized: existing material tables; first-layer actual-region
+Included: existing material tables; first-layer actual-region
 eligibility; model-volume order; object-wide coefficient reused across groups;
 existing per-group thermal length untouched. Adjacent geometry, second moment,
 width quantization, max-speed, EFC, routing, skirts, material/footer serialization,
-seams, fill, ironing and all W1/W3/W4/W5/W6 work deferred. No guards/fallbacks.
+seams, fill, ironing and all other work deferred. No guards/fallbacks.
 
 ## Inputs and source provenance
 
@@ -55,12 +54,12 @@ This is reachable via adding a part, assigning filaments and setting brim type.
 The generator's old absolute source path is retained transparently; verify source
 SHA against tracked fixture before replay. `inputs/inputs.json` hashes all4files.
 
-Factorial: `auto_brim|no_brim` × `PLA/PLA|PLA/PETG`. All4 frozen input-only archives
-are referenced by run.sh and verify-motion.js. No outputs/probes enter Git.
+Factorial: `auto_brim|no_brim` × `PLA/PLA|PLA/PETG`. All4 archives are
+frozen input-only. No outputs/probes enter Git.
 
 ## Read-only Native-first results
 
-All8 official/seeded Native runs rc0, real CLI4/4 rc0, allCPU13 and seededCPU13.
+All8 official/seeded Native runs rc0, real CLI4/4 rc0.
 Only generator line normalized; no M73, motion, temperature or metadata mask.
 
 | case | Native positive Brim XY | Ares | strict whole output, both modes |
@@ -89,25 +88,16 @@ Z-scale37.5 (75mm height) probe gives Native1074/Ares537, all3controls equal, ye
 first strict difference is a prior M73 insertion at1113. These external probe
 inputs are NOT proposed as final fixtures; no further timing tuning or masking.
 
-Coordinator explicitly accepted this M73-leading strict failure because the
+This M73-leading strict failure is accepted because the
 independent Native/Ares Brim geometry evidence establishes its cause. Preserve
 M73 in complete ordered comparisons: no mask or timing-only acceptance.
-The authorized public RED must use shared NativeCase
+The public RED must use shared NativeCase
 for Native→API+actualCLI and rawAPI/CLI equality; no copied EFC/general harness,
 new ignore/allow/expect, constants encoding results or M73 masking.
 
-## Evidence / next decision
+## Next decision
 
-Root contains run.sh, generate-inputs.js, inputs.json, per-mode Native logs/rc,
-actualCLI logs/rc, summary.json, verify-motion.js, verified-motion.json,
-verification.txt, and provenance.txt. All Native output stays external.
-Failed python3 launch (unavailable executable) produced no runs; subsequent
-replayable Node generator succeeded. No environment installation was performed.
-
-Coordinator approved committing this docs-only SPEC, then frozen-input NativeCase
-RED with API + actual CLI strict complete output and Native-first Brim change.
-Report RED before any production changes. Prospective GREEN remains limited to
+All Native output stays external. This docs-only SPEC is followed by frozen-input NativeCase
+RED with API + actual CLI strict complete output and Native-first Brim change. Prospective GREEN remains limited to
 object adhesion preparation and WidthContext/width_mm; thermal stays group scoped.
 Any strict residual requires STOP rather than broadening the boundary.
-All evidence paths in this document are relative to the external discovery root:
-`${COORD_ROOT}/evidence/worker2-material-rediscovery-20261020T224150/`.

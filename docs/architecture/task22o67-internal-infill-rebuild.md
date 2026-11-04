@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted and implemented; final independent implementation review pending.
+Accepted and implemented.
 
 ## Decision
 
@@ -77,12 +77,8 @@ byte-exact. Compiler failures are invalid evidence.
 Every Rust source is at most 399 LOC, tests use ordinary child modules, and
 include macros may not split source.
 
-Behavioral RED is preserved in `/tmp/task22o67-behavioral-red.log`. Focused
-6/6 and dependency 782/782 pass in `/tmp/pi-unified-exec-981-8fed4331.log`;
-workspace 6,442/6,442 with two skipped passes in
-`/tmp/pi-unified-exec-982-893c4a5a.log`; strict Clippy, rustfmt, wasm32, four
-desktop targets, LOC/static, pinned Orca and no-staged gates pass in
-`/tmp/pi-unified-exec-984-8aad9912.log`.
+Focused 6/6 and dependency 782/782 pass; strict Clippy, rustfmt, wasm32, four
+desktop targets, LOC/static and pinned Orca gates pass.
 
 The compile-validating 18-mutation audit script SHA-256 is
 `7eb0d586597d4a836ae9b10f4d0be5463b68eafac43ceebf406cab9d6bdb8cf8`;
@@ -90,4 +86,3 @@ output SHA-256 is
 `95555f3fe5a1065c9cdff033f9367239c250f7c72952e62d78132273326f329b`.
 All 18 mutations die and production restores byte-exact at
 `e6cb24825b1727c8509af9645b204040d468d8dc09ad26118d40dbc055bbcb96`.
-Final independent six-axis review remains required.

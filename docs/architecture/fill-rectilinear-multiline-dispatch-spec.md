@@ -1,7 +1,6 @@
 # SPEC: Rectilinear sparse multiline dispatch
 
-Status: proposed; no test or production implementation before approval.
-Base: `5a9687ac020962f254b6262f2184f3345025c70f`.
+Status: proposed.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Selection and ownership
@@ -9,18 +8,14 @@ Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Port the remaining Rectilinear dispatch finding R2 from
 [the shared multiline union slice](fillbase-multiline-clipper2-union.md).
 Historical Native/Ares first whole-file difference was line18
-`M73 P0 R38` / `M73 P0 R37`, retained in
-`/tmp/worker6-union-numerics-trial.yr9Ms7/control-audit.json` and the earlier
-`/tmp/worker6-multiline-union-red.1zTTQm`. This is historical evidence only,
+`M73 P0 R38` / `M73 P0 R37`. This is historical evidence only,
 not RED on the new base. Grid mode0 and Stars mode2 prerequisites are merged.
 
 Read-only main inspection still finds both Rectilinear consumers constructing
-`MonotonicFillParams`, which has no multiline field. Inbox audit found no other
-claim to this Rectilinear dispatch boundary. Worker1 owns per-object skirt;
-worker4 retains counterbore non-None; web owns OptionsZCorrector. Their production
-paths are excluded. The proposed adjacent bridge-anchor change is confined to
-the Rectilinear dispatch sub-branch in sparse_anchoring/arms.rs; coordinator
-approval of this spec must also approve that shared-file boundary. No changes
+`MonotonicFillParams`, which has no multiline field. Per-object skirt,
+counterbore non-None and OptionsZCorrector production paths are excluded. The
+proposed adjacent bridge-anchor change is confined to the Rectilinear dispatch
+sub-branch in sparse_anchoring/arms.rs. No changes
 to anchor_projection, candidate expansion, admission, bridge classification or
 other pattern arms are included.
 
@@ -87,7 +82,7 @@ Deferred: AlignedRectilinear inheritance, Line/Zag variants, Triangles mode1,
 new high-density or degenerate clipping defects, rotated multi-instance bbox
 changes, variable-height/range configuration and support/modifier interactions.
 No rejection is added for deferred inputs. Do not remove any existing guard,
-change an existing negative expectation, fix counterbore or alter W1/web paths.
+change an existing negative expectation, fix counterbore or alter skirt/web paths.
 
 ## Fresh Native-backed RED plan
 
@@ -95,8 +90,7 @@ Use the tracked authored prism/holed-prism STL inputs from
 `tests/parity/multiline-union`, exported at runtime through OrcaRunner with
 existing Ender-3 presets and verified requested settings. Native accepts and
 produces the complete reference independently in official and seeded modes.
-Both modes get fresh roots/caches; directed outer taskset CPU11, jobs1/threads2
-and the currently authorized window/load rule. No Native output is committed.
+Both modes get fresh roots/caches. No Native output is committed.
 
 Freeze twelve controls before production:
 
@@ -119,10 +113,9 @@ a bbox, polygon summary, footer or selected lines in place of full bytes.
 
 RED must demonstrate a real Native-admitted main mismatch in an eligible
 Rectilinear case. If every eligible case is equal, report NO RED FOUND and stop.
-If any noneligible control already differs, preserve its evidence and ask for
-classification before modifying controls or their comparison. Commit/report
-RED separately before GREEN; neither production nor test implementation is
-authorized by this proposed doc until coordinator approval.
+If any noneligible control already differs, preserve its evidence and classify
+it before modifying controls or their comparison. Commit RED separately before
+GREEN.
 
 ## Acceptance
 
@@ -131,6 +124,5 @@ count1/full/other-pattern control's Ares raw bytes across RED and GREEN;
 report any unrelated raw changes before proceeding. Assertions and comparator
 remain unchanged. Run full option_coverage in both modes, strict clippy
 `--workspace --all-targets --all-features -- -D warnings`, fmt and wasm32.
-Exact-hash self-hosted workspace and canonical full follow coordinator queue
-authorization. No ignore, suppression, probe, regions[0], new Unsupported gate,
+No ignore, suppression, probe, regions[0], new Unsupported gate,
 oracle fallback or Native artifact submission is permitted.

@@ -1,9 +1,5 @@
 # SPEC: Repetier travel-acceleration cache admission
 
-Base: `33ed13702fbb099d569d5feedca905d586fdd088`.
-The coordinator authorized docs SPEC and public RED with one combined review
-request. Hold before GREEN; no FULL run is authorized.
-
 ## Source owner and architectural constraints
 
 `OrcaSlicer/src/libslic3r/GCodeWriter.cpp:49-52::apply_print_config` initializes
@@ -22,7 +18,7 @@ bad cache value.
 Rust destination:
 `gcode_emit/motion/options/build/fields/assemble.rs::assemble`, the
 `max_travel_acceleration` initializer. It currently checks only the separate
-flavor set, incorrectly admitting Repetier's raw machine cap. After RED review,
+flavor set, incorrectly admitting Repetier's raw machine cap. The fix is to
 add ONLY the existing local `use_mach_limits` value as a conjunction to that
 initializer. Preserve the current flavor set, rounding, u32 cache type and zero
 branch. Do not extract helpers or alter the existing shared predicate.
@@ -31,8 +27,8 @@ The options assembly remains a temporary compatibility shell around the cited
 upstream writer cache. This is not a new Ares travel/acceleration pipeline.
 Included: the missing cache-admission conjunction. Deferred: travel execution,
 processor limits and time estimates, process acceleration, print-cache ties-even,
-jerk gates, raw headers and generic `rounded_acceleration`. No changes to W1
-auto_lift/M73, W3 tokenizer/fan/zero-E or W6 value.rs/coInts files. No masks or
+jerk gates, raw headers and generic `rounded_acceleration`. No changes to
+auto_lift/M73, the tokenizer/fan/zero-E or value.rs/coInts files. No masks or
 processor compensation.
 
 ## Saved-project witness and controls
@@ -59,14 +55,12 @@ limit remains active. These are admitted saved settings, not a recommendation
 for factory Ender3 firmware or physical acceleration tuning.
 
 All six fresh Native discovery slices replay identically and all Native/CLI
-exits are zero. Discovery is not public API, seeded, RED or FULL qualification.
-Evidence: `${EVIDENCE_ROOT}/w4-repetier-travel-cache-gate/`, including
-`target-diff-audit.json`. The older deferred BBL travel=10000 observation is
-retained externally but is not needed as a public input in this slice.
+exits are zero. The older deferred BBL travel=10000 observation is not needed
+as a public input in this slice.
 
 ## RED seam and failure modes, before implementation
 
-Freeze the three approved archives. Add direct calls to the existing
+Freeze the three archives. Add direct calls to the existing
 `native_stream_case` Native/API/CLI seam. Fresh Native replay qualifies first.
 Callbacks derive requested travel acceleration, cap and flavor from the input,
 then observe actual Native body travel commands. For Repetier, M202 X/Y must
@@ -79,7 +73,7 @@ only the established generator-line normalization. Keep timing, headers,
 configuration and footers. Require raw API==CLI. Callback observations are not
 filters. Commit no Native output references. Expected RED: the target fails at
 the M202 clamp; both controls pass; all Native replay and callbacks qualify.
-Commit RED, submit one combined SPEC/RED review request and hold before GREEN.
+Commit RED before GREEN.
 
 Failure modes: forgetting the `use_mach_limits` conjunction, removing separate
 M202 support instead of disabling only its machine cache, disabling Marlin2/RRF
@@ -87,8 +81,8 @@ limits, changing rounding or other caches, inactive requests below the cap,
 confusing raw envelope data with body commands, and masking downstream output.
 No new Klipper, BBL, rounding or comment variants are introduced.
 
-After RED approval: only the authorized initializer conjunction, RED tests and
-inputs unchanged; CPU17/PIN17, one build job and one parity thread, fmt,
+GREEN: only the initializer conjunction, RED tests and
+inputs unchanged; fmt,
 workspace all-target clippy and the same three cases in official then seeded
 mode. Preserve normal group separators, root registries and the 400-line Rust
-file limit. Submit a GREEN review request and hold. No FULL, merge, push or stash.
+file limit.

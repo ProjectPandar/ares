@@ -1,8 +1,5 @@
 # SPEC: fixed pressure-advance signed-zero serialization
 
-Status: discovery / SPEC-RR only. Base `bdb47cefe5d7851ff0e17e12d40425a1fd43bcfa`.
-This proposal contains no production, test or committed-input changes.
-
 ## Upstream source owner and Rust destination
 
 This is a small source-cited serialization rewrite slice, not a new PA policy.
@@ -64,7 +61,7 @@ formatting remain intact on the same public CLI path.
 
 ## Included and deferred behavior
 
-After separate approval, preserve the sign of admitted IEEE zero in this private
+Preserve the sign of admitted IEEE zero in this private
 fixed-PA number formatter, matching defaultfloat. Keep the negative-value guard,
 nonzero significant-digit formatting, command syntax and writer side effects
 unchanged. No new general formatter/API or numerical normalization policy.
@@ -72,48 +69,22 @@ unchanged. No new general formatter/API or numerical normalization policy.
 Deferred: adaptive PA models/cache algorithms, root standalone G-code APIs,
 other ostream edge cases, BBL/flavor precedence, machine configuration,
 processor parsing/time/statistics, templates/bed/exclude-name, fan/fuzzy, tower,
-skirt/brim/support speed, and all frozen W4 temperature/lift/jerk production areas.
+and skirt/brim/support speed, and the temperature/lift/jerk production areas.
 Do not alter input parsing or strip signed zero from config as a workaround.
 If the actual public RED exposes another owner, stop before expanding scope.
 
-## Proposed RED / exits (not executed)
+## Proposed RED / exits
 
-After SPEC approval: SHA-pinned Native-first public API+CLI target for signed
+SHA-pinned Native-first public API+CLI target for signed
 zero plus positive-zero, ordinary positive and disabled controls. Qualify two
 fresh Native streams and the admitted PA command's observed sign before complete
-unmasked generator-only comparison. Official then seeded, CPU17/PIN17, jobs1 /
-threads1. No committed Native outputs or precomputed G-code goldens.
+unmasked generator-only comparison. Official then seeded.
+No committed Native outputs or precomputed G-code goldens.
 
 Failures to pin before implementation: zero-sign collapse; excluding negative
 zero as if strictly negative; changing positive-zero serialization; changing
 nonzero precision or swallowing the actual command. Internal IEEE sign must
 reach output; public command observation must precede Ares comparison.
 
-Freeze RED-RR before requesting GREEN. Eventual exit after separate authorization:
-all directed complete streams pass both modes, fmt/workspace all-target clippy
-pass, and only the coordinator-authorized exact integration-tip dual FULL.
-This SPEC makes no public API/seeded/test-RED/GREEN/FULL qualification claim.
-
-## Evidence / ownership audit
-
-`${EVIDENCE_ROOT}/w4-pa-signed-zero/`: `probe.py`, `probe.log`,
-`results.json`, six archives, per-case Native double streams/logs, actual Ares
-CLI stream/log, full `ordered.diff`, `overlap-audit.json`, `binary-provenance.json`.
-Serial CPU17, `ARES_PARITY_THREADS=1`, `ARES_PIN_OFFSET=17`, `OMP_NUM_THREADS=1`,
-`RAYON_NUM_THREADS=1`, official inherited-affinity wrapper with setarch. No builds.
-
-Existing discovery CLI `/tmp/w4-temperature-red-target/debug/ares` built at
-`a5cc569c05857121af80533679c801f6258b9cb5`; the destination PA module is identical
-to new SPEC base mainbdb47cefe. This is disclosed historical exact-tip CLI
-output, not current-main API/rebuild qualification. Stock spaced temperatures,
-normal0.4 hop and unmodified jerk isolate the candidate from the three frozen
-W4 chains; tower remains off and no W5 Type1 behavior is exercised.
-
-Preproposal audit checks the exact PA module against W5 Type1 work/proposal,
-W1 fuzzy qualified/startup-fan, W6 frozen six-chain, W2 skirt/support/seam and
-frozen515e95975, and all three W4 frozen chains. Cross-worker architecture-tree
-search checks prior PA signed-zero/negative-zero/format_pa reservations. Exact
-refs, tips, scan count and results are stored in `overlap-audit.json`. W3 processor
-word owner is expressly outside this emitter-only boundary.
-
-Stop after SPEC-RR; no tests, inputs or implementation until separate approval.
+Exit: all directed complete streams pass both modes, fmt/workspace all-target
+clippy pass, and the full parity suite passes.

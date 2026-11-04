@@ -1,10 +1,8 @@
 # Adaptive PA bridge option: bounded coverage classification (APA-G1)
 
-Status: **SPEC ONLY — awaiting coordinator approval before RED/harness GREEN**.
-Analysis main `af7398b78168ebe497f1b38302de2da4878cad40`.
-Owner: worker1; only key `adaptive_pressure_advance_bridges`.
+Scope: only key `adaptive_pressure_advance_bridges`.
 This is a source-cited test-harness continuation of APA-R1 and G3, not a new
-Ares pipeline or authorization for a production repair.
+Ares pipeline or a production repair.
 
 ## Upstream boundary and current gap
 
@@ -74,7 +72,7 @@ suppression means M900 presence alone is not threshold proof. Require actual
 Native tags/comments, bridge/nonbridge reachability and complete byte comparison.
 
 Previous `0.0001000001`→`0.0001` collapse is a retained admission observation;
-keep the already approved representable probe. No new collapse control, export
+keep the existing representable probe. No new collapse control, export
 rounding workaround, epsilon adjustment or requested/effective relaxation.
 
 ## Rust destination / minimal shared wiring
@@ -102,13 +100,12 @@ Keep OptionOutcome accounting and comparator semantics unchanged. If proving
 Native activation requires a comparison hook, add only a key-specific call via
 the new module; do not introduce a new scanner/export pipeline. A failed
 reachability assertion is missing evidence, never PASS or an Ares RED.
-Coordinate shared file wiring with worker2/3/6; inspect latest `domains.rs` and
-related call sites after rebase, use minimal disjoint edits. No edits to their
+Use minimal disjoint edits to shared `domains.rs` wiring. No edits to the
 G2/G3/G4 option logic.
 
-## TDD stages (approval before tests)
+## TDD stages
 
-1. Commit this source-cited spec alone and request review.
+1. Commit this source-cited spec alone.
 2. **Independent Native-backed RED:** add dedicated runtime E2Es first. Under
    current incomplete classification, export/slice the finite requests and
    controls, verify applied dependencies and Native BR1/BR0 gates, retain full
@@ -117,7 +114,7 @@ G2/G3/G4 option logic.
    generic plan can remain incomplete until GREEN; RED records which new
    dependency-backed requests were exercised separately.
 3. If full bytes fail before the metadata assertion, preserve first difference
-   and STOP for source-owner admission. Do not manufacture metadata RED around
+   and STOP for source-boundary admission. Do not manufacture metadata RED around
    a divergent stream, adjust geometry/values or fix production in this slice.
 4. **Harness GREEN only:** implement the key-local finite plan/context and
    bounded-positive classification, wire the canonical selected-key sweep into
@@ -137,10 +134,9 @@ false PASS and missing Native falsely passing.
 
 ## Execution and exit evidence
 
-Native directed runs: start only when load1<60, nextest **2 threads**; one heavy
-stage at a time. Full runs: start when load1<30; retain the measured load/admission
-receipt. CPU pinning and inherited producer identities remain unchanged. Builds
-and tests freeze the source tree; caches/artifacts/logs outside Git. Optional
+Native directed runs: one heavy stage at a time. Inherited producer identities
+remain unchanged. Builds and tests freeze the source tree; caches/artifacts/logs
+are not committed. Optional
 missing Native visibly SKIPPED, required missing Native FAIL; configured invalid
 path/nonzero/timeout/missing output FAIL, never fallback or skip.
 
@@ -149,14 +145,12 @@ path/nonzero/timeout/missing output FAIL, never fallback or skip.
 - Selected-key unfiltered Option sweep: all six authored requests accounted
   for, full comparisons PASS, scoped row PASS; no excused/rejected successes.
 - Default full workspace via nextest; strict workspace/all-target/all-feature
-  Clippy, fmt and WASM. Source-only harness slice does not authorize core changes.
+  Clippy, fmt and WASM. Source-only harness slice makes no core changes.
 - Fresh seeded/official base/candidate v2 full controls with independent targets
   and different binary SHAs before launch; compare by test name. Seeded candidate
   all PASS; official candidate FAIL subset baseline FAIL. Standard v2 Native
   nonexecution/seeded-only guards remain visibly recorded separately from
   Nextest skip counts. List all raw Ares changes and their source/input authority.
-- Exact-hash review before authorized integration. Test/docs-only main carry
-  permitted only with owner ruling; production main changes require fresh gates.
 
 ## Deferred / no false closure
 
@@ -168,32 +162,30 @@ overhang ramp interaction, printer hardware limits and other PA firmware
 formats are deferred. No new negative/upper-rejection witness is silently claimed.
 `bridge_flow`, `internal_bridge_flow`, `filament_diameter` and
 `filament_flow_ratio` stay with their own incomplete/assigned source boundaries.
-Type2 activation remains worker2's work. Existing Ares scaffold is only the
+Type2 activation is a separate slice. Existing Ares scaffold is only the
 compatibility shell around the cited upstream options/consumer, never an
 independent pipeline design.
 
-## Admitted .06 Native nondeterminism (coordinator ruling)
+## Admitted .06 Native nondeterminism
 
-First runtime attempt `0bf96342-efc0-4adf-a0cf-46e8d2e2b67d`:
+First runtime attempt:
 8/9 contextual whole comparisons PASS; interior .06 differs at byte20964,
 line662 (internal-solid-infill travel): Native X113.388/Y113.135 versus
 Ares X113.244/Y113.297. Initial Native raw SHA
 `cc5769d8778be94ac91e89b293abccc731dc90185cf621cf4e5cc7baa8aee79f`.
 Classification assertion was not reached; this is not the metadata RED.
 
-Authorized read-only fixed-input investigation kept input raw SHA
+A read-only fixed-input investigation kept input raw SHA
 `622a00603557b44d5aec41c49fdeb093aaf01d338d5a1ee73b5267a0541eeb99`
-and every member byte fixed. Three cold Native processes, CPU39 as the original
-receipt, all match two raw-stable public Ares outputs under the existing whole
+and every member byte fixed. Three cold Native processes, configured as the original
+run, all match two raw-stable public Ares outputs under the existing whole
 stream generated-by-line identity policy. Three cold runs alone have one
 variant; including the initial independently captured Native yields two.
 Ares raw SHA both runs and the original failed case:
 `ed03e3a1d25f4a6a35da152aa1918e0cf8d21713745de91aa698ab98d16d43dd`.
-Original R1 .06 on af739's immutable binary also matches; input members exact.
-Evidence: `${TMP_ROOT}/ares-apa-g1-bridges/nd-diagnosis/{fixed-input-audit.json,original-and-main-control.json}`;
-first failure retained under `${TMP_ROOT}/ares-apa-g1-bridges/red-official`.
+Original R1 .06 on the earlier immutable binary also matches; input members exact.
 
-Coordinator explicitly ruled Native ND and authorized ONLY this .06 context to
+This is classified as Native ND, and ONLY this .06 context may
 use the existing `compare_exported` bounded Native retry path. Keep all observed
 variants and the first failure; no new tolerance, filter, comparator, run-budget
 change, chosen frozen authority or production fix. Every resulting PASS still
@@ -203,25 +195,17 @@ harness GREEN. Other contexts retain their original strict path.
 
 ## Native-backed classification RED and harness GREEN checkpoint
 
-Accepted admission run `fb395a3f-47e4-4b7f-bf19-579cfdcbfdff`,
-`${TMP_ROOT}/ares-apa-g1-bridges/red-classification-official`: all nine full comparisons
+Accepted admission run: all nine full comparisons
 and application/BR1/BR0 checks PASS, then only the classification assertion
-fails (INCOMPLETE versus PASS). Independent RED commit `70145c3f4`; the authorized
-pure-test main advance to `1b1c38eb9` was carried git-only to `c59d8132b` without
-claiming new runtime evidence.
+fails (INCOMPLETE versus PASS) in an independent RED commit.
 
 Harness implementation is key-local: six cases preserve old probe-min .5 and
-probe-max 2.0 labels, fixed dependency activation, applied-value receipts before
+probe-max 2.0 labels, fixed dependency activation, applied-value checks before
 Native reachability and full comparison, one bounded metadata row. Cold/hot
 seeded and official directed runs each PASS both the nine-context classification
-test and selected-key six-case unfiltered-value sweep. Evidence directories:
-`${TMP_ROOT}/ares-apa-g1-bridges/{green-first-official,green-hot-official,green-cold-seeded,green-hot-seeded}`.
-Inventory audit `other-plan-inventory-audit.json`: 650 rows in each tree,
+test and selected-key six-case unfiltered-value sweep.
+Inventory audit: 650 rows in each tree,
 only adaptive_pressure_advance_bridges differs; all other 649 rows exact.
 Targeted strict Clippy exit0. These checkpoints do not substitute for the final
-workspace/full controls and exact-hash combined review; no production PA,
+workspace/full controls; no production PA,
 geometry, writer, processor or comparator change.
-
-Approval requested: this bounded test-harness contract and Native-backed
-classification RED, followed by harness-only GREEN. No tests/implementation
-start before approval.

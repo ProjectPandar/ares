@@ -24,5 +24,4 @@ residual inputs before production edits. After edits repeat16, full68, previousl
 restored52 and823 stock controls, plus8 fresh official references retained from
 the prior slice. Preserve every non-PASS; claim only observed recovery and do not
 waive assertions. Workspace Nextest/fmt/default Clippy/actual core+adapter WASM
-build are mandatory. Existing lint debt is reported to the lint owner, not fixed
-or suppressed here. Independent coordinator review precedes ff-only integration.
+build are mandatory. Existing lint debt is not fixed or suppressed here.

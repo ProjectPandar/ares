@@ -1,15 +1,9 @@
 # APA-R2 remaining M: classic sloped-loop PA context — SPEC
 
-Status: **SPEC-REVIEW REQUEST, no execution/implementation authorization**.
+Status: proposed.
 Parent: `docs/architecture/adaptive-pa-deferred-r2-spec.md`, ARD-0104,
-roadmap OPEN `2863ef3ea`; execution order **M → A → R**.
-Analysis CAND: `d3f599ed5e07e3176d3cce98d8b67afbd99a46fd`, BASE
-`5d79a99632fbe0157e40228f42a0adfc53467438`.
+execution order **M → A → R**.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-This spec is stored outside the reviewed candidate to preserve its exact hash
-while it queues full. Intended durable repository destination after approval:
-`docs/architecture/adaptive-pa-r2-m-sloped-loop-spec.md`, docs-only commit
-before new tests on the next slice. No current candidate code/test changes.
 
 ## 1. Non-negotiable architecture / rewrite slice
 
@@ -18,16 +12,16 @@ Port/verify `libslic3r::GCode::extrude_loop`'s loop PA context and
 Existing `ares-core::project_slice::gcode_emit::motion` modules are temporary
 compatibility shells around the cited upstream GCode concepts. Core consumes
 platform-neutral typed state/bytes; adapters own exports, files, processes,
-receipts and reports. Tier1 browser WASM/Windows/macOS/Linux boundaries stay.
+and reports. Tier1 browser WASM/Windows/macOS/Linux boundaries stay.
 
-A standalone `ExtrusionMultiPath` is not a sloped loop. Engineering-approved
-standalone mean candidate d3f (+15/-2) does not close this residual or authorize
+A standalone `ExtrusionMultiPath` is not a sloped loop. The standalone mean
+candidate d3f (+15/-2) does not close this residual or justify
 another production repair. Existing R1 uniform same-role slope is a control,
 not heterogeneous-flow or mixed-role loop coverage.
 
 ### Exact source / Rust destination map
 
-| Upstream boundary | Included source behavior | Rust boundary / permitted action after RED review |
+| Upstream boundary | Included source behavior | Rust boundary / permitted action after RED |
 | --- | --- | --- |
 | `GCode.cpp:5777–5806::extrude_loop` | Ordinary non-vase outer/perimeter loop after layer0; optional conditional slope gate; slope uses clip_length0 before building slopes while ordinary loop may apply seam-gap clip. Empty clipped path set returns. | `motion/loop_paths.rs::emit`, `motion/scarf.rs::build`; **eligibility/clipping are frozen**, only verify admitted behavior. Do not repair scarf geometry. |
 | `GCode.cpp:5893–5900` | Small-perimeter override applies perimeter roles, not bridge/overhang roles; leave source-observed speed/role lag unchanged. | `motion/loop_paths.rs` speed_for_path; verify only, no speed-planning repair. |
@@ -46,8 +40,8 @@ they are not runtime RED and do not justify adding suppression assignments now.
 
 ## 2. Offline fixture inventory and requested producer scope
 
-Artifact: `${TMP_ROOT}/ares-adaptive-pa-r2/M-sloped-offline-fixture-inventory.json`
-contains original ZIP member hashes/settings. No Native/export/compile executed.
+An offline fixture inventory records original ZIP member hashes/settings.
+No Native/export/compile executed.
 
 - R1 `tests/parity/cube10.stl` +
   `adaptive_pressure_advance/residual_witness.rs` is already admitted uniform
@@ -68,17 +62,17 @@ contains original ZIP member hashes/settings. No Native/export/compile executed.
   replacing only the mesh argument cube10→overhang for the new test. This is
   a proposed reuse/admission scope, **not runtime reachability evidence**.
 
-Approval requested covers this one existing mesh and R1 option context, no
+Scope covers this one existing mesh and R1 option context, no
 manual mesh creation, shears, mesh rescaling, generator substitution, new
 printer context, unsupported tower producer or synthetic entity injection.
-If export or whole-output negative control fails, preserve and refer to owner;
+If export or whole-output negative control fails, preserve and report it;
 stop M. If Native cannot prove heterogeneous flow or real mixed roles in a
 single classic sloped loop, stop as missing witness, not PA RED. A new manual
 mesh/producer requires a separate amendment; no unbounded probe sweep.
 
 ## 3. Test-first, frozen option/input contract
 
-After approval and docs commit, commit a new separate E2E module before any
+After the docs commit, commit a new separate E2E module before any
 production change. Do not edit R1 assertions or current standalone off/active
 tests. Use established private runner export/slice/compare seam; no public field
 visibility expansion or isolated implementation-following unit tests.
@@ -129,7 +123,7 @@ regression controls. No preset/domain/sweep registration changes in this slice.
 
 ## 4. Admission evidence: source-owned, observable and honest
 
-Use actual uninstrumented required-Native outputs and executed Slice receipts.
+Use actual uninstrumented required-Native outputs and executed Slice results.
 Capture `PA_CHANGE`, `APA` debug and actual flavor-owned PA commands without
 stripping any from acceptance. Bind actual finalized tool, used ACCEL, BR/RC/OV,
 flow/feed sequence, layer, XY/E extrusion and slope rising-Z/flat/end blocks.
@@ -151,30 +145,30 @@ Distinct requested proofs:
 Full final output may not expose original raw path count/length/flow/ownership
 unambiguously. If comments/debug plus known source producer cannot distinguish
 one loop from several, mark that proof **UNVERIFIED**, stop admission and request
-an approved evidence seam or fixture amendment. Do not use GDB/private mode
+an evidence seam or fixture amendment. Do not use GDB/private mode
 injection, instrumented substitutes for final output, hidden-register release
-requirements, invented assertions or synthetic caches. Owner discontinued GDB;
-that ruling remains in force. Frozen geometry identity is necessary but not
+requirements, invented assertions or synthetic caches. GDB is not used.
+Frozen geometry identity is necessary but not
 sufficient runtime path admission.
 
 ## 5. RED localization and permitted repair envelope
 
 Preserve first complete same-input Native/Ares mismatch with raw inputs,
-nonconfig-member/settings hashes, request/producer receipt, binary hashes,
-argv/env/CPU, captured stdout/stderr/status, raw streams, run IDs and exact first
+nonconfig-member/settings hashes, request/producer identity, binary hashes,
+argv/env, captured stdout/stderr/status, raw streams, run IDs and exact first
 difference. Native actual exit0/output is required. Export rejection, compile
 failure, unreachable branch, missing product, timeout or SIGTERM is infrastructure
 or admission blocker, never parity RED.
 
-Before repair review, show the whole-output delta is causally PA activation:
+Before repair, show the whole-output delta is causally PA activation:
 negative geometry controls exact; geometry/XY/E/feed differences must be
-separated and referred, not patched in this slice. Compare role/flow tags
+separated and reported, not patched in this slice. Compare role/flow tags
 against upstream initial mean/suppression/role semantics, not expected numeric
 prediction picked to force GREEN. If divergence belongs to scarf geometry,
 small-perimeter speed, processor, formatter, ramp A or reset R, stop and re-scope
-with owner, do not grow this M repair boundary.
+rather than grow this M repair boundary.
 
-After genuine localized M RED approval, the only potential production owners
+After a genuine localized M RED, the only potential production owners
 are loop PA context initialization/after-child suppression and initial marker
 mean/role override in the existing mapped motion files. Preserve raw mean/E
 ratio distinction, geometry, tool/role order, wipe and context teardown. No
@@ -200,33 +194,25 @@ Touched Rust modules <=400LOC; split only if required, no unrelated cleanup.
 
 ## 7. Exit gates and stop conditions
 
-SPEC review may approve **bounded producer admission/test-first execution** only;
-there is no claimed runtime RED or implementation authorization now.
+This SPEC covers **bounded producer admission/test-first execution** only;
+there is no claimed runtime RED or implementation.
 
 - Admitted producer and same-loop heterogeneous/mixed-role/slope proof, or
   explicit missing-witness report with no fake coverage.
-- Six contexts official + `${TMP_ROOT}/ares-parity-control-set-v2.sh seeded` standard
-  mode with fresh caches/roots and actual Slice receipt/binary policies. Correct
-  notification mode labels and verify mode independently from receipts. Native
+- Six contexts in official and seeded standard
+  mode with fresh caches/roots and actual Slice binary policies. Correct
+  mode labels and verify mode independently from results. Native
   optional absence SKIP is not proof; required absence/nonzero/timeout FAIL.
 - Preserve original `golden::compare_ordered_bytes_generator_only`; entire
   output assertion + permitted generator normalization only. Source-admission
   extraction is supplemental, never an acceptance comparator.
-- If production changes: authentic test-first RED review→localized GREEN,
-  workspace Nextest/strict Clippy/fmt/WASM, four-leg standard BASE/CAND full and
-  independent bounded group REVIEW. If already equal: test-only verification
-  review and explicit owner full-exemption ruling if applicable.
+- If production changes: authentic test-first RED→localized GREEN,
+  workspace Nextest/strict Clippy/fmt/WASM and standard BASE/CAND full parity.
+  If already equal: test-only verification.
 - If option inventory/domain plan/sweep registration is unexpectedly required,
-  stop for scope approval; any approved registration delta additionally requires
+  stop for scope review; any registration delta additionally requires
   entire option_coverage group including nonNative `option_coverage::tests::*`.
-- No heavy during offline SPEC work; no editing tests during runs. Directed
-  load<60, engineering load<30/jobs2threads2/nonpinned; pinned only seeded Native
-  replay directed. Honor HOLD/browser and exact exclusive-leg protocol/current
-  coordinator rulings. No retry-until-PASS, stash/force push or premature full.
-- Current d3f standalone slice remains queued W3brim→W5inherits→W1; separate
-  next-slice docs/tests do not mutate its approved candidate. Production main
-  advancement VOID gates and requires fresh rebase/gates; test/CI-only advances
-  carry only under owner ruling with range-diff. Exact approval before FF.
+- No editing tests during runs. No retry-until-PASS or premature full run.
 
 Completing admission or a bounded repair here does not close parent APA-R2,
 ARD-0104 or roadmap OPEN2863. M residuals close only to the actually measured

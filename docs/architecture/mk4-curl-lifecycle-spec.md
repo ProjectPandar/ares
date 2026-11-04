@@ -1,12 +1,7 @@
 # SPEC: Source-owned curled-perimeter lifecycle (`estimate_curled_extrusions`)
 
-Status: **APPROVED by the coordinator; implemented by the RED/GREEN slice
-on this branch.** Base `6876ad70cc2e8d68b86bb7220124a6b27be775aa`.
-
-Originating evidence: MK4 `make_overhang_printable=1` PINPOINT-FINAL —
-the worker-lane evidence receipt
-`PINPOINT-FINAL-mk4-make-overhang-printable.md`
-(SHA256 `ef6b4b2fc5752bbece5fdcd02a2f347d5fd7b1477f12848d23f6196ad64ec107`).
+Originating witness: MK4 `make_overhang_printable=1` read-only pinpoint
+capture.
 This is a source-cited rewrite slice of `libslic3r`; it replaces Ares
 scaffolding around an upstream concept and creates no Ares-owned pipeline.
 
@@ -100,7 +95,7 @@ external fragments. Consequences witnessed on MK4:
 The `CurlTracker` module doc already claims `SupportSpotsGenerator.cpp:141-196`
 semantics; this slice makes the module's *inputs* actually match that source.
 
-## 3. Included behavior (the authorized correction scope)
+## 3. Included behavior (the correction scope)
 
 Create a source-owned pre-seam/pre-simplify curl estimation stage, ported from
 `PrintObject::estimate_curled_extrusions` → `estimate_malformations`:
@@ -162,7 +157,7 @@ new public API, no retained diagnostics, no formatter/M73/cooling changes.
 
 ## 5. Expected corrections on the MK4 witness (0-based layers)
 
-From the PINPOINT captures (same fixture, CPU15/threads1):
+From the PINPOINT captures (same fixture):
 
 | Layer | Native (upstream contract) | Ares today | Expected after slice |
 | --- | --- | --- | --- |
@@ -180,24 +175,22 @@ verification targets, not guarantees; the slice is validated against Native,
 and if a layer still diverges the run stops for re-localization rather than
 tuning.
 
-## 6. RED/GREEN and acceptance plan (for the next batch, coordinator-gated)
+## 6. RED/GREEN and acceptance plan
 
 1. RED first (test-only commit): MK4 `make_overhang_printable` fixture E2E
    (official + seeded) reproducing the stable whole-stream difference
    (byte 1710 `M73 P69/P68`, motion `F1650/F1654` at Z7.6), registered only
-   in the group file; root `orca_parity.rs` unchanged. RED commit carries the
-   unique `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` trailer.
+   in the group file; root `orca_parity.rs` unchanged.
 2. GREEN: implement §3 only. Re-run exact RED in both modes (fresh official,
    fresh seeded) plus API==CLI raw equality, existing curl/overhang controls,
    `cargo nextest run` scoped core suite, fmt, clippy, LOC<400 module split.
-3. Evidence: artifacts + receipts under a new evidence dir; Native outputs
-   never committed; a shared Orca cache directory via `ARES_ORCA_CACHE_DIR`
-   with `ARES_REQUIRE_ORCA=1`; CPU15/threads1/jobs1.
+3. Native outputs are never committed; a shared Orca cache directory via
+   `ARES_ORCA_CACHE_DIR` with `ARES_REQUIRE_ORCA=1`.
 4. Exit criteria: whole-stream NULL vs Native on the witness (or an explicitly
    re-localized next first difference reported, not masked); no regression on
    previously NULL machines/cases in the scoped control set.
 
-### GREEN outcome (2026-10-27, strict form)
+### GREEN outcome (strict form)
 
 The E2E is a strict whole-stream `native_stream_case::check` (no
 pinned-mismatch asserts). The curl lifecycle stage lands the

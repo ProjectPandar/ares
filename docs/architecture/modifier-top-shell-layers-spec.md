@@ -1,13 +1,9 @@
 # Proposed slice: parameter-modifier top_shell_layers
 
-Status: SPEC review request, docs only. Worker3; base main
-`5a9687ac020962f254b6262f2184f3345025c70f`.
-Previous center proposal stopped: canonical Native has no registered --center.
-Per-object skirt belongs to W1; counterbore belongs to W4. This proposal touches
-neither. Modifier filament selectors remain outside worker3's slice (inventory
-reserved them for worker6).
+Per-object skirt and counterbore are separate slices; this proposal touches
+neither. Modifier filament selectors remain outside this slice.
 
-## Remaining difference and evidence status
+## Remaining difference
 
 The UnsupportedProjectFeature inventory (2026-10-08, row05) lists modifier
 shell counts separately from ordinary process shell settings. Current
@@ -19,8 +15,8 @@ removed only its own gate and explicitly deferred top/bottom shell counts.
 Native's region construction applies modifier volume config to the parent
 PrintRegionConfig, and its shell consumers read region-specific top counts.
 Thus this is a concrete source-supported admission candidate. Runtime Native
-acceptance is not yet measured for the new matrix: prove admission first after
-SPEC approval, and stop if Native rejects or the public output is ambiguous.
+acceptance is not yet measured for the new matrix: prove admission first,
+and stop if Native rejects or the public output is ambiguous.
 Do not count registry presence or old global-option sweeps as a modifier PASS.
 
 ## Upstream ownership
@@ -79,13 +75,13 @@ No public import/selection/placement/API contract changes are proposed.
 
 ## RED, GREEN and evidence
 
-After approval, author input-only deterministic 3MF generator/provenance,
+Author input-only deterministic 3MF generator/provenance,
 starting from the retained modifier-wall-loop control and replacing only the
 modifier's wall override with top_shell_layers. Keep the parent, region options
 and geometry separately recorded. Use a tall prism with a modifier reaching
 the top over half its XY footprint, enough layers to distinguish count 1/4.
 
-On CPU12 (outer taskset, jobs1/threads2), run Native official and seeded in
+Run Native official and seeded in
 fresh cache/artifact roots. Require exit0 plus effective config/geometry
 witnesses; compare active Native top-count outputs against equal/no-override
 controls to prove the local feature changes output. Then run the same inputs
@@ -94,13 +90,11 @@ with equal/no-override controls distinguished explicitly. Record all exit
 channels, input/G-code SHA, API/CLI equality and the raw first mismatch. Do not
 infer a local effect from a global config footer alone.
 
-Commit fixtures and public Native-backed RED separately and report to inbox
+Commit fixtures and public Native-backed RED separately and report it
 before GREEN. Keep strict ordered complete-output comparison in both modes;
 no normalization beyond the existing generator-line comparator, retries,
 assertion weakening, ignored tests or committed Native outputs. Any existing
-negative top-guard assertion needs its own precise retirement request.
+negative top-guard assertion needs its own precise retirement.
 
 GREEN must preserve unaffected raw control streams, each Rust file <=400 LOC,
-and pass directed matrix plus strict clippy/fmt/wasm32 before code review.
-Workspace/full require explicit coordinator allocation, no push. No production
-or fixture implementation before this SPEC is approved.
+and pass directed matrix plus strict clippy/fmt/wasm32.

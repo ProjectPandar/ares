@@ -1,8 +1,5 @@
 # SPEC: Klipper merged velocity-limit verbose suffix
 
-Base `a6232a1dfa1735463e6be9088e9cc8bb673bb47b`; coordinator ACK authorizes
-SPEC → Native-first public RED → minimal GREEN → review and hold, no FULL.
-
 ## Non-negotiable source boundary
 
 Port `OrcaSlicer/src/libslic3r/GCodeWriter.cpp:311-350::set_accel_and_jerk`,
@@ -35,8 +32,7 @@ first normalized difference byte87481; Native has the exact suffix on the
 ACCEL250/ACCEL_TO_DECEL125 command and restoration500/250, Ares omits it.
 Four fresh Native slices replay-stable; actual exact-main CLI used. Verbose
 byte-fidelity only, not changed motion. Full output, generator-line normalization
-only; no masks. Discovery evidence
-`${EVIDENCE_ROOT}/w4-next-velocity-comments/` including ownership audit.
+only; no masks.
 
 ## Test-first plan / failures / exits
 
@@ -45,7 +41,7 @@ cases through existing `native_stream_case`, with no new helper. Native replay
 and callback must qualify actual merged commands: comments enabled requires
 source suffix, disabled requires absent suffix; both must exercise the command.
 Then unchanged full Native/API/CLI comparator, all timing/config/footer included.
-CPU17/PIN17/jobs1/threads1, official then seeded. RED target fails at missing
+Official then seeded. RED target fails at missing
 suffix while control passes; verify API==CLI. Commit RED before production.
 
 Failure classes: comment appended to empty/no-op commands; suffix emitted with
@@ -56,6 +52,6 @@ No hardcoded Native coordinates, reference goldens, count masks or output filter
 
 GREEN changes only conditional suffix in existing nonempty arm. Tests/inputs
 freeze unchanged. Run fmt, workspace all-target clippy and both directed cases
-in both modes, preserve actual statuses/logs, issue REVIEW-REQUEST and hold.
-No FULL, merge or push. Final files stay≤400LOC; group test registration without
+in both modes, preserve actual statuses/logs.
+Final files stay≤400LOC; group test registration without
 squeezing root registries. Native outputs remain external artifacts only.

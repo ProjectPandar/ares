@@ -1,6 +1,5 @@
-# Native 清理 B：travel 三输入参照迁移
+# Native 清理：travel 三输入参照迁移
 
-owner worker6；整体 B / 共享 runner/cache owner worker4。基线 `eddfff507`。
 本片把已有 CLI E2E 的冻结 Native 参照迁为运行时参照，保留五个 active
 测试的公共 CLI 输出入口和比较合同，不修改 travel 生产实现。
 
@@ -19,7 +18,7 @@ owner worker6；整体 B / 共享 runner/cache owner worker4。基线 `eddfff507
 
 Rust 路径相对 `crates/ares-core/src/project_slice/gcode_emit/`，仅用于说明
 被验证的所有权，不在本片改动。已有兼容 scaffold 不扩展、不作为新算法。
-worker2 的 router 截断修复独立；若合入后产生交互，先 rebase 到其 main，
+router 截断修复是独立切片；若产生交互，
 以运行时 Native 对照定位，不改断言来吸收输出变化。
 
 ## 精确写入范围
@@ -34,9 +33,9 @@ worker2 的 router 截断修复独立；若合入后产生交互，先 rebase �
   冻结参照/历史测试数量说明。三个 `.3mf` 与 `.gitattributes` 字节不变。
 
 不改生产 API、routing、root `orca_parity.rs`、共享 result cache、
-`cache.rs/custom_gcode.rs`、`.config`，不涉及 worker4 的 CLI63、retained、
-channels、marker、KSR。当前 `.config/nextest.toml` 没有三个旧 binary 的
-精确 selector；后续若发现失效 selector，先报告协调者，不自行改配置。
+`cache.rs/custom_gcode.rs`、`.config`，不涉及 CLI63、retained、
+channels、marker、KSR 迁移。当前 `.config/nextest.toml` 没有三个旧 binary 的
+精确 selector；后续若发现失效 selector，先报告，不自行改配置。
 
 ## 五个测试的不可放宽合同
 
@@ -84,14 +83,12 @@ required 冷/热各跑五例：冷轮验证三个唯一输入的真实 Native �
 required/optional 缺依赖策略和暖缓存检查。保存两轮 receipts 与全输出。
 
 在最新生产 main 上 fresh base/cand v2 seeded + official，记录完整状态变化、
-共同 Ares raw SHA 与严格失败子集脚本原始结果；不沿用旧 `08a` raw。
-`083` Stage2 之后的新生产改动须刷新相应配对基线，test/docs-only 可按协调者
-裁定沿用。任何 Native 波动保留原失败和双侧原始证据，先交协调者裁定。
+共同 Ares raw SHA 与严格失败子集脚本原始结果。
+新生产改动须刷新相应配对基线。任何 Native 波动保留原失败和双侧原始证据并逐例报告。
 
-工程门禁：本组定向、`cargo nextest run --workspace`（16 threads）、
+工程门禁：本组定向、`cargo nextest run --workspace`、
 workspace/all-targets/all-features clippy `-D warnings`、fmt、
-core/vgcode/wasm 的 wasm32 check。每人一个 heavy、独立 target；浏览器窗口
-不启动新 heavy。完成后提交确切 hash REVIEW，批准后才 rebase/ff-only push。
+core/vgcode/wasm 的 wasm32 check。
 
 Deferred：所有生产 travel 修复、额外 fixture/option 矩阵、Native 非确定性
-修复、共享缓存/selector 策略调整及其它 B 组；无新增 ignore 或弱化断言。
+修复、共享缓存/selector 策略调整及其它迁移组；无新增 ignore 或弱化断言。

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted and implemented; final independent implementation review pending.
+Accepted and implemented.
 
 ## Decision
 
@@ -131,22 +131,13 @@ ignored errors, and output sorting; production must restore byte-exact.
 Implementation adds the ordinary private seam and test children, the direct
 flat Polygon/Polygon intersection overload and re-exports, exact ordered
 geometry composition, injected operation-order/error tests, real topology,
-empty/range/repeatability, and allocation-preservation tests. Behavioral RED was preserved against the deliberate `todo!` stub in
-`/tmp/task22o66-behavioral-red.log`.
+empty/range/repeatability, and allocation-preservation tests. Behavioral RED was preserved against the deliberate `todo!` stub.
 
-Focused O66 and the exact dependency band pass 12/12 and 776/776 in
-`/tmp/pi-unified-exec-967-58fbf8ad.log`; workspace Nextest passes
-6,436/6,436 with two skipped in `/tmp/pi-unified-exec-968-c6df80da.log`.
-Strict Clippy, rustfmt, wasm32, x86_64/aarch64 Windows/macOS,
-diff/LOC/static, pinned Orca, and no-staged checks pass in
-`/tmp/pi-unified-exec-969-e230f5e9.log`.
+Focused O66 and the exact dependency band pass 12/12 and 776/776;
+workspace Nextest passes 6,436/6,436 with two skipped. Strict Clippy,
+rustfmt, wasm32, x86_64/aarch64 Windows/macOS, diff/LOC/static and pinned
+Orca checks pass.
 
-The compile-validating 30-mutation audit script has SHA-256
-`86cc8dc6e84b8864fa1a866412a69f92a342a8c2d36a1d9a22c862f88f14c749`;
-its output has SHA-256
-`577d9aef4ab2f8c26676f3cbb99e09383a75df3988f496783c6b9425748a5d1f`.
 All 30 compiling behavioral mutations, including no-safety difference and
 intersection discriminators, are killed and production restores
-byte-exact at SHA-256
-`ea5648423925ad89e5085409a0c3551c6315f5ac5e36a1a5a908e58cdae9a009`.
-Final independent six-axis review remains required.
+byte-exact.

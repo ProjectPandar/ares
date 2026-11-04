@@ -1,7 +1,7 @@
 # Lateral sparse multiline overlap removal
 
 Status: SPEC proposal; docs only. No Native discovery or RED has run for this slice.
-Base: `3ee8f272c6d8e2db22dde9003a01afeb7201e36a` (current main).
+Against main `3ee8f272c6d8e2db22dde9003a01afeb7201e36a`.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Owning upstream boundary
@@ -60,8 +60,8 @@ Include only sparse LateralLattice/LateralHoneycomb count > 1, post-clip
 pre-connect overlap removal. Preserve spacing, density, sweep arithmetic,
 frame, existing multiline offset, connection, extrusion flow, and ordering.
 
-Defer regular Honeycomb and TPMS-D anchoring (W3), SupportCubic E (W3),
-Adaptive/touching, ironing and support ironing (W5), all other pattern
+Defer regular Honeycomb and TPMS-D anchoring, SupportCubic E,
+Adaptive/touching, ironing and support ironing, all other pattern
 algorithms, shared union changes, and numerical fixes outside this helper.
 The ordinary Honeycomb pattern is distinct from LateralHoneycomb. This
 proposal does not claim any ownership of its anchoring or an ironing arm.
@@ -70,13 +70,13 @@ report; do not expand production scope to make the candidate pass.
 
 ## Native-first discovery and RED plan
 
-After approval, use an authored centered rectangular prism, one object,
+Use an authored centered rectangular prism, one object,
 one region/no modifier, one filament/no tower, by-layer, sparse density 30%,
 0.2 mm layers and explicit 0.45 mm infill width. Keep ordinary walls and
 solid caps. Only input 3MF/settings and test source enter Git.
 
-Bounded requests (each official and seeded, CPU11, jobs1/threads2, fresh
-cache/artifact root per run, canonical environment):
+Bounded requests (each official and seeded, fresh cache/artifact root per
+run, canonical environment):
 
 | Requests | Pattern and settings | Purpose |
 | --- | --- | --- |
@@ -96,21 +96,20 @@ inconclusive, never an accepted witness.
 For any true witness, localize the first unequal stage: pre-intersection
 pool, post-intersection pool, retained-prefix output, then connected paths.
 Require evidence that upstream removes a line here and Ares retains it;
-if stages already differ before this helper, report and stop for a ruling.
+if stages already differ before this helper, report and stop.
 Use only the existing Native binary if read-only gdb is necessary.
 
-Commit the public RED separately and request review before GREEN. Exercise
+Commit the public RED separately before GREEN. Exercise
 `slice_project_plate_validated` and CLI with runtime `OrcaRunner` reference;
 assert complete normalized byte equality and API == CLI. Missing Native
 uses shared required/optional policy. No guards, ignore, weakened assertions,
 Native artifacts, or fabricated expected geometry. All existing controls
 must pass first and remain raw-byte unchanged after any port.
 
-## Acceptance after a separately approved RED
+## Acceptance after a separate RED
 
 Exact final clean hash: frozen RED cases and four controls in both modes;
 non-RED shared multiline callers raw-byte unchanged; full option_coverage
 (including non-Native tests) in both modes with visible skips reported;
 strict clippy, rustfmt, wasm32, files <= 400 LOC. Any residual is STOP,
-not GREEN. Full/workspace remain coordinator-owned and require allocation.
-Rebase onto stack-17's merged main before runtime work if it has advanced.
+not GREEN.

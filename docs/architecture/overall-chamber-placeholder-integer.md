@@ -1,7 +1,5 @@
 # Machine-start overall chamber placeholder integer identity
 
-Status: docs-first SPEC; formal public RED follows separately.
-Base `404177d8cf855c0e8ca89afa1edd7f59f13e0590`.
 Upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Owning upstream constructor and exact Rust boundary
@@ -43,8 +41,8 @@ lexer/tokenizer, evaluator, formatter, motion, processor, timing and acceleratio
 No name branch inside a generic formatter or evaluator. No global integer
 retyping or changed numeric literal semantics.
 
-This boundary avoids W1 orchestration total_layer_count/auto_lift, W3
-lexer/tokenizer/fan/zero-E, and W4 writer jerk/format/acceleration. It does not
+This boundary avoids orchestration total_layer_count/auto_lift,
+lexer/tokenizer/fan/zero-E, and writer jerk/format/acceleration. It does not
 extend the separately frozen coInts ingress slice.
 
 ## Frozen Native-first public witness
@@ -72,21 +70,16 @@ stream, including comments/M73/motion/time/metadata/footer; no masks/tolerances.
 Canonical RED panic precedes final raw assertion and helper adapter update:
 audit raw artifacts independently instead of claiming unreachable assertions.
 
-## Sequence and review
+## Sequence
 
 1. Commit this SPEC before tests or production changes.
 2. Commit frozen inputs, README/hash manifest and public two-case RED separately
-   from production. Register in the existing W6 case group, not the full root.
-3. CPU15/jobs1/test-threads1: actual official and seeded formal RED, independent
-   initially empty caches. Static fmt and strict workspace/all-target clippy;
-   verify frozen inputs, source boundary, trailers and all changed text<400LOC.
-4. Submit one SPEC+RED REVIEW-REQUEST and HOLD at that review boundary.
-5. Subsequent GREEN remains restricted to the single start_config.rs writeback
-   above, never formatter/eval/temperature computation. No FULL, integration,
-   rebase, merge or push is inferred from this SPEC.
+   from production. Register in the existing case group, not the full root.
+3. Actual official and seeded formal RED with independent initially empty
+   caches. Static fmt and strict workspace/all-target clippy; verify frozen
+   inputs, source boundary and all changed text<400LOC.
+4. Subsequent GREEN remains restricted to the single start_config.rs writeback
+   above, never formatter/eval/temperature computation.
 
-Discovery evidence is under
-`${EVIDENCE_ROOT}/w6-overall-chamber-probe-discovery-4h7m2n9p/`.
-Formal RED creates fresh evidence and does not borrow discovery verdicts or
-claim runtime type captures. The source-only max_print_z idea was excluded
+Formal RED does not borrow discovery verdicts or claim runtime type captures. The source-only max_print_z idea was excluded
 because its existing binding is already Integer. No browser/multicore claim.

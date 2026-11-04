@@ -1,8 +1,7 @@
 # J1b: first compatible toolchange template context
 
-Status: SPEC-REVIEW requested. Expansion authorized by coordinator after
-mask-only candidate exposed a later complete-byte residual. No J1b
-implementation yet.
+This expansion follows the mask-only change, which exposed a later
+complete-byte residual.
 
 ## Source boundary
 
@@ -39,17 +38,12 @@ Upstream pin8500fcdccaa10b5099ac20d252af3a7c560046f1:
 
 ## Evidence and corrected interpretation
 
-Mask-only production commit `df56e12f0fe3fad0e071cbb717f830ff9dbd8ca6`
-stands alone, NOT pushed and NOT declared whole-file GREEN. Parent is the
-approved RED4f943a7ed. Mask now matches Native and the unused T0 flush is
-removed. The unchanged primary inputSHA7d796432… still differs at
+The mask-only production change is NOT declared whole-file GREEN. Mask now
+matches Native and the unused T0 flush is removed. The unchanged primary inputSHA7d796432… still differs at
 byte1845/line135: Native `_FORCE_RESUME_FAN_SPEED`, Ares blank followed by
 `; Change T0 -> T1 (layer -1 1/0)`.
 
-Frozen exact streams, input, manifest/error, usage witness and receipt:
-`${TMP_ROOT}/ares-j1-mask/findings/primary-after-mask/FINDING.md` and
-`finding.json`. Four fresh CPU0/seed0 Slice receipts,0TIMEOUT. Primary
-remains DIVERGENT; three authorized witness-only controls remain PASS.
+Primary remains DIVERGENT; the three witness-only controls remain PASS.
 
 The stock J1 `change_filament_gcode` begins with its update comment, then
 `{if current_extruder != next_extruder}` gates the Change/T/fan/quick-switch
@@ -87,24 +81,21 @@ Included:
 - Do not use mask contents, number of registered tools, physical ID or
   literal J1 printer name to invent a special startup rule.
 
-Deferred: wipe-progress/M73 residual
-`${TMP_ROOT}/ares-j1-mask/findings/wipe-progress/FINDING.md`; sequential ordering
+Deferred: wipe-progress/M73 residual; sequential ordering
 lifecycle; generalized persistent custom user-variable state; template
 expression changes, numerical/time/cooling fixes, geometry, seam and
 unrelated toolchange policies. No marker stripping or injected output.
 
-## TDD/review gates
+## TDD gates
 
 The mask-only primary complete-byte RED is an independent pre-J1b witness;
-retain it and its exact input/Native hashes. Request SPEC-REVIEW before
-implementation. J1b production change must be a separate commit from
-mask-only df56e12f. Existing primary assertion stays complete bytes with
+retain it and its exact input/Native hashes. J1b production change must be a
+separate commit from the mask-only change. Existing primary assertion stays complete bytes with
 only generated-by normalized; M73/footer/statistics retained. Three control
-assertions remain exact witness-only under the prior ruling, with their
+assertions remain exact witness-only under the prior decision, with their
 raw divergences and findings preserved.
 
-After approval, test the smallest context repair using fresh CPU0/seed0
-references, runs1, fresh caches, shared300s per-case deadlines and prebuild
+Test the smallest context repair using fresh seed0 references, runs1, fresh caches, shared300s per-case deadlines and prebuild
 outside deadline. Assert primary complete bytes, initial1, usage false/true,
 and exact Native tool/flush sequence. Preserve ordinary role1, both-used
 and by-object witnesses; add or reuse public-output coverage showing an
@@ -114,9 +105,6 @@ initial=next indiscriminately.
 If primary reveals another residual, stop and report exact bytes without
 relaxing it. Once primary is complete-byte GREEN, run fresh base/candidate
 full seeded, directed cases, strict Clippy-Dwarnings, rustfmt and WASM.
-Official/full-workspace scope remains per latest coordinator ruling, with
-any carried-forward evidence explicitly labeled. Candidate named failure
-set must be subset of base. Audit RED/GREEN input/Native invariance and
-by-object witness/output preservation; do not claim witness PASS is full
-parity. Submit combined exact hashes in REVIEW-REQUEST, then only approved
-nonforceFF push after latest-main rebase and independent remote confirmation.
+Candidate named failure set must be subset of base. Audit RED/GREEN
+input/Native invariance and by-object witness/output preservation; do not
+claim witness PASS is full parity.

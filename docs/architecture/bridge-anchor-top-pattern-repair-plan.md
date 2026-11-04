@@ -1,13 +1,13 @@
 # C2-T repair PLAN amendment: global validation and local Fill admission
 
-Status: PLAN-REVIEW-REQUEST; no production edits.
-Approved SPEC C2 `2f2cdfe41`; branch carried onto merged `4c5812d18`.
+Status: proposed PLAN amendment; no production edits.
+SPEC C2 `2f2cdfe41`; branch carried onto merged `4c5812d18`.
 Only C2-T is active; C2-S / D-M / D-A remain deferred.
 
 ## Measured public distinction
 
-Official CPU13 and seeded CPU14, fresh Native roots:
-`/tmp/worker2-c2t-admission-summary.json` retains complete public inputs,
+Official and seeded, fresh Native roots; the external admission summary
+retains complete public inputs,
 Native/CLI outputs and wrapper/ELF SHA.
 
 - Local object/model-part `top_surface_pattern=grid`: Native completes,
@@ -17,8 +17,8 @@ Native/CLI outputs and wrapper/ELF SHA.
   with exit 238 (-18), stderr:
   `Param values in 3mf/config error: \ntop_surface_pattern: invalid value grid\n`.
   Merged 4c CLI instead returns UnsupportedProjectFeature(top_surface_pattern).
-  Roots `/tmp/worker2-c2t-global-official.jlzq276i` and
-  `/tmp/worker2-c2t-global-seeded.padox4sv` retain exact diagnostics and input SHA.
+  The external official and seeded global roots
+  retain exact diagnostics and input SHA.
 
 Permanent local E2E active cases reach the same guard at the whole-output
 PASS assertion. The first no-candidate slab setup wrongly treated the pinned
@@ -42,7 +42,7 @@ Source `8500fcdccaa10b5099ac20d252af3a7c560046f1`, `src/libslic3r/`:
 The source has a global validation boundary and a distinct local Fill boundary.
 Removing an internal compatibility-shell gate cannot replace the former.
 
-## Why the approved minimal deletion needs this amendment
+## Why the minimal deletion needs this amendment
 
 Ares' existing `SliceOptions::validate_infill_pattern_options` already ports
 these four global domain predicates, and STL loaded validation uses it.
@@ -57,7 +57,7 @@ A top-guard deletion alone would permit global Grid on candidate-producing
 already the wrong error family. Do not preserve that rejection by inventing
 a new stage-local whitelist or silently skipping the whole affected region.
 
-## Proposed authorized implementation, after additional public RED
+## Proposed implementation, after additional public RED
 
 1. Extend the permanent public E2E with global-role rejection controls before
    production edits. Assert Native exact config-error family/body and public
@@ -71,7 +71,7 @@ a new stage-local whitelist or silently skipping the whole affected region.
    parsing, clamping, numeric policy, helper abstraction or fallback.
 3. Delete only the top_surface_pattern rejection from
    `project_slice/prepare_infill/bridge_over_infill/transaction/anchor_projection.rs`.
-   Leave the local internal-solid gate for its separately approved C2-S slice.
+   Leave the local internal-solid gate for its separate C2-S slice.
    Preserve Fill selection, rotation, output order, errors and write-back.
 
 Included scope expansion: the one call-site integration of the already
@@ -85,12 +85,12 @@ new patterns/geometry algorithms, layer ranges/profiles, CLI exit redesign.
 If existing error rendering or Fill output still differs, retain raw evidence
 and stop for a further source-cited PLAN, rather than modifying assertions.
 
-## Exit / schedule
+## Exit
 
 Keep corrected local RED and new global-diagnostic RED as separate evidence;
 commit all test/assertion expectations before either production change.
-After PLAN APPROVED and open directed window, official CPU13 / seeded CPU14,
-jobs2/threads2, fresh cache/root each run. Local positive/no-candidate outputs
+Then official and seeded runs,
+fresh cache/root each run. Local positive/no-candidate outputs
 and global negative diagnostics must match Native, then existing bridge/anchor
-regressions plus strict/fmt/wasm32. Independent C2-T code REVIEW; no full or
-workspace without allocation; coordinator alone merges main.
+regressions plus strict/fmt/wasm32. C2-T lands as its own commit after full
+parity.

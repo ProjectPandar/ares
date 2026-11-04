@@ -1,13 +1,13 @@
 # J1 runtime usage mask: frozen public-input E2E cases
 
 Source/spec: `GCode.cpp:2901–2904`, upstream8500fcdccaa10b5099ac20d252af3a7c560046f1;
-`docs/architecture/gcode-runtime-used-extruder-mask-j1.md`, approved b7b5b9a27.
+`docs/architecture/gcode-runtime-used-extruder-mask-j1.md`.
 
-`role2.3mf` is the exact worker6 original finding input, SHA256
+`role2.3mf` is the exact original finding input, SHA256
 7d796432a448d46adc30e9ea91b4c729a6044058d3dd61bb4f5c13e64ea615f4.
 No fixture tuning: stock J1 startup, unchanged Dumbbell geometry, two0.4
 nozzles, explicit role IDs2, object default extruder1, Manual map1/2.
-Independent fresh CPU0/seed0 public-API/Native complete-byte RED confirms
+Independent fresh seed0 public-API/Native complete-byte RED confirms
 Native usage false/true versus Ares true/true, initial1 in both. The true
 first difference is byte461/line18, M73 P0 R2 versus P0 R3. M73/footer remain
 in the assertion, generated-by identity is the only normalization.
@@ -26,22 +26,19 @@ and by-object differ at byte2449/line165, Native M73 P41 versus Ares
 WIPE_START. Both-used differs at byte2384/line189, Native
 FORCE_RESUME_FAN_SPEED versus Ares blank/change T0->T1. Their usage, initial
 and tool/flush witnesses are already equal, so these residuals are not mask
-REDs. Coordinator explicitly authorized only these three controls to assert
-exact usage/initial/literal tool+flush witnesses WITHOUT full-byte comparison.
+REDs. Only these three controls assert exact usage/initial/literal
+tool+flush witnesses WITHOUT full-byte comparison.
 The primary still requires complete-byte RED→GREEN; any subsequent residual
 must be reported without stripping it. Inputs and expectations were not tuned.
 
-Frozen independent residuals with exact inputs/outputs/first differences,
-hashes and Native receipts:
-- `${TMP_ROOT}/ares-j1-mask/findings/wipe-progress/FINDING.md`
-- `${TMP_ROOT}/ares-j1-mask/findings/filament-start-transition/FINDING.md`
+The independent residuals (wipe progress, filament-start transition) are
+recorded externally with exact inputs/outputs/first differences and hashes.
 
 The final test-only scope run has one primary complete-byte RED and three
 witness-only PASS. Do NOT interpret those PASS as complete-stream parity.
-Four fresh Slice receipts bind input/reference hashes, requested and actual
-CPU0/seed0, runs1, zero timeouts; compilation was outside each shared300s
-case deadline. No production code changed. First raw captures remain in
-`${TMP_ROOT}/ares-j1-mask/red/directed/`; scoped captures in `directed-scoped/`.
+Four fresh Slice records bind input/reference hashes and seed0, with zero
+timeouts; compilation was outside each shared300s case deadline. No
+production code changed.
 
 Tests: `crates/ares-cli/tests/orca_parity/runner/j1_used_extruder_mask_follows_emitted_tools.rs`.
 Use the configured pinned Native/resources/artifact environment and:
@@ -69,9 +66,7 @@ The nonzero-top control preserves avoidance of surviving Top regions.
 These are **travel-only lifecycle witnesses**, not relaxed complete-byte
 comparisons; the original primary still asserts the entire file.
 
-On main ff40fd2e7 plus separate mask/J1b commits, fresh CPU0/seed0 runs gave:
+Fresh seed0 runs gave:
 primary complete-byte RED at byte3810/line222; zero-top travel RED; nonzero-top
-travel PASS. Three fresh Slice receipts, zero timeouts, strict workspace
-clippy/fmt exit0. No J1c production edit. Tracked machine record:
-`docs/architecture/gcode-runtime-used-extruder-mask-j1c-red-record.json`;
-full evidence `${TMP_ROOT}/ares-j1-mask/j1c-red/`.
+travel PASS, with zero timeouts. No J1c production edit. Tracked machine record:
+`docs/architecture/gcode-runtime-used-extruder-mask-j1c-red-record.json`.

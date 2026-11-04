@@ -1,7 +1,7 @@
 # SurfaceFillParams flow-ratio grouping inputs
 
-SPEC: `docs/architecture/2026-10-20-fill-group-flow-ratio-key-spec.md`, approved
-at `2995e6d60`. Orca source: `Fill.cpp::SurfaceFillParams::operator<` and
+SPEC: `docs/architecture/2026-10-20-fill-group-flow-ratio-key-spec.md`.
+Orca source: `Fill.cpp::SurfaceFillParams::operator<` and
 `group_fills`, pinned `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 Frozen input-only copies of the independently probed compatible-region
@@ -20,9 +20,6 @@ placement, printer/filament profile, G-code, preview or golden was added.
 
 All five tests assert strict complete Native/public API/CLI equality, with
 fresh Native repeats and API/CLI raw identity. Only generator/date identity
-is normalized. Before the separately approved GREEN, ratio11 fails and the
+is normalized. Before GREEN, ratio11 fails and the
 four controls pass in both official and seeded modes. This is not an inverted
 assertion or a recorded Native golden. The seam_gap sibling is excluded.
-
-Initial discovery and reproducible provenance:
-`${EVIDENCE_ROOT}/w3-fill-group-flow-ratio-spec-review/README.md`.

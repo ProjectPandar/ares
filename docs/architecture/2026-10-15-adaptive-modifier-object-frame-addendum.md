@@ -1,19 +1,17 @@
 # AdaptiveCubic modifier witness: PrintObject coordinate-frame amendment
 
-Status: SPEC-REVIEW-REQUEST; docs only. GREEN remains unauthorized until this
-amendment is approved. This supersedes the Adaptive exclusion in the
-[original spec](2026-10-15-adaptive-noop-modifier-fill-loss-spec.md), following
-the coordinator's ownership ruling. The accepted public RED `c488128e8` and
+Docs only. This supersedes the Adaptive exclusion in the
+[original spec](2026-10-15-adaptive-noop-modifier-fill-loss-spec.md). The public RED `c488128e8` and
 [STOP evidence](2026-10-15-modifier-sparse-loss-red-localization.md) stay frozen.
-Base: main `3ee8f272c6d8e2db22dde9003a01afeb7201e36a`.
+Builds on main `3ee8f272c6d8e2db22dde9003a01afeb7201e36a`.
 Upstream revision: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 ## Native measurements, before proposing the fix
 
 Existing official Native binary, SHA256
 `64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60`,
-was executed once each on the frozen A-C0 and A-C1 inputs under read-only GDB,
-CPU11. No rebuild, inferior call, memory/register assignment, source probe,
+was executed once each on the frozen A-C0 and A-C1 inputs under read-only GDB.
+No rebuild, inferior call, memory/register assignment, source probe,
 input change, or retry was used. The debugger disables ASLR, matching the
 canonical wrapper. Both Native processes exit 0, and their observed CPU
 masks are 11.
@@ -43,11 +41,7 @@ line. Both normalized streams have SHA256
 This is an observer-neutrality check, separate from the unchanged Ares/Native
 comparator in the public RED.
 
-Evidence directory:
-`${EVIDENCE_ROOT}/worker6/modifier-native-frame.lrCwDT/`.
-It contains `audit.json`, per-case `receipt.json`/`state.jsonl`/`gdb.log`,
-`reader.py`, and `symbols-clean.log` identifying the offset loads. All Native
-products remain outside Git. The earlier symbol-only type lookup returned
+All Native products remain outside Git.. The earlier symbol-only type lookup returned
 no type information; that failed lookup is retained and is not measurement.
 
 ## Owning upstream contract
@@ -96,7 +90,7 @@ extraction, not inferred only from output counts.
 Do not globally delete translation in `octree.rs`. Prefer selecting the correct
 Adaptive input frame and resulting offset in the caller, keeping the shared
 builder unchanged. If implementation proves a shared-builder change necessary,
-stop and bring the specific evidence for review before that edit. Existing
+stop and bring the specific evidence before that edit. Existing
 adapters remain temporary compatibility shells for the cited PrintObject
 transform and FillAdaptive tree; no new pipeline or public API is introduced.
 
@@ -111,16 +105,16 @@ order, bridge candidate, or sharing-policy change is included.
 
 This gives a structural isolation argument, not a substitute for execution:
 the GREEN must demonstrate that existing SupportCubic controls remain raw-byte
-unchanged. W3 retains `adaptive/hooks.rs`, touching-grid S-C0, and adaptive
-object-region spacing. No connector, hook, collision-index, support spacing,
+unchanged. `adaptive/hooks.rs`, touching-grid S-C0, and adaptive
+object-region spacing are separate slices. No connector, hook, collision-index, support spacing,
 `touching.rs`, surface grouping, bridge-angle algorithm, or emission change is
-authorized. A residual after fixing this frame is reported with the frozen
+included. A residual after fixing this frame is reported with the frozen
 strict RED intact, not absorbed through assertion changes.
 
-## TDD and exact-head checks after approval
+## TDD and exact-head checks
 
 Keep RED `c488128e8` separate; implement GREEN in its own production commit.
-On CPU11, canonical official and seeded modes, jobs1/threads2, fresh cache/root
+In canonical official and seeded modes, with fresh cache/root
 for every run, verify:
 
 - Frozen public modifier tests: A-C0/A-C1/A-C2 must all match complete Native
@@ -132,17 +126,15 @@ for every run, verify:
 - The frozen `support_touching_grid_s_c0_public_api_cli` witness
   (input SHA `9580fd4f17fad55829f561c13ee0ae336b447016c7c9682ce301f79afc9d0bc1`)
   is run unchanged on both base and candidate. It is currently an acknowledged
-  independent public RED in W3's unmerged `c15b29c60`; a continuing known panic
-  is reported as FAIL, never PASS. If W3's fix has merged before these runs,
-  use the merged test and require PASS. Do not edit W3's worktree or assertions.
+  independent public RED in `c15b29c60`; a continuing known panic
+  is reported as FAIL, never PASS. If its fix has merged before these runs,
+  use the merged test and require PASS. Do not edit its assertions.
   An external validation-only test tree can carry its exact unchanged test
   while leaving this candidate's production and test commits untouched.
 - Entire option_coverage group in both modes, including non-Native inventory
-  tests; exact clean-head strict clippy/fmt/wasm32. No local full/workspace;
-  those remain coordinator allocated.
+  tests; exact clean-head strict clippy/fmt/wasm32.
 
 Any changed SupportCubic behavior or unexplained non-RED byte change means STOP.
 Report all outcomes, including the separate S-C0 baseline failure if still
-present, before asking for GREEN acceptance. No Native products, ignored tests,
-new guards, assertion retirement, global frame reset, or push is authorized by
-this docs-only amendment.
+present. No Native products, ignored tests, new guards, assertion retirement or
+global frame reset is part of this docs-only amendment.

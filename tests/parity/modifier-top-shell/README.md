@@ -10,6 +10,4 @@ the top. Parent top count=2, thickness=0; modifier top=0/1/4/equal2, no override
 disjoint control, or overlapping later top1. Classic horizontal variants use
 ensure_vertical_shell_thickness=none; other cases use ensure_all. Inputs carry
 no Native outputs; Native admission/effect evidence remains outside git.
-
-Initial Native preflight official and seeded each17/17 exit0:
-/tmp/worker3-modifier-top-native-tesis_2u/evidence.json and native-local-effect.json.
+Native official and seeded slice all 17 cases with exit 0.

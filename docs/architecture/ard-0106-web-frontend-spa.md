@@ -88,7 +88,7 @@ Included: project (3MF) and STL import, plate + model display, object list,
 read-only preset/settings display from project settings, slicing in the
 worker, G-code export download, Preview tab with slice summary.
 
-Deferred, pending core APIs (reported to coordinator, not built in TS):
+Deferred, pending core APIs (not built in TS):
 
 - Toolpath preview + layer slider + feature legend need upstream
   `GCodeProcessor::process_file` → `GCodeProcessorResult::moves` ported as a

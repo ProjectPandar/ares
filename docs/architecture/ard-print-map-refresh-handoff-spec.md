@@ -1,8 +1,8 @@
 # Print::update_filament_maps_to_config: conditional late-refresh handoff
 
-Date: 2026-10-10. Status: proposed, offline only; no production authorization.
-Rust tree audited: `f2cdadb05e72147cf39b25c2c20bc8e482fe83a1`, before worker3
-actual-used map correction. Worker1 fresh-full exclusivity remains in force.
+Date: 2026-10-10. Status: proposed, offline only; no production change.
+Rust tree audited: `f2cdadb05e72147cf39b25c2c20bc8e482fe83a1`, before the
+actual-used map correction.
 
 ## Owning upstream state transition
 
@@ -35,12 +35,11 @@ Filament selection asks for `(logical filament index+1, active variant of the
 mapped physical extruder)`; the physical map ID is not itself the logical
 filament-self ID. See `PrintConfig.cpp:9832-9858`. Do not conflate those IDs.
 Source miss/short-vector handling must be reproduced only on a separately
-observed admitted case; no Ares fallback is authorized by this document.
+observed admitted case; this document permits no Ares fallback.
 
 ## What the current A2 evidence does and does not prove
 
-Historical A2 on worker3 `c948c292a` / main `f45b81941`:
-`/tmp/worker3-master-standalone-red-f45-v2-seeded-artifacts/master-extruder-2-D8tliA/`.
+Historical A2 on `c948c292a` / main `f45b81941`:
 Native `native/plate_1.gcode` versus `ares.validated.gcode` already agree on:
 
 - print IDs `1,2`, paired quoted `Direct Drive Standard` process variants;
@@ -53,12 +52,12 @@ Native `native/plate_1.gcode` versus `ares.validated.gcode` already agree on:
 Maps differ (`2,1` Native, `2,2` Ares). This is NOT evidence of an independent
 process-variant or retraction RED, nor proof that fixing the map closes the
 whole stream. Do not attribute the first duration-header mismatch to this
-refresh without worker3's post-correction unchanged-input residual.
-These are offline reads of historical receipts, not new Native execution.
+refresh without the post-correction unchanged-input residual.
+These are offline reads of historical outputs, not new Native execution.
 
 ## Conditional included slice and exact Rust destination
 
-After worker3 GREEN/admission correction, retain A2's same input and strict
+After the GREEN/admission correction, retain A2's same input and strict
 whole API/CLI comparators. If a residual implicates refreshed values, report
 its exact field/first byte and destination before production edits:
 
@@ -78,32 +77,32 @@ The current `materialize_project_variants` returns only the collapsed result;
 `ProjectConfigViews` stores full/runtime/runtime_gcode but no original-full
 checkpoint. For a genuinely changed active filament variant, lifetime capture
 of the upstream checkpoint is required. Its smallest representation/capture
-seam must be reported for approval before adding state or changing callers.
+seam must be specified before adding state or changing callers.
 Do not reconstruct it from exported raw input, replay profile inheritance,
 re-run initial materialization on collapsed vectors, or add a second slicing
-pass as a substitute. No checkpoint/state change is approved now.
+pass as a substitute. No checkpoint/state change is made now.
 
 If actual A2 proves filament selection invariant under its map change, a
 bounded retraction-only residual may reuse its existing full view and the
 existing view resolver; prove this invariant on both producers first. Do not
 silently generalize that optimization to different active variant flavors.
 
-Worker3's approved late handoff supplies the accepted one-based map after
-actual-layer/dontcare collection and before reorder. Worker4 returns/refills
+The late map handoff supplies the accepted one-based map after
+actual-layer/dontcare collection and before reorder. This slice returns/refills
 refreshed config views before template/file-start consumption; existing
 `write_config_block` serializes those views, never patches the footer text.
-The necessary invocation/lifetime seam in worker3's staged caller is a
-**coordinator-approved handoff**, not authority to edit worker3 files.
+The necessary invocation/lifetime seam in the staged map caller is a
+**fixed handoff**, not license to edit the map-recommendation files.
 `project/effective_config/phases.rs`, schedule/emit integration, public
-`SliceError` and CLI `failure.rs` are shared: report exact proposed diff first.
+`SliceError` and CLI `failure.rs` are shared: specify the exact proposed diff first.
 
 ## Deferred, tests-first, and nonnegotiable fences
 
 Deferred: recommendation/master admission/TPU shortcut and printability,
 ToolOrdering collection/reorder/partitions, AMS/ordinary-group solver,
 geometry/flow algorithm changes, generalized refresh contexts beyond the
-observed residual, new public APIs and defensive validation. Worker3 owns
-`filament_map_recommend` and `tool_ordering` files; worker4 does not edit them.
+observed residual, new public APIs and defensive validation. The
+`filament_map_recommend` and `tool_ordering` files are not edited here.
 The current phase scaffold is temporary upstream compatibility state, not
 an independent Ares pipeline to extend with invented refresh passes.
 
@@ -112,14 +111,13 @@ collapsed vectors; stale map in one view; double nullable override; logical
 ID confused with physical map ID; repeated process rematerialization;
 placeholder vs runtime disagreement; footer rebuilt from stale full;
 unchanged-map doing unnecessary reselection; earlier guard/error reclassified.
-Use worker3's preserved A1/A2 E2E inputs/strict channels/full JSON/no-export or
+Use the preserved A1/A2 E2E inputs/strict channels/full JSON/no-export or
 whole-Gcode comparisons without altering them. Additional control, only after
-scope approval: same map, mapped nil/default versus explicit retract value,
+an explicit scope amendment: same map, mapped nil/default versus explicit retract value,
 and an admitted changed-flavor case if checkpoint capture is actually needed.
 
 No compile/setup failure counts as RED, no fallback/extra normalization/new
 golden/cache/sweep hook, no core I/O/process/shell. Required Native absence
 fails by name; optional absence visibly skips. Keep modules <=400 LOC.
-No new heavy task until worker1 four-leg END; subsequent runtime windows
-load<60/two threads, engineering gates per owner. A runtime residual is a
-report/approval barrier, not permission to automatically implement this spec.
+A runtime residual is a
+scope barrier, not permission to automatically implement this spec.

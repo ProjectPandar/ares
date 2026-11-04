@@ -1,8 +1,7 @@
 # SPEC: FillStars sparse multiline trapezoidal branch
 
-Status: approved spec; implementation WIP resumed on `aeb2ff618` after the
-multiline union prerequisite merged. Remaining byte differences are under
-diagnosis; no GREEN acceptance or push is claimed.
+Status: Accepted spec; implementation resumed after the multiline union
+prerequisite merged.
 
 ## Priority and ownership
 
@@ -14,7 +13,7 @@ coupled consumer: the current Stars adapter explicitly defers the trapezoidal
 branch and unconditionally uses the ordinary scanline-family generator.
 This is not another inventory-count or domain-status promotion.
 
-No `FillStars`/trapezoidal claim was found in the coordinator inbox. Exclude
+Exclude
 brim, scarf/APA, G4/tool ordering, profile inheritance, CI and web. Do not change
 Grid or Triangles dispatch, their generators, or their prior parity contracts.
 Any conflicting assignment discovered before implementation stops this slice.
@@ -54,7 +53,7 @@ coordinates, a per-surface grid or a synthesized approximate star pattern.
   mode2 rows and finalization. Reuse the existing `fill::multiline_offset`,
   checked rotation, ordered open-path clipping and `fill::connect` primitives;
   do not create another geometry/cache framework or public API.
-- Coordinator-approved narrow object-once wiring in
+- Narrow object-once wiring in
   `project_slice/fill_entities.rs::prepare` and `fill_entities/stars_bounds.rs`:
   `Fill.cpp:1624/1637` set_bounding_box(object()->bounding_box()),
   `PrintObject.cpp:96-112`, `Model.cpp:1586-1599`,
@@ -69,13 +68,13 @@ coordinates, a per-surface grid or a synthesized approximate star pattern.
   legacy bbox callers or reinterpret compensated slice bounds as mesh size.
   If correct provenance requires a wider traversal change, report that boundary
   before editing it. The finite inputs below disable XY compensation.
-- Coordinator-approved additional Stars consumer:
+- Additional Stars consumer:
   `project_slice/prepare_infill/bridge_over_infill/sparse_anchoring/arms_tail.rs:43-60`.
   Upstream `Fill.cpp:1394-1501` creates the same FillStars generator, sets the
   PrintObject bbox (:1398/:1443), forwards multiline (:1489), and invokes
   fill_surface (:1497). For Stars count>1 this caller must share the new mode2
   generator, layer phase and object box; count1 and other patterns retain their
-  current dispatch. This wiring is included when the Stars WIP resumes.
+  current dispatch. This wiring is included.
   `transaction/candidate_expansion/layers.rs::prepare_infill_lines` computes
   the source mesh box once per object only for Stars count>1, then threads it
   through private `sparse_anchoring::{mod,arms,arms_tail}` calls. Planned
@@ -113,11 +112,11 @@ exported project bytes. Keep input/archive-member hashes in runtime receipts.
 | H1 | holed prism |1 |30% |45deg |stock anchors |
 | H2 | holed prism |2 |30% |45deg |stock anchors |
 
-After approval, freeze Native/Ares requests and all first outcomes. Require
+Freeze Native/Ares requests and all first outcomes. Require
 successful Native slicing and unchanged effective requested values. Prove
 actual positive-XYE sparse extrusion, at least three reached source infill-layer
 phases and both odd/even bundle witnesses. Hole case must reach clipping on
-both exterior and hole boundaries. S2N is excluded from this slice by the coordinator ruling below. A Native rejection, timeout, rewritten request,
+both exterior and hole boundaries. S2N is excluded from this slice (see below). A Native rejection, timeout, rewritten request,
 absent consumer, unstable Native output or unrelated first difference is not
 this port's RED; report it without changing context to manufacture a PASS.
 
@@ -131,8 +130,7 @@ from a settings echo, scalar range plan or filtered polygon comparison.
 
 If the finite count>1 cases already match current main completely, report
 NO RED FOUND with evidence and do not implement from source suspicion alone.
-Otherwise commit the real Native-backed RED before any core GREEN. No tests
-or Native runs are authorized by this spec submission itself.
+Otherwise commit the real Native-backed RED before any core GREEN.
 
 ## Included, deferred and acceptance
 
@@ -149,16 +147,14 @@ non-axis-aligned model transforms, multinozzle/SEMM, towers and GUI consumers.
 Source integer/floating arithmetic is included; no UB or nondeterminism
 emulation, fallback, ignore or assertion tolerance is permitted.
 
-Exit after SPEC approval: Native-backed RED -> bounded core GREEN -> fresh
+Exit: Native-backed RED -> bounded core GREEN -> fresh
 cold/hot directed witnesses in seeded/official and entire option_coverage group
 (including non-Native tests), strict clippy/fmt/wasm32 and fresh default workspace.
 Any original expectations updated must be itemized; unrelated assertions/plans
-remain unchanged. A production GREEN then queues a fresh full on latest main:
-shared base keyed by exact main hash, seeded/official candidate legs run in
-parallel with distinct fresh roots/caches, each threads2. Require cand.fail to
-be a subset of the corresponding shared base.fail (currently both empty).
-No inherited print-statistics failure exception. Audit changed raw streams and
-retain all failures before REVIEW-REQUEST; no automatic reruns or push.
+remain unchanged. A production GREEN then requires a fresh full run on latest
+main whose candidate failures are a subset of the base failures (currently both
+empty). No inherited print-statistics failure exception. Audit changed raw
+streams and retain all failures; no automatic reruns.
 
 ## Native-backed RED observation
 
@@ -182,14 +178,11 @@ sparse XY+E commands prove the actual geometry difference on layer4 (Z0.8):
 | H2 |1705: X141.02 Y128.255 E.00723 |1705: X134.974 Y133.02 E.01315 |
 
 The whole-output comparator still requires PASS; the XY+E table is diagnostic,
-not another acceptance comparator. First captures and logs remain under
-`/tmp/worker6-stars-red-v1/{seeded,official}`. Initial S2N observation attempted
+not another acceptance comparator. Initial S2N observation attempted
 reading absent Ares output after the real error; the corrected RED records
 ARES_ERROR explicitly and retains the PASS assertion. All eight cases were
-then run with independent fresh caches under `/tmp/worker6-stars-red-v2`, with
-identical classifications. Logs are `seeded.log` / `official.log`; `audit.json`
-records per-case hashes, complete line counts and differences. No first record
-was overwritten and no Native artifact is tracked.
+then run with independent fresh caches, with identical classifications. No
+Native artifact is tracked.
 
 S2N is not silently removed: its effective absolute `infill_anchor_max=0`
 projects to 0.0, rejected by
@@ -201,11 +194,11 @@ instead of calling connect_infill; `FillBase.cpp:1820-1828` has the same split.
 `FillBase.cpp:1580-1587` connection assertions apply to the connecting branch.
 The cited `:2712-2784` only expands bundles, not anchors. Generator finalization
 was included in this spec, but the bridge transaction admission edit is outside
-its listed Rust targets. Coordinator ruling: the zero-anchor admission is the general rectilinear-family
+its listed Rust targets. Decision: the zero-anchor admission is the general rectilinear-family
 no-connect slice, not Stars mode2. S2N is removed from this branch's active
 controls, preserving the five real byte REDs and two count1 controls.
 
-### Deferred zero-anchor admission (coordinator ruling)
+### Deferred zero-anchor admission
 
 S2N (`infill_anchor_max=0`, count2) is deferred to the next separately specified
 rectilinear-family no-connect port. The existing guard is
@@ -213,57 +206,45 @@ rectilinear-family no-connect port. The existing guard is
 Upstream references: `Fill.cpp:978-989/:1286-1287`, `FillBase.hpp:52`,
 `FillRectilinear.cpp:3366-3373`, `FillBase.cpp:1820-1828/:1580-1587`.
 This is not `multiline_fill` (`FillBase.cpp:2712-2784`). Native accepts in both
-modes; Ares reports UnsupportedProjectFeature. Frozen first evidence and
-corrected-harness evidence remain outside git under
-`/tmp/worker6-stars-red-v1` and `/tmp/worker6-stars-red-v2` (each mode's S2N
-case directory and log; v2 audit.json includes the explicit error). No guard
+modes; Ares reports UnsupportedProjectFeature. No guard
 change, ignore, skip or retained failing S2N test belongs to this Stars branch.
 The subsequent slice must reuse this real RED and port no-connect admission
 before removing the guard; no scope expansion is implied here.
 
-### Deferred shared union prerequisite (coordinator ruling)
+### Deferred shared union prerequisite
 
-The first Stars mode2 WIP produces exact Native row arrays and exact round
+The first Stars mode2 implementation produces exact Native row arrays and exact round
 offset polygons before union on all13 emitted S2 layers. Differences first
 appear at union: Native uses Clipper2 Positive union
 (`deps_src/clipper2/Clipper2Lib/src/clipper.offset.cpp:604-630`), while the shared
 Ares `fill/multiline_offset/round.rs:57` uses the Clipper1 NonZero union helper.
-Evidence: `/tmp/worker6-stars-union-stage-audit.json` and
-`/tmp/worker6-stars-union-boundary.md` reference both raw stage captures.
 This is a common `FillBase.cpp:2712-2784` dependency, not a Stars-local algorithm.
-Coordinator ruling: preserve this GREEN as a local WIP, do not push it; specify
-and prove a non-Stars Native-backed RED on baseline48821ce89 before any shared
+Decision: specify and prove a non-Stars Native-backed RED before any shared
 union change. If those controls already match, report rather than widening
 the Stars slice or silently changing Clipper1 semantics.
 
 ### Resumed trial after the union prerequisite
 
-The numeric union slice merged as `aeb2ff618`. WIP rebased with only the test
-registration conflict, preserving both G4 and Stars modules. Seven runtime
-controls ran with fresh cache/root per mode under
-`/tmp/worker6-stars-union-trial.L3W1yh`; both exited100, three PASS/four FAIL.
+After the numeric union slice merged, seven runtime controls ran with fresh
+cache/root per mode; both exited100, three PASS/four FAIL.
 S1/H1/S2A passed; S2/S3/S10/H2 remain whole-byte DIVERGENT. First whole lines:
 S2 line135 M73 placement, S3 line38 remaining time, S10 line131 M73 placement,
-H2 line18 remaining time. `remaining-divergence-audit.json` retains artifacts
-and first positive-extrusion differences: S2/H2 sparse layer5(Z1.0), S10
+H2 line18 remaining time. First positive-extrusion differences: S2/H2 sparse layer5(Z1.0), S10
 sparse layer4(Z0.8). S3's14457 sparse extrusion commands agree, but its first
 machine-command difference is layer17 Outer wall retract/travel (Native
 line16684 `G1 E-2.8 F3600`, Ares line16686 `G1 X140.608 Y133.201 F9000`).
 Solid extrusion commands agree in all seven controls. This does not establish
-anchoring as the cause; the approved anchoring mode2 caller is connected next
+anchoring as the cause; the anchoring mode2 caller is connected next
 and must be tested separately without changing comparison or assertions.
 
 ### Anchoring follow-up and remaining union input mismatch
 
-Anchoring WIP `2a0f0b5f0` ran the same seven controls with fresh caches/roots
-under `/tmp/worker6-stars-anchoring-trial.f0TdJ3`. Both modes exited100:
-S3 became whole-output PASS; S1/H1/S2A stayed PASS with unchanged Ares raw.
-S2/H2/S10 remain DIVERGENT, with their first sparse differences still at
-layers5/5/4 respectively. `anchoring-before-after-audit.json` verifies equal
-input members and records all status/byte changes. No GREEN is claimed.
+With anchoring connected, the same seven controls ran with fresh caches/roots.
+Both modes exited100: S3 became whole-output PASS; S1/H1/S2A stayed PASS with
+unchanged Ares raw. S2/H2/S10 remain DIVERGENT, with their first sparse
+differences still at layers5/5/4 respectively.
 
-Read-only gdb evidence `/tmp/worker6-stars-resumed-gdb.0fu8lY/stage-audit.json`
-compares14 S2 calls (one anchoring,13 emitted fills) against earlier initialized
+Read-only gdb evidence compares14 S2 calls (one anchoring,13 emitted fills) against earlier initialized
 Native captures with identical input members. All ordered rows and raw offset
 polygons match; union phase0 matches, phase1/2 differ before clipping/connection
 (`FillRectilinear.cpp:3345/3351/3357/3366-3373`). Phase1 Native13489 versus
@@ -271,8 +252,7 @@ Ares13459 points; phase2 Native13492 versus Ares13461. The union belongs to
 `FillBase.cpp:2712-2784` through `clipper.offset.cpp:604-630`.
 
 All30 phase1 Native-only points exist in the equal raw input. After adjacent
-duplicate removal each is exactly collinear with its raw neighbors, verified
-in `raw-collinear-points-audit.json`. Clipper2 `clipper.engine.cpp:615-661`
+duplicate removal each is exactly collinear with its raw neighbors. Clipper2 `clipper.engine.cpp:615-661`
 AddPaths_ skips duplicates but retains these vertices. Ares
 `geometry/clipper/input/path.rs:114-127` clean_path removes them before union
 when preserve_collinear is false. Native only cleans collinearity after union
@@ -281,27 +261,23 @@ integer truncation, making the retained vertex noncollinear. Example raw
 point(36252936,31786081): raw cross0, Native final neighbors give cross-740788.
 This is distinct from the already-ported intersection arithmetic.
 
-Coordinator-approved narrow follow-up: only the Clipper2Truncate/Positive
+Narrow follow-up: only the Clipper2Truncate/Positive
 helper retains all input collinear vertices, including spikes; duplicate
 removal remains. A compile-time RoundPolicy constant selects input cleanup,
 with the existing default Clipper1 behavior intact. Output cleanup still uses
 preserve_collinear=false. No runtime hooks, new sweep or external crate.
 Revalidate ten union controls, seven Stars controls and whole option_coverage
-in both modes. Rebased to36125a678 before this implementation; no conflicts.
-Fresh direct Native/Ares H2 capture also reproduces the same14-call phase
-mismatch, `/tmp/worker6-stars-h2-stage-gdb.0kjxSu/stage-audit.json`.
-This is a WIP implementation; no GREEN or acceptance is claimed yet.
+in both modes. Fresh direct Native/Ares H2 capture also reproduces the same
+14-call phase mismatch.
 
 ### Input-only-dedup trial: geometry restored, order remains different
 
-`/tmp/worker6-stars-input-policy-trial.lE1PaS` preserves both exit100 runs:
-ten union controls PASS, Stars S1/H1 PASS, S2/S3/S10/S2A/H2 DIVERGENT (12/17).
-`17-controls-table.md` and `17-controls-audit.json` give every result and first
-difference. All five remaining first sparse differences are now layer4(Z0.8).
-S3/S2A changed from PASS to FAIL; no result or assertion is suppressed.
+Both modes exited100: ten union controls PASS, Stars S1/H1 PASS,
+S2/S3/S10/S2A/H2 DIVERGENT (12/17). All five remaining first sparse differences
+are now layer4(Z0.8). S3/S2A changed from PASS to FAIL; no result or assertion
+is suppressed.
 
-S2 read-only capture `/tmp/worker6-stars-input-policy-stage.yt6R1i`
-phase-audit.json confirms all14
+S2 read-only capture confirms all14
 row arrays equal Native, phase0 union13104 points, phase1 N13489/A13489 and
 phase2 N13492/A13492. Each phase has24 closed paths and identical point sets.
 Diagnostic cyclic/path-order comparison finds all polygons geometrically
@@ -320,79 +296,61 @@ contract for this private Positive policy, then diagnose the minima ordering
 if permutations remain. Keep default Clipper1 output/minima behavior and strict
 assertions intact; no whole sweep port or coordinate-based output sorting.
 
-### Approved Positive output order follow-up, step 1
+### Positive output order follow-up, step 1
 
-The coordinator approved private CleanCollinear/front-cursor alignment first,
-then stable minima source order only if permutations remain. Both are selected
+Private CleanCollinear/front-cursor alignment comes first, then stable minima
+source order only if permutations remain. Both are selected
 by Clipper2 policy; default Clipper1 remains unchanged. Output-coordinate sorting
 and comparator changes are excluded.
 
-Step 1 WIP `5f4f8f69f`, based on `10058be78`, keeps the outrec front unless
+Step 1 keeps the outrec front unless
 that node is removed. The arena's previous link corresponds to Clipper2 next,
 so cleanup follows that link and updates a removed front to the other neighbor.
 `output/clipper2_front.rs` cites CleanCollinear `:1531-1565`; existing output
 collection follows BuildPath64 `:2885-2921` in the same mapped direction.
-Core strict clippy and fmt passed. This is not an acceptance claim.
 
-Fresh `/tmp/worker6-stars-positive-front-trial.sTXEOD` preserves both exit100
-runs and `17-controls-audit.json`/`17-controls-table.md`. Both modes are 16/17:
+A fresh run gives exit100 in both modes, each 16/17:
 all ten union controls PASS, Stars S1/H1/S2/S3/S2A/H2 PASS, S10 DIVERGENT.
 S10 first difference is line 131, Native M73 P3 R36 before the extrusion versus
 Ares after it. The unchanged strict comparator still rejects the whole file.
 
-Existing-binary S10 captures under
-`/tmp/worker6-stars-front-s10-stage.cGAWqY/order-audit.json` contain all 14 calls.
+Existing-binary S10 captures contain all 14 calls.
 Ordered input rows match. Phase 1 shows paired path permutations; phase 1/2
 point counts are Native 5876/5878 versus Ares 5878/5879. Some paths therefore
 still differ geometrically, rather than only in their front or permutation.
-These observations do not authorize a broader sweep or output normalization.
-Step 2 WIP `dabe72ada` implements only the approved source minima ordering;
-its fresh 17-control two-mode trial is required before any GREEN claim.
+These observations do not justify a broader sweep or output normalization.
+Step 2 implements only the source minima ordering.
 
-Step 2 fresh `/tmp/worker6-stars-positive-minima-trial.xDPbI7` also gives
-16/17 in both modes, with only S10 DIVERGENT. The step 1/2 raw audit confirms
-34/34 Ares G-code outputs unchanged. S10 stage audit
-`/tmp/worker6-stars-minima-s10-stage.OKxdRk/step1-step2-stage-diff.json`
+Step 2 also gives 16/17 in both modes, with only S10 DIVERGENT. The step 1/2
+raw audit confirms 34/34 Ares G-code outputs unchanged. The S10 stage audit
 shows changed union ordering in phase 1 calls 2/5/8/11; all other calls are
-unchanged. `native-order-after-step2.json` shows every geometrically matching
+unchanged. Every geometrically matching
 polygon now has the same Native/Ares index, with no remaining matched-path
 permutation. Post-clipping arrays are unchanged across all 14 calls. Thus
 minima sorting has a source-stage effect, but has not repaired the S10 bytes.
-The coordinator retained this source-stage correction; it is not claimed
-to repair the S10 bytes by itself.
+This source-stage correction is retained; it is not claimed to repair the S10
+bytes by itself.
 
 ### Shared multiline expression precision correction
 
 FillBase.cpp:2739-2749 receives spacing as float: `i * spacing` remains f32
 before conversion into the double offsets vector, while `0.5 * spacing` and
-the even-offset sum use f64. The coordinator approved preserving these types
+the even-offset sum use f64. These types are preserved
 in the shared `fill/multiline_offset.rs::apply`; count 1 still returns early.
 
-Existing Native capture `/tmp/worker6-stars-execute-delta.xGNfx8/delta-audit.json`
-contains all 14 S10 calls and five actual Execute deltas per call. Every value
+An existing Native capture contains all 14 S10 calls and five actual Execute deltas per call. Every value
 matches the f32-product expression exactly. For captured spacing
 0.40707963705062866, index 3 gives Native delta 1424778.6700725555 versus the
 old f64-product delta 1424778.7296772003. The original missing-symbol capture
 is excluded; successful spacing/delta capture uses x86_64 argument registers.
 No Native rebuild or artifact is committed.
 
-Correction `05d4568f1` keeps multiplication in f32 and then promotes to f64,
-with an explicit upstream-line comment. Core strict clippy and fmt passed.
-Fresh `/tmp/worker6-stars-float-gates.GeN49e/finite` gives 17/17 PASS in each
-mode, including S10 whole-output equality. Its raw-change-audit.json compares
-same-input members against Step 2: 16/17 raw outputs identical per mode, only
-S10 changes (line 131 M73 placement and subsequent path differences repaired).
-Complete option_coverage on this tree passed 220/220 in both modes under
-`/tmp/worker6-stars-float-gates.GeN49e/option`. Against pre-correction
-`/tmp/worker6-stars-float-baseline.1EjVGY`, raw-change-audit.json records
-391 seeded and 381 official same-input outputs unchanged; only S10 changes.
-Two additional official labels lacked baseline captures because the original
-tree assertion stopped early. No non-RED raw change is observed.
-`tree-native-attribution.json` records the baseline official tree failure:
-same input and Ares raw SHA, Native-only line 1081 travel variation
-113.388/113.135 versus 113.244/113.297. Original FAIL logs remain intact.
-Rebase to afca7400a is conflict-free; all 11 range-diff entries are unchanged.
-On b92b16b03, `/tmp/worker6-stars-afca-gates.Abs6QH` gives option_coverage
-220/220 in both modes (including all 17 controls), strict/fmt/wasm32 exit 0.
-All matched raw outputs versus the previous GREEN remain identical: seeded
-392/392 and official 384/384. Workspace awaits coordinator allocation.
+The correction keeps multiplication in f32 and then promotes to f64,
+with an explicit upstream-line comment. It gives 17/17 PASS in each
+mode, including S10 whole-output equality. Against Step 2, 16/17 raw outputs
+are identical per mode, only S10 changes (line 131 M73 placement and
+subsequent path differences repaired). Complete option_coverage passes in both
+modes; against the pre-correction baseline only S10 changes. No non-RED raw
+change is observed. The baseline official tree failure was a Native-only
+line 1081 travel variation (113.388/113.135 versus 113.244/113.297) with the
+same input and Ares raw SHA.

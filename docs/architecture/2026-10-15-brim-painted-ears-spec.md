@@ -2,10 +2,10 @@
 
 状态：SPEC-DRAFT（docs-only，未跑 Native）。
 
-## 0. Roadmap 观察记录（按 coord 指示并入本 commit；经纠正修订）
+## 0. Roadmap 观察记录（经纠正修订）
 
 **BrimEars+tree ears-only `no_brim_offset` 项 = 死代码（非 latent）**
-（discovery 2026-10-15，6/6 迭代，artifact /tmp/w5-brim2/{n,a}-eart*）。
+（discovery，6/6 迭代）。
 依据 `Brim.cpp:457-458`：btEar 使 use_auto_brim_ears=true →
 has_inner_brim=has_outer_brim=**true**，故 `:621 (!has_outer_brim)`
 与 `:623 (!has_inner_brim && !has_outer_brim)` 两项对 ears **永不
@@ -36,7 +36,7 @@ ba599af1a 的前提有误，NO-RED STOP 因这一更强的理由成立）。
 `brim_ear_points.txt` 解析、无 painted 点集**——若 fixture 携带
 painted 点，ares 要么空 brim 要么走错路径，预期强分歧。
 
-## 3. Discovery 计划（Native-first，需授权，CPU7,8）
+## 3. Discovery 计划（Native-first）
 
 fixture：canon base + `brim_type=painted` + zip 追加
 `Metadata/brim_ear_points.txt`（v0 格式，对象 1 一点：

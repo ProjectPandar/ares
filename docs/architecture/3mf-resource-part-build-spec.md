@@ -1,11 +1,7 @@
 # SPEC: 3MF resource-part import without a build element
 
-Status: **input revision REVIEW-REQUEST after rejected e1de695aa RED**.
-Source boundary c6a9e152a and canonical seam d610c0aad remain approved. Owner
-rejected the first RED because its control failed full parity; the new frozen
-input pair below awaits exact revised SPEC approval BEFORE any new execution.
-Main is3ee8f272c (FULL16 both1499/1499, CI38675499172success), freeze lifted.
-No production authorization; old test/fixtures/evidence remain immutable.
+Status: proposed (revised input pair after the first RED attempt, whose control
+failed full parity). Old test/fixtures remain immutable.
 
 ## 1. Owning upstream rewrite boundary
 
@@ -32,9 +28,7 @@ not an Ares-designed ZIP/scene pipeline or a general 3MF-conformance project.
 
 ## 2. Retained finding, and what it does not establish
 
-Frozen `loader-no-build-3mf-finding.md` and archive
-`${LOCAL_EVIDENCE_ROOT}/worker4/lower-slices-admission-stop-CXWg.tar.gz`, SHA
-`3d575de80a7ebaf18350119bb19eba06f0dc29974365cdce247e51d01d3f8c42`.
+Frozen `loader-no-build-3mf-finding.md`.
 Exact v1 contour.3mf SHA
 `871b1a88ee8813d468ee65d6a2a6b7e22097788d43d06c2e8a61f19481dce880`.
 Its main `3D/3dmodel.model` HAS build. Body
@@ -58,12 +52,11 @@ retained. This proposal does not resume the old eight-case discovery or seam v2.
 
 ## 2a. Rejected first public attempt and replacement input justification
 
-Frozen test e1de695aa8cfbffb99cd971f86468037f6df4766 is **NOT approved RED**.
+Frozen test e1de695aa8cfbffb99cd971f86468037f6df4766 is **NOT a qualified RED**.
 Fresh Native-first official+seeded6/6 complete/neutral; official public positive/
 repeat API and CLI both reject missing build. However old v2 control admitted/
 raw API==CLI but strict comparator failed byte5217/line224: M73 P67 R2 versus
-adjacent G1 order. STOP was correct; public seeded was not run. Retain the exact
-root `/tmp/worker4-resource-build-red-c0yg` and archive39906c69dc4b6b80218e816cc890778ab51e1cc8a620b37a0975e3b42bfc9380.
+adjacent G1 order. Public seeded was not run.
 [Independent discovery](discovery-m73-resource-control-order.md) records the
 GCodeProcessor::run_post_process insertion boundary; it is deferred, not repaired
 by this slice. No comparator/M73 weakening or retry of the old pair is proposed.
@@ -87,15 +80,11 @@ versus positive
 `345b6dc35a34402a1a6e06733b4829dfa04acb8fedc407b4e831d509de7c4d2e`.
 Only this positive is derived; control is an exact existing file, not regenerated.
 
-**Current-main strict-PASS evidence, not a new runtime claim:** FULL16
+**Current-main strict-PASS evidence, not a new runtime claim:** the full run's
 `wipe_before_override::wipe_before_override_control_before50` passes
-in official/run.log14837 and seeded/run.log14796, same main3ee8f272c.
+in official and seeded modes.
 Raw retained streams were read offline: strict generator-only COMPLETE equality
 and raw API/CLI equality independently verified, retaining M73/all movement/footer.
-Official root:
-`${TMP_ROOT}/ares-full16-3ee8f-5ovWDK/official/artifacts/wipe-before-override-control-before50-4hqbHN`;
-seeded root:
-`${TMP_ROOT}/ares-full16-3ee8f-5ovWDK/seeded/artifacts/wipe-before-override-control-before50-YOBX0W`.
 Both API+CLI rawSHA
 `2e9e3d4a65a71c9e05b58792c78e3b21879b635ab219be0b212d39da7f58340d`;
 all normalized Native/API/CLI SHA
@@ -103,12 +92,8 @@ all normalized Native/API/CLI SHA
 Actual source request was Native --slice0 --outputdir (no explicit --arrange),
 validated API/defaults and real bare CLI. Preserve that exact source request in
 this revision; no arrangement option or loadedJSONs are added. Fresh Native-first
-proof on the new pair is still mandatory after revised SPEC approval. No Native/
+proof on the new pair is still mandatory. No Native/
 API/CLI execution has been done on the new positive and no positive RED claimed.
-
-Proposal bytes/complete entry manifest/current-main raw proof copies are external
-under `${LOCAL_EVIDENCE_ROOT}/worker4/resource-build-input-v2-proposal/`.
-Do not overwrite committed e1de695aa fixtures until this revision is approved.
 
 ## 3. Exact Rust destination / behavior
 
@@ -140,10 +125,10 @@ upstream discrepancy, STOP/amend the SPEC rather than invent Unsupported guards.
 Existing XML/schema/limit failures and path/identity checks stay unchanged.
 
 Existing ModelDocument/ModelGraph remain temporary representations of the named
-upstream resource/import graph, not a new Ares scene architecture. No production
-change is authorized by this document. Tier1 byte-only core boundary stays intact.
+upstream resource/import graph, not a new Ares scene architecture.
+Tier1 byte-only core boundary stays intact.
 
-## 4. Approved amended public RED seam: Native-first canonical slicing
+## 4. Public RED seam: Native-first canonical slicing
 
 **No loader-only or export-only oracle.** The earlier load_project/export proposal
 is withdrawn. The owning production boundary remains resource-part parsing, but
@@ -158,16 +143,16 @@ verification uses the complete public slicing path:
 - Real CLI `ares slice -o <fresh cli.gcode> <same frozen3MF>`, no profile/loaded
   files/overrides. Capture actual command/status/stdout/stderr and complete output.
 
-After approval, freeze the new section2a pair: positive0eab5d4d, exact qualified
+Freeze the new section2a pair: positive0eab5d4d, exact qualified
 controladb38ee8, and fresh positive repeat. Pin complete source/ZIP-entry hashes
 and prove the sole resource empty-build removal. No further mesh/settings/
 M73/config/metadata/identity/transform changes; no old-v1/v2 substitution.
-Retained FULL16 control streams select the fixture, but fresh Native references
+Retained full-run control streams select the fixture, but fresh Native references
 are mandatory for this RED matrix.
 
 **Native-first, full test per mode:** obtain fresh Native --slice references
-before public calls within EACH official/seeded test invocation. Per owner review,
-no Native-only early return or externally injected reference path is permitted;
+before public calls within EACH official/seeded test invocation.
+No Native-only early return or externally injected reference path is permitted;
 each enabled test always executes Native→public end to end. Every reference leg must
 exit0 with complete ordered G-code/footer and authoritative complete snapshots.
 Require complete generator-only Native positive/repeat/control neutrality; no
@@ -175,11 +160,11 @@ cached historical stream, export result, partial observation or load-only succes
 can substitute. Stop on Native failure, unstable/non-neutral reference or source
 mismatch. Do not run Ares first and treat a missing Native baseline as RED.
 
-**Approved RED:** Native completes G-code on the frozen positive while the public
+**Expected RED:** Native completes G-code on the frozen positive while the public
 Ares slicing entry rejects its resource model specifically for missing build.
 Run/capture the real CLI too: it must reject the same request for the same
 admission cause, not a different adapter/input contract. This attributable product
-admission error is the RED at the approved slicing seam; it is not fabricated
+admission error is the RED at the slicing seam; it is not fabricated
 ordered-byte divergence. Native/harness failures or unrelated Ares errors are not
 qualifying RED. Preserve the old discovery's separate historical classification.
 
@@ -192,9 +177,9 @@ evaluated: no complete Ares stream**; matching API/CLI error causes are recorded
 not misreported as byte equality or G-code PASS. Control must Native-complete
 and both public Ares entries admit; record its full strict comparison. A residual
 control mismatch is retained/reported, never waived or repaired to manufacture
-parity. Freeze test-only errors/results before production review.
+parity. Freeze test-only errors/results before production.
 
-After separately approved GREEN, positive/repeat/control must admit, API/CLI raw
+After GREEN, positive/repeat/control must admit, API/CLI raw
 equality must hold and the same full strict comparator must be rerun. If ANY
 residual G-code difference remains, **STOP and report exact first difference and
 full retained streams; no scope growth** into seam, geometry, order, config or
@@ -208,24 +193,18 @@ outputs, diagnostic core I/O, new public APIs or oracle fallback.
 
 ## 5. Gates / limits / deferrals
 
-1. Review this exact input revision, including reason, new SHAs and inherited
-   qualified control request. Source/parser boundary and canonical seam stay fixed.
-   No new tests/Native/API/CLI/production runs before revised SPEC approval.
-2. After approval (and any applicable freeze lift), freeze the new positive /
-   repeat / exact qualified empty-build control and run Native-first, maximum three fresh Native
-   slices per mode, official+seeded. CPU15/jobs1/threads1, load<60 before builds /
-   every Native, fresh caches/artifacts, from_env, START/END receipts. No export
-   preflight or additional oracle is authorized.
-3. Freeze public test-only attributable slicing-admission RED + control/neutrality
-   proof; REVIEW-REQUEST independent exact-hash review BEFORE production approval.
-4. Separate bounded correction only after that gate; fmt/strict clippy/WASM,
+1. Freeze the new positive / repeat / exact qualified empty-build control and
+   run Native-first, maximum three fresh Native slices per mode, official+seeded,
+   fresh caches/artifacts, from_env. No export preflight or additional oracle.
+2. Freeze public test-only attributable slicing-admission RED +
+   control/neutrality proof before production.
+3. Bounded correction: fmt/strict clippy/WASM,
    <400LOC modules, original slicing witness + existing project-loader family.
    Any post-GREEN residual whole-output diff means STOP/report, not expansion.
 
 STOP on changed failure, no RED, non-neutral control, request mismatch, Native
---slice failure/incomplete G-code, missing archived input/source, or freeze.
-No retries or further substitutions; stop and request disposition. Current main
-has advanced/freeze lifted, but this revised input SPEC must be approved first.
+--slice failure/incomplete G-code or missing archived input/source.
+No retries or further substitutions.
 
 Deferred: main-model missing-build parity, nonempty resource build/item behavior,
 arbitrary resource-schema relaxation, nested/remote relationship-policy changes,

@@ -1,7 +1,6 @@
 # SPEC: 移除 plane-path 链序兼容缝——非校准 ArchimedeanChords 与校准剩余集统一走 chain_polylines
 
-状态：SPEC-REVIEW-REQUEST（docs-only）。
-前置：HilbertCurve 根因片（`7da43f4ac` 已批；GREEN `8623119d2` 已批）。
+前置：HilbertCurve 根因片（`7da43f4ac`；GREEN `8623119d2`）。
 
 ## 1. 上游真值
 
@@ -33,7 +32,7 @@
   （`shortest_path/chain.rs:93/114/130` classic perimeters 路径），
   非孤儿。
 
-## 4. 门（@exact HEAD，CPU7/8，directed）
+## 4. 门（directed）
 
 - 既有 ArchimedeanChords ironing 腿（4149E/`1121d580302b`）
   byte-parity 保持（该 fixture 上两序现巧合一致，切换后必须仍一致）；

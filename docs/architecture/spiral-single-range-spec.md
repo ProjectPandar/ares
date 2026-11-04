@@ -1,11 +1,9 @@
 # SPEC: release single/multi-range spiral slicing
 
-Status: owner-approved source contract. Tests-only RED `c252fa902` qualified
-Native first in both modes, then API/CLI rejected R1/R2 at layer_config_ranges;
-C0 passed strict complete output. Minimal literal GREEN is under verification.
-Owner amendment: the official release uses NDEBUG; the multi-range branch is a
-defined literal-port target, not UB merely because a debug assertion rejects it.
-Base: `2859763166e4a16e4aa4db5bc01380f9316d414f`.
+The tests-only RED qualified Native first in both modes, then API/CLI rejected
+R1/R2 at layer_config_ranges; C0 passed strict complete output. The official
+release uses NDEBUG; the multi-range branch is a defined literal-port target,
+not UB merely because a debug assertion rejects it.
 Upstream: OrcaSlicer `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 Independent of the scarf policy; no scarf stack is required.
 
@@ -41,8 +39,8 @@ particularly `:194-222`.
 
 The official 2.4.2 release compiles that assertion out under NDEBUG. Entering
 the otherwise branch then executes the ordinary defined ranged-slicing code;
-the assertion itself is not an undefined read. The owner explicitly approves
-using deterministic completed Native release runs as authority for R1-like
+the assertion itself is not an undefined read. Deterministic completed Native
+release runs are the authority for R1-like
 multi-range cases as well as the single-range path. Debug-assert behavior must
 not become a new release-only rejection in Rust.
 
@@ -97,7 +95,7 @@ model-settings resource ID is2.
   unfiltered upstream `LayerRanges` count for mixed inputs. The older
   `2026-10-08-object-layer-height-profile-boundary.md` decision5 equates
   equal PrintRegion configurations with unsplit candidates; the source
-  distinguishes those two counts. This RR requests correcting that assumption
+  distinguishes those two counts. This spec corrects that assumption
   by retaining source ranges, not building a second approximate counter.
 - `project/region_graph.rs::object_region_graph`: bounds/membership and
   configuration reuse already exist; no parallel registry is proposed.
@@ -107,7 +105,7 @@ model-settings resource ID is2.
   these source-shaped owners rather than design another spiral algorithm.
 - `project_slice/raw_intersections/ranges.rs` remains the ranged-volume owner.
 
-After review and a Native-backed public RED, admit Native-completing,
+After a Native-backed public RED, admit Native-completing,
 deterministic cases such as C0/R1/R2 rather than rejecting all range overrides.
 Port the branch selected by the **source-faithful global range count**:
 
@@ -126,17 +124,17 @@ filter as part of the source assignment rewrite, reusing region configuration
 deduplication and bbox membership downstream. Review the older height-profile
 boundary decision5 accordingly and retain height-only/mixed-range regression
 controls. One canonical assignment owner replaces the temporary shell; no
-duplicate planner, public flag or shape/input whitelist is authorized.
+duplicate planner, public flag or shape/input whitelist is added.
 
 Included: literal single and release multi-range branches, range membership and
 per-layer configuration, the source-derived schedule, regular stock bottom/
 positive-largest single-range transition, and consistent API/CLI behavior.
-Defer Native-rejected or nondeterministic cases for evidence/ruling rather than
+Defer Native-rejected or nondeterministic cases for separate evidence rather than
 invent acceptance. Missing-height profile-regeneration policy, adaptive height
 generation, unrelated vase emission and scarf are unchanged. No default-height
 fabrication; core stays portable with no Native invocation or file I/O.
 
-## 4. Native-first probe plan (CPU18 only)
+## 4. Native-first probe plan
 
 Source fixture: `tests/parity/spiral-hole-projected-split/spiral.3mf`,
 SHA256 `7737bc4991c554b645ceed6fe819462cfb1ece3ad2b6cfdf9095dacd78dbde27`.
@@ -163,15 +161,14 @@ Use the existing pinned producers; no upstream source edits or new oracle build.
 If needed, use matching seeded debug information to observe the actual global
 vector size and mode/cutoff; keep official observation limits explicit.
 
-## 5. Review and implementation gates
+## 5. Implementation gates
 
-Send this amended spec plus probe receipts as REVIEW-REQUEST **before product
-edits**. Report Native rejection/crash/nondeterminism without retries to
-manufacture a pass. GDB must identify the selected branch; a completed R1 is a
+The probe results precede product edits. Native rejection/crash/nondeterminism
+is reported without retries to manufacture a pass. GDB must identify the selected branch; a completed R1 is a
 multi-range release witness, never mislabeled single-range. R2 is independently
 an ignored-override admission witness, not active speed-override behavior.
 
-A later authorized RED uses the public byte API and CLI on identical C0/R1/R2
+The RED uses the public byte API and CLI on identical C0/R1/R2
 inputs; Native must complete first in both official and seeded modes. Preserve
 strict complete ordered-byte comparison with only the existing generator-line
 normalization. In particular preserve R1's actual layer count/Z schedule,

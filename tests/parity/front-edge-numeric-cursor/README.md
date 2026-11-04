@@ -13,15 +13,13 @@ world mesh bbox `[25,0.5,0]..[35,1.5,4]`. Only exported setting difference:
 `extruder_offset: ["0x0"] -> ["0x2"]`. All other ZIP member contents are identical.
 GUI: `PrintConfig.cpp:2305-2313`, `slic3r/GUI/Tab.cpp:5134-5135` Position group.
 
-Frozen copies from accepted discovery evidence:
-`${EVIDENCE_ROOT}/w6-92238-front-edge-nearest-br884s6n/{control,target}/exported.3mf`.
+Frozen copies of the accepted discovery exports.
 `SHA256SUMS.json` binds exact archive bytes, not a reconstructed equivalent.
 Discovery control passed official+seeded complete streams; target official first
 non-M73 difference at model-locate move `Y-1.25` versus `Y-.75`. These coordinates
 are explanatory evidence, NOT expected constants in the tests.
 
-Owner audit root `${EVIDENCE_ROOT}/w6-front-edge-owner-audit-pvpa3_kb/`:
-Native preferred `(-30,-1)` in both; Ares None fallback gives target `(-30,+1)`.
+Source-owner audit: Native preferred `(-30,-1)` in both; Ares None fallback gives target `(-30,+1)`.
 Four complete read-only observers exited normally with unchanged outputs; equal
 candidate geometry/ranges/angles/overhang/embedded and visibility evidence isolate
 the preferred cursor input. HOST replay is not a runtime index/expf capture.
@@ -32,5 +30,4 @@ whole ordered generator-only comparison. No masks, tolerance or expected rejecti
 RED target canonical panic occurs before final raw assertion/adapter update;
 retained actual API/CLI raw equality must be checked independently.
 
-This new positive/front-edge witness does not revive discarded cursor commits
-489/66/dd8 or use their tests/production changes. No production code is included.
+No production code is included.

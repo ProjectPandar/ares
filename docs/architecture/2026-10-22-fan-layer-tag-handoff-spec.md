@@ -1,11 +1,11 @@
 # FanMover per-layer reserved-tag handoff — independent SPEC
 
-## Authorization and upstream owner
+## Scope and upstream owner
 
-Docs-first SPEC → test-only RED on exact main
-`afcb6aa7c90f8eb363cba82aaaac9e23717d0cfb`; no production implementation,
-GREEN, FULL or integration authorized. This is independent of paused signed
-FanMover SPEC/RED a741 and rejected candidate740; neither is resumed or changed.
+Docs-first SPEC → test-only RED on main
+`afcb6aa7c90f8eb363cba82aaaac9e23717d0cfb`; no production implementation.
+This is independent of FanMover SPEC/RED a741 and candidate740; neither is
+changed.
 
 Pinned upstream `8500fcdccaa10b5099ac20d252af3a7c560046f1`:
 
@@ -61,17 +61,15 @@ fan semantics, role classification, arc handling, custom-code barriers, general
 flush implementation, PWM/flavor writer policy and option admission. No timing/
 M73 repair, numerical tolerance, output masking or downstream split patch.
 Do not incorporate negative-time abs conversion/with_D_option representation;
-a741/740 remains paused until this independent positive slice is resolved.
+a741/740 stays separate from this independent positive slice.
 
-Any eventual residual requires STOP/report and separate source-owned approval,
+Any eventual residual requires a separate source-owned slice,
 not adjacent changes or broader FanMover fixes. This SPEC does not assert an
 untested tag change will close all possible fan cases.
 
 ## Positive GUI witness and frozen inputs
 
-Accepted read-only diagnosis:
-`${EVIDENCE_ROOT}/w3-fan-positive-delay-readonly-ad5111f0b/README.md`,
-manifest `87bf617358a0be11ad085fa6d95efb6b8205e2f8a19416a9a9ad1a0d297f4b71`.
+Read-only diagnosis manifest `87bf617358a0be11ad085fa6d95efb6b8205e2f8a19416a9a9ad1a0d297f4b71`.
 Copy the existing two input bytes exactly; no regeneration or output golden:
 
 | Input | fan_speedup_time | SHA256 |
@@ -105,10 +103,9 @@ SHA README and thin wiring; no Native G-code/golden,private observers,ignored/
 inverted checks,unsupported-as-success,extra helper/comparator or tolerances.
 Keep fan/M73/time/E/F/wipe/start/end/footer bytes in the original comparison.
 
-Separate docs-only SPEC and test-only RED commits. On the exact clean RED tip,
-CPU12/jobs1/threads1/incremental0,fresh sequential official/seeded roots: expect
+Separate docs-only SPEC and test-only RED commits. On the RED tip, with fresh
+sequential official/seeded roots: expect
 one control PASS and one genuine whole-output target FAIL each mode. Native
 must succeed/replay stably; API/CLI must succeed/raw-equal. Target panic can
 precede wrapper-tail; audit raw bytes without claiming unexecuted assertions.
-Run fmt and locked all-target Clippy,retain full logs/exits/source/input/runtime
-provenance,submit SPEC/RED RR. **Stop before GREEN/production/FULL**.
+Run fmt and locked all-target Clippy.

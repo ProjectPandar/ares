@@ -1,10 +1,8 @@
 # D4: shrink_to_new_bed bed re-centering (3MF + loaded machine)
 
-Status: spec for coordinator review. No production change, no RED, no GREEN
-included. Upstream revision: OrcaSlicer v2.4.2 (`OrcaSlicer/src/`, Nix source
-`/nix/store/hxvv0g1qlw9lwimj2km3ghxphrl9p4qf-orca-slicer-2.4.2-seed-replay-source`).
+Upstream revision: OrcaSlicer v2.4.2 (`OrcaSlicer/src/`).
 This is the last open item of the O3-BBL chain: after D4 lands, the
-`embedded-script` receipt case upgrades to the whole-file comparison that
+`embedded-script` case upgrades to the whole-file comparison that
 completes the chain exit criterion
 (`o3-bbl-profile-overlay-triage.md`, "Known native nondeterminism" section
 aside).
@@ -45,7 +43,7 @@ the loaded machine's bed:
 6. Ender-3 3MF (220×220) + Bambu Lab X1 Carbon (256×256): old < new →
    `shrink = 1`, offset `+18/+18`, instance positions shift by 18 on both
    axes and `wipe_tower_x/y` `15,220 → 33,238` — exactly the residual
-   difference the `embedded-script` receipt shows after D5/D2/D6.
+   difference the `embedded-script` case shows after D5/D2/D6.
 
 ## Included behavior
 
@@ -63,7 +61,7 @@ the loaded machine's bed:
 - Whole-file comparison for the `embedded-script` case becomes the D4 RED
   (fails at the first shifted coordinate) and the D4 GREEN proof.
 
-## Deferred (each its own slice, none exercised by the receipt)
+## Deferred (each its own slice, none exercised by the `embedded-script` case)
 
 - `translate_old` (pre-1.5.9 3MF version path, `OrcaSlicer.cpp:1664-1666`,
   `:3800-3803`, `:3965-3973`).

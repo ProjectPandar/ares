@@ -1,8 +1,7 @@
 # Modifier-volume wall_loops PrintRegion slice
 
-Status: proposed; sole-coordinator approval required before new probes, tests or
-production edits. Base: merged epsilon `70243e353`. Historical epsilon admission
-failures are scope leads, not the independent runtime RED for this slice.
+Status: proposed. Historical epsilon admission failures are scope leads, not the
+independent runtime RED for this slice.
 
 ## Upstream owner and Rust destination
 
@@ -68,11 +67,11 @@ slice-Z routing; classic/Arachne divergence; physical layer/template count doubl
 zero-count empty paths mishandled; hidden geometry, progress or configuration
 changes; Native failure accidentally classified as parity PASS.
 
-After approval only:
+Plan:
 
 1. Derive legal source inputs from the admitted cube/modifier archive. Preserve
-   original/input identities, exact settings, source/binary/resources/seed/CPU,
-   argv/status and full streams under /tmp. Start with no-modifier/no-overlap and
+   original/input identities, exact settings, source/binary/resources/seed,
+   argv/status and full streams outside the repository. Start with no-modifier/no-overlap and
    equal-parent controls, each backend separately. Do not assume an epsilon-era
    legal Native stream remains a new slice's admission result.
 2. Run an independent Native-exit0 complete-output witness against unchanged
@@ -92,12 +91,10 @@ After approval only:
 5. Run unchanged epsilon/Stage1/Stage2/zero-height controls, a fresh ordered same-
    main required-Native seeded baseline/candidate pair, input-bound full common
    stream audit, required-Native workspace nextest, clippy/fmt and core+WASM check.
-   One heavy job,16 threads/build8; obey browser pauses. Native test admission
+   Native test admission
    uses shared fail-closed native_environment. Only the entire generated-by line
    may be normalized; never motion/M73/Z/region/configuration/template lines.
-6. Conclusion-only ARD plus /tmp receipts → sole-coordinator REVIEW → explicit
-   approval → fetch/rebase/ordinary ff-only push. Historical evidence must retain
-   its actual commit binding; only authorized production-zero changes carry it.
+6. Conclusion-only ARD. Historical evidence must retain its actual commit binding.
 
 Exit criteria: source override/parent/range precedence, config-distinct identity
 and perimeter compatibility proved through unchanged whole outputs in both

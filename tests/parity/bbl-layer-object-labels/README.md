@@ -10,7 +10,7 @@ paired envelopes and changing layer membership before comparing Ares.
 
 | Input | SHA256 | Origin / GUI-reachable operation |
 |---|---|---|
-| `two-object.3mf` | `e78d0feba53df6318deb96929eb0620d5392f16a88832fb4ffd75969b853ed28` | W5 stock X1C tower-disabled witness, copied byte-for-byte; IDs 45/56 |
+| `two-object.3mf` | `e78d0feba53df6318deb96929eb0620d5392f16a88832fb4ffd75969b853ed28` | Stock X1C tower-disabled Type1 witness input, copied byte-for-byte; IDs 45/56 |
 | `one-object.3mf` | `858fee95543f6bc6b773930197852d778579dd3ef4b4d782da5a019708665f64` | Same X1C project, delete second object (ID56), retaining first stock object/ID45 |
 | `differing-heights.3mf` | `cf61c496ff6f3e2f2802e3b77da11aee9520480c69f87211cd8a639b0b625b63` | Same X1C project, unlock uniform scaling and set second object's Z scale to 50%; drop to bed (Z translation 2.5 instead of 5) |
 | `non-bbl.3mf` | `33980328409429587aa8d6b2d97be1d5755c010917113018f2c8fb2bf2e6ffe5` | Existing `config-float-header/class.3mf` stock Ender-3 project, disable prime tower in process settings; IDs 45/56 retained |
@@ -22,8 +22,7 @@ settings/plate instance membership; its unused mesh archive entry and its
 The differing-height variant changes only the second build transform, not geometry
 or printer/filament/start G-code. Neither requires a private slicing API.
 
-The two-object X1C source is:
-`${COORD_ROOT}/evidence/w5-type1-public-red-meYjMY/seeded-artifacts/bbl-type1-tower-disabled-UthxqY/input.3mf`.
+The two-object X1C source is the seeded Type1 tower-disabled public RED input.
 Derived zip entry timestamps are fixed to 1980-01-01; original witness bytes are
 preserved exactly.
 

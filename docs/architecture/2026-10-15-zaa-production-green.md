@@ -1,8 +1,8 @@
 # ZAA production contour integration
 
-Approved boundaries: SPEC06a8, RED6d2b6f37a (carried as503dd63f7),
-repair PLAN90381524 with its deterministic-tree supplement. Base main:
-29f4a49c18139925fec238d31d2fdb6b790fbc30, including the separately approved
+Boundaries: SPEC06a8, RED6d2b6f37a (carried as503dd63f7),
+repair PLAN90381524 with its deterministic-tree supplement. Builds on main
+29f4a49c18139925fec238d31d2fdb6b790fbc30, including the separate
 Polyline3 mechanical migration. This feature chain keeps RED with its
 production repair; it is not a standalone unused-kernel submission.
 
@@ -61,9 +61,7 @@ The original ordinary-Z=0 geometry arithmetic is retained for controls.
 ## Constructor correction and retained evidence
 
 The first two-mode public replay retained disabled PASS but enabled DIVERGENT.
-Original failures are preserved under worker2-zaa-green-directed-official.a8pbir
-and worker2-zaa-green-directed-seeded.CHK4pm. Assertions/comparator were not
-changed. A Native ABI probe and Ares debugger observation isolated a one-unit
+Assertions/comparator were not changed. A Native ABI probe and Ares debugger observation isolated a one-unit
 coordinate error: Native(-2031758,-6352), Ares(-2031757,-6351). Native E was
 0.0031749992803961334, just below the five-digit rounding boundary.
 
@@ -75,17 +73,15 @@ this also preserves corners and removes the unintended duplicate wipe point.
 This is source constructor behavior, not a tolerance or comparator change.
 
 Only the superseded capabilities.rs zaa guard and compiler-proven local
-helpers/imports are removed. The exact approved retirement patch SHA256
+helpers/imports are removed. The exact retirement patch SHA256
 is a4df93e58be222f236201e3947b17a0a1bb8ea618e2002f74f82cd8a7d0419af;
 its obsolete private assertion/helpers are retired in a separate test-only
 commit after the production GREEN. The public RED stays unchanged.
 
 Finite coverage is the admitted classic sloped-roof public API/CLI witness,
 plus ordinary fill/perimeter directed controls and source kernel/motion tests.
-Broader fixtures remain deferred as listed in the approved SPEC: Arachne,
+Broader fixtures remain deferred as listed in the SPEC: Arachne,
 modifier boundaries, multipart/instance transforms, nondefault minZ/angle,
 fill-direction, ironing-specific and scarf/arc interactions. No generic
-coverage claim replaces these missing witnesses. Exact hashes, fresh-root
-Native outputs, disabled raw bytes and gate results belong to the review
-receipt; Native products are never committed. Full/workspace and merging
-remain coordinator-owned.
+coverage claim replaces these missing witnesses. Native products are never
+committed.

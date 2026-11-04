@@ -1,9 +1,9 @@
 # ARD: Resource build payload belongs to ObjectImporter's ignored dispatch
 
-Status: **IMPLEMENTED / REFRESHED at main41f2 (2026-10-16)**, associated
+Status: accepted; implemented at main 41f2 (2026-10-16), associated
 [SPEC](3mf-resource-build-item-ignore-spec.md). This docs-only refresh identifies
-that the repeated assignment is already completed in main; no new runtime,
-fixture, RED, test, or production change is proposed. Await owner adjudication.
+that the behavior is already completed in main; no new runtime,
+fixture, RED, test, or production change is proposed.
 
 Main `41f2c90f765d42c6620583121296bb61a2cb839c` contains resource-ignore GREEN
 `86b7f3e1c` and omission prerequisite `61c22160b`. Existing role selection decodes
@@ -15,7 +15,7 @@ assertion. On this base it is a regression, not a new RED.
 
 Non-negotiable: do not undo already merged parity or invent another importer to
 manufacture a RED. A new behavior must have a new source-cited boundary and
-separate approval. Failure inventory and current frozen pair are in the SPEC.
+separate SPEC. Failure inventory and current frozen pair are in the SPEC.
 The original decisions below remain the source contract, with the old optional
 `Build` gap description historical rather than current. M73 stays deferred.
 
@@ -48,11 +48,11 @@ shells around the named upstream import owner, not a new Ares pipeline.
   no general claim about schema-invalid main-model admission is permitted.
 - Same qualified control, one resource-entry edit, one positive/repeat/control
   per mode. Full Native→public test only, no bypass switches or injected refs.
-  Runtime/fixture freezing requires exact input/SPEC approval first.
+  Runtime/fixture freezing requires an exact input/SPEC first.
 - RED is attributable public API+realCLI rejection versus complete neutral
   Native output, with full strict-PASS control. No stream means comparison not
   evaluated. Never weaken M73/metadata/motion/statistics/footer comparisons.
-- Separate RED review and production approval; freeze tests for GREEN. Any
+- Separate RED and production commits; freeze tests for GREEN. Any
   residual G-code difference => STOP, not scope growth. Core remains byte-only
   on WASM/Windows/macOS/Linux; changed modules remain under400LOC.
 

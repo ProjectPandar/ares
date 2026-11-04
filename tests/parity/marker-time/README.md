@@ -5,7 +5,7 @@ unchanged `tagged-overrides.json`. Native JSON, CSV, TSV projections and run log
 are generated into unique **external** artifact directories, never read from Git.
 Historical outputs remain in git history, not as fallback oracle files.
 
-Approved boundary: `docs/architecture/web-marker-time.md`,
+Boundary: `docs/architecture/web-marker-time.md`,
 `docs/architecture/web-colorchange.md` (tagged marker Time), and
 `docs/architecture/marker-time-runtime-native-migration.md` (runtime authority).
 Pinned upstream: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
@@ -22,7 +22,7 @@ adaptation diffs and extraction hashes. No Rust/JS-generated expected timing/tex
 Use the pinned upstream source and nixpkgs paths, without changing Native patches:
 
 ```sh
-export ORCA_PROCGCODE_SOURCE=${TMP_ROOT}/ares-orca-procgcode-source
+export ORCA_PROCGCODE_SOURCE=<pinned-procgcode-source-dir>
 export ORCA_PROCGCODE_NIXPKGS=/nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source
 node tools/chain-probe/extract-marker-time.mjs --check
 raw=$(nix build --impure --cores 8 --no-link --print-out-paths -f tools/chain-probe/marker-time.nix)
@@ -55,7 +55,7 @@ unchanged. Production core/vgcode/WASM/display code remains I/O-free and unchang
 For a standalone raw capture, an external destination is mandatory:
 
 ```sh
-artifact=$(mktemp -d /tmp/marker-time-raw.XXXXXX)
+artifact=$(mktemp -d)
 node tools/chain-probe/marker-time-fixtures.mjs "$artifact"
 ```
 
@@ -76,7 +76,7 @@ and Normal elapsed bits are still asserted.
 To repeat the single-producer capture using that test's retained input:
 
 ```sh
-stable=$(mktemp -d /tmp/marker-time-stable.XXXXXX)
+stable=$(mktemp -d)
 node tools/chain-probe/marker-time-stable.mjs <printed-tagged-artifact>/oracle-input.gcode "$stable"
 ```
 

@@ -1,12 +1,12 @@
 # SAFC coupled option-family bounded source slice
 
-Status: SPEC-REQUEST only. No Native run, new test, production change or coverage promotion for this slice. Worker2 claims the active-model coverage gap; SPEC approval is required before Native admission/RED.
+Status: Proposed. This slice adds coverage for the coupled active-model SAFC options.
 
 ## Selection and ownership
 
 Select only `small_area_infill_flow_compensation` (coBool) and `small_area_infill_flow_compensation_model` (coStrings) from the 650-key plan. Existing `option_coverage/domains.rs` generates generic false/true for the switch; `domains/probes.rs:89-92` supplies only `probe-empty` for the model. This is **not** a claim that the keys are absent from the inventory: the missing coverage is coupled nonempty model initialization, role/pattern admission and measurable E modification. A free-form empty probe cannot prove an active PCHIP consumer. No nonempty-model CLI parity witness was found under `crates/ares-cli/tests`.
 
-Offline coordination/findings/cluster searches found no SAFC logic claim or matrix DIVERGENT ownership. A historical web UI metadata reference is not a logic-port claim. APA remains worker1, load-settings worker5, matrix DIVERGENT worker3; none are selected or modified. If a conflicting claim emerges, pause before implementation. Baseline for this request is merged G4 `e051ee15863ceffc4b7599632e08ca48ab7f5f9e`; fix actual latest baseline before approved execution.
+A historical web UI metadata reference is not a logic-port claim. Baseline for this specification is G4 `e051ee15863ceffc4b7599632e08ca48ab7f5f9e`.
 
 ## Non-negotiable source boundary
 
@@ -41,11 +41,11 @@ The custom curve is legal by source: first length0, strictly increasing lengths/
 
 ## Test-first proof obligations
 
-Before production edits, author the coupled E2E harness and strong consumer assertions, then run real Native/Ares whole-output comparisons under approved windows. Preserve all initial failures. Require actual positive-E solid/top/bottom extrusion, at least one segment in the active interior, observable E reduction on an admitted matching segment, and wall/sparse roles unaffected. An output footer, enable flag, model token or PASS on inactive stock geometry alone is insufficient.
+Before production edits, author the coupled E2E harness and strong consumer assertions, then run real Native/Ares whole-output comparisons. Preserve all initial failures. Require actual positive-E solid/top/bottom extrusion, at least one segment in the active interior, observable E reduction on an admitted matching segment, and wall/sparse roles unaffected. An output footer, enable flag, model token or PASS on inactive stock geometry alone is insufficient.
 
 Observer must preserve TYPE and E addressing state across layers. Use actual XY length and positive extrusion, bind comparable segment endpoints/roles for paired enable controls, and respect Native emission quantization instead of fitting a loose epsilon to output. Whole comparator remains unchanged (generated banner policy only). If no matching eligible segment exists, admission fails; don't weaken the witness. For unsupported-pattern control, verify actual concentric role extrusion and no correction against its own disabled companion, not against a different geometry pattern.
 
-Tests precede code. A real RED must come from successfully admitted identical project bytes and actual consumer/output mismatch, not compile/input failure. Any production repair requires a separate source-cited bounded repair request after RED. Existing unit scaffolding stays intact; no post-hoc assertion edits to manufacture GREEN. No Native execution before SPEC approval.
+Tests precede code. A real RED must come from successfully admitted identical project bytes and actual consumer/output mismatch, not compile/input failure. Any production repair requires a separate source-cited bounded repair request after RED. Existing unit scaffolding stays intact; no post-hoc assertion edits to manufacture GREEN.
 
 ## Included / deferred / exit
 
@@ -53,4 +53,4 @@ Included: single-region one-nozzle initialization, stock/custom lawful model int
 
 Deferred: malformed parser/error parity, nonfinite/numeric-prefix acceptance, near-equal validation edge cases, all-pattern exhaustion, object/region overrides, multi-filament/multi-nozzle, arc/scarf variable-Z routes, external support/bridge behavior beyond role nonapplication controls, GUI editing and config-stack/CLI adapters. Existing code may already support parts; this slice doesn't credit unobserved behavior or add legacy fallback.
 
-Exit: owner-approved SPEC → exact retained Native admission/RED → separately approved source-owned repair if required → all finite consumer/whole witnesses GREEN → fresh workspace/strict fmt/WASM and four independent standard full legs on latest production baseline → raw input/member/channel and unchanged648-plan audit → exact-hash review. Existing Native ND exemptions do not automatically apply to a new failure. Core remains filesystem/UI/terminal-free on WASM/Windows/macOS/Linux; runtime E2E is the CLI adapter only.
+Exit: SPEC → exact retained Native admission/RED → separate source-owned repair if required → all finite consumer/whole witnesses GREEN → fresh workspace/strict fmt/WASM and four independent standard full legs on latest production baseline → raw input/member/channel and unchanged648-plan audit. Existing Native ND exemptions do not automatically apply to a new failure. Core remains filesystem/UI/terminal-free on WASM/Windows/macOS/Linux; runtime E2E is the CLI adapter only.

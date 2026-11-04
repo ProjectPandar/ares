@@ -1,6 +1,6 @@
 # ARD: Layer templates use current logical writer filament
 
-Status: proposed, awaiting SPEC approval; worker2, base `36ed482eb`.
+Status: proposed; base `36ed482eb`.
 
 ## Upstream decision boundary
 
@@ -12,8 +12,8 @@ OrcaSlicer `8500fcd` `libslic3r/GCode.cpp:4639-4641,4682-4684`, within `GCode::p
 - Keep the before hook before `change_layer` and the after hook after it. Preserve scalar placeholders, vectors, explicit indexes, RNG, error capture and assignment write-back.
 - Reuse `EmitState.extruders.active_id()` and `template::render_for_filament`. No new context plumbing, tool selection, parser algorithm or public API.
 - Runtime edits stay in `ares-core/src/project_slice/gcode_emit/layer_gcode.rs`. The existing module is the compatibility shell for the cited upstream slice, not an Ares-owned pipeline extension.
-- Establish Native-admitted public API/CLI E2E RED before an approved production repair. Actual M104 consumption and wall/tool execution are required; comments or settings footer alone are insufficient.
-- Keep full-output comparisons and existing assertions. Native instability remains visible and needs a specific coordinator ruling; it does not justify a new normalization or fallback.
-- Do not extend this port into the other workers' APA/anchor, brim, profiles, geometry, CI/oracle or viewer files. Adjacent template call sites remain deferred.
+- Establish Native-admitted public API/CLI E2E RED before a production repair. Actual M104 consumption and wall/tool execution are required; comments or settings footer alone are insufficient.
+- Keep full-output comparisons and existing assertions. Native instability remains visible and needs a specific decision; it does not justify a new normalization or fallback.
+- Do not extend this port into APA/anchor, brim, profiles, geometry, CI/oracle or viewer files. Adjacent template call sites remain deferred.
 
-The complete included/deferred behavior, failure inventory, finite cases, ownership and gates are in [the SPEC](layer-template-filament-context-spec.md). This is a source-cited `libslic3r` rewrite under [ARD-0020](ard-0020-future-milestone-rewrite-gate.md).
+The complete included/deferred behavior, failure inventory, finite cases and gates are in [the SPEC](layer-template-filament-context-spec.md). This is a source-cited `libslic3r` rewrite under [ARD-0020](ard-0020-future-milestone-rewrite-gate.md).

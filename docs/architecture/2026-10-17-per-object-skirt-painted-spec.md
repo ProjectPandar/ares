@@ -2,19 +2,14 @@
 
 ## Scope and guard-off result
 
-This slice is based on approved InnerOnly admission `2a37ae4a3dd6f7c40950681b93fdae2f1ef1509f`, with the stack-24 source boundary at `4351a644d6683555ae48e44ea7f898a66f75d585`.
-The frozen two-object input is `/tmp/w2-painted-perobject.3mf`: two separated
+This slice is based on InnerOnly admission `2a37ae4a3dd6f7c40950681b93fdae2f1ef1509f`, with the source boundary at `4351a644d6683555ae48e44ea7f898a66f75d585`.
+The frozen two-object input has two separated
 objects, `skirt_type=perobject`, `brim_type=painted`, `combine_brims=0`, one
 filament and one instance per object, ByLayer, no tower/support/raft.
 
 A guard-off probe temporarily added `ProcessBrimType::Painted` to the existing
 `generate.rs:48-56` match, without any other code change. Native and Ares were
-then run on the same input in both modes with fresh roots and CPU affinity:
-
-- official CPU13: Native rc 0 at `/tmp/w2-painted-native-W5sd`; temporary Ares
-  output at `/tmp/w2-painted-ares-official-k7c0`;
-- seeded CPU14: Native rc 0 at `/tmp/w2-painted-native-seeded-6mzx`; temporary
-  Ares output at `/tmp/w2-painted-ares-seeded-VtKQ`.
+then run on the same input in both official and seeded modes with fresh roots; Native returned rc 0 in both.
 
 Native asserted active geometry: each mode contains four `;TYPE:Skirt` blocks
 (lines 74, 242, 547, 698) and a `;TYPE:Brim` block (line 310, byte offset
@@ -42,7 +37,7 @@ normalization, no painted-ear geometry port is included here.
 
 ## Included, deferred, and RED plan
 
-After approval, the GREEN changes only the brim-type match by adding
+The GREEN changes only the brim-type match by adding
 `ProcessBrimType::Painted`; `combine_brims`, instance-count, and tower/flush
 conditions remain unchanged. BrimEars and Auto remain separate deferred slices.
 
@@ -51,5 +46,5 @@ Native through `OrcaRunner::from_env` and asserts Native rc 0, at least two
 Skirt blocks, and a Brim block before the unchanged strict whole-output
 comparison. API and CLI must both compare strictly to Native; the test must
 fail at the current guard while the corresponding OuterOnly/InnerOnly controls
-pass. Official CPU13 and seeded CPU14 use fresh roots. No Native artifacts are
+pass. Official and seeded modes use fresh roots. No Native artifacts are
 committed.

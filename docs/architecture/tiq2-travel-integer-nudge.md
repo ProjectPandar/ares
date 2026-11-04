@@ -63,9 +63,8 @@ only the four retry-coordinate expressions corrected, all bytes agree
 through33323 lines; the next first difference is footer emission at33324:
 Native emits `; filament end gcode`, while Rust emits
 `G1 X-19 F3000 ; home X axis`. No output is filtered and complete TiQ2 parity
-is not claimed. Coordinator approved this bounded source-arithmetic slice;
-the still-failing whole-byte test remains on a local footer branch, not in
-the merge candidate. The six smooth Type2 groups and exhaustive fan command
+is not claimed. This is a bounded source-arithmetic slice; the still-failing
+whole-byte test is not registered. The six smooth Type2 groups and exhaustive fan command
 sequence comparison pass after the correction.
 
 ## Verification boundary
@@ -81,17 +80,5 @@ streams are identical, and only the target TiQ2 travel stream changes. All605
 Native streams remain identical after generated-by banner normalization.
 The target stream's next first difference remains the footer documented above.
 
-Subsequent authorized evidence carry-forward covers the seam visibility
-first-layer-hole correction (89549ca11, new E2E coverage), modifier/range
-wall_loops and Arachne zero-wall correction (844633cb7), and the added
-PrintStatistics result field (8a0116f54, no G-code change). Default-environment
-workspace verification was refreshed after these production changes on
-16e222917:8182/8182 pass,6 skipped, with no ARES environment overrides and
-no fail-fast. The latest required-Native v2 control set passes807/807 with
-0 skipped, including initialized-KSR and PrintStatistics environment bindings.
-Later main rebases are test/tool/document-only and preserve these conclusions.
-
-Workspace all-targets/all-features clippy with warnings denied passes.
-WASM core/adapter check and formatting check also pass.
 Debugging receipts and generated streams remain runtime artifacts only.
 

@@ -1,8 +1,6 @@
 # Draft SPEC: exact-containment assignment of AutoBrim layer polygons
 
-Status: **NATIVE-FIRST DISCOVERY / SPEC-REVIEW-REQUEST**; no RED or production
-change authorized by this document. Branch `worker2/auto-brim-material-discovery`
-(name reflects the initial exploration, not the final selected boundary).
+Native-first discovery; no RED or production change in this document.
 Base and read-only CLI source: `e81afae89a4874af3c5556a592c3d5a1d121055c`,
 the merged AutoBrim/admission/object-speed integration.
 This slice rewrites one `libslic3r::PrintObjectSlice` assignment operation,
@@ -24,9 +22,6 @@ assignment. No general mixed-material behavior is claimed here.
 
 ## Native-first evidence (completed, not public RED)
 
-Final root:
-`${COORD_ROOT}/evidence/worker2-material-discovery-20261020T194111/final-single-filament-regroup/`.
-
 Source project is the merged
 `tests/parity/auto-brim-object-speed/auto_brim-global-only.3mf`, SHA256
 `e862e3a09ab896c964f2caad70e974f880354c79e740238186cfc6ab609c27d5`.
@@ -44,7 +39,7 @@ original cube mesh entry is byte-identical to the source project in all4 inputs;
 the second entry differs only in model identity/UUID, not mesh vertices/faces.
 The no-brim variant differs from separated-auto only in `brim_type`.
 
-All8 Native runs (4×official/seeded) and4 existing CLI runs exit0, serial CPU13.
+All8 Native runs (4×official/seeded) and4 existing CLI runs exit0.
 Official/seeded Brim body hashes agree. Counts below are actual positive-E XY
 extrusion lines in Brim sections, **not** inferred loop or TYPE counts:
 
@@ -137,27 +132,25 @@ M73 estimator changes. No new Unsupported guard or fallback allowed.
 
 ## Frozen RED input provenance
 
-After SPEC approval the four final discovery archives are copied byte-for-byte
+The four final discovery archives are copied byte-for-byte
 into `tests/parity/auto-brim-exact-group-assignment/{single-auto,overlap-auto,separated-auto,separated-none}.3mf`.
 The table above is the frozen SHA256 manifest; every input has one public test.
-The external generator is `generate-inputs.js` under the final evidence root,
-with its source SHA256 recorded there. It reads the already-merged single-auto
+The external discovery generator reads the already-merged single-auto
 project, creates a second component/part with consistent transforms, copies
 its mesh without vertex/face edits, and writes a deterministic stored ZIP with
 per-entry CRC32. It is a discovery/reproduction script, not a committed test
 probe. No output G-code is frozen in Git. This corresponds to GUI Add Part
 plus zero/30 mm placement, not malformed project or a new unsupported setting.
 
-## Proposed post-approval SPEC → RED → GREEN
+## Proposed SPEC → RED → GREEN
 
-1. Rebase this docs-only SPEC onto current main, reconfirm exact4 input hashes
-   and Native observations before tests. Approval required; no implementation yet.
+1. Reconfirm exact4 input hashes and Native observations before tests; no
+   implementation yet.
 2. RED freezes these4 input-only cases, all referenced. Reuse the integrated
-   `runner/native_api_cli.rs` (or the canonical shared helper selected by the
-   coordinator), Native through required-oracle setup. Assert Native rc0 and
+   `runner/native_api_cli.rs` (or the canonical shared helper), Native through required-oracle setup. Assert Native rc0 and
    nonempty Brim XY motion for Auto inputs, no Brim for none. Require Native/API/
    CLI strict complete byte parity and API/CLI raw equality; target must FAIL,
-   all3 controls must PASS in official and seeded modes on assigned CPU13.
+   all3 controls must PASS in official and seeded modes.
    Record the missing894 motion lines, not only early M73 differences.
 3. GREEN changes **production only** at cited assignment boundary, preserving
    tests/docs and all width/speed/material/emission algorithms. If whole-output
@@ -165,27 +158,5 @@ plus zero/30 mm placement, not malformed project or a new unsupported setting.
    magic result constants, broad geometry cleanup or extra policy guard.
 4. Existing AutoBrim volume/material/small-diagonal, per-object admission and
    object-speed regressions remain unchanged. After directed dual-mode GREEN:
-   fmt, clippy, wasm32; exact-hash dual canonical FULL only in an explicitly
-   coordinator-allocated window. Discovery runs no FULL. Review/merge only by
-   coordinator; source-cited rewrite scope, no dead fixtures or Native outputs.
-
-## Provenance / replay
-
-Evidence scripts and inputs live outside Git: `generate-inputs.js`, `run.sh`,
-`summarize.js`, exact input archives, Native command stdout/stderr/result/G-code,
-per-case exit files, CLI outputs, input manifest, file/binary hashes and clean
-pre-doc worktree status. All runs/analysis serial `taskset -c13`, seeded
-`ORCA_REPLAY_CPU=13`, seed0; official extracted2.4.2 and explicit seed-only
-Native binaries selected via existing wrappers. No builds, FULL, stress or
-CPU48–51 use occurred.
-Read-only Ares source `e81afae89`, binary SHA256
-`543cae94560feb1f2a2ca4fad6603feb1406db637558895e17b823125838de4e`;
-it was produced by the just-merged integration. Upstream source checkout is
-read from the original worktree because this discovery worktree has no local
-ignored OrcaSlicer source/resources link. Hashes are recorded in evidence.
-
-Replay into a new external root: copy the3 scripts; verify source fixture and
-CLI hashes; run `taskset -c13 node <root>/generate-inputs.js <root>/inputs`, then
-`taskset -c13 bash <root>/run.sh <root>`. The generator copies the retained
-real mesh and uses matching component/part transforms; no generated meshes or
-probe code enter the repository. Only this SPEC document is committed.
+   fmt, clippy, wasm32; exact-hash dual canonical FULL. Discovery runs no FULL.
+   Source-cited rewrite scope, no dead fixtures or Native outputs.

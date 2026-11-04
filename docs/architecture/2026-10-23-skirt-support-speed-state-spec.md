@@ -24,9 +24,9 @@ upstream fallback instead of the positive explicit skirt speed override.
 
 ## Rust destination and replacement
 
-Stack on approved ratio GREEN `93d9057636233b245795fec3ea926bb3d984c52b`,
-which includes approved seam state43e10f4c8. This is the fourth W2 slice;
-minimum-skirt017a9876b remains separate until the integration window.
+Stack on ratio GREEN `93d9057636233b245795fec3ea926bb3d984c52b`,
+which includes seam state43e10f4c8. Minimum-skirt017a9876b remains a
+separate slice.
 
 Extend the existing `gcode_emit/motion/state.rs::EmitState` current-object
 state with only current support_speed. Initialize it beside existing object
@@ -84,32 +84,26 @@ modes; target strict first difference is M73R4 versus R3. This is explicitly
 accepted as M73-leading with independent feed evidence, not masked. Second
 layer next-instance skirt NativeF600 versus AresF1842, all skirt XY/E sequences
 identical. Native double replay/modes agree. These are external diagnostics,
-not test constants. Evidence:
-`worker2-skirt-support-speed-proposal-20261023T100026/PROPOSAL-REVIEW-REQUEST.md`.
+not test constants.
 
 The initial positive-skirt-speed brim hypothesis was rejected because both
 cases matched; do not revive it or claim a first-layer brim defect. Frozen
 seam/ratio/min-length slices do not address this speed field.
 
-## Staged review gates
+## Staged gates
 
-1. Docs-only SPEC commit and SPEC RR before tests/production.
-2. After SPEC review add exactly two input-only3MFs and two public cases through
+1. Docs-only SPEC commit before tests/production.
+2. Add exactly two input-only3MFs and two public cases through
    unchanged `runner::native_stream_case::check` with `(false, |_, _| {})`.
    Register in runner.rs (parent395LOC), not root-registry migration/include.
    Preserve all earlier tests/inputs/helpers. No hard-coded feed assertions,
    geometry callbacks, copied runner, guard, allow/expect or expected-error test.
-3. Exact RED tip, CPU13, buildjobs1,PIN_OFFSET13,PARITY_THREADS1,replayCPU13;
-   serial official/seeded, independent fresh empty caches. Each mode must show
+3. Exact RED tip; serial official/seeded, independent fresh empty caches. Each mode must show
    one genuine strict target failure and one complete control pass, Native
    double replay, successful public API/actual CLI and raw API/CLI equality.
    Compare complete ordered bytes with generator-line-only handling, no M73,
    timing, metadata, travel or geometry mask. Attach independent feed proof.
-   Run fmt and strict workspace all-targets clippy, submit RED RR.
-4. Carrier audit then authorized minimal GREEN with tests/input/helper frozen;
-   STOP for any broader state model or other residual. Report each stage.
-   FULL waits for allocated coordinator window; do not duplicate full runs.
-5. All four W2 slices integrate onto then-current main together in the notified
-   W2 window with separate mechanical adapters if needed and one fresh dual
-   FULL at exact final tip, then integration RR. Coordinator owns review/merge;
-   integration notification interrupts this work immediately.
+   Run fmt and strict workspace all-targets clippy.
+4. Carrier audit then minimal GREEN with tests/input/helper frozen;
+   STOP for any broader state model or other residual.
+5. One fresh dual FULL at the exact final tip.

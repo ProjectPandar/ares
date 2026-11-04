@@ -16,14 +16,12 @@ change does not switch executable references or claim beta parity.
 Priority is config/resources, geometry and mesh ordering, walls, seams, fill,
 fixed-tool writer/travel contracts, material/tower planning and final processor
 integration. The ARD names upstream functions, current Rust owners, per-layer
-exits, deferred features and the six-area ownership partition. Slice authors use only
-their public targeted RED/GREEN filter plus fmt/Clippy; batch E2E belongs to the
-integrator. Keep approved 2.4.2 chains and receipts frozen; do not relabel them as
-beta qualification or rename existing tests outside the fill/support owner's dedicated rename commit.
+exits, deferred features and the six-area partition. Keep 2.4.2 parity
+results frozen; do not relabel them as beta qualification.
 
 ## Prior baseline program: OrcaSlicer v2.4.2 3MF project G-code parity
 
-### By-object spiral per-object transition_out: approved SPEC → side-branch tests-only RED → bounded GREEN
+### By-object spiral per-object transition_out: SPEC → tests-only RED → bounded GREEN
 
 Owner upstream8500fcdcc `SpiralVase.cpp:120–121,154–165,205–216` (the
 last layer of EVERY object batch emits a flat taper pass cloned from
@@ -38,9 +36,7 @@ drops the `is_last_entry` conjunct, becoming per-object
 consumer table proves `is_last_entry`/`last_entry` plumbing
 (`schedule.rs:285–287,329`, `layers.rs:134`, `tool_entry.rs:40,73,287`,
 `drive.rs:315`, `object_entry.rs:36,125`) has no other consumer and is
-removed. RED on the side branch `spiral-byobject-transition` from the
-W1 tip `a1a72362a` (not merged into the frozen window tip; append is a
-COORD decision after the RR): witness = the committed
+removed. RED witness = the committed
 `two-object-by-object-apart.3mf` (A1 by-object spiral; first
 difference line 5 — `; total layer number: 83` vs `82`; Native prints
 `overhang.obj`'s top-layer flat taper pass, Ares drops it plus the
@@ -51,7 +47,7 @@ ramp feed `F3713` vs `F1857` (overhang slow-down classification).
 [SPEC](architecture/spiral-byobject-transition-spec.md),
 [ARD](architecture/ard-spiral-byobject-transition.md).
 
-### Spiral vase object-start Z-only line: approved SPEC → tests-only RED → bounded GREEN
+### Spiral vase object-start Z-only line: SPEC → tests-only RED → bounded GREEN
 
 Owner upstream8500fcdcc `SpiralVase.cpp:131–141` (every Z-only G1 of a
 spiral-enabled layer is kept and rewritten to the ramp base z with the
@@ -66,7 +62,7 @@ labels). Destination: remove the `already_emitted` dedup in
 `ares-core gcode_spiral_vase/project.rs::append_layer_z` (literal
 rewrite-all port); `start_travel.rs:148–157` only if RED bytes prove the
 writer-side branch also wrong, aligned to `GCode.cpp:5708/6367–6385`
-semantics. RED on the W1 chain at `2a20c7dff`: witness
+semantics. RED witness
 `single-object-by-layer` (A1 spiral; comparator first difference byte
 81880 — 47 Native-only bare `G1 Z<z>` lines after M624 markers) plus the
 `z_hop=0` variant (byte 81702), complete unweakened comparator, official
@@ -77,7 +73,7 @@ number 83-vs-82 class, smooth-XY extras.
 [SPEC](architecture/spiral-vase-object-start-z-spec.md),
 [ARD](architecture/ard-spiral-vase-object-start-z.md).
 
-### Spiral vase multi-copy by-layer admission: approved SPEC → tests-only RED → bounded GREEN
+### Spiral vase multi-copy by-layer admission: SPEC → tests-only RED → bounded GREEN
 
 Owner upstream8500fcdcc `Print.cpp:1334–1341` (`Print::validate`: with
 `spiral_mode`, `total_copies_count = Σ instances > 1` and a non-by-object
@@ -85,8 +81,7 @@ sequence rejects with the `spiral vase mode` diagnostic; CLI
 `CLI_VALIDATE_ERROR` −51 → 205 with the validate `result.json` fields).
 Destination: only `ares-core print/validate.rs::validate_print` gains the
 instance-count check on the existing `SliceError::Validate` path; typed reads,
-no new exit plumbing; file stays ≤400 LOC. RED = three cases on the W1 chain
-at `a62041e78`: witness `two-object-by-layer` (A1, `spiral_mode=1`, by layer;
+no new exit plumbing; file stays ≤400 LOC. RED = three cases: witness `two-object-by-layer` (A1, `spiral_mode=1`, by layer;
 Native −51/205 + diagnostic, Ares currently exit 0) plus acceptance guards
 `single-object-by-layer` and `two-object-by-object-apart` (both accepted by
 Native and Ares; byte parity deferred — BBL spiral emission divergences are
@@ -95,7 +90,7 @@ Deferred: `Print.cpp:1342–1353` regions check, spiral emission parity.
 [SPEC](architecture/spiral-vase-admission-spec.md),
 [ARD](architecture/ard-spiral-vase-admission.md).
 
-### Extruded weight/volume template totals: approved SPEC → formal RED → bounded GREEN
+### Extruded weight/volume template totals: SPEC → formal RED → bounded GREEN
 
 Owner upstream8500fcdcc `GCode.cpp:1675–1690` (per-extruder `w = v ×
 filament_density × 0.001`, volume via typed filament_diameter cross-section),
@@ -104,18 +99,17 @@ render, `PrintConfig.cpp:11188` definition. Destination: `ares-core
 project_slice/gcode_emit/motion/state.rs::EmitState::extrusion_totals()`
 replaces hard-coded diameter 1.75 / density 1.24 with typed per-extruder
 values; consumers `layer_gcode.rs:113-119/218-224` unchanged semantics. RED =
-three `native_stream_case::check` cases on the W1 branch chain at `d340f9c84`:
+three `native_stream_case::check` cases:
 MK4 stock control + targets `filament_density=2.0` (first diff byte 11090,
 line 459, M74 W ratio 2.0/1.24) and `filament_diameter=1.85` (byte 11103,
 ratio (1.75/1.85)²); official+seeded, runtime Native, no silent pass. M73
 transpositions in the density witness are downstream STOP-check effects.
 Deferred: vector weight/volume placeholders, interpolate_table engine,
-statistics footer, M201 consumer, queued files. CPU18 serial/threads1; no
-FULL/rebase/merge/push.
+statistics footer, M201 consumer.
 [SPEC](architecture/extruded-weight-totals-spec.md),
 [ARD](architecture/ard-extruded-weight-totals.md).
 
-### Unknown-key CONFIG_BLOCK echo: approved SPEC → formal RED → bounded GREEN
+### Unknown-key CONFIG_BLOCK echo: SPEC → formal RED → bounded GREEN
 
 Owner upstream8500fcdcc `Config.cpp::set_deserialize_nothrow:576–590` (cleared
 keys recorded, never stored), `Config.cpp::set_deserialize_raw:608–629` (no
@@ -124,18 +118,17 @@ def/alias → `UnknownOptionException`), `GCode.cpp::append_full_config:5591–5
 only the `ares-core options/config_export/writer.rs` raw-echo loop: gate raw
 project-settings keys on the existing registry definition table incl.
 `OptionMetadata::aliases` (literal alias→canonical port), no hand-written key
-lists; `config_export/value.rs` stays with the queued W6 window;
+lists; `config_export/value.rs` is out of scope;
 `EXPLICIT_RULES` (handle_legacy port) stays byte-for-byte. RED = two
 `native_stream_case::check` cases: P1S ByLayer target with the single unknown
 key `first_layer_size_compensation=0.2` (comparator FAIL today: Ares emits
 `; first_layer_size_compensation = 0.2`, byte 12675) plus the keyless control;
 Native runtime-generated, never committed, no silent pass. GREEN flips the
 target to PASS with controls and the complete comparator unchanged.
-CPU18 serial/threads1; no FULL/rebase/merge/push.
 [SPEC](architecture/unknown-key-config-block-spec.md),
 [ARD](architecture/ard-unknown-key-config-block.md).
 
-### Sequential template total: approved SPEC → formal RED → bounded GREEN
+### Sequential template total: SPEC → formal RED → bounded GREEN
 
 Owner upstream8500fcdcc `GCode.cpp::_do_export:2484–2528` mode-dependent
 `m_layer_count` → `:2890` placeholder → `:4677–4684` layer template consumer.
@@ -143,37 +136,35 @@ Rust boundary: existing private `gcode_emit/orchestration.rs::emit`
 `EmitState.total_layer_count` initializer; replace the wrong scalar handoff
 with existing `tail_layer_count`, not a new Ares counter/pipeline. Include only
 that handoff; defer file-start/role cache, P1S ByObject compound Y/M73 residual,
-broader skirt control, geometry, writer, processor, templates and other workers.
-Above frozen117f4ffe3 afterW5: docs commit then tests-only Native-first official+
-seeded A1 ByObject target (81 vs50) and stock A1/originalP1S ByLayer controls.
+broader skirt control, geometry, writer, processor and templates.
+Tests-only Native-first official+seeded A1 ByObject target (81 vs50) and stock
+A1/originalP1S ByLayer controls.
 Exit RED: one genuine count-only FAIL/two complete PASS each mode, API/CLI
 success/raw equality, immutable SHA inputs, unchanged complete comparator and
-fmt/strict Clippy. One combined docs+RED REVIEW-REQUEST/HOLD; later GREEN only
-the existing field initializer with identical tests. CPU18 serial/threads1;
-no FULL/integration/rebase/merge/push or broader runtime qualification.
+fmt/strict Clippy. GREEN changes only the existing field initializer with
+identical tests.
 [SPEC](architecture/sequential-template-layer-count-spec.md),
 [ARD](architecture/ard-sequential-template-layer-count.md).
 
-### Sequential origin-hop writer frame: approved SPEC → formal RED → bounded GREEN
+### Sequential origin-hop writer frame: SPEC → formal RED → bounded GREEN
 
-Approved source boundary at upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`: `GCode.cpp::travel_to:7480–7506`, `point_to_gcode:8124–8128`, and `set_origin:5659–5669`, reached by sequential `_do_export:3298–3322`. Rust destination is the existing `gcode_emit/layers/transition.rs::emit` hop output and writer XY cache, reusing `state.offset`. Include only this frame conversion; defer generic writer/processor, M73 implementation, broader skirt, and W3/W4/W6 owners. Formal RED target is stock-offset P1S ByObject with unchanged complete comparator including M73; controls are same-scene zero-offset and A1 ByObject. GREEN must pass complete parity; any remaining M73 difference is STOP. Docs+RED use one REVIEW-REQUEST and append coordinator inbox. CPU18 serial/threads1; no FULL/integration/rebase/merge/push.
+Source boundary at upstream pin `8500fcdccaa10b5099ac20d252af3a7c560046f1`: `GCode.cpp::travel_to:7480–7506`, `point_to_gcode:8124–8128`, and `set_origin:5659–5669`, reached by sequential `_do_export:3298–3322`. Rust destination is the existing `gcode_emit/layers/transition.rs::emit` hop output and writer XY cache, reusing `state.offset`. Include only this frame conversion; defer generic writer/processor, M73 implementation and broader skirt. Formal RED target is stock-offset P1S ByObject with unchanged complete comparator including M73; controls are same-scene zero-offset and A1 ByObject. GREEN must pass complete parity; any remaining M73 difference is STOP.
 [SPEC](architecture/sequential-origin-writer-frame-spec.md),
 [ARD](architecture/ard-sequential-origin-writer-frame.md).
 
-### Auto-lift query frame: SPEC review → genuine RED review → translation-only GREEN
+### Auto-lift query frame: SPEC → genuine RED → translation-only GREEN
 
 Upstream `GCode.cpp::needs_retraction:7604` translates the clipped overhang
 query by `m_origin - m_writer.get_xy_offset()` into current-plate coordinates.
 Destination: existing ares-core `gcode_emit/motion/auto_lift.rs::AutoLift::crosses_overhang`;
 correct its nozzle-offset compatibility shell, not an Ares travel pipeline.
 Include only that translation and its spiral/progress consequences; defer cache
-geometry, detection, nonzero-plate plumbing, writer, processor and W3-owned work.
+geometry, detection, nonzero-plate plumbing, writer and processor.
 Use the original P1S two-object ByLayer Native-first public witness. Exit: real
 tests-only RED, then unchanged complete-output comparator PASS/raw API==CLI,
 Native G17/G3 Z4 spiral and removal of the extra early P28R13 through translation
-alone. No separate B timing/M73 implementation. Fresh stack above frozen
-sequential label-flush; CPU18 serial/threads1. Each phase requires
-REVIEW-REQUEST/HOLD; no FULL/integration.
+alone. No separate B timing/M73 implementation. Builds on the sequential
+label-flush slice.
 [SPEC](architecture/auto-lift-query-frame-spec.md),
 [ARD](architecture/ard-auto-lift-query-frame.md).
 
@@ -187,9 +178,9 @@ upstream compatibility shell, not an Ares pipeline. Include only the missing
 consumption/citation; defer generic travel, formatting, geometry, queue/IDs,
 priming and tower. Exit: tests-only RED then official+seeded Native-first K1
 ByObject2object target and by-layer2object control, complete-output parity and
-rawAPI==CLI, unchanged control streams. Base frozen4eeda42be afterW5; no FULL.
+rawAPI==CLI, unchanged control streams.
 [SPEC](architecture/sequential-origin-label-flush-spec.md),
-[ARD](architecture/ard-sequential-origin-label-flush.md). RR then HOLD.
+[ARD](architecture/ard-sequential-origin-label-flush.md).
 
 ### Support-base extension priority: SPEC → RED → bounded GREEN
 
@@ -200,7 +191,7 @@ with valid-previous priority, not a new Ares support pipeline. Include only the
 candidate block and affected comments; defer geometry, marking, trimming, costs,
 linking and writer behavior. Exit: official+seeded Native-first K1 tree(auto)
 overhang, stock and normal(auto) controls, full-output parity and raw API==CLI
-after tests-only RED. Stack frozenccc79c314; no FULL; REVIEW-REQUEST then HOLD.
+after tests-only RED.
 [SPEC](architecture/support-base-extension-priority-spec.md),
 [ARD](architecture/ard-support-base-extension-priority.md).
 
@@ -213,8 +204,7 @@ unchanged nearest-projection helper; the extra role gate is an incompatible
 caller shell, not an Ares pipeline feature. Include hole loops/bottom layers;
 defer geometry, SpiralVase arithmetic, seam ranking, travel/wipe and processor.
 Exit: Native-first official/seeded MK4 spiral-hole, stock-hole and existing CW
-control full-output equality plus raw API==CLI after tests-only RED. Stack on
-frozen83e2e4f09; no FULL; review/hold for single W1 window after W5.
+control full-output equality plus raw API==CLI after tests-only RED.
 [SPEC](architecture/spiral-hole-projected-split-spec.md),
 [ARD](architecture/ard-spiral-hole-projected-split.md).
 
@@ -227,11 +217,10 @@ identity on pinned8500fcdcc. Rust destination: existing private
 compatibility shell, not Grid geometry or GCode island assignment. Live traces
 prove identical ordered surfaces/full vertices but Native collections[1,1]
 versus Rust[2]. Keep flat geometry consumers and path semantics unchanged.
-Exit for this assignment: docs SPEC then shared `native_stream_case` tests-only
+Exit: docs SPEC then shared `native_stream_case` tests-only
 K1 bridge strict RED + MK4 bridge passing control, frozen input SHA, Native
 double replay before API/actual CLI, raw API==CLI, complete generator-only
-ordered comparison, official/seeded CPU13 serial threads1, then REVIEW/HOLD.
-GREEN/FULL require separate approval. Defer grouping, other infill patterns,
+ordered comparison in official/seeded modes. Defer grouping, other infill patterns,
 multiline algorithm changes, support/raft, travel, seam/rear, brim, scan,
 cooling and processor/M73 behavior. No golden output or comparator weakening.
 [ARD / SPEC](architecture/ard-grid-surface-collections.md).
@@ -239,7 +228,7 @@ cooling and processor/M73 behavior. No golden output or comparator weakening.
 ### Project_settings boolean wire forms: SPEC → tests-only RED
 
 Port the upstream boolean wire classification for `Metadata/project_settings.config`
-on main5948c9347: `bbs_3mf.cpp:_extract_project_config_from_archive` →
+`bbs_3mf.cpp:_extract_project_config_from_archive` →
 `Config.cpp:DynamicPrintConfig::load_from_json:905-990` only deserializes JSON
 strings (`:927-929`) and arrays — every other scalar JSON type (boolean, number)
 hits the `invalid json type` else-branch and the key is DROPPED, keeping the
@@ -247,14 +236,14 @@ option default. `Config.hpp:1828-1848` accepts exact `"1"`/`"0"` strings only;
 the EnableSilent 3MF rule retries via `enum_looks_like_true_value`
 (`Config.hpp:96-99`, `enabled`/`on`). Ares main already matches every string
 form (including `""`/`"on"` substitution) but `OrcaBool::visit_bool` accepts a
-JSON boolean as the option value. Exit for this assignment: docs SPEC
+JSON boolean as the option value. Exit: docs SPEC
 (`architecture/ard-project-settings-bool-wire.md`, itemized wire-form audit)
 plus shared `native_stream_case` tests-only RED on the Native-runtime K1 stock
 bridge project with `staggered_inner_seams` rewired to unquoted JSON `true`
 (seam-scan patch artifact; Native unstaggered `X130.857` vs Ares staggered
-`X131.357`), frozen input SHA, native double replay, dual mode CPU13 threads1,
-registration in the parity suite group file, then REVIEW/HOLD. GREEN (loader
-wire classification) and FULL separately authorized. Defer JSON number scalars
+`X131.357`), frozen input SHA, native double replay, both modes,
+registration in the parity suite group file. GREEN ports the loader
+wire classification. Defer JSON number scalars
 (same else-branch family, no witness), embedded preset documents, CLI override
 grammar, vector-bool options.
 [ARD / SPEC](architecture/ard-project-settings-bool-wire.md).
@@ -271,19 +260,19 @@ clear. Destination: existing `motion/path/start_travel/{route,approach}.rs`,
 the current `!matches!(feature, "Skirt" | "Brim")` gate/consumption exceptions
 line by line against upstream and finds no basis (the gate at `:7417-7420` is
 feature-less; Ares arms at the Skirt tag instead of skirt end, never arms for
-brim, and lacks the `use_external_mp` emission windows). Exit for this
-assignment: docs SPEC then shared `native_stream_case` tests-only RED on the
+brim, and lacks the `use_external_mp` emission windows). Exit: docs SPEC
+then shared `native_stream_case` tests-only RED on the
 Native-runtime stock Anker M5 fixture (matrix5 discovery residual, bilateral
-gdb pinpoint published), grouped registration in an existing case file, dual
-mode CPU13 threads1, REVIEW/HOLD; GREEN only the upstream literal ordering
-above with identical tests; FULL separately authorized. Defer detour shape
+gdb pinpoint published), grouped registration in an existing case file, both
+modes; GREEN only the upstream literal ordering
+above with identical tests. Defer detour shape
 internals (path_shape family), boundary construction internals, multi-extruder
 loop ranges, wipe tower, cooling, other flavors.
 [ARD / SPEC](architecture/ard-avoid-once-arm-consumption.md).
 
-### GUI painted fuzzy skin: discovery rejection, SPEC review pending (#126)
+### GUI painted fuzzy skin: discovery rejection
 
-Frozen beam92ce9b02c is unchanged; this separate docs slice owns upstream8500fcdcc
+This slice ports upstream8500fcdcc
 `PrintObjectSlice.cpp1033–1141/1227–1241 apply_fuzzy_skin_segmentation`,
 `MultiMaterialSegmentation.cpp2211–2226 →1955–2194 segmentation_by_painting`,
 `PrintApply.cpp1081–1110` real fuzzy region IDs and classic `FuzzySkin.cpp561–684`
@@ -294,18 +283,17 @@ Eight Native first (both modes/replays) on exact stock cube single-face Ripple
 pair: full generator-only replay stable,1/4raw pairs identical and3timestamp-only;
 then two CLI: control matches both Native, painted rejects canonical XML attribute.
 No public RED/API qualification claimed; observer initial-tool stop preserved.
-Priority/exit: independently approve SPEC → success-required Native/API/CLI RED
-→ RED RR and separate GREEN instruction → complete real consumed chain. Keep
+Priority/exit: SPEC → success-required Native/API/CLI RED
+→ GREEN → complete real consumed chain. Keep
 MMU→fuzzy→single interlocking→compensation, stock EFC; no admission-only patch,
 new registry/backend/API or comparator weakening. Combined annotations/beam,
-Arachne-painted/nonzero XY/broader runtime remain deferred. CPU18/jobs1; files≤400.
-No production/tests/FULL/rebase/merge/push here; beam integration window separate.
+Arachne-painted/nonzero XY/broader runtime remain deferred. Files≤400.
 [SPEC](architecture/painted-fuzzy-skin-spec.md),
 [ARD](architecture/ard-painted-fuzzy-skin.md).
 
-### MM flush_into_infill object-label envelope: SPEC+RED / HOLD
+### MM flush_into_infill object-label envelope: SPEC+RED
 
-Discovery on main `78d642702`: stock P1S AMS two-filament witness, single knob
+Discovery: stock P1S AMS two-filament witness, single knob
 `flush_into_infill` 0→1. Stable dual-mode residual, zero motion bytes:
 84 extra `; stop printing object, unique label id`/M625 pairs plus 2
 stale layer-end stop ids (Native 142/142 envelope balance vs Ares 142/205).
@@ -318,13 +306,12 @@ Ares `object.rs::queue_stop` BBL branch arms unconditionally and
 already byte-identical) and deferred. Tests-only RED
 `test(mm_flush_into_infill_labels)`: target FAIL / base control PASS
 per mode, Native required, inputs committed, no Native output committed.
-Exit after approval: same selector green in official+seeded, fresh caches,
-CPU11/threads1; any other residual including M73 → STOP.
+Exit: same selector green in official+seeded, fresh caches;
+any other residual including M73 → STOP.
 [ARD/SPEC](architecture/ard-mm-flush-into-infill-labels.md).
 
-### W5 P1S ByLayer brim: area-boundary SPEC revision / HOLD
+### P1S ByLayer brim: area-boundary SPEC revision
 
-Frozen rib3 `a96cf4d03` → docs `f4c714372` → approved RED `61b15c6a8`.
 Read-only entry traces locate the eight missing notch vertices before
 materialization (Native contour60 vs Ares52, identical hole/second area).
 Corrected upstream pin8500fcdcc `Brim.cpp::outer_inner_brim_area`:
@@ -334,37 +321,34 @@ Rust destination: `project_slice/gcode_emit/brim.rs` collection/finalization,
 `brim/owner.rs` translation and `brim/bed_area.rs::clip_plate` consumer.
 `brims/outer.rs` remains the local producer; paths.rs is not the repair target.
 Existing per-owner orchestration is a temporary upstream compatibility shell,
-not an Ares pipeline design. Priority: approve revised SPEC before GREEN.
+not an Ares pipeline design. Priority: revised SPEC before GREEN.
 Unchanged-code baseline `test(brim) | test(p1s_bylayer_brim_)`: 150 selected,
-149 PASS + target FAIL per official/seeded mode, CPU11/threads1/fresh caches.
-Exit after approval: same complete-stream target/control/neighbors dual run;
+149 PASS + target FAIL per official/seeded mode, fresh caches.
+Exit: same complete-stream target/control/neighbors dual run;
 any residual including M73 → STOP, no mask or scope expansion. Defer new area
 heuristics, shared geometry, registration/emission and timing changes.
-Docs-only revision → REVIEW-REQUEST/HOLD; no GREEN/FULL/integration yet.
 [ARD/SPEC](architecture/ard-p1s-bylayer-brim-contour.md).
 
 
-### Painted MMU → beam call order: discovery complete, SPEC RR pending
+### Painted MMU → beam call order: discovery complete
 
-Legacy #70–#73 carrier/segmentation goals are superseded by the merged complete
+Earlier carrier/segmentation goals are superseded by the merged complete
 MMU and side-cut chains. Next bounded upstream slice: pinned8500fcdcc
 `PrintObjectSlice.cpp:1207–1243` MMU/fuzzy/interlocking order, preserving
 `MultiMaterialSegmentation.cpp:2169–2207` beam suppression of side cutting.
 Rust boundary: existing private load_stages post-painted/pre-compensation handoff
 and region_slices interlocking consumer; current early placement and painted+beam
 rejection are temporary compatibility shells, not an Ares pipeline design.
-Priority/exit: independently approved SPEC → public success-required RED with
-beam-off/active-unpainted controls → RED RR before any GREEN; final strict dual
-FULL only in a separately assigned window. Discovery has16 Native/4CLI calls,
+Priority/exit: SPEC → public success-required RED with
+beam-off/active-unpainted controls before any GREEN; final strict dual-mode
+full run. Discovery has16 Native/4CLI calls,
 not public acceptance. Fuzzy painting/combined annotations remain deferred.
-CPU18/jobs1/test-threads1; no new registry/backend/API or comparator relaxation.
+No new registry/backend/API or comparator relaxation.
 [SPEC](architecture/painted-beam-call-order-spec.md),
 [ARD](architecture/ard-painted-beam-call-order.md).
 
 ### Chamber writer-used extruder reduction: docs-first SPEC → test-only RED
 
-Coordinator accepted discovery on frozen exhaust53890b780. New branch
-`worker1/chamber-used-extruder` stacks docs then tests only on that commit.
 Upstream8500fcdcc `GCode.cpp:3008–3013,3037,3130–3133,3498–3499` and
 `GCodeWriter.cpp:192–212` own activation OR, independent maximum, placeholder,
 startup/shutdown bytes. Destination: existing private machine/temperature.rs;
@@ -372,17 +356,13 @@ its object scan is an incomplete upstream shell. Reuse existing writer
 `ExtruderRegistry::ids()` handoff, never a new registry or object-scan fallback.
 Exit: four immutable inputs/SHA, two genuine full-stream REDs and two controls
 per official/seeded mode, global Native-first preflight, strict Native/API/CLI
-and raw API==CLI evidence on CPU18; send RED RR and stop for GREEN authorization.
-get_at deferred with discovery evidence retained, no slice. Exhaust and chamber
-rebase together only in the authorized integration window. No production edits,
-FULL, merge/push or broader runtime qualification here.
+and raw API==CLI. get_at deferred, no slice. No broader runtime qualification.
 [SPEC](architecture/chamber-used-extruder-spec.md),
 [ARD](architecture/ard-chamber-used-extruder.md).
 
-### Exhaust-fan writer-used extruder reduction: SPEC → public RED (#102/#103)
+### Exhaust-fan writer-used extruder reduction: SPEC → public RED
 
-COORD accepted readonly discovery #101 on main6f6ef10f5. New branch commits
-docs-first SPEC/ARD, then four frozen input3MF+SHA public NativeCase tests only.
+Docs-first SPEC/ARD, then four frozen input3MF+SHA public NativeCase tests only.
 Owner upstream8500fcdcc `GCode.cpp3181–3196/3501–3516` reduces over
 `m_writer.extruders()`; Rust destination is existing private
 `gcode_emit/machine/exhaust_fan.rs` at current start/end call locations.
@@ -393,30 +373,27 @@ Do not create a shadow registry or change Print/ToolOrdering behavior.
 
 Priority/exit: docs commit → T0-only/high-unusedT1 target plus equal,
 unused-disabled and machine-capability-off controls → global Native-first,
-official/seeded directed CPU18 public success-required complete ordered Native /
-API / actual CLI and raw API==CLI → RED RR. Expected target FAIL/three controls
+official/seeded directed public success-required complete ordered Native /
+API / actual CLI and raw API==CLI. Expected target FAIL/three controls
 PASS per mode; no Native constants, movement goldens or expected-error inversion.
-No GREEN before separate approval; defer nonzero/multiple/support/custom-tool
-runtime witnesses, adjacent fans/temperature/registry work, other workers'
-skirt/z-hop/print_order/M73/seam-occlusion scopes, FULL, merge/push and platform
-runtime qualification. Prior painted stage text below remains historical.
+Defer nonzero/multiple/support/custom-tool runtime witnesses, adjacent
+fans/temperature/registry work, skirt/z-hop/print_order/M73/seam-occlusion
+scopes and platform runtime qualification. Prior painted stage text below remains historical.
 [SPEC](architecture/exhaust-used-extruder-spec.md),
 [ARD](architecture/ard-exhaust-used-extruder.md).
 
-### BBL Type1 wipe tower: milestone approved, T1–T2 SPEC review
+### BBL Type1 wipe tower: milestone, T1–T2 SPEC
 
-Milestone docs approved/committed as `8a22fa596`. W5's
+The
 [T1–T2 consumed-chain SPEC](architecture/bbl-type1-t1-t2-consumed-chain-spec.md)
 now inventories the accepted X1C baseline: rib wall, single-nozzle two-slot
 same-category planning, and separate Type1 activation versus Type2 priming-order
 flags. Config-derived reachability is distinguished from observed output and
-untraced dynamic branches. SPEC review is required before any public RED.
+untraced dynamic branches.
 
 Priority: restore stock X1C AMS tower output before more literal-placeholder
 edge cases. Accepted two-object Basic/Matte discovery has Native success in
 both modes but no Ares tower; stock G29 bounds are a downstream symptom.
-Owner W5; frozen placeholder integration stack55a81063b stays unchanged.
-No code/RED/FULL/rebase authority is implied by this proposal.
 
 Source pin8500fcdcc: `Print.hpp:1086` BBL effective Type1 →
 `Print.cpp:3290-3301/3390-3571` activation/planning →
@@ -433,19 +410,17 @@ not Type2 algorithms; existing shells are temporary upstream adapters.
 Each slice requires a GUI-reachable stock X1C Native-success/public whole-stream
 RED: baseline; prime-volume variation; smooth-timelapse/unequal heights;
 moved/rotated tower respectively. Only baseline is currently measured.
-SPEC→frozen RED→separate GREEN approval; slices are checkpoints, not independently
+SPEC→frozen RED→GREEN; slices are checkpoints, not independently
 shippable activation. Exit requires complete consumed-chain Native/API/CLI parity
 in official+seeded, raw API==CLI, Type2 regressions, fmt/strict Clippy/WASM and
-coordinator-scheduled exact-tip FULL. No isolated G29 fix, guards, omissions or
+an exact-tip full run. No isolated G29 fix, guards, omissions or
 Type2 fallback. Preview-only rendering/general multi-transform preparation defer;
 all activated live Type1 consumers need qualification, not assumed X1C coverage.
 [Milestone ARD](architecture/ard-bbl-type1-wipe-tower-port.md).
 
-### Painted side-layer cutting: approved SPEC, public RED only (#99)
+### Painted side-layer cutting: SPEC, public RED
 
-New branch from frozen1045b1775; original painted branch/worktree remain unchanged.
-COORD authorizes docs-only SPEC/ARD/roadmap, then Native-first public RED only;
-no GREEN, production change, FULL, merge or push. Source boundary at8500fcdcc:
+Docs-only SPEC/ARD, then Native-first public RED. Source boundary at8500fcdcc:
 `MultiMaterialSegmentation.cpp1144–1168 cut_segmented_layers`,2169–2181 gate/order,
 2197–2207 wrapper; actual consumer`PrintObjectSlice874–886/1206–1224`.
 Rust destination is private`ares-core/project_slice/region_slices/painted/cut.rs`,
@@ -455,24 +430,22 @@ width0/depth>width behavior, not tooltip ignore rules or unused width-depth math
 Priority precedes painted+beam's separate generator; beam/fuzzy painting defer.
 RED exit: three discovery-exact target3MFs(width1/depth0,1/1.5,0/0.5), one unchanged
 existing painted-split control, full ordered NativeCase/API/CLI assertions and
-raw API==CLI; dual-mode CPU18 expected3target FAIL/1control PASS with fresh global
-Native-first barrier, static/target gates, retained artifacts and independent
-RED-RR. Later GREEN/integration/FULL need separate authority; #90 still waits its
-explicit W1 integration turn. [SPEC](architecture/painted-side-cut-spec.md),
+raw API==CLI; dual-mode expected3target FAIL/1control PASS with fresh global
+Native-first barrier and static/target gates.
+[SPEC](architecture/painted-side-cut-spec.md),
 [ARD](architecture/ard-painted-side-cut.md).
 
-### Painted MMU complete consumed chain: SPEC request (#90)
+### Painted MMU complete consumed chain: SPEC
 
-Base main3e862584d; upstream8500fcdcc. COORD accepted the seeded-only discovery
-of the real PrintObjectSlice1224→apply877→MMS2207→segmentation2127/2153→
+Upstream8500fcdcc. Seeded-only discovery covers
+the real PrintObjectSlice1224→apply877→MMS2207→segmentation2127/2153→
 build_graph1555 caller chain, not phase/public GREEN. Default VD repair is now
-integrated; painted projection/graph/actual apply still are not. No RED yet on
-this new SPEC hash; old f894/0ce6 runs remain historical.
+integrated; painted projection/graph/actual apply still are not.
 
-Priority/order: independently approve this docs-only SPEC → public NativeCase
-whole-stream RED via native_stream_case::check → independent RED approval/separate
-GREEN instruction → ONE complete consumed-chain production integration unit.
-Retain source-ordered phase discovery/design RRs as document checkpoints, not
+Priority/order: docs-only SPEC → public NativeCase
+whole-stream RED via native_stream_case::check → GREEN as ONE complete
+consumed-chain production integration unit.
+Source-ordered phase discovery/design remain document checkpoints, not
 additional private-phase prerequisites for public RED. Projection491–588/
 2029–2120 → painted_lines/color614–956 → MMU graph59–479/1527–1822 →
 top/bottom1181–1472 → merge1825–1870 → real PrintObjectSlice apply874–1030/
@@ -486,21 +459,18 @@ Exit: frozen leaves/split plus unpainted controls, Native-first with positive
 model extrusion for both painted materials, complete ordered public API/actual
 CLI parity/raw API==CLI in official+seeded. Current paint_color rejection is legal
 success-required RED, not expected-error PASS. No private-entry phase tests;
-read-only phase GDB is GREEN diagnosis only. Branch stage commits each cargo
-check; no allow/expect/cfg parking, fake consumer or dormant public entry.
-All final fmt/strict workspace-all-target Clippy/wasm32/dual-mode canonical FULL
-bind the exact complete integration tip and assigned window. W2 owns FULL now;
-this request authorizes only docs, not RED/GREEN/FULL/push/merge. Cut/width-depth,
+read-only phase GDB is GREEN diagnosis only. No allow/expect/cfg parking,
+fake consumer or dormant public entry. Final fmt/strict workspace-all-target
+Clippy/wasm32/dual-mode canonical full run bind the exact complete integration
+tip. Cut/width-depth,
 painted+beam/fuzzy stay deferred; preserve support/interlocking and fail-closed
 compositions. [SPEC](architecture/painted-projection-graph-spec.md),
 [ARD](architecture/ard-painted-projection-graph.md).
 
 ### Default Voronoi detection / rotation repair: prerequisite integrated
 
-The approved five-commit default-repair stack is integrated in main3e862584d.
-Its historical painted complete-unit SPECf894/public RED0ce6 remain unmerged;
-#90 has resumed discovery/SPEC under the complete-chain conditions above, not
-implementation. The actual frozen painted-split Native MMU calls use
+The default-repair stack is integrated. The painted complete chain continues
+under the complete-chain conditions above. The actual frozen painted-split Native MMU calls use
 REPAIR_SUCCESSFUL/effective local storage; this is distinct from the earlier
 incident-anchor prerequisite's no-repair rectangle.
 
@@ -513,21 +483,19 @@ filtered-planarity/point helpers. Rust target is private
 Adjacent closing retry and painted implementation defer. Arachne's actual
 `SkeletalTrapezoidation.cpp:378` also uses default repair; that consumer/migration
 is explicitly deferred, not qualified by raw-Boost parity. GREEN needs targeted
-MedialAxis/consumer regressions plus final coordinator-scheduled FULL to prove
+MedialAxis/consumer regressions plus a final full run to prove
 expected constructor behavior changes do not regress consumers.
 
-Completed prerequisite order/exit: approve docs SPEC/ARD -> fresh real reachable repaired Native-first
+Completed prerequisite order/exit: docs SPEC/ARD -> fresh real reachable repaired Native-first
 constructor RED -> wrapper plus real consumer -> independently qualified exact
 GREEN, complete ordered effective arrays/states and consumer regressions,
 fmt/strict/WASM. No tolerance, repair suppression, FFI or backend fallback.
-Durable measured evidence is hash-verified under `${EVIDENCE_ROOT}/worker1/`;
-old hashes are not new-base credit. No FULL/push/merge now; coordinator schedules
-broad validation. [SPEC](architecture/voronoi-default-repair-prerequisite-spec.md),
+[SPEC](architecture/voronoi-default-repair-prerequisite-spec.md),
 [ARD](architecture/voronoi-default-repair-prerequisite-ard.md).
 
-### Conditional scarf eligibility: SPEC request (2026-10-17)
+### Conditional scarf eligibility: SPEC
 
-Approved proposala30db87 selects libslic3r `GCode.cpp::GCode::extrude_loop5777-5785`
+This slice ports libslic3r `GCode.cpp::GCode::extrude_loop5777-5785`
 → `ExtrusionEntity.cpp::ExtrusionLoop::is_smooth369-424` into existing Rust
 `gcode_emit/motion/scarf.rs::build`/private helper and config/callsite context.
 Adjacent positive-overhang guard5787-5791 is IN SCOPE with source-owned
@@ -537,65 +505,58 @@ No zero-only support, invented threshold/fallback, old penalty/embedding rewrite
 or new Ares pipeline. Existing scarf construction remains unchanged; painting,
 new random/nearest placement, geometry/travel/M73 and processor behavior defer.
 
-Exit: approved exact SPEC, fixed-budget Native low/high nonzero-dependency
+Exit: exact SPEC, fixed-budget Native low/high nonzero-dependency
 qualification, frozen five-case Native-ACTIVE/INACTIVE public RED with both
-API/CLI complete strict comparisons in both modes, then separately authorized
+API/CLI complete strict comparisons in both modes, then
 bounded GREEN all wholePASS plus targeted regressions/fmt/strict clippy/WASM.
 Qualification or unrelated geometry prerequisite failure means STOP, not wider
-port/fixture search. RED only integrates with GREEN; full/workspace remains
-coordinator-only. [SPEC](architecture/scarf-conditional-spec.md),
+port/fixture search. RED only integrates with GREEN. [SPEC](architecture/scarf-conditional-spec.md),
 [ARD](architecture/ard-scarf-conditional.md).
 
-### spRear/back candidate comparison and alignment: SPEC request (2026-10-17)
+### spRear/back candidate comparison and alignment: SPEC
 
-W4's coordinator-approved proposal ports `GCode/SeamPlacer.cpp` spRear
+This slice ports `GCode/SeamPlacer.cpp` spRear
 comparison Y priority777-779, similarity839-841, pick917-928, rear fit
 length1364-1366 and alignment routing1486-1492 (pin8500fcdcc). Rust boundary is
 existing `project_slice/seam_placement` runtime/preparation/alignment; replace
 its Back bypass, not the unrelated basic-perimeter max-Y helper. No max-Y
 shortcut or new Ares pipeline; paint/scarf/new random/nearest and clocks defer.
-Base **approved physical-plane GREEN4dbba4fc09b4b84033797ab83f2941e5d8484b95**,
-keeping shared files on the same stack25 ancestry. Discovery on4351: admitted
+Builds on the physical-plane slice. Discovery: admitted
 6-vertex/8-triangle four-layer prism, aligned control Native/CLI whole-PASS;
 only back positive Native0/CLI0 whole-FAIL byte451/line18, first motion raw64
 Native110,113.446 versus Ares110.43,112.509. Not an admission/defensive guard.
-Docs only: SPEC approval→frozen Native-first public API+real CLI control/positive
-RED in official+seeded→RED REVIEW→separate bounded GREEN REVIEW. Exit: whole
+SPEC→frozen Native-first public API+real CLI control/positive
+RED in official+seeded→bounded GREEN. Exit: whole
 PASS/raw API==CLI both modes, Native first-motion parity, existing seam-family
 regressions including audited Native gates, fmt/strict scoped clippy/WASM;
-residual whole failure means STOP. No code/test/fixture permission before gates;
-CPU15 targeted only, coordinator owns full/workspace/integration; RED merges
-only with GREEN. [SPEC](architecture/seam-rear-spec.md),
+residual whole failure means STOP. RED merges only with GREEN. [SPEC](architecture/seam-rear-spec.md),
 [ARD](architecture/ard-seam-rear.md).
 
-### Per-object skirt guard inventory: approved ByObject slice, integration pending (2026-10-17)
+### Per-object skirt guard inventory: ByObject slice
 
-W1 Slice 1 GREEN `c1780265dd00dfd9322ffc6bba734d335c5311fe` ports
+Slice 1 ports
 `GCode.cpp:3321-3322` / `GCodeWriter.hpp:266-267` / `GCodeWriter.cpp:678`
-transition descriptions. Slice 2 GREEN
-`ee270b46a3ebf5d66f8f6838b06b6557b1c0ce00` admits separated ByObject
+transition descriptions. Slice 2 admits separated ByObject
 per-object skirt groups, reusing `Print.cpp::_make_skirt:2780-2977` and
-`GCode.cpp:4465-4483,5334` per-group emission. Both are owner-approved and
-queued together, **not yet merged**. Slice 2 official/seeded targeted28/28 each,
+`GCode.cpp:4465-4483,5334` per-group emission. Slice 2 official/seeded targeted28/28 each,
 fmt/strict/WASM pass; shared-group source-branch reachability remains unproven.
 [SPEC](architecture/per-object-skirt-by-object-spec.md),
 [Slice 2 boundary](architecture/per-object-skirt-by-object-slice2-spec.md).
 
-Remaining guards in W1's approved
+Remaining guards in
 `crates/ares-core/src/project_slice/gcode_emit/skirt/generate.rs::SkirtPlan::generate`
-are recorded below; W2/W5 concurrently own related edits, so their integration
-status is not inferred from this branch. Coordinator resolves stack conflicts.
+are recorded below.
 
-- Early multi-object/perobject guard: enabled prime tower (W5); more than one
-  filament-diameter entry / multi-filament (W5); any object enabling support or
-  raft layers (W2); installed raft schedule (W2); nonempty tower corners (W5).
+- Early multi-object/perobject guard: enabled prime tower; more than one
+  filament-diameter entry / multi-filament; any object enabling support or
+  raft layers; installed raft schedule; nonempty tower corners.
 - Brim guard remains: an installed brim plan with combine_brims enabled, a
   non-OuterOnly brim type, or a print-object group with other than one instance.
   Existing singleton OuterOnly/no-combine admission is not broadened here.
 - New bounded post-group guard remains: ByObject + perobject with multiple
   object members in a computed generation group returns the existing
   UnsupportedProjectFeature. `Print.cpp:2551-2556` throws SlicingError for
-  has_shared_per_object_skirt; W1 does not invent that diagnostic/error variant
+  has_shared_per_object_skirt; Ares does not invent that diagnostic/error variant
   without a reachable witness. The distance35 probe rejected earlier at
   sequential clearance, so it does not certify this shared-skirt branch.
 
@@ -603,8 +564,7 @@ Only the blanket early sequence disjunct was removed. Native ByObject clearance,
 height/order constraints (`Print.cpp:613,1286-1303`) remain unchanged. No blanket
 reset of skirt histories between objects, no new grouping/sequence pipeline,
 and no fallback. Future guard removals require their own source-owned SPEC,
-Native-first public RED and independent GREEN approval; no full/workspace run
-is implied by this docs-only inventory.
+Native-first public RED and GREEN.
 
 ### Native-undefined support-ironing patterns (2026-10-17)
 
@@ -619,9 +579,9 @@ keeps the existing guard and does not claim a RED or port for these three
 patterns. Ordinary ironing remains the two-value enum from
 `PrintConfig.cpp:6565-6575`.
 
-### Physical seam candidate plane: resource-control SPEC request (2026-10-16)
+### Physical seam candidate plane: resource-control SPEC
 
-W4 localized unchanged d951 resource-control motion995/line1198 to third-layer
+Discovery localized the unchanged resource-control motion995/line1198 to third-layer
 region1 inner hole-wall seam selection. All24 oriented pre-seam loops and67
 candidate XY/angles agree; Native slice_z0.62 versus Rust0.32 flips candidate8/10.
 The upstream owner is `GCode/SeamPlacer.cpp::gather_seam_candidates:1014-1040`,
@@ -631,61 +591,58 @@ consuming `PrintObjectSlice.cpp::compute_slice_z/new_layers:24-75`'s physical
 `PostClassicTraversalPrintObject::physical_layers` view. No new plane/pipeline.
 Minimal-delta modifier density50→20 control whole-PASSes official Native/API/CLI;
 positive whole strict FAIL is retained. M73 is a total-time-denominator symptom,
-not a postprocessor fix; old v2 NO-RED remains closed. SPEC approval→frozen public
-RED review→separate GREEN permission. Exit: both whole streams/raw API==CLI in
-both modes, scoped regressions/fmt/clippy/WASM, no scoring/geometry/M73 changes;
-residual owner means STOP. main41f2 now; rebase only after stack24 MAIN-ADVANCE.
-FULL24 FREEZE: CPU15 targeted only; coordinator owns full/workspace/integration.
+not a postprocessor fix. SPEC→frozen public RED→GREEN. Exit: both whole
+streams/raw API==CLI in both modes, scoped regressions/fmt/clippy/WASM, no
+scoring/geometry/M73 changes; residual owner means STOP.
 [SPEC](architecture/seam-physical-plane-resource-spec.md),
 [ARD](architecture/ard-seam-physical-plane-resource.md).
 
-### 3MF vertex coordinate defaults: amended shared importer SPEC (2026-10-15)
+### 3MF vertex coordinate defaults: amended shared importer SPEC
 
-Next W4 docs-only candidate: both
+Both
 `_BBS_3MF_Importer::_handle_start_vertex:3772-3782` and
 `ObjectImporter::_handle_object_start_vertex:5485-5495` use zero for missing
 x/y/z before their existing unit factors. Rust destination is the single
 `project/model_xml.rs::Vertex` decoder through `project/load/graph.rs`; no
 role-specific DTO partition. Triangle `v1/v2/v3` zero defaults at main `:3814`
 and resource `:5527` are explicitly deferred. Preserve explicit coordinates,
-unit scaling, mesh finite/index checks, XML security, and both roles. SPEC review
-and input approval precede any Native/API/CLI/test/fixture work. Public RED must
+unit scaling, mesh finite/index checks, XML security, and both roles. Public RED must
 assert target Native equality and fail until GREEN; controls assert equality.
 [SPEC](architecture/3mf-resource-vertex-defaults-spec.md),
 [ARD](architecture/ard-3mf-resource-vertex-defaults.md).
 
-### Modifier feature filament IDs: six Native-qualified public REDs (2026-10-16)
+### Modifier feature filament IDs: six Native-qualified public REDs
 
-Worker4's next rewrite slice is `PrintObject.cpp:3592-3705` explicit feature-ID
+This rewrite slice ports `PrintObject.cpp:3592-3705` explicit feature-ID
 mask and modifier base-extruder precedence, `PrintApply.cpp:1032-1055` parent
 region construction (painting override order at810-830/1060-1075 stays separate),
 and `PrintRegion.cpp:13-15/81-86` sparse filament routing/used-tool collection.
 Rust destinations: the six-key modifier guard in effective_config/candidates.rs,
 existing region_graph::add_modifier and options/region_options/merge resolver;
-no new pipeline. Native discovery on CPU15 accepted both frozen input members
+no new pipeline. Native discovery accepted both frozen input members
 in both modes: positive only adds sparse_infill_filament_id=2 to an existing
 modifier with absent extruder, using identical complete two-filament settings.
 Positive/control diverge; positive780 actual T1 sparse segments inside modifier
 bounds vs controlzero. Observer TYPE/FEATURE dialect fix was offline only;
-four primary Native slices, no retry/input substitution. SPEC a2ffbb77b approved
-with per-role guard retirement: only a role with its own reviewed public RED
+four primary Native slices, no retry/input substitution. The SPEC uses
+per-role guard retirement: only a role with its own public RED
 may lose its guard. Before extension, fresh public control whole strict PASS /
 raw API==CLI was established in both modes. Five additional single-key positives
 now qualify in Native: local T1 counts405 internal-solid/43 top/63 bottom/200
 outer/196 inner in each mode, versus controlzero; sparse780 retained. All six
 enter independent target-success/full-equality REDs, inputs+SHA only committed,
 Native generated fresh at runtime. No unqualified role in the frozen matrix;
-future qualification failure retains its guard. GREEN needs separate approval;
+future qualification failure retains its guard. GREEN touches
 no other guards, M73 or downstream repairs. Nonzero modifier-extruder/material/
 painting/overlap runtime matrices stay deferred. Exit: both modes
 whole strict Native/API/realCLI equality, raw API==CLI, unchanged control and
-approved targeted regression/fmt/clippy/WASM. Coordinator owns full/merge.
+targeted regression/fmt/clippy/WASM.
 [SPEC](architecture/modifier-feature-filament-spec.md),
 [ARD](architecture/ard-modifier-feature-filament.md).
 
-### Shared triangle vertex-index defaults: proposed source slice (2026-10-16)
+### Shared triangle vertex-index defaults: proposed source slice
 
-Worker4 ports the previously deferred v1/v2/v3 omission contract:
+Port the previously deferred v1/v2/v3 omission contract:
 `Format/bbs_3mf.cpp` main `_handle_start_triangle:3813-3819` and resource
 `ObjectImporter::_handle_object_start_triangle:5526-5532` both read absent
 indices as zero using `bbs_get_attribute_value_int:508-514`. Destination is
@@ -694,214 +651,187 @@ roles; current fields are required u32. No separate role DTO or mesh repair port
 Active Native `_generate_volumes_new` bounds-checks then constructs TriangleMesh,
 not an automatic STL repair; first proposed witness removes already-zero v1
 from `(0,1,2)` in unchanged controladb38, avoiding new degeneration. No fixture
-or runtime yet. Priority: SPEC/input approval, bounded CPU15 Native discovery,
-separately approved public target-success/equality RED with strict-PASS control,
-then authorized minimal shared defaults GREEN. Exit: both modes whole strict
+or runtime yet. Priority: SPEC/input, bounded Native discovery,
+public target-success/equality RED with strict-PASS control,
+then minimal shared defaults GREEN. Exit: both modes whole strict
 Native/API/realCLI equality/raw API==CLI, unchanged control and targeted 3MF/load
 regressions plus fmt/clippy/WASM. Nonzero-index omissions/degenerate repair,
 malformed numeric conversion, extra role/index fixtures and M73 are deferred.
 [SPEC](architecture/3mf-triangle-index-defaults-spec.md),
 [ARD](architecture/ard-3mf-triangle-index-defaults.md).
 
-### Resource build/item non-consumption: merged, refreshed at main41f2 (2026-10-16)
+### Resource build/item non-consumption: merged
 
 `Format/bbs_3mf.cpp::ObjectImporter` resource start/end handlers5612-5687 do
 not dispatch build/item, unlike main `_handle_start_item:3893-3909`. This port
-is already present in main41f2: `project/load/graph.rs` decodes resource payload
+is already present: `project/load/graph.rs` decodes resource payload
 as `ModelDocument<Option<IgnoredAny>>`; `project/model_xml.rs` converts it to
 empty internal build items. Required main Build and instance/security behavior
-remain unchanged. Merged GREEN86b7f3e1c implements original approved GREEN06d31;
-existing frozen public witness/control now assert full strict Native/API/CLI
-and raw API==CLI equality. The repeated assignment is docs-only refresh and
-owner adjudication, not permission to fabricate another RED or undo parity.
-Refreshed SPEC records exact current pair, included/deferred scope, failure
-inventory, historical pre-GREEN design and planned oracle seam for separately
-approved verification. No new Native/test/production work; M73 stays deferred.
+remain unchanged. Existing frozen public witness/control assert full strict
+Native/API/CLI and raw API==CLI equality.
+The SPEC records exact current pair, included/deferred scope, failure
+inventory, historical pre-GREEN design and planned oracle seam. M73 stays deferred.
 [SPEC](architecture/3mf-resource-build-item-ignore-spec.md),
 [ARD](architecture/ard-3mf-resource-build-item-ignore.md).
 
-### Referenced 3MF resource-part build omission: approved GREEN, stack-17 (2026-10-15)
+### Referenced 3MF resource-part build omission: GREEN
 
-Worker4 ports `Format/bbs_3mf.cpp::ObjectImporter` resource build-omission semantics
-(active workers1780-1817, dispatch5612-5687, end_model5323-5327) into private
+Port `Format/bbs_3mf.cpp::ObjectImporter` resource build-omission semantics
+(active handlers1780-1817, dispatch5612-5687, end_model5323-5327) into private
 `project/model_xml.rs`/`project/load/graph.rs` role-aware decoding under
-`load_project_with_preparation`. Main required Build remains unchanged. Approved
-public RED `a88578afa946db02e4e6d68420730b8dae71902f` always executes fresh
-Native→public; old e1/ad442 rejected commits are not its ancestor chain. Exact
+`load_project_with_preparation`. Main required Build remains unchanged. Public
+RED always executes fresh Native→public. Exact
 controladb38ee8/positive0eab5d4d differ only by resource empty-build omission.
-Owner approved GREEN `87ac91eb5243d70138681e12a5c2b20602cc92bc` for stack-17;
-RED may merge only with GREEN. No GREEN batch rerun after API/socket failures.
+RED may merge only with GREEN.
 The independent [M73 discovery](architecture/discovery-m73-resource-control-order.md)
-is archived/deferred, no work. Present nonempty resource build/item behavior is
+is deferred. Present nonempty resource build/item behavior is
 separate proposed work above, not implicitly included in this omission GREEN.
 [SPEC](architecture/3mf-resource-part-build-spec.md),
 [ARD](architecture/ard-3mf-resource-part-build.md).
 
-### Arachne fuzzy-skin junctions: proposed SPEC (2026-10-13)
+### Arachne fuzzy-skin junctions: proposed SPEC
 
-Worker3 next slice: `PerimeterGenerator.cpp::process_arachne:2095,2125` and
+Upstream boundary: `PerimeterGenerator.cpp::process_arachne:2095,2125` and
 `traverse_extrusions:378–435`; `Feature/FuzzySkin/FuzzySkin.cpp:223–291,345–558,685–814`
 own junction noise/modes, compatible-region effects and source-ordered splitting.
 Rust destination is private `project_slice/perimeters/arachne/fuzzy_skin` plus
 existing context/config/traverse seams; replace two fuzzy guards after public RED.
-Doc only; proposed stochastic oracle boundary and Native closure/width preflight
-require SPEC review. Alternate6a7d842bc is code-approved but not merge-authorized;
-full/workspace HOLD. [SPEC](architecture/arachne-fuzzy-skin-spec.md),
+Doc only; proposes a stochastic oracle boundary and Native closure/width
+preflight. [SPEC](architecture/arachne-fuzzy-skin-spec.md),
 [proposed ARD](architecture/ard-arachne-fuzzy-skin.md).
 
-### Arachne alternate extra wall: bounded GREEN, review pending (2026-10-13)
+### Arachne alternate extra wall: bounded GREEN
 
-Worker3 ports `PerimeterGenerator.cpp::process_arachne:2131–2144,2163–2175`
+Port `PerimeterGenerator.cpp::process_arachne:2131–2144,2163–2175`
 per-surface alternate count, integer sparse-density predicate and ordering before
 single-wall overrides into `project_slice/perimeters/arachne/{config,walls}.rs`.
 Replace only its alternate guard; existing generator/regeneration consumers remain.
-Fuzzy skin and overhang each await separate SPEC/RED/REVIEW.
-SPEC c3d238a8a approved; Native official/seeded each2PASS/8 guard-rejection FAIL,
+Fuzzy skin and overhang each need a separate SPEC/RED.
+RED: Native official/seeded each2PASS/8 guard-rejection FAIL,
 40/40 Native admissions, 24 public off/inert control comparisons PASS.
 [RED evidence](architecture/arachne-alternate-extra-wall-red-evidence.md);
-approved obsolete negative unit retirement76b8fbe43 is separate from GREEN.
+obsolete negative unit retirement is separate from GREEN.
 Finite official/seeded10/10 paired tests PASS each; all48 raw off/inert control
 streams unchanged. [GREEN evidence](architecture/arachne-alternate-extra-wall-green-evidence.md).
-Broad oracle-dependent gates await RESTORED; workspace/full await allocation.
 [SPEC and public test-first gates](architecture/arachne-alternate-extra-wall-spec.md),
 [proposed ARD](architecture/ard-arachne-alternate-extra-wall.md).
 
-### OuterOnly contour and hole exclusion: bounded GREEN, review pending (2026-10-12)
+### OuterOnly contour and hole exclusion: bounded GREEN
 
-Next worker3 candidate: `Brim.cpp::outer_inner_brim_area:448-570,661-711`
+Upstream boundary: `Brim.cpp::outer_inner_brim_area:448-570,661-711`
 explicit OuterOnly contour-only Round area, default-Miter3 no-inner hole mask
 and contact retention; `make_brim:903-904` owns spacing as no_brim_offset.
 Replace the bounded whole-ExPolygon project scaffold with private `brims/outer.rs`
 and existing BrimPlan dispatch, reusing shared clipping/contact/path emission.
 One object/instance/volume/group/tool; auto/EFC/support/painting, nested islands,
 cross-object policy and the public rectangular adapter remain deferred.
-SPEC a68680255 approved; admitted fixtures/tests [RED9c589662e](architecture/outer-only-brim-red-evidence.md)
-committed/reported before production (both modes39PASS/8 new geometry FAIL).
+Admitted fixtures/tests [RED](architecture/outer-only-brim-red-evidence.md)
+precede production (both modes39PASS/8 new geometry FAIL).
 Finite GREEN47/47 both modes; all138 existing/inactive raw Ares streams unchanged.
 [GREEN evidence](architecture/outer-only-brim-green-evidence.md) records clipping
-Native226 retained and prior52 detached paths removed. Directed/engineering/code
-review remain separate; workspace/full wait explicit allocation.
+Native226 retained and prior52 detached paths removed.
 [SPEC and test-first gates](architecture/outer-only-brim-hole-mask-spec.md),
 [proposed ARD](architecture/ard-outer-only-brim-hole-mask-boundary.md).
 
-### G4 timelapse-template current-filament context: bounded GREEN, gates pending (2026-10-12)
+### G4 timelapse-template current-filament context: bounded GREEN
 
 Port `GCode::process_layer` direct/tracked timelapse invocation context from `GCode.cpp:4672-4674,5167`: implicit vectors use the current logical writer filament.
-Rust boundary is `gcode_emit/timelapse.rs`: shared render context plus approved `GCode.cpp:5455-5460` once-only traditional insertion check/set using the existing physical-layer flag. Preserve validation/write-back and position/last-Z bookkeeping.
+Rust boundary is `gcode_emit/timelapse.rs`: shared render context plus `GCode.cpp:5455-5460` once-only traditional insertion check/set using the existing physical-layer flag. Preserve validation/write-back and position/last-Z bookkeeping.
 Six finite Native/API/CLI controls must witness direct/traditional phases and real M104/tool consumption. BBL/tower/safe-position and other template owners remain deferred.
-SPEC20444a910 and PLAN extension1f79cf081 approved; admitted RED2ceaa08bf tests/assertions retained. Finite six cases PASS both modes with full Native/API/CLI equality, direct/traditional100 blocks over50 layers. Whole option_coverage and engineering gates pending; heavy gates require allocation. No overlap with other workers' production claims.
+Admitted RED tests/assertions retained. Finite six cases PASS both modes with full Native/API/CLI equality, direct/traditional100 blocks over50 layers.
 [SPEC and test-first gates](architecture/timelapse-filament-context-spec.md), [proposed ARD](architecture/ard-timelapse-filament-context.md).
 
-### G4 layer-template current-filament context: merged bounded GREEN (2026-10-12)
+### G4 layer-template current-filament context: merged bounded GREEN
 
 Port `GCode::process_layer` before/after layer-template invocation context from `GCode.cpp:4639-4641,4682-4684`: unindexed legacy vectors use the current logical writer filament.
 Rust boundary is existing `gcode_emit/layer_gcode.rs`; reuse the parser and writer registry, preserve hook timing/write-back and explicit indexes.
 Six finite Native/API/CLI controls distinguish nonzero/current/upcoming tools through actual M104 and wall-tool consumption. Other template owners and printer/option completeness remain deferred.
-Merged `afca7400a` after approved RED/repair: six finite controls PASS both modes. Accepted workspace actualc7@d7518361/8361 and candidate full actual55f6@361988/988 in both modes; these are carried candidate results, not a new full baseline.
-Final afca directed seeded214/214, official213PASS/1 coordinator-accepted Native adaptivePA variant (fresh3PASS, five identical Ares SHA samples), strict/fmt/wasm PASS. Raw failure evidence remains recorded.
+Six finite controls PASS both modes.
 [SPEC and test-first gates](architecture/layer-template-filament-context-spec.md), [proposed architecture decision](architecture/ard-layer-template-filament-context.md).
 
-### G4 first-layer sequence: bounded GREEN (2026-10-12)
+### G4 first-layer sequence: bounded GREEN
 
 Witness upstream `ToolOrdering::apply_first_layer_order` with two actual outer-wall tools, not only wall/infill sharing.
 Five finite one-based configured-vector controls cover size gating, reversal and first-occurrence duplicate handling.
-Merged `36ed482eb`: machine-start implicit vector rendering follows the resolved initial filament (`GCode.cpp:3118`); first-layer ordering itself is retained.
-Full evidence is the actual `4650357d2`-based candidate: seeded974/974 PASS, official973 PASS/1 coordinator-adjudicated known Native variant, fresh diagnostic3/3 PASS; not a new clean full baseline.
-Other-layer count is already merged; SAFC Native nondeterminism is owned by worker6.
+Machine-start implicit vector rendering follows the resolved initial filament (`GCode.cpp:3118`); first-layer ordering itself is retained.
+Other-layer count is already merged; SAFC Native nondeterminism is tracked separately.
 [Sources, Rust destinations, failure inventory and test-first exits](architecture/option-g4-first-layer-sequence-coverage.md).
 
-### OuterAndInner combined brim: merged bounded source slice (2026-10-12)
+### OuterAndInner combined brim: merged bounded source slice
 
-Next worker3 source slice: `Brim.cpp::outer_inner_brim_area` combined selector,
+`Brim.cpp::outer_inner_brim_area` combined selector,
 contour Round outer area + original-width Miter3 hole area, shared masks/contact
 and existing `tryExPolygonOffset`/`makeBrimInfillImpl` paths. One object/instance/
 volume/group/tool; EFC, supports, painting, cross-object composition and the
-rectangular public adapter remain deferred. SPEC53b22ddc9 approved; ten input-only
-fixtures/Native-admitted REDb35dc2bd5 committed/reported before implementation.
+rectangular public adapter remain deferred. Ten input-only
+fixtures/Native-admitted RED precede implementation.
 Finite GREEN25/25 both modes; all nine InnerOnly API/CLI outputs byte-identical
-across both modes (36 streams). Merged `5d1a77062` after exact-hash approval.
-Workspace8718380/8380 accepted; strict/fmt/WASM green. Directed seeded232/232,
-official231 PASS/1 Native M73 displacement accepted after fresh3 and unchanged
-Ares SHA versus main/history. Full executed871@oldbaseafca: seeded1007/1007 PASS,
-official1005 PASS/2 Native113.388 variants, each fresh3 PASS with identical Ares
-SHA; full evidence accepted and carried through catalog-only rebase. Raw FAILs
-remain retained; old-base full is not registered as a new clean baseline.
+across both modes (36 streams).
 [SPEC](architecture/outer-inner-brim-rewrite-spec.md),
 [runtime ARD](architecture/ard-outer-inner-brim-runtime-boundary.md).
 
-### Inner-only hole brim: merged bounded source slice (2026-10-12)
+### Inner-only hole brim: merged bounded source slice
 
-Next worker3 slice of the open active-dependency/complete-output priority:
+Slice of the open active-dependency/complete-output priority:
 `Brim.cpp::outer_inner_brim_area` InnerOnly hole offsets/masks/contact rules
 and existing `tryExPolygonOffset`/`makeBrimInfillImpl` → private core inner
 area producer and real project BrimPlan dispatch. One object/group/tool;
 public rectangular adapter, OuterAndInner, painting and EFC remain deferred.
 Exit: admitted Native-backed RED before code, both-mode finite hole witnesses
 and whole option_coverage, unchanged full comparisons, Tier1/engineering gates,
-then reviewed canonical candidate full with0FAIL. SPEC696cd308a approved;
-test-first RED063a161bc reported before implementation. Finite Native/API/CLI
-GREEN15/15 in both modes; merged `10058be78` after Claude's approval.
-Workspace8356/8356 and directed222/222 both modes passed; strict/fmt/WASM green.
-Full executed38@oldbaseaeb: seeded993/993 PASS; official991 PASS/2 known Native
-variants accepted only after each fresh3 PASS and identical Ares SHA. Raw FAIL
-evidence is retained; rebase-carry accepted, old-base full not registered anew.
+then canonical candidate full with0FAIL. Test-first RED precedes
+implementation. Finite Native/API/CLI GREEN15/15 in both modes.
 [SPEC](architecture/inner-only-brim-rewrite-spec.md),
 [runtime ARD](architecture/ard-inner-only-brim-runtime-boundary.md),
 [RED evidence](architecture/inner-only-brim-red-evidence.md).
 
-### Adaptive volumetric fit: coupled-family SPEC request (2026-10-11)
+### Adaptive volumetric fit: coupled-family SPEC
 
 Port witnesses for `GCode::calc_max_volumetric_speed` and `_extrude` current-filament fitted/user cap intersection.
 Eight finite enable/model controls must prove actual positive-XYE role/F effects, not empty probes or footer presence.
 Existing typed speed algebra is a compatibility scaffold until project-emission reachability is proven.
-No Native or production changes before SPEC approval; arbitrary strings and multi-filament contexts remain deferred.
+Arbitrary strings and multi-filament contexts remain deferred.
 [Source ownership, Rust destinations, failure checklist and test-first gates](architecture/option-adaptive-volumetric-fit-coverage.md).
 
-### SAFC coupled model: source-slice SPEC request (2026-10-11)
+### SAFC coupled model: source-slice SPEC
 
 Select `small_area_infill_flow_compensation` + `_model`; current model probe is empty-only, not active-curve proof.
 Admit upstream SmallAreaInfillFlowCompensator/PCHIP and `_needSAFC` in a finite single-region linear-extrusion context.
 Seven paired enable/model/pattern controls require actual solid-role E effects and unchanged whole comparison.
-APA, load-settings and owned matrix DIVERGENT work stay excluded; no Native or production edit before approval.
+APA, load-settings and matrix DIVERGENT work stay excluded.
 [Source ownership, lawful curves, Rust destination and test-first exit gates](architecture/option-safc-coupled-model-coverage.md).
 
-### G4 other-layer sequence count: bounded GREEN (2026-10-11)
+### G4 other-layer sequence count: bounded GREEN
 
 Admit upstream sequence count0/1/2 plus empty/reverse-priority consumers; other G4 domains stay deferred.
 Port type-owned numeric/bool vector nil footer semantics, without String/Point suppression or key exceptions.
-Fresh workspace8295/8295, strict/fmt/WASM and seeded full923→924 PASS; official base923 PASS.
-Official candidate923 PASS/1 FAIL: owner exempts only the observed Native internal-solid path-order outlier.
-Native nondeterminism remains a separate OPEN item; no comparator relaxation or automatic full rerun.
-[Source scope, gate receipts and exact one-time adjudication](architecture/g4-sequence-review.md).
+An observed Native internal-solid path-order nondeterminism remains a separate OPEN item; no comparator relaxation.
+[Source scope](architecture/g4-sequence-review.md).
 
-### G4 Manual-map slice (2026-10-10)
+### G4 Manual-map slice
 
 `ToolOrdering` physical-map consumers and `GCode` timelapse/label/M624-M625 lifecycle are rewritten in core.
 Only four coherent two-nozzle Manual `filament_map` cases are promoted; other five keys/by-object masks are deferred.
-Fresh workspace8265/8265 and strict Clippy/fmt/WASM passed; seeded full893→894 PASS.
-Original official failures remain visible; candidate-only Native path-order ND was explicitly owner-adjudicated.
-No comparator change or reruns.
-[Source boundaries, four-leg receipts, raw inventory and adjudication](architecture/g4-manual-map-review.md).
+No comparator change.
+[Source boundaries](architecture/g4-manual-map-review.md).
 
-### Printable-height coverage: bounded GREEN, pending integration review (2026-10-10)
+### Printable-height coverage: bounded GREEN
 
 Source-owned BuildVolume zero-height scene sentinel and Print::validate generated-layer ceiling are ported; G2 sequential fixtures are reused.
-Seeded/official fresh cold witnesses passed; other 649 plans unchanged. Fresh full BASE626/CAND5572: seeded898→903 and official898→903 PASS, both failure subsets pass.
-The concentric Native capture multiplicity disclosure is retained and owner-accepted; no comparator change or rerun.
+No comparator change.
 [Source boundaries, bounded context and exclusions](architecture/option-printable-height-bounded-coverage.md).
 
-### G2 clearance/height coverage: harness GREEN, pending integration review (2026-10-09)
+### G2 clearance/height coverage: harness GREEN
 
-Four bounded coFloat plans: seeded/official cold/hit 12 strict sweep matches; 14 sequential and 8 loaded-rejection witnesses; no production edits.
-Actual fcd50205a/1151db4bc full pairs: seeded 882→889 PASS, official 881 PASS/1 FAIL→889 PASS; 705/667 common streams unchanged.
-[Source boundary, exclusions and actual execution receipts](architecture/option-g2-clearance-height-coverage.md).
+Four bounded coFloat plans: 12 strict sweep matches; 14 sequential and 8 loaded-rejection witnesses; no production edits.
+[Source boundary and exclusions](architecture/option-g2-clearance-height-coverage.md).
 
-### Stock signal audit: all twelve cases docs only (2026-10-09)
+### Stock signal audit: all twelve cases docs only
 
 Native nondeterministic crashes rule out runtime-test admission; no tests or production changes remain.
 [Audit, retained failures and verification](architecture/2026-10-09-stock-signal-runtime-admission.md).
 
-### TiQ2 complete-output parity (whole-file GREEN, review pending)
+### TiQ2 complete-output parity (whole-file GREEN)
 
 The committed `tests/parity/validation/tiq2-type2-enabled.3mf` now produces
 complete G-code equal to the runtime seeded OrcaSlicer oracle, with only the
@@ -912,32 +842,23 @@ vector indexing uses the invocation filament index while `current_extruder`
 remains writer-active. Rust destination: existing `gcode_emit/finish.rs`.
 [Source boundary](architecture/tiq2-footer-filament-template-dispatch.md).
 Runtime controls cover nonzero SEMM active slot, unused configured slot and
-assignment write-back between templates. Fresh default workspace passes
-8239/8239; seeded and official paired controls each pass863/863 base and
-868/868 candidate, including the strict original whole-file comparison.
-Clippy, formatting and core/adapter WASM checks pass. Final merge approval
-remains pending; this result does not establish parity for unrelated projects.
+assignment write-back between templates, including the strict original
+whole-file comparison. This result does not establish parity for unrelated projects.
 
-### X2D-FM #55 dual-nozzle flush-matrix preparation: closed (2026-10-09)
+### X2D-FM dual-nozzle flush-matrix preparation: closed
 
-Landed on main (RED `ab6d7d2e1` → GREEN `e0134bcd7` → review fixes
-`f14c02af6`/`0c6e3ccf8` → dependency rule `310f5ae9a` → generated-id
-`1c3a64a59`/`cbee83539`). Exit-condition evidence is itemized per
-condition — matrices, whole-output equality (seeded 594/594,
-byte-stability 500/500), nontrigger preservation, gates and approval
-hashes, with stated gaps (workspace/WASM/browser recorded on the
-e0134-era candidate, covered by later main gates) — in the
-closure record of
+Exit-condition evidence is itemized per condition — matrices, whole-output
+equality, byte stability and nontrigger preservation — in
 [the spec](architecture/x2d-dual-nozzle-flush-matrix-preparation.md).
 Scalar UB inputs follow the closed O8 contract.
 
-### O8-X2D-SCALAR: closed as a documented unsupported-input contract (2026-10-09)
+### O8-X2D-SCALAR: closed as a documented unsupported-input contract
 
-Closed by coordinator ruling: the original `case-LqoYic` divergence (Native
+The original `case-LqoYic` divergence (Native
 success via the out-of-bounds per-nozzle selector read versus Ares's exact
 upstream matrix-size error, `GCode.cpp:5596-5614`) is a documented
 unsupported-input contract — `UB_ADJACENT`, `parity_pass=false`, not a
-parity PASS. The admitted RED and all artifacts are retained; pinned
+parity PASS. Pinned
 closure controls live in `runner/x2d_flush_matrix.rs` (the
 runtime-constructed original shape asserting the exact CLI
 error/exit-1/no-output and a requires-native guard); the legal-size
@@ -946,7 +867,7 @@ with both observed values, not an Ares-side contract.
 Full record: [closure spec](architecture/o8-x2d-scalar-flush-context.md).
 No UB emulation, numeric patch or relaxed size guard.
 
-### Profile-based slicing entry (2026-10-05, interface approved)
+### Profile-based slicing entry
 
 Port PresetBundle loading/inheritance/full_fff_config and Preset compatibility into
 `ares-core::profiles`, with byte/JSON WASM adapters and STL filename semantics.
@@ -966,7 +887,7 @@ stock inventory or an Ares-owned pipeline milestone.
 - BBL timelapse forced-Z handoff — DONE `b1a5a84d4`; `GCodeWriter::travel_to_xyz` force-Z state, within [ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md).
 - Type2 tower planning/emission, PA restore/reset and live geometry consumers — DONE `c53be4fe9`, `ff2a912e0`; `Print::_make_wipe_tower`, `WipeTower2` and `WipeTowerIntegration`, within [ARD-0105](architecture/ard-0105-smooth-type2-timelapse-port.md).
 - Initialized bridge candidate traversal and mesh affine arithmetic — DONE `50fe97a6e`; [ARD-0075](architecture/ard-0075-initialized-bridge-candidate-direction.md) / [ARD-0076](architecture/ard-0076-slicing-mesh-affine-rounding.md).
-- Type2 `enable_prime_tower=1` verification — GREEN, docs-only review pending;
+- Type2 `enable_prime_tower=1` verification — GREEN, docs-only;
   [measured gate and exact output](architecture/type2-tower-activation.md).
   Resolves bounded `21c18b79d`: apply-time normalization disables the effective
   tower flag despite two emitted tools / 68 changes; no fix/new test, not active
@@ -974,9 +895,9 @@ stock inventory or an Ares-owned pipeline milestone.
 
 ### Selective WIP ports: remaining boundaries (open)
 
-- Adaptive PA deferred upstream behavior — OPEN `2863ef3ea`, worker1;
+- Adaptive PA deferred upstream behavior — OPEN;
   [ARD-0104](architecture/ard-0104-adaptive-pressure-advance-port.md) /
-  [APA-R2 SPEC-REQUEST](architecture/adaptive-pa-deferred-r2-spec.md): residual
+  [APA-R2 SPEC](architecture/adaptive-pa-deferred-r2-spec.md): residual
   multipath/sloped suppression, activation/calibration, source-specific resets
   and lookahead; calibration admission and Type1 remain explicit deferred gates.
   Landed bounded ports do not close full Adaptive PA or printer/Option coverage.
@@ -993,7 +914,7 @@ stock inventory or an Ares-owned pipeline milestone.
 
 Range min/max/interior and active dependency coverage still require their complete
 source-owned witnesses. The fresh nonempty all-PASS full-inventory exit, unchanged
-complete comparators, Tier-1 verification and independent six-axis review remain
+complete comparators and Tier-1 verification remain
 OPEN. Completed executions/classifications and individual domain closures are not
 that global exit; raw Native errors, crashes and incomplete domains are not PASS.
 
@@ -1016,7 +937,7 @@ ARD/spec remains separate, without a full printer/Option parity claim.
 ## Completed milestones
 
 Each milestone is recorded as one line (number, name, DONE); the
-full exit criteria, specs and run logs remain in git history.
+full exit criteria and specs remain in git history.
 
 - M1: Basic slicer framework skeleton — DONE
 - M2: STL model import — DONE
@@ -1578,7 +1499,7 @@ full exit criteria, specs and run logs remain in git history.
 ## Web preview and editing upstream slices (ARD-0106 follow-up)
 
 The web frontend (ARD-0106, M1 merged) is unblocked by two source-cited
-slices. Each slice gets its own REVIEW-REQUEST:
+slices:
 
 1. M853:
    `GCodeProcessorResult::moves` and `LibVGCodeWrapper::convert` →
@@ -1588,34 +1509,25 @@ slices. Each slice gets its own REVIEW-REQUEST:
    boundary, for settings editing and re-slice.
 
 M853 lands first because Preview is the larger user-visible gap. M854 is
-independent and can follow on the same branch.
+independent and can follow.
 
 ### ColorChange / M600 preview continuation
 
-Filament/ColorPrint `9b5db6d7a` is approved and merged. The
-[ColorChange rewrite spec](architecture/web-colorchange.md) is approved and
-merged at `70323c9a7`: upstream
+Filament/ColorPrint is merged. The
+[ColorChange rewrite spec](architecture/web-colorchange.md) ports upstream
 `GCodeProcessor` custom items, `UsedFilaments::volumes_per_color_change` and
 normal custom times → ares-core; `libvgcode::ColorPrint` and GCodeViewer
 partial display records → ares-vgcode; thin WASM and lazy display-only TS.
 Exit requires native-oracle-backed event/volume/segment parity, full existing
 browser coverage plus ColorChange E2E artifacts, unchanged bundle budget,
-Rust/build gates and coordinator approval. Native probing resolved the
+Rust/build gates. Native probing resolved the
 zero-volume question: preserve raw data and report partial usage unavailable
 rather than indexing absent volumes. Automatic M600 injection and
 bare-M600 color inference remain outside this slice.
 
-Verification on `43df7c95d`: workspace 7,935 passed / 9 skipped; seeded
-reference 561/561 in both trees; full browser 14/14 base and 15/15 candidate;
-candidate initial JS gzip 124,953 B. Official retains eight shared environment
-failures; the extra base tree-support failure has exact raw-Ares equality
-and differing native M73 insertion evidence. See the architecture record for
-artifacts, setup corrections and approved diagnostic distinctions. A later
-VG1/UsedFilaments merger must rebase and rerun.
+### Tool-position Time row — implemented
 
-### Tool-position Time row — implemented, awaiting review
-
-The approved [marker-time slice](architecture/web-marker-time.md) ports
+The [marker-time slice](architecture/web-marker-time.md) ports
 `libvgcode::ViewerImpl::get_estimated_time_at` (`ViewerImpl.cpp:1461-1465`)
 into ares-vgcode and transports its inclusive f32 prefix plus the existing
 selected vertex duration to the lazy Time property
@@ -1627,33 +1539,13 @@ Exit: source-kernel/native processor f32-bit and display-text evidence,
 RED-before-GREEN, unchanged G-code/M73, reload/filter/seam correctness, full
 Rust/build/browser gates and initial JS gzip strictly below 125,000 B.
 Stealth UI, acceleration/jerk/PA, actual-speed profile and slider time/distance
-remain deferred. Historical VG1 checkpoint `9e3e81837`: full browser base/candidate
-15/15 and 16/16 passed, initial gzip 124,949/124,954 B. Workspace: 7,953 passed,
-9 skipped. Corrected-protocol seeded: 575/575 on both trees. Official: 566/575
-on both trees, with eight shared environment failures and two distinct native
-ND cases backed by identical raw Ares bytes. That checkpoint is historical.
+remain deferred. `narrowed_x2d_whole_file` differs under official 2.4.2 only on
+its uninitialized object-label ids (the `initialized_*` environment class,
+ARD-0081) and passes whole-file under seeded. The tagged stable-Time authority
+and bounded raw difference are documented in the ColorChange Known difference
+section.
 
-Final gates on `1b1751434` (later main commits through `21c18b79d` are
-docs-only): fmt, workspace all-target clippy `-D warnings`, workspace nextest
-**7,964 passed, 9 skipped**, CLI/example/WASM/library/app builds, typecheck
-and lint. Fresh corrected v2 references with empty caches: seeded **585/585**
-on both trees; official base **574/585**, candidate **575/585**. Eight shared
-reference-environment failures remain. Base-only `painted-blocker` is ND
-(identical raw Ares bytes). Two shared native-oracle 300 s SIGKILLs were rerun
-solo per ruling (threads=1, unchanged timeout): `change_filament_flush_blocks`
-passes on both trees; `narrowed_x2d_whole_file` fails identically, with
-identical Ares bytes, only on official 2.4.2's uninitialized object-label ids
-(accepted as the `initialized_*` environment class, ARD-0081), and passes
-whole-file under seeded on both trees. Full browser: base **14/15**,
-candidate **15/16**; the single shared failure is `presetImport.spec.ts:96`
-(`bridge_speed contains invalid value`), an O3 regression on main: native
-official accepts the BBL array value (reported to the coordinator). Initial gzip
-**124,951 / 124,948 B**. Not an all-green official gate; coordinator
-review/acceptance remains required.
-The tagged stable-Time authority and bounded raw difference are explicitly
-approved and documented in the ColorChange Known difference section.
-
-### Preview Acceleration / Jerk / Pressure Advance — spec approved, in progress
+### Preview Acceleration / Jerk / Pressure Advance — in progress
 
 The [motion-attributes spec](architecture/web-motion-attributes.md) ports
 `GCodeProcessor::store_move_vertex` `pressure_advance`/`acceleration`/`jerk`
@@ -1663,12 +1555,12 @@ recording (`GCodeProcessor.cpp:5630-5706,5771-5885`) and the M900/M572/
 `GCodeViewer` view-type items, legend ranges and ToolPosition rows into the
 lazy web UI. Exit: native-oracle f32-bit vertex parity on processor fixtures,
 unchanged G-code/M73, full Rust/reference/browser gates and initial JS gzip
-strictly below 125,000 B. Approved with rulings (initialized-native PA oracle,
-f32 bit-exact machine state); Klipper `SET_VELOCITY_LIMIT` travel-accel fix in-slice.
+strictly below 125,000 B. Decisions: initialized-native PA oracle,
+f32 bit-exact machine state; Klipper `SET_VELOCITY_LIMIT` travel-accel fix in-slice.
 
 ### `GCodeProcessor::process_M205` machine limits — integrated
 
-Integrated at `d0e8b64f9bf35750f51f5e6ca5a6d01bbfcda16b`; see the
+See the
 [source-owned M205 slice](architecture/gcode-processor-m205-machine-limits.md).
 The Rust `processor/motion` rewrite ports `GCodeProcessor.cpp:5236-5265`
 (X also sets Y; a later Y overrides; S/T/J update existing-parser values),
@@ -1677,16 +1569,7 @@ E-delta travel/extrusion selection (`:3987-3989,4347-4349`), and the block
 feedrate floor (`:5726-5740`) without changing commanded F or JD formulas.
 Six permanent same-input Native/public processed-output cases preserve the
 four original complete-byte REDs and two controls; all six are now PASS.
-
-Fresh matching-base `7b4b1ee2b` acceptance: seeded base598/598 and
-candidate604/604; official base588/598 and candidate594/604 have exactly
-the same ten failure names (both exit100 retained, not a count-based waiver).
-Workspace7990/7990 with nine existing skips, strict Clippy/rustfmt, and WASM
-check/release pass. All517 common raw Ares G-code streams remain byte-identical;
-118 inputs have exact archive SHA equality and399 have identical payloads
-for every ZIP entry. All12006 upstream resource JSON files were inspected:
-522 authored minimum-rate fields are zero, so the nonzero-rate stock subset
-is empty; the67 missing retained stock inputs are not credited as PASS.
-Browser E2E is explicitly waived for this slice: no web changes, unchanged
-common output bytes, and no nonzero stock minimum rates. Independent remote
-confirmation after non-force FF integration matches the approved hash.
+All12006 upstream resource JSON files were inspected: 522 authored
+minimum-rate fields are zero, so the nonzero-rate stock subset is empty.
+Browser E2E is not needed for this slice: no web changes, unchanged
+common output bytes, and no nonzero stock minimum rates.

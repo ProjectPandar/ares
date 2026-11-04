@@ -1,11 +1,8 @@
 # SurfaceFillParams: exclude emission flow ratio from the grouping key
 
-Status: SPEC-REVIEW-REQUEST. Docs only; no public RED or production edit.
+Docs only; no public RED or production edit.
 Discovery base: `b49c63836a4bdcb2223624f7a2dd68a83fae7488`, the preliminary
-consistent-grid GREEN, not accepted main. Current main remains
-`a5eb0f0356057fe9c62ec3319834f82b40a7731a`.
-Queue: W1 Voronoi → W4 ironing → consistent-grid final rebase/FULL/RR.
-This SPEC requests review only, not a competing merge or FULL window.
+consistent-grid GREEN.
 
 ## Owning upstream boundary
 
@@ -45,8 +42,7 @@ promise of complete comparator parity.
 
 ## Native-first authored witness
 
-Reuse the existing, previously passing compatible-region overhang project:
-`w3-plane-path-bbox-green-a5eb0f035/full-official-artifacts/case-apU3W2/input.3mf`.
+Reuse the existing, previously passing compatible-region overhang project.
 It is the source-authored `overhang.stl` object plus the existing left-side
 parameter modifier (X scale 0.6, X translation −6 mm), not newly searched
 geometry. Set both global and local
@@ -67,7 +63,7 @@ setting below changes. Local means metadata on the existing modifier part.
 | global-ratio11 | global top ratio 1.1, no local ratio | PASS |
 | local-speed45 | local top speed 45 mm/s, ratio remains 1 | PASS |
 
-Each case has two fresh canonical Native slices per mode, CPU12. The five
+Each case has two fresh canonical Native slices per mode. The five
 SPEC cases therefore supply twenty fresh Native streams and ten CLI
 streams, with repeat/cross-mode input and normalized stream identity.
 The equal local ratio controls explicit override admission; global 1.1
@@ -129,31 +125,21 @@ control or part of this port. Do not silently broaden this slice to close it.
 
 ## Staged plan and stop rule
 
-1. SPEC: approve this exact owner/boundary and the five-case matrix. No tests
+1. SPEC: this exact owner/boundary and the five-case matrix. No tests
    or production changes in this commit.
-2. RED, only after independent SPEC approval: freeze the five input-only
+2. RED: freeze the five input-only
    projects/SHA manifest; reuse the existing shared parity runner and strict
    complete-output assertion. Preserve all existing assertions/inputs and
    unconditional prior checks. Require independent Native repeats and public
    API/CLI producer identity. Expect one target FAIL and four controls PASS
-   per mode; submit a separate RED RR without production edits.
-3. GREEN, only after independent RED approval: production-only removal of
+   per mode, without production edits.
+3. GREEN: production-only removal of
    the `flow_ratio` discriminator. Frozen RED/harness/inputs remain unchanged.
    Any strict residual after that bounded change means STOP/report; do not
    expand into motion, graph, E, bridge-angle, time or another key repair.
 4. Validate fmt, locked workspace/all-target clippy `-D warnings`, and core +
-   wasm browser target. After the queue releases, rebase to current main,
-   preserve range-diff, rerun selected checks and fresh canonical official +
-   seeded FULL at the exact clean final hash, CPU20–23/threads4, zero
-   FAIL/skipped. If main advances, rebase and rerun final-hash acceptance.
+   wasm browser target, then fresh canonical official + seeded FULL with zero
+   FAIL/skipped.
 
 No tolerance, filtering of progress/E, fallback, unsupported-feature guard,
-allow/expect/ignore, Native golden, inverted assertion, merge or push.
-
-## Repeatable discovery evidence
-
-`${EVIDENCE_ROOT}/w3-fill-group-flow-ratio-spec-review/README.md`
-links the external runners, immutable inputs/commands/stdout/stderr, source
-and producer identities, complete comparison matrix, GDB transcripts and
-repeatable audits. All probes and audits use CPU12. No formal FULL or GREEN
-claim is attached to this SPEC; consistent-grid acceptance is still pending.
+allow/expect/ignore, Native golden or inverted assertion.

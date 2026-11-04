@@ -1,6 +1,5 @@
-# Native 清理 B：EXCLUDE_OBJECT_DEFINE identity / jitter hull
+# Native 清理：EXCLUDE_OBJECT_DEFINE identity / jitter hull
 
-owner worker6；整体 B 与共享 runner/cache owner worker4。基线 `7880ef442`。
 本片只迁移两例 Native E2E 的参照来源，不修改生产行为或输入。
 
 ## 上游边界与 Rust 目标
@@ -17,7 +16,7 @@ owner worker6；整体 B 与共享 runner/cache owner worker4。基线 `7880ef44
 | `GCode.cpp:8059-8072,8096-8106`，`polygon_to_string` / `GCode::set_object_info` | hull 经 print-space 转换、闭合首点后写入完整 EXCLUDE_OBJECT_DEFINE。对应 `gcode_emit/footprint.rs` 的 Klipper 对象定义。 |
 
 Included：迁移两例整流测试 adapter、沿用 runtime Native 缓存、删除旧 reader 与冻结输出。
-Deferred：生产 hull/简化/变换算法修正、额外几何用例、其它 B 组和共享 runner/cache 扩展。
+Deferred：生产 hull/简化/变换算法修正、额外几何用例、其它迁移组和共享 runner/cache 扩展。
 已有几何实现保持不变；只有验证壳的文件系统/Native 责任迁入 CLI。
 
 ## 一对一输入与断言合同
@@ -54,12 +53,12 @@ receipt/hash 和 `ARES_ORCA_CACHE_DIR`；没有第二缓存、预热或顺序依
 `OrcaRunner::from_env` 沿用共享 `native_environment`：required 缺 Native/资源 FAIL，
 optional 缺依赖可见 SKIPPED；无效配置、执行/解析/比较错误均 FAIL。
 缓存命中也不能绕过依赖策略。本片不需要 GDB 或新增外部工具。
-Native/Ares 输出、比较首差/行数/SHA 与 cache receipts 只保留于仓库外。
+Native/Ares 输出、比较首差/行数/SHA 与 cache receipts 不提交。
 
 删除 `crates/ares-core/tests/exclude_outline.rs` 及
 `tests/parity/validation/exclude-outline-{identity,jitter}-expected.gcode`（共 10525 行）。
 两份 3MF 字节不变。不动生产、公开 API、`.config`、共享 cache/custom_gcode、
-root harness、共享 README 或 worker4 的 CLI63/channels/retained/marker/KSR。
+root harness、共享 README 或其它 CLI63/channels/retained/marker/KSR 迁移。
 如发现共享接口缺口，先报告，不自行扩大范围。
 
 ## 验收边界
@@ -73,6 +72,5 @@ required 必须 FAIL，optional 必须可见 SKIPPED，不通过缓存绕开依�
 
 fresh v2 base/candidate seeded 与 official 使用独立缓存、保留状态变化和共同 Ares
 raw SHA；严格 cand-failure-subset 不放宽。Native 差异附同输入/producer/Ares raw/
-首差证据交协调者裁定。随后 required workspace nextest、strict clippy、fmt、wasm
-检查与 exact-hash REVIEW；批准后 rebase/ff-only push。每人一个 heavy、16 threads、
-独立 target；浏览器暂停期间不启动新 heavy。spec 未批准不改实现。
+首差证据逐例报告。随后 required workspace nextest、strict clippy、fmt、wasm
+检查。

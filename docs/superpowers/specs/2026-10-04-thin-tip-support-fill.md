@@ -21,7 +21,7 @@ Reference: OrcaSlicer v2.4.2, commit
 
 Included: diagnose the first support path divergence for tip diameter 0.1,
 repair the proven source-semantic mismatch, preserve line/contour ordering and
-complete output comparisons. The approved regression seam is the existing
+complete output comparisons. The regression seam is the existing
 public project-to-G-code comparison in CLI `option_coverage/tree_activation.rs`:
 raw Grid normalized to Organic and explicit Organic, with support width 0.1
 and layer/first-layer height 0.08. Existing assertions remain unchanged.
@@ -33,11 +33,7 @@ output equivalence. No guards, ignored tests, fallback or comparator changes.
 ## Acceptance
 
 Reproduce retained RED before production edits; use cached full-output replay
-for diagnosis, then execute fresh official OrcaSlicer 2.4.2 CPU0 and seeded
-CPU0/seed0 full activation comparisons (28 pairs each, previously 26 PASS).
+for diagnosis, then execute fresh official OrcaSlicer 2.4.2 single-CPU and seeded
+single-CPU/seed0 full activation comparisons (28 pairs each, previously 26 PASS).
 The expected explicit Organic100 native rejection remains separately reported.
 Require workspace Nextest, Clippy, rustfmt and core+adapter WASM compilation.
-Only then commit/push `pi/thin-tip-support-fill`. The user's follow-up requires
-fetch/rebase onto latest origin/main, repeating all four quality gates and
-fast-forward-only `git push origin HEAD:main` from this isolated worktree.
-If rejected because main advanced, rebase and verify again; never force push.

@@ -1,10 +1,5 @@
 # ARD: VG1-induced M73 arc-cache cursor parity
 
-Status: authorized docs-only SPEC then input-only formal RED. STOP for
-review before GREEN. Ninth chain branches from approved frozen
-`d0ebd29ade6b257cfb5493b948a9bbdc2eb7f04a`, after the eighth FanMover
-chain. Earlier eight tips remain untouched; no integration/FULL here.
-
 ## Upstream owner, trigger and exact Rust destination
 
 Upstream `OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp`:
@@ -31,7 +26,7 @@ Exact Rust destination ONLY
 arc_segment_counts[index]/arc_seam_excluded[index] tied to the physical
 source line. Once VG1 shifts ids, that shortcut queries different entries.
 `estimate.rs` existing call/signature wiring may change ONLY if necessary.
-Any required edit outside these two files must STOP for scope approval.
+Any required edit outside these two files is out of scope.
 
 Existing `estimate/export_cache.rs::snapshots` already ports the dynamic
 ExportLines timestamp cursor; it is a source-aligned adjacent reference,
@@ -64,9 +59,7 @@ provenance, not Native evaluated values or expected G-code snapshots.
 | control |61d36dff5dfb995fb3cd1f2bcb3ece0d9e79c5476137b05ddd495d4b901368fb|
 | target |f6a1b0ab02e4be9f4d3c20e6dcf09d55b0ba37f4b47e3989053de03adefac169|
 
-Provenance uses repository-relative paths/evidence IDs only. Discovery
-ID `w5-multimat-vg1-export-arc-cache` retains actual exports/launches/
-settings/proofs; original macro source is
+Provenance uses repository-relative paths only. The original macro source is
 `tests/parity/validation/multi-filament-bridge-anchor-narrowed.3mf`.
 
 ## Honest causal evidence and strict acceptance
@@ -86,14 +79,13 @@ First arc divergence: source1213,physical65,counter85,Native ret0 versus
 Rust source-arc ret21. Diagnostic replay is not a production patch or
 whole-GREEN proof. Rust total was not captured; do not claim measured
 total equality. Successful full debug outputs match their own CLI;
-failed/pending/incomplete probes are excluded. Full evidence in the
-above evidence ID, not embedded into regression expected outputs.
+failed/pending/incomplete probes are excluded. Discovery evidence is not
+embedded into regression expected outputs.
 
 Formal RED uses TWO DIRECT native_stream_case::check calls. Existing
 NativeCase double Native replay then complete validated API/bare CLI
 comparison; no copied orchestration/normalizer/helper/Native constants,
-private seam, ignored or expected-failure flags. CPU11/thread1/job1,
-official then seeded. Require controlPASS and genuine targetFAIL with
+private seam, ignored or expected-failure flags. Official then seeded. Require controlPASS and genuine targetFAIL with
 valid public generation and both comparison attempts retained. No setup
 or environment-disabled run counted. Only existing generated-by identity/
 date normalization; NO M73/time/header/fan/E/XY/comment/config/trailing-line
@@ -102,12 +94,10 @@ mask, tolerance, numeric equivalence or sorting.
 ## Deferrals and phase exit
 
 Defer all virtual math/block/planner/cache-build/material/vertex changes,
-other export policies, ramming/cooling tube/tower geometry, W2 skirt,
+other export policies, ramming/cooling tube/tower geometry, skirt,
 FanMover EPSILON/thresholds, earlier processor firmware chain, header/
-placeholder/value rendering, W1–W4/W6 owned families and all earlier
-approved chains. Any later bounded GREEN residual requires STOP/report,
+placeholder/value rendering and all other families. Any later bounded GREEN residual requires STOP/report,
 not expanding scope or weakening the strict comparator.
 
-Commit SPEC then input-only pair/tests/manifest/README RED, run dual-mode
-targeted checks and send RR. Freeze tests/inputs/helpers/docs thereafter.
-STOP before GREEN/FULL/rebase/integration/main update until authorized.
+Commit SPEC then input-only pair/tests/manifest/README RED and run dual-mode
+targeted checks. Freeze tests/inputs/helpers/docs thereafter.

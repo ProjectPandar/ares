@@ -1,8 +1,8 @@
 # Follow-up gap: odd rotated mesh exports in Ares, empty first layer in Native
 
-Status: recorded gap, outside the approved high-valence pairing slice.
+Recorded gap, outside the high-valence pairing slice.
 No sorting, loop-chaining, mesh repair or new admission behavior is proposed
-or authorized by this document. A follow-up implementation needs a SPEC.
+by this document. A follow-up implementation needs a SPEC.
 
 ## Reproduction and public boundary
 
@@ -13,9 +13,7 @@ Vertices and oriented triangle multiset match odd-original and odd-reverse.
 Only odd-original is in the Native-admitted strict feature matrix.
 
 Input SHA256: 93a493cec3f419398d2cfc04401e0c5f53c373ffe38d2e526c885e876f6b5bc3.
-Production checkpoint: 9856c12b07aecb90295400cbba7fdaf404a53bb0.
-Evidence: /tmp/worker3-mesh-edge-green-tnjm_ze7/evidence.json and
-GREEN-receipt.json; each mode uses fresh Native cache/artifact roots, CPU12.
+Each mode uses fresh Native cache/artifact roots.
 No retries or normalization of this difference were performed.
 
 ## Observation (both official and seeded)
@@ -29,7 +27,7 @@ Odd-rotated Ares raw G-code SHA256 (same in both modes):
 99521ddc83fa146da43b50d88271afb586afc95f2c046f875089130fb6afc6b4.
 These two diagnostics are never counted as strict parity PASS. The strict
 Native-admitted matrix passes13/13 in each mode; the three manifold control
-Ares outputs remain byte-identical to RED d5d5bdcc1.
+Ares outputs remain byte-identical to RED.
 
 ## Source attribution and limit of the conclusion
 
@@ -37,11 +35,10 @@ TriangleMesh.cpp:520-563 creates endpoint-only sorted edge uses;
 its_face_edge_ids_impl:565-613 pairs opposite first, then same direction.
 TriangleMeshSlicer.cpp:1876-1880 consumes these IDs; make_loops:1383-1482
 chains connectivity into loops. Rust mesh_slicer/topology.rs ports pairing
-while retaining existing endpoint/face/local-edge ordering under the approved
-addendum8b4162da3. Rust chaining transport is unchanged in this slice.
+while retaining existing endpoint/face/local-edge ordering under the
+ordering addendum. Rust chaining transport is unchanged in this slice.
 
-For the Native -100, source+logs in
-/tmp/worker3-edge-native-logfile-ycvz867g/evidence.json establish import,
+For the Native -100, source and logs establish import,
 print-volume admission, slicing and infill complete before export fails:
 GCode.cpp:1774-1778 throws SlicingError for no first-layer extrusions;
 :1847-1866 aggregates it; Exception.hpp:40-46 names the aggregate Errors;
@@ -52,4 +49,4 @@ This proves an output/admission gap for one ordered input. It does not prove
 std::sort alone causes it: pairing order, face traversal and loop chaining
 remain candidate source boundaries for a separate investigation. Do not add
 an Ares blanket guard or rewrite generic sorting to imitate -100 here.
-Keep this input and all retained roots for the follow-up.
+Keep this input for the follow-up.

@@ -1,9 +1,6 @@
 # SeamPlacer occlusion volume-affine precision
 
-Status: docs-only SPEC; Native-first public RED follows under COORD authorization.
-Base: 4b3844e28711a6a1381ca847dbd390fe67f2347f.
-Branch: worker6/occlusion-volume-affine-spec. CPU15, one job/thread; no FULL window.
-GREEN requires separate RED approval. This is a libslic3r rewrite slice, not a new
+This is a libslic3r rewrite slice, not a new
 Ares seam-selection, visibility, travel or timing policy.
 
 ## Source owner and exact Rust destination
@@ -45,14 +42,10 @@ Core remains platform-neutral for browser WASM, Windows, macOS and Linux.
 - Do not absorb a strict residual into another producer or consumer. If the
   volume-only future correction does not pass COMPLETE frozen streams, STOP
   and report it; no silent object-stage widening or consumer compensation.
-- Preserve the user's decision that `loop_paths/tests.rs` stays deleted.
 
 ## Qualified first-producer evidence
 
-External discovery and approved draft:
-`${EVIDENCE_ROOT}/w6-4b-zigzag-h40-oo1qibb6/`.
-`verification.json` binds the frozen pair and all proofs. Source arrays stay in
-external machine-readable files, not this SPEC or committed Native output.
+Source arrays are not recorded in this SPEC or committed Native output.
 
 - Native/Rust runtime inputs are identical: two f64 volume matrices, all36 float
   source vertices and64 triangle indices. Native's actual post-volume vertices
@@ -112,20 +105,18 @@ Ares `G3 Z2.2 I.072 J-1.215 P1  F18000`. Next destination is
 Native110.32,101.56 versus Ares110.458,101.503. Preserve ALL M73, motion, timing,
 metadata and footers; no masks, selective acceptance or expected-error success.
 
-## Approval and verification sequence
+## Verification sequence
 
-1. This separate docs-only SPEC commit, then input/test-only public Native-first
-   RED on an exact commit. Reuse unchanged `runner::native_stream_case::check`
+1. Input/test-only public Native-first RED. Reuse unchanged `runner::native_stream_case::check`
    delegating to canonical `native_api_cli::NativeCase`; assert SHA and T0/T1.
    Native2 must be stable before API/CLI for each case, in official and seeded.
 2. Require each mode target FAIL/control PASS, both complete Native/API and
    Native/CLI comparisons, API success/CLI0. On RED, the canonical helper panics
    before its final raw assertion: independently audit actual API/CLI files;
    do not claim that final assertion or post-compare adapter code was reached.
-3. Send RED RR and STOP for separate production-only GREEN authorization. Freeze
-   inputs, tests, helper, normalizer and SPEC; future correction only the volume
+3. Freeze inputs, tests, helper, normalizer and SPEC; the production-only GREEN
+   corrects only the volume
    callsite using existing f64 transform followed by per-coordinate as f32.
 4. GREEN must pass whole target/control streams in both modes, raw equality,
    selected nearest/aligned/mesh/interlocking Native neighbors, fmt, strict
    workspace/all-target clippy and WASM gate. Changed text files stay <400LOC.
-5. FULL/rebase only in a later explicit integration window; no push/self-merge.

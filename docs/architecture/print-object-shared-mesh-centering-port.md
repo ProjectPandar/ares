@@ -1,17 +1,14 @@
 # PrintObject centering and bbs_3mf shared-mesh rewrite SPEC
 
-Status: SPEC49cf8a57a approved; C1 then C2, independently RED/GREEN/review/full
-and merge. C2 begins after C1 closes; public load/selection changes need a new SPEC.
-Base: origin/main `023b742f26caab6c51df9ebb6db156d44792fc4b`.
-Worktree: `${TMP_ROOT}/ares-worker3-object-centering-spec`.
+C1 then C2, each with independent RED/GREEN. Public load/selection changes
+need a new SPEC.
 
 ## Owning upstream boundaries
 
 This is a Rust rewrite of Model volume preparation, the bbs_3mf importer,
 and PrintObject's coordinate frame. It does not define a new Ares pipeline.
-Use the checked-out OrcaSlicer 2.4.2 source at:
-`/nix/store/hxvv0g1qlw9lwimj2km3ghxphrl9p4qf-orca-slicer-2.4.2-seed-replay-source`.
-Paths and line numbers below are relative to its `src/libslic3r` directory.
+Use the OrcaSlicer 2.4.2 source (`8500fcdcc`). Paths and line numbers below
+are relative to its `src/libslic3r` directory.
 
 | Source / function | Behavior to port or preserve |
 | --- | --- |
@@ -75,30 +72,21 @@ All inputs are temporary authored 3MF packages based on
 asymmetric 10x6x1 box centered locally at (17,-3,0); a distinct second mesh is
 16x6x1. Use classic walls, no support/brim/skirt/tower, aligned seam, by-layer
 printing. Component package relationships and plate instance records are
-explicit. Authoring and launches are retained in each root below.
+explicit.
 
-All three rounds ran sequentially on CPU12 using outer `taskset -c 12`, clean
-PATH/HOME-based environments, seed0 for replay, and a fresh per-case Native
-cache/artifact directory. No cargo, workspace or full was run. Official wrapper
-was ASLR-off SHA
-`1689a2ff46564cf723ad90c663051b58115920c3cce639bd2961340955cebbf3`.
-Ares was the previously built exact-023b executable from its accepted full:
-`/tmp/worker3-fuzzy-full-023b-m0h2p_iq/official/target/debug/ares`.
-Every launch records the actual executable SHA, input SHA, command and env.
-These are reachability and geometry witnesses, not strict parity PASS claims
+All three rounds used seed0 for replay and a fresh per-case Native
+cache/artifact directory. These are reachability and geometry witnesses, not strict parity PASS claims
 or the later committed public E2E RED.
 
 ### All rounds retained; input construction changes explained
 
-1. `/tmp/worker3-centering-native-preflight-4aq04pyh`.
-   The second `<object>` in model_settings was appended after `<plate>`.
+1. The second `<object>` in model_settings was appended after `<plate>`.
    Native official 9/9 and seeded 9/9 exited0 and emitted G-code.
    Ares accepted single/XY controls; three cases reached
    `print_object_centering`; four two-object cases stopped earlier with
    `duplicate field object`. Thus seven Ares rejections included four XML
    construction rejections, not seven centering guard witnesses.
-2. `/tmp/worker3-centering-native-preflight-luzd_fps`.
-   The only authoring correction was placing the second `<object>` immediately
+2. The only authoring correction was placing the second `<object>` immediately
    after the first, before `<plate>`. Geometry, transforms, sharing keys and
    settings were unchanged. Native official 9/9 and seeded 9/9 again exited0.
    Ares admitted distinct and implicit-shared two-object packages. Three cases
@@ -106,19 +94,15 @@ or the later committed public E2E RED.
    at `duplicate field metadata`, because their metadata was appended after
    the part's `<mesh_stat>`. Five rejections here were three guards plus two
    XML construction rejections. Implicit sharing already showed wrong geometry.
-3. `/tmp/worker3-centering-native-preflight-e7ijpo7c` (authoritative guard matrix).
-   The only next correction placed `mesh_shared` alongside the part's other
+3. (Authoritative guard matrix.) The only next correction placed `mesh_shared` alongside the part's other
    metadata, before `<mesh_stat>`. All logical case parameters remained the
    same. Native official 9/9 and seeded 9/9 exited0. Ares accepted four packages
    and rejected five via the two intended guards. No XML construction failure
    remains. This round isolates the feature boundary; it does not overwrite
    either earlier round or use repeated execution to explain away differences.
 
-Each root retains `generator.py` as that round's exact generator snapshot,
-`inputs/*.3mf`, `plan.json`, per-case `launch.json`, stdout/stderr,
-Native output, per-leg `results.json` and aggregate `evidence.json`.
-The final root also contains `preflight-audit.json`. ZIP/input SHA differences
-between rounds are recorded; they are not Ares/Native output instability claims.
+ZIP/input SHA differences between rounds are input-construction changes, not
+Ares/Native output instability.
 
 | Case | Native both modes | Current Ares | First-layer positive wall witness |
 | --- | --- | --- | --- |
@@ -140,7 +124,7 @@ G-code SHA for implicit-shared and distinct-mesh, incorrectly using the second
 source's independent geometry. The 3mm extent difference is deterministic and
 present in both oracles; it is not a stochastic Variant A attribution.
 
-## Proposed implementation slices (separate RED, GREEN, review)
+## Proposed implementation slices (separate RED, GREEN)
 
 ### C1: PrintObject group centering
 
@@ -214,10 +198,10 @@ integer-id reuse, first available mesh and init-shift restoration, selected-plat
 scope, volume metadata isolation. Deferred: mesh reload/export/backup, GUI undo,
 SLA, native pointer identity itself; Rust immutable sharing is its representation.
 
-## TDD and release gates after SPEC approval
+## TDD and release gates
 
 For each slice first commit authored inputs and public API/CLI Native RED
-independently, then report its evidence before production. Official and seeded
+independently before production. Official and seeded
 both use strict full ordered generated-output comparison. Reachability/extents
 above explain the cases; they do not replace the strict comparator. All Native
 G-code, diagnostics and execution evidence remain external artifacts, not Git.
@@ -232,12 +216,10 @@ key-1 lookup and fresh fallback, unseen explicit key, reversed build/object orde
 selected plate with shared source excluded, repeated independent plate selection,
 and per-volume metadata/annotation isolation. Commit immutable provenance/SHA.
 
-Existing guard-only unit assertions need a separate retirement request listing
+Existing guard-only unit assertions need a separate retirement record listing
 precisely the contradictory assertions/tests, with RED and source citations.
-This SPEC does not authorize deleting them. Preserve all unrelated assertions.
+This SPEC does not delete them. Preserve all unrelated assertions.
 No UnsupportedProjectFeature replacement, normalization, ignored case, probe,
 Native-product commit, lint suppression or `regions[0]` shortcut is permitted.
-Files stay <=400LOC. CPU12 outer-taskset directed jobs2/threads2 with fresh Native
-cache/artifact roots; strict workspace clippy, fmt and WASM must be green.
-Canonical full/workspace require explicit coordinator allocation and fixed
-jobs2/threads2. Merge remains coordinator-owned; no worker push.
+Files stay <=400LOC. Fresh Native cache/artifact roots; strict workspace
+clippy, fmt and WASM must be green.

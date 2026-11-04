@@ -1,15 +1,11 @@
 # Adaptive PA residual boundary continuation — APA-R2 SPEC
 
-Status: **SPEC approved `cf4146f9d`; M producer amendment approved by owner**.
-Owner: worker1.
-Roadmap parent: OPEN `2863ef3ea`; [ARD-0104](ard-0104-adaptive-pressure-advance-port.md).
-Analysis main: `eade4762ab168297620395b6afbdc852779735e0`.
+Status: accepted.
+Parent: [ARD-0104](ard-0104-adaptive-pressure-advance-port.md).
 Upstream pin verified: OrcaSlicer 2.4.2
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
-This original SPEC commit contained documents only. Owner subsequently approved
-M→A→R, test-first execution and one REVIEW-REQUEST per group. The producer
-amendment below is docs-only and must be committed before its tests/runs; no
-production change or parity RED is claimed by that amendment.
+Execution order is M→A→R, test-first. The producer amendment below must be
+committed before its tests/runs.
 
 ## 1. Rewrite boundary and non-negotiable decisions
 
@@ -49,9 +45,9 @@ static code differences are hypotheses, never implementation RED.
 | `GCode.cpp`,1088–1094,1369–1375 | `WipeTowerIntegration` first/second append sites set static PA then reset previous PA; second has valid-tool guard. Type2/second site may be included only via an already supported, actually tower-emitting witness; first/Type1 remains deferred. Rust `gcode_emit/wipe_tower/emit.rs`, `pressure_advance.rs`, `adaptive_pa.rs`. No tower activation/planning/geometry repairs. |
 | `GCode.cpp`,3143–3161 | BBL initial-non-support filament restore: start G-code/VT marker, enabled static PA, reset before layers. Included reached startup case. Rust `layer_gcode/startup.rs`, `machine/first_filaments.rs`, `pressure_advance.rs`, `adaptive_pa.rs`. Not generic "reset all printers at start". |
 | `GCode.cpp::set_extruder`,7710–7748,8047–8053 | Single-writer-extruder branch restores/reset before writer toolchange; multi-tool tail does so after filament-start and ooze-prevention. Included non-tower lifecycle, PA enabled/disabled and repeated-tool visits. Rust `tool_transition.rs`, `pressure_advance.rs`, `motion/state.rs`, `adaptive_pa.rs::Processor::reset`. |
-| `calib.hpp`,17–30,34–49; `Print.hpp`,1087–1089; `Print.cpp`,423–426; `GCode.cpp`,2915,3072,3246,4692–4704 | Actual Print calibration mode/params and calibration output generation. Explicitly deferred API/admission/generator slice, not a model-string or option-toggle proxy. Future Rust target is `ares-core::print` typed source-owned Print calibration context, propagated to `project_slice/gcode_emit/motion/path/adaptive_pa.rs`; no invented JSON/env flag or GUI dependency. Separate approval required. |
+| `calib.hpp`,17–30,34–49; `Print.hpp`,1087–1089; `Print.cpp`,423–426; `GCode.cpp`,2915,3072,3246,4692–4704 | Actual Print calibration mode/params and calibration output generation. Explicitly deferred API/admission/generator slice, not a model-string or option-toggle proxy. Future Rust target is `ares-core::print` typed source-owned Print calibration context, propagated to `project_slice/gcode_emit/motion/path/adaptive_pa.rs`; no invented JSON/env flag or GUI dependency. Separate slice required. |
 
-## 3. Included first execution tranche after approval
+## 3. Included first execution tranche
 
 Three independently attributable witness groups, executed serially. Preserve all
 existing PA tests; new cases use the current public exported-3MF/full-output seam
@@ -67,14 +63,14 @@ comments1, PA+adaptive1, no tower; bridge override0. Freeze complete numeric
 settings and input hashes in the RED request before comparison, reusing
 source-admitted fixture values.
 
-### Approved M producer amendment — standalone case only
+### M producer amendment — standalone case only
 
 Source tracing established that `PerimeterGenerator.cpp:370::traverse_extrusions`
 is the Arachne producer and its open entities become `ExtrusionMultiPath` at
 `555–566`, dispatched through `GCode.cpp:6092–6095` to `6038::extrude_multi_path`.
 Classic thin walls instead call `variable_width` at `PerimeterGenerator.cpp:
 231–233`; `VariableWidth.cpp:216–233` emits open children as individual paths.
-Owner approves **only the standalone M producer context** changing from classic
+**Only the standalone M producer context** changes from classic
 to this already-admitted Arachne fixture:
 `tests/parity/validation/arachne-open-wall-order/C0-neck0.25-r0.3mf`, SHA256
 `6c5c67976071ea79e663b8a4d428f3f51202b3fb9821a49fbe6b9da1f399a07d`.
@@ -87,7 +83,7 @@ Before the active case, commit and run **PA-off baseline control** with
 `enable_pressure_advance=0` and `adaptive_pressure_advance=0` (preserving all
 other original settings). Its official Native/Ares complete-output comparison
 must PASS; if it differs, retain raw input/channels/products/first-difference
-and refer the Arachne geometry baseline to its owner, **stop this subcase**.
+and report the Arachne geometry baseline mismatch separately, **stop this subcase**.
 Do not repair geometry here or call that mismatch PA RED. Only after that
 control admits the producer, commit the active PA tracer before running it.
 Both variants must keep identical geometry and non-PA settings. A subsequent
@@ -149,7 +145,7 @@ lifecycle first; do not preselect a generic ordered-event framework, inline rese
 marker protocol, per-tool previous cache or arbitrary byte-offset replay.
 Debugger scheduling is diagnostic and may perturb ordering; retain uninstrumented
 official outputs as acceptance evidence. If reset effects are inherently
-nondeterministic, stop for owner ruling rather than choose favorable schedules.
+nondeterministic, stop and report rather than choose favorable schedules.
 
 ## 4. Deferred / stop barriers (parent OPEN remains)
 
@@ -158,7 +154,7 @@ nondeterministic, stop for owner ruling rather than choose favorable schedules.
   Print params (`slic3r/GUI/Plater.cpp:12644,13215`); inspection of
   `OrcaSlicer.cpp` found no corresponding calib_mode/set_calib entry.
   Current Ares public project request likewise carries no Print calibration
-  mode. Need an approved authentic Native public/API producer and a separate
+mode. Need an authentic Native public/API producer and a separate
   source-owned Rust request/context spec before those E2Es. Never set private
   mode through GDB, add a test-only bypass or fake a 3MF calibration option.
 - Type1/first append reset `1093`, unsupported tower integration and any tower
@@ -174,16 +170,16 @@ nondeterministic, stop for owner ruling rather than choose favorable schedules.
 
 ## 5. RED → GREEN admission / acceptance contract
 
-After exact SPEC approval, commit test/input changes first. For each group,
+Commit test/input changes first. For each group,
 record Native admission/reachability and preserve the first successful fresh
 Native output and original public Ares complete-output comparison. Only a real
 same-input, source-localized difference is RED; export rejection, unreachable
 branch, infrastructure/compiler failure, cancellation, timeout or absent product
 is not parity RED. If already equal, report verification GREEN/test-only coverage
-and seek ruling, without invented RED or unnecessary production edits.
+without inventing RED or unnecessary production edits.
 
 Retain runtime input ZIP/member/applied-setting hashes, binary/source identities,
-argv/env/CPU, stdout/stderr/results/G-code, exits, timeout/cancellation receipts,
+argv/env, stdout/stderr/results/G-code, exits, timeout/cancellation status,
 and diagnostic source-site/tag offsets outside Git. Official and seed-only
 Native are independently identified with fresh per-leg caches and separate roots;
 no frozen Native substitution. Use centralized existing permitted normalization
@@ -191,25 +187,18 @@ only; never strip PA/debug/ramp/movement lines or relax expected/tolerances.
 Optional Native absence visibly SKIP; required absent/invalid/nonzero/timeout/
 missing product FAIL. Existing ND rulings apply only to their original cases.
 
-Only after source-localized RED review, implement minimal upstream deltas in the
+Only after source-localized RED, implement minimal upstream deltas in the
 mapped private Rust modules. Keep <=400 LOC touched modules; no isolated
 implementation-following tests after code. Verification requires active directed
 Native old+new assertions, separate BASE/CAND CLI and test binaries, seeded and
 official same-input legs, named failure-subset audit. Production change requires
 unfiltered standard `orca_parity` full controls, workspace Nextest, strict Clippy,
-rustfmt and WASM; test-only/document-only carry requires explicit owner ruling.
+rustfmt and WASM.
 Do not edit test trees mid-run, retry until PASS, ignore failures or force push.
 
-All execution respects current W2→W5→W3→web full queue and any-worker exclusive
-full START; stop owned heavy groups, preserve VOID evidence, resume after END /
-permission. Directed starts load<60; workspace/strict starts load<30,
-CARGO_INCREMENTAL=0/jobs2/threads2; honor HOLD/browser flags. SPEC stage is
-read-only source work and docs, with zero heavy work. Exact-hash REVIEW approval
-is required before later integration.
-
-Approved execution: **APA-R2 bounded M→A→R witness-first execution**, with one
-REVIEW-REQUEST per group. Calibration-mode/API and first/Type1 tower reset remain
+Execution: **APA-R2 bounded M→A→R witness-first execution**.
+Calibration-mode/API and first/Type1 tower reset remain
 deferred; production repair still requires genuine RED localization. The M
 producer amendment requires PA-off admission before its active tracer. Parent
-OPEN remains until its separate deferred obligations have admitted evidence and
-approval.
+The parent remains open until its separate deferred obligations have admitted
+evidence.

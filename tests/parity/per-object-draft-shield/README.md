@@ -1,9 +1,7 @@
 # Per-object draft shield pure inputs
 
-Approved SPEC53ac644e9 (rebased docs1573ed32e with range-diff1/1=) is
-`docs/architecture/per-object-draft-shield-spec.md`. Execution base is new main
-6e0349d9; `manifest.json` base104d84970 records original discovery provenance,
-not the execution HEAD. Twelve 3MFs are pure inputs; no Native output committed.
+SPEC: `docs/architecture/per-object-draft-shield-spec.md`.
+`manifest.json` records original discovery provenance. Twelve 3MFs are pure inputs; no Native output committed.
 
 Each original disjoint/overlap/transitive/copies geometry has disabled/all/single
 variants changing only draft_shield and single_loop_draft_shield. Min0, no brim,
@@ -17,9 +15,8 @@ motion, then require API/CLI success, existing strict full ordered Native
 comparisons and raw API/CLI equality. Rejection is never expected as success.
 
 Selection: `test(orca_parity_per_object_draft_shield_)`, required Native
-producer environment, CPU18, fresh caches/artifacts and explicit owned target.
-Baseline public RED should be4disabledPASS+8enabledguardFAIL each mode. No
-production edits before RED review; fixtures/assertions are fixed for GREEN.
+producer environment, fresh caches/artifacts and explicit target.
+Baseline public RED should be4disabledPASS+8enabledguardFAIL each mode;
+fixtures/assertions are fixed for GREEN.
 Artifact includes input/hash/launch/result/fullNative G-code/per-Z witness,
-API/CLI output or errors and comparison. Future gates record exact submitted
-HEAD+clean status and actual descendant/thread masks. No stream normalization.
+API/CLI output or errors and comparison. No stream normalization.

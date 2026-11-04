@@ -1,9 +1,5 @@
 # Medial-axis endpoint zero-direction normalization
 
-Status: docs-only SPEC; public Native-first RED is next. GREEN requires separate
-RED approval. Base b9cc91ff0d1f4909bf23e87286be88c34ec5cd74.
-Work branch worker6/medial-endpoint-zero-spec. CPU15 only; no FULL window.
-
 ## Upstream ownership, including Eigen semantics
 
 This is a Rust rewrite slice of libslic3r ExPolygon endpoint postprocessing,
@@ -47,14 +43,12 @@ threshold, endpoint search policy, public API or helper/geometry abstraction.
 Do not modify global vector normalizers, slicer transforms, Polygon intersection,
 Voronoi construction/validation/chaining, medial retention, VariableWidth,
 InterlockingGenerator/VoxelUtils, seam selection/cache, fill, cooling, time/M73,
-brim, painted, spiral or ironing. COORD confirmed no W1 painted ownership conflict.
+brim, painted, spiral or ironing.
 Core remains platform-neutral for WASM/Windows/macOS/Linux; no I/O enters core.
 
 ## First producer evidence
 
-Read-only source-cited evidence root:
-`${EVIDENCE_ROOT}/w6-b9cc-interlock-params-j7321r01/`.
-Authoritative `downstream-proof.json` enumerates valid captures and checks.
+Read-only source-cited captures:
 
 - All300 generator pre/post ordered layer/region polygon records are exact.
 - All150 delivered Classic PerimeterGenerator region/layer input polygons exact.
@@ -109,10 +103,9 @@ normalizer, internal-only substitute or error-as-success assertion. Check runner
 LOC before registration. All changed text files must be <400 lines.
 
 Sequence: this docs-only SPEC -> test/input-only Native-first RED at exact commit
-hash, official/seeded2case runs -> RED REVIEW-REQUEST and STOP for COORD approval
--> production-only private helper correction if separately authorized. Preserve
+hash, official/seeded2case runs
+-> production-only private helper correction. Preserve
 complete ordered Native/API and Native/CLI comparison plus raw API/CLI equality.
 On RED canonical comparison panics before its final raw equality assertion;
 audit actual emitted raw files independently, do not claim that assertion ran.
-Any strict residual on GREEN means STOP. FULL/rebase require a later window.
-No push/self-merge. User's loop_paths/tests.rs keep-deleted decision is unchanged.
+Any strict residual on GREEN means STOP.

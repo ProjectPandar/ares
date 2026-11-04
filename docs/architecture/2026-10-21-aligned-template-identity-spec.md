@@ -1,9 +1,6 @@
 # AlignedRectilinear: template identity is not the layer-angle override
 
-Status: COORD accepted the read-only discovery and authorized this docs-only
-SPEC followed by a separate input-only RED, on an independent branch from
-main `47821c760d5ea86102a34bbc78c092bbaf381214`. GREEN is NOT authorized;
-SPEC+RED require independent content review. CPU12, no FULL/integration window.
+Discovery base: main `47821c760d5ea86102a34bbc78c092bbaf381214`.
 
 ## Owning upstream rewrite slice
 
@@ -40,16 +37,16 @@ pipeline design. No new parameter family, helper, API or configuration is needed
 
 ## Non-negotiable scope / queue separation
 
-A future independently approved GREEN is only those two adapter changes.
+A future GREEN is only those two adapter changes.
 **Do not remove fixed_angle from the comparator** or otherwise alter grouping,
 first-owner machinery, Flow, kernels, union/clipping, phase/graph, emission,
 M73/time/feedrate/E/wipe/retraction/footer behavior. No new allow/expect,
 tolerance, filter, inverted assertion, Native golden, fallback or guard.
 
-Freeze ironing and all concentric code/helpers: W4 owns concentric ironing.
+Freeze ironing and all concentric code/helpers.
 This witness uses ordinary unpainted normal+modifier regions and aligned line
-fill, not W1 painted, W2 brim/EFC, W4 concentric sparse, W5 spiral/processor/
-lightning, or W6 seam occlusion/zero-area orientation. None of those queued
+fill, not painted, brim/EFC, concentric sparse, spiral/processor/
+lightning, or seam occlusion/zero-area orientation. None of those
 source boundaries is included. Tier1 remains browser WASM/Windows/macOS/Linux;
 no filesystem/UI/terminal/OpenGL behavior enters core.
 
@@ -98,7 +95,7 @@ No Native output or numerical Native constants are checked into tests/fixtures.
 Input SHA identities and upstream source citations are allowed.
 
 Register three thin, unconditional calls to the existing shared
-`native_stream_case::check` (or the already approved case_runner). No new runner,
+`native_stream_case::check` (or the existing case_runner). No new runner,
 normalizer, comparison policy, observer framework or copied harness. The shared
 check drives fresh canonical Native and a second replay, then public validated
 API and CLI whole-output equality with the existing generator/date-only policy.
@@ -108,32 +105,25 @@ or weakened expectations in RED. Include frozen input-only3MFs and their README.
 ## Stage exits
 
 1. Commit this SPEC alone from main47821c760, then separately commit input-only
-   RED per COORD's explicit combined-stage authorization. Keep distinct commits.
+   RED. Keep distinct commits.
 2. Exact RED: one intended strict FAIL and two controls PASS per official/seeded
-   mode. Existing W3 fifty shared checks remain PASS with retained raw triples
+   mode. Existing fifty shared checks remain PASS with retained raw triples
    and activity. Capture fresh producer command/status/input/output/binary
    evidence; Native repeats and API/CLI raw equality must be stable. Source
    admission/effective Native footer/activity and group identity remain
    independently auditable outside tests, without Native golden assertions.
 3. Run fmt, locked workspace/all-target Clippy with-Dwarnings, locked core+wasm
-   wasm32 gates after test registration. CPU12/jobs1/incremental0/threads1.
-   No FULL, rebase, merge or push. Send SPEC+RED RR, then STOP for review.
-4. No GREEN before new authority. Any separately approved bounded implementation
-   must preserve approved RED/helpers/inputs and stop/report on any strict
+   wasm32 gates after test registration.
+4. Any bounded implementation
+   must preserve the RED/helpers/inputs and stop/report on any strict
    residual; adjacent repair or output normalization expansion is not allowed.
 
-Accepted discovery, hashes, source/GUI citations, raw producers,24 Native +12
-CLI +12 independent API runs and four canonical diagnostic streams:
-`${EVIDENCE_ROOT}/w3-aligned-template-readonly-47821c760/README.md`.
-Failed optimized readers and the initial76-vs75 priority-event labelling mistake
-are retained/excluded there; accepted readers use actual generation layer args.
+## Sparse-anchoring class-angle amendment
 
-## Approved sparse-anchoring class-angle amendment
-
-COORD independently accepted the read-only diagnosis at candidate
+The read-only diagnosis was made at candidate
 `26c54635079492678df1ea5e31af8ed6834c0115`. That three-file attempt closed
 the official 53 selected checks but stopped on ten of 83 official neighbors;
-it was not GREEN. Its explicit authorization also included the existing
+it was not GREEN. The amendment also includes the existing
 `fill/rectilinear_multiline.rs:35` class-angle guard.
 
 Extend the source-owned boundary to
@@ -156,14 +146,10 @@ Normal aligned filling already supplied class=true. Thirteen observer complete
 streams matched the canonical failures. This does not guarantee later closure.
 
 This amendment supersedes the earlier two-adapter-only scope solely for the
-authorized existing multiline guard and this one sparse-anchoring assignment.
-Freeze all approved tests, inputs, SOURCE, helpers, comparator, ironing,
+existing multiline guard and this one sparse-anchoring assignment.
+Freeze all existing tests, inputs, SOURCE, helpers, comparator, ironing,
 concentric, other algorithms, Flow and emission. Separate docs and one-line
 production commits are required. Verify all 53 target/control checks and the
 full 83 aligned/rectilinear/infill neighbors in both official and seeded modes,
-plus fmt, locked workspace/all-target Clippy-Dwarnings and browser wasm32, on
-CPU12. No FULL. Any residual means STOP, not adjacent repair.
-
-Read-only source map, actual parameters/stacks/vtable return, canonical streams
-and independently approved amendment RR:
-`${EVIDENCE_ROOT}/w3-aligned-class-angle-readonly-26c546350/README.md`.
+plus fmt, locked workspace/all-target Clippy-Dwarnings and browser wasm32.
+Any residual means STOP, not adjacent repair.

@@ -1,6 +1,6 @@
 # SPEC(提案): InnerOnly 臂 support no-brim mask——延后项收口
 
-状态：SPEC-DRAFT（docs-only，FULL15 冻结期起草；未跑任何
+状态：SPEC-DRAFT（docs-only；未跑任何
 Native/nextest）。承接：OuterOnly（`da3c31320`）与 OuterAndInner
 （`3a67dee7c`）两臂已落 parity；`brim.rs` 的 `support_mask` 现仅覆盖
 OuterOnly|OuterAndInner。
@@ -35,11 +35,11 @@ inner::area().forbidden`，未并入 `support_mask`。GREEN =
 InnerOnly brim 只存在于对象**孔内**——现有 canon base 底面无孔，
 须造带孔 fixture：在 overhang.stl_1.model 上加一个贯通孔（mesh
 编辑：顶面/底面各加环形顶点 + 侧面），或改用既有带孔 canon
-fixture（冻结解除后检索 `/tmp/isfix` 可用材料）。
+fixture。
 - fixture：canon base + 带孔底面对象 + `brim_type=inner_only` +
   显式宽度（建议 w=5 对齐既有量化链）+ 保持 tree(manual)+organic
   support（复用已验证的 mask/epsilon 链）；
-- Discovery（Native-first，CPU7/8）：归一化 diff + brim 段
+- Discovery（Native-first）：归一化 diff + brim 段
   E-move/bbox 对拍，确认分歧确由 InnerOnly 臂 mask 缺失引起
   （预期：native 孔内 brim 被 support 裁剪，ares 不裁）；
 - RED：input-only fixture + `OrcaRunner::from_env` compare_case

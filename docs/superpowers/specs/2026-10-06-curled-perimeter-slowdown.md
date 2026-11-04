@@ -1,6 +1,6 @@
 # Spec: parity of the curled-perimeter (malformation) slowdown — C1
 
-Status: draft for coordinator review
+Status: draft
 Provenance: the case was first attributed to CoolingBuffer layer-time
 slowdown; that direction was verified formula-exact and ruled out, and
 the divergence re-attributed to the curled-perimeter (malformation)
@@ -8,7 +8,7 @@ slowdown in this spec. The cooling-buffer spec was superseded and not
 kept; its durable conclusions (feedrate table, wipe-speed echo) are
 folded in below.
 
-## Verified facts (evidence collected 2026-10-06)
+## Verified facts
 
 Case: stock matrix `case-VpfOo2` (Creality Sermoon V1, cube10.stl,
 10×10×10 cube whose first layer is inset ~0.3 mm by a bottom chamfer).
@@ -16,7 +16,7 @@ Only layer **Z = 0.6** diverges; Z0.4 and Z0.8+ emitted streams are
 byte-identical between orca and ares (including F values).
 
 With `slow_down_for_layer_cooling` disabled in a repacked 3mf
-(seeded oracle, `ORCA_REPLAY_SEED=0 taskset -c N`):
+(seeded oracle, `ORCA_REPLAY_SEED=0`, single CPU):
 
 | role | orca `G1 F` (Z0.6) | ares `G1 F` (Z0.6) |
 |---|---|---|
@@ -104,9 +104,8 @@ Sub-hypotheses to test, in order:
 ## Method (cheap, established)
 
 - Repack `input.3mf` with `slow_down_for_layer_cooling = 0` via the
-  node zip+zlib rewriter (see /tmp/v1mod3.3mf recipe), slice with the
-  seeded oracle → /tmp/v1nc/plate_1.gcode = orca's exact pre-cooling
-  emitted F per segment.
+  node zip+zlib rewriter, slice with the seeded oracle → `plate_1.gcode`
+  = orca's exact pre-cooling emitted F per segment.
 - Slice the same modified 3mf with ares → ares' pre-cooling F per
   segment. Direct per-segment diff, no inference needed.
 - Optional instrumentation (as used, reverted): env-gated dumps of
@@ -168,7 +167,7 @@ Therefore the residual delta must be ONE of:
 The no-cooling diff (F-values per segment) plus a one-off dump of the
 CurledLine sets is enough to discriminate these three.
 
-## Coordinator-review appendices
+## Review appendices
 
 - flow_width hypothesis DISPROVEN: upstream `get_flow_width(region,
   erExternalPerimeter)` = `PrintRegion::flow(frExternalPerimeter).width()`

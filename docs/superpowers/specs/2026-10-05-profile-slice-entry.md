@@ -1,12 +1,12 @@
 # Profile-based slicing: upstream rewrite slice
 
-Status: interface approved; native RED precedes production edits.
+Native RED precedes production edits.
 Contract: [ARD](../../architecture/ard-profile-slice-entry.md).
 Upstream revision: `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
-## Bounded candidate status
+## Bounded slice
 
-The current review candidate covers STL profile slicing, typed five-argument
+This slice covers STL profile slicing, typed five-argument
 transport and CLI config export parity only. It does not satisfy this whole
 specification. Selected-profile 3MF, compatibility/import APIs, loadScene/web
 migration and BBL filtering measurement remain open. Existing embedded 3MF slicing
@@ -83,7 +83,7 @@ does not flatten inheritance and does not require external parents to be in
 the same input. Malformed JSON/ZIP are errors.
 
 `loadScene` filename, web caller migration, the real BBL filtering E2E timing
-receipt and selected-profile 3MF remain task24 remainder items after this slice.
+measurement and selected-profile 3MF remain open after this slice.
 
 ## Agreed public test seams and failure inventory
 
@@ -118,7 +118,5 @@ byte size and environment. This is measurement, not a timing waiver or flaky gat
 
 Exit: public complete-output E2E parity; workspace Nextest; cargo fmt; default
 Clippy with no added warning set; actual wasm32 core/WASM build; full official and
-seeded controls with exact-commit evidence. Preserve historical stock failures and
-known official coordinate-witness receipts. Commit ARD with implementation, push
-exact checked candidate, request review, await explicit approval, then rebase and
-revalidate latest main before ff-only integration. No full-stock completion claim.
+seeded controls. Preserve historical stock failures and known official
+coordinate-witness cases. No full-stock completion claim.

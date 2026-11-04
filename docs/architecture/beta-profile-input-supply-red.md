@@ -21,7 +21,7 @@ G-code, caches, unpacked resources and golden files stay outside Git.
 
 ## Executed public RED
 
-CPU15 / `CARGO_BUILD_JOBS=1`, explicit beta environment and external artifact root:
+Serial build, explicit beta environment and external artifact root:
 
 ```sh
 cargo nextest run -p ares-cli --test orca_parity \
@@ -44,13 +44,13 @@ The cases, without renaming:
 4. `per_object_skirt_raft_red_matches_native`
 
 This execution used pre-implementation source at `63b82ec82`. The entire grouped
-case module is byte-identical at the approved independent base `9f6ee320d`:
+case module is byte-identical at the independent base `9f6ee320d`:
 Git blob `13160a3ee392e640895c2183015a1b07ce0b562e`. The failure occurs at its
 profile-directory read before any core slicing; no fresh main-base result is
-claimed by that receipt. Implementation must be independent of unmerged PR4.
+claimed by that record. Implementation must be independent of unmerged PR4.
 
 Complete original nextest output, native environment identities and reproducible
-runtime artifacts are retained externally by the review handoff. This is not a
+runtime artifacts are retained externally. This is not a
 mock/private-helper test or a newly generated expected output.
 
 ## Boundary contract / failure model (before implementation)
@@ -74,7 +74,7 @@ mock/private-helper test or a newly generated expected output.
   path and a real same-HEAD checkout whose profile bytes were changed. Require
   actual test panic at the intended boundary, not a compile/setup failure.
 
-## Approved exit and residual ownership
+## Exit and residual boundaries
 
 Exit is **supply-boundary GREEN**: all four pass raw input verification and reach
 unchanged real whole-output comparisons; the three input-boundary negatives
@@ -93,10 +93,10 @@ moving the implementation off PR4's base) reached all four real comparisons:
 
 All four independently recorded the pinned Ares input provenance; API/CLI raw
 bytes matched each other. All four strict Native comparisons remained RED.
-These residuals belong to their footer/M73 upstream owners, not this provisioning
+These residuals belong to their footer/M73 upstream slices, not this provisioning
 slice. A rebased implementation must rerun the boundary checks and report its
 actual residuals honestly rather than inheriting a strict GREEN claim.
 
-No persistent local environment change is allowed until its separate one-line
-append diff is approved. OPC decoding, include/inheritance algorithms, footer
+No persistent local environment change is made in this slice; its one-line
+append diff is separate. OPC decoding, include/inheritance algorithms, footer
 fields and M73 timing fixes are deferred to independent source-cited slices.

@@ -1,18 +1,11 @@
 # Classic unsupported wall-loop deferral
 
-Status: approved Classic ARD committed before fixture work as
-`9f2e1658197effcb31bb554a38ae23ac97d56954`; frozen Native-first public
-qualification is complete (two strict REDs and one complete control PASS).
-The frozen RED `aeff66b69d8acee8310cb024cc04353983c9f10b` and doc-only
-nullopt boundary amendment `d6a0309947b37e4ee66bea6a318434c41c0738f3` are
-approved. The literal Classic port is strict GREEN for both enabled cases
-and the disabled control, with frozen paired 298-test scope and 0 P→F.
-The entire `wipe_inward` slice remains explicitly deferred.
+Frozen Native-first public qualification produced two strict REDs and one
+complete control PASS. The literal Classic port is strict GREEN for both
+enabled cases and the disabled control, with frozen paired 298-test scope
+and 0 P→F. The entire `wipe_inward` slice remains explicitly deferred.
 
-Base: `5910df8eb0c2a9cab5958a1dcce7fdb34d075ecb`.
 Upstream: OrcaSlicer beta `345efec64c7b95a05ce5cf96df0dde66a158835c`.
-Approved thin/narrow branches remain untouched; this proposal is not
-rebased onto or falsely qualified by their earlier runtime evidence.
 
 ## Why this is next in source order
 
@@ -123,11 +116,9 @@ support preseed, append and forwarding at `:8903-8929`. Its typed option
 projection and actual supported wipe geometry belong to that future slice,
 not to this one. Existing `wipe_on_loops` is a different source behavior.
 
-A read-only prerequisite audit stopped before any production edit or new
-runtime on the approved RED. The explicit disposition is this nullopt-branch
-boundary, not a waiver or a placeholder implementation. After this slice's
-GREEN, propose a source-cited `wipe_inward` ARD as the next slice; its actual
-RED and runtime budget require separate approval.
+The explicit disposition is this nullopt-branch boundary, not a waiver or a
+placeholder implementation. A source-cited `wipe_inward` ARD is the next
+slice, with its own RED.
 
 Defer Arachne's separate call at `PerimeterGenerator.cpp:3108`; no Arachne
 parity is claimed from a Classic fixture. If enabling this boolean on an
@@ -141,9 +132,9 @@ not a new feature-specific substitute.
 
 ## Required public RED and failure inventory
 
-The initial bounded plan below was approved before fixture authorship.
-Fresh qualification is recorded in the following section; no older
-seam/overhang record is substituted for these actual runs.
+The bounded plan below preceded fixture authorship. Fresh qualification is
+recorded in the following section; no older seam/overhang record is
+substituted for these actual runs.
 
 - Target: a Classic stepped ledge/island with at least one wholly
   overhang loop and an anchored wall stack, option enabled, wall order
@@ -159,10 +150,9 @@ seam/overhang record is substituted for these actual runs.
   it remains before infill rather than receiving the unanchored flag.
 
 The frozen RED budget was at most three cases, each Native2 fresh stable /
-validated API1 / CLI1, with no retry, alternative producer, input search
-loop or debugger probe. Exact inputs were frozen after the initial ARD
-commit and before execution. If a Native premise or prerequisite fails
-in any later authorized stage, preserve STOP rather than hunting geometry
+validated API1 / CLI1, with no alternative producer, input search loop or
+debugger probe. Exact inputs were frozen before execution. If a Native
+premise or prerequisite fails, preserve STOP rather than hunting geometry
 or patching an adjacent boundary.
 
 Verify actual full ordered island/region extrusion passes, not only TYPE
@@ -194,7 +184,7 @@ are retained in `tests/parity/classic-unsupported-wall-last/provenance.json`.
 | Same ledge, disabled | `be3d9503721e1a2236064a7d80dacb6f90907b8a01acdbf5898ac159b84ef833` | Walls precede infill; complete strict output PASS |
 | Attached eight-wall stack, enabled | `2aad0f555101c289b8cd1698bddda7bb520c3bbac58f51b11e30311dc411149c` | Anchored inner wall, unsupported tail innermost-out, then infill |
 
-One frozen three-case run completed: Native6 fresh exports (three stable
+The frozen three-case run completed: Native6 fresh exports (three stable
 pairs), validated API3 and CLI3 completed, raw API/CLI identical per case;
 one strict PASS and two FAILs, zero ignored. Native premises are checked
 before API/CLI, and complete shoulder extrusion passes/closed-loop
@@ -210,18 +200,13 @@ The unattached case first strictly fails at byte1291/line58:
 `M73 P17 R3` versus `M73 P18 R3`. Externally its first non-M73 is
 Native423/API422: `G1 X108.291 Y108.291 Z1.8` versus
 `G1 X119.775 Y119.775 Z1.8`, selecting walls before the anchoring infill.
-Full unfiltered contexts, maps and all removed M73 records are retained;
-no Fword filter, coordinate/count golden or filtered acceptance.
+No Fword filter, coordinate/count golden or filtered acceptance.
 
 The disabled control passes the unchanged complete comparator, including
 M73, config/footer and trailing bytes. The two enabled cases are actual
 strict REDs on the proposed producer/consumer boundary; no unported
 prerequisite or API/CLI admission failure appeared in this frozen set.
 Neither earlier M73 record is attributed as an independent timing root.
-No production change, retry, extra probe, input variant, debugger, carrier
-trace or family run occurred. Fmt and strict workspace/all-targets Clippy
-pass. Only this result note changes after execution; no postcommit rerun
-is claimed. Submit this frozen RED RR before any implementation.
 
 ## Literal nullopt port qualification
 
@@ -241,13 +226,11 @@ three source perimeter passes, and only selected loops are copied for local
 seam placement. First-layer/region `should_print` and already-infill-first
 single emission are literal; no optional wipe support or unused prefix exists.
 
-The scope was frozen before production edits. BEFORE ran on the immutable
-amendment worktree; implementation and AFTER used a separate worktree and
-fresh independent target. The exact same 298 test IDs ran once per phase:
-137 PASS / 161 FAIL → 139 PASS / 159 FAIL, exactly the two enabled targets
-F→P and zero P→F, zero ignored. There were 456 Native command receipts per
-phase (453 code0, two238, one205); the existing Native failures are retained,
-not relabeled as parity. The remaining159 family failures and FULL stay open.
+The scope was frozen before production edits. The exact same 298 test IDs
+ran before and after: 137 PASS / 161 FAIL → 139 PASS / 159 FAIL, exactly
+the two enabled targets F→P and zero P→F, zero ignored. Existing Native
+failures are retained, not relabeled as parity. The remaining159 family
+failures stay open.
 
 Each phase includes fresh Native6 (three stable pairs), validated API3 and
 CLI3 for the three frozen inputs, with raw API/CLI identity. AFTER all four
@@ -264,66 +247,34 @@ Every extrusion run/point/line agrees over every physical layer; new full
 and external non-M73 first differences are NONE for all three. No Native
 private flag or attachment operand trace is claimed. Canonical generator
 line is the sole strict normalization; diagnostic M73-only files are not
-acceptance. No runtime retry, extra Native probe, input/producer/formula
-variant, debugger, carrier trace, estimator overlay or test edit occurred.
-Two static preflight command errors and two build/lint corrections are
-retained: heredoc quoting, grep escaping, private-module import changed to
-the existing re-export, and stable `sort_by` changed to stable Reverse-key
-sorting. All happened before AFTER runtime; no suppression or kernel change.
-Fmt and strict workspace/all-targets Clippy pass. This qualification note
-is the sole postexecution tree change; no postcommit rerun is claimed.
+acceptance. No estimator overlay or test edit occurred.
 
-## Approval and verification sequence
+## Verification sequence
 
-The Classic producer/flag/nullopt-consumer boundary and frozen RED are
-approved. This doc-only boundary amendment must be committed on top of the
-RED before any port. No implicit delegation or unrelated queue write is
-authorized. Freeze Classic/wall-sequence/
-overhang/region-infill/wipe before/after breadth before edits, require
-zero prior-PASS to FAIL and report every flip and first remaining full/
-non-M73 difference. Complete GREEN requires M73-inclusive whole streams;
-COORD owns integration/FULL/closure. Preserve source/ELF/fixture/manifest
-identities and every invalid attempt.
+Freeze Classic/wall-sequence/overhang/region-infill/wipe before/after
+breadth before edits, require zero prior-PASS to FAIL and report every flip
+and first remaining full/non-M73 difference. Complete GREEN requires
+M73-inclusive whole streams.
 
-The approved narrow branch is not rebased or extended by this slice.
-The initial ARD is based on the explicitly requested main5910. The literal
-port adds only the approved metadata/Classic producer/nullopt consumer;
+The literal port adds only the metadata/Classic producer/nullopt consumer;
 no independent pipeline design, root harness, runner, comparator, test or
-fixture change is included. Propose the separate `wipe_inward` ARD next.
+fixture change is included. The separate `wipe_inward` ARD follows.
 
-## Authorized restack onto main8612802fe
+## Combination with the thin/narrow-hole ports
 
-The owner restacked the four approved commits onto
-`8612802fec12baeaa32600edb8e0f3795d3eeb95` on a separate branch,
-preserving the original branches. The new chain is `6a8576f00`,
-`ffc43b2c9`, `89248b8d9`, and `3c39d57ca`. The two doc commits are
-unchanged in the range-diff. The test commit preserves all three thin-hole,
-narrow-hole, and unsupported-wall module declarations. Production resolutions
-retain the new base's two additional region fields plus the deferral field
-(152 total), and pass the narrow predicate beside the unchanged deferral
-operands. The base's complete `reorder_walls` and sandwich functions are
-byte-identical; thin-hole onion/hierarchy/traversal/orientation logic is
-unchanged. The resulting perimeter-append module is 394 lines.
+Combined with the thin-hole and narrow-hole ports, all three module
+declarations are preserved. The region options carry the two additional
+region fields plus the deferral field (152 total), and the narrow predicate
+is passed beside the unchanged deferral operands. The complete
+`reorder_walls` and sandwich functions are byte-identical; thin-hole
+onion/hierarchy/traversal/orientation logic is unchanged. The resulting
+perimeter-append module is 394 lines.
 
-Fresh immutable before/after worktrees and independent targets selected
-exactly 300 identical tests: the original 298 plus the main thin/narrow
-cases. Before: 138 PASS / 162 FAIL. After: 140 PASS / 160 FAIL. Exactly the
-two enabled deferral cases changed FAIL to PASS; zero prior PASS changed to
-FAIL, with no ignored tests. The three frozen input/test bodies are unchanged.
-Every dedicated case used fresh stable Native2 / validated API1 / CLI1 per
-phase, with raw API=CLI. All three AFTER complete streams agree, including
-M73, roles, extrusion/feed, footer, whitespace, and trailing bytes. Their
-canonical generator-only byte identities remain exactly the table above;
-full and external non-M73 first differences are NONE.
-
-The before/after ledgers retain 461 / 460 Native command receipts: 102
-exports each and 359 / 358 slices. The one fewer ordinary slice receipt is
-reported without inventing a cause or forcing equal invocation counts;
-dedicated Native pairs are complete. Both phases retain two code-238 and
-one code-205 receipts and all remaining family failures. This is not family
-or FULL closure. There was no runtime retry, extra probe, trace, variant,
-formatter/kernel change, or estimator overlay. A rejected global Cargo
-argument before compilation and an offline attempt to hash an already
-removed temporary settings file are preserved separately from runtime.
-Fmt and strict workspace/all-targets Clippy pass. This paragraph is a
-postexecution doc-only addition; no postcommit runtime rerun is claimed.
+The combined before/after scope is exactly 300 identical tests: the
+original 298 plus the thin/narrow cases. Before: 138 PASS / 162 FAIL.
+After: 140 PASS / 160 FAIL. Exactly the two enabled deferral cases changed
+FAIL to PASS; zero prior PASS changed to FAIL, with no ignored tests. All
+three AFTER complete streams agree, including M73, roles, extrusion/feed,
+footer, whitespace, and trailing bytes. Their canonical generator-only byte
+identities remain exactly the table above; full and external non-M73 first
+differences are NONE.

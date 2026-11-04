@@ -1,12 +1,6 @@
 # Proposed slice: parameter-modifier bottom_shell_layers
 
-Status: docs only, SPEC review requested. Worker3.
-Dependency: code-approved top slice `5fa60caaeeadc73d6c64972aa121b549907a1931`,
-awaiting stacked exclusive full. Its branch/worktree remain frozen unchanged.
-This document lives in separate worktree ${TMP_ROOT}/ares-worker3-modifier-bottom-spec,
-branch pi/worker3-modifier-bottom-shell-spec, based on that candidate. After
-stack merge, carry only this new proposal onto the broadcast main before any
-implementation. No builds, tests, Native or fixtures are run/changed here.
+Dependency: the modifier top_shell_layers slice. No builds, tests, Native or fixtures are run/changed here.
 
 ## Remaining source difference
 
@@ -18,7 +12,7 @@ modifier intersects a model part or equals its parent setting.
 Native `region_config_from_model_volume` applies volume config to the parent
 region and shell consumers read region-specific bottom counts, rather than
 rejecting the option. Runtime admission/effect for this new matrix remains to
-be proved after SPEC approval and a directed window. The top matrix's Native
+be proved by directed runs. The top matrix's Native
 success is adjacent evidence, not bottom admission or parity proof.
 
 ## Owning upstream boundaries
@@ -80,14 +74,13 @@ would require its own fixtures and scope review.
 
 ## Native preflight, public RED and GREEN
 
-After SPEC approval and an open directed window only, author input-only
+Author input-only
 3MF generator/provenance in a new bottom directory. Reuse the existing admitted
 modifier-wall prism geometry, replacing its modifier wall override with bottom
 count, independently record settings and input changes. Do not mutate top
-fixtures or relabel top receipts as bottom evidence.
+fixtures or relabel top results as bottom evidence.
 
-CPU12 outer taskset, jobs1/threads2, fresh cache/artifact root per run,
-START/END inbox. In official and seeded, first require Native exit0/result0
+Use a fresh cache/artifact root per run. In official and seeded, first require Native exit0/result0
 and a local lower-layer solid/sparse geometry change between bottom1 and4.
 Check modifier half vs parent half, rather than a global footer or elapsed time.
 If zero or another case is rejected by Native, report and revise its admission
@@ -95,7 +88,7 @@ classification; do not add an Ares rejection to imitate it or retry to PASS.
 
 Then commit fixtures/public RED separately: existing core and CLI slicing,
 strict ordered complete-output comparison, API/CLI raw equality, input/G-code
-SHA and first mismatch receipts. All override cases currently encounter the
+SHA and first mismatch records. All override cases currently encounter the
 bottom guard; no-override controls should retain strict output. Prove Native
 admits the active local effect before GREEN. Only generator-line comparison
 uses the existing permitted comparator; no other normalization/weakening.
@@ -103,7 +96,7 @@ uses the existing permitted comparator; no other normalization/weakening.
 After RED report, remove only bottom guard and prove the source consumers
 through full-output GREEN. Preserve new bottom controls' raw bytes and rerun
 unchanged top matrix controls. Keep each Rust file <=400 LOC. The old fixed-order
-unit array bottom tuple (7->6) needs a separate precise retirement request after
+unit array bottom tuple (7->6) needs a separate precise retirement after
 RED; retain all remaining tuples/assertions/helper/imports and use an independent
 test commit. Run that retained core test plus directed both modes, strict/fmt/
-wasm32 before REVIEW. Workspace/full require allocation; no push.
+wasm32.

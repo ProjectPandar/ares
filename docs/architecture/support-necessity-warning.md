@@ -1,14 +1,11 @@
 # Support-necessity warning — PrintObject source rewrite boundary
 
-Status: ARD and public CLI RED approved. The core-only port was explicitly
-authorized while waiting for its success-report writer prerequisite; the real
-public RED now establishes missing warning fields in two successful reports.
-Producer and single-writer adapter GREEN work is authorized; qualification and
-review remain required before any behavior-parity claim or slice completion.
+Status: Accepted. The real public RED establishes missing warning fields in two
+successful reports. Qualification remains required before any behavior-parity
+claim or slice completion.
 Source: OrcaSlicer345efec64c7b95a05ce5cf96df0dde66a158835c.
-Initial analysis base: mainf4ea41332cdcb7eadf9adbc7f7c1936c0ad7e9c5.
-The RED commit must be based on the separately approved beta CLI warnings
-writer's posted rebased tip; do not recreate that transport in this slice.
+The RED commit builds on the beta CLI warnings writer; do not recreate that
+transport in this slice.
 
 ## Owning upstream behavior, not a new warning heuristic
 
@@ -99,7 +96,7 @@ or clone/reconfigure a project to force an unsupported public result.
   a new/changed/current warning; fresh slice calls must not inherit stale flags.
   Do not add a global warning store or recreate incremental PrintState machinery
   when the existing fresh-slice boundary already supplies the lifecycle.
-- **Transport:** use the posted beta CLI warnings writer as the sole adapter
+- **Transport:** use the beta CLI warnings writer as the sole adapter
   for class `slicing_warning_non_critical`, `plate_id`, `text`
   (`OrcaSlicer.cpp:7150-7160`). Native records it before G-code export; do not
   drop it on a later export error. `PrintBase::SlicingStatus` is the core source
@@ -112,8 +109,8 @@ or clone/reconfigure a project to force an unsupported public result.
   processor data and must not own support warnings. The byte-only convenience
   slice wrappers may still return bytes; the warning-aware CLI must use the
   processed slice result instead of discarding statuses. Exact CLI plumbing is
-  bound to the landed writer's success path before the implementation RR.
-- At the analysis base no public slicing-warning carrier or no_check API exists.
+  bound to the landed writer's success path.
+- Before this slice no public slicing-warning carrier or no_check API exists.
   Do **not** equate validate_print=false with Native no_check=true: the flags
   have different source owners. Do not add a new CLI no-check/strict option in
   this classifier slice. Ordinary current requests correspond to the source's
@@ -129,9 +126,8 @@ or clone/reconfigure a project to force an unsupported public result.
 
 ## Public RED plan and failure inventory — before test code
 
-The RED commit must wait for both the warnings writer's **posted rebased tip**
-and its success-path follow-up. Its old commit ID alone is not authority to pick
-an obsolete base or duplicate a writer. The ARD can be reviewed independently.
+The RED commit depends on both the warnings writer and its success-path
+follow-up; do not duplicate a writer.
 
 ### Chosen public seam: stack on the success writer
 
@@ -144,7 +140,7 @@ record, plate1, for **overhang.obj**, and the same full text in
 `sliced_plates[0].warning_message`: floating cantilever. This is not a stderr
 warning witness and not a rejected-slice fixture.
 
-At the analysis base `ProcessedGCode` exposes G-code, processor result and print
+Before this slice `ProcessedGCode` exposes G-code, processor result and print
 statistics, but **no slicing-warning output**. Creating a new core seam before
 the feature, or asserting that a success report file is missing, would not
 isolate this detection gap. Therefore choose the existing public **CLI result
@@ -181,8 +177,8 @@ A success Native result.json cannot serve as a trivial whole-file RED if the
 landed Ares writer still defers success reports. Likewise a missing report or
 compiler error is **not this classifier RED**. Use the agreed landed writer
 seam or public warning-bearing stderr/status channel so the failure is genuinely
-missing/different SlicingNeedSupportOn data. Confirm that seam from the writer
-handoff before writing the test. Keep existing whole-output comparisons intact;
+missing/different SlicingNeedSupportOn data. Confirm that seam in the landed
+writer before writing the test. Keep existing whole-output comparisons intact;
 any broader unported reporting channel remains visible, not waived.
 
 Ways this slice can fail:
@@ -205,7 +201,7 @@ already-registered test leaf or dedicated public CLI integration test (no ROOT
 registry edit). Only add a source-required control when the first witness shows
 which guard branch is exercised. No horizontal bulk test suite or unit-after-code.
 
-## Approved adapter connection
+## Adapter connection
 
 The success writer is the prerequisite boundary, not a second warning framework.
 The existing report-aware `SlicedPlate` holds the source warning snapshot before
@@ -233,10 +229,10 @@ critical classes, success-report writer work, belt/tilt kernel parity not alread
 present in the reused detector, background incremental scheduler behavior and
 unreachable LargeOverhang. These deferrals are not permission for a wrong result
 or a fallback on an exercised input: if the actual fixture needs missing belt/
-tilt/other prerequisite, stop and submit that source boundary for review first.
+tilt/other prerequisite, stop and specify that source boundary first.
 
 Exit for this phase: source/retained-state audit, ARD, one real public RED with
-verifiable runtime warning evidence, then SPEC/RED RR. **No production port before
-review authorization.** Keep nextest/fmt/workspace-all-target-all-feature clippy
+verifiable runtime warning evidence. **No production port before that RED.**
+Keep nextest/fmt/workspace-all-target-all-feature clippy
 `-D warnings`, strict comparisons, original Native-required policy and artifacts
 outside Git. No committed Native binary, G-code, unpacked resources or goldens.

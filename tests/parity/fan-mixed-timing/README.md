@@ -17,7 +17,7 @@ Two DIRECT crate::runner::native_stream_case::check cases reuse main
 NativeCase double replay then complete validated API/bare CLI comparison.
 No duplicated replay/normalization/orchestration/helper/expected failure.
 Run with explicit Native environments, ARES_REQUIRE_ORCA=1, retained
-artifact roots, CPU11/thread1/job1, official then seeded:
+artifact roots, official then seeded:
 
 ```
 cargo nextest run -p ares-cli --test orca_parity --no-fail-fast \
@@ -29,14 +29,10 @@ public attempts; environment-disabled/setup failure is NOT RED credit.
 Only existing generated-by identity/date normalization. No M73/header/
 time/fan/E/XY/comment/config/trailing-line masks/tolerance/sorting.
 
-Freeze pair/tests/helpers for later GREEN. Future authorized slice only
+Pair/tests/helpers stay frozen for GREEN. GREEN covers only
 mixed-precision timing/promotions/narrowing at exact upstream boundaries,
 not scheduling/E formatting/relative-E model/text/comments/flavor/global
 Reader/processor/travel/nearest changes. Other files remain deferred; if
 private consumers need changes outside the two-file boundary STOP/report.
-Send SPEC+RED RR then STOP: no GREEN/FULL/integration/main update here.
-This eighth independent chain integrates AFTER the seven frozen chains,
-only when a separate window and exact main are supplied.
-Discovery evidence stays separate at
-${COORD_ROOT}/evidence/w5-3fb-fan-mixed-timing/;
-it is NOT substituted for formal shared-checker API/CLI receipts.
+External discovery evidence is NOT substituted for formal shared-checker
+API/CLI results.

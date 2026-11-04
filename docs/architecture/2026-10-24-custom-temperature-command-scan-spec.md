@@ -1,9 +1,6 @@
 # SPEC: custom start G-code temperature-command scanning
 
 Date: 2026-10-24 (UTC+08).
-Status: docs-only proposal, no new test or implementation authorized.
-Base: main `957e963c3d653214f471dad289a4205c38fc9b23`.
-Branch: `w4/custom-temperature-command-scan`.
 
 ## 1. Rewrite owner and scope
 
@@ -49,30 +46,6 @@ new user configuration. If source `temp_out` propagation exposes an additional
 writer-state requirement beyond lexical suppression, report a separate boundary
 rather than silently expanding this slice.
 
-## 2. Deduplication before proposing
-
-Evidence: `${EVIDENCE_ROOT}/w4-custom-temperature-command-scan/`.
-`overlap-audit.json` records exact refs/ranges and file-history checks:
-
-| Frozen/pending owner | audited tip | temperature.rs changed in bounded stack? |
-|---|---|---|
-| W6 six-chain integration | `26a87adfe` (`ad5111f0b..worker6/integration-six-ad5111f0b`) | no |
-| W2 frozen stack | `515e95975` (`47821c760..515e95975`) | no |
-| W5 Type1 proposal | `b70231d0b` (`55a81063b..w5/type1-milestone-proposal`) | no |
-| W5 Type1 work | `3525efaf9` (`957e963c3..w5/type1-acbb`) | no |
-
-No commits for this Rust path occur in those audited ranges. Their source owners
-(seam/ironing/name sanitization/defaultfloat; adhesion loop state; Type1 tower
-planning/emission) do not include this lexical scanner. A scan of all 73
-`worker6/*` refs' architecture docs for `custom_gcode_sets_temperature` and
-related compact-temperature/scanner terms returned no match; records retained
-in `worker6-spec-audit.json`. Commit-subject discovery likewise found no pending
-compact-temperature scanner slice. These are evidence-backed checks, not a claim
-that file-disjointness alone proves independence.
-
-The previous name-edge proposal `a3aa23527` is NOT this work: it remains unmerged,
-W6-owned and untouched. Do not revalidate or advance that sanitizer again.
-
 ## 3. Exact-main reachable witness
 
 Use stock Ender-3 `tests/parity/orca_cli_ender3.3mf`, disable prime tower, retain
@@ -99,13 +72,7 @@ Fresh discovery results on exact main `957e963c3`:
 
 Each input has two fresh official Native slices, identical in complete bytes
 under generator-line normalization, BEFORE comparison to the existing exact-tip
-Ares CLI executable. Binary:
-`/tmp/w4-integration-5350c3b0a-full-official-target/debug/ares`, built and qualified
-at `957e963c3` before it was merged. Wrapper:
-`${COORD_ROOT}/bin/orca-wrapper-inherit-cpu.sh`, official2.4.2.
-`probe.py` ran serially within CPU17 and `ARES_PIN_OFFSET=17`, exit0. No cargo
-build or FULL run was started. Inputs, complete streams, logs, ordered diffs,
-`probe.py`, results/hashes are stored under the evidence root.
+Ares CLI executable. The Ares CLI executable was built at `957e963c3`; Native is official 2.4.2.
 
 The compact-bed complete ordered diff is exactly one extra generated line
 between machine limits and `;TYPE:Custom`:
@@ -140,7 +107,7 @@ and tower planning, state splits, geometry and GCodeProcessor/M73. Explicitly
 all touched modules <400LOC. Preserve the existing helper unit tests; do not
 modify or add isolated tests after production code. No legacy fallback/flags.
 
-## 5. Proposed RED-first sequence (requires approval)
+## 5. Proposed RED-first sequence
 
 1. Add Native-first public API+CLI SHA-pinned test-only inputs via the existing
    `native_stream_case::check` seam. Targets: compact bed/nozzle, stock spaced
@@ -153,10 +120,5 @@ modify or add isolated tests after production code. No legacy fallback/flags.
    only if a stock reachable profile produces a clean isolated witness.
 3. Document invalid/malformed scanning behaviour only after observing Native;
    do not invent validation or rely on invalid input to demonstrate the gap.
-4. Report RED exact tip before implementation. Then, with separate authorization,
-   port only the private helper's scanner, preserve callers/state semantics,
-   and run directed/neighbour plus canonical coordinator gates on CPU17/PIN17,
-   jobs1/threads1. No FULL for this proposal.
-
-Docs-only completion means verified current-main gap and ownership plan, not
-an approved RED/GREEN or authorization to change any frozen stack.
+4. Report RED exact tip before implementation. Then port only the private helper's scanner, preserve callers/state semantics,
+   and run directed/neighbour gates.
