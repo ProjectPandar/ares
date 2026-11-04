@@ -1,5 +1,8 @@
 //! SpiralVase entry/final overlap: independent state, extrusion priority, passthrough.
 
+#[path = "change_layer_travel.rs"]
+mod change_layer_travel;
+
 #[test]
 fn spiral_overlap_transition_nonspiral_control() {
     crate::runner::native_stream_case::check(
