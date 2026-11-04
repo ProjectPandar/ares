@@ -65,10 +65,10 @@ pub(in crate::project_slice::gcode_emit) fn finalize(
 ) -> Result<(), SliceError> {
     let tower = state.wipe_tower.as_ref().expect("finalizing active tower");
     let data = Rc::clone(&tower.data);
-    if data.type1 {
+    let (false, Some(final_purge)) = (data.type1, &data.final_purge) else {
         return Ok(());
-    }
-    let z = f64::from(data.final_purge.print_z);
+    };
+    let z = f64::from(final_purge.print_z);
     if (state.writer_z.unwrap_or(0.0) - z).abs() > 1e-4 {
         context.layer.index += 1;
         let printer = &context.traversal.resolved.views.full.printer.gcode;
@@ -94,7 +94,7 @@ pub(in crate::project_slice::gcode_emit) fn finalize(
         output,
         state,
         Append {
-            result: &data.final_purge,
+            result: final_purge,
             new_tool: None,
             z: None,
             context,

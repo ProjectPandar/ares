@@ -95,7 +95,7 @@ impl Planned {
             rib_offset: generator.rib_offset,
             priming: Vec::new(),
             changes,
-            final_purge,
+            final_purge: Some(final_purge),
             width: generator.plan.width,
             depth: generator.plan.depth,
             height: generator.plan.height,

@@ -1,4 +1,4 @@
-//! `Print.hpp::WipeTowerData` and `Print.cpp:3601–3690` generation lifecycle.
+//! `Print.hpp::WipeTowerData` and the `Print.cpp:5509-5597` Type2 generation lifecycle.
 use super::super::tool_ordering::LayerTools;
 use super::{generator::Generator, planning::Planned, result::ToolChangeResult};
 use crate::{
@@ -11,7 +11,7 @@ pub(in crate::project_slice::gcode_emit) struct Data {
     pub(super) rib_offset: [f32; 2],
     pub(super) priming: Vec<ToolChangeResult>,
     pub(super) changes: Vec<Vec<ToolChangeResult>>,
-    pub(super) final_purge: ToolChangeResult,
+    pub(super) final_purge: Option<ToolChangeResult>,
     pub(super) width: f32,
     pub(super) depth: f32,
     pub(super) height: f32,
@@ -48,12 +48,13 @@ impl Planned {
         );
         generator.plan = self.plan;
         let changes = generator.generate()?;
-        if last.wipe_tower_partitions == 0 {
-            generator.set_layer(last.print_z as f32, normal_height as f32);
-        } else if generator.layer_finished {
-            generator.set_layer((last.print_z + normal_height) as f32, normal_height as f32);
-        }
-        let final_purge = generator.tool_change(None);
+        // `Print.cpp:5575-5594`: a tower below the last print layer gets no final purge.
+        let final_purge = (last.wipe_tower_partitions > 0).then(|| {
+            if generator.layer_finished {
+                generator.set_layer((last.print_z + normal_height) as f32, normal_height as f32);
+            }
+            generator.tool_change(None)
+        });
         // `WipeTower2::get_z_and_depth_pairs`, cpp 2448–2459.
         let mut depth_profile = vec![(0.0, generator.plan.depth)];
         for layer in &generator.plan.layers {
