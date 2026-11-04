@@ -19,7 +19,7 @@ not a new retraction policy or writer algorithm.
 - `PrintConfig.cpp:11965–11981`: the caller prepares empty vectors from the
   registered default and dispatches supported string, integer, float, percent,
   float-or-percent, bool and enum vectors to the same gather helper. This slice
-  addresses nonempty vectors; empty/default preparation is a separate boundary.
+  preserves the gather's empty-source return; default preparation is separate.
 - `src/libslic3r/PrintApply.cpp:1436–1455`: materialize the static per-filament
   variant arrays before computing runtime print-config differences. Dynamic
   persisted-selector expansion in the neighboring branch remains separate.
@@ -38,6 +38,51 @@ not a new retraction policy or writer algorithm.
   being rewritten by this slice.
 
 ## Exact Rust destination
+
+### Shared gather caller inventory
+
+Both upstream dispatch sites use the same helper, for all seven payload kinds:
+
+| Upstream caller | Dispatch citations | Rust destination |
+| --- | --- | --- |
+| `update_values_to_printer_extruders_for_multiple_filaments` | `PrintConfig.cpp:11971–11977` | `project_variants.rs::materialize_project_variants` and `refresh_filament_map`, both through `filament.rs::materialize` |
+| `update_filament_config_values_for_multiple_extruders` | `PrintConfig.cpp:12090–12096` | No dynamic-slot producer exists in this slice; any future port must reuse this same gather, not introduce another payload selector |
+
+Static entry is `PrintApply.cpp:1436–1455`; static writeback re-entry is
+`Print.cpp:4723–4755`. The dynamic callers are `PrintApply.cpp:1442–1450`
+and the dynamic selector writeback path; their slot production remains deferred.
+The helper's empty-option early return is included: leave the destination
+unchanged when the source vector is empty. Do not reject it or fill it with
+zeros. Registered-default preparation before gathering remains separate.
+
+Every existing Rust gather invocation is one of the two macros in
+`filament.rs::materialize`. Both must call the shared port. The currently
+materialized fields are:
+
+- `activate_air_filtration`, `activate_air_filtration_during_print`,
+  `activate_air_filtration_on_completion`, `complete_print_exhaust_fan_speed`,
+  `during_print_exhaust_fan_speed`;
+- `filament_adaptive_volumetric_speed`, `filament_cooling_before_tower`,
+  `filament_extruder_variant`, `filament_flow_ratio`, `filament_flush_temp`,
+  `filament_flush_volumetric_speed`, `filament_max_volumetric_speed`;
+- `filament_ironing_flow`, `filament_ironing_inset`,
+  `filament_ironing_spacing`, `filament_ironing_speed`;
+- `filament_deretraction_speed`, `filament_long_retractions_when_cut`,
+  `filament_retract_before_wipe`, `filament_retract_lift_above`,
+  `filament_retract_lift_below`, `filament_retract_lift_enforce`,
+  `filament_retract_restart_extra`, `filament_retract_when_changing_layer`,
+  `filament_retraction_distances_when_cut`, `filament_retraction_length`,
+  `filament_retraction_minimum_travel`, `filament_retraction_speed`,
+  `filament_wipe`, `filament_wipe_distance`, `filament_z_hop`,
+  `filament_z_hop_types`;
+- `long_retractions_when_ec`, `nozzle_temperature`,
+  `nozzle_temperature_initial_layer`, `retraction_distances_when_ec`,
+  `volumetric_speed_coefficients`.
+
+These are members of `filament_options_with_variant`
+(`PrintConfig.cpp:10150–10221`). New field materializers and unsupported payload
+representations are not added here. `filament_self_index` is separately
+regenerated from the selected slots; it is not a numeric-zero payload fallback.
 
 Replace the zero-on-missing-index shell in
 `crates/ares-core/src/options/project_variants/filament_select.rs::select_filament`
@@ -61,14 +106,14 @@ retract implementation must not be patched to add a missing command.
 
 ## Included and deferred behavior
 
-Included: nonempty filament-vector gathering through already resolved source
+Included: empty-source early return and nonempty filament-vector gathering through already resolved source
 indices; exact source front cloning on a miss; preserving nil, explicit zero,
 nonzero values, output count and selected-index order. Full and runtime views
 continue to use the existing configuration lifecycle. No new platform-specific
 behavior or dependency is introduced; core remains portable to all Tier 1
 platforms.
 
-Deferred: empty-vector/default initialization, unsupported option types, new
+Deferred: registered-default initialization, unsupported option types, new
 variant resolvers, dynamic/multi-slot selector producers, nullable overlay
 policy changes, writer/retraction algorithms, wipe and lift behavior, command
 formatting, GUI/plate read-back and registry regeneration. Existing gather code
