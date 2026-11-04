@@ -113,6 +113,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         &resolved.views,
         &project.documents().project_settings_raw,
         project.current_plate_index(),
+        None,
         &mut config_block,
     )?;
     let config_block = (!config_block.is_empty()).then_some(config_block);

@@ -8,24 +8,19 @@ use std::fs;
 
 const FOOTER_LINES: [(&str, &str); 1] = [("; first_layer_bed_temperature = ", "73")];
 
-fn map_lines(text: &str) -> Vec<&str> {
+fn footer_lines(text: &str) -> Vec<&str> {
     FOOTER_LINES
         .iter()
         .map(|&(prefix, _)| {
             let mut lines = text.lines().filter(|line| line.starts_with(prefix));
             let line = lines.next().unwrap();
-            assert!(lines.next().is_none(), "one complete map line per key");
+            assert!(lines.next().is_none(), "one compatibility footer line");
             line
         })
         .collect()
 }
 
-pub(crate) fn check_labelled(
-    label: &str,
-    input: &[u8],
-    expected_sha: &str,
-    expected: [(&str, &str); 1],
-) {
+fn check_labelled(label: &str, input: &[u8], expected_sha: &str, expected: [(&str, &str); 1]) {
     let (reference, _) = native_stream_case::qualify(
         (
             "bed-temperature-footer",
@@ -41,7 +36,7 @@ pub(crate) fn check_labelled(
         expected_sha,
         false,
     );
-    let native_section = map_lines(&reference.native);
+    let native_section = footer_lines(&reference.native);
     let expected_section: Vec<_> = expected
         .iter()
         .map(|(prefix, value)| format!("{prefix}{value}"))
@@ -108,8 +103,8 @@ pub(crate) fn check_labelled(
     assert!(cli.status.success());
     let cli_bytes = cli_bytes.unwrap();
     assert_eq!(api, cli_bytes, "raw API/CLI equality");
-    let api_section = map_lines(std::str::from_utf8(&api).unwrap());
-    let cli_section = map_lines(std::str::from_utf8(&cli_bytes).unwrap());
+    let api_section = footer_lines(std::str::from_utf8(&api).unwrap());
+    let cli_section = footer_lines(std::str::from_utf8(&cli_bytes).unwrap());
     fs::write(
         reference.root.join("labelled-section-comparison.json"),
         serde_json::to_vec_pretty(&json!({

@@ -1,4 +1,4 @@
-use crate::{OrcaBool, ProjectBedType, ProjectSettings, SliceError};
+use crate::{OrcaBool, ProjectSettings, SliceError};
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},
@@ -49,6 +49,7 @@ pub(crate) fn write_config_block(
     views: &ProjectConfigViews,
     raw_settings: &ProjectSettingsRaw,
     plate_index: usize,
+    compat_first_layer_bed_temp: Option<i32>,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
     let transformed = transformed_for_export(
@@ -67,6 +68,7 @@ pub(crate) fn write_config_block(
     )?;
     write_runtime_tail(
         &views.runtime,
+        compat_first_layer_bed_temp,
         is_bbl_printer(views),
         &entries,
         &mut scratch,
@@ -88,48 +90,11 @@ fn is_bbl_printer(views: &ProjectConfigViews) -> bool {
 
 fn write_runtime_tail(
     runtime: &ProjectSettings,
+    compat_first_layer_bed_temp: Option<i32>,
     bbl_printer: bool,
     entries: &[ConfigEntry],
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
-    let (bed_key, bed_values) = match runtime.project.print.curr_bed_type {
-        ProjectBedType::SupertackPlate => (
-            "supertack_plate_temp_initial_layer",
-            &runtime.filament.print.supertack_plate_temp_initial_layer,
-        ),
-        ProjectBedType::CoolPlate => (
-            "cool_plate_temp_initial_layer",
-            &runtime.filament.print.cool_plate_temp_initial_layer,
-        ),
-        ProjectBedType::TexturedCoolPlate => (
-            "textured_cool_plate_temp_initial_layer",
-            &runtime
-                .filament
-                .print
-                .textured_cool_plate_temp_initial_layer,
-        ),
-        ProjectBedType::EngineeringPlate => (
-            "eng_plate_temp_initial_layer",
-            &runtime.filament.print.eng_plate_temp_initial_layer,
-        ),
-        ProjectBedType::HighTempPlate => (
-            "hot_plate_temp_initial_layer",
-            &runtime.filament.print.hot_plate_temp_initial_layer,
-        ),
-        ProjectBedType::TexturedPeiPlate => (
-            "textured_plate_temp_initial_layer",
-            &runtime.filament.print.textured_plate_temp_initial_layer,
-        ),
-        ProjectBedType::DefaultPlate => {
-            return Err(invalid(
-                "curr_bed_type Default Plate has no first-layer temperature",
-            ));
-        }
-    };
-    let bed = bed_values
-        .0
-        .first()
-        .ok_or_else(|| invalid(format!("{bed_key} must not be empty")))?;
     let nozzle = runtime
         .filament
         .print
@@ -137,7 +102,12 @@ fn write_runtime_tail(
         .0
         .first()
         .ok_or_else(|| invalid("nozzle_temperature_initial_layer must not be empty"))?;
-    append_line(output, "first_layer_bed_temperature", &bed.0.to_string());
+    // GCode.cpp:3681–3685,4892: the export snapshot is computed before the
+    // object loop by the same reader as M140. Early template config has no
+    // ToolOrdering context yet and does not include this compatibility scalar.
+    if let Some(bed) = compat_first_layer_bed_temp {
+        append_line(output, "first_layer_bed_temperature", &bed.to_string());
+    }
     // Upstream appends compatible info after the config keys: the non-BBL
     // footer also mirrors the printable_area serialization as bed_shape and
     // re-formats the initial layer print height at %.3f

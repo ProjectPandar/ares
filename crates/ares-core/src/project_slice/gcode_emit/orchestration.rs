@@ -1,7 +1,6 @@
 use super::*;
 use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
-
 pub(in crate::project_slice) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
@@ -86,6 +85,15 @@ pub(in crate::project_slice) fn emit(
         &tower_corners,
         &islands.plate,
     );
+    let initial_filaments = machine::first_filaments::resolve(traversal, &schedule.tool_ordering);
+    let mut export_config = Vec::new();
+    crate::options::write_config_block(
+        &traversal.resolved.views,
+        &traversal.project.documents().project_settings_raw,
+        traversal.project.current_plate_index(),
+        Some(initial_filaments.initial_bed_temperature()),
+        &mut export_config,
+    )?;
     let mut output = Vec::new();
     file_start::append(
         &mut output,
@@ -100,16 +108,13 @@ pub(in crate::project_slice) fn emit(
     }
     // GCode.cpp:4285-4300/4882-4935: BBL keeps config up front;
     // non-BBL writes it after executable output and before statistics.
-    if tags.is_bbl()
-        && let Some(config) = &traversal.config_block
-    {
-        output.extend_from_slice(config);
+    if tags.is_bbl() {
+        output.extend_from_slice(&export_config);
     }
     header::append_width_block(&mut output, traversal)?;
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     object::append_definitions(&mut output, traversal);
     machine::append_first_line_m73(&mut output);
-    let initial_filaments = machine::first_filaments::resolve(traversal, &schedule.tool_ordering);
     let options = motion::MotionOptions::from_traversal(traversal, 0);
     let small_area_flow = small_area::from_traversal(traversal)?;
     // `GCode.hpp:185-187`: origin starts at zero; real set_origin calls
@@ -322,10 +327,8 @@ pub(in crate::project_slice) fn emit(
                 .unwrap_or_else(|| "#FF8000".to_string())
         })
         .collect::<Vec<_>>();
-    if !tags.is_bbl()
-        && let Some(config) = &traversal.config_block
-    {
-        output.extend_from_slice(config);
+    if !tags.is_bbl() {
+        output.extend_from_slice(&export_config);
     }
     finish::append_filament_stats(&mut output, traversal, &state);
     finish::append_compatible_stats(

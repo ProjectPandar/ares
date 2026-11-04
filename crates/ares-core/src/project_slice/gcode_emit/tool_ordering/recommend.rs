@@ -86,6 +86,7 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
                 &traversal.resolved.views,
                 &traversal.project.documents().project_settings_raw,
                 traversal.project.current_plate_index(),
+                None,
                 &mut block,
             )?;
             traversal.config_block = (!block.is_empty()).then_some(block);
