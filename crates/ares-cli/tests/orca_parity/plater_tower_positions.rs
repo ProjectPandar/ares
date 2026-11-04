@@ -19,6 +19,8 @@ mod wipe_tower2_gap_travel;
 mod wipe_tower2_gap_wall;
 #[path = "wipe_tower2_rib.rs"]
 mod wipe_tower2_rib;
+#[path = "wipe_tower2_tower_lift.rs"]
+mod wipe_tower2_tower_lift;
 
 const TWO_FILAMENTS: &str = "tests/parity/print-order-as-obj-list/class-default.3mf";
 const PROJECT: &str = "Metadata/project_settings.config";
