@@ -71,6 +71,7 @@ declare_option_group! {
         auxiliary_fan => "auxiliary_fan": OrcaBool = OrcaBool(false),
         support_air_filtration => "support_air_filtration": OrcaBool = OrcaBool(true),
         printer_structure => "printer_structure": PrinterStructure = PrinterStructure::Undefine,
+        farthest_point_timelapse => "farthest_point_timelapse": OrcaBool = OrcaBool(false),
         support_chamber_temp_control => "support_chamber_temp_control": OrcaBool = OrcaBool(true),
         extruder_type => "extruder_type": ExtruderTypes = ExtruderTypes(vec![ExtruderType::DirectDrive]),
         printer_extruder_id => "printer_extruder_id": OrcaInts = ints(&[1]),
@@ -97,7 +98,7 @@ declare_option_group! {
 }
 
 impl PrinterGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 71] = [
+    pub const DECLARATION_ORDER: [&'static str; 72] = [
         "before_layer_change_gcode",
         "printing_by_object_gcode",
         "machine_end_gcode",
@@ -147,6 +148,7 @@ impl PrinterGCodeSourceOptions {
         "auxiliary_fan",
         "support_air_filtration",
         "printer_structure",
+        "farthest_point_timelapse",
         "support_chamber_temp_control",
         "extruder_type",
         "printer_extruder_id",

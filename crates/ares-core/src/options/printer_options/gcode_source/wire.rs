@@ -7,7 +7,7 @@ impl Serialize for PrinterGCodeSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(71))?;
+        let mut map = serializer.serialize_map(Some(72))?;
         map.serialize_entry("auxiliary_fan", &self.auxiliary_fan)?;
         map.serialize_entry("bed_temperature_formula", &self.bed_temperature_formula)?;
         map.serialize_entry("before_layer_change_gcode", &self.before_layer_change_gcode)?;
@@ -33,6 +33,7 @@ impl Serialize for PrinterGCodeSourceOptions {
         map.serialize_entry("fan_kickstart", &self.fan_kickstart)?;
         map.serialize_entry("fan_speedup_overhangs", &self.fan_speedup_overhangs)?;
         map.serialize_entry("fan_speedup_time", &self.fan_speedup_time)?;
+        map.serialize_entry("farthest_point_timelapse", &self.farthest_point_timelapse)?;
         map.serialize_entry("file_start_gcode", &self.file_start_gcode)?;
         map.serialize_entry("gcode_flavor", &self.gcode_flavor)?;
         map.serialize_entry(

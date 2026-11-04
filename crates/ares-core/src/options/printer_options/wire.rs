@@ -7,7 +7,7 @@ impl Serialize for PrinterOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(144))?;
+        let mut map = serializer.serialize_map(Some(145))?;
         map.serialize_entry(
             "adaptive_bed_mesh_margin",
             &self.remaining.adaptive_bed_mesh_margin,
@@ -106,6 +106,10 @@ impl Serialize for PrinterOptions {
         map.serialize_entry("fan_kickstart", &self.gcode.fan_kickstart)?;
         map.serialize_entry("fan_speedup_overhangs", &self.gcode.fan_speedup_overhangs)?;
         map.serialize_entry("fan_speedup_time", &self.gcode.fan_speedup_time)?;
+        map.serialize_entry(
+            "farthest_point_timelapse",
+            &self.gcode.farthest_point_timelapse,
+        )?;
         map.serialize_entry("file_start_gcode", &self.gcode.file_start_gcode)?;
         map.serialize_entry(
             "flashforge_serial_number",

@@ -362,11 +362,15 @@ pub(super) fn append<'a>(
     if let Some(item) = custom_gcode {
         super::custom_gcode::append(output, state, item, &timelapse_context)?;
     }
-    // Orca `GCode.cpp:5205-5210`: core-xy BBL printers emit the eager
-    // change-layer lift (the second change-layer retract is a no-op
-    // for E once retracted) and the timelapse gcode inside the new
-    // layer's window, after the layer-change acceleration.
-    let bbl_layer_start = state.tags.is_bbl() && !state.traditional_timelapse;
+    // `GCode.cpp:6683-6685,6450-6455,7386-7392`: a single nozzle is
+    // always the photo head, so farthest-point snapshots skip this block.
+    let full = &traversal.resolved.views.full;
+    let farthest_point_photo_head = full.printer.gcode.farthest_point_timelapse.0
+        && full.process.print.timelapse_type == crate::ProcessTimelapseType::Traditional
+        && traversal.resolved.views.runtime_gcode.printer_structure != crate::PrinterStructure::I3
+        && full.project.print.nozzle_diameter.0.len() <= 1;
+    let bbl_layer_start =
+        state.tags.is_bbl() && !state.traditional_timelapse && !farthest_point_photo_head;
     if bbl_layer_start && state.options.retract_when_changing_layer {
         motion::flush_pending_retract_eager_forced(output, state);
     }
