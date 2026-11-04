@@ -13,6 +13,8 @@ mod filament_volume_map;
 mod filament_volume_map_contrasts;
 #[path = "option_coverage/initial_bed_temperature.rs"]
 mod initial_bed_temperature;
+#[path = "option_coverage/nozzle_temperature_footer.rs"]
+mod nozzle_temperature_footer;
 
 #[path = "classic_narrow_island_guard.rs"]
 mod classic_narrow_island_guard;
