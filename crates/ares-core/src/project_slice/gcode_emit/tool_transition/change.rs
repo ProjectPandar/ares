@@ -11,6 +11,7 @@ pub(in crate::project_slice::gcode_emit::tool_transition) mod dynamic;
 #[derive(Clone, Copy)]
 pub(super) struct Context<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) tool_ordering: Option<&'a super::super::tool_ordering::ToolOrdering>,
     pub(super) metadata: GenerationMetadata,
     pub(super) first_layer_bounds: Option<footprint::FirstLayerBounds>,
     pub(super) layer_num: i64,

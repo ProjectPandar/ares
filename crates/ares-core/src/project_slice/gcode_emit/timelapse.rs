@@ -15,6 +15,7 @@ pub(super) struct TimelapseLayer {
 #[derive(Clone, Copy)]
 pub(super) struct Context<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) tool_ordering: &'a super::tool_ordering::ToolOrdering,
     pub(super) layer: TimelapseLayer,
     pub(super) metadata: GenerationMetadata,
     pub(super) first_layer_bounds: Option<footprint::FirstLayerBounds>,
@@ -109,6 +110,7 @@ fn append(
     state: &mut super::motion::EmitState,
     Context {
         traversal,
+        tool_ordering: _,
         layer,
         metadata,
         first_layer_bounds,

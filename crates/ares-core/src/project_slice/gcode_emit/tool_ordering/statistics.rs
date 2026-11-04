@@ -22,3 +22,16 @@ pub(super) fn collect(
     }
     (all, first)
 }
+
+pub(super) fn collect_last_layer_per_extruder(
+    layers: &[LayerTools],
+    all_extruders: &[usize],
+) -> Vec<Option<f64>> {
+    let mut last = vec![None; all_extruders.iter().copied().max().map_or(0, |id| id + 1)];
+    for layer in layers {
+        for &extruder in &layer.extruders {
+            last[extruder] = Some(layer.print_z);
+        }
+    }
+    last
+}

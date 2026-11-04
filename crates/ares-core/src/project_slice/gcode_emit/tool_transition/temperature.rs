@@ -8,6 +8,21 @@ pub(super) fn pre(output: &mut Vec<u8>, state: &EmitState, context: Context<'_>)
         return;
     }
     let id = state.extruders.active_id();
+    let is_last_use = context
+        .tool_ordering
+        .is_some_and(|ordering| ordering.is_last_extrusion_layer(context.print_z, id));
+    if is_last_use {
+        super::super::temperature::append(
+            output,
+            context.traversal.resolved.views.runtime_gcode.gcode_flavor,
+            0,
+            false,
+            Some(id),
+        );
+        output.pop();
+        output.extend_from_slice(b" ;cooldown\n");
+        return;
+    }
     let idle = at(&full.filament.print.idle_temperature, id);
     let delta = full.process.print.standby_temperature_delta.0;
     let temperature = if idle != 0 {

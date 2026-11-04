@@ -20,6 +20,7 @@ pub(super) fn initial(
         state.initial_filaments.initial(),
         change::Context {
             traversal,
+            tool_ordering: None,
             metadata,
             first_layer_bounds,
             layer_num: -1,
@@ -62,6 +63,7 @@ pub(super) fn emit(
         filament,
         change::Context {
             traversal: context.traversal,
+            tool_ordering: Some(context.tool_ordering),
             metadata: context.metadata,
             first_layer_bounds: context.first_layer_bounds,
             layer_num: context.layer.index as i64,
@@ -92,6 +94,7 @@ pub(super) fn tower(
         change.filament,
         change::Context {
             traversal: context.traversal,
+            tool_ordering: Some(context.tool_ordering),
             metadata: context.metadata,
             first_layer_bounds: context.first_layer_bounds,
             layer_num: if change.priming {
@@ -120,6 +123,7 @@ pub(super) fn type1_config(
         filament,
         change::Context {
             traversal: context.traversal,
+            tool_ordering: Some(context.tool_ordering),
             metadata: context.metadata,
             first_layer_bounds: context.first_layer_bounds,
             layer_num: context.layer.index as i64,

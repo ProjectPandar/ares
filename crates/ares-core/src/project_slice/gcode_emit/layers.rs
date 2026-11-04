@@ -270,7 +270,7 @@ pub(super) fn append(
     );
 
     let filtered_end = output.len();
-    if let Some((entry, slices, spacing)) = final_chunk {
+    if let Some((tool_ordering, entry, slices, spacing)) = final_chunk {
         tower::emit(
             output,
             state,
@@ -278,6 +278,7 @@ pub(super) fn append(
             tower::Input {
                 context: super::timelapse::Context {
                     traversal,
+                    tool_ordering,
                     metadata,
                     first_layer_bounds,
                     layer: super::timelapse::TimelapseLayer {

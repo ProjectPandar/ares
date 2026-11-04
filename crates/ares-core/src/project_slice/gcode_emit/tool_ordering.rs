@@ -40,6 +40,7 @@ pub(super) struct LayerTools {
 pub(super) struct ToolOrdering {
     pub(super) layers: Vec<LayerTools>,
     all_extruders: Vec<usize>,
+    last_layer_per_extruder: Vec<Option<f64>>,
     pub(super) first_extruder: Option<usize>,
     pub(super) tower_type: Option<crate::WipeTowerType>,
 }
@@ -159,6 +160,13 @@ impl ToolOrdering {
 
     pub(super) fn all_extruders(&self) -> &[usize] {
         &self.all_extruders
+    }
+
+    pub(super) fn is_last_extrusion_layer(&self, print_z: f64, extruder_id: usize) -> bool {
+        self.last_layer_per_extruder
+            .get(extruder_id)
+            .and_then(|last| *last)
+            .is_none_or(|last| print_z >= last - 1e-4)
     }
 
     pub(super) fn ordered_tools(&self) -> impl Iterator<Item = usize> + '_ {
@@ -322,12 +330,15 @@ fn finish_layers(
         super::wipe_tower::requested(settings, super::tags::Tags::of(traversal).is_bbl());
     let prime = requested == Some(crate::WipeTowerType::Type2);
     let (all_extruders, first_extruder) = statistics::collect(&layers, prime);
+    let last_layer_per_extruder =
+        statistics::collect_last_layer_per_extruder(&layers, &all_extruders);
     let tower_type = requested.filter(|_| {
         first_extruder.is_some() && layers.first().is_some_and(|layer| layer.has_wipe_tower)
     });
     Ok(ToolOrdering {
         layers,
         all_extruders,
+        last_layer_per_extruder,
         first_extruder,
         tower_type,
     })

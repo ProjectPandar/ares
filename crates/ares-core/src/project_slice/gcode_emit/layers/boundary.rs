@@ -8,6 +8,7 @@ use super::super::{
 
 pub(super) struct Boundary<'a> {
     pub traversal: &'a PreparedPostClassicTraversal,
+    pub tool_ordering: &'a super::super::tool_ordering::ToolOrdering,
     pub layer_change_template: &'a layer_gcode::LayerChangeTemplate,
     pub metadata: GenerationMetadata,
     pub first_layer_bounds: Option<footprint::FirstLayerBounds>,
@@ -91,6 +92,7 @@ pub(super) fn append<'a>(
     spiral: &mut spiral_vase::SpiralVaseFilter,
     Boundary {
         traversal,
+        tool_ordering,
         layer_change_template,
         metadata,
         first_layer_bounds,
@@ -122,6 +124,7 @@ pub(super) fn append<'a>(
     output.extend_from_slice(header.as_bytes());
     let timelapse_context = timelapse::Context {
         traversal,
+        tool_ordering,
         layer: timelapse::TimelapseLayer {
             // `{layer_num}`/`{layer_z}` placeholders and the wrapping
             // insert (`GCode.cpp:783`, :5302) scope the PHYSICAL index and

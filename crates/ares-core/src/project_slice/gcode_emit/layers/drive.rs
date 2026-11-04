@@ -110,6 +110,7 @@
                 tower::Input {
                     context: super::timelapse::Context {
                         traversal,
+                        tool_ordering,
                         metadata,
                         first_layer_bounds,
                         layer: super::timelapse::TimelapseLayer {
@@ -175,6 +176,7 @@
             &mut spiral,
             boundary::Boundary {
                 traversal,
+                tool_ordering,
                 layer_change_template: &layer_change_template,
                 metadata,
                 first_layer_bounds,
@@ -322,7 +324,7 @@
         }
         cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
         if state.wipe_tower.is_some() {
-            final_chunk = Some((final_entry, chunk_slices, chunk_perimeter_spacing));
+            final_chunk = Some((tool_ordering, final_entry, chunk_slices, chunk_perimeter_spacing));
         }
         previous_layer_z = layer_z;
         chunk_index += 1;
