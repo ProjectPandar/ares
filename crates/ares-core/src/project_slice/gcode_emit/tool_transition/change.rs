@@ -59,7 +59,7 @@ pub(super) fn append(
     let name = "change_filament_gcode";
     let rendered = template::render_for_filament(source, &mut config, filament)
         .map_err(|error| error.to_string())
-        .and_then(|text| motion::apply_writer_state(name, &config, state).map(|()| text));
+        .and_then(|text| motion::apply_writer_state(name, &config, &text, state).map(|()| text));
     let mut rendered = match rendered {
         Ok(text) => text,
         Err(error) => {

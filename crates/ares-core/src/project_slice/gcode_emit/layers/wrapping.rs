@@ -71,9 +71,12 @@ pub(super) fn emit(
         match template::render(source, &mut config) {
             Ok(text) => {
                 rendered = text;
-                if let Err(error) =
-                    motion::apply_writer_state("wrapping_detection_gcode", &config, state)
-                {
+                if let Err(error) = motion::apply_writer_state(
+                    "wrapping_detection_gcode",
+                    &config,
+                    &rendered,
+                    state,
+                ) {
                     let name = "wrapping_detection_gcode";
                     output.extend_from_slice(
                         format!(

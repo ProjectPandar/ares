@@ -1,6 +1,6 @@
 //! Ordinary initial writer selection and filament-start (`GCode.cpp:3144,3227,7710`).
 
-use super::super::{tags, template};
+use super::super::{motion, tags, template};
 use crate::{
     GenerationMetadata, SliceError,
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -108,7 +108,7 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
                 state.record_template_failure(name, &failure_error);
                 true
             }
-            Ok(rendered) => match super::super::motion::apply_writer_state(name, &config, state) {
+            Ok(rendered) => match motion::apply_writer_state(name, &config, &rendered, state) {
                 Ok(()) => {
                     output.extend_from_slice(rendered.as_bytes());
                     if !rendered.ends_with('\n') {

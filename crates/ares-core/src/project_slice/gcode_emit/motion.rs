@@ -12,6 +12,7 @@ mod jerk;
 mod layer;
 mod loop_paths;
 mod materialized;
+mod motion_state;
 mod options;
 mod origin;
 mod overhang;
@@ -52,6 +53,7 @@ pub(super) use travel::{
 };
 
 use features::PathProperties;
+pub(in crate::project_slice::gcode_emit) use motion_state::invalidate_after_custom_gcode;
 pub(in crate::project_slice::gcode_emit) use options::{MotionOptions, first_nullable_float};
 pub(in crate::project_slice::gcode_emit) use writer_state::{
     apply_writer_state, refresh_writer_state,

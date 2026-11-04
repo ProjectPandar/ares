@@ -84,7 +84,7 @@ pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
         refresh_writer_state(&mut config, state);
         match template::render(&template_source, &mut config) {
             Ok(rendered) => {
-                if let Err(error) = apply_writer_state(name, &config, state) {
+                if let Err(error) = apply_writer_state(name, &config, &rendered, state) {
                     // `GCode.cpp:3929-3932` verbatim: `err.what()` is
                     // concatenated with NO separating newline, and the
                     // caller's role-gcode loop adds a trailing `\n`.

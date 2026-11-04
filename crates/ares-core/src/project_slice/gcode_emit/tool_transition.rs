@@ -284,7 +284,7 @@ fn append_filament(
         value::Value::Integer(template_filament),
     );
     let rendered = match template::render_for_filament(source, &mut config, filament) {
-        Ok(rendered) => match motion::apply_writer_state(name, &config, state) {
+        Ok(rendered) => match motion::apply_writer_state(name, &config, &rendered, state) {
             Ok(()) => Ok(rendered),
             Err(error) => Err(error),
         },

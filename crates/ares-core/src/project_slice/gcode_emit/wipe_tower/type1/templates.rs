@@ -32,7 +32,7 @@ pub(super) fn render(
 ) -> String {
     let rendered = template::render_for_filament(source, config, tool)
         .map_err(|e| e.to_string())
-        .and_then(|text| motion::apply_writer_state(name, config, state).map(|()| text));
+        .and_then(|text| motion::apply_writer_state(name, config, &text, state).map(|()| text));
     let mut output = match rendered {
         Ok(text) => text,
         Err(error) => {

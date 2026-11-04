@@ -183,7 +183,10 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     );
     let name = "printing_by_object_gcode";
     let rendered = match super::super::template::render(raw, &mut config) {
-        Ok(rendered) => rendered,
+        Ok(rendered) => {
+            motion::invalidate_after_custom_gcode(&rendered, state);
+            rendered
+        }
         Err(error) => {
             state.record_template_failure(name, &error);
             format!(

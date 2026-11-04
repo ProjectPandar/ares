@@ -257,7 +257,7 @@ fn append_template(
     let Some(rendered) = rendered else {
         return Ok(());
     };
-    if let Err(error) = super::motion::apply_writer_state(template_name, config, state) {
+    if let Err(error) = super::motion::apply_writer_state(template_name, config, &rendered, state) {
         output.extend_from_slice(
             format!(
                 "\n!!!!! Failed to process the custom G-code template {template_name}\n{error}!!!!! End of an error report for the custom G-code template {template_name}\n\n\n"

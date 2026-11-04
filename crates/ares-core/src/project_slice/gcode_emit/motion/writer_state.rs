@@ -137,6 +137,7 @@ fn validate_vector_size(
 pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
     name: &str,
     config: &Config,
+    gcode: &str,
     state: &mut EmitState,
 ) -> Result<(), String> {
     // Vector-size validation first (`GCode.cpp:3898` calls
@@ -151,6 +152,8 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
             validate_vector_size(name, config, key, MAXIMUM_EXTRUDER_NUMBER, state)?;
         }
     }
+    // `GCode.cpp:5362-5366`: after validation, before the position write-back.
+    super::invalidate_after_custom_gcode(gcode, state);
     if let Some(Value::List(position)) = config.get("position")
         && let [x, y, z] = position.as_slice()
         && let (Some(x), Some(y), Some(z)) = (numeric(x), numeric(y), numeric(z))

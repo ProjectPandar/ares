@@ -176,10 +176,11 @@ fn append(
         };
     let last_z = rendered.as_deref().and_then(last_motion_z);
     let name = "timelapse_gcode";
-    let failed = rendered.is_none()
-        || super::motion::apply_writer_state(name, &config, state)
+    let failed = rendered.as_deref().is_none_or(|text| {
+        super::motion::apply_writer_state(name, &config, text, state)
             .map_err(|error| failure_error = error)
-            .is_err();
+            .is_err()
+    });
     if failed {
         let error = failure_error;
         output.extend_from_slice(

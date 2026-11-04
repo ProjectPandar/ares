@@ -180,8 +180,9 @@ pub(super) fn append(
     config.insert("toolchange_z", Value::number(z));
     let name = "tcr_rotated_gcode";
     let rendered =
-        template::render_for_filament(&code, &mut config, new_tool.unwrap_or(usize::MAX))
-            .and_then(|text| motion::apply_writer_state(name, &config, state).map(|()| text));
+        template::render_for_filament(&code, &mut config, new_tool.unwrap_or(usize::MAX)).and_then(
+            |text| motion::apply_writer_state(name, &config, &text, state).map(|()| text),
+        );
     match rendered {
         Ok(text) => {
             // Config.cpp::unescape_string_cstyle; generated results end in a newline.

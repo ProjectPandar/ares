@@ -118,10 +118,11 @@ pub(super) fn append_before_layer_change_gcode(
                 None
             }
         };
-    let failed = rendered.is_none()
-        || super::motion::apply_writer_state(name, &config, state)
+    let failed = rendered.as_deref().is_none_or(|text| {
+        super::motion::apply_writer_state(name, &config, text, state)
             .map_err(|error| failure_error = error)
-            .is_err();
+            .is_err()
+    });
     if failed {
         let error = failure_error;
         output.extend_from_slice(
@@ -209,10 +210,11 @@ pub(super) fn append_layer_change(
                 }
             };
         let name = "layer_change_gcode";
-        let failed = rendered.is_none()
-            || super::motion::apply_writer_state(name, &config, state)
+        let failed = rendered.as_deref().is_none_or(|text| {
+            super::motion::apply_writer_state(name, &config, text, state)
                 .map_err(|error| failure_error = error)
-                .is_err();
+                .is_err()
+        });
         if failed {
             let error = failure_error;
             output.extend_from_slice(

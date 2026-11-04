@@ -71,7 +71,10 @@ fn render(
     )?;
     motion::refresh_writer_state(&mut config, state);
     match template::render_for_filament(source, &mut config, state.extruders.active_id()) {
-        Ok(rendered) => output.extend_from_slice(rendered.as_bytes()),
+        Ok(rendered) => {
+            motion::invalidate_after_custom_gcode(&rendered, state);
+            output.extend_from_slice(rendered.as_bytes());
+        }
         Err(error) => {
             state.record_template_failure(name, &error);
             output.extend_from_slice(
