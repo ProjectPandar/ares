@@ -46,10 +46,13 @@ Reuse `gcode_emit/machine.rs::initial_layer_nozzle_temperature` and
 `machine/temperature.rs::filament_int`, rather than implementing another
 indexed-temperature reader. They already preserve front-on-miss. The existing
 `options/project_variants/index.rs` and `select.rs` materialize the resolved
-variant boundary. Before implementation, verify how their full/runtime views
-represent the source config column for the unchanged static witnesses. Pass
-that resolved column to the shared reader; do not invent a selector, silently
-assume an identity map in grouped cases, or broaden variant mapping behavior.
+variant boundary. Their materialized full view already places the selected source columns in
+logical-filament order. The High Flow witness selects source columns 1 and 3
+into logical columns 0 and 1, respectively, producing temperatures 217 and 237.
+The shared reader indexes this resolved full view with the initial logical
+filament, rather than applying a second source-column formula. Do not invent a
+selector, assume identity between logical and source columns, or broaden
+variant mapping behavior.
 
 The scalar must be captured with the export-initial filament before object
 emission and retained independently of object-local transitions and writer
@@ -80,8 +83,12 @@ Use the unchanged authored project inputs:
 - `tests/parity/m140-initial-bed/unused-hotter-filament.3mf`, SHA256
   `893689e2ea06b9f6de4704fc21ca6743618ac483e4e02d00eb1e50419431f6b0`.
 
-Both Native outputs have `first_layer_temperature = 223`; the existing Ares
-outputs have `211`, at line6571,column30. Both require stable Native replay,
+Both Native outputs have `first_layer_temperature = 223`; the previous Ares
+outputs have `211`, at line6571,column30. The additional
+`tests/parity/nozzle-footer/variant-column.3mf` witness, SHA256
+`908612c123f73537d6cd07b3baaf93e5c48e97f84503030944c330ac3327f23d`,
+selects source variant column 3 for initial logical tool 1. Its expected footer
+value is 237, whereas the previous reduced-vector-front projection gives 217. Both require stable Native replay,
 positive tool1 model activity, successful public API and CLI output and raw
 API/CLI equality. Compare the unique labelled footer line exactly. Preserve
 complete outputs and exact first differences separately; no whole-output

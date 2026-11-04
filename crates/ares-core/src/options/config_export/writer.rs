@@ -1,4 +1,4 @@
-use crate::{OrcaBool, ProjectSettings, SliceError};
+use crate::{OrcaBool, SliceError};
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},
@@ -49,7 +49,7 @@ pub(crate) fn write_config_block(
     views: &ProjectConfigViews,
     raw_settings: &ProjectSettingsRaw,
     plate_index: usize,
-    compat_first_layer_bed_temp: Option<i32>,
+    compat_temperatures: Option<(i32, i32)>,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
     let transformed = transformed_for_export(
@@ -67,12 +67,11 @@ pub(crate) fn write_config_block(
         &mut scratch,
     )?;
     write_runtime_tail(
-        &views.runtime,
-        compat_first_layer_bed_temp,
+        compat_temperatures,
         is_bbl_printer(views),
         &entries,
         &mut scratch,
-    )?;
+    );
     scratch.extend_from_slice(END);
     output.extend_from_slice(&scratch);
     Ok(())
@@ -89,23 +88,14 @@ fn is_bbl_printer(views: &ProjectConfigViews) -> bool {
 }
 
 fn write_runtime_tail(
-    runtime: &ProjectSettings,
-    compat_first_layer_bed_temp: Option<i32>,
+    compat_temperatures: Option<(i32, i32)>,
     bbl_printer: bool,
     entries: &[ConfigEntry],
     output: &mut Vec<u8>,
-) -> Result<(), SliceError> {
-    let nozzle = runtime
-        .filament
-        .print
-        .nozzle_temperature_initial_layer
-        .0
-        .first()
-        .ok_or_else(|| invalid("nozzle_temperature_initial_layer must not be empty"))?;
-    // GCode.cpp:3681–3685,4892: the export snapshot is computed before the
-    // object loop by the same reader as M140. Early template config has no
-    // ToolOrdering context yet and does not include this compatibility scalar.
-    if let Some(bed) = compat_first_layer_bed_temp {
+) {
+    // GCode.cpp:3681–3687,4892–4894: both snapshots precede the object loop.
+    // Early template config has no ToolOrdering context for these scalars.
+    if let Some((bed, _)) = compat_temperatures {
         append_line(output, "first_layer_bed_temperature", &bed.to_string());
     }
     // Upstream appends compatible info after the config keys: the non-BBL
@@ -120,7 +110,9 @@ fn write_runtime_tail(
             .map(|entry| entry.token.as_str())
             .unwrap_or_default();
         append_line(output, "bed_shape", area);
-        append_line(output, "first_layer_temperature", &nozzle.0.to_string());
+        if let Some((_, nozzle)) = compat_temperatures {
+            append_line(output, "first_layer_temperature", &nozzle.to_string());
+        }
         if let Some(height) = entries
             .iter()
             .find(|entry| entry.key == "initial_layer_print_height")
@@ -128,10 +120,9 @@ fn write_runtime_tail(
         {
             append_line(output, "first_layer_height", &format!("{height:.3}"));
         }
-    } else {
-        append_line(output, "first_layer_temperature", &nozzle.0.to_string());
+    } else if let Some((_, nozzle)) = compat_temperatures {
+        append_line(output, "first_layer_temperature", &nozzle.to_string());
     }
-    Ok(())
 }
 
 pub(super) fn append_line(output: &mut Vec<u8>, key: &str, token: &str) {

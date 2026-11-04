@@ -35,6 +35,19 @@ impl InitialFilaments {
         self.initial_bed_temperature
     }
 
+    // GCode.cpp:3681–3687: snapshot both values before the object loop.
+    // project_variants::materialize_project_variants has already selected
+    // source variant columns into full's logical-filament order.
+    pub(in crate::project_slice::gcode_emit) fn compat_temperatures(
+        &self,
+        traversal: &PreparedPostClassicTraversal,
+    ) -> (i32, i32) {
+        (
+            self.initial_bed_temperature,
+            super::initial_layer_nozzle_temperature(&traversal.resolved.views.full, self.initial),
+        )
+    }
+
     pub(in crate::project_slice::gcode_emit) fn first_layer_tools(&self) -> &[usize] {
         &self.first_layer_tools
     }

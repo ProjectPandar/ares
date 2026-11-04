@@ -91,7 +91,7 @@ pub(in crate::project_slice) fn emit(
         &traversal.resolved.views,
         &traversal.project.documents().project_settings_raw,
         traversal.project.current_plate_index(),
-        Some(initial_filaments.initial_bed_temperature()),
+        Some(initial_filaments.compat_temperatures(traversal)),
         &mut export_config,
     )?;
     let mut output = Vec::new();
