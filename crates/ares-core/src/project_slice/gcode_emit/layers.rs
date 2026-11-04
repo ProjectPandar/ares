@@ -7,6 +7,7 @@ mod custom_gcode;
 mod entry;
 mod entry_builder;
 mod fan_setup;
+pub(super) mod farthest;
 mod group;
 mod layer_end;
 

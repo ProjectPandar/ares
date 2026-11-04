@@ -29,7 +29,6 @@ pub(super) fn emit(
         return Ok(());
     }
     let entry = input.entry;
-    let traversal = input.context.traversal;
     let geometry = if let Some(layer) = entry.object_layer {
         input
             .builder
@@ -51,9 +50,9 @@ pub(super) fn emit(
     let boundary = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
     let mut view = if let Some(layer) = entry.object_layer {
-        geometry.view(traversal, entry.object_index, layer, boundary.as_ref())
+        geometry.view(input.context, entry.object_index, layer, boundary.as_ref())
     } else {
-        geometry.view_raft(traversal.scale)
+        geometry.view_raft(input.context)
     };
     if entry.object_layer.is_none()
         && let Some(support) = input.support

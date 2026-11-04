@@ -50,9 +50,14 @@ pub(super) fn emit(
     let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
     let mut motion_geometry = if let Some(index) = object_layer {
-        geometry.view(traversal, object_index, index, lower_boundary.as_ref())
+        geometry.view(
+            timelapse_context,
+            object_index,
+            index,
+            lower_boundary.as_ref(),
+        )
     } else {
-        geometry.view_raft(traversal.scale)
+        geometry.view_raft(timelapse_context)
     };
     motion_geometry.internal_surfaces = &[];
     motion_geometry.avoid_crossing.top_surfaces = &[];

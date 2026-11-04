@@ -348,6 +348,8 @@ fn emit_inner(
     constant::emit(constant::Emission {
         output,
         points: &points,
+        local_points: &local_points,
+        timelapse_context: geometry.timelapse_context,
         wipe_points: &wipe_points_source,
         segment_lengths: &segment_lengths,
         fitting: &fitting,
@@ -356,6 +358,5 @@ fn emit_inner(
         force_no_extrusion,
         properties,
         state,
-    });
-    Ok(())
+    })
 }

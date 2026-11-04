@@ -1,7 +1,7 @@
 //! `GCode.cpp:4864–5130`: tool → object → island → region ownership.
 
 mod object;
-mod support;
+pub(super) mod support;
 
 use std::collections::BTreeMap;
 

@@ -26,9 +26,11 @@ impl EntryGeometry<'_> {
     /// layers do not run the perimeter-crossing planner).
     pub(super) fn view_raft<'a>(
         &'a self,
-        scale: crate::geometry::CoordinateScale,
+        timelapse_context: super::super::timelapse::Context<'a>,
     ) -> motion::LayerGeometry<'a> {
+        let scale = timelapse_context.traversal.scale;
         motion::LayerGeometry {
+            timelapse_context,
             nearest_seam_penalties: None,
             staggered_inner: false,
             internal_surfaces: &[],
@@ -51,12 +53,14 @@ impl EntryGeometry<'_> {
     /// owned lines for the duration of one emission.
     pub(super) fn view<'a>(
         &'a self,
-        traversal: &'a crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+        timelapse_context: super::super::timelapse::Context<'a>,
         object_index: usize,
         layer_index: usize,
         previous_layer_boundary: Option<&'a crate::geometry::LineDistanceTree<'a>>,
     ) -> motion::LayerGeometry<'a> {
+        let traversal = timelapse_context.traversal;
         motion::LayerGeometry {
+            timelapse_context,
             nearest_seam_penalties: self.nearest_penalties,
             staggered_inner: self.nearest_penalties.is_some()
                 && traversal

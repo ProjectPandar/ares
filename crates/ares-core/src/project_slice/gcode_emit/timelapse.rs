@@ -31,6 +31,7 @@ pub(super) struct Context<'a> {
 enum Overlay {
     LayerStart,
     InsertLambda,
+    Inline,
 }
 
 /// The non-BBL layer-start render (`GCode.cpp:4667-4675`): emits the
@@ -59,10 +60,29 @@ pub(super) fn append_and_track(
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<(), SliceError> {
+    append_generated(output, state, context, Overlay::InsertLambda).map(|_| ())
+}
+
+pub(super) fn append_inline(
+    output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
+    context: Context<'_>,
+) -> Result<bool, SliceError> {
+    append_generated(output, state, context, Overlay::Inline)
+}
+
+fn append_generated(
+    output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
+    context: Context<'_>,
+    overlay: Overlay,
+) -> Result<bool, SliceError> {
+    let has_labels = state.layer_object_labels.is_some();
     if let Some(labels) = &state.layer_object_labels {
         labels.append_start(output, context.layer.index + 1);
     }
-    if let Some(last_z) = append(output, state, context, Overlay::InsertLambda)? {
+    let generated = append(output, state, context, overlay)?;
+    if let Some(last_z) = generated {
         if let Some(z) = last_z {
             // `GCode.cpp:5173-5178`: the template's last Z is ADOPTED into
             // `m_pos(2)` — subsequent eager lifts target writer-domain
@@ -85,7 +105,7 @@ pub(super) fn append_and_track(
     if let Some(labels) = &state.layer_object_labels {
         labels.append_end(output, context.layer.index + 1);
     }
-    Ok(())
+    Ok(generated.is_some() || has_labels)
 }
 
 pub(super) fn append_traditional(
@@ -152,9 +172,19 @@ fn append(
     // the non-BBL layer-start render (`:4667-4674`) overlays only
     // layer_num/layer_z/max_layer_z, so those spellings stay unresolved
     // variables there.
-    if overlay == Overlay::InsertLambda {
+    if overlay != Overlay::LayerStart {
         let most_used = insert_physical_extruder_ids(&mut config, traversal, state);
-        let position = safe_position(traversal, most_used);
+        let inline = overlay == Overlay::Inline;
+        let position = if inline {
+            None
+        } else {
+            safe_position(traversal, most_used)
+        };
+        config.insert("timelapse_inline_photo", value::Value::option_bool(inline));
+        config.insert(
+            "farthest_point_timelapse_enabled",
+            value::Value::option_bool(state.farthest_point.enabled),
+        );
         config.insert(
             "has_timelapse_safe_pos",
             value::Value::option_bool(position.is_some()),

@@ -9,6 +9,8 @@ use crate::project_slice::perimeters::classic::materialize::FittedMove;
 pub(super) struct Emission<'a, 'b> {
     pub(super) output: &'a mut Vec<u8>,
     pub(super) points: &'a [(f64, f64)],
+    pub(super) local_points: &'a [(f64, f64)],
+    pub(super) timelapse_context: crate::project_slice::gcode_emit::timelapse::Context<'b>,
     // The RAW pre-arc-fit path points (upstream `path.polyline`,
     // `GCode.cpp:6111`) used to build the wipe path — not the post
     // `clip_fitting_end` `local_points`.
@@ -22,10 +24,12 @@ pub(super) struct Emission<'a, 'b> {
     pub(super) state: &'a mut EmitState,
 }
 
-pub(super) fn emit(emission: Emission<'_, '_>) {
+pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> {
     let Emission {
         output,
         points,
+        local_points,
+        timelapse_context,
         wipe_points,
         segment_lengths,
         fitting,
@@ -72,7 +76,25 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     } else {
         String::new()
     };
-    for segment in segments {
+    let straight = [FittedMove {
+        start: 0,
+        end: points.len() - 1,
+        arc: None,
+    }];
+    let endpoint_fitting = if state.options.enable_arc_fitting && !fitting.is_empty() {
+        fitting
+    } else {
+        &straight
+    };
+    let endpoints = endpoint_fitting.iter().flat_map(|fitted| {
+        let first = if fitted.arc.is_some() {
+            fitted.end
+        } else {
+            fitted.start + 1
+        };
+        first..=fitted.end
+    });
+    for (segment, endpoint) in segments.into_iter().zip(endpoints) {
         match segment {
             arc::Segment::Line { end, length } if length >= SOURCE_EPSILON_MM => {
                 if force_no_extrusion {
@@ -80,6 +102,13 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
                 } else {
                     extrusion::linear_segment(output, end, length, properties, state);
                 }
+                let (x, y) = local_points[endpoint];
+                crate::project_slice::gcode_emit::layers::farthest::check_and_insert(
+                    output,
+                    state,
+                    (x + state.origin.0, y + state.origin.1),
+                    timelapse_context,
+                )?;
             }
             arc::Segment::Line { .. } => {}
             arc::Segment::Arc(arc_segment) if arc_segment.length >= SOURCE_EPSILON_MM => {
@@ -118,4 +147,5 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     state.last_scaled_position = last_scaled;
     state.last_position_defined = true;
     state.scarf_z = Some(state.layer_z);
+    Ok(())
 }

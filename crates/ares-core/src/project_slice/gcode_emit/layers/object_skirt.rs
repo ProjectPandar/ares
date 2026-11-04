@@ -13,6 +13,7 @@ use crate::{
 };
 
 pub(super) struct Input<'a, 'b> {
+    pub(super) timelapse_context: super::super::timelapse::Context<'a>,
     pub(super) skirt: &'a Option<skirt::SkirtPlan>,
     pub(super) done: &'a mut [(usize, f64)],
     pub(super) object: usize,
@@ -68,7 +69,12 @@ pub(super) fn emit(
         plan.emit_group(
             output,
             (group, layer),
-            geometry.view(input.traversal, input.object, object_layer, lower.as_ref()),
+            geometry.view(
+                input.timelapse_context,
+                input.object,
+                object_layer,
+                lower.as_ref(),
+            ),
             state,
         )?;
     } else if let Some(raft_index) = input.raft_layer {
@@ -96,7 +102,7 @@ pub(super) fn emit(
         plan.emit_group(
             output,
             (group, layer),
-            geometry.view_raft(input.traversal.scale),
+            geometry.view_raft(input.timelapse_context),
             state,
         )?;
     } else if let Some(support_index) = input.support_layer {
@@ -119,7 +125,7 @@ pub(super) fn emit(
         plan.emit_group(
             output,
             (group, layer),
-            geometry.view_raft(input.traversal.scale),
+            geometry.view_raft(input.timelapse_context),
             state,
         )?;
     }

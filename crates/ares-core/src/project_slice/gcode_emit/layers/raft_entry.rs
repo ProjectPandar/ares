@@ -47,7 +47,7 @@ pub(super) fn emit(
         chunk_slices: raft_polygons,
         chunk_perimeter_spacing: 0.0,
     };
-    let motion_geometry = geometry.view_raft(traversal.scale);
+    let motion_geometry = geometry.view_raft(timelapse_context);
     let plan = &raft
         .as_ref()
         .expect("a materialized raft has its schedule")

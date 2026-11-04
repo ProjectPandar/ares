@@ -3,6 +3,9 @@
         let phase = &phases[phase_index];
         state.layer_object_labels = None;
         let tool_ordering: &super::tool_ordering::ToolOrdering = phases[phase_index].tool_ordering;
+        if by_object && group_start == 0 {
+            state.most_used_extruder = tool_ordering.most_used_extruder(traversal);
+        }
         if group_start >= merged.len() {
             phase_index += 1;
             group_start = 0;
@@ -151,6 +154,18 @@
         let first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
         let layer_tools = tool_ordering.for_layer(group_z);
         let wiping = &layer_tools.wiping;
+        farthest::begin_layer(
+            state,
+            traversal,
+            farthest::LayerViews {
+                entries: &entries,
+                objects,
+                support: support_layers,
+                raft: &raft_layers,
+                instances: &instances,
+            },
+            layer_tools,
+        );
         let mut by_tool = tool_buckets::build(tool_buckets::Input {
             traversal,
             entries: &entries,
@@ -221,6 +236,7 @@
             output,
             state,
             skirt_emit::SkirtEmission {
+                timelapse_context,
                 entries: &entries,
                 support: support_layers,
                 skirt,
@@ -228,7 +244,6 @@
                 print_z: layer_z,
                 schedule: &mut skirt_schedule,
                 entry_builder: &mut entry_builder,
-                traversal,
                 chunk_slices: &chunk_slices,
                 chunk_perimeter_spacing,
             },

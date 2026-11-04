@@ -3,7 +3,7 @@
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::{ExtrusionRole, ObjectOptions};
 
-pub(super) fn selectors(
+pub(in crate::project_slice::gcode_emit::layers) fn selectors(
     roles: impl Iterator<Item = ExtrusionRole>,
     options: &ObjectOptions,
     traversal: &PreparedPostClassicTraversal,

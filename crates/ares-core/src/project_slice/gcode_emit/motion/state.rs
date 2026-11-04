@@ -191,6 +191,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
     pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
+    pub(in crate::project_slice::gcode_emit) farthest_point:
+        super::super::layers::farthest::Context,
     /// `has_insert_timelapse_gcode` is a `process_layer` local upstream
     /// (`GCode.cpp:4653`) — reset at every layer, set by the traditional
     /// timelapse insert (`GCode.cpp:5289-5297`, ported at the toolchange
@@ -224,6 +226,8 @@ impl EmitState {
 
 #[derive(Clone, Copy)]
 pub(in crate::project_slice::gcode_emit) struct LayerGeometry<'a> {
+    pub(in crate::project_slice::gcode_emit) timelapse_context:
+        super::super::timelapse::Context<'a>,
     /// Per-layer nearest-seam penalty data for the Nearest mode — the
     /// layer's candidates with emit-time gaussian distance selection
     /// (`SeamPlacer.cpp:1500-1560`).

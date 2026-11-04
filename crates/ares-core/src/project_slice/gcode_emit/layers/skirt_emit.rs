@@ -10,7 +10,6 @@ use super::entry_builder::EntryBuilder;
 use super::raft_schedule::RaftSchedule;
 use super::schedule::LayerToPrint;
 use crate::geometry::ExPolygon;
-use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 use crate::project_slice::support_material::InstalledSupportLayer;
 
 /// Inputs to the per-chunk skirt loop (`GCode.cpp:4388+`).
@@ -22,7 +21,7 @@ pub(super) struct SkirtEmission<'a, 'b> {
     pub(super) print_z: f64,
     pub(super) schedule: &'a mut super::skirt_schedule::SkirtSchedule,
     pub(super) entry_builder: &'a mut EntryBuilder<'b>,
-    pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) timelapse_context: super::super::timelapse::Context<'a>,
     pub(super) chunk_slices: &'a [ExPolygon],
     pub(super) chunk_perimeter_spacing: f64,
 }
@@ -38,7 +37,7 @@ pub(super) fn emit(
         print_z,
         schedule,
         entry_builder,
-        traversal,
+        timelapse_context,
         chunk_slices,
         chunk_perimeter_spacing,
     }: SkirtEmission<'_, '_>,
@@ -98,9 +97,14 @@ pub(super) fn emit(
         let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
             .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
         let motion_geometry = if entry.object_layer.is_some() {
-            geometry.view(traversal, object, skirt_layer, lower_boundary.as_ref())
+            geometry.view(
+                timelapse_context,
+                object,
+                skirt_layer,
+                lower_boundary.as_ref(),
+            )
         } else {
-            geometry.view_raft(traversal.scale)
+            geometry.view_raft(timelapse_context)
         };
         // `GCode.cpp:4413/:4448`: the whole skirt emission plans travels
         // against the external boundary; the window closes after the

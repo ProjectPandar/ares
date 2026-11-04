@@ -108,6 +108,7 @@ pub(super) fn emit(
             output,
             state,
             super::object_skirt::Input {
+                timelapse_context,
                 skirt,
                 done: object_skirt_done,
                 object: object_index,
@@ -223,7 +224,7 @@ pub(super) fn emit(
             bucket.instance.copy,
             layer_index,
             entry_builder,
-            traversal,
+            timelapse_context,
             chunk_perimeter_spacing,
         )?;
     }

@@ -4,7 +4,6 @@
 
 use super::super::{brim, motion, skirt};
 use super::entry_builder::EntryBuilder;
-use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
 #[expect(
     clippy::too_many_arguments,
@@ -18,7 +17,7 @@ pub(super) fn emit(
     copy: usize,
     layer_index: usize,
     entry_builder: &mut EntryBuilder<'_>,
-    traversal: &PreparedPostClassicTraversal,
+    timelapse_context: super::super::timelapse::Context<'_>,
     chunk_perimeter_spacing: f64,
 ) -> Result<(), crate::SliceError> {
     if layer_index != 0 {
@@ -67,7 +66,7 @@ pub(super) fn emit(
     plan.emit(
         output,
         geometry.view(
-            traversal,
+            timelapse_context,
             object_index,
             layer_index,
             lower_boundary.as_ref(),

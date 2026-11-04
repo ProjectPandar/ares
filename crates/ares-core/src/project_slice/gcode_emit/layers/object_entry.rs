@@ -42,7 +42,7 @@ pub(super) fn emit(
     let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
         .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
     let motion_geometry = geometry.view(
-        traversal,
+        timelapse_context,
         object_index,
         layer_index,
         lower_boundary.as_ref(),

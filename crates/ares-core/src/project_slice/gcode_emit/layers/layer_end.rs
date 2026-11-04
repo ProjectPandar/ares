@@ -19,6 +19,8 @@ pub(super) fn emit(
     }: LayerTimelapse,
     timelapse_context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
+    // `GCode.cpp:8165`: publish the inline insert before the layer-end tail.
+    state.has_insert_timelapse_gcode |= state.farthest_point.inserted_this_layer;
     // The layer-end timelapse sequence closes every layer chunk
     // (`GCode.cpp:5527-5546`), after all of the chunk's objects.
     if timelapse_inserted || state.has_insert_timelapse_gcode {
