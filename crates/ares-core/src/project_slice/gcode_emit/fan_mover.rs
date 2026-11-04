@@ -163,6 +163,11 @@ impl FanMover {
             if let Some(role) = comment.strip_prefix("TYPE:") {
                 self.current_role = role_from_str(role);
             }
+            if raw.starts_with(";_FAN_MOVER_SKIP_") {
+                self.is_custom_gcode = raw.starts_with(";_FAN_MOVER_SKIP_START");
+                // `FanMover.cpp:453–457,469,524`: negative-time markers neither buffer nor flush.
+                return;
+            }
             if raw.contains("; custom gcode") {
                 self.is_custom_gcode = !raw.contains("; custom gcode end");
             }

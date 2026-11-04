@@ -13,7 +13,7 @@ pub(super) fn emit(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<footprint::FirstLayerBounds>,
-) -> Result<(), SliceError> {
+) -> Result<usize, SliceError> {
     // `GCode::preamble` performs a *silent* `travel_to_z(z_offset)`
     // (`GCode.cpp:5676-5679` — the returned G-code is discarded, only
     // `m_pos(2)` updates). Ordering differs by printer family: for BBL
@@ -66,5 +66,5 @@ pub(super) fn emit(
         state.x = x + f64::from(offset_x);
         state.y = y + f64::from(offset_y);
     }
-    Ok(())
+    Ok(output.len())
 }

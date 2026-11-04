@@ -73,7 +73,15 @@ pub(super) fn append(
     if !rendered.is_empty() && !rendered.ends_with('\n') {
         rendered.push('\n');
     }
+    let gcode = &context.traversal.resolved.views.full.printer.gcode;
+    let fan_mover_enabled = gcode.fan_speedup_time.0 != 0.0 || gcode.fan_kickstart.0 > 0.0;
+    if fan_mover_enabled {
+        output.extend_from_slice(b";_FAN_MOVER_SKIP_START\n");
+    }
     output.extend_from_slice(rendered.as_bytes());
+    if fan_mover_enabled {
+        output.extend_from_slice(b";_FAN_MOVER_SKIP_END\n");
+    }
     output.extend_from_slice(b";_FORCE_RESUME_FAN_SPEED\n");
     state.positioned = false;
     if let Some(z) = timelapse::last_motion_z(&rendered) {

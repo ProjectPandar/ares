@@ -46,7 +46,7 @@ pub(super) fn append(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     context: Context<'_>,
-) -> Result<(f64, Option<fan_mover::FanMover>, usize), SliceError> {
+) -> Result<(f64, Option<fan_mover::FanMover>, usize, usize), SliceError> {
     let Context {
         metadata,
         first_layer_bounds,
@@ -248,6 +248,7 @@ pub(super) fn append(
     let mut phase_index = 0usize;
     let mut group_start = 0;
     let mut first_group = true;
+    let mut fan_layers_start = output.len();
     let mut last_object_copy: Option<(usize, usize)> = None;
     let mut previous_layer_z = 0.0;
     let mut chunk_index = 0;
@@ -297,5 +298,10 @@ pub(super) fn append(
             },
         )?;
     }
-    Ok((max_layer_z, fan_mover_handle, filtered_end))
+    Ok((
+        max_layer_z,
+        fan_mover_handle,
+        filtered_end,
+        fan_layers_start,
+    ))
 }

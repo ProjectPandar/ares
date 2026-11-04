@@ -251,8 +251,8 @@ pub(in crate::project_slice) fn emit(
         metadata,
         first_layer_bounds,
     )?;
-    let fan_layers_start = output.len();
-    let (max_layer_z, mut fan_mover_handle, fan_layers_end) = layers::append(
+    let filtered_layers_start = output.len();
+    let (max_layer_z, mut fan_mover_handle, fan_layers_end, fan_layers_start) = layers::append(
         prepared,
         &mut output,
         &mut state,
@@ -341,9 +341,7 @@ pub(in crate::project_slice) fn emit(
         ),
     );
     output.push(b'\n');
-    // Upstream applies FanMover ONLY to layer-chunk output (the tbb
-    // pipeline after the cooling filter, GCode.cpp:3749), never to the
-    // machine start g-code.
+    // Initial preamble bypasses FanMover (`GCode.cpp:4495,5192–5220`).
     if fan_mover_handle.is_some()
         || state
             .extruders
@@ -351,10 +349,15 @@ pub(in crate::project_slice) fn emit(
             .iter()
             .any(|&tool| adaptive_pa::enabled(&traversal.resolved.views.full, tool))
     {
-        let mut layers = output.split_off(fan_layers_start);
-        let tail = layers.split_off(fan_layers_end - fan_layers_start);
+        let mut layers = output.split_off(filtered_layers_start);
+        let tail = layers.split_off(fan_layers_end - filtered_layers_start);
         if let Some(mover) = fan_mover_handle.as_mut() {
-            layers = fan_chunks::process_layer_chunks(mover, layers, state.tags.layer_change());
+            let fan_layers = layers.split_off(fan_layers_start - filtered_layers_start);
+            layers.extend(fan_chunks::process_layer_chunks(
+                mover,
+                fan_layers,
+                state.tags.layer_change(),
+            ));
         }
         output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);

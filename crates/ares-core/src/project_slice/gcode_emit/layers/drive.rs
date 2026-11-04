@@ -102,7 +102,8 @@
         // off `first_group`, not `first_layer == 0`). Upstream emits the
         // filament-start g-code at the raft base, not the object base.
         if first_group {
-            preamble::emit(output, state, traversal, metadata, first_layer_bounds)?;
+            fan_layers_start =
+                preamble::emit(output, state, traversal, metadata, first_layer_bounds)?;
             tower::emit(
                 output,
                 state,
