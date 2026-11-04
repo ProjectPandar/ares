@@ -1,8 +1,8 @@
 # Oracle excerpt for `artificial_distance_to_curled_lines`
 # (`ExtrusionProcessor.hpp:382-420`) — Sermoon V1 cube10, stock matrix
-# case-6qvP0t (`/tmp/ares-stock-matrix-028c758-seeded/case-6qvP0t/`).
+# case-6qvP0t.
 #
-# Source: /tmp/curldump.txt — sha256
+# Source dump sha256
 #   b7cad1f2f806e1c8a67c657aac4f110ff5fb58d20465bf87ba4f08e3e58d4977
 # produced 2026-10-06 by an upstream OrcaSlicer 2.4.2 oracle build
 # patched via the nix recipe in tools/orca-probes/ (curlp/spdin-style

@@ -131,7 +131,7 @@ fn j1_by_layer_role2_usage_matches_complete_output() {
     );
 }
 
-// Coordinator-approved witness-only control: frozen whole-file first difference
+// Witness-only control: frozen whole-file first difference
 // byte2449/line165 is Native M73 P41 versus Ares WIPE_START, unrelated to mask.
 #[test]
 fn j1_by_layer_role1_usage_witness() {

@@ -1,6 +1,5 @@
-//! FillBase.cpp:2247-2650 `Fill::connect_base_support` RED; GREEN is not
-//! authorized until the in-function fork stage is narrowed with dual-side
-//! intermediate quantities (coordinator ACK 2026-10-25).
+//! FillBase.cpp:2247-2650 `Fill::connect_base_support` RED; GREEN needs the in-function fork stage
+//! narrowed with dual-side intermediate quantities.
 use crate::runner::native_stream_case;
 
 const UPSTREAM: (&str, &[&str]) = (

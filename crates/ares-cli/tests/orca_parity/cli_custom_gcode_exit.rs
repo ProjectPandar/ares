@@ -1,5 +1,5 @@
 //! GCode.cpp:3640-3645 PlaceholderParserError -> OrcaSlicer.cpp:6286-6291.
-//! Fresh Native seed0/cpu1 captured all five stock inputs with Unix156.
+//! Fresh Native seed0 captured all five stock inputs with Unix156.
 #![cfg(target_os = "linux")]
 
 use std::{fs, path::Path, process::Command};

@@ -80,8 +80,7 @@ fn print_sequence_by_object_single_object_two_instances_matches_native() {
     // runs the full inter-instance transition per copy (GCode.cpp:3304
     // gate, :3326-3327 hop/origin, :3333-3339 temps). Ares currently merges
     // both copies into one chunk: the header layer count says 62 vs native
-    // 124 and the body is missing the inter-instance transition (RED log:
-    // /tmp/ares-gates/m73-multi-red2.log).
+    // 124 and the body is missing the inter-instance transition.
     by_object_case_impl(
         &runner,
         "Creality",

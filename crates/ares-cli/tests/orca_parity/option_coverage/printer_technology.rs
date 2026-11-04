@@ -99,8 +99,7 @@ fn printer_technology_original_sla_machine_mismatch() {
     fs::write(root.join("application.json"), serde_json::to_vec_pretty(&json!({
         "requested":"SLA","effective":"FFF","error":error.to_string(),
         "original_audit_status":"FAIL","scope":"expected mismatch regression, NOT SLA admission",
-        "project_sha256":sha(&exported.project),
-        "historical_attribution_root":"/tmp/worker2-option-full-103wd7e0"
+        "project_sha256":sha(&exported.project)
     })).unwrap()).unwrap();
 }
 

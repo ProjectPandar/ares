@@ -5,7 +5,7 @@
 //! must contain `new_printer_system_name` (`:2575-2584`). Branch 2: loaded
 //! machine only — `current_print_compatible_printers` must contain it, or a
 //! `machine_switch` (`new_printer_name != current_printer_name`) accepts. Branch-2 cases ship once the composite admits partial lists.
-//! (`:2585-2594,:2624-2647` semantics are in the adjudication; its REDs/! wait for the partial-list composite — worker5 boundary; `-16` upward! gate stays deferred).
+//! (`:2585-2594,:2624-2647` semantics are in the adjudication; its REDs/! wait for the partial-list composite; `-16` upward! gate stays deferred).
 #![cfg(target_os = "linux")]
 
 use std::fs;

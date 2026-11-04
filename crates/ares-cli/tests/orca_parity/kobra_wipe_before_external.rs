@@ -1,5 +1,5 @@
 //! Anycubic Kobra wipe-before-external witness (tests-only RED for the
-//! machine-matrix2 residual, GREEN scope approved by the coordinator).
+//! machine-matrix2 residual).
 //!
 //! Stock Anycubic Kobra 0.4 nozzle defaults + the hole-to-polyhole block
 //! mesh. On layer Z:8 the inner→outer transition travel endpoint

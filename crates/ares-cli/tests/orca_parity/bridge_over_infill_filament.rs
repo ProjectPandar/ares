@@ -9,10 +9,10 @@
 //!
 //! The fixture narrows unrelated emission families: `exclude_object=0`
 //! (the EXCLUDE_OBJECT_DEFINE vertex outline is a separate upstream
-//! divergence — see /tmp/ares-matrix-clusters.md) and the source input
+//! divergence) and the source input
 //! already disables the prime tower.
 //!
-//! Official-mode disposition (coordinator ruling 2026-10-09): the byte
+//! Official-mode disposition: the byte
 //! comparison runs only against the seeded replay binary (which
 //! initializes object ids); the stock official appimage carries an
 //! uninitialized object id (see the probe note at the native invocation)
@@ -66,9 +66,9 @@ fn assert_parity(input_bytes: &[u8], input_sha256: &str) {
     // 1800s instead of the shared 300s default: under the official control
     // set's 32-way parallel run the appimage wrote only 53KB of the ~6.4MB
     // stream before the default timeout killed it
-    // (/tmp/narrowed-x2d-whole-file-rqnfpn/orca/plate_1.gcode.tmp), while the
+    // while the
     // same fixture completes standalone in 4.2s unpinned / 12-13s pinned to
-    // one CPU (official probes /tmp/x2d-official-probe/{out,out1,out2}).
+    // one CPU.
     stages::run_with_timeout(
         runner.bin(),
         [
@@ -87,12 +87,11 @@ fn assert_parity(input_bytes: &[u8], input_sha256: &str) {
 
     // The stock official appimage labels objects from an uninitialized id:
     // three probes on the same input and CPU pin produced id:0 twice and
-    // id:9223372037920129024 once (1424 label lines, probe directories
-    // /tmp/x2d-official-probe/{out,out1,out2}); the seeded replay binary
+    // id:9223372037920129024 once (1424 label lines); the seeded replay binary
     // initializes ids (the initialized_object_id precedent). The byte
     // comparison therefore runs only against the deterministic seeded
     // reference; under official the case asserts the native completed and
-    // produced the full stream instead (coordinator ruling 2026-10-09).
+    // produced the full stream instead.
     if std::env::var("ORCA_REPLAY_SEED").is_err() {
         assert!(
             reference

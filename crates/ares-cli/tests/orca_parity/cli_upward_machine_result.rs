@@ -37,7 +37,7 @@ fn cli_custom_gcode_failure_preserves_nonempty_upward_machine_header() {
         serde_json::to_vec_pretty(&machine).unwrap(),
     )
     .unwrap();
-    // Fixed independent -100 witness; do not import worker3's grouping layer.
+    // Fixed independent -100 witness; do not import the grouping layer.
     machine.insert(
         "machine_start_gcode".into(),
         json!("{ares_upward_result_missing_variable}\n"),

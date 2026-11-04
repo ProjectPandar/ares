@@ -223,7 +223,7 @@ fn flush_matrix_cli_reconstruction_scalar_four_cell_input_fails_exactly_at_the_c
     );
 }
 
-/// FM closure follow-up (GAP-1, coordinator ruling 2026-10-09): a legal
+/// FM closure follow-up (GAP-1): a legal
 /// two-value `nozzle_volume_type=[High Flow,High Flow]` input with an
 /// absent matrix — the reconstruction runs through the High Flow flush
 /// dataset end-to-end, compared against complete Native output (the

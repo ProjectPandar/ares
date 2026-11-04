@@ -93,8 +93,8 @@ fn nearest_cluster_check() {
 }
 
 fn dump_cluster_case(case: parity::ParityCase) {
-    let dir = std::path::Path::new("/tmp/kobra2");
-    std::fs::create_dir_all(dir).unwrap();
+    let dir = std::env::temp_dir().join("kobra2");
+    std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("case.3mf"), &case.project).unwrap();
     std::fs::write(dir.join("ref.gcode"), &case.reference).unwrap();
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -297,8 +297,8 @@ fn prusa_core_one_dump() {
         parity::select_printer(&profiles, "Prusa", "Prusa CORE One 0.4 nozzle").unwrap();
     let result = parity::build_selection_case(&runner, &profiles, &selection, &cube_model())
         .map(|case| {
-            let dir = std::path::Path::new("/tmp/prusa");
-            std::fs::create_dir_all(dir).unwrap();
+            let dir = std::env::temp_dir().join("prusa");
+            std::fs::create_dir_all(&dir).unwrap();
             std::fs::write(dir.join("case.3mf"), &case.project).unwrap();
             std::fs::write(dir.join("ref.gcode"), &case.reference).unwrap();
         })

@@ -11,11 +11,11 @@
 //! (`01c0a5de8`, `4f02cbe8a`, `9e3e81837`, and the placeholder family).
 //! It is a control guarding that byte parity, not a RED.
 //!
-//! Official-mode disposition (coordinator ruling 2026-10-09): the byte
+//! Official-mode disposition: the byte
 //! comparison runs only against the seeded replay binary (which
 //! initializes object ids); the stock official appimage carries an
 //! uninitialized object id (three probes: id:0 twice,
-//! id:9223372037920129024 once — /tmp/x2d-official-probe/{out,out1,out2})
+//! id:9223372037920129024 once)
 //! and needs >300s under the official control set's 32-way parallelism,
 //! so the official case asserts native completion and a complete stream
 //! instead.
@@ -53,9 +53,9 @@ fn narrowed_bridge_anchor_whole_file_control() {
     // 1800s instead of the shared 300s default: under the official control
     // set's 32-way parallel run the appimage wrote only 53KB of the 6.4MB
     // stream before the default timeout killed it
-    // (/tmp/narrowed-x2d-whole-file-rqnfpn/orca/plate_1.gcode.tmp), while
+    // while
     // the same fixture completes standalone in 4.2s unpinned / 12-13s
-    // pinned to one CPU (/tmp/x2d-official-probe/{out,out1,out2}).
+    // pinned to one CPU.
     stages::run_with_timeout(
         runner.bin(),
         [
@@ -74,7 +74,7 @@ fn narrowed_bridge_anchor_whole_file_control() {
 
     // Byte-compare only the deterministic seeded reference; the official
     // appimage's uninitialized object id makes its labels vary run to run
-    // (initialized_object_id precedent, coordinator ruling 2026-10-09).
+    // (initialized_object_id precedent).
     if std::env::var("ORCA_REPLAY_SEED").is_err() {
         assert!(
             reference

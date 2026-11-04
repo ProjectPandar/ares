@@ -17,8 +17,6 @@ pub(super) fn generate(key: &str) -> Option<(Vec<OptionCase>, Value)> {
             "first_layer_print_sequence":[0,1],
             "paired_vectors":[[2,5,2,1],[2,5,2,1],[2,5,1,2,4,6,2,1]],
             "canonical_count":3,"controls":["empty-vector","reverse-row-priority"],
-            "evidence":"/tmp/worker2-g4-type-green-f45-seeded.RErt6J/artifacts/g4-sequence-cases.json",
-            "run":"6cb5153b-93da-47e6-bd81-cc518ec50a8c",
             "spec":"docs/architecture/option-g4-other-layer-sequence-count.md",
             "deferred":["unbounded counts","malformed vectors","by-object","other G4 consumers"]
         }))

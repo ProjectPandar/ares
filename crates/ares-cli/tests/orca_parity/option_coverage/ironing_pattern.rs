@@ -2,12 +2,12 @@
 //! `Fill::new_from_type` (`FillBase.cpp:40-77`) — every `InfillPattern` reaches
 //! the corresponding `fill_surface`. The `ironing.rs` `_` arm at
 //! `fill_entities/ironing.rs:231-234` instead rejects every pattern outside the
-//! W1 set with `UnsupportedProjectFeature("ironing_pattern")`.
+//! ported set with `UnsupportedProjectFeature("ironing_pattern")`.
 //!
 //! Fixture `tests/parity/summary/time-cost.3mf`: real Arachne model with `stTop`
 //! surfaces; patching `ironing_type=top` + `ironing_pattern=<x>` produces
 //! Native ironing feature blocks on every leg below. Probes ran on official
-//! OrcaSlicer 2.4.2 (`~/.ares-evidence/worker4/ironing-pattern-probe/`).
+//! OrcaSlicer 2.4.2.
 //!
 //! Legs `adaptivecubic`/`supportcubic`/`lightning` upstream-SIGSEGV inside
 //! `FillAdaptive::Filler::_fill_surface_single` /
@@ -36,7 +36,7 @@ const ANCHOR_PATTERN: &str = "\"ironing_pattern\": \"rectilinear\"";
 /// `GCode.cpp:5348-5353` — `; printing object <name> id:<hash> copy`
 /// labels read `print_object.get_id()` (unstable `ModelObject` hash;
 /// `id:0` on the seeded replay, ASLR-dependent on the official AppImage,
-/// `initialized_object_id` precedent / coordinator ruling 2026-10-09).
+/// `initialized_object_id` precedent).
 /// With `gcode_label_objects = 0`, upstream emits
 /// `; start printing object, unique label id: <identify_id>`
 /// (`GCode.cpp:5356-5365`), driven by `ModelInstance::identify_id` —

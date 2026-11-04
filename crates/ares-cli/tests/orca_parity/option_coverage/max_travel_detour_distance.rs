@@ -13,7 +13,7 @@
 //!
 //! The second upstream cap site (`AvoidCrossingPerimeters.cpp:1576`)
 //! sits inside a `#if 0` block (:1340-:1729) — dead code, deferred as
-//! untriggerable per coordinator instruction.
+//! untriggerable.
 //!
 //! Fixture `tests/parity/max-travel-detour/detour-3parts.3mf`: three
 //! parts — two 15x15x8 blocks flanking a 2x90x8 wall — with

@@ -8,7 +8,7 @@
 //! The fixture is `input-multi-used.3mf` (X2D, two filaments, object-level
 //! `sparse_infill_filament_id=2`) narrowed to this slice's surface:
 //! `enable_prime_tower=0` (tower-activation `used_filaments` counting is a
-//! separate upstream divergence — see /tmp/ares-matrix-clusters.md),
+//! separate upstream divergence),
 //! `time_lapse_gcode=""` (per-layer timelapse block emission is another
 //! unported slice), `z_hop_types`/`filament_z_hop_types` = Normal Lift
 //! (the spiral-lift predicate after toolchange diverges independently),

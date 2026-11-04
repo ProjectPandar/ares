@@ -1,4 +1,4 @@
-//! W6 source-cited rewrite parity cases, grouped without changing case bodies.
+//! Source-cited rewrite parity cases, grouped without changing case bodies.
 
 #[path = "coints_comma_regression.rs"]
 mod coints_comma_regression;

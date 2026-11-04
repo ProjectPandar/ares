@@ -1,7 +1,6 @@
 # Processor isolation input
 
-`project.3mf` is a byte-identical copy of the Coordinator's small parity anchor:
-`2026-09-07-coordinator/anchor-baseline/project.3mf`.
+`project.3mf` is a small parity anchor project.
 SHA256: `200980b8217b4a5f0dfb8022e0a837c662c15fcaaaeca7d7a545eb7be250a63d`.
 This fixture exercises the real public 3MF CLI and processor boundary; it does
 not claim all-printer/default-option or full Orca output parity. No reference
