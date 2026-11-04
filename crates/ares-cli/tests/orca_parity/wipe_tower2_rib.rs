@@ -51,13 +51,19 @@ fn tower_boxes(gcode: &[u8]) -> Vec<Option<[f64; 4]>> {
 
 /// Native and the CLI slicing plate 1 of `class-default.3mf` under `edits`.
 pub(super) fn slice_both(label: &str, edits: &[(&str, &str)]) -> (Vec<u8>, Vec<u8>) {
+    slice_fixture(TWO_FILAMENTS, label, edits)
+}
+
+/// Native and the CLI slicing plate 1 of the repo `fixture` under `edits`.
+pub(super) fn slice_fixture(
+    fixture: &str,
+    label: &str,
+    edits: &[(&str, &str)],
+) -> (Vec<u8>, Vec<u8>) {
     let runner = OrcaRunner::from_env()
         .unwrap()
         .expect("official v2.5.0-beta slicing oracle");
-    let project = rewrite_project(
-        &std::fs::read(repo_root().join(TWO_FILAMENTS)).unwrap(),
-        edits,
-    );
+    let project = rewrite_project(&std::fs::read(repo_root().join(fixture)).unwrap(), edits);
     let exported = runner
         .fixture_case(&format!("wipe-tower2-rib/{label}"), project)
         .unwrap();
