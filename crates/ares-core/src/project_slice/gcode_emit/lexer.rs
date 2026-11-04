@@ -33,8 +33,10 @@ pub(crate) enum Token {
     Colon,
 }
 
-pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
+/// Tokens with the byte offset of each token in `input`.
+pub(crate) fn tokenize(input: &str) -> Result<(Vec<Token>, Vec<usize>), String> {
     let mut tokens = Vec::new();
+    let mut offsets = Vec::new();
     let mut rest = input;
     while let Some(character) = rest.chars().next() {
         if character.is_whitespace() {
@@ -184,8 +186,9 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
             _ => return Err(format!("invalid expression character: {character}")),
         };
         tokens.push(token);
+        offsets.push(offset);
     }
-    Ok(tokens)
+    Ok((tokens, offsets))
 }
 
 fn expect_char(rest: &mut &str, expected: char) -> Result<(), String> {

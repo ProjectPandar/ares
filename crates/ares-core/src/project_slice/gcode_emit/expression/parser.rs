@@ -3,10 +3,12 @@ use super::super::value::{Config, Value};
 use super::ParsePath;
 use super::arithmetic::{Arithmetic, arithmetic};
 use super::comparison;
-use super::functions::{function, is_function_keyword};
+use super::functions::{InterpolateTableError, function, interpolate_table, is_function_keyword};
 
 pub(super) struct Parser<'a> {
     pub(super) tokens: Vec<Token>,
+    /// Byte offset of each token in the expression input.
+    offsets: Vec<usize>,
     pub(super) index: usize,
     config: &'a Config,
     path: ParsePath,
@@ -211,8 +213,10 @@ impl Parser<'_> {
                         };
                     }
                     let mut args = Vec::new();
+                    let mut starts = Vec::new();
                     if !self.take(Token::Right) {
                         loop {
+                            starts.push(self.index);
                             args.push(self.parse_or()?);
                             if self.take(Token::Right) {
                                 break;
@@ -221,6 +225,9 @@ impl Parser<'_> {
                                 return Err("expected comma in function".to_owned());
                             }
                         }
+                    }
+                    if name == "interpolate_table" {
+                        return self.interpolate_table(&args, &starts);
                     }
                     return match function(&name, args, self.config) {
                         Ok(value) => Ok(value),
@@ -321,6 +328,28 @@ impl Parser<'_> {
         }
     }
 
+    /// `interpolate_table` failures report at the x expression
+    /// (`expr_x.it_range`, `PlaceholderParser.cpp:2007`) or at the earlier
+    /// point's x (`it_range_x`, `:1982-1984`); `starts` holds each
+    /// argument's first token index.
+    fn interpolate_table(&mut self, args: &[Value], starts: &[usize]) -> Result<Value, String> {
+        let (token, message) = match interpolate_table(args) {
+            Ok(value) => return Ok(value),
+            // Suppressed (inactive) branch: no evaluation failure.
+            Err(_) if self.suppressed > 0 => return Ok(Value::Bool(false)),
+            Err(InterpolateTableError::Invalid(message)) => return Err(message.to_owned()),
+            Err(InterpolateTableError::OutsideRange) => {
+                (starts[0], "Interpolation value is outside the table range")
+            }
+            Err(InterpolateTableError::NotIncreasing { point }) => (
+                starts[point + 1] + 1,
+                "X coordinates of the table must be increasing",
+            ),
+        };
+        self.scalar_failure = Some((self.offsets[token], message));
+        Err(message.to_owned())
+    }
+
     fn peek(&self) -> Option<&Token> {
         self.tokens.get(self.index)
     }
@@ -344,12 +373,14 @@ impl Parser<'_> {
 impl<'a> Parser<'a> {
     pub(super) fn new(
         tokens: Vec<Token>,
+        offsets: Vec<usize>,
         config: &'a Config,
         path: ParsePath,
         filament: usize,
     ) -> Self {
         Self {
             tokens,
+            offsets,
             index: 0,
             config,
             path,

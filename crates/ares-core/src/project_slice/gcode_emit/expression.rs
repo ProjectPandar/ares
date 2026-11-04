@@ -57,8 +57,8 @@ pub(crate) fn evaluate_path(
     path: ParsePath,
     filament: usize,
 ) -> Result<Value, PathError> {
-    let tokens = tokenize(input).map_err(PathError::Other)?;
-    let mut parser = Parser::new(tokens, config, path, filament);
+    let (tokens, offsets) = tokenize(input).map_err(PathError::Other)?;
+    let mut parser = Parser::new(tokens, offsets, config, path, filament);
     match parser.parse_or() {
         Ok(value) if parser.index == parser.tokens.len() => Ok(value),
         Ok(_) => Err(PathError::Other(format!(
@@ -85,7 +85,8 @@ pub(crate) fn evaluate_path(
 /// Evaluates a brace-context expression (`{if …}` conditions and
 /// assignment right-hand sides) under the same variable semantics.
 pub(crate) fn evaluate(input: &str, config: &Config, filament: usize) -> Result<Value, String> {
-    let mut parser = Parser::new(tokenize(input)?, config, ParsePath::Brace, filament);
+    let (tokens, offsets) = tokenize(input)?;
+    let mut parser = Parser::new(tokens, offsets, config, ParsePath::Brace, filament);
     let value = parser.parse_or()?;
     if parser.index != parser.tokens.len() {
         return Err(format!("unexpected token in expression: {input}"));
