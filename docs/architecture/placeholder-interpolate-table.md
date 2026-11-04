@@ -72,6 +72,7 @@ Rewrite slice of `InterpolateTableContext::evaluate` (`PlaceholderParser.cpp:197
 An admission case in `smoke/custom_gcode_unknown_function.rs`'s harness style, as a new `#[path]` sibling `smoke/custom_gcode_interpolate_table.rs` (`orca_parity.rs` stays byte-identical).
 
 - **Fixture:** a new `tests/parity/validation/cli-exit/custom-gcode/mk4-interpolate-table-range.3mf`, built from `mk4base.3mf` with the two edits above. It is checked in, like the other rejection fixtures.
+  - Fixture note: its `inherits_group` is padded to four empty entries (process, two filaments, printer). With the three entries `mk4base.3mf` carries, Native prints `Warning: inherits_group has 3 entries, expected 4 for 2 filaments` before the rejection header (`OrcaSlicer.cpp:1852-1855`). That CLI warning is not ported and is outside this slice.
 - **Assertions, as in that harness:**
   - the Native reference is captured twice and is byte-stable;
   - Native stderr starts with the custom-G-code rejection header and contains "Interpolation value is outside the table range";
