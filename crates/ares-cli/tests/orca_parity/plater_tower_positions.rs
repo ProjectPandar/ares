@@ -11,6 +11,8 @@ use super::super::plater_archive::{read_entry, rewrite_archive};
 use super::{STRIDE, export, slice_session};
 use crate::runner::{OrcaRunner, repo_root};
 
+#[path = "custom_gcode_motion_state.rs"]
+mod custom_gcode_motion_state;
 #[path = "wipe_tower2_gap_travel.rs"]
 mod wipe_tower2_gap_travel;
 #[path = "wipe_tower2_gap_wall.rs"]

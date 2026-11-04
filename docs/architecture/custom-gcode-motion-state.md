@@ -108,9 +108,9 @@ A section oracle with no whole-output parity claim. It goes in a new `custom_gco
 
 This captures both count and position, and does not depend on travel coordinates, which other open slices still change in this file.
 
-**Cases.** All use `mk4-layer-change/mk4base.3mf` with `before_layer_change_gcode` / `layer_change_gcode` edits:
+**Cases.** All use `mk4-layer-change/mk4base.3mf` with `before_layer_change_gcode` / `layer_change_gcode` edits and `enable_prime_tower` set to 0, which keeps the tower final-purge differences (a separate slice) out of the last layer:
 1. **`before_layer_change_gcode`** (`:6670` → `layer_gcode.rs:122`), fixture as is. RED: Native re-emits `M204 T4000`/`P4000` after each layer change.
-2. **`layer_change_gcode`** (`:6112` → `layer_gcode.rs:213`): the `M201 X{…} Y{…}` line moved from `before_layer_change_gcode` into `layer_change_gcode`. RED.
+2. **`layer_change_gcode`** (`:6112` → `layer_gcode.rs:213`): the `M201 X{…} Y{…}` line removed from `before_layer_change_gcode` and a literal `M201 X4000 Y4000` added to `layer_change_gcode` (the template form makes Native abort with the tower off: `interpolate_table` rejects its negative first-layer `extruded_weight_total`). RED.
 3. **Jerk:** `M205 X8 Y8` appended to `layer_change_gcode`. Native re-emits the role jerk (`M205 X7 Y7` or `M205 X9 Y9`) after each layer change. RED.
 4. **Control:** the `M201` line removed from `before_layer_change_gcode`, so no custom G-code touches the motion state. It must match Native now, and catches over-invalidation after GREEN.
 
