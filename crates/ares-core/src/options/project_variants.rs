@@ -53,7 +53,7 @@ pub(crate) fn materialize_project_variants(
     // before the multiple-filament variant materialization below.
     let checkpoint = materialized.clone();
     let filament_indices = index::resolve_filament_indices(source, &filament_map, &active)?;
-    filament::materialize(&mut materialized, &checkpoint, &filament_indices)?;
+    filament::materialize(&mut materialized, &checkpoint, &filament_indices);
     Ok(MaterializedProjectVariants {
         full: materialized,
         checkpoint,
@@ -74,7 +74,7 @@ pub(crate) fn refresh_filament_map(
         let filament_indices = index::resolve_filament_indices(checkpoint, &filament_map, &active)?;
         // Print.cpp:3174-3195: select from the saved full config, then apply
         // only filament_options_with_variant to m_config, not process options.
-        filament::materialize(&mut refreshed, checkpoint, &filament_indices)?;
+        filament::materialize(&mut refreshed, checkpoint, &filament_indices);
     }
     // Print.cpp:3193-3195 applies the newly computed retract overrides last.
     crate::options::project_config_views::resolve_project_config_views(refreshed)

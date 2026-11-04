@@ -1,37 +1,33 @@
-use crate::{SliceError, options::ProjectSettings};
+use crate::options::ProjectSettings;
 
 use super::filament_select::select_filament;
 
 macro_rules! select_wrapped_field {
-    ($field:expr, $source:expr, $indices:expr, $key:literal) => {{
-        let selected = select_filament(&$source.0, $indices, $key)?;
-        $field.0 = selected;
-    }};
+    ($field:expr, $source:expr, $indices:expr) => {
+        select_filament(&mut $field.0, &$source.0, $indices);
+    };
 }
 
 macro_rules! select_vec_field {
-    ($field:expr, $source:expr, $indices:expr, $key:literal) => {{
-        let selected = select_filament(&$source, $indices, $key)?;
-        $field = selected;
-    }};
+    ($field:expr, $source:expr, $indices:expr) => {
+        select_filament(&mut $field, &$source, $indices);
+    };
 }
 
 pub(super) fn materialize(
     settings: &mut ProjectSettings,
     source: &ProjectSettings,
     indices: &[usize],
-) -> Result<(), SliceError> {
+) {
     select_wrapped_field!(
         settings.filament.print.activate_air_filtration,
         source.filament.print.activate_air_filtration,
-        indices,
-        "activate_air_filtration"
+        indices
     );
     select_wrapped_field!(
         settings.filament.print.activate_air_filtration_during_print,
         source.filament.print.activate_air_filtration_during_print,
-        indices,
-        "activate_air_filtration_during_print"
+        indices
     );
     select_wrapped_field!(
         settings
@@ -39,32 +35,27 @@ pub(super) fn materialize(
             .print
             .activate_air_filtration_on_completion,
         source.filament.print.activate_air_filtration_on_completion,
-        indices,
-        "activate_air_filtration_on_completion"
+        indices
     );
     select_wrapped_field!(
         settings.filament.print.complete_print_exhaust_fan_speed,
         source.filament.print.complete_print_exhaust_fan_speed,
-        indices,
-        "complete_print_exhaust_fan_speed"
+        indices
     );
     select_wrapped_field!(
         settings.filament.print.during_print_exhaust_fan_speed,
         source.filament.print.during_print_exhaust_fan_speed,
-        indices,
-        "during_print_exhaust_fan_speed"
+        indices
     );
     select_vec_field!(
         settings.filament.gcode.filament_adaptive_volumetric_speed,
         source.filament.gcode.filament_adaptive_volumetric_speed,
-        indices,
-        "filament_adaptive_volumetric_speed"
+        indices
     );
     select_vec_field!(
         settings.filament.gcode.filament_cooling_before_tower,
         source.filament.gcode.filament_cooling_before_tower,
-        indices,
-        "filament_cooling_before_tower"
+        indices
     );
     select_vec_field!(
         settings
@@ -75,56 +66,47 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_deretraction_speed,
-        indices,
-        "filament_deretraction_speed"
+        indices
     );
     select_wrapped_field!(
         settings.filament.gcode.filament_extruder_variant,
         source.filament.gcode.filament_extruder_variant,
-        indices,
-        "filament_extruder_variant"
+        indices
     );
     select_vec_field!(
         settings.filament.gcode.filament_flow_ratio,
         source.filament.gcode.filament_flow_ratio,
-        indices,
-        "filament_flow_ratio"
+        indices
     );
     select_vec_field!(
         settings.filament.gcode.filament_flush_temp,
         source.filament.gcode.filament_flush_temp,
-        indices,
-        "filament_flush_temp"
+        indices
     );
     select_vec_field!(
         settings.filament.gcode.filament_flush_volumetric_speed,
         source.filament.gcode.filament_flush_volumetric_speed,
-        indices,
-        "filament_flush_volumetric_speed"
+        indices
     );
     select_vec_field!(
         settings.filament.region.filament_ironing_flow,
         source.filament.region.filament_ironing_flow,
-        indices,
-        "filament_ironing_flow"
+        indices
     );
     select_vec_field!(
         settings.filament.region.filament_ironing_inset,
         source.filament.region.filament_ironing_inset,
-        indices,
-        "filament_ironing_inset"
+        indices
     );
     select_vec_field!(
         settings.filament.region.filament_ironing_spacing,
         source.filament.region.filament_ironing_spacing,
-        indices,
-        "filament_ironing_spacing"
+        indices
     );
     select_vec_field!(
         settings.filament.region.filament_ironing_speed,
         source.filament.region.filament_ironing_speed,
-        indices,
-        "filament_ironing_speed"
+        indices
     );
     select_vec_field!(
         settings
@@ -135,14 +117,12 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_long_retractions_when_cut,
-        indices,
-        "filament_long_retractions_when_cut"
+        indices
     );
     select_wrapped_field!(
         settings.filament.gcode.filament_max_volumetric_speed,
         source.filament.gcode.filament_max_volumetric_speed,
-        indices,
-        "filament_max_volumetric_speed"
+        indices
     );
     select_vec_field!(
         settings
@@ -153,8 +133,7 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_retract_before_wipe,
-        indices,
-        "filament_retract_before_wipe"
+        indices
     );
     select_vec_field!(
         settings
@@ -165,8 +144,7 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_retract_lift_above,
-        indices,
-        "filament_retract_lift_above"
+        indices
     );
     select_vec_field!(
         settings
@@ -177,8 +155,7 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_retract_lift_below,
-        indices,
-        "filament_retract_lift_below"
+        indices
     );
     select_vec_field!(
         settings
@@ -189,8 +166,7 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_retract_lift_enforce,
-        indices,
-        "filament_retract_lift_enforce"
+        indices
     );
     select_vec_field!(
         settings
@@ -201,8 +177,7 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_retract_restart_extra,
-        indices,
-        "filament_retract_restart_extra"
+        indices
     );
     select_vec_field!(
         settings
@@ -213,8 +188,7 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_retract_when_changing_layer,
-        indices,
-        "filament_retract_when_changing_layer"
+        indices
     );
     select_vec_field!(
         settings
@@ -225,8 +199,7 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_retraction_distances_when_cut,
-        indices,
-        "filament_retraction_distances_when_cut"
+        indices
     );
     select_vec_field!(
         settings
@@ -234,8 +207,7 @@ pub(super) fn materialize(
             .retract_overrides
             .filament_retraction_length,
         source.filament.retract_overrides.filament_retraction_length,
-        indices,
-        "filament_retraction_length"
+        indices
     );
     select_vec_field!(
         settings
@@ -246,8 +218,7 @@ pub(super) fn materialize(
             .filament
             .retract_overrides
             .filament_retraction_minimum_travel,
-        indices,
-        "filament_retraction_minimum_travel"
+        indices
     );
     select_vec_field!(
         settings
@@ -255,62 +226,51 @@ pub(super) fn materialize(
             .retract_overrides
             .filament_retraction_speed,
         source.filament.retract_overrides.filament_retraction_speed,
-        indices,
-        "filament_retraction_speed"
+        indices
     );
     select_vec_field!(
         settings.filament.retract_overrides.filament_wipe,
         source.filament.retract_overrides.filament_wipe,
-        indices,
-        "filament_wipe"
+        indices
     );
     select_vec_field!(
         settings.filament.retract_overrides.filament_wipe_distance,
         source.filament.retract_overrides.filament_wipe_distance,
-        indices,
-        "filament_wipe_distance"
+        indices
     );
     select_vec_field!(
         settings.filament.retract_overrides.filament_z_hop,
         source.filament.retract_overrides.filament_z_hop,
-        indices,
-        "filament_z_hop"
+        indices
     );
     select_vec_field!(
         settings.filament.retract_overrides.filament_z_hop_types,
         source.filament.retract_overrides.filament_z_hop_types,
-        indices,
-        "filament_z_hop_types"
+        indices
     );
     select_vec_field!(
         settings.filament.gcode.long_retractions_when_ec,
         source.filament.gcode.long_retractions_when_ec,
-        indices,
-        "long_retractions_when_ec"
+        indices
     );
     select_wrapped_field!(
         settings.filament.print.nozzle_temperature,
         source.filament.print.nozzle_temperature,
-        indices,
-        "nozzle_temperature"
+        indices
     );
     select_wrapped_field!(
         settings.filament.print.nozzle_temperature_initial_layer,
         source.filament.print.nozzle_temperature_initial_layer,
-        indices,
-        "nozzle_temperature_initial_layer"
+        indices
     );
     select_vec_field!(
         settings.filament.gcode.retraction_distances_when_ec,
         source.filament.gcode.retraction_distances_when_ec,
-        indices,
-        "retraction_distances_when_ec"
+        indices
     );
     select_wrapped_field!(
         settings.filament.gcode.volumetric_speed_coefficients,
         source.filament.gcode.volumetric_speed_coefficients,
-        indices,
-        "volumetric_speed_coefficients"
+        indices
     );
-    Ok(())
 }

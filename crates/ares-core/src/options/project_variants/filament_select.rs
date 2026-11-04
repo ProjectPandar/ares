@@ -1,52 +1,11 @@
-//! Zero-initialized payload selection (`PrintConfig.cpp:9879-10015`).
+//! Shared payload gathering (`PrintConfig.cpp:11862–11882`).
 
-use crate::{
-    SliceError,
-    options::{Nullable, OrcaBool, OrcaFloat, OrcaInt, Percent, RetractLiftEnforce, ZHopType},
-};
-
-pub(super) trait FilamentZero: Clone {
-    fn zero() -> Self;
-}
-
-macro_rules! zero_value {
-    ($($ty:ty => $value:expr),+ $(,)?) => {
-        $(impl FilamentZero for $ty {
-            fn zero() -> Self {
-                $value
-            }
-        })+
+pub(super) fn select_filament<T: Clone>(destination: &mut Vec<T>, source: &[T], indices: &[usize]) {
+    let Some(first) = source.first() else {
+        return;
     };
-}
-
-zero_value!(
-    String => String::new(),
-    OrcaBool => OrcaBool(false),
-    OrcaFloat => OrcaFloat(0.0),
-    OrcaInt => OrcaInt(0),
-    Percent => Percent(0.0),
-    ZHopType => ZHopType::Auto,
-    RetractLiftEnforce => RetractLiftEnforce::AllSurfaces,
-);
-
-impl<T: FilamentZero> FilamentZero for Nullable<T> {
-    fn zero() -> Self {
-        Self::Value(T::zero())
-    }
-}
-
-pub(super) fn select_filament<T: FilamentZero>(
-    values: &[T],
-    indices: &[usize],
-    key: &str,
-) -> Result<Vec<T>, SliceError> {
-    if values.is_empty() {
-        return Err(SliceError::InvalidInput(format!(
-            "invalid Orca option {key}"
-        )));
-    }
-    Ok(indices
+    *destination = indices
         .iter()
-        .map(|&index| values.get(index).cloned().unwrap_or_else(T::zero))
-        .collect())
+        .map(|&index| source.get(index).unwrap_or(first).clone())
+        .collect();
 }
