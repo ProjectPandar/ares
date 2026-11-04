@@ -158,6 +158,14 @@ async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
     fs::write(directory.join("ares.gcode"), &ares).unwrap();
     assert_eq!(fs::read(&input).unwrap(), project);
     let ares = String::from_utf8(ares).unwrap();
+    if case.label == "default" {
+        crate::runner::first_travel_acceleration_ordering::assert_first_travel_prefix(
+            &directory,
+            "default-singleton",
+            native.as_bytes(),
+            ares.as_bytes(),
+        );
+    }
     assert_eq!(
         crate::cli_retained_input::normalize_generator(&ares, "Ares"),
         crate::cli_retained_input::normalize_generator(&native, "OrcaSlicer"),

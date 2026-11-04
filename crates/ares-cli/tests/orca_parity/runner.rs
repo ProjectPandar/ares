@@ -78,7 +78,8 @@ mod lateral_multiline_overlap;
 mod rectilinear_multiline;
 #[path = "runner/triangles_multiline_mode1.rs"]
 mod triangles_multiline_mode1;
-
+#[path = "runner/first_travel_acceleration_ordering.rs"]
+pub(crate) mod first_travel_acceleration_ordering;
 #[path = "runner/object_layer_ranges.rs"]
 mod object_layer_ranges;
 

@@ -146,6 +146,9 @@ async fn compare(runner: &OrcaRunner, label: &str, input: &[u8]) {
         "ares": actual.as_ref().map(|bytes| bytes.len()).map_err(ToString::to_string),
     })).unwrap()).unwrap();
     let actual = actual.unwrap_or_else(|error| panic!("{label}: {error}; artifacts {directory:?}"));
+    super::first_travel_acceleration_ordering::assert_first_travel_prefix(
+        &directory, label, &reference, &actual,
+    );
     crate::golden::compare_ordered_bytes_generator_only(&reference, &actual)
         .unwrap_or_else(|error| panic!("{label}: {error}; artifacts {directory:?}"));
 }

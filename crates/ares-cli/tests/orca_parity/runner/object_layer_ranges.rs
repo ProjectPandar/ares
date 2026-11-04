@@ -142,6 +142,14 @@ async fn compare(label: &str, input: &[u8], baseline_label: &str, baseline_input
     );
     let baseline_actual =
         baseline_actual.unwrap_or_else(|error| panic!("inactive: {error}; {directory:?}"));
+    if label == "modifier-range" {
+        super::first_travel_acceleration_ordering::assert_first_travel_prefix(
+            &directory.join("baseline"),
+            baseline_label,
+            &baseline,
+            &baseline_actual,
+        );
+    }
     crate::golden::compare_ordered_bytes_generator_only(&baseline, &baseline_actual)
         .unwrap_or_else(|error| panic!("inactive: {error}; {directory:?}"));
     let native = reference(&runner, label, input, &directory);

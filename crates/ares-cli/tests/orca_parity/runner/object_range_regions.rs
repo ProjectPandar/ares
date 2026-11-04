@@ -79,6 +79,12 @@ async fn object_range_wall_loops_changes_only_the_selected_constant_height_inter
     )
     .unwrap();
     let actual = actual.unwrap_or_else(|error| panic!("{error}; artifacts {directory:?}"));
+    super::first_travel_acceleration_ordering::assert_first_travel_prefix(
+        &directory,
+        "wall-loops",
+        &reference,
+        &actual,
+    );
     crate::golden::compare_ordered_bytes_generator_only(&reference, &actual)
         .unwrap_or_else(|error| panic!("{error}; artifacts {directory:?}"));
 }
