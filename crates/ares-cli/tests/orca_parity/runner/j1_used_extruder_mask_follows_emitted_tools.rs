@@ -1,7 +1,117 @@
 //! `GCode.cpp:2901-2904`: by-layer usage follows emitted tools, not model defaults.
 
 use super::{ExportedCase, OrcaRunner, cache_identity};
-use std::fs;
+use std::{
+    fs,
+    io::{Cursor, Read, Write},
+};
+
+#[test]
+fn j1_custom_toolchange_fan_mover_prefix() {
+    check_fan_mover_prefix(false);
+}
+
+#[test]
+fn j1_custom_toolchange_fan_mover_disabled_prefix() {
+    check_fan_mover_prefix(true);
+}
+
+fn check_fan_mover_prefix(disabled: bool) {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let source = include_bytes!(
+        "../../../../../tests/parity/j1-used-extruder-follows-emitted-tools/role2.3mf"
+    );
+    let project = if disabled {
+        let mut input = zip::ZipArchive::new(Cursor::new(source)).unwrap();
+        let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        for index in 0..input.len() {
+            let mut file = input.by_index(index).unwrap();
+            let mut bytes = Vec::new();
+            file.read_to_end(&mut bytes).unwrap();
+            if file.name() == "Metadata/project_settings.config" {
+                let mut settings: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+                settings["fan_speedup_time"] = "0".into();
+                settings["fan_kickstart"] = "0".into();
+                bytes = serde_json::to_vec(&settings).unwrap();
+            }
+            output
+                .start_file(
+                    file.name(),
+                    zip::write::SimpleFileOptions::DEFAULT.compression_method(file.compression()),
+                )
+                .unwrap();
+            output.write_all(&bytes).unwrap();
+        }
+        output.finish().unwrap().into_inner()
+    } else {
+        source.to_vec()
+    };
+    let directory = tempfile::Builder::new()
+        .prefix("j1-custom-toolchange-fan-mover-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    let input_path = directory.join("input.3mf");
+    let output_dir = directory.join("native");
+    fs::write(&input_path, &project).unwrap();
+    fs::create_dir(&output_dir).unwrap();
+    let sliced = runner
+        .slice_case(&ExportedCase {
+            label: format!("j1-custom-toolchange-fan-mover/disabled-{disabled}"),
+            project,
+            project_path: input_path,
+            output_dir,
+        })
+        .unwrap();
+    fs::write(directory.join("native.gcode"), &sliced.reference).unwrap();
+    let expected = fan_mover_prefix(&sliced.reference);
+    assert_eq!(expected.contains(";_FAN_MOVER_SKIP_START\n"), !disabled);
+    assert_eq!(expected.contains(";_FAN_MOVER_SKIP_END\n"), !disabled);
+    if disabled {
+        assert!(
+            !std::str::from_utf8(&sliced.reference)
+                .unwrap()
+                .contains(";_FAN_MOVER_SKIP_")
+        );
+    }
+    let outcome = crate::compare_case(&sliced);
+    let artifacts = outcome.artifacts.as_ref().unwrap();
+    let actual = fs::read(artifacts.join("ares.gcode")).unwrap();
+    fs::write(
+        directory.join("prefix-witness.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "disabled": disabled,
+            "native_prefix": expected,
+            "ares_prefix": fan_mover_prefix(&actual),
+            "complete_status": outcome.status,
+            "complete_detail": outcome.detail,
+            "complete_artifacts": artifacts,
+            "assertion_scope": "exact initial custom toolchange prefix; complete residual retained"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(fan_mover_prefix(&actual), expected, "{directory:?}");
+    if disabled {
+        assert!(
+            !std::str::from_utf8(&actual)
+                .unwrap()
+                .contains(";_FAN_MOVER_SKIP_")
+        );
+    }
+}
+
+fn fan_mover_prefix(bytes: &[u8]) -> &str {
+    let text = std::str::from_utf8(bytes).unwrap();
+    let start = text
+        .find("M83 ; use relative distances for extrusion\n")
+        .unwrap();
+    let rest = &text[start..];
+    let end = rest.find(";_FORCE_RESUME_FAN_SPEED\n").unwrap() + ";_FORCE_RESUME_FAN_SPEED\n".len();
+    &rest[..end]
+}
 
 fn check(name: &str, input: &[u8], sha256: &str, expected_usage: [bool; 2]) {
     assert_eq!(cache_identity::raw_digest(input), sha256);
