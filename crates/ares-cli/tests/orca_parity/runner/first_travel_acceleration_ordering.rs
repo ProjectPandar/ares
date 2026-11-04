@@ -1,5 +1,8 @@
 //! `GCode.cpp:7386–7392` layer-start gate and first-travel command ordering.
 
+#[path = "first_travel_acceleration_ordering/inline_snapshot.rs"]
+mod inline_snapshot;
+
 pub(crate) fn assert_first_travel_prefix(
     directory: &std::path::Path,
     case: &str,
@@ -45,6 +48,7 @@ pub(crate) fn assert_first_travel_prefix(
         native.get(first_difference),
         ares.get(first_difference),
     );
+    inline_snapshot::assert_prefix(directory, case, &native, &ares);
 }
 
 fn commands(bytes: &[u8]) -> Vec<&str> {
