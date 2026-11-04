@@ -59,6 +59,25 @@ fn modifier_without_cooling_or_wall_routing_preserves_complete_layer_63_motion()
     assert_eq!(layer_63(&actual), expected);
 }
 
+#[test]
+fn modifier_preserves_final_use_cooldown_section() {
+    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+        return;
+    }
+    let (reference, actual) = outputs(true);
+    let expected = cooldown_section(&reference);
+    assert!(expected.contains("M104 S0 T0 ; set nozzle temperature ;cooldown\n"));
+    assert_eq!(cooldown_section(&actual), expected);
+}
+
+fn cooldown_section(bytes: &[u8]) -> &str {
+    let text = std::str::from_utf8(bytes).unwrap();
+    let start = text
+        .rfind("M104 S0 T0 ; set nozzle temperature ;cooldown\n")
+        .unwrap();
+    text[start..].split_once("; CONFIG_BLOCK_START").unwrap().0
+}
+
 fn layer_63(bytes: &[u8]) -> &str {
     std::str::from_utf8(bytes)
         .unwrap()
