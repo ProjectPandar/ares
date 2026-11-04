@@ -19,6 +19,8 @@ mod layer_fan_priority;
 
 #[path = "smoke/custom_gcode_functions.rs"]
 mod custom_gcode_functions;
+#[path = "smoke/custom_gcode_interpolate_table.rs"]
+mod custom_gcode_interpolate_table;
 #[path = "smoke/custom_gcode_pause_vars.rs"]
 mod custom_gcode_pause_vars;
 #[path = "smoke/custom_gcode_timelapse.rs"]

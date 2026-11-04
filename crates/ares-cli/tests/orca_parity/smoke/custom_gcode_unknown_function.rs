@@ -37,7 +37,7 @@ use std::{fs, path::Path};
 
 use crate::native_wall_clock::result_comparison_bytes;
 
-fn assert_rejection_matches_native(case: &str) {
+pub(super) fn assert_rejection_matches_native(case: &str, reason: &str) {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/parity/validation/cli-exit/custom-gcode")
         .join(format!("{case}.3mf"));
@@ -74,9 +74,9 @@ fn assert_rejection_matches_native(case: &str) {
     assert!(
         native
             .stderr
-            .windows(b"Not a variable name".len())
-            .any(|window| window == b"Not a variable name"),
-        "upstream rejects the unknown function keyword as a variable name: {:?}",
+            .windows(reason.len())
+            .any(|window| window == reason.as_bytes()),
+        "upstream rejects the template with {reason:?}: {:?}",
         String::from_utf8_lossy(&native.stderr)
     );
 
@@ -113,10 +113,10 @@ fn assert_rejection_matches_native(case: &str) {
 
 #[test]
 fn custom_gcode_unknown_function_matches_native() {
-    assert_rejection_matches_native("mk4-unknown-function");
+    assert_rejection_matches_native("mk4-unknown-function", "Not a variable name");
 }
 
 #[test]
 fn custom_gcode_leading_blank_line_matches_native() {
-    assert_rejection_matches_native("x1c-blc-leading-blank");
+    assert_rejection_matches_native("x1c-blc-leading-blank", "Not a variable name");
 }
