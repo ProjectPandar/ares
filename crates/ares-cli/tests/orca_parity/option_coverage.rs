@@ -106,6 +106,8 @@ mod hole_to_polyhole;
 mod ironing_pattern;
 #[path = "option_coverage/max_travel_detour_distance.rs"]
 mod max_travel_detour_distance;
+#[path = "option_coverage/refresh_preset_includes.rs"]
+mod refresh_preset_includes;
 #[path = "option_coverage/region_speed_emission.rs"]
 mod region_speed_emission;
 
