@@ -371,17 +371,7 @@ pub(in crate::project_slice) fn emit(
             traversal,
         ));
     }
-    // `GCodeProcessor.cpp:2920-2926,3323-3325,1136-1139`: count exact
-    // reserved comment lines in the complete stream, including end templates.
-    if header::enabled(traversal) {
-        let layer_count = output
-            .split(|byte| *byte == b'\n')
-            .filter(|line| {
-                line.strip_suffix(b"\r").unwrap_or(line) == state.tags.layer_change().as_bytes()
-            })
-            .count();
-        header::finalize_layer_count(&mut output, layer_count);
-    }
+    orchestration_header::finalize_layer_count(&mut output, traversal, &state);
     let (processed, printable_area) = processor::process(
         output,
         !traversal.resolved.views.full.printer.gcode.disable_m73.0,
