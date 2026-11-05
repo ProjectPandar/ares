@@ -339,10 +339,13 @@ pub(super) fn emit_approach_move(
         }
         travel_set_layer_z = true;
     } else {
-        // Same `travel_to_xyz` else-branch: the unclear-position split
-        // emits the XY leg at `config.travel_speed` without the
-        // first-layer override (`GCodeWriter.cpp:793-798`).
-        let xy_feedrate = if first_position {
+        // Same-Z returns before the unclear-position split
+        // (`GCodeWriter.cpp:1096–1105,1123–1131`).
+        let split_position = first_position
+            && (state.writer_z.is_none()
+                || state.layer_change_travel_pending
+                || travel_will_move_z(state, leg_z));
+        let xy_feedrate = if split_position {
             state.options.travel_feedrate
         } else {
             state.travel_feedrate
@@ -356,19 +359,15 @@ pub(super) fn emit_approach_move(
             state,
             (travel_x, travel_y),
             xy_feedrate,
-            if first_position {
+            if split_position {
                 first_travel_comment
             } else {
                 ""
             },
         );
-        // The print's first travel from an unknown position always
-        // splits: the unclear-position branch of `travel_to_xyz`
-        // (`GCodeWriter.cpp:754+`) emits XY then `_travel_to_z`
-        // separately — `force_z` only merges Z for CLEAR-position
-        // travels. A cancelled lift while still unpositioned lands here
-        // too (`first_position` == `!state.positioned`).
-        if first_position {
+        // The first extrusion still synchronizes Z in `restate` after XY-only travel.
+        unclear_position_travel = first_position;
+        if split_position {
             let z_feedrate = travel::lift_z_feedrate(state);
             output.extend_from_slice(
                 format!(
@@ -380,7 +379,6 @@ pub(super) fn emit_approach_move(
             );
             state.current_feedrate = z_feedrate;
             state.record_z(leg_z);
-            unclear_position_travel = true;
         }
     }
     MoveOutcome {
