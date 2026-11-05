@@ -6,5 +6,8 @@
 #[path = "../m73_progress_placement.rs"]
 mod m73_progress_placement;
 
+#[path = "g29_time.rs"]
+mod g29_time;
+
 #[path = "placeholder.rs"]
 mod placeholder;
