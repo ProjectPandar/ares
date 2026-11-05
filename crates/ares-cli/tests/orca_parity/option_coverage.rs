@@ -15,6 +15,8 @@ mod filament_volume_map_contrasts;
 mod initial_bed_temperature;
 #[path = "option_coverage/nozzle_temperature_footer.rs"]
 mod nozzle_temperature_footer;
+#[path = "option_coverage/pa_variant.rs"]
+mod pa_variant;
 #[path = "option_coverage/variant_retraction.rs"]
 mod variant_retraction;
 
