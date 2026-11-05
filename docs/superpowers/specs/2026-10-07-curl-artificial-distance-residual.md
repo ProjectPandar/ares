@@ -90,9 +90,7 @@ upstream's `estimate_malformations` per-segment inputs and the
 
 White-box check: ares' `artificial_distance` reproduces orca's
 `art`/`nr` values **exactly** when fed orca's stored CurledLine set
-(fixture `oracle_artd_sermoon_v1.txt`, test
-`artificial_distance_matches_the_sermoon_v1_oracle_records` —
-green on first run; H1/H4 ruled out for the formula itself).
+(green on first run; H1/H4 ruled out for the formula itself).
 
 Local probes (env-gated, uncommitted, reverted) then showed:
 
