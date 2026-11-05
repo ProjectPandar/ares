@@ -55,10 +55,12 @@ pub(crate) fn object_region_graph(
         {
             continue;
         }
+        // `trafo_for_bbox` (`PrintApply.cpp:622-630`): drop only the object's bed placement and
+        // keep the volume's own XY offset.
         let transform = resolved.print_objects[0]
             .transform
-            .then(volume.transform())
-            .without_xy_translation();
+            .without_xy_translation()
+            .then(volume.transform());
         if candidates.len() == 1 {
             boxes[0][index] = Some(transformed_mesh_bbox(volume.mesh(), transform, offset));
         } else {
