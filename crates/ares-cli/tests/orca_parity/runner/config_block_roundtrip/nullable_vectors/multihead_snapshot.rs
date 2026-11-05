@@ -19,6 +19,7 @@ fn compare(enabled: bool) {
             "timelapse_type":"0", "printer_structure":"corexy",
             "physical_extruder_map":["1","0"], "extruder_offset":["0x0","0x0"],
             "retraction_length":["0.4","0.4"], "retraction_speed":["30","30"],
+            "filament_retraction_length":["3","3"], "filament_retraction_speed":["30","30"],
             "deretraction_speed":["30","30"],
             "machine_max_acceleration_e":["5000","5000","5000","5000"],
             "machine_max_speed_e":["120","120","120","120"]
