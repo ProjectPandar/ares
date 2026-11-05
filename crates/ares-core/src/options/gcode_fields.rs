@@ -45,6 +45,8 @@ macro_rules! gcode_option_fields {
             printer => bed_temperature_formula => "bed_temperature_formula": BedTemperatureFormula,
             printer => physical_extruder_map => "physical_extruder_map": OrcaInts,
             printer => nozzle_flush_dataset => "nozzle_flush_dataset": NullableInts,
+            printer => hotend_cooling_rate => "hotend_cooling_rate": NullableFloats,
+            printer => hotend_heating_rate => "hotend_heating_rate": NullableFloats,
             filament => filament_flush_volumetric_speed => "filament_flush_volumetric_speed": Vec<Nullable<OrcaFloat>>,
             filament => filament_flush_temp => "filament_flush_temp": Vec<Nullable<OrcaInt>>,
             printer => scan_first_layer => "scan_first_layer": OrcaBool,

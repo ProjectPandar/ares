@@ -35,6 +35,16 @@ pub(super) fn materialize_variant_one(
         indices,
         "nozzle_flush_dataset"
     );
+    select_field!(
+        settings.printer.gcode.hotend_cooling_rate,
+        indices,
+        "hotend_cooling_rate"
+    );
+    select_field!(
+        settings.printer.gcode.hotend_heating_rate,
+        indices,
+        "hotend_heating_rate"
+    );
     select_field!(settings.printer.gcode.nozzle_type, indices, "nozzle_type");
     select_field!(
         settings.printer.remaining.nozzle_volume,

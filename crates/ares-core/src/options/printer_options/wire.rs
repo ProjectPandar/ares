@@ -7,7 +7,7 @@ impl Serialize for PrinterOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(145))?;
+        let mut map = serializer.serialize_map(Some(147))?;
         map.serialize_entry(
             "adaptive_bed_mesh_margin",
             &self.remaining.adaptive_bed_mesh_margin,
@@ -226,6 +226,8 @@ impl Serialize for PrinterOptions {
             &self.machine.min_resonance_avoidance_speed,
         )?;
         map.serialize_entry("nozzle_flush_dataset", &self.gcode.nozzle_flush_dataset)?;
+        map.serialize_entry("hotend_cooling_rate", &self.gcode.hotend_cooling_rate)?;
+        map.serialize_entry("hotend_heating_rate", &self.gcode.hotend_heating_rate)?;
         map.serialize_entry("nozzle_height", &self.remaining.nozzle_height)?;
         map.serialize_entry("nozzle_hrc", &self.gcode.nozzle_hrc)?;
         map.serialize_entry("nozzle_type", &self.gcode.nozzle_type)?;

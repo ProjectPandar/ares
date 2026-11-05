@@ -10,6 +10,8 @@ pub use enums::{
     PrinterStructure, RetractLiftEnforces, WipeTowerType, ZHopType, ZHopTypes,
 };
 
+use super::remaining::NullableFloats;
+
 use super::super::{
     BedTemperatureFormula, GCodeFlavor, PowerLossRecoveryMode, RetractLiftEnforce,
     config_types::{
@@ -32,6 +34,8 @@ declare_option_group! {
         bed_temperature_formula => "bed_temperature_formula": BedTemperatureFormula = BedTemperatureFormula::HighestTemp,
         physical_extruder_map => "physical_extruder_map": OrcaInts = ints(&[0]),
         nozzle_flush_dataset => "nozzle_flush_dataset": NullableInts = nullable_ints(&[0]),
+        hotend_cooling_rate => "hotend_cooling_rate": NullableFloats = NullableFloats(vec![Nullable::Value(OrcaFloat(2.0))]),
+        hotend_heating_rate => "hotend_heating_rate": NullableFloats = NullableFloats(vec![Nullable::Value(OrcaFloat(2.0))]),
         scan_first_layer => "scan_first_layer": OrcaBool = OrcaBool(false),
         enable_power_loss_recovery => "enable_power_loss_recovery": PowerLossRecoveryMode = PowerLossRecoveryMode::PrinterConfiguration,
         wrapping_detection_layers => "wrapping_detection_layers": OrcaInt = OrcaInt(20),
