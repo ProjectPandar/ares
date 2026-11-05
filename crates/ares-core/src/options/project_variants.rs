@@ -54,6 +54,7 @@ pub(crate) fn materialize_project_variants(
     let checkpoint = materialized.clone();
     let filament_indices = index::resolve_filament_indices(source, &filament_map, &active)?;
     filament::materialize(&mut materialized, &checkpoint, &filament_indices);
+    remap_filament_self_index(&mut materialized, &checkpoint, &filament_indices);
     Ok(MaterializedProjectVariants {
         full: materialized,
         checkpoint,
@@ -75,6 +76,7 @@ pub(crate) fn refresh_filament_map(
         // Print.cpp:3174-3195: select from the saved full config, then apply
         // only filament_options_with_variant to m_config, not process options.
         filament::materialize(&mut refreshed, checkpoint, &filament_indices);
+        remap_filament_self_index(&mut refreshed, checkpoint, &filament_indices);
     }
     // Print.cpp:3193-3195 applies the newly computed retract overrides last.
     crate::options::project_config_views::resolve_project_config_views(refreshed)
@@ -103,4 +105,19 @@ fn expanded_filament_map(source: &ProjectSettings, map: &OrcaInts) -> OrcaInts {
         expanded.0[..filament_count].fill(OrcaInt(1));
     }
     expanded
+}
+
+// PrintConfig.cpp:11984-11992: the id list is remapped last, one id per filament taken at its
+// selected variant slot; an empty list is left untouched.
+fn remap_filament_self_index(
+    settings: &mut ProjectSettings,
+    source: &ProjectSettings,
+    indices: &[usize],
+) {
+    let ids = &source.project.preset.filament_self_index.0;
+    if ids.is_empty() {
+        return;
+    }
+    settings.project.preset.filament_self_index =
+        OrcaInts(indices.iter().map(|&index| ids[index]).collect());
 }

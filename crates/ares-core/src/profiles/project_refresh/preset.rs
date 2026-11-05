@@ -80,11 +80,10 @@ fn system_config(
             raw.insert((*key).to_owned(), value);
         }
     }
-    for position in catalog.chain_positions(position)? {
+    for layer in catalog.resolved_layers(position)? {
         let mut fragment = ProjectSettingsRaw::default();
         fragment.extend(
-            catalog
-                .document(position)
+            layer
                 .fields
                 .iter()
                 .map(|(key, value)| (key.clone(), value.clone())),
