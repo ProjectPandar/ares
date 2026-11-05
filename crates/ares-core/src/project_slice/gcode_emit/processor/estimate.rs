@@ -122,7 +122,7 @@ impl Estimate {
                 true if !g29_adds_time => None,
                 _ => command_delay(code),
             };
-            if synchronizes_planner(code, g29_adds_time) {
+            if synchronizes_planner(code, g29_adds_time, limits.gcode_flavor) {
                 events.push(FlushEvent {
                     block_count: blocks.len(),
                     klipper: state.klipper,

@@ -1,6 +1,7 @@
 use super::super::filament_change::unloads_filament;
 use super::super::motion::{KlipperConfig, MotionBlock, MotionKind};
 use super::{IndexedMotion, MoveRecorder, RecordedMotion, SeamDetector, word};
+use crate::GCodeFlavor;
 
 pub(super) fn tool_change_block(klipper: KlipperConfig) -> MotionBlock {
     MotionBlock {
@@ -78,9 +79,11 @@ pub(super) fn record_motions(
     }
 }
 
-pub(super) fn synchronizes_planner(code: &str, measured_g29: bool) -> bool {
+/// `process_M400:6947–6960`: bare Klipper M400 also synchronizes with zero delay.
+pub(super) fn synchronizes_planner(code: &str, measured_g29: bool, flavor: GCodeFlavor) -> bool {
     let command = code.split_whitespace().next().unwrap_or_default();
     matches!(command, "M0" | "M1")
+        || command == "M400" && flavor == GCodeFlavor::Klipper
         || matches!(command, "G4" | "M400")
             && (word(code, 'S').is_some() || word(code, 'P').is_some())
         || measured_g29

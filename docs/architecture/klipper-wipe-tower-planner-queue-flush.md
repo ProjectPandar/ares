@@ -29,11 +29,17 @@ Rust paths below are relative to `crates/ares-core/src/project_slice/gcode_emit/
 
 Every listed Rust `G4 S0` is a queue flush, not an intentional flavor-independent dwell. Split combined strings at the flush boundary while preserving every surrounding byte and its order. Non-Klipper output remains `G4 S0\n`.
 
+## Processor synchronization companion
+
+`GCodeProcessor.cpp:6947–6960`, `GCodeProcessor::process_M400`, synchronizes even without an S/P delay when the flavor is Klipper. A bare non-Klipper M400 returns early. Its subsequent `m_skip_end_gcode_delays && has_delay` guard cannot suppress a bare Klipper M400 because `has_delay` is false. `process_G4` (`:6356–6364`) still requires a parseable S or P before synchronizing.
+
+The Rust destination is `processor/estimate/commands.rs::synchronizes_planner` and its existing `Estimate::record` caller in `processor/estimate.rs`. Pass the caller's existing `limits.gcode_flavor` into the predicate. Add only the missing bare-Klipper-M400 synchronization case; existing S/P delay parsing and other command gates stay unchanged. No new global state or end-G-code-delay policy is introduced. The corrected queue-flush commands must not lose their zero-delay planner barriers during Ares processing.
+
 ## Included and deferred behavior
 
-Included: flavor-aware queue flushing at every mapped active call site, including Type1 bookkeeping results, monitoring, temperature, priming, unload and tool-change completion.
+Included: flavor-aware queue flushing at every mapped active call site, including Type1 bookkeeping results, monitoring, temperature, priming, unload and tool-change completion; the corresponding bare-Klipper-M400 processor synchronization branch.
 
-Deferred: `wait_command` duration spelling and rounding (`WipeTower.cpp:724–729`), the deliberately forced BBL pre-cooling `M400` (`:1447–1449`), disabled Type1 unload behavior, thermal configuration defaults, retraction ownership, estimator changes, and unrelated motion behavior. No global G-code substitution, postprocessing fallback or fixture-specific production branch is permitted.
+Deferred: `wait_command` duration spelling and rounding (`WipeTower.cpp:724–729`), the deliberately forced BBL pre-cooling `M400` (`:1447–1449`), disabled Type1 unload behavior, thermal configuration defaults, retraction ownership, estimator behavior outside the bare-Klipper-M400 synchronization branch, and unrelated motion behavior. No global G-code substitution, postprocessing fallback or fixture-specific production branch is permitted.
 
 ## Public boundary and failure model
 
