@@ -13,7 +13,6 @@ use crate::project_slice::{
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct Context {
     pub(in crate::project_slice::gcode_emit) enabled: bool,
-    single_nozzle: bool,
     farthest_gcode_pos: (f64, f64),
     farthest_is_photo_head: bool,
     pub(super) inserted_this_layer: bool,
@@ -40,7 +39,6 @@ pub(super) fn begin_layer(
     let single_nozzle = full.project.print.nozzle_diameter.0.len() <= 1;
     state.farthest_point = Context {
         enabled,
-        single_nozzle,
         ..Context::default()
     };
     if enabled && let Some(candidate) = target::compute(traversal, views, tools) {
@@ -60,9 +58,7 @@ pub(in crate::project_slice::gcode_emit) fn check_and_insert(
     context: timelapse::Context<'_>,
 ) -> Result<(), crate::SliceError> {
     let photo = &state.farthest_point;
-    // Multi-head placement is outside this single-nozzle rewrite slice.
     if !photo.enabled
-        || !photo.single_nozzle
         || !photo.farthest_is_photo_head
         || photo.inserted_this_layer
         || !state.extruder_selected
