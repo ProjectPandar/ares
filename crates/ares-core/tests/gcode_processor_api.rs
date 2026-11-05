@@ -34,10 +34,28 @@ fn public_processor_delegates_handwritten_relative_extrusion() {
 fn public_processor_matches_native_marlin_junction_deviation_start() {
     let mut settings = ProjectSettings::default();
     settings.printer.gcode.gcode_flavor = GCodeFlavor::MarlinFirmware;
+    settings.printer.machine.machine_max_junction_deviation.0[0].0 = 0.0;
     let input = "M201 X1000 Y1000 Z500 E5000\nM203 X500 Y500 Z12 E120\nM205 X9 Y9 Z0.2 E2.5 J0.01\nM204 P1000 T1000\nG1 X100 F6000\nG1 X200 F6000\n";
     let output = gcode_processor::process_gcode(input, &settings, false, false);
     assert_eq!(
         format!("{:.6}", output.result.print_statistics.normal_time),
         "2.099956"
     );
+}
+
+#[test]
+fn public_processor_keeps_classic_jerk_for_nonpositive_live_junction_deviation() {
+    for junction_deviation in ["0", "-0.01"] {
+        let mut settings = ProjectSettings::default();
+        settings.printer.gcode.gcode_flavor = GCodeFlavor::MarlinFirmware;
+        let input = format!(
+            "M201 X1000 Y1000 Z500 E5000\nM203 X500 Y500 Z12 E120\nM205 X9 Y9 Z0.2 E2.5 J{junction_deviation}\nM204 P1000 T1000\nG1 X100 F6000\nG1 X200 F6000\n"
+        );
+        let output = gcode_processor::process_gcode(&input, &settings, false, false);
+        assert_eq!(
+            format!("{:.6}", output.result.print_statistics.normal_time),
+            "2.082810",
+            "M205 J{junction_deviation}"
+        );
+    }
 }
