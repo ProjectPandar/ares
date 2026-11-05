@@ -20,6 +20,36 @@ pub(super) fn materialize(
     indices: &[usize],
 ) {
     select_wrapped_field!(
+        settings.filament.gcode.enable_pressure_advance,
+        source.filament.gcode.enable_pressure_advance,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.gcode.pressure_advance,
+        source.filament.gcode.pressure_advance,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.gcode.adaptive_pressure_advance,
+        source.filament.gcode.adaptive_pressure_advance,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.gcode.adaptive_pressure_advance_model,
+        source.filament.gcode.adaptive_pressure_advance_model,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.gcode.adaptive_pressure_advance_overhangs,
+        source.filament.gcode.adaptive_pressure_advance_overhangs,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.gcode.adaptive_pressure_advance_bridges,
+        source.filament.gcode.adaptive_pressure_advance_bridges,
+        indices
+    );
+    select_wrapped_field!(
         settings.filament.print.activate_air_filtration,
         source.filament.print.activate_air_filtration,
         indices
