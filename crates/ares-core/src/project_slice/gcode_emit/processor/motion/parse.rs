@@ -184,6 +184,11 @@ impl MotionState {
         // (`GCodeProcessor.cpp:3993-4080`); the minimum-rate-selected F travels here.
         Some(MotionBlock {
             klipper: self.klipper,
+            junction_deviation: if self.gcode_flavor == GCodeFlavor::MarlinFirmware {
+                self.junction_deviation
+            } else {
+                0.0
+            },
             virtual_motion: false,
             distance,
             delta,

@@ -1,6 +1,7 @@
 //! The single-segment block builder (`MotionState::segment_block`).
 
 use super::{MotionBlock, MotionKind, MotionState};
+use crate::GCodeFlavor;
 
 impl MotionState {
     pub(in crate::project_slice::gcode_emit::processor) fn segment_block(
@@ -31,6 +32,11 @@ impl MotionState {
         };
         Some(MotionBlock {
             klipper: self.klipper,
+            junction_deviation: if self.gcode_flavor == GCodeFlavor::MarlinFirmware {
+                self.junction_deviation
+            } else {
+                0.0
+            },
             virtual_motion: false,
             distance,
             delta,

@@ -1,7 +1,66 @@
 //! Junction-speed and acceleration-limited velocity computation
 //! (`GCodeProcessor.cpp:4085-4182, 149-152`).
 
-use super::{JunctionInput, PlannedBlock};
+use super::{JunctionInput, MotionBlock, PlannedBlock};
+
+/// `GCodeProcessor.cpp:7809-7820,7858-7896`: Marlin XYZE JD limits.
+pub(super) fn junction_deviation_speed(
+    block: &MotionBlock,
+    previous: Option<PlannedBlock>,
+    direction: [f32; 4],
+    cruise: f32,
+    acceleration: f32,
+) -> Option<f32> {
+    let junction_deviation = block.junction_deviation as f32;
+    if junction_deviation <= 0.0 {
+        return None;
+    }
+    let Some(previous) = previous else {
+        return Some(0.0);
+    };
+
+    let products =
+        std::array::from_fn::<_, 4, _>(|axis| -previous.jd_direction[axis] * direction[axis]);
+    let mut junction_cos_theta = (products[0] + products[2]) + (products[1] + products[3]);
+    if junction_cos_theta > 0.999_999 {
+        return Some(0.0);
+    }
+    junction_cos_theta = junction_cos_theta.max(-0.999_999);
+    let sin_theta_d2 = (0.5_f32 * (1.0 - junction_cos_theta)).sqrt();
+    let junction: [f32; 4] =
+        std::array::from_fn(|axis| direction[axis] - previous.jd_direction[axis]);
+    let squared = junction.map(|value| value * value);
+    let junction_norm = ((squared[0] + squared[2]) + (squared[1] + squared[3])).sqrt();
+    let junction_unit = if junction_norm > 0.0 {
+        junction.map(|value| value / junction_norm)
+    } else {
+        [0.0; 4]
+    };
+    let junction_acceleration = junction_unit
+        .iter()
+        .zip(block.max_acceleration)
+        .filter_map(|(unit, maximum)| {
+            (*unit != 0.0 && maximum > 0.0).then_some((maximum as f32 / *unit).abs())
+        })
+        .fold(acceleration, f32::min);
+    let mut maximum_squared =
+        junction_acceleration * junction_deviation * sin_theta_d2 / (1.0 - sin_theta_d2);
+    if block.distance < 1.0 && junction_cos_theta < -std::f32::consts::FRAC_1_SQRT_2 {
+        let negative = if junction_cos_theta < 0.0 { -1.0 } else { 1.0 };
+        let t = negative * junction_cos_theta;
+        let asinx = 0.032_843_707
+            + t * (-1.451_838_4
+                + t * (29.661_54
+                    + t * (-131.112_35 + t * (262.81306 + t * (-242.71996 + t * (84.31466))))));
+        let junction_theta = 0.5 * std::f32::consts::PI + negative * asinx;
+        maximum_squared =
+            maximum_squared.min(block.distance as f32 * junction_acceleration / junction_theta);
+    }
+    maximum_squared = maximum_squared
+        .min(cruise * cruise)
+        .min(previous.cruise * previous.cruise);
+    Some(maximum_squared.sqrt())
+}
 
 /// Upstream's junction vectors are `Vec3f` (`GCodeProcessor.cpp:4091-
 /// 4097`): `exit_v = prev.feedrate * prev.exit_direction` multiplies

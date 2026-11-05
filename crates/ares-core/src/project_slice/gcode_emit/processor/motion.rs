@@ -103,6 +103,7 @@ pub(super) struct IndexedMotion {
 
 pub(super) struct MotionBlock {
     pub(super) klipper: KlipperConfig,
+    pub(super) junction_deviation: f64,
     pub(super) virtual_motion: bool,
     pub(super) distance: f64,
     /// Raw axis deltas (upstream `AxisCoords delta_pos` doubles,

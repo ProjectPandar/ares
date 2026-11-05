@@ -5,6 +5,7 @@ use super::{IndexedMotion, MoveRecorder, RecordedMotion, SeamDetector, word};
 pub(super) fn tool_change_block(klipper: KlipperConfig) -> MotionBlock {
     MotionBlock {
         klipper,
+        junction_deviation: 0.0,
         virtual_motion: false,
         distance: 0.0,
         delta: [0.0; 4],

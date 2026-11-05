@@ -22,6 +22,7 @@ struct PlannedBlock {
     nominal_length: bool,
     recalculate: bool,
     direction: [f32; 4],
+    jd_direction: [f32; 4],
     axis_feedrate: [f64; 4],
 }
 
@@ -177,11 +178,17 @@ fn prepare(
             nominal_length: false,
             recalculate: false,
             direction: [0.0; 4],
+            jd_direction: [0.0; 4],
             axis_feedrate: [0.0; 4],
         };
     }
     let distance = block.distance as f32;
     let delta = block.delta;
+    let jd_delta = delta.map(|component| component as f32);
+    let jd_norm = ((jd_delta[0] * jd_delta[0] + jd_delta[2] * jd_delta[2])
+        + (jd_delta[1] * jd_delta[1] + jd_delta[3] * jd_delta[3]))
+        .sqrt();
+    let jd_direction = jd_delta.map(|component| component / jd_norm);
     let jerk = block.jerk.map(|component| component as f32);
     let mut feedrate = block.speed as f32;
     // Enter direction (`GCodeProcessor.cpp:4000-4007`): the f32 delta
@@ -251,27 +258,43 @@ fn prepare(
             acceleration = (f64::from(max) / (axis_delta.abs() * inv_distance)) as f32;
         }
     }
-    // Safe feedrate from the jerk limits (`GCodeProcessor.cpp:4074-4080`).
-    let mut safe = cruise;
-    for axis in 0..4 {
-        if abs_axis_feedrate[axis] > f64::from(jerk[axis]) {
-            safe = safe.min(jerk[axis]);
-        }
-    }
-    let max_entry = if has_junction && let Some(previous) = previous {
-        junction_speed(
-            previous,
-            JunctionInput {
-                direction,
-                jerk,
-                cruise,
-                axis_feedrate,
-                safe,
-            },
-        )
+    // `process_G1:5544-5564`: positive Marlin junction deviation uses a
+    // zero safe feedrate and its own junction-speed calculation; non-positive
+    // junction deviation keeps the classic jerk path unchanged.
+    let junction_deviation = junction::junction_deviation_speed(
+        block,
+        previous.filter(|previous| has_junction && previous.cruise > 0.0001),
+        jd_direction,
+        cruise,
+        acceleration,
+    );
+    let safe = if junction_deviation.is_some() {
+        0.0
     } else {
+        let mut safe = cruise;
+        for axis in 0..4 {
+            if abs_axis_feedrate[axis] > f64::from(jerk[axis]) {
+                safe = safe.min(jerk[axis]);
+            }
+        }
         safe
     };
+    let max_entry = junction_deviation.unwrap_or_else(|| {
+        if has_junction && let Some(previous) = previous {
+            junction_speed(
+                previous,
+                JunctionInput {
+                    direction,
+                    jerk,
+                    cruise,
+                    axis_feedrate,
+                    safe,
+                },
+            )
+        } else {
+            safe
+        }
+    });
     let allowable = max_allowable_speed(acceleration, safe, distance);
     let entry = max_entry.min(allowable);
 
@@ -288,6 +311,7 @@ fn prepare(
         nominal_length: cruise <= allowable,
         recalculate: true,
         direction,
+        jd_direction,
         axis_feedrate,
     };
     (planned.time, planned.trapezoid) = block_time(planned);
