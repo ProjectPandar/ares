@@ -1,5 +1,5 @@
 {
-  "template": "/tmp/ares-object-ironing-remaining-discovery-8f6ce1660/inputs/rectilinear-control.3mf",
+  "template": "tests/parity/object-archimedean-ironing/rectilinear-control.3mf",
   "template_sha256": "74f447fffe933f8d5540426e8fea625894c9c63ee5fbce679861e9fcb94a5cce",
   "models": {
     "box": {

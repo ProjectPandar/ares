@@ -1,7 +1,6 @@
 {
   "approved_spec": "664b387d8beb7c5ae5d42c4c8ba3e7485cabfe23",
   "phase": "7 Native exit0 at actual664b387d8; off-total-motion equality expectation failed795XY differences retained, owner source-cited correction approved. Original input/profile/gates unchanged.",
-  "source_input": "/tmp/worker3-master-full-496-v1-seeded-cand-artifacts/case-PhFtBr/input.3mf",
   "source_sha256": "ed6913c385172728c1623f4fd51971c23d8c72939d7fcd44cbf20039c482fb37",
   "source_historical_execution": "f1db83f31 full retained SEMM distinct-profile input, not current admission/golden",
   "cases": {
@@ -73,6 +72,5 @@
   "ownership": "WipeTower2 production differences record/report only, worker2-owned; no worker3 repair",
   "input": "R1.3mf",
   "input_sha256": "0b765abbf5dcc3d7196a5555dba9241fc6c5d55830e0b986cf9fbc9a62b00b9f",
-  "artifact_root": "/tmp/worker3-semm-admission-6e-v1",
   "scope": "input only, no Native golden"
 }

@@ -2,14 +2,11 @@
   "status": "executed-public-red-not-parity",
   "source": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
   "ares_base": "37159663447569aaff248fab5c4a23b487bdfe77",
-  "cwd": "/home/indexyz/ares.pi-subagents-arachne-first-slice-aab21e8-7ce2-s0-t0",
-  "path_notation": "argv below is expanded by replacing $W with cwd, exactly as the executed shell commands expanded $PWD",
-  "runtime": "/tmp/squashfs-root/bin/orca-slicer",
+  "path_notation": "$W in argv below denotes the repository root, expanded as the executed shell commands expanded $PWD",
   "runtime_sha256": "64515d01f887b4797105530751a3ad59b0fa8537fbe3a294c420e1e14bba3b60",
-  "wrapper": "/home/indexyz/ares/scripts/orca-parity.sh",
+  "wrapper": "$W/scripts/orca-parity.sh",
   "wrapper_sha256": "01764d2db02c6febcb8f16992bbe34482bfb180ba9205956c5700fc588186932",
   "environment": {
-    "ORCA_APPDIR": "/tmp/squashfs-root",
     "ORCA_LIB_CACHE": "$W/.arachne-evidence/libs.cache",
     "XDG_CONFIG_HOME": "$W/.arachne-evidence/state",
     "XDG_CACHE_HOME": "$W/.arachne-evidence/state"
@@ -22,7 +19,7 @@
   },
   "export": {
     "argv": [
-      "/home/indexyz/ares/scripts/orca-parity.sh",
+      "$W/scripts/orca-parity.sh",
       "--datadir", "$W/.arachne-evidence/state",
       "--load-settings", "$W/tests/parity/arachne/machine.json;$W/tests/parity/arachne/process.json",
       "--load-filaments", "$W/tests/parity/arachne/filament.json",
@@ -37,7 +34,7 @@
   },
   "slice": {
     "argv": [
-      "/home/indexyz/ares/scripts/orca-parity.sh",
+      "$W/scripts/orca-parity.sh",
       "--datadir", "$W/.arachne-evidence/state",
       "--slice", "0",
       "--outputdir", "$W/.arachne-evidence/reference",

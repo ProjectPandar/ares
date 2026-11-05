@@ -10,7 +10,6 @@
     {
       "case": "spiral",
       "sha256": "7737bc4991c554b645ceed6fe819462cfb1ece3ad2b6cfdf9095dacd78dbde27",
-      "discovery_source": "/home/indexyz/ares-evidence/worker1/mk4-spiral-hole-discovery-1a57f677f/mk4-default-hole.3mf",
       "effective_settings": {
         "spiral_mode": "1",
         "ironing_type": "no ironing",
@@ -42,7 +41,6 @@
     {
       "case": "control",
       "sha256": "4c4ceaf15b083f1882c29ab0dc867ae62099abd3d3c13c30c8b6f6c2416766fa",
-      "discovery_source": "/home/indexyz/ares-evidence/worker1/mk4-default-hole-discovery-1a57f677f/mk4-default-hole.3mf",
       "effective_settings": {
         "spiral_mode": "0",
         "ironing_type": "no ironing",

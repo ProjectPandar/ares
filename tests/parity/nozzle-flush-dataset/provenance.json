@@ -1,5 +1,4 @@
 {
-  "source": "/tmp/worker3-dataset-baseline-admission-v1-seeded-artifacts/case-Lx9w4s/input.3mf",
   "source_sha256": "d80b6905cf7f074d2333ed8db077a94a57f937368a067024659936e67ab7cc17",
   "cases": {
     "D0": {
@@ -83,6 +82,5 @@
   },
   "all_other_members_equal": true,
   "actual_native_commit": "3d6de0318ee3534c54fda1bb0c4790cd8a0f9cbc",
-  "artifact_root": "/tmp/worker3-dataset-admission-v1",
   "scope": "input only, not output golden; full settings/member proofs external"
 }

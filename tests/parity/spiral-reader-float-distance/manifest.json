@@ -21,12 +21,6 @@
         "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
-      },
-      "provenance": {
-        "original_official_export": "/tmp/w5-discovery-89560-spiral-finish-flow1/control/exported.3mf",
-        "export_launch_receipt": "/tmp/w5-discovery-89560-spiral-finish-flow1/control/export-launch.json",
-        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-spiral-reader-float-distance/original-export-receipts/control",
-        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-spiral-reader-float-distance/witness/verified.json"
       }
     },
     "positive": {
@@ -42,12 +36,6 @@
         "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
-      },
-      "provenance": {
-        "original_official_export": "/tmp/w5-discovery-89560-spiral-finish-flow1/positive/exported.3mf",
-        "export_launch_receipt": "/tmp/w5-discovery-89560-spiral-finish-flow1/positive/export-launch.json",
-        "durable_export_receipts": "/home/indexyz/ares-coord/evidence/w5-spiral-reader-float-distance/original-export-receipts/positive",
-        "durable_verification": "/home/indexyz/ares-coord/evidence/w5-spiral-reader-float-distance/witness/verified.json"
       }
     }
   },

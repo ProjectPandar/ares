@@ -1,5 +1,4 @@
 {
-  "source": "/tmp/worker3-brim-baseline-v1-seeded-artifacts/case-nrnEEB/input.3mf",
   "source_sha256": "2ff24b19f73b7a07c90f1a2d910a5fe2b24f2c3b7e1b12e6667b3cff8c129cb9",
   "common_changes": {
     "brim_object_gap": "0.1",
@@ -41,6 +40,5 @@
   },
   "all_other_members_equal": true,
   "actual_native_commit": "b09dd730dd2b2088bc24841eb1903bd8ddc73eac",
-  "artifact_root": "/tmp/worker3-brim-admission-v1",
   "scope": "inputs only, no golden"
 }

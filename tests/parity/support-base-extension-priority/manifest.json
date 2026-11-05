@@ -7,7 +7,6 @@
       "case": "k1-tree-auto-overhang",
       "file": "tree.3mf",
       "sha256": "33023baaf33cdab1f5753cbc5beea7e104daa0d888f7a8daad1e1dddf8145d63",
-      "original": "/home/indexyz/ares-evidence/worker1/heavy-stock-discovery-a6232a1df/overhang-tree-support/project.3mf",
       "support_type": "tree(auto)",
       "enable_support": "1"
     },
@@ -15,7 +14,6 @@
       "case": "k1-stock-overhang",
       "file": "stock.3mf",
       "sha256": "b3f72543f8794281e1d99ef784a993dbb0523bfbe96468403cec4b21da34a5a2",
-      "original": "/home/indexyz/ares-evidence/worker1/heavy-stock-discovery-a6232a1df/overhang-stock-control/project.3mf",
       "support_type": "normal(auto)",
       "enable_support": "0"
     },
@@ -23,7 +21,6 @@
       "case": "k1-normal-auto-overhang",
       "file": "normal.3mf",
       "sha256": "05545ab741fbd56710dfc41aa5185654ad9b586901aa37d1e6fff34813cfb5fb",
-      "original": "/home/indexyz/ares-evidence/worker1/heavy-stock-discovery-a6232a1df/overhang-normal-support/project.3mf",
       "support_type": "normal(auto)",
       "enable_support": "1"
     }

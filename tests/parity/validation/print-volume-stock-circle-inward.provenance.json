@@ -1,7 +1,7 @@
 {
-  "parent": "/tmp/worker3-o6-stock-circle/stock-circle-cylinder.3mf",
+  "parent": "tests/parity/validation/print-volume-stock-circle-cylinder.3mf",
   "parent_sha256": "446e19e8f8dc9443c68774bc31fca6d0187798e41031882919cf0930362be8f6",
-  "input": "/tmp/worker3-o6-stock-circle-inward/input.3mf",
+  "input": "tests/parity/validation/print-volume-stock-circle-inward.3mf",
   "input_sha256": "8958ba6462946f57d1fc2d6443e6c7fac736a87be5e89dc68d2bbfc8837c1b13",
   "only_changed_entry": [
     "3D/3dmodel.model"

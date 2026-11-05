@@ -2,7 +2,6 @@
   "scope": "input only; no Native golden committed",
   "input": "P0.3mf",
   "input_sha256": "bc8798e5b984ecd394f44bdb0dbf501791d60ef09ec2c4ecba4d12e8ca42a869",
-  "source_input": "/tmp/worker3-master-full-496-v1-seeded-cand-artifacts/case-rdg7o7/input.3mf",
   "source_input_sha256": "0e44706e5fc06599cc4de6652d0022543c04af0f60b3105f1ba7f3a2e40bedf9",
   "source_label": "g4-mapping/manual-1-2",
   "shared_edits": [
@@ -11,7 +10,6 @@
   ],
   "approval": "b5737f235",
   "native_admission_execution": "b5737f2353f59b0cf67fa2ed342c4da45e0c670b",
-  "native_admission_root": "/tmp/worker3-printer-physical-admission-e6-v2",
   "native_sha256": "59fb88a2cb441713c2f572cb06e30e4ab58c22a676cacca1812372b9575e73ff",
   "cases": {
     "P0": {

@@ -5,10 +5,8 @@
   "upstream_commit": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
   "source": "PrintConfig.cpp:5399-5403; ToolOrdering.cpp:1150-1206; FilamentGroup.cpp:40-50; Generic TPU @BBL H2D.json inherited profile",
   "shape_source": "G4 coherent two Standard nozzle cube10 input; worker2 historical case-TMUNAk SHA392459a443928ecae0729cac72f5b33086953412aa6b8ee308dd6917448c62d2, geometry and selector shape only; no historic output carry",
-  "construction_receipt": "/tmp/worker3-master-admission-a539-v1/input-binding.json",
   "settings": "Auto For Flush at project and plate; stock GenericTPU Standard plus PLA; temperatures240 within both recommendation ranges; printable[2,3] retained; map[1,1]; master1",
   "derived_A2": "only master_extruder_id1\u21922; other settings and ZIP member bytes unchanged",
-  "Native_admission_receipt": "/tmp/worker3-master-admission-a539-v3/admission-audit.json; actuald53cc/a539 (authorized tests/docs-only carry to f45)",
   "owner_disposition": "master1 genuine-100 left-nozzle rejection; master2 legal TPUright/PLAleft. No bilateral TPU mask or TPU-AMS substitution.",
   "members": {
     "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",

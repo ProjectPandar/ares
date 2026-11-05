@@ -15,7 +15,6 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "source_export": "/tmp/w5-discovery-d592-spiral3/control/exported.3mf",
       "settings": {
         "spiral_mode": "0",
         "wall_direction": "ccw",
@@ -48,7 +47,6 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "source_export": "/tmp/w5-discovery-d592-spiral3/positive/exported.3mf",
       "settings": {
         "spiral_mode": "1",
         "wall_direction": "ccw",
@@ -81,7 +79,6 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "source_export": "/tmp/w5-discovery-d592-spiral-cw-rectangle/cw-rectangle-spiral-control/exported.3mf",
       "settings": {
         "spiral_mode": "1",
         "wall_direction": "cw",

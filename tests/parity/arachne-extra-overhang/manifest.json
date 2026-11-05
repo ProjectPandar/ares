@@ -15,7 +15,6 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "original_export": "/tmp/w5-overhang-isolate1/arachne-control/exported.3mf",
       "settings": {
         "wall_generator": "arachne",
         "wall_loops": "3",
@@ -43,7 +42,6 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "original_export": "/tmp/w5-overhang-isolate1/arachne-positive/exported.3mf",
       "settings": {
         "wall_generator": "arachne",
         "wall_loops": "3",
@@ -71,7 +69,6 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "original_export": "/tmp/w5-overhang-isolate1/arachne-undetected-control/exported.3mf",
       "settings": {
         "wall_generator": "arachne",
         "wall_loops": "3",
@@ -99,7 +96,6 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "original_export": "/tmp/w5-overhang-isolate1/arachne-undetected-extra/exported.3mf",
       "settings": {
         "wall_generator": "arachne",
         "wall_loops": "3",
@@ -127,7 +123,6 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "original_export": "/tmp/w5-overhang-isolate1/classic-detected-extra-control/exported.3mf",
       "settings": {
         "wall_generator": "classic",
         "wall_loops": "3",

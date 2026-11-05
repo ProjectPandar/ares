@@ -5,7 +5,6 @@
   "Native_ONLY": true,
   "cases": {
     "box-unit": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -46,7 +45,6 @@
       "classification": "regression_guard"
     },
     "outer075": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -87,7 +85,6 @@
       "classification": "candidate_red"
     },
     "inner065": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -128,7 +125,6 @@
       "classification": "candidate_red"
     },
     "sparse070": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -169,7 +165,6 @@
       "classification": "regression_guard"
     },
     "solid060": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -210,7 +205,6 @@
       "classification": "candidate_red"
     },
     "gate-off-all": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -251,7 +245,6 @@
       "classification": "regression_guard"
     },
     "first-unit": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -300,7 +293,6 @@
       "classification": "regression_guard"
     },
     "first055-on": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -349,7 +341,6 @@
       "classification": "candidate_red"
     },
     "first055-off": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/box.3mf",
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
       "changes": {
         "ironing_type": "no ironing",
@@ -398,7 +389,6 @@
       "classification": "regression_guard"
     },
     "gap-unit": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/gap.3mf",
       "template_sha256": "11f0236e5e047fba8eb2b4ab2a6e355d30cabd96a4cfc624b6072d1085700eab",
       "changes": {
         "ironing_type": "no ironing",
@@ -437,7 +427,6 @@
       "classification": "regression_guard"
     },
     "gap070": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/gap.3mf",
       "template_sha256": "11f0236e5e047fba8eb2b4ab2a6e355d30cabd96a4cfc624b6072d1085700eab",
       "changes": {
         "ironing_type": "no ironing",
@@ -476,7 +465,6 @@
       "classification": "candidate_red"
     },
     "support-unit": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/T.3mf",
       "template_sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
       "changes": {
         "ironing_type": "no ironing",
@@ -521,7 +509,6 @@
       "classification": "regression_guard"
     },
     "support070": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/T.3mf",
       "template_sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
       "changes": {
         "ironing_type": "no ironing",
@@ -566,7 +553,6 @@
       "classification": "candidate_red"
     },
     "interface065": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/T.3mf",
       "template_sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
       "changes": {
         "ironing_type": "no ironing",
@@ -611,7 +597,6 @@
       "classification": "candidate_red"
     },
     "overhang070": {
-      "template": "/tmp/ares-gated-flow-discovery-v2-fffecfa38/templates/T.3mf",
       "template_sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
       "changes": {
         "ironing_type": "no ironing",
@@ -659,8 +644,7 @@
   "source": {
     "upstream_pin": "8500fcdccaa10b5099ac20d252af3a7c560046f1",
     "consumer": "OrcaSlicer/src/libslic3r/GCode.cpp:6485-6507",
-    "approved_spec": "4701b06a025ab81b20a2ea73becf26a2cb4d36df",
-    "discovery_audit": "/tmp/ares-gated-flow-spec-reviewed-scope/spec-review-audit.json"
+    "approved_spec": "4701b06a025ab81b20a2ea73becf26a2cb4d36df"
   },
   "classification_ruling": "Sparse070 is existing parity, not inverted RED. Candidate passes become guards; failing guards stop. Full matrix reruns at final classification hash; success assertions unchanged."
 }
