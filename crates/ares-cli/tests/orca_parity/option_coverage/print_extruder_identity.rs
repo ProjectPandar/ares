@@ -158,6 +158,15 @@ async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
     fs::write(directory.join("ares.gcode"), &ares).unwrap();
     assert_eq!(fs::read(&input).unwrap(), project);
     let ares = String::from_utf8(ares).unwrap();
+    if printer == "Bambu Lab H2D 0.4 nozzle" {
+        crate::runner::first_travel_acceleration_ordering::assert_multi_nozzle_prefix(
+            &directory,
+            case.label,
+            native.as_bytes(),
+            ares.as_bytes(),
+            "M971 S11 C10 O0 T3000",
+        );
+    }
     if case.label == "default" {
         crate::runner::first_travel_acceleration_ordering::assert_first_travel_prefix(
             &directory,

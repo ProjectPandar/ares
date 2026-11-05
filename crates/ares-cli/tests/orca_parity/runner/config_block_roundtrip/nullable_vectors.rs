@@ -9,6 +9,8 @@ mod inner_wall_speed_readers;
 mod input;
 #[path = "nullable_vectors/mapped_nozzle.rs"]
 mod mapped_nozzle;
+#[path = "nullable_vectors/multihead_snapshot.rs"]
+mod multihead_snapshot;
 #[path = "nullable_vectors/overlays.rs"]
 mod overlays;
 #[path = "nullable_vectors/scalar_authored.rs"]

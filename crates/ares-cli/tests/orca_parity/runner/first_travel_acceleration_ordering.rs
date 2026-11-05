@@ -4,6 +4,18 @@
 mod final_layer;
 #[path = "first_travel_acceleration_ordering/inline_snapshot.rs"]
 mod inline_snapshot;
+#[path = "first_travel_acceleration_ordering/multihead_snapshot.rs"]
+mod multihead_snapshot;
+
+pub(crate) fn assert_multi_nozzle_prefix(
+    directory: &std::path::Path,
+    case: &str,
+    native: &[u8],
+    ares: &[u8],
+    photo: &str,
+) {
+    multihead_snapshot::assert_prefix(directory, case, &commands(native), &commands(ares), photo);
+}
 
 pub(crate) fn assert_final_layer(directory: &std::path::Path, native: &[u8], ares: &[u8]) {
     final_layer::assert_prefix(directory, &commands(native), &commands(ares));
