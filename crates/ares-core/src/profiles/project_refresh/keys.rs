@@ -20,7 +20,17 @@ pub(super) fn default_value(key: &str) -> Result<Option<RawConfigValue>, SliceEr
     let Some(definition) = option_definition(key) else {
         return Ok(None);
     };
-    let wire = if definition.default_is_nil {
+    // PresetBundle.cpp:508-518 nils every nullable filament override key of the default filament preset.
+    let wire = if definition.default_is_nil
+        || (is_filament_extruder_override_key(key)
+            && matches!(
+                definition.kind,
+                OptionValueKind::BoolsNullable
+                    | OptionValueKind::EnumsNullable
+                    | OptionValueKind::FloatsNullable
+                    | OptionValueKind::IntsNullable
+                    | OptionValueKind::PercentsNullable
+            )) {
         "nil"
     } else if definition.full_config_default {
         definition.default_wire_value
@@ -77,4 +87,36 @@ pub(super) fn default_value(key: &str) -> Result<Option<RawConfigValue>, SliceEr
         }
     };
     Ok(Some(value))
+}
+
+/// `is_filament_extruder_override_key` (`PrintConfig.cpp:130-139`) over
+/// `filament_extruder_override_keys` (`PrintConfig.cpp:97-122`).
+fn is_filament_extruder_override_key(key: &str) -> bool {
+    matches!(
+        key,
+        "filament_retraction_length"
+            | "filament_z_hop"
+            | "filament_z_hop_types"
+            | "filament_retract_lift_above"
+            | "filament_retract_lift_below"
+            | "filament_retract_lift_enforce"
+            | "filament_retraction_speed"
+            | "filament_deretraction_speed"
+            | "filament_retract_restart_extra"
+            | "filament_retraction_minimum_travel"
+            | "filament_retract_length_toolchange"
+            | "filament_retract_restart_extra_toolchange"
+            | "filament_wipe_distance"
+            | "filament_retract_when_changing_layer"
+            | "filament_wipe"
+            | "filament_retract_before_wipe"
+            | "filament_retract_after_wipe"
+            | "filament_long_retractions_when_cut"
+            | "filament_retraction_distances_when_cut"
+            | "filament_retract_length_nc"
+            | "filament_ironing_flow"
+            | "filament_ironing_spacing"
+            | "filament_ironing_inset"
+            | "filament_ironing_speed"
+    )
 }
