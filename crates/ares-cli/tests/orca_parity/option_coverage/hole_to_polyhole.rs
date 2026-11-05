@@ -12,6 +12,9 @@
 //! block with a centered r=5 mm 64-gon hole (generated; see
 //! `docs/architecture/hole-to-polyhole-spec.md`).
 
+#[path = "hole_to_polyhole/aligned_seam_wipe.rs"]
+mod aligned_seam_wipe;
+
 use super::*;
 use crate::{golden, runner::stages};
 use serde_json::json;
