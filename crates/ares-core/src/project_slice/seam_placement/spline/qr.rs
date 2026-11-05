@@ -344,19 +344,18 @@ fn next_sse_packet(products: &mut impl Iterator<Item = f32>) -> [f32; 4] {
     ]
 }
 
-fn sse_dot_single(products: impl ExactSizeIterator<Item = f32>) -> f32 {
-    let len = products.len();
-    let packeted = len / 4 * 4;
+fn sse_dot_single(mut products: impl ExactSizeIterator<Item = f32>) -> f32 {
+    let packeted = products.len() / 4 * 4;
     let mut lanes = [0.0_f32; 4];
-    let mut scalar = 0.0_f32;
-    for (index, product) in products.enumerate() {
-        if index < packeted {
-            lanes[index % 4] += product;
-        } else {
-            scalar += product;
-        }
+    for (index, product) in products.by_ref().take(packeted).enumerate() {
+        lanes[index % 4] += product;
     }
-    (lanes[0] + lanes[2]) + (lanes[1] + lanes[3]) + scalar
+    // Eigen GeneralMatrixVector.h:417–436 adds each scalar to the packet redux.
+    let mut result = (lanes[0] + lanes[2]) + (lanes[1] + lanes[3]);
+    for product in products {
+        result += product;
+    }
+    result
 }
 
 // Eigen 5 evaluates a dynamic one-column remainder with four packet
