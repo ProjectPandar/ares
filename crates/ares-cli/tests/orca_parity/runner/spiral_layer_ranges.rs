@@ -2,6 +2,9 @@
 //! Release NDEBUG keeps ordinary ranged slicing for multi-range spiral input.
 use crate::{golden, runner::native_stream_case};
 
+#[path = "spiral_layer_acceleration.rs"]
+mod spiral_layer_acceleration;
+
 const SOURCE: &[u8] =
     include_bytes!("../../../../../tests/parity/spiral-hole-projected-split/spiral.3mf");
 const SOURCE_SHA: &str = "7737bc4991c554b645ceed6fe819462cfb1ece3ad2b6cfdf9095dacd78dbde27";
