@@ -17,7 +17,9 @@ fn compare(enabled: bool) {
         json!({
             "farthest_point_timelapse": if enabled { "1" } else { "0" },
             "timelapse_type":"0", "printer_structure":"corexy",
-            "physical_extruder_map":["1","0"], "extruder_offset":["0x0","2x0"],
+            "physical_extruder_map":["1","0"], "extruder_offset":["0x0","0x0"],
+            "retraction_length":["0.4","0.4"], "retraction_speed":["30","30"],
+            "deretraction_speed":["30","30"],
             "machine_max_acceleration_e":["5000","5000","5000","5000"],
             "machine_max_speed_e":["120","120","120","120"]
         })
@@ -50,7 +52,7 @@ fn compare(enabled: bool) {
         reference.root.join("multihead-api-result.json"),
         serde_json::to_vec_pretty(&json!({
             "case":case,"input_sha256":sha(&project),"runtime_head":1,
-            "firmware_label":0,"nozzle_offset_mm":[2,0],
+            "firmware_label":0,"nozzle_offset_mm":[0,0],
             "api_error":result.as_ref().err().map(|e|format!("{e:?}")),
             "whole_output_parity_claimed":false
         }))
