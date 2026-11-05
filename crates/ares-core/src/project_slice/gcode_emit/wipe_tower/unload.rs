@@ -174,7 +174,7 @@ impl Generator<'_> {
             writer.position = position;
         }
         writer.suppress_preview = false;
-        writer.gcode.push_str("G4 S0\n");
+        Writer::flush_planner_queue(&mut writer.gcode, self.flavor);
     }
 
     fn ramming_first_line(&self, y_step: f32) -> Option<f32> {

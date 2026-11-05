@@ -127,9 +127,10 @@ impl Generator<'_> {
         }
         writer.speed_override_restore();
         writer.feedrate(self.settings.process.gcode.travel_speed.0 as f32 * 60.0);
+        Writer::flush_planner_queue(&mut writer.gcode, self.flavor);
         writer
             .gcode
-            .push_str("G4 S0\nG92 E0\n; CP TOOLCHANGE END\n;------------------\n\n\n");
+            .push_str("G92 E0\n; CP TOOLCHANGE END\n;------------------\n\n\n");
         self.used_filament[self.current_tool] += writer.take_used_filament();
         self.result(
             writer,
@@ -152,7 +153,7 @@ impl Generator<'_> {
             super::super::format_processor_float(f64::from(position[1]))
         ));
         writer.set_tool(tool, self.filaments[tool].max_e_speed);
-        writer.gcode.push_str("G4 S0\n");
+        Writer::flush_planner_queue(&mut writer.gcode, self.flavor);
         self.current_tool = tool;
     }
 

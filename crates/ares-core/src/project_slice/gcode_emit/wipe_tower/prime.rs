@@ -1,5 +1,7 @@
 //! `WipeTower2::prime` and constructor bed classification.
-use super::{generator::Generator, geometry::BoxCoordinates, result::ToolChangeResult};
+use super::{
+    generator::Generator, geometry::BoxCoordinates, result::ToolChangeResult, writer::Writer,
+};
 
 impl Generator<'_> {
     pub(super) fn prime(&mut self, height: f32, tools: &[usize]) -> Vec<ToolChangeResult> {
@@ -80,9 +82,10 @@ impl Generator<'_> {
             if index + 1 == tools.len() {
                 writer.speed_override_restore();
                 writer.feedrate(self.settings.process.gcode.travel_speed.0 as f32 * 60.0);
+                Writer::flush_planner_queue(&mut writer.gcode, self.flavor);
                 writer
                     .gcode
-                    .push_str("G4 S0\nG92 E0\n; CP PRIMING END\n;------------------\n\n\n");
+                    .push_str("G92 E0\n; CP PRIMING END\n;------------------\n\n\n");
             }
             results.push(self.result(writer, old_tool, super::result::Kind::Priming));
         }

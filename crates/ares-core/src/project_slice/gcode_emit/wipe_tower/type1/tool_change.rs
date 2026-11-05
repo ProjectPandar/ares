@@ -1,5 +1,5 @@
 //! `WipeTower.cpp:2760–2913`: Type1 tool-change result and stock template slots.
-use super::super::geometry::BoxCoordinates;
+use super::super::{geometry::BoxCoordinates, writer::Writer as CommandWriter};
 use super::{generator::Generator, result::Result};
 use crate::geometry::ClipperError;
 use std::fmt::Write;
@@ -86,7 +86,11 @@ impl Generator<'_> {
             .push_str("[filament_end_gcode]\n[change_filament_gcode]\n");
         writer.tool = new;
         writer.max_e_speed = self.filaments[new].max_e_speed;
-        writer.gcode.push_str("[filament_start_gcode]\nG4 S0\n");
+        writer.gcode.push_str("[filament_start_gcode]\n");
+        CommandWriter::flush_planner_queue(
+            &mut writer.gcode,
+            self.settings.printer.gcode.gcode_flavor,
+        );
         self.current = new;
         let base = if self.first_layer() {
             self.filaments[new].first_temperature
@@ -158,9 +162,13 @@ impl Generator<'_> {
             depth - nozzle_depth * self.plan.layers[self.index].spacing;
         self.plan.blocks[block_index].last_filament = Some(new);
         writer.feedrate(self.settings.process.gcode.travel_speed.0 as f32 * 60.0);
+        CommandWriter::flush_planner_queue(
+            &mut writer.gcode,
+            self.settings.printer.gcode.gcode_flavor,
+        );
         writer
             .gcode
-            .push_str("G4 S0\nG92 E0\n; CP TOOLCHANGE END\n;------------------\n\n\n");
+            .push_str("G92 E0\n; CP TOOLCHANGE END\n;------------------\n\n\n");
         self.used[new] += std::mem::take(&mut writer.used);
         let mut result = Result::from_writer(writer, self.z, self.height, old, false);
         result.tool_change = true;

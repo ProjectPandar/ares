@@ -1,5 +1,5 @@
 //! `Print.cpp:3537–3571`: retain Type1 generated results and accounting.
-use super::super::{super::tool_ordering::LayerTools, Data};
+use super::super::{super::tool_ordering::LayerTools, Data, writer::Writer as CommandWriter};
 use super::{generator::Generator, planning::Planned, result::Result};
 use crate::{
     ProjectSettings,
@@ -38,9 +38,10 @@ impl Planned {
         )
         .unwrap();
         writer.feedrate(settings.process.gcode.travel_speed.0 as f32 * 60.0);
+        CommandWriter::flush_planner_queue(&mut writer.gcode, settings.printer.gcode.gcode_flavor);
         writer
             .gcode
-            .push_str("G4 S0\nG92 E0\n; CP TOOLCHANGE END\n;------------------\n\n\n");
+            .push_str("G92 E0\n; CP TOOLCHANGE END\n;------------------\n\n\n");
         let mut final_purge = Result::from_writer(
             writer,
             generator.z,
