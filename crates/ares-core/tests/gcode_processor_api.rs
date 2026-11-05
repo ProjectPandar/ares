@@ -2,7 +2,7 @@
 //! Failure inventory before exposure: missing public entry, different processor
 //! accounting, dropped moves/settings, or an unnecessary G-code rewrite.
 
-use ares_core::{ProjectSettings, gcode_processor};
+use ares_core::{GCodeFlavor, ProjectSettings, gcode_processor};
 
 #[test]
 fn public_processor_delegates_handwritten_relative_extrusion() {
@@ -28,4 +28,16 @@ fn public_processor_delegates_handwritten_relative_extrusion() {
     assert_eq!(extrusion[1].gcode_id, 4);
     assert_eq!(extrusion[1].position, [2.0, 0.0, 0.0]);
     assert_eq!(extrusion[1].delta_extruder, 10.0);
+}
+
+#[test]
+fn public_processor_matches_native_marlin_junction_deviation_start() {
+    let mut settings = ProjectSettings::default();
+    settings.printer.gcode.gcode_flavor = GCodeFlavor::MarlinFirmware;
+    let input = "M201 X1000 Y1000 Z500 E5000\nM203 X500 Y500 Z12 E120\nM205 X9 Y9 Z0.2 E2.5 J0.01\nM204 P1000 T1000\nG1 X100 F6000\nG1 X200 F6000\n";
+    let output = gcode_processor::process_gcode(input, &settings, false, false);
+    assert_eq!(
+        format!("{:.6}", output.result.print_statistics.normal_time),
+        "2.099956"
+    );
 }
