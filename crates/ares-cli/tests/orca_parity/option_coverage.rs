@@ -106,6 +106,8 @@ mod filament_override_range;
 mod hole_to_polyhole;
 #[path = "option_coverage/ironing_pattern.rs"]
 mod ironing_pattern;
+#[path = "option_coverage/load_filament_variant_normalize.rs"]
+mod load_filament_variant_normalize;
 #[path = "option_coverage/max_travel_detour_distance.rs"]
 mod max_travel_detour_distance;
 #[path = "option_coverage/refresh_preset_includes.rs"]
