@@ -1,7 +1,13 @@
 //! `GCode.cpp:7386–7392` layer-start gate and first-travel command ordering.
 
+#[path = "first_travel_acceleration_ordering/final_layer.rs"]
+mod final_layer;
 #[path = "first_travel_acceleration_ordering/inline_snapshot.rs"]
 mod inline_snapshot;
+
+pub(crate) fn assert_final_layer(directory: &std::path::Path, native: &[u8], ares: &[u8]) {
+    final_layer::assert_prefix(directory, &commands(native), &commands(ares));
+}
 
 pub(crate) fn assert_first_travel_prefix(
     directory: &std::path::Path,

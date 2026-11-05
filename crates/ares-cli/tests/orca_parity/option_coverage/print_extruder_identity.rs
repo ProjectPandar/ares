@@ -165,6 +165,11 @@ async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
             native.as_bytes(),
             ares.as_bytes(),
         );
+        crate::runner::first_travel_acceleration_ordering::assert_final_layer(
+            &directory,
+            native.as_bytes(),
+            ares.as_bytes(),
+        );
     }
     assert_eq!(
         crate::cli_retained_input::normalize_generator(&ares, "Ares"),
