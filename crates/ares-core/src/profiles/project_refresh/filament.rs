@@ -40,7 +40,7 @@ pub(super) fn apply(
         }
     }
     groups.resize(count, (0, 0));
-    normalize_variants(result, count, &ids, filaments)?;
+    normalize_variants(result, filaments)?;
     let mut start = 0;
     for (slot, config) in filaments.iter().enumerate() {
         let old_count = groups[slot].1;
@@ -112,8 +112,6 @@ pub(super) fn apply(
 
 fn normalize_variants(
     result: &mut ProjectSettingsRaw,
-    count: usize,
-    ids: &[usize],
     filaments: &[Option<ProjectSettingsRaw>],
 ) -> Result<(), SliceError> {
     for key in crate::filament_options_with_variant() {
@@ -126,20 +124,8 @@ fn normalize_variants(
         {
             result.insert((*key).to_owned(), value);
         }
-        let Some(value) = result.get(key) else {
-            continue;
-        };
-        let values = vector(value);
-        if ids.len() <= count || (values.len() != count && values.len() != 1) {
-            continue;
-        }
-        // PrintConfig.cpp:11431–11457: one value per filament or singleton -> original variants.
-        let expanded = ids
-            .iter()
-            .map(|id| values[if values.len() == 1 { 0 } else { id - 1 }].clone())
-            .collect();
-        result.insert((*key).to_owned(), RawConfigValue::List(expanded));
     }
+    result.normalize_filament_values_to_variants();
     Ok(())
 }
 

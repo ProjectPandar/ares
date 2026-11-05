@@ -165,6 +165,8 @@ pub(crate) fn load_project_with_preparation(
     // `project_config_substitutions` reports them). Caller overrides below merge
     // through their own deserialization rule and are not substituted.
     project_settings_raw.normalize_embedded_wire_substitutions();
+    // `handle_legacy_composite` (`PrintConfig.cpp:10094-10096`) ends the same `load_from_json`.
+    project_settings_raw.normalize_filament_values_to_variants();
     // CLI:1704 captures the old configuration before user edits.
     let preparation = crate::options::flush_matrix::PreparationContext::capture(
         &project_settings_raw,
@@ -195,6 +197,7 @@ pub(crate) fn load_project_with_preparation(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
+    project_settings_raw.complete_filament_variant_defaults()?;
     let settings = <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
         project_settings_raw.clone().into_object(),
     )

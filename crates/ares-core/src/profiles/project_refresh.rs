@@ -2,6 +2,8 @@ mod filament;
 mod keys;
 mod preset;
 
+pub(crate) use keys::default_value;
+
 use super::{Placement, catalog::Catalog};
 use crate::{ConfigOverrides, Project, SliceError};
 

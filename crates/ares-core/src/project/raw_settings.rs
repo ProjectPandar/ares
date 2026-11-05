@@ -8,6 +8,7 @@
 //! holding dynamic JSON.
 
 mod deserialize;
+mod filament_variants;
 mod numeric;
 
 use std::collections::BTreeMap;

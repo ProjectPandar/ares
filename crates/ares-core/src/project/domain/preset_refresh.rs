@@ -14,6 +14,7 @@ impl Project {
         raw.handle_legacy();
         raw.normalize_wire_vector_shapes()
             .map_err(SliceError::InvalidInput)?;
+        raw.complete_filament_variant_defaults()?;
         self.settings = crate::options::json_deserialize::deserialize_preset_config::<
             ProjectSettingsBuilder,
         >(raw.clone().into_object())

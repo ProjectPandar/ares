@@ -15,7 +15,7 @@ pub(super) fn names(kind: ProfileKind) -> impl Iterator<Item = &'static str> {
     first.iter().chain(last).copied()
 }
 
-pub(super) fn default_value(key: &str) -> Result<Option<RawConfigValue>, SliceError> {
+pub(crate) fn default_value(key: &str) -> Result<Option<RawConfigValue>, SliceError> {
     // PresetCollection's default preset applies only definitions present in PrintConfigDef.
     let Some(definition) = option_definition(key) else {
         return Ok(None);
