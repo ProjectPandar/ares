@@ -58,6 +58,7 @@ impl Estimate {
         let mut prepare_stage = false;
         let mut saw_motion_command = false;
         let mut measure_g29_time = false;
+        let mut g29_time_added = false;
         let mut filaments = FilamentChange::new(config, machine_load_filament_time);
         let mut used_filaments = UsedFilaments::new(config);
         // GCode.cpp's fresh export processor keeps its default XY offset zero.
@@ -111,16 +112,17 @@ impl Estimate {
                 measure_g29_time = false;
             }
             let is_g29 = code.starts_with("G29") && !code.starts_with("G29.");
-            // Orca counts the hardcoded 260s G29 bedding delay on every
-            // machine; the M622 J1 gate only applies to BBL printers
-            // (`GCodeProcessor.cpp:4859-4869`).
-            let bbl_gating_blocks_delay = limits.bbl_printer && !measure_g29_time;
+            // `GCodeProcessor::process_G29` (`GCodeProcessor.cpp:6367-6375`): only the first G29
+            // passing `!s_IsBBLPrinter || m_measure_g29_time` adds time and synchronizes; the
+            // `m_g29_time_added` latch is reset per processor run (`:3808`).
+            let g29_adds_time =
+                is_g29 && (!limits.bbl_printer || measure_g29_time) && !g29_time_added;
+            g29_time_added |= g29_adds_time;
             let delay = match is_g29 {
-                true if bbl_gating_blocks_delay => None,
+                true if !g29_adds_time => None,
                 _ => command_delay(code),
             };
-            let measured_g29 = is_g29 && !bbl_gating_blocks_delay;
-            if synchronizes_planner(code, measured_g29) {
+            if synchronizes_planner(code, g29_adds_time) {
                 events.push(FlushEvent {
                     block_count: blocks.len(),
                     klipper: state.klipper,

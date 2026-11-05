@@ -25,7 +25,7 @@ pub(super) fn command_delay(code: &str) -> Option<f64> {
             return Some(milliseconds * 0.001);
         }
     }
-    // OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:4859-4864.
+    // OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:6367-6375.
     if code.starts_with("G29") && !code.starts_with("G29.") {
         return Some(260.0);
     }
