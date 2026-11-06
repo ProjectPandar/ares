@@ -115,6 +115,8 @@ mod bbl_toolchange_command;
 mod cooling_fan_nozzle_range_variants;
 #[path = "option_coverage/filament_override_range.rs"]
 mod filament_override_range;
+#[path = "option_coverage/first_point_travel.rs"]
+mod first_point_travel;
 #[path = "option_coverage/hole_to_polyhole.rs"]
 mod hole_to_polyhole;
 #[path = "option_coverage/ironing_pattern.rs"]
