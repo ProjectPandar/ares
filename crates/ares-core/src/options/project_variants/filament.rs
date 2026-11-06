@@ -170,6 +170,16 @@ pub(super) fn materialize(
         indices
     );
     select_vec_field!(
+        settings.filament.gcode.filament_pre_cooling_temperature,
+        source.filament.gcode.filament_pre_cooling_temperature,
+        indices
+    );
+    select_vec_field!(
+        settings.filament.gcode.filament_pre_cooling_temperature_nc,
+        source.filament.gcode.filament_pre_cooling_temperature_nc,
+        indices
+    );
+    select_vec_field!(
         settings
             .filament
             .retract_overrides

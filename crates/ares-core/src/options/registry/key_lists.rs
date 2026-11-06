@@ -130,6 +130,8 @@ const FILAMENT_OPTIONS_WITH_VARIANT_KEYS: &[&str] = &[
     "filament_multitool_ramming",
     "filament_multitool_ramming_flow",
     "filament_multitool_ramming_volume",
+    "filament_pre_cooling_temperature",
+    "filament_pre_cooling_temperature_nc",
     "filament_retract_before_wipe",
     "filament_retract_lift_above",
     "filament_retract_lift_below",

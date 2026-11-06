@@ -73,6 +73,14 @@ where
         &value.gcode.filament_multitool_ramming_volume,
     )?;
     map.serialize_entry("filament_notes", &value.print.filament_notes)?;
+    map.serialize_entry(
+        "filament_pre_cooling_temperature",
+        &NullableVectorRef::new(&value.gcode.filament_pre_cooling_temperature),
+    )?;
+    map.serialize_entry(
+        "filament_pre_cooling_temperature_nc",
+        &NullableVectorRef::new(&value.gcode.filament_pre_cooling_temperature_nc),
+    )?;
     map.serialize_entry("filament_printable", &value.gcode.filament_printable)?;
     map.serialize_entry(
         "filament_ramming_parameters",

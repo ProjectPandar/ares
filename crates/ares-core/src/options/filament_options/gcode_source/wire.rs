@@ -1,13 +1,14 @@
 use serde::{Serialize, Serializer, ser::SerializeMap};
 
 use super::FilamentGCodeSourceOptions;
+use crate::options::config_types::semantic::NullableVectorRef;
 
 impl Serialize for FilamentGCodeSourceOptions {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(53))?;
+        let mut map = serializer.serialize_map(Some(55))?;
         serialize_entries(&mut map, self)?;
         map.end()
     }
@@ -104,6 +105,14 @@ where
     map.serialize_entry(
         "filament_multitool_ramming_volume",
         &value.filament_multitool_ramming_volume,
+    )?;
+    map.serialize_entry(
+        "filament_pre_cooling_temperature",
+        &NullableVectorRef::new(&value.filament_pre_cooling_temperature),
+    )?;
+    map.serialize_entry(
+        "filament_pre_cooling_temperature_nc",
+        &NullableVectorRef::new(&value.filament_pre_cooling_temperature_nc),
     )?;
     map.serialize_entry("filament_printable", &value.filament_printable)?;
     map.serialize_entry(

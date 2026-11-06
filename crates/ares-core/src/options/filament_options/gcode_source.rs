@@ -90,6 +90,8 @@ declare_option_group! {
         filament_extruder_variant => "filament_extruder_variant": VariantStride = variant_stride(&["Direct Drive Standard"]),
         filament_flush_volumetric_speed => "filament_flush_volumetric_speed": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.0]),
         filament_flush_temp => "filament_flush_temp": Vec<Nullable<OrcaInt>> = nullable_ints(&[0]),
+        filament_pre_cooling_temperature => "filament_pre_cooling_temperature": Vec<Nullable<OrcaInt>> = nullable_ints(&[0]),
+        filament_pre_cooling_temperature_nc => "filament_pre_cooling_temperature_nc": Vec<Nullable<OrcaInt>> = nullable_ints(&[0]),
         retraction_distances_when_ec => "retraction_distances_when_ec": Vec<Nullable<OrcaFloat>> = nullable_floats(&[10.0]),
         long_retractions_when_ec => "long_retractions_when_ec": Vec<Nullable<OrcaBool>> = nullable_bools(&[false]),
         filament_start_gcode => "filament_start_gcode": OrcaStrings = strings(&[" "]),
@@ -123,7 +125,7 @@ declare_option_group! {
 }
 
 impl FilamentGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 53] = [
+    pub const DECLARATION_ORDER: [&'static str; 55] = [
         "filament_end_gcode",
         "filament_flow_ratio",
         "enable_pressure_advance",
@@ -152,6 +154,8 @@ impl FilamentGCodeSourceOptions {
         "filament_extruder_variant",
         "filament_flush_volumetric_speed",
         "filament_flush_temp",
+        "filament_pre_cooling_temperature",
+        "filament_pre_cooling_temperature_nc",
         "retraction_distances_when_ec",
         "long_retractions_when_ec",
         "filament_start_gcode",
@@ -199,6 +203,8 @@ impl FilamentGCodeSourceOptions {
             retraction_distances_when_ec => "retraction_distances_when_ec",
             filament_flush_volumetric_speed => "filament_flush_volumetric_speed",
             filament_flush_temp => "filament_flush_temp",
+            filament_pre_cooling_temperature => "filament_pre_cooling_temperature",
+            filament_pre_cooling_temperature_nc => "filament_pre_cooling_temperature_nc",
             filament_cooling_before_tower => "filament_cooling_before_tower",
             filament_adaptive_volumetric_speed => "filament_adaptive_volumetric_speed",
         );
@@ -221,6 +227,8 @@ impl FilamentGCodeSourceOptionsBuilder {
             retraction_distances_when_ec => "retraction_distances_when_ec",
             filament_flush_volumetric_speed => "filament_flush_volumetric_speed",
             filament_flush_temp => "filament_flush_temp",
+            filament_pre_cooling_temperature => "filament_pre_cooling_temperature",
+            filament_pre_cooling_temperature_nc => "filament_pre_cooling_temperature_nc",
             filament_cooling_before_tower => "filament_cooling_before_tower",
             volumetric_speed_coefficients => "volumetric_speed_coefficients",
             filament_adaptive_volumetric_speed => "filament_adaptive_volumetric_speed",
@@ -242,6 +250,8 @@ impl FilamentGCodeSourceOptionsBuilder {
         let retraction_distances_when_ec = self.retraction_distances_when_ec.take();
         let filament_flush_volumetric_speed = self.filament_flush_volumetric_speed.take();
         let filament_flush_temp = self.filament_flush_temp.take();
+        let filament_pre_cooling_temperature = self.filament_pre_cooling_temperature.take();
+        let filament_pre_cooling_temperature_nc = self.filament_pre_cooling_temperature_nc.take();
         let filament_cooling_before_tower = self.filament_cooling_before_tower.take();
         let volumetric_speed_coefficients = self.volumetric_speed_coefficients.take();
         let filament_adaptive_volumetric_speed = self.filament_adaptive_volumetric_speed.take();
@@ -255,6 +265,8 @@ impl FilamentGCodeSourceOptionsBuilder {
         apply_nullable_profile_fields!(target, mapping, exact_variant_vectors_equal;
             long_retractions_when_ec => "long_retractions_when_ec",
             filament_flush_temp => "filament_flush_temp",
+            filament_pre_cooling_temperature => "filament_pre_cooling_temperature",
+            filament_pre_cooling_temperature_nc => "filament_pre_cooling_temperature_nc",
             filament_adaptive_volumetric_speed => "filament_adaptive_volumetric_speed",
         );
         apply_wrapped_profile_fields!(target, mapping;
