@@ -97,10 +97,11 @@ pub(super) fn emit(
         .or(contour_z)
         .or(after_contour.then_some(state.layer_z));
     let target_z = travel_z.unwrap_or(state.layer_z);
-    let needs_travel = first_position
-        || !state.last_position_defined
+    // `GCode.cpp:9226-9227`: the writer's clear flag is not part of the condition, and the
+    // change-layer flag counts whatever the writer position.
+    let needs_travel = !state.last_position_defined
         || state.last_scaled_position != first_scaled
-        || layer_change_travel
+        || state.layer_change_travel_pending
         || slope_needs_z_travel;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     let (travel_set_layer_z, eager_lifted_travel, unclear_position_travel) = if needs_travel {

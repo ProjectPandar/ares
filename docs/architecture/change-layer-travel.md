@@ -34,7 +34,7 @@ The flag already exists in Ares as `EmitState::layer_change_travel_pending`, and
 - **Cleared** in `motion/path/start_travel.rs` after the first-point travel (`:9245`, `:10504`).
 
 The missing piece is the `_extrude` condition:
-- **`motion/path/start_travel.rs`, `needs_travel`:** gains `layer_change_travel`, Ares's `m_need_change_layer_lift_z` gated on a clear position, matching `GCode.cpp:9226`. The zero-length change-layer travel then goes through `approach::emit_needs_travel`, Ares's `travel_to` port, which handles:
+- **`motion/path/start_travel.rs`, `needs_travel`:** gains `layer_change_travel_pending`, Ares's `m_need_change_layer_lift_z`, ungated as at `GCode.cpp:9226` (see `first-point-travel-condition.md`). The zero-length change-layer travel then goes through `approach::emit_needs_travel`, Ares's `travel_to` port, which handles:
   - the acceleration and jerk (`motion::begin_path_travel`, `state.rs:285-330`);
   - the object labels;
   - the forced `G1 X Y Z` move.
