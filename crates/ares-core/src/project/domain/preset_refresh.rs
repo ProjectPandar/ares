@@ -14,10 +14,11 @@ impl Project {
         raw.handle_legacy();
         raw.normalize_wire_vector_shapes()
             .map_err(SliceError::InvalidInput)?;
-        raw.complete_filament_variant_defaults()?;
+        let mut materialized_raw = raw.clone();
+        materialized_raw.complete_filament_variant_defaults()?;
         self.settings = crate::options::json_deserialize::deserialize_preset_config::<
             ProjectSettingsBuilder,
-        >(raw.clone().into_object())
+        >(materialized_raw.into_object())
         .map_err(|error| {
             SliceError::InvalidInput(format!("refreshed project settings are invalid: {error}"))
         })?

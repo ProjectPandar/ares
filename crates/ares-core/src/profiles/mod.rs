@@ -5,7 +5,7 @@ mod entry;
 mod import;
 mod load_settings;
 mod project_refresh;
-pub(crate) use project_refresh::{ProjectPresetRefresh, default_value, preset_owns_option};
+pub(crate) use project_refresh::{ProjectPresetRefresh, preset_owns_option};
 
 mod fragment;
 mod inheritance;

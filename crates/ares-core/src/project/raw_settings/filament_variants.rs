@@ -52,11 +52,20 @@ impl ProjectSettingsRaw {
     /// defaults, then lays the per-variant filament options out again.
     pub(crate) fn complete_filament_variant_defaults(&mut self) -> Result<(), SliceError> {
         for key in crate::filament_options_with_variant() {
-            if !self.0.contains_key(*key)
-                && let Some(value) = crate::profiles::default_value(key)?
-            {
-                self.0.insert((*key).to_owned(), value);
+            if self.0.contains_key(*key) {
+                continue;
             }
+            let Some(definition) =
+                crate::option_definition(key).filter(|definition| definition.full_config_default)
+            else {
+                continue;
+            };
+            let value = crate::options::json_deserialize::decode(
+                definition.kind,
+                definition.default_wire_value,
+            )
+            .map_err(SliceError::InvalidInput)?;
+            self.0.insert((*key).to_owned(), value);
         }
         self.normalize_filament_values_to_variants();
         Ok(())

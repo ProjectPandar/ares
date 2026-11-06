@@ -197,9 +197,10 @@ pub(crate) fn load_project_with_preparation(
         .map_err(|error| {
             SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
         })?;
-    project_settings_raw.complete_filament_variant_defaults()?;
+    let mut materialized_settings_raw = project_settings_raw.clone();
+    materialized_settings_raw.complete_filament_variant_defaults()?;
     let settings = <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
-        project_settings_raw.clone().into_object(),
+        materialized_settings_raw.into_object(),
     )
     .map_err(|error| SliceError::InvalidInput(format!("invalid project settings JSON: {error}")))?
     .resolve();
