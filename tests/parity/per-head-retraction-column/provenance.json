@@ -1,0 +1,277 @@
+{
+  "source": {
+    "format": "OrcaSlicer project archive",
+    "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+    "printer_preset": "Bambu Lab X2D 0.4 nozzle",
+    "filament_type": [
+      "PLA",
+      "PLA"
+    ]
+  },
+  "cases": [
+    {
+      "id": "x2d_pla_power_loss_comments",
+      "input": "x2d_pla_power_loss_comments.3mf",
+      "sha256": "0b47be231f6e6d3f00f36a759a58f277351661a7e7ba996ae8ef940f2706a0e7",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_generated_printer_ids_incomplete_map",
+      "input": "x2d_pla_generated_printer_ids_incomplete_map.3mf",
+      "sha256": "600d0bdd7b626855411a6d85b342fc1fc0a0b85b6a676e998a742c429d7e9d08",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_power_loss_by_layer",
+      "input": "x2d_pla_power_loss_by_layer.3mf",
+      "sha256": "92f48044969ff8c862077d0cedeb29b930c71c9b64f66ac17ff28659cf7cae4b",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_power_loss_printer_configuration",
+      "input": "x2d_pla_power_loss_printer_configuration.3mf",
+      "sha256": "19fb31b00554291f5d94378152e9aa5eb085c42960c136f3aa77a2b372d4ffe4",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_concentric_ironing_auto_map",
+      "input": "x2d_pla_concentric_ironing_auto_map.3mf",
+      "sha256": "7143117d16ff40c408a30ecaba3abf504aa22aa64cd777b399834ff1d464dc6c",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_bowden_inner_wall_nil_override",
+      "input": "x2d_pla_bowden_inner_wall_nil_override.3mf",
+      "sha256": "df66635e952224cea6b1246f7c676e8bf279d04dd2bbb4a7dd6b8107b73306ba",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "2",
+          "2"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_direct_inner_wall",
+      "input": "x2d_pla_direct_inner_wall.3mf",
+      "sha256": "422b0e0ca43f006b9659ab3b5afda50637210cdc6b3f3c8db1531bb9723ac88c",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_bowden_inner_wall",
+      "input": "x2d_pla_bowden_inner_wall.3mf",
+      "sha256": "07dc1913d6e65bc49fdc997ad0f879af8334ad9142d50c8e54441d91400bd64f",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "2",
+          "2"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_bowden_nozzle_placeholder",
+      "input": "x2d_pla_bowden_nozzle_placeholder.3mf",
+      "sha256": "eeec6574d3176b50c987a3479aeff965ee6be3039d72d94d93e4fd08a5846796",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "2",
+          "2"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_direct_nozzle_slot",
+      "input": "x2d_pla_direct_nozzle_slot.3mf",
+      "sha256": "bcba33b9026cd11a88059bdc7efe58785283b83b3ca9fd81b43ef8bdf735caa4",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_bowden_nozzle_slot",
+      "input": "x2d_pla_bowden_nozzle_slot.3mf",
+      "sha256": "a771112139e7688eddefd2626777e1e9ef3952b8d3880ca9dcff265056971685",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "2",
+          "2"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_bowden_multi_value_overlay",
+      "input": "x2d_pla_bowden_multi_value_overlay.3mf",
+      "sha256": "991ca2fd145c3ae18855f707b83352b132aed92c485e9c75dbf6e3f749229208",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "2",
+          "2"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_bowden_nil_overlay",
+      "input": "x2d_pla_bowden_nil_overlay.3mf",
+      "sha256": "5274491068ad4d1f27496758f1a2b9a6f3ea92b78553cada15f1488d26dc486d",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "2",
+          "2"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_bowden_singleton_overlay",
+      "input": "x2d_pla_bowden_singleton_overlay.3mf",
+      "sha256": "253e834e00b97882ca1d2af2c06fb714b5d4fedf64df0c10ab5ddda78417c67f",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "2",
+          "2"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_direct_distinct_overlay_source",
+      "input": "x2d_pla_direct_distinct_overlay_source.3mf",
+      "sha256": "3979ea682f672d4ff3a539a72527e0b4d90a2a485baa51be2ca6e308d6d50e2b",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_direct_equal_overlay_source",
+      "input": "x2d_pla_direct_equal_overlay_source.3mf",
+      "sha256": "edfa4c967b1f48404fff092c84f9636937b59d0893c0325e1c0a4eb2bfb9f950",
+      "parameters": {
+        "filament_map_mode": "Manual",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_auto_map_toolchange_boundary",
+      "input": "x2d_pla_auto_map_toolchange_boundary.3mf",
+      "sha256": "5e72871b0778388980f54374ba8c2caa7ed0156fae7e78f8b008e67cf191b950",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_auto_map_object_boundary",
+      "input": "x2d_pla_auto_map_object_boundary.3mf",
+      "sha256": "cf27b54f529979370ecdb8f0f03ad19c9412a03fa17ae6156967c0ffdf074e24",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_variant_order_stream",
+      "input": "x2d_pla_variant_order_stream.3mf",
+      "sha256": "a17ab11edca5ef6ec93aa202d87f75e1898526a604c954dd166b939cc94b0553",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_variant_order_extrusion_speed",
+      "input": "x2d_pla_variant_order_extrusion_speed.3mf",
+      "sha256": "a17ab11edca5ef6ec93aa202d87f75e1898526a604c954dd166b939cc94b0553",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_toolchange_without_virtual_move_comments",
+      "input": "x2d_pla_toolchange_without_virtual_move_comments.3mf",
+      "sha256": "61d36dff5dfb995fb3cd1f2bcb3ece0d9e79c5476137b05ddd495d4b901368fb",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "x2d_pla_toolchange_with_virtual_move_comments",
+      "input": "x2d_pla_toolchange_with_virtual_move_comments.3mf",
+      "sha256": "f6a1b0ab02e4be9f4d3c20e6dcf09d55b0ba37f4b47e3989053de03adefac169",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "filament_map": [
+          "1",
+          "1"
+        ]
+      }
+    }
+  ]
+}
