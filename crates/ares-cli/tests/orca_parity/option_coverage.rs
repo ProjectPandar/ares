@@ -116,6 +116,8 @@ mod max_travel_detour_distance;
 mod refresh_preset_includes;
 #[path = "option_coverage/region_speed_emission.rs"]
 mod region_speed_emission;
+#[path = "option_coverage/single_variant_printer_filament_selection.rs"]
+mod single_variant_printer_filament_selection;
 #[path = "option_coverage/variant_footer.rs"]
 mod variant_footer;
 
