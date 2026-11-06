@@ -1,4 +1,4 @@
-use crate::{ObjectOptions, OrcaFloats, ProcessRegionSourceOptions, SliceError};
+use crate::{ObjectOptions, OrcaFloats, OrcaInts, ProcessRegionSourceOptions, SliceError};
 use crate::{
     geometry::{CoordinateScale, ExPolygon},
     project_slice::{
@@ -21,6 +21,8 @@ pub(crate) struct SpanGeneration<'a> {
     pub(crate) object: &'a ObjectOptions,
     pub(crate) default_region: &'a ProcessRegionSourceOptions,
     pub(crate) nozzles: &'a OrcaFloats,
+    pub(crate) filament_map: &'a OrcaInts,
+    pub(crate) is_bbl: bool,
     pub(crate) scale: CoordinateScale,
 }
 
@@ -55,6 +57,8 @@ pub(crate) fn append_spans(input: SpanGeneration<'_>) -> Result<(), SliceError> 
                 object: input.object,
                 default_region: input.default_region,
                 nozzles: input.nozzles,
+                filament_map: input.filament_map,
+                is_bbl: input.is_bbl,
                 layer: input.layer,
                 layers: input.layers,
                 last_layer,

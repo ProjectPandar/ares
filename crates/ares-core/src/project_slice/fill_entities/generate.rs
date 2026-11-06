@@ -342,6 +342,12 @@ pub(in crate::project_slice) fn generate_layer_with_active(
         object: object_options,
         default_region: &traversal.resolved.views.full.process.region,
         nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
+        filament_map: &traversal.resolved.applied_filament_map,
+        is_bbl: crate::print::validate::project_is_bbl(
+            &traversal.resolved.views.full,
+            &traversal.project.documents().project_settings_raw,
+            None,
+        )?,
         scale: traversal.scale,
     })?;
     let process = &traversal.resolved.views.full.process;

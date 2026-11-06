@@ -3,8 +3,8 @@ use crate::project_slice::perimeters::classic::materialize::Polyline3;
 // Source boundary: OrcaSlicer 2.4.2 `Fill/Fill.cpp::Layer::make_ironing`.
 
 use crate::{
-    ExtrusionRole, ObjectOptions, OrcaFloats, ProcessInfillPattern, ProcessRegionSourceOptions,
-    RegionOptions, SliceError,
+    ExtrusionRole, ObjectOptions, OrcaFloats, OrcaInts, ProcessInfillPattern,
+    ProcessRegionSourceOptions, RegionOptions, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     geometry::{CoordinateScale, ExPolygon, JoinType, Point, offset_expolygon},
     project_slice::{
@@ -36,6 +36,8 @@ pub(super) struct Input<'a> {
     /// the meta-language B/T shell units (`Fill.cpp:125-127`).
     pub(super) default_region: &'a ProcessRegionSourceOptions,
     pub(super) nozzles: &'a OrcaFloats,
+    pub(super) filament_map: &'a OrcaInts,
+    pub(super) is_bbl: bool,
     pub(super) layer: &'a PlannedLayer,
     pub(super) layers: &'a [PlannedLayer],
     pub(super) last_layer: bool,
@@ -102,7 +104,7 @@ pub(super) fn append_areas(
     if spacing <= 0.0 {
         return Ok(());
     }
-    let nozzle = areas::selected_nozzle(input.region, input.nozzles)?;
+    let nozzle = areas::selected_nozzle(input);
     let (angle, fixed_angle) = areas::ironing_angle(input);
     let extrusion_height =
         input.object.layer_height.0 * 0.01 * input.region.filament_ironing_flow.0 * spacing

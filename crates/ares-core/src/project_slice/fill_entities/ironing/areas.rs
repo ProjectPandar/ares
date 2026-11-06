@@ -1,7 +1,7 @@
 //! `Layer::make_ironing` area/enabled/angle/nozzle helpers (Fill.cpp:1573-1705).
 
 use crate::{
-    OrcaFloats, ProcessIroningType, RegionOptions, SliceError,
+    ProcessIroningType, RegionOptions, SliceError,
     geometry::{
         ExPolygon, JoinType, intersection_ex, offset_expolygons, union_safety_offset_expolygons,
     },
@@ -90,7 +90,7 @@ pub(super) fn ironing_areas(
     }
 
     let inset_mm = if input.region.filament_ironing_inset.0 == 0.0 {
-        0.5 * selected_nozzle(input.region, input.nozzles)?
+        0.5 * selected_nozzle(input)
     } else {
         input.region.filament_ironing_inset.0
     };
@@ -159,20 +159,19 @@ fn base_angle(region: &RegionOptions, context: &SpanContext<'_>) -> f64 {
     }
 }
 
-pub(super) fn selected_nozzle(
-    region: &RegionOptions,
-    nozzles: &OrcaFloats,
-) -> Result<f64, SliceError> {
-    let index = region
-        .top_surface_filament_id
-        .0
-        .checked_sub(1)
-        .and_then(|index| usize::try_from(index).ok())
-        .unwrap_or(0);
-    nozzles
-        .0
-        .get(index)
-        .map(|value| value.0)
-        .filter(|value| value.is_finite() && *value > 0.0)
-        .ok_or_else(|| SliceError::InvalidInput("invalid Orca option nozzle_diameter".to_owned()))
+pub(super) fn selected_nozzle(input: &Input<'_>) -> f64 {
+    let filament_id = input.region.top_surface_filament_id.0;
+    let nozzles = &input.nozzles.0;
+    let map = &input.filament_map.0;
+    let extruder = if input.is_bbl
+        && nozzles.len() > 1
+        && filament_id >= 1
+        && filament_id as usize <= map.len()
+    {
+        map[(filament_id - 1) as usize].0
+    } else {
+        filament_id
+    };
+    let index = (i64::from(extruder) - 1) as usize;
+    nozzles.get(index).unwrap_or(&nozzles[0]).0
 }
