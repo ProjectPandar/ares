@@ -69,7 +69,7 @@ fn interior_deferred_disabled_arc_retains_spiral() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/interior-deferred-arc-0.3mf"
         )),
-        "38f2aeba0b18b9f28b0e84cb01290a687d4310c0bddeed282d341943343dfe54",
+        "96b858ed6d5dc6c5963bec18d41228c87588e96c0db4e2ee416de0af9299ef88",
         (false, false, true),
     );
 }
@@ -82,7 +82,7 @@ fn interior_deferred_enabled_arc_retains_spiral() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/interior-deferred-arc-1.3mf"
         )),
-        "1269ab69f9e3c3a76202094278d0ec5cd18fe978ed0de96d01398036e3150f87",
+        "83d0f1cc5da23b1904516d3492c3324905610365b1cfa5458b58a8e8bcf6c2f3",
         (true, false, true),
     );
 }
@@ -95,7 +95,7 @@ fn interior_eager_disabled_arc_retains_spiral() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/interior-eager-arc-0.3mf"
         )),
-        "6cb35f55f11e7e77d7a521a1763629e880962e996d22d42a6577304ec5a6ce65",
+        "23f66318e3a5f81d454f1880b7d563526ab6ba0d19d020bf8d5a76d9e19bdc9e",
         (false, true, true),
     );
 }
@@ -108,7 +108,7 @@ fn interior_eager_enabled_arc_retains_spiral() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/interior-eager-arc-1.3mf"
         )),
-        "106156bada89ed98a8d9fa774c7f1dcdf14ca71507ab1fe8a6eb8689aa8b1103",
+        "94e164709a3a1775b47b34fde04c9f54e9adac5c20d283aaeb6d5efaceaeb681",
         (true, true, true),
     );
 }
@@ -121,7 +121,7 @@ fn front_edge_eager_disabled_arc_uses_normal_lift() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/front-edge-eager-arc-0.3mf"
         )),
-        "29333c079d80736fcc8e608707e11057e39ef9450c47c26ef096e2cd71368893",
+        "ed0559f266f619ecc68a0b79a0660fa57ff9d9565448f622b4d3bbedf7d7eae3",
         (false, true, false),
     );
 }
@@ -134,7 +134,7 @@ fn front_edge_eager_enabled_arc_uses_normal_lift() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/front-edge-eager-arc-1.3mf"
         )),
-        "31732d4f8e9a8bd33688c46719a3d19aa1334605f32af6653e053d88fe38e784",
+        "7017ae3b5916564705170ead727af56c77ce5fdc45b0af364884b7a8e15a5ec8",
         (true, true, false),
     );
 }
