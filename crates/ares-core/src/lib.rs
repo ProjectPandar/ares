@@ -150,10 +150,10 @@ pub use options::{
     ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
     ProcessSupportType, ProcessTimelapseType, ProcessWallDirection, ProcessWallSequence,
     ProcessWipeTowerWallType, ProjectBedType, ProjectFilamentMapMode, ProjectGCodeSourceOptions,
-    ProjectPresetSourceOptions, ProjectPrintSourceOptions, ProjectRuntimeOptions, ProjectSettings,
-    RammingParameters, RawOverhangFanThreshold, RegionOptions, RetractLiftEnforce,
-    RetractLiftEnforces, SliceOptions, SpaceTuple, ThumbnailDefinitions, VariantStride,
-    WipeTowerType, ZHopType, ZHopTypes,
+    ProjectPresetSourceOptions, ProjectPrimeVolumeMode, ProjectPrintSourceOptions,
+    ProjectRuntimeOptions, ProjectSettings, RammingParameters, RawOverhangFanThreshold,
+    RegionOptions, RetractLiftEnforce, RetractLiftEnforces, SliceOptions, SpaceTuple,
+    ThumbnailDefinitions, VariantStride, WipeTowerType, ZHopType, ZHopTypes,
 };
 pub use options::{
     decode_config_value, decode_config_value_by_key, encode_config_value,

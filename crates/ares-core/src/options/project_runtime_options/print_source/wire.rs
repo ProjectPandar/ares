@@ -7,7 +7,7 @@ impl Serialize for ProjectPrintSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(19))?;
+        let mut map = serializer.serialize_map(Some(22))?;
         map.serialize_entry("curr_bed_type", &self.curr_bed_type)?;
         map.serialize_entry("extruder_colour", &self.extruder_colour)?;
         map.serialize_entry("extruder_offset", &self.extruder_offset)?;
@@ -16,8 +16,10 @@ impl Serialize for ProjectPrintSourceOptions {
             &self.first_layer_print_sequence,
         )?;
         map.serialize_entry("flush_multiplier", &self.flush_multiplier)?;
+        map.serialize_entry("flush_multiplier_fast", &self.flush_multiplier_fast)?;
         map.serialize_entry("flush_volumes_matrix", &self.flush_volumes_matrix)?;
         map.serialize_entry("flush_volumes_vector", &self.flush_volumes_vector)?;
+        map.serialize_entry("group_algo_with_time", &self.group_algo_with_time)?;
         map.serialize_entry("max_layer_height", &self.max_layer_height)?;
         map.serialize_entry("min_layer_height", &self.min_layer_height)?;
         map.serialize_entry("nozzle_diameter", &self.nozzle_diameter)?;
@@ -29,6 +31,7 @@ impl Serialize for ProjectPrintSourceOptions {
             "other_layers_print_sequence_nums",
             &self.other_layers_print_sequence_nums,
         )?;
+        map.serialize_entry("prime_volume_mode", &self.prime_volume_mode)?;
         map.serialize_entry(
             "retract_when_changing_layer",
             &self.retract_when_changing_layer,

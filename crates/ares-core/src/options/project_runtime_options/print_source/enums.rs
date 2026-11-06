@@ -18,3 +18,11 @@ pub enum ProjectBedType {
     #[serde(rename = "Textured Cool Plate")]
     TexturedCoolPlate,
 }
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ProjectPrimeVolumeMode {
+    #[default]
+    Default,
+    Saving,
+    Fast,
+}

@@ -13,7 +13,7 @@ pub use gcode_source::{ProjectFilamentMapMode, ProjectGCodeSourceOptions};
 pub use preset_source::ProjectPresetSourceOptions;
 pub(crate) use preset_source::ProjectPresetSourceOptionsBuilder;
 pub(crate) use print_source::ProjectPrintSourceOptionsBuilder;
-pub use print_source::{ProjectBedType, ProjectPrintSourceOptions};
+pub use print_source::{ProjectBedType, ProjectPrimeVolumeMode, ProjectPrintSourceOptions};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProjectRuntimeOptions {

@@ -176,7 +176,8 @@ pub use {
     },
     project_runtime_options::{
         ProjectBedType, ProjectFilamentMapMode, ProjectGCodeSourceOptions,
-        ProjectPresetSourceOptions, ProjectPrintSourceOptions, ProjectRuntimeOptions,
+        ProjectPresetSourceOptions, ProjectPrimeVolumeMode, ProjectPrintSourceOptions,
+        ProjectRuntimeOptions,
     },
     project_settings::ProjectSettings,
     region_options::RegionOptions,

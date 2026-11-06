@@ -5,7 +5,7 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, de::Visitor};
 
-pub use enums::ProjectBedType;
+pub use enums::{ProjectBedType, ProjectPrimeVolumeMode};
 
 use super::super::{
     FlatMatrix, OrcaBool, OrcaBools, OrcaFloat, OrcaFloats, OrcaInt, OrcaInts, OrcaStrings,
@@ -32,12 +32,15 @@ declare_option_group! {
         flush_volumes_matrix => "flush_volumes_matrix": FlatMatrix = flush_matrix(),
         flush_volumes_vector => "flush_volumes_vector": OrcaFloats = floats(&[140.0; 8]),
         flush_multiplier => "flush_multiplier": OrcaFloats = floats(&[0.3]),
+        flush_multiplier_fast => "flush_multiplier_fast": OrcaFloats = floats(&[1.2]),
+        prime_volume_mode => "prime_volume_mode": ProjectPrimeVolumeMode = ProjectPrimeVolumeMode::Default,
+        group_algo_with_time => "group_algo_with_time": OrcaBool = OrcaBool(false),
         start_end_points => "start_end_points": Point2dList = points(&[(30.0, -3.0), (54.0, 245.0)]),
     }
 }
 
 impl ProjectPrintSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 19] = [
+    pub const DECLARATION_ORDER: [&'static str; 22] = [
         "curr_bed_type",
         "first_layer_print_sequence",
         "other_layers_print_sequence",
@@ -56,6 +59,9 @@ impl ProjectPrintSourceOptions {
         "flush_volumes_matrix",
         "flush_volumes_vector",
         "flush_multiplier",
+        "flush_multiplier_fast",
+        "prime_volume_mode",
+        "group_algo_with_time",
         "start_end_points",
     ];
 }
