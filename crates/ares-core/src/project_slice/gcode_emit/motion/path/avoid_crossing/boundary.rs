@@ -12,7 +12,6 @@ use crate::geometry::{
 use crate::project_slice::gcode_emit::motion::state::AvoidCrossingGeometry;
 use resample::inner_offset;
 
-pub(super) const SCALED_EPSILON: f64 = 1.0e-4;
 pub(super) const MITER_LIMIT: f64 = 2.0;
 
 /// The routing boundary: the inner-offset slice union as contours, an edge

@@ -1,7 +1,7 @@
 //! Boundary resampling — the polygon/contour resampler and the inner
 //! offset walker feeding `Boundary` grids (`avoid_crossing` family).
 
-use super::{MITER_LIMIT, SCALED_EPSILON, contours_bounds};
+use super::{MITER_LIMIT, contours_bounds};
 use crate::geometry::{
     ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, JoinType, Point, Polygon,
     offset_paths, union_expolygons,
@@ -81,6 +81,7 @@ pub(super) fn inner_offset(
     offset_dis: f64,
     scale: CoordinateScale,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
+    let scaled_epsilon = scale.scaled_delta(1.0e-4);
     let hole_probe = scale.checked_scale(0.1).unwrap_or(100_000) as f32;
     let mut result = Vec::with_capacity(expolygons.len());
     for expolygon in expolygons {
@@ -113,7 +114,7 @@ pub(super) fn inner_offset(
         let widths = [
             offset_dis / 2.0,
             offset_dis,
-            2.0 * offset_dis + SCALED_EPSILON,
+            2.0 * offset_dis + scaled_epsilon,
         ];
         'widths: for (width_index, &min_contour_width) in widths.iter().enumerate() {
             let search_radius = 2.0 * (offset_dis + min_contour_width);
@@ -134,7 +135,7 @@ pub(super) fn inner_offset(
             ) else {
                 continue;
             };
-            let thresholds = DistanceThresholds::new(offset_dis, search_radius, SCALED_EPSILON);
+            let thresholds = DistanceThresholds::new(offset_dis, search_radius, scaled_epsilon);
             let mut offsets = Vec::with_capacity(ex_poly.holes().len() + 1);
             for (contour_index, contour) in contours.iter().enumerate() {
                 let parameters = own_parameters(contour);
