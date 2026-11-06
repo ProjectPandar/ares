@@ -15,6 +15,14 @@ sixteen limit keys consumed here, so their stride is two: select the normal
 value of each used extruder's `(normal, silent)` pair before reducing.
 The silent value is not another extruder's limit.
 
+`PrintConfig.cpp:10664–10666` sizes every member of that set for the rebuilt
+printer variants. `PrintApply.cpp:1423–1427` then materializes the entire set
+with stride two before variant-one selection. The Rust counterpart is
+`options/project_variants/printer.rs::materialize_variant_two`; complete its
+missing `machine_max_junction_deviation` member so that the envelope receives
+all sixteen applied pair vectors, including shared defaults. Do not compensate
+for an unmaterialized vector with an indexing fallback in the emitter.
+
 The Rust destination is
 `crates/ares-core/src/project_slice/gcode_emit/machine/envelope.rs::append_machine_envelope`.
 Its first-element selection is a temporary compatibility shell around this
