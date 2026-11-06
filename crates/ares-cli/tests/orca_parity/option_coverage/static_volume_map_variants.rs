@@ -66,3 +66,24 @@ fn bbl_plate_map_longer_than_consumables_keeps_one_variant_slot() {
         ),
     );
 }
+
+#[test]
+fn single_object_by_object_high_flow_keeps_unused_standard_volume() {
+    check(
+        CASE,
+        "single-object-by-object-high-flow",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/static-volume-map-by-object/single-object-high-flow.3mf"
+        )),
+        "0fa9901192bc4b9e1b0b3d55e107a5db8df9446f56501165e51e7411d38802db",
+        (
+            &[
+                ("print_sequence", "by object"),
+                ("filament_map", "1,1"),
+                ("nozzle_volume_type", "High Flow"),
+            ],
+            &[("filament_volume_map", "0,1")],
+        ),
+    );
+}
