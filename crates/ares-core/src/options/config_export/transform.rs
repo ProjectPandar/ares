@@ -41,7 +41,12 @@ fn apply_cli_oracle_state(settings: &mut ProjectSettings, overrides: &ExportOver
 }
 
 fn scale_flush_matrix(settings: &mut ProjectSettings) -> Result<(), SliceError> {
-    let multipliers = &settings.project.print.flush_multiplier.0;
+    let multipliers = match settings.project.print.prime_volume_mode {
+        crate::ProjectPrimeVolumeMode::Fast => &settings.project.print.flush_multiplier_fast.0,
+        crate::ProjectPrimeVolumeMode::Default | crate::ProjectPrimeVolumeMode::Saving => {
+            &settings.project.print.flush_multiplier.0
+        }
+    };
     let head_count = multipliers.len();
     if head_count == 0 {
         return Err(matrix_error());
