@@ -28,6 +28,8 @@ mod nullable_vector_placeholder;
 mod pa_variant;
 #[path = "option_coverage/pre_cooling_variant.rs"]
 mod pre_cooling_variant;
+#[path = "option_coverage/project_key_presence.rs"]
+mod project_key_presence;
 #[path = "option_coverage/remaining_filament_variants.rs"]
 mod remaining_filament_variants;
 #[path = "option_coverage/variant_retraction.rs"]
