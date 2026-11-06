@@ -48,6 +48,7 @@ pub(crate) fn materialize_project_variants(
         let printer_indices = index::resolve_printer_indices(&materialized, &active.variants)?;
         printer::materialize_variant_one(&mut materialized, &printer_indices)?;
 
+        index::ensure_process_variant_columns(&mut materialized);
         let process_indices = index::resolve_process_indices(&materialized, &active.variants)?;
         printer::materialize_process(&mut materialized, &process_indices)?;
         process_indices

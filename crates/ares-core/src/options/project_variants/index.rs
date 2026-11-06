@@ -90,6 +90,40 @@ pub(super) fn resolve_process_indices(
     )
 }
 
+// PrintConfig.cpp:11623-11660: length-1 process columns are synthesized from the printer's
+// extruder_variant_list before the process selection (:11702-11703).
+pub(super) fn ensure_process_variant_columns(settings: &mut ProjectSettings) {
+    let region = &settings.process.region;
+    if region.print_extruder_id.0.len() != 1 || region.print_extruder_variant.0.len() != 1 {
+        return;
+    }
+    let mut ids = Vec::new();
+    let mut variants = Vec::new();
+    for (index, group) in settings
+        .printer
+        .remaining
+        .extruder_variant_list
+        .0
+        .iter()
+        .enumerate()
+    {
+        for token in split_compressed_commas(group).map(str::trim) {
+            if token.is_empty() {
+                continue;
+            }
+            ids.push(OrcaInt(index as i32 + 1));
+            variants.push(token.to_owned());
+        }
+    }
+    // A single column is the legitimate single-extruder layout.
+    if ids.len() <= 1 {
+        return;
+    }
+    let region = &mut settings.process.region;
+    region.print_extruder_id.0 = ids;
+    region.print_extruder_variant.0 = variants;
+}
+
 pub(super) fn resolve_filament_indices(
     source: &ProjectSettings,
     filament_map: &crate::options::OrcaInts,
