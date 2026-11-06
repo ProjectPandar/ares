@@ -13,7 +13,8 @@ pub use enums::{
 };
 
 use super::super::{
-    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaString, Percent,
+    FloatOrPercent, Nullable, OrcaBool, OrcaFloat, OrcaFloatOrPercentsNullable, OrcaFloatsNullable,
+    OrcaInt, OrcaString, Percent,
     object_fields::{OBJECT_OPTION_DECLARATION_ORDER, object_option_fields},
     option_group::declare_option_group,
 };

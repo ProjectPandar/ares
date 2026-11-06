@@ -137,9 +137,10 @@ pub use {
     config_types::{
         AmsCounts, CsvTable, FlatMatrix, FloatOrPercent, Millimeters, Nullable,
         NullablePrinterTechnologies, OrcaBool, OrcaBools, OrcaBoolsNullable, OrcaFloat,
-        OrcaFloatOrPercents, OrcaFloats, OrcaFloatsNullable, OrcaInt, OrcaInts, OrcaPercents,
-        OrcaString, OrcaStrings, OrcaUInt, Percent, Point2d, Point2dGroups, Point2dList,
-        PrinterTechnologies, PrinterTechnology, RammingParameters, SpaceTuple, VariantStride,
+        OrcaFloatOrPercents, OrcaFloatOrPercentsNullable, OrcaFloats, OrcaFloatsNullable, OrcaInt,
+        OrcaInts, OrcaPercents, OrcaString, OrcaStrings, OrcaUInt, Percent, Point2d, Point2dGroups,
+        Point2dList, PrinterTechnologies, PrinterTechnology, RammingParameters, SpaceTuple,
+        VariantStride,
     },
     filament_options::{
         FilamentGCodeSourceOptions, FilamentOptions, FilamentPrintSourceOptions,

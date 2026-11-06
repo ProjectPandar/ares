@@ -225,6 +225,83 @@ pub(super) fn materialize_process(
     settings: &mut ProjectSettings,
     indices: &[usize],
 ) -> Result<(), SliceError> {
+    select_field!(
+        settings.process.object.default_acceleration,
+        indices,
+        "default_acceleration"
+    );
+    select_field!(
+        settings.process.object.outer_wall_acceleration,
+        indices,
+        "outer_wall_acceleration"
+    );
+    select_field!(
+        settings.process.object.inner_wall_acceleration,
+        indices,
+        "inner_wall_acceleration"
+    );
+    select_field!(
+        settings.process.object.top_surface_acceleration,
+        indices,
+        "top_surface_acceleration"
+    );
+    select_field!(
+        settings.process.object.initial_layer_acceleration,
+        indices,
+        "initial_layer_acceleration"
+    );
+    select_field!(
+        settings.process.object.bridge_acceleration,
+        indices,
+        "bridge_acceleration"
+    );
+    select_field!(
+        settings.process.object.travel_acceleration,
+        indices,
+        "travel_acceleration"
+    );
+    select_field!(
+        settings.process.object.sparse_infill_acceleration,
+        indices,
+        "sparse_infill_acceleration"
+    );
+    select_field!(
+        settings.process.object.internal_solid_infill_acceleration,
+        indices,
+        "internal_solid_infill_acceleration"
+    );
+    select_field!(
+        settings.process.object.default_jerk,
+        indices,
+        "default_jerk"
+    );
+    select_field!(
+        settings.process.object.outer_wall_jerk,
+        indices,
+        "outer_wall_jerk"
+    );
+    select_field!(
+        settings.process.object.inner_wall_jerk,
+        indices,
+        "inner_wall_jerk"
+    );
+    select_field!(settings.process.object.infill_jerk, indices, "infill_jerk");
+    select_field!(
+        settings.process.object.top_surface_jerk,
+        indices,
+        "top_surface_jerk"
+    );
+    select_field!(
+        settings.process.object.initial_layer_jerk,
+        indices,
+        "initial_layer_jerk"
+    );
+    select_field!(settings.process.object.travel_jerk, indices, "travel_jerk");
+    select_field!(
+        settings.process.gcode.initial_layer_travel_acceleration,
+        indices,
+        "initial_layer_travel_acceleration"
+    );
     settings.process.region.inner_wall_speed.0 = select_stride(
         &settings.process.region.inner_wall_speed.0,
         indices,

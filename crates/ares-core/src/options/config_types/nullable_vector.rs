@@ -3,7 +3,7 @@ use serde::{
     de::{DeserializeOwned, Error, SeqAccess, Visitor, value::SeqAccessDeserializer},
 };
 
-use super::{Nullable, OrcaBool, OrcaFloat};
+use super::{FloatOrPercent, Nullable, OrcaBool, OrcaFloat};
 use crate::options::{json_deserialize, registry::OptionValueKind};
 
 pub(super) fn bools<'de, D: Deserializer<'de>>(
@@ -16,6 +16,12 @@ pub(super) fn floats<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<Nullable<OrcaFloat>>, D::Error> {
     deserialize(deserializer, OptionValueKind::FloatsNullable)
+}
+
+pub(super) fn floats_or_percents<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Vec<Nullable<FloatOrPercent>>, D::Error> {
+    deserialize(deserializer, OptionValueKind::FloatsOrPercents)
 }
 
 // Config.cpp:981-983,626-695: a JSON string reaches the vector's own

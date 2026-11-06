@@ -45,10 +45,12 @@ pub(super) fn prelude(traversal: &PreparedPostClassicTraversal, filament: usize)
         .or_else(|| gcode.filament_diameter.0.first())
         .map_or(1.75, |value| value.0);
     let travel_speed = gcode.travel_speed.0;
-    let travel_acceleration = object.map_or(full.process.object.travel_acceleration.0, |value| {
-        value.object.travel_acceleration.0
-    });
-    let accelerations = region::accelerations(full, object);
+    let nozzle_index = crate::options::mapped_extruder_id(full, filament);
+    let travel_acceleration = object.map_or(
+        full.process.object.travel_acceleration.get_at(nozzle_index),
+        |value| value.object.travel_acceleration.get_at(nozzle_index),
+    );
+    let accelerations = region::accelerations(full, object, nozzle_index);
     let (retraction_speed, deretraction_speed) = retraction::speeds(gcode, filament);
     Prelude {
         full,

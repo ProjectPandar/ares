@@ -5,8 +5,8 @@ use std::fmt;
 use serde::{Deserialize, Deserializer, de::Visitor};
 
 use super::super::{
-    ArcFittingMode, FloatOrPercent, OrcaBool, OrcaFloat, OrcaString, OrcaStrings, Percent,
-    option_group::declare_option_group,
+    ArcFittingMode, FloatOrPercent, Nullable, OrcaBool, OrcaFloat, OrcaFloatOrPercentsNullable,
+    OrcaString, OrcaStrings, Percent, option_group::declare_option_group,
 };
 
 declare_option_group! {
@@ -26,7 +26,7 @@ declare_option_group! {
         accel_to_decel_enable => "accel_to_decel_enable": OrcaBool = OrcaBool(true),
         accel_to_decel_factor => "accel_to_decel_factor": Percent = Percent(50.0),
         initial_layer_travel_speed => "initial_layer_travel_speed": FloatOrPercent = FloatOrPercent::Percent(Percent(100.0)),
-        initial_layer_travel_acceleration => "initial_layer_travel_acceleration": FloatOrPercent = FloatOrPercent::Percent(Percent(100.0)),
+        initial_layer_travel_acceleration => "initial_layer_travel_acceleration": OrcaFloatOrPercentsNullable = OrcaFloatOrPercentsNullable(vec![Nullable::Value(FloatOrPercent::Percent(Percent(100.0)))]),
         initial_layer_travel_jerk => "initial_layer_travel_jerk": FloatOrPercent = FloatOrPercent::Percent(Percent(100.0)),
         small_area_infill_flow_compensation_model => "small_area_infill_flow_compensation_model": OrcaStrings = strings(&[
             "0,0", "\n0.2,0.4444", "\n0.4,0.6145", "\n0.6,0.7059", "\n0.8,0.7619",

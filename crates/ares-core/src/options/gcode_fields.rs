@@ -114,7 +114,7 @@ macro_rules! gcode_option_fields {
             process => accel_to_decel_enable => "accel_to_decel_enable": OrcaBool,
             process => accel_to_decel_factor => "accel_to_decel_factor": Percent,
             process => initial_layer_travel_speed => "initial_layer_travel_speed": FloatOrPercent,
-            process => initial_layer_travel_acceleration => "initial_layer_travel_acceleration": FloatOrPercent,
+            process => initial_layer_travel_acceleration => "initial_layer_travel_acceleration": OrcaFloatOrPercentsNullable,
             process => initial_layer_travel_jerk => "initial_layer_travel_jerk": FloatOrPercent,
             project => bbl_calib_mark_logo => "bbl_calib_mark_logo": OrcaBool,
             printer => disable_m73 => "disable_m73": OrcaBool,

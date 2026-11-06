@@ -27,6 +27,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         default_acceleration,
         ..
     } = prelude;
+    let nozzle_index = crate::options::mapped_extruder_id(full, filament);
     let use_mach_limits = use_mach_limits(full.printer.gcode.gcode_flavor);
     let mut options = MotionOptions {
         adaptive_pa: crate::project_slice::gcode_emit::adaptive_pa::Options::new(full, filament),
@@ -152,66 +153,88 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .and_then(|value| (value.0 >= 0).then_some(value.0 as u8)),
         initial_layer_acceleration: acceleration(
             object.map(|value| &value.object),
-            full.process.object.initial_layer_acceleration.0,
-            |value| value.initial_layer_acceleration.0,
+            full.process
+                .object
+                .initial_layer_acceleration
+                .get_at(nozzle_index),
+            |value| value.initial_layer_acceleration.get_at(nozzle_index),
         ),
         default_acceleration,
         outer_wall_acceleration,
         inner_wall_acceleration: acceleration(
             object.map(|value| &value.object),
-            full.process.object.inner_wall_acceleration.0,
-            |value| value.inner_wall_acceleration.0,
+            full.process
+                .object
+                .inner_wall_acceleration
+                .get_at(nozzle_index),
+            |value| value.inner_wall_acceleration.get_at(nozzle_index),
         ),
         bridge_acceleration: absolute(
-            object.map_or(full.process.object.bridge_acceleration, |value| {
-                value.object.bridge_acceleration
-            }),
+            object
+                .map_or(&full.process.object.bridge_acceleration, |value| {
+                    &value.object.bridge_acceleration
+                })
+                .get_at(nozzle_index),
             outer_wall_acceleration,
         ),
         sparse_infill_acceleration: absolute(
-            object.map_or(full.process.object.sparse_infill_acceleration, |value| {
-                value.object.sparse_infill_acceleration
-            }),
+            object
+                .map_or(&full.process.object.sparse_infill_acceleration, |value| {
+                    &value.object.sparse_infill_acceleration
+                })
+                .get_at(nozzle_index),
             default_acceleration,
         ),
         internal_solid_infill_acceleration: absolute(
-            object.map_or(
-                full.process.object.internal_solid_infill_acceleration,
-                |value| value.object.internal_solid_infill_acceleration,
-            ),
+            object
+                .map_or(
+                    &full.process.object.internal_solid_infill_acceleration,
+                    |value| &value.object.internal_solid_infill_acceleration,
+                )
+                .get_at(nozzle_index),
             default_acceleration,
         ),
         top_surface_acceleration: acceleration(
             object.map(|value| &value.object),
-            full.process.object.top_surface_acceleration.0,
-            |value| value.top_surface_acceleration.0,
+            full.process
+                .object
+                .top_surface_acceleration
+                .get_at(nozzle_index),
+            |value| value.top_surface_acceleration.get_at(nozzle_index),
         ),
         initial_layer_travel_acceleration: absolute(
-            gcode.initial_layer_travel_acceleration,
+            gcode.initial_layer_travel_acceleration.get_at(nozzle_index),
             travel_acceleration,
         ),
         travel_acceleration,
-        default_jerk: object.map_or(full.process.object.default_jerk.0, |value| {
-            value.object.default_jerk.0
-        }),
-        outer_wall_jerk: object.map_or(full.process.object.outer_wall_jerk.0, |value| {
-            value.object.outer_wall_jerk.0
-        }),
-        inner_wall_jerk: object.map_or(full.process.object.inner_wall_jerk.0, |value| {
-            value.object.inner_wall_jerk.0
-        }),
-        top_surface_jerk: object.map_or(full.process.object.top_surface_jerk.0, |value| {
-            value.object.top_surface_jerk.0
-        }),
-        infill_jerk: object.map_or(full.process.object.infill_jerk.0, |value| {
-            value.object.infill_jerk.0
-        }),
-        initial_layer_jerk: object.map_or(full.process.object.initial_layer_jerk.0, |value| {
-            value.object.initial_layer_jerk.0
-        }),
-        travel_jerk: object.map_or(full.process.object.travel_jerk.0, |value| {
-            value.object.travel_jerk.0
-        }),
+        default_jerk: object.map_or(
+            full.process.object.default_jerk.get_at(nozzle_index),
+            |value| value.object.default_jerk.get_at(nozzle_index),
+        ),
+        outer_wall_jerk: object.map_or(
+            full.process.object.outer_wall_jerk.get_at(nozzle_index),
+            |value| value.object.outer_wall_jerk.get_at(nozzle_index),
+        ),
+        inner_wall_jerk: object.map_or(
+            full.process.object.inner_wall_jerk.get_at(nozzle_index),
+            |value| value.object.inner_wall_jerk.get_at(nozzle_index),
+        ),
+        top_surface_jerk: object.map_or(
+            full.process.object.top_surface_jerk.get_at(nozzle_index),
+            |value| value.object.top_surface_jerk.get_at(nozzle_index),
+        ),
+        infill_jerk: object.map_or(
+            full.process.object.infill_jerk.get_at(nozzle_index),
+            |value| value.object.infill_jerk.get_at(nozzle_index),
+        ),
+        initial_layer_jerk: object.map_or(
+            full.process.object.initial_layer_jerk.get_at(nozzle_index),
+            |value| value.object.initial_layer_jerk.get_at(nozzle_index),
+        ),
+        travel_jerk: object.map_or(
+            full.process.object.travel_jerk.get_at(nozzle_index),
+            |value| value.object.travel_jerk.get_at(nozzle_index),
+        ),
         max_jerk_x: if use_mach_limits {
             first_float(&full.printer.machine.machine_max_jerk_x).round_ties_even()
         } else {

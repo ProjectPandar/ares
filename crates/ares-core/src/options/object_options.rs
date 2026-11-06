@@ -1,8 +1,8 @@
 use super::{
-    FloatOrPercent, OrcaBool, OrcaFloat, OrcaInt, OrcaString, Percent, ProcessBrimType,
-    ProcessExtraBridgeLayer, ProcessGapFillTarget, ProcessInfillPattern,
-    ProcessInternalBridgeFilter, ProcessObjectSourceOptions, ProcessPerimeterGenerator,
-    ProcessSeamPosition, ProcessSlicingMode, ProcessSupportBasePattern,
+    FloatOrPercent, OrcaBool, OrcaFloat, OrcaFloatOrPercentsNullable, OrcaFloatsNullable, OrcaInt,
+    OrcaString, Percent, ProcessBrimType, ProcessExtraBridgeLayer, ProcessGapFillTarget,
+    ProcessInfillPattern, ProcessInternalBridgeFilter, ProcessObjectSourceOptions,
+    ProcessPerimeterGenerator, ProcessSeamPosition, ProcessSlicingMode, ProcessSupportBasePattern,
     ProcessSupportInterfacePattern, ProcessSupportStyle, ProcessSupportType,
     object_fields::object_option_fields,
 };

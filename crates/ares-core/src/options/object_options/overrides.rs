@@ -6,11 +6,11 @@ use serde::{
 use crate::SliceError;
 
 use super::{
-    FloatOrPercent, ObjectOptionOverrides, OrcaBool, OrcaFloat, OrcaInt, OrcaString, Percent,
-    ProcessBrimType, ProcessExtraBridgeLayer, ProcessGapFillTarget, ProcessInfillPattern,
-    ProcessInternalBridgeFilter, ProcessPerimeterGenerator, ProcessSeamPosition,
-    ProcessSlicingMode, ProcessSupportBasePattern, ProcessSupportInterfacePattern,
-    ProcessSupportStyle, ProcessSupportType, object_option_fields,
+    FloatOrPercent, ObjectOptionOverrides, OrcaBool, OrcaFloat, OrcaFloatOrPercentsNullable,
+    OrcaFloatsNullable, OrcaInt, OrcaString, Percent, ProcessBrimType, ProcessExtraBridgeLayer,
+    ProcessGapFillTarget, ProcessInfillPattern, ProcessInternalBridgeFilter,
+    ProcessPerimeterGenerator, ProcessSeamPosition, ProcessSlicingMode, ProcessSupportBasePattern,
+    ProcessSupportInterfacePattern, ProcessSupportStyle, ProcessSupportType, object_option_fields,
 };
 
 fn deserialize_value<'de, T>(key: &str, value: &'de str) -> Result<T, SliceError>

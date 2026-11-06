@@ -60,7 +60,7 @@ pub(super) const EARLY_OPTION_DEFINITIONS: &[OptionDefinition] = &[
         Enum,
         "monotonic",
         super::INFILL_PATTERN_TYPE_KEYS; true, false, "monotonic"),
-    definition!("bridge_acceleration", FloatOrPercent, "50%"; true, false, "50%"),
+    definition!("bridge_acceleration", FloatsOrPercents, "50%"; true, false, "50%"),
     definition!("bridge_angle", Float, "0"; true, false, "0"),
     definition!("bridge_density", Percent, "100"; true, false, "100%"),
     definition!("bridge_flow", Float, "1"; true, false, "1"),

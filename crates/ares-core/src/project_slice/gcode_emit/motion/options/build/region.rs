@@ -30,17 +30,24 @@ pub(in crate::project_slice::gcode_emit) struct RegionAccelerations {
 pub(in crate::project_slice::gcode_emit) fn accelerations(
     full: &ProjectSettings,
     object: Option<&ResolvedProjectObject>,
+    nozzle_index: usize,
 ) -> RegionAccelerations {
     RegionAccelerations {
         outer_wall_acceleration: acceleration(
             object.map(|value| &value.object),
-            full.process.object.outer_wall_acceleration.0,
-            |value| value.outer_wall_acceleration.0,
+            full.process
+                .object
+                .outer_wall_acceleration
+                .get_at(nozzle_index),
+            |value| value.outer_wall_acceleration.get_at(nozzle_index),
         ),
         default_acceleration: acceleration(
             object.map(|value| &value.object),
-            full.process.object.default_acceleration.0,
-            |value| value.default_acceleration.0,
+            full.process
+                .object
+                .default_acceleration
+                .get_at(nozzle_index),
+            |value| value.default_acceleration.get_at(nozzle_index),
         ),
     }
 }

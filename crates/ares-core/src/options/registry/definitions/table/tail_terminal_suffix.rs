@@ -25,7 +25,7 @@ pub(super) const TAIL_TERMINAL_SUFFIX_OPTION_DEFINITIONS: &[OptionDefinition] = 
     definition!("top_shell_layers", Int, "4"; true, false, "4"),
     definition!("top_shell_thickness", Float, "0.6"; true, false, "0.6"),
     definition!("top_solid_infill_flow_ratio", Float, "1"; true, false, "1"),
-    definition!("top_surface_acceleration", Float, "500"; true, false, "500"),
+    definition!("top_surface_acceleration", FloatsNullable, "500"; true, false, "500"),
     definition!("top_surface_density", Percent, "100"; true, false, "100%"),
     definition!("top_surface_expansion", Float, "0"; true, false, "0"),
     definition!(
@@ -35,7 +35,7 @@ pub(super) const TAIL_TERMINAL_SUFFIX_OPTION_DEFINITIONS: &[OptionDefinition] = 
     definition!("top_surface_expansion_margin", Float, "0"; true, false, "0"),
     definition!("top_surface_filament_id", Int, "0"; true, false, "0"),
     definition!("top_surface_fill_order", Enum, "default"; true, false, "default"),
-    definition!("top_surface_jerk", Float, "9"; true, false, "9"),
+    definition!("top_surface_jerk", FloatsNullable, "9"; true, false, "9"),
     definition!("top_surface_line_width", FloatOrPercent, "0"; true, false, "0"),
     definition!(
         "top_surface_pattern",
@@ -43,8 +43,8 @@ pub(super) const TAIL_TERMINAL_SUFFIX_OPTION_DEFINITIONS: &[OptionDefinition] = 
         "monotonicline",
         super::INFILL_PATTERN_TYPE_KEYS; true, false, "monotonicline"),
     definition!("top_surface_speed", Float, "100"; true, false, "100"),
-    definition!("travel_acceleration", Float, "10000"; true, false, "10000"),
-    definition!("travel_jerk", Float, "12"; true, false, "12"),
+    definition!("travel_acceleration", FloatsNullable, "10000"; true, false, "10000"),
+    definition!("travel_jerk", FloatsNullable, "12"; true, false, "12"),
     definition!("travel_slope", Floats, "3"; true, false, "3"),
     definition!("travel_speed", Float, "120"; true, false, "120"),
     definition!("travel_speed_z", Float, "0"; true, false, "0"),

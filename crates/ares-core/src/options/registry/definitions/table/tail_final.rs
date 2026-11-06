@@ -5,7 +5,7 @@ pub(super) const TAIL_FINAL_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("small_support_perimeter_threshold", Floats, "0"; true, false, "0"),
     definition!("solid_infill_direction", Float, "45"; true, false, "45"),
     definition!("solid_infill_rotate_template", String, ""; true, false, ""),
-    definition!("sparse_infill_acceleration", FloatOrPercent, "100%"; true, false, "100%"),
+    definition!("sparse_infill_acceleration", FloatsOrPercents, "100%"; true, false, "100%"),
     definition!("sparse_infill_density", Percent, "20"; true, false, "20%"),
     definition!("sparse_infill_filament_id", Int, "0"; true, false, "0"),
     definition!("sparse_infill_flow_ratio", Float, "1"; true, false, "1"),

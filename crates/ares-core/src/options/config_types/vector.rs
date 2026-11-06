@@ -77,6 +77,22 @@ impl OrcaBoolsNullable {
             .any(|value| !matches!(value, Nullable::Value(OrcaBool(false))))
     }
 }
+numeric_vector!(
+    OrcaFloatOrPercentsNullable,
+    Nullable<FloatOrPercent>,
+    CONFIG_OPTION_NULLABLE_VECTOR,
+    "super::nullable_vector::floats_or_percents"
+);
+
+impl OrcaFloatOrPercentsNullable {
+    pub(crate) fn get_at(&self, index: usize) -> FloatOrPercent {
+        match self.0.get(index).unwrap_or(&self.0[0]) {
+            Nullable::Value(value) => *value,
+            Nullable::Nil => FloatOrPercent::Float(f64::NAN),
+        }
+    }
+}
+
 numeric_vector!(OrcaInts, OrcaInt, CONFIG_OPTION_INTS);
 numeric_vector!(OrcaFloats, OrcaFloat, CONFIG_OPTION_NUMERIC_VECTOR);
 numeric_vector!(OrcaPercents, Percent, CONFIG_OPTION_NUMERIC_VECTOR);
