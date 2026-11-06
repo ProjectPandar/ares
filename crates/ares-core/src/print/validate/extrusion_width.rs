@@ -170,7 +170,7 @@ fn bridge_widths(
                 ));
             }
             if !allow_thin && width <= object.layer_height.0 {
-                return Err(SliceError::InvalidInput("Too small line width".to_owned()));
+                return Err(SliceError::InvalidInput("Line width too small".to_owned()));
             }
         }
     }
@@ -202,14 +202,14 @@ fn width(
         return Ok(());
     }
     if minimum_width <= layer_height {
-        return Err(SliceError::InvalidInput("Too small line width".to_owned()));
+        return Err(SliceError::InvalidInput("Line width too small".to_owned()));
     }
     let maximum_width = match value {
         FloatOrPercent::Float(value) => value,
         FloatOrPercent::Percent(value) => maximum_nozzle * value.0 / 100.0,
     };
     if maximum_width > maximum_nozzle * 5.0 {
-        return Err(SliceError::InvalidInput("Too large line width".to_owned()));
+        return Err(SliceError::InvalidInput("Line width too large".to_owned()));
     }
     Ok(())
 }
