@@ -81,14 +81,38 @@ where
         "filament_pre_cooling_temperature_nc",
         &NullableVectorRef::new(&value.gcode.filament_pre_cooling_temperature_nc),
     )?;
+    map.serialize_entry(
+        "filament_preheat_temperature_delta",
+        &NullableVectorRef::new(&value.gcode.filament_preheat_temperature_delta),
+    )?;
     map.serialize_entry("filament_printable", &value.gcode.filament_printable)?;
     map.serialize_entry(
         "filament_ramming_parameters",
         &value.gcode.filament_ramming_parameters,
     )?;
     map.serialize_entry(
+        "filament_ramming_travel_time",
+        &NullableVectorRef::new(&value.gcode.filament_ramming_travel_time),
+    )?;
+    map.serialize_entry(
+        "filament_ramming_travel_time_nc",
+        &NullableVectorRef::new(&value.gcode.filament_ramming_travel_time_nc),
+    )?;
+    map.serialize_entry(
+        "filament_ramming_volumetric_speed",
+        &NullableVectorRef::new(&value.gcode.filament_ramming_volumetric_speed),
+    )?;
+    map.serialize_entry(
+        "filament_ramming_volumetric_speed_nc",
+        &NullableVectorRef::new(&value.gcode.filament_ramming_volumetric_speed_nc),
+    )?;
+    map.serialize_entry(
         "filament_retract_before_wipe",
         &NullableVectorRef::new(&value.retract_overrides.filament_retract_before_wipe),
+    )?;
+    map.serialize_entry(
+        "filament_retract_length_nc",
+        &NullableVectorRef::new(&value.gcode.filament_retract_length_nc),
     )?;
     map.serialize_entry(
         "filament_retract_lift_above",

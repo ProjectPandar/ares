@@ -8,7 +8,7 @@ impl Serialize for FilamentGCodeSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(55))?;
+        let mut map = serializer.serialize_map(Some(61))?;
         serialize_entries(&mut map, self)?;
         map.end()
     }
@@ -114,10 +114,34 @@ where
         "filament_pre_cooling_temperature_nc",
         &NullableVectorRef::new(&value.filament_pre_cooling_temperature_nc),
     )?;
+    map.serialize_entry(
+        "filament_preheat_temperature_delta",
+        &NullableVectorRef::new(&value.filament_preheat_temperature_delta),
+    )?;
     map.serialize_entry("filament_printable", &value.filament_printable)?;
     map.serialize_entry(
         "filament_ramming_parameters",
         &value.filament_ramming_parameters,
+    )?;
+    map.serialize_entry(
+        "filament_ramming_travel_time",
+        &NullableVectorRef::new(&value.filament_ramming_travel_time),
+    )?;
+    map.serialize_entry(
+        "filament_ramming_travel_time_nc",
+        &NullableVectorRef::new(&value.filament_ramming_travel_time_nc),
+    )?;
+    map.serialize_entry(
+        "filament_ramming_volumetric_speed",
+        &NullableVectorRef::new(&value.filament_ramming_volumetric_speed),
+    )?;
+    map.serialize_entry(
+        "filament_ramming_volumetric_speed_nc",
+        &NullableVectorRef::new(&value.filament_ramming_volumetric_speed_nc),
+    )?;
+    map.serialize_entry(
+        "filament_retract_length_nc",
+        &NullableVectorRef::new(&value.filament_retract_length_nc),
     )?;
     map.serialize_entry("filament_soluble", &value.filament_soluble)?;
     map.serialize_entry(

@@ -180,6 +180,36 @@ pub(super) fn materialize(
         indices
     );
     select_vec_field!(
+        settings.filament.gcode.filament_preheat_temperature_delta,
+        source.filament.gcode.filament_preheat_temperature_delta,
+        indices
+    );
+    select_vec_field!(
+        settings.filament.gcode.filament_ramming_travel_time,
+        source.filament.gcode.filament_ramming_travel_time,
+        indices
+    );
+    select_vec_field!(
+        settings.filament.gcode.filament_ramming_travel_time_nc,
+        source.filament.gcode.filament_ramming_travel_time_nc,
+        indices
+    );
+    select_vec_field!(
+        settings.filament.gcode.filament_ramming_volumetric_speed,
+        source.filament.gcode.filament_ramming_volumetric_speed,
+        indices
+    );
+    select_vec_field!(
+        settings.filament.gcode.filament_ramming_volumetric_speed_nc,
+        source.filament.gcode.filament_ramming_volumetric_speed_nc,
+        indices
+    );
+    select_vec_field!(
+        settings.filament.gcode.filament_retract_length_nc,
+        source.filament.gcode.filament_retract_length_nc,
+        indices
+    );
+    select_vec_field!(
         settings
             .filament
             .retract_overrides

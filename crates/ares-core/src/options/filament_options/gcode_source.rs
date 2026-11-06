@@ -92,6 +92,12 @@ declare_option_group! {
         filament_flush_temp => "filament_flush_temp": Vec<Nullable<OrcaInt>> = nullable_ints(&[0]),
         filament_pre_cooling_temperature => "filament_pre_cooling_temperature": Vec<Nullable<OrcaInt>> = nullable_ints(&[0]),
         filament_pre_cooling_temperature_nc => "filament_pre_cooling_temperature_nc": Vec<Nullable<OrcaInt>> = nullable_ints(&[0]),
+        filament_preheat_temperature_delta => "filament_preheat_temperature_delta": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.0]),
+        filament_ramming_travel_time => "filament_ramming_travel_time": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.0]),
+        filament_ramming_travel_time_nc => "filament_ramming_travel_time_nc": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.0]),
+        filament_ramming_volumetric_speed => "filament_ramming_volumetric_speed": Vec<Nullable<OrcaFloat>> = nullable_floats(&[-1.0]),
+        filament_ramming_volumetric_speed_nc => "filament_ramming_volumetric_speed_nc": Vec<Nullable<OrcaFloat>> = nullable_floats(&[-1.0]),
+        filament_retract_length_nc => "filament_retract_length_nc": Vec<Nullable<OrcaFloat>> = nullable_floats(&[10.0]),
         retraction_distances_when_ec => "retraction_distances_when_ec": Vec<Nullable<OrcaFloat>> = nullable_floats(&[10.0]),
         long_retractions_when_ec => "long_retractions_when_ec": Vec<Nullable<OrcaBool>> = nullable_bools(&[false]),
         filament_start_gcode => "filament_start_gcode": OrcaStrings = strings(&[" "]),
@@ -125,7 +131,7 @@ declare_option_group! {
 }
 
 impl FilamentGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 55] = [
+    pub const DECLARATION_ORDER: [&'static str; 61] = [
         "filament_end_gcode",
         "filament_flow_ratio",
         "enable_pressure_advance",
@@ -156,6 +162,12 @@ impl FilamentGCodeSourceOptions {
         "filament_flush_temp",
         "filament_pre_cooling_temperature",
         "filament_pre_cooling_temperature_nc",
+        "filament_preheat_temperature_delta",
+        "filament_ramming_travel_time",
+        "filament_ramming_travel_time_nc",
+        "filament_ramming_volumetric_speed",
+        "filament_ramming_volumetric_speed_nc",
+        "filament_retract_length_nc",
         "retraction_distances_when_ec",
         "long_retractions_when_ec",
         "filament_start_gcode",
