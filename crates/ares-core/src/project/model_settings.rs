@@ -100,12 +100,47 @@ pub(crate) struct MeshStatistics {
     pub backwards_edges: u32,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct PlateSettings {
-    #[serde(rename = "metadata", default)]
     pub metadata: Vec<Metadata>,
-    #[serde(rename = "model_instance", default)]
     pub model_instances: Vec<PlateModelInstance>,
+}
+
+#[derive(Deserialize)]
+struct PlateSettingsWire {
+    #[serde(rename = "$value", default)]
+    children: Vec<PlateChild>,
+}
+
+#[derive(Deserialize)]
+enum PlateChild {
+    #[serde(rename = "metadata")]
+    Metadata(Metadata),
+    #[serde(rename = "model_instance")]
+    ModelInstance(PlateModelInstance),
+    #[serde(other)]
+    Other,
+}
+
+impl<'de> Deserialize<'de> for PlateSettings {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let wire = PlateSettingsWire::deserialize(deserializer)?;
+        let mut plate = Self {
+            metadata: Vec::new(),
+            model_instances: Vec::new(),
+        };
+        for child in wire.children {
+            match child {
+                PlateChild::Metadata(metadata) => plate.metadata.push(metadata),
+                PlateChild::ModelInstance(instance) => plate.model_instances.push(instance),
+                PlateChild::Other => {}
+            }
+        }
+        Ok(plate)
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
