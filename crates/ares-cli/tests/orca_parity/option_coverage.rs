@@ -17,6 +17,8 @@ mod hotend_rate_variants;
 mod initial_bed_temperature;
 #[path = "option_coverage/nozzle_temperature_footer.rs"]
 mod nozzle_temperature_footer;
+#[path = "option_coverage/nullable_vector_placeholder.rs"]
+mod nullable_vector_placeholder;
 #[path = "option_coverage/pa_variant.rs"]
 mod pa_variant;
 #[path = "option_coverage/variant_retraction.rs"]
