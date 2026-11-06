@@ -303,4 +303,29 @@ pub(super) fn materialize(
         source.filament.gcode.volumetric_speed_coefficients,
         indices
     );
+    select_wrapped_field!(
+        settings.filament.print.additional_cooling_fan_speed,
+        source.filament.print.additional_cooling_fan_speed,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.print.fan_max_speed,
+        source.filament.print.fan_max_speed,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.print.fan_min_speed,
+        source.filament.print.fan_min_speed,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.print.nozzle_temperature_range_high,
+        source.filament.print.nozzle_temperature_range_high,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.print.nozzle_temperature_range_low,
+        source.filament.print.nozzle_temperature_range_low,
+        indices
+    );
 }
