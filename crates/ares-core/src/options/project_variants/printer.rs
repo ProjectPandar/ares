@@ -194,6 +194,11 @@ pub(super) fn materialize_variant_two(
         "machine_max_jerk_z"
     );
     select_stride_two_field!(
+        settings.printer.machine.machine_max_junction_deviation,
+        &stride_indices,
+        "machine_max_junction_deviation"
+    );
+    select_stride_two_field!(
         settings.printer.machine.machine_max_speed_e,
         &stride_indices,
         "machine_max_speed_e"
