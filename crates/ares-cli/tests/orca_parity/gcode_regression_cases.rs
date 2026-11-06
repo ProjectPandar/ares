@@ -9,6 +9,9 @@ mod direct_coints_placeholder;
 #[path = "front_edge_numeric_cursor.rs"]
 mod front_edge_numeric_cursor;
 
+#[path = "spiral_lift_printable_area.rs"]
+mod spiral_lift_printable_area;
+
 #[path = "instance_name_sanitize.rs"]
 mod instance_name_sanitize;
 
