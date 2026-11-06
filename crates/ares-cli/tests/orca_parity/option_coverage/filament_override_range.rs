@@ -110,19 +110,25 @@ fn sha(bytes: &[u8]) -> String {
 
 /// `--slice 0 --outputdir` Native reference; requires exit0 + nonempty
 /// gcode.
-fn native(runner: &OrcaRunner, directory: &std::path::Path, project: &[u8]) -> Vec<u8> {
+fn native(
+    runner: &OrcaRunner,
+    directory: &std::path::Path,
+    project: &[u8],
+    overrides: &[&str],
+) -> Vec<u8> {
     fs::create_dir(directory).unwrap();
     let path = directory.join("input.3mf");
     fs::write(&path, project).unwrap();
     let output = directory.join("native");
     fs::create_dir(&output).unwrap();
-    let args = [
+    let mut args = vec![
         "--slice".into(),
         "0".into(),
         "--outputdir".into(),
         output.to_str().unwrap().into(),
         path.to_str().unwrap().into(),
     ];
+    args.extend(overrides.iter().map(|argument| (*argument).to_owned()));
     stages::run(runner.bin(), args, stages::Stage::Slice, directory).unwrap();
     let result = fs::read(output.join("result.json")).unwrap();
     let metadata: serde_json::Value = serde_json::from_slice(&result).unwrap();
@@ -216,7 +222,7 @@ fn run_leg(leg: &Leg) {
         return;
     }
 
-    let reference = native(&runner, &directory, &project);
+    let reference = native(&runner, &directory, &project, &[]);
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
@@ -294,10 +300,10 @@ fn filament_override_range_control_15() {
 /// `ConfigBase::set_deserialize` (`Config.cpp:591-620`), which never
 /// applies min/max — upstream's only range gate is `Slic3r::validate`
 /// where `fpc.apply` already dropped dynamic keys. Native reference is
-/// the same effective config via `project_settings` (target-5 project);
-/// Ares applies `{"filament_retraction_distances_when_cut":["5","5"]}`
-/// over the unpatched fixture and must produce identical bytes.
-/// FAILS pre-fix (`5 not in range [10,18]` at the boundary).
+/// the actual CLI flag over the unpatched fixture: unlike a pre-edited
+/// project, it records the changed key in both filament dirty columns
+/// (`OrcaSlicer.cpp:4158-4220`). Ares applies the same explicit override
+/// over that fixture and must produce identical complete output bytes.
 #[test]
 fn filament_override_range_overrides_cli_5() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
@@ -309,8 +315,20 @@ fn filament_override_range_overrides_cli_5() {
         .unwrap()
         .keep();
     let directory = root.join("case");
-    // Same effective config, through the project_settings path.
-    let reference = native(&runner, &directory, &project(&LEGS[0]));
+    let reference = native(
+        &runner,
+        &directory,
+        BASE,
+        &["--filament-retraction-distances-when-cut", "5,5"],
+    );
+    let dirty_line = "; different_settings_to_system = ;filament_retraction_distances_when_cut;filament_retraction_distances_when_cut;";
+    assert!(
+        std::str::from_utf8(&reference)
+            .unwrap()
+            .lines()
+            .any(|line| line == dirty_line),
+        "{root:?}: Native CLI override must mark both filament columns"
+    );
 
     let output_dir = directory.join("ares");
     fs::create_dir(&output_dir).unwrap();
@@ -327,9 +345,11 @@ fn filament_override_range_overrides_cli_5() {
         .unwrap();
     fs::write(directory.join("ares.stdout"), &cli.stdout).unwrap();
     fs::write(directory.join("ares.stderr"), &cli.stderr).unwrap();
-    let comparison = fs::read(&output)
+    let gcode = fs::read(&output);
+    let comparison = gcode
+        .as_ref()
         .map_err(|error| format!("CLI output: {error}"))
-        .and_then(|gcode| golden::compare_ordered_bytes_generator_only(&reference, &gcode));
+        .and_then(|gcode| golden::compare_ordered_bytes_generator_only(&reference, gcode));
     fs::write(
         directory.join("comparison.json"),
         serde_json::to_vec_pretty(&json!({
@@ -341,6 +361,13 @@ fn filament_override_range_overrides_cli_5() {
     )
     .unwrap();
     assert!(cli.status.success(), "{root:?}: {cli:?}");
+    assert!(
+        std::str::from_utf8(gcode.as_ref().unwrap())
+            .unwrap()
+            .lines()
+            .any(|line| line == dirty_line),
+        "{root:?}: Ares CLI override must mark both filament columns"
+    );
     comparison.unwrap_or_else(|error| panic!("{root:?}: {error}"));
 
     // Static `GCodeConfig` filament members stay range-checked through the
