@@ -1,5 +1,5 @@
 //! `libslic3r/FlushVolCalc.cpp` and pure RGBA/HSV CLI dependencies (8500fcd).
-mod color_distance;
+pub(super) mod color_distance;
 mod predictor;
 
 use std::f64::consts::PI;

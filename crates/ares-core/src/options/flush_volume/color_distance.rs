@@ -24,7 +24,7 @@ fn lab([r, g, b]: [u8; 3]) -> [f64; 3] {
     [116.0 * y - 16.0, 500.0 * (x - y), 200.0 * (y - z)]
 }
 
-pub(super) fn distance(from: [u8; 3], to: [u8; 3]) -> f32 {
+pub(crate) fn distance(from: [u8; 3], to: [u8; 3]) -> f32 {
     let [l1, a1, b1] = lab(from);
     let [l2, a2, b2] = lab(to);
     let c1 = (a1 * a1 + b1 * b1).sqrt();
