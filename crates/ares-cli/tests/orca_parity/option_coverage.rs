@@ -114,6 +114,8 @@ mod ironing_pattern;
 mod load_filament_variant_normalize;
 #[path = "option_coverage/max_travel_detour_distance.rs"]
 mod max_travel_detour_distance;
+#[path = "option_coverage/pressure_advance_variant_layout.rs"]
+mod pressure_advance_variant_layout;
 #[path = "option_coverage/process_variant_columns.rs"]
 mod process_variant_columns;
 #[path = "option_coverage/refresh_preset_includes.rs"]
