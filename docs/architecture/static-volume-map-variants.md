@@ -92,3 +92,28 @@ uses the existing variant footer check, which compares Native against API and CL
   (`filament-map-length/x1c-cube-too-long.3mf`): `filament_self_index = 1`,
   `filament_volume_map = 0`, `nozzle_temperature = 220`. This already matches
   and must keep matching; it catches failure mode 2.
+
+## Single-object by-object print sequence
+
+- `src/libslic3r/GCode/ToolOrdering.cpp:3054`: the static branch runs when
+  `print_sequence != ByObject || objects().size() == 1`. A single-object
+  by-object print takes the same static write-back as a by-layer print. Only
+  more than one by-object object takes the `else` branch (`:3088-3091`), which
+  wraps the config map without writing it back.
+- `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/recommend.rs`
+  already guards the whole block with this condition. Inside it, the write-back
+  also requires a by-layer sequence. Remove only that inner test, so
+  `update_static_filament_maps` runs whenever the block runs. No condition is
+  added.
+- Included: a single-object by-object print writes the same static maps as the
+  by-layer print of the same project. Witness: the Ender-3 High Flow variant
+  column printed by object, `filament_volume_map = 0,1`.
+- Deferred: the sequential write-back in `Print.cpp:3665-3724` for more than one
+  by-object object (auto map modes, per-object tool orderings), and the
+  print-wide stitching of the per-object plans. The single-object print reaches
+  the same static result there, so it does not change this case.
+- Failure mode: the inner test stays and the single-object by-object print keeps
+  the singleton `filament_volume_map = 0`.
+- Test: `static_volume_map_variants.rs` adds the by-object case on
+  `static-volume-map-by-object/single-object-high-flow.3mf`, which differs from
+  `nozzle-footer/variant-column.3mf` only in `print_sequence`.
