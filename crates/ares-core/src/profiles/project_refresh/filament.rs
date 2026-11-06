@@ -146,7 +146,9 @@ fn replace_variants(
         source.resize(new_count, source[0].clone());
     }
     if old.len() < start + old_count {
-        old.resize(start + old_count, source[0].clone());
+        // `ConfigOptionVector::resize` (`Config.hpp:698-715`) extends with its own front value.
+        let pad = old.first().unwrap_or(&source[0]).clone();
+        old.resize(start + old_count, pad);
     }
     let inserted = source
         .into_iter()
