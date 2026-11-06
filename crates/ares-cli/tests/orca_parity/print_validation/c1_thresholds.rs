@@ -163,6 +163,23 @@ threshold_case!(
     "; different_settings_to_system = ;filament_diameter;"
 );
 
+threshold_case!(
+    c1_override_scalar_same_value,
+    "layer_height",
+    "0.200",
+    None,
+    "; different_settings_to_system = ;;"
+);
+#[tokio::test]
+async fn c1_override_vector_front_fallback_equivalent() {
+    verify(
+        json!({"nozzle_temperature": ["190", "190", "190"]}),
+        None,
+        &["; different_settings_to_system = ;;"],
+    )
+    .await;
+}
+
 #[tokio::test]
 async fn c1_unchanged_control() {
     verify(json!({}), None, &[]).await;
