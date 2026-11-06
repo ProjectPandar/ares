@@ -91,7 +91,7 @@ pub(super) fn inner_offset(
             .holes()
             .iter()
             .filter(|hole| {
-                !offset_paths(&[(*hole).clone()], hole_probe, JoinType::Round, MITER_LIMIT)
+                !offset_paths(&[(*hole).clone()], hole_probe, JoinType::Miter, 3.0)
                     .unwrap_or_default()
                     .is_empty()
             })
