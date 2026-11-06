@@ -1,5 +1,8 @@
 //! `GCodeWriter` printable-area circle admission through public slicing streams.
 
+#[path = "spiral_lift_printable_area/coverage.rs"]
+mod coverage;
+
 #[test]
 fn front_edge_circle_uses_native_normal_lift() {
     check(

@@ -1,0 +1,244 @@
+[
+  {
+    "label": "interior-deferred-arc-0",
+    "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
+    "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
+    "input_sha256": "38f2aeba0b18b9f28b0e84cb01290a687d4310c0bddeed282d341943343dfe54",
+    "updates": {
+      "enable_arc_fitting": "0",
+      "z_hop_types": [
+        "Spiral Lift",
+        "Spiral Lift"
+      ],
+      "timelapse_gcode": "",
+      "enable_wrapping_detection": "0"
+    },
+    "translate_y_mm": 100,
+    "changed_entries": [
+      {
+        "entry": "3D/3dmodel.model",
+        "source_sha256": "f6bcbb86c089a69c89c4834b8662d44778954b9f44cb13e70bed2ac497241471",
+        "result_sha256": "6df9aa75bb00a885b102a5738e272a4d73784113a09cc0f798421efb91905f10"
+      },
+      {
+        "entry": "Metadata/project_settings.config",
+        "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
+        "result_sha256": "a36b6bfb86ccc30e5c1af0b696368cd1135a4434512a25c19c9cdcd0d595b118"
+      }
+    ]
+  },
+  {
+    "label": "interior-eager-arc-0",
+    "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
+    "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
+    "input_sha256": "6cb35f55f11e7e77d7a521a1763629e880962e996d22d42a6577304ec5a6ce65",
+    "updates": {
+      "enable_arc_fitting": "0",
+      "z_hop_types": [
+        "Spiral Lift",
+        "Spiral Lift"
+      ],
+      "timelapse_gcode": "; PRINTABLE_AREA_EAGER\n",
+      "enable_wrapping_detection": "0"
+    },
+    "translate_y_mm": 100,
+    "changed_entries": [
+      {
+        "entry": "3D/3dmodel.model",
+        "source_sha256": "f6bcbb86c089a69c89c4834b8662d44778954b9f44cb13e70bed2ac497241471",
+        "result_sha256": "6df9aa75bb00a885b102a5738e272a4d73784113a09cc0f798421efb91905f10"
+      },
+      {
+        "entry": "Metadata/project_settings.config",
+        "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
+        "result_sha256": "8cfa970c7704ae005d7e0c0e95bac5ce366729147c884090d52fa2fa6c2f16e8"
+      }
+    ]
+  },
+  {
+    "label": "front-edge-eager-arc-0",
+    "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
+    "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
+    "input_sha256": "29333c079d80736fcc8e608707e11057e39ef9450c47c26ef096e2cd71368893",
+    "updates": {
+      "enable_arc_fitting": "0",
+      "z_hop_types": [
+        "Spiral Lift",
+        "Spiral Lift"
+      ],
+      "timelapse_gcode": "; PRINTABLE_AREA_EAGER\n",
+      "enable_wrapping_detection": "0"
+    },
+    "translate_y_mm": 0,
+    "changed_entries": [
+      {
+        "entry": "Metadata/project_settings.config",
+        "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
+        "result_sha256": "8cfa970c7704ae005d7e0c0e95bac5ce366729147c884090d52fa2fa6c2f16e8"
+      }
+    ]
+  },
+  {
+    "label": "interior-deferred-arc-1",
+    "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
+    "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
+    "input_sha256": "1269ab69f9e3c3a76202094278d0ec5cd18fe978ed0de96d01398036e3150f87",
+    "updates": {
+      "enable_arc_fitting": "1",
+      "z_hop_types": [
+        "Spiral Lift",
+        "Spiral Lift"
+      ],
+      "timelapse_gcode": "",
+      "enable_wrapping_detection": "0"
+    },
+    "translate_y_mm": 100,
+    "changed_entries": [
+      {
+        "entry": "3D/3dmodel.model",
+        "source_sha256": "f6bcbb86c089a69c89c4834b8662d44778954b9f44cb13e70bed2ac497241471",
+        "result_sha256": "6df9aa75bb00a885b102a5738e272a4d73784113a09cc0f798421efb91905f10"
+      },
+      {
+        "entry": "Metadata/project_settings.config",
+        "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
+        "result_sha256": "bbdaf6e3a425e2a8ee3bc70721281fff49fcfbf72d4b9b4d8a1ab401d601e1b0"
+      }
+    ]
+  },
+  {
+    "label": "interior-eager-arc-1",
+    "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
+    "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
+    "input_sha256": "106156bada89ed98a8d9fa774c7f1dcdf14ca71507ab1fe8a6eb8689aa8b1103",
+    "updates": {
+      "enable_arc_fitting": "1",
+      "z_hop_types": [
+        "Spiral Lift",
+        "Spiral Lift"
+      ],
+      "timelapse_gcode": "; PRINTABLE_AREA_EAGER\n",
+      "enable_wrapping_detection": "0"
+    },
+    "translate_y_mm": 100,
+    "changed_entries": [
+      {
+        "entry": "3D/3dmodel.model",
+        "source_sha256": "f6bcbb86c089a69c89c4834b8662d44778954b9f44cb13e70bed2ac497241471",
+        "result_sha256": "6df9aa75bb00a885b102a5738e272a4d73784113a09cc0f798421efb91905f10"
+      },
+      {
+        "entry": "Metadata/project_settings.config",
+        "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
+        "result_sha256": "3031f1097c3cde74a549cb9e298a3b7bef2192b53ab879715e5acc308ff482c0"
+      }
+    ]
+  },
+  {
+    "label": "front-edge-eager-arc-1",
+    "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
+    "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
+    "input_sha256": "31732d4f8e9a8bd33688c46719a3d19aa1334605f32af6653e053d88fe38e784",
+    "updates": {
+      "enable_arc_fitting": "1",
+      "z_hop_types": [
+        "Spiral Lift",
+        "Spiral Lift"
+      ],
+      "timelapse_gcode": "; PRINTABLE_AREA_EAGER\n",
+      "enable_wrapping_detection": "0"
+    },
+    "translate_y_mm": 0,
+    "changed_entries": [
+      {
+        "entry": "Metadata/project_settings.config",
+        "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
+        "result_sha256": "3031f1097c3cde74a549cb9e298a3b7bef2192b53ab879715e5acc308ff482c0"
+      }
+    ]
+  },
+  {
+    "label": "physical-1",
+    "source": "tests/parity/nozzle-flush-dataset/D0.3mf",
+    "source_sha256": "6d576ce9d4835dfae9ec5edacf9c215d7d6893ce097606f06f987db98261ff34",
+    "input_sha256": "f6710b699ee35c63c1b6b6f4eb41a129f0d168c4ea76bb2483085940f6ced6cc",
+    "updates": {
+      "filament_map_mode": "Manual",
+      "filament_map": [
+        "1",
+        "1"
+      ],
+      "enable_prime_tower": "0",
+      "enable_arc_fitting": "1",
+      "slow_down_for_layer_cooling": [
+        "0",
+        "0"
+      ],
+      "z_hop_types": [
+        "Spiral Lift",
+        "Spiral Lift",
+        "Spiral Lift",
+        "Spiral Lift"
+      ],
+      "extruder_printable_area": [
+        "0x0,256x0,256x256,0x256",
+        "133x0,256x0,256x256,133x256"
+      ]
+    },
+    "translate_y_mm": 0,
+    "changed_entries": [
+      {
+        "entry": "Metadata/project_settings.config",
+        "source_sha256": "014f7814e5716c7cd02f6b828178fb6e294b9bd157bccf67ce7f6ccf7ebf7d2a",
+        "result_sha256": "7f77738c125c1068506a9dffdb44f514044f3faa58eccca5ea7c2b7215acdfee"
+      },
+      {
+        "entry": "Metadata/model_settings.config",
+        "source_sha256": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "result_sha256": "1a43acf92a4f58e462bc7094728f8c3155500ea2e244f3bb9ca803c555c2e78f"
+      }
+    ]
+  },
+  {
+    "label": "physical-2",
+    "source": "tests/parity/nozzle-flush-dataset/D0.3mf",
+    "source_sha256": "6d576ce9d4835dfae9ec5edacf9c215d7d6893ce097606f06f987db98261ff34",
+    "input_sha256": "7bb9e8fc0e0c2e651fd334bb6e7564a1a2a8e20d1a78f80265b4b46334af64b5",
+    "updates": {
+      "filament_map_mode": "Manual",
+      "filament_map": [
+        "2",
+        "2"
+      ],
+      "enable_prime_tower": "0",
+      "enable_arc_fitting": "1",
+      "slow_down_for_layer_cooling": [
+        "0",
+        "0"
+      ],
+      "z_hop_types": [
+        "Spiral Lift",
+        "Spiral Lift",
+        "Spiral Lift",
+        "Spiral Lift"
+      ],
+      "extruder_printable_area": [
+        "0x0,256x0,256x256,0x256",
+        "133x0,256x0,256x256,133x256"
+      ]
+    },
+    "translate_y_mm": 0,
+    "changed_entries": [
+      {
+        "entry": "Metadata/project_settings.config",
+        "source_sha256": "014f7814e5716c7cd02f6b828178fb6e294b9bd157bccf67ce7f6ccf7ebf7d2a",
+        "result_sha256": "167acab9bf1bac27f18b8d473ad43d00ca984dded93a72d61c1aa56d6c1b96a7"
+      },
+      {
+        "entry": "Metadata/model_settings.config",
+        "source_sha256": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+        "result_sha256": "1a43acf92a4f58e462bc7094728f8c3155500ea2e244f3bb9ca803c555c2e78f"
+      }
+    ]
+  }
+]
