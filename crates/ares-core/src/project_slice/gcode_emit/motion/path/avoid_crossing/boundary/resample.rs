@@ -103,15 +103,16 @@ pub(super) fn inner_offset(
         let resample = offset_dis / 2.0;
         let tolerance = scale.checked_scale(0.5).unwrap_or(500) as f64;
         let mut ex_poly = resample_expolygon(&ex_poly, resample, tolerance)?;
-        // Filter out expolygons smaller than 0.1 mm^2 (bbox estimate).
+        // The source skips offsetting, not polygon retention, for small padded areas.
         let (min, max) = polygon_bounds(ex_poly.contour());
         let epsilon = scaled_epsilon.round() as Coord;
         let padded_min = Point::new(min.x() - epsilon, min.y() - epsilon);
         let padded_max = Point::new(max.x() + epsilon, max.y() + epsilon);
-        let filter_extent = scale.checked_scale(0.1).unwrap_or(100_000);
-        let width = max.x().saturating_sub(min.x());
-        let height = max.y().saturating_sub(min.y());
-        if width < filter_extent && height < filter_extent {
+        let width = (padded_max.x() - padded_min.x()) as f64;
+        let height = (padded_max.y() - padded_min.y()) as f64;
+        let area_threshold = scale.scaled_delta(f64::from(0.1_f32)).powi(2);
+        if width * height < area_threshold {
+            result.push(ex_poly);
             continue;
         }
         let widths = [
