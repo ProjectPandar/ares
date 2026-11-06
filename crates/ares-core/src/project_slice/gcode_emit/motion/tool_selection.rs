@@ -55,7 +55,12 @@ pub(in crate::project_slice::gcode_emit) fn toolchange(
     };
     let supplied = custom_changes_tool(custom, prefix, filament);
     if !supplied {
-        output.extend_from_slice(format!("{prefix}{filament}{comment}\n").as_bytes());
+        let command = if is_bbl && !runtime.manual_filament_change.0 {
+            format!("M1020 S{filament} H{}", nozzle(traversal, filament))
+        } else {
+            format!("{prefix}{filament}")
+        };
+        output.extend_from_slice(format!("{command}{comment}\n").as_bytes());
     }
     // Forced reset_E clears private and shared positions, but not signed usage
     // or retraction (`Extruder.hpp:37`, `GCodeWriter.cpp:480–503`).
@@ -73,14 +78,14 @@ pub(in crate::project_slice::gcode_emit) fn toolchange(
     }
 }
 
+/// `GCodeWriter::toolchange_prefix` (`GCodeWriter.cpp:793-800`), also the cooling buffer's
+/// tool-change prefix (`CoolingBuffer.cpp:40`).
 pub(in crate::project_slice::gcode_emit) fn prefix(
     traversal: &PreparedPostClassicTraversal,
 ) -> &'static str {
     let runtime = &traversal.resolved.views.runtime_gcode;
     if runtime.manual_filament_change.0 {
         "; MANUAL_TOOL_CHANGE T"
-    } else if super::super::tags::Tags::of(traversal).is_bbl() {
-        "M1020 S"
     } else {
         match runtime.gcode_flavor {
             crate::GCodeFlavor::MakerWare => "M135 T",
@@ -88,6 +93,23 @@ pub(in crate::project_slice::gcode_emit) fn prefix(
             _ => "T",
         }
     }
+}
+
+/// `nozzle_id_for_gcode_placeholder` (`GCode.cpp:241-247`) over the static group result of a
+/// printer with one nozzle per extruder (`ToolOrdering.cpp:1892-1941`): the filament's 0-based
+/// `filament_map` entry, or -1 when the filament or that nozzle is outside the nozzle list
+/// (`MultiNozzleUtils.cpp:380-387,442-446,454-458`).
+fn nozzle(traversal: &PreparedPostClassicTraversal, filament: usize) -> i64 {
+    let full = &traversal.resolved.views.full;
+    let nozzles = full.project.print.nozzle_diameter.0.len() as i64;
+    full.project
+        .gcode
+        .filament_map
+        .0
+        .get(filament)
+        .map(|id| i64::from(id.0) - 1)
+        .filter(|id| (0..nozzles).contains(id))
+        .unwrap_or(-1)
 }
 
 /// Source scanner keeps the last parseable, line-leading prefix result
