@@ -5,6 +5,12 @@ fn assert_native(native: &str, label: &str, (arc, eager, interior): (bool, bool,
         let map = if physical == "1" { "0,0" } else { "1,1" };
         assert!(native.contains(&format!("; filament_map_2 = {map}\n")));
         assert!(native.contains("133x0,256x0,256x256,133x256"));
+        let lift = if physical == "1" {
+            "G3 Z.8 I-.164 J1.206 P1  F60000"
+        } else {
+            "G1 Z.8 F60000"
+        };
+        assert!(native.lines().any(|line| line == lift));
     } else if interior {
         assert!(native.lines().any(|line| {
             if arc {
@@ -69,7 +75,7 @@ fn interior_deferred_disabled_arc_retains_spiral() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/interior-deferred-arc-0.3mf"
         )),
-        "96b858ed6d5dc6c5963bec18d41228c87588e96c0db4e2ee416de0af9299ef88",
+        "44465492c87e179ac3da6c48599600f424799ddcc3aa73de12ede4ce3879e1de",
         (false, false, true),
     );
 }
@@ -82,7 +88,7 @@ fn interior_deferred_enabled_arc_retains_spiral() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/interior-deferred-arc-1.3mf"
         )),
-        "83d0f1cc5da23b1904516d3492c3324905610365b1cfa5458b58a8e8bcf6c2f3",
+        "047bf1790e5cdd9747671c9f0bae018680751f929b612e99907cc4b1a9f7b024",
         (true, false, true),
     );
 }
@@ -95,7 +101,7 @@ fn interior_eager_disabled_arc_retains_spiral() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/interior-eager-arc-0.3mf"
         )),
-        "23f66318e3a5f81d454f1880b7d563526ab6ba0d19d020bf8d5a76d9e19bdc9e",
+        "122dfa08f498a8b8cde6eb50fe0449a05486ca6153b37cf80e293f824972b9b3",
         (false, true, true),
     );
 }
@@ -108,7 +114,7 @@ fn interior_eager_enabled_arc_retains_spiral() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/interior-eager-arc-1.3mf"
         )),
-        "94e164709a3a1775b47b34fde04c9f54e9adac5c20d283aaeb6d5efaceaeb681",
+        "ea95c1338b13087950c6d40a33b8bb9d9b18a6f824edd85df2e095a39f5e0559",
         (true, true, true),
     );
 }
@@ -121,7 +127,7 @@ fn front_edge_eager_disabled_arc_uses_normal_lift() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/front-edge-eager-arc-0.3mf"
         )),
-        "ed0559f266f619ecc68a0b79a0660fa57ff9d9565448f622b4d3bbedf7d7eae3",
+        "718fc367e21e92030f0c3c37ea2c5ea74e536ebc474a9081a2ee24c569e1b35c",
         (false, true, false),
     );
 }
@@ -134,7 +140,7 @@ fn front_edge_eager_enabled_arc_uses_normal_lift() {
             env!("CARGO_MANIFEST_DIR"),
             "/../../tests/parity/spiral-lift-printable-area/front-edge-eager-arc-1.3mf"
         )),
-        "7017ae3b5916564705170ead727af56c77ce5fdc45b0af364884b7a8e15a5ec8",
+        "71715ee49512ce481923f68ae0a645286dcfaa50969a3238085febee64ab37ef",
         (true, true, false),
     );
 }

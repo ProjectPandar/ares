@@ -3,14 +3,13 @@
     "label": "interior-deferred-arc-0",
     "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
     "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
-    "input_sha256": "96b858ed6d5dc6c5963bec18d41228c87588e96c0db4e2ee416de0af9299ef88",
+    "input_sha256": "44465492c87e179ac3da6c48599600f424799ddcc3aa73de12ede4ce3879e1de",
     "updates": {
       "enable_arc_fitting": "0",
       "z_hop_types": [
         "Spiral Lift",
         "Spiral Lift"
       ],
-      "time_lapse_gcode": "",
       "enable_wrapping_detection": "0"
     },
     "translate_y_mm": 100,
@@ -23,7 +22,7 @@
       {
         "entry": "Metadata/project_settings.config",
         "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
-        "result_sha256": "d04422aba5096193487477a436357ce28e096b7ba5724444a44b4deec612d3b4"
+        "result_sha256": "298d8a02ff2393dd7341ade3cb27723c14d895bef59971d6f18c3f36e037c4d2"
       }
     ]
   },
@@ -31,15 +30,16 @@
     "label": "interior-eager-arc-0",
     "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
     "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
-    "input_sha256": "23f66318e3a5f81d454f1880b7d563526ab6ba0d19d020bf8d5a76d9e19bdc9e",
+    "input_sha256": "122dfa08f498a8b8cde6eb50fe0449a05486ca6153b37cf80e293f824972b9b3",
     "updates": {
       "enable_arc_fitting": "0",
       "z_hop_types": [
         "Spiral Lift",
         "Spiral Lift"
       ],
+      "enable_wrapping_detection": "0",
       "time_lapse_gcode": "; PRINTABLE_AREA_EAGER\n",
-      "enable_wrapping_detection": "0"
+      "printer_structure": "i3"
     },
     "translate_y_mm": 100,
     "changed_entries": [
@@ -51,7 +51,7 @@
       {
         "entry": "Metadata/project_settings.config",
         "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
-        "result_sha256": "a9a94cc3612ac3107a0fce96aa491a201f1c3038cdce85dfdfd719df85a14e77"
+        "result_sha256": "68fb2f8aa38ca8f16f006d72952739678028054338d424b66d82776b19d26d82"
       }
     ]
   },
@@ -59,22 +59,23 @@
     "label": "front-edge-eager-arc-0",
     "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
     "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
-    "input_sha256": "ed0559f266f619ecc68a0b79a0660fa57ff9d9565448f622b4d3bbedf7d7eae3",
+    "input_sha256": "718fc367e21e92030f0c3c37ea2c5ea74e536ebc474a9081a2ee24c569e1b35c",
     "updates": {
       "enable_arc_fitting": "0",
       "z_hop_types": [
         "Spiral Lift",
         "Spiral Lift"
       ],
+      "enable_wrapping_detection": "0",
       "time_lapse_gcode": "; PRINTABLE_AREA_EAGER\n",
-      "enable_wrapping_detection": "0"
+      "printer_structure": "i3"
     },
     "translate_y_mm": 0,
     "changed_entries": [
       {
         "entry": "Metadata/project_settings.config",
         "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
-        "result_sha256": "a9a94cc3612ac3107a0fce96aa491a201f1c3038cdce85dfdfd719df85a14e77"
+        "result_sha256": "68fb2f8aa38ca8f16f006d72952739678028054338d424b66d82776b19d26d82"
       }
     ]
   },
@@ -82,14 +83,13 @@
     "label": "interior-deferred-arc-1",
     "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
     "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
-    "input_sha256": "83d0f1cc5da23b1904516d3492c3324905610365b1cfa5458b58a8e8bcf6c2f3",
+    "input_sha256": "047bf1790e5cdd9747671c9f0bae018680751f929b612e99907cc4b1a9f7b024",
     "updates": {
       "enable_arc_fitting": "1",
       "z_hop_types": [
         "Spiral Lift",
         "Spiral Lift"
       ],
-      "time_lapse_gcode": "",
       "enable_wrapping_detection": "0"
     },
     "translate_y_mm": 100,
@@ -102,7 +102,7 @@
       {
         "entry": "Metadata/project_settings.config",
         "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
-        "result_sha256": "01741a84cc2914415f05a105dfe9a2bf33224907dc211ce05ff43e305cb8d048"
+        "result_sha256": "ce4bdfa8dd4e4bc1bd84cc11343beede1c6c820510ee8099ce90b9324483a592"
       }
     ]
   },
@@ -110,15 +110,16 @@
     "label": "interior-eager-arc-1",
     "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
     "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
-    "input_sha256": "94e164709a3a1775b47b34fde04c9f54e9adac5c20d283aaeb6d5efaceaeb681",
+    "input_sha256": "ea95c1338b13087950c6d40a33b8bb9d9b18a6f824edd85df2e095a39f5e0559",
     "updates": {
       "enable_arc_fitting": "1",
       "z_hop_types": [
         "Spiral Lift",
         "Spiral Lift"
       ],
+      "enable_wrapping_detection": "0",
       "time_lapse_gcode": "; PRINTABLE_AREA_EAGER\n",
-      "enable_wrapping_detection": "0"
+      "printer_structure": "i3"
     },
     "translate_y_mm": 100,
     "changed_entries": [
@@ -130,7 +131,7 @@
       {
         "entry": "Metadata/project_settings.config",
         "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
-        "result_sha256": "7b22f689797978923927f21818db5bfda3e1fa20f23809d9f2022ae0a45be7d9"
+        "result_sha256": "14aea2c6f32fc04b8de6cab9ac91f8a846cee83e9d7f8ee0ac04ab56cb1cdfed"
       }
     ]
   },
@@ -138,22 +139,23 @@
     "label": "front-edge-eager-arc-1",
     "source": "tests/parity/front-edge-numeric-cursor/control.3mf",
     "source_sha256": "0f5ff07e6145155275ba82bbedfd608569117a3ee30a26309686efba2764f0c1",
-    "input_sha256": "7017ae3b5916564705170ead727af56c77ce5fdc45b0af364884b7a8e15a5ec8",
+    "input_sha256": "71715ee49512ce481923f68ae0a645286dcfaa50969a3238085febee64ab37ef",
     "updates": {
       "enable_arc_fitting": "1",
       "z_hop_types": [
         "Spiral Lift",
         "Spiral Lift"
       ],
+      "enable_wrapping_detection": "0",
       "time_lapse_gcode": "; PRINTABLE_AREA_EAGER\n",
-      "enable_wrapping_detection": "0"
+      "printer_structure": "i3"
     },
     "translate_y_mm": 0,
     "changed_entries": [
       {
         "entry": "Metadata/project_settings.config",
         "source_sha256": "746d7af471d0f4d2c25fa6e300e0f935e9c7c602f68951602eb37c2f108d08b6",
-        "result_sha256": "7b22f689797978923927f21818db5bfda3e1fa20f23809d9f2022ae0a45be7d9"
+        "result_sha256": "14aea2c6f32fc04b8de6cab9ac91f8a846cee83e9d7f8ee0ac04ab56cb1cdfed"
       }
     ]
   },
