@@ -126,6 +126,7 @@ fn resolve_with_observer(
     );
     // Temporary applied-map snapshot until ToolOrdering runs after validation.
     let applied_filament_map = first.project.gcode.filament_map.clone();
+    crate::options::filament_map_recommend::prepare_multi_extruder_cli_defaults(&mut first);
     // ToolOrdering::initialize re-derives the map before G-code export
     // (ToolOrdering.cpp:1288-1303; Print::update_filament_maps_to_config).
     crate::options::filament_map_recommend::apply_recommended_filament_map(&mut first);

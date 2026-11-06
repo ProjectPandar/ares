@@ -9,7 +9,6 @@ pub(super) fn transformed_for_export(
     overrides: &ExportOverrides,
 ) -> Result<ProjectSettings, SliceError> {
     let mut transformed = source.clone();
-    prepare_multi_extruder_cli_defaults(&mut transformed);
     apply_cli_oracle_state(&mut transformed, overrides);
     scale_flush_matrix(&mut transformed)?;
     Ok(transformed)
@@ -39,20 +38,6 @@ fn apply_cli_oracle_state(settings: &mut ProjectSettings, overrides: &ExportOver
     if map_changed && let Some(raw) = overrides.enable_prime_tower {
         settings.process.print.enable_prime_tower = raw;
     }
-}
-
-/// The OrcaSlicer CLI slicing path fills per-extruder defaults for
-/// multi-extruder printers (`OrcaSlicer.cpp:5993-6022`, applied when
-/// `filament_map_mode < Manual`): every extruder gets the `1#0|4#1`
-/// AMS mapping, including when the input already supplies a mapping.
-fn prepare_multi_extruder_cli_defaults(settings: &mut ProjectSettings) {
-    use crate::ProjectFilamentMapMode;
-
-    let count = settings.project.print.nozzle_diameter.0.len();
-    if count <= 1 || settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::Manual {
-        return;
-    }
-    settings.project.gcode.extruder_ams_count.0 = vec!["1#0|4#1".to_owned(); count];
 }
 
 fn scale_flush_matrix(settings: &mut ProjectSettings) -> Result<(), SliceError> {

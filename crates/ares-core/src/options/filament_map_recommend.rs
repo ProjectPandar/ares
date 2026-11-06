@@ -13,6 +13,15 @@
 
 use crate::{OrcaInt, ProjectFilamentMapMode, ProjectSettings};
 
+/// OrcaSlicer.cpp:6937–6969: CLI auto-map preparation replaces per-head AMS counts.
+pub(crate) fn prepare_multi_extruder_cli_defaults(settings: &mut ProjectSettings) {
+    let count = settings.project.print.nozzle_diameter.0.len();
+    if count <= 1 || settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::Manual {
+        return;
+    }
+    settings.project.gcode.extruder_ams_count.0 = vec!["1#0|4#1".to_owned(); count];
+}
+
 pub(crate) fn apply_recommended_filament_map(settings: &mut ProjectSettings) {
     if settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::Manual {
         return;
