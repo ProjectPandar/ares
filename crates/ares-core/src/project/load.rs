@@ -173,7 +173,7 @@ pub(crate) fn load_project_with_preparation(
         overrides,
     )?;
     // Overrides win over document values (`apply_only`, `Config.cpp:461`).
-    overrides.apply(&mut project_settings_raw);
+    overrides.apply(&mut project_settings_raw)?;
     // Same upstream deserializer semantics as preset documents: JSON
     // strings on vector-kind options deserialize through
     // `ConfigOptionVector::deserialize` (`Config.hpp:868-887`,

@@ -10,7 +10,7 @@ impl Project {
         mut raw: ProjectSettingsRaw,
         overrides: &ConfigOverrides,
     ) -> Result<(), SliceError> {
-        overrides.apply(&mut raw);
+        overrides.apply(&mut raw)?;
         raw.handle_legacy();
         raw.normalize_wire_vector_shapes()
             .map_err(SliceError::InvalidInput)?;

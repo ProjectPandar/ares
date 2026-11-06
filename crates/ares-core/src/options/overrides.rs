@@ -8,6 +8,8 @@
 //! token, out-of-range numeric value) and then applied as last-write-wins
 //! on the project-settings layer.
 
+mod dirty_columns;
+
 use std::collections::BTreeMap;
 
 use serde::Deserialize;
@@ -141,7 +143,8 @@ impl ConfigOverrides {
 
     /// Applies the overrides onto the raw project-settings view
     /// (`ConfigBase::apply_only`, `Config.cpp:461`: later values win).
-    pub(crate) fn apply(&self, raw: &mut ProjectSettingsRaw) {
+    pub(crate) fn apply(&self, raw: &mut ProjectSettingsRaw) -> Result<(), SliceError> {
+        let mut changed = Vec::new();
         for (key, override_value) in &self.values {
             let tokens = &override_value.tokens;
             let definition = option_definition(key).expect("validated override key");
@@ -155,8 +158,12 @@ impl ConfigOverrides {
                         .collect(),
                 )
             };
+            if !dirty_columns::same_value(key, raw.get(key), &value)? {
+                changed.push(key.as_str());
+            }
             raw.insert(key.clone(), value);
         }
+        dirty_columns::record_changed(raw, &changed)
     }
 }
 

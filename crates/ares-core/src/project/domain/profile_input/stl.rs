@@ -64,7 +64,7 @@ impl Project {
             (profile.settings.clone(), raw)
         } else {
             let mut merged = raw;
-            overrides.apply(&mut merged);
+            overrides.apply(&mut merged)?;
             // `handle_legacy` on user edits (Config.cpp:577–579) precedes
             // the typed settings rebuild.
             merged.handle_legacy();

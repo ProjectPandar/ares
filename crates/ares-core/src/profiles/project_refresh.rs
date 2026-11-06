@@ -7,6 +7,11 @@ pub(crate) use keys::default_value;
 use super::{Placement, catalog::Catalog};
 use crate::{ConfigOverrides, Project, SliceError};
 
+/// Preset.cpp: source-owned print, filament and printer option membership.
+pub(crate) fn preset_owns_option(kind: super::ProfileKind, key: &str) -> bool {
+    keys::names(kind).any(|name| name == key)
+}
+
 #[derive(Clone, Copy)]
 pub(crate) struct ProjectPresetRefresh<'a> {
     pub(super) catalog: &'a Catalog,

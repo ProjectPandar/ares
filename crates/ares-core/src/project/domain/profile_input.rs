@@ -190,7 +190,7 @@ impl Project {
             },
         )?;
         // M854 edit order: user overrides apply last (`Config.cpp:461`).
-        overrides.apply(&mut merged);
+        overrides.apply(&mut merged)?;
         // `set_deserialize`/`handle_legacy` runs on every option token the
         // merged config carries — embedded base and profile overlay alike
         // (`Config.cpp:577-579`) — so the raw view is post-legacy before the
