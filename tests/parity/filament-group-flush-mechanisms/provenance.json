@@ -1,0 +1,122 @@
+{
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "source_boundary": [
+    "src/libslic3r/FilamentGroup.cpp:36-374,427-566,901-922,1036-1051",
+    "src/libslic3r/GCode/ToolOrdering.cpp:1537-1747,1808-1846,2870-3084",
+    "src/libslic3r/GCode/ToolOrderUtils.cpp:748-1141,1324-1494",
+    "src/libslic3r/Print.cpp:4908-4976",
+    "src/libslic3r/PrintObject.cpp:349-515"
+  ],
+  "scope": "Non-TPU static dual BBL, one Standard nozzle per head, Auto For Flush, by layer, no switcher/preload. All configured logical filaments are used.",
+  "geometry": "20x20 mm cubes; three-object cases at x=96.5/128.5/160.5 and five-object cases at x=64.5/96.5/128.5/160.5/192.5, all y=128.5. Height 1.2 mm except the last two prior-state objects scaled to 0.2 mm.",
+  "pairs": [
+    {
+      "first": "x2d_pla_five_filaments_equal_cost_first_assignment",
+      "second": "x2d_pla_five_filaments_last_filament_flush_bias",
+      "parameter": "Physical-head-1 matrix entries involving logical filament 5; all-zero tie versus positive bias. Five used filaments exceed the CLI capacity of four per head; equal-score traversal must retain the first source assignment."
+    },
+    {
+      "first": "x2d_pla_three_filaments_remembered_small_gap",
+      "second": "x2d_pla_three_filaments_outside_absolute_gap",
+      "parameter": "Nonzero flush entries 3 versus 4, zero load/unload/switch time. Distinguish remembered absolute gap plus empty-inventory AMS monogroup preference from primary-only selection."
+    },
+    {
+      "first": "x2d_pla_other_layers_ascending_custom_order",
+      "second": "x2d_pla_other_layers_middle_last_custom_order",
+      "parameter": "Only the other-layer sequence for layers 2-6, mirrored in project and plate settings; first-layer order remains 1,2,3."
+    },
+    {
+      "first": "x2d_pla_short_objects_ascending_prior_state",
+      "second": "x2d_pla_short_objects_descending_prior_state",
+      "parameter": "Only first-layer order 1,2,3 versus 3,2,1, mirrored in project and plate settings. Both physical matrices are identical and symmetric, so first-layer assignment costs are unchanged by reversal. Only filament 1 remains after layer 1; resetting prior nozzle state would lose the map-changing distinction."
+    }
+  ],
+  "constraint_control": {
+    "input": "../filament-group-flush-context/x2d_pla_three_objects_default_purge.3mf",
+    "sha256": "717250cd867278868a88c646f9754f7761dd73f1f8d461e965b294545cf3db66",
+    "public_test": "filament_group_flush_context::x2d_pla_three_objects_default_purge",
+    "native_map": "1,2,1",
+    "parameters": "Change one filament_printable entry 3 to 1, or lower only the second physical head height from 256 to 0.1. Restricting logical filament 2 also prevents an otherwise occupancy-favored master swap."
+  },
+  "qualification_limits": [
+    "The remembered/AMS pair is a composition witness for empty inventory only; no live tray producer or nonempty colour matching is supplied.",
+    "Two static head fingerprints differ; these inputs do not independently exercise equivalent-nozzle hash deduplication.",
+    "The static wrapper supplies no initial loaded nozzle state; the prior pair exercises carried layer state, not live inventory.",
+    "These inputs do not isolate nozzle-volume declaration restrictions or all geometric area/conflict branches.",
+    "Strict whole Native/API/CLI output diagnostics remain independent of literal map and context assertions."
+  ],
+  "cases": [
+    {
+      "id": "x2d_pla_five_filaments_equal_cost_first_assignment",
+      "input": "x2d_pla_five_filaments_equal_cost_first_assignment.3mf",
+      "sha256": "c29a5a3e3ea6662b917b3714cfa497e43a7864c16d739c939257c4f2a3ee0622",
+      "expectations_file": "preferences.json"
+    },
+    {
+      "id": "x2d_pla_five_filaments_last_filament_flush_bias",
+      "input": "x2d_pla_five_filaments_last_filament_flush_bias.3mf",
+      "sha256": "304108a59983863bd45b34777601470dcbd68cb614c5557a0e71404106ba288b",
+      "expectations_file": "preferences.json"
+    },
+    {
+      "id": "x2d_pla_three_filaments_remembered_small_gap",
+      "input": "x2d_pla_three_filaments_remembered_small_gap.3mf",
+      "sha256": "80e2db05444d4b78ba663ea374141537fa241027c67c4dd6a6ea6ef6d201f19a",
+      "expectations_file": "preferences.json"
+    },
+    {
+      "id": "x2d_pla_three_filaments_outside_absolute_gap",
+      "input": "x2d_pla_three_filaments_outside_absolute_gap.3mf",
+      "sha256": "b02152095c3302ed9447fea555581e2f6dc1c9e8e052536640181a1ebbae9fb2",
+      "expectations_file": "preferences.json"
+    },
+    {
+      "id": "x2d_pla_other_layers_ascending_custom_order",
+      "input": "x2d_pla_other_layers_ascending_custom_order.3mf",
+      "sha256": "1604901c251e5d056b5565ff48b657ee3b9ba8175b09d921de477ce645912062",
+      "expectations_file": "ordering.json"
+    },
+    {
+      "id": "x2d_pla_other_layers_middle_last_custom_order",
+      "input": "x2d_pla_other_layers_middle_last_custom_order.3mf",
+      "sha256": "744be8eb5dd26e978b5873716f8e03563d36c90cb45067aee1c3d7b395ffe342",
+      "expectations_file": "ordering.json"
+    },
+    {
+      "id": "x2d_pla_short_objects_ascending_prior_state",
+      "input": "x2d_pla_short_objects_ascending_prior_state.3mf",
+      "sha256": "ea67a836adc5533c0eca444bf9892825dec35c316f3a01357ac0dda76b5693b8",
+      "expectations_file": "ordering.json"
+    },
+    {
+      "id": "x2d_pla_short_objects_descending_prior_state",
+      "input": "x2d_pla_short_objects_descending_prior_state.3mf",
+      "sha256": "0cfd5f48f43152f251b2b466437bdcf40b1d7a8923adbb980927de52eae4e15b",
+      "expectations_file": "ordering.json"
+    },
+    {
+      "id": "x2d_pla_auto_map_first_filament_head1_only",
+      "input": "x2d_pla_auto_map_first_filament_head1_only.3mf",
+      "sha256": "385741447ea057dcaebabda4910561e22fd50bd6aff2f566544eea6ff8709497",
+      "expectations_file": "constraints.json"
+    },
+    {
+      "id": "x2d_pla_auto_map_second_filament_head1_only",
+      "input": "x2d_pla_auto_map_second_filament_head1_only.3mf",
+      "sha256": "8a03539998963da13bf93a4836e85781b41deb96910cfbe936d9ce24153ba00c",
+      "expectations_file": "constraints.json"
+    },
+    {
+      "id": "x2d_pla_auto_map_third_filament_head1_only",
+      "input": "x2d_pla_auto_map_third_filament_head1_only.3mf",
+      "sha256": "9688d6791eac694e190f714ab8e42e4dd98f7d0c8ce9e23dca89d49b0e03c99c",
+      "expectations_file": "constraints.json"
+    },
+    {
+      "id": "x2d_pla_auto_map_second_head_height_below_model",
+      "input": "x2d_pla_auto_map_second_head_height_below_model.3mf",
+      "sha256": "6d550d5c4a39d4ae89c98881f183d079c5dc007a1f342648f17fdde57c3d4909",
+      "expectations_file": "constraints.json"
+    }
+  ]
+}
