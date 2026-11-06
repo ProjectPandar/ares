@@ -3,6 +3,7 @@ use super::super::{
     format::{axis as format_axis, offset as format_offset, z as format_z},
 };
 
+mod printable_area;
 mod spiral;
 
 use spiral::append as append_spiral;
@@ -218,36 +219,20 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     let rise = raised_z - state.writer_z.unwrap_or(state.layer_z);
     let emitted = match mode {
         LiftMode::Normal => {
-            let feedrate = z_feedrate(state);
-            // `GCodeWriter::_travel_to_z` (`GCodeWriter.cpp:841`): the lift
-            // carries a trailing ` ; normal lift Z` under `gcode_comments`.
-            let comment = if state.options.gcode_comments {
-                " ; normal lift Z"
-            } else {
-                ""
-            };
-            output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}{comment}\n",
-                    format_z(raised_z),
-                    format_axis(feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = feedrate;
+            append_normal(output, state, raised_z);
             true
         }
         LiftMode::Spiral => {
             let slope = state.options.travel_slope_radians;
             if slope > 0.0 && travel_distance > f64::EPSILON && rise > 0.0 {
                 let radius = rise / (std::f64::consts::TAU * slope.atan());
-                append_spiral(
-                    output,
-                    state,
-                    raised_z,
-                    -dy / travel_distance * radius,
-                    dx / travel_distance * radius,
-                );
+                let i = -dy / travel_distance * radius;
+                let j = dx / travel_distance * radius;
+                if state.spiral_lift_fits_printable_area((source.0 + i, source.1 + j), radius) {
+                    append_spiral(output, state, raised_z, i, j);
+                } else {
+                    append_normal(output, state, raised_z);
+                }
                 true
             } else {
                 false
@@ -335,23 +320,17 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState, force_sp
     {
         let radius = state.options.z_hop
             / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
-        append_spiral(output, state, raised_z, radius, 0.0);
-    } else {
-        let feedrate = z_feedrate(state);
-        let comment = if state.options.gcode_comments {
-            " ; normal lift Z"
-        } else {
-            ""
-        };
-        output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}{comment}\n",
-                format_z(raised_z),
-                format_axis(feedrate)
-            )
-            .as_bytes(),
+        let center = (
+            state.x - state.xy_offset.0 + radius,
+            state.y - state.xy_offset.1,
         );
-        state.current_feedrate = feedrate;
+        if state.spiral_lift_fits_printable_area(center, radius) {
+            append_spiral(output, state, raised_z, radius, 0.0);
+        } else {
+            append_normal(output, state, raised_z);
+        }
+    } else {
+        append_normal(output, state, raised_z);
     }
     state.record_z(raised_z);
     state.lifted = true;
@@ -382,4 +361,23 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     state.record_z(raised);
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
+}
+
+// GCodeWriter::_travel_to_z: the same normal lift serves both rejected-circle branches.
+fn append_normal(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64) {
+    let feedrate = z_feedrate(state);
+    let comment = if state.options.gcode_comments {
+        " ; normal lift Z"
+    } else {
+        ""
+    };
+    output.extend_from_slice(
+        format!(
+            "G1 Z{} F{}{comment}\n",
+            format_z(raised_z),
+            format_axis(feedrate)
+        )
+        .as_bytes(),
+    );
+    state.current_feedrate = feedrate;
 }

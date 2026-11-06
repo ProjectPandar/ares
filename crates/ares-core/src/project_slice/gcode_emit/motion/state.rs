@@ -28,6 +28,9 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) template_rng: super::super::value::TemplateRng,
     pub(in crate::project_slice::gcode_emit) hold_chamber_temp_for_flat_print: bool,
     pub(in crate::project_slice::gcode_emit) first_layer_hull: Vec<crate::geometry::Point>,
+    pub(in crate::project_slice::gcode_emit) bed_printable_area: Option<crate::geometry::Polygon>,
+    pub(in crate::project_slice::gcode_emit) extruder_printable_areas:
+        Vec<crate::geometry::Polygon>,
     pub(in crate::project_slice::gcode_emit) wipe_tower:
         Option<super::super::wipe_tower::Integration>,
     pub(in crate::project_slice::gcode_emit) adaptive_pa_flow: Option<f64>,

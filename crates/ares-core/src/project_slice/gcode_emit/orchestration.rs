@@ -241,6 +241,7 @@ pub(in crate::project_slice) fn emit(
         },
         ..Default::default()
     };
+    state.apply_printable_area(&traversal.resolved.views.full)?;
     // Writer registration precedes machine-start and its output-variable
     // refresh/write-back (`GCode.cpp:2791,2829,3118`). No extruder is selected yet.
     machine::append_limits(
