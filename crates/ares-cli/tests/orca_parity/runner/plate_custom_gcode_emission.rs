@@ -94,6 +94,9 @@ fn check(runner: &OrcaRunner, label: &str, project: Vec<u8>, witness: &Witness) 
         );
     }
     let outcome = crate::compare_case(&case);
+    if label == "plate-custom-gcode-emission/multi-as-single" {
+        crate::option_coverage::multitool_ramming_footer::check(&outcome);
+    }
     assert_eq!(
         outcome.status, "PASS",
         "{label}: {}; {:?}",

@@ -15,6 +15,8 @@ mod filament_volume_map_contrasts;
 mod hotend_rate_variants;
 #[path = "option_coverage/initial_bed_temperature.rs"]
 mod initial_bed_temperature;
+#[path = "option_coverage/multitool_ramming_footer.rs"]
+pub(crate) mod multitool_ramming_footer;
 #[path = "option_coverage/nozzle_temperature_footer.rs"]
 mod nozzle_temperature_footer;
 #[path = "option_coverage/nullable_vector_placeholder.rs"]

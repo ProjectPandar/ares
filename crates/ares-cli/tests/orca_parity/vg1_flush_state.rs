@@ -116,6 +116,9 @@ fn check(printer: &str, virtual_segment: &str, oracle: Oracle) {
         Oracle::Bytes => {}
     }
     let outcome = crate::compare_case(&case);
+    if virtual_segment.starts_with("VG1 ") {
+        crate::option_coverage::multitool_ramming_footer::check(&outcome);
+    }
     assert_eq!(
         outcome.status, "PASS",
         "{}; {:?}",
