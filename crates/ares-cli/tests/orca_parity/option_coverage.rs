@@ -3,6 +3,9 @@
 #[path = "arachne_unsupported_wall_last.rs"]
 mod arachne_unsupported_wall_last;
 
+#[path = "option_coverage/acceleration_jerk_variants.rs"]
+mod acceleration_jerk_variants;
+
 #[path = "option_coverage/bed_temperature_footer.rs"]
 mod bed_temperature_footer;
 #[path = "option_coverage/filament_is_mixed_echo.rs"]
