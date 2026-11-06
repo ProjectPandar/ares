@@ -164,7 +164,7 @@ fn print_bed_compat_flat_height_bridge_and_layer_reset_check_still_precede_bed()
     check(
         json!({"cool_plate_temp":["0"],"bridge_line_width":"0.1"}),
         false,
-        Some("Too small line width"),
+        Some("Line width too small"),
     );
     check(
         json!({"cool_plate_temp":["0"],"before_layer_change_gcode":"G92 E0\n"}),

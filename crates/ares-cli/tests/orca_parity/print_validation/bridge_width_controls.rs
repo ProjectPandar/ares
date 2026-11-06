@@ -2,7 +2,7 @@
 use ares_core::{ProjectSettings, SliceError};
 use serde_json::{Value, json};
 
-const LOWER: &str = "Too small line width";
+const LOWER: &str = "Line width too small";
 const UPPER: &str = "Bridge line width must not exceed nozzle diameter";
 
 fn check(extra: Value, expected: Option<&str>) {
@@ -118,7 +118,7 @@ fn print_bridge_width_ordinary_height_and_width_errors_precede_bridge() {
     );
     check(
         json!({"line_width":"3","bridge_line_width":"0.1"}),
-        Some("Too large line width"),
+        Some("Line width too large"),
     );
 }
 

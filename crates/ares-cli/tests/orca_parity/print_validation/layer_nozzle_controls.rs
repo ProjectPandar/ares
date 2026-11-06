@@ -34,7 +34,7 @@ fn print_layer_nozzle_equal_is_legal_strictly_above_is_not() {
     for key in ["layer_height", "initial_layer_print_height"] {
         for height in ["0.399999", "0.4"] {
             if key == "layer_height" && height == "0.4" {
-                check_exact(json!({key:height}), Some("Too small line width"));
+                check_exact(json!({key:height}), Some("Line width too small"));
             } else {
                 check(json!({key:height}), false);
             }
@@ -47,7 +47,7 @@ fn print_layer_nozzle_equal_is_legal_strictly_above_is_not() {
 fn print_layer_nozzle_unused_smaller_nozzle_is_not_minimum() {
     check_exact(
         json!({"nozzle_diameter":["0.1","0.4"],"filament_map":["2"]}),
-        Some("Too small line width"),
+        Some("Line width too small"),
     );
     check(
         json!({"nozzle_diameter":["0.4","0.1"],"filament_map":["2"]}),

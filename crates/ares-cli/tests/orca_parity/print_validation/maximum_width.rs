@@ -30,7 +30,7 @@ fn verify(width: &str) {
         directory.join("invocation.json"),
         serde_json::to_vec_pretty(&json!({
             "input_sha256":hash, "overrides":{"line_width":width},
-            "expected_error":"Too large line width",
+            "expected_error":"Line width too large",
             "apis":["validate_project_plate","slice_project_plate_validated"]
         }))
         .unwrap(),
@@ -61,9 +61,9 @@ fn verify(width: &str) {
             Some(if cfg!(unix) { 205 } else { -51 }),
             "{error}"
         );
-        assert_eq!(captured.stderr, b"Too large line width\n", "{error}");
+        assert_eq!(captured.stderr, b"Line width too large\n", "{error}");
         assert!(!output.join("plate_1.gcode").exists());
-        json!({"code":captured.code,"stderr":"Too large line width\n","evidence":error.evidence})
+        json!({"code":captured.code,"stderr":"Line width too large\n","evidence":error.evidence})
     });
     let validation = ares_core::validate_project_plate(input, None, &overrides);
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -90,11 +90,11 @@ fn verify(width: &str) {
     )
     .unwrap();
     assert!(
-        matches!(validation, Err(SliceError::Validate { message: ref text, .. }) if text == "Too large line width"),
+        matches!(validation, Err(SliceError::Validate { message: ref text, .. }) if text == "Line width too large"),
         "Print upper must precede later O4 lower: {validation:?}; {directory:?}"
     );
     assert!(
-        matches!(sliced, Err(SliceError::Validate { message: ref text, .. }) if text == "Too large line width"),
+        matches!(sliced, Err(SliceError::Validate { message: ref text, .. }) if text == "Line width too large"),
         "validated composition must preserve the same first error; {directory:?}"
     );
     assert!(!directory.join("ares.gcode").exists());

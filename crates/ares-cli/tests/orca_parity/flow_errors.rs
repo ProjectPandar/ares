@@ -121,7 +121,7 @@ fn validated_s1plus_keeps_minimum_width_first_error() {
         SlicerContext::new(0),
     ));
     assert!(
-        matches!(result, Err(SliceError::Validate { ref message, .. }) if message == "Too small line width")
+        matches!(result, Err(SliceError::Validate { ref message, .. }) if message == "Line width too small")
     );
 }
 

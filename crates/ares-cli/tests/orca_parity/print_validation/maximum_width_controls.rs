@@ -29,9 +29,9 @@ fn print_upper_auto_equal_and_percentage_boundaries() {
         check(json!({"line_width":width}), None);
     }
     for width in ["2.000001", "500.0001%"] {
-        check(json!({"line_width":width}), Some("Too large line width"));
+        check(json!({"line_width":width}), Some("Line width too large"));
     }
-    check(json!({"line_width":"0.2"}), Some("Too small line width"));
+    check(json!({"line_width":"0.2"}), Some("Line width too small"));
 }
 
 #[test]
@@ -46,7 +46,7 @@ fn print_upper_each_region_key_uses_same_source_predicate() {
         "skeleton_infill_line_width",
     ] {
         check(json!({key:"2"}), None);
-        check(json!({key:"2.000001"}), Some("Too large line width"));
+        check(json!({key:"2.000001"}), Some("Line width too large"));
     }
 }
 
@@ -56,7 +56,7 @@ fn print_upper_support_is_conditional() {
     for activation in ["enable_support", "enforce_support_layers", "raft_layers"] {
         check(
             json!({"support_line_width":"3",activation:"1"}),
-            Some("Too large line width"),
+            Some("Line width too large"),
         );
     }
 }
@@ -65,7 +65,7 @@ fn print_upper_support_is_conditional() {
 fn print_upper_unused_larger_nozzle_cannot_relax_bound() {
     check(
         json!({"nozzle_diameter":["0.4","1.0"],"filament_map":["1"],"line_width":"2.1"}),
-        Some("Too large line width"),
+        Some("Line width too large"),
     );
     check(
         json!({"nozzle_diameter":["0.4","1.0"],"filament_map":["2"],"line_width":"2.1"}),
@@ -73,7 +73,7 @@ fn print_upper_unused_larger_nozzle_cannot_relax_bound() {
     );
     check(
         json!({"nozzle_diameter":["1.0","0.4"],"filament_map":["2"],"line_width":"2.1"}),
-        Some("Too large line width"),
+        Some("Line width too large"),
     );
 }
 
@@ -83,8 +83,8 @@ fn print_upper_minimum_and_maximum_use_the_same_used_set() {
     for (width, expected) in [
         ("2.5", None),
         ("500%", None),
-        ("500.0001%", Some("Too large line width")),
-        ("50%", Some("Too small line width")),
+        ("500.0001%", Some("Line width too large")),
+        ("50%", Some("Line width too small")),
     ] {
         let mut config = shared.clone();
         config
@@ -99,22 +99,22 @@ fn print_upper_minimum_and_maximum_use_the_same_used_set() {
 fn print_upper_checks_keys_in_source_first_error_order() {
     check(
         json!({"line_width":"3","inner_wall_line_width":"0.2"}),
-        Some("Too large line width"),
+        Some("Line width too large"),
     );
     check(
         json!({"line_width":"0.2","inner_wall_line_width":"3"}),
-        Some("Too small line width"),
+        Some("Line width too small"),
     );
     check(
         json!({"inner_wall_line_width":"3","outer_wall_line_width":"0.2"}),
-        Some("Too large line width"),
+        Some("Line width too large"),
     );
     check(
         json!({"inner_wall_line_width":"0.2","outer_wall_line_width":"3"}),
-        Some("Too small line width"),
+        Some("Line width too small"),
     );
     check(
         json!({"line_width":"3","use_relative_e_distances":"1","layer_change_gcode":"g92 e0"}),
-        Some("Too large line width"),
+        Some("Line width too large"),
     );
 }

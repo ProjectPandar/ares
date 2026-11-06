@@ -12,7 +12,7 @@ fn print_bridge_width_original_thin_precedes_layer_reset_check() {
         super::RELATIVE_INPUT,
         super::RELATIVE_SHA256,
         json!({"bridge_line_width":"0.1"}),
-        "Too small line width",
+        "Line width too small",
     );
 }
 

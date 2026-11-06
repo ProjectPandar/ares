@@ -2,7 +2,7 @@
 use ares_core::{ProjectSettings, SliceError};
 use serde_json::{Value, json};
 
-const ERROR: &str = "Too small line width";
+const ERROR: &str = "Line width too small";
 
 fn settings(extra: Value) -> ProjectSettings {
     let mut fields = json!({"nozzle_diameter":["0.4"], "layer_height":"0.2", "line_width":"0", "use_relative_e_distances":"0", "gcode_flavor":"marlin"});

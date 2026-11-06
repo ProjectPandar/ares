@@ -6,7 +6,7 @@ use serde_json::json;
 
 use crate::runner::{OrcaRunner, stages};
 
-const ERROR: &str = "Too small line width";
+const ERROR: &str = "Line width too small";
 
 macro_rules! stock_case {
     ($name:ident, $fixture:literal, $hash:literal, $label:literal) => {
@@ -98,9 +98,9 @@ fn verify(label: &str, input: &[u8], expected_hash: &str) {
             Some(if cfg!(unix) { 205 } else { -51 }),
             "{error}"
         );
-        assert_eq!(captured.stderr, b"Too small line width\n", "{error}");
+        assert_eq!(captured.stderr, b"Line width too small\n", "{error}");
         assert!(!output.join("plate_1.gcode").exists());
-        json!({"code":captured.code, "stderr":"Too small line width\n", "evidence":error.evidence})
+        json!({"code":captured.code, "stderr":"Line width too small\n", "evidence":error.evidence})
     });
     let overrides = ConfigOverrides::default();
     let validation = ares_core::validate_project_plate(input, None, &overrides);

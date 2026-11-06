@@ -161,7 +161,7 @@ async fn retraction_when_cut_28_loaded_config() {
         machine: "Creality SPARKX i7 0.4 nozzle",
         process: "0.20mm Standard @Creality SPARKX i7 0.4 nozzle",
         filament: "Generic PLA @SPARKX i7-all",
-        error_lines: "retraction_distances_when_cut: 28 not in range [10.000000,18.000000]",
+        error_lines: "retraction_distances_when_cut: 28 not in range [10, 18]",
     })
     .await;
 }
@@ -178,7 +178,7 @@ async fn retraction_when_cut_30_loaded_config() {
         machine: "Creality K2 0.4 nozzle",
         process: "0.20mm Standard @Creality K2 0.4 nozzle",
         filament: "Creality Generic PLA @K2-all",
-        error_lines: "retraction_distances_when_cut: 30 not in range [10.000000,18.000000]",
+        error_lines: "retraction_distances_when_cut: 30 not in range [10, 18]",
     })
     .await;
 }
@@ -190,7 +190,7 @@ async fn extruder_printable_height_2100_loaded_config() {
         machine: "SeeMeCNC BOSSdelta 500 0521 0.4 nozzle",
         process: "0.20mm Standard @SeeMeCNC BOSSdelta 500 0521 0.4",
         filament: "SeeMeCNC PLA",
-        error_lines: "extruder_printable_height: 2100 not in range [0.000000,1000.000000]",
+        error_lines: "extruder_printable_height: 2100 not in range [0, 1000]",
     })
     .await;
 }
@@ -206,7 +206,7 @@ async fn nil_flush_temp_and_retraction_zero_loaded_config() {
         machine: "Anycubic Kobra S1 Max 0.6 nozzle",
         process: "0.30mm Standard @Anycubic Kobra S1 Max 0.6 nozzle",
         filament: "Anycubic PLA @Anycubic Kobra S1 Max 0.6 nozzle",
-        error_lines: "filament_flush_temp: nil not in range [0.000000,1500.000000]\nretraction_distances_when_cut: 0 not in range [10.000000,18.000000]",
+        error_lines: "filament_flush_temp: nil not in range [0, 1500]\nretraction_distances_when_cut: 0 not in range [10, 18]",
     })
     .await;
 }
@@ -398,7 +398,7 @@ async fn firmware_and_range_loaded_config() {
         kind: "machine",
         key: "use_firmware_retraction",
         value: json!("1"),
-        error_lines: "retraction_distances_when_cut: 28 not in range [10.000000,18.000000]\nuse_firmware_retraction: --use-firmware-retraction is not compatible with --wipe",
+        error_lines: "retraction_distances_when_cut: 28 not in range [10, 18]\nuse_firmware_retraction: --use-firmware-retraction is not compatible with --wipe",
         prefix: "o3-combo-",
     })
     .await;

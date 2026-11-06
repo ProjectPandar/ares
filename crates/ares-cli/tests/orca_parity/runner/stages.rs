@@ -126,7 +126,7 @@ pub(crate) fn attributable(output: &Captured, key: &str) -> bool {
         // extrusion minimum. Both skin/skeleton infill widths share the
         // generic diagnostic (the opt_key is not echoed in the -51 text).
         if matches!(key, "skin_infill_line_width" | "skeleton_infill_line_width")
-            && text.lines().any(|line| line == "Too small line width")
+            && text.lines().any(|line| line == "Line width too small")
         {
             return true;
         }

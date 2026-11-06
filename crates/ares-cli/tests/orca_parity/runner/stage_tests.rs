@@ -37,7 +37,7 @@ fn validation_status_requires_source_attributable_diagnostic() {
             "line_width",
             false,
         ),
-        (Some(-51), "Too small line width", "line_width", false),
+        (Some(-51), "Line width too small", "line_width", false),
         (
             Some(-51),
             "Bridge line width must not exceed nozzle diameter",
@@ -88,13 +88,13 @@ fn validation_status_requires_source_attributable_diagnostic() {
         ),
         (
             Some(-51),
-            "Too small line width",
+            "Line width too small",
             "skin_infill_line_width",
             true,
         ),
         (
             Some(-51),
-            "Too small line width",
+            "Line width too small",
             "skeleton_infill_line_width",
             true,
         ),
