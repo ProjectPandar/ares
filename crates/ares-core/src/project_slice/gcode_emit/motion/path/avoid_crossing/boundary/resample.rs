@@ -1,7 +1,7 @@
 //! Boundary resampling — the polygon/contour resampler and the inner
 //! offset walker feeding `Boundary` grids (`avoid_crossing` family).
 
-use super::{MITER_LIMIT, contours_bounds};
+use super::MITER_LIMIT;
 use crate::geometry::{
     ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, JoinType, Point, Polygon,
     offset_paths, union_expolygons,
@@ -105,6 +105,9 @@ pub(super) fn inner_offset(
         let mut ex_poly = resample_expolygon(&ex_poly, resample, tolerance)?;
         // Filter out expolygons smaller than 0.1 mm^2 (bbox estimate).
         let (min, max) = polygon_bounds(ex_poly.contour());
+        let epsilon = scaled_epsilon.round() as Coord;
+        let padded_min = Point::new(min.x() - epsilon, min.y() - epsilon);
+        let padded_max = Point::new(max.x() + epsilon, max.y() + epsilon);
         let filter_extent = scale.checked_scale(0.1).unwrap_or(100_000);
         let width = max.x().saturating_sub(min.x());
         let height = max.y().saturating_sub(min.y());
@@ -126,11 +129,10 @@ pub(super) fn inner_offset(
             if resolution <= 0 {
                 continue;
             }
-            let (min, max) = contours_bounds(&contours);
             let Ok(grid) = EdgeGrid::new_from_contours(
                 contours.iter().map(|contour| contour.as_slice()),
-                min,
-                max,
+                padded_min,
+                padded_max,
                 resolution,
             ) else {
                 continue;
