@@ -9,19 +9,33 @@ use super::select::select_stride;
 
 pub(super) struct ActiveVariants(Vec<String>);
 
+pub(super) struct Activation {
+    pub(super) variants: ActiveVariants,
+    // `(extruder_count > 1) || different_extruder` (PrintApply.cpp:1424) also selects the
+    // printer and process variants.
+    pub(super) extruders: bool,
+}
+
 pub(super) fn resolve_activation(
     source: &ProjectSettings,
-) -> Result<Option<ActiveVariants>, SliceError> {
+) -> Result<Option<Activation>, SliceError> {
     let physical_count = physical_count(source)?;
     let tokens = guard_tokens(source, physical_count)?;
-    if physical_count == 1 && tokens.len() <= 1 {
+    let extruders = physical_count > 1 || tokens.len() > 1;
+    // PrintApply.cpp:1453 and Print.cpp:4684 select the filament variants on a single-variant
+    // printer too once a filament defines several (`has_multi_variant_filament`,
+    // PrintConfig.cpp:10829-10834).
+    let filament = &source.filament.gcode;
+    if !extruders
+        && filament.filament_extruder_variant.0.len() <= filament.filament_diameter.0.len()
+    {
         return Ok(None);
     }
 
-    Ok(Some(ActiveVariants(active_variants(
-        source,
-        physical_count,
-    )?)))
+    Ok(Some(Activation {
+        variants: ActiveVariants(active_variants(source, physical_count)?),
+        extruders,
+    }))
 }
 
 pub(super) fn resolve_printer_indices(

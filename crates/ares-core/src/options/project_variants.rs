@@ -38,21 +38,29 @@ pub(crate) fn materialize_project_variants(
         });
     };
 
-    // PrintApply.cpp:1423-1427: variant one shrinks the id/variant metadata,
-    // so resolve and materialize the stride-two values first.
-    let printer_indices = index::resolve_printer_indices_for_variant_two(&materialized, &active);
-    printer::materialize_variant_two(&mut materialized, &printer_indices)?;
+    let process_indices = if active.extruders {
+        // PrintApply.cpp:1423-1427: variant one shrinks the id/variant metadata,
+        // so resolve and materialize the stride-two values first.
+        let printer_indices =
+            index::resolve_printer_indices_for_variant_two(&materialized, &active.variants);
+        printer::materialize_variant_two(&mut materialized, &printer_indices)?;
 
-    let printer_indices = index::resolve_printer_indices(&materialized, &active)?;
-    printer::materialize_variant_one(&mut materialized, &printer_indices)?;
+        let printer_indices = index::resolve_printer_indices(&materialized, &active.variants)?;
+        printer::materialize_variant_one(&mut materialized, &printer_indices)?;
 
-    let process_indices = index::resolve_process_indices(&materialized, &active)?;
-    printer::materialize_process(&mut materialized, &process_indices)?;
+        let process_indices = index::resolve_process_indices(&materialized, &active.variants)?;
+        printer::materialize_process(&mut materialized, &process_indices)?;
+        process_indices
+    } else {
+        // PrintApply.cpp:1431-1432
+        vec![0]
+    };
 
     // PrintApply.cpp:1165-1172 preserves this post-printer/process snapshot
     // before the multiple-filament variant materialization below.
     let checkpoint = materialized.clone();
-    let filament_indices = index::resolve_filament_indices(source, &filament_map, &active)?;
+    let filament_indices =
+        index::resolve_filament_indices(source, &filament_map, &active.variants)?;
     filament::materialize(&mut materialized, &checkpoint, &filament_indices);
     remap_filament_self_index(&mut materialized, &checkpoint, &filament_indices);
     Ok(MaterializedProjectVariants {
@@ -72,7 +80,8 @@ pub(crate) fn refresh_filament_map(
     let mut refreshed = current.clone();
     refreshed.project.gcode.filament_map = filament_map.clone();
     if let Some(active) = index::resolve_activation(checkpoint)? {
-        let filament_indices = index::resolve_filament_indices(checkpoint, &filament_map, &active)?;
+        let filament_indices =
+            index::resolve_filament_indices(checkpoint, &filament_map, &active.variants)?;
         // Print.cpp:3174-3195: select from the saved full config, then apply
         // only filament_options_with_variant to m_config, not process options.
         filament::materialize(&mut refreshed, checkpoint, &filament_indices);
