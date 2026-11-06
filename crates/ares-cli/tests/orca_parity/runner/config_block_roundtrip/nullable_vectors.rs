@@ -7,6 +7,8 @@ mod inner_wall_speed;
 mod inner_wall_speed_readers;
 #[path = "nullable_vectors/input.rs"]
 mod input;
+#[path = "nullable_vectors/machine_envelope.rs"]
+mod machine_envelope;
 #[path = "nullable_vectors/mapped_nozzle.rs"]
 mod mapped_nozzle;
 #[path = "nullable_vectors/multihead_snapshot.rs"]
