@@ -43,6 +43,7 @@ pub(super) fn append_limits(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     initial_extruder_id: usize,
+    used_filaments: &[usize],
 ) {
     let flavor = traversal.resolved.views.full.printer.gcode.gcode_flavor;
     // `print_machine_envelope` runs for Marlin-family flavors only, after the
@@ -61,7 +62,7 @@ pub(super) fn append_limits(
         .emit_machine_limits_to_gcode
         .0
     {
-        envelope::append_machine_envelope(output, traversal);
+        envelope::append_machine_envelope(output, traversal, used_filaments);
     }
     // Disable fan for printers with an auxiliary fan
     // (`GCode.cpp:2822-2826`, `Config.hpp:624-627`: get_at(initial_extruder_id)).
@@ -85,10 +86,6 @@ pub(super) fn append_limits(
             format!("M106 S0{fan_comment}\nM106 P2 S0{aux_comment}\n").as_bytes(),
         );
     }
-}
-
-pub(super) fn first(values: &crate::OrcaFloats) -> f64 {
-    values.0.first().map_or(0.0, |value| value.0)
 }
 
 /// Transition from the first to the second layer

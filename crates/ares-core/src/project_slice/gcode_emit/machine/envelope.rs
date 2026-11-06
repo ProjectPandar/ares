@@ -1,53 +1,65 @@
-//! `append_machine_envelope` — `print_machine_envelope` (`GCode.cpp:2629-2658`),
-//! the Marlin-family M201/203/204/205 limit block after the first M73 line.
+//! `GCode.cpp:5407-5491::print_machine_envelope`: limits over used extruders.
 
-use super::first;
 use crate::options::InputShaperType;
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
 pub(super) fn append_machine_envelope(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
+    used_filaments: &[usize],
 ) {
     let machine = &traversal.resolved.views.full.printer.machine;
+    let filament_map = &traversal.resolved.views.runtime_gcode.filament_map.0;
+    // All MAX_LIMIT keys here belong to printer_options_with_variant_2
+    // (PrintConfig.cpp:10270-10287): normal/silent pairs per physical extruder.
+    let max_limit = |values: &crate::OrcaFloats| {
+        used_filaments
+            .iter()
+            .map(|&filament| {
+                let extruder = (filament_map[filament].0 - 1) as usize;
+                values.0[extruder * 2].0
+            })
+            .reduce(f64::max)
+            .expect("writer has a used filament")
+    };
     let flavor = traversal.resolved.views.full.printer.gcode.gcode_flavor;
     let rrf = flavor == crate::GCodeFlavor::RepRapFirmware;
     let factor: f64 = if rrf { 60.0 } else { 1.0 };
     // Upstream converts the envelope integers with `int(value + 0.5)`
-    // (`GCode.cpp:3945-3980`).
+    // (`GCode.cpp:5437-5479`).
     let half_up = |value: f64| (value + 0.5).floor() as i64;
     output.extend_from_slice(
         format!(
             "M201 X{} Y{} Z{} E{}\n",
-            half_up(first(&machine.machine_max_acceleration_x)),
-            half_up(first(&machine.machine_max_acceleration_y)),
-            half_up(first(&machine.machine_max_acceleration_z)),
-            half_up(first(&machine.machine_max_acceleration_e)),
+            half_up(max_limit(&machine.machine_max_acceleration_x)),
+            half_up(max_limit(&machine.machine_max_acceleration_y)),
+            half_up(max_limit(&machine.machine_max_acceleration_z)),
+            half_up(max_limit(&machine.machine_max_acceleration_e)),
         )
         .as_bytes(),
     );
     output.extend_from_slice(
         format!(
             "M203 X{} Y{} Z{} E{}\n",
-            half_up(first(&machine.machine_max_speed_x) * factor),
-            half_up(first(&machine.machine_max_speed_y) * factor),
-            half_up(first(&machine.machine_max_speed_z) * factor),
-            half_up(first(&machine.machine_max_speed_e) * factor),
+            half_up(max_limit(&machine.machine_max_speed_x) * factor),
+            half_up(max_limit(&machine.machine_max_speed_y) * factor),
+            half_up(max_limit(&machine.machine_max_speed_z) * factor),
+            half_up(max_limit(&machine.machine_max_speed_e) * factor),
         )
         .as_bytes(),
     );
     // Legacy Marlin exports travel acceleration equal to printing
     // acceleration; other flavors use the travel value.
     let travel_acceleration = if flavor == crate::GCodeFlavor::MarlinLegacy {
-        first(&machine.machine_max_acceleration_extruding)
+        max_limit(&machine.machine_max_acceleration_extruding)
     } else {
-        first(&machine.machine_max_acceleration_travel)
+        max_limit(&machine.machine_max_acceleration_travel)
     };
     if rrf {
         output.extend_from_slice(
             format!(
                 "M204 P{} T{} ; sets acceleration (P, T), mm/sec^2\n",
-                half_up(first(&machine.machine_max_acceleration_extruding)),
+                half_up(max_limit(&machine.machine_max_acceleration_extruding)),
                 half_up(travel_acceleration),
             )
             .as_bytes(),
@@ -56,8 +68,8 @@ pub(super) fn append_machine_envelope(
         output.extend_from_slice(
             format!(
                 "M204 P{} R{} T{} ; sets acceleration (P, T) and retract acceleration (R), mm/sec^2\n",
-                half_up(first(&machine.machine_max_acceleration_extruding)),
-                half_up(first(&machine.machine_max_acceleration_retracting)),
+                half_up(max_limit(&machine.machine_max_acceleration_extruding)),
+                half_up(max_limit(&machine.machine_max_acceleration_retracting)),
                 half_up(travel_acceleration),
             )
             .as_bytes(),
@@ -66,8 +78,8 @@ pub(super) fn append_machine_envelope(
         output.extend_from_slice(
             format!(
                 "M204 P{} R{} T{}\n",
-                half_up(first(&machine.machine_max_acceleration_extruding)),
-                half_up(first(&machine.machine_max_acceleration_retracting)),
+                half_up(max_limit(&machine.machine_max_acceleration_extruding)),
+                half_up(max_limit(&machine.machine_max_acceleration_retracting)),
                 half_up(travel_acceleration),
             )
             .as_bytes(),
@@ -77,10 +89,10 @@ pub(super) fn append_machine_envelope(
         output.extend_from_slice(
             format!(
                 "M566 X{:.2} Y{:.2} Z{:.2} E{:.2} ; sets the jerk limits, mm/min\n",
-                first(&machine.machine_max_jerk_x) * factor,
-                first(&machine.machine_max_jerk_y) * factor,
-                first(&machine.machine_max_jerk_z) * factor,
-                first(&machine.machine_max_jerk_e) * factor,
+                max_limit(&machine.machine_max_jerk_x) * factor,
+                max_limit(&machine.machine_max_jerk_y) * factor,
+                max_limit(&machine.machine_max_jerk_z) * factor,
+                max_limit(&machine.machine_max_jerk_e) * factor,
             )
             .as_bytes(),
         );
@@ -88,15 +100,15 @@ pub(super) fn append_machine_envelope(
         output.extend_from_slice(
             format!(
                 "M205 X{:.2} Y{:.2} Z{:.2} E{:.2} ; sets the jerk limits, mm/sec\n",
-                first(&machine.machine_max_jerk_x),
-                first(&machine.machine_max_jerk_y),
-                first(&machine.machine_max_jerk_z),
-                first(&machine.machine_max_jerk_e),
+                max_limit(&machine.machine_max_jerk_x),
+                max_limit(&machine.machine_max_jerk_y),
+                max_limit(&machine.machine_max_jerk_z),
+                max_limit(&machine.machine_max_jerk_e),
             )
             .as_bytes(),
         );
     }
-    let junction_deviation = first(&machine.machine_max_junction_deviation);
+    let junction_deviation = max_limit(&machine.machine_max_junction_deviation);
     if flavor == crate::GCodeFlavor::MarlinFirmware && junction_deviation > 0.0 {
         let comment = if traversal.resolved.views.full.process.print.gcode_comments.0 {
             " ; Junction Deviation"

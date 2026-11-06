@@ -243,7 +243,12 @@ pub(in crate::project_slice) fn emit(
     };
     // Writer registration precedes machine-start and its output-variable
     // refresh/write-back (`GCode.cpp:2791,2829,3118`). No extruder is selected yet.
-    machine::append_limits(&mut output, traversal, state.initial_filaments.initial());
+    machine::append_limits(
+        &mut output,
+        traversal,
+        state.initial_filaments.initial(),
+        state.extruders.ids(),
+    );
     let bed_cache = machine::append_start(
         &mut output,
         &mut state,
