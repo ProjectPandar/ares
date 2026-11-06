@@ -154,6 +154,21 @@ pub(super) fn materialize(
         source.filament.gcode.filament_max_volumetric_speed,
         indices
     );
+    select_wrapped_field!(
+        settings.filament.gcode.filament_multitool_ramming,
+        source.filament.gcode.filament_multitool_ramming,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.gcode.filament_multitool_ramming_volume,
+        source.filament.gcode.filament_multitool_ramming_volume,
+        indices
+    );
+    select_wrapped_field!(
+        settings.filament.gcode.filament_multitool_ramming_flow,
+        source.filament.gcode.filament_multitool_ramming_flow,
+        indices
+    );
     select_vec_field!(
         settings
             .filament
