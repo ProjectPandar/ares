@@ -5,6 +5,7 @@ macro_rules! gcode_option_fields {
             printer => printing_by_object_gcode => "printing_by_object_gcode": OrcaString,
             project => deretraction_speed => "deretraction_speed": OrcaFloats,
             process => enable_arc_fitting => "enable_arc_fitting": ArcFittingMode,
+            process => enable_pre_heating => "enable_pre_heating": OrcaBool,
             printer => machine_end_gcode => "machine_end_gcode": OrcaString,
             filament => filament_end_gcode => "filament_end_gcode": OrcaStrings,
             filament => filament_flow_ratio => "filament_flow_ratio": Vec<Nullable<OrcaFloat>>,

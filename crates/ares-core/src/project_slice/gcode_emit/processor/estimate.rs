@@ -56,6 +56,7 @@ impl Estimate {
         let mut custom_events = Vec::new();
         let mut stop_events = Vec::new();
         let mut prepare_stage = false;
+        let mut skip_end_gcode_delays = false;
         let mut saw_motion_command = false;
         let mut measure_g29_time = false;
         let mut g29_time_added = false;
@@ -82,6 +83,9 @@ impl Estimate {
                     prepare_stage = false
                 }
                 _ => {}
+            }
+            if line.trim() == "; MACHINE_END_GCODE_START" {
+                skip_end_gcode_delays = true;
             }
             let code = super::virtual_motion::command(line)
                 .unwrap_or_else(|| line.split(';').next().unwrap_or_default().trim());
@@ -122,7 +126,12 @@ impl Estimate {
                 true if !g29_adds_time => None,
                 _ => command_delay(code),
             };
-            if synchronizes_planner(code, g29_adds_time, limits.gcode_flavor) {
+            if synchronizes_planner(
+                code,
+                g29_adds_time,
+                limits.gcode_flavor,
+                skip_end_gcode_delays,
+            ) {
                 events.push(FlushEvent {
                     block_count: blocks.len(),
                     klipper: state.klipper,

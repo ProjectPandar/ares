@@ -7,10 +7,11 @@ impl Serialize for ProcessGCodeSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(17))?;
+        let mut map = serializer.serialize_map(Some(18))?;
         map.serialize_entry("accel_to_decel_enable", &self.accel_to_decel_enable)?;
         map.serialize_entry("accel_to_decel_factor", &self.accel_to_decel_factor)?;
         map.serialize_entry("enable_arc_fitting", &self.enable_arc_fitting)?;
+        map.serialize_entry("enable_pre_heating", &self.enable_pre_heating)?;
         map.serialize_entry("enable_wrapping_detection", &self.enable_wrapping_detection)?;
         map.serialize_entry(
             "extrusion_rate_smoothing_external_perimeter_only",

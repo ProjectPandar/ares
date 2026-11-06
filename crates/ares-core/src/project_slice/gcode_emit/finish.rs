@@ -83,6 +83,9 @@ pub(super) fn append(
         output.extend_from_slice(b"M981 S0 P20000 ; close spaghetti detector\n");
     }
     output.extend_from_slice(custom.as_bytes());
+    if traversal.resolved.views.runtime_gcode.enable_pre_heating.0 {
+        output.extend_from_slice(b"; MACHINE_END_GCODE_START\n");
+    }
     if state.options.single_extruder_multi_material {
         let filament = state.extruders.active_id();
         let source = gcode

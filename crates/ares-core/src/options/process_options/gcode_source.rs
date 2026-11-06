@@ -12,6 +12,7 @@ use super::super::{
 declare_option_group! {
     pub struct ProcessGCodeSourceOptions, ProcessGCodeSourceOptionsBuilder {
         enable_arc_fitting => "enable_arc_fitting": ArcFittingMode = ArcFittingMode::Disabled,
+        enable_pre_heating => "enable_pre_heating": OrcaBool = OrcaBool(false),
         enable_wrapping_detection => "enable_wrapping_detection": OrcaBool = OrcaBool(false),
         gcode_add_line_number => "gcode_add_line_number": OrcaBool = OrcaBool(false),
         max_volumetric_extrusion_rate_slope => "max_volumetric_extrusion_rate_slope": OrcaFloat = OrcaFloat(0.0),
@@ -35,8 +36,9 @@ declare_option_group! {
 }
 
 impl ProcessGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 17] = [
+    pub const DECLARATION_ORDER: [&'static str; 18] = [
         "enable_arc_fitting",
+        "enable_pre_heating",
         "enable_wrapping_detection",
         "gcode_add_line_number",
         "max_volumetric_extrusion_rate_slope",

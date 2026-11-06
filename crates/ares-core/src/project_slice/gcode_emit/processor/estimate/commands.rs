@@ -80,8 +80,19 @@ pub(super) fn record_motions(
 }
 
 /// `process_M400:6947–6960`: bare Klipper M400 also synchronizes with zero delay.
-pub(super) fn synchronizes_planner(code: &str, measured_g29: bool, flavor: GCodeFlavor) -> bool {
+pub(super) fn synchronizes_planner(
+    code: &str,
+    measured_g29: bool,
+    flavor: GCodeFlavor,
+    skip_end_gcode_delays: bool,
+) -> bool {
     let command = code.split_whitespace().next().unwrap_or_default();
+    if skip_end_gcode_delays
+        && command == "M400"
+        && (word(code, 'S').is_some() || word(code, 'P').is_some())
+    {
+        return false;
+    }
     matches!(command, "M0" | "M1")
         || command == "M400" && flavor == GCodeFlavor::Klipper
         || matches!(command, "G4" | "M400")
