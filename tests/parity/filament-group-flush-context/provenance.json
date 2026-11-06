@@ -1,0 +1,237 @@
+{
+  "source": {
+    "format": "OrcaSlicer 3MF",
+    "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+    "base_fixture": "x2d_pla_variant_order_extrusion_speed",
+    "base_sha256": "a17ab11edca5ef6ec93aa202d87f75e1898526a604c954dd166b939cc94b0553",
+    "materials": [
+      "PLA",
+      "PLA",
+      "PLA"
+    ],
+    "geometry": {
+      "closed_cube_dimensions_mm": [
+        20,
+        20,
+        1.2
+      ],
+      "vertices": 8,
+      "triangles": 12,
+      "object_extruders": [
+        1,
+        2,
+        3
+      ],
+      "object_x_mm": [
+        96.5,
+        128.5,
+        160.5
+      ],
+      "object_y_mm": 128.5
+    },
+    "column_expansion": "Expand per-filament two-value lists to three and eight-column lists to twelve; preserve physical printer vectors; reset role filament IDs to object defaults.",
+    "filament_colours": [
+      "#EE2222",
+      "#22CC44",
+      "#2233EE"
+    ],
+    "filament_self_index": [
+      "1",
+      "1",
+      "1",
+      "1",
+      "2",
+      "2",
+      "2",
+      "2",
+      "3",
+      "3",
+      "3",
+      "3"
+    ]
+  },
+  "cases": [
+    {
+      "id": "x2d_pla_three_objects_default_purge",
+      "input": "x2d_pla_three_objects_default_purge.3mf",
+      "sha256": "717250cd867278868a88c646f9754f7761dd73f1f8d461e965b294545cf3db66",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "prime_volume_mode": "Default",
+        "flush_multiplier": [
+          "1",
+          "1"
+        ],
+        "flush_multiplier_fast": [
+          "0.1",
+          "4"
+        ],
+        "flush_volumes_matrix": [
+          "0",
+          "100",
+          "1000",
+          "100",
+          "0",
+          "800",
+          "1000",
+          "800",
+          "0",
+          "0",
+          "900",
+          "20",
+          "900",
+          "0",
+          "1000",
+          "20",
+          "1000",
+          "0"
+        ],
+        "group_algo_with_time": "1",
+        "machine_load_filament_time": "29",
+        "machine_unload_filament_time": "29"
+      },
+      "object_heights_mm": [
+        1.2,
+        1.2,
+        1.2
+      ]
+    },
+    {
+      "id": "x2d_pla_three_objects_fast_purge",
+      "input": "x2d_pla_three_objects_fast_purge.3mf",
+      "sha256": "a939bc8d03f118750ac3c92a31be557c23a7142f749aec120451d4c45fa6e30f",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "prime_volume_mode": "Fast",
+        "flush_multiplier": [
+          "1",
+          "1"
+        ],
+        "flush_multiplier_fast": [
+          "0.1",
+          "4"
+        ],
+        "flush_volumes_matrix": [
+          "0",
+          "100",
+          "1000",
+          "100",
+          "0",
+          "800",
+          "1000",
+          "800",
+          "0",
+          "0",
+          "900",
+          "20",
+          "900",
+          "0",
+          "1000",
+          "20",
+          "1000",
+          "0"
+        ],
+        "group_algo_with_time": "1",
+        "machine_load_filament_time": "29",
+        "machine_unload_filament_time": "29"
+      },
+      "object_heights_mm": [
+        1.2,
+        1.2,
+        1.2
+      ]
+    },
+    {
+      "id": "x2d_pla_short_middle_zero_load_time",
+      "input": "x2d_pla_short_middle_zero_load_time.3mf",
+      "sha256": "70d70acb3835a51d8363a1386984301884b84a226c59991ede3827456a64d0e4",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "prime_volume_mode": "Default",
+        "flush_multiplier": [
+          "1",
+          "1"
+        ],
+        "flush_multiplier_fast": [
+          "0.1",
+          "4"
+        ],
+        "flush_volumes_matrix": [
+          "0",
+          "100",
+          "1000",
+          "100",
+          "0",
+          "800",
+          "1000",
+          "800",
+          "0",
+          "0",
+          "900",
+          "1",
+          "900",
+          "0",
+          "1000",
+          "1",
+          "1000",
+          "0"
+        ],
+        "group_algo_with_time": "0",
+        "machine_load_filament_time": "0",
+        "machine_unload_filament_time": "0",
+        "machine_switch_extruder_time": "0"
+      },
+      "object_heights_mm": [
+        1.2,
+        0.2,
+        1.2
+      ]
+    },
+    {
+      "id": "x2d_pla_short_middle_high_load_time",
+      "input": "x2d_pla_short_middle_high_load_time.3mf",
+      "sha256": "79cb28c0a1ea6369251c8d6a481eaec560c216b4603291e31b6c7439cdae0685",
+      "parameters": {
+        "filament_map_mode": "Auto For Flush",
+        "prime_volume_mode": "Default",
+        "flush_multiplier": [
+          "1",
+          "1"
+        ],
+        "flush_multiplier_fast": [
+          "0.1",
+          "4"
+        ],
+        "flush_volumes_matrix": [
+          "0",
+          "100",
+          "1000",
+          "100",
+          "0",
+          "800",
+          "1000",
+          "800",
+          "0",
+          "0",
+          "900",
+          "1",
+          "900",
+          "0",
+          "1000",
+          "1",
+          "1000",
+          "0"
+        ],
+        "group_algo_with_time": "0",
+        "machine_load_filament_time": "1000",
+        "machine_unload_filament_time": "0",
+        "machine_switch_extruder_time": "0"
+      },
+      "object_heights_mm": [
+        1.2,
+        0.2,
+        1.2
+      ]
+    }
+  ]
+}

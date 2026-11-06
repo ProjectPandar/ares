@@ -2,6 +2,8 @@
 mod defaults_nil;
 #[path = "nullable_vectors/filament_group_flush.rs"]
 mod filament_group_flush;
+#[path = "nullable_vectors/filament_group_flush_context.rs"]
+mod filament_group_flush_context;
 #[path = "nullable_vectors/inner_wall_speed.rs"]
 mod inner_wall_speed;
 
