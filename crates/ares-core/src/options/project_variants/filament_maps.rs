@@ -8,8 +8,6 @@ use crate::{
     project::raw_settings::ProjectSettingsRaw,
 };
 
-use super::index;
-
 pub(crate) fn update_static_filament_maps(
     checkpoint: &mut ProjectSettings,
     current: &ProjectSettings,
@@ -42,9 +40,6 @@ pub(crate) fn update_static_filament_maps(
         NozzleVolumeType::Standard => 0,
         NozzleVolumeType::HighFlow => 1,
     };
-    if index::resolve_activation(current)?.is_some() {
-        return Ok(None);
-    }
     // LayeredNozzleGroupResult::create stores the complete 0-based map.
     let assignments: Vec<i32> = match current.project.gcode.filament_map_mode {
         crate::ProjectFilamentMapMode::Manual => current
@@ -102,7 +97,12 @@ pub(crate) fn update_static_filament_maps(
             config.filament_nozzle_map.clone_from(&nozzles);
         }
     }
-    crate::options::project_config_views::resolve_project_config_views(refreshed).map(Some)
+    super::refresh_filament_map(
+        checkpoint,
+        &refreshed.project.gcode.filament_map,
+        &refreshed,
+    )
+    .map(Some)
 }
 
 fn sized_base(values: &OrcaInts, count: usize, default: i32) -> OrcaInts {
