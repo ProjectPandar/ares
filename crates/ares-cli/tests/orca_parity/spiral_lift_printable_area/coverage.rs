@@ -6,9 +6,9 @@ fn assert_native(native: &str, label: &str, (arc, eager, interior): (bool, bool,
         assert!(native.contains(&format!("; filament_map_2 = {map}\n")));
         assert!(native.contains("133x0,256x0,256x256,133x256"));
         let lift = if physical == "1" {
-            "G3 Z.8 I-.164 J1.206 P1  F60000"
+            "G3 Z1 I-.864 J.857 P1  F60000"
         } else {
-            "G1 Z.8 F60000"
+            "G1 Z1 F60000"
         };
         assert!(native.lines().any(|line| line == lift));
     } else if interior {
