@@ -23,6 +23,8 @@ mod nozzle_temperature_footer;
 mod nullable_vector_placeholder;
 #[path = "option_coverage/pa_variant.rs"]
 mod pa_variant;
+#[path = "option_coverage/pre_cooling_variant.rs"]
+mod pre_cooling_variant;
 #[path = "option_coverage/variant_retraction.rs"]
 mod variant_retraction;
 
