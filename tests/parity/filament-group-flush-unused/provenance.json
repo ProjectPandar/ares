@@ -1,0 +1,113 @@
+{
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "source_boundary": [
+    "src/libslic3r/GCode/ToolOrdering.cpp:3053-3084",
+    "src/libslic3r/FilamentGroupUtils.cpp:346-358",
+    "src/libslic3r/MultiNozzleUtils.cpp:25-41,144-163,319-369",
+    "src/libslic3r/Print.cpp:4656-4753"
+  ],
+  "geometry": "Two 20x20x1.2 mm cubes at x=96.5/128.5, y=128.5; logical filaments 1/2 used, logical filament 3 configured but unused. Static dual BBL, one Standard nozzle per physical head, Auto For Flush.",
+  "invariants": [
+    "Used extruder/volume entries are updated; correctly sized unused seeds remain unchanged.",
+    "The full derived global nozzle map is published directly; it is not derived by subtracting one from the merged physical extruder map.",
+    "Column selection follows the merged physical head map; an unused volume seed does not invent another physical nozzle."
+  ],
+  "pairs": [
+    {
+      "first": "x2d_pla_two_objects_unused_filament_head1",
+      "second": "x2d_pla_two_objects_unused_filament_head2",
+      "parameter": "unused logical filament 3 physical head, mirrored in project and plate seeds"
+    },
+    {
+      "first": "x2d_pla_two_objects_unused_filament_head2",
+      "second": "x2d_pla_two_objects_unused_filament_high_flow",
+      "parameter": "unused logical filament 3 volume seed only"
+    }
+  ],
+  "cases": [
+    {
+      "id": "x2d_pla_two_objects_unused_filament_head1",
+      "input": "x2d_pla_two_objects_unused_filament_head1.3mf",
+      "sha256": "7b3259be9c0dea1ba6a9d4f7a3340fedda293d7abb65cb8740660c9734c5a2dc",
+      "seed_map": [
+        "1",
+        "1",
+        "1"
+      ],
+      "seed_volume_map": [
+        "0",
+        "0",
+        "0"
+      ],
+      "plate_seed": "1 1 1",
+      "expected_native": {
+        "filament_map": "2,1,1",
+        "filament_volume_map": "0,0,0",
+        "filament_nozzle_map": "1,0,0",
+        "filament_self_index": "1,2,3",
+        "filament_retraction_length": "3,0.4,0.4",
+        "filament_printable": "3,3,3",
+        "extruder_ams_count": "1#0|4#1;1#0|4#1",
+        "group_algo_with_time": "1",
+        "flush_multiplier": "1,1",
+        "flush_volumes_matrix": "0,100,1000,100,0,800,1000,800,0,0,900,20,900,0,1000,20,1000,0"
+      }
+    },
+    {
+      "id": "x2d_pla_two_objects_unused_filament_head2",
+      "input": "x2d_pla_two_objects_unused_filament_head2.3mf",
+      "sha256": "2a4398a04974692d774e1cf22d4f60c41b7b857b31d1f2396a115bb50a312f9b",
+      "seed_map": [
+        "1",
+        "1",
+        "2"
+      ],
+      "seed_volume_map": [
+        "0",
+        "0",
+        "0"
+      ],
+      "plate_seed": "1 1 2",
+      "expected_native": {
+        "filament_map": "2,1,2",
+        "filament_volume_map": "0,0,0",
+        "filament_nozzle_map": "1,0,0",
+        "filament_self_index": "1,2,3",
+        "filament_retraction_length": "3,0.4,3",
+        "filament_printable": "3,3,3",
+        "extruder_ams_count": "1#0|4#1;1#0|4#1",
+        "group_algo_with_time": "1",
+        "flush_multiplier": "1,1",
+        "flush_volumes_matrix": "0,100,1000,100,0,800,1000,800,0,0,900,20,900,0,1000,20,1000,0"
+      }
+    },
+    {
+      "id": "x2d_pla_two_objects_unused_filament_high_flow",
+      "input": "x2d_pla_two_objects_unused_filament_high_flow.3mf",
+      "sha256": "dbad5db580c6ad372910769afaa8e8bf35bb84e86f8a059161931ead698cb538",
+      "seed_map": [
+        "1",
+        "1",
+        "2"
+      ],
+      "seed_volume_map": [
+        "0",
+        "0",
+        "1"
+      ],
+      "plate_seed": "1 1 2",
+      "expected_native": {
+        "filament_map": "2,1,2",
+        "filament_volume_map": "0,0,1",
+        "filament_nozzle_map": "1,0,0",
+        "filament_self_index": "1,2,3",
+        "filament_retraction_length": "3,0.4,3",
+        "filament_printable": "3,3,3",
+        "extruder_ams_count": "1#0|4#1;1#0|4#1",
+        "group_algo_with_time": "1",
+        "flush_multiplier": "1,1",
+        "flush_volumes_matrix": "0,100,1000,100,0,800,1000,800,0,0,900,20,900,0,1000,20,1000,0"
+      }
+    }
+  ]
+}
