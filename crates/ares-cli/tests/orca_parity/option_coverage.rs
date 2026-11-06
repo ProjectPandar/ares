@@ -106,6 +106,8 @@ pub(crate) mod multiline_union;
 #[path = "option_coverage/interface_shells_alignment.rs"]
 mod interface_shells_alignment;
 
+#[path = "option_coverage/bbl_toolchange_command.rs"]
+mod bbl_toolchange_command;
 #[path = "option_coverage/cooling_fan_nozzle_range_variants.rs"]
 mod cooling_fan_nozzle_range_variants;
 #[path = "option_coverage/filament_override_range.rs"]
