@@ -120,6 +120,20 @@ fn ender3_one_nozzle_preserves_two_supported_variants() {
 }
 
 #[test]
+fn mk4_two_filaments_keep_one_physical_nozzle() {
+    check(
+        "preset-normalize-mk4-control-",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/mk4-layer-change/mk4base.3mf"
+        )),
+        "d0a4dfdb7f89120719b380a2995687a81a7e699025b8f3734349480bdebdc046",
+        "1",
+        &[("nozzle_diameter", "0.4"), ("print_extruder_id", "1,1")],
+    );
+}
+
+#[test]
 fn x1c_two_filaments_do_not_become_two_physical_extruders() {
     check(
         "preset-normalize-x1c-control-",
