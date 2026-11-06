@@ -43,18 +43,12 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             is_bbl,
         );
         // ToolOrdering.cpp:3054–3084 also writes static maps in Manual mode.
-        let static_views = if traversal.resolved.views.full.process.print.print_sequence
-            == ProcessPrintSequence::ByLayer
-        {
-            update_static_filament_maps(
-                &mut traversal.resolved.filament_variant_checkpoint,
-                &traversal.resolved.views.full,
-                &traversal.project.documents().project_settings_raw,
-                &used,
-            )?
-        } else {
-            None
-        };
+        let static_views = update_static_filament_maps(
+            &mut traversal.resolved.filament_variant_checkpoint,
+            &traversal.resolved.views.full,
+            &traversal.project.documents().project_settings_raw,
+            &used,
+        )?;
         if static_views.is_some()
             || changed
             || (traversal
