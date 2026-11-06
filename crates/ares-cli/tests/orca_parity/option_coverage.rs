@@ -120,6 +120,8 @@ mod refresh_preset_includes;
 mod region_speed_emission;
 #[path = "option_coverage/single_variant_printer_filament_selection.rs"]
 mod single_variant_printer_filament_selection;
+#[path = "option_coverage/static_volume_map_variants.rs"]
+mod static_volume_map_variants;
 #[path = "option_coverage/variant_footer.rs"]
 mod variant_footer;
 
