@@ -1,10 +1,14 @@
 //! ConfigOptionFloatOrPercent tag/magnitude checks at bbs_3mf export bytes.
 #[path = "application/cli_command.rs"]
 mod cli_command;
+#[path = "application/cli_command_directory.rs"]
+mod cli_command_directory;
+#[path = "../../support/project_preset_catalog.rs"]
+mod project_preset_catalog;
 #[path = "application/project_presets.rs"]
 mod project_presets;
 use super::stages::{FailureKind, Stage, StageError};
-pub(crate) use cli_command::cli_command;
+pub(crate) use cli_command::{CliCommand, cli_command};
 pub(crate) use project_presets::{
     native_arguments, project_supply, slice_plater_plate, slice_project, slice_project_plate,
     slice_project_plate_processed, slice_project_plate_processed_validated,

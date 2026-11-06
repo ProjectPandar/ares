@@ -1,17 +1,20 @@
 use std::{
     ffi::OsStr,
     io,
-    path::Path,
     process::{Command, Output},
 };
 
-pub(crate) struct CliCommand(Command);
+pub(crate) struct CliCommand(pub(super) Command);
 
 pub(crate) fn cli_command() -> CliCommand {
-    CliCommand(Command::new(env!("CARGO_BIN_EXE_ares")))
+    CliCommand::new(env!("CARGO_BIN_EXE_ares"))
 }
 
 impl CliCommand {
+    pub(crate) fn new(binary: impl AsRef<OsStr>) -> Self {
+        Self(Command::new(binary))
+    }
+
     pub(crate) fn arg(&mut self, arg: impl AsRef<OsStr>) -> &mut Self {
         self.0.arg(arg);
         self
@@ -23,11 +26,6 @@ impl CliCommand {
         S: AsRef<OsStr>,
     {
         self.0.args(args);
-        self
-    }
-
-    pub(crate) fn current_dir(&mut self, path: impl AsRef<Path>) -> &mut Self {
-        self.0.current_dir(path);
         self
     }
 

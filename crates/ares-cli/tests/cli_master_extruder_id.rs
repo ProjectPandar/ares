@@ -3,12 +3,16 @@
 //! missing rejection, CLI channel mismatch, and footer-only false positive.
 #![cfg(target_os = "linux")]
 
+#[path = "orca_parity/runner/application/cli_command.rs"]
+mod cli_command;
 #[path = "stock_project_whole_file/golden.rs"]
 mod golden;
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 #[path = "orca_parity/native_wall_clock.rs"]
 mod native_wall_clock;
+#[path = "support/project_preset_catalog.rs"]
+mod project_presets;
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -122,7 +126,7 @@ fn ares_case(
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
-    let public = runtime.block_on(ares_core::slice_project_plate_validated(
+    let public = runtime.block_on(project_presets::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
         None,
@@ -140,7 +144,7 @@ fn ares_case(
     fs::create_dir(&output_dir).unwrap();
     let output = output_dir.join("plate_1.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = cli_command::cli_command()
         .args(["slice", "-o"])
         .arg(&output)
         .arg(directory.join("input.3mf"))

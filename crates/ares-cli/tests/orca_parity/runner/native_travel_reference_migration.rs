@@ -7,7 +7,7 @@
 //! See native-artifact-cleanup-travel-reference-spec.md.
 
 use super::{ExportedCase, OrcaRunner, cache_identity, repo_root};
-use std::{fs, process::Command};
+use std::fs;
 
 #[test]
 fn avoid_crossing_perimeters_preserves_ordered_xy_travel_commands() {
@@ -106,7 +106,7 @@ fn slice_fixture(name: &str) -> Option<(String, String)> {
     let output = runner.work.join("ares.gcode");
     let binary =
         std::env::var_os("ARES_TRAVEL_BIN").unwrap_or_else(|| env!("CARGO_BIN_EXE_ares").into());
-    let result = Command::new(&binary)
+    let result = super::application::CliCommand::new(&binary)
         .arg("slice")
         .arg("-o")
         .arg(&output)
