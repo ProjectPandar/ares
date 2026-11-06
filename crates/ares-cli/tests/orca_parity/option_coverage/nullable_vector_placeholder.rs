@@ -94,10 +94,7 @@ async fn nullable_vector_nil_reference_returns_slice_error() {
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     for (label, template) in [
         ("brace", "; NIL_REF {filament_pre_cooling_temperature[0]}\n"),
-        (
-            "legacy",
-            "; NIL_REF [filament_pre_cooling_temperature[0]]\n",
-        ),
+        ("legacy", "; NIL_REF [filament_pre_cooling_temperature_0]\n"),
     ] {
         let input = reference_input(template);
         let root = tempfile::Builder::new()
@@ -154,7 +151,7 @@ async fn nullable_vector_nil_reference_returns_slice_error() {
         fs::write(root.join("ares.cli.stderr"), &cli.stderr).unwrap();
         fs::write(root.join("comparison.json"), serde_json::to_vec_pretty(&json!({"input_sha256": Sha256::digest(&input).iter().map(|byte| format!("{byte:02x}")).collect::<String>(),"api":api.as_ref().map(|b|b.len()).map_err(ToString::to_string),"cli_exit":cli.status.code(),"native_result":native_result})).unwrap()).unwrap();
         assert!(
-            matches!(api, Err(SliceError::InvalidInput(ref message)) if message.contains(NIL_ERROR)),
+            matches!(api, Err(SliceError::CustomGCode { ref message, .. }) if message.contains(NIL_ERROR)),
             "{api:?}"
         );
         assert!(!cli.status.success());
