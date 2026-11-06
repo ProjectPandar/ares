@@ -8,6 +8,8 @@ mod filament_group_flush_context;
 mod filament_group_flush_geometry;
 #[path = "nullable_vectors/filament_group_flush_mechanisms.rs"]
 mod filament_group_flush_mechanisms;
+#[path = "nullable_vectors/filament_group_flush_restriction_pairs.rs"]
+mod filament_group_flush_restriction_pairs;
 #[path = "nullable_vectors/filament_group_flush_unused.rs"]
 mod filament_group_flush_unused;
 #[path = "nullable_vectors/inner_wall_speed.rs"]
