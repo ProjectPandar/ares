@@ -258,7 +258,10 @@ impl Parser<'_> {
                     && let Value::List(values) = &value
                     && !values.is_empty()
                 {
-                    if values.iter().all(|item| matches!(item, Value::Number(_))) {
+                    if values
+                        .iter()
+                        .all(|item| matches!(item, Value::Number(_) | Value::Nil))
+                    {
                         value = values
                             .get(self.filament)
                             .or_else(|| values.first())
@@ -300,6 +303,9 @@ impl Parser<'_> {
                         },
                         None => Value::Bool(false),
                     };
+                }
+                if self.suppressed == 0 {
+                    value.ensure_defined()?;
                 }
                 Ok(value)
             }

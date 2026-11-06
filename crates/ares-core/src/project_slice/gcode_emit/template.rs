@@ -173,6 +173,7 @@ impl Renderer<'_> {
                 ParsePath::Brace => 0,
             };
             let value = value.index(vector_index).unwrap_or(&value);
+            value.ensure_defined()?;
             let rendered = match path {
                 ParsePath::Legacy => value.as_legacy_string(),
                 ParsePath::Brace => super::expression::to_string(value),

@@ -7,6 +7,7 @@ pub(crate) type TemplateRng = Rc<RefCell<crate::slicer_context::Mt19937>>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Value {
+    Nil,
     Integer(i64),
     Number(f64),
     String(String),
@@ -16,6 +17,17 @@ pub(crate) enum Value {
 }
 
 impl Value {
+    pub(crate) fn ensure_defined(&self) -> Result<(), String> {
+        if matches!(self, Self::Nil) {
+            Err(
+                "Trying to reference an undefined (nil) element of vector of optional values"
+                    .to_owned(),
+            )
+        } else {
+            Ok(())
+        }
+    }
+
     pub(crate) fn number(value: f64) -> Self {
         Self::Number(value)
     }
@@ -44,7 +56,8 @@ impl Value {
     pub(crate) fn iter_list(&self) -> std::slice::Iter<'_, Self> {
         match self {
             Self::List(values) => values.iter(),
-            scalar @ (Self::Integer(_)
+            scalar @ (Self::Nil
+            | Self::Integer(_)
             | Self::Number(_)
             | Self::String(_)
             | Self::OptionBool(_)
@@ -58,7 +71,7 @@ impl Value {
             Self::Number(value) => Some(*value),
             Self::OptionBool(value) | Self::Bool(value) => Some(f64::from(*value)),
             Self::String(value) => value.parse().ok(),
-            Self::List(_) => None,
+            Self::Nil | Self::List(_) => None,
         }
     }
 
@@ -72,6 +85,7 @@ impl Value {
 
     pub(crate) fn as_bool(&self) -> bool {
         match self.scalar() {
+            Self::Nil => false,
             Self::OptionBool(value) | Self::Bool(value) => *value,
             Self::Integer(value) => *value != 0,
             Self::Number(value) => *value != 0.0,
@@ -82,6 +96,7 @@ impl Value {
 
     pub(crate) fn as_string(&self) -> String {
         match self.scalar() {
+            Self::Nil => "nil".to_owned(),
             Self::Integer(value) => value.to_string(),
             Self::Number(value) => format_number(*value),
             Self::String(value) => value.clone(),
@@ -213,15 +228,22 @@ fn parse_value(raw: &str, kind: Option<crate::options::registry::OptionValueKind
         let elements = match kind {
             Kind::Ints | Kind::IntsNullable => raw
                 .split([';', ','])
-                .map(|scalar| parse_scalar(scalar, false, true))
+                .map(|scalar| parse_vector_scalar(scalar, false, true, kind == Kind::IntsNullable))
                 .collect::<Vec<_>>(),
             Kind::Floats | Kind::FloatsNullable | Kind::Percents | Kind::PercentsNullable => raw
                 .split([';', ','])
-                .map(|scalar| parse_scalar(scalar, false, false))
+                .map(|scalar| {
+                    parse_vector_scalar(
+                        scalar,
+                        false,
+                        false,
+                        matches!(kind, Kind::FloatsNullable | Kind::PercentsNullable),
+                    )
+                })
                 .collect::<Vec<_>>(),
             Kind::Bools | Kind::BoolsNullable => raw
                 .split([';', ','])
-                .map(|scalar| parse_scalar(scalar, true, false))
+                .map(|scalar| parse_vector_scalar(scalar, true, false, kind == Kind::BoolsNullable))
                 .collect::<Vec<_>>(),
             Kind::Strings | Kind::Enums | Kind::EnumsNullable => raw
                 .split([';', ','])
@@ -253,6 +275,14 @@ fn parse_value(raw: &str, kind: Option<crate::options::registry::OptionValueKind
         };
     }
     Value::List(values)
+}
+
+fn parse_vector_scalar(raw: &str, is_bool: bool, is_ints: bool, nullable: bool) -> Value {
+    if nullable && raw.trim() == "nil" {
+        Value::Nil
+    } else {
+        parse_scalar(raw, is_bool, is_ints)
+    }
 }
 
 fn parse_scalar(raw: &str, is_bool: bool, is_ints: bool) -> Value {
