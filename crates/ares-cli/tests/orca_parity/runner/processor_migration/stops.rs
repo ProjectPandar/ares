@@ -36,16 +36,17 @@ async fn check(name: &str, overrides: &[u8]) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let reference = slice(&runner, &with_overrides(overrides));
+    let project = with_overrides(overrides);
+    let reference = slice(&runner, &project);
     let text = std::str::from_utf8(&reference).unwrap();
     let input = inverse(text, true);
     let processed = ares_core::gcode_processor::process_gcode(&input, &settings(text), false, true);
     strict(&runner, &input, &reference, &processed.gcode);
     let gcode = crate::runner::application::slice_project_plate(
-        PROJECT,
+        &project,
         GenerationMetadata::default(),
         Some(1),
-        &ConfigOverrides::from_json(overrides).unwrap(),
+        &ConfigOverrides::default(),
         SlicerContext::new(0),
     )
     .await
