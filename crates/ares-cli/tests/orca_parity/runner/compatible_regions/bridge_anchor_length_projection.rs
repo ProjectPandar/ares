@@ -118,18 +118,14 @@ fn inject_anchor(
         if file.name() == "Metadata/model_settings.config" {
             let text = String::from_utf8(bytes).unwrap();
             assert!(!text.contains("key=\"infill_anchor\""));
-            let expression = match scope {
-                Scope::Object => r#"<object id="[^"]+">"#,
-                Scope::Part => r#"<part id="[^"]+" subtype="normal_part">"#,
+            let start = match scope {
+                Scope::Object => crate::runner::compatible_regions::fixture::object_start(&text),
+                Scope::Part => crate::runner::compatible_regions::fixture::part_end(&text),
             };
-            let regex = regex::Regex::new(expression).unwrap();
-            let starts = regex.find_iter(&text).collect::<Vec<_>>();
-            assert_eq!(starts.len(), 1);
-            let start = starts.first().unwrap();
             metadata = format!(
                 "{}\n      <metadata key=\"infill_anchor\" value=\"{value}\"/>{}",
-                &text[..start.end()],
-                &text[start.end()..]
+                &text[..start],
+                &text[start..]
             );
             assert_eq!(metadata.matches("key=\"infill_anchor\"").count(), 1);
             bytes = metadata.as_bytes().to_vec();

@@ -1,3 +1,4 @@
+use crate::runner::compatible_regions::fixture::{object_start, part_end};
 use crate::{
     CaseInputs, VendorProfiles, normalize_filament_defaults, normalize_process_defaults,
     runner::{self, ExportedCase, OrcaRunner},
@@ -116,18 +117,14 @@ pub(super) fn prepare(
         if file.name() == "Metadata/model_settings.config" {
             let text = String::from_utf8(bytes).unwrap();
             assert!(!text.contains("key=\"internal_solid_infill_pattern\""));
-            let expression = match scope {
-                Scope::Object => r#"<object id="[^"]+">"#,
-                Scope::Part => r#"<part id="[^"]+" subtype="normal_part">"#,
+            let start = match scope {
+                Scope::Object => object_start(&text),
+                Scope::Part => part_end(&text),
             };
-            let regex = regex::Regex::new(expression).unwrap();
-            let starts = regex.find_iter(&text).collect::<Vec<_>>();
-            assert_eq!(starts.len(), 1);
-            let start = starts.first().unwrap();
             metadata = format!(
                 "{}\n      <metadata key=\"internal_solid_infill_pattern\" value=\"{pattern}\"/>{}",
-                &text[..start.end()],
-                &text[start.end()..]
+                &text[..start],
+                &text[start..]
             );
             bytes = metadata.as_bytes().to_vec();
         } else {

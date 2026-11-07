@@ -3,6 +3,9 @@ use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 use std::io::{Cursor, Read};
 
+#[path = "compatible_regions/fixture.rs"]
+mod fixture;
+
 #[path = "compatible_regions/inherited_filament.rs"]
 mod inherited_filament;
 
