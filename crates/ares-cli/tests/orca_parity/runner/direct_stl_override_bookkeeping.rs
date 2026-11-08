@@ -3,6 +3,9 @@
 #[path = "direct_stl_override_bookkeeping/residual_membership.rs"]
 mod residual_membership;
 
+#[path = "direct_stl_override_bookkeeping/flush_preparation.rs"]
+mod flush_preparation;
+
 use super::{OrcaRunner, cache_identity, profile_entry};
 use ares_core::{ConfigOverrides, SliceError};
 use serde_json::{Value, json};
