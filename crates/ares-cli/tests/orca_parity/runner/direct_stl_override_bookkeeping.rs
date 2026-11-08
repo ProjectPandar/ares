@@ -144,6 +144,70 @@ fn check(name: &str, filename: &str, none: bool) {
     assert_eq!(status, "PASS", "{name}: {detail:?}; {:?}", runner.work);
 }
 
+fn check_applied_print_host(value: &str) {
+    let root = super::repo_root();
+    let profiles_root = root.join("OrcaSlicer/resources/profiles");
+    let mut machine_vendor = profile_entry::vendor(&profiles_root, "WEMAKE3D");
+    let machine = machine_vendor["files"]
+        .as_object_mut()
+        .unwrap()
+        .values_mut()
+        .find(|profile| profile["type"] == "machine" && profile["name"] == MACHINE)
+        .unwrap();
+    machine["bbl_use_printhost"] = json!(value);
+    let catalog = json!({
+        "vendors": [profile_entry::vendor(&profiles_root, "OrcaFilamentLibrary"), machine_vendor],
+        "imports": [],
+    });
+    let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [FILAMENT]});
+    let input =
+        fs::read(root.join("tests/parity/counterbore-partiallybridge/solid-plate.stl")).unwrap();
+    let artifacts = tempfile::Builder::new()
+        .prefix("applied-print-host-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    fs::write(artifacts.join("input.stl"), &input).unwrap();
+    profile_entry::write_json(&artifacts.join("catalog.json"), &catalog);
+    profile_entry::write_json(&artifacts.join("selection.json"), &selection);
+    let output = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(ares_core::slice_with_profiles(
+            &input,
+            ares_core::ProfileSliceRequest {
+                filename: "input.stl",
+                catalog_json: &catalog.to_string(),
+                selection_json: &selection.to_string(),
+                plate: None,
+                overrides: &ConfigOverrides::default(),
+                placement: ares_core::Placement::None,
+            },
+            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            ares_core::SlicerContext::new(0),
+        ))
+        .unwrap();
+    fs::write(artifacts.join("ares.gcode"), &output).unwrap();
+    let text = std::str::from_utf8(&output).unwrap();
+    let block = text.split_once("; CONFIG_BLOCK_START\n").unwrap().1;
+    let block = block.split_once("; CONFIG_BLOCK_END").unwrap().0;
+    let lines = block
+        .lines()
+        .filter(|line| line.starts_with("; bbl_use_printhost = "))
+        .collect::<Vec<_>>();
+    assert_eq!(lines, [format!("; bbl_use_printhost = {value}")]);
+}
+
+#[test]
+fn direct_stl_applied_print_host_true_is_emitted() {
+    check_applied_print_host("1");
+}
+
+#[test]
+fn direct_stl_applied_print_host_false_is_emitted() {
+    check_applied_print_host("0");
+}
+
 #[test]
 fn direct_stl_none_override_bookkeeping_complete_output() {
     check("direct-stl-none-override", "solid-plate", true);
