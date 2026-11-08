@@ -2,7 +2,7 @@ use super::{OptionDefinition, OptionValueKind};
 
 pub(super) const PRE_MIDDLE_DEFAULT_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("default_acceleration", FloatsNullable, "500"; true, false, "500"),
-    definition!("default_bed_type", String, ""; true, false, ""),
+    definition!("default_bed_type", String, ""; false, false, ""),
     definition!("default_filament_colour", Strings, ""; true, false, "\"\""),
     definition!("default_filament_profile", Strings, ""; false, false, ""),
     definition!("default_jerk", FloatsNullable, "0"; true, false, "0"),
