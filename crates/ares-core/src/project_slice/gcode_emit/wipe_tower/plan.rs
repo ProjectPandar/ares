@@ -1,5 +1,5 @@
 //! `WipeTowerInfo`, `plan_toolchange` and downward `plan_tower` depth propagation.
-use super::filament::Filament;
+use super::{filament::Filament, generator::use_gap_wall};
 use crate::ProjectSettings;
 
 pub(super) struct ToolChange {
@@ -35,6 +35,8 @@ pub(super) struct Plan {
     pub(super) extra_spacing: f32,
     pub(super) ramming_spacing: f32,
     pub(super) ramming: bool,
+    semm: bool,
+    use_gap_wall: bool,
     pub(super) no_sparse: bool,
 }
 
@@ -54,6 +56,8 @@ impl Plan {
                 / 100.0) as f32,
             ramming_spacing: (print.wipe_tower_extra_spacing.0 / 100.0) as f32,
             ramming: settings.printer.gcode.enable_filament_ramming.0,
+            semm: settings.printer.gcode.single_extruder_multi_material.0,
+            use_gap_wall: use_gap_wall(print),
             no_sparse: settings.process.gcode.wipe_tower_no_sparse_layers.0,
         }
     }
@@ -136,7 +140,13 @@ impl Plan {
         } else {
             0.0
         };
-        let first_wipe_line = -(width * (length / width - (length / width) as i32 as f32) - width);
+        let do_ramming = (self.semm && self.ramming) || filament.multitool_ramming;
+        let boundary_wipe_start = do_ramming && !self.semm && self.use_gap_wall;
+        let first_wipe_line = if do_ramming && !boundary_wipe_start {
+            -(width * (length / width - (length / width) as i32 as f32) - width)
+        } else {
+            0.0
+        };
         let first_volume = length_to_volume(
             first_wipe_line,
             self.perimeter_width * self.extra_flow,
