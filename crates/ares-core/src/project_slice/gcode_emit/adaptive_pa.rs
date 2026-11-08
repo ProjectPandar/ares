@@ -78,6 +78,7 @@ pub(super) fn process(
         is_bbl: super::tags::Tags::of(traversal).is_bbl(),
         previous: 0.0,
         current_speed: 0.0,
+        modal_speed: 0.0,
         last_tool: None,
     };
     let text = String::from_utf8(layers).expect("generated G-code is UTF-8");
@@ -114,6 +115,7 @@ struct Processor<'a> {
     is_bbl: bool,
     previous: f64,
     current_speed: f64,
+    modal_speed: f64,
     last_tool: Option<usize>,
 }
 
@@ -137,6 +139,9 @@ impl Processor<'_> {
             }
             if !wiping && let Some(speed) = scan::feedrate(line) {
                 self.current_speed = speed;
+            }
+            if let Some(speed) = scan::move_feedrate(line) {
+                self.modal_speed = speed;
             }
             if line.contains("WIPE_END") {
                 wiping = false;
@@ -166,7 +171,7 @@ impl Processor<'_> {
         let overhang = &tag[6] != "0";
         let changed_tool = self.last_tool != Some(tool);
         self.last_tool = Some(tool);
-        let speeds = scan::lookahead(following, self.current_speed);
+        let speeds = scan::lookahead(following, self.current_speed, self.modal_speed);
         self.current_speed = speeds.current;
         let filament = &self.full.filament.gcode;
         let default = if at(&filament.enable_pressure_advance.0, tool).0 {
