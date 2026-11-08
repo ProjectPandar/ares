@@ -7,7 +7,7 @@ use crate::{
 };
 use serde_json::json;
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path};
 
 #[path = "printer_physical_identity/input.rs"]
 mod input;
@@ -142,7 +142,7 @@ fn compare_with(runner: &OrcaRunner, label: &str, ids: &[&str], physical: &[&str
     fs::create_dir(&output_dir).unwrap();
     let output = output_dir.join("plate_1.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(directory.join("input.3mf"))

@@ -6,7 +6,6 @@ use sha2::{Digest, Sha256};
 use std::{
     fs,
     io::{Cursor, Read},
-    process::Command,
 };
 
 #[test]
@@ -206,7 +205,7 @@ fn check(label: &str, enabled: bool, single: bool) {
         .and_then(|g| golden::compare_ordered_bytes_generator_only(&reference, g));
     let output = root.join("ares.cli.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

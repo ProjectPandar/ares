@@ -2,6 +2,7 @@
 
 use super::producer;
 use crate::runner::{ExportedCase, cache_identity, repo_root};
+use assert_cmd::assert::OutputAssertExt;
 use std::{fs, path::Path};
 
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
@@ -36,14 +37,15 @@ fn config_export_fixture_matches_resolved_views_byte_for_byte() {
         .unwrap();
     fs::write(runner.work.join("orca.gcode"), &case.reference).unwrap();
     let output = runner.work.join("ares.gcode");
-    assert_cmd::Command::cargo_bin("ares")
-        .unwrap()
+    crate::runner::application::cli_command()
         .args([
             "slice",
             "-o",
             output.to_str().unwrap(),
             project_path.to_str().unwrap(),
         ])
+        .output()
+        .unwrap()
         .assert()
         .success();
     let actual = fs::read(output).unwrap();

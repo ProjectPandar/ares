@@ -34,7 +34,6 @@ use sha2::{Digest, Sha256};
 use std::{
     fs,
     io::{Cursor, Read, Write},
-    process::Command,
 };
 
 const BASE: &[u8] =
@@ -232,7 +231,7 @@ fn run_leg(leg: &Leg, control_reference: &[u8]) {
     fs::create_dir(&output_dir).unwrap();
     let output = output_dir.join("plate_1.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(directory.join("input.3mf"))

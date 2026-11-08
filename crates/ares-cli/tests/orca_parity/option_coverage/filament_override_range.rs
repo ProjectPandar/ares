@@ -30,7 +30,6 @@ use sha2::{Digest, Sha256};
 use std::{
     fs,
     io::{Cursor, Read, Write},
-    process::Command,
 };
 
 const BASE: &[u8] = include_bytes!("../../../../../tests/parity/filament-override-range/base.3mf");
@@ -244,7 +243,7 @@ fn run_leg(leg: &Leg) {
     fs::create_dir(&output_dir).unwrap();
     let output = output_dir.join("plate_1.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(directory.join("input.3mf"))
@@ -337,7 +336,7 @@ fn filament_override_range_overrides_cli_5() {
     let overrides = "{\"filament_retraction_distances_when_cut\":[\"5\",\"5\"]}";
     let input = directory.join("unpatched.3mf");
     fs::write(&input, BASE).unwrap();
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "--overrides", overrides, "-o"])
         .arg(&output)
         .arg(&input)
@@ -372,7 +371,7 @@ fn filament_override_range_overrides_cli_5() {
 
     // Static `GCodeConfig` filament members stay range-checked through the
     // same boundary (`filament_max_volumetric_speed=-1` → reject).
-    let reject = Command::new(binary)
+    let reject = crate::runner::application::CliCommand::new(binary)
         .args([
             "slice",
             "--overrides",

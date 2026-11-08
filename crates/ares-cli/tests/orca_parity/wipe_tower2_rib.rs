@@ -4,8 +4,6 @@
 //! (`docs/architecture/wipe-tower2-rib-square.md`). A section oracle: each layer's `;TYPE:Prime
 //! tower` extrusions must cover the box Native's do; the rest of the output is not compared.
 
-use std::process::Command;
-
 use super::{RECTANGLE_TOWER, TWO_FILAMENTS, rewrite_project};
 use crate::runner::{OrcaRunner, repo_root};
 
@@ -69,7 +67,7 @@ pub(super) fn slice_fixture(
         .unwrap();
     let native = runner.slice_selected_plate_case(&exported, 1).unwrap();
     let output = exported.output_dir.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::CliCommand::new(env!("CARGO_BIN_EXE_ares"))
         .args(["slice", "--plate", "1", "-o"])
         .arg(&output)
         .arg(&exported.project_path)

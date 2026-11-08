@@ -1,6 +1,6 @@
 use super::{native::NativeCase, sha, witness};
 use serde_json::json;
-use std::{fs, process::Command};
+use std::fs;
 
 pub(super) fn slice(project: &[u8], seed: u32) -> Result<Vec<u8>, ares_core::SliceError> {
     tokio::runtime::Builder::new_current_thread()
@@ -28,7 +28,7 @@ pub(super) fn compare(case: NativeCase, project: &[u8]) {
     }
     let output = root.join("ares.cli.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

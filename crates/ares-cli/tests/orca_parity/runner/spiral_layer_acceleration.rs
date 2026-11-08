@@ -2,8 +2,6 @@
 //! (`GCode.cpp:9224-9246`, `:10372-10418`) after the `M201` in `before_layer_change_gcode`
 //! invalidated it (`GCode.cpp:5362-5366`) (`docs/architecture/change-layer-travel.md`).
 
-use std::process::Command;
-
 use crate::runner::{OrcaRunner, repo_root};
 
 /// Per `;LAYER_CHANGE`, the `M204` lines in order.
@@ -35,7 +33,7 @@ fn assert_spiral_acceleration_matches(label: &str, fixture: &str) {
         .unwrap();
     let native = runner.slice_selected_plate_case(&exported, 1).unwrap();
     let output = exported.output_dir.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::CliCommand::new(env!("CARGO_BIN_EXE_ares"))
         .args(["slice", "--plate", "1", "-o"])
         .arg(&output)
         .arg(&exported.project_path)

@@ -3,8 +3,6 @@
 //! A section oracle: the first-layer time estimate must match Native's; the rest of the output
 //! is not compared.
 
-use std::process::Command;
-
 use crate::runner::{OrcaRunner, repo_root};
 
 const FIRST_LAYER_TIME: &str = "; estimated first layer printing time (normal mode) = ";
@@ -29,7 +27,7 @@ fn assert_first_layer_time_matches(label: &str, fixture: &str) {
         .unwrap();
     let native = runner.slice_selected_plate_case(&exported, 1).unwrap();
     let output = exported.output_dir.join("ares.cli.gcode");
-    let cli = Command::new(env!("CARGO_BIN_EXE_ares"))
+    let cli = crate::runner::application::CliCommand::new(env!("CARGO_BIN_EXE_ares"))
         .args(["slice", "--plate", "1", "-o"])
         .arg(&output)
         .arg(&exported.project_path)

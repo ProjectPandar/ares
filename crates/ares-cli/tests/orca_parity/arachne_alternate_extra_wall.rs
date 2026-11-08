@@ -9,7 +9,6 @@ use std::{
     fs,
     io::{Cursor, Read, Write},
     path::Path,
-    process::Command,
 };
 
 #[path = "arachne_alternate_extra_wall/witness.rs"]
@@ -203,7 +202,7 @@ fn compare_public(root: &Path, project: &[u8], reference: &[u8]) -> Vec<String> 
         .and_then(|gcode| golden::compare_ordered_bytes_generator_only(reference, gcode));
     let output = root.join("ares.cli.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

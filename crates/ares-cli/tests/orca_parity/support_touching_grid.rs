@@ -3,7 +3,7 @@
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 fn sha(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
@@ -64,7 +64,7 @@ fn support_touching_grid_s_c0_public_api_cli() {
     // Capture CLI exit status and stderr before invoking the public API.
     let binary = env!("CARGO_BIN_EXE_ares");
     let output = root.join("ares.cli.gcode");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

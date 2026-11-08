@@ -3,7 +3,7 @@
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 #[test]
 fn clearance_admission_control() {
@@ -179,7 +179,7 @@ fn check(label: &str) {
     }
     let output = root.join("ares.cli.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

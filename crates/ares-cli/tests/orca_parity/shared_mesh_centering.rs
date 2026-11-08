@@ -5,7 +5,7 @@ use crate::{
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 const MANIFEST: &str =
     include_str!("../../../../tests/parity/shared-mesh-centering/provenance.json");
@@ -125,7 +125,7 @@ pub(super) fn compare_scope(
         .and_then(|g| golden::compare_ordered_bytes_generator_only(&reference, g));
     let output = root.join("ares.cli.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let mut command = Command::new(binary);
+    let mut command = crate::runner::application::CliCommand::new(binary);
     command.arg("slice");
     if let Some(plate) = plate {
         command.args(["--plate", &plate.to_string()]);

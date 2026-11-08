@@ -5,7 +5,7 @@ use crate::{
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::fs;
 
 const MANIFEST: &str =
     include_str!("../../../../tests/parity/print-object-centering/provenance.json");
@@ -126,7 +126,7 @@ fn compare(label: &str, bytes: &[u8]) {
         .and_then(|g| golden::compare_ordered_bytes_generator_only(&reference, g));
     let output = root.join("ares.cli.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(root.join("input.3mf"))

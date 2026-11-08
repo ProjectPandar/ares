@@ -73,7 +73,7 @@ pub(super) async fn verify(fields: Value, expected_error: Option<&str>, expected
     fs::create_dir(&cli_directory).unwrap();
     let cli = (expected_error.is_some() || !expected_dirty.is_empty()).then(|| {
         if expected_dirty.is_empty() {
-            std::process::Command::new(assert_cmd::cargo::cargo_bin!("ares"))
+            crate::runner::application::CliCommand::new(assert_cmd::cargo::cargo_bin!("ares"))
                 .args([
                     "slice",
                     "--overrides",

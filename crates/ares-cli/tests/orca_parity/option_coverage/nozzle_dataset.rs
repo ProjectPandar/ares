@@ -11,7 +11,6 @@ use std::{
     fs,
     io::{Cursor, Read},
     path::Path,
-    process::Command,
 };
 struct Case {
     label: &'static str,
@@ -183,7 +182,7 @@ fn compare_with(runner: &OrcaRunner, case: &Case) {
     fs::create_dir(&output_dir).unwrap();
     let output = output_dir.join("plate_1.gcode");
     let binary = env!("CARGO_BIN_EXE_ares");
-    let cli = Command::new(binary)
+    let cli = crate::runner::application::CliCommand::new(binary)
         .args(["slice", "-o"])
         .arg(&output)
         .arg(directory.join("input.3mf"))
