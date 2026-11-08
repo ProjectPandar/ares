@@ -134,7 +134,7 @@ impl MergePass<'_> {
         let next = self.arena.create_node(NodeSeed {
             position,
             distance_to_top: node.distance_to_top + 1,
-            roof_layers_below: node.roof_layers_below - i32::from(node.distance_to_top > 0),
+            roof_layers_below: node.roof_layers_below - i32::from(node.distance_to_top >= 0),
             to_buildplate,
             parent: Some(parent),
             print_z: self.next_height.print_z,

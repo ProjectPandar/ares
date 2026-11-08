@@ -46,19 +46,15 @@ impl NodeDrawing<'_, '_> {
         for &id in nodes {
             let node = &arena.nodes[id];
             let mut area = self.node_area(node, &mut output)?;
-            let within_roof_cap = node.distance_mm_to_top - self.collision.top_z_distance
-                < self.top_interface_layers as f64 * node.height + 0.0001;
             if self.collision.object_layer > 0 && node.distance_to_top < 0 {
                 output.roof_gap.append(&mut area);
             } else if self.collision.object_layer > 0
                 && node.roof_layers_below == 1
-                && within_roof_cap
                 && !node.is_sharp_tail
             {
                 output.roof_first.append(&mut area);
             } else if self.collision.object_layer > 0
                 && node.roof_layers_below > 1
-                && within_roof_cap
                 && !node.is_sharp_tail
             {
                 output.roof.append(&mut area);

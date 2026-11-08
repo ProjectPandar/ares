@@ -124,7 +124,6 @@ pub(in crate::project_slice::support_material) fn generate(
             slicing: tree.slicing,
             independent: input.independent,
             top_z_distance,
-            top_interface_layers: object.support_interface_top_layers.0,
             raft_layers: raft_count,
         },
         &mut arena,

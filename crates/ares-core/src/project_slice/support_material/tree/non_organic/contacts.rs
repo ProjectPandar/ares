@@ -132,11 +132,7 @@ impl LayerContacts<'_> {
         let id = self.arena.create_node(NodeSeed {
             position: point,
             distance_to_top: -self.gap_layers,
-            roof_layers_below: if interface {
-                (self.roof_layers - 1).max(0)
-            } else {
-                0
-            },
+            roof_layers_below: if interface { self.roof_layers } else { 0 },
             to_buildplate: true,
             parent: None,
             print_z: self.bottom_z,

@@ -18,7 +18,6 @@ pub(super) struct HeightInput<'a> {
     pub(super) slicing: &'a SlicingParameters,
     pub(super) independent: bool,
     pub(super) top_z_distance: f64,
-    pub(super) top_interface_layers: i32,
     pub(super) raft_layers: usize,
 }
 
@@ -58,22 +57,6 @@ pub(super) fn plan_layer_heights(
     }
     *contact_nodes = redistributed;
     adjust_gaps(input, &heights, arena, contact_nodes);
-    if input.independent && input.top_interface_layers > 0 {
-        let interface_height = f64::from(input.top_interface_layers) * input.slicing.layer_height;
-        for &id in contact_nodes.iter().flatten() {
-            let node = &mut arena.nodes[id];
-            if node.height <= EPSILON {
-                continue;
-            }
-            let remaining = interface_height - (node.distance_mm_to_top - input.top_z_distance);
-            let layers_fit = if remaining < -EPSILON {
-                0
-            } else {
-                ((remaining + EPSILON) / node.height).floor() as i32
-            };
-            node.roof_layers_below = layers_fit.min(input.top_interface_layers);
-        }
-    }
     heights
 }
 
