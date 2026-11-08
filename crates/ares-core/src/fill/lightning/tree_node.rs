@@ -2,7 +2,7 @@
 //! lightning-tree vertex — a `shared_ptr`/`weak_ptr` parent-children tree with
 //! `deepCopy`/`reroot`/`realign`/`straighten`/`prune`/`convertToPolylines`/
 //! `removeJunctionOverlap`. Ported to `Rc<RefCell<Node>>` + `Weak` parents.
-//! `convertToPolylines` picks the first child via glibc `rand()` (byte parity).
+//! `convertToPolylines` picks the first child from a generator seeded per tree.
 
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};

@@ -5,7 +5,6 @@
 //! orchestrates across all layers.
 
 mod distance_field;
-mod glibc_rand;
 mod tree_geom;
 mod tree_node;
 mod tree_ops;

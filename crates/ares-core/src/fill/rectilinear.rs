@@ -7,7 +7,7 @@ mod path_matrix;
 mod perimeter;
 mod pinch;
 mod regions;
-mod rng;
+pub(super) mod rng;
 pub(crate) mod segments;
 mod surface;
 mod traverse;

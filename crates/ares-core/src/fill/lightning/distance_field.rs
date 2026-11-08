@@ -16,8 +16,8 @@ const RADIUS_PER_CELL_SIZE: Coord = 6;
 /// `prime_for_hash` for the stable ordering tie-break (DistanceField.cpp).
 const PRIME_FOR_HASH: i64 = 191;
 
-/// `PointHash` (`Point.hpp:496`) — `(89*31 + x)*31 + y`.
-fn point_hash(p: Point) -> u64 {
+/// `PointHash` (`Point.hpp:505-508`) — `(89*31 + x)*31 + y`.
+pub(super) fn point_hash(p: Point) -> u64 {
     ((89 * 31 + p.x()) * 31 + p.y()) as u64
 }
 

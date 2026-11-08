@@ -68,8 +68,8 @@ Rows: **84**. Every listed Rust path was checked at the planning base.
 | M | `Fill/Lightning/Generator.hpp` | partial port — `C:fill/lightning/generator.rs` | bounded 2.4.2 slice |
 | M | `Fill/Lightning/Layer.cpp` | partial port — `C:fill/lightning/layer.rs` | bounded 2.4.2 slice |
 | M | `Fill/Lightning/Layer.hpp` | partial port — `C:fill/lightning/layer.rs` | bounded 2.4.2 slice |
-| M | `Fill/Lightning/TreeNode.cpp` | partial port — `C:fill/lightning/tree_node.rs` | bounded 2.4.2 slice |
-| M | `Fill/Lightning/TreeNode.hpp` | partial port — `C:fill/lightning/tree_node.rs` | bounded 2.4.2 slice |
+| M | `Fill/Lightning/TreeNode.cpp` | partial port — `C:fill/lightning/tree_node.rs`, `C:fill/lightning/tree_geom.rs` | `convertToPolylines` updated to the target; rest is a bounded 2.4.2 slice |
+| M | `Fill/Lightning/TreeNode.hpp` | partial port — `C:fill/lightning/tree_node.rs`, `C:fill/lightning/tree_geom.rs` | `convertToPolylines` updated to the target; rest is a bounded 2.4.2 slice |
 | M | `Flow.cpp` | partial port — `C:project_slice/perimeters/flow.rs`, `C:extrusions/options.rs` | bounded 2.4.2 slice |
 | M | `Flow.hpp` | partial port — `C:project_slice/perimeters/flow.rs`, `C:extrusions/options.rs` | bounded 2.4.2 slice |
 | M | `PrintObject.cpp` | partial port — `C:project_slice/prepare_infill.rs`, `C:project_slice/support_material.rs` | bounded 2.4.2 slice |

@@ -35,10 +35,6 @@ pub(crate) struct Generator {
     overhang_per_layer: Vec<Vec<Polygon>>,
     lightning_layers: Vec<Layer>,
     locator_cell_size: Coord,
-    /// The shared `rand()` stream (TreeNode.cpp:365 `rand() % m_children.size()`)
-    /// — upstream consumes the process-global C `rand()` continuously across ALL
-    /// `convertToPolylines` calls and ALL layers, not a per-layer reseed.
-    rng: std::cell::RefCell<super::glibc_rand::GlibcRand>,
 }
 
 /// Infill constructor inputs from `Generator.cpp:66-99`.
@@ -96,7 +92,6 @@ impl Generator {
                 .map(|_| Layer::new(locator_cell_size))
                 .collect(),
             locator_cell_size,
-            rng: std::cell::RefCell::new(super::glibc_rand::GlibcRand::new()),
         };
         generator.generate_trees(contours)?;
         Ok(generator)
@@ -165,7 +160,6 @@ impl Generator {
             overhang_per_layer: vec![Vec::new(); n],
             lightning_layers: (0..n).map(|_| Layer::new(locator_cell_size)).collect(),
             locator_cell_size,
-            rng: std::cell::RefCell::new(super::glibc_rand::GlibcRand::new()),
         };
         generator.generate_initial_internal_overhangs(&layer_internal_outlines)?;
         generator.generate_trees(&layer_internal_outlines)?;
@@ -279,11 +273,8 @@ impl Generator {
         limit_to_outline: &[Polygon],
         line_overlap: Coord,
     ) -> Result<Vec<Polyline>, ClipperError> {
-        let lines = self.lightning_layers[layer_id].convert_to_lines(
-            limit_to_outline,
-            line_overlap,
-            &mut self.rng.borrow_mut(),
-        )?;
+        let lines =
+            self.lightning_layers[layer_id].convert_to_lines(limit_to_outline, line_overlap)?;
         Ok(lines)
     }
 }

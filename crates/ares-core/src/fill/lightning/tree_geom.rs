@@ -4,19 +4,18 @@
 use crate::geometry::point_in_polygon;
 use crate::geometry::{Coord, EdgeGrid, Point, Polygon, Polyline};
 
-use super::glibc_rand::GlibcRand;
+use super::distance_field::point_hash;
 use super::tree_node::{Node, NodeSPtr};
+use crate::fill::rectilinear::rng::Mt19937_64;
 
 impl Node {
-    /// `convertToPolylines` — depth-first branch order, first child picked by
-    /// `rand()` (glibc), other children get new polylines (TreeNode.cpp:355).
-    pub(super) fn convert_to_polylines(
-        this: &NodeSPtr,
-        line_overlap: Coord,
-        rng: &mut GlibcRand,
-    ) -> Vec<Polyline> {
+    /// `convertToPolylines` — depth-first branch order, the first child picked by
+    /// a generator seeded from this tree's root, other children get new polylines
+    /// (TreeNode.cpp:358-369,372-388).
+    pub(super) fn convert_to_polylines(this: &NodeSPtr, line_overlap: Coord) -> Vec<Polyline> {
         let mut result: Vec<Polyline> = vec![Polyline::new(Vec::new())];
-        Self::convert_rec(this, 0, &mut result, rng);
+        let mut rng = Mt19937_64::with_seed(point_hash(this.borrow().p));
+        Self::convert_rec(this, 0, &mut result, &mut rng);
         Self::remove_junction_overlap(&mut result, line_overlap);
         result
     }
@@ -25,7 +24,7 @@ impl Node {
         this: &NodeSPtr,
         long_line_idx: usize,
         output: &mut Vec<Polyline>,
-        rng: &mut GlibcRand,
+        rng: &mut Mt19937_64,
     ) {
         let (children, p) = {
             let n = this.borrow();

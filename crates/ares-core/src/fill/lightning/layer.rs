@@ -13,7 +13,6 @@ use crate::geometry::{
 };
 
 use super::distance_field::DistanceField;
-use super::glibc_rand::GlibcRand;
 use super::layer_geom::{GroundingContext, get_best_grounding_location};
 use super::tree_node::{Node, NodeSPtr};
 
@@ -162,14 +161,13 @@ impl Layer {
         &self,
         limit_to_outline: &[Polygon],
         line_overlap: Coord,
-        rng: &mut GlibcRand,
     ) -> Result<Vec<Polyline>, ClipperError> {
         if self.tree_roots.is_empty() {
             return Ok(Vec::new());
         }
         let mut result_lines = Vec::new();
         for tree in &self.tree_roots {
-            result_lines.extend(Node::convert_to_polylines(tree, line_overlap, rng));
+            result_lines.extend(Node::convert_to_polylines(tree, line_overlap));
         }
         intersection_open_polylines(&result_lines, limit_to_outline)
     }

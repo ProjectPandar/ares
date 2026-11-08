@@ -4,15 +4,21 @@ const MATRIX: u64 = 0xB502_6F5A_A966_19E9;
 const LOWER_MASK: u64 = (1_u64 << 31) - 1;
 const UPPER_MASK: u64 = !LOWER_MASK;
 
-pub(super) struct Mt19937_64 {
+pub(in crate::fill) struct Mt19937_64 {
     state: [u64; STATE_SIZE],
     index: usize,
 }
 
 impl Default for Mt19937_64 {
     fn default() -> Self {
+        Self::with_seed(5489)
+    }
+}
+
+impl Mt19937_64 {
+    pub(in crate::fill) fn with_seed(seed: u64) -> Self {
         let mut state = [0_u64; STATE_SIZE];
-        state[0] = 5489;
+        state[0] = seed;
         for index in 1..STATE_SIZE {
             let previous = state[index - 1];
             state[index] = 6_364_136_223_846_793_005_u64
@@ -24,10 +30,8 @@ impl Default for Mt19937_64 {
             index: STATE_SIZE,
         }
     }
-}
 
-impl Mt19937_64 {
-    pub(super) fn next(&mut self) -> u64 {
+    pub(in crate::fill) fn next(&mut self) -> u64 {
         if self.index == STATE_SIZE {
             self.twist();
         }
