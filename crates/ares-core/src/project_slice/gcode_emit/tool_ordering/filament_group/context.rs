@@ -36,6 +36,10 @@ impl Context {
                 "Flush volumes matrix do not match to the correct size!".to_owned(),
             ));
         }
+        let raw_tokens = raw
+            .iter()
+            .collect::<Result<BTreeMap<_, _>, _>>()
+            .map_err(SliceError::InvalidInput)?;
         for key in [
             "enable_filament_dynamic_map",
             "has_filament_switcher",
@@ -43,11 +47,16 @@ impl Context {
             "extruder_max_nozzle_count",
             "extruder_nozzle_stats",
         ] {
-            let token = raw.get(key).and_then(|value| value.token());
             let default = crate::option_definition(key)
                 .expect("registered grouping option")
                 .default_wire_value;
-            config.set_deserialize_strict(key, token.as_deref().unwrap_or(default))?;
+            config.set_deserialize_strict(
+                key,
+                raw_tokens
+                    .get(key)
+                    .and_then(Option::as_deref)
+                    .unwrap_or(default),
+            )?;
         }
         if settings.project.gcode.filament_map_mode != crate::ProjectFilamentMapMode::AutoForFlush
             || config.option("enable_filament_dynamic_map").bool()
