@@ -1,13 +1,21 @@
-//! `OrcaSlicer.cpp:3340–3503` CLI preparation before `Print::apply` (8500fcd).
+//! `OrcaSlicer.cpp:3851–4023` CLI preparation before `Print::apply`
+//! (345efec64c7b95a05ce5cf96df0dde66a158835c).
 mod context;
 pub(crate) use context::PreparationContext;
 
+use serde::Deserialize;
+
 use crate::{
-    ExtruderType, NozzleVolumeType, Nullable, OrcaFloat, ProjectSettings, SliceError,
-    project::raw_settings::ProjectSettingsRaw,
+    ExtruderType, NozzleVolumeType, Nullable, OrcaFloat, OrcaStrings, ProjectSettings, SliceError,
+    project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
 use super::flush_volume::{calculate, rgba};
+
+#[derive(Deserialize)]
+struct LoadedPalette {
+    filament_colour: OrcaStrings,
+}
 
 pub(crate) fn prepare(
     settings: &mut ProjectSettings,
@@ -16,26 +24,51 @@ pub(crate) fn prepare(
     overrides: &crate::ConfigOverrides,
 ) -> Result<(), SliceError> {
     let nozzle_count = settings.project.print.nozzle_diameter.0.len();
+    let filament_count = settings.filament.gcode.filament_diameter.0.len();
+    let has_palette = raw.contains_key("filament_colour");
+    let mut palette_raw = ProjectSettingsRaw::default();
+    // Config.cpp:323–341,1721–1741: option(key, true) clones the registered
+    // default before CLI:3862 grows it; a later typed palette is not that option.
+    let value = match raw.get("filament_colour") {
+        Some(value) => value.clone(),
+        None => RawConfigValue::Text(
+            super::registry::option_definition("filament_colour")
+                .unwrap()
+                .default_wire_value
+                .to_owned(),
+        ),
+    };
+    palette_raw.insert("filament_colour".to_owned(), value);
+    let LoadedPalette {
+        mut filament_colour,
+    } = super::json_deserialize::deserialize_preset_config(palette_raw.into_object()).map_err(
+        |error| SliceError::InvalidInput(format!("invalid project settings JSON: {error}")),
+    )?;
+    let grown = filament_count > 0 && (!has_palette || filament_colour.0.len() < filament_count);
+    if !has_palette && !grown {
+        return Ok(());
+    }
+    if grown {
+        filament_colour
+            .0
+            .resize(filament_count, "#FFFFFF".to_owned());
+    }
+    settings.filament.gcode.filament_colour = filament_colour;
     let colors = &settings.filament.gcode.filament_colour.0;
-    // Byte/project entry corresponds to CLI --slice without extra nozzle/color
-    // arguments: new types default to Standard per nozzle (3022–3047).
-    // Retain vector shape: one Standard differs from two Standards. A malformed
-    // supplied matrix alone is NOT a rebuild trigger (3351).
+    // CLI:3415–3441 defaults new types to Standard per nozzle. Retain vector
+    // shape: one Standard differs from two Standards. A malformed supplied
+    // matrix alone is NOT a rebuild trigger (3866).
     let types = &settings.project.gcode.nozzle_volume_type.0;
     let new_types = if overrides.contains_key("nozzle_volume_type") {
         types.clone()
     } else {
         vec![NozzleVolumeType::Standard; nozzle_count]
     };
-    let changed = context.colour_override
+    let changed = grown
+        || context.colour_override
         || context.current_nozzle_count != nozzle_count
         || context.current_volume_types != new_types;
-    // CLI:3340–3351 requires a project colour option, not the typed default
-    // supplied later by FullPrintConfig. Sparse STL profiles may omit it.
-    if !raw.contains_key("filament_colour")
-        || colors.is_empty()
-        || (raw.contains_key("flush_volumes_matrix") && !changed)
-    {
+    if colors.is_empty() || (raw.contains_key("flush_volumes_matrix") && !changed) {
         return Ok(());
     }
     let support = &settings.filament.gcode.filament_is_support.0;
@@ -77,7 +110,9 @@ pub(crate) fn prepare(
     let minima = minimum_volumes(settings, raw);
     let colors: Vec<_> = colors.iter().map(|color| rgba(color)).collect();
     let count = colors.len();
-    let mut matrix = vec![0.0; count * count * nozzle_count];
+    let matrix = &mut settings.project.print.flush_volumes_matrix.0;
+    // CLI:3944–3949 resizes the applied matrix before computing its cells.
+    matrix.resize(count * count * nozzle_count, 0.0);
     for (nozzle, segment) in matrix.chunks_exact_mut(count * count).enumerate() {
         let Some(dataset) = datasets.as_ref().map(|datasets| datasets[nozzle]) else {
             segment.fill(230.0);
@@ -97,7 +132,6 @@ pub(crate) fn prepare(
             });
         }
     }
-    settings.project.print.flush_volumes_matrix.0 = matrix;
     Ok(())
 }
 
@@ -153,8 +187,8 @@ fn dataset(settings: &ProjectSettings, raw: &ProjectSettingsRaw, nozzle: usize) 
     })
 }
 
-// Pure extraction of Plater.cpp:764–835. CLI deliberately calls this for
-// nozzle 0 before iterating all nozzles, not once per nozzle (3412).
+// Pure extraction of Plater.cpp:1251–1314. CLI deliberately calls this for
+// nozzle 0 before iterating all nozzles, not once per nozzle (3927).
 fn minimum_volumes(settings: &ProjectSettings, raw: &ProjectSettingsRaw) -> Vec<i32> {
     let printer = &settings.printer.gcode;
     let nozzle_volume = match settings.printer.remaining.nozzle_volume.0[0] {

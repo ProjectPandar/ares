@@ -1,4 +1,5 @@
-//! Old side of CLI preparation (`OrcaSlicer.cpp:1704,3022–3047,3340`).
+//! Old side of CLI preparation (`OrcaSlicer.cpp:1824–1836,3415–3441,3851`).
+//! Upstream: 345efec64c7b95a05ce5cf96df0dde66a158835c.
 use serde::Deserialize;
 
 use crate::project::raw_settings::ProjectSettingsRaw;
