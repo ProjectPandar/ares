@@ -23,11 +23,7 @@ pub(crate) struct PaintedParameters {
     /// scaled (`Brim.cpp:445`); the `brim_width` of the inner branch
     /// (`:546`).
     pub(crate) width: f32,
-    pub(crate) spacing: f32,
     pub(crate) resolution: f64,
-    /// Brim flow width in millimetres (`print.brim_flow()` spacing), the
-    /// `flowWidth` argument of `make_brim_ears` (Brim.cpp:355).
-    pub(crate) flow_width: f64,
     pub(crate) scale: CoordinateScale,
     /// Ear centres already mapped into the `source` (mesh-centred
     /// lslices) space, each with its `head_front_radius` in millimetres.
@@ -41,12 +37,8 @@ pub(crate) struct PaintedParameters {
     pub(crate) efc_outline: Option<Vec<ExPolygon>>,
 }
 
-/// `make_brim_ears` (Brim.cpp:354-412), outer-birim call site `:537`:
-/// per-point discs minus the object contour offset. The EFC snapping
-/// branch (:377-404) is deferred with the EFC chain; the inner call site
-/// (:551) needs a holed fixture and stays deferred.
-/// `Brim.cpp:383-388`: the POLY_SIDE_COUNT-sided ear circle (24,
-/// libslic3r.h:72) translated to the truncating-scaled ear centre.
+/// `Brim.cpp:419-425`: the raw-radius, 24-sided painted ear circle;
+/// `Point.hpp:208` rounds the disc offsets before centre translation.
 fn ear_disc(center_x: i64, center_y: i64, size: i64) -> Polygon {
     Polygon::new(
         (0..24)
@@ -61,34 +53,42 @@ fn ear_disc(center_x: i64, center_y: i64, size: i64) -> Polygon {
     )
 }
 
-/// `closest_point_on_expolygons` (Brim.cpp:65-80): nearest vertex over
-/// every contour and hole (vertex-level `closest_point`, no projection),
-/// `int64` squared deltas compared as `double` with strict `<`.
+/// `Brim.cpp:105-125`: ordered segment projection, with the unquantized
+/// distance and truncating candidate of `Line.hpp:45-73`.
 fn closest_point_on_expolygons(polygons: &[ExPolygon], from: Point) -> Option<Point> {
     let mut best: Option<(f64, Point)> = None;
-    let mut consider = |point: &Point| {
-        let dx = point.x() - from.x();
-        let dy = point.y() - from.y();
-        let distance = (dx * dx + dy * dy) as f64;
-        if best.is_none_or(|(previous, _)| distance < previous) {
-            best = Some((distance, *point));
+    let lines = polygons
+        .iter()
+        .flat_map(|polygon| std::iter::once(polygon.contour()).chain(polygon.holes()))
+        .flat_map(Polygon::lines);
+    for line in lines {
+        let distance = line.distance_to_squared(from);
+        let closer = best.is_none_or(|(previous, _)| distance < previous);
+        if !closer {
+            continue;
         }
-    };
-    for polygon in polygons {
-        consider_many(polygon, &mut consider);
+        let vx = (line.b.x() - line.a.x()) as f64;
+        let vy = (line.b.y() - line.a.y()) as f64;
+        let length_squared = vx * vx + vy * vy;
+        let candidate = if length_squared == 0.0 {
+            line.a
+        } else {
+            let t = ((from.x() - line.a.x()) as f64 * vx + (from.y() - line.a.y()) as f64 * vy)
+                / length_squared;
+            if t <= 0.0 {
+                line.a
+            } else if t >= 1.0 {
+                line.b
+            } else {
+                Point::new(
+                    (line.a.x() as f64 + t * vx) as i64,
+                    (line.a.y() as f64 + t * vy) as i64,
+                )
+            }
+        };
+        best = Some((distance, candidate));
     }
     best.map(|(_, point)| point)
-}
-
-fn consider_many<F: FnMut(&Point)>(polygon: &ExPolygon, consider: &mut F) {
-    for point in polygon.contour().points() {
-        consider(point);
-    }
-    for hole in polygon.holes() {
-        for point in hole.points() {
-            consider(point);
-        }
-    }
 }
 
 /// `find_containing_expolygon_index` (Brim.cpp:84-96): first lslices
@@ -125,20 +125,15 @@ pub(crate) fn painted(
     let PaintedParameters {
         gap,
         width,
-        spacing,
         resolution,
-        flow_width,
         scale,
         points,
         raw_outline,
         efc_outline,
     } = parameters;
     let factor = scale.factor();
-    // :392-411: snap each ear centre (after the truncating scale_ of
-    // :390-391) to the closest vertex of the EFC-adjusted outline when
-    // the gate :56-62 is open; the disc size path (:375-382) is
-    // unaffected, so the snapped centre feeds both the outer and the
-    // inner discs (:411 translates after the branch).
+    // Brim.cpp:426-452: project each centre to an EFC outline segment;
+    // the same raw-radius disc is used by the outer and inner call sites.
     let mut centers = Vec::with_capacity(points.len());
     for &(center, _) in &points {
         let mut pt = Point::new(
@@ -163,14 +158,7 @@ pub(crate) fn painted(
             .map_err(geometry_error)?;
         let mut discs = Vec::new();
         for (&(_, radius), &pt) in points.iter().zip(&centers) {
-            // :375/:377-380: the painted radius quantizes to even brim
-            // flow widths (the second re-quantization pass over the scaled
-            // width collapses to the same millimetre quantization).
-            let width_mm = (f64::from(radius) / flow_width / 2.0).floor() * flow_width * 2.0;
-            // :382: size_ear = brim_width - brim_offset - scaled spacing.
-            let size_ear = (scale.checked_scale(width_mm).expect("validated brim width") as f32
-                - gap
-                - spacing) as i64;
+            let size_ear = (f64::from(radius) / factor) as i64;
             discs.push(ExPolygon::new(
                 ear_disc(pt.x(), pt.y(), size_ear),
                 Vec::new(),
@@ -197,14 +185,7 @@ pub(crate) fn painted(
                 .map_err(geometry_error)?;
             let mut inner_discs = Vec::new();
             for (&(_, radius), &pt) in points.iter().zip(&centers) {
-                // :375-376 without the :377-380 outer re-quantization:
-                // brim_width = floor(scale_(radius) / flowWidth / 2) *
-                // flowWidth * 2 keeps the scaled/millimetre mix; scale_ is
-                // the plain double division (libslic3r.h:93), so the
-                // quotient stays f64 until the float assignment.
-                let scaled_radius = f64::from(radius) / factor;
-                let mixed = (scaled_radius / flow_width / 2.0).floor() * flow_width * 2.0;
-                let size_ear = (mixed as f32 - gap - spacing) as i64;
+                let size_ear = (f64::from(radius) / factor) as i64;
                 inner_discs.push(ExPolygon::new(
                     ear_disc(pt.x(), pt.y(), size_ear),
                     Vec::new(),

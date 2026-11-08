@@ -10,7 +10,7 @@ Pinned libslic3r revision `345efec64c7b95a05ce5cf96df0dde66a158835c`:
 - `Line.hpp::line_alg::distance_to_squared`45–73: clamped segment projection, degenerate/end-point cases, unquantized distance and truncating integer candidate conversion.
 - `Point.hpp:208`: the disc's double-coordinate constructor rounds coordinates; preserve the existing disc rounding.
 
-Rust destination: `crates/ares-core/src/brims/ears.rs::painted` and its existing private closest-point helper. Remove the obsolete `PaintedParameters::flow_width` field and its sole initializer in `project_slice/gcode_emit/brim.rs`; that initializer removal is the only caller change.
+Rust destination: `crates/ares-core/src/brims/ears.rs::painted` and its existing private closest-point helper. Remove the obsolete `PaintedParameters::flow_width` and `spacing` fields and their sole initializers in `project_slice/gcode_emit/brim.rs`; those two initializer removals are the only caller changes.
 
 The existing painted-ear implementation is a compatibility shell around this upstream helper. Replace its older flow-quantized radius and nearest-vertex behavior, rather than introduce a second brim path or an independent pipeline.
 
@@ -26,7 +26,7 @@ Use the raw scaled painted radius for both outer and inner disc construction. Pr
 
 Replace vertex selection with an ordered segment scan. Reuse existing scalar segment-distance behavior; derive the corresponding clamped integer candidate with Native's truncating cast rather than Polygon::point_projection's rounded candidate. Preserve strict-distance tie order and matching-island selection. Do not change shared geometry primitives or callers to introduce a new projection API.
 
-Retire only the no-longer-consumed flow-width parameter. Do not retain a dummy read, ignored compatibility field or alternate radius algorithm.
+Retire only the no-longer-consumed flow-width and spacing parameters. Do not retain a dummy read, ignored compatibility field or alternate radius algorithm.
 
 ## Test-first contract
 
