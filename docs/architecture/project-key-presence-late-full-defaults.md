@@ -88,7 +88,7 @@ the Rust field declarations themselves. The materialization port alone does
 not satisfy the complete default/refresh contract.
 
 Add the public X1C regression after those six keys are represented, observe
-RED, and review this independent slice before changing its three production
+RED as an independent slice before changing its three production
 destinations. Existing six-key tests and their inputs remain unchanged.
 
 ## Tests

@@ -66,7 +66,7 @@ This dependency makes the previously supplied-constraint boundary explicit. It i
 - Preserve lowest-position-fastest enumeration, source sorting and fixed-width wrapping hashes independently of WASM `usize`. No arbitrary filament-count cutoff, random iteration or lexicographic tie-break is permitted.
 - Preserve remembered relative gap `0.01`, absolute gap `10` near zero, candidate insertion order and source heap ties. Rust floating total ordering or a stock heap must not silently add signed-zero/identity ordering or change equal-key extraction behavior.
 - Run source AMS postselection over primary plus remembered candidates. Synthetic CLI records have no `tray_name`: usable inventory is empty despite capacity four per head. Do not fabricate trays. Preserve missing-inventory penalties, first minimum, type/support rules, threshold `20` and integer matching semantics.
-- Reuse the existing colour implementation through `calc_color_distance`; introduce its approved façade alias only with its first actual engine consumer. No duplicated parser or formula.
+- Reuse the existing colour implementation through `calc_color_distance`; introduce its façade alias only with its first actual engine consumer. No duplicated parser or formula.
 - Master preference remains outside the solver after AMS selection. Swap only on strictly greater non-master occupancy and valid source capacity/printability constraints.
 
 ## Replace the temporary recommendation shells
@@ -90,7 +90,7 @@ Validate the existing malformed-matrix contract before unsupported-context/group
 | Restriction producers | Named physical/flow/geometric source boundaries | Native reachable/unreachable, height/area and printable/volume conflict witnesses; no blanket empty sets |
 | AMS matching | CLI capacity and empty usable inventory are source-established | Reachable missing-inventory/first-minimum behavior needs a public witness. Nonempty inventory/colour matching is not runtime-qualified by these inputs; disclose dormant branches and do not invent a live inventory producer |
 
-Unchanged-map pairs, Native-only observations and early validation failures are not scoring RED. Keep new exploratory inputs separate from frozen formal inputs. Same-byte producer identities remain separate tests. If a required public discriminator cannot be reached in the included wrapper, report that limitation for review rather than claiming coverage or silently broadening the wrapper.
+Unchanged-map pairs, Native-only observations and early validation failures are not scoring RED. Keep new exploratory inputs separate from frozen formal inputs. Same-byte producer identities remain separate tests. If a required public discriminator cannot be reached in the included wrapper, report that limitation rather than claiming coverage or silently broadening the wrapper.
 
 ## Implementation and verification sequence
 
@@ -99,5 +99,5 @@ Unchanged-map pairs, Native-only observations and early validation failures are 
 3. Port a connected private engine and its real wrapper/publication consumer. Avoid unused scaffold commits, lint allowances and premature colour exports. Split source concerns into files before 400 LOC; preserve the source class/function boundaries above.
 4. Run the fixed ten-case inventory in both frozen modes. Require all map/volume/nozzle/self/nullable-retraction and matrix assertions GREEN, qualified Native double replay and complete API/CLI byte equality. Keep independent generator-line-only whole-output comparisons as strict diagnostics, not implied parity.
 5. Rerun all 23 retraction identities, both public controls and malformed-matrix controls. Preserve exact Native premises, feedrates, G1 formatting, wipe/toolchange/Z-hop/first-extrusion/custom-G-code/acceleration/photo-head boundaries. Retain the two existing nominal-matrix whole-output comparisons without suppression or normalization.
-6. Verify actual-tip rustfmt, workspace/all-target Clippy without warnings and core/browser-WASM compilation. Each review commit must independently pass Clippy. Do not transfer runtime credit across rewritten commits.
+6. Verify actual-tip rustfmt, workspace/all-target Clippy without warnings and core/browser-WASM compilation. Each commit must independently pass Clippy. Do not transfer runtime credit across rewritten commits.
 7. Request separately coordinated broader qualification only after focused gates pass. No automatic FULL, sweep change, general unequal-head claim, time-header fix or whole-program parity claim belongs to this implementation step.
