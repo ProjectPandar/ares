@@ -25,21 +25,26 @@ pub(crate) fn update_static_filament_maps(
         .get("filament_is_mixed")
         .and_then(|v| v.token())
         .is_some_and(|wire| wire.split(';').any(|v| matches!(v, "1" | "true")));
-    if current.project.print.nozzle_diameter.0.len() != 1 || multiple_nozzles || mixed {
+    let physical_count = current.project.print.nozzle_diameter.0.len();
+    if multiple_nozzles || mixed {
         return Ok(None);
     }
-    let volume = match current
-        .project
-        .gcode
-        .nozzle_volume_type
-        .0
-        .first()
-        .copied()
-        .unwrap_or(NozzleVolumeType::Standard)
-    {
-        NozzleVolumeType::Standard => 0,
-        NozzleVolumeType::HighFlow => 1,
-    };
+    let volumes = (0..physical_count)
+        .map(|head| {
+            match current
+                .project
+                .gcode
+                .nozzle_volume_type
+                .0
+                .get(head)
+                .copied()
+                .unwrap_or(NozzleVolumeType::Standard)
+            {
+                NozzleVolumeType::Standard => 0,
+                NozzleVolumeType::HighFlow => 1,
+            }
+        })
+        .collect::<Vec<_>>();
     // LayeredNozzleGroupResult::create stores the complete 0-based map.
     let assignments: Vec<i32> = match current.project.gcode.filament_map_mode {
         crate::ProjectFilamentMapMode::Manual => current
@@ -51,33 +56,56 @@ pub(crate) fn update_static_filament_maps(
             .map(|id| id.0 - 1)
             .collect(),
         crate::ProjectFilamentMapMode::AutoForFlush
-        | crate::ProjectFilamentMapMode::AutoForMatch => {
+        | crate::ProjectFilamentMapMode::AutoForMatch
+            if physical_count == 1 =>
+        {
             vec![
                 current.printer.gcode.master_extruder_id.0 - 1;
                 current.filament.gcode.filament_colour.0.len()
             ]
         }
+        crate::ProjectFilamentMapMode::AutoForFlush
+        | crate::ProjectFilamentMapMode::AutoForMatch => current
+            .project
+            .gcode
+            .filament_map
+            .0
+            .iter()
+            .map(|id| id.0 - 1)
+            .collect(),
     };
     if assignments.is_empty() {
         return Ok(None);
     }
-    // MultiNozzleUtils.cpp:316–369: one nozzle, group_id/extruder_id0.
+    // MultiNozzleUtils.cpp:319–369: one nozzle per head; group_id == extruder_id.
     let derived_extruders = OrcaInts(
         assignments
             .iter()
-            .map(|id| OrcaInt(if *id == 0 { 1 } else { 0 }))
+            .map(|id| {
+                OrcaInt(if (0..physical_count as i32).contains(id) {
+                    *id + 1
+                } else {
+                    0
+                })
+            })
             .collect(),
     );
     let derived_volumes = OrcaInts(
         assignments
             .iter()
-            .map(|id| OrcaInt(if *id == 0 { volume } else { -1 }))
+            .map(|id| OrcaInt(volumes.get(*id as usize).copied().unwrap_or(-1)))
             .collect(),
     );
     let nozzles = OrcaInts(
         assignments
             .iter()
-            .map(|id| OrcaInt(if *id == 0 { 0 } else { -1 }))
+            .map(|id| {
+                OrcaInt(if (0..physical_count as i32).contains(id) {
+                    *id
+                } else {
+                    -1
+                })
+            })
             .collect(),
     );
     let count = assignments.len();

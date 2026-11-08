@@ -4,12 +4,9 @@
 //! `Print::update_filament_maps_to_config` (`Print.cpp:3166`) updates
 //! `m_config` before G-code export.
 //!
-//! The full `FilamentGroup::calc_filament_group` flush optimizer
-//! (`FilamentGroup.cpp`) is deferred: this port covers the branches the
-//! printer smoke corpus exercises — single-nozzle (every filament maps to
-//! `master_extruder_id`), non-BBL multi-nozzle (filament i → extruder i),
-//! and dual-nozzle BBL where the initial `master_extruder_id` vector is the
-//! result for single-filament prints.
+//! BBL multi-head grouping runs after actual layer usage is available in
+//! `gcode_emit::tool_ordering::recommend`. This early phase preserves its
+//! input map; it only resolves the independent single-head/non-BBL routes.
 
 use crate::{OrcaInt, ProjectFilamentMapMode, ProjectSettings};
 
@@ -34,8 +31,11 @@ pub(crate) fn apply_recommended_filament_map(settings: &mut ProjectSettings) {
         .printer_model
         .0
         .starts_with("Bambu Lab");
+    if nozzle_count > 1 && is_bbl {
+        return;
+    }
     let master = settings.printer.gcode.master_extruder_id.0;
-    let map = if nozzle_count == 1 || (nozzle_count == 2 && is_bbl) {
+    let map = if nozzle_count == 1 {
         vec![OrcaInt(master); filament_count]
     } else if nozzle_count > 1 {
         (1..=filament_count as i32).map(OrcaInt).collect()

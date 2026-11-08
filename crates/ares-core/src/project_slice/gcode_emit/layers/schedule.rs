@@ -129,7 +129,6 @@ pub(in crate::project_slice::gcode_emit) fn build(
             .predecessor
             .predecessor
             .predecessor
-            .predecessor
             .predecessor,
         objects,
         support,

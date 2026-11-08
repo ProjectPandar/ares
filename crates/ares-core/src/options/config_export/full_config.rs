@@ -279,9 +279,13 @@ fn applied_filament_maps(
         // ToolOrdering.cpp:1768-1773,1892-1907: ordinary grouping has one
         // logical nozzle per extruder, group_id == zero-based extruder_id;
         // Print.cpp:4673-4675 writes the applied nozzle map back to the dump.
-        let nozzles = filament_map
+        let nozzles = settings
+            .project
+            .gcode
+            .filament_nozzle_map
+            .0
             .iter()
-            .map(|id| (id.0 - 1).to_string())
+            .map(|id| id.0.to_string())
             .collect::<Vec<_>>()
             .join(",");
         lines.retain(|(key, _)| key != "filament_nozzle_map");
