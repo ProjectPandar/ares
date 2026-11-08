@@ -227,6 +227,7 @@ fn materialize_record(
                 outer_walls_first_for_brim: config.outer_walls_first_for_brim,
                 fuzzy_skin: &fuzzy,
                 slice_z,
+                layer_height: input.layer_height,
                 perimeter_flow: input.perimeter_flow,
                 ext_perimeter_flow: input.ext_perimeter_flow,
                 overhang_flow: input.overhang_flow,

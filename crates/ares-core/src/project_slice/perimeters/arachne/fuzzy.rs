@@ -310,6 +310,7 @@ fn rebuild(
 pub(super) struct Layer {
     pub(super) id: usize,
     pub(super) slice_z: f64,
+    pub(super) layer_height: f64,
     pub(super) scale: CoordinateScale,
 }
 

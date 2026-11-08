@@ -54,6 +54,7 @@ pub(in crate::project_slice) struct TraverseExtrusionsContext<'a> {
     pub(in crate::project_slice) outer_walls_first_for_brim: bool,
     pub(in crate::project_slice) fuzzy_skin: &'a super::fuzzy::Regions,
     pub(in crate::project_slice) slice_z: f64,
+    pub(in crate::project_slice) layer_height: f64,
     pub(in crate::project_slice) perimeter_flow: Flow,
     pub(in crate::project_slice) ext_perimeter_flow: Flow,
     pub(in crate::project_slice) overhang_flow: Flow,
@@ -107,6 +108,7 @@ pub(in crate::project_slice) fn traverse_extrusions(
             super::fuzzy::Layer {
                 id: context.layer_id,
                 slice_z: context.slice_z,
+                layer_height: context.layer_height,
                 scale: context.scale,
             },
             slice_context,

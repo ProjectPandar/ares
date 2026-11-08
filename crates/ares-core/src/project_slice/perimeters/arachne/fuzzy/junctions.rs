@@ -14,6 +14,7 @@ pub(super) fn fuzzify(
     Layer {
         id: layer_id,
         slice_z,
+        layer_height,
         scale,
     }: Layer,
     context: &mut SlicerContext,
@@ -27,6 +28,8 @@ pub(super) fn fuzzify(
     }
     let minimum_step = config.point_distance as f64 * 3.0 / 4.0;
     let random_step = config.point_distance as f64 / 2.0;
+    let min_extrusion_width =
+        scale.scaled_delta(layer_height * (1.0 - 0.25 * std::f64::consts::PI) * 1.05);
     let mut left_over = context.rng().unit() * (minimum_step / 2.0);
     let mut previous = junctions[0];
     let mut output = Vec::with_capacity(junctions.len());
@@ -56,7 +59,7 @@ pub(super) fn fuzzify(
                 )
             };
             let radius = noise * config.thickness as f64;
-            let width = (next.width as f64 + radius + 0.01).max(0.01);
+            let width = (next.width as f64 + radius + min_extrusion_width).max(min_extrusion_width);
             let (displacement, width) = match config.mode {
                 ProcessFuzzySkinMode::Displacement => (radius, next.width),
                 ProcessFuzzySkinMode::Extrusion => (0.0, width as i64),
