@@ -7,6 +7,8 @@ use serde_json::{Value, json};
 use std::io::{Cursor, Read, Write};
 
 include!("flush_matrix_cli_reconstruction/helpers.rs");
+#[path = "flush_matrix_cli_reconstruction/process_vectors.rs"]
+mod process_vectors;
 
 #[test]
 fn flush_matrix_cli_reconstruction_unchanged_nozzle_types_preserve_custom_matrix() {
