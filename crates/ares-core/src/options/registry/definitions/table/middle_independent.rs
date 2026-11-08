@@ -45,7 +45,7 @@ pub(super) const MIDDLE_INDEPENDENT_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("initial_layer_print_height", Float, "0.2"; true, false, "0.2"),
     definition!("initial_layer_speed", FloatsNullable, "30"; true, false, "30"),
     definition!("initial_layer_travel_acceleration", FloatsOrPercents, "100%"; true, false, "100%"),
-    definition!("initial_layer_travel_jerk", FloatOrPercent, "100%"; true, false, "100%"),
+    definition!("initial_layer_travel_jerk", FloatsOrPercents, "100%"; true, false, "100%"),
     definition!("initial_layer_travel_speed", FloatsOrPercents, "100%"; true, false, "100%"),
     definition!("inner_wall_acceleration", FloatsNullable, "10000"; true, false, "10000"),
     definition!("inner_wall_filament_id", Int, "0"; true, false, "0"),

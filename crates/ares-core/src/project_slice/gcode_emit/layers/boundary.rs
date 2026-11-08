@@ -340,7 +340,7 @@ pub(super) fn append<'a>(
                 .process
                 .object
                 .default_junction_deviation
-                .0,
+                .get_at(state.options.nozzle_config_index),
             traversal
                 .resolved
                 .views

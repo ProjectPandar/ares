@@ -23,6 +23,7 @@ pub(super) fn materialize(
         travel_acceleration,
         sparse_infill_acceleration,
         internal_solid_infill_acceleration,
+        default_junction_deviation,
         default_jerk,
         outer_wall_jerk,
         inner_wall_jerk,
@@ -35,6 +36,7 @@ pub(super) fn materialize(
     );
     fields!(gcode:
         initial_layer_travel_acceleration,
+        initial_layer_travel_jerk,
         travel_speed,
         travel_speed_z,
         initial_layer_travel_speed,

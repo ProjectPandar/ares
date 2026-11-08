@@ -2,13 +2,12 @@ use crate::options::OrcaFloatsNullable;
 
 use super::{
     AmsCounts, ArcFittingMode, BedTemperatureFormula, CsvTable, ExtruderTypes,
-    FilamentGCodeSourceOptions, FloatOrPercent, GCodeFlavor, NozzleVolumeTypes, Nullable,
-    NullableFloats, NullableInts, NullableNozzleTypes, OrcaBool, OrcaBools, OrcaFloat,
-    OrcaFloatOrPercentsNullable, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaString,
-    OrcaStrings, Percent, Point2dList, PowerLossRecoveryMode, PrinterGCodeSourceOptions,
-    PrinterStructure, ProcessGCodeSourceOptions, ProjectFilamentMapMode, ProjectGCodeSourceOptions,
-    RammingParameters, RetractLiftEnforces, SpaceTuple, VariantStride, WipeTowerType, ZHopTypes,
-    gcode_fields::gcode_option_fields,
+    FilamentGCodeSourceOptions, GCodeFlavor, NozzleVolumeTypes, Nullable, NullableFloats,
+    NullableInts, NullableNozzleTypes, OrcaBool, OrcaBools, OrcaFloat, OrcaFloatOrPercentsNullable,
+    OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaString, OrcaStrings, Percent, Point2dList,
+    PowerLossRecoveryMode, PrinterGCodeSourceOptions, PrinterStructure, ProcessGCodeSourceOptions,
+    ProjectFilamentMapMode, ProjectGCodeSourceOptions, RammingParameters, RetractLiftEnforces,
+    SpaceTuple, VariantStride, WipeTowerType, ZHopTypes, gcode_fields::gcode_option_fields,
 };
 
 macro_rules! clone_source_field {

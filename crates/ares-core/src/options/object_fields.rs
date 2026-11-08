@@ -119,7 +119,7 @@ macro_rules! object_option_fields {
             initial_layer_jerk => "initial_layer_jerk": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(9.0))]),
             travel_jerk => "travel_jerk": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(12.0))]),
             precise_z_height => "precise_z_height": OrcaBool = OrcaBool(false),
-            default_junction_deviation => "default_junction_deviation": OrcaFloat = OrcaFloat(0.0),
+            default_junction_deviation => "default_junction_deviation": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(0.0))]),
             interlocking_beam => "interlocking_beam": OrcaBool = OrcaBool(false),
             interlocking_beam_width => "interlocking_beam_width": OrcaFloat = OrcaFloat(0.8),
             interlocking_orientation => "interlocking_orientation": OrcaFloat = OrcaFloat(22.5),

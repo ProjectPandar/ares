@@ -29,7 +29,7 @@ declare_option_group! {
         accel_to_decel_factor => "accel_to_decel_factor": Percent = Percent(50.0),
         initial_layer_travel_speed => "initial_layer_travel_speed": OrcaFloatOrPercentsNullable = OrcaFloatOrPercentsNullable(vec![Nullable::Value(FloatOrPercent::Percent(Percent(100.0)))]),
         initial_layer_travel_acceleration => "initial_layer_travel_acceleration": OrcaFloatOrPercentsNullable = OrcaFloatOrPercentsNullable(vec![Nullable::Value(FloatOrPercent::Percent(Percent(100.0)))]),
-        initial_layer_travel_jerk => "initial_layer_travel_jerk": FloatOrPercent = FloatOrPercent::Percent(Percent(100.0)),
+        initial_layer_travel_jerk => "initial_layer_travel_jerk": OrcaFloatOrPercentsNullable = OrcaFloatOrPercentsNullable(vec![Nullable::Value(FloatOrPercent::Percent(Percent(100.0)))]),
         small_area_infill_flow_compensation_model => "small_area_infill_flow_compensation_model": OrcaStrings = strings(&[
             "0,0", "\n0.2,0.4444", "\n0.4,0.6145", "\n0.6,0.7059", "\n0.8,0.7619",
             "\n1.5,0.8571", "\n2,0.8889", "\n3,0.9231", "\n5,0.9520", "\n10,1",
