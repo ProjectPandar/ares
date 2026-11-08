@@ -1,6 +1,6 @@
 use serde_json::{Number, Value};
 
-use super::SliceOptions;
+use super::{SliceOptions, registry, vector_resize};
 use crate::SliceError;
 
 const DEFAULT_EXTRUDER_VARIANT: &str = "Direct Drive Standard";
@@ -37,6 +37,17 @@ impl SliceOptions {
             "printer_extruder_variant".to_owned(),
             Value::Array(printer_extruder_variants),
         );
+        // PrintConfig.cpp:10661-10666: limits are paired per rebuilt variant.
+        for key in registry::printer_options_with_variant_2() {
+            let size = self.parameter_size(key, num_extruders)?;
+            if let Some(Value::Array(values)) = self.values.get_mut(*key) {
+                vector_resize::resize_array(
+                    values,
+                    size,
+                    vector_resize::default_array_member(key)?,
+                );
+            }
+        }
         Ok(())
     }
 

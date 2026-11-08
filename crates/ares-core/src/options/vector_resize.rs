@@ -23,11 +23,19 @@ pub(super) fn default_array_member(key: &str) -> Result<Value, SliceError> {
         | OptionValueKind::Percent
         | OptionValueKind::Percents
         | OptionValueKind::PercentsNullable
-        | OptionValueKind::Int
-        | OptionValueKind::Ints
-        | OptionValueKind::IntsNullable
         | OptionValueKind::Floats
         | OptionValueKind::FloatsNullable => default_number(definition.default_value, key),
+        OptionValueKind::Int | OptionValueKind::Ints | OptionValueKind::IntsNullable => definition
+            .default_value
+            .split(',')
+            .next()
+            .unwrap_or(definition.default_value)
+            .trim()
+            .parse::<i32>()
+            .map(Value::from)
+            .map_err(|_| {
+                SliceError::InvalidInput(format!("{key} default must be an integer array member"))
+            }),
         OptionValueKind::Bool | OptionValueKind::Bools | OptionValueKind::BoolsNullable => {
             default_bool(definition.default_value, key)
         }

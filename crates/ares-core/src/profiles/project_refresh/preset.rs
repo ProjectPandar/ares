@@ -97,6 +97,9 @@ fn system_config(
     }
     raw.normalize_wire_vector_shapes()
         .map_err(SliceError::InvalidInput)?;
+    if kind == ProfileKind::Machine {
+        super::super::preset_normalization::normalize_machine(&mut raw)?;
+    }
     Ok(raw)
 }
 

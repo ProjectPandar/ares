@@ -141,6 +141,22 @@ impl Catalog {
         } else {
             merge_profile_fragments(&fragments, kind, name)?
         };
+        if kind == ProfileKind::Machine
+            && !self.direct_imports
+            && super::super::preset_normalization::normalize_machine(raw)?
+        {
+            let (printer, _, _, project) =
+                crate::options::json_deserialize::deserialize_preset_config::<
+                    crate::options::ProjectSettingsBuilder,
+                >(raw.clone().into_object())
+                .map_err(SliceError::InvalidInput)?
+                .into_profile_parts();
+            let MergedProfile::Machine { options, .. } = &mut merged else {
+                unreachable!("machine selection has a machine payload")
+            };
+            *options = printer.resolve();
+            runtime.overlay(project);
+        }
         if !self.is_user_scope(position) {
             let filament_id = fragments
                 .iter()

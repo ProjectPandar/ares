@@ -4,6 +4,7 @@ mod composition;
 mod entry;
 mod import;
 mod load_settings;
+mod preset_normalization;
 mod project_refresh;
 pub(crate) use project_refresh::{ProjectPresetRefresh, preset_owns_option};
 
