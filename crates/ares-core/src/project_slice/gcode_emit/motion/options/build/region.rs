@@ -108,8 +108,8 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     options.small_perimeter_speed =
         small_perimeter_speed(small_perimeter, options.outer_wall_speed);
     options.small_perimeter_threshold = region
-        .map_or(default.small_perimeter_threshold.0, |value| {
-            value.small_perimeter_threshold.0
+        .map_or(default.small_perimeter_threshold.get_at(slot), |value| {
+            value.small_perimeter_threshold.get_at(slot)
         });
     options.bridge_speed = region.map_or(default.bridge_speed.get_at(slot), |value| {
         value.bridge_speed.get_at(slot)

@@ -154,7 +154,9 @@ pub(super) fn project_surface(
     } else {
         resolve_fill_flow(flow_context, flow_role)?
     };
-    params.flow_ratio = role_flow_ratio(context, params.extrusion_role);
+    // Fill.cpp:1077–1085 selects the emitted role's mapped extruder.
+    let slot = crate::options::mapped_extruder_id(context.settings, (params.extruder - 1) as usize);
+    params.flow_ratio = role_flow_ratio(context, params.extrusion_role, slot);
     let seam_gap = match context.region.seam_gap {
         FloatOrPercent::Float(value) => value,
         FloatOrPercent::Percent(value) => f64::from(params.flow.nozzle_diameter) * value.0 / 100.0,
@@ -163,8 +165,6 @@ pub(super) fn project_surface(
         .scale
         .checked_scale(seam_gap)
         .ok_or_else(|| SliceError::InvalidInput("seam_gap is out of coordinate range".into()))?;
-    // Fill.cpp:1077–1085 selects the emitted role's mapped extruder.
-    let slot = crate::options::mapped_extruder_id(context.settings, (params.extruder - 1) as usize);
     params.role_speed = role_speed(context.region, params.extrusion_role, slot);
     params.filter_out_gap_fill = context.region.filter_out_gap_fill.0;
     params.gap_fill_target = context.object.gap_fill_target;
@@ -241,12 +241,12 @@ pub(super) fn flow_role(kind: RegionSurfaceKind, solid: bool) -> FillFlowRole {
     }
 }
 
-fn role_flow_ratio(context: &LayerContext<'_>, role: ExtrusionRole) -> f64 {
+fn role_flow_ratio(context: &LayerContext<'_>, role: ExtrusionRole, slot: usize) -> f64 {
     let region = context.region;
     // Only the earlier, ungated roles remain pre-baked. GCode.cpp:6485-6507
     // is owned by motion::extrusion::effective_flow for every entity family.
     match role {
-        ExtrusionRole::TopSolidInfill => region.top_solid_infill_flow_ratio.0,
+        ExtrusionRole::TopSolidInfill => region.top_solid_infill_flow_ratio.get_at(slot),
         ExtrusionRole::BottomSurface => region.bottom_solid_infill_flow_ratio.0,
         ExtrusionRole::InternalBridgeInfill => region.internal_bridge_flow.0,
         _ => 1.0,

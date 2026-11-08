@@ -57,12 +57,14 @@ pub(super) fn materialize(
         sparse_infill_speed,
         internal_solid_infill_speed,
         top_surface_speed,
+        top_solid_infill_flow_ratio,
         internal_bridge_speed,
         overhang_1_4_speed,
         overhang_2_4_speed,
         overhang_3_4_speed,
         overhang_4_4_speed,
         small_perimeter_speed,
+        small_perimeter_threshold,
     );
     Ok(())
 }

@@ -103,7 +103,12 @@ fn check(case: Case) {
                 region.sparse_infill_pattern,
                 ProcessInfillPattern::Rectilinear
             );
-            assert_eq!(region.top_solid_infill_flow_ratio.0, case.global_ratio);
+            assert_eq!(
+                region.top_solid_infill_flow_ratio.0,
+                [ares_core::Nullable::Value(ares_core::OrcaFloat(
+                    case.global_ratio
+                ))]
+            );
             assert_eq!(
                 region.top_surface_speed.0,
                 [ares_core::Nullable::Value(ares_core::OrcaFloat(30.0))]
