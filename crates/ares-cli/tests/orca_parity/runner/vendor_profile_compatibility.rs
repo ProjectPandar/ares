@@ -7,7 +7,14 @@ use serde_json::{Value, json};
 
 use super::{OrcaRunner, cache_identity, profile_entry, repo_root, stages, write_preset};
 
-fn compare(vendor: &str, printer: &str) {
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Conclusion {
+    Compatible,
+    NotCompatible,
+    Missing,
+}
+
+fn compare(vendor: &str, printer: &str, expected: Conclusion) {
     let Some(_) = crate::native_environment::binary("ARES_ORCA_BIN") else {
         return;
     };
@@ -44,7 +51,7 @@ fn compare(vendor: &str, printer: &str) {
     }
     let native_work = work.join("native");
     fs::create_dir(&native_work).unwrap();
-    let failure = stages::run(
+    let admission = stages::run(
         &runner.bin,
         [
             "--load-settings".to_owned(),
@@ -62,49 +69,68 @@ fn compare(vendor: &str, printer: &str) {
         ],
         stages::Stage::Export,
         &native_work,
-    )
-    .expect_err("Native admission: expected a source-owned early conclusion");
-    assert_eq!(
-        failure.kind,
-        stages::FailureKind::Process,
-        "Native admission: {failure}"
     );
-    let captured = failure.captured.as_ref().unwrap();
     let native_result: Value =
         serde_json::from_slice(&fs::read(native_work.join("result.json")).unwrap()).unwrap();
     let native_code = native_result["return_code"].as_i64().unwrap();
-    let native_compatible = match native_code {
-        -17 => {
-            let native_log = fs::read_to_string(native_work.join("00000.log")).unwrap();
-            assert_eq!(captured.code, Some(239), "Native admission");
-            assert!(
-                native_log.contains("2652: process not compatible with printer."),
-                "Native admission: {native_log}"
+    let native_evidence = admission
+        .as_ref()
+        .err()
+        .and_then(|failure| failure.evidence.clone());
+    let failure = admission.as_ref().err();
+    let (conclusion, captured) = match failure {
+        None => (Conclusion::Compatible, None),
+        Some(failure) => {
+            assert_eq!(
+                failure.kind,
+                stages::FailureKind::Process,
+                "Native admission: {failure}"
             );
-            assert!(
-                !missing,
-                "Native admission: expected an existing process identity"
-            );
-            Some(false)
+            let captured = failure.captured.as_ref().unwrap();
+            let conclusion = match native_code {
+                -17 => {
+                    let native_log = fs::read_to_string(native_work.join("00000.log")).unwrap();
+                    assert_eq!(captured.code, Some(239), "Native admission");
+                    assert!(
+                        native_log.contains("2652: process not compatible with printer."),
+                        "Native admission: {native_log}"
+                    );
+                    assert!(
+                        !missing,
+                        "Native admission: expected an existing process identity"
+                    );
+                    Conclusion::NotCompatible
+                }
+                -3 => {
+                    assert_eq!(captured.code, Some(253), "Native admission");
+                    assert!(missing, "Native admission: target unexpectedly exists");
+                    assert!(
+                        String::from_utf8_lossy(&captured.stderr).contains(&format!(
+                            "can not find setting file: {}",
+                            process_file.display()
+                        )),
+                        "Native admission"
+                    );
+                    Conclusion::Missing
+                }
+                other => {
+                    panic!("Native admission: different conclusion {other}, artifacts {work:?}")
+                }
+            };
+            (conclusion, Some(captured))
         }
-        -3 => {
-            assert_eq!(captured.code, Some(253), "Native admission");
-            assert!(missing, "Native admission: target unexpectedly exists");
-            assert!(
-                String::from_utf8_lossy(&captured.stderr).contains(&format!(
-                    "can not find setting file: {}",
-                    process_file.display()
-                )),
-                "Native admission"
-            );
-            None
-        }
-        other => panic!("Native admission: different conclusion {other}, artifacts {work:?}"),
     };
-    assert!(
-        !work.join("input.3mf").exists(),
-        "Native admission: no exported project"
+    assert_eq!(conclusion, expected, "Native admission; artifacts {work:?}");
+    assert_eq!(
+        work.join("input.3mf").exists(),
+        expected == Conclusion::Compatible,
+        "Native admission: exported project {work:?}"
     );
+    let native_compatible = match conclusion {
+        Conclusion::Compatible => Some(true),
+        Conclusion::NotCompatible => Some(false),
+        Conclusion::Missing => None,
+    };
 
     let vendors = [
         profile_entry::vendor(&root, "OrcaFilamentLibrary"),
@@ -144,9 +170,9 @@ fn compare(vendor: &str, printer: &str) {
         &work.join("comparison.json"),
         &json!({
             "vendor": vendor, "printer": printer, "default_process": process, "default_filament": filament,
-            "native_code": native_code, "native_exit": captured.code, "native_compatible": native_compatible,
+            "native_code": native_code, "native_exit": captured.and_then(|captured| captured.code), "native_compatible": native_compatible,
             "ares_compatible": ares_compatible, "ares_missing_error": ares_error,
-            "native_evidence": failure.evidence, "producer": producer.receipt,
+            "native_evidence": native_evidence, "producer": producer.receipt,
             "machine_sha256": cache_identity::raw_digest(&fs::read(&machine_file).unwrap()),
             "process_sha256": if missing { None } else { Some(cache_identity::raw_digest(&fs::read(&process_file).unwrap())) },
             "filament_sha256": cache_identity::raw_digest(&fs::read(&filament_file).unwrap()),
@@ -176,61 +202,71 @@ fn compare(vendor: &str, printer: &str) {
 }
 
 macro_rules! case {
-    ($test:ident, $vendor:literal, $printer:literal) => {
+    ($test:ident, $vendor:literal, $printer:literal, $expected:expr) => {
         #[test]
         fn $test() {
-            compare($vendor, $printer);
+            compare($vendor, $printer, $expected);
         }
     };
 }
 
 case!(
-    k1_se_08_missing_default_matches_runtime_native,
+    k1_se_08_default_compatibility_matches_runtime_native,
     "Creality",
-    "Creality K1 SE 0.8 nozzle"
+    "Creality K1 SE 0.8 nozzle",
+    Conclusion::Compatible
 );
 case!(
     ratrig_300_08_default_compatibility_matches_runtime_native,
     "Ratrig",
-    "RatRig V-Core 4 300 0.8 nozzle"
+    "RatRig V-Core 4 300 0.8 nozzle",
+    Conclusion::Compatible
 );
 case!(
     ratrig_400_08_default_compatibility_matches_runtime_native,
     "Ratrig",
-    "RatRig V-Core 4 400 0.8 nozzle"
+    "RatRig V-Core 4 400 0.8 nozzle",
+    Conclusion::Compatible
 );
 case!(
     ratrig_500_08_default_compatibility_matches_runtime_native,
     "Ratrig",
-    "RatRig V-Core 4 500 0.8 nozzle"
+    "RatRig V-Core 4 500 0.8 nozzle",
+    Conclusion::Compatible
 );
 case!(
     tiq2_025_default_compatibility_matches_runtime_native,
     "iQ",
-    "iQ TiQ2 0.25 Nozzle"
+    "iQ TiQ2 0.25 Nozzle",
+    Conclusion::Compatible
 );
 case!(
     tiq2_06_default_compatibility_matches_runtime_native,
     "iQ",
-    "iQ TiQ2 0.6 Nozzle"
+    "iQ TiQ2 0.6 Nozzle",
+    Conclusion::Compatible
 );
 case!(
     tiq2_08_default_compatibility_matches_runtime_native,
     "iQ",
-    "iQ TiQ2 0.8 Nozzle"
+    "iQ TiQ2 0.8 Nozzle",
+    Conclusion::Compatible
 );
 case!(
     tiq8_025_default_compatibility_matches_runtime_native,
     "iQ",
-    "iQ TiQ8 0.25 Nozzle"
+    "iQ TiQ8 0.25 Nozzle",
+    Conclusion::Compatible
 );
 case!(
     tiq8_06_default_compatibility_matches_runtime_native,
     "iQ",
-    "iQ TiQ8 0.6 Nozzle"
+    "iQ TiQ8 0.6 Nozzle",
+    Conclusion::Compatible
 );
 case!(
     tiq8_08_default_compatibility_matches_runtime_native,
     "iQ",
-    "iQ TiQ8 0.8 Nozzle"
+    "iQ TiQ8 0.8 Nozzle",
+    Conclusion::Compatible
 );
