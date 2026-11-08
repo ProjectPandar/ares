@@ -73,6 +73,11 @@ second mapping implementation or a promise of time-header/full-output parity.
   serializes the entire settings object. Reuse that config adapter and its
   registered wire tokens for restriction inputs. Do not introduce a second
   adapter, duplicate parsing or widen retained-data access.
+- Decode nozzle statistics with `PrintConfig.cpp:724–731,940–972` and the
+  explicit `PrintConfig.hpp::NozzleVolumeType` values (index `4` is reserved).
+  Recognize all six names; reject valid types outside Standard/High Flow
+  static grouping rather than dropping them. Counts consume signed C-locale
+  decimal prefixes. Tokens with fewer than two fields or unknown names skip.
 - Distinguish logical filament IDs, physical heads, nozzle-list indices, global
   nozzle groups and materialized columns. Enumerate lowest-position-fastest,
   retain source fixed-width hash/heap ties and preference-before-cost ranking.

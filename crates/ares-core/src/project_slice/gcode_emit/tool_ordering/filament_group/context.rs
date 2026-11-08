@@ -189,10 +189,13 @@ fn check_nozzle_stats(config: &DynamicPrintConfig, volumes: &[i32; 2]) -> Result
                 "Standard" => 0,
                 "High Flow" => 1,
                 "Hybrid" => 2,
+                "TPU High Flow" => 3,
+                "E3D High Flow" => 5,
+                "Extra High Flow" => 6,
                 _ => continue,
             };
             let Some(count) = parts.next() else { continue };
-            stats.insert(volume, count.parse::<i32>().unwrap_or(0));
+            stats.insert(volume, atoi(count));
         }
         if !stats.is_empty() {
             if stats.len() != 1 || stats.values().any(|v| *v != 1) || stats.contains_key(&2) {
@@ -205,6 +208,19 @@ fn check_nozzle_stats(config: &DynamicPrintConfig, volumes: &[i32; 2]) -> Result
         }
     }
     Ok(())
+}
+
+// std::atoi consumes a signed C-locale decimal prefix (PrintConfig.cpp:967).
+fn atoi(text: &str) -> i32 {
+    let text = text.trim_start_matches([' ', '\t', '\n', '\u{b}', '\u{c}', '\r']);
+    let sign = usize::from(text.starts_with(['+', '-']));
+    let end = sign
+        + text
+            .bytes()
+            .skip(sign)
+            .take_while(u8::is_ascii_digit)
+            .count();
+    text[..end].parse().unwrap_or(0)
 }
 
 fn prepare_flush_matrices(settings: &ProjectSettings, total: usize) -> [Vec<Vec<f32>>; 2] {
