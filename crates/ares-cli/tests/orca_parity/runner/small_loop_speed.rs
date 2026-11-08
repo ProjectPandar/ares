@@ -50,9 +50,8 @@ fn check(
         ("seam_slope_steps", "4"),
         ("scarf_joint_speed", "100%"),
         ("slow_down_layers", "5"),
-        ("initial_layer_speed", "20"),
     ];
-    let vector_settings = [
+    let mut vector_settings = vec![
         (
             "outer_wall_speed",
             json!([if overhang { "200" } else { "120" }]),
@@ -62,7 +61,18 @@ fn check(
             json!([if overhang { "1" } else { "0" }]),
         ),
         ("slowdown_for_curled_perimeters", json!(["0"])),
+        ("inner_wall_speed", json!(["200"])),
+        ("small_perimeter_threshold", json!([threshold])),
+        ("small_perimeter_speed", json!([speed])),
+        ("overhang_1_4_speed", json!(["50"])),
+        ("overhang_2_4_speed", json!(["30"])),
+        ("overhang_3_4_speed", json!(["20"])),
+        ("overhang_4_4_speed", json!(["15"])),
+        ("support_speed", json!(["80"])),
     ];
+    if scarf {
+        vector_settings.push(("initial_layer_speed", json!(["20"])));
+    }
     let settings = [
         ("wall_generator", generator),
         (
@@ -80,20 +90,13 @@ fn check(
             "outer_wall_line_width",
             if overhang { "0.42" } else { "0.4" },
         ),
-        ("inner_wall_speed", "200"),
-        ("small_perimeter_threshold", threshold),
-        ("small_perimeter_speed", speed),
         ("sparse_infill_density", "0%"),
         ("top_shell_layers", "0"),
         ("bottom_shell_layers", "0"),
         ("enable_support", "0"),
         ("enable_prime_tower", "0"),
         ("disable_m73", "0"),
-        ("overhang_1_4_speed", "50"),
-        ("overhang_2_4_speed", "30"),
-        ("overhang_3_4_speed", "20"),
-        ("overhang_4_4_speed", "15"),
-        ("enable_arc_fitting", "0"),
+        ("enable_arc_fitting", "disabled"),
         ("resonance_avoidance", "0"),
         ("slow_down_layers", if scarf { "5" } else { "0" }),
         ("seam_gap", "0"),
@@ -102,7 +105,6 @@ fn check(
         ("skirt_loops", if skirt { "1" } else { "0" }),
         ("skirt_height", if skirt { "3" } else { "1" }),
         ("skirt_distance", "2"),
-        ("support_speed", "80"),
         ("skirt_speed", "0"),
     ];
     for (key, value) in &vector_settings {

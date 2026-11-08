@@ -12,7 +12,7 @@ pub(super) fn threshold_input(
     directory: &Path,
 ) -> ExportedCase {
     let effective = application::settings(&exported.project).unwrap();
-    if effective["small_perimeter_threshold"] == json!(threshold) {
+    if effective["small_perimeter_threshold"] == json!([threshold]) {
         return exported;
     }
     let mut archive = zip::ZipArchive::new(Cursor::new(&exported.project)).unwrap();
@@ -23,7 +23,7 @@ pub(super) fn threshold_input(
         file.read_to_end(&mut bytes).unwrap();
         if file.name() == "Metadata/project_settings.config" {
             let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
-            settings["small_perimeter_threshold"] = json!(threshold);
+            settings["small_perimeter_threshold"] = json!([threshold]);
             bytes = serde_json::to_vec_pretty(&settings).unwrap();
         }
         output
