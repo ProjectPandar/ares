@@ -16,7 +16,7 @@ fn assert_native(native: &str, printer: &str, sequence: &str, total: usize, offs
         format!("; extruder_offset = {offset}\n"),
         "; model label id: 45,56\n".to_owned(),
         "; printing object overhang.obj id:0 copy 0\n".to_owned(),
-        "; printing object cube_with_hole.obj id:0 copy 0\n".to_owned(),
+        "; printing object cube_with_hole.obj id:1 copy 0\n".to_owned(),
     ] {
         assert!(
             native.contains(&marker),
