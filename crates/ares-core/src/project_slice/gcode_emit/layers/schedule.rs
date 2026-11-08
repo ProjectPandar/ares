@@ -64,7 +64,6 @@ impl Schedule {
 
 pub(in crate::project_slice::gcode_emit) fn build(
     prepared: &mut crate::project_slice::island_print_order::PreparedPostIslandPrintOrder,
-    context: &mut crate::SlicerContext,
 ) -> Result<Schedule, crate::SliceError> {
     let objects = &prepared.objects;
     let support = &mut prepared.support_layers;
@@ -121,7 +120,6 @@ pub(in crate::project_slice::gcode_emit) fn build(
         &first_layer_lslices,
         &slicing_parameters,
         traversal.scale,
-        context,
     )?;
     let mut tool_ordering = super::super::tool_ordering::build_recommended(
         &mut original

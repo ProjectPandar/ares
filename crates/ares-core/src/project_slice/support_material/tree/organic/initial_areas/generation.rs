@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 
 use super::{InitialAreas, prepare_layer, raft_contact};
 use crate::{
-    ObjectOptions, SlicerContext,
+    ObjectOptions,
     geometry::{ClipperError, Coord, CoordinateScale, ExPolygon, FillRule, Polygon, union_ex},
     project_slice::support_material::tree::{
         model_volumes::TreeModelVolumes,
@@ -29,7 +29,6 @@ pub(in super::super) fn generate(
     volumes: &mut TreeModelVolumes<'_>,
     interface: &mut InterfacePlacer<'_>,
     move_bounds: &mut [VecDeque<SupportElement>],
-    context: &mut SlicerContext,
 ) -> Result<(), ClipperError> {
     let config = interface.config;
     let mesh = &config.mesh;
@@ -66,7 +65,6 @@ pub(in super::super) fn generate(
                 (layer_index, connect_length),
                 &mut placer,
                 input.scale,
-                context,
             )?;
         }
     }
@@ -78,7 +76,6 @@ fn sample_areas(
     (layer_index, connect_length): (usize, Coord),
     placer: &mut RichInterfacePlacer<'_, '_, '_>,
     scale: CoordinateScale,
-    context: &mut SlicerContext,
 ) -> Result<(), ClipperError> {
     let roof_layers = placer.interface.config.mesh.roof_layers as usize;
     for (large_horizontal_roof, areas) in [(true, initial.roofs), (false, initial.regular)] {
@@ -97,7 +94,6 @@ fn sample_areas(
                 },
                 placer,
                 scale,
-                context,
             )?;
         }
     }

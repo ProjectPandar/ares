@@ -2,7 +2,7 @@
 
 use super::ToolpathInput;
 use crate::{
-    ExtrusionRole, SliceError, SlicerContext,
+    ExtrusionRole, SliceError,
     geometry::{Polygon, difference_polygons_paths},
     project_slice::{
         perimeters::types::Flow,
@@ -21,7 +21,6 @@ pub(super) fn fill_prefix(
     layers: &mut [InstalledSupportLayer],
     geometry: &GeneratedSupportGeometry,
     input: &ToolpathInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<(), SliceError> {
     for (index, layer) in layers.iter_mut().enumerate() {
         let raft = &geometry.rafts[index];
@@ -55,7 +54,6 @@ pub(super) fn fill_prefix(
                         no_sort: false,
                     },
                     input,
-                    context,
                 )?;
             }
             if !columns.is_empty() {
@@ -73,7 +71,6 @@ pub(super) fn fill_prefix(
                         no_sort: false,
                     },
                     input,
-                    context,
                 )?;
             }
         }
@@ -116,7 +113,6 @@ pub(super) fn fill_prefix(
                 no_sort: index == 0,
             },
             input,
-            context,
         )?;
     }
     Ok(())
@@ -138,7 +134,6 @@ fn append_fill(
     (regions, columns): (&[Polygon], &[Polygon]),
     plan: FillPlan,
     input: &ToolpathInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<(), SliceError> {
     let spec = RaftFillSpec {
         angle: f64::from(plan.angle),
@@ -164,7 +159,7 @@ fn append_fill(
         })?;
         &trimmed
     };
-    let entities = raft_layer_entities(regions, spec, input.scale, context).map_err(|error| {
+    let entities = raft_layer_entities(regions, spec, input.scale).map_err(|error| {
         SliceError::InvalidInput(format!("support raft prefix fill: {error:?}"))
     })?;
     layer.support_fills.extend(

@@ -10,7 +10,6 @@ pub(super) fn generate(
     input: &mut OverhangSample,
     placer: &mut RichInterfacePlacer<'_, '_, '_>,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<(tip_lines::LineInformations, usize, usize), ClipperError> {
     let config = placer.interface.config;
     let mut added_roofs = vec![Vec::new(); input.roof_layers];
@@ -40,7 +39,6 @@ pub(super) fn generate(
                     ),
                     placer,
                     scale,
-                    context,
                 )?;
             }
             break;
@@ -57,12 +55,11 @@ pub(super) fn generate(
             placer,
             input.layer_index - generation_depth,
             scale,
-            context,
         )?
         .is_empty()
     {
         for (index, roof) in added_roofs.iter().enumerate().take(depth) {
-            if roof_lines(roof, placer, input.layer_index - index, scale, context)?.is_empty() {
+            if roof_lines(roof, placer, input.layer_index - index, scale)?.is_empty() {
                 depth = index;
                 generation_depth = depth.max(1) - 1;
                 break;
@@ -78,10 +75,9 @@ fn previous_roof_lines(
     (area, layer, connect_length): (&[Polygon], usize, crate::geometry::Coord),
     placer: &mut RichInterfacePlacer<'_, '_, '_>,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<tip_lines::LineInformations, ClipperError> {
     let polylines = ensure_distance(
-        roof_lines(area, placer, layer, scale, context)?,
+        roof_lines(area, placer, layer, scale)?,
         connect_length as f64,
         1,
         scale,

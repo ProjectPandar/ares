@@ -1,7 +1,7 @@
 //! `TreeSupport.cpp:1210-1242` with source `Fill::new_from_type` kernels.
 
 use crate::{
-    ExtrusionRole, SlicerContext,
+    ExtrusionRole,
     fill::{
         honeycomb::{HoneycombFillParams, fill_honeycomb},
         multiline::{MultilineFillParams, Sweep},
@@ -43,11 +43,10 @@ impl Filler {
         destination: &mut Vec<SupportExtrusionEntity>,
         areas: &[ExPolygon],
         settings: FillSettings,
-        context: &mut SlicerContext,
     ) -> Result<Vec<BoundingBox>, ClipperError> {
         let mut boxes = Vec::with_capacity(areas.len());
         for area in areas {
-            let lines = self.fill_surface(area, settings, context)?;
+            let lines = self.fill_surface(area, settings)?;
             boxes.push(emitted_bounds(&lines));
             SupportExtrusionEntity::append_paths(destination, lines, settings.role, settings.flow);
         }
@@ -58,7 +57,6 @@ impl Filler {
         &self,
         area: &ExPolygon,
         settings: FillSettings,
-        context: &mut SlicerContext,
     ) -> Result<Vec<Polyline>, ClipperError> {
         let scale = self.scale;
         let reference = self.reference.unwrap_or_else(|| {
@@ -137,7 +135,6 @@ impl Filler {
                     outer_offset: scale.scaled_delta(-0.5 * self.spacing) as f32,
                 },
                 scale,
-                context,
             ),
             RaftFillPattern::Honeycomb => {
                 let mut lines = Vec::new();

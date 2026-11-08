@@ -19,7 +19,7 @@ use super::{
     nodes, output, pathing,
 };
 use crate::{
-    ObjectOptions, OrcaFloats, RegionOptions, SliceError, SlicerContext,
+    ObjectOptions, OrcaFloats, RegionOptions, SliceError,
     geometry::{ClipperError, CoordinateScale, ExPolygon, JoinType, Polygon, offset_paths},
     project_slice::{
         parameters::SlicingParameters,
@@ -57,7 +57,6 @@ pub(in crate::project_slice::support_material) struct TreeInput<'a> {
 
 pub(in crate::project_slice::support_material) fn generate(
     input: &TreeInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<GeneratedSupportGeometry, SliceError> {
     let mesh = MeshGroupSettings::new(MeshGroupInput {
         object: input.object,
@@ -117,8 +116,7 @@ pub(in crate::project_slice::support_material) fn generate(
         let mut graph = (0..layer_count)
             .map(|_| VecDeque::new())
             .collect::<Vec<_>>();
-        generation::generate(objects, &mut volumes, &mut interface, &mut graph, context)
-            .map_err(error)?;
+        generation::generate(objects, &mut volumes, &mut interface, &mut graph).map_err(error)?;
         pathing::create_layer_pathing(&mut volumes, &config, &mut graph, input.scale)
             .map_err(error)?;
         nodes::create_nodes_from_area(&mut volumes, &config, &mut graph).map_err(error)?;

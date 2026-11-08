@@ -78,11 +78,10 @@ pub(crate) fn raft_layer_entities(
     layer_polygons: &[Polygon],
     spec: RaftFillSpec,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<Vec<RaftEntity>, ClipperError> {
     if !spec.sheath {
         return Ok(
-            raft_layer_fill(layer_polygons, spec, Point::new(0, 0), scale, context)?
+            raft_layer_fill(layer_polygons, spec, Point::new(0, 0), scale)?
                 .into_iter()
                 .map(RaftEntity::Path)
                 .collect(),
@@ -92,7 +91,7 @@ pub(crate) fn raft_layer_entities(
     if spec.density == 0.0 {
         return tree::tree_supports_generate_paths(layer_polygons, spec, scale);
     }
-    sheath::fill_with_sheath(layer_polygons, spec, scale, context)
+    sheath::fill_with_sheath(layer_polygons, spec, scale)
 }
 
 mod sheath;
@@ -129,7 +128,6 @@ pub(crate) fn raft_layer_fill(
     spec: RaftFillSpec,
     reference: Point,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let expolygons = match spec.preprocess {
         // `union_safety_offset_ex` = `offset_ex(polygons, 10.f)`
@@ -144,7 +142,7 @@ pub(crate) fn raft_layer_fill(
             closing_polygons(layer_polygons, epsilon, epsilon)?
         }
     };
-    fill_expolygons(expolygons, spec, reference, scale, context)
+    fill_expolygons(expolygons, spec, reference, scale)
 }
 
 /// `fill_expolygons_generate_paths` (`SupportCommon.cpp:432-443`); the
@@ -154,7 +152,6 @@ fn fill_expolygons(
     spec: RaftFillSpec,
     reference: Point,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let mut out = Vec::new();
     for expolygon in expolygons {
@@ -193,7 +190,6 @@ fn fill_expolygons(
                 outer_offset: checked_scale_f32(scale, -0.5 * spec.spacing)?,
             },
             scale,
-            context,
         )?);
     }
     Ok(out)

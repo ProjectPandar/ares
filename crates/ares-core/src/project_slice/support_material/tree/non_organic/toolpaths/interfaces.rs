@@ -9,7 +9,7 @@ use super::{
     perimeter::PerimeterInfill,
 };
 use crate::{
-    ExtrusionRole, ProcessSupportInterfacePattern, SliceError, SlicerContext,
+    ExtrusionRole, ProcessSupportInterfacePattern, SliceError,
     geometry::{ExPolygon, JoinType, Point, offset_expolygon},
     project_slice::{
         perimeters::types::Flow, raft::fill_params::RaftFillPattern,
@@ -30,7 +30,6 @@ impl InterfaceArea<'_, '_> {
     pub(super) fn append(
         &self,
         destination: &mut Vec<SupportExtrusionEntity>,
-        context: &mut SlicerContext,
     ) -> Result<(), SliceError> {
         let input = self.input;
         let wall_count = input.object.tree_support_wall_count.0 as usize;
@@ -107,7 +106,6 @@ impl InterfaceArea<'_, '_> {
                         },
                         infill_first: false,
                     },
-                    context,
                 )
                 .map_err(geometry_error)?;
             if !entities.is_empty() {
@@ -132,7 +130,7 @@ impl InterfaceArea<'_, '_> {
             | ProcessSupportInterfacePattern::Concentric => {}
         }
         filler
-            .append(destination, &areas, fill, context)
+            .append(destination, &areas, fill)
             .map_err(geometry_error)?;
         Ok(())
     }

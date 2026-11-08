@@ -10,16 +10,13 @@ use crate::project_slice::{
         extrusion_path::SupportExtrusionEntity, grid_generation::GeneratedSupportGeometry,
     },
 };
-use crate::{
-    ExtrusionRole, ProcessSupportBasePattern, ProcessSupportStyle, SliceError, SlicerContext,
-};
+use crate::{ExtrusionRole, ProcessSupportBasePattern, ProcessSupportStyle, SliceError};
 
 impl LayerCache<SupportExtrusionEntity> {
     pub(in crate::project_slice::support_material) fn fill_grid_base(
         &mut self,
         geometry: &mut GeneratedSupportGeometry,
         input: &SupportFillInput<'_>,
-        context: &mut SlicerContext,
     ) -> Result<(), SliceError> {
         if let Some(base) = &mut self.base
             && !base.empty(geometry)
@@ -84,15 +81,11 @@ impl LayerCache<SupportExtrusionEntity> {
                 },
                 preprocess: RaftFillPreprocess::Closing,
             };
-            let entities = raft_layer_entities(
-                base.polygons_to_extrude(geometry),
-                spec,
-                input.scale,
-                context,
-            )
-            .map_err(|error| {
-                SliceError::InvalidInput(format!("support base fill error: {error:?}"))
-            })?;
+            let entities =
+                raft_layer_entities(base.polygons_to_extrude(geometry), spec, input.scale)
+                    .map_err(|error| {
+                        SliceError::InvalidInput(format!("support base fill error: {error:?}"))
+                    })?;
             base.extrusions.extend(entities.into_iter().map(|entity| {
                 SupportExtrusionEntity::from_fill_entity(
                     entity,

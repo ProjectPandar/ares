@@ -8,7 +8,7 @@ use super::{
     perimeter::PerimeterInfill,
 };
 use crate::{
-    ExtrusionRole, ProcessSupportBasePattern, ProcessSupportStyle, SliceError, SlicerContext,
+    ExtrusionRole, ProcessSupportBasePattern, ProcessSupportStyle, SliceError,
     geometry::{ExPolygon, JoinType, Line, Point, offset_expolygon},
     project_slice::{
         perimeters::{classic::shortest_path::chain_polylines, types::Flow},
@@ -34,7 +34,6 @@ impl BaseArea<'_, '_> {
     pub(super) fn append(
         &self,
         destination: &mut Vec<SupportExtrusionEntity>,
-        context: &mut SlicerContext,
     ) -> Result<(), SliceError> {
         let input = self.input;
         let on_bed = self.layer_id == 0 && input.raft_layers == 0;
@@ -109,7 +108,6 @@ impl BaseArea<'_, '_> {
                     &to_polygons(std::slice::from_ref(self.area)),
                     spec,
                     input.scale,
-                    context,
                 )
                 .map_err(geometry_error)?
                 .into_iter()
@@ -146,7 +144,6 @@ impl BaseArea<'_, '_> {
                         },
                         infill_first: false,
                     },
-                    context,
                 )
                 .map_err(geometry_error)?;
         }

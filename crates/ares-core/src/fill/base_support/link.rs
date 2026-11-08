@@ -134,12 +134,13 @@ impl<'a> LinkPhases<'a> {
     }
 
     /// Cost-classified arch selection (`evaluate_support_arches`
-    /// `:2203-2243` + selection `:2463-2502`). Returns the arc costs
+    /// `:2203-2243` + selection `:2703-2740`). Returns the arc costs
     /// for the later T-joint and very-long-arch phases (upstream
     /// reuses the same table without recomputation).
     pub(super) fn select_support_arches(
         &mut self,
-        costs: crate::slicer_context::SupportConnectionCosts,
+        cost_low: f64,
+        cost_high: f64,
     ) -> Vec<SupportArcCost> {
         let arches = evaluate_support_arches(
             self.boundary,
@@ -147,8 +148,6 @@ impl<'a> LinkPhases<'a> {
             self.paths,
             self.scaled_epsilon,
         );
-        let cost_low = costs.low;
-        let cost_high = costs.high;
         let mut selected = Vec::new();
         for index in 0..self.intersections.len() {
             if self.intersections[index].consumed {

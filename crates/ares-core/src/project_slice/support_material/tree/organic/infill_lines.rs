@@ -23,7 +23,6 @@ pub(super) fn generate(
     parameters: &ToolpathParameters,
     layer: InfillLayer,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let InfillLayer {
         roof,
@@ -75,7 +74,6 @@ pub(super) fn generate(
                     outer_offset: (-0.5 * spacing / scale.factor()) as f32,
                 },
                 scale,
-                context,
             )?),
             RaftFillPattern::Rectilinear => {
                 let params = MonotonicFillParams {

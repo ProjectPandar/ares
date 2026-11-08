@@ -21,7 +21,6 @@ pub(in crate::project_slice) fn fill_surface(
     expolygon: &ExPolygon,
     params: SupportBaseFillParams,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let scaled_spacing = f64::from(params.spacing as f32) / scale.factor();
     let line_spacing = (scaled_spacing / f64::from(params.density)) as i64;
@@ -76,7 +75,6 @@ pub(in crate::project_slice) fn fill_surface(
             multiline: 1,
             dont_adjust: true,
         },
-        context,
     )?;
     Ok(connected
         .into_iter()

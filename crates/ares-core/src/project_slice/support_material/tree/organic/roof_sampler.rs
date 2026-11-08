@@ -26,14 +26,12 @@ pub(super) fn sample(
     mut input: OverhangSample,
     placer: &mut RichInterfacePlacer<'_, '_, '_>,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<(), ClipperError> {
     let mut lines = Vec::new();
     let mut roof_depth = 0;
     let mut generation_depth = 0;
     if input.large_horizontal_roof {
-        (lines, roof_depth, generation_depth) =
-            roof_stack::generate(&mut input, placer, scale, context)?;
+        (lines, roof_depth, generation_depth) = roof_stack::generate(&mut input, placer, scale)?;
     }
     if lines.is_empty() {
         let config = placer.interface.config;
@@ -53,7 +51,6 @@ pub(super) fn sample(
                     },
                 },
                 scale,
-                context,
             )?,
             if continuous_tips {
                 (config.min_radius / 2) as f64
@@ -146,7 +143,6 @@ fn roof_lines(
     placer: &RichInterfacePlacer<'_, '_, '_>,
     layer_index: usize,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, ClipperError> {
     infill_lines::generate(
         area,
@@ -157,6 +153,5 @@ fn roof_lines(
             support_infill_distance: placer.interface.config.mesh.roof_line_distance,
         },
         scale,
-        context,
     )
 }

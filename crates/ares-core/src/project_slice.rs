@@ -219,7 +219,7 @@ pub(crate) fn slice_source(
         // CLI:7150-7160 records warnings before export; a later error keeps them.
         sliced_plate.warnings.clone_from(&warnings);
     }
-    let support_layers = match support_material::generate(&filled, &mut context) {
+    let support_layers = match support_material::generate(&filled) {
         Ok(layers) => layers,
         Err(error) => {
             fill_entities::dispose(filled);

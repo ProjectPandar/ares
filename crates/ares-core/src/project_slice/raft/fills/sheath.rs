@@ -70,7 +70,6 @@ pub(super) fn fill_with_sheath(
     polygons: &[Polygon],
     spec: RaftFillSpec,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
 ) -> Result<Vec<RaftEntity>, ClipperError> {
     let flow = SheathFlow::new(&spec, scale);
     let mut out = Vec::new();
@@ -82,13 +81,7 @@ pub(super) fn fill_with_sheath(
             JoinType::Miter,
             3.0,
         )?;
-        region.extend(fill_expolygons(
-            fill_region,
-            spec,
-            Point::new(0, 0),
-            scale,
-            context,
-        )?);
+        region.extend(fill_expolygons(fill_region, spec, Point::new(0, 0), scale)?);
         if !spec.no_sort {
             out.extend(region.into_iter().map(RaftEntity::Path));
         } else if !region.is_empty() {

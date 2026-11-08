@@ -7,7 +7,7 @@ pub(in crate::project_slice) fn emit(
     record_moves: bool,
     context: &mut crate::SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
-    let mut schedule = layers::build_schedule(prepared, context)?;
+    let mut schedule = layers::build_schedule(prepared)?;
     let traversal = &prepared
         .predecessor
         .predecessor

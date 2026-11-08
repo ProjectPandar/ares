@@ -9,7 +9,7 @@ mod raft;
 
 use super::drawing::{DrawnLayers, areas::LayerAreas, groups::AreaKind};
 use crate::{
-    FloatOrPercent, ObjectOptions, SliceError, SlicerContext,
+    FloatOrPercent, ObjectOptions, SliceError,
     geometry::{ClipperError, CoordinateScale, ExPolygon},
     project_slice::{
         parameters::SlicingParameters,
@@ -39,7 +39,6 @@ pub(super) struct ToolpathInput<'a> {
 pub(super) fn generate(
     drawn: DrawnLayers,
     input: &ToolpathInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<Vec<InstalledSupportLayer>, SliceError> {
     let mut output = drawn
         .layers
@@ -62,7 +61,7 @@ pub(super) fn generate(
     if output.is_empty() {
         return Ok(output);
     }
-    raft::fill_prefix(&mut output, &drawn.layers, input, context)?;
+    raft::fill_prefix(&mut output, &drawn.layers, input)?;
     for (layer_id, (source, layer)) in drawn
         .layers
         .iter()
@@ -89,7 +88,7 @@ pub(super) fn generate(
                     print_z: source.print_z,
                     lightning: drawn.lightning.as_ref(),
                 }
-                .append(&mut layer.support_fills, context)?;
+                .append(&mut layer.support_fills)?;
             } else {
                 interfaces::InterfaceArea {
                     input,
@@ -99,7 +98,7 @@ pub(super) fn generate(
                     interface_flow,
                     layer_id,
                 }
-                .append(&mut layer.support_fills, context)?;
+                .append(&mut layer.support_fills)?;
             }
         }
         chain_and_reorder_entities_with_optional_start(&mut layer.support_fills, None);

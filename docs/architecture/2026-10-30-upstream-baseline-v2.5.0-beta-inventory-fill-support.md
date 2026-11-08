@@ -34,7 +34,7 @@ Rows: **84**. Every listed Rust path was checked at the planning base.
 | M | `Fill/Fill3DHoneycomb.hpp` | partial port — `C:fill/three_d_honeycomb.rs` | bounded 2.4.2 slice |
 | M | `Fill/FillAdaptive.cpp` | partial port — `C:fill/adaptive/mod.rs`, `C:project_slice/fill_entities/adaptive.rs` | bounded 2.4.2 slice |
 | M | `Fill/FillAdaptive.hpp` | partial port — `C:fill/adaptive/mod.rs`, `C:project_slice/fill_entities/adaptive.rs` | bounded 2.4.2 slice |
-| M | `Fill/FillBase.cpp` | partial port — `C:fill.rs`, `C:fill/connect.rs` | bounded 2.4.2 slice |
+| M | `Fill/FillBase.cpp` | partial port — `C:fill.rs`, `C:fill/connect.rs` | `connect_base_support` connection costs updated to the target; rest is a bounded 2.4.2 slice |
 | M | `Fill/FillBase.hpp` | partial port — `C:fill.rs`, `C:fill/connect.rs` | bounded 2.4.2 slice |
 | M | `Fill/FillConcentric.cpp` | partial port — `C:fill/concentric_sparse.rs` | bounded 2.4.2 slice |
 | M | `Fill/FillConcentric.hpp` | partial port — `C:fill/concentric_sparse.rs` | bounded 2.4.2 slice |

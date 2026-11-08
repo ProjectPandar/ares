@@ -5,7 +5,6 @@ use super::{
     loops::make_loops,
 };
 use crate::{
-    SlicerContext,
     geometry::{
         BoundingBox, ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polygon,
         chain_points, difference_ex, offset_expolygon,
@@ -28,7 +27,6 @@ impl Filler {
         destination: &mut Vec<SupportExtrusionEntity>,
         area: &ExPolygon,
         settings: PerimeterInfill,
-        context: &mut SlicerContext,
     ) -> Result<(), ClipperError> {
         let scale = self.scale;
         let spacing = settings.fill.flow.scaled_spacing(scale) as f32;
@@ -39,7 +37,7 @@ impl Filler {
             JoinType::Square,
             3.0,
         )?;
-        let boxes = self.append(destination, &infill, settings.fill, context)?;
+        let boxes = self.append(destination, &infill, settings.fill)?;
         if settings.wall_count == 0 {
             outlines = trim_zero_wall(outlines, boxes, self.angle, settings.fill.flow, scale)?;
         }

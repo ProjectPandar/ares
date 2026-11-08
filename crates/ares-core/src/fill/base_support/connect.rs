@@ -35,7 +35,6 @@ pub(crate) fn connect_base_support(
     }: BaseSupportGeometry<'_>,
     spacing: f64,
     params: &crate::fill::FillParams,
-    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Polyline>, crate::geometry::ClipperError> {
     let density = params.density;
     let scaled_spacing = spacing / scale.factor();
@@ -100,11 +99,13 @@ pub(crate) fn connect_base_support(
     // Vertical-arch consumption (`:2425-2455`).
     linker.consume_vertical_arches();
 
-    // Cost-classified arch selection (`:2463-2502`); the cost table
+    // Cost-classified arch selection (`:2703-2740`); the cost table
     // is reused by the T-joint and very-long-arch phases without
     // recomputation (upstream keeps the same `arches` vector).
-    let costs = context.support_connection_costs(line_spacing);
-    let arches = linker.select_support_arches(costs);
+    let cost_low = line_spacing * 1.3;
+    let cost_high = line_spacing * 2.0;
+    let cost_very_high = line_spacing * 3.0;
+    let arches = linker.select_support_arches(cost_low, cost_high);
 
     // Zig-zag traversal (`:2577-2592`).
     linker.link_zigzag();
@@ -113,7 +114,7 @@ pub(crate) fn connect_base_support(
     linker.close_left_caps();
 
     // T-joints (`:2625-2645`).
-    linker.connect_t_joints(&arches, costs.high);
+    linker.connect_t_joints(&arches, cost_high);
 
     // Very long arches and reasonably long caps (`:2648-2691`).
     emit_very_long_arches(
@@ -123,7 +124,7 @@ pub(crate) fn connect_base_support(
         &mut polylines_out,
         line_half_width,
         line_spacing,
-        costs.very_high,
+        cost_very_high,
         scaled_epsilon,
     );
 

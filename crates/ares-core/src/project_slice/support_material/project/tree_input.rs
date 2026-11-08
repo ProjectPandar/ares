@@ -3,7 +3,7 @@
 use super::region::{self, Region};
 use crate::{
     FloatOrPercent, Point3d, ProcessBrimType, ProcessDraftShield, ProjectObject, ProjectSettings,
-    ProjectVolumeType, SliceError, SlicerContext,
+    ProjectVolumeType, SliceError,
     fill::lightning::generator::SupportSettings,
     geometry::{BoundingBox, Point, Polygon},
     project::effective_config::types::ResolvedProjectObject,
@@ -34,7 +34,6 @@ pub(super) struct ProjectInputs<'a> {
 pub(super) fn generate(
     tree: &TreeInput<'_>,
     project: &ProjectInputs<'_>,
-    context: &mut SlicerContext,
 ) -> Result<Vec<InstalledSupportLayer>, SliceError> {
     let bottoms = project
         .data
@@ -82,28 +81,25 @@ pub(super) fn generate(
         .map(|nozzle| nozzle.0)
         .fold(f64::NEG_INFINITY, f64::max);
     let region = &project.resolved.all_regions[0];
-    generate_non_organic(
-        &NonOrganicInput {
-            tree,
-            planned: &project.plan.layers,
-            tops: project.tops,
-            bottoms: &bottoms,
-            trim_regions: project.trim_regions,
-            bounds: mesh_bounds(project, tree.scale.factor()),
-            vertical_enforcers: project.vertical_enforcers,
-            independent: print.independent_support_layer_height.0,
-            brim_flow,
-            brim_skirt_layers: usize::from(has_brim).max(skirt_layers),
-            lightning_settings: SupportSettings {
-                layer_height: tree.object.layer_height.0,
-                infill_line_width: absolute(region.sparse_infill_line_width, max_nozzle),
-                line_width: absolute(tree.object.line_width, max_nozzle),
-                max_nozzle_diameter: max_nozzle,
-                scale: tree.scale,
-            },
+    generate_non_organic(&NonOrganicInput {
+        tree,
+        planned: &project.plan.layers,
+        tops: project.tops,
+        bottoms: &bottoms,
+        trim_regions: project.trim_regions,
+        bounds: mesh_bounds(project, tree.scale.factor()),
+        vertical_enforcers: project.vertical_enforcers,
+        independent: print.independent_support_layer_height.0,
+        brim_flow,
+        brim_skirt_layers: usize::from(has_brim).max(skirt_layers),
+        lightning_settings: SupportSettings {
+            layer_height: tree.object.layer_height.0,
+            infill_line_width: absolute(region.sparse_infill_line_width, max_nozzle),
+            line_width: absolute(tree.object.line_width, max_nozzle),
+            max_nozzle_diameter: max_nozzle,
+            scale: tree.scale,
         },
-        context,
-    )
+    })
 }
 
 // PrintObject.cpp89-113 and Print.hpp347: centered integer size, not slice extents.

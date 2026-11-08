@@ -15,7 +15,7 @@ use super::{
     raft_layers, smoothing, toolpaths,
 };
 use crate::{
-    FloatOrPercent, SliceError, SlicerContext,
+    FloatOrPercent, SliceError,
     fill::lightning::generator::SupportSettings,
     geometry::{BoundingBox, ClipperError, Polygon},
     project_slice::{
@@ -44,7 +44,6 @@ pub(in crate::project_slice::support_material) struct NonOrganicInput<'a> {
 
 pub(in crate::project_slice::support_material) fn generate(
     input: &NonOrganicInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<Vec<InstalledSupportLayer>, SliceError> {
     let tree = input.tree;
     let object = tree.object;
@@ -198,7 +197,6 @@ pub(in crate::project_slice::support_material) fn generate(
             raft_layers: raft_count,
             scale: tree.scale,
         },
-        context,
     )
 }
 

@@ -8,7 +8,7 @@ use super::{
     perimeter::PerimeterInfill,
 };
 use crate::{
-    ExtrusionRole, SliceError, SlicerContext,
+    ExtrusionRole, SliceError,
     geometry::{JoinType, difference_ex, intersection_ex, offset_expolygons},
     project_slice::{
         raft::fill_params::RaftFillPattern,
@@ -20,7 +20,6 @@ pub(super) fn fill_prefix(
     output: &mut [InstalledSupportLayer],
     layers: &[LayerAreas],
     input: &ToolpathInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<(), SliceError> {
     let scale = input.scale;
     let mut areas = input.first_object_slices.to_vec();
@@ -100,7 +99,6 @@ pub(super) fn fill_prefix(
                     flow,
                     role: ExtrusionRole::SupportMaterial,
                 },
-                context,
             )
             .map_err(geometry_error)?;
     }
@@ -135,7 +133,7 @@ pub(super) fn fill_prefix(
             role: ExtrusionRole::SupportMaterialInterface,
         };
         filler
-            .append(&mut layer.support_fills, &interface_areas, fill, context)
+            .append(&mut layer.support_fills, &interface_areas, fill)
             .map_err(geometry_error)?;
         filler
             .append(
@@ -146,7 +144,6 @@ pub(super) fn fill_prefix(
                     role: ExtrusionRole::SupportMaterial,
                     ..fill
                 },
-                context,
             )
             .map_err(geometry_error)?;
     }
@@ -178,7 +175,6 @@ pub(super) fn fill_prefix(
                         },
                         infill_first: false,
                     },
-                    context,
                 )
                 .map_err(geometry_error)?;
         }

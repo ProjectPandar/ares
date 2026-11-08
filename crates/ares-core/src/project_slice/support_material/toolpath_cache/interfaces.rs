@@ -20,7 +20,6 @@ use crate::project_slice::{
 };
 use crate::{
     ExtrusionRole, ObjectOptions, ProcessSupportBasePattern, ProcessSupportStyle, SliceError,
-    SlicerContext,
 };
 
 pub(in crate::project_slice::support_material) struct SupportFillInput<'a> {
@@ -58,7 +57,6 @@ impl LayerCache<SupportExtrusionEntity> {
         &mut self,
         geometry: &GeneratedSupportGeometry,
         input: &SupportFillInput<'_>,
-        context: &mut SlicerContext,
     ) -> Result<(), SliceError> {
         let top_interfaces = input.counts.top > 0;
         let bottom_interfaces = top_interfaces && input.counts.bottom > 0;
@@ -69,7 +67,7 @@ impl LayerCache<SupportExtrusionEntity> {
         } else {
             InterfaceLayerType::InterfaceAsBase
         };
-        extrude_interface(&mut self.top, geometry, top_type, input, context)?;
+        extrude_interface(&mut self.top, geometry, top_type, input)?;
         let bottom_type = if bottom_interfaces {
             InterfaceLayerType::BottomContact
         } else {
@@ -80,20 +78,14 @@ impl LayerCache<SupportExtrusionEntity> {
             input.object.support_style,
         ) != ProcessSupportStyle::Organic
         {
-            extrude_interface(&mut self.bottom, geometry, bottom_type, input, context)?;
+            extrude_interface(&mut self.bottom, geometry, bottom_type, input)?;
         }
         let interface_type = if top_interfaces {
             InterfaceLayerType::Interface
         } else {
             InterfaceLayerType::InterfaceAsBase
         };
-        extrude_interface(
-            &mut self.interface,
-            geometry,
-            interface_type,
-            input,
-            context,
-        )?;
+        extrude_interface(&mut self.interface, geometry, interface_type, input)?;
         if let Some(base_interface) = &mut self.base_interface
             && !base_interface.empty(geometry)
             && !base_interface.polygons_to_extrude(geometry).is_empty()
@@ -112,7 +104,7 @@ impl LayerCache<SupportExtrusionEntity> {
                     RaftFillPattern::SupportBase
                 },
             };
-            fill_layer(base_interface, geometry, plan, input, context)?;
+            fill_layer(base_interface, geometry, plan, input)?;
         }
         Ok(())
     }
@@ -135,7 +127,6 @@ fn extrude_interface(
     geometry: &GeneratedSupportGeometry,
     kind: InterfaceLayerType,
     input: &SupportFillInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<(), SliceError> {
     let Some(layer) = layer else {
         return Ok(());
@@ -197,7 +188,7 @@ fn extrude_interface(
             parameters.contact_fill_pattern
         },
     };
-    fill_layer(layer, geometry, plan, input, context)
+    fill_layer(layer, geometry, plan, input)
 }
 
 fn fill_layer(
@@ -205,7 +196,6 @@ fn fill_layer(
     geometry: &GeneratedSupportGeometry,
     plan: InterfaceFillPlan,
     input: &SupportFillInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<(), SliceError> {
     let spec = RaftFillSpec {
         angle: f64::from(plan.angle),
@@ -227,7 +217,6 @@ fn fill_layer(
         spec,
         Point::new(0, 0),
         input.scale,
-        context,
     )
     .map_err(|error| {
         SliceError::InvalidInput(format!("support interface fill error: {error:?}"))

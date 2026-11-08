@@ -14,7 +14,7 @@ use super::{
     toolpath_parameters::ToolpathParameters,
 };
 use crate::{
-    ObjectOptions, SliceError, SlicerContext, geometry::CoordinateScale,
+    ObjectOptions, SliceError, geometry::CoordinateScale,
     project_slice::parameters::SlicingParameters,
 };
 
@@ -29,13 +29,12 @@ pub(super) struct ToolpathInput<'a> {
 pub(super) fn generate_grid_support_toolpaths(
     geometry: &mut GeneratedSupportGeometry,
     input: &ToolpathInput<'_>,
-    context: &mut SlicerContext,
 ) -> Result<Vec<InstalledSupportLayer>, SliceError> {
     let mut layers = std::mem::take(&mut geometry.support_layers);
     let n_raft_layers = layers.len().min(
         (input.slicing.base_raft_layers + input.slicing.interface_raft_layers).saturating_sub(1),
     );
-    raft::fill_prefix(&mut layers[..n_raft_layers], geometry, input, context)?;
+    raft::fill_prefix(&mut layers[..n_raft_layers], geometry, input)?;
     let width_scaled =
         (f64::from(input.parameters.interface_flow.width) / input.scale.factor()) as i64;
     let loops = LoopInterfaceProcessor::new(
@@ -72,8 +71,8 @@ pub(super) fn generate_grid_support_toolpaths(
             interface_angle,
             scale: input.scale,
         };
-        cache.fill_grid_interfaces(geometry, &fill, context)?;
-        cache.fill_grid_base(geometry, &fill, context)?;
+        cache.fill_grid_interfaces(geometry, &fill)?;
+        cache.fill_grid_base(geometry, &fill)?;
         let mut ordered = cache.collect_ordered(geometry, &indices).map_err(|error| {
             SliceError::InvalidInput(format!("support toolpath islands: {error:?}"))
         })?;

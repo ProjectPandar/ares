@@ -16,7 +16,7 @@ use super::{
 };
 use crate::{
     FloatOrPercent, ProcessBrimType, ProcessSupportStyle, ProcessSupportType, ProjectVolumeType,
-    SliceError, SlicerContext,
+    SliceError,
     geometry::support_grid::SupportGridParams,
     project_slice::{
         extruders::collect_project_object_extruders,
@@ -31,7 +31,6 @@ use region::{Region, RegionSource};
 
 pub(in crate::project_slice) fn generate(
     prepared: &PreparedPostFillEntities,
-    context: &mut SlicerContext,
 ) -> Result<Vec<Vec<InstalledSupportLayer>>, SliceError> {
     let horizontal = &prepared.predecessor.predecessor.predecessor.predecessor;
     let traversal = &horizontal.predecessor;
@@ -291,11 +290,10 @@ pub(in crate::project_slice) fn generate(
                         max_object_layers,
                         vertical_enforcers: &vertical_enforcers,
                     },
-                    context,
                 )?);
                 continue;
             }
-            let mut geometry = super::tree::generate(&tree_input, context)?;
+            let mut geometry = super::tree::generate(&tree_input)?;
             output.push(generate_grid_support_toolpaths(
                 &mut geometry,
                 &ToolpathInput {
@@ -305,7 +303,6 @@ pub(in crate::project_slice) fn generate(
                     counts: &counts,
                     scale,
                 },
-                context,
             )?);
             continue;
         }
@@ -388,7 +385,6 @@ pub(in crate::project_slice) fn generate(
                 counts: &counts,
                 scale,
             },
-            context,
         )?);
     }
     Ok(output)
