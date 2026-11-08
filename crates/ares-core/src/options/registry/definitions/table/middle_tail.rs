@@ -25,7 +25,7 @@ pub(super) const MIDDLE_TAIL_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("internal_solid_infill_speed", FloatsNullable, "100"; true, false, "100"),
     definition!("ironing_angle", Float, "0"; true, false, "0"),
     definition!("ironing_angle_fixed", Bool, "false"; true, false, "0"),
-    definition!("ironing_expansion", Float, "0"; true, false, "0"),
+    definition!("ironing_expansion", Float, "0"; false, false, "0"),
     definition!("ironing_fan_speed", Ints, "-1"; true, false, "-1"),
     definition!("ironing_flow", Percent, "10"; true, false, "10%"),
     definition!("ironing_inset", Float, "0"; true, false, "0"),

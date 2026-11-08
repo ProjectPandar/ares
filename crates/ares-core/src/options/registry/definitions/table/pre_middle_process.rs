@@ -72,7 +72,7 @@ pub(super) const PRE_MIDDLE_PROCESS_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("extruder_printable_area", PointsGroups, ""; true, false, ""),
     definition!("extruder_printable_height", Floats, "0"; true, false, "0"),
     definition!("extruder_type", Enums, "Direct Drive"; true, false, "Direct Drive"),
-    definition!("extruder_variant_list", Strings, "Direct Drive Standard"; true, false, "\"Direct Drive Standard\""),
+    definition!("extruder_variant_list", Strings, "Direct Drive Standard"; false, false, "\"Direct Drive Standard\""),
     definition!(
         "extrusion_rate_smoothing_external_perimeter_only",
         Bool,

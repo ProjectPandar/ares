@@ -1,7 +1,7 @@
 use super::{OptionDefinition, OptionValueKind};
 
 pub(super) const LATE_TAIL_FINAL_OPTION_DEFINITIONS: &[OptionDefinition] = &[
-    definition!("plugins", Strings, ""; true, false, ""),
+    definition!("plugins", Strings, ""; false, false, ""),
     definition!("post_process", Strings, ""; true, false, ""),
     definition!("precise_outer_wall", Bool, "true"; true, false, "1"),
     definition!("precise_z_height", Bool, "false"; true, false, "0"),
@@ -32,20 +32,20 @@ pub(super) const LATE_TAIL_FINAL_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("print_settings_id", String, ""; false, false, ""),
     definition!("printable_area", Points, "0x0,200x0,200x200,0x200"; true, false, "0x0,200x0,200x200,0x200"),
     definition!("printable_height", Float, "100"; true, false, "100"),
-    definition!("printer_agent", String, ""; true, false, ""),
+    definition!("printer_agent", String, ""; false, false, ""),
     definition!("printer_extruder_id", Ints, "1"; true, false, "1"),
     definition!("printer_extruder_variant", Strings, "Direct Drive Standard"; true, false, "\"Direct Drive Standard\""),
     definition!("printer_model", String, ""; true, false, ""),
     definition!("printer_notes", String, ""; true, false, ""),
-    definition!("printer_plugin_config_overrides", String, ""; true, false, ""),
+    definition!("printer_plugin_config_overrides", String, ""; false, false, ""),
     definition!("printer_settings_id", String, ""; false, false, ""),
     definition!("printer_structure", Enum, "undefine"; true, false, "undefine"),
     definition!("printer_technology", Enum, "FFF"; true, false, "FFF"),
     definition!("printer_variant", String, ""; true, false, ""),
     definition!("printhost_apikey", String, ""; true, false, ""),
-    definition!("printhost_authorization_type", Enum, "key"; true, false, "key"),
+    definition!("printhost_authorization_type", Enum, "key"; false, false, "key"),
     definition!("printhost_cafile", String, ""; true, false, ""),
     definition!("printhost_password", String, ""; true, false, ""),
     definition!("printhost_port", String, ""; true, false, ""),
-    definition!("printhost_ssl_ignore_revoke", Bool, "false"; true, false, "0"),
+    definition!("printhost_ssl_ignore_revoke", Bool, "false"; false, false, "0"),
 ];
