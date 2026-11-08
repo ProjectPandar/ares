@@ -1,8 +1,7 @@
 //! Per-instance object geometry for Klipper/Marlin object exclusion and
 //! first-layer/timelapse bounds helpers.
 
-use crate::geometry::convex_hull;
-use crate::geometry::{CoordinateScale, Point, douglas_peucker};
+use crate::geometry::{CoordinateScale, Point, Polygon, convex_hull};
 use crate::project_slice::gcode_emit::{format_processor_float, tags::Tags};
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::{Point3d, ProjectInstance, ProjectObject, ProjectVolumeType};
@@ -87,6 +86,14 @@ pub(super) struct InstanceDefinition {
 
 pub(super) fn definitions(traversal: &PreparedPostClassicTraversal) -> Vec<InstanceDefinition> {
     let scale = traversal.scale;
+    let tolerance_mm = traversal
+        .resolved
+        .views
+        .full
+        .process
+        .print
+        .exclude_object_tolerance
+        .0;
     // Exclude-object definitions are plate-local like every emitted
     // coordinate (`set_gcode_offset`, Print.cpp:2636-2638).
     let plate_origin = traversal.project.plate_origin();
@@ -100,7 +107,7 @@ pub(super) fn definitions(traversal: &PreparedPostClassicTraversal) -> Vec<Insta
             output.push(InstanceDefinition {
                 name: instance_name(object.name(), object_index as u32, instance_index as u32),
                 unique_id,
-                klipper_body: klipper_body(object, instance, scale, plate_origin),
+                klipper_body: klipper_body(object, instance, scale, plate_origin, tolerance_mm),
             });
             unique_id += 1;
         }
@@ -172,6 +179,7 @@ fn klipper_body(
     instance: &ProjectInstance,
     scale: CoordinateScale,
     plate_origin: (f64, f64),
+    tolerance_mm: f64,
 ) -> Option<String> {
     let mut min = [f64::INFINITY; 2];
     let mut max = [f64::NEG_INFINITY; 2];
@@ -217,7 +225,11 @@ fn klipper_body(
     if points.is_empty() {
         return None;
     }
-    let hull = douglas_peucker(&convex_hull(&points), 0.1);
+    let mut hull = Polygon::new(convex_hull(&points));
+    // Print.cpp:7122–7125, Polygon.cpp:112–117: scale mm without quantizing,
+    // then simplify the closed polygon, not an open chain's fixed endpoints.
+    hull.douglas_peucker(scale.scaled_delta(tolerance_mm));
+    let hull = hull.into_points();
     if hull.is_empty() {
         return None;
     }

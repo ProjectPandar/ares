@@ -73,6 +73,7 @@ declare_option_group! {
         combine_brims => "combine_brims": OrcaBool = OrcaBool(false),
         gcode_label_objects => "gcode_label_objects": OrcaBool = OrcaBool(true),
         exclude_object => "exclude_object": OrcaBool = OrcaBool(false),
+        exclude_object_tolerance => "exclude_object_tolerance": OrcaFloat = OrcaFloat(0.1),
         gcode_comments => "gcode_comments": OrcaBool = OrcaBool(false),
         slow_down_layers => "slow_down_layers": OrcaInt = OrcaInt(0),
         notes => "notes": OrcaString = string(""),
@@ -80,7 +81,7 @@ declare_option_group! {
 }
 
 impl ProcessPrintSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 59] = [
+    pub const DECLARATION_ORDER: [&'static str; 60] = [
         "reduce_crossing_wall",
         "max_travel_detour_distance",
         "print_sequence",
@@ -137,6 +138,7 @@ impl ProcessPrintSourceOptions {
         "combine_brims",
         "gcode_label_objects",
         "exclude_object",
+        "exclude_object_tolerance",
         "gcode_comments",
         "slow_down_layers",
         "notes",

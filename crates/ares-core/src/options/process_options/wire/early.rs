@@ -113,6 +113,7 @@ where
         &region.ensure_vertical_shell_thickness,
     )?;
     map.serialize_entry("exclude_object", &print.exclude_object)?;
+    map.serialize_entry("exclude_object_tolerance", &print.exclude_object_tolerance)?;
     map.serialize_entry(
         "extra_perimeters_on_overhangs",
         &region.extra_perimeters_on_overhangs,

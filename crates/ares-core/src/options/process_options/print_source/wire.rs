@@ -7,7 +7,7 @@ impl Serialize for ProcessPrintSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(59))?;
+        let mut map = serializer.serialize_map(Some(60))?;
         map.serialize_entry("combine_brims", &self.combine_brims)?;
         map.serialize_entry("draft_shield", &self.draft_shield)?;
         map.serialize_entry("enable_prime_tower", &self.enable_prime_tower)?;
@@ -20,6 +20,7 @@ impl Serialize for ProcessPrintSourceOptions {
             &self.enable_tower_interface_features,
         )?;
         map.serialize_entry("exclude_object", &self.exclude_object)?;
+        map.serialize_entry("exclude_object_tolerance", &self.exclude_object_tolerance)?;
         map.serialize_entry("filename_format", &self.filename_format)?;
         map.serialize_entry("gcode_comments", &self.gcode_comments)?;
         map.serialize_entry("gcode_label_objects", &self.gcode_label_objects)?;
