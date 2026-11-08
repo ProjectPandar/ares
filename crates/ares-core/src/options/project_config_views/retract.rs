@@ -22,13 +22,13 @@ pub(super) fn apply(
         map,
         "filament_deretraction_speed"
     );
+    overlay!(
+        runtime.project.gcode.retract_after_wipe,
+        &overrides.filament_retract_after_wipe,
+        map,
+        "filament_retract_after_wipe"
+    );
     if full.printer.gcode.enable_long_retraction_when_cut.0 == ENABLE_FILAMENT_LONG_RETRACTION {
-        overlay!(
-            runtime.project.gcode.retract_after_wipe,
-            &overrides.filament_retract_after_wipe,
-            map,
-            "filament_retract_after_wipe"
-        );
         overlay!(
             runtime.printer.gcode.long_retractions_when_cut,
             &overrides.filament_long_retractions_when_cut,
