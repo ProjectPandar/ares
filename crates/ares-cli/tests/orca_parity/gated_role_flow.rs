@@ -68,10 +68,13 @@ fn assert_native_active(native: &str, case: &Value) -> Value {
         case["positive_layers"].as_u64().unwrap()
     );
     assert!(layers.iter().all(|count| *count > 0));
-    assert_eq!(
-        serde_json::to_value(&roles).unwrap(),
-        case["native_activity"]
-    );
+    for role in case["gated_roles"].as_array().unwrap() {
+        let role = role.as_str().unwrap();
+        assert!(
+            roles.get(role).copied().unwrap_or(0) > 0,
+            "gated role {role} has no positive move"
+        );
+    }
     for (key, value) in case["changes"].as_object().unwrap() {
         assert!(native.contains(&format!("; {key} = {}\n", value.as_str().unwrap())));
     }

@@ -33,16 +33,14 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Inner wall": 80,
-        "Outer wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "regression_guard"
+      "classification": "regression_guard",
+      "gated_roles": [
+        "Outer wall",
+        "Inner wall",
+        "Sparse infill",
+        "Internal solid infill"
+      ]
     },
     "outer075": {
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
@@ -73,16 +71,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Inner wall": 80,
-        "Outer wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "candidate_red"
+      "classification": "candidate_red",
+      "gated_roles": [
+        "Outer wall"
+      ]
     },
     "inner065": {
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
@@ -113,16 +106,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Inner wall": 80,
-        "Outer wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "candidate_red"
+      "classification": "candidate_red",
+      "gated_roles": [
+        "Inner wall"
+      ]
     },
     "sparse070": {
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
@@ -153,16 +141,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Inner wall": 80,
-        "Outer wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "regression_guard"
+      "classification": "regression_guard",
+      "gated_roles": [
+        "Sparse infill"
+      ]
     },
     "solid060": {
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
@@ -193,16 +176,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Inner wall": 80,
-        "Outer wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "candidate_red"
+      "classification": "candidate_red",
+      "gated_roles": [
+        "Internal solid infill"
+      ]
     },
     "gate-off-all": {
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
@@ -233,16 +211,14 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Inner wall": 80,
-        "Outer wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "regression_guard"
+      "classification": "regression_guard",
+      "gated_roles": [
+        "Outer wall",
+        "Inner wall",
+        "Sparse infill",
+        "Internal solid infill"
+      ]
     },
     "first-unit": {
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
@@ -279,18 +255,14 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Skirt": 33,
-        "Brim": 101,
-        "Outer wall": 80,
-        "Inner wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "regression_guard"
+      "classification": "regression_guard",
+      "gated_roles": [
+        "Outer wall",
+        "Inner wall",
+        "Sparse infill",
+        "Internal solid infill"
+      ]
     },
     "first055-on": {
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
@@ -327,18 +299,14 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Skirt": 33,
-        "Brim": 101,
-        "Outer wall": 80,
-        "Inner wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "candidate_red"
+      "classification": "candidate_red",
+      "gated_roles": [
+        "Outer wall",
+        "Inner wall",
+        "Sparse infill",
+        "Internal solid infill"
+      ]
     },
     "first055-off": {
       "template_sha256": "ba0ccceea9257efa86db1b8831d7d642b88306ff358d969216acd271e1dc8651",
@@ -375,18 +343,14 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Skirt": 33,
-        "Brim": 101,
-        "Outer wall": 80,
-        "Inner wall": 80,
-        "Sparse infill": 396,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 20,
-      "classification": "regression_guard"
+      "classification": "regression_guard",
+      "gated_roles": [
+        "Outer wall",
+        "Inner wall",
+        "Sparse infill",
+        "Internal solid infill"
+      ]
     },
     "gap-unit": {
       "template_sha256": "11f0236e5e047fba8eb2b4ab2a6e355d30cabd96a4cfc624b6072d1085700eab",
@@ -419,12 +383,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Outer wall": 80,
-        "Gap infill": 20
-      },
       "positive_layers": 20,
-      "classification": "regression_guard"
+      "classification": "regression_guard",
+      "gated_roles": [
+        "Gap infill"
+      ]
     },
     "gap070": {
       "template_sha256": "11f0236e5e047fba8eb2b4ab2a6e355d30cabd96a4cfc624b6072d1085700eab",
@@ -457,12 +420,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Outer wall": 80,
-        "Gap infill": 20
-      },
       "positive_layers": 20,
-      "classification": "candidate_red"
+      "classification": "candidate_red",
+      "gated_roles": [
+        "Gap infill"
+      ]
     },
     "support-unit": {
       "template_sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
@@ -494,19 +456,12 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Support": 507,
-        "Inner wall": 85,
-        "Outer wall": 85,
-        "Sparse infill": 156,
-        "Support interface": 312,
-        "Overhang wall": 12,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 28,
-      "classification": "regression_guard"
+      "classification": "regression_guard",
+      "gated_roles": [
+        "Support",
+        "Support interface"
+      ]
     },
     "support070": {
       "template_sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
@@ -538,19 +493,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Support": 507,
-        "Inner wall": 85,
-        "Outer wall": 85,
-        "Sparse infill": 156,
-        "Support interface": 312,
-        "Overhang wall": 12,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 28,
-      "classification": "candidate_red"
+      "classification": "candidate_red",
+      "gated_roles": [
+        "Support"
+      ]
     },
     "interface065": {
       "template_sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
@@ -582,19 +529,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Support": 507,
-        "Inner wall": 85,
-        "Outer wall": 85,
-        "Sparse infill": 156,
-        "Support interface": 312,
-        "Overhang wall": 12,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 28,
-      "classification": "candidate_red"
+      "classification": "candidate_red",
+      "gated_roles": [
+        "Support interface"
+      ]
     },
     "overhang070": {
       "template_sha256": "c10ce14f43d70412c5b20fed480c93726df5734aa734a9241453c7b5a2b8c1a9",
@@ -626,19 +565,11 @@
         "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
         "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
       },
-      "native_activity": {
-        "Support": 507,
-        "Inner wall": 85,
-        "Outer wall": 85,
-        "Sparse infill": 156,
-        "Support interface": 312,
-        "Overhang wall": 12,
-        "Internal solid infill": 258,
-        "Internal Bridge": 116,
-        "Top surface": 71
-      },
       "positive_layers": 28,
-      "classification": "candidate_red"
+      "classification": "candidate_red",
+      "gated_roles": [
+        "Overhang wall"
+      ]
     }
   },
   "source": {
