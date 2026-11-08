@@ -1,5 +1,7 @@
 #![cfg_attr(not(test), allow(dead_code))]
 
+use crate::options::OrcaFloatOrPercentsNullable;
+
 use std::{iter::Peekable, str::Chars};
 
 use serde::{
@@ -62,7 +64,7 @@ macro_rules! nullable_vector_codecs {
         })*
     };
 }
-nullable_vector_codecs!(OrcaBoolsNullable => BoolsNullable, OrcaFloatsNullable => FloatsNullable);
+nullable_vector_codecs!(OrcaBoolsNullable => BoolsNullable, OrcaFloatsNullable => FloatsNullable, OrcaFloatOrPercentsNullable => FloatsOrPercents);
 
 impl RegionMetadataCodec for OrcaInts {
     fn deserialize_metadata(value: &str) -> Result<Self, String> {

@@ -104,7 +104,10 @@ fn check(case: Case) {
                 ProcessInfillPattern::Rectilinear
             );
             assert_eq!(region.top_solid_infill_flow_ratio.0, case.global_ratio);
-            assert_eq!(region.top_surface_speed.0, 30.0);
+            assert_eq!(
+                region.top_surface_speed.0,
+                [ares_core::Nullable::Value(ares_core::OrcaFloat(30.0))]
+            );
             let modifier = case_runner::modifier(metadata);
             assert!(modifier.contains("<metadata key=\"sparse_infill_density\" value=\"15%\"/>"));
             for key in ["top_solid_infill_flow_ratio", "top_surface_speed"] {

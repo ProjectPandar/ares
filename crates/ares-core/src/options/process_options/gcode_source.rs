@@ -1,3 +1,5 @@
+use crate::options::OrcaFloatsNullable;
+
 mod wire;
 
 use std::fmt;
@@ -21,11 +23,11 @@ declare_option_group! {
         single_extruder_multi_material_priming => "single_extruder_multi_material_priming": OrcaBool = OrcaBool(false),
         wipe_tower_no_sparse_layers => "wipe_tower_no_sparse_layers": OrcaBool = OrcaBool(false),
         process_change_extrusion_role_gcode => "process_change_extrusion_role_gcode": OrcaString = string(""),
-        travel_speed => "travel_speed": OrcaFloat = OrcaFloat(120.0),
-        travel_speed_z => "travel_speed_z": OrcaFloat = OrcaFloat(0.0),
+        travel_speed => "travel_speed": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(120.0))]),
+        travel_speed_z => "travel_speed_z": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(0.0))]),
         accel_to_decel_enable => "accel_to_decel_enable": OrcaBool = OrcaBool(true),
         accel_to_decel_factor => "accel_to_decel_factor": Percent = Percent(50.0),
-        initial_layer_travel_speed => "initial_layer_travel_speed": FloatOrPercent = FloatOrPercent::Percent(Percent(100.0)),
+        initial_layer_travel_speed => "initial_layer_travel_speed": OrcaFloatOrPercentsNullable = OrcaFloatOrPercentsNullable(vec![Nullable::Value(FloatOrPercent::Percent(Percent(100.0)))]),
         initial_layer_travel_acceleration => "initial_layer_travel_acceleration": OrcaFloatOrPercentsNullable = OrcaFloatOrPercentsNullable(vec![Nullable::Value(FloatOrPercent::Percent(Percent(100.0)))]),
         initial_layer_travel_jerk => "initial_layer_travel_jerk": FloatOrPercent = FloatOrPercent::Percent(Percent(100.0)),
         small_area_infill_flow_compensation_model => "small_area_infill_flow_compensation_model": OrcaStrings = strings(&[

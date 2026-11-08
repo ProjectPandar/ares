@@ -87,7 +87,7 @@ async fn preset_scalar_original_bbl_array() {
     let placed = ares_core::profile_placed_project(input, request).await;
     write_json(
         &directory.join("result.json"),
-        &json!({"native": native, "ares": loaded.as_ref().map(|view| json!(view)).map_err(ToString::to_string), "typed_bridge_speed": placed.as_ref().map(|project| project.settings().process.region.bridge_speed.0).map_err(ToString::to_string)}),
+        &json!({"native": native, "ares": loaded.as_ref().map(|view| json!(view)).map_err(ToString::to_string), "typed_bridge_speed": placed.as_ref().map(|project| &project.settings().process.region.bridge_speed.0).map_err(ToString::to_string)}),
     );
     let loaded = serde_json::to_value(
         loaded.unwrap_or_else(|error| panic!("{error}; evidence {directory:?}")),
@@ -96,6 +96,6 @@ async fn preset_scalar_original_bbl_array() {
     assert_eq!(loaded["bridge_speed"], json!("50"));
     assert_eq!(
         placed.unwrap().settings().process.region.bridge_speed.0,
-        50.0
+        [ares_core::Nullable::Value(ares_core::OrcaFloat(50.0))]
     );
 }

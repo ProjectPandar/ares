@@ -144,7 +144,11 @@ pub(in crate::project_slice::gcode_emit) fn emit_skirt_loop(
                 fitting: &[],
                 slope: None,
             },
-            Some(state.current_support_speed),
+            Some(
+                state
+                    .current_support_speed
+                    .get_at(state.options.nozzle_config_index),
+            ),
         ),
         geometry,
         state,

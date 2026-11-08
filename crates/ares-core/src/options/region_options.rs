@@ -1,3 +1,5 @@
+use crate::options::OrcaFloatOrPercentsNullable;
+
 use super::{
     FilamentRegionSourceOptions, FloatOrPercent, OrcaBool, OrcaBoolsNullable, OrcaFloat,
     OrcaFloatsNullable, OrcaInt, OrcaInts, OrcaString, OrcaStrings, Percent,

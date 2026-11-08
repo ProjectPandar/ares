@@ -1,5 +1,7 @@
 #![cfg_attr(not(test), allow(dead_code))]
 
+use crate::options::OrcaFloatOrPercentsNullable;
+
 use crate::SliceError;
 
 use super::super::{

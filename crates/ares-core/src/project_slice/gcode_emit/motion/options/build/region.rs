@@ -102,8 +102,8 @@ pub(in crate::project_slice::gcode_emit) fn apply(
         || default.outer_wall_speed.get_at(slot),
         |value| value.outer_wall_speed.get_at(slot),
     );
-    let small_perimeter = region.map_or(default.small_perimeter_speed, |value| {
-        value.small_perimeter_speed
+    let small_perimeter = region.map_or(default.small_perimeter_speed.get_at(slot), |value| {
+        value.small_perimeter_speed.get_at(slot)
     });
     options.small_perimeter_speed =
         small_perimeter_speed(small_perimeter, options.outer_wall_speed);
@@ -111,26 +111,30 @@ pub(in crate::project_slice::gcode_emit) fn apply(
         .map_or(default.small_perimeter_threshold.0, |value| {
             value.small_perimeter_threshold.0
         });
-    options.bridge_speed = region.map_or(default.bridge_speed.0, |value| value.bridge_speed.0);
+    options.bridge_speed = region.map_or(default.bridge_speed.get_at(slot), |value| {
+        value.bridge_speed.get_at(slot)
+    });
     options.internal_bridge_speed = absolute(
-        region.map_or(default.internal_bridge_speed, |value| {
-            value.internal_bridge_speed
+        region.map_or(default.internal_bridge_speed.get_at(slot), |value| {
+            value.internal_bridge_speed.get_at(slot)
         }),
         options.bridge_speed,
     );
-    options.sparse_infill_speed = region.map_or(default.sparse_infill_speed.0, |value| {
-        value.sparse_infill_speed.0
-    });
-    options.internal_solid_infill_speed = region
-        .map_or(default.internal_solid_infill_speed.0, |value| {
-            value.internal_solid_infill_speed.0
+    options.sparse_infill_speed = region
+        .map_or(default.sparse_infill_speed.get_at(slot), |value| {
+            value.sparse_infill_speed.get_at(slot)
         });
-    options.top_surface_speed = region.map_or(default.top_surface_speed.0, |value| {
-        value.top_surface_speed.0
+    options.internal_solid_infill_speed = region
+        .map_or(default.internal_solid_infill_speed.get_at(slot), |value| {
+            value.internal_solid_infill_speed.get_at(slot)
+        });
+    options.top_surface_speed = region.map_or(default.top_surface_speed.get_at(slot), |value| {
+        value.top_surface_speed.get_at(slot)
     });
     options.ironing_speed = region.map_or(default.ironing_speed.0, |value| value.ironing_speed.0);
-    options.gap_infill_speed =
-        region.map_or(default.gap_infill_speed.0, |value| value.gap_infill_speed.0);
+    options.gap_infill_speed = region.map_or(default.gap_infill_speed.get_at(slot), |value| {
+        value.gap_infill_speed.get_at(slot)
+    });
     options.enable_overhang_speed = region.map_or_else(
         || default.enable_overhang_speed.get_at(slot),
         |value| value.enable_overhang_speed.get_at(slot),
@@ -140,10 +144,26 @@ pub(in crate::project_slice::gcode_emit) fn apply(
         |value| value.slowdown_for_curled_perimeters.get_at(slot),
     );
     options.overhang_speed_bands = [
-        Some(region.map_or(default.overhang_1_4_speed, |value| value.overhang_1_4_speed)),
-        Some(region.map_or(default.overhang_2_4_speed, |value| value.overhang_2_4_speed)),
-        Some(region.map_or(default.overhang_3_4_speed, |value| value.overhang_3_4_speed)),
-        Some(region.map_or(default.overhang_4_4_speed, |value| value.overhang_4_4_speed)),
+        Some(
+            region.map_or(default.overhang_1_4_speed.get_at(slot), |value| {
+                value.overhang_1_4_speed.get_at(slot)
+            }),
+        ),
+        Some(
+            region.map_or(default.overhang_2_4_speed.get_at(slot), |value| {
+                value.overhang_2_4_speed.get_at(slot)
+            }),
+        ),
+        Some(
+            region.map_or(default.overhang_3_4_speed.get_at(slot), |value| {
+                value.overhang_3_4_speed.get_at(slot)
+            }),
+        ),
+        Some(
+            region.map_or(default.overhang_4_4_speed.get_at(slot), |value| {
+                value.overhang_4_4_speed.get_at(slot)
+            }),
+        ),
     ];
     options.bottom_surface_pattern_hilbert = super::fields::hilbert::is_hilbert(
         region.map_or(default.bottom_surface_pattern, |value| {

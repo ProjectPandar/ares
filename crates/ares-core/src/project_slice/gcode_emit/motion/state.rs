@@ -76,7 +76,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) current_seam_gap: crate::FloatOrPercent,
     /// Current object field in GCode::m_config, applied before each instance's body.
     pub(in crate::project_slice::gcode_emit) current_brim_flow_ratio: f64,
-    pub(in crate::project_slice::gcode_emit) current_support_speed: f64,
+    pub(in crate::project_slice::gcode_emit) current_support_speed:
+        crate::options::OrcaFloatsNullable,
     pub(in crate::project_slice::gcode_emit) auto_lift: super::auto_lift::AutoLift,
     pub(in crate::project_slice::gcode_emit) active_layer_print_z: f64,
     pub(in crate::project_slice::gcode_emit) small_area_flow:

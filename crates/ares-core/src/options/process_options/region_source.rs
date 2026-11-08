@@ -1,3 +1,5 @@
+use crate::options::OrcaFloatOrPercentsNullable;
+
 mod enums;
 mod wire;
 

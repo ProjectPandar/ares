@@ -100,7 +100,12 @@ pub(super) fn emit(
                 motion.apply_region(
                     &traversal.resolved.views.full.process.region,
                     Some(options),
-                    traversal.resolved.views.runtime_gcode.travel_speed.0,
+                    traversal
+                        .resolved
+                        .views
+                        .runtime_gcode
+                        .travel_speed
+                        .get_at(motion.nozzle_config_index),
                     motion.nozzle_diameter,
                 );
                 (

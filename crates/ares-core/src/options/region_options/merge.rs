@@ -1,3 +1,5 @@
+use crate::options::project_variants::apply_nullable_vector;
+
 use super::{
     super::{FilamentRegionSourceOptions, Nullable, OrcaInt, region_fields::region_option_fields},
     RegionBase, RegionOptionOverrides, RegionOptions, RegionOverrideSources, normalization,
@@ -119,48 +121,11 @@ fn apply_overrides(
     process_variant_indices: &[usize],
 ) {
     macro_rules! apply_fields {
-        ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
-            $(apply_field!(options, source, mask, $field);)*
+        ($($field:ident => $key:literal: $ty:ident = $default:expr),* $(,)?) => {
+            $(apply_field!(options, source, mask, process_variant_indices, $field, $ty);)*
         };
     }
     region_option_fields!(apply_fields);
-
-    if let Some(value) = &source.inner_wall_speed
-        && !options.inner_wall_speed.source_equals(value)
-    {
-        apply_nullable_vector(
-            &mut options.inner_wall_speed.0,
-            &value.0,
-            process_variant_indices,
-        );
-    }
-    if let Some(value) = &source.outer_wall_speed
-        && !options.outer_wall_speed.source_equals(value)
-    {
-        apply_nullable_vector(
-            &mut options.outer_wall_speed.0,
-            &value.0,
-            process_variant_indices,
-        );
-    }
-    if let Some(value) = &source.enable_overhang_speed
-        && options.enable_overhang_speed != *value
-    {
-        apply_nullable_vector(
-            &mut options.enable_overhang_speed.0,
-            &value.0,
-            process_variant_indices,
-        );
-    }
-    if let Some(value) = &source.slowdown_for_curled_perimeters
-        && options.slowdown_for_curled_perimeters != *value
-    {
-        apply_nullable_vector(
-            &mut options.slowdown_for_curled_perimeters.0,
-            &value.0,
-            process_variant_indices,
-        );
-    }
 
     if let Some(extruder) = source.extruder.filter(|value| value.0 > 0) {
         apply_fallbacks!(options, mask, extruder;
@@ -175,80 +140,74 @@ fn apply_overrides(
 }
 
 macro_rules! apply_field {
-    ($options:ident, $source:ident, $mask:ident, sparse_infill_filament_id) => {
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, sparse_infill_filament_id, $ty:ident) => {
         apply_feature(
             &mut $options.sparse_infill_filament_id,
             $source.sparse_infill_filament_id,
             &mut $mask.sparse_infill_filament_id,
         );
     };
-    ($options:ident, $source:ident, $mask:ident, internal_solid_filament_id) => {
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, internal_solid_filament_id, $ty:ident) => {
         apply_feature(
             &mut $options.internal_solid_filament_id,
             $source.internal_solid_filament_id,
             &mut $mask.internal_solid_filament_id,
         );
     };
-    ($options:ident, $source:ident, $mask:ident, top_surface_filament_id) => {
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, top_surface_filament_id, $ty:ident) => {
         apply_feature(
             &mut $options.top_surface_filament_id,
             $source.top_surface_filament_id,
             &mut $mask.top_surface_filament_id,
         );
     };
-    ($options:ident, $source:ident, $mask:ident, bottom_surface_filament_id) => {
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, bottom_surface_filament_id, $ty:ident) => {
         apply_feature(
             &mut $options.bottom_surface_filament_id,
             $source.bottom_surface_filament_id,
             &mut $mask.bottom_surface_filament_id,
         );
     };
-    ($options:ident, $source:ident, $mask:ident, outer_wall_filament_id) => {
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, outer_wall_filament_id, $ty:ident) => {
         apply_feature(
             &mut $options.outer_wall_filament_id,
             $source.outer_wall_filament_id,
             &mut $mask.outer_wall_filament_id,
         );
     };
-    ($options:ident, $source:ident, $mask:ident, inner_wall_filament_id) => {
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, inner_wall_filament_id, $ty:ident) => {
         apply_feature(
             &mut $options.inner_wall_filament_id,
             $source.inner_wall_filament_id,
             &mut $mask.inner_wall_filament_id,
         );
     };
-    // These source-owned vectors use set_variant_override below, not replacement.
-    ($options:ident, $source:ident, $mask:ident, inner_wall_speed) => {};
-    ($options:ident, $source:ident, $mask:ident, outer_wall_speed) => {};
-    ($options:ident, $source:ident, $mask:ident, enable_overhang_speed) => {};
-    ($options:ident, $source:ident, $mask:ident, slowdown_for_curled_perimeters) => {};
-    ($options:ident, $source:ident, $mask:ident, $field:ident) => {
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, $field:ident, OrcaFloatsNullable) => {
+        if let Some(value) = &$source.$field
+            && !$options.$field.source_equals(value)
+        {
+            apply_nullable_vector(&mut $options.$field.0, &value.0, $indices);
+        }
+    };
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, $field:ident, OrcaFloatOrPercentsNullable) => {
+        if let Some(value) = &$source.$field
+            && !$options.$field.source_equals(value)
+        {
+            apply_nullable_vector(&mut $options.$field.0, &value.0, $indices);
+        }
+    };
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, $field:ident, OrcaBoolsNullable) => {
+        if let Some(value) = &$source.$field
+            && $options.$field != *value
+        {
+            apply_nullable_vector(&mut $options.$field.0, &value.0, $indices);
+        }
+    };
+    ($options:ident, $source:ident, $mask:ident, $indices:ident, $field:ident, $ty:ident) => {
         if let Some(value) = &$source.$field {
             $options.$field = value.clone();
         }
     };
-}
-
-// PrintObject.cpp:4363-4374; PrintConfig.cpp:11421-11429; Config.hpp:612-629.
-// Non-nil singletons broadcast. Nil/out-of-range source columns retain the target.
-fn apply_nullable_vector<T: Clone>(
-    target: &mut Vec<Nullable<T>>,
-    source: &[Nullable<T>],
-    indices: &[usize],
-) {
-    if indices.is_empty() {
-        target.clear();
-        target.extend_from_slice(source);
-        return;
-    }
-    target.resize(indices.len(), source[0].clone());
-    let broadcast = source.len() == 1 && !matches!(source[0], Nullable::Nil);
-    for (value, &index) in target.iter_mut().zip(indices) {
-        let index = if broadcast { 0 } else { index };
-        if let Some(selected @ Nullable::Value(_)) = source.get(index) {
-            value.clone_from(selected);
-        }
-    }
 }
 
 macro_rules! apply_fallbacks {

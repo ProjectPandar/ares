@@ -113,7 +113,6 @@ impl MergedProfileMetadata {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-#[expect(clippy::large_enum_variant)]
 pub enum MergedProfile {
     Machine {
         metadata: MergedProfileMetadata,

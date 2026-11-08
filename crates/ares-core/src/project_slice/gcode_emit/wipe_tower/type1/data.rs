@@ -37,7 +37,7 @@ impl Planned {
             generator.changes + 1
         )
         .unwrap();
-        writer.feedrate(settings.process.gcode.travel_speed.0 as f32 * 60.0);
+        writer.feedrate(generator.travel_speed * 60.0);
         CommandWriter::flush_planner_queue(&mut writer.gcode, settings.printer.gcode.gcode_flavor);
         writer
             .gcode

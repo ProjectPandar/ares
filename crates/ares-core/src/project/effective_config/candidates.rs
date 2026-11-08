@@ -19,6 +19,7 @@ pub(crate) fn resolve_project_objects(
     validated: ValidatedMaterializedProject,
     objects: &[ProjectObject],
     grouped: &GroupedPrintObjects,
+    process_variant_indices: &[usize],
 ) -> Result<Vec<ResolvedProjectObject>, SliceError> {
     let z_compensation = z_shrinkage_compensation(settings, validated.logical_filament_count);
     grouped
@@ -31,6 +32,7 @@ pub(crate) fn resolve_project_objects(
                 &settings.process.object,
                 object.object_overrides(),
                 validated.logical_filament_count,
+                process_variant_indices,
             );
             Ok(ResolvedProjectObject {
                 source_object_index: groups.source_object_index,
@@ -71,7 +73,13 @@ pub(crate) fn resolve_project_candidates(
     grouped: &GroupedPrintObjects,
     process_variant_indices: &[usize],
 ) -> Result<Vec<ResolvedProjectObject>, SliceError> {
-    let mut resolved = resolve_project_objects(settings, validated, objects, grouped)?;
+    let mut resolved = resolve_project_objects(
+        settings,
+        validated,
+        objects,
+        grouped,
+        process_variant_indices,
+    )?;
 
     for (groups, resolved_object) in grouped
         .by_object

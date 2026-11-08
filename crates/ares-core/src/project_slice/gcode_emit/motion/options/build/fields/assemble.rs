@@ -53,11 +53,17 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .or_else(|| gcode.filament_max_volumetric_speed.0.first())
             .map_or(0.0, |value| value.0),
         travel_feedrate: travel_speed * 60.0,
-        z_travel_feedrate: gcode.travel_speed_z.0 * 60.0,
-        first_layer_travel_feedrate: absolute(gcode.initial_layer_travel_speed, travel_speed)
-            * 60.0,
-        initial_layer_speed: full.process.print.initial_layer_speed.0,
-        initial_layer_infill_speed: full.process.print.initial_layer_infill_speed.0,
+        z_travel_feedrate: gcode.travel_speed_z.get_at(nozzle_index) * 60.0,
+        first_layer_travel_feedrate: absolute(
+            gcode.initial_layer_travel_speed.get_at(nozzle_index),
+            travel_speed,
+        ) * 60.0,
+        initial_layer_speed: full.process.print.initial_layer_speed.get_at(nozzle_index),
+        initial_layer_infill_speed: full
+            .process
+            .print
+            .initial_layer_infill_speed
+            .get_at(nozzle_index),
         skirt_speed: full.process.print.skirt_speed.0,
         resonance_avoidance: full.printer.machine.resonance_avoidance.0.then_some((
             full.printer.machine.min_resonance_avoidance_speed.0,
@@ -65,9 +71,10 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         )),
         slow_down_layers: full.process.print.slow_down_layers.0.max(0) as u32,
         raft_layers: full.process.object.raft_layers.0.max(0) as u32,
-        support_speed: object.map_or(full.process.object.support_speed.0, |value| {
-            value.object.support_speed.0
-        }),
+        support_speed: object.map_or(
+            full.process.object.support_speed.get_at(nozzle_index),
+            |value| value.object.support_speed.get_at(nozzle_index),
+        ),
         support_flow_ratio: object.map_or(full.process.object.support_flow_ratio.0, |value| {
             value.object.support_flow_ratio.0
         }),
@@ -78,10 +85,13 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         support_type: object.map_or(full.process.object.support_type, |value| {
             value.object.support_type
         }),
-        support_interface_speed: object
-            .map_or(full.process.object.support_interface_speed.0, |value| {
-                value.object.support_interface_speed.0
-            }),
+        support_interface_speed: object.map_or(
+            full.process
+                .object
+                .support_interface_speed
+                .get_at(nozzle_index),
+            |value| value.object.support_interface_speed.get_at(nozzle_index),
+        ),
         enable_overhang_bridge_fan: full
             .filament
             .print

@@ -19,6 +19,7 @@ pub(super) struct ValidatedClassicObject {
 }
 
 pub(super) struct ClassicValidationContext<'a> {
+    pub(super) settings: &'a crate::ProjectSettings,
     pub(super) resolved_objects:
         &'a [crate::project::effective_config::types::ResolvedProjectObject],
     pub(super) enable_arc_fitting: bool,
@@ -28,6 +29,7 @@ pub(super) struct ClassicValidationContext<'a> {
 }
 
 struct RecordValidationContext<'a> {
+    settings: &'a crate::ProjectSettings,
     object_options: &'a ObjectOptions,
     region: &'a RegionOptions,
     enable_arc_fitting: bool,
@@ -76,6 +78,7 @@ pub(super) fn validate_project(
                         validate_record(
                             record,
                             RecordValidationContext {
+                                settings: context.settings,
                                 object_options: &resolved.object,
                                 region: object.region_options(record),
                                 enable_arc_fitting: context.enable_arc_fitting,
@@ -97,6 +100,7 @@ fn validate_record(
     context: RecordValidationContext<'_>,
 ) -> Result<ValidatedClassicConfig, SliceError> {
     let RecordValidationContext {
+        settings,
         object_options,
         region,
         enable_arc_fitting,
@@ -148,7 +152,13 @@ fn validate_record(
         detect_thin_wall: region.detect_thin_wall.0,
         // v2.5.0-beta PerimeterGenerator.cpp:619-622,1540.
         only_one_wall_top: region.only_one_wall_top.0 && region.top_shell_layers.0 > 0,
-        gap_infill_speed: region.gap_infill_speed.0,
+        // PerimeterGenerator.cpp:829,1505 uses the mapped outer-wall extruder.
+        gap_infill_speed: region
+            .gap_infill_speed
+            .get_at(crate::options::mapped_extruder_id(
+                settings,
+                (region.outer_wall_filament_id.0 - 1) as usize,
+            )),
         surface_simplify_resolution: simplify_resolution,
         support_nozzle_diameter,
     })

@@ -21,9 +21,9 @@ struct Stat {
 fn stat(
     regions: &[PostRegion],
     color: usize,
-    height: f32,
-    nozzle: f64,
+    (height, nozzle): (f32, f64),
     scale: CoordinateScale,
+    settings: &crate::ProjectSettings,
 ) -> Result<Stat, SliceError> {
     let mut out = Stat::default();
     for region in regions
@@ -44,7 +44,12 @@ fn stat(
         out.width = out.width.max(width as f32);
         out.top = out.top.max(cfg.top_shell_layers.0 as usize);
         out.bottom = out.bottom.max(cfg.bottom_shell_layers.0 as usize);
-        let small = if cfg.gap_infill_speed.0 > 0.0 {
+        // MultiMaterialSegmentation.cpp:1430 selects the outer-wall extruder.
+        let slot = crate::options::mapped_extruder_id(
+            settings,
+            (cfg.outer_wall_filament_id.0 - 1) as usize,
+        );
+        let small = if cfg.gap_infill_speed.get_at(slot) > 0.0 {
             (0.5 * width) as f32
         } else {
             (width + f64::from(0.7_f32 * spacing)) as f32
@@ -180,7 +185,7 @@ fn merge(top: Embedded, bottom: Embedded) -> Result<Patches, ClipperError> {
 pub(super) fn segment(
     input: &Input<'_>,
     layers: &[Layer],
-    regions: &[PostRegion],
+    (regions, settings): (&[PostRegion], &crate::ProjectSettings),
     heights: &[f32],
     nozzle: f64,
 ) -> Result<Patches, SliceError> {
@@ -228,7 +233,7 @@ pub(super) fn segment(
         .iter()
         .map(|&h| {
             (0..input.states)
-                .map(|color| stat(regions, color, h, nozzle, input.scale))
+                .map(|color| stat(regions, color, (h, nozzle), input.scale, settings))
                 .collect::<Result<Vec<_>, _>>()
         })
         .collect::<Result<Vec<_>, _>>()?;

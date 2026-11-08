@@ -81,7 +81,7 @@ impl Generator<'_> {
             }
             if index + 1 == tools.len() {
                 writer.speed_override_restore();
-                writer.feedrate(self.settings.process.gcode.travel_speed.0 as f32 * 60.0);
+                writer.feedrate(self.travel_speed * 60.0);
                 Writer::flush_planner_queue(&mut writer.gcode, self.flavor);
                 writer
                     .gcode

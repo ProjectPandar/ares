@@ -85,6 +85,32 @@ numeric_vector!(
 );
 
 impl OrcaFloatOrPercentsNullable {
+    // Config.hpp:62–63 compares both the value and percentage tag.
+    pub(crate) fn source_equals(&self, other: &Self) -> bool {
+        self.0.len() == other.0.len()
+            && self.0.iter().zip(&other.0).all(|(a, b)| match (a, b) {
+                (Nullable::Nil, Nullable::Nil) => true,
+                (
+                    Nullable::Value(FloatOrPercent::Float(a)),
+                    Nullable::Value(FloatOrPercent::Float(b)),
+                ) => (a - b).abs() < 1e-4,
+                (
+                    Nullable::Value(FloatOrPercent::Percent(a)),
+                    Nullable::Value(FloatOrPercent::Percent(b)),
+                ) => (a.0 - b.0).abs() < 1e-4,
+                (Nullable::Nil, Nullable::Value(_))
+                | (Nullable::Value(_), Nullable::Nil)
+                | (
+                    Nullable::Value(FloatOrPercent::Float(_)),
+                    Nullable::Value(FloatOrPercent::Percent(_)),
+                )
+                | (
+                    Nullable::Value(FloatOrPercent::Percent(_)),
+                    Nullable::Value(FloatOrPercent::Float(_)),
+                ) => false,
+            })
+    }
+
     pub(crate) fn get_at(&self, index: usize) -> FloatOrPercent {
         match self.0.get(index).unwrap_or(&self.0[0]) {
             Nullable::Value(value) => *value,

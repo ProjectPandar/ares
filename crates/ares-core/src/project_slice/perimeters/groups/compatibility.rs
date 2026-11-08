@@ -18,8 +18,11 @@ pub(super) fn is_compatible(
         && a.is_infill_first == b.is_infill_first
         && a.inner_wall_speed.get_at(slot) == b.inner_wall_speed.get_at(slot)
         && a.outer_wall_speed.get_at(slot) == b.outer_wall_speed.get_at(slot)
-        && float_or_percent_eq(a.small_perimeter_speed, b.small_perimeter_speed)
-        && a.gap_infill_speed == b.gap_infill_speed
+        && float_or_percent_eq(
+            a.small_perimeter_speed.get_at(slot),
+            b.small_perimeter_speed.get_at(slot),
+        )
+        && a.gap_infill_speed.get_at(slot) == b.gap_infill_speed.get_at(slot)
         && a.filter_out_gap_fill == b.filter_out_gap_fill
         && a.detect_overhang_wall == b.detect_overhang_wall
         && a.overhang_reverse == b.overhang_reverse

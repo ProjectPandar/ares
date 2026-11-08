@@ -130,7 +130,7 @@ impl Generator<'_> {
             writer.trimpot(550);
         }
         writer.speed_override_restore();
-        writer.feedrate(self.settings.process.gcode.travel_speed.0 as f32 * 60.0);
+        writer.feedrate(self.travel_speed * 60.0);
         Writer::flush_planner_queue(&mut writer.gcode, self.flavor);
         writer
             .gcode
@@ -150,7 +150,7 @@ impl Generator<'_> {
             writer.switch_filament_monitoring(true);
         }
         let position = writer.rotated(writer.position);
-        writer.feedrate(self.settings.process.gcode.travel_speed.0 as f32 * 60.0);
+        writer.feedrate(self.travel_speed * 60.0);
         writer.gcode.push_str(&format!(
             "G1 X{} Y{}_GCODE_WIPE_TOWER_NEVER_SKIP_TAG\n[deretraction_from_wipe_tower_generator]",
             super::super::format_processor_float(f64::from(position[0])),

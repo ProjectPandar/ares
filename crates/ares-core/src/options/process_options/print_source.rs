@@ -1,3 +1,5 @@
+use crate::options::{Nullable, OrcaFloatsNullable};
+
 mod enums;
 mod wire;
 
@@ -24,8 +26,8 @@ declare_option_group! {
         draft_shield => "draft_shield": ProcessDraftShield = ProcessDraftShield::Disabled,
         initial_layer_line_width => "initial_layer_line_width": FloatOrPercent = FloatOrPercent::Float(0.0),
         initial_layer_print_height => "initial_layer_print_height": OrcaFloat = OrcaFloat(0.2),
-        initial_layer_speed => "initial_layer_speed": OrcaFloat = OrcaFloat(30.0),
-        initial_layer_infill_speed => "initial_layer_infill_speed": OrcaFloat = OrcaFloat(60.0),
+        initial_layer_speed => "initial_layer_speed": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(30.0))]),
+        initial_layer_infill_speed => "initial_layer_infill_speed": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(60.0))]),
         reduce_infill_retraction => "reduce_infill_retraction": OrcaBool = OrcaBool(false),
         ooze_prevention => "ooze_prevention": OrcaBool = OrcaBool(false),
         filename_format => "filename_format": OrcaString = string("{input_filename_base}_{filament_type[initial_tool]}_{print_time}.gcode"),

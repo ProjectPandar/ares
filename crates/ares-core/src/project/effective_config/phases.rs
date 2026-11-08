@@ -81,8 +81,13 @@ fn resolve_with_observer(
     let grouped = group_print_object_transforms(project.objects());
     observer.validate_and_group(MaterializationPass::First, &grouped);
 
-    let first_shells =
-        resolve_project_objects(&first, first_validated, project.objects(), &grouped)?;
+    let first_shells = resolve_project_objects(
+        &first,
+        first_validated,
+        project.objects(),
+        &grouped,
+        &process_variant_indices,
+    )?;
     observer.resolve_object_shells(&first_shells);
     let first_pre_region = collect_usage(
         UsagePass::FirstPreRegion,

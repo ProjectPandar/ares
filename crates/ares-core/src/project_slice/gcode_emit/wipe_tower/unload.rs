@@ -252,7 +252,7 @@ impl Generator<'_> {
         let perimeter = self.plan.perimeter_width;
         let xl = bounds.lower[0] + perimeter;
         let xr = bounds.upper[0] - perimeter;
-        let travel_speed = self.settings.process.gcode.travel_speed.0 as f32;
+        let travel_speed = self.travel_speed;
         let turn = (old_x + 20.0 * if turning - old_x > 0.0 { 1.0 } else { -1.0 }).clamp(xl, xr);
         if stamping > 5.0 {
             let center = writer.position[0];

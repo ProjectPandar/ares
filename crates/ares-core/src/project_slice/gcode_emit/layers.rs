@@ -82,8 +82,11 @@ pub(super) fn append(
         .0;
     let mut object_skirt_done = vec![(0, 0.0); skirt.as_ref().map_or(0, |plan| plan.group_count())];
     let mut cooling = cooling::CoolingState::from_traversal(traversal, state);
-    let mut spiral =
-        spiral_vase::SpiralVaseFilter::from_traversal(traversal, brim.iter().any(Option::is_some));
+    let mut spiral = spiral_vase::SpiralVaseFilter::from_traversal(
+        traversal,
+        brim.iter().any(Option::is_some),
+        state.options.travel_feedrate,
+    );
     // `GCode.cpp:4629-4630`: upstream tracks `m_max_layer_z` as the
     // running max of `float(print_z)` — the f32 cast absorbs the f64
     // accumulation drift so `{max_layer_z}`/`max_print_z` placeholders

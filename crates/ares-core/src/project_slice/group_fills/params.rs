@@ -21,6 +21,7 @@ use crate::{
 use super::{LockRegionParam, SurfaceFillParams};
 
 pub(super) struct LayerContext<'a> {
+    pub(super) settings: &'a crate::ProjectSettings,
     pub(super) planned: &'a PlannedLayer,
     /// Whole `plan.layers` for the meta-language rotation interpreter
     /// (`Fill.cpp:85-175` walks layers `i <= layer_id`).
@@ -78,6 +79,7 @@ impl<'a> LayerContext<'a> {
             0.0
         };
         Self {
+            settings: &traversal.resolved.views.full,
             planned: &plan.layers[layer_index],
             layers: &plan.layers,
             record,

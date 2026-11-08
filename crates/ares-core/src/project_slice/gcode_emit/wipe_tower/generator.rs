@@ -16,6 +16,10 @@ pub(super) struct Generator<'a> {
     pub(super) wipe_volumes: Vec<Vec<f32>>,
     pub(super) current_tool: usize,
     perimeter_speed: f32,
+    // WipeTower2.cpp:1060–1081 snapshots the initial tool, not the current tool.
+    pub(super) travel_speed: f32,
+    first_layer_speed: f32,
+    infill_speed: f32,
     pub(super) layer_index: usize,
     pub(super) z: f32,
     pub(super) layer_height: f32,
@@ -81,6 +85,9 @@ impl<'a> Generator<'a> {
             plan,
             wipe_volumes,
             current_tool: initial_tool,
+            travel_speed: settings.process.gcode.travel_speed.get_at(slot) as f32,
+            first_layer_speed: settings.process.print.initial_layer_speed.get_at(slot) as f32,
+            infill_speed: settings.process.region.sparse_infill_speed.get_at(slot) as f32,
             perimeter_speed: if perimeter_speed == 0.0 {
                 80.0
             } else {
@@ -231,7 +238,7 @@ impl<'a> Generator<'a> {
     }
 
     pub(super) fn first_layer_speed(&self) -> f32 {
-        let speed = self.settings.process.print.initial_layer_speed.0 as f32;
+        let speed = self.first_layer_speed;
         if speed == 0.0 { 30.0 } else { speed }
     }
 
@@ -240,7 +247,7 @@ impl<'a> Generator<'a> {
     }
 
     pub(super) fn infill_speed(&self) -> f32 {
-        let speed = self.settings.process.region.sparse_infill_speed.0 as f32;
+        let speed = self.infill_speed;
         if speed == 0.0 { 80.0 } else { speed }
     }
 }

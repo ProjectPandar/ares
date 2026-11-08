@@ -102,7 +102,13 @@ pub(in crate::project_slice) fn apply_project(
             )
             .map_err(clip_error)?;
         }
-        let caps = top_bottom::segment(&input, &layers, &object.regions, &heights, nozzle)?;
+        let caps = top_bottom::segment(
+            &input,
+            &layers,
+            (&object.regions, &prepared.resolved.views.full),
+            &heights,
+            nozzle,
+        )?;
         let segmentation = merge::merge(side, caps, prepared.scale).map_err(clip_error)?;
         apply::apply(object, metadata, segmentation, extruders, prepared.scale)?;
     }

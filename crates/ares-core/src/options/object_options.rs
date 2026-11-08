@@ -9,6 +9,35 @@ use super::{
 
 mod overrides;
 
+macro_rules! overlay_field {
+    ($result:ident, $source:ident, $indices:ident, support_speed) => {
+        overlay_variant!($result, $source, $indices, support_speed);
+    };
+    ($result:ident, $source:ident, $indices:ident, support_interface_speed) => {
+        overlay_variant!($result, $source, $indices, support_interface_speed);
+    };
+    ($result:ident, $source:ident, $indices:ident, $field:ident) => {
+        if let Some(value) = &$source.$field {
+            $result.$field = value.clone();
+        }
+    };
+}
+
+macro_rules! overlay_variant {
+    ($result:ident, $source:ident, $indices:ident, $field:ident) => {
+        if let Some(value) = &$source.$field
+            && !$result.$field.source_equals(value)
+        {
+            // PrintObject.cpp:4289–4295 retains source-column indices for overrides.
+            super::project_variants::apply_nullable_vector(
+                &mut $result.$field.0,
+                &value.0,
+                $indices,
+            );
+        }
+    };
+}
+
 macro_rules! declare_object_options {
     ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
         #[derive(Clone, Debug, PartialEq)]
@@ -31,13 +60,10 @@ macro_rules! declare_object_options {
             pub(crate) fn overlay(
                 base: &ProcessObjectSourceOptions,
                 overrides: &ObjectOptionOverrides,
+                process_variant_indices: &[usize],
             ) -> Self {
                 let mut result = Self::from_base(base);
-                $(
-                    if let Some(value) = &overrides.$field {
-                        result.$field = value.clone();
-                    }
-                )*
+                $(overlay_field!(result, overrides, process_variant_indices, $field);)*
                 result
             }
 
@@ -46,8 +72,9 @@ macro_rules! declare_object_options {
                 base: &ProcessObjectSourceOptions,
                 overrides: &ObjectOptionOverrides,
                 num_extruders: usize,
+                process_variant_indices: &[usize],
             ) -> Self {
-                let mut result = Self::overlay(base, overrides);
+                let mut result = Self::overlay(base, overrides, process_variant_indices);
                 let num_extruders = num_extruders as i32;
                 if result.support_filament.0 > num_extruders {
                     result.support_filament = OrcaInt(1);

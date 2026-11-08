@@ -163,7 +163,9 @@ pub(super) fn project_surface(
         .scale
         .checked_scale(seam_gap)
         .ok_or_else(|| SliceError::InvalidInput("seam_gap is out of coordinate range".into()))?;
-    params.role_speed = role_speed(context.region, params.extrusion_role);
+    // Fill.cpp:1077–1085 selects the emitted role's mapped extruder.
+    let slot = crate::options::mapped_extruder_id(context.settings, (params.extruder - 1) as usize);
+    params.role_speed = role_speed(context.region, params.extrusion_role, slot);
     params.filter_out_gap_fill = context.region.filter_out_gap_fill.0;
     params.gap_fill_target = context.object.gap_fill_target;
 
@@ -346,15 +348,16 @@ fn bridge_pattern(top: ProcessInfillPattern) -> ProcessInfillPattern {
     }
 }
 
-fn role_speed(region: &RegionOptions, role: ExtrusionRole) -> f32 {
+fn role_speed(region: &RegionOptions, role: ExtrusionRole, slot: usize) -> f32 {
     match role {
-        ExtrusionRole::BridgeInfill => region.bridge_speed.0 as f32,
-        ExtrusionRole::InternalBridgeInfill => {
-            absolute_speed(region.internal_bridge_speed, region.bridge_speed.0) as f32
-        }
-        ExtrusionRole::InternalInfill => region.sparse_infill_speed.0 as f32,
-        ExtrusionRole::TopSolidInfill => region.top_surface_speed.0 as f32,
-        ExtrusionRole::SolidInfill => region.internal_solid_infill_speed.0 as f32,
+        ExtrusionRole::BridgeInfill => region.bridge_speed.get_at(slot) as f32,
+        ExtrusionRole::InternalBridgeInfill => absolute_speed(
+            region.internal_bridge_speed.get_at(slot),
+            region.bridge_speed.get_at(slot),
+        ) as f32,
+        ExtrusionRole::InternalInfill => region.sparse_infill_speed.get_at(slot) as f32,
+        ExtrusionRole::TopSolidInfill => region.top_surface_speed.get_at(slot) as f32,
+        ExtrusionRole::SolidInfill => region.internal_solid_infill_speed.get_at(slot) as f32,
         ExtrusionRole::None
         | ExtrusionRole::Perimeter
         | ExtrusionRole::ExternalPerimeter

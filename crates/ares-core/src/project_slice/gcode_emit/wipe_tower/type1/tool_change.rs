@@ -161,7 +161,7 @@ impl Generator<'_> {
         self.plan.blocks[block_index].current +=
             depth - nozzle_depth * self.plan.layers[self.index].spacing;
         self.plan.blocks[block_index].last_filament = Some(new);
-        writer.feedrate(self.settings.process.gcode.travel_speed.0 as f32 * 60.0);
+        writer.feedrate(self.travel_speed * 60.0);
         CommandWriter::flush_planner_queue(
             &mut writer.gcode,
             self.settings.printer.gcode.gcode_flavor,

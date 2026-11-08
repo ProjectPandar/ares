@@ -22,6 +22,25 @@ use moves::MoveRecorder;
 pub(super) use stats::{PRINT_TIME_SEC_PLACEHOLDER, USED_FILAMENT_LENGTH_PLACEHOLDER};
 use time::{duration, minutes};
 
+pub(super) fn extruder_colors(
+    filament: &crate::options::FilamentGCodeSourceOptions,
+) -> Vec<String> {
+    // `GCodeProcessorResult::extruder_colors`: `filament_colour` padded
+    // to `filaments_count`, missing/empty slots → `#FF8000`
+    // (`GCodeProcessor::apply_config`, `GCodeProcessor.cpp:2321-2343`).
+    (0..filament.filament_diameter.0.len())
+        .map(|id| {
+            filament
+                .filament_colour
+                .0
+                .get(id)
+                .filter(|value| !value.is_empty())
+                .cloned()
+                .unwrap_or_else(|| "#FF8000".to_string())
+        })
+        .collect::<Vec<_>>()
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct ProcessorLimits {
     pub(super) print_acceleration: f64,

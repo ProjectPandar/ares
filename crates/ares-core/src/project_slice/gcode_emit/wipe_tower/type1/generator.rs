@@ -16,6 +16,9 @@ pub(super) struct Generator<'a> {
     pub(super) plan: Plan,
     pub(super) filaments: Vec<Filament>,
     pub(super) current: usize,
+    // WipeTower.cpp:1990,2033 selects the initial tool once.
+    pub(super) travel_speed: f32,
+    first_layer_speed: f32,
     pub(super) index: usize,
     pub(super) z: f32,
     pub(super) height: f32,
@@ -41,12 +44,15 @@ impl<'a> Generator<'a> {
         planned: super::planning::Planned,
     ) -> Self {
         let count = settings.filament.gcode.filament_colour.0.len();
+        let slot = crate::options::mapped_extruder_id(settings, planned.first_tool);
         Self {
             settings,
             scale,
             plan: planned.plan,
             filaments: (0..count).map(|i| Filament::new(settings, i)).collect(),
             current: planned.first_tool,
+            travel_speed: settings.process.gcode.travel_speed.get_at(slot) as f32,
+            first_layer_speed: settings.process.print.initial_layer_speed.get_at(slot) as f32,
             index: 0,
             z: 0.0,
             height: 0.0,
@@ -76,7 +82,7 @@ impl<'a> Generator<'a> {
     }
 
     pub(super) fn first_speed(&self) -> f32 {
-        let speed = self.settings.process.print.initial_layer_speed.0 as f32;
+        let speed = self.first_layer_speed;
         if speed == 0.0 { 30.0 } else { speed }
     }
 

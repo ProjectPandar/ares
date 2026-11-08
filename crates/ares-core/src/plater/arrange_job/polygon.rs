@@ -165,7 +165,7 @@ pub(in crate::plater) fn convex_hull_2d(object: &ProjectObject, instance: Transf
 
 /// The object's options over the global ones (`ModelObject::get_config_value`).
 fn object_options(settings: &ProjectSettings, object: &ProjectObject) -> ObjectOptions {
-    ObjectOptions::overlay(&settings.process.object, object.object_overrides())
+    ObjectOptions::overlay(&settings.process.object, object.object_overrides(), &[])
 }
 
 /// `get_bed_temp_key` / `get_bed_temp_1st_layer_key` (`PrintConfig.hpp:732-776`); the default

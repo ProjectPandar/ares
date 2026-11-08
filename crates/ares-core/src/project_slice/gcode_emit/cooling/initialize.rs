@@ -142,7 +142,12 @@ impl CoolingState {
                         )
                     })
                     .collect(),
-                runtime.travel_speed.0,
+                runtime
+                    .travel_speed
+                    .get_at(crate::options::mapped_extruder_id(
+                        &traversal.resolved.views.full,
+                        writer.initial_filaments.initial(),
+                    )),
                 super::super::motion::tool_selection::prefix(traversal),
                 writer.initial_filaments.initial(),
             ),

@@ -5,12 +5,13 @@ mod filament_select;
 pub(crate) use filament_maps::update_static_filament_maps;
 mod index;
 mod printer;
+mod process;
 mod select;
 
 pub(crate) use index::{canonical_variant, get_index_for_extruder};
 
 use crate::{
-    SliceError,
+    Nullable, SliceError,
     options::{OrcaInt, OrcaInts, ProjectSettings, project_config_views::ProjectConfigViews},
 };
 
@@ -50,7 +51,7 @@ pub(crate) fn materialize_project_variants(
 
         index::ensure_process_variant_columns(&mut materialized);
         let process_indices = index::resolve_process_indices(&materialized, &active.variants)?;
-        printer::materialize_process(&mut materialized, &process_indices)?;
+        process::materialize(&mut materialized, &process_indices)?;
         process_indices
     } else {
         // PrintApply.cpp:1431-1432
@@ -103,6 +104,28 @@ pub(crate) fn mapped_extruder_id(settings: &ProjectSettings, filament: usize) ->
         .0
         .get(filament)
         .map_or(0, |id| (id.0 - 1) as usize)
+}
+
+// PrintObject.cpp:4363-4374; PrintConfig.cpp:11421-11429; Config.hpp:612-629.
+// Non-nil singletons broadcast. Nil/out-of-range source columns retain the target.
+pub(in crate::options) fn apply_nullable_vector<T: Clone>(
+    target: &mut Vec<Nullable<T>>,
+    source: &[Nullable<T>],
+    indices: &[usize],
+) {
+    if indices.is_empty() {
+        target.clear();
+        target.extend_from_slice(source);
+        return;
+    }
+    target.resize(indices.len(), source[0].clone());
+    let broadcast = source.len() == 1 && !matches!(source[0], Nullable::Nil);
+    for (value, &index) in target.iter_mut().zip(indices) {
+        let index = if broadcast { 0 } else { index };
+        if let Some(selected @ Nullable::Value(_)) = source.get(index) {
+            value.clone_from(selected);
+        }
+    }
 }
 
 fn expanded_filament_map(source: &ProjectSettings, map: &OrcaInts) -> OrcaInts {

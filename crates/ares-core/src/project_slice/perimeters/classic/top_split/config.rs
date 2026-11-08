@@ -38,7 +38,15 @@ pub(super) fn validate_project(
                         if region.wall_loops.0 < 0 {
                             return Err(invalid("wall_loops"));
                         }
-                        validate_non_negative("gap_infill_speed", region.gap_infill_speed.0)?;
+                        validate_non_negative(
+                            "gap_infill_speed",
+                            region
+                                .gap_infill_speed
+                                .get_at(crate::options::mapped_extruder_id(
+                                    &prepared.resolved.views.full,
+                                    (region.outer_wall_filament_id.0 - 1) as usize,
+                                )),
+                        )?;
                         let nozzle_index = region
                             .outer_wall_filament_id
                             .0

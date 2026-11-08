@@ -1,3 +1,5 @@
+use crate::options::OrcaFloatsNullable;
+
 use super::{
     AmsCounts, ArcFittingMode, BedTemperatureFormula, CsvTable, ExtruderTypes,
     FilamentGCodeSourceOptions, FloatOrPercent, GCodeFlavor, NozzleVolumeTypes, Nullable,

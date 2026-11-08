@@ -63,6 +63,7 @@ pub(super) fn finish_classic_prelude(
     let validated = preflight::validate_project(
         &prepared.objects,
         ClassicValidationContext {
+            settings: &prepared.resolved.views.full,
             resolved_objects: &prepared.resolved.objects,
             enable_arc_fitting,
             resolution,

@@ -144,7 +144,14 @@ pub(in crate::project_slice) fn emit(
         total_layer_count: tail_layer_count,
         // GCode.cpp:2533-2534 initializes the region state from defaults.
         current_seam_gap: traversal.resolved.views.full.process.region.seam_gap,
-        current_support_speed: traversal.resolved.views.full.process.object.support_speed.0,
+        current_support_speed: traversal
+            .resolved
+            .views
+            .full
+            .process
+            .object
+            .support_speed
+            .clone(),
         current_brim_flow_ratio: traversal
             .resolved
             .views
@@ -318,21 +325,7 @@ pub(in crate::project_slice) fn emit(
     )?;
     machine::append_completion_controls(&mut output, traversal, &state);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
-    let filament = &traversal.resolved.views.full.filament.gcode;
-    // `GCodeProcessorResult::extruder_colors`: `filament_colour` padded
-    // to `filaments_count`, missing/empty slots → `#FF8000`
-    // (`GCodeProcessor::apply_config`, `GCodeProcessor.cpp:2321-2343`).
-    let extruder_colors = (0..filament.filament_diameter.0.len())
-        .map(|id| {
-            filament
-                .filament_colour
-                .0
-                .get(id)
-                .filter(|value| !value.is_empty())
-                .cloned()
-                .unwrap_or_else(|| "#FF8000".to_string())
-        })
-        .collect::<Vec<_>>();
+    let extruder_colors = processor::extruder_colors(&traversal.resolved.views.full.filament.gcode);
     if !tags.is_bbl() {
         output.extend_from_slice(&export_config);
     }

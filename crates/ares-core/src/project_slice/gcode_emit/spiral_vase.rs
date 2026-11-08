@@ -23,7 +23,11 @@ pub(super) struct SpiralVaseFilter {
 }
 
 impl SpiralVaseFilter {
-    pub(super) fn from_traversal(traversal: &PreparedPostClassicTraversal, has_brim: bool) -> Self {
+    pub(super) fn from_traversal(
+        traversal: &PreparedPostClassicTraversal,
+        has_brim: bool,
+        travel_feedrate: f64,
+    ) -> Self {
         let full = &traversal.resolved.views.full;
         let print = &full.process.print;
         let region = &full.process.region;
@@ -62,7 +66,7 @@ impl SpiralVaseFilter {
                 .expect("normalized skirt_height is non-negative"),
             has_brim,
             infinite_skirt: print.draft_shield != crate::ProcessDraftShield::Disabled,
-            travel_feedrate: traversal.resolved.views.runtime_gcode.travel_speed.0 * 60.0,
+            travel_feedrate,
         }
     }
 

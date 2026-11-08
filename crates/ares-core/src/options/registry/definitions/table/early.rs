@@ -66,7 +66,7 @@ pub(super) const EARLY_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("bridge_flow", Float, "1"; true, false, "1"),
     definition!("bridge_line_width", FloatOrPercent, "100%"; true, false, "100%"),
     definition!("bridge_no_support", Bool, "false"; true, false, "0"),
-    definition!("bridge_speed", Float, "25"; true, false, "25"),
+    definition!("bridge_speed", FloatsNullable, "25"; true, false, "25"),
     definition!("brim_ears", Bool, "false"; false, false, "0"),
     definition!("brim_ears_detection_length", Float, "1"; true, false, "1"),
     definition!("brim_ears_max_angle", Float, "125"; true, false, "125"),

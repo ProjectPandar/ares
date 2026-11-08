@@ -37,7 +37,7 @@ pub(super) const MIDDLE_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("gamma_correction", Float, "1"; false, false, ""),
     definition!("gap_fill_flow_ratio", Float, "1"; true, false, "1"),
     definition!("gap_fill_target", Enum, "nowhere"; true, false, "nowhere"),
-    definition!("gap_infill_speed", Float, "30"; true, false, "30"),
+    definition!("gap_infill_speed", FloatsNullable, "30"; true, false, "30"),
     definition!("gcode_add_line_number", Bool, "false"; true, false, "0"),
     definition!("gcode_comments", Bool, "false"; true, false, "0"),
     definition!(
