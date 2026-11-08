@@ -116,7 +116,7 @@ pub(super) fn prepare_object(
             candidates,
             horizontal,
             prelude,
-            spacing: predecessor.object_spacings[object_index],
+            spacing: &predecessor.object_spacings[object_index],
         },
     );
     if candidates.surfaces_by_layer.is_empty() {

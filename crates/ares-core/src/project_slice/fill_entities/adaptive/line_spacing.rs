@@ -1,7 +1,7 @@
 use crate::{FloatOrPercent, OrcaFloats, ProcessInfillPattern, RegionOptions};
 
-// FillAdaptive.cpp:296-309,344-354: the single contributing region's
-// config width and density are double. Flow.cpp:21-36 auto width is float.
+// FillAdaptive.cpp:304-323: each region's config width and density are double.
+// Flow.cpp:21-36 auto width is float.
 pub(in crate::project_slice) fn configured(
     region: &RegionOptions,
     nozzles: &OrcaFloats,

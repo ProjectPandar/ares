@@ -30,8 +30,7 @@ pub(super) fn dispatch(
     object_bounding_box: crate::geometry::BoundingBox,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
     stars_bounds: Option<(crate::geometry::BoundingBox, usize)>,
-    adaptive_spacing: f64,
-    support_spacing: f64,
+    object_spacing: &crate::project_slice::fill_entities::adaptive::ObjectSpacing,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
     match fill.params.pattern {
@@ -289,11 +288,8 @@ pub(super) fn dispatch(
                 crate::project_slice::fill_entities::adaptive::AdaptiveObject::new(
                     traversal,
                     object_index,
-                    crate::project_slice::fill_entities::adaptive::ObjectSpacing {
-                        adaptive: adaptive_spacing,
-                        support: support_spacing,
-                    }
-                    .for_pattern(pattern),
+                    // Fill.cpp:1619 uses the same region selection for anchoring.
+                    object_spacing.for_pattern(pattern, fill.region_id),
                 ),
                 &fill,
                 z,

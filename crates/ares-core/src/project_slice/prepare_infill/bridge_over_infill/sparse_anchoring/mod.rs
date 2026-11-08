@@ -71,7 +71,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
         traversal.scale,
     );
     let mut result = Vec::new();
-    let spacing = prepared.object_spacings[object_index];
+    let spacing = &prepared.object_spacings[object_index];
 
     for fill in grouped.surface_fills {
         if fill.representative.kind != RegionSurfaceKind::Internal {
@@ -87,8 +87,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             object_bounding_box,
             lightning_generator,
             stars_bounds.map(|bounds| (bounds, plan.layers[layer_index].id)),
-            spacing.adaptive,
-            spacing.support,
+            spacing,
             &mut result,
         )?;
     }

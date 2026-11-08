@@ -15,8 +15,7 @@ pub(in crate::project_slice) struct LayerGenerationOptions<'a> {
     pub(in crate::project_slice) lightning_generator:
         Option<&'a crate::fill::lightning::generator::Generator>,
     pub(in crate::project_slice) stars_bounds: Option<crate::geometry::BoundingBox>,
-    pub(in crate::project_slice) adaptive_spacing: f64,
-    pub(in crate::project_slice) support_spacing: f64,
+    pub(in crate::project_slice) object_spacing: &'a super::adaptive::ObjectSpacing,
 }
 
 pub(in crate::project_slice) fn generate_layer_with_active(
@@ -28,8 +27,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
     let LayerGenerationOptions {
         lightning_generator,
         stars_bounds,
-        adaptive_spacing,
-        support_spacing,
+        object_spacing,
     } = options;
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
@@ -164,11 +162,8 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 pattern
                 @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
             ) => {
-                let line_spacing = super::adaptive::ObjectSpacing {
-                    adaptive: adaptive_spacing,
-                    support: support_spacing,
-                }
-                .for_pattern(pattern);
+                // Fill.cpp:1386 selects the tree using the fill's printing region.
+                let line_spacing = object_spacing.for_pattern(pattern, region_id);
                 super::adaptive::append(
                     &mut output,
                     fill,
@@ -362,16 +357,14 @@ pub(in crate::project_slice) fn generate_layer_with_active(
 }
 
 pub(in crate::project_slice) fn layer_options<'a>(
-    prepared: &PreparedPostExternalSurfaces,
+    prepared: &'a PreparedPostExternalSurfaces,
     object_index: usize,
     lightning_generator: Option<&'a crate::fill::lightning::generator::Generator>,
     stars_bounds: Option<crate::geometry::BoundingBox>,
 ) -> LayerGenerationOptions<'a> {
-    let spacing = prepared.object_spacings[object_index];
     LayerGenerationOptions {
         lightning_generator,
         stars_bounds,
-        adaptive_spacing: spacing.adaptive,
-        support_spacing: spacing.support,
+        object_spacing: &prepared.object_spacings[object_index],
     }
 }

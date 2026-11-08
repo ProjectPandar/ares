@@ -15,16 +15,19 @@ use crate::{
     },
 };
 
-#[derive(Clone, Copy)]
 pub(in crate::project_slice) struct ObjectSpacing {
-    pub(in crate::project_slice) adaptive: f64,
+    pub(in crate::project_slice) adaptive: Vec<f64>,
     pub(in crate::project_slice) support: f64,
 }
 
 impl ObjectSpacing {
-    pub(in crate::project_slice) fn for_pattern(self, pattern: ProcessInfillPattern) -> f64 {
+    pub(in crate::project_slice) fn for_pattern(
+        &self,
+        pattern: ProcessInfillPattern,
+        region_id: usize,
+    ) -> f64 {
         match pattern {
-            ProcessInfillPattern::AdaptiveCubic => self.adaptive,
+            ProcessInfillPattern::AdaptiveCubic => self.adaptive[region_id],
             ProcessInfillPattern::SupportCubic => self.support,
             _ => unreachable!("spacing is only defined for adaptive patterns"),
         }
@@ -45,12 +48,21 @@ pub(in crate::project_slice) fn object_spacings(
         .collect::<Vec<_>>();
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
     ObjectSpacing {
-        adaptive: super::line_spacing::object_configured(
-            &region_options,
-            nozzles,
-            ProcessInfillPattern::AdaptiveCubic,
-            &active,
-        ),
+        // FillAdaptive.cpp:304-323 / PrintObject.cpp:1169-1190.
+        adaptive: region_options
+            .iter()
+            .enumerate()
+            .map(|(region_id, region)| {
+                if active.contains(&region_id)
+                    && region.sparse_infill_pattern == ProcessInfillPattern::AdaptiveCubic
+                    && region.sparse_infill_density.0 > 0.0
+                {
+                    super::line_spacing::configured(region, nozzles, region.fill_multiline.0)
+                } else {
+                    0.0
+                }
+            })
+            .collect(),
         support: super::line_spacing::object_configured(
             &region_options,
             nozzles,
@@ -91,7 +103,7 @@ pub(in crate::project_slice) struct SupportPreparation<'a> {
     pub(in crate::project_slice) candidates: &'a BridgeCandidateObject,
     pub(in crate::project_slice) horizontal: &'a PreparedSurfaceTypeObject,
     pub(in crate::project_slice) prelude: &'a PostPerimeterInputPrintObject,
-    pub(in crate::project_slice) spacing: ObjectSpacing,
+    pub(in crate::project_slice) spacing: &'a ObjectSpacing,
 }
 
 pub(in crate::project_slice) fn prepare_support(context: SupportPreparation<'_>) {
