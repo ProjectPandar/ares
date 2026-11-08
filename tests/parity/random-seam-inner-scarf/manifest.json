@@ -1,12 +1,10 @@
 {
-  "native_witness": "G1 X114.679 Y118.918 Z18.329 E.02273",
   "only_delta": {
     "control": "0",
     "key": "seam_slope_inner_walls",
     "positive": "1",
     "zip_payload": "Metadata/project_settings.config"
   },
-  "red_ares_witness": "G1 X114.679 Y118.918 Z18.329 E.02274",
   "scope_amendment": "96a4bdec2",
   "settings": {
     "control.3mf": {

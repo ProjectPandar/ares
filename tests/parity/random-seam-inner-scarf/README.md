@@ -1,58 +1,30 @@
-# Random seam arithmetic exposed by inner-wall scarf
+# Random seam with inner-wall scarf
 
-These are the actual official OrcaSlicer 2.4.2 CLI-exported projects,
-not post-export edited ZIPs. `manifest.json` freezes their complete
-hashes, every ZIP payload hash, and retained GUI settings.
+The positive and control projects were exported by OrcaSlicer 2.4.2.
+`manifest.json` records their archive hashes, ZIP payload hashes and
+settings. Only `Metadata/project_settings.config` differs, and its only
+setting difference is `seam_slope_inner_walls`: `"1"` for positive,
+`"0"` for control. Geometry and every other payload are identical.
 
-The ZIP payloads differ only in `Metadata/project_settings.config`;
-the JSON differs only in `seam_slope_inner_walls`: `"0"` for control,
-`"1"` for positive. Geometry and all other settings are identical.
-Scarf Contour, random seam, staggered inner seams, three walls and
-Inner/Outer order are retained. Wipe is disabled using the legitimate
-per-extruder `wipe = ["0"]` setting, avoiding two separate retraction
-mismatches rather than filtering output.
+Both use random seams, staggered inner seams, three walls, Inner/Outer
+wall order and Contour scarf. Wipe is disabled with `wipe = ["0"]`.
 
-The source-cited boundary and read-only GDB evidence are in
-[the SPEC](../../../docs/architecture/2026-10-20-random-seam-inner-scarf-spec.md).
-The last-edge guard remains unchanged per the spec amendment.
-This witness depends on the separate staggered interpolation
-fix; it is NOT the previous slice_z12.5 staggered witness.
+## Native motion contract
 
-## Formal contract
+The positive case must contain an inner-wall scarf ramp: an extruding
+G1 move with XY motion and changing Z within a layer's Inner wall block.
+The control must have no such activity. Layer transitions, other roles,
+constant Z and travel moves do not satisfy this property. The test uses
+live Native output, not a fixed motion line, coordinate, E value or count.
+The `seam_slope_inner_walls` and `wipe` configuration premises also apply.
 
-Tests directly reuse
-`runner/native_api_cli.rs::NativeCase`, without copying either helper,
-manual Native/API/CLI flow or the borrowed PROFILE_ENTRY gate. Native
-availability is the only environment condition, like main's NativeCase
-users. Targeted filter: `test(random_scarf_normalized_edge_)`.
-The current source boundary is re-established as SPEC5047755ca.
+Both cases reuse `runner/native_api_cli.rs::NativeCase` to compare complete
+Native streams with the validated public API and bare CLI. Only the
+existing generator identity/date-line exception applies. The complete
+comparison includes motion, M73 and footer data, with raw API/CLI equality.
 
-
-Fresh official and seed-replay Native outputs are compared against the
-public validated slicing API and bare Ares CLI, using the shared
-Native/API/CLI harness. Compare complete streams, permitting only the
-existing generator identity/date-line removal. Retain Native/API/CLI
-G-code, CLI logs and the comparator result as external artifacts.
-
-Before the random arithmetic fix, control must PASS and positive must
-FAIL on precisely one ordered output line (raw line 20461, or 20460
-with the generator line removed):
-
-    Native: G1 X114.679 Y118.918 Z18.329 E.02273
-    Ares:   G1 X114.679 Y118.918 Z18.329 E.02274
-
-The positive pins Native's complete witness line as a premise. After
-the bounded fix, require both COMPLETE outputs to pass in both modes;
-any residual mismatch blocks scope expansion. The isolated local probe's
-read-only GDB record matched all100 random selections and the target final
-Y f32 bits3225649160. That proof remains local probe evidence, not a
-current-main integration claim.
-
-Native export/slice reachability can be independently repeated with
-an official Orca CLI (`$ORCA`), writing outside the repository:
-
-    "$ORCA" --export-3mf "$OUT/scarf-positive-exported.3mf" positive.3mf
-    "$ORCA" --slice 0 --outputdir "$OUT/scarf-positive" positive.3mf
-
-Run these commands from this fixture directory with `OUT` set to an
-external directory, using distinct output locations for control.
+The upstream boundary is `SeamPlacerImpl::pick_random_seam_point` in
+`libslic3r/GCode/SeamPlacer.cpp`, normalized-edge selection at lines
+1441–1443 of `345efec64c7b95a05ce5cf96df0dde66a158835c`.
+The [historical arithmetic analysis](../../../docs/architecture/2026-10-20-random-seam-inner-scarf-spec.md)
+describes the original source port, not the current Native motion premise.
