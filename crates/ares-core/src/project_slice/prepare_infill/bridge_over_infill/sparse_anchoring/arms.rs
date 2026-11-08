@@ -284,6 +284,13 @@ pub(super) fn dispatch(
             for expolygon in &fill.expolygons {
                 let _ = expolygon;
             }
+            let prelude = &traversal.objects[object_index]
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object;
+            let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
             let anchored = crate::project_slice::fill_entities::adaptive::anchoring_lines(
                 crate::project_slice::fill_entities::adaptive::AdaptiveObject::new(
                     traversal,
@@ -293,6 +300,7 @@ pub(super) fn dispatch(
                 ),
                 &fill,
                 z,
+                plan.layers[layer_index].id,
                 traversal.scale,
             )?;
             result.extend(anchored);

@@ -47,6 +47,15 @@ impl<F: NativeFloat> FloatLineDistanceTree<F> {
         query::nearest(self, point, squared_limit)
     }
 
+    /// AABBTreeLines.hpp:361–371: strict-radius primitive query and indexed access.
+    pub(crate) fn all_lines_in_radius(&self, point: [F; 2], radius: F) -> Vec<usize> {
+        query::radius(self, point, radius * radius)
+    }
+
+    pub(crate) fn get_line(&self, index: usize) -> [[F; 2]; 2] {
+        self.lines[index]
+    }
+
     pub(crate) fn intersections_sorted(&self, line: [[F; 2]; 2]) -> Vec<([F; 2], usize)> {
         intersections::sorted(self, line)
     }

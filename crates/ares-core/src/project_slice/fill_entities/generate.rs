@@ -167,7 +167,10 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 super::adaptive::append(
                     &mut output,
                     fill,
-                    layer.print_z,
+                    super::adaptive::LayerGeometry {
+                        print_z: layer.print_z,
+                        layer_id: layer.id,
+                    },
                     super::adaptive::AdaptiveObject::new(traversal, object_index, line_spacing),
                     traversal.scale,
                 )?;

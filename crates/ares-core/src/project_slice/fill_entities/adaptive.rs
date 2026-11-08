@@ -41,10 +41,15 @@ impl<'a> AdaptiveObject<'a> {
     }
 }
 
+pub(super) struct LayerGeometry {
+    pub(super) print_z: f64,
+    pub(super) layer_id: usize,
+}
+
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
-    print_z: f64,
+    LayerGeometry { print_z, layer_id }: LayerGeometry,
     AdaptiveObject {
         traversal,
         object_index,
@@ -72,7 +77,11 @@ pub(super) fn append(
                 filler::fill_surface(
                     &octree,
                     &component,
-                    print_z,
+                    filler::SurfaceGeometry {
+                        z: print_z,
+                        layer_id,
+                        thickness_layers: fill.representative.thickness_layers,
+                    },
                     fill.params.spacing,
                     fill.params.multiline,
                     fill.params.anchor_length,
@@ -306,6 +315,7 @@ pub(in crate::project_slice) fn anchoring_lines(
     adaptive: AdaptiveObject<'_>,
     fill: &SurfaceFill,
     z: f64,
+    layer_id: usize,
     scale: CoordinateScale,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
     let AdaptiveObject {
@@ -332,7 +342,11 @@ pub(in crate::project_slice) fn anchoring_lines(
                 filler::fill_surface(
                     &octree,
                     &component,
-                    z,
+                    filler::SurfaceGeometry {
+                        z,
+                        layer_id,
+                        thickness_layers: fill.representative.thickness_layers,
+                    },
                     fill.params.spacing,
                     fill.params.multiline,
                     fill.params.anchor_length,

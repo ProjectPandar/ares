@@ -1,15 +1,11 @@
-//! OrcaSlicer 2.4.2 `Fill/FillAdaptive.cpp` infill line generation
-//! (`FillContext`, `generate_infill_lines_recursive`,
-//! `Filler::_fill_surface_single`; lines 232-235, 362-399, 450-510,
-//! 1321-1428).
-//!
-//! Slice 2 of the FillAdaptive port. The octree cube centers are in world
-//! coordinates (the build ends with `transform_center`,
-//! `FillAdaptive.cpp:1524-1528`); `z` and the surface live in the same
-//! frame.
+//! `FillAdaptive.cpp::Filler::_fill_surface_single`: octree wall segments,
+//! noncrossing multiline paths, offset, cropping and connection.
+//! Octree centers, Z and the surface use the same world frame.
 
 use super::octree::{Cube, Octree};
-use crate::geometry::{ClipperError, CoordinateScale, ExPolygon, Point, Polyline};
+use crate::geometry::{
+    BoundingBox, ClipperError, CoordinateScale, ExPolygon, Line, Point, Polyline,
+};
 
 /// `FillAdaptive.cpp:232-235` — traversal order of octree children cells
 /// for the three infill directions.
@@ -27,11 +23,11 @@ const DIRECTION_ANGLES: [f64; 3] = [
     -(2.0 * std::f64::consts::PI) / 3.0,
 ];
 
-/// A generated infill segment in scaled coordinates.
-#[derive(Clone, Copy, Debug)]
-struct Segment {
-    a: Point,
-    b: Point,
+/// FillAdaptive.cpp:1902: the filler layer and representative surface thickness.
+pub(crate) struct SurfaceGeometry {
+    pub(crate) z: f64,
+    pub(crate) layer_id: usize,
+    pub(crate) thickness_layers: u16,
 }
 
 /// `FillAdaptive.cpp:362-399`
@@ -43,8 +39,8 @@ struct FillContext<'a> {
     sin_a: f64,
     /// Linearized tree spanning a single octree wall; `None` marks an
     /// unused slot (upstream uses `a.x == coord_t::max`).
-    temp_lines: Vec<Option<Segment>>,
-    output_lines: Vec<Segment>,
+    temp_lines: Vec<Option<Line>>,
+    output_lines: Vec<Line>,
     /// Gap threshold for starting a new line, in scaled units
     /// (`FillAdaptive.cpp:489`: 1000 at the 40/mm lattice).
     connect_epsilon: i64,
@@ -119,7 +115,7 @@ fn generate_infill_lines_recursive(
         );
         let slot = &mut context.temp_lines[address];
         match *slot {
-            None => *slot = Some(Segment { a: new_a, b: new_b }),
+            None => *slot = Some(Line { a: new_a, b: new_b }),
             Some(ref mut last) => {
                 let gap = (new_a.x() - last.b.x())
                     .abs()
@@ -151,13 +147,17 @@ fn generate_infill_lines_recursive(
     }
 }
 
-/// `Filler::_fill_surface_single` (`FillAdaptive.cpp:1321-1428`): generate
+/// `Filler::_fill_surface_single` (`FillAdaptive.cpp:1844`): generate
 /// the three line directions, crop by the surface, then chain/connect.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn fill_surface(
     octree: &Octree,
     surface: &ExPolygon,
-    z: f64,
+    SurfaceGeometry {
+        z,
+        layer_id,
+        thickness_layers,
+    }: SurfaceGeometry,
     spacing: f64,
     multiline: i32,
     anchor_length: f32,
@@ -167,7 +167,7 @@ pub(crate) fn fill_surface(
 ) -> Result<Vec<Polyline>, ClipperError> {
     // `FillAdaptive.cpp:487`: retain the literal in the active scaled domain.
     let connect_epsilon = 1000;
-    let mut lines: Vec<Segment> = Vec::new();
+    let mut lines: Vec<Line> = Vec::new();
     for direction in 0..3 {
         let mut context = FillContext::new(octree, z, direction, connect_epsilon, scale);
         generate_infill_lines_recursive(
@@ -182,11 +182,32 @@ pub(crate) fn fill_surface(
         }
     }
     let mut all_polylines: Vec<Polyline> = lines
-        .into_iter()
+        .iter()
         .map(|l| Polyline::new(vec![l.a, l.b]))
         .collect();
+    // FillAdaptive.cpp:1897–1905: route the wall families before multiline offset.
+    if multiline > 1 {
+        let d1 = spacing / scale.factor() * f64::from(multiline);
+        let cover = BoundingBox::from_expolygon(surface)
+            .expect("fill component has a contour")
+            .inflated((4.0 * d1) as i64);
+        let sweep = (layer_id / usize::from(thickness_layers.max(1))) % 3;
+        let paths = super::multiline::multiline_paths(
+            &lines,
+            sweep,
+            cover,
+            super::multiline::Routing {
+                d1,
+                end_overlap: 0.5 * (spacing / scale.factor()),
+                eps: 0.002 / scale.factor(),
+            },
+        );
+        if !paths.is_empty() {
+            all_polylines = paths;
+        }
+    }
 
-    // Apply multiline offset if needed (`FillAdaptive.cpp:1380`).
+    // Apply multiline offset if needed (`FillAdaptive.cpp:1908`).
     all_polylines =
         super::super::multiline_offset::apply(all_polylines, multiline, spacing, scale)?;
 

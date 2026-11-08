@@ -21,6 +21,43 @@ pub(super) fn nearest<F: NativeFloat>(
     query.hit
 }
 
+/// AABBTreeIndirect.hpp:639–667 visits left then right with strict limits.
+pub(super) fn radius<F: NativeFloat>(
+    tree: &FloatLineDistanceTree<F>,
+    origin: [F; 2],
+    limit: F,
+) -> Vec<usize> {
+    let mut found = Vec::new();
+    if !tree.nodes.is_empty() {
+        radius_visit(tree, origin, limit, 0, &mut found);
+    }
+    found
+}
+fn radius_visit<F: NativeFloat>(
+    tree: &FloatLineDistanceTree<F>,
+    origin: [F; 2],
+    limit: F,
+    index: usize,
+    found: &mut Vec<usize>,
+) {
+    match tree.nodes[index].kind {
+        NodeKind::Unused => unreachable!("radius traversal reaches valid tree nodes"),
+        NodeKind::Leaf(line) => {
+            let [a, b] = tree.lines[line];
+            if distance_squared(a, b, origin).0 < limit {
+                found.push(line);
+            }
+        }
+        NodeKind::Inner => {
+            for child in [index * 2 + 1, index * 2 + 2] {
+                if exterior(tree.nodes[child].bounds, origin) < limit {
+                    radius_visit(tree, origin, limit, child, found);
+                }
+            }
+        }
+    }
+}
+
 struct Query<'a, F> {
     tree: &'a FloatLineDistanceTree<F>,
     origin: [F; 2],
