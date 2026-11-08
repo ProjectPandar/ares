@@ -45,6 +45,9 @@ mod placeholder_double_render;
 #[path = "rear_seam_visibility.rs"]
 mod rear_seam_visibility;
 
+#[path = "retract_after_wipe.rs"]
+mod retract_after_wipe;
+
 #[path = "xl_curl_segmentation.rs"]
 mod xl_curl_segmentation;
 
