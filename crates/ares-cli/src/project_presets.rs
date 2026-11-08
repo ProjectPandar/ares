@@ -110,6 +110,7 @@ pub(super) async fn slice(
         crate::result_json::Success {
             output: &args.output,
             plate: args.plate.unwrap_or(1),
+            plate_index: args.plate.unwrap_or(0),
             sliced_plate,
             upward_machines: &upward_report,
         },

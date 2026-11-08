@@ -129,6 +129,7 @@ impl ResultJson<'_> {
 pub(super) struct Success<'a> {
     pub(super) output: &'a Path,
     pub(super) plate: u32,
+    pub(super) plate_index: u32,
     pub(super) sliced_plate: ares_core::SlicedPlate,
     pub(super) upward_machines: &'a [String],
 }
@@ -152,7 +153,7 @@ impl Success<'_> {
         let _ = ResultJson {
             return_code: 0,
             error_string: "Success.",
-            plate_index: self.plate,
+            plate_index: self.plate_index,
             layer_height: self.sliced_plate.layer_height,
             wall_loops: self.sliced_plate.wall_loops,
             sparse_infill_density: self.sliced_plate.sparse_infill_density,
