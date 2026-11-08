@@ -1,6 +1,6 @@
 use super::motion::MotionState;
 use super::motion::arc::parse_arc;
-use super::motion_util::word;
+use super::motion_util::{precise_word, word};
 use crate::geometry::arc_welder::arc_discretization_steps;
 
 /// Upstream discretizes G2/G3 into `segments` internal G1s during
@@ -12,7 +12,7 @@ use crate::geometry::arc_welder::arc_discretization_steps;
 /// with the block-generating segment count.
 pub(super) fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionState) -> usize {
     let start = state.position;
-    let (end_x, end_y) = (word(code, 'X'), word(code, 'Y'));
+    let (end_x, end_y) = (precise_word(code, 'X'), precise_word(code, 'Y'));
     let end_x = end_x.map_or(start[0], |value| {
         if state.relative {
             start[0] + value

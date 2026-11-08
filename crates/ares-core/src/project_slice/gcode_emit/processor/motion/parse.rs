@@ -71,12 +71,20 @@ impl MotionState {
         }
         let old = self.position;
         let mut next = old;
+        // An arc end position is precise_value in every flavor (cpp:6077, :8180).
+        // A linear move keeps the GCodeReader float word (cpp:5190), except on
+        // Klipper (cpp:5195-5202). The arc feedrate stays a float (cpp:6154).
+        let read_position = |letter| {
+            if precise || matches!(command, "G2" | "G3") {
+                precise_word(code, letter)
+            } else {
+                word(code, letter)
+            }
+        };
         for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
-            let Some(value) = read(letter) else {
+            let Some(value) = read_position(letter) else {
                 continue;
             };
-            // Klipper linear G1 retains precise_value (cpp:5195-5202).
-            // Other paths keep the GCodeReader float-word quantization.
             let value = value * f64::from(self.units);
             next[axis] = match self.relative {
                 true => old[axis] + value,
@@ -84,7 +92,7 @@ impl MotionState {
             };
         }
         let old_e = self.e_position;
-        let next_e = match read('E').map(|value| value * f64::from(self.units)) {
+        let next_e = match read_position('E').map(|value| value * f64::from(self.units)) {
             Some(value) if self.relative || self.e_relative => old_e + value,
             Some(value) => self.origin[3] + value,
             None => old_e,

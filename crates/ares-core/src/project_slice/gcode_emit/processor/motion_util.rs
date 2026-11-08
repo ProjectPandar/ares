@@ -6,8 +6,9 @@ pub(super) fn word(code: &str, letter: char) -> Option<f64> {
     precise_word(code, letter).map(|value| f64::from(value as f32))
 }
 
-/// `GCodeReader::precise_value`, selected by Klipper linear `process_G1`
-/// (`GCodeProcessor.cpp:5195-5202`), retains the parsed decimal double.
+/// `GCodeReader::precise_value`, selected by the `process_G2_G3` end position
+/// (`GCodeProcessor.cpp:6077`, `:8180`) and Klipper linear `process_G1`
+/// (`:5195-5202`), retains the parsed decimal double.
 pub(super) fn precise_word(code: &str, letter: char) -> Option<f64> {
     let code = code.split([';', '\r', '\n', '\0']).next()?;
     let mut result = None;

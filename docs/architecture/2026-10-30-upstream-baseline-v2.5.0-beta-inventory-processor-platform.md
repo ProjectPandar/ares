@@ -28,7 +28,7 @@ Rows: **85**. Every listed Rust path was checked at the planning base.
 | A | `GCode/ElegooGCodeProcessorHelper.cpp` | **not ported** | new beta file |
 | M | `GCode/FanMover.cpp` | partial port — `C:project_slice/gcode_emit/fan_mover.rs` | bounded 2.4.2 slice |
 | M | `GCode/FanMover.hpp` | partial port — `C:project_slice/gcode_emit/fan_mover.rs` | bounded 2.4.2 slice |
-| M | `GCode/GCodeProcessor.cpp` | partial port — `C:project_slice/gcode_emit/processor.rs` | bounded 2.4.2 slice |
+| M | `GCode/GCodeProcessor.cpp` | partial port — `C:project_slice/gcode_emit/processor.rs` | `process_G2_G3` end-position read updated to the target; rest is a bounded 2.4.2 slice |
 | M | `GCode/GCodeProcessor.hpp` | partial port — `C:project_slice/gcode_emit/processor.rs` | bounded 2.4.2 slice |
 | A | `GCode/GCodeStatistics.cpp` | **not ported** | new beta file |
 | A | `GCode/GCodeStatistics.hpp` | **not ported** | new beta file |
