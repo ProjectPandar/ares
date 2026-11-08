@@ -1,13 +1,14 @@
-//! `AvoidCrossingPerimeters.cpp:1116–1130`: route around current Top fill surfaces.
+//! `AvoidCrossingPerimeters.cpp:1137–1155`: route around current Top fill surfaces.
 
 use super::{ExportedCase, OrcaRunner, cache_identity};
-use std::fs;
+use std::{fs, path::PathBuf};
 
-fn check(name: &str, input: &[u8], sha256: &str) {
-    assert_eq!(cache_identity::raw_digest(input), sha256);
-    let Some(runner) = OrcaRunner::from_env().unwrap() else {
-        return;
-    };
+const TOP1_INPUT: &[u8] = include_bytes!(
+    "../../../../../tests/parity/j1-used-extruder-follows-emitted-tools/top1-control.3mf"
+);
+const TOP1_SHA256: &str = "83d0c1908087d796008602671bdc3a6ef43f12fdd7423b0d3c96db2d423af310";
+
+fn native_reference(runner: &OrcaRunner, name: &str, input: &[u8]) -> (PathBuf, Vec<u8>) {
     let directory = tempfile::Builder::new()
         .prefix("j1-top-surface-lifecycle-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
@@ -25,6 +26,16 @@ fn check(name: &str, input: &[u8], sha256: &str) {
             output_dir,
         })
         .unwrap();
+    fs::write(directory.join("orca.gcode"), &native.reference).unwrap();
+    (directory, native.reference)
+}
+
+fn check(name: &str, input: &[u8], sha256: &str) {
+    assert_eq!(cache_identity::raw_digest(input), sha256);
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let (directory, reference) = native_reference(&runner, name, input);
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
@@ -35,14 +46,13 @@ fn check(name: &str, input: &[u8], sha256: &str) {
         ))
         .unwrap();
     fs::write(directory.join("ares.gcode"), &actual).unwrap();
-    fs::write(directory.join("orca.gcode"), &native.reference).unwrap();
-    let reference_travel = final_layer_travel(&native.reference);
+    let reference_travel = final_layer_travel(&reference);
     let actual_travel = final_layer_travel(&actual);
     fs::write(
         directory.join("travel-witness.json"),
         serde_json::to_vec_pretty(&serde_json::json!({
             "input_sha256": sha256,
-            "native_sha256": cache_identity::raw_digest(&native.reference),
+            "native_sha256": cache_identity::raw_digest(&reference),
             "ares_sha256": cache_identity::raw_digest(&actual),
             "native_travel": reference_travel,
             "ares_travel": actual_travel,
@@ -52,14 +62,28 @@ fn check(name: &str, input: &[u8], sha256: &str) {
     )
     .unwrap();
     if name == "top0" {
-        assert!(reference_travel.windows(3).any(|lines| {
-            lines
-                == [
-                    "G1 X159.628 Y99.772",
-                    "G1 X152.911 Y103.089",
-                    "G1 X159.089 Y103.089",
-                ]
-        }));
+        assert_eq!(cache_identity::raw_digest(TOP1_INPUT), TOP1_SHA256);
+        let (top1_directory, top1_reference) =
+            native_reference(&runner, "top1-premise", TOP1_INPUT);
+        let top1_travel = final_layer_travel(&top1_reference);
+        fs::write(
+            directory.join("top-premise.json"),
+            serde_json::to_vec_pretty(&serde_json::json!({
+                "source": "AvoidCrossingPerimeters.cpp::get_boundary:1137-1155",
+                "top0_native_sha256": cache_identity::raw_digest(&reference),
+                "top1_native_sha256": cache_identity::raw_digest(&top1_reference),
+                "top1_input_sha256": TOP1_SHA256,
+                "top1_artifacts": top1_directory,
+                "top0_travel": reference_travel,
+                "top1_travel": top1_travel
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        assert_ne!(
+            reference_travel, top1_travel,
+            "current-layer Top surfaces must change Native travel: {directory:?} vs {top1_directory:?}"
+        );
     }
     assert_eq!(actual_travel, reference_travel, "{directory:?}");
 }
@@ -90,11 +114,5 @@ fn j1c_zero_top_layers_travel_has_no_stale_top_holes() {
 
 #[test]
 fn j1c_nonzero_top_layers_travel_control() {
-    check(
-        "top1",
-        include_bytes!(
-            "../../../../../tests/parity/j1-used-extruder-follows-emitted-tools/top1-control.3mf"
-        ),
-        "83d0c1908087d796008602671bdc3a6ef43f12fdd7423b0d3c96db2d423af310",
-    );
+    check("top1", TOP1_INPUT, TOP1_SHA256);
 }
