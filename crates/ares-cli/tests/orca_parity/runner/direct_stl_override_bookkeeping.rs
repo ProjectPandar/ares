@@ -144,7 +144,7 @@ fn check(name: &str, filename: &str, none: bool) {
     assert_eq!(status, "PASS", "{name}: {detail:?}; {:?}", runner.work);
 }
 
-fn check_applied_print_host(value: &str) {
+fn check_applied_machine_option(key: &str, value: &str) {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let mut machine_vendor = profile_entry::vendor(&profiles_root, "WEMAKE3D");
@@ -154,7 +154,7 @@ fn check_applied_print_host(value: &str) {
         .values_mut()
         .find(|profile| profile["type"] == "machine" && profile["name"] == MACHINE)
         .unwrap();
-    machine["bbl_use_printhost"] = json!(value);
+    machine[key] = json!(value);
     let catalog = json!({
         "vendors": [profile_entry::vendor(&profiles_root, "OrcaFilamentLibrary"), machine_vendor],
         "imports": [],
@@ -163,7 +163,7 @@ fn check_applied_print_host(value: &str) {
     let input =
         fs::read(root.join("tests/parity/counterbore-partiallybridge/solid-plate.stl")).unwrap();
     let artifacts = tempfile::Builder::new()
-        .prefix("applied-print-host-")
+        .prefix("applied-machine-option-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
@@ -193,19 +193,24 @@ fn check_applied_print_host(value: &str) {
     let block = block.split_once("; CONFIG_BLOCK_END").unwrap().0;
     let lines = block
         .lines()
-        .filter(|line| line.starts_with("; bbl_use_printhost = "))
+        .filter(|line| line.starts_with(&format!("; {key} = ")))
         .collect::<Vec<_>>();
-    assert_eq!(lines, [format!("; bbl_use_printhost = {value}")]);
+    assert_eq!(lines, [format!("; {key} = {value}")]);
 }
 
 #[test]
 fn direct_stl_applied_print_host_true_is_emitted() {
-    check_applied_print_host("1");
+    check_applied_machine_option("bbl_use_printhost", "1");
 }
 
 #[test]
 fn direct_stl_applied_print_host_false_is_emitted() {
-    check_applied_print_host("0");
+    check_applied_machine_option("bbl_use_printhost", "0");
+}
+
+#[test]
+fn direct_stl_applied_default_bed_type_is_emitted() {
+    check_applied_machine_option("default_bed_type", "Textured PEI Plate");
 }
 
 #[test]
