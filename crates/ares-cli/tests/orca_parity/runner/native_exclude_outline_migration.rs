@@ -105,3 +105,142 @@ async fn rotation_residue_hull_keeps_edge_midpoints_like_native() {
 async fn identity_transform_hull_stays_four_corners() {
     check("exclude-outline-identity.3mf").await;
 }
+
+fn with_tolerance(original: &[u8], tolerance: &str) -> Vec<u8> {
+    use std::io::{Cursor, Read, Write};
+
+    let mut input = zip::ZipArchive::new(Cursor::new(original)).unwrap();
+    let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..input.len() {
+        let mut file = input.by_index(index).unwrap();
+        if file.name() != "Metadata/project_settings.config" {
+            output.raw_copy_file(file).unwrap();
+            continue;
+        }
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        let mut settings: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        settings["exclude_object_tolerance"] = serde_json::json!(tolerance);
+        output
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+            )
+            .unwrap();
+        output
+            .write_all(&serde_json::to_vec(&settings).unwrap())
+            .unwrap();
+    }
+    output.finish().unwrap().into_inner()
+}
+
+#[tokio::test]
+async fn configured_zero_tolerance_preserves_native_rotation_hull() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let original =
+        fs::read(repo_root().join("tests/parity/validation/exclude-outline-jitter.3mf")).unwrap();
+    let mut streams = Vec::new();
+    let mut actual_hulls = Vec::new();
+    let mut native_hulls = Vec::new();
+    let mut records = Vec::new();
+    for tolerance in ["0.1", "0"] {
+        let project = with_tolerance(&original, tolerance);
+        let work = runner.work.join(format!("tolerance-{tolerance}"));
+        fs::create_dir(&work).unwrap();
+        let project_path = work.join("exclude-outline-jitter.3mf");
+        fs::write(&project_path, &project).unwrap();
+        let output_dir = work.join("native");
+        fs::create_dir(&output_dir).unwrap();
+        let case = runner
+            .slice_case(&ExportedCase {
+                label: format!("validation/exclude-outline/tolerance-{tolerance}"),
+                project: project.clone(),
+                project_path,
+                output_dir,
+            })
+            .unwrap();
+        let actual = slice_project_plate(
+            project,
+            GenerationMetadata::default(),
+            None,
+            &ConfigOverrides::default(),
+            SlicerContext::new(0),
+        )
+        .await
+        .unwrap();
+        fs::write(work.join("ares.gcode"), &actual).unwrap();
+        fs::write(work.join("orca.gcode"), &case.reference).unwrap();
+        let actual = String::from_utf8(actual).unwrap();
+        let expected = String::from_utf8(case.reference).unwrap();
+        let actual_hull = actual
+            .lines()
+            .find(|line| line.starts_with("EXCLUDE_OBJECT_DEFINE "))
+            .unwrap()
+            .to_owned();
+        let native_hull = expected
+            .lines()
+            .find(|line| line.starts_with("EXCLUDE_OBJECT_DEFINE "))
+            .unwrap()
+            .to_owned();
+        let actual_lines = normalize(&actual);
+        let native_lines = normalize(&expected);
+        records.push(serde_json::json!({
+            "tolerance_mm": tolerance,
+            "input_sha256": cache_identity::raw_digest(&case.project),
+            "ares_sha256": cache_identity::raw_digest(actual.as_bytes()),
+            "native_sha256": cache_identity::raw_digest(expected.as_bytes()),
+            "ares_hull": actual_hull,
+            "native_hull": native_hull,
+            "ares_lines": actual_lines.len(),
+            "native_lines": native_lines.len(),
+            "first_difference_line": actual_lines.iter().zip(&native_lines).position(|(a,b)| a != b).map(|index| index + 1),
+            "artifacts": work,
+        }));
+        actual_hulls.push(actual_hull);
+        native_hulls.push(native_hull);
+        streams.push((actual, expected));
+    }
+    fs::write(
+        runner.work.join("tolerance-activation.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "original_input_sha256": cache_identity::raw_digest(&original),
+            "native_activation": native_hulls[0] != native_hulls[1],
+            "ares_activation": actual_hulls[0] != actual_hulls[1],
+            "cases": records,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_ne!(
+        native_hulls[0], native_hulls[1],
+        "Native tolerance activation; artifacts {:?}",
+        runner.work
+    );
+    assert_ne!(
+        actual_hulls[0], actual_hulls[1],
+        "Ares tolerance activation; artifacts {:?}",
+        runner.work
+    );
+    assert_eq!(actual_hulls, native_hulls, "artifacts {:?}", runner.work);
+    for (actual, expected) in &streams {
+        let actual_lines = normalize(actual);
+        let native_lines = normalize(expected);
+        for (index, (actual, expected)) in actual_lines.iter().zip(&native_lines).enumerate() {
+            assert_eq!(
+                actual,
+                expected,
+                "first mismatch at line {}; artifacts {:?}",
+                index + 1,
+                runner.work
+            );
+        }
+        assert_eq!(
+            actual_lines.len(),
+            native_lines.len(),
+            "artifacts {:?}",
+            runner.work
+        );
+    }
+}
