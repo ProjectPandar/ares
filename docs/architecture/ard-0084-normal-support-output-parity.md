@@ -40,10 +40,9 @@ generation errors use the existing predecessor-disposal path.
 - Preserve native undefined bounding-box semantics for empty polygons, not
   MAX/MIN sentinels or saturating arithmetic. Preserve scaled-width integer
   truncation and native Flow narrowing before downstream calculations.
-- Support connection cost thresholds retain first-call lifetime within the
-  job-owned SlicerContext. Current trim/cap/minimum-length values are not
-  cached. Native parallel first-arrival policy remains a separate unresolved
-  reference issue, not permission to select a convenient reference variant.
+- Support connection cost thresholds come from the current line spacing on
+  every call (`Fill/FillBase.cpp:2697-2701` at `345efec64`). Neither they nor
+  the trim/cap/minimum-length values are cached.
 - The public project-input/complete-G-code-output seam is the acceptance
   interface. Compare ordered bytes excluding only the generator line; retain
   input, both streams, error and producer manifest before assertions.

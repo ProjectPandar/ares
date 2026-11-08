@@ -21,15 +21,14 @@ Upstream owners and Rust destinations:
   contact-pattern/filler selection into `raft/fill_params.rs` and the
   project raft bridge; native `FillConcentric::_fill_surface_single` and
   `FillGrid::fill_surface` into `raft/fills/patterns/`.
-- `FillBase.cpp:2464-2466` and its selection/T-joint/long-arch consumers
-  into task-local `SlicerContext` costs and `fill/base_support/`, with one
-  explicit mutable job context through actual raft/skirt callers.
+- `Fill/FillBase.cpp:2697-2701` at `345efec64` and its
+  selection/T-joint/long-arch consumers into per-call costs in
+  `fill/base_support/`.
 
 The raft pipeline is a temporary compatibility caller of these native
-support contracts, not a new Ares-owned support generator. Freeze only
-the three source first-call costs; preserve current-call geometry metrics.
-Task-local lifetime means the accepted fresh-native-process-per-input
-contract, not arbitrary native long-lived or parallel process equivalence.
+support contracts, not a new Ares-owned support generator. The three
+costs and the geometry metrics all come from the current call, so neither
+process lifetime nor thread order affects them.
 Keep strict complete ordered bytes excluding only the generator line,
 effective-value checks, active support XY extrusion and full artifacts.
 

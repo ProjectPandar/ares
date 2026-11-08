@@ -19,7 +19,8 @@ Status: independently verified prerequisite; combined runtime verification is se
 - Pass epsilon from the selected CoordinateScale through marking, availability,
   trimming and emitted finite arcs/caps: normal 100, large-bed 10. Do not fix
   the value at 16 or reuse normal-only 100 in the large-bed marking radius.
-- Keep native traversal, scalar arithmetic and current first-call costs.
+- Keep native traversal and scalar arithmetic, with per-call costs
+  (`Fill/FillBase.cpp:2697-2701` at `345efec64`).
   No new allocations, fallback, guard or global state is introduced.
 
 Included: these consumed connector repairs in the existing Fill module.

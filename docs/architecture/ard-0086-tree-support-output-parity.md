@@ -128,9 +128,9 @@ Production worker derivation remains intact. Keep official default multiworker
 results and first substantive differences in the plan; do not choose a
 convenient variant or claim default-worker byte determinism.
 
-SlicerContext owns source-required randomness and first-call connection costs;
-no global RNG/process-static mutable cache, filesystem, terminal or native UI
-belongs in ares-core. The selected official build remains immutable. A separate
+SlicerContext owns source-required randomness. Connection costs are per call
+(`Fill/FillBase.cpp:2697-2701` at `345efec64`). No global RNG/process-static
+mutable cache, filesystem, terminal or native UI belongs in ares-core. The selected official build remains immutable. A separate
 seeded/initialized build supplies reproducible evidence alongside it.
 
 Acceptance is public project bytes to complete G-code, excluding only the
