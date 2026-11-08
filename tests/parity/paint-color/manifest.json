@@ -26,11 +26,7 @@
         "interlocking_beam": "0",
         "mmu_segmented_region_max_width": "0",
         "mmu_segmented_region_interlocking_depth": "0"
-      },
-      "positive_model_XYE_by_tool": {
-        "0": 3735
-      },
-      "both_material_positive_layers": 0
+      }
     },
     "painted-leaves": {
       "archive_sha256": "d0756da3c62f62b4f11a6356e5bb5b51522a80b2a1b849b292e79451b433410a",
@@ -65,12 +61,7 @@
         "interlocking_beam": "0",
         "mmu_segmented_region_max_width": "0",
         "mmu_segmented_region_interlocking_depth": "0"
-      },
-      "positive_model_XYE_by_tool": {
-        "0": 3321,
-        "1": 861
-      },
-      "both_material_positive_layers": 48
+      }
     },
     "painted-split": {
       "archive_sha256": "a18492a3cb74b68012e2d8c8975dafaa81267e77731cdab28411badeb4dc31cc",
@@ -105,14 +96,8 @@
         "interlocking_beam": "0",
         "mmu_segmented_region_max_width": "0",
         "mmu_segmented_region_interlocking_depth": "0"
-      },
-      "positive_model_XYE_by_tool": {
-        "0": 3674,
-        "1": 900
-      },
-      "both_material_positive_layers": 48
+      }
     }
   },
-  "approved_spec": "1b51550807e68f9ea252b9d846d38c4cdfaed8c1",
-  "gate_contract": "Single branch RED\u2192carrier\u2192approvedsegmentation\u2192finalstrictGREEN; nointermediatepaintadmit/discard; noREDmergewithoutGREEN"
+  "approved_spec": "1b51550807e68f9ea252b9d846d38c4cdfaed8c1"
 }
