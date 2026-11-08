@@ -90,7 +90,9 @@ impl InterfaceArea<'_, '_> {
         };
         if self.group.kind == AreaKind::RoofFirst {
             filler.pattern = RaftFillPattern::Rectilinear;
-            filler.angle = input.base_angle();
+            filler.angle = input
+                .parameters
+                .support_interface_angle(input.object, self.group.interface_id);
             let mut entities = Vec::new();
             filler
                 .perimeter_and_infill(
