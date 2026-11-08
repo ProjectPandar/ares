@@ -24,12 +24,25 @@ fn next_speed(speed: f32, target: f32) -> f32 {
 }
 
 impl Generator<'_> {
+    pub(super) fn wipe_row_spacing(&self, first_layer: bool) -> f32 {
+        (if first_layer {
+            self.plan.extra_flow
+        } else {
+            self.plan.extra_spacing
+        }) * self.plan.perimeter_width
+    }
+
+    pub(super) fn wipe_start_offset_after_ram(&self, ramming_depth: f32, first_layer: bool) -> f32 {
+        ramming_depth + self.wipe_row_spacing(first_layer)
+            - (self.plan.perimeter_width + self.plan.perimeter_width * self.plan.extra_flow) / 2.0
+    }
+
     pub(super) fn wipe(
         &mut self,
         writer: &mut Writer,
         bounds: BoxCoordinates,
         volume: f32,
-        interface: bool,
+        (interface, fill_box): (bool, bool),
     ) {
         writer.gcode.push_str("; CP TOOLCHANGE WIPE\n");
         writer.set_flow(self.extrusion_flow * self.plan.extra_flow);
@@ -37,11 +50,7 @@ impl Generator<'_> {
         writer.change_width(line_width);
         let mut remaining = volume_to_length(volume, self.plan.perimeter_width, self.layer_height)
             / self.plan.extra_flow;
-        let dy = if self.is_first_layer() {
-            self.plan.extra_flow
-        } else {
-            self.plan.extra_spacing
-        } * self.plan.perimeter_width;
+        let dy = self.wipe_row_spacing(self.is_first_layer());
         let target = if self.is_first_layer() || (self.tool_changes <= 1 && self.plan.no_sparse) {
             self.first_layer_speed() * 60.0
         } else {
@@ -99,7 +108,7 @@ impl Generator<'_> {
                 break;
             }
             remaining -= (previous_x - writer.position[0]).abs();
-            if remaining < 1e-3 {
+            if !fill_box && remaining < 1e-3 {
                 writer.travel(
                     [
                         edge_x([xl, xr], !self.left_to_right, 1.5 * line_width),

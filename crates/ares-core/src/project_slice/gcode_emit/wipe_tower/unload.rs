@@ -164,14 +164,22 @@ impl Generator<'_> {
         if enabled {
             writer.gcode.push_str("; Ramming end\n");
         }
-        let position = [
-            end[0],
-            end[1] + (y_step / self.plan.ramming_spacing - perimeter) / 2.0 + perimeter,
-        ];
         if do_ramming {
-            writer.travel(position, 2400.0);
+            writer.travel(
+                [
+                    end[0],
+                    end[1] + (y_step / self.plan.ramming_spacing - perimeter) / 2.0 + perimeter,
+                ],
+                2400.0,
+            );
         } else {
-            writer.position = position;
+            writer.position = [
+                end[0],
+                bounds.lower[1]
+                    + self.depth_traversed
+                    + self.wipe_start_offset_after_ram(0.0, self.is_first_layer())
+                    + perimeter,
+            ];
         }
         writer.suppress_preview = false;
         Writer::flush_planner_queue(&mut writer.gcode, self.flavor);

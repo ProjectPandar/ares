@@ -56,10 +56,10 @@ impl Generator<'_> {
                     &mut writer,
                     bounds,
                     self.wipe_volumes[previous][tool],
-                    false,
+                    (false, false),
                 );
             } else {
-                self.wipe(&mut writer, bounds, 20.0, false);
+                self.wipe(&mut writer, bounds, 20.0, (false, false));
                 let mut unload_box = bounds;
                 unload_box.translate([
                     0.0,

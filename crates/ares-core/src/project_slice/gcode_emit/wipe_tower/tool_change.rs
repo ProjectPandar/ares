@@ -65,6 +65,10 @@ impl Generator<'_> {
             writer.trimpot(750);
         }
         if let Some(tool) = tool {
+            let semm = self.settings.printer.gcode.single_extruder_multi_material.0;
+            let ramming = (semm && self.plan.ramming) || self.filaments[old_tool].multitool_ramming;
+            let boundary_wipe_start = ramming && !semm && self.use_gap_wall();
+            let fill_box = !ramming || boundary_wipe_start;
             let first = self.is_first_layer();
             let temperature = if first {
                 self.filaments[tool].first_temperature
@@ -111,7 +115,7 @@ impl Generator<'_> {
                     },
                 );
             }
-            self.wipe(&mut writer, bounds, volume, interface);
+            self.wipe(&mut writer, bounds, volume, (interface, fill_box));
             if change_interface_temperature && !cooldown {
                 writer.set_temperature(temperature, false);
             }
