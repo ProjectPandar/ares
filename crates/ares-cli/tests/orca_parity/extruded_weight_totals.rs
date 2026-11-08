@@ -61,7 +61,7 @@ fn extruded_weight_totals_stock_mk4() {
                 assert_native_template_witness(
                     native,
                     "M201 X3999.92 Y3999.92\n",
-                    "M74 W0.07497\n",
+                    "M74 W0.0749698\n",
                 );
             }
         }),
@@ -104,7 +104,7 @@ fn extruded_weight_totals_diameter185_mk4() {
                 assert_native_template_witness(
                     native,
                     "M201 X3999.92 Y3999.92\n",
-                    "M74 W0.07497\n",
+                    "M74 W0.0749698\n",
                 );
             }
         }),
