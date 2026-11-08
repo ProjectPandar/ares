@@ -33,6 +33,8 @@ mod multihead_snapshot;
 mod overlays;
 #[path = "nullable_vectors/plate_metadata_order.rs"]
 mod plate_metadata_order;
+#[path = "nullable_vectors/process_vector_readers.rs"]
+mod process_vector_readers;
 #[path = "nullable_vectors/retraction_column.rs"]
 mod retraction_column;
 #[path = "nullable_vectors/scalar_authored.rs"]

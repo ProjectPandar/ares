@@ -39,7 +39,7 @@ fn check(case: &str, family: &str, keys: &[&str]) {
         return;
     };
     let changes = match case {
-        "original" => vec![],
+        "original" | "one-head" => vec![],
         "missing" => vec![("flush_volumes_matrix", None)],
         "high-flow-rebuild" => vec![
             (
@@ -50,18 +50,28 @@ fn check(case: &str, family: &str, keys: &[&str]) {
         ],
         _ => unreachable!(),
     };
-    let exported = project(&runner, case, &changes);
-    let reference = NativeCase::slice(
-        &runner,
-        &exported.project,
-        &format!("process-{family}-{case}-"),
-    );
+    let project = if case == "one-head" {
+        fs::read(super::repo_root().join("tests/parity/orca_cli_ender3.3mf")).unwrap()
+    } else {
+        project(&runner, case, &changes).project
+    };
+    let reference = NativeCase::slice(&runner, &project, &format!("process-{family}-{case}-"));
     let replay = NativeCase::slice(
         &runner,
-        &exported.project,
+        &project,
         &format!("process-{family}-{case}-replay-"),
     );
     let native = footer(&reference.native);
+    if case == "one-head" {
+        assert_eq!(
+            application::settings(&project).unwrap()["nozzle_diameter"]
+                .as_array()
+                .unwrap()
+                .len(),
+            1
+        );
+        assert!(keys.iter().all(|key| native[*key].split(',').count() == 1));
+    }
     assert_eq!(
         native,
         footer(&replay.native),
@@ -79,7 +89,7 @@ fn check(case: &str, family: &str, keys: &[&str]) {
         .build()
         .unwrap()
         .block_on(application::slice_project_plate_validated(
-            &exported.project,
+            &project,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             None,
             &ares_core::ConfigOverrides::default(),
@@ -97,7 +107,7 @@ fn check(case: &str, family: &str, keys: &[&str]) {
     fs::write(reference.root.join("ares.cli.stdout"), &cli.stdout).unwrap();
     fs::write(reference.root.join("ares.cli.stderr"), &cli.stderr).unwrap();
     fs::write(reference.root.join("endpoints.json"), serde_json::to_vec_pretty(&json!({
-        "input_sha256":sha(&exported.project), "case":case, "family":family,
+        "input_sha256":sha(&project), "case":case, "family":family,
         "api_error":api.as_ref().err().map(|error|format!("{error:?}")), "cli_code":cli.status.code(),
         "native_replay_root":replay.root,
     })).unwrap()).unwrap();
@@ -114,7 +124,7 @@ fn check(case: &str, family: &str, keys: &[&str]) {
             "matches":api_footer.get(key)==Some(&expected) && cli_footer.get(key)==Some(&expected)})
     }).collect::<Vec<_>>();
     fs::write(reference.root.join("process-vectors.json"), serde_json::to_vec_pretty(&json!({
-        "case":case, "family":family, "input_sha256":sha(&exported.project), "rows":rows,
+        "case":case, "family":family, "input_sha256":sha(&project), "rows":rows,
         "native_footer":native, "api_footer":api_footer, "cli_footer":cli_footer,
         "api_cli_equal":api==cli,
         "complete_api_comparison":crate::golden::compare_ordered_bytes_generator_only(reference.native.as_bytes(), &api),
@@ -156,6 +166,12 @@ fn native_process_jerk_retained_high_flow() {
 #[test]
 fn native_process_threshold_flow_retained_standard() {
     check("original", "threshold-flow", THRESHOLD_FLOW);
+}
+
+#[test]
+fn native_process_vectors_one_head_inactive() {
+    let keys = [SPEEDS, JERK, THRESHOLD_FLOW].concat();
+    check("one-head", "inactive", &keys);
 }
 #[test]
 fn native_process_threshold_flow_retained_missing_matrix() {
