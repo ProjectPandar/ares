@@ -33,6 +33,26 @@ fn assert_native(native: &str, printer: &str, sequence: &str, total: usize, offs
     assert_eq!(actual, expected, "Native layer-template sequence");
 }
 
+// GCodeWriter.cpp:1259-1270 emits live spiral-lift operands, not fixed coordinates.
+fn has_spiral_lift(native: &str) -> bool {
+    native
+        .lines()
+        .zip(native.lines().skip(1))
+        .any(|(plane, arc)| {
+            let mut words = arc.split_ascii_whitespace();
+            plane == "G17"
+                && words.next() == Some("G3")
+                && ['Z', 'I', 'J'].into_iter().all(|prefix| {
+                    words
+                        .next()
+                        .and_then(|word| word.strip_prefix(prefix))
+                        .and_then(|value| value.parse::<f64>().ok())
+                        .is_some_and(f64::is_finite)
+                })
+                && words.next() == Some("P1")
+        })
+}
+
 #[test]
 fn sequential_template_layer_count_a1_byobject() {
     native_stream_case::check(
@@ -135,8 +155,8 @@ fn sequential_template_layer_count_p1s_bylayer_control() {
             for case in [reference, replay] {
                 assert_native(&case.native, "Bambu Lab P1S", "by layer", 50, "0x2");
                 assert!(
-                    case.native
-                        .contains("G17\nG3 Z4 I.058 J-1.216 P1  F30000\n")
+                    has_spiral_lift(&case.native),
+                    "Native lacks an adjacent G17/G3 spiral-lift pair"
                 );
             }
         }),
