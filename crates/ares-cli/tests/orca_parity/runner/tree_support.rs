@@ -7,6 +7,8 @@ use serde_json::json;
 mod manual;
 #[path = "tree_support/retraction.rs"]
 mod retraction;
+#[path = "tree_support/roof_layers.rs"]
+mod roof_layers;
 
 #[test]
 fn default_tree_auto_overhang_preserves_complete_output() {

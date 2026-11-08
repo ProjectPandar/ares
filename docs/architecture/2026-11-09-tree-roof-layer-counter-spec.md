@@ -94,7 +94,13 @@ Organic tree support, `SupportMaterial`, and branch geometry are out of scope.
 
 ## Failing cases and acceptance
 
-No new fixture, stored coordinate or stored count is added. Measured with the change as a temporary experiment on
+Public cases in `orca_parity/runner/tree_support/roof_layers.rs` replay the existing
+overhang model with the settings that select each behavior, and derive the per-layer
+roof signature from both streams at runtime: independent and object layer heights at
+three, two and one top interface layers, and the first-roof fill axis with the `auto`
+and `grid` interface patterns. No stored coordinate or stored count is added.
+
+Measured with the change as a temporary experiment on
 the `tree | support` test selection, official and seeded modes giving the same
 result, against the unchanged tree:
 
@@ -107,7 +113,7 @@ result, against the unchanged tree:
 | Pass to fail | none |
 
 The retraction witnesses live on the premise-scoped test commit, so this change
-stacks on that commit or follows it onto the main line.
+stacks on that commit.
 
 Remaining failures in the selection were failing before the change and are not
 claimed, among them the Tree lightning, base-connect, default short-edge and
