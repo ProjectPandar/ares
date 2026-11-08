@@ -23,7 +23,7 @@ pub(super) const EARLY_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("area_fill", Float, "50"; false, false, ""),
     definition!("auxiliary_fan", Bool, "false"; true, false, "0"),
     definition!("bbl_calib_mark_logo", Bool, "true"; true, false, "1"),
-    definition!("bbl_use_printhost", Bool, "false"; true, false, "0"),
+    definition!("bbl_use_printhost", Bool, "false"; false, false, "0"),
     definition!("bed_custom_model", String, ""; true, false, ""),
     definition!("bed_custom_texture", String, ""; true, false, ""),
     definition!("bed_exclude_area", Points, "0x0"; true, false, "0x0"),

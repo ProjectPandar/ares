@@ -32,10 +32,8 @@ pub(crate) fn default_value(key: &str) -> Result<Option<RawConfigValue>, SliceEr
                     | OptionValueKind::PercentsNullable
             )) {
         "nil"
-    } else if definition.full_config_default {
-        definition.default_wire_value
     } else {
-        definition.default_value
+        definition.default_wire_value
     };
     use OptionValueKind as K;
     let value = match definition.kind {
