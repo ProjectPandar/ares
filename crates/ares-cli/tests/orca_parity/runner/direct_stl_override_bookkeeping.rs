@@ -1,5 +1,8 @@
 //! Direct-STL overrides retain the CLI non-BBL bookkeeping boundary.
 
+#[path = "direct_stl_override_bookkeeping/residual_membership.rs"]
+mod residual_membership;
+
 use super::{OrcaRunner, cache_identity, profile_entry};
 use ares_core::{ConfigOverrides, SliceError};
 use serde_json::{Value, json};
