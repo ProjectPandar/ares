@@ -115,7 +115,7 @@ impl Generator<'_> {
                     },
                 );
             }
-            self.wipe(&mut writer, bounds, volume, (interface, fill_box));
+            self.wipe(&mut writer, bounds, volume, (interface, false, fill_box));
             if change_interface_temperature && !cooldown {
                 writer.set_temperature(temperature, false);
             }

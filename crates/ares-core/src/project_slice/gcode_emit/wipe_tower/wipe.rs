@@ -37,12 +37,50 @@ impl Generator<'_> {
             - (self.plan.perimeter_width + self.plan.perimeter_width * self.plan.extra_flow) / 2.0
     }
 
+    fn scrub_entry(&self, writer: &mut Writer, xr: f32, speed: f32) {
+        let mut ironing_length = 3.0;
+        if xr - writer.position[0] < ironing_length {
+            ironing_length = (xr - writer.position[0]).max(0.0);
+        }
+        let filament = &self.filaments[self.current_tool];
+        let retract_length = filament.retract_length;
+        let retract_speed = filament.retract_speed * 60.0;
+        writer.extrude(
+            [writer.position[0] + ironing_length, writer.position[1]],
+            speed,
+        );
+        writer.load(-retract_length, retract_speed);
+        writer.travel(
+            [
+                writer.position[0] - 1.5 * ironing_length,
+                writer.position[1],
+            ],
+            600.0,
+        );
+        writer.travel(
+            [
+                writer.position[0] + 0.5 * ironing_length,
+                writer.position[1],
+            ],
+            240.0,
+        );
+        let iron_end = [writer.position[0] + ironing_length, writer.position[1]];
+        writer.spiral_flat_ironing(
+            writer.position,
+            filament.ironing_area,
+            self.plan.perimeter_width,
+            10.0 * 60.0,
+        );
+        writer.travel(iron_end, speed);
+        writer.load(retract_length, retract_speed);
+    }
+
     pub(super) fn wipe(
         &mut self,
         writer: &mut Writer,
         bounds: BoxCoordinates,
         volume: f32,
-        (interface, fill_box): (bool, bool),
+        (interface, priming, fill_box): (bool, bool, bool),
     ) {
         writer.gcode.push_str("; CP TOOLCHANGE WIPE\n");
         writer.set_flow(self.extrusion_flow * self.plan.extra_flow);
@@ -74,36 +112,27 @@ impl Generator<'_> {
             );
             self.left_to_right = !self.left_to_right;
         }
-        let ironing = self.settings.process.print.prime_tower_flat_ironing.0
-            && (!interface
-                || !self
-                    .settings
-                    .process
-                    .print
-                    .enable_tower_interface_features
-                    .0);
-        let ironing_area = self.filaments[self.current_tool].ironing_area;
         let mut index = 0;
         loop {
             if index != 0 {
                 speed = next_speed(speed, target);
             }
             let previous_x = writer.position[0];
+            if index == 0
+                && self.use_gap_wall()
+                && !interface
+                && !priming
+                && self.left_to_right
+                && writer.position[0] - xl < 2.5 * line_width
+            {
+                self.scrub_entry(writer, xr, speed);
+            }
             let inset = match (self.left_to_right, index % 4) {
                 (true, 0) | (false, 1) => 0.0,
                 _ => 1.5 * line_width,
             };
             let x = edge_x([xl, xr], self.left_to_right, inset);
             writer.extrude([x, writer.position[1]], speed);
-            if index == 0 && ironing && ironing_area > 0.0 {
-                writer.travel(writer.position, 600.0);
-                writer.spiral_flat_ironing(
-                    writer.position,
-                    ironing_area,
-                    self.plan.perimeter_width,
-                    600.0,
-                );
-            }
             if writer.position[1] + 1e-4 > bounds.upper[1] - 0.5 * line_width {
                 break;
             }
