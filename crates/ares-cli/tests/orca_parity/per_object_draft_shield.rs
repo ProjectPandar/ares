@@ -3,66 +3,70 @@
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{fs, process::Command};
+use std::{
+    fs,
+    io::{Cursor, Read},
+    process::Command,
+};
 
 #[test]
 fn per_object_draft_shield_disjoint_disabled() {
-    check("disjoint-disabled", 2, false, false);
+    check("disjoint-disabled", false, false);
 }
 
 #[test]
 fn per_object_draft_shield_disjoint_all() {
-    check("disjoint-all", 2, true, false);
+    check("disjoint-all", true, false);
 }
 
 #[test]
 fn per_object_draft_shield_disjoint_single() {
-    check("disjoint-single", 2, true, true);
+    check("disjoint-single", true, true);
 }
 
 #[test]
 fn per_object_draft_shield_overlap_disabled() {
-    check("overlap-disabled", 1, false, false);
+    check("overlap-disabled", false, false);
 }
 
 #[test]
 fn per_object_draft_shield_overlap_all() {
-    check("overlap-all", 1, true, false);
+    check("overlap-all", true, false);
 }
 
 #[test]
 fn per_object_draft_shield_overlap_single() {
-    check("overlap-single", 1, true, true);
+    check("overlap-single", true, true);
 }
 
 #[test]
 fn per_object_draft_shield_transitive_disabled() {
-    check("transitive-disabled", 1, false, false);
+    check("transitive-disabled", false, false);
 }
 
 #[test]
 fn per_object_draft_shield_transitive_all() {
-    check("transitive-all", 1, true, false);
+    check("transitive-all", true, false);
 }
 
 #[test]
 fn per_object_draft_shield_transitive_single() {
-    check("transitive-single", 1, true, true);
+    check("transitive-single", true, true);
 }
 
 #[test]
 fn per_object_draft_shield_copies_disabled() {
-    check("copies-disabled", 1, false, false);
+    check("copies-disabled", false, false);
 }
 
 #[test]
 fn per_object_draft_shield_copies_all() {
-    check("copies-all", 1, true, false);
+    check("copies-all", true, false);
 }
 
 #[test]
 fn per_object_draft_shield_copies_single() {
-    check("copies-single", 1, true, true);
+    check("copies-single", true, true);
 }
 
 fn sha(bytes: &[u8]) -> String {
@@ -72,7 +76,7 @@ fn sha(bytes: &[u8]) -> String {
         .collect()
 }
 
-fn check(label: &str, expected_groups: usize, enabled: bool, single: bool) {
+fn check(label: &str, enabled: bool, single: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -81,6 +85,19 @@ fn check(label: &str, expected_groups: usize, enabled: bool, single: bool) {
         serde_json::from_slice(&fs::read(fixture.join("manifest.json")).unwrap()).unwrap();
     let bytes = fs::read(fixture.join(format!("{label}.3mf"))).unwrap();
     assert_eq!(sha(&bytes), manifest["cases"][label]["sha256"]);
+    let touching = manifest["cases"][label]["touching"].as_bool().unwrap();
+    // Upstream groups skirts per object instance (Print.cpp:4176-4192) and only
+    // merges instances whose expanded skirts intersect (Print.cpp:4252-4300).
+    let items = {
+        let mut archive = zip::ZipArchive::new(Cursor::new(&bytes)).unwrap();
+        let mut model = String::new();
+        archive
+            .by_name("3D/3dmodel.model")
+            .unwrap()
+            .read_to_string(&mut model)
+            .unwrap();
+        model.matches("<item ").count()
+    };
     let settings = crate::runner::application::settings(&bytes).unwrap();
     for (key, value) in [
         ("skirt_type", "perobject"),
@@ -144,11 +161,18 @@ fn check(label: &str, expected_groups: usize, enabled: bool, single: bool) {
     assert_eq!(layers.last().unwrap().z, if enabled { 4.0 } else { 0.2 });
     let first = &layers[0].groups;
     for (index, layer) in layers.iter().enumerate() {
-        assert_eq!(
-            layer.groups.len(),
-            expected_groups,
-            "once per group/Z {root:?}"
-        );
+        if touching {
+            assert!(
+                (1..items).contains(&layer.groups.len()),
+                "touching instances merge into fewer than {items} groups {root:?}"
+            );
+        } else {
+            assert_eq!(
+                layer.groups.len(),
+                items,
+                "one shield per instance {root:?}"
+            );
+        }
         if index > 0 && single {
             for (group, initial) in layer.groups.iter().zip(first) {
                 assert!(
@@ -161,7 +185,7 @@ fn check(label: &str, expected_groups: usize, enabled: bool, single: bool) {
     }
     fs::write(root.join("witness.json"), serde_json::to_vec_pretty(&json!({
         "case":label,"input_sha256":sha(&bytes),"native_sha256":sha(&reference),
-        "enabled":enabled,"single":single,"groups_per_z":expected_groups,"skirt_z_count":layers.len(),"skirt_layers":layers
+        "enabled":enabled,"single":single,"groups_per_z":items,"items":items,"touching":touching,"skirt_z_count":layers.len(),"skirt_layers":layers
     })).unwrap()).unwrap();
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
