@@ -3,6 +3,8 @@ use super::{OrcaRunner, Stage, StageError, cache_identity, fs, io, lock, publish
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
+mod success;
+
 pub(crate) struct CliResultReference {
     pub(crate) directory: PathBuf,
     pub(crate) stdout: Vec<u8>,
@@ -76,6 +78,7 @@ impl EarlyExit {
 #[derive(Clone, Copy)]
 enum ResultKind {
     CustomGCode,
+    CustomGCodeSuccess,
     SequentialCollision,
     SequentialLast,
     Early(EarlyExit),
@@ -87,6 +90,7 @@ impl ResultKind {
     fn code(self) -> i32 {
         match self {
             Self::CustomGCode => -100,
+            Self::CustomGCodeSuccess => 0,
             Self::SequentialCollision => -63,
             Self::SequentialLast => 0,
             Self::Early(early) => early.code(),
@@ -97,6 +101,7 @@ impl ResultKind {
     fn schema(self) -> &'static str {
         match self {
             Self::CustomGCode => "custom-gcode-failure-v1",
+            Self::CustomGCodeSuccess => "custom-gcode-success-v1",
             Self::SequentialCollision => "sequential-collision-v1",
             Self::SequentialLast => "sequential-last-v1",
             Self::Early(_) => "early-cli-failure-v1",
@@ -108,7 +113,9 @@ impl ResultKind {
     fn native_products(self) -> &'static [&'static str] {
         match self {
             Self::CustomGCode | Self::SequentialCollision | Self::Early(_) => &["result.json"],
-            Self::SequentialLast | Self::RetainedFirst => &["plate_1.gcode", "result.json"],
+            Self::SequentialLast | Self::RetainedFirst | Self::CustomGCodeSuccess => {
+                &["plate_1.gcode", "result.json"]
+            }
             Self::RetainedSecond => &["plate_2.gcode", "result.json"],
         }
     }
@@ -116,7 +123,8 @@ impl ResultKind {
     fn slice(self) -> u32 {
         match self {
             Self::RetainedSecond => 2,
-            Self::CustomGCode
+            Self::CustomGCodeSuccess
+            | Self::CustomGCode
             | Self::SequentialCollision
             | Self::SequentialLast
             | Self::Early(_)
@@ -174,19 +182,6 @@ impl OrcaRunner {
                     settings,
                     filaments,
                 }),
-            },
-        )
-    }
-
-    pub(crate) fn custom_gcode_reference(
-        &self,
-        project: &Path,
-    ) -> Result<CliResultReference, StageError> {
-        self.cli_result_reference(
-            project,
-            ReferenceRequest {
-                kind: ResultKind::CustomGCode,
-                load_settings: None,
             },
         )
     }
@@ -292,7 +287,9 @@ impl OrcaRunner {
             stderr: stages::read(&entry.join("stderr"), stage)?,
             result_json: stages::read(&entry.join("result.json"), stage)?,
             gcode: match kind {
-                ResultKind::SequentialLast | ResultKind::RetainedFirst => {
+                ResultKind::SequentialLast
+                | ResultKind::RetainedFirst
+                | ResultKind::CustomGCodeSuccess => {
                     Some(stages::read(&entry.join("plate_1.gcode"), stage)?)
                 }
                 ResultKind::RetainedSecond => {
@@ -411,7 +408,10 @@ impl OrcaRunner {
         if parsed["return_code"] != kind.code() {
             return Err(io(stage, "Native result.json return code mismatch"));
         }
-        if let ResultKind::SequentialLast = kind {
+        if matches!(
+            kind,
+            ResultKind::SequentialLast | ResultKind::CustomGCodeSuccess
+        ) {
             let gcode = stages::read(&output.join("plate_1.gcode"), stage)?;
             if gcode.is_empty() {
                 return Err(io(stage, "Native last-object control emitted no G-code"));

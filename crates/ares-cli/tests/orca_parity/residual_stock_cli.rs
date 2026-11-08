@@ -4,7 +4,7 @@ use std::fs;
 
 use sha2::{Digest, Sha256};
 
-use crate::{native_wall_clock::result_comparison_bytes, runner::OrcaRunner};
+use crate::{golden, native_wall_clock::result_comparison_bytes, runner::OrcaRunner};
 
 fn compare(case: &str, historical_sha: &str) {
     let Some(_) = crate::native_environment::binary("ARES_ORCA_BIN") else {
@@ -61,8 +61,8 @@ fn compare(case: &str, historical_sha: &str) {
     let input = artifacts.join(format!("{case}.3mf"));
     fs::write(&input, bytes).unwrap();
     assert_eq!(fs::read(&input).unwrap(), *bytes);
-    let native = runner.custom_gcode_reference(&input).unwrap();
-    let hit = runner.custom_gcode_reference(&input).unwrap();
+    let native = runner.custom_gcode_success_reference(&input).unwrap();
+    let hit = runner.custom_gcode_success_reference(&input).unwrap();
     assert_eq!(native.directory, hit.directory);
     assert_eq!(native.stdout, hit.stdout);
     assert_eq!(native.stderr, hit.stderr);
@@ -89,13 +89,13 @@ fn compare(case: &str, historical_sha: &str) {
         "case": case, "input_sha256": sha, "input": input,
         "provenance": "RUNTIME_STOCK_SELECTOR_NATIVE_EXPORT",
         "historical_stock_input_sha256": historical_sha,
-        "ares_exit": output.status.code(), "native_code": -100,
+        "ares_exit": output.status.code(), "native_code": 0,
         "stdout_equal": output.stdout == native.stdout,
         "stderr_equal": output.stderr == native.stderr,
         "result_equal_except_two_wall_clock_fields": result_comparison_bytes(&actual_result) == result_comparison_bytes(&native.result_json),
         "native_cache": native.directory,
     })).unwrap()).unwrap();
-    assert_eq!(output.status.code(), Some(156), "artifacts {artifacts:?}");
+    assert_eq!(output.status.code(), Some(0), "artifacts {artifacts:?}");
     assert_eq!(output.stdout, native.stdout, "artifacts {artifacts:?}");
     assert_eq!(output.stderr, native.stderr, "artifacts {artifacts:?}");
     assert_eq!(
@@ -103,7 +103,18 @@ fn compare(case: &str, historical_sha: &str) {
         result_comparison_bytes(&native.result_json),
         "artifacts {artifacts:?}"
     );
-    assert!(!retained.exists(), "artifacts {artifacts:?}");
+    assert!(retained.exists(), "artifacts {artifacts:?}");
+    let expected_gcode = golden::normalize_one_generator_line(
+        native.gcode.as_ref().unwrap(),
+        golden::GeneratorKind::Orca,
+    )
+    .unwrap();
+    let actual_gcode = golden::normalize_one_generator_line(
+        &fs::read(&retained).unwrap(),
+        golden::GeneratorKind::Ares,
+    )
+    .unwrap();
+    assert_eq!(actual_gcode, expected_gcode, "artifacts {artifacts:?}");
 }
 
 #[test]
