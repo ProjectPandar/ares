@@ -21,8 +21,8 @@ mod absolute_e_reset_comment;
 #[path = "mk4_tree_support_base_connect.rs"]
 mod mk4_tree_support_base_connect;
 
-#[path = "mk4_tree_support_default_short_edge.rs"]
-mod mk4_tree_support_default_short_edge;
+#[path = "mk4_tree_support_default_seam_anchor.rs"]
+mod mk4_tree_support_default_seam_anchor;
 
 #[path = "spiral_hole_projected_split.rs"]
 mod spiral_hole_projected_split;

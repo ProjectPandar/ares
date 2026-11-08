@@ -1,4 +1,4 @@
-# MK4 organic default support short-edge fixtures
+# MK4 organic default support seam anchor fixtures
 
 Stock Prusa MK4 0.4-mm overhang project with the established support family,
 `tree(auto)`, default (Organic) style, wall count 0, support width 0.42 mm,
@@ -10,14 +10,14 @@ its strict one-key control; geometry and all other configuration are equal.
 - `rectilinear-control.3mf` — only `support_base_pattern=rectilinear`; SHA-256
   `339351a56db7c4df91e5f13aa2d358442ae50d6085e1ffa2a485e91e86ce0e00`.
 
-Upstream `SupportCommon.cpp:1791-1801` routes Organic default support to
-`tree_supports_generate_paths`. Its shrink helper (`:486-570`) sets
-`ShortestEdgeLength=double(delta*0.005)` from the positive function width
-for both outer contour and holes (`:508,:531`), negating only the outer
-Execute delta. The Ares signed closure delta disabled outer short-edge
-filtering and also multiplied in f32 rather than double. Neutral dual-side
-probes traced the first emitted difference to the anchor on print_z 2;
-travel Z2.4 is its lifted height.
+At OrcaSlicer `345efec64`, `SupportCommon.cpp:1955-1958` routes Organic default
+support to `tree_supports_generate_paths` (`:642-843`), which cuts a seam anchor
+from a second loop made by its shrink helper (`:651-707`). The rectilinear
+control does not take that route.
+
+These fixtures do not cover the shrink helper's short-edge threshold. They were
+recorded when it decided the anchor on one layer, but at this revision no edge
+falls under it, and the output is the same with the filter disabled.
 
 Both cases use `native_stream_case::check` for Native double-replay and
 public API/CLI complete ordered byte comparison, normalizing only the
