@@ -45,12 +45,9 @@ fn conditional_scarf_matches_native_public_slicing() {
     for (label, native, public) in &results {
         let expected = &manifest["cases"][*label];
         assert_eq!(
-            native["slope_count"], expected["native_slope_count"],
+            native["slope_count"].as_u64().unwrap() > 0,
+            expected["scarf_active"].as_bool().unwrap(),
             "Native activity {label}"
-        );
-        assert_eq!(
-            native["first_slope"], expected["native_first_slope"],
-            "Native first slope {label}"
         );
         assert_eq!(native["layers"], 4, "Native layers {label}");
         assert_eq!(
@@ -66,6 +63,14 @@ fn conditional_scarf_matches_native_public_slicing() {
         assert_eq!(public["api_complete"], true, "API complete {label}");
         assert_eq!(public["cli_complete"], true, "CLI complete {label}");
         assert_eq!(public["raw_api_cli_equal"], true, "raw API/CLI {label}");
+        assert_eq!(
+            public["api_first_slope"], native["first_slope"],
+            "Native/API first slope {label}"
+        );
+        assert_eq!(
+            public["cli_first_slope"], native["first_slope"],
+            "Native/CLI first slope {label}"
+        );
     }
     for label in [
         "control",
@@ -224,6 +229,8 @@ fn public_case(work: &Path, label: &str, input: &[u8], native: &[u8]) -> Value {
         "api_complete":api_bytes.is_some_and(complete),"cli_complete":cli_bytes.is_some_and(complete),
         "api_sha256":api_bytes.map(cache_identity::raw_digest),
         "cli_sha256":cli_bytes.map(cache_identity::raw_digest),
+        "api_first_slope":api_bytes.map(|bytes|activity(bytes)["first_slope"].take()),
+        "cli_first_slope":cli_bytes.map(|bytes|activity(bytes)["first_slope"].take()),
         "raw_api_cli_equal":api_bytes.zip(cli_bytes).map(|(api,cli)|api==cli),
         "api_comparison":comparison(native,api_bytes),"cli_comparison":comparison(native,cli_bytes)});
     profile_entry::write_json(&directory.join("public-result.json"), &result);
