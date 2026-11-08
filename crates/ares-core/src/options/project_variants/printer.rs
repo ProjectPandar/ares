@@ -62,6 +62,11 @@ pub(super) fn materialize_variant_one(
         "printer_extruder_variant"
     );
     select_field!(
+        settings.project.gcode.retract_after_wipe,
+        indices,
+        "retract_after_wipe"
+    );
+    select_field!(
         settings.project.gcode.retract_before_wipe,
         indices,
         "retract_before_wipe"

@@ -91,57 +91,19 @@ pub(super) fn retract_and_wipe_impl(
     }
     let wipe = wipe_moves(state);
     let retraction_distance = wipe.retraction_distance;
+    let (override_length, during) =
+        wipe_retraction_lengths(state, retraction_length, retraction_distance);
     let requested_before = retraction_length * state.options.retract_before_wipe;
-    let remaining = retraction_length - requested_before;
     let wipe_speed = if state.options.role_based_wipe_speed {
         state.extrusion_feedrate / 60.0
     } else {
         state.options.wipe_speed
     }
     .max(10.0);
-    // `GCode.cpp:350-358`: the during-wipe amount is
-    // `retraction_speed * unscale_(wipe_path_length) / wipe_speed` (the
-    // effective, unrounded mm/s). Upstream caps at `remaining` only when
-    // `during - remaining > EPSILON`; within the EPSILON window the
-    // larger `during` value is emitted as-is.
-    let during_max = state.options.retraction_during_wipe_speed * retraction_distance / wipe_speed;
-    // Upstream EPSILON is `1e-4` (`libslic3r.h:52`). When the during
-    // amount is itself below EPSILON upstream returns `(fL, 0)` — the
-    // whole pre-wipe fraction retracts BEFORE the wipe and the wipe
-    // carries no retraction (`GCode.cpp:350-353`). Otherwise `during >
-    // remaining` within the EPSILON window emits as-is (:352-357).
-    // `GCode.cpp:330,337`: the full-length and remaining-length early
-    // returns precede the during-wipe budget calculation.
-    let during = if retraction_length <= 1e-4 || remaining <= 1e-4 || during_max <= 1e-4 {
-        0.0
-    } else if during_max - remaining > 1e-4 {
-        remaining
-    } else {
-        during_max
-    };
-    // `before` = `retraction_before_wipe + (remaining - during)` =
-    // `retraction_length - during` (`GCode.cpp:358` adds the leftover
-    // difference into the pre-wipe amount). Without an eligible wipe
-    // path upstream never calls `retract(true, beforeWipe)` — the single
-    // `retract()` emits only the REMAINING distance
-    // (`Extruder.cpp:75-84`), so a partially-retracted nozzle (e.g. a
-    // template `e_retracted` assignment) tops up rather than restarting
-    // the full length.
     let before = if !has_wipe {
         (retraction_length - state.extruder.retracted_amount).max(0.0)
-    } else if during <= 0.0 {
-        // `GCodeWriter.cpp:1004-1011` consumes the `(0, 0)` return via
-        // its configured before-wipe fraction, as for `(fL, 0)` here.
-        // `(fL, 0)` — no leftover difference is folded into the
-        // pre-wipe amount (`GCode.cpp:351-352`).
-        (requested_before - state.extruder.retracted_amount).max(0.0)
     } else {
-        // The before-wipe call emits `max(0, before - m_retracted)`
-        // (`Extruder.cpp:77-84`); the post-wipe `retract()` tops the
-        // remainder off to the full length.
-        // `GCodeWriter.cpp:1004-1011`: only overrides above EPSILON
-        // select the explicit length; otherwise use the configured fraction.
-        let override_length = retraction_length - during;
+        // GCodeWriter::_retract dispatches only overrides above EPSILON.
         let length = if override_length > 1e-4 {
             override_length
         } else {
@@ -187,6 +149,35 @@ pub(super) fn retract_and_wipe_impl(
         }
     }
     reset_e(output, state, false);
+}
+
+// GCode.cpp:538-602 (345efec64c7b): reserve both full-length products
+// before calculating the during-wipe budget. The ordinary retract supplies after.
+fn wipe_retraction_lengths(state: &EmitState, length: f64, distance: f64) -> (f64, f64) {
+    if length <= 1e-4 {
+        return (0.0, 0.0);
+    }
+    let mut before = length * state.options.retract_before_wipe;
+    let after = length * state.options.retract_after_wipe;
+    let remaining = length - (before + after);
+    if remaining <= 1e-4 {
+        return (before, 0.0);
+    }
+    let wipe_speed = if state.options.role_based_wipe_speed {
+        state.extrusion_feedrate / 60.0
+    } else {
+        state.options.wipe_speed
+    }
+    .max(10.0);
+    let during = state.options.retraction_during_wipe_speed * distance / wipe_speed;
+    if during <= 1e-4 {
+        return (before, 0.0);
+    }
+    if during - remaining > 1e-4 {
+        return (before, remaining);
+    }
+    before += remaining - during;
+    (before, during)
 }
 
 /// `GCodeWriter::_retract` comment gating: the feature comment is

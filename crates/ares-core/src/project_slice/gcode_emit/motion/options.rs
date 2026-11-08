@@ -163,6 +163,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) bottom_surface_pattern_hilbert: bool,
     pub(in crate::project_slice::gcode_emit) top_surface_pattern_hilbert: bool,
     pub(in crate::project_slice::gcode_emit) retract_before_wipe: f64,
+    pub(in crate::project_slice::gcode_emit) retract_after_wipe: f64,
     pub(in crate::project_slice::gcode_emit) role_based_wipe_speed: bool,
     pub(in crate::project_slice::gcode_emit) wipe_speed: f64,
     pub(in crate::project_slice::gcode_emit) wipe_on_loops: bool,

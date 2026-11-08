@@ -11,7 +11,7 @@ impl Serialize for FilamentOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(130))?;
+        let mut map = serializer.serialize_map(Some(131))?;
         early::serialize_entries(&mut map, self)?;
         middle::serialize_entries(&mut map, self)?;
         late::serialize_entries(&mut map, self)?;

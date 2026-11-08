@@ -272,6 +272,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         z_offset: traversal.resolved.views.full.printer.remaining.z_offset.0,
         reduce_infill_retraction: full.process.print.reduce_infill_retraction.0,
         retract_before_wipe: wipe_tail.retract_before_wipe,
+        retract_after_wipe: wipe_tail.retract_after_wipe,
         nozzle_diameter: wipe_tail.nozzle_diameter,
         seam_position: full.process.object.seam_position,
         reduce_crossing_wall: full.process.print.reduce_crossing_wall.0,

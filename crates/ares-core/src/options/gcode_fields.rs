@@ -65,6 +65,7 @@ macro_rules! gcode_option_fields {
             process => max_volumetric_extrusion_rate_slope_segment_length => "max_volumetric_extrusion_rate_slope_segment_length": OrcaFloat,
             process => extrusion_rate_smoothing_external_perimeter_only => "extrusion_rate_smoothing_external_perimeter_only": OrcaBool,
             project => retract_before_wipe => "retract_before_wipe": OrcaPercents,
+            project => retract_after_wipe => "retract_after_wipe": OrcaPercents,
             project => retraction_length => "retraction_length": OrcaFloats,
             project => retract_length_toolchange => "retract_length_toolchange": OrcaFloats,
             printer => enable_long_retraction_when_cut => "enable_long_retraction_when_cut": OrcaInt,

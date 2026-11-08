@@ -7,7 +7,7 @@ impl Serialize for ProjectGCodeSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(19))?;
+        let mut map = serializer.serialize_map(Some(20))?;
         map.serialize_entry("bbl_calib_mark_logo", &self.bbl_calib_mark_logo)?;
         map.serialize_entry("deretraction_speed", &self.deretraction_speed)?;
         map.serialize_entry("extruder_ams_count", &self.extruder_ams_count)?;
@@ -18,6 +18,7 @@ impl Serialize for ProjectGCodeSourceOptions {
         map.serialize_entry("filament_volume_map", &self.filament_volume_map)?;
         map.serialize_entry("has_scarf_joint_seam", &self.has_scarf_joint_seam)?;
         map.serialize_entry("nozzle_volume_type", &self.nozzle_volume_type)?;
+        map.serialize_entry("retract_after_wipe", &self.retract_after_wipe)?;
         map.serialize_entry("retract_before_wipe", &self.retract_before_wipe)?;
         map.serialize_entry("retract_length_toolchange", &self.retract_length_toolchange)?;
         map.serialize_entry("retract_lift_above", &self.retract_lift_above)?;

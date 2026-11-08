@@ -107,6 +107,10 @@ where
         &NullableVectorRef::new(&value.gcode.filament_ramming_volumetric_speed_nc),
     )?;
     map.serialize_entry(
+        "filament_retract_after_wipe",
+        &NullableVectorRef::new(&value.retract_overrides.filament_retract_after_wipe),
+    )?;
+    map.serialize_entry(
         "filament_retract_before_wipe",
         &NullableVectorRef::new(&value.retract_overrides.filament_retract_before_wipe),
     )?;

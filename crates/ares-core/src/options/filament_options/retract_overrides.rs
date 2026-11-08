@@ -31,6 +31,7 @@ declare_option_group! {
         filament_retract_when_changing_layer => "filament_retract_when_changing_layer": Vec<Nullable<OrcaBool>> = nullable_nil(),
         filament_wipe => "filament_wipe": Vec<Nullable<OrcaBool>> = nullable_nil(),
         filament_retract_before_wipe => "filament_retract_before_wipe": Vec<Nullable<Percent>> = nullable_nil(),
+        filament_retract_after_wipe => "filament_retract_after_wipe": Vec<Nullable<Percent>> = nullable_nil(),
         filament_long_retractions_when_cut => "filament_long_retractions_when_cut": Vec<Nullable<OrcaBool>> = nullable_nil(),
         filament_retraction_distances_when_cut => "filament_retraction_distances_when_cut": Vec<Nullable<OrcaFloat>> = nullable_nil(),
     }
@@ -55,6 +56,7 @@ macro_rules! retract_profile_fields {
                 filament_retract_when_changing_layer => ("filament_retract_when_changing_layer", exact_variant_vectors_equal),
                 filament_wipe => ("filament_wipe", exact_variant_vectors_equal),
                 filament_retract_before_wipe => ("filament_retract_before_wipe", nullable_percent_variant_vectors_equal),
+                filament_retract_after_wipe => ("filament_retract_after_wipe", nullable_percent_variant_vectors_equal),
                 filament_long_retractions_when_cut => ("filament_long_retractions_when_cut", exact_variant_vectors_equal),
                 filament_retraction_distances_when_cut => ("filament_retraction_distances_when_cut", nullable_float_variant_vectors_equal),
             }
@@ -132,7 +134,7 @@ impl FilamentRetractOverrideOptionsBuilder {
 }
 
 impl FilamentRetractOverrideOptions {
-    pub const DECLARATION_ORDER: [&'static str; 16] = [
+    pub const DECLARATION_ORDER: [&'static str; 17] = [
         "filament_retraction_length",
         "filament_z_hop",
         "filament_z_hop_types",
@@ -147,6 +149,7 @@ impl FilamentRetractOverrideOptions {
         "filament_retract_when_changing_layer",
         "filament_wipe",
         "filament_retract_before_wipe",
+        "filament_retract_after_wipe",
         "filament_long_retractions_when_cut",
         "filament_retraction_distances_when_cut",
     ];

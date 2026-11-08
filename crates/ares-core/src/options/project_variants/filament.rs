@@ -213,6 +213,17 @@ pub(super) fn materialize(
         settings
             .filament
             .retract_overrides
+            .filament_retract_after_wipe,
+        source
+            .filament
+            .retract_overrides
+            .filament_retract_after_wipe,
+        indices
+    );
+    select_vec_field!(
+        settings
+            .filament
+            .retract_overrides
             .filament_retract_before_wipe,
         source
             .filament

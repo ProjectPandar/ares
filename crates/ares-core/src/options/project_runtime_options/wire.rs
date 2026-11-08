@@ -12,7 +12,7 @@ impl Serialize for ProjectRuntimeOptions {
             print,
             preset,
         } = self;
-        let mut map = serializer.serialize_map(Some(44))?;
+        let mut map = serializer.serialize_map(Some(45))?;
         map.serialize_entry("bbl_calib_mark_logo", &gcode.bbl_calib_mark_logo)?;
         map.serialize_entry("curr_bed_type", &print.curr_bed_type)?;
         map.serialize_entry("default_filament_profile", &preset.default_filament_profile)?;
@@ -53,6 +53,7 @@ impl Serialize for ProjectRuntimeOptions {
         )?;
         map.serialize_entry("print_settings_id", &preset.print_settings_id)?;
         map.serialize_entry("printer_settings_id", &preset.printer_settings_id)?;
+        map.serialize_entry("retract_after_wipe", &gcode.retract_after_wipe)?;
         map.serialize_entry("retract_before_wipe", &gcode.retract_before_wipe)?;
         map.serialize_entry(
             "retract_length_toolchange",
