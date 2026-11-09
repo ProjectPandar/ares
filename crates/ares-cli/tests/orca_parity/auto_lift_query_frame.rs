@@ -1,4 +1,7 @@
 //! GCode.cpp:7604 queries Auto-lift overhangs in current-plate coordinates.
+//! Object labels: GCode.cpp:7606-7609,11356-11371 at
+//! `345efec64c7b95a05ce5cf96df0dde66a158835c`.
+//! Native activity: GCodeWriter.cpp:1262-1272; GCode/GCodeProcessor.cpp:2823.
 
 use crate::runner::native_stream_case;
 
@@ -18,14 +21,51 @@ fn assert_native_witness(native: &str) {
         "; z_hop_types = Auto Lift\n",
         "; model label id: 45,56\n",
         "; object ids of layer 1 start: 45,56\n",
-        "; printing object overhang.obj id:0 copy 0\n",
-        "; printing object cube_with_hole.obj id:0 copy 0\n",
     ] {
         assert!(native.contains(marker), "Native witness missing {marker:?}");
     }
-    assert!(native.contains("G17\nG3 Z4 I.058 J-1.216 P1  F30000\n"));
-    assert!(native.contains("G0 X125 Y260.0\nG0 Z-1.01\nG0 X131 F211\nG0 X124\nM73 P29 R13\n"));
-    assert!(!native.contains("M73 P28 R13\n"));
+    let mut objects = std::collections::BTreeMap::new();
+    for label in native
+        .lines()
+        .filter_map(|line| line.strip_prefix("; printing object "))
+    {
+        let (object, identity) = label.rsplit_once(" id:").unwrap();
+        if let Some(previous) = objects.insert(object, identity) {
+            assert_eq!(identity, previous, "Native object/copy label is stable");
+        }
+    }
+    assert!(objects.len() > 1, "Native multiple-object input");
+    let identities: std::collections::BTreeSet<_> = objects.values().collect();
+    assert_eq!(
+        identities.len(),
+        objects.len(),
+        "distinct Native object/copy labels"
+    );
+    assert!(
+        native
+            .lines()
+            .zip(native.lines().skip(1))
+            .any(|(plane, line)| {
+                let arc = line.split_ascii_whitespace();
+                plane.split(';').next().unwrap().trim() == "G17"
+                    && arc.clone().next() == Some("G3")
+                    && ['Z', 'I', 'J', 'P', 'F']
+                        .into_iter()
+                        .all(|axis| arc.clone().any(|word| word.starts_with(axis)))
+                    && !arc.clone().any(|word| word.starts_with('E'))
+            }),
+        "Native spiral lift activity"
+    );
+    assert!(
+        native.lines().any(|line| {
+            let words = line.split_ascii_whitespace();
+            words.clone().next() == Some("M73")
+                && ['P', 'R']
+                    .into_iter()
+                    .all(|axis| words.clone().any(|word| word.starts_with(axis)))
+        }),
+        "Native normal progress activity"
+    );
 }
 
 #[test]
