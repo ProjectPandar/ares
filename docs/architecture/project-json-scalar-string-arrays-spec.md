@@ -25,14 +25,13 @@ value from the enclosing Native CLI's natural exit status. Record actual exit,
 diagnostic and output behavior for the mixed-type control rather than inventing
 a fatal Native return code or silently converting invalid elements.
 
-## Rust destination and ownership
+## Rust destination
 
 Extend the existing source-backed array normalizer in
 `crates/ares-core/src/options/json_deserialize.rs` from numeric scalar kinds to
 `OptionValueKind::String`. Rename `normalize_numeric_scalar_arrays` to
 `normalize_scalar_arrays` and update only its existing call sites in
-`project/raw_settings.rs` and `profiles/catalog/store.rs`. W2 overlap must be
-cleared before editing these production paths.
+`project/raw_settings.rs` and `profiles/catalog/store.rs`.
 
 Reuse the existing `encode_array`/`decode` path and its per-kind separators.
 Keep the first raw legacy-key pass and the second joined-token legacy pass in
@@ -56,13 +55,12 @@ behavior must be reported distinctly; no new partial-load fallback is added to
 Ares. Boolean/enum/point scalar expansion, unrelated option definitions and
 configuration validation changes are deferred.
 
-## Test-first observable contract
+## Observable behavior
 
 Use the tracked Native stock cube project
 `tests/parity/machine-acceleration-cache-rounding/stock-control.3mf`, SHA-256
 `b1a3ee564b1e78d1b87f6957f2177f6cd528906ce4790218a0dca410b4191bb8`.
-Construct project-settings variants in memory; never commit a generated 3MF or
-copy user bytes, option values or names into a fixture.
+Construct project-settings variants in memory from this public fixture.
 
 A valid multi-string thumbnail array must have complete Native output equal to
 its comma-string control, then match the public API and CLI on that same array
@@ -72,20 +70,20 @@ ordered-byte comparison, including the full footer and generator-only allowance.
 A mixed-type thumbnail array must exercise Native and Ares; preserve its actual
 Native diagnostics/status and prove Ares does not coerce it to a valid string.
 
-### Recorded control divergence (not a slice gate)
+### Native mixed-array divergence
 
-At test commit `ee71d08b1`, both official and seeded Native runs accepted the
-mixed string/integer thumbnail array at the enclosing process level: natural
-exit zero and a generated `plate_1.gcode`. Ares rejected project admission via
-the public API and CLI (natural exit one, no G-code). This is the named **Native
-mixed-array partial-load versus Ares admission-rejection divergence**. Preserve
-it honestly; do not port Native's silent partial-load behavior in this slice.
-The mixed case records outcomes, not successful Native/Ares parity. The gates
-are valid string-array joining and the private user-file load.
+Both official and seeded Native runs accept the mixed string/integer thumbnail
+array at the enclosing process level: natural exit zero and a generated
+`plate_1.gcode`. Ares rejects project admission via the public API and CLI
+(natural exit one, no G-code). This is the named **Native mixed-array partial-load
+versus Ares admission-rejection divergence**. This slice does not adopt Native's
+silent partial-load behavior. The mixed case records those different outcomes,
+not successful Native/Ares parity.
 
-After the failing public E2Es are committed, implement the scoped normalizer and
-repeat the private user-file load gate by SHA only. Run both oracle modes,
-filtered project/3MF regressions, fmt, strict workspace/all-target Clippy, WASM,
-module-size/scope/trailer/hygiene gates and exact-tip evidence. Core remains
-platform-neutral and uses linear existing string assembly without file I/O,
-new dependencies, compatibility flags or parser fallback.
+Compare valid string-array inputs with their comma-string controls and with
+Native/API/CLI output in both official and seeded modes, retaining complete
+ordered bytes and the existing generator-only allowance. Verify formatting with
+`cargo fmt --check`, linting with `cargo clippy --workspace --all-targets -- -D warnings`,
+and browser compilation with `cargo build -p ares-wasm --target wasm32-unknown-unknown`.
+Core remains platform-neutral and uses linear existing string assembly without
+file I/O, new dependencies, compatibility flags or parser fallback.

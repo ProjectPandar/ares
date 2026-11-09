@@ -97,7 +97,7 @@ fn mixed_thumbnail_array_native_outcome_recorded_without_coercion() {
     assert!(!cli.status.success());
     assert!(!root.join("ares.cli.gcode").exists());
     for value in [serde_json::json!([true]), serde_json::json!([null])] {
-        assert!(ares_core::load_project(&with_option("thumbnails", value)).is_err());
+        assert!(ares_core::load_project(with_option("thumbnails", value)).is_err());
     }
 }
 

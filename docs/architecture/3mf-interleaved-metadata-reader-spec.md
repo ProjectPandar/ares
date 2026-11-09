@@ -61,7 +61,7 @@ Use scoped ordered-child deserialization, following the existing
 `PlateSettingsWire` child-dispatch pattern. Represent the affected parents'
 children in document order and fold metadata and structural children into the
 existing destination fields. An ordered `$value` child wire is suitable;
-keep any main/resource build-mode specialization private to the model reader.
+keep any main/resource build-mode specialization internal to the model reader.
 
 Identity-only reads must skip resource/build contents with ignored-value
 semantics rather than constructing mesh vertices, triangles or project state.
@@ -92,7 +92,7 @@ Thus an unbound `triangle/@face_property` is an upstream-supported form,
 not an attribute whose namespace must be the production extension namespace.
 
 Include that exact unbound attribute in the existing model-attribute namespace
-gate. Do not admit arbitrary unknown attributes, add namespace aliases, or
+validation. Do not admit arbitrary unknown attributes, add namespace aliases, or
 relax the required namespaces of existing core/production/XML attributes.
 Do not preprocess or strip the attribute to bypass validation.
 
@@ -154,7 +154,7 @@ Runtime stock variants must add a missing-key and an explicitly empty-key
 object metadata child, using only public fixture-derived data. Native must
 accept them and retain complete control output; public import/identity and
 Native/API/CLI comparisons must pass. Retain the existing missing-key rejection
-for part and plate metadata. No user bytes or generated archive is committed.
+for part and plate metadata.
 
 ## Portability and allocation contract
 
