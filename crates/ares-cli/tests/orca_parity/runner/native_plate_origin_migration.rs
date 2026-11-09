@@ -6,6 +6,9 @@
 //! required/optional policy and the existing-cache selected-plate recipe.
 //! See native-artifact-cleanup-plate-origin-spec.md.
 
+#[path = "native_plate_origin_migration/first_layer_print_space.rs"]
+mod first_layer_print_space;
+
 use super::{ExportedCase, OrcaRunner, cache_identity, repo_root};
 use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
 use std::fs;
