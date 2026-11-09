@@ -123,6 +123,24 @@ async fn rejected_orders_diagnostic_only() {
         crate::native_environment::skipped("mesh-edge Native unavailable");
         return;
     };
+    let source = super::repo_root().join("OrcaSlicer/src");
+    let utils = fs::read_to_string(source.join("libslic3r/Utils.hpp")).unwrap();
+    let slicing_error: i32 = utils
+        .lines()
+        .find_map(|line| line.strip_prefix("#define CLI_SLICING_ERROR"))
+        .unwrap()
+        .trim()
+        .parse()
+        .unwrap();
+    let cli_source = fs::read_to_string(source.join("OrcaSlicer.cpp")).unwrap();
+    let slicing_message = cli_source
+        .lines()
+        .find_map(|line| {
+            line.trim()
+                .strip_prefix("{CLI_SLICING_ERROR, \"")
+                .and_then(|message| message.strip_suffix("\"},"))
+        })
+        .unwrap();
     for (label, input) in [
         (
             "odd-reverse",
@@ -201,18 +219,18 @@ async fn rejected_orders_diagnostic_only() {
         .unwrap();
         let error = native.unwrap_err();
         assert_eq!(error.kind, super::stages::FailureKind::Process, "{root:?}");
-        assert_eq!(native_result["return_code"], -100, "{root:?}");
+        assert_eq!(native_result["return_code"], slicing_error, "{root:?}");
         let captured = error.captured.unwrap();
         assert_eq!(
             captured.code,
-            Some(if cfg!(unix) { 156 } else { -100 }),
+            Some(if cfg!(unix) {
+                slicing_error.rem_euclid(256)
+            } else {
+                slicing_error
+            }),
             "{root:?}"
         );
-        assert_eq!(
-            String::from_utf8_lossy(&captured.stderr).trim(),
-            "Errors",
-            "{root:?}"
-        );
+        assert_eq!(native_result["error_string"], slicing_message, "{root:?}");
         assert!(!output.join("plate_1.gcode").exists(), "{root:?}");
     }
 }
