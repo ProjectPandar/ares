@@ -243,9 +243,13 @@ pub(super) fn append_areas(
             // `ironing-pattern-probe/native-classification.txt`). Keep the
             // bounded `UnsupportedProjectFeature` guard per
             // `docs/architecture/ironing-pattern-coverage-spec.md`.
+            // `Fill3DHoneycomb` has no defined result here: `make_ironing` leaves
+            // `layer_height` at zero, so its Z scale is non-finite
+            // (`Fill3DHoneycomb.cpp:371-391`).
             ProcessInfillPattern::AdaptiveCubic
             | ProcessInfillPattern::SupportCubic
-            | ProcessInfillPattern::Lightning => {
+            | ProcessInfillPattern::Lightning
+            | ProcessInfillPattern::ThreeDHoneycomb => {
                 return Err(SliceError::UnsupportedProjectFeature(
                     "ironing_pattern".to_owned(),
                 ));

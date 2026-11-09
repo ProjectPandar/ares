@@ -3,9 +3,10 @@
 //! upstream `Layer::make_ironing` specialization goes through the shared
 //! `fill_entities::surface` dispatcher — the same `Fill::new_from_type`
 //! (`FillBase.cpp:40-77`) entry `support_ironing` calls
-//! (`SupportCommon.cpp:1879`). The three crash-class patterns
-//! (`AdaptiveCubic`, `SupportCubic`, `Lightning`) upstream SIGSEGV inside
-//! `make_ironing` — there is no oracle output to mirror; they keep the
+//! (`SupportCommon.cpp:1879`). The crash-class patterns (`AdaptiveCubic`,
+//! `SupportCubic`, `Lightning`) upstream SIGSEGV inside `make_ironing` and
+//! `ThreeDHoneycomb` has no defined result there — there is no oracle output to
+//! mirror; they keep the
 //! bounded `UnsupportedProjectFeature` guard per
 //! `docs/architecture/ironing-pattern-coverage-spec.md`.
 
