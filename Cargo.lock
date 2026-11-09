@@ -87,6 +87,7 @@ name = "ares-cli"
 version = "0.1.0"
 dependencies = [
  "ares-core",
+ "ares-vgcode",
  "ares-wasm",
  "assert_cmd",
  "boostvoronoi",

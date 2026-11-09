@@ -1,0 +1,122 @@
+{
+  "upstream": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "tree": "8a8a22aab5db06fffb90912821fd4ebf7eabbc57",
+  "geometry": [
+    [
+      12,
+      12,
+      0.6,
+      30,
+      40
+    ],
+    [
+      80,
+      40,
+      0.6,
+      80,
+      40
+    ]
+  ],
+  "triangles_per_prism": [
+    [
+      0,
+      2,
+      1
+    ],
+    [
+      0,
+      3,
+      2
+    ],
+    [
+      4,
+      5,
+      6
+    ],
+    [
+      4,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      5
+    ],
+    [
+      0,
+      5,
+      4
+    ],
+    [
+      1,
+      2,
+      6
+    ],
+    [
+      1,
+      6,
+      5
+    ],
+    [
+      2,
+      3,
+      7
+    ],
+    [
+      2,
+      7,
+      6
+    ],
+    [
+      3,
+      0,
+      4
+    ],
+    [
+      3,
+      4,
+      7
+    ]
+  ],
+  "source_profiles": {
+    "resources/profiles/BBL/machine/Bambu Lab X2D 0.4 nozzle.json": "f2a833d6f335789197e4d23feb86396067fe3893c6892da2b3774ab6dab5884c",
+    "resources/profiles/BBL/machine/fdm_bbl_3dp_002_common.json": "1f7a3af118dea528a0b054fb339e74ba141852546e73a850ac5723b137924e45",
+    "resources/profiles/BBL/machine/fdm_machine_common.json": "cee021d6dbf12c2bf0bc6e2394cb4f0fa37af78296930cc753498f7ad3341a4a",
+    "resources/profiles/BBL/machine/Bambu Lab X2D 0.4 nozzle template machine_start_gcode.json": "e7c7f650974db81b16c96131ead9420bf4011dbdd2cab3aa8842a7d083b48a71",
+    "resources/profiles/BBL/machine/Bambu Lab X2D 0.4 nozzle template machine_end_gcode.json": "50363883f21ef241320250e5957134d4e45d263f00d2fa2f46869217b692c06a",
+    "resources/profiles/BBL/machine/Bambu Lab X2D 0.4 nozzle template layer_change_gcode.json": "9f0b4afa71a13864796f1554094830877b2af0845b223e408246161f3bd7e842",
+    "resources/profiles/BBL/machine/Bambu Lab X2D 0.4 nozzle template time_lapse_gcode.json": "710efa4bafb2cd22ddd74bab7105e72e4935e51e69d6b0cd1cde5e3ce5542094",
+    "resources/profiles/BBL/machine/Bambu Lab X2D 0.4 nozzle template change_filament_gcode.json": "5e0758c3aa24d3bf87c6a1518a434579cf9197cb3f65a94964a266720f08a05a",
+    "resources/profiles/BBL/process/0.20mm Standard @BBL X2D.json": "56fea44d1cdd74bd0cad1e7d799688673a24812a56b3b2405d28bee72b940f0c",
+    "resources/profiles/BBL/process/fdm_process_dual_0.20_nozzle_0.4.json": "8015670b40629f69ec2a2bff47d549d778e95ee545350e5fa9f60f8d8cbf2adc",
+    "resources/profiles/BBL/process/fdm_process_dual_common.json": "e27d14721c6efd4cd435368e30835ea08405209b75e25192943d4d23440449b2",
+    "resources/profiles/BBL/process/fdm_process_common.json": "25602054557e1fed37fd530e12914640c1ec33910f526dbc96deab4a016997d1",
+    "resources/profiles/BBL/filament/Bambu PLA Basic @BBL X2D 0.4 nozzle.json": "17562eaf108b8dba2532b186455e386e058aaa5e2c2a2ea44504d19656b343c1",
+    "resources/profiles/OrcaFilamentLibrary/filament/Bambu/Bambu PLA Basic @base.json": "f4111b0fe206e26f44121c88c1a8aee923dc1706d464b4c72770550a9dcdfa4e",
+    "resources/profiles/OrcaFilamentLibrary/filament/base/fdm_filament_pla.json": "3eca9d67192a14939a523c098a2ad17df13018e76a2590f3133098d3d870215f",
+    "resources/profiles/OrcaFilamentLibrary/filament/base/fdm_filament_common.json": "1928f6fe4d9a572d51c4172c8f0df2b39684341c3f687ce39c8f4138d63809fb",
+    "resources/profiles/BBL/filament/fdm_filament_template_direct_bowden_e3d.json": "cc518ebe128bf40be47e99030406b406f198764d6012a4689fbf2880784735df"
+  },
+  "selection": {
+    "machine": "Bambu Lab X2D 0.4 nozzle",
+    "process": "0.20mm Standard @BBL X2D",
+    "filaments": [
+      "Bambu PLA Basic @BBL X2D 0.4 nozzle",
+      "Bambu PLA Basic @BBL X2D 0.4 nozzle"
+    ]
+  },
+  "input_sha256": "3af196464a2e8315bdb9d84c6fdaa1eaf8062f1104bc5a60a940203d334ac87f",
+  "entries_sha256": {
+    "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+    "3D/3dmodel.model": "740b2bafb3cf12e00c5c5ef96c77f20d55ce221e4c8e9e6b35390157264ff115",
+    "3D/_rels/3dmodel.model.rels": "32c20cc4a4d0298bf36a8d1d7ab802cff030260712c1f0b66acd160e773d604c",
+    "3D/Objects/prism-1_1.model": "71e7868fd6c407e194c49808b62a1a69a0f0c8d9fa44a167b35a81fb0d8c0897",
+    "3D/Objects/prism-2_2.model": "5884cf24f1fa3f1014c4c3be5ab1f8fb93f1187d42c41c347fadfb61d2621d40",
+    "Metadata/project_settings.config": "4365e2fc5f5253dbb5448b4e8e9c1d016503c918cf9f2835d7841ae7f6490c1b",
+    "Metadata/model_settings.config": "6b9fb17af715b09d4c08ffc55b7f6cafb8b360f2e42bae5777df7397b3510f21",
+    "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+    "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+    "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+  }
+}
