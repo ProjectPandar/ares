@@ -203,6 +203,12 @@ pub(super) fn append_start(
         }
     };
     state.start_gcode_filament = super::tool_transition::last_start_filament(&rendered);
+    state.start_gcode_sets_nozzle_temperature = temperature::sets_temperature(
+        &rendered,
+        &["M104", "M109"],
+        traversal.resolved.views.full.printer.gcode.gcode_flavor
+            == crate::GCodeFlavor::RepRapFirmware,
+    );
     let bed_cache = temperature::append_startup(
         output,
         traversal,
@@ -229,6 +235,20 @@ pub(super) fn append_start(
         append_flavor_preamble(output, traversal);
     }
     Ok(bed_cache)
+}
+
+// `GCode.cpp:4439-4441`, `_print_first_layer_extruder_temperatures`:5553-5585.
+pub(super) fn append_start_temperature_wait(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    state: &motion::EmitState,
+) {
+    temperature::append_nozzle_temperatures(
+        output,
+        traversal,
+        state.start_gcode_sets_nozzle_temperature,
+        true,
+    );
 }
 
 pub(super) fn append_completion_controls(

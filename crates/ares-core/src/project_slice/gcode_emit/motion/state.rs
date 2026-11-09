@@ -67,6 +67,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) current_hotend: i32,
     pub(in crate::project_slice::gcode_emit) toolchange_count: usize,
     pub(in crate::project_slice::gcode_emit) start_gcode_filament: Option<usize>,
+    pub(in crate::project_slice::gcode_emit) start_gcode_sets_nozzle_temperature: bool,
     pub(in crate::project_slice::gcode_emit) scale_factor: f64,
     pub(in crate::project_slice::gcode_emit) travel_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) extrusion_feedrate: f64,

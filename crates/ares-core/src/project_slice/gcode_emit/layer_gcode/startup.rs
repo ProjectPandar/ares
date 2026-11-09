@@ -148,6 +148,7 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
         super::super::pressure_advance::append(output, state, traversal, filament);
     }
     if is_bbl {
+        super::super::machine::append_start_temperature_wait(output, traversal, state);
         super::super::machine::append_flavor_preamble(output, traversal);
         output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\n");
     }

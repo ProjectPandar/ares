@@ -74,7 +74,12 @@ pub(super) fn append_startup(
             .as_bytes(),
         );
     }
-    append_nozzle_temperatures(output, traversal, machine_start_gcode, flavor);
+    let temperature_set_by_start = sets_temperature(
+        machine_start_gcode,
+        &["M104", "M109"],
+        flavor == GCodeFlavor::RepRapFirmware,
+    );
+    append_nozzle_temperatures(output, traversal, temperature_set_by_start, false);
     bed_temperature
 }
 
@@ -152,21 +157,18 @@ pub(super) fn filament_int(values: &crate::OrcaInts, index: usize) -> i32 {
         .map_or(0, |value| value.0)
 }
 
-fn append_nozzle_temperatures(
+pub(super) fn append_nozzle_temperatures(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
-    machine_start_gcode: &str,
-    flavor: GCodeFlavor,
+    temperature_set_by_start: bool,
+    wait: bool,
 ) {
-    if sets_temperature(
-        machine_start_gcode,
-        &["M104", "M109"],
-        flavor == GCodeFlavor::RepRapFirmware,
-    ) {
+    if temperature_set_by_start {
         return;
     }
 
     let settings = &traversal.resolved.views.full;
+    let flavor = settings.printer.gcode.gcode_flavor;
     let runtime = &traversal.resolved.views.runtime_gcode;
     let mut used = used_filaments(traversal);
     let single_extruder_multi_material = runtime.single_extruder_multi_material.0;
@@ -195,7 +197,7 @@ fn append_nozzle_temperatures(
                 output,
                 flavor,
                 temperature as u32,
-                false,
+                wait,
                 multiple_extruders.then_some(tool),
             );
         }
@@ -219,8 +221,8 @@ fn used_filaments(traversal: &PreparedPostClassicTraversal) -> Vec<usize> {
     used
 }
 
-fn sets_temperature(gcode: &str, commands: &[&str], include_g10: bool) -> bool {
-    // GCode.cpp:528-589 scans a NUL-terminated string, not whitespace tokens.
+pub(super) fn sets_temperature(gcode: &str, commands: &[&str], include_g10: bool) -> bool {
+    // GCode.cpp:780-840 scans a NUL-terminated string, not whitespace tokens.
     let bytes = gcode.as_bytes();
     let at = |index: usize| bytes.get(index).copied().unwrap_or(0);
     let commands = [commands[0], commands[1]].map(|command| command[1..].parse::<i32>().unwrap());
