@@ -88,6 +88,8 @@ fn layer_change_template_resolves_every_timelapse_variable_like_native() {
         "max_layer_z",
         "most_used_physical_extruder_id",
         "curr_physical_extruder_id",
+        "timelapse_pos_x",
+        "timelapse_pos_y",
         "has_timelapse_safe_pos",
         "timelapse_inline_photo",
         "farthest_point_timelapse_enabled",
@@ -97,9 +99,12 @@ fn layer_change_template_resolves_every_timelapse_variable_like_native() {
     .fold(MARKER.to_owned(), |line, name| {
         format!("{line} {name}={{{name}}}")
     });
-    for (timelapse_type, print_sequence) in
-        [("0", "by layer"), ("1", "by layer"), ("0", "by object")]
-    {
+    for (timelapse_type, print_sequence) in [
+        ("0", "by layer"),
+        ("1", "by layer"),
+        ("0", "by object"),
+        ("1", "by object"),
+    ] {
         let project = with_settings(&[
             ("time_lapse_gcode", json!(template)),
             ("timelapse_type", json!(timelapse_type)),
@@ -112,6 +117,29 @@ fn layer_change_template_resolves_every_timelapse_variable_like_native() {
         ] {
             assert!(case.native.lines().any(|line| line == echoed), "{echoed}");
         }
+        assert_one_render_per_layer(&case.native, MARKER);
+        case.compare(ares_core::GenerationMetadata::default());
+    }
+}
+
+/// `TimelapsePosPicker.hpp:83`, `.cpp:36`, `:361-363`: the camera limit inflates by the clearance
+/// truncated to an int and halved by integer division.
+#[test]
+fn safe_position_follows_truncated_clearance_like_native() {
+    const MARKER: &str = ";TIMELAPSE_POSITION";
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let template =
+        format!("{MARKER} {{timelapse_pos_x}} {{timelapse_pos_y}} {{has_timelapse_safe_pos}}");
+    for clearance in ["65", "67.5", "64.9", "71"] {
+        let project = with_settings(&[
+            ("time_lapse_gcode", json!(template)),
+            ("extruder_clearance_radius", json!(clearance)),
+        ]);
+        let case = NativeCase::slice(&runner, &project, "timelapse-position-clearance-");
+        let echoed = format!("; extruder_clearance_radius = {clearance}");
+        assert!(case.native.lines().any(|line| line == echoed), "{echoed}");
         assert_one_render_per_layer(&case.native, MARKER);
         case.compare(ares_core::GenerationMetadata::default());
     }
