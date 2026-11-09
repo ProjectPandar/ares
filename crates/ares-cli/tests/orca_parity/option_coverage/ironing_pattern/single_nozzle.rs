@@ -3,7 +3,7 @@
 //! project configuration of the MK4 rear-seam control
 //! (`docs/architecture/ironing-single-nozzle-legs-spec.md`).
 
-use super::{SETTINGS, assert_matches_native, iron_top, prepare, rewrite_settings};
+use super::{PREFIX, SETTINGS, assert_matches_native, iron_top, prepare, rewrite_settings};
 use std::io::{Cursor, Read};
 
 const MESH: &[u8] = include_bytes!(
@@ -23,8 +23,9 @@ fn machine_settings() -> String {
     text
 }
 
-fn project(pattern: &str) -> Vec<u8> {
-    let settings = iron_top(&machine_settings(), pattern);
+/// The derived base with its MK4 configuration passed through `edit`.
+pub(in super::super) fn base(edit: impl FnOnce(&str) -> String) -> Vec<u8> {
+    let settings = edit(&machine_settings());
     let config: serde_json::Value = serde_json::from_str(&settings).unwrap();
     assert_eq!(
         config["nozzle_diameter"].as_array().map(Vec::len),
@@ -32,6 +33,10 @@ fn project(pattern: &str) -> Vec<u8> {
         "derived base must have a single nozzle"
     );
     rewrite_settings(MESH, |_| settings)
+}
+
+fn project(pattern: &str) -> Vec<u8> {
+    base(|text| iron_top(text, pattern))
 }
 
 /// Layers (`;LAYER_CHANGE`) whose body holds a `;TYPE:Ironing` block.
@@ -44,7 +49,7 @@ fn ironed_layers(gcode: &[u8]) -> usize {
 }
 
 fn run(label: &'static str) {
-    let Some((runner, case)) = prepare((label, label), project(label)) else {
+    let Some((runner, case)) = prepare((PREFIX, label, label), project(label)) else {
         return;
     };
     assert_matches_native(&runner, &case, |reference| {

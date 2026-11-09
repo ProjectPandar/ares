@@ -27,7 +27,7 @@
 //! label (`FillBase.cpp:72`), not reachable via `ironing_pattern`.
 
 #[path = "ironing_pattern/single_nozzle.rs"]
-mod single_nozzle;
+pub(super) mod single_nozzle;
 #[path = "ironing_pattern/three_d_honeycomb_guard.rs"]
 mod three_d_honeycomb_guard;
 
@@ -44,6 +44,7 @@ use std::{
 
 const BASE: &[u8] = include_bytes!("../../../../../tests/parity/summary/time-cost.3mf");
 const SETTINGS: &str = "Metadata/project_settings.config";
+const PREFIX: &str = "ironing-pattern";
 
 const ANCHOR_TYPE: &str = "\"ironing_type\": \"no ironing\"";
 const ANCHOR_PATTERN: &str = "\"ironing_pattern\": \"rectilinear\"";
@@ -178,24 +179,25 @@ fn native(runner: &OrcaRunner, directory: &std::path::Path, project: &[u8]) -> V
     reference
 }
 
-/// One leg's artifact directories, input project and validated-API slice.
-struct Case {
+/// One leg's artifact directories, input project and validated-API slice; `setting` is the
+/// value under test.
+pub(super) struct Case {
     label: &'static str,
-    pattern: &'static str,
+    setting: &'static str,
     root: PathBuf,
     directory: PathBuf,
     project: Vec<u8>,
     public: Result<Vec<u8>, ares_core::SliceError>,
 }
 
-/// `None` when no Native runner is configured.
-fn prepare(
-    (label, pattern): (&'static str, &'static str),
+/// `None` when no Native runner is configured; artifacts go to `<prefix>-<label>-*`.
+pub(super) fn prepare(
+    (prefix, label, setting): (&str, &'static str, &'static str),
     project: Vec<u8>,
 ) -> Option<(OrcaRunner, Case)> {
     let runner = OrcaRunner::from_env().unwrap()?;
     let root = tempfile::Builder::new()
-        .prefix(&format!("ironing-pattern-{label}-"))
+        .prefix(&format!("{prefix}-{label}-"))
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
@@ -213,7 +215,7 @@ fn prepare(
     ));
     let case = Case {
         label,
-        pattern,
+        setting,
         root,
         directory,
         project,
@@ -242,7 +244,7 @@ fn assert_native_crash_is_guarded(runner: &OrcaRunner, case: Case) {
     let native_result = stages::run(runner.bin(), args, stages::Stage::Slice, directory);
     let native_failure = native_result.expect_err(&format!(
         "{directory:?}: native must crash on `{}`, but exited 0",
-        case.pattern
+        case.setting
     ));
     let (native_code, native_status) = native_failure
         .captured
@@ -261,7 +263,7 @@ fn assert_native_crash_is_guarded(runner: &OrcaRunner, case: Case) {
         directory.join("comparison.json"),
         serde_json::to_vec_pretty(&json!({
             "label": case.label,
-            "pattern": case.pattern,
+            "setting": case.setting,
             "native_crashes": true,
             "native_failure": format!("{native_failure}"),
             "native_code": native_code,
@@ -275,7 +277,7 @@ fn assert_native_crash_is_guarded(runner: &OrcaRunner, case: Case) {
 
 /// Whole-output comparison of the validated API and the CLI against Native;
 /// `premise` inspects the Native reference before any comparison.
-fn assert_matches_native(runner: &OrcaRunner, case: &Case, premise: impl FnOnce(&[u8])) {
+pub(super) fn assert_matches_native(runner: &OrcaRunner, case: &Case, premise: impl FnOnce(&[u8])) {
     let Case {
         root,
         directory,
@@ -314,7 +316,7 @@ fn assert_matches_native(runner: &OrcaRunner, case: &Case, premise: impl FnOnce(
         directory.join("comparison.json"),
         serde_json::to_vec_pretty(&json!({
             "label": case.label,
-            "pattern": case.pattern,
+            "setting": case.setting,
             "input_sha256": sha(&case.project),
             "native_sha256": sha(&reference),
             "validated_api_comparison": api_comparison,
@@ -333,7 +335,8 @@ fn assert_matches_native(runner: &OrcaRunner, case: &Case, premise: impl FnOnce(
 }
 
 fn run_leg(leg: &Leg) {
-    let Some((runner, case)) = prepare((leg.label, leg.pattern), project(leg.pattern)) else {
+    let Some((runner, case)) = prepare((PREFIX, leg.label, leg.pattern), project(leg.pattern))
+    else {
         return;
     };
     if leg.native_crashes {

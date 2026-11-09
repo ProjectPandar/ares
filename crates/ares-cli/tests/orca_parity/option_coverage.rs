@@ -143,6 +143,8 @@ mod region_speed_emission;
 mod single_variant_printer_filament_selection;
 #[path = "option_coverage/static_volume_map_variants.rs"]
 mod static_volume_map_variants;
+#[path = "option_coverage/top_surface_expansion.rs"]
+mod top_surface_expansion;
 #[path = "option_coverage/variant_footer.rs"]
 mod variant_footer;
 
