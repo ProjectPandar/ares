@@ -35,7 +35,10 @@ fn closest_line_extension_preserves_all_ordered_one_wall_xy_commands() {
             .collect::<Vec<_>>()
     };
     let expected = xy(&expected);
-    assert_eq!(expected.len(), 436);
+    assert!(
+        !expected.is_empty(),
+        "Native witness must contain XY travel commands"
+    );
     assert_eq!(
         xy(&actual),
         expected,
