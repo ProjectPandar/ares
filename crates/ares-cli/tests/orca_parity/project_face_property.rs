@@ -42,7 +42,8 @@ fn face_property_namespace_and_element_rejections_are_retained() {
         let project = with_attribute(element, attribute);
         let load = ares_core::load_project(&project).unwrap_err().to_string();
         let identity = ares_core::UpwardMachineSource::from_project(&project)
-            .unwrap_err()
+            .err()
+            .unwrap()
             .to_string();
         for error in [load, identity] {
             assert_eq!(
