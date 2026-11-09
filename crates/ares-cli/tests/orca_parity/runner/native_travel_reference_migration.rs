@@ -63,13 +63,25 @@ fn extrude_loop_preserves_complete_ordered_sparse_runs_and_inward_move() {
     let Some((actual, expected)) = slice_fixture("anchor") else {
         return;
     };
-    for z in ["2.58", "2.72", "8.04"] {
+    let native_sparse_layers = expected
+        .split(";LAYER_CHANGE\n")
+        .filter(|section| section.contains(";TYPE:Sparse infill\n"))
+        .map(|section| {
+            section
+                .lines()
+                .find_map(|line| line.strip_prefix(";Z:"))
+                .unwrap()
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        !native_sparse_layers.is_empty(),
+        "Native witness must contain sparse layers"
+    );
+    for z in native_sparse_layers {
         let actual = layer(&actual, z);
         let expected = layer(&expected, z);
-        assert!(expected.contains("G1 X164.851 Y179.88\n"));
-        assert!(expected.contains(";TYPE:Sparse infill\n"));
         // Compare the entire layer, including the inward move, retraction,
-        // approach, both sparse paths, intervening travel, feeds and M73.
+        // approach, all sparse paths, intervening travel, feeds and M73.
         assert_eq!(actual, expected, "complete layer at Z{z}");
     }
 }
