@@ -117,7 +117,13 @@ fn initialized_overhang_intersections_match_complete_output() {
         application::verify_value(&exported.project, key, value).unwrap();
     }
     for (key, value) in settings {
-        application::verify_value(&exported.project, key, &Value::String(value.into())).unwrap();
+        // PrintConfig.cpp:1991–2054 declares these speeds as vector options.
+        let expected = match key {
+            "bridge_speed" | "overhang_1_4_speed" | "overhang_2_4_speed" | "overhang_3_4_speed"
+            | "overhang_4_4_speed" => serde_json::json!([value]),
+            _ => Value::String(value.into()),
+        };
+        application::verify_value(&exported.project, key, &expected).unwrap();
     }
     let loaded = ares_core::load_project(&exported.project).unwrap();
     assert_eq!(loaded.objects().len(), 1);
