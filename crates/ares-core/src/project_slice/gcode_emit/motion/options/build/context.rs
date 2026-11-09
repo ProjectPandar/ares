@@ -5,9 +5,7 @@
 
 use super::region;
 use super::retraction;
-use crate::options::{
-    FilamentRetractOverrideOptions, GCodeOptions, ProjectSettings, RegionOptions,
-};
+use crate::options::{GCodeOptions, ProjectSettings, RegionOptions};
 use crate::project::effective_config::types::ResolvedProjectObject;
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
@@ -15,7 +13,6 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 pub(super) struct Prelude<'a> {
     pub full: &'a ProjectSettings,
     pub gcode: &'a GCodeOptions,
-    pub retract_overrides: &'a FilamentRetractOverrideOptions,
     pub object: Option<&'a ResolvedProjectObject>,
     pub region: Option<&'a RegionOptions>,
     pub filament: usize,
@@ -32,7 +29,6 @@ pub(super) struct Prelude<'a> {
 pub(super) fn prelude(traversal: &PreparedPostClassicTraversal, filament: usize) -> Prelude<'_> {
     let full = &traversal.resolved.views.full;
     let gcode = &traversal.resolved.views.runtime_gcode;
-    let retract_overrides = &full.filament.retract_overrides;
     let object = traversal.resolved.objects.first();
     let region = object
         .and_then(|object| object.layer_candidates.first())
@@ -55,7 +51,6 @@ pub(super) fn prelude(traversal: &PreparedPostClassicTraversal, filament: usize)
     Prelude {
         full,
         gcode,
-        retract_overrides,
         object,
         region,
         filament,

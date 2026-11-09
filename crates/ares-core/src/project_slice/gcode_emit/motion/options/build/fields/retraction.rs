@@ -1,8 +1,8 @@
 //! Selected-filament getters (`Extruder.cpp:172–235`, GCode FILAMENT_CONFIG).
 
-use super::super::super::{MotionOptions, nullable_float_at};
+use super::super::super::MotionOptions;
 use super::super::context::Prelude;
-use crate::{Nullable, OrcaFloats, ProjectSettings};
+use crate::{OrcaFloats, ProjectSettings};
 
 fn at<T>(values: &[T], index: usize) -> Option<&T> {
     values.get(index).or_else(|| values.first())
@@ -14,9 +14,7 @@ fn float(values: &OrcaFloats, index: usize) -> f64 {
 
 pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime: &ProjectSettings) {
     let Prelude {
-        full,
         gcode,
-        retract_overrides,
         filament,
         physical,
         retraction_speed,
@@ -45,21 +43,11 @@ pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime:
     // Extruder::travel_slope alone uses physical extruder_id(), not m_id.
     options.travel_slope_radians =
         float(&gcode.travel_slope, *physical) * std::f64::consts::PI / 180.0;
-    let printer = &full.project.print;
-    options.wipe = match at(&retract_overrides.filament_wipe, filament) {
-        Some(Nullable::Value(value)) => value.0,
-        Some(Nullable::Nil) | None => at(&printer.wipe.0, filament).is_some_and(|value| value.0),
-    };
     // The runtime view has the overrides and the filament map applied (Print.cpp:4730-4749).
-    options.wipe_distance = float(&runtime.project.print.wipe_distance, filament);
-    options.retraction_minimum_travel = nullable_float_at(
-        &retract_overrides.filament_retraction_minimum_travel,
-        filament,
-        float(&printer.retraction_minimum_travel, filament),
-    );
-    options.retract_when_changing_layer = at(
-        &runtime.project.print.retract_when_changing_layer.0,
-        filament,
-    )
-    .is_some_and(|value| value.0);
+    let print = &runtime.project.print;
+    options.wipe = at(&print.wipe.0, filament).is_some_and(|value| value.0);
+    options.wipe_distance = float(&print.wipe_distance, filament);
+    options.retraction_minimum_travel = float(&print.retraction_minimum_travel, filament);
+    options.retract_when_changing_layer =
+        at(&print.retract_when_changing_layer.0, filament).is_some_and(|value| value.0);
 }
