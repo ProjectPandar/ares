@@ -105,8 +105,14 @@ fn adaptive_volumetric_coupled_models_preserve_whole_output_and_segment_consumer
         for (key, value) in fixed {
             runner::application::verify_value(&exported.project, key, &json!(value)).unwrap();
         }
+        // Config.cpp:1573–1585 emits coFloats options as JSON arrays.
         for (key, value) in &speed_values {
-            runner::application::verify_value(&exported.project, key, value).unwrap();
+            let expected = if value.is_array() {
+                value.clone()
+            } else {
+                json!([value])
+            };
+            runner::application::verify_value(&exported.project, key, &expected).unwrap();
         }
         rejection_project.clone_from(&exported.project);
         let sliced = runner.slice_case(&exported).unwrap();
