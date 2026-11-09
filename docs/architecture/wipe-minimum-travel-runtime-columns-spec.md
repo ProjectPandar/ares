@@ -57,19 +57,15 @@ modes, generator line normalized. The configuration block is excluded until
 multi-extruder configuration serialization matches.
 
 The minimum-travel project sets `outer_wall_acceleration` equal to
-`travel_acceleration`, so the short-travel acceleration below cannot change the output,
+`travel_acceleration`, so the short-travel acceleration cannot change the output,
 and gives the second filament the wide threshold, which keeps the repeated `G1 Z` below
 out of the output. The wipe-flag project turns wipe off for the first filament for the
 same reason.
 
 ## Deferred
 
-- Short-travel acceleration and jerk read `EXTRUDER_CONFIG(retraction_minimum_travel)`
-  (`GCode.cpp:10386`), the physical index of the overlaid vector, while
-  `needs_retraction` reads the filament column. Ares keeps one field for both. On a
-  swapped map a filament override already emits an `M204 T` line Native does not. After
-  this change machine columns differ on the same read, because the field follows the
-  filament column. It needs a second field.
+- Short-travel acceleration and jerk read the same option at the physical index
+  (`GCode.cpp:10386`), as `short-travel-acceleration-column-spec.md` specifies.
 - Ares repeats a `G1 Z` line on the travel into an object when the second filament's
   wipe is off, or when the first filament's threshold covers that travel. The cause is
   not located.
