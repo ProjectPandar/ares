@@ -5,7 +5,12 @@ use crate::{
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{fs, path::Path, process::Command};
+use std::{
+    fs,
+    io::{Cursor, Read, Write},
+    path::Path,
+    process::Command,
+};
 
 #[path = "arachne_alternate_extra_wall/witness.rs"]
 mod witness;
@@ -20,7 +25,36 @@ fn sha(bytes: &[u8]) -> String {
         .collect()
 }
 
-fn compare_pair(label: &str, off: &[u8], on: &[u8]) {
+/// The fixture with `edits` applied to its project settings; no edits keep its bytes.
+fn with_settings(fixture: &[u8], edits: &[(&str, &str)]) -> Vec<u8> {
+    if edits.is_empty() {
+        return fixture.to_vec();
+    }
+    let mut input = zip::ZipArchive::new(Cursor::new(fixture)).unwrap();
+    let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..input.len() {
+        let mut file = input.by_index(index).unwrap();
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).unwrap();
+        if file.name() == "Metadata/project_settings.config" {
+            let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
+            for (key, value) in edits {
+                settings[*key] = json!(value);
+            }
+            bytes = serde_json::to_vec(&settings).unwrap();
+        }
+        output
+            .start_file(
+                file.name(),
+                zip::write::SimpleFileOptions::default().compression_method(file.compression()),
+            )
+            .unwrap();
+        output.write_all(&bytes).unwrap();
+    }
+    output.finish().unwrap().into_inner()
+}
+
+fn compare_pair(label: &str, edits: &[(&str, &str)], off: &[u8], on: &[u8]) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         crate::native_environment::skipped("Arachne alternate wall: Native oracle not configured");
         return;
@@ -32,14 +66,17 @@ fn compare_pair(label: &str, off: &[u8], on: &[u8]) {
         .unwrap()
         .keep();
     let mut native_witnesses = Vec::new();
+    let mut project_settings = Vec::new();
     let mut failures = Vec::new();
-    for (mode, project) in [("off", off), ("on", on)] {
+    for (mode, fixture) in [("off", off), ("on", on)] {
         let input = &manifest["pairs"][label]["cases"][mode];
-        assert_eq!(sha(project), input["input_sha256"].as_str().unwrap());
-        let settings = crate::runner::application::settings(project).unwrap();
+        assert_eq!(sha(fixture), input["input_sha256"].as_str().unwrap());
+        let settings = crate::runner::application::settings(fixture).unwrap();
         for (key, value) in input["settings"].as_object().unwrap() {
             assert_eq!(&settings[key], value, "input {label}/{mode}/{key}");
         }
+        let project = &with_settings(fixture, edits)[..];
+        let settings = crate::runner::application::settings(project).unwrap();
         let case_root = root.join(mode);
         let native = case_root.join("native");
         fs::create_dir_all(&native).unwrap();
@@ -93,7 +130,10 @@ fn compare_pair(label: &str, off: &[u8], on: &[u8]) {
             "only_one_wall_top",
             "only_one_wall_first_layer",
             "spiral_mode",
-        ] {
+        ]
+        .into_iter()
+        .chain(edits.iter().map(|(key, _)| *key))
+        {
             assert_eq!(
                 effective[key], settings[key],
                 "effective {key}: {case_root:?}"
@@ -114,11 +154,12 @@ fn compare_pair(label: &str, off: &[u8], on: &[u8]) {
         )
         .unwrap();
         native_witnesses.push(captured);
+        project_settings.push(settings);
         failures.extend(compare_public(&case_root, project, &reference));
     }
     witness::verify(
         label,
-        &manifest["pairs"][label]["cases"],
+        &project_settings,
         &native_witnesses[0],
         &native_witnesses[1],
     );
@@ -194,11 +235,12 @@ fn compare_public(root: &Path, project: &[u8], reference: &[u8]) -> Vec<String> 
 }
 
 macro_rules! pair {
-    ($test:ident, $label:literal) => {
+    ($test:ident, $label:literal $(, $edit:expr)*) => {
         #[test]
         fn $test() {
             compare_pair(
                 $label,
+                &[$($edit),*],
                 include_bytes!(concat!(
                     "../../../../tests/parity/arachne-alternate-extra-wall/",
                     $label,
@@ -235,3 +277,8 @@ pair!(
 pair!(arachne_alternate_zero_configured_walls, "zero-walls");
 pair!(arachne_alternate_two_islands_independent, "two-islands");
 pair!(arachne_alternate_effective_spiral_control, "spiral");
+pair!(
+    arachne_alternate_top_shell_thins_topmost_layer,
+    "single-top",
+    ("top_shell_layers", "1")
+);

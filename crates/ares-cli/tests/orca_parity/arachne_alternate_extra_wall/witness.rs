@@ -1,6 +1,6 @@
 //! Emitted positive wall XY/E crossings of y=110 witness independently authored
 //! prism/step/island fixtures. Full ordered bytes remain the parity gate.
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 
 pub(super) fn capture(bytes: &[u8]) -> Vec<Value> {
     let mut layers = Vec::new();
@@ -81,11 +81,11 @@ pub(super) fn capture(bytes: &[u8]) -> Vec<Value> {
     layers
 }
 
-/// `PerimeterGenerator.cpp:2703-2706`: the configured walls, plus one on odd
-/// layers when alternating over a nonzero integer density. The single-wall
-/// overrides at `:2710-2716` need shell layers (`:618-631`, `:2681-2682`), and
-/// every non-spiral fixture here has none, so they do not enter the count.
-fn wall_count(settings: &Value, layer_id: usize) -> usize {
+/// `PerimeterGenerator.cpp:2703-2716`: the configured walls, plus one on odd
+/// layers when alternating over a nonzero integer density, then the topmost
+/// override, which needs top shell layers (`:619-622`, `:2681`). The first-layer
+/// override at `:2710` needs bottom shell layers, which no fixture has.
+fn wall_count(settings: &Map<String, Value>, layer_id: usize, layers: usize) -> usize {
     let number = |key: &str| {
         settings[key]
             .as_str()
@@ -97,10 +97,15 @@ fn wall_count(settings: &Value, layer_id: usize) -> usize {
     let alternate = settings["alternate_extra_wall"] == "1"
         && layer_id % 2 == 1
         && number("sparse_infill_density") as i32 > 0;
-    number("wall_loops") as usize + usize::from(alternate)
+    let count = number("wall_loops") as usize + usize::from(alternate);
+    let thinned = |option: &str, shell: &str| settings[option] == "1" && number(shell) > 0.0;
+    if layer_id + 1 == layers && count > 1 && thinned("only_one_wall_top", "top_shell_layers") {
+        return 1;
+    }
+    count
 }
 
-pub(super) fn verify(label: &str, cases: &Value, off: &[Value], on: &[Value]) {
+pub(super) fn verify(label: &str, settings: &[Map<String, Value>], off: &[Value], on: &[Value]) {
     if label == "spiral" {
         // SpiralVase.cpp:123,153 adds the final constant-Z transition-out.
         assert_eq!(off.len(), 7, "Native spiral transition-out layer");
@@ -116,12 +121,11 @@ pub(super) fn verify(label: &str, cases: &Value, off: &[Value], on: &[Value]) {
     assert_eq!(on.len(), 6, "Native on layer count: {label}");
     // Two y=110 crossings per wall of each independent contour.
     let islands = if label == "two-islands" { 2 } else { 1 };
-    for (mode, layers) in [("off", off), ("on", on)] {
-        let settings = &cases[mode]["settings"];
+    for ((mode, layers), settings) in [("off", off), ("on", on)].into_iter().zip(settings) {
         for (layer_id, layer) in layers.iter().enumerate() {
             assert_eq!(
                 layer["crossings"].as_array().unwrap().len(),
-                2 * islands * wall_count(settings, layer_id),
+                2 * islands * wall_count(settings, layer_id, layers.len()),
                 "{label}/{mode} layer {layer_id}: {layer}"
             );
         }
