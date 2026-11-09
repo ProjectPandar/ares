@@ -147,7 +147,12 @@ fn modifier_preserves_fourth_layer_outer_wall_exit() {
     }
     let (reference, actual) = outputs(true);
     let expected = fourth_layer_object(&reference);
-    assert!(expected.ends_with("G1 X166.79 Y104.781\n"));
+    assert!(expected.contains(";TYPE:Outer wall\n"));
+    let exit = expected.lines().last().unwrap();
+    assert!(
+        exit.starts_with("G1 X") && exit.contains(" Y") && !exit.contains(" E"),
+        "Native outer-wall exit must be a nonextruding XY travel"
+    );
     assert_eq!(fourth_layer_object(&actual), expected);
 }
 
