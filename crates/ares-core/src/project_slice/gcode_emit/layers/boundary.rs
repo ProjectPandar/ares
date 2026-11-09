@@ -139,7 +139,9 @@ pub(super) fn append<'a>(
         metadata,
         first_layer_bounds,
     };
-    let timelapse_at_layer_change = !tags.is_bbl()
+    // `GCode.cpp:6710`: exclusive with the traditional inserts.
+    let timelapse_at_layer_change = !state.traditional_timelapse
+        && !tags.is_bbl()
         && !traversal
             .resolved
             .views
