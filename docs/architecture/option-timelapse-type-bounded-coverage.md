@@ -57,6 +57,11 @@ the opposite marker and unexpanded expressions, and agree on ordered marker
 locations and resolved layer variables. Compare the complete ordered G-code
 bytes and line count with the existing generated-by-only normalization. Do
 not infer one insertion per layer: upstream has multiple insertion sites.
+
+At v2.5.0-beta `345efec64` those sites are exclusive and each layer renders once (see
+[the hook specification](timelapse-layer-change-gate-spec.md)). The 100 markers recorded
+below are a v2.4.2 observation of two renders per layer.
+
 Add empty-template controls for both enum values; markers must disappear,
 and complete Native/Ares byte comparison still applies. CONFIG_BLOCK equality
 alone cannot establish activation.
