@@ -1,4 +1,4 @@
-//! FFF-only CLI admission (`OrcaSlicer.cpp:3619,3627-3633`).
+//! FFF-only CLI admission (`OrcaSlicer.cpp:4254-4263`).
 
 use crate::{CaseInputs, OrcaRunner, VendorProfiles, runner};
 use serde_json::{Value, json};
@@ -118,6 +118,12 @@ fn printer_technology_parsed_sla_rejection() {
         if member.name() == "Metadata/project_settings.config" {
             let mut config: Value = serde_json::from_slice(&bytes).unwrap();
             config["printer_technology"] = json!("SLA");
+            // A named printer makes Native read past its one default preset
+            // (`Preset.cpp:4563`, `Preset.hpp:793`) before the rejection. No name
+            // returns at `OrcaSlicer.cpp:3168`; no list passes `:2967`.
+            config["printer_settings_id"] = json!("");
+            config.as_object_mut().unwrap().remove("inherits_group");
+            config["print_compatible_printers"] = json!([]);
             bytes = serde_json::to_vec(&config).unwrap();
         }
         output
@@ -150,7 +156,7 @@ fn printer_technology_parsed_sla_rejection() {
         serde_json::to_vec_pretty(&json!({
             "wrapper":runner.bin(),"args":args,"input_sha256":sha(&bytes),
             "requested":"SLA","channel":"imported 3MF project_settings",
-            "source":"OrcaSlicer.cpp1854-1859,3619,3627-3633"
+            "source":"OrcaSlicer.cpp:2967,3168,4254-4263"
         }))
         .unwrap(),
     )
