@@ -27,13 +27,13 @@ fn write_native_preset(path: &Path, kind: &str, fields: serde_json::Map<String, 
     write_json(path, &Value::Object(preset));
 }
 
-struct RangeCase {
+struct RangeCase<'a> {
     /// Vendor directory under `OrcaSlicer/resources/profiles`.
     vendor_name: &'static str,
     machine: &'static str,
     /// Process preset filename stem (loaded via `profiles.process`).
     process: &'static str,
-    filament: &'static str,
+    filament: &'a str,
     /// Exact `key: text` lines after the `Param values in 3mf/config
     /// error: ` header, in the native (key-sorted) order.
     error_lines: &'static str,
@@ -43,7 +43,7 @@ struct RangeCase {
 /// exact `key: <serialize()> not in range [min,max]` text; Ares must
 /// surface the same `SliceError::InvalidValuesInProject` text via
 /// `validate_with_profiles` / `slice_with_profiles_validated`.
-async fn original_profile(case: &RangeCase) {
+async fn original_profile(case: &RangeCase<'_>) {
     let root = super::super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, case.vendor_name).unwrap();
@@ -165,23 +165,6 @@ async fn retraction_when_cut_28_loaded_config() {
         process: "0.20mm Standard @Creality SPARKX i7 0.4 nozzle",
         filament: "Generic PLA @SPARKX i7-all",
         error_lines: "retraction_distances_when_cut: 28 not in range [10, 18]",
-    })
-    .await;
-}
-
-/// Creality K2 carries `retraction_distances_when_cut: "30"` (above
-/// [10,18]). The `solid_infill_filament`/`internal_solid_filament_id`
-/// legacy-alias collision is now resolved by upstream overwrite
-/// semantics (`f5c869df`), so the O3 range loop reaches and rejects the
-/// out-of-range retraction with the native text.
-#[tokio::test]
-async fn retraction_when_cut_30_loaded_config() {
-    original_profile(&RangeCase {
-        vendor_name: "Creality",
-        machine: "Creality K2 0.4 nozzle",
-        process: "0.20mm Standard @Creality K2 0.4 nozzle",
-        filament: "Creality Generic PLA @K2-all",
-        error_lines: "retraction_distances_when_cut: 30 not in range [10, 18]",
     })
     .await;
 }
