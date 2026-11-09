@@ -16,8 +16,16 @@
 //! `UnsupportedProjectFeature` for them; these legs assert the guard still
 //! fires post-fix (no regression on the crash-boundary contract).
 //!
+//! `3dhoneycomb` has no defined Native result in `make_ironing`: `layer_height`
+//! stays zero (`Fill.cpp:1814-1816`, `FillBase.hpp:91`), so `zScale` is non-finite
+//! (`Fill3DHoneycomb.cpp:371-391`), and whether Native then crashes depends on
+//! geometry. Ares rejects it; that test does not run Native.
+//!
 //! `concentricinternal` is a `internal_solid_infill_pattern`-only upstream
 //! label (`FillBase.cpp:72`), not reachable via `ironing_pattern`.
+
+#[path = "ironing_pattern/three_d_honeycomb_guard.rs"]
+mod three_d_honeycomb_guard;
 
 use super::*;
 use crate::{golden, runner::stages};
@@ -53,7 +61,7 @@ struct Leg {
     native_crashes: bool,
 }
 
-const LEGS: [Leg; 20] = [
+const LEGS: [Leg; 19] = [
     Leg {
         label: "control-rectilinear",
         pattern: "rectilinear",
@@ -110,11 +118,6 @@ const LEGS: [Leg; 20] = [
         native_crashes: false,
     },
     Leg {
-        label: "3dhoneycomb",
-        pattern: "3dhoneycomb",
-        native_crashes: false,
-    },
-    Leg {
         label: "lateral-honeycomb",
         pattern: "lateral-honeycomb",
         native_crashes: false,
@@ -156,7 +159,7 @@ const LEGS: [Leg; 20] = [
     },
 ];
 
-fn project(leg: &Leg) -> Vec<u8> {
+fn project(pattern: &str) -> Vec<u8> {
     let mut reader = zip::ZipArchive::new(Cursor::new(BASE)).unwrap();
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..reader.len() {
@@ -180,7 +183,7 @@ fn project(leg: &Leg) -> Vec<u8> {
             text = text.replacen(ANCHOR_TYPE, "\"ironing_type\": \"top\"", 1);
             text = text.replacen(
                 ANCHOR_PATTERN,
-                &format!("\"ironing_pattern\": \"{}\"", leg.pattern),
+                &format!("\"ironing_pattern\": \"{}\"", pattern),
                 1,
             );
             text = text.replacen(ANCHOR_LABELS, "\"gcode_label_objects\": \"0\"", 1);
@@ -243,7 +246,7 @@ fn run_leg(leg: &Leg) {
         .keep();
     let directory = root.join("case");
     fs::create_dir_all(&directory).unwrap();
-    let project = project(leg);
+    let project = project(leg.pattern);
 
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
@@ -371,13 +374,12 @@ legs! {
     orca_parity_ironing_pattern_cubic => 8,
     orca_parity_ironing_pattern_quartercubic => 9,
     orca_parity_ironing_pattern_honeycomb => 10,
-    orca_parity_ironing_pattern_3dhoneycomb => 11,
-    orca_parity_ironing_pattern_lateral_honeycomb => 12,
-    orca_parity_ironing_pattern_crosshatch => 13,
-    orca_parity_ironing_pattern_tpmsd => 14,
-    orca_parity_ironing_pattern_tpmsfk => 15,
-    orca_parity_ironing_pattern_gyroid => 16,
-    orca_parity_ironing_pattern_adaptivecubic => 17,
-    orca_parity_ironing_pattern_supportcubic => 18,
-    orca_parity_ironing_pattern_lightning => 19,
+    orca_parity_ironing_pattern_lateral_honeycomb => 11,
+    orca_parity_ironing_pattern_crosshatch => 12,
+    orca_parity_ironing_pattern_tpmsd => 13,
+    orca_parity_ironing_pattern_tpmsfk => 14,
+    orca_parity_ironing_pattern_gyroid => 15,
+    orca_parity_ironing_pattern_adaptivecubic => 16,
+    orca_parity_ironing_pattern_supportcubic => 17,
+    orca_parity_ironing_pattern_lightning => 18,
 }
