@@ -9,6 +9,9 @@ use super::{cube_model, profiles_root};
 #[path = "sweep/tests.rs"]
 mod tests;
 
+#[path = "sweep/prime_tower_export.rs"]
+mod prime_tower_export;
+
 /// Full vendor sweep; writes `tests/parity/printer-smoke-summary.md` and
 /// fails unless every printer produces a matching complete output.
 /// Gated behind `ARES_PARITY_SWEEP=1` because slicing every vendor preset
