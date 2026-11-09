@@ -65,6 +65,9 @@ argument of the upstream function, so no path has its own variable set.
   - Several objects: `footprint::model_bounds` reads the first object only.
   - By-object collision and rod areas, the tower area, raft height and the
     height gap between extruders.
+  - The safe area on the stock MK4 by-layer fixture. Native picks a position that
+    scores better under the shared penalty, so Ares never considered it: the
+    difference is in the area, not the selection.
 
   Non-BBL templates naming a position now reach these gaps on the layer-change
   path, where they were previously rejected. Each difference measured with the
@@ -81,9 +84,11 @@ modes, and store no Native values.
   matching the layer-change branch of the hook gate from
   [the hook specification](timelapse-layer-change-gate-spec.md), and compares
   complete output.
-- A runtime template naming every variable compares complete output for
-  traditional, smooth and single-object by-object prints. Native must resolve
-  each variable.
+- A runtime template naming every variable except `timelapse_pos_x` and
+  `timelapse_pos_y` compares complete output for traditional, smooth and
+  single-object by-object prints. Native must resolve each variable. The smooth
+  print moves its tower through the pre-slice fit. The coordinates stay out while
+  the picker differences above remain.
 - A runtime template naming an unknown variable compares exit code, stdout,
   stderr and `result.json` with Native, and retains no G-code. This keeps the
   rejection coverage the fixture no longer provides.
