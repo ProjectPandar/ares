@@ -168,3 +168,88 @@ fn ender3_single_head_nil_retraction_overrides() {
         None,
     );
 }
+
+/// Every emitted move precedes the config block, which is excluded until multi-extruder config
+/// serialization matches.
+fn before_config_block(gcode: &[u8]) -> &[u8] {
+    let marker = b"; CONFIG_BLOCK_START";
+    let end = gcode
+        .windows(marker.len())
+        .position(|window| window == marker)
+        .unwrap();
+    &gcode[..end]
+}
+
+#[test]
+fn swapped_filament_map_wipe_budget() {
+    if crate::OrcaRunner::from_env().unwrap().is_none() {
+        return;
+    }
+    let source = fs::read(
+        repo_root().join("tests/parity/j1-used-extruder-follows-emitted-tools/both-used.3mf"),
+    )
+    .unwrap();
+    let project = super::input::settings_variant(
+        &source,
+        json!({
+            "filament_map":["2","1"],
+            "filament_retraction_speed":["30","20"],
+            "filament_wipe_distance":["1","2"]
+        })
+        .as_object()
+        .unwrap(),
+    );
+    let (reference, _) = native_stream_case::qualify(
+        (
+            "retraction-column",
+            &[
+                "GCode.cpp:578,584 calculateWipeRetractionLengths",
+                "GCode.cpp:699 Wipe::wipe",
+                "Extruder.cpp:31-34 set_config_index",
+            ],
+        ),
+        "swapped-filament-map-wipe-budget",
+        &project,
+        &sha(&project),
+        true,
+    );
+    assert!(
+        reference
+            .native
+            .lines()
+            .any(|line| line == "; filament_map = 2,1"),
+        "Native must keep the saved map; {:?}",
+        reference.root
+    );
+    let api = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(crate::runner::application::slice_project_plate_validated(
+            &project,
+            GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            None,
+            &ConfigOverrides::default(),
+            SlicerContext::new(0),
+        ))
+        .unwrap_or_else(|error| panic!("{error:?}; {:?}", reference.root));
+    fs::write(reference.root.join("ares.api.gcode"), &api).unwrap();
+    let difference = crate::golden::compare_ordered_bytes_generator_only(
+        before_config_block(reference.native.as_bytes()),
+        before_config_block(&api),
+    );
+    fs::write(
+        reference.root.join("wipe-budget-comparison.json"),
+        serde_json::to_vec_pretty(&json!({
+            "before_config_block_difference":difference,
+            "strict_whole_output_comparison":crate::golden::compare_ordered_bytes_generator_only(
+                reference.native.as_bytes(),
+                &api,
+            ),
+            "whole_output_parity_claimed":false,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    difference.unwrap_or_else(|error| panic!("{error}; {:?}", reference.root));
+}
