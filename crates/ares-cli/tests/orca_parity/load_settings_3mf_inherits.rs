@@ -1,12 +1,9 @@
-//! `--load-settings`/`--load-filaments` direct-load witnesses (spec:
-//! docs/superpowers/specs/2026-10-11-cli-load-settings-inherits.md) —
-//! the CLI path never resolves `inherits`
-//! (`OrcaSlicer.cpp:1953-2010` loads each file's fields directly);
-//! `inherits` is a value (the system name for `from: user` files),
-//! never a link. RED: Ares resolves import chains today.
+//! Runtime Native inheritance admission and whole-output witnesses.
 #![cfg(target_os = "linux")]
 
 use std::fs;
+
+use serde_json::Value;
 
 use crate::load_settings_3mf::load_settings_3mf_fixture;
 use crate::load_settings_cli::{banner_normalized, stages_run};
@@ -84,16 +81,9 @@ fn load_settings_3mf_user_inherits_whole_file() {
     );
 }
 
-/// RED B (no-chain control): the child filament declares `inherits`
-/// naming a parent that is NOT listed and omits `filament_flow_ratio`.
-/// Native direct-loads the single slot (chain reads commented out,
-/// `OrcaSlicer.cpp:1987,1991`) and slices; a chain-resolving
-/// implementation fails with a missing-parent error. The spec's
-/// same-list pair control is unreachable as a whole-file witness: the
-/// reference Native 2.4.2 deterministically SIGSEGVs on ANY two-entry
-/// `--load-filaments` list (verified with unrelated pairs, both
-/// orders); `parent-filament.json` stays as the documented pair
-/// counterpart of that investigation.
+/// Compare the original unlisted-parent filament against live Native admission.
+/// OrcaSlicer.cpp:2113–2161 routes user files to PresetBundle resolution;
+/// PresetBundle.cpp:556–650 binds a source file to its loaded preset identity.
 #[test]
 fn load_settings_3mf_filament_inherits_no_chain() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
@@ -116,10 +106,9 @@ fn load_settings_3mf_filament_inherits_no_chain() {
     let filaments = load_settings_3mf_fixture("child-filament.json")
         .to_string_lossy()
         .into_owned();
-    stages_run(
-        &runner,
-        &directory,
-        &[
+    let native = crate::runner::stages::run(
+        runner.bin(),
+        [
             "--slice",
             "0",
             "--load-settings",
@@ -131,9 +120,12 @@ fn load_settings_3mf_filament_inherits_no_chain() {
             "--outputdir",
             "native-output",
             project.to_str().unwrap(),
-        ],
+        ]
+        .into_iter()
+        .map(str::to_owned),
+        crate::runner::stages::Stage::Slice,
+        &directory,
     );
-    let native = fs::read(directory.join("native-output/plate_1.gcode")).unwrap();
     let output = crate::runner::application::cli_command()
         .current_dir(&directory)
         .args([
@@ -148,6 +140,48 @@ fn load_settings_3mf_filament_inherits_no_chain() {
         .arg(&project)
         .output()
         .unwrap();
+    fs::write(directory.join("ares.stdout"), &output.stdout).unwrap();
+    fs::write(directory.join("ares.stderr"), &output.stderr).unwrap();
+    fs::write(
+        directory.join("ares.exit.json"),
+        serde_json::to_vec(&output.status.code()).unwrap(),
+    )
+    .unwrap();
+    if let Err(native) = native {
+        assert_eq!(native.kind, crate::runner::stages::FailureKind::Process);
+        let evidence = native.evidence.unwrap();
+        let status: Value =
+            serde_json::from_slice(&fs::read(evidence.join("status.json")).unwrap()).unwrap();
+        assert!(
+            status["code"].is_i64(),
+            "Native process did not exit normally"
+        );
+        assert_eq!(
+            serde_json::json!(output.status.code()),
+            status["code"],
+            "Native/Ares exit code mismatch; artifacts {}",
+            directory.display(),
+        );
+        assert_eq!(
+            output.stdout,
+            fs::read(evidence.join("stdout.bin")).unwrap(),
+            "Native/Ares stdout mismatch; artifacts {}",
+            directory.display(),
+        );
+        assert_eq!(
+            output.stderr,
+            fs::read(evidence.join("stderr.bin")).unwrap(),
+            "Native/Ares stderr mismatch; artifacts {}",
+            directory.display(),
+        );
+        assert_eq!(
+            directory.join("ares.gcode").exists(),
+            directory.join("native-output/plate_1.gcode").exists(),
+            "Native/Ares G-code presence mismatch",
+        );
+        return;
+    }
+    let native = fs::read(directory.join("native-output/plate_1.gcode")).unwrap();
     assert!(
         output.status.success(),
         "ares rejected the filament-inherits --load-filaments argv:\n{}",
