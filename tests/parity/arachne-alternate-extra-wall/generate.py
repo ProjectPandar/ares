@@ -89,7 +89,7 @@ def mesh(shape):
 with zipfile.ZipFile(BASE) as source:
     original = {n:source.read(n) for n in source.namelist()}
 manifest = {'base':str(BASE), 'base_sha256':sha256(BASE.read_bytes()).hexdigest(),
-            'source':'PerimeterGenerator.cpp::process_arachne:2131-2175,2224-2244',
+            'source':'PerimeterGenerator.cpp::process_arachne:2703-2744,2751-2877',
             'common_settings':COMMON, 'pairs':{}}
 for label, overrides, shape in CASES:
     model, vertices, triangles, volume = mesh(shape)

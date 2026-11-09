@@ -2,7 +2,7 @@
 
 Input-only closed 3MF meshes/settings; no Native G-code is committed.
 Approved SPEC: `c3d238a8a`, `docs/architecture/arachne-alternate-extra-wall-spec.md`.
-Source owner: `PerimeterGenerator.cpp::process_arachne:2131–2175,2224–2244`.
+Source owner: `PerimeterGenerator.cpp::process_arachne:2703–2744,2751–2877`.
 
 Run `python3 tests/parity/arachne-alternate-extra-wall/generate.py` from the
 repository root. The recipe copies the existing O0 project container, authors
@@ -24,6 +24,15 @@ Fixed ZIP timestamps and sorted settings reproduce all input SHA256s in
 | zero-walls | odd layers may gain one despite configured zero walls |
 | two-islands | each footprint island gains its own wall and infill boundary |
 | spiral | effective spiral dispatch stays unchanged on/off |
+
+Three more tests rewrite a fixture's settings at run time to reach the overrides
+that need a shell (`PerimeterGenerator.cpp:2681-2682`), so no new input is committed:
+
+| Fixture | Run-time setting | Behavior witness |
+| --- | --- | --- |
+| single-top | `top_shell_layers` 1 | odd topmost layer single-wall override wins |
+| stepped-top | `top_shell_layers` 1 | inner count feeds partial-top regeneration |
+| single-first | `bottom_shell_layers` 1 | one bottom wall; odd later layers still gain walls |
 
 Public test module: `ares-cli/tests/orca_parity/arachne_alternate_extra_wall.rs`.
 Each mode saves input, launch identity, Native admission/footer, emitted wall

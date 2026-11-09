@@ -100,7 +100,7 @@ fn compare_pair(label: &str, edits: &[(&str, &str)], off: &[u8], on: &[u8]) {
                 "wrapper":runner.bin(),"args":args,"native_binary":producer,
                 "native_binary_sha256":sha(&fs::read(&producer).unwrap()),
                 "seed":std::env::var("ORCA_REPLAY_SEED").ok(),"input_sha256":sha(project),
-                "source":"PerimeterGenerator.cpp::process_arachne:2131-2175,2224-2244"
+                "source":"PerimeterGenerator.cpp::process_arachne:2703-2744,2751-2877"
             }))
             .unwrap(),
         )
