@@ -180,8 +180,7 @@ fn before_config_block(gcode: &[u8]) -> &[u8] {
     &gcode[..end]
 }
 
-#[test]
-fn swapped_filament_map_wipe_budget() {
+fn check_swapped_wipe_budget(label: &str, updates: serde_json::Value) {
     if crate::OrcaRunner::from_env().unwrap().is_none() {
         return;
     }
@@ -189,16 +188,7 @@ fn swapped_filament_map_wipe_budget() {
         repo_root().join("tests/parity/j1-used-extruder-follows-emitted-tools/both-used.3mf"),
     )
     .unwrap();
-    let project = super::input::settings_variant(
-        &source,
-        json!({
-            "filament_map":["2","1"],
-            "filament_retraction_speed":["30","20"],
-            "filament_wipe_distance":["1","2"]
-        })
-        .as_object()
-        .unwrap(),
-    );
+    let project = super::input::settings_variant(&source, updates.as_object().unwrap());
     let (reference, _) = native_stream_case::qualify(
         (
             "retraction-column",
@@ -208,7 +198,7 @@ fn swapped_filament_map_wipe_budget() {
                 "Extruder.cpp:31-34 set_config_index",
             ],
         ),
-        "swapped-filament-map-wipe-budget",
+        label,
         &project,
         &sha(&project),
         true,
@@ -252,4 +242,32 @@ fn swapped_filament_map_wipe_budget() {
     )
     .unwrap();
     difference.unwrap_or_else(|error| panic!("{error}; {:?}", reference.root));
+}
+
+#[test]
+fn swapped_filament_map_wipe_budget() {
+    check_swapped_wipe_budget(
+        "swapped-filament-map-wipe-budget",
+        json!({
+            "filament_map":["2","1"],
+            "filament_retraction_speed":["30","20"],
+            "filament_wipe_distance":["1","2"]
+        }),
+    );
+}
+
+#[test]
+fn swapped_machine_columns_wipe_budget() {
+    check_swapped_wipe_budget(
+        "swapped-machine-columns-wipe-budget",
+        json!({
+            "filament_map":["2","1"],
+            "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
+            "printer_extruder_id":["1","2"],
+            "retraction_speed":["30","20"],
+            "wipe_distance":["1","2"],
+            "filament_retraction_speed":["nil","nil"],
+            "filament_wipe_distance":["nil","nil"]
+        }),
+    );
 }
