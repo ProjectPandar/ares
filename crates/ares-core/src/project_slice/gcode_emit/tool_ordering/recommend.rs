@@ -45,9 +45,12 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
         &used,
         traversal.objects.len(),
     )?;
-    let sequential = traversal.resolved.views.full.process.print.print_sequence
-        == ProcessPrintSequence::ByObject;
-    if !sequential || traversal.objects.len() == 1 {
+    let current = &traversal.resolved.views.full;
+    let sequential = current.process.print.print_sequence == ProcessPrintSequence::ByObject;
+    let single_head_auto = current.project.print.nozzle_diameter.0.len() == 1
+        && current.project.gcode.filament_map_mode != ProjectFilamentMapMode::Manual;
+    // Print.cpp:3700–3734 also publishes single-head sequential auto maps.
+    if !sequential || traversal.objects.len() == 1 || single_head_auto {
         let changed = filament_map_recommend::apply_used_tpu_map(
             &mut traversal.resolved.views.full,
             &used,
