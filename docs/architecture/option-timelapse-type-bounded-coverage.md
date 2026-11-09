@@ -63,15 +63,19 @@ alone cannot establish activation.
 
 ## Rejection witness and deferred behavior
 
-Retain the historical failed-request identity and raw -102 observation.
-Recover that request from its existing external audit artifacts for a fresh
-rejection capture; inability to recover it must be reported rather than
-substituting an unrelated request and claiming reproduction. Preserve the
-existing active `timelapse_extrusion_outside_printable_area_rejects_after_processing`
-E2E in `orca_parity/gcode_printable_area.rs`, its tracked input
-`tests/parity/validation/timelapse-unprintable-gcode.3mf`, Native retained-output
-and exact result.json/validated API diagnostic assertions. This independent
--102 control does not by itself prove parity for commandRnYKWl.
+The -102 observation for commandRnYKWl is a v2.4.2 record. At v2.5.0-beta
+`345efec64` a plain slice moves a stored tower that does not fit before slicing
+anything (`OrcaSlicer.cpp:6480-6509`; see
+[the tower fit specification](slice-wipe-tower-fit-spec.md)), so Native slices
+that context successfully instead of rejecting it. An off-bed stored tower is no
+longer a -102 witness.
+
+`orca_parity/gcode_printable_area.rs` holds both sides on the tracked input
+`tests/parity/validation/timelapse-unprintable-gcode.3mf`:
+`off_bed_stored_tower_moves_before_slicing_like_native` compares the moved tower
+on complete output, and `skirt_past_the_bed_edge_rejects_after_processing` derives
+an input at runtime that still reaches -102, with Native's result confirmed live
+and the retained G-code compared in full.
 
 Defer Type2 tower enablement/placement, SEMM, multiple nozzles/filaments,
 physical/virtual tool mapping, by-object, BBL camera/purge templates, spiral
@@ -105,7 +109,10 @@ result.json and comparison receipts stay under external artifact/cache roots.
 No new runner/cache/API, frozen fallback, ignored test, probe, tolerance or
 special production guard is part of this slice.
 
-## Smooth -102 rejection analysis
+## Smooth -102 rejection analysis (v2.4.2)
+
+This analysis describes the v2.4.2 source. The rejection it explains no longer
+occurs at v2.5.0-beta `345efec64`; see "Rejection witness and deferred behavior".
 
 The RED asserted PASS but received INCOMPLETE:
 Traditional full-output PASS, Smooth Native Unix154 / return_code -102.
@@ -116,17 +123,14 @@ activates its single-filament smooth tower. Retained G-code's Skirt line79
 (Y224.646) and Prime tower line666 (Y222.328) exceed the expanded bed maxY222
 in GCodeProcessor.cpp:1922-1948; OrcaSlicer.cpp:6221-6227 emits the exact -102.
 
-The coverage therefore uses the distinct disabled-tower spec input while
-retaining that rejection as a control. No bed/tower coordinates or production
+The coverage therefore uses the distinct disabled-tower spec input. No bed/tower coordinates or production
 source changed. Both active enum templates emit 100 ordered markers in the
 actual outputs; empty controls emit 0. Every success compares complete output
 bytes, with only generated-by normalization. Counts are observed, not
-generalized to a one-insertion-per-layer requirement. The original-context
-runtime rejection control reproduces -102 with an unchanged input, not a
-replacement negative fixture.
+generalized to a one-insertion-per-layer requirement.
 
-Three tests cover the slice: the complete-domain assertion, the
-conditional-template/empty controls, and the original Smooth -102 control.
+Two tests cover the slice: the complete-domain assertion and the
+conditional-template/empty controls.
 The selected `timelapse_type` domain moves from INCOMPLETE (2 generated,
 1 compared, 1 rejected) to PASS (2 generated, 2 compared, 0 rejected). No
 tolerance, comparator or failure filtering changed; all other option plans,

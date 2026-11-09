@@ -86,21 +86,3 @@ pub(in super::super) fn export(
     }
     Ok(exported)
 }
-
-// Preserve the original sweep's tower/bed/template settings unchanged.
-pub(super) fn rejected_smooth(
-    runner: &OrcaRunner,
-) -> Result<runner::ExportedCase, runner::stages::StageError> {
-    let (machine, mut process, filaments) = settings();
-    process.insert("timelapse_type".into(), json!("1"));
-    runner.export_case(
-        &CaseInputs {
-            label: "timelapse/original-sweep-rejection",
-            machine: &machine,
-            process: &process,
-            filaments: &filaments,
-        },
-        &parity::smoke_overrides(),
-        &runner::repo_root().join("tests/parity/cube10.stl"),
-    )
-}
