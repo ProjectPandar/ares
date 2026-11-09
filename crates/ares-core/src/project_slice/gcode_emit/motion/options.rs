@@ -146,12 +146,10 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     /// Effective `retraction_speed` (filament `filament_retraction_speed`
     /// override applied, UNROUNDED, mm/s) for the during-wipe cap
     /// `retractionDuringWipe = retraction_speed * wipe_path_length /
-    /// wipe_speed` (`GCode.cpp:350`). Distinct from `retraction_feedrate`,
+    /// wipe_speed` (`GCode.cpp:584`). Distinct from `retraction_feedrate`,
     /// which is `floor(retraction_speed + 0.5) * 60` for the F word
-    /// (`Extruder.cpp:184-186`).
+    /// (`Extruder.cpp:225-227`).
     pub(in crate::project_slice::gcode_emit) retraction_during_wipe_speed: f64,
-    /// Physical-extruder wipe budget (`GCode.cpp:342-350`), distinct from the logical path.
-    pub(in crate::project_slice::gcode_emit) retraction_during_wipe_distance: f64,
     pub(in crate::project_slice::gcode_emit) wipe: bool,
     pub(in crate::project_slice::gcode_emit) wipe_distance: f64,
     pub(in crate::project_slice::gcode_emit) retraction_minimum_travel: f64,

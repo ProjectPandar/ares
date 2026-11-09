@@ -1,5 +1,8 @@
 # ARD: Wipe budget and logical path reader parity
 
+This record describes v2.4.2. v2.5.0-beta reads both budget values at the
+configuration column; see `wipe-retraction-config-column-spec.md`.
+
 ## Source and Rust boundary
 
 Port the distinct readers in `OrcaSlicer/src/libslic3r/GCode.cpp`:
