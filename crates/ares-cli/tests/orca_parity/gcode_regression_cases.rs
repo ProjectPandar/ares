@@ -24,6 +24,9 @@ mod medial_endpoint_zero;
 #[path = "mk4_curl_lifecycle.rs"]
 mod mk4_curl_lifecycle;
 
+#[path = "perimeter_printable_lower_slices.rs"]
+mod perimeter_printable_lower_slices;
+
 #[path = "mesh_center_precision.rs"]
 mod mesh_center_precision;
 
