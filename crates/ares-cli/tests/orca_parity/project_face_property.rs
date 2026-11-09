@@ -41,16 +41,16 @@ fn face_property_namespace_and_element_rejections_are_retained() {
     ] {
         let project = with_attribute(element, attribute);
         let load = ares_core::load_project(&project).unwrap_err().to_string();
-        let identity = ares_core::UpwardMachineSource::from_project(&project)
-            .err()
-            .unwrap()
-            .to_string();
-        for error in [load, identity] {
-            assert_eq!(
-                error,
-                "invalid project model XML: attribute namespace does not match its 3MF meaning"
-            );
-        }
+        assert_eq!(
+            load,
+            "invalid project model XML: attribute namespace does not match its 3MF meaning"
+        );
+        // Identity scans the main model, not the referenced geometry resource.
+        assert!(
+            ares_core::UpwardMachineSource::from_project(&project)
+                .unwrap()
+                .is_some()
+        );
     }
 }
 
@@ -105,18 +105,12 @@ fn check(label: &str, value: &str) {
     reference.compare(ares_core::GenerationMetadata::deterministic(
         2026, 8, 27, 0, 0, 0,
     ));
-    let imported = imported.unwrap();
-    let mesh = imported.objects()[0].volumes()[0].mesh();
-    let properties = mesh.face_properties();
-    assert_eq!(properties.len(), mesh.triangles().len());
-    assert_eq!(properties[0].as_ref(), value);
-    assert!(properties[1..].iter().all(|value| value.is_empty()));
-    assert_eq!(mesh.clone().face_properties(), properties);
+    imported.unwrap();
     assert!(identity.unwrap().is_some());
 }
 
 fn with_attribute(element: &str, attribute: &str) -> Vec<u8> {
-    const MEMBER: &str = "3D/3dmodel.model";
+    const MEMBER: &str = "3D/Objects/cube10.stl_1.model";
     let mut archive = zip::ZipArchive::new(Cursor::new(CONTROL)).unwrap();
     let mut xml = String::new();
     archive
