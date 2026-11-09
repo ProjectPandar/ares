@@ -6,6 +6,9 @@ mod post_region_normalization;
 use serde_json::{Map, Value};
 use std::path::PathBuf;
 
+#[path = "estimated_tower.rs"]
+mod estimated_tower;
+
 pub(crate) struct ExportedCase {
     pub(crate) label: String,
     pub(crate) project: Vec<u8>,

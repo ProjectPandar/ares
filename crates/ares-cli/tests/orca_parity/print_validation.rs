@@ -33,6 +33,8 @@ mod minimum_width_controls;
 mod positive;
 #[path = "print_validation/rejections.rs"]
 pub(crate) mod rejections;
+#[path = "print_validation/tiq2_corner.rs"]
+pub(crate) mod tiq2_corner;
 
 use ares_core::{ConfigOverrides, SliceError};
 use serde_json::json;
