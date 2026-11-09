@@ -1,4 +1,4 @@
-//! Config.cpp::load_from_json -> scalar ConfigOptionFloat real BBL array wire.
+//! PrintConfig.cpp:2043-2054 / Config.hpp:920-930: bridge-speed float-vector config.
 use std::{
     fs,
     io::{Cursor, Read},
@@ -31,7 +31,7 @@ async fn preset_scalar_original_bbl_array() {
     fs::write(directory.join("input.3mf"), input).unwrap();
     let machine_fields = profiles.machine(machine).unwrap();
     let process_fields = profiles.process(process).unwrap();
-    assert_eq!(process_fields["bridge_speed"], json!(["50", "50"]));
+    let bridge_speed = process_fields["bridge_speed"].clone();
     for (kind, fields) in [
         ("machine", machine_fields),
         ("process", process_fields),
@@ -69,7 +69,7 @@ async fn preset_scalar_original_bbl_array() {
             .read_to_end(&mut bytes)
             .unwrap();
         let settings: Value = serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(settings["bridge_speed"], "50");
+        assert_eq!(settings["bridge_speed"], bridge_speed);
         json!({"status": "EXPORTED", "bridge_speed": settings["bridge_speed"]})
     });
     let catalog_json = catalog.to_string();
@@ -93,9 +93,19 @@ async fn preset_scalar_original_bbl_array() {
         loaded.unwrap_or_else(|error| panic!("{error}; evidence {directory:?}")),
     )
     .unwrap();
-    assert_eq!(loaded["bridge_speed"], json!("50"));
+    assert_eq!(loaded["bridge_speed"], bridge_speed);
+    let expected = bridge_speed
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|value| {
+            ares_core::Nullable::Value(ares_core::OrcaFloat(
+                value.as_str().unwrap().parse().unwrap(),
+            ))
+        })
+        .collect::<Vec<_>>();
     assert_eq!(
         placed.unwrap().settings().process.region.bridge_speed.0,
-        [ares_core::Nullable::Value(ares_core::OrcaFloat(50.0))]
+        expected
     );
 }
