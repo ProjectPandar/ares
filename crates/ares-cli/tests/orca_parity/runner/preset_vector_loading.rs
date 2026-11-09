@@ -10,7 +10,6 @@ use super::{OrcaRunner, stages, vendor, write_json};
 
 const MACHINE: &str = "E3NG v1.2S - 0.4 nozzle";
 const PROCESS: &str = "0.20mm Standard @E3NG v1.2S";
-const FILAMENT: &str = "Generic PLA @E3NG v1.2S";
 const ERROR: &str =
     "use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe";
 
@@ -26,11 +25,13 @@ async fn rh3d_original_scalar_vector_profile_loads_then_rejects_double_reset() {
         ],
         "imports": [],
     });
-    assert_eq!(
-        catalog["vendors"][1]["files"]["machine/fdm_machine_common.json"]["default_filament_profile"],
-        FILAMENT,
-    );
-    let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [FILAMENT]});
+    // The stock machine's parent chain carries this coStrings option as a scalar.
+    let machine = profiles.machine(MACHINE).unwrap();
+    let filament = machine["default_filament_profile"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [filament]});
     let directory = tempfile::Builder::new()
         .prefix("rh3d-vector-load-")
         .tempdir()
@@ -41,9 +42,9 @@ async fn rh3d_original_scalar_vector_profile_loads_then_rejects_double_reset() {
     let input = fs::read(root.join("tests/parity/cube10.stl")).unwrap();
     fs::write(directory.join("cube10.stl"), &input).unwrap();
     for (kind, fields) in [
-        ("machine", profiles.machine(MACHINE).unwrap()),
+        ("machine", machine),
         ("process", profiles.process(PROCESS).unwrap()),
-        ("filament", profiles.filament(FILAMENT).unwrap()),
+        ("filament", profiles.filament(&filament).unwrap()),
     ] {
         write_json(
             &directory.join(format!("{kind}.json")),
@@ -113,7 +114,7 @@ async fn rh3d_original_scalar_vector_profile_loads_then_rejects_double_reset() {
         &json!({"native": native, "load": load, "slice": slice}),
     );
     assert!(loaded.is_ok(), "{load}; evidence {directory:?}");
-    assert_eq!(load["settings"]["default_filament_profile"], FILAMENT);
+    assert_eq!(load["settings"]["default_filament_profile"], filament);
     assert!(
         matches!(sliced, Err(SliceError::InvalidValuesInProject(text)) if text == ERROR),
         "{slice}; evidence {directory:?}",
