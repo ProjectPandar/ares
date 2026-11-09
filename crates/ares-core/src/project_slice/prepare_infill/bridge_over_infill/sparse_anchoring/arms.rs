@@ -157,10 +157,22 @@ pub(super) fn dispatch(
                 dont_sort: false,
             };
             for expolygon in fill.expolygons {
-                result.extend(
+                // FillCubic::fill_surface (FillRectilinear.cpp:3603-3618).
+                let lines = if params.multiline > 1 {
+                    crate::fill::cubic_trapezoidal::fill_surface(
+                        &expolygon,
+                        params,
+                        crate::fill::cubic_trapezoidal::SurfaceGeometry {
+                            layer_id: layer_index,
+                            thickness_layers: fill.representative.thickness_layers,
+                            print_z: z,
+                        },
+                        traversal.scale,
+                    )
+                } else {
                     fill_multiline_surface(&expolygon, params, &sweeps, traversal.scale)
-                        .map_err(super::super::transaction::geometry_error)?,
-                );
+                };
+                result.extend(lines.map_err(super::super::transaction::geometry_error)?);
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
