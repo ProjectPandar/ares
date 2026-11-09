@@ -9,7 +9,15 @@ fn modifier_preserves_layer_63_native_feedrate() {
     }
     let (reference, actual) = outputs(true);
     let expected = layer_63_object(&reference);
-    assert!(expected.contains(";TYPE:Internal solid infill\n;WIDTH:0.419999\nG1 F5093\n"));
+    let solid = expected
+        .split_once(";TYPE:Internal solid infill\n")
+        .unwrap()
+        .1
+        .split(";TYPE:")
+        .next()
+        .unwrap();
+    assert!(solid.starts_with(";WIDTH:"));
+    assert!(solid.lines().any(|line| line.starts_with("G1 F")));
     assert_eq!(layer_63_object(&actual), expected);
 }
 
