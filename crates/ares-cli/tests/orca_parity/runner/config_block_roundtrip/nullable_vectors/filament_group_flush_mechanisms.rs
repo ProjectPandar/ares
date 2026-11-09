@@ -199,3 +199,27 @@ cases! {
     x2d_pla_auto_map_third_filament_head1_only,
     x2d_pla_auto_map_second_head_height_below_model,
 }
+
+#[test]
+fn h2c_manual_multi_nozzle_grouping_is_admitted() {
+    let project = fs::read(
+        repo_root()
+            .join("tests/parity/filament-group-flush-mechanisms/h2c_manual_multi_nozzle.3mf"),
+    )
+    .unwrap();
+    let api = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(crate::runner::application::slice_project_plate_validated(
+            &project,
+            GenerationMetadata::deterministic(2026, 11, 10, 2, 0, 0),
+            None,
+            &ConfigOverrides::default(),
+            SlicerContext::new(0),
+        ))
+        .unwrap();
+    let output = std::str::from_utf8(&api).unwrap();
+    assert!(output.contains("; filament_map = 1,2,1\n"));
+    assert!(output.contains("; filament_nozzle_map = 0,1,0\n"));
+}
