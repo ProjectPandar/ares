@@ -117,11 +117,11 @@ pub(crate) fn normalize_scalar_vector_strings(
     Ok(())
 }
 
-/// `Config.cpp:945-1001` joins JSON array tokens before scalar
-/// deserialization; `Config.hpp:784-790` reads a numeric prefix. Keep the
-/// preset presence view consistent with the typed scalar, without applying
-/// preset coercion to project documents or user overrides.
-pub(crate) fn normalize_numeric_scalar_arrays(
+/// `Config.cpp:1004-1060` joins typed JSON string arrays before scalar
+/// deserialization: numeric kinds read their prefix, while coString keeps
+/// the comma-joined text. Keep raw presence views consistent with the typed
+/// scalar without coercing non-string array elements.
+pub(crate) fn normalize_scalar_arrays(
     values: &mut BTreeMap<String, RawConfigValue>,
 ) -> Result<(), String> {
     for (mut key, mut value) in std::mem::take(values) {
@@ -132,6 +132,7 @@ pub(crate) fn normalize_numeric_scalar_arrays(
                     | OptionValueKind::Int
                     | OptionValueKind::Percent
                     | OptionValueKind::FloatOrPercent
+                    | OptionValueKind::String
             )
             && let RawConfigValue::List(items) = &value
             && is_string_array(items)

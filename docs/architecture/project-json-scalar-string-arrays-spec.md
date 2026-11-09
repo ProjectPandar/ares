@@ -72,6 +72,17 @@ ordered-byte comparison, including the full footer and generator-only allowance.
 A mixed-type thumbnail array must exercise Native and Ares; preserve its actual
 Native diagnostics/status and prove Ares does not coerce it to a valid string.
 
+### Recorded control divergence (not a slice gate)
+
+At test commit `ee71d08b1`, both official and seeded Native runs accepted the
+mixed string/integer thumbnail array at the enclosing process level: natural
+exit zero and a generated `plate_1.gcode`. Ares rejected project admission via
+the public API and CLI (natural exit one, no G-code). This is the named **Native
+mixed-array partial-load versus Ares admission-rejection divergence**. Preserve
+it honestly; do not port Native's silent partial-load behavior in this slice.
+The mixed case records outcomes, not successful Native/Ares parity. The gates
+are valid string-array joining and the private user-file load.
+
 After the failing public E2Es are committed, implement the scoped normalizer and
 repeat the private user-file load gate by SHA only. Run both oracle modes,
 filtered project/3MF regressions, fmt, strict workspace/all-target Clippy, WASM,

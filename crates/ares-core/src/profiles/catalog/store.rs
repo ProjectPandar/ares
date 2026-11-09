@@ -106,7 +106,7 @@ impl Catalog {
         // Config.hpp:1153-1159); normalize at the parse boundary so the raw
         // and typed views agree on the shape.
         crate::options::json_deserialize::normalize_empty_vector_strings(&mut document.fields);
-        crate::options::json_deserialize::normalize_numeric_scalar_arrays(&mut document.fields)
+        crate::options::json_deserialize::normalize_scalar_arrays(&mut document.fields)
             .map_err(invalid)?;
         // Old-profile percentage values for now-absolute keys are erased at
         // file load (`PrintConfig.cpp:8087-8094`, via `set_deserialize`'

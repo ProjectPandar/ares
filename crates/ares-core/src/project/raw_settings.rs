@@ -104,7 +104,7 @@ impl ProjectSettingsRaw {
     /// not the array. Runs after `handle_legacy` (the branch's first pass
     /// renames the key with an empty value).
     pub(crate) fn normalize_scalar_arrays(&mut self) -> Result<(), String> {
-        crate::options::json_deserialize::normalize_numeric_scalar_arrays(&mut self.0)
+        crate::options::json_deserialize::normalize_scalar_arrays(&mut self.0)
     }
 
     /// `PrintConfigDef::handle_legacy` (`PrintConfig.cpp:8033`) runs inside
