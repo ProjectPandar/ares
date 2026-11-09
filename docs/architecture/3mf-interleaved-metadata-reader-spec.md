@@ -81,6 +81,58 @@ could add geometry-sized event storage to identity-only and browser imports.
 An arbitrary replay-event cap would instead reject otherwise valid large
 projects based on their ordering. Neither change is needed for this boundary.
 
+## Upstream face-property attribute admission
+
+At the same upstream pin, `bbs_3mf.cpp:367` names the unqualified
+`face_property` triangle attribute. `bbs_get_attribute_value_charptr:525-535`
+compares exact attribute names; `bbs_get_attribute_value_string:538-541`
+returns its string, or the empty string when absent. The main triangle reader
+at4023-4052 and `ObjectImporter` triangle reader at5927 append that string.
+Thus an unbound `triangle/@face_property` is an upstream-supported form,
+not an attribute whose namespace must be the production extension namespace.
+
+Include that exact unbound attribute in the existing model-attribute namespace
+gate. Do not admit arbitrary unknown attributes, add namespace aliases, or
+relax the required namespaces of existing core/production/XML attributes.
+Do not preprocess or strip the attribute to bypass validation.
+
+A runtime stock-project variant with an explicitly empty `face_property`
+must import and slice identically to its absent-attribute control: the pinned
+getter returns the same empty string for both inputs. Keep the public project,
+identity and CLI paths covered by the same complete ordered-output contract.
+
+Face properties can change Native output through auto-orientation. The importer
+materializes them at5324-5327 and5542-5545; `deps_src/admesh/stl.h:171-218`
+parses the normal/exterior-appearance type and area. `Orient.cpp:209-227`
+reads the appearance type and427-428 changes the orientation's overhang cost;
+selection at185-202 can consequently choose a different rotation and slice.
+
+The named deferred gap is **FaceProperty-aware auto-orientation, owner
+Orient.cpp:185-227/427-428 + admesh stl.h:171-218**. Whoever later ports
+orientation must consume the preserved `FaceProperty` data. The CLI
+orientation action is explicit (`OrcaSlicer.cpp:4973ff`). The current project
+slice contract retains the saved transforms and does not request that action.
+Prove complete Native/API/CLI equality for both a neutral attribute and an
+enum-defined exterior-appearance value on this fixed-transform path. Do not
+infer auto-orientation parity from that result. If an output-affecting property
+is encountered on an unsupported operation, that operation must be ported or
+rejected before output, not silently ignored.
+
+Preserve the decoded strings opaquely, in triangle order, from
+`project/model_xml.rs::Triangle` through `project/load/mesh_prepare.rs` into
+`project/domain/mesh.rs::MeshGeometry`, shared with the existing mesh geometry.
+Expose the strings through `ProjectMesh::face_properties` so the public E2E can
+verify non-neutral data retention without implementing orientation. Empty
+strings retain the upstream absent-attribute meaning. This requires per-face
+string storage; identity-only scans must still ignore the geometry subtree.
+
+This addition ports attribute admission and opaque retention, not the deferred
+orientation algorithm. The generic3MF triangle reader (`3mf.cpp:1776-1796`) does not consume
+this BBS attribute. Existing Ares mesh representations remain a temporary
+compatibility shell for the deferred upstream data boundary. Namespace/entity/
+archive/geometry validation stays in force; prefixed face-property attributes
+and face-property attributes on other elements retain their rejection behavior.
+
 ## Portability and allocation contract
 
 Keep the existing quick-xml dependency/features. Use the existing Rust reader,
