@@ -31,6 +31,11 @@ fn semm_allocation_keeps_its_separate_receiving_reservation() {
     run("semm-allocation-control", Some([5, 35]), true);
 }
 
+#[test]
+fn custom_toolchange_right_side_motion_sets_the_gap_entry_origin() {
+    run("custom-change-right-entry", Some([5, 0]), false);
+}
+
 fn run(label: &str, minimum: Option<[u8; 2]>, semm: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -63,6 +68,13 @@ fn run(label: &str, minimum: Option<[u8; 2]>, semm: bool) {
         settings.insert(
             "filament_minimal_purge_on_wipe_tower".to_owned(),
             json!(values.map(|value| value.to_string())),
+        );
+    }
+    if label == "custom-change-right-entry" {
+        let source = settings["change_filament_gcode"].as_str().unwrap();
+        settings.insert(
+            "change_filament_gcode".to_owned(),
+            json!(format!("{source}\nG1 X215 Y160\n")),
         );
     }
     let mut archive = zip::ZipArchive::new(Cursor::new(original)).unwrap();
@@ -112,6 +124,14 @@ fn run(label: &str, minimum: Option<[u8; 2]>, semm: bool) {
         assert!(
             text.lines().any(|line| line == expected),
             "Native premise {expected}; {root:?}"
+        );
+    }
+    if label == "custom-change-right-entry" {
+        assert!(
+            text.contains(
+                "G1 X187.637 Y156.2\nG1 X144.8 Y156.2\nG1 X144.8 Y150.25\nG1 X150.25 Y150.25\n"
+            ),
+            "Native did not route from the custom right-side endpoint; {root:?}"
         );
     }
     assert!(
