@@ -1,5 +1,9 @@
 //! FilamentGroup.cpp preferences/memory/AMS and ToolOrderUtils.cpp carried layer state.
-use super::super::super::{native_api_cli::sha, native_stream_case, repo_root};
+use super::super::super::{
+    native_api_cli::{NativeCase, sha},
+    native_stream_case, repo_root,
+};
+use crate::OrcaRunner;
 use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use serde_json::json;
 use std::{
@@ -201,25 +205,15 @@ cases! {
 }
 
 #[test]
-fn h2c_manual_multi_nozzle_grouping_is_admitted() {
+fn h2c_manual_multi_nozzle_grouping_matches_native() {
     let project = fs::read(
         repo_root()
             .join("tests/parity/filament-group-flush-mechanisms/h2c_manual_multi_nozzle.3mf"),
     )
     .unwrap();
-    let api = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
+    let runner = OrcaRunner::from_env()
         .unwrap()
-        .block_on(crate::runner::application::slice_project_plate_validated(
-            &project,
-            GenerationMetadata::deterministic(2026, 11, 10, 2, 0, 0),
-            None,
-            &ConfigOverrides::default(),
-            SlicerContext::new(0),
-        ))
-        .unwrap();
-    let output = std::str::from_utf8(&api).unwrap();
-    assert!(output.contains("; filament_map = 1,2,1\n"));
-    assert!(output.contains("; filament_nozzle_map = 0,1,0\n"));
+        .expect("Native harness required");
+    let native = NativeCase::slice(&runner, &project, "h2c-manual-multi-nozzle-");
+    native.compare_prefix_and_maps(GenerationMetadata::deterministic(2026, 11, 10, 2, 0, 0));
 }

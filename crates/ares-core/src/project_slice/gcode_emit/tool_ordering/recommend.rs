@@ -39,11 +39,22 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
         &traversal.project.documents().project_settings_raw,
         None,
     )?;
+    let multiple_nozzles = traversal
+        .project
+        .documents()
+        .project_settings_raw
+        .get("extruder_max_nozzle_count")
+        .and_then(|value| value.token())
+        .is_some_and(|wire| {
+            wire.split([';', ','])
+                .any(|count| count.parse::<i32>().is_ok_and(|value| value > 1))
+        });
     let automatic = filament_group::check_scope(
         &traversal.resolved.views.full,
         is_bbl,
         &used,
         traversal.objects.len(),
+        multiple_nozzles,
     )?;
     let current = &traversal.resolved.views.full;
     let sequential = current.process.print.print_sequence == ProcessPrintSequence::ByObject;

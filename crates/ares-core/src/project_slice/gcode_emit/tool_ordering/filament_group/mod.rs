@@ -15,10 +15,12 @@ pub(super) fn check_scope(
     is_bbl: bool,
     used: &[usize],
     objects: usize,
+    multiple_nozzles: bool,
 ) -> Result<bool, SliceError> {
-    let automatic = is_bbl
+    let automatic = (is_bbl || multiple_nozzles)
         && settings.project.print.nozzle_diameter.0.len() > 1
-        && settings.project.gcode.filament_map_mode != ProjectFilamentMapMode::Manual
+        && (settings.project.gcode.filament_map_mode != ProjectFilamentMapMode::Manual
+            || multiple_nozzles)
         && !used.iter().any(|&id| {
             settings
                 .filament
@@ -47,24 +49,37 @@ pub(super) fn apply(
 ) -> Result<ProjectConfigViews, SliceError> {
     let (current, raw) = input;
     let context = context::Context::build((current, checkpoint, raw), layers, geometry, config)?;
-    let mut result = enumeration::solve(&context);
-    // ToolOrdering.cpp:1681–1747: post-AMS master preference is not a solver tie-break.
-    let master = context.master;
-    let other = 1 - master;
-    let mut occupancy = [0; 2];
-    for &id in &context.used {
-        occupancy[result[id]] += 1;
-    }
-    let printable_swap = context
-        .used
-        .iter()
-        .all(|id| !context.limits[1 - result[*id]].contains(id));
-    let capacity_swap = !(occupancy[0] <= context.capacity[0]
-        && occupancy[1] <= context.capacity[1]
-        && (occupancy[1] > context.capacity[0] || occupancy[0] > context.capacity[1]));
-    if occupancy[other] > occupancy[master] && printable_swap && capacity_swap {
+    let mut result = if context.manual_multi_nozzle {
+        current
+            .project
+            .gcode
+            .filament_map
+            .0
+            .iter()
+            .map(|id| usize::try_from(id.0 - 1).expect("validated filament map"))
+            .collect()
+    } else {
+        enumeration::solve(&context)
+    };
+    if !context.manual_multi_nozzle {
+        // ToolOrdering.cpp:1681–1747: post-AMS master preference is not a solver tie-break.
+        let master = context.master;
+        let other = 1 - master;
+        let mut occupancy = [0; 2];
         for &id in &context.used {
-            result[id] = 1 - result[id];
+            occupancy[result[id]] += 1;
+        }
+        let printable_swap = context
+            .used
+            .iter()
+            .all(|id| !context.limits[1 - result[*id]].contains(id));
+        let capacity_swap = !(occupancy[0] <= context.capacity[0]
+            && occupancy[1] <= context.capacity[1]
+            && (occupancy[1] > context.capacity[0] || occupancy[0] > context.capacity[1]));
+        if occupancy[other] > occupancy[master] && printable_swap && capacity_swap {
+            for &id in &context.used {
+                result[id] = 1 - result[id];
+            }
         }
     }
     let mut refreshed = current.clone();
@@ -74,10 +89,25 @@ pub(super) fn apply(
         heads.0[id] = OrcaInt(result[id] as i32 + 1);
         volumes.0[id] = OrcaInt(context.volumes[result[id]]);
     }
+    let nozzle_offsets = context
+        .nozzle_counts
+        .iter()
+        .scan(0usize, |offset, count| {
+            let current = *offset;
+            *offset += *count;
+            Some(current)
+        })
+        .collect::<Vec<_>>();
     let nozzles = OrcaInts(
         result
-            .into_iter()
-            .map(|head| OrcaInt(head as i32))
+            .iter()
+            .map(|head| {
+                OrcaInt(if context.manual_multi_nozzle {
+                    nozzle_offsets[*head] as i32
+                } else {
+                    *head as i32
+                })
+            })
             .collect(),
     );
     if current.project.gcode.filament_map != heads
@@ -90,11 +120,17 @@ pub(super) fn apply(
             config.filament_nozzle_map.clone_from(&nozzles);
         }
     }
-    refresh_filament_map(
+    let mut views = refresh_filament_map(
         checkpoint,
         &refreshed.project.gcode.filament_map,
         &refreshed,
-    )
+    )?;
+    if context.manual_multi_nozzle {
+        views.full.project.gcode.filament_nozzle_map = nozzles.clone();
+        views.runtime.project.gcode.filament_nozzle_map = nozzles.clone();
+        views.runtime_gcode.filament_nozzle_map = nozzles;
+    }
+    Ok(views)
 }
 
 fn sized_seed(seed: &OrcaInts, count: usize, default: i32) -> OrcaInts {

@@ -75,12 +75,16 @@ The implementation destination is private
   with the source-owned nozzle inventory and context construction;
 - `filament_group/{enumeration,sequence}.rs`: carry the nozzle-centric group
   and sequence result without collapsing physical nozzles into extruders;
-- `recommend.rs`: dispatch the multi-nozzle modes and publish the derived
-  maps through the existing private ToolOrdering seam.
+- `recommend.rs` and `filament_group/mod.rs`: dispatch the manual
+  multi-nozzle mode, build the private context, preserve the manual extruder
+  assignment, and publish global physical-nozzle IDs.
+- `options/config_export/full_config.rs`: serialize the derived nozzle map in
+  the existing ToolOrdering config-block publication path.
 
 A new private sibling module is permitted only if needed to represent the
 upstream `MultiNozzleUtils` result. No public API or dependency changes are
-in scope.
+in scope. Do not derive a separate Ares-owned fallback map in
+`options/project_variants/filament_maps.rs`.
 
 ## Included behavior
 

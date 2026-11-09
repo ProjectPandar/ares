@@ -18,6 +18,8 @@ pub(super) struct Context {
     pub custom: BTreeMap<usize, Vec<usize>>,
     pub load: [f32; 2],
     pub unload: [f32; 2],
+    pub nozzle_counts: Vec<usize>,
+    pub manual_multi_nozzle: bool,
 }
 
 impl Context {
@@ -58,7 +60,18 @@ impl Context {
                     .unwrap_or(default),
             )?;
         }
-        if settings.project.gcode.filament_map_mode != crate::ProjectFilamentMapMode::AutoForFlush
+        let nozzle_counts = config
+            .option("extruder_max_nozzle_count")
+            .ints()
+            .iter()
+            .map(|count| usize::try_from(*count).expect("validated nozzle count"))
+            .collect::<Vec<_>>();
+        let manual_multi_nozzle = settings.project.gcode.filament_map_mode
+            == crate::ProjectFilamentMapMode::Manual
+            && nozzle_counts.iter().any(|count| *count > 1);
+        if (!manual_multi_nozzle
+            && settings.project.gcode.filament_map_mode
+                != crate::ProjectFilamentMapMode::AutoForFlush)
             || config.option("enable_filament_dynamic_map").bool()
             || config.option("has_filament_switcher").bool()
             || config
@@ -66,11 +79,12 @@ impl Context {
                 .bools()
                 .iter()
                 .any(|v| *v)
-            || config
-                .option("extruder_max_nozzle_count")
-                .ints()
-                .iter()
-                .any(|v| *v != 1)
+            || (!manual_multi_nozzle
+                && config
+                    .option("extruder_max_nozzle_count")
+                    .ints()
+                    .iter()
+                    .any(|v| *v != 1))
             || print.nozzle_diameter.0.len() != 2
         {
             return Err(unsupported());
@@ -84,7 +98,9 @@ impl Context {
                 .get(head)
                 .map_or(0, |v| *v as i32)
         });
-        check_nozzle_stats(&config, &volumes)?;
+        if !manual_multi_nozzle {
+            check_nozzle_stats(&config, &volumes)?;
+        }
         let mut used = layers
             .iter()
             .flat_map(|l| l.extruders.iter().copied())
@@ -168,6 +184,8 @@ impl Context {
                 settings.printer.gcode.machine_unload_filament_time.0 as f32,
                 (settings.printer.gcode.machine_unload_filament_time.0 / 2.0) as f32,
             ],
+            nozzle_counts,
+            manual_multi_nozzle,
         })
     }
 }

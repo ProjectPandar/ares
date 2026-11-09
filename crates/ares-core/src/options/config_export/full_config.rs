@@ -272,24 +272,23 @@ fn applied_filament_maps(
         .and_then(|value| value.token())
         .is_some_and(|value| {
             value
-                .split(';')
+                .split([';', ','])
                 .any(|element| element.parse::<i32>().is_ok_and(|count| count > 1))
         });
+    // ToolOrdering.cpp:1768-1773,1892-1907 and 3035-3087: publish the
+    // applied physical-nozzle map, including expanded multi-nozzle groups.
+    let nozzles = settings
+        .project
+        .gcode
+        .filament_nozzle_map
+        .0
+        .iter()
+        .map(|id| id.0.to_string())
+        .collect::<Vec<_>>()
+        .join(",");
+    lines.retain(|(key, _)| key != "filament_nozzle_map");
+    lines.push(("filament_nozzle_map".to_owned(), nozzles));
     if !multiple_nozzles {
-        // ToolOrdering.cpp:1768-1773,1892-1907: ordinary grouping has one
-        // logical nozzle per extruder, group_id == zero-based extruder_id;
-        // Print.cpp:4673-4675 writes the applied nozzle map back to the dump.
-        let nozzles = settings
-            .project
-            .gcode
-            .filament_nozzle_map
-            .0
-            .iter()
-            .map(|id| id.0.to_string())
-            .collect::<Vec<_>>()
-            .join(",");
-        lines.retain(|(key, _)| key != "filament_nozzle_map");
-        lines.push(("filament_nozzle_map".to_owned(), nozzles));
         let volumes = settings
             .project
             .gcode
