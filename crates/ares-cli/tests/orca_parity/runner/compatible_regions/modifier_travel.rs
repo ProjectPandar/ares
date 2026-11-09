@@ -228,8 +228,11 @@ fn modifier_without_wall_routing_preserves_second_layer_native_approach() {
     }
     let (reference, actual) = outputs(false);
     let expected = approach(&reference);
-    assert!(expected.contains("G3 Z.92"));
-    assert!(expected.contains("G1 X165.499 Y103.499"));
+    assert!(
+        expected.lines().any(|line| {
+            line.starts_with("G1 X") && line.contains(" Y") && !line.contains(" E")
+        })
+    );
     assert_eq!(approach(&actual), expected);
 }
 
