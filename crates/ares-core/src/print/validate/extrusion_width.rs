@@ -61,6 +61,7 @@ pub(super) fn flat(settings: &ProjectSettings) -> Result<BoundedProjectUsage, Sl
         }],
         settings,
         settings.filament.gcode.filament_diameter.0.len(),
+        &[],
     );
     let nozzles = nozzle_bounds(
         settings,

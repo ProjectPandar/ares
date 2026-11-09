@@ -96,13 +96,15 @@ fn resolve_with_observer(
             objects: project.objects(),
             grouped: &grouped,
             resolved: &first_shells,
+            custom_tool_changes: &[],
         },
         &first,
         observer,
     );
 
     let print_object_count = grouped.effective_print_object_count;
-    call_normalize_fdm_2(
+    let mut unnormalized = first.clone();
+    let first_changed_keys = call_normalize_fdm_2(
         &mut first,
         NormalizeFdm2Pass::FirstLate,
         print_object_count,
@@ -118,6 +120,59 @@ fn resolve_with_observer(
         (project, &grouped, &process_variant_indices),
         observer,
     )?;
+    let custom_tool_changes = project
+        .curr_plate_custom_gcodes()
+        .gcodes
+        .into_iter()
+        .filter(|item| item.kind == crate::gcode_processor::CustomGCodeType::ToolChange)
+        .map(|item| item.extruder)
+        .collect::<Vec<_>>();
+    let post_region_usage = collect_usage(
+        UsagePass::PostRegion,
+        ProjectUsageSources {
+            settings: &first,
+            objects: project.objects(),
+            grouped: &grouped,
+            resolved: &objects,
+            custom_tool_changes: &custom_tool_changes,
+        },
+        &first,
+        observer,
+    );
+    // PrintApply.cpp:2208-2216 rechecks the retained configuration, then
+    // applies only keys that differ from the configuration already applied.
+    let mut changed_keys = call_normalize_fdm_2(
+        &mut unnormalized,
+        NormalizeFdm2Pass::PostRegion,
+        print_object_count,
+        post_region_usage.supported_used_filaments.len(),
+        observer,
+    );
+    changed_keys.extend(first_changed_keys);
+    changed_keys.retain(|key| match key {
+        ProjectFdmNormalizationKey::EnablePrimeTower => {
+            first.process.print.enable_prime_tower != unnormalized.process.print.enable_prime_tower
+        }
+        ProjectFdmNormalizationKey::IndependentSupportLayerHeight => {
+            first.process.print.independent_support_layer_height
+                != unnormalized.process.print.independent_support_layer_height
+        }
+    });
+    for key in changed_keys {
+        match key {
+            ProjectFdmNormalizationKey::EnablePrimeTower => {
+                first.process.print.enable_prime_tower.0 =
+                    unnormalized.process.print.enable_prime_tower.0;
+            }
+            ProjectFdmNormalizationKey::IndependentSupportLayerHeight => {
+                first.process.print.independent_support_layer_height.0 = unnormalized
+                    .process
+                    .print
+                    .independent_support_layer_height
+                    .0;
+            }
+        }
+    }
     let usage = collect_usage(
         UsagePass::FinalPostNormalize,
         ProjectUsageSources {
@@ -125,6 +180,7 @@ fn resolve_with_observer(
             objects: project.objects(),
             grouped: &grouped,
             resolved: &objects,
+            custom_tool_changes: &custom_tool_changes,
         },
         &first,
         observer,
@@ -184,9 +240,10 @@ fn call_normalize_fdm_2(
     object_count: usize,
     used_filament_count: usize,
     observer: &mut impl PhaseObserver,
-) {
+) -> Vec<ProjectFdmNormalizationKey> {
     let keys = normalize_fdm_2(settings, object_count, used_filament_count);
     observer.normalize_fdm_2(pass, (object_count, used_filament_count), &keys, settings);
+    keys
 }
 
 fn collect_usage(
@@ -206,6 +263,7 @@ fn collect_usage(
 pub(crate) enum NormalizeFdm2Pass {
     ColdFirst,
     FirstLate,
+    PostRegion,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -221,6 +279,7 @@ pub(crate) enum CandidatePass {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum UsagePass {
     FirstPreRegion,
+    PostRegion,
     FinalPostNormalize,
 }
 

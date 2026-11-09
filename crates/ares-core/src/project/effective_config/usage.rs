@@ -13,6 +13,7 @@ pub(crate) struct ProjectUsageSources<'a> {
     pub(crate) objects: &'a [ProjectObject],
     pub(crate) grouped: &'a GroupedPrintObjects,
     pub(crate) resolved: &'a [ResolvedProjectObject],
+    pub(crate) custom_tool_changes: &'a [u32],
 }
 
 pub(crate) struct ObjectUsageInput<'a> {
@@ -62,6 +63,7 @@ pub(crate) fn collect_bounded_project_usage(
         &objects,
         wipe_settings,
         sources.settings.filament.gcode.filament_diameter.0.len(),
+        sources.custom_tool_changes,
     )
 }
 
@@ -69,6 +71,7 @@ pub(crate) fn collect_usage(
     objects: &[ObjectUsageInput<'_>],
     wipe_settings: &ProjectSettings,
     logical_filament_count: usize,
+    custom_tool_changes: &[u32],
 ) -> BoundedProjectUsage {
     let has_brim = objects.iter().any(|input| supported_brim(input.object));
     let mut object_filaments = Vec::new();
@@ -111,6 +114,16 @@ pub(crate) fn collect_usage(
 
     let mut supported_used_filaments = object_filaments;
     supported_used_filaments.extend(support_filaments);
+    // Print.cpp:784-793 appends current-plate ToolChanges before the tower
+    // selector and final deduplication, using unsigned 32-bit subtraction.
+    let colour_count = wipe_settings.filament.gcode.filament_colour.0.len();
+    supported_used_filaments.extend(
+        custom_tool_changes
+            .iter()
+            .copied()
+            .filter(|&selector| selector as usize <= colour_count)
+            .map(|selector| selector.wrapping_sub(1) as usize),
+    );
     let wipe_selector = wipe_settings.process.print.wipe_tower_filament.0;
     if has_wipe_tower(wipe_settings, logical_filament_count)
         && wipe_selector != 0
