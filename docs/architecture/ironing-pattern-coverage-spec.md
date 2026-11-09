@@ -60,7 +60,7 @@ CLI strings the probe used: `monotonic`, `monotonicline`, `alignedrectilinear`,
 | supportcubic | **Native SIGSEGV** | 0 |
 | lightning | **Native SIGSEGV** | 0 |
 | honeycomb | ok | 82 |
-| 3dhoneycomb | ok | 73 |
+| 3dhoneycomb | **undefined**, see "3D honeycomb in object ironing" | none defined |
 | lateral-honeycomb | ok | 117 |
 | lateral-lattice | ok | 114 |
 | crosshatch | ok | 72 |
@@ -95,7 +95,6 @@ monotonic, overlap=0, dont_alternate_fill_direction propagated, link_max_length
 | Cubic | `fill::multiline::sweeps` cubic-family sweep (`FillRectilinear.cpp` cubic sweeps; already used by `sparse_infill_pattern=cubic`) | `FillCubic` | real |
 | QuarterCubic | `fill::multiline::sweeps::quartercubic_sweeps` | `FillQuarterCubic` | real |
 | Honeycomb | `fill::honeycomb::fill_honeycomb` | `FillHoneycomb` | real |
-| ThreeDHoneycomb | `fill::three_d_honeycomb::fill_surface` | `Fill3DHoneycomb` | real |
 | LateralHoneycomb | `fill::honeycomb::fill_honeycomb` (lateral variant) | `FillLateralHoneycomb` | real |
 | LateralLattice | `fill::honeycomb::fill_honeycomb` (lattice variant) | `FillLateralLattice` | real |
 | CrossHatch | `fill::cross_hatch::fill_surface` | `FillCrossHatch` | real |
@@ -105,6 +104,7 @@ monotonic, overlap=0, dont_alternate_fill_direction propagated, link_max_length
 | AdaptiveCubic | — return `UnsupportedProjectFeature` | `FillAdaptive::Filler` | **SIGSEGV** |
 | SupportCubic | — return `UnsupportedProjectFeature` | `FillAdaptive::Filler` | **SIGSEGV** |
 | Lightning | — return `UnsupportedProjectFeature` | `FillLightning::Filler` | **SIGSEGV** |
+| ThreeDHoneycomb | — return `UnsupportedProjectFeature` | `Fill3DHoneycomb` | **undefined** |
 
 The three Native-SIGSEGV patterns stay `UnsupportedProjectFeature` — upstream
 crashes in `FillAdaptive`/`FillLightning` `_fill_surface_single` when called
@@ -123,19 +123,52 @@ is a different key path); leave it out — a region with
 `internal_solid_infill_pattern=concentricinternal` + `ironing_pattern=<...>` reads
 from `ironing_pattern` only, not `internal_solid_infill_pattern`.
 
+## 3D honeycomb in object ironing
+
+Source boundary, OrcaSlicer `345efec64` (v2.5.0-beta):
+
+- `src/libslic3r/Fill/Fill.cpp:1814-1816`, `Layer::make_ironing`: sets density
+  one and monotonic, and never sets `layer_height`.
+- `src/libslic3r/Fill/FillBase.hpp:91`: `FillParams::layer_height` defaults to
+  zero.
+- `src/libslic3r/Fill/Fill3DHoneycomb.cpp:371-391`: a zero height at density one
+  takes the dense branch, whose `zScale` divides by zero, and the non-finite Z
+  reaches `makeGrid`. The conversion chain from there is recorded in
+  `support-ironing-fill-params-beta.md`.
+
+Every call that irons with this pattern therefore converts non-finite values to
+integers, which is undefined. Whether the process then crashes depends on
+geometry, so neither the crash nor a completed output defines a result. No
+fixture can iron with this pattern and avoid that path.
+
+`src/libslic3r/Fill/Fill.cpp:1432,1654` set `layer_height` on the normal fill
+paths, so sparse and solid 3D honeycomb stay defined and are unchanged.
+
+`ThreeDHoneycomb` joins the `UnsupportedProjectFeature` guard in
+`fill_entities/ironing.rs`. The test asserts that guard and does not run Native,
+because a crash that depends on geometry is not a contract.
+
+Support ironing reaches the same upstream chain and keeps its separate
+empty-component policy from `support-ironing-fill-params-beta.md`. The two differ
+on purpose. The object-ironing match already rejects each pattern that has no
+defined upstream result, and 3D honeycomb belongs to that class, where an explicit
+rejection is better than silently ironing nothing. Support ironing has no such
+pattern guard, and its accepted contract keeps the rest of the support output.
+
 ## Test plan (red)
 
 New spec-driven test `filament_override_range_ironing_patterns` (or
 rename the existing one to a generic coverage module):
 
 - Fixture: `tests/parity/summary/time-cost.3mf` (Arachne, real top surface).
-- For each of the 16 Native-emits patterns, build `time-cost.3mf` with
+- For each of the 15 defined Native-emits patterns, build `time-cost.3mf` with
   `ironing_type=top` + `ironing_pattern=<pattern>` patched in, run Native
   `--slice 0` once, freeze `plate_1.gcode`; then run Ares on the same fixture and
   assert byte-equality under the official + seeded oracles.
 - For `adaptivecubic`, `supportcubic`, `lightning`: assert Ares exits with
   `UnsupportedProjectFeature` (matching its current contract; Native SIGSEGV is
   upstream breakage, not a parity target).
+- For `3dhoneycomb`: assert the same Ares error without running Native.
 - Existing patterns (rectilinear, concentric, hilbertcurve, archimedeanchords,
   octagramspiral, zigzag, crosszag, lockedzag) must stay byte-equal.
 
@@ -163,11 +196,11 @@ rename the existing one to a generic coverage module):
 
 ## Acceptance
 
-- All 16 real-ironing patterns byte-equal `ares` ↔ Native under the official
+- All 15 defined real-ironing patterns byte-equal `ares` ↔ Native under the official
   and seeded oracles on `tests/parity/summary/time-cost.3mf` + `ironing_type=top`.
-- `adaptivecubic`, `supportcubic`, `lightning` return
-  `UnsupportedProjectFeature("ironing_pattern")` — Ares-only upstream crash is
-  bounded, not reproduced.
+- `adaptivecubic`, `supportcubic`, `lightning`, `3dhoneycomb` return
+  `UnsupportedProjectFeature("ironing_pattern")` — the upstream crash or undefined
+  result is bounded, not reproduced.
 - `cargo clippy -D warnings` clean on `ares-core` + `ares-cli` + tests.
 - `cargo fmt --check` clean.
 - `cargo check --target wasm32-unknown-unknown -p ares-core -p ares-cli` clean.
