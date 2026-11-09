@@ -50,11 +50,8 @@ pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime:
         Some(Nullable::Value(value)) => value.0,
         Some(Nullable::Nil) | None => at(&printer.wipe.0, filament).is_some_and(|value| value.0),
     };
-    options.wipe_distance = nullable_float_at(
-        &retract_overrides.filament_wipe_distance,
-        filament,
-        float(&printer.wipe_distance, filament),
-    );
+    // The runtime view has the overrides and the filament map applied (Print.cpp:4730-4749).
+    options.wipe_distance = float(&runtime.project.print.wipe_distance, filament);
     options.retraction_minimum_travel = nullable_float_at(
         &retract_overrides.filament_retraction_minimum_travel,
         filament,
