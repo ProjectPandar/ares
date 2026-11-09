@@ -180,7 +180,12 @@ fn before_config_block(gcode: &[u8]) -> &[u8] {
     &gcode[..end]
 }
 
-fn check_swapped_wipe_budget(label: &str, updates: serde_json::Value) {
+fn check_swapped_columns(
+    label: &str,
+    sources: &[&str],
+    column_echo: &str,
+    updates: serde_json::Value,
+) {
     if crate::OrcaRunner::from_env().unwrap().is_none() {
         return;
     }
@@ -190,27 +195,19 @@ fn check_swapped_wipe_budget(label: &str, updates: serde_json::Value) {
     .unwrap();
     let project = super::input::settings_variant(&source, updates.as_object().unwrap());
     let (reference, _) = native_stream_case::qualify(
-        (
-            "retraction-column",
-            &[
-                "GCode.cpp:578,584 calculateWipeRetractionLengths",
-                "GCode.cpp:699 Wipe::wipe",
-                "Extruder.cpp:31-34 set_config_index",
-            ],
-        ),
+        ("retraction-column", sources),
         label,
         &project,
         &sha(&project),
         true,
     );
-    assert!(
-        reference
-            .native
-            .lines()
-            .any(|line| line == "; filament_map = 2,1"),
-        "Native must keep the saved map; {:?}",
-        reference.root
-    );
+    for premise in ["; filament_map = 2,1", column_echo] {
+        assert!(
+            reference.native.lines().any(|line| line == premise),
+            "Native must keep `{premise}`; {:?}",
+            reference.root
+        );
+    }
     let api = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -229,7 +226,7 @@ fn check_swapped_wipe_budget(label: &str, updates: serde_json::Value) {
         before_config_block(&api),
     );
     fs::write(
-        reference.root.join("wipe-budget-comparison.json"),
+        reference.root.join("column-comparison.json"),
         serde_json::to_vec_pretty(&json!({
             "before_config_block_difference":difference,
             "strict_whole_output_comparison":crate::golden::compare_ordered_bytes_generator_only(
@@ -244,10 +241,18 @@ fn check_swapped_wipe_budget(label: &str, updates: serde_json::Value) {
     difference.unwrap_or_else(|error| panic!("{error}; {:?}", reference.root));
 }
 
+const WIPE_BUDGET_SOURCES: &[&str] = &[
+    "GCode.cpp:578,584 calculateWipeRetractionLengths",
+    "GCode.cpp:699 Wipe::wipe",
+    "Extruder.cpp:31-34 set_config_index",
+];
+
 #[test]
 fn swapped_filament_map_wipe_budget() {
-    check_swapped_wipe_budget(
+    check_swapped_columns(
         "swapped-filament-map-wipe-budget",
+        WIPE_BUDGET_SOURCES,
+        "; filament_wipe_distance = 1,2",
         json!({
             "filament_map":["2","1"],
             "filament_retraction_speed":["30","20"],
@@ -258,8 +263,10 @@ fn swapped_filament_map_wipe_budget() {
 
 #[test]
 fn swapped_machine_columns_wipe_budget() {
-    check_swapped_wipe_budget(
+    check_swapped_columns(
         "swapped-machine-columns-wipe-budget",
+        WIPE_BUDGET_SOURCES,
+        "; wipe_distance = 1,2",
         json!({
             "filament_map":["2","1"],
             "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
@@ -268,6 +275,49 @@ fn swapped_machine_columns_wipe_budget() {
             "wipe_distance":["1","2"],
             "filament_retraction_speed":["nil","nil"],
             "filament_wipe_distance":["nil","nil"]
+        }),
+    );
+}
+
+/// The first filament's wipe is off, which keeps the repeated `G1 Z` out of the comparison.
+#[test]
+fn swapped_machine_columns_wipe_flag() {
+    check_swapped_columns(
+        "swapped-machine-columns-wipe-flag",
+        &[
+            "GCode.cpp:8740,8837,8867,10699 FILAMENT_CONFIG(wipe)",
+            "Print.cpp:4730-4749 retract overlay",
+        ],
+        "; wipe = 1,0",
+        json!({
+            "filament_map":["2","1"],
+            "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
+            "printer_extruder_id":["1","2"],
+            "wipe":["1","0"],
+            "filament_wipe":["nil","nil"]
+        }),
+    );
+}
+
+/// Equal outer wall and travel accelerations keep the short-travel read at `GCode.cpp:10386` out
+/// of the comparison, and the second filament holds the wide threshold, which keeps the repeated
+/// `G1 Z` out too.
+#[test]
+fn swapped_machine_columns_minimum_travel() {
+    check_swapped_columns(
+        "swapped-machine-columns-minimum-travel",
+        &[
+            "GCode.cpp:10569 needs_retraction",
+            "Print.cpp:4730-4749 retract overlay",
+        ],
+        "; retraction_minimum_travel = 500,0.1",
+        json!({
+            "filament_map":["2","1"],
+            "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
+            "printer_extruder_id":["1","2"],
+            "retraction_minimum_travel":["500","0.1"],
+            "filament_retraction_minimum_travel":["nil","nil"],
+            "outer_wall_acceleration":"10000"
         }),
     );
 }
