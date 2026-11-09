@@ -40,7 +40,11 @@ pub(super) struct Filament {
 }
 
 impl Filament {
-    pub(super) fn from_config(settings: &ProjectSettings, index: usize) -> Self {
+    pub(super) fn from_config(
+        settings: &ProjectSettings,
+        index: usize,
+        retract_speed: f32,
+    ) -> Self {
         let g = &settings.filament.gcode;
         let p = &settings.filament.print;
         let semm = settings.printer.gcode.single_extruder_multi_material.0;
@@ -88,7 +92,7 @@ impl Filament {
             multitool_ramming: false,
             multitool_ramming_time: 0.0,
             retract_length: at(&settings.project.gcode.retraction_length.0, index).0 as f32,
-            retract_speed: at(&settings.project.gcode.retraction_speed.0, index).0 as f32,
+            retract_speed,
             interface_distance: at(&g.filament_tower_interface_pre_extrusion_dist.0, index).0
                 as f32,
             interface_length: at(&g.filament_tower_interface_pre_extrusion_length.0, index).0

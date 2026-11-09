@@ -32,8 +32,16 @@ pub(in crate::project_slice::gcode_emit) fn prepare(
     let settings = &traversal.resolved.views.full;
     let config = &settings.filament.gcode;
     let count = config.filament_colour.0.len();
+    let retraction_speed = &traversal
+        .resolved
+        .views
+        .runtime
+        .project
+        .gcode
+        .retraction_speed
+        .0;
     let filaments = (0..count)
-        .map(|tool| Filament::from_config(settings, tool))
+        .map(|tool| Filament::from_config(settings, tool, at(retraction_speed, tool).0 as f32))
         .collect::<Vec<_>>();
     let purge = settings.printer.gcode.single_extruder_multi_material.0
         && settings.printer.gcode.purge_in_prime_tower.0;
