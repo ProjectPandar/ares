@@ -14,6 +14,8 @@
 
 #[path = "hole_to_polyhole/aligned_seam_wipe.rs"]
 mod aligned_seam_wipe;
+#[path = "hole_to_polyhole/zero_threshold.rs"]
+mod zero_threshold;
 
 use super::*;
 use crate::{golden, runner::stages};
@@ -65,7 +67,7 @@ const LEGS: [Leg; 6] = [
         native_marker: "G1 X130.802 Y125 E.05577",
     },
     Leg {
-        label: "threshold-miss",
+        label: "zero-threshold",
         fixture: BASE,
         inject: &[
             ("hole_to_polyhole", "1"),
@@ -209,6 +211,12 @@ fn strip_generator(bytes: &[u8]) -> Vec<u8> {
 }
 
 fn run_leg(leg: &Leg, control_reference: &[u8]) {
+    run_leg_with_native(leg, |reference| {
+        assert_native(reference, control_reference, leg);
+    });
+}
+
+fn run_leg_with_native(leg: &Leg, check: impl FnOnce(&[u8])) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -220,7 +228,7 @@ fn run_leg(leg: &Leg, control_reference: &[u8]) {
     let directory = root.join("case");
     let project = project(leg);
     let reference = native(&runner, &directory, &project);
-    assert_native(&reference, control_reference, leg);
+    check(&reference);
 
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
@@ -333,20 +341,6 @@ fn hole_to_polyhole_enabled_untwisted() {
         return;
     }
     run_leg(&LEGS[2], &control);
-}
-
-/// Control: `hole_to_polyhole=1` + `hole_to_polyhole_threshold=0` —
-/// the variation bound collapses to `SCALED_EPSILON`, the 64-gon's
-/// edge-midpoint spread (~0.009 mm) fails detection, and Native keeps
-/// the circular hole; Native output must equal the plain control. Ares
-/// must match byte-for-byte.
-#[test]
-fn hole_to_polyhole_threshold_miss() {
-    let control = control_native(BASE);
-    if control.is_empty() {
-        return;
-    }
-    run_leg(&LEGS[3], &control);
 }
 
 /// Control on the noisy fixture: `hole_to_polyhole_threshold=5%` —
