@@ -176,11 +176,24 @@ impl Generator<'_> {
         for change_index in 0..self.plan.layers[index].changes.len() {
             let tool = self.plan.layers[index].changes[change_index].new_tool;
             self.tool_change(Some(tool));
-            if finish_after == Some(change_index) {
+            let saved = if finish_after == Some(change_index) {
                 let extrusion = self.finish_layer()?.extrusion_length();
+                Some(length_to_volume(
+                    extrusion,
+                    self.plan.perimeter_width,
+                    self.plan.layers[index].height,
+                ))
+            } else if self.plan.layers[index].changes[change_index].wipe_volume
+                < self.filaments[tool].minimal_purge
+            {
+                // WipeTower2.cpp:2381-2386: non-finishing changes save no volume.
+                Some(0.0)
+            } else {
+                None
+            };
+            if let Some(saved) = saved {
                 let layer = &self.plan.layers[index];
                 let change = &layer.changes[change_index];
-                let saved = length_to_volume(extrusion, self.plan.perimeter_width, layer.height);
                 let remaining = self.filaments[tool]
                     .minimal_purge
                     .max(change.wipe_volume_total - saved);
