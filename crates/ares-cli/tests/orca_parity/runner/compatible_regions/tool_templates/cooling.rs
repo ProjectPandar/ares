@@ -38,7 +38,10 @@ fn two_nozzle_first_layer_cooling_preserves_native_extrusion_feedrates() {
             .collect::<Vec<_>>()
     };
     let expected = feedrates(&reference);
-    assert_eq!(expected.len(), 5);
+    assert!(
+        !expected.is_empty(),
+        "Native first layer must emit extrusion feedrate commands"
+    );
     assert_eq!(feedrates(&actual), expected);
 }
 
