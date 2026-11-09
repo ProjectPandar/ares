@@ -236,12 +236,12 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             |value| value.object.travel_jerk.get_at(nozzle_index),
         ),
         max_jerk_x: if use_mach_limits {
-            first_float(&full.printer.machine.machine_max_jerk_x).round_ties_even()
+            first_float(&full.printer.machine.machine_max_jerk_x).round()
         } else {
             0.0
         },
         max_jerk_y: if use_mach_limits {
-            first_float(&full.printer.machine.machine_max_jerk_y).round_ties_even()
+            first_float(&full.printer.machine.machine_max_jerk_y).round()
         } else {
             0.0
         },
