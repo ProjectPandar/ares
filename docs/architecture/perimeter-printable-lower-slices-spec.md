@@ -22,20 +22,23 @@ including nozzles not selected for the current region. Start with `min_width = d
 
 For object configuration `wall_generator = Arachne`, obtain the physical-unit
 `min_feature_size` from `Arachne::make_paths_params`
-(`src/libslic3r/Arachne/WallToolPaths.cpp:47-56`):
+(`src/libslic3r/Arachne/WallToolPaths.cpp:47-56`). Its assignment computes
+`min_feature_size_percent * 0.01 * d` in double, then stores it in the float
+`WallToolPathsParams::min_feature_size` field (`Arachne/WallToolPaths.hpp`).
+The field starts at zero; a zero percent leaves that default unchanged.
 
-`min_feature_size = min_feature_size_percent * 0.01 * d`.
-
-Use that value as `min_width` unless print configuration enables spiral mode;
-in that case use `min(d / 3, min_feature_size)`. The object generator choice,
-not the current record's classic/Arachne dispatch, controls this branch.
-A spiral record may dispatch classic while its object configuration is Arachne.
+Promote that float value to double for `min_width` unless print configuration
+enables spiral mode; in that case use `min(d / 3, double(min_feature_size))`.
+The object generator choice, not the current record's classic/Arachne dispatch,
+controls this branch. A spiral record may dispatch classic while its object
+configuration is Arachne.
 
 When `min_width > EPSILON`, return
 `opening_ex(slices, float(scale_(min_width / 2.)))`; otherwise return the input
-geometry without an opening. Preserve the double arithmetic through division
-and scaling, then the explicit float conversion at the opening radius.
-Do not derive this radius from the integer `ArachneWallParams::min_feature_size`.
+geometry without an opening. After the float-field promotion, retain double
+arithmetic through division and scaling, then the explicit float conversion
+at the opening radius. Do not derive this radius from the integer
+`ArachneWallParams::min_feature_size`, or omit the source float-field rounding.
 
 `src/libslic3r/ClipperUtils.hpp:447-448`, `opening_ex`, delegates to
 `offset2_ex` with negative radius followed by positive radius and the source
