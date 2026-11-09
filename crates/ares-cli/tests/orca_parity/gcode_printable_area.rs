@@ -119,3 +119,56 @@ async fn skirt_past_the_bed_edge_rejects_after_processing() {
     crate::golden::compare_ordered_bytes_generator_only(&retained, &fs::read(cli_path).unwrap())
         .unwrap_or_else(|error| panic!("retained G-code at {directory:?}: {error}"));
 }
+
+/// `OrcaSlicer.cpp:6480-6509` moves a tower stored off the bed before anything is sliced, so the
+/// project prints instead of reaching the rejection above.
+#[test]
+fn off_bed_stored_tower_moves_before_slicing_like_native() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let settings = crate::runner::application::settings(INPUT).unwrap();
+    let stored: f64 = settings["wipe_tower_y"][0]
+        .as_str()
+        .unwrap()
+        .parse()
+        .unwrap();
+    let bed_top = settings["printable_area"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|point| {
+            let (_, y) = point.as_str().unwrap().split_once('x').unwrap();
+            y.parse::<f64>().unwrap()
+        })
+        .fold(f64::MIN, f64::max);
+    assert!(stored >= bed_top, "{stored} is on the {bed_top} mm bed");
+
+    let case =
+        crate::runner::native_api_cli::NativeCase::slice(&runner, INPUT, "off-bed-stored-tower-");
+    let fitted: f64 = case
+        .native
+        .lines()
+        .find_map(|line| line.strip_prefix("; wipe_tower_y = "))
+        .unwrap()
+        .parse()
+        .unwrap();
+    assert!(fitted < bed_top, "Native left the tower at {fitted}");
+
+    let (api, _) = case.compare(GenerationMetadata::default());
+    let processed = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(
+            crate::runner::application::slice_project_plate_processed_validated(
+                INPUT,
+                GenerationMetadata::default(),
+                None,
+                &ConfigOverrides::default(),
+                SlicerContext::new(0),
+            ),
+        )
+        .unwrap();
+    assert_eq!(processed.gcode, api, "processed entry at {:?}", case.root);
+}
