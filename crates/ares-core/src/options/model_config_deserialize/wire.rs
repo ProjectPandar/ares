@@ -24,9 +24,26 @@ pub(crate) fn decode(kind: OptionValueKind, value: &str) -> Result<WireValue, St
         OptionValueKind::Point => Ok(WireValue::Scalar(value.to_owned())),
         OptionValueKind::Points => Ok(WireValue::Sequence(split_flat(value))),
         OptionValueKind::PointsGroups => Ok(WireValue::Sequence(split_groups(value))),
-        OptionValueKind::Floats if value.is_empty() => {
+        OptionValueKind::Floats | OptionValueKind::FloatsNullable if value.is_empty() => {
             Ok(WireValue::Sequence(vec!["0".to_owned()]))
         }
+        // Config.hpp:932-958: coFloats stores the stream value without testing failbit.
+        OptionValueKind::FloatsNullable => Ok(WireValue::Sequence(
+            value
+                .split_terminator(',')
+                .map(|item| {
+                    let item = item.trim_matches(|c| matches!(c, ' ' | '\t'..='\r'));
+                    if item.is_empty() || item == "nil" {
+                        item.to_owned()
+                    } else {
+                        super::super::decode::cxx_float_prefix_untrimmed(item)
+                            .0
+                            .clamp(-f64::MAX, f64::MAX)
+                            .to_string()
+                    }
+                })
+                .collect(),
+        )),
         OptionValueKind::Percents
         | OptionValueKind::PercentsNullable
         | OptionValueKind::Bools
@@ -34,7 +51,6 @@ pub(crate) fn decode(kind: OptionValueKind, value: &str) -> Result<WireValue, St
         | OptionValueKind::Enums
         | OptionValueKind::EnumsNullable
         | OptionValueKind::Floats
-        | OptionValueKind::FloatsNullable
         | OptionValueKind::FloatsOrPercents
         | OptionValueKind::IntsNullable
         | OptionValueKind::Ints => Ok(WireValue::Sequence(split_flat(value))),

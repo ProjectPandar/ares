@@ -28,7 +28,10 @@ where
 /// Returns `(value, extracted)` — `[facet.num.get.virtuals]` Stages 2/3
 /// commit the field and set the target to `0` on malformed conversion.
 fn cxx_float_prefix(value: &str) -> (f64, bool) {
-    let value = value.trim();
+    cxx_float_prefix_untrimmed(value.trim())
+}
+
+pub(super) fn cxx_float_prefix_untrimmed(value: &str) -> (f64, bool) {
     let bytes = value.as_bytes();
     let mut end = 0;
     let mut seen_digit = false;

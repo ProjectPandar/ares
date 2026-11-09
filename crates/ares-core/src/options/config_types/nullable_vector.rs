@@ -5,6 +5,7 @@ use serde::{
 
 use super::{FloatOrPercent, Nullable, OrcaBool, OrcaFloat};
 use crate::options::{json_deserialize, registry::OptionValueKind};
+use crate::project::raw_settings::RawConfigValue;
 
 pub(super) fn bools<'de, D: Deserializer<'de>>(
     deserializer: D,
@@ -43,7 +44,16 @@ fn deserialize<'de, D: Deserializer<'de>, T: DeserializeOwned>(
         }
 
         fn visit_seq<A: SeqAccess<'de>>(self, sequence: A) -> Result<Self::Value, A::Error> {
-            Vec::deserialize(SeqAccessDeserializer::new(sequence))
+            if self.kind != OptionValueKind::FloatsNullable {
+                return Vec::deserialize(SeqAccessDeserializer::new(sequence));
+            }
+            let values = Vec::<RawConfigValue>::deserialize(SeqAccessDeserializer::new(sequence))?;
+            if !json_deserialize::is_string_array(&values) {
+                return Vec::deserialize(RawConfigValue::List(values)).map_err(A::Error::custom);
+            }
+            let wire =
+                json_deserialize::encode_array(self.kind, &values).map_err(A::Error::custom)?;
+            self.visit_str(&wire)
         }
 
         fn visit_str<E: Error>(self, wire: &str) -> Result<Self::Value, E> {

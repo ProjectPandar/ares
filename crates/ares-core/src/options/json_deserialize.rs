@@ -84,6 +84,8 @@ pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawCo
 /// is handled by `normalize_empty_vector_strings`, which must run first.
 /// coStrings JSON arrays take the same quote/join/decode route as presets
 /// (`Config.cpp:945-1001`), retaining logical slots for the typed builder.
+/// Nullable coFloats arrays use their wire decoder before validation and export
+/// (`Config.hpp:932-958`).
 pub(crate) fn normalize_scalar_vector_strings(
     values: &mut BTreeMap<String, RawConfigValue>,
 ) -> Result<(), String> {
@@ -95,11 +97,17 @@ pub(crate) fn normalize_scalar_vector_strings(
             RawConfigValue::Text(text) if !text.is_empty() && is_vector(definition.kind) => {
                 Some(decode(definition.kind, text))
             }
-            RawConfigValue::List(values) if definition.kind == OptionValueKind::Strings => Some(
-                encode_array(definition.kind, values)
-                    .map_err(str::to_owned)
-                    .and_then(|wire| decode(definition.kind, &wire)),
-            ),
+            RawConfigValue::List(values)
+                if definition.kind == OptionValueKind::Strings
+                    || (definition.kind == OptionValueKind::FloatsNullable
+                        && is_string_array(values)) =>
+            {
+                Some(
+                    encode_array(definition.kind, values)
+                        .map_err(str::to_owned)
+                        .and_then(|wire| decode(definition.kind, &wire)),
+                )
+            }
             _ => None,
         };
         if let Some(decoded) = decoded {
@@ -288,7 +296,7 @@ fn looks_like_true(value: &str) -> bool {
     value.eq_ignore_ascii_case("enabled") || value.eq_ignore_ascii_case("on")
 }
 
-fn is_string_array(values: &[RawConfigValue]) -> bool {
+pub(super) fn is_string_array(values: &[RawConfigValue]) -> bool {
     values.iter().all(|value| match value {
         RawConfigValue::Text(_) => true,
         RawConfigValue::List(values) => is_string_array(values),
@@ -296,7 +304,10 @@ fn is_string_array(values: &[RawConfigValue]) -> bool {
     })
 }
 
-fn encode_array(kind: OptionValueKind, values: &[RawConfigValue]) -> Result<String, &'static str> {
+pub(super) fn encode_array(
+    kind: OptionValueKind,
+    values: &[RawConfigValue],
+) -> Result<String, &'static str> {
     let mut wire = String::new();
     let nested = matches!(values.first(), Some(RawConfigValue::List(_)));
     for (index, value) in values.iter().enumerate() {
