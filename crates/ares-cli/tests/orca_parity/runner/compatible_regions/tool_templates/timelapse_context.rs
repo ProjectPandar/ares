@@ -6,6 +6,8 @@ use std::fs;
 mod fixture;
 #[path = "timelapse_context_observation.rs"]
 mod observation;
+#[path = "timelapse_context_smooth_tower.rs"]
+mod smooth_tower;
 
 #[test]
 fn timelapse_templates_render_current_logical_filament_vectors() {
