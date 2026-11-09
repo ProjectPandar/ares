@@ -77,6 +77,16 @@ pub enum ProcessCounterboreHoleBridging {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ProcessTopSurfaceExpansionDirection {
+    #[serde(rename = "inward_and_outward")]
+    InwardAndOutward,
+    #[serde(rename = "inward")]
+    Inward,
+    #[serde(rename = "outward")]
+    Outward,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ProcessWallSequence {
     #[serde(rename = "inner wall/outer wall")]
     InnerOuter,

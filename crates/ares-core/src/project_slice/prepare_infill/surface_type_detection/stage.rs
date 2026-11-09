@@ -4,6 +4,7 @@ use crate::{
     project_slice::{
         perimeters::{
             classic::PostClassicTraversalPrintObject,
+            flow::{FillFlowContext, FillFlowRole, resolve_fill_flow},
             layer_region::{
                 PreparedLayerRegionPerimeterObject, PreparedLayerRegionPerimeterRecord,
                 PreparedPostLayerRegionPerimeters,
@@ -21,6 +22,7 @@ use super::{
         opening_offset, paths, safety_difference,
     },
     preflight,
+    top_expansion::{self, TopExpansion},
     types::StagedRecord,
 };
 
@@ -36,6 +38,7 @@ struct StageRecordContext {
     layer_count: usize,
     spiral_mode: bool,
     interface_shells: bool,
+    top_expansion: Option<TopExpansion>,
 }
 
 pub(super) fn project(
@@ -80,6 +83,11 @@ fn stage_object(
         .print
         .spiral_mode
         .0;
+    let classic = prepared.predecessor.as_classic();
+    let full = &classic.resolved.views.full;
+    let (compensated, _) = input_object.as_parts();
+    let (post_region, _) = compensated.as_parts();
+    let (plan, _, _) = post_region.as_parts();
     let layer_count = input_object
         .records
         .iter()
@@ -93,9 +101,28 @@ fn stage_object(
         .zip(&input_object.records)
         .map(|(output, input)| match (output, input) {
             (Some(output), Some(input)) => {
-                let bottom_shell_layers =
-                    usize::try_from(input_object.region_options(input).bottom_shell_layers.0)
-                        .expect("normalized bottom_shell_layers is non-negative");
+                let region = input_object.region_options(input);
+                let bottom_shell_layers = usize::try_from(region.bottom_shell_layers.0)
+                    .expect("normalized bottom_shell_layers is non-negative");
+                let top_expansion = TopExpansion::new(
+                    region,
+                    (input.ext_perimeter_flow, input.perimeter_flow),
+                    || {
+                        let layer = &plan.layers[input.planned_layer_index];
+                        resolve_fill_flow(
+                            FillFlowContext::new(
+                                layer,
+                                layer.height,
+                                full.process.print.initial_layer_line_width,
+                                region,
+                                options,
+                                &full.project.print.nozzle_diameter,
+                            ),
+                            FillFlowRole::Top,
+                        )
+                    },
+                    classic.scale,
+                )?;
                 stage_record(
                     input_object,
                     input,
@@ -109,6 +136,7 @@ fn stage_object(
                         layer_count,
                         spiral_mode,
                         interface_shells: options.interface_shells.0,
+                        top_expansion,
                     },
                 )
                 .map(Some)
@@ -172,8 +200,11 @@ fn stage_record(
         domain,
         upper,
         lower,
-        context.external_width,
-        context.bottom_kind,
+        (
+            context.external_width,
+            context.bottom_kind,
+            context.top_expansion,
+        ),
     )?;
     apply_spiral_surface_types(
         &mut slices,
@@ -226,8 +257,7 @@ pub(super) fn classify_with_fill(
     domain: (&[RegionSurface], Option<&[RegionSurface]>),
     upper: Option<&[ExPolygon]>,
     lower: Option<LowerLayer<'_>>,
-    external_width: i64,
-    bottom_kind: RegionSurfaceKind,
+    (external_width, bottom_kind, expansion): (i64, RegionSurfaceKind, Option<TopExpansion>),
 ) -> Result<Vec<RegionSurface>, SliceError> {
     let (source, generated) = domain;
     let previous = expolygons(source);
@@ -279,6 +309,9 @@ pub(super) fn classify_with_fill(
     };
 
     cracks::resolve(&mut top, &mut bottom, external_width, lower.is_some())?;
+    if let Some(expansion) = expansion {
+        top_expansion::apply(expansion, &mut top, &bottom, comparison)?;
+    }
     let mut top_bottom = paths(&top);
     top_bottom.extend(paths(&bottom));
     let mut slices = internal(&previous, &top_bottom)?;

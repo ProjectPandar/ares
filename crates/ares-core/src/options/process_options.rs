@@ -26,7 +26,8 @@ pub(crate) use region_source::ProcessRegionSourceOptionsBuilder;
 pub use region_source::{
     ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
     ProcessFuzzySkinType, ProcessIroningType, ProcessNoiseType, ProcessRegionSourceOptions,
-    ProcessSeamScarfType, ProcessWallDirection, ProcessWallSequence,
+    ProcessSeamScarfType, ProcessTopSurfaceExpansionDirection, ProcessWallDirection,
+    ProcessWallSequence,
 };
 
 use super::{OrcaFloat, option_group::OverlayOptionGroup};

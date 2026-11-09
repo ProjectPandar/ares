@@ -10,7 +10,7 @@ use serde::{Deserialize, Deserializer, de::Visitor};
 pub use enums::{
     ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
     ProcessFuzzySkinType, ProcessIroningType, ProcessNoiseType, ProcessSeamScarfType,
-    ProcessWallDirection, ProcessWallSequence,
+    ProcessTopSurfaceExpansionDirection, ProcessWallDirection, ProcessWallSequence,
 };
 
 use super::super::{
@@ -40,7 +40,7 @@ impl ProcessRegionSourceOptionsBuilder {
 }
 
 impl ProcessRegionSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 154] = REGION_OPTION_DECLARATION_ORDER;
+    pub const DECLARATION_ORDER: [&'static str; 157] = REGION_OPTION_DECLARATION_ORDER;
 }
 
 impl Default for ProcessRegionSourceOptions {

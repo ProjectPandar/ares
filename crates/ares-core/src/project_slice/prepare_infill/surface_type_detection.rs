@@ -3,6 +3,7 @@ mod extra_bridge;
 mod geometry;
 mod preflight;
 mod stage;
+mod top_expansion;
 
 pub(in crate::project_slice) mod types;
 

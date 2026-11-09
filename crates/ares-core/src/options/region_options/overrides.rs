@@ -9,7 +9,8 @@ use super::super::{
     OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
     ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode, ProcessFuzzySkinType,
     ProcessInfillPattern, ProcessIroningType, ProcessNoiseType, ProcessSeamScarfType,
-    ProcessWallDirection, ProcessWallSequence, region_fields::region_option_fields,
+    ProcessTopSurfaceExpansionDirection, ProcessWallDirection, ProcessWallSequence,
+    region_fields::region_option_fields,
 };
 use super::metadata::RegionMetadataCodec;
 

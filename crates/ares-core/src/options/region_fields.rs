@@ -92,6 +92,9 @@ macro_rules! region_option_fields {
             top_surface_line_width => "top_surface_line_width": FloatOrPercent = FloatOrPercent::Float(0.0),
             top_shell_layers => "top_shell_layers": OrcaInt = OrcaInt(4),
             top_shell_thickness => "top_shell_thickness": OrcaFloat = OrcaFloat(0.6),
+            top_surface_expansion => "top_surface_expansion": OrcaFloat = OrcaFloat(0.0),
+            top_surface_expansion_margin => "top_surface_expansion_margin": OrcaFloat = OrcaFloat(0.0),
+            top_surface_expansion_direction => "top_surface_expansion_direction": ProcessTopSurfaceExpansionDirection = ProcessTopSurfaceExpansionDirection::InwardAndOutward,
             top_surface_speed => "top_surface_speed": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(100.0))]),
             enable_overhang_speed => "enable_overhang_speed": OrcaBoolsNullable = OrcaBoolsNullable(vec![Nullable::Value(OrcaBool(true))]),
             overhang_1_4_speed => "overhang_1_4_speed": OrcaFloatOrPercentsNullable = OrcaFloatOrPercentsNullable(vec![Nullable::Value(FloatOrPercent::Float(0.0))]),
@@ -163,7 +166,7 @@ pub(crate) use region_option_fields;
 
 macro_rules! declare_region_option_order {
     ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
-        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 154] = [$($key),*];
+        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 157] = [$($key),*];
     };
 }
 

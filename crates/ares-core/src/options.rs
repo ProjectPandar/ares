@@ -171,8 +171,8 @@ pub use {
         ProcessPrintSequence, ProcessPrintSourceOptions, ProcessRegionSourceOptions,
         ProcessSeamPosition, ProcessSeamScarfType, ProcessSkirtType, ProcessSlicingMode,
         ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
-        ProcessSupportType, ProcessTimelapseType, ProcessWallDirection, ProcessWallSequence,
-        ProcessWipeTowerWallType,
+        ProcessSupportType, ProcessTimelapseType, ProcessTopSurfaceExpansionDirection,
+        ProcessWallDirection, ProcessWallSequence, ProcessWipeTowerWallType,
     },
     project_runtime_options::{
         ProjectBedType, ProjectFilamentMapMode, ProjectGCodeSourceOptions,

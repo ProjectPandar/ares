@@ -5,8 +5,8 @@ use super::{
     OrcaFloatsNullable, OrcaInt, OrcaInts, OrcaString, OrcaStrings, Percent,
     ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
     ProcessFuzzySkinType, ProcessInfillPattern, ProcessIroningType, ProcessNoiseType,
-    ProcessRegionSourceOptions, ProcessSeamScarfType, ProcessWallDirection, ProcessWallSequence,
-    region_fields::region_option_fields,
+    ProcessRegionSourceOptions, ProcessSeamScarfType, ProcessTopSurfaceExpansionDirection,
+    ProcessWallDirection, ProcessWallSequence, region_fields::region_option_fields,
 };
 
 mod merge;

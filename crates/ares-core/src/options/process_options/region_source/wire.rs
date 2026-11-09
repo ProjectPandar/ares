@@ -7,7 +7,7 @@ impl Serialize for ProcessRegionSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(154))?;
+        let mut map = serializer.serialize_map(Some(157))?;
         map.serialize_entry(
             "align_infill_direction_to_model",
             &self.align_infill_direction_to_model,
@@ -223,6 +223,15 @@ impl Serialize for ProcessRegionSourceOptions {
             &self.top_solid_infill_flow_ratio,
         )?;
         map.serialize_entry("top_surface_density", &self.top_surface_density)?;
+        map.serialize_entry("top_surface_expansion", &self.top_surface_expansion)?;
+        map.serialize_entry(
+            "top_surface_expansion_direction",
+            &self.top_surface_expansion_direction,
+        )?;
+        map.serialize_entry(
+            "top_surface_expansion_margin",
+            &self.top_surface_expansion_margin,
+        )?;
         map.serialize_entry("top_surface_filament_id", &self.top_surface_filament_id)?;
         map.serialize_entry("top_surface_line_width", &self.top_surface_line_width)?;
         map.serialize_entry("top_surface_pattern", &self.top_surface_pattern)?;
