@@ -1,6 +1,7 @@
 //! Config.cpp:657-676 / Config.hpp:2032-2040: EnableSilent enum substitution.
 //! Config.cpp:947-1000 / Config.cpp:832-867 / Config.hpp:784-790: array-valued
 //! scalar options join with ',' and take the first numeric token per type.
+//! PrintConfig.cpp:7533-7541 / Config.hpp:909-918: interface speed is a float vector.
 use crate::{
     OrcaRunner,
     runner::native_api_cli::{NativeCase, sha},
@@ -78,9 +79,33 @@ fn project_settings_array_scalar_iface_speed_arr42() {
 
 #[test]
 fn project_settings_array_scalar_iface_speed_arr42_77() {
-    run_array_scalar_case(
+    let project =
+        include_bytes!("../../../../tests/parity/project-settings/mk4-iface-speed-arr42-77.3mf");
+    let settings = crate::runner::application::settings(project).unwrap();
+    let expected = settings["support_interface_speed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|value| value.as_str().unwrap())
+        .collect::<Vec<_>>()
+        .join(",");
+    native_stream_case::check(
+        (
+            "project-settings-array-scalar",
+            &["PrintConfig.cpp:7533-7541", "Config.hpp:909-918"],
+        ),
         "mk4-iface-speed-arr42-77",
-        include_bytes!("../../../../tests/parity/project-settings/mk4-iface-speed-arr42-77.3mf"),
+        project,
         "c7ed3e9d84c4a3c08349df5dc3ed5cb344eb36c26792e0d0db53c5f49d2f263e",
+        (false, |reference: &NativeCase, replay: &NativeCase| {
+            for case in [reference, replay] {
+                let actual = case
+                    .native
+                    .lines()
+                    .find_map(|line| line.strip_prefix("; support_interface_speed = "))
+                    .unwrap();
+                assert_eq!(actual, expected);
+            }
+        }),
     );
 }
