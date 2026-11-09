@@ -3,7 +3,7 @@ use crate::runner::CaseInputs;
 use std::io::{Cursor, Read};
 
 #[test]
-fn single_volume_offset_matches_complete_rotated_prism_output() {
+fn single_volume_offset_matches_complete_prism_output() {
     if !crate::runner::reference_enabled("ARES_PARITY_VOLUME_OFFSETS_REFERENCE") {
         return;
     }
@@ -78,9 +78,14 @@ fn single_volume_offset_matches_complete_rotated_prism_output() {
     assert_eq!(component.len(), 12);
     assert_eq!(instance.len(), 12);
     assert!(component[9..].iter().any(|offset| *offset != 0.0));
-    assert!(instance[1] != 0.0 || instance[3] != 0.0);
     let project = ares_core::load_project(&exported.project).unwrap();
     let object = &project.objects()[0];
+    // bbs_3mf.cpp:7844–7852 writes three rows per column; 2337–2358
+    // changes only instance offsets, so all linear coefficients must survive.
+    let transform = object.instances()[0].transform().to_column_major();
+    for (column, expected) in instance[..9].as_chunks::<3>().0.iter().enumerate() {
+        assert_eq!(&transform[column * 4..column * 4 + 3], expected);
+    }
     assert_eq!(object.volumes().len(), 1);
     let reference = runner.slice_case(&exported).unwrap();
     let outcome = crate::artifacts::compare(
