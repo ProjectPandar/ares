@@ -15,9 +15,10 @@ Upstream pin: `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 | `TimeMachine::G1LinesCacheItem`, `GCodeProcessor.hpp:783-788`; postprocess move-counter lookup | `processor/estimate/elapsed.rs::elapsed_snapshots` | Match physical/export motion IDs to cached float timestamps |
 | `GCodeProcessor::TimeMachine::calculate_time`, `GCodeProcessor.cpp:576-797` | `processor/estimate.rs::Estimate::record` | Produce the double total and float elapsed snapshots from the motion schedule |
 | `ExportLines::append_line`, `GCodeProcessor.cpp:1025-1043` | `processor/export_lines.rs::ExportLines::{begin,append_from,append}` | Preserve output order; the progress flag affects source-line mapping, not insertion before the last motion |
+| `CoolingBuffer::calculate_layer_slowdown` / `apply_layer_cooldown`, `CoolingBuffer.cpp:665-735,979-1019` | `cooling/feedrate/slowdown.rs::apply`, `cooling/feedrate/range.rs::slow_down`, `cooling/feedrate/rewrite.rs::append` | Calculate cooled feedrates, then round and overwrite F words |
 | `GCodeWriter::_retract` / the before-wipe retract | `motion/travel/wipe_sequence.rs::{retract_and_wipe_impl,emit_retract_e}` | Write the observed E-only retract before `WIPE_START`; observation boundary only |
 
-Rust paths in the last four rows are under
+Abbreviated Rust paths in the table are under
 `crates/ares-core/src/project_slice/gcode_emit/`. The total's inputs are
 produced by the existing motion/schedule pass. That pass is a compatibility
 shell around `GCodeProcessor` concepts, not a separate timing pipeline.
@@ -120,6 +121,70 @@ the consumer and agrees with the complete output's15m54s duration.
 A read-only comparison script initially failed syntax preflight, before
 writing observations. Its failure remains separate from the corrected run.
 No production instrumentation or source modification was used.
+
+## First F difference: calculation, not final formatting
+
+The first post-cooling motion difference is the35th layer, Z7, role
+`Inner wall`, not `Outer wall`. It is motion ordinal1806 and processor-input
+line3146. A curl/overhang option being enabled does not make this an
+external-wall curl-only observation.
+
+The upstream speed chain is `GCode.cpp:9553-9638` (overhang/curl estimation
+and `F = speed * 60`), then the constant/segmented speed writers at9901,
+10050 and10130-10133. `GCodeWriter.cpp:860-870` delegates F to
+`GCodeWriter.hpp:336-338,366-368`: `F_EXPORT_DIGITS = 3` and `emit_f`.
+`GCodeWriter.cpp:1683-1689` quantizes using `round(v * 10^digits)`.
+Rust's pre-cooling speed marker is written by
+`motion/extrusion.rs::speed` with `motion/format.rs::axis`.
+Those serialized bytes then become cooling inputs.
+
+For the affected Inner-wall run, both actual pre-cooling streams contain:
+
+```text
+G1 F9251.231;_EXTRUDE_SET_SPEED
+```
+
+Matched read-only observations immediately before the cooling rewrite show:
+
+| Value | Native | Rust |
+| --- | ---: | ---: |
+| Original F marker | 9251.231 | 9251.231 |
+| Cooling-line length | 32.836517333984375 | 32.836517333984375 |
+| Adjusted feedrate, mm/s | 20.98900032043457 | 20.965614318847656 |
+| Feedrate little-endian f32 bytes | `79e9a741` | `94b9a741` |
+| Slowdown flag | true | true |
+| `floor(60.0 * double(feedrate) + 0.5)` | 1259 | 1258 |
+
+Native `CoolingBuffer.cpp:995` and Rust
+`cooling/feedrate/rewrite.rs:45-49` use the same double multiplication and
+half-up integer expression. Native writes the resulting integer with `%d`;
+Rust writes the resulting integer with `to_string`. This later write does
+not call the three-decimal `GCodeWriter` formatter. The differing values
+already exist before the integer rounding; changing either formatter is not
+justified.
+
+The Native observation is at the exact `apply_layer_cooldown` function
+address, before its prologue. Its std::string return uses the hidden return
+pointer in RDI; `this` is RSI, gcode reference RDX, layer ID RCX, adjustments
+reference R8, and the float layer time XMM0. The original symbolic breakpoint
+also matched an inlined sorting lambda with no `layer_id`; that failed
+observation remains separate. The exact-entry retry and Rust `rewrite::append`
+observation exit naturally0 and preserve their actual input buffers/fields.
+
+This does not establish a bug in the cooling solver. The whole layer inputs
+are not matched: raw diagnostic motion records number143 Native versus124
+Rust, and already differ at ordinal43, before cooling: Native travel
+`G1 X128.205 Y104.356 Z7.4 F18000` versus Rust
+`G1 X128.206 Y104.343 Z7.4 F18000`. Later-layer motion affects the layer-wide
+cooldown applied to the earlier Inner-wall run. These counts/coordinates are
+observations, not refreshed assertions. The first integer F difference is a
+cooling-calculation result on unequal whole-layer inputs, not proof of a
+curl estimator, rounding, cooling solver or time-estimator defect.
+
+No further geometry/seam/curl cause trace is included. The next gate must
+establish the owner of the unequal pre-cooling layer input or obtain matched
+cooling inputs before proposing a solver change. The production whitelist
+remains empty.
 
 ## Included investigation and implementation gate
 
