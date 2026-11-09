@@ -1,4 +1,6 @@
 //! Print.cpp:2548-2557,2780-2977; GCode.cpp:3280-3374,4465-4483,5334.
+//! Global object labels: GCode.cpp:4662,7606-7609,11356-11371 at
+//! `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
@@ -86,27 +88,48 @@ fn check(label: &str) {
             .any(|line| line.starts_with("G1 X") && line.contains(" E"))
     );
     if label == "target" {
-        assert!(native.contains("; total layer number: 40\n"));
-        let skirts: Vec<_> = native
-            .match_indices(";TYPE:Skirt\n")
-            .map(|(i, _)| i)
+        let layers = native
+            .lines()
+            .find_map(|line| line.strip_prefix("; total layer number: "))
+            .unwrap()
+            .parse::<usize>()
+            .unwrap();
+        assert_eq!(
+            layers,
+            native
+                .lines()
+                .filter(|line| *line == ";LAYER_CHANGE")
+                .count()
+        );
+        let stacks: Vec<_> = native
+            .split("; move to origin position for next object")
             .collect();
-        assert_eq!(skirts.len(), 2);
-        let origin = native
-            .find("; move to origin position for next object")
-            .unwrap();
-        let first = native
-            .find("; printing object cube10.stl id:0 copy 0")
-            .unwrap();
-        // Sequential process_layers reuses local object id 0 for the next stack.
-        let second = origin
-            + native[origin..]
-                .find("; printing object cube10.stl id:0 copy 0")
-                .unwrap();
-        assert!(skirts[0] < first && first < origin && origin < skirts[1] && skirts[1] < second);
-        for (start, end) in [(skirts[0], first), (skirts[1], second)] {
+        assert!(stacks.len() > 1, "Native sequential object stacks");
+        assert_eq!(native.matches(";TYPE:Skirt\n").count(), stacks.len());
+        let mut identities = std::collections::BTreeSet::new();
+        for stack in stacks {
+            let skirt = stack.find(";TYPE:Skirt\n").unwrap();
+            let first = stack.find("; printing object ").unwrap();
+            let identity = stack[first..]
+                .lines()
+                .next()
+                .unwrap()
+                .rsplit_once(" id:")
+                .unwrap()
+                .1;
             assert!(
-                native[start..end]
+                identities.insert(identity),
+                "distinct Native object/copy labels"
+            );
+            for object in stack
+                .lines()
+                .filter_map(|line| line.strip_prefix("; printing object "))
+            {
+                assert_eq!(object.rsplit_once(" id:").unwrap().1, identity);
+            }
+            assert!(skirt < first);
+            assert!(
+                stack[skirt..first]
                     .lines()
                     .any(|line| line.starts_with("G1 X") && line.contains(" E"))
             );
