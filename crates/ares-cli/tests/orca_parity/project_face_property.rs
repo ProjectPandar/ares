@@ -105,7 +105,13 @@ fn check(label: &str, value: &str) {
     reference.compare(ares_core::GenerationMetadata::deterministic(
         2026, 8, 27, 0, 0, 0,
     ));
-    imported.unwrap();
+    let imported = imported.unwrap();
+    let mesh = imported.objects()[0].volumes()[0].mesh();
+    let properties = mesh.face_properties();
+    assert_eq!(properties.len(), mesh.triangles().len());
+    assert_eq!(properties[0].as_ref(), value);
+    assert!(properties[1..].iter().all(|value| value.is_empty()));
+    assert_eq!(mesh.clone().face_properties(), properties);
     assert!(identity.unwrap().is_some());
 }
 
