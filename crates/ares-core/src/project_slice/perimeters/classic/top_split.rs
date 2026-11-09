@@ -83,7 +83,7 @@ fn prepare_record(
         TopSplitUpperSource::WholeLayer
     };
     let upper = selected_upper(object, input, upper_source);
-    let lower = object.lower_slices(input);
+    let lower = record.printable_lower_slices.as_deref();
     let surfaces = record
         .surfaces
         .iter()

@@ -67,6 +67,7 @@ pub(super) fn finish_classic_prelude(
             resolved_objects: &prepared.resolved.objects,
             enable_arc_fitting,
             resolution,
+            spiral_mode: prepared.resolved.views.full.process.print.spiral_mode.0,
             nozzle_diameters: &prepared.resolved.views.full.project.print.nozzle_diameter,
             scale: prepared.scale,
         },

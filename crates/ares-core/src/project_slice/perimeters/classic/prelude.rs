@@ -69,9 +69,25 @@ fn prepare_record(
         as f32;
     let smaller_external_flow = record.ext_perimeter_flow.with_width(smaller_width)?;
 
-    let counterbore_fill =
-        super::counterbore::process(object, record, perimeter_spacing, external_width, scale)?;
-    let lower = object.lower_slices(record);
+    let printable_lower_slices = object
+        .lower_slices(record)
+        .map(|lower| {
+            super::super::printable_slices::printable_slices(
+                lower,
+                config.printable_min_width,
+                scale,
+            )
+        })
+        .transpose()
+        .map_err(geometry_error)?;
+    let lower = printable_lower_slices.as_deref();
+    let counterbore_fill = super::counterbore::process(
+        object,
+        record,
+        lower,
+        (perimeter_spacing, external_width),
+        scale,
+    )?;
     let lower_slices_polygons = if config.detect_overhang_wall {
         lower
             .map(|lower| offset_paths(lower, 0.5 * config.support_nozzle_diameter, scale))
@@ -104,6 +120,7 @@ fn prepare_record(
         detect_thin_wall: config.detect_thin_wall,
         ext_perimeter_flow: record.ext_perimeter_flow,
         smaller_external_flow,
+        printable_lower_slices,
         lower_slices_polygons,
         lower_polygons_series,
         external_lower_polygons_series,

@@ -12,6 +12,7 @@ pub(super) struct ValidatedClassicConfig {
     pub(super) gap_infill_speed: f64,
     pub(super) surface_simplify_resolution: f64,
     pub(super) support_nozzle_diameter: f64,
+    pub(super) printable_min_width: f64,
 }
 
 pub(super) struct ValidatedClassicObject {
@@ -24,6 +25,7 @@ pub(super) struct ClassicValidationContext<'a> {
         &'a [crate::project::effective_config::types::ResolvedProjectObject],
     pub(super) enable_arc_fitting: bool,
     pub(super) resolution: f64,
+    pub(super) spiral_mode: bool,
     pub(super) nozzle_diameters: &'a crate::OrcaFloats,
     pub(super) scale: crate::geometry::CoordinateScale,
 }
@@ -34,6 +36,7 @@ struct RecordValidationContext<'a> {
     region: &'a RegionOptions,
     enable_arc_fitting: bool,
     scaled_resolution: f64,
+    spiral_mode: bool,
     has_fuzzy_skin: bool,
     nozzle_diameters: &'a crate::OrcaFloats,
 }
@@ -83,6 +86,7 @@ pub(super) fn validate_project(
                                 region: object.region_options(record),
                                 enable_arc_fitting: context.enable_arc_fitting,
                                 scaled_resolution,
+                                spiral_mode: context.spiral_mode,
                                 has_fuzzy_skin,
                                 nozzle_diameters: context.nozzle_diameters,
                             },
@@ -105,6 +109,7 @@ fn validate_record(
         region,
         enable_arc_fitting,
         scaled_resolution,
+        spiral_mode,
         has_fuzzy_skin,
         nozzle_diameters,
     } = context;
@@ -161,6 +166,11 @@ fn validate_record(
             )),
         surface_simplify_resolution: simplify_resolution,
         support_nozzle_diameter,
+        printable_min_width: super::super::printable_slices::minimum_width(
+            object_options,
+            nozzle_diameters,
+            spiral_mode,
+        ),
     })
 }
 

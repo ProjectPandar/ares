@@ -102,7 +102,8 @@ fn materialize_record(
     context: &mut crate::SlicerContext,
 ) -> Result<PreparedLayerRegionPerimeterRecord, SliceError> {
     let region = object.region_options(input);
-    let fuzzy = super::fuzzy::Regions::prepare(object, input, scale, object.lower_slices(input))?;
+    let lower_slices = prelude_record.printable_lower_slices.as_deref();
+    let fuzzy = super::fuzzy::Regions::prepare(object, input, scale, lower_slices)?;
     let config = config::validate_record(
         region,
         object_options,
@@ -151,7 +152,7 @@ fn materialize_record(
     let geometry_error =
         |error| SliceError::InvalidInput(format!("extra overhang perimeter geometry: {error:?}"));
     let extra = (!input.spiral_mode
-        && object.lower_slices(input).is_some()
+        && lower_slices.is_some()
         && region.detect_overhang_wall.0
         && region.extra_perimeters_on_overhangs.0
         && region.wall_loops.0 > 0
@@ -172,7 +173,7 @@ fn materialize_record(
                 .map(|upper_slices| super::top_surface::TopSurfaceInputs {
                     upper_slices,
                     upper_same_region: object.upper_same_region_surfaces(input),
-                    lower_slices: object.lower_slices(input),
+                    lower_slices,
                     interface_shells: object_options.interface_shells.0,
                     min_width_top_surface_mm,
                     perimeter_width: spacings.perimeter_width,
@@ -232,7 +233,7 @@ fn materialize_record(
                 ext_perimeter_flow: input.ext_perimeter_flow,
                 overhang_flow: input.overhang_flow,
                 lower_slices_polygons: &prelude_record.lower_slices_polygons,
-                lower_slices: object.lower_slices(input).unwrap_or(&[]),
+                lower_slices: lower_slices.unwrap_or(&[]),
                 scale,
             },
             context,

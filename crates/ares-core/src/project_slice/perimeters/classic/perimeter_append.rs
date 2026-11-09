@@ -101,7 +101,7 @@ fn transform_object(
                     let reorient = SurfaceReorient {
                         record: traversal_record,
                         region,
-                        lower: traversal.lower_slices(index),
+                        lower: traversal.printable_lower_slices(index),
                         scale,
                         touch_distance,
                     };

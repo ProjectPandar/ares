@@ -42,18 +42,15 @@ impl SurfaceReference {
 pub(super) fn process(
     object: &mut PostPerimeterInputPrintObject,
     record: &PerimeterInputRecord,
-    spacing: i64,
-    external_width: i64,
+    lower: Option<&[ExPolygon]>,
+    (spacing, external_width): (i64, i64),
     scale: CoordinateScale,
 ) -> Result<Vec<ExPolygon>, SliceError> {
     let config = object.region_options(record);
     if config.counterbore_hole_bridging == ProcessCounterboreHoleBridging::None {
         return Ok(Vec::new());
     }
-    let Some(lower) = object
-        .lower_slices(record)
-        .filter(|lower| !lower.is_empty())
-    else {
+    let Some(lower) = lower.filter(|lower| !lower.is_empty()) else {
         return Ok(Vec::new());
     };
     let mut surfaces = object.perimeter_surfaces(record).to_vec();
