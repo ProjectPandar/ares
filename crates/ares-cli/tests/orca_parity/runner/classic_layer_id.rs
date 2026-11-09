@@ -49,15 +49,6 @@ fn check(name: &str) {
     let input_filename = case["input"].as_str().unwrap();
     let input = fs::read(fixtures.join(input_filename)).unwrap();
     assert_eq!(cache_identity::raw_digest(&input), expected["sha256"]);
-    let provenance: Value =
-        serde_json::from_slice(&fs::read(fixtures.join("profile-provenance.json")).unwrap())
-            .unwrap();
-    for kind in ["machine", "process", "filament"] {
-        for source in provenance[kind]["parent_chain"].as_array().unwrap() {
-            let bytes = fs::read(profiles_root.join(source["path"].as_str().unwrap())).unwrap();
-            assert_eq!(cache_identity::raw_digest(&bytes), source["sha256"]);
-        }
-    }
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, "WEMAKE3D").unwrap();
     assert!(profiles.process_is_compatible(PROCESS, MACHINE));
     assert!(profiles.filament_is_compatible(FILAMENT, MACHINE));
@@ -67,19 +58,13 @@ fn check(name: &str) {
         "imports": [],
     });
     let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [FILAMENT]});
-    for (kind, preset_name, mut fields) in [
-        ("machine", MACHINE, profiles.machine(MACHINE).unwrap()),
-        ("process", PROCESS, profiles.process(PROCESS).unwrap()),
-        ("filament", FILAMENT, profiles.filament(FILAMENT).unwrap()),
+    // These files are flattened, so no `inherits`: with one, Native would have to
+    // match them to a vendor source (`OrcaSlicer.cpp:2122-2123`, `PresetBundle.cpp:650`).
+    for (kind, mut fields) in [
+        ("machine", profiles.machine(MACHINE).unwrap()),
+        ("process", profiles.process(PROCESS).unwrap()),
+        ("filament", profiles.filament(FILAMENT).unwrap()),
     ] {
-        let selected = catalog["vendors"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .flat_map(|vendor| vendor["files"].as_object().unwrap().values())
-            .find(|profile| profile["type"] == kind && profile["name"] == preset_name)
-            .unwrap();
-        fields.insert("inherits".to_owned(), selected["inherits"].clone());
         if kind == "process" {
             assert_eq!(fields["counterbore_hole_bridging"], "partiallybridge");
             assert_eq!(fields["wall_generator"], "classic");

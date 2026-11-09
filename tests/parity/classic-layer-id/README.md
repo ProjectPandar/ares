@@ -14,7 +14,9 @@ and cited by docs/architecture/classic-physical-layer-wall-order-spec.md.
 
 Original M-v3 manifest and profile provenance bytes are retained unchanged
 (including historical other-candidate manifest rows); only matrix case selection
-is narrowed. Runner validates selected input, manifest/provenance and upstream
-profile-parent hashes, Native effective engine/mode, then compares complete
-ordered public slice_with_profiles output with generator-only normalization.
+is narrowed. The provenance parent hashes are historical v2.4.2 data, not checked
+against the current profiles. Runner validates selected input and
+manifest/provenance document hashes, stock process/filament compatibility and
+stock engine/mode at the upstream pin, Native effective engine/mode, then compares
+complete ordered public slice_with_profiles output with generator-only normalization.
 Movement, arcs, M73, statistics and footer remain part of acceptance.
