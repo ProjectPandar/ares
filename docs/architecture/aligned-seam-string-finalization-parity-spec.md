@@ -2,7 +2,7 @@
 
 ## Measured boundary
 
-Upstream source is `345efec64c7b95a05ce5cf96df0dde66a158835c`. The Rust production tree is `8ba63961f0c42cea7b798b8d7e4082a88e334297`. Public comparison and first-endpoint context are described in [the painted split localization](paint-color-split-first-loop-start-localization.md).
+Upstream source is `345efec64c7b95a05ce5cf96df0dde66a158835c`. The baseline Rust production tree is `8ba63961f0c42cea7b798b8d7e4082a88e334297`. Public comparison and first-endpoint context are described in [the painted split localization](paint-color-split-first-loop-start-localization.md).
 
 The earlier read-only first-loop observation of the existing seeded Native executable and existing Rust CLI distinguishes geometry from cached seam choice. Complete observed exports match their respective original complete outputs under the unchanged generator-line allowance. That first-loop snapshot alone is not an official-mode private observation or a repaired public comparison; the producer transition below has a separate official observation.
 
@@ -64,7 +64,8 @@ Keep the rewrite private to `ares-core::project_slice::seam_placement`:
 
 - `alignment.rs::{align,find_seam_string,find_next_in_layer,finalize_string}` and their existing scoring/choice helpers.
 - `alignment/preparation.rs::{prepare,prepare_layer,PerimeterAssociation}` only for the existing producer handoff, initial-state observations and source-required immutable contour inputs. Do not change region grouping or entity membership.
-- Source-owned contour continuation, if its responsibility is demonstrated, belongs in private `alignment/contour_continuation` modules matching `SeamContour::Resolver`, not a new public API, crate, configuration option or independent pipeline.
+- `seam_candidates.rs::{SourcePerimeterPolygon,SeamPerimeter}` carries only the immutable loop-role/reliability metadata from `SeamPlacer.cpp::extract_perimeter_polygons` and assignments722–725. Candidate geometry, extraction, winding normalization, ordering and angles remain unchanged.
+- Private `alignment/contour_continuation.rs` owns `Contour`, `Layers`, `Options`, the lossless `Result` variants and `Resolver` with its radius-sensitive cache. Its `geometry.rs`, `index.rs` and `selection.rs` port the closest-foot/normal predicates, immutable per-layer box queries and source continuation selection. No public API, crate, configuration option or independent pipeline is added.
 
 `LayerPlan`, `PerimeterChoice`, candidate vectors and collection associations remain temporary private representation shells around Native `LayerSeams`, `Perimeter` and `SeamCandidate` state. Reuse an existing equivalent source port only after checking its input/output contract. Split affected modules before they exceed400lines. Do not retain the old algorithm as an alternative execution path.
 
@@ -79,15 +80,19 @@ The measured counterexample identifies the source-owned continuation restriction
 
 ## Included and deferred behavior
 
-Included is source-equivalent aligned seam-string construction/finalization for the demonstrated responsible kernel, with physical layer coordinates, immutable contour restrictions, ordered candidates, stable ties, source thresholds and exact state propagation. Keep valid no-continuation behavior exactly as upstream specifies; do not introduce a separate compatibility branch.
+Included is source-equivalent aligned seam-string construction/finalization for the demonstrated responsible kernel, with physical layer coordinates, immutable contour restrictions, ordered candidates, stable ties, source thresholds and exact state propagation. The resolver includes bounds certification, compatible-facing closest patches, material/boundary probes, reverse certification, uncertainty propagation and two-criterion dominance. Box-query results are sorted by contour index as upstream requires; balanced-tree partition order therefore has no tie-breaking effect. Its cache contains only immutable geometry queries and distinguishes actual search radii. Empty restrictions leave the existing KD search unrestricted exactly as upstream specifies; no separate compatibility branch is introduced.
 
-Deferred are new seam modes, random/nearest redesign, region/island grouping, painted segmentation, perimeter geometry generation, nozzle/configuration mapping, G-code formatting, projection/splitting changes, estimator/M73 behavior, cache architecture and viewer logic. A differing input owned by one of these boundaries requires its own source-defined work rather than scope expansion. No Native rebuild, instrumentation or inferior assignment/call is part of the measurement protocol.
+Preparation supplies candidate f32 XY widened to f64, original loop roles/reliability, f32 flow width widened to f64 and the maximum configured nozzle diameter in f64. That nozzle input is separate from the existing candidate-angle operand. The restriction is applied before initializing nearest/best, and the existing finalized-nearest empty return remains unchanged.
+
+Deferred are new seam modes, random/nearest redesign, region/island grouping, painted segmentation, perimeter geometry generation, nozzle/configuration mapping, G-code formatting, projection/splitting changes, estimator/M73 behavior, cache architecture, host cancellation-callback plumbing and viewer logic. A differing input owned by one of these boundaries requires its own source-defined work rather than scope expansion. No Native rebuild, instrumentation or inferior assignment/call is part of the measurement protocol.
 
 ## Tests
 
 Use the existing public E2E contract before and after any replacement. Both modes' original `paint_color_native_preflight` finish before Ares legs; keep positive painted activity, count/export and Native double-replay checks. Run `paint_color_split` separately per mode and retain its complete generator-only ordered comparisons over headers, configuration, time, M73, tools, roles and motion. No geometry-only substitute or added mask is permitted.
 
 Run the distinct existing `paint_color_unpainted` and `paint_color_leaves` controls in the same environment. Preserve API and CLI raw products and actual nextest exits. The present baseline is preflight1pass/exit0, target1failure/exit100 and controls2passes/exit0 per mode. External target API/CLI raw equality does not mean the helper's later assertion ran after its Native/API failure.
+
+Run the complete `ares-cli::orca_parity` binary in both modes on base `c50969acdee3936f63a428c8fadcde930fdd2b25` and the candidate, using identical Native environments and unchanged test/comparison sources. Retain full inventories and actual exits, report every status change and require zero pass-to-fail transitions.
 
 A replacement must reproduce the measured source-equivalent internal transition, restore the complete target comparison in both modes and preserve controls without weakening assertions. First-loop or scoped internal agreement alone is not complete-file parity. Use source-derived/live Native data, never new coordinate, count, exit or output goldens. Build checks include formatting, strict workspace/all-target Clippy and browser WASM; core changes remain platform-neutral.
 
@@ -99,7 +104,7 @@ A replacement must reproduce the measured source-equivalent internal transition,
 4. Comparing pre-seam Native with already placed Rust loops mistakes the effect for an input difference.
 5. Replacing a physical `slice_z` with print Z changes cross-layer search inputs.
 6. Omitting contour role/reliability, nozzle bounds or continuation outcome changes admissible strings.
-7. Initializing nearest/best from an excluded or finalized candidate changes the source traversal semantics.
+7. Initializing nearest/best before contour filtering or replacing the finalized-nearest empty return changes the source traversal semantics.
 8. Changing forward/backward restart or alternative-start traversal changes string length and finalization.
 9. Fusing arithmetic or changing float precision, thresholds or stable comparison ties changes choices.
 10. Forcing an unfinalized first layer or a chosen corner repairs one output without porting its owner.

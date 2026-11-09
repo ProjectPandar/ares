@@ -1,6 +1,7 @@
 use crate::{
     geometry::{CoordinateScale, Point},
     project_slice::perimeters::classic::{
+        chained_loops::ExtrusionLoopRole,
         entity_collections::{ExtrusionEntity, ExtrusionEntityCollection},
         materialize::{ExtrusionPath, ExtrusionRole},
     },
@@ -18,6 +19,8 @@ pub(in crate::project_slice) struct SeamPerimeter {
     pub(in crate::project_slice) start_index: usize,
     pub(in crate::project_slice) end_index: usize,
     pub(in crate::project_slice) flow_width: f32,
+    pub(in crate::project_slice) is_hole: bool,
+    pub(in crate::project_slice) contour_reliable: bool,
 }
 
 #[derive(Debug, PartialEq)]
@@ -56,6 +59,7 @@ pub(in crate::project_slice) fn generate_regions(
 struct SourcePerimeterPolygon {
     points: Vec<Point>,
     flow_width: f32,
+    boundary_hole: Option<bool>,
 }
 
 fn extract_perimeter_polygons(regions: &[RegionPerimeters<'_>]) -> Vec<SourcePerimeterPolygon> {
@@ -69,6 +73,7 @@ fn extract_perimeter_polygons(regions: &[RegionPerimeters<'_>]) -> Vec<SourcePer
         polygons.push(SourcePerimeterPolygon {
             points: vec![Point::new(0, 0)],
             flow_width: 0.0,
+            boundary_hole: None,
         });
     }
     polygons
@@ -111,6 +116,14 @@ fn extract_collection(
         polygons.push(SourcePerimeterPolygon {
             points: collect_loop_points(paths),
             flow_width: external_flow_width,
+            // SeamPlacer.cpp::extract_perimeter_polygons: loop role survives
+            // printing-direction reversal; open paths have unknown boundaries.
+            boundary_hole: match entity {
+                ExtrusionEntity::Loop(ordered) => {
+                    Some(ordered.extrusion_loop.role == ExtrusionLoopRole::Hole)
+                }
+                ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => None,
+            },
         });
     }
     if polygons.is_empty() {
@@ -129,6 +142,7 @@ fn extract_collection(
             polygons.push(SourcePerimeterPolygon {
                 points,
                 flow_width: external_flow_width,
+                boundary_hole: None,
             });
         }
     }
@@ -183,6 +197,9 @@ fn process_polygon(
         start_index,
         end_index: output.points.len(),
         flow_width: source.flow_width,
+        // SeamPlacer.cpp:722-725: these are immutable contour inputs only.
+        is_hole: source.boundary_hole.unwrap_or(was_clockwise),
+        contour_reliable: source.boundary_hole.is_some(),
     });
 }
 

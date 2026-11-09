@@ -17,7 +17,11 @@ use crate::{
     },
 };
 
-use super::{LayerPlan, PerimeterChoice, context, is_better};
+use super::{
+    LayerPlan, PerimeterChoice, context,
+    contour_continuation::{Contour, Layers},
+    is_better,
+};
 use crate::project_slice::seam_placement::{candidate_penalty, visibility};
 
 pub(in crate::project_slice::seam_placement) fn prepare(
@@ -39,6 +43,17 @@ pub(in crate::project_slice::seam_placement) fn prepare(
         .predecessor
         .predecessor
         .object;
+    let max_nozzle_diameter = traversal
+        .resolved
+        .views
+        .full
+        .project
+        .print
+        .nozzle_diameter
+        .0
+        .iter()
+        .map(|value| value.0)
+        .fold(0.0_f64, f64::max);
     let mut plans = layers
         .iter()
         .zip(layer_zs)
@@ -49,7 +64,7 @@ pub(in crate::project_slice::seam_placement) fn prepare(
                 &regions,
                 z,
                 traversal.scale,
-                nozzle_diameter,
+                (nozzle_diameter, max_nozzle_diameter),
                 (visibility, placement),
             )
         })
@@ -76,6 +91,32 @@ pub(in crate::project_slice::seam_placement) fn prepare(
             .collect();
     }
     plans
+}
+
+// SeamPlacer.cpp:1915-1929: immutable geometry, independent of choices.
+pub(super) fn contours(layers: &[LayerPlan]) -> Layers {
+    layers
+        .iter()
+        .map(|layer| {
+            layer
+                .candidates
+                .perimeters
+                .iter()
+                .map(|perimeter| Contour {
+                    points: layer.positions[perimeter.start_index..perimeter.end_index]
+                        .iter()
+                        .map(|point| [f64::from(point.x), f64::from(point.y)])
+                        .collect(),
+                    hole: perimeter.is_hole,
+                    reliable: perimeter.contour_reliable,
+                    width: f64::from(perimeter.flow_width),
+                    nozzle: layer.max_nozzle_diameter,
+                    min: [0.0; 2],
+                    max: [0.0; 2],
+                })
+                .collect()
+        })
+        .collect()
 }
 
 fn embedding_layers(layers: &[OrderedExtrusionLayer]) -> Vec<bool> {
@@ -133,7 +174,7 @@ fn prepare_layer(
     regions: &[seam_candidates::RegionPerimeters<'_>],
     z: f32,
     scale: CoordinateScale,
-    nozzle_diameter: f32,
+    (nozzle_diameter, max_nozzle_diameter): (f32, f64),
     (visibility, placement): (Option<&visibility::GlobalVisibility>, ProcessSeamPosition),
 ) -> LayerPlan {
     let collections = regions
@@ -183,6 +224,7 @@ fn prepare_layer(
         collection_perimeters,
         scores,
         z,
+        max_nozzle_diameter,
         overhangs: vec![0.0; candidate_count],
         unsupported_distances: None,
         embedded_distances: vec![0.0; candidate_count],

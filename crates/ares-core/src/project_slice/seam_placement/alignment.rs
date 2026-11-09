@@ -1,4 +1,5 @@
 mod context;
+mod contour_continuation;
 mod loop_normal;
 mod preparation;
 mod random;
@@ -25,6 +26,7 @@ pub(super) struct LayerPlan {
     pub(super) collection_perimeters: Vec<Vec<usize>>,
     pub(super) scores: Vec<f32>,
     z: f32,
+    max_nozzle_diameter: f64,
     pub(super) overhangs: Vec<f32>,
     pub(super) unsupported_distances: Option<Vec<f32>>,
     pub(super) embedded_distances: Vec<f32>,
@@ -110,6 +112,10 @@ pub(super) fn randomize(layers: &mut [LayerPlan]) {
 }
 
 pub(super) fn align(layers: &mut [LayerPlan]) {
+    let mut contours = contour_continuation::Resolver::new(
+        preparation::contours(layers),
+        contour_continuation::Options::default(),
+    );
     let mut seams = layers
         .iter()
         .enumerate()
@@ -136,15 +142,19 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
         if choice(layers, start).finalized {
             continue;
         }
-        let mut seam_string = find_seam_string(layers, start);
+        let mut seam_string = find_seam_string(layers, start, &mut contours);
         let step = 1 + seam_string.len() / 20;
         let mut alternative_start = 0;
         while alternative_start < seam_string.len() {
             let point = seam_string[alternative_start];
-            let alternative = find_seam_string(layers, {
-                let seam_index = choice(layers, point).seam_index;
-                (point.0, seam_index)
-            });
+            let alternative = find_seam_string(
+                layers,
+                {
+                    let seam_index = choice(layers, point).seam_index;
+                    (point.0, seam_index)
+                },
+                &mut contours,
+            );
             if alternative.len() > seam_string.len() {
                 seam_string = alternative;
             }
@@ -159,7 +169,11 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
     }
 }
 
-fn find_seam_string(layers: &[LayerPlan], start: (usize, usize)) -> Vec<(usize, usize)> {
+fn find_seam_string(
+    layers: &[LayerPlan],
+    start: (usize, usize),
+    contours: &mut contour_continuation::Resolver,
+) -> Vec<(usize, usize)> {
     let max_distance = SEARCH_DISTANCE_FLOW_FACTOR * perimeter(layers, start).flow_width;
     let mut next_layer = start.0 as isize + 1;
     let mut step = 1;
@@ -181,7 +195,13 @@ fn find_seam_string(layers: &[LayerPlan], start: (usize, usize)) -> Vec<(usize, 
             previous_position.y,
             layers[next_layer_index].z,
         );
-        if let Some(next) = find_next_in_layer(layers, next_layer_index, projected, max_distance) {
+        if let Some(next) = find_next_in_layer(
+            layers,
+            (next_layer_index, projected),
+            max_distance,
+            previous,
+            contours,
+        ) {
             output.push(next);
             previous = next;
         } else if step == 1 {
@@ -203,32 +223,46 @@ fn find_seam_string(layers: &[LayerPlan], start: (usize, usize)) -> Vec<(usize, 
 
 fn find_next_in_layer(
     layers: &[LayerPlan],
-    layer_index: usize,
-    projected: Vec3,
+    (layer_index, projected): (usize, Vec3),
     max_distance: f32,
+    previous: (usize, usize),
+    contours: &mut contour_continuation::Resolver,
 ) -> Option<(usize, usize)> {
+    let source = perimeter(layers, previous);
+    let source_index = layers[previous.0].candidates.points[previous.1].perimeter_index;
+    let continuation = contours.resolve(
+        (previous.0, source_index, previous.1 - source.start_index),
+        if layer_index > previous.0 { 1 } else { -1 },
+        f64::from(max_distance),
+    );
+    let continuation = continuation.contours();
     let layer = &layers[layer_index];
     let nearby = layer
         .point_tree
         .in_radius(&layer.positions, projected, max_distance);
-    let &first = nearby.first()?;
-    let mut best = first;
-    let mut nearest = first;
+    let mut selected = None;
     for index in nearby {
-        if layer.choices[layer.candidates.points[index].perimeter_index].finalized {
+        let perimeter_index = layer.candidates.points[index].perimeter_index;
+        // SeamPlacer.cpp:1766-1775 filters before initializing either index.
+        if !continuation.is_empty() && !continuation.contains(&perimeter_index) {
             continue;
         }
-        if is_better(layer, index, best)
-            || layer.choices[layer.candidates.points[best].perimeter_index].finalized
-        {
-            best = index;
+        let (best, nearest) = selected.get_or_insert((index, index));
+        if layer.choices[perimeter_index].finalized {
+            continue;
         }
-        if distance_squared(layer, index, projected) < distance_squared(layer, nearest, projected)
-            || layer.choices[layer.candidates.points[nearest].perimeter_index].finalized
+        if is_better(layer, index, *best)
+            || layer.choices[layer.candidates.points[*best].perimeter_index].finalized
         {
-            nearest = index;
+            *best = index;
+        }
+        if distance_squared(layer, index, projected) < distance_squared(layer, *nearest, projected)
+            || layer.choices[layer.candidates.points[*nearest].perimeter_index].finalized
+        {
+            *nearest = index;
         }
     }
+    let (best, nearest) = selected?;
     if layer.choices[layer.candidates.points[nearest].perimeter_index].finalized {
         return None;
     }
