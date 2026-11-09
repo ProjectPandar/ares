@@ -1,47 +1,11 @@
-use crate::{OrcaBool, SliceError};
+use crate::SliceError;
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},
     transform::transformed_for_export,
 };
 use crate::options::project_config_views::ProjectConfigViews;
-use crate::project::raw_settings::{ProjectSettingsRaw, RawConfigValue};
-/// CLI-oracle export state the interactive `Print::apply` passes never
-/// observe (see `transform::apply_cli_oracle_state`).
-#[derive(Default)]
-pub(super) struct ExportOverrides {
-    /// Raw preset `enable_prime_tower` (None when the raw settings lack
-    /// the key — keep the resolved value).
-    pub(super) enable_prime_tower: Option<OrcaBool>,
-    /// Raw preset `filament_map` token (joined `;` list).
-    pub(super) raw_filament_map_token: Option<String>,
-    #[allow(dead_code)]
-    pub(super) is_bbl: bool,
-}
-
-impl ExportOverrides {
-    /// Bookkeeping lookups read the raw map directly and render with the
-    /// generic (non-Floats) token — no export-echo serialization, so no
-    /// error path and no silent skips.
-    fn from_raw(raw_settings: &ProjectSettingsRaw, is_bbl: bool) -> Self {
-        let enable_prime_tower = raw_settings
-            .get("enable_prime_tower")
-            .and_then(RawConfigValue::token)
-            .and_then(|token| match token.as_str() {
-                "1" | "true" => Some(OrcaBool(true)),
-                "0" | "false" => Some(OrcaBool(false)),
-                _ => None,
-            });
-        let raw_filament_map_token = raw_settings
-            .get("filament_map")
-            .and_then(RawConfigValue::token);
-        Self {
-            enable_prime_tower,
-            raw_filament_map_token,
-            is_bbl,
-        }
-    }
-}
+use crate::project::raw_settings::ProjectSettingsRaw;
 
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
 const END: &[u8] = b"; CONFIG_BLOCK_END\n\n";
@@ -52,10 +16,7 @@ pub(crate) fn write_config_block(
     compat_temperatures: Option<(i32, i32)>,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
-    let transformed = transformed_for_export(
-        &views.full,
-        &ExportOverrides::from_raw(raw_settings, is_bbl_printer(views)),
-    )?;
+    let transformed = transformed_for_export(&views.full)?;
     let entries = collect_config_entries(&transformed).map_err(config_error)?;
     let mut scratch = Vec::new();
     scratch.extend_from_slice(START);
