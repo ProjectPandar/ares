@@ -5,6 +5,9 @@ use crate::{
 
 use super::{footprint, template, value};
 
+/// `placeholder_parser_process("time_lapse_gcode", ...)` (`GCode.cpp:6477`, `:6712`).
+const NAME: &str = "time_lapse_gcode";
+
 #[derive(Clone, Copy)]
 pub(super) struct TimelapseLayer {
     pub(super) index: usize,
@@ -21,34 +24,20 @@ pub(super) struct Context<'a> {
     pub(super) first_layer_bounds: Option<footprint::FirstLayerBounds>,
 }
 
-/// The timelapse overlay split of the two upstream render sites: the
-/// non-BBL layer-start render (`GCode.cpp:4667-4674`) overlays only
-/// `layer_num`/`layer_z`/`max_layer_z`, while the `insert_timelapse_gcode`
-/// lambda (`:5162-5167`, BBL layer-start and traditional layer-end
-/// insert) additionally maps the physical extruder ids and the timelapse
-/// park position.
-#[derive(Clone, Copy, PartialEq)]
-enum Overlay {
-    LayerStart,
-    InsertLambda,
-    Inline,
-}
-
-/// The non-BBL layer-start render (`GCode.cpp:4667-4675`): emits the
+/// The non-BBL render at the layer change (`GCode.cpp:6710-6713`): emits the
 /// timelapse template directly after `change_layer` WITHOUT the
 /// `set_current_position_clear(false)` / `get_last_z_from_gcode` bookkeeping
-/// — those live only in the `insert_timelapse_gcode` lambda
-/// (`GCode.cpp:5171-5178`) used by the layer-end traditional insert and the
-/// BBL layer-start insert. Clearing here would wrongly downgrade a deferred
-/// spiral lift to the uncleared-position split (Qidi Q1 Pro emits a spiral
-/// at every layer change because its position stays clear through this
-/// render).
+/// — those live only in `generate_timelapse_gcode` (`GCode.cpp:6480-6487`)
+/// used by the traditional inserts and the BBL layer-start insert. Clearing
+/// here would wrongly downgrade a deferred spiral lift to the uncleared-position
+/// split (Qidi Q1 Pro emits a spiral at every layer change because its position
+/// stays clear through this render).
 pub(super) fn append_untracked(
     output: &mut Vec<u8>,
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<(), SliceError> {
-    append(output, state, context, Overlay::LayerStart)?;
+    append(output, state, context, false)?;
     Ok(())
 }
 
@@ -60,7 +49,7 @@ pub(super) fn append_and_track(
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<(), SliceError> {
-    append_generated(output, state, context, Overlay::InsertLambda).map(|_| ())
+    append_generated(output, state, context, false).map(|_| ())
 }
 
 pub(super) fn append_inline(
@@ -68,20 +57,20 @@ pub(super) fn append_inline(
     state: &mut super::motion::EmitState,
     context: Context<'_>,
 ) -> Result<bool, SliceError> {
-    append_generated(output, state, context, Overlay::Inline)
+    append_generated(output, state, context, true)
 }
 
 fn append_generated(
     output: &mut Vec<u8>,
     state: &mut super::motion::EmitState,
     context: Context<'_>,
-    overlay: Overlay,
+    skip_pos_pick: bool,
 ) -> Result<bool, SliceError> {
     let has_labels = state.layer_object_labels.is_some();
     if let Some(labels) = &state.layer_object_labels {
         labels.append_start(output, context.layer.index + 1);
     }
-    let generated = append(output, state, context, overlay)?;
+    let generated = append(output, state, context, skip_pos_pick)?;
     if let Some(last_z) = generated {
         if let Some(z) = last_z {
             // `GCode.cpp:5173-5178`: the template's last Z is ADOPTED into
@@ -135,7 +124,7 @@ fn append(
         metadata,
         first_layer_bounds,
     }: Context<'_>,
-    overlay: Overlay,
+    skip_pos_pick: bool,
 ) -> Result<Option<Option<f64>>, SliceError> {
     let runtime = &traversal.resolved.views.runtime_gcode;
     let source = &runtime.time_lapse_gcode.0;
@@ -165,33 +154,39 @@ fn append(
             ]),
         );
     }
+    // `timelapse_gcode_config` (`GCode.cpp:6516-6550`) serves every render.
     // `ToolOrdering::cal_most_used_extruder` (`ToolOrdering.cpp:955-981`,
-    // `state.most_used_extruder`): the placeholder id is then
-    // `physical_extruder_map.get_at(most_used)` — but ONLY on the
-    // `insert_timelapse_gcode` lambda overlay (`GCode.cpp:5162-5167`);
-    // the non-BBL layer-start render (`:4667-4674`) overlays only
-    // layer_num/layer_z/max_layer_z, so those spellings stay unresolved
-    // variables there.
-    if overlay != Overlay::LayerStart {
-        let most_used = insert_physical_extruder_ids(&mut config, traversal, state);
-        let inline = overlay == Overlay::Inline;
-        let position = if inline {
-            None
-        } else {
-            safe_position(traversal, most_used)
-        };
-        config.insert("timelapse_inline_photo", value::Value::option_bool(inline));
-        config.insert(
-            "farthest_point_timelapse_enabled",
-            value::Value::option_bool(state.farthest_point.enabled),
-        );
-        config.insert(
-            "has_timelapse_safe_pos",
-            value::Value::option_bool(position.is_some()),
-        );
-        let (x, y) = position.unwrap_or_default();
-        config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
-        config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
+    // `state.most_used_extruder`) picks the photo head.
+    let most_used = insert_physical_extruder_ids(&mut config, traversal, state);
+    // `:3395-3397` runs the picker only for a template naming its results;
+    // `:6535` otherwise keeps `DefaultTimelapsePos`.
+    let uses_position =
+        source.contains("timelapse_pos") || source.contains("has_timelapse_safe_pos");
+    let (x, y) = (!skip_pos_pick && uses_position)
+        .then(|| safe_position(traversal, most_used))
+        .flatten()
+        .unwrap_or_default();
+    config.insert(
+        "timelapse_inline_photo",
+        value::Value::option_bool(skip_pos_pick),
+    );
+    config.insert(
+        "farthest_point_timelapse_enabled",
+        value::Value::option_bool(state.farthest_point.enabled),
+    );
+    config.insert(
+        "has_timelapse_safe_pos",
+        value::Value::option_bool((x, y) != (0, 0)),
+    );
+    config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
+    config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
+    // `get_is_clear_to_x0` (`TimelapsePosPicker.cpp:641-683`) only collects
+    // objects other than the current one while printing by object, so it is
+    // true by layer or with one object. Several by-object objects stay undefined.
+    let by_object = traversal.resolved.views.full.process.print.print_sequence
+        == crate::ProcessPrintSequence::ByObject;
+    if source.contains("clear_to_x0") && (!by_object || traversal.project.objects().len() == 1) {
+        config.insert("clear_to_x0", value::Value::option_bool(true));
     }
 
     // Write-back validation precedes emission; render or validation
@@ -202,14 +197,13 @@ fn append(
             Ok(rendered) => Some(rendered),
             Err(error) => {
                 failure_error = error.to_string();
-                state.record_template_failure("timelapse_gcode", &failure_error);
+                state.record_template_failure(NAME, &failure_error);
                 None
             }
         };
     let last_z = rendered.as_deref().and_then(last_motion_z);
-    let name = "timelapse_gcode";
     let failed = rendered.as_deref().is_none_or(|text| {
-        super::motion::apply_writer_state(name, &config, text, state)
+        super::motion::apply_writer_state(NAME, &config, text, state)
             .map_err(|error| failure_error = error)
             .is_err()
     });
@@ -217,7 +211,7 @@ fn append(
         let error = failure_error;
         output.extend_from_slice(
             format!(
-                "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+                "\n!!!!! Failed to process the custom G-code template {NAME}\n{error}!!!!! End of an error report for the custom G-code template {NAME}\n\n\n"
             )
             .as_bytes(),
         );

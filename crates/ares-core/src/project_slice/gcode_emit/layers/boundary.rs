@@ -250,9 +250,9 @@ pub(super) fn append<'a>(
     );
     motion::flush_pending_retract_lift(output, state, live_writer_z, will_move_z);
     if timelapse_at_layer_change {
-        // Non-BBL layer-start render (`GCode.cpp:4667`): no position-clear,
-        // no Z adoption — those belong to the lambda inserts only. It runs
-        // AFTER `change_layer` (`process_layer`, `GCode.cpp:4663-4668`) so
+        // Non-BBL render (`GCode.cpp:6710`): no position-clear, no Z adoption
+        // — those belong to `generate_timelapse_gcode` only. It runs AFTER
+        // `change_layer` (`process_layer`, `GCode.cpp:6704-6711`) so
         // `{position[2]}` reads the new layer's Z and assignments survive.
         timelapse::append_untracked(output, state, timelapse_context)?;
     }
