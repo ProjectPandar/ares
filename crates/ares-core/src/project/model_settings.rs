@@ -49,10 +49,18 @@ pub(crate) struct ObjectSettings {
 struct ObjectSettingsWire {
     #[serde(rename = "@id")]
     id: u32,
-    #[serde(rename = "metadata", default)]
-    metadata: Vec<Metadata>,
-    #[serde(rename = "part", default)]
-    parts: Vec<PartSettings>,
+    #[serde(rename = "$value", default)]
+    children: Vec<ObjectChild>,
+}
+
+#[derive(Deserialize)]
+enum ObjectChild {
+    #[serde(rename = "metadata")]
+    Metadata(Metadata),
+    #[serde(rename = "part")]
+    Part(Box<PartSettings>),
+    #[serde(other)]
+    Other,
 }
 
 impl<'de> Deserialize<'de> for ObjectSettings {
@@ -60,11 +68,16 @@ impl<'de> Deserialize<'de> for ObjectSettings {
     where
         D: Deserializer<'de>,
     {
-        let ObjectSettingsWire {
-            id,
-            metadata,
-            parts,
-        } = ObjectSettingsWire::deserialize(deserializer)?;
+        let ObjectSettingsWire { id, children } = ObjectSettingsWire::deserialize(deserializer)?;
+        let mut metadata = Vec::new();
+        let mut parts = Vec::new();
+        for child in children {
+            match child {
+                ObjectChild::Metadata(entry) => metadata.push(entry),
+                ObjectChild::Part(part) => parts.push(*part),
+                ObjectChild::Other => {}
+            }
+        }
         Self::from_ordered_metadata(id, metadata, parts).map_err(D::Error::custom)
     }
 }

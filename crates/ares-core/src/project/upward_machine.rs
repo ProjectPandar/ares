@@ -37,8 +37,16 @@ struct MachineFields {
 
 #[derive(Deserialize)]
 struct ModelIdentity {
-    #[serde(rename = "metadata", default)]
-    metadata: Vec<Metadata>,
+    #[serde(rename = "$value", default)]
+    children: Vec<IdentityChild>,
+}
+
+#[derive(Deserialize)]
+enum IdentityChild {
+    #[serde(rename = "metadata")]
+    Metadata(Metadata),
+    #[serde(other)]
+    Other,
 }
 
 #[derive(Deserialize)]
@@ -61,7 +69,10 @@ impl UpwardMachineSource {
         )?;
         let model_path = relationships.resolve_required(&root, MODEL_RELATIONSHIP_TYPE)?;
         let identity: ModelIdentity = deserialize_xml(&archive.read(&model_path)?, XmlRole::Model)?;
-        if !identity.metadata.iter().any(|entry| {
+        if !identity.children.iter().any(|child| {
+            let IdentityChild::Metadata(entry) = child else {
+                return false;
+            };
             entry.name == "Application"
                 && (entry.value.starts_with("BambuStudio-")
                     || entry.value.starts_with("OrcaSlicer-"))

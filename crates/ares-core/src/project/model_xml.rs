@@ -9,14 +9,12 @@ pub(crate) const PRODUCTION_NAMESPACE: &str =
 pub(crate) const MATERIAL_NAMESPACE: &str =
     "http://schemas.microsoft.com/3dmanufacturing/material/2015/02";
 
-#[derive(Debug, Deserialize, PartialEq)]
-#[serde(rename = "model")]
+mod document;
+
+#[derive(Debug, PartialEq)]
 pub(crate) struct ModelDocument<B = Build> {
-    #[serde(rename = "@unit", default)]
     pub unit: ModelUnit,
-    #[serde(rename = "@requiredextensions", default)]
     pub required_extensions: String,
-    #[serde(rename = "metadata", default)]
     pub metadata: Vec<ModelMetadata>,
     pub resources: Resources,
     pub build: B,

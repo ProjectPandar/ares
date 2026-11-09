@@ -13,10 +13,18 @@ struct PartSettingsWire {
     id: u32,
     #[serde(rename = "@subtype")]
     subtype: String,
-    #[serde(rename = "metadata", default)]
-    metadata: Vec<Metadata>,
+    #[serde(rename = "$value", default)]
+    children: Vec<PartChild>,
+}
+
+#[derive(Deserialize)]
+enum PartChild {
+    #[serde(rename = "metadata")]
+    Metadata(Metadata),
     #[serde(rename = "mesh_stat")]
-    mesh_stat: Option<MeshStatistics>,
+    MeshStatistics(MeshStatistics),
+    #[serde(other)]
+    Other,
 }
 
 impl<'de> Deserialize<'de> for PartSettings {
@@ -27,9 +35,20 @@ impl<'de> Deserialize<'de> for PartSettings {
         let PartSettingsWire {
             id,
             subtype,
-            metadata,
-            mesh_stat,
+            children,
         } = PartSettingsWire::deserialize(deserializer)?;
+        let mut metadata = Vec::new();
+        let mut mesh_stat = None;
+        for child in children {
+            match child {
+                PartChild::Metadata(entry) => metadata.push(entry),
+                PartChild::MeshStatistics(_) if mesh_stat.is_some() => {
+                    return Err(D::Error::duplicate_field("mesh_stat"));
+                }
+                PartChild::MeshStatistics(stat) => mesh_stat = Some(stat),
+                PartChild::Other => {}
+            }
+        }
         Self::from_ordered_metadata(id, subtype, metadata, mesh_stat).map_err(D::Error::custom)
     }
 }
