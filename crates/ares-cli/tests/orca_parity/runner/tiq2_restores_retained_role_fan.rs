@@ -17,8 +17,13 @@ fn tiq2_restores_retained_role_fan_complete_sequence() {
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
+    let input = crate::print_validation::tiq2_corner::corner_input(
+        input,
+        crate::print_validation::tiq2_corner::Scenario::RetainedFan,
+        &directory,
+    );
     let path = directory.join("input.3mf");
-    std::fs::write(&path, input).unwrap();
+    std::fs::write(&path, &input).unwrap();
     let output_dir = directory.join("native");
     std::fs::create_dir(&output_dir).unwrap();
     let case = runner
@@ -33,7 +38,7 @@ fn tiq2_restores_retained_role_fan_complete_sequence() {
         .build()
         .unwrap()
         .block_on(crate::runner::application::slice_project(
-            input,
+            &input,
             ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
             ares_core::SlicerContext::new(0),
         ))

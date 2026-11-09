@@ -17,8 +17,13 @@ fn tiq2_footer_dispatch_whole_file() {
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
+    let input = crate::print_validation::tiq2_corner::corner_input(
+        input,
+        crate::print_validation::tiq2_corner::Scenario::WholeFile,
+        &directory,
+    );
     let path = directory.join("input.3mf");
-    std::fs::write(&path, input).unwrap();
+    std::fs::write(&path, &input).unwrap();
     let output_dir = directory.join("native");
     std::fs::create_dir(&output_dir).unwrap();
     let case = runner

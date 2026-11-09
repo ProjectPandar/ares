@@ -100,6 +100,13 @@ fn verify(scenario: Scenario) {
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
+    use crate::print_validation::tiq2_corner::{Scenario as CornerScenario, corner_input};
+    let project = match scenario {
+        Scenario::Slots => corner_input(&project, CornerScenario::Slots, &directory),
+        Scenario::Unused => corner_input(&project, CornerScenario::Unused, &directory),
+        Scenario::Assignment => corner_input(&project, CornerScenario::Assignment, &directory),
+        Scenario::Semm => project,
+    };
     let project_path = directory.join("input.3mf");
     std::fs::write(&project_path, &project).unwrap();
     let output_dir = directory.join("native");
