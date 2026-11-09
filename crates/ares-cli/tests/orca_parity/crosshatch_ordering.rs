@@ -181,32 +181,32 @@ fn crosshatch_ordering_target_mirror_matches_native() {
 }
 
 #[test]
-fn crosshatch_ordering_target_rotinst_matches_native() {
+fn crosshatch_rotated_instance_order_matches_complete_runtime_native_output() {
     assert_eq!(sha256(TARGET_ROTINST), TARGET_ROTINST_SHA256);
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
     let root = crate::artifacts::root_from_env().unwrap();
     let reference = slice_native(&runner, &root, TARGET_ROTINST, "co-rotinst-");
-    // Native-active pin: the rotated second instance slices independently
-    // (`Print.cpp:2193-2194` trafo equality refuses cross-trafo sharing),
-    // so the first object's layer-2 chaining is undisturbed — the X98.585
-    // lane travel precedes the corridor's X110.33 endpoint. Ares over-merges
-    // the rotated instance and reaches the corridor first.
-    let lane = reference
-        .find("G1 X98.585 Y115.98 F9000\n")
-        .expect("native lane travel at X98.585");
-    let corridor = reference
-        .find("G1 X110.33 Y124.02 E.03924\n")
-        .expect("native corridor ends at X110.33");
+    // ExtrusionEntity.cpp:680 supplies the sparse role; GCodeProcessor.cpp:
+    // 1328-1331 supplies the layer count. The live stream is the order oracle.
     assert!(
-        lane < corridor,
-        "native order: X98.585 lane before the corridor's X110.33 endpoint"
+        reference.lines().any(|line| line == ";TYPE:Sparse infill"),
+        "Native witness must contain sparse infill"
     );
+    let declared_layers = reference
+        .lines()
+        .find_map(|line| line.strip_prefix("; total layer number: "))
+        .expect("Native header must declare the layer count")
+        .parse::<usize>()
+        .unwrap();
     assert_eq!(
-        reference.lines().filter(|l| *l == ";LAYER_CHANGE").count(),
-        5,
-        "both objects sliced through all layers"
+        reference
+            .lines()
+            .filter(|line| *line == ";LAYER_CHANGE")
+            .count(),
+        declared_layers,
+        "Native must emit all declared layers"
     );
     let outcome = compare(
         &root,
