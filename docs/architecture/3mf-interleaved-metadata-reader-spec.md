@@ -133,6 +133,29 @@ compatibility shell for the deferred upstream data boundary. Namespace/entity/
 archive/geometry validation stays in force; prefixed face-property attributes
 and face-property attributes on other elements retain their rejection behavior.
 
+## Keyless object metadata
+
+`bbs_3mf.cpp::_handle_start_config_metadata:4577-4584` obtains the `key`
+and `value` strings using the getter at525-541, then returns success immediately
+when the key is empty. Thus a missing or explicitly empty key is skipped before
+object lookup or metadata append at4609-4624. An object child such as
+`metadata/@face_count` without `@key` has no imported configuration meaning;
+it is not a reason to synthesize an empty option or reject the project.
+
+Port that rule only for `object/metadata`, in
+`project/model_settings.rs::ObjectSettingsWire`. Use an object-specific wire
+representation that can distinguish keyless entries and discard them before
+calling the existing ordered metadata consumer. Do not add serde defaults to
+the shared metadata type or change part/plate metadata admission. Nonempty
+keyed entries retain the current representation requirements and ordering.
+Adjacent missing-value behavior for nonempty keys is not included in this slice.
+
+Runtime stock variants must add a missing-key and an explicitly empty-key
+object metadata child, using only public fixture-derived data. Native must
+accept them and retain complete control output; public import/identity and
+Native/API/CLI comparisons must pass. Retain the existing missing-key rejection
+for part and plate metadata. No user bytes or generated archive is committed.
+
 ## Portability and allocation contract
 
 Keep the existing quick-xml dependency/features. Use the existing Rust reader,
