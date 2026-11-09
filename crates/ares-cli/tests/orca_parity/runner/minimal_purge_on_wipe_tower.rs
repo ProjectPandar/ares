@@ -6,6 +6,9 @@ use std::{
     io::{Cursor, Read, Write},
 };
 
+#[path = "minimal_purge_on_wipe_tower/controls.rs"]
+mod controls;
+
 fn wipes(gcode: &[u8]) -> Vec<(usize, f64)> {
     let mut tool = 0;
     let mut wiping = false;
