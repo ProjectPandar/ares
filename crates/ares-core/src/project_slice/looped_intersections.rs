@@ -1,16 +1,12 @@
-use crate::{
-    ProjectVolumeType,
-    geometry::Coord,
-    mesh_slicer::{LoopedLayer, make_loops},
-};
+use crate::{ProjectVolumeType, mesh_slicer::LoopedLayer};
 
-use super::{chained_intersections::ChainedPrintObject, layers::PlannedPrintObject};
+use super::layers::PlannedPrintObject;
 
 pub(super) struct LoopedVolumeIntersections {
-    source_volume_index: usize,
-    volume_ordinal: u32,
-    volume_type: ProjectVolumeType,
-    layers: Vec<LoopedLayer>,
+    pub(super) source_volume_index: usize,
+    pub(super) volume_ordinal: u32,
+    pub(super) volume_type: ProjectVolumeType,
+    pub(super) layers: Vec<LoopedLayer>,
 }
 
 impl LoopedVolumeIntersections {
@@ -25,42 +21,12 @@ impl LoopedVolumeIntersections {
 }
 
 pub(super) struct LoopedPrintObject {
-    plan: PlannedPrintObject,
-    volumes: Vec<LoopedVolumeIntersections>,
+    pub(super) plan: PlannedPrintObject,
+    pub(super) volumes: Vec<LoopedVolumeIntersections>,
 }
 
 impl LoopedPrintObject {
     pub(super) fn into_parts(self) -> (PlannedPrintObject, Vec<LoopedVolumeIntersections>) {
         (self.plan, self.volumes)
     }
-}
-
-pub(super) fn loop_project_intersections(
-    objects: Vec<ChainedPrintObject>,
-    max_gap_scaled: Coord,
-) -> Vec<LoopedPrintObject> {
-    objects
-        .into_iter()
-        .map(|object| {
-            let (plan, volumes) = object.into_parts();
-            let volumes = volumes
-                .into_iter()
-                .map(|volume| {
-                    let (source_volume_index, volume_ordinal, volume_type, layers) =
-                        volume.into_parts();
-                    let layers = layers
-                        .into_iter()
-                        .map(|layer| make_loops(layer, max_gap_scaled))
-                        .collect();
-                    LoopedVolumeIntersections {
-                        source_volume_index,
-                        volume_ordinal,
-                        volume_type,
-                        layers,
-                    }
-                })
-                .collect();
-            LoopedPrintObject { plan, volumes }
-        })
-        .collect()
 }

@@ -20,15 +20,6 @@ pub(crate) use slabs::{slice_bottom_slabs, slice_mesh_slabs};
 pub(crate) use slicing_mode::{SlicingMode, apply_slicing_mode};
 pub(crate) use topology::{MeshTopology, index_mesh_edges};
 
-const RAW_INTERSECTION_LIMIT: usize = 1_000_000;
-const RAW_INTERSECTION_LIMIT_ERROR: &str =
-    "project raw intersection count exceeds supported limit of 1000000";
-
-#[derive(Debug, Default)]
-pub(crate) struct RawIntersectionBudget {
-    retained_lines: usize,
-}
-
 #[derive(Clone, Copy)]
 struct MeshPlaneInput<'a> {
     vertices: &'a [[f32; 3]],
@@ -46,29 +37,10 @@ impl<'a> MeshPlaneInput<'a> {
     }
 }
 
-impl RawIntersectionBudget {
-    pub(crate) const fn new() -> Self {
-        Self { retained_lines: 0 }
-    }
-
-    fn claim(&mut self, additional: usize) -> Result<(), SliceError> {
-        let retained_lines = self
-            .retained_lines
-            .checked_add(additional)
-            .ok_or_else(raw_intersection_limit_error)?;
-        if retained_lines > RAW_INTERSECTION_LIMIT {
-            return Err(raw_intersection_limit_error());
-        }
-        self.retained_lines = retained_lines;
-        Ok(())
-    }
-}
-
 pub(crate) fn slice_mesh_on_planes(
     vertices: &[[f32; 3]],
     triangles: &[[u32; 3]],
     planes: &[f32],
-    budget: &mut RawIntersectionBudget,
 ) -> Result<Vec<Vec<IntersectionLine>>, SliceError> {
     let input = MeshPlaneInput::new(vertices, triangles, planes);
     let topology = index_mesh_edges(triangles)?;
@@ -76,10 +48,9 @@ pub(crate) fn slice_mesh_on_planes(
     dispatch_indexed_mesh_on_planes_with(
         input,
         &topology,
-        budget,
         |_, _| {},
         |plane_index, line| lines[plane_index].push(line),
-    )?;
+    );
     for layer in &mut lines {
         layer.sort_unstable_by_key(|line| {
             let ids = |point: IntersectionPoint| match point.reference() {
@@ -108,7 +79,6 @@ pub(crate) fn slice_mesh_on_planes(
 
 fn dispatch_mesh_on_planes_with<Visit, Push>(
     input: MeshPlaneInput<'_>,
-    budget: &mut RawIntersectionBudget,
     visit: Visit,
     push: Push,
 ) -> Result<(), SliceError>
@@ -117,17 +87,16 @@ where
     Push: FnMut(usize, IntersectionLine),
 {
     let topology = index_mesh_edges(input.triangles)?;
-    dispatch_indexed_mesh_on_planes_with(input, &topology, budget, visit, push)
+    dispatch_indexed_mesh_on_planes_with(input, &topology, visit, push);
+    Ok(())
 }
 
 fn dispatch_indexed_mesh_on_planes_with<Visit, Push>(
     input: MeshPlaneInput<'_>,
     topology: &MeshTopology,
-    budget: &mut RawIntersectionBudget,
     mut visit: Visit,
     mut push: Push,
-) -> Result<(), SliceError>
-where
+) where
     Visit: FnMut(usize, usize),
     Push: FnMut(usize, IntersectionLine),
 {
@@ -148,12 +117,10 @@ where
                 *triangle,
                 edge_ids,
             ) {
-                budget.claim(1)?;
                 push(plane_index, line);
             }
         }
     }
-    Ok(())
 }
 
 fn eligible_plane_range(planes: &[f32], min_z: f32, max_z: f32) -> Range<usize> {
@@ -162,27 +129,14 @@ fn eligible_plane_range(planes: &[f32], min_z: f32, max_z: f32) -> Range<usize> 
     first..end
 }
 
-fn raw_intersection_limit_error() -> SliceError {
-    SliceError::InvalidInput(RAW_INTERSECTION_LIMIT_ERROR.to_owned())
-}
-
 type FacetIntersectionFn = fn(f32, &[[f32; 3]; 3], [u32; 3], [u32; 3]) -> Option<IntersectionLine>;
-type MeshSliceFn = fn(
-    &[[f32; 3]],
-    &[[u32; 3]],
-    &[f32],
-    &mut RawIntersectionBudget,
-) -> Result<Vec<Vec<IntersectionLine>>, SliceError>;
-type MeshDispatchFn = fn(
-    MeshPlaneInput<'_>,
-    &mut RawIntersectionBudget,
-    fn(usize, usize),
-    fn(usize, IntersectionLine),
-) -> Result<(), SliceError>;
+type MeshSliceFn =
+    fn(&[[f32; 3]], &[[u32; 3]], &[f32]) -> Result<Vec<Vec<IntersectionLine>>, SliceError>;
+type MeshDispatchFn =
+    fn(MeshPlaneInput<'_>, fn(usize, usize), fn(usize, IntersectionLine)) -> Result<(), SliceError>;
 type LoopRepairFn = fn(ChainedLayer, crate::geometry::Coord) -> LoopedLayer;
 
 const _: FacetIntersectionFn = intersect_facet;
-const _: fn() -> RawIntersectionBudget = RawIntersectionBudget::new;
 const _: MeshSliceFn = slice_mesh_on_planes;
 const _: MeshDispatchFn = dispatch_mesh_on_planes_with;
 const _: LoopRepairFn = make_loops;

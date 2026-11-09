@@ -5,8 +5,7 @@ use crate::{
     Point3d, ProjectVolumeType, SliceError,
     geometry::{CoordinateScale, Polygon},
     mesh_slicer::{
-        RawIntersectionBudget, chain_lines_by_triangle_connectivity, make_loops,
-        slice_mesh_on_planes, slice_mesh_slabs,
+        chain_lines_by_triangle_connectivity, make_loops, slice_mesh_on_planes, slice_mesh_slabs,
     },
     project::facets_annotation::strict_annotated_facets,
 };
@@ -38,8 +37,7 @@ fn bottom_slice(
     scale: CoordinateScale,
     coplanar: &[bool],
 ) -> Result<Vec<Polygon>, SliceError> {
-    let mut budget = RawIntersectionBudget::new();
-    let lines = slice_mesh_on_planes(vertices, triangles, &[z], &mut budget)?
+    let lines = slice_mesh_on_planes(vertices, triangles, &[z])?
         .pop()
         .unwrap();
     Ok(make_loops(

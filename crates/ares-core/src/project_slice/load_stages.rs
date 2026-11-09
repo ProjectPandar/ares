@@ -1,10 +1,9 @@
 use crate::SliceError;
 
 use super::{
-    PreparedPostClosing, PreparedPostRegions, ProjectSource, chained_intersections, closing,
-    conical_overhang, largest_contours, looped_intersections, pre_closing_unions, profile_entry,
-    region_slices, simplification, slicing_mode_intersections, state, top_empty_layers,
-    volume_bounds, volume_regions,
+    PreparedPostClosing, PreparedPostRegions, ProjectSource, closing, conical_overhang,
+    largest_contours, pre_closing_unions, profile_entry, region_slices, simplification,
+    slicing_mode_intersections, state, top_empty_layers, volume_bounds, volume_regions,
 };
 
 pub(super) fn prepare_post_closing(
@@ -16,7 +15,7 @@ pub(super) fn prepare_post_closing(
         resolved,
         config_block,
         scale,
-        intersected_objects,
+        looped_objects,
     } = if let Some(profile) = project.profile {
         profile_entry::prepare_profile_slice(&project, profile)?
     } else {
@@ -36,12 +35,6 @@ pub(super) fn prepare_post_closing(
             ),
         };
     }
-    let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
-    let max_gap_scaled = scale
-        .checked_scale(2.0)
-        .expect("2 mm loop-repair radius must fit the selected coordinate scale");
-    let looped_objects =
-        looped_intersections::loop_project_intersections(chained_objects, max_gap_scaled);
     let spiral_mode = resolved.views.full.process.print.spiral_mode.0;
     let slicing_mode_objects = slicing_mode_intersections::apply_project_slicing_modes(
         looped_objects,

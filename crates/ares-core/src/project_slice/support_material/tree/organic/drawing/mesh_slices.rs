@@ -6,8 +6,8 @@ use crate::{
     SliceError,
     geometry::intersection_polygons_paths_with_safety_offset,
     mesh_slicer::{
-        RawIntersectionBudget, SlicingMode, apply_slicing_mode,
-        chain_lines_by_triangle_connectivity, make_loops, slice_mesh_on_planes,
+        SlicingMode, apply_slicing_mode, chain_lines_by_triangle_connectivity, make_loops,
+        slice_mesh_on_planes,
     },
 };
 
@@ -70,12 +70,7 @@ impl Drawing<'_, '_> {
                 vertex[1] *= multiplier;
             }
         }
-        let raw = slice_mesh_on_planes(
-            &mesh.vertices,
-            &mesh.indices,
-            slice_z,
-            &mut RawIntersectionBudget::new(),
-        )?;
+        let raw = slice_mesh_on_planes(&mesh.vertices, &mesh.indices, slice_z)?;
         let mut polygons = Vec::with_capacity(raw.len());
         for (offset, lines) in raw.into_iter().enumerate() {
             let mut loops = make_loops(

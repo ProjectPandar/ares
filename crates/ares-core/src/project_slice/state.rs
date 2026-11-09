@@ -15,10 +15,9 @@ pub(crate) use print_volume::{
 };
 
 use super::{
+    looped_intersections::LoopedPrintObject,
     planning::plan_project,
-    raw_intersections::{
-        IntersectedPrintObject, intersect_projected_objects, prepare_projected_objects,
-    },
+    raw_intersections::{prepare_projected_objects, slice_projected_objects},
 };
 
 pub(super) struct ProjectSliceState {
@@ -26,7 +25,7 @@ pub(super) struct ProjectSliceState {
     pub(super) resolved: BoundedResolvedProjectConfig,
     pub(super) config_block: Option<Vec<u8>>,
     pub(super) scale: CoordinateScale,
-    pub(super) intersected_objects: Vec<IntersectedPrintObject>,
+    pub(super) looped_objects: Vec<LoopedPrintObject>,
 }
 
 pub(super) fn prepare_project_source(
@@ -123,7 +122,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         prepare_projected_objects(project.objects(), &resolved.objects, planned_objects)?;
     let scale =
         CoordinateScale::from_printable_area(&resolved.views.full.printer.remaining.printable_area);
-    let intersected_objects = intersect_projected_objects(
+    let looped_objects = slice_projected_objects(
         project.objects(),
         &resolved.objects,
         projected_objects,
@@ -139,6 +138,6 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         resolved,
         config_block,
         scale,
-        intersected_objects,
+        looped_objects,
     })
 }

@@ -8,7 +8,6 @@ pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 256 * 10
 
 mod bounds;
 mod capabilities;
-mod chained_intersections;
 mod closing;
 pub(crate) mod compatibility;
 mod compensation;

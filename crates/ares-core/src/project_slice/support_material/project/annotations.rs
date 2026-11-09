@@ -6,8 +6,7 @@ use crate::{
     Point3d, ProjectObject, ProjectVolumeType, SliceError,
     geometry::{CoordinateScale, Polygon, union_polygons_paths},
     mesh_slicer::{
-        RawIntersectionBudget, SlicingMode, chain_lines_by_triangle_connectivity, make_loops,
-        slice_mesh_on_planes,
+        SlicingMode, chain_lines_by_triangle_connectivity, make_loops, slice_mesh_on_planes,
     },
     project::effective_config::types::ResolvedProjectObject,
     project_slice::{
@@ -49,7 +48,6 @@ pub(super) fn slice_volumes(
         .map(|layer| layer.slice_z as f32)
         .collect::<Vec<_>>();
     let max_gap = scale.checked_scale(2.0).unwrap();
-    let mut budget = RawIntersectionBudget::new();
     let mut slices = vec![Vec::new(); planes.len()];
     let mut merge_layers = vec![false; planes.len()];
     for volume in std::iter::once(first).chain(volumes) {
@@ -90,7 +88,7 @@ pub(super) fn slice_volumes(
             &topology,
             scale.factor(),
         );
-        let layers = slice_mesh_on_planes(&vertices, &triangles, &planes, &mut budget)?;
+        let layers = slice_mesh_on_planes(&vertices, &triangles, &planes)?;
         for ((target, merge), lines) in slices.iter_mut().zip(&mut merge_layers).zip(layers) {
             let loops = make_loops(
                 chain_lines_by_triangle_connectivity(lines, &coplanar),

@@ -3,12 +3,15 @@ use std::{borrow::Cow, num::NonZeroU32, ops::Deref};
 use crate::{
     Point3d, ProjectObject, ProjectVolumeType, SliceError,
     geometry::CoordinateScale,
-    mesh_slicer::{IntersectionLine, RawIntersectionBudget, slice_mesh_on_planes},
+    mesh_slicer::{chain_lines_by_triangle_connectivity, make_loops, slice_mesh_on_planes},
     options::FilamentRegionSourceOptions,
     project::effective_config::types::ResolvedProjectObject,
 };
 
-use super::layers::PlannedPrintObject;
+use super::{
+    layers::PlannedPrintObject,
+    looped_intersections::{LoopedPrintObject, LoopedVolumeIntersections},
+};
 
 #[path = "raw_intersections/ranges.rs"]
 mod ranges;
@@ -44,55 +47,6 @@ impl Deref for ProjectedPrintObject {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub(super) struct RawVolumeIntersections {
-    source_volume_index: usize,
-    volume_ordinal: VolumeOrdinal,
-    volume_type: ProjectVolumeType,
-    layers: Vec<Vec<IntersectionLine>>,
-    coplanar_edges: Vec<bool>,
-}
-
-impl RawVolumeIntersections {
-    pub(super) fn into_parts(
-        self,
-    ) -> (
-        usize,
-        u32,
-        ProjectVolumeType,
-        Vec<Vec<IntersectionLine>>,
-        Vec<bool>,
-    ) {
-        (
-            self.source_volume_index,
-            self.volume_ordinal.0.get(),
-            self.volume_type,
-            self.layers,
-            self.coplanar_edges,
-        )
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub(super) struct IntersectedPrintObject {
-    pub(super) plan: PlannedPrintObject,
-    volumes: Vec<RawVolumeIntersections>,
-}
-
-impl IntersectedPrintObject {
-    pub(super) fn into_parts(self) -> (PlannedPrintObject, Vec<RawVolumeIntersections>) {
-        (self.plan, self.volumes)
-    }
-}
-
-impl Deref for IntersectedPrintObject {
-    type Target = PlannedPrintObject;
-
-    fn deref(&self) -> &Self::Target {
-        &self.plan
-    }
-}
-
 pub(super) fn prepare_projected_objects(
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
@@ -116,7 +70,7 @@ pub(super) fn prepare_projected_objects(
     Ok(projected_objects)
 }
 
-pub(super) fn intersect_projected_objects(
+pub(super) fn slice_projected_objects(
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
     projected_objects: Vec<ProjectedPrintObject>,
@@ -126,9 +80,11 @@ pub(super) fn intersect_projected_objects(
         usize,
         &[usize],
     ),
-) -> Result<Vec<IntersectedPrintObject>, SliceError> {
-    let mut budget = RawIntersectionBudget::new();
-    let mut intersected_objects = Vec::with_capacity(projected_objects.len());
+) -> Result<Vec<LoopedPrintObject>, SliceError> {
+    let max_gap_scaled = scale
+        .checked_scale(2.0)
+        .expect("2 mm loop-repair radius must fit the selected coordinate scale");
+    let mut looped_objects = Vec::with_capacity(projected_objects.len());
     for projected_object in projected_objects {
         let (plan, projected_volumes) = projected_object.into_parts();
         let source = &source_objects[plan.source_object_index];
@@ -212,25 +168,34 @@ pub(super) fn intersect_projected_objects(
                     &triangles,
                     &planes,
                     &active[projected_volume.source_volume_index],
-                    &mut budget,
                 )?,
-                None => slice_mesh_on_planes(&vertices, &triangles, &planes, &mut budget)?,
+                None => slice_mesh_on_planes(&vertices, &triangles, &planes)?,
             };
             // PrintObjectSlice.cpp:221-225 drops volumes with no filtered layers.
             if active_ranges.is_some() && layers.is_empty() {
                 continue;
             }
-            volumes.push(RawVolumeIntersections {
+            // TriangleMeshSlicer.cpp:1997-2038: raw lines belong to one mesh;
+            // make_loops:1616-1666 chains and repairs each layer before return.
+            let layers = layers
+                .into_iter()
+                .map(|lines| {
+                    make_loops(
+                        chain_lines_by_triangle_connectivity(lines, &coplanar_edges),
+                        max_gap_scaled,
+                    )
+                })
+                .collect();
+            volumes.push(LoopedVolumeIntersections {
                 source_volume_index: projected_volume.source_volume_index,
-                volume_ordinal: projected_volume.volume_ordinal,
+                volume_ordinal: projected_volume.volume_ordinal.0.get(),
                 volume_type: source_volume.volume_type(),
                 layers,
-                coplanar_edges,
             });
         }
-        intersected_objects.push(IntersectedPrintObject { plan, volumes });
+        looped_objects.push(LoopedPrintObject { plan, volumes });
     }
-    Ok(intersected_objects)
+    Ok(looped_objects)
 }
 
 pub(super) fn raw_center_unscaled(source: &ProjectObject) -> Result<[f64; 2], SliceError> {
