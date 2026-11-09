@@ -3,11 +3,53 @@ mod keys;
 mod preset;
 
 use super::{Placement, catalog::Catalog};
-use crate::{ConfigOverrides, Project, SliceError};
+use crate::{
+    ConfigOverrides, Project, ProjectSettings, SliceError,
+    project::raw_settings::ProjectSettingsRaw,
+};
 
 /// Preset.cpp: source-owned print, filament and printer option membership.
 pub(crate) fn preset_owns_option(kind: super::ProfileKind, key: &str) -> bool {
     keys::names(kind).any(|name| name == key)
+}
+
+/// CLI:3167-3200 applies the collection-default keyset for retained project presets.
+pub(crate) fn apply_retained_preset_defaults(
+    raw: &mut ProjectSettingsRaw,
+    selected: &ProjectSettings,
+) -> Result<(), SliceError> {
+    let inherited = preset::strings(raw, "inherits_group");
+    let filament_count = preset::strings(raw, "filament_settings_id").len();
+    let selection = &selected.project.preset;
+    for (kind, identity, loaded, slot) in [
+        (
+            super::ProfileKind::Machine,
+            "printer_settings_id",
+            selection.printer_settings_id.0.as_str(),
+            filament_count + 1,
+        ),
+        (
+            super::ProfileKind::Process,
+            "print_settings_id",
+            selection.print_settings_id.0.as_str(),
+            0,
+        ),
+    ] {
+        let names = preset::strings(raw, identity);
+        let name = names.first().map(String::as_str).unwrap_or("");
+        if !loaded.is_empty() || preset::system_name(name, &inherited, slot).is_empty() {
+            continue;
+        }
+        for key in keys::names(kind) {
+            if raw.contains_key(key) || preset::bookkeeping(key) || preset::connection(key) {
+                continue;
+            }
+            if let Some(value) = keys::default_value(key)? {
+                raw.insert(key.to_owned(), value);
+            }
+        }
+    }
+    Ok(())
 }
 
 #[derive(Clone, Copy)]

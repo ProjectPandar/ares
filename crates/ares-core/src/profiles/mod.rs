@@ -6,7 +6,9 @@ mod import;
 mod load_settings;
 mod preset_normalization;
 mod project_refresh;
-pub(crate) use project_refresh::{ProjectPresetRefresh, preset_owns_option};
+pub(crate) use project_refresh::{
+    ProjectPresetRefresh, apply_retained_preset_defaults, preset_owns_option,
+};
 
 mod fragment;
 mod inheritance;

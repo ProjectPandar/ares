@@ -103,7 +103,7 @@ fn system_config(
     Ok(raw)
 }
 
-fn system_name<'a>(name: &'a str, inherited: &'a [String], slot: usize) -> &'a str {
+pub(super) fn system_name<'a>(name: &'a str, inherited: &'a [String], slot: usize) -> &'a str {
     inherited
         .get(slot)
         .map(String::as_str)
@@ -147,7 +147,7 @@ pub(super) fn dirty_keys(dirty: &[String], slot: usize) -> Result<BTreeSet<Strin
     Ok(keys)
 }
 
-fn bookkeeping(key: &str) -> bool {
+pub(super) fn bookkeeping(key: &str) -> bool {
     matches!(
         key,
         "inherits"
@@ -160,7 +160,7 @@ fn bookkeeping(key: &str) -> bool {
     )
 }
 
-fn connection(key: &str) -> bool {
+pub(super) fn connection(key: &str) -> bool {
     matches!(
         key,
         "print_host"
