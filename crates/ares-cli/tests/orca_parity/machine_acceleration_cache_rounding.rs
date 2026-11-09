@@ -1,14 +1,17 @@
-//! `GCodeWriter.cpp:38-41`: machine print-acceleration caches use lrint.
+//! `GCodeWriter.cpp:128-149`: machine print-acceleration caches use `std::round`.
 
 #[test]
-fn even_half_machine_cap_rounds_to_even() {
+fn even_half_machine_cap_rounds_away_from_zero() {
     let project = include_bytes!(
         "../../../../tests/parity/machine-acceleration-cache-rounding/even-half-extruding.3mf"
     );
     crate::runner::native_stream_case::check(
         (
             "machine-acceleration-cache-rounding",
-            &["GCodeWriter.cpp:38-41::apply_print_config"],
+            &[
+                "GCodeWriter.cpp:106-149::apply_print_config",
+                "GCodeWriter.cpp:427-436::set_acceleration_internal",
+            ],
         ),
         "even-half-extruding",
         project,
@@ -29,7 +32,7 @@ fn even_half_machine_cap_rounds_to_even() {
                 .unwrap()
                 .parse()
                 .unwrap();
-            let expected = requested.round().min(cap.round_ties_even()) as u32;
+            let expected = requested.round().min(cap.round()) as u32;
             let actual: u32 = reference
                 .native
                 .lines()
@@ -42,7 +45,7 @@ fn even_half_machine_cap_rounds_to_even() {
                 .unwrap();
             assert_eq!(
                 actual, expected,
-                "Native first-layer body acceleration must use the source lrint cache, not raw envelope rounding"
+                "Native first-layer body acceleration must use the source std::round cache clamp"
             );
         }),
     );
