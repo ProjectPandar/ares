@@ -48,7 +48,12 @@ pub(super) fn apply(
     config: DynamicPrintConfig,
 ) -> Result<ProjectConfigViews, SliceError> {
     let (current, raw) = input;
-    let context = context::Context::build((current, checkpoint, raw), layers, geometry, config)?;
+    let context = context::Context::build_filament_group_context(
+        (current, checkpoint, raw),
+        layers,
+        geometry,
+        config,
+    )?;
     let mut result = if context.manual_multi_nozzle {
         current
             .project
@@ -89,21 +94,19 @@ pub(super) fn apply(
         heads.0[id] = OrcaInt(result[id] as i32 + 1);
         volumes.0[id] = OrcaInt(context.volumes[result[id]]);
     }
-    let nozzle_offsets = context
-        .nozzle_counts
-        .iter()
-        .scan(0usize, |offset, count| {
-            let current = *offset;
-            *offset += *count;
-            Some(current)
-        })
-        .collect::<Vec<_>>();
     let nozzles = OrcaInts(
         result
             .iter()
             .map(|head| {
                 OrcaInt(if context.manual_multi_nozzle {
-                    nozzle_offsets[*head] as i32
+                    context
+                        .nozzle_groups
+                        .iter()
+                        .find(|group| {
+                            group.extruder == *head && group.volume == context.volumes[*head]
+                        })
+                        .expect("each extruder has a physical nozzle")
+                        .group_id as i32
                 } else {
                     *head as i32
                 })

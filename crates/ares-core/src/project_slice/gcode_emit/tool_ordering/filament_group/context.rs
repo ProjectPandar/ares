@@ -5,6 +5,12 @@ use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintC
 use crate::{ProjectPrimeVolumeMode, ProjectSettings, SliceError};
 use std::collections::{BTreeMap, BTreeSet};
 
+pub(super) struct NozzleGroup {
+    pub extruder: usize,
+    pub group_id: usize,
+    pub volume: i32,
+}
+
 pub(super) struct Context {
     pub total: usize,
     pub used: Vec<usize>,
@@ -18,12 +24,12 @@ pub(super) struct Context {
     pub custom: BTreeMap<usize, Vec<usize>>,
     pub load: [f32; 2],
     pub unload: [f32; 2],
-    pub nozzle_counts: Vec<usize>,
+    pub nozzle_groups: Vec<NozzleGroup>,
     pub manual_multi_nozzle: bool,
 }
 
 impl Context {
-    pub(super) fn build(
+    pub(super) fn build_filament_group_context(
         input: (&ProjectSettings, &ProjectSettings, &ProjectSettingsRaw),
         layers: &[LayerTools],
         geometric: Vec<BTreeSet<usize>>,
@@ -101,6 +107,7 @@ impl Context {
         if !manual_multi_nozzle {
             check_nozzle_stats(&config, &volumes)?;
         }
+        let nozzle_groups = build_nozzle_groups(&nozzle_counts, &volumes);
         let mut used = layers
             .iter()
             .flat_map(|l| l.extruders.iter().copied())
@@ -184,10 +191,27 @@ impl Context {
                 settings.printer.gcode.machine_unload_filament_time.0 as f32,
                 (settings.printer.gcode.machine_unload_filament_time.0 / 2.0) as f32,
             ],
-            nozzle_counts,
+            nozzle_groups,
             manual_multi_nozzle,
         })
     }
+}
+
+// ToolOrdering.cpp:1503-1527: expand each extruder into physical nozzle groups.
+fn build_nozzle_groups(counts: &[usize], volumes: &[i32; 2]) -> Vec<NozzleGroup> {
+    let mut groups = Vec::new();
+    let mut group_id = 0;
+    for (extruder, count) in counts.iter().copied().enumerate() {
+        for _ in 0..count {
+            groups.push(NozzleGroup {
+                extruder,
+                group_id,
+                volume: volumes[extruder],
+            });
+            group_id += 1;
+        }
+    }
+    groups
 }
 
 fn check_nozzle_stats(config: &DynamicPrintConfig, volumes: &[i32; 2]) -> Result<(), SliceError> {
