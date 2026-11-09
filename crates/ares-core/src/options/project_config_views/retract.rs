@@ -75,6 +75,18 @@ pub(super) fn apply(
         "filament_retract_restart_extra"
     );
     overlay!(
+        runtime.project.gcode.retract_length_toolchange,
+        &overrides.filament_retract_length_toolchange,
+        map,
+        "filament_retract_length_toolchange"
+    );
+    overlay!(
+        runtime.project.gcode.retract_restart_extra_toolchange,
+        &overrides.filament_retract_restart_extra_toolchange,
+        map,
+        "filament_retract_restart_extra_toolchange"
+    );
+    overlay!(
         runtime.project.print.retract_when_changing_layer,
         &overrides.filament_retract_when_changing_layer,
         map,

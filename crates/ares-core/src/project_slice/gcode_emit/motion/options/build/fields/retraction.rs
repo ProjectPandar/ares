@@ -23,9 +23,9 @@ pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime:
     } = prelude;
     let filament = *filament;
     options.retraction_length = float(&gcode.retraction_length, filament);
-    options.retract_length_toolchange = float(&gcode.retract_length_toolchange, *physical);
+    options.retract_length_toolchange = float(&gcode.retract_length_toolchange, filament);
     options.retract_restart_extra_toolchange =
-        float(&gcode.retract_restart_extra_toolchange, *physical);
+        float(&gcode.retract_restart_extra_toolchange, filament);
     options.retract_restart_extra = float(&gcode.retract_restart_extra, filament);
     options.deretraction_feedrate = deretraction_speed * 60.0;
     options.retraction_feedrate = retraction_speed * 60.0;

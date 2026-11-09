@@ -119,6 +119,10 @@ where
         &NullableVectorRef::new(&value.gcode.filament_retract_length_nc),
     )?;
     map.serialize_entry(
+        "filament_retract_length_toolchange",
+        &NullableVectorRef::new(&value.retract_overrides.filament_retract_length_toolchange),
+    )?;
+    map.serialize_entry(
         "filament_retract_lift_above",
         &NullableVectorRef::new(&value.retract_overrides.filament_retract_lift_above),
     )?;
@@ -133,6 +137,14 @@ where
     map.serialize_entry(
         "filament_retract_restart_extra",
         &NullableVectorRef::new(&value.retract_overrides.filament_retract_restart_extra),
+    )?;
+    map.serialize_entry(
+        "filament_retract_restart_extra_toolchange",
+        &NullableVectorRef::new(
+            &value
+                .retract_overrides
+                .filament_retract_restart_extra_toolchange,
+        ),
     )?;
     map.serialize_entry(
         "filament_retract_when_changing_layer",

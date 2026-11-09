@@ -7,7 +7,7 @@ impl Serialize for FilamentRetractOverrideOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(17))?;
+        let mut map = serializer.serialize_map(Some(19))?;
         serialize_entries(&mut map, self)?;
         map.end()
     }
@@ -37,6 +37,10 @@ where
         &value.filament_retract_before_wipe,
     )?;
     map.serialize_entry(
+        "filament_retract_length_toolchange",
+        &value.filament_retract_length_toolchange,
+    )?;
+    map.serialize_entry(
         "filament_retract_lift_above",
         &value.filament_retract_lift_above,
     )?;
@@ -51,6 +55,10 @@ where
     map.serialize_entry(
         "filament_retract_restart_extra",
         &value.filament_retract_restart_extra,
+    )?;
+    map.serialize_entry(
+        "filament_retract_restart_extra_toolchange",
+        &value.filament_retract_restart_extra_toolchange,
     )?;
     map.serialize_entry(
         "filament_retract_when_changing_layer",

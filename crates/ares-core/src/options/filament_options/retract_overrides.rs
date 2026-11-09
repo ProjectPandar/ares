@@ -27,6 +27,8 @@ declare_option_group! {
         filament_deretraction_speed => "filament_deretraction_speed": Vec<Nullable<OrcaFloat>> = nullable_nil(),
         filament_retract_restart_extra => "filament_retract_restart_extra": Vec<Nullable<OrcaFloat>> = nullable_nil(),
         filament_retraction_minimum_travel => "filament_retraction_minimum_travel": Vec<Nullable<OrcaFloat>> = nullable_nil(),
+        filament_retract_length_toolchange => "filament_retract_length_toolchange": Vec<Nullable<OrcaFloat>> = nullable_nil(),
+        filament_retract_restart_extra_toolchange => "filament_retract_restart_extra_toolchange": Vec<Nullable<OrcaFloat>> = nullable_nil(),
         filament_wipe_distance => "filament_wipe_distance": Vec<Nullable<OrcaFloat>> = nullable_nil(),
         filament_retract_when_changing_layer => "filament_retract_when_changing_layer": Vec<Nullable<OrcaBool>> = nullable_nil(),
         filament_wipe => "filament_wipe": Vec<Nullable<OrcaBool>> = nullable_nil(),
@@ -52,6 +54,8 @@ macro_rules! retract_profile_fields {
                 filament_deretraction_speed => ("filament_deretraction_speed", nullable_float_variant_vectors_equal),
                 filament_retract_restart_extra => ("filament_retract_restart_extra", nullable_float_variant_vectors_equal),
                 filament_retraction_minimum_travel => ("filament_retraction_minimum_travel", nullable_float_variant_vectors_equal),
+                filament_retract_length_toolchange => ("filament_retract_length_toolchange", nullable_float_variant_vectors_equal),
+                filament_retract_restart_extra_toolchange => ("filament_retract_restart_extra_toolchange", nullable_float_variant_vectors_equal),
                 filament_wipe_distance => ("filament_wipe_distance", nullable_float_variant_vectors_equal),
                 filament_retract_when_changing_layer => ("filament_retract_when_changing_layer", exact_variant_vectors_equal),
                 filament_wipe => ("filament_wipe", exact_variant_vectors_equal),
@@ -134,7 +138,7 @@ impl FilamentRetractOverrideOptionsBuilder {
 }
 
 impl FilamentRetractOverrideOptions {
-    pub const DECLARATION_ORDER: [&'static str; 17] = [
+    pub const DECLARATION_ORDER: [&'static str; 19] = [
         "filament_retraction_length",
         "filament_z_hop",
         "filament_z_hop_types",
@@ -145,6 +149,8 @@ impl FilamentRetractOverrideOptions {
         "filament_deretraction_speed",
         "filament_retract_restart_extra",
         "filament_retraction_minimum_travel",
+        "filament_retract_length_toolchange",
+        "filament_retract_restart_extra_toolchange",
         "filament_wipe_distance",
         "filament_retract_when_changing_layer",
         "filament_wipe",

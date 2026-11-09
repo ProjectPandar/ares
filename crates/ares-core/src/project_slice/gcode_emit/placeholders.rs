@@ -2,6 +2,7 @@ mod bounds;
 mod cut_retraction;
 
 mod timestamp;
+mod toolchange_retraction;
 
 pub(super) use cut_retraction::insert_aliases as refresh_filament_aliases;
 
@@ -229,6 +230,7 @@ fn insert_runtime_placeholders(
     config.insert("input_filename_base", Value::String(input_filename));
     config.insert("zhop", Value::number(0.0));
     cut_retraction::insert(config, &traversal.resolved.views.runtime_gcode);
+    toolchange_retraction::insert(config, &traversal.resolved.views.runtime_gcode);
     refresh_filament_aliases(config, 0);
     config.insert(
         "position",
