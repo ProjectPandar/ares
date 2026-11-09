@@ -95,7 +95,8 @@ CLI comparisons, original fixtures and complete-output assertions:
 - `byobject_perobject_skirt::byobject_perobject_skirt_combined_control`
 
 Both Native modes must complete successfully on the original inputs.
-Compare maps and complete streams without normalization or a private state
-observer. The same public fixtures exercise distinct object-local brim,
-multiple-copy brim and skirt behavior without substituting geometry or
+Keep their existing generator-line-only comparison exception and retain all
+raw streams. Add no normalization or private state observer. The same public
+fixtures exercise distinct object-local brim, multiple-copy brim and skirt
+behavior without substituting geometry or
 switching the project to Manual mode.
