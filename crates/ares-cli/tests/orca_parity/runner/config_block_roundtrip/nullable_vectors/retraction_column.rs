@@ -5,6 +5,9 @@ use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use serde_json::json;
 use std::fs;
 
+#[path = "retraction_column/toolchange.rs"]
+mod toolchange;
+
 fn prefix<'a>(text: &'a str, marker: &str) -> Vec<&'a str> {
     let mut lines = text.lines().skip_while(|line| *line != marker);
     assert_eq!(lines.next(), Some(marker));
@@ -180,10 +183,12 @@ fn before_config_block(gcode: &[u8]) -> &[u8] {
     &gcode[..end]
 }
 
-fn check_swapped_columns(
+/// `premises` are configuration lines the Native output must echo, so a project whose map or
+/// columns collapse fails instead of passing without a difference to find.
+pub(super) fn check_filament_columns(
     label: &str,
     sources: &[&str],
-    column_echo: &str,
+    premises: &[&str],
     updates: serde_json::Value,
 ) {
     if crate::OrcaRunner::from_env().unwrap().is_none() {
@@ -201,7 +206,7 @@ fn check_swapped_columns(
         &sha(&project),
         true,
     );
-    for premise in ["; filament_map = 2,1", column_echo] {
+    for &premise in premises {
         assert!(
             reference.native.lines().any(|line| line == premise),
             "Native must keep `{premise}`; {:?}",
@@ -249,10 +254,10 @@ const WIPE_BUDGET_SOURCES: &[&str] = &[
 
 #[test]
 fn swapped_filament_map_wipe_budget() {
-    check_swapped_columns(
+    check_filament_columns(
         "swapped-filament-map-wipe-budget",
         WIPE_BUDGET_SOURCES,
-        "; filament_wipe_distance = 1,2",
+        &["; filament_map = 2,1", "; filament_wipe_distance = 1,2"],
         json!({
             "filament_map":["2","1"],
             "filament_retraction_speed":["30","20"],
@@ -263,10 +268,10 @@ fn swapped_filament_map_wipe_budget() {
 
 #[test]
 fn swapped_machine_columns_wipe_budget() {
-    check_swapped_columns(
+    check_filament_columns(
         "swapped-machine-columns-wipe-budget",
         WIPE_BUDGET_SOURCES,
-        "; wipe_distance = 1,2",
+        &["; filament_map = 2,1", "; wipe_distance = 1,2"],
         json!({
             "filament_map":["2","1"],
             "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
@@ -282,13 +287,13 @@ fn swapped_machine_columns_wipe_budget() {
 /// The first filament's wipe is off, which keeps the repeated `G1 Z` out of the comparison.
 #[test]
 fn swapped_machine_columns_wipe_flag() {
-    check_swapped_columns(
+    check_filament_columns(
         "swapped-machine-columns-wipe-flag",
         &[
             "GCode.cpp:8740,8837,8867,10699 FILAMENT_CONFIG(wipe)",
             "Print.cpp:4730-4749 retract overlay",
         ],
-        "; wipe = 1,0",
+        &["; filament_map = 2,1", "; wipe = 1,0"],
         json!({
             "filament_map":["2","1"],
             "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
@@ -304,13 +309,16 @@ fn swapped_machine_columns_wipe_flag() {
 /// `G1 Z` out too.
 #[test]
 fn swapped_machine_columns_minimum_travel() {
-    check_swapped_columns(
+    check_filament_columns(
         "swapped-machine-columns-minimum-travel",
         &[
             "GCode.cpp:10569 needs_retraction",
             "Print.cpp:4730-4749 retract overlay",
         ],
-        "; retraction_minimum_travel = 500,0.1",
+        &[
+            "; filament_map = 2,1",
+            "; retraction_minimum_travel = 500,0.1",
+        ],
         json!({
             "filament_map":["2","1"],
             "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
@@ -332,10 +340,13 @@ const SHORT_TRAVEL_SOURCES: &[&str] = &[
 /// comparison.
 #[test]
 fn swapped_machine_columns_short_travel_motion() {
-    check_swapped_columns(
+    check_filament_columns(
         "swapped-machine-columns-short-travel-motion",
         SHORT_TRAVEL_SOURCES,
-        "; retraction_minimum_travel = 3,0.1",
+        &[
+            "; filament_map = 2,1",
+            "; retraction_minimum_travel = 3,0.1",
+        ],
         json!({
             "filament_map":["2","1"],
             "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
@@ -350,10 +361,13 @@ fn swapped_machine_columns_short_travel_motion() {
 /// see it.
 #[test]
 fn swapped_filament_override_short_travel_motion() {
-    check_swapped_columns(
+    check_filament_columns(
         "swapped-filament-override-short-travel-motion",
         SHORT_TRAVEL_SOURCES,
-        "; filament_retraction_minimum_travel = 0.1,500",
+        &[
+            "; filament_map = 2,1",
+            "; filament_retraction_minimum_travel = 0.1,500",
+        ],
         json!({
             "filament_map":["2","1"],
             "retraction_minimum_travel":["500"],
