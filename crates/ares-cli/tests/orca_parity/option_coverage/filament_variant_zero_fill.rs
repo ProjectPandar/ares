@@ -52,10 +52,8 @@ fn short_filament_variants_preserve_zero_slots_in_complete_output() {
             .unwrap();
         2
     ];
-    // A standalone dual-variant filament keeps the second-variant layout
-    // alive under the ruled flatten: the variant list carries two slots
-    // while the per-slot payloads stay short, so the complete output must
-    // zero-fill the missing slots.
+    // PrintConfig.cpp:11430–11456 expands logical-filament payloads through
+    // filament_self_index before selecting the active variants.
     for filament in &mut filaments {
         filament.insert(
             "filament_extruder_variant".into(),
@@ -92,26 +90,51 @@ fn short_filament_variants_preserve_zero_slots_in_complete_output() {
         .unwrap();
     runner::filament_map::verify(&exported.project, &Value::String("Manual".into())).unwrap();
     let settings = runner::application::settings(&exported.project).unwrap();
-    assert_eq!(settings["filament_diameter"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        settings["filament_diameter"].as_array().unwrap().len(),
+        filaments.len()
+    );
     assert_eq!(settings["filament_map_mode"], "Manual");
     for key in [
         "filament_z_hop_types",
         "filament_wipe",
         "volumetric_speed_coefficients",
     ] {
-        assert_eq!(settings[key].as_array().unwrap().len(), 2);
+        assert_eq!(settings[key].as_array().unwrap().len(), filaments.len());
     }
     let sliced = runner.slice_case(&exported).unwrap();
     let native = std::str::from_utf8(&sliced.reference).unwrap();
-    // A standalone dual-variant filament keeps the second-variant layout
-    // alive under the ruled flatten: the per-slot payloads are short, so
-    // the complete output must zero-fill the missing second slots
-    // (defaults for enums, 0 for flags, nil for nullable flows).
-    assert!(native.contains("\n; activate_air_filtration_during_print = 1,0\n"));
-    assert!(native.contains("\n; filament_z_hop_types = Spiral Lift,Auto Lift\n"));
-    assert!(native.contains("\n; filament_wipe = 1,0\n"));
-    assert!(native.contains("\n; filament_ironing_flow = nil,0%\n"));
-    assert!(native.contains("\n; volumetric_speed_coefficients = \"0 0 0 0 0 0\";\n"));
+    // PrintConfig.cpp:11865–11882 copies an existing source value per slot,
+    // including the first on a missing index. Uniform inputs stay uniform.
+    for key in [
+        "activate_air_filtration_during_print",
+        "filament_z_hop_types",
+        "filament_wipe",
+        "volumetric_speed_coefficients",
+    ] {
+        let values = settings[key].as_array().unwrap();
+        let source = &values[0];
+        assert!(values.iter().all(|value| value == source));
+        // Config.hpp:1207–1209 quotes the fixture's space-delimited strings.
+        let (value, separator) = if key == "volumetric_speed_coefficients" {
+            (serde_json::to_string(source).unwrap(), ";")
+        } else {
+            (source.as_str().unwrap().to_owned(), ",")
+        };
+        let expected = std::iter::repeat_n(value.as_str(), filaments.len())
+            .collect::<Vec<_>>()
+            .join(separator);
+        assert!(native.contains(&format!("\n; {key} = {expected}\n")));
+    }
+    // GCode.cpp:8342–8351 omits options whose values are all nil.
+    assert!(
+        settings["filament_ironing_flow"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|value| value == "nil")
+    );
+    assert!(!native.contains("\n; filament_ironing_flow = "));
     assert!(!native.contains("\n; filament used [g] = "));
     let outcome = parity::compare_case(&sliced);
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
