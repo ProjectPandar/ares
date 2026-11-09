@@ -54,9 +54,17 @@ struct ObjectSettingsWire {
 }
 
 #[derive(Deserialize)]
+struct ObjectMetadataWire {
+    #[serde(rename = "@key")]
+    key: Option<String>,
+    #[serde(rename = "@value")]
+    value: Option<String>,
+}
+
+#[derive(Deserialize)]
 enum ObjectChild {
     #[serde(rename = "metadata")]
-    Metadata(Metadata),
+    Metadata(ObjectMetadataWire),
     #[serde(rename = "part")]
     Part(Box<PartSettings>),
     #[serde(other)]
@@ -73,9 +81,15 @@ impl<'de> Deserialize<'de> for ObjectSettings {
         let mut parts = Vec::new();
         for child in children {
             match child {
-                ObjectChild::Metadata(entry) => metadata.push(entry),
+                ObjectChild::Metadata(ObjectMetadataWire {
+                    key: Some(key),
+                    value,
+                }) if !key.is_empty() => {
+                    let value = value.ok_or_else(|| D::Error::missing_field("@value"))?;
+                    metadata.push(Metadata { key, value });
+                }
                 ObjectChild::Part(part) => parts.push(*part),
-                ObjectChild::Other => {}
+                ObjectChild::Metadata(_) | ObjectChild::Other => {}
             }
         }
         Self::from_ordered_metadata(id, metadata, parts).map_err(D::Error::custom)
