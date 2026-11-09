@@ -3,7 +3,7 @@
 //! Corpus scope: `pick_pos_for_curr_layer` for by-layer prints — the
 //! safe area is the picture extruder's printable region minus the object
 //! projections (offset by `extruder_clearance_radius / 2`) and the camera
-//! limit areas (first-quadrant bboxes inflated by `√2 · radius / 2`),
+//! limit areas (first-quadrant bboxes inflated by `√2 · (int(radius) / 2)`),
 //! opened by 5 mm, and the picked position is the boundary candidate with
 //! the minimum penalty `|curr − cand|₁ − ⅓ |cand|₁` (camera at the
 //! origin). Raft, rod limits, by-object mode and the wipe tower area are
@@ -54,10 +54,11 @@ fn bounding_box_polygon(bounds: (f64, f64, f64, f64)) -> Polygon {
     ])
 }
 
-/// Camera limit (`get_limit_area_for_camera`): the object bbox inflated by
-/// `√2 · radius / 2`, constrained to the first quadrant.
+/// Camera limit (`get_limit_area_for_camera`, `TimelapsePosPicker.cpp:361-363`): the object bbox
+/// inflated by `√2 · (int(radius) / 2)`, constrained to the first quadrant. The member is an int
+/// (`TimelapsePosPicker.hpp:83`), so the clearance truncates and the halving is integer division.
 fn camera_limit_polygon(bounds: (f64, f64, f64, f64), clearance_radius: f64) -> Polygon {
-    let inflate = std::f64::consts::SQRT_2 * clearance_radius * 0.5;
+    let inflate = std::f64::consts::SQRT_2 * f64::from(clearance_radius as i32 / 2);
     let (min_x, min_y, max_x, max_y) = (
         (bounds.0 - inflate).max(0.0),
         (bounds.1 - inflate).max(0.0),
@@ -144,6 +145,14 @@ pub(super) fn position(
     traversal: &PreparedPostClassicTraversal,
     picture_extruder: usize,
 ) -> Option<(i32, i32)> {
+    // `pick_pos_for_all_layer` (`TimelapsePosPicker.cpp:585-589`), taken for a smooth timelapse
+    // (`:42`), returns the default position when printing by object.
+    let print = &traversal.resolved.views.full.process.print;
+    if print.timelapse_type == crate::ProcessTimelapseType::Smooth
+        && print.print_sequence == crate::ProcessPrintSequence::ByObject
+    {
+        return None;
+    }
     let model_bounds = footprint::model_bounds(traversal)?;
     let printer = &traversal.resolved.views.full.printer;
     let clearance_radius = printer.remaining.extruder_clearance_radius.0;
