@@ -1,5 +1,8 @@
 //! Inputs and recorded outputs shared by the parity runner stages.
 
+#[path = "post_region_normalization.rs"]
+mod post_region_normalization;
+
 use serde_json::{Map, Value};
 use std::path::PathBuf;
 
