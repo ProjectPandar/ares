@@ -13,35 +13,8 @@ pub(super) fn path(
     context: timelapse::Context<'_>,
     scale: CoordinateScale,
 ) -> Result<Vec<Point>, crate::SliceError> {
-    let mut start = [0.0_f32; 2];
-    // GCodeProcessor.cpp:3021: complete motion lines and first X/Y word.
-    for line in source
-        .split_inclusive('\n')
-        .filter_map(|line| line.strip_suffix('\n'))
-    {
-        let line = line
-            .trim_matches(' ')
-            .trim_end_matches(';')
-            .trim_end_matches(' ');
-        if line.len() <= 5
-            || !["G0 ", "G1 ", "G2 ", "G3 "]
-                .iter()
-                .any(|prefix| line.starts_with(prefix))
-        {
-            continue;
-        }
-        for (axis, key) in [" X", " Y"].iter().enumerate() {
-            let Some((_, tail)) = line.split_once(key) else {
-                continue;
-            };
-            let word = tail.split([' ', '\t', '\r', '\n', ';']).next().unwrap();
-            if word.len() <= 8
-                && let Ok(value) = word.parse::<f32>()
-            {
-                start[axis] = value;
-            }
-        }
-    }
+    let mut start = [0.0_f32; 3];
+    super::super::last_position::scan(source, &mut start);
     let tower = state.wipe_tower.as_ref().unwrap();
     let bounds = tower.data.first_layer_bounds.unwrap();
     let translation = [

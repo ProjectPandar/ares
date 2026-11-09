@@ -13,6 +13,7 @@ mod generate;
 mod generator;
 mod integration;
 mod interface_temperature;
+mod last_position;
 pub(super) use integration::Integration;
 mod geometry;
 mod occupancy;

@@ -64,6 +64,35 @@ pub(in crate::project_slice::gcode_emit) fn travel_to(
     Ok(())
 }
 
+/// `GCode.cpp:1782–1789`: in-place entry without an extra unlift or unretract.
+pub(in crate::project_slice::gcode_emit) fn entry_travel(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    [start, destination]: [[i64; 2]; 2],
+    route: impl FnOnce(&EmitState) -> Result<Vec<[i64; 2]>, crate::SliceError>,
+    geometry: LayerGeometry<'_>,
+) -> Result<(), crate::SliceError> {
+    state.last_scaled_position = (start[0], start[1]);
+    state.last_position_defined = true;
+    state.use_external_mp_once = true;
+    let mut travel = Vec::new();
+    for [x, y] in route(state)? {
+        path::tower_travel(&mut travel, state, (x, y), geometry)?;
+    }
+    path::tower_travel(
+        &mut travel,
+        state,
+        (destination[0], destination[1]),
+        geometry,
+    )?;
+    if !travel.is_empty() && !travel.ends_with(b"\n") {
+        travel.push(b'\n');
+    }
+    output.extend_from_slice(&travel);
+    state.last_scaled_position = (destination[0], destination[1]);
+    Ok(())
+}
+
 pub(in crate::project_slice::gcode_emit) fn change_z(
     output: &mut Vec<u8>,
     state: &mut EmitState,

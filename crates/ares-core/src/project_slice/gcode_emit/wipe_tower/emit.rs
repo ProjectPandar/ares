@@ -3,7 +3,8 @@ use super::super::{
     motion, placeholders, pressure_advance, template, timelapse, tool_transition, value::Value,
 };
 use super::{
-    filament::at, interface_temperature, postprocess, result::ToolChangeResult, tower_gap,
+    filament::at, generator::use_gap_wall, interface_temperature, last_position, postprocess,
+    result::ToolChangeResult, tower_gap,
 };
 use crate::SliceError;
 
@@ -69,7 +70,8 @@ pub(super) fn append(
             || will_go_down
             || ramming
             || settings.printer.gcode.tool_change_on_wipe_tower.0);
-    if should_travel || state.layer_change_travel_pending {
+    let travel_to_tower_now = should_travel || state.layer_change_travel_pending;
+    if travel_to_tower_now {
         let route = |state: &motion::EmitState| {
             if result.priming || !state.last_position_defined {
                 return Ok(Vec::new());
@@ -136,6 +138,9 @@ pub(super) fn append(
                 temperature_override: override_temperature,
             },
         )?;
+        if !travel_to_tower_now && !result.priming && use_gap_wall(&settings.process.print) {
+            append_entry_travel(&mut change, state, start, transform_wt2_pt, &input)?;
+        }
         if settings.process.print.enable_prime_tower.0 {
             motion::tower::restore_z(&mut deretraction, state, z);
         }
@@ -223,6 +228,57 @@ pub(super) fn append(
             current_z,
             "Travel back up to the topmost object layer.",
         );
+    }
+    Ok(())
+}
+
+fn append_entry_travel(
+    change: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    start: [f32; 2],
+    transform_wt2_pt: impl Fn([f32; 2]) -> [f32; 2],
+    input: &Append<'_>,
+) -> Result<(), SliceError> {
+    let (context, geometry) = (input.context, input.geometry);
+    let mut position = [
+        state.x as f32,
+        state.y as f32,
+        state.writer_z.unwrap_or(0.0) as f32,
+    ];
+    let route_start = if last_position::scan(
+        std::str::from_utf8(change).expect("toolchange G-code is UTF-8"),
+        &mut position,
+    ) {
+        let plate_origin = state.xy_offset_f32();
+        let origin = [state.origin.0, state.origin.1];
+        let offset = [state.extruder_offset.0, state.extruder_offset.1];
+        Some(std::array::from_fn(|axis| {
+            ((f64::from(position[axis]) + f64::from(plate_origin[axis]) - origin[axis]
+                + offset[axis])
+                / geometry.scale.factor()) as i64
+        }))
+    } else {
+        state
+            .last_position_defined
+            .then_some([state.last_scaled_position.0, state.last_scaled_position.1])
+    };
+    if let Some(route_start) = route_start {
+        let destination = motion::tower::object_point_grid(start, state, geometry.scale);
+        motion::tower::entry_travel(
+            change,
+            state,
+            [route_start, destination],
+            |state| {
+                tower_gap::waypoints(
+                    state,
+                    context,
+                    [route_start, destination],
+                    transform_wt2_pt,
+                    geometry.scale,
+                )
+            },
+            geometry,
+        )?;
     }
     Ok(())
 }
