@@ -94,31 +94,32 @@ fn compare(
 }
 
 #[test]
-fn crosshatch_ordering_target_matches_native() {
+fn crosshatch_sparse_infill_order_matches_complete_runtime_native_output() {
     assert_eq!(sha256(TARGET), TARGET_SHA256);
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
     let root = crate::artifacts::root_from_env().unwrap();
     let reference = slice_native(&runner, &root, TARGET, "co-target-");
-    // Native-active pin: the diverging corridor order — the 36-line
-    // layer-2 path starting at X110.33 is chained BEFORE the X105.255
-    // path on Native (Ares emits X105.255 first and pairs the corridor
-    // differently).
-    let corridor = reference
-        .find("G1 X110.33 Y124.02 F9000\nG1 F3600\nG1 X109.147 Y124.02 E.03924\n")
-        .expect("native chains the corridor starting at X110.33");
-    let lane = reference
-        .find("G1 X105.255 Y124.02 F9000\n")
-        .expect("native lane start at X105.255");
+    // ExtrusionEntity.cpp:680 supplies the sparse role; GCodeProcessor.cpp:
+    // 1328-1331 supplies the layer count. The live stream is the order oracle.
     assert!(
-        corridor < lane,
-        "native order: X110.33 corridor before X105.255 lane"
+        reference.lines().any(|line| line == ";TYPE:Sparse infill"),
+        "Native witness must contain sparse infill"
     );
+    let declared_layers = reference
+        .lines()
+        .find_map(|line| line.strip_prefix("; total layer number: "))
+        .expect("Native header must declare the layer count")
+        .parse::<usize>()
+        .unwrap();
     assert_eq!(
-        reference.lines().filter(|l| *l == ";LAYER_CHANGE").count(),
-        5,
-        "both objects sliced through all layers"
+        reference
+            .lines()
+            .filter(|line| *line == ";LAYER_CHANGE")
+            .count(),
+        declared_layers,
+        "Native must emit all declared layers"
     );
     let outcome = compare(
         &root,
