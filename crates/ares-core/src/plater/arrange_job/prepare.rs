@@ -21,7 +21,7 @@ pub(super) struct Prepared {
 }
 
 /// `PartPlate::get_print_seq`: the print sequence the plate's document sets, if any.
-pub(super) fn plate_sequence(
+pub(in crate::plater) fn plate_sequence(
     project: &Project,
     plates: &PlateList,
     index: usize,

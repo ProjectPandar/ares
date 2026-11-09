@@ -93,7 +93,7 @@ impl PlaterSession {
         Ok(Self::with_project(input, project))
     }
 
-    fn with_project(input: Vec<u8>, project: Project) -> Self {
+    pub(super) fn with_project(input: Vec<u8>, project: Project) -> Self {
         let plates = project
             .plates()
             .iter()

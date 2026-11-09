@@ -52,7 +52,7 @@ fn clamp(value: f64, hi: f64) -> f64 {
 }
 
 /// `ConfigOptionFloats::set_at`: grown with copies of the first value.
-fn set_at(values: &mut Vec<f64>, index: usize, value: f64) {
+pub(in crate::plater) fn set_at(values: &mut Vec<f64>, index: usize, value: f64) {
     if values.len() <= index {
         let first = values[0];
         values.resize(index + 1, first);
@@ -130,7 +130,7 @@ fn preview_box(
 
 impl PlaterSession {
     /// `PartPlate::printable_instance_size`: the plate's printable instances not outside it.
-    fn printable_instance_size(
+    pub(in crate::plater) fn printable_instance_size(
         &self,
         plate: usize,
         (config, zones): (&DynamicPrintConfig, &[ImexZoneLayout]),

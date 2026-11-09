@@ -14,7 +14,8 @@ mod polygon;
 mod prepare;
 mod wipe_tower;
 
-pub(super) use wipe_tower::{TowerPositions, check_positions_for_new_plate};
+pub(super) use prepare::plate_sequence;
+pub(super) use wipe_tower::{TowerPositions, check_positions_for_new_plate, set_at};
 
 pub(super) use polygon::convex_hull_2d;
 
