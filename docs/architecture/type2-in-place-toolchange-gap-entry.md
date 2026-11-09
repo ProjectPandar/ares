@@ -62,11 +62,11 @@ Add only the narrow `motion/tower.rs` bridge needed to access the existing trave
 
 ## Scope and dependency
 
-Included: the second call site, shared terminal-position recovery, its selected-position lifetime and the existing gap router's invocation. Reuse existing typed configuration and writer state; introduce no configuration defaults or shadow readers.
+Included: the second call site, shared terminal-position recovery, its selected-position lifetime, the existing gap router's invocation and the resolved current-tool retraction-speed parameter described below. Reuse existing typed configuration and writer state; introduce no configuration defaults or shadow readers.
 
-Deferred: tower plan/depth, first-line credit, purge-row lattice, entry scrub, ramming, boundary wipe start, grouping, final purge, lift policy, geometry precision, processor timing and unrelated template parsing.
+Deferred: tower plan/depth, first-line credit, purge-row lattice, entry-scrub geometry, ramming, boundary wipe start, grouping, final purge, lift policy, geometry precision, processor timing and unrelated template parsing.
 
-Start directly from `16135e14a`, not from the after-wipe reservation chain. The branch dispatch and position recovery have no demonstrated after-wipe dependency. If the entry-state comparison exposes such a dependency, record the exact operand and dependency before stacking anything; do not transfer old results to the new source.
+The branch dispatch and position recovery do not own after-wipe reservation. Establish entry-state correspondence on the exact source/configuration being translated; do not transfer comparisons across different parameter producers.
 
 ## Test premise
 
@@ -74,4 +74,14 @@ Use the existing public test `smooth_type2_tower::tools::smooth_type2_tower_tool
 
 Retained outputs first differ strictly at byte 470, line 18, column 10: Native `M73 P0 R27`, Rust `M73 P0 R24`. Diagnostic command alignment first differs after T1/waits/pressure advance: Native retracts at line 321 and routes through the gap, while Rust begins the generated positioning move at line 320. Neither diagnostic command filtering nor a matched local travel section establishes complete-output parity.
 
-Keep all nine existing tools/priming members and both provider modes. Compare complete ordered output, including M73, metadata and configuration, with only the existing generator normalization; require API/CLI raw equality. Preserve the Type1 route caller and the existing gap-travel and tower-lift controls. Any first difference left afterward remains a failure with its original and new raw context reported separately. No section-only or timing waiver substitutes for this test.
+Keep all nine existing tools/priming members and both provider modes. Compare complete ordered Native/API output, including M73, metadata and configuration, with only the existing generator normalization. Record API/CLI raw equality separately; retain pre-existing footer differences without changing footer production or either comparator. Preserve the Type1 route caller and the existing gap-travel and tower-lift controls. Any first difference left afterward remains a failure with its original and new raw context reported separately. No section-only or timing waiver substitutes for this test.
+
+## Resolved current-tool scrub retraction speed
+
+`PrintApply.cpp::print_config_diffs:282–317` resolves nullable filament retract overrides; `:1666–1670` applies them to `m_config`. `Print.cpp:5509–5517` passes that configuration to `WipeTower2::set_extruder`. `GCode/WipeTower2.cpp:1222–1223` stores `config.retraction_speed.get_at(idx)` in the filament parameter, narrowing to float. Its entry scrub at `:1940–1949` reads `m_filpar[m_current_tool]`, multiplies the stored speed by `60.f`, then uses that feedrate for both retract and restore.
+
+Rust `wipe_tower/wipe.rs::scrub_entry` already selects `self.filaments[self.current_tool]` and multiplies its stored speed by `60.0_f32`. `tool_change.rs::change` selects the incoming tool before this operation. The mismatch is earlier: `planning.rs::prepare` constructs `Filament` from `views.full`, so `filament.rs::from_config` reads machine `retraction_speed` without its filament override. This is an incomplete `set_extruder` translation, not a deretraction-speed choice or a new scrub algorithm.
+
+Supply only the selected slot's already-resolved `views.runtime.project.gcode.retraction_speed` to the Type2 filament constructor, using the existing vector-access semantics and a direct `f64`→`f32` cast. Keep the other full-view fields unchanged. Reuse `project_config_views/retract.rs` for nullable overrides and filament-map selection; do not duplicate those rules in tower code, use motion-writer integer rounding, add defaults, read `deretraction_speed` or hardcode a target feedrate. Existing consumers retain this single parameter's lifetime and the scrub retains its sign, operation order and float multiplication.
+
+Use the existing nine-member tools test as the failing public boundary before changing this producer. Preserve the eight passing members' raw streams and all Type1 streams in both modes, and rerun the existing gap/lift controls. Whole-output Native comparison remains strict; any remaining mismatch, including M73, stays a failure.
