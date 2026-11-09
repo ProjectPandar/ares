@@ -287,3 +287,8 @@ pair!(
     "stepped-top",
     ("top_shell_layers", "1")
 );
+pair!(
+    arachne_alternate_bottom_shell_thins_first_layer,
+    "single-first",
+    ("bottom_shell_layers", "1")
+);

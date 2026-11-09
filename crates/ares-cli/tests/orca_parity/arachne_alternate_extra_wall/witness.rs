@@ -82,9 +82,9 @@ pub(super) fn capture(bytes: &[u8]) -> Vec<Value> {
 }
 
 /// `PerimeterGenerator.cpp:2703-2716`: the configured walls, plus one on odd
-/// layers when alternating over a nonzero integer density, then the topmost
-/// override, which needs top shell layers (`:619-622`, `:2681`). The first-layer
-/// override at `:2710` needs bottom shell layers, which no fixture has.
+/// layers when alternating over a nonzero integer density, then the first-layer
+/// and topmost overrides, which need shell layers (`:618-631`, `:2681-2682`).
+/// No fixture has a raft, so the bottom layer of `:2709` is layer 0.
 fn wall_count(settings: &Map<String, Value>, layer_id: usize, layers: usize) -> usize {
     let number = |key: &str| {
         settings[key]
@@ -99,6 +99,9 @@ fn wall_count(settings: &Map<String, Value>, layer_id: usize, layers: usize) -> 
         && number("sparse_infill_density") as i32 > 0;
     let count = number("wall_loops") as usize + usize::from(alternate);
     let thinned = |option: &str, shell: &str| settings[option] == "1" && number(shell) > 0.0;
+    if layer_id == 0 && thinned("only_one_wall_first_layer", "bottom_shell_layers") {
+        return 1;
+    }
     if layer_id + 1 == layers && count > 1 && thinned("only_one_wall_top", "top_shell_layers") {
         return 1;
     }
