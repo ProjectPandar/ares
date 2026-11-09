@@ -1,7 +1,7 @@
 //! `Print.cpp:3020–3057`, `Print::first_layer_wipe_tower_corners`.
 use super::Data;
 use crate::{
-    ProjectSettings,
+    ProcessWipeTowerWallType, ProjectSettings,
     geometry::{CoordinateScale, Point},
 };
 
@@ -20,11 +20,18 @@ impl Data {
             .first_layer_bounds
             .expect("generated tower retains first-layer polygon");
         let print = &settings.process.print;
+        // Print.cpp:4480-4483: only a Type2 cone wall occupies a cone base.
+        let cone_angle =
+            if !self.type1 && print.wipe_tower_wall_type == ProcessWipeTowerWallType::Cone {
+                print.wipe_tower_cone_angle.0
+            } else {
+                0.0
+            };
         let (radius, stretch) = super::geometry::cone_base(
             print.prime_tower_width.0,
             f64::from(self.height),
             f64::from(self.depth),
-            print.wipe_tower_cone_angle.0,
+            cone_angle,
         );
         placed_corners(
             [
