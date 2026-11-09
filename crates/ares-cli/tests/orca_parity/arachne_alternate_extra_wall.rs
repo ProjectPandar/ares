@@ -282,3 +282,8 @@ pair!(
     "single-top",
     ("top_shell_layers", "1")
 );
+pair!(
+    arachne_alternate_top_shell_regenerates_stepped_walls,
+    "stepped-top",
+    ("top_shell_layers", "1")
+);
