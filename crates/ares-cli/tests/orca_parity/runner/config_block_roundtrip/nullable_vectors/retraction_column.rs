@@ -321,3 +321,43 @@ fn swapped_machine_columns_minimum_travel() {
         }),
     );
 }
+
+const SHORT_TRAVEL_SOURCES: &[&str] = &[
+    "GCode.cpp:10386 short-travel EXTRUDER_CONFIG",
+    "GCode.cpp:10569 needs_retraction",
+    "Print.cpp:4730-4749 retract overlay",
+];
+
+/// The second filament holds the wide threshold, which keeps the repeated `G1 Z` out of the
+/// comparison.
+#[test]
+fn swapped_machine_columns_short_travel_motion() {
+    check_swapped_columns(
+        "swapped-machine-columns-short-travel-motion",
+        SHORT_TRAVEL_SOURCES,
+        "; retraction_minimum_travel = 3,0.1",
+        json!({
+            "filament_map":["2","1"],
+            "printer_extruder_variant":["Direct Drive Standard","Direct Drive Standard"],
+            "printer_extruder_id":["1","2"],
+            "retraction_minimum_travel":["3","0.1"],
+            "filament_retraction_minimum_travel":["nil","nil"]
+        }),
+    );
+}
+
+/// The wide machine value is hidden by both overrides, so only a read of the machine column can
+/// see it.
+#[test]
+fn swapped_filament_override_short_travel_motion() {
+    check_swapped_columns(
+        "swapped-filament-override-short-travel-motion",
+        SHORT_TRAVEL_SOURCES,
+        "; filament_retraction_minimum_travel = 0.1,500",
+        json!({
+            "filament_map":["2","1"],
+            "retraction_minimum_travel":["500"],
+            "filament_retraction_minimum_travel":["0.1","500"]
+        }),
+    );
+}
