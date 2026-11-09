@@ -66,3 +66,6 @@ mod zero_area_orientation;
 
 #[path = "per_object_skirt_combine.rs"]
 mod per_object_skirt_combine;
+
+#[path = "project_scalar_string_arrays.rs"]
+mod project_scalar_string_arrays;
