@@ -14,9 +14,31 @@ fn two_nozzle_footer_preserves_each_filament_usage_and_totals() {
     }
     let (reference, actual) = outputs("", "", false, &[]);
     let expected = footer(&reference);
-    assert!(expected.starts_with("; filament used [mm] = 368.40, 149.19\n"));
+    let tools = std::str::from_utf8(&reference)
+        .unwrap()
+        .lines()
+        .filter_map(|line| line.strip_prefix('T')?.parse::<u32>().ok())
+        .collect::<std::collections::BTreeSet<_>>();
+    assert!(tools.len() > 1);
+    let usage = expected
+        .lines()
+        .next()
+        .unwrap()
+        .strip_prefix("; filament used [mm] = ")
+        .unwrap()
+        .split(", ")
+        .map(|value| value.parse::<f64>().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(usage.len(), tools.len());
+    assert!(usage.iter().all(|&value| value > 0.0));
     assert!(expected.contains("; filament used [g] = "));
-    assert!(expected.contains("; total filament change = 16\n"));
+    let changes = expected
+        .lines()
+        .find_map(|line| line.strip_prefix("; total filament change = "))
+        .unwrap()
+        .parse::<usize>()
+        .unwrap();
+    assert!(changes > 0);
     assert_eq!(footer(&actual), expected);
 }
 
