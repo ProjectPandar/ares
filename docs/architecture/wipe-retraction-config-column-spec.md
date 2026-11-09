@@ -25,17 +25,22 @@ reads the during-wipe speed at the `filament` column that its neighbouring
 `Extruder` getters already use. Ares materializes one column per filament before
 this point, so no new resolver is added.
 
-The budget distance and the path clip now read one upstream value, so
+The budget distance and the path clip read one upstream value, so
 `MotionOptions::retraction_during_wipe_distance` is removed and
-`motion/travel/wipe_path.rs` reads `wipe_distance` for both. The during-wipe speed
+`motion/travel/wipe_path.rs` reads `wipe_distance` for both. That value comes from
+`views.runtime`, where `project_config_views/retract.rs` has already applied the
+filament overrides and the filament map (`Print.cpp:4730-4749`,
+`PrintConfig.cpp:12408` `apply_override`). `views.full` keeps the machine columns as
+loaded and is not the configuration `Wipe` reads. The during-wipe speed
 stays separate from `retraction_feedrate`, which carries the rounding of
 `Extruder::retract_speed` (`Extruder.cpp:227`); `:584` reads the raw value.
 
 ## Observable behavior
 
 The two readers differ only when a filament's mapped physical extruder is not its
-own column and the columns hold different values. With `filament_map = 2,1` and
-per-filament `filament_retraction_speed` and `filament_wipe_distance`, a physical
+own column and the columns hold different values. With `filament_map = 2,1`, either
+through per-filament `filament_retraction_speed` and `filament_wipe_distance` or
+through machine `retraction_speed` and `wipe_distance` with nil overrides, a physical
 read gives each filament the other filament's budget, which moves retraction between
 the plain retract and the wipe. The length difference also changes retract time, so
 `CoolingBuffer` feedrates and progress lines follow it.
@@ -47,16 +52,18 @@ the plain retract and the wipe. The length difference also changes retract time,
 - Moving other physical readers with these two: `travel_slope` (`Extruder.cpp:260`)
   and `retract_lift_above`, `retract_lift_below` (`GCodeWriter.cpp:911-912`) stay at
   `extruder_id()`.
+- Testing overrides only: a non-nil override hides the `views.full` fallback, so the
+  machine-column case needs its own output.
 - A fixture where the map is recomputed: `Auto For Flush` replaces the saved map, so
   the fixture is `Manual` in the project and in the plate metadata.
 
 ## Test
 
-`swapped_filament_map_wipe_budget` in
+`swapped_filament_map_wipe_budget` and `swapped_machine_columns_wipe_budget` in
 `crates/ares-cli/tests/orca_parity/runner/config_block_roundtrip/nullable_vectors/retraction_column.rs`
-derives its project at runtime from
+derive their projects at runtime from
 `tests/parity/j1-used-extruder-follows-emitted-tools/both-used.3mf`, which prints both
-filaments, and compares against the live Native output in official and seeded modes.
+filaments, and compare against the live Native output in official and seeded modes.
 
 The assertion covers every byte before `; CONFIG_BLOCK_START`, generator line
 normalized, which holds every emitted move. The configuration block is excluded until
