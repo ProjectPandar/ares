@@ -70,6 +70,12 @@ The production destination is core-only and platform-neutral. No filesystem,
 terminal, OpenGL, UI or browser-specific behavior is introduced. Existing
 `ares_core::slice_with_profiles` remains the public byte-oriented entry point.
 
+`wipe_tower_filament` uses `0` for automatic selection and otherwise the 1-based
+logical-filament range from `Print.cpp:798-800`, independent of physical extruder
+count; when the selector is consumed, Ares retains an error above the logical
+filament count instead of upstream's debug-only assertion and release-mode
+undefined behavior.
+
 ## Deferred adjacent behavior
 
 - Type1 `GCode/WipeTower.cpp` allocation/emission, Bambu carousel/nozzle grouping,
