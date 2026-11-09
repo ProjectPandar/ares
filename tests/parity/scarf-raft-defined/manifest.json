@@ -1,0 +1,47 @@
+{
+  "upstream": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "source_boundary": "src/libslic3r/GCode/SeamPlacer.cpp:1683-1727,2321-2329,2384; src/libslic3r/GCode.cpp:8519-8541; src/libslic3r/PerimeterGenerator.cpp:1545-1570; src/libslic3r/Format/bbs_3mf.cpp:2235-2238; src/libslic3r/Slicing.cpp:242-258",
+  "derived_from": "tests/parity/scarf-conditional-raft/taper-raft-40.3mf",
+  "source_sha256": "abeeb454cf7ebf73f51a56f77b24c4e5d87c74d21e6e8522b63fb4aa91b53885",
+  "height_range": {
+    "object_index": 1,
+    "min_z": 0,
+    "max_z": 0.2,
+    "layer_height": 0.2,
+    "wall_loops": 0
+  },
+  "cases": {
+    "positive": {
+      "sha256": "20718c5f7ae9b508af15ba6145efc6c705e4bec529d9e6a0901282137cd5459c",
+      "scarf_active": true,
+      "settings": {
+        "seam_slope_type": "external",
+        "seam_slope_conditional": "1",
+        "scarf_angle_threshold": "0",
+        "scarf_overhang_threshold": "40%",
+        "seam_slope_steps": "10",
+        "seam_slope_min_length": "10",
+        "seam_slope_start_height": "10%",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_entire_loop": "0",
+        "raft_layers": "2"
+      }
+    },
+    "control": {
+      "sha256": "1749630edff848531c260f955fb0b3d562ebf224527204c3db0c42a255294f9e",
+      "scarf_active": false,
+      "settings": {
+        "seam_slope_type": "none",
+        "seam_slope_conditional": "1",
+        "scarf_angle_threshold": "0",
+        "scarf_overhang_threshold": "40%",
+        "seam_slope_steps": "10",
+        "seam_slope_min_length": "10",
+        "seam_slope_start_height": "10%",
+        "seam_slope_inner_walls": "0",
+        "seam_slope_entire_loop": "0",
+        "raft_layers": "2"
+      }
+    }
+  }
+}

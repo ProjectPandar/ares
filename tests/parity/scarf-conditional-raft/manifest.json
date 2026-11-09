@@ -19,8 +19,7 @@
         "seam_slope_entire_loop": "0",
         "raft_layers": "2"
       },
-      "native_slope_count": 64,
-      "native_first_slope": "G1 X109.72 Y114.063 Z.63 E.0027 ; perimeter"
+      "native_compare": "historical_undefined_first_object_layer_distance"
     }
   }
 }

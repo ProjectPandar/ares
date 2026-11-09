@@ -11,13 +11,17 @@
 //! threshold. Admission does not prove the uninitialized field is zero;
 //! the owner-approved deterministic absent-distance policy is recorded in
 //! `docs/architecture/ard-scarf-raft-unset-distance.md`.
+//!
+//! That first-object-layer Native comparison is historical. Active cases use
+//! a zero-wall first object layer and conditional scarf on later layers,
+//! whose selected seam distances have a previous object slice.
+//! Upstream `345efec64c7b95a05ce5cf96df0dde66a158835c`,
+//! `SeamPlacer.cpp:1683-1727,2384`, `GCode.cpp:8519-8541`.
 use crate::runner::{
     OrcaRunner, cache_identity, profile_entry, reference_enabled, repo_root, stages,
 };
 use serde_json::{Value, json};
 use std::{fs, path::Path};
-
-const LABEL: &str = "taper-raft-40";
 
 #[test]
 fn raft_conditional_scarf_matches_native_public_slicing() {
@@ -27,66 +31,58 @@ fn raft_conditional_scarf_matches_native_public_slicing() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let fixtures = repo_root().join("tests/parity/scarf-conditional-raft");
+    let fixtures = repo_root().join("tests/parity/scarf-raft-defined");
     let manifest: Value =
         serde_json::from_slice(&fs::read(fixtures.join("manifest.json")).unwrap()).unwrap();
-    let input = fs::read(fixtures.join(format!("{LABEL}.3mf"))).unwrap();
-    assert_eq!(
-        cache_identity::raw_digest(&input),
-        manifest["cases"][LABEL]["sha256"]
-    );
-    let native_bytes = native_case(&runner, &manifest, &input);
-    let native = activity(&native_bytes);
-    let public = public_case(&runner.work, &input, &native_bytes);
-    profile_entry::write_json(
-        &runner.work.join("case-before-assertions.json"),
-        &json!((LABEL, &native, &public)),
-    );
-    assert_eq!(
-        native["slope_count"], 64,
-        "Native keeps the scarf on all four object layers over the raft"
-    );
-    assert_eq!(native["layers"], 6, "Native layers: 2 raft + 4 object");
-    assert_eq!(
-        native["first_layer_slope_count"], 0,
-        "raft layers themselves carry no scarf"
-    );
-    assert_eq!(
-        native["first_slope"], "G1 X109.72 Y114.063 Z.63 E.0027 ; perimeter",
-        "Native first slope sits on the first object layer (z .6 raft offset)"
-    );
-    let layers: Vec<_> = native["slope_moves"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|row| row["layer"].as_u64().unwrap())
-        .collect();
-    for object_layer in 3..=6 {
+    for label in ["positive", "control"] {
+        let input = fs::read(fixtures.join(format!("{label}.3mf"))).unwrap();
         assert_eq!(
-            layers
-                .iter()
-                .filter(|&&layer| layer == object_layer)
-                .count(),
-            16,
-            "object layer {object_layer} scarf segment count"
+            cache_identity::raw_digest(&input),
+            manifest["cases"][label]["sha256"]
+        );
+        let native_bytes = native_case(&runner, &manifest, &input, label);
+        let native = activity(&native_bytes);
+        let public = public_case(&runner.work, &input, &native_bytes, label);
+        profile_entry::write_json(
+            &runner.work.join(format!("{label}-before-assertions.json")),
+            &json!((label, &native, &public)),
+        );
+        assert_eq!(
+            native["slope_count"].as_u64().unwrap() > 0,
+            manifest["cases"][label]["scarf_active"].as_bool().unwrap(),
+            "Native scarf activity: {label}"
+        );
+        assert_eq!(native["layers"], 6, "Native layers: 2 raft + 4 object");
+        assert_eq!(native["first_layer_slope_count"], 0, "no raft scarf");
+        assert_eq!(
+            native["first_object_wall_count"], 0,
+            "first object layer has no wall loops: {label}"
+        );
+        assert!(
+            native["later_object_wall_count"].as_u64().unwrap() > 0,
+            "later object layers have walls: {label}"
+        );
+        for movement in native["slope_moves"].as_array().unwrap() {
+            assert!(
+                (4..=6).contains(&movement["layer"].as_u64().unwrap()),
+                "Native scarf belongs to later object layers"
+            );
+            assert_eq!(movement["role"], "Outer wall", "Native role");
+        }
+        assert_eq!(public["api_ok"], true, "API admission");
+        assert_eq!(public["cli_exit"], 0, "CLI admission");
+        assert_eq!(public["api_complete"], true, "API complete");
+        assert_eq!(public["cli_complete"], true, "CLI complete");
+        assert_eq!(public["raw_api_cli_equal"], true, "raw API/CLI");
+        assert_eq!(
+            public["api_comparison"]["status"], "PASS",
+            "strict Native/API: {public}"
+        );
+        assert_eq!(
+            public["cli_comparison"]["status"], "PASS",
+            "strict Native/CLI: {public}"
         );
     }
-    for movement in native["slope_moves"].as_array().unwrap() {
-        assert_eq!(movement["role"], "Outer wall", "Native role");
-    }
-    assert_eq!(public["api_ok"], true, "API admission");
-    assert_eq!(public["cli_exit"], 0, "CLI admission");
-    assert_eq!(public["api_complete"], true, "API complete");
-    assert_eq!(public["cli_complete"], true, "CLI complete");
-    assert_eq!(public["raw_api_cli_equal"], true, "raw API/CLI");
-    assert_eq!(
-        public["api_comparison"]["status"], "PASS",
-        "strict Native/API: {public}"
-    );
-    assert_eq!(
-        public["cli_comparison"]["status"], "PASS",
-        "strict Native/CLI: {public}"
-    );
 }
 
 fn complete(bytes: &[u8]) -> bool {
@@ -96,8 +92,8 @@ fn complete(bytes: &[u8]) -> bool {
         .any(|line| line == "; CONFIG_BLOCK_END")
 }
 
-fn native_case(runner: &OrcaRunner, manifest: &Value, input: &[u8]) -> Vec<u8> {
-    let directory = runner.work.join(LABEL);
+fn native_case(runner: &OrcaRunner, manifest: &Value, input: &[u8], label: &str) -> Vec<u8> {
+    let directory = runner.work.join(label);
     fs::create_dir(&directory).unwrap();
     let input_path = directory.join("input.3mf");
     fs::write(&input_path, input).unwrap();
@@ -117,16 +113,16 @@ fn native_case(runner: &OrcaRunner, manifest: &Value, input: &[u8]) -> Vec<u8> {
     let bytes = fs::read(directory.join("plate_1.gcode")).unwrap();
     profile_entry::write_json(
         &directory.join("native-result.json"),
-        &json!({"label":LABEL,"input_sha256":cache_identity::raw_digest(input),
+        &json!({"label":label,"input_sha256":cache_identity::raw_digest(input),
         "native_sha256":cache_identity::raw_digest(&bytes),"complete":complete(&bytes)}),
     );
     assert!(complete(&bytes), "incomplete Native stream");
     let text = std::str::from_utf8(&bytes).unwrap();
-    for (key, value) in manifest["cases"][LABEL]["settings"].as_object().unwrap() {
+    for (key, value) in manifest["cases"][label]["settings"].as_object().unwrap() {
         let setting = format!("; {key} = {}", value.as_str().unwrap());
         assert!(
             text.lines().any(|line| line == setting),
-            "Native setting {LABEL}: {setting}"
+            "Native setting {label}: {setting}"
         );
     }
     bytes
@@ -136,9 +132,12 @@ fn activity(bytes: &[u8]) -> Value {
     let mut layer = 0;
     let mut role = "";
     let mut movements = Vec::new();
+    let mut first_object_wall_count = 0;
+    let mut later_object_wall_count = 0;
     for (index, line) in std::str::from_utf8(bytes).unwrap().lines().enumerate() {
         if line == ";LAYER_CHANGE" {
             layer += 1;
+            role = "";
         }
         if let Some(value) = line.strip_prefix(";TYPE:") {
             role = value;
@@ -156,12 +155,21 @@ fn activity(bytes: &[u8]) -> Value {
             .iter()
             .find_map(|token| token.strip_prefix('E'))
             .is_some_and(|value| value.parse::<f64>().unwrap() > 0.0);
+        if has_xy && extrudes && matches!(role, "Outer wall" | "Inner wall") {
+            if layer == 3 {
+                first_object_wall_count += 1;
+            } else if layer > 3 {
+                later_object_wall_count += 1;
+            }
+        }
         if has_xy && has_z && extrudes {
             movements.push(json!({"line":index+1,"text":line,"layer":layer,"role":role}));
         }
     }
     json!({"slope_count":movements.len(),"layers":layer,
         "first_layer_slope_count":movements.iter().filter(|row|row["layer"]==1).count(),
+        "first_object_wall_count":first_object_wall_count,
+        "later_object_wall_count":later_object_wall_count,
         "first_slope":movements.first().map(|row|&row["text"]),"slope_moves":movements})
 }
 
@@ -174,8 +182,8 @@ fn comparison(native: &[u8], output: Option<&[u8]>) -> Value {
         "difference":result.err().map(|difference|difference.to_string())})
 }
 
-fn public_case(work: &Path, input: &[u8], native: &[u8]) -> Value {
-    let directory = work.join(format!("public-{LABEL}"));
+fn public_case(work: &Path, input: &[u8], native: &[u8], label: &str) -> Value {
+    let directory = work.join(format!("public-{label}"));
     fs::create_dir(&directory).unwrap();
     let input_path = directory.join("input.3mf");
     let cli_path = directory.join("cli.gcode");
@@ -203,7 +211,7 @@ fn public_case(work: &Path, input: &[u8], native: &[u8]) -> Value {
     }
     let cli_bytes = fs::read(&cli_path).ok();
     let api_bytes = api.as_ref().ok().map(Vec::as_slice);
-    json!({"label":LABEL,"api_ok":api.is_ok(),"cli_exit":cli.status.code(),
+    json!({"label":label,"api_ok":api.is_ok(),"cli_exit":cli.status.code(),
         "api_error":api.as_ref().err().map(|error|format!("{error:?}")),
         "api_complete":api_bytes.is_some_and(complete),
         "cli_complete":cli_bytes.as_deref().is_some_and(complete),
