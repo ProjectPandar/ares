@@ -74,7 +74,8 @@ fn timelapse_templates_render_current_logical_filament_vectors() {
         assert_eq!(actual, cli_bytes, "API/CLI raw output");
         let cli_comparison =
             crate::golden::compare_ordered_bytes_generator_only(&sliced.reference, &cli_bytes);
-        observation::verify(&native, enabled, handoff, explicit);
+        let phase = observation::gate_phase(std::str::from_utf8(&sliced.reference).unwrap());
+        observation::verify(&native, enabled, handoff, explicit, phase);
         if name == "vendor" {
             vendor_output = Some(actual.clone());
         }
@@ -86,7 +87,7 @@ fn timelapse_templates_render_current_logical_filament_vectors() {
             .unwrap();
         }
         if outcome.status == "PASS" {
-            observation::verify(&ares, enabled, handoff, explicit);
+            observation::verify(&ares, enabled, handoff, explicit, phase);
             assert_eq!(native, ares, "Native/API hook observations");
         } else {
             failures.push(format!("{label}: {}", outcome.detail));
@@ -94,7 +95,7 @@ fn timelapse_templates_render_current_logical_filament_vectors() {
         if let Err(error) = cli_comparison {
             failures.push(format!("{label} CLI: {error:?}"));
         } else {
-            observation::verify(&cli_observed, enabled, handoff, explicit);
+            observation::verify(&cli_observed, enabled, handoff, explicit, phase);
             assert_eq!(native, cli_observed, "Native/CLI hook observations");
         }
     }

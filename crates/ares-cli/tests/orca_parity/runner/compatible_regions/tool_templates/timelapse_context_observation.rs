@@ -83,7 +83,27 @@ pub(super) fn observe(gcode: &str) -> Value {
     json!({"hooks":hooks,"wall_tools":walls,"physical_layers":layer})
 }
 
-pub(super) fn verify(observed: &Value, enabled: bool, handoff: bool, explicit: bool) {
+/// The phase `need_insert_timelapse_gcode_for_traditional` selects for a nonempty template
+/// (`GCode.cpp:6689-6692`): the traditional inserts when true, the layer-change render
+/// (`:6710`) otherwise. `enable_timelapse_print()` is `timelapse_type` Smooth.
+pub(super) fn gate_phase(native: &str) -> &'static str {
+    let value = |key: &str| {
+        let prefix = format!("; {key} = ");
+        native
+            .lines()
+            .find_map(|line| line.strip_prefix(prefix.as_str()))
+            .unwrap()
+    };
+    let smooth_tower = value("enable_prime_tower") == "1" && value("timelapse_type") == "1";
+    let i3 = value("printer_structure") == "i3" && value("spiral_mode") == "0";
+    if !smooth_tower && (i3 || value("nozzle_diameter").contains(',')) {
+        "traditional"
+    } else {
+        "direct"
+    }
+}
+
+pub(super) fn verify(observed: &Value, enabled: bool, handoff: bool, explicit: bool, phase: &str) {
     assert_eq!(
         observed["wall_tools"],
         json!([0, 1]),
@@ -123,16 +143,13 @@ pub(super) fn verify(observed: &Value, enabled: bool, handoff: bool, explicit: b
         phases.len() as u64,
         observed["physical_layers"].as_u64().unwrap()
     );
-    assert_eq!(
-        hooks.len(),
-        phases.len() * 2,
-        "two timelapse phases per layer"
-    );
+    // `has_insert_timelapse_gcode` and the single layer-change site: one render per layer.
+    assert_eq!(hooks.len(), phases.len(), "one timelapse render per layer");
     assert!(
         phases
             .values()
-            .all(|value| *value == BTreeSet::from(["direct", "traditional"])),
-        "direct and tracked phases: {phases:?}"
+            .all(|value| *value == BTreeSet::from([phase])),
+        "{phase} phase on every layer: {phases:?}"
     );
     if handoff {
         assert!(
