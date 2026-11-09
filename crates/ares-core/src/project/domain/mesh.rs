@@ -5,6 +5,7 @@ use std::sync::Arc;
 pub(super) struct MeshGeometry {
     pub(super) vertices: Vec<Point3d>,
     pub(super) triangles: Vec<[u32; 3]>,
+    pub(super) face_properties: Vec<Box<str>>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -22,11 +23,16 @@ impl ProjectMesh {
     pub(super) fn geometry_identity(&self) -> usize {
         std::ptr::from_ref(self.geometry.as_ref()) as usize
     }
-    pub(crate) fn new(vertices: Vec<Point3d>, triangles: Vec<[u32; 3]>) -> Self {
+    pub(crate) fn new(
+        vertices: Vec<Point3d>,
+        triangles: Vec<[u32; 3]>,
+        face_properties: Vec<Box<str>>,
+    ) -> Self {
         Self {
             geometry: Arc::new(MeshGeometry {
                 vertices,
                 triangles,
+                face_properties,
             }),
             supported_facets: crate::project::facets_annotation::FacetsAnnotation::default(),
             mmu_segmentation_facets: crate::project::facets_annotation::FacetsAnnotation::default(),
@@ -39,5 +45,9 @@ impl ProjectMesh {
     }
     pub fn triangles(&self) -> &[[u32; 3]] {
         &self.geometry.triangles
+    }
+    /// Opaque BBS triangle properties, in source-triangle order.
+    pub fn face_properties(&self) -> &[Box<str>] {
+        &self.geometry.face_properties
     }
 }

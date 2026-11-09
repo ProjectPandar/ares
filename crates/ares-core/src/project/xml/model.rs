@@ -7,6 +7,7 @@ use super::super::model_xml::{MATERIAL_NAMESPACE, PRODUCTION_NAMESPACE};
 const XML_NAMESPACE: &[u8] = b"http://www.w3.org/XML/1998/namespace";
 
 pub(super) fn validate_attribute_namespace(
+    element_name: &[u8],
     local_name: &[u8],
     namespace: &ResolveResult<'_>,
 ) -> Result<(), SliceError> {
@@ -35,7 +36,7 @@ pub(super) fn validate_attribute_namespace(
             | b"pid"
             | b"pindex"
             | b"color"
-    );
+    ) || (element_name == b"triangle" && local_name == b"face_property");
     let valid = if production_attribute {
         matches!(namespace, ResolveResult::Bound(value) if value.as_ref() == PRODUCTION_NAMESPACE.as_bytes())
     } else if language_attribute {

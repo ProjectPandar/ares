@@ -6,6 +6,7 @@ use super::XmlRole;
 
 pub(super) fn validate(
     role: XmlRole,
+    element_name: &[u8],
     qualified_name: &[u8],
     local_name: &[u8],
     namespace: &ResolveResult<'_>,
@@ -14,7 +15,7 @@ pub(super) fn validate(
         return Ok(());
     }
     if role == XmlRole::Model {
-        return super::model::validate_attribute_namespace(local_name, namespace);
+        return super::model::validate_attribute_namespace(element_name, local_name, namespace);
     }
     if role == XmlRole::LayerConfigRanges {
         return if matches!(namespace, ResolveResult::Unbound)

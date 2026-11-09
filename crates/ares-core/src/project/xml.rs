@@ -219,6 +219,7 @@ fn validate_attributes(
         }
         attribute::validate(
             role,
+            element.local_name().as_ref(),
             attribute.key.as_ref(),
             local_name.as_ref(),
             &namespace,

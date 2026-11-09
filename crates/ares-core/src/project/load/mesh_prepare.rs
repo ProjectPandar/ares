@@ -56,6 +56,12 @@ pub(super) fn prepare(
             })
             .collect(),
         triangles,
+        source
+            .triangles
+            .triangles
+            .iter()
+            .map(|triangle| triangle.face_property.clone())
+            .collect(),
     );
     mesh.supported_facets = crate::project::facets_annotation::FacetsAnnotation::from_triangles(
         source

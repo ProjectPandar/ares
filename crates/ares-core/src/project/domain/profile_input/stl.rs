@@ -104,7 +104,7 @@ impl Project {
         let volume = ProjectVolume::new(
             filename.to_owned(),
             0,
-            ProjectMesh::new(vertices, triangles),
+            ProjectMesh::new(vertices, triangles, Vec::new()),
             transform,
             (
                 filename.to_owned(),
