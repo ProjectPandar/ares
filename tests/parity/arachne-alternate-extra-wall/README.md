@@ -18,9 +18,9 @@ Fixed ZIP timestamps and sorted settings reproduce all input SHA256s in
 | density-zero | enabled option inert at density 0 |
 | density-half | upstream integer conversion makes 0.5 inert |
 | density-one | 1 activates the increment |
-| single-top | odd topmost layer single-wall override wins |
-| stepped-top | inner count feeds existing partial-top regeneration |
-| single-first | one bottom wall; odd later layers still gain walls |
+| single-top | `only_one_wall_top` is inert with zero top shell layers |
+| stepped-top | `only_one_wall_top` is inert on a stepped footprint with zero top shell layers |
+| single-first | `only_one_wall_first_layer` is inert with zero bottom shell layers |
 | zero-walls | odd layers may gain one despite configured zero walls |
 | two-islands | each footprint island gains its own wall and infill boundary |
 | spiral | effective spiral dispatch stays unchanged on/off |

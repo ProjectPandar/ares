@@ -116,7 +116,12 @@ fn compare_pair(label: &str, off: &[u8], on: &[u8]) {
         native_witnesses.push(captured);
         failures.extend(compare_public(&case_root, project, &reference));
     }
-    witness::verify(label, &native_witnesses[0], &native_witnesses[1]);
+    witness::verify(
+        label,
+        &manifest["pairs"][label]["cases"],
+        &native_witnesses[0],
+        &native_witnesses[1],
+    );
     fs::write(
         root.join("pair-evidence.json"),
         serde_json::to_vec_pretty(&json!({
@@ -215,9 +220,18 @@ pair!(
     "density-half"
 );
 pair!(arachne_alternate_one_density_active, "density-one");
-pair!(arachne_alternate_single_top_override, "single-top");
-pair!(arachne_alternate_stepped_top_regeneration, "stepped-top");
-pair!(arachne_alternate_single_first_override, "single-first");
+pair!(
+    arachne_alternate_zero_top_shell_keeps_top_walls,
+    "single-top"
+);
+pair!(
+    arachne_alternate_zero_top_shell_keeps_stepped_walls,
+    "stepped-top"
+);
+pair!(
+    arachne_alternate_zero_bottom_shell_keeps_first_layer_walls,
+    "single-first"
+);
 pair!(arachne_alternate_zero_configured_walls, "zero-walls");
 pair!(arachne_alternate_two_islands_independent, "two-islands");
 pair!(arachne_alternate_effective_spiral_control, "spiral");

@@ -81,7 +81,26 @@ pub(super) fn capture(bytes: &[u8]) -> Vec<Value> {
     layers
 }
 
-pub(super) fn verify(label: &str, off: &[Value], on: &[Value]) {
+/// `PerimeterGenerator.cpp:2703-2706`: the configured walls, plus one on odd
+/// layers when alternating over a nonzero integer density. The single-wall
+/// overrides at `:2710-2716` need shell layers (`:618-631`, `:2681-2682`), and
+/// every non-spiral fixture here has none, so they do not enter the count.
+fn wall_count(settings: &Value, layer_id: usize) -> usize {
+    let number = |key: &str| {
+        settings[key]
+            .as_str()
+            .unwrap()
+            .trim_end_matches('%')
+            .parse::<f64>()
+            .unwrap()
+    };
+    let alternate = settings["alternate_extra_wall"] == "1"
+        && layer_id % 2 == 1
+        && number("sparse_infill_density") as i32 > 0;
+    number("wall_loops") as usize + usize::from(alternate)
+}
+
+pub(super) fn verify(label: &str, cases: &Value, off: &[Value], on: &[Value]) {
     if label == "spiral" {
         // SpiralVase.cpp:123,153 adds the final constant-Z transition-out.
         assert_eq!(off.len(), 7, "Native spiral transition-out layer");
@@ -95,25 +114,14 @@ pub(super) fn verify(label: &str, off: &[Value], on: &[Value]) {
     }
     assert_eq!(off.len(), 6, "Native off layer count: {label}");
     assert_eq!(on.len(), 6, "Native on layer count: {label}");
-    // Worked fixture expectations: two y=110 crossings per enclosing wall,
-    // except two-islands where each independent contour contributes its pair.
-    let (expected_off, expected_on) = match label {
-        "density-zero" | "density-half" => ([4; 6], [4; 6]),
-        "single-top" => ([4, 4, 4, 4, 4, 2], [4, 6, 4, 6, 4, 2]),
-        // Layer 4 is not topmost and its upper footprint is unchanged;
-        // regeneration's no-top-surface branch restores the full count.
-        "stepped-top" => ([4, 4, 4, 4, 4, 2], [4, 6, 4, 6, 4, 2]),
-        "single-first" => ([2, 4, 4, 4, 4, 4], [2, 6, 4, 6, 4, 6]),
-        "zero-walls" => ([0; 6], [0, 2, 0, 2, 0, 2]),
-        "two-islands" => ([8; 6], [8, 12, 8, 12, 8, 12]),
-        "prism" | "density-one" => ([4; 6], [4, 6, 4, 6, 4, 6]),
-        _ => panic!("unknown fixture {label}"),
-    };
-    for (mode, layers, expected) in [("off", off, expected_off), ("on", on, expected_on)] {
-        for (layer_id, (layer, count)) in layers.iter().zip(expected).enumerate() {
+    // Two y=110 crossings per wall of each independent contour.
+    let islands = if label == "two-islands" { 2 } else { 1 };
+    for (mode, layers) in [("off", off), ("on", on)] {
+        let settings = &cases[mode]["settings"];
+        for (layer_id, layer) in layers.iter().enumerate() {
             assert_eq!(
                 layer["crossings"].as_array().unwrap().len(),
-                count,
+                2 * islands * wall_count(settings, layer_id),
                 "{label}/{mode} layer {layer_id}: {layer}"
             );
         }
