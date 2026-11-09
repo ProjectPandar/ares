@@ -24,3 +24,6 @@ include!("profile_entry_3mf/settings_archive.rs");
 include!("profile_entry_3mf/settings_stl.rs");
 
 include!("profile_entry_3mf/post_process.rs");
+
+#[path = "minimal_purge_on_wipe_tower.rs"]
+mod minimal_purge_on_wipe_tower;
