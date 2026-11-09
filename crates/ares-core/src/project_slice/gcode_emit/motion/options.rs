@@ -153,6 +153,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) wipe: bool,
     pub(in crate::project_slice::gcode_emit) wipe_distance: f64,
     pub(in crate::project_slice::gcode_emit) retraction_minimum_travel: f64,
+    /// `EXTRUDER_CONFIG(retraction_minimum_travel)` for short-travel acceleration and jerk
+    /// (`GCode.cpp:10386`), read at the physical index.
+    pub(in crate::project_slice::gcode_emit) short_travel_distance: f64,
     pub(in crate::project_slice::gcode_emit) reduce_infill_retraction: bool,
     pub(in crate::project_slice::gcode_emit) has_sparse_infill: bool,
     /// `GCode::_retract` suppresses the writer retract when the bottom

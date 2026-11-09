@@ -305,7 +305,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
             state.options.initial_layer_travel_acceleration as u32;
         (initial_layer_travel_acceleration > 0)
             .then_some(f64::from(initial_layer_travel_acceleration))
-    } else if travel_distance < state.options.retraction_minimum_travel {
+    } else if travel_distance < state.options.short_travel_distance {
         match destination_feature {
             "Overhang wall" => (state.options.bridge_acceleration > 0.0)
                 .then_some(state.options.bridge_acceleration),
@@ -321,7 +321,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
         0.0
     } else if state.layer_index == 0 {
         state.options.travel_jerk
-    } else if travel_distance < state.options.retraction_minimum_travel
+    } else if travel_distance < state.options.short_travel_distance
         && matches!(destination_feature, "Outer wall" | "Overhang wall")
         && state.options.outer_wall_jerk > 0.0
     {

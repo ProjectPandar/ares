@@ -48,6 +48,7 @@ pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime:
     options.wipe = at(&print.wipe.0, filament).is_some_and(|value| value.0);
     options.wipe_distance = float(&print.wipe_distance, filament);
     options.retraction_minimum_travel = float(&print.retraction_minimum_travel, filament);
+    options.short_travel_distance = float(&print.retraction_minimum_travel, *physical);
     options.retract_when_changing_layer =
         at(&print.retract_when_changing_layer.0, filament).is_some_and(|value| value.0);
 }
