@@ -11,6 +11,9 @@ use serde_json::{Value, json};
 
 use super::{OrcaRunner, stages, vendor, write_json};
 
+#[path = "loaded_config_ranges/stock_filament.rs"]
+mod stock_filament;
+
 /// Writes a standalone `{kind}.json` for the native `--load-settings` /
 /// `--load-filaments` path, mirroring `runner.rs::write_preset` (398-404):
 /// injects `type`, `instantiation:"true"`, and normalizes `from` to the
@@ -213,11 +216,11 @@ async fn nil_flush_temp_and_retraction_zero_loaded_config() {
 
 // --- Override-driven cases: catalog + standalone files share the patch ---
 
-struct OverrideCase {
+struct OverrideCase<'a> {
     vendor_name: &'static str,
     machine: &'static str,
     process: &'static str,
-    filament: &'static str,
+    filament: &'a str,
     /// Which preset kind carries the injected field: machine|process|filament.
     kind: &'static str,
     key: &'static str,
@@ -229,7 +232,7 @@ struct OverrideCase {
 /// Runs one case where a named field on `kind` is overridden in BOTH the
 /// catalog (source of truth for Ares profile composition) and the standalone
 /// `{kind}.json` fed to native. `error_lines` is the exact key:sorted text.
-async fn run_override_case(case: &OverrideCase) {
+async fn run_override_case(case: &OverrideCase<'_>) {
     let OverrideCase {
         vendor_name,
         machine,
@@ -360,26 +363,6 @@ async fn run_override_case(case: &OverrideCase) {
         matches!(sliced, Err(SliceError::InvalidValuesInProject(text)) if text == *error_lines),
         "sliced must emit the same key:text lines; evidence {directory:?}"
     );
-}
-
-/// `bridge_line_width` > min_nozzle_diameter — the separate
-/// `Slic3r::validate` line-width bound (PrintConfig.cpp:10504-10517), not
-/// the generic `is_value_valid` loop.
-#[tokio::test]
-async fn bridge_line_width_over_nozzle_loaded_config() {
-    run_override_case(&OverrideCase {
-        vendor_name: "Creality",
-        machine: "Creality Ender-3 0.4 nozzle",
-        process: "0.20mm Standard @Creality Ender3 0.4",
-        filament: "Creality Generic PLA",
-        kind: "process",
-        key: "bridge_line_width",
-        value: json!("1.0"),
-        error_lines:
-            "bridge_line_width: Bridge line width must not exceed nozzle diameter: 1.000000",
-        prefix: "o3-bridge-",
-    })
-    .await;
 }
 
 // --- O2+O3 simultaneous violation: shared ordered map ---
