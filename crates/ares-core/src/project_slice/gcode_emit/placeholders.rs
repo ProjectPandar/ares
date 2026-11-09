@@ -86,7 +86,11 @@ pub(super) fn base_config(
     config.insert("retraction_length", retract_length);
     insert_bed_temperature_placeholders(&mut config);
     bounds::insert_print_bed_bounds(&mut config);
-    bounds::insert_first_layer_bounds(&mut config, first_layer_bounds);
+    bounds::insert_first_layer_bounds(
+        &mut config,
+        first_layer_bounds,
+        traversal.project.plate_origin(),
+    );
     insert_outer_wall_volumetric_speed(&mut config, traversal)?;
     bounds::insert_adaptive_bed_mesh(&mut config);
     bounds::insert_head_wrap_detect_zone(&mut config, traversal);

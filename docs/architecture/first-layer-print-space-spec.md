@@ -28,12 +28,15 @@ detect zone shifted by the writer offset, so the hull itself stays in the world 
 ## Rust destination
 
 - `crates/ares-core/src/project_slice/gcode_emit/footprint/first_layer.rs`,
-  `first_layer_bounds`: its inputs (first-layer islands with the instance shift, skirt,
-  brim and tower corners) are in the world frame like upstream's hull. It subtracts
-  `traversal.project.plate_origin()` from the bounds it returns, as
-  `translate_to_print_space` does, so `placeholders/bounds.rs` renders
-  `first_layer_print_min`, `first_layer_print_max`, `first_layer_print_size` and the
-  adaptive bed mesh from print-space values.
+  `first_layer_bounds`, keeps returning world-frame bounds: its inputs (first-layer
+  islands with the instance shift, skirt, brim and tower corners) are in the world frame
+  like upstream's hull, and the timelapse and placeholder centers read the same bounds.
+- `crates/ares-core/src/project_slice/gcode_emit/placeholders/bounds.rs`,
+  `insert_first_layer_bounds`, subtracts `traversal.project.plate_origin()` once, as
+  `translate_to_print_space` does, when it renders `first_layer_print_min` and
+  `first_layer_print_max`; `first_layer_print_size` is unchanged by the shift, and the
+  adaptive bed mesh reads the translated values. Its
+  `first_layer_center_no_wipe_tower` keeps the untranslated bounds.
 - `crates/ares-core/src/project_slice/gcode_emit/motion/writer_state.rs` renders
   `first_layer_print_convex_hull` from `EmitState::first_layer_hull` with the same
   subtraction. `first_layer_hull` itself stays in the world frame for the head-wrap check.

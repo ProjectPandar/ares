@@ -31,9 +31,13 @@ pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
                 .first_layer_hull
                 .iter()
                 .map(|point| {
-                    // ConfigOptionPoints renders indexed values via to_string(Vec2d).
-                    let x = super::format::ostream(point.x() as f64 * state.scale_factor);
-                    let y = super::format::ostream(point.y() as f64 * state.scale_factor);
+                    // ConfigOptionPoints renders indexed values via to_string(Vec2d), in print
+                    // space (`GCode.cpp:3900-3902`); the hull stays world-frame for the
+                    // head-wrap check.
+                    let x = point.x() as f64 * state.scale_factor - state.xy_offset.0;
+                    let y = point.y() as f64 * state.scale_factor - state.xy_offset.1;
+                    let x = super::format::ostream(x);
+                    let y = super::format::ostream(y);
                     Value::String(format!("[{x}, {y}]"))
                 })
                 .collect(),

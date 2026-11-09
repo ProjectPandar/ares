@@ -40,22 +40,6 @@ pub(super) fn self_start_config(
         .map(|record| record.layer_height)
         .sum::<f64>();
     config.insert("max_layer_z", value::Value::number(max_z));
-    if let Some((min_x, min_y, size_x, size_y)) = first_layer_bounds {
-        config.insert(
-            "first_layer_print_min",
-            value::Value::List(vec![
-                value::Value::number(min_x),
-                value::Value::number(min_y),
-            ]),
-        );
-        config.insert(
-            "first_layer_print_size",
-            value::Value::List(vec![
-                value::Value::number(size_x),
-                value::Value::number(size_y),
-            ]),
-        );
-    }
     super::super::motion::refresh_writer_state(&mut config, state);
     state.initial_filaments.insert_machine(&mut config);
     Ok(config)

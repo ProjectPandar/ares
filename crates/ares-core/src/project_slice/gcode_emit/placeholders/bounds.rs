@@ -74,18 +74,23 @@ pub(super) fn insert_head_wrap_detect_zone(
     config.insert("in_head_wrap_detect_zone", Value::option_bool(in_zone));
 }
 
+/// `GCode.cpp:3894-3908` renders the bounds in print space (`Print::translate_to_print_space`,
+/// `Print.cpp:4543-4552`); `first_layer_center_no_wipe_tower` stays untranslated
+/// (`GCode.cpp:3968-3975`).
 pub(super) fn insert_first_layer_bounds(
     config: &mut value::Config,
     bounds: Option<FirstLayerBounds>,
+    (origin_x, origin_y): (f64, f64),
 ) {
     let Some((min_x, min_y, size_x, size_y)) = bounds else {
         return;
     };
     let point = |x, y| Value::List(vec![Value::number(x), Value::number(y)]);
-    config.insert("first_layer_print_min", point(min_x, min_y));
+    let (print_x, print_y) = (min_x - origin_x, min_y - origin_y);
+    config.insert("first_layer_print_min", point(print_x, print_y));
     config.insert(
         "first_layer_print_max",
-        point(min_x + size_x, min_y + size_y),
+        point(print_x + size_x, print_y + size_y),
     );
     config.insert("first_layer_print_size", point(size_x, size_y));
     config.insert(
