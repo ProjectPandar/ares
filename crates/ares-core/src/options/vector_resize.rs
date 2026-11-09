@@ -20,11 +20,19 @@ pub(super) fn default_array_member(key: &str) -> Result<Value, SliceError> {
     match definition.kind {
         OptionValueKind::Float
         | OptionValueKind::FloatOrPercent
-        | OptionValueKind::Percent
-        | OptionValueKind::Percents
-        | OptionValueKind::PercentsNullable
         | OptionValueKind::Floats
         | OptionValueKind::FloatsNullable => default_number(definition.default_value, key),
+        OptionValueKind::Percent
+        | OptionValueKind::Percents
+        | OptionValueKind::PercentsNullable => Ok(Value::String(
+            definition
+                .default_value
+                .split(',')
+                .next()
+                .unwrap_or(definition.default_value)
+                .trim()
+                .to_owned(),
+        )),
         OptionValueKind::Int | OptionValueKind::Ints | OptionValueKind::IntsNullable => definition
             .default_value
             .split(',')
