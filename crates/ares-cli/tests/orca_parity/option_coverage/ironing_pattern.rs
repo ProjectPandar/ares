@@ -1,13 +1,15 @@
-//! `Layer::make_ironing` (`Fill.cpp:1573-1705`) routes `ironing_pattern` through
-//! `Fill::new_from_type` (`FillBase.cpp:40-77`) — every `InfillPattern` reaches
+//! `Layer::make_ironing` (`Fill.cpp:1707-1932`) routes `ironing_pattern` through
+//! `Fill::new_from_type` (`FillBase.cpp:65-104`) — every `InfillPattern` reaches
 //! the corresponding `fill_surface`. The `ironing.rs` `_` arm at
 //! `fill_entities/ironing.rs:231-234` instead rejects every pattern outside the
 //! ported set with `UnsupportedProjectFeature("ironing_pattern")`.
 //!
 //! Fixture `tests/parity/summary/time-cost.3mf`: real Arachne model with `stTop`
-//! surfaces; patching `ironing_type=top` + `ironing_pattern=<x>` produces
-//! Native ironing feature blocks on every leg below. Probes ran on official
-//! OrcaSlicer 2.4.2.
+//! surfaces on a two-nozzle X2D; patching `ironing_type=top` + `ironing_pattern=<x>`
+//! produces Native ironing feature blocks. The rectilinear control stays on it as the
+//! whole-output dual-nozzle case; the other patterns run on the single-nozzle base of
+//! `single_nozzle` (`docs/architecture/ironing-single-nozzle-legs-spec.md`). Probes
+//! ran on OrcaSlicer v2.5.0-beta `345efec64`.
 //!
 //! Legs `adaptivecubic`/`supportcubic`/`lightning` upstream-SIGSEGV inside
 //! `FillAdaptive::Filler::_fill_surface_single` /
@@ -24,6 +26,8 @@
 //! `concentricinternal` is a `internal_solid_infill_pattern`-only upstream
 //! label (`FillBase.cpp:72`), not reachable via `ironing_pattern`.
 
+#[path = "ironing_pattern/single_nozzle.rs"]
+mod single_nozzle;
 #[path = "ironing_pattern/three_d_honeycomb_guard.rs"]
 mod three_d_honeycomb_guard;
 
@@ -34,9 +38,12 @@ use sha2::{Digest, Sha256};
 use std::{
     fs,
     io::{Cursor, Read, Write},
+    path::PathBuf,
+    process::Command,
 };
 
 const BASE: &[u8] = include_bytes!("../../../../../tests/parity/summary/time-cost.3mf");
+const SETTINGS: &str = "Metadata/project_settings.config";
 
 const ANCHOR_TYPE: &str = "\"ironing_type\": \"no ironing\"";
 const ANCHOR_PATTERN: &str = "\"ironing_pattern\": \"rectilinear\"";
@@ -60,85 +67,10 @@ struct Leg {
     native_crashes: bool,
 }
 
-const LEGS: [Leg; 19] = [
+const LEGS: [Leg; 4] = [
     Leg {
         label: "control-rectilinear",
         pattern: "rectilinear",
-        native_crashes: false,
-    },
-    Leg {
-        label: "monotonic",
-        pattern: "monotonic",
-        native_crashes: false,
-    },
-    Leg {
-        label: "monotonicline",
-        pattern: "monotonicline",
-        native_crashes: false,
-    },
-    Leg {
-        label: "alignedrectilinear",
-        pattern: "alignedrectilinear",
-        native_crashes: false,
-    },
-    Leg {
-        label: "line",
-        pattern: "line",
-        native_crashes: false,
-    },
-    Leg {
-        label: "grid",
-        pattern: "grid",
-        native_crashes: false,
-    },
-    Leg {
-        label: "triangles",
-        pattern: "triangles",
-        native_crashes: false,
-    },
-    Leg {
-        label: "tri-hexagon",
-        pattern: "tri-hexagon",
-        native_crashes: false,
-    },
-    Leg {
-        label: "cubic",
-        pattern: "cubic",
-        native_crashes: false,
-    },
-    Leg {
-        label: "quartercubic",
-        pattern: "quartercubic",
-        native_crashes: false,
-    },
-    Leg {
-        label: "honeycomb",
-        pattern: "honeycomb",
-        native_crashes: false,
-    },
-    Leg {
-        label: "lateral-honeycomb",
-        pattern: "lateral-honeycomb",
-        native_crashes: false,
-    },
-    Leg {
-        label: "crosshatch",
-        pattern: "crosshatch",
-        native_crashes: false,
-    },
-    Leg {
-        label: "tpmsd",
-        pattern: "tpmsd",
-        native_crashes: false,
-    },
-    Leg {
-        label: "tpmsfk",
-        pattern: "tpmsfk",
-        native_crashes: false,
-    },
-    Leg {
-        label: "gyroid",
-        pattern: "gyroid",
         native_crashes: false,
     },
     Leg {
@@ -158,35 +90,18 @@ const LEGS: [Leg; 19] = [
     },
 ];
 
-fn project(pattern: &str) -> Vec<u8> {
-    let mut reader = zip::ZipArchive::new(Cursor::new(BASE)).unwrap();
+/// Rebuilds the `base` archive with its project configuration passed through `edit`.
+fn rewrite_settings(base: &[u8], edit: impl FnOnce(String) -> String) -> Vec<u8> {
+    let mut edit = Some(edit);
+    let mut reader = zip::ZipArchive::new(Cursor::new(base)).unwrap();
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..reader.len() {
         let mut file = reader.by_index(index).unwrap();
         let mut bytes = Vec::new();
         file.read_to_end(&mut bytes).unwrap();
-        if file.name() == "Metadata/project_settings.config" {
-            let mut text = String::from_utf8(bytes).unwrap();
-            assert!(
-                text.contains(ANCHOR_TYPE),
-                "fixture must carry {ANCHOR_TYPE}"
-            );
-            assert!(
-                text.contains(ANCHOR_PATTERN),
-                "fixture must carry {ANCHOR_PATTERN}"
-            );
-            assert!(
-                text.contains(ANCHOR_LABELS),
-                "fixture must carry {ANCHOR_LABELS}"
-            );
-            text = text.replacen(ANCHOR_TYPE, "\"ironing_type\": \"top\"", 1);
-            text = text.replacen(
-                ANCHOR_PATTERN,
-                &format!("\"ironing_pattern\": \"{}\"", pattern),
-                1,
-            );
-            text = text.replacen(ANCHOR_LABELS, "\"gcode_label_objects\": \"0\"", 1);
-            bytes = text.into_bytes();
+        if file.name() == SETTINGS {
+            let edit = edit.take().unwrap();
+            bytes = edit(String::from_utf8(bytes).unwrap()).into_bytes();
         }
         writer
             .start_file(
@@ -196,7 +111,36 @@ fn project(pattern: &str) -> Vec<u8> {
             .unwrap();
         writer.write_all(&bytes).unwrap();
     }
+    assert!(edit.is_none(), "archive must carry {SETTINGS}");
     writer.finish().unwrap().into_inner()
+}
+
+/// Turns on top ironing with `pattern` in a configuration that carries the anchors.
+fn iron_top(text: &str, pattern: &str) -> String {
+    assert!(
+        text.contains(ANCHOR_TYPE),
+        "fixture must carry {ANCHOR_TYPE}"
+    );
+    assert!(
+        text.contains(ANCHOR_PATTERN),
+        "fixture must carry {ANCHOR_PATTERN}"
+    );
+    text.replacen(ANCHOR_TYPE, "\"ironing_type\": \"top\"", 1)
+        .replacen(
+            ANCHOR_PATTERN,
+            &format!("\"ironing_pattern\": \"{pattern}\""),
+            1,
+        )
+}
+
+fn project(pattern: &str) -> Vec<u8> {
+    rewrite_settings(BASE, |text| {
+        assert!(
+            text.contains(ANCHOR_LABELS),
+            "fixture must carry {ANCHOR_LABELS}"
+        );
+        iron_top(&text, pattern).replacen(ANCHOR_LABELS, "\"gcode_label_objects\": \"0\"", 1)
+    })
 }
 
 fn sha(bytes: &[u8]) -> String {
@@ -234,19 +178,29 @@ fn native(runner: &OrcaRunner, directory: &std::path::Path, project: &[u8]) -> V
     reference
 }
 
-fn run_leg(leg: &Leg) {
-    let Some(runner) = OrcaRunner::from_env().unwrap() else {
-        return;
-    };
+/// One leg's artifact directories, input project and validated-API slice.
+struct Case {
+    label: &'static str,
+    pattern: &'static str,
+    root: PathBuf,
+    directory: PathBuf,
+    project: Vec<u8>,
+    public: Result<Vec<u8>, ares_core::SliceError>,
+}
+
+/// `None` when no Native runner is configured.
+fn prepare(
+    (label, pattern): (&'static str, &'static str),
+    project: Vec<u8>,
+) -> Option<(OrcaRunner, Case)> {
+    let runner = OrcaRunner::from_env().unwrap()?;
     let root = tempfile::Builder::new()
-        .prefix(&format!("ironing-pattern-{}-", leg.label))
+        .prefix(&format!("ironing-pattern-{label}-"))
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
     let directory = root.join("case");
     fs::create_dir_all(&directory).unwrap();
-    let project = project(leg.pattern);
-
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
@@ -257,59 +211,80 @@ fn run_leg(leg: &Leg) {
         &ares_core::ConfigOverrides::default(),
         ares_core::SlicerContext::new(0),
     ));
+    let case = Case {
+        label,
+        pattern,
+        root,
+        directory,
+        project,
+        public,
+    };
+    Some((runner, case))
+}
 
-    if leg.native_crashes {
-        // Upstream SIGSEGV on `FillAdaptive::Filler::_fill_surface_single` /
-        // `FillLightning::Filler::_fill_surface_single` — assert Native
-        // actually fails (signal/nonzero), and Ares keeps the
-        // `UnsupportedProjectFeature` guard.
-        fs::create_dir_all(&directory).unwrap();
-        let path = directory.join("input.3mf");
-        fs::write(&path, &project).unwrap();
-        let output = directory.join("native");
-        fs::create_dir(&output).unwrap();
-        let args = [
-            "--slice".into(),
-            "0".into(),
-            "--outputdir".into(),
-            output.to_str().unwrap().into(),
-            path.to_str().unwrap().into(),
-        ];
-        let native_result = stages::run(runner.bin(), args, stages::Stage::Slice, &directory);
-        let native_failure = native_result.expect_err(&format!(
-            "{directory:?}: native must crash on `{}`, but exited 0",
-            leg.pattern
-        ));
-        let (native_code, native_status) = native_failure
-            .captured
-            .as_ref()
-            .map(|c| (c.code, c.status.clone()))
-            .unwrap_or((None, String::new()));
-        let error = public.expect_err("crash-class pattern must remain unsupported");
-        assert!(
-            format!("{error:?}").contains("ironing_pattern"),
-            "{:?}: error must carry `ironing_pattern`, got {error:?}",
-            directory
-        );
-        fs::write(
-            directory.join("comparison.json"),
-            serde_json::to_vec_pretty(&json!({
-                "label": leg.label,
-                "pattern": leg.pattern,
-                "native_crashes": true,
-                "native_failure": format!("{native_failure}"),
-                "native_code": native_code,
-                "native_status": native_status,
-                "ares_error": format!("{error:?}"),
-            }))
-            .unwrap(),
-        )
-        .unwrap();
-        return;
-    }
+/// Upstream SIGSEGV on `FillAdaptive::Filler::_fill_surface_single` /
+/// `FillLightning::Filler::_fill_surface_single` — assert Native
+/// actually fails (signal/nonzero), and Ares keeps the
+/// `UnsupportedProjectFeature` guard.
+fn assert_native_crash_is_guarded(runner: &OrcaRunner, case: Case) {
+    let directory = &case.directory;
+    let path = directory.join("input.3mf");
+    fs::write(&path, &case.project).unwrap();
+    let output = directory.join("native");
+    fs::create_dir(&output).unwrap();
+    let args = [
+        "--slice".into(),
+        "0".into(),
+        "--outputdir".into(),
+        output.to_str().unwrap().into(),
+        path.to_str().unwrap().into(),
+    ];
+    let native_result = stages::run(runner.bin(), args, stages::Stage::Slice, directory);
+    let native_failure = native_result.expect_err(&format!(
+        "{directory:?}: native must crash on `{}`, but exited 0",
+        case.pattern
+    ));
+    let (native_code, native_status) = native_failure
+        .captured
+        .as_ref()
+        .map(|c| (c.code, c.status.clone()))
+        .unwrap_or((None, String::new()));
+    let error = case
+        .public
+        .expect_err("crash-class pattern must remain unsupported");
+    assert!(
+        format!("{error:?}").contains("ironing_pattern"),
+        "{:?}: error must carry `ironing_pattern`, got {error:?}",
+        directory
+    );
+    fs::write(
+        directory.join("comparison.json"),
+        serde_json::to_vec_pretty(&json!({
+            "label": case.label,
+            "pattern": case.pattern,
+            "native_crashes": true,
+            "native_failure": format!("{native_failure}"),
+            "native_code": native_code,
+            "native_status": native_status,
+            "ares_error": format!("{error:?}"),
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+}
 
-    let reference = native(&runner, &directory, &project);
-    if let Ok(gcode) = &public {
+/// Whole-output comparison of the validated API and the CLI against Native;
+/// `premise` inspects the Native reference before any comparison.
+fn assert_matches_native(runner: &OrcaRunner, case: &Case, premise: impl FnOnce(&[u8])) {
+    let Case {
+        root,
+        directory,
+        public,
+        ..
+    } = case;
+    let reference = native(runner, directory, &case.project);
+    premise(&reference);
+    if let Ok(gcode) = public {
         fs::write(directory.join("ares.validated.gcode"), gcode).unwrap();
     }
     let api_comparison = public
@@ -331,16 +306,16 @@ fn run_leg(leg: &Leg) {
     let cli_comparison = fs::read(&output)
         .map_err(|error| format!("CLI output: {error}"))
         .and_then(|gcode| golden::compare_ordered_bytes_generator_only(&reference, &gcode));
-    let raw_equals_cli = match (&public, fs::read(&output)) {
+    let raw_equals_cli = match (public, fs::read(&output)) {
         (Ok(api), Ok(cli)) => api == &cli,
         _ => false,
     };
     fs::write(
         directory.join("comparison.json"),
         serde_json::to_vec_pretty(&json!({
-            "label": leg.label,
-            "pattern": leg.pattern,
-            "input_sha256": sha(&project),
+            "label": case.label,
+            "pattern": case.pattern,
+            "input_sha256": sha(&case.project),
             "native_sha256": sha(&reference),
             "validated_api_comparison": api_comparison,
             "cli_comparison": cli_comparison,
@@ -357,28 +332,24 @@ fn run_leg(leg: &Leg) {
     assert!(raw_equals_cli, "{root:?}: raw API must equal CLI output");
 }
 
+fn run_leg(leg: &Leg) {
+    let Some((runner, case)) = prepare((leg.label, leg.pattern), project(leg.pattern)) else {
+        return;
+    };
+    if leg.native_crashes {
+        assert_native_crash_is_guarded(&runner, case);
+    } else {
+        assert_matches_native(&runner, &case, |_| {});
+    }
+}
+
 macro_rules! legs {
     ($($name:ident => $index:expr,)*) => {$(#[test] fn $name() { run_leg(&LEGS[$index]); })*};
 }
 
 legs! {
     orca_parity_ironing_pattern_control_rectilinear => 0,
-    orca_parity_ironing_pattern_monotonic => 1,
-    orca_parity_ironing_pattern_monotonicline => 2,
-    orca_parity_ironing_pattern_alignedrectilinear => 3,
-    orca_parity_ironing_pattern_line => 4,
-    orca_parity_ironing_pattern_grid => 5,
-    orca_parity_ironing_pattern_triangles => 6,
-    orca_parity_ironing_pattern_tri_hexagon => 7,
-    orca_parity_ironing_pattern_cubic => 8,
-    orca_parity_ironing_pattern_quartercubic => 9,
-    orca_parity_ironing_pattern_honeycomb => 10,
-    orca_parity_ironing_pattern_lateral_honeycomb => 11,
-    orca_parity_ironing_pattern_crosshatch => 12,
-    orca_parity_ironing_pattern_tpmsd => 13,
-    orca_parity_ironing_pattern_tpmsfk => 14,
-    orca_parity_ironing_pattern_gyroid => 15,
-    orca_parity_ironing_pattern_adaptivecubic => 16,
-    orca_parity_ironing_pattern_supportcubic => 17,
-    orca_parity_ironing_pattern_lightning => 18,
+    orca_parity_ironing_pattern_adaptivecubic => 1,
+    orca_parity_ironing_pattern_supportcubic => 2,
+    orca_parity_ironing_pattern_lightning => 3,
 }
