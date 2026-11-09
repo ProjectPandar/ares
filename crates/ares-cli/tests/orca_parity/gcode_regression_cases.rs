@@ -23,6 +23,8 @@ mod medial_endpoint_zero;
 
 #[path = "mk4_curl_lifecycle.rs"]
 mod mk4_curl_lifecycle;
+#[path = "project_face_property.rs"]
+mod project_face_property;
 #[path = "project_metadata_order.rs"]
 mod project_metadata_order;
 
