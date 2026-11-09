@@ -138,7 +138,48 @@ fn cli_unprintable_area_reports_selected_nonminimum_plate() {
         .tempdir()
         .unwrap()
         .keep();
-    let input = second_plate(&temp, &fixtures(), "-1.3");
+    use std::io::Read;
+
+    let original = fs::File::open(fixtures().join("print-volume-stock-circle-inward.3mf")).unwrap();
+    let mut archive = zip::ZipArchive::new(original).unwrap();
+    let config: serde_json::Value =
+        serde_json::from_reader(archive.by_name("Metadata/project_settings.config").unwrap())
+            .unwrap();
+    let xs = config["printable_area"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|point| {
+            point
+                .as_str()
+                .unwrap()
+                .split_once('x')
+                .unwrap()
+                .0
+                .parse::<f64>()
+                .unwrap()
+        });
+    // OrcaSlicer.cpp:1901-1904,4372-4374 truncates the bed bounding-box width.
+    // PartPlate.cpp:131,6054-6066,7049-7055 places column 1 at width*(1+1/5).
+    let width = (xs.clone().reduce(f64::max).unwrap() - xs.reduce(f64::min).unwrap()) as i32;
+    let mut model = String::new();
+    archive
+        .by_name("3D/3dmodel.model")
+        .unwrap()
+        .read_to_string(&mut model)
+        .unwrap();
+    let transform = regex::Regex::new(r#"<item\s[^>]*transform="([^"]+)""#)
+        .unwrap()
+        .captures(&model)
+        .unwrap();
+    let original_x = transform[1]
+        .split_whitespace()
+        .nth(9)
+        .unwrap()
+        .parse::<f64>()
+        .unwrap();
+    let translation_x = f64::from(width) * (1.0 + 1.0 / 5.0) + original_x;
+    let input = second_plate(&temp, &fixtures(), &translation_x.to_string());
     run_cli(&input, true, &temp);
 }
 
