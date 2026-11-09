@@ -220,6 +220,10 @@ pub(super) fn append_start(
             output.push(b'\n');
         }
     }
+    // `GCode.cpp:4379-4386`.
+    if traversal.resolved.views.runtime_gcode.enable_pre_heating.0 {
+        output.extend_from_slice(b"; MACHINE_START_GCODE_END\n");
+    }
     exhaust_fan::append_print_start(output, traversal, state.extruders.ids());
     if !super::tags::Tags::of(traversal).is_bbl() {
         append_flavor_preamble(output, traversal);
