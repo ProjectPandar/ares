@@ -18,7 +18,10 @@ const CONTROL: &[u8] = include_bytes!(
     "../../../../tests/parity/machine-acceleration-cache-rounding/stock-control.3mf"
 );
 const CONTROL_SHA: &str = "b1a3ee564b1e78d1b87f6957f2177f6cd528906ce4790218a0dca410b4191bb8";
-const UPSTREAM: &[&str] = &["bbs_3mf.cpp:3582-3593,4142-4160,3655-3673,4577-4626"];
+const UPSTREAM: &[&str] = &[
+    "bbs_3mf.cpp:3582-3593,4142-4160,3655-3673,4577-4626",
+    "bbs_3mf.cpp:4577-4584",
+];
 
 #[test]
 fn contiguous_project_metadata_complete_parity() {
@@ -60,9 +63,71 @@ fn part_metadata_after_mesh_stat_imports() {
     );
 }
 
+#[test]
+fn object_keyless_face_count_complete_parity() {
+    check_object_metadata("keyless-object", "");
+}
+
+#[test]
+fn object_empty_key_face_count_complete_parity() {
+    check_object_metadata("empty-key-object", " key=\"\"");
+}
+
+#[test]
+fn part_and_plate_missing_metadata_keys_still_reject() {
+    const MEMBER: &str = "Metadata/model_settings.config";
+    let mut archive = zip::ZipArchive::new(Cursor::new(CONTROL)).unwrap();
+    let mut xml = String::new();
+    archive
+        .by_name(MEMBER)
+        .unwrap()
+        .read_to_string(&mut xml)
+        .unwrap();
+    for parent in ["part", "plate"] {
+        let closing = format!("</{parent}>");
+        assert!(xml.contains(&closing));
+        let changed = xml.replacen(
+            &closing,
+            &format!("<metadata face_count=\"12\"/>{closing}"),
+            1,
+        );
+        let project = replace_member(MEMBER, &changed);
+        let error = ares_core::load_project(&project).unwrap_err().to_string();
+        assert_eq!(
+            error,
+            "invalid project model settings XML: missing field `@key`"
+        );
+        assert!(
+            ares_core::UpwardMachineSource::from_project(&project)
+                .unwrap()
+                .is_some()
+        );
+    }
+}
+
+fn check_object_metadata(label: &str, key: &str) {
+    const MEMBER: &str = "Metadata/model_settings.config";
+    let mut archive = zip::ZipArchive::new(Cursor::new(CONTROL)).unwrap();
+    let mut xml = String::new();
+    archive
+        .by_name(MEMBER)
+        .unwrap()
+        .read_to_string(&mut xml)
+        .unwrap();
+    let changed = xml.replacen(
+        "</object>",
+        &format!("<metadata{key} face_count=\"12\"/></object>"),
+        1,
+    );
+    check_project(label, replace_member(MEMBER, &changed), true);
+}
+
 fn check_order(label: &str, member: &str, parent: &str, sibling: &str, slice: bool) {
     assert_eq!(sha(CONTROL), CONTROL_SHA);
-    let project = permute_metadata(member, parent, sibling);
+    check_project(label, permute_metadata(member, parent, sibling), slice);
+}
+
+fn check_project(label: &str, project: Vec<u8>, slice: bool) {
     let (reference, _) = native_stream_case::qualify(
         ("project-metadata-order", UPSTREAM),
         label,
@@ -172,6 +237,11 @@ fn permute_metadata(member: &str, parent: &str, sibling: &str) -> Vec<u8> {
         &xml[closing..]
     );
     assert_eq!(moved.len(), xml.len());
+    replace_member(member, &moved)
+}
+
+fn replace_member(member: &str, xml: &str) -> Vec<u8> {
+    let mut archive = zip::ZipArchive::new(Cursor::new(CONTROL)).unwrap();
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..archive.len() {
         let entry = archive.by_index(index).unwrap();
@@ -179,7 +249,7 @@ fn permute_metadata(member: &str, parent: &str, sibling: &str) -> Vec<u8> {
             writer
                 .start_file(member, zip::write::SimpleFileOptions::default())
                 .unwrap();
-            writer.write_all(moved.as_bytes()).unwrap();
+            writer.write_all(xml.as_bytes()).unwrap();
         } else {
             writer.raw_copy_file(entry).unwrap();
         }
