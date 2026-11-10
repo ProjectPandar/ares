@@ -12,6 +12,7 @@ mod preprocess;
 mod projection;
 mod projection_visitor;
 mod slabs;
+mod tiles;
 mod top_bottom;
 
 use crate::project_slice::{PreparedPostRegions, centering};
@@ -107,7 +108,7 @@ pub(in crate::project_slice) fn apply_project(
             &layers,
             (&object.regions, &prepared.resolved.views.full),
             &heights,
-            nozzle,
+            (nozzle, resolved.object.line_width),
         )?;
         let segmentation = merge::merge(side, caps, prepared.scale).map_err(clip_error)?;
         apply::apply(object, metadata, segmentation, extruders, prepared.scale)?;

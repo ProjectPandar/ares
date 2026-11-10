@@ -1,12 +1,13 @@
-//! MultiMaterialSegmentation.cpp1285–1472: slab cleanup, embedded shells and ordered color ownership.
+//! MultiMaterialSegmentation.cpp:1247-1582: painted top/bottom segmentation.
+mod projection;
 use super::super::PostRegion;
 use super::{clip_error, math::paths, preprocess::Layer, projection::Input, slabs};
 use crate::geometry::difference_polygons_paths;
 use crate::{
     FloatOrPercent, SliceError,
     geometry::{
-        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, difference_ex,
-        intersection_ex, offset_expolygons, opening_ex, union_ex, union_expolygons,
+        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, difference_ex, opening_ex,
+        union_ex, union_expolygons,
     },
 };
 
@@ -27,7 +28,7 @@ fn stat(
     color: usize,
     (height, nozzle): (f32, f64),
     scale: CoordinateScale,
-    settings: &crate::ProjectSettings,
+    (settings, fallback_width): (&crate::ProjectSettings, FloatOrPercent),
 ) -> Result<Stat, SliceError> {
     let mut out = Stat::default();
     for region in regions
@@ -35,9 +36,22 @@ fn stat(
         .filter(|r| color == 0 || r.options.outer_wall_filament_id.0 == color as i32)
     {
         let cfg = &region.options;
-        let width = match cfg.outer_wall_line_width {
-            FloatOrPercent::Float(v) => v,
-            FloatOrPercent::Percent(v) => v.0 * nozzle / 100.0,
+        let nozzles = &settings.project.print.nozzle_diameter.0;
+        let nozzle = nozzles
+            .get((cfg.outer_wall_filament_id.0 - 1) as usize)
+            .map_or(nozzle, |value| value.0);
+        let raw = match cfg.outer_wall_line_width {
+            FloatOrPercent::Float(value) => value,
+            FloatOrPercent::Percent(value) => value.0,
+        };
+        let width = match if raw == 0.0 {
+            fallback_width
+        } else {
+            cfg.outer_wall_line_width
+        } {
+            FloatOrPercent::Float(value) if value <= 0.0 => f64::from(1.125_f32 * nozzle as f32),
+            FloatOrPercent::Float(value) => value,
+            FloatOrPercent::Percent(value) => value.0 * nozzle / 100.0,
         };
         let spacing = width as f32 - height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
         if spacing <= 0.0 {
@@ -89,6 +103,7 @@ struct EmbedInput<'a> {
     raw: &'a [slabs::Surfaces],
     layers: &'a [Layer],
     stats: &'a [Vec<Stat>],
+    scale: CoordinateScale,
 }
 fn embed_patch<const TOP: bool>(
     patch: &[ExPolygon],
@@ -99,34 +114,24 @@ fn embed_patch<const TOP: bool>(
     let stat = &input.stats[index][color];
     let count = input.layers.len();
     output.base[color][index].extend(patch.iter().cloned());
-    let mut slices = input.layers[index].input.clone();
-    let mut offset = 0.0_f32;
     let target_count = if TOP {
         index.saturating_sub(index.saturating_sub(stat.top) + 1)
     } else {
         (index + stat.bottom).min(count).saturating_sub(index + 1)
     };
-    for step in 0..target_count {
-        let target = if TOP {
-            index - 1 - step
-        } else {
-            index + 1 + step
-        };
-        offset -= stat.spacing + stat.width;
-        slices = intersection_ex(&slices, &input.layers[target].input)?;
-        let last = opening_ex(
-            &intersection_ex(
-                patch,
-                &offset_expolygons(&slices, offset, JoinType::Miter, 3.0)?,
-            )?,
-            stat.small,
-            JoinType::Miter,
-            3.0,
-        )?;
-        if last.is_empty() {
-            break;
-        }
-        output.shell[color][target].extend(last);
+    let targets = (0..target_count)
+        .map(|step| {
+            if TOP {
+                index - 1 - step
+            } else {
+                index + 1 + step
+            }
+        })
+        .collect::<Vec<_>>();
+    let projections =
+        projection::project_to_shells(patch, (input.layers, input.scale), index, &targets, stat)?;
+    for (target, shell) in targets.into_iter().zip(projections) {
+        output.shell[color][target].extend(shell);
     }
     Ok(())
 }
@@ -197,7 +202,7 @@ pub(super) fn segment(
     layers: &[Layer],
     (regions, settings): (&[PostRegion], &crate::ProjectSettings),
     heights: &[f32],
-    nozzle: f64,
+    (nozzle, fallback_width): (f64, FloatOrPercent),
 ) -> Result<Patches, SliceError> {
     let max_top = regions
         .iter()
@@ -253,7 +258,15 @@ pub(super) fn segment(
         .iter()
         .map(|&h| {
             (0..input.states)
-                .map(|color| stat(regions, color, (h, nozzle), input.scale, settings))
+                .map(|color| {
+                    stat(
+                        regions,
+                        color,
+                        (h, nozzle),
+                        input.scale,
+                        (settings, fallback_width),
+                    )
+                })
                 .collect::<Result<Vec<_>, _>>()
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -266,6 +279,7 @@ pub(super) fn segment(
             raw: &raw.top,
             layers,
             stats: &stats,
+            scale: input.scale,
         },
         &mut top,
     )
@@ -275,6 +289,7 @@ pub(super) fn segment(
             raw: &raw.bottom,
             layers,
             stats: &stats,
+            scale: input.scale,
         },
         &mut bottom,
     )
