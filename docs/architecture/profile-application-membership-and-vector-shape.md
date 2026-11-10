@@ -73,6 +73,12 @@ completeness contract must address final static-default completion, aliases,
 nil values, hidden options, and profile metadata using their upstream-owned
 boundaries. No additional output keys are filtered here.
 
+Remove the old STL carrier-only `upward_compatible_machine` exception, including
+its guard assertions and filtering. `OrcaSlicer.cpp:1769` creates that member
+while reading a 3MF; original STL replacement loading does not perform that
+read. Compare complete, unfiltered STL outputs with the same ordered-byte
+comparator. Delete the archive-rewrite helper once neither comparison uses it.
+
 ## Filament vector defaults are not palette cardinality
 
 `PrintConfig.cpp:2369-2379` defines
