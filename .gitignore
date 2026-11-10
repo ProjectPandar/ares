@@ -1,6 +1,7 @@
 OrcaSlicer/
 .omx/
 .superpowers/
+.pi/
 target*/
 .omx/artifacts
 00000.log
