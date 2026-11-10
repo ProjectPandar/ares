@@ -46,7 +46,8 @@ This slice rewrites OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`,
     temperature is `get_nozzle_temp(last, false, true, false)`, which gives 140 for no
     filament. The target is `get_nozzle_temp(next, false, false, !ignore_cooling_before_tower)`,
     which gives 0 for no filament and subtracts `filament_preheat_temperature_delta` when the
-    last argument is set;
+    last argument is set. The filament path forces `ignore_cooling_before_tower`, so it never
+    subtracts the delta;
   - `build_extruder_free_blocks` (`:2198-2204`): with at most one extruder block it takes
     the filament path;
   - `build_by_filament_blocks` (`:2429-2473`): blocks are grouped per extruder, framed by a
@@ -56,7 +57,12 @@ This slice rewrites OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`,
     and the blocks are sorted by `(free_lower, free_upper)`;
   - `inject_cooling_heating_command` (`:2217-2424`):
     - the move window comes from `lower_bound` on `gcode_id` (`:2295-2319`);
-    - the cooling-only branch (`:2383-2390`) and the heating-only branch (`:2391-2405`);
+    - the post-extrusion cooling (`:2376-2381`). On the filament path the partial range is
+      empty, so it writes `M104 … ;Multi extruder pre cooling in post extrusion` at
+      `free_lower` with the current temperature whenever the last filament's
+      `filament_pre_cooling_temperature` is above 0 and below its nozzle temperature;
+    - the cooling-only branch (`:2383-2390`). `process_pre_cooling_and_heating` always sets
+      pre-cooling, so the heating-only branch (`:2391-2405`) is never taken and is not ported;
     - the cool-then-heat branch (`:2406-2423`): `mid_temp`, the back-solved heating start
       found with `upper_bound` on the cumulative time, and the start relocated before a
       SKIPPABLE range by `adjust_iter` (`:2265-2290`);
@@ -104,6 +110,8 @@ Ares already models the same grouping for the `H` word of `M1020`
     runs the injection after `ExportLines::finish` (`:260-264`). Recorded moves are returned
     only when the caller asked for them;
   - not touched: `process_gcode` and the load-time arguments (`:114-151`).
+- `gcode_emit/motion/tool_selection.rs`: `nozzle` takes the project settings, so the usage
+  builder reads the same static grouping as the `H` word of `M1020`.
 - `gcode_emit/orchestration.rs` (`:374-390`): the export path sets the flag from
   `runtime_gcode.enable_pre_heating`, which is upstream's `finalize(true)` after
   `GCode::_do_export`. The flag does not depend on `disable_m73`.
@@ -219,7 +227,7 @@ F→P is listed with the port.
 
 - The extruder-block path, which needs `; NOZZLE_CHANGE_START`/`END` from the wipe tower
   (`WipeTower.cpp:3646`). Its pieces are `ExtruderUsageBlcok`, `build_by_extruder_blocks`,
-  the partial-free post-extrusion cooling, `ignore_cooling_before_tower` from
+  the tower's partial-free range, `ignore_cooling_before_tower` from
   `; CP_TOOLCHANGE_WIPE` and the first-nozzle lookup of the close-out. Neither Native nor
   Ares writes those tags in the suite (premise 1). The Rust builder takes the filament path,
   as upstream does with at most one extruder block.
@@ -242,3 +250,6 @@ F→P is listed with the port.
 - Unread inputs: `filament_types`, `filament_nozzle_temps_initial_layer` (every call passes
   `is_first_layer = false`), `filament_max_temperature_drop_when_ec`, `is_multiple_nozzle`, and
   the `lines_ends` rebuild (Ares keeps no line-end table).
+- Undefined upstream reads are not ported. A filament id from custom G-code at or above the
+  filament count indexes past `filament_nozzle_temps`. Ares reads the first entry, as
+  `ConfigOptionVector::get_at` does.
