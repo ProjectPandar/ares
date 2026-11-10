@@ -273,47 +273,12 @@ pub(super) fn merged_profile_raw(
     }
     // `:2838,:2978,:3161`: the process slot, loaded filament slots, and the
     // machine slot are cleared; unloaded filament slots stay embedded.
-    // `:2275,:3680-3699`: mapping every embedded filament to a single
-    // preset disables the prime tower (unless a smooth timelapse needs
-    // it) and records the key in the process slot.
-    let single_preset_mapping = settings
-        .project
-        .preset
-        .filament_settings_id
-        .0
-        .first()
-        .is_some_and(|first| {
-            settings
-                .project
-                .preset
-                .filament_settings_id
-                .0
-                .iter()
-                .all(|name| name == first)
-        });
-    fn truthy(value: Option<&RawConfigValue>) -> bool {
-        match value {
-            Some(RawConfigValue::Text(value)) => value == "1",
-            Some(RawConfigValue::Flag(value)) => *value,
-            _ => false,
-        }
-    }
-    let smooth_timelapse = truthy(merged.get("enable_timelapse"))
-        && matches!(merged.get("timelapse_type"), Some(RawConfigValue::Text(value)) if value == "1");
-    let prime_tower_disabled = single_preset_mapping && !smooth_timelapse;
-    if prime_tower_disabled {
-        inserts.push((
-            "enable_prime_tower".to_owned(),
-            RawConfigValue::Text("0".to_owned()),
-        ));
-    }
     {
         let len = embedded_count + 2;
         let context = DifferentSettingsContext {
             embedded: embedded_raw.get("different_settings_to_system"),
             len,
             selected,
-            prime_tower_disabled,
             switch_compatible_printers: machine_switch.is_some(),
         };
         let values = (0..len).map(|index| context.slot(index)).collect();
@@ -443,14 +408,12 @@ fn inherits_slot(
 }
 
 /// One slot of the `different_settings_to_system` vector
-/// (`OrcaSlicer.cpp:2838,:2978,:3161,:3680-3699`). Slot 0 accumulates the
-/// machine-switch `compatible_printers` marker (`:3056-3070`) before the
-/// prime-tower marker (`:3688-3698`), each with the upstream dedup.
+/// (`OrcaSlicer.cpp:2838,:2978,:3161`). Slot 0 accumulates the machine-switch
+/// `compatible_printers` marker before CLI overrides and mapped tower edits.
 struct DifferentSettingsContext<'a> {
     embedded: Option<&'a RawConfigValue>,
     len: usize,
     selected: usize,
-    prime_tower_disabled: bool,
     switch_compatible_printers: bool,
 }
 
@@ -474,9 +437,6 @@ impl DifferentSettingsContext<'_> {
                 && !keys.iter().any(|key| key == "compatible_printers")
             {
                 keys.insert(0, "compatible_printers".to_owned());
-            }
-            if self.prime_tower_disabled && !keys.iter().any(|key| key == "enable_prime_tower") {
-                keys.push("enable_prime_tower".to_owned());
             }
             return RawConfigValue::Text(keys.join(";"));
         }
