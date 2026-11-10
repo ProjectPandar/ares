@@ -52,23 +52,26 @@ replacement configurations, and `:3257-3301` composes loaded filament metadata
 and slots. `PresetBundle.cpp:194-213,300-341` likewise distinguishes an applied
 configuration from the fields supplied by individual filament presets.
 
-The archive-view comparisons must use the same replacement inputs on both
-sides. Native slices the rewritten archive with the original machine, process,
-and filament files, plus CLI options generated generically from the existing
-overrides JSON. `OrcaSlicer.cpp:4138-4221` records changed command-line keys in
+The settings-slice comparisons use the same original input and replacement
+inputs on both sides. Native slices the original 3MF or STL with the original
+machine, process, and filament files, plus CLI options generated generically
+from the existing overrides JSON. `OrcaSlicer.cpp:4138-4221` records changed command-line keys in
 `different_settings_to_system` before applying `m_extra_config`. This is the
 Native counterpart of Ares `ConfigOverrides` bookkeeping; overlaying values
 into a process file would omit that override operation. Ares keeps its original
 selection and override call. The ordered-byte comparator and assertions stay
-unchanged. Rename the tests to
-state this application-path contract instead of suggesting a general settings
-round trip.
+unchanged. Rename the tests to state this application-path contract instead of
+suggesting a general settings round trip. Do not rewrite an archive as a proxy
+for the original input: Native can change dirty-column membership for that
+carrier even under identical replacement inputs.
 
-These comparisons establish that the archive embedding the view produces the
-same slice under identical replacement inputs. They do not independently prove
-view completeness: a replacement file can supply a member missing from the
-view. Independent view-completeness verification is deferred, not implicitly
-claimed by these comparisons. No additional output keys are filtered.
+The comparisons do not independently prove view completeness. That remains
+deferred, and the STL view stays sparse. A CONFIG key inventory illustrates the
+representation gap: the 3MF view lacks four CONFIG aliases and has 43 additional
+members; the sparse STL view has 338 members versus 722 CONFIG members. A future
+completeness contract must address final static-default completion, aliases,
+nil values, hidden options, and profile metadata using their upstream-owned
+boundaries. No additional output keys are filtered here.
 
 ## Filament vector defaults are not palette cardinality
 
@@ -113,8 +116,8 @@ Keep these existing comparisons and their assertions unchanged in both Native
 modes:
 
 - `runner::profile_entry_3mf::profile_entry_3mf_load_settings`
-- `runner::profile_entry_3mf::profile_settings_view_archive_matches_replacement_slice_3mf`
-- `runner::profile_entry_3mf::profile_settings_view_archive_matches_replacement_slice_stl`
+- `runner::profile_entry_3mf::profile_settings_slice_matches_native_replacement_3mf`
+- `runner::profile_entry_3mf::profile_settings_slice_matches_native_replacement_stl`
 - `load_settings_3mf_partial::load_settings_3mf_machine_only_whole_file`
 - `load_settings_3mf_partial::load_settings_3mf_process_only_whole_file`
 - `runner::direct_stl_override_bookkeeping::flush_preparation::short_palette_grows_preserving_prefix`
