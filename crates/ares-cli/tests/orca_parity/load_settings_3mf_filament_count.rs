@@ -52,7 +52,7 @@ async fn zero_embedded_filament_selection_uses_loaded_count_whole_output() {
 }
 
 #[tokio::test]
-async fn zero_embedded_filament_selection_uses_two_loaded_slots_whole_output() {
+async fn two_loaded_slots_keep_native_flush_matrix_rejection() {
     run_case(true, 2).await;
 }
 
@@ -98,10 +98,9 @@ async fn run_case(empty: bool, count: usize) {
         .collect::<Vec<_>>()
         .join(";");
     let setting_paths = format!("{};{}", machine.display(), process.display());
-    crate::load_settings_cli::stages_run(
-        &runner,
-        &root,
-        &[
+    let native_result = crate::runner::stages::run(
+        runner.bin(),
+        [
             "--slice",
             "0",
             "--load-settings",
@@ -113,9 +112,35 @@ async fn run_case(empty: bool, count: usize) {
             "--outputdir",
             "native-output",
             input_path.to_str().unwrap(),
-        ],
+        ]
+        .into_iter()
+        .map(str::to_owned),
+        crate::runner::stages::Stage::Slice,
+        &root,
     );
-    let native = fs::read(root.join("native-output/plate_1.gcode")).unwrap();
+    let native_path = root.join("native-output/plate_1.gcode");
+    let matrix_error = "Flush volumes matrix do not match to the correct size!";
+    let native = if count == 2 {
+        let failure = native_result.unwrap_err();
+        assert_eq!(failure.kind, crate::runner::stages::FailureKind::Process);
+        let evidence = failure.evidence.unwrap();
+        let status: Value =
+            serde_json::from_slice(&fs::read(evidence.join("status.json")).unwrap()).unwrap();
+        assert_eq!(status["code"], 156);
+        assert_eq!(
+            fs::read(evidence.join("stdout.bin")).unwrap(),
+            b"run found error, return -100, exit...\n"
+        );
+        assert!(
+            String::from_utf8_lossy(&fs::read(evidence.join("stderr.bin")).unwrap())
+                .contains(matrix_error)
+        );
+        assert!(!native_path.exists());
+        None
+    } else {
+        native_result.unwrap();
+        Some(fs::read(native_path).unwrap())
+    };
     let machine_json = fs::read_to_string(&machine).unwrap();
     let process_json = fs::read_to_string(&process).unwrap();
     let filament_jsons = filament_paths
@@ -156,34 +181,42 @@ async fn run_case(empty: bool, count: usize) {
         SlicerContext::new(0),
     )
     .await;
-    let comparison = public
-        .as_ref()
-        .map_err(|error| error.to_string())
-        .and_then(|gcode| {
-            let expected = crate::load_settings_cli::banner_normalized(&native);
-            let actual = crate::load_settings_cli::banner_normalized(gcode);
-            if expected == actual {
-                Ok(())
-            } else {
-                let at = expected
-                    .iter()
-                    .zip(&actual)
-                    .position(|(a, b)| a != b)
-                    .unwrap_or(expected.len().min(actual.len()));
-                Err(format!(
-                    "first difference at byte {at}; Native {} bytes, API {} bytes",
-                    expected.len(),
-                    actual.len()
-                ))
-            }
-        });
+    let comparison = if let Some(native) = &native {
+        public
+            .as_ref()
+            .map_err(|error| error.to_string())
+            .and_then(|gcode| {
+                let expected = crate::load_settings_cli::banner_normalized(native);
+                let actual = crate::load_settings_cli::banner_normalized(gcode);
+                if expected == actual {
+                    Ok(())
+                } else {
+                    let at = expected
+                        .iter()
+                        .zip(&actual)
+                        .position(|(a, b)| a != b)
+                        .unwrap_or(expected.len().min(actual.len()));
+                    Err(format!(
+                        "first difference at byte {at}; Native {} bytes, API {} bytes",
+                        expected.len(),
+                        actual.len()
+                    ))
+                }
+            })
+    } else {
+        match &public {
+            Err(error) if error.to_string().contains(matrix_error) => Ok(()),
+            Err(error) => Err(format!("Native matrix rejection differs: {error}")),
+            Ok(_) => Err("API accepted the Native matrix rejection".to_owned()),
+        }
+    };
     if let Ok(gcode) = &public {
         fs::write(root.join("api.gcode"), gcode).unwrap();
     }
     fs::write(root.join("comparison.json"), serde_json::to_vec_pretty(&json!({
         "original_sha256": digest(&original), "input_sha256": digest(&input),
         "machine_sha256": digest(machine_json.as_bytes()), "process_sha256": digest(process_json.as_bytes()), "filament_sha256": filament_jsons.iter().map(|json| digest(json.as_bytes())).collect::<Vec<_>>(),
-        "native_sha256": digest(&native), "api_sha256": public.as_ref().ok().map(|bytes| digest(bytes)),
+        "native_sha256": native.as_ref().map(|bytes| digest(bytes)), "api_sha256": public.as_ref().ok().map(|bytes| digest(bytes)),
         "api_error": public.as_ref().err().map(ToString::to_string), "whole_output": comparison,
         "input_change": if empty { "filament_settings_id becomes [] only" } else { "none" }, "loaded_filament_count": count,
     })).unwrap()).unwrap();
