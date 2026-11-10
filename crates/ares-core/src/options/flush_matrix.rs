@@ -24,7 +24,8 @@ pub(crate) fn prepare(
     overrides: &crate::ConfigOverrides,
 ) -> Result<(), SliceError> {
     let nozzle_count = settings.project.print.nozzle_diameter.0.len();
-    let filament_count = settings.filament.gcode.filament_diameter.0.len();
+    // CLI:1893,2528-2529: count selected presets, not diameter overrides.
+    let filament_count = settings.project.preset.filament_settings_id.0.len();
     let has_palette = raw.contains_key("filament_colour");
     let mut palette_raw = ProjectSettingsRaw::default();
     // Config.cpp:323–341,1721–1741: option(key, true) clones the registered

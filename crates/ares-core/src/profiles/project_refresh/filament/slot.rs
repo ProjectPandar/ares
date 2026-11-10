@@ -105,7 +105,8 @@ pub(super) fn apply(
             };
             let first = source[0].clone();
             if values.len() <= slot {
-                values.resize(slot + 1, first.clone());
+                // Config.hpp:451-459: set_at grows with the destination front.
+                values.resize(slot + 1, values[0].clone());
             }
             values[slot] = first;
             result.insert(key.clone(), RawConfigValue::List(values));
