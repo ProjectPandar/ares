@@ -31,6 +31,9 @@ mod layer_context;
 #[path = "tool_templates/timelapse_context.rs"]
 mod timelapse_context;
 
+#[path = "tool_templates/pre_heating.rs"]
+mod pre_heating;
+
 #[test]
 fn printing_toolchange_restores_pressure_advance_after_filament_start() {
     if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {

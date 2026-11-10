@@ -32,6 +32,17 @@ pub(super) fn configured(
     aliases: bool,
     overrides: Overrides<'_>,
 ) -> (Vec<u8>, Vec<u8>) {
+    let (_, reference, actual) = configured_project(start, end, aliases, overrides);
+    (reference, actual)
+}
+
+/// The sliced project with its Native and Ares outputs.
+pub(super) fn configured_project(
+    start: &str,
+    end: &str,
+    aliases: bool,
+    overrides: Overrides<'_>,
+) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
     let machine_overrides = overrides.machine;
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     let profiles = VendorProfiles::load(
@@ -155,5 +166,5 @@ pub(super) fn configured(
             ares_core::SlicerContext::new(0),
         ))
         .unwrap();
-    (sliced.reference, actual)
+    (sliced.project, sliced.reference, actual)
 }
