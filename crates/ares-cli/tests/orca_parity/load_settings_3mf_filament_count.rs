@@ -48,15 +48,20 @@ fn without_selection(input: &[u8]) -> Vec<u8> {
 
 #[tokio::test]
 async fn zero_embedded_filament_selection_uses_loaded_count_whole_output() {
-    run_case(true).await;
+    run_case(true, 1).await;
+}
+
+#[tokio::test]
+async fn zero_embedded_filament_selection_uses_two_loaded_slots_whole_output() {
+    run_case(true, 2).await;
 }
 
 #[tokio::test]
 async fn embedded_filament_selection_public_whole_output_control() {
-    run_case(false).await;
+    run_case(false, 1).await;
 }
 
-async fn run_case(empty: bool) {
+async fn run_case(empty: bool, count: usize) {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -76,6 +81,22 @@ async fn run_case(empty: bool) {
     let machine = load_settings_3mf_fixture("machine.json");
     let process = load_settings_3mf_fixture("process.json");
     let filament = load_settings_3mf_fixture("compatible-filament-0.json");
+    let mut filament_paths = vec![filament.clone()];
+    if count == 2 {
+        let mut second: Value = serde_json::from_slice(&fs::read(&filament).unwrap()).unwrap();
+        second["name"] = json!(format!(
+            "{} - second slot",
+            second["name"].as_str().unwrap()
+        ));
+        let path = root.join("second-filament.json");
+        fs::write(&path, serde_json::to_vec_pretty(&second).unwrap()).unwrap();
+        filament_paths.push(path);
+    }
+    let filament_args = filament_paths
+        .iter()
+        .map(|path| path.to_str().unwrap())
+        .collect::<Vec<_>>()
+        .join(";");
     let setting_paths = format!("{};{}", machine.display(), process.display());
     crate::load_settings_cli::stages_run(
         &runner,
@@ -86,7 +107,7 @@ async fn run_case(empty: bool) {
             "--load-settings",
             &setting_paths,
             "--load-filaments",
-            filament.to_str().unwrap(),
+            &filament_args,
             "--arrange",
             "0",
             "--outputdir",
@@ -97,7 +118,10 @@ async fn run_case(empty: bool) {
     let native = fs::read(root.join("native-output/plate_1.gcode")).unwrap();
     let machine_json = fs::read_to_string(&machine).unwrap();
     let process_json = fs::read_to_string(&process).unwrap();
-    let filament_json = fs::read_to_string(&filament).unwrap();
+    let filament_jsons = filament_paths
+        .iter()
+        .map(|path| fs::read_to_string(path).unwrap())
+        .collect::<Vec<_>>();
     let settings = [
         LoadSettingsFile {
             label: machine.to_str().unwrap(),
@@ -108,10 +132,14 @@ async fn run_case(empty: bool) {
             json: &process_json,
         },
     ];
-    let filaments = [LoadSettingsFile {
-        label: filament.to_str().unwrap(),
-        json: &filament_json,
-    }];
+    let filaments = filament_paths
+        .iter()
+        .zip(&filament_jsons)
+        .map(|(path, json)| LoadSettingsFile {
+            label: path.to_str().unwrap(),
+            json,
+        })
+        .collect::<Vec<_>>();
     let mut sliced_plate = ares_core::SlicedPlate::default();
     let public = ares_core::slice_with_load_settings(
         &input,
@@ -154,10 +182,10 @@ async fn run_case(empty: bool) {
     }
     fs::write(root.join("comparison.json"), serde_json::to_vec_pretty(&json!({
         "original_sha256": digest(&original), "input_sha256": digest(&input),
-        "machine_sha256": digest(machine_json.as_bytes()), "process_sha256": digest(process_json.as_bytes()), "filament_sha256": digest(filament_json.as_bytes()),
+        "machine_sha256": digest(machine_json.as_bytes()), "process_sha256": digest(process_json.as_bytes()), "filament_sha256": filament_jsons.iter().map(|json| digest(json.as_bytes())).collect::<Vec<_>>(),
         "native_sha256": digest(&native), "api_sha256": public.as_ref().ok().map(|bytes| digest(bytes)),
         "api_error": public.as_ref().err().map(ToString::to_string), "whole_output": comparison,
-        "input_change": if empty { "filament_settings_id becomes [] only" } else { "none" }, "loaded_filament_count": 1,
+        "input_change": if empty { "filament_settings_id becomes [] only" } else { "none" }, "loaded_filament_count": count,
     })).unwrap()).unwrap();
     assert!(
         comparison.is_ok(),
