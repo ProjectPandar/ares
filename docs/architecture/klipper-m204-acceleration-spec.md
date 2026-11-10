@@ -113,9 +113,17 @@ One new test in `crates/ares-cli/tests/orca_parity/runner/processor_migration/`,
   - Kobra S1 Max 0.25 unchanged.
 - Runtime premises on each Native G-code:
   - the flavor is Klipper;
-  - before the first `SET_VELOCITY_LIMIT` there is an `M204`: an `S` above the extruding
-    limit for K1, and a `P` without `T` for Kobra;
-  - an extrusion-only move comes after that `M204`.
+  - before the first `SET_VELOCITY_LIMIT` that carries `ACCEL=` there is an `M204`: an `S`
+    above the extruding limit for K1, and a `P` without `T` for Kobra;
+  - an extrusion-only move comes after that `M204` and before that `SET_VELOCITY_LIMIT`.
+
+  The premise stops at the first `SET_VELOCITY_LIMIT` with `ACCEL=`, not at the first
+  `SET_VELOCITY_LIMIT`. Kobra's before-layer-change G-code writes
+  `SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY=9` right after `M204 P500`. That line changes
+  only the square corner velocity (`:6906-6908`) and leaves the acceleration as it was. So
+  the acceleration the `M204` would set stays in effect until a `SET_VELOCITY_LIMIT` with
+  `ACCEL=` replaces it (`:6895-6896`). On K1 the first `SET_VELOCITY_LIMIT` already carries
+  `ACCEL=`, so the two readings agree there.
 - It replays the Native G-code through the public
   `ares_core::gcode_processor::process_gcode`, with the M73 lines and estimate lines reset
   as the existing processor replays do. It asserts that the processor output equals the
