@@ -3,7 +3,7 @@ use crate::{
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
-use super::{footprint::FirstLayerBounds, placeholders, processor, template, value::Value};
+use super::{footprint::FirstLayerBounds, placeholders, template};
 
 /// `file_start_gcode` is rendered before every generated header
 /// (`GCode.cpp:2551-2566`). Timing and filament totals are resolved by the
@@ -21,14 +21,6 @@ pub(super) fn append(
     }
     let mut config =
         placeholders::base_config(traversal, metadata, first_layer_bounds, None, layer_count)?;
-    config.insert(
-        "print_time_sec",
-        Value::String(processor::PRINT_TIME_SEC_PLACEHOLDER.to_owned()),
-    );
-    config.insert(
-        "used_filament_length",
-        Value::String(processor::USED_FILAMENT_LENGTH_PLACEHOLDER.to_owned()),
-    );
     let rendered = template::render(source, &mut config).map_err(|error| {
         SliceError::InvalidInput(format!(
             "invalid project file-start G-code template: {error}"

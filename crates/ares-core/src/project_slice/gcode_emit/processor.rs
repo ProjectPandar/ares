@@ -20,7 +20,7 @@ use crate::options::GCodeFlavor;
 use estimate::Estimate;
 use export_lines::ExportLines;
 use moves::MoveRecorder;
-pub(super) use stats::{PRINT_TIME_SEC_PLACEHOLDER, USED_FILAMENT_LENGTH_PLACEHOLDER};
+pub(super) use stats::DEFERRED_PLACEHOLDERS;
 use time::{duration, minutes};
 
 pub(super) fn extruder_colors(
@@ -189,16 +189,15 @@ pub(super) fn process(
         .unwrap_or(0);
     let prepare_time = estimate.prepare;
     let model_time = (estimate.total - prepare_time).max(0.0);
-    let print_time_sec = format!("{:.2}", estimate.total);
-    let used_filament_length = format!(
-        "{:.2}",
-        estimate.print_statistics.total_used_filament / 1_000.0
+    let deferred = stats::values(
+        estimate.total,
+        estimate.print_statistics.total_used_filament,
     );
 
     for (index, line) in lines.iter().enumerate() {
         let material = materials.process(line);
         let line = material.as_deref().unwrap_or(line);
-        let expanded = stats::expand(line, &print_time_sec, &used_filament_length);
+        let expanded = stats::expand(line, &deferred);
         let line = expanded.as_ref();
         result.begin(line, estimate.export_elapsed_at(index + 1));
         if line == "M73 P0 R0" {
