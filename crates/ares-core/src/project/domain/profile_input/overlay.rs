@@ -1,10 +1,16 @@
 //! Selected-profile overlay onto a raw settings view
 //! (`OrcaSlicer.cpp:2750-2812,3155-3161,3259-3271,3301`).
 
+mod cli_bookkeeping;
+mod identity_slots;
+
 use crate::{
     ProjectSettings, SliceError,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
+
+use cli_bookkeeping::{DifferentSettingsContext, expression_group_slot};
+use identity_slots::{inherits_slot, name_slot};
 
 /// The selected profile's composed pieces shared by the STL and 3MF
 /// entries: resolved typed settings, the chain-expanded presence view, and
@@ -365,108 +371,4 @@ fn filament_slot(
         .and_then(|value| value.element(index).or_else(|| value.element(0)))
         .cloned()
         .unwrap_or(RawConfigValue::Null))
-}
-
-/// One slot of a per-slot name vector (`filament_settings_id`, `filament_ids`).
-fn name_slot(
-    embedded_raw: &ProjectSettingsRaw,
-    key: &str,
-    loaded: &[String],
-    index: usize,
-) -> RawConfigValue {
-    if index < loaded.len() {
-        return RawConfigValue::Text(loaded[index].clone());
-    }
-    embedded_raw
-        .get(key)
-        .and_then(|value| value.element(index))
-        .cloned()
-        .unwrap_or_else(|| RawConfigValue::Text(String::new()))
-}
-
-/// One slot of the `inherits_group` vector (`OrcaSlicer.cpp:2817`).
-fn inherits_slot(
-    inherits: &[String],
-    embedded: Option<&RawConfigValue>,
-    index: usize,
-    len: usize,
-    selected: usize,
-) -> RawConfigValue {
-    let loaded = if index == 0 {
-        inherits.first()
-    } else if index == len - 1 {
-        inherits.last()
-    } else if index <= selected {
-        inherits.get(index)
-    } else {
-        None
-    };
-    loaded
-        .map(|text| RawConfigValue::Text(text.clone()))
-        .or_else(|| embedded.and_then(|value| value.element(index)).cloned())
-        .unwrap_or_else(|| RawConfigValue::Text(String::new()))
-}
-
-/// One slot of the `different_settings_to_system` vector
-/// (`OrcaSlicer.cpp:2838,:2978,:3161`). Slot 0 accumulates the machine-switch
-/// `compatible_printers` marker before CLI overrides and mapped tower edits.
-struct DifferentSettingsContext<'a> {
-    embedded: Option<&'a RawConfigValue>,
-    len: usize,
-    selected: usize,
-    switch_compatible_printers: bool,
-}
-
-impl DifferentSettingsContext<'_> {
-    fn slot(&self, index: usize) -> RawConfigValue {
-        if index == 0 {
-            let existing = self
-                .embedded
-                .and_then(|value| value.element(0))
-                .and_then(|value| match value {
-                    RawConfigValue::Text(text) => Some(text.as_str()),
-                    _ => None,
-                })
-                .unwrap_or("");
-            let mut keys: Vec<String> = existing
-                .split(';')
-                .filter(|key| !key.is_empty())
-                .map(str::to_owned)
-                .collect();
-            if self.switch_compatible_printers
-                && !keys.iter().any(|key| key == "compatible_printers")
-            {
-                keys.insert(0, "compatible_printers".to_owned());
-            }
-            return RawConfigValue::Text(keys.join(";"));
-        }
-        if index == self.len - 1 || index <= self.selected {
-            return RawConfigValue::Text(String::new());
-        }
-        self.embedded
-            .and_then(|value| value.element(index))
-            .cloned()
-            .unwrap_or_else(|| RawConfigValue::Text(String::new()))
-    }
-}
-
-/// One slot of a `compatible_*_expression_group` vector
-/// (`OrcaSlicer.cpp:3259-3271`).
-fn expression_group_slot(
-    group: &RawConfigValue,
-    embedded: Option<&RawConfigValue>,
-    index: usize,
-    offset: usize,
-    selected: usize,
-) -> RawConfigValue {
-    if index >= offset
-        && index - offset < selected
-        && let Some(value) = group.element(index)
-    {
-        return value.clone();
-    }
-    embedded
-        .and_then(|value| value.element(index))
-        .cloned()
-        .unwrap_or_else(|| RawConfigValue::Text(String::new()))
 }
