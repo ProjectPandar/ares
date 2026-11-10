@@ -22,6 +22,26 @@ fn tiq2_unchanged_estimated_tower_printable_rejection() {
         .unwrap()
         .keep();
     fs::write(directory.join("input.3mf"), input).unwrap();
+    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(input)).unwrap();
+    let settings: serde_json::Value =
+        serde_json::from_reader(archive.by_name("Metadata/project_settings.config").unwrap())
+            .unwrap();
+    assert_eq!(settings["enable_wrapping_detection"], "0");
+    assert_eq!(settings["wrapping_exclude_area"], serde_json::json!([]));
+    assert_eq!(settings["bed_exclude_area"], serde_json::json!(["0x0"]));
+    assert_eq!(settings["extruder_printable_area"], serde_json::json!([]));
+    fs::write(
+        directory.join("deferred-check-admission.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "input_sha256": cache_identity::raw_digest(input),
+            "enable_wrapping_detection": settings["enable_wrapping_detection"],
+            "wrapping_exclude_area": settings["wrapping_exclude_area"],
+            "bed_exclude_area": settings["bed_exclude_area"],
+            "extruder_printable_area": settings["extruder_printable_area"],
+        }))
+        .unwrap(),
+    )
+    .unwrap();
     fs::create_dir(directory.join("native")).unwrap();
     let error = stages::run(
         runner.bin(),
