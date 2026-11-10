@@ -1,5 +1,6 @@
 //! `GCodeProcessor::UsedFilaments`, `process_filaments` and G1/VG1
-//! volume accounting (cpp:1515–1650, 3895–3961, 4306–4324, 5937–5950).
+//! volume accounting (`GCodeProcessor.cpp:2553-2573, 2647-2672, 4481-4482,
+//! 5319-5325, 7668`).
 
 use super::ProcessorConfig;
 use super::filament_change::FilamentChange;
@@ -78,7 +79,7 @@ impl<'a> UsedFilaments<'a> {
                 _ => 0,
             };
         }
-        // process_tags WIPE_TOWER_END, GCodeProcessor.cpp:3163–3165.
+        // process_tags WIPE_TOWER_END, GCodeProcessor.cpp:4481-4482.
         if comment.starts_with(" WIPE_TOWER_END") {
             self.flush_wipe_tower(filament);
         }
@@ -164,15 +165,15 @@ impl<'a> UsedFilaments<'a> {
         self.pending[2] = 0.0;
     }
 
-    /// `UsedFilaments::process_role_cache` (`GCodeProcessor.cpp:1621-1639`).
+    /// `UsedFilaments::process_role_cache` (`GCodeProcessor.cpp:2647-2665`).
     fn process_role_cache(&mut self, filament: usize) {
         if self.role_cache == 0.0 {
             return;
         }
         let radius = 0.5 * f64::from(self.diameters[filament].0 as f32);
         let area = std::f64::consts::PI * (radius * radius);
-        // apply_config uses ConfigOptionVector::get_at (cpp:2083,
-        // Config.hpp:624-628): scalar density applies to later filaments.
+        // apply_config uses ConfigOptionVector::get_at (GCodeProcessor.cpp:2206,
+        // Config.hpp:676-682): scalar density applies to later filaments.
         let density =
             f64::from(self.densities.get(filament).unwrap_or(&self.densities[0]).0 as f32);
         let filament_usage = (

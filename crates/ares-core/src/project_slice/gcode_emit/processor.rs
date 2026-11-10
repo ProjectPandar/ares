@@ -129,11 +129,9 @@ pub fn process_gcode(
     let (mut output, _) = process(
         gcode.as_bytes().to_vec(),
         post_process,
-        if post_process {
-            settings.printer.gcode.machine_load_filament_time.0
-        } else {
-            0.0
-        },
+        // `GCodeProcessor::apply_config` sets load time independently of
+        // `finalize(bool)` (`GCodeProcessor.cpp:3217,3558-3560`).
+        settings.printer.gcode.machine_load_filament_time.0,
         limits.with_settings(settings).recording_moves(true),
     );
     output
