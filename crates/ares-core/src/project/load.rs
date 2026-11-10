@@ -90,7 +90,20 @@ pub(crate) fn load_project_with_preparation(
     input: impl AsRef<[u8]>,
     overrides: &crate::ConfigOverrides,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    let input = input.as_ref();
+    load_project_raw(input.as_ref(), overrides, true)
+}
+
+pub(crate) fn load_project_for_preset_refresh(
+    input: &[u8],
+) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
+    load_project_raw(input, &crate::ConfigOverrides::default(), false)
+}
+
+fn load_project_raw(
+    input: &[u8],
+    overrides: &crate::ConfigOverrides,
+    materialize_retained_defaults: bool,
+) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     if input.is_empty() {
         return Err(SliceError::EmptyInput);
     }
@@ -174,7 +187,9 @@ pub(crate) fn load_project_with_preparation(
     )?;
     // Preset.cpp:1059-1089 constructs retained presets over their full defaults,
     // excluding embedded connection credentials from the project overlay.
-    crate::profiles::apply_retained_preset_defaults(&mut project_settings_raw, None)?;
+    if materialize_retained_defaults {
+        crate::profiles::apply_retained_preset_defaults(&mut project_settings_raw, None)?;
+    }
     // Overrides win over document values (`apply_only`, `Config.cpp:461`).
     overrides.apply(&mut project_settings_raw)?;
     // Same upstream deserializer semantics as preset documents: JSON

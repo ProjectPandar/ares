@@ -103,16 +103,18 @@ impl ProjectPresetRefresh<'_> {
                 "project-derived selection requires a 3MF project".to_owned(),
             ));
         }
-        let (mut project, preparation) =
-            crate::project::load_project_with_preparation(input, &ConfigOverrides::default())?;
+        let (mut project, preparation) = crate::project::load_project_for_preset_refresh(input)?;
         if validate {
             crate::project_slice::validate_post_process(&project)?;
         }
-        let raw = preset::refresh(
+        let mut raw = preset::refresh(
             self.catalog,
             &project.documents().project_settings_raw,
             self.uptodate,
         )?;
+        // CLI:3167-3200 fills initially missing keys from the resolved system
+        // preset before collection defaults can obscure their absence.
+        apply_retained_preset_defaults(&mut raw, None)?;
         project.apply_project_preset_refresh(raw, overrides)?;
         Ok((project, preparation.for_overrides(overrides)))
     }

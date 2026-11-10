@@ -32,7 +32,7 @@ pub use domain::{
 };
 pub(crate) use domain::{compute_colum_count, plate_dimensions, plate_origin_at};
 pub use layer_config_ranges::LayerConfigRange;
-pub(crate) use load::load_project_with_preparation;
 pub use load::{ConfigSubstitution, load_project, load_project_with, project_config_substitutions};
+pub(crate) use load::{load_project_for_preset_refresh, load_project_with_preparation};
 pub use plate_custom_gcodes::{CustomGCodeInfo, CustomGCodeMode};
 pub use transform::Transform3d;
