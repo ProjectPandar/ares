@@ -29,7 +29,7 @@ pub(super) fn dispatch(
     object_reference: Point,
     object_bounding_box: crate::geometry::BoundingBox,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    stars_bounds: Option<(crate::geometry::BoundingBox, usize)>,
+    (grid_bounds, layer_id): (Option<crate::geometry::BoundingBox>, usize),
     object_spacing: &crate::project_slice::fill_entities::adaptive::ObjectSpacing,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
@@ -68,21 +68,19 @@ pub(super) fn dispatch(
                 dont_sort: false,
             };
             for expolygon in fill.expolygons {
-                let lines = match (params.multiline > 1, stars_bounds) {
-                    (true, Some((bounds, layer_id))) => {
-                        crate::fill::grid_trapezoidal::fill_surface(
-                            &expolygon,
-                            params,
-                            crate::fill::grid_trapezoidal::SurfaceGeometry {
-                                layer_id,
-                                thickness_layers: fill.representative.thickness_layers,
-                                bounds,
-                            },
-                            traversal.scale,
-                        )
-                    }
+                let lines = match (params.multiline > 1, grid_bounds) {
+                    (true, Some(bounds)) => crate::fill::grid_trapezoidal::fill_surface(
+                        &expolygon,
+                        params,
+                        crate::fill::grid_trapezoidal::SurfaceGeometry {
+                            layer_id,
+                            thickness_layers: fill.representative.thickness_layers,
+                            bounds,
+                        },
+                        traversal.scale,
+                    ),
                     (true, None) => {
-                        unreachable!("Grid anchoring retains its object box and layer id")
+                        unreachable!("Grid anchoring retains its object box")
                     }
                     (false, _) => {
                         fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
@@ -104,28 +102,18 @@ pub(super) fn dispatch(
                 dont_sort: false,
             };
             for expolygon in fill.expolygons {
-                let lines = match (params.multiline > 1, stars_bounds) {
-                    (true, Some((bounds, layer_id))) => {
-                        crate::fill::triangles_trapezoidal::fill_surface(
-                            &expolygon,
-                            params,
-                            crate::fill::triangles_trapezoidal::SurfaceGeometry {
-                                layer_id,
-                                thickness_layers: fill.representative.thickness_layers,
-                                bounds,
-                            },
-                            traversal.scale,
-                        )
-                    }
-                    (true, None) => {
-                        unreachable!("Triangles anchoring retains its object box and layer id")
-                    }
-                    (false, _) => fill_multiline_surface(
+                let lines = if params.multiline > 1 {
+                    crate::fill::triangles_trapezoidal::fill_surface(
                         &expolygon,
                         params,
-                        &TRIANGLE_SWEEPS,
+                        crate::fill::triangles_trapezoidal::SurfaceGeometry {
+                            layer_id,
+                            thickness_layers: fill.representative.thickness_layers,
+                        },
                         traversal.scale,
-                    ),
+                    )
+                } else {
+                    fill_multiline_surface(&expolygon, params, &TRIANGLE_SWEEPS, traversal.scale)
                 };
                 result.extend(lines.map_err(super::super::transaction::geometry_error)?);
             }
@@ -363,7 +351,7 @@ pub(super) fn dispatch(
                 z,
                 object_reference,
                 lightning_generator,
-                stars_bounds,
+                layer_id,
                 result,
             );
         }

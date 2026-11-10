@@ -143,10 +143,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     fill,
                     traversal.scale,
                     object_reference,
-                    super::triangles::LayerGeometry {
-                        layer_id: layer.id,
-                        bounds: stars_bounds,
-                    },
+                    super::triangles::LayerGeometry { layer_id: layer.id },
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
@@ -213,10 +210,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     fill,
                     traversal.scale,
                     object_reference,
-                    super::stars::LayerGeometry {
-                        layer_id: layer.id,
-                        bounds: stars_bounds,
-                    },
+                    super::stars::LayerGeometry { layer_id: layer.id },
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsFk) => {

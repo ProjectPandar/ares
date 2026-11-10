@@ -86,7 +86,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             object_reference,
             object_bounding_box,
             lightning_generator,
-            stars_bounds.map(|bounds| (bounds, plan.layers[layer_index].id)),
+            (stars_bounds, plan.layers[layer_index].id),
             spacing,
             &mut result,
         )?;

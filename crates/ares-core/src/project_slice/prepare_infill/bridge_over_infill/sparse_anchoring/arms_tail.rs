@@ -22,7 +22,7 @@ pub(super) fn dispatch_tail(
     z: f64,
     object_reference: Point,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    stars_bounds: Option<(crate::geometry::BoundingBox, usize)>,
+    layer_id: usize,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
     let multiline_params =
@@ -46,20 +46,14 @@ pub(super) fn dispatch_tail(
                 fill.params.multiline,
                 (0.01_f64 * f64::from(fill.params.density)) as f32,
             );
-            let geometry = match (fill.params.multiline > 1, stars_bounds) {
-                (true, Some(bounds)) => Some(bounds),
-                (true, None) => unreachable!("Stars anchoring retains its PrintObject bounds"),
-                (false, _) => None,
-            };
             for expolygon in fill.expolygons {
-                let lines = if let Some((bounds, layer_id)) = geometry {
+                let lines = if fill.params.multiline > 1 {
                     crate::fill::stars_trapezoidal::fill_surface(
                         &expolygon,
                         multiline_params(fill.params),
                         crate::fill::stars_trapezoidal::SurfaceGeometry {
                             layer_id,
                             thickness_layers: fill.representative.thickness_layers,
-                            bounds,
                         },
                         traversal.scale,
                     )

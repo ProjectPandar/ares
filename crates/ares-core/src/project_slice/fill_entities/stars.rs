@@ -18,7 +18,6 @@ use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, Lay
 #[derive(Clone, Copy)]
 pub(super) struct LayerGeometry {
     pub(super) layer_id: usize,
-    pub(super) bounds: Option<crate::geometry::BoundingBox>,
 }
 
 pub(super) fn polylines(
@@ -44,16 +43,12 @@ pub(super) fn polylines(
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         let lines = if params.multiline > 1 {
-            let Some(bounds) = geometry.bounds else {
-                unreachable!("Stars multiline bounds are prepared once per object");
-            };
             crate::fill::stars_trapezoidal::fill_surface(
                 expolygon,
                 params,
                 crate::fill::stars_trapezoidal::SurfaceGeometry {
                     layer_id: geometry.layer_id,
                     thickness_layers: fill.representative.thickness_layers,
-                    bounds,
                 },
                 scale,
             )

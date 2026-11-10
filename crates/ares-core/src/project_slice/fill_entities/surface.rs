@@ -139,7 +139,6 @@ pub(in crate::project_slice) fn surface_polylines(
                 request.call.reference,
                 super::triangles::LayerGeometry {
                     layer_id: request.call.layer_id,
-                    bounds: None,
                 },
             )
         }
@@ -205,7 +204,6 @@ pub(in crate::project_slice) fn surface_polylines(
                 request.call.reference,
                 super::stars::LayerGeometry {
                     layer_id: request.call.layer_id,
-                    bounds: None,
                 },
             )
         }
