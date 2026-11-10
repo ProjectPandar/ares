@@ -372,14 +372,13 @@ impl Estimate {
             .collect::<Vec<_>>();
         let export_elapsed = export_cache::snapshots(lines, &cache);
         let elapsed = elapsed_snapshots(lines, &cache);
-        // `prepare_time += block_time` accumulates in f32
-        // (`GCodeProcessor.cpp:475-476`), so the exported trailer matches
-        // upstream's float rounding at the sixth decimal.
+        // `prepare_time += block_time` adds the double block time to the float
+        // total and narrows once (`GCodeProcessor.cpp:649-650`).
         let prepare = times
             .iter()
             .zip(prepare_stages)
             .filter_map(|(time, is_prepare)| is_prepare.then_some(time))
-            .fold(0.0_f32, |sum, time| sum + *time as f32) as f64;
+            .fold(0.0_f32, |sum, time| (f64::from(sum) + time) as f32) as f64;
         let total = cumulative + trailing_delay;
         let custom_gcode_times =
             custom_time::custom_times(&custom_events, &flush_ends, &times, trailing_delay, total);

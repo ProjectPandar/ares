@@ -43,7 +43,6 @@ pub(super) fn scheduled_times(
     flavor: GCodeFlavor,
 ) -> Schedule {
     let mut planner = Planner::new(flavor);
-    let klipper = flavor == GCodeFlavor::Klipper;
     // Blocks the final pass drops keep zero time and the zero trapezoid.
     let mut timed = vec![(0.0, Trapezoid::default()); blocks.len()];
     let mut pending = VecDeque::new();
@@ -57,13 +56,7 @@ pub(super) fn scheduled_times(
         while pushed < event.block_count {
             let batch = planner.push(&blocks[pushed]);
             pushed += 1;
-            record_batch(
-                blocks,
-                (&mut timed, &mut emitted),
-                batch,
-                &mut pending,
-                klipper,
-            );
+            record_batch(blocks, (&mut timed, &mut emitted), batch, &mut pending);
             pushed_processed.push(emitted);
         }
         flush_starts.push(emitted);
@@ -78,35 +71,17 @@ pub(super) fn scheduled_times(
             }
         }
         let batch = planner.flush(event.klipper);
-        record_batch(
-            blocks,
-            (&mut timed, &mut emitted),
-            batch,
-            &mut pending,
-            klipper,
-        );
+        record_batch(blocks, (&mut timed, &mut emitted), batch, &mut pending);
         flush_ends.push(emitted);
     }
     while pushed < blocks.len() {
         let batch = planner.push(&blocks[pushed]);
         pushed += 1;
-        record_batch(
-            blocks,
-            (&mut timed, &mut emitted),
-            batch,
-            &mut pending,
-            klipper,
-        );
+        record_batch(blocks, (&mut timed, &mut emitted), batch, &mut pending);
         pushed_processed.push(emitted);
     }
     let batch = planner.finish(!pending.is_empty());
-    record_batch(
-        blocks,
-        (&mut timed, &mut emitted),
-        batch,
-        &mut pending,
-        klipper,
-    );
+    record_batch(blocks, (&mut timed, &mut emitted), batch, &mut pending);
 
     let trailing_delay = pending
         .into_iter()
@@ -128,7 +103,6 @@ fn record_batch(
     (timed, emitted): (&mut [(f64, Trapezoid)], &mut usize),
     mut batch: Vec<(f64, Trapezoid)>,
     pending: &mut VecDeque<PendingDelay>,
-    klipper: bool,
 ) {
     for (block, (time, _)) in blocks[*emitted..].iter().zip(&mut batch) {
         let Some(delay) = pending.front() else {
@@ -137,11 +111,9 @@ fn record_batch(
         if delay.target == DelayTarget::Any
             || delay.target == DelayTarget::ToolChange && block.kind == MotionKind::ToolChange
         {
-            if klipper {
-                *time += f64::from(delay.seconds);
-            } else {
-                *time = f64::from(*time as f32 + delay.seconds);
-            }
+            // `double block_time = motion_time; block_time += float delay` for every flavor
+            // (`GCodeProcessor.cpp:630-636`).
+            *time += f64::from(delay.seconds);
             pending.pop_front();
         }
     }

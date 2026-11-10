@@ -21,7 +21,7 @@ pub(super) fn custom_times(
         let end = flush_ends[flush];
         let duration = times[cursor..end]
             .iter()
-            .fold(0.0_f32, |cache, time| cache + *time as f32);
+            .fold(0.0_f32, |cache, time| (f64::from(cache) + time) as f32);
         cursor = end;
         if duration != 0.0 {
             records.push((kind, duration));
@@ -29,7 +29,7 @@ pub(super) fn custom_times(
     }
     let trailing = times[cursor..]
         .iter()
-        .fold(0.0_f32, |cache, time| cache + *time as f32)
+        .fold(0.0_f32, |cache, time| (f64::from(cache) + time) as f32)
         + trailing_delay as f32;
     if trailing != 0.0 {
         records.push((CustomGCodeType::ColorChange, trailing));
