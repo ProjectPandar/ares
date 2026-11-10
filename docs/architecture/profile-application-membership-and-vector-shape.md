@@ -53,10 +53,14 @@ and slots. `PresetBundle.cpp:194-213,300-341` likewise distinguishes an applied
 configuration from the fields supplied by individual filament presets.
 
 The archive-view comparisons must use the same replacement inputs on both
-sides. Native slices the rewritten archive with the original machine and
-filament files plus a copy of the process file overlaid generically with the
-existing overrides JSON. Ares keeps its original selection and override call.
-The ordered-byte comparator and assertions stay unchanged. Rename the tests to
+sides. Native slices the rewritten archive with the original machine, process,
+and filament files, plus CLI options generated generically from the existing
+overrides JSON. `OrcaSlicer.cpp:4138-4221` records changed command-line keys in
+`different_settings_to_system` before applying `m_extra_config`. This is the
+Native counterpart of Ares `ConfigOverrides` bookkeeping; overlaying values
+into a process file would omit that override operation. Ares keeps its original
+selection and override call. The ordered-byte comparator and assertions stay
+unchanged. Rename the tests to
 state this application-path contract instead of suggesting a general settings
 round trip.
 
