@@ -126,9 +126,9 @@ impl Project {
     /// is the chain-expanded presence view and `filament_raws` carries one
     /// merged raw per selected filament for the `:3301` per-slot `set_at`
     /// overlay. Upstream indexes `different_settings_to_system` and
-    /// `inherits_group` by the embedded `filament_count` (`:2817-2818`), so
-    /// selecting more filaments than the embedded count is rejected rather
-    /// than silently truncated or allowed to write out of bounds.
+    /// `inherits_group` by `filament_count` (`:2817-2818`). A zero embedded
+    /// count takes the loaded count (`:2528-2529`); a nonzero embedded count
+    /// still bounds the number of selected filaments.
     pub(crate) fn from_3mf_with_profiles(
         input: &[u8],
         profile: SelectedProfile<'_>,
@@ -160,12 +160,18 @@ impl Project {
             .filament_settings_id
             .0
             .len();
-        if embedded_count == 0 {
+        // OrcaSlicer.cpp:2528-2529 uses the loaded count only for zero.
+        let filament_count = if embedded_count == 0 {
+            selected
+        } else {
+            embedded_count
+        };
+        if filament_count == 0 {
             return Err(SliceError::InvalidInput(
                 "project embeds no filament selection".to_owned(),
             ));
         }
-        if selected > embedded_count {
+        if selected > filament_count {
             return Err(SliceError::InvalidInput(format!(
                 "selection has {selected} filaments but the project embeds {embedded_count}"
             )));
@@ -185,7 +191,7 @@ impl Project {
             },
             OverlayContext {
                 selected,
-                embedded_count,
+                embedded_count: filament_count,
                 machine_switch: switch,
             },
         )?;
@@ -237,7 +243,7 @@ impl Project {
 
         project.settings = resolved;
         project.documents.project_settings_raw = merged;
-        project.initialize_cli_loaded_project_config(embedded_count);
+        project.initialize_cli_loaded_project_config(filament_count);
         Ok((project, preparation))
     }
 }
