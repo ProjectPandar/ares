@@ -56,7 +56,10 @@ pub(in crate::project_slice::gcode_emit) fn toolchange(
     let supplied = custom_changes_tool(custom, prefix, filament);
     if !supplied {
         let command = if is_bbl && !runtime.manual_filament_change.0 {
-            format!("M1020 S{filament} H{}", nozzle(traversal, filament))
+            format!(
+                "M1020 S{filament} H{}",
+                nozzle(&traversal.resolved.views.full, filament)
+            )
         } else {
             format!("{prefix}{filament}")
         };
@@ -99,10 +102,13 @@ pub(in crate::project_slice::gcode_emit) fn prefix(
 /// printer with one nozzle per extruder (`ToolOrdering.cpp:1892-1941`): the filament's 0-based
 /// `filament_map` entry, or -1 when the filament or that nozzle is outside the nozzle list
 /// (`MultiNozzleUtils.cpp:380-387,442-446,454-458`).
-fn nozzle(traversal: &PreparedPostClassicTraversal, filament: usize) -> i64 {
-    let full = &traversal.resolved.views.full;
-    let nozzles = full.project.print.nozzle_diameter.0.len() as i64;
-    full.project
+pub(in crate::project_slice::gcode_emit) fn nozzle(
+    settings: &crate::ProjectSettings,
+    filament: usize,
+) -> i64 {
+    let nozzles = settings.project.print.nozzle_diameter.0.len() as i64;
+    settings
+        .project
         .gcode
         .filament_map
         .0

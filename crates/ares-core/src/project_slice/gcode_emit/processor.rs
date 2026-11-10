@@ -9,6 +9,7 @@ mod material_statistics;
 mod motion;
 mod motion_util;
 mod moves;
+mod pre_heating;
 mod schedule;
 mod stats;
 mod stop_times;
@@ -73,6 +74,8 @@ pub(super) struct ProcessorConfig<'a> {
     extruder_colors: Vec<String>,
     /// `m_writer.extruders()` ids, sorted (`GCode.cpp:1904-1940`).
     writer_extruders: Vec<usize>,
+    /// `m_enable_pre_heating` of `finalize(true)` after the export (`GCodeProcessor.cpp:4000-4005`).
+    pre_heating: bool,
 }
 
 impl ProcessorLimits {
@@ -85,6 +88,7 @@ impl ProcessorLimits {
             record_moves: false,
             extruder_colors: Vec::new(),
             writer_extruders: Vec::new(),
+            pre_heating: false,
         }
     }
 }
@@ -107,6 +111,13 @@ impl ProcessorConfig<'_> {
     pub(super) fn writer_extruders(self, writer_extruders: Vec<usize>) -> Self {
         Self {
             writer_extruders,
+            ..self
+        }
+    }
+
+    pub(super) fn pre_heating(self, pre_heating: bool) -> Self {
+        Self {
+            pre_heating,
             ..self
         }
     }
@@ -152,7 +163,8 @@ pub(super) fn process(
     let limits = config.limits;
     let text = String::from_utf8(output).expect("generated G-code is UTF-8");
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
-    let record_moves = config.record_moves;
+    // The injector reads the moves and the line map.
+    let record_moves = config.record_moves || config.pre_heating;
     let mut recorder = record_moves.then(|| MoveRecorder::new(&config));
     let estimate = Estimate::record(
         &lines,
@@ -255,10 +267,22 @@ pub(super) fn process(
             result.append(line);
         }
     }
-    let (gcode, line_map) = result.finish();
+    let (mut gcode, line_map) = result.finish();
     let mut processor_result = recorder
         .zip(line_map)
-        .map(|(recorder, line_map)| recorder.finish(&line_map))
+        .map(|(recorder, line_map)| {
+            let mut result = recorder.finish(&line_map);
+            if config.pre_heating {
+                pre_heating::inject(
+                    &lines,
+                    &line_map,
+                    config.settings,
+                    (&mut gcode, &mut result.moves),
+                );
+            }
+            result
+        })
+        .filter(|_| config.record_moves)
         .unwrap_or_default();
     let mut statistics = estimate.print_statistics;
     // `GCodeProcessor::get_time` returns the float machine time.

@@ -386,7 +386,8 @@ pub(in crate::project_slice) fn emit(
             .with_settings(&traversal.resolved.views.full)
             .extruder_colors(extruder_colors)
             .writer_extruders(state.extruders.ids().to_vec())
-            .recording_moves(record_moves),
+            .recording_moves(record_moves)
+            .pre_heating(traversal.resolved.views.runtime_gcode.enable_pre_heating.0),
     );
     retained_output::check(processed, printable_area, traversal)
 }
