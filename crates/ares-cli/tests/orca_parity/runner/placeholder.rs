@@ -2,6 +2,8 @@
 mod placeholder_brace_output;
 #[path = "placeholder_comparison_dispatch.rs"]
 mod placeholder_comparison_dispatch;
+#[path = "placeholder_deferred_print_time.rs"]
+mod placeholder_deferred_print_time;
 #[path = "placeholder_digits_rounding.rs"]
 mod placeholder_digits_rounding;
 #[path = "placeholder_int_result.rs"]
