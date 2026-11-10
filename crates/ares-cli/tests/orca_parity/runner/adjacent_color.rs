@@ -5,9 +5,9 @@
 //! survive a later no-change slice. Fixture tags are supplied only through
 //! the existing user template override, never through emitter changes.
 
-use ares_core::{
-    ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate_processed,
-};
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
+
+use crate::runner::application::slice_project_plate_processed;
 
 #[path = "adjacent_color/native.rs"]
 mod native;
