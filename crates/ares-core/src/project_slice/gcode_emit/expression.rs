@@ -5,6 +5,7 @@ use super::{
 
 mod arithmetic;
 mod comparison;
+mod deferred;
 mod functions;
 mod parser;
 
@@ -60,7 +61,7 @@ pub(crate) fn evaluate_path(
     let (tokens, offsets) = tokenize(input).map_err(PathError::Other)?;
     let mut parser = Parser::new(tokens, offsets, config, path, filament);
     match parser.parse_or() {
-        Ok(value) if parser.index == parser.tokens.len() => Ok(value),
+        Ok(value) if parser.index == parser.tokens.len() => Ok(value.value),
         Ok(_) => Err(PathError::Other(format!(
             "unexpected token in expression: {input}"
         ))),
@@ -87,7 +88,7 @@ pub(crate) fn evaluate_path(
 pub(crate) fn evaluate(input: &str, config: &Config, filament: usize) -> Result<Value, String> {
     let (tokens, offsets) = tokenize(input)?;
     let mut parser = Parser::new(tokens, offsets, config, ParsePath::Brace, filament);
-    let value = parser.parse_or()?;
+    let value = parser.parse_or()?.value;
     if parser.index != parser.tokens.len() {
         return Err(format!("unexpected token in expression: {input}"));
     }
