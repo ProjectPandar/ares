@@ -81,6 +81,31 @@ fn normal_snug_sparse_interfaces_preserve_complete_output() {
     );
 }
 
+#[test]
+fn default_tree_interface_filament_keeps_one_base_interface_layer() {
+    compare_overhang(
+        "tree-support/auto/default/interface-filament-base-interface",
+        "default",
+        &[
+            ("support_filament", "0"),
+            ("support_interface_filament", "1"),
+        ],
+    );
+}
+
+#[test]
+fn normal_snug_interface_filament_keeps_one_base_interface_layer() {
+    compare_overhang(
+        "normal-support/auto/snug/interface-filament-base-interface",
+        "snug",
+        &[
+            ("support_type", "normal(auto)"),
+            ("support_filament", "0"),
+            ("support_interface_filament", "1"),
+        ],
+    );
+}
+
 fn compare_overhang(label: &str, style: &str, overrides: &[(&str, &str)]) {
     let Some(sliced) = overhang_case(label, style, overrides) else {
         return;
