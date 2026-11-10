@@ -138,6 +138,8 @@ Measured on `07a20e194` in both modes.
    leaves Native equal to the Ares output everywhere except three config-block lines:
    `default_nozzle_volume_type`, `extruder_variant_list` and `print_extruder_id`. The first
    two lines differ with pre-heating off as well. Both modes give the same executable block.
+   The config block follows the executable block, so the output line numbers of every
+   injected line match between Native and the expected Ares output.
 
 ## Observable behavior
 
@@ -168,25 +170,44 @@ Without the flag, nothing changes. The flag is unset for every printer except th
 
 ## Test plan
 
-New test `pre_heating_injects_idle_extruder_temperatures_like_native` in
+New test `injected_temperature_lines_and_positions_match_native` in
 `crates/ares-cli/tests/orca_parity/runner/compatible_regions/tool_templates/pre_heating.rs`.
 It builds the J1 fixture with `enable_pre_heating = 1` as a machine override, verified in
-the exported project. It compares Native with the API output and the API with the CLI
-output, byte for byte, with only the config block (`; CONFIG_BLOCK_START` …
-`; CONFIG_BLOCK_END`) cut from both sides. That covers the header times, the `M73` lines and
-every injected line. Runtime premises, with no stored Native values:
+the exported project. The test checks two things:
+
+- **API and CLI agree:** the API and CLI outputs are byte-equal.
+- **The injection matches Native exactly:** the test computes the same projection on the
+  Native output and on the Ares output, and requires the two to be equal.
+  - An injection is a maximal run of consecutive injector groups. A heating group is an
+    `M632 …` line followed by `M400`, an `M104 … N0 ;Multi extruder pre heating` line and
+    `M633`. A cooling pair is `M400` followed by an `M104 … N0 ;Multi extruder pre cooling…`
+    line.
+  - The projection lists every injection in order, as three items: the 1-based output line
+    number of the line right before the run, that line's text, and the run's lines.
+  - So the test fixes the line contents, their order and their places in the output.
+
+Runtime premises, with no stored Native values:
 
 - Native has `; MACHINE_START_GCODE_END`;
-- Native has at least one `;Multi extruder pre cooling` and one `;Multi extruder pre heating`
-  line;
+- Native has at least one cooling line and one heating line;
 - Native's `T` lines select both extruders.
 
-The config block goes back into the comparison once the three config-line gaps of premise 4
-are closed.
+The test does not compare the whole file against Native. The existing whole-output
+comparisons stay as they are and keep failing honestly on the gaps of premise 3. The three
+config lines of premise 4 are a separate follow-up slice, owned upstream by the following:
+
+- `extruder_variant_list`: `extend_extruder_variant` (`PrintConfig.cpp:10630-10670`), which
+  pads the list to the extruder count with its first value.
+- `default_nozzle_volume_type`: the extruder-option resize of `set_num_extruders`
+  (`:10672-10686`).
+- `print_extruder_id`: `ensure_process_variant_columns` (`:11631-11659`), which rebuilds the
+  process columns from the printer's `extruder_variant_list` before
+  `update_values_to_printer_extruders` expands them (`PresetBundle.cpp:5581`,
+  `PrintApply.cpp:1429`).
 
 | Test | Before the port | After the port |
 |---|---|---|
-| `pre_heating_injects_idle_extruder_temperatures_like_native` (new) | F | P |
+| `injected_temperature_lines_and_positions_match_native` (new) | F | P |
 
 The test commit adds one FAIL per mode. The port commit is expected to turn it into PASS in
 both modes, with no PASS turning into FAIL. In particular, the passing enable-pre-heating
