@@ -63,7 +63,7 @@ pub(super) fn prepare_infill_lines(
     let object_options = &resolved.object;
     let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
     // Fill.cpp:1398/1443 gives the anchoring filler the same PrintObject box.
-    let stars_bounds = resolved
+    let grid_bounds = resolved
         .all_regions
         .iter()
         .any(|region| {
@@ -71,7 +71,7 @@ pub(super) fn prepare_infill_lines(
                 && region.fill_multiline.0 > 1
         })
         .then(|| {
-            crate::project_slice::fill_entities::extended_stars_bounds(
+            crate::project_slice::fill_entities::extended_object_bounds(
                 &predecessor.predecessor.predecessor.project.objects()[plan.source_object_index],
                 resolved.print_objects[plan.transform_index].transform,
                 scale,
@@ -106,7 +106,7 @@ pub(super) fn prepare_infill_lines(
             object_index,
             lower_layer,
             lightning_generator,
-            stars_bounds,
+            grid_bounds,
         )?;
         result.insert(lower_layer, lines);
     }

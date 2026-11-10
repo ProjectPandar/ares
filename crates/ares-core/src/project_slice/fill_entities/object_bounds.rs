@@ -1,4 +1,4 @@
-//! PrintObject::bounding_box and Stars Fill::extended_object_bounding_box.
+//! PrintObject::bounding_box and Fill::extended_object_bounding_box.
 use crate::{
     Point3d, ProjectObject, ProjectVolumeType, Transform3d,
     geometry::{BoundingBox, CoordinateScale, Point},

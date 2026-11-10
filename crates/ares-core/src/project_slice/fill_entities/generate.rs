@@ -14,7 +14,7 @@ use super::types::LayerFillEntities;
 pub(in crate::project_slice) struct LayerGenerationOptions<'a> {
     pub(in crate::project_slice) lightning_generator:
         Option<&'a crate::fill::lightning::generator::Generator>,
-    pub(in crate::project_slice) stars_bounds: Option<crate::geometry::BoundingBox>,
+    pub(in crate::project_slice) grid_bounds: Option<crate::geometry::BoundingBox>,
     pub(in crate::project_slice) object_spacing: &'a super::adaptive::ObjectSpacing,
 }
 
@@ -26,7 +26,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
 ) -> Result<LayerFillEntities, SliceError> {
     let LayerGenerationOptions {
         lightning_generator,
-        stars_bounds,
+        grid_bounds,
         object_spacing,
     } = options;
     let grouped = group_fills(prepared, object_index, layer_index)?;
@@ -75,7 +75,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
     let mut extended_object_bounds = || {
         let (extended_object_min_x, extended_object_max_x) = *extended_object_bounds_x
             .get_or_insert_with(|| {
-                let bounds = super::stars_bounds::object(
+                let bounds = super::object_bounds::object(
                     &traversal.project.objects()[plan.source_object_index],
                     resolved_object.print_objects[plan.transform_index].transform,
                     traversal.scale,
@@ -121,7 +121,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     object_reference,
                     super::grid::LayerGeometry {
                         layer_id: layer.id,
-                        bounds: stars_bounds,
+                        bounds: grid_bounds,
                     },
                 )?;
             }
@@ -268,7 +268,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     | ExtrusionRole::InternalInfill
             ) =>
             {
-                let object_bounding_box = super::stars_bounds::object(
+                let object_bounding_box = super::object_bounds::object(
                     &traversal.project.objects()[plan.source_object_index],
                     resolved_object.print_objects[plan.transform_index].transform,
                     traversal.scale,
@@ -357,11 +357,11 @@ pub(in crate::project_slice) fn layer_options<'a>(
     prepared: &'a PreparedPostExternalSurfaces,
     object_index: usize,
     lightning_generator: Option<&'a crate::fill::lightning::generator::Generator>,
-    stars_bounds: Option<crate::geometry::BoundingBox>,
+    grid_bounds: Option<crate::geometry::BoundingBox>,
 ) -> LayerGenerationOptions<'a> {
     LayerGenerationOptions {
         lightning_generator,
-        stars_bounds,
+        grid_bounds,
         object_spacing: &prepared.object_spacings[object_index],
     }
 }

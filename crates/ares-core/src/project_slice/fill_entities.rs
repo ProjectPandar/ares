@@ -15,19 +15,19 @@ mod lightning;
 mod line;
 mod locked_zag;
 mod monotonic;
+mod object_bounds;
 mod plane_path;
 mod quartercubic;
 mod simplify;
 mod stars;
-mod stars_bounds;
 mod surface;
 mod tpms_d;
 mod tpms_fk;
 
 pub(in crate::project_slice) use flow::{extended_object_bounding_box_x, materialized_flow};
 
-pub(in crate::project_slice) use stars_bounds::{
-    extended as extended_stars_bounds, object as print_object_bounds,
+pub(in crate::project_slice) use object_bounds::{
+    extended as extended_object_bounds, object as print_object_bounds,
 };
 
 pub(in crate::project_slice) use surface::{SurfaceRequest, surface_polylines};
@@ -85,7 +85,7 @@ pub(in crate::project_slice) fn prepare(
                 };
                 // Fill.cpp:1224/1237 -> PrintObject::bounding_box, once per object.
                 // Grid multiline reads this box; other generators keep their adapters.
-                let stars_bounds = resolved
+                let grid_bounds = resolved
                     .all_regions
                     .iter()
                     .any(|region| {
@@ -93,7 +93,7 @@ pub(in crate::project_slice) fn prepare(
                             && region.fill_multiline.0 > 1
                     })
                     .then(|| {
-                        stars_bounds::extended(
+                        object_bounds::extended(
                             &traversal.project.objects()[plan.source_object_index],
                             resolved.print_objects[plan.transform_index].transform,
                             traversal.scale,
@@ -117,7 +117,7 @@ pub(in crate::project_slice) fn prepare(
                                 external,
                                 object_index,
                                 lightning_generator.map(|g| g.as_ref()),
-                                stars_bounds,
+                                grid_bounds,
                             ),
                         )
                     })
