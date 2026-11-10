@@ -61,6 +61,47 @@ fn run(label: &'static str) {
     });
 }
 
+/// The base unchanged: its only buffered delay is the first `G29`
+/// (`docs/architecture/m73-block-time-precision-spec.md`).
+#[test]
+fn derived_base_places_progress_like_native() {
+    let project = base(|text| {
+        let config: serde_json::Value = serde_json::from_str(text).unwrap();
+        assert_eq!(config["ironing_type"], "no ironing", "base must not iron");
+        assert!(
+            config.get("top_surface_expansion").is_none(),
+            "base must not set `top_surface_expansion`"
+        );
+        text.to_owned()
+    });
+    let Some((runner, case)) = prepare((PREFIX, "derived-base", "no ironing"), project) else {
+        return;
+    };
+    assert_matches_native(&runner, &case, |reference| {
+        let gcode = String::from_utf8_lossy(reference);
+        let commands = gcode
+            .lines()
+            .map(|line| line.split(';').next().unwrap_or_default())
+            .collect::<Vec<_>>();
+        assert!(
+            commands.iter().any(|code| code.starts_with("G29 ")),
+            "Native must run `G29`"
+        );
+        let delay = commands.iter().find(|code| {
+            let mut words = code.split_whitespace();
+            match words.next() {
+                Some("G4" | "M400") => words.any(|word| word.starts_with(['S', 'P'])),
+                Some("SYNC") => true,
+                _ => false,
+            }
+        });
+        assert!(
+            delay.is_none(),
+            "Native must not wait outside `G29`: {delay:?}"
+        );
+    });
+}
+
 macro_rules! legs {
     ($($name:ident => $pattern:literal,)*) => {$(#[test] fn $name() { run($pattern); })*};
 }
