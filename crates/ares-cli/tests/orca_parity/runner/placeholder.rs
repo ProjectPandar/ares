@@ -20,3 +20,7 @@ mod placeholder_rounding_results;
 mod placeholder_signed_zero;
 #[path = "placeholder_string_addition.rs"]
 mod placeholder_string_addition;
+#[path = "placeholder_type_errors.rs"]
+mod placeholder_type_errors;
+#[path = "placeholder_value_types.rs"]
+mod placeholder_value_types;

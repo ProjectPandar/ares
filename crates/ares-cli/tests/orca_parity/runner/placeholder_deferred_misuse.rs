@@ -11,7 +11,7 @@ use serde_json::json;
 const DEFERRED_MESSAGE: &str = "This value is known only after the G-code is generated. It can \
      be printed, but not used in a calculation or a comparison.";
 
-fn export(runner: &OrcaRunner, label: &str, line: &str) -> ExportedCase {
+pub(super) fn export(runner: &OrcaRunner, label: &str, line: &str) -> ExportedCase {
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
         "Creality",
@@ -60,13 +60,13 @@ fn export(runner: &OrcaRunner, label: &str, line: &str) -> ExportedCase {
     exported
 }
 
-fn assert_rejection_matches_native(label: &str, line: &str) {
+pub(super) fn assert_rejection_matches_native(label: &str, line: &str, reason: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
     let exported = export(&runner, label, line);
     let artifacts = tempfile::Builder::new()
-        .prefix("deferred-placeholder-misuse-")
+        .prefix("placeholder-rejection-")
         .tempdir()
         .unwrap()
         .keep();
@@ -74,8 +74,8 @@ fn assert_rejection_matches_native(label: &str, line: &str) {
     fs::write(&project, &exported.project).unwrap();
     let native = runner.custom_gcode_reference(&project).unwrap();
     assert!(
-        String::from_utf8_lossy(&native.stderr).contains(DEFERRED_MESSAGE),
-        "Native rejects {line:?} as a deferred value: {:?}",
+        String::from_utf8_lossy(&native.stderr).contains(reason),
+        "Native rejects {line:?} with {reason:?}: {:?}",
         String::from_utf8_lossy(&native.stderr)
     );
     let retained = artifacts.join("plate_1.gcode");
@@ -104,6 +104,7 @@ fn adding_a_number_to_a_deferred_value_fails_like_native() {
     assert_rejection_matches_native(
         "deferred-placeholder-misuse/add",
         "; TOTAL={print_time_total_sec + 1}",
+        DEFERRED_MESSAGE,
     );
 }
 
@@ -112,6 +113,7 @@ fn multiplying_by_a_deferred_value_fails_like_native() {
     assert_rejection_matches_native(
         "deferred-placeholder-misuse/multiply",
         "; SECONDS={2 * print_time_sec}",
+        DEFERRED_MESSAGE,
     );
 }
 
@@ -120,6 +122,7 @@ fn comparing_a_deferred_value_fails_like_native() {
     assert_rejection_matches_native(
         "deferred-placeholder-misuse/compare",
         "; LONG={print_time_minute > 5}",
+        DEFERRED_MESSAGE,
     );
 }
 
@@ -128,6 +131,7 @@ fn a_variable_holding_a_deferred_value_is_deferred_too() {
     assert_rejection_matches_native(
         "deferred-placeholder-misuse/variable",
         "{local hours = print_time_hour}; HOURS={hours - 1}",
+        DEFERRED_MESSAGE,
     );
 }
 
