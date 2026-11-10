@@ -45,4 +45,21 @@ impl InterfaceCounts {
             bottom_base: base_count(bottom, slicing.zero_gap_interface_bottom),
         }
     }
+
+    /// SupportCommon.cpp:215–225: a separately printed contact consumes one requested
+    /// interface layer; Organic bottom contacts are projection seeds and consume none.
+    pub(super) fn projected(&self, organic: bool) -> Self {
+        let top = if self.top > 0 { self.top - 1 } else { 0 };
+        let bottom = if self.bottom > 0 {
+            self.bottom - if organic { 0 } else { 1 }
+        } else {
+            0
+        };
+        Self {
+            top,
+            bottom,
+            top_base: self.top_base.min(top),
+            bottom_base: self.bottom_base.min(bottom),
+        }
+    }
 }

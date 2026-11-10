@@ -28,6 +28,7 @@ pub(super) fn generate(
     let mut interfaces = Vec::new();
     let mut base_interfaces = Vec::new();
     if !bases.is_empty() && counts.top + counts.bottom > 0 {
+        let counts = &counts.projected(true);
         for (index, &base) in bases.iter().enumerate() {
             let (top, top_base) = project_top(roofs, counts, &bases, &tops, index);
             let (bottom, bottom_base) = project_bottom(roofs, counts, &bases, &bottoms, index);

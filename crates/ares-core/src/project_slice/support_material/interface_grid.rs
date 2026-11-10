@@ -42,23 +42,9 @@ pub(super) fn generate_grid_interface_layers(
         return Ok(output);
     }
     // SupportCommon.cpp:220–233; SupportParameters.hpp:49–50 defines contacts as n > 0.
-    let organic = input.style == ProcessSupportStyle::Organic;
-    let top = if input.counts.top > 0 {
-        input.counts.top - 1
-    } else {
-        0
-    };
-    let bottom = if input.counts.bottom > 0 {
-        input.counts.bottom - if organic { 0 } else { 1 }
-    } else {
-        0
-    };
-    let counts = InterfaceCounts {
-        top,
-        bottom,
-        top_base: input.counts.top_base.min(top),
-        bottom_base: input.counts.bottom_base.min(bottom),
-    };
+    let counts = input
+        .counts
+        .projected(input.style == ProcessSupportStyle::Organic);
     let input = &GridInterfacesInput {
         counts: &counts,
         ..*input
