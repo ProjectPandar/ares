@@ -40,17 +40,31 @@ with static defaults and overlays applied preset values. `GCode.cpp:8244-8246,
 8338-8352` serializes actual completed dynamic members, omitting banned and nil
 values; serialization does not construct a default preset.
 
-`profile_settings` must expose the same applied raw configuration consumed by
-its selected-profile slice. Preserve compatible-machine/process expression
-group presence and cardinality from the same importer and loaded-filament
-metadata stages used by slicing. Do not infer presence from typed defaults or
-remove dynamic print-host values through static export membership filtering.
-A rewritten 3MF takes Native's retained path, whereas an explicit replacement
-slice takes the loaded-file path: comparisons must first establish that their
-applied configuration contracts are equivalent. If those Native paths produce
-different membership for identical supplied values, report that source-level
-contract conflict rather than adding a test-specific exception or changing a
-public comparison silently.
+`profile_settings` exposes the applied raw configuration consumed by its
+selected-profile slice. Do not infer presence from typed defaults or remove
+dynamic print-host values through static export membership filtering.
+
+A rewritten 3MF sliced without replacement settings takes Native's retained
+path. `Preset.cpp:1059-1088,1787-1792` constructs full default-preset membership;
+`OrcaSlicer.cpp:3167-3200` applies that construction when a kind is not replaced.
+By contrast, `OrcaSlicer.cpp:3100-3162` applies the actual keys of loaded
+replacement configurations, and `:3257-3301` composes loaded filament metadata
+and slots. `PresetBundle.cpp:194-213,300-341` likewise distinguishes an applied
+configuration from the fields supplied by individual filament presets.
+
+The archive-view comparisons must use the same replacement inputs on both
+sides. Native slices the rewritten archive with the original machine and
+filament files plus a copy of the process file overlaid generically with the
+existing overrides JSON. Ares keeps its original selection and override call.
+The ordered-byte comparator and assertions stay unchanged. Rename the tests to
+state this application-path contract instead of suggesting a general settings
+round trip.
+
+These comparisons establish that the archive embedding the view produces the
+same slice under identical replacement inputs. They do not independently prove
+view completeness: a replacement file can supply a member missing from the
+view. Independent view-completeness verification is deferred, not implicitly
+claimed by these comparisons. No additional output keys are filtered.
 
 ## Filament vector defaults are not palette cardinality
 
@@ -87,8 +101,8 @@ Keep these existing comparisons and their assertions unchanged in both Native
 modes:
 
 - `runner::profile_entry_3mf::profile_entry_3mf_load_settings`
-- `runner::profile_entry_3mf::profile_settings_view_round_trips_through_3mf`
-- `runner::profile_entry_3mf::profile_settings_view_round_trips_through_stl`
+- `runner::profile_entry_3mf::profile_settings_view_archive_matches_replacement_slice_3mf`
+- `runner::profile_entry_3mf::profile_settings_view_archive_matches_replacement_slice_stl`
 - `load_settings_3mf_partial::load_settings_3mf_machine_only_whole_file`
 - `load_settings_3mf_partial::load_settings_3mf_process_only_whole_file`
 - `runner::direct_stl_override_bookkeeping::flush_preparation::short_palette_grows_preserving_prefix`
