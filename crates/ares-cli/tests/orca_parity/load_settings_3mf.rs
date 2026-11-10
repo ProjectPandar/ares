@@ -4,6 +4,9 @@
 //! control, and the `-5`/`-19` read-ordering RED.
 #![cfg(target_os = "linux")]
 
+#[path = "load_settings_3mf_filament_count.rs"]
+mod filament_count;
+
 use std::fs;
 
 use crate::load_settings_cli::{banner_normalized, stages_run};
