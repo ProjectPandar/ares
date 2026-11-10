@@ -103,7 +103,7 @@ impl ProjectPresetRefresh<'_> {
                 "project-derived selection requires a 3MF project".to_owned(),
             ));
         }
-        let (mut project, preparation) = crate::project::load_project_for_preset_refresh(input)?;
+        let (mut project, preparation) = crate::project::load_project_for_profiles(input)?;
         if validate {
             crate::project_slice::validate_post_process(&project)?;
         }

@@ -141,10 +141,7 @@ impl Project {
             filament_raws,
             validate_print,
         } = profile;
-        let (mut project, preparation) = crate::project::load_project_with_preparation(
-            input,
-            &crate::ConfigOverrides::default(),
-        )?;
+        let (mut project, preparation) = crate::project::load_project_for_profiles(input)?;
         project.apply_plater_edits(edits);
         let preparation = preparation.for_overrides(overrides);
         let embedded_raw = project.documents.project_settings_raw.clone();

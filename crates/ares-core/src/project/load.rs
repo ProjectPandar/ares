@@ -93,7 +93,7 @@ pub(crate) fn load_project_with_preparation(
     load_project_raw(input.as_ref(), overrides, true)
 }
 
-pub(crate) fn load_project_for_preset_refresh(
+pub(crate) fn load_project_for_profiles(
     input: &[u8],
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     load_project_raw(input, &crate::ConfigOverrides::default(), false)
