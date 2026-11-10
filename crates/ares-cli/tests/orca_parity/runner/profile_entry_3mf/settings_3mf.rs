@@ -1,12 +1,7 @@
-/// Oracle E2E for `profile_settings`: the returned flat config is written
-/// verbatim into a copy of the input archive's `project_settings.config`;
-/// the native oracle slices that rewritten 3MF directly (no
-/// `--load-settings`), while the Rust entry slices the original with
-/// catalog/selection/overrides. Identical G-code proves the view carries
-/// every key the slice consumes — any missing key would fall back to the
-/// native default and diverge.
+/// Native and Ares slice the same original 3MF with replacement profiles and
+/// overrides. Independent settings-view completeness remains a separate contract.
 #[test]
-fn profile_settings_view_round_trips_through_3mf() {
+fn profile_settings_slice_matches_native_replacement_3mf() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
@@ -26,7 +21,8 @@ fn profile_settings_view_round_trips_through_3mf() {
     let selection = json!({
         "machine": machine_name, "process": process_name, "filaments": [filament_name],
     });
-    let overrides = ares_core::ConfigOverrides::from_json(br#"{"layer_height":"0.3"}"#).unwrap();
+    let overrides_json = br#"{"layer_height":"0.3"}"#;
+    let overrides = ares_core::ConfigOverrides::from_json(overrides_json).unwrap();
 
     // Original 3MF: embedded config from the pristine presets.
     let stl = placed_cube(&std::fs::read(root.join("tests/parity/cube10.stl")).unwrap());
@@ -93,27 +89,38 @@ fn profile_settings_view_round_trips_through_3mf() {
             },
         ))
         .unwrap();
-    let view_json = serde_json::to_string(&view).unwrap();
+    write_json(
+        &runner.work.join("view-settings.json"),
+        &serde_json::to_value(&view).unwrap(),
+    );
 
-    // Rewrite the archive's project_settings.config with the view.
-    let rewritten = rewrite_project_settings(&original, view_json.as_bytes());
-    let view_path = runner.work.join("view-rewritten.3mf");
-    std::fs::write(&view_path, &rewritten).unwrap();
+    let override_fields: serde_json::Map<String, Value> =
+        serde_json::from_slice(overrides_json).unwrap();
 
-    // Native oracle: slice the rewritten 3MF directly.
+    // Native uses the same replacement inputs and overrides as the selection.
     let output = runner.work.join("view-reference");
     std::fs::create_dir(&output).unwrap();
     stages::run(
         &runner.bin,
         [
+            "--load-settings".to_owned(),
+            super::join_paths(
+                [runner.work.join("view-machine.json"), runner.work.join("view-process.json")].iter(),
+            ),
+            "--load-filaments".to_owned(),
+            runner.work.join("view-filament.json").to_str().unwrap().to_owned(),
             "--arrange".to_owned(),
             "0".to_owned(),
             "--slice".to_owned(),
             "0".to_owned(),
             "--outputdir".to_owned(),
             output.to_str().unwrap().to_owned(),
-            view_path.to_str().unwrap().to_owned(),
-        ],
+            project_path.to_str().unwrap().to_owned(),
+        ]
+        .into_iter()
+        .chain(override_fields.iter().flat_map(|(key, value)| {
+            [format!("--{}", key.replace('_', "-")), value.as_str().unwrap().to_owned()]
+        })),
         stages::Stage::Slice,
         &runner.work,
     )

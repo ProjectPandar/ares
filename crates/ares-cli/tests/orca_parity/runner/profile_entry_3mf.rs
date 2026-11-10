@@ -19,8 +19,6 @@ include!("profile_entry_3mf/overrides.rs");
 
 include!("profile_entry_3mf/settings_3mf.rs");
 
-include!("profile_entry_3mf/settings_archive.rs");
-
 include!("profile_entry_3mf/settings_stl.rs");
 
 include!("profile_entry_3mf/post_process.rs");

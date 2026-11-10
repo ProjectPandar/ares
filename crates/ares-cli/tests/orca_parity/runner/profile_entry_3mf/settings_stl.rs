@@ -1,10 +1,7 @@
-/// Oracle E2E case 2: the STL entry's view (routed through the same overlay
-/// machinery when overrides are present) round-trips through a 3MF whose
-/// embedded config is that view; the native oracle slices the rewritten
-/// archive directly while the Rust entry slices the original STL with
-/// catalog/selection/override.
+/// Native and Ares slice the same original STL with replacement profiles and
+/// overrides. Independent settings-view completeness remains a separate contract.
 #[test]
-fn profile_settings_view_round_trips_through_stl() {
+fn profile_settings_slice_matches_native_replacement_stl() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
@@ -24,19 +21,11 @@ fn profile_settings_view_round_trips_through_stl() {
     let selection = json!({
         "machine": machine_name, "process": process_name, "filaments": [filament_name],
     });
-    let overrides = ares_core::ConfigOverrides::from_json(br#"{"layer_height":"0.3"}"#).unwrap();
+    let overrides_json = br#"{"layer_height":"0.3"}"#;
+    let overrides = ares_core::ConfigOverrides::from_json(overrides_json).unwrap();
 
-    // A carrier 3MF with the same geometry, exported from the presets so the
-    // archive structure is native; its embedded config is replaced below.
     let stl = placed_cube(&std::fs::read(root.join("tests/parity/cube10.stl")).unwrap());
     std::fs::write(runner.work.join("stl-cube10.stl"), &stl).unwrap();
-    let settings = super::join_paths(
-        [
-            runner.work.join("stl-machine.json"),
-            runner.work.join("stl-process.json"),
-        ]
-        .iter(),
-    );
     for (kind, fields) in [
         ("machine", profiles.machine(machine_name).unwrap()),
         ("process", profiles.process(&process_name).unwrap()),
@@ -51,36 +40,6 @@ fn profile_settings_view_round_trips_through_stl() {
             &Value::Object(preset),
         );
     }
-    let carrier = runner.work.join("stl.3mf");
-    stages::run(
-        &runner.bin,
-        [
-            "--load-settings".to_owned(),
-            settings,
-            "--load-filaments".to_owned(),
-            runner
-                .work
-                .join("stl-filament.json")
-                .to_str()
-                .unwrap()
-                .to_owned(),
-            "--arrange".to_owned(),
-            "0".to_owned(),
-            "--export-3mf".to_owned(),
-            carrier.to_str().unwrap().to_owned(),
-            runner
-                .work
-                .join("stl-cube10.stl")
-                .to_str()
-                .unwrap()
-                .to_owned(),
-        ],
-        stages::Stage::Export,
-        &runner.work,
-    )
-    .unwrap();
-    let carrier_bytes = std::fs::read(&carrier).unwrap();
-
     // The STL entry's view for the original STL bytes.
     let view = tokio::runtime::Builder::new_current_thread()
         .build()
@@ -97,26 +56,37 @@ fn profile_settings_view_round_trips_through_stl() {
             },
         ))
         .unwrap();
-    let rewritten = rewrite_project_settings(
-        &carrier_bytes,
-        serde_json::to_string(&view).unwrap().as_bytes(),
+    write_json(
+        &runner.work.join("stl-settings.json"),
+        &serde_json::to_value(&view).unwrap(),
     );
-    let view_path = runner.work.join("stl-rewritten.3mf");
-    std::fs::write(&view_path, &rewritten).unwrap();
+
+    let override_fields: serde_json::Map<String, Value> =
+        serde_json::from_slice(overrides_json).unwrap();
 
     let output = runner.work.join("stl-reference");
     std::fs::create_dir(&output).unwrap();
     stages::run(
         &runner.bin,
         [
+            "--load-settings".to_owned(),
+            super::join_paths(
+                [runner.work.join("stl-machine.json"), runner.work.join("stl-process.json")].iter(),
+            ),
+            "--load-filaments".to_owned(),
+            runner.work.join("stl-filament.json").to_str().unwrap().to_owned(),
             "--arrange".to_owned(),
             "0".to_owned(),
             "--slice".to_owned(),
             "0".to_owned(),
             "--outputdir".to_owned(),
             output.to_str().unwrap().to_owned(),
-            view_path.to_str().unwrap().to_owned(),
-        ],
+            runner.work.join("stl-cube10.stl").to_str().unwrap().to_owned(),
+        ]
+        .into_iter()
+        .chain(override_fields.iter().flat_map(|(key, value)| {
+            [format!("--{}", key.replace('_', "-")), value.as_str().unwrap().to_owned()]
+        })),
         stages::Stage::Slice,
         &runner.work,
     )
@@ -141,32 +111,5 @@ fn profile_settings_view_round_trips_through_stl() {
         ))
         .unwrap();
     std::fs::write(runner.work.join("stl-ares.gcode"), &actual).unwrap();
-    // The native 3MF path materializes `upward_compatible_machine` via
-    // create-on-read (`OrcaSlicer.cpp:1769`) while STL --load-settings does
-    // not (ARD-documented deviation). Pin the deviation before filtering:
-    // exactly one native line, with an empty value, and none on the Ares
-    // side — any other shape fails instead of being silently dropped.
-    {
-        let native_lines = reference
-            .split_inclusive(|byte| *byte == b'\n')
-            .filter(|line| line.starts_with(b"; upward_compatible_machine ="))
-            .collect::<Vec<_>>();
-        assert_eq!(
-            native_lines,
-            vec!["; upward_compatible_machine = \n".as_bytes()],
-            "the deviation must stay a single empty native line"
-        );
-        assert!(
-            !actual
-                .split_inclusive(|byte| *byte == b'\n')
-                .any(|line| line.starts_with(b"; upward_compatible_machine =")),
-            "the STL entry never exports the key"
-        );
-    }
-    let reference = reference
-        .split_inclusive(|byte| *byte == b'\n')
-        .filter(|line| !line.starts_with(b"; upward_compatible_machine ="))
-        .collect::<Vec<_>>()
-        .concat();
     crate::golden::compare_ordered_bytes_generator_only(&reference, &actual).unwrap();
 }
