@@ -53,7 +53,7 @@ pub(in crate::project_slice) fn apply_project(
     prepared: &mut PreparedPostRegions,
 ) -> Result<(), SliceError> {
     let full = &prepared.resolved.views.full;
-    let states = full.filament.gcode.filament_colour.0.len() + 1;
+    let states = full.filament.gcode.filament_diameter.0.len() + 1;
     let extruders = full.filament.gcode.filament_diameter.0.len();
     let nozzle = full.project.print.nozzle_diameter.0[0].0;
     for (object, metadata) in prepared.objects.iter_mut().zip(&prepared.painting) {
@@ -110,7 +110,7 @@ pub(in crate::project_slice) fn apply_project(
             &heights,
             (nozzle, resolved.object.line_width),
         )?;
-        let segmentation = merge::merge(side, caps, prepared.scale).map_err(clip_error)?;
+        let segmentation = merge::merge(side, caps, &layers, prepared.scale).map_err(clip_error)?;
         apply::apply(object, metadata, segmentation, extruders, prepared.scale)?;
     }
     Ok(())

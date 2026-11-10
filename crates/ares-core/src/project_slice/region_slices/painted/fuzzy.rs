@@ -58,7 +58,8 @@ pub(in crate::project_slice) fn apply_project(
             )
             .map_err(clip_error)?;
         }
-        let segmentation = merge::merge(side, Vec::new(), prepared.scale).map_err(clip_error)?;
+        let segmentation =
+            merge::merge(side, Vec::new(), &layers, prepared.scale).map_err(clip_error)?;
         apply::fuzzy::apply(object, metadata, segmentation, prepared.scale)?;
     }
     Ok(())
