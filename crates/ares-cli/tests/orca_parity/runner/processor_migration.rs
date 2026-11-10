@@ -5,6 +5,8 @@ use super::{ExportedCase, OrcaRunner};
 use ares_core::ProjectSettings;
 use serde_json::{Map, Value};
 
+#[path = "processor_migration/klipper_m204.rs"]
+mod klipper_m204;
 #[path = "processor_migration/klipper_waits.rs"]
 mod klipper_waits;
 #[path = "processor_migration/roles.rs"]
