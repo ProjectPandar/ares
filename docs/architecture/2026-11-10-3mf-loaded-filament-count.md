@@ -54,8 +54,9 @@ profile overlay 和切片入口；现有 scaffold 仅承接此处的上游 count
 
 使用已有 `slice_with_load_settings` 公共 byte API，提交同一 3MF 与同一组
 原始 preset 文件给 API 和原版 Orca `--load-settings/--load-filaments`。
-从已有可重复的 3MF fixture 只移除内嵌 filament 选择；保留其余配置和模型。
-源 fixture 与派生输入均保留哈希及可复现的生成方法。
+从已有可重复的 3MF fixture 只把内嵌 `filament_settings_id` 设置为空数组；
+保留其余配置和模型。源 fixture 与派生输入均保留哈希及可复现的生成方法。
+缺失字段可能采用非空反序列化默认值，因此不能用删除字段代替零数量见证。
 
 先保留一个 Native 成功、API 在现有零数量拒绝处失败的运行时见证。不能以
 编译或进程启动失败代替。Native 和 API 成功时比较完整 G-code，只允许既有
