@@ -8,7 +8,7 @@
 //! form, so `zdigits(5.5, 3)` renders `006`.
 //!
 //! Two stock fixtures whose `machine_start_gcode` keeps the stock template
-//! and appends the marker `;W4PH_MS_ZDIGITS={zdigits(5.5, 3)}` (line 83 on
+//! and appends the marker `;ARES_PROBE_MS_ZDIGITS={zdigits(5.5, 3)}` (line 83 on
 //! MK4 `cube_with_hole`, line 9 on the K1 variant).
 //! RED: Ares's function table had no `zdigits` arm, so slicing aborted with
 //! `unknown function: zdigits in zdigits(5.5, 3)` (exit 156) while Native
@@ -52,7 +52,7 @@ fn assert_zdigits_matches_native(case: &str) {
         normalized(&rerun.reference),
         "seeded oracle is not self-stable on {case}"
     );
-    let marker = b";W4PH_MS_ZDIGITS=006";
+    let marker = b";ARES_PROBE_MS_ZDIGITS=006";
     assert!(
         sliced
             .reference

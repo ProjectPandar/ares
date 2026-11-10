@@ -2,7 +2,7 @@
 //!
 //! A non-BBL printer outside the traditional gate renders `time_lapse_gcode` at the layer change
 //! through `timelapse_gcode_config`, the same configuration every other render uses. Fixture:
-//! stock MK4 `cube_with_hole` appending `;W4PH_TLMPE={most_used_physical_extruder_id}`.
+//! stock MK4 `cube_with_hole` appending `;ARES_PROBE_TLMPE={most_used_physical_extruder_id}`.
 
 #![cfg(target_os = "linux")]
 
@@ -72,7 +72,7 @@ fn custom_gcode_timelapse_overlay_mk4_matches_native() {
         return;
     };
     let case = NativeCase::slice(&runner, &fixture(), "timelapse-overlay-mk4-");
-    assert_one_render_per_layer(&case.native, ";W4PH_TLMPE=");
+    assert_one_render_per_layer(&case.native, ";ARES_PROBE_TLMPE=");
     case.compare(ares_core::GenerationMetadata::default());
 }
 

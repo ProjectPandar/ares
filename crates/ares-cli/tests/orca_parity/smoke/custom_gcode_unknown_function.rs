@@ -14,7 +14,7 @@
 //! (`GCode.cpp:3920-3933`) into `PlaceholderParserError`
 //! (`GCode.cpp:3637-3645`, CLI exit 156):
 //! - `mk4-unknown-function.3mf`: stock MK4 `layer_change_gcode` plus the
-//!   marker `;W4PH_LC_FORMAT={format("%.3f",layer_z)}`. The 2.4.2 grammar
+//!   marker `;ARES_PROBE_LC_FORMAT={format("%.3f",layer_z)}`. The 2.4.2 grammar
 //!   has no `format` keyword, so upstream resolves `format` as a variable
 //!   name and throws "Not a variable name". Ares instead parsed any
 //!   `identifier(` as a function call and reported
@@ -22,7 +22,7 @@
 //!   line/caret (fixed by the FUNCTION_KEYWORDS grammar gate).
 //! - `x1c-blc-leading-blank.3mf`: stock X1C `before_layer_change_gcode` is
 //!   empty, so the template value itself starts with the newline before
-//!   the same marker (`"\n;W4PH_BLC_FORMAT=..."`); upstream reports
+//!   the same marker (`"\n;ARES_PROBE_BLC_FORMAT=..."`); upstream reports
 //!   "Parsing error at line 2" because the skipped blank line still
 //!   counts. Ares trimmed the template string before parsing, shifting
 //!   error offsets onto the trimmed copy ("line 1").

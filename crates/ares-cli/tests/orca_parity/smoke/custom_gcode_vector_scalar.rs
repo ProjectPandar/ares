@@ -12,7 +12,7 @@
 //! identifier's line/caret (`process_error_message` `:1731-1770`).
 //!
 //! Two stock fixtures (MK4 and K1) whose `machine_start_gcode` appends
-//! `;W4PH_MS_VARS N={nozzle_temperature} B={bed_temperature}
+//! `;ARES_PROBE_MS_VARS N={nozzle_temperature} B={bed_temperature}
 //! F={filament_type[0]} T={total_layer_count}`. `nozzle_temperature` and
 //! `bed_temperature` are `coInts` (`PrintConfig.cpp:6644`, `:11315`), so
 //! Native rejects on the bare `nozzle_temperature` reference (line 83 MK4 /
