@@ -10,6 +10,10 @@ use crate::{
     },
 };
 
+fn color_penetration_layers(penetration: i32, shell: i32) -> usize {
+    usize::try_from(if penetration > 0 { penetration } else { shell }).unwrap()
+}
+
 #[derive(Default)]
 struct Stat {
     width: f32,
@@ -42,8 +46,14 @@ fn stat(
             ));
         }
         out.width = out.width.max(width as f32);
-        out.top = out.top.max(cfg.top_shell_layers.0 as usize);
-        out.bottom = out.bottom.max(cfg.bottom_shell_layers.0 as usize);
+        out.top = out.top.max(color_penetration_layers(
+            cfg.top_color_penetration_layers.0,
+            cfg.top_shell_layers.0,
+        ));
+        out.bottom = out.bottom.max(color_penetration_layers(
+            cfg.bottom_color_penetration_layers.0,
+            cfg.bottom_shell_layers.0,
+        ));
         // MultiMaterialSegmentation.cpp:1430 selects the outer-wall extruder.
         let slot = crate::options::mapped_extruder_id(
             settings,
@@ -191,12 +201,22 @@ pub(super) fn segment(
 ) -> Result<Patches, SliceError> {
     let max_top = regions
         .iter()
-        .map(|r| r.options.top_shell_layers.0)
+        .map(|r| {
+            color_penetration_layers(
+                r.options.top_color_penetration_layers.0,
+                r.options.top_shell_layers.0,
+            )
+        })
         .max()
         .unwrap();
     let max_bottom = regions
         .iter()
-        .map(|r| r.options.bottom_shell_layers.0)
+        .map(|r| {
+            color_penetration_layers(
+                r.options.bottom_color_penetration_layers.0,
+                r.options.bottom_shell_layers.0,
+            )
+        })
         .max()
         .unwrap();
     let mut raw = slabs::collect(input, (max_top > 0, max_bottom > 0))?;

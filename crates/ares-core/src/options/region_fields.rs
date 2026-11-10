@@ -4,6 +4,7 @@ macro_rules! region_option_fields {
             print_extruder_id => "print_extruder_id": OrcaInts = OrcaInts(vec![OrcaInt(1)]),
             print_extruder_variant => "print_extruder_variant": OrcaStrings = strings(&["Direct Drive Standard"]),
             bottom_shell_layers => "bottom_shell_layers": OrcaInt = OrcaInt(3),
+            bottom_color_penetration_layers => "bottom_color_penetration_layers": OrcaInt = OrcaInt(0),
             bottom_shell_thickness => "bottom_shell_thickness": OrcaFloat = OrcaFloat(0.0),
             bridge_angle => "bridge_angle": OrcaFloat = OrcaFloat(0.0),
             internal_bridge_angle => "internal_bridge_angle": OrcaFloat = OrcaFloat(0.0),
@@ -91,6 +92,7 @@ macro_rules! region_option_fields {
             detect_thin_wall => "detect_thin_wall": OrcaBool = OrcaBool(false),
             top_surface_line_width => "top_surface_line_width": FloatOrPercent = FloatOrPercent::Float(0.0),
             top_shell_layers => "top_shell_layers": OrcaInt = OrcaInt(4),
+            top_color_penetration_layers => "top_color_penetration_layers": OrcaInt = OrcaInt(0),
             top_shell_thickness => "top_shell_thickness": OrcaFloat = OrcaFloat(0.6),
             top_surface_expansion => "top_surface_expansion": OrcaFloat = OrcaFloat(0.0),
             top_surface_expansion_margin => "top_surface_expansion_margin": OrcaFloat = OrcaFloat(0.0),
@@ -166,7 +168,7 @@ pub(crate) use region_option_fields;
 
 macro_rules! declare_region_option_order {
     ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
-        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 157] = [$($key),*];
+        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 159] = [$($key),*];
     };
 }
 

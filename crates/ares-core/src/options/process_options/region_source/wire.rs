@@ -7,13 +7,17 @@ impl Serialize for ProcessRegionSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(157))?;
+        let mut map = serializer.serialize_map(Some(159))?;
         map.serialize_entry(
             "align_infill_direction_to_model",
             &self.align_infill_direction_to_model,
         )?;
         map.serialize_entry("alternate_extra_wall", &self.alternate_extra_wall)?;
         map.serialize_entry("bottom_shell_layers", &self.bottom_shell_layers)?;
+        map.serialize_entry(
+            "bottom_color_penetration_layers",
+            &self.bottom_color_penetration_layers,
+        )?;
         map.serialize_entry("bottom_shell_thickness", &self.bottom_shell_thickness)?;
         map.serialize_entry(
             "bottom_solid_infill_flow_ratio",
@@ -217,6 +221,10 @@ impl Serialize for ProcessRegionSourceOptions {
             &self.top_bottom_infill_wall_overlap,
         )?;
         map.serialize_entry("top_shell_layers", &self.top_shell_layers)?;
+        map.serialize_entry(
+            "top_color_penetration_layers",
+            &self.top_color_penetration_layers,
+        )?;
         map.serialize_entry("top_shell_thickness", &self.top_shell_thickness)?;
         map.serialize_entry(
             "top_solid_infill_flow_ratio",

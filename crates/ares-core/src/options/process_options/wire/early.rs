@@ -21,6 +21,10 @@ where
     )?;
     map.serialize_entry("alternate_extra_wall", &region.alternate_extra_wall)?;
     map.serialize_entry("bottom_shell_layers", &region.bottom_shell_layers)?;
+    map.serialize_entry(
+        "bottom_color_penetration_layers",
+        &region.bottom_color_penetration_layers,
+    )?;
     map.serialize_entry("bottom_shell_thickness", &region.bottom_shell_thickness)?;
     map.serialize_entry(
         "bottom_solid_infill_flow_ratio",

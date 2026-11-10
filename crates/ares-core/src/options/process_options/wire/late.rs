@@ -146,6 +146,10 @@ where
         &region.top_bottom_infill_wall_overlap,
     )?;
     map.serialize_entry("top_shell_layers", &region.top_shell_layers)?;
+    map.serialize_entry(
+        "top_color_penetration_layers",
+        &region.top_color_penetration_layers,
+    )?;
     map.serialize_entry("top_shell_thickness", &region.top_shell_thickness)?;
     map.serialize_entry(
         "top_solid_infill_flow_ratio",
