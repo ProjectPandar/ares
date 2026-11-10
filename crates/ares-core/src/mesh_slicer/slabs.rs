@@ -35,6 +35,21 @@ struct SlabLines {
     between: Vec<Vec<IntersectionLine>>,
 }
 
+/// Ordinal of upstream `FacetEdgeType::Slab`, the type of every in-between slab line.
+const SLAB_EDGE_TYPE: u8 = 5;
+
+impl SlabLines {
+    /// TriangleMeshSlicer.cpp:1077–1093: the facet loop leaves the lines in scheduling order.
+    fn sort_canonically(&mut self) {
+        for slab in &mut self.at_slice {
+            slab.sort_unstable_by_key(|entry| entry.line.canonical_key(entry.kind as u8));
+        }
+        for slab in &mut self.between {
+            slab.sort_unstable_by_key(|line| line.canonical_key(SLAB_EDGE_TYPE));
+        }
+    }
+}
+
 pub(crate) struct ProjectedSlabs {
     pub(crate) top: Vec<Vec<Polygon>>,
     pub(crate) bottom: Vec<Vec<Polygon>>,
@@ -176,6 +191,9 @@ pub(crate) fn slice_mesh_slabs(
         {
             facet::slice::<false>(make_facet(Orientation::Down), edge_count, zs, lines);
         }
+    }
+    for lines in [top.as_mut(), bottom.as_mut()].into_iter().flatten() {
+        lines.sort_canonically();
     }
     Ok(ProjectedSlabs {
         top: top

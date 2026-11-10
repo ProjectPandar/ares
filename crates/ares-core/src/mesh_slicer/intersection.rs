@@ -59,6 +59,29 @@ impl IntersectionLine {
     pub(crate) const fn edge_type(self) -> FacetEdgeType {
         self.edge_type
     }
+
+    /// TriangleMeshSlicer.cpp:622–633 and :1077–1093 canonical line order. `edge_type` is the
+    /// upstream `FacetEdgeType` ordinal; flags are zero before the sort.
+    pub(crate) fn canonical_key(self, edge_type: u8) -> impl Ord {
+        let ids = |point: IntersectionPoint| match point.reference() {
+            EndpointReference::Edge(id) => (i64::from(id), -1),
+            EndpointReference::Vertex(id) => (-1, i64::from(id)),
+        };
+        let (edge_a, a) = ids(self.a);
+        let (edge_b, b) = ids(self.b);
+        (
+            edge_a,
+            edge_b,
+            a,
+            b,
+            self.a.point.x(),
+            self.a.point.y(),
+            self.b.point.x(),
+            self.b.point.y(),
+            edge_type,
+            0_u8,
+        )
+    }
 }
 
 pub(crate) fn intersect_facet(

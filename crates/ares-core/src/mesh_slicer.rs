@@ -52,27 +52,7 @@ pub(crate) fn slice_mesh_on_planes(
         |plane_index, line| lines[plane_index].push(line),
     );
     for layer in &mut lines {
-        layer.sort_unstable_by_key(|line| {
-            let ids = |point: IntersectionPoint| match point.reference() {
-                EndpointReference::Edge(id) => (i64::from(id), -1),
-                EndpointReference::Vertex(id) => (-1, i64::from(id)),
-            };
-            let (edge_a, a) = ids(line.a());
-            let (edge_b, b) = ids(line.b());
-            // TriangleMeshSlicer.cpp:623–635; flags are zero in this raw-line subset.
-            (
-                edge_a,
-                edge_b,
-                a,
-                b,
-                line.a().point().x(),
-                line.a().point().y(),
-                line.b().point().x(),
-                line.b().point().y(),
-                line.edge_type() as u8,
-                0_u8,
-            )
-        });
+        layer.sort_unstable_by_key(|line| line.canonical_key(line.edge_type() as u8));
     }
     Ok(lines)
 }
