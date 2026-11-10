@@ -35,7 +35,7 @@ impl InterfaceCounts {
             if zero_gap && soluble_interface_non_soluble_base {
                 (count / 2).min(2)
             } else {
-                usize::from(different_filament && zero_gap)
+                usize::from(different_filament && count > 1)
             }
         };
         Self {
