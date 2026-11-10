@@ -66,7 +66,10 @@ profile overlay 和切片入口；现有 scaffold 仅承接此处的上游 count
 
 1. 内嵌零、加载一个：不得早拒绝；应进入对应的一槽 overlay。
 2. 内嵌零、加载多个：数量取已加载数量，不硬编码为一；各槽身份和配置按
-   已有顺序应用，不截断 group 或 self-index。
+   已有顺序应用，不截断 group 或 self-index。原单槽 fixture 搭配两个加载
+   文件时，Native 因原 flush matrix 尺寸返回 `-100`、不输出 G-code；这组
+   作为拒绝控制，API 应到达同一矩阵错误，不手填矩阵制造成功。单加载槽
+   仍是完整 G-code 成功比较的主要见证。
 3. 内嵌非零：不因加载数量少而缩短项目；原有 whole-output 控制不改变。
 4. 内嵌和加载均为零：不隐式选择 default filament。
 5. 选择超出非零内嵌数量：保留既有错误，不扩大此切片范围。
