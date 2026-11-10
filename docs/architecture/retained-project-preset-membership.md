@@ -87,3 +87,33 @@ Both Native modes must pass the unchanged complete-output comparisons:
 Preserve assertions, expected values, comparators, key ordering, and explicit
 catalog composition. The adjacent-color application adapter correction stays
 independent of the retained-project construction correction.
+
+## System resolution precedes collection defaults
+
+`Preset::load_external_config` first constructs collection defaults, then
+`Preset.cpp:1080-1088` uses `find_base` and
+`update_non_diff_values_to_base_config` to supply current system values.
+`PresetBundle.cpp:5484-5495` adds identity protection even when the serialized
+changed-key list is empty. `OrcaSlicer.cpp:3167-3200` subsequently applies
+initially absent project members even without refreshing existing members.
+
+The Rust catalog refresh must therefore see the embedded project's original
+membership. Inserting collection defaults before that refresh turns absent
+members into apparent explicit values, preventing system values from being
+applied. For example, the X1 Carbon preset sets `farthest_point_timelapse` to
+`1`, whereas the collection default is `0`; premature default construction
+changes timelapse placement and generated travel, not just exported metadata.
+
+The catalog loading entry must defer retained default construction until
+`preset::refresh` has resolved system values. Apply the existing collection
+default constructor to remaining absent printer/process members afterward,
+before final typed construction and caller overrides. Preserve connection
+credential exclusion at that construction boundary. The direct no-catalog
+entry still materializes retained defaults during loading because no system
+resolution is available. Select the order explicitly by loading entry, without
+key-specific rules or a separate missing-key set passed between stages.
+
+Additional unchanged complete-output comparisons in both Native modes:
+
+- `adaptive_octree_spacing::adaptive_octree_spacing_two_region_control`
+- `adaptive_octree_spacing::adaptive_octree_spacing_multiline_red`
