@@ -1,6 +1,7 @@
 //! `Print.cpp:1524-1556,1627-1781::Print::validate` (OrcaSlicer v2.4.2):
 //! applied height/width bounds, extruder addressing, then bed compatibility.
 mod bed_filament;
+mod estimated_tower;
 mod extrusion_width;
 mod identity;
 mod layered_wrapping;
@@ -231,7 +232,8 @@ pub(crate) fn validate_applied_project(
         &resolved.usage.supported_used_filaments,
         plate_number,
     )
-    .map_err(into_validate)
+    .map_err(into_validate)?;
+    estimated_tower::validate(project, resolved, plate_number)
 }
 
 /// Wrap an `InvalidInput` rejection from the applied-project validation in

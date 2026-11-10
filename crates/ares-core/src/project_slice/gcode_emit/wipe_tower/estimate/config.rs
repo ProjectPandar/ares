@@ -141,7 +141,7 @@ impl DynamicPrintConfig {
         let token = self
             .tokens
             .get(key)
-            .map_or(definition.default_value, String::as_str);
+            .map_or(definition.default_wire_value, String::as_str);
         parse(definition.kind, token)
     }
 }
