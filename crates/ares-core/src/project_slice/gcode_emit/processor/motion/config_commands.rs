@@ -20,6 +20,10 @@ impl MotionState {
             return true;
         }
         if code.starts_with("M204") {
+            if self.gcode_flavor == crate::GCodeFlavor::Klipper {
+                self.klipper_m204(code);
+                return true;
+            }
             if let Some(value) = word(code, 'S') {
                 self.acceleration = clamp(value, self.max_print_acceleration);
                 self.travel_acceleration = clamp(value, self.max_travel_acceleration);

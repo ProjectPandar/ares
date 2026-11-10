@@ -1,5 +1,6 @@
-//! `GCodeProcessor.cpp:383-387,6870-6916`: live Klipper toolhead limits.
+//! `GCodeProcessor.cpp:383-387,6795-6808,6870-6916`: live Klipper toolhead limits.
 use super::MotionState;
+use crate::project_slice::gcode_emit::processor::motion_util::word;
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -25,6 +26,16 @@ impl KlipperConfig {
 }
 
 impl MotionState {
+    /// `process_M204:6795-6808`: Klipper replaces its live acceleration unclamped, from `S` or
+    /// else `min(P, T)`, and leaves the retract acceleration unchanged.
+    pub(super) fn klipper_m204(&mut self, code: &str) {
+        let value = word(code, 'S').or_else(|| Some(word(code, 'P')?.min(word(code, 'T')?)));
+        if let Some(value) = value.filter(|value| *value > 0.0) {
+            self.acceleration = value;
+            self.travel_acceleration = value;
+        }
+    }
+
     pub(super) fn klipper_velocity_limit(&mut self, code: &str) {
         static PARAMETERS: LazyLock<Regex> = LazyLock::new(|| {
             Regex::new(r"(?i-u)\s(VELOCITY|ACCEL|ACCEL_TO_DECEL|SQUARE_CORNER_VELOCITY|MINIMUM_CRUISE_RATIO)\s*=\s*([+]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?)")
