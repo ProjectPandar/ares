@@ -19,15 +19,21 @@ impl MinimumSpanningTree {
         distances[0] = None;
         let mut closest_to = vec![0; vertices.len()];
         for _ in 1..vertices.len() {
-            // reserve(N), identity pointer hash and 16-byte Point stride yield
-            // distinct odd-prime buckets: native traversal is reverse insertion.
+            // MinimumSpanningTree.cpp:66-77: equal distances fall back to Point operator<.
+            // Coincident points keep the map order: reserve(N), identity pointer hash and
+            // 16-byte Point stride yield distinct odd-prime buckets, so it is reverse insertion.
             let closest = distances
                 .iter()
                 .enumerate()
                 .skip(1)
                 .rev()
                 .filter_map(|(index, distance)| distance.map(|distance| (index, distance)))
-                .min_by(|left, right| left.1.total_cmp(&right.1))
+                .min_by(|left, right| {
+                    let coordinates = |index: usize| (vertices[index].x(), vertices[index].y());
+                    left.1
+                        .total_cmp(&right.1)
+                        .then_with(|| coordinates(left.0).cmp(&coordinates(right.0)))
+                })
                 .expect("a spanning tree has an unconnected vertex")
                 .0;
             let other = closest_to[closest];
