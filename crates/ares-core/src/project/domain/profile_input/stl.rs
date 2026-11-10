@@ -57,11 +57,17 @@ impl Project {
                 ),
             );
         }
-        let (settings, raw) = if overrides.is_empty() {
+        let (settings, mut raw) = if overrides.is_empty() {
             // The composed profile raw is already the post-`handle_legacy`
             // view (`Config.cpp:577-579` normalizes every loaded preset at
             // compose, before any overlay).
-            (profile.settings.clone(), raw)
+            let mut settings = profile.settings.clone();
+            // CLI:4250-4259 adds a missing static default once, not once per
+            // loaded filament. Typed composition must not invent raw members.
+            settings
+                .filament
+                .restore_absent_defaults(|key| raw.contains_key(key));
+            (settings, raw)
         } else {
             let mut merged = raw;
             overrides.apply(&mut merged)?;
@@ -79,6 +85,9 @@ impl Project {
                 merged,
             )
         };
+        // CLI:4243-4244 normalizes mixed metadata for the loaded logical slots.
+        let filament_count = settings.project.preset.filament_settings_id.0.len();
+        super::resize_mixed_filament_metadata(&mut raw, filament_count, filament_count);
         let model = crate::load_model(input)?;
         let (vertices, triangles) = index_stl_vertices(&model);
         let mut min = [f64::INFINITY; 3];

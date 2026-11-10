@@ -41,6 +41,19 @@ pub struct FilamentOptions {
 }
 
 impl FilamentOptions {
+    pub(crate) fn restore_absent_defaults(&mut self, present: impl Fn(&str) -> bool) {
+        let defaults = Self::default();
+        self.gcode.restore_absent_defaults(defaults.gcode, &present);
+        self.print.restore_absent_defaults(defaults.print, &present);
+        self.region
+            .restore_absent_defaults(defaults.region, &present);
+        self.retract_overrides
+            .restore_absent_defaults(defaults.retract_overrides, &present);
+        if !present("pellet_flow_coefficient") {
+            self.pellet_flow_coefficient = defaults.pellet_flow_coefficient;
+        }
+    }
+
     pub(crate) fn append(&mut self, child: Self) {
         let Self {
             gcode,

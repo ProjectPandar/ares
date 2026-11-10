@@ -224,6 +224,14 @@ macro_rules! declare_option_group {
         }
 
         impl $group {
+            pub(crate) fn restore_absent_defaults(
+                &mut self,
+                defaults: Self,
+                present: &impl Fn(&str) -> bool,
+            ) {
+                $(if !present($key) { self.$field = defaults.$field; })*
+            }
+
             pub(crate) fn append(&mut self, child: Self) {
                 $(
                     $crate::options::option_group::AppendOptionValue::append_value(
