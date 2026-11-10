@@ -49,6 +49,12 @@ lands on the first cached G1 whose float elapsed time crosses the next percent o
   snapshots (`:748-753`), the preview time narrowing in `estimate/options_z.rs` (`:646`),
   and the `M73` lookup in `estimate/export_cache.rs`, `estimate/elapsed.rs` and
   `processor.rs`.
+- Unchanged, already matching upstream: the final-pass leftover in `schedule.rs`
+  (`trailing_delay`). Upstream sums the delays left in the buffer in float
+  (`float leftover = 0.0f; leftover += …`, `:766-768`), adds the float total to the double
+  `time` (`:771`) and adds it to the float cache as float plus float (`:772`). Ares folds the
+  pending delays in f32, adds the widened sum to `total`, and adds `trailing_delay as f32` to
+  the f32 cache sum in `custom_times`.
 
 ## Premises
 
