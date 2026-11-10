@@ -79,7 +79,8 @@ pub(super) fn record_motions(
     }
 }
 
-/// `process_M400:6947–6960`: bare Klipper M400 also synchronizes with zero delay.
+/// `process_M400:6947–6960`: bare Klipper M400 also synchronizes with zero delay, as do the
+/// Klipper temperature waits `process_M109:6650-6653` and `process_M190:6714-6717`.
 pub(super) fn synchronizes_planner(
     code: &str,
     measured_g29: bool,
@@ -94,7 +95,7 @@ pub(super) fn synchronizes_planner(
         return false;
     }
     matches!(command, "M0" | "M1")
-        || command == "M400" && flavor == GCodeFlavor::Klipper
+        || matches!(command, "M400" | "M109" | "M190") && flavor == GCodeFlavor::Klipper
         || matches!(command, "G4" | "M400")
             && (word(code, 'S').is_some() || word(code, 'P').is_some())
         || measured_g29
