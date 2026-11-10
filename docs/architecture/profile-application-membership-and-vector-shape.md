@@ -95,6 +95,14 @@ Preserve explicitly supplied vectors, per-slot insertion behavior, variant
 selection, palette growth, and matrix calculations. Do not repair cardinality
 in the config writer or normalize a merged project as an individual preset.
 
+Mixed-filament metadata has a separate explicit cardinality contract:
+`PrintConfig.cpp:11475-11488` resizes its seven metadata vectors, and
+`OrcaSlicer.cpp:4243-4244` passes the loaded logical filament count for both
+arguments. The existing Rust `resize_mixed_filament_metadata` port must run for
+STL as well as 3MF loading. This does not justify resizing ordinary missing
+filament defaults: the mixed-metadata normalizer, not palette growth or option
+type alone, owns those seven vector shapes.
+
 ## Public comparisons
 
 Keep these existing comparisons and their assertions unchanged in both Native
