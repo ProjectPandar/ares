@@ -39,7 +39,6 @@ use std::{
     fs,
     io::{Cursor, Read, Write},
     path::PathBuf,
-    process::Command,
 };
 
 const BASE: &[u8] = include_bytes!("../../../../../tests/parity/summary/time-cost.3mf");
