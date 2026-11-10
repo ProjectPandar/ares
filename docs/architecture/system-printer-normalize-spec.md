@@ -134,6 +134,21 @@ of the config block equal Native's. Every other line is unchanged.
   unlisted keys (`refresh_unlisted`). In that case the normalized system values replace
   them, as upstream.
 
+## Upstream UB boundary
+
+- Upstream: `extend_extruder_variant` resizes `extruder_variant_list` with itself as the
+  default (`PrintConfig.cpp:10639`). When the list is present but empty and `n > 0`,
+  `ConfigOptionVector::resize` takes its empty-vector branch and reads `values.front()` of
+  that same empty vector (`Config.hpp:705`). That is undefined behavior; release builds
+  drop the `assert` at `Config.hpp:691`. Upstream gives no defined result to match.
+- Ares: `SliceOptions::extend_extruder_variant` (`options/extruder_variant.rs`) returns
+  `SliceError::InvalidInput` for a present but empty `extruder_variant_list` when `n > 0`. No
+  value is invented.
+- The test fixture does not trigger it: the J1 printer chain does not hold
+  `extruder_variant_list`, so step 1 inserts `n` entries before the resize, and the list is
+  never empty. No test compares Ares with Native on an empty list, since
+  Native's output there is undefined.
+
 ## Test plan
 
 There is one new test in
