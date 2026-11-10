@@ -16,22 +16,22 @@ pub(crate) fn preset_owns_option(kind: super::ProfileKind, key: &str) -> bool {
 /// CLI:3167-3200 applies the collection-default keyset for retained project presets.
 pub(crate) fn apply_retained_preset_defaults(
     raw: &mut ProjectSettingsRaw,
-    selected: &ProjectSettings,
+    selected: Option<&ProjectSettings>,
 ) -> Result<(), SliceError> {
     let inherited = preset::strings(raw, "inherits_group");
     let filament_count = preset::strings(raw, "filament_settings_id").len();
-    let selection = &selected.project.preset;
+    let selection = selected.map(|settings| &settings.project.preset);
     for (kind, identity, loaded, slot) in [
         (
             super::ProfileKind::Machine,
             "printer_settings_id",
-            selection.printer_settings_id.0.as_str(),
+            selection.map_or("", |preset| preset.printer_settings_id.0.as_str()),
             filament_count + 1,
         ),
         (
             super::ProfileKind::Process,
             "print_settings_id",
-            selection.print_settings_id.0.as_str(),
+            selection.map_or("", |preset| preset.print_settings_id.0.as_str()),
             0,
         ),
     ] {
@@ -41,7 +41,11 @@ pub(crate) fn apply_retained_preset_defaults(
             continue;
         }
         for key in keys::names(kind) {
-            if raw.contains_key(key) || preset::bookkeeping(key) || preset::connection(key) {
+            let connection = preset::connection(key);
+            if preset::bookkeeping(key)
+                || (connection && selected.is_some())
+                || (raw.contains_key(key) && !connection)
+            {
                 continue;
             }
             if let Some(value) = keys::default_value(key)? {

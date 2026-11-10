@@ -172,6 +172,9 @@ pub(crate) fn load_project_with_preparation(
         &project_settings_raw,
         overrides,
     )?;
+    // Preset.cpp:1059-1089 constructs retained presets over their full defaults,
+    // excluding embedded connection credentials from the project overlay.
+    crate::profiles::apply_retained_preset_defaults(&mut project_settings_raw, None)?;
     // Overrides win over document values (`apply_only`, `Config.cpp:461`).
     overrides.apply(&mut project_settings_raw)?;
     // Same upstream deserializer semantics as preset documents: JSON

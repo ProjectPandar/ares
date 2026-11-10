@@ -175,7 +175,7 @@ impl Project {
 
         let switch = machine_switch(&embedded_raw, settings, project.documents.bbl_family_3mf);
         let mut merge_base = embedded_raw.clone();
-        crate::profiles::apply_retained_preset_defaults(&mut merge_base, settings)?;
+        crate::profiles::apply_retained_preset_defaults(&mut merge_base, Some(settings))?;
         let mut merged = merged_profile_raw(
             &embedded_raw,
             merge_base,
