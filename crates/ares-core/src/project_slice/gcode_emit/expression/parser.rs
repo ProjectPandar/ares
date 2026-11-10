@@ -5,6 +5,7 @@ use super::arithmetic::{Arithmetic, arithmetic};
 use super::comparison;
 use super::deferred::{self, Operand};
 use super::functions::is_function_keyword;
+use super::type_check::{self, Failure};
 
 mod call;
 mod variable;
@@ -35,12 +36,12 @@ impl Parser<'_> {
         while self.take(Token::Or) {
             let right = self.parse_and()?;
             self.reject_deferred(&[&value, &right])?;
+            self.check(type_check::logical(&value, &right))?;
             let result = value.value.as_bool() || right.value.as_bool();
             value = Operand::plain(Value::Bool(result), value.start);
         }
         if self.take(Token::Question) {
-            // `evaluate_boolean` (`PlaceholderParser.cpp:604-612`) rejects a deferred condition.
-            self.reject_deferred(&[&value])?;
+            self.check(type_check::condition(&value))?;
             let condition = value.value.as_bool();
             // `conditional_expression` suppresses the inactive branch's
             // evaluation (`PlaceholderParser.cpp:2215-2221`): parse it for
@@ -73,6 +74,7 @@ impl Parser<'_> {
         while self.take(Token::And) {
             let right = self.parse_compare()?;
             self.reject_deferred(&[&value, &right])?;
+            self.check(type_check::logical(&value, &right))?;
             let result = value.value.as_bool() && right.value.as_bool();
             value = Operand::plain(Value::Bool(result), value.start);
         }
@@ -126,7 +128,7 @@ impl Parser<'_> {
                 Err(_) if self.suppressed > 0 => {
                     return Ok(Operand::plain(Value::Bool(false), left.start));
                 }
-                Err(error) => return Err(error),
+                Err(message) => return Err(self.fail((left.start, message))),
             }
         };
         Ok(Operand::plain(Value::Bool(result), left.start))
@@ -172,11 +174,12 @@ impl Parser<'_> {
         right: Operand,
         operation: Arithmetic,
     ) -> Result<Operand, String> {
-        if self.suppressed == 0
-            && let Some(start) = deferred::arithmetic_failure(&left, &right, operation)
+        if matches!(operation, Arithmetic::Add)
+            && let Some(start) = deferred::addition_failure(&left, &right)
         {
-            return Err(self.deferred_failure(start));
+            self.check(Err((start, deferred::MESSAGE)))?;
         }
+        self.check(type_check::arithmetic(&left, &right, operation))?;
         let deferred = deferred::sum(&left, &right, operation);
         let start = left.start;
         match arithmetic(left.value, right.value, operation) {
@@ -195,7 +198,7 @@ impl Parser<'_> {
         if self.take(Token::Not) {
             let start = self.offsets[self.index - 1];
             let operand = self.parse_unary()?;
-            self.reject_deferred(&[&operand])?;
+            self.check(type_check::inversion(&operand))?;
             return Ok(Operand::plain(Value::Bool(!operand.value.as_bool()), start));
         }
         if self.take(Token::Plus) {
@@ -208,17 +211,13 @@ impl Parser<'_> {
         if self.take(Token::Minus) {
             let start = self.offsets[self.index - 1];
             let operand = self.parse_unary()?;
-            self.reject_deferred(&[&operand])?;
-            let value = if let Some(value) = operand.value.as_integer() {
-                Value::Integer(-value)
-            } else {
-                match operand.value.as_number() {
-                    Some(number) => Value::Number(-number),
-                    // Suppressed (inactive) branch: `unary_minus` no-ops on
-                    // skipped values (`PlaceholderParser.cpp:335-340`).
-                    None if self.suppressed > 0 => Value::Bool(false),
-                    None => return Err("numeric expression expected".to_owned()),
-                }
+            self.check(type_check::negation(&operand))?;
+            let value = match operand.value.scalar() {
+                Value::Integer(value) => Value::Integer(-value),
+                Value::Number(value) => Value::Number(-value),
+                // Suppressed (inactive) branch: `unary_minus` no-ops on
+                // skipped values (`PlaceholderParser.cpp:335-340`).
+                _ => Value::Bool(false),
             };
             return Ok(Operand::plain(value, start));
         }
@@ -270,16 +269,23 @@ impl Parser<'_> {
     /// `throw_if_deferred` (`PlaceholderParser.cpp:884-888`) on each operand in order;
     /// upstream skips it inside an inactive branch.
     fn reject_deferred(&mut self, operands: &[&Operand]) -> Result<(), String> {
-        match deferred::first(operands) {
-            Some(start) if self.suppressed == 0 => Err(self.deferred_failure(start)),
+        let result =
+            deferred::first(operands).map_or(Ok(()), |start| Err((start, deferred::MESSAGE)));
+        self.check(result)
+    }
+
+    /// Reports a failed check; upstream evaluates nothing inside an inactive branch.
+    fn check(&mut self, result: Result<(), Failure>) -> Result<(), String> {
+        match result {
+            Err(failure) if self.suppressed == 0 => Err(self.fail(failure)),
             _ => Ok(()),
         }
     }
 
-    /// Reports the deferred message at the operand start for the line/caret report.
-    fn deferred_failure(&mut self, start: usize) -> String {
-        self.scalar_failure = Some((start, deferred::MESSAGE));
-        deferred::MESSAGE.to_owned()
+    /// Reports `message` at the operand start for the line/caret report.
+    fn fail(&mut self, (start, message): Failure) -> String {
+        self.scalar_failure = Some((start, message));
+        message.to_owned()
     }
 
     fn peek(&self) -> Option<&Token> {

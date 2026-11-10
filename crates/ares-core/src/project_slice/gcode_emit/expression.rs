@@ -8,6 +8,7 @@ mod comparison;
 mod deferred;
 mod functions;
 mod parser;
+mod type_check;
 
 pub(super) use arithmetic::to_string;
 use parser::Parser;

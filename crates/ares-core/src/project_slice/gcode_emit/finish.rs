@@ -58,8 +58,8 @@ pub(super) fn append(
     config.insert("layer_z", value::Value::number(layer_z_placeholder));
     config.insert("max_layer_z", value::Value::number(max_layer_z));
     config.insert("timelapse_type", value::Value::number(0.0));
-    config.insert("most_used_physical_extruder_id", value::Value::number(1.0));
-    config.insert("curr_physical_extruder_id", value::Value::number(1.0));
+    config.insert("most_used_physical_extruder_id", value::Value::Integer(1));
+    config.insert("curr_physical_extruder_id", value::Value::Integer(1));
     config.insert("has_timelapse_safe_pos", value::Value::option_bool(false));
 
     let tags = super::tags::Tags::of(traversal);

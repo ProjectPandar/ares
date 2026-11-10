@@ -5,6 +5,7 @@
 use super::super::processor::DEFERRED_PLACEHOLDERS;
 use super::super::value::Value;
 use super::arithmetic::Arithmetic;
+use super::type_check::is_string;
 
 pub(super) const MESSAGE: &str = "This value is known only after the G-code is generated. It can \
      be printed, but not used in a calculation or a comparison.";
@@ -55,40 +56,18 @@ impl Operand {
         }
     }
 
-    fn is_deferred(&self) -> bool {
+    pub(super) fn is_deferred(&self) -> bool {
         self.deferred != Deferred::None
     }
 }
 
-fn is_string(value: &Value) -> bool {
-    matches!(value.scalar(), Value::String(_))
-}
-
-fn is_numeric(value: &Value) -> bool {
-    matches!(value.scalar(), Value::Integer(_) | Value::Number(_))
-}
-
-/// The operand an arithmetic operator rejects as deferred: `operator+=` (`:491-512`) and the
-/// `throw_if_not_numeric` order of `-`, `*`, `/` and `%` (`:523-596`).
-pub(super) fn arithmetic_failure(
-    left: &Operand,
-    right: &Operand,
-    operation: Arithmetic,
-) -> Option<usize> {
-    if matches!(operation, Arithmetic::Add) {
-        return if left.deferred == Deferred::Value
-            && (!is_string(&right.value) || right.deferred == Deferred::Value)
-        {
-            Some(left.start)
-        } else if right.deferred == Deferred::Value && !is_string(&left.value) {
-            Some(right.start)
-        } else {
-            None
-        };
-    }
-    if left.is_deferred() {
+/// The operand `operator+=` (`:491-499`) rejects as deferred before any type check.
+pub(super) fn addition_failure(left: &Operand, right: &Operand) -> Option<usize> {
+    if left.deferred == Deferred::Value
+        && (!is_string(&right.value) || right.deferred == Deferred::Value)
+    {
         Some(left.start)
-    } else if right.is_deferred() && is_numeric(&left.value) {
+    } else if right.deferred == Deferred::Value && !is_string(&left.value) {
         Some(right.start)
     } else {
         None
@@ -102,33 +81,6 @@ pub(super) fn sum(left: &Operand, right: &Operand, operation: Arithmetic) -> Def
     } else {
         Deferred::None
     }
-}
-
-/// The first deferred parameter a function rejects, checked in order until a parameter fails
-/// its own type check: `min`, `max` (`:684`), `random` (`:714`), `digits` (`:730`), `int`,
-/// `round`, `floor`, `ceil` (`:409-472`) and the `interpolate_table` lookup value (`:1959`).
-pub(super) fn argument_failure(name: &str, arguments: &[Operand]) -> Option<usize> {
-    let checked = match name {
-        "min" | "max" | "random" | "digits" | "zdigits" | "int" | "round" | "floor" | "ceil" => {
-            arguments
-        }
-        "interpolate_table" => &arguments[..arguments.len().min(1)],
-        _ => return None,
-    };
-    for (index, argument) in checked.iter().enumerate() {
-        if argument.is_deferred() {
-            return Some(argument.start);
-        }
-        let accepted = if index > 0 && name.ends_with("digits") {
-            matches!(argument.value.scalar(), Value::Integer(_))
-        } else {
-            is_numeric(&argument.value)
-        };
-        if !accepted {
-            return None;
-        }
-    }
-    None
 }
 
 /// The first deferred operand of an operator that rejects any deferred value

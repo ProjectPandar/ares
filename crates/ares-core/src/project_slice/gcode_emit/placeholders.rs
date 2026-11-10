@@ -31,9 +31,9 @@ pub(super) fn base_config(
     for (key, tag) in super::processor::DEFERRED_PLACEHOLDERS {
         config.insert(key, Value::String(tag.to_owned()));
     }
-    config.insert("current_extruder", Value::number(0.0));
-    config.insert("filament_extruder_id", Value::number(0.0));
-    config.insert("current_hotend", Value::number(-1.0));
+    config.insert("current_extruder", Value::Integer(0));
+    config.insert("filament_extruder_id", Value::Integer(0));
+    config.insert("current_hotend", Value::Integer(-1));
     for (target, source) in [
         (
             "first_layer_temperature",
@@ -117,7 +117,7 @@ fn insert_flush_placeholders(config: &mut value::Config, traversal: &PreparedPos
         .iter()
         .enumerate()
         .map(|(index, value)| flush_temperature(value, &print.nozzle_temperature_range_high, index))
-        .map(|value| Value::number(f64::from(value)))
+        .map(|value| Value::Integer(i64::from(value)))
         .collect();
     config.insert("flush_temperatures", Value::List(temperatures));
 }
@@ -179,7 +179,7 @@ fn insert_runtime_placeholders(
         "total_toolchanges",
         "current_object_idx",
     ] {
-        config.insert(name, Value::number(0.0));
+        config.insert(name, Value::Integer(0));
     }
     let filament_count = traversal.resolved.logical_filament_count.max(1);
     let extruder_count = config
@@ -199,7 +199,7 @@ fn insert_runtime_placeholders(
     ] {
         config.insert(name, first.clone());
     }
-    config.insert("num_extruders", Value::number(extruder_count as f64));
+    config.insert("num_extruders", Value::Integer(extruder_count as i64));
     let used = crate::project_slice::extruders::collect_project_object_extruders(
         traversal.project.objects(),
         &traversal.resolved.objects,
@@ -251,7 +251,7 @@ fn insert_runtime_placeholders(
         "has_single_extruder_multi_material_priming",
         Value::option_bool(false),
     );
-    config.insert("total_layer_count", Value::number(layer_count as f64));
+    config.insert("total_layer_count", Value::Integer(layer_count as i64));
     let max_print_z = traversal
         .objects
         .iter()

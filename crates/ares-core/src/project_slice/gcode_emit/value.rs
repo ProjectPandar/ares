@@ -215,58 +215,66 @@ impl Config {
     }
 }
 
+/// The `expr` type an option value takes: `scalar_variable_to_expr`
+/// (`PlaceholderParser.cpp:1170-1232`) and `vector_element_to_expr` (`:1355-1361`).
+#[derive(Clone, Copy)]
+enum Scalar {
+    Bool,
+    Int,
+    /// `coFloat`, `coPercent` and their vectors: the number without its `%`.
+    Float,
+    /// `coString`, `coEnum` and `coStrings`: the serialized text.
+    Text,
+    Untyped,
+}
+
 fn parse_value(raw: &str, kind: Option<crate::options::registry::OptionValueKind>) -> Value {
     use crate::options::registry::OptionValueKind as Kind;
     // Registry-typed vector options keep their vector shape regardless of
     // element count — upstream vectors stay `is_vector()` even with a
     // single element, and a bare brace reference then enters
     // `vector_element_to_expr` (`PlaceholderParser.cpp:1086-1211`) instead
-    // of scalar resolution. Element kinds follow the option type:
-    // `Ints → Integer`, float/percent vectors → `Number`, bool vectors →
-    // OptionBool, string vectors → String.
-    if let Some(kind) = kind {
-        let elements = match kind {
-            Kind::Ints | Kind::IntsNullable => raw
-                .split([';', ','])
-                .map(|scalar| parse_vector_scalar(scalar, false, true, kind == Kind::IntsNullable))
-                .collect::<Vec<_>>(),
-            Kind::Floats | Kind::FloatsNullable | Kind::Percents | Kind::PercentsNullable => raw
-                .split([';', ','])
-                .map(|scalar| {
-                    parse_vector_scalar(
-                        scalar,
-                        false,
-                        false,
-                        matches!(kind, Kind::FloatsNullable | Kind::PercentsNullable),
-                    )
-                })
-                .collect::<Vec<_>>(),
-            Kind::Bools | Kind::BoolsNullable => raw
-                .split([';', ','])
-                .map(|scalar| parse_vector_scalar(scalar, true, false, kind == Kind::BoolsNullable))
-                .collect::<Vec<_>>(),
-            Kind::Strings | Kind::Enums | Kind::EnumsNullable => raw
-                .split([';', ','])
-                .map(|scalar| parse_scalar(scalar, false, false))
-                .collect::<Vec<_>>(),
-            _ => Vec::new(),
-        };
-        if !elements.is_empty() {
-            return Value::List(elements);
-        }
-    }
-    let is_bool = kind.is_some_and(|kind| matches!(kind, Kind::Bool | Kind::Bools));
-    let is_ints = kind == Some(Kind::Ints);
+    // of scalar resolution.
+    let (scalar, nullable) = match kind {
+        Some(Kind::Int) => return parse_scalar(raw, Scalar::Int),
+        Some(Kind::Float | Kind::Percent) => return parse_scalar(raw, Scalar::Float),
+        Some(Kind::String | Kind::Enum) => return parse_scalar(raw, Scalar::Text),
+        Some(Kind::Bool) => return untyped_list(raw, Scalar::Bool),
+        Some(Kind::Ints) => (Scalar::Int, false),
+        Some(Kind::IntsNullable) => (Scalar::Int, true),
+        Some(Kind::Floats | Kind::Percents) => (Scalar::Float, false),
+        Some(Kind::FloatsNullable | Kind::PercentsNullable) => (Scalar::Float, true),
+        Some(Kind::Bools) => (Scalar::Bool, false),
+        Some(Kind::BoolsNullable) => (Scalar::Bool, true),
+        Some(Kind::Strings) => (Scalar::Text, false),
+        Some(Kind::Enums | Kind::EnumsNullable) => (Scalar::Untyped, false),
+        _ => return untyped_list(raw, Scalar::Untyped),
+    };
+    Value::List(
+        raw.split([';', ','])
+            .map(|element| {
+                if nullable && element.trim() == "nil" {
+                    Value::Nil
+                } else {
+                    parse_scalar(element, scalar)
+                }
+            })
+            .collect(),
+    )
+}
+
+/// An option without a registry vector kind: `;` or `,` separated values become a list.
+fn untyped_list(raw: &str, scalar: Scalar) -> Value {
     let mut values = raw
         .split(';')
-        .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
+        .map(|value| parse_scalar(value, scalar))
         .collect::<Vec<_>>();
     if values.len() == 1 {
         let value = values.remove(0);
         let comma_values = value
             .as_string()
             .split(',')
-            .map(|scalar| parse_scalar(scalar, is_bool, is_ints))
+            .map(|value| parse_scalar(value, scalar))
             .collect::<Vec<_>>();
         return if comma_values.len() == 1 {
             value
@@ -277,21 +285,24 @@ fn parse_value(raw: &str, kind: Option<crate::options::registry::OptionValueKind
     Value::List(values)
 }
 
-fn parse_vector_scalar(raw: &str, is_bool: bool, is_ints: bool, nullable: bool) -> Value {
-    if nullable && raw.trim() == "nil" {
-        Value::Nil
-    } else {
-        parse_scalar(raw, is_bool, is_ints)
+fn parse_scalar(raw: &str, scalar: Scalar) -> Value {
+    let raw = raw.trim().trim_matches('"');
+    match scalar {
+        Scalar::Bool if matches!(raw, "0" | "1" | "false" | "true") => {
+            Value::option_bool(matches!(raw, "1" | "true"))
+        }
+        Scalar::Int => Value::Integer(raw.parse().unwrap()),
+        Scalar::Float => raw
+            .trim_end_matches('%')
+            .parse()
+            .map_or_else(|_| untyped(raw), Value::Number),
+        Scalar::Text => Value::String(raw.to_owned()),
+        Scalar::Bool | Scalar::Untyped => untyped(raw),
     }
 }
 
-fn parse_scalar(raw: &str, is_bool: bool, is_ints: bool) -> Value {
-    let raw = raw.trim().trim_matches('"');
-    if is_bool && matches!(raw, "0" | "1" | "false" | "true") {
-        Value::option_bool(matches!(raw, "1" | "true"))
-    } else if is_ints {
-        Value::Integer(raw.parse().unwrap())
-    } else if let Ok(value) = raw.parse::<f64>() {
+fn untyped(raw: &str) -> Value {
+    if let Ok(value) = raw.parse::<f64>() {
         Value::Number(value)
     } else if raw == "true" || raw == "false" {
         Value::Bool(raw == "true")

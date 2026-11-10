@@ -179,7 +179,7 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     motion::refresh_writer_state(&mut config, state);
     config.insert(
         "current_object_idx",
-        super::super::value::Value::number(finished_objects as f64),
+        super::super::value::Value::Integer(finished_objects as i64),
     );
     let name = "printing_by_object_gcode";
     let rendered = match super::super::template::render(raw, &mut config) {

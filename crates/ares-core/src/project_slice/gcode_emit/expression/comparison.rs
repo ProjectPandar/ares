@@ -2,7 +2,7 @@ use super::super::lexer::Token;
 use super::{Value, to_string};
 
 // PlaceholderParser.cpp:558-600: compare_op and its inverted wrappers.
-pub(super) fn compare(left: &Value, right: &Value, token: Token) -> Result<bool, String> {
+pub(super) fn compare(left: &Value, right: &Value, token: Token) -> Result<bool, &'static str> {
     let (operation, invert) = match token {
         Token::Eq => (Operation::Equal, false),
         Token::NotEq => (Operation::Equal, true),
@@ -29,7 +29,7 @@ pub(super) fn compare(left: &Value, right: &Value, token: Token) -> Result<bool,
             Value::Bool(right) | Value::OptionBool(right),
         ) => {
             if !matches!(operation, Operation::Equal) {
-                return Err("Cannot compare the types.".to_owned());
+                return Err("Cannot compare the types.");
             }
             (*left == *right, false, false)
         }
@@ -38,7 +38,7 @@ pub(super) fn compare(left: &Value, right: &Value, token: Token) -> Result<bool,
             let right = to_string(right);
             (left == right, left < right, left > right)
         }
-        _ => return Err("Cannot compare the types.".to_owned()),
+        _ => return Err("Cannot compare the types."),
     };
     let result = match operation {
         Operation::Equal => values.0,

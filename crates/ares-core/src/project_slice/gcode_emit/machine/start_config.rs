@@ -22,8 +22,8 @@ pub(super) fn self_start_config(
         Some(&state.template_rng),
         state.total_layer_count,
     )?;
-    config.insert("next_extruder", value::Value::number(0.0));
-    config.insert("next_hotend", value::Value::number(-1.0));
+    config.insert("next_extruder", value::Value::Integer(0));
+    config.insert("next_hotend", value::Value::Integer(-1));
     config.insert(
         "overall_chamber_temperature",
         value::Value::Integer(i64::from(temperature::overall_chamber_temperature(

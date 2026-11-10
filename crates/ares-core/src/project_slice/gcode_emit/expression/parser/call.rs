@@ -2,8 +2,9 @@
 
 use super::super::super::lexer::Token;
 use super::super::super::value::Value;
-use super::super::deferred::{self, Operand};
+use super::super::deferred::Operand;
 use super::super::functions::{InterpolateTableError, function, interpolate_table};
+use super::super::type_check;
 use super::Parser;
 
 impl Parser<'_> {
@@ -29,11 +30,7 @@ impl Parser<'_> {
             return Ok(Operand::plain(value, start));
         }
         let (args, starts) = self.arguments()?;
-        if self.suppressed == 0
-            && let Some(at) = deferred::argument_failure(name, &args)
-        {
-            return Err(self.deferred_failure(at));
-        }
+        self.check(type_check::arguments(name, &args))?;
         let args = args.into_iter().map(|arg| arg.value).collect::<Vec<_>>();
         let value = if name == "interpolate_table" {
             self.interpolate_table(&args, &starts)?

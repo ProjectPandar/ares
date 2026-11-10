@@ -61,7 +61,7 @@ pub(super) fn emit(
         motion::refresh_writer_state(&mut config, state);
         config.insert(
             "layer_num",
-            value::Value::number(context.layer.index as f64),
+            value::Value::Integer(context.layer.index as i64),
         );
         config.insert("layer_z", value::Value::number(context.layer.z));
         config.insert("max_layer_z", value::Value::number(context.layer.max_z));

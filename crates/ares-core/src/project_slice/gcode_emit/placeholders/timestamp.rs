@@ -11,13 +11,13 @@ pub(super) fn insert(config: &mut value::Config, metadata: GenerationMetadata) {
         )),
     );
     for (name, number) in [
-        ("year", year as f64),
-        ("month", f64::from(month)),
-        ("day", f64::from(day)),
-        ("hour", f64::from(hour)),
-        ("minute", f64::from(minute)),
-        ("second", f64::from(second)),
+        ("year", i64::from(year)),
+        ("month", i64::from(month)),
+        ("day", i64::from(day)),
+        ("hour", i64::from(hour)),
+        ("minute", i64::from(minute)),
+        ("second", i64::from(second)),
     ] {
-        config.insert(name, Value::number(number));
+        config.insert(name, Value::Integer(number));
     }
 }

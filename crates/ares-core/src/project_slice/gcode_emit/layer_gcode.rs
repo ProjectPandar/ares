@@ -99,7 +99,7 @@ pub(super) fn append_before_layer_change_gcode(
     // `ppi.update_from_gcodewriter(m_writer)` refreshes `position`/
     // E-counters before each template (`GCode.cpp:3896`).
     super::motion::refresh_writer_state(&mut config, state);
-    config.insert("layer_num", value::Value::number(layer_index as f64));
+    config.insert("layer_num", value::Value::Integer(layer_index as i64));
     config.insert("layer_z", value::Value::number(layer_z));
     config.insert("max_layer_z", value::Value::number(max_layer_z));
     // Render or write-back failure both reduce to the inline report —
@@ -160,9 +160,9 @@ pub(super) fn append_layer_change(
             state.total_layer_count,
         )?;
         super::motion::refresh_writer_state(&mut config, state);
-        config.insert("layer_num", value::Value::number(layer_index as f64));
+        config.insert("layer_num", value::Value::Integer(layer_index as i64));
         config.insert("layer_z", value::Value::number(layer_z));
-        config.insert("overall_chamber_temperature", value::Value::number(0.0));
+        config.insert("overall_chamber_temperature", value::Value::Integer(0));
         if let Some(value) = config
             .get("temperature_vitrification")
             .and_then(|value| value.index(0))
@@ -193,7 +193,7 @@ pub(super) fn append_layer_change(
             .map_or(0, |value| value.0);
         config.insert(
             "most_used_physical_extruder_id",
-            value::Value::number(most_used_physical_extruder_id as f64),
+            value::Value::Integer(most_used_physical_extruder_id as i64),
         );
         // Render or write-back failure both produce only the inline
         // report (`GCode.cpp:3920-3933`).
