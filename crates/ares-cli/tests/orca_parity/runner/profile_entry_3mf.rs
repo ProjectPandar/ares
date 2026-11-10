@@ -25,7 +25,7 @@ include!("profile_entry_3mf/settings_stl.rs");
 
 include!("profile_entry_3mf/post_process.rs");
 
-#[path = "minimal_purge_on_wipe_tower.rs"]
-mod minimal_purge_on_wipe_tower;
 #[path = "profile_entry_3mf/machine_start_end_marker.rs"]
 mod machine_start_end_marker;
+#[path = "minimal_purge_on_wipe_tower.rs"]
+mod minimal_purge_on_wipe_tower;
