@@ -18,6 +18,7 @@ pub(in crate::project_slice::gcode_emit) struct InitialFilaments {
     non_support_hotend: i32,
     first: Vec<i32>,
     first_non_support: Vec<i32>,
+    nozzle_diameters: Vec<f64>,
     total_toolchanges: usize,
     used_extruders: Option<value::Value>,
 }
@@ -67,6 +68,16 @@ impl InitialFilaments {
         config.insert(
             "total_toolchanges",
             value::Value::Integer(self.total_toolchanges as i64),
+        );
+        config.insert(
+            "nozzle_diameter_at_nozzle_id",
+            value::Value::List(
+                self.nozzle_diameters
+                    .iter()
+                    .copied()
+                    .map(value::Value::Number)
+                    .collect(),
+            ),
         );
         for (name, id) in [
             ("initial_tool", self.initial),
@@ -193,6 +204,12 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
         non_support_hotend: hotend(non_support),
         first,
         first_non_support,
+        // GCode.cpp:278-291: admitted retained groups have consecutive IDs in order.
+        nozzle_diameters: ordering
+            .nozzle_groups
+            .iter()
+            .map(|group| group.diameter)
+            .collect(),
         // `GCode.cpp:2901-2904`: by-layer export uses finalized logical tools,
         // not the configured object-extruder candidate set.
         used_extruders: (settings.process.print.print_sequence

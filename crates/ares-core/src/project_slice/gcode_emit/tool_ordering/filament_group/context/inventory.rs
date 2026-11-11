@@ -1,15 +1,22 @@
 use super::{DynamicPrintConfig, NozzleGroup, SliceError, unsupported};
+use crate::project_slice::gcode_emit::tool_ordering::nozzle_group::canonical_diameter;
 use std::collections::BTreeMap;
 
 // ToolOrdering.cpp:1503-1527: expand each extruder into physical nozzle groups.
-pub(super) fn build_nozzle_groups(counts: &[usize], volumes: &[i32; 2]) -> Vec<NozzleGroup> {
+pub(super) fn build_nozzle_groups(
+    counts: &[usize],
+    volumes: &[i32; 2],
+    diameters: &crate::OrcaFloats,
+) -> Vec<NozzleGroup> {
     let mut groups = Vec::new();
     let mut group_id = 0;
     for (extruder, count) in counts.iter().copied().enumerate() {
+        let diameter = canonical_diameter(diameters.0[extruder].0);
         for _ in 0..count {
             groups.push(NozzleGroup {
                 extruder,
                 group_id,
+                diameter,
                 volume: volumes[extruder],
             });
             group_id += 1;

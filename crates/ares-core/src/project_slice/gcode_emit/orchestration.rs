@@ -58,7 +58,6 @@ pub(in crate::project_slice) fn emit(
         &prepared.support_layers,
         &schedule,
     )?;
-    let nozzle_groups = std::mem::take(&mut schedule.tool_ordering.nozzle_groups);
     let sliced_layer_count = schedule.layer_count();
     // Under sequential by-object printing `m_layer_count` accumulates the
     // per-object layer counts (`GCode.cpp:2505`, `+= instances.size() *
@@ -87,6 +86,7 @@ pub(in crate::project_slice) fn emit(
         &islands.plate,
     );
     let initial_filaments = machine::first_filaments::resolve(traversal, &schedule.tool_ordering);
+    let nozzle_groups = std::mem::take(&mut schedule.tool_ordering.nozzle_groups);
     let mut export_config = Vec::new();
     crate::options::write_config_block(
         &traversal.resolved.views,

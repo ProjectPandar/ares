@@ -8,15 +8,23 @@ use crate::{NozzleVolumeType, ProjectSettings};
 pub(in crate::project_slice::gcode_emit) struct NozzleGroup {
     pub(in crate::project_slice::gcode_emit) extruder: usize,
     pub(in crate::project_slice::gcode_emit) group_id: usize,
+    pub(in crate::project_slice::gcode_emit) diameter: f64,
     pub(in crate::project_slice::gcode_emit) volume: i32,
 }
 
 // MultiNozzleUtils.cpp:319-369: one physical group per head on the static path.
 pub(super) fn static_groups(settings: &ProjectSettings) -> Vec<NozzleGroup> {
-    (0..settings.project.print.nozzle_diameter.0.len())
-        .map(|extruder| NozzleGroup {
+    settings
+        .project
+        .print
+        .nozzle_diameter
+        .0
+        .iter()
+        .enumerate()
+        .map(|(extruder, diameter)| NozzleGroup {
             extruder,
             group_id: extruder,
+            diameter: canonical_diameter(diameter.0),
             volume: match settings
                 .project
                 .gcode
@@ -32,6 +40,17 @@ pub(super) fn static_groups(settings: &ProjectSettings) -> Vec<NozzleGroup> {
             },
         })
         .collect()
+}
+
+// utils.cpp:1784-1791: strict nearest supported diameter; first wins ties.
+pub(super) fn canonical_diameter(diameter: f64) -> f64 {
+    [0.4, 0.6, 0.8].into_iter().fold(0.2, |closest, candidate| {
+        if (candidate - diameter).abs() < (closest - diameter).abs() {
+            candidate
+        } else {
+            closest
+        }
+    })
 }
 
 pub(in crate::project_slice::gcode_emit) fn nozzle_count(

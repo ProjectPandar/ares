@@ -123,7 +123,7 @@ impl Context {
         if !manual_multi_nozzle {
             check_nozzle_stats(&config, &volumes)?;
         }
-        let nozzle_groups = build_nozzle_groups(&nozzle_counts, &volumes);
+        let nozzle_groups = build_nozzle_groups(&nozzle_counts, &volumes, &print.nozzle_diameter);
         let mut used = layers
             .iter()
             .flat_map(|l| l.extruders.iter().copied())
