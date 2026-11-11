@@ -25,7 +25,7 @@ use std::{
 
 const INPUT: &[u8] =
     include_bytes!("../../../tests/parity/master-extruder-id/stock-right-only.3mf");
-const MESSAGE: &str = "Grouping error: TPU can not be placed in the left nozzle";
+const MESSAGE: &str = "Grouping error: TPU cannot be placed in the left nozzle";
 
 fn project(master: &str) -> Vec<u8> {
     let mut reader = zip::ZipArchive::new(Cursor::new(INPUT)).unwrap();
