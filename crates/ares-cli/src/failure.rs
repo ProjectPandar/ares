@@ -318,7 +318,9 @@ pub(super) fn slice_error_to_failure(
             sparse_infill_density,
             #[cfg(target_os = "linux")]
             "Object conflicts were detected. Please verify the slicing of all plates in Orca Slicer before uploading.",
-            format!("{message}\n"),
+            // Print.cpp:1734/5634 stores this validation string with a trailing newline;
+            // OrcaSlicer.cpp:7015 writes it through cerr and appends std::endl.
+            format!("{message}\n\n"),
         ),
         // OrcaSlicer.cpp:6286-6291: generic slicing/export exceptions share -100.
         SliceError::Slicing {
