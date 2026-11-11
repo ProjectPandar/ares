@@ -80,6 +80,52 @@ The fitted position replaces the stored one for the whole slice: the tower
 G-code, the config block's two `wipe_tower_x` and `wipe_tower_y` renderings, and
 every consumer of `print.wipe_tower_x` and `print.wipe_tower_y`.
 
+## Type1 rib footprint sizing boundary
+
+The B50 `bbl_type1_prime_tower_waypoints_two_categories` witness also covers the
+same pre-slice fit, but its first non-clock difference is before placement
+clamping. After removing only generator and estimated-time lines from the
+complete outputs, the Native and Ares headers report:
+
+| Value | Native | Ares |
+| --- | ---: | ---: |
+| fitted `wipe_tower_y` | `219.915` | `217.415` |
+| estimated footprint width/depth | `31.6569` | `34.156853` |
+
+The `2.5` mm position difference is therefore the footprint difference, not a
+clamp tolerance or nearest-clear relocation result. The Ares intermediate
+values for the two Type1 filaments are:
+
+| `estimate_rib_tower_bbox_side` input/result | Value |
+| --- | ---: |
+| filament IDs | `[0, 1]` |
+| adhesiveness categories | `[100, 705]` |
+| `tower_blocks_depth(purges, 35)` | `23` |
+| aligned square | `28.5` |
+| `tower_blocks_depth(purges, 28.5)` | `27.5` |
+| `rib_tower_bbox_side` | `34.156853` |
+
+The Native footprint log reports `31.6569`; with the pinned Native
+`rib_width = 8`, `extra_rib_length = 0`, and the same rib-footprint formula,
+that corresponds to the Native kernel's smaller aligned body (`26`) and
+second depth (`25`) rather than Ares's `28.5` and `27.5`. The first changed
+intermediate is consequently the Type1 category purge-depth calculation, and
+its propagated effects are alignment, second depth, and final rib side. The
+fix must compare the per-category purge inputs and `tower_blocks_depth` before
+changing `estimate_wipe_tower_polygon` clamp behavior.
+
+The source boundary is the single upstream footprint chain:
+
+- `WipeTower::estimate_tower_blocks_depth` and
+  `WipeTower::estimate_rib_tower_bbox_side`, `GCode/WipeTower.cpp:1760-1819`.
+- `estimate_wipe_tower_footprint`, `GCode/WipeTowerEstimate.cpp:86-245`.
+- `PartPlate::estimate_wipe_tower_polygon`, `slic3r/GUI/PartPlate.cpp:4065-4155`.
+
+The Ares destination is `project_slice/gcode_emit/wipe_tower/estimate/` for the
+footprint kernel, called through `plater/plate_list/wipe_tower.rs::Towers::polygon`
+and `plater/slice_tower_fit.rs`. The existing two-category Native stream
+witness is the red test boundary; no separate fixture is required.
+
 ## Deferred behavior
 
 - Belt printers, along with the rest of the belt path.
