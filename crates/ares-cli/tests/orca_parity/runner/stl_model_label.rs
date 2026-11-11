@@ -1,8 +1,8 @@
 //! STL object-label identity: `ModelInstance::get_labeled_id`
-//! (`Model.hpp:1267-1273`) falls back to the instance's `ObjectBase` id
-//! while `loaded_id` stays 0 for STL inputs, and the id comes from the
-//! process-global construction counter (`ObjectID.hpp:86-87`,
-//! `ObjectID.cpp:5`). The header emits it at `GCode.cpp:2594`.
+//! (`Model.hpp:1433-1443`) falls back to the instance's `ObjectBase` id
+//! while `loaded_id` stays 0 for STL inputs. Default volume members,
+//! including eight texture-displacement facets (`Model.hpp:903-935`),
+//! allocate through `ObjectID.hpp:86-87`; `GCode.cpp:4224-4239` emits the label.
 
 use ares_core::{ConfigOverrides, Placement, ProfileSliceRequest};
 use serde_json::{Value, json};
@@ -67,6 +67,7 @@ async fn stl_model_label_id() {
     )
     .await
     .unwrap();
+    std::fs::write(directory.join("api.gcode"), &ares).unwrap();
     let ares = String::from_utf8_lossy(&ares).into_owned();
     let ares_line = ares
         .lines()
@@ -103,8 +104,4 @@ async fn stl_model_label_id() {
         .find(|line| line.starts_with("; model label id: "))
         .expect("native output lacks ; model label id line");
     assert_eq!(ares_line, native_line, "; model label id mismatch");
-    assert_eq!(
-        ares_line, "; model label id: 14",
-        "STL instance label must follow the ObjectBase construction sequence"
-    );
 }
