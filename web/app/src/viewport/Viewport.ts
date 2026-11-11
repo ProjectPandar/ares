@@ -109,7 +109,7 @@ export class Viewport {
     canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
     this.#gizmos = new Gizmos(this.#scene, this.#camera, container);
-    attachInstanceDrag(canvas, this.#controls, this.#camera, (raycaster) => this.#dragHit(raycaster), () => this.#edit);
+    attachInstanceDrag(canvas, this.#controls, this.#camera, { hit: (raycaster) => this.#dragHit(raycaster), previewed: () => this.#placeGizmo() }, () => this.#edit);
 
     this.#resize = new ResizeObserver(() => this.#fitCanvas());
     this.#resize.observe(container);
@@ -227,9 +227,9 @@ export class Viewport {
   #dragHit(raycaster: THREE.Raycaster): DragHit | null {
     if (!this.#edit || !this.#models.visible) return null;
     const gizmo = this.#gizmos.hit(raycaster);
-    if (gizmo) return { target: this.#selectedGroup()!.userData.ref as InstanceRef, point: gizmo.point, gizmo };
-    const hit = raycaster.intersectObject(this.#models, true)[0];
-    return hit ? { target: hit.object.parent!.userData.ref as InstanceRef, point: hit.point, gizmo: null } : null;
+    const hit = gizmo ? null : raycaster.intersectObject(this.#models, true)[0];
+    const group = gizmo ? this.#selectedGroup()! : hit?.object.parent;
+    return group ? { target: group.userData.ref as InstanceRef, group, point: gizmo?.point ?? hit!.point, gizmo } : null;
   }
 
   setEditHandlers(edit: EditHandlers | undefined, mode: GizmoMode | null) {

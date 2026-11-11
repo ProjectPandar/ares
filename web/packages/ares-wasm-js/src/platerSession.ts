@@ -78,6 +78,11 @@ export class PlaterSession {
     await this.#call({ kind: "platerSetInstalledVendors", sessionId: this.#sessionId, catalogId: catalog.workerId });
   }
 
+  /** The point a rotate gizmo drag turns the instance about, its bounding-sphere centre (`Selection::setup_cache`). */
+  async rotationPivot(object: number, instance: number): Promise<Vec3> {
+    return (await this.#call({ kind: "platerRotationPivot", sessionId: this.#sessionId, object, instance })) as Vec3;
+  }
+
   /** The instance's absolute rotation fields in degrees (`GizmoObjectManipulation`). */
   async absoluteRotation(object: number, instance: number): Promise<Vec3> {
     return (await this.#call({ kind: "platerAbsoluteRotation", sessionId: this.#sessionId, object, instance })) as Vec3;

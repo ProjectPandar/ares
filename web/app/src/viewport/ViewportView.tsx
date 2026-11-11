@@ -3,7 +3,7 @@ import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState }
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
-import { moveInstance, rotateInstance, scaleInstance } from "../state/plates";
+import { moveInstance, rotateInstance, rotationPivot, scaleInstance } from "../state/plates";
 import { placedScene, presetSliceBlocker } from "../state/presets";
 import { openStlSession } from "../state/stlSession";
 import { useApp } from "../state/store";
@@ -188,7 +188,8 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     viewport?.setScene(scene, firstString(loaded?.settings?.filament, "filament_colour") ?? "#29b2a3");
   }, [viewport, scene, loaded]);
 
-  // A press on an instance selects it (GLCanvas3D::on_mouse LeftDown) and drags it.
+  // A press on an instance selects it (GLCanvas3D::on_mouse LeftDown) and drags it; the release
+  // commits the drag after its undo snapshot (GLCanvas3D::do_move / do_rotate / do_scale).
   useEffect(() => {
     if (!viewport) return;
     const select = (object: number) => {
@@ -196,13 +197,20 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       if (id !== undefined && useApp.getState().selectedObject !== id) selectObject(id);
     };
     viewport.setEditHandlers(editable && plater ? {
-      start: (target) => {
-        select(target.object);
+      start: (target) => select(target.object),
+      pivot: rotationPivot,
+      move: (target, displacement) => {
         takeSnapshot();
+        void moveInstance(target, displacement);
       },
-      move: (target, displacement) => void moveInstance(target, displacement),
-      rotate: (target, radians) => void rotateInstance(target, radians),
-      scale: (target, factor) => void scaleInstance(target, factor),
+      rotate: (target, radians) => {
+        takeSnapshot();
+        void rotateInstance(target, radians);
+      },
+      scale: (target, factor) => {
+        takeSnapshot();
+        void scaleInstance(target, factor);
+      },
     } : undefined, gizmo);
   }, [viewport, editable, plater, gizmo]);
   useEffect(() => {

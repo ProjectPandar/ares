@@ -74,6 +74,15 @@ impl PlaterSession {
             .map_err(js_error)
     }
 
+    /// The rotate gizmo's pivot, the instance's bounding-sphere centre (`Selection::setup_cache`).
+    #[wasm_bindgen(js_name = rotationPivot)]
+    pub fn rotation_pivot(&self, object: usize, instance: usize) -> Result<Vec<f64>, JsValue> {
+        self.session
+            .rotation_pivot(object, instance)
+            .map(Vec::from)
+            .map_err(js_error)
+    }
+
     /// The absolute rotation fields in degrees (`GizmoObjectManipulation::update_settings_value`).
     #[wasm_bindgen(js_name = absoluteRotation)]
     pub fn absolute_rotation(&self, object: usize, instance: usize) -> Result<Vec<f64>, JsValue> {

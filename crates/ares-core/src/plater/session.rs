@@ -250,6 +250,13 @@ impl PlaterSession {
         Ok(())
     }
 
+    /// `Selection::setup_cache`'s rotation pivot (`Selection.cpp:2548`): the instance's
+    /// bounding-sphere centre, about which `rotate_instance` turns it (`:1391`).
+    pub fn rotation_pivot(&self, object: usize, instance: usize) -> Result<[f64; 3], SliceError> {
+        self.check(object, instance)?;
+        Ok(selection::rotation_pivot(&self.project, (object, instance)))
+    }
+
     /// The absolute rotation fields' values in degrees
     /// (`update_settings_value`, `GizmoObjectManipulation.cpp:120-122`).
     pub fn absolute_rotation(

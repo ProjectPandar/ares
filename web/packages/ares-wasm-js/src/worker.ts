@@ -286,6 +286,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "platerSetInstalledVendors":
       sessions.get(request.sessionId)!.setInstalledVendors(catalogs.get(request.catalogId)!);
       return [undefined, []];
+    case "platerRotationPivot":
+      return [[...sessions.get(request.sessionId)!.rotationPivot(request.object, request.instance)], []];
     case "platerAbsoluteRotation":
       return [[...sessions.get(request.sessionId)!.absoluteRotation(request.object, request.instance)], []];
     case "platerScaleAndSize": {

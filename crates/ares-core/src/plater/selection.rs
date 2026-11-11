@@ -244,7 +244,7 @@ pub(super) fn selection_bounding_box(project: &Project, key: InstanceKey) -> Bou
 }
 
 /// The rotation pivot over every volume of the instance (`Selection.cpp:1188-1205`).
-fn rotation_pivot(project: &Project, key: InstanceKey) -> [f64; 3] {
+pub(super) fn rotation_pivot(project: &Project, key: InstanceKey) -> [f64; 3] {
     let transform = instance_transform(project, key);
     let mut points = Vec::new();
     for volume in project.objects()[key.0].volumes() {

@@ -69,49 +69,28 @@ export async function lockPlate(index: number, locked: boolean) {
 }
 
 type Vec3 = [number, number, number];
-type Step = { kind: "move" | "rotate" | "scale"; target: InstanceRef; vector: Vec3 };
-const steps: Step[] = [];
-let editing = false;
 
-/**
- * Canvas drags and gizmo steps run one at a time in the worker; steps of one kind on one instance
- * that arrive meanwhile are combined and sent as one: moves and turns summed (gizmo drags turn
- * about a single axis), scale factors multiplied.
- */
-async function enqueue(step: Step) {
-  const last = steps.at(-1);
-  if (last && last.kind === step.kind && last.target.object === step.target.object && last.target.instance === step.target.instance) {
-    last.vector = last.vector.map((value, axis) => (step.kind === "scale" ? value * step.vector[axis] : value + step.vector[axis])) as Vec3;
-  }
-  else steps.push(step);
-  if (editing) return;
-  editing = true;
-  try {
-    for (let next = steps.shift(); next; next = steps.shift()) {
-      const { plater, currentPlate } = useApp.getState();
-      const { object, instance } = next.target;
-      const layout = await (next.kind === "move" ? plater!.translate(object, instance, next.vector)
-        : next.kind === "rotate" ? plater!.rotate(object, instance, next.vector) : plater!.scale(object, instance, next.vector));
-      applyLayout(layout, currentPlate);
-    }
-  } finally {
-    editing = false;
-  }
+/** A canvas drag or move gizmo drag's total (Selection::translate, then GLCanvas3D::do_move). */
+export async function moveInstance(target: InstanceRef, displacement: Vec3) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.translate(target.object, target.instance, displacement), currentPlate);
 }
 
-/** A canvas drag or move gizmo step (Selection::translate, then GLCanvas3D::do_move). */
-export function moveInstance(target: InstanceRef, displacement: Vec3) {
-  return enqueue({ kind: "move", target, vector: displacement });
+/** The point a rotate gizmo drag turns the instance about (`Selection::setup_cache`'s rotation pivot). */
+export function rotationPivot(target: InstanceRef) {
+  return useApp.getState().plater!.rotationPivot(target.object, target.instance);
 }
 
-/** A rotate gizmo step about world axes, in radians (Selection::rotate, then GLCanvas3D::do_rotate). */
-export function rotateInstance(target: InstanceRef, radians: Vec3) {
-  return enqueue({ kind: "rotate", target, vector: radians });
+/** A rotate gizmo drag's total or a relative rotation, about world axes in radians (Selection::rotate, then GLCanvas3D::do_rotate). */
+export async function rotateInstance(target: InstanceRef, radians: Vec3) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.rotate(target.object, target.instance, radians), currentPlate);
 }
 
-/** A scale gizmo step by relative world factors (Selection::scale_and_translate, then GLCanvas3D::do_scale). */
-export function scaleInstance(target: InstanceRef, factor: Vec3) {
-  return enqueue({ kind: "scale", target, vector: factor });
+/** A scale gizmo drag's total, relative world factors (Selection::scale_and_translate, then GLCanvas3D::do_scale). */
+export async function scaleInstance(target: InstanceRef, factor: Vec3) {
+  const { plater, currentPlate } = useApp.getState();
+  applyLayout(await plater!.scale(target.object, target.instance, factor), currentPlate);
 }
 
 /** A Position field edit in world coordinates (GizmoObjectManipulation::change_position_value). */
