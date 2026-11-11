@@ -1,10 +1,15 @@
-//! WipeTower.cpp:3614–3703: stock X1C distinct adhesiveness-category blocks.
+//! The pre-slice footprint witness covers Type1 category sizing before tower
+//! placement: WipeTower.cpp:1760–1819 and WipeTowerEstimate.cpp:86–245.
 #[test]
 fn bbl_type1_prime_tower_waypoints_two_categories() {
     crate::runner::native_stream_case::check(
         (
             "bbl-type1-two-categories",
-            &["Print.cpp:3444-3537", "GCode/WipeTower.cpp:3614-3806,3864"],
+            &[
+                "GCode/WipeTower.cpp:1760-1819",
+                "GCode/WipeTowerEstimate.cpp:86-245",
+                "PartPlate.cpp:4065-4155",
+            ],
         ),
         "pla-support",
         include_bytes!("../../../../../tests/parity/bbl-type1-tower/two-categories.3mf"),
