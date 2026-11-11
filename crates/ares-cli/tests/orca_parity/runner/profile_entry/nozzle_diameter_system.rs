@@ -31,6 +31,26 @@ async fn h2d_system_preset_nozzle_diameters_match_native() {
     .unwrap();
     let template = source["machine_start_gcode"].as_str().unwrap();
     assert_eq!(template.matches("nozzle_diameter_at_nozzle_id").count(), 13);
+    let change_source: Value = serde_json::from_slice(
+        &fs::read(
+            profiles
+                .join("BBL/machine/Bambu Lab H2D 0.4 nozzle template change_filament_gcode.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    let change_template = change_source["change_filament_gcode"].as_str().unwrap();
+    for (name, count) in [
+        ("nozzle_diameter_at_nozzle_id", 20),
+        ("initial_nozzle_id", 13),
+        ("current_nozzle_id", 5),
+        ("next_nozzle_id", 4),
+    ] {
+        assert_eq!(
+            template.matches(name).count() + change_template.matches(name).count(),
+            count,
+        );
+    }
     let datadir = native_user_presets::system(&runner.work, &profiles, &vendors);
     let system = datadir.join("system/BBL");
     let machine = system.join("machine/Bambu Lab H2D 0.4 nozzle.json");
@@ -90,6 +110,10 @@ async fn h2d_system_preset_nozzle_diameters_match_native() {
     assert_eq!(
         composed["machine_start_gcode"],
         source["machine_start_gcode"]
+    );
+    assert_eq!(
+        composed["change_filament_gcode"],
+        change_source["change_filament_gcode"]
     );
     let api = ares_core::slice_with_profiles_processed_validated(
         &project,
