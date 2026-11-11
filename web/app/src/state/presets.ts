@@ -5,7 +5,7 @@ import { deleteImport, loadImports, saveConfig, saveImports, storedConfig, store
 import { extruderOverrides, selectionExtruders } from "./extruders";
 import { printerBedType, updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
-import { type CompatibleState, type ModelFile, type PresetSelection, useApp } from "./store";
+import { type ModelFile, type PresetSelection, useApp } from "./store";
 import { decodeOptions } from "./typedSettings";
 
 /**
@@ -115,6 +115,12 @@ async function restoreSession() {
 
 void restoreSession();
 
+/** Whether the selection still has the printer and process a filter ran for; filaments do not change it. */
+function filtered({ printer, process }: PresetSelection) {
+  const selection = useApp.getState().presetSelection;
+  return selection?.printer === printer && selection.process === process;
+}
+
 /**
  * PresetBundle::update_compatible(Always) for the selected printer and process: the compatible
  * lists, and each missing or incompatible filament slot replaced by the best compatible visible
@@ -145,11 +151,12 @@ export async function updateCompatible() {
       Array.from({ length: slots }, (_, slot) => selection.filaments[slot] ?? ""), [...installedFilaments]);
     const { filaments, ...filamentProject } = await catalog.normalizeFilamentSlots(selection.printer,
       { ...(selection.filamentProject ?? projectFilamentState(scene?.settings ?? null)), filaments: selected });
-    if (useApp.getState().presetSelection === selection) {
-      useApp.setState({ presetSelection: { ...selection, filaments, filamentProject }, compatible: { status: "done", presets, filamentInfo } });
+    if (filtered(selection)) {
+      const current = useApp.getState().presetSelection!;
+      useApp.setState({ presetSelection: { ...current, filaments, filamentProject }, compatible: { status: "done", presets, filamentInfo } });
     }
   } catch (error) {
-    if (useApp.getState().presetSelection === selection) {
+    if (filtered(selection)) {
       useApp.setState({ compatible: { status: "error", error: (error as Error).message } });
     }
   }
@@ -234,19 +241,24 @@ export function saveSelection() {
  * Selects a user or system printer; `null` returns to the project's presets. The printer's
  * last process and filaments come back (`remember_printer_config`, Tab.cpp:6229-6233,
  * PresetBundle::update_selections, PresetBundle.cpp:2625-2650), each only while it is still
- * loaded and compatible (select_preset_by_name_strict, then update_compatible).
+ * loaded and compatible (select_preset_by_name_strict, then update_compatible); without such a
+ * process the core picks the compatible one update_compatible prefers.
  */
 export async function selectPrinter(printer: string | null) {
   const saved = printer === null ? undefined : storedConfig.printers[printer];
-  useApp.setState({ presetSelection: printer === null ? null : { printer, filaments: saved?.filaments ?? [] } });
-  await updateCompatible();
-  const restored = (selection: PresetSelection | null, compatible: CompatibleState | null) =>
-    selection?.printer === printer && compatible?.status === "done" ? { selection, presets: compatible.presets } : null;
-  const state = restored(useApp.getState().presetSelection, useApp.getState().compatible);
-  if (state && saved?.process && state.presets.processes.includes(saved.process)) {
-    useApp.setState({ presetSelection: { ...state.selection, process: saved.process } });
-    await updateCompatible();
+  // update_compatible(Always) for the print (PresetBundle.cpp:8635-8639): the remembered print, else
+  // the previous one, while compatible; otherwise the preferred compatible print.
+  const current = saved?.process ?? useApp.getState().presetSelection?.process;
+  if (printer === null) useApp.setState({ presetSelection: null });
+  else {
+    // The combo shows the printer and the filtering state while the print is chosen.
+    useApp.setState({ presetSelection: { printer, filaments: saved?.filaments ?? [] }, compatible: { status: "filtering" } });
+    // A printer the catalog cannot resolve has no print; updateCompatible shows the engine's error.
+    const process = await (await presetCatalog()).compatiblePrint(printer, current).catch(() => null);
+    const chosen = useApp.getState().presetSelection;
+    if (process && chosen?.printer === printer) useApp.setState({ presetSelection: { ...chosen, process } });
   }
+  await updateCompatible();
   await updatePrinterPanel();
   const selection = useApp.getState().presetSelection;
   if (selection && selection.printer === printer) {

@@ -3,18 +3,21 @@
 //! `is_compatible_with_print`), `Preset.cpp:843-850` (`printer_preset` /
 //! `num_extruders` extras) and
 //! `PresetCollection::update_library_profile_excluded_from`
-//! (`Preset.cpp:3705-3736`). Only the filtering decision and its
-//! source-defined error-to-true diagnostics are ported; selection,
-//! unselection and visibility bookkeeping are upstream UI state and stay
+//! (`Preset.cpp:3705-3736`): the filtering decision and its
+//! source-defined error-to-true diagnostics, the print a printer selection
+//! holds (`print_selection`) and the filament of each slot (`selection`).
+//! The visibility bookkeeping of `update_compatible_internal` stays
 //! unported.
 
 use serde::Serialize;
 
 mod checks;
 mod installed;
+mod print_selection;
 mod selection;
 
 pub(super) use installed::installed_filaments;
+pub(super) use print_selection::compatible_print;
 pub(super) use selection::select_compatible_filaments;
 
 use super::catalog::Catalog;
