@@ -11,6 +11,8 @@ use super::{OrcaRunner, stages};
 
 #[path = "stock_validation/cases.rs"]
 mod cases;
+#[path = "stock_validation/project_value_out_of_range.rs"]
+mod project_value_out_of_range;
 
 async fn compare(vendor_name: &str, printer: &str, expected: &str, loaded_error: bool) {
     let Some(_) = crate::native_environment::binary("ARES_ORCA_BIN") else {
