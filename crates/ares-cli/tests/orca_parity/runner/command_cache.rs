@@ -1,3 +1,5 @@
+#[path = "command_cache/producer.rs"]
+mod producer;
 #[path = "command_cache/profile.rs"]
 mod profile;
 use profile::{Profile, timed};
@@ -8,16 +10,14 @@ mod request;
 mod storage;
 
 use super::{
-    cache_identity,
     command::{self, Limits},
     stages::{self, Captured, FailureKind, StageError},
 };
 use serde_json::{Value, json};
 use std::{
-    collections::HashMap,
     fs,
     path::{Path, PathBuf},
-    sync::{Arc, Mutex, OnceLock},
+    sync::Arc,
     time::Instant,
 };
 
@@ -44,7 +44,9 @@ pub(super) fn run(
         );
         return command::run_exact(bin, args, envs, limits);
     };
-    let producer = match timed(&mut profile.producer_us, || producer(bin)) {
+    let producer = match timed(&mut profile.producer_us, || {
+        producer::identify(bin).map(Arc::new)
+    }) {
         Ok(producer) => producer,
         Err(error) => {
             trace(
@@ -92,7 +94,7 @@ pub(super) fn run(
         })).unwrap()).map_err(|error| StageError::new(limits.stage, FailureKind::Io, error))?;
         trace(
             &evidence,
-            json!({"outcome":"hit","producer_digest":producer.digest,"request_digest":request.digest,"elapsed_us":started.elapsed().as_micros(),"native_executed":false,"profile":profile,"producer_identity":producer.receipt["identity_profile"]}),
+            json!({"outcome":"hit","producer_digest":producer.digest,"request_digest":request.digest,"elapsed_us":started.elapsed().as_micros(),"native_executed":false,"profile":profile,"producer_identity":producer.receipt["identity_profile"],"producer_identity_hit":producer.receipt["identity_cache_hit"]}),
         );
         return stages::finish(
             &evidence,
@@ -143,21 +145,9 @@ pub(super) fn run(
     trace(
         work,
         json!({"outcome":"miss","stage":format!("{stage:?}"),"producer_digest":producer.digest,"request_digest":request.digest,
-        "elapsed_us":started.elapsed().as_micros(),"native_executed":true,"publication":publication,"profile":profile,"producer_identity":producer.receipt["identity_profile"]}),
+        "elapsed_us":started.elapsed().as_micros(),"native_executed":true,"publication":publication,"profile":profile,"producer_identity":producer.receipt["identity_profile"],"producer_identity_hit":producer.receipt["identity_cache_hit"]}),
     );
     result.map(|_| ())
-}
-
-fn producer(bin: &Path) -> Result<Arc<cache_identity::Producer>, StageError> {
-    static PRODUCERS: OnceLock<Mutex<HashMap<PathBuf, Arc<cache_identity::Producer>>>> =
-        OnceLock::new();
-    let mut producers = PRODUCERS.get_or_init(Mutex::default).lock().unwrap();
-    if let Some(producer) = producers.get(bin) {
-        return Ok(producer.clone());
-    }
-    let producer = Arc::new(cache_identity::identify(bin)?);
-    producers.insert(bin.to_owned(), producer.clone());
-    Ok(producer)
 }
 
 fn read_capture(directory: &Path) -> Option<Captured> {

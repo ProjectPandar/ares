@@ -1,15 +1,9 @@
 use super::stages::{FailureKind, Stage, StageError};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::{
-    collections::HashMap,
-    fs,
-    io::Read,
-    path::{Path, PathBuf},
-    sync::{Mutex, OnceLock},
-    time::SystemTime,
-};
+use std::{fs, io::Read, path::Path};
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(super) struct Producer {
     pub(super) digest: String,
     pub(super) receipt: Value,
@@ -83,56 +77,6 @@ fn resource_hash(
         }
     }
     Ok(())
-}
-
-pub(super) fn cached_directory_digest(root: &Path) -> std::io::Result<(String, bool)> {
-    static CACHE: OnceLock<Mutex<HashMap<PathBuf, (String, String)>>> = OnceLock::new();
-    let signature = directory_signature(root)?;
-    let mut cache = CACHE.get_or_init(Mutex::default).lock().unwrap();
-    if let Some((cached_signature, digest)) = cache.get(root)
-        && cached_signature == &signature
-    {
-        return Ok((digest.clone(), true));
-    }
-    let digest = directory_digest(root)?;
-    cache.insert(root.to_owned(), (signature, digest.clone()));
-    Ok((digest, false))
-}
-
-fn directory_signature(root: &Path) -> std::io::Result<String> {
-    let mut hash = Sha256::new();
-    fn visit(root: &Path, directory: &Path, hash: &mut Sha256) -> std::io::Result<()> {
-        let mut entries = fs::read_dir(directory)?.collect::<Result<Vec<_>, _>>()?;
-        entries.sort_by_key(|entry| entry.file_name());
-        for entry in entries {
-            let path = entry.path();
-            let relative = path
-                .strip_prefix(root)
-                .unwrap()
-                .as_os_str()
-                .as_encoded_bytes();
-            let metadata = fs::symlink_metadata(&path)?;
-            hash.update((relative.len() as u64).to_le_bytes());
-            hash.update(relative);
-            hash.update(metadata.file_type().is_dir().to_string().as_bytes());
-            hash.update(metadata.len().to_le_bytes());
-            hash.update(
-                metadata
-                    .modified()
-                    .unwrap_or(SystemTime::UNIX_EPOCH)
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_nanos()
-                    .to_le_bytes(),
-            );
-            if metadata.is_dir() {
-                visit(root, &path, hash)?;
-            }
-        }
-        Ok(())
-    }
-    visit(root, root, &mut hash)?;
-    Ok(hex(&hash.finalize()))
 }
 
 pub(super) fn directory_digest(root: &Path) -> std::io::Result<String> {

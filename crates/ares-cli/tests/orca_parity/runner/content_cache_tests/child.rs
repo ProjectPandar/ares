@@ -142,11 +142,23 @@ fn direct_content_cache_child() {
         }
         _ => unreachable!(),
     }
+    if change == "identity" {
+        let trace = cache_trace(&work).unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&fs::read(trace).unwrap()).unwrap();
+        assert_eq!(value["producer_identity_hit"], step == 2);
+    }
     if change == "memo" {
         let data = work.join("data/nested/value");
+        let modified = fs::metadata(&data).unwrap().modified().unwrap();
         for (name, reused) in [("unchanged", true), ("mutated", false)] {
             if !reused {
                 fs::write(&data, b"modified").unwrap();
+                fs::File::options()
+                    .write(true)
+                    .open(&data)
+                    .unwrap()
+                    .set_times(fs::FileTimes::new().set_modified(modified))
+                    .unwrap();
             }
             let next = work.join(name);
             fs::create_dir(&next).unwrap();
@@ -158,7 +170,7 @@ fn direct_content_cache_child() {
             let trace = cache_trace(&next).unwrap();
             let value: serde_json::Value =
                 serde_json::from_slice(&fs::read(trace).unwrap()).unwrap();
-            assert_eq!(value["profile"]["datadir_reused"], reused);
+            assert_eq!(value["profile"]["datadir_hashes"], 1);
         }
     }
 }

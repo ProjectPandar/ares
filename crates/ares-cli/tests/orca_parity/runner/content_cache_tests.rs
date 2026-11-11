@@ -19,7 +19,11 @@ fn direct_content_cache_tracks_datadir_nested_bytes() {
     verify("datadir", 2);
 }
 #[test]
-fn direct_content_cache_reuses_datadir_digest_and_invalidates_restored_mtime() {
+fn direct_content_cache_recomputes_identity_when_native_changes() {
+    verify("identity", 2);
+}
+#[test]
+fn direct_content_cache_tracks_same_process_datadir_bytes_with_restored_mtime() {
     verify("memo", 2);
 }
 #[test]
@@ -190,6 +194,14 @@ fi
         }
         if change == "directory" && step == 3 {
             fs::create_dir(work.join("data/empty")).unwrap();
+        }
+        if change == "identity" && step == 3 {
+            let replacement = directory.join("native-replacement.sh");
+            fs::copy(directory.join("native.sh"), &replacement).unwrap();
+            let mut bytes = fs::read(&replacement).unwrap();
+            bytes.extend_from_slice(b"\n# replaced executable\n");
+            fs::write(&replacement, bytes).unwrap();
+            fs::rename(replacement, directory.join("native.sh")).unwrap();
         }
         if matches!(
             change,
