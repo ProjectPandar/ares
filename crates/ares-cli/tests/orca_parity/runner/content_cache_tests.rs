@@ -11,6 +11,10 @@ fn direct_slice_content_cache_normalizes_paths_and_tracks_input_bytes() {
     verify("input", 2);
 }
 #[test]
+fn direct_content_cache_unknown_arguments_bypass_before_hashing() {
+    verify("unknown", 3);
+}
+#[test]
 fn direct_content_cache_tracks_datadir_nested_bytes() {
     verify("datadir", 2);
 }

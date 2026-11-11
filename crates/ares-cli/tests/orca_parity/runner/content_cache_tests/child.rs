@@ -23,7 +23,7 @@ fn direct_content_cache_child() {
         ("generic", 3..) => "4",
         _ => "0",
     };
-    let args = if change == "export" {
+    let mut args = if change == "export" {
         vec![
             "--export-3mf".into(),
             work.join("export.3mf").to_str().unwrap().into(),
@@ -40,6 +40,9 @@ fn direct_content_cache_child() {
             work.join("input.3mf").to_str().unwrap().into(),
         ]
     };
+    if change == "unknown" {
+        args.insert(args.len() - 1, "--not-supported".into());
+    }
     let stage = if change == "export" {
         stages::Stage::Export
     } else {
@@ -63,6 +66,16 @@ fn direct_content_cache_child() {
     } else {
         stages::run(runner.bin(), args, stage, &work)
     };
+    if change == "unknown" {
+        let trace = fs::read_dir(&work)
+            .unwrap()
+            .map(|entry| entry.unwrap().path().join("cache.json"))
+            .find(|path| path.is_file())
+            .unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&fs::read(trace).unwrap()).unwrap();
+        assert_eq!(value["outcome"], "bypass-request");
+        assert_eq!(value["profile"]["datadir_hashes"], 0);
+    }
     match mode {
         "0" => {
             result.unwrap();

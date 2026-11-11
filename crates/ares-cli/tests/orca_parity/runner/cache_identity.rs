@@ -39,7 +39,12 @@ pub(super) fn file_hash(path: &Path) -> std::io::Result<String> {
     Ok(hex(&hash.finalize()))
 }
 
-fn resource_hash(root: &Path, directory: &Path, hash: &mut Sha256) -> std::io::Result<()> {
+fn resource_hash(
+    root: &Path,
+    directory: &Path,
+    hash: &mut Sha256,
+    follow_links: bool,
+) -> std::io::Result<()> {
     let mut entries = fs::read_dir(directory)?.collect::<Result<Vec<_>, _>>()?;
     entries.sort_by_key(|entry| entry.file_name());
     for entry in entries {
@@ -51,39 +56,38 @@ fn resource_hash(root: &Path, directory: &Path, hash: &mut Sha256) -> std::io::R
             .as_encoded_bytes();
         hash.update((name.len() as u64).to_le_bytes());
         hash.update(name);
-        if fs::metadata(&path)?.is_dir() {
-            hash.update(b"directory");
-            resource_hash(root, &path, hash)?;
+        let kind = entry.file_type()?;
+        let kind = if follow_links && kind.is_symlink() {
+            fs::metadata(&path)?.file_type()
         } else {
+            kind
+        };
+        if kind.is_dir() {
+            hash.update(b"directory");
+            resource_hash(root, &path, hash, follow_links)?;
+        } else if kind.is_file() {
             hash.update(b"file");
             hash.update(file_hash(&path)?.as_bytes());
+        } else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "uncacheable file type",
+            ));
         }
     }
     Ok(())
 }
 
 pub(super) fn directory_digest(root: &Path) -> std::io::Result<String> {
-    regular_tree(root)?;
-    let mut hash = Sha256::new();
-    resource_hash(root, root, &mut hash)?;
-    Ok(hex(&hash.finalize()))
-}
-
-fn regular_tree(path: &Path) -> std::io::Result<()> {
-    let kind = fs::symlink_metadata(path)?.file_type();
-    if kind.is_dir() {
-        for entry in fs::read_dir(path)? {
-            regular_tree(&entry?.path())?;
-        }
-        Ok(())
-    } else if kind.is_file() {
-        Ok(())
-    } else {
-        Err(std::io::Error::new(
+    if !fs::symlink_metadata(root)?.is_dir() {
+        return Err(std::io::Error::new(
             std::io::ErrorKind::Unsupported,
             "uncacheable file type",
-        ))
+        ));
     }
+    let mut hash = Sha256::new();
+    resource_hash(root, root, &mut hash, false)?;
+    Ok(hex(&hash.finalize()))
 }
 
 pub(super) fn identify(bin: &Path) -> Result<Producer, StageError> {
@@ -110,7 +114,7 @@ pub(super) fn identify(bin: &Path) -> Result<Producer, StageError> {
     let endpoint = std::env::var_os("ORCA_REPLAY_BIN").map(std::path::PathBuf::from);
     let endpoint_hash = endpoint.as_deref().map(file_hash).transpose().map_err(io)?;
     let mut tree = Sha256::new();
-    resource_hash(&resources, &resources, &mut tree).map_err(io)?;
+    resource_hash(&resources, &resources, &mut tree, true).map_err(io)?;
     let resources_hash = hex(&tree.finalize());
     let policy = ["ORCA_REPLAY_SEED", "ARES_PARITY_SEEDED_REFERENCE", "LC_ALL"]
         .map(|key| (key, std::env::var(key).ok()))

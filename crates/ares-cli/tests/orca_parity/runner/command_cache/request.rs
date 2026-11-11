@@ -1,4 +1,7 @@
-use super::super::{cache_identity, stages::Stage};
+use super::{
+    super::{cache_identity, stages::Stage},
+    profile::{Profile, timed},
+};
 use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
@@ -22,8 +25,9 @@ pub(super) fn normalize(
     envs: &[(&str, &str)],
     stage: Stage,
     work: &Path,
+    profile: &mut Profile,
 ) -> Option<Request> {
-    if !matches!(stage, Stage::Slice | Stage::Export) {
+    if !matches!(stage, Stage::Slice | Stage::Export) || !eligible(args, work) {
         return None;
     }
     let path = |value: &str| {
@@ -58,15 +62,16 @@ pub(super) fn normalize(
             }
             "--datadir" => {
                 let directory = path(args.next()?);
+                profile.datadir_hashes += 1;
                 normalized.push(
-                    json!({"flag":arg,"tree":cache_identity::directory_digest(&directory).ok()?}),
+                    json!({"flag":arg,"tree":timed(&mut profile.datadir_hash_us, || cache_identity::directory_digest(&directory)).ok()?}),
                 );
             }
             "--load-settings" | "--load-filaments" => {
                 let files = args
                     .next()?
                     .split(';')
-                    .map(|value| file(&path(value)))
+                    .map(|value| file(&path(value), profile))
                     .collect::<Option<Vec<_>>>()?;
                 normalized.push(json!({"flag":arg,"files":files}));
             }
@@ -74,13 +79,15 @@ pub(super) fn normalize(
                 normalized.push(json!({"flag":arg,"value":args.next()?}));
             }
             value if value.starts_with('-') => return None,
-            value => normalized.push(file(&path(value))?),
+            value => normalized.push(file(&path(value), profile)?),
         }
     }
     if outputs.is_empty() {
         return None;
     }
-    let environment = envs.iter().copied().collect::<BTreeMap<_, _>>();
+    let environment = timed(&mut profile.environment_us, || {
+        envs.iter().copied().collect::<BTreeMap<_, _>>()
+    });
     let components = json!({"schema":"native-command-v1", "args": normalized,
         "environment":environment,"env_clear":false,"stage":format!("{stage:?}")});
     let digest = cache_identity::digest(&[
@@ -94,11 +101,42 @@ pub(super) fn normalize(
     })
 }
 
-fn file(path: &Path) -> Option<Value> {
+fn eligible(args: &[String], work: &Path) -> bool {
+    let mut args = args.iter();
+    let mut output = false;
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--outputdir" | "--export-3mf" => {
+                let Some(value) = args.next() else {
+                    return false;
+                };
+                let target = work.join(value);
+                if target.exists()
+                    && (arg != "--outputdir"
+                        || !fs::read_dir(target).is_ok_and(|mut entries| entries.next().is_none()))
+                {
+                    return false;
+                }
+                output = true;
+            }
+            "--datadir" | "--load-settings" | "--load-filaments" | "--slice" | "--arrange"
+            | "--debug" => {
+                if args.next().is_none() {
+                    return false;
+                }
+            }
+            value if value.starts_with('-') => return false,
+            _ => {}
+        }
+    }
+    output
+}
+
+fn file(path: &Path, profile: &mut Profile) -> Option<Value> {
     if !fs::metadata(path).ok()?.is_file() {
         return None;
     }
     Some(
-        json!({"basename":path.file_name()?.to_str()?,"sha256":cache_identity::file_hash(path).ok()?}),
+        json!({"basename":path.file_name()?.to_str()?,"sha256":timed(&mut profile.input_hash_us, || cache_identity::file_hash(path)).ok()?}),
     )
 }

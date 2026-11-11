@@ -1,3 +1,7 @@
+#[path = "command_cache/profile.rs"]
+mod profile;
+use profile::{Profile, timed};
+
 #[path = "command_cache/request.rs"]
 mod request;
 #[path = "command_cache/storage.rs"]
@@ -23,16 +27,24 @@ pub(super) fn run(
     envs: &[(&str, &str)],
     limits: Limits<'_>,
 ) -> Result<(), StageError> {
-    let started = Instant::now();
-    let Some(request) = request::normalize(&args, envs, limits.stage, limits.work) else {
-        return command::run_exact(bin, args, envs, limits);
-    };
     // Instrumented helpers have their own producer contracts and stay with their owning cache.
     let declared = std::env::var_os("ARES_ORCA_BIN").and_then(|path| fs::canonicalize(path).ok());
     if declared.as_deref() != fs::canonicalize(bin).ok().as_deref() || declared.is_none() {
         return command::run_exact(bin, args, envs, limits);
     }
-    let producer = match producer(bin) {
+    let started = Instant::now();
+    let mut profile = Profile::default();
+    let normalization = Instant::now();
+    let request = request::normalize(&args, envs, limits.stage, limits.work, &mut profile);
+    profile.normalize_us = normalization.elapsed().as_micros();
+    let Some(request) = request else {
+        trace(
+            limits.work,
+            json!({"outcome":"bypass-request","profile":profile}),
+        );
+        return command::run_exact(bin, args, envs, limits);
+    };
+    let producer = match timed(&mut profile.producer_us, || producer(bin)) {
         Ok(producer) => producer,
         Err(error) => {
             trace(
@@ -59,11 +71,14 @@ pub(super) fn run(
     let Ok(_lock) = lock else {
         return command::run_exact(bin, args, envs, limits);
     };
-    if let Some((packet, captured)) = storage::load(&entry, &request, &producer.digest)
-        && ((captured.code == Some(0) && packet.rejection.is_none())
-            || (packet.rejection.is_some() && deterministic_rejection(&captured)))
-        && storage::materialize(&entry, &request, &packet, limits.work)
-            .map_err(|error| StageError::new(limits.stage, FailureKind::Io, error))?
+    if let Some((packet, captured)) = timed(&mut profile.verify_us, || {
+        storage::load(&entry, &request, &producer.digest)
+    }) && ((captured.code == Some(0) && packet.rejection.is_none())
+        || (packet.rejection.is_some() && deterministic_rejection(&captured)))
+        && timed(&mut profile.materialize_us, || {
+            storage::materialize(&entry, &request, &packet, limits.work)
+        })
+        .map_err(|error| StageError::new(limits.stage, FailureKind::Io, error))?
     {
         let evidence = tempfile::Builder::new()
             .prefix("command-cache-hit-")
@@ -77,7 +92,7 @@ pub(super) fn run(
         })).unwrap()).map_err(|error| StageError::new(limits.stage, FailureKind::Io, error))?;
         trace(
             &evidence,
-            json!({"outcome":"hit","producer_digest":producer.digest,"request_digest":request.digest,"elapsed_us":started.elapsed().as_micros(),"native_executed":false}),
+            json!({"outcome":"hit","producer_digest":producer.digest,"request_digest":request.digest,"elapsed_us":started.elapsed().as_micros(),"native_executed":false,"profile":profile}),
         );
         return stages::finish(
             &evidence,
@@ -107,7 +122,7 @@ pub(super) fn run(
     };
     let mut publication = None;
     if let Some(captured) = captured {
-        let publish = (|| -> std::io::Result<()> {
+        let publish = timed(&mut profile.publication_us, || -> std::io::Result<()> {
             let staging = tempfile::Builder::new()
                 .prefix("command-")
                 .tempdir_in(&parent)?;
@@ -122,13 +137,13 @@ pub(super) fn run(
                 fs::remove_dir_all(&entry)?;
             }
             fs::rename(staging.path(), &entry)
-        })();
+        });
         publication = Some(publish.err().map(|error| error.to_string()));
     }
     trace(
         work,
         json!({"outcome":"miss","stage":format!("{stage:?}"),"producer_digest":producer.digest,"request_digest":request.digest,
-        "elapsed_us":started.elapsed().as_micros(),"native_executed":true,"publication":publication}),
+        "elapsed_us":started.elapsed().as_micros(),"native_executed":true,"publication":publication,"profile":profile}),
     );
     result.map(|_| ())
 }
