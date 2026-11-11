@@ -55,7 +55,9 @@ Never publish timeouts, wait failures, spawn failures, capture I/O failures, cra
 
 `stages::run_with_timeout` remains the live execution API. Direct commands opt into the content cache only for Export and Slice stages and only where the caller has not requested a replay or forced rerun. `rerun_reference` and all replay/forced paths bypass lookup and publication. Existing command capture, timeout, shutdown, diagnostics, and comparator behavior remain unchanged.
 
-The existing `OrcaRunner` cache retains its `OnceLock` producer path. Direct commands retain identified producers in a process-local `OnceLock` map keyed by launcher. Each nextest test has its own process, so this only avoids repeated identification within one test. Persisting or sharing producer keys across test processes is a separate follow-up and is not part of this slice.
+The existing `OrcaRunner` cache retains its `OnceLock` producer path. Direct commands persist producer identities under `native-cache-v2/producer-identity`. Before each use, the record must match the Native executable's canonical path plus `(device, inode, size, mtime_ns)`, with nanoseconds including both seconds and the subsecond component. A mismatch forces recomputation and atomic replacement under the existing lock/temp/rename convention. The record also validates its checksum and declared launcher, resource location, policy, catalog location, and parallelism context. This is safe for the pinned oracle because the Nix store executable and its declared producer inputs remain immutable within that context; replacement or any Native stat change invalidates the record. A subprocess E2E verifies first computation, cross-process reuse, and recomputation after executable replacement.
+
+The filesystem identity is only the lookup key for this producer record. The producer digest itself remains content-based, as do normalized command keys. Datadir content is still read and hashed on every eligible request; no mtime-only datadir digest memo is used. Timings separate normalization, input/datadir hashing, producer lookup, receipt/output validation, materialization, and publication.
 
 ## Determinism and safety rules
 
@@ -91,8 +93,9 @@ The implementation must provide:
 3. Exact equality of PASS/FAIL test-ID sets between cold and warm runs.
 4. Byte-identical compared outputs for corresponding cold and warm cases.
 5. Measured lower Native time on the warm run, with cache hit/miss counts and timing measurements recorded.
-6. A dual official/seeded FULL comparison against the current main tip, with inherited failures preserved and transitions analyzed by exact test ID.
-7. `cargo fmt --all -- --check`, workspace clippy with warnings denied, and a scope audit.
+6. A dual official/seeded full-suite comparison against the current main tip remains integration qualification, with inherited failures preserved and transitions analyzed by exact test ID; focused validation does not substitute for it.
+7. Warm wall-time comparisons use three repetitions per mode and revision, exclude compilation and warm-up, and report medians and spread. Both candidate mode medians must be no slower than their baseline medians, with a clear improvement in at least one mode.
+8. `cargo fmt --all -- --check`, workspace clippy with warnings denied, and a scope audit.
 
 ## Implemented command boundary
 
@@ -105,7 +108,7 @@ The result receipt hashes the entire result record. The record binds the produce
 ## Deferred behavior
 
 - Replay-pair caching remains explicitly deferred.
-- Persisting producer keys across separate test processes remains explicitly deferred.
+- Producer identity persistence is limited to the canonical Native executable stat key described above; resource-tree changes outside that key remain governed by the pinned immutable oracle contract.
 - Automatic cache invalidation beyond the content key remains unnecessary; changing any keyed producer, input, datadir, argument, or explicit child-environment content creates a new entry.
 - Cross-process cache garbage collection is not part of this slice.
 - Cache compression is not required.
