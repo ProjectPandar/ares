@@ -7,8 +7,11 @@
 use super::super::expression::PathError;
 use super::super::value::Config;
 use evaluate::Block;
+pub(super) use vector_kind::VectorKind;
 
 mod evaluate;
+mod rhs;
+mod vector_kind;
 
 /// The dictionary a `local` or `global` declaration stores its variable in
 /// (`new_old_variable`, `PlaceholderParser.cpp:1529-1564`).
@@ -17,6 +20,9 @@ pub(super) enum Scope {
     Local,
     Global,
 }
+
+/// The output variables declared during a render: name, scope and, for a vector, its type.
+pub(super) type Journal = Vec<(String, Scope, Option<VectorKind>)>;
 
 /// Whether a `{...}` body uses the statement grammar: a top-level `;`, a
 /// leading `local`/`global` declaration, or an inline `if ... then` block.
@@ -44,7 +50,7 @@ pub(super) fn evaluate_block(
     body: &str,
     config: &mut Config,
     filament: usize,
-    journal: &mut Vec<(String, Scope)>,
+    journal: &mut Journal,
 ) -> Result<String, PathError> {
     let (statements, rest) = parse_statements(body, &[]).map_err(PathError::Other)?;
     if !rest.trim_start().is_empty() {

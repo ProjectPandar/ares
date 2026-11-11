@@ -7,7 +7,10 @@ use super::super::super::expression::{
 };
 use super::super::super::value::{Config, Value};
 use super::super::offset_in;
-use super::{Arm, Scope, Statement};
+use super::rhs::{Reference, Rhs};
+use super::{Arm, Journal, Scope, Statement};
+
+mod vector;
 
 /// The writable system output variables (`GCode.cpp:2189-2209`).
 const SYSTEM_OUTPUTS: [&str; 4] = ["position", "e_position", "e_retracted", "e_restart_extra"];
@@ -35,7 +38,7 @@ pub(super) struct Block<'a> {
     pub(super) body: &'a str,
     pub(super) config: &'a mut Config,
     pub(super) filament: usize,
-    pub(super) journal: &'a mut Vec<(String, Scope)>,
+    pub(super) journal: &'a mut Journal,
 }
 
 impl Block<'_> {
@@ -61,17 +64,36 @@ impl Block<'_> {
 
     /// `assignment_statement` (`:2435-2448`): the target resolves before the right-hand side
     /// (`resolve_variable`, `:1123-1145`) and is checked writable after it (`check_writable`,
-    /// `:1377-1380`); a declared variable keeps its type.
+    /// `:1377-1380`). An initializer list and `repeat` fill a vector, a naked vector reference
+    /// copies into a naked vector, and any other expression assigns a scalar or an element.
     fn assign(&mut self, name: &str, index: Option<&str>, rhs: &str) -> Result<(), PathError> {
-        let declared = self.scope(name).is_some();
+        if self.config.get(name).is_none() {
+            return Err(self.failure(name, "Not a variable name"));
+        }
+        let kind = self.vector_kind(name);
+        match (Rhs::parse(rhs), kind) {
+            (Rhs::List(elements), kind) => self.assign_list(name, kind, &elements),
+            (Rhs::Repeat(count, value), kind) => self.assign_repeat(name, kind, (count, value)),
+            (Rhs::Expression, Some(kind)) => match (index, Reference::parse(rhs)) {
+                (None, Some(reference)) => self.copy(name, kind, &reference),
+                _ => self.assign_element(name, kind, index, rhs),
+            },
+            (Rhs::Expression, None) => self.assign_scalar(name, index, rhs),
+        }
+    }
+
+    /// `scalar_variable_assign_scalar` (`:1396-1426`): a declared variable keeps its type.
+    fn assign_scalar(
+        &mut self,
+        name: &str,
+        index: Option<&str>,
+        rhs: &str,
+    ) -> Result<(), PathError> {
         let value = match self.config.get(name) {
-            None => return Err(self.failure(name, "Not a variable name")),
-            Some(variable) if declared => self.assigned(rhs, variable)?,
-            Some(_) => {
+            Some(variable) if self.scope(name).is_some() => self.assigned(rhs, variable)?,
+            _ => {
                 let value = self.value(rhs)?;
-                if !SYSTEM_OUTPUTS.contains(&name) {
-                    return Err(self.failure(name, "Cannot modify a read-only variable"));
-                }
+                self.writable(name)?;
                 value
             }
         };
@@ -79,6 +101,15 @@ impl Block<'_> {
             assignment_index(name, index, self.config, self.filament).map_err(PathError::Other)?;
         self.config.assign(name, index, value);
         Ok(())
+    }
+
+    /// `check_writable` (`:1377-1380`): only `local`, `global` and system output variables.
+    fn writable(&self, name: &str) -> Result<(), PathError> {
+        if self.scope(name).is_some() || SYSTEM_OUTPUTS.contains(&name) {
+            Ok(())
+        } else {
+            Err(self.failure(name, "Cannot modify a read-only variable"))
+        }
     }
 
     /// `new_old_variable` (`:1529-1564`) checks the name before the right-hand side. A name
@@ -105,22 +136,59 @@ impl Block<'_> {
         if let Some(message) = conflict {
             return Err(self.failure(name, message));
         }
-        let value = match self.config.get(name) {
-            Some(variable) => self.assigned(rhs, variable)?,
-            None => self.value(rhs)?,
-        };
-        if declared.is_none() {
-            self.journal.push((name.to_owned(), scope));
+        if declared.is_some() {
+            return self.redeclare(name, rhs);
         }
-        self.config.assign(name, None, value);
-        Ok(())
+        match Rhs::parse(rhs) {
+            Rhs::List(elements) => self.new_list(name, scope, &elements),
+            Rhs::Repeat(count, value) => self.new_repeat(name, scope, (count, value)),
+            Rhs::Expression => {
+                if let Some(reference) = Reference::parse(rhs)
+                    && let Some((kind, values)) = self.duplicate(&reference)?
+                {
+                    self.store_new(name, (scope, Some(kind)), values);
+                    return Ok(());
+                }
+                let value = self.value(rhs)?;
+                self.journal.push((name.to_owned(), scope, None));
+                self.config.assign(name, None, value);
+                Ok(())
+            }
+        }
+    }
+
+    /// A declaration of a name declared before in the same scope assigns it
+    /// (`scalar_variable_new_from_scalar_expression`, `:1577-1600`,
+    /// `vector_variable_new_from_initializer_list`, `vector_variable_new_from_copy` and
+    /// `vector_variable_new_from_array`).
+    fn redeclare(&mut self, name: &str, rhs: &str) -> Result<(), PathError> {
+        let kind = self.vector_kind(name);
+        match (Rhs::parse(rhs), kind) {
+            (Rhs::List(elements), kind) => self.assign_list(name, kind, &elements),
+            (Rhs::Repeat(count, value), kind) => self.assign_repeat(name, kind, (count, value)),
+            (Rhs::Expression, Some(kind)) => match Reference::parse(rhs) {
+                Some(reference) => self.copy(name, kind, &reference),
+                None => {
+                    self.value(rhs)?;
+                    Err(self.failure(rhs, "Cannot assign a scalar value to a vector variable."))
+                }
+            },
+            (Rhs::Expression, None) => {
+                let value = match self.config.get(name) {
+                    Some(variable) => self.assigned(rhs, variable)?,
+                    None => self.value(rhs)?,
+                };
+                self.config.assign(name, None, value);
+                Ok(())
+            }
+        }
     }
 
     /// The scope `name` was declared in during this render.
     fn scope(&self, name: &str) -> Option<Scope> {
         self.journal
             .iter()
-            .find_map(|(declared, scope)| (declared == name).then_some(*scope))
+            .find_map(|(declared, scope, _)| (declared == name).then_some(*scope))
     }
 
     /// A failure at `name`, a slice of the block body.

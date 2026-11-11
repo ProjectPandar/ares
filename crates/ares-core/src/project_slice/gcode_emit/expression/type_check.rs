@@ -174,3 +174,25 @@ pub(super) fn assigned(variable: &Value, operand: &Operand) -> Result<Value, Fai
         Value::Nil | Value::List(_) => Ok(operand.value.clone()),
     }
 }
+
+/// An element of `vector_variable_assign_initializer_list` (`:1651-1694`) or
+/// `vector_variable_assign_expr_with_count` (`:1465-1490`): it takes the type of the vector like
+/// `assigned`, but a non-boolean reports through `expr::throw_exception`.
+pub(super) fn element(variable: &Value, operand: &Operand) -> Result<Value, Failure> {
+    if matches!(variable, Value::Bool(_)) && !is_bool(&operand.value) {
+        return Err(fail(operand, "Right side is not a boolean expression"));
+    }
+    assigned(variable, operand)
+}
+
+/// `evaluate_count` (`:1387-1394`): the number of elements `repeat` fills a vector with.
+pub(super) fn count(operand: &Operand) -> Result<usize, Failure> {
+    match operand.value.scalar() {
+        Value::Integer(count) => usize::try_from(*count)
+            .map_err(|_| fail(operand, "Negative number of elements specified.")),
+        _ => Err(fail(
+            operand,
+            "Expected number of elements to fill a vector with.",
+        )),
+    }
+}

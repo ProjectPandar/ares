@@ -11,6 +11,7 @@ mod parser;
 mod type_check;
 
 pub(super) use arithmetic::to_string;
+pub(crate) use deferred::Operand;
 use parser::Parser;
 
 /// The placeholder parse path an evaluation runs under. Upstream's grammar
@@ -105,6 +106,31 @@ pub(crate) fn evaluate_assigned(
 ) -> Result<Value, PathError> {
     let operand = operand(input, config, ParsePath::Brace, filament)?;
     type_check::assigned(variable, &operand).map_err(type_failure)
+}
+
+/// An element of a vector right-hand side, before it takes the type of the vector.
+pub(crate) fn evaluate_operand(
+    input: &str,
+    config: &Config,
+    filament: usize,
+) -> Result<Operand, PathError> {
+    operand(input, config, ParsePath::Brace, filament)
+}
+
+/// `operand` in the type of `variable` (`scalar_variable_assign_scalar`, `:1396-1426`, and
+/// `vector_variable_element_assign_scalar`, `:1428-1463`).
+pub(crate) fn assigned_value(variable: &Value, operand: &Operand) -> Result<Value, PathError> {
+    type_check::assigned(variable, operand).map_err(type_failure)
+}
+
+/// An element of an initializer list or of `repeat` in the type of `variable`.
+pub(crate) fn element_value(variable: &Value, operand: &Operand) -> Result<Value, PathError> {
+    type_check::element(variable, operand).map_err(type_failure)
+}
+
+/// The count of `repeat` (`evaluate_count`, `:1387-1394`).
+pub(crate) fn element_count(operand: &Operand) -> Result<usize, PathError> {
+    type_check::count(operand).map_err(type_failure)
 }
 
 fn type_failure((offset, message): type_check::Failure) -> PathError {

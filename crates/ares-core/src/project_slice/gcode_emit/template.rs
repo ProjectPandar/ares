@@ -2,7 +2,7 @@ use super::{
     expression::{ParsePath, evaluate_condition, evaluate_path},
     value::Config,
 };
-use macro_block::Scope;
+use macro_block::Journal;
 use parser::{Arm, Node, parse};
 
 mod error;
@@ -42,8 +42,8 @@ pub(super) fn render_for_filament(
 
 /// Drops the output variables created during a render (`config_local` lifetime,
 /// `PlaceholderParser.cpp:889-906`).
-fn drop_output_variables(config: &mut Config, journal: &mut Vec<(String, Scope)>) {
-    for (name, _) in journal.drain(..) {
+fn drop_output_variables(config: &mut Config, journal: &mut Journal) {
+    for (name, ..) in journal.drain(..) {
         config.remove(&name);
     }
 }
@@ -54,7 +54,7 @@ struct Renderer<'a> {
     template: &'a str,
     config: &'a mut Config,
     filament: usize,
-    journal: Vec<(String, Scope)>,
+    journal: Journal,
 }
 
 impl Renderer<'_> {

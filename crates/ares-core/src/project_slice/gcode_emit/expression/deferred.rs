@@ -41,8 +41,8 @@ impl Deferred {
 
 /// An evaluated expression with its deferred state and the byte offset where it starts
 /// (`expr::it_range`), which the error caret points at.
-pub(super) struct Operand {
-    pub(super) value: Value,
+pub(crate) struct Operand {
+    pub(crate) value: Value,
     pub(super) deferred: Deferred,
     pub(super) start: usize,
 }
