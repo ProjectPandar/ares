@@ -1,0 +1,117 @@
+{
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "source_boundary": [
+    "src/libslic3r/ObjectID.hpp:76-87,100-111",
+    "src/libslic3r/Model.hpp:582-588,1433-1443",
+    "src/libslic3r/Format/bbs_3mf.cpp:4381-4398,4424-4432,2466-2500",
+    "src/libslic3r/GCode.cpp:4224-4239"
+  ],
+  "source_fixture": "tests/parity/nozzle-id-diameters/scalars/h2d-canonical-startup.3mf",
+  "source_sha256": "f6a40929f428cedd3a407007af94ccf4154b054c54c031e194cef160067c5343",
+  "input": "build-allocation.3mf",
+  "input_sha256": "fc5fc1e4a31e489c414abb6495e79f6877289e6ef0608ba68906798216d8902d",
+  "changed_members": [
+    "3D/3dmodel.model",
+    "Metadata/model_settings.config"
+  ],
+  "members": [
+    {
+      "path": "[Content_Types].xml",
+      "source_sha256": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+      "input_sha256": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+      "unchanged": true
+    },
+    {
+      "path": "3D/3dmodel.model",
+      "source_sha256": "8a235e5a3195344e2c3ef877b96a5a80f654fcd0fc3164e0acdc9c57b6d021fd",
+      "input_sha256": "d656ee38041403fbe923436775fd342514e634c156a8a0fd653d51708b766cf4",
+      "unchanged": false
+    },
+    {
+      "path": "3D/_rels/3dmodel.model.rels",
+      "source_sha256": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+      "input_sha256": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+      "unchanged": true
+    },
+    {
+      "path": "3D/Objects/cube10.stl_1.model",
+      "source_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+      "input_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+      "unchanged": true
+    },
+    {
+      "path": "Metadata/project_settings.config",
+      "source_sha256": "277f7c2d66b0d11f3835dd6573acea84c7dade4ba5b20755724528ffc6e77887",
+      "input_sha256": "277f7c2d66b0d11f3835dd6573acea84c7dade4ba5b20755724528ffc6e77887",
+      "unchanged": true
+    },
+    {
+      "path": "Metadata/model_settings.config",
+      "source_sha256": "1eafc00508367ab9333dacbbdb9f76de4c5cad886f14a4e4ecd5c21403da9a1d",
+      "input_sha256": "af2bc3ea3ffdf63c94f72258e0c53b153ee725a38ad0902c4eb95f9140cdc714",
+      "unchanged": false
+    },
+    {
+      "path": "Metadata/slice_info.config",
+      "source_sha256": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+      "input_sha256": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+      "unchanged": true
+    },
+    {
+      "path": "Metadata/filament_sequence.json",
+      "source_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+      "input_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+      "unchanged": true
+    },
+    {
+      "path": "_rels/.rels",
+      "source_sha256": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f",
+      "input_sha256": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f",
+      "unchanged": true
+    }
+  ],
+  "build_object_ids": [
+    2,
+    2,
+    2,
+    3
+  ],
+  "build_allocation_ids": [
+    8,
+    9,
+    10,
+    14
+  ],
+  "loaded_labels": [
+    null,
+    null,
+    37,
+    null
+  ],
+  "effective_build_labels": [
+    8,
+    9,
+    37,
+    14
+  ],
+  "native_header": "; model label id: 8,9,14,37",
+  "native_qualification_sha256": "973d9fd6beb07ed955cbe55bd64c93b93ecf7b893462703ecfe4c54530eda2f9",
+  "native_qualification": [
+    {
+      "mode": "official",
+      "input_sha256": "fc5fc1e4a31e489c414abb6495e79f6877289e6ef0608ba68906798216d8902d",
+      "native_sha256": "dfe3b987ca9780fe5a705a1d7a7401ee885fa4950edabf05780987ed825172f1",
+      "native_header": "; model label id: 8,9,14,37",
+      "qualified": true
+    },
+    {
+      "mode": "seeded",
+      "input_sha256": "fc5fc1e4a31e489c414abb6495e79f6877289e6ef0608ba68906798216d8902d",
+      "native_sha256": "7f5316d7a7d731c61e4dcd933fad6ca5a5441c313b65705a574386af10b0a543",
+      "native_header": "; model label id: 8,9,14,37",
+      "qualified": true
+    }
+  ],
+  "spec": "docs/architecture/2026-11-11-3mf-instance-label-allocation.md",
+  "scope": "Fresh BBL explicit build allocation and loaded-label precedence. Same project bytes through Native then public API then CLI; strict whole-output comparator and raw API/CLI equality; no output normalization."
+}

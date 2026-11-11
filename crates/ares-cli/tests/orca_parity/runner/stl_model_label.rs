@@ -105,3 +105,36 @@ async fn stl_model_label_id() {
         .expect("native output lacks ; model label id line");
     assert_eq!(ares_line, native_line, "; model label id mismatch");
 }
+
+#[test]
+fn three_mf_instance_allocation_labels_match_native() {
+    let root = super::repo_root().join("tests/parity/model-instance-label-allocation");
+    let project = std::fs::read(root.join("build-allocation.3mf")).unwrap();
+    let provenance: Value =
+        serde_json::from_slice(&std::fs::read(root.join("provenance.json")).unwrap()).unwrap();
+    assert_eq!(
+        super::native_api_cli::sha(&project),
+        provenance["input_sha256"].as_str().unwrap()
+    );
+    let runner = OrcaRunner::from_env()
+        .unwrap()
+        .expect("Native harness required");
+    let native = super::native_api_cli::NativeCase::slice(
+        &runner,
+        &project,
+        "three-mf-instance-allocation-labels-",
+    );
+    // Build allocation is 8,9,10,14; loaded37 wins for the third instance.
+    // GCode.cpp:4233–4237 sorts the effective labels for the CSV header.
+    assert_eq!(
+        native
+            .native
+            .lines()
+            .find(|line| line.starts_with("; model label id: "))
+            .unwrap(),
+        "; model label id: 8,9,14,37"
+    );
+    native.compare(ares_core::GenerationMetadata::deterministic(
+        2026, 8, 27, 0, 0, 0,
+    ));
+}
