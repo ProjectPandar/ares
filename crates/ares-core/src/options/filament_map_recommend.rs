@@ -106,7 +106,7 @@ pub(crate) fn check_filament_printable_after_group(
                 .unwrap_or(&filament.filament_type.0[0]);
             let name = if nozzle == 0 { "left" } else { "right" };
             return Err(format!(
-                "Grouping error: {kind} can not be placed in the {name} nozzle"
+                "Grouping error: {kind} cannot be placed in the {name} nozzle"
             ));
         }
     }
