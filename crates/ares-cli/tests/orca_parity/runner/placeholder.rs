@@ -1,3 +1,5 @@
+#[path = "placeholder_assignment_checks.rs"]
+mod placeholder_assignment_checks;
 #[path = "placeholder_brace_output.rs"]
 mod placeholder_brace_output;
 #[path = "placeholder_comparison_dispatch.rs"]
