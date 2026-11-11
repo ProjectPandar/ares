@@ -49,8 +49,10 @@ test("the viewport draws without animation frames, once per change", async ({ pa
   await expect.poll(() => canvasColours(page)).toBeGreaterThan(8);
   await page.screenshot({ path: `${artifacts}prepare.png` });
 
-  // OrbitControls: each pointer move of a drag renders at most once.
+  // A drag of the model at the canvas centre: each pointer move renders at most once.
   const box = (await page.getByTestId("viewport").boundingBox())!;
+  const instances = () => page.locator(".viewport").getAttribute("data-instances");
+  const before = await instances();
   const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
   await page.mouse.move(x, y);
   await page.mouse.down();
@@ -61,6 +63,9 @@ test("the viewport draws without animation frames, once per change", async ({ pa
   const dragRenders = (await renders(page)) - beforeDrag;
   expect(dragRenders).toBeGreaterThan(0);
   expect(dragRenders).toBeLessThanOrEqual(moves);
+  // The release commits the drag once (GLCanvas3D::do_move), and that change renders.
+  await expect.poll(instances).not.toBe(before);
+  await expect(page.getByTestId("viewport")).not.toHaveAttribute("data-drawing");
 
   // Nothing renders while nothing changes.
   const idle = await renders(page);
