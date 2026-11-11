@@ -7,6 +7,7 @@ import init, {
   decodeConfigValue,
   encodeConfigValue,
   filterCompatiblePresets,
+  guideModels,
   loadScene,
   optionColors,
   optionTypes,
@@ -190,6 +191,15 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
         request.printer, request.process, JSON.stringify(request.filaments), JSON.stringify(request.installed))), []];
     case "catalogNormalizeFilamentSlots":
       return [JSON.parse(catalogs.get(request.catalogId)!.normalizeFilamentSlots(request.printer, JSON.stringify(request.state))), []];
+    case "catalogSetInstalledPrinters":
+      catalogs.get(request.catalogId)!.setInstalledPrinters(JSON.stringify(request.installed));
+      return [undefined, []];
+    case "catalogSystemPrinter":
+      return [JSON.parse(catalogs.get(request.catalogId)!.systemPrinter(request.model, request.variant)), []];
+    case "catalogGuideFilaments":
+      return [JSON.parse(catalogs.get(request.catalogId)!.guideFilaments()), []];
+    case "guideModels":
+      return [JSON.parse(guideModels(request.input)), []];
     case "catalogFree":
       catalogs.get(request.catalogId)!.free();
       catalogs.delete(request.catalogId);

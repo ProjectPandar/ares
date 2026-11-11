@@ -134,6 +134,47 @@ impl PresetCatalog {
         )
         .map_err(|error| JsValue::from_str(&error))
     }
+
+    /// Sets the `AppConfig` vendors section, JSON `{vendor: {model: [variant]}}`. The printer
+    /// listings and `installedFilaments` then follow `set_visible_from_appconfig`.
+    #[wasm_bindgen(js_name = setInstalledPrinters)]
+    pub fn set_installed_printers(&mut self, installed_json: String) -> Result<(), JsValue> {
+        self.set_installed_printers_json(&installed_json)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    /// `find_system_preset_by_model_and_variant`: the preset name (JSON string or null).
+    #[wasm_bindgen(js_name = systemPrinter)]
+    pub fn system_printer(&self, model: String, variant: String) -> String {
+        self.system_printer_json(&model, &variant)
+    }
+
+    /// The setup guide's system filaments, JSON
+    /// `[{name, vendor, filament_type, models: [[printer_model, printer_variant]]}]`.
+    #[wasm_bindgen(js_name = guideFilaments)]
+    pub fn guide_filaments(&self) -> Result<String, JsValue> {
+        self.guide_filaments_json()
+            .map_err(|error| JsValue::from_str(&error))
+    }
+}
+
+impl PresetCatalog {
+    pub fn set_installed_printers_json(&mut self, installed_json: &str) -> Result<(), String> {
+        let installed = serde_json::from_str(installed_json)
+            .map_err(|error| format!("invalid installed printers JSON: {error}"))?;
+        self.handle.set_installed_printers(installed);
+        Ok(())
+    }
+
+    pub fn system_printer_json(&self, model: &str, variant: &str) -> String {
+        serde_json::to_string(&self.handle.system_printer(model, variant))
+            .unwrap_or_else(|_| "null".to_owned())
+    }
+
+    pub fn guide_filaments_json(&self) -> Result<String, String> {
+        serde_json::to_string(&self.handle.guide_filaments())
+            .map_err(|error| format!("guide filaments cannot serialize: {error}"))
+    }
 }
 
 impl PresetCatalog {

@@ -5,11 +5,11 @@ import type { SettingsTab } from "./SettingsDialog";
 
 export type OpenTab = (tab: SettingsTab) => void;
 
-export /** Plater preset edit button (Plater.cpp `btn_edit_printer` / filament `edit_btn`). */
-function EditButton({ label, onClick }: { label: string; onClick: () => void }) {
+export /** Plater preset edit button (Plater.cpp `btn_edit_printer` / filament `edit_btn`), or a panel title `settings` button. */
+function EditButton({ label, onClick, icon = "edit" }: { label: string; onClick: () => void; icon?: string }) {
   return (
     <button className="preset-edit" aria-label={label} title={label} onClick={onClick}>
-      <OrcaIcon name="edit" />
+      <OrcaIcon name={icon} />
     </button>
   );
 }

@@ -3,7 +3,7 @@ import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ConfigValue, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene, SlicingStatus } from "./types.js";
+import type { CompatiblePresets, ConfigValue, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene, SlicingStatus } from "./types.js";
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
@@ -165,6 +165,15 @@ export class AresSlicer {
   async parsePresetBundle(input: Uint8Array, filename: string): Promise<ParsedPresetBundle> {
     await this.#ready;
     return (await this.#call({ kind: "parsePresetBundle", input: input.slice(), filename })) as ParsedPresetBundle;
+  }
+
+  /**
+   * The setup guide's printer models (`VendorProfile::PrinterModel`) of vendor envelopes
+   * `[{id, index, files}]` as JSON bytes, such as `loadPrinterModels()` of `@ares-slicer/profiles`.
+   */
+  async guideModels(vendorsJson: Uint8Array): Promise<GuideModel[]> {
+    await this.#ready;
+    return (await this.#call({ kind: "guideModels", input: vendorsJson.slice() })) as GuideModel[];
   }
 
   /** An empty preset catalog in the worker; add vendors and imports, then filter. */

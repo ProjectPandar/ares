@@ -1,5 +1,5 @@
 import { Outlet, useRouter } from "@tanstack/react-router";
-import { type DragEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type DragEvent, lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { exportGcode, importFiles, selectObject, slicePlate } from "../state/actions";
 import { useApp } from "../state/store";
 import { cmdDown, isShortcut } from "./keys";
@@ -8,11 +8,14 @@ import { ShortcutsDialog } from "./ShortcutsDialog";
 import { StatusBar } from "./StatusBar";
 import { TabBar, TitleBar } from "./TopBar";
 
+const SetupWizard = lazy(() => import("../wizard/SetupWizard").then((module) => ({ default: module.SetupWizard })));
+
 const hasFiles = (event: DragEvent) => event.dataTransfer.types.includes("Files");
 
 export function Shell() {
   const theme = useApp((state) => state.theme);
   const engine = useApp((state) => state.engine);
+  const wizard = useApp((state) => state.wizard);
   const [dragging, setDragging] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const importInput = useRef<HTMLInputElement>(null);
@@ -75,6 +78,11 @@ export function Shell() {
       </main>
       <StatusBar />
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      {wizard && (
+        <Suspense>
+          <SetupWizard key={wizard} firstRun={wizard === "first-run"} onClose={() => useApp.setState({ wizard: null })} />
+        </Suspense>
+      )}
     </div>
   );
 }

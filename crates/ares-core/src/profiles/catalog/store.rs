@@ -32,6 +32,7 @@ impl Catalog {
             vendor_names: Vec::new(),
             vendor_ids: Vec::new(),
             vendor_models: Vec::new(),
+            installed_printers: None,
             direct_imports: false,
         }
     }

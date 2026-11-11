@@ -222,6 +222,30 @@ export interface PrinterModel {
   model: string;
 }
 
+/** The `AppConfig` vendors section: vendor id → printer model id → installed nozzle variants. */
+export type InstalledPrinters = Record<string, Record<string, string[]>>;
+
+/** A setup guide printer model (`GuideFrame::BuildProfileJson`, `m_ProfileJson["model"]`). */
+export interface GuideModel {
+  /** Vendor id, the vendor index file stem. */
+  vendor: string;
+  /** Model id, the `printer_model` of its presets. */
+  model: string;
+  name: string;
+  /** Nozzle variants in `nozzle_diameter` order. */
+  variants: string[];
+  default_materials: string[];
+}
+
+/** A setup guide system filament (`m_ProfileJson["filament"]`). */
+export interface GuideFilament {
+  name: string;
+  vendor: string;
+  filament_type: string;
+  /** `[printer_model, printer_variant]` of each compatible system printer. */
+  models: [string, string][];
+}
+
 /** The selected printer `PresetCatalog.similarPrinterPreset` resolves from; it may be a project printer outside the catalog. */
 export interface CurrentPrinter {
   name: string;

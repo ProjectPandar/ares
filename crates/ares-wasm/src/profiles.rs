@@ -17,6 +17,19 @@ pub fn parse_preset_bundle_json(input: &[u8], filename: &str) -> Result<String, 
         .map_err(|error| format!("preset bundle result cannot serialize: {error}"))
 }
 
+/// The setup guide's printer models of vendor envelopes `[{id, index, files}]` holding only
+/// `machine_model_list` files, as JSON `[{vendor, model, name, variants, default_materials}]`.
+#[wasm_bindgen(js_name = guideModels)]
+pub fn guide_models(vendors_json: Vec<u8>) -> Result<String, JsValue> {
+    guide_models_json(&vendors_json).map_err(|error| JsValue::from_str(&error))
+}
+
+pub fn guide_models_json(vendors_json: &[u8]) -> Result<String, String> {
+    let models = ares_core::guide_models(vendors_json).map_err(|error| error.to_string())?;
+    serde_json::to_string(&models)
+        .map_err(|error| format!("guide models cannot serialize: {error}"))
+}
+
 #[wasm_bindgen(js_name = filterCompatiblePresets)]
 pub fn filter_compatible_presets(
     catalog_json: String,

@@ -1,5 +1,5 @@
 import type { RequestBody } from "./protocol.js";
-import type { CompatiblePresets, CurrentPrinter, OptionMap, PresetKind, PrinterModel, PrinterModelInfo, SelectablePrinter } from "./types.js";
+import type { CompatiblePresets, CurrentPrinter, GuideFilament, InstalledPrinters, OptionMap, PresetKind, PrinterModel, PrinterModelInfo, SelectablePrinter } from "./types.js";
 
 export interface FilamentSlotState {
   filaments: string[];
@@ -129,6 +129,28 @@ export class PresetCatalog {
   /** PresetBundle hardware minimum, last-preset padding, and per-nozzle flush layout. */
   async normalizeFilamentSlots(printer: string, state: Partial<FilamentSlotState> & { filaments: string[] }): Promise<FilamentSlotState> {
     return (await this.#call({ kind: "catalogNormalizeFilamentSlots", catalogId: this.#catalogId, printer, state })) as FilamentSlotState;
+  }
+
+  /**
+   * Sets the `AppConfig` vendors section. `printers`, `printerModels` and `installedFilaments`
+   * then hide the system printers `Preset::set_visible_from_appconfig` hides; without it every
+   * printer is listed.
+   */
+  async setInstalledPrinters(installed: InstalledPrinters): Promise<void> {
+    await this.#call({ kind: "catalogSetInstalledPrinters", catalogId: this.#catalogId, installed });
+  }
+
+  /**
+   * The first system printer of `model` with `variant` (any variant when empty), visible or not
+   * (`PrinterPresetCollection::find_system_preset_by_model_and_variant`).
+   */
+  async systemPrinter(model: string, variant: string): Promise<string | null> {
+    return (await this.#call({ kind: "catalogSystemPrinter", catalogId: this.#catalogId, model, variant })) as string | null;
+  }
+
+  /** The loaded system filaments in name order with the printers they are compatible with, for the setup guide. */
+  async guideFilaments(): Promise<GuideFilament[]> {
+    return (await this.#call({ kind: "catalogGuideFilaments", catalogId: this.#catalogId })) as GuideFilament[];
   }
 
   /** Releases the worker's catalog. */
