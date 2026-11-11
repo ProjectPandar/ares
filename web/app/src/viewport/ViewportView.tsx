@@ -8,6 +8,8 @@ import { placedScene, presetSliceBlocker } from "../state/presets";
 import { openStlSession } from "../state/stlSession";
 import { useApp } from "../state/store";
 import { takeSnapshot } from "../state/undoRedo";
+import { CopiesDialog } from "../sidebar/CopiesDialog";
+import { ObjectMenu } from "../sidebar/ObjectMenu";
 import { firstString } from "../sidebar/options";
 import { bedFromSettings } from "./bedShape";
 import type { ViewPreset, ZoomTarget } from "./camera";
@@ -73,6 +75,8 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   const [viewport, setViewport] = useState<Viewport | null>(null);
   const [active, setActive] = useState<ViewPreset | null>("plate");
   const [gizmo, setGizmo] = useState<GizmoMode>("move");
+  const [menu, setMenu] = useState<{ objectId: number; at: [number, number] } | null>(null);
+  const [copies, setCopies] = useState<number | null>(null);
   const theme = useApp((state) => state.theme);
   const loaded = useApp((state) => state.scene);
   const file = useApp((state) => state.file);
@@ -145,6 +149,13 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       if (disposed) return;
       instance = new ViewportClass(host.current!, themeColors());
       instance.onPick = selectObject;
+      // A right click on an object selects it and shows the object menu at the cursor; elsewhere it
+      // deselects (GLCanvas3D::on_mouse RightUp, GLCanvas3D.cpp:5411-5471; Plater::priv::on_right_click,
+      // Plater.cpp:14201-14263).
+      instance.onContextPick = (objectId, at) => {
+        selectObject(objectId);
+        setMenu(objectId === null ? null : { objectId, at });
+      };
       instance.onOrbit = () => setActive(null);
       window.addEventListener("keydown", onKey);
       setViewport(instance);
@@ -184,6 +195,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       rotate: (target, radians) => void rotateInstance(target, radians),
     } : undefined, gizmo);
   }, [viewport, editable, plater, gizmo]);
+  const copiesIndex = loaded?.objects.findIndex(({ id }) => id === copies) ?? -1;
   useEffect(() => viewport?.setSelected(selected), [viewport, selected]);
   // A new scene or slice result is re-framed: Prepare the plate, Preview the print.
   useEffect(() => {
@@ -244,6 +256,12 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
           <span className="view-separator" />
           <ArrangeMenu />
         </div>
+      )}
+      {menu && (
+        <ObjectMenu objectId={menu.objectId} position={menu.at} onClose={() => setMenu(null)} onCopies={() => setCopies(menu.objectId)} />
+      )}
+      {copiesIndex >= 0 && (
+        <CopiesDialog object={copiesIndex} count={loaded!.objects[copiesIndex].instances.length} onClose={() => setCopies(null)} />
       )}
       {children}
     </div>

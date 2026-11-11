@@ -61,6 +61,8 @@ export class Viewport {
   #selected: number | null = null;
   #pointerDown: { x: number; y: number } | null = null;
   onPick?: (objectId: number | null) => void;
+  /** A right click without a drag where instances can be edited, at its client position (GLCanvas3D::on_mouse RightUp). */
+  onContextPick?: (objectId: number | null, at: [number, number]) => void;
   /** Where instances can be edited: drags and gizmo moves and turns of one instance. */
   #edit?: EditHandlers;
   readonly #gizmos: Gizmos;
@@ -100,9 +102,11 @@ export class Viewport {
     canvas.addEventListener("pointerup", (event) => {
       const start = this.#pointerDown;
       this.#pointerDown = null;
-      if (event.button !== 0 || !start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) return;
-      this.onPick?.(this.#pick(event));
+      if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) return;
+      if (event.button === 0) this.onPick?.(this.#pick(event));
+      else if (event.button === 2 && this.#edit) this.onContextPick?.(this.#pick(event), [event.clientX, event.clientY]);
     });
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
     this.#gizmos = new Gizmos(this.#scene, this.#camera, container);
     attachInstanceDrag(canvas, this.#controls, this.#camera, (raycaster) => this.#dragHit(raycaster), () => this.#edit);
