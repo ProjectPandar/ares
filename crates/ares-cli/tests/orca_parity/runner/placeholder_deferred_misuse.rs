@@ -8,7 +8,7 @@ use crate::runner::{CaseInputs, ExportedCase, OrcaRunner, application, repo_root
 use crate::{self as parity, presets::VendorProfiles};
 use serde_json::json;
 
-const DEFERRED_MESSAGE: &str = "This value is known only after the G-code is generated. It can \
+pub(super) const DEFERRED_MESSAGE: &str = "This value is known only after the G-code is generated. It can \
      be printed, but not used in a calculation or a comparison.";
 
 pub(super) fn export(runner: &OrcaRunner, label: &str, line: &str) -> ExportedCase {

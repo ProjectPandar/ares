@@ -8,6 +8,8 @@ mod placeholder_deferred_misuse;
 mod placeholder_deferred_print_time;
 #[path = "placeholder_digits_rounding.rs"]
 mod placeholder_digits_rounding;
+#[path = "placeholder_if_conditions.rs"]
+mod placeholder_if_conditions;
 #[path = "placeholder_int_result.rs"]
 mod placeholder_int_result;
 #[path = "placeholder_max_print_z.rs"]
