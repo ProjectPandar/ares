@@ -5,13 +5,11 @@
 This document specifies the next source-cited rewrite slice only. It does not
 implement Rust code, add tests, or change the public API.
 
-The implementation must be based on main `7cdea9d1625ac942a318ae8337f6a16df36e30f9`
-and then rebase onto the narrowed manual multi-nozzle admission slice and its
-typed `NozzleVolumeType::Hybrid` rejection (`PrintConfig.hpp:618-623`,
-`nvtHybrid`) when that work lands. The typed rejection is a precondition: this
-slice must preserve rejection of a manual multi-nozzle `NozzleVolumeType::Hybrid`
-declaration while removing only the current `used_filaments <= 1` admission
-restriction.
+The prerequisite boundary is narrowed manual multi-nozzle admission with typed
+`NozzleVolumeType::Hybrid` rejection (`PrintConfig.hpp:618-623`, `nvtHybrid`).
+This slice must preserve rejection of a manual multi-nozzle
+`NozzleVolumeType::Hybrid` declaration while removing only the current
+`used_filaments <= 1` admission restriction.
 
 The existing narrowed boundary is intentionally incomplete. Its manual path
 admits a multi-nozzle extruder only when at most one used logical filament is
