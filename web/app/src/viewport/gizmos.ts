@@ -92,6 +92,9 @@ export class Gizmos {
       Object.assign(handles, { x: at(1), y: at(3), z: at(5), uniform: at(8) });
     }
     this.scene.add(this.#group);
+    // `hit` raycasts the world matrices, which a render would only update after a press that
+    // can come first; the handles are pressable from the moment `data-gizmo` publishes them.
+    this.#group.updateMatrixWorld(true);
     const screen = (point: THREE.Vector3) => {
       const projected = point.clone().project(this.camera);
       return [((projected.x + 1) / 2) * this.container.clientWidth, ((1 - projected.y) / 2) * height].map(Math.round);
