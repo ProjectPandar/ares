@@ -56,9 +56,10 @@ async function selectedLabel(page: Page, name: string) {
 async function install(page: Page, vendor: string) {
   await combo(page, "Printer preset").click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: vendor, exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: `All ${vendor} models`, exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 }
 
@@ -117,7 +118,7 @@ test("plate type and nozzle offer the selected printer's options and reach the s
 
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
-  await install(page, "Bambulab");
+  await install(page, "Bambu Lab");
 
   // A1 mini: two plates are not supported; the nozzle combo lists the model's printer variants.
   await chooseModel(page, "Bambu Lab A1 mini");

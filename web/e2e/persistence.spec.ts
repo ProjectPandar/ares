@@ -79,9 +79,10 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
   await loadProject(page);
   await combo(page, "Printer preset").click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Bambulab", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await page.getByTestId("preset-import-input").setInputFiles(IMPORT);
   await choose(page, "Printer preset", SELECTION.printer);
   await choose(page, "Process preset", SELECTION.process);
@@ -126,8 +127,9 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
     dropped[name] = await page.evaluate(() => {
       const text = localStorage.getItem("ares.config");
       if (text === null) return true;
-      const stored = JSON.parse(text) as { version: number; theme: string; printer: string | null; vendors: string[] };
-      return stored.version === 1 && stored.theme === "dark" && stored.printer === null && stored.vendors.length === 0;
+      const stored = JSON.parse(text) as { version: number; theme: string; printer: string | null; installedPrinters: object };
+      return stored.version === 1 && stored.theme === "dark" && stored.printer === null
+        && Object.keys(stored.installedPrinters).length === 0;
     });
     expect(dropped[name], name).toBe(true);
   }

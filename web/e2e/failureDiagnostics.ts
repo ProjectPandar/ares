@@ -1,6 +1,47 @@
-import { test as base } from "@playwright/test";
+import { test as base, type BrowserContext, type Page } from "@playwright/test";
 
-export const test = base.extend<{ failureDiagnostics: void }>({
+/**
+ * The app config after a first run's setup wizard: the stored result of checking only Custom /
+ * Generic Klipper Printer and pressing Finish, which printerWizard.spec.ts checks against a real
+ * Finish. It is not upstream's cancel path (WebGuideDialog.cpp:1257-1266): that path calls
+ * set_variant("Custom", ORCA_DEFAULT_PRINTER_MODEL, "0.4"), but ORCA_DEFAULT_PRINTER_MODEL is the
+ * preset name "MyKlipper 0.4 nozzle" (PresetBundle.cpp:187-189), not its printer_model "Generic
+ * Klipper Printer" (Custom/machine/MyKlipper 0.4 nozzle.json:27), so it installs no visible printer.
+ */
+export const FIRST_RUN_CONFIG = {
+  version: 1,
+  theme: "dark",
+  mode: "simple",
+  gcodeWindow: true,
+  installedPrinters: { Custom: { "Generic Klipper Printer": ["0.2", "0.4", "0.6", "0.8"] } },
+  printer: "MyKlipper 0.4 nozzle",
+  // load_selections takes the printer's default_filament_profile (PresetBundle.cpp:4070-4076, 4163;
+  // Custom/machine/fdm_klipper_common.json:230-232); apply_vendor_config keeps it as it is checked (:2079-2095).
+  printers: { "MyKlipper 0.4 nozzle": { filaments: ["Generic PLA @System"] } },
+  // The model's default_materials (Custom/machine/Generic Klipper Printer.json), checked by save_userguide_models.
+  installedFilaments: [
+    "Generic ABS @System", "Generic ASA @System", "Generic PA @System", "Generic PA-CF @System", "Generic PC @System",
+    "Generic PETG @System", "Generic PLA @System", "Generic PLA-CF @System", "Generic PVA @System", "Generic TPU @System",
+  ],
+  nozzleVolumeTypes: {},
+  preferredFilamentMapMode: "Auto For Flush",
+};
+
+/** Pages of `target` without an app config start with `FIRST_RUN_CONFIG`. */
+export const seedFirstRun = (target: Page | BrowserContext) =>
+  target.addInitScript((record) => {
+    if (localStorage.getItem("ares.config") === null) localStorage.setItem("ares.config", record);
+  }, JSON.stringify(FIRST_RUN_CONFIG));
+
+export const test = base.extend<{ failureDiagnostics: void; firstRunConfig: boolean; firstRunSeed: void }>({
+  /** Whether a page without an app config starts with `FIRST_RUN_CONFIG` instead of the setup wizard. */
+  firstRunConfig: [true, { option: true }],
+  firstRunSeed: [async ({ page, firstRunConfig }, use) => {
+    if (firstRunConfig) {
+      await seedFirstRun(page);
+    }
+    await use();
+  }, { auto: true }],
   failureDiagnostics: [async ({ page }, use, info) => {
     await use();
     if (info.status === info.expectedStatus) return;

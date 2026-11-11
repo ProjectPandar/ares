@@ -40,9 +40,10 @@ test("filament combos group compatible installed presets like PlaterPresetComboB
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await combo(page, "Printer preset").click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Bambulab", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await page.getByTestId("preset-import-input").setInputFiles(`${repositoryRoot}tests/presets/My X1C 0.4 nozzle.orca_printer`);
   // The imported printer inherits the X1C 0.4 nozzle; a user printer matches filaments through its
   // parent (Preset.cpp:799-806).

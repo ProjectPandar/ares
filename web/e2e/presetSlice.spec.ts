@@ -134,9 +134,10 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   // ConfigWizard: install the LH vendor; its printers join the "System presets" group.
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "LH", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All LH models", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
 
   // The plater combo lists the printer model (PresetComboBoxes.cpp:1238-1251); selecting it
   // resolves the preset with PresetBundle::get_similar_printer_preset (Plater.cpp:9565-9572),

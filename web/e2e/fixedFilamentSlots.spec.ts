@@ -17,10 +17,11 @@ test("U1 has four fixed filament slots and edits them directly", async ({ page }
   const printer = page.getByRole("button", { name: "Printer preset", exact: true });
   await printer.click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Snapmaker", exact: true }).check();
-  await wizard.getByRole("checkbox", { name: "Bambulab", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Snapmaker models", exact: true }).check();
+  await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await printer.click();
   await page.getByRole("option", { name: "Bambu Lab X1 Carbon", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });

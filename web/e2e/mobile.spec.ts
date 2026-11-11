@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { AxeBuilder } from "@axe-core/playwright";
 import { chromium, expect, type Locator, type Page } from "@playwright/test";
-import { test } from "./failureDiagnostics";
+import { seedFirstRun, test } from "./failureDiagnostics";
 import { moving, smallFonts, tabSweep } from "./a11y";
 import { chromiumLaunch } from "./chromiumLaunch";
 import { act, choose, type Input, PRESETS } from "./lhPresets";
@@ -96,12 +96,13 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await act(input, button("Printer preset"));
   await targets("preset list");
   await act(input, page.getByRole("option", { name: "Select/Remove printers (system presets)" }));
-  const wizard = page.getByRole("dialog", { name: "System presets" });
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
   await expect(wizard).toBeVisible();
   await targets("wizard");
-  await act(input, wizard.getByRole("checkbox", { name: PRESETS.vendor, exact: true }));
-  await expect(wizard.getByRole("checkbox", { name: PRESETS.vendor, exact: true })).toBeChecked();
-  await act(input, wizard.getByRole("button", { name: "Done" }));
+  await act(input, wizard.getByRole("checkbox", { name: `All ${PRESETS.vendor} models`, exact: true }));
+  await expect(wizard.getByRole("checkbox", { name: `All ${PRESETS.vendor} models`, exact: true })).toBeChecked();
+  await act(input, wizard.getByRole("button", { name: "Confirm" }));
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await choose(page, input, "Printer preset", "System presets", PRESETS.printer);
   await choose(page, input, "Process preset", "System presets", PRESETS.process);
   // An STL has no filament slots until a system printer is chosen.
@@ -183,6 +184,7 @@ test("touch flow: import, presets, slice, preview and download match the desktop
   let desktop;
   try {
     const context = await browser.newContext({ baseURL: info.project.use.baseURL, viewport: { width: 1600, height: 900 }, acceptDownloads: true });
+    await seedFirstRun(context);
     desktop = await mainFlow(await context.newPage(), "mouse", `${artifacts}desktop/`);
   } finally {
     await browser.close();
