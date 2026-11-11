@@ -330,10 +330,19 @@ impl crate::ProjectSettings {
         raw: &ProjectSettingsRaw,
         validate_print: bool,
     ) -> Result<(), SliceError> {
+        loaded_config_error(self.loaded_config_errors(raw, validate_print)?)
+    }
+
+    /// The `Slic3r::validate` error map: key to message.
+    pub(crate) fn loaded_config_errors(
+        &self,
+        raw: &ProjectSettingsRaw,
+        validate_print: bool,
+    ) -> Result<BTreeMap<String, String>, SliceError> {
         let mut errors = raw.loaded_range_options(validate_print)?;
         // O2 (firmware/wipe) writes the same std::map (PrintConfig.cpp:10391).
         merge_first(&mut errors, self.validate_loaded_retraction_map()?);
-        loaded_config_error(errors)
+        Ok(errors)
     }
 }
 

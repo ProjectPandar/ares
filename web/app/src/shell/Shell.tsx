@@ -3,6 +3,7 @@ import { type DragEvent, useEffect, useLayoutEffect, useRef, useState } from "re
 import { exportGcode, importFiles, selectObject, slicePlate } from "../state/actions";
 import { useApp } from "../state/store";
 import { cmdDown, isShortcut } from "./keys";
+import { LoadWarning } from "./LoadWarning";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { StatusBar } from "./StatusBar";
 import { TabBar, TitleBar } from "./TopBar";
@@ -69,6 +70,7 @@ export function Shell() {
           importFiles([...event.dataTransfer.files]);
         }}>
         <Outlet />
+        <LoadWarning />
         {dragging && <div className="drop-overlay" data-testid="drop-overlay">Drop a 3MF project or STL model to import</div>}
       </main>
       <StatusBar />

@@ -3,6 +3,7 @@
  * GUI_App::update_label_colours (#F1754E modified label), GLCanvas3D
  * DEFAULT_BG_LIGHT_COLOR(_DARK), Bed3D::DEFAULT_MODEL_COLOR(_DARK) x0.8
  * (render_default) and PartPlate::LINE_TOP_SEL(_DARK)_COLOR.
+ * --warning is ColorRGB::WARNING (Color.hpp:72), darkened in light mode for AA text contrast.
  */
 :root,
 :root[data-theme="light"] {
@@ -41,6 +42,7 @@
   --disabled-bg: #6b6b6b;
   --disabled-text: #acacac;
   --danger: #d01b1b;
+  --warning: #b94a22;
   --modified: #f1754e;
   --canvas-bg: #e7e7e7;
   --bed: #434545;
@@ -85,6 +87,7 @@
   --disabled-bg: #6b6b6b;
   --disabled-text: #acacac;
   --danger: #bb2a3a;
+  --warning: #f1754e;
   --modified: #f1754e;
   --canvas-bg: #54545a;
   --bed: #343439;

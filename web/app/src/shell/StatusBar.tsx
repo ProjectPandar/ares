@@ -1,3 +1,4 @@
+import { presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 
 function formatBytes(bytes: number) {
@@ -7,7 +8,8 @@ function formatBytes(bytes: number) {
 }
 
 export function StatusBar() {
-  const { engine, engineError, file, slice, loadError, loadingFile, arranging, arrangeError } = useApp();
+  const { engine, engineError, file, scene, presetSelection, slice, loadError, loadingFile, arranging, arrangeError } = useApp();
+  const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
   let message: string;
   if (engine === "loading") message = "Loading slicing engine…";
   else if (engine === "error") message = `Engine failed: ${engineError}`;
@@ -19,12 +21,12 @@ export function StatusBar() {
   else if (arrangeError) message = `Arrange failed: ${arrangeError}`;
   else if (slice.status === "done")
     message = `Slice complete — ${formatBytes(slice.gcode.length)} G-code in ${(slice.elapsedMs / 1000).toFixed(2)} s`;
-  else if (file) message = "Ready to slice";
+  else if (file) message = blocker ?? "Ready to slice";
   else message = "Import a 3MF project or STL model to begin";
   const error = engine === "error" || !!loadError || (!arranging && !!arrangeError) || slice.status === "error";
   return (
     <footer className="statusbar">
-      <span className={error ? "status-message error" : "status-message"} data-testid="status">
+      <span className={error ? "status-message error" : message === blocker ? "status-message warning" : "status-message"} data-testid="status">
         {(slice.status === "slicing" || loadingFile || arranging || engine === "loading") && <span className="spinner" />}
         {message}
       </span>

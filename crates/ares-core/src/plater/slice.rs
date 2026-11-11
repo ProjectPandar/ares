@@ -1,6 +1,8 @@
 //! Slicing a plater session: the loaded input with the session's edits,
 //! one plate at a time (`PartPlateList` per-plate `Print`,
-//! `PartPlate.cpp:2398, 2520`).
+//! `PartPlate.cpp:2398, 2520`). As the GUI's `BackgroundSlicingProcess::validate`
+//! (`BackgroundSlicingProcess.cpp:726-734`), a session slice runs `Print::validate` only: the
+//! CLI's `DynamicPrintConfig::validate` (`OrcaSlicer.cpp:4277-4282`) is not run.
 
 use super::PlaterSession;
 use crate::project_slice::{ProjectSource, slice_source};
@@ -15,7 +17,7 @@ pub struct PlaterSlice<'a> {
     /// The plate id (`plater_id`, 1-based); `None` slices the first plate.
     pub plate: Option<u32>,
     pub overrides: &'a ConfigOverrides,
-    /// Run `Print::validate` as the adapter entries do.
+    /// Run `Print::validate`.
     pub validate_print: bool,
 }
 
@@ -26,9 +28,6 @@ pub async fn slice_plater_plate(
     metadata: GenerationMetadata,
     context: SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
-    if slice.validate_print {
-        slice.overrides.validate_cli_config()?;
-    }
     let edits = session.edits();
     slice_source(
         ProjectSource {
@@ -38,6 +37,7 @@ pub async fn slice_plater_plate(
             refresh: None,
             overrides: slice.overrides,
             validate_print: slice.validate_print,
+            validate_config: false,
             upward: None,
             sliced_plate: None,
             edits: &edits,
@@ -61,6 +61,7 @@ pub async fn slice_plater_with_profiles(
     let edits = session.edits();
     crate::profiles::with_edited_profile_source(session.input(), request, &edits, |mut source| {
         source.validate_print = validate_print;
+        source.validate_config = false;
         if let Some(profile) = &mut source.profile {
             profile.validate_print = validate_print;
         }

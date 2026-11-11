@@ -31,6 +31,14 @@ export class PlaterSession {
   }
 
   /**
+   * The loaded project config's `DynamicPrintConfig::validate()` errors, key to message, which
+   * OrcaSlicer's GUI shows as a warning while the project still loads (Plater.cpp:9462-9481).
+   */
+  async invalidValues(): Promise<Record<string, string>> {
+    return (await this.#call({ kind: "platerInvalidValues", sessionId: this.#sessionId })) as Record<string, string>;
+  }
+
+  /**
    * Moves an instance by `displacement` (`Selection::translate`), then drops it onto the bed
    * unless it now sinks into it (`GLCanvas3D::do_move`) and reassigns it to the plate it lies on.
    */

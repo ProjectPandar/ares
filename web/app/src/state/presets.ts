@@ -104,8 +104,12 @@ async function restoreSession() {
 
 void restoreSession();
 
-/** PresetBundle::update_compatible for the selected printer and process. */
-async function updateCompatible() {
+/**
+ * PresetBundle::update_compatible(Always) for the selected printer and process: the compatible
+ * lists, and each missing or incompatible filament slot replaced by the best compatible visible
+ * preset (PresetBundle.cpp:8650-8673). The slots are the selection's, or the project's when more.
+ */
+export async function updateCompatible() {
   const selection = useApp.getState().presetSelection;
   if (!selection) {
     useApp.setState({ compatible: null });
@@ -124,7 +128,13 @@ async function updateCompatible() {
       type: firstString(values[index], "filament_type") ?? "",
       vendor: firstString(values[index], "filament_vendor") ?? "",
     }]));
-    if (useApp.getState().presetSelection === selection) useApp.setState({ compatible: { status: "done", presets, filamentInfo } });
+    const { scene, installedFilaments } = useApp.getState();
+    const slots = Math.max(selection.filaments.length, presetFilamentSlots(scene?.settings ?? null));
+    const filaments = await catalog.selectCompatibleFilaments(selection.printer, selection.process,
+      Array.from({ length: slots }, (_, slot) => selection.filaments[slot] ?? ""), [...installedFilaments]);
+    if (useApp.getState().presetSelection === selection) {
+      useApp.setState({ presetSelection: { ...selection, filaments }, compatible: { status: "done", presets, filamentInfo } });
+    }
   } catch (error) {
     if (useApp.getState().presetSelection === selection) {
       useApp.setState({ compatible: { status: "error", error: (error as Error).message } });
@@ -209,15 +219,10 @@ export async function selectPrinter(printer: string | null) {
   await updateCompatible();
   const restored = (selection: PresetSelection | null, compatible: CompatibleState | null) =>
     selection?.printer === printer && compatible?.status === "done" ? { selection, presets: compatible.presets } : null;
-  let state = restored(useApp.getState().presetSelection, useApp.getState().compatible);
+  const state = restored(useApp.getState().presetSelection, useApp.getState().compatible);
   if (state && saved?.process && state.presets.processes.includes(saved.process)) {
     useApp.setState({ presetSelection: { ...state.selection, process: saved.process } });
     await updateCompatible();
-    state = restored(useApp.getState().presetSelection, useApp.getState().compatible);
-  }
-  if (state) {
-    const filaments = state.selection.filaments.map((name) => (state.presets.filaments.includes(name) ? name : ""));
-    useApp.setState({ presetSelection: { ...state.selection, filaments } });
   }
   await updatePrinterPanel();
   const selection = useApp.getState().presetSelection;
@@ -250,8 +255,8 @@ export async function selectPrinterModel(model: string, current: CurrentPrinter)
 export async function selectProcess(process: string) {
   const selection = useApp.getState().presetSelection!;
   useApp.setState({ presetSelection: { ...selection, process } });
-  saveSelection();
   await updateCompatible();
+  saveSelection();
 }
 
 export function selectFilament(slot: number, filament: string) {

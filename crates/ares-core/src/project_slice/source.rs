@@ -11,6 +11,9 @@ pub(crate) struct ProjectSource<'a> {
     pub(crate) overrides: &'a ConfigOverrides,
     /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
     pub(crate) validate_print: bool,
+    /// `DynamicPrintConfig::validate` of the loaded config, which the CLI rejects on
+    /// (`OrcaSlicer.cpp:4277-4282`); the GUI only warns at load (`Plater.cpp:9466-9481`).
+    pub(crate) validate_config: bool,
     pub(crate) upward: Option<CliUpwardMachine<'a>>,
     /// The CLI's success report values, filled once the plate is set up.
     pub(crate) sliced_plate: Option<&'a mut SlicedPlate>,
@@ -82,6 +85,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             refresh: None,
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
+            validate_config: true,
             upward: None,
             sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
@@ -100,6 +104,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             refresh: None,
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
+            validate_config: true,
             upward: None,
             sliced_plate: None,
             edits: &crate::plater::NO_EDITS,

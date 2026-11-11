@@ -2,7 +2,7 @@ import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { loadArrangeSettings } from "./arrange";
 import { saveConfig } from "./persistence";
-import { installVendors, overrideTokens, presetSliceBlocker, sliceWithPresets } from "./presets";
+import { installVendors, overrideTokens, presetSliceBlocker, sliceWithPresets, updateCompatible } from "./presets";
 import { stlSessionOpened } from "./stlSession";
 import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
@@ -41,12 +41,13 @@ export async function importFile(file: File) {
     return;
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
-  useApp.setState({ loadingFile: true, loadError: undefined });
+  useApp.setState({ loadingFile: true, loadError: undefined, loadWarning: undefined });
   try {
     // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure).
     const plater = /\.3mf$/i.test(file.name) ? await slicer.createPlaterSession(bytes, file.name) : null;
     if (plater) await installVendors(plater);
     const scene = plater ? await plater.scene() : await slicer.loadScene(bytes);
+    const loadWarning = plater ? invalidValuesWarning(await plater.invalidValues()) : undefined;
     const typedSettings = scene.settings && (await decodeSettings(await configDefs, scene.settings));
     const previous = useApp.getState().plater;
     useApp.setState({
@@ -62,15 +63,26 @@ export async function importFile(file: File) {
       selectedInstance: null,
       overrides: {},
       slice: { status: "idle" },
+      loadWarning,
     });
     void previous?.free();
     if (plater) await loadArrangeSettings(plater);
-    if (!useApp.getState().presetSelection) await updatePrinterPanel();
+    // The selection keeps its presets; the project's filament count can add slots.
+    if (useApp.getState().presetSelection) await updateCompatible();
+    else await updatePrinterPanel();
   } catch (error) {
     useApp.setState({ loadError: (error as Error).message });
   } finally {
     useApp.setState({ loadingFile: false });
   }
+}
+
+/** Plater.cpp:9474-9479: the warning text of a project's invalid values, if any. */
+function invalidValuesWarning(values: Record<string, string>) {
+  const entries = Object.entries(values);
+  if (entries.length === 0) return undefined;
+  const lines = entries.map(([key, message]) => `-${key}: ${message}\n`).join("");
+  return `Invalid values found in the 3MF:\n${lines}\nPlease correct them in the Param tabs`;
 }
 
 export function selectObject(id: number | null) {

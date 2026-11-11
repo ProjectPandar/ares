@@ -226,6 +226,9 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [JSON.parse(catalogs.get(request.catalogId)!.printerModelInfo(request.model)), []];
     case "catalogInstalledFilaments":
       return [JSON.parse(catalogs.get(request.catalogId)!.installedFilaments(JSON.stringify(request.installed))), []];
+    case "catalogSelectCompatibleFilaments":
+      return [JSON.parse(catalogs.get(request.catalogId)!.selectCompatibleFilaments(
+        request.printer, request.process, JSON.stringify(request.filaments), JSON.stringify(request.installed))), []];
     case "catalogFree":
       catalogs.get(request.catalogId)!.free();
       catalogs.delete(request.catalogId);
@@ -240,6 +243,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     }
     case "platerScene":
       return sceneResult(sessions.get(request.sessionId)!.scene());
+    case "platerInvalidValues":
+      return [JSON.parse(sessions.get(request.sessionId)!.invalidValues()), []];
     case "platerEdit": {
       const session = sessions.get(request.sessionId)!;
       applyEdit(session, request.edit);

@@ -149,6 +149,12 @@ impl PlaterSession {
         self.session.set_installed_vendors(&catalog.handle);
     }
 
+    /// The loaded project's invalid values (`Plater.cpp:9462-9481`) as JSON `{key: message}`.
+    #[wasm_bindgen(js_name = invalidValues)]
+    pub fn invalid_values(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.session.invalid_values().map_err(js_error)?).map_err(js_error)
+    }
+
     /// "Add plate" (`PartPlateList::create_plate`).
     #[wasm_bindgen(js_name = addPlate)]
     pub fn add_plate(&mut self) -> Result<(), JsValue> {

@@ -92,6 +92,8 @@ export interface AppState {
   typedSettings: TypedSettings | null;
   loadingFile: boolean;
   loadError?: string;
+  /** The warning notification of a loaded project's invalid values (Plater.cpp:9466-9481). */
+  loadWarning?: string;
   selectedObject: number | null;
   /** The selected object's selected instance item, by index (ObjectList's itInstance). */
   selectedInstance: number | null;

@@ -112,10 +112,12 @@ pub(super) fn prepare_profile_slice(
             names,
         )?;
     }
-    loaded.settings().validate_loaded_config(
-        &loaded.documents().project_settings_raw,
-        project.validate_print,
-    )?;
+    if project.validate_config {
+        loaded.settings().validate_loaded_config(
+            &loaded.documents().project_settings_raw,
+            project.validate_print,
+        )?;
+    }
     state::prepare_loaded_project_slice_with_validation(
         loaded,
         project.plate,

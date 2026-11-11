@@ -104,6 +104,15 @@ export class PresetCatalog {
     return (await this.#call({ kind: "catalogInstalledFilaments", catalogId: this.#catalogId, installed })) as string[];
   }
 
+  /**
+   * The filament of each slot after `PresetBundle::update_compatible(Always)`: a compatible
+   * filament stays, a missing or incompatible one takes the best compatible visible preset, or
+   * "" when there is none. System filaments are visible when `installed` names them.
+   */
+  async selectCompatibleFilaments(printer: string, process: string | undefined, filaments: string[], installed: string[]): Promise<string[]> {
+    return (await this.#call({ kind: "catalogSelectCompatibleFilaments", catalogId: this.#catalogId, printer, process, filaments, installed })) as string[];
+  }
+
   /** Releases the worker's catalog. */
   async free(): Promise<void> {
     await this.#call({ kind: "catalogFree", catalogId: this.#catalogId });

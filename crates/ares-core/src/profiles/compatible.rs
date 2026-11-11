@@ -12,8 +12,10 @@ use serde::Serialize;
 
 mod checks;
 mod installed;
+mod selection;
 
 pub(super) use installed::installed_filaments;
+pub(super) use selection::select_compatible_filaments;
 
 use super::catalog::Catalog;
 use super::fragment::ProfileKind;

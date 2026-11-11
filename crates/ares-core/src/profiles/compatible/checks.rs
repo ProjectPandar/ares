@@ -56,7 +56,7 @@ pub(super) struct Candidate {
     vendor: String,
     /// `PresetBundle.cpp:4943-4944,5086-5101`: explicit `alias` field, else
     /// the bare preset name trimmed before the first `@`.
-    alias: String,
+    pub(super) alias: String,
     compatible: crate::profiles::fragment::metadata::ProfileConfigMetadataPatch,
 }
 

@@ -38,7 +38,7 @@ export function FilamentSection({ settings, openTab }: { settings: ProjectSettin
         <div className="filament-row" key={index}>
           <span className="filament-swatch" data-testid={`filament-swatch-${index + 1}`}
             style={{ background: colours[index] ?? "#888" }}>{index + 1}</span>
-          <PresetCombo label={`Filament ${index + 1} preset`} value={selection?.filaments[index] || name} groups={groups(index)}
+          <PresetCombo label={`Filament ${index + 1} preset`} value={selection ? (selection.filaments[index] ?? "") : name} groups={groups(index)}
             placeholder="" searchable={selection !== null} onSelect={(filament) => selection && selectFilament(index, filament)}
             // PresetComboBoxes.cpp:1460-1461: the "Add/Remove filaments" item.
             actions={selection ? [{ label: "Add/Remove filaments", run: () => setDialog(true) }] : []} />

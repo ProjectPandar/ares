@@ -106,6 +106,23 @@ impl PresetCatalog {
         self.installed_filaments_json(&installed_json)
             .map_err(|error| JsValue::from_str(&error))
     }
+
+    /// `PresetBundle::update_compatible(Always)` over the filament slots, as a JSON array.
+    #[wasm_bindgen(js_name = selectCompatibleFilaments)]
+    pub fn select_compatible_filaments(
+        &self,
+        printer: String,
+        process: Option<String>,
+        filaments_json: String,
+        installed_json: String,
+    ) -> Result<String, JsValue> {
+        self.select_compatible_filaments_json(
+            (&printer, process.as_deref()),
+            &filaments_json,
+            &installed_json,
+        )
+        .map_err(|error| JsValue::from_str(&error))
+    }
 }
 
 impl PresetCatalog {
@@ -152,6 +169,24 @@ impl PresetCatalog {
             .map_err(|error| error.to_string())?;
         serde_json::to_string(&installed)
             .map_err(|error| format!("installed filaments cannot serialize: {error}"))
+    }
+
+    pub fn select_compatible_filaments_json(
+        &self,
+        selection: (&str, Option<&str>),
+        filaments_json: &str,
+        installed_json: &str,
+    ) -> Result<String, String> {
+        let filaments: Vec<String> = serde_json::from_str(filaments_json)
+            .map_err(|error| format!("invalid filaments JSON: {error}"))?;
+        let installed: Vec<String> = serde_json::from_str(installed_json)
+            .map_err(|error| format!("invalid installed filaments JSON: {error}"))?;
+        let selected = self
+            .handle
+            .select_compatible_filaments(selection, &filaments, &installed)
+            .map_err(|error| error.to_string())?;
+        serde_json::to_string(&selected)
+            .map_err(|error| format!("selected filaments cannot serialize: {error}"))
     }
 }
 

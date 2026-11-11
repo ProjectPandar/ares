@@ -45,10 +45,12 @@ export type WorkerRequest =
   | { id: number; kind: "catalogPresetValues"; catalogId: number; presetKind: PresetKind; names: string[]; keys: string[] }
   | { id: number; kind: "catalogPrinterModelInfo"; catalogId: number; model: string }
   | { id: number; kind: "catalogInstalledFilaments"; catalogId: number; installed: string[] }
+  | { id: number; kind: "catalogSelectCompatibleFilaments"; catalogId: number; printer: string; process?: string; filaments: string[]; installed: string[] }
   | { id: number; kind: "catalogFree"; catalogId: number }
   | { id: number; kind: "platerCreate"; sessionId: number; input: Uint8Array; filename: string }
   | { id: number; kind: "platerCreateWithProfiles"; sessionId: number; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }
   | { id: number; kind: "platerScene"; sessionId: number }
+  | { id: number; kind: "platerInvalidValues"; sessionId: number }
   | { id: number; kind: "platerEdit"; sessionId: number; edit: PlaterEdit }
   | { id: number; kind: "platerAbsoluteRotation"; sessionId: number; object: number; instance: number }
   | { id: number; kind: "platerScaleAndSize"; sessionId: number; object: number; instance: number }

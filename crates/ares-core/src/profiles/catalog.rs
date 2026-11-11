@@ -174,6 +174,23 @@ impl PresetCatalogHandle {
     pub fn installed_filaments(&self, installed: &[String]) -> Result<Vec<String>, SliceError> {
         super::compatible::installed_filaments(&self.catalog, installed)
     }
+
+    /// The filament of each slot after `PresetBundle::update_compatible(Always)`
+    /// (`PresetBundle.cpp:8650-8673`) for the printer and process, with the
+    /// system filaments of `installed` visible.
+    pub fn select_compatible_filaments(
+        &self,
+        (printer, process): (&str, Option<&str>),
+        filaments: &[String],
+        installed: &[String],
+    ) -> Result<Vec<String>, SliceError> {
+        super::compatible::select_compatible_filaments(
+            &self.catalog,
+            (printer, process),
+            filaments,
+            installed,
+        )
+    }
 }
 
 impl Default for PresetCatalogHandle {

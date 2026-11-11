@@ -154,6 +154,15 @@ impl PlaterSession {
         &self.project
     }
 
+    /// `Plater::priv::load_files` (`Plater.cpp:9462-9481`): the loaded project config's
+    /// `DynamicPrintConfig::validate()` (`under_cli` false) map, key to message, which the GUI
+    /// shows as a warning while the project loads.
+    pub fn invalid_values(&self) -> Result<std::collections::BTreeMap<String, String>, SliceError> {
+        self.project
+            .settings()
+            .loaded_config_errors(&self.project.documents().project_settings_raw, true)
+    }
+
     pub fn instance_transform(
         &self,
         object: usize,
