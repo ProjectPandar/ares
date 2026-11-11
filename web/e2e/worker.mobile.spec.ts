@@ -61,9 +61,10 @@ test("the 3D view caps its pixel ratio at 2 and a large model slices in the work
   if (await panel.isVisible()) await act("touch", panel);
   await act("touch", page.getByRole("button", { name: "Printer preset", exact: true }));
   await act("touch", page.getByRole("option", { name: "Select/Remove printers (system presets)" }));
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await act("touch", wizard.getByRole("checkbox", { name: PRESETS.vendor, exact: true }));
-  await act("touch", wizard.getByRole("button", { name: "Done" }));
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await act("touch", wizard.getByRole("checkbox", { name: `All ${PRESETS.vendor} models`, exact: true }));
+  await act("touch", wizard.getByRole("button", { name: "Confirm" }));
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await choose(page, "touch", "Printer preset", "System presets", PRESETS.printer);
   await choose(page, "touch", "Process preset", "System presets", PRESETS.process);
   await choose(page, "touch", "Filament 1 preset", "System presets", PRESETS.filament);

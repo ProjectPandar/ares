@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
-import { test } from "./failureDiagnostics";
+import { FIRST_RUN_CONFIG, test } from "./failureDiagnostics";
 import { vendorProfiles } from "./filamentOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -49,9 +49,10 @@ async function installBambuLab(page: Page) {
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await combo(page, "Printer preset").click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Bambulab", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
 }
 
 test.beforeAll(() => {
@@ -63,10 +64,19 @@ test("an A1M project switched to the H2D lists and selects only filaments compat
   test.setTimeout(300_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  // Oracle from the raw vendor files: the installed (seeded) BBL filaments that list the printer.
+  // Oracle from the raw vendor files: the installed (seeded) BBL filaments that list the printer, and the
+  // installed library filaments (the first-run ones) that no preset of the same alias lists the printer for
+  // (update_library_profile_excluded_from, Preset.cpp:4365-4395; is_compatible_with_printer, :916-923).
   const bbl = vendorProfiles(["BBL"]);
-  const compatible = (printer: string) =>
-    [...bbl.seeded].filter((name) => bbl.filament(name).compatiblePrinters.includes(printer)).sort();
+  const alias = (name: string) => name.replace(/ @.*$/, "");
+  const lists = (name: string, printer: string) => bbl.filament(name).compatiblePrinters.includes(printer);
+  const superseded = (name: string, printer: string) =>
+    [...bbl.filaments.keys()].some((other) => alias(other) === alias(name) && lists(other, printer));
+  const library = FIRST_RUN_CONFIG.installedFilaments.filter((name) => name.endsWith(" @System"));
+  const compatible = (printer: string) => [
+    ...[...bbl.seeded].filter((name) => lists(name, printer)),
+    ...library.filter((name) => !superseded(name, printer)),
+  ].sort();
   const expected = ["Bambu PLA Basic @BBL H2D", "Bambu PLA Matte @BBL H2D"];
   for (const name of expected) expect(compatible(H2D)).toContain(name);
 
