@@ -86,6 +86,9 @@ pub(super) fn append(
     if traversal.resolved.views.runtime_gcode.enable_pre_heating.0 {
         output.extend_from_slice(b"; MACHINE_END_GCODE_START\n");
     }
+    let mut ending_nozzle = state
+        .initial_filaments
+        .nozzle_id(state.extruders.active_id());
     if state.options.single_extruder_multi_material {
         let filament = state.extruders.active_id();
         let source = gcode
@@ -102,6 +105,8 @@ pub(super) fn append(
         )?;
     } else {
         for (filament, source) in gcode.filament_end_gcode.0.iter().enumerate() {
+            // GCode.cpp:4838-4849: machine-end inherits the last ending-loop value.
+            ending_nozzle = state.initial_filaments.nozzle_id(filament);
             append_template(
                 output,
                 state,
@@ -116,7 +121,7 @@ pub(super) fn append(
         state,
         &gcode.machine_end_gcode.0,
         &mut config,
-        EndTemplate::Machine,
+        EndTemplate::Machine(ending_nozzle),
     )?;
     Ok(())
 }
@@ -199,21 +204,21 @@ fn float_at(values: &crate::OrcaFloats, index: usize) -> f64 {
 #[derive(Clone, Copy)]
 enum EndTemplate {
     Filament(usize),
-    Machine,
+    Machine(i64),
 }
 
 impl EndTemplate {
     fn name(self) -> &'static str {
         match self {
             Self::Filament(_) => "filament-end",
-            Self::Machine => "machine-end",
+            Self::Machine(_) => "machine-end",
         }
     }
 
     fn template_name(self) -> &'static str {
         match self {
             Self::Filament(_) => "filament_end_gcode",
-            Self::Machine => "machine_end_gcode",
+            Self::Machine(_) => "machine_end_gcode",
         }
     }
 }
@@ -233,8 +238,13 @@ fn append_template(
     super::motion::refresh_writer_state(config, state);
     let filament = match template {
         EndTemplate::Filament(filament) => filament,
-        EndTemplate::Machine => state.extruders.active_id(),
+        EndTemplate::Machine(_) => state.extruders.active_id(),
     };
+    let nozzle = match template {
+        EndTemplate::Filament(filament) => state.initial_filaments.nozzle_id(filament),
+        EndTemplate::Machine(nozzle) => nozzle,
+    };
+    config.insert("current_nozzle_id", value::Value::Integer(nozzle));
     if matches!(template, EndTemplate::Filament(_)) {
         config.insert(
             "filament_extruder_id",

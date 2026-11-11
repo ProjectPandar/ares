@@ -55,6 +55,14 @@ pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
             config.insert(name, Value::Integer(state.extruders.active_id() as i64));
         }
         config.insert(
+            "current_nozzle_id",
+            Value::Integer(
+                state
+                    .initial_filaments
+                    .nozzle_id(state.extruders.active_id()),
+            ),
+        );
+        config.insert(
             "current_hotend",
             Value::Integer(i64::from(state.current_hotend)),
         );

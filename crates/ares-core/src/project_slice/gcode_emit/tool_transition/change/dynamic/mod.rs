@@ -44,11 +44,11 @@ pub(in crate::project_slice::gcode_emit::tool_transition) fn insert(
         ("next_filament_id", filament as i64),
         (
             "current_nozzle_id",
-            old.map_or(-1, |id| motion::tool_selection::nozzle(full, id)),
+            old.map_or(-1, |id| state.initial_filaments.nozzle_id(id)),
         ),
         (
             "next_nozzle_id",
-            motion::tool_selection::nozzle(full, filament),
+            state.initial_filaments.nozzle_id(filament),
         ),
         ("layer_num", context.layer_num),
         ("toolchange_count", state.toolchange_count as i64),

@@ -269,6 +269,10 @@ fn append_filament(
         state.total_layer_count,
     )?;
     motion::refresh_writer_state(&mut config, state);
+    config.insert(
+        "current_nozzle_id",
+        value::Value::Integer(state.initial_filaments.nozzle_id(filament)),
+    );
     if start {
         placeholders::refresh_filament_aliases(&mut config, filament);
         config.insert("current_extruder", value::Value::Integer(filament as i64));

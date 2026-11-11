@@ -19,6 +19,10 @@ pub(in crate::project_slice::gcode_emit) struct InitialFilaments {
     first: Vec<i32>,
     first_non_support: Vec<i32>,
     nozzle_diameters: Vec<f64>,
+    initial_nozzle: i64,
+    non_support_nozzle: i64,
+    nozzle_ids: Vec<i64>,
+    unmapped_nozzle: i64,
     total_toolchanges: usize,
     used_extruders: Option<value::Value>,
 }
@@ -57,7 +61,21 @@ impl InitialFilaments {
         self.non_support
     }
 
+    pub(in crate::project_slice::gcode_emit) fn nozzle_id(&self, filament: usize) -> i64 {
+        self.nozzle_ids
+            .get(filament)
+            .copied()
+            .unwrap_or(self.unmapped_nozzle)
+    }
+
+    pub(in crate::project_slice::gcode_emit) fn non_support_nozzle_id(&self) -> i64 {
+        self.non_support_nozzle
+    }
+
     pub(in crate::project_slice::gcode_emit) fn insert(&self, config: &mut value::Config) {
+        for name in ["initial_nozzle_id", "current_nozzle_id"] {
+            config.insert(name, value::Value::Integer(self.initial_nozzle));
+        }
         config.insert(
             "bed_temperature_initial_layer_single",
             value::Value::Integer(i64::from(self.initial_bed_temperature)),
@@ -101,6 +119,10 @@ impl InitialFilaments {
 
     pub(super) fn insert_machine(&self, config: &mut value::Config) {
         self.insert(config);
+        config.insert(
+            "initial_no_support_filament_id",
+            value::Value::Integer(self.non_support as i64),
+        );
         for name in ["current_extruder", "filament_extruder_id"] {
             config.insert(name, value::Value::Integer(self.initial as i64));
         }
@@ -120,6 +142,38 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
     let mut first = vec![-1; physical_count];
     let mut first_non_support = vec![-1; physical_count];
     let filament_map = &settings.project.gcode.filament_map;
+    let nozzle_map = &settings.project.gcode.filament_nozzle_map;
+    // GCode.cpp:241-276; Print.cpp:5008-5014: preserve each helper's fallback.
+    let extruder = |filament: usize| {
+        filament_map
+            .0
+            .get(filament)
+            .map_or(0, |id| i64::from(id.0 - 1))
+    };
+    let nozzle = |filament: usize| {
+        nozzle_map
+            .0
+            .get(filament)
+            .and_then(|id| usize::try_from(id.0).ok())
+            .and_then(|id| ordering.nozzle_groups.get(id))
+    };
+    let first_nozzle = |filament| {
+        nozzle(filament).map_or_else(|| extruder(filament), |group| group.group_id as i64)
+    };
+    let unmapped_nozzle = if ordering.nozzle_groups.is_empty() {
+        0
+    } else {
+        -1
+    };
+    let nozzle_ids = (0..filament_map.0.len().max(nozzle_map.0.len()))
+        .map(|filament| {
+            if ordering.nozzle_groups.is_empty() {
+                extruder(filament)
+            } else {
+                nozzle(filament).map_or(-1, |group| group.group_id as i64)
+            }
+        })
+        .collect();
 
     let is_support = |filament| {
         settings
@@ -200,6 +254,10 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
         initial_bed_temperature,
         first_layer_tools,
         non_support,
+        initial_nozzle: first_nozzle(initial),
+        non_support_nozzle: first_nozzle(non_support),
+        nozzle_ids,
+        unmapped_nozzle,
         initial_hotend: hotend(initial),
         non_support_hotend: hotend(non_support),
         first,

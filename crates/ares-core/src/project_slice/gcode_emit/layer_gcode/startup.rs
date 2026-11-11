@@ -81,6 +81,14 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
             "filament_extruder_id",
             super::super::value::Value::Integer(filament as i64),
         );
+        config.insert(
+            "current_nozzle_id",
+            super::super::value::Value::Integer(if is_bbl {
+                state.initial_filaments.non_support_nozzle_id()
+            } else {
+                state.initial_filaments.nozzle_id(filament)
+            }),
+        );
         // Before the first change_layer, m_layer_index is -1
         // (`GCode.hpp:193`). BBL startup overlays only layer_num
         // (`GCode.cpp:3149`); ordinary set_extruder also overlays the
