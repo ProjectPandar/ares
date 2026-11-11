@@ -196,6 +196,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [undefined, []];
     case "catalogSystemPrinter":
       return [JSON.parse(catalogs.get(request.catalogId)!.systemPrinter(request.model, request.variant)), []];
+    case "catalogCompatiblePrint":
+      return [JSON.parse(catalogs.get(request.catalogId)!.compatiblePrint(request.printer, request.current)), []];
     case "catalogGuideFilaments":
       return [JSON.parse(catalogs.get(request.catalogId)!.guideFilaments()), []];
     case "guideModels":

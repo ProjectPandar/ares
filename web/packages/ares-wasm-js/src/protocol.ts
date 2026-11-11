@@ -51,6 +51,7 @@ export type WorkerRequest =
   | { id: number; kind: "catalogNormalizeFilamentSlots"; catalogId: number; printer: string; state: Partial<FilamentSlotState> & { filaments: string[] } }
   | { id: number; kind: "catalogSetInstalledPrinters"; catalogId: number; installed: InstalledPrinters }
   | { id: number; kind: "catalogSystemPrinter"; catalogId: number; model: string; variant: string }
+  | { id: number; kind: "catalogCompatiblePrint"; catalogId: number; printer: string; current: string | undefined }
   | { id: number; kind: "catalogGuideFilaments"; catalogId: number }
   | { id: number; kind: "guideModels"; input: Uint8Array }
   | { id: number; kind: "catalogFree"; catalogId: number }

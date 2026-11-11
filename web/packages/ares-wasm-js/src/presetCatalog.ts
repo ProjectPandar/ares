@@ -148,6 +148,15 @@ export class PresetCatalog {
     return (await this.#call({ kind: "catalogSystemPrinter", catalogId: this.#catalogId, model, variant })) as string | null;
   }
 
+  /**
+   * The process a selection of `printer` holds (`PresetBundle::update_compatible` with `Always`):
+   * `current` while it is compatible, else the compatible process that best matches its alias,
+   * the printer's `default_print_profile` and its layer height; null when none is compatible.
+   */
+  async compatiblePrint(printer: string, current?: string): Promise<string | null> {
+    return (await this.#call({ kind: "catalogCompatiblePrint", catalogId: this.#catalogId, printer, current })) as string | null;
+  }
+
   /** The loaded system filaments in name order with the printers they are compatible with, for the setup guide. */
   async guideFilaments(): Promise<GuideFilament[]> {
     return (await this.#call({ kind: "catalogGuideFilaments", catalogId: this.#catalogId })) as GuideFilament[];
