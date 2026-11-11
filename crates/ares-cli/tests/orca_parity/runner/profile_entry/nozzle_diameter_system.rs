@@ -40,6 +40,9 @@ async fn h2d_system_preset_nozzle_diameters_match_native() {
     )
     .unwrap();
     let change_template = change_source["change_filament_gcode"].as_str().unwrap();
+    let startup_alias = "initial_no_support_filament_id";
+    assert_eq!(template.matches(startup_alias).count(), 73);
+    assert_eq!(change_template.matches(startup_alias).count(), 0);
     for (name, count) in [
         ("nozzle_diameter_at_nozzle_id", 20),
         ("initial_nozzle_id", 13),
@@ -90,6 +93,7 @@ async fn h2d_system_preset_nozzle_diameters_match_native() {
         );
     }
     assert!(case.native.contains("M1015.4 S1 K1 H0.4 "));
+    assert!(case.native.contains("M1002 set_filament_type:PLA\n"));
 
     let catalog_json = catalog.to_string();
     let selection_json = selection.to_string();
@@ -149,6 +153,7 @@ async fn h2d_system_preset_nozzle_diameters_match_native() {
         &json!({
             "selection": selection,
             "system_template_references": 13,
+            "startup_logical_alias_references": 73,
             "native_premises": "PASS",
             "native_sha256": crate::runner::native_api_cli::sha(case.native.as_bytes()),
             "input_sha256": crate::runner::native_api_cli::sha(&project),
