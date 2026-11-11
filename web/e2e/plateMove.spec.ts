@@ -49,8 +49,10 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
   await expect(position(page, "Z")).toHaveValue("5.00");
   await page.screenshot({ path: `${artifacts}dragged.png` });
 
-  // GLGizmoMove3D: a drag on the X grabber, along the arrow on screen, moves the instance along X only.
+  // GLGizmoMove3D, opened from the gizmo toolbar: a drag on the X grabber, along the arrow on
+  // screen, moves the instance along X only.
   const dragged = await position(page, "X").inputValue();
+  await page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name: "Move", exact: true }).click();
   const gizmo = JSON.parse((await page.getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<"center" | "x", [number, number]>;
   await page.mouse.move(box.x + gizmo.x[0], box.y + gizmo.x[1]);
   await page.mouse.down();

@@ -71,6 +71,17 @@ test("a right click on an object in the canvas shows the object menu, a right dr
   await expect(objectMenu(page)).toHaveCount(0);
   const copies = await instances(page);
 
+  // With a gizmo open a right click on the cube keeps it selected and shows no menu.
+  await cube.click();
+  await page.keyboard.press("m");
+  await expect(page.getByTestId("viewport")).toHaveAttribute("data-gizmo", /"mode":"move"/);
+  await page.mouse.click(x, y, { button: "right" });
+  await page.waitForTimeout(500);
+  await expect(objectMenu(page)).toHaveCount(0);
+  await expect(cube).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("m");
+  await expect(page.getByTestId("viewport")).not.toHaveAttribute("data-gizmo");
+
   // A right drag pans the camera and shows no menu.
   const unpanned = await canvasPixels(page);
   await page.mouse.move(x, y);
