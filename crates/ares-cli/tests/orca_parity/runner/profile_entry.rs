@@ -4,6 +4,9 @@
 #[path = "native_user_presets.rs"]
 pub(super) mod native_user_presets;
 
+#[path = "profile_entry/nozzle_diameter_system.rs"]
+mod nozzle_diameter_system;
+
 #[path = "loaded_config_acceptance.rs"]
 mod loaded_config_acceptance;
 
