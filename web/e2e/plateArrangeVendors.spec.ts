@@ -38,9 +38,10 @@ async function systemPrinters(page: Page) {
 async function installBbl(page: Page, installed: boolean) {
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Bambulab", exact: true }).setChecked(installed);
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).setChecked(installed);
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   // The printer list follows the catalog sync, which hands the plater the installed vendors first.
   await expect.poll(async () => (await systemPrinters(page)).includes("Bambu Lab X2D"), { timeout: 60_000 }).toBe(installed);
 }

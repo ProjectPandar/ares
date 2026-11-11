@@ -88,8 +88,11 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   // STL by drag-drop.
   await dropFiles(page, [{ name: "cube10.stl", bytes: readFileSync(cube) }]);
   await expect(status).toHaveText("Ready to slice");
-  await expect(rows).toHaveCount(1);
-  await expect(rows.first()).toContainText("cube10");
+  // The first-run record stores a printer: the STL opens on its bed (Plater.cpp:7149-7160), under the
+  // plate node like the project below (ObjectList::reload_all_plates).
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toHaveText("Plate 1");
+  await expect(rows.nth(1)).toContainText("cube10");
 
   // Multi-object 3MF by drag-drop, dropped on the Preview page.
   await page.getByRole("link", { name: "Preview" }).click();

@@ -52,9 +52,10 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await combo(page, "Printer preset").click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Bambulab", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await page.getByTestId("import-input").setInputFiles(project("legal.3mf", LEGAL));
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
 

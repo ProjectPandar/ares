@@ -135,10 +135,11 @@ test("imported printer presets list the compatible processes and filaments", asy
   // ConfigWizard: install the BBL vendor, as upstream requires before importing user presets.
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Bambulab", exact: true }).check();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
   await page.screenshot({ path: `${artifacts}vendors.png` });
-  await wizard.getByRole("button", { name: "Done" }).click();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await expect(page.getByTestId("preset-error")).toHaveCount(0);
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   // One item per printer model, not per preset (48 instantiable BBL printers, 12 models).
