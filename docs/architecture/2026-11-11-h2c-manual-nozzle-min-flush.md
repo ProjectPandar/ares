@@ -160,3 +160,94 @@ upstream rewrite slice. The implementation plan must cite the pinned
 change, and keep included and deferred behavior separate. The first code
 change must be preceded by the Native-first H2C witness plan being executable
 through the existing public harness.
+
+## Per-file implementation plan
+
+This plan is the source-cited boundary for the implementation. It ports only
+the manual multi-nozzle flush path exercised by the H2C witness. It does not
+port Auto-For-Match, TPU grouping, dynamic per-layer regrouping, new AMS
+hardware models, or unrelated ToolOrdering paths.
+
+### `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/filament_group/context.rs`
+
+- Extend the private `Context` with the physical nozzle domain and the
+  nozzle-level restrictions required by `FilamentGroup.cpp:1495-1505` and
+  `FilamentGroup.cpp:901-922`: physical nozzle IDs, owning extruder IDs,
+  per-nozzle volume types, manual opposite-extruder restrictions, and the
+  source-owned enumeration threshold/budget inputs.
+- Keep the existing matrix construction, printable/geometric restrictions,
+  declaration volume restrictions, typed `NozzleVolumeType::Hybrid` rejection,
+  AMS capacity parsing, and X2D single-nozzle behavior unchanged.
+- Remove only the `used`-filament-count rejection for a multi-nozzle manual
+  extruder. Build the manual restriction as a per-filament set of physical
+  nozzles rather than copying the configured nozzle map into the result.
+- Preserve the existing two-head destination and the current `Context`
+  construction boundary; no public context or allocator is added.
+
+### `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/filament_group/context/inventory.rs`
+
+- Keep `build_nozzle_groups` as the source-cited physical expansion from
+  `ToolOrdering.cpp:1503-1527` and expose only the private inventory data
+  needed by enumeration.
+- Do not change the existing stats validation or typed Hybrid handling.
+
+### `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/filament_group/enumeration.rs`
+
+- Replace the current two-extruder bit-mask solver with the bounded manual
+  nozzle solver corresponding to `FilamentGroup.cpp:199-224`, `279-311`,
+  `359-363`, and `901-922`.
+- Use the physical nozzle count as `k`, estimate `k^n` with the pinned
+  `ENUM_THRESHOLD = 10000` and early-exit bound, build FNV nozzle hashes from
+  volume type, right-extruder identity, and loaded-filament identity, and
+  deduplicate equivalent assignment candidates by sorted nozzle/filament
+  masks.
+- Apply manual opposite-extruder and volume restrictions at the physical
+  nozzle level. Score every retained candidate through the existing flush
+  matrix and layer-order support, then apply strict preference/score
+  improvement and the source absolute flush-gap tolerance.
+- Preserve the source memory heap semantics and retained candidates. Add the
+  source k-medoids fallback boundary from `FilamentGroup.cpp:374-414` and
+  `901-922`; for the bounded witness, the enumeration branch is selected, but
+  the fallback remains explicit and is deferred from this slice unless its
+  dependency can be represented without inventing a second grouping model.
+- Return a private result containing both the coarse owning-extruder map and
+  the selected global physical-nozzle map. The returned nozzle map must be the
+  solver result, never the input `filament_nozzle_map` copied as output.
+
+### `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/filament_group/sequence.rs`
+
+- Keep the existing Hamiltonian layer sequence/flush scoring as the Rust
+  destination for the single-nozzle ordering support used by the witness.
+- Add only the nozzle-aware transition inputs needed by the manual solver:
+  physical-nozzle ownership and the source loaded-nozzle state. Do not change
+  the X2D score or custom-sequence behavior.
+
+### `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/filament_group/mod.rs`
+
+- Change the private `apply` result assembly so manual H2C uses the solver’s
+  physical-nozzle IDs and derives its owning-extruder and volume maps from the
+  selected nozzle records.
+- Keep the existing `refresh_filament_map` writeback and the manual view
+  override, preserving synchronized map/volume/nozzle identity for all
+  downstream consumers.
+- Keep the non-manual solver and its post-AMS master preference path
+  unchanged.
+
+### `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/recommend.rs`
+
+- Keep the existing private caller and static ToolOrdering seam. Pass the
+  manual-map restriction and returned nozzle-level result through
+  `filament_group::apply`; do not add a second grouping entry point.
+- Preserve the existing X2D branch and all unsupported-context behavior except
+  the narrowed multi-used manual admission restriction.
+
+### Deferred upstream source boundaries
+
+`FilamentGroup.cpp:427-459,508-512,1253-1268` AMS color-distance matching,
+`ToolOrderUtils.cpp:676-800` flow/matching solvers,
+`MultiNozzleUtils.cpp:467-666` change-time/nozzle-state simulation, and
+`ToolOrdering.cpp:2093-2270` per-layer nozzle rematching/order are adjacent
+upstream dependencies. They remain deferred unless the H2C witness proves
+that the existing context and sequence seam cannot produce the strict public
+Native output without them. No comparison normalization or output filtering
+may substitute for these behaviors.
