@@ -96,7 +96,9 @@ async fn h2d_system_preset_nozzle_diameters_match_native() {
     assert!(case.native.contains("M1002 set_filament_type:PLA\n"));
 
     let catalog_json = catalog.to_string();
-    let selection_json = selection.to_string();
+    let api_selection = json!({ "from_project": true });
+    write_json(&runner.work.join("api-selection.json"), &api_selection);
+    let selection_json = api_selection.to_string();
     let overrides = ConfigOverrides::default();
     let request = || ProfileSliceRequest {
         filename: "input.3mf",
@@ -152,6 +154,7 @@ async fn h2d_system_preset_nozzle_diameters_match_native() {
         &case.root.join("result.json"),
         &json!({
             "selection": selection,
+            "api_selection": api_selection,
             "system_template_references": 13,
             "startup_logical_alias_references": 73,
             "native_premises": "PASS",
@@ -162,6 +165,7 @@ async fn h2d_system_preset_nozzle_diameters_match_native() {
             "cli_code": cli.status.code(),
             "cli_output_error": cli_bytes.as_ref().err().map(ToString::to_string),
             "cli_comparison": cli_comparison,
+            "api_cli_raw_equal": api.as_ref().ok().zip(cli_bytes.as_ref().ok()).map(|(api, cli)| api == cli),
             "strict_complete_output_required": true,
         }),
     );
