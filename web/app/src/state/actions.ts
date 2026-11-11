@@ -2,7 +2,7 @@ import type { OptionValue, SliceResult, SlicingStatus } from "@ares-slicer/wasm"
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { loadArrangeSettings } from "./arrange";
 import { saveConfig } from "./persistence";
-import { installVendors, overrideTokens, presetSliceBlocker, sliceWithPresets, updateCompatible } from "./presets";
+import { installVendors, overrideTokens, presetSliceBlocker, selectPrinter, sliceWithPresets, updateCompatible } from "./presets";
 import { stlSessionOpened } from "./stlSession";
 import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
@@ -69,8 +69,10 @@ export async function importFile(file: File) {
     });
     void previous?.free();
     if (plater) await loadArrangeSettings(plater);
-    // The selection keeps its presets; the project's filament count can add slots.
-    if (useApp.getState().presetSelection) await updateCompatible();
+    // A project config becomes the current presets (Plater.cpp:9514-9515, PresetBundle::load_config_model
+    // at :9623); a model file keeps the selection, and its filament count can add slots.
+    if (plater && scene.settings) await selectPrinter(null);
+    else if (useApp.getState().presetSelection) await updateCompatible();
     else await updatePrinterPanel();
   } catch (error) {
     useApp.setState({ loadError: (error as Error).message });
