@@ -54,7 +54,7 @@ pub(in crate::profiles) fn compatible_print(
     let printer_values = catalog.resolved_values(printer_position, &["default_print_profile"])?;
     let prefered = PreferedPrint {
         alias: match current {
-            Some(position) => Candidate::load(catalog, position)?.alias,
+            Some(position) => print_alias(catalog, position, &Candidate::load(catalog, position)?),
             None => String::new(),
         },
         layer_height: match current {
@@ -77,7 +77,7 @@ pub(in crate::profiles) fn compatible_print(
             return Ok(Some(candidate.name));
         }
         let quality = prefered.quality(
-            (&candidate.name, &candidate.alias),
+            (&candidate.name, &print_alias(catalog, position, &candidate)),
             layer_height(catalog, position)?,
         );
         if best.as_ref().is_none_or(|(best, _)| quality > *best) {
@@ -85,6 +85,21 @@ pub(in crate::profiles) fn compatible_print(
         }
     }
     Ok(best.map(|(_, name)| name))
+}
+
+/// A system print's alias is `Candidate`'s; a user print keeps its whole bare name
+/// (`PresetCollection::set_custom_preset_alias`, `Preset.cpp:4414-4437`).
+fn print_alias(catalog: &Catalog, position: usize, candidate: &Candidate) -> String {
+    if catalog.is_user_scope(position) {
+        candidate
+            .name
+            .rsplit('/')
+            .next()
+            .unwrap_or(&candidate.name)
+            .to_owned()
+    } else {
+        candidate.alias.clone()
+    }
 }
 
 fn layer_height(catalog: &Catalog, position: usize) -> Result<f64, SliceError> {
