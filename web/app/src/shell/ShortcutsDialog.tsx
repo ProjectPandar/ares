@@ -1,7 +1,5 @@
 import { useEffect, useRef } from "react";
-
-const mac = /Mac|iPhone|iPad/.test(navigator.userAgent);
-const ctrl = mac ? "\u2318+" : "Ctrl+";
+import { ctrlLabel as ctrl, mac } from "./keys";
 
 /**
  * KBShortcutsDialog::fill_shortcuts, limited to the shortcuts this app
@@ -28,6 +26,7 @@ const GROUPS: [string, [string, string][]][] = [
     ["O", "Zoom out"],
     ["M", "Gizmo move"],
     ["R", "Gizmo rotate"],
+    ["S", "Gizmo scale"],
     ["A", "Arrange all objects"],
     ["Shift+A", "Arrange objects on selected plates"],
     // Shortcuts.cpp:74-75; Ctrl+Shift+Z redoes too.

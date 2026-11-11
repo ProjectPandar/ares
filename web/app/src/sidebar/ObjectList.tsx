@@ -7,7 +7,7 @@ import { instanceEdits, ObjectMenu } from "./ObjectMenu";
 import { PlateMenu } from "./PlateMenu";
 import { selectInstance, selectObject } from "../state/actions";
 import { arrange } from "../state/arrange";
-import { addPlate, changeInstances, deleteInstance, deleteObject, deletePlate, lockPlate, MAX_PLATES, selectPlate } from "../state/plates";
+import { changeInstances, deleteInstance, deleteObject, deletePlate, lockPlate, selectPlate } from "../state/plates";
 import { useApp } from "../state/store";
 
 /** MenuFactory::get_volume_bitmaps, indexed by ModelVolumeType. */
@@ -184,17 +184,5 @@ export function ObjectList() {
     <div className="object-list" role="tree" data-testid="object-list">
       {scene.plates.length ? <PlateNodes scene={scene} object={node} /> : scene.objects.map((object) => node(object, false))}
     </div>
-  );
-}
-
-/** "Add plate" (GLToolbar `addplate`, Plater::priv::on_action_add_plate), up to `MAX_PLATES`. */
-export function AddPlateButton() {
-  const count = useApp((state) => (state.plater ? state.scene?.plates.length ?? 0 : null));
-  const slicing = useApp((state) => state.slice.status === "slicing");
-  if (count === null) return null;
-  return (
-    <button className="plate-add" onClick={() => void addPlate()} disabled={slicing || count >= MAX_PLATES} title="Add plate">
-      Add plate
-    </button>
   );
 }

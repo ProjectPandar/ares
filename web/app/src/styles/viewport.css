@@ -10,15 +10,26 @@
 @media (hover: hover) { .view-button:not(:disabled):hover { color: var(--text); background: var(--panel-raised); } }
 .view-button[aria-pressed="true"] { color: var(--accent-text); background: var(--accent-fill); }
 .view-button:disabled { opacity: 0.4; }
-.gizmo-toolbar {
-  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px;
-  padding: 3px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow);
-}
+.view-toolbar.bottom { top: auto; bottom: 10px; }
 .view-separator { width: 1px; margin: 3px 2px; background: var(--separator); }
-/* The main toolbar's arrange popup (GLCanvas3D::_render_arrange_menu). */
-.arrange-menu { position: relative; display: flex; }
+/* GLCanvas3D::_render_overlay_toolbars: [main] | [gizmos] | [assembly view] at the top centre. */
+.plater-toolbar {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 20px); display: flex;
+  overflow-x: auto; scrollbar-width: none; padding: 3px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 6px; box-shadow: var(--shadow);
+}
+.toolbar-group { display: flex; gap: 2px; }
+.toolbar-separator { flex: none; width: 1px; margin: 4px 3px; background: var(--separator); }
+.toolbar-item {
+  flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: none;
+  border-radius: 4px; background: transparent; cursor: pointer;
+}
+@media (hover: hover) { .toolbar-item:not(:disabled):hover { background: var(--panel-raised); } }
+.toolbar-item[aria-pressed="true"] { background: var(--accent-fill); }
+.toolbar-item:disabled { opacity: 0.35; cursor: default; }
+/* The main toolbar's arrange popup (GLCanvas3D::_render_arrange_menu), below the toolbar. */
 .arrange-popup {
-  position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); width: 280px;
+  position: absolute; top: 58px; left: 50%; transform: translateX(-50%); width: 280px;
   display: grid; gap: 8px; padding: 10px; background: var(--panel); border: 1px solid var(--border);
   border-radius: 6px; box-shadow: var(--shadow);
 }

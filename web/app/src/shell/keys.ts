@@ -10,3 +10,7 @@ export function isShortcut(event: KeyboardEvent): boolean {
 
 /** Ctrl on Windows/Linux, Cmd on macOS (wxWidgets `CmdDown`). */
 export const cmdDown = (event: KeyboardEvent) => event.ctrlKey || event.metaKey;
+
+export const mac = /Mac|iPhone|iPad/.test(navigator.userAgent);
+/** The Ctrl key's label in shortcuts: ⌘ on macOS. */
+export const ctrlLabel = mac ? "\u2318+" : "Ctrl+";

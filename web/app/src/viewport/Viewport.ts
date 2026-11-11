@@ -213,7 +213,7 @@ export class Viewport {
     return true;
   }
 
-  /** The move gizmo on the selected object's first instance, while instances can be moved. */
+  /** The open gizmo on the selected object's first instance, while instances can be edited. */
   #placeGizmo() {
     const group = this.#edit && this.#models.visible ? this.#selectedGroup() : undefined;
     this.#gizmos.place(group ? new THREE.Box3().setFromObject(group) : null);
@@ -232,7 +232,7 @@ export class Viewport {
     return hit ? { target: hit.object.parent!.userData.ref as InstanceRef, point: hit.point, gizmo: null } : null;
   }
 
-  setEditHandlers(edit: EditHandlers | undefined, mode: GizmoMode) {
+  setEditHandlers(edit: EditHandlers | undefined, mode: GizmoMode | null) {
     this.#edit = edit;
     this.#gizmos.mode = mode;
     this.#placeGizmo();

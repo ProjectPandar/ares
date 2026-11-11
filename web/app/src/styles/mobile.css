@@ -10,6 +10,7 @@
    desktop corners (GCodeViewer stacks its windows, GCodeViewer.cpp:957-972). */
 @media (min-width: 641px) and (max-width: 1024px) {
   .view-toolbar { top: 8px; left: 10px; right: 86px; transform: none; overflow-x: auto; scrollbar-width: none; }
+  .plater-toolbar { top: 8px; left: 10px; right: 10px; max-width: none; transform: none; }
   .view-button { flex: none; }
   .preview-card, .layer-slider { top: 66px; }
   .preview-card { width: min(250px, calc(50% - 20px)); max-height: calc(50% - 96px); overflow: auto; }
@@ -55,6 +56,7 @@
   /* Overlays stay inside the 3D view; the camera toolbar scrolls sideways right of the panel toggle. */
   .viewport { overflow: hidden; }
   .view-toolbar { top: 8px; left: 60px; right: 8px; transform: none; overflow-x: auto; scrollbar-width: none; }
+  .plater-toolbar { top: 8px; left: 60px; right: 8px; max-width: none; transform: none; }
   .view-button { flex: none; }
   .preview-card, .layer-slider { top: 66px; }
   /* The cards keep the centre free for orbit and pinch: the summary above it, the legend below it and above the moves slider. */

@@ -122,6 +122,19 @@ impl PlaterSession {
             .map_err(js_error)
     }
 
+    /// A scale gizmo drag step by relative world factors `[x, y, z]` (`GLGizmoScale3D`,
+    /// `GLCanvas3D::do_scale`).
+    pub fn scale(
+        &mut self,
+        object: usize,
+        instance: usize,
+        factor: Vec<f64>,
+    ) -> Result<(), JsValue> {
+        self.session
+            .scale_instance(object, instance, vector(&factor)?)
+            .map_err(js_error)
+    }
+
     /// A "Size" field edit, `edit_json` `{axis, value, uniform}` (`change_size_value`).
     #[wasm_bindgen(js_name = setSize)]
     pub fn set_size(

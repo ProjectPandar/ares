@@ -80,6 +80,8 @@ function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.setScale(edit.object, edit.instance, JSON.stringify(edit.edit));
     case "setSize":
       return session.setSize(edit.object, edit.instance, JSON.stringify(edit.edit));
+    case "scale":
+      return session.scale(edit.object, edit.instance, new Float64Array(edit.factor));
     case "mirror":
       return session.mirror(edit.object, edit.instance, edit.axis);
     case "scaleToFit":

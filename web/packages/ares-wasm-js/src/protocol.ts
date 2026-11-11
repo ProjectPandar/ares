@@ -9,6 +9,7 @@ export type PlaterEdit =
   | { op: "rotate"; object: number; instance: number; radians: Vec3 }
   | { op: "setAbsoluteRotation"; object: number; instance: number; axis: 0 | 1 | 2; degrees: number }
   | { op: "setScale" | "setSize"; object: number; instance: number; edit: ScaleEdit }
+  | { op: "scale"; object: number; instance: number; factor: Vec3 }
   | { op: "mirror"; object: number; instance: number; axis: 0 | 1 | 2 }
   | { op: "scaleToFit"; object: number; instance: number }
   | { op: "addPlate" }

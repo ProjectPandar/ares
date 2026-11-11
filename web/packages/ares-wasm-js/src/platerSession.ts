@@ -53,6 +53,14 @@ export class PlaterSession {
   }
 
   /**
+   * Scales an instance by relative world `factor`s about its bounding-box centre, then drops it onto
+   * the bed (a scale gizmo drag step, `GLGizmoScale3D` and `GLCanvas3D::do_scale`).
+   */
+  scale(object: number, instance: number, factor: Vec3): Promise<PlaterLayout> {
+    return this.#edit({ op: "scale", object, instance, factor });
+  }
+
+  /**
    * Hands the session the installed system vendors (`PresetBundle::vendors`): the catalog built from
    * the installed vendor profiles. The arrange reads the printer's vendor from it, so a Bambu Lab
    * printer counts as one only while BBL is installed. Call it after creating the session and

@@ -20,7 +20,8 @@
   .process-tab { min-height: 44px; }
   .plate-row { min-height: 44px; }
   .plate-arrange, .plate-lock, .plate-delete { width: 44px; height: 44px; }
-  .plate-add { min-height: 44px; }
+  .toolbar-item { width: 44px; height: 44px; }
+  .arrange-popup { top: 70px; }
   /* 16px text so iOS Safari does not zoom into a focused field. */
   .option-field, .option-select, .legend-view, .combo-search, .filament-column-search { height: 44px; font-size: 16px; }
   .moves-slider input { height: 44px; margin: 0; }

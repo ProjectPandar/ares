@@ -139,6 +139,14 @@ const SHELL_ICONS = [
   "printer", "filament", "process", "edit", "tab_3d_active", "tab_preview_active", "topbar_open",
   // MenuFactory ADD_VOLUME_MENU_ITEMS: ObjectList volume icons.
   "menu_add_part", "menu_add_negative", "menu_add_modifier", "menu_support_blocker", "menu_support_enforcer",
+  // GLCanvas3D::_init_main_toolbar, GLGizmosManager::init and _init_assemble_view_toolbar icons.
+  ...[
+    "toolbar_open", "toolbar_add_plate", "toolbar_orient", "toolbar_arrange", "instance_add", "instance_remove",
+    "split_objects", "split_parts", "toolbar_variable_layer_height", "toolbar_move", "toolbar_rotate", "toolbar_scale",
+    "toolbar_flatten", "toolbar_cut", "toolbar_meshboolean", "toolbar_support", "toolbar_seam", "toolbar_fuzzy_skin_paint",
+    "mmu_segmentation", "toolbar_text", "toolbar_measure", "toolbar_assembly", "toolbar_brimears", "toolbar_assemble",
+  ].flatMap((name) => [name, `${name}_dark`]),
+  "toolbar_texture_displacement",
 ];
 const iconDir = fileURLToPath(new URL("../app/src/assets/orca/", import.meta.url));
 mkdirSync(iconDir, { recursive: true });

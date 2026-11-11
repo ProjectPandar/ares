@@ -105,6 +105,19 @@ impl PlaterSession {
         Ok(())
     }
 
+    /// A scale gizmo drag step (`GLGizmoScale3D::on_mouse`, `GLGizmoScale.cpp:112-133`): the
+    /// relative world `factor` about the instance's box centre, then `GLCanvas3D::do_scale`.
+    pub fn scale_instance(
+        &mut self,
+        object: usize,
+        instance: usize,
+        factor: [f64; 3],
+    ) -> Result<(), SliceError> {
+        self.check(object, instance)?;
+        self.scale_and_drop((object, instance), (factor, TransformationType::Relative));
+        Ok(())
+    }
+
     /// `GizmoObjectManipulation::do_scale` (`:463-481`) with `limit_scaling_ratio` (`:484-490`),
     /// then `GLCanvas3D::do_scale` (`GLCanvas3D.cpp:5897-5962`): every instance's lowest point is
     /// kept from before the scale, the scaled object's instances are notified, and each instance
