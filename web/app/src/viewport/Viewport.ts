@@ -377,7 +377,9 @@ export class Viewport {
     this.#renderer.setSize(width, height);
     this.#camera.aspect = width / height;
     this.#camera.updateProjectionMatrix();
-    this.render();
+    // setSize clears the drawing buffer and resize observers run right before the frame is
+    // painted: a render posted to the next task would leave that frame blank.
+    this.#renderer.render(this.#scene, this.#camera);
   }
 
   #pick(event: PointerEvent): number | null {
