@@ -15,7 +15,8 @@ relative to `src/slic3r/GUI/`.
 - `Plater::priv::on_right_click` (`Plater.cpp:14201-14263`) shows `MenuFactory::object_menu`
   (`GUI_Factories.cpp:2122`) for a selected full instance or object, at the cursor
   (`show_right_click_menu`, `:14183`). It is the object list's menu (`GUI_ObjectList.cpp`), so the
-  canvas shows the web's `sidebar/ObjectMenu`.
+  canvas shows the web's `sidebar/ObjectMenu`. The canvas posts the right click only while no
+  gizmo is open (`GLCanvas3D.cpp:5459`).
 
 ## Web destination
 
@@ -24,7 +25,8 @@ relative to `src/slic3r/GUI/`.
   browser's context menu.
 - `web/app/src/viewport/ViewportView.tsx`: on the Prepare tab, the picked object is selected and
   `ObjectMenu` opens at the cursor, with its "Set number of instances" dialog. A click elsewhere
-  clears the selection and shows no menu. The Preview tab has no object menu.
+  clears the selection and shows no menu. With a gizmo open the picked object is selected and no
+  menu opens (`web-plater-toolbar.md`). The Preview tab has no object menu.
 
 ## Deferred
 
@@ -32,8 +34,6 @@ relative to `src/slic3r/GUI/`.
   `on_plate_right_click`); the canvas shows no menu there.
 - The multiple selection and part menus, and the instance selection of a right click: the web
   canvas selects whole objects, so the menu acts on the object as the object list's does.
-- Orca shows no menu while a gizmo is open (`m_gizmos.get_current_type()`); the web canvas always
-  has the move or rotate gizmo, so the menu opens with either.
 
 ## Verification
 
@@ -41,4 +41,5 @@ relative to `src/slic3r/GUI/`.
 must be selected and the menu must open at the cursor. "Add instance" and "Set number of
 instances" must change the object, and Escape must close the menu. A right drag must pan the
 camera without a menu. A right click on empty space must clear the selection, and the Preview tab
-must show no menu. Every canvas `contextmenu` event must be prevented.
+must show no menu. With the move gizmo open, a right click on the cube must select it
+without a menu. Every canvas `contextmenu` event must be prevented.
