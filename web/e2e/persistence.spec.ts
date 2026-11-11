@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
@@ -8,6 +8,8 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/persistence/", imp
 // Two filaments, so the selection has two filament slots.
 const PROJECT = `${repositoryRoot}tests/parity/master-extruder-id/stock-right-only.3mf`;
 const IMPORT = `${repositoryRoot}tests/presets/My X1C 0.4 nozzle.orca_printer`;
+const A1_MINI = "Bambu Lab A1 mini 0.4 nozzle";
+const orca = process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`;
 const SELECTION = {
   printer: "My X1C 0.4 nozzle",
   process: "0.20mm Standard @BBL X1C - Mine",
@@ -92,20 +94,28 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
   await expectSelection(page);
   await page.screenshot({ path: `${artifacts}before-reload.png` });
 
-  // The model is not persisted; its two filament slots come back with the project.
+  // The model is not persisted; its two filament slots come back with the project. Opening it selects
+  // its presets (PresetBundle::load_config_model, Plater.cpp:9514-9515, :9623); choosing the printer
+  // again brings back its process and filaments (remember_printer_config).
   await page.reload();
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await loadProject(page);
+  expect(await page.evaluate(() => (JSON.parse(localStorage.getItem("ares.config")!) as { printer: string | null }).printer)).toBeNull();
+  await choose(page, "Printer preset", SELECTION.printer);
   await expectSelection(page);
   expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
   await expect(page.getByRole("slider", { name: "Settings mode" })).toHaveAttribute("aria-valuetext", "Expert settings");
   expect(await groupOptions(page, "Printer preset", "User presets")).toEqual([SELECTION.printer]);
   await page.screenshot({ path: `${artifacts}after-reload.png` });
 
-  // remember_printer_config: another printer starts without this printer's process, and switching
-  // back brings the process and filaments back.
+  // remember_printer_config: another printer does not take this printer's process. update_compatible
+  // (PresetBundle.cpp:8635-8639) gives it the print matching the user print's alias, its whole name
+  // (Preset.cpp:4414-4437), else its layer height: A1 mini's default_print_profile. Switching back
+  // brings the process and filaments back.
   await choose(page, "Printer preset", "Bambu Lab A1 mini");
-  await expect(combo(page, "Process preset")).toHaveText("Select a process preset");
+  const a1mini = JSON.parse(readFileSync(`${orca}/resources/profiles/BBL/machine/${A1_MINI}.json`, "utf8")) as
+    { default_print_profile: string };
+  await expect(combo(page, "Process preset")).toHaveText(a1mini.default_print_profile);
   await choose(page, "Printer preset", SELECTION.printer);
   await expectSelection(page);
   await page.screenshot({ path: `${artifacts}printer-switch.png` });

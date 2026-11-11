@@ -8,6 +8,11 @@ import { projectConfig } from "./settingsOracle";
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const orca = process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`;
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/preset-import/", import.meta.url));
+/** A BBL machine preset's `default_print_profile`, as its vendor file states it. */
+const defaultPrint = (machine: string) => {
+  const file = readFileSync(`${orca}/resources/profiles/BBL/machine/${machine}.json`, "utf8");
+  return (JSON.parse(file) as { default_print_profile: string }).default_print_profile;
+};
 
 /** A BBL machine's first `default_filament_profile`, inherited from its parents. */
 const defaultFilament = (machine: string): string => {
@@ -137,9 +142,14 @@ test("imported printer presets list the compatible processes and filaments", asy
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
   const wizard = page.getByRole("dialog", { name: "Printer Selection" });
   await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
+  // The first-run record's model is unchecked, so only BBL models stay installed.
+  await wizard.getByRole("checkbox", { name: "Generic Klipper Printer", exact: true }).uncheck();
   await page.screenshot({ path: `${artifacts}vendors.png` });
   await wizard.getByRole("button", { name: "Confirm" }).click();
   await expect(wizard).toHaveCount(0, { timeout: 60_000 });
+  // apply_config selects the first newly installed model's printer (PresetBundle.cpp:2050-2095);
+  // the imported printer is chosen again.
+  await choose(page, "Printer preset", expected.printer);
   await expect(page.getByTestId("preset-error")).toHaveCount(0);
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   // One item per printer model, not per preset (48 instantiable BBL printers, 12 models).
@@ -158,9 +168,16 @@ test("imported printer presets list the compatible processes and filaments", asy
     expected.withoutProcess.missing_parents.map(({ kind, name, parent }) => `${name} (${kind}): parent preset "${parent}" is not loaded`),
   );
   await page.screenshot({ path: `${artifacts}missing-parents.png` });
-  await expect(sliceButton).toBeDisabled();
-  await expect(sliceButton).toHaveAttribute("title", "Select a process preset to slice");
-  await expect(page.getByTestId("preset-slice-blocker")).toHaveText("Select a process preset to slice.");
+  // update_compatible(Always) selects the print (PresetBundle.cpp:8635-8639): with no previous print,
+  // the inherited default_print_profile of the imported printer's parent.
+  await expect(page.getByRole("button", { name: "Process preset", exact: true }))
+    .toHaveText(defaultPrint("Bambu Lab X1 Carbon 0.4 nozzle"));
+  // The filament pass of the same call filled the slot (Tab.cpp:7702-7713, PresetBundle.cpp:8637, 8656-8664),
+  // so nothing blocks the slice.
+  await expect(page.getByRole("button", { name: "Filament 1 preset", exact: true }))
+    .toHaveText(defaultFilament("Bambu Lab X1 Carbon 0.4 nozzle"));
+  await expect(sliceButton).toBeEnabled();
+  await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await page.getByRole("button", { name: "Process preset", exact: true }).click();
   await page.screenshot({ path: `${artifacts}processes.png` });
   await page.keyboard.press("Escape");
@@ -202,10 +219,12 @@ test("imported printer presets list the compatible processes and filaments", asy
   const measures = await timings(page);
   const build = measures.filter((entry) => entry.name === "ares:catalog-build");
   const filter = measures.filter((entry) => entry.name === "ares:filter-compatible-presets");
-  // One catalog handle per vendor change (without and with BBL); filtered without BBL, then without and with a process.
+  // One catalog handle per vendor change (without and with BBL). Filtered for the first-run printer, the
+  // imported printer without BBL, the printer Confirm selects, the imported printer with its print, and
+  // the chosen process.
   // Filtering never serializes the whole catalog: that is only for slicing.
   expect(build).toHaveLength(2);
-  expect(filter).toHaveLength(3);
+  expect(filter).toHaveLength(5);
   expect(measures.filter((entry) => entry.name === "ares:catalog-stringify")).toHaveLength(0);
 
   // A printer model selected over the project's printer, which no installed vendor holds: the combo

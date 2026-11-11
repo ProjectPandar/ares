@@ -103,15 +103,9 @@ test("an A1M project switched to the H2D lists and selects only filaments compat
   expect(h2dOptions).toEqual(compatible(H2D));
   expect(h2dOptions.filter((name) => name.includes("@BBL A1M"))).toEqual([]);
 
-  // The remaining blocker is named in the status bar and on the Slice button.
-  const blocker = "Select a process preset to slice";
-  await expect(page.getByTestId("status")).toHaveText(blocker);
-  await expect(page.getByTestId("status")).toHaveClass(/warning/);
-  await expect(page.getByRole("button", { name: "Slice plate" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Slice plate" })).toHaveAttribute("title", blocker);
-  await page.screenshot({ path: `${artifacts}h2d-blocked.png` });
-
-  await choose(page, "Process preset", "0.20mm Standard @BBL H2D");
+  // The same call selects the print: the H2D's default_print_profile (PreferedPrintProfileMatch,
+  // PresetBundle.cpp:8638-8639; BBL/machine/fdm_bbl_3dp_002_common.json:23), so nothing blocks the slice.
+  await expect(combo(page, "Process preset")).toHaveText("0.20mm Standard @BBL H2D");
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   await expect(page.getByTestId("status")).not.toHaveClass(/warning/);
   await expect(page.getByRole("button", { name: "Slice plate" })).toBeEnabled();
