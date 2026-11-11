@@ -59,8 +59,11 @@ volume constructors are deferred until after the imported instances.
 
 `project/domain.rs::ProjectInstance` and `project/domain/instance.rs` retain the
 distinction between a loaded label and an allocation-derived label. Preserve
-`loaded_label_id()` returning `None` for missing or zero metadata and returning
-the original positive value for loaded metadata. Add only a crate-private
+`loaded_label_id()` returning `None` when a build instance has no positive
+loaded entry (absent `model_instance` or identify_id0), and returning the
+original positive value for loaded metadata. Existing metadata validation is
+unchanged; this does not admit a malformed model_instance missing a required
+metadata member. Add only a crate-private
 labeled-ID accessor for the upstream `get_labeled_id` result. Advance the
 allocation sequence even for instances whose loaded label takes precedence.
 Do not encode an absent allocation as a guessed zero or reuse an XML ID.
@@ -109,9 +112,12 @@ its printer/process/filament settings, templates, diameter inventory, meshes,
 and all unchanged archive members. Change only root object/build occurrences
 and model-instance metadata. Use three build instances of the first object,
 then one of a second object; only the third instance has loaded label 37. The
-source allocation sequence is 8, 9, 10, 14 and the expected Native labeled IDs
-are 8, 9, 37, 14. This distinguishes constant8, XML/index substitution, resetting
-per object, skipping loaded instances, and allocating 3MF volumes before their
+source allocation sequence is 8, 9, 10, 14 and the build-order effective labeled
+IDs are 8, 9, 37, 14. `GCode.cpp:4233–4237` sorts these IDs before serializing the
+single CSV header `; model label id: 8,9,14,37`; verify that literal Native header
+without sorting or rewriting actual output. This distinguishes constant8,
+XML/index substitution, resetting per object, skipping loaded instances, and
+allocating 3MF volumes before their
 upstream time. Native must establish these literal premises in both official
 and seeded modes before any Ares execution or parity claim. Also qualify an
 unchanged-geometry derivative with no `model_instance` entries and Native label8,
