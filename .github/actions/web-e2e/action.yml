@@ -6,7 +6,7 @@ runs:
     - run: npm run prepare:e2e --prefix web
       shell: bash
     - name: Desktop E2E
-      run: npm exec --prefix web -- playwright test --config web/playwright.config.ts --project desktop --workers 1 --trace retain-on-failure --output /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/desktop
+      run: npm exec --prefix web -- playwright test --config web/playwright.config.ts --project desktop --project packages --workers 1 --trace retain-on-failure --output /tmp/ares-ci-web-${{ github.run_id }}-${{ github.run_attempt }}/desktop
       shell: bash
     - name: Mobile E2E
       if: ${{ !cancelled() }}

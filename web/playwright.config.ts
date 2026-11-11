@@ -4,6 +4,11 @@ import { chromiumLaunch as chromium } from "./e2e/chromiumLaunch";
 // Touch-emulated phones and tablets run only the mobile flow.
 const webkit = { executablePath: process.env.ARES_E2E_WEBKIT || undefined };
 const mobileSpecs = /mobile\.spec\.ts$/;
+// Specs that pack a workspace package (`npm pack` runs `prepack`, which empties its dist) or build
+// a page that imports one from its dist: one at a time, so no pack empties a dist another spec is
+// reading. A new spec that packs a package or builds a page from one belongs here.
+const packageSpecs = /\/(package|profiles|configRoundTrip|ksrProject|platerSession|profileSlice)\.spec\.ts$/;
+const desktop = { browserName: "chromium" as const, viewport: { width: 1600, height: 900 }, launchOptions: chromium };
 
 export default defineConfig({
   testDir: "e2e",
@@ -17,8 +22,14 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
-      testIgnore: /mobile\.spec\.ts$/,
-      use: { browserName: "chromium", viewport: { width: 1600, height: 900 }, launchOptions: chromium },
+      testIgnore: [mobileSpecs, packageSpecs],
+      use: desktop,
+    },
+    {
+      name: "packages",
+      testMatch: packageSpecs,
+      workers: 1,
+      use: desktop,
     },
     {
       // Bundled WebKit; on NixOS run through e2e/webkit-env.sh.
