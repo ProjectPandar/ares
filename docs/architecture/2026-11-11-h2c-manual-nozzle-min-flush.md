@@ -128,9 +128,12 @@ three-filament control, and the typed `NozzleVolumeType::Hybrid` rejection
 control. Native is run first for each new or changed witness, and the
 comparison retains exact failure diagnostics when Native rejects.
 
-The Native-first plan is a behavior gate, not an implementation shortcut. No
-footer filtering, status-only substitute, output normalization, or weakened
-comparison is allowed.
+The Native-first plan is a behavior gate, not an implementation shortcut.
+Use the existing `NativeCase::compare` complete-output seam and its generator-only
+helper: only generator identity and clock lines receive the existing treatment
+(`GCode.cpp:4217`). Time estimates, footer fields, maps, and all remaining bytes
+are compared strictly. No additional normalization, footer filtering, status-only
+substitute, or weakened comparison is allowed.
 
 ## Deferred behavior
 
