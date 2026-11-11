@@ -255,7 +255,7 @@ may substitute for these behaviors.
 ### Bounded implementation destinations and deferred dependencies
 
 The implementation boundary below narrows the earlier complete-path description
- to the source branches required by the static H2C witness:
+to the source branches required by the static H2C witness:
 
 - `enumeration.rs` retains the existing X2D solver and memory heap. Its private
   child `enumeration/manual.rs` ports the physical-nozzle base-`k` traversal,
@@ -267,12 +267,13 @@ The implementation boundary below narrows the earlier complete-path description
   select clustering remain unsupported. `FlushDistanceEvaluator` (`570-635`),
   `KMediods` (`636-900`) and `ClusteringBudget` (`FilamentGroup.hpp:155-163`)
   are explicitly deferred; no substitute clustering or clock/RNG API is added.
-- `reorder/nozzles.rs` ports the per-nozzle base reorder and cyclic
-  extruder/nozzle stitching in `ToolOrderUtils.cpp:1030-1141,1324-1494`, using
-  the existing Hamiltonian solver without inter-layer forecast. This private
-  routine is shared by `filament_group/sequence.rs` for `full_evaluate` and
-  by the static manual multi-nozzle branch in `reorder.rs`. X2D continues to
-  use its existing scoring and downstream ordering branches.
+- `filament_group/sequence/nozzles.rs` ports the per-nozzle base reorder and
+  cyclic extruder/nozzle stitching in `ToolOrderUtils.cpp:1030-1141,1324-1494`,
+  reusing the private Hamiltonian scoring routine without inter-layer forecast
+  or custom sequences, as passed by `FilamentGroup.cpp:124-196`. This routine
+  belongs only to grouping evaluation. The static downstream call remains
+  extruder-map based (`ToolOrdering.cpp:3111-3119`), including H2C. `reorder.rs`
+  is unchanged; X2D retains its existing scoring and downstream ordering.
 - `sequence.rs` ports the `full_evaluate` composition (`FilamentGroup.cpp:124-196`)
   for an empty initial nozzle status and disabled preload. In this boundary,
   `simulate_filament_change_time` (`MultiNozzleUtils.cpp:467-661`) reduces to
@@ -288,6 +289,47 @@ The implementation boundary below narrows the earlier complete-path description
   the upstream primary-map master default or remembered-map zero default;
   input nozzle IDs are not used as a solution.
 
-The bounded enumeration, full evaluation and downstream static nozzle order
-must together satisfy the unchanged complete-output witness. This is not a
-claim to port every branch listed in the broader source boundary above.
+The bounded enumeration, full evaluation, static extruder order and G-code
+consumers must together satisfy the unchanged complete-output witness. Physical
+map equality alone is insufficient. `GCode.cpp:223-274` distinguishes static
+BBL hotend placeholders (`-1`) from physical nozzle IDs, while the incoming
+material-change configuration at `11068-11082` supplies both identities. These
+consumers are not part of the grouping evaluator; their existing Ares
+extruder-only scaffolding remains a temporary compatibility shell until the
+corresponding source slice is ported. This is not a claim to port every branch
+listed in the broader source boundary above.
+
+## Static G-code identity consumers
+
+The static grouping result must reach its G-code consumers without conflating
+physical nozzle IDs, owning extruder IDs, and firmware hotend selectors.
+Included source behavior and Rust destinations are:
+
+- `GCode.cpp:223-274,11068-11082`: static BBL `current_hotend` and
+  `next_hotend` are `-1`; non-BBL hotends remain owning-extruder indices.
+  `tool_transition/change/dynamic/mod.rs` replaces its X2D-only selector
+  special case and supplies the old/new physical nozzle identities alongside
+  the existing logical filament IDs. Dynamic nozzle maps remain unsupported.
+- `GCode.cpp:3738-3741,4398-4402`: initial hotend values follow the same
+  static-BBL rule. `machine/first_filaments.rs` replaces its X2D-only
+  compatibility shell without changing temperature indexing or physical-head
+  first-filament lists.
+- `GCode.cpp:4408-4419`: only printers with multiple nozzles on a head add
+  the signed `H-1` field to the initial `;VT` marker. `layer_gcode/startup.rs`
+  uses the configured nozzle inventory, not the selected map cardinality.
+  Single-nozzle markers retain their source byte shape.
+- `GCode.cpp:241-247,11237-11267` and `GCodeWriter.cpp:803-831`:
+  `motion/tool_selection.rs` resolves static physical nozzle IDs from the
+  grouping result represented by `filament_nozzle_map`, uses those IDs for
+  writer commands, and stores the static hotend selector separately from
+  the owning head. Its existing private accessor remains the identity seam;
+  no public identity API or allocator is introduced.
+
+The changes above do not alter `PlaceholderParser` evaluation or broaden input
+admission. General dynamic nozzle migration, loaded hardware status, preload,
+AMS matching, calibration-only writer paths, and per-layer rematching remain
+deferred. Nozzle-indexed diameter/volume template arrays and parked-retraction
+state propagation are adjacent G-code consumers; port them only if the strict
+witness requires them, first naming their source producer and Rust destination.
+Existing unsupported paths stay rejected; the unchanged full-output comparator,
+time estimates, footer, and raw API/CLI equality remain the verification boundary.
