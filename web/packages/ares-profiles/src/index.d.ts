@@ -56,5 +56,11 @@ export interface VendorProfiles {
   files: Record<string, ProfileJson>;
 }
 
+/**
+ * Every vendor that has printer models, with only its `machine_model_list` files, as the
+ * setup guide lists them (`GuideFrame::BuildProfileJson`). One chunk for all vendors.
+ */
+export declare function loadPrinterModels(): Promise<VendorProfiles[]>;
+
 /** Loads one vendor's index and preset files; bundlers emit one chunk per vendor. */
 export declare function loadVendor(id: string): Promise<VendorProfiles>;

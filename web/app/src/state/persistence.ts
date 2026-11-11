@@ -4,6 +4,7 @@
  * versioned localStorage record, and the imported preset files in IndexedDB. A
  * record or import entry that does not match its schema is deleted.
  */
+import type { InstalledPrinters } from "@ares-slicer/wasm";
 import type { Theme, ViewMode } from "./store";
 
 const CONFIG_KEY = "ares.config";
@@ -25,8 +26,8 @@ export interface StoredConfig {
   mode: ViewMode;
   /** `show_gcode_window` (AppConfig.cpp:301-302). */
   gcodeWindow: boolean;
-  /** Installed system vendors (ConfigWizard). */
-  vendors: string[];
+  /** Section `vendors` (`AppConfig::VendorMap`): the setup wizard's installed printer models and nozzles. */
+  installedPrinters: InstalledPrinters;
   /** Section `presets`: the selected printer, if a preset printer is selected. */
   printer: string | null;
   /** Printer settings by printer preset name. */
@@ -46,7 +47,7 @@ const DEFAULTS: StoredConfig = {
   // OrcaSlicer starts in simple mode (GUI_App::get_saved_mode).
   mode: "simple",
   gcodeWindow: true,
-  vendors: [],
+  installedPrinters: {},
   printer: null,
   printers: {},
   installedFilaments: [],
@@ -69,7 +70,8 @@ function isStoredConfig(value: Record<string, unknown>): boolean {
   return (value.theme === "dark" || value.theme === "light")
     && (value.mode === "simple" || value.mode === "advanced" || value.mode === "expert")
     && typeof value.gcodeWindow === "boolean"
-    && isStrings(value.vendors)
+    && isRecord(value.installedPrinters)
+    && Object.values(value.installedPrinters).every((models) => isRecord(models) && Object.values(models).every(isStrings))
     && (value.printer === null || typeof value.printer === "string")
     && isRecord(value.printers) && Object.values(value.printers).every(isPrinterSettings)
     && isStrings(value.installedFilaments)
@@ -78,24 +80,33 @@ function isStoredConfig(value: Record<string, unknown>): boolean {
     && (value.arrange === undefined || (isRecord(value.arrange) && Object.values(value.arrange).every((item) => typeof item === "string")));
 }
 
-/** The stored record, or the defaults after deleting a missing, old or malformed one. */
-function loadConfig(): StoredConfig {
+/** The stored record, or null after deleting an old or malformed one. */
+function loadConfig(): StoredConfig | null {
   // Unversioned keys of earlier builds are dropped, not migrated.
   for (const key of ["ares.theme", "ares.mode", "ares.gcodeWindow", "ares.vendors"]) localStorage.removeItem(key);
   const text = localStorage.getItem(CONFIG_KEY);
   if (text !== null) {
     try {
       const { version, ...config } = JSON.parse(text) as Record<string, unknown>;
+      // The vendor-level `vendors` field of earlier builds is dropped, not expanded into models:
+      // no printer is installed, so the setup wizard opens.
+      delete config.vendors;
+      config.installedPrinters ??= {};
       if (version === VERSION && isStoredConfig(config)) return config as unknown as StoredConfig;
     } catch {
       // Not JSON: dropped below.
     }
     localStorage.removeItem(CONFIG_KEY);
   }
-  return DEFAULTS;
+  return null;
 }
 
-export const storedConfig: StoredConfig = loadConfig();
+const loaded = loadConfig();
+
+/** Whether an `ares.config` record was loaded (`GUI_App::m_app_conf_exists`). */
+export const storedConfigExists = loaded !== null;
+
+export const storedConfig: StoredConfig = loaded ?? DEFAULTS;
 
 export function saveConfig(patch: Partial<StoredConfig>) {
   Object.assign(storedConfig, patch);

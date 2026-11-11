@@ -17,7 +17,8 @@ mod inheritance;
 
 pub(crate) use catalog::VendorType;
 pub use catalog::{
-    CurrentPrinter, PresetCatalogHandle, PresetValues, PrinterModelInfo, SelectablePrinter,
+    CurrentPrinter, GuideFilament, GuideModel, InstalledPrinters, PresetCatalogHandle,
+    PresetValues, PrinterModelInfo, SelectablePrinter, guide_models,
 };
 pub use compatible::{FilteredPresets, MissingParent, filter_compatible_presets};
 pub use composition::{

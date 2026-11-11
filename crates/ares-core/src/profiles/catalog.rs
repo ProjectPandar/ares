@@ -3,7 +3,9 @@ mod cli_metadata;
 mod compose;
 mod document;
 mod filament_slots;
+mod guide;
 mod includes;
+mod installed_printers;
 mod model_info;
 mod preset_values;
 mod printer_models;
@@ -27,6 +29,8 @@ use crate::{
 pub(in crate::profiles) use chain::MissingParentLink;
 pub(super) use document::ProfileDocument;
 use document::VendorInput;
+pub use guide::{GuideFilament, GuideModel, guide_models};
+pub use installed_printers::InstalledPrinters;
 pub use model_info::PrinterModelInfo;
 pub(crate) use model_info::VendorType;
 pub use preset_values::PresetValues;
@@ -60,6 +64,8 @@ pub(super) struct Catalog {
     vendor_ids: Vec<String>,
     /// `VendorProfile::models` per vendor scope.
     vendor_models: Vec<Vec<vendor_models::PrinterModelProfile>>,
+    /// The `AppConfig` vendors section; `None` until the caller sets one.
+    installed_printers: Option<InstalledPrinters>,
     /// Set by the sparse `--load-settings` entry: imports compose as single
     /// records, matching typed files without inherits that bypass Native's
     /// resolver (`OrcaSlicer.cpp:2121-2123`). The preset-bundle/catalog entry
@@ -136,16 +142,16 @@ impl PresetCatalogHandle {
     /// that are not visible: load-time visibility is
     /// `instantiation != "false"` (`Preset.cpp:1663`), and printers with
     /// unresolvable parents never enter the collection (`Preset.cpp:1685-1691`).
-    /// The GUI's per-model/variant install matrix (`Preset.cpp:851-864`,
-    /// AppConfig state) has no Ares counterpart: the caller's `add_vendor`
-    /// set is the installed set, matching the CLI which does not filter
-    /// visibility.
+    /// The installed printers (`set_installed_printers`) then hide the
+    /// printers `set_visible_from_appconfig` hides. Model and variant are the
+    /// resolved config values.
     pub fn printers(&self) -> Vec<SelectablePrinter> {
         self.catalog
-            .selectable_positions(ProfileKind::Machine)
-            .into_iter()
-            .filter(|position| self.catalog.missing_parent(*position).is_none())
-            .map(|position| {
+            .printer_identities()
+            .filter(|(position, model, variant)| {
+                self.catalog.is_visible_printer(*position, (model, variant))
+            })
+            .map(|(position, printer_model, printer_variant)| {
                 let document = self.catalog.document(position);
                 SelectablePrinter {
                     vendor: if self.catalog.is_user_scope(position) {
@@ -154,8 +160,8 @@ impl PresetCatalogHandle {
                         self.catalog.vendor_name(position).to_owned()
                     },
                     name: document.name.clone(),
-                    printer_model: document_text(document, "printer_model"),
-                    printer_variant: document_text(document, "printer_variant"),
+                    printer_model,
+                    printer_variant,
                 }
             })
             .collect()

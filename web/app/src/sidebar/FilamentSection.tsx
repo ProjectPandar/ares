@@ -32,7 +32,10 @@ export function FilamentSection({ settings, openTab }: { settings: ProjectSettin
     return filamentGroups(compatible.presets.filaments, compatible.filamentInfo, user, installed, selection.filaments[slot]);
   };
   return (
-    <Section icon={<OrcaIcon name="filament" />} title="Filament" extra={slots || undefined}>
+    // The title `settings` button, "Set filaments to use": run_wizard(RR_USER, SP_FILAMENTS), the guide/23
+    // filament page (Plater.cpp:3379-3387).
+    <Section icon={<OrcaIcon name="filament" />} title="Filament" extra={slots || undefined}
+      action={selection && <EditButton icon="settings" label="Set filaments to use" onClick={() => setDialog(true)} />}>
       {slots === 0 && <div className="side-empty">No filament preset</div>}
       {Array.from({ length: slots }, (_, index) => names[index]).map((name, index) => (
         <div className="filament-row" key={index}>

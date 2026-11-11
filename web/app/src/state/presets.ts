@@ -1,7 +1,7 @@
-import type { ConfigOverrides, CurrentPrinter, FilamentSlotState, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, ProjectSettings, Scene, SliceResult, SlicingStatus } from "@ares-slicer/wasm";
+import type { ConfigOverrides, CurrentPrinter, FilamentSlotState, InstalledPrinters, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, ProjectSettings, Scene, SliceResult, SlicingStatus } from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
-import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
+import { deleteImport, loadImports, saveConfig, saveImports, storedConfig, storedConfigExists } from "./persistence";
 import { extruderOverrides, selectionExtruders } from "./extruders";
 import { printerBedType, updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
@@ -17,13 +17,14 @@ export const FILAMENT_LIBRARY = "OrcaFilamentLibrary";
 /** Imported preset files, in import order, for the engine catalog. */
 const importFiles: { input: Uint8Array; filename: string }[] = [];
 
-let synced: { vendors: readonly string[]; imports: number; catalog: PresetCatalog } | null = null;
+let synced: { vendors: readonly string[]; installed: InstalledPrinters | null; imports: number; catalog: PresetCatalog } | null = null;
 let syncing: Promise<unknown> = Promise.resolve();
 
 /**
  * The engine catalog (PresetBundle) of the installed vendors and imported
- * presets: rebuilt when the vendors change, imports added as they arrive.
- * Syncs run one at a time.
+ * presets: rebuilt when the vendors change, imports added as they arrive, and
+ * its printers' visibility set from the installed printers
+ * (PresetBundle::load_installed_printers). Syncs run one at a time.
  */
 export function presetCatalog(): Promise<PresetCatalog> {
   const next = syncing.then(syncCatalog);
@@ -32,7 +33,7 @@ export function presetCatalog(): Promise<PresetCatalog> {
 }
 
 async function syncCatalog(): Promise<PresetCatalog> {
-  const { vendors } = useApp.getState();
+  const { vendors, installedPrinters } = useApp.getState();
   if (synced?.vendors !== vendors) {
     const start = performance.now();
     void synced?.catalog.free();
@@ -43,9 +44,13 @@ async function syncCatalog(): Promise<PresetCatalog> {
     const encoder = new TextEncoder();
     for (const vendor of loaded) await catalog.addVendor(encoder.encode(JSON.stringify(vendor)));
     performance.measure("ares:catalog-build", { start });
-    synced = { vendors, imports: 0, catalog };
+    synced = { vendors, installed: null, imports: 0, catalog };
     // The installed vendors changed: the plater's vendor test reads the new set.
     await useApp.getState().plater?.setInstalledVendors(catalog);
+  }
+  if (synced.installed !== installedPrinters) {
+    await synced.catalog.setInstalledPrinters(installedPrinters);
+    synced.installed = installedPrinters;
   }
   for (const { input, filename } of importFiles.slice(synced.imports)) await synced.catalog.addImport(input, filename);
   synced.imports = importFiles.length;
@@ -60,13 +65,13 @@ export async function installVendors(plater: PlaterSession) {
   await plater.setInstalledVendors(await presetCatalog());
 }
 
-/** The installed vendors' printers and the printer models of the printer combo's "System presets" group. */
-async function updateSystemPrinters() {
-  const { vendors } = useApp.getState();
+/** The installed printers and the printer models of the printer combo's "System presets" group. */
+export async function updateSystemPrinters() {
+  const { installedPrinters } = useApp.getState();
   try {
     const catalog = await presetCatalog();
     const [printers, models] = await Promise.all([catalog.printers(), catalog.printerModels()]);
-    if (useApp.getState().vendors === vendors) {
+    if (useApp.getState().installedPrinters === installedPrinters) {
       useApp.setState({
         systemPrinters: printers.filter((printer) => printer.vendor !== "user"),
         printerModels: models.map(({ model }) => model),
@@ -92,8 +97,14 @@ async function restoreSession() {
       await deleteImport(key);
     }
   }
-  if (useApp.getState().vendors.length > 0) await updateSystemPrinters();
+  await updateSystemPrinters();
   await updateInstalledFilaments();
+  // GUI_App::config_wizard_startup (GUI_App.cpp:10129-10135): no app config, or only default
+  // printers (Preset.cpp:4599-4606), where imported printers count as visible.
+  const { systemPrinters, presetImports } = useApp.getState();
+  if (!storedConfigExists || (systemPrinters.length === 0 && importedNames(presetImports, "machine").size === 0)) {
+    useApp.setState({ wizard: "first-run" });
+  }
   const { printer } = storedConfig;
   if (printer === null) return;
   // select_preset_by_name_strict: a printer that is no longer loaded is not selected.
@@ -176,18 +187,11 @@ export async function importPresetFiles(files: File[]) {
   await updateCompatible();
 }
 
-/** ConfigWizard: the installed system vendors. */
-export async function setVendors(vendors: string[]) {
-  saveConfig({ vendors });
-  useApp.setState({ vendors });
-  await Promise.all([updateSystemPrinters(), updateInstalledFilaments(), updateCompatible(), updatePrinterPanel()]);
-}
-
-/** PresetBundle::load_installed_filaments (PresetBundle.cpp:2541-2600) over the stored set. */
-async function updateInstalledFilaments() {
-  const { vendors } = useApp.getState();
+/** PresetBundle::load_installed_filaments (PresetBundle.cpp:3757-3816) over the stored set. */
+export async function updateInstalledFilaments() {
+  const { installedPrinters } = useApp.getState();
   const installed = await (await presetCatalog()).installedFilaments(storedConfig.installedFilaments);
-  if (useApp.getState().vendors !== vendors) return;
+  if (useApp.getState().installedPrinters !== installedPrinters) return;
   saveConfig({ installedFilaments: installed });
   useApp.setState({ installedFilaments: new Set(installed) });
 }
