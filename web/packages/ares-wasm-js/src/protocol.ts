@@ -1,4 +1,4 @@
-import type { ArrangeSettings, ConfigValue, CurrentPrinter, PresetKind, ScaleEdit, SlicingStatus } from "./types.js";
+import type { ArrangeSettings, ConfigValue, CurrentPrinter, InstalledPrinters, PresetKind, ScaleEdit, SlicingStatus } from "./types.js";
 
 import type { FilamentSlotState } from "./presetCatalog.js";
 
@@ -49,6 +49,10 @@ export type WorkerRequest =
   | { id: number; kind: "catalogInstalledFilaments"; catalogId: number; installed: string[] }
   | { id: number; kind: "catalogSelectCompatibleFilaments"; catalogId: number; printer: string; process?: string; filaments: string[]; installed: string[] }
   | { id: number; kind: "catalogNormalizeFilamentSlots"; catalogId: number; printer: string; state: Partial<FilamentSlotState> & { filaments: string[] } }
+  | { id: number; kind: "catalogSetInstalledPrinters"; catalogId: number; installed: InstalledPrinters }
+  | { id: number; kind: "catalogSystemPrinter"; catalogId: number; model: string; variant: string }
+  | { id: number; kind: "catalogGuideFilaments"; catalogId: number }
+  | { id: number; kind: "guideModels"; input: Uint8Array }
   | { id: number; kind: "catalogFree"; catalogId: number }
   | { id: number; kind: "platerCreate"; sessionId: number; input: Uint8Array; filename: string }
   | { id: number; kind: "platerCreateWithProfiles"; sessionId: number; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }

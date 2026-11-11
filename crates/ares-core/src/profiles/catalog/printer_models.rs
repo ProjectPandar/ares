@@ -30,13 +30,12 @@ impl super::PresetCatalogHandle {
     /// `printers()`.
     pub fn printer_models(&self) -> Vec<PrinterModel> {
         self.catalog
-            .selectable_positions(ProfileKind::Machine)
-            .into_iter()
-            .filter(|position| {
+            .printer_identities()
+            .filter(|(position, model, variant)| {
                 !self.catalog.is_user_scope(*position)
-                    && self.catalog.missing_parent(*position).is_none()
+                    && self.catalog.is_visible_printer(*position, (model, variant))
             })
-            .map(|position| document_text(self.catalog.document(position), "printer_model"))
+            .map(|(_, model, _)| model)
             .collect::<std::collections::BTreeSet<_>>()
             .into_iter()
             .map(|model| PrinterModel { model })

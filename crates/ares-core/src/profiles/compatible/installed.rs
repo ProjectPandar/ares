@@ -8,10 +8,10 @@ use crate::SliceError;
 use crate::profiles::ProfileKind;
 
 /// `installed` (the AppConfig `filaments` section) plus, for every vendor
-/// printer with models that no installed filament is compatible with, the
-/// system presets named by its printer model's `default_materials`
-/// (`:2550-2590`), sorted as the section's `std::map`. All vendor printers
-/// count as visible: the catalog's vendors are the installed set. Names
+/// visible printer with models that no installed filament is compatible
+/// with, the system presets named by its printer model's `default_materials`
+/// (`:2550-2590`), sorted as the section's `std::map`. Visibility is the
+/// installed printers' (`PresetBundle.cpp:3767`, `printer.is_visible`). Names
 /// that are not loaded are kept, as the section keeps them.
 pub(in crate::profiles) fn installed_filaments(
     catalog: &Catalog,
@@ -28,6 +28,10 @@ pub(in crate::profiles) fn installed_filaments(
     let mut section: BTreeSet<String> = installed.iter().cloned().collect();
     for position in catalog.selectable_positions(ProfileKind::Machine) {
         if catalog.missing_parent(position).is_some() || !catalog.has_vendor_models(position) {
+            continue;
+        }
+        let (model, variant) = catalog.printer_identity(position)?;
+        if !catalog.is_visible_printer(position, (&model, &variant)) {
             continue;
         }
         let printer = active_printer(catalog, position)?;

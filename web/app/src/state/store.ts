@@ -1,4 +1,4 @@
-import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, FilamentSlotState, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, Toolpaths } from "@ares-slicer/wasm";
+import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, FilamentSlotState, InstalledPrinters, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
@@ -103,8 +103,12 @@ export interface AppState {
   /** Process option edits on top of the project config. */
   overrides: ConfigOverrides;
   slice: SliceState;
-  /** Installed system vendors (ConfigWizard), `@ares-slicer/profiles` ids. */
+  /** The setup wizard's installed printer models and nozzles (AppConfig `vendors` section). */
+  installedPrinters: InstalledPrinters;
+  /** The vendors of `installedPrinters` the catalog loads, `@ares-slicer/profiles` ids. */
   vendors: readonly string[];
+  /** The open setup wizard: the full guide on first run, or its models-only page. */
+  wizard: "first-run" | "models" | null;
   /** Selectable printers of the installed vendors (`PresetCatalog.printers`). */
   systemPrinters: readonly SelectablePrinter[];
   /** System printer models the plater printer combo lists (`PresetCatalog.printerModels`). */
@@ -122,6 +126,10 @@ export interface AppState {
   /** G-code window visibility (GUI_App `show_gcode_window`). */
   gcodeWindow: boolean;
 }
+
+/** The vendor bundles `PresetBundle::apply_vendor_config` installs: those with a model (PresetBundle.cpp:1968-1975). */
+export const installedVendors = (installed: InstalledPrinters) =>
+  Object.keys(installed).filter((vendor) => Object.keys(installed[vendor]).length > 0).sort();
 
 export const DEFAULT_PREVIEW: PreviewView = {
   layers: [0, 0],
@@ -152,7 +160,9 @@ export const useApp = create<AppState>(() => ({
   selectedInstance: null,
   overrides: {},
   slice: { status: "idle" },
-  vendors: storedConfig.vendors,
+  installedPrinters: storedConfig.installedPrinters,
+  vendors: installedVendors(storedConfig.installedPrinters),
+  wizard: null,
   systemPrinters: [],
   printerModels: [],
   presetImports: [],
