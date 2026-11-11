@@ -1,0 +1,455 @@
+{
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "upstream_file": "src/libslic3r/PrintConfig.cpp",
+  "upstream_file_sha256": "bf382f3e609d7173adb1a4375f0b88f0f7a76a56efd0b9a642fbc68e82665791",
+  "spec": "docs/architecture/2026-11-11-filament-variant-membership.md",
+  "spec_sha256": "ca00b9c3a5be077d6dfec9435a8c4af085d6c6aa6aa01d687f7d20a2ea374a8f",
+  "source_archive": "/home/indexyz/ares-evidence/worker2/nozzle-diameter-placeholder-632803b1-r1/a-object-id-r1/after-qualify-r1/../after-r1/official/artifacts/h2d-system-nozzle-array-kTR2tv/input.3mf",
+  "source_archive_sha256": "f1ac3418ebd723fc0e1cea940ba4a6709a40e2814a36679c490236eaa8aba6cf",
+  "source_members_sha256": {
+    "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+    "3D/3dmodel.model": "43d48e20eb00eb2794f318e1671a5a78b49cf96f78262c00b4f6c6a8b358bca8",
+    "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+    "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+    "Metadata/project_settings.config": "246390b53b9f1173c53c964a1a383eb6c567500a577fe29c9459acddb806a656",
+    "Metadata/model_settings.config": "d6f3e206a7b3d1411cd6ed9f4de9b546b94e2299084fe16f260b1caf60745f18",
+    "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+    "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+    "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+  },
+  "changed_member_only": "Metadata/project_settings.config",
+  "templates_geometry_build_metadata_unchanged": true,
+  "filament_self_index": [
+    "1",
+    "1",
+    "1"
+  ],
+  "filament_extruder_variant": [
+    "Direct Drive Standard",
+    "Direct Drive High Flow",
+    "Direct Drive E3D High Flow"
+  ],
+  "cases": [
+    {
+      "name": "retract-length-toolchange",
+      "key": "filament_retract_length_toolchange",
+      "source_citation": "PrintConfig.cpp:10171",
+      "singleton": [
+        "1.125"
+      ],
+      "expected_native_variant_values": [
+        "1.125",
+        "1.125",
+        "1.125"
+      ],
+      "input": "/home/indexyz/ares-evidence/worker2/nozzle-diameter-placeholder-632803b1-r1/c-variant-members-r1/native-r1/inputs/retract-length-toolchange.3mf",
+      "input_sha256": "b49465bf267758fbebf27c2bf3912e0702744ae4a2ccf26a297f6b1c29e621b6",
+      "members_sha256": {
+        "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+        "3D/3dmodel.model": "43d48e20eb00eb2794f318e1671a5a78b49cf96f78262c00b4f6c6a8b358bca8",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "9d072fb4b8b78c69220c69b7041a99ef4ed28a5a309a709addd9dbdb79c454b7",
+        "Metadata/model_settings.config": "d6f3e206a7b3d1411cd6ed9f4de9b546b94e2299084fe16f260b1caf60745f18",
+        "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+      },
+      "file": "retract-length-toolchange.3mf"
+    },
+    {
+      "name": "retract-restart-extra-toolchange",
+      "key": "filament_retract_restart_extra_toolchange",
+      "source_citation": "PrintConfig.cpp:10172",
+      "singleton": [
+        "0.125"
+      ],
+      "expected_native_variant_values": [
+        "0.125",
+        "0.125",
+        "0.125"
+      ],
+      "input": "/home/indexyz/ares-evidence/worker2/nozzle-diameter-placeholder-632803b1-r1/c-variant-members-r1/native-r1/inputs/retract-restart-extra-toolchange.3mf",
+      "input_sha256": "7aa2e07a2e0aeea4277fc187a931b623f8af9492e89867832233f51fb17ea0c2",
+      "members_sha256": {
+        "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+        "3D/3dmodel.model": "43d48e20eb00eb2794f318e1671a5a78b49cf96f78262c00b4f6c6a8b358bca8",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "b96c33362cba023b9cd0b80dc9357ab9e814c015f04142745f078ea2a005aa5b",
+        "Metadata/model_settings.config": "d6f3e206a7b3d1411cd6ed9f4de9b546b94e2299084fe16f260b1caf60745f18",
+        "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+      },
+      "file": "retract-restart-extra-toolchange.3mf"
+    },
+    {
+      "name": "minimal-purge-on-wipe-tower",
+      "key": "filament_minimal_purge_on_wipe_tower",
+      "source_citation": "PrintConfig.cpp:10210",
+      "singleton": [
+        "17.5"
+      ],
+      "expected_native_variant_values": [
+        "17.5",
+        "17.5",
+        "17.5"
+      ],
+      "input": "/home/indexyz/ares-evidence/worker2/nozzle-diameter-placeholder-632803b1-r1/c-variant-members-r1/native-r1/inputs/minimal-purge-on-wipe-tower.3mf",
+      "input_sha256": "0eb9bb0153a4954a1d47230520f02b94cf8357a9f79ac52487003957218dcea0",
+      "members_sha256": {
+        "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+        "3D/3dmodel.model": "43d48e20eb00eb2794f318e1671a5a78b49cf96f78262c00b4f6c6a8b358bca8",
+        "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+        "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+        "Metadata/project_settings.config": "ac20dd886b47d6636ba68671f150d21ddd3812e658865c4058390f6b3c83d2b0",
+        "Metadata/model_settings.config": "d6f3e206a7b3d1411cd6ed9f4de9b546b94e2299084fe16f260b1caf60745f18",
+        "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+        "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+        "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+      },
+      "file": "minimal-purge-on-wipe-tower.3mf"
+    }
+  ],
+  "native_qualification_sha256": "2e9684a3f41335db0ea82148620857f6ca855929cb8f8614182a1003efa8933a",
+  "native_qualification": [
+    {
+      "mode": "official",
+      "name": "retract-length-toolchange",
+      "key": "filament_retract_length_toolchange",
+      "source_citation": "PrintConfig.cpp:10171",
+      "slice": {
+        "exit": 0,
+        "signal": null
+      },
+      "export": {
+        "exit": 0,
+        "signal": null
+      },
+      "input_sha256": "b49465bf267758fbebf27c2bf3912e0702744ae4a2ccf26a297f6b1c29e621b6",
+      "native_output_exists": true,
+      "native_sha256": "8741fe488c6d8c1412d6ea63f96f243db3d27037313c2a163490d50286930723",
+      "export_output_exists": true,
+      "export_archive_sha256": "2b26880715b56c9ea2578b97d3f53dfdb279c704d3e6a52abe84be043a3828f0",
+      "observation": {
+        "values": [
+          "1.125",
+          "1.125",
+          "1.125"
+        ],
+        "self_index": [
+          "1",
+          "1",
+          "1"
+        ],
+        "variants": [
+          "Direct Drive Standard",
+          "Direct Drive High Flow",
+          "Direct Drive E3D High Flow"
+        ],
+        "members_sha256": {
+          "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+          "3D/3dmodel.model": "acfb2b75f7da4bc97975e25a2cc692c8947796dd2712eaec42638cb8a5ba07a6",
+          "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+          "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "Metadata/project_settings.config": "ad3217037fb2975f027079a7af1c3390c54b32f89c08ff5f833701ed8f7f76bf",
+          "Metadata/model_settings.config": "fdc01b61283d3b098ed8a97ca5d782211582e591df584df87bbd5422f7a6387f",
+          "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+          "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+        }
+      },
+      "expected_native_variant_values": [
+        "1.125",
+        "1.125",
+        "1.125"
+      ],
+      "values_match": true,
+      "binaries_unchanged": true,
+      "qualified": true,
+      "meaning": "Native-only premise, not Ares behavior or complete-output equality"
+    },
+    {
+      "mode": "official",
+      "name": "retract-restart-extra-toolchange",
+      "key": "filament_retract_restart_extra_toolchange",
+      "source_citation": "PrintConfig.cpp:10172",
+      "slice": {
+        "exit": 0,
+        "signal": null
+      },
+      "export": {
+        "exit": 0,
+        "signal": null
+      },
+      "input_sha256": "7aa2e07a2e0aeea4277fc187a931b623f8af9492e89867832233f51fb17ea0c2",
+      "native_output_exists": true,
+      "native_sha256": "4c8a3da93f28ce458d7624d45e7dc8a5d391840d224fc4fc33b0292efc9c5f0c",
+      "export_output_exists": true,
+      "export_archive_sha256": "6f8c2962e19bb87a8e3bad75e471bf571722591f0f11f74f2f131518efd133b2",
+      "observation": {
+        "values": [
+          "0.125",
+          "0.125",
+          "0.125"
+        ],
+        "self_index": [
+          "1",
+          "1",
+          "1"
+        ],
+        "variants": [
+          "Direct Drive Standard",
+          "Direct Drive High Flow",
+          "Direct Drive E3D High Flow"
+        ],
+        "members_sha256": {
+          "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+          "3D/3dmodel.model": "acfb2b75f7da4bc97975e25a2cc692c8947796dd2712eaec42638cb8a5ba07a6",
+          "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+          "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "Metadata/project_settings.config": "3aa24ec7ea455734da6e03235fca35799be3d689dae60a70957e0dabf2856c2f",
+          "Metadata/model_settings.config": "fdc01b61283d3b098ed8a97ca5d782211582e591df584df87bbd5422f7a6387f",
+          "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+          "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+        }
+      },
+      "expected_native_variant_values": [
+        "0.125",
+        "0.125",
+        "0.125"
+      ],
+      "values_match": true,
+      "binaries_unchanged": true,
+      "qualified": true,
+      "meaning": "Native-only premise, not Ares behavior or complete-output equality"
+    },
+    {
+      "mode": "official",
+      "name": "minimal-purge-on-wipe-tower",
+      "key": "filament_minimal_purge_on_wipe_tower",
+      "source_citation": "PrintConfig.cpp:10210",
+      "slice": {
+        "exit": 0,
+        "signal": null
+      },
+      "export": {
+        "exit": 0,
+        "signal": null
+      },
+      "input_sha256": "0eb9bb0153a4954a1d47230520f02b94cf8357a9f79ac52487003957218dcea0",
+      "native_output_exists": true,
+      "native_sha256": "cb583322704aff255a7c09b480c5f1e23a7faad4bb0d446d564d4441c922c30c",
+      "export_output_exists": true,
+      "export_archive_sha256": "bb5a17c757066d6731b3b27e21abf41d210dc47e693aed3fe7eb6a8bc3244f3c",
+      "observation": {
+        "values": [
+          "17.5",
+          "17.5",
+          "17.5"
+        ],
+        "self_index": [
+          "1",
+          "1",
+          "1"
+        ],
+        "variants": [
+          "Direct Drive Standard",
+          "Direct Drive High Flow",
+          "Direct Drive E3D High Flow"
+        ],
+        "members_sha256": {
+          "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+          "3D/3dmodel.model": "acfb2b75f7da4bc97975e25a2cc692c8947796dd2712eaec42638cb8a5ba07a6",
+          "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+          "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "Metadata/project_settings.config": "5169bcab47183be848eb2d1961e13b420e94a5234f5bb488482b84399ae1e6ea",
+          "Metadata/model_settings.config": "fdc01b61283d3b098ed8a97ca5d782211582e591df584df87bbd5422f7a6387f",
+          "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+          "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+        }
+      },
+      "expected_native_variant_values": [
+        "17.5",
+        "17.5",
+        "17.5"
+      ],
+      "values_match": true,
+      "binaries_unchanged": true,
+      "qualified": true,
+      "meaning": "Native-only premise, not Ares behavior or complete-output equality"
+    },
+    {
+      "mode": "seeded",
+      "name": "retract-length-toolchange",
+      "key": "filament_retract_length_toolchange",
+      "source_citation": "PrintConfig.cpp:10171",
+      "slice": {
+        "exit": 0,
+        "signal": null
+      },
+      "export": {
+        "exit": 0,
+        "signal": null
+      },
+      "input_sha256": "b49465bf267758fbebf27c2bf3912e0702744ae4a2ccf26a297f6b1c29e621b6",
+      "native_output_exists": true,
+      "native_sha256": "d781b0c313a60da12a4b58f4d668e55b179a7b3c80b3cd7ba6fb5a5157e15ffb",
+      "export_output_exists": true,
+      "export_archive_sha256": "fb0f3f4e597d50c88558af7dce309f7ac9a93c1817b1c4269cc8916bb867c2e4",
+      "observation": {
+        "values": [
+          "1.125",
+          "1.125",
+          "1.125"
+        ],
+        "self_index": [
+          "1",
+          "1",
+          "1"
+        ],
+        "variants": [
+          "Direct Drive Standard",
+          "Direct Drive High Flow",
+          "Direct Drive E3D High Flow"
+        ],
+        "members_sha256": {
+          "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+          "3D/3dmodel.model": "acfb2b75f7da4bc97975e25a2cc692c8947796dd2712eaec42638cb8a5ba07a6",
+          "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+          "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "Metadata/project_settings.config": "ad3217037fb2975f027079a7af1c3390c54b32f89c08ff5f833701ed8f7f76bf",
+          "Metadata/model_settings.config": "fdc01b61283d3b098ed8a97ca5d782211582e591df584df87bbd5422f7a6387f",
+          "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+          "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+        }
+      },
+      "expected_native_variant_values": [
+        "1.125",
+        "1.125",
+        "1.125"
+      ],
+      "values_match": true,
+      "binaries_unchanged": true,
+      "qualified": true,
+      "meaning": "Native-only premise, not Ares behavior or complete-output equality"
+    },
+    {
+      "mode": "seeded",
+      "name": "retract-restart-extra-toolchange",
+      "key": "filament_retract_restart_extra_toolchange",
+      "source_citation": "PrintConfig.cpp:10172",
+      "slice": {
+        "exit": 0,
+        "signal": null
+      },
+      "export": {
+        "exit": 0,
+        "signal": null
+      },
+      "input_sha256": "7aa2e07a2e0aeea4277fc187a931b623f8af9492e89867832233f51fb17ea0c2",
+      "native_output_exists": true,
+      "native_sha256": "8bd358fc93e7fabd70cc94a90139261971d7b18661f974fd202b9115c624e1a3",
+      "export_output_exists": true,
+      "export_archive_sha256": "471ee877f04e8aaa8373b12db30e17e774c470e72d0961da8d5320ed380040b9",
+      "observation": {
+        "values": [
+          "0.125",
+          "0.125",
+          "0.125"
+        ],
+        "self_index": [
+          "1",
+          "1",
+          "1"
+        ],
+        "variants": [
+          "Direct Drive Standard",
+          "Direct Drive High Flow",
+          "Direct Drive E3D High Flow"
+        ],
+        "members_sha256": {
+          "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+          "3D/3dmodel.model": "acfb2b75f7da4bc97975e25a2cc692c8947796dd2712eaec42638cb8a5ba07a6",
+          "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+          "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "Metadata/project_settings.config": "3aa24ec7ea455734da6e03235fca35799be3d689dae60a70957e0dabf2856c2f",
+          "Metadata/model_settings.config": "fdc01b61283d3b098ed8a97ca5d782211582e591df584df87bbd5422f7a6387f",
+          "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+          "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+        }
+      },
+      "expected_native_variant_values": [
+        "0.125",
+        "0.125",
+        "0.125"
+      ],
+      "values_match": true,
+      "binaries_unchanged": true,
+      "qualified": true,
+      "meaning": "Native-only premise, not Ares behavior or complete-output equality"
+    },
+    {
+      "mode": "seeded",
+      "name": "minimal-purge-on-wipe-tower",
+      "key": "filament_minimal_purge_on_wipe_tower",
+      "source_citation": "PrintConfig.cpp:10210",
+      "slice": {
+        "exit": 0,
+        "signal": null
+      },
+      "export": {
+        "exit": 0,
+        "signal": null
+      },
+      "input_sha256": "0eb9bb0153a4954a1d47230520f02b94cf8357a9f79ac52487003957218dcea0",
+      "native_output_exists": true,
+      "native_sha256": "c77d026d398761409c0ca1841acaa23a084bfe98d105bc09df9913e7a79c01c2",
+      "export_output_exists": true,
+      "export_archive_sha256": "9792760d1e9abc5a3b4d7d592658284e24a7d7662f94b767f657a6a9d9a63d2e",
+      "observation": {
+        "values": [
+          "17.5",
+          "17.5",
+          "17.5"
+        ],
+        "self_index": [
+          "1",
+          "1",
+          "1"
+        ],
+        "variants": [
+          "Direct Drive Standard",
+          "Direct Drive High Flow",
+          "Direct Drive E3D High Flow"
+        ],
+        "members_sha256": {
+          "[Content_Types].xml": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+          "3D/3dmodel.model": "acfb2b75f7da4bc97975e25a2cc692c8947796dd2712eaec42638cb8a5ba07a6",
+          "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+          "3D/Objects/cube10.stl_1.model": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "Metadata/project_settings.config": "5169bcab47183be848eb2d1961e13b420e94a5234f5bb488482b84399ae1e6ea",
+          "Metadata/model_settings.config": "fdc01b61283d3b098ed8a97ca5d782211582e591df584df87bbd5422f7a6387f",
+          "Metadata/slice_info.config": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+          "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "_rels/.rels": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f"
+        }
+      },
+      "expected_native_variant_values": [
+        "17.5",
+        "17.5",
+        "17.5"
+      ],
+      "values_match": true,
+      "binaries_unchanged": true,
+      "qualified": true,
+      "meaning": "Native-only premise, not Ares behavior or complete-output equality"
+    }
+  ],
+  "contract": "Each original singleton input is sliced and re-exported by Native before public load_project/settings import. Compare the observed Native three-slot vector, then require unchanged generator-only strict complete-output Native/API/CLI comparisons and raw API/CLI equality. Native-normalized archives are evidence only, never substituted as Ares inputs."
+}

@@ -18,6 +18,8 @@ mod filament_group_flush_restriction_pairs;
 mod filament_group_flush_unused;
 #[path = "nullable_vectors/filament_group_nozzle_carry.rs"]
 mod filament_group_nozzle_carry;
+#[path = "nullable_vectors/filament_variant_members.rs"]
+mod filament_variant_members;
 #[path = "nullable_vectors/inner_wall_speed.rs"]
 mod inner_wall_speed;
 
