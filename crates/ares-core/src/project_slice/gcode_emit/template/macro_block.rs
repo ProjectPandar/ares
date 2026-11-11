@@ -4,8 +4,11 @@
 //! `if/then/elsif/else/endif` blocks. Only the selected arm of an inline
 //! `if` is evaluated, mirroring upstream's conditional suppression.
 
-use super::super::expression::{evaluate, to_string};
+use super::super::expression::{
+    ParsePath, PathError, evaluate, evaluate_condition, evaluate_path, to_string,
+};
 use super::super::value::{Config, Value};
+use super::offset_in;
 
 /// Whether a `{...}` body uses the statement grammar: a top-level `;`, a
 /// leading `local`/`global` declaration, or an inline `if ... then` block.
@@ -27,39 +30,49 @@ pub(super) fn has_top_level_then(condition: &str) -> bool {
 /// output (`to_string2` per expression statement, `:532-537`).
 /// `journal` records output variables created by `local`/`global` so the
 /// caller can drop them when the template render ends (upstream
-/// `config_local` lifetime, `:889-906`).
+/// `config_local` lifetime, `:889-906`). Failures carry their offset in
+/// `body`.
 pub(super) fn evaluate_block(
     body: &str,
     config: &mut Config,
     filament: usize,
     journal: &mut Vec<(String, Option<Value>)>,
-) -> Result<String, String> {
-    let (statements, rest) = parse_statements(body, &[])?;
+) -> Result<String, PathError> {
+    let (statements, rest) = parse_statements(body, &[]).map_err(PathError::Other)?;
     if !rest.trim_start().is_empty() {
-        return Err(format!("unexpected {rest:?} in macro block"));
+        return Err(PathError::Other(format!(
+            "unexpected {rest:?} in macro block"
+        )));
     }
     let mut output = String::new();
-    evaluate_statements(&statements, config, filament, journal, &mut output)?;
+    Block {
+        body,
+        config,
+        filament,
+        journal,
+    }
+    .statements(&statements, &mut output)?;
     Ok(output)
 }
 
-enum Statement {
-    Expression(String),
+/// Statements keep slices of the block body so failures report their offset.
+enum Statement<'a> {
+    Expression(&'a str),
     Assignment {
-        name: String,
-        index: Option<String>,
-        rhs: String,
+        name: &'a str,
+        index: Option<&'a str>,
+        rhs: &'a str,
     },
     Declare {
-        name: String,
-        rhs: String,
+        name: &'a str,
+        rhs: &'a str,
     },
-    If(Vec<Arm>),
+    If(Vec<Arm<'a>>),
 }
 
-struct Arm {
-    condition: Option<String>,
-    statements: Vec<Statement>,
+struct Arm<'a> {
+    condition: Option<&'a str>,
+    statements: Vec<Statement<'a>>,
 }
 
 /// Parses statements until a stop keyword (`elsif`/`else`/`endif`) or the
@@ -67,7 +80,7 @@ struct Arm {
 fn parse_statements<'a>(
     input: &'a str,
     stops: &[&str],
-) -> Result<(Vec<Statement>, &'a str), String> {
+) -> Result<(Vec<Statement<'a>>, &'a str), String> {
     let mut statements = Vec::new();
     let mut rest = input;
     loop {
@@ -108,11 +121,11 @@ fn statement_end(input: &str, stops: &[&str]) -> usize {
 
 /// Parses one inline `if COND then ... (elsif COND then ...)*
 /// (else ...)? endif` block; `input` starts at the `if` keyword.
-fn parse_if(input: &str) -> Result<(Statement, &str), String> {
+fn parse_if(input: &str) -> Result<(Statement<'_>, &str), String> {
     let after_if = &input["if".len()..];
     let then =
         find_keyword(after_if, "then").ok_or_else(|| "expected then in macro if".to_owned())?;
-    let condition = after_if[..then].trim().to_owned();
+    let condition = after_if[..then].trim();
     let mut rest = &after_if[then + "then".len()..];
     let mut arms = Vec::new();
     let (statements, tail) = parse_statements(rest, &["elsif", "else", "endif"])?;
@@ -127,7 +140,7 @@ fn parse_if(input: &str) -> Result<(Statement, &str), String> {
             let after_elsif = &rest["elsif".len()..];
             let then = find_keyword(after_elsif, "then")
                 .ok_or_else(|| "expected then in macro elsif".to_owned())?;
-            let condition = after_elsif[..then].trim().to_owned();
+            let condition = after_elsif[..then].trim();
             let (statements, tail) = parse_statements(
                 &after_elsif[then + "then".len()..],
                 &["elsif", "else", "endif"],
@@ -154,7 +167,7 @@ fn parse_if(input: &str) -> Result<(Statement, &str), String> {
     }
 }
 
-fn parse_statement(statement: &str) -> Result<Statement, String> {
+fn parse_statement(statement: &str) -> Result<Statement<'_>, String> {
     for keyword in ["local", "global"] {
         if starts_keyword(statement, keyword) {
             let rest = &statement[keyword.len()..];
@@ -174,19 +187,15 @@ fn parse_statement(statement: &str) -> Result<Statement, String> {
                 return Err(format!("invalid variable name {name:?} in {statement}"));
             }
             return Ok(Statement::Declare {
-                name: name.to_owned(),
-                rhs: rest[equals + 1..].trim().to_owned(),
+                name,
+                rhs: rest[equals + 1..].trim(),
             });
         }
     }
     if let Some((name, index, rhs)) = super::assignment_parts(statement) {
-        return Ok(Statement::Assignment {
-            name: name.to_owned(),
-            index: index.map(str::to_owned),
-            rhs: rhs.to_owned(),
-        });
+        return Ok(Statement::Assignment { name, index, rhs });
     }
-    Ok(Statement::Expression(statement.to_owned()))
+    Ok(Statement::Expression(statement))
 }
 
 /// Evaluates an assignment's optional index expression to a valid
@@ -206,69 +215,86 @@ fn assignment_index(
     }
 }
 
-/// First arm of an inline `if` whose condition holds: arms are
-/// evaluated in order and the `else` arm has no condition
-/// (`if_else_output`, `:2178-2186`).
-fn selected_arm<'a>(
-    arms: &'a [Arm],
-    config: &Config,
+/// The evaluation state of one block: its body, for the offsets of failures, the config
+/// mutated by assignments and the journal of `local`/`global` output variables.
+struct Block<'a> {
+    body: &'a str,
+    config: &'a mut Config,
     filament: usize,
-) -> Result<Option<&'a [Statement]>, String> {
-    for arm in arms {
-        let selected = match &arm.condition {
-            None => true,
-            Some(condition) => evaluate(condition, config, filament)
-                .map_err(|error| format!("{error} in {condition}"))?
-                .as_bool(),
-        };
-        if selected {
-            return Ok(Some(&arm.statements));
-        }
-    }
-    Ok(None)
+    journal: &'a mut Vec<(String, Option<Value>)>,
 }
 
-/// Evaluates a `;`-separated statement list, appending rendered
-/// expression statements to `output` (`PlaceholderParser.cpp:2157-2186`).
-fn evaluate_statements(
-    statements: &[Statement],
-    config: &mut Config,
-    filament: usize,
-    journal: &mut Vec<(String, Option<Value>)>,
-    output: &mut String,
-) -> Result<(), String> {
-    for statement in statements {
-        match statement {
-            Statement::Expression(expression) => {
-                let value = evaluate(expression, config, filament)
-                    .map_err(|error| format!("{error} in {expression}"))?;
-                output.push_str(&to_string(&value));
-            }
-            Statement::Assignment { name, index, rhs } => {
-                let value =
-                    evaluate(rhs, config, filament).map_err(|error| format!("{error} in {rhs}"))?;
-                let index = assignment_index(name, index.as_deref(), config, filament)?;
-                config.assign(name, index, value);
-            }
-            Statement::Declare { name, rhs } => {
-                let value =
-                    evaluate(rhs, config, filament).map_err(|error| format!("{error} in {rhs}"))?;
-                // `new_old_variable` (`:1384-1448`): a name that already
-                // resolves assigns that variable in place; a new name
-                // becomes an output variable restored after the render.
-                if config.get(name).is_none() {
-                    journal.push((name.clone(), None));
+impl Block<'_> {
+    /// Evaluates a `;`-separated statement list, appending rendered
+    /// expression statements to `output` (`PlaceholderParser.cpp:2157-2186`).
+    fn statements(
+        &mut self,
+        statements: &[Statement<'_>],
+        output: &mut String,
+    ) -> Result<(), PathError> {
+        for statement in statements {
+            match statement {
+                Statement::Expression(expression) => {
+                    output.push_str(&to_string(&self.value(expression)?));
                 }
-                config.assign(name, None, value);
-            }
-            Statement::If(arms) => {
-                if let Some(statements) = selected_arm(arms, config, filament)? {
-                    evaluate_statements(statements, config, filament, journal, output)?;
+                Statement::Assignment { name, index, rhs } => {
+                    let value = self.value(rhs)?;
+                    let index = assignment_index(name, *index, self.config, self.filament)
+                        .map_err(PathError::Other)?;
+                    self.config.assign(name, index, value);
                 }
+                Statement::Declare { name, rhs } => self.declare(name, rhs)?,
+                Statement::If(arms) => self.branch(arms, output)?,
             }
         }
+        Ok(())
     }
-    Ok(())
+
+    /// `new_old_variable` (`:1384-1448`): a name that already resolves
+    /// assigns that variable in place; a new name becomes an output variable
+    /// restored after the render.
+    fn declare(&mut self, name: &str, rhs: &str) -> Result<(), PathError> {
+        let value = self.value(rhs)?;
+        if self.config.get(name).is_none() {
+            self.journal.push((name.to_owned(), None));
+        }
+        self.config.assign(name, None, value);
+        Ok(())
+    }
+
+    /// `if_else_output` (`:2341-2349`): every condition is evaluated in order, also after an
+    /// arm was taken (`:2345`), and the first true arm runs when its condition is reached.
+    fn branch(&mut self, arms: &[Arm<'_>], output: &mut String) -> Result<(), PathError> {
+        let mut taken = false;
+        for arm in arms {
+            let holds = match arm.condition {
+                None => true,
+                Some(condition) => self.condition(condition)?,
+            };
+            if holds && !taken {
+                taken = true;
+                self.statements(&arm.statements, output)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn condition(&self, condition: &str) -> Result<bool, PathError> {
+        evaluate_condition(condition, self.config, self.filament)
+            .map_err(|error| self.located(error, condition))
+    }
+
+    fn value(&self, expression: &str) -> Result<Value, PathError> {
+        evaluate_path(expression, self.config, ParsePath::Brace, self.filament)
+            .map_err(|error| self.located(error, expression))
+    }
+
+    /// A failure of `part`, a slice of the block body, in block coordinates.
+    fn located(&self, error: PathError, part: &str) -> PathError {
+        error
+            .in_expression(part)
+            .shifted(offset_in(self.body, part))
+    }
 }
 
 fn is_word(character: char) -> bool {

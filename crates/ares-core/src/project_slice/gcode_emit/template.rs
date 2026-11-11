@@ -1,8 +1,8 @@
 use super::{
-    expression::{ParsePath, PathError, evaluate, evaluate_path},
+    expression::{ParsePath, evaluate, evaluate_condition, evaluate_path},
     value::{Config, Value},
 };
-use parser::{Node, parse};
+use parser::{Arm, Node, parse};
 
 mod error;
 mod macro_block;
@@ -60,33 +60,37 @@ struct Renderer<'a> {
     journal: Vec<(String, Option<Value>)>,
 }
 
-#[expect(
-    clippy::excessive_nesting,
-    reason = "branch selection stays with node rendering"
-)]
 impl Renderer<'_> {
     fn render_nodes(&mut self, nodes: &[Node]) -> Result<String, String> {
         let mut output = String::new();
         for node in nodes {
             match node {
                 Node::Text { text, offset } => output.push_str(&self.render_text(text, *offset)?),
-                Node::Branch { arms } => {
-                    for arm in arms {
-                        let selected = match &arm.condition {
-                            None => true,
-                            Some(condition) => evaluate(condition, self.config, self.filament)
-                                .map_err(|error| format!("{error} in {condition}"))?
-                                .as_bool(),
-                        };
-                        if selected {
-                            output.push_str(&self.render_nodes(&arm.nodes)?);
-                            break;
-                        }
-                    }
-                }
+                Node::Branch { arms } => output.push_str(&self.render_branch(arms)?),
             }
         }
         Ok(output)
+    }
+
+    /// `if_else_output` (`PlaceholderParser.cpp:2341-2349`): every condition is evaluated in
+    /// order, also after an arm was taken (`:2345`), and the first true arm renders when its
+    /// condition is reached.
+    fn render_branch(&mut self, arms: &[Arm]) -> Result<String, String> {
+        let mut output = None;
+        for arm in arms {
+            let holds = match &arm.condition {
+                None => true,
+                Some(condition) => evaluate_condition(&condition.text, self.config, self.filament)
+                    .map_err(|error| {
+                        let error = error.in_expression(&condition.text);
+                        error::describe(self.template, error, condition.offset)
+                    })?,
+            };
+            if holds && output.is_none() {
+                output = Some(self.render_nodes(&arm.nodes)?);
+            }
+        }
+        Ok(output.unwrap_or_default())
     }
 
     fn render_text(&mut self, text: &str, text_offset: usize) -> Result<String, String> {
@@ -125,47 +129,29 @@ impl Renderer<'_> {
             // Statement lists inside one brace block (`macros`,
             // `PlaceholderParser.cpp:2162-2174`): `;`-separated statements,
             // `local`/`global` and inline `if/then/elsif/else/endif`.
+            let start = text_offset + expression_start;
+            let template = self.template;
             if delimiter == '{' && macro_block::is_macro_body(expression) {
-                output.push_str(&macro_block::evaluate_block(
+                let rendered = macro_block::evaluate_block(
                     expression,
                     self.config,
                     self.filament,
                     &mut self.journal,
-                )?);
+                )
+                .map_err(|error| error::describe(template, error, start))?;
+                output.push_str(&rendered);
                 index = expression_start + relative_end + 1;
                 continue;
             }
-            // Upstream supports assignment statements (`{var[idx] = expr}`) that
-            // store into the parser and render nothing.
-            if let Some((name, index_expression, rhs)) = assignment_parts(expression) {
-                let assignment_index = match index_expression {
-                    Some(index_expression) => {
-                        match evaluate(index_expression, self.config, self.filament)?.as_number() {
-                            Some(number) if number >= 0.0 => Some(number as usize),
-                            _ => return Err(format!("invalid assignment index in {expression}")),
-                        }
-                    }
-                    None => None,
-                };
-                let value = evaluate(rhs, self.config, self.filament)
-                    .map_err(|error| format!("{error} in {expression}"))?;
-                self.config.assign(name, assignment_index, value);
+            if let Some(parts) = assignment_parts(expression) {
+                self.assign(expression, parts, start)?;
                 index = expression_start + relative_end + 1;
                 continue;
             }
-            let value = match evaluate_path(expression, self.config, path, self.filament) {
-                Ok(value) => value,
-                Err(PathError::Parse(failure)) => {
-                    return Err(error::report(
-                        self.template,
-                        &failure,
-                        text_offset + expression_start + failure.offset,
-                    ));
-                }
-                Err(PathError::Other(message)) => {
-                    return Err(format!("{message} in {expression}"));
-                }
-            };
+            let value =
+                evaluate_path(expression, self.config, path, self.filament).map_err(|error| {
+                    error::describe(template, error.in_expression(expression), start)
+                })?;
             // `PlaceholderParser.cpp:915`: legacy vectors use the process call's
             // logical filament context, not a template's physical extruder ID.
             let vector_index = match path {
@@ -183,6 +169,36 @@ impl Renderer<'_> {
         }
         Ok(output)
     }
+
+    /// Upstream supports assignment statements (`{var[idx] = expr}`) that
+    /// store into the parser and render nothing; `start` is the template
+    /// offset of `expression`.
+    fn assign(
+        &mut self,
+        expression: &str,
+        (name, index, rhs): (&str, Option<&str>, &str),
+        start: usize,
+    ) -> Result<(), String> {
+        let index = match index {
+            Some(index) => match evaluate(index, self.config, self.filament)?.as_number() {
+                Some(number) if number >= 0.0 => Some(number as usize),
+                _ => return Err(format!("invalid assignment index in {expression}")),
+            },
+            None => None,
+        };
+        let value =
+            evaluate_path(rhs, self.config, ParsePath::Brace, self.filament).map_err(|error| {
+                let error = error.in_expression(expression);
+                error::describe(self.template, error, start + offset_in(expression, rhs))
+            })?;
+        self.config.assign(name, index, value);
+        Ok(())
+    }
+}
+
+/// Byte offset of `part` within `whole`, of which it is a slice.
+fn offset_in(whole: &str, part: &str) -> usize {
+    part.as_ptr().addr() - whole.as_ptr().addr()
 }
 
 /// Splits `name[index] = rhs` assignment statements; returns the variable

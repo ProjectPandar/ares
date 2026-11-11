@@ -18,8 +18,14 @@ pub(super) enum Node {
 /// One `{if}`/`{elsif}`/`{else}` arm; `None` condition is the catch-all
 /// `{else}`.
 pub(super) struct Arm {
-    pub(super) condition: Option<String>,
+    pub(super) condition: Option<Condition>,
     pub(super) nodes: Vec<Node>,
+}
+
+/// An `{if}` or `{elsif}` condition with its byte offset in the template.
+pub(super) struct Condition {
+    pub(super) text: String,
+    pub(super) offset: usize,
 }
 
 pub(super) fn parse(template: &str) -> Result<Vec<Node>, String> {
@@ -94,9 +100,9 @@ impl Parser<'_> {
 
     /// Parses the `{if}`/`{elsif}`/`{else}` arms that follow the opening
     /// condition, consuming the closing `{endif}`.
-    fn parse_arms(&mut self, condition: String) -> Result<Vec<Arm>, String> {
+    fn parse_arms(&mut self, condition: Option<Condition>) -> Result<Vec<Arm>, String> {
         let mut arms = vec![Arm {
-            condition: (!condition.is_empty()).then_some(condition),
+            condition,
             nodes: Vec::new(),
         }];
         let (nodes, terminator) = self.parse_branch()?;
@@ -106,10 +112,7 @@ impl Parser<'_> {
             match terminator {
                 Some(Directive::Elsif(condition)) => {
                     let (nodes, next) = self.parse_branch()?;
-                    arms.push(Arm {
-                        condition: (!condition.is_empty()).then_some(condition),
-                        nodes,
-                    });
+                    arms.push(Arm { condition, nodes });
                     terminator = next;
                 }
                 Some(Directive::Else) => {
@@ -171,7 +174,7 @@ impl Parser<'_> {
                 continue;
             };
             let end = self.directive_end(keyword_start)?;
-            let condition = self.template[keyword_start + length..end].trim().to_owned();
+            let condition = self.condition(keyword_start + length, end);
             if name == "if" {
                 return Some((index, end + 1, Directive::If(condition)));
             }
@@ -183,6 +186,16 @@ impl Parser<'_> {
             return Some((index, end + 1, directive));
         }
         None
+    }
+
+    /// The trimmed condition between `start` and `end`; an empty one is `None`.
+    fn condition(&self, start: usize, end: usize) -> Option<Condition> {
+        let raw = &self.template[start..end];
+        let text = raw.trim();
+        (!text.is_empty()).then(|| Condition {
+            text: text.to_owned(),
+            offset: start + raw.len() - raw.trim_start().len(),
+        })
     }
 
     /// Index of the `}` closing a directive opened at `start` (already past
@@ -213,8 +226,8 @@ impl Parser<'_> {
 }
 
 enum Directive {
-    If(String),
-    Elsif(String),
+    If(Option<Condition>),
+    Elsif(Option<Condition>),
     Else,
     Endif,
 }

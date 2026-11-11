@@ -48,6 +48,27 @@ pub(crate) enum PathError {
     Other(String),
 }
 
+impl PathError {
+    /// Names the failing expression in a message that has no caret report.
+    pub(crate) fn in_expression(self, expression: &str) -> Self {
+        match self {
+            Self::Other(message) => Self::Other(format!("{message} in {expression}")),
+            parse => parse,
+        }
+    }
+
+    /// Moves the caret offset of a failure by `distance` bytes.
+    pub(crate) fn shifted(self, distance: usize) -> Self {
+        match self {
+            Self::Parse(failure) => Self::Parse(ParseFailure {
+                offset: failure.offset + distance,
+                ..failure
+            }),
+            other => other,
+        }
+    }
+}
+
 /// Evaluates `input` under one of the upstream placeholder parse paths so
 /// unknown symbols surface with the path's message and identifier offset.
 /// `filament` is the process call's extruder context: the bare-vector
@@ -59,10 +80,36 @@ pub(crate) fn evaluate_path(
     path: ParsePath,
     filament: usize,
 ) -> Result<Value, PathError> {
+    operand(input, config, path, filament).map(|operand| operand.value)
+}
+
+/// An `{if}` or `{elsif}` condition (`bool_expr_eval`, `PlaceholderParser.cpp:2408`): it must be
+/// a boolean (`evaluate_boolean`, `:604-612`).
+pub(crate) fn evaluate_condition(
+    input: &str,
+    config: &Config,
+    filament: usize,
+) -> Result<bool, PathError> {
+    let operand = operand(input, config, ParsePath::Brace, filament)?;
+    type_check::condition(&operand).map_err(|(offset, message)| {
+        PathError::Parse(ParseFailure {
+            message: message.to_owned(),
+            offset,
+        })
+    })?;
+    Ok(operand.value.as_bool())
+}
+
+fn operand(
+    input: &str,
+    config: &Config,
+    path: ParsePath,
+    filament: usize,
+) -> Result<deferred::Operand, PathError> {
     let (tokens, offsets) = tokenize(input).map_err(PathError::Other)?;
     let mut parser = Parser::new(tokens, offsets, config, path, filament);
     match parser.parse_or() {
-        Ok(value) if parser.index == parser.tokens.len() => Ok(value.value),
+        Ok(operand) if parser.index == parser.tokens.len() => Ok(operand),
         Ok(_) => Err(PathError::Other(format!(
             "unexpected token in expression: {input}"
         ))),
@@ -84,8 +131,7 @@ pub(crate) fn evaluate_path(
     }
 }
 
-/// Evaluates a brace-context expression (`{if …}` conditions and
-/// assignment right-hand sides) under the same variable semantics.
+/// Evaluates the index of an assigned vector element under the brace variable semantics.
 pub(crate) fn evaluate(input: &str, config: &Config, filament: usize) -> Result<Value, String> {
     let (tokens, offsets) = tokenize(input)?;
     let mut parser = Parser::new(tokens, offsets, config, ParsePath::Brace, filament);

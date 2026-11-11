@@ -1,6 +1,6 @@
 //! Upstream template parse-error report (`PlaceholderParser.cpp:1726-1770`).
 
-use super::super::expression::ParseFailure;
+use super::super::expression::{ParseFailure, PathError};
 
 /// Formats the error text stored per failed template: a header naming the
 /// line number and the parse-path message, the physical line containing the
@@ -19,4 +19,12 @@ pub(super) fn report(template: &str, failure: &ParseFailure, offset: usize) -> S
         message = failure.message,
         caret = " ".repeat(offset - line_start)
     )
+}
+
+/// The error text of a failure in an expression that starts at template byte `offset`.
+pub(super) fn describe(template: &str, error: PathError, offset: usize) -> String {
+    match error {
+        PathError::Parse(failure) => report(template, &failure, offset + failure.offset),
+        PathError::Other(message) => message,
+    }
 }
