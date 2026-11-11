@@ -268,3 +268,83 @@ fn h2c_manual_multi_nozzle_two_used_filaments_remain_unsupported() {
             .contains("unsupported automatic filament grouping context")
     );
 }
+
+#[test]
+fn h2c_manual_multi_nozzle_hybrid_remains_unsupported() {
+    let project =
+        fs::read(repo_root().join(
+            "tests/parity/filament-group-flush-mechanisms/h2c_manual_multi_nozzle_hybrid.3mf",
+        ))
+        .unwrap();
+    let runner = OrcaRunner::from_env()
+        .unwrap()
+        .expect("Native harness required");
+    let native = NativeCase::slice(&runner, &project, "h2c-manual-hybrid-");
+    assert!(
+        native
+            .native
+            .contains("; nozzle_volume_type = Standard,Hybrid\n")
+    );
+    let result = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(crate::runner::application::slice_project_plate_validated(
+            &project,
+            GenerationMetadata::deterministic(2026, 11, 10, 2, 0, 0),
+            None,
+            &ConfigOverrides::default(),
+            SlicerContext::new(0),
+        ));
+    let diagnostic = result.as_ref().err().map(|error| format!("{error:?}"));
+    fs::write(
+        native.root.join("ares.api.error"),
+        format!("{diagnostic:?}"),
+    )
+    .unwrap();
+    assert!(
+        matches!(result, Err(ares_core::SliceError::InvalidInput(ref detail))
+        if detail == "unsupported automatic filament grouping context"),
+        "API error: {diagnostic:?}"
+    );
+    let cli = crate::runner::application::cli_command()
+        .args(["slice", "-o"])
+        .arg(native.root.join("ares.cli.gcode"))
+        .arg(native.root.join("input.3mf"))
+        .output()
+        .unwrap();
+    fs::write(native.root.join("ares.cli.stderr"), &cli.stderr).unwrap();
+    assert!(!cli.status.success());
+    assert!(
+        String::from_utf8_lossy(&cli.stderr)
+            .contains("unsupported automatic filament grouping context")
+    );
+}
+
+#[test]
+fn h2c_hybrid_projects_load_without_volume_substitution() {
+    let source =
+        fs::read(repo_root().join(
+            "tests/parity/filament-group-flush-mechanisms/h2c_manual_multi_nozzle_hybrid.3mf",
+        ))
+        .unwrap();
+    for mode in ["Auto For Flush", "Manual"] {
+        let project = super::input::settings_variant(
+            &source,
+            json!({"filament_map_mode": mode}).as_object().unwrap(),
+        );
+        let substitutions = ares_core::project_config_substitutions(&project).unwrap();
+        assert!(
+            !substitutions
+                .iter()
+                .any(|entry| entry.key == "nozzle_volume_type"),
+            "{mode}: {substitutions:?}"
+        );
+        let loaded = ares_core::load_project(&project).unwrap();
+        assert_eq!(
+            serde_json::to_value(&loaded.settings().project.gcode.nozzle_volume_type).unwrap(),
+            json!(["Standard", "Hybrid"]),
+            "{mode}"
+        );
+    }
+}

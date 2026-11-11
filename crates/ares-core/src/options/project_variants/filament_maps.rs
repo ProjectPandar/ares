@@ -42,6 +42,8 @@ pub(crate) fn update_static_filament_maps(
             {
                 NozzleVolumeType::Standard => 0,
                 NozzleVolumeType::HighFlow => 1,
+                // PrintConfig.hpp:618-623: the volume map retains nvtHybrid = 2.
+                NozzleVolumeType::Hybrid => 2,
             }
         })
         .collect::<Vec<_>>();

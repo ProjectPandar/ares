@@ -31,6 +31,18 @@ any multi-nozzle extruder retain
 `InvalidInput("unsupported automatic filament grouping context")`.
 The manual-map witness covers the admitted boundary; a Native-first
 three-filament fixture with manual map `1,2,2` covers deliberate rejection.
+Manual multi-nozzle grouping also rejects a Hybrid nozzle-volume declaration
+on either extruder with the same unsupported error. A Native-first fixture
+changes only `nozzle_volume_type` to `Standard,Hybrid`; Native slices it, while
+Ares API and CLI must reject it rather than apply the uniform-nozzle proof.
+`PrintConfig.hpp:618-623` and `PrintConfig.cpp:724-731` define the Hybrid
+volume value as 2. The Rust typed enum and `nozzle_volume_type` registry retain
+that value without substitution. `PrintConfig.cpp:10889-10892` maps Hybrid to
+Standard only for preset lookup; the flush-dataset and canonical variant
+readers follow that rule, while static volume-map publication preserves 2.
+Project loading and config inspection remain available for Hybrid declarations.
+Only the manual multi-nozzle ToolOrdering context rejects the typed Hybrid
+volume; no loading-time slicing admission is applied.
 
 Slice 2 is separate: `calc_filament_group_for_match_multi_nozzle` and its
 Auto-For-Match dispatch and validation. It requires its own red test and is

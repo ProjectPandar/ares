@@ -143,6 +143,16 @@
         "Change only project filament_map to [1,2,2] and plate filament_maps to 1 2 2.",
         "Preserve all geometry, object filament assignments and remaining metadata. Native must consume all three logical filaments; Ares deliberately rejects the two used filaments on the multi-nozzle extruder."
       ]
+    },
+    {
+      "id": "h2c_manual_multi_nozzle_hybrid",
+      "input": "h2c_manual_multi_nozzle_hybrid.3mf",
+      "sha256": "33fc5bcf7c1d3e64932004113d2167f317347c5e28b18372cb03fe2107294ac0",
+      "source": "Authored h2c_manual_multi_nozzle.3mf; no user-derived bytes.",
+      "generation": [
+        "Change only project nozzle_volume_type from [Standard,Standard] to [Standard,Hybrid].",
+        "Preserve all other project fields and every other archive payload. Native slices this input successfully; Ares deliberately rejects Hybrid in manual multi-nozzle grouping because the restricted equivalence does not cover it."
+      ]
     }
   ]
 }

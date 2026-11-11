@@ -65,6 +65,9 @@ pub enum NozzleVolumeType {
     Standard,
     #[serde(rename = "High Flow")]
     HighFlow,
+    // PrintConfig.hpp:618-623 / PrintConfig.cpp:724-731: stable serialized value.
+    #[serde(rename = "Hybrid")]
+    Hybrid = 2,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]

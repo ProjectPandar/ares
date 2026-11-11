@@ -157,8 +157,9 @@ fn dataset(settings: &ProjectSettings, raw: &ProjectSettingsRaw, nozzle: usize) 
             ExtruderType::DirectDrive => "Direct Drive",
             ExtruderType::Bowden => "Bowden",
         };
+        // PrintConfig.cpp:10889-10892: Hybrid uses Standard for preset lookup.
         let volume = match at(&settings.project.gcode.nozzle_volume_type.0, nozzle) {
-            NozzleVolumeType::Standard => "Standard",
+            NozzleVolumeType::Standard | NozzleVolumeType::Hybrid => "Standard",
             NozzleVolumeType::HighFlow => "High Flow",
         };
         let variant = format!("{extruder} {volume}");

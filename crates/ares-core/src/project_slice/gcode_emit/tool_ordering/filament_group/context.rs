@@ -5,6 +5,9 @@ use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintC
 use crate::{ProjectPrimeVolumeMode, ProjectSettings, SliceError};
 use std::collections::{BTreeMap, BTreeSet};
 
+mod inventory;
+use inventory::{build_nozzle_groups, check_nozzle_stats};
+
 pub(super) struct NozzleGroup {
     pub extruder: usize,
     pub group_id: usize,
@@ -104,6 +107,16 @@ impl Context {
                 .get(head)
                 .map_or(0, |v| *v as i32)
         });
+        if manual_multi_nozzle
+            && settings
+                .project
+                .gcode
+                .nozzle_volume_type
+                .0
+                .contains(&crate::options::NozzleVolumeType::Hybrid)
+        {
+            return Err(unsupported());
+        }
         if !manual_multi_nozzle {
             check_nozzle_stats(&config, &volumes)?;
         }
@@ -209,74 +222,6 @@ impl Context {
             manual_multi_nozzle,
         })
     }
-}
-
-// ToolOrdering.cpp:1503-1527: expand each extruder into physical nozzle groups.
-fn build_nozzle_groups(counts: &[usize], volumes: &[i32; 2]) -> Vec<NozzleGroup> {
-    let mut groups = Vec::new();
-    let mut group_id = 0;
-    for (extruder, count) in counts.iter().copied().enumerate() {
-        for _ in 0..count {
-            groups.push(NozzleGroup {
-                extruder,
-                group_id,
-                volume: volumes[extruder],
-            });
-            group_id += 1;
-        }
-    }
-    groups
-}
-
-fn check_nozzle_stats(config: &DynamicPrintConfig, volumes: &[i32; 2]) -> Result<(), SliceError> {
-    // PrintConfig.cpp:940–972 / ToolOrdering.cpp:1508–1530. One physical
-    // nozzle of one volume type is the admitted inventory boundary.
-    for (head, wire) in config
-        .option("extruder_nozzle_stats")
-        .strings()
-        .iter()
-        .enumerate()
-        .take(2)
-    {
-        let mut stats = BTreeMap::new();
-        for token in wire.split('|') {
-            let mut parts = token.split('#');
-            let volume = match parts.next().unwrap() {
-                "Standard" => 0,
-                "High Flow" => 1,
-                "Hybrid" => 2,
-                "TPU High Flow" => 3,
-                "E3D High Flow" => 5,
-                "Extra High Flow" => 6,
-                _ => continue,
-            };
-            let Some(count) = parts.next() else { continue };
-            stats.insert(volume, atoi(count));
-        }
-        if !stats.is_empty() {
-            if stats.len() != 1 || stats.values().any(|v| *v != 1) || stats.contains_key(&2) {
-                return Err(unsupported());
-            }
-            // Non-hybrid build_nozzle_groups retains the configured volume.
-            if !stats.contains_key(&volumes[head]) {
-                return Err(unsupported());
-            }
-        }
-    }
-    Ok(())
-}
-
-// std::atoi consumes a signed C-locale decimal prefix (PrintConfig.cpp:967).
-fn atoi(text: &str) -> i32 {
-    let text = text.trim_start_matches([' ', '\t', '\n', '\u{b}', '\u{c}', '\r']);
-    let sign = usize::from(text.starts_with(['+', '-']));
-    let end = sign
-        + text
-            .bytes()
-            .skip(sign)
-            .take_while(u8::is_ascii_digit)
-            .count();
-    text[..end].parse().unwrap_or(0)
 }
 
 fn prepare_flush_matrices(settings: &ProjectSettings, total: usize) -> [Vec<Vec<f32>>; 2] {

@@ -345,8 +345,9 @@ pub(crate) fn canonical_variant(extruder: ExtruderType, volume: NozzleVolumeType
         ExtruderType::DirectDrive => "Direct Drive",
         ExtruderType::Bowden => "Bowden",
     };
+    // PrintConfig.cpp:10889-10892: Hybrid is not a physical preset variant.
     let volume = match volume {
-        NozzleVolumeType::Standard => "Standard",
+        NozzleVolumeType::Standard | NozzleVolumeType::Hybrid => "Standard",
         NozzleVolumeType::HighFlow => "High Flow",
     };
     format!("{extruder} {volume}")
