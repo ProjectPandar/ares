@@ -251,3 +251,43 @@ upstream dependencies. They remain deferred unless the H2C witness proves
 that the existing context and sequence seam cannot produce the strict public
 Native output without them. No comparison normalization or output filtering
 may substitute for these behaviors.
+
+### Bounded implementation destinations and deferred dependencies
+
+The implementation boundary below narrows the earlier complete-path description
+ to the source branches required by the static H2C witness:
+
+- `enumeration.rs` retains the existing X2D solver and memory heap. Its private
+  child `enumeration/manual.rs` ports the physical-nozzle base-`k` traversal,
+  nozzle/filament-mask deduplication, preferences, strict optimum selection,
+  heap retention and empty-inventory AMS selection. No injective-assignment
+  shortcut is permitted: multiple filaments may share a physical nozzle.
+- The manual child implements `estimate_dedup_enum_count` (`199-224`) and the
+  `ENUM_EARLY_EXIT = 10000000` / `ENUM_THRESHOLD = 10000` selector. Inputs that
+  select clustering remain unsupported. `FlushDistanceEvaluator` (`570-635`),
+  `KMediods` (`636-900`) and `ClusteringBudget` (`FilamentGroup.hpp:155-163`)
+  are explicitly deferred; no substitute clustering or clock/RNG API is added.
+- `reorder/nozzles.rs` ports the per-nozzle base reorder and cyclic
+  extruder/nozzle stitching in `ToolOrderUtils.cpp:1030-1141,1324-1494`, using
+  the existing Hamiltonian solver without inter-layer forecast. This private
+  routine is shared by `filament_group/sequence.rs` for `full_evaluate` and
+  by the static manual multi-nozzle branch in `reorder.rs`. X2D continues to
+  use its existing scoring and downstream ordering branches.
+- `sequence.rs` ports the `full_evaluate` composition (`FilamentGroup.cpp:124-196`)
+  for an empty initial nozzle status and disabled preload. In this boundary,
+  `simulate_filament_change_time` (`MultiNozzleUtils.cpp:467-661`) reduces to
+  the loaded-filament state per owning extruder: switching physical nozzles
+  does not eliminate AMS-channel clearance or the associated load/unload time.
+- `context.rs` reconstructs opposite-extruder restrictions before source
+  intersection removal, and retains requested per-filament volume restrictions.
+  Nonempty nozzle statistics and loaded-nozzle/AMS hardware state are not
+  admitted by this new manual solver. General nozzle-state loading, preload,
+  AMS color matching/flow and dynamic per-layer rematching remain deferred.
+- `mod.rs` publishes the selected physical IDs, deriving used-filament
+  extruder/volume values from their nozzle records. Unused solver slots retain
+  the upstream primary-map master default or remembered-map zero default;
+  input nozzle IDs are not used as a solution.
+
+The bounded enumeration, full evaluation and downstream static nozzle order
+must together satisfy the unchanged complete-output witness. This is not a
+claim to port every branch listed in the broader source boundary above.
