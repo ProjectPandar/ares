@@ -73,12 +73,33 @@ fn relative_launch_probe() {
         work,
     )
     .unwrap();
-    let directory = std::fs::read_dir(work)
+    let directories: Vec<_> = std::fs::read_dir(work)
         .unwrap()
-        .next()
-        .unwrap()
-        .unwrap()
-        .path();
+        .map(|entry| entry.unwrap().path())
+        .collect();
+    let commands: Vec<_> = directories
+        .iter()
+        .filter(|path| {
+            path.file_name()
+                .unwrap()
+                .as_encoded_bytes()
+                .starts_with(b"command-")
+        })
+        .collect();
+    assert_eq!(commands.len(), 1, "expected exactly one command capture");
+    assert_eq!(
+        directories
+            .iter()
+            .filter(|path| path
+                .file_name()
+                .unwrap()
+                .as_encoded_bytes()
+                .starts_with(b"cache-command-"))
+            .count(),
+        1,
+        "expected exactly one cache request trace"
+    );
+    let directory = commands[0];
     let command: serde_json::Value =
         serde_json::from_slice(&std::fs::read(directory.join("command.json")).unwrap()).unwrap();
     let binary = Path::new(command["binary"].as_str().unwrap());
