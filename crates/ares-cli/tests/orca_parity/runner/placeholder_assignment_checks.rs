@@ -13,7 +13,7 @@ const SYSTEM_OUTPUT: &str = "Symbol is already defined as system output variable
 const NOT_NUMERIC: &str = "Right side is not a numeric expression";
 const NOT_BOOLEAN: &str = "Right side is not a boolean expression";
 
-fn assert_output_matches_native(label: &str, line: &str) {
+pub(super) fn assert_output_matches_native(label: &str, line: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

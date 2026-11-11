@@ -28,3 +28,7 @@ mod placeholder_string_addition;
 mod placeholder_type_errors;
 #[path = "placeholder_value_types.rs"]
 mod placeholder_value_types;
+#[path = "placeholder_vector_copies.rs"]
+mod placeholder_vector_copies;
+#[path = "placeholder_vector_variables.rs"]
+mod placeholder_vector_variables;
