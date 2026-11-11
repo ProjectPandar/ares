@@ -20,6 +20,7 @@ mod selection;
 mod session;
 mod slice;
 mod slice_tower_fit;
+mod snapshot;
 mod transformation;
 
 pub use arrange_job::{ArrangeScope, ArrangeSettings};
@@ -28,6 +29,7 @@ pub use scale::ScaleEdit;
 pub use session::{PlaterPlate, PlaterSession};
 pub use slice::{PlaterSlice, slice_plater_plate, slice_plater_with_profiles};
 pub(crate) use slice_tower_fit::fit_slice_wipe_tower;
+pub use snapshot::PlaterSnapshot;
 
 /// No edits: the loaded model as it is.
 pub(crate) static NO_EDITS: PlaterEdits = PlaterEdits::NONE;

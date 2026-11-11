@@ -7,6 +7,7 @@ import { moveInstance, rotateInstance } from "../state/plates";
 import { placedScene, presetSliceBlocker } from "../state/presets";
 import { openStlSession } from "../state/stlSession";
 import { useApp } from "../state/store";
+import { takeSnapshot } from "../state/undoRedo";
 import { firstString } from "../sidebar/options";
 import { bedFromSettings } from "./bedShape";
 import type { ViewPreset, ZoomTarget } from "./camera";
@@ -175,10 +176,11 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       if (id !== undefined && useApp.getState().selectedObject !== id) selectObject(id);
     };
     viewport.setEditHandlers(editable && plater ? {
-      move: (target, displacement) => {
+      start: (target) => {
         select(target.object);
-        void moveInstance(target, displacement);
+        takeSnapshot();
       },
+      move: (target, displacement) => void moveInstance(target, displacement),
       rotate: (target, radians) => void rotateInstance(target, radians),
     } : undefined, gizmo);
   }, [viewport, editable, plater, gizmo]);

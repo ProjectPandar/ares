@@ -14,7 +14,10 @@ use crate::profiles::{PresetCatalog, ProfileSliceOptions};
 use crate::scene::{self, SceneInstance, ScenePlate};
 use crate::{SceneData, SliceOutput};
 
+mod snapshot;
 mod transform;
+
+pub use snapshot::PlaterSnapshot;
 
 #[wasm_bindgen]
 pub struct PlaterSession {

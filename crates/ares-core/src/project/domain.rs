@@ -11,6 +11,8 @@ mod import_scope;
 mod instance;
 pub(crate) use instance::InstancePvs;
 mod instance_copies;
+mod model_snapshot;
+pub(crate) use model_snapshot::ModelSnapshot;
 mod plate_selection;
 mod plater_edits;
 use import_scope::ImportScope;

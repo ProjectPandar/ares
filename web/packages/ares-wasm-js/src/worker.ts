@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import init, {
   PlaterSession,
+  type PlaterSnapshot,
   createPlaterSessionWithProfiles,
   PresetCatalog,
   decodeConfigValue,
@@ -48,6 +49,9 @@ function keepPlateViewer(sessionId: number, plate: number | undefined) {
   plateViewers.set(key, viewer!);
   if (previous !== viewer) previous?.free();
 }
+
+/** Undo/redo snapshots of each plater session by id (`UndoRedo::Stack`). */
+const snapshots = new Map<number, Map<number, PlaterSnapshot>>();
 
 /** An edit or release invalidates every slice result of the session. */
 function dropPlateViewers(sessionId: number) {
@@ -240,6 +244,27 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       dropPlateViewers(request.sessionId);
       return [JSON.parse(session.layout()), []];
     }
+    case "platerTakeSnapshot": {
+      const { sessionId, snapshotId } = request;
+      const taken = snapshots.get(sessionId) ?? new Map<number, PlaterSnapshot>();
+      taken.set(snapshotId, sessions.get(sessionId)!.takeSnapshot());
+      snapshots.set(sessionId, taken);
+      return [undefined, []];
+    }
+    case "platerLoadSnapshot": {
+      const session = sessions.get(request.sessionId)!;
+      session.loadSnapshot(snapshots.get(request.sessionId)!.get(request.snapshotId)!);
+      dropPlateViewers(request.sessionId);
+      return [JSON.parse(session.layout()), []];
+    }
+    case "platerDropSnapshots": {
+      const taken = snapshots.get(request.sessionId)!;
+      for (const snapshotId of request.snapshotIds) {
+        taken.get(snapshotId)!.free();
+        taken.delete(snapshotId);
+      }
+      return [undefined, []];
+    }
     case "platerArrangeSettings": {
       const session = sessions.get(request.sessionId)!;
       const settings = {
@@ -278,6 +303,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     }
     case "platerFree":
       dropPlateViewers(request.sessionId);
+      for (const snapshot of snapshots.get(request.sessionId)?.values() ?? []) snapshot.free();
+      snapshots.delete(request.sessionId);
       sessions.get(request.sessionId)!.free();
       sessions.delete(request.sessionId);
       return [undefined, []];

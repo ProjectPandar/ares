@@ -17,6 +17,7 @@ type Axis = 0 | 1 | 2;
 export class PlaterSession {
   readonly #call: Call;
   readonly #sessionId: number;
+  #nextSnapshotId = 0;
 
   /** @internal */
   constructor(call: Call, sessionId: number) {
@@ -225,6 +226,26 @@ export class PlaterSession {
    */
   async preview(plate: number): Promise<boolean> {
     return (await this.#call({ kind: "platerPreview", sessionId: this.#sessionId, plate })) as boolean;
+  }
+
+  /**
+   * Saves the model and plates as the requests sent before leave them
+   * (`UndoRedo::StackImpl::take_snapshot`) and returns the snapshot's id.
+   */
+  takeSnapshot(): number {
+    const snapshotId = this.#nextSnapshotId++;
+    void this.#call({ kind: "platerTakeSnapshot", sessionId: this.#sessionId, snapshotId });
+    return snapshotId;
+  }
+
+  /** Puts back a snapshot (`UndoRedo::StackImpl::load_snapshot`); every slice result is dropped as by an edit. */
+  async loadSnapshot(snapshotId: number): Promise<PlaterLayout> {
+    return (await this.#call({ kind: "platerLoadSnapshot", sessionId: this.#sessionId, snapshotId })) as PlaterLayout;
+  }
+
+  /** Releases snapshots no longer needed. */
+  async dropSnapshots(snapshotIds: number[]): Promise<void> {
+    await this.#call({ kind: "platerDropSnapshots", sessionId: this.#sessionId, snapshotIds });
   }
 
   /** Releases the worker's session. */

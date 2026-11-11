@@ -168,8 +168,8 @@ pub use pipeline::slice_stl_validated;
 pub use pipeline::{PipelineDiagnostics, PipelineStage, SlicingPipeline, run_slicing_pipeline};
 pub use planning::{Layer, plan_layers};
 pub use plater::{
-    ArrangeScope, ArrangeSettings, PlaterEdits, PlaterPlate, PlaterSession, PlaterSlice, ScaleEdit,
-    slice_plater_plate, slice_plater_with_profiles,
+    ArrangeScope, ArrangeSettings, PlaterEdits, PlaterPlate, PlaterSession, PlaterSlice,
+    PlaterSnapshot, ScaleEdit, slice_plater_plate, slice_plater_with_profiles,
 };
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::warnings::{PrintWarning, SlicingNotificationType, WarningLevel};

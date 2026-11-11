@@ -3,6 +3,7 @@ import { ObjectIcon } from "../shell/icons";
 import type { ScaleAndSize } from "@ares-slicer/wasm";
 import { rotateInstance, setInstancePosition, setInstanceRotation, setInstanceScale, setInstanceSize } from "../state/plates";
 import { useApp } from "../state/store";
+import { takeSnapshot } from "../state/undoRedo";
 import { Section } from "./Section";
 
 const AXES = ["X", "Y", "Z"] as const;
@@ -88,7 +89,10 @@ export function ObjectManipulation() {
       <Fields name="Position" values={[matrix[12], matrix[13], matrix[14]]} unit="mm" disabled={slicing}
         onCommit={(axis, value) => void setInstancePosition(target, axis, value)} />
       <Fields name="Rotate (relative)" values={[0, 0, 0]} unit="°" disabled={slicing}
-        onCommit={(axis, degrees) => void rotateInstance(target, radians(axis, degrees))} />
+        onCommit={(axis, degrees) => {
+          takeSnapshot();
+          void rotateInstance(target, radians(axis, degrees));
+        }} />
       {fields?.matrix === matrix && (
         <>
           <Fields name="Rotate (absolute)" values={fields.degrees} unit="°" disabled={slicing}

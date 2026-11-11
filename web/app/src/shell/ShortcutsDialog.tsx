@@ -30,6 +30,10 @@ const GROUPS: [string, [string, string][]][] = [
     ["R", "Gizmo rotate"],
     ["A", "Arrange all objects"],
     ["Shift+A", "Arrange objects on selected plates"],
+    // Shortcuts.cpp:74-75; Ctrl+Shift+Z redoes too.
+    [`${ctrl}Z`, "Undo"],
+    [`${ctrl}Y`, "Redo"],
+    [`${ctrl}Shift+Z`, "Redo"],
     // Shortcuts.cpp:33-41, 79-85.
     [mac ? "Backspace" : "Delete", "Delete Selected"],
     [`${ctrl}D`, "Delete All"],

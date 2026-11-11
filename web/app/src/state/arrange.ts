@@ -8,6 +8,7 @@ import type { ArrangeSettings, ArrangeSettingsModel, PlaterSession } from "@ares
 import { saveConfig, storedConfig } from "./persistence";
 import { applyLayout, selectPlate } from "./plates";
 import { useApp } from "./store";
+import { takeSnapshot } from "./undoRedo";
 
 /** The app-config keys of the settings set `key` (`dist_key`, `rot_key` and the shared two). */
 function configKeys({ key }: ArrangeSettingsModel) {
@@ -91,6 +92,7 @@ export async function arrange(plate?: number) {
   const { plater, arrange: current, slice, arranging } = useApp.getState();
   if (!plater || !current || slice.status === "slicing" || arranging) return;
   if (plate !== undefined) await selectPlate(plate);
+  takeSnapshot();
   useApp.setState({ arranging: true, arrangeError: undefined });
   try {
     const layout = await plater.arrange(current.settings, plate);

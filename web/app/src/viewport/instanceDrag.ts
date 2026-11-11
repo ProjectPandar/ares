@@ -7,13 +7,21 @@ export type InstanceRef = { object: number; instance: number };
 
 type Vec3 = [number, number, number];
 
-/** Moves one instance by a world displacement, or turns it by world-axis angles in radians. */
-export type EditHandlers = { move: (target: InstanceRef, displacement: Vec3) => void; rotate: (target: InstanceRef, radians: Vec3) => void };
+/**
+ * `start` runs before the first step of a drag (the drag's undo snapshot, GLCanvas3D::do_move /
+ * do_rotate); each step moves one instance by a world displacement, or turns it by world-axis
+ * angles in radians.
+ */
+export type EditHandlers = {
+  start: (target: InstanceRef) => void;
+  move: (target: InstanceRef, displacement: Vec3) => void;
+  rotate: (target: InstanceRef, radians: Vec3) => void;
+};
 
 /** What a pointer press landed on: an instance body, or one of its gizmo's handles. */
 export type DragHit = { target: InstanceRef; point: THREE.Vector3; gizmo: GizmoHit | null };
 
-type Drag = { target: InstanceRef; last: THREE.Vector3; gizmo: GizmoHit | null };
+type Drag = { target: InstanceRef; last: THREE.Vector3; gizmo: GizmoHit | null; started: boolean };
 
 /**
  * GLCanvas3D::on_mouse dragging (`m_mouse.drag`): a press on an instance starts a move on the
@@ -48,7 +56,7 @@ export function attachInstanceDrag(
     const { gizmo } = pressed;
     const last = gizmo?.kind === "ring" ? planePoint(ray(event).ray, gizmo.center, gizmo.axis) : pressed.point;
     if (!last) return;
-    drag = { target: pressed.target, last, gizmo };
+    drag = { target: pressed.target, last, gizmo, started: false };
     controls.enabled = false;
   }, { capture: true });
   canvas.addEventListener("pointermove", (event) => {
@@ -60,6 +68,10 @@ export function attachInstanceDrag(
       : gizmo.kind === "axis" ? axisPoint(line, drag.last, gizmo.axis)
       : planePoint(line, gizmo.center, gizmo.axis);
     if (!point || point.equals(drag.last)) return;
+    if (!drag.started) {
+      drag.started = true;
+      handlers.start(drag.target);
+    }
     if (gizmo?.kind === "ring") {
       const from = drag.last.clone().sub(gizmo.center);
       const to = point.clone().sub(gizmo.center);
