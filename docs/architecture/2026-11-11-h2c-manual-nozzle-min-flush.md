@@ -151,8 +151,6 @@ Defer the following adjacent upstream behavior:
 
 The typed `NozzleVolumeType::Hybrid` rejection, existing X2D behavior, and
 current unsupported-context checks are retained rather than deferred.
-Implementation starts only after the narrowed admission slice and typed
-rejection are available for a clean rebase.
 
 ## Spec exit criteria
 
