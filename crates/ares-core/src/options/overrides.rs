@@ -141,6 +141,10 @@ impl ConfigOverrides {
         self.values.contains_key(key)
     }
 
+    pub(crate) fn tokens(&self, key: &str) -> Option<&[String]> {
+        self.values.get(key).map(|value| value.tokens.as_slice())
+    }
+
     /// Applies the overrides onto the raw project-settings view
     /// (`ConfigBase::apply_only`, `Config.cpp:461`: later values win).
     pub(crate) fn apply(&self, raw: &mut ProjectSettingsRaw) -> Result<(), SliceError> {

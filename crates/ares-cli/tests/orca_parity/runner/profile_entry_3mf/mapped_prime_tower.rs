@@ -184,4 +184,3 @@ fn mapped_tower_keeps_tower_for_distinct_cli_colours() {
         overrides: json!({"filament_colour": ["#102030", "#E0C040"]}),
     });
 }
-

@@ -3,7 +3,11 @@ use crate::{
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
-pub(super) fn disable_after_mapping(raw: &mut ProjectSettingsRaw, settings: &ProjectSettings) {
+pub(super) fn disable_after_mapping(
+    raw: &mut ProjectSettingsRaw,
+    settings: &ProjectSettings,
+    overrides: &crate::ConfigOverrides,
+) {
     let single_preset_mapping = settings
         .project
         .preset
@@ -27,6 +31,21 @@ pub(super) fn disable_after_mapping(raw: &mut ProjectSettingsRaw, settings: &Pro
     let smooth_timelapse = enable_timelapse
         && matches!(raw.get("timelapse_type"), Some(RawConfigValue::Text(value)) if value == "1");
     if !single_preset_mapping || smooth_timelapse {
+        return;
+    }
+
+    let distinct_cli_colours = overrides.tokens("filament_colour").is_some_and(|colours| {
+        colours
+            .iter()
+            .filter(|colour| !colour.is_empty())
+            .any(|colour| {
+                colours
+                    .iter()
+                    .filter(|candidate| !candidate.is_empty())
+                    .any(|candidate| candidate != colour)
+            })
+    });
+    if distinct_cli_colours {
         return;
     }
 
