@@ -221,6 +221,7 @@ impl Writer {
             });
         }
         let center = self.rotated(center);
+        self.set_acceleration(amount == 0.0);
         write!(
             self.gcode,
             "G{} X{:.3} Y{:.3} I{:.3} J{:.3}",

@@ -23,10 +23,7 @@ pub(super) fn prepare(generator: &mut Generator<'_>) {
         else {
             continue;
         };
-        let wipe_depth = (change.length / (generator.plan.width - 2.0 * generator.plan.perimeter))
-            .ceil()
-            * generator.plan.perimeter
-            * layer.spacing;
+        let wipe_depth = change.depth - change.nozzle_depth;
         let mut depth = *depths.entry(new).or_insert(block.start);
         let nozzle_change =
             generator.plan.nozzle_map[change.old] != generator.plan.nozzle_map[change.new];
@@ -45,7 +42,7 @@ pub(super) fn prepare(generator: &mut Generator<'_>) {
             *depths.entry(old).or_insert(old_block.start) += nozzle_depth;
         }
         let y = if generator.index % 2 == 1 {
-            depth + wipe_depth - layer.spacing * generator.plan.perimeter
+            depth + wipe_depth - layer.spacing * generator.plan.infill_gap
         } else {
             depth
         };

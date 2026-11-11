@@ -66,9 +66,15 @@ impl Generator<'_> {
             self.filaments[old].material, self.filaments[new].material
         )
         .unwrap();
+        if matches!(
+            self.settings.printer.gcode.gcode_flavor,
+            crate::GCodeFlavor::MarlinLegacy | crate::GCodeFlavor::MarlinFirmware
+        ) {
+            writer.gcode.push_str("M220 B\n");
+        }
         writer.gcode.push_str("M220 S100\n");
         let count = (length / bounds.size()[0]) as i32;
-        let offset = count as f32 * (self.plan.layers[self.index].spacing * self.plan.perimeter);
+        let offset = count as f32 * (self.plan.layers[self.index].spacing * self.plan.infill_gap);
         let initial = [
             if matches!(self.index % 4, 1 | 2) {
                 bounds.upper[0]
@@ -161,6 +167,12 @@ impl Generator<'_> {
         self.plan.blocks[block_index].current +=
             depth - nozzle_depth * self.plan.layers[self.index].spacing;
         self.plan.blocks[block_index].last_filament = Some(new);
+        if matches!(
+            self.settings.printer.gcode.gcode_flavor,
+            crate::GCodeFlavor::MarlinLegacy | crate::GCodeFlavor::MarlinFirmware
+        ) {
+            writer.gcode.push_str("M220 R\n");
+        }
         writer.feedrate(self.travel_speed * 60.0);
         CommandWriter::flush_planner_queue(
             &mut writer.gcode,

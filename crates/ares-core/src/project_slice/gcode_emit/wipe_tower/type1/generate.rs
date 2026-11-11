@@ -46,17 +46,17 @@ fn finish_remaining(
         };
         if let Some(position) = results.iter().position(|r| r.common.new_tool == tool) {
             let previous = results.remove(position);
-            results.insert(position, previous.merge(result));
+            results.insert(position, previous.merge(result, generator.max_speed()));
         } else if let Some(position) = last_filament
             .is_none()
             .then(|| results.iter().position(|r| r.common.initial_tool == tool))
             .flatten()
         {
             let next = results.remove(position);
-            results.insert(position, result.merge(next));
+            results.insert(position, result.merge(next, generator.max_speed()));
         } else if !result.common.gcode.is_empty() {
             *finish = Some(match finish.take() {
-                Some(first) => first.merge(result),
+                Some(first) => first.merge(result, generator.max_speed()),
                 None => result,
             });
         }
@@ -69,7 +69,7 @@ impl Generator<'_> {
         if self.plan.layers.is_empty() {
             return Ok(Vec::new());
         }
-        self.plan.plan_tower();
+        self.plan.plan_tower_new();
         if let Some(change) = self
             .plan
             .layers
@@ -192,10 +192,10 @@ impl Generator<'_> {
         } else if let Some(finish) = finish {
             if let Some(position) = finish_index {
                 let previous = results.remove(position);
-                results.insert(position, previous.merge(finish));
+                results.insert(position, previous.merge(finish, self.max_speed()));
             } else {
                 let next = results.remove(0);
-                results.insert(0, finish.merge(next));
+                results.insert(0, finish.merge(next, self.max_speed()));
             }
         }
         if let Some(wall) = timelapse_wall

@@ -1,4 +1,5 @@
 //! `WipeTower.cpp:522–659,1182–1233`: Type1 writer state and linear motion.
+mod acceleration;
 mod path;
 
 use super::super::writer::Extrusion;
@@ -21,6 +22,12 @@ pub(super) struct Writer {
     size: [f32; 2],
     angle: f32,
     y_shift: f32,
+    accelerations: Vec<[u32; 2]>,
+    max_acceleration: u32,
+    last_acceleration: u32,
+    flavor: crate::GCodeFlavor,
+    accel_to_decel: bool,
+    accel_to_decel_factor: f32,
 }
 
 impl Writer {
@@ -44,6 +51,12 @@ impl Writer {
             size: [0.0; 2],
             angle: 0.0,
             y_shift: 0.0,
+            accelerations: Vec::new(),
+            max_acceleration: 0,
+            last_acceleration: 0,
+            flavor: crate::GCodeFlavor::MarlinLegacy,
+            accel_to_decel: false,
+            accel_to_decel_factor: 0.0,
         }
     }
 
@@ -106,6 +119,7 @@ impl Writer {
                 width,
             });
         }
+        self.set_acceleration(amount == 0.0);
         self.gcode.push_str("G1");
         for (axis, before, after) in [('X', start[0], end[0]), ('Y', start[1], end[1])] {
             if (after - before).abs() > 1e-4_f32 {
@@ -202,6 +216,14 @@ impl Writer {
             upper = upper.map(|v| v + step);
             lower = lower.map(|v| v - step);
         }
+    }
+
+    pub(super) fn format_line_m104(&mut self, temperature: i32, tool: Option<i32>) {
+        self.gcode.push_str("M400\nM104");
+        if let Some(tool) = tool {
+            write!(self.gcode, " T{tool}").unwrap();
+        }
+        writeln!(self.gcode, " S{temperature} N0").unwrap();
     }
 
     pub(super) fn temperature(&mut self, temperature: i32, wait: bool) {

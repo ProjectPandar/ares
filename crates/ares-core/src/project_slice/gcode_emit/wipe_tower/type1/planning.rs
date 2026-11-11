@@ -55,7 +55,6 @@ pub(in crate::project_slice::gcode_emit) fn prepare(
     let mut current = first_tool;
     let mut nozzle_filaments = vec![None; nozzle_count];
     nozzle_filaments[plan.nozzle_map[current]] = Some(current);
-    let prime = settings.process.print.prime_volume.0 as f32;
     let mut layers = ordering.layers.iter_mut().peekable();
     while let Some(tools) = layers.next() {
         if !tools.has_wipe_tower {
@@ -88,6 +87,7 @@ pub(in crate::project_slice::gcode_emit) fn prepare(
             }
             let grab = (at(&settings.printer.remaining.grab_length.0, nozzle).0 * 2.4) as f32;
             purge = (purge - grab).max(0.0);
+            let prime = at(&config.filament_prime_volume.0, next).0 as f32;
             plan.add(position, (current, next), prime, purge);
             current = next;
             nozzle_filaments[nozzle] = Some(current);

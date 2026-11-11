@@ -85,6 +85,7 @@ where
         "filament_preheat_temperature_delta",
         &NullableVectorRef::new(&value.gcode.filament_preheat_temperature_delta),
     )?;
+    map.serialize_entry("filament_prime_volume", &value.gcode.filament_prime_volume)?;
     map.serialize_entry("filament_printable", &value.gcode.filament_printable)?;
     map.serialize_entry(
         "filament_ramming_parameters",

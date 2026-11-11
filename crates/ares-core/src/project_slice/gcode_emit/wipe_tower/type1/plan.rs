@@ -30,6 +30,7 @@ pub(super) struct Plan {
     pub(super) height: f32,
     pub(super) perimeter: f32,
     pub(super) spacing: f32,
+    pub(super) infill_gap: f32,
     pub(super) brim: f32,
     pub(super) rib_length: f32,
     pub(super) rib_width: f32,
@@ -62,6 +63,7 @@ impl Plan {
             height: 0.0,
             perimeter: at(&settings.project.print.nozzle_diameter.0, count - 1).0 as f32 * 1.25,
             spacing: p.prime_tower_infill_gap.0 as f32 / 100.0,
+            infill_gap: 0.0,
             brim: p.prime_tower_brim_width.0 as f32,
             rib_length: 0.0,
             rib_width: p.wipe_tower_rib_width.0 as f32,
@@ -156,13 +158,25 @@ impl Plan {
                 let change = &mut self.layers[index].changes[change_index];
                 change.nozzle_depth = nozzle_depth;
                 change.depth = (change.length / (self.width - 2.0 * self.perimeter)).ceil()
-                    * self.perimeter
+                    * self.infill_gap
                     + nozzle_depth;
             }
         }
     }
 
-    pub(super) fn plan_tower(&mut self) {
+    pub(super) fn calc_block_infill_gap(&mut self) {
+        let width = self.width - 2.0 * self.perimeter;
+        self.infill_gap = self.perimeter * self.spacing;
+        let gap = self.infill_gap;
+        for layer in &mut self.layers {
+            for change in &mut layer.changes {
+                change.depth = (change.length / width).ceil() * gap + change.nozzle_depth;
+            }
+        }
+        self.spacing = 1.0;
+    }
+
+    pub(super) fn plan_tower_new(&mut self) {
         self.height = self.layers.last().map_or(0.0, |layer| layer.z);
         if self.brim < 0.0 {
             self.brim = if self.height < 100.0 {
@@ -171,6 +185,7 @@ impl Plan {
                 8.0
             };
         }
+        self.calc_block_infill_gap();
         if self.rib {
             self.generate_blocks();
             let depth = self.blocks.iter().map(|b| b.depth).sum::<f32>() + self.perimeter;
@@ -213,23 +228,22 @@ impl Plan {
 }
 
 fn apply_spacing(layer: &mut Layer, index: usize, spacing: f32, perimeter: f32, width: f32) {
-    if index == 0 && f64::from(spacing) > 1.0 + 1e-4 {
+    if index == 0 {
         layer.spacing = 1.0;
         for change in &mut layer.changes {
-            let length =
-                super::super::plan::volume_to_length(change.volume, perimeter, layer.height);
-            let line = width - 2.0 * perimeter;
-            let expanded = ((length * spacing / line).floor() * line).max(length);
-            let lines = ((expanded - 1e-3) / line).ceil() as i32;
-            let nozzle_lines = ((change.nozzle_depth + 1e-3) / (2.0 * perimeter)) as i32;
-            change.depth = lines as f32 * perimeter + nozzle_lines as f32 * (2.0 * perimeter);
-            change.volume *= expanded / length;
-            change.length = expanded;
+            let wipe_depth = (change.depth - change.nozzle_depth) * spacing;
+            let lines = wipe_depth / perimeter;
+            change.nozzle_depth *= spacing;
+            change.depth = wipe_depth + change.nozzle_depth;
+            change.length = lines * (width - 2.0 * perimeter);
+            change.volume =
+                super::super::plan::length_to_volume(change.length, perimeter, layer.height);
         }
     } else {
         layer.spacing = spacing;
         for change in &mut layer.changes {
             change.depth *= spacing;
+            change.nozzle_depth *= spacing;
             change.length =
                 super::super::plan::volume_to_length(change.volume, perimeter, layer.height);
         }

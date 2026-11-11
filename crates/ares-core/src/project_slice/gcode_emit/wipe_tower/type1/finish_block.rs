@@ -166,6 +166,7 @@ impl Generator<'_> {
             self.index > 1 && !block.solid_infill[self.index - 1] && self.flow < self.flow_at(0.2);
         let mut writer = if thicker {
             let mut w = Writer::new(0.2, p, self.filaments[0].area, tool);
+            w.configure_accelerations(self.settings, self.index == 0);
             w.flow = self.flow_at(0.2);
             w.max_e_speed = self.filaments[tool].max_e_speed;
             w.set_y_shift(self.y_shift);

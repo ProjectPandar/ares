@@ -86,11 +86,15 @@ impl<'a> Generator<'a> {
         if speed == 0.0 { 30.0 } else { speed }
     }
 
+    pub(super) fn max_speed(&self) -> f32 {
+        self.settings.process.print.wipe_tower_max_purge_speed.0 as f32 * 60.0
+    }
+
     pub(super) fn finish_speed(&self, tool: usize) -> f32 {
         if self.first_layer() {
-            (self.first_speed() * 60.0).min(5400.0)
+            (self.first_speed() * 60.0).min(self.max_speed())
         } else {
-            (60.0 * self.filaments[tool].max_e_speed / self.flow).min(5400.0)
+            (60.0 * self.filaments[tool].max_e_speed / self.flow).min(self.max_speed())
         }
     }
 
@@ -101,6 +105,7 @@ impl<'a> Generator<'a> {
             self.filaments[0].area,
             tool,
         );
+        writer.configure_accelerations(self.settings, self.index == 0);
         writer.flow = self.flow;
         writer.max_e_speed = self.filaments[tool].max_e_speed;
         writer.set_y_shift(self.y_shift);

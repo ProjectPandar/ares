@@ -8,7 +8,7 @@ impl Serialize for FilamentGCodeSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(61))?;
+        let mut map = serializer.serialize_map(Some(62))?;
         serialize_entries(&mut map, self)?;
         map.end()
     }
@@ -118,6 +118,7 @@ where
         "filament_preheat_temperature_delta",
         &NullableVectorRef::new(&value.filament_preheat_temperature_delta),
     )?;
+    map.serialize_entry("filament_prime_volume", &value.filament_prime_volume)?;
     map.serialize_entry("filament_printable", &value.filament_printable)?;
     map.serialize_entry(
         "filament_ramming_parameters",

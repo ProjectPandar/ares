@@ -93,6 +93,7 @@ declare_option_group! {
         filament_pre_cooling_temperature => "filament_pre_cooling_temperature": Vec<Nullable<OrcaInt>> = nullable_ints(&[0]),
         filament_pre_cooling_temperature_nc => "filament_pre_cooling_temperature_nc": Vec<Nullable<OrcaInt>> = nullable_ints(&[0]),
         filament_preheat_temperature_delta => "filament_preheat_temperature_delta": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.0]),
+        filament_prime_volume => "filament_prime_volume": OrcaFloats = floats(&[45.0]),
         filament_ramming_travel_time => "filament_ramming_travel_time": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.0]),
         filament_ramming_travel_time_nc => "filament_ramming_travel_time_nc": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.0]),
         filament_ramming_volumetric_speed => "filament_ramming_volumetric_speed": Vec<Nullable<OrcaFloat>> = nullable_floats(&[-1.0]),
@@ -131,7 +132,7 @@ declare_option_group! {
 }
 
 impl FilamentGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 61] = [
+    pub const DECLARATION_ORDER: [&'static str; 62] = [
         "filament_end_gcode",
         "filament_flow_ratio",
         "enable_pressure_advance",
@@ -163,6 +164,7 @@ impl FilamentGCodeSourceOptions {
         "filament_pre_cooling_temperature",
         "filament_pre_cooling_temperature_nc",
         "filament_preheat_temperature_delta",
+        "filament_prime_volume",
         "filament_ramming_travel_time",
         "filament_ramming_travel_time_nc",
         "filament_ramming_volumetric_speed",

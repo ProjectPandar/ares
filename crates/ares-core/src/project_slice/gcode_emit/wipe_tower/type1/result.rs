@@ -73,7 +73,7 @@ impl Result {
         }
     }
 
-    pub(super) fn merge(mut self, second: Self) -> Self {
+    pub(super) fn merge(mut self, second: Self, max_speed: f32) -> Self {
         self.common.contact |= second.common.contact;
         let dx = self.common.end[0] - second.common.start[0];
         let dy = self.common.end[1] - second.common.start[1];
@@ -84,7 +84,7 @@ impl Result {
             if !change_at_start {
                 writeln!(
                     self.common.gcode,
-                    "G1 X{:.3} Y{:.3} F5400",
+                    "G1 X{:.3} Y{:.3} F{max_speed:.6}",
                     second.common.start[0], second.common.start[1]
                 )
                 .unwrap();
