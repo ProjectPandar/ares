@@ -21,6 +21,9 @@ include!("profile_entry_3mf/settings_3mf.rs");
 
 include!("profile_entry_3mf/settings_stl.rs");
 
+#[path = "profile_entry_3mf/mapped_prime_tower.rs"]
+mod mapped_prime_tower;
+
 include!("profile_entry_3mf/post_process.rs");
 
 #[path = "profile_entry_3mf/machine_start_end_marker.rs"]
