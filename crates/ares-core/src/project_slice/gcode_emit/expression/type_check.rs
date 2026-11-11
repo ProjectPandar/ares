@@ -2,7 +2,7 @@
 //! only `TYPE_INT` and `TYPE_DOUBLE` are numeric (`:313`), and nothing converts between types.
 
 use super::super::value::Value;
-use super::arithmetic::Arithmetic;
+use super::arithmetic::{Arithmetic, to_string};
 use super::deferred::{self, Operand};
 
 /// The operand start the error caret points at, and the message.
@@ -145,5 +145,32 @@ pub(super) fn arguments(name: &str, arguments: &[Operand]) -> Result<(), Failure
         }
         "interpolate_table" => numeric(first, "Interpolation value must be a number."),
         _ => Ok(()),
+    }
+}
+
+/// `scalar_variable_assign_scalar` (`:1396-1426`): an assigned value takes the type of the
+/// variable. `check_numeric` (`:1382-1385`) reports through `expr::throw_exception`; the boolean
+/// check reports through `ctx->throw_exception`, without the deferred message.
+pub(super) fn assigned(variable: &Value, operand: &Operand) -> Result<Value, Failure> {
+    const NOT_NUMERIC: &str = "Right side is not a numeric expression";
+    let value = operand.value.scalar();
+    match variable {
+        // `as_i` (`:327`) truncates a double.
+        Value::Integer(_) => match value {
+            Value::Integer(integer) => Ok(Value::Integer(*integer)),
+            Value::Number(number) => Ok(Value::Integer(*number as i64)),
+            _ => Err(fail(operand, NOT_NUMERIC)),
+        },
+        Value::Number(_) => match value {
+            Value::Integer(integer) => Ok(Value::Number(*integer as f64)),
+            Value::Number(number) => Ok(Value::Number(*number)),
+            _ => Err(fail(operand, NOT_NUMERIC)),
+        },
+        Value::String(_) => Ok(Value::String(to_string(&operand.value))),
+        Value::Bool(_) | Value::OptionBool(_) if is_bool(value) => Ok(Value::Bool(value.as_bool())),
+        Value::Bool(_) | Value::OptionBool(_) => {
+            Err((operand.start, "Right side is not a boolean expression"))
+        }
+        Value::Nil | Value::List(_) => Ok(operand.value.clone()),
     }
 }

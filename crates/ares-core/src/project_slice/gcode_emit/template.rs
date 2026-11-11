@@ -1,7 +1,8 @@
 use super::{
-    expression::{ParsePath, evaluate, evaluate_condition, evaluate_path},
-    value::{Config, Value},
+    expression::{ParsePath, evaluate_condition, evaluate_path},
+    value::Config,
 };
+use macro_block::Scope;
 use parser::{Arm, Node, parse};
 
 mod error;
@@ -26,8 +27,8 @@ pub(super) fn render_for_filament(
     // untrimmed template, so a skipped blank line still counts.
     let nodes = parse(template)?;
     // Output variables created by `local`/`global` live for this render
-    // only (`config_local`, `PlaceholderParser.cpp:889-906`): their prior
-    // absence is journaled and restored afterwards.
+    // only (`config_local`, `PlaceholderParser.cpp:889-906`): they are
+    // journaled and dropped afterwards.
     let mut renderer = Renderer {
         template,
         config,
@@ -35,19 +36,15 @@ pub(super) fn render_for_filament(
         journal: Vec::new(),
     };
     let output = renderer.render_nodes(&nodes);
-    restore_output_variables(renderer.config, &mut renderer.journal);
+    drop_output_variables(renderer.config, &mut renderer.journal);
     output
 }
 
-/// Drops output variables created during a render, restoring any value a
-/// `local`/`global` declaration replaced (`config_local` lifetime,
-/// `PlaceholderParser.cpp:889-906,1384-1448`).
-fn restore_output_variables(config: &mut Config, journal: &mut Vec<(String, Option<Value>)>) {
-    for (name, previous) in journal.drain(..).rev() {
-        match previous {
-            Some(value) => config.insert(name, value),
-            None => config.remove(&name),
-        }
+/// Drops the output variables created during a render (`config_local` lifetime,
+/// `PlaceholderParser.cpp:889-906`).
+fn drop_output_variables(config: &mut Config, journal: &mut Vec<(String, Scope)>) {
+    for (name, _) in journal.drain(..) {
+        config.remove(&name);
     }
 }
 
@@ -57,7 +54,7 @@ struct Renderer<'a> {
     template: &'a str,
     config: &'a mut Config,
     filament: usize,
-    journal: Vec<(String, Option<Value>)>,
+    journal: Vec<(String, Scope)>,
 }
 
 impl Renderer<'_> {
@@ -131,7 +128,10 @@ impl Renderer<'_> {
             // `local`/`global` and inline `if/then/elsif/else/endif`.
             let start = text_offset + expression_start;
             let template = self.template;
-            if delimiter == '{' && macro_block::is_macro_body(expression) {
+            // Assignments are statements of their own (`assignment_statement`, `:2435-2448`).
+            if (delimiter == '{' && macro_block::is_macro_body(expression))
+                || assignment_parts(expression).is_some()
+            {
                 let rendered = macro_block::evaluate_block(
                     expression,
                     self.config,
@@ -140,11 +140,6 @@ impl Renderer<'_> {
                 )
                 .map_err(|error| error::describe(template, error, start))?;
                 output.push_str(&rendered);
-                index = expression_start + relative_end + 1;
-                continue;
-            }
-            if let Some(parts) = assignment_parts(expression) {
-                self.assign(expression, parts, start)?;
                 index = expression_start + relative_end + 1;
                 continue;
             }
@@ -168,31 +163,6 @@ impl Renderer<'_> {
             index = expression_start + relative_end + 1;
         }
         Ok(output)
-    }
-
-    /// Upstream supports assignment statements (`{var[idx] = expr}`) that
-    /// store into the parser and render nothing; `start` is the template
-    /// offset of `expression`.
-    fn assign(
-        &mut self,
-        expression: &str,
-        (name, index, rhs): (&str, Option<&str>, &str),
-        start: usize,
-    ) -> Result<(), String> {
-        let index = match index {
-            Some(index) => match evaluate(index, self.config, self.filament)?.as_number() {
-                Some(number) if number >= 0.0 => Some(number as usize),
-                _ => return Err(format!("invalid assignment index in {expression}")),
-            },
-            None => None,
-        };
-        let value =
-            evaluate_path(rhs, self.config, ParsePath::Brace, self.filament).map_err(|error| {
-                let error = error.in_expression(expression);
-                error::describe(self.template, error, start + offset_in(expression, rhs))
-            })?;
-        self.config.assign(name, index, value);
-        Ok(())
     }
 }
 

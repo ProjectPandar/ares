@@ -91,13 +91,27 @@ pub(crate) fn evaluate_condition(
     filament: usize,
 ) -> Result<bool, PathError> {
     let operand = operand(input, config, ParsePath::Brace, filament)?;
-    type_check::condition(&operand).map_err(|(offset, message)| {
-        PathError::Parse(ParseFailure {
-            message: message.to_owned(),
-            offset,
-        })
-    })?;
+    type_check::condition(&operand).map_err(type_failure)?;
     Ok(operand.value.as_bool())
+}
+
+/// The right-hand side assigned to an output variable, in the type of `variable`
+/// (`scalar_variable_assign_scalar`, `PlaceholderParser.cpp:1396-1426`).
+pub(crate) fn evaluate_assigned(
+    input: &str,
+    config: &Config,
+    filament: usize,
+    variable: &Value,
+) -> Result<Value, PathError> {
+    let operand = operand(input, config, ParsePath::Brace, filament)?;
+    type_check::assigned(variable, &operand).map_err(type_failure)
+}
+
+fn type_failure((offset, message): type_check::Failure) -> PathError {
+    PathError::Parse(ParseFailure {
+        message: message.to_owned(),
+        offset,
+    })
 }
 
 fn operand(
