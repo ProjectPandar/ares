@@ -17,7 +17,9 @@ export const FIRST_RUN_CONFIG = {
   printer: "MyKlipper 0.4 nozzle",
   // load_selections takes the printer's default_filament_profile (PresetBundle.cpp:4070-4076, 4163;
   // Custom/machine/fdm_klipper_common.json:230-232); apply_vendor_config keeps it as it is checked (:2079-2095).
-  printers: { "MyKlipper 0.4 nozzle": { filaments: ["Generic PLA @System"] } },
+  // The print is update_compatible's PreferedPrintProfileMatch pick (PresetBundle.cpp:8635-8639): the printer's
+  // default_print_profile (Custom/machine/fdm_klipper_common.json:233).
+  printers: { "MyKlipper 0.4 nozzle": { filaments: ["Generic PLA @System"], process: "0.20mm Standard @MyKlipper" } },
   // The model's default_materials (Custom/machine/Generic Klipper Printer.json), checked by save_userguide_models.
   installedFilaments: [
     "Generic ABS @System", "Generic ASA @System", "Generic PA @System", "Generic PA-CF @System", "Generic PC @System",
