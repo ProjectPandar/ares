@@ -94,7 +94,7 @@ mod volume_regions;
 pub async fn slice_project(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
-    context: crate::SlicerContext,
+    context: crate::SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     slice_project_plate(
         project,
@@ -113,7 +113,7 @@ pub async fn slice_project_plate(
     metadata: GenerationMetadata,
     plate: Option<u32>,
     overrides: &ConfigOverrides,
-    context: crate::SlicerContext,
+    context: crate::SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     slice_source(
         ProjectSource {
@@ -142,7 +142,7 @@ pub async fn slice_project_plate_processed(
     metadata: GenerationMetadata,
     plate: Option<u32>,
     overrides: &ConfigOverrides,
-    context: crate::SlicerContext,
+    context: crate::SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     slice_source(
         ProjectSource {
@@ -168,7 +168,7 @@ pub(crate) fn slice_source(
     mut project: ProjectSource<'_>,
     metadata: GenerationMetadata,
     record_moves: bool,
-    mut context: crate::SlicerContext,
+    mut context: crate::SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     // Fresh-process equivalence for the `~`/`^` rotate_template joints:
     // upstream slices once per process, so `rand()` always sees the default
@@ -179,9 +179,14 @@ pub(crate) fn slice_source(
         sliced_plate: sliced_plate.as_deref_mut(),
         ..project
     };
-    let staged = prepare_infill::surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(project, &mut context)?,
-    )?;
+    let walls = perimeters::prepare_post_layer_region_perimeters(project, &mut context)?;
+    // `Print.cpp:3461-3481` prepares and fills each object in turn (`PrintObject.cpp:631,819`);
+    // Ares prepares the infill of every object, then fills every object.
+    for _ in &walls.objects {
+        context.set_status(25, format_args!("Generating infill regions"), 0);
+        context.set_status(35, format_args!("Generating infill toolpath"), 0);
+    }
+    let staged = prepare_infill::surface_type_detection::prepare(walls)?;
     let external = prepare_infill::external_surfaces::prepare(
         prepare_infill::horizontal_shell_propagation::prepare(
             prepare_infill::horizontal_shell_promotion::prepare(
@@ -208,8 +213,8 @@ pub(crate) fn slice_source(
     // (`AvoidCrossingPerimeters.cpp:1116-1130`), not the classification snapshot.
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
     let mut filled = fill_entities::prepare(prepared)?;
-    contour_z::prepare(&mut filled);
-    let warnings = match support_material::check_necessity(&filled) {
+    contour_z::prepare(&mut filled, &mut context);
+    let warnings = match support_material::check_necessity(&filled, &mut context) {
         Ok(warnings) => warnings,
         Err(error) => {
             fill_entities::dispose(filled);
@@ -220,7 +225,7 @@ pub(crate) fn slice_source(
         // CLI:7150-7160 records warnings before export; a later error keeps them.
         sliced_plate.warnings.clone_from(&warnings);
     }
-    let support_layers = match support_material::generate(&filled) {
+    let support_layers = match support_material::generate(&filled, &mut context) {
         Ok(layers) => layers,
         Err(error) => {
             fill_entities::dispose(filled);
@@ -285,6 +290,12 @@ fn consume_post_island_print_order(
     record_moves: bool,
     context: &mut crate::SlicerContext,
 ) -> Result<ProcessedGCode, SliceError> {
+    // `Print.cpp:3540-3550` detects auto-lift overhangs per object (`PrintObject.cpp:940`; Ares runs
+    // the detection in `AutoLift::prepare`), then makes the skirt and brim (`Print.cpp:3638`).
+    for _ in &prepared.objects {
+        context.set_status(71, format_args!("Detect overhangs for auto-lift"), 0);
+    }
+    context.set_status(70, format_args!("Generating skirt & brim"), 0);
     let mut output = gcode_emit::emit(&mut prepared, metadata, record_moves, context)?;
     output.result.apply_filament_config(prepared.filament());
     island_print_order::dispose(prepared);

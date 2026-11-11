@@ -68,6 +68,18 @@ pub(super) fn prepare_post_layer_region_perimeters<'a>(
     // context spine and arachne records materialize through
     // `PerimeterGenerator::process_arachne` (`PerimeterGenerator.cpp:2093`).
     let prelude = prepare_post_classic_prelude(project)?;
+    // `Print.cpp:3420-3448` slices every object (`PrintObjectSlice.cpp:889`), then makes the
+    // walls of every object (`PrintObject.cpp:528`).
+    for _ in &prelude.objects {
+        context.set_status(
+            5,
+            format_args!("Slicing mesh"),
+            crate::SlicingStatus::RELOAD_SCENE,
+        );
+    }
+    for _ in &prelude.objects {
+        context.set_status(15, format_args!("Generating walls"), 0);
+    }
     let arachne = arachne::materialize::finish(&prelude, context)?;
     let has_arachne = arachne
         .objects

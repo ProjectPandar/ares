@@ -10,6 +10,7 @@ pub(super) async fn slice(
     catalog_path: &Path,
     input: &[u8],
     overrides: &ares_core::ConfigOverrides,
+    context: ares_core::SlicerContext<'_>,
 ) -> Result<(), CliFailure> {
     if args
         .input
@@ -60,7 +61,6 @@ pub(super) async fn slice(
         placement: ares_core::Placement::None,
     };
     let metadata = ares_core::GenerationMetadata::default();
-    let context = ares_core::SlicerContext::new(0);
     let input_file = args.input.to_string_lossy();
     let source = ares_core::UpwardMachineSource::from_project(input)
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;

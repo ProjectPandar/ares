@@ -26,7 +26,7 @@ pub async fn slice_plater_plate(
     session: &PlaterSession,
     slice: PlaterSlice<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     let edits = session.edits();
     slice_source(
@@ -55,7 +55,7 @@ pub async fn slice_plater_with_profiles(
     mut request: ProfileSliceRequest<'_>,
     validate_print: bool,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     request.placement = crate::Placement::None;
     let edits = session.edits();

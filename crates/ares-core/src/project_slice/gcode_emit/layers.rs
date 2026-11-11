@@ -47,6 +47,7 @@ pub(super) fn append(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     context: Context<'_>,
+    slicer: &mut crate::SlicerContext,
 ) -> Result<(f64, Option<fan_mover::FanMover>, usize, usize), SliceError> {
     let Context {
         metadata,
@@ -257,6 +258,7 @@ pub(super) fn append(
     let mut previous_layer_z = 0.0;
     let mut chunk_index = 0;
     let mut final_chunk = None;
+    let mut status_layer = 0;
     include!("layers/drive.rs");
     cooling.finish(output);
     // `GCode.cpp:3440-3441` (ByLayer; the per-object completion

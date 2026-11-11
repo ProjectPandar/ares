@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 ares-core = { path = "../ares-core" }
 ares-vgcode = { path = "../ares-vgcode" }
+js-sys = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }

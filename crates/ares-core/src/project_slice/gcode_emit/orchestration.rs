@@ -43,6 +43,10 @@ pub(in crate::project_slice) fn emit(
     )?;
     let islands =
         footprint::FirstLayerIslands::collect(traversal, &prepared.support_layers, &schedule)?;
+    // `PrintObject.cpp:1061,1079,1097`: three per object; walls and infill ran in `path_simplification`.
+    for _ in 0..3 * prepared.objects.len() {
+        context.set_status(75, format_args!("Optimizing toolpath"), 0);
+    }
     let process = &traversal.resolved.views.full.process;
     crate::project_slice::path_simplification::simplify_support_layers(
         &mut prepared.support_layers,
@@ -58,6 +62,7 @@ pub(in crate::project_slice) fn emit(
         &prepared.support_layers,
         &schedule,
     )?;
+    context.set_status(80, format_args!("Generating G-code"), 0);
     let sliced_layer_count = schedule.layer_count();
     // Under sequential by-object printing `m_layer_count` accumulates the
     // per-object layer counts (`GCode.cpp:2505`, `+= instances.size() *
@@ -278,6 +283,7 @@ pub(in crate::project_slice) fn emit(
             skirt: &skirt,
             schedule,
         },
+        context,
     )?;
     let traversal = &prepared
         .predecessor

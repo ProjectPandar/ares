@@ -164,6 +164,11 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
   ];
 }
 
+/** Posts each slicing status of request `id` to the client before the request's response. */
+function reportStatus(id: number) {
+  return (percent: number, text: string) => self.postMessage({ id, status: { percent, text } } satisfies WorkerResponse);
+}
+
 async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]> {
   switch (request.kind) {
     case "init":
@@ -295,13 +300,13 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [{ scale: [...values.subarray(0, 3)], size: [...values.subarray(3)] }, []];
     }
     case "platerSlice": {
-      const result = processedResult(await sessions.get(request.sessionId)!.sliceProcessed(request.plate, request.overrides));
+      const result = processedResult(await sessions.get(request.sessionId)!.sliceProcessed(request.plate, request.overrides, reportStatus(request.id)));
       keepPlateViewer(request.sessionId, request.plate);
       return result;
     }
     case "platerSliceWithProfiles": {
       const { sessionId, plate, catalog, selection, options } = request;
-      const result = processedResult(await sessions.get(sessionId)!.sliceWithProfilesProcessed(catalog, selection, options));
+      const result = processedResult(await sessions.get(sessionId)!.sliceWithProfilesProcessed(catalog, selection, options, reportStatus(request.id)));
       keepPlateViewer(sessionId, plate);
       return result;
     }

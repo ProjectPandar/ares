@@ -121,6 +121,12 @@ export interface ProfileSelection {
   filaments: string[];
 }
 
+/** A status of a running slice (`PrintBase::SlicingStatus`): its progress and the current stage. */
+export interface SlicingStatus {
+  percent: number;
+  text: string;
+}
+
 export interface ProfileSliceOptions {
   /** 3MF `plater_id`; STL input has no plates. */
   plate?: number;

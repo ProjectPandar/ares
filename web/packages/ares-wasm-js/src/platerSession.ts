@@ -1,9 +1,9 @@
 import type { PresetCatalog } from "./presetCatalog.js";
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
-import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, ScaleAndSize, ScaleEdit, Scene } from "./types.js";
+import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
 
-type Call = (body: RequestBody) => Promise<unknown>;
+type Call = (body: RequestBody, onStatus?: (status: SlicingStatus) => void) => Promise<unknown>;
 type Vec3 = [number, number, number];
 type Axis = 0 | 1 | 2;
 
@@ -222,13 +222,19 @@ export class PlaterSession {
     return (await this.#call({ kind: "platerShownArrangeSettings", sessionId: this.#sessionId, settings })) as ArrangeSettings;
   }
 
-  /** Slices plate `plate` (1-based, the first when omitted) as `AresSlicer.sliceProject` slices a project. */
-  async slice(plate?: number, overrides: Record<string, string | string[]> = {}): Promise<SliceResult> {
-    return (await this.#call({ kind: "platerSlice", sessionId: this.#sessionId, plate, overrides: JSON.stringify(overrides) })) as SliceResult;
+  /**
+   * Slices plate `plate` (1-based, the first when omitted) as `AresSlicer.sliceProject` slices a project.
+   * `onStatus` receives each status of the slice, in order, while it runs.
+   */
+  async slice(plate?: number, overrides: Record<string, string | string[]> = {}, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
+    return (await this.#call({ kind: "platerSlice", sessionId: this.#sessionId, plate, overrides: JSON.stringify(overrides) }, onStatus)) as SliceResult;
   }
 
-  /** Slices plate `options.plate` with selected presets, as `AresSlicer.sliceWithProfiles` slices the loaded file. */
-  async sliceWithProfiles(catalogJson: string, selection: ProfileSelection, options: ProfileSliceOptions): Promise<SliceResult> {
+  /**
+   * Slices plate `options.plate` with selected presets, as `AresSlicer.sliceWithProfiles` slices the loaded file.
+   * `onStatus` receives each status of the slice, in order, while it runs.
+   */
+  async sliceWithProfiles(catalogJson: string, selection: ProfileSelection, options: ProfileSliceOptions, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
     return (await this.#call({
       kind: "platerSliceWithProfiles",
       sessionId: this.#sessionId,
@@ -236,7 +242,7 @@ export class PlaterSession {
       catalog: catalogJson,
       selection: JSON.stringify(selection),
       options: JSON.stringify(options),
-    })) as SliceResult;
+    }, onStatus)) as SliceResult;
   }
 
   /**

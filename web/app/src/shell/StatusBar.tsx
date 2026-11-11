@@ -8,13 +8,16 @@ function formatBytes(bytes: number) {
 }
 
 export function StatusBar() {
-  const { engine, engineError, file, scene, presetSelection, slice, loadError, loadingFile, arranging, arrangeError } = useApp();
+  const { engine, engineError, file, scene, presetSelection, slice, currentPlate, loadError, loadingFile, arranging, arrangeError } = useApp();
   const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
+  const progress = slice.status === "slicing" ? slice.progress : undefined;
   let message: string;
   if (engine === "loading") message = "Loading slicing engine…";
   else if (engine === "error") message = `Engine failed: ${engineError}`;
   else if (loadingFile) message = "Loading model…";
   else if (loadError) message = `Import failed: ${loadError}`;
+  // `PartPlate.cpp:5476-5480`: the running plate's latest slicing status.
+  else if (progress) message = `Slicing plate ${currentPlate + 1}: ${progress.text}`;
   else if (slice.status === "slicing") message = "Slicing plate…";
   else if (slice.status === "error") message = `Slicing failed: ${slice.error}`;
   else if (arranging) message = "Arranging…";
@@ -29,6 +32,7 @@ export function StatusBar() {
       <span className={error ? "status-message error" : message === blocker ? "status-message warning" : "status-message"} data-testid="status">
         {(slice.status === "slicing" || loadingFile || arranging || engine === "loading") && <span className="spinner" />}
         {message}
+        {progress && <progress className="slice-progress" data-testid="slice-progress" max={100} value={progress.percent} />}
       </span>
       <span className="status-right">
         {file && <span>{file.name} · {formatBytes(file.bytes.length)}</span>}

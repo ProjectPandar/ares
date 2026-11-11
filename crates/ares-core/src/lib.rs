@@ -211,7 +211,7 @@ pub use project_slice::{
 pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
-pub use slicer_context::SlicerContext;
+pub use slicer_context::{SlicerContext, SlicingStatus};
 pub use speeds::{
     AccelerationOptions, JerkOptions, LayerSpeedMoves, OverhangSpeedBands, SpeedMove,
     SpeedMoveKinematics, SpeedOptions, generate_speed_moves,

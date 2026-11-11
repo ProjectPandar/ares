@@ -40,7 +40,7 @@ pub async fn slice_cli_project_plate_validated(
     input: impl AsRef<[u8]>,
     request: CliProjectSliceRequest<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     let CliProjectSliceRequest {
         plate,
@@ -75,7 +75,7 @@ pub async fn slice_project_plate_validated(
     metadata: GenerationMetadata,
     plate: Option<u32>,
     overrides: &ConfigOverrides,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     overrides.validate_cli_config()?;
     slice_source(
@@ -103,7 +103,7 @@ pub async fn slice_project_plate_processed_validated(
     metadata: GenerationMetadata,
     plate: Option<u32>,
     overrides: &ConfigOverrides,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     overrides.validate_cli_config()?;
     slice_source(

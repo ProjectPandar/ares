@@ -1,4 +1,4 @@
-import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, Toolpaths } from "@ares-slicer/wasm";
+import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
@@ -12,7 +12,8 @@ export type ViewMode = "simple" | "advanced" | "expert";
 
 export type SliceState =
   | { status: "idle" }
-  | { status: "slicing"; startedAt: number }
+  // `progress`: the latest status of the running slice (`Plater::priv::on_slicing_update`).
+  | { status: "slicing"; startedAt: number; progress?: SlicingStatus }
   | { status: "done"; gcode: Uint8Array<ArrayBuffer>; toolpaths: Toolpaths | null; elapsedMs: number }
   | { status: "error"; error: string };
 

@@ -9,6 +9,7 @@
         if group_start >= merged.len() {
             phase_index += 1;
             group_start = 0;
+            status_layer = 0;
             if let Some(phase) = phases.get(phase_index) {
                 // `GCode.cpp:3359-3361`: after the finished object's layers
                 // (its stop label already written) and before the instance
@@ -75,6 +76,9 @@
             group_end == merged.len(),
         );
         group_start = group_end;
+        // `GCode.cpp:5149,5248`: one status per layer to print; by object, each instance restarts at 1.
+        status_layer += 1;
+        slicer.set_status(80, format_args!("Generating G-code: layer {status_layer}"), 0);
         if tool_ordering.tools_for_layer(group_z).is_empty() {
             cooling.empty_layer(output, cooling_layer_index, group_end == merged.len());
             continue;

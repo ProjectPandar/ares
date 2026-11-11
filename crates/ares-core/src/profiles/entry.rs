@@ -48,7 +48,7 @@ pub async fn slice_with_profiles(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     slice_profile_source(input, request, metadata, false, context).map(|processed| processed.gcode)
 }
@@ -60,7 +60,7 @@ pub async fn slice_with_profiles_processed(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     slice_profile_source(input, request, metadata, true, context)
 }
@@ -70,7 +70,7 @@ pub async fn slice_with_profiles_validated(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     slice_validated_profile_source(input, request, metadata, (false, None, None), context)
         .map(|output| output.gcode)
@@ -80,7 +80,7 @@ pub async fn slice_with_profiles_processed_validated(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     slice_validated_profile_source(input, request, metadata, (true, None, None), context)
 }
@@ -99,7 +99,7 @@ pub async fn slice_cli_with_profiles_validated(
     input: impl AsRef<[u8]>,
     request: CliProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     let CliProfileSliceRequest {
         profile,
@@ -126,7 +126,7 @@ fn slice_validated_profile_source(
         Option<&mut crate::SlicedPlate>,
         Option<crate::CliUpwardMachine<'_>>,
     ),
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     request.overrides.validate_cli_config()?;
     with_profile_source(input.as_ref(), request, |source| {
@@ -205,7 +205,7 @@ fn slice_profile_source(
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
     record_moves: bool,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     with_profile_source(input.as_ref(), request, |source| {
         slice_source(source, metadata, record_moves, context)
@@ -254,7 +254,7 @@ pub async fn slice_with_load_settings(
     input: impl AsRef<[u8]>,
     request: LoadSettingsSliceRequest<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     with_load_settings_source(input.as_ref(), request, |source| {
         slice_source(source, metadata, false, context)

@@ -80,6 +80,7 @@ a { color: var(--accent-ink); }
 .status-message { display: flex; align-items: center; gap: 6px; }
 .status-message.error { color: var(--danger); }
 .status-message.warning { color: var(--warning); }
+.slice-progress { width: 120px; height: 6px; accent-color: var(--accent); }
 .status-right { display: flex; align-items: center; gap: 8px; }
 .engine-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
 .engine-dot.ready { background: var(--accent); }

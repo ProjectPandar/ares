@@ -11,6 +11,7 @@ mod profiles;
 mod raw_moves;
 mod role_times;
 mod scene;
+mod status;
 
 pub use colors::{option_colors, role_colors, view_types};
 pub use moves::{SliceOutput, VertexBuffers, option_types};

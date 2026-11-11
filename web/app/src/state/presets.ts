@@ -1,4 +1,4 @@
-import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, Scene, SliceResult } from "@ares-slicer/wasm";
+import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, Scene, SliceResult, SlicingStatus } from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
@@ -324,7 +324,7 @@ export async function overrideTokens(overrides: ConfigOverrides): Promise<Record
  * plate (Plater.cpp:7056-7058, 7111-7112, 7149-7160). Sidebar edits apply after
  * the presets, as an edit of the selected preset in a settings tab does.
  */
-export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides, plate?: number): Promise<SliceResult> {
+export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides, plate?: number, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, useApp.getState(), plate);
   // The plate combo's `curr_bed_type` is part of the project config the slice composes.
   // So are the dual-nozzle volume types and filament map.
@@ -335,7 +335,7 @@ export async function sliceWithPresets(file: ModelFile, scene: Scene, selection:
   const request = { ...options, overrides: await overrideTokens({ ...overrides, ...project }) };
   const { plater } = useApp.getState();
   return plater
-    ? plater.sliceWithProfiles(catalog, profiles, request)
+    ? plater.sliceWithProfiles(catalog, profiles, request, onStatus)
     : slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, request);
 }
 

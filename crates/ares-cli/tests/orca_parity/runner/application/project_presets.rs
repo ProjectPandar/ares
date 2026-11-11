@@ -6,7 +6,7 @@ pub(crate) use super::project_preset_catalog::{project_supply, slice_project_pla
 pub(crate) async fn slice_project(
     input: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     match project_supply()? {
         None => ares_core::slice_project(input, metadata, context).await,
@@ -27,7 +27,7 @@ pub(crate) async fn slice_project_plate(
     metadata: GenerationMetadata,
     plate: Option<u32>,
     overrides: &ConfigOverrides,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     match project_supply()? {
         None => ares_core::slice_project_plate(input, metadata, plate, overrides, context).await,
@@ -48,7 +48,7 @@ pub(crate) async fn slice_project_plate_processed(
     metadata: GenerationMetadata,
     plate: Option<u32>,
     overrides: &ConfigOverrides,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     match project_supply()? {
         None => {
@@ -72,7 +72,7 @@ pub(crate) async fn slice_project_plate_processed_validated(
     metadata: GenerationMetadata,
     plate: Option<u32>,
     overrides: &ConfigOverrides,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     match project_supply()? {
         None => {
@@ -97,7 +97,7 @@ pub(crate) async fn slice_plater_plate(
     session: &ares_core::PlaterSession,
     slice: ares_core::PlaterSlice<'_>,
     metadata: GenerationMetadata,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     match project_supply()? {
         None => ares_core::slice_plater_plate(session, slice, metadata, context).await,

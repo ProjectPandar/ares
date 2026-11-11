@@ -31,6 +31,7 @@ use region::{Region, RegionSource};
 
 pub(in crate::project_slice) fn generate(
     prepared: &PreparedPostFillEntities,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<Vec<InstalledSupportLayer>>, SliceError> {
     let horizontal = &prepared.predecessor.predecessor.predecessor.predecessor;
     let traversal = &horizontal.predecessor;
@@ -81,6 +82,9 @@ pub(in crate::project_slice) fn generate(
         if !object.enable_support.0 && object.enforce_support_layers.0 == 0 {
             output.push(Vec::new());
             continue;
+        }
+        if plan.layers.len() > 1 || object.raft_layers.0 > 0 {
+            context.set_status(50, format_args!("Generating support"), 0);
         }
         let tree = matches!(
             object.support_type,
@@ -290,10 +294,11 @@ pub(in crate::project_slice) fn generate(
                         max_object_layers,
                         vertical_enforcers: &vertical_enforcers,
                     },
+                    context,
                 )?);
                 continue;
             }
-            let mut geometry = super::tree::generate(&tree_input)?;
+            let mut geometry = super::tree::generate(&tree_input, context)?;
             output.push(generate_grid_support_toolpaths(
                 &mut geometry,
                 &ToolpathInput {

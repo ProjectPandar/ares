@@ -1,4 +1,4 @@
-import type { OptionValue, SliceResult } from "@ares-slicer/wasm";
+import type { OptionValue, SliceResult, SlicingStatus } from "@ares-slicer/wasm";
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { loadArrangeSettings } from "./arrange";
 import { saveConfig } from "./persistence";
@@ -117,11 +117,13 @@ async function slicePlates(indices: number[]) {
     const startedAt = performance.now();
     useApp.setState({ currentPlate: index, slice: { status: "slicing", startedAt }, arrangeError: undefined });
     const plate = scene.plates[index]?.id;
+    const onStatus = (progress: SlicingStatus) =>
+      useApp.setState(({ slice: running }) => (running.status === "slicing" ? { slice: { ...running, progress } } : {}));
     try {
       const result = presetSelection
-        ? await sliceWithPresets(file, scene, presetSelection, overrides, plate)
+        ? await sliceWithPresets(file, scene, presetSelection, overrides, plate, onStatus)
         : plater
-          ? await plater.slice(plate, await overrideTokens(overrides))
+          ? await plater.slice(plate, await overrideTokens(overrides), onStatus)
           : await slicer.sliceStl(file.bytes);
       if (useApp.getState().file !== file) return;
       setSliceResult(result, performance.now() - startedAt);

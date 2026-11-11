@@ -1,3 +1,4 @@
+mod args;
 mod compatible_machine;
 mod failure;
 mod moves_csv;
@@ -7,60 +8,11 @@ mod result_json;
 
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use clap::{Parser, Subcommand};
+use args::{Cli, Commands, SliceArgs};
+use clap::Parser;
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
-
-#[derive(Parser)]
-#[command(name = "ares")]
-struct Cli {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    Slice(SliceArgs),
-}
-
-#[derive(Parser)]
-struct SliceArgs {
-    /// Complete preset catalog supplied explicitly for project-derived refresh
-    #[arg(long, conflicts_with_all = ["load_settings", "load_filaments", "resources_dir"])]
-    project_preset_catalog: Option<PathBuf>,
-    /// Refresh unlisted project values from the supplied system presets
-    #[arg(long, requires = "project_preset_catalog")]
-    uptodate: bool,
-    #[arg(long)]
-    options: Option<PathBuf>,
-    /// 1-based plate number to slice for multi-plate 3MF projects
-    #[arg(long)]
-    plate: Option<u32>,
-    /// Resource root containing profiles/BBL/machine_full (default: resources beside the executable)
-    #[arg(long)]
-    resources_dir: Option<PathBuf>,
-    /// Write the G-code processor move vertices as CSV (3MF input only)
-    #[arg(long)]
-    dump_moves: Option<PathBuf>,
-    /// JSON object of user option overrides `{key: string|string[]}`
-    /// applied on the project-settings layer (3MF input only; M854)
-    #[arg(long)]
-    overrides: Option<String>,
-    /// OrcaSlicer-native preset files, `;` separated (machine;process;
-    /// `PrintConfig.cpp:10890-10895`)
-    #[arg(long)]
-    load_settings: Option<String>,
-    /// OrcaSlicer-native filament preset files, `;` separated
-    /// (`PrintConfig.cpp:10896-10901`); empty slots are dropped like
-    /// `OrcaSlicer.cpp:2202-2215` with the CLI-default
-    /// `use_first_fila_as_default=false`
-    #[arg(long)]
-    load_filaments: Option<String>,
-    #[arg(short = 'o')]
-    output: PathBuf,
-    input: PathBuf,
-}
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -123,8 +75,16 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     };
     // The file name as the CLI received it (`m_input_files`), which the substitution report names.
     let input_file = args.input.to_string_lossy().into_owned();
+    // `PrintBase::set_status` without a GUI callback logs `Percent %1%: %2%` (`PrintBase.cpp:127`).
+    let mut print_status = |status: &ares_core::SlicingStatus<'_>| {
+        eprintln!("Percent {}: {}", status.percent, status.text);
+    };
+    let mut context = ares_core::SlicerContext::new(0);
+    if args.progress {
+        context.set_status_callback(&mut print_status);
+    }
     if let Some(catalog) = &args.project_preset_catalog {
-        return project_presets::slice(&args, catalog, &input, &overrides).await;
+        return project_presets::slice(&args, catalog, &input, &overrides, context).await;
     }
     let load_settings = args
         .load_settings
@@ -177,7 +137,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 sliced_plate: &mut sliced_plate,
             },
             ares_core::GenerationMetadata::default(),
-            ares_core::SlicerContext::new(0),
+            context,
         )
         .await
         {
@@ -217,7 +177,6 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     let output = match extension {
         Some(extension) if extension == "3mf" => {
             let metadata = ares_core::GenerationMetadata::default();
-            let context = ares_core::SlicerContext::new(0);
             let (source, machine_full) =
                 compatible_machine::load(&input, args.resources_dir.as_deref())?;
             let mut upward_report = Vec::new();

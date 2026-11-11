@@ -3,7 +3,7 @@ import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ConfigValue, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene } from "./types.js";
+import type { CompatiblePresets, ConfigValue, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene, SlicingStatus } from "./types.js";
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
@@ -11,7 +11,7 @@ export { PresetCatalog } from "./presetCatalog.js";
 export type * from "./configDef.js";
 export type * from "./types.js";
 
-type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void };
+type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void; onStatus?: (status: SlicingStatus) => void };
 
 export interface AresSlicerOptions {
   /** A module worker running `@ares-slicer/wasm/worker`. */
@@ -37,6 +37,11 @@ export class AresSlicer {
   constructor({ worker, wasmUrl }: AresSlicerOptions) {
     this.#worker = worker;
     worker.onmessage = ({ data }: MessageEvent<WorkerResponse>) => {
+      // Statuses of a running request arrive before its response.
+      if ("status" in data) {
+        this.#pending.get(data.id)?.onStatus?.(data.status);
+        return;
+      }
       const pending = this.#pending.get(data.id);
       this.#pending.delete(data.id);
       if (data.ok) pending?.resolve(data.value);
@@ -179,7 +184,7 @@ export class AresSlicer {
     await this.#ready;
     const sessionId = this.#nextSessionId++;
     await this.#call({ kind: "platerCreate", sessionId, input: input.slice(), filename });
-    return new PlaterSession((body) => this.#call(body), sessionId);
+    return new PlaterSession((body, onStatus) => this.#call(body, onStatus), sessionId);
   }
 
   /**
@@ -206,7 +211,7 @@ export class AresSlicer {
       selection: JSON.stringify(selection),
       options: JSON.stringify(options),
     });
-    return new PlaterSession((body) => this.#call(body), sessionId);
+    return new PlaterSession((body, onStatus) => this.#call(body, onStatus), sessionId);
   }
 
   /**
@@ -311,12 +316,12 @@ export class AresSlicer {
     this.#worker.terminate();
   }
 
-  #call(body: RequestBody): Promise<unknown> {
+  #call(body: RequestBody, onStatus?: (status: SlicingStatus) => void): Promise<unknown> {
     const id = this.#nextId++;
     const request = { ...body, id } as WorkerRequest;
     const transfer = "input" in request ? [request.input.buffer] : [];
     return new Promise((resolve, reject) => {
-      this.#pending.set(id, { resolve, reject });
+      this.#pending.set(id, { resolve, reject, onStatus });
       this.#worker.postMessage(request, transfer);
     });
   }

@@ -76,7 +76,7 @@ pub(crate) async fn slice_project_plate_validated(
     metadata: GenerationMetadata,
     plate: Option<u32>,
     overrides: &ConfigOverrides,
-    context: SlicerContext,
+    context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     match project_supply()? {
         None => {

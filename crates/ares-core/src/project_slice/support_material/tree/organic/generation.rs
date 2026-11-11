@@ -57,6 +57,7 @@ pub(in crate::project_slice::support_material) struct TreeInput<'a> {
 
 pub(in crate::project_slice::support_material) fn generate(
     input: &TreeInput<'_>,
+    context: &mut crate::SlicerContext,
 ) -> Result<GeneratedSupportGeometry, SliceError> {
     let mesh = MeshGroupSettings::new(MeshGroupInput {
         object: input.object,
@@ -117,6 +118,8 @@ pub(in crate::project_slice::support_material) fn generate(
             .map(|_| VecDeque::new())
             .collect::<Vec<_>>();
         generation::generate(objects, &mut volumes, &mut interface, &mut graph).map_err(error)?;
+        // `TreeSupport3D.cpp:3622`.
+        context.set_status(60, format_args!("Generating support"), 0);
         pathing::create_layer_pathing(&mut volumes, &config, &mut graph, input.scale)
             .map_err(error)?;
         nodes::create_nodes_from_area(&mut volumes, &config, &mut graph).map_err(error)?;
@@ -138,6 +141,8 @@ pub(in crate::project_slice::support_material) fn generate(
     } else {
         raft_contact::generate(&objects, &mut interface).map_err(error)?;
     }
+    // `TreeSupport3D.cpp:3700`.
+    context.set_status(69, format_args!("Generating support"), 0);
     let mut geometry = output::geometry(&mut roofs);
     geometry.rafts = generate_raft_base(
         &AdhesionInput {

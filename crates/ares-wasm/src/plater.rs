@@ -5,7 +5,6 @@
 
 use ares_core::{
     ArrangeScope, ArrangeSettings, GenerationMetadata, PlaterSlice, ProfileSliceRequest,
-    SlicerContext,
 };
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -268,13 +267,16 @@ impl PlaterSession {
 
     /// Slices plate `plate` (1-based; the first when omitted) with the project's presets and
     /// `overridesJson` edits, as `sliceProjectPlateProcessed` slices a loaded project.
+    /// `onStatus(percent, text)` receives each slicing status (`PrintBase::set_status`).
     #[wasm_bindgen(js_name = sliceProcessed)]
     pub async fn slice_processed(
         &self,
         plate: Option<u32>,
         overrides_json: Option<String>,
+        on_status: Option<js_sys::Function>,
     ) -> Result<SliceOutput, JsValue> {
         let overrides = crate::parse_overrides(overrides_json.as_deref()).map_err(js_error)?;
+        let mut report = on_status.as_ref().map(crate::status::report_to);
         let output = ares_core::slice_plater_plate(
             &self.session,
             PlaterSlice {
@@ -283,7 +285,7 @@ impl PlaterSession {
                 validate_print: true,
             },
             GenerationMetadata::default(),
-            SlicerContext::new(0),
+            crate::status::context(0, report.as_mut()),
         )
         .await
         .map_err(js_error)?;
@@ -301,14 +303,17 @@ impl PlaterSession {
 
     /// Slices a plate with selected presets, as `sliceWithProfilesProcessed` slices the
     /// loaded file; `options.plate` selects the plate.
+    /// `onStatus(percent, text)` receives each slicing status.
     #[wasm_bindgen(js_name = sliceWithProfilesProcessed)]
     pub async fn slice_with_profiles_processed(
         &self,
         catalog_json: String,
         selection_json: String,
         options_json: String,
+        on_status: Option<js_sys::Function>,
     ) -> Result<SliceOutput, JsValue> {
         let options = ProfileSliceOptions::parse(&options_json).map_err(js_error)?;
+        let mut report = on_status.as_ref().map(crate::status::report_to);
         let overrides = options.overrides();
         let request = ProfileSliceRequest {
             filename: &self.filename,
@@ -323,7 +328,7 @@ impl PlaterSession {
             request,
             true,
             GenerationMetadata::default(),
-            SlicerContext::new(options.seed),
+            crate::status::context(options.seed, report.as_mut()),
         )
         .await
         .map(SliceOutput::from_processed)

@@ -1,4 +1,4 @@
-import type { ArrangeSettings, ConfigValue, CurrentPrinter, PresetKind, ScaleEdit } from "./types.js";
+import type { ArrangeSettings, ConfigValue, CurrentPrinter, PresetKind, ScaleEdit, SlicingStatus } from "./types.js";
 
 type Vec3 = [number, number, number];
 
@@ -76,5 +76,6 @@ export type WorkerRequest =
 export type RequestBody = WorkerRequest extends infer R ? (R extends unknown ? Omit<R, "id"> : never) : never;
 
 export type WorkerResponse =
+  | { id: number; status: SlicingStatus }
   | { id: number; ok: true; value: unknown }
   | { id: number; ok: false; error: string };

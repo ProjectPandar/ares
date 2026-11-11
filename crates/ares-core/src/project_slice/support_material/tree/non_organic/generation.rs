@@ -44,9 +44,12 @@ pub(in crate::project_slice::support_material) struct NonOrganicInput<'a> {
 
 pub(in crate::project_slice::support_material) fn generate(
     input: &NonOrganicInput<'_>,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<InstalledSupportLayer>, SliceError> {
     let tree = input.tree;
     let object = tree.object;
+    // `TreeSupport.cpp:1914-1950`: one status per stage of `TreeSupport::generate`.
+    context.set_status(55, format_args!("Generating support"), 0);
     let mut overhangs = SmartOverhangs::new(object, tree.layers, tree.extrusion_width, tree.scale)
         .map_err(error)?;
     if object.enable_support.0 {
@@ -102,6 +105,7 @@ pub(in crate::project_slice::support_material) fn generate(
         top_z_distance = top_z_distance.max(f64::from(tree.slicing.min_layer_height as f32));
     }
     let style = super::super::super::style::resolve(object.support_type, object.support_style);
+    context.set_status(56, format_args!("Support: generate contact points"), 0);
     let mut contacts = contacts::generate_contact_points(
         &ContactInput {
             object,
@@ -128,6 +132,7 @@ pub(in crate::project_slice::support_material) fn generate(
         &mut arena,
         &mut contacts.layers,
     );
+    context.set_status(60, format_args!("Generating support"), 0);
     NodeDropping {
         arena: &mut arena,
         layers: &mut contacts.layers,
@@ -137,9 +142,10 @@ pub(in crate::project_slice::support_material) fn generate(
         object,
         style,
     }
-    .run()
+    .run(context)
     .map_err(error)?;
     smoothing::smooth_nodes(&mut arena, &contacts.layers, object, tree.scale);
+    context.set_status(65, format_args!("Generating support"), 0);
     let trim_layers = tree
         .slices
         .iter()
@@ -184,6 +190,7 @@ pub(in crate::project_slice::support_material) fn generate(
     .map_err(error)?;
     prefix.append(&mut drawn.layers);
     drawn.layers = prefix;
+    context.set_status(70, format_args!("Generating support"), 0);
     toolpaths::generate(
         drawn,
         &toolpaths::ToolpathInput {

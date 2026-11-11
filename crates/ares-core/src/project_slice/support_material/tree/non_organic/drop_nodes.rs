@@ -24,7 +24,7 @@ pub(super) struct NodeDropping<'a> {
 }
 
 impl NodeDropping<'_> {
-    pub(super) fn run(self) -> Result<(), ClipperError> {
+    pub(super) fn run(self, context: &mut crate::SlicerContext) -> Result<(), ClipperError> {
         let Self {
             arena,
             layers,
@@ -42,6 +42,12 @@ impl NodeDropping<'_> {
             if layers[layer].is_empty() {
                 continue;
             }
+            // `TreeSupport.cpp:2955`.
+            context.set_status(
+                60 + (10.0 * (1.0 - layer as f32 / layers.len() as f32)) as i32,
+                format_args!("Generating support"),
+                0,
+            );
             let current_height = &heights[layer];
             let next_height = &heights[layer - 1];
             let mut cuts = LineCutCache::new(super::super::super::layer_input::to_polygons(

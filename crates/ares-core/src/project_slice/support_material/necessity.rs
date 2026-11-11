@@ -7,6 +7,7 @@ use crate::{
 
 pub(in crate::project_slice) fn check(
     prepared: &PreparedPostFillEntities,
+    context: &mut crate::SlicerContext,
 ) -> Result<Vec<PrintWarning>, SliceError> {
     let horizontal = &prepared.predecessor.predecessor.predecessor.predecessor;
     let traversal = &horizontal.predecessor;
@@ -32,6 +33,7 @@ pub(in crate::project_slice) fn check(
         if object.enable_support.0 || object.enforce_support_layers.0 > 0 {
             continue;
         }
+        context.set_status(50, format_args!("Checking support necessity"), 0);
         // No no_check option exists in the current public request: source default false.
         // Neither validate_print=false nor raft-only suppresses this check.
         let layers = plan
