@@ -42,11 +42,15 @@ Design:
 
 - `web/app/src/state/persistence.ts` is the only module that touches browser
   storage. It holds one `localStorage` record, `ares.config`:
-  `{ version: 1, theme, mode, gcodeWindow, vendors, printer: string | null,
+  `{ version: 1, theme, mode, gcodeWindow, printer: string | null,
   printers: { [printerName]: {process?, filaments[], bedType?} },
+  installedPrinters: { [vendor]: { [model]: string[] } },
   installedFilaments, nozzleVolumeTypes: { [basePrinter]: string[] },
   preferredFilamentMapMode }`. Fields arrive with the features that use them,
-  still at version 1 because nothing has shipped. `remember_printer_config`
+  still at version 1 because nothing has shipped. `installedPrinters` is the
+  `AppConfig` vendors section the setup wizard writes
+  (`web-printer-setup-wizard.md`). It replaces the old vendor-level `vendors`
+  field, which is dropped on load, so the wizard opens. `remember_printer_config`
   is always on (its upstream default) because Ares has no Preferences page.
   The record is small and is read synchronously before the first render, so
   the theme does not flash. Unset filament slots are stored as `""`.
@@ -276,8 +280,12 @@ Each spec writes screenshots plus a JSON record under `target/web-e2e/<spec>/`.
      plate, an imported user preset file, and the dark/expert UI prefs. Reload.
      Every combo and pref is restored, the import is listed under User presets,
      and the screenshots before and after are recorded.
-   - Switch to another printer and back. Its own process and filaments are
-     restored (`remember_printer_config`).
+   - Opening the project again selects its own presets
+     (`PresetBundle::load_config_model`) and stores no selected printer.
+     Choosing X1C again restores its process and filaments.
+   - Switch to another printer and back. The other printer gets the print
+     `update_compatible` prefers, not X1C's process. Back on X1C, its own
+     process and filaments are restored (`remember_printer_config`).
    - Corruption cases: write a `version: 0` record, invalid JSON, a bad field
      type and a corrupt IndexedDB import, then reload each time. The app starts
      with defaults, there are no `pageerror` events, and the bad entries are
