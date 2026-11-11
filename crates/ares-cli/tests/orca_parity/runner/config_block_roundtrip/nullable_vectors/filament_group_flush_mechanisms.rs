@@ -217,3 +217,54 @@ fn h2c_manual_multi_nozzle_grouping_matches_native() {
     let native = NativeCase::slice(&runner, &project, "h2c-manual-multi-nozzle-");
     native.compare_prefix_and_maps(GenerationMetadata::deterministic(2026, 11, 10, 2, 0, 0));
 }
+
+#[test]
+fn h2c_manual_multi_nozzle_two_used_filaments_remain_unsupported() {
+    let project = fs::read(repo_root().join(
+        "tests/parity/filament-group-flush-mechanisms/h2c_manual_multi_nozzle_two_filaments.3mf",
+    ))
+    .unwrap();
+    let runner = OrcaRunner::from_env()
+        .unwrap()
+        .expect("Native harness required");
+    let native = NativeCase::slice(&runner, &project, "h2c-manual-two-filaments-");
+    let usage = native
+        .native
+        .lines()
+        .find_map(|line| line.strip_prefix("; filament used [mm] = "))
+        .unwrap();
+    assert!(
+        usage
+            .split(", ")
+            .all(|value| value.parse::<f64>().unwrap() > 0.0)
+    );
+    assert!(native.native.contains("; filament_map = 1,2,2\n"));
+    let result = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(crate::runner::application::slice_project_plate_validated(
+            &project,
+            GenerationMetadata::deterministic(2026, 11, 10, 2, 0, 0),
+            None,
+            &ConfigOverrides::default(),
+            SlicerContext::new(0),
+        ));
+    let error = result.unwrap_err();
+    fs::write(native.root.join("ares.api.error"), format!("{error:?}")).unwrap();
+    assert!(
+        matches!(error, ares_core::SliceError::InvalidInput(ref detail) if detail == "unsupported automatic filament grouping context")
+    );
+    let cli = crate::runner::application::cli_command()
+        .args(["slice", "-o"])
+        .arg(native.root.join("ares.cli.gcode"))
+        .arg(native.root.join("input.3mf"))
+        .output()
+        .unwrap();
+    fs::write(native.root.join("ares.cli.stderr"), &cli.stderr).unwrap();
+    assert!(!cli.status.success());
+    assert!(
+        String::from_utf8_lossy(&cli.stderr)
+            .contains("unsupported automatic filament grouping context")
+    );
+}

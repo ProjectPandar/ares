@@ -24,7 +24,13 @@ Slice 1 is limited to `build_nozzle_groups` (`ToolOrdering.cpp:1503-1527`),
 `build_filament_group_context` (`1537-1672`), the manual multi-nozzle path
 through `calc_filament_group_for_manual_multi_nozzle` and
 `get_recommended_filament_maps`, and derived map write-back (`3035-3087`).
-Its red test is an H2C manual-map fixture.
+Admission is restricted to manual maps with at most one used logical filament
+assigned to each multi-nozzle extruder. Used means present in the collected
+ToolOrdering layer usage, not merely configured. Two or more used filaments on
+any multi-nozzle extruder retain
+`InvalidInput("unsupported automatic filament grouping context")`.
+The manual-map witness covers the admitted boundary; a Native-first
+three-filament fixture with manual map `1,2,2` covers deliberate rejection.
 
 Slice 2 is separate: `calc_filament_group_for_match_multi_nozzle` and its
 Auto-For-Match dispatch and validation. It requires its own red test and is
@@ -88,15 +94,55 @@ in scope. Do not derive a separate Ares-owned fallback map in
 
 ## Included behavior
 
-Port only the upstream physical-nozzle expansion, context construction,
-manual and Auto-For-Match multi-nozzle grouping, result validation, and
-map write-back. Preserve X2D's existing one-nozzle-per-extruder behavior and
+Port only physical-nozzle expansion, context construction, the restricted
+manual multi-nozzle case, and map write-back. This is not the complete upstream
+manual grouping algorithm; Auto-For-Match is not included. Preserve X2D's existing one-nozzle-per-extruder behavior and
 all existing scoring, ordering, emission, and fixture behavior outside this
 boundary.
 
+## Restricted manual equivalence
+
+`FilamentGroup.cpp:1495-1505` adds manual-map restrictions to the other
+extruder, removes group capacity limits, then calls
+`calc_filament_group_for_flush`. That function (`1253-1268`) invokes
+`calc_min_flush_group` and then `select_best_group_for_ams`; it does not simply
+copy the manual extruder IDs. General nozzle-level min-flush and AMS candidate
+selection therefore remain an independent future slice.
+
+For the admitted static inventory, nozzles on a given extruder have the same
+diameter and configured non-Hybrid volume, with no loaded-filament state or
+switcher. `ToolOrdering.cpp:1503-1527` constructs that uniform group;
+`MultiNozzleUtils.cpp:25-40` sorts groups and emits increasing global nozzle
+IDs. In the H2C Standard witness these are nozzle 0 on extruder 0 and nozzles
+1 through 6 on extruder 1.
+
+With at most one used filament on a multi-nozzle extruder, moving that filament
+among its equivalent nozzles changes neither flush cost nor load/unload timing.
+The single-nozzle extruder has no alternative assignment. Enumeration in
+`FilamentGroup.cpp:279-311` traverses increasing base-k masks and hashes
+same-volume, unloaded nozzles identically (`nozzles_hash`, `fnv_hash_nozzle` at
+`69-90,270-275`). The first admissible assignment uses the lowest global nozzle
+ID on that extruder; equivalent later assignments are deduplicated.
+`FilamentGroup.cpp:359-363` updates the optimum only for a strict score
+improvement at equal preference. `1258-1259` puts this optimum first in the
+AMS candidate list; `427-459,508-512` groups AMS costs by extruder and keeps
+the first equal-cost candidate. Thus the Standard witness selects nozzle 1,
+not nozzle 6, for its single filament on the six-nozzle extruder, giving
+`0,1,0`. The existing static adapter supplies empty AMS inventory and no
+loaded nozzle state; live inventory and Hybrid-volume inventories are not
+covered by this equivalence argument.
+
+For two used filaments on that extruder, distributing them among nozzles can
+change flushing. The proof no longer applies, so the adapter must reject
+rather than return the first nozzle for both. The rejection witness first
+requires Native slicing to succeed and demonstrate all three logical
+filaments are used with map `1,2,2`, then requires the exact unsupported error
+from API and a failing CLI with the same diagnostic.
+
 ## Deferred behavior
 
-Defer GCodeProcessor preheat, retraction-column behavior, UI arrangement,
+Defer complete nozzle-level manual min-flush/AMS selection and its multi-used-
+filament admission, Auto-For-Match, GCodeProcessor preheat, retraction-column behavior, UI arrangement,
 new golden fixtures, production observation hooks, and unrelated kernels.
 Do not weaken comparators or add fallback behavior for unsupported grouping.
 

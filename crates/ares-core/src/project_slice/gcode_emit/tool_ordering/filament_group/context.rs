@@ -114,6 +114,20 @@ impl Context {
             .collect::<Vec<_>>();
         used.sort_unstable();
         used.dedup();
+        if manual_multi_nozzle
+            && nozzle_counts.iter().enumerate().any(|(head, &count)| {
+                count > 1
+                    && used
+                        .iter()
+                        .filter(|&&id| {
+                            settings.project.gcode.filament_map.0[id].0 == head as i32 + 1
+                        })
+                        .count()
+                        > 1
+            })
+        {
+            return Err(unsupported());
+        }
         if used.len() >= 14 {
             return Err(unsupported());
         }

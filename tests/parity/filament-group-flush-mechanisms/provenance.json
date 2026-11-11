@@ -117,6 +117,32 @@
       "input": "x2d_pla_auto_map_second_head_height_below_model.3mf",
       "sha256": "6d550d5c4a39d4ae89c98881f183d079c5dc007a1f342648f17fdde57c3d4909",
       "expectations_file": "constraints.json"
+    },
+    {
+      "id": "h2c_manual_multi_nozzle",
+      "input": "h2c_manual_multi_nozzle.3mf",
+      "sha256": "37c8dde7c663e9bf2c1471a83dac22e2f29304cb81d2bcbb8667a0d5f3a7a518",
+      "source": "Repository-authored x2d_pla_other_layers_middle_last_custom_order.3mf plus pinned stock BBL H2C machine and process profiles; no user-derived bytes.",
+      "stock_profiles": [
+        "resources/profiles/BBL/machine/Bambu Lab H2C 0.4 nozzle.json",
+        "resources/profiles/BBL/process/0.20mm Standard @BBL H2C.json"
+      ],
+      "generation": [
+        "Retain every archive payload from the authored X2D source except Metadata/project_settings.config and Metadata/model_settings.config; geometry is the same three authored cubes.",
+        "Replace machine/process identifiers and inherited extruder type, variant lists, printable areas, maximum nozzle counts, and bridge_speed with H2C stock values.",
+        "Set project filament_map_mode to Manual, filament_map to [1,2,1], filament_volume_map to [0,0,0]; set plate filament_map_mode to Manual and filament_maps to 1 2 1.",
+        "Write the modified metadata back into the archive without altering mesh payloads."
+      ]
+    },
+    {
+      "id": "h2c_manual_multi_nozzle_two_filaments",
+      "input": "h2c_manual_multi_nozzle_two_filaments.3mf",
+      "sha256": "b587d1b7bee51921375933e80b131519bf541e6a8af940b7c48e2fb66be0bd11",
+      "source": "Authored h2c_manual_multi_nozzle.3mf; no user-derived bytes.",
+      "generation": [
+        "Change only project filament_map to [1,2,2] and plate filament_maps to 1 2 2.",
+        "Preserve all geometry, object filament assignments and remaining metadata. Native must consume all three logical filaments; Ares deliberately rejects the two used filaments on the multi-nozzle extruder."
+      ]
     }
   ]
 }
