@@ -13,6 +13,7 @@ pub(crate) use instance::InstancePvs;
 mod instance_copies;
 mod model_snapshot;
 pub(crate) use model_snapshot::ModelSnapshot;
+pub(super) mod object_id;
 mod plate_selection;
 mod plater_edits;
 use import_scope::ImportScope;
@@ -334,10 +335,8 @@ impl ProjectVolume {
 pub struct ProjectInstance {
     object_id: u32,
     instance_id: u32,
-    /// Plate identity from `model_settings.config`; `None` when the build
-    /// instance has no plate assignment (`ModelInstancePVS` loading keeps
-    /// the instance for the geometric print-volume gate).
-    loaded_label_id: Option<u32>,
+    /// Loaded plate identity or the ObjectBase ID allocated by a fresh model import.
+    label: instance::InstanceLabel,
     printable: bool,
     auto_drop: bool,
     transform: Transform3d,

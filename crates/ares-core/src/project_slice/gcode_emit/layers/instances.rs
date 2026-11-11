@@ -52,9 +52,7 @@ pub(super) fn collect(traversal: &PreparedPostClassicTraversal) -> Vec<Vec<Insta
                 centers.push((shift.x(), shift.y()));
                 Instance {
                     copy,
-                    label_id: object.instances()[source_instance]
-                        .loaded_label_id()
-                        .unwrap_or(0),
+                    label_id: object.instances()[source_instance].labeled_id(),
                     shift,
                     position: 0,
                     arrange_order: 0,

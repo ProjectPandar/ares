@@ -1,3 +1,5 @@
+use crate::project::domain::object_id::ObjectIdCounter;
+
 use super::{
     FilamentSequences, ModelSettings, PlateMetadata, Point3d, Project, ProjectDocuments,
     ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectSettingsBuilder,
@@ -122,15 +124,11 @@ impl Project {
                 Transform3d::IDENTITY,
             ),
         );
-        // Default ObjectBase members allocate IDs (`ObjectID.hpp:86-87`).
-        // The CLI model and read_from_file model each include a wipe tower
-        // (`OrcaSlicer.cpp:1730`, `Model.cpp:331`), followed by object +
-        // config + layer-height profile (`Model.hpp:582-588`). The volume
-        // allocates itself, its config, four facets, and eight texture-
-        // displacement facets (`Model.hpp:903-935`), then the instance
-        // (`Model.cpp:506-507,1554-1562`). With loaded_id=0, get_labeled_id
-        // returns that ID (`Model.hpp:1433-1443`, `GCode.cpp:4224-4239`).
-        let label_id = 2 + 2 + 3 + (6 + 8) + 1;
+        // STL.cpp creates the volume before the default instance, unlike 3MF build import.
+        let mut object_ids = ObjectIdCounter::model_read();
+        object_ids.add_object();
+        object_ids.add_volume();
+        let label_id = object_ids.add_instance();
         // `ModelInstance` drops onto the bed by default (`auto_drop(true)`, `Model.hpp:1392`).
         let instance = ProjectInstance::new([1, 0, label_id], true, true, Transform3d::IDENTITY);
         let object = ProjectObject::new(

@@ -41,7 +41,7 @@ impl ObjectLabels {
         let (resolved, group) = traversal.print_object_config(object_index);
         let object = &traversal.project.objects()[resolved.source_object_index];
         let instance = &object.instances()[group.instance_indices[copy_index]];
-        let encoded_labels = inventory.encode_one(instance.loaded_label_id().unwrap_or(0))?;
+        let encoded_labels = inventory.encode_one(instance.labeled_id())?;
         let (exclude_start, exclude_end) =
             super::footprint::in_print_labels(traversal, object_index, copy_index);
         // Beta GCode.cpp:4336-4340 assigns label IDs before the exclusion gate.
@@ -49,7 +49,7 @@ impl ObjectLabels {
             name: object.name().to_owned(),
             object_id: object_index as u32,
             copy_id: copy_index as u32,
-            label_id: instance.loaded_label_id().unwrap_or(0),
+            label_id: instance.labeled_id(),
             encoded_labels,
             exclude_start,
             exclude_end,

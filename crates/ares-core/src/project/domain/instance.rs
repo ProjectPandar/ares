@@ -1,5 +1,11 @@
 use super::{Project, ProjectInstance, Transform3d};
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) enum InstanceLabel {
+    Loaded(u32),
+    Allocated(u32),
+}
+
 /// `ModelInstanceEPrintVolumeState` (`Model.hpp:1408-1415` at v2.5.0-beta `345efec64`): where an
 /// instance sits against the print volume. `calc_print_volume_state` never yields `Limited`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -31,7 +37,7 @@ impl ProjectInstance {
         Self {
             object_id: identity[0],
             instance_id: identity[1],
-            loaded_label_id: Some(identity[2]),
+            label: InstanceLabel::Loaded(identity[2]),
             printable,
             auto_drop,
             transform,
@@ -40,16 +46,15 @@ impl ProjectInstance {
     }
 
     pub(crate) fn unassigned(
-        object_id: u32,
-        instance_id: u32,
+        identity: [u32; 3],
         printable: bool,
         auto_drop: bool,
         transform: Transform3d,
     ) -> Self {
         Self {
-            object_id,
-            instance_id,
-            loaded_label_id: None,
+            object_id: identity[0],
+            instance_id: identity[1],
+            label: InstanceLabel::Allocated(identity[2]),
             printable,
             auto_drop,
             transform,
@@ -66,7 +71,16 @@ impl ProjectInstance {
     }
 
     pub fn loaded_label_id(&self) -> Option<u32> {
-        self.loaded_label_id
+        match self.label {
+            InstanceLabel::Loaded(id) => Some(id),
+            InstanceLabel::Allocated(_) => None,
+        }
+    }
+
+    pub(crate) fn labeled_id(&self) -> u32 {
+        match self.label {
+            InstanceLabel::Loaded(id) | InstanceLabel::Allocated(id) => id,
+        }
     }
 
     pub fn printable(&self) -> bool {

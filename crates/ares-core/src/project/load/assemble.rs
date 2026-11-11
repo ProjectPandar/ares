@@ -10,7 +10,9 @@ use super::{
 use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 use crate::project::{
     PackagePath,
-    domain::{ProjectInstance, ProjectModel, ProjectObject, ProjectVolume},
+    domain::{
+        ProjectInstance, ProjectModel, ProjectObject, ProjectVolume, object_id::ObjectIdCounter,
+    },
     model_settings::{ModelSettings, ObjectSettings},
 };
 
@@ -106,6 +108,7 @@ fn project_domain_with_budget(
     validate_component_cycles(graph, &build_roots)?;
     let group_extruders = colors::group_extruders(graph);
 
+    let mut object_ids = ObjectIdCounter::model_read();
     let mut builders = BTreeMap::<(PackagePath, u32), ObjectBuilder>::new();
     let mut order = Vec::new();
     let mut loaded_instances = BTreeSet::new();
@@ -120,6 +123,7 @@ fn project_domain_with_budget(
 
         if let std::collections::btree_map::Entry::Vacant(entry) = builders.entry(identity.clone())
         {
+            object_ids.add_object();
             let source_settings = metadata
                 .object_settings
                 .get(&item.object_id)
@@ -145,6 +149,8 @@ fn project_domain_with_budget(
             });
             order.push(identity.clone());
         }
+        // bbs_3mf.cpp:4381–4448 creates build instances before deferred volumes (:5212).
+        let allocated_label_id = object_ids.add_instance();
         let instance = match loaded_label_id {
             Some(&label) => ProjectInstance::new(
                 [item.object_id, instance_id, label],
@@ -153,8 +159,7 @@ fn project_domain_with_budget(
                 item.transform,
             ),
             None => ProjectInstance::unassigned(
-                item.object_id,
-                instance_id,
+                [item.object_id, instance_id, allocated_label_id],
                 item.printable,
                 item.auto_drop,
                 item.transform,
