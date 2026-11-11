@@ -149,6 +149,19 @@ impl PresetCatalog {
         self.system_printer_json(&model, &variant)
     }
 
+    /// The print a selection of `printer` holds (`PresetBundle::update_compatible` with
+    /// `Always`): `current` while compatible, else the preferred compatible print, as a JSON
+    /// string or null.
+    #[wasm_bindgen(js_name = compatiblePrint)]
+    pub fn compatible_print(
+        &self,
+        printer: String,
+        current: Option<String>,
+    ) -> Result<String, JsValue> {
+        self.compatible_print_json(&printer, current.as_deref())
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
     /// The setup guide's system filaments, JSON
     /// `[{name, vendor, filament_type, models: [[printer_model, printer_variant]]}]`.
     #[wasm_bindgen(js_name = guideFilaments)]
@@ -169,6 +182,19 @@ impl PresetCatalog {
     pub fn system_printer_json(&self, model: &str, variant: &str) -> String {
         serde_json::to_string(&self.handle.system_printer(model, variant))
             .unwrap_or_else(|_| "null".to_owned())
+    }
+
+    pub fn compatible_print_json(
+        &self,
+        printer: &str,
+        current: Option<&str>,
+    ) -> Result<String, String> {
+        let print = self
+            .handle
+            .compatible_print(printer, current)
+            .map_err(|error| error.to_string())?;
+        serde_json::to_string(&print)
+            .map_err(|error| format!("compatible print cannot serialize: {error}"))
     }
 
     pub fn guide_filaments_json(&self) -> Result<String, String> {

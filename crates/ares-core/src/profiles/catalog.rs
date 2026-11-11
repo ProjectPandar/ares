@@ -175,6 +175,18 @@ impl PresetCatalogHandle {
         super::compatible::filter_with_catalog(&self.catalog, printer, process)
     }
 
+    /// The print a selection of `printer` holds after `PresetBundle::update_compatible` with
+    /// `PresetSelectCompatibleType::Always`: `current` while compatible, else the best
+    /// `PreferedPrintProfileMatch` against `current` and the printer's `default_print_profile`
+    /// (`PresetBundle.cpp:8635-8639`), or `None` when no print is compatible.
+    pub fn compatible_print(
+        &self,
+        printer: &str,
+        current: Option<&str>,
+    ) -> Result<Option<String>, SliceError> {
+        super::compatible::compatible_print(&self.catalog, printer, current)
+    }
+
     /// The installed filament set after `PresetBundle::load_installed_filaments`
     /// seeds it (`PresetBundle.cpp:2541-2600`).
     pub fn installed_filaments(&self, installed: &[String]) -> Result<Vec<String>, SliceError> {
