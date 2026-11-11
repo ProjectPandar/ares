@@ -182,7 +182,7 @@ fn native_slice(
         "case": label, "input_sha256": sha(&fs::read(input).unwrap()), "wrapper": runner.bin(), "args": args,
         "upstream": ["PrintObjectSlice.cpp:slices_to_regions", "Feature/Interlocking/InterlockingGenerator.cpp", "Feature/Interlocking/VoxelUtils.cpp", "PrintRegion.cpp:flow"]
     })).unwrap()).unwrap();
-    stages::run(runner.bin(), args, stages::Stage::Slice, &native_dir).unwrap();
+    stages::run_live(runner.bin(), args, stages::Stage::Slice, &native_dir).unwrap();
     fs::read(native_dir.join("plate_1.gcode")).unwrap()
 }
 

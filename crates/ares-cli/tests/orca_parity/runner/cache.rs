@@ -130,7 +130,7 @@ impl OrcaRunner {
                 write_preset(&file, "filament", filament)?;
                 filament_files.push(file);
             }
-            stages::run(
+            stages::run_live(
                 &self.bin,
                 [
                     "--load-settings",
@@ -242,7 +242,7 @@ impl OrcaRunner {
                 .prefix("slice-")
                 .tempdir_in(&parent)
                 .map_err(|error| io(Stage::Slice, error))?;
-            stages::run(
+            stages::run_live(
                 &self.bin,
                 [
                     "--slice",

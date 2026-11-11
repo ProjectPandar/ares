@@ -69,7 +69,7 @@ impl OrcaRunner {
                 .tempdir_in(&parent)
                 .map_err(|error| io(stage, error))?;
             let capture = staging.path().join("capture");
-            stages::run(
+            stages::run_live(
                 &launcher,
                 [&input, &capture, &reader, &gdb]
                     .map(|path| path.to_string_lossy().into_owned())

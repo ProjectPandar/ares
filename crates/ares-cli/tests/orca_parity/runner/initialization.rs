@@ -1,6 +1,12 @@
 use super::{FailureKind, OrcaRunner, PathBuf, Stage, StageError, environment};
 
 impl OrcaRunner {
+    /// Path to the executable invoked for reference production — used by
+    /// the sweep preflight to verify the wrapper actually runs.
+    pub(crate) fn bin(&self) -> &PathBuf {
+        &self.bin
+    }
+
     /// Only absent optional configuration returns None; initialization errors must fail callers.
     #[track_caller]
     pub(crate) fn from_env() -> Result<Option<Self>, StageError> {

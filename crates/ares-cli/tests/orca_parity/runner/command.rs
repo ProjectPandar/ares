@@ -26,7 +26,27 @@ pub(super) fn run(
     run_exact(bin, args, envs, limits)
 }
 
+pub(super) fn run_cached(
+    bin: &Path,
+    args: impl IntoIterator<Item = String>,
+    envs: &[(&str, &str)],
+    limits: Limits<'_>,
+) -> Result<(), StageError> {
+    let args = super::application::native_arguments(args.into_iter().collect())
+        .map_err(|error| StageError::new(limits.stage, FailureKind::Io, error))?;
+    super::command_cache::run(bin, args, envs, limits)
+}
+
 pub(super) fn run_exact(
+    bin: &Path,
+    args: impl IntoIterator<Item = String>,
+    envs: &[(&str, &str)],
+    limits: Limits<'_>,
+) -> Result<(), StageError> {
+    run_recorded(bin, args, envs, limits).map(|_| ())
+}
+
+pub(super) fn run_recorded(
     bin: &Path,
     args: impl IntoIterator<Item = String>,
     envs: &[(&str, &str)],
@@ -35,7 +55,7 @@ pub(super) fn run_exact(
         work,
         timeout,
     }: Limits,
-) -> Result<(), StageError> {
+) -> Result<std::path::PathBuf, StageError> {
     let started = Instant::now();
     let mut timings = serde_json::json!({"clock": "monotonic", "unit": "microseconds"});
     let io_error = |error| StageError::new(stage, FailureKind::Io, error);
@@ -65,6 +85,7 @@ pub(super) fn run_exact(
     .collect::<std::collections::BTreeMap<_, _>>();
     std::fs::write(directory.join("command.json"), serde_json::to_vec_pretty(&serde_json::json!({
         "binary": bin, "requested_binary": requested_bin, "args": args, "stage": format!("{stage:?}"),
+        "test_id": std::env::args().skip(1).find(|arg| arg.contains("::")),
         "cwd": work, "timeout_millis": timeout.as_millis(), "shutdown_grace_millis": 2000,
         "environment": environment, "set_environment": envs,
         "capture_policy": "file-backed; immutable length-bounded snapshots; no inherited-pipe EOF wait",
@@ -100,7 +121,8 @@ pub(super) fn run_exact(
                     stderr: vec![],
                 },
                 (timings, started),
-            );
+            )
+            .map(|_| directory);
         }
     };
     let pid = child.id();
@@ -160,6 +182,7 @@ pub(super) fn run_exact(
         },
         (timings, started),
     )
+    .map(|_| directory)
 }
 
 fn timed_finish(

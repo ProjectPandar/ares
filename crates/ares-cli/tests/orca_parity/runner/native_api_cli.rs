@@ -57,7 +57,7 @@ impl NativeCase {
         let output = root.join("native");
         fs::write(&input, project).unwrap();
         fs::create_dir(&output).unwrap();
-        stages::run(
+        stages::run_live(
             runner.bin(),
             [
                 "--slice".to_owned(),

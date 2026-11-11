@@ -64,7 +64,7 @@ impl OrcaRunner {
                 .prefix("print-statistics-")
                 .tempdir_in(&parent)
                 .map_err(|error| io(stage, error))?;
-            stages::run_with_env(
+            stages::run_live_with_env(
                 &bin,
                 [
                     "--slice".to_owned(),

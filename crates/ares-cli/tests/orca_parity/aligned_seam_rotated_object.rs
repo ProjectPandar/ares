@@ -78,7 +78,7 @@ fn native_plate(runner: &crate::OrcaRunner, project: &[u8], root: &Path) -> Stri
     let output = root.join("output");
     fs::write(&input, project).unwrap();
     fs::create_dir(&output).unwrap();
-    crate::runner::stages::run(
+    crate::runner::stages::run_live(
         runner.bin(),
         [
             "--slice".to_owned(),

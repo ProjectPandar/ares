@@ -65,7 +65,7 @@ pub(super) fn prepare(
         .unwrap(),
     )
     .unwrap();
-    stages::run_with_env(
+    stages::run_live_with_env(
         runner.bin(),
         args,
         &[("ORCA_REPLAY_SEED", &seed_wire)],

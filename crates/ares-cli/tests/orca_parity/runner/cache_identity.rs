@@ -25,7 +25,7 @@ pub(super) fn digest(parts: &[&[u8]]) -> String {
     hex(&hash.finalize())
 }
 
-fn file_hash(path: &Path) -> std::io::Result<String> {
+pub(super) fn file_hash(path: &Path) -> std::io::Result<String> {
     let mut file = fs::File::open(path)?;
     let mut hash = Sha256::new();
     let mut buffer = [0u8; 65536];
@@ -60,6 +60,30 @@ fn resource_hash(root: &Path, directory: &Path, hash: &mut Sha256) -> std::io::R
         }
     }
     Ok(())
+}
+
+pub(super) fn directory_digest(root: &Path) -> std::io::Result<String> {
+    regular_tree(root)?;
+    let mut hash = Sha256::new();
+    resource_hash(root, root, &mut hash)?;
+    Ok(hex(&hash.finalize()))
+}
+
+fn regular_tree(path: &Path) -> std::io::Result<()> {
+    let kind = fs::symlink_metadata(path)?.file_type();
+    if kind.is_dir() {
+        for entry in fs::read_dir(path)? {
+            regular_tree(&entry?.path())?;
+        }
+        Ok(())
+    } else if kind.is_file() {
+        Ok(())
+    } else {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "uncacheable file type",
+        ))
+    }
 }
 
 pub(super) fn identify(bin: &Path) -> Result<Producer, StageError> {

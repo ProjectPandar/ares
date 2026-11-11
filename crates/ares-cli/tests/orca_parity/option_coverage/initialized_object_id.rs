@@ -39,7 +39,7 @@ fn initialized_reference_repeats_complete_stock_project_output() {
     for index in 0..2 {
         let output = directory.join(format!("run-{index}"));
         std::fs::create_dir(&output).unwrap();
-        runner::stages::run(
+        runner::stages::run_live(
             runner.bin(),
             [
                 "--slice".to_owned(),

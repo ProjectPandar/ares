@@ -162,7 +162,7 @@ async fn rejected_orders_diagnostic_only() {
         fs::write(&path, input).unwrap();
         let output = root.join("native");
         fs::create_dir(&output).unwrap();
-        let native = super::stages::run(
+        let native = super::stages::run_live(
             runner.bin(),
             [
                 "--slice".into(),

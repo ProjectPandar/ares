@@ -175,6 +175,9 @@ mod clipped_loop_motion;
 #[path = "runner/compatible_regions.rs"]
 mod compatible_regions;
 #[cfg(test)]
+#[path = "runner/content_cache_tests.rs"]
+mod content_cache_tests;
+#[cfg(test)]
 #[path = "runner/costrings.rs"]
 mod costrings;
 #[cfg(test)]
@@ -334,6 +337,8 @@ mod tree_support;
 
 #[path = "runner/command.rs"]
 mod command;
+#[path = "runner/command_cache.rs"]
+mod command_cache;
 #[cfg(test)]
 #[path = "runner/strict_reference_tests.rs"]
 mod strict_reference_tests;
@@ -377,14 +382,6 @@ pub(super) struct OrcaRunner {
     /// directory unless ARES_ORCA_CACHE_DIR shares them across runs.
     cache: PathBuf,
     producer: std::sync::OnceLock<cache_identity::Producer>,
-}
-
-impl OrcaRunner {
-    /// Path to the executable invoked for reference production — used by
-    /// the sweep preflight to verify the wrapper actually runs.
-    pub(super) fn bin(&self) -> &PathBuf {
-        &self.bin
-    }
 }
 
 #[path = "runner/fixture_support.rs"]

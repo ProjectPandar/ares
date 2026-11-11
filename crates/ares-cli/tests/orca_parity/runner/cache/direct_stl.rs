@@ -39,7 +39,7 @@ impl OrcaRunner {
                 .prefix("direct-stl-")
                 .tempdir_in(&parent)
                 .map_err(|error| io(Stage::Slice, error))?;
-            stages::run(
+            stages::run_live(
                 &self.bin,
                 [
                     "--load-settings".to_owned(),

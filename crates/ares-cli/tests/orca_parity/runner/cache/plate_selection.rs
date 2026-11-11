@@ -38,7 +38,7 @@ impl OrcaRunner {
                 .prefix("selected-plate-")
                 .tempdir_in(&parent)
                 .map_err(|error| io(Stage::Slice, error))?;
-            stages::run(
+            stages::run_live(
                 &self.bin,
                 [
                     "--slice".to_owned(),

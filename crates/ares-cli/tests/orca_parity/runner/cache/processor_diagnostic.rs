@@ -121,7 +121,7 @@ impl OrcaRunner {
                 Recipe::RawColor => "--dump-color-change",
                 Recipe::Dynamics => "--dump-move-dynamics",
             };
-            stages::run(
+            stages::run_live(
                 &bin,
                 [
                     "--process-gcode".to_owned(),

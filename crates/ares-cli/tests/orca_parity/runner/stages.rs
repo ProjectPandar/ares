@@ -153,6 +153,15 @@ pub(crate) fn run(
     stage: Stage,
     work: &Path,
 ) -> Result<(), StageError> {
+    run_with_env(bin, args, &[], stage, work)
+}
+
+pub(crate) fn run_live(
+    bin: &Path,
+    args: impl IntoIterator<Item = String>,
+    stage: Stage,
+    work: &Path,
+) -> Result<(), StageError> {
     run_with_timeout(bin, args, stage, work, Duration::from_secs(300))
 }
 
@@ -177,6 +186,25 @@ pub(crate) fn run_with_timeout(
 
 /// `run` with `envs` set on the child only (the parent environment is shared by parallel tests).
 pub(crate) fn run_with_env(
+    bin: &Path,
+    args: impl IntoIterator<Item = String>,
+    envs: &[(&str, &str)],
+    stage: Stage,
+    work: &Path,
+) -> Result<(), StageError> {
+    super::command::run_cached(
+        bin,
+        args,
+        envs,
+        super::command::Limits {
+            stage,
+            work,
+            timeout: Duration::from_secs(300),
+        },
+    )
+}
+
+pub(crate) fn run_live_with_env(
     bin: &Path,
     args: impl IntoIterator<Item = String>,
     envs: &[(&str, &str)],

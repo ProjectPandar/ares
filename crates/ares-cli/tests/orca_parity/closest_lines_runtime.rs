@@ -133,6 +133,6 @@ fn native_slice(
         "case": label, "input_sha256": sha(&fs::read(input).unwrap()), "wrapper": runner.bin(), "args": args,
         "upstream": ["GCode/AvoidCrossingPerimeters.cpp:130-294", "Line.hpp:line_alg::distance_to_squared"]
     })).unwrap()).unwrap();
-    stages::run(runner.bin(), args, stages::Stage::Slice, &native_dir).unwrap();
+    stages::run_live(runner.bin(), args, stages::Stage::Slice, &native_dir).unwrap();
     fs::read(native_dir.join("plate_1.gcode")).unwrap()
 }

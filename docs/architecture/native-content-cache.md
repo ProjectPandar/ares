@@ -40,9 +40,9 @@ A cache entry uses the existing `native-cache-v2` root and lock/temporary-direct
 - the command result needed by the caller, including the exit status and code;
 - the output directory contents produced by the command, preserving relative names and bytes.
 
-Publication is staged and atomic under the per-entry lock. A hit is valid only when the receipt, result, stdout, stderr, and every declared output file are present and internally digest-consistent. Missing or malformed entries are cache misses and fall back to a live command. A corrupt entry must never produce a successful result without reproducing the existing captured-result classification.
+Publication is staged and atomic under the per-entry lock. A hit is valid only when the receipt, result, stdout, stderr, and declared output snapshots are present or absent exactly as recorded and internally digest-consistent. The corruption policy is **cache miss, rerun Native, then replace the damaged entry with the newly captured eligible result**. Missing, malformed, digest-inconsistent, or unsupported filesystem entries never return cached bytes or a partial result. An E2E check must tamper with a rejection record to claim success and prove that the caller still receives the original Native process failure after a live rerun.
 
-The materialized output directory for a hit is created under the caller's requested work directory, then populated from the cached relative files before the caller reads it. The materialization path is never part of the key.
+All cached output roots are first copied into private staging under the caller's work directory and revalidated against the record before any requested output is populated. Source snapshot/read failures discard the staged copies and become a cache miss; ordinary caller-output I/O errors remain explicit I/O failures, not successful cache results. Non-regular cache file types, including symlinks, are ineligible. The materialization path is never part of the key.
 
 Only these results may be published:
 
@@ -55,7 +55,7 @@ Never publish timeouts, wait failures, spawn failures, capture I/O failures, cra
 
 `stages::run_with_timeout` remains the live execution API. Direct commands opt into the content cache only for Export and Slice stages and only where the caller has not requested a replay or forced rerun. `rerun_reference` and all replay/forced paths bypass lookup and publication. Existing command capture, timeout, shutdown, diagnostics, and comparator behavior remain unchanged.
 
-The producer digest is computed once per `OrcaRunner` process through the existing `OnceLock` path. Each nextest test has its own process, so this only avoids repeated identification among multiple runners in one test. Persisting or sharing producer keys across test processes is a separate follow-up and is not part of this slice.
+The existing `OrcaRunner` cache retains its `OnceLock` producer path. Direct commands retain identified producers in a process-local `OnceLock` map keyed by launcher. Each nextest test has its own process, so this only avoids repeated identification within one test. Persisting or sharing producer keys across test processes is a separate follow-up and is not part of this slice.
 
 ## Determinism and safety rules
 
@@ -87,12 +87,20 @@ The failing checks must fail against the pre-implementation behavior where the n
 The implementation must provide:
 
 1. Harness-level coverage for normalized file arguments, output-directory normalization, datadir tree hashing, explicit-environment separation, corrupt-entry fallback, deterministic-rejection replay, timeout/crash exclusion, and replay/forced-path bypass.
-2. Approximately 100 `orca_parity` tests run twice with the same inputs: cold cache, then warm cache.
+2. Approximately 100 `orca_parity` tests run twice with the same inputs: cold cache, then warm cache. Export the existing Native comparison gates and report every ID's executed/skipped status. Skipped Native gates must be zero in the counted execution sample; any excluded skips are listed separately and never represented as successful Native comparisons.
 3. Exact equality of PASS/FAIL test-ID sets between cold and warm runs.
 4. Byte-identical compared outputs for corresponding cold and warm cases.
 5. Measured lower Native time on the warm run, with cache hit/miss counts and timing measurements recorded.
 6. A dual official/seeded FULL comparison against the current main tip, with inherited failures preserved and transitions analyzed by exact test ID.
 7. `cargo fmt --all -- --check`, workspace clippy with warnings denied, and a scope audit.
+
+## Implemented command boundary
+
+`stages::run` and `run_with_env` admit the direct command cache for Export and Slice. The recognized contract includes positional input files, semicolon-separated `--load-settings` and `--load-filaments` files, `--datadir`, `--outputdir`, named `--export-3mf` outputs, and scalar `--slice`, `--arrange`, and `--debug` values. Named export outputs retain their basename; output directory paths use only a marker. Unsupported argument shapes and already-populated output targets remain live, rather than guessing whether a path is an input.
+
+Only the configured base Native launcher uses this cache. Instrumented helper binaries retain their own producer boundaries. `run_live`, `run_live_with_env`, and `run_with_timeout` never enter lookup or publication. Existing cache-owned subprocesses, `NativeCase::slice`, explicit self-replay helpers, and environment-controlled fuzzy replays route through those live APIs. Replay qualification therefore cannot accidentally become a comparison against cached bytes.
+
+The result receipt hashes the entire result record. The record binds the producer, normalized request, code/status, capture hashes, and output-root tree hashes. Tree hashes include relative names, file bytes, and empty directories. Stored result records, captures, and trees must all validate before materialization. Only success and input rejections recognized by `stages::attributable` can be published; dynamically extracted option names must exist in the option-definition registry. A diagnostic header alone or a generic nonzero exit is not sufficient.
 
 ## Deferred behavior
 

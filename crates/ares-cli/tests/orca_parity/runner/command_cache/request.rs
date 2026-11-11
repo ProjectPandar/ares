@@ -1,0 +1,104 @@
+use super::super::{cache_identity, stages::Stage};
+use serde_json::{Value, json};
+use std::{
+    collections::BTreeMap,
+    fs,
+    path::{Path, PathBuf},
+};
+
+pub(super) struct Output {
+    pub(super) path: PathBuf,
+    pub(super) directory: bool,
+}
+
+pub(super) struct Request {
+    pub(super) digest: String,
+    pub(super) components: Value,
+    pub(super) outputs: Vec<Output>,
+}
+
+pub(super) fn normalize(
+    args: &[String],
+    envs: &[(&str, &str)],
+    stage: Stage,
+    work: &Path,
+) -> Option<Request> {
+    if !matches!(stage, Stage::Slice | Stage::Export) {
+        return None;
+    }
+    let path = |value: &str| {
+        let path = Path::new(value);
+        if path.is_absolute() {
+            path.to_owned()
+        } else {
+            work.join(path)
+        }
+    };
+    let mut normalized = Vec::new();
+    let mut outputs = Vec::new();
+    let mut args = args.iter();
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--outputdir" | "--export-3mf" => {
+                let value = args.next()?;
+                let target = path(value);
+                let directory = arg == "--outputdir";
+                // An existing output is not an input contract; keep such invocations live.
+                if target.exists() && (!directory || fs::read_dir(&target).ok()?.next().is_some()) {
+                    return None;
+                }
+                normalized.push(
+                    json!({"flag":arg,"output":outputs.len(),"directory":directory,
+                    "basename":if directory { None } else { Some(target.file_name()?.to_str()?) }}),
+                );
+                outputs.push(Output {
+                    path: target,
+                    directory,
+                });
+            }
+            "--datadir" => {
+                let directory = path(args.next()?);
+                normalized.push(
+                    json!({"flag":arg,"tree":cache_identity::directory_digest(&directory).ok()?}),
+                );
+            }
+            "--load-settings" | "--load-filaments" => {
+                let files = args
+                    .next()?
+                    .split(';')
+                    .map(|value| file(&path(value)))
+                    .collect::<Option<Vec<_>>>()?;
+                normalized.push(json!({"flag":arg,"files":files}));
+            }
+            "--slice" | "--arrange" | "--debug" => {
+                normalized.push(json!({"flag":arg,"value":args.next()?}));
+            }
+            value if value.starts_with('-') => return None,
+            value => normalized.push(file(&path(value))?),
+        }
+    }
+    if outputs.is_empty() {
+        return None;
+    }
+    let environment = envs.iter().copied().collect::<BTreeMap<_, _>>();
+    let components = json!({"schema":"native-command-v1", "args": normalized,
+        "environment":environment,"env_clear":false,"stage":format!("{stage:?}")});
+    let digest = cache_identity::digest(&[
+        b"native-command-v1",
+        &serde_json::to_vec(&components).unwrap(),
+    ]);
+    Some(Request {
+        digest,
+        components,
+        outputs,
+    })
+}
+
+fn file(path: &Path) -> Option<Value> {
+    if !fs::metadata(path).ok()?.is_file() {
+        return None;
+    }
+    Some(
+        json!({"basename":path.file_name()?.to_str()?,"sha256":cache_identity::file_hash(path).ok()?}),
+    )
+}
