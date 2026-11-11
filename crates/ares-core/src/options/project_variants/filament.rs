@@ -133,6 +133,11 @@ pub(super) fn materialize(
         indices
     );
     select_wrapped_field!(
+        settings.filament.gcode.filament_minimal_purge_on_wipe_tower,
+        source.filament.gcode.filament_minimal_purge_on_wipe_tower,
+        indices
+    );
+    select_wrapped_field!(
         settings.filament.gcode.filament_multitool_ramming,
         source.filament.gcode.filament_multitool_ramming,
         indices
