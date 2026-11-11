@@ -1,5 +1,21 @@
 use super::{OrcaRunner, stages};
-use std::{fs, path::Path, time::Duration};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    time::Duration,
+};
+
+fn cache_trace(root: &Path) -> Option<PathBuf> {
+    let trace = root.join("cache.json");
+    if trace.is_file() {
+        return Some(trace);
+    }
+    fs::read_dir(root)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.is_dir())
+        .find_map(|path| cache_trace(&path))
+}
 
 #[test]
 fn direct_content_cache_child() {
@@ -48,6 +64,7 @@ fn direct_content_cache_child() {
     } else {
         stages::Stage::Slice
     };
+    let repeated = args.clone();
     let result = if mode == "1" {
         stages::run_with_timeout(runner.bin(), args, stage, &work, Duration::from_millis(30))
     } else if change == "live" && step >= 3 {
@@ -124,5 +141,24 @@ fn direct_content_cache_child() {
             assert!(!error.input_rejection("layer_height"));
         }
         _ => unreachable!(),
+    }
+    if change == "memo" {
+        let data = work.join("data/nested/value");
+        for (name, reused) in [("unchanged", true), ("mutated", false)] {
+            if !reused {
+                fs::write(&data, b"modified").unwrap();
+            }
+            let next = work.join(name);
+            fs::create_dir(&next).unwrap();
+            let mut args = repeated.clone();
+            let index = args.iter().position(|arg| arg == "--outputdir").unwrap();
+            fs::create_dir(next.join("native")).unwrap();
+            args[index + 1] = next.join("native").to_str().unwrap().into();
+            stages::run(runner.bin(), args, stage, &next).unwrap();
+            let trace = cache_trace(&next).unwrap();
+            let value: serde_json::Value =
+                serde_json::from_slice(&fs::read(trace).unwrap()).unwrap();
+            assert_eq!(value["profile"]["datadir_reused"], reused);
+        }
     }
 }

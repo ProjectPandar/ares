@@ -19,6 +19,10 @@ fn direct_content_cache_tracks_datadir_nested_bytes() {
     verify("datadir", 2);
 }
 #[test]
+fn direct_content_cache_reuses_datadir_digest_and_invalidates_restored_mtime() {
+    verify("memo", 2);
+}
+#[test]
 fn direct_content_cache_tracks_datadir_names() {
     verify("rename", 2);
 }

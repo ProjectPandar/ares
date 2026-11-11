@@ -92,7 +92,7 @@ pub(super) fn run(
         })).unwrap()).map_err(|error| StageError::new(limits.stage, FailureKind::Io, error))?;
         trace(
             &evidence,
-            json!({"outcome":"hit","producer_digest":producer.digest,"request_digest":request.digest,"elapsed_us":started.elapsed().as_micros(),"native_executed":false,"profile":profile}),
+            json!({"outcome":"hit","producer_digest":producer.digest,"request_digest":request.digest,"elapsed_us":started.elapsed().as_micros(),"native_executed":false,"profile":profile,"producer_identity":producer.receipt["identity_profile"]}),
         );
         return stages::finish(
             &evidence,
@@ -143,7 +143,7 @@ pub(super) fn run(
     trace(
         work,
         json!({"outcome":"miss","stage":format!("{stage:?}"),"producer_digest":producer.digest,"request_digest":request.digest,
-        "elapsed_us":started.elapsed().as_micros(),"native_executed":true,"publication":publication,"profile":profile}),
+        "elapsed_us":started.elapsed().as_micros(),"native_executed":true,"publication":publication,"profile":profile,"producer_identity":producer.receipt["identity_profile"]}),
     );
     result.map(|_| ())
 }

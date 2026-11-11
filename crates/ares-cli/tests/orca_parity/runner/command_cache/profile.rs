@@ -7,6 +7,7 @@ pub(super) struct Profile {
     pub(super) input_hash_us: u128,
     pub(super) datadir_hash_us: u128,
     pub(super) datadir_hashes: usize,
+    pub(super) datadir_reused: bool,
     pub(super) environment_us: u128,
     pub(super) producer_us: u128,
     pub(super) verify_us: u128,

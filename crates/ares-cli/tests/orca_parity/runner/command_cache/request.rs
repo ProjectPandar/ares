@@ -63,9 +63,12 @@ pub(super) fn normalize(
             "--datadir" => {
                 let directory = path(args.next()?);
                 profile.datadir_hashes += 1;
-                normalized.push(
-                    json!({"flag":arg,"tree":timed(&mut profile.datadir_hash_us, || cache_identity::directory_digest(&directory)).ok()?}),
-                );
+                let (digest, reused) = timed(&mut profile.datadir_hash_us, || {
+                    cache_identity::cached_directory_digest(&directory)
+                })
+                .ok()?;
+                profile.datadir_reused |= reused;
+                normalized.push(json!({"flag":arg,"tree":digest}));
             }
             "--load-settings" | "--load-filaments" => {
                 let files = args
