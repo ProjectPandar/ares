@@ -65,6 +65,16 @@ The source helpers' null-result/negative-filament extruder return is included so
 
 The included subset is the already admitted by-layer static single-head, dual-head and retained manual multi-nozzle result. Its one selected nozzle per filament makes first-use and ordinary lookup agree for mapped filaments. Dynamic per-layer/H addressing, sparse inventories, sequential publication, new tower scheduling and changes to grouping admission remain deferred. Existing scaffolding stays a temporary compatibility shell around the cited upstream result and placeholder state.
 
+## Authorized startup logical-filament alias
+
+After the three nozzle-ID scalars, both modes qualify four strict array/scalar witnesses and sixteen retained controls, but the unchanged H2D primary stops at startup line 102 on `initial_no_support_filament_id`. Native still succeeds; no Ares output or byte comparison exists for that primary. Separate coordinator authorization includes exactly this observed alias, with supplemental spec and test commits before its production edit.
+
+`GCode.cpp:3744` publishes `initial_no_support_filament_id` in the initialization block beside `initial_filament_id` (:3743) and `initial_nozzle_id` (:3745). Its value is the logical initial non-support filament, not the owning physical extruder, nozzle group or firmware selector. Port only the machine-start setting into `machine/first_filaments.rs::InitialFilaments::insert_machine`, using the existing `non_support` snapshot also exposed as `initial_no_support_extruder`. Do not add another selection algorithm, state field, public API or global writer-refresh alias.
+
+The exact source startup contains 73 references to this name; the exact change template contains none. Current core publication and exact-symbol histories are empty. `initial_filament_id` has zero references in these two templates and remains deferred despite belonging to the same upstream block. Other adjacent vocabulary remains outside this authorization.
+
+The existing real H2D system-template test is the Native-first RED witness. Bind both unchanged composed templates and Native's evaluated filament-type command, then record the public API/CLI startup102 emission failure on the committed supplemental spec/tests with the already qualified six-file nozzle-scalar working patch unchanged. This is a dirty-tree, source-bound RED, not a clean-tip claim. Only then add the startup alias. Require both modes' full 21-test suite, including all sixteen retained controls, to pass; preserve complete-output comparisons, independent raw API=CLI equality and all earlier failures. Finish with spec→tests→feat commit ordering and one final RR.
+
 ## Included and deferred behavior
 
 Included:
@@ -73,11 +83,12 @@ Included:
 - Physical inventory order and length, including unused physical nozzle slots, independently of used logical filament count.
 - The canonical diameter producer needed by the source helper and the existing supported template contexts listed above.
 - The three explicitly authorized initial/current/next nozzle-ID scalars and the supported setting-point subset specified above.
+- The separately authorized startup-only `initial_no_support_filament_id` logical alias from the existing non-support snapshot.
 - Preservation of typed unsupported-path boundaries and complete output comparison.
 
 Deferred:
 
-- `nozzle_volume_types`, additional identity vocabulary beyond the three authorized scalars, and any other adjacent missing placeholder.
+- `nozzle_volume_types`, `initial_filament_id`, identity vocabulary beyond the three nozzle-ID scalars and the single startup alias, and any other adjacent missing placeholder.
 - Dynamic per-layer/H addressing, additional hardware-declaration/inventory support, preload/loaded-state/AMS rematching, flow matching and sparse hardware-group support.
 - Hybrid grouping, clustering and custom-sequence redesign.
 - Tower insertion/ordering, retraction, object labels, farthest/photo producers or generic timelapse changes.
@@ -85,7 +96,7 @@ Deferred:
 
 Sequential consequence: existing typed unsupported outcomes remain. Already admitted contexts may inherit the diameter metadata through their existing retained groups, but this is not a claim of all-static-mode sequential parity or complete H2D sequential startup support. An unsupported path without the required group result cannot be repaired by inventing default diameter slots; an empty result followed by indexed template access still cannot supply the required value. Full sequential publication needs its own source-cited rewrite and Native end-to-end witness.
 
-Exposing this metadata in an already supported template context does not authorize adding new tower/runtime behavior. Missing placeholders beyond the three explicitly authorized scalars remain separate residuals; do not extend the slice silently.
+Exposing this metadata in an already supported template context does not authorize adding new tower/runtime behavior. Missing placeholders beyond the three nozzle-ID scalars and the separately authorized startup alias remain separate residuals; do not extend the slice silently.
 
 ## Failure modes and end-to-end evidence
 
