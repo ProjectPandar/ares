@@ -10,7 +10,13 @@ pub(super) struct Producer {
 }
 
 fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut result = String::with_capacity(bytes.len() * 2);
+    for &byte in bytes {
+        result.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        result.push(char::from(DIGITS[usize::from(byte & 15)]));
+    }
+    result
 }
 
 pub(super) fn raw_digest(bytes: &[u8]) -> String {
@@ -27,11 +33,14 @@ pub(super) fn digest(parts: &[&[u8]]) -> String {
 }
 
 pub(super) fn file_hash(path: &Path) -> std::io::Result<String> {
+    file_hash_buffered(path, &mut [0u8; 65536])
+}
+
+fn file_hash_buffered(path: &Path, buffer: &mut [u8]) -> std::io::Result<String> {
     let mut file = fs::File::open(path)?;
     let mut hash = Sha256::new();
-    let mut buffer = [0u8; 65536];
     loop {
-        let length = file.read(&mut buffer)?;
+        let length = file.read(buffer)?;
         if length == 0 {
             break;
         }
@@ -45,9 +54,10 @@ fn resource_hash(
     directory: &Path,
     hash: &mut Sha256,
     follow_links: bool,
+    buffer: &mut [u8],
 ) -> std::io::Result<()> {
     let mut entries = fs::read_dir(directory)?.collect::<Result<Vec<_>, _>>()?;
-    entries.sort_by_key(|entry| entry.file_name());
+    entries.sort_by_cached_key(|entry| entry.file_name());
     for entry in entries {
         let path = entry.path();
         let name = path
@@ -65,10 +75,10 @@ fn resource_hash(
         };
         if kind.is_dir() {
             hash.update(b"directory");
-            resource_hash(root, &path, hash, follow_links)?;
+            resource_hash(root, &path, hash, follow_links, buffer)?;
         } else if kind.is_file() {
             hash.update(b"file");
-            hash.update(file_hash(&path)?.as_bytes());
+            hash.update(file_hash_buffered(&path, buffer)?.as_bytes());
         } else {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Unsupported,
@@ -87,7 +97,7 @@ pub(super) fn directory_digest(root: &Path) -> std::io::Result<String> {
         ));
     }
     let mut hash = Sha256::new();
-    resource_hash(root, root, &mut hash, false)?;
+    resource_hash(root, root, &mut hash, false, &mut [0u8; 65536])?;
     Ok(hex(&hash.finalize()))
 }
 
@@ -120,7 +130,7 @@ pub(super) fn identify(bin: &Path) -> Result<Producer, StageError> {
     let launcher_us = start.elapsed().as_micros();
     let start = std::time::Instant::now();
     let mut tree = Sha256::new();
-    resource_hash(&resources, &resources, &mut tree, true).map_err(io)?;
+    resource_hash(&resources, &resources, &mut tree, true, &mut [0u8; 65536]).map_err(io)?;
     let resources_hash = hex(&tree.finalize());
     let resources_us = start.elapsed().as_micros();
     let policy = ["ORCA_REPLAY_SEED", "ARES_PARITY_SEEDED_REFERENCE", "LC_ALL"]
