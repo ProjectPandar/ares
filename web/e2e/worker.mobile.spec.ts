@@ -90,11 +90,11 @@ test("the 3D view caps its pixel ratio at 2 and a large model slices in the work
     }).observe(bar, { childList: true, subtree: true, characterData: true });
   });
   await page.getByRole("button", { name: "Slice plate", exact: true }).tap();
-  await expect(status).toHaveText("Slicing plate…");
+  await expect(status).toHaveText(/^Slicing plate 1: /);
   // The UI answers a tap mid-slice.
   await page.getByRole("button", { name: "Light theme" }).tap();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light", { timeout: 1_000 });
-  await expect(status, "the theme switched while the plate was still slicing").toHaveText("Slicing plate…");
+  await expect(status, "the theme switched while the plate was still slicing").toHaveText(/^Slicing plate 1: /);
   await expect(status).toContainText("Slice complete", { timeout: 480_000 });
   const beat = await page.evaluate(() => (window as unknown as { beat: { start: number; end: number; maxGap: number; beats: number } }).beat);
   const sliceMs = beat.end - beat.start;
