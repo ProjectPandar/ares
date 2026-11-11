@@ -58,6 +58,7 @@ pub(in crate::project_slice) fn emit(
         &prepared.support_layers,
         &schedule,
     )?;
+    let nozzle_groups = std::mem::take(&mut schedule.tool_ordering.nozzle_groups);
     let sliced_layer_count = schedule.layer_count();
     // Under sequential by-object printing `m_layer_count` accumulates the
     // per-object layer counts (`GCode.cpp:2505`, `+= instances.size() *
@@ -371,6 +372,7 @@ pub(in crate::project_slice) fn emit(
         ));
     }
     orchestration_header::finalize_layer_count(&mut output, traversal, &state);
+    let nozzle_counts = super::tool_ordering::nozzle_count(traversal);
     let (processed, printable_area) = processor::process(
         output,
         !traversal.resolved.views.full.printer.gcode.disable_m73.0,
@@ -387,7 +389,9 @@ pub(in crate::project_slice) fn emit(
             .extruder_colors(extruder_colors)
             .writer_extruders(state.extruders.ids().to_vec())
             .recording_moves(record_moves)
-            .pre_heating(traversal.resolved.views.runtime_gcode.enable_pre_heating.0),
+            .pre_heating(traversal.resolved.views.runtime_gcode.enable_pre_heating.0)
+            .nozzle_groups(&nozzle_groups)
+            .nozzle_counts(&nozzle_counts),
     );
     retained_output::check(processed, printable_area, traversal)
 }

@@ -3,7 +3,7 @@ mod context;
 mod enumeration;
 mod sequence;
 
-use super::super::LayerTools;
+use super::super::{LayerTools, NozzleGroup};
 use crate::options::{project_config_views::ProjectConfigViews, refresh_filament_map};
 use crate::project::raw_settings::ProjectSettingsRaw;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
@@ -46,7 +46,7 @@ pub(super) fn apply(
     layers: &[LayerTools],
     geometry: Vec<BTreeSet<usize>>,
     config: DynamicPrintConfig,
-) -> Result<ProjectConfigViews, SliceError> {
+) -> Result<(ProjectConfigViews, Vec<NozzleGroup>), SliceError> {
     let (current, raw) = input;
     let context = context::Context::build_filament_group_context(
         (current, checkpoint, raw),
@@ -55,14 +55,7 @@ pub(super) fn apply(
         config,
     )?;
     let mut result = if context.manual_multi_nozzle {
-        current
-            .project
-            .gcode
-            .filament_map
-            .0
-            .iter()
-            .map(|id| usize::try_from(id.0 - 1).expect("validated filament map"))
-            .collect()
+        enumeration::solve_manual(&context)?
     } else {
         enumeration::solve(&context)
     };
@@ -91,26 +84,14 @@ pub(super) fn apply(
     let mut heads = sized_seed(&current.project.gcode.filament_map, context.total, 1);
     let mut volumes = sized_seed(&current.project.gcode.filament_volume_map, context.total, 0);
     for &id in &context.used {
-        heads.0[id] = OrcaInt(result[id] as i32 + 1);
-        volumes.0[id] = OrcaInt(context.volumes[result[id]]);
+        let nozzle = &context.nozzle_groups[result[id]];
+        heads.0[id] = OrcaInt(nozzle.extruder as i32 + 1);
+        volumes.0[id] = OrcaInt(nozzle.volume);
     }
     let nozzles = OrcaInts(
         result
-            .iter()
-            .map(|head| {
-                OrcaInt(if context.manual_multi_nozzle {
-                    context
-                        .nozzle_groups
-                        .iter()
-                        .find(|group| {
-                            group.extruder == *head && group.volume == context.volumes[*head]
-                        })
-                        .expect("each extruder has a physical nozzle")
-                        .group_id as i32
-                } else {
-                    *head as i32
-                })
-            })
+            .into_iter()
+            .map(|nozzle| OrcaInt(nozzle as i32))
             .collect(),
     );
     if current.project.gcode.filament_map != heads
@@ -133,7 +114,7 @@ pub(super) fn apply(
         views.runtime.project.gcode.filament_nozzle_map = nozzles.clone();
         views.runtime_gcode.filament_nozzle_map = nozzles;
     }
-    Ok(views)
+    Ok((views, context.nozzle_groups))
 }
 
 fn sized_seed(seed: &OrcaInts, count: usize, default: i32) -> OrcaInts {

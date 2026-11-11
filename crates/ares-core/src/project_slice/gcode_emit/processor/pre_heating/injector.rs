@@ -7,6 +7,7 @@ use std::iter::once;
 
 use super::{FilamentUsage, InsertedLines, UsageBlocks, extruder_of};
 use crate::gcode_processor::MoveVertex;
+use crate::project_slice::gcode_emit::tool_ordering::NozzleGroup;
 use crate::{Nullable, NullableFloats, OrcaInts, ProjectSettings};
 
 /// `room_temperature` (`:2374`).
@@ -34,6 +35,8 @@ struct Command<'a> {
 
 pub(super) struct Injector<'a> {
     settings: &'a ProjectSettings,
+    nozzle_group_result: &'a [NozzleGroup],
+    nozzle_counts: &'a [i64],
     moves: &'a [MoveVertex],
     times: &'a [f32],
     skippable: &'a [(u32, u32)],
@@ -45,6 +48,7 @@ impl<'a> Injector<'a> {
     /// `build_by_filament_blocks` (`:2429-2473`).
     pub(super) fn new(
         settings: &'a ProjectSettings,
+        (nozzle_group_result, nozzle_counts): (&'a [NozzleGroup], &'a [i64]),
         moves: &'a [MoveVertex],
         times: &'a [f32],
         blocks: &'a UsageBlocks,
@@ -84,6 +88,8 @@ impl<'a> Injector<'a> {
         free_blocks.sort_by_key(|block| (block.lower, block.upper));
         Self {
             settings,
+            nozzle_group_result,
+            nozzle_counts,
             moves,
             times,
             skippable: &blocks.skippable,
@@ -165,7 +171,7 @@ impl<'a> Injector<'a> {
         if lower >= upper || gap < 0.0 {
             return;
         }
-        let extruder = extruder_of(self.settings, block.last_nozzle);
+        let extruder = extruder_of(block.last_nozzle, self.nozzle_group_result);
         let gcode = &self.settings.printer.gcode;
         let heating_rate = rate(&gcode.hotend_heating_rate, extruder);
         let cooling_rate = rate(&gcode.hotend_cooling_rate, extruder);
@@ -252,8 +258,8 @@ impl<'a> Injector<'a> {
         heat
     }
 
-    /// `add_M104_lines` / `format_line_M104` (`:2333-2370`) for a printer without dynamic nozzle
-    /// maps, multi-nozzle extruders or hotend-as-extruder addressing.
+    /// `add_M104_lines` / `format_line_M104` (`:2333-2370`) with static nozzle mapping;
+    /// dynamic `H` and hotend-as-extruder addressing remain deferred.
     fn add(&mut self, key: u32, command: Command<'_>) {
         let map = &self.settings.printer.gcode.physical_extruder_map.0;
         let physical = map
@@ -261,7 +267,14 @@ impl<'a> Injector<'a> {
             .map_or(command.extruder, |id| id.0);
         let lines = self.inserted.entry(key).or_default();
         if let Some(filament) = command.skippable {
-            lines.push(format!("M632 S{filament} W\n"));
+            let count = self
+                .nozzle_counts
+                .get(command.extruder as usize)
+                .or_else(|| self.nozzle_counts.first())
+                .copied()
+                .unwrap_or(1);
+            let remap = if count > 1 { " N R" } else { "" };
+            lines.push(format!("M632 S{filament}{remap} W\n"));
         }
         lines.push("M400\n".to_owned());
         lines.push(format!(

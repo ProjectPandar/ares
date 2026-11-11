@@ -2,6 +2,8 @@
 use super::context::Context;
 use std::collections::BTreeMap;
 
+mod nozzles;
+
 pub(super) fn score(context: &Context, map: &[usize]) -> f64 {
     let results = std::array::from_fn::<_, 2, _>(|head| score_nozzle(context, map, head));
     let flush = results.iter().map(|(cost, _)| *cost).sum::<i32>();
@@ -62,9 +64,36 @@ pub(super) fn score(context: &Context, map: &[usize]) -> f64 {
     f64::from(flush) * 1.26 * 180.0 * 2.0 / 1000.0 + time
 }
 
+// FilamentGroup.cpp:124–196; the static wrapper has no loaded status or preload.
+pub(super) fn score_multi_nozzle(context: &Context, map: &[usize]) -> f64 {
+    let heads = context
+        .nozzle_groups
+        .iter()
+        .map(|nozzle| nozzle.extruder)
+        .collect::<Vec<_>>();
+    let (flush, sequences) = nozzles::sequences(context, map);
+    let mut loaded = [None; 2];
+    let mut time = 0.0;
+    let [standard_load, selector_load] = context.load;
+    let [standard_unload, selector_unload] = context.unload;
+    let load = (standard_load - selector_load) + selector_load;
+    let unload = selector_unload + (standard_unload - selector_unload);
+    for id in sequences.into_iter().flatten() {
+        let head = heads[map[id]];
+        if loaded[head] != Some(id) {
+            if loaded[head].is_some() {
+                time += f64::from(unload);
+            }
+            time += f64::from(load);
+            loaded[head] = Some(id);
+        }
+    }
+    f64::from(flush) * 1.26 * 180.0 * 2.0 / 1000.0 + time
+}
+
 fn score_nozzle(context: &Context, map: &[usize], head: usize) -> (i32, Vec<Vec<usize>>) {
     let mut output = Vec::with_capacity(context.layers.len());
-    let matrix = &context.matrices[head];
+    let matrix = &context.matrices[context.nozzle_groups[head].extruder];
     let mut previous: Option<usize> = None;
     let mut cache = BTreeMap::<u128, (f32, Vec<usize>)>::new();
     let mut cost = 0_i32;
@@ -74,7 +103,11 @@ fn score_nozzle(context: &Context, map: &[usize], head: usize) -> (i32, Vec<Vec<
             .copied()
             .filter(|id| map[*id] == head)
             .collect::<Vec<_>>();
-        let sequence = if let Some(custom) = context.custom.get(&index) {
+        let sequence = if let Some(custom) = context
+            .custom
+            .get(&index)
+            .filter(|_| !context.manual_multi_nozzle)
+        {
             let sequence = custom
                 .iter()
                 .copied()

@@ -1,4 +1,4 @@
-//! ToolOrdering.cpp:1477–1672: static single-nozzle-per-head grouping context.
+//! ToolOrdering.cpp:1477–1672,1750–1853: static physical-nozzle grouping context.
 use super::super::super::LayerTools;
 use crate::project::raw_settings::ProjectSettingsRaw;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
@@ -8,11 +8,7 @@ use std::collections::{BTreeMap, BTreeSet};
 mod inventory;
 use inventory::{build_nozzle_groups, check_nozzle_stats};
 
-pub(super) struct NozzleGroup {
-    pub extruder: usize,
-    pub group_id: usize,
-    pub volume: i32,
-}
+use crate::project_slice::gcode_emit::tool_ordering::NozzleGroup;
 
 pub(super) struct Context {
     pub total: usize,
@@ -28,6 +24,8 @@ pub(super) struct Context {
     pub load: [f32; 2],
     pub unload: [f32; 2],
     pub nozzle_groups: Vec<NozzleGroup>,
+    pub manual_extruders: Vec<usize>,
+    pub requested_volumes: Vec<i32>,
     pub manual_multi_nozzle: bool,
 }
 
@@ -108,12 +106,17 @@ impl Context {
                 .map_or(0, |v| *v as i32)
         });
         if manual_multi_nozzle
-            && settings
+            && (settings
                 .project
                 .gcode
                 .nozzle_volume_type
                 .0
                 .contains(&crate::options::NozzleVolumeType::Hybrid)
+                || config
+                    .option("extruder_nozzle_stats")
+                    .strings()
+                    .iter()
+                    .any(|wire| !wire.is_empty()))
         {
             return Err(unsupported());
         }
@@ -127,20 +130,26 @@ impl Context {
             .collect::<Vec<_>>();
         used.sort_unstable();
         used.dedup();
-        if manual_multi_nozzle
-            && nozzle_counts.iter().enumerate().any(|(head, &count)| {
-                count > 1
-                    && used
-                        .iter()
-                        .filter(|&&id| {
-                            settings.project.gcode.filament_map.0[id].0 == head as i32 + 1
-                        })
-                        .count()
-                        > 1
-            })
-        {
-            return Err(unsupported());
-        }
+        let manual_extruders = if manual_multi_nozzle {
+            settings
+                .project
+                .gcode
+                .filament_map
+                .0
+                .iter()
+                .map(|id| (id.0 - 1) as usize)
+                .collect()
+        } else {
+            Vec::new()
+        };
+        let requested_volumes = settings
+            .project
+            .gcode
+            .filament_volume_map
+            .0
+            .iter()
+            .map(|volume| volume.0)
+            .collect();
         if used.len() >= 14 {
             return Err(unsupported());
         }
@@ -219,6 +228,8 @@ impl Context {
                 (settings.printer.gcode.machine_unload_filament_time.0 / 2.0) as f32,
             ],
             nozzle_groups,
+            manual_extruders,
+            requested_volumes,
             manual_multi_nozzle,
         })
     }

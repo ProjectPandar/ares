@@ -20,10 +20,16 @@ pub(in crate::project_slice::gcode_emit::tool_transition) fn insert(
     let full = &context.traversal.resolved.views.full;
     let runtime = &context.traversal.resolved.views.runtime_gcode;
     let map = &full.project.gcode.filament_map.0;
-    // `hotend_id_for_gcode_placeholder` (`GCode.cpp:102-105`): -1 on X2D,
-    // else the physical extruder id (`get_extruder_id`).
+    // Static BBL hotend selectors are -1, distinct from physical nozzle IDs
+    // (`GCode.cpp:223-247,11068-11082`).
     let hotend = |id: usize| {
-        if full.printer.remaining.printer_model.0 == "Bambu Lab X2D" {
+        if full
+            .printer
+            .remaining
+            .printer_model
+            .0
+            .starts_with("Bambu Lab")
+        {
             -1
         } else {
             extruder_of(map, id) as i64
@@ -34,6 +40,16 @@ pub(in crate::project_slice::gcode_emit::tool_transition) fn insert(
         ("next_extruder", filament as i64),
         ("current_hotend", old.map_or(-1, hotend)),
         ("next_hotend", hotend(filament)),
+        ("current_filament_id", old.map_or(-1, |id| id as i64)),
+        ("next_filament_id", filament as i64),
+        (
+            "current_nozzle_id",
+            old.map_or(-1, |id| motion::tool_selection::nozzle(full, id)),
+        ),
+        (
+            "next_nozzle_id",
+            motion::tool_selection::nozzle(full, filament),
+        ),
         ("layer_num", context.layer_num),
         ("toolchange_count", state.toolchange_count as i64),
         ("fan_speed", 0),

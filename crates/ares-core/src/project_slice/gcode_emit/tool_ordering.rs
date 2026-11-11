@@ -10,6 +10,9 @@ mod recommend;
 pub(super) use recommend::build_recommended;
 mod reorder;
 mod statistics;
+
+mod nozzle_group;
+pub(super) use nozzle_group::{NozzleGroup, nozzle_count};
 pub(super) mod wiping;
 
 pub(super) use collect::{object_options, print_extruders};
@@ -39,6 +42,7 @@ pub(super) struct LayerTools {
 
 pub(super) struct ToolOrdering {
     pub(super) layers: Vec<LayerTools>,
+    pub(super) nozzle_groups: Vec<NozzleGroup>,
     all_extruders: Vec<usize>,
     last_layer_per_extruder: Vec<Option<f64>>,
     pub(super) first_extruder: Option<usize>,
@@ -337,6 +341,7 @@ fn finish_layers(
     });
     Ok(ToolOrdering {
         layers,
+        nozzle_groups: nozzle_group::static_groups(settings),
         all_extruders,
         last_layer_per_extruder,
         first_extruder,

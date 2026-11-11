@@ -14,8 +14,8 @@ use crate::project_slice::{
 pub(in crate::project_slice::gcode_emit) struct Context {
     pub(in crate::project_slice::gcode_emit) enabled: bool,
     farthest_gcode_pos: (f64, f64),
-    farthest_is_photo_head: bool,
-    pub(super) inserted_this_layer: bool,
+    pub(in crate::project_slice::gcode_emit) farthest_is_photo_head: bool,
+    pub(in crate::project_slice::gcode_emit) inserted_this_layer: bool,
 }
 
 pub(super) struct LayerViews<'a> {

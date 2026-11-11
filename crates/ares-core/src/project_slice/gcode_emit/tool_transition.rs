@@ -37,7 +37,8 @@ pub(super) fn emit(
     filament: usize,
     context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
-    // GCode.cpp:5289-5299 runs before set_extruder increments the change count.
+    // GCode.cpp:7476-7478,7513-7539: synchronize inline insertion before
+    // the ordinary pre-toolchange timelapse gate.
     let settings = &context.traversal.resolved.views.full;
     let current_extruder = settings
         .project
@@ -46,11 +47,22 @@ pub(super) fn emit(
         .0
         .get(state.extruders.active_id())
         .map_or(0, |value| (value.0 - 1).max(0) as usize);
+    let photo = &state.farthest_point;
+    state.has_insert_timelapse_gcode |= photo.inserted_this_layer;
+    let current_is_photo_head = current_extruder == state.most_used_extruder;
+    let is_case_b = photo.enabled && !photo.farthest_is_photo_head;
+    let should_insert = if is_case_b {
+        !current_is_photo_head
+    } else {
+        current_is_photo_head
+    };
     if state.traditional_timelapse
         && !state.has_insert_timelapse_gcode
-        && state.extruder_selected
+        && !(photo.enabled && photo.farthest_is_photo_head)
+        && state.extruders.active_id() != filament
         && settings.project.print.nozzle_diameter.0.len() == 2
-        && current_extruder == state.most_used_extruder
+        && state.extruder_selected
+        && should_insert
     {
         motion::prepare_traditional_timelapse(output, state);
         motion::append_exclude_end(output, state);

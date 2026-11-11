@@ -76,6 +76,9 @@ pub(super) struct ProcessorConfig<'a> {
     writer_extruders: Vec<usize>,
     /// `m_enable_pre_heating` of `finalize(true)` after the export (`GCodeProcessor.cpp:4000-4005`).
     pre_heating: bool,
+    /// `nozzle_group_result.get_nozzle_from_id` consumed by `GCodeProcessor.cpp:2217-2223`.
+    nozzle_group_result: &'a [crate::project_slice::gcode_emit::tool_ordering::NozzleGroup],
+    nozzle_counts: &'a [i64],
 }
 
 impl ProcessorLimits {
@@ -89,11 +92,13 @@ impl ProcessorLimits {
             extruder_colors: Vec::new(),
             writer_extruders: Vec::new(),
             pre_heating: false,
+            nozzle_group_result: &[],
+            nozzle_counts: &[1],
         }
     }
 }
 
-impl ProcessorConfig<'_> {
+impl<'a> ProcessorConfig<'a> {
     pub(super) fn recording_moves(self, record_moves: bool) -> Self {
         Self {
             record_moves,
@@ -118,6 +123,23 @@ impl ProcessorConfig<'_> {
     pub(super) fn pre_heating(self, pre_heating: bool) -> Self {
         Self {
             pre_heating,
+            ..self
+        }
+    }
+
+    pub(super) fn nozzle_counts(self, nozzle_counts: &'a [i64]) -> Self {
+        Self {
+            nozzle_counts,
+            ..self
+        }
+    }
+
+    pub(super) fn nozzle_groups(
+        self,
+        nozzle_group_result: &'a [crate::project_slice::gcode_emit::tool_ordering::NozzleGroup],
+    ) -> Self {
+        Self {
+            nozzle_group_result,
             ..self
         }
     }
@@ -276,6 +298,7 @@ pub(super) fn process(
                     &lines,
                     &line_map,
                     config.settings,
+                    (config.nozzle_group_result, config.nozzle_counts),
                     (&mut gcode, &mut result.moves),
                 );
             }

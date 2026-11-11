@@ -116,7 +116,7 @@ retain the complete Native result or exact rejection. Confirm which logical
 filaments are used and record the complete filament/extruder/nozzle maps and
 whole public output when Native accepts it.
 2. Run the same bytes through the current narrowed implementation to retain
-the expected red admission failure caused specifically by the more-than-one
+the expected admission failure caused specifically by the more-than-one
 used-filament restriction. Do not treat this failure as proof of Native
 behavior.
 3. After implementation, run Ares through the same public API/CLI path and
@@ -331,5 +331,123 @@ AMS matching, calibration-only writer paths, and per-layer rematching remain
 deferred. Nozzle-indexed diameter/volume template arrays and parked-retraction
 state propagation are adjacent G-code consumers; port them only if the strict
 witness requires them, first naming their source producer and Rust destination.
+
+The strict witness also requires the static physical-nozzle owner to survive
+into `GCodeProcessor.cpp:2160-2343`. The included processor slice is
+`UsageBlocks` owner resolution and `GCodeProcessor.cpp:2217-2223`,
+`nozzle_group_result.get_nozzle_from_id(...)->extruder_id`, defaulting to head
+0 when absent. `filament_group::apply` retains its existing physical groups
+alongside the refreshed views; `recommend.rs` installs those groups in
+`ToolOrdering`; `orchestration.rs` passes a borrowed slice through
+`processor.rs` to `pre_heating.rs` / `pre_heating/injector.rs`. The processor
+must not reconstruct an ownership table from counts or filament maps. Static
+single-nozzle paths retain one group per head, matching
+`MultiNozzleUtils.cpp:319-369`.
+
+`tool_ordering/nozzle_group.rs` also reads the startup nozzle count through
+`ProjectSettingsRaw::iter` and the existing strict `DynamicPrintConfig`
+`IntsNullable` decoder (`Config.hpp:1115-1135`), rather than splitting raw
+array tokens. The conditional processor extension is now triggered by
+`impl-r8`: official and seeded each ran five tests with four passes and the
+first strict residual at byte 64198, line 1301, Native `M632 S1 N R W` versus
+Ares `M632 S1 W`. Include the `add_M104_lines` count input and `M632 N R`
+emission (`GCodeProcessor.cpp:2333-2343`): `orchestration.rs` supplies the same
+typed count reader through a private borrowed integer slice in `processor.rs`;
+`pre_heating.rs` forwards it to `injector.rs`, which uses
+`value_at_or_front(counts, target_extruder, 1) > 1` for the literal ` N R`.
+Dynamic `H` addressing and other processor behavior remain deferred. No
+generic dynamic configuration channel is added, and unrelated single-nozzle
+behavior remains unchanged.
+
 Existing unsupported paths stay rejected; the unchanged full-output comparator,
-time estimates, footer, and raw API/CLI equality remain the verification boundary.
+time estimates, footer, and raw API/CLI equality remain the verification
+boundary.
+
+## Non-wipe-tower pre-toolchange timelapse gate
+
+The strict witness reaches a separate non-wipe-tower upstream rewrite
+slice in `GCode.cpp::process_layer`, not a change to minimum-flush scoring.
+Include the complete small non-wipe-tower insertion gate at `GCode.cpp:7513-7539`
+and the inline-insertion synchronization at `GCode.cpp:7476-7478`.
+`tool_transition.rs::emit` is the Rust destination: replace its partial
+pre-toolchange predicate, using the existing `FarthestPointTimelapse` state from
+`layers/farthest.rs`, the current logical filament's owning extruder, and the
+existing `most_used_extruder`. No new public state or identity abstraction is
+introduced. The existing Ares predicate is only a temporary compatibility shell
+for this upstream gate, not an independent timelapse design.
+
+Included behavior:
+
+- Synchronize the layer's `has_insert_timelapse_gcode` with the retained
+  `inserted_this_layer` before evaluating the gate.
+- Retain all ordinary prerequisites: traditional mode, not already inserted,
+  actual logical tool change, exactly two configured nozzle-diameter entries,
+  and a currently selected writer filament. Physical nozzle IDs do not replace
+  logical filament identity or owning-extruder identity here.
+- Suppress this ordinary insertion in Case A: farthest-point timelapse enabled
+  and the farthest target belongs to the photo head.
+- In Case B, enabled with the farthest target on the other head, invert the
+  current-head test: insert when the current owning extruder is not the
+  most-used/photo extruder. With farthest-point timelapse disabled, retain the
+  ordinary current-head-equals-photo-head test.
+- Preserve the chosen insertion order: ordinary retract, pending object-change
+  labels, existing timelapse append, mark inserted, then the existing
+  `set_extruder` equivalent. Do not compensate by changing retraction lengths,
+  shared retraction-state ownership, or object-label primitives.
+
+Before implementation, debugger captures on the unchanged r9 source establish
+Case-A operands on both sides at the first differing transition: layer0,
+logical filament1 to2, current owning head1, most-used head1,
+`enabled=true`, `farthest_is_photo_head=true`, and
+`inserted_this_layer=false`. Native suppresses this early insertion; the partial
+Ares predicate enters it. Native locals optimized out by the authority binary
+remain explicitly unavailable; the measured false Case-A conjunct suffices to
+establish Native suppression. The first incomplete Ares debugger attempt is
+excluded; the completed capture supplies the same catalog argument as the
+parity CLI adapter. These are root-cause diagnostics, not full-output parity.
+
+Add two non-H2C no-tower dual-color Native witnesses with explicit
+`farthest_point_timelapse=1` and `=0`, traditional mode, and both colors actually
+used. The enabled witness must exercise Case-B inversion, complementing the H2C
+Case-A witness; the disabled witness pins the ordinary branch. Retain exact
+Native input/output and runtime branch premises before production edits. Run
+both witnesses and the original H2C/Hybrid/X2D controls in official and seeded
+modes. Require the unchanged generator-only ordered-byte comparator for both
+public API and CLI, independent raw API/CLI equality, and complete timing/footer
+comparison; do not substitute local sections or map equality for full parity.
+
+Deferred behavior remains wipe-tower-specific insertion and `wipe_tower/type1`,
+changes to the farthest-target producer or inline snapshot algorithm, generic
+timelapse redesign, wrapping-detection changes, and other toolchange paths.
+The only inline-path addition here is synchronization of its already-retained
+insertion flag. Existing unsupported input paths and dynamic nozzle-map `H`
+addressing remain unchanged. This small generic gate is included in full rather
+than specialized to the H2C witness.
+
+## Grouping-evaluation per-head nozzle carryover audit
+
+`ToolOrderUtils.cpp:1463-1488` updates the last nozzle for every extruder with a
+nonempty fragment, then commits the whole per-head vector after the layer. The
+last extruder is a separate scalar. In the already-included
+`filament_group/sequence/nozzles.rs::sequences` destination, retaining only the
+final head's nozzle is an incomplete compatibility shell for this source state.
+When a multi-nozzle head is visited before another head, its next cyclic tour
+must start at its own last nozzle, not an older layer's nozzle.
+
+The original H2C witness has zero load/unload times and cannot establish this
+state's contribution to candidate score. The single carryover discriminator
+keeps that witness's geometry and all other archive members byte-identical,
+sets both heads' off-diagonal flush costs to1, and sets load/unload times to30s.
+Native-first official and seeded exports both choose physical nozzle map
+`0,2,1`; the Ares output before this change chooses `0,1,1`. This
+field-only diagnostic is not the full-output mismatch: register the same input
+as a strict Native/API/CLI E2E on the completed timelapse gate before changing
+carryover, including actual use of all three filaments and retained raw streams.
+
+Only after that E2E distinguishes the implementations, port the per-head nozzle
+update in this existing evaluator. Preserve cyclic nozzle/head traversal,
+nonmanual behavior, and existing score arithmetic. Downstream `reorder.rs`,
+extruder/retraction registries, the grouping admission boundary and other source
+algorithms are unchanged. Do not introduce another scoring model. If this one
+candidate does not distinguish Native and Ares, record that result and stop;
+further fixture expansion or carryover changes are outside this audit slice.

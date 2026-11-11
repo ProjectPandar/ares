@@ -142,7 +142,14 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
         super::super::motion::tool_selection::toolchange(output, state, traversal, filament, "");
     }
     if is_bbl {
-        output.extend_from_slice(format!(";VT{initial}\n").as_bytes());
+        let multiple_nozzles = super::super::tool_ordering::nozzle_count(traversal)
+            .into_iter()
+            .any(|count| count > 1);
+        if multiple_nozzles {
+            output.extend_from_slice(format!(";VT{initial} H-1\n").as_bytes());
+        } else {
+            output.extend_from_slice(format!(";VT{initial}\n").as_bytes());
+        }
     }
     if is_bbl || multiple_extruders {
         super::super::pressure_advance::append(output, state, traversal, filament);

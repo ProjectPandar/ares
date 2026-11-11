@@ -166,7 +166,13 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
 
     let non_support = non_support.unwrap_or(initial);
     let hotend = |filament: usize| {
-        if settings.printer.remaining.printer_model.0 == "Bambu Lab X2D" {
+        if settings
+            .printer
+            .remaining
+            .printer_model
+            .0
+            .starts_with("Bambu Lab")
+        {
             -1
         } else {
             filament_map.0.get(filament).map_or(0, |value| value.0 - 1)

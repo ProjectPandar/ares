@@ -16,6 +16,8 @@ mod filament_group_flush_remembered_pair;
 mod filament_group_flush_restriction_pairs;
 #[path = "nullable_vectors/filament_group_flush_unused.rs"]
 mod filament_group_flush_unused;
+#[path = "nullable_vectors/filament_group_nozzle_carry.rs"]
+mod filament_group_nozzle_carry;
 #[path = "nullable_vectors/inner_wall_speed.rs"]
 mod inner_wall_speed;
 
@@ -41,6 +43,8 @@ mod retraction_column;
 mod scalar_authored;
 #[path = "nullable_vectors/scalar_wire.rs"]
 mod scalar_wire;
+#[path = "nullable_vectors/timelapse_toolchange.rs"]
+mod timelapse_toolchange;
 
 use serde_json::{Map, Value, json};
 

@@ -55,6 +55,7 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
         traversal.objects.len(),
         multiple_nozzles,
     )?;
+    let mut nozzle_groups = None;
     let current = &traversal.resolved.views.full;
     let sequential = current.process.print.print_sequence == ProcessPrintSequence::ByObject;
     let single_head_auto = current.project.print.nozzle_diameter.0.len() == 1
@@ -71,7 +72,7 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             let config = DynamicPrintConfig::new(&traversal.resolved.views.full)?;
             let geometry =
                 geometric_unprintables(&horizontal.objects, traversal, objects, &config)?;
-            Some(filament_group::apply(
+            let (views, groups) = filament_group::apply(
                 &mut traversal.resolved.filament_variant_checkpoint,
                 (
                     &traversal.resolved.views.full,
@@ -80,7 +81,9 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
                 &layers,
                 geometry,
                 config,
-            )?)
+            )?;
+            nozzle_groups = Some(groups);
+            Some(views)
         } else {
             update_static_filament_maps(
                 &mut traversal.resolved.filament_variant_checkpoint,
@@ -142,7 +145,11 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             });
         }
     }
-    finish_layers(traversal, layers, bottom_z, max_height, false)
+    let mut ordering = finish_layers(traversal, layers, bottom_z, max_height, false)?;
+    if let Some(groups) = nozzle_groups {
+        ordering.nozzle_groups = groups;
+    }
+    Ok(ordering)
 }
 
 // PrintObject.cpp:349–515; Print.cpp:3593–3604. Borrow geometry; keep area limits separate.

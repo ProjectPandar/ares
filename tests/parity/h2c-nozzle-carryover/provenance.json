@@ -1,0 +1,43 @@
+{
+  "source": "tests/parity/filament-group-flush-mechanisms/h2c_manual_multi_nozzle_two_filaments.3mf",
+  "source_sha256": "b587d1b7bee51921375933e80b131519bf541e6a8af940b7c48e2fb66be0bd11",
+  "input": "nonzero-load-unload.3mf",
+  "input_sha256": "745c2937b8a7a011b369fa20f7f7bdf12f3363d9a315354e3ff9cf11c615438b",
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "source_boundary": "ToolOrderUtils.cpp:1463-1488 per-head last-nozzle carry in grouping evaluator",
+  "changes": {
+    "flush_volumes_matrix": [
+      "0",
+      "1",
+      "1",
+      "1",
+      "0",
+      "1",
+      "1",
+      "1",
+      "0",
+      "0",
+      "1",
+      "1",
+      "1",
+      "0",
+      "1",
+      "1",
+      "1",
+      "0"
+    ],
+    "machine_load_filament_time": "30",
+    "machine_unload_filament_time": "30"
+  },
+  "unchanged_archive_members": "All except Metadata/project_settings.config; verified by author.py before Native-only export",
+  "native_observation": {
+    "modes": [
+      "official",
+      "seeded"
+    ],
+    "filament_map": "1,2,2",
+    "filament_nozzle_map": "0,2,1",
+    "filament_volume_map": "0,0,0"
+  },
+  "limit": "One authorized candidate only; no fixture expansion if nondiscriminating"
+}

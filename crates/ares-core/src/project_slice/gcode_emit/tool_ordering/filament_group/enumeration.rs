@@ -2,6 +2,9 @@
 use super::{context::Context, sequence};
 use std::collections::BTreeSet;
 
+mod manual;
+pub(super) use manual::solve as solve_manual;
+
 #[derive(Clone)]
 struct Remembered {
     labels: Vec<usize>,

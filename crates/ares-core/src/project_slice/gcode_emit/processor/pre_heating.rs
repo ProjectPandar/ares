@@ -1,6 +1,6 @@
 //! Pre-heating usage blocks and the second-pass injection of `GCodeProcessor`
-//! (`GCodeProcessor.cpp:1607-1943,1960-2141`) on the filament path with one nozzle per
-//! extruder (`docs/architecture/pre-heating-injector-spec.md`).
+//! (`GCodeProcessor.cpp:1607-1943,1960-2141`) on the static filament path.
+//! Physical nozzle ownership is borrowed from the retained grouping result.
 
 mod injector;
 
@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 
 use crate::ProjectSettings;
 use crate::gcode_processor::MoveVertex;
+use crate::project_slice::gcode_emit::tool_ordering::NozzleGroup;
 
 /// `(unsigned)-1`: a machine G-code tag that was not seen.
 const SENTINEL: u32 = u32::MAX;
@@ -39,9 +40,10 @@ pub(super) fn inject(
     lines: &[String],
     line_map: &[u32],
     settings: &ProjectSettings,
+    (nozzle_group_result, nozzle_counts): (&[NozzleGroup], &[i64]),
     (gcode, moves): (&mut Vec<u8>, &mut [MoveVertex]),
 ) {
-    let blocks = UsageBlocks::build(lines, settings).remap(line_map);
+    let blocks = UsageBlocks::build(lines, settings, nozzle_group_result).remap(line_map);
     // `:2005-2014`: the injector reads a float prefix sum of the per-move times.
     let mut elapsed = 0.0_f32;
     let times = moves
@@ -51,7 +53,14 @@ pub(super) fn inject(
             elapsed
         })
         .collect::<Vec<_>>();
-    let inserted = injector::Injector::new(settings, moves, &times, &blocks).run();
+    let inserted = injector::Injector::new(
+        settings,
+        (nozzle_group_result, nozzle_counts),
+        moves,
+        &times,
+        &blocks,
+    )
+    .run();
     if inserted.is_empty() {
         return;
     }
@@ -85,7 +94,11 @@ fn splice(gcode: &mut Vec<u8>, inserted: &InsertedLines) {
 impl UsageBlocks {
     /// `build_usage_blocks` over every raw processor input line (`:1689-1771,1824-1833`) and
     /// the close-out of the last filament block (`:1885-1886`).
-    fn build(lines: &[String], settings: &ProjectSettings) -> Self {
+    fn build(
+        lines: &[String],
+        settings: &ProjectSettings,
+        nozzle_group_result: &[NozzleGroup],
+    ) -> Self {
         let mut blocks = Self {
             filaments: Vec::new(),
             skippable: Vec::new(),
@@ -93,7 +106,7 @@ impl UsageBlocks {
             end_start: SENTINEL,
         };
         for (index, line) in lines.iter().enumerate() {
-            blocks.line(line, index as u32 + 1, settings);
+            blocks.line(line, index as u32 + 1, settings, nozzle_group_result);
         }
         if let Some(last) = blocks.filaments.last_mut() {
             last.upper = blocks.end_start;
@@ -101,7 +114,13 @@ impl UsageBlocks {
         blocks
     }
 
-    fn line(&mut self, line: &str, id: u32, settings: &ProjectSettings) {
+    fn line(
+        &mut self,
+        line: &str,
+        id: u32,
+        settings: &ProjectSettings,
+        nozzle_group_result: &[NozzleGroup],
+    ) {
         match line.strip_prefix(';') {
             Some(" MACHINE_START_GCODE_END") => return self.start_end = id,
             Some(" MACHINE_END_GCODE_START") => return self.end_start = id,
@@ -123,13 +142,19 @@ impl UsageBlocks {
         } else {
             None
         };
-        if let Some((filament, nozzle)) = selection.and_then(filament_change) {
-            self.filament_change(filament, id, nozzle, settings);
+        if let Some(selection) = selection.and_then(filament_change) {
+            self.filament_change(selection, id, settings, nozzle_group_result);
         }
     }
 
     /// `handle_filament_change` (`:1638-1656`).
-    fn filament_change(&mut self, filament: i32, id: u32, nozzle: i32, settings: &ProjectSettings) {
+    fn filament_change(
+        &mut self,
+        (filament, nozzle): (i32, i32),
+        id: u32,
+        settings: &ProjectSettings,
+        nozzle_group_result: &[NozzleGroup],
+    ) {
         if self.start_end == SENTINEL || self.end_start != SENTINEL && id > self.end_start {
             return;
         }
@@ -143,7 +168,7 @@ impl UsageBlocks {
         };
         self.filaments.push(FilamentUsage {
             filament,
-            extruder: extruder_of(settings, nozzle),
+            extruder: extruder_of(nozzle, nozzle_group_result),
             nozzle,
             lower: id,
             upper: SENTINEL,
@@ -171,15 +196,11 @@ impl UsageBlocks {
     }
 }
 
-/// `get_nozzle_from_id(nozzle)->extruder_id` of the static grouping, where a nozzle is its
-/// extruder, or 0 when the nozzle is not in the nozzle list.
-fn extruder_of(settings: &ProjectSettings, nozzle: i32) -> i32 {
-    let nozzles = settings.project.print.nozzle_diameter.0.len() as i32;
-    if (0..nozzles).contains(&nozzle) {
-        nozzle
-    } else {
-        0
-    }
+/// `get_valid_extruder_id` (`GCodeProcessor.cpp:2217-2223`) over the retained grouping.
+fn extruder_of(nozzle: i32, nozzle_group_result: &[NozzleGroup]) -> i32 {
+    nozzle_group_result
+        .get(nozzle as usize)
+        .map_or(0, |group| group.extruder as i32)
 }
 
 /// The `istringstream` reads after `T`, `;VT` or `M1020 … S`: a filament id in `0..255`, then

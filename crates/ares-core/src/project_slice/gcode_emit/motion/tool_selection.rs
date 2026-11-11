@@ -21,7 +21,13 @@ pub(in crate::project_slice::gcode_emit) fn select(
     );
     state.extruder_selected = true;
     let config = &traversal.resolved.views.full;
-    state.current_hotend = if config.printer.remaining.printer_model.0 == "Bambu Lab X2D" {
+    state.current_hotend = if config
+        .printer
+        .remaining
+        .printer_model
+        .0
+        .starts_with("Bambu Lab")
+    {
         -1
     } else {
         config
@@ -98,24 +104,19 @@ pub(in crate::project_slice::gcode_emit) fn prefix(
     }
 }
 
-/// `nozzle_id_for_gcode_placeholder` (`GCode.cpp:241-247`) over the static group result of a
-/// printer with one nozzle per extruder (`ToolOrdering.cpp:1892-1941`): the filament's 0-based
-/// `filament_map` entry, or -1 when the filament or that nozzle is outside the nozzle list
-/// (`MultiNozzleUtils.cpp:380-387,442-446,454-458`).
+/// `nozzle_id_for_gcode_placeholder` (`GCode.cpp:241-247`) over the static
+/// grouping result, published as global physical IDs in `filament_nozzle_map`.
 pub(in crate::project_slice::gcode_emit) fn nozzle(
     settings: &crate::ProjectSettings,
     filament: usize,
 ) -> i64 {
-    let nozzles = settings.project.print.nozzle_diameter.0.len() as i64;
     settings
         .project
         .gcode
-        .filament_map
+        .filament_nozzle_map
         .0
         .get(filament)
-        .map(|id| i64::from(id.0) - 1)
-        .filter(|id| (0..nozzles).contains(id))
-        .unwrap_or(-1)
+        .map_or(-1, |id| i64::from(id.0))
 }
 
 /// Source scanner keeps the last parseable, line-leading prefix result

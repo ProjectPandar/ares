@@ -1,0 +1,44 @@
+{
+  "source": "tests/parity/nozzle-flush-dataset/D0.3mf",
+  "source_sha256": "6d576ce9d4835dfae9ec5edacf9c215d7d6893ce097606f06f987db98261ff34",
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "boundary": "GCode.cpp:7476-7478,7513-7539 complete non-wipe-tower gate",
+  "construction": "Duplicate source cube into two unique object/instance UUIDs and identify IDs9100/9101; scale Z0.1; head0 cube X160.5, head1 cube X96.5, Y128.5; farthest-from-origin target head0, most-used tie selects head1. Mesh members unchanged.",
+  "shared_settings": {
+    "enable_prime_tower": "0",
+    "timelapse_type": "0",
+    "filament_map_mode": "Manual",
+    "filament_map": [
+      "1",
+      "2"
+    ],
+    "filament_nozzle_map": [
+      "0",
+      "1"
+    ],
+    "filament_volume_map": [
+      "0",
+      "0"
+    ],
+    "physical_extruder_map": [
+      "0",
+      "1"
+    ],
+    "print_sequence": "by layer",
+    "time_lapse_gcode": "; TIMELAPSE_HEAD current={curr_physical_extruder_id} photo={most_used_physical_extruder_id}\n"
+  },
+  "cases": [
+    {
+      "id": "x2d-no-tower-farthest-enabled",
+      "input": "x2d-no-tower-farthest-enabled.3mf",
+      "sha256": "046a9247e01047c74b10e076a0f0eab7071742c3be6deabe1928c405e12a2c94",
+      "farthest_point_timelapse": true
+    },
+    {
+      "id": "x2d-no-tower-farthest-disabled",
+      "input": "x2d-no-tower-farthest-disabled.3mf",
+      "sha256": "b22ce3644b8000e8ab66274b4671e259329116db7a7f1517632a66072543b7d5",
+      "farthest_point_timelapse": false
+    }
+  ]
+}
