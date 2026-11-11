@@ -31,6 +31,8 @@ mod machine_envelope;
 mod mapped_nozzle;
 #[path = "nullable_vectors/multihead_snapshot.rs"]
 mod multihead_snapshot;
+#[path = "nullable_vectors/nozzle_diameters.rs"]
+mod nozzle_diameters;
 #[path = "nullable_vectors/overlays.rs"]
 mod overlays;
 #[path = "nullable_vectors/plate_metadata_order.rs"]

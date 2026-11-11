@@ -1,0 +1,216 @@
+{
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "upstream": [
+    "GCode.cpp:278-291",
+    "GCode/ToolOrdering.cpp:1503-1527,1894-1908",
+    "utils.cpp:1784-1791"
+  ],
+  "purpose": "Auxiliary canonical-value and retained-unused-slot whole-output witnesses; not substitutes for the unmodified H2D system-preset primary",
+  "native_qualification": {
+    "modes": [
+      "official",
+      "seeded"
+    ],
+    "result_sha256": "2992cc8cd3bdc2fb55a0d96aba9bb9b639229f529e41a2d04dd27814933fcd6a"
+  },
+  "cases": [
+    {
+      "name": "h2d-canonical-startup",
+      "archive": "h2d-canonical-startup.3mf",
+      "sha256": "65787acb8b0a9459c77f8ef5009aa6a402471cd5cfbaa146d37c2318ec5b2093",
+      "source_sha256": "2d974688d7eaaa93a6718af7ebe6e791a03f98bc530f2f9a59795592cb48d4d3",
+      "contexts": [
+        "start"
+      ],
+      "expected_values": "n0=0.4 n1=0.6",
+      "settings_changes": [
+        {
+          "key": "machine_start_gcode",
+          "before_sha256": "d046ceef846d1023f28ba3f62adca5621c7ae04c9504776d63930988e6b834aa",
+          "after_sha256": "96400d1044388471ce4957ddb6a371355b817b26553efc61a07014eb1a3f1672"
+        },
+        {
+          "key": "bridge_line_width",
+          "before": "100%",
+          "after": "0.38"
+        },
+        {
+          "key": "nozzle_diameter",
+          "before": [
+            "0.4",
+            "0.4"
+          ],
+          "after": [
+            "0.39",
+            "0.61"
+          ]
+        }
+      ],
+      "members": {
+        "[Content_Types].xml": {
+          "before_sha256": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+          "after_sha256": "dce70dceec7ff9559eb460b5f2f80c3426c239442c98713eadbdbb924e8f7a91",
+          "unchanged": true
+        },
+        "3D/3dmodel.model": {
+          "before_sha256": "8a235e5a3195344e2c3ef877b96a5a80f654fcd0fc3164e0acdc9c57b6d021fd",
+          "after_sha256": "8a235e5a3195344e2c3ef877b96a5a80f654fcd0fc3164e0acdc9c57b6d021fd",
+          "unchanged": true
+        },
+        "3D/_rels/3dmodel.model.rels": {
+          "before_sha256": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+          "after_sha256": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+          "unchanged": true
+        },
+        "3D/Objects/cube10.stl_1.model": {
+          "before_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "after_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+          "unchanged": true
+        },
+        "Metadata/project_settings.config": {
+          "before_sha256": "1501c27b8e25d7e9b35577c534f85e669fefc04b5a332739dc2d3eed9e2e4d61",
+          "after_sha256": "edf415afe4659f3dc626318deec71837d1c60fd6818ce23223a54285b4951f66",
+          "unchanged": false
+        },
+        "Metadata/model_settings.config": {
+          "before_sha256": "1eafc00508367ab9333dacbbdb9f76de4c5cad886f14a4e4ecd5c21403da9a1d",
+          "after_sha256": "1eafc00508367ab9333dacbbdb9f76de4c5cad886f14a4e4ecd5c21403da9a1d",
+          "unchanged": true
+        },
+        "Metadata/slice_info.config": {
+          "before_sha256": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+          "after_sha256": "21a14369798395f3c54bf75de4916ebb6ebdc519b7561183461e193d96de074f",
+          "unchanged": true
+        },
+        "Metadata/filament_sequence.json": {
+          "before_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "after_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "unchanged": true
+        },
+        "_rels/.rels": {
+          "before_sha256": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f",
+          "after_sha256": "d5d34bfb20159ba1ecb8ee92ffde78d08a2e80e77cd54b38b31657010d48005f",
+          "unchanged": true
+        }
+      }
+    },
+    {
+      "name": "h2c-inventory-contexts",
+      "archive": "h2c-inventory-contexts.3mf",
+      "sha256": "753ffed53ac8bf188bb5df5d8140ac2cbc2ed3023538dd5918d6a35d7458d3d5",
+      "source_sha256": "b587d1b7bee51921375933e80b131519bf541e6a8af940b7c48e2fb66be0bd11",
+      "contexts": [
+        "start",
+        "change",
+        "end",
+        "filament_start",
+        "filament_end"
+      ],
+      "expected_values": "n0=0.4 n1=0.4 n6=0.4",
+      "settings_changes": [
+        {
+          "key": "machine_start_gcode",
+          "before_sha256": "1391a6210d9963a3eee2d3e4b73a239f221bf29e2fcce075b70f1403a5f2f9d2",
+          "after_sha256": "2f27cfd7018901eb01c560d2b50f6209e14cd22dd0386eaecb0d2047051c64b1"
+        },
+        {
+          "key": "change_filament_gcode",
+          "before_sha256": "8389b38f6dd17e1d948a84a2b000e7525c55d561e300f47af5ef03760100f579",
+          "after_sha256": "d04b12207bbcffa76554e5d356e1bb9d7595bbd907c29066bc94d33d3ad0687d"
+        },
+        {
+          "key": "machine_end_gcode",
+          "before_sha256": "8f9ef9ec9fb8ca90a546f7e1acbf75e1a5514d94db262e77df6703520e490e56",
+          "after_sha256": "df41d723d250a02d15999cab65283c7159dce9be616becbc6a37597e9dcc2712"
+        },
+        {
+          "key": "filament_start_gcode",
+          "before_sha256": "034d8120308dc92ea3afbaf233a465ee42d710e9d5f23d20329f6ecfa8a1885a",
+          "after_sha256": "8be970785d5ba34acc187195263437bb0eb7e843ba3a1a246eb703c3cb760b1a"
+        },
+        {
+          "key": "filament_end_gcode",
+          "before_sha256": "1b23cc3062e1fe70d7b8a751e01e106ee0e551bfccd4b51a768f21531346a852",
+          "after_sha256": "c2c504626d35f732aebe477ed60b38d930ec42b8b20a4de7e26e3349ba15f00c"
+        }
+      ],
+      "members": {
+        "[Content_Types].xml": {
+          "before_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "after_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+          "unchanged": true
+        },
+        "Metadata/plate_1.png": {
+          "before_sha256": "dfe32954d6ab273265d9db35aab38595707adc5da1b2b67e69bca3f85260c30e",
+          "after_sha256": "dfe32954d6ab273265d9db35aab38595707adc5da1b2b67e69bca3f85260c30e",
+          "unchanged": true
+        },
+        "Metadata/plate_1_small.png": {
+          "before_sha256": "888f31f06b0b1e75a7a6324189703e8e4350aad94fa14e2e046cdd84a593e165",
+          "after_sha256": "888f31f06b0b1e75a7a6324189703e8e4350aad94fa14e2e046cdd84a593e165",
+          "unchanged": true
+        },
+        "Metadata/plate_no_light_1.png": {
+          "before_sha256": "928fb898dbc9c8156ac1877e67c1d48f01eb203188d65e25c9581463179301ff",
+          "after_sha256": "928fb898dbc9c8156ac1877e67c1d48f01eb203188d65e25c9581463179301ff",
+          "unchanged": true
+        },
+        "Metadata/top_1.png": {
+          "before_sha256": "95b49d12b781fb1aa93d147cbbf44d48887ced63365ebde2753e61f455eb656c",
+          "after_sha256": "95b49d12b781fb1aa93d147cbbf44d48887ced63365ebde2753e61f455eb656c",
+          "unchanged": true
+        },
+        "Metadata/pick_1.png": {
+          "before_sha256": "94f145af3f5e71065af6cf7e6af1c94850ec172e2857ae77ff508bea064889c6",
+          "after_sha256": "94f145af3f5e71065af6cf7e6af1c94850ec172e2857ae77ff508bea064889c6",
+          "unchanged": true
+        },
+        "Metadata/plate_1.json": {
+          "before_sha256": "9edc1c752609571d08931d0667cafb0384414c4ff10b3c5a03062f942744d544",
+          "after_sha256": "9edc1c752609571d08931d0667cafb0384414c4ff10b3c5a03062f942744d544",
+          "unchanged": true
+        },
+        "Metadata/project_settings.config": {
+          "before_sha256": "e3d9b579987bef6c6b4039384e813bb69bbfd25e11358230fd675be5451e82c2",
+          "after_sha256": "651d0904681a4b51b1df128dfb86caf5cebd0980b98ee827efcbba0d33c6f796",
+          "unchanged": false
+        },
+        "Metadata/model_settings.config": {
+          "before_sha256": "6d2fe6e0b73ee02171a011e2f580ea6cdf16daf0bdaa2d6acb70e908bc7c30b2",
+          "after_sha256": "6d2fe6e0b73ee02171a011e2f580ea6cdf16daf0bdaa2d6acb70e908bc7c30b2",
+          "unchanged": true
+        },
+        "Metadata/slice_info.config": {
+          "before_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "after_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+          "unchanged": true
+        },
+        "Metadata/filament_sequence.json": {
+          "before_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "after_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+          "unchanged": true
+        },
+        "3D/3dmodel.model": {
+          "before_sha256": "d842bb73d6a34dc7cd2c3da807619b50dec3c9226d2c250b56f677c45a8f27d4",
+          "after_sha256": "d842bb73d6a34dc7cd2c3da807619b50dec3c9226d2c250b56f677c45a8f27d4",
+          "unchanged": true
+        },
+        "3D/_rels/3dmodel.model.rels": {
+          "before_sha256": "f3386560bbe0a0fed7aa611cbfdb3eaac8311e6936e72ab6f5be2c20b5c4aa77",
+          "after_sha256": "f3386560bbe0a0fed7aa611cbfdb3eaac8311e6936e72ab6f5be2c20b5c4aa77",
+          "unchanged": true
+        },
+        "3D/Objects/ksr_fdmtest_v4.drc_2.model": {
+          "before_sha256": "ad6e13bd9a102b698e7f24e17e490621fdcc7d4f7473f191c6141bfa69d81c4b",
+          "after_sha256": "ad6e13bd9a102b698e7f24e17e490621fdcc7d4f7473f191c6141bfa69d81c4b",
+          "unchanged": true
+        },
+        "_rels/.rels": {
+          "before_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "after_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+          "unchanged": true
+        }
+      }
+    }
+  ]
+}
