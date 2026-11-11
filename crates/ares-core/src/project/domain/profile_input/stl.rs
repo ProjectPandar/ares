@@ -122,19 +122,15 @@ impl Project {
                 Transform3d::IDENTITY,
             ),
         );
-        // `ObjectID.hpp:86-87`: every default-constructed `ObjectBase`
-        // increments the process-global id counter (`ObjectBase(-1)`
-        // members do not). The CLI STL flow constructs, in order: the
-        // outer `Model` and its wipe tower (`OrcaSlicer.cpp:1612`), the
-        // `read_from_file` `Model` and its wipe tower (`Model.cpp:256`),
-        // this object's `ModelObject` + config + layer height profile
-        // (`Model.cpp:467-500`), the volume's `ModelVolume` + config + the
-        // four facet annotations (`Model.hpp:794,870-879`), and finally the
-        // instance (`Model.cpp:361,658`) — 2 + 2 + 3 + 6 + 1.
-        // `get_labeled_id` (`Model.hpp:1267-1273`) returns it while
-        // `loaded_id` stays 0 for STL inputs; the header emits it at
-        // `GCode.cpp:2594`.
-        let label_id = 2 + 2 + 3 + 6 + 1;
+        // Default ObjectBase members allocate IDs (`ObjectID.hpp:86-87`).
+        // The CLI model and read_from_file model each include a wipe tower
+        // (`OrcaSlicer.cpp:1730`, `Model.cpp:331`), followed by object +
+        // config + layer-height profile (`Model.hpp:582-588`). The volume
+        // allocates itself, its config, four facets, and eight texture-
+        // displacement facets (`Model.hpp:903-935`), then the instance
+        // (`Model.cpp:506-507,1554-1562`). With loaded_id=0, get_labeled_id
+        // returns that ID (`Model.hpp:1433-1443`, `GCode.cpp:4224-4239`).
+        let label_id = 2 + 2 + 3 + (6 + 8) + 1;
         // `ModelInstance` drops onto the bed by default (`auto_drop(true)`, `Model.hpp:1392`).
         let instance = ProjectInstance::new([1, 0, label_id], true, true, Transform3d::IDENTITY);
         let object = ProjectObject::new(
