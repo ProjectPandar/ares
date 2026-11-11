@@ -93,7 +93,12 @@ pub(super) fn score_multi_nozzle(context: &Context, map: &[usize]) -> f64 {
 
 fn score_nozzle(context: &Context, map: &[usize], head: usize) -> (i32, Vec<Vec<usize>>) {
     let mut output = Vec::with_capacity(context.layers.len());
-    let matrix = &context.matrices[context.nozzle_groups[head].extruder];
+    // Ordinary maps use physical heads; multi-nozzle maps use nozzle-group IDs.
+    let matrix = if context.manual_multi_nozzle {
+        &context.matrices[context.nozzle_groups[head].extruder]
+    } else {
+        &context.matrices[head]
+    };
     let mut previous: Option<usize> = None;
     let mut cache = BTreeMap::<u128, (f32, Vec<usize>)>::new();
     let mut cost = 0_i32;

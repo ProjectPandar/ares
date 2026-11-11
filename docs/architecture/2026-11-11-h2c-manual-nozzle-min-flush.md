@@ -71,6 +71,18 @@ remain unchanged. The implementation must not solve this slice by editing
 `options/project_variants/filament_maps.rs` or by adding a second grouping
 algorithm outside the ToolOrdering seam.
 
+Flush matrices remain indexed by physical extruder. In
+`sequence.rs::score_nozzle`, an ordinary map value is already a physical head
+and must select `matrices[head]`, as in
+`ToolOrderUtils.cpp::reorder_filaments_for_minimum_flush_volume` (`1143-1235`).
+Only a manual multi-nozzle map value is a nozzle-group ID: resolve its owning
+extruder before selecting the matrix, matching
+`FilamentGroup.cpp::full_evaluate` (`124-164`) and
+`ToolOrderUtils.cpp::reorder_filaments_for_multi_nozzle_extruder` (`1324-1390`).
+The ordinary two-head score must not index the retained nozzle-group vector,
+which can contain only one entry. Keep matrix construction, group inventory,
+scoring costs, and both paths' sequence algorithms unchanged.
+
 ## Included behavior
 
 This slice includes the complete upstream manual flush-group path for a
