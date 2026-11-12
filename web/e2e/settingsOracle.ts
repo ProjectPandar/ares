@@ -19,9 +19,19 @@ export function nativeConfigDef(repositoryRoot: string) {
   return new Map(options.map((option) => [option.key, option]));
 }
 
-/** OrcaSlicer's own `Metadata/project_settings.config` of the fixture: the values the controls must show. */
+/**
+ * `PrintConfigDef::handle_legacy` (PrintConfig.cpp:9886-9891), which `ConfigBase::load_from_json`
+ * applies to every stored scalar (Config.cpp:1010): `enable_arc_fitting` is an enum since v2.5.0.
+ */
+const legacyValue = (key: string, value: string | string[]) =>
+  key === "enable_arc_fitting" && typeof value === "string"
+    ? ({ "1": "enabled", true: "enabled", "0": "disabled", false: "disabled" } as Record<string, string>)[value.toLowerCase()] ?? value
+    : value;
+
+/** OrcaSlicer's own `Metadata/project_settings.config` of the fixture, as loaded: the values the controls must show. */
 export function projectConfig(fixture: string): Record<string, string | string[]> {
-  return JSON.parse(execFileSync("unzip", ["-p", fixture, "Metadata/project_settings.config"], { maxBuffer: 1 << 24 }).toString());
+  const stored: Record<string, string | string[]> = JSON.parse(execFileSync("unzip", ["-p", fixture, "Metadata/project_settings.config"], { maxBuffer: 1 << 24 }).toString());
+  return Object.fromEntries(Object.entries(stored).map(([key, value]) => [key, legacyValue(key, value)]));
 }
 
 /**
