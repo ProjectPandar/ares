@@ -26,6 +26,24 @@ pub fn asymmetric() -> Frame {
     }
 }
 
+pub fn high_color(width: u32, height: u32) -> Frame {
+    let mut pixels = Vec::with_capacity((width * height * 4) as usize);
+    for color in 0..width * height {
+        pixels.extend_from_slice(&[
+            (((color >> 11) & 31) << 3) as u8,
+            (((color >> 5) & 63) << 2) as u8,
+            ((color & 31) << 3) as u8,
+            255,
+        ]);
+    }
+    Frame {
+        size: [f64::from(width), f64::from(height)],
+        width,
+        height,
+        pixels,
+    }
+}
+
 pub fn families() -> Vec<(&'static str, Frame)> {
     let solid = Frame {
         size: [32.0, 24.0],
@@ -33,21 +51,7 @@ pub fn families() -> Vec<(&'static str, Frame)> {
         height: 24,
         pixels: [83, 139, 197, 255].repeat(32 * 24),
     };
-    let mut colors = Vec::with_capacity(64 * 48 * 4);
-    for color in 0_u32..64 * 48 {
-        colors.extend_from_slice(&[
-            (((color >> 11) & 31) << 3) as u8,
-            (((color >> 5) & 63) << 2) as u8,
-            ((color & 31) << 3) as u8,
-            255,
-        ]);
-    }
-    let high_color = Frame {
-        size: [64.0, 48.0],
-        width: 64,
-        height: 48,
-        pixels: colors,
-    };
+    let high_color = high_color(64, 48);
     // Thumbnails.cpp:234: these RGB565 values become zero in BTT output.
     let special_colors = [
         [0, 4, 0, 255],
