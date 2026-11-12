@@ -108,7 +108,9 @@ name = "ares-core"
 version = "0.1.0"
 dependencies = [
  "boostvoronoi",
+ "crc32fast",
  "getrandom 0.3.4",
+ "miniz_oxide",
  "num-traits",
  "proptest",
  "quick-xml",

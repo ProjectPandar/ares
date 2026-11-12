@@ -30,7 +30,7 @@ pub(crate) fn normalize_thumbnails(
     )))
 }
 
-fn parse_fixed_definitions(
+pub(crate) fn parse_fixed_definitions(
     thumbnails: &str,
     default_format: Option<GCodeThumbnailFormat>,
 ) -> Result<Vec<GCodeThumbnailDefinition>, ThumbnailParseError> {
