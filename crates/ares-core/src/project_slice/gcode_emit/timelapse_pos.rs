@@ -11,6 +11,7 @@
 //! no tower) and stay unported.
 
 use crate::geometry::{self, ExPolygon, Point, Polygon};
+use crate::options::Nullable;
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
 use super::footprint;
@@ -144,6 +145,8 @@ fn consider_ring(ring: &Polygon, segment: f64, consider: &mut impl FnMut(Point))
 pub(super) fn position(
     traversal: &PreparedPostClassicTraversal,
     picture_extruder: usize,
+    current_extruder: usize,
+    layer_z: f64,
 ) -> Option<(i32, i32)> {
     // `pick_pos_for_all_layer` (`TimelapsePosPicker.cpp:585-589`), taken for a smooth timelapse
     // (`:42`), returns the default position when printing by object.
@@ -153,8 +156,39 @@ pub(super) fn position(
     {
         return None;
     }
-    let model_bounds = footprint::model_bounds(traversal)?;
     let printer = &traversal.resolved.views.full.printer;
+    if print.timelapse_type != crate::ProcessTimelapseType::Smooth {
+        // init (:38–39), current-layer range (:515–518), and z_low (:155–159).
+        let height_range = if current_extruder != picture_extruder
+            && traversal
+                .resolved
+                .views
+                .full
+                .project
+                .print
+                .nozzle_diameter
+                .0
+                .len()
+                > 1
+            && let [Nullable::Value(left), Nullable::Value(right), ..] =
+                printer.remaining.extruder_printable_height.0.as_slice()
+            && picture_extruder != usize::from(left.0 >= right.0)
+        {
+            -((left.0 - right.0).abs() as i32) as f32
+        } else {
+            0.0
+        };
+        // Layer::print_z stays double until the float z_low assignment.
+        let z_low = if height_range < 0.0 {
+            (layer_z + f64::from(height_range)) as f32
+        } else {
+            layer_z as f32
+        };
+        if z_low <= 0.0 {
+            return None;
+        }
+    }
+    let model_bounds = footprint::model_bounds(traversal)?;
     let clearance_radius = printer.remaining.extruder_clearance_radius.0;
     let bed = scaled_polygon(
         &printer

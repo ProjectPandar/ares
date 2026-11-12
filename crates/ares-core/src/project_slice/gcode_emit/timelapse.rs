@@ -163,7 +163,14 @@ fn append(
     let uses_position =
         source.contains("timelapse_pos") || source.contains("has_timelapse_safe_pos");
     let (x, y) = (!skip_pos_pick && uses_position)
-        .then(|| safe_position(traversal, most_used))
+        .then(|| {
+            safe_position(
+                traversal,
+                most_used,
+                state.extruders.active_physical(),
+                layer.z,
+            )
+        })
         .flatten()
         .unwrap_or_default();
     config.insert(
@@ -281,6 +288,10 @@ pub(super) fn last_motion_z(gcode: &str) -> Option<f64> {
 fn safe_position(
     traversal: &PreparedPostClassicTraversal,
     picture_extruder: Option<usize>,
+    current_extruder: usize,
+    layer_z: f64,
 ) -> Option<(i32, i32)> {
-    picture_extruder.and_then(|extruder| super::timelapse_pos::position(traversal, extruder))
+    picture_extruder.and_then(|extruder| {
+        super::timelapse_pos::position(traversal, extruder, current_extruder, layer_z)
+    })
 }
