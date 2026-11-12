@@ -9,6 +9,7 @@ This is a rewrite of the following upstream boundaries, not a new Ares filament-
 - `OrcaSlicer/src/libslic3r/PresetBundle.cpp:5400-5424`: `get_printer_extruder_count` and `min_filament_count`. The nozzle vector supplies the hardware count; SEMM has minimum one, otherwise the minimum is the hardware count.
 - `PresetBundle.cpp:5426-5436`: `update_filament_count` grows an FFF selection to its minimum, copying the last preset or the first visible preset when empty. It does not truncate longer selections.
 - `PresetBundle.cpp:8598-8671`: `update_multi_material_filament_presets` pads presets and resizes `flush_multiplier`, `flush_volumes_vector`, and the per-nozzle square `flush_volumes_matrix`, preserving old entries and initializing new off-diagonal entries from the per-filament load/unload volumes.
+- v2.5.0 adds `PresetBundle.cpp:6455-6459` in `load_config_file_config`: after preset padding, call `set_num_filaments` if the palette is shorter than the selection. Port its `:4328-4372` color and map arrays too: colors and color types grow using `ConfigOptionVector::resize`'s first element (`Config.hpp:684-714`); multi-colors mirror colors; new filament maps use 1, nozzle and volume maps use 0. Do not invent tool indices from the slot number. Mixed-filament metadata inside that adjacent routine remains outside this fixed-physical-slot slice.
 - `OrcaSlicer/src/slic3r/GUI/Plater.cpp:6574-6610`: `should_show_SEMM_buttons` / `show_SEMM_buttons`. SEMM or BBL permits add; delete and flush controls also require more than one slot. Other printers have fixed slots.
 - `Plater.cpp:3740-3760`: multi-material SEMM/BBL edit opens the filament action menu; fixed and single-slot printers open the filament settings tab directly.
 - `Plater.cpp:5826-5841`: adding is bounded by `MAXIMUM_EXTRUDER_NUMBER`; deletion stops at one slot.
@@ -41,7 +42,7 @@ Deferred: adding the currently absent SEMM/BBL add/delete/flush controls and mul
 
 ## Failure modes and test seams
 
-Use public core/catalog APIs and Playwright; do not test private helpers. Runtime Native results come from the CLI only where it reaches the same boundary, otherwise a chain-probe observer of `PresetBundle::update_multi_material_filament_presets` at the pinned revision. No committed Native result goldens.
+Use public core/catalog APIs and Playwright; do not test private helpers. Runtime Native results come from the CLI only where it reaches the same boundary, otherwise a chain-probe observer calling the real `PresetBundle::update_multi_material_filament_presets`. No reconstructed C++ helper or committed Native result goldens. The minimum, padding and flush routines are the same in v2.5.0-beta and v2.5.0, so a beta runtime can exercise them during development; they are rechecked on a v2.5.0 runtime. The v2.5.0 color/map post-padding call is source-cited separately and is checked on the v2.5.0 runtime.
 
 Failure modes to cover before implementation:
 
