@@ -82,7 +82,6 @@ pub(in crate::project_slice) fn emit(
     } else {
         sliced_layer_count
     };
-    let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
     let first_layer_bounds = footprint::first_layer_bounds(
         traversal,
         skirt.as_ref(),
@@ -108,16 +107,13 @@ pub(in crate::project_slice) fn emit(
         first_layer_bounds,
         sliced_layer_count,
     )?;
-    let tags = tags::Tags::of(traversal);
-    if header::enabled(traversal) {
-        header::append_header(&mut output, traversal, &schedule, max_print_z);
-    }
-    // GCode.cpp:4285-4300/4882-4935: BBL keeps config up front;
-    // non-BBL writes it after executable output and before statistics.
-    if tags.is_bbl() {
-        output.extend_from_slice(&export_config);
-    }
-    header::append_width_block(&mut output, traversal)?;
+    let tags = preamble::append(
+        &mut output,
+        traversal,
+        &schedule,
+        &export_config,
+        context.thumbnail_images(),
+    )?;
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     object::append_definitions(&mut output, traversal);
     machine::append_first_line_m73(&mut output);

@@ -1,3 +1,13 @@
+mod btt;
+mod colpic;
+mod data;
+mod export;
+mod jpg;
+mod png;
+mod qoi;
+pub use data::ThumbnailData;
+pub(crate) use export::append;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum GCodeThumbnailFormat {
     #[serde(rename = "PNG")]
