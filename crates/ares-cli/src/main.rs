@@ -100,8 +100,14 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .map(split_native_list)
         .unwrap_or_default();
     if !load_settings.is_empty() || !load_filaments.is_empty() {
-        return load_settings::slice(&args, &input, &overrides, &load_settings, &load_filaments)
-            .await;
+        return load_settings::slice(
+            &args,
+            &input,
+            &overrides,
+            (&load_settings, &load_filaments),
+            context,
+        )
+        .await;
     }
     let output = match extension {
         Some(extension) if extension == "3mf" => {
