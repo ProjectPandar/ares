@@ -56,7 +56,10 @@ pub(super) fn refresh(
             result.insert(key.clone(), value.clone());
         }
     }
-    if supplied.is_some_and(|p| !p.filament_settings_id.0.is_empty()) {
+    // CLI:2295,2793: a supplied named machine skips retained filament refresh.
+    if supplied.is_some_and(|p| {
+        !p.printer_settings_id.0.is_empty() || !p.filament_settings_id.0.is_empty()
+    }) {
         return Ok(result);
     }
     let filaments = names
