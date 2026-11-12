@@ -104,6 +104,12 @@ An absent/empty caller image collection does not activate image export.
   Preserve BTT's CRLF rows, dimension hex header and end-marker condition
   based on the definition's position. Preserve the first emitted ColPic
   `gimage` label and subsequent `simage` labels across a mixed list.
+  Native's postprocessor retains CR and LF when assembling raw lines
+  (`GCodeProcessor.cpp:1794-1803`), forwards ordinary lines (`:1846,1852,1869`)
+  through `ExportLines::append_line` (`:1027-1040`) and its cached write/flush
+  paths (`:1105-1133`) to `GCodeFileWriter::append` (`:867-881`). Preserve those
+  original terminators for every ordinary line, including custom G-code and
+  thumbnail data. No thumbnail byte-range boundary belongs in the processor.
 - Output parity concerns emitted bytes, not unused capacity or bytes after a
   Native C-string terminator in an overallocated compression buffer.
 
@@ -112,7 +118,7 @@ An absent/empty caller image collection does not activate image export.
 | Format | Owning upstream implementation | Required proof |
 | --- | --- | --- |
 | PNG | `compress_thumbnail_png`, miniz `tdefl_write_image_to_png_file_in_memory_ex` | RGBA, vertical flip, native compression parameters, PNG chunks/checksums and compressed bytes |
-| JPG | `compress_thumbnail_jpg`, libjpeg defaults and quality85 | Flip, RGBA input/alpha treatment, subsampling, quantization, DCT/Huffman choices and complete JPEG bytes |
+| JPG | `compress_thumbnail_jpg`, libjpeg-turbo 3.2.0 baseline defaults and quality85 | Flip, RGBA input/alpha treatment, subsampling, quantization, DCT/Huffman choices and complete JPEG bytes |
 | QOI | `compress_thumbnail_qoi`, `qoi_encode` | Flipped RGBA, four channels, sRGB, exact header/opcodes/end marker |
 | BTT_TFT | `compress_thumbnail_btt_tft` | Flip, integer alpha multiplication, RGB565 hex, three special zero colors, CRLF layout |
 | ColPic | `compress_thumbnail_colpic`, `ColPicEncode`, `ColPic_EncodeStr` | Native capped-size handling, alpha-zero color, palette ordering/ties, run/page encoding, binary header and escaped six-bit text/padding |
@@ -124,6 +130,83 @@ algorithm when a dependency differs, or explicitly defer that format and
 report the failed comparison. No approximate encoder, runtime Native/FFI
 fallback, silent skip or PNG replacement is accepted. The initial target is
 all five formats; none is claimed supported before its own proof.
+
+## JPG: official libjpeg-turbo 3.2.0 baseline slice
+
+The JPEG authority is the official v2.5.0 binary, not whichever JPEG library
+happens to be installed beside an observer. Orca's `deps/JPEG/JPEG.cmake:16-24`
+pins libjpeg-turbo **3.2.0**, builds it statically and hides its Linux symbols.
+The official ELF embeds that version; it does not dynamically depend on a JPEG
+shared library. The current source observer instead links libjpeg-turbo 3.1.4.1.
+Keep that distinction in supplier manifests and verification results.
+
+`Thumbnails.cpp:75-116::compress_thumbnail_jpg` owns this dependency slice:
+RGBA input, vertical flip, `jpeg_set_defaults`, quality 85 with baseline tables,
+scanline submission and a complete encoded destination. Its Rust destination
+is private modules under `gcode_thumbnails/jpg/`, each at most 400 lines. Port
+only this fixed encoding path, without unsafe code, FFI or a Native fallback:
+
+- `libjpeg-turbo` tag `3.2.0`, `src/jcparam.c:30-167`:
+  `jpeg_add_quant_table`, `jpeg_quality_scaling`, `jpeg_set_quality` and the
+  standard luminance/chrominance tables; preserve integer scaling and rounding.
+- `src/jcparam.c::jpeg_set_defaults` (`:184-279`) and
+  `jpeg_set_colorspace` (`:374-382`): sequential 8-bit YCbCr, default 4:2:0,
+  component identities and table selectors. Preserve the RGBA conversion in
+  `src/jccolor.c`/`jccolext.c` and `jcsample.c:265::h2v2_downsample`, including
+  edge expansion and alternating rounding bias; do not composite alpha.
+- `src/jcparam.c:254` and `src/jpeglib.h:300-301`: default `JDCT_ISLOW`.
+  Port `src/jfdctint.c:143::_jpeg_fdct_islow` and
+  `src/jcdctmgr.c:417,499::quantize/forward_DCT`, including coefficient scaling,
+  signed rounding and quantization. Preserve partial-MCU dummy blocks from
+  `src/jccoefct.c:185-203`; generic pixel-edge replication is not equivalent.
+- `src/jstdhuff.c:54::std_huff_tables` and the sequential encoder in
+  `src/jchuff.c`: standard Huffman tables, DC prediction, AC runs, bit stuffing
+  and scan termination, without optimized tables or arithmetic coding.
+- `src/jcparam.c:269-274` and `src/jcmarker.c::emit_jfif_app0`: default JFIF
+  version/density fields. Preserve marker and table order from
+  `write_frame_header` (`:500`) and `write_scan_header` (`:563`), not merely
+  a container that decodes to the same pixels.
+
+JPEG decoding, alternate quality/subsampling, grayscale/CMYK, progressive or
+arithmetic scans, optimized tables, custom restart intervals and metadata are
+outside this fixed upstream path. Do not expose new codec controls.
+
+Before selecting the observer as a JPG reference, call the actual official
+ELF's `compress_thumbnail_jpg` under GDB with identical RGBA. Compare complete
+JPEG output and repeat in independent processes, including a partial-MCU case.
+If official and observer bytes differ, the official binary wins: rebuild the
+observer against 3.2.0 or retain the direct official call. These comparisons
+cover the exercised JPEG samples, not complete FFF exports or browser rendering.
+
+## Defined behavior instead of upstream undefined memory access
+
+`Thumbnails.cpp:85-93,109-113::compress_thumbnail_jpg` gives libjpeg a
+vector-backed memory destination. `jpeg_mem_dest` may replace that destination,
+but the final copy still reads the original vector. Small-frame observer runs
+returned unstable encoded output for identical inputs. Ares consumes the complete
+finished JPEG destination, never the superseded buffer. Native equality tests use
+inputs whose compressed output fits the original destination.
+
+`Thumbnails.cpp:147-159::compress_thumbnail_colpic` caps dimensions while
+preserving their ratio, then allocates a fixed-size output buffer.
+`ColPicEncode` writes its binary header and palette without first establishing
+that they fit (`:472-485`); `ColPic_EncodeStr` checks capacity only after binary
+encoding and padding (`:498-511`). Small-frame observer runs aborted or returned
+an incomplete encoded image. Ares grows the binary and text buffers to hold the
+complete header, palette, runs and padding instead of reproducing the undersized
+allocation. This is the same encoding algorithm, not a replacement codec.
+
+The cap's integer conversion can also make the other dimension zero
+(`:147-155`); observer runs on extreme aspect ratios crashed. That does not
+define an encodable positive-size image. Ares deterministically rejects this
+case as invalid input, without emitting a partial block or inventing a minimum
+size or resampling policy. Otherwise preserve upstream's capped contiguous-pixel
+prefix and row interpretation (`:158-185`), not a newly designed image resize.
+
+These undefined-memory input classes are excluded from Native equality samples.
+Do not assert that Ares differs from Native or turn observed memory contents into
+expected bytes or goldens. The defined-input matrix remains strict byte equality.
+These decisions do not claim that an unimplemented or unproven codec is complete.
 
 ## Browser renderer
 
