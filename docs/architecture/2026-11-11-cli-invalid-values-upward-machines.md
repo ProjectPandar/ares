@@ -65,9 +65,10 @@ nonempty-only emission and all existing source-selection behavior.
 3. Write a public CLI E2E at the agreed result.json seam, then execute it on
    the unchanged implementation. Exercise ordinary and `--dump-moves` entries
    through their existing common report-aware path. Compare entire result.json
-   bytes and all fields, including zero timing fields on this early exit;
-   do not use the wall-clock adaptation helper, delete fields or normalize
-   machine arrays. Independently check exit/stdout/stderr and absent final
+   bytes and all fields with the explicitly authorized existing normalization
+   of only `prepare_time` and `export_time`; assert Ares retains deterministic
+   zero values and the helper changes no other field. Do not delete fields,
+   normalize machine arrays or add any other mask. Independently check exit/stdout/stderr and absent final
    G-code/move CSV. Keep a repeatable, verifiable artifact per invocation.
 4. Only after the real failure, relocate the existing report assignment;
    rerun the exact test and existing early/late failure controls in both modes.
@@ -79,6 +80,39 @@ report leakage before post-process/compatibility rejection; changed error
 code/stdout/stderr/other JSON fields; empty-key emission; hidden timing/field
 filters; missing Native execution mislabeled as parity; changed `-100` behavior.
 No implementation-following unit tests substitute for public CLI E2E evidence.
+
+## Native early-exit timing finding and authorized exception
+
+The first Native run at spec commit `534684a5b` reached actual `-18` with
+`["Bambu Lab H2D Pro 0.4 nozzle"]` in both modes. Its strict qualifier exited1:
+although official timings were0/0, seeded `prepare_time` was140737174491600
+and `export_time` was140737488334736. The zero-timing assumption above the
+original test plan was wrong. Preserve that run and its failed qualifier; no
+Native result was changed or rerun to select favorable values.
+
+Source: `OrcaSlicer.cpp:258–259` declares the two `size_t` members without
+initializers; `:1387` default-initializes stack `sliced_info_t sliced_info;`;
+`:555–556` serializes them on `-18` before the prepare-time assignment at
+`:6294`, after the validation exit at `:4277`. These observed values are an
+upstream uninitialized-read defect, not useful durations to port. Ares keeps
+its existing deterministic zero values for this early failure.
+
+The coordinator explicitly authorized the existing
+`native_wall_clock::result_comparison_bytes` exception for **only**
+`prepare_time` and `export_time`. The new E2E must name these two fields,
+assert its normalized Native JSON equals the original JSON with exactly those
+two values set to0, and compare the remaining complete serialized bytes
+strictly against Ares. This checks no extra helper mask can silently apply.
+All fields remain present and recorded in raw artifacts; the upward array,
+return code, messages, configuration metadata, warnings, strict flag, and
+formatting retain the full comparison contract. No Native patch, Ares
+uninitialized-value emulation, extra normalization or changed error behavior.
+
+Evidence: `upward-machine-minus18-de07bfa9e-r1/native-r1/`, particularly
+`INPUT.json`, each mode's raw `native/result.json`, root `RESULT.json` and
+`PREMISE-TIMING-FAILURE-r1.md`. Input SHA256:
+`5f7adc3f35fdb9a06ee98964178990cd41906ee1610ef7e4e0114f716daced29`.
+This is Native field-contract evidence; Ares parity remains to be tested.
 
 ## The reported -100 analogue: already covered, not implementation scope
 
