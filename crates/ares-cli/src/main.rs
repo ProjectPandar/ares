@@ -154,8 +154,9 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 )
                 .with_config_substitutions(&input_file, substitutions(&input));
                 #[cfg(target_os = "linux")]
-                let failure =
-                    failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
+                let failure = failure
+                    .with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings)
+                    .with_upward_report(sliced_plate.upward_machines);
                 return Err(failure);
             }
         };
@@ -168,8 +169,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 output: &args.output,
                 plate: args.plate.unwrap_or(1),
                 plate_index: args.plate.unwrap_or(0),
+                upward_machines: &std::mem::take(&mut sliced_plate.upward_machines),
                 sliced_plate,
-                upward_machines: &[],
             },
         );
         return Ok(());

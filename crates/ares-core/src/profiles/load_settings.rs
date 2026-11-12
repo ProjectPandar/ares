@@ -10,6 +10,8 @@
 //! preset files as user-scope documents and selects them by name — no
 //! second composition exists.
 
+mod project;
+
 use super::ProfileSelection;
 use super::catalog::{Catalog, ComposedSelection, ProfileDocument};
 use crate::{SliceError, project::raw_settings::RawConfigValue};
@@ -70,6 +72,32 @@ fn parse_file(file: &LoadSettingsFile<'_>) -> Result<(String, ProfileDocument), 
 pub fn compose_load_settings(
     request: &LoadSettingsRequest<'_>,
 ) -> Result<ComposedSelection, SliceError> {
+    compose_with_project(request, None)
+}
+
+pub(crate) fn compose_project_load_settings(
+    input: &[u8],
+    request: &LoadSettingsRequest<'_>,
+) -> Result<
+    (
+        ComposedSelection,
+        crate::project_slice::compatibility::LoadedPresetNames,
+    ),
+    SliceError,
+> {
+    let mut names = load_settings_preset_names(request)?;
+    names.embedded = project::retained_config(input, request, &names)?;
+    let composed = match names.embedded.as_ref() {
+        Some(embedded) => compose_with_project(request, Some(embedded))?,
+        None => compose_load_settings(request)?,
+    };
+    Ok((composed, names))
+}
+
+fn compose_with_project(
+    request: &LoadSettingsRequest<'_>,
+    embedded: Option<&crate::project::raw_settings::ProjectSettingsRaw>,
+) -> Result<ComposedSelection, SliceError> {
     let mut catalog = Catalog::empty();
     catalog.enable_direct_imports();
     let mut machine: Option<String> = None;
@@ -117,7 +145,10 @@ pub fn compose_load_settings(
         }
         filament_slots.push(catalog.push_filament_slot(document, slot)?);
     }
-    let selection = ProfileSelection::new_partial(process, machine, filament_slots)?;
+    let selection = match embedded {
+        Some(config) => ProfileSelection::machine_for_project(machine.unwrap(), config)?,
+        None => ProfileSelection::new_partial(process, machine, filament_slots)?,
+    };
     catalog.compose(&selection)
 }
 
@@ -161,7 +192,11 @@ pub(crate) fn load_settings_preset_names(
             _ => {}
         }
     }
-    Ok(LoadedPresetNames { machine, process })
+    Ok(LoadedPresetNames {
+        machine,
+        process,
+        embedded: None,
+    })
 }
 
 fn descriptor(document: &ProfileDocument) -> crate::project_slice::compatibility::PresetDescriptor {

@@ -99,6 +99,7 @@ fn load_and_place_with_preparation(
 pub(super) fn prepare_profile_slice(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
+    upward_report: Option<&mut Vec<String>>,
 ) -> Result<ProjectSliceState, SliceError> {
     let (loaded, preparation) = load_and_place_with_preparation(project, profile)?;
     // `OrcaSlicer.cpp:2575-2620,:2653-2654`: the compatible-printers
@@ -110,7 +111,21 @@ pub(super) fn prepare_profile_slice(
         super::compatibility::reject_incompatible_load_settings(
             &loaded.documents().project_settings_raw,
             names,
+            profile.raw,
         )?;
+        // OrcaSlicer.cpp:3005 commits this before later validation/slicing.
+        if let Some(embedded) = &names.embedded
+            && let Some(report) = upward_report
+        {
+            *report = embedded
+                .get("upward_compatible_machine")
+                .map(|values| {
+                    (0..values.len())
+                        .map(|index| values.element(index).unwrap().token().unwrap())
+                        .collect()
+                })
+                .unwrap_or_default();
+        }
     }
     if project.validate_config {
         loaded.settings().validate_loaded_config(
