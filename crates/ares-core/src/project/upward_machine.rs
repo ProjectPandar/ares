@@ -154,10 +154,10 @@ impl UpwardMachineSource {
     }
 }
 
-// CLI:1953-2017 accepts system, User and user sources. A failed load must
-// not be interpreted as an absent original-machine file.
+// OrcaSlicer.cpp:2205–2263 accepts system, User and user sources. A failed
+// explicit-file load must not be interpreted as an absent machine file.
 fn file_profile(json: &[u8]) -> Result<crate::profiles::ProfileFragment, SliceError> {
-    let profile = crate::profiles::ProfileFragment::from_json_bytes(json)?;
+    let profile = crate::profiles::ProfileFragment::from_up_to_date_file_bytes(json)?;
     validate_source(&profile)?;
     Ok(profile)
 }

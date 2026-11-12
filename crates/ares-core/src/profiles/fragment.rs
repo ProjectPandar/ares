@@ -61,6 +61,20 @@ impl ProfileFragment {
         if parsed.config.inherits.is_some() {
             return Self::from_json_bytes(input);
         }
+        Self::from_flattened_config_bytes(input)
+    }
+
+    pub(crate) fn from_up_to_date_file_bytes(input: &[u8]) -> Result<Self, SliceError> {
+        let parsed = metadata::parse(input)?;
+        // OrcaSlicer.cpp:2539–2558 uses the same direct-file loader before
+        // selecting the machine's upward vector.
+        if parsed.preset.kind != ProfileKind::Machine || parsed.config.inherits.is_some() {
+            return Self::from_json_bytes(input);
+        }
+        Self::from_flattened_config_bytes(input)
+    }
+
+    fn from_flattened_config_bytes(input: &[u8]) -> Result<Self, SliceError> {
         let mut values: BTreeMap<String, crate::project::raw_settings::RawConfigValue> =
             serde_json::from_slice(input).map_err(|error| {
                 SliceError::InvalidInput(format!("profile JSON is invalid: {error}"))
