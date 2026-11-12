@@ -87,7 +87,9 @@ impl ProfileFragment {
                     | crate::project::raw_settings::RawConfigValue::List(_)
             )
         });
-        Self::from_catalog_values(values).map(|(profile, _)| profile)
+        // OrcaSlicer.cpp::load_config_file loads into an empty DynamicPrintConfig;
+        // collection defaults belong to resolved presets, not flattened files.
+        Self::from_catalog_values(values, BTreeMap::new()).map(|(profile, _)| profile)
     }
 
     pub(super) fn from_catalog_values(

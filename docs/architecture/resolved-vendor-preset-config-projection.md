@@ -169,6 +169,30 @@ refresh remain separate paths. No global registry-default expansion, changed
 static membership bit, footer filter, vendor-name exception, new filesystem
 lookup, public API or fallback is permitted.
 
+## Flattened machine file loading
+
+The direct up-to-date-file and original-machine-resource entry points introduced
+by `9c748a458620fc6da39017ce2aa4d86c978470db` and
+`987d1f7a6cac169ef52bf3c660500139c9948cc2` share
+`ProfileFragment::from_flattened_config_bytes`. Both decode the full known-option
+schema with an empty creation-default map. A full-config reader is not a
+collection-completed vendor preset.
+
+In Orca v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`),
+`PrintConfig.hpp:915-931` and `Config.hpp:2909-2917` default-construct an empty
+`DynamicPrintConfig`; the separate `full_print_config` factory is not used.
+`OrcaSlicer.cpp::load_config_file` at2205-2275 loads authored strings and arrays
+through `Config.cpp:978-1063`. Its direct callers at2542-2558,2635-2637 and
+2820-2842 do not start from a preset collection. `resolve_preset` at2118-2123
+bypasses preset resolution for explicitly typed files without a nonempty
+inherits value.
+
+Keep full-schema legacy conversion and source/shape validation, but do not
+inject machine collection defaults, static full-config membership, or registered
+numeric defaults for absent/nil fields into these direct loads. Collection
+completion remains owned by the manifest-resolved vendor path above. Inherited
+files retain their existing strict/resolved path.
+
 ## Public verification and failure model
 
 The public seam is `ares_core::slice_with_profiles` versus live pinned Native
