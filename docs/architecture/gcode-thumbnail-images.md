@@ -13,6 +13,11 @@ Source authority is OrcaSlicer v2.5.0,
   `ThumbnailsParams` and `ThumbnailsGeneratorCallback`.
 - `src/libslic3r/GCode.cpp:4233-4239,4322-4334`: BTT header suppression and
   the non-BBL thumbnail export/error branch in `_do_export`.
+- `src/libslic3r/PrintConfig.cpp:10046-10074::handle_legacy_composite`:
+  validate and canonicalize loaded thumbnails with the same
+  `make_and_check_thumbnail_list`; invalid values throw
+  `Invalid value provided for parameter thumbnails`. The load paths call
+  this conversion at `Config.cpp:1153,1245,1334,1516`.
 - `src/slic3r/GUI/Plater.cpp:7898,7913,14317-14328` and
   `GLCanvas3D.cpp:6945-7293`: orthographic image generation and readback.
   These GUI sources constrain the browser adapter, not the core renderer.
@@ -78,13 +83,21 @@ An absent/empty caller image collection does not activate image export.
 - BBL front-config branch: no thumbnail blocks and no thumbnail-export
   validation, even if images were supplied. Preserve existing BBL detection;
   do not infer it from a preset/vendor name.
-- Non-BBL with images: parse and validate the actual effective thumbnails
-  string, then emit at the upstream preamble position, before width/executable
-  output. Empty definitions emit nothing.
-- Invalid definitions: `Invalid thumbnails value:` followed by Native's
-  ordered error text/newlines. Native accumulates invalid-value, range and
-  extension errors; do not report a different UI parser error or silently
-  encode a PNG instead. This validation is local to the active export branch.
+- Non-BBL with images: retain the upstream export validation guard, then emit
+  at the upstream preamble position, before width/executable output. Loaded
+  definitions are already valid; this guard is a no-op on those paths.
+  Empty definitions emit nothing.
+- Loading validates and canonicalizes definitions in
+  `PrintConfig.cpp:10046-10074::handle_legacy_composite`, called by
+  `Config.cpp:1153,1245,1334,1516`. Preserve the existing public load errors
+  and assertions, whether images are absent, present or suppressed for BBL.
+- The export kernel's `Invalid thumbnails value:` branch accumulates ordered
+  invalid-value, range and extension errors. It is unreachable through these
+  loaded public inputs. Prove its text/combinations only through the Native
+  observer; do not create an entry point, bypass load validation or add a
+  third parser to make it reachable. Investigate any apparent public bypass
+  against its corresponding upstream load path before changing behavior.
+- Never silently encode a PNG instead of the requested format.
 - Ordinary encoded blocks use Native's tags, base64 byte length, 78-character
   rows, separators and `THUMBNAIL_BLOCK_START/END` comments verbatim.
 - BTT and ColPic have different layouts, not base64 thumbnail wrappers.
@@ -155,9 +168,12 @@ Native command, source/dependency provenance, input hash and output artifact.
    mixed/repeated definitions, format tags, exact lengths/wrapping/terminators,
    fractional sizes and empty/missing frames. Report any undefined or unstable
    Native encoder boundary rather than inventing expected bytes for it.
-5. Check all error categories and combinations against Native text. Include
-   non-BBL supplied images, BBL supplied images, empty definitions and no-image
-   controls. Existing normalization/project-import assertions remain strict.
+5. The observer checks all export-kernel error categories/combinations against
+   Native text. Public API tests cover only reachable load errors and preserve
+   existing normalization/project-import assertions. Export errors are
+   unreachable after the cited load validation; do not invent a public bypass.
+   Include non-BBL supplied images, BBL supplied images, empty definitions and
+   no-image controls.
 6. No-image E2E keeps complete ordered G-code equality under the existing
    generator/date-only normalization contract. Keep the BTT no-header raw-byte
    comparator unchanged. Also verify image insertion leaves the remaining
