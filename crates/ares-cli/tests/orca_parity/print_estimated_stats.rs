@@ -92,6 +92,94 @@ fn print_estimated_stats_time_cost() {
     assert_native("time-cost");
 }
 
+/// ToolOrdering.cpp:1506-1527: missing count entries still create both X2D groups.
+#[test]
+fn cli_time_cost_missing_nozzle_counts_matches_native() {
+    use crate::runner::native_api_cli::{NativeCase, sha};
+    use serde_json::json;
+    use std::{collections::BTreeMap, fs, io::Cursor};
+
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let project = include_bytes!("../../../../tests/parity/summary/time-cost.3mf");
+    let mut archive = zip::ZipArchive::new(Cursor::new(project)).unwrap();
+    let settings: serde_json::Value =
+        serde_json::from_reader(archive.by_name("Metadata/project_settings.config").unwrap())
+            .unwrap();
+    assert_eq!(settings["nozzle_diameter"], json!(["0.4", "0.4"]));
+    assert!(settings.get("extruder_max_nozzle_count").is_none());
+    let reference = NativeCase::slice(&runner, project, "nozzle-group-extruder-count-");
+    let output_path = reference.root.join("ares.cli.gcode");
+    // The shared cli_command injects a preset catalog, hiding the missing count.
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
+        .args(["slice", "-o"])
+        .arg(&output_path)
+        .arg(reference.root.join("input.3mf"))
+        .output()
+        .unwrap();
+    fs::write(reference.root.join("ares.cli.stdout"), &output.stdout).unwrap();
+    fs::write(reference.root.join("ares.cli.stderr"), &output.stderr).unwrap();
+    fs::write(
+        reference.root.join("cli-status.json"),
+        serde_json::to_vec_pretty(&json!({
+            "input_sha256": sha(project), "native_sha256": sha(reference.native.as_bytes()),
+            "cli_exit": output.status.code(), "success": output.status.success(),
+            "upstream": "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+            "boundary": "ToolOrdering.cpp:1506-1527 build_nozzle_groups",
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    assert!(
+        output.status.success(),
+        "CLI must retain both physical groups, status {}; artifacts {:?}: {}",
+        output.status,
+        reference.root,
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let cli = fs::read_to_string(&output_path).unwrap();
+    let mut comparison = BTreeMap::new();
+    for key in [
+        "nozzle_diameter",
+        "filament_map",
+        "filament_map_mode",
+        "filament_nozzle_map",
+        "filament_volume_map",
+    ] {
+        let prefix = format!("; {key} = ");
+        let native = reference
+            .native
+            .lines()
+            .find_map(|line| line.strip_prefix(&prefix))
+            .unwrap();
+        let actual = cli
+            .lines()
+            .find_map(|line| line.strip_prefix(&prefix))
+            .unwrap();
+        comparison.insert(key, json!({"native": native, "cli": actual}));
+    }
+    fs::write(
+        reference.root.join("nozzle-group-comparison.json"),
+        serde_json::to_vec_pretty(&comparison).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        comparison["filament_map"]["native"]
+            .as_str()
+            .unwrap()
+            .split(',')
+            .any(|head| head == "2")
+    );
+    for (key, values) in comparison {
+        assert_eq!(
+            values["native"], values["cli"],
+            "{key}; {:?}",
+            reference.root
+        );
+    }
+}
+
 /// Filament 2 is configured but unused (not in `m_writer.extruders()`).
 #[test]
 fn print_estimated_stats_unused_filament() {
