@@ -111,7 +111,7 @@ pub use gcode_processor::{
     GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, PrintStatistics, ProcessedGCode,
 };
 pub use gcode_thumbnails::{
-    GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailParseError,
+    GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailData, ThumbnailParseError,
     parse_thumbnail_definitions, thumbnail_error_string,
 };
 pub use generation::{GenerationMetadata, ORCA_SLICER_COMPATIBILITY_VERSION};
