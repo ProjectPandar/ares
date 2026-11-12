@@ -12,8 +12,8 @@ pub(super) async fn slice(
     args: &SliceArgs,
     input: &[u8],
     overrides: &ares_core::ConfigOverrides,
-    load_settings: &[&str],
-    load_filaments: &[&str],
+    (load_settings, load_filaments): (&[&str], &[&str]),
+    context: ares_core::SlicerContext<'_>,
 ) -> Result<(), CliFailure> {
     let input_file = args.input.to_string_lossy().into_owned();
     let filename = args
@@ -63,7 +63,7 @@ pub(super) async fn slice(
             sliced_plate: &mut sliced_plate,
         },
         ares_core::GenerationMetadata::default(),
-        ares_core::SlicerContext::new(0),
+        context,
     )
     .await
     {
