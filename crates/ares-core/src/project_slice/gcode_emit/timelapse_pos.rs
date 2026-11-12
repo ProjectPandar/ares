@@ -5,8 +5,9 @@
 //! projections (offset by `extruder_clearance_radius / 2`) and the camera
 //! limit areas (first-quadrant bboxes inflated by `√2 · (int(radius) / 2)`),
 //! opened by 5 mm, and the picked position is the boundary candidate with
-//! the minimum penalty `|curr − cand|₁ − ⅓ |cand|₁` (camera at the
-//! origin). Raft, rod limits, by-object mode and the wipe tower area are
+//! the minimum penalty: target-to-candidate L1 when engaged, otherwise
+//! `|curr − cand|₁ − ⅓ |cand|₁` (camera at the origin). Raft, rod limits,
+//! by-object mode and the wipe tower area are
 //! not exercised by the smoke corpus (single object, no raft, by-layer,
 //! no tower) and stay unported.
 
@@ -85,7 +86,11 @@ fn expolygon_contains(expolygon: &ExPolygon, point: Point) -> bool {
 
 /// `pick_pos_internal` for by-layer mode (no path-collision check): the
 /// minimum-penalty boundary candidate.
-fn pick_pos_internal(current: Point, safe_areas: &[ExPolygon]) -> Option<(i64, i64)> {
+fn pick_pos_internal(
+    current: Point,
+    safe_areas: &[ExPolygon],
+    target: Option<Point>,
+) -> Option<(i64, i64)> {
     if safe_areas
         .iter()
         .any(|area| expolygon_contains(area, current))
@@ -96,9 +101,17 @@ fn pick_pos_internal(current: Point, safe_areas: &[ExPolygon]) -> Option<(i64, i
     let segment = scale(CANDIDATE_SEGMENT_MM) as f64;
     let mut best: Option<(f64, Point)> = None;
     let mut consider = |candidate: Point| {
-        let penalty = (current.x() - candidate.x()).abs() as f64
-            + (current.y() - candidate.y()).abs() as f64
-            - (candidate.x().abs() + candidate.y().abs()) as f64 / 3.0;
+        // pick_pos_internal (:406–414) replaces the camera score only for an engaged target.
+        let penalty = match target {
+            Some(target) => {
+                ((target.x() - candidate.x()).abs() + (target.y() - candidate.y()).abs()) as f64
+            }
+            None => {
+                (current.x() - candidate.x()).abs() as f64
+                    + (current.y() - candidate.y()).abs() as f64
+                    - (candidate.x().abs() + candidate.y().abs()) as f64 / 3.0
+            }
+        };
         if best.is_none_or(|(best_penalty, _)| penalty < best_penalty) {
             best = Some((penalty, candidate));
         }
@@ -147,6 +160,7 @@ pub(super) fn position(
     picture_extruder: usize,
     current_extruder: usize,
     layer_z: f64,
+    target: Option<Point>,
 ) -> Option<(i32, i32)> {
     // `pick_pos_for_all_layer` (`TimelapsePosPicker.cpp:585-589`), taken for a smooth timelapse
     // (`:42`), returns the default position when printing by object.
@@ -258,5 +272,5 @@ pub(super) fn position(
         scale_round((model_bounds.0 + model_bounds.2) * 0.5),
         scale_round((model_bounds.1 + model_bounds.3) * 0.5),
     );
-    pick_pos_internal(center, &safe).map(|(x, y)| (x as i32, y as i32))
+    pick_pos_internal(center, &safe, target).map(|(x, y)| (x as i32, y as i32))
 }

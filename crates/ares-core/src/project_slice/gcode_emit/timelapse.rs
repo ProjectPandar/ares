@@ -169,6 +169,7 @@ fn append(
                 most_used,
                 state.extruders.active_physical(),
                 layer.z,
+                state.farthest_point.farthest_point,
             )
         })
         .flatten()
@@ -290,8 +291,9 @@ fn safe_position(
     picture_extruder: Option<usize>,
     current_extruder: usize,
     layer_z: f64,
+    target: Option<crate::geometry::Point>,
 ) -> Option<(i32, i32)> {
     picture_extruder.and_then(|extruder| {
-        super::timelapse_pos::position(traversal, extruder, current_extruder, layer_z)
+        super::timelapse_pos::position(traversal, extruder, current_extruder, layer_z, target)
     })
 }

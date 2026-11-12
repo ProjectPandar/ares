@@ -3,6 +3,7 @@
 mod target;
 
 use super::{instances::Instance, schedule::LayerToPrint};
+use crate::geometry::{CoordinateScale, Point};
 use crate::project_slice::{
     gcode_emit::{motion::EmitState, timelapse, tool_ordering::LayerTools},
     island_print_order::OrderedExtrusionLayer,
@@ -14,6 +15,8 @@ use crate::project_slice::{
 pub(in crate::project_slice::gcode_emit) struct Context {
     pub(in crate::project_slice::gcode_emit) enabled: bool,
     farthest_gcode_pos: (f64, f64),
+    /// Plate-relative native-scale target (`GCode.cpp:6526–6531`).
+    pub(in crate::project_slice::gcode_emit) farthest_point: Option<Point>,
     pub(in crate::project_slice::gcode_emit) farthest_is_photo_head: bool,
     pub(in crate::project_slice::gcode_emit) inserted_this_layer: bool,
 }
@@ -37,8 +40,16 @@ pub(super) fn begin_layer(
         && full.process.print.timelapse_type == crate::ProcessTimelapseType::Traditional
         && traversal.resolved.views.runtime_gcode.printer_structure != crate::PrinterStructure::I3;
     let single_nozzle = full.project.print.nozzle_diameter.0.len() <= 1;
+    let native_scale = CoordinateScale::Normal;
+    let origin = traversal.project.plate_origin();
+    let origin = Point::new(
+        native_scale.scaled_delta(origin.0).round() as i64,
+        native_scale.scaled_delta(origin.1).round() as i64,
+    );
     state.farthest_point = Context {
         enabled,
+        // compute_farthest_point resets the global point to zero (:6307).
+        farthest_point: enabled.then_some(Point::new(-origin.x(), -origin.y())),
         ..Context::default()
     };
     if enabled && let Some(candidate) = target::compute(traversal, views, tools) {
@@ -46,6 +57,11 @@ pub(super) fn begin_layer(
             traversal.scale.unscale(candidate.point.x()),
             traversal.scale.unscale(candidate.point.y()),
         );
+        let (x, y) = state.farthest_point.farthest_gcode_pos;
+        state.farthest_point.farthest_point = Some(Point::new(
+            native_scale.scaled_delta(x).round() as i64 - origin.x(),
+            native_scale.scaled_delta(y).round() as i64 - origin.y(),
+        ));
         state.farthest_point.farthest_is_photo_head =
             single_nozzle || candidate.physical_extruder == state.most_used_extruder;
     }
