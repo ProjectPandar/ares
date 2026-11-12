@@ -2,6 +2,7 @@ mod chain;
 mod cli_metadata;
 mod compose;
 mod document;
+mod filament_slots;
 mod includes;
 mod model_info;
 mod preset_values;

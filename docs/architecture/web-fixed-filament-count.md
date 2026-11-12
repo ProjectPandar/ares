@@ -22,7 +22,7 @@ The existing project-load rule (`5e49bd563`) sizes an empty profile selection fr
 
 ## Rust destination and architecture decisions
 
-The pure preset-layer API owns the count rule, padding, flush layout, and SEMM/BBL control policy. It accepts resolved printer configuration and current selection/flush data, and returns normalized selection/layout plus the control policy. Catalog callers resolve printer and first-visible preset information before invoking it. Browser code does not infer the hardware slot count from printer names or duplicate the count rule.
+The pure preset-layer API owns the count rule, padding, flush layout, and v2.5.0 palette/map normalization. It accepts resolved printer configuration and current selection/project arrays, and returns normalized selection/layout. The currently absent SEMM/BBL controls and their control-policy transport remain deferred (see Included and deferred). Catalog callers resolve printer and first-visible preset information before invoking it. Browser code does not infer the hardware slot count from printer names or duplicate the count rule.
 
 Expose the API through `ares-wasm` and the existing `ares-wasm-js` catalog/worker transport. Keep it filesystem-, terminal-, and UI-independent on WASM, Windows, macOS, and Linux.
 
@@ -36,9 +36,11 @@ Do not truncate a pre-existing selection longer than the hardware count: upstrea
 
 ## Included and deferred
 
-Included: FFF minimum count, last/first-visible padding, flush data resize and preservation, printer switch/session restoration/project-load wiring, fixed-slot rendering and direct settings edit, and U1 slicing through the normalized selection.
+Included: FFF minimum count, last/first-visible padding, flush data resize and preservation, printer switch/session restoration/project-load wiring, fixed-slot rendering and direct opening of the existing filament settings tab, and U1 slicing through the normalized selection.
 
-Deferred: adding the currently absent SEMM/BBL add/delete/flush controls and multi-material action menu (their future policy must follow `Plater.cpp:3740-3760,6574-6610` `show_SEMM_buttons`); SLA material selection, physical AMS synchronization, virtual/mixed-filament creation, hardware discovery, and unrelated H2C/filament-group logic. Do not change wipe/prime-tower generation. Flush layout is the cited PresetBundle state update only, not a tower feature.
+Two prerequisite repairs are bounded to that direct-tab witness and committed separately: mount the selected filament tab without requiring a project's settings (`Plater.cpp:3752-3758`, `Tab.cpp:7233-7267`), and serialize the selected preset's boolean defaults as `1`/`0` before strict typed decoding (`Config.hpp:1922-1925,1995-2008`). The STL witness otherwise either cannot mount the dialog or fails field decoding. Printer tabs retain their existing project-settings lifecycle. Preserve the existing read-only setting controls: a writable preset editor is not introduced here; upstream's shared edited-preset behavior (`PresetBundle.cpp:5653-5667`) must be a separately specified slice, not independent per-slot writes.
+
+Deferred: align `first_visible` visibility with `load_installed_filaments` when that slice is integrated; the current empty-selection source is the first preset without missing parents, not necessarily the first visible installed filament. Also deferred: adding the currently absent SEMM/BBL add/delete/flush controls and multi-material action menu (their future policy must follow `Plater.cpp:3740-3760,6574-6610` `show_SEMM_buttons`); SLA material selection, physical AMS synchronization, virtual/mixed-filament creation, hardware discovery, and unrelated H2C/filament-group logic. Do not change wipe/prime-tower generation. Flush layout is the cited PresetBundle state update only, not a tower feature.
 
 ## Failure modes and test seams
 

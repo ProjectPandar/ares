@@ -1,4 +1,4 @@
-import type { ConfigOverrides, CurrentPrinter, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, Scene, SliceResult, SlicingStatus } from "@ares-slicer/wasm";
+import type { ConfigOverrides, CurrentPrinter, FilamentSlotState, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, ProjectSettings, Scene, SliceResult, SlicingStatus } from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig } from "./persistence";
@@ -130,16 +130,35 @@ export async function updateCompatible() {
     }]));
     const { scene, installedFilaments } = useApp.getState();
     const slots = Math.max(selection.filaments.length, presetFilamentSlots(scene?.settings ?? null));
-    const filaments = await catalog.selectCompatibleFilaments(selection.printer, selection.process,
+    const selected = await catalog.selectCompatibleFilaments(selection.printer, selection.process,
       Array.from({ length: slots }, (_, slot) => selection.filaments[slot] ?? ""), [...installedFilaments]);
+    const { filaments, ...filamentProject } = await catalog.normalizeFilamentSlots(selection.printer,
+      { ...(selection.filamentProject ?? projectFilamentState(scene?.settings ?? null)), filaments: selected });
     if (useApp.getState().presetSelection === selection) {
-      useApp.setState({ presetSelection: { ...selection, filaments }, compatible: { status: "done", presets, filamentInfo } });
+      useApp.setState({ presetSelection: { ...selection, filaments, filamentProject }, compatible: { status: "done", presets, filamentInfo } });
     }
   } catch (error) {
     if (useApp.getState().presetSelection === selection) {
       useApp.setState({ compatible: { status: "error", error: (error as Error).message } });
     }
   }
+}
+
+/** The loaded project's arrays; omitted fields use the core's PrintConfig defaults. */
+function projectFilamentState(settings: ProjectSettings | null): Partial<FilamentSlotState> {
+  const values = { ...settings?.project, ...settings?.filament };
+  const state: Partial<FilamentSlotState> = {};
+  const entries = (key: string) => {
+    const raw = values[key];
+    return Array.isArray(raw) ? raw : String(raw).split(/[;,]/);
+  };
+  for (const key of ["flush_multiplier", "flush_volumes_vector", "flush_volumes_matrix", "filament_map", "filament_nozzle_map", "filament_volume_map"] as const) {
+    if (key in values) state[key] = entries(key).map(Number);
+  }
+  for (const key of ["filament_colour", "filament_multi_colour", "filament_colour_type"] as const) {
+    if (key in values) state[key] = entries(key).map(String);
+  }
+  return state;
 }
 
 /** MainFrame::load_config_file: adds the files' presets as user presets. */
@@ -289,7 +308,7 @@ export function presetSliceBlocker(selection: PresetSelection, scene: Scene): st
 export type CatalogSources = { vendors: readonly string[]; presetImports: readonly ParsedPresetBundle[] };
 
 /** The `sliceWithProfiles` / `profileSettings` arguments of a complete selection. */
-export async function profileRequest(scene: Scene, { printer, process, filaments }: PresetSelection, { vendors, presetImports }: CatalogSources, plate = scene.plates[0]?.id) {
+export async function profileRequest(scene: Scene, { printer, process, filaments, filamentProject }: PresetSelection, { vendors, presetImports }: CatalogSources, plate = scene.plates[0]?.id) {
   const { loadVendor } = await import("@ares-slicer/profiles");
   const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
   const catalog = JSON.stringify({ vendors: loaded, imports: presetImports });
@@ -297,6 +316,7 @@ export async function profileRequest(scene: Scene, { printer, process, filaments
     plate,
     seed: 0,
     placement: scene.format === "stl" ? "center" : "none",
+    overrides: filamentProject ? await overrideTokens(filamentProject) : undefined,
   };
   return { catalog, selection: { machine: printer, process: process!, filaments }, options };
 }
@@ -330,7 +350,8 @@ export async function sliceWithPresets(file: ModelFile, scene: Scene, selection:
   // So are the dual-nozzle volume types and filament map.
   const project: ConfigOverrides = {
     ...(selection.bedType === undefined ? {} : { curr_bed_type: selection.bedType }),
-    ...extruderOverrides(selection, presetFilamentSlots(scene.settings)),
+    ...selection.filamentProject,
+    ...extruderOverrides(selection, selection.filaments.length),
   };
   const request = { ...options, overrides: await overrideTokens({ ...overrides, ...project }) };
   const { plater } = useApp.getState();

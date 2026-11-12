@@ -72,7 +72,8 @@ fn u1_flush_layout_grows_per_nozzle_and_preserves_existing_values() {
                 "filament_map": [2],
                 "filament_nozzle_map": [1],
                 "filament_volume_map": [0]
-            })).unwrap(),
+            }))
+            .unwrap(),
         )
         .unwrap();
     assert_eq!(state.filaments, vec!["Last PETG"; 4]);
@@ -87,6 +88,15 @@ fn u1_flush_layout_grows_per_nozzle_and_preserves_existing_values() {
     assert_eq!(state.flush_volumes_matrix[16], 0.0);
     assert_eq!(state.flush_volumes_matrix[17], 220.0);
     let actual = serde_json::to_value(&state).unwrap();
+    if let Some(root) = std::env::var_os("ARES_FIXED_FILAMENT_ARTIFACT_ROOT") {
+        let root = std::path::PathBuf::from(root);
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(
+            root.join("rust-slot-state.json"),
+            serde_json::to_vec_pretty(&actual).unwrap(),
+        )
+        .unwrap();
+    }
     assert_eq!(actual["filament_colour"], json!(vec!["#123456"; 4]));
     assert_eq!(actual["filament_multi_colour"], json!(vec!["#123456"; 4]));
     assert_eq!(actual["filament_map"], json!([2, 1, 1, 1]));

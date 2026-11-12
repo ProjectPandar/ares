@@ -99,6 +99,17 @@ impl PresetCatalog {
             .map_err(|error| JsValue::from_str(&error))
     }
 
+    /// PresetBundle minimum and flush-layout normalization for a printer selection.
+    #[wasm_bindgen(js_name = normalizeFilamentSlots)]
+    pub fn normalize_filament_slots(
+        &self,
+        printer: String,
+        state_json: String,
+    ) -> Result<String, JsValue> {
+        self.normalize_filament_slots_json(&printer, &state_json)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
     /// The installed filament names (JSON string array) seeded like
     /// `PresetBundle::load_installed_filaments`, as a sorted JSON array.
     #[wasm_bindgen(js_name = installedFilaments)]
@@ -126,6 +137,21 @@ impl PresetCatalog {
 }
 
 impl PresetCatalog {
+    pub fn normalize_filament_slots_json(
+        &self,
+        printer: &str,
+        state_json: &str,
+    ) -> Result<String, String> {
+        let state: ares_core::FilamentSlotState = serde_json::from_str(state_json)
+            .map_err(|error| format!("invalid filament slot state: {error}"))?;
+        let state = self
+            .handle
+            .normalize_filament_slots(printer, state)
+            .map_err(|error| error.to_string())?;
+        serde_json::to_string(&state)
+            .map_err(|error| format!("filament slot state cannot serialize: {error}"))
+    }
+
     pub fn preset_values_json(
         &self,
         kind: &str,

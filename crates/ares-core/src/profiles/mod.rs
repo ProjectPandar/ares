@@ -10,6 +10,8 @@ pub(crate) use project_refresh::{
     ProjectPresetRefresh, apply_retained_preset_defaults, preset_owns_option,
 };
 
+mod filament_slots;
+pub use filament_slots::FilamentSlotState;
 mod fragment;
 mod inheritance;
 
