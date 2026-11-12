@@ -2,11 +2,25 @@ mod filament;
 mod keys;
 mod preset;
 
+use std::collections::BTreeMap;
+
 use super::{Placement, catalog::Catalog};
 use crate::{
     ConfigOverrides, Project, ProjectSettings, SliceError,
-    project::raw_settings::ProjectSettingsRaw,
+    project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
+
+pub(super) fn default_preset_fields(
+    kind: super::ProfileKind,
+) -> Result<BTreeMap<String, RawConfigValue>, SliceError> {
+    let mut fields = BTreeMap::new();
+    for key in keys::names(kind) {
+        if let Some(value) = keys::default_value(key)? {
+            fields.insert(key.to_owned(), value);
+        }
+    }
+    Ok(fields)
+}
 
 /// Preset.cpp: source-owned print, filament and printer option membership.
 pub(crate) fn preset_owns_option(kind: super::ProfileKind, key: &str) -> bool {

@@ -92,9 +92,14 @@ impl ProfileFragment {
 
     pub(super) fn from_catalog_values(
         input: BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
+        defaults: BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
     ) -> Result<(Self, ProjectRuntimeOptionsBuilder), SliceError> {
+        let mut metadata_values = defaults.clone();
+        metadata_values.extend(input.clone());
+        let parsed = metadata::parse_values(crate::project::raw_settings::RawConfigValue::Object(
+            metadata_values,
+        ))?;
         let input = crate::project::raw_settings::RawConfigValue::Object(input);
-        let parsed = metadata::parse_values(input.clone())?;
         // Config.cpp's preset loader uses the same typed legacy normalization as
         // project loading, before parent/child overlay; keep absence as absence.
         let builder = crate::options::json_deserialize::deserialize_preset_config::<
@@ -103,7 +108,16 @@ impl ProfileFragment {
         .map_err(|error| {
             SliceError::InvalidInput(format!("profile option JSON is invalid: {error}"))
         })?;
-        let (printer, process, filament, runtime) = builder.into_profile_parts();
+        let (authored_printer, authored_process, authored_filament, authored_runtime) =
+            builder.into_profile_parts();
+        let (mut printer, mut process, mut filament, mut runtime) =
+            ProjectSettingsBuilder::from_creation_defaults(defaults)
+                .map_err(SliceError::InvalidInput)?
+                .into_profile_parts();
+        printer.overlay(authored_printer);
+        process.overlay(authored_process);
+        filament.overlay(authored_filament);
+        runtime.overlay(authored_runtime);
         let payload = match parsed.preset.kind {
             ProfileKind::Machine => ProfilePayload::Machine(Box::new(printer)),
             ProfileKind::Process => ProfilePayload::Process(Box::new(process)),

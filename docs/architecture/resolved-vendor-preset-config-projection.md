@@ -131,7 +131,11 @@ as a new runtime policy table.
 
 For instantiated vendor selections, make the selected raw configuration and
 its typed profile agree with the collection-completed configuration before
-CLI profile application. Reuse the existing kind-owned membership and
+CLI profile application. Identify this boundary by the selected record's
+manifest-owned vendor scope and instantiation, not its `from` metadata or
+whether direct imports are enabled. `Catalog::push_vendor` establishes that
+scope from the vendor manifest; imported records remain in the user scope.
+Reuse the existing kind-owned membership and
 canonical default/nil constructor. Explicit inherited, included and leaf
 values retain upstream precedence. Default-valued false, zero, empty string
 and empty vector members are real values, not absence predicates.
@@ -149,7 +153,18 @@ group rows as exporter exceptions. The default filament nil seed must reach
 composition before absent registration defaults can turn into an applied 10.
 
 Standalone sparse imported replacement files keep their current CLI
-construction. Ordinary byte-only 3MF entry and retained project/catalog
+construction. Their filament identity is the file-list slot, not the authored
+preset name: `OrcaSlicer.cpp:2424-2452` appends a separate config, name and id
+for every loaded slot. In `profiles/load_settings.rs` and `catalog/store.rs`,
+use private per-slot lookup keys for these direct-file filament records while
+preserving their original `ProfileDocument` names, JSON and exported preset
+metadata. Do not deduplicate repeated slots or collapse different files with
+the same preset name. `OrcaSlicer.cpp:3625-3635` creates a missing
+`filament_extruder_variant` while matching each loaded slot; materialize that
+registered default in the per-filament raw input before composition, so it is
+not mistaken for a static default copied once after merging. Vendor/user
+catalog name uniqueness remains unchanged.
+Ordinary byte-only 3MF entry and retained project/catalog
 refresh remain separate paths. No global registry-default expansion, changed
 static membership bit, footer filter, vendor-name exception, new filesystem
 lookup, public API or fallback is permitted.

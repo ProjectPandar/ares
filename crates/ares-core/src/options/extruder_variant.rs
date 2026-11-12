@@ -6,6 +6,45 @@ use crate::SliceError;
 const DEFAULT_EXTRUDER_VARIANT: &str = "Direct Drive Standard";
 
 impl SliceOptions {
+    // Preset.cpp:301-357: present vectors use first-set-wins variant classes.
+    pub(crate) fn extended_preset_variants(
+        &self,
+    ) -> Result<std::collections::BTreeMap<String, Value>, SliceError> {
+        let length = |key: &str, default| {
+            self.values.get(key).and_then(Value::as_array).map_or(default, Vec::len)
+        };
+        let process = length("print_extruder_variant", 1);
+        let filament = length("filament_extruder_variant", 1);
+        let machine = length("printer_extruder_variant", length("nozzle_diameter", 1));
+        let mut extended = std::collections::BTreeMap::new();
+        for (key, value) in &self.values {
+            let size = if registry::print_options_with_variant().contains(&key.as_str()) {
+                process
+            } else if registry::filament_options_with_variant().contains(&key.as_str()) {
+                filament
+            } else if registry::printer_options_with_variant_1().contains(&key.as_str()) {
+                machine
+            } else if registry::printer_options_with_variant_2().contains(&key.as_str()) {
+                machine * 2
+            } else {
+                continue;
+            };
+            let Value::Array(values) = value else {
+                unreachable!("preset variant options are vectors")
+            };
+            if values.len() != size {
+                let mut values = values.clone();
+                let default = values.first().cloned().map_or_else(
+                    || vector_resize::default_array_member(key),
+                    Ok,
+                )?;
+                vector_resize::resize_array(&mut values, size, default);
+                extended.insert(key.clone(), Value::Array(values));
+            }
+        }
+        Ok(extended)
+    }
+
     pub fn extend_extruder_variant(&mut self, num_extruders: usize) -> Result<(), SliceError> {
         let mut variants = self.extruder_variant_list(num_extruders)?;
         variants.resize(

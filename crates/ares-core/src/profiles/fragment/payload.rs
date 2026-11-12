@@ -96,6 +96,15 @@ impl<'de> serde::de::Visitor<'de> for PayloadVisitor {
                 )));
             }
         }
+        // Config.cpp:1149 converts the authored file before defaults and inheritance.
+        if let ProfilePayload::Machine(builder) = &mut self.builder {
+            builder.normalize_present_thumbnails().map_err(|error| {
+                serde::de::Error::custom(format_args!(
+                    "profile option thumbnails is invalid: {}",
+                    crate::thumbnail_error_string(error)
+                ))
+            })?;
+        }
         Ok(self.builder)
     }
 }

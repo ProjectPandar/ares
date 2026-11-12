@@ -132,6 +132,10 @@ impl PrinterOptionsBuilder {
         self.remaining.normalize_present_thumbnails()
     }
 
+    pub(crate) fn present_thumbnails(&self) -> Option<&str> {
+        self.remaining.present_thumbnails()
+    }
+
     pub(crate) fn resolve(self) -> PrinterOptions {
         PrinterOptions {
             machine: self.machine.resolve(),

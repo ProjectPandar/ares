@@ -29,7 +29,7 @@ pub(crate) fn is_dynamic_filament_override_key(key: &str) -> bool {
     FilamentRetractOverrideOptionsBuilder::is_known_field(key)
 }
 
-use super::{OrcaFloat, OrcaFloats, VariantStride};
+use super::{OrcaFloat, OrcaFloats, VariantStride, option_group::OverlayOptionGroup};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FilamentOptions {
@@ -122,6 +122,16 @@ pub(crate) struct FilamentOptionsBuilder {
 }
 
 impl FilamentOptionsBuilder {
+    pub(crate) fn overlay(&mut self, child: Self) {
+        self.gcode.overlay(child.gcode);
+        self.print.overlay(child.print);
+        self.region.overlay(child.region);
+        self.retract_overrides.overlay(child.retract_overrides);
+        if let Some(value) = child.pellet_flow_coefficient {
+            self.pellet_flow_coefficient = Some(value);
+        }
+    }
+
     pub(crate) fn resolve_profile_root(self) -> Result<FilamentOptions, crate::SliceError> {
         let mut target = self.resolve();
         let defaults = FilamentOptions::default();

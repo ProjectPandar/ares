@@ -75,11 +75,7 @@ fn system_config(
         })?;
     let membership = keys::names(kind).collect::<BTreeSet<_>>();
     let mut raw = ProjectSettingsRaw::default();
-    for key in &membership {
-        if let Some(value) = keys::default_value(key)? {
-            raw.insert((*key).to_owned(), value);
-        }
-    }
+    raw.extend(super::default_preset_fields(kind)?);
     for layer in catalog.resolved_layers(position)? {
         let mut fragment = ProjectSettingsRaw::default();
         fragment.extend(

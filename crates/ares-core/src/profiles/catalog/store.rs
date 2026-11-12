@@ -64,9 +64,20 @@ impl Catalog {
         self.push_document(Scope::User, document)
     }
 
+    pub(in crate::profiles) fn push_filament_slot(
+        &mut self,
+        document: ProfileDocument,
+        slot: usize,
+    ) -> Result<String, SliceError> {
+        // CLI file slots own configs independently; authored preset names stay metadata.
+        let key = slot.to_string();
+        self.insert(Scope::User, ProfileKind::Filament, key.clone(), document)?;
+        Ok(key)
+    }
+
     fn push_document(&mut self, scope: Scope, document: ProfileDocument) -> Result<(), SliceError> {
         let kind = ProfileKind::parse(&document.kind)?;
-        self.insert(scope, kind, document)
+        self.insert(scope, kind, document.name.clone(), document)
     }
 
     fn insert_vendor(&mut self, scope: Scope, mut vendor: VendorInput) -> Result<(), SliceError> {
@@ -90,7 +101,7 @@ impl Catalog {
             let document = vendor.files.remove(&entry.sub_path).ok_or_else(|| {
                 invalid(format!("missing vendor profile file {}", entry.sub_path))
             })?;
-            self.insert(scope, kind, document)?;
+            self.insert(scope, kind, document.name.clone(), document)?;
         }
         Ok(())
     }
@@ -99,6 +110,7 @@ impl Catalog {
         &mut self,
         scope: Scope,
         kind: ProfileKind,
+        identity: String,
         mut document: ProfileDocument,
     ) -> Result<(), SliceError> {
         // Bare empty preset strings on vector-kind options are EMPTY
@@ -122,10 +134,10 @@ impl Catalog {
                 && value.token().is_some_and(|token| token.contains('%')))
         });
         let position = self.records.len();
-        let key = (kind, document.name.clone());
+        let key = (kind, identity.clone());
         if self
             .index
-            .insert((scope, kind, document.name.clone()), position)
+            .insert((scope, kind, identity), position)
             .is_some()
         {
             return Err(invalid(format!(

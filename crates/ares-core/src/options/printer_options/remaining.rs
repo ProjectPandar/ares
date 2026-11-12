@@ -76,6 +76,10 @@ declare_option_group! {
 }
 
 impl PrinterRemainingOptionsBuilder {
+    pub(crate) fn present_thumbnails(&self) -> Option<&str> {
+        self.thumbnails.as_ref().map(ThumbnailDefinitions::as_str)
+    }
+
     pub(crate) fn normalize_present_thumbnails(&mut self) -> Result<(), ThumbnailParseError> {
         let Some(thumbnails) = self.thumbnails.as_ref() else {
             return Ok(());
