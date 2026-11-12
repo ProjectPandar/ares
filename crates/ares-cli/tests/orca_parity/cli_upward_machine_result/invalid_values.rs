@@ -88,21 +88,9 @@ fn invalid_values(dump_moves: bool) {
         stock["upward_compatible_machine"],
         native_json["upward_compatible_machine"]
     );
-    let resources = root.join("resources");
-    let full = resources.join("profiles/BBL/machine_full");
-    fs::create_dir_all(&full).unwrap();
-    fs::write(
-        full.join("Bambu Lab H2D 0.4 nozzle.json"),
-        serde_json::to_vec_pretty(&stock).unwrap(),
-    )
-    .unwrap();
-    let mut command = crate::runner::application::cli_command();
-    // Explicit resources retain the plain-3MF entry, not the adapter's implicit catalog refresh.
-    command
-        .args(["slice", "-o"])
-        .arg(&gcode)
-        .arg("--resources-dir")
-        .arg(&resources);
+    // Invoke the default plain-project entry without the adapter's implicit catalog refresh.
+    let mut command = std::process::Command::new(env!("CARGO_BIN_EXE_ares"));
+    command.args(["slice", "-o"]).arg(&gcode);
     if dump_moves {
         command.arg("--dump-moves").arg(&moves);
     }
