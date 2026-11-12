@@ -31,9 +31,15 @@ embedded configuration read by `src/libslic3r/Format/bbs_3mf.cpp`.
    presets independently of the supplied kinds. A supplied machine skips
    printer refresh, not retained process refresh. `Preset.cpp:1059–1088`,
    `Preset::load_external_config`, owns the default/project/system merge;
-   `OrcaSlicer.cpp:2774–2816,3510–3728` owns retained filament resolution and
-   application. Reuse the existing `project_refresh` implementation for omitted
-   process/filament kinds before registered defaults obscure raw absence.
+   `OrcaSlicer.cpp:2295` sets `new_printer_name` from the supplied machine;
+   retained filament resolution at `:2793` requires
+   `is_bbl_3mf && new_printer_name.empty()`. That predicate is false for this
+   supplied named machine: refresh the omitted process, but do not resolve or
+   apply retained system filaments. The process branch at `:3199–3200` remains
+   eligible independently. Without supplied filaments or `--uptodate`, the
+   filament application branch at `:3510–3512` has no loaded/refreshed entries.
+   Reuse `project_refresh` with these distinct predicates before registered
+   defaults obscure raw absence; catalog-only `from_project` remains unchanged.
 
 ## Non-negotiable decisions
 
@@ -83,7 +89,7 @@ The refresh integration also owns these directly related boundaries:
 | `crates/ares-cli/src/load_settings.rs` | Existing file-list I/O plus explicit catalog transport; extracted from `main.rs` to preserve its size limit. |
 | `crates/ares-core/src/profiles/entry/load_settings.rs` | Optional catalog JSON and existing `uptodate` switch on `LoadSettingsSliceRequest`; existing catalog decoding and source wiring, extracted from `entry.rs`. |
 | `crates/ares-core/src/profiles/project_refresh.rs` | Reuse the existing refresh object for selected-profile loading without loading geometry twice. |
-| `crates/ares-core/src/profiles/project_refresh/preset.rs` | Skip actually supplied kinds while retaining existing identity, inheritance, dirty-key and filament application behavior. |
+| `crates/ares-core/src/profiles/project_refresh/preset.rs` | Skip supplied machine/process kinds; a supplied named machine also skips retained filament resolution/application (`OrcaSlicer.cpp:2295,2793`), not omitted process refresh (`:3199–3200`). Preserve catalog-only identity, inheritance, dirty-key and filament application behavior. |
 | `crates/ares-core/src/project/domain/profile_input.rs` and `profile_input/three_mf.rs` | The existing single 3MF load and pre-default refresh/application seam; split the directly related loader before exceeding 400 lines. |
 
 The table identifies allowed production boundaries, not a requirement to change
@@ -122,9 +128,13 @@ the load-settings exclusion in `project-derived-preset-refresh-adapters.md`.
 
 The CLI reads the explicitly requested catalog and transports its bytes. Core
 uses the existing `Catalog::from_json` and `ProjectPresetRefresh` machinery,
-refreshing only retained kinds not supplied by the request. A selected machine
-must not be refreshed from its catalog identity. Existing complete-list merge
-and context-free constructor checks remain intact. No new file search,
+refreshing retained kinds only when their upstream request predicates permit.
+A selected machine must not be refreshed from its catalog identity; its nonempty
+name also prevents retained filament refresh (`OrcaSlicer.cpp:2295,2793`), while
+omitted process refresh remains applicable (`:3199–3200`). This supersedes any
+reading that omission alone permits filament refresh with a supplied machine.
+Catalog-only `from_project` behavior, existing complete-list merge and
+context-free constructor checks remain intact. No new file search,
 environment input, catalog generation or exported settings enter production.
 
 Reuse the existing E2E `project_supply`/`native_arguments` adapters. With supply
@@ -167,9 +177,12 @@ post-overlay printer in place of the supplied printer config; changing machine
 ownership/variants; dropping the upward snapshot; losing it on a later failure;
 and comparing only the first visible difference instead of complete outputs.
 The catalog extension must also expose the former CLI mutual-exclusion failure,
-accidentally refreshing the supplied machine, filling absent values from
-registered defaults before refresh, losing dirty/present-value protection, and
-relaxing the retained filament/resource argument conflicts. Commit and execute
+accidentally refreshing the supplied machine or retained filaments despite its
+nonempty name, skipping the eligible omitted process, filling absent values
+from registered defaults before refresh, losing dirty/present-value protection,
+and relaxing the retained filament/resource argument conflicts. The existing
+whole-output cases must expose both config and emitted G-code changes caused
+by violating the filament predicate, without changing the comparisons. Commit and execute
 the catalog-supplied E2Es before production wiring; a compile error is not a failing assertion.
 
 Compare exit status and the entire report through unchanged
