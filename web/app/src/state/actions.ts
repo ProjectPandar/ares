@@ -9,9 +9,18 @@ import { slicer } from "./slicer";
 import { decodeSettings } from "./typedSettings";
 import { DEFAULT_PREVIEW, invalidatedSlices, type PreviewView, type SlicedPlate, type Theme, type Thumb, useApp, type ViewMode } from "./store";
 
-const configDefs = slicer.printConfigDef().then(({ options }) => new Map(options.map((def) => [def.key, def])));
-configDefs.then(
-  (defs) => useApp.setState({ engine: "ready", configDefs: defs }),
+const configDefs = slicer.printConfigDef().then(({ options }) => {
+  const defs = new Map(options.map((def) => [def.key, def]));
+  // The startup selection reads them (printerBedType).
+  useApp.setState({ configDefs: defs });
+  return defs;
+});
+// GUI_App::on_init_inner shows the main frame only after load_presets selected the stored presets
+// (GUI_App.cpp:3713): the app reads ready, which opens files to the user, after the startup selection.
+// presets.ts evaluates after this module (it imports printer.ts, which imports this one), so the
+// restore promise is read once the definitions arrive.
+configDefs.then(() => sessionRestored).then(
+  () => useApp.setState({ engine: "ready" }),
   (error: Error) => useApp.setState({ engine: "error", engineError: error.message }),
 );
 
