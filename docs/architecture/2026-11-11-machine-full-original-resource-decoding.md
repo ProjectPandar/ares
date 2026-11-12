@@ -39,3 +39,49 @@ The regression uses public `UpwardMachineSource::{from_project,select}` and raw 
 Each control must run against both Native modes before its Rust fix. Native's `--load-settings` witness exercises the same `load_config_file` used by the original-resource read; it can affect slicing, unlike a compatibility-only resource read. Therefore compare admission, the selected upward vector, and the declared Native config observations at that seam; do not claim complete G-code equality between these different invocation roles. The raw CLI resource read must not change unrelated slicing output: compare its complete bytes against the same raw CLI invocation without the resource override. Record pre-existing Native/Ares nozzle or label differences without masking them or expanding this slice.
 
 Existing strict fragment admission, malformed/source/type controls, early rejection gates, and result comparison helpers remain controls. Finish with formatting, strict locked workspace/all-target Clippy, fresh host and browser-WASM core/adapter checks, changed-file size checks, and actual exact-tip official/seeded E2E executions. Static checks alone are not runtime proof.
+
+## Per-key ownership and legacy classification
+
+The complete resource has 39 non-metadata keys absent from the three static typed printer groups. This is a lexical context mismatch, not 39 missing global option definitions. The table individually classifies all 39 against the cited upstream source. Printer ownership below explains catalog defaults but is not a flattened direct-load filter. Alias rewrites are `PrintConfig.cpp:9975–9978`; unknown-key deletion is `:10033–10037`. `include` is transport handled at `Config.cpp:972–974` when inheritance loading is disabled; the flattened no-parent direct branch does not resolve it.
+
+| Resource key | Native definition or treatment | Owning collection source |
+| --- | --- | --- |
+| `cooling_filter_enabled` | `coBool`, PrintConfig.cpp:4632 | `s_Preset_printer_options`, Preset.cpp:1590 |
+| `default_filament_profile` | `coStrings`, PrintConfig.cpp:2350 | `m_extruder_option_keys`, PrintConfig.cpp:8993 |
+| `deretract_speed_extruder_change` | `coFloats`, PrintConfig.cpp:6483 | `s_Preset_printer_options`, Preset.cpp:1613 |
+| `deretraction_speed` | `coFloats`, PrintConfig.cpp:6470 | `m_extruder_option_keys`, PrintConfig.cpp:8995 |
+| `enable_pre_heating` | `coBool`, PrintConfig.cpp:8837 | `s_Preset_printer_options`, Preset.cpp:1609 |
+| `extruder_clearance_dist_to_rod` | `coFloat`, PrintConfig.cpp:2815 | `s_Preset_printer_options`, Preset.cpp:1586 |
+| `extruder_clearance_max_radius` | Alias → `extruder_clearance_radius`; `coFloat`, PrintConfig.cpp:2840 | `s_Preset_printer_options`, Preset.cpp:1586 |
+| `extruder_colour` | `coStrings`, PrintConfig.cpp:2903 | `m_extruder_option_keys`, PrintConfig.cpp:8996 |
+| `extruder_height_gap` | Unknown; cleared by `handle_legacy` | Not a printer option |
+| `extruder_max_nozzle_count` | `coInts`, PrintConfig.cpp:8939 | `s_Preset_printer_options`, Preset.cpp:1609 |
+| `extruder_offset` | `coPoints`, PrintConfig.cpp:2911 | `m_extruder_option_keys`, PrintConfig.cpp:8997 |
+| `fan_direction` | `coEnum`, PrintConfig.cpp:4537 | `s_Preset_printer_options`, Preset.cpp:1590 |
+| `group_algo_with_time` | `coBool`, PrintConfig.cpp:8829 | `s_Preset_printer_options`, Preset.cpp:1609 |
+| `include` | Transport; not resolved in the no-parent branch | Not a printer option |
+| `machine_bed_mass_Y` | `coFloat`, PrintConfig.cpp:5487 | `s_Preset_machine_limits_options`, Preset.cpp:1566 |
+| `machine_hotend_change_time` | `coFloat`, PrintConfig.cpp:8816 | `s_Preset_printer_options`, Preset.cpp:1610 |
+| `machine_max_force_Y` | `coFloat`, PrintConfig.cpp:5477 | `s_Preset_machine_limits_options`, Preset.cpp:1566 |
+| `machine_max_printed_mass` | `coFloat`, PrintConfig.cpp:5497 | `s_Preset_machine_limits_options`, Preset.cpp:1566 |
+| `machine_prepare_compensation_time` | `coFloat`, PrintConfig.cpp:8833 | `s_Preset_printer_options`, Preset.cpp:1610 |
+| `machine_switch_extruder_time` | Alias → `machine_tool_change_time`; `coFloat`, PrintConfig.cpp:3214 | `s_Preset_printer_options`, Preset.cpp:1589 |
+| `max_layer_height` | `coFloats`, PrintConfig.cpp:5627 | `m_extruder_option_keys`, PrintConfig.cpp:9001 |
+| `min_layer_height` | `coFloats`, PrintConfig.cpp:5723 | `m_extruder_option_keys`, PrintConfig.cpp:9002 |
+| `nozzle_diameter` | `coFloats`, PrintConfig.cpp:5741 | `m_extruder_option_keys`, PrintConfig.cpp:9003 |
+| `print_in_clockwise` | Unknown; cleared by `handle_legacy` | Not a printer option |
+| `retract_before_wipe` | `coPercents`, PrintConfig.cpp:6118 | `m_extruder_option_keys`, PrintConfig.cpp:9008 |
+| `retract_length_toolchange` | `coFloats`, PrintConfig.cpp:6184 | `m_extruder_option_keys`, PrintConfig.cpp:9009 |
+| `retract_lift_above` | `coFloats`, PrintConfig.cpp:6242 | `m_extruder_option_keys`, PrintConfig.cpp:9010 |
+| `retract_lift_below` | `coFloats`, PrintConfig.cpp:6249 | `m_extruder_option_keys`, PrintConfig.cpp:9011 |
+| `retract_restart_extra` | `coFloats`, PrintConfig.cpp:6446 | `m_extruder_option_keys`, PrintConfig.cpp:9013 |
+| `retract_restart_extra_toolchange` | `coFloats`, PrintConfig.cpp:6454 | `m_extruder_option_keys`, PrintConfig.cpp:9014 |
+| `retract_when_changing_layer` | `coBools`, PrintConfig.cpp:6135 | `m_extruder_option_keys`, PrintConfig.cpp:9015 |
+| `retraction_length` | `coFloats`, PrintConfig.cpp:6141 | `m_extruder_option_keys`, PrintConfig.cpp:9017 |
+| `retraction_minimum_travel` | `coFloats`, PrintConfig.cpp:6111 | `m_extruder_option_keys`, PrintConfig.cpp:9018 |
+| `retraction_speed` | `coFloats`, PrintConfig.cpp:6462 | `m_extruder_option_keys`, PrintConfig.cpp:9019 |
+| `support_cooling_filter` | `coBool`, PrintConfig.cpp:4628 | `s_Preset_printer_options`, Preset.cpp:1590 |
+| `support_fast_purge_mode` | `coBool`, PrintConfig.cpp:8947 | `s_Preset_printer_options`, Preset.cpp:1613 |
+| `wipe` | `coBools`, PrintConfig.cpp:8227 | `m_extruder_option_keys`, PrintConfig.cpp:9021 |
+| `wipe_distance` | `coFloats`, PrintConfig.cpp:8233 | `m_extruder_option_keys`, PrintConfig.cpp:9022 |
+| `z_hop` | `coFloats`, PrintConfig.cpp:6193 | `m_extruder_option_keys`, PrintConfig.cpp:9023 |
