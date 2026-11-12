@@ -54,6 +54,28 @@ impl ProfileFragment {
         })
     }
 
+    pub(crate) fn from_original_machine_bytes(input: &[u8]) -> Result<Self, SliceError> {
+        let parsed = metadata::parse(input)?;
+        // OrcaSlicer.cpp:2118–2123 separates flattened direct loads from
+        // inherited resources; keep the latter's existing strict handling.
+        if parsed.config.inherits.is_some() {
+            return Self::from_json_bytes(input);
+        }
+        let mut values: BTreeMap<String, crate::project::raw_settings::RawConfigValue> =
+            serde_json::from_slice(input).map_err(|error| {
+                SliceError::InvalidInput(format!("profile JSON is invalid: {error}"))
+            })?;
+        // Config.cpp:978–1060 loads strings/arrays; other shapes leave defaults.
+        values.retain(|_, value| {
+            matches!(
+                value,
+                crate::project::raw_settings::RawConfigValue::Text(_)
+                    | crate::project::raw_settings::RawConfigValue::List(_)
+            )
+        });
+        Self::from_catalog_values(values).map(|(profile, _)| profile)
+    }
+
     pub(super) fn from_catalog_values(
         input: BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
     ) -> Result<(Self, ProjectRuntimeOptionsBuilder), SliceError> {

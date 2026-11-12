@@ -116,7 +116,9 @@ impl UpwardMachineSource {
                 }
                 match machine_full {
                     Some(json) => {
-                        file_profile(json)?;
+                        let profile =
+                            crate::profiles::ProfileFragment::from_original_machine_bytes(json)?;
+                        validate_source(&profile)?;
                         Ok(fields(json)?.upward_compatible_machine)
                     }
                     None => Ok(self.embedded),
@@ -156,12 +158,17 @@ impl UpwardMachineSource {
 // not be interpreted as an absent original-machine file.
 fn file_profile(json: &[u8]) -> Result<crate::profiles::ProfileFragment, SliceError> {
     let profile = crate::profiles::ProfileFragment::from_json_bytes(json)?;
+    validate_source(&profile)?;
+    Ok(profile)
+}
+
+fn validate_source(profile: &crate::profiles::ProfileFragment) -> Result<(), SliceError> {
     if !matches!(profile.from(), Some("system" | "User" | "user")) {
         return Err(SliceError::InvalidInput(
             "unsupported machine source from metadata".into(),
         ));
     }
-    Ok(profile)
+    Ok(())
 }
 
 fn fields(json: &[u8]) -> Result<MachineFields, SliceError> {
