@@ -67,7 +67,7 @@ pub(crate) struct LoadedPresetNames {
 /// The project-backed machine-only entry ports `OrcaSlicer.cpp:2922–2945`.
 /// Existing complete-list adjudication stays unchanged; process-only and
 /// other printer-switch contexts remain separate rewrite slices.
-pub(super) fn reject_incompatible_load_settings(
+pub(crate) fn reject_incompatible_load_settings(
     raw: &ProjectSettingsRaw,
     names: &LoadedPresetNames,
     machine_config: &ProjectSettingsRaw,

@@ -2,6 +2,7 @@
 
 mod mapped_prime_tower;
 mod stl;
+mod three_mf;
 
 use super::{
     Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,

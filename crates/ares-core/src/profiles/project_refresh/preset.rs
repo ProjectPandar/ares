@@ -11,6 +11,7 @@ pub(super) fn refresh(
     catalog: &Catalog,
     project: &ProjectSettingsRaw,
     uptodate: bool,
+    selected: Option<&crate::ProjectSettings>,
 ) -> Result<ProjectSettingsRaw, SliceError> {
     let names = strings(project, "filament_settings_id");
     let inherited = strings(project, "inherits_group");
@@ -18,10 +19,24 @@ pub(super) fn refresh(
     let refresh_unlisted = uptodate || dirty.iter().any(|entry| !entry.is_empty());
     let mut result = project.clone();
     // CLI:3167–3200: machine and process refresh, not replacement selection.
-    for (kind, key, slot) in [
-        (ProfileKind::Machine, "printer_settings_id", names.len() + 1),
-        (ProfileKind::Process, "print_settings_id", 0),
+    let supplied = selected.map(|selected| &selected.project.preset);
+    for (kind, key, slot, replaced) in [
+        (
+            ProfileKind::Machine,
+            "printer_settings_id",
+            names.len() + 1,
+            supplied.is_some_and(|p| !p.printer_settings_id.0.is_empty()),
+        ),
+        (
+            ProfileKind::Process,
+            "print_settings_id",
+            0,
+            supplied.is_some_and(|p| !p.print_settings_id.0.is_empty()),
+        ),
     ] {
+        if replaced {
+            continue;
+        }
         let identity = strings(project, key);
         let name = identity.first().map(String::as_str).unwrap_or("");
         let name = system_name(name, &inherited, slot);
@@ -40,6 +55,9 @@ pub(super) fn refresh(
             }
             result.insert(key.clone(), value.clone());
         }
+    }
+    if supplied.is_some_and(|p| !p.filament_settings_id.0.is_empty()) {
+        return Ok(result);
     }
     let filaments = names
         .iter()

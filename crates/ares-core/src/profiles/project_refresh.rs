@@ -106,6 +106,14 @@ pub(super) fn selection(input: &str) -> Result<Option<bool>, SliceError> {
 }
 
 impl ProjectPresetRefresh<'_> {
+    pub(crate) fn retained(
+        self,
+        raw: &ProjectSettingsRaw,
+        selected: &ProjectSettings,
+    ) -> Result<ProjectSettingsRaw, SliceError> {
+        preset::refresh(self.catalog, raw, self.uptodate, Some(selected))
+    }
+
     pub(crate) fn load(
         self,
         input: &[u8],
@@ -125,6 +133,7 @@ impl ProjectPresetRefresh<'_> {
             self.catalog,
             &project.documents().project_settings_raw,
             self.uptodate,
+            None,
         )?;
         // CLI:3167-3200 fills initially missing keys from the resolved system
         // preset before collection defaults can obscure their absence.
