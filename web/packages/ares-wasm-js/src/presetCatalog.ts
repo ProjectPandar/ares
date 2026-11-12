@@ -1,6 +1,19 @@
 import type { RequestBody } from "./protocol.js";
 import type { CompatiblePresets, CurrentPrinter, OptionMap, PresetKind, PrinterModel, PrinterModelInfo, SelectablePrinter } from "./types.js";
 
+export interface FilamentSlotState {
+  filaments: string[];
+  flush_multiplier: number[];
+  flush_volumes_vector: number[];
+  flush_volumes_matrix: number[];
+  filament_colour: string[];
+  filament_multi_colour: string[];
+  filament_colour_type: string[];
+  filament_map: number[];
+  filament_nozzle_map: number[];
+  filament_volume_map: number[];
+}
+
 type Call = (body: RequestBody) => Promise<unknown>;
 
 /**
@@ -111,6 +124,11 @@ export class PresetCatalog {
    */
   async selectCompatibleFilaments(printer: string, process: string | undefined, filaments: string[], installed: string[]): Promise<string[]> {
     return (await this.#call({ kind: "catalogSelectCompatibleFilaments", catalogId: this.#catalogId, printer, process, filaments, installed })) as string[];
+  }
+
+  /** PresetBundle hardware minimum, last-preset padding, and per-nozzle flush layout. */
+  async normalizeFilamentSlots(printer: string, state: Partial<FilamentSlotState> & { filaments: string[] }): Promise<FilamentSlotState> {
+    return (await this.#call({ kind: "catalogNormalizeFilamentSlots", catalogId: this.#catalogId, printer, state })) as FilamentSlotState;
   }
 
   /** Releases the worker's catalog. */

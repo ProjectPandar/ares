@@ -7,7 +7,7 @@ import type { CompatiblePresets, ConfigValue, OptionMap, ParsedPresetBundle, Pro
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
-export { PresetCatalog } from "./presetCatalog.js";
+export { PresetCatalog, type FilamentSlotState } from "./presetCatalog.js";
 export type * from "./configDef.js";
 export type * from "./types.js";
 
