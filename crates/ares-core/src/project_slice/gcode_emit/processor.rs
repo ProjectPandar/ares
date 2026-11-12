@@ -216,7 +216,14 @@ pub(super) fn process(
         estimate.print_statistics.total_used_filament,
     );
 
-    for (index, line) in lines.iter().enumerate() {
+    for (index, (line, original)) in lines.iter().zip(text.split_inclusive('\n')).enumerate() {
+        // GCodeProcessor.cpp:1794-1803 retains CR/LF for every ordinary line;
+        // ExportLines (:1027-1040,1105-1133) and GCodeFileWriter (:867-881) keep them.
+        let ending = if original.ends_with("\r\n") {
+            "\r\n"
+        } else {
+            "\n"
+        };
         let material = materials.process(line);
         let line = material.as_deref().unwrap_or(line);
         let expanded = stats::expand(line, &deferred);
@@ -260,7 +267,7 @@ pub(super) fn process(
             ));
             continue;
         }
-        result.append_from(format!("{line}\n"), index + 1);
+        result.append_from(format!("{line}{ending}"), index + 1);
         if index < first_marker || !emit_progress || !is_progress_motion(line) {
             continue;
         }
