@@ -3,7 +3,8 @@
 //!
 //! Upstream boundary: per-file validation and the machine/process/filament
 //! loops live in the `load_config_file` lambda and its callers
-//! (`OrcaSlicer.cpp:1953-2215`); the merge itself is `update_full_config`
+//! (`OrcaSlicer.cpp:2205-2452`); typed files without inherits bypass preset
+//! resolution at `:2121-2123`. The merge itself is `update_full_config`
 //! and the filament resize/`set_at` contract (`:2826-3337`), which
 //! `Catalog::compose` already ports. This module only ingests the CLI
 //! preset files as user-scope documents and selects them by name — no
@@ -34,8 +35,8 @@ fn invalid(message: String) -> SliceError {
 }
 
 /// Parses and validates one preset file exactly like the `load_config_file`
-/// lambda (`OrcaSlicer.cpp:1953-2024`): `from` must be `system|User|user`
-/// (`:1989-1993`) and `type` must be a known kind (`:1996-2000`).
+/// lambda (`OrcaSlicer.cpp:2205-2260`): `from` must be `system|User|user`
+/// and `type` must be a known kind.
 fn parse_file(file: &LoadSettingsFile<'_>) -> Result<(String, ProfileDocument), SliceError> {
     let document: ProfileDocument = serde_json::from_str(file.json).map_err(|error| {
         invalid(format!(

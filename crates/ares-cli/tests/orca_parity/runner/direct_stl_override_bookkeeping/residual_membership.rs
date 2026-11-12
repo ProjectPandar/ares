@@ -1,8 +1,6 @@
 //! Closed dynamic-only membership set from full-config-residual-membership.md.
 use super::{FILAMENT, MACHINE, OrcaRunner, PROCESS, profile_entry};
-use ares_core::{
-    ConfigOverrides, GenerationMetadata, Placement, ProfileSliceRequest, SlicerContext,
-};
+use ares_core::{ConfigOverrides, Placement};
 use serde_json::{Value, json};
 use std::{fs, path::PathBuf};
 
@@ -112,23 +110,18 @@ fn slice(applied: Option<(&str, Value)>, label: &str) -> (PathBuf, Vec<u8>, Vec<
     .unwrap();
     let native = fs::read(native_dir.join("plate_1.gcode")).unwrap();
     fs::write(runner.work.join("native.gcode"), &native).unwrap();
-    let actual = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_with_profiles(
-            &input,
-            ProfileSliceRequest {
-                filename: "input.stl",
-                catalog_json: &catalog.to_string(),
-                selection_json: &selection.to_string(),
-                plate: None,
-                overrides: &ConfigOverrides::default(),
-                placement: Placement::None,
-            },
-            GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            SlicerContext::new(0),
-        ))
-        .unwrap();
+    let actual = crate::runner::profile_entry::slice_flattened(
+        &input,
+        "input.stl",
+        &[
+            runner.work.join("machine.json"),
+            runner.work.join("process.json"),
+        ],
+        &[runner.work.join("filament.json")],
+        &ConfigOverrides::default(),
+        Placement::None,
+    )
+    .unwrap();
     fs::write(runner.work.join("ares.gcode"), &actual).unwrap();
     profile_entry::write_json(
         &runner.work.join("residual-membership-result.json"),
@@ -137,7 +130,7 @@ fn slice(applied: Option<(&str, Value)>, label: &str) -> (PathBuf, Vec<u8>, Vec<
             "input_sha256": crate::runner::cache_identity::raw_digest(&input),
             "native_sha256": crate::runner::cache_identity::raw_digest(&native),
             "api_sha256": crate::runner::cache_identity::raw_digest(&actual),
-            "rust_entry": "ares_core::slice_with_profiles", "native": "fresh runtime CLI; no stored values",
+            "rust_entry": "ares_core::slice_with_load_settings", "native": "fresh runtime CLI; no stored values",
         }),
     );
     (runner.work.clone(), native, actual)

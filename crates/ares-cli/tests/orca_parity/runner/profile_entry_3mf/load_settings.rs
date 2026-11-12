@@ -113,22 +113,14 @@ fn profile_entry_3mf_load_settings() {
         "native full-output repeat"
     );
 
-    let actual = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_with_profiles(
-            &project,
-            ares_core::ProfileSliceRequest {
-                filename: "profile-entry.3mf",
-                catalog_json: &catalog.to_string(),
-                selection_json: &selection.to_string(),
-                plate: None,
-                overrides: &ares_core::ConfigOverrides::default(),
-                placement: ares_core::Placement::None,
-            },
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            ares_core::SlicerContext::new(0),
-        ))
+    let actual = crate::runner::profile_entry::slice_flattened(
+        &project,
+        "profile-entry.3mf",
+        &[runner.work.join("machine.json"), runner.work.join("process.json")],
+        &[runner.work.join("filament.json")],
+        &ares_core::ConfigOverrides::default(),
+        ares_core::Placement::None,
+    )
         .unwrap();
     std::fs::write(runner.work.join("ares.gcode"), &actual).unwrap();
     let comparison = crate::golden::compare_ordered_bytes_generator_only(&first, &actual);
@@ -137,7 +129,7 @@ fn profile_entry_3mf_load_settings() {
         &json!({
             "selection": selection,
             "native_repeat": "PASS",
-            "rust_entry": "ares_core::slice_with_profiles",
+            "rust_entry": "ares_core::slice_with_load_settings",
             "evidence": crate::artifacts::EVIDENCE,
             "status": if comparison.is_ok() { "PASS" } else { "DIVERGENT" },
             "difference": comparison.as_ref().err().map(ToString::to_string),

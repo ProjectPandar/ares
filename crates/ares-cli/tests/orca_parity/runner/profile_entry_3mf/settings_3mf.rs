@@ -127,23 +127,15 @@ fn profile_settings_slice_matches_native_replacement_3mf() {
     .unwrap();
     let reference = std::fs::read(output.join("plate_1.gcode")).unwrap();
 
-    // Rust entry: original archive + catalog/selection/override.
-    let actual = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_with_profiles(
-            &original,
-            ares_core::ProfileSliceRequest {
-                filename: "view.3mf",
-                catalog_json: &catalog.to_string(),
-                selection_json: &selection.to_string(),
-                plate: None,
-                overrides: &overrides,
-                placement: ares_core::Placement::None,
-            },
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            ares_core::SlicerContext::new(0),
-        ))
+    // Rust loads the same flattened replacement files and CLI overrides as Native.
+    let actual = crate::runner::profile_entry::slice_flattened(
+        &original,
+        "view.3mf",
+        &[runner.work.join("view-machine.json"), runner.work.join("view-process.json")],
+        &[runner.work.join("view-filament.json")],
+        &overrides,
+        ares_core::Placement::None,
+    )
         .unwrap();
     std::fs::write(runner.work.join("view-ares.gcode"), &actual).unwrap();
     crate::golden::compare_ordered_bytes_generator_only(&reference, &actual).unwrap();

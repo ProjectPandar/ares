@@ -1,5 +1,8 @@
-//! Public profile-entry tracer. Native CLI input is independently flattened;
-//! raw catalog input retains every inherited fragment for the Rust entry.
+//! Public profile entries against matched Native configuration-loading lifecycles.
+
+#[path = "profile_entry/flattened.rs"]
+mod flattened;
+pub(super) use flattened::slice_flattened;
 
 #[path = "native_user_presets.rs"]
 pub(super) mod native_user_presets;
@@ -366,23 +369,18 @@ fn profile_entry_stl_center_placement() {
     .unwrap();
     let reference = std::fs::read(output.join("plate_1.gcode")).unwrap();
 
-    let actual = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_with_profiles(
-            &raw,
-            ares_core::ProfileSliceRequest {
-                filename: "cube10.stl",
-                catalog_json: &catalog.to_string(),
-                selection_json: &selection.to_string(),
-                plate: None,
-                overrides: &ares_core::ConfigOverrides::default(),
-                placement: ares_core::Placement::Center,
-            },
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            ares_core::SlicerContext::new(0),
-        ))
-        .unwrap();
+    let actual = crate::runner::profile_entry::slice_flattened(
+        &raw,
+        "cube10.stl",
+        &[
+            runner.work.join("center-machine.json"),
+            runner.work.join("center-process.json"),
+        ],
+        &[runner.work.join("center-filament.json")],
+        &ares_core::ConfigOverrides::default(),
+        ares_core::Placement::Center,
+    )
+    .unwrap();
     std::fs::write(runner.work.join("center-ares.gcode"), &actual).unwrap();
     crate::golden::compare_ordered_bytes_generator_only(&reference, &actual).unwrap();
 }

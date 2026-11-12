@@ -70,11 +70,7 @@ fn check(name: &str, filename: &str, none: bool) {
     }
     profile_entry::write_json(&runner.work.join("catalog.json"), &catalog);
     profile_entry::write_json(&runner.work.join("selection.json"), &selection);
-    let overrides_json = if none {
-        json!({"counterbore_hole_bridging": "none"})
-    } else {
-        json!({})
-    };
+    let overrides_json = json!({});
     profile_entry::write_json(&runner.work.join("overrides.json"), &overrides_json);
     let overrides =
         ConfigOverrides::from_json(&serde_json::to_vec(&overrides_json).unwrap()).unwrap();
@@ -89,22 +85,17 @@ fn check(name: &str, filename: &str, none: bool) {
             &runner.work.join("input.stl"),
         )
         .unwrap();
-    let actual = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_with_profiles(
-            &input,
-            ares_core::ProfileSliceRequest {
-                filename: "input.stl",
-                catalog_json: &catalog.to_string(),
-                selection_json: &selection.to_string(),
-                plate: None,
-                overrides: &overrides,
-                placement: ares_core::Placement::None,
-            },
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            ares_core::SlicerContext::new(0),
-        ));
+    let actual = crate::runner::profile_entry::slice_flattened(
+        &input,
+        "input.stl",
+        &[
+            runner.work.join("machine.json"),
+            runner.work.join("process.json"),
+        ],
+        &[runner.work.join("filament.json")],
+        &overrides,
+        ares_core::Placement::None,
+    );
     let (status, detail, actual_sha256) = match &actual {
         Ok(bytes) => {
             fs::write(runner.work.join("ares.gcode"), bytes).unwrap();
@@ -143,7 +134,7 @@ fn check(name: &str, filename: &str, none: bool) {
             "selection": selection, "overrides": overrides_json,
             "native_sha256": cache_identity::raw_digest(&reference),
             "ares_sha256": actual_sha256, "status": status, "detail": detail,
-            "rust_entry": "ares_core::slice_with_profiles", "evidence": crate::artifacts::EVIDENCE,
+            "rust_entry": "ares_core::slice_with_load_settings", "evidence": crate::artifacts::EVIDENCE,
             "comparison": "complete bytes; generated-by identity only; movement/M73/stats/footer retained",
         }),
     );

@@ -37,8 +37,8 @@ impl Catalog {
     }
 
     /// Marks this imports-only catalog as the `--load-settings` entry:
-    /// every record composes as its own single chain (direct-load,
-    /// `OrcaSlicer.cpp:1953-2010`).
+    /// every record composes as its own single chain (the sparse typed-file
+    /// resolver bypass at `OrcaSlicer.cpp:2121-2123`).
     pub(in crate::profiles) fn enable_direct_imports(&mut self) {
         self.direct_imports = true;
     }
