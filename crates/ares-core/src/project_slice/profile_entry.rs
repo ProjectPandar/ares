@@ -58,8 +58,7 @@ fn load_with_profile_preparation(
             project.bytes,
             selected,
             project.overrides,
-            project.plate,
-            project.edits,
+            (project.plate, project.edits),
             upward_report,
         ),
         _ => Project::from_stl_with_profiles(

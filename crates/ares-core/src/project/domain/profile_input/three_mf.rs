@@ -19,17 +19,15 @@ impl Project {
         input: &[u8],
         profile: SelectedProfile<'_>,
         overrides: &crate::ConfigOverrides,
-        plate: Option<u32>,
-        edits: &crate::plater::PlaterEdits,
+        (plate, edits): (Option<u32>, &crate::plater::PlaterEdits),
         upward_report: Option<&mut Vec<String>>,
     ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
         let SelectedProfile {
             settings,
             profile_raw,
-            filament_raws,
-            validate_print: _,
             load_names,
             retained_refresh,
+            ..
         } = profile;
         let (mut project, preparation) = crate::project::load_project_for_profiles(input)?;
         project.apply_plater_edits(edits);
@@ -41,25 +39,26 @@ impl Project {
             crate::project_slice::validate_post_process(&project)?;
         }
 
-        if let Some(names) = load_names
-            && names.embedded.is_some()
-        {
+        let retained_names = load_names.filter(|names| names.embedded.is_some());
+        if let Some(names) = retained_names {
             crate::project_slice::compatibility::reject_incompatible_load_settings(
                 &embedded_raw,
                 names,
                 profile_raw,
             )?;
-            // OrcaSlicer.cpp:3005 precedes retained preset refresh at :3164–3200.
-            if let Some(report) = upward_report {
-                *report = embedded_raw
-                    .get("upward_compatible_machine")
-                    .map(|values| {
-                        (0..values.len())
-                            .map(|index| values.element(index).unwrap().token().unwrap())
-                            .collect()
-                    })
-                    .unwrap_or_default();
-            }
+        }
+        // OrcaSlicer.cpp:3005 precedes retained preset refresh at :3164–3200.
+        if retained_names.is_some()
+            && let Some(report) = upward_report
+        {
+            *report = embedded_raw
+                .get("upward_compatible_machine")
+                .map(|values| {
+                    (0..values.len())
+                        .map(|index| values.element(index).unwrap().token().unwrap())
+                        .collect()
+                })
+                .unwrap_or_default();
         }
 
         let selected = settings.project.preset.filament_settings_id.0.len();
