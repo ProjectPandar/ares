@@ -1,5 +1,7 @@
 import type { ArrangeSettings, ConfigValue, CurrentPrinter, PresetKind, ScaleEdit, SlicingStatus } from "./types.js";
 
+import type { FilamentSlotState } from "./presetCatalog.js";
+
 type Vec3 = [number, number, number];
 
 /** One plater session edit; `object` and `instance` index `Scene.objects` and its `instances`. */
@@ -46,6 +48,7 @@ export type WorkerRequest =
   | { id: number; kind: "catalogPrinterModelInfo"; catalogId: number; model: string }
   | { id: number; kind: "catalogInstalledFilaments"; catalogId: number; installed: string[] }
   | { id: number; kind: "catalogSelectCompatibleFilaments"; catalogId: number; printer: string; process?: string; filaments: string[]; installed: string[] }
+  | { id: number; kind: "catalogNormalizeFilamentSlots"; catalogId: number; printer: string; state: Partial<FilamentSlotState> & { filaments: string[] } }
   | { id: number; kind: "catalogFree"; catalogId: number }
   | { id: number; kind: "platerCreate"; sessionId: number; input: Uint8Array; filename: string }
   | { id: number; kind: "platerCreateWithProfiles"; sessionId: number; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }

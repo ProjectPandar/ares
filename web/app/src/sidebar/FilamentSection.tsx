@@ -7,7 +7,7 @@ import { filamentGroups } from "./filamentGroups";
 import { FilamentMapPanel } from "./FilamentMapPanel";
 import { type PresetGroup, PresetCombo } from "./PresetCombo";
 import { EditButton, type OpenTab, Section } from "./Section";
-import { filamentNames, presetFilamentSlots, stringList } from "./options";
+import { filamentNames, stringList } from "./options";
 
 const FilamentDialog = lazy(() => import("./FilamentDialog").then((module) => ({ default: module.FilamentDialog })));
 
@@ -17,10 +17,10 @@ export function FilamentSection({ settings, openTab }: { settings: ProjectSettin
   const compatible = useApp((state) => state.compatible);
   const installed = useApp((state) => state.installedFilaments);
   const [dialog, setDialog] = useState(false);
-  const names = filamentNames(settings);
-  const colours = stringList(settings?.filament, "filament_colour");
+  const names = selection ? selection.filaments : filamentNames(settings);
+  const colours = selection?.filamentProject?.filament_colour ?? stringList(settings?.filament, "filament_colour");
   const types = stringList(settings?.filament, "filament_type");
-  const slots = selection ? presetFilamentSlots(settings) : names.length;
+  const slots = names.length;
   // Each preset once, drawn in the colour of its first slot.
   const presets = names
     .map((name, index) => ({ name, colour: colours[index] }))

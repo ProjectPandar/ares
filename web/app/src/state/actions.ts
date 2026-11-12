@@ -50,7 +50,9 @@ export async function importFile(file: File) {
     const loadWarning = plater ? invalidValuesWarning(await plater.invalidValues()) : undefined;
     const typedSettings = scene.settings && (await decodeSettings(await configDefs, scene.settings));
     const previous = useApp.getState().plater;
+    const selection = useApp.getState().presetSelection;
     useApp.setState({
+      presetSelection: selection && { ...selection, filamentProject: undefined },
       file: { name: file.name, bytes },
       scene,
       plater,

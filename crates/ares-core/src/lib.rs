@@ -185,14 +185,14 @@ pub(crate) use print_paths::{
 };
 pub use profiles::Placement;
 pub use profiles::{
-    CliProfileSliceRequest, ComposedProfile, CurrentPrinter, FilteredPresets, LoadSettingsFile,
-    LoadSettingsRequest, LoadSettingsSliceRequest, MergedProfile, MergedProfileMetadata,
-    MissingParent, ParsedPresetBundle, PresetCatalogHandle, PresetValues, PrinterModelInfo,
-    ProfileFragment, ProfileGroupMetadata, ProfileKind, ProfileSelection, ProfileSettings,
-    ProfileSliceRequest, SelectablePrinter, compose_profile_fragments, filter_compatible_presets,
-    merge_profile_fragments, parse_preset_bundle, profile_placed_project, profile_settings,
-    slice_with_load_settings, slice_with_profiles, slice_with_profiles_processed,
-    validate_load_settings_input, validate_with_profiles,
+    CliProfileSliceRequest, ComposedProfile, CurrentPrinter, FilamentSlotState, FilteredPresets,
+    LoadSettingsFile, LoadSettingsRequest, LoadSettingsSliceRequest, MergedProfile,
+    MergedProfileMetadata, MissingParent, ParsedPresetBundle, PresetCatalogHandle, PresetValues,
+    PrinterModelInfo, ProfileFragment, ProfileGroupMetadata, ProfileKind, ProfileSelection,
+    ProfileSettings, ProfileSliceRequest, SelectablePrinter, compose_profile_fragments,
+    filter_compatible_presets, merge_profile_fragments, parse_preset_bundle,
+    profile_placed_project, profile_settings, slice_with_load_settings, slice_with_profiles,
+    slice_with_profiles_processed, validate_load_settings_input, validate_with_profiles,
 };
 pub use profiles::{
     slice_cli_with_profiles_validated, slice_with_profiles_processed_validated,

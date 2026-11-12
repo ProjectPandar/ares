@@ -234,6 +234,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "catalogSelectCompatibleFilaments":
       return [JSON.parse(catalogs.get(request.catalogId)!.selectCompatibleFilaments(
         request.printer, request.process, JSON.stringify(request.filaments), JSON.stringify(request.installed))), []];
+    case "catalogNormalizeFilamentSlots":
+      return [JSON.parse(catalogs.get(request.catalogId)!.normalizeFilamentSlots(request.printer, JSON.stringify(request.state))), []];
     case "catalogFree":
       catalogs.get(request.catalogId)!.free();
       catalogs.delete(request.catalogId);

@@ -28,6 +28,9 @@ pub(in crate::profiles) fn select_compatible_filaments(
     installed: &[String],
 ) -> Result<Vec<String>, SliceError> {
     let compatible = filter_with_catalog(catalog, printer, process)?.filaments;
+    // PresetBundle.cpp:5419-5436: hardware minimum, padded before compatibility selection.
+    let (_, minimum) = catalog.filament_slot_counts(printer)?;
+    let mut filaments = filaments.to_vec();
     let installed: BTreeSet<&str> = installed.iter().map(String::as_str).collect();
     let mut candidates = Vec::new();
     for name in &compatible {
@@ -40,6 +43,15 @@ pub(in crate::profiles) fn select_compatible_filaments(
     }
     // PresetCollection keeps its presets sorted by name.
     candidates.sort_by(|a, b| a.name.cmp(&b.name));
+    if filaments.len() < minimum {
+        let last = filaments.last().cloned().unwrap_or_else(|| {
+            candidates
+                .first()
+                .map(|preset| preset.name.clone())
+                .unwrap_or_default()
+        });
+        filaments.resize(minimum, last);
+    }
     let printer = catalog
         .selectable_position(ProfileKind::Machine, printer)
         .expect("filter_with_catalog found the printer");
@@ -52,7 +64,7 @@ pub(in crate::profiles) fn select_compatible_filaments(
             .map(|position| filament(catalog, position))
             .transpose()
     };
-    if let [name] = filaments {
+    if let [name] = filaments.as_slice() {
         // `:8660-8664`: the edited preset after `PresetCollection::update_compatible`
         // (`Preset.hpp:877-885`) with `PreferedFilamentsProfileMatch` (`:8600-8628`).
         if compatible.contains(name) {

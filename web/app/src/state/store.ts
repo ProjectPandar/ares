@@ -1,4 +1,4 @@
-import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, Toolpaths } from "@ares-slicer/wasm";
+import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, FilamentSlotState, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
@@ -52,6 +52,8 @@ export interface PresetSelection {
   process?: string;
   /** Filament preset by slot; unset slots keep the project's. */
   filaments: string[];
+  /** PresetBundle's normalized project palette, maps and per-nozzle flush data. */
+  filamentProject?: Omit<FilamentSlotState, "filaments">;
   /** `curr_bed_type` of the plate combo; unset when the printer has none. */
   bedType?: string;
   /** `nozzle_volume_type`, `filament_map_mode` and `filament_map` of a dual-nozzle printer. */
