@@ -46,16 +46,10 @@ fn a_negative_raft_expansion_in_a_project_fails_like_native() {
     );
     assert_eq!(output.stdout, native.stdout, "{root:?}");
     assert_eq!(output.stderr, native.stderr, "{root:?}");
-    // OrcaSlicer.cpp:3005 records `upward_compatible_machine` before the :4277 check; the Ares
-    // CLI does not report it on this exit yet.
     let report = |bytes: &[u8]| -> serde_json::Value {
         serde_json::from_slice(&result_comparison_bytes(bytes)).unwrap()
     };
-    let mut expected = report(&native.result_json);
-    expected
-        .as_object_mut()
-        .unwrap()
-        .remove("upward_compatible_machine");
+    let expected = report(&native.result_json);
     assert_eq!(
         report(&std::fs::read(root.join("result.json")).unwrap()),
         expected,
