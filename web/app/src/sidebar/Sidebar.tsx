@@ -15,6 +15,7 @@ const SettingsDialog = lazy(() => import("./SettingsDialog").then((module) => ({
 export function Sidebar() {
   const scene = useApp((state) => state.scene);
   const settings = scene?.settings ?? null;
+  const selection = useApp((state) => state.presetSelection);
   const [tab, setTab] = useState<SettingsTab | null>(null);
   // Phones show the sidebar as a drawer over the viewport; wider layouts always show it.
   const [open, setOpen] = useState(false);
@@ -32,7 +33,7 @@ export function Sidebar() {
       </Section>
       <ObjectManipulation />
       <ProcessSection settings={settings} />
-      {tab && settings && (
+      {tab && (settings || (tab.kind === "filament" && selection)) && (
         <Suspense>
           <SettingsDialog tab={tab} settings={settings} onClose={() => setTab(null)} />
         </Suspense>
