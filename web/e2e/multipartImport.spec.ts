@@ -2,7 +2,27 @@ import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
-import { test } from "./failureDiagnostics";
+import { test as diagnostics } from "./failureDiagnostics";
+
+const test = diagnostics.extend<{ servedBodies: void }>({
+  servedBodies: [async ({ context }, use, info) => {
+    const captures: Promise<unknown>[] = [];
+    context.on("response", (response) => {
+      if (!/\.(js|wasm)(\?|$)/.test(response.url())) return;
+      const index = captures.length;
+      captures.push((async () => {
+        const bytes = await response.body();
+        const path = `served-${index}.${response.url().includes(".wasm") ? "wasm" : "js"}`;
+        writeFileSync(info.outputPath(path), bytes);
+        return { url: response.url(), status: response.status(), path, bytes: bytes.length, sha256: sha256(bytes) };
+      })());
+    });
+    await use();
+    const responses = await Promise.allSettled(captures);
+    writeFileSync(info.outputPath("served-bodies.json"), `${JSON.stringify(responses, null, 2)}\n`);
+    expect(responses.filter((response) => response.status === "rejected")).toEqual([]);
+  }, { auto: true }],
+});
 
 const cube = readFileSync(fileURLToPath(new URL("../../tests/parity/cube10.stl", import.meta.url)));
 const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
@@ -81,4 +101,55 @@ test("dropping two STLs loads one object with both parts and slices it", async (
   writeFileSync(info.outputPath("result.json"), `${JSON.stringify({ inputs, objects, gcode: { bytes: gcode.length, sha256: sha256(gcode) }, errors }, null, 2)}\n`);
   await page.screenshot({ path: info.outputPath("sliced.png") });
   expect(errors).toEqual([]);
+});
+
+for (const autoDrop of [true, false]) {
+  test(`picker loads separate objects with Auto-Drop ${autoDrop ? "on" : "off"}`, async ({ page }, info) => {
+    const files = [part("base.stl", [0.8, 0.3, 0.2], [0, 0, 3]), part("upper.stl", [0.3, 0.8, 0.2], [12, 4, 7])];
+    await page.goto("/");
+    await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
+    await page.getByTestId("import-input").setInputFiles(files.map(({ name, bytes: buffer }) => ({ name, buffer, mimeType: "model/stl" })));
+    const dialog = page.getByRole("dialog", { name: "An object with multiple parts was detected", exact: true });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("checkbox", { name: "Auto-Drop", exact: true })).toBeChecked();
+    if (!autoDrop) await dialog.getByRole("checkbox", { name: "Auto-Drop", exact: true }).uncheck();
+    await dialog.getByRole("button", { name: "No", exact: true }).click();
+    await expect(page.getByTestId("object-count")).toHaveText("2");
+    await expect(page.getByTestId("status")).toHaveText("Ready to slice");
+    await page.screenshot({ path: info.outputPath("separate.png") });
+    await page.getByRole("button", { name: "Slice plate", exact: true }).click();
+    await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code file", exact: true }).click()]);
+    await download.saveAs(info.outputPath("separate.gcode"));
+  });
+}
+
+test("batch replacement, cancellation and malformed input preserve the right project", async ({ page }, info) => {
+  const files = [part("base.stl", [0.8, 0.3, 0.2], [0, 0, 0]), part("upper.stl", [0.3, 0.8, 0.2], [12, 4, 2])];
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId("import-input").setInputFiles({ name: "old.stl", buffer: cube, mimeType: "model/stl" });
+  await expect(page.getByTestId("object-count")).toHaveText("1");
+  const picker = page.getByTestId("plater-toolbar").locator('input[type="file"]');
+  await picker.setInputFiles(files.map(({ name, bytes: buffer }) => ({ name, buffer, mimeType: "model/stl" })));
+  const dialog = page.getByRole("dialog", { name: "An object with multiple parts was detected", exact: true });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByTestId("object-list")).toContainText("old.stl");
+  await drop(page, files);
+  await expect(dialog.getByRole("checkbox", { name: "Auto-Drop", exact: true })).toBeChecked();
+  await dialog.getByRole("button", { name: "Yes", exact: true }).click();
+  await expect(page.getByTestId("object-count")).toHaveText("1");
+  await expect(page.getByTestId("object-list")).not.toContainText("old.stl");
+  await drop(page, [files[0], { name: "broken.stl", bytes: Buffer.from("not an STL") }]);
+  await dialog.getByRole("button", { name: "Yes", exact: true }).click();
+  await expect(page.getByTestId("status")).toContainText("Import failed");
+  await expect(page.getByTestId("object-count")).toHaveText("1");
+  await drop(page, [files[0], { name: "other.3mf", bytes: Buffer.from("not a project") }]);
+  await expect(page.getByTestId("status")).toContainText("Import failed");
+  await expect(dialog).toHaveCount(0);
+  await page.getByTestId("object-list").getByRole("button", { name: "Toggle parts", exact: true }).click();
+  await expect(page.getByTestId("object-list").locator(".object-part")).toHaveCount(2);
+  await page.screenshot({ path: info.outputPath("preserved.png") });
 });
