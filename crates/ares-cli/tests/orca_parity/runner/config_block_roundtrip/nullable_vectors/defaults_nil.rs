@@ -84,7 +84,7 @@ fn native_three_vector_defaults_and_nil_preserve_public_shape() {
             "full Native export must replay: {work:?}"
         );
         let native: Value = serde_json::from_slice(&exports[0]).unwrap();
-        assert_eq!(native["version"], "2.5.0-beta");
+        assert_eq!(native["version"], "2.5.0");
         for key in KEYS {
             assert!(native[key].is_array(), "{key}: {work:?}");
         }

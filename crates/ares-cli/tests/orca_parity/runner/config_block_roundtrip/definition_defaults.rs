@@ -82,7 +82,7 @@ fn native_settings(setting: Option<(&str, &str)>) -> Option<(OrcaRunner, Value)>
     )
     .unwrap_or_else(|error| panic!("{error}"));
     let native: Value = serde_json::from_slice(&std::fs::read(settings).unwrap()).unwrap();
-    assert_eq!(native["version"], "2.5.0-beta", "{:?}", runner.work);
+    assert_eq!(native["version"], "2.5.0", "{:?}", runner.work);
     std::fs::write(
         runner.work.join("ares-print-config-def.json"),
         ares_core::print_config_def_json(),

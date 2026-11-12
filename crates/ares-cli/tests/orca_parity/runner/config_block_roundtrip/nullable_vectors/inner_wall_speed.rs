@@ -44,7 +44,7 @@ fn native_export(runner: &OrcaRunner, work: &Path, project: Option<&[u8]>) -> Va
         assert_eq!(fs::read(input).unwrap(), project);
     }
     let native: Value = serde_json::from_slice(&exports[0]).unwrap();
-    assert_eq!(native["version"], "2.5.0-beta");
+    assert_eq!(native["version"], "2.5.0");
     assert!(native[KEY].is_array(), "Native vector premise: {work:?}");
     native
 }

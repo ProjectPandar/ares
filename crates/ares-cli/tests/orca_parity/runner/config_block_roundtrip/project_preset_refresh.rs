@@ -118,7 +118,7 @@ fn check(label: &str, authored: bool, dirty: bool, uptodate: bool, expected: [&s
         })
         .collect::<Vec<_>>();
     assert_eq!(native[0], native[1], "Native repeat; {:?}", runner.work);
-    assert_eq!(native[0]["version"], "2.5.0-beta");
+    assert_eq!(native[0]["version"], "2.5.0");
     for (key, token) in KEYS.into_iter().zip(expected) {
         assert_eq!(
             native[0][key], token,
