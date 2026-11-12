@@ -26,7 +26,7 @@ fn acceleration_lines(gcode: &[u8]) -> Vec<Vec<&str>> {
 fn assert_spiral_acceleration_matches(label: &str, fixture: &str) {
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("official v2.5.0-beta slicing oracle");
+        .expect("official v2.5.0 slicing oracle");
     let project = std::fs::read(repo_root().join(fixture)).unwrap();
     let exported = runner
         .fixture_case(&format!("spiral-layer-acceleration/{label}"), project)

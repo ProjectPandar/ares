@@ -154,7 +154,7 @@ fn native_arranged(
 ) -> Arranged {
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("official v2.5.0-beta arrange oracle");
+        .expect("official v2.5.0 arrange oracle");
     let directory = runner.work.join(label);
     std::fs::create_dir_all(&directory).unwrap();
     let (input_path, output_path) = (directory.join("input.3mf"), directory.join("arranged.3mf"));

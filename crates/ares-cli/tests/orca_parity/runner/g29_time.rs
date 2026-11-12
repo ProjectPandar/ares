@@ -20,7 +20,7 @@ fn first_layer_time(gcode: &[u8]) -> &str {
 fn assert_first_layer_time_matches(label: &str, fixture: &str) {
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("official v2.5.0-beta slicing oracle");
+        .expect("official v2.5.0 slicing oracle");
     let project = std::fs::read(repo_root().join(fixture)).unwrap();
     let exported = runner
         .fixture_case(&format!("processor-g29-time/{label}"), project)

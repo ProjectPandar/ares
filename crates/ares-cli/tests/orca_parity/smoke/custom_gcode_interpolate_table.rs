@@ -29,7 +29,7 @@ fn interpolate_table_outside_range_rejects_like_native() {
 fn interpolate_table_inside_range_matches_native() {
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("official v2.5.0-beta slicing oracle");
+        .expect("official v2.5.0 slicing oracle");
     let project =
         std::fs::read(repo_root().join("tests/parity/mk4-layer-change/mk4base-no-tower.3mf"))
             .unwrap();

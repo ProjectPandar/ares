@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 fn native_bin() -> PathBuf {
     PathBuf::from(
         std::env::var_os("ARES_PROCGCODE_NATIVE_BIN")
-            .expect("ARES_PROCGCODE_NATIVE_BIN must select the pinned v2.5.0-beta processor ELF"),
+            .expect("ARES_PROCGCODE_NATIVE_BIN must select the pinned v2.5.0 processor ELF"),
     )
 }
 impl OrcaRunner {

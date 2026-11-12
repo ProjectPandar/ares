@@ -60,7 +60,7 @@ pub(super) fn slice_fixture(
 ) -> (Vec<u8>, Vec<u8>) {
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("official v2.5.0-beta slicing oracle");
+        .expect("official v2.5.0 slicing oracle");
     let project = rewrite_project(&std::fs::read(repo_root().join(fixture)).unwrap(), edits);
     let exported = runner
         .fixture_case(&format!("wipe-tower2-rib/{label}"), project)

@@ -1,6 +1,6 @@
 use crate::SliceError;
 
-pub const ORCA_SLICER_COMPATIBILITY_VERSION: &str = "2.5.0-beta";
+pub const ORCA_SLICER_COMPATIBILITY_VERSION: &str = "2.5.0";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct GenerationMetadata {

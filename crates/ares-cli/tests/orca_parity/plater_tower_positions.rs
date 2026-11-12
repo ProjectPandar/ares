@@ -119,7 +119,7 @@ fn assert_tower_like_native(
 ) {
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("official v2.5.0-beta slicing oracle");
+        .expect("official v2.5.0 slicing oracle");
     let oracle = export(session);
     let settings = read_entry(&oracle, PROJECT);
     let config: serde_json::Value = serde_json::from_str(&settings).unwrap();
@@ -252,7 +252,7 @@ fn plater_added_plate_echoes_its_own_tower_position_like_native() {
     let session = cubes_on_added_plate();
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("official v2.5.0-beta slicing oracle");
+        .expect("official v2.5.0 slicing oracle");
     let exported = runner
         .fixture_case("plater/tower-echo-added-plate", export(&session))
         .unwrap();

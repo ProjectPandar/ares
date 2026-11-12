@@ -41,7 +41,7 @@ fn motion_state_lines(gcode: &[u8]) -> Vec<Vec<&str>> {
 fn assert_motion_state_matches(label: &str, edits: &[(&str, &str)]) {
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("official v2.5.0-beta slicing oracle");
+        .expect("official v2.5.0 slicing oracle");
     let edits = [edits, &[NO_TOWER]].concat();
     let project = rewrite_project(&std::fs::read(repo_root().join(MK4)).unwrap(), &edits);
     let exported = runner
