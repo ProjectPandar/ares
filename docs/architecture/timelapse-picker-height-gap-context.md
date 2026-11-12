@@ -23,9 +23,11 @@ Rust destination: `crates/ares-core/src/project_slice/gcode_emit/timelapse_pos.r
 
 ## Tests
 
-The P0 control archive changes only farthest_point_timelapse to 0 and retains the original timelapse script. It compares complete Native, public validated API and CLI output using the existing generator-only normalization. The original five cases and their fixture builders remain unchanged.
+The height control derives from the repository P0 archive and changes only time_lapse_gcode to a conditional marker exposing has_timelapse_safe_pos. Its metadata records repository provenance, source/parent input hashes, the changed archive field and template bytes. The existing farthest producer and scheduling remain enabled, so the marker observes the height decision without publishing the separate XY objective.
 
-The height boundary depends on configured current/picture heads and actual print_z. Differing heads with a non-liftable picture head exercise the negative range. Complete output keeps the clock headers, G29 and M73 in the comparison.
+Native publishes 24 false markers followed by 26 true markers in both official and seeded modes. Before the fix, the whole-output comparison fails at byte 58329, line 1313, column 22 with marker 0 expected and marker 1 produced. All other normalized bytes match. The control compares complete Native, public validated API and CLI output using the existing generator-only normalization.
+
+Disabling farthest produces 50 safe Native snapshots because it changes insertion/head context. It does not isolate the differing-head height guard.
 
 Failure modes:
 
