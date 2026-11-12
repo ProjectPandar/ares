@@ -8,6 +8,9 @@ mod invalid_values;
 #[path = "cli_upward_machine_result/machine_full.rs"]
 mod machine_full;
 
+#[path = "cli_upward_machine_result/explicit_file.rs"]
+mod explicit_file;
+
 use std::fs;
 
 use crate::{
