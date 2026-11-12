@@ -45,6 +45,39 @@ async fn caller_rgba_colpic_matches_native_export_through_public_project_slice()
 }
 
 #[tokio::test]
+async fn colpic_at_size_cap_with_palette_overflow_matches_native() {
+    support::check(
+        "colpic-at-cap",
+        "512x37/COLPIC",
+        vec![samples::high_color(512, 37)],
+        Expected::Blocks,
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn colpic_width_capping_with_palette_overflow_matches_native() {
+    support::check(
+        "colpic-width-cap",
+        "513x37/COLPIC",
+        vec![samples::high_color(513, 37)],
+        Expected::Blocks,
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn colpic_height_capping_with_palette_overflow_matches_native() {
+    support::check(
+        "colpic-height-cap",
+        "37x513/COLPIC",
+        vec![samples::high_color(37, 513)],
+        Expected::Blocks,
+    )
+    .await;
+}
+
+#[tokio::test]
 async fn mixed_and_repeated_definitions_keep_native_order_tags_and_btt_terminators() {
     for definitions in [
         "32x24/PNG, 32x24/JPG, 32x24/QOI, 32x24/BTT_TFT, 32x24/COLPIC, 32x24/PNG, 32x24/COLPIC",
