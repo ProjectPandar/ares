@@ -14,4 +14,6 @@ pub(crate) use convert::{
 };
 pub(crate) use obsolete::OBSOLETE_INPUTS;
 pub(crate) use project::deserialize_project_field;
-pub(crate) use thumbnails::normalize_thumbnails;
+pub(crate) use thumbnails::{
+    normalize_thumbnails, parse_fixed_definitions as parse_loaded_thumbnail_definitions,
+};
