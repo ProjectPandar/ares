@@ -72,22 +72,17 @@ fn check(name: &str, fields: Value, filament_count: usize) {
     )
     .unwrap();
     let reference = fs::read(output.join("plate_1.gcode")).unwrap();
-    let actual = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_with_profiles(
-            &input,
-            ares_core::ProfileSliceRequest {
-                filename: "input.stl",
-                catalog_json: &catalog.to_string(),
-                selection_json: &selection.to_string(),
-                plate: None,
-                overrides: &ares_core::ConfigOverrides::default(),
-                placement: ares_core::Placement::None,
-            },
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            ares_core::SlicerContext::new(0),
-        ));
+    let actual = crate::runner::profile_entry::slice_flattened(
+        &input,
+        "input.stl",
+        &[
+            runner.work.join("machine.json"),
+            runner.work.join("process.json"),
+        ],
+        &vec![runner.work.join("filament.json"); filament_count],
+        &ares_core::ConfigOverrides::default(),
+        ares_core::Placement::None,
+    );
     let actual = match actual {
         Ok(bytes) => bytes,
         Err(error) => {
@@ -130,7 +125,7 @@ fn check(name: &str, fields: Value, filament_count: usize) {
             "native_rows": native_rows, "ares_rows": actual_rows,
             "row_equal": native_rows == actual_rows,
             "whole_equal": comparison.is_ok(), "whole_difference": comparison.as_ref().err(),
-            "rust_entry": "ares_core::slice_with_profiles",
+            "rust_entry": "ares_core::slice_with_load_settings",
             "comparison": "complete ordered bytes; generated-by identity only",
         }),
     );

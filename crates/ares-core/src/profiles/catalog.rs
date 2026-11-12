@@ -59,11 +59,10 @@ pub(super) struct Catalog {
     vendor_ids: Vec<String>,
     /// `VendorProfile::models` per vendor scope.
     vendor_models: Vec<Vec<vendor_models::PrinterModelProfile>>,
-    /// Set only by the `--load-settings` entry: every import composes
-    /// as its own single record (`load_config_file` direct-load,
-    /// `OrcaSlicer.cpp:1953-2010`; the chain reads are commented out,
-    /// `:1987,1991`). The preset-bundle/catalog entry keeps the full
-    /// `PresetBundle` chain walk for its user imports.
+    /// Set by the sparse `--load-settings` entry: imports compose as single
+    /// records, matching typed files without inherits that bypass Native's
+    /// resolver (`OrcaSlicer.cpp:2121-2123`). The preset-bundle/catalog entry
+    /// keeps the full `PresetBundle` chain walk for its user imports.
     direct_imports: bool,
 }
 

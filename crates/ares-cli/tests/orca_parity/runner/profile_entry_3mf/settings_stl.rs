@@ -93,22 +93,14 @@ fn profile_settings_slice_matches_native_replacement_stl() {
     .unwrap();
     let reference = std::fs::read(output.join("plate_1.gcode")).unwrap();
 
-    let actual = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_with_profiles(
-            &stl,
-            ares_core::ProfileSliceRequest {
-                filename: "stl-cube10.stl",
-                catalog_json: &catalog.to_string(),
-                selection_json: &selection.to_string(),
-                plate: None,
-                overrides: &overrides,
-                placement: ares_core::Placement::Center,
-            },
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            ares_core::SlicerContext::new(0),
-        ))
+    let actual = crate::runner::profile_entry::slice_flattened(
+        &stl,
+        "stl-cube10.stl",
+        &[runner.work.join("stl-machine.json"), runner.work.join("stl-process.json")],
+        &[runner.work.join("stl-filament.json")],
+        &overrides,
+        ares_core::Placement::Center,
+    )
         .unwrap();
     std::fs::write(runner.work.join("stl-ares.gcode"), &actual).unwrap();
     crate::golden::compare_ordered_bytes_generator_only(&reference, &actual).unwrap();
