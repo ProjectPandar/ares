@@ -1,0 +1,12 @@
+{
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "machine_name": "Bambu Lab H2D 0.4 nozzle",
+  "resource_construction": "Existing VendorProfiles::load and machine selection flatten the stock BBL machine profile; regression preserves the resulting original bytes without removing keys.",
+  "resource_bytes": 16306,
+  "resource_sha256": "2a2e89e53063119290a5b8c185ea01f4e207044dc11f4e78f5a34cd22d162e4b",
+  "input": "tests/parity/master-extruder-id/stock-right-only.3mf",
+  "input_sha256": "69d425b79297129c1b3894ee106269d3b33b7f1badcbeed15598dfe774cff09a",
+  "upstream_loader": "OrcaSlicer.cpp:2118-2123,2205-2263,2820-2842",
+  "controls": "Single declared field changes in machine_full.rs; original stock resource and archive otherwise unchanged",
+  "comparison_boundary": "Native direct-load admission/config observations; public UpwardMachineSource selection; raw CLI resource/no-resource complete bytes. No complete Native/Ares slicing parity claim."
+}

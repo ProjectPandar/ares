@@ -5,6 +5,8 @@
 
 #[path = "cli_upward_machine_result/invalid_values.rs"]
 mod invalid_values;
+#[path = "cli_upward_machine_result/machine_full.rs"]
+mod machine_full;
 
 use std::fs;
 
