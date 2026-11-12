@@ -42,3 +42,22 @@ test("a model opened right at startup loads after the stored printer is selected
   const ready = statuses.slice(loading).find(({ text }) => text === "Ready to slice")!;
   expect(messages.filter(({ at, kind }) => at > ready.at && kind.startsWith("catalog")).map(({ kind }) => kind)).toEqual([]);
 });
+
+// GUI_App::on_init_inner creates and shows the main frame only after load_presets has selected the
+// stored presets (GUI_App.cpp:3713): when the engine dot reads ready, which enables opening files,
+// the printer combo already holds the stored printer.
+test("the app reads ready only once the stored printer is selected", async ({ page }) => {
+  await page.addInitScript(() => {
+    new MutationObserver((_, observer) => {
+      if (!document.querySelector(".engine-dot.ready")) return;
+      const combo = document.querySelector("button[aria-label='Printer preset']");
+      (window as unknown as { printerAtReady: string | null }).printerAtReady = combo?.getAttribute("title") ?? null;
+      observer.disconnect();
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"] });
+  });
+
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
+  expect(await page.evaluate(() => (window as unknown as { printerAtReady: string | null }).printerAtReady))
+    .toBe(FIRST_RUN_CONFIG.printer);
+});
