@@ -114,8 +114,7 @@ fn profile_entry_3mf_load_settings() {
     );
 
     let actual = crate::runner::profile_entry::slice_flattened(
-        &project,
-        "profile-entry.3mf",
+        (&project, "profile-entry.3mf"),
         &[runner.work.join("machine.json"), runner.work.join("process.json")],
         &[runner.work.join("filament.json")],
         &ares_core::ConfigOverrides::default(),

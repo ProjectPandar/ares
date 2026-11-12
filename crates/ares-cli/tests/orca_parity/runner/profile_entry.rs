@@ -293,13 +293,6 @@ fn profile_entry_stl_center_placement() {
     let machine_name = "LH Stinger 0.4 nozzle";
     let process_name = profiles.compatible_process(machine_name).unwrap();
     let filament_name = profiles.compatible_filament(machine_name).unwrap();
-    let catalog = json!({
-        "vendors": [vendor(&profiles_root, "OrcaFilamentLibrary"), vendor(&profiles_root, "LH")],
-        "imports": [],
-    });
-    let selection = json!({
-        "machine": machine_name, "process": process_name, "filaments": [filament_name],
-    });
     for (kind, fields) in [
         ("machine", profiles.machine(machine_name).unwrap()),
         ("process", profiles.process(&process_name).unwrap()),
@@ -370,8 +363,7 @@ fn profile_entry_stl_center_placement() {
     let reference = std::fs::read(output.join("plate_1.gcode")).unwrap();
 
     let actual = crate::runner::profile_entry::slice_flattened(
-        &raw,
-        "cube10.stl",
+        (&raw, "cube10.stl"),
         &[
             runner.work.join("center-machine.json"),
             runner.work.join("center-process.json"),

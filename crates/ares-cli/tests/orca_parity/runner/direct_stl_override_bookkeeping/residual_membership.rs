@@ -111,8 +111,7 @@ fn slice(applied: Option<(&str, Value)>, label: &str) -> (PathBuf, Vec<u8>, Vec<
     let native = fs::read(native_dir.join("plate_1.gcode")).unwrap();
     fs::write(runner.work.join("native.gcode"), &native).unwrap();
     let actual = crate::runner::profile_entry::slice_flattened(
-        &input,
-        "input.stl",
+        (&input, "input.stl"),
         &[
             runner.work.join("machine.json"),
             runner.work.join("process.json"),

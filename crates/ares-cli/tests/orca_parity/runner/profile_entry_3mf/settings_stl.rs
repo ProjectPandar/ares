@@ -94,8 +94,7 @@ fn profile_settings_slice_matches_native_replacement_stl() {
     let reference = std::fs::read(output.join("plate_1.gcode")).unwrap();
 
     let actual = crate::runner::profile_entry::slice_flattened(
-        &stl,
-        "stl-cube10.stl",
+        (&stl, "stl-cube10.stl"),
         &[runner.work.join("stl-machine.json"), runner.work.join("stl-process.json")],
         &[runner.work.join("stl-filament.json")],
         &overrides,
