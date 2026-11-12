@@ -5,6 +5,8 @@ use serde_json::json;
 use std::{fs, os::unix::fs::PermissionsExt, path::Path, process::Command};
 #[path = "content_cache_tests/child.rs"]
 mod child;
+#[path = "content_cache_tests/cwd_outputs.rs"]
+mod cwd_outputs;
 
 #[test]
 fn direct_slice_content_cache_normalizes_paths_and_tracks_input_bytes() {
