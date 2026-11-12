@@ -22,7 +22,12 @@ export async function decodeOptions(defs: ReadonlyMap<string, ConfigOptionDef>, 
   for (const [key, value] of Object.entries(settings)) {
     if (!typed(defs.get(key))) continue;
     const stored = Array.isArray(value) ? value : [value];
-    for (const element of stored) entries.push([key, String(element)]);
+    const boolean = defs.get(key)!.type.startsWith("bool");
+    for (const element of stored) {
+      const token = String(element);
+      // ConfigOptionBool(s)::serialize, Config.hpp:1922-1925, :1995-2008.
+      entries.push([key, boolean && token === "true" ? "1" : boolean && token === "false" ? "0" : token]);
+    }
     slots.push([key, Array.isArray(value) ? value.length : undefined]);
   }
   const values = await slicer.decodeConfigValues(entries);
