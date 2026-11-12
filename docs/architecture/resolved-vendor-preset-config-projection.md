@@ -59,6 +59,34 @@ Preserve the following existing behavior:
    at `4250-4259`. `GCode.cpp:8244-8347` serializes actual applied members,
    excluding banned and nil entries. It does not manufacture missing presets.
 
+## JSON conversion precedes preset completion
+
+`PresetBundle.cpp:8223-8235` loads each vendor file into `entry.config_src`
+through `ConfigBase::load_from_json`. That loader calls
+`handle_legacy_composite` after the file dictionary is loaded
+(`Config.cpp:1147-1149`); `DynamicPrintConfig` delegates to
+`PrintConfigDef` (`PrintConfig.hpp:957-958`). Thus vendor files do receive
+composite conversion, but before parent/default/include completion.
+
+`PrintConfig.cpp:10043-10072` rewrites a present, non-empty `thumbnails`
+value into comma-space-separated definitions. An absent key is not created.
+The selected LH files do not author that key; its collection creation default
+is `48x48/PNG,300x300/PNG` (`PrintConfig.cpp:8595-8600`).
+`PresetBundle.cpp:7627-7666` subsequently copies defaults or a completed
+parent, applies included and own converted values, extends vectors and
+normalizes the preset. It does not repeat the JSON composite conversion.
+
+Keep collection-default construction separate from file deserialization in
+Rust. Normalize authored thumbnails when each fragment loads, not after the
+inheritance merge or when rebuilding a completed machine's typed projection.
+A creation default absent from every loaded file keeps its registered token;
+an explicitly authored value still receives the existing composite conversion.
+Do not change the global thumbnail formatter. Likewise, copy completed raw
+defaults through the same CLI transfer rule as authored members:
+`OrcaSlicer.cpp:3715-3737` routes filament conditions into expression groups
+and skips other filament scalars; the existing `catalog/raw.rs::applies`
+remains the authority rather than a new metadata exclusion list.
+
 ## Closed witness and per-key ownership
 
 The unchanged public witness is
