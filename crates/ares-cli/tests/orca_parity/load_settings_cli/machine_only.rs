@@ -19,6 +19,53 @@ fn empty_inherits_machine_preserves_embedded_kinds() {
     exercise("empty-inherits", true);
 }
 
+#[test]
+fn catalog_keeps_filament_conflict() {
+    catalog_conflict("--load-filaments");
+}
+
+#[test]
+fn catalog_keeps_resource_conflict() {
+    catalog_conflict("--resources-dir");
+}
+
+fn catalog_conflict(conflicting: &str) {
+    let root = tempfile::Builder::new()
+        .prefix("machine-catalog-conflict-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    let argv = [
+        "slice",
+        "--project-preset-catalog",
+        "catalog.json",
+        conflicting,
+        "conflicting-input",
+        "-o",
+        "output.gcode",
+        "input.3mf",
+    ];
+    fs::write(
+        root.join("argv.json"),
+        serde_json::to_vec_pretty(&argv).unwrap(),
+    )
+    .unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+        .args(argv)
+        .current_dir(&root)
+        .output()
+        .unwrap();
+    channels(&root, "ares", &output);
+    assert_eq!(output.status.code(), Some(2), "{root:?}");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("--project-preset-catalog") && stderr.contains(conflicting),
+        "{stderr}; {root:?}"
+    );
+    assert!(output.stdout.is_empty());
+    assert!(!root.join("output.gcode").exists());
+}
+
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -74,7 +121,22 @@ fn exercise(label: &str, empty_inherits: bool) {
     let native_dir = root.join("native");
     fs::create_dir(&native_dir).unwrap();
     let native_bin = std::env::var_os("ARES_ORCA_BIN").unwrap();
-    let native_argv = [
+    let supply = crate::runner::application::project_supply().unwrap();
+    fs::write(
+        root.join("catalog-supply.json"),
+        serde_json::to_vec_pretty(&supply.map(|supply| {
+            json!({
+                "catalog_path": supply.catalog_path, "catalog_sha256": supply.digest,
+                "native_dir": supply.native_dir
+            })
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    if let Some(supply) = supply {
+        fs::write(root.join("catalog.json"), &supply.catalog).unwrap();
+    }
+    let native_argv = crate::runner::application::native_arguments(vec![
         "--load-settings".to_owned(),
         machine_path.display().to_string(),
         "--slice".to_owned(),
@@ -82,7 +144,8 @@ fn exercise(label: &str, empty_inherits: bool) {
         "--outputdir".to_owned(),
         native_dir.display().to_string(),
         input_path.display().to_string(),
-    ];
+    ])
+    .unwrap();
     fs::write(
         root.join("native.argv.json"),
         serde_json::to_vec_pretty(&native_argv).unwrap(),
@@ -114,7 +177,7 @@ fn exercise(label: &str, empty_inherits: bool) {
 
     let ares_dir = root.join("ares");
     fs::create_dir(&ares_dir).unwrap();
-    let ares_argv = [
+    let mut ares_argv = vec![
         "slice".to_owned(),
         "--load-settings".to_owned(),
         machine_path.display().to_string(),
@@ -122,6 +185,15 @@ fn exercise(label: &str, empty_inherits: bool) {
         ares_dir.join("plate_1.gcode").display().to_string(),
         input_path.display().to_string(),
     ];
+    if let Some(supply) = supply {
+        ares_argv.splice(
+            1..1,
+            [
+                "--project-preset-catalog".to_owned(),
+                supply.catalog_path.display().to_string(),
+            ],
+        );
+    }
     fs::write(
         root.join("ares.argv.json"),
         serde_json::to_vec_pretty(&ares_argv).unwrap(),
