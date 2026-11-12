@@ -27,6 +27,13 @@ embedded configuration read by `src/libslic3r/Format/bbs_3mf.cpp`.
    excluding its explicit metadata keys. `:3237–3259` applies the loaded
    machine with `update_all = true`; machine option ownership and variant
    handling must follow that operation, not an inferred Ares merge policy.
+5. `:3164–3200`, `load_project_preset`, refreshes retained printer/process
+   presets independently of the supplied kinds. A supplied machine skips
+   printer refresh, not retained process refresh. `Preset.cpp:1059–1088`,
+   `Preset::load_external_config`, owns the default/project/system merge;
+   `OrcaSlicer.cpp:2774–2816,3510–3728` owns retained filament resolution and
+   application. Reuse the existing `project_refresh` implementation for omitted
+   process/filament kinds before registered defaults obscure raw absence.
 
 ## Non-negotiable decisions
 
@@ -34,9 +41,11 @@ embedded configuration read by `src/libslic3r/Format/bbs_3mf.cpp`.
   with embedded process and filament state. Keep the public, context-free
   `ProfileSelection` constructor checks and existing complete-list behavior.
   A format extension or a Boolean flag alone is not proof of retained state.
-- Do not synthesize process or filament files, resolve an omitted kind from
-  default catalog names, or serialize an intermediate replacement archive.
-  Inspect embedded settings without loading another copy of mesh geometry.
+- Do not synthesize process or filament files, select omitted kinds by a
+  replacement machine's default names, or serialize an intermediate archive.
+  Resolve retained identities only through explicitly supplied original catalog
+  documents and the existing refresh code. Inspect embedded settings without
+  loading another copy of mesh geometry.
 - Use the existing catalog/profile composition and project loading seams.
   Their current complete-list-only checks and loaded-name equality checks are
   temporary compatibility shells around the cited upstream operations; they
@@ -67,9 +76,21 @@ embedded configuration read by `src/libslic3r/Format/bbs_3mf.cpp`.
 | `crates/ares-core/src/project/domain/profile_input/overlay.rs` | Only machine application/ownership/variant corrections required by `OrcaSlicer.cpp:3099–3164,3237–3259`; existing project overlay remains the owner. |
 | `crates/ares-cli/src/main.rs` | Transfer core's snapshot to existing success/failure serialization, corresponding to `OrcaSlicer.cpp:3005,428–432`; no configuration decisions. |
 
+The refresh integration also owns these directly related boundaries:
+
+| File | Source-owned responsibility |
+| --- | --- |
+| `crates/ares-cli/src/load_settings.rs` | Existing file-list I/O plus explicit catalog transport; extracted from `main.rs` to preserve its size limit. |
+| `crates/ares-core/src/profiles/entry/load_settings.rs` | Optional catalog JSON and existing `uptodate` switch on `LoadSettingsSliceRequest`; existing catalog decoding and source wiring, extracted from `entry.rs`. |
+| `crates/ares-core/src/profiles/project_refresh.rs` | Reuse the existing refresh object for selected-profile loading without loading geometry twice. |
+| `crates/ares-core/src/profiles/project_refresh/preset.rs` | Skip actually supplied kinds while retaining existing identity, inheritance, dirty-key and filament application behavior. |
+| `crates/ares-core/src/project/domain/profile_input.rs` and `profile_input/three_mf.rs` | The existing single 3MF load and pre-default refresh/application seam; split the directly related loader before exceeding 400 lines. |
+
 The table identifies allowed production boundaries, not a requirement to change
-an unaffected file. Any additional production boundary needs a new source-based
-scope decision. No inherited-machine or general resolver behavior is introduced.
+an unaffected file. Additional boundaries require a source-based scope decision.
+No new preset lookup, parser, inherited-machine or general resolver is added.
+The source/profile structs carry existing refresh context and report data; they
+do not create a second configuration implementation.
 
 ## Included behavior and public seam
 
@@ -88,6 +109,37 @@ Reuse the stock full-machine fixture at
 (SHA-256 `2a2e89e53063119290a5b8c185ea01f4e207044dc11f4e78f5a34cd22d162e4b`).
 The second case adds only `"inherits": ""`; it is otherwise identical.
 No process or filament list is supplied in either case.
+
+### Explicit catalog with loaded settings
+
+`--project-preset-catalog <PATH>` may now accompany `--load-settings`; remove
+only `load_settings` from that option's `conflicts_with_all`. Conflicts with
+`--load-filaments` and `--resources-dir` remain unchanged. Ordinary catalog-only
+requests keep their existing branch. Combined requests use the load-settings
+entry with an optional catalog JSON field and the existing `--uptodate` value;
+no catalog preserves the previous load-settings behavior. This supersedes only
+the load-settings exclusion in `project-derived-preset-refresh-adapters.md`.
+
+The CLI reads the explicitly requested catalog and transports its bytes. Core
+uses the existing `Catalog::from_json` and `ProjectPresetRefresh` machinery,
+refreshing only retained kinds not supplied by the request. A selected machine
+must not be refreshed from its catalog identity. Existing complete-list merge
+and context-free constructor checks remain intact. No new file search,
+environment input, catalog generation or exported settings enter production.
+
+Reuse the existing E2E `project_supply`/`native_arguments` adapters. With supply
+present, pass the same catalog file explicitly to Ares and the matching staged
+Native system tree through the existing Native argument adapter. Keep original
+archive/machine bytes, comparisons, Native success premises and both modes.
+Record catalog identity and the complete argv. With supply absent, do not
+silently discover a catalog, skip the case or excuse a mismatch.
+
+The loaded project's embedded post-process check and retained-process
+compatibility precede the original upward snapshot. Commit that snapshot before
+retained refresh and later validation so a later refresh/slice failure cannot
+lose it. Run refresh before collection-default materialization and explicit
+machine overlay; apply user overrides last. Keep complete-list adjudication on
+its existing path and load mesh geometry only once.
 
 Runtime Native in both official and seeded modes is the independent oracle.
 Both cases must return exit 0, report return code 0 and upward machines exactly
@@ -114,6 +166,11 @@ constructor; evaluating renamed compatibility keys incorrectly; using the
 post-overlay printer in place of the supplied printer config; changing machine
 ownership/variants; dropping the upward snapshot; losing it on a later failure;
 and comparing only the first visible difference instead of complete outputs.
+The catalog extension must also expose the former CLI mutual-exclusion failure,
+accidentally refreshing the supplied machine, filling absent values from
+registered defaults before refresh, losing dirty/present-value protection, and
+relaxing the retained filament/resource argument conflicts. Commit and execute
+the catalog-supplied E2Es before production wiring; a compile error is not a failing assertion.
 
 Compare exit status and the entire report through unchanged
 `native_wall_clock::result_comparison_bytes`, including upward metadata.
