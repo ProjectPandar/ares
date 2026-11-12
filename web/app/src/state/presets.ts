@@ -113,7 +113,8 @@ async function restoreSession() {
   else saveConfig({ printer: null });
 }
 
-void restoreSession();
+/** The startup selection; a file load waits for it, as the plater only takes files after GUI_App init. */
+export const sessionRestored = restoreSession();
 
 /** Whether the selection still has the printer and process a filter ran for; filaments do not change it. */
 function filtered({ printer, process }: PresetSelection) {
