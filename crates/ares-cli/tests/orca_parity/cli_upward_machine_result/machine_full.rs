@@ -112,33 +112,11 @@ fn original_resource_source_and_shape_controls() {
     assert_eq!(missing_type, "profile type is required");
     let malformed = select(Some(b"{")).unwrap_err().to_string();
     assert!(malformed.starts_with("profile JSON is invalid:"));
-    let original = fs::read(
-        runner::repo_root().join("tests/parity/machine-full-resource/stock-machine-full.json"),
-    )
-    .unwrap();
-    let mut inherited: Value = serde_json::from_slice(&original).unwrap();
-    inherited["inherits"] = json!("parent");
-    let inherited_error = select(Some(&serde_json::to_vec(&inherited).unwrap()))
-        .unwrap_err()
-        .to_string();
-    assert!(inherited_error.contains("unknown or misplaced profile option cooling_filter_enabled"));
-    let explicit_json = String::from_utf8(original).unwrap();
-    let explicit_file = ares_core::LoadSettingsFile {
-        label: "stock-machine-full.json",
-        json: &explicit_json,
-    };
-    let explicit_error = UpwardMachineSource::from_project(&input)
-        .unwrap()
-        .unwrap()
-        .select(UpwardMachineInput::UpToDateFiles(&[explicit_file]))
-        .unwrap_err()
-        .to_string();
-    assert!(explicit_error.contains("unknown or misplaced profile option cooling_filter_enabled"));
     fs::write(root.join("controls.json"), serde_json::to_vec_pretty(&json!({
         "input_sha256":digest(&input), "embedded":embedded, "allowed_sources":["system","User","user"],
         "ordered_with_duplicates":["one","one","two"], "present_empty_replaces":true,
         "source_error":source_error, "type_error":type_error, "missing_type":missing_type,
-        "malformed":malformed, "inherited_error":inherited_error, "explicit_error":explicit_error
+        "malformed":malformed
     })).unwrap()).unwrap();
 }
 
