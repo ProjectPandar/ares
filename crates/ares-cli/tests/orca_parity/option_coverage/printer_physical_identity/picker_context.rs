@@ -1,4 +1,4 @@
-//! `TimelapsePosPicker.cpp:38–39,515–524,155–159`: current-layer height context.
+//! `TimelapsePosPicker.cpp:38–39,155–159,406–414,515–552`: height and target context.
 
 use super::{COMPLETE, input};
 use crate::{
@@ -13,7 +13,7 @@ use std::{
 
 const HEIGHT_TEMPLATE: &str = "; PICKER_HEIGHT_SAFE {if has_timelapse_safe_pos}1{else}0{endif}\n";
 
-fn height_context_project() -> (Vec<u8>, serde_json::Value) {
+fn project_with_setting(key: &str, value: &str) -> (Vec<u8>, serde_json::Value) {
     let project = input::project(COMPLETE, &["0", "1"]);
     let parent_sha = sha(&project);
     let mut reader = zip::ZipArchive::new(Cursor::new(project)).unwrap();
@@ -26,21 +26,27 @@ fn height_context_project() -> (Vec<u8>, serde_json::Value) {
         if file.name() == "Metadata/project_settings.config" {
             let before: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
             let mut settings = before.clone();
-            settings["time_lapse_gcode"] = json!(HEIGHT_TEMPLATE);
+            settings[key] = json!(value);
             bytes = serde_json::to_vec_pretty(&settings).unwrap();
+            let derived_template = settings["time_lapse_gcode"].clone();
             let mut restored = settings;
-            restored["time_lapse_gcode"] = before["time_lapse_gcode"].clone();
+            match before.get(key) {
+                Some(value) => restored[key] = value.clone(),
+                None => {
+                    restored.as_object_mut().unwrap().remove(key);
+                }
+            }
             assert_eq!(restored, before);
             provenance = Some(json!({
-                "kind":"synthetic repository-derived height-gap control",
+                "kind":"synthetic repository-derived picker control",
                 "source_fixture":"tests/parity/printer-physical-identity/P0.3mf",
                 "source_fixture_sha256":sha(include_bytes!("../../../../../../tests/parity/printer-physical-identity/P0.3mf")),
                 "parent_identity_project_sha256":parent_sha,
                 "changed_archive_entry":"Metadata/project_settings.config",
-                "changed_fields":["time_lapse_gcode"],
+                "changed_fields":[key],
                 "parent_template_sha256":sha(before["time_lapse_gcode"].as_str().unwrap().as_bytes()),
-                "derived_template":HEIGHT_TEMPLATE,
-                "farthest_producer_overridden":false
+                "derived_template":derived_template,
+                "farthest_producer_overridden":key == "farthest_point_timelapse"
             }));
         }
         writer
@@ -59,7 +65,7 @@ fn current_layer_height_gap() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let (project, provenance) = height_context_project();
+    let (project, provenance) = project_with_setting("time_lapse_gcode", HEIGHT_TEMPLATE);
     let case = NativeCase::slice(&runner, &project, "picker-height-gap-");
     fs::write(
         case.root.join("provenance.json"),
@@ -78,4 +84,29 @@ fn current_layer_height_gap() {
         2026, 8, 27, 0, 0, 0,
     ));
     assert_eq!(api, cli, "{:?}: raw API/CLI bytes", case.root);
+}
+
+#[test]
+fn absent_target_retains_camera_score() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let (project, provenance) = project_with_setting("farthest_point_timelapse", "0");
+    let case = NativeCase::slice(&runner, &project, "picker-no-target-");
+    fs::write(
+        case.root.join("provenance.json"),
+        serde_json::to_vec_pretty(&provenance).unwrap(),
+    )
+    .unwrap();
+    let pictures = case
+        .native
+        .lines()
+        .map(str::trim_start)
+        .filter(|line| line.starts_with("M9711 M0 E"))
+        .collect::<Vec<_>>();
+    assert_eq!(pictures.len(), 50, "{:?}", case.root);
+    assert!(pictures.iter().all(|line| line.contains(" X")));
+    case.compare(ares_core::GenerationMetadata::deterministic(
+        2026, 8, 27, 0, 0, 0,
+    ));
 }
