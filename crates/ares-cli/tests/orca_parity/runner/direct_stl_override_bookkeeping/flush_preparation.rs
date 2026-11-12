@@ -73,8 +73,7 @@ fn check(name: &str, fields: Value, filament_count: usize) {
     .unwrap();
     let reference = fs::read(output.join("plate_1.gcode")).unwrap();
     let actual = crate::runner::profile_entry::slice_flattened(
-        &input,
-        "input.stl",
+        (&input, "input.stl"),
         &[
             runner.work.join("machine.json"),
             runner.work.join("process.json"),

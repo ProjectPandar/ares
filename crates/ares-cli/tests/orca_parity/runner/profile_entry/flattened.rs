@@ -4,8 +4,7 @@ use ares_core::{
 use std::{fs, path::PathBuf};
 
 pub(in crate::runner) fn slice_flattened(
-    input: &[u8],
-    filename: &str,
+    (input, filename): (&[u8], &str),
     settings_paths: &[PathBuf],
     filament_paths: &[PathBuf],
     overrides: &ConfigOverrides,

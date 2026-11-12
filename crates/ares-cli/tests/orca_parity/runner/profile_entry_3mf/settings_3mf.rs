@@ -129,8 +129,7 @@ fn profile_settings_slice_matches_native_replacement_3mf() {
 
     // Rust loads the same flattened replacement files and CLI overrides as Native.
     let actual = crate::runner::profile_entry::slice_flattened(
-        &original,
-        "view.3mf",
+        (&original, "view.3mf"),
         &[runner.work.join("view-machine.json"), runner.work.join("view-process.json")],
         &[runner.work.join("view-filament.json")],
         &overrides,
