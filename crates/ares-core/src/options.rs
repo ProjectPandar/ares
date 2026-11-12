@@ -90,6 +90,7 @@ mod support_different_extruders;
 mod support_ironing;
 #[cfg_attr(not(test), allow(dead_code, unused_imports))]
 mod typed_legacy;
+pub(crate) use typed_legacy::parse_loaded_thumbnail_definitions;
 mod update_multi_to_multi;
 mod update_printer_extruders;
 mod update_single_to_multi;
