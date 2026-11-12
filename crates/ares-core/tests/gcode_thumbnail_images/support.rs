@@ -15,7 +15,6 @@ mod native_environment;
 pub enum Expected {
     Blocks,
     Empty,
-    Error,
 }
 
 pub enum Control {
@@ -113,17 +112,6 @@ pub async fn check(sample: &str, definitions: &str, frames: Vec<Frame>, expected
     )
     .await;
     match expected {
-        Expected::Error => {
-            let native_error = trace["error"].as_str().unwrap();
-            let error = result.unwrap_err().to_string();
-            fs::write(work.join("ares-error.txt"), &error).unwrap();
-            assert!(native.is_empty());
-            assert_eq!(
-                error, native_error,
-                "Native thumbnail error mismatch: {work:?}"
-            );
-            return;
-        }
         Expected::Blocks => {
             assert!(
                 trace.get("error").is_none(),
