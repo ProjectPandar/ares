@@ -1,5 +1,8 @@
 //! Source-cited rewrite parity cases, grouped without changing case bodies.
 
+#[path = "custom_gcode_line_endings.rs"]
+mod custom_gcode_line_endings;
+
 #[path = "coints_comma_regression.rs"]
 mod coints_comma_regression;
 
