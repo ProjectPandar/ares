@@ -78,6 +78,17 @@ fn profile_entry_cli_config_presence() {
     }
 }
 
+#[test]
+fn resolved_vendor_presets_preserve_applied_default_members() {
+    run_profile_entry(&[
+        ("machine", "bbl_use_printhost", json!("0")),
+        ("machine", "default_bed_type", json!("")),
+        ("machine", "default_nozzle_volume_type", json!(["Standard"])),
+        ("machine", "machine_max_junction_deviation", json!(["0.02"])),
+        ("filament", "filament_retract_length_nc", json!(["12"])),
+    ]);
+}
+
 fn run_profile_entry(overrides: &[(&str, &str, Value)]) {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
