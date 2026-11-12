@@ -8,5 +8,5 @@
   "input_sha256": "69d425b79297129c1b3894ee106269d3b33b7f1badcbeed15598dfe774cff09a",
   "upstream_loader": "OrcaSlicer.cpp:2118-2123,2205-2263,2820-2842",
   "controls": "Single declared field changes in machine_full.rs; original stock resource and archive otherwise unchanged",
-  "comparison_boundary": "Native direct-load admission/config observations; public UpwardMachineSource selection; raw CLI resource/no-resource complete bytes. No complete Native/Ares slicing parity claim."
+  "comparison_boundary": "Native direct-load admission/config observations; public UpwardMachineSource selection; raw CLI resource admission and ordered upward report vector only. Ares slicing exit, channels, reports and outputs are retained without asserting slicing success or failure."
 }

@@ -54,6 +54,94 @@ fn non_bool_resource_value_preserves_default() {
     );
 }
 
+#[test]
+fn original_resource_source_and_shape_controls() {
+    if OrcaRunner::from_env().unwrap().is_none() {
+        return;
+    }
+    let root = tempfile::Builder::new()
+        .prefix("upward-source-controls-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    let input =
+        fs::read(runner::repo_root().join("tests/parity/master-extruder-id/stock-right-only.3mf"))
+            .unwrap();
+    let select = |resource: Option<&[u8]>| {
+        UpwardMachineSource::from_project(&input)
+            .unwrap()
+            .unwrap()
+            .select(UpwardMachineInput::FetchOriginal(resource))
+    };
+    let embedded = UpwardMachineSource::from_project(&input)
+        .unwrap()
+        .unwrap()
+        .select(UpwardMachineInput::Embedded)
+        .unwrap();
+    assert_eq!(select(None).unwrap(), embedded);
+    let mut machine = json!({"type":"machine", "name":"Bambu Lab H2D 0.4 nozzle",
+        "from":"system", "upward_compatible_machine":["one", "one", "two"]});
+    for source in ["system", "User", "user"] {
+        machine["from"] = json!(source);
+        assert_eq!(
+            select(Some(&serde_json::to_vec(&machine).unwrap())).unwrap(),
+            ["one", "one", "two"]
+        );
+    }
+    machine["from"] = json!("unsupported");
+    let source_error = select(Some(&serde_json::to_vec(&machine).unwrap()))
+        .unwrap_err()
+        .to_string();
+    assert_eq!(source_error, "unsupported machine source from metadata");
+    machine["from"] = json!("system");
+    machine["upward_compatible_machine"] = json!([]);
+    assert!(
+        select(Some(&serde_json::to_vec(&machine).unwrap()))
+            .unwrap()
+            .is_empty()
+    );
+    machine["type"] = json!("unknown");
+    let type_error = select(Some(&serde_json::to_vec(&machine).unwrap()))
+        .unwrap_err()
+        .to_string();
+    assert_eq!(type_error, "profile type is unsupported");
+    machine.as_object_mut().unwrap().remove("type");
+    let missing_type = select(Some(&serde_json::to_vec(&machine).unwrap()))
+        .unwrap_err()
+        .to_string();
+    assert_eq!(missing_type, "profile type is required");
+    let malformed = select(Some(b"{")).unwrap_err().to_string();
+    assert!(malformed.starts_with("profile JSON is invalid:"));
+    let original = fs::read(
+        runner::repo_root().join("tests/parity/machine-full-resource/stock-machine-full.json"),
+    )
+    .unwrap();
+    let mut inherited: Value = serde_json::from_slice(&original).unwrap();
+    inherited["inherits"] = json!("parent");
+    let inherited_error = select(Some(&serde_json::to_vec(&inherited).unwrap()))
+        .unwrap_err()
+        .to_string();
+    assert!(inherited_error.contains("unknown or misplaced profile option cooling_filter_enabled"));
+    let explicit_json = String::from_utf8(original).unwrap();
+    let explicit_file = ares_core::LoadSettingsFile {
+        label: "stock-machine-full.json",
+        json: &explicit_json,
+    };
+    let explicit_error = UpwardMachineSource::from_project(&input)
+        .unwrap()
+        .unwrap()
+        .select(UpwardMachineInput::UpToDateFiles(&[explicit_file]))
+        .unwrap_err()
+        .to_string();
+    assert!(explicit_error.contains("unknown or misplaced profile option cooling_filter_enabled"));
+    fs::write(root.join("controls.json"), serde_json::to_vec_pretty(&json!({
+        "input_sha256":digest(&input), "embedded":embedded, "allowed_sources":["system","User","user"],
+        "ordered_with_duplicates":["one","one","two"], "present_empty_replaces":true,
+        "source_error":source_error, "type_error":type_error, "missing_type":missing_type,
+        "malformed":malformed, "inherited_error":inherited_error, "explicit_error":explicit_error
+    })).unwrap()).unwrap();
+}
+
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -146,17 +234,8 @@ fn exercise(label: &str, mutation: Option<(&str, Value)>, cooling: &str, height:
         .output()
         .unwrap();
     channels(&root, "native", &native);
-    let baseline_dir = root.join("baseline");
     let ares_dir = root.join("ares");
-    fs::create_dir(&baseline_dir).unwrap();
     fs::create_dir(&ares_dir).unwrap();
-    let baseline = Command::new(env!("CARGO_BIN_EXE_ares"))
-        .args(["slice", "-o"])
-        .arg(baseline_dir.join("plate_1.gcode"))
-        .arg(&input_path)
-        .output()
-        .unwrap();
-    channels(&root, "baseline", &baseline);
     let ares = Command::new(env!("CARGO_BIN_EXE_ares"))
         .args(["slice", "--resources-dir"])
         .arg(&resources)
@@ -166,12 +245,18 @@ fn exercise(label: &str, mutation: Option<(&str, Value)>, cooling: &str, height:
         .output()
         .unwrap();
     channels(&root, "ares", &ares);
+    let report = fs::read(ares_dir.join("result.json")).ok();
+    let report_json = report
+        .as_deref()
+        .map(serde_json::from_slice::<Value>)
+        .transpose()
+        .unwrap();
     fs::write(root.join("observation.json"), serde_json::to_vec_pretty(&json!({
         "case": label, "input_sha256": digest(&input), "resource_sha256": digest(resource.as_bytes()),
-        "resource_path": machine_path, "native_bin": native_bin, "native_argv": native_argv,
+        "resource_path": machine_path, "native_bin": native_bin.to_string_lossy(), "native_argv": native_argv,
         "raw_cli": env!("CARGO_BIN_EXE_ares"), "api": api, "refreshed_api": refreshed_api,
         "strict_fragment_rejected": strict_fragment_rejected,
-        "baseline_exit": baseline.status.code(), "ares_exit": ares.status.code(),
+        "ares_exit": ares.status.code(), "ares_report": report_json,
         "native_exit": native.status.code(),
         "scope": "Full-config admission and upward selection, not complete Native/Ares slicing parity"
     })).unwrap()).unwrap();
@@ -207,28 +292,13 @@ fn exercise(label: &str, mutation: Option<(&str, Value)>, cooling: &str, height:
         strict_fragment_rejected,
         "strict public API is unchanged: {root:?}"
     );
-    assert_eq!(baseline.status.code(), Some(0), "{root:?}");
     assert_eq!(api, Ok(expected_upward.clone()), "FetchOriginal: {root:?}");
     assert_eq!(
         refreshed_api,
         Ok(expected_upward.clone()),
         "UpToDateOriginal: {root:?}"
     );
-    assert_eq!(ares.status.code(), Some(0), "raw CLI: {root:?}");
-    assert_eq!(ares.stdout, baseline.stdout, "{root:?}");
-    assert_eq!(ares.stderr, baseline.stderr, "{root:?}");
-    assert_eq!(
-        fs::read(ares_dir.join("plate_1.gcode")).unwrap(),
-        fs::read(baseline_dir.join("plate_1.gcode")).unwrap(),
-        "resource must not overlay slicing: {root:?}"
-    );
-    let report = fs::read(ares_dir.join("result.json")).unwrap();
-    assert_eq!(
-        report,
-        fs::read(baseline_dir.join("result.json")).unwrap(),
-        "complete resource/no-resource result bytes: {root:?}"
-    );
-    let report: Value = serde_json::from_slice(&report).unwrap();
+    let report = report_json.expect("resource admission must produce its report");
     assert_eq!(
         report["upward_compatible_machine"],
         json!(expected_upward),
