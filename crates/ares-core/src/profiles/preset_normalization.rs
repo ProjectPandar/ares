@@ -7,6 +7,16 @@ use crate::{
     project::raw_settings::ProjectSettingsRaw,
 };
 
+pub(super) fn extend_default_config_length(raw: &mut ProjectSettingsRaw) -> Result<(), SliceError> {
+    let options =
+        json_deserialize::deserialize_preset_config::<SliceOptions>(raw.clone().into_object())
+            .map_err(SliceError::InvalidInput)?;
+    for (key, value) in options.extended_preset_variants()? {
+        raw.insert(key, serde_json::from_value(value).unwrap());
+    }
+    Ok(())
+}
+
 // Preset.cpp:535-541 runs once on the completed machine preset, not each parent.
 pub(super) fn normalize_machine(raw: &mut ProjectSettingsRaw) -> Result<bool, SliceError> {
     let mut input = ProjectSettingsRaw::default();

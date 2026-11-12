@@ -131,7 +131,11 @@ as a new runtime policy table.
 
 For instantiated vendor selections, make the selected raw configuration and
 its typed profile agree with the collection-completed configuration before
-CLI profile application. Reuse the existing kind-owned membership and
+CLI profile application. Identify this boundary by the selected record's
+manifest-owned vendor scope and instantiation, not its `from` metadata or
+whether direct imports are enabled. `Catalog::push_vendor` establishes that
+scope from the vendor manifest; imported records remain in the user scope.
+Reuse the existing kind-owned membership and
 canonical default/nil constructor. Explicit inherited, included and leaf
 values retain upstream precedence. Default-valued false, zero, empty string
 and empty vector members are real values, not absence predicates.
@@ -149,10 +153,45 @@ group rows as exporter exceptions. The default filament nil seed must reach
 composition before absent registration defaults can turn into an applied 10.
 
 Standalone sparse imported replacement files keep their current CLI
-construction. Ordinary byte-only 3MF entry and retained project/catalog
+construction. Their filament identity is the file-list slot, not the authored
+preset name: `OrcaSlicer.cpp:2424-2452` appends a separate config, name and id
+for every loaded slot. In `profiles/load_settings.rs` and `catalog/store.rs`,
+use private per-slot lookup keys for these direct-file filament records while
+preserving their original `ProfileDocument` names, JSON and exported preset
+metadata. Do not deduplicate repeated slots or collapse different files with
+the same preset name. `OrcaSlicer.cpp:3625-3635` creates a missing
+`filament_extruder_variant` while matching each loaded slot; materialize that
+registered default in the per-filament raw input before composition, so it is
+not mistaken for a static default copied once after merging. Vendor/user
+catalog name uniqueness remains unchanged.
+Ordinary byte-only 3MF entry and retained project/catalog
 refresh remain separate paths. No global registry-default expansion, changed
 static membership bit, footer filter, vendor-name exception, new filesystem
 lookup, public API or fallback is permitted.
+
+## Flattened machine file loading
+
+The direct up-to-date-file and original-machine-resource entry points introduced
+by `9c748a458620fc6da39017ce2aa4d86c978470db` and
+`987d1f7a6cac169ef52bf3c660500139c9948cc2` share
+`ProfileFragment::from_flattened_config_bytes`. Both decode the full known-option
+schema with an empty creation-default map. A full-config reader is not a
+collection-completed vendor preset.
+
+In Orca v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`),
+`PrintConfig.hpp:915-931` and `Config.hpp:2909-2917` default-construct an empty
+`DynamicPrintConfig`; the separate `full_print_config` factory is not used.
+`OrcaSlicer.cpp::load_config_file` at2205-2275 loads authored strings and arrays
+through `Config.cpp:978-1063`. Its direct callers at2542-2558,2635-2637 and
+2820-2842 do not start from a preset collection. `resolve_preset` at2118-2123
+bypasses preset resolution for explicitly typed files without a nonempty
+inherits value.
+
+Keep full-schema legacy conversion and source/shape validation, but do not
+inject machine collection defaults, static full-config membership, or registered
+numeric defaults for absent/nil fields into these direct loads. Collection
+completion remains owned by the manifest-resolved vendor path above. Inherited
+files retain their existing strict/resolved path.
 
 ## Public verification and failure model
 

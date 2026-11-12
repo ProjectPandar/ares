@@ -267,6 +267,7 @@ const PRINTER_OPTIONS_WITH_VARIANT_2_KEYS: &[&str] = &[
     "machine_max_jerk_x",
     "machine_max_jerk_y",
     "machine_max_jerk_z",
+    "machine_max_junction_deviation",
     "machine_max_speed_e",
     "machine_max_speed_x",
     "machine_max_speed_y",

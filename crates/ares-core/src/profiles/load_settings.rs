@@ -103,8 +103,8 @@ pub fn compose_load_settings(
             _ => {}
         }
     }
-    let mut filament_names = Vec::new();
-    for file in request.filaments {
+    let mut filament_slots = Vec::new();
+    for (slot, file) in request.filaments.iter().enumerate() {
         if file.json.is_empty() {
             continue;
         }
@@ -115,10 +115,9 @@ pub fn compose_load_settings(
                 file.label
             )));
         }
-        filament_names.push(document.name.clone());
-        catalog.push_import(document)?;
+        filament_slots.push(catalog.push_filament_slot(document, slot)?);
     }
-    let selection = ProfileSelection::new_partial(process, machine, filament_names)?;
+    let selection = ProfileSelection::new_partial(process, machine, filament_slots)?;
     catalog.compose(&selection)
 }
 

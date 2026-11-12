@@ -26,6 +26,19 @@ pub(crate) struct ProjectSettingsBuilder {
 }
 
 impl ProjectSettingsBuilder {
+    // Creation defaults are not a loaded JSON file (Preset.cpp:1735-1743).
+    pub(crate) fn from_creation_defaults(
+        fields: std::collections::BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
+    ) -> Result<Self, String> {
+        let mut builder = Self::default();
+        for (key, value) in fields {
+            builder
+                .deserialize_known_value(&key, value)
+                .map_err(|error| error.to_string())?;
+        }
+        Ok(builder)
+    }
+
     pub(crate) fn deserialize_known_field<'de, A>(
         &mut self,
         key: &str,

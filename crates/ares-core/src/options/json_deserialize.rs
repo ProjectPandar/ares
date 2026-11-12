@@ -17,6 +17,18 @@ use crate::project::raw_settings::RawConfigValue;
 pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
     input: RawConfigValue,
 ) -> Result<T, String> {
+    T::deserialize(RawConfigValue::Object(decode_preset_values(input)?))
+        .map_err(|error| error.to_string())
+}
+
+// Config application does not load another JSON file or rerun its composite conversion.
+pub(crate) fn deserialize_config_values(
+    input: RawConfigValue,
+) -> Result<super::ProjectSettingsBuilder, String> {
+    super::ProjectSettingsBuilder::from_creation_defaults(decode_preset_values(input)?)
+}
+
+fn decode_preset_values(input: RawConfigValue) -> Result<BTreeMap<String, RawConfigValue>, String> {
     let RawConfigValue::Object(mut values) = input else {
         unreachable!("preset config loader receives an option object")
     };
@@ -41,7 +53,7 @@ pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
             *value = decoded.map_err(|error| format!("invalid Orca option {key}: {error}"))?;
         }
     }
-    T::deserialize(RawConfigValue::Object(values)).map_err(|error| error.to_string())
+    Ok(values)
 }
 
 /// Bare empty preset strings on vector-kind options deserialize to EMPTY

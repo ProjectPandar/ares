@@ -6,6 +6,7 @@ use std::borrow::Cow;
 use super::super::{
     MergedProfile, ProfileFragment, ProfileKind, ProfileSelection,
     composition::compose_resolved_profiles,
+    fragment::payload::ProfilePayload,
     inheritance::{UnselectedKind, merge_direct_profile_fragment, unselected_profile},
     merge_profile_fragments,
 };
@@ -54,7 +55,7 @@ impl Catalog {
                 // `update_full_config` overlays the machine onto the
                 // embedded project settings. With no machine loaded
                 // there is no machine config to default (`:2009-2106`).
-                insert_default_gcodes(&mut raw, &PRINTER_GCODE_KEYS);
+                insert_default_options(&mut raw, &PRINTER_GCODE_KEYS);
                 merged
             }
             None => unselected_profile(UnselectedKind::Machine),
@@ -76,16 +77,39 @@ impl Catalog {
                 // `load_default_gcodes_to_config(config, TYPE_FILAMENT)`
                 // (`OrcaSlicer.cpp:3150,587-606`): an empty filament
                 // start/end G-code vector is resized to one empty slot.
-                insert_default_gcodes(&mut filament_raw, &FILAMENT_GCODE_KEYS);
+                insert_default_options(&mut filament_raw, &FILAMENT_GCODE_KEYS);
                 resize_empty_filament_gcodes(&mut filament_raw);
+                if self.direct_imports {
+                    // CLI::run creates this option per loaded file slot before variant matching.
+                    // OrcaSlicer.cpp:3625-3635.
+                    insert_default_options(&mut filament_raw, &["filament_extruder_variant"]);
+                }
                 raw.extend_raw(&filament_raw);
                 filament_raws.push(filament_raw);
                 Ok(merged)
             })
             .collect::<Result<Vec<_>, SliceError>>()?;
         super::cli_metadata::filament_conditions(&mut raw, &filaments);
-        let composed =
-            compose_resolved_profiles(selection, machine, process, filaments, runtime.resolve());
+        // File-slot lookup keys are not exported preset names.
+        let source_selection = if self.direct_imports {
+            Cow::Owned(ProfileSelection::new_partial(
+                selection.process().map(str::to_owned),
+                selection.machine().map(str::to_owned),
+                selection.filaments().iter().map(|key| {
+                    let position = self.selectable[&(ProfileKind::Filament, key.clone())];
+                    self.document(position).name.clone()
+                }),
+            )?)
+        } else {
+            Cow::Borrowed(selection)
+        };
+        let composed = compose_resolved_profiles(
+            &source_selection,
+            machine,
+            process,
+            filaments,
+            runtime.resolve(),
+        );
         if let Some(group) = composed.metadata().inherits_group() {
             raw.insert_strings("inherits_group", group);
         }
@@ -117,16 +141,32 @@ impl Catalog {
             .selectable
             .get(&(kind, name.to_owned()))
             .ok_or_else(|| invalid(format!("selectable profile '{name}' was not found")))?;
-        // Direct CLI files do not resolve preset links (OrcaSlicer.cpp:1953-2010).
+        // Typed sparse files bypass preset resolution (OrcaSlicer.cpp:2121-2123).
         let layers = if self.direct_imports {
             vec![Cow::Borrowed(self.document(position))]
         } else {
             self.resolved_layers(position)?
         };
+        // PresetBundle.cpp:7627-7641 starts resolved vendor presets from collection defaults.
+        let completed_vendor = matches!(self.records[position].scope, super::Scope::Vendor(_))
+            && self.document(position).instantiation.as_deref() == Some("true");
+        let mut defaults = if completed_vendor {
+            super::super::project_refresh::default_preset_fields(kind)?
+        } else {
+            Default::default()
+        };
+        raw.extend(
+            defaults
+                .iter()
+                .filter(|(key, _)| super::raw::applies(kind, key))
+                .map(|(key, value)| (key.clone(), value.clone())),
+        );
         let mut fragments = Vec::with_capacity(layers.len());
         for layer in layers {
-            let (fragment, project) = ProfileFragment::from_catalog_values(layer.values())?;
-            fragments.push(fragment);
+            let (fragment, project) = ProfileFragment::from_catalog_values(
+                layer.values(),
+                std::mem::take(&mut defaults),
+            )?;
             runtime.overlay(project);
             raw.extend(
                 layer
@@ -135,20 +175,34 @@ impl Catalog {
                     .filter(|(key, _)| super::raw::applies(kind, key))
                     .map(|(key, value)| (key.clone(), value.clone())),
             );
+            // Config.cpp:1147-1149 converts authored JSON before preset completion.
+            if layer.fields.contains_key("thumbnails")
+                && let ProfilePayload::Machine(printer) = fragment.payload()
+                && let Some(thumbnails) = printer.present_thumbnails()
+            {
+                raw.insert(
+                    "thumbnails".to_owned(),
+                    RawConfigValue::Text(thumbnails.to_owned()),
+                );
+            }
+            fragments.push(fragment);
         }
         let mut merged = if self.direct_imports {
-            merge_direct_profile_fragment(&fragments, kind, name)?
+            merge_direct_profile_fragment(&fragments, kind, &self.document(position).name)?
         } else {
             merge_profile_fragments(&fragments, kind, name)?
         };
+        if completed_vendor {
+            super::super::preset_normalization::extend_default_config_length(raw)?;
+        }
         if kind == ProfileKind::Machine
             && !self.direct_imports
-            && super::super::preset_normalization::normalize_machine(raw)?
+            && (super::super::preset_normalization::normalize_machine(raw)? || completed_vendor)
         {
             let (printer, _, _, project) =
-                crate::options::json_deserialize::deserialize_preset_config::<
-                    crate::options::ProjectSettingsBuilder,
-                >(raw.clone().into_object())
+                crate::options::json_deserialize::deserialize_config_values(
+                    raw.clone().into_object(),
+                )
                 .map_err(SliceError::InvalidInput)?
                 .into_profile_parts();
             let MergedProfile::Machine { options, .. } = &mut merged else {
@@ -192,9 +246,8 @@ fn resize_empty_filament_gcodes(raw: &mut ProjectSettingsRaw) {
 
 /// `option(key, true)` with the option default (`Config.hpp` create path):
 /// absent keys are created from the registry default, present keys stay.
-/// The pairs are filtered out of the option registry, so every inserted
-/// default is a registry `OptionDefinition::default_value`.
-fn insert_default_gcodes(raw: &mut ProjectSettingsRaw, keys: &[&str]) {
+/// Every inserted value is the registered `OptionDefinition::default_value`.
+fn insert_default_options(raw: &mut ProjectSettingsRaw, keys: &[&str]) {
     for definition in crate::option_definitions() {
         if !keys.contains(&definition.key) {
             continue;

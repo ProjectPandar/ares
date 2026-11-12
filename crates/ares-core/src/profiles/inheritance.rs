@@ -188,10 +188,9 @@ pub fn merge_profile_fragments(
     merge_chain(&chain, target_kind)
 }
 
-/// Single-record composition for the CLI import path: `load_config_file`
-/// never resolves `inherits` (the chain reads are commented out upstream,
-/// `OrcaSlicer.cpp:1987,1991`), so an imported preset composes as its own
-/// chain of one. Parent metadata follows CLI file-source rules:
+/// Single-record composition for sparse typed CLI files: the early return
+/// at `OrcaSlicer.cpp:2121-2123` bypasses preset resolution without inherits.
+/// Parent metadata follows CLI file-source rules:
 /// system machine/process parents are cleared (`:2838-2842,2981-2985`),
 /// and filament parents are retained only for `User`/`user` (`:2189-2193`).
 pub(super) fn merge_direct_profile_fragment(
@@ -237,12 +236,6 @@ fn merge_chain(
                 };
                 merged.overlay(child.as_ref().clone());
             }
-            merged.normalize_present_thumbnails().map_err(|error| {
-                SliceError::InvalidInput(format!(
-                    "profile option thumbnails is invalid: {}",
-                    crate::thumbnail_error_string(error)
-                ))
-            })?;
             Ok(MergedProfile::Machine {
                 metadata,
                 options: merged.resolve(),
