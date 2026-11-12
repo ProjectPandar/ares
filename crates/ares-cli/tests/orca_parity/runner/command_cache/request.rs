@@ -12,6 +12,7 @@ use std::{
 pub(super) struct Output {
     pub(super) path: PathBuf,
     pub(super) directory: bool,
+    pub(super) cwd: bool,
 }
 
 pub(super) struct Request {
@@ -58,6 +59,7 @@ pub(super) fn normalize(
                 outputs.push(Output {
                     path: target,
                     directory,
+                    cwd: false,
                 });
             }
             "--datadir" => {
@@ -87,6 +89,12 @@ pub(super) fn normalize(
     if outputs.is_empty() {
         return None;
     }
+    normalized.push(json!({"implicit_cwd":"native-cli-diagnostics-v1","output":outputs.len()}));
+    outputs.push(Output {
+        path: work.to_owned(),
+        directory: true,
+        cwd: true,
+    });
     let environment = timed(&mut profile.environment_us, || {
         envs.iter().copied().collect::<BTreeMap<_, _>>()
     });
@@ -103,9 +111,29 @@ pub(super) fn normalize(
     })
 }
 
+pub(super) fn cwd_output(name: &std::ffi::OsStr) -> bool {
+    let Some(name) = name.to_str() else {
+        return false;
+    };
+    name == "result.json"
+        || name.strip_suffix(".log").is_some_and(|counter| {
+            counter.len() >= 5 && counter.bytes().all(|byte| byte.is_ascii_digit())
+        })
+}
+
 fn eligible(args: &[String], work: &Path) -> bool {
+    // Existing diagnostics may be appended to or replaced by Native, so keep them live.
+    if !fs::read_dir(work).is_ok_and(|entries| {
+        entries
+            .into_iter()
+            .all(|entry| entry.is_ok_and(|entry| !cwd_output(&entry.file_name())))
+    }) {
+        return false;
+    }
     let mut args = args.iter();
     let mut output = false;
+    let mut outputdir = false;
+    let mut slice = false;
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--outputdir" | "--export-3mf" => {
@@ -120,9 +148,11 @@ fn eligible(args: &[String], work: &Path) -> bool {
                     return false;
                 }
                 output = true;
+                outputdir |= arg == "--outputdir";
             }
             "--datadir" | "--load-settings" | "--load-filaments" | "--slice" | "--arrange"
             | "--debug" => {
+                slice |= arg == "--slice";
                 if args.next().is_none() {
                     return false;
                 }
@@ -131,7 +161,8 @@ fn eligible(args: &[String], work: &Path) -> bool {
             _ => {}
         }
     }
-    output
+    // Without outputdir Native keeps sliced G-code at PartPlate's temporary path.
+    output && (!slice || outputdir)
 }
 
 fn file(path: &Path, profile: &mut Profile) -> Option<Value> {

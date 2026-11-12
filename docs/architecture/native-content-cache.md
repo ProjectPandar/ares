@@ -81,6 +81,7 @@ Before writing implementation code, enumerate and bind a failing harness-level t
 6. A cached deterministic rejection changes its exit code, diagnostics, or failure classification.
 7. A timeout or crash is published and later replayed as a clean result.
 8. A replay or forced rerun accidentally reads or writes the ordinary command cache.
+9. A successful cached export restores the declared archive but drops Native's implicit cwd `result.json` or default logs.
 
 The failing checks must fail against the pre-implementation behavior where the new contract is absent, then pass after the implementation. The checks are harness-level and must not alter production comparators or test identities.
 
@@ -104,6 +105,22 @@ The implementation must provide:
 Only the configured base Native launcher uses this cache. Instrumented helper binaries retain their own producer boundaries. `run_live`, `run_live_with_env`, and `run_with_timeout` never enter lookup or publication. Existing cache-owned subprocesses, `NativeCase::slice`, explicit self-replay helpers, and environment-controlled fuzzy replays route through those live APIs. Replay qualification therefore cannot accidentally become a comparison against cached bytes.
 
 The result receipt hashes the entire result record. The record binds the producer, normalized request, code/status, capture hashes, and output-root tree hashes. Tree hashes include relative names, file bytes, and empty directories. Stored result records, captures, and trees must all validate before materialization. Only success and input rejections recognized by `stages::attributable` can be published; dynamically extracted option names must exist in the option-definition registry. A diagnostic header alone or a generic nonzero exit is not sufficient.
+
+## Implicit Native cwd products
+
+Declared output arguments are not the whole Native CLI output contract. At pinned source `345efec64c7b95a05ce5cf96df0dde66a158835c`:
+
+- `OrcaSlicer.cpp:535–586`, `record_exit_reson`, writes `outputdir/result.json` on Linux when outputdir is nonempty, otherwise the relative path `result.json` in the command cwd. The same function writes success and failure results.
+- `OrcaSlicer.cpp:1524–1535` initializes logging independently of outputdir. `PrintConfig.cpp:13196–13200` supplies an empty default logfile; `libslic3r/utils.cpp:197–200` delegates to Boost.Log. The pinned Boost1.86 `text_file_backend.hpp:402–408` defaults to `%5N.log`: zero-filled numeric counters with minimum width5.
+- `OrcaSlicer.cpp:7182–7207` uses `PartPlate` temporary G-code paths when outputdir is empty. These paths are not an output namespace the command cache can fully restore.
+
+Every eligible request therefore also declares a scoped cwd snapshot containing only `result.json` and numeric default log names, not inputs, command-capture directories, cache-owned directories or arbitrary cwd contents. Its stable `native-cli-diagnostics-v1` marker participates in the request digest, so old incomplete snapshots cannot hit the new request. The existing checksummed directory snapshot and private staging protocol validate and restore this output root alongside explicit outputs, including recorded absence of files. Cwd logs are captured even when an explicit outputdir exists because logging is independent of that flag.
+
+A populated cwd diagnostic namespace remains live: existing files may be appended to or replaced by Native and are not a clean replay destination. Any invocation containing `--slice` without `--outputdir` also remains live, even if it declares an export archive. Unsupported output/log flags continue to bypass the cache rather than extending this contract by guesswork.
+
+The Native subprocess regression calls the public stage entry twice with identical arguments and cwd, using an isolated cache. After the first live call it retains reference result/log bytes and removes generated outputs. The second call must be an actual cache hit and restore byte-identical `result.json` and `00000.log`; neither bypass nor a live rerun satisfies that assertion. The unmodified failing baseline reaches the second hit and then fails with ENOENT reading `result.json`.
+
+The runner audit distinguishes the affected `vendor_profile_compatibility::compare` export (ten printer cases; no outputdir) from `preset_include_controls::check` (cwd log reader using live `command::run`/unsupported export-settings arguments), explicit-outputdir result readers, and cache-owned/live result pipelines. Cache metadata and Ares-authored `result.json` reports are not Native cwd consumers. No comparator or incumbent consumer assertion is weakened.
 
 ## Deferred behavior
 

@@ -66,6 +66,17 @@ pub(super) fn load(entry: &Path, request: &Request, producer: &str) -> Option<(P
     Some((packet, captured))
 }
 
+fn copy_cwd_outputs(source: &Path, destination: &Path) -> io::Result<()> {
+    fs::create_dir(destination)?;
+    for entry in fs::read_dir(source)? {
+        let entry = entry?;
+        if super::request::cwd_output(&entry.file_name()) {
+            copy(&entry.path(), &destination.join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
 pub(super) fn store(
     entry: &Path,
     request: &Request,
@@ -77,7 +88,9 @@ pub(super) fn store(
     fs::create_dir(entry.join("outputs"))?;
     for (index, output) in request.outputs.iter().enumerate() {
         let destination = entry.join("outputs").join(index.to_string());
-        if output.path.try_exists()? {
+        if output.cwd {
+            copy_cwd_outputs(&output.path, &destination)?;
+        } else if output.path.try_exists()? {
             copy(&output.path, &destination)?;
         }
         outputs.push(fingerprint(&destination, output.directory)?);
