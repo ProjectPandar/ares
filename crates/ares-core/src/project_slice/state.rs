@@ -45,6 +45,14 @@ pub(super) fn prepare_project_source(
     // `OrcaSlicer.cpp:2653-2654`: the plain-3MF compatible-printers gate
     // fires after load and before parameter validation.
     super::compatibility::reject_incompatible_process(&project.documents().project_settings_raw)?;
+    // OrcaSlicer.cpp:3005 commits the report before validate(true):4272–4278.
+    // Earlier load/post-process/compatibility failures do not reach this snapshot.
+    if let Some(upward) = source.upward {
+        *upward.report = match upward.source {
+            Some(original) => original.select(upward.input)?,
+            None => Vec::new(),
+        };
+    }
     if source.validate_config {
         project.settings().validate_loaded_config(
             &project.documents().project_settings_raw,
@@ -53,14 +61,6 @@ pub(super) fn prepare_project_source(
     }
     let filament_count = project.cli_filament_count();
     project.initialize_cli_loaded_project_config(filament_count);
-    // CLI:2656 commits the original-machine report before plate selection
-    // and Print::validate. Early load/config failures above cannot leak it.
-    if let Some(upward) = source.upward {
-        *upward.report = match upward.source {
-            Some(original) => original.select(upward.input)?,
-            None => Vec::new(),
-        };
-    }
     prepare_loaded_project_slice_with_validation(
         project,
         source.plate,

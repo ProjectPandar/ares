@@ -2,14 +2,12 @@
 
 ## Boundary and authority
 
-This is the source-cited `OrcaSlicer.cpp` CLI adapter metadata port assigned by
-the coordinator, not a new Ares slicing pipeline. Base is
-`de07bfa9e4f17806398b7f5152cad35321b21cb7`; the unrelated nozzle branch stays
-unchanged at `e87c09966642bb0c3c31c2813a1d0d59d2681795`.
+This ports the `OrcaSlicer.cpp` CLI adapter's upward-machine report ordering.
+It does not introduce an Ares-owned slicing pipeline.
 
 Authority: OrcaSlicer v2.5.0-beta source
-`345efec64c7b95a05ce5cf96df0dde66a158835c`, with the frozen official binary
-and separately approved seeded replay evaluated independently.
+`345efec64c7b95a05ce5cf96df0dde66a158835c`. The official binary and seeded
+replay are evaluated independently.
 
 - `src/OrcaSlicer.cpp:2820–2851` fetches the original system machine's
   `upward_compatible_machine`, retaining the existing source-selection rules.
@@ -51,44 +49,38 @@ new public identity/report API or mutable global state. Existing Linux-only
 result-file emission remains in the CLI. Preserve vector order/multiplicity,
 nonempty-only emission and all existing source-selection behavior.
 
-## Native-first and test-first plan
+## Fixture and public CLI coverage
 
-1. Construct a retained input from the main stock H2D project
-   `tests/parity/master-extruder-id/stock-right-only.3mf`, changing only the
-   existing `use_firmware_retraction` option to `"1"` while its wipe vector
-   remains enabled. Record archive and ZIP-member payload provenance.
-2. Run original bytes through both frozen Native modes before authoring the
-   regression. Require actual `-18`, nonempty upward metadata, complete
-   stdout/stderr/result.json and no final G-code. If admission or another
-   premise fails, retain it separately and stop calling that attempt evidence
-   of the missing field. Native output is authority, not a hand-derived JSON.
-3. Write a public CLI E2E at the agreed result.json seam, then execute it on
-   the unchanged implementation. Exercise ordinary and `--dump-moves` entries
-   through their existing common report-aware path. Compare entire result.json
-   bytes and all fields with the explicitly authorized existing normalization
-   of only `prepare_time` and `export_time`; assert Ares retains deterministic
-   zero values and the helper changes no other field. Do not delete fields,
-   normalize machine arrays or add any other mask. Independently check exit/stdout/stderr and absent final
-   G-code/move CSV. Keep a repeatable, verifiable artifact per invocation.
-4. Only after the real failure, relocate the existing report assignment;
-   rerun the exact test and existing early/late failure controls in both modes.
-   Run fmt, locked workspace/all-target Clippy with warnings denied, fresh
-   core+WASM checks and changed Rust LOC checks, then submit one separate RR.
+The fixture derives from the stock H2D project
+`tests/parity/master-extruder-id/stock-right-only.3mf`. Only the existing
+`use_firmware_retraction` option changes to `"1"` while the wipe vector remains
+enabled. Archive and ZIP-member payload provenance identifies the input.
+
+Both Native modes return `-18` with nonempty upward metadata, complete
+stdout/stderr/result.json and no final G-code. Native output defines the
+comparison contract.
+
+The public CLI E2E exercises ordinary and `--dump-moves` entries through their
+existing common report-aware path. It compares entire result.json bytes and
+all fields with the existing normalization of only `prepare_time` and
+`export_time`, because those upstream members are uninitialized at this exit.
+It asserts Ares retains deterministic zeros and the helper changes no other
+field. Machine arrays are not normalized, and no other mask applies. Exit,
+stdout/stderr and absent final G-code/move CSV are checked independently. Each
+invocation retains a repeatable, verifiable artifact.
 
 Failure model: missing nonempty header; wrong machine source or array order;
 report leakage before post-process/compatibility rejection; changed error
 code/stdout/stderr/other JSON fields; empty-key emission; hidden timing/field
 filters; missing Native execution mislabeled as parity; changed `-100` behavior.
-No implementation-following unit tests substitute for public CLI E2E evidence.
+No implementation-following unit tests substitute for public CLI E2E coverage.
 
-## Native early-exit timing finding and authorized exception
+## Upstream uninitialized early-exit timings
 
-The first Native run at spec commit `534684a5b` reached actual `-18` with
-`["Bambu Lab H2D Pro 0.4 nozzle"]` in both modes. Its strict qualifier exited1:
-although official timings were0/0, seeded `prepare_time` was140737174491600
-and `export_time` was140737488334736. The zero-timing assumption above the
-original test plan was wrong. Preserve that run and its failed qualifier; no
-Native result was changed or rerun to select favorable values.
+Both Native modes return `-18` with
+`["Bambu Lab H2D Pro 0.4 nozzle"]`. Observed official timings were0/0, while
+seeded `prepare_time` was140737174491600 and `export_time` was140737488334736.
+The timing fields cannot be assumed to contain zero.
 
 Source: `OrcaSlicer.cpp:258–259` declares the two `size_t` members without
 initializers; `:1387` default-initializes stack `sliced_info_t sliced_info;`;
@@ -97,9 +89,9 @@ initializers; `:1387` default-initializes stack `sliced_info_t sliced_info;`;
 upstream uninitialized-read defect, not useful durations to port. Ares keeps
 its existing deterministic zero values for this early failure.
 
-The coordinator explicitly authorized the existing
+The upstream uninitialized reads require the existing
 `native_wall_clock::result_comparison_bytes` exception for **only**
-`prepare_time` and `export_time`. The new E2E must name these two fields,
+`prepare_time` and `export_time`. The E2E names these two fields and must
 assert its normalized Native JSON equals the original JSON with exactly those
 two values set to0, and compare the remaining complete serialized bytes
 strictly against Ares. This checks no extra helper mask can silently apply.
@@ -108,28 +100,19 @@ return code, messages, configuration metadata, warnings, strict flag, and
 formatting retain the full comparison contract. No Native patch, Ares
 uninitialized-value emulation, extra normalization or changed error behavior.
 
-Evidence: `upward-machine-minus18-de07bfa9e-r1/native-r1/`, particularly
-`INPUT.json`, each mode's raw `native/result.json`, root `RESULT.json` and
-`PREMISE-TIMING-FAILURE-r1.md`. Input SHA256:
+The input SHA256 is
 `5f7adc3f35fdb9a06ee98964178990cd41906ee1610ef7e4e0114f716daced29`.
-This is Native field-contract evidence; Ares parity remains to be tested.
 
-## The reported -100 analogue: already covered, not implementation scope
+## Existing -100 coverage
 
-Coordinator clarification: the earlier W3 classification note has no separate
-input/evidence and refers to main's existing
 `cli_upward_machine_result::cli_custom_gcode_failure_preserves_nonempty_upward_machine_header`
-and existing writer. `docs/architecture/cli-upward-machine-result-green-candidate.md`
-records its prior official/seeded coverage. That late custom-G-code `-100`
-path already receives the snapshot; the newly reported `-18` defect is the
-loaded-config validation ordering ahead of publication. They share transport
-but are not an additional unported `-100` writer defect. Reuse that existing
-E2E as a regression control, without altering its assertions or implementing
-another `-100` route.
+already covers the existing writer in both Native modes. That late custom-G-code
+`-100` path receives the snapshot. The `-18` defect is loaded-config validation
+preceding publication. The two exits share transport. Keep the existing E2E's
+assertions as a regression control without implementing another `-100` route.
 
 Deferred: broader CLI result metadata, downward discovery/checking, new error
 families, load-settings/profile-controller sequencing, machine-switch/update
 orchestration, validation behavior, grouping/G-code changes and cross-platform
 runtime certification. This slice does not certify all CLI entry variants or
-workspace-wide Native parity. The nozzle branch and its pending B54 rebase
-remain a separate workstream.
+workspace-wide Native parity.

@@ -137,16 +137,5 @@
     }
   ],
   "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
-  "upstream_boundary": "OrcaSlicer.cpp:3005 -> validate(true):4272-4278 -> record_exit_reson:550-556",
-  "native_evidence": "upward-machine-minus18-de07bfa9e-r1/native-r1",
-  "native_actual_code": -18,
-  "native_upward": [
-    "Bambu Lab H2D Pro 0.4 nozzle"
-  ],
-  "authorized_timing_exception": [
-    "prepare_time",
-    "export_time"
-  ],
-  "native_initial_qualifier_exit": 1,
-  "native_initial_qualifier_reason": "seeded uninitialized timing members; explicit coordinator ruling retained"
+  "upstream_boundary": "OrcaSlicer.cpp:3005 -> validate(true):4272-4278 -> record_exit_reson:550-556"
 }

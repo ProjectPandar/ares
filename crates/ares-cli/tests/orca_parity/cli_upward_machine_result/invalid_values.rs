@@ -62,7 +62,8 @@ fn invalid_values(dump_moves: bool) {
         native_json["upward_compatible_machine"],
         json!(["Bambu Lab H2D Pro 0.4 nozzle"])
     );
-    // The coordinator permits only these two upstream uninitialized timing members.
+    // OrcaSlicer.cpp:258–259 leaves these members uninitialized.
+    // They are read at :555–556 before the first assignment at :6294.
     let timing_exception = ["prepare_time", "export_time"];
     let mut expected = native_json.clone();
     for field in timing_exception {
