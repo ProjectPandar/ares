@@ -45,6 +45,17 @@ async fn caller_rgba_colpic_matches_native_export_through_public_project_slice()
 }
 
 #[tokio::test]
+async fn jpg_partial_mcus_match_native() {
+    support::check(
+        "jpg-partial-mcus",
+        "31x23/JPG",
+        vec![samples::high_color(31, 23)],
+        Expected::Blocks,
+    )
+    .await;
+}
+
+#[tokio::test]
 async fn colpic_at_size_cap_with_palette_overflow_matches_native() {
     support::check(
         "colpic-at-cap",
