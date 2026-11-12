@@ -9,6 +9,13 @@ const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const orca = process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`;
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/preset-import/", import.meta.url));
 
+/** A BBL machine's first `default_filament_profile`, inherited from its parents. */
+const defaultFilament = (machine: string): string => {
+  const file = readFileSync(`${orca}/resources/profiles/BBL/machine/${machine}.json`, "utf8");
+  const preset = JSON.parse(file) as { inherits: string; default_filament_profile?: string[] };
+  return preset.default_filament_profile?.[0] ?? defaultFilament(preset.inherits);
+};
+
 interface Compatible {
   processes: string[];
   filaments: string[];
@@ -168,7 +175,11 @@ test("imported printer presets list the compatible processes and filaments", asy
   const bbl = vendorProfiles(["BBL"]);
   const visible = expected.withProcess.filaments.filter((name) => !bbl.filaments.has(name) || bbl.seeded.has(name));
   expect(filaments.sort()).toEqual([...visible].sort());
-  await expect(sliceButton).toHaveAttribute("title", "Select a filament preset for every filament to slice");
+  // update_compatible(Always) on the printer change (Tab.cpp:7702-7713) filled the empty slot with the
+  // printer's preferred default_filament_profile (PresetBundle.cpp:8637, 8656-8664).
+  await expect(page.getByRole("button", { name: "Filament 1 preset", exact: true }))
+    .toHaveText(defaultFilament("Bambu Lab X1 Carbon 0.4 nozzle"));
+  await expect(sliceButton).toBeEnabled();
   // The imported PLA: Cool Plate, the 3MF plate, supports it.
   await choose(page, "Filament 1 preset", visible.find((name) => !bbl.filaments.has(name))!);
   // A 3MF with every preset selected slices through sliceWithProfiles.
