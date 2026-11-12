@@ -4,7 +4,7 @@ use crate::{
 };
 
 use super::catalog::{Catalog, selection};
-use super::load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_load_settings};
+use super::load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_project_load_settings};
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
 /// transform (`OrcaSlicer.cpp:4376-4392`): bed-center placement plus the
@@ -285,8 +285,7 @@ fn with_load_settings_source<T>(
         settings,
         filaments,
     };
-    let load_names = super::load_settings::load_settings_preset_names(&request)?;
-    let composed = compose_load_settings(&request)?;
+    let (composed, load_names) = compose_project_load_settings(input, &request)?;
     // `OrcaSlicer.cpp:1682-1690`: the embedded `post_process` check lives
     // in the 3MF load block, so the composite entry validates 3MF inputs
     // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.

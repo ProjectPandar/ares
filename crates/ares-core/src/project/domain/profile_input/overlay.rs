@@ -238,16 +238,18 @@ pub(super) fn merged_profile_raw(
             RawConfigValue::List(values),
         ));
     }
-    // `:3117-3337`: single-variant selections rebuild `filament_self_index`
-    // as a plain 1..=filament_count identity.
-    inserts.push((
-        "filament_self_index".to_owned(),
-        RawConfigValue::List(
-            (1..=embedded_count)
-                .map(|index| RawConfigValue::Text(index.to_string()))
-                .collect(),
-        ),
-    ));
+    // Without loaded filament configs the embedded filament state is retained
+    // (OrcaSlicer.cpp:2280–2374); only selected slots rebuild this index.
+    if selected > 0 {
+        inserts.push((
+            "filament_self_index".to_owned(),
+            RawConfigValue::List(
+                (1..=embedded_count)
+                    .map(|index| RawConfigValue::Text(index.to_string()))
+                    .collect(),
+            ),
+        ));
+    }
 
     // `:2817-2818`: group vectors are embedded_count + 2, indexed
     // process | filaments | machine; only the loaded slots are written.
@@ -266,6 +268,13 @@ pub(super) fn merged_profile_raw(
         let len = embedded_count + 2;
         let values = (0..len)
             .map(|index| {
+                if index == 0 && selected == 0 {
+                    return embedded_raw
+                        .get("inherits_group")
+                        .and_then(|group| group.element(0))
+                        .cloned()
+                        .unwrap_or_else(|| RawConfigValue::Text(String::new()));
+                }
                 inherits_slot(
                     &inherits,
                     embedded_raw.get("inherits_group"),

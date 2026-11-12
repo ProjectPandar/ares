@@ -36,6 +36,8 @@ pub struct CliUpwardMachine<'a> {
 pub struct SlicedPlate {
     /// `PrintObject` warnings captured before export, including on later failure.
     pub warnings: Vec<crate::PrintWarning>,
+    /// Original upward vector committed after compatibility (OrcaSlicer.cpp:3005).
+    pub upward_machines: Vec<String>,
     pub triangle_count: usize,
     /// The f32-stored value widened to f64.
     pub layer_height: f64,
