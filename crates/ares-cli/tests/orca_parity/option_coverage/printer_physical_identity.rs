@@ -11,6 +11,8 @@ use std::{fs, path::Path};
 
 #[path = "printer_physical_identity/input.rs"]
 mod input;
+#[path = "printer_physical_identity/picker_context.rs"]
+mod picker_context;
 
 const COMPLETE: &[&str] = &["1", "1", "2", "2"];
 const REVERSED: &[&str] = &["2", "2", "1", "1"];
