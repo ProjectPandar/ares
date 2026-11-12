@@ -101,7 +101,7 @@ async fn missing_frames_and_empty_definitions_emit_no_blocks_or_other_changes() 
 }
 
 #[tokio::test]
-async fn active_thumbnail_errors_match_native_categories_and_combinations() {
+async fn supplied_images_preserve_reachable_thumbnail_load_errors() {
     for definitions in [
         "bad",
         "0x24/PNG",
@@ -112,11 +112,11 @@ async fn active_thumbnail_errors_match_native_categories_and_combinations() {
         "1000x24/UNKNOWN",
         "bad, 1000x24/UNKNOWN",
     ] {
-        support::check(
-            "invalid",
+        support::unchanged(
+            project::ENDER3,
             definitions,
             vec![samples::asymmetric()],
-            Expected::Error,
+            Control::ExistingLoadError,
         )
         .await;
     }
