@@ -3,6 +3,9 @@
 //! incomplete channel comparison and a frozen Native result masking admission.
 #![cfg(target_os = "linux")]
 
+#[path = "cli_upward_machine_result/invalid_values.rs"]
+mod invalid_values;
+
 use std::fs;
 
 use crate::{

@@ -1,0 +1,152 @@
+{
+  "source": "tests/parity/master-extruder-id/stock-right-only.3mf",
+  "source_base": "de07bfa9e4f17806398b7f5152cad35321b21cb7",
+  "source_sha256": "69d425b79297129c1b3894ee106269d3b33b7f1badcbeed15598dfe774cff09a",
+  "input_sha256": "5f7adc3f35fdb9a06ee98964178990cd41906ee1610ef7e4e0114f716daced29",
+  "mutation": {
+    "key": "use_firmware_retraction",
+    "original": "0",
+    "input": "1"
+  },
+  "members": [
+    {
+      "name": "[Content_Types].xml",
+      "original_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+      "input_sha256": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+      "payload_unchanged": true,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "3D/3dmodel.model",
+      "original_sha256": "7bf4457378ffa82273ad03de1267e7bd84b56ac77dc3a9fabcef0b15029163b9",
+      "input_sha256": "7bf4457378ffa82273ad03de1267e7bd84b56ac77dc3a9fabcef0b15029163b9",
+      "payload_unchanged": true,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "3D/_rels/3dmodel.model.rels",
+      "original_sha256": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+      "input_sha256": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+      "payload_unchanged": true,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "3D/Objects/cube10.stl_1.model",
+      "original_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+      "input_sha256": "fc8c0f2793adfeede8a5077a42603545016c0c02b06c8dd411e7d17573afb805",
+      "payload_unchanged": true,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Metadata/project_settings.config",
+      "original_sha256": "6f1f478ae4ff96c41f4723b9437b1dd60f083ca3968b9519f16b63d1f2d797f4",
+      "input_sha256": "5287aa5946ad0d57be0e739f7b9b23f06177129bba4e65f597a5d74950accc2c",
+      "payload_unchanged": false,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Metadata/model_settings.config",
+      "original_sha256": "bae1d3bac6734d0aaafb061c6575f984d07d65c23dd24ea664561bb026a59c99",
+      "input_sha256": "bae1d3bac6734d0aaafb061c6575f984d07d65c23dd24ea664561bb026a59c99",
+      "payload_unchanged": true,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Metadata/slice_info.config",
+      "original_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+      "input_sha256": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+      "payload_unchanged": true,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Metadata/filament_sequence.json",
+      "original_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+      "input_sha256": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+      "payload_unchanged": true,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "_rels/.rels",
+      "original_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+      "input_sha256": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9",
+      "payload_unchanged": true,
+      "date_time": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "upstream_revision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
+  "upstream_boundary": "OrcaSlicer.cpp:3005 -> validate(true):4272-4278 -> record_exit_reson:550-556",
+  "native_evidence": "upward-machine-minus18-de07bfa9e-r1/native-r1",
+  "native_actual_code": -18,
+  "native_upward": [
+    "Bambu Lab H2D Pro 0.4 nozzle"
+  ],
+  "authorized_timing_exception": [
+    "prepare_time",
+    "export_time"
+  ],
+  "native_initial_qualifier_exit": 1,
+  "native_initial_qualifier_reason": "seeded uninitialized timing members; explicit coordinator ruling retained"
+}
