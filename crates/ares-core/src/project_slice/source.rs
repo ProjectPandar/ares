@@ -56,6 +56,7 @@ pub(crate) struct ProfileInput<'a> {
     /// `OrcaSlicer.cpp:2575-2620` loaded-names adjudication; `None` on
     /// the catalog/profile paths.
     pub(crate) load_names: Option<&'a super::compatibility::LoadedPresetNames>,
+    pub(crate) retained_refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
     pub(crate) placement: crate::profiles::Placement,
     /// CLI composite entries set this; the profile path checks the
     /// embedded `post_process` on it before overlay (O5).

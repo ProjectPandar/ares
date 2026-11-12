@@ -22,6 +22,8 @@ pub(crate) struct SelectedProfile<'a> {
     /// CLI composite entries set this; the 3MF overlay checks the embedded
     /// `post_process` before applying profiles (O5).
     pub(crate) validate_print: bool,
+    pub(crate) load_names: Option<&'a crate::project_slice::compatibility::LoadedPresetNames>,
+    pub(crate) retained_refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
 }
 
 /// The selected-profile overlay onto a raw settings view:
@@ -101,7 +103,7 @@ pub(super) fn merged_profile_raw(
         settings,
         profile_raw,
         filament_raws,
-        validate_print: _,
+        ..
     } = profile;
     let OverlayContext {
         selected,

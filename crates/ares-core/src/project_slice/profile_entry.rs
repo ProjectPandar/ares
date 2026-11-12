@@ -37,18 +37,21 @@ pub(super) fn load_with_profile(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
-    load_with_profile_preparation(project, profile).map(|(loaded, _)| loaded)
+    load_with_profile_preparation(project, profile, None).map(|(loaded, _)| loaded)
 }
 
 fn load_with_profile_preparation(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
+    upward_report: Option<&mut Vec<String>>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     let selected = SelectedProfile {
         settings: profile.composed.settings(),
         profile_raw: profile.raw,
         filament_raws: profile.filament_raws,
         validate_print: project.validate_print,
+        load_names: profile.load_names,
+        retained_refresh: profile.retained_refresh,
     };
     match crate::InputFormat::detect(project.bytes) {
         crate::InputFormat::ThreeMf => Project::from_3mf_with_profiles(
@@ -57,6 +60,7 @@ fn load_with_profile_preparation(
             project.overrides,
             project.plate,
             project.edits,
+            upward_report,
         ),
         _ => Project::from_stl_with_profiles(
             project.bytes,
@@ -77,14 +81,15 @@ pub(crate) fn load_and_place(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
-    load_and_place_with_preparation(project, profile).map(|(loaded, _)| loaded)
+    load_and_place_with_preparation(project, profile, None).map(|(loaded, _)| loaded)
 }
 
 fn load_and_place_with_preparation(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
+    upward_report: Option<&mut Vec<String>>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    let (mut loaded, preparation) = load_with_profile_preparation(project, profile)?;
+    let (mut loaded, preparation) = load_with_profile_preparation(project, profile, upward_report)?;
     if profile.placement == Placement::Center {
         let bed = bed_center(&profile.composed.settings().printer.remaining.printable_area);
         loaded.center_instances_around_point(bed);
@@ -101,31 +106,20 @@ pub(super) fn prepare_profile_slice(
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let (loaded, preparation) = load_and_place_with_preparation(project, profile)?;
+    let (loaded, preparation) = load_and_place_with_preparation(project, profile, upward_report)?;
     // `OrcaSlicer.cpp:2575-2620,:2653-2654`: the compatible-printers
     // gate fires after load and before parameter validation —
     // loaded-names adjudication for the `--load-settings` composite
     // (branches 1-2); the catalog/profile entry has no CLI file loop
     // (its adjudication semantics are a deferred slice — no gate).
-    if let Some(names) = profile.load_names {
+    if let Some(names) = profile.load_names
+        && names.embedded.is_none()
+    {
         super::compatibility::reject_incompatible_load_settings(
             &loaded.documents().project_settings_raw,
             names,
             profile.raw,
         )?;
-        // OrcaSlicer.cpp:3005 commits this before later validation/slicing.
-        if let Some(embedded) = &names.embedded
-            && let Some(report) = upward_report
-        {
-            *report = embedded
-                .get("upward_compatible_machine")
-                .map(|values| {
-                    (0..values.len())
-                        .map(|index| values.element(index).unwrap().token().unwrap())
-                        .collect()
-                })
-                .unwrap_or_default();
-        }
     }
     if project.validate_config {
         loaded.settings().validate_loaded_config(
