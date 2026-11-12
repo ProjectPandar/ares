@@ -1,4 +1,106 @@
 use ares_core::{PlaterSession, Project, StlFile, StlImportOptions};
+use serde_json::json;
+
+#[tokio::test]
+async fn both_slice_entries_use_the_complete_original_model_and_apply_edits_once() {
+    let base = part([0.8, 0.3, 0.2], [0.0; 3]);
+    let upper = part([0.3, 0.8, 0.2], [12.0, 4.0, 2.0]);
+    let files = [
+        StlFile {
+            name: "base.stl",
+            bytes: &base,
+        },
+        StlFile {
+            name: "upper.stl",
+            bytes: &upper,
+        },
+    ];
+    let vendor = json!({"id":"Acme", "index":{"name":"Acme", "machine_list":[{"sub_path":"machine.json"}], "process_list":[{"sub_path":"process.json"}], "filament_list":[{"sub_path":"filament.json"}]}, "files":{
+        "machine.json":{"type":"machine", "name":"A1", "from":"system", "instantiation":"true", "nozzle_diameter":[0.4], "printable_area":["0x0","256x0","256x256","0x256"], "use_relative_e_distances":false},
+        "process.json":{"type":"process", "name":"Standard", "from":"system", "instantiation":"true", "layer_height":"0.2"},
+        "filament.json":{"type":"filament", "name":"PLA", "from":"system", "instantiation":"true", "filament_diameter":[1.75]}
+    }});
+    let catalog = json!({"vendors":[vendor], "imports":[]}).to_string();
+    let selection = json!({"machine":"A1", "process":"Standard", "filaments":["PLA"]}).to_string();
+    let overrides = ares_core::ConfigOverrides::default();
+    let request = ares_core::ProfileSliceRequest {
+        filename: "base.stl",
+        catalog_json: &catalog,
+        selection_json: &selection,
+        plate: Some(1),
+        overrides: &overrides,
+        placement: ares_core::Placement::Center,
+    };
+    let options = StlImportOptions {
+        as_multipart: true,
+        auto_drop: true,
+    };
+    let mut session = PlaterSession::load_stl_files_with_profiles(&files, options, request)
+        .await
+        .unwrap();
+    session.translate_instance(0, 0, [10.0, 0.0, 0.0]).unwrap();
+    session.increase_instances(0, 1).unwrap();
+    let positions: Vec<_> = session.project().objects()[0]
+        .instances()
+        .iter()
+        .map(|i| i.transform())
+        .collect();
+    assert_eq!(positions.len(), 2);
+    let metadata = ares_core::GenerationMetadata::deterministic(2026, 11, 12, 0, 0, 0);
+    let plain = ares_core::slice_plater_plate(
+        &session,
+        ares_core::PlaterSlice {
+            plate: Some(1),
+            overrides: &overrides,
+            validate_print: false,
+        },
+        metadata,
+        ares_core::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    let profiled = ares_core::slice_plater_with_profiles(
+        &session,
+        request,
+        false,
+        metadata,
+        ares_core::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    assert_eq!(plain.gcode, profiled.gcode);
+    assert!(plain.gcode.windows(3).any(|w| w == b"G1 "));
+    assert_eq!(
+        session.project().objects()[0]
+            .instances()
+            .iter()
+            .map(|i| i.transform())
+            .collect::<Vec<_>>(),
+        positions
+    );
+    let alternate = [
+        files[0],
+        StlFile {
+            name: "upper.stl",
+            bytes: &base,
+        },
+    ];
+    let mut other = PlaterSession::load_stl_files_with_profiles(&alternate, options, request)
+        .await
+        .unwrap();
+    other.translate_instance(0, 0, [10.0, 0.0, 0.0]).unwrap();
+    other.increase_instances(0, 1).unwrap();
+    let changed = ares_core::slice_plater_with_profiles(
+        &other,
+        request,
+        false,
+        metadata,
+        ares_core::SlicerContext::new(0),
+    )
+    .await
+    .unwrap();
+    assert_ne!(plain.gcode, changed.gcode);
+}
 
 fn part(scale: [f32; 3], offset: [f32; 3]) -> Vec<u8> {
     let mut bytes = include_bytes!("../../../tests/parity/cube10.stl").to_vec();
