@@ -219,7 +219,7 @@ pub struct ProfileSettings(pub(crate) crate::project::raw_settings::ProjectSetti
 
 /// Composes the request and runs `body` on the resulting source; both the
 /// slice entries and the settings view share this single compose path.
-fn with_profile_source<T>(
+pub(super) fn with_profile_source<T>(
     input: &[u8],
     request: ProfileSliceRequest<'_>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
@@ -253,14 +253,15 @@ pub(crate) fn with_edited_profile_source<T>(
         ));
     }
     let catalog = Catalog::from_json(catalog_json)?;
-    if let Some(uptodate) = super::project_refresh::selection(selection_json)? {
+    if let Some(policy) = super::project_refresh::selection(selection_json)? {
         return body(ProjectSource {
             input,
             plate,
             profile: None,
             refresh: Some(super::ProjectPresetRefresh {
                 catalog: &catalog,
-                uptodate,
+                policy,
+                filename,
                 placement,
             }),
             overrides,

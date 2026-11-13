@@ -14,6 +14,7 @@ mod numeric;
 mod plate;
 pub(crate) mod plate_config;
 mod plate_custom_gcodes;
+pub(crate) mod preset_version;
 pub(crate) mod raw_settings;
 pub(crate) mod region_graph;
 mod relationships;

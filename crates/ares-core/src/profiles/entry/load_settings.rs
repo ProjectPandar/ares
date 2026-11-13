@@ -2,10 +2,11 @@ use super::Placement;
 use crate::{
     GenerationMetadata, SliceError, SlicerContext,
     profiles::{
+        ProjectPresetPolicy,
         catalog::Catalog,
         load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_project_load_settings},
     },
-    project_slice::{ProfileInput, ProjectSource, slice_source},
+    project_slice::{ProfileInput, ProjectInput, ProjectSource, slice_source},
 };
 
 /// Model identity and preset files supplied by the native
@@ -72,7 +73,7 @@ fn with_load_settings_source<T>(
     // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.
     let validate_print = crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf;
     body(ProjectSource {
-        bytes: input,
+        input: ProjectInput::Bytes(input),
         plate,
         profile: Some(ProfileInput {
             filename,
@@ -83,7 +84,8 @@ fn with_load_settings_source<T>(
             retained_refresh: catalog.as_ref().map(|catalog| {
                 crate::profiles::ProjectPresetRefresh {
                     catalog,
-                    uptodate,
+                    policy: ProjectPresetPolicy::Cli { uptodate },
+                    filename,
                     placement,
                 }
             }),
