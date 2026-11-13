@@ -115,5 +115,40 @@ gcode_id as u32 in takeIds(), including phantom vertices copied from curr.
 The large16777217 unit case and both browser oracle projections explicitly
 exercise lossless IDs. No web temporary conversion code was deleted.
 
+## 2.5.0 path starts: acceleration and jerk
+
+OrcaSlicer v2.5.0 (`40ecc66f7`) `LibVGCodeWrapper.cpp:221-237`,
+`starts_path`: a move that is not an option marker (Noop, Travel, Wipe,
+Extrude) starts a path, and gets a phantom vertex (`:283-304`), when it is
+the first move or differs from the previous move in type, extrusion role,
+`mm3_per_mm`, `acceleration` or `jerk`. `ares-vgcode::convert`
+(`convert.rs:37-48`) ports the whole condition. The comparator's oracle-side
+projection (`web/e2e/wasmMovesCompare.mjs`) still used the older
+type/role/flow condition, so the browser had 196 more phantom vertices than
+it projected for Ender3, each at an acceleration or jerk change.
+
+`--dump-moves` has no acceleration or jerk column. The same oracle run also
+writes `--dump-move-dynamics` (`tools/chain-probe/procgcode-dynamics.patch`):
+one row per `GCodeProcessorResult::moves` entry with the raw
+`MoveVertex::acceleration`, `jerk` and `actual_feedrate` printed `%.9g`,
+which round-trips f32. The comparator:
+
+- asserts the dynamics header and that each row has the same `gcode_id`,
+  type and `internal_only` as the `--dump-moves` row at the same index;
+- projects path starts with the whole `starts_path` condition, comparing
+  acceleration and jerk as f32;
+- requires each vertex's acceleration and jerk to equal the oracle's f32
+  value exactly, phantom vertices taking the current move's values as
+  upstream does;
+- requires each vertex's `actual_feedrate` to equal the oracle's exactly:
+  the current move's value, the previous move's for a phantom vertex
+  (`:288-296`, `:308-317`). M853 deferred this field; Ares now fills it.
+
+Failure modes this rules out: a dynamics dump out of step with the moves dump
+(header and per-row identity), a projection that misses the acceleration or
+jerk split (vertex count), and Ares values that differ from GCodeProcessor's
+(per-vertex exact comparison, no bound). Both fixtures run; a missing dump
+fails the run.
+
 Browser rendering UI integration is a separate web slice, which also removes
 the temporary conversion. M854 remains a separate next slice.
