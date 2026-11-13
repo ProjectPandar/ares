@@ -20,6 +20,8 @@ use sha2::{Digest, Sha256};
 
 use crate::runner::{OrcaRunner, stages};
 
+#[path = "power_loss_recovery/planner_boundaries.rs"]
+mod planner_boundaries;
 #[path = "power_loss_recovery/queue_flush.rs"]
 mod queue_flush;
 
