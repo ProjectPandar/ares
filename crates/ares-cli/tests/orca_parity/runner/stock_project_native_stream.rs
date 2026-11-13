@@ -22,9 +22,9 @@ fn compare(reference: &[u8], actual: &[u8], artifacts: &Path) -> Result<(), Stri
 }
 
 #[test]
-fn project_matches_initialized_orca_242_ordered_bytes() {
+fn project_matches_initialized_orca_ordered_bytes() {
     let Some(runner) = producer::runner(
-        "runner::stock_project_native_stream::project_matches_initialized_orca_242_ordered_bytes",
+        "runner::stock_project_native_stream::project_matches_initialized_orca_ordered_bytes",
     ) else {
         return;
     };
