@@ -66,9 +66,9 @@ async fn extruder_printable_height_2100_loaded_config() {
 }
 
 /// Anycubic Kobra S1 Max carries `retraction_distances_when_cut: ["0"]`
-/// (below [10,18]) plus `filament_flush_temp: ["nil"]` — the nil `coInts`
-/// element is the `INT_MAX` sentinel (Config.hpp:1013), which
-/// `is_value_valid` reports out-of-range (max 1500). Two sorted lines.
+/// (below [10,18]) plus `filament_flush_temp: ["nil"]`. Vendor loading completes
+/// the whole nil vector from its parent/default before validation
+/// (Preset.cpp:313-370; PresetBundle.cpp:7781-7848), retaining only the retraction error.
 #[tokio::test]
 async fn nil_flush_temp_and_retraction_zero_loaded_config() {
     original_profile(&RangeCase {
@@ -76,7 +76,7 @@ async fn nil_flush_temp_and_retraction_zero_loaded_config() {
         machine: "Anycubic Kobra S1 Max 0.6 nozzle",
         process: "0.30mm Standard @Anycubic Kobra S1 Max 0.6 nozzle",
         filament: "Anycubic PLA @Anycubic Kobra S1 Max 0.6 nozzle",
-        error_lines: "filament_flush_temp: nil not in range [0, 1500]\nretraction_distances_when_cut: 0 not in range [10, 18]",
+        error_lines: "retraction_distances_when_cut: 0 not in range [10, 18]",
     })
     .await;
 }
