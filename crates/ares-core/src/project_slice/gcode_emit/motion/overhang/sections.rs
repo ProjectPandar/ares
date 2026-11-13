@@ -9,6 +9,7 @@ pub(super) fn speed_sections(
     width: f32,
     reference_speed: f64,
     options: &MotionOptions,
+    is_bridge_infill: bool,
 ) -> Vec<(f32, f32)> {
     let reference_speed_f32 = reference_speed as f32;
     let band_speeds = options.overhang_speed_bands.map(|value| {
@@ -18,7 +19,7 @@ pub(super) fn speed_sections(
             .map(|speed| source_dynamic_speed(speed, reference_speed, reference_speed_f32))
             .unwrap_or(reference_speed_f32)
     });
-    let severe_speed = if options.slowdown_for_curled_perimeters {
+    let severe_speed = if options.slowdown_for_curled_perimeters && !is_bridge_infill {
         band_speeds[3]
     } else {
         source_dynamic_speed(options.bridge_speed, reference_speed, reference_speed_f32)
