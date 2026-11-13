@@ -77,6 +77,22 @@ narrowing, not zero and not an error. Failure modes are a layer before the first
 change (negative signed distance), the first-change layer (zero), later layers
 (positive), and the absent-index sentinel. Do not saturate or clamp the result.
 
+## Included compacted nozzle-entry prerequisite
+
+The Type1 two-nozzle cases also expose an existing Ares omission from
+`82e91bd47` (already present upstream before `39408fa1f`). Port both branches
+of `GCode.cpp:1231–1250` at `40ecc66f7`, not a new height policy. When the
+compacted tower is below the object and `tcr.print_z` is above the live writer Z,
+`compact_intower_nc_travel` makes the nozzle-start travel target the tower Z
+directly. Otherwise, travel at the normal layer Z and, when compacted below the
+object, use raw `travel_to_z(z)` before unretraction and nozzle-change extrusion.
+
+The Rust boundary is Type1 `emit.rs` plus the existing tower-travel request's
+Z target in `motion/tower.rs` and `motion/path/start_travel.rs`. Preserve the
+normal nominal-Z target for all other callers. Keep this omission's correction
+in its own production commit before the `39408fa1f` restoration change; do not
+attribute it to `39408fa1f` or include the other `9ed545` behavior.
+
 ## E2E contract and failure modes
 
 Use the upstream test's eight combinations: Type1/Type2 × one/two physical
@@ -84,6 +100,12 @@ nozzles × nonempty/empty custom macro. The public seam is Native CLI and the
 public slicing API receiving the same repeatable 3MF bytes. Build the source
 scenario: 10×10×10 mm and 10×10×2 mm objects, 0.2 mm layers, filament 2 only on
 top surfaces, tower at 30×30 and sparse tower layers skipped.
+
+Add a Type1 two-nozzle case whose end-filament macro sets live writer Z above
+the compacted tower. Establish from Native output that the conditional explicit
+descent occurs before nozzle-change extrusion, then require the same Ares
+observation. This exercises the other nozzle-entry branch without weakening any
+of the eight original height contracts.
 
 Retain input, complete Native/Ares G-code, independent parsed height observations
 and the unchanged whole-output comparator's result. First establish that Native
@@ -103,7 +125,8 @@ extrusions, rather than letting an empty observation set satisfy a check.
 Commit this source specification first, then the E2E tests and their failing
 runs, then production changes. Run the original 48 whole-output cases, six
 planner controls and existing Marlin control unchanged in both final-release
-modes, alongside the eight new height cases. Enumerate each of the 47 preceding
+modes, alongside the eight new height cases and the elevated nozzle-entry case.
+Enumerate each of the 47 preceding
 failures with its before/after first difference: resolved restoration/empty
 expansion versus an independently remaining cause. Keep failures visible;
 never broaden a comparator or assign every byte to this commit by assumption.

@@ -8,7 +8,12 @@ use super::{EMPTY_KLIPPER, slice_native};
 use crate::runner::OrcaRunner;
 use serde_json::{Value, json};
 
-fn project(tower_type: &str, two_nozzles: bool, custom_macro: bool) -> Vec<u8> {
+fn project(
+    tower_type: &str,
+    two_nozzles: bool,
+    custom_macro: bool,
+    high_nozzle_entry: bool,
+) -> Vec<u8> {
     let mut archive = zip::ZipArchive::new(Cursor::new(EMPTY_KLIPPER)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..archive.len() {
@@ -31,6 +36,12 @@ fn project(tower_type: &str, two_nozzles: bool, custom_macro: bool) -> Vec<u8> {
                 } else {
                     ""
                 });
+                if high_nozzle_entry {
+                    settings["filament_end_gcode"] = json!([
+                        "G1 Z10\n{position[2] = 10}\n",
+                        "G1 Z10\n{position[2] = 10}\n"
+                    ]);
+                }
                 settings["gcode_comments"] = json!("1");
                 settings["timelapse_type"] = json!("0");
                 settings["enable_wrapping_detection"] = json!("0");
@@ -94,6 +105,7 @@ struct Heights {
     tower_extrusions: Vec<(f64, f64)>,
     lifts: usize,
     maximum_object_z: f64,
+    nozzle_entry_descents: usize,
 }
 
 fn heights(gcode: &str) -> Heights {
@@ -102,10 +114,25 @@ fn heights(gcode: &str) -> Heights {
         tower_extrusions: Vec::new(),
         lifts: 0,
         maximum_object_z: 0.0,
+        nozzle_entry_descents: 0,
     };
     let mut z = 0.0;
     let mut in_tower = false;
+    let mut compacted_descend = false;
     for line in gcode.lines() {
+        if line.contains("Travel to a Wipe Tower")
+            || line.contains("Move to nozzle change start pos")
+        {
+            compacted_descend = false;
+        }
+        if line.contains("Descend to compacted wipe tower z") {
+            compacted_descend = true;
+        }
+        if (line.starts_with("; NOZZLE_CHANGE_START") || line.starts_with("; Nozzle change start"))
+            && compacted_descend
+        {
+            result.nozzle_entry_descents += 1;
+        }
         if line.starts_with(";TYPE:") || line.starts_with("; FEATURE: ") {
             in_tower = line.contains("Prime tower");
         }
@@ -113,23 +140,22 @@ fn heights(gcode: &str) -> Heights {
         let Some(command) = words.next() else {
             continue;
         };
-        if matches!(command, "G0" | "G1") {
-            let mut xy = false;
-            let mut extrusion = 0.0;
-            for word in words.take_while(|word| !word.starts_with(';')) {
-                match word.as_bytes()[0] {
-                    b'Z' => z = word[1..].parse().unwrap(),
-                    b'X' | b'Y' => xy = true,
-                    b'E' => extrusion = word[1..].parse::<f64>().unwrap(),
-                    _ => {}
-                }
+        let is_move = matches!(command, "G0" | "G1");
+        let mut xy = false;
+        let mut extrusion = 0.0;
+        for word in words.take_while(|word| is_move && !word.starts_with(';')) {
+            match word.as_bytes()[0] {
+                b'Z' => z = word[1..].parse().unwrap(),
+                b'X' | b'Y' => xy = true,
+                b'E' => extrusion = word[1..].parse::<f64>().unwrap(),
+                _ => {}
             }
-            if extrusion > 0.0 && xy {
-                if !in_tower {
-                    result.maximum_object_z = result.maximum_object_z.max(z);
-                } else if result.maximum_object_z > 2.0 + 1e-4 && z <= 10.0 + 1e-4 {
-                    result.tower_extrusions.push((z, result.maximum_object_z));
-                }
+        }
+        if extrusion > 0.0 && xy {
+            if !in_tower {
+                result.maximum_object_z = result.maximum_object_z.max(z);
+            } else if result.maximum_object_z > 2.0 + 1e-4 && z <= 10.0 + 1e-4 {
+                result.tower_extrusions.push((z, result.maximum_object_z));
             }
         }
         if line.contains("; TOOLCHANGE_MARK")
@@ -165,7 +191,7 @@ fn assert_heights(heights: &Heights, two_nozzles: bool, custom_macro: bool) {
     }
 }
 
-fn check(tower_type: &str, two_nozzles: bool, custom_macro: bool) {
+fn check(tower_type: &str, two_nozzles: bool, custom_macro: bool, high_nozzle_entry: bool) {
     let runner = OrcaRunner::from_env()
         .unwrap()
         .expect("Native slicing oracle");
@@ -176,7 +202,7 @@ fn check(tower_type: &str, two_nozzles: bool, custom_macro: bool) {
         .unwrap()
         .keep();
     eprintln!("artifacts {directory:?}");
-    let input = project(tower_type, two_nozzles, custom_macro);
+    let input = project(tower_type, two_nozzles, custom_macro, high_nozzle_entry);
     fs::write(directory.join("input.3mf"), &input).unwrap();
     let native = slice_native(&runner, &directory, &input, "native-");
     fs::write(directory.join("native.gcode"), &native).unwrap();
@@ -187,6 +213,9 @@ fn check(tower_type: &str, two_nozzles: bool, custom_macro: bool) {
     )
     .unwrap();
     assert_heights(&native_heights, two_nozzles, custom_macro);
+    if high_nozzle_entry {
+        assert!(native_heights.nozzle_entry_descents > 0);
+    }
     let processed = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
@@ -203,41 +232,50 @@ fn check(tower_type: &str, two_nozzles: bool, custom_macro: bool) {
     fs::write(directory.join("result.json"), serde_json::to_vec_pretty(&json!({
         "source": "39408fa1f; tests/fff_print/test_wipe_tower.cpp:659",
         "tower_type": tower_type, "two_nozzles": two_nozzles, "custom_macro": custom_macro,
+        "high_nozzle_entry": high_nozzle_entry,
         "native_heights": native_heights, "ares_heights": ares_heights,
         "whole_output_comparison_not_waived": crate::golden::compare_ordered_bytes_generator_only(native.as_bytes(), &processed.gcode)
     })).unwrap()).unwrap();
     assert_heights(&ares_heights, two_nozzles, custom_macro);
+    if high_nozzle_entry {
+        assert!(ares_heights.nozzle_entry_descents > 0);
+    }
 }
 
 #[test]
 fn type1_single_nozzle_custom_macro_starts_at_object_z() {
-    check("type1", false, true);
+    check("type1", false, true, false);
 }
 #[test]
 fn type1_single_nozzle_empty_macro_stays_at_tower_z() {
-    check("type1", false, false);
+    check("type1", false, false, false);
 }
 #[test]
 fn type1_two_nozzles_custom_macro_starts_at_object_z() {
-    check("type1", true, true);
+    check("type1", true, true, false);
 }
 #[test]
 fn type1_two_nozzles_empty_macro_starts_at_object_z() {
-    check("type1", true, false);
+    check("type1", true, false, false);
 }
 #[test]
 fn type2_single_nozzle_custom_macro_starts_at_object_z() {
-    check("type2", false, true);
+    check("type2", false, true, false);
 }
 #[test]
 fn type2_single_nozzle_empty_macro_stays_at_tower_z() {
-    check("type2", false, false);
+    check("type2", false, false, false);
 }
 #[test]
 fn type2_two_nozzles_custom_macro_starts_at_object_z() {
-    check("type2", true, true);
+    check("type2", true, true, false);
 }
 #[test]
 fn type2_two_nozzles_empty_macro_starts_at_object_z() {
-    check("type2", true, false);
+    check("type2", true, false, false);
+}
+
+#[test]
+fn type1_two_nozzles_high_entry_descends_before_nozzle_wipe() {
+    check("type1", true, true, true);
 }
