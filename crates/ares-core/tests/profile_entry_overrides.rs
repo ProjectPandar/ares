@@ -117,6 +117,39 @@ async fn imported_sparse_profile_pads_empty_filament_gcode_vectors() {
     assert_eq!(settings["filament_start_gcode"], json!([""]));
 }
 
+#[tokio::test]
+async fn vendor_profile_omitted_filament_gcodes_keep_registered_space_defaults() {
+    let (catalog, selection) = catalog_parts();
+    let catalog_json = catalog.to_string();
+    let selection_json = selection.to_string();
+    let overrides = ConfigOverrides::default();
+    let settings =
+        ares_core::profile_settings(stl(), request(&catalog_json, &selection_json, &overrides))
+            .await
+            .unwrap();
+    let settings = serde_json::to_value(settings).unwrap();
+    assert_eq!(settings["filament_end_gcode"], json!([" "]));
+    assert_eq!(settings["filament_start_gcode"], json!([" "]));
+}
+
+#[tokio::test]
+async fn vendor_profile_empty_filament_gcode_vectors_become_one_empty_slot() {
+    let (mut catalog, selection) = catalog_parts();
+    let filament = &mut catalog["vendors"][0]["files"]["filament.json"];
+    filament["filament_end_gcode"] = json!([]);
+    filament["filament_start_gcode"] = json!([]);
+    let catalog_json = catalog.to_string();
+    let selection_json = selection.to_string();
+    let overrides = ConfigOverrides::default();
+    let settings =
+        ares_core::profile_settings(stl(), request(&catalog_json, &selection_json, &overrides))
+            .await
+            .unwrap();
+    let settings = serde_json::to_value(settings).unwrap();
+    assert_eq!(settings["filament_end_gcode"], json!([""]));
+    assert_eq!(settings["filament_start_gcode"], json!([""]));
+}
+
 fn write_artifact(name: &str, bytes: &[u8]) {
     let root = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"));
     std::fs::create_dir_all(root).unwrap();
