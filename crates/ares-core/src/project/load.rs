@@ -180,6 +180,9 @@ fn load_project_raw(
     project_settings_raw.normalize_embedded_wire_substitutions();
     // `handle_legacy_composite` (`PrintConfig.cpp:10094-10096`) ends the same `load_from_json`.
     project_settings_raw.normalize_filament_values_to_variants();
+    project_settings_raw
+        .normalize_loaded_composites()
+        .map_err(SliceError::InvalidInput)?;
     // CLI:1704 captures the old configuration before user edits.
     let preparation = crate::options::flush_matrix::PreparationContext::capture(
         &project_settings_raw,

@@ -27,7 +27,7 @@ pub(super) fn normalize_legacy_thumbnails(
     Ok(())
 }
 
-fn format_thumbnail_definitions(definitions: &[GCodeThumbnailDefinition]) -> String {
+pub(crate) fn format_thumbnail_definitions(definitions: &[GCodeThumbnailDefinition]) -> String {
     definitions
         .iter()
         .map(|definition| {

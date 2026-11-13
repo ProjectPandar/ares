@@ -87,6 +87,27 @@ impl ProjectSettingsRaw {
         });
     }
 
+    /// Rewrites composites performed by `ConfigBase::load_from_json` after
+    /// the embedded JSON has been decoded. Later typed config application
+    /// intentionally does not repeat this step.
+    pub(crate) fn normalize_loaded_composites(&mut self) -> Result<(), String> {
+        let Some(RawConfigValue::Text(thumbnails)) = self.get("thumbnails") else {
+            return Ok(());
+        };
+        let default_format = match self.get("thumbnails_format") {
+            Some(RawConfigValue::Text(format)) => Some(format.as_str()),
+            _ => None,
+        };
+        let definitions = crate::parse_thumbnail_definitions(thumbnails, default_format)
+            .map_err(|error| crate::thumbnail_error_string(error).to_owned())?;
+        if definitions.is_empty() {
+            return Ok(());
+        }
+        let value = crate::options::legacy::format_thumbnail_definitions(&definitions);
+        self.insert("thumbnails".to_owned(), RawConfigValue::Text(value));
+        Ok(())
+    }
+
     /// The vector-shape normalizations without the wire substitutions,
     /// for a raw that already carries override values on top of the
     /// normalized embedded config.
