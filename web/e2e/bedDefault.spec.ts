@@ -67,3 +67,101 @@ test("U1 initializes Textured PEI and exports Native first-layer bed temperature
   expect(firstBedCommands(browser)).toEqual(firstBedCommands(native));
   expect(browser).toContain("; curr_bed_type = Textured PEI Plate");
 });
+
+test("the actual WASM module resolves bed hints through its message protocol", async ({ page }) => {
+  const workerReady = page.waitForEvent("worker");
+  const wasmRequested = page.waitForRequest((request) => new URL(request.url()).pathname.endsWith(".wasm"));
+  await page.goto("/");
+  const workerUrl = (await workerReady).url();
+  const wasmUrl = (await wasmRequested).url();
+  const cases = [
+    ["Cool Plate", "", "Cool Plate"], ["Engineering Plate", "", "Engineering Plate"],
+    ["High Temp Plate", "", "High Temp Plate"], ["Textured PEI Plate", "", "Textured PEI Plate"],
+    ["Textured Cool Plate", "", "Textured Cool Plate"], ["Supertack Plate", "", "Supertack Plate"],
+    ["4suffix", "", "Textured PEI Plate"], [" +4tail", "", "Textured PEI Plate"],
+    ["invalid", "BL-P001", "High Temp Plate"], ["", "BL-P001", "Cool Plate"],
+    ["", "BL-P002", "Cool Plate"], ["", "C13", "Cool Plate"], ["", "C11", "High Temp Plate"],
+    ["", "", "High Temp Plate"], ["", "Bambu Lab X1 Carbon", "High Temp Plate"],
+  ];
+  const actual = await page.evaluate(async ({ workerUrl, wasmUrl, cases }) => {
+    const worker = new Worker(workerUrl, { type: "module" });
+    let nextId = 0;
+    const call = (request: Record<string, unknown>): Promise<unknown> => new Promise((resolve, reject) => {
+      const id = nextId++;
+      const receive = ({ data }: MessageEvent) => {
+        if (data.id !== id || "status" in data) return;
+        worker.removeEventListener("message", receive);
+        if (data.ok) resolve(data.value);
+        else reject(new Error(data.error));
+      };
+      worker.addEventListener("message", receive);
+      worker.postMessage({ id, ...request });
+    });
+    try {
+      await call({ kind: "init", wasmUrl });
+      return await Promise.all(cases.map(([hint, modelId]) => call({ kind: "resolveDefaultBedType", hint, modelId })));
+    } finally {
+      worker.terminate();
+    }
+  }, { workerUrl, wasmUrl, cases });
+  mkdirSync(artifacts, { recursive: true });
+  writeFileSync(`${artifacts}resolver.json`, JSON.stringify({ workerUrl, wasmUrl, cases, actual }, null, 2));
+  expect(actual).toEqual(cases.map(([, , expected]) => expected));
+});
+
+test("a hidden plate combo still initializes a concrete printer bed", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("button", { name: "Printer preset", exact: true }).click();
+  await page.getByRole("option", { name: "Select/Remove printers (system presets)", exact: true }).click();
+  const wizard = page.getByRole("dialog", { name: "System presets" });
+  await wizard.getByRole("checkbox", { name: "LH", exact: true }).check();
+  await wizard.getByRole("button", { name: "Done", exact: true }).click();
+  await page.getByRole("button", { name: "Printer preset", exact: true }).click();
+  await page.getByRole("option", { name: "LH Stinger", exact: true }).click();
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  await expect(page.getByRole("combobox", { name: "Plate type", exact: true })).toHaveCount(0);
+  const state = () => page.evaluate(() => {
+    const config = JSON.parse(localStorage.getItem("ares.config")!);
+    return { printer: config.printer, bedType: config.printers[config.printer]?.bedType };
+  });
+  mkdirSync(artifacts, { recursive: true });
+  writeFileSync(`${artifacts}hidden-combo.json`, JSON.stringify(await state(), null, 2));
+  await expect.poll(async () => (await state()).bedType).toBe("High Temp Plate");
+  writeFileSync(`${artifacts}hidden-combo.json`, JSON.stringify(await state(), null, 2));
+  await page.evaluate(() => {
+    const config = JSON.parse(localStorage.getItem("ares.config")!);
+    config.printers[config.printer].bedType = "Cool Plate";
+    localStorage.setItem("ares.config", JSON.stringify(config));
+  });
+  await page.reload();
+  await expect.poll(async () => (await state()).bedType).toBe("High Temp Plate");
+  writeFileSync(`${artifacts}hidden-combo-stored.json`, JSON.stringify(await state(), null, 2));
+});
+
+test("supported remembered beds win and unsupported remembered beds use the first listed choice", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
+  const printer = page.getByRole("button", { name: "Printer preset", exact: true });
+  await printer.click();
+  await page.getByRole("option", { name: "Select/Remove printers (system presets)", exact: true }).click();
+  const wizard = page.getByRole("dialog", { name: "System presets" });
+  await wizard.getByRole("checkbox", { name: "Snapmaker", exact: true }).check();
+  await wizard.getByRole("button", { name: "Done", exact: true }).click();
+  await printer.click();
+  await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  const plate = page.getByRole("combobox", { name: "Plate type", exact: true });
+  await plate.selectOption("High Temp Plate");
+  await page.reload();
+  await expect(plate).toHaveValue("High Temp Plate", { timeout: 60_000 });
+  await page.evaluate(() => {
+    const config = JSON.parse(localStorage.getItem("ares.config")!);
+    config.printers[config.printer].bedType = "Cool Plate";
+    localStorage.setItem("ares.config", JSON.stringify(config));
+  });
+  await page.reload();
+  await expect(plate).toHaveValue("High Temp Plate", { timeout: 60_000 });
+  mkdirSync(artifacts, { recursive: true });
+  writeFileSync(`${artifacts}remembered.json`, JSON.stringify({ selected: await plate.inputValue(), options: await plate.locator("option").allTextContents() }, null, 2));
+});
