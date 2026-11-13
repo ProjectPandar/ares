@@ -9,3 +9,10 @@ export function disposeTree(root: THREE.Object3D) {
     }
   });
 }
+
+/** Frees the GPU buffers of every mesh and line under `root`; their materials stay for the next build. */
+export function disposeGeometries(root: THREE.Object3D) {
+  root.traverse((node) => {
+    if (node instanceof THREE.Mesh || node instanceof THREE.Line) node.geometry.dispose();
+  });
+}
