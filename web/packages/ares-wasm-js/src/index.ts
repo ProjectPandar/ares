@@ -3,7 +3,7 @@ import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ConfigValue, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
+import type { CompatiblePresets, ConfigValue, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
@@ -206,7 +206,7 @@ export class AresSlicer {
     input: Uint8Array,
     filename: string,
     catalogJson: string,
-    selection: ProfileSelection,
+    selection: ProfileSelection | ProjectPresetSelection,
     options: ProfileSliceOptions,
   ): Promise<PlaterSession> {
     await this.#ready;
