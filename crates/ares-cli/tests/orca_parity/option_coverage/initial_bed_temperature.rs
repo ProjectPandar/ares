@@ -1,4 +1,4 @@
-//! GCode.cpp:3990–4005,5497–5513,5518–5545: labelled start-temperature oracle.
+//! GCode.cpp:4019–4029,5525–5531: labelled start-temperature oracle.
 use crate::{
     golden,
     runner::{application, native_api_cli::sha, native_stream_case},
@@ -43,7 +43,7 @@ fn check(label: &str, input: &[u8], expected_sha: &str, temperature: &str) {
     let (reference, _) = native_stream_case::qualify(
         (
             "initial-bed-temperature",
-            &["GCode.cpp:3990-4005,5497-5513,5518-5545"],
+            &["bbs_3mf.cpp:4641-4646", "GCode.cpp:4019-4029,5525-5531"],
         ),
         label,
         input,
@@ -193,5 +193,57 @@ fn initial_bed_unused_hotter_filament_labelled_start() {
         )),
         "893689e2ea06b9f6de4704fc21ca6743618ac483e4e02d00eb1e50419431f6b0",
         "63",
+    );
+}
+
+#[test]
+fn initial_bed_plate_import_empty_is_cool() {
+    check(
+        "plate-bed-empty",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/bed-type-selection/empty.3mf"
+        )),
+        "775da9727a13149360c9405d1979485cf13d36a402fdc6788de3f4814a53bffe",
+        "35",
+    );
+}
+
+#[test]
+fn initial_bed_plate_import_unrecognized_is_cool() {
+    check(
+        "plate-bed-unrecognized",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/bed-type-selection/unrecognized.3mf"
+        )),
+        "bdd48fd729164653805053c9c0daa72123a2a2b7a18f8e92366def519f786b51",
+        "35",
+    );
+}
+
+#[test]
+fn initial_bed_plate_import_padded_name_is_cool() {
+    check(
+        "plate-bed-padded",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/bed-type-selection/padded.3mf"
+        )),
+        "5407de1bcf9cf71a2afb38811f7783dffe38bef0fbdfe4baa4563465cec85a42",
+        "35",
+    );
+}
+
+#[test]
+fn initial_bed_plate_import_supertack_alias_is_concrete() {
+    check(
+        "plate-bed-supertack-alias",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/bed-type-selection/supertack-alias.3mf"
+        )),
+        "ce75ea9ba21f181fd908c02f9b6f494534a9ad4ff152679fba67a5cff6eaf5ed",
+        "47",
     );
 }
