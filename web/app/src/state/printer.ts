@@ -2,8 +2,9 @@
 import { firstString } from "../sidebar/options";
 import { setOverride } from "./actions";
 import { saveSelection, presetCatalog, selectPrinter } from "./presets";
-import { accordBedType, bedTypeOptions, defaultBedType, diameterString, PANEL_KEYS, type PrinterPanel, printerPanel, showsBedTypes } from "./printerPanel";
+import { accordBedType, bedTypeOptions, diameterString, PANEL_KEYS, type PrinterPanel, printerPanel, showsBedTypes } from "./printerPanel";
 import { invalidatedSlices, useApp } from "./store";
+import { slicer } from "./slicer";
 
 /** The panel of the selected preset printer, or of the project's printer without a selection. */
 export async function updatePrinterPanel() {
@@ -18,23 +19,24 @@ export async function updatePrinterPanel() {
     return;
   }
   const info = await catalog.printerModelInfo(firstString(values, "printer_model") ?? "");
+  const defaultBedType = await slicer.resolveDefaultBedType(firstString(values, "default_bed_type") ?? "", info.model_id);
   // PresetBundle::is_bbl_vendor: the model's vendor is the one installed from BBL.json.
   const bbl = info.vendor === "BBL";
   const { presetSelection, scene: current } = useApp.getState();
   if (presetSelection?.printer !== selection?.printer || (!selection && current !== scene)) return;
-  useApp.setState({ printerPanel: printerPanel(values, info, bbl) });
+  useApp.setState({ printerPanel: printerPanel(values, info, bbl, defaultBedType) });
 }
 
 /**
- * The bed type of a newly selected printer (Plater.cpp:2512-2539): its stored `curr_bed_type`
- * (AppConfig::get_printer_setting), else Preset::get_default_bed_type, as the combo lists it.
- * Undefined when the printer has no plate combo.
+ * Plater.cpp:3876–3908: initialize a concrete default even without a plate combo;
+ * with a combo, prefer the printer's stored choice and accord it to supported choices.
  */
 export function printerBedType(stored: string | undefined): string | undefined {
   const { printerPanel: panel, configDefs } = useApp.getState();
-  if (!panel || !showsBedTypes(panel)) return undefined;
+  if (!panel) return undefined;
+  if (!showsBedTypes(panel)) return panel.defaultBedType;
   const def = configDefs.get("curr_bed_type")!;
-  return accordBedType(bedTypeOptions(def, panel), stored ?? defaultBedType(def, panel));
+  return accordBedType(bedTypeOptions(def, panel), stored ?? panel.defaultBedType);
 }
 
 /**
