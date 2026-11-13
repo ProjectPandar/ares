@@ -56,6 +56,10 @@ fn process_filament_and_machine_readers_preserve_string_bom_and_typed_values() {
         br#"{"type":"filament","name":"f","filament_diameter":["1.75"],"inherits":"parent","description":"\uFEFFkeep"}"#,
         br#"{"type":"machine","name":"m","nozzle_diameter":["0.6"],"description":"\uFEFFkeep"}"#,
     ] {
+        let text = std::str::from_utf8(input)
+            .unwrap()
+            .replace(r"\uFEFF", "\u{feff}");
+        let input = text.as_bytes();
         let control = ProfileFragment::from_json_bytes(input).unwrap();
         let bytes = prefixed(BOM, input);
         let actual = ProfileFragment::from_json_bytes(&bytes).unwrap();
@@ -161,6 +165,13 @@ fn archive_metadata_and_json_members_accept_one_bom_without_changing_the_archive
     assert_eq!(actual["bundle"]["author"], "\u{feff}keep");
     assert_eq!(actual["profiles"][0]["inherits"], "parent");
     assert_eq!(bytes, original);
+    let repeated = prefixed(BOM, BOM);
+    for malformed in [
+        archive(&prefixed(&repeated, metadata), profile),
+        archive(metadata, &prefixed(&repeated, profile)),
+    ] {
+        assert!(parse_preset_bundle(&malformed, "fixture.orca_printer").is_err());
+    }
 }
 
 #[test]
@@ -189,6 +200,9 @@ fn original_and_up_to_date_machine_bytes_use_one_json_lexical_policy() {
 
 #[test]
 fn malformed_repeated_displaced_and_unsupported_boms_are_rejected() {
+    assert!(ProfileFragment::from_json_bytes(BOM).is_err());
+    assert!(parse_preset_bundle(BOM, "machine.json").is_err());
+    assert!(PresetCatalogHandle::new().add_vendor(BOM).is_err());
     let vendor = vendor().to_string();
     for prefix in [
         b"\xef".as_slice(),
