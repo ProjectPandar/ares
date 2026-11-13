@@ -163,8 +163,8 @@ fn parse_bundle_metadata(input: &[u8]) -> Result<BundleMetadata, SliceError> {
         imported_time: Option<i64>,
         updated_time: Option<i64>,
     }
-    let raw: Raw =
-        serde_json::from_slice(input).map_err(|error| invalid_json("bundle metadata", error))?;
+    let raw: Raw = serde_json::from_slice(super::without_utf8_bom(input))
+        .map_err(|error| invalid_json("bundle metadata", error))?;
     Ok(BundleMetadata {
         id: raw.id.unwrap_or_default(),
         name: raw.name.or(raw.bundle_id).unwrap_or_default(),
@@ -185,7 +185,8 @@ fn import_json(
     profiles: &mut Vec<BTreeMap<String, RawConfigValue>>,
 ) -> Result<(), SliceError> {
     let mut object: BTreeMap<String, RawConfigValue> =
-        serde_json::from_slice(input).map_err(|error| invalid_json("preset", error))?;
+        serde_json::from_slice(super::without_utf8_bom(input))
+            .map_err(|error| invalid_json("preset", error))?;
     let version = object.get("version").and_then(raw_text).unwrap_or_default();
     if version.is_empty() {
         // Upstream `Semver::parse` failure skips the record.

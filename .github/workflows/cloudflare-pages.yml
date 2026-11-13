@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
-          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # OrcaSlicer v2.4.2
+          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19 # OrcaSlicer v2.5.0
           path: OrcaSlicer
           persist-credentials: false
           sparse-checkout: resources/profiles
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
-          ref: 8500fcdccaa10b5099ac20d252af3a7c560046f1 # OrcaSlicer v2.4.2
+          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19 # OrcaSlicer v2.5.0
           path: OrcaSlicer
           persist-credentials: false
           sparse-checkout: resources/profiles

@@ -123,7 +123,7 @@ impl PresetCatalogHandle {
     /// One vendor envelope `{id, index, files}` as JSON bytes, exactly the
     /// one-shot transport's `vendors[]` element.
     pub fn add_vendor(&mut self, vendor_json: &[u8]) -> Result<(), SliceError> {
-        let vendor: VendorInput = serde_json::from_slice(vendor_json)
+        let vendor: VendorInput = serde_json::from_slice(super::without_utf8_bom(vendor_json))
             .map_err(|error| invalid(format!("invalid vendor profile JSON: {error}")))?;
         self.catalog.push_vendor(vendor)
     }
