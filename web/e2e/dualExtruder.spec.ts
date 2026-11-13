@@ -90,6 +90,9 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   const web = readFileSync(`${artifacts}web.gcode`, "utf8");
   expect(web).toContain("; filament_map = 2,1");
   expect(web).toContain("; nozzle_volume_type = Standard,High Flow");
+  // A key the project lacks comes from its system printer preset (OrcaSlicer.cpp:3167-3200,
+  // PresetBundle::load_config_file_config): the H2D's 50, not the option default 40.
+  expect(web).toContain("; extruder_clearance_dist_to_rod = 50\n");
   if (orca) expect(normalize(web, "Ares"), "the sidebar edits slice as the edited project").toBe(orcaGcode(project("edited.3mf", { ...LEGAL, ...EDITS })));
 
   // Different diameters cannot print together: the question picks one for both nozzles; Cancel keeps both.
