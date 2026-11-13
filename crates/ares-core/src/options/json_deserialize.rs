@@ -25,7 +25,9 @@ pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
 pub(crate) fn deserialize_config_values(
     input: RawConfigValue,
 ) -> Result<super::ProjectSettingsBuilder, String> {
-    super::ProjectSettingsBuilder::from_creation_defaults(decode_preset_values(input)?)
+    crate::options::project_deserialize::deserialize_config_values(RawConfigValue::Object(
+        decode_preset_values(input)?,
+    ))
 }
 
 fn decode_preset_values(input: RawConfigValue) -> Result<BTreeMap<String, RawConfigValue>, String> {
