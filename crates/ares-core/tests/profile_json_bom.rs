@@ -3,8 +3,8 @@
 use std::io::{Cursor, Write};
 
 use ares_core::{
-    LoadSettingsFile, PresetCatalogHandle, ProfileFragment, ProfileKind, UpwardMachineInput,
-    UpwardMachineSource, filter_compatible_presets, parse_preset_bundle,
+    LoadSettingsFile, PresetCatalogHandle, ProfileFragment, ProfileKind, SliceError,
+    UpwardMachineInput, UpwardMachineSource, filter_compatible_presets, parse_preset_bundle,
 };
 use serde_json::{Value, json};
 use zip::{ZipWriter, write::SimpleFileOptions};
@@ -37,8 +37,8 @@ fn vendor() -> Value {
 }
 
 #[test]
-fn original_benfab_bytes_preserve_metadata_payload_and_inheritance() {
-    for input in ORIGINALS {
+fn original_benfab_bytes_preserve_payload_inheritance_and_existing_errors() {
+    for input in &ORIGINALS[..4] {
         assert_eq!(&input[..3], BOM);
         let control = ProfileFragment::from_json_bytes(&input[3..]).unwrap();
         let actual = ProfileFragment::from_json_bytes(input).unwrap();
@@ -47,6 +47,13 @@ fn original_benfab_bytes_preserve_metadata_payload_and_inheritance() {
         assert_eq!(actual.instantiation(), Some("false"));
         assert_eq!(actual, control);
     }
+    let input = ORIGINALS[4];
+    let control = ProfileFragment::from_json_bytes(&input[3..]).unwrap_err();
+    assert!(
+        matches!(&control, SliceError::InvalidInput(message) if message == "profile option JSON is invalid: invalid Orca option enable_arc_fitting: unknown variant `1`, expected one of `disabled`, `enabled`, `sparse_infill` at line 15 column 30")
+    );
+    let actual = ProfileFragment::from_json_bytes(input).unwrap_err();
+    assert_eq!(actual.to_string(), control.to_string());
 }
 
 #[test]
@@ -54,7 +61,7 @@ fn process_filament_and_machine_readers_preserve_string_bom_and_typed_values() {
     for input in [
         br#"{"type":"process","name":"p","layer_height":"0.27","description":"\uFEFFkeep"}"#.as_slice(),
         br#"{"type":"filament","name":"f","filament_diameter":["1.75"],"inherits":"parent","description":"\uFEFFkeep"}"#,
-        br#"{"type":"machine","name":"m","nozzle_diameter":["0.6"],"description":"\uFEFFkeep"}"#,
+        br#"{"type":"machine","name":"m","printer_model":"M","description":"\uFEFFkeep"}"#,
     ] {
         let text = std::str::from_utf8(input)
             .unwrap()
