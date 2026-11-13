@@ -1,5 +1,5 @@
 use crate::{
-    Project, ProjectSettings, SliceError,
+    Project, ProjectBedType, ProjectSettings, SliceError,
     options::{
         MaterializedProjectVariants, materialize_project_variants,
         project_config_views::resolve_project_config_views,
@@ -54,6 +54,10 @@ fn prepared_source(
         context,
         overrides,
     )?;
+    if source.project.print.curr_bed_type == ProjectBedType::DefaultPlate {
+        // Preset.cpp:1034–1048: without a preset bundle, the model identifier is empty.
+        source.project.print.curr_bed_type = source.printer.remaining.default_bed_type.resolve("");
+    }
     Ok(source)
 }
 
