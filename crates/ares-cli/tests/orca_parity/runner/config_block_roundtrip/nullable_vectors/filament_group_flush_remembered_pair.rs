@@ -1,4 +1,5 @@
-//! FilamentGroup.cpp:427-566 remembered candidates and empty-inventory AMS selection.
+//! Final2.5 a2acec57: FilamentGroup.cpp:245-270,472-495,571-623.
+//! Keep the historical test ID; both flush-entry endpoints now select the primary.
 use super::super::super::{native_api_cli::sha, native_stream_case, repo_root};
 use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use std::{fs, io::Cursor};
@@ -7,7 +8,7 @@ const CASES: [(&str, &str, [i32; 3]); 2] = [
     (
         "x2d_pla_three_filaments_remembered_small_gap",
         "80e2db05444d4b78ba663ea374141537fa241027c67c4dd6a6ea6ef6d201f19a",
-        [1, 1, 1],
+        [1, 2, 1],
     ),
     (
         "x2d_pla_three_filaments_outside_absolute_gap",
@@ -45,9 +46,9 @@ fn sample((name, digest, expected): (&str, &str, [i32; 3]), input: &[u8]) -> Obs
         (
             "filament-group-flush-remembered-pair",
             &[
-                "FilamentGroup.cpp:427-518 empty-inventory first-minimum selection",
-                "FilamentGroup.cpp:521-566 remembered absolute/relative gap retention",
-                "FilamentGroup.cpp:901-922 primary and remembered candidate composition",
+                "FilamentGroup.cpp:472-495 empty-inventory first-candidate selection",
+                "FilamentGroup.cpp:245-270,571-623 palette-relative retained budget",
+                "FilamentGroup.cpp:1313-1329 primary and remembered candidate composition",
             ],
         ),
         name,
@@ -83,6 +84,7 @@ fn sample((name, digest, expected): (&str, &str, [i32; 3]), input: &[u8]) -> Obs
             SlicerContext::new(0),
         ))
         .unwrap();
+    fs::write(reference.root.join("ares.api.gcode"), &api).unwrap();
     let cli_path = reference.root.join("ares.cli.gcode");
     let cli = crate::runner::application::cli_command()
         .args(["slice", "-o"])
@@ -90,6 +92,8 @@ fn sample((name, digest, expected): (&str, &str, [i32; 3]), input: &[u8]) -> Obs
         .arg(reference.root.join("input.3mf"))
         .output()
         .unwrap();
+    fs::write(reference.root.join("ares.cli.stdout"), &cli.stdout).unwrap();
+    fs::write(reference.root.join("ares.cli.stderr"), &cli.stderr).unwrap();
     assert!(
         cli.status.success(),
         "CLI at {:?}: {:?}; stderr={}; stdout={}",
@@ -104,6 +108,19 @@ fn sample((name, digest, expected): (&str, &str, [i32; 3]), input: &[u8]) -> Obs
         crate::golden::compare_ordered_bytes_generator_only(reference.native.as_bytes(), &api);
     let strict_cli =
         crate::golden::compare_ordered_bytes_generator_only(reference.native.as_bytes(), &cli);
+    fs::write(
+        reference.root.join("remembered-map-comparison.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "input_sha256": digest, "native": native,
+            "api": map(std::str::from_utf8(&api).unwrap()),
+            "cli": map(std::str::from_utf8(&cli).unwrap()),
+            "api_sha256": sha(&api), "cli_sha256": sha(&cli),
+            "strict_whole_api": strict_api, "strict_whole_cli": strict_cli,
+            "whole_output_parity_claimed": false
+        }))
+        .unwrap(),
+    )
+    .unwrap();
     Observed {
         native,
         api: map(std::str::from_utf8(&api).unwrap()),
@@ -163,7 +180,11 @@ fn x2d_pla_remembered_gap_changes_empty_inventory_assignment() {
     let native_delta = delta(native);
     let api_delta = delta(api);
     let cli_delta = delta(cli);
-    assert_eq!(native_delta, [0, 1, 0], "Native remembered-gap direction");
+    assert_eq!(
+        native_delta,
+        [0, 0, 0],
+        "final2.5 empty inventory keeps both primaries"
+    );
     assert_eq!(
         api, native,
         "API endpoint maps; native_delta={native_delta:?}; api_delta={api_delta:?}; cli_delta={cli_delta:?}; small_gap={}; outside_gap={}",

@@ -18,7 +18,16 @@
     {
       "first": "x2d_pla_three_filaments_remembered_small_gap",
       "second": "x2d_pla_three_filaments_outside_absolute_gap",
-      "parameter": "Nonzero flush entries 3 versus 4, zero load/unload/switch time. Distinguish remembered absolute gap plus empty-inventory AMS monogroup preference from primary-only selection."
+      "parameter": "Nonzero flush entries 3 versus 4, zero load/unload/switch time. Originally distinguished beta's empty-inventory monogroup preference; final2.5 keeps the primary 1,2,1 for both inputs.",
+      "final_recheck": {
+        "upstream_revision": "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+        "change_commit": "a2acec57c4784d6cdb3c3806b2c73286e6edd495",
+        "source_boundary": "FilamentGroup.cpp:245-270,472-495,571-623; GCode/ToolOrdering.cpp:1839-1856",
+        "small_gap_beta_map": "1,1,1",
+        "small_gap_final_map": "1,2,1",
+        "outside_gap_final_map": "1,2,1",
+        "note": "Runtime Native2.5 endpoints, not an isolated heap-budget witness; authored input bytes unchanged."
+      }
     },
     {
       "first": "x2d_pla_other_layers_ascending_custom_order",
