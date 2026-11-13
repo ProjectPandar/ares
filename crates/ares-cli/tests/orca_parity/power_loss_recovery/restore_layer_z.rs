@@ -1,4 +1,7 @@
 //! OrcaSlicer 39408fa1f, tests/fff_print/test_wipe_tower.cpp:659.
+#[path = "restore_layer_z/entry.rs"]
+mod entry;
+
 use std::{
     fs,
     io::{Cursor, Read, Write},

@@ -58,7 +58,8 @@ prerequisite, connect this exact source operation rather than inventing a
 second height policy. Preserve the source comment and newline behavior.
 
 No new public API, target-specific behavior, filesystem dependency, option,
-feature flag or compatibility fallback is needed. Tower planning, dimensions,
+feature flag or compatibility fallback is needed. Other than sharing the exact
+sparse-skipping eligibility predicate below, tower planning, dimensions,
 ramming, temperature policy, synchronization and unrelated no-sparse-layer
 travel optimizations remain outside this slice. Keep the preceding planner
 boundary rewrite unchanged.
@@ -93,6 +94,53 @@ normal nominal-Z target for all other callers. Keep this omission's correction
 in its own production commit before the `39408fa1f` restoration change; do not
 attribute it to `39408fa1f` or include the other `9ed545` behavior.
 
+## Included sparse eligibility and model-side descent prerequisites
+
+`GCode/WipeTower.cpp:53–57` owns `wipe_tower_sparse_layers_skipped`: the raw
+no-sparse option must be enabled, timelapse must not be Smooth, and wrapping
+detection must be disabled. `WipeTower` and `WipeTower2` constructors, and
+`GCode.cpp:130`, share this predicate. The Rust destination is one predicate in
+`gcode_emit/wipe_tower.rs`, reused by the existing plan, generator, integration
+and Type1 compacted-height decisions. Preserve the raw exported option;
+eligibility is not option normalization. The existing tower-presence predicates
+in `wipe_tower::requested` and `tool_ordering/collect.rs` answer a different
+question and cannot substitute for sparse-skipping eligibility.
+
+Also include the omitted `82e91bd47` operation at `GCode.cpp:1164–1178` in
+Type1 `emit.rs`. Defer the initial tower-Z descent when sparse layers are
+skipped, the result is neither priming nor finish-first, and
+`current_z - z > EPSILON`. Until the later tower travel, the nozzle is still
+over the model. Do not change the captured `current_z` or manufacture a
+restoration lift by prematurely descending there. Finish-first has already
+travelled to the tower and retains the immediate descent. The subsequent
+nozzle-entry and start-filament descents remain required after safe travel.
+
+Type2 `append_tcr2` is distinct: final upstream `GCode.cpp:1753–1757` still
+descends immediately on `will_go_down`, after its unconditional tower travel
+for that condition. It has no Type1 finish-first/deferred-descent predicate.
+Keep this ordering rather than copying Type1's guard into Type2.
+
+### Predicate consumers and observable coverage
+
+| Rust consumer | Upstream boundary | Smooth/wrapping observation and limit |
+|---|---|---|
+| `integration.rs::Integration::new` | `GCode.hpp:130`, integration's sparse-skipped state | Type1 and Type2 variants require tower extrusion at object Z rather than accumulated compacted Z. |
+| `type1/emit.rs::append` | `GCode.cpp:1178,1231–1250,1262–1271` | Type1 variants require no compacted-layer restoration lifts; the normal compacted variant separately checks model-side end-filament Z. |
+| `type1/plan.rs::Planned::new` | `WipeTower.cpp:1990`, constructor sparse-skipped state | Type1 variants exercise full-height planning and emission. Exact first-change index and first-layer footprint are not independently compared by the height observer. |
+| `plan.rs::Plan::new` | `WipeTower2.cpp:1060`, constructor sparse-skipped state | Type2 variants exercise full-height planning and emission. Exact first-layer speed, cone shape and filament accounting are not independently compared by the height observer. |
+| `type1/generator.rs::finish_result` | `WipeTower.cpp:3099–3102,3999–4002`, printed-layer filament accounting | The variants exercise generated sparse results, but exact per-filament consumed length is not independently asserted. Full output and its unchanged comparison result remain available; height success is not an accounting-parity claim. |
+
+The other helper consumers in final upstream are not implemented by these Rust
+shells: `WipeTower.cpp:79`'s sparse-layer combination and
+`Print.cpp:1434/1504`'s estimated/actual compacted-tower clearance validators.
+Sparse combination currently has registry/profile vocabulary only; the existing
+`print/validate/estimated_tower.rs` checks printable-region containment, not
+compacted-tower clearance. Those absent behaviors are deferred and have no
+claimed coverage here. There is also no corresponding incremental
+`Print::invalidate_state_by_config_options` implementation for `Print.cpp:571`.
+Do not change its raw option vocabulary in export, registry or profile-refresh
+keys: the effective predicate controls behavior, not configuration identity.
+
 ## E2E contract and failure modes
 
 Use the upstream test's eight combinations: Type1/Type2 × one/two physical
@@ -106,6 +154,15 @@ the compacted tower. Establish from Native output that the conditional explicit
 descent occurs before nozzle-change extrusion, then require the same Ares
 observation. This exercises the other nozzle-entry branch without weakening any
 of the eight original height contracts.
+
+Add a single-physical-nozzle Type1 custom-macro scenario whose end-filament
+macro exposes `{position[2]}`. Establish Native entries after object extrusion
+above the short object without the finish-first tower travel; the end macro
+must still see at least the highest printed object Z. This exposes an unsafe
+early descent even when a later restoration makes the change macro safe.
+Also run Smooth-timelapse and wrapping-detection variants with the raw no-sparse
+option still enabled: Native must retain tower extrusion at object height and
+emit no compacted-layer restoration lifts. Require the same public-API behavior.
 
 Retain input, complete Native/Ares G-code, independent parsed height observations
 and the unchanged whole-output comparator's result. First establish that Native
