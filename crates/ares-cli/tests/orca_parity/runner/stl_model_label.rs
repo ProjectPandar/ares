@@ -12,13 +12,11 @@ use super::{
     profile_entry::{placed_cube, vendor, write_json},
     stages,
 };
-use crate::presets::VendorProfiles;
 
 #[tokio::test]
 async fn stl_model_label_id() {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
-    let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();
     let machine = "Bambu Lab X1 Carbon 0.4 nozzle";
     let process = "0.20mm Standard @BBL X1C";
     let filament = "Bambu PLA Basic @BBL X1C";
@@ -34,16 +32,6 @@ async fn stl_model_label_id() {
         .keep();
     write_json(&directory.join("catalog.json"), &catalog);
     write_json(&directory.join("selection.json"), &selection);
-    for (kind, fields) in [
-        ("machine", profiles.machine(machine).unwrap()),
-        ("process", profiles.process(process).unwrap()),
-        ("filament", profiles.filament(filament).unwrap()),
-    ] {
-        write_json(
-            &directory.join(format!("{kind}.json")),
-            &Value::Object(fields),
-        );
-    }
 
     let stl = placed_cube(&std::fs::read(root.join("tests/parity/cube10.stl")).unwrap());
     // The oracle slices the same pre-positioned cube from the case directory.
@@ -76,16 +64,24 @@ async fn stl_model_label_id() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
+    let native_presets = super::profile_entry::native_user_presets::resolved(
+        &directory,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
     let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
     let output = directory.join("native");
     std::fs::create_dir(&output).unwrap();
     stages::run(
         runner.bin(),
         [
+            "--datadir".to_owned(),
+            native_presets.datadir.to_str().unwrap().to_owned(),
             "--load-settings".to_owned(),
-            format!("{};{}", path("machine.json"), path("process.json")),
+            super::join_paths(native_presets.settings.iter()),
             "--load-filaments".to_owned(),
-            path("filament.json"),
+            super::join_paths(native_presets.filaments.iter()),
             "--arrange".to_owned(),
             "0".to_owned(),
             "--slice".to_owned(),

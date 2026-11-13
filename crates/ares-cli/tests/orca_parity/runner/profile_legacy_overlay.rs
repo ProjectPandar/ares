@@ -8,14 +8,13 @@
 //! embedded Ender-3 `extruder_clearance_radius = 47` with `68`.
 
 use ares_core::{ConfigOverrides, Placement, ProfileSliceRequest};
-use serde_json::{Value, json};
+use serde_json::json;
 
 use super::{
     OrcaRunner,
     profile_entry::{vendor, write_json},
     stages,
 };
-use crate::presets::VendorProfiles;
 
 fn config_line<'a>(gcode: &'a str, key: &str) -> Option<&'a str> {
     gcode
@@ -29,16 +28,28 @@ fn line_token(line: &str) -> &str {
 
 #[tokio::test]
 async fn profile_legacy_machine_overlay_matches_native() {
+    compare_radius(None).await;
+}
+
+#[tokio::test]
+async fn child_canonical_radius_overrides_inherited_legacy_radius() {
+    compare_radius(Some("69")).await;
+}
+
+async fn compare_radius(child_radius: Option<&str>) {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
-    let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();
     let machine = "Bambu Lab X1 Carbon 0.4 nozzle";
     let process = "0.20mm Standard @BBL X1C";
     let filament = "Bambu PLA Basic @BBL X1C";
-    let catalog = json!({
+    let mut catalog = json!({
         "vendors": [vendor(&profiles_root, "OrcaFilamentLibrary"), vendor(&profiles_root, "BBL")],
         "imports": [],
     });
+    if let Some(radius) = child_radius {
+        catalog["vendors"][1]["files"][format!("machine/{machine}.json")]["extruder_clearance_radius"] =
+            json!(radius);
+    }
     let selection = json!({"machine": machine, "process": process, "filaments": [filament]});
     let directory = tempfile::Builder::new()
         .prefix("profile-legacy-overlay-")
@@ -47,16 +58,6 @@ async fn profile_legacy_machine_overlay_matches_native() {
         .keep();
     write_json(&directory.join("catalog.json"), &catalog);
     write_json(&directory.join("selection.json"), &selection);
-    for (kind, fields) in [
-        ("machine", profiles.machine(machine).unwrap()),
-        ("process", profiles.process(process).unwrap()),
-        ("filament", profiles.filament(filament).unwrap()),
-    ] {
-        write_json(
-            &directory.join(format!("{kind}.json")),
-            &Value::Object(fields),
-        );
-    }
     let input = include_bytes!("../../../../../tests/parity/validation/preset-json-ender3-0.2.3mf");
     std::fs::write(directory.join("input.3mf"), input).unwrap();
     let catalog_json = catalog.to_string();
@@ -78,22 +79,31 @@ async fn profile_legacy_machine_overlay_matches_native() {
     )
     .await
     .unwrap();
+    std::fs::write(directory.join("ares.gcode"), &ares).unwrap();
     let ares = String::from_utf8_lossy(&ares).into_owned();
     let ares_line = config_line(&ares, "extruder_clearance_radius")
         .expect("ares output lacks ; extruder_clearance_radius = line");
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
+    let native_presets = super::profile_entry::native_user_presets::resolved(
+        &directory,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
     let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
     let output = directory.join("native");
     std::fs::create_dir(&output).unwrap();
     stages::run(
         runner.bin(),
         [
+            "--datadir".to_owned(),
+            native_presets.datadir.to_str().unwrap().to_owned(),
             "--load-settings".to_owned(),
-            format!("{};{}", path("machine.json"), path("process.json")),
+            super::join_paths(native_presets.settings.iter()),
             "--load-filaments".to_owned(),
-            path("filament.json"),
+            super::join_paths(native_presets.filaments.iter()),
             "--slice".to_owned(),
             "0".to_owned(),
             "--outputdir".to_owned(),
@@ -112,11 +122,11 @@ async fn profile_legacy_machine_overlay_matches_native() {
         line_token(native_line),
         "; extruder_clearance_radius mismatch (loaded machine legacy rename must precede the overlay)"
     );
-    // The loaded machine chain's legacy value wins over the embedded one
-    // (`PrintConfig.cpp:8248-8249` rename before `:2750-2812` overlay).
+    // A child's canonical value overrides the parent's renamed value, and
+    // either loaded machine value wins over the embedded project value.
     assert_eq!(
         line_token(ares_line),
-        "68",
+        child_radius.unwrap_or("68"),
         "extruder_clearance_radius must come from the loaded machine: {ares_line}"
     );
 }
