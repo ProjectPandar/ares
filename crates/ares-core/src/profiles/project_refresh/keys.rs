@@ -89,7 +89,7 @@ pub(crate) fn default_value(key: &str) -> Result<Option<RawConfigValue>, SliceEr
 
 /// `is_filament_extruder_override_key` (`PrintConfig.cpp:130-139`) over
 /// `filament_extruder_override_keys` (`PrintConfig.cpp:97-122`).
-fn is_filament_extruder_override_key(key: &str) -> bool {
+pub(in crate::profiles) fn is_filament_extruder_override_key(key: &str) -> bool {
     matches!(
         key,
         "filament_retraction_length"
