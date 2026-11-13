@@ -43,7 +43,10 @@ pub(super) fn refresh(
         if name.is_empty() {
             continue;
         }
-        let system = system_config(catalog, kind, name)?;
+        // CLI:3182-3185: a resolver miss keeps the project's values.
+        let Some(system) = system_config(catalog, kind, name)? else {
+            continue;
+        };
         let protected = dirty_keys(&dirty, slot)?;
         for (key, value) in system.entries() {
             if bookkeeping(key)
@@ -68,14 +71,10 @@ pub(super) fn refresh(
         .map(|(slot, name)| {
             let name = system_name(name, &inherited, slot + 1);
             // CLI:2805–2807: a resolver miss keeps the imported filament slot.
-            if name.is_empty()
-                || catalog
-                    .selectable_position(ProfileKind::Filament, name)
-                    .is_none_or(|position| catalog.is_user_scope(position))
-            {
+            if name.is_empty() {
                 Ok(None)
             } else {
-                system_config(catalog, ProfileKind::Filament, name).map(Some)
+                system_config(catalog, ProfileKind::Filament, name)
             }
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
@@ -87,13 +86,13 @@ fn system_config(
     catalog: &Catalog,
     kind: ProfileKind,
     name: &str,
-) -> Result<ProjectSettingsRaw, SliceError> {
-    let position = catalog
+) -> Result<Option<ProjectSettingsRaw>, SliceError> {
+    let Some(position) = catalog
         .selectable_position(kind, name)
         .filter(|position| !catalog.is_user_scope(*position))
-        .ok_or_else(|| {
-            SliceError::InvalidInput(format!("system preset '{name}' was not supplied"))
-        })?;
+    else {
+        return Ok(None);
+    };
     let membership = keys::names(kind).collect::<BTreeSet<_>>();
     let mut raw = ProjectSettingsRaw::default();
     raw.extend(super::default_preset_fields(kind)?);
@@ -117,7 +116,7 @@ fn system_config(
     if kind == ProfileKind::Machine {
         super::super::preset_normalization::normalize_machine(&mut raw)?;
     }
-    Ok(raw)
+    Ok(Some(raw))
 }
 
 pub(super) fn system_name<'a>(name: &'a str, inherited: &'a [String], slot: usize) -> &'a str {
