@@ -1,11 +1,13 @@
 //! Contact-temperature command rewriting in `GCode.cpp::append_tcr2`.
+use super::writer::Writer;
+use crate::GCodeFlavor;
 
 pub(super) fn rewrite(
     custom: &str,
     tower: &str,
     tool: usize,
-    base: i32,
-    interface: i32,
+    (base, interface): (i32, i32),
+    flavor: GCodeFlavor,
 ) -> (String, String) {
     let token = format!(" T{tool}");
     let custom = custom
@@ -17,6 +19,7 @@ pub(super) fn rewrite(
         })
         .collect();
     let preheat = format!("preheat T{tool}");
+    let flush = Writer::flush_planner_queue_command(flavor);
     let mut rewritten = String::with_capacity(tower.len());
     for line in tower.split_inclusive('\n') {
         let mut line = line.to_owned();
@@ -33,7 +36,11 @@ pub(super) fn rewrite(
         }
         let trimmed = line.trim_start_matches([' ', '\t']);
         let matches = !trimmed.contains('T') || trimmed.contains(&token);
-        if !(trimmed.starts_with("M109") && matches && number(trimmed, 'S') == Some(interface)) {
+        if trimmed.starts_with("M109") && matches && number(trimmed, 'S') == Some(interface) {
+            if rewritten.ends_with(flush) {
+                rewritten.truncate(rewritten.len() - flush.len());
+            }
+        } else {
             rewritten.push_str(&line);
         }
     }

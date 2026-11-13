@@ -157,8 +157,8 @@ pub(super) fn append(
             &change,
             &code,
             tool,
-            at(temperatures, tool).0,
-            temperature,
+            (at(temperatures, tool).0, temperature),
+            settings.printer.gcode.gcode_flavor,
         );
     }
     let mut config = placeholders::base_config(

@@ -95,10 +95,14 @@ impl Generator<'_> {
             let change_interface_temperature =
                 interface && interface_temp > 0 && interface_temp != temperature;
             if change_interface_temperature {
-                writer.set_temperature(interface_temp, true);
+                writer.set_temperature(interface_temp, true, true);
             }
             if change_interface_temperature && cooldown {
-                writer.set_temperature(temperature, false);
+                writer.set_temperature(
+                    temperature,
+                    false,
+                    self.flavor != crate::GCodeFlavor::Klipper,
+                );
             }
             if interface && filament.interface_distance > 0.0 && filament.interface_length > 0.0 {
                 writer.extrude_explicit(
@@ -117,7 +121,11 @@ impl Generator<'_> {
             }
             self.wipe(&mut writer, bounds, volume, (interface, false, fill_box));
             if change_interface_temperature && !cooldown {
-                writer.set_temperature(temperature, false);
+                writer.set_temperature(
+                    temperature,
+                    false,
+                    self.flavor != crate::GCodeFlavor::Klipper,
+                );
             }
             writer.gcode.push_str("; WIPE_TOWER_END\n");
             self.tool_changes += 1;
@@ -152,7 +160,7 @@ impl Generator<'_> {
         let position = writer.rotated(writer.position);
         writer.feedrate(self.travel_speed * 60.0);
         writer.gcode.push_str(&format!(
-            "G1 X{} Y{}_GCODE_WIPE_TOWER_NEVER_SKIP_TAG\n[deretraction_from_wipe_tower_generator]",
+            "G1 X{} Y{}_GCODE_WIPE_TOWER_NEVER_SKIP_TAG\n[deretraction_from_wipe_tower_generator]\n",
             super::super::format_processor_float(f64::from(position[0])),
             super::super::format_processor_float(f64::from(position[1]))
         ));
