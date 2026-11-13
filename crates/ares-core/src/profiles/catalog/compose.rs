@@ -179,6 +179,9 @@ impl Catalog {
             // Config.cpp:600-615 normalizes each source before PresetBundle.cpp:7839
             // applies it over the parent/default config, not over a joined raw map.
             authored.handle_legacy();
+            if completed_vendor {
+                super::super::preset_normalization::replace_nil_from_defaults(&mut authored, raw)?;
+            }
             raw.extend_raw(&authored);
             // Config.cpp:1147-1149 converts authored JSON before preset completion.
             if layer.fields.contains_key("thumbnails")
@@ -190,6 +193,9 @@ impl Catalog {
                     RawConfigValue::Text(thumbnails.to_owned()),
                 );
             }
+            if completed_vendor {
+                super::super::preset_normalization::extend_default_config_length(raw)?;
+            }
             fragments.push(fragment);
         }
         let mut merged = if self.direct_imports {
@@ -197,9 +203,6 @@ impl Catalog {
         } else {
             merge_profile_fragments(&fragments, kind, name)?
         };
-        if completed_vendor {
-            super::super::preset_normalization::extend_default_config_length(raw)?;
-        }
         if kind == ProfileKind::Machine
             && !self.direct_imports
             && (super::super::preset_normalization::normalize_machine(raw)? || completed_vendor)
