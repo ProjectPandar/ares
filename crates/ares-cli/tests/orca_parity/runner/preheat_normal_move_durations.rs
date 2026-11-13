@@ -5,7 +5,7 @@ use ares_core::gcode_processor::{EMoveType, MoveVertex};
 use serde_json::{Value, json};
 use std::{collections::BTreeSet, fs, process::Command};
 
-const UPSTREAM: &str = "345efec64c7b95a05ce5cf96df0dde66a158835c";
+const UPSTREAM: &str = "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19";
 const INPUT: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../tests/parity/preheat-normal-move-durations/x2d-two-prisms.3mf"
