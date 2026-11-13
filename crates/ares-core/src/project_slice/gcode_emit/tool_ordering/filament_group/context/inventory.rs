@@ -10,8 +10,9 @@ pub(super) fn build_nozzle_groups(
 ) -> Vec<NozzleGroup> {
     let mut groups = Vec::new();
     let mut group_id = 0;
-    for (extruder, count) in counts.iter().copied().enumerate() {
-        let diameter = canonical_diameter(diameters.0[extruder].0);
+    for (extruder, diameter) in diameters.0.iter().enumerate() {
+        let count = counts.get(extruder).copied().unwrap_or(1);
+        let diameter = canonical_diameter(diameter.0);
         for _ in 0..count {
             groups.push(NozzleGroup {
                 extruder,
