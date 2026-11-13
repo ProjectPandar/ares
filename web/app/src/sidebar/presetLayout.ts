@@ -824,6 +824,31 @@ export const PRINTER_PAGES: LayoutPage[] = [
           {
             "kind": "option",
             "key": "disable_m73"
+          },
+          {
+            "kind": "option",
+            "key": "thumbnails",
+            "full": true
+          },
+          {
+            "kind": "option",
+            "key": "use_relative_e_distances"
+          },
+          {
+            "kind": "option",
+            "key": "use_firmware_retraction"
+          },
+          {
+            "kind": "option",
+            "key": "time_cost"
+          },
+          {
+            "kind": "option",
+            "key": "build_plate_tilt_x"
+          },
+          {
+            "kind": "option",
+            "key": "build_plate_tilt_y"
           }
         ]
       },
@@ -876,31 +901,6 @@ export const PRINTER_PAGES: LayoutPage[] = [
           {
             "kind": "option",
             "key": "belt_frame_tilt_angle"
-          },
-          {
-            "kind": "option",
-            "key": "thumbnails",
-            "full": true
-          },
-          {
-            "kind": "option",
-            "key": "use_relative_e_distances"
-          },
-          {
-            "kind": "option",
-            "key": "use_firmware_retraction"
-          },
-          {
-            "kind": "option",
-            "key": "time_cost"
-          },
-          {
-            "kind": "option",
-            "key": "build_plate_tilt_x"
-          },
-          {
-            "kind": "option",
-            "key": "build_plate_tilt_y"
           }
         ]
       },
