@@ -1,5 +1,8 @@
-//! FilamentGroup.cpp:199–374,427–512,901–922,1316–1345,1495–1505.
-use super::{Context, Memory, Remembered, nozzle_hash, sequence};
+//! Final2.5 FilamentGroup.cpp:245–414,472–495,1313–1329; ToolOrdering.cpp:1810–1856.
+use super::{
+    Context, Memory, Remembered, calc_one_change_budget, nozzle_hash, select_best_group_for_ams,
+    sequence,
+};
 use crate::SliceError;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -13,6 +16,7 @@ pub(in super::super) fn solve(context: &Context) -> Result<Vec<usize>, SliceErro
         .collect::<Vec<_>>();
     let total = enumeration_count(context.used.len(), &hashes)?;
     let limits = nozzle_limits(context);
+    let one_change_budget = calc_one_change_budget(context);
     let mut seen = BTreeSet::new();
     let mut memory = Memory::default();
     let mut best_score = f64::MAX;
@@ -59,32 +63,16 @@ pub(in super::super) fn solve(context: &Context) -> Result<Vec<usize>, SliceErro
             best_preference = preference;
             primary = full;
         }
-        memory.remember(Remembered {
-            labels,
-            score,
-            preference,
-        });
+        memory.remember(
+            Remembered {
+                labels,
+                score,
+                preference,
+            },
+            one_change_budget,
+        );
     }
-    // Empty usable AMS inventory: the owning-extruder cost is 2 * 9999 per used head.
-    let ams_cost = |map: &[usize]| {
-        let mut heads = [false; 2];
-        for &id in &context.used {
-            heads[context.nozzle_groups[map[id]].extruder] = true;
-        }
-        heads.into_iter().filter(|used| *used).count() * 2 * 9999
-    };
-    let mut cost = ams_cost(&primary);
-    while let Some(candidate) = memory.pop() {
-        let mut map = vec![0; context.total];
-        for (&id, nozzle) in context.used.iter().zip(candidate.labels) {
-            map[id] = nozzle;
-        }
-        let candidate_cost = ams_cost(&map);
-        if candidate_cost < cost {
-            cost = candidate_cost;
-            primary = map;
-        }
-    }
+    primary = select_best_group_for_ams(context, primary, memory);
     // ToolOrdering.cpp:1842–1853: an unsatisfiable manual extruder map is an error.
     if context
         .used
