@@ -24,7 +24,7 @@ async function main() {
   for (const entry of (await readdir(source, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name, "en"))) {
     if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
     const bytes = await readFile(join(source, entry.name));
-    const index = JSON.parse(bytes.toString("utf8"));
+    const index = JSON.parse(bytes.toString("utf8").replace(/^\uFEFF/u, ""));
     if (!lists.some((list) => Array.isArray(index[list]))) continue;
     manifests.push({ id: entry.name.slice(0, -5), index, bytes });
   }
@@ -50,7 +50,7 @@ async function main() {
       }
       const target = join(system, id, within);
       const contents = await readFile(original);
-      files[path] = JSON.parse(contents.toString("utf8"));
+      files[path] = JSON.parse(contents.toString("utf8").replace(/^\uFEFF/u, ""));
       await mkdir(dirname(target), { recursive: true });
       await copyFile(original, target);
       hashes[`${id}/${path}`] = digest(contents);
