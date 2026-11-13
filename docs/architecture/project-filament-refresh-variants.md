@@ -122,6 +122,20 @@ inherits system `1` with either empty or nonempty difference metadata; an
 explicit authored `0` stays `0` with empty metadata. These are controls for the
 existing machine path, not a reason to change its implementation.
 
+The source device-vector comparison also covers JSON deserialization before
+assembly. `Config.cpp:887–918,1008–1060` serializes a JSON array for
+`set_deserialize`; `ConfigOptionFloatsTempl::deserialize`
+(`Config.hpp:933–940`) maps the empty string to the one-element vector `{0}`.
+An empty float JSON array therefore contributes `0`, not no elements, for
+all `coFloats` and `coFloatsNullable` keys through this loader. This is not a
+device-key-specific rule or a change to `set_filament_dev_options`' internal
+empty-vector skip behavior. The existing shared Rust wire decoder already
+implements it; raw normalization in `options/json_deserialize.rs` bypasses
+that decoder for empty non-nullable float arrays and maps all bare empty
+vector strings to empty lists. Before changing that shared owner, inventory
+the affected raw entry points and existing parity inputs. Do not implement a
+device-key whitelist around the temporary raw-config shell.
+
 Native observations may have typed envelopes while the public API has flat
 values. Decode the observation at that boundary while retaining complete vector
 length/order/value/type checks. A public core request using CLI policy is not an
