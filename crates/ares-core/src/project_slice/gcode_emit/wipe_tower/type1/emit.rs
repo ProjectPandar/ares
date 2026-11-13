@@ -1,6 +1,6 @@
 //! `GCode.cpp:712–1117`: Type1 append_tcr; never calls append_tcr2/set_extruder.
 use super::super::super::{motion, pressure_advance, timelapse, value::Value};
-use super::super::{emit::Append, postprocess};
+use super::super::{emit::Append, filament::at, postprocess};
 use super::{dynamic, templates, travel};
 use crate::SliceError;
 
@@ -123,6 +123,22 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
         .runtime_gcode
         .change_filament_gcode
         .0;
+    let new_physical = (at(&settings.project.gcode.filament_map.0, tool).0 - 1) as usize;
+    let tool_may_travel = !source.is_empty()
+        || (state.extruder_selected && state.extruders.active_physical() != new_physical);
+    let mut restore_layer_z = Vec::new();
+    if compacted_below_object
+        && tool_may_travel
+        && state.writer_z.expect("tower travel positions writer") < current_z - 1e-4
+    {
+        motion::tower::writer_z(
+            &mut restore_layer_z,
+            state,
+            current_z,
+            "Restore layer Z before toolchange",
+            false,
+        );
+    }
     let mut change = String::new();
     if !source.is_empty() {
         let mut config = templates::config(state, context)?;
@@ -172,8 +188,23 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     let mut start_filament = templates::start(state, context, tool, close_mask)?;
     start_filament.push_str(std::str::from_utf8(&last_travel).expect("writer G-code is UTF-8"));
     start_filament.push_str(std::str::from_utf8(&unretract).expect("writer G-code is UTF-8"));
+    if compacted_below_object {
+        let mut descend = Vec::new();
+        motion::tower::writer_z(
+            &mut descend,
+            state,
+            z,
+            "Descend to compacted wipe tower z (no sparse layers)",
+            false,
+        );
+        start_filament.push_str(std::str::from_utf8(&descend).expect("writer G-code is UTF-8"));
+    }
     let mut config = templates::config(state, context)?;
     config.insert("filament_end_gcode", Value::String(end_filament));
+    config.insert(
+        "restore_layer_z_before_toolchange",
+        Value::String(String::from_utf8(restore_layer_z).expect("writer G-code is UTF-8")),
+    );
     config.insert("change_filament_gcode", Value::String(change));
     config.insert("filament_start_gcode", Value::String(start_filament));
     let text = templates::render(state, "tcr_rotated_gcode", &code, tool, &mut config);
