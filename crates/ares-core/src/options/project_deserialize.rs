@@ -2,6 +2,8 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, de::Visitor};
 
+use crate::project::raw_settings::RawConfigValue;
+
 use super::{
     ProjectSettings, project_settings::ProjectSettingsBuilder,
     typed_legacy::deserialize_project_field,
@@ -21,11 +23,25 @@ impl<'de> Deserialize<'de> for ProjectSettingsBuilder {
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_map(ProjectSettingsVisitor)
+        deserializer.deserialize_map(ProjectSettingsVisitor {
+            apply_thumbnail: true,
+        })
     }
 }
 
-struct ProjectSettingsVisitor;
+pub(crate) fn deserialize_config_values(
+    input: RawConfigValue,
+) -> Result<ProjectSettingsBuilder, String> {
+    input
+        .deserialize_map(ProjectSettingsVisitor {
+            apply_thumbnail: false,
+        })
+        .map_err(|error| error.to_string())
+}
+
+struct ProjectSettingsVisitor {
+    apply_thumbnail: bool,
+}
 
 impl<'de> Visitor<'de> for ProjectSettingsVisitor {
     type Value = ProjectSettingsBuilder;
@@ -53,7 +69,9 @@ impl<'de> Visitor<'de> for ProjectSettingsVisitor {
             map.next_value::<serde::de::IgnoredAny>()?;
         }
 
-        builder.apply_thumbnail_composite::<A::Error>()?;
+        if self.apply_thumbnail {
+            builder.apply_thumbnail_composite::<A::Error>()?;
+        }
         Ok(builder)
     }
 }
