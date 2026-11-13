@@ -81,7 +81,7 @@ fn run_case(case: Case<'_>) {
                 .iter(),
             ),
             "--load-filaments".to_owned(),
-            filament_paths.clone(),
+            filament_paths,
             "--arrange".to_owned(),
             "1".to_owned(),
             "--export-3mf".to_owned(),
@@ -93,6 +93,12 @@ fn run_case(case: Case<'_>) {
     )
     .unwrap();
 
+    let native_presets = crate::runner::profile_entry::native_user_presets::resolved(
+        &runner.work,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
     let overrides_json = serde_json::to_vec(&case.overrides).unwrap();
     let overrides = ares_core::ConfigOverrides::from_json(&overrides_json).unwrap();
     let catalog_json = catalog.to_string();
@@ -136,16 +142,12 @@ fn run_case(case: Case<'_>) {
     stages::run(
         &runner.bin,
         [
+            "--datadir".to_owned(),
+            native_presets.datadir.to_str().unwrap().to_owned(),
             "--load-settings".to_owned(),
-            join_paths(
-                [
-                    runner.work.join("machine.json"),
-                    runner.work.join("process.json"),
-                ]
-                .iter(),
-            ),
+            join_paths(native_presets.settings.iter()),
             "--load-filaments".to_owned(),
-            filament_paths,
+            join_paths(native_presets.filaments.iter()),
             "--arrange".to_owned(),
             "0".to_owned(),
             "--slice".to_owned(),
