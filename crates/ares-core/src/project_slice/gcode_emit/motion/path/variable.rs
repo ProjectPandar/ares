@@ -11,10 +11,11 @@ pub(super) struct Emission<'a> {
     pub(super) acceleration: u32,
     pub(super) force_no_extrusion: bool,
     pub(super) properties: PathProperties<'a>,
+    pub(super) timelapse_context: crate::project_slice::gcode_emit::timelapse::Context<'a>,
     pub(super) state: &'a mut EmitState,
 }
 
-pub(super) fn emit(command: Emission<'_>) {
+pub(super) fn emit(command: Emission<'_>) -> Result<(), crate::SliceError> {
     let Emission {
         output,
         points,
@@ -24,6 +25,7 @@ pub(super) fn emit(command: Emission<'_>) {
         acceleration,
         force_no_extrusion,
         properties,
+        timelapse_context,
         state,
     } = command;
     let original_feedrate = original_speed * 60.0;
@@ -126,6 +128,16 @@ pub(super) fn emit(command: Emission<'_>) {
         } else {
             extrusion::linear_segment(output, end, length, properties, state);
         }
+        // GCode.cpp:10321: the farthest-point check after each segmented emission.
+        crate::project_slice::gcode_emit::layers::farthest::check_and_insert(
+            output,
+            state,
+            (
+                processed[index].x + state.origin.0,
+                processed[index].y + state.origin.1,
+            ),
+            timelapse_context,
+        )?;
         previous = end_q;
         previous_z = quantize(processed[index].z);
     }
@@ -144,4 +156,5 @@ pub(super) fn emit(command: Emission<'_>) {
         .rev()
         .map(|&(x, y)| arc::Point { x, y })
         .collect();
+    Ok(())
 }
