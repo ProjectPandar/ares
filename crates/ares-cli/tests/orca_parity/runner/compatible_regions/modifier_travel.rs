@@ -270,6 +270,9 @@ fn outputs_with_cooling(
         ("sparse_infill_density", "0%"),
         ("sparse_infill_pattern", "rectilinear"),
         ("sparse_infill_filament_id", "2"),
+        ("internal_solid_filament_id", "2"),
+        ("top_surface_filament_id", "2"),
+        ("bottom_surface_filament_id", "2"),
         (
             "reduce_crossing_wall",
             if reduce_crossing_wall { "1" } else { "0" },

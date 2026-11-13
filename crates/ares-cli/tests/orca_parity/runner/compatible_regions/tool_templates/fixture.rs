@@ -71,6 +71,9 @@ pub(super) fn configured_project(
         ("sparse_infill_density", "0%"),
         ("sparse_infill_pattern", "rectilinear"),
         ("sparse_infill_filament_id", "2"),
+        ("internal_solid_filament_id", "2"),
+        ("top_surface_filament_id", "2"),
+        ("bottom_surface_filament_id", "2"),
     ] {
         process.insert(key.into(), json!(value));
     }
