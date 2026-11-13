@@ -3,12 +3,18 @@ use crate::GCodeFlavor;
 use std::fmt::Write;
 
 impl Writer {
-    pub(in super::super) fn flush_planner_queue(gcode: &mut String, flavor: GCodeFlavor) {
-        gcode.push_str(if flavor == GCodeFlavor::Klipper {
+    pub(in super::super) fn flush_planner_queue_command(flavor: GCodeFlavor) -> &'static str {
+        if flavor == GCodeFlavor::Klipper {
             "M400\n"
         } else {
             "G4 S0\n"
-        });
+        }
+    }
+
+    pub(in super::super) fn flush_planner_queue(gcode: &mut String, flavor: GCodeFlavor) {
+        if flavor != GCodeFlavor::Klipper {
+            gcode.push_str(Self::flush_planner_queue_command(flavor));
+        }
     }
 
     pub(super) fn format_feedrate(&mut self, feedrate: f32) {
@@ -49,13 +55,17 @@ impl Writer {
     }
 
     pub(in super::super) fn switch_filament_monitoring(&mut self, enabled: bool) {
-        Self::flush_planner_queue(&mut self.gcode, self.flavor);
+        self.gcode
+            .push_str(Self::flush_planner_queue_command(self.flavor));
         self.gcode
             .push_str(if enabled { "M591 R\n" } else { "M591 S0\n" });
     }
 
-    pub(in super::super) fn set_temperature(&mut self, temperature: i32, wait: bool) {
-        Self::flush_planner_queue(&mut self.gcode, self.flavor);
+    pub(in super::super) fn set_temperature(&mut self, temperature: i32, wait: bool, sync: bool) {
+        if sync {
+            self.gcode
+                .push_str(Self::flush_planner_queue_command(self.flavor));
+        }
         writeln!(
             self.gcode,
             "M{} S{temperature}",
