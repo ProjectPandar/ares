@@ -294,16 +294,7 @@ impl PlaterSession {
         )
         .await
         .map_err(js_error)?;
-        // Model::plates_custom_gcodes is keyed by plate index.
-        let index = plate.map_or(0, |plate| plate as i32 - 1);
-        let custom_gcodes = self
-            .session
-            .project()
-            .plates_custom_gcodes()
-            .get(&index)
-            .map(|info| info.gcodes.clone())
-            .unwrap_or_default();
-        Ok(SliceOutput::from_processed(output).with_custom_gcodes(&custom_gcodes))
+        Ok(SliceOutput::from_processed(output).with_custom_gcodes(&self.custom_gcodes(plate)))
     }
 
     /// Slices a plate with selected presets, as `sliceWithProfilesProcessed` slices the
@@ -328,7 +319,7 @@ impl PlaterSession {
             overrides: &overrides,
             placement: options.placement(),
         };
-        ares_core::slice_plater_with_profiles(
+        let output = ares_core::slice_plater_with_profiles(
             &self.session,
             request,
             true,
@@ -336,12 +327,28 @@ impl PlaterSession {
             crate::status::context(options.seed, report.as_mut()),
         )
         .await
-        .map(SliceOutput::from_processed)
-        .map_err(js_error)
+        .map_err(js_error)?;
+        Ok(SliceOutput::from_processed(output)
+            .with_custom_gcodes(&self.custom_gcodes(options.plate)))
     }
 }
 
 impl PlaterSession {
+    /// The custom G-codes of plate `plate` (1-based; the first when omitted), which
+    /// `Model::plates_custom_gcodes` keys by plate index.
+    fn custom_gcodes(
+        &self,
+        plate: Option<u32>,
+    ) -> Vec<ares_core::gcode_processor::CustomGCodeItem> {
+        let index = plate.map_or(0, |plate| plate as i32 - 1);
+        self.session
+            .project()
+            .plates_custom_gcodes()
+            .get(&index)
+            .map(|info| info.gcodes.clone())
+            .unwrap_or_default()
+    }
+
     fn plates(&self) -> Vec<ScenePlate> {
         let objects = self.session.project().objects();
         self.session
