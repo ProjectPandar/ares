@@ -49,9 +49,9 @@ async fn selection_preserves_loaded_model_and_applies_explicit_overrides_last() 
 }
 
 #[tokio::test]
-async fn multiple_filament_admission_is_rejected_without_changing_cli_admission() {
+async fn single_filament_always_selection_remains_admitted() {
     let settings = input::settings("Missing Process", "0.2");
-    let Some(case) = Case::new("selection-multiple-boundary", settings.clone()) else {
+    let Some(case) = Case::new("selection-single-boundary", settings.clone()) else {
         return;
     };
     assert_eq!(
@@ -62,24 +62,77 @@ async fn multiple_filament_admission_is_rejected_without_changing_cli_admission(
         "native-premise.json",
         &json!({"passed": true, "scope": "single-filament control"}),
     );
-    let mut multiple = settings;
-    for key in [
-        "filament_settings_id",
-        "filament_ids",
-        "filament_colour",
-        "filament_diameter",
-    ] {
-        let first = multiple[key][0].clone();
-        multiple[key] = json!([first, first]);
-    }
-    case.boundary(&multiple, false).await.unwrap();
+    case.boundary(&settings, false).await.unwrap();
     case.write(
         "cli-premise.json",
-        &json!({"passed": true, "filament_slots": 2}),
+        &json!({"passed": true, "filament_slots": 1}),
     );
-    let error = case
-        .boundary(&multiple, true)
+    case.boundary(&settings, true).await.unwrap();
+}
+
+#[tokio::test]
+async fn two_filament_always_selection_loads_each_external_filament() {
+    let mut settings = input::settings("Missing Process", "0.2");
+    settings["filament_settings_id"] = json!(["Missing Filament A", "Missing Filament B"]);
+    settings["filament_ids"] = json!(["fixture-a", "fixture-b"]);
+    settings["filament_colour"] = json!(["#AABBCC", "#CCDDEE"]);
+    settings["filament_diameter"] = json!(["1.75", "1.75"]);
+    settings["filament_flow_ratio"] = json!(["0.91", "0.92"]);
+    settings["filament_extruder_variant"] =
+        json!(["Direct Drive Standard", "Direct Drive Standard"]);
+    settings["different_settings_to_system"] = json!(["", "", "", ""]);
+    let Some(case) = Case::new("selection-two-filament-always", settings) else {
+        return;
+    };
+    case.write("native-premise.json", &json!({"passed": true}));
+    let view = case
+        .api()
         .await
-        .expect_err("multi-filament Always is outside this slice");
-    assert!(error.to_string().contains("single filament"), "{error}");
+        .expect("two-filament Always must load external filament presets");
+    assert_eq!(
+        view["settings"]["filament_flow_ratio"],
+        json!(["0.91", "0.92"])
+    );
+    assert_eq!(
+        view["settings"]["filament_settings_id"],
+        json!([
+            "Missing Filament A(selection-two-filament-always.3mf)",
+            "Missing Filament B(selection-two-filament-always.3mf)"
+        ])
+    );
+}
+
+#[tokio::test]
+async fn h2d_always_selection_slices_filament_variant_ranges() {
+    let mut settings = input::settings("Missing Process", "0.2");
+    settings["filament_settings_id"] = json!(["H2D Filament A", "H2D Filament B"]);
+    settings["filament_ids"] = json!(["h2d-a", "h2d-b"]);
+    settings["filament_colour"] = json!(["#AABBCC", "#CCDDEE"]);
+    settings["filament_diameter"] = json!(["1.75", "1.75"]);
+    settings["filament_self_index"] = json!(["1", "1", "2", "2"]);
+    settings["filament_extruder_variant"] = json!([
+        "Direct Drive Standard",
+        "Direct Drive High Flow",
+        "Direct Drive Standard",
+        "Direct Drive High Flow"
+    ]);
+    settings["filament_flow_ratio"] = json!(["0.91", "0.92", "0.93", "0.94"]);
+    settings["nozzle_diameter"] = json!(["0.4", "0.4"]);
+    settings["different_settings_to_system"] = json!(["", "", "", ""]);
+    let Some(case) = Case::with_catalog("selection-h2d-always", settings, input::catalog(&[], &[]))
+    else {
+        return;
+    };
+    case.write(
+        "native-premise.json",
+        &json!({"passed": true, "scope": "H2D"}),
+    );
+    let view = case
+        .api()
+        .await
+        .expect("H2D multi-filament Always must load external filament presets");
+    assert_eq!(
+        view["settings"]["filament_flow_ratio"],
+        json!(["0.91", "0.92", "0.93", "0.94"])
+    );
 }
