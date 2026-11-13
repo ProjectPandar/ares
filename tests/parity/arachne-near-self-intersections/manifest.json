@@ -1,0 +1,49 @@
+{
+  "template": "mesh-edge-pairing/cube-control.3mf",
+  "template_sha256": "3d28ef67d923a90e022b8c186ebf06c050d1473ecf1bcdc83e1768f470592533",
+  "archive_sha256": "ebc96e851366d5328a05226929dacde3f5b9577dcffce5e51046f71da36a44fe",
+  "polygon_mm": [
+    [
+      0,
+      0
+    ],
+    [
+      9,
+      -0.08
+    ],
+    [
+      10,
+      -0.002
+    ],
+    [
+      10.0052,
+      0
+    ],
+    [
+      20,
+      0
+    ],
+    [
+      20,
+      10
+    ],
+    [
+      0,
+      10
+    ]
+  ],
+  "height_mm": 0.8,
+  "vertex_count": 14,
+  "triangle_count": 24,
+  "members_sha256": {
+    "3D/3dmodel.model": "5f27f2d302efadb39f09aa0e66c8f55a6621fa743af73c9d1fd32cc5ae5bbab7",
+    "3D/Objects/cube10.stl_1.model": "d5dc230ed5a4e002b2362b0e1b280af0c70882581ebaecb7203b19e528400b6b",
+    "3D/_rels/3dmodel.model.rels": "a2394cc41cda4143dbad13ac17d80d6bd007e7ff9ab7d44197bc939286bc1a4f",
+    "Metadata/filament_sequence.json": "b22b4b14fba3081538bb78d2304ff061b72ccaf6b742d1edd5bf13ceb3242884",
+    "Metadata/model_settings.config": "d73252ebcdf58c9b152a0920acba0a3407d7342a31f30857c89c62843f73f13d",
+    "Metadata/project_settings.config": "3384bc032cbd890ed58791a1a8dd870e18da0343ad85bc102a1171d57de58d14",
+    "Metadata/slice_info.config": "fa4c767811be276df82bfc4a10de2208f7e775a859a350a186130b799a768e3b",
+    "[Content_Types].xml": "4acce1f577c7f0af6d9d5923faac96a76aeb1c06f0eef1762b2c8905cc0c846b",
+    "_rels/.rels": "eba9728f3f5482ecaee5c07f78ab85ac1b537747f60035da471f79678f858aa9"
+  }
+}
