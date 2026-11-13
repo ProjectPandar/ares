@@ -43,6 +43,86 @@ fn wrong_authored_binary_import_matches_native() {
     compare_import("wrong-authored-binary");
 }
 
+#[test]
+fn disconnected_inward_component_matches_native() {
+    compare_import("disconnected-inward");
+}
+
+#[test]
+fn disconnected_opposite_seed_matches_native() {
+    compare_import("disconnected-opposite");
+}
+
+#[test]
+fn disconnected_scaled_seed_matches_native() {
+    compare_import("disconnected-scaled");
+}
+
+#[test]
+fn disconnected_zero_seed_matches_native() {
+    compare_import("disconnected-zero");
+}
+
+#[test]
+fn seed_epsilon_below_matches_native() {
+    compare_import("epsilon-below");
+}
+
+#[test]
+fn seed_epsilon_above_matches_native() {
+    compare_import("epsilon-above");
+}
+
+#[test]
+fn seed_epsilon_exact_is_not_backwards_like_native() {
+    compare_import("epsilon-exact");
+}
+
+#[test]
+fn seed_epsilon_adjacent_below_is_backwards_like_native() {
+    compare_import("epsilon-adjacent-below");
+}
+
+#[test]
+fn contradiction_rolls_back_prior_component_like_native() {
+    compare_import("contradiction-rollback");
+}
+
+#[test]
+fn signed_zero_and_permuted_facets_match_native() {
+    compare_import("signed-zero-permuted");
+}
+
+#[test]
+fn translated_near_cancelling_volume_matches_native() {
+    compare_import("float-volume");
+}
+
+#[test]
+fn excluded_domains_preserve_all_original_facets() {
+    for case in [
+        "excluded-open",
+        "excluded-degenerate",
+        "excluded-high-valence",
+    ] {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/parity/stl-closed-import-repair")
+            .join(format!("{case}.stl"));
+        let input = fs::read(path).unwrap();
+        let expected = raw_binary_facets(&input);
+        let model = load_model(&input).unwrap();
+        let actual: Vec<Facet> = model
+            .triangles()
+            .iter()
+            .map(|triangle| triangle.vertices().map(|point| [point.x, point.y, point.z]))
+            .collect();
+        assert_eq!(
+            actual, expected,
+            "excluded domain was partially repaired: {case}"
+        );
+    }
+}
+
 fn compare_import(case: &str) {
     let Some(native) = native_environment::binary("ARES_ORCA_BIN") else {
         return;
