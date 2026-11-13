@@ -3,7 +3,7 @@ use std::{fs, process::Command};
 #[test]
 fn optional_missing_native_never_consumes_frozen_stock_project_reference() {
     missing_native(
-        "runner::stock_project_native_stream::project_matches_initialized_orca_242_ordered_bytes",
+        "runner::stock_project_native_stream::project_matches_initialized_orca_ordered_bytes",
     );
 }
 
@@ -24,7 +24,7 @@ fn optional_missing_native_never_consumes_frozen_classic_records() {
 #[test]
 fn optional_missing_native_never_consumes_frozen_browser_reference() {
     missing_native(
-        "runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_242_ordered_bytes",
+        "runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_ordered_bytes",
     );
 }
 
@@ -43,7 +43,7 @@ fn required_without_browser_capture_is_visibly_skipped() {
     let output = Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
-            "runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_242_ordered_bytes",
+            "runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_ordered_bytes",
             "--nocapture",
         ])
         .env("ARES_REQUIRE_ORCA", "1")
