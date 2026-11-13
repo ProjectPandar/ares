@@ -1,6 +1,7 @@
 mod chain;
 mod cli_metadata;
 mod compose;
+mod defaults;
 mod document;
 mod filament_slots;
 mod guide;
@@ -50,6 +51,7 @@ pub(super) struct ComposedSelection {
 /// transport).
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) enum Scope {
+    Default,
     Vendor(usize),
     User,
 }
@@ -178,7 +180,8 @@ impl PresetCatalogHandle {
     /// The print a selection of `printer` holds after `PresetBundle::update_compatible` with
     /// `PresetSelectCompatibleType::Always`: `current` while compatible, else the best
     /// `PreferedPrintProfileMatch` against `current` and the printer's `default_print_profile`
-    /// (`PresetBundle.cpp:8635-8639`), or `None` when no print is compatible.
+    /// (`PresetBundle.cpp:8635-8639`), or the initialized collection default
+    /// when no ordinary print is compatible.
     pub fn compatible_print(
         &self,
         printer: &str,
