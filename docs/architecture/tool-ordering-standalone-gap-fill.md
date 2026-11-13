@@ -21,6 +21,24 @@ and `project_slice/gcode_emit/tool_ordering/collect.rs::object`.
 collection decisions, not a separate slicing design. This slice replaces its
 incorrect sparse classification of independent thin GapFill collections.
 
+## Source selector matrix
+
+`region_filament` dispatches in this order:
+
+| Collection predicate or selected role | Configuration key | Release lines |
+| --- | --- | --- |
+| Infill without solid infill | `sparse_infill_filament_id` | 146–148 |
+| Solid collection, ignoring GapFill members: TopSolidInfill or Ironing | `top_surface_filament_id` | 150–155 |
+| Same solid scan: BottomSurface | `bottom_surface_filament_id` | 150–157 |
+| Other result of the solid scan | `internal_solid_filament_id` | 150–158 |
+| Non-infill, nonempty, entirely inner-wall loops | `inner_wall_filament_id` | 160–163 |
+| Other non-infill, including standalone GapFill | `outer_wall_filament_id` | 160–163 |
+
+This slice changes only standalone GapFill in the last row.
+`WipingExtrusions::is_overriddable` at 3394–3405 rejects soluble filaments,
+accepts `flush_into_objects`, and otherwise requires both `flush_into_infill`
+and `erInternalInfill`. GapFill therefore retains wall overridability.
+
 ## Contract
 
 An independent thin-fill Path or Loop whose role is GapFill is not sparse
