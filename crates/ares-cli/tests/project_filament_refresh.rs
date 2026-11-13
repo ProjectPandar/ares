@@ -44,7 +44,12 @@ fn fixture(indices: &[&str]) -> (Value, Value) {
 }
 
 async fn compare(indices: &[&str]) {
-    let stale = indices != ["1", "2"];
+    let (project, catalog) = fixture(indices);
+    compare_project(project, catalog).await;
+}
+
+async fn compare_project(project: Value, catalog: Value) {
+    let stale = project["filament_self_index"] != json!(["1", "2"]);
     let Some(binary) = native_environment::binary("ARES_ORCA_FILAMENT_REFRESH_BIN") else {
         return;
     };
@@ -61,7 +66,6 @@ async fn compare(indices: &[&str]) {
         .unwrap()
         .keep();
     eprintln!("artifacts: {}", root.display());
-    let (project, catalog) = fixture(indices);
     let archive = input::project(&project);
     fs::write(root.join("input.3mf"), &archive).unwrap();
     fs::write(root.join("catalog.json"), catalog.to_string()).unwrap();
@@ -138,7 +142,16 @@ async fn compare(indices: &[&str]) {
     );
     let log = fs::read_to_string(root.join("00000.log")).unwrap();
     assert!(!log.contains("Could not find vendor for preset Synthetic Material"));
+    assert!(!log.contains("not resolved (Failed loading configuration file"));
+    assert!(!log.contains("can not install Synthetic Printer"));
     assert_eq!(log.contains("regenerating"), stale);
+    if project["printer_settings_id"] == "Synthetic Printer" {
+        let expected = project
+            .get("enable_pre_heating")
+            .cloned()
+            .unwrap_or(json!("1"));
+        assert_eq!(native["enable_pre_heating"], expected);
+    }
     fs::write(
         root.join("native-premise.json"),
         json!({"passed": true, "stale": stale}).to_string(),
@@ -169,6 +182,9 @@ async fn compare(indices: &[&str]) {
     )
     .unwrap();
     let actual = result.unwrap();
+    if project["printer_settings_id"] == "Synthetic Printer" {
+        assert_eq!(actual["enable_pre_heating"], native["enable_pre_heating"]);
+    }
     for key in [
         "filament_flow_ratio",
         "filament_self_index",
@@ -178,6 +194,61 @@ async fn compare(indices: &[&str]) {
     ] {
         assert_eq!(actual[key], native[key], "{key}: {}", root.display());
     }
+}
+
+async fn compare_preheating(authored: bool, refresh: bool) {
+    let (mut project, mut catalog) = fixture(&["1", "2"]);
+    project["printer_settings_id"] = json!("Synthetic Printer");
+    project["different_settings_to_system"] = if refresh {
+        json!([
+            "layer_height",
+            "filament_flow_ratio",
+            "filament_flow_ratio",
+            ""
+        ])
+    } else {
+        json!(["", "", "", ""])
+    };
+    if authored {
+        project["enable_pre_heating"] = json!("0");
+    }
+    let vendor = &mut catalog["vendors"][0];
+    vendor["index"]["machine_model_list"] = json!([{
+        "name": "Synthetic Model", "sub_path": "machine/model.json"
+    }]);
+    vendor["files"]["machine/model.json"] = json!({
+        "type": "machine_model", "name": "Synthetic Model", "nozzle_diameter": "0.4",
+        "machine_tech": "FFF", "model_id": "SYN01"
+    });
+    vendor["index"]["machine_list"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "name": "Synthetic Printer", "sub_path": "machine/printer.json"
+        }));
+    vendor["files"]["machine/printer.json"] = json!({
+        "type": "machine", "name": "Synthetic Printer", "from": "system",
+        "instantiation": "true", "version": "02.05.00.00", "enable_pre_heating": "1",
+        "printer_technology": "FFF", "printer_model": "Synthetic Model",
+        "printer_variant": "0.4", "nozzle_diameter": ["0.4"],
+        "printable_area": ["0x0", "200x0", "200x200", "0x200"]
+    });
+    compare_project(project, catalog).await;
+}
+
+#[tokio::test]
+async fn two_slot_project_missing_preheating_with_empty_differences_inherits_system() {
+    compare_preheating(false, false).await;
+}
+
+#[tokio::test]
+async fn two_slot_project_missing_preheating_with_nonempty_difference_refreshes_system() {
+    compare_preheating(false, true).await;
+}
+
+#[tokio::test]
+async fn two_slot_project_authored_preheating_off_is_retained() {
+    compare_preheating(true, false).await;
 }
 
 #[tokio::test]
