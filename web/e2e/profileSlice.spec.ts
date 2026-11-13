@@ -17,6 +17,9 @@ type Slice = { gcode: string; catalogBytes: number; loadMs: number; serializeMs:
 test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlicer --load-settings bytes, with and without overrides", async ({ page }) => {
   const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   if (!orca) test.skip();
+  const seeded = process.env.ARES_PARITY_SEEDED_REFERENCE === "1";
+  const launcher = seeded ? process.env.ARES_ORCA_SEEDED_BIN : `${repositoryRoot}scripts/orca-parity.sh`;
+  if (!launcher) throw new Error("Explicit seeded mode requires ARES_ORCA_SEEDED_BIN");
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -34,8 +37,8 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
     env: {
       ...process.env,
       ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1",
-      ARES_ORCA_BIN: `${repositoryRoot}scripts/orca-parity.sh`,
-      ...nativeEnv(orca!),
+      ARES_ORCA_BIN: launcher,
+      ...(seeded ? {} : nativeEnv(orca!)),
       ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
     },
   });
