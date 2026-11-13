@@ -26,10 +26,9 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
   // The parity runner keeps its artifacts outside the repository.
   const nativeRoot = `${mkdtempSync(`${tmpdir()}/ares-web-profile-oracle-`)}/`;
 
-  // Oracle: the public profile-entry parity tests run official OrcaSlicer with independently
-  // flattened presets (`--load-settings machine;process --load-filaments filament`). The STL test
-  // writes the selection, the pre-placed model and the native plate G-code; the 3MF override test
-  // writes the same layer_height edit into the native process JSON and keeps the 3MF it slices.
+  // The public profile-entry tests resolve original vendor leaves through isolated Native
+  // preset data. The STL test retains the selection, pre-placed model and Native stream;
+  // the 3MF override test applies layer_height after preset loading and retains its project.
   execFileSync("cargo", ["nextest", "run", "-p", "ares-cli", "-E",
     "test(profile_entry_stl_load_settings) | test(profile_entry_3mf_override_parity)"], {
     cwd: repositoryRoot,
@@ -56,9 +55,9 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
 
   const root = `${web}e2e/profile-slice-page`;
   await build({ root, logLevel: "warn", build: { outDir: `${artifacts}page`, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 16_000 } });
-  const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 4177, strictPort: true } });
+  const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 4234, strictPort: true } });
   try {
-    await page.goto("http://127.0.0.1:4177/");
+    await page.goto("http://127.0.0.1:4234/");
     await expect(page.getByTestId("ready")).toHaveText("ready", { timeout: 60_000 });
     const slice = (vendors: string[], input = model, filename = "cube10.stl", edits: [string, number][] = []) => page.evaluate(
       ([bytes, name, ids, chosen, typed]) =>
