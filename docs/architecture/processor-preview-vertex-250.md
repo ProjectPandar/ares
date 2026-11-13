@@ -25,3 +25,26 @@ moves and 306 vertices off; KSR 4054 moves.
 
 Included: `fan_speed` of both inserted vertices is the current move's.
 Deferred: nothing else in the inserted vertex changes.
+
+## A move that closes a seam keeps the restored f32 end position
+
+`process_G1` closes a pending outer-wall seam before it stores the move
+(`:5711-5730`): it saves `const Vec3f curr_pos(m_end_position[X],
+m_end_position[Y], m_end_position[Z])`, moves the end position to the seam
+point, stores the `Seam` vertex, and restores the end position from
+`curr_pos`. `m_end_position` is `AxisCoords`, a `std::array<double, 4>`
+(`GCodeProcessor.hpp:674`), so the restore leaves the end XYZ rounded through
+f32. `store_move_vertex` then picks the vertex jerk from which axes moved
+(`:7519-7546`): an E-only retract whose start was not f32-exact now has
+`delta_x` and `delta_y` above zero and takes `min(jerk_x, jerk_y)`, not
+`jerk_e`.
+
+Ares already restores the rounded position for the next move
+(`estimate/commands.rs`, `associate_linear_seam`), but the move recorder
+stored the seam-closing move with its unrounded end, so the vertex took
+`jerk_e`. KSR showed 65 retracts after an arc and a closed seam with jerk 2.5
+where Native has 9.
+
+Included: the move that closes a seam is stored with its end XYZ rounded
+through f32, for linear moves and arc segments alike; its position, E delta
+and acceleration do not change. Deferred: none.
