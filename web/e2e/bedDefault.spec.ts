@@ -155,13 +155,14 @@ test("supported remembered beds win and unsupported remembered beds use the firs
   await plate.selectOption("High Temp Plate");
   await page.reload();
   await expect(plate).toHaveValue("High Temp Plate", { timeout: 60_000 });
+  const firstListed = await plate.locator("option").first().getAttribute("value");
   await page.evaluate(() => {
     const config = JSON.parse(localStorage.getItem("ares.config")!);
-    config.printers[config.printer].bedType = "Cool Plate";
+    config.printers[config.printer].bedType = "Unsupported Plate";
     localStorage.setItem("ares.config", JSON.stringify(config));
   });
   await page.reload();
-  await expect(plate).toHaveValue("High Temp Plate", { timeout: 60_000 });
+  await expect(plate).toHaveValue(firstListed!, { timeout: 60_000 });
   mkdirSync(artifacts, { recursive: true });
   writeFileSync(`${artifacts}remembered.json`, JSON.stringify({ selected: await plate.inputValue(), options: await plate.locator("option").allTextContents() }, null, 2));
 });
