@@ -1,8 +1,6 @@
-/// Override parity on the 3MF entry: the native oracle receives the same
-/// override written into the `--load-settings` process JSON, while the Rust
-/// entry slices the pristine catalog with the override document (M854 edit
-/// order: preset → user edit wins, `Config.cpp:461`). Full ordered output
-/// must be byte-identical (generator line normalized).
+/// Both 3MF entries load the pristine vendor presets before applying the
+/// layer-height edit (`Config.cpp:461`, `OrcaSlicer.cpp:4138-4226`). Full ordered
+/// output must be byte-identical (generator line normalized).
 #[test]
 fn profile_entry_3mf_override_parity() {
     if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
@@ -53,14 +51,12 @@ fn profile_entry_3mf_override_parity() {
         .iter(),
     );
     let project_path = runner.work.join("override.3mf");
-    // The exported 3MF still embeds the PRISTINE process: both sides start
-    // from the same archive and only the loaded/override value differs in
-    // name, not in effect.
+    // Both entries start from the same archive, exported with layer height 0.3.
     stages::run(
         &runner.bin,
         [
             "--load-settings".to_owned(),
-            settings.clone(),
+            settings,
             "--load-filaments".to_owned(),
             runner
                 .work
@@ -79,21 +75,26 @@ fn profile_entry_3mf_override_parity() {
     )
     .unwrap();
     let project = std::fs::read(&project_path).unwrap();
+    let native_presets = crate::runner::profile_entry::native_user_presets::resolved(
+        &runner.work,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
 
     let output = runner.work.join("override-reference");
     std::fs::create_dir(&output).unwrap();
     stages::run(
         &runner.bin,
         [
+            "--datadir".to_owned(),
+            native_presets.datadir.to_str().unwrap().to_owned(),
             "--load-settings".to_owned(),
-            settings,
+            super::join_paths(native_presets.settings.iter()),
             "--load-filaments".to_owned(),
-            runner
-                .work
-                .join("override-filament.json")
-                .to_str()
-                .unwrap()
-                .to_owned(),
+            super::join_paths(native_presets.filaments.iter()),
+            "--layer-height".to_owned(),
+            "0.3".to_owned(),
             "--slice".to_owned(),
             "0".to_owned(),
             "--outputdir".to_owned(),
