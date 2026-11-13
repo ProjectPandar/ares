@@ -87,7 +87,11 @@ refresh and other import operations retain their existing admission behavior.
 ## Equality and selection
 
 Comparison is typed `ConfigOption` equality for common keys, not JSON spelling,
-serialized fragments or only the fields visible in a settings panel. Missing-only
+serialized fragments or only the fields visible in a settings panel. Float and
+float-or-percent equality follows `Config.hpp:834,985–995,1355–1356,1501–1512`
+and `libslic3r.h:57,319–323`: strict absolute difference below the existing
+`EPSILON = 1e-4`, with matching percent flags and vector lengths. Point equality
+remains exact. These are production option operators, not parity tolerances. Missing-only
 keys do not make `profile_print_params_same` unequal. Its complete exclusion set is:
 
 - `compatible_prints`, `compatible_prints_condition`
