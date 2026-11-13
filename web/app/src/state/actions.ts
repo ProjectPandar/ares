@@ -38,10 +38,12 @@ export function showFieldError(fieldError: { key: string; message: string } | nu
   useApp.setState({ fieldError });
 }
 
-/** Plater::load_files entry for a drop: one model file per project for now. */
+/** Shared picker/drop entry (`Plater::add_model`, Plater.cpp:16670–16692). */
 export function importFiles(files: File[]) {
-  if (files.length !== 1) useApp.setState({ loadError: "drop one 3MF or STL file at a time" });
-  else void importFile(files[0]);
+  if (!files.length) return;
+  if (files.length === 1) void importFile(files[0]);
+  else if (files.every((file) => /\.stl$/i.test(file.name))) useApp.setState({ stlImport: files, loadError: undefined });
+  else useApp.setState({ loadError: "multiple inputs must all be STL files" });
 }
 
 export async function importFile(file: File) {
@@ -62,7 +64,7 @@ export async function importFile(file: File) {
     const selection = useApp.getState().presetSelection;
     useApp.setState({
       presetSelection: selection && { ...selection, filamentProject: undefined },
-      file: { name: file.name, bytes },
+      file: { kind: "single", name: file.name, bytes },
       scene,
       plater,
       currentPlate: 0,
@@ -138,7 +140,9 @@ async function slicePlates(indices: number[]) {
     try {
       const result = presetSelection
         ? await sliceWithPresets(file, scene, presetSelection, overrides, plate, onStatus)
-        : plater
+        : file.kind === "stl-batch"
+          ? await plater!.slice(plate, await overrideTokens(overrides), onStatus)
+          : plater
           ? await plater.slice(plate, await overrideTokens(overrides), onStatus)
           : await slicer.sliceStl(file.bytes);
       if (useApp.getState().file !== file) return;

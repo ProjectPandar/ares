@@ -21,6 +21,8 @@ mod session;
 mod slice;
 mod slice_tower_fit;
 mod snapshot;
+mod stl_files;
+pub use stl_files::{StlFile, StlImportOptions};
 mod transformation;
 
 pub use arrange_job::{ArrangeScope, ArrangeSettings};

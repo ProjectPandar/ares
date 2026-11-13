@@ -213,26 +213,9 @@ fn slice_profile_source(
     })
 }
 
-/// The effective config view for a selected-profile request: the same
-/// merged raw the slice pipeline consumes (embedded base ∪ profile overlay
-/// ∪ user overrides), serialized for the web Process panel (upstream
-/// `PresetBundle::full_config` / the GUI Tab's edited preset).
+/// The effective config view for a selected-profile request.
 #[derive(serde::Serialize)]
-pub struct ProfileSettings(crate::project::raw_settings::ProjectSettingsRaw);
-
-/// Composes the selected profiles and returns their effective settings
-/// view for `input` — the identical data `slice_with_profiles` slices with.
-pub async fn profile_settings(
-    input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
-) -> Result<ProfileSettings, SliceError> {
-    with_profile_source(input.as_ref(), request, |source| {
-        let project = crate::project_slice::load_profile_project(&source)?;
-        Ok(ProfileSettings(
-            project.documents().project_settings_raw.clone(),
-        ))
-    })
-}
+pub struct ProfileSettings(pub(crate) crate::project::raw_settings::ProjectSettingsRaw);
 
 /// Composes the request and runs `body` on the resulting source; both the
 /// slice entries and the settings view share this single compose path.
@@ -241,12 +224,17 @@ fn with_profile_source<T>(
     request: ProfileSliceRequest<'_>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
 ) -> Result<T, SliceError> {
-    with_edited_profile_source(input, request, &crate::plater::NO_EDITS, body)
+    with_edited_profile_source(
+        crate::project_slice::ProjectInput::Bytes(input),
+        request,
+        &crate::plater::NO_EDITS,
+        body,
+    )
 }
 
 /// `with_profile_source` with plater edits applied to the loaded model.
 pub(crate) fn with_edited_profile_source<T>(
-    input: &[u8],
+    input: crate::project_slice::ProjectInput<'_>,
     request: ProfileSliceRequest<'_>,
     edits: &crate::plater::PlaterEdits,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
@@ -267,7 +255,7 @@ pub(crate) fn with_edited_profile_source<T>(
     let catalog = Catalog::from_json(catalog_json)?;
     if let Some(uptodate) = super::project_refresh::selection(selection_json)? {
         return body(ProjectSource {
-            bytes: input,
+            input,
             plate,
             profile: None,
             refresh: Some(super::ProjectPresetRefresh {
@@ -286,7 +274,7 @@ pub(crate) fn with_edited_profile_source<T>(
     let selection = selection(selection_json)?;
     let composed = catalog.compose(&selection)?;
     body(ProjectSource {
-        bytes: input,
+        input,
         plate,
         profile: Some(ProfileInput {
             filename,

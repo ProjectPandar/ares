@@ -1,7 +1,7 @@
 mod catalog;
 pub(crate) mod compatible;
 mod composition;
-mod entry;
+pub(crate) mod entry;
 mod import;
 mod load_settings;
 mod preset_normalization;

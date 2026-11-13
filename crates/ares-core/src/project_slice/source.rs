@@ -3,7 +3,7 @@ use crate::{ConfigOverrides, project::raw_settings::ProjectSettingsRaw};
 /// Input bytes and caller-selected plate/config. Loading occurs only at the
 /// existing project-state seam; no intermediate archive is serialized.
 pub(crate) struct ProjectSource<'a> {
-    pub(crate) bytes: &'a [u8],
+    pub(crate) input: ProjectInput<'a>,
     pub(crate) plate: Option<u32>,
     pub(crate) profile: Option<ProfileInput<'a>>,
     pub(crate) refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
@@ -63,9 +63,50 @@ pub(crate) struct ProfileInput<'a> {
     pub(crate) validate_print: bool,
 }
 
-impl AsRef<[u8]> for ProjectSource<'_> {
-    fn as_ref(&self) -> &[u8] {
-        self.bytes
+#[derive(Clone, Copy)]
+pub(crate) enum ProjectInput<'a> {
+    Bytes(&'a [u8]),
+    Model(&'a crate::Project),
+}
+
+impl ProjectInput<'_> {
+    pub(crate) fn load(
+        self,
+        overrides: &ConfigOverrides,
+        refresh: Option<crate::profiles::ProjectPresetRefresh<'_>>,
+        validate_print: bool,
+    ) -> Result<
+        (
+            crate::Project,
+            crate::options::flush_matrix::PreparationContext,
+        ),
+        crate::SliceError,
+    > {
+        match self {
+            Self::Bytes(bytes) => match refresh {
+                Some(refresh) => refresh.load(bytes, overrides, validate_print),
+                None => crate::project::load_project_with_preparation(bytes, overrides),
+            },
+            Self::Model(model) => {
+                if refresh.is_some() {
+                    return Err(crate::SliceError::InvalidInput(
+                        "project preset refresh requires a 3MF input".to_owned(),
+                    ));
+                }
+                let preparation = crate::options::flush_matrix::PreparationContext::capture(
+                    &crate::project::raw_settings::ProjectSettingsRaw::default(),
+                    overrides,
+                )?;
+                let mut project = model.copy_stl_model();
+                if !overrides.is_empty() {
+                    project.apply_project_preset_refresh(
+                        model.documents().project_settings_raw.clone(),
+                        overrides,
+                    )?;
+                }
+                Ok((project, preparation))
+            }
+        }
     }
 }
 
@@ -82,7 +123,7 @@ impl<'a> ProjectBytes<'a> for ProjectSource<'a> {
 impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
     fn into_source(self) -> ProjectSource<'a> {
         ProjectSource {
-            bytes: self.as_ref(),
+            input: ProjectInput::Bytes(self.as_ref()),
             plate: None,
             profile: None,
             refresh: None,
@@ -101,7 +142,7 @@ static EMPTY_OVERRIDES: ConfigOverrides = ConfigOverrides::empty();
 impl<'a> From<&'a [u8]> for ProjectSource<'a> {
     fn from(bytes: &'a [u8]) -> Self {
         Self {
-            bytes,
+            input: ProjectInput::Bytes(bytes),
             plate: None,
             profile: None,
             refresh: None,

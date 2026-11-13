@@ -38,7 +38,9 @@ export function stlSessionOpened(): Promise<unknown> {
 
 async function openSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
-  const plater = await slicer.createPlaterSessionWithProfiles(file.bytes, file.name, catalog, profiles, options);
+  const plater = file.kind === "stl-batch"
+    ? await slicer.createPlaterSessionFromStlFilesWithProfiles(file.files, file.choices, catalog, profiles, options)
+    : await slicer.createPlaterSessionWithProfiles(file.bytes, file.name, catalog, profiles, options);
   await installVendors(plater);
   const placed = await plater.scene();
   if (useApp.getState().file !== file) {

@@ -129,10 +129,9 @@ fn bounds(project: &Project) -> Vec<([f64; 3], [f64; 3])> {
                     let point = object.instances()[0]
                         .transform()
                         .transform_point(volume.transform().transform_point(*point));
-                    for (axis, coordinate) in [point.x, point.y, point.z].into_iter().enumerate() {
-                        min[axis] = min[axis].min(coordinate);
-                        max[axis] = max[axis].max(coordinate);
-                    }
+                    let position = [point.x, point.y, point.z];
+                    min = std::array::from_fn(|axis| min[axis].min(position[axis]));
+                    max = std::array::from_fn(|axis| max[axis].max(position[axis]));
                 }
                 (min, max)
             })
@@ -175,10 +174,10 @@ fn four_choices_keep_all_parts_and_apply_the_requested_ground_policy() {
             let boxes = bounds(project);
             assert_eq!(boxes.len(), 2);
             assert!((boxes[0].1[0] - boxes[0].0[0] - 8.0).abs() < 1e-5);
-            let expected_z = if auto_drop {
-                [0.0, if as_multipart { 4.0 } else { 0.0 }]
-            } else {
-                [2.0, 6.0]
+            let expected_z = match (as_multipart, auto_drop) {
+                (true, true) => [0.0, 4.0],
+                (false, true) => [0.0, 0.0],
+                (_, false) => [2.0, 6.0],
             };
             for (actual, expected) in boxes.iter().zip(expected_z) {
                 assert!(

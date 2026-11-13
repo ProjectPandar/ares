@@ -311,7 +311,7 @@ export function selectFilament(slot: number, filament: string) {
 export function presetSliceBlocker(selection: PresetSelection, scene: Scene): string | null {
   // An STL is centered like one model loaded on an empty plate (Plater.cpp:7149-7160); with more
   // objects OrcaSlicer looks for empty cells instead, which is not ported yet.
-  if (scene.format === "stl" && scene.objects.length !== 1) {
+  if (scene.format === "stl" && scene.objects.length !== 1 && useApp.getState().file?.kind !== "stl-batch") {
     return "Placing more than one STL object on the plate needs arrange, which is not ported yet";
   }
   if (!selection.process) return "Select a process preset to slice";
@@ -372,6 +372,7 @@ export async function sliceWithPresets(file: ModelFile, scene: Scene, selection:
   };
   const request = { ...options, overrides: await overrideTokens({ ...overrides, ...project }) };
   const { plater } = useApp.getState();
+  if (file.kind === "stl-batch") return plater!.sliceWithProfiles(catalog, profiles, request, onStatus);
   return plater
     ? plater.sliceWithProfiles(catalog, profiles, request, onStatus)
     : slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, request);
@@ -383,7 +384,9 @@ export async function sliceWithPresets(file: ModelFile, scene: Scene, selection:
  */
 export async function presetValues(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<OptionMap> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
-  const settings = await slicer.profileSettings(file.bytes, file.name, catalog, profiles, options);
+  const settings = file.kind === "stl-batch"
+    ? await useApp.getState().plater!.profileSettings(catalog, profiles, options)
+    : await slicer.profileSettings(file.bytes, file.name, catalog, profiles, options);
   return { ...settings, ...(await decodeOptions(useApp.getState().configDefs!, settings)) };
 }
 
@@ -393,7 +396,9 @@ export async function presetValues(file: ModelFile, scene: Scene, selection: Pre
  */
 export async function placedScene(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
-  return slicer.placementScene(file.bytes, file.name, catalog, profiles, options);
+  return file.kind === "stl-batch"
+    ? useApp.getState().plater!.scene()
+    : slicer.placementScene(file.bytes, file.name, catalog, profiles, options);
 }
 
 /** Names of the imported presets of one `type`, for the "User presets" group. */
