@@ -244,7 +244,7 @@ fn adding_imports_preserves_builtin_lookup_without_installing_defaults() {
 #[test]
 fn one_shot_catalog_constructs_source_defined_defaults() {
     let actual = ares_core::filter_compatible_presets(
-        "{\"vendors\":[]}",
+        "{\"vendors\":[],\"imports\":[]}",
         "Default Printer",
         Some("Default Setting"),
     );
