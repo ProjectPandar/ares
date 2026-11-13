@@ -146,6 +146,37 @@ changes touches a view this oracle dumps, and they are not ported in this slice:
 - `Settings` adds `dim_previous_layers`, `dim_previous_layers_brightness` and
   `translucent_filaments` (`Settings.hpp:24-30`). These are render-only.
 
+### Slice input for Speed + Travel under 2.5.0
+
+In 2.5.0, `starts_path` (`LibVGCodeWrapper.cpp:227-235`) also starts a path when
+`acceleration` or `jerk` changes. 2.4.2 split only on type, role and `mm3_per_mm`.
+`convert.rs` already splits the same way. A path start puts a phantom vertex in front of
+the move, and the phantom carries the move's own feedrate. So a travel→travel instance
+keeps differing Speed ends only when the feedrate changes and type, role, `mm3_per_mm`,
+`acceleration` and `jerk` do not.
+
+The three differing instances of the plain fixture (above) are a Z-only travel followed by
+an XY travel. The preview jerk of a Z-only move is the Z jerk (`GCodeProcessor.cpp:7540-7547`),
+so each XY travel now starts a path. With the 2.5.0 oracle the plain fixture has 0
+differing `speedTravels` instances (7465 vertices; the 2.4.2 oracle gives 7269 vertices
+and 3 on the same G-code). The coverage precondition would then fail, and step 2 (Speed +
+Travel) could not run.
+
+The precondition stays. A case where only the feedrate changes is still reachable: two
+consecutive XY travels at different feedrates have the same travel acceleration and XY jerk.
+`slice` therefore imports a copy of the fixture with one extra XY travel in its project
+`machine_end_gcode` (`Metadata/project_settings.config`), placed before the present-print
+travel at `F{travel_speed*60}`:
+
+```
+G1 X50 Y{print_bed_max[1]*0.5} F3000
+```
+
+The 2.5.0 oracle gives one differing travel→travel `speedTravels` instance on that G-code,
+and 0 differing `featureType` instances. The copy keeps the fixture's file name and is used
+for the whole `slice` test: the import, the native `ares-cli` reference and the
+project-edit OrcaSlicer reference. `presetSlice` and the fixture itself do not change.
+
 ## RED (after a scaffold) and control
 
 The scaffold commit adds `aStartColor` filled with the **end** vertex color. That is the
