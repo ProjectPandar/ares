@@ -58,6 +58,11 @@ function bedCenter(vendor: string, machine: string): [number, number] {
   return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
 }
 
+/** GCode.cpp:8272 writes filament_multi_colour only when the loaded config carries it. */
+function multiColour(gcode: string) {
+  return gcode.split("\n").filter((line) => line.startsWith("; filament_multi_colour ="));
+}
+
 async function exportGcode(page: Page, directory: string) {
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -175,6 +180,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     selection,
     bytes: browser.length,
   }, null, 2)}\n`);
+  expect(multiColour(browser), "filament_multi_colour config line").toEqual(multiColour(native));
   expect(normalize(browser, "Ares") === native, "browser G-code equals native --load-settings G-code").toBe(true);
 
   // The preset slice carries the engine's toolpaths for the preview.
@@ -201,6 +207,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     edit: EDIT,
     bytes: browserEdited.length,
   }, null, 2)}\n`);
+  expect(multiColour(browserEdited), "edited filament_multi_colour config line").toEqual(multiColour(nativeEdited));
   expect(normalize(browserEdited, "Ares") === nativeEdited, "edited browser G-code equals native --load-settings G-code").toBe(true);
 
   // An STL loaded on the empty plate is centered on the bed and dropped to it
@@ -232,6 +239,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     selection,
     bytes: centered.length,
   }, null, 2)}\n`);
+  expect(multiColour(centered), "STL filament_multi_colour config line").toEqual(multiColour(nativeCenter));
   expect(normalize(centered, "Ares") === nativeCenter, "browser STL G-code equals native G-code of the bed-centered model").toBe(true);
   expect(errors).toEqual([]);
 });
