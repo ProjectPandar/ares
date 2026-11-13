@@ -19,7 +19,7 @@ type VendorIndex = Record<(typeof LISTS)[number], Entry[]> & Record<string, unkn
 
 const run = (command: string, args: string[], cwd: string) =>
   execFileSync(command, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-const readJson = (path: string) => JSON.parse(readFileSync(path, "utf8"));
+const readJson = (path: string) => JSON.parse(readFileSync(path, "utf8").replace(/^\uFEFF/u, ""));
 
 test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-vendor data", async ({ page }) => {
   test.setTimeout(300_000);
