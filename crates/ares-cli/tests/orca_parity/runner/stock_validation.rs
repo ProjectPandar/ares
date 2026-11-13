@@ -38,7 +38,6 @@ async fn compare(vendor_name: &str, printer: &str, expected: &str, loaded_error:
     fs::write(directory.join("cube10.stl"), &input).unwrap();
     write_json(&directory.join("catalog.json"), &catalog);
     write_json(&directory.join("selection.json"), &selection);
-    let mut filament_paths = Vec::new();
     for (kind, filename, mut fields) in [
         (
             "machine",
@@ -63,18 +62,23 @@ async fn compare(vendor_name: &str, printer: &str, expected: &str, loaded_error:
         fields.insert("from".to_owned(), Value::String("system".to_owned()));
         fields.insert("instantiation".to_owned(), Value::String("true".to_owned()));
         write_json(&directory.join(&filename), &Value::Object(fields));
-        if kind == "filament" {
-            filament_paths.push(directory.join(filename).to_str().unwrap().to_owned());
-        }
     }
+    let presets = super::profile_entry::native_user_presets::resolved(
+        &directory,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
     let path = |name: &str| directory.join(name).to_str().unwrap().to_owned();
     let export = stages::run(
         runner.bin(),
         [
+            "--datadir".to_owned(),
+            presets.datadir.to_str().unwrap().to_owned(),
             "--load-settings".to_owned(),
-            format!("{};{}", path("machine.json"), path("process.json")),
+            super::join_paths(presets.settings.iter()),
             "--load-filaments".to_owned(),
-            filament_paths.join(";"),
+            super::join_paths(presets.filaments.iter()),
             "--arrange".to_owned(),
             "1".to_owned(),
             "--export-3mf".to_owned(),

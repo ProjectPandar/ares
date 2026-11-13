@@ -14,11 +14,7 @@ use super::{OrcaRunner, stages, vendor, write_json};
 #[path = "loaded_config_ranges/stock_filament.rs"]
 mod stock_filament;
 
-/// Writes a standalone `{kind}.json` for the native `--load-settings` /
-/// `--load-filaments` path, mirroring `runner.rs::write_preset` (398-404):
-/// injects `type`, `instantiation:"true"`, and normalizes `from` to the
-/// lowercase `"system"` the native CLI accepts (the stock SeeMeCNC files
-/// carry `"from":"System"`, which native rejects).
+/// Retains flattened input snapshots alongside the manifest-owned Native leaves.
 fn write_native_preset(path: &Path, kind: &str, fields: serde_json::Map<String, Value>) {
     let mut preset = fields;
     preset.insert("type".to_owned(), json!(kind));
@@ -39,121 +35,9 @@ struct RangeCase<'a> {
     error_lines: &'static str,
 }
 
-/// One O3 case: native `--load-settings` rejects with exit 238 and the
-/// exact `key: <serialize()> not in range [min,max]` text; Ares must
-/// surface the same `SliceError::InvalidValuesInProject` text via
-/// `validate_with_profiles` / `slice_with_profiles_validated`.
-async fn original_profile(case: &RangeCase<'_>) {
-    let root = super::super::repo_root();
-    let profiles_root = root.join("OrcaSlicer/resources/profiles");
-    let profiles = crate::presets::VendorProfiles::load(&profiles_root, case.vendor_name).unwrap();
-    let machine_fields = profiles.machine(case.machine).unwrap();
-    let process_fields = profiles.process(case.process).unwrap();
-    let filament_fields = profiles.filament(case.filament).unwrap();
-    let catalog = json!({"vendors": [
-        vendor(&profiles_root, "OrcaFilamentLibrary"),
-        vendor(&profiles_root, case.vendor_name),
-    ], "imports": []});
-    let selection = json!({
-        "machine": case.machine,
-        "process": case.process,
-        "filaments": [case.filament],
-    });
-    let directory = tempfile::Builder::new()
-        .prefix(&format!("o3-{}-", case.machine.replace(' ', "_")))
-        .tempdir()
-        .unwrap()
-        .keep();
-    write_json(&directory.join("catalog.json"), &catalog);
-    write_json(&directory.join("selection.json"), &selection);
-    let input = fs::read(root.join("tests/parity/cube10.stl")).unwrap();
-    fs::write(directory.join("cube10.stl"), &input).unwrap();
-    for (kind, fields) in [
-        ("machine", machine_fields),
-        ("process", process_fields),
-        ("filament", filament_fields),
-    ] {
-        write_native_preset(&directory.join(format!("{kind}.json")), kind, fields);
-    }
-    let expected_stderr = format!("Param values in 3mf/config error: \n{}\n", case.error_lines);
-    let native = OrcaRunner::from_env().unwrap().map(|runner| {
-        let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
-        let failure = stages::run(
-            runner.bin(),
-            [
-                "--load-settings".to_owned(),
-                format!("{};{}", path("machine.json"), path("process.json")),
-                "--load-filaments".to_owned(),
-                path("filament.json"),
-                "--arrange".to_owned(),
-                "1".to_owned(),
-                "--export-3mf".to_owned(),
-                path("native.3mf"),
-                path("cube10.stl"),
-            ],
-            stages::Stage::Export,
-            &directory,
-        )
-        .unwrap_err();
-        let captured = failure.captured.as_ref().unwrap();
-        assert_eq!(captured.code, Some(if cfg!(unix) { 238 } else { -18 }));
-        assert_eq!(
-            std::str::from_utf8(&captured.stderr).unwrap(),
-            expected_stderr,
-            "native diagnostic; evidence {directory:?}"
-        );
-        assert!(!directory.join("native.3mf").exists());
-        json!({"code": captured.code, "stderr": expected_stderr, "evidence": failure.evidence})
-    });
-    let catalog_json = serde_json::to_string(&catalog).unwrap();
-    let selection_json = serde_json::to_string(&selection).unwrap();
-    let overrides = ConfigOverrides::default();
-    let request = ProfileSliceRequest {
-        filename: "cube10.stl",
-        catalog_json: &catalog_json,
-        selection_json: &selection_json,
-        plate: None,
-        overrides: &overrides,
-        placement: Placement::None,
-    };
-    let loaded = ares_core::profile_settings(&input, request).await;
-    let placed = ares_core::profile_placed_project(&input, request).await;
-    assert!(
-        placed.is_ok(),
-        "placed scene must allow editing invalid config; evidence {directory:?}"
-    );
-    let validated = ares_core::validate_with_profiles(&input, request);
-    let sliced = ares_core::slice_with_profiles_validated(
-        &input,
-        request,
-        GenerationMetadata::default(),
-        SlicerContext::new(0),
-    )
-    .await;
-    if let Ok(gcode) = &sliced {
-        fs::write(directory.join("ares.gcode"), gcode).unwrap();
-    }
-    write_json(
-        &directory.join("result.json"),
-        &json!({
-            "native": native,
-            "expected": case.error_lines,
-            "loaded": loaded.as_ref().map(|view| json!(view)).map_err(ToString::to_string),
-            "validated": validated.as_ref().map_err(ToString::to_string),
-            "sliced": sliced.as_ref().map(|_| "GCODE").map_err(ToString::to_string),
-        }),
-    );
-    loaded.unwrap();
-    assert!(
-        matches!(validated, Err(SliceError::InvalidValuesInProject(text)) if text == case.error_lines),
-        "validated must surface the same key:text lines; evidence {directory:?}"
-    );
-    assert!(
-        matches!(sliced, Err(SliceError::InvalidValuesInProject(text)) if text == case.error_lines),
-        "sliced must surface the same key:text lines; evidence {directory:?}"
-    );
-    assert!(!directory.join("ares.gcode").exists());
-}
+#[path = "loaded_config_ranges/original.rs"]
+mod original;
+use original::original_profile;
 
 // --- O3 single-key out-of-range cases (original matrix vendor data) ---
 
@@ -197,7 +81,7 @@ async fn nil_flush_temp_and_retraction_zero_loaded_config() {
     .await;
 }
 
-// --- Override-driven cases: catalog + standalone files share the patch ---
+// --- Override-driven cases: catalog + Native vendor leaves share the patch ---
 
 struct OverrideCase<'a> {
     vendor_name: &'static str,
@@ -212,9 +96,8 @@ struct OverrideCase<'a> {
     prefix: &'static str,
 }
 
-/// Runs one case where a named field on `kind` is overridden in BOTH the
-/// catalog (source of truth for Ares profile composition) and the standalone
-/// `{kind}.json` fed to native. `error_lines` is the exact key:sorted text.
+/// The named catalog source edit reaches both Ares and Native's staged vendor leaf.
+/// `error_lines` is the exact key-sorted diagnostic.
 async fn run_override_case(case: &OverrideCase<'_>) {
     let OverrideCase {
         vendor_name,
@@ -282,14 +165,18 @@ async fn run_override_case(case: &OverrideCase<'_>) {
     }
     let expected_stderr = format!("Param values in 3mf/config error: \n{error_lines}\n");
     let native = OrcaRunner::from_env().unwrap().map(|runner| {
+        let presets =
+            super::native_user_presets::resolved(&directory, &profiles_root, &catalog, &selection);
         let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
         let failure = stages::run(
             runner.bin(),
             [
+                "--datadir".to_owned(),
+                presets.datadir.to_str().unwrap().to_owned(),
                 "--load-settings".to_owned(),
-                format!("{};{}", path("machine.json"), path("process.json")),
+                super::super::join_paths(presets.settings.iter()),
                 "--load-filaments".to_owned(),
-                path("filament.json"),
+                super::super::join_paths(presets.filaments.iter()),
                 "--arrange".to_owned(),
                 "1".to_owned(),
                 "--export-3mf".to_owned(),
