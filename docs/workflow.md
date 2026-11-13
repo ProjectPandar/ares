@@ -33,6 +33,7 @@ write `Wn -> COORD: …`.
 - `$COORD_DIR` holds the coordinator state:
   - `inbox.log`, which workers append to with `bin/notify.sh <name> "<line>"`, and `mark`, the last line read.
   - The decision ledger, `b42-candidates.txt`. It records every RR, verdict, batch composition and user decision.
+  - `TODO.md`, the work the user queued for after the current tasks. The patrol dispatches it when a worker frees up.
   - `briefs/`, the task briefs. `briefs/dynamic-worker-rules.md` is the onboarding brief for new workers.
   - `bin/`:
     - `notify.sh`;
@@ -110,7 +111,7 @@ recreate them after every restart or context reset.
   2. Run `hc ls` and read each worker's pane.
      - Answer open dialogs.
      - Look for stalls, errors and rule violations.
-     - Give an idle fixed worker its next task, or tell the user.
+     - Give an idle fixed worker its next task (check `TODO.md`), or tell the user.
   3. Kill dynamic workers that are idle with no open task, and record each one in the ledger.
   4. Move the current batch forward once its inputs are ready.
 
