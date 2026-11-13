@@ -156,13 +156,15 @@ fn plater_stl_session_centers_moves_and_slices_like_native() {
         "stl-session-centered",
         &cube_at([118.0, 138.0, 0.0]),
     );
-    crate::golden::compare_ordered_bytes_generator_only(&centered, &slice(&session, &presets))
-        .unwrap();
+    let actual = slice(&session, &presets);
+    std::fs::write(runner.work.join("stl-session-centered/ares.gcode"), &actual).unwrap();
+    crate::golden::compare_ordered_bytes_generator_only(&centered, &actual).unwrap();
     // A raised move drops back onto the bed (GLCanvas3D::do_move).
     session
         .translate_instance(0, 0, [20.0, -15.0, 3.0])
         .unwrap();
     let moved = native(&runner, "stl-session-moved", &cube_at([138.0, 123.0, 0.0]));
-    crate::golden::compare_ordered_bytes_generator_only(&moved, &slice(&session, &presets))
-        .unwrap();
+    let actual = slice(&session, &presets);
+    std::fs::write(runner.work.join("stl-session-moved/ares.gcode"), &actual).unwrap();
+    crate::golden::compare_ordered_bytes_generator_only(&moved, &actual).unwrap();
 }
