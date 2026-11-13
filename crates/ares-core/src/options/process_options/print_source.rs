@@ -9,7 +9,7 @@ use serde::{Deserialize, Deserializer, de::Visitor};
 
 pub use enums::{
     ProcessDraftShield, ProcessPrintOrder, ProcessPrintSequence, ProcessSkirtType,
-    ProcessTimelapseType, ProcessWipeTowerWallType,
+    ProcessTimelapseType, ProcessToolChangeOrdering, ProcessWipeTowerWallType,
 };
 
 use super::super::{
@@ -19,6 +19,14 @@ use super::super::{
 
 declare_option_group! {
     pub struct ProcessPrintSourceOptions, ProcessPrintSourceOptionsBuilder {
+        enable_mixed_color_sublayer => "enable_mixed_color_sublayer": OrcaBool = OrcaBool(false),
+        belt_purge_tower_width => "belt_purge_tower_width": OrcaFloat = OrcaFloat(35.0),
+        wipe_tower_sparse_layers_combination => "wipe_tower_sparse_layers_combination": OrcaBool = OrcaBool(false),
+        toolchange_ordering => "toolchange_ordering": ProcessToolChangeOrdering = ProcessToolChangeOrdering::Default,
+        toolchange_cyclic_order => "toolchange_cyclic_order": OrcaString = string(""),
+        toolchange_cyclic_first_layer => "toolchange_cyclic_first_layer": OrcaBool = OrcaBool(false),
+        slicing_pipeline_plugin => "slicing_pipeline_plugin": OrcaStrings = OrcaStrings(Vec::new()),
+        print_plugin_config_overrides => "print_plugin_config_overrides": OrcaString = string(""),
         reduce_crossing_wall => "reduce_crossing_wall": OrcaBool = OrcaBool(false),
         max_travel_detour_distance => "max_travel_detour_distance": FloatOrPercent = FloatOrPercent::Float(0.0),
         print_sequence => "print_sequence": ProcessPrintSequence = ProcessPrintSequence::ByLayer,
@@ -83,7 +91,15 @@ declare_option_group! {
 }
 
 impl ProcessPrintSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 60] = [
+    pub const DECLARATION_ORDER: [&'static str; 68] = [
+        "enable_mixed_color_sublayer",
+        "belt_purge_tower_width",
+        "wipe_tower_sparse_layers_combination",
+        "toolchange_ordering",
+        "toolchange_cyclic_order",
+        "toolchange_cyclic_first_layer",
+        "slicing_pipeline_plugin",
+        "print_plugin_config_overrides",
         "reduce_crossing_wall",
         "max_travel_detour_distance",
         "print_sequence",
