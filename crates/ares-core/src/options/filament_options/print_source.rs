@@ -20,6 +20,7 @@ use super::super::{
 
 declare_option_group! {
     append pub struct FilamentPrintSourceOptions, FilamentPrintSourceOptionsBuilder {
+        initial_layer_fan_speed => "initial_layer_fan_speed": OrcaInts = ints(&[-1]),
         additional_cooling_fan_speed => "additional_cooling_fan_speed": OrcaInts = ints(&[0]),
         close_additional_fan_first_x_layers => "close_additional_fan_first_x_layers": OrcaInts = ints(&[1]),
         additional_fan_full_speed_layer => "additional_fan_full_speed_layer": OrcaInts = ints(&[0]),
@@ -158,7 +159,8 @@ impl FilamentPrintSourceOptionsBuilder {
 }
 
 impl FilamentPrintSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 48] = [
+    pub const DECLARATION_ORDER: [&'static str; 49] = [
+        "initial_layer_fan_speed",
         "additional_cooling_fan_speed",
         "close_additional_fan_first_x_layers",
         "additional_fan_full_speed_layer",

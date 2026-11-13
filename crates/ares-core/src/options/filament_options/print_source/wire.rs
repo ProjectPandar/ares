@@ -7,7 +7,7 @@ impl Serialize for FilamentPrintSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(48))?;
+        let mut map = serializer.serialize_map(Some(49))?;
         serialize_entries(&mut map, self)?;
         map.end()
     }
@@ -146,5 +146,6 @@ where
         "textured_plate_temp_initial_layer",
         &value.textured_plate_temp_initial_layer,
     )?;
+    map.serialize_entry("initial_layer_fan_speed", &value.initial_layer_fan_speed)?;
     Ok(())
 }

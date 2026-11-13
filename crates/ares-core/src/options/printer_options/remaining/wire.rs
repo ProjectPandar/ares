@@ -7,7 +7,7 @@ impl Serialize for PrinterRemainingOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(45))?;
+        let mut map = serializer.serialize_map(Some(66))?;
         map.serialize_entry("adaptive_bed_mesh_margin", &self.adaptive_bed_mesh_margin)?;
         map.serialize_entry("bbl_use_printhost", &self.bbl_use_printhost)?;
         map.serialize_entry("bed_custom_model", &self.bed_custom_model)?;
@@ -77,6 +77,39 @@ impl Serialize for PrinterRemainingOptions {
         map.serialize_entry("thumbnails_format", &self.thumbnails_format)?;
         map.serialize_entry("upward_compatible_machine", &self.upward_compatible_machine)?;
         map.serialize_entry("z_offset", &self.z_offset)?;
+        map.serialize_entry("gcode_skip_config_block", &self.gcode_skip_config_block)?;
+        map.serialize_entry("build_plate_tilt_x", &self.build_plate_tilt_x)?;
+        map.serialize_entry("build_plate_tilt_y", &self.build_plate_tilt_y)?;
+        map.serialize_entry("belt_printer", &self.belt_printer)?;
+        map.serialize_entry("belt_printer_infinite_y", &self.belt_printer_infinite_y)?;
+        map.serialize_entry("belt_slice_rotation_angle", &self.belt_slice_rotation_angle)?;
+        map.serialize_entry("belt_slice_rotation", &self.belt_slice_rotation)?;
+        map.serialize_entry("belt_support_floor_offset", &self.belt_support_floor_offset)?;
+        map.serialize_entry("gcode_remap_x", &self.gcode_remap_x)?;
+        map.serialize_entry("gcode_remap_y", &self.gcode_remap_y)?;
+        map.serialize_entry("gcode_remap_z", &self.gcode_remap_z)?;
+        map.serialize_entry("belt_frame_tilt_decouple", &self.belt_frame_tilt_decouple)?;
+        map.serialize_entry("belt_frame_tilt_angle", &self.belt_frame_tilt_angle)?;
+        map.serialize_entry(
+            "printer_plugin_config_overrides",
+            &self.printer_plugin_config_overrides,
+        )?;
+        map.serialize_entry(
+            "extruder_clearance_dist_to_rod",
+            &self.extruder_clearance_dist_to_rod,
+        )?;
+        map.serialize_entry("fan_direction", &self.fan_direction)?;
+        map.serialize_entry("cooling_filter_enabled", &self.cooling_filter_enabled)?;
+        map.serialize_entry(
+            "wait_for_temp_on_wipe_tower",
+            &self.wait_for_temp_on_wipe_tower,
+        )?;
+        map.serialize_entry("enable_belt_purge_tower", &self.enable_belt_purge_tower)?;
+        map.serialize_entry(
+            "imex_firmware_managed_zones",
+            &self.imex_firmware_managed_zones,
+        )?;
+        map.serialize_entry("imex_viz_theme", &self.imex_viz_theme)?;
         map.end()
     }
 }
