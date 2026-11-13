@@ -134,6 +134,7 @@ pub(super) fn targets(command: &str, code: &str, motion: ArcMotion) -> Option<Ve
         start_radius,
         radius,
         e_delta,
+        extrusion: e_delta as f32,
         feedrate,
         i,
         j,
@@ -156,6 +157,7 @@ struct ArcGeometry {
     /// Vec3d `start_radius()` norm — legacy branch only.
     radius: f64,
     e_delta: f64,
+    extrusion: f32,
     feedrate: f64,
     i: f32,
     j: f32,
@@ -181,10 +183,9 @@ fn marlin_targets(arc: ArcGeometry) -> Vec<[f64; 4]> {
     let cos_theta = theta.cos();
     let sin_theta = theta.sin();
     let z_step = ((arc.end[2] - arc.start[2]) * f64::from(inv_segments)) as f32;
-    // `extruder_per_segment = *extrusion * inv_segments` multiplies the
-    // double extrusion delta by the promoted float inverse in double
-    // before the single float store.
-    let e_step = (arc.e_delta * f64::from(inv_segments)) as f32;
+    // The stored float extrusion and inverse multiply in float
+    // (`GCodeProcessor.cpp:6178-6181,6260`).
+    let e_step = arc.extrusion * inv_segments;
     let mut rvec = [-arc.i, -arc.j];
     let mut correction = 25;
     // `AxisCoords` is `std::array<double, 4>` (`GCodeProcessor.hpp:392`):
@@ -234,10 +235,9 @@ fn legacy_targets(arc: ArcGeometry) -> Vec<[f64; 4]> {
     let inv_segments = 1.0 / segments as f64;
     let theta = arc.sweep * inv_segments;
     let z_step = (arc.end[2] - arc.start[2]) * inv_segments;
-    // `extruder_per_segment = *extrusion * inv_segment` is a pure double
-    // product — no float pre-rounding of the extrusion delta
-    // (`GCodeProcessor.cpp:4796`).
-    let e_step = arc.e_delta * inv_segments;
+    // Promote the stored float extrusion before the double product
+    // (`GCodeProcessor.cpp:6178-6181,6322`).
+    let e_step = f64::from(arc.extrusion) * inv_segments;
     let squared_theta = theta * theta;
     let cos_theta = 1.0 - 0.5 * squared_theta;
     let sin_theta = theta - squared_theta * theta / 6.0;
