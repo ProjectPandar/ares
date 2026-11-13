@@ -58,6 +58,9 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     let current_z = state.writer_z.unwrap_or(0.0);
     let z = z.unwrap_or(current_z);
     let different_z = (z - current_z).abs() >= 1e-4;
+    let compacted_below_object = settings.process.gcode.wipe_tower_no_sparse_layers.0
+        && z >= 0.0
+        && f64::from(result.print_z) - z > 1e-4;
     if different_z {
         motion::tower::change_z(
             output,
@@ -73,7 +76,25 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     motion::append_exclude_end(&mut retract, state);
     if nozzle_change {
         let mut before = Vec::new();
-        motion::tower::type1_travel(&mut before, state, transform(nozzle.start), geometry)?;
+        let compact_intower_nc_travel = compacted_below_object
+            && f64::from(result.print_z) - state.writer_z.expect("tower travel positions writer")
+                > 1e-4;
+        motion::tower::type1_travel(
+            &mut before,
+            state,
+            transform(nozzle.start),
+            geometry,
+            compact_intower_nc_travel.then_some(z),
+        )?;
+        if !compact_intower_nc_travel && compacted_below_object {
+            motion::tower::writer_z(
+                &mut before,
+                state,
+                z,
+                "Descend to compacted wipe tower z (no sparse layers)",
+                false,
+            );
+        }
         motion::tower::type1_unretract(&mut before, state);
         before.extend_from_slice(
             postprocess::nozzle_moves(&nozzle.gcode, nozzle.start, offset, angle).as_bytes(),
