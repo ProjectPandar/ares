@@ -7,6 +7,8 @@ use serde_json::{Value, json};
 mod input;
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
+#[path = "project_filament_refresh/variants.rs"]
+mod variants;
 
 fn fixture(indices: &[&str]) -> (Value, Value) {
     let mut project = input::settings("Unlisted Synthetic Process", "0.2");
@@ -50,6 +52,22 @@ async fn compare(indices: &[&str]) {
 
 async fn compare_project(project: Value, catalog: Value) {
     let stale = project["filament_self_index"] != json!(["1", "2"]);
+    let mut expected = json!({
+        "filament_self_index": ["1", "2"], "filament_flow_ratio": ["0.91", "0.92"],
+        "filament_colour": project["filament_colour"],
+        "filament_extruder_variant": project["filament_extruder_variant"],
+        "filament_settings_id": project["filament_settings_id"]
+    });
+    if project["printer_settings_id"] == "Synthetic Printer" {
+        expected["enable_pre_heating"] = project
+            .get("enable_pre_heating")
+            .cloned()
+            .unwrap_or(json!("1"));
+    }
+    compare_expected(project, catalog, expected, stale).await;
+}
+
+async fn compare_expected(project: Value, catalog: Value, expected: Value, stale: bool) {
     let Some(binary) = native_environment::binary("ARES_ORCA_FILAMENT_REFRESH_BIN") else {
         return;
     };
@@ -133,25 +151,15 @@ async fn compare_project(project: Value, catalog: Value) {
     );
     let native: Value =
         serde_json::from_slice(&fs::read(root.join("native.json")).unwrap()).unwrap();
-    assert_eq!(native["filament_self_index"], json!(["1", "2"]));
-    assert_eq!(native["filament_flow_ratio"], json!(["0.91", "0.92"]));
-    assert_eq!(native["filament_colour"], project["filament_colour"]);
-    assert_eq!(
-        native["filament_extruder_variant"],
-        project["filament_extruder_variant"]
-    );
+    for (key, value) in expected.as_object().unwrap() {
+        assert_eq!(&native[key], value, "Native {key}: {}", root.display());
+    }
+    fs::write(root.join("expected.json"), expected.to_string()).unwrap();
     let log = fs::read_to_string(root.join("00000.log")).unwrap();
     assert!(!log.contains("Could not find vendor for preset Synthetic Material"));
     assert!(!log.contains("not resolved (Failed loading configuration file"));
     assert!(!log.contains("can not install Synthetic Printer"));
     assert_eq!(log.contains("regenerating"), stale);
-    if project["printer_settings_id"] == "Synthetic Printer" {
-        let expected = project
-            .get("enable_pre_heating")
-            .cloned()
-            .unwrap_or(json!("1"));
-        assert_eq!(native["enable_pre_heating"], expected);
-    }
     fs::write(
         root.join("native-premise.json"),
         json!({"passed": true, "stale": stale}).to_string(),
@@ -182,16 +190,7 @@ async fn compare_project(project: Value, catalog: Value) {
     )
     .unwrap();
     let actual = result.unwrap();
-    if project["printer_settings_id"] == "Synthetic Printer" {
-        assert_eq!(actual["enable_pre_heating"], native["enable_pre_heating"]);
-    }
-    for key in [
-        "filament_flow_ratio",
-        "filament_self_index",
-        "filament_colour",
-        "filament_settings_id",
-        "filament_extruder_variant",
-    ] {
+    for key in expected.as_object().unwrap().keys() {
         assert_eq!(actual[key], native[key], "{key}: {}", root.display());
     }
 }
