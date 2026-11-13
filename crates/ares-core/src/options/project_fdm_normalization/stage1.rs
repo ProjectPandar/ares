@@ -2,30 +2,6 @@ use super::super::{Nullable, OrcaBool, OrcaFloat, OrcaInt, Percent};
 use super::ProjectSettings;
 
 pub(super) fn normalize(settings: &mut ProjectSettings) {
-    {
-        let region = &mut settings.process.region;
-        if region.sparse_infill_filament_id.0 > 0 && region.internal_solid_filament_id.0 == 0 {
-            region.internal_solid_filament_id = region.sparse_infill_filament_id;
-        }
-
-        let internal_solid = region.internal_solid_filament_id;
-        let top_surface = region.top_surface_filament_id;
-        let bottom_surface = region.bottom_surface_filament_id;
-
-        if internal_solid.0 == 0 && top_surface.0 > 0 {
-            region.internal_solid_filament_id = top_surface;
-        }
-        if internal_solid.0 == 0 && bottom_surface.0 > 0 {
-            region.internal_solid_filament_id = bottom_surface;
-        }
-        if top_surface.0 == 0 && internal_solid.0 > 0 {
-            region.top_surface_filament_id = internal_solid;
-        }
-        if bottom_surface.0 == 0 && internal_solid.0 > 0 {
-            region.bottom_surface_filament_id = internal_solid;
-        }
-    }
-
     if settings.process.print.spiral_mode.0 {
         settings
             .project
