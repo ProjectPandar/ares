@@ -149,7 +149,8 @@ recreate them after every restart or context reset.
 3. Run these checks:
    - only the affected cases, in both modes. The env files alone omit some bindings (GDB, the
      `*_REFERENCE` flags); the complete set is the `environment` object that the last baseline FULL
-     recorded for each mode, minus its target dir, home, PATH and CPU pin. A skipped Native run or a
+     recorded for each mode, minus its target dir, home, PATH and CPU bindings (`ARES_PIN_CPUS` and the
+     seeded `ORCA_REPLAY_CPU` both move to the worker's own CPUs). A skipped Native run or a
      missing producer never counts as a result;
    - `cargo fmt`;
    - `cargo clippy --workspace --all-targets -- -D warnings`;
