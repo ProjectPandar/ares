@@ -64,9 +64,44 @@ fn request<'a>(
 }
 
 #[tokio::test]
-async fn composed_profile_has_one_empty_filament_gcode_slot() {
-    let (catalog, selection) = catalog_parts();
-    let catalog_json = catalog.to_string();
+async fn composed_vendor_profile_preserves_omitted_filament_gcode_defaults() {
+    let (_, selection) = catalog_parts();
+    let catalog_json = include_str!("../../../tests/profiles/filament-gcode-slots/catalog.json");
+    let selection_json = selection.to_string();
+    let overrides = ConfigOverrides::default();
+    let settings =
+        ares_core::profile_settings(stl(), request(catalog_json, &selection_json, &overrides))
+            .await
+            .unwrap();
+    let settings = serde_json::to_value(settings).unwrap();
+    write_artifact(
+        "vendor-omitted.json",
+        &serde_json::to_vec_pretty(&settings).unwrap(),
+    );
+    assert_eq!(settings["filament_end_gcode"], json!([" "]));
+    assert_eq!(settings["filament_start_gcode"], json!([" "]));
+}
+
+#[tokio::test]
+async fn imported_sparse_profile_pads_empty_filament_gcode_vectors() {
+    let catalog: Value = serde_json::from_str(include_str!(
+        "../../../tests/profiles/filament-gcode-slots/catalog.json"
+    ))
+    .unwrap();
+    let process: Value = serde_json::from_str(include_str!(
+        "../../../tests/profiles/filament-gcode-slots/cli-process.json"
+    ))
+    .unwrap();
+    let filament: Value = serde_json::from_str(include_str!(
+        "../../../tests/profiles/filament-gcode-slots/cli-filament.json"
+    ))
+    .unwrap();
+    let imported_catalog = json!({
+        "vendors": [],
+        "imports": [{"profiles": [catalog["vendors"][0]["files"]["machine.json"], process, filament]}]
+    });
+    let (_, selection) = catalog_parts();
+    let catalog_json = imported_catalog.to_string();
     let selection_json = selection.to_string();
     let overrides = ConfigOverrides::default();
     let settings =
@@ -74,8 +109,23 @@ async fn composed_profile_has_one_empty_filament_gcode_slot() {
             .await
             .unwrap();
     let settings = serde_json::to_value(settings).unwrap();
+    write_artifact(
+        "imported-empty.json",
+        &serde_json::to_vec_pretty(&settings).unwrap(),
+    );
     assert_eq!(settings["filament_end_gcode"], json!([""]));
     assert_eq!(settings["filament_start_gcode"], json!([""]));
+}
+
+fn write_artifact(name: &str, bytes: &[u8]) {
+    let root = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"));
+    std::fs::create_dir_all(root).unwrap();
+    let path = root.join(format!(
+        "filament-gcode-slots-{}-{name}",
+        std::process::id()
+    ));
+    std::fs::write(&path, bytes).unwrap();
+    eprintln!("artifact: {}", path.display());
 }
 
 #[tokio::test]

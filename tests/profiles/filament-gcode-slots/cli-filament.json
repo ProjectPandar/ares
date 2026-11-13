@@ -1,0 +1,12 @@
+{
+  "filament_diameter": [
+    "1.75"
+  ],
+  "filament_end_gcode": [],
+  "filament_id": "AF000",
+  "filament_start_gcode": [],
+  "from": "system",
+  "instantiation": "true",
+  "name": "Acme PLA",
+  "type": "filament"
+}
