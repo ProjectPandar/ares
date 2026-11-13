@@ -115,3 +115,53 @@ pub enum ProcessSeamScarfType {
     #[serde(rename = "all")]
     All,
 }
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ProcessSurfaceFillOrder {
+    #[serde(rename = "default")]
+    Default,
+    #[serde(rename = "outward")]
+    Outward,
+    #[serde(rename = "inward")]
+    Inward,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ProcessCenterOfSurfacePattern {
+    #[serde(rename = "each_surface")]
+    EachSurface,
+    #[serde(rename = "each_model")]
+    EachModel,
+    #[serde(rename = "each_assembly")]
+    EachAssembly,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ProcessAdaptiveInfillMode {
+    #[serde(rename = "disabled")]
+    Disabled,
+    #[serde(rename = "distance_warp")]
+    DistanceWarp,
+    #[serde(rename = "smooth_blend")]
+    SmoothBlend,
+    #[serde(rename = "stepped_shells")]
+    SteppedShells,
+    #[serde(rename = "lobes")]
+    Lobes,
+    #[serde(rename = "normal_z")]
+    NormalZ,
+    #[serde(rename = "normal_y")]
+    NormalY,
+    #[serde(rename = "normal_x")]
+    NormalX,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ProcessAdaptiveInfillGradient {
+    #[serde(rename = "linear")]
+    Linear,
+    #[serde(rename = "quadratic")]
+    Quadratic,
+    #[serde(rename = "exponential")]
+    Exponential,
+}
