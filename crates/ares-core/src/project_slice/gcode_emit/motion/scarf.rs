@@ -2,6 +2,7 @@
 
 mod eligibility;
 mod emit;
+mod split;
 mod trim;
 
 pub(super) use emit::segments as emit_segments;
@@ -9,7 +10,7 @@ pub(super) use emit::segments as emit_segments;
 use super::{LayerGeometry, MotionOptions};
 use crate::project_slice::perimeters::classic::{
     chained_loops::ExtrusionLoopRole,
-    materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3},
+    materialize::{ExtrusionPath, ExtrusionRole, Point3},
 };
 use crate::{FloatOrPercent, ProcessSeamScarfType};
 
@@ -111,7 +112,7 @@ pub(super) fn build(
         let length = path_length(&source.polyline.points) * scale;
         let (slope_path, flat_path, end_ratio) = if length > remaining {
             let cut = (remaining / scale, (0.5 * max_segment).min(1.0 / scale));
-            let (slope, flat) = split_path(source, cut);
+            let (slope, flat) = split::path(source, cut, scale);
             remaining = 0.0;
             (slope, (flat.polyline.points.len() > 1).then_some(flat), 1.0)
         } else {
@@ -245,53 +246,6 @@ fn scarf_speed(role: ExtrusionRole, options: &MotionOptions) -> f64 {
         FloatOrPercent::Percent(value) => base * value.0 / 100.0,
     };
     base.min(configured)
-}
-
-// `ExtrusionEntity.cpp:487-505`: split at the nearby vertex instead of leaving a short stub.
-fn split_path(src: &ExtrusionPath, (distance, snap): (f64, f64)) -> (ExtrusionPath, ExtrusionPath) {
-    let points = &src.polyline.points;
-    let mut traversed = 0.0;
-    for (index, segment) in points.windows(2).enumerate() {
-        let length = point_distance(segment[0], segment[1]);
-        let end_length = traversed + length;
-        if end_length >= distance {
-            let point = if end_length - distance < snap {
-                segment[1]
-            } else {
-                lerp(segment[0], segment[1], (distance - traversed) / length)
-            };
-            let mut before = points[..=index].to_vec();
-            if before.last() != Some(&point) {
-                before.push(point);
-            }
-            let mut after = vec![point];
-            if point == segment[1] {
-                after.clear();
-            }
-            after.extend_from_slice(&points[index + 1..]);
-            return (copy_with_points(src, before), copy_with_points(src, after));
-        }
-        traversed = end_length;
-    }
-    (
-        src.clone(),
-        copy_with_points(src, vec![*points.last().unwrap()]),
-    )
-}
-
-fn copy_with_points(path: &ExtrusionPath, points: Vec<Point3>) -> ExtrusionPath {
-    ExtrusionPath {
-        z_contoured: path.z_contoured,
-        polyline: Polyline3 {
-            points,
-            fitting: Vec::new(),
-        },
-        role: path.role,
-        can_reverse: path.can_reverse,
-        mm3_per_mm: path.mm3_per_mm,
-        width: path.width,
-        height: path.height,
-    }
 }
 
 fn detail(points: &[Point3], maximum: f64) -> Vec<Point3> {
