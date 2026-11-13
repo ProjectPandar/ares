@@ -147,7 +147,10 @@ recreate them after every restart or context reset.
 
    The upstream reference is the pinned Orca release.
 3. Run these checks:
-   - only the affected cases, in both modes (official and seeded env);
+   - only the affected cases, in both modes. The env files alone omit some bindings (GDB, the
+     `*_REFERENCE` flags); the complete set is the `environment` object that the last baseline FULL
+     recorded for each mode, minus its target dir, home, PATH and CPU pin. A skipped Native run or a
+     missing producer never counts as a result;
    - `cargo fmt`;
    - `cargo clippy --workspace --all-targets -- -D warnings`;
    - wasm32 and web checks, when those parts are touched.
