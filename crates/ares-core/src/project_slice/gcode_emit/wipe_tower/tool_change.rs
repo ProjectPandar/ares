@@ -153,7 +153,9 @@ impl Generator<'_> {
 
     pub(super) fn change(&mut self, writer: &mut Writer, tool: usize) {
         self.used_filament[self.current_tool] += writer.take_used_filament();
-        writer.gcode.push_str("[change_filament_gcode]\n");
+        writer
+            .gcode
+            .push_str("[restore_layer_z_before_toolchange]\n[change_filament_gcode]\n");
         if self.mk4_mmu3 {
             writer.switch_filament_monitoring(true);
         }
