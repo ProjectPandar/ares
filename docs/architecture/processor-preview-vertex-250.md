@@ -1,0 +1,27 @@
+# Processor preview vertices against OrcaSlicer 2.5.0
+
+Upstream: OrcaSlicer v2.5.0 (`40ecc66f7`), `src/libslic3r/GCode/GCodeProcessor.cpp`.
+Destination: `ares-core` `project_slice::gcode_emit::processor`, the
+`GCodeProcessorResult::moves` records that `ares-vgcode::convert` turns into
+preview vertices. The browser move check (`web/e2e/wasmMovesCompare.mjs`,
+[M853](m853-wasm-moves.md)) compares them with the processor oracle's moves
+and move dynamics dumps; each section below names the field it found
+different from Native and the upstream code Ares follows.
+
+## Actual-speed vertices take the current move's fan speed
+
+`TimeMachine::calculate_time` inserts an `internal_only` vertex where a block
+stops accelerating or starts decelerating (`:675-703`, `:706-734`). Its
+position, `delta_extruder`, `width`, `height` and `temperature` interpolate
+between the previous and current move when both have the same type;
+`feedrate`, `mm3_per_mm` and `fan_speed` are the current move's
+(`const float fan_speed = curr_move.fan_speed;`, `:688`, `:719`).
+
+Ares interpolated `fan_speed` too
+(`processor/moves/actual_speed.rs`, `actual_vertex`). Across a fan change the
+inserted vertex got a value between the two moves; within one fan speed the
+f32 `lerp` still rounds 100 to 100.0000076 or 99.9999924. Ender3 showed 195
+moves and 306 vertices off; KSR 4054 moves.
+
+Included: `fan_speed` of both inserted vertices is the current move's.
+Deferred: nothing else in the inserted vertex changes.
