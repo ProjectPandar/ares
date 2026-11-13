@@ -58,10 +58,11 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     let current_z = state.writer_z.unwrap_or(0.0);
     let z = z.unwrap_or(current_z);
     let different_z = (z - current_z).abs() >= 1e-4;
-    let compacted_below_object = settings.process.gcode.wipe_tower_no_sparse_layers.0
-        && z >= 0.0
-        && f64::from(result.print_z) - z > 1e-4;
-    if different_z {
+    let sparse_skipped = super::super::sparse_layers_skipped(settings);
+    let compacted_below_object = sparse_skipped && z >= 0.0 && f64::from(result.print_z) - z > 1e-4;
+    let defer_compacted_descend =
+        sparse_skipped && !result.priming && !metadata.finish_first && current_z - z > 1e-4;
+    if different_z && !defer_compacted_descend {
         motion::tower::change_z(
             output,
             state,
