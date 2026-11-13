@@ -2,6 +2,7 @@ use super::super::{OrcaRunner, application, cache_identity, profile_entry, repo_
 use super::project_catalog_supply::{native, produce};
 use super::project_preset_refresh::replace_settings;
 use serde_json::json;
+use std::path::Path;
 
 const UNLISTED: &str = "0.20mm Unlisted @H2D";
 
@@ -43,6 +44,18 @@ fn project_process_refresh_miss_keeps_project_values_like_native() {
     assert!(text.contains("; extruder_clearance_dist_to_rod = 50\n"));
     assert!(text.contains("; support_cooling_filter = 1\n"));
 
+    slice_matches_native(&runner, &input, &supply, &reference, "process");
+}
+
+/// Slices `input` through the public `from_project` request over the produced catalog and
+/// compares the whole output with OrcaSlicer's `reference`.
+pub(super) fn slice_matches_native(
+    runner: &OrcaRunner,
+    input: &[u8],
+    supply: &Path,
+    reference: &[u8],
+    miss: &str,
+) {
     let catalog_json = std::fs::read_to_string(supply.join("catalog.json")).unwrap();
     let selection_json = json!({"from_project": true}).to_string();
     let overrides = ares_core::ConfigOverrides::default();
@@ -50,7 +63,7 @@ fn project_process_refresh_miss_keeps_project_values_like_native() {
         .build()
         .unwrap()
         .block_on(ares_core::slice_with_profiles_validated(
-            &input,
+            input,
             ares_core::ProfileSliceRequest {
                 filename: "project.3mf",
                 catalog_json: &catalog_json,
@@ -70,8 +83,8 @@ fn project_process_refresh_miss_keeps_project_values_like_native() {
         },
     );
     let actual = result
-        .unwrap_or_else(|error| panic!("public process refresh miss: {error}; {:?}", runner.work));
+        .unwrap_or_else(|error| panic!("public {miss} refresh miss: {error}; {:?}", runner.work));
     std::fs::write(runner.work.join("ares.gcode"), &actual).unwrap();
-    crate::golden::compare_ordered_bytes_generator_only(&reference, &actual)
+    crate::golden::compare_ordered_bytes_generator_only(reference, &actual)
         .unwrap_or_else(|error| panic!("whole output: {error}; {:?}", runner.work));
 }
