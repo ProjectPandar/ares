@@ -19,6 +19,7 @@ use super::model_settings::Metadata;
 /// The plate metadata keys OrcaSlicer deserializes into `PartPlate::config`
 /// (`bbs_3mf.cpp:4418-4565`); each maps to the owning settings group field.
 pub(super) fn apply_plate_config_overrides(settings: &mut ProjectSettings, metadata: &[Metadata]) {
+    let mut bed_type = ProjectBedType::DefaultPlate;
     for item in metadata {
         match item.key.as_str() {
             // `fmmDefault` is never written to the file; every stored value is
@@ -41,10 +42,9 @@ pub(super) fn apply_plate_config_overrides(settings: &mut ProjectSettings, metad
                         OrcaInts(map.iter().map(|&v| OrcaInt(v.max(1))).collect());
                 }
             }
-            "curr_bed_type" => {
-                if let Some(bed) = parse_bed_type(&item.value) {
-                    settings.project.print.curr_bed_type = bed;
-                }
+            "bed_type" => {
+                // bbs_3mf.cpp:4641–4646 initializes btPC before parsing any present value.
+                bed_type = parse_bed_type(&item.value).unwrap_or(ProjectBedType::CoolPlate);
             }
             "print_sequence" => {
                 if let Some(sequence) = parse_print_sequence(&item.value) {
@@ -76,6 +76,7 @@ pub(super) fn apply_plate_config_overrides(settings: &mut ProjectSettings, metad
             _ => {}
         }
     }
+    settings.project.print.curr_bed_type = bed_type.resolve(settings.project.print.curr_bed_type);
 }
 
 /// The plate's own `filament_map_mode` and `filament_map` (`PartPlate::get_filament_map_mode`,
@@ -133,8 +134,7 @@ fn parse_map_mode(value: &str) -> Option<ProjectFilamentMapMode> {
 }
 
 fn parse_bed_type(value: &str) -> Option<ProjectBedType> {
-    match value.trim() {
-        "Default Plate" => Some(ProjectBedType::DefaultPlate),
+    match value {
         "Supertack Plate" | "SuperTack Plate" => Some(ProjectBedType::SupertackPlate),
         "Cool Plate" => Some(ProjectBedType::CoolPlate),
         "Engineering Plate" => Some(ProjectBedType::EngineeringPlate),
