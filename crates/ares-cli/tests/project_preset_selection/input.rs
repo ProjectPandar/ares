@@ -68,6 +68,11 @@ pub fn catalog(system: &[Value], users: &[Value]) -> Value {
 }
 
 pub fn project(settings: &Value) -> Vec<u8> {
+    project_version(settings, "2.5.0")
+}
+
+pub fn project_version(settings: &Value, version: &str) -> Vec<u8> {
+    let model = ROOT_MODEL.replace("OrcaSlicer-2.5.0", &format!("OrcaSlicer-{version}"));
     let mut cursor = Cursor::new(Vec::new());
     {
         let mut writer = zip::ZipWriter::new(&mut cursor);
@@ -81,7 +86,7 @@ pub fn project(settings: &Value) -> Vec<u8> {
                 "_rels/.rels",
                 r#"<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/root.model" Id="r1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>"#,
             ),
-            ("3D/root.model", ROOT_MODEL),
+            ("3D/root.model", model.as_str()),
             ("Metadata/model_settings.config", MODEL_SETTINGS),
             (
                 "Metadata/slice_info.config",

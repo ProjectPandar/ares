@@ -67,11 +67,17 @@ async fn mapped_limits(label: &str, variants: Value, ids: Value, limits: Value, 
         "existing_edited"
     );
     assert_eq!(
+        native["edited"]["config"]["machine_max_speed_x"]["type"],
+        16_385
+    );
+    assert_eq!(
         view["preset_selection"]["printer"]["edited"]["config"]["machine_max_speed_x"],
-        native["edited"]["config"]["machine_max_speed_x"]
+        json!(expected.split(',').collect::<Vec<_>>())
     );
     assert_eq!(
         view["preset_selection"]["printer"]["edited"]["config"]["printer_extruder_variant"],
-        native["edited"]["config"]["printer_extruder_variant"]
+        json!(super::support::native_strings(
+            &native["edited"]["config"]["printer_extruder_variant"]
+        ))
     );
 }

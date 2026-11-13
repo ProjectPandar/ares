@@ -25,11 +25,30 @@ impl Case {
         Self::with_native_controls(label, settings, catalog, &[])
     }
 
+    pub fn with_version(
+        label: &str,
+        settings: Value,
+        catalog: Value,
+        version: &str,
+    ) -> Option<Self> {
+        Self::with_version_controls(label, settings, catalog, &[], version)
+    }
+
     pub fn with_native_controls(
         label: &str,
         settings: Value,
         catalog: Value,
         controls: &[Value],
+    ) -> Option<Self> {
+        Self::with_version_controls(label, settings, catalog, controls, "2.5.0")
+    }
+
+    fn with_version_controls(
+        label: &str,
+        settings: Value,
+        catalog: Value,
+        controls: &[Value],
+        version: &str,
     ) -> Option<Self> {
         let binary = super::native_environment::binary("ARES_ORCA_PRESET_SELECT_BIN")?;
         let root = PathBuf::from(super::native_environment::value(
@@ -79,11 +98,11 @@ impl Case {
         let catalog = catalog.to_string();
         fs::write(root.join("catalog.json"), &catalog).unwrap();
         fs::write(root.join("project-settings.json"), settings.to_string()).unwrap();
-        let input = super::input::project(&settings);
+        let input = super::input::project_version(&settings, version);
         fs::write(root.join("selection.3mf"), &input).unwrap();
         let projects = std::iter::once(&settings)
             .chain(controls.iter())
-            .map(native_project)
+            .map(|settings| native_project(settings, version))
             .collect::<Vec<_>>();
         let request = json!({
             "data_directory": root.join("data"),
@@ -245,14 +264,26 @@ impl Case {
     }
 }
 
-fn native_project(settings: &Value) -> Value {
+pub fn native_strings(report: &Value) -> Vec<String> {
+    assert_eq!(report["type"], 16_387);
+    serde_json::from_str(
+        &ares_core::decode_config_value(
+            OptionValueKind::Strings,
+            report["serialized"].as_str().unwrap(),
+        )
+        .unwrap(),
+    )
+    .unwrap()
+}
+
+fn native_project(settings: &Value, version: &str) -> Value {
     let options = settings
         .as_object()
         .unwrap()
         .iter()
         .map(|(key, value)| (key.clone(), Value::String(wire(key, value))))
         .collect::<serde_json::Map<_, _>>();
-    json!({"filename": "selection.3mf", "version": "2.5.0", "options": options})
+    json!({"filename": "selection.3mf", "version": version, "options": options})
 }
 
 fn scalar(value: &Value) -> String {
