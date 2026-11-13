@@ -1,15 +1,15 @@
-//! Beta `ExtrusionEntity.cpp:487-505`: extend a ramp past a short vertex remainder.
+//! OrcaSlicer 2.5.0 `ExtrusionEntity.cpp:493-519`: keep a straight ramp's exact length.
 
 #[tokio::test]
-async fn scarf_ramp_snaps_to_nearby_vertex_without_a_short_flat_stub() {
+async fn scarf_ramp_keeps_exact_length_without_a_short_flat_stub() {
     let project = include_bytes!("../../../../tests/parity/scarf-default-threshold/boundary.3mf");
     let (reference, _) = crate::runner::native_stream_case::qualify(
         (
             "scarf_ramp_endpoint_vertex_snap",
             &[
-                "345efec64c7b95a05ce5cf96df0dde66a158835c",
-                "ExtrusionEntity.cpp:487-505 split_at_slope_end",
-                "ExtrusionEntity.cpp:571-579 sloped-loop ramp split",
+                "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+                "ExtrusionEntity.cpp:493-519 split_at_slope_end",
+                "ExtrusionEntity.cpp:592-600 sloped-loop ramp split",
             ],
         ),
         "existing_boundary",
@@ -18,7 +18,7 @@ async fn scarf_ramp_snaps_to_nearby_vertex_without_a_short_flat_stub() {
         false,
     );
     let native_object = second_layer_object(&reference.native);
-    assert!(native_object.contains("G1 X106.25 Y105 Z.225 "));
+    assert!(native_object.contains("G1 X107.5 Y105 Z.25 "));
     assert!(native_object.contains("G1 F3600\n"));
     assert!(native_object.contains("G1 F7200\n"));
     std::fs::write(
@@ -45,7 +45,7 @@ async fn scarf_ramp_snaps_to_nearby_vertex_without_a_short_flat_stub() {
     .unwrap();
     assert_eq!(
         api_object, native_object,
-        "the complete scarf object must match the runtime beta vertex-snap oracle: {:?}",
+        "the complete scarf object must match the runtime exact-length oracle: {:?}",
         reference.root,
     );
 }
