@@ -17,6 +17,16 @@
      // Mark the main thread for the debugger and for runtime checks.
      set_current_thread_name("orcaslicer_main");
      // Save the thread ID of the main thread.
+@@ -8194,6 +8197,9 @@
+     }
+ #endif
+ 
++    if (const char *test_resources = std::getenv("ARES_ORCA_RESOURCES_DIR"))
++        path_resources = test_resources;
++
+     set_resources_dir(path_resources.string());
+     set_var_dir((path_resources / "images").string());
+     set_local_dir((path_resources / "i18n").string());
 --- a/src/libslic3r/Preset.cpp
 +++ b/src/libslic3r/Preset.cpp
 @@ -30,6 +30,7 @@
