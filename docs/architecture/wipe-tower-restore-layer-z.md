@@ -63,6 +63,20 @@ ramming, temperature policy, synchronization and unrelated no-sparse-layer
 travel optimizations remain outside this slice. Keep the preceding planner
 boundary rewrite unchanged.
 
+## Included signed layer-distance prerequisite
+
+The height scenario also exposes an existing Rust translation mismatch in
+`type1/finish_layer.rs`, not a change introduced by upstream `39408fa1f`.
+`WipeTower.cpp:3063–3064` and `3957–3958` compute `int dist_to_1st` from the
+iterator distance minus `m_first_layer_idx`, then subtract it from the minimum
+of brim loops and chamfer loops. Preserve the subtraction's unsigned wrapping
+before narrowing to the signed integer; do not subtract two Rust `usize`
+values with checked arithmetic. Represent the absent first-layer index as the
+source `size_t(-1)` sentinel. Its distance is therefore `idx + 1` before signed
+narrowing, not zero and not an error. Failure modes are a layer before the first
+change (negative signed distance), the first-change layer (zero), later layers
+(positive), and the absent-index sentinel. Do not saturate or clamp the result.
+
 ## E2E contract and failure modes
 
 Use the upstream test's eight combinations: Type1/Type2 × one/two physical
