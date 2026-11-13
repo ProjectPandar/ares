@@ -14,8 +14,9 @@ mod styles;
 #[path = "manual/vertical.rs"]
 mod vertical;
 
+// OrcaSlicer 2.5.0 TreeSupport.cpp:3359-3371 includes XY clearance in node classification.
 #[test]
-fn manual_slim_painted_overhang_preserves_complete_output() {
+fn manual_slim_painted_overhang_collision_clearance_preserves_complete_output() {
     let label = "tree-support/manual/slim/painted-overhang";
     let Some(baseline) = overhang_case(label, "tree_slim", &[("support_type", "tree(manual)")])
     else {
