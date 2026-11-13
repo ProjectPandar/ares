@@ -174,8 +174,8 @@ impl DropPass<'_> {
     fn drop_circle(&mut self, id: NodeId, position: Point) -> Result<(), ClipperError> {
         let collision = self.data.collision(0.0, self.next_height.object_layer)?;
         let projected = movement::projection_onto(collision, position);
-        let to_buildplate =
-            !movement::is_inside_any(&self.data.outlines[self.next_height.object_layer], position);
+        // OrcaSlicer 2.5.0 TreeSupport.cpp:3359-3360 includes the XY clearance.
+        let to_buildplate = !movement::is_inside_any(collision, position);
         let old_position = self.arena.nodes[id].position;
         let direction = Point::new(
             projected.x() - old_position.x(),
