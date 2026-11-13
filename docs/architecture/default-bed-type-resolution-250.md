@@ -39,7 +39,11 @@ Correct plate composition in
 `Project::select_plate` boundary. Read the persisted `bed_type` key, not
 `curr_bed_type`; do not keep the incorrect key as an alias. An omitted plate
 selection inherits the project's concrete current bed type. A concrete plate
-selection overrides it.
+selection overrides it. A present `bed_type` starts as Cool Plate (`btPC`): an
+empty or unrecognized string leaves that value unchanged when `from_string`
+fails (`bbs_3mf.cpp:4641–4646`). This is not default-hint resolution or plate
+inheritance. Match enum names exactly, without trimming. The importer maps
+only the exact alias `SuperTack Plate` to `Supertack Plate` before parsing.
 
 Persisted `bed_type="Default Plate"` is outside the supported file contract:
 Native cannot slice that input successfully. Do not construct such a fixture
@@ -89,6 +93,12 @@ resolves its printer default. A caller's missing current bed selection,
 vector lookup. Typed project preparation handles an in-memory project Default
 marker after caller overrides; it is not persisted as plate metadata.
 
+The Rust entry selectors are
+`options/bed_temperature.rs::SliceOptions::curr_bed_type` for raw byte options
+and `project/effective_config/phases.rs::prepared_source` for typed project
+overrides. These adapters remain compatibility shells around the cited
+printer-selection semantics, not an independent bed-selection policy.
+
 Callers with a catalog pass the looked-up `PrinterModelInfo.model_id`. Core
 entry points without a catalog pass an empty model identifier, matching
 `get_printer_type` without a preset bundle. Consequently a no-catalog caller
@@ -104,8 +114,10 @@ Exercise loaded project bytes through `Project::select_plate` and the public
 slice API/CLI. Compare the emitted M140/M190 temperatures with Native for a
 project with a concrete current bed and an omitted plate selection, and for
 the same project with an explicit Textured PEI plate. Check both initial-layer
-and subsequent-layer commands. Retain complete outputs independently of the
-labelled temperature comparison. Test Default inheritance and concrete
+and subsequent-layer commands. Also cover present empty, unrecognized, and
+space-padded bed values over a High Temp project: all select Cool Plate, while
+the exact `SuperTack Plate` alias selects Supertack. Retain complete outputs
+independently of the labelled temperature comparison. Test Default inheritance and concrete
 selection preservation through `ProjectBedType::resolve`. Exercise missing,
 empty, and Default caller selections through the byte API and an in-memory
 Default project override through the validated project API. Assert both
@@ -119,7 +131,8 @@ integer mappings come from the cited upstream function and BedType enum, not
 from recomputing the implementation.
 
 Failure modes include treating Default as an empty vector, losing the project
-bed during plate overlay, reading the wrong persisted metadata key,
+bed during plate overlay, reading the wrong persisted metadata key, treating
+present invalid metadata as omitted, trimming imported enum names,
 using integer-only hint parsing, accepting an invalid Default hint, consulting
 model defaults after an invalid nonempty hint, and coupling resolution to a
 catalog or filesystem.
