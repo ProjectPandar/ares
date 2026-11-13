@@ -64,6 +64,32 @@ The existing package remains protected by a garbage-collection root.
 [tools/README](../../tools/README.md) records the reconstruction and
 instantiate-only commands. This decision does not realize the package.
 
+## OrcaSlicer 2.5.0 producer
+
+The KSR consumers now compare against the 2.5.0 (`40ecc66f7`) seed-replay producer.
+This replaces the 2.4.2 producer above. Upstream 2.5.0 already initializes the
+fields that the 2.4.2 patch set:
+- `Arachne::WallToolPathsParams` defaults `min_length_factor = 0.5f` and
+  `is_top_or_bottom_layer = false` (`WallToolPaths.hpp:33,38`). The concentric fills
+  therefore no longer need them set.
+- `Print.hpp:742` declares `size_t m_id{0}`.
+
+The 2.5.0 producer source is `40ecc66f7` plus the seed-only change. It patches only
+`Feature/FuzzySkin/FuzzySkin.cpp` (the `ORCA_REPLAY_SEED` generator) and
+`GCode.cpp` (the placeholder RNG seed). Its package output is
+`6fp28jy4wfr292v1knh0wp8yp6a65v06-orca-slicer-seed-replay-250-2.5.0`, protected by a
+garbage-collection root.
+
+`producer.rs` binds the producer identity to the raw SHA-256 of both executables:
+- wrapper `bin/orca-slicer`:
+  `9d285c9995cdd0eacef354afb76853c81e3def3154b12e38a50238bf268004d6`;
+- ELF `bin/.orca-slicer-wrapped`:
+  `84a7780653be3b46fe909e43ae98b3576907c561e8ff337c208ff97c2b23a84a`.
+
+The consumer names drop the version: `project_matches_initialized_orca_ordered_bytes`
+and `browser::browser_output_matches_initialized_orca_ordered_bytes`. The comparator,
+the input SHA and the cache binding do not change.
+
 ## Consumer contract
 
 All Ares-versus-reference comparisons migrate to freshly generated initialized
