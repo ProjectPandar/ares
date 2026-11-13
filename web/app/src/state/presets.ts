@@ -149,7 +149,8 @@ export async function updateCompatible() {
     const slots = Math.max(selection.filaments.length, presetFilamentSlots(scene?.settings ?? null));
     const selected = await catalog.selectCompatibleFilaments(selection.printer, selection.process,
       Array.from({ length: slots }, (_, slot) => selection.filaments[slot] ?? ""), [...installedFilaments]);
-    const { filaments, ...filamentProject } = await catalog.normalizeFilamentSlots(selection.printer,
+    // GCode.cpp:8272 writes filament_multi_colour only when the loaded project carries it; the core keeps it.
+    const { filaments, filament_multi_colour: _projectOwned, ...filamentProject } = await catalog.normalizeFilamentSlots(selection.printer,
       { ...(selection.filamentProject ?? projectFilamentState(scene?.settings ?? null)), filaments: selected });
     if (filtered(selection)) {
       const current = useApp.getState().presetSelection!;

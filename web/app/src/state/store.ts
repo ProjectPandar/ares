@@ -53,7 +53,7 @@ export interface PresetSelection {
   /** Filament preset by slot; unset slots keep the project's. */
   filaments: string[];
   /** PresetBundle's normalized project palette, maps and per-nozzle flush data. */
-  filamentProject?: Omit<FilamentSlotState, "filaments">;
+  filamentProject?: Omit<FilamentSlotState, "filaments" | "filament_multi_colour">;
   /** `curr_bed_type` of the plate combo; unset when the printer has none. */
   bedType?: string;
   /** `nozzle_volume_type`, `filament_map_mode` and `filament_map` of a dual-nozzle printer. */
