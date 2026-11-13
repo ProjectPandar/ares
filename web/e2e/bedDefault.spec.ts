@@ -34,6 +34,22 @@ test("U1 initializes Textured PEI and exports Native first-layer bed temperature
   const plate = page.getByRole("combobox", { name: "Plate type", exact: true });
   await expect(plate).toBeVisible();
   const bed = await plate.inputValue();
+  writeFileSync(`${artifacts}initial-selection.json`, JSON.stringify({ bed, printer: await combo("Printer preset").getAttribute("title"), explicit_bed_selection: false }, null, 2));
+  await page.screenshot({ path: `${artifacts}implicit-selection.png` });
+  expect(bed).toBe("Textured PEI Plate");
+  await combo("Process preset").click();
+  await page.getByRole("option", { name: "0.20 Standard @Snapmaker U1 (0.4 nozzle)", exact: true }).click();
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  await combo("Filament 1 preset").click();
+  await page.getByRole("option", { name: "Add/Remove filaments", exact: true }).click();
+  const filaments = page.getByRole("dialog", { name: "Filament selection" });
+  await filaments.getByRole("group", { name: "Filaments", exact: true }).getByRole("checkbox", { name: "Generic PLA", exact: true }).check();
+  await filaments.getByRole("button", { name: "Done", exact: true }).click();
+  const slots = page.getByRole("button", { name: /^Filament \d+ preset$/ });
+  for (let index = 0; index < await slots.count(); index++) {
+    await slots.nth(index).click();
+    await page.getByRole("option", { name: "Generic PLA @U1 0.4 nozzle", exact: true }).click();
+  }
   const selection = {
     printer: (await combo("Printer preset").getAttribute("title"))!,
     process: (await combo("Process preset").getAttribute("title"))!,
@@ -41,7 +57,6 @@ test("U1 initializes Textured PEI and exports Native first-layer bed temperature
   };
   expect(selection.filaments.length).toBeGreaterThan(0);
   const native = await nativeBedReference(binary!, selection, model, `${artifacts}native`);
-  await page.screenshot({ path: `${artifacts}implicit-selection.png` });
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code" }).click()]);
@@ -50,6 +65,5 @@ test("U1 initializes Textured PEI and exports Native first-layer bed temperature
   writeFileSync(`${artifacts}result.json`, JSON.stringify({ selection, bed, explicit_bed_selection: false, native_first_bed_commands: firstBedCommands(native), browser_first_bed_commands: firstBedCommands(browser), native_bed_commands: bedCommands(native), browser_bed_commands: bedCommands(browser), complete_output_parity_claimed: false }, null, 2));
   expect(firstBedCommands(native)).toEqual(["M140 S55", "M190 S55"]);
   expect(firstBedCommands(browser)).toEqual(firstBedCommands(native));
-  expect(bed).toBe("Textured PEI Plate");
   expect(browser).toContain("; curr_bed_type = Textured PEI Plate");
 });
