@@ -37,6 +37,8 @@ pub(crate) struct ProjectDocuments {
     /// model's `Application` metadata starts with `BambuStudio-` or
     /// `OrcaSlicer-`.
     pub bbl_family_3mf: bool,
+    pub preset_file_version: Option<String>,
+    pub preset_selection: Option<std::sync::Arc<crate::profiles::PresetSelection>>,
 }
 
 impl ProjectDocuments {
@@ -49,6 +51,8 @@ impl ProjectDocuments {
             plate_documents: self.plate_documents.clone(),
             has_painted_layer_height_profile: self.has_painted_layer_height_profile,
             bbl_family_3mf: self.bbl_family_3mf,
+            preset_file_version: self.preset_file_version.clone(),
+            preset_selection: self.preset_selection.clone(),
         }
     }
 }

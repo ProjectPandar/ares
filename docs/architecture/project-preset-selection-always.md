@@ -53,7 +53,9 @@ adapter transport is deferred. The existing `ProfileSettings` return type
 serializes the Always result as `{"settings": {...}, "preset_selection": {...}}`.
 `settings` is the effective option map; `preset_selection` has `process`,
 `printer` and `filament` entries with selected reference, edited configuration,
-outcome and collection state. Existing CLI results remain flat option maps.
+outcome and collection state. Each record's `config` is a flat option map, not
+the Native observation's `{type, serialized}` envelope. Existing CLI results
+remain flat option maps.
 
 The core result must carry the loaded project and per-collection identity,
 selected reference versus edited effective configuration, dirty state, visibility,
