@@ -1,7 +1,7 @@
 import type { PresetCatalog } from "./presetCatalog.js";
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
-import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
+import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
 
 type Call = (body: RequestBody, onStatus?: (status: SlicingStatus) => void) => Promise<unknown>;
 type Vec3 = [number, number, number];
@@ -234,7 +234,7 @@ export class PlaterSession {
    * Slices plate `options.plate` with selected presets, as `AresSlicer.sliceWithProfiles` slices the loaded file.
    * `onStatus` receives each status of the slice, in order, while it runs.
    */
-  async sliceWithProfiles(catalogJson: string, selection: ProfileSelection, options: ProfileSliceOptions, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
+  async sliceWithProfiles(catalogJson: string, selection: ProfileSelection | ProjectPresetSelection, options: ProfileSliceOptions, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
     return (await this.#call({
       kind: "platerSliceWithProfiles",
       sessionId: this.#sessionId,
