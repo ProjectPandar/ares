@@ -18,7 +18,7 @@ inline void load_times(const std::vector<libvgcode::PathVertex>& m_vertices, std
     }
 }
 
-// GCodeViewer::render_legend (GCodeViewer.cpp:4105, 4374-4382, 4606-4618, 4627-4636):
+// GCodeViewer::render_legend (GCodeViewer.cpp:4064, 4333-4341, 4565-4577, 4586-4595):
 // the Feature Type Time and % cells; Usage cells are a later slice.
 template <class Viewer>
 inline void feature_type_cells(const Viewer& m_viewer, const Slic3r::PrintEstimatedStatistics::Mode& time_mode,
