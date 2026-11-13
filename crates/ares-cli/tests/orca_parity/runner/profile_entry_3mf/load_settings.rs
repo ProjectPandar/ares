@@ -73,7 +73,21 @@ fn profile_entry_3mf_load_settings() {
     .unwrap();
     let project = std::fs::read(&project_path).unwrap();
 
-    // Step 2: native oracle slices the 3MF with the same selected presets.
+    // Browser vendor references use this metadata independently of the flat/flat guard.
+    let native_presets = crate::runner::profile_entry::native_user_presets::resolved(
+        &runner.work,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
+    write_json(
+        &runner.work.join("native-profile-inputs.json"),
+        &json!({
+            "datadir": &native_presets.datadir,
+            "settings": &native_presets.settings,
+            "filaments": &native_presets.filaments,
+        }),
+    );
     let native = |name: &str| {
         let output = runner.work.join(name);
         std::fs::create_dir(&output).unwrap();

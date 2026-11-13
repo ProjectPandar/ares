@@ -109,20 +109,30 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   cpSync(centerWork, `${artifacts}native-center/`, { recursive: true });
   expect(JSON.parse(readFileSync(`${work}result.json`, "utf8"))).toMatchObject({ native_repeat: "PASS" });
   const selection = JSON.parse(readFileSync(`${work}selection.json`, "utf8")) as { machine: string; process: string; filaments: string[] };
-  const native = normalize(readFileSync(`${work}reference-first/plate_1.gcode`, "utf8"), "OrcaSlicer");
-  const nativeCenter = normalize(readFileSync(`${centerWork}center-reference/plate_1.gcode`, "utf8"), "OrcaSlicer");
+  const inputs = JSON.parse(readFileSync(`${work}native-profile-inputs.json`, "utf8")) as { datadir: string; settings: string[]; filaments: string[] };
+  const loadPresets = ["--datadir", inputs.datadir, "--load-settings", inputs.settings.join(";"), "--load-filaments", inputs.filaments.join(";")];
+  mkdirSync(`${work}selected-system-reference`);
+  execFileSync(launcher, [
+    ...loadPresets, "--slice", "0", "--outputdir", `${work}selected-system-reference`, `${work}profile-entry.3mf`,
+  ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
+  cpSync(`${work}selected-system-reference`, `${artifacts}native/selected-system-reference`, { recursive: true });
+  const native = normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer");
+  mkdirSync(`${centerWork}selected-system-reference`);
+  execFileSync(launcher, [
+    ...loadPresets, "--arrange", "0", "--slice", "0", "--outputdir", `${centerWork}selected-system-reference`, `${centerWork}cube10.stl`,
+  ], { cwd: centerWork, stdio: ["ignore", "pipe", "pipe"] });
+  cpSync(`${centerWork}selected-system-reference`, `${artifacts}native-center/selected-system-reference`, { recursive: true });
+  const nativeCenter = normalize(readFileSync(`${centerWork}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer");
   const centerNames = ["machine", "process", "filament"].map((kind) => JSON.parse(readFileSync(`${centerWork}center-${kind}.json`, "utf8")).name);
   expect(centerNames, "both native runs use the same presets").toEqual([selection.machine, selection.process, ...selection.filaments]);
 
-  // Override oracle: the same user edit written into the --load-settings process JSON, so
-  // upstream applies it on top of the selected preset as a GUI edit would
-  // (GUI.cpp:113 change_opt_value, Config.cpp:461 apply_only: later values win).
+  // Preserve the edit snapshot, but apply the Native CLI edit after pristine vendor loading
+  // (OrcaSlicer.cpp:2118-2157; Config.cpp:461 apply_only: later values win).
   const processPreset = JSON.parse(readFileSync(`${work}process.json`, "utf8")) as Record<string, unknown>;
   writeFileSync(`${work}process-override.json`, JSON.stringify({ ...processPreset, [EDIT.key]: EDIT.value }, null, 2));
   mkdirSync(`${work}override-reference`);
   execFileSync(launcher, [
-    "--load-settings", `${work}machine.json;${work}process-override.json`,
-    "--load-filaments", `${work}filament.json`,
+    ...loadPresets, "--layer-height", String(EDIT.value),
     "--slice", "0", "--outputdir", `${work}override-reference`, `${work}profile-entry.3mf`,
   ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${work}override-reference`, `${artifacts}native/override-reference`, { recursive: true });
@@ -186,7 +196,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const editedPath = await exportGcode(page, `${artifacts}edited/`);
   const browserEdited = readFileSync(editedPath, "utf8");
   writeFileSync(`${artifacts}edited/result.json`, `${JSON.stringify({
-    oracle: "official OrcaSlicer 2.5.0-beta --load-settings with the edit written into the process JSON",
+    oracle: "OrcaSlicer selected vendor presets followed by the CLI layer-height edit",
     evidence: "ordered_bytes_generator_only",
     edit: EDIT,
     bytes: browserEdited.length,
