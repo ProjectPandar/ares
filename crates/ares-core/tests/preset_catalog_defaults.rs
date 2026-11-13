@@ -27,6 +27,12 @@ fn values(
     keys: &[&str],
     artifact: &str,
 ) -> Value {
+    for key in keys {
+        assert!(
+            ares_core::option_definition(key).is_some(),
+            "source-defined option {key} must have a registered owner"
+        );
+    }
     let actual = catalog.preset_values(kind, &[name.to_owned()], keys);
     observe(
         artifact,
@@ -101,7 +107,7 @@ fn source_defined_filament_default_preserves_one_empty_id_and_nil_overrides() {
             "filament_settings_id",
             "inherits",
             "filament_diameter",
-            "filament_retract_length",
+            "filament_retraction_length",
             "filament_ironing_speed",
         ],
         "filament-default",
@@ -110,7 +116,7 @@ fn source_defined_filament_default_preserves_one_empty_id_and_nil_overrides() {
         actual,
         json!([{
             "filament_settings_id": [""], "inherits": "", "filament_diameter": ["1.75"],
-            "filament_retract_length": ["nil"], "filament_ironing_speed": ["nil"]
+            "filament_retraction_length": ["nil"], "filament_ironing_speed": ["nil"]
         }])
     );
 }
