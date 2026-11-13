@@ -177,7 +177,7 @@ multi-nozzle block (`:4683`), the all-plates Total Estimation
 ### Evidence
 
 `web/e2e/estimation.spec.ts` with the Native probe
-(`ARES_PRINT_STATISTICS_BIN`) and the two `tests/parity/summary` fixtures (`time-cost`, `unused-filament`),
+(`ARES_PRINT_STATISTICS_BIN`, pinned to the CPU `ORCA_REPLAY_CPU` names; unset fails) and the two `tests/parity/summary` fixtures (`time-cost`, `unused-filament`),
 per fixture:
 
 1. The `view-type` option values, read without waiting, equal upstream's
