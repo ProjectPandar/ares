@@ -9,6 +9,8 @@ policy.
 - `src/libslic3r/Preset.cpp:1140–1175`,
   `Preset::get_default_bed_type`, resolves a printer's default-bed hint from
   its inherited configuration and its `get_printer_type` model identifier.
+  `Preset.cpp:1034–1048` returns an empty model identifier when no preset bundle
+  or matching vendor model is available.
 - `src/slic3r/GUI/PartPlate.cpp:267–314`, `PartPlate::get_bed_type` and
   `PartPlate::set_bed_type`, distinguish a plate's own concrete bed type from
   the project-level bed type. Selecting `btDefault` removes the plate-local
@@ -79,6 +81,23 @@ aliases that the upstream enum-name parser does not accept.
 - Core logic remains byte-oriented and platform-neutral; caller adapters own
   resource acquisition and retained UI settings.
 
+## Caller initialization
+
+`Plater.cpp:1991–2010,2512–2535` restores a printer's stored current bed type or
+resolves its printer default. A caller's missing current bed selection,
+`DefaultPlate`, or empty byte-option selection must resolve before temperature
+vector lookup. Typed project preparation handles an in-memory project Default
+marker after caller overrides; it is not persisted as plate metadata.
+
+Callers with a catalog pass the looked-up `PrinterModelInfo.model_id`. Core
+entry points without a catalog pass an empty model identifier, matching
+`get_printer_type` without a preset bundle. Consequently a no-catalog caller
+with no default-bed hint selects High Temp even if its printer name describes
+BL-P001, BL-P002, or C13; a name is not model metadata. The registered
+`curr_bed_type` default remains Cool Plate (`PrintConfig.cpp`, `btPC`). Only a
+missing selection or Default marker enters default-hint resolution; concrete
+project and caller selections remain unchanged.
+
 ## Public contract checks and failure modes
 
 Exercise loaded project bytes through `Project::select_plate` and the public
@@ -87,7 +106,10 @@ project with a concrete current bed and an omitted plate selection, and for
 the same project with an explicit Textured PEI plate. Check both initial-layer
 and subsequent-layer commands. Retain complete outputs independently of the
 labelled temperature comparison. Test Default inheritance and concrete
-selection preservation through `ProjectBedType::resolve`.
+selection preservation through `ProjectBedType::resolve`. Exercise missing,
+empty, and Default caller selections through the byte API and an in-memory
+Default project override through the validated project API. Assert both
+initial-layer and subsequent-layer commands without a temperature fallback.
 
 Exercise `DefaultBedType::resolve` through the public type and through printer
 options loaded from unchanged 2.5.0 Snapmaker U1 profile bytes. Cover enum names,
