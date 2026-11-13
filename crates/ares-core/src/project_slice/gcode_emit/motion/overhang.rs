@@ -72,6 +72,7 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Estimate> {
         request.properties.width,
         reference_speed(&request),
         request.options,
+        request.properties.feature == "Bridge",
     );
     let original_speed = request.original_speed as f32;
     let minimum_slowdown_distance = sections
