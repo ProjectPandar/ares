@@ -1,5 +1,26 @@
 # Web initial JS gzip budget headroom
 
+## Current budget: 500,000 B
+
+`INITIAL_GZIP_BUDGET` in `web/e2e/bundle.spec.ts` is 500,000 B gzip. The
+earlier 125,000 B limit was lifted by a product decision after the initial JS
+grew past it gradually rather than through any single change:
+
+- `1587d4012` (the object panel's Scale and Size fields) first went over,
+  at 125,308 B.
+- The largest later additions were the toolbar (+2,047 B), the dual-nozzle
+  sidebar (+1,599 B), the arrange popup (+1,452 B) and the filament grouping
+  (+1,397 B).
+- `2ec2be77f` measures 130,049 B: react-dom about 63 kB, TanStack Router
+  about 22 kB and the app shell about 37 kB.
+
+The limit still catches a regression that pulls a large dependency into the
+first screen. The spec separately keeps Three.js (about 147 kB) and inlined
+SVG icons out of the initial JS. The 125,000 B figures in older slice
+documents record the limit in force when those slices landed.
+
+The sections below record the icon slice made under the 125,000 B limit.
+
 ## Why this slice
 
 After `c4572b368` the initial JS (entry + modulepreloads) is 124,955 B gzip,
@@ -52,7 +73,8 @@ Measured with that one-line change (scratch build, reverted):
 
 Rejected or deferred alternatives:
 
-- **Raising the budget:** not allowed.
+- **Raising the budget:** not allowed at the time; lifted later (see
+  Current budget).
 - **Lazy Preview route (`PreviewPage`, `LayerSlider`, `layerRange`,
   `roles`):** about 3 kB gzip. This is a larger router change. It is deferred
   until headroom runs out again.
