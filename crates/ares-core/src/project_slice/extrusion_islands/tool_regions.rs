@@ -9,6 +9,7 @@ use crate::project_slice::{
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct RegionToolUsage {
     pub(in crate::project_slice) perimeters: bool,
+    pub(in crate::project_slice) outer_wall_fill: bool,
     pub(in crate::project_slice) internal_solid: bool,
     pub(in crate::project_slice) top: bool,
     pub(in crate::project_slice) bottom: bool,
@@ -63,10 +64,16 @@ pub(super) fn collect(layer: &LayerFillEntities) -> Vec<RegionToolUsage> {
             }
         }
     }
-    // `Fill.cpp:1361–1369` wraps each thin fill in its own fill collection.
+    // `Fill.cpp:1528–1537` wraps each thin fill independently.
+    // `ToolOrdering.cpp:160–163` selects the outer wall for standalone GapFill.
     for (region, range) in layer.thin_fill_ranges.iter().enumerate() {
         for entity in &layer.thin_fills[range.clone()] {
-            regions[region].record(gap_role(entity));
+            let role = gap_role(entity);
+            if role == ExtrusionRole::GapFill {
+                regions[region].outer_wall_fill = true;
+            } else {
+                regions[region].record(role);
+            }
         }
     }
     regions
