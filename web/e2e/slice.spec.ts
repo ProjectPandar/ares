@@ -47,18 +47,15 @@ function nativeGcode(project: string, plate: string): Buffer {
 }
 
 /**
- * Official OrcaSlicer slicing a copy of the project whose `Metadata/project_settings.config`
- * (bbs_3mf.cpp:210, loaded at :2647) carries the edit: the PresetBundle::full_config ->
- * Print::apply path a GUI edit takes (Config.cpp:573 set_deserialize_nothrow, PrintApply.cpp:1113),
- * as the M854 oracle crates/ares-cli/tests/orca_parity/runner/user_overrides.rs does.
+ * Official OrcaSlicer slicing the project with the edit as typed CLI options, as the M854 oracle
+ * crates/ares-cli/tests/orca_parity/runner/user_overrides.rs does. OrcaSlicer.cpp:4138-4223 records
+ * the changed keys in different_settings_to_system like a GUI edit (PresetBundle.cpp:5586-5595);
+ * an edit inside the project config keeps the project's column (OrcaSlicer.cpp:1896, :3202-3207).
  */
 function orcaEditedGcode(project: string, edit: Record<string, string>): string {
   const work = `${mkdtempSync(`${tmpdir()}/ares-web-project-edit-`)}/`;
-  const entries = unzipSync(readFileSync(project));
-  const config = "Metadata/project_settings.config";
-  entries[config] = strToU8(JSON.stringify({ ...JSON.parse(strFromU8(entries[config])), ...edit }));
-  writeFileSync(`${work}edited.3mf`, zipSync(entries));
-  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, ["--slice", "0", "--outputdir", work, `${work}edited.3mf`], {
+  const options = Object.entries(edit).flatMap(([key, value]) => [`--${key.replaceAll("_", "-")}`, value]);
+  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, [...options, "--slice", "0", "--outputdir", work, project], {
     cwd: work, stdio: ["ignore", "pipe", "pipe"],
   });
   const gcode = readFileSync(`${work}plate_1.gcode`, "utf8");
@@ -196,7 +193,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   if (orca) {
     const nativeEdited = orcaEditedGcode(project, { layer_height: "0.12" });
     writeFileSync(`${artifacts}project-edit/result.json`, `${JSON.stringify({
-      oracle: "official OrcaSlicer 2.5.0 on the project with the edit in Metadata/project_settings.config",
+      oracle: "official OrcaSlicer 2.5.0 on the project with the edit as typed CLI options",
       evidence: "ordered_bytes_generator_only",
       edit: { layer_height: "0.12" },
       bytes: edited.length,
