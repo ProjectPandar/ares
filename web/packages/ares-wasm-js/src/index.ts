@@ -66,6 +66,12 @@ export class AresSlicer {
     return (await this.#call({ kind: "printConfigDef" })) as PrintConfigDef;
   }
 
+  /** `Preset::get_default_bed_type`, with an inherited hint and resolved catalog model ID. */
+  async resolveDefaultBedType(hint: string, modelId: string): Promise<string> {
+    await this.#ready;
+    return (await this.#call({ kind: "resolveDefaultBedType", hint, modelId })) as string;
+  }
+
   /** Loads a 3MF project or STL model into plater scene data. */
   async loadScene(input: Uint8Array): Promise<Scene> {
     await this.#ready;

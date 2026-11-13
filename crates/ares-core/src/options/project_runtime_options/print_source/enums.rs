@@ -30,7 +30,9 @@ impl ProjectBedType {
         }
     }
 
-    pub(crate) const fn as_str(self) -> &'static str {
+    /// The registered `curr_bed_type` enum string.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
         match self {
             Self::DefaultPlate => "Default Plate",
             Self::SupertackPlate => "Supertack Plate",
