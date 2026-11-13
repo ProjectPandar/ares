@@ -95,7 +95,7 @@ impl Integration {
                 Priming::Clear
             },
             center_no_tower,
-            no_sparse: settings.process.gcode.wipe_tower_no_sparse_layers.0,
+            no_sparse: super::sparse_layers_skipped(settings),
             layer: None,
             change: 0,
             first_print: true,
