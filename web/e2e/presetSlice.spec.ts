@@ -72,6 +72,9 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   const procgcode = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
   if (!orca) test.skip();
+  const seeded = process.env.ARES_PARITY_SEEDED_REFERENCE === "1";
+  const launcher = seeded ? process.env.ARES_ORCA_SEEDED_BIN : `${repositoryRoot}scripts/orca-parity.sh`;
+  if (!launcher) throw new Error("Explicit seeded mode requires ARES_ORCA_SEEDED_BIN");
   test.setTimeout(600_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -94,8 +97,8 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     env: {
       ...process.env,
       ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1",
-      ARES_ORCA_BIN: `${repositoryRoot}scripts/orca-parity.sh`,
-      ...nativeEnv(orca!),
+      ARES_ORCA_BIN: launcher,
+      ...(seeded ? {} : nativeEnv(orca!)),
       ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
     },
   });
@@ -117,7 +120,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const processPreset = JSON.parse(readFileSync(`${work}process.json`, "utf8")) as Record<string, unknown>;
   writeFileSync(`${work}process-override.json`, JSON.stringify({ ...processPreset, [EDIT.key]: EDIT.value }, null, 2));
   mkdirSync(`${work}override-reference`);
-  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, [
+  execFileSync(launcher, [
     "--load-settings", `${work}machine.json;${work}process-override.json`,
     "--load-filaments", `${work}filament.json`,
     "--slice", "0", "--outputdir", `${work}override-reference`, `${work}profile-entry.3mf`,
