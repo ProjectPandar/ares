@@ -51,19 +51,14 @@ fn counterbore_n_split_arachne_filled_complete_output() {
         "imports": [],
     });
     let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [FILAMENT]});
-    for (kind, mut fields) in [
-        ("machine", profiles.machine(MACHINE).unwrap()),
-        ("process", profiles.process(PROCESS).unwrap()),
-        ("filament", profiles.filament(FILAMENT).unwrap()),
-    ] {
-        if kind == "process" {
-            assert_eq!(fields["counterbore_hole_bridging"], "partiallybridge");
-            assert_eq!(fields["wall_generator"], "classic");
-            fields.insert("counterbore_hole_bridging".to_owned(), json!(mode));
-            fields.insert("wall_generator".to_owned(), json!("arachne"));
-        }
-        profile_entry::write_json(&runner.work.join(format!("{kind}.json")), &json!(fields));
-    }
+    assert_eq!(
+        profiles.process(PROCESS).unwrap()["counterbore_hole_bridging"],
+        "partiallybridge"
+    );
+    assert_eq!(
+        profiles.process(PROCESS).unwrap()["wall_generator"],
+        "classic"
+    );
     profile_entry::write_json(&runner.work.join("catalog.json"), &catalog);
     profile_entry::write_json(&runner.work.join("selection.json"), &selection);
     let wall_generator = "arachne";
@@ -73,16 +68,19 @@ fn counterbore_n_split_arachne_filled_complete_output() {
     let overrides =
         ConfigOverrides::from_json(&serde_json::to_vec(&overrides_json).unwrap()).unwrap();
     fs::write(runner.work.join("n-split.stl"), &input).unwrap();
-    let reference = runner
-        .slice_stl_with_settings(
-            [
-                &runner.work.join("machine.json"),
-                &runner.work.join("process.json"),
-                &runner.work.join("filament.json"),
-            ],
-            &runner.work.join("n-split.stl"),
-        )
-        .unwrap();
+    let native_presets = profile_entry::native_user_presets::resolved(
+        &runner.work,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
+    let reference = profile_entry::native_user_presets::slice_stl(
+        &runner,
+        &native_presets,
+        &runner.work.join("n-split.stl"),
+        "native",
+        &overrides_json,
+    );
     fs::write(runner.work.join("native-counterbore.gcode"), &reference).unwrap();
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
