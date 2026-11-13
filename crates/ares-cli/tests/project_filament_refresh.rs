@@ -8,7 +8,7 @@ mod input;
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
-fn fixture(stale: bool) -> (Value, Value) {
+fn fixture(indices: &[&str]) -> (Value, Value) {
     let mut project = input::settings("Unlisted Synthetic Process", "0.2");
     project["printer_settings_id"] = json!("Unlisted Synthetic Printer");
     project["nozzle_diameter"] = json!(["0.4"]);
@@ -19,11 +19,7 @@ fn fixture(stale: bool) -> (Value, Value) {
     project["filament_type"] = json!(["PLA", "PLA"]);
     project["filament_is_support"] = json!(["0", "0"]);
     project["filament_flow_ratio"] = json!(["0.91", "0.92"]);
-    project["filament_self_index"] = if stale {
-        json!(["1", "1"])
-    } else {
-        json!(["1", "2"])
-    };
+    project["filament_self_index"] = json!(indices);
     project["filament_extruder_variant"] =
         json!(["Direct Drive Standard", "Direct Drive Standard"]);
     project["inherits_group"] = json!(["", "", "", ""]);
@@ -47,7 +43,8 @@ fn fixture(stale: bool) -> (Value, Value) {
     (project, input::catalog(&filaments, &[]))
 }
 
-async fn compare(stale: bool) {
+async fn compare(indices: &[&str]) {
+    let stale = indices != ["1", "2"];
     let Some(binary) = native_environment::binary("ARES_ORCA_FILAMENT_REFRESH_BIN") else {
         return;
     };
@@ -64,7 +61,7 @@ async fn compare(stale: bool) {
         .unwrap()
         .keep();
     eprintln!("artifacts: {}", root.display());
-    let (project, catalog) = fixture(stale);
+    let (project, catalog) = fixture(indices);
     let archive = input::project(&project);
     fs::write(root.join("input.3mf"), &archive).unwrap();
     fs::write(root.join("catalog.json"), catalog.to_string()).unwrap();
@@ -185,10 +182,25 @@ async fn compare(stale: bool) {
 
 #[tokio::test]
 async fn valid_two_slot_indices_preserve_protected_values() {
-    compare(false).await;
+    compare(&["1", "2"]).await;
 }
 
 #[tokio::test]
 async fn stale_two_slot_indices_regenerate_before_restoring_protected_values() {
-    compare(true).await;
+    compare(&["1", "1"]).await;
+}
+
+#[tokio::test]
+async fn negative_two_slot_indices_regenerate_before_restoring_protected_values() {
+    compare(&["-1", "2"]).await;
+}
+
+#[tokio::test]
+async fn zero_two_slot_indices_regenerate_before_restoring_protected_values() {
+    compare(&["0", "2"]).await;
+}
+
+#[tokio::test]
+async fn excessive_two_slot_indices_regenerate_before_restoring_protected_values() {
+    compare(&["1", "3"]).await;
 }
