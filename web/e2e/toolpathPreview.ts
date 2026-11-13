@@ -76,12 +76,14 @@ function currentLine(moves: Move[], top: number) {
  * (`AppConfig.cpp:202-203`, `GCodeViewer.cpp:1128-1131`).
  */
 export function movesSliderVertices(moves: Move[], top: number) {
-  // libvgcode::convert (LibVGCodeWrapper.cpp:209-240): a path move whose type, role or
-  // mm3/mm differs from the previous move gets a phantom vertex first, with its own ids.
+  // libvgcode::convert, starts_path (LibVGCodeWrapper.cpp:227-235): a path move whose type, role,
+  // mm3/mm, acceleration or jerk differs from the previous move gets a phantom vertex first, with its own ids.
   const vertices: Move[] = [];
   for (let i = 1; i < moves.length; i++) {
     const [prev, curr] = [moves[i - 1], moves[i]];
-    if (PATH_TYPES.has(curr.type) && (vertices.length === 0 || prev.type !== curr.type || prev.role !== curr.role || prev.mm3PerMm !== curr.mm3PerMm)) vertices.push(curr);
+    const startsPath = prev.type !== curr.type || prev.role !== curr.role || prev.mm3PerMm !== curr.mm3PerMm
+      || prev.acceleration !== curr.acceleration || prev.jerk !== curr.jerk;
+    if (PATH_TYPES.has(curr.type) && (vertices.length === 0 || startsPath)) vertices.push(curr);
     vertices.push(curr);
   }
   // ViewerImpl::is_visible (ViewerImpl.cpp:1713-1726) with only extrusions and seams shown.
