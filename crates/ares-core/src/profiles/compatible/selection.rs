@@ -19,7 +19,7 @@ struct Filament {
 }
 
 /// The filament of each slot after `update_compatible(Always)` for `printer` and `process`;
-/// an empty name where no compatible visible preset exists. System filaments are visible when
+/// the initialized default where no compatible visible ordinary preset exists. System filaments are visible when
 /// `installed` names them (`PresetBundle::load_installed_filaments`), user filaments always.
 pub(in crate::profiles) fn select_compatible_filaments(
     catalog: &Catalog,
@@ -67,14 +67,18 @@ pub(in crate::profiles) fn select_compatible_filaments(
     if let [name] = filaments.as_slice() {
         // `:8660-8664`: the edited preset after `PresetCollection::update_compatible`
         // (`Preset.hpp:877-885`) with `PreferedFilamentsProfileMatch` (`:8600-8628`).
-        if compatible.contains(name) {
+        if compatible.contains(name)
+            || catalog
+                .selectable_position(ProfileKind::Filament, name)
+                .is_some_and(|position| catalog.is_default(position))
+        {
             return Ok(vec![name.clone()]);
         }
         let preset = slot(name)?;
         let (alias, filament_type) = preset.map_or((String::new(), "PLA".to_owned()), |preset| {
             (preset.alias, preset.filament_type)
         });
-        return Ok(vec![first_compatible(&candidates, |candidate| {
+        return Ok(vec![first_compatible(catalog, &candidates, |candidate| {
             let quality = i32::from(preferred.contains(&candidate.name)) + 1;
             score(candidate, (&alias, &filament_type), quality)
         })]);
@@ -85,7 +89,11 @@ pub(in crate::profiles) fn select_compatible_filaments(
         .iter()
         .enumerate()
         .map(|(index, name)| {
-            if compatible.contains(name) {
+            if compatible.contains(name)
+                || catalog
+                    .selectable_position(ProfileKind::Filament, name)
+                    .is_some_and(|position| catalog.is_default(position))
+            {
                 return Ok(name.clone());
             }
             let preset = slot(name)?;
@@ -93,7 +101,7 @@ pub(in crate::profiles) fn select_compatible_filaments(
                 (preset.alias, preset.filament_type)
             });
             let preferred = preferred.get(index).or(preferred.first());
-            Ok(first_compatible(&candidates, |candidate| {
+            Ok(first_compatible(catalog, &candidates, |candidate| {
                 // Every candidate is visible: + 1. A missing preset's empty type matches none.
                 let quality = i32::from(preferred == Some(&candidate.name)) + 2;
                 score(candidate, (&alias, &filament_type), quality)
@@ -115,7 +123,11 @@ fn score(candidate: &Filament, (alias, filament_type): (&str, &str), quality: i3
 }
 
 /// `first_compatible_idx`: the first candidate of the highest quality.
-fn first_compatible(candidates: &[Filament], quality: impl Fn(&Filament) -> i32) -> String {
+fn first_compatible(
+    catalog: &Catalog,
+    candidates: &[Filament],
+    quality: impl Fn(&Filament) -> i32,
+) -> String {
     let mut best: Option<(&Filament, i32)> = None;
     for candidate in candidates {
         let this = quality(candidate);
@@ -124,7 +136,12 @@ fn first_compatible(candidates: &[Filament], quality: impl Fn(&Filament) -> i32)
         }
     }
     best.map(|(candidate, _)| candidate.name.clone())
-        .unwrap_or_default()
+        .unwrap_or_else(|| {
+            catalog
+                .document(catalog.default_position(ProfileKind::Filament))
+                .name
+                .clone()
+        })
 }
 
 fn filament(catalog: &Catalog, position: usize) -> Result<Filament, SliceError> {
