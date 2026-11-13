@@ -56,14 +56,18 @@ async fn original_profile(nozzle: &str) {
         );
     }
     let native = OrcaRunner::from_env().unwrap().map(|runner| {
+        let presets =
+            super::native_user_presets::resolved(&directory, &profiles_root, &catalog, &selection);
         let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
         let failure = stages::run(
             runner.bin(),
             [
+                "--datadir".to_owned(),
+                presets.datadir.to_str().unwrap().to_owned(),
                 "--load-settings".to_owned(),
-                format!("{};{}", path("machine.json"), path("process.json")),
+                super::super::join_paths(presets.settings.iter()),
                 "--load-filaments".to_owned(),
-                path("filament.json"),
+                super::super::join_paths(presets.filaments.iter()),
                 "--arrange".to_owned(),
                 "1".to_owned(),
                 "--export-3mf".to_owned(),
