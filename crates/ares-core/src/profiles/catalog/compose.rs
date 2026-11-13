@@ -213,7 +213,7 @@ impl Catalog {
             let MergedProfile::Machine { options, .. } = &mut merged else {
                 unreachable!("machine selection has a machine payload")
             };
-            *options = printer.resolve();
+            **options = printer.resolve();
             runtime.overlay(project);
         }
         if !self.is_user_scope(position) {
