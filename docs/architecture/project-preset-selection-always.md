@@ -17,6 +17,11 @@ This is a Rust rewrite slice of OrcaSlicer
 - `src/libslic3r/Config.cpp:531–555`: common-option typed equality and diff.
 - `src/libslic3r/PrintConfig.cpp:12139–12265`: protected variant restoration
   onto the available base layout.
+- `src/libslic3r/Semver.hpp:66–74,164–174`, with
+  `deps_src/semver/semver.c:133–212,554–569`: version parsing and BBS
+  major/minor/patch-hundreds/patch-remainder formatting, including suffixes.
+- `src/libslic3r/Format/bbs_3mf.cpp:1539–1551,4171–4188`: valid OrcaSlicer
+  metadata takes precedence over the Application generator version.
 
 ## Rust destination and compatibility shell
 
@@ -26,6 +31,9 @@ legacy normalization and mapped-variant operations. Loaded original/parent name
 lookup and system rename metadata belong in `profiles/catalog/`.
 The existing `project/domain/preset_refresh.rs::apply_project_preset_refresh`
 remains the application boundary for materialized settings and explicit overrides.
+`project/preset_version.rs` owns the shared source version parse/format slice used
+by archive metadata and selection records. Semver ordering, arithmetic and
+persistence are outside this slice.
 
 The existing `ProjectPresetRefresh` operation is a CLI refresh port, not GUI
 selection. Its `uptodate || any non-empty difference entry` rule and its
