@@ -31,6 +31,8 @@ mod project_catalog_supply;
 mod project_filament_miss;
 #[path = "config_block_roundtrip/project_preset_refresh.rs"]
 mod project_preset_refresh;
+#[path = "config_block_roundtrip/project_printer_miss.rs"]
+mod project_printer_miss;
 #[path = "config_block_roundtrip/project_process_miss.rs"]
 mod project_process_miss;
 #[path = "config_block_roundtrip/project_refresh_errors.rs"]
