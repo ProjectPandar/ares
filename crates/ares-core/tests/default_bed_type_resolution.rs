@@ -1,7 +1,4 @@
-use ares_core::{
-    DefaultBedType, MergedProfile, ProfileFragment, ProfileKind, ProjectBedType,
-    merge_profile_fragments,
-};
+use ares_core::{DefaultBedType, PresetCatalogHandle, ProfileKind, ProjectBedType};
 
 // Preset.cpp:1140–1175 and PrintConfig.hpp's BedType enum at 40ecc66f7.
 #[test]
@@ -65,25 +62,43 @@ fn only_an_empty_default_bed_hint_uses_the_model_identifier() {
 
 #[test]
 fn unchanged_u1_resource_bytes_resolve_the_inherited_textured_pei_hint() {
-    let fragments = [
-        include_bytes!("../../../tests/profiles/default-bed-type/fdm_klipper.json").as_slice(),
-        include_bytes!("../../../tests/profiles/default-bed-type/fdm_toolchanger.json"),
-        include_bytes!("../../../tests/profiles/default-bed-type/fdm_U1.json"),
-    ]
-    .into_iter()
-    .map(ProfileFragment::from_json_bytes)
-    .collect::<Result<Vec<_>, _>>()
+    let mut catalog = PresetCatalogHandle::new();
+    for (filename, bytes) in [
+        (
+            "fdm_klipper.json",
+            include_bytes!("../../../tests/profiles/default-bed-type/fdm_klipper.json").as_slice(),
+        ),
+        (
+            "fdm_toolchanger.json",
+            include_bytes!("../../../tests/profiles/default-bed-type/fdm_toolchanger.json"),
+        ),
+        (
+            "fdm_U1.json",
+            include_bytes!("../../../tests/profiles/default-bed-type/fdm_U1.json"),
+        ),
+        (
+            "Snapmaker U1 (0.4 nozzle).json",
+            include_bytes!(
+                "../../../tests/profiles/default-bed-type/Snapmaker U1 (0.4 nozzle).json"
+            ),
+        ),
+    ] {
+        catalog.add_import(bytes, filename).unwrap();
+    }
+    let mut values = serde_json::to_value(
+        catalog
+            .preset_values(
+                ProfileKind::Machine,
+                &["Snapmaker U1 (0.4 nozzle)".to_owned()],
+                &["default_bed_type"],
+            )
+            .unwrap(),
+    )
     .unwrap();
-    let MergedProfile::Machine { options, .. } =
-        merge_profile_fragments(&fragments, ProfileKind::Machine, "fdm_U1").unwrap()
-    else {
-        panic!("U1 is a machine profile");
-    };
-    assert_eq!(options.remaining.default_bed_type.0, "Textured PEI Plate");
-    assert_eq!(
-        options.remaining.default_bed_type.resolve(""),
-        ProjectBedType::TexturedPeiPlate
-    );
+    let hint: DefaultBedType =
+        serde_json::from_value(values[0]["default_bed_type"].take()).unwrap();
+    assert_eq!(hint.0, "Textured PEI Plate");
+    assert_eq!(hint.resolve(""), ProjectBedType::TexturedPeiPlate);
 }
 
 // PartPlate.cpp:267–314: Default is an in-memory plate inheritance marker.
