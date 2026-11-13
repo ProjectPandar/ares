@@ -5,6 +5,21 @@ use crate::{
 };
 
 impl Project {
+    pub fn preset_selection(&self) -> Option<&crate::profiles::PresetSelection> {
+        self.documents.preset_selection.as_deref()
+    }
+
+    pub(crate) fn apply_project_preset_selection(
+        &mut self,
+        raw: ProjectSettingsRaw,
+        selection: crate::profiles::PresetSelection,
+        overrides: &ConfigOverrides,
+    ) -> Result<(), SliceError> {
+        self.apply_project_preset_refresh(raw, overrides)?;
+        self.documents.preset_selection = Some(std::sync::Arc::new(selection));
+        Ok(())
+    }
+
     pub(crate) fn apply_project_preset_refresh(
         &mut self,
         mut raw: ProjectSettingsRaw,
