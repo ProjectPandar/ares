@@ -41,7 +41,11 @@ The existing JSON request entry gains the distinct operation
 CLI requests remain unchanged; `uptodate` is not part of the Always operation.
 Do not introduce a separate catalog-handle load/result API. Structured selection
 metadata belongs with the existing core project/settings result projection;
-adapter transport is deferred.
+adapter transport is deferred. The existing `ProfileSettings` return type
+serializes the Always result as `{"settings": {...}, "preset_selection": {...}}`.
+`settings` is the effective option map; `preset_selection` has `process`,
+`printer` and `filament` entries with selected reference, edited configuration,
+outcome and collection state. Existing CLI results remain flat option maps.
 
 The core result must carry the loaded project and per-collection identity,
 selected reference versus edited effective configuration, dirty state, visibility,
