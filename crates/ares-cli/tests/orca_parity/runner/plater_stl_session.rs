@@ -140,6 +140,25 @@ fn plater_stl_session_centers_moves_and_slices_like_native() {
         .unwrap()
         .expect("native profile oracle");
     let presets = presets(&runner);
+    let native_presets = super::native_user_presets::resolved(
+        &runner.work,
+        &super::super::repo_root().join("OrcaSlicer/resources/profiles"),
+        &serde_json::from_str(&presets.catalog).unwrap(),
+        &serde_json::from_str(&presets.selection).unwrap(),
+    );
+    let native = |label: &str, stl: &[u8]| {
+        let directory = runner.work.join(label);
+        std::fs::create_dir_all(&directory).unwrap();
+        let model = directory.join("cube10.stl");
+        std::fs::write(&model, stl).unwrap();
+        super::native_user_presets::slice_stl(
+            &runner,
+            &native_presets,
+            &model,
+            &format!("{label}/reference"),
+            &json!({}),
+        )
+    };
     let overrides = ConfigOverrides::default();
     let stl = std::fs::read(super::super::repo_root().join("tests/parity/cube10.stl")).unwrap();
     let mut session = tokio::runtime::Builder::new_current_thread()
@@ -151,11 +170,7 @@ fn plater_stl_session_centers_moves_and_slices_like_native() {
         ))
         .unwrap();
     // Loaded onto the empty LH Stinger plate: bbox center at the bed center (118, 138), grounded.
-    let centered = native(
-        &runner,
-        "stl-session-centered",
-        &cube_at([118.0, 138.0, 0.0]),
-    );
+    let centered = native("stl-session-centered", &cube_at([118.0, 138.0, 0.0]));
     let actual = slice(&session, &presets);
     std::fs::write(runner.work.join("stl-session-centered/ares.gcode"), &actual).unwrap();
     crate::golden::compare_ordered_bytes_generator_only(&centered, &actual).unwrap();
@@ -163,7 +178,7 @@ fn plater_stl_session_centers_moves_and_slices_like_native() {
     session
         .translate_instance(0, 0, [20.0, -15.0, 3.0])
         .unwrap();
-    let moved = native(&runner, "stl-session-moved", &cube_at([138.0, 123.0, 0.0]));
+    let moved = native("stl-session-moved", &cube_at([138.0, 123.0, 0.0]));
     let actual = slice(&session, &presets);
     std::fs::write(runner.work.join("stl-session-moved/ares.gcode"), &actual).unwrap();
     crate::golden::compare_ordered_bytes_generator_only(&moved, &actual).unwrap();
