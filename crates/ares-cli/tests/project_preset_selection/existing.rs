@@ -169,6 +169,68 @@ async fn selecting_hidden_default_match_makes_only_that_selection_visible() {
 }
 
 #[tokio::test]
+async fn scalar_float_inside_native_epsilon_reuses_clean_user_reference() {
+    native_float_equality("0.20005", false).await;
+}
+
+#[tokio::test]
+async fn scalar_float_outside_native_epsilon_keeps_existing_reference_with_edit() {
+    native_float_equality("0.20011", true).await;
+}
+
+async fn native_float_equality(layer: &str, dirty: bool) {
+    let catalog = super::input::catalog(&[], &[super::input::process("Float User", "0.2", "user")]);
+    let Some(case) = Case::with_catalog(
+        &format!("selection-user-float-{layer}"),
+        super::input::settings("Float User", layer),
+        catalog,
+    ) else {
+        return;
+    };
+    let native = &case.native["projects"][0]["result"]["process"];
+    assert_eq!(native["selected"]["name"], "Float User");
+    assert_eq!(native["dirty"], dirty);
+    assert_eq!(
+        native["selected"]["config"]["layer_height"]["serialized"],
+        "0.2"
+    );
+    assert_eq!(
+        native["edited"]["config"]["layer_height"]["serialized"],
+        if dirty { layer } else { "0.2" }
+    );
+    case.write(
+        "native-premise.json",
+        &json!({"passed": true, "native_float_dirty": dirty}),
+    );
+    let cli = case.cli().await.unwrap();
+    assert_eq!(cli["layer_height"], layer);
+    case.write(
+        "cli-premise.json",
+        &json!({"passed": true, "layer_height": cli["layer_height"]}),
+    );
+    let view = case
+        .api()
+        .await
+        .expect("valid Always request must load the project");
+    let actual = &view["preset_selection"]["process"];
+    assert_eq!(
+        actual["outcome"],
+        if dirty {
+            "existing_edited"
+        } else {
+            "existing_clean"
+        }
+    );
+    assert_eq!(actual["dirty"], dirty);
+    assert_eq!(actual["dirty_options"], native["dirty_options"]);
+    assert_eq!(actual["selected"]["config"]["layer_height"], "0.2");
+    assert_eq!(
+        actual["edited"]["config"]["layer_height"],
+        if dirty { layer } else { "0.2" }
+    );
+}
+
+#[tokio::test]
 async fn typed_equal_user_match_does_not_import_ignored_setting_id() {
     let catalog =
         super::input::catalog(&[], &[super::input::process("Typed User", "0.20", "user")]);
