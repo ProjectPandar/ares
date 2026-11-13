@@ -60,7 +60,8 @@ pub(super) fn apply(
         enumeration::solve(&context)
     };
     if !context.manual_multi_nozzle {
-        // ToolOrdering.cpp:1681–1747: post-AMS master preference is not a solver tie-break.
+        // Final2.5 ToolOrdering.cpp:1839–1856: [preferred, original] selection
+        // keeps preferred first when inventory is empty, as in this static context.
         let master = context.master;
         let other = 1 - master;
         let mut occupancy = [0; 2];

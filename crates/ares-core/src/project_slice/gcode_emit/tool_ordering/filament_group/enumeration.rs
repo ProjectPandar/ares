@@ -1,4 +1,4 @@
-//! FilamentGroup.cpp:36–374,427–566,901–922,1253–1268.
+//! Final2.5 FilamentGroup.cpp:245–414,472–495,571–623,1313–1329.
 use super::{context::Context, sequence};
 use std::collections::BTreeSet;
 
@@ -69,7 +69,7 @@ impl Memory {
         Some(result)
     }
 
-    fn remember(&mut self, item: Remembered) {
+    fn remember(&mut self, item: Remembered, one_change_budget: f64) {
         let Some(best) = self.0.first() else {
             self.push(item);
             return;
@@ -83,11 +83,10 @@ impl Memory {
             return;
         }
         let acceptable = |candidate: &Remembered, best: &Remembered| {
-            if best.score == 0.0 {
-                (candidate.score - best.score).abs() <= 10.0
-            } else {
-                (candidate.score - best.score).abs() / best.score <= 0.01
-            }
+            let tolerance = (10.0_f64 * 6.0)
+                .max(one_change_budget * 5.0)
+                .max(best.score * 0.01);
+            (candidate.score - best.score).abs() <= tolerance
         };
         if best.score <= item.score {
             if acceptable(&item, best) {
@@ -118,7 +117,26 @@ fn nozzle_hash(volume: i32, head: usize) -> u64 {
     hash
 }
 
+fn calc_one_change_budget(context: &Context) -> f64 {
+    let n = context.used.len();
+    if n < 2 {
+        return 0.0;
+    }
+    let mut pairs = Vec::with_capacity(n * (n - 1));
+    for matrix in &context.matrices {
+        for (index, &from) in context.used.iter().enumerate() {
+            for &to in &context.used[index + 1..] {
+                pairs.push(matrix[from][to].max(matrix[to][from]));
+            }
+        }
+    }
+    let middle = pairs.len() / 2;
+    let (_, median, _) = pairs.select_nth_unstable_by(middle, f32::total_cmp);
+    f64::from(*median) * sequence::FLUSH_VOLUME_TO_SCORE * 1.2
+}
+
 pub(super) fn solve(context: &Context) -> Vec<usize> {
+    let one_change_budget = calc_one_change_budget(context);
     let mut seen = BTreeSet::new();
     let mut memory = Memory::default();
     let mut best_score = f64::MAX;
@@ -173,33 +191,34 @@ pub(super) fn solve(context: &Context) -> Vec<usize> {
             best_preference = preference;
             primary = full;
         }
-        memory.remember(Remembered {
-            labels,
-            score,
-            preference,
-        });
+        memory.remember(
+            Remembered {
+                labels,
+                score,
+                preference,
+            },
+            one_change_budget,
+        );
     }
-    // CLI synthetic filaments have no tray_name, so build_machine_filaments produces
-    // empty usable inventory. Missing-group cost is group_colors.size() * 9999 (two),
-    // not the number of filaments assigned to that head. Select the first minimum.
-    let ams_cost = |map: &[usize]| {
-        (0..2)
-            .filter(|head| context.used.iter().any(|&id| map[id] == *head))
-            .count()
-            * 2
-            * 9999
-    };
-    let mut cost = ams_cost(&primary);
-    while let Some(candidate) = memory.pop() {
+    select_best_group_for_ams(context, primary, memory)
+}
+
+fn select_best_group_for_ams(
+    context: &Context,
+    primary: Vec<usize>,
+    mut memory: Memory,
+) -> Vec<usize> {
+    let remembered = std::iter::from_fn(|| memory.pop()).map(|candidate| {
         let mut map = vec![0; context.total];
         for (&id, head) in context.used.iter().zip(candidate.labels) {
             map[id] = head;
         }
-        let candidate_cost = ams_cost(&map);
-        if candidate_cost < cost {
-            cost = candidate_cost;
-            primary = map;
-        }
-    }
-    primary
+        map
+    });
+    // Final select_best_group_for_ams: synthetic CLI filaments have no tray_name,
+    // so inventory is empty. Keep the first map without materializing the others.
+    std::iter::once(primary)
+        .chain(remembered)
+        .next()
+        .expect("primary grouping candidate")
 }

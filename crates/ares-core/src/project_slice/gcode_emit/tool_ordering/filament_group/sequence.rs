@@ -4,6 +4,9 @@ use std::collections::BTreeMap;
 
 mod nozzles;
 
+// Final2.5 FilamentGroup.cpp:103-112, shared with calc_one_change_budget.
+pub(super) const FLUSH_VOLUME_TO_SCORE: f64 = 1.26 * 180.0 * 2.0 / 1000.0;
+
 pub(super) fn score(context: &Context, map: &[usize]) -> f64 {
     let results = std::array::from_fn::<_, 2, _>(|head| score_nozzle(context, map, head));
     let flush = results.iter().map(|(cost, _)| *cost).sum::<i32>();
@@ -61,7 +64,7 @@ pub(super) fn score(context: &Context, map: &[usize]) -> f64 {
     }
     // ToolOrdering.cpp:1532 supplies an empty print-time table under both time flags.
     // Actual change-time simulation above is unconditional, including flag zero.
-    f64::from(flush) * 1.26 * 180.0 * 2.0 / 1000.0 + time
+    f64::from(flush) * FLUSH_VOLUME_TO_SCORE + time
 }
 
 // FilamentGroup.cpp:124–196; the static wrapper has no loaded status or preload.
@@ -88,7 +91,7 @@ pub(super) fn score_multi_nozzle(context: &Context, map: &[usize]) -> f64 {
             loaded[head] = Some(id);
         }
     }
-    f64::from(flush) * 1.26 * 180.0 * 2.0 / 1000.0 + time
+    f64::from(flush) * FLUSH_VOLUME_TO_SCORE + time
 }
 
 fn score_nozzle(context: &Context, map: &[usize], head: usize) -> (i32, Vec<Vec<usize>>) {

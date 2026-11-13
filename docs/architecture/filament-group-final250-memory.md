@@ -13,7 +13,7 @@ Pinned sources under `src/libslic3r/`:
 - `FilamentGroup.cpp:1313-1329`: prepend the primary flush solution to remembered candidates.
 - `GCode/ToolOrdering.cpp:1675-1748,1839-1856`: master-extruder preference and reselect between preferred/original maps; empty inventory keeps the preferred first candidate.
 
-Rust destination: `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/filament_group/{enumeration.rs,sequence.rs,mod.rs}`. Existing `Context` remains a temporary compatibility shell for the source's static dual-head, one-nozzle-per-head, Auto For Flush subset. It is not a replacement pipeline or a live printer-inventory model.
+Rust destination: `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/filament_group/{enumeration.rs,enumeration/manual.rs,sequence.rs,mod.rs}`. Existing `Context` remains a temporary compatibility shell for the source's static dual-head Auto For Flush subset and already-supported Manual multi-nozzle dispatch. Both existing enumeration callers share the source's budget/empty-inventory selection; keep their plumbing consistent without admitting any new manual/nozzle combination. It is not a replacement pipeline or a live printer-inventory model.
 
 ## Included
 
@@ -21,7 +21,7 @@ Rust destination: `crates/ares-core/src/project_slice/gcode_emit/tool_ordering/f
 2. Preserve heap ordering, preference priority, first-best enumeration order and heap rebuilding. Retain same-preference candidates when absolute score difference is at most `max(10*6, one_change_budget*5, best_score*0.01)`, replacing beta's special zero-score10 / relative1% rule.
 3. Preserve primary-before-remembered candidate order. With both printer inventories empty, choose the first candidate. Do not rank candidates by occupied-head count. This is the relevant branch of `select_best_group_for_ams`, not an invented inventory fallback.
 4. Retain existing master preference: under the supported empty-inventory context, upstream's final selection between `[preferred, original]` necessarily selects `preferred`. Update the citation/comment; no new swapping heuristic.
-5. Use the same constant expression as final upstream score conversion in both existing score functions.
+5. Use the same constant expression as final upstream score conversion in both existing score functions. Thread the new budget through the existing manual enumeration caller and share the empty-inventory selector; preserve its physical-head restriction/error check and existing H2C controls.
 
 The retained-budget computation is ported and exercised during enumeration, but empty-inventory E2E results do **not** independently prove which candidates the heap retained: the final source branch selects the primary. Do not claim a live-inventory budget witness.
 
