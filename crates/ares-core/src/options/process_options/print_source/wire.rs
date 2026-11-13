@@ -7,7 +7,7 @@ impl Serialize for ProcessPrintSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(60))?;
+        let mut map = serializer.serialize_map(Some(68))?;
         map.serialize_entry("combine_brims", &self.combine_brims)?;
         map.serialize_entry("draft_shield", &self.draft_shield)?;
         map.serialize_entry("enable_prime_tower", &self.enable_prime_tower)?;
@@ -104,6 +104,26 @@ impl Serialize for ProcessPrintSourceOptions {
         map.serialize_entry("wipe_tower_rotation_angle", &self.wipe_tower_rotation_angle)?;
         map.serialize_entry("wipe_tower_wall_type", &self.wipe_tower_wall_type)?;
         map.serialize_entry("wiping_volumes_extruders", &self.wiping_volumes_extruders)?;
+        map.serialize_entry(
+            "enable_mixed_color_sublayer",
+            &self.enable_mixed_color_sublayer,
+        )?;
+        map.serialize_entry("belt_purge_tower_width", &self.belt_purge_tower_width)?;
+        map.serialize_entry(
+            "wipe_tower_sparse_layers_combination",
+            &self.wipe_tower_sparse_layers_combination,
+        )?;
+        map.serialize_entry("toolchange_ordering", &self.toolchange_ordering)?;
+        map.serialize_entry("toolchange_cyclic_order", &self.toolchange_cyclic_order)?;
+        map.serialize_entry(
+            "toolchange_cyclic_first_layer",
+            &self.toolchange_cyclic_first_layer,
+        )?;
+        map.serialize_entry("slicing_pipeline_plugin", &self.slicing_pipeline_plugin)?;
+        map.serialize_entry(
+            "print_plugin_config_overrides",
+            &self.print_plugin_config_overrides,
+        )?;
         map.end()
     }
 }

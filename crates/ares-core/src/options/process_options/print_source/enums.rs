@@ -49,3 +49,11 @@ pub enum ProcessWipeTowerWallType {
     #[serde(rename = "rib")]
     Rib,
 }
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ProcessToolChangeOrdering {
+    #[serde(rename = "default")]
+    Default,
+    #[serde(rename = "cyclic")]
+    Cyclic,
+}

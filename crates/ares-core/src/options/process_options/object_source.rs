@@ -14,8 +14,7 @@ pub use enums::{
 
 use super::super::{
     FloatOrPercent, Nullable, OrcaBool, OrcaFloat, OrcaFloatOrPercentsNullable, OrcaFloatsNullable,
-    OrcaInt, OrcaString, Percent,
-    object_fields::{OBJECT_OPTION_DECLARATION_ORDER, object_option_fields},
+    OrcaInt, OrcaString, Percent, object_fields::object_option_fields,
     option_group::declare_option_group,
 };
 
@@ -23,8 +22,19 @@ macro_rules! declare_process_object_source_options {
     ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
         declare_option_group! {
             pub struct ProcessObjectSourceOptions, ProcessObjectSourceOptionsBuilder {
-                $($field => $key: $ty = $default),*
+                $($field => $key: $ty = $default),*,
+                leading_brim_length => "leading_brim_length": OrcaFloat = OrcaFloat(0.0),
+                extra_brim_width => "extra_brim_width": OrcaFloat = OrcaFloat(0.0),
+                brim_ears_outer_only => "brim_ears_outer_only": OrcaBool = OrcaBool(false),
             }
+        }
+        impl ProcessObjectSourceOptions {
+            pub const DECLARATION_ORDER: [&'static str; 130] = [
+                $($key),*,
+                "leading_brim_length",
+                "extra_brim_width",
+                "brim_ears_outer_only",
+            ];
         }
     };
 }
@@ -35,10 +45,6 @@ impl ProcessObjectSourceOptionsBuilder {
     pub(crate) fn set_derived_support_style(&mut self, value: ProcessSupportStyle) {
         self.support_style = Some(value);
     }
-}
-
-impl ProcessObjectSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 127] = OBJECT_OPTION_DECLARATION_ORDER;
 }
 
 impl Default for ProcessObjectSourceOptions {
