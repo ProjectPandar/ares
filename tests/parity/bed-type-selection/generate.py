@@ -22,8 +22,17 @@ manifest = {
 for name, bed, initial, ordinary in [
     ('omitted', None, 55, 50),
     ('textured-pei', 'Textured PEI Plate', 61, 59),
+    ('empty', '', 35, 30),
+    ('unrecognized', 'unrecognized plate', 35, 30),
+    ('padded', ' Textured PEI Plate ', 35, 30),
+    ('supertack-alias', 'SuperTack Plate', 47, 43),
 ]:
     current = dict(entries)
+    if name == 'supertack-alias':
+        current['Metadata/project_settings.config'] = json.dumps(config | {
+            'supertack_plate_temp_initial_layer': [str(initial)] * 2,
+            'supertack_plate_temp': [str(ordinary)] * 2,
+        }, indent=2).encode()
     if bed is not None:
         current['Metadata/model_settings.config'] = current['Metadata/model_settings.config'].replace(
             b'<metadata key="plater_id" value="1"/>',
