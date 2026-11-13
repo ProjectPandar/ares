@@ -12,7 +12,7 @@ This is a Rust rewrite slice of OrcaSlicer
 - `src/libslic3r/Preset.cpp:1090–1119`: `Preset::load_external_config`.
 - `Preset.cpp:3009–3262`: `profile_print_params_same` and
   `PresetCollection::load_external_preset`, limited to `Always`.
-- `Preset.cpp:4072–4081,4203–4221,4272–4297`: selected/edited dirty state,
+- `Preset.cpp:4072–4081,4203–4240,4272–4297`: selected/edited dirty state,
   saved-edit snapshot and visibility.
 - `src/libslic3r/Config.cpp:531–555`: common-option typed equality and diff.
 - `src/libslic3r/PrintConfig.cpp:12139–12265`: protected variant restoration
@@ -111,8 +111,10 @@ record elsewhere or create a project-local replacement on this branch.
 
 Dirty calculation is separate from match equality: it skips only the three FFF
 settings IDs and also detects presence differences for optional
-`compatible_prints` and `compatible_printers` (`Preset.cpp:4203–4221`). Selecting
-clears prior collection dirty flags, initializes edited/saved state, and makes
+`compatible_prints` and `compatible_printers` (`Preset.cpp:4203–4221`). The exposed
+`dirty_options` list follows `PresetCollection::dirty_options` (`4224–4240`):
+it retains settings-ID differences; only the dirty boolean excludes those IDs.
+Selecting clears prior collection dirty flags, initializes edited/saved state, and makes
 that selection visible. Do not encode dirtiness by renaming a stored preset or
 adding a localized GUI marker.
 
