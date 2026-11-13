@@ -1,5 +1,5 @@
 mod filament;
-mod keys;
+pub(in crate::profiles) mod keys;
 mod preset;
 
 use std::collections::BTreeMap;
