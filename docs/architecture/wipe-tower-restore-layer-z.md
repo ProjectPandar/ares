@@ -99,7 +99,7 @@ attribute it to `39408fa1f` or include the other `9ed545` behavior.
 `GCode/WipeTower.cpp:53–57` owns `wipe_tower_sparse_layers_skipped`: the raw
 no-sparse option must be enabled, timelapse must not be Smooth, and wrapping
 detection must be disabled. `WipeTower` and `WipeTower2` constructors, and
-`GCode.cpp:130`, share this predicate. The Rust destination is one predicate in
+`GCode.hpp:130`, share this predicate. The Rust destination is one predicate in
 `gcode_emit/wipe_tower.rs`, reused by the existing plan, generator, integration
 and Type1 compacted-height decisions. Preserve the raw exported option;
 eligibility is not option normalization. The existing tower-presence predicates

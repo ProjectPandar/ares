@@ -87,9 +87,9 @@ impl Generator<'_> {
         writer.gcode.push_str("; WIPE_TOWER_START\n");
         // Unload/Load bodies are #if 0 in Type1; real commands come from stock slots.
         self.used[old] += std::mem::take(&mut writer.used);
-        writer
-            .gcode
-            .push_str("[filament_end_gcode]\n[change_filament_gcode]\n");
+        writer.gcode.push_str(
+            "[filament_end_gcode]\n[restore_layer_z_before_toolchange]\n[change_filament_gcode]\n",
+        );
         writer.tool = new;
         writer.max_e_speed = self.filaments[new].max_e_speed;
         writer.gcode.push_str("[filament_start_gcode]\n");
