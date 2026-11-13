@@ -131,6 +131,16 @@ fn check(label: &str, input: &[u8], expected_sha: &str, temperature: &str) {
         native_scalar, api_scalar,
         "labelled rendered scalar placeholder"
     );
+    let native_bed_commands: Vec<_> = reference
+        .native
+        .lines()
+        .filter(|line| line.starts_with("M140 ") || line.starts_with("M190 "))
+        .collect();
+    let api_bed_commands: Vec<_> = api_text
+        .lines()
+        .filter(|line| line.starts_with("M140 ") || line.starts_with("M190 "))
+        .collect();
+    assert_eq!(native_bed_commands, api_bed_commands, "all bed commands");
 }
 
 #[test]
@@ -143,6 +153,33 @@ fn initial_bed_nonzero_filament_labelled_start() {
         )),
         "44338634ac93567c8cc10255a9825d229416c996b264c19c4dab75f78738496a",
         "73",
+    );
+}
+
+// bbs_3mf.cpp:375,4641–4646 and PartPlate.cpp:267–314 at 40ecc66f7.
+#[test]
+fn initial_bed_plate_omitted_inherits_project_selection() {
+    check(
+        "plate-bed-omitted",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/bed-type-selection/omitted.3mf"
+        )),
+        "dfe0d43e406387a725efbbee196d61b65a8e382fae6d26e839feb3dd4bcf6000",
+        "55",
+    );
+}
+
+#[test]
+fn initial_bed_plate_textured_pei_overrides_project_selection() {
+    check(
+        "plate-bed-textured-pei",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/bed-type-selection/textured-pei.3mf"
+        )),
+        "9945da770f311ec4e68d99a841229dd480284cf467fe3ba5fb4a69bd87fe9d20",
+        "61",
     );
 }
 
