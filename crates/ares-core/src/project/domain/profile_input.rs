@@ -208,9 +208,11 @@ impl Project {
         // "printable_height")`/`opt<ConfigOptionPoints>(
         // "printable_area")` over the fully parsed config
         // (`OrcaSlicer.cpp:3711,3708`), `PrintConfigDef` defaults included.
-        let mut resolved = crate::options::json_deserialize::deserialize_preset_config::<
-            ProjectSettingsBuilder,
-        >(merged.clone().into_object())
+        // Config application copies parsed values (OrcaSlicer.cpp:3152–3159),
+        // without repeating the JSON-load composite (Config.cpp:1151–1154).
+        let mut resolved = crate::options::json_deserialize::deserialize_config_values(
+            merged.clone().into_object(),
+        )
         .map_err(|error| {
             SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
         })?
@@ -232,9 +234,9 @@ impl Project {
             project.translate_all_instances(offset);
             shift_wipe_tower(&mut merged, offset);
             // The shifted wipe tower reaches the typed view too.
-            resolved = crate::options::json_deserialize::deserialize_preset_config::<
-                ProjectSettingsBuilder,
-            >(merged.clone().into_object())
+            resolved = crate::options::json_deserialize::deserialize_config_values(
+                merged.clone().into_object(),
+            )
             .map_err(|error| {
                 SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
             })?
