@@ -117,6 +117,7 @@ async fn h2d_always_selection_slices_filament_variant_ranges() {
         "Direct Drive High Flow"
     ]);
     settings["filament_flow_ratio"] = json!(["0.91", "0.92", "0.93", "0.94"]);
+    settings["extruder_variant_list"] = json!(["Direct Drive Standard", "Direct Drive High Flow"]);
     settings["nozzle_diameter"] = json!(["0.4", "0.4"]);
     settings["different_settings_to_system"] = json!(["", "", "", ""]);
     let Some(case) = Case::with_catalog("selection-h2d-always", settings, input::catalog(&[], &[]))
