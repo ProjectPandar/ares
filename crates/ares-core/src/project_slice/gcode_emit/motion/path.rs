@@ -307,8 +307,9 @@ fn emit_inner(
             acceleration,
             force_no_extrusion,
             properties,
+            timelapse_context: geometry.timelapse_context,
             state,
-        });
+        })?;
         state.last_scaled_position = last_scaled;
         state.last_position_defined = true;
         if properties.contour.is_none() {
@@ -324,7 +325,7 @@ fn emit_inner(
             (properties, path_overhang_fan_active),
             geometry,
             state,
-        );
+        )?;
         state.last_scaled_position = last_scaled;
         state.last_position_defined = true;
         return Ok(());
@@ -332,13 +333,19 @@ fn emit_inner(
     // Non-processed sloped path (`GCode.cpp:6992` non-`new_points`
     // branch, `sloped != nullptr`): constant speed F, Z-interpolated
     // segments — no per-segment speed tracking needed.
-    if let Some(slope) = properties.slope {
+    if properties.slope.is_some() {
         let wipe_points = wipe_points_source
             .iter()
             .map(|&(x, y)| arc::Point { x, y })
             .collect::<Vec<_>>();
         fan::update_for_constant_path(output, properties, path_overhang_fan_active, state);
-        super::scarf::emit_segments(output, &points, slope, properties, state);
+        super::scarf::emit_segments(
+            output,
+            (&points, &local_points),
+            properties,
+            state,
+            geometry.timelapse_context,
+        )?;
         output.extend_from_slice(b";_EXTRUDE_END\n");
         state.wipe_path = wipe_points.into_iter().rev().collect();
         state.last_scaled_position = last_scaled;
