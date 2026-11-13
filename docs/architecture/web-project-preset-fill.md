@@ -108,10 +108,13 @@ OrcaSlicer v2.5.0 (`40ecc66f`):
    50, `support_cooling_filter` 1). Ares must produce the same G-code. The
    existing web specs import Bambu projects without installing BBL and must
    keep passing.
-2. **Filled keys reach the slice but not the scene, or the reverse.** Both use
-   the same selection. dualExtruder checks the slice (`:92`), and a new
-   assertion checks that a printer settings field of a key the fixture lacks
-   (`extruder_clearance_dist_to_rod`) shows 50 after load.
+2. **Filled keys miss the slice.** The scene and the slice use the same
+   selection. dualExtruder compares the slice with OrcaSlicer's (`:92`) when
+   the oracle is present, and a new assertion checks, with or without it, that
+   the exported config block holds `extruder_clearance_dist_to_rod = 50`, a
+   key the fixture lacks. A settings field cannot show this: the filled keys
+   that the web layouts list are not in Ares' typed scene options yet
+   (`PrinterOptions` has no `extruder_clearance_dist_to_rod`), a separate gap.
 3. **Sidebar edits are lost or overridden by the fill.** dualExtruder's
    `filament_map`, `filament_map_mode` and `nozzle_volume_type` edits are in
    the compared G-code.
@@ -129,7 +132,7 @@ OrcaSlicer v2.5.0 (`40ecc66f`):
    compared with the OrcaSlicer CLI's G-code. It fails first with
    `system preset '…' was not supplied`.
 3. `fix(core)`: the resolver-miss rule in `system_config`.
-4. `test(web)`: the dualExtruder settings-field assertion. It fails first, like
+4. `test(web)`: the dualExtruder config-block assertion. It fails first, like
    `:92`.
 5. `feat(web)`: the session load and slice through the `from_project`
    selection.
