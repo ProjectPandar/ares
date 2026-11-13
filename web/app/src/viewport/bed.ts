@@ -27,16 +27,43 @@ export function buildPlates(shape: BedShape, origins: readonly (readonly [number
   return group;
 }
 
-/** A plate index sprite facing the camera. */
-function buildLabel(text: string, color: number, size: number) {
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = 64;
+/**
+ * The colours of plates `buildPlates` built, set on their own materials and label canvases. A colour-mode
+ * change keeps the bed and plate models and only stores `m_is_dark` (GLCanvas3D::on_change_color_mode,
+ * GLCanvas3D.cpp:1787; Bed3D, 3DBed.cpp:387-390; PartPlateList, PartPlate.hpp:1059), so no shader compiles.
+ */
+export function recolorPlates(group: THREE.Group, current: number, colors: ViewportColors) {
+  const plates = group.children.slice(0, -1);
+  const paint = (node: THREE.Object3D, color: number) => ((node as THREE.Mesh).material as THREE.MeshBasicMaterial).color.setHex(color);
+  plates.forEach((plate, index) => {
+    const outline = plates.length > 1 && index === current ? colors.current : colors.outline;
+    const [surface, minor, major, loop, label] = plate.children;
+    paint(surface, colors.bed);
+    paint(minor, colors.gridMinor);
+    paint(major, colors.gridMajor);
+    paint(loop, outline);
+    if (label instanceof THREE.Sprite) {
+      drawLabel(label.material.map!.image as HTMLCanvasElement, String(index + 1), outline);
+      label.material.map!.needsUpdate = true;
+    }
+  });
+}
+
+function drawLabel(canvas: HTMLCanvasElement, text: string, color: number) {
   const context = canvas.getContext("2d")!;
+  context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = `#${color.toString(16).padStart(6, "0")}`;
   context.font = "bold 44px sans-serif";
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.fillText(text, 32, 34);
+}
+
+/** A plate index sprite facing the camera. */
+function buildLabel(text: string, color: number, size: number) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 64;
+  drawLabel(canvas, text, color);
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), depthWrite: false }));
   sprite.scale.set(size, size, 1);
   return sprite;

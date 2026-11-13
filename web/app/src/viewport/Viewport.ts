@@ -1,7 +1,7 @@
 import { type Scene, type Toolpaths, VERTEX_VALUES, type VolumeType } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { buildPlates } from "./bed";
+import { buildPlates, recolorPlates } from "./bed";
 import { disposeTree } from "./dispose";
 import { type GizmoMode, Gizmos } from "./gizmos";
 import { attachInstanceDrag, type DragHit, type EditHandlers, type InstanceRef } from "./instanceDrag";
@@ -120,7 +120,8 @@ export class Viewport {
   setColors(colors: ViewportColors) {
     this.#colors = colors;
     this.#scene.background = new THREE.Color(colors.background);
-    this.setBed(this.#bedShape, this.#plateOrigins, this.#currentPlate);
+    recolorPlates(this.#bed, this.#currentPlate, colors);
+    this.render();
   }
 
   /** The bed shape at every plate origin; toolpaths and plate zoom follow the current plate. */
