@@ -5,6 +5,8 @@ use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use serde_json::json;
 use std::fs;
 
+#[path = "retraction_column/lift.rs"]
+mod lift;
 #[path = "retraction_column/toolchange.rs"]
 mod toolchange;
 
@@ -331,9 +333,9 @@ fn swapped_machine_columns_minimum_travel() {
 }
 
 const SHORT_TRAVEL_SOURCES: &[&str] = &[
-    "GCode.cpp:10386 short-travel EXTRUDER_CONFIG",
-    "GCode.cpp:10569 needs_retraction",
-    "Print.cpp:4730-4749 retract overlay",
+    "40ecc66f7 GCode.cpp:10533 short-travel FILAMENT_CONFIG",
+    "40ecc66f7 GCode.cpp:10716 needs_retraction",
+    "40ecc66f7 Print.cpp:4733-4754 retract overlay",
 ];
 
 /// The second filament holds the wide threshold, which keeps the repeated `G1 Z` out of the
