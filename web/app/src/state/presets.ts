@@ -275,6 +275,8 @@ export async function selectPrinter(printer: string | null) {
  * (Plater::priv::on_select_preset, Plater.cpp:9565-9572).
  */
 export async function selectPrinterModel(model: string, current: CurrentPrinter) {
+  // Plater::priv::on_select_preset resolves the model and selects its preset in the selection event (Plater.cpp:13016-13031).
+  useApp.setState({ compatible: { status: "filtering" } });
   try {
     const printer = await (await presetCatalog()).similarPrinterPreset(model, "", current);
     if (printer === null) {
