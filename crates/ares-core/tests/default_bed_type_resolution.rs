@@ -62,8 +62,7 @@ fn only_an_empty_default_bed_hint_uses_the_model_identifier() {
 
 #[test]
 fn unchanged_u1_resource_bytes_resolve_the_inherited_textured_pei_hint() {
-    let mut catalog = PresetCatalogHandle::new();
-    for (filename, bytes) in [
+    let profiles = [
         (
             "fdm_klipper.json",
             include_bytes!("../../../tests/profiles/default-bed-type/fdm_klipper.json").as_slice(),
@@ -82,9 +81,30 @@ fn unchanged_u1_resource_bytes_resolve_the_inherited_textured_pei_hint() {
                 "../../../tests/profiles/default-bed-type/Snapmaker U1 (0.4 nozzle).json"
             ),
         ),
-    ] {
-        catalog.add_import(bytes, filename).unwrap();
+    ];
+    let entries: Vec<_> = profiles
+        .iter()
+        .map(|(filename, _)| serde_json::json!({"sub_path": filename}))
+        .collect();
+    let mut vendor = serde_json::to_vec(&serde_json::json!({
+        "id": "Snapmaker",
+        "index": {"name": "Snapmaker", "machine_list": entries}
+    }))
+    .unwrap();
+    vendor.pop();
+    vendor.extend_from_slice(b",\"files\":{");
+    // Keep the upstream profile bodies byte-identical inside the vendor transport.
+    for (index, (filename, bytes)) in profiles.into_iter().enumerate() {
+        if index > 0 {
+            vendor.push(b',');
+        }
+        vendor.extend_from_slice(&serde_json::to_vec(filename).unwrap());
+        vendor.push(b':');
+        vendor.extend_from_slice(bytes);
     }
+    vendor.extend_from_slice(b"}}");
+    let mut catalog = PresetCatalogHandle::new();
+    catalog.add_vendor(&vendor).unwrap();
     let mut values = serde_json::to_value(
         catalog
             .preset_values(
