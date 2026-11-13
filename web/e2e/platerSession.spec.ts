@@ -48,8 +48,8 @@ test("a plater session moves, rotates and replans plates, and slices the edited 
 
     const loaded = await call<Layout>(page, "load", [...readFileSync(`${repositoryRoot}${FIXTURE}`)], "two-plates.3mf");
     expect(platesOf(loaded)).toEqual([
-      { id: 1, origin: [0, 0], instances: [[2, 0, 14]] },
-      { id: 2, origin: [STRIDE, 0], instances: [[3, 0, 15]] },
+      { id: 1, origin: [0, 0], instances: [[2, 0, 14]], locked: false },
+      { id: 2, origin: [STRIDE, 0], instances: [[3, 0, 15]], locked: false },
     ]);
 
     // Selection::translate + do_move: object 2 onto plate 2 (notify_instance_update reassigns it).
@@ -71,8 +71,8 @@ test("a plater session moves, rotates and replans plates, and slices the edited 
     // delete_plate: later plates and their instances move up one place.
     layout = await call<Layout>(page, "deletePlate", 0);
     expect(platesOf(layout)).toEqual([
-      { id: 1, origin: [0, 0], instances: [[2, 0, 14], [3, 0, 15]] },
-      { id: 2, origin: [STRIDE, 0], instances: [] },
+      { id: 1, origin: [0, 0], instances: [[2, 0, 14], [3, 0, 15]], locked: false },
+      { id: 2, origin: [STRIDE, 0], instances: [], locked: false },
     ]);
     const moved = matrix([], [50, 60, 5]);
     const rotated = matrix([aboutZ(45)], [110, 95.5, 5]);
