@@ -75,3 +75,6 @@ mod project_scalar_string_arrays;
 
 #[path = "raw_intersection_capacity.rs"]
 mod raw_intersection_capacity;
+
+#[path = "moonraker_metadata.rs"]
+mod moonraker_metadata;
