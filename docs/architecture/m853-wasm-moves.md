@@ -90,7 +90,8 @@ Ender3:5564 moves/7347 vertices; KSR:635147 moves/823716 vertices; zero
 mismatches. Native oracle actually ran on the browser's emitted G-code,
 not on a native replacement slice. Full raw typed buffers, native CSV,
 stdout and diff.csv remain in each fixture directory. E2E requires explicit
-oracle and WASM package paths; it cannot silently pass without them.
+oracle and WASM package paths and the oracle CPU (`ORCA_REPLAY_CPU`); it cannot
+silently pass without them.
 
 Reproduce after building release ares-wasm and running wasm-bindgen --target web:
 
@@ -98,6 +99,7 @@ Reproduce after building release ares-wasm and running wasm-bindgen --target web
 ARES_WASM_PKG=/absolute/bindgen/output \
 ARES_MOVES_ARTIFACTS=/new/evidence/directory \
 ARES_PROCGCODE_BIN=/absolute/orca-slicer \
+ORCA_REPLAY_CPU=<one CPU> \
 ARES_E2E_CHROME=/absolute/chrome node web/e2e/wasmMoves.mjs
 ```
 
