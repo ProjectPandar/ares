@@ -2,23 +2,6 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
-// Beta OrcaSlicer.cpp:2118-2157 resolves inherited user inputs by the file
-// identity loaded from data_dir/user/default, against data_dir/system.
-pub(in super::super) fn stage(work: &Path, profiles: &Path) -> (PathBuf, PathBuf) {
-    let datadir = system(work, profiles, &["OrcaFilamentLibrary", "BBL"]);
-    let index: Value =
-        serde_json::from_slice(&std::fs::read(profiles.join("BBL.json")).unwrap()).unwrap();
-    let mut process: Value =
-        serde_json::from_slice(&std::fs::read(work.join("process.json")).unwrap()).unwrap();
-    // Preset.cpp:1860-1867 requires a valid version for directory-loaded users.
-    process["version"] = index["version"].clone();
-    let user = datadir.join("user/default/process");
-    std::fs::create_dir_all(&user).unwrap();
-    let path = user.join(format!("{}.json", process["name"].as_str().unwrap()));
-    super::write_json(&path, &process);
-    (datadir, path)
-}
-
 /// An isolated data_dir whose `system` holds the unchanged `vendors` manifests and trees, as
 /// `PresetBundle.cpp:3313-3345` loads them. A system leaf inside it resolves by file identity
 /// through its vendor manifest (`PresetBundle.cpp:617-645`) and beta flattens the tree itself.
@@ -56,8 +39,17 @@ pub(in super::super) fn resolved(
         .map(|vendor| vendor["id"].as_str().unwrap())
         .collect::<Vec<_>>();
     let datadir = system(work, profiles, &names);
+    for vendor in vendors {
+        let id = vendor["id"].as_str().unwrap();
+        let original = super::vendor(profiles, id);
+        for (relative, fields) in vendor["files"].as_object().unwrap() {
+            if fields != &original["files"][relative] {
+                super::write_json(&datadir.join("system").join(id).join(relative), fields);
+            }
+        }
+    }
     let leaf = |kind: &str, name: &str| {
-        let (path, mut fields) = vendors
+        let (path, fields) = vendors
             .iter()
             .flat_map(|vendor| {
                 vendor["files"]
@@ -68,14 +60,37 @@ pub(in super::super) fn resolved(
             })
             .find(|(_, _, fields)| fields["type"] == kind && fields["name"] == name)
             .map(|(vendor, relative, fields)| {
-                (
-                    datadir.join("system").join(vendor).join(relative),
-                    fields.clone(),
-                )
+                let mut fields = fields.clone();
+                fields["from"] = Value::from("system");
+                (datadir.join("system").join(vendor).join(relative), fields)
             })
-            .unwrap();
-        // CLI::load_config_file requires source metadata, not completed option values.
-        fields["from"] = Value::from("system");
+            .unwrap_or_else(|| {
+                let fields = catalog["imports"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .flat_map(|group| group["profiles"].as_array().unwrap())
+                    .find(|fields| fields["type"] == kind && fields["name"] == name)
+                    .unwrap();
+                let parent = fields["inherits"].as_str().unwrap();
+                let vendor = vendors
+                    .iter()
+                    .find(|vendor| {
+                        vendor["files"]
+                            .as_object()
+                            .unwrap()
+                            .values()
+                            .any(|fields| fields["type"] == kind && fields["name"] == parent)
+                    })
+                    .unwrap();
+                let mut fields = fields.clone();
+                fields["from"] = Value::from("user");
+                // Preset.cpp:1860-1867 requires a version for directory-loaded users.
+                fields["version"] = vendor["index"]["version"].clone();
+                let directory = datadir.join("user/default").join(kind);
+                std::fs::create_dir_all(&directory).unwrap();
+                (directory.join(format!("{name}.json")), fields)
+            });
         super::write_json(&path, &fields);
         path
     };

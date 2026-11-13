@@ -17,7 +17,6 @@ use super::{
     profile_entry::{vendor, write_json},
     stages,
 };
-use crate::presets::VendorProfiles;
 
 fn normalized(gcode: &str) -> String {
     gcode
@@ -77,7 +76,6 @@ fn strip_old_bed_height(project: &[u8]) -> Vec<u8> {
 async fn embedded_script_case(stripped: bool) -> Option<(String, String)> {
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
-    let profiles = VendorProfiles::load(&profiles_root, "BBL").unwrap();
     let machine = "Bambu Lab X1 Carbon 0.4 nozzle";
     let system_process = "0.20mm Standard @BBL X1C";
     let process = "0.20mm Standard @BBL X1C - Mine";
@@ -102,23 +100,6 @@ async fn embedded_script_case(stripped: bool) -> Option<(String, String)> {
         .keep();
     write_json(&directory.join("catalog.json"), &catalog);
     write_json(&directory.join("selection.json"), &selection);
-    let mut process_fields = profiles.process(system_process).unwrap();
-    process_fields.insert("name".to_owned(), Value::String(process.to_owned()));
-    process_fields.insert("from".to_owned(), Value::String("user".to_owned()));
-    process_fields.insert(
-        "inherits".to_owned(),
-        Value::String(system_process.to_owned()),
-    );
-    for (kind, fields) in [
-        ("machine", profiles.machine(machine).unwrap()),
-        ("process", process_fields),
-        ("filament", profiles.filament(filament).unwrap()),
-    ] {
-        write_json(
-            &directory.join(format!("{kind}.json")),
-            &Value::Object(fields),
-        );
-    }
     let raw_input =
         include_bytes!("../../../../../tests/parity/validation/preset-json-ender3-0.2.3mf");
     let input = if stripped {
@@ -150,17 +131,21 @@ async fn embedded_script_case(stripped: bool) -> Option<(String, String)> {
     let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
     let output = directory.join("native");
     std::fs::create_dir(&output).unwrap();
-    let (datadir, process_path) =
-        super::profile_entry::native_user_presets::stage(&directory, &profiles_root);
+    let native_presets = super::profile_entry::native_user_presets::resolved(
+        &directory,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
     stages::run(
         runner.bin(),
         [
             "--datadir".to_owned(),
-            datadir.to_str().unwrap().to_owned(),
+            native_presets.datadir.to_str().unwrap().to_owned(),
             "--load-settings".to_owned(),
-            format!("{};{}", path("machine.json"), process_path.display()),
+            super::join_paths(native_presets.settings.iter()),
             "--load-filaments".to_owned(),
-            path("filament.json"),
+            super::join_paths(native_presets.filaments.iter()),
             "--slice".to_owned(),
             "0".to_owned(),
             "--outputdir".to_owned(),

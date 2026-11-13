@@ -1,10 +1,10 @@
 //! Config.cpp:945-1001 joins JSON arrays before ConfigOptionFloat reads a
 //! numeric prefix (Config.hpp:784). Exercise the inherited user-preset path
-//! with the existing LH whole-file control, independently flattened for CLI.
+//! with the existing LH whole-file control and matching raw vendor/user inputs.
 use std::fs;
 
 use ares_core::{ConfigOverrides, Placement, ProfileSliceRequest};
-use serde_json::{Value, json};
+use serde_json::json;
 
 use super::{OrcaRunner, stages, vendor, write_json};
 
@@ -26,31 +26,7 @@ async fn inherited_user_process_scalar_array_whole_file() {
     let input = super::placed_cube(include_bytes!("../../../../../tests/parity/cube10.stl"));
     let path = |name: &str| runner.work.join(name).to_str().unwrap().to_owned();
     fs::write(path("cube10.stl"), &input).unwrap();
-    for (kind, name, mut fields) in [
-        ("machine", machine, profiles.machine(machine).unwrap()),
-        (
-            "filament",
-            filament.as_str(),
-            profiles.filament(&filament).unwrap(),
-        ),
-    ] {
-        // Flatten values, but retain the selected leaf's inheritance metadata,
-        // exactly as the stock whole-file profile-entry control does.
-        let selected = vendors
-            .as_array()
-            .unwrap()
-            .iter()
-            .flat_map(|vendor| vendor["files"].as_object().unwrap().values())
-            .find(|profile| profile["type"] == kind && profile["name"] == name)
-            .unwrap();
-        if let Some(inherits) = selected.get("inherits") {
-            fields.insert("inherits".to_owned(), inherits.clone());
-        }
-        write_json(
-            &runner.work.join(format!("{kind}.json")),
-            &Value::Object(fields),
-        );
-    }
+    let selection = json!({"machine": machine, "process": user, "filaments": [filament]});
     let cases = [
         ("array", json!(["50", "50"])),
         ("different", json!(["50", "60"])),
@@ -58,29 +34,25 @@ async fn inherited_user_process_scalar_array_whole_file() {
     ];
     let mut references = Vec::new();
     for (label, values) in &cases {
-        let mut flattened = profiles.process(&parent).unwrap();
-        flattened.insert("name".into(), json!(user));
-        flattened.insert("inherits".into(), json!(parent));
-        flattened.insert("from".into(), json!("user"));
-        flattened.insert("bridge_speed".into(), values.clone());
-        flattened.insert("initial_layer_print_height".into(), json!(["50%", "60%"]));
-        write_json(
-            &runner.work.join(format!("process-{label}.json")),
-            &Value::Object(flattened),
-        );
+        let catalog = json!({
+            "vendors": vendors,
+            "imports": [{"profiles": [{"type": "process", "name": user, "inherits": parent,
+                "from": "user", "instantiation": "true", "bridge_speed": values,
+                "initial_layer_print_height": ["50%", "60%"]}]}],
+        });
         let output = runner.work.join(format!("native-{label}"));
         fs::create_dir(&output).unwrap();
+        let native_presets =
+            super::native_user_presets::resolved(&output, &profiles_root, &catalog, &selection);
         stages::run(
             runner.bin(),
             [
+                "--datadir".to_owned(),
+                native_presets.datadir.to_str().unwrap().to_owned(),
                 "--load-settings".to_owned(),
-                format!(
-                    "{};{}",
-                    path("machine.json"),
-                    path(&format!("process-{label}.json"))
-                ),
+                super::super::join_paths(native_presets.settings.iter()),
                 "--load-filaments".to_owned(),
-                path("filament.json"),
+                super::super::join_paths(native_presets.filaments.iter()),
                 "--arrange".to_owned(),
                 "0".to_owned(),
                 "--slice".to_owned(),
@@ -107,7 +79,6 @@ async fn inherited_user_process_scalar_array_whole_file() {
             runner.work
         );
     }
-    let selection = json!({"machine": machine, "process": user, "filaments": [filament]});
     write_json(&runner.work.join("selection.json"), &selection);
     let selection_json = selection.to_string();
     let overrides = ConfigOverrides::default();
