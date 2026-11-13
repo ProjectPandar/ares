@@ -168,13 +168,18 @@ impl Catalog {
                 std::mem::take(&mut defaults),
             )?;
             runtime.overlay(project);
-            raw.extend(
+            let mut authored = ProjectSettingsRaw::default();
+            authored.extend(
                 layer
                     .fields
                     .iter()
                     .filter(|(key, _)| super::raw::applies(kind, key))
                     .map(|(key, value)| (key.clone(), value.clone())),
             );
+            // Config.cpp:600-615 normalizes each source before PresetBundle.cpp:7839
+            // applies it over the parent/default config, not over a joined raw map.
+            authored.handle_legacy();
+            raw.extend_raw(&authored);
             // Config.cpp:1147-1149 converts authored JSON before preset completion.
             if layer.fields.contains_key("thumbnails")
                 && let ProfilePayload::Machine(printer) = fragment.payload()
