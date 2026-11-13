@@ -126,7 +126,7 @@ Keep this ordering rather than copying Type1's guard into Type2.
 |---|---|---|
 | `integration.rs::Integration::new` | `GCode.hpp:130`, integration's sparse-skipped state | Type1 and Type2 variants require tower extrusion at object Z rather than accumulated compacted Z. |
 | `type1/emit.rs::append` | `GCode.cpp:1178,1231–1250,1262–1271` | Type1 variants require no compacted-layer restoration lifts; the normal compacted variant separately checks model-side end-filament Z. |
-| `type1/plan.rs::Planned::new` | `WipeTower.cpp:1990`, constructor sparse-skipped state | Type1 variants exercise full-height planning and emission. Exact first-change index and first-layer footprint are not independently compared by the height observer. |
+| `type1/plan.rs::Plan::new` | `WipeTower.cpp:1990`, constructor sparse-skipped state | Type1 variants exercise full-height planning and emission. Exact first-change index and first-layer footprint are not independently compared by the height observer. |
 | `plan.rs::Plan::new` | `WipeTower2.cpp:1060`, constructor sparse-skipped state | Type2 variants exercise full-height planning and emission. Exact first-layer speed, cone shape and filament accounting are not independently compared by the height observer. |
 | `type1/generator.rs::finish_result` | `WipeTower.cpp:3099–3102,3999–4002`, printed-layer filament accounting | The variants exercise generated sparse results, but exact per-filament consumed length is not independently asserted. Full output and its unchanged comparison result remain available; height success is not an accounting-parity claim. |
 
