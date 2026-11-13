@@ -75,12 +75,20 @@ pub(crate) fn scalar_token(kind: OptionValueKind, value: &str) -> Result<Cow<'_,
 
 pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawConfigValue>) {
     for (key, value) in values {
-        if let Some(definition) = option_definition(key)
-            && is_vector(definition.kind)
-            && matches!(value, RawConfigValue::Text(text) if text.is_empty())
+        let Some(definition) = option_definition(key) else {
+            continue;
+        };
+        if !is_vector(definition.kind)
+            || !matches!(value, RawConfigValue::Text(text) if text.is_empty())
         {
-            *value = RawConfigValue::List(Vec::new());
+            continue;
         }
+        *value = match definition.kind {
+            OptionValueKind::Floats | OptionValueKind::FloatsNullable => {
+                RawConfigValue::List(vec![RawConfigValue::Text("0".to_owned())])
+            }
+            _ => RawConfigValue::List(Vec::new()),
+        };
     }
 }
 
@@ -93,11 +101,12 @@ pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawCo
 /// embedded settings need the same normalization before the typed
 /// builders run. Non-empty scalars decode to lists; the empty-string case
 /// keeps the `ConfigOptionStrings::deserialize` empty-vector result and
-/// is handled by `normalize_empty_vector_strings`, which must run first.
-/// coStrings JSON arrays take the same quote/join/decode route as presets
-/// (`Config.cpp:945-1001`), retaining logical slots for the typed builder.
-/// Nullable coFloats arrays use their wire decoder before validation and export
-/// (`Config.hpp:932-958`).
+/// is handled by `normalize_empty_vector_strings`, which must run first;
+/// ordinary and nullable coFloats use the shared empty-wire rule and become
+/// `[0]`, while coStrings remain empty. coStrings JSON arrays take the same
+/// quote/join/decode route as presets (`Config.cpp:945-1001`), retaining
+/// logical slots for the typed builder. Nullable coFloats arrays use their wire
+/// decoder before validation and export (`Config.hpp:932-958`).
 pub(crate) fn normalize_scalar_vector_strings(
     values: &mut BTreeMap<String, RawConfigValue>,
 ) -> Result<(), String> {
@@ -111,8 +120,10 @@ pub(crate) fn normalize_scalar_vector_strings(
             }
             RawConfigValue::List(values)
                 if definition.kind == OptionValueKind::Strings
-                    || (definition.kind == OptionValueKind::FloatsNullable
-                        && is_string_array(values)) =>
+                    || (matches!(
+                        definition.kind,
+                        OptionValueKind::Floats | OptionValueKind::FloatsNullable
+                    ) && is_string_array(values)) =>
             {
                 Some(
                     encode_array(definition.kind, values)
