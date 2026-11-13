@@ -7,7 +7,7 @@ import { bedCommands, firstBedCommands, nativeBedReference } from "./bedDefaultO
 import { oraclePath } from "./oracleEnv";
 
 const repository = fileURLToPath(new URL("../../", import.meta.url));
-const model = `${repository}tests/parity/cube10.stl`;
+const model = `${repository}tests/parity/adaptive-octree-spacing/baseline.3mf`;
 const artifacts = `${repository}target/web-e2e/bed-default/`;
 
 test("U1 initializes Textured PEI and exports Native first-layer bed temperatures without a bed selection", async ({ page }) => {
