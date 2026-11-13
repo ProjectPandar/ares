@@ -1,15 +1,19 @@
-use crate::{InputFormat, Model, Point3, SliceError, Triangle};
+mod repair;
+
+use crate::{InputFormat, Model, Point3, SliceError};
+use repair::Facet;
 
 const BINARY_HEADER_LEN: usize = 80;
 const TRIANGLE_COUNT_LEN: usize = 4;
 const BINARY_TRIANGLE_LEN: usize = 50;
 
 pub fn load(input: &[u8]) -> Result<Model, SliceError> {
-    if looks_like_binary(input) {
-        parse_binary(input)
+    let facets = if looks_like_binary(input) {
+        parse_binary(input)?
     } else {
-        parse_ascii(input)
-    }
+        parse_ascii(input)?
+    };
+    Ok(Model::new(InputFormat::Stl, repair::into_triangles(facets)))
 }
 
 pub fn looks_like_binary(input: &[u8]) -> bool {
@@ -26,7 +30,7 @@ pub fn looks_like_binary(input: &[u8]) -> bool {
         == input.len()
 }
 
-fn parse_binary(input: &[u8]) -> Result<Model, SliceError> {
+fn parse_binary(input: &[u8]) -> Result<Vec<Facet>, SliceError> {
     let count = u32::from_le_bytes(
         input[BINARY_HEADER_LEN..BINARY_HEADER_LEN + TRIANGLE_COUNT_LEN]
             .try_into()
@@ -46,11 +50,15 @@ fn parse_binary(input: &[u8]) -> Result<Model, SliceError> {
             read_point(input, vertex_offset + 12)?,
             read_point(input, vertex_offset + 24)?,
         ];
-        triangles.push(Triangle::new(vertices));
+        let normal = std::array::from_fn(|axis| {
+            let start = offset + axis * 4;
+            f32::from_le_bytes(input[start..start + 4].try_into().unwrap())
+        });
+        triangles.push(Facet { normal, vertices });
         offset += BINARY_TRIANGLE_LEN;
     }
 
-    Ok(Model::new(InputFormat::Stl, triangles))
+    Ok(triangles)
 }
 
 fn read_point(input: &[u8], offset: usize) -> Result<Point3, SliceError> {
@@ -67,12 +75,13 @@ fn read_finite_f32(input: &[u8], offset: usize) -> Result<f32, SliceError> {
     ))
 }
 
-fn parse_ascii(input: &[u8]) -> Result<Model, SliceError> {
+fn parse_ascii(input: &[u8]) -> Result<Vec<Facet>, SliceError> {
     let text = std::str::from_utf8(input).map_err(|_| malformed_stl())?;
     let mut triangles = Vec::new();
     let mut in_solid = false;
     let mut in_facet = false;
     let mut in_loop = false;
+    let mut normal = [0.0; 3];
     let mut vertices = Vec::new();
 
     for line in text.lines() {
@@ -88,8 +97,8 @@ fn parse_ascii(input: &[u8]) -> Result<Model, SliceError> {
                 if parts.next() != Some("normal") {
                     return Err(malformed_stl());
                 }
-                for _ in 0..3 {
-                    parse_ascii_f32(parts.next().ok_or_else(malformed_stl)?)?;
+                for component in &mut normal {
+                    *component = parse_ascii_f32(parts.next().ok_or_else(malformed_stl)?)?;
                 }
                 if parts.next().is_some() {
                     return Err(malformed_stl());
@@ -124,7 +133,10 @@ fn parse_ascii(input: &[u8]) -> Result<Model, SliceError> {
                 if parts.next().is_some() || vertices.len() != 3 {
                     return Err(malformed_stl());
                 }
-                triangles.push(Triangle::new([vertices[0], vertices[1], vertices[2]]));
+                triangles.push(Facet {
+                    normal,
+                    vertices: [vertices[0], vertices[1], vertices[2]],
+                });
                 vertices.clear();
                 in_facet = false;
             }
@@ -139,7 +151,7 @@ fn parse_ascii(input: &[u8]) -> Result<Model, SliceError> {
         return Err(malformed_stl());
     }
 
-    Ok(Model::new(InputFormat::Stl, triangles))
+    Ok(triangles)
 }
 
 fn parse_ascii_f32(value: &str) -> Result<f32, SliceError> {
