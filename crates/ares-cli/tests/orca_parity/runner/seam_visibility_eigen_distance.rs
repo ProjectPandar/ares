@@ -48,20 +48,14 @@ pub(super) fn check(name: &str, filename: &str, none: bool) {
         "imports": [],
     });
     let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [FILAMENT]});
-    for (kind, mut fields) in [
-        ("machine", profiles.machine(MACHINE).unwrap()),
-        ("process", profiles.process(PROCESS).unwrap()),
-        ("filament", profiles.filament(FILAMENT).unwrap()),
-    ] {
-        if kind == "process" {
-            assert_eq!(fields["counterbore_hole_bridging"], "partiallybridge");
-            assert_eq!(fields["wall_generator"], "classic");
-            if none {
-                fields.insert("counterbore_hole_bridging".to_owned(), json!("none"));
-            }
-        }
-        profile_entry::write_json(&runner.work.join(format!("{kind}.json")), &json!(fields));
-    }
+    assert_eq!(
+        profiles.process(PROCESS).unwrap()["counterbore_hole_bridging"],
+        "partiallybridge"
+    );
+    assert_eq!(
+        profiles.process(PROCESS).unwrap()["wall_generator"],
+        "classic"
+    );
     profile_entry::write_json(&runner.work.join("catalog.json"), &catalog);
     profile_entry::write_json(&runner.work.join("selection.json"), &selection);
     let overrides_json = if none {
@@ -73,16 +67,19 @@ pub(super) fn check(name: &str, filename: &str, none: bool) {
     let overrides =
         ConfigOverrides::from_json(&serde_json::to_vec(&overrides_json).unwrap()).unwrap();
     fs::write(runner.work.join("input.stl"), &input).unwrap();
-    let reference = runner
-        .slice_stl_with_settings(
-            [
-                &runner.work.join("machine.json"),
-                &runner.work.join("process.json"),
-                &runner.work.join("filament.json"),
-            ],
-            &runner.work.join("input.stl"),
-        )
-        .unwrap();
+    let native_presets = profile_entry::native_user_presets::resolved(
+        &runner.work,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
+    let reference = profile_entry::native_user_presets::slice_stl(
+        &runner,
+        &native_presets,
+        &runner.work.join("input.stl"),
+        "native",
+        &overrides_json,
+    );
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()

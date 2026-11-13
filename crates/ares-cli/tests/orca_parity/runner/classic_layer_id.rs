@@ -60,19 +60,14 @@ fn check(name: &str) {
     let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [FILAMENT]});
     // These files are flattened, so no `inherits`: with one, Native would have to
     // match them to a vendor source (`OrcaSlicer.cpp:2122-2123`, `PresetBundle.cpp:650`).
-    for (kind, mut fields) in [
-        ("machine", profiles.machine(MACHINE).unwrap()),
-        ("process", profiles.process(PROCESS).unwrap()),
-        ("filament", profiles.filament(FILAMENT).unwrap()),
-    ] {
-        if kind == "process" {
-            assert_eq!(fields["counterbore_hole_bridging"], "partiallybridge");
-            assert_eq!(fields["wall_generator"], "classic");
-            fields.insert("counterbore_hole_bridging".to_owned(), json!(mode));
-            fields.insert("wall_generator".to_owned(), json!(wall_generator));
-        }
-        profile_entry::write_json(&runner.work.join(format!("{kind}.json")), &json!(fields));
-    }
+    assert_eq!(
+        profiles.process(PROCESS).unwrap()["counterbore_hole_bridging"],
+        "partiallybridge"
+    );
+    assert_eq!(
+        profiles.process(PROCESS).unwrap()["wall_generator"],
+        "classic"
+    );
     profile_entry::write_json(&runner.work.join("catalog.json"), &catalog);
     profile_entry::write_json(&runner.work.join("selection.json"), &selection);
 
@@ -82,16 +77,19 @@ fn check(name: &str) {
     let overrides =
         ConfigOverrides::from_json(&serde_json::to_vec(&overrides_json).unwrap()).unwrap();
     fs::write(runner.work.join(input_filename), &input).unwrap();
-    let reference = runner
-        .slice_stl_with_settings(
-            [
-                &runner.work.join("machine.json"),
-                &runner.work.join("process.json"),
-                &runner.work.join("filament.json"),
-            ],
-            &runner.work.join(input_filename),
-        )
-        .unwrap();
+    let native_presets = profile_entry::native_user_presets::resolved(
+        &runner.work,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
+    let reference = profile_entry::native_user_presets::slice_stl(
+        &runner,
+        &native_presets,
+        &runner.work.join("filament.json"),
+        "native",
+        &overrides_json,
+    );
     fs::write(runner.work.join("native-counterbore.gcode"), &reference).unwrap();
     let native_text = std::str::from_utf8(&reference).unwrap();
     assert!(

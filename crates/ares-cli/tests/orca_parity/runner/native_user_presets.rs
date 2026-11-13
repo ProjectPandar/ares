@@ -37,6 +37,112 @@ pub(in super::super) fn system(work: &Path, profiles: &Path, vendors: &[&str]) -
     datadir
 }
 
+pub(in super::super) struct ResolvedPresets {
+    pub(in super::super) datadir: PathBuf,
+    pub(in super::super) settings: [PathBuf; 2],
+    pub(in super::super) filaments: Vec<PathBuf>,
+}
+
+/// Native resolves the same manifest-owned leaves supplied to `slice_with_profiles`.
+pub(in super::super) fn resolved(
+    work: &Path,
+    profiles: &Path,
+    catalog: &Value,
+    selection: &Value,
+) -> ResolvedPresets {
+    let vendors = catalog["vendors"].as_array().unwrap();
+    let names = vendors
+        .iter()
+        .map(|vendor| vendor["id"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    let datadir = system(work, profiles, &names);
+    let leaf = |kind: &str, name: &str| {
+        let (path, mut fields) = vendors
+            .iter()
+            .flat_map(|vendor| {
+                vendor["files"]
+                    .as_object()
+                    .unwrap()
+                    .iter()
+                    .map(move |(path, fields)| (vendor["id"].as_str().unwrap(), path, fields))
+            })
+            .find(|(_, _, fields)| fields["type"] == kind && fields["name"] == name)
+            .map(|(vendor, relative, fields)| {
+                (
+                    datadir.join("system").join(vendor).join(relative),
+                    fields.clone(),
+                )
+            })
+            .unwrap();
+        // CLI::load_config_file requires source metadata, not completed option values.
+        fields["from"] = Value::from("system");
+        super::write_json(&path, &fields);
+        path
+    };
+    ResolvedPresets {
+        settings: [
+            leaf("machine", selection["machine"].as_str().unwrap()),
+            leaf("process", selection["process"].as_str().unwrap()),
+        ],
+        filaments: selection["filaments"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|name| leaf("filament", name.as_str().unwrap()))
+            .collect(),
+        datadir,
+    }
+}
+
+pub(in super::super) fn slice_stl(
+    runner: &super::OrcaRunner,
+    presets: &ResolvedPresets,
+    input: &Path,
+    output: &str,
+    overrides: &Value,
+) -> Vec<u8> {
+    let output = runner.work.join(output);
+    std::fs::create_dir(&output).unwrap();
+    for (index, path) in presets
+        .settings
+        .iter()
+        .chain(&presets.filaments)
+        .enumerate()
+    {
+        std::fs::copy(path, output.join(format!("loaded-leaf-{index}.json"))).unwrap();
+    }
+    let mut arguments = vec![
+        "--datadir".to_owned(),
+        presets.datadir.to_str().unwrap().to_owned(),
+        "--load-settings".to_owned(),
+        super::super::join_paths(presets.settings.iter()),
+        "--load-filaments".to_owned(),
+        super::super::join_paths(presets.filaments.iter()),
+        "--arrange".to_owned(),
+        "0".to_owned(),
+        "--slice".to_owned(),
+        "0".to_owned(),
+        "--outputdir".to_owned(),
+        output.to_str().unwrap().to_owned(),
+        input.to_str().unwrap().to_owned(),
+    ];
+    // OrcaSlicer.cpp:4138-4226 applies CLI overrides after loading the preset baseline.
+    for (key, value) in overrides.as_object().unwrap() {
+        arguments.extend([
+            format!("--{}", key.replace('_', "-")),
+            value.as_str().unwrap().to_owned(),
+        ]);
+    }
+    super::stages::run(
+        runner.bin(),
+        arguments,
+        super::stages::Stage::Slice,
+        &runner.work,
+    )
+    .unwrap();
+    std::fs::read(output.join("plate_1.gcode")).unwrap()
+}
+
 fn copy_directory(source: &Path, destination: &Path) {
     std::fs::create_dir(destination).unwrap();
     for entry in std::fs::read_dir(source).unwrap() {

@@ -66,19 +66,14 @@ fn check(name: &str) {
         "imports": [],
     });
     let selection = json!({"machine": MACHINE, "process": PROCESS, "filaments": [FILAMENT]});
-    for (kind, mut fields) in [
-        ("machine", profiles.machine(MACHINE).unwrap()),
-        ("process", profiles.process(PROCESS).unwrap()),
-        ("filament", profiles.filament(FILAMENT).unwrap()),
-    ] {
-        if kind == "process" {
-            assert_eq!(fields["counterbore_hole_bridging"], "partiallybridge");
-            assert_eq!(fields["wall_generator"], "classic");
-            fields.insert("counterbore_hole_bridging".to_owned(), json!(mode));
-            fields.insert("wall_generator".to_owned(), json!("arachne"));
-        }
-        profile_entry::write_json(&runner.work.join(format!("{kind}.json")), &json!(fields));
-    }
+    assert_eq!(
+        profiles.process(PROCESS).unwrap()["counterbore_hole_bridging"],
+        "partiallybridge"
+    );
+    assert_eq!(
+        profiles.process(PROCESS).unwrap()["wall_generator"],
+        "classic"
+    );
     profile_entry::write_json(&runner.work.join("catalog.json"), &catalog);
     profile_entry::write_json(&runner.work.join("selection.json"), &selection);
     let wall_generator = matrix["wall_generator"].as_str().unwrap();
@@ -90,33 +85,30 @@ fn check(name: &str) {
     let overrides =
         ConfigOverrides::from_json(&serde_json::to_vec(&overrides_json).unwrap()).unwrap();
     fs::write(runner.work.join("input.stl"), &input).unwrap();
-    let reference = runner
-        .slice_stl_with_settings(
-            [
-                &runner.work.join("machine.json"),
-                &runner.work.join("process.json"),
-                &runner.work.join("filament.json"),
-            ],
-            &runner.work.join("input.stl"),
-        )
-        .unwrap();
+    let native_presets = profile_entry::native_user_presets::resolved(
+        &runner.work,
+        &profiles_root,
+        &catalog,
+        &selection,
+    );
+    let reference = profile_entry::native_user_presets::slice_stl(
+        &runner,
+        &native_presets,
+        &runner.work.join("input.stl"),
+        "native",
+        &overrides_json,
+    );
     fs::write(runner.work.join("native-counterbore.gcode"), &reference).unwrap();
     if filename == "stepped-hole" && mode != "none" {
-        let process_path = runner.work.join("process.json");
-        let process: Value = serde_json::from_slice(&fs::read(&process_path).unwrap()).unwrap();
-        let mut none = process.clone();
+        let mut none = overrides_json.clone();
         none["counterbore_hole_bridging"] = json!("none");
-        profile_entry::write_json(&runner.work.join("process-none.json"), &none);
-        let control = runner
-            .slice_stl_with_settings(
-                [
-                    &runner.work.join("machine.json"),
-                    &runner.work.join("process-none.json"),
-                    &runner.work.join("filament.json"),
-                ],
-                &runner.work.join("input.stl"),
-            )
-            .unwrap();
+        let control = profile_entry::native_user_presets::slice_stl(
+            &runner,
+            &native_presets,
+            &runner.work.join("input.stl"),
+            "native-none",
+            &none,
+        );
         fs::write(runner.work.join("native-none.gcode"), &control).unwrap();
         let none_normalized = crate::golden::normalize_one_generator_line(
             &control,
