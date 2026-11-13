@@ -18,6 +18,38 @@
       "plate_bed_type": "Textured PEI Plate",
       "initial_temperature": 61,
       "ordinary_temperature": 59
+    },
+    {
+      "input": "empty.3mf",
+      "sha256": "775da9727a13149360c9405d1979485cf13d36a402fdc6788de3f4814a53bffe",
+      "project_bed_type": "High Temp Plate",
+      "plate_bed_type": "",
+      "initial_temperature": 35,
+      "ordinary_temperature": 30
+    },
+    {
+      "input": "unrecognized.3mf",
+      "sha256": "bdd48fd729164653805053c9c0daa72123a2a2b7a18f8e92366def519f786b51",
+      "project_bed_type": "High Temp Plate",
+      "plate_bed_type": "unrecognized plate",
+      "initial_temperature": 35,
+      "ordinary_temperature": 30
+    },
+    {
+      "input": "padded.3mf",
+      "sha256": "5407de1bcf9cf71a2afb38811f7783dffe38bef0fbdfe4baa4563465cec85a42",
+      "project_bed_type": "High Temp Plate",
+      "plate_bed_type": " Textured PEI Plate ",
+      "initial_temperature": 35,
+      "ordinary_temperature": 30
+    },
+    {
+      "input": "supertack-alias.3mf",
+      "sha256": "ce75ea9ba21f181fd908c02f9b6f494534a9ad4ff152679fba67a5cff6eaf5ed",
+      "project_bed_type": "High Temp Plate",
+      "plate_bed_type": "SuperTack Plate",
+      "initial_temperature": 47,
+      "ordinary_temperature": 43
     }
   ]
 }
