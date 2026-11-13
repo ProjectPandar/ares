@@ -128,7 +128,8 @@ test("imported printer presets list the compatible processes and filaments", asy
   await page.getByTestId("preset-import-input").setInputFiles(
     [expected.bundle, expected.filament].map((name) => `${repositoryRoot}tests/presets/${name}`),
   );
-  expect(await groupOptions(page, "Printer preset", "User presets")).toEqual([expected.printer]);
+  // The input change starts importPresetFiles without waiting for it; the worker parses the files after.
+  await expect.poll(() => groupOptions(page, "Printer preset", "User presets"), { timeout: 30_000 }).toEqual([expected.printer]);
   expect(await groupOptions(page, "Printer preset", "Project presets")).toEqual([projectPrinter]);
 
   // No system vendor installed: the engine's missing-parent error, verbatim.
