@@ -18,6 +18,26 @@ Port the printer-selection portion of OrcaSlicer
 Earlier line references to the printer-selection branch at 2512 are obsolete
 for this pinned revision.
 
+The Native comparison passes original system resource file paths to the CLI.
+`OrcaSlicer.cpp:2086–2161` resolves their inherited config through the adjacent
+vendor manifest. A flattened system document in an unrelated temporary directory
+is not equivalent to this input boundary. Preserve all resource fields and let
+Native resolve its own source tree.
+
+Bare CLI loading of these U1 resources leaves `curr_bed_type` at the registered
+Cool Plate value and produces first `M140`/`M190` temperatures of 35. This is a
+CLI-versus-GUI caller difference, not the Plater initialization reference. The
+Native oracle therefore passes `--curr-bed-type` to represent the GUI caller.
+It obtains the value by walking the same original U1 machine inheritance chain:
+`resources/profiles/Snapmaker/machine/Snapmaker U1 (0.4 nozzle).json` inherits
+`fdm_U1.json`, whose `default_bed_type` at line 249 supplies the hint. The
+concrete-name lookup follows `Preset.cpp:1146–1149` and
+`PrintConfig.cpp:606–615`; the test does not hand-select a Native bed name or
+modify the resource documents. This oracle covers the U1 concrete-name branch;
+legacy numeric hints and model-ID fallback are covered by the core resolver
+checks, not independently reimplemented here. The browser performs no explicit
+bed selection and its first bed commands must equal this Native output.
+
 ## Rust and adapter boundary
 
 `ares-core::DefaultBedType::resolve` owns the resolver. The browser must not
