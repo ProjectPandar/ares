@@ -212,27 +212,6 @@ fn slice_profile_source(
     })
 }
 
-/// The effective config view for a selected-profile request: the same
-/// merged raw the slice pipeline consumes (embedded base ∪ profile overlay
-/// ∪ user overrides), serialized for the web Process panel (upstream
-/// `PresetBundle::full_config` / the GUI Tab's edited preset).
-#[derive(serde::Serialize)]
-pub struct ProfileSettings(crate::project::raw_settings::ProjectSettingsRaw);
-
-/// Composes the selected profiles and returns their effective settings
-/// view for `input` — the identical data `slice_with_profiles` slices with.
-pub async fn profile_settings(
-    input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
-) -> Result<ProfileSettings, SliceError> {
-    with_profile_source(input.as_ref(), request, |source| {
-        let project = crate::project_slice::load_profile_project(&source)?;
-        Ok(ProfileSettings(
-            project.documents().project_settings_raw.clone(),
-        ))
-    })
-}
-
 /// Model identity and preset files supplied by the native
 /// `--load-settings`/`--load-filaments` CLI lists.
 #[derive(Debug)]
@@ -315,7 +294,7 @@ fn with_load_settings_source<T>(
 
 /// Composes the request and runs `body` on the resulting source; both the
 /// slice entries and the settings view share this single compose path.
-fn with_profile_source<T>(
+pub(super) fn with_profile_source<T>(
     input: &[u8],
     request: ProfileSliceRequest<'_>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
@@ -344,14 +323,15 @@ pub(crate) fn with_edited_profile_source<T>(
         ));
     }
     let catalog = Catalog::from_json(catalog_json)?;
-    if let Some(uptodate) = super::project_refresh::selection(selection_json)? {
+    if let Some(policy) = super::project_refresh::selection(selection_json)? {
         return body(ProjectSource {
             bytes: input,
             plate,
             profile: None,
             refresh: Some(super::ProjectPresetRefresh {
                 catalog: &catalog,
-                uptodate,
+                policy,
+                filename,
                 placement,
             }),
             overrides,

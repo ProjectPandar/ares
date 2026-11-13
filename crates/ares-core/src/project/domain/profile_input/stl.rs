@@ -163,6 +163,8 @@ impl Project {
                     plate_documents: Vec::new(),
                     has_painted_layer_height_profile: false,
                     bbl_family_3mf: false,
+                    preset_file_version: None,
+                    preset_selection: None,
                 },
             ),
             preparation,

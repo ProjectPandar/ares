@@ -106,7 +106,7 @@ pub(super) fn system_name<'a>(name: &'a str, inherited: &'a [String], slot: usiz
         .unwrap_or(name)
 }
 
-pub(super) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<String> {
+pub(in crate::profiles) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<String> {
     let Some(value) = raw.get(key) else {
         return Vec::new();
     };
@@ -123,7 +123,10 @@ pub(super) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<String> {
     }
 }
 
-pub(super) fn dirty_keys(dirty: &[String], slot: usize) -> Result<BTreeSet<String>, SliceError> {
+pub(in crate::profiles) fn dirty_keys(
+    dirty: &[String],
+    slot: usize,
+) -> Result<BTreeSet<String>, SliceError> {
     let token = dirty.get(slot).map(String::as_str).unwrap_or("");
     let mut keys = crate::options::unescape_strings_cstyle(token)
         .map_err(SliceError::InvalidInput)?
@@ -155,7 +158,7 @@ pub(super) fn bookkeeping(key: &str) -> bool {
     )
 }
 
-pub(super) fn connection(key: &str) -> bool {
+pub(in crate::profiles) fn connection(key: &str) -> bool {
     matches!(
         key,
         "print_host"

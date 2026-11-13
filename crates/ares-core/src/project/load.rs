@@ -239,6 +239,28 @@ fn load_project_raw(
                     || entry.value.starts_with("OrcaSlicer-"))
         })
     });
+    // bbs_3mf.cpp:1539-1551: OrcaSlicer metadata takes precedence over Application.
+    let preset_file_version = graph
+        .models
+        .iter()
+        .flat_map(|model| &model.document.metadata)
+        .rfind(|entry| entry.name == "OrcaSlicer")
+        .and_then(|entry| super::preset_version::parse(&entry.value))
+        .or_else(|| {
+            graph
+                .models
+                .iter()
+                .flat_map(|model| &model.document.metadata)
+                .rev()
+                .filter(|entry| entry.name == "Application")
+                .find_map(|entry| {
+                    entry
+                        .value
+                        .strip_prefix("OrcaSlicer-")
+                        .or_else(|| entry.value.strip_prefix("BambuStudio-"))
+                })
+                .and_then(super::preset_version::parse)
+        });
     let mut project = Project::new(
         models,
         objects,
@@ -252,6 +274,8 @@ fn load_project_raw(
             plate_documents,
             has_painted_layer_height_profile,
             bbl_family_3mf,
+            preset_file_version,
+            preset_selection: None,
         },
     );
     project.plates_custom_gcodes = plates_custom_gcodes;

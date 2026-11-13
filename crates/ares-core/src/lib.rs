@@ -196,6 +196,9 @@ pub use profiles::{
     validate_load_settings_input, validate_with_profiles,
 };
 pub use profiles::{
+    PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
+};
+pub use profiles::{
     slice_cli_with_profiles_validated, slice_with_profiles_processed_validated,
     slice_with_profiles_validated,
 };
