@@ -73,6 +73,17 @@ Source comparisons must first address these questions:
   machine path. Establish its effective public input on this starting tree;
   historical missing-key observations alone do not establish a new regression.
 
+The synthetic stale-index reproduction uses two protected flow values
+`[0.91,0.92]`, system values `[1.02,1.04]`, identical variant names and imported
+self indices `[1,1]`. Native's range/cardinality predicate at
+`OrcaSlicer.cpp:3534–3547` regenerates indices to `[1,2]` before saving old ranges.
+The current Rust shell instead groups both old values into the first slot,
+leaves an empty second range and replaces the protected second value with
+`1.04`. The public settings comparison observes `[0.91,1.04]` rather than Native's
+`[0.91,0.92]`. Valid `[1,2]` indices are an unchanged passing control. The intended
+correction is the source's regeneration predicate before grouping, not a change
+to protected-key handling or numeric comparisons.
+
 No production change is justified until a source-owned difference has a runnable
 public-API reproduction and a real Native result for the same synthetic inputs.
 Passing controls remain controls rather than being relabeled as failures.
