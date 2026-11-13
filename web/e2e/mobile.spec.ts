@@ -97,7 +97,8 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await targets("preset list");
   await act(input, page.getByRole("option", { name: "Select/Remove printers (system presets)" }));
   const wizard = page.getByRole("dialog", { name: "Printer Selection" });
-  await expect(wizard).toBeVisible();
+  // The vendor sidebar and model cards render once the printer models load.
+  await expect(wizard.getByRole("checkbox", { name: `All ${PRESETS.vendor} models`, exact: true })).toBeVisible();
   await targets("wizard");
   await act(input, wizard.getByRole("checkbox", { name: `All ${PRESETS.vendor} models`, exact: true }));
   await expect(wizard.getByRole("checkbox", { name: `All ${PRESETS.vendor} models`, exact: true })).toBeChecked();
