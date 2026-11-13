@@ -2,8 +2,9 @@
 
 Date: 2026-11-12. Status: **proposed implementation specification**.
 The release target is chosen. This document does not switch producers or port
-release behavior. Pin changes must wait until this specification's contents are
-agreed on and the beta changes are on `main`.
+release behavior. Its profile-byte and oracle extension must be agreed on before
+the corresponding tests and fixes. The beta prerequisite is already on `main` at
+`2ec2be77f9b7aba723f0a77a800c4a68d9679f54`; the extension starts from that tree.
 
 ## Decision and immutable source identities
 
@@ -26,8 +27,13 @@ A source pin, a verified Native producer, and an executed parity result are
 separate identities. Existing beta binaries, resources, caches and PASS results
 retain their beta identities. Do not relabel them, support two algorithms, add a
 legacy fallback, relax comparators or repair fixtures to conceal release changes.
-Native environment setup and binary checks belong to the Native producer owner,
-outside this documentation and repository-pin change.
+Existing official, seed-only and merged release producers retain their owners.
+The two additional producers included here are segment-colors and initialized
+KSR replay. Check existing release handoffs before building either; do not rebuild
+unrelated Native variants. The separate version-identity change owns
+`generation.rs`'s compatibility constant, the emitted header identity and
+test-comparator version regexes. Source-citation comments remain in this change
+only after checking their sources.
 
 ## Complete `libslic3r` changed-file inventory and ownership
 
@@ -182,10 +188,16 @@ source hashes and line anchors from the release before claiming a release kernel
 
 ## Proposed repository-pin implementation
 
-The implementation includes source/resource selection, active probe provenance,
-source extraction manifests and the build script. It does not include the 61
-behavioral ports, Native provisioning, new dependencies, new crates, UI/OpenGL,
-filesystem behavior in core or bulk replacement of historical beta citations.
+First implement the web source refs and BOM readers below as a separate change.
+The independent parity action, probe/caller cleanup and oracle builds follow later.
+The release `Snapmaker/machine/fdm_U1.json` supplies `support_multi_bed_types = 1`.
+Do not change `default_bed_type` enum parsing or Default Plate temperatures.
+
+The implementation includes source/resource selection, original-byte profile
+JSON readers, active probe provenance, source extraction manifests, the build
+script and the two oracle producers below. It does not include the 61
+behavioral ports, unrelated Native provisioning, new Rust dependencies or crates,
+UI/OpenGL, filesystem behavior in core or bulk replacement of historical citations.
 
 ### Raw profile action
 
@@ -194,6 +206,44 @@ HEAD assertion, profile-tree assertion and displayed identity together to the
 release row above. Retain the sparse checkout, disabled persisted credentials and
 explicit `ARES_PARITY_PROFILE_RESOURCES_DIR` binding. Check both identities before
 exporting the directory. A release label with the beta profile tree is invalid.
+This action is an independent parity input, not a consumer of the web source pin.
+Its existing beta ref must not change merely because web refs change; migrate its
+ref, HEAD and tree checks explicitly with matching release producer inputs.
+
+### Original-byte profile JSON readers
+
+The upstream reader boundary is `ConfigBase::load_from_json` in `Config.cpp:875–932`
+and vendor JSON reading in `PresetBundle.cpp:8234,8302`. Both use nlohmann JSON;
+`deps_src/nlohmann/detail/input/lexer.hpp:1478–1488,1504–1511` skips one `EF BB BF`
+only at the beginning of input. It does not trim arbitrary text or fix a bad BOM.
+
+Port that byte-entry behavior to `web/packages/ares-profiles/scripts/build-profiles.mjs`
+and core's `profiles/fragment.rs` byte constructors, including original-machine
+and up-to-date-file reads. Check `profiles/catalog.rs`, `profiles/catalog/store.rs`
+and `profiles/import.rs` byte-entry readers too. Catalog/vendor envelopes remain
+temporary transport shells around `PresetBundle`; do not invent a new grammar.
+Keep metadata, typed option decoding, inheritance and error ordering unchanged.
+Use a borrowed suffix in Rust; do not copy or rewrite caller buffers. Parsed-value
+paths need no additional normalization. Core must not discover directories or
+read files; Node and CLI adapters continue to own filesystem access.
+
+The five original inputs under `resources/profiles/BenFab/process/` are:
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `fdm_process_benfab_04020.json` | 552 | `2e5cb439e92d47a99965b593cdc62bd09a2446710867b40b00503037c6172aa7` |
+| `fdm_process_benfab_06030.json` | 850 | `2f8aa6d9fd3229b7c7595f8de4f118bd952db027ee708d9375dcc60925370af6` |
+| `fdm_process_benfab_08040.json` | 885 | `56d827ef87cf25bf6591b40d0e8532d27dcf9c3f282c2f07a5dceefc9d3bac35` |
+| `fdm_process_benfab_10050.json` | 914 | `e08d2630ee29e6227f8d90588cfd85ca29cfc936368dbd1bc6443f18a2090ea0` |
+| `fdm_process_benfab_common.json` | 3331 | `73ef97ce3de1039a7d67ba1b75dd5e211a46b720b1393595c882caf8ac9de198` |
+
+Write Node build and public Core API tests before fixes. Exercise those unchanged
+inputs, non-BOM process/filament/machine controls, vendor/catalog byte entries and
+BOM inside JSON string values. Repeated/truncated BOMs, BOM after leading whitespace
+and unsupported encodings must not become accepted by removing arbitrary bytes.
+General decoder changes, XML/3MF handling and archive-format changes are deferred.
+Save the complete generated catalog, input hashes and test results outside Git;
+never repair the upstream JSON resources or commit generated Native outputs.
 
 ### Active `tools/chain-probe` pins and provenance
 
@@ -218,16 +268,66 @@ exporting the directory. A release label with the beta profile tree is invalid.
   the beta rationale in `marker-time-stable.mjs`. They are not release provenance.
   Update only instructions describing the new active producer contract.
 
+### Release segment-colors producer
+
+The boundary is `GCodeProcessorResult` through `libvgcode::convert` in
+`LibVGCodeWrapper.cpp`, then the extracted `ViewerImpl::update_color_ranges`,
+`get_vertex_color` and palette methods plus real `ColorRange`/`Layers` data.
+`extract-segment-colors.mjs`, `segment-colors-oracle.hpp` and `segment-colors.nix`
+with `procgcode.nix` retain that source-kernel boundary. This is not full Native
+viewer or OpenGL execution, nor a new Rust viewer or slicing pipeline.
+
+Regenerate the release extraction before building. Keep vertex order, position
+bits, seven color views and the travel-visible speed view; do not alter arithmetic,
+palettes, conversion or comparison rules. Record the release source, patches,
+compiler/SDK inputs, wrapper/ELF hashes and a separate gcroot. Bind the actual
+producer to `ARES_SEGMENT_COLOR_BIN` in the release environment and update active
+instructions/known-failure notes. A merged smoke result or the old 2.4.2 gcroot
+cannot establish release segment-colors output. Retain the old producer's identity.
+
+### Initialized KSR release replay
+
+Preserve the initialized authority described in
+[the KSR decision](ard-ksr-initialized-runtime-authority.md), not a seed-only
+producer. At release `Print.hpp:742`, `PrintObject::m_id` already starts at zero.
+`Arachne/WallToolPaths.hpp:33,38` supplies `min_length_factor = 0.5f` and
+`is_top_or_bottom_layer = false`; `FillConcentric.cpp:135` and
+`FillConcentricInternal.cpp:47` default-construct those parameters. Keep these
+upstream initializers rather than carrying duplicate assignments in the old patch.
+
+`Feature/FuzzySkin/FuzzySkin.cpp:39–41` still seeds `random_value` nondeterministically.
+Adapt `tools/orca-probes/ksr-initialized-source.patch` to the release context while
+retaining its `ORCA_REPLAY_SEED`/MT19937 behavior. Do not add the seed-only patch's
+`GCode.cpp` placeholder RNG change. Retarget `ksr-initialized.nix` and the build
+script's KSR source/version together. The shared build-script branches must also
+stop applying obsolete object-id/concentric initialization hunks now supplied
+upstream; their existing seed-only policy remains separate and unchanged.
+
+The consumers include `runner/stock_project_native_stream/producer.rs`,
+`option_coverage/safc_reference.rs` and `web/e2e/ksrProject.spec.ts`. Keep their
+initialized environment binding and authenticate the new wrapper/ELF hashes;
+do not remove the old hash assertions without replacing them with verified release
+identities. KSR labels, selectors and expected header literals must describe the
+actual release producer; do not change version-identity constants or comparator regexes.
+
+Use unchanged KSR project bytes and two fresh, serial seed-zero/single-core Native
+captures. Record complete output hashes and require repeatability with only the
+existing validated generator timestamp normalization. Run the complete ordered
+G-code/config consumers against that producer, not a CONFIG_BLOCK-only substitute.
+Keep original and initialized historical captures distinct. Source defaults,
+patch applicability, compilation and repeatable execution are separate claims.
+
 ### Build script and missing stable-options call graph
 
 `scripts/ci/build-oracle.sh:26` still downloads 2.4.2 commit
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`. Retarget its archive revision to the
 release. Keep explicit per-variant patch composition, strict failures, bounded
 build jobs and substitution-only cache-miss failure. Preflight the existing
-patches against a fresh owned release tree before any build. Patch applicability
-has not been established by this source inventory. Algorithm or
-initialization-policy changes need a separate source-cited specification.
-Patch-context updates must not introduce them.
+patches against a fresh owned release tree before any build. Source-only checks
+show the old KSR patch rejects release FuzzySkin/`Print.hpp`; `procgcode.patch`
+applies and the following segment-colors patch checks successfully. Those checks
+are not builds. The KSR section defines the retained initialization policy;
+patch-context updates must not introduce other algorithm or policy changes.
 
 The current inconsistency is concrete:
 
@@ -253,17 +353,24 @@ Do not manufacture a replacement patch, alias stable to raw, add a fallback or
 remove unrelated oracle variants. Check that remaining consumers do not require
 the retired environment variable before removing it.
 
-The caller repair adds only `tier1.yml` to the three source-pin areas above.
-The old refs in `cloudflare-pages.yml:25,63` and official packaging in
-`scripts/ci/fetch-orca-appimage.sh` remain with their owners, outside this change.
-Until those producer paths are verified, do not describe every CI/deployment
-consumer as release-based.
+Web's global resource source moves from `8500fcdccaa10b5099ac20d252af3a7c560046f1`
+to the release: change `cloudflare-pages.yml:25,63` and `tier1.yml:23`. In Cloudflare,
+change only the two checkout refs and their version comments; keep deployment
+gates, sparse checkout, credentials, caching and build commands unchanged. Do not
+create a submodule or redirect shared checkouts. The parity profile action above
+remains an independent source binding. Official packaging in
+`scripts/ci/fetch-orca-appimage.sh` remains with its owner; do not claim all
+CI/deployment consumers are release-based.
 
 ## Verification and implementation limits
 
-Agree on this source/ownership specification and put the beta changes on `main`
-before changing pins. The additional workflow changes are limited to the
-`tier1.yml` caller repair above. Native environment setup remains separate.
+Agree on this extended source/ownership specification before tests and fixes.
+Keep specification, failing tests and implementation in that order. Workflow
+changes are limited to the caller repair and web source refs above. Inspect
+existing release handoffs before proposing either Native build; do not
+reuse a seed-only ELF as an initialized KSR producer. Rebuild only the two
+specified oracles if needed, with four build jobs and one concurrent build;
+substitution-only requests retain zero local build jobs.
 
 For the repository-pin change, retain repeatable artifacts containing the Ares
 commit, upstream commit/profile-tree IDs, generated extraction hashes, patch
@@ -280,7 +387,14 @@ blocked execution, not skipped parity PASS. Preserve full G-code/report comparis
 rules and channel/exit checks. Each later behavioral rewrite first needs its
 source-bounded specification and failing public E2E witness, followed by the
 matching implementation and Rust formatting, Clippy, host and WASM checks.
-Browser runtime results remain distinct from WASM compilation.
+Browser runtime results remain distinct from WASM compilation. Run formatting,
+strict locked workspace/all-target Clippy, selected nextest, host and Core/adapter
+WASM checks for changed Rust, plus web build/typecheck/lint for the byte-reader
+change. Use a fresh strict-port 4184 browser server with a free-port check and
+save the actual served assets and downloaded output. Do not borrow a server or
+change source files during verification. Keep source/producer setup failures and
+actual behavior failures separate; missing output is never equality.
 
-This specification verifies endpoint source inventory and ownership only. It
-contains no release build, runtime parity, cross-platform or completed-port claim.
+This specification records source inventory, ownership, original-byte inspection
+and patch applicability only. It contains no release build, runtime parity,
+cross-platform or completed-port claim.
