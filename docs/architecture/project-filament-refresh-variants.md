@@ -113,6 +113,15 @@ regression tests. If the sealed launcher cannot route a synthetic resource root,
 obtain an explicitly authorized observational entry before proceeding; do not
 substitute unrelated stock configurations or user-derived input.
 
+Synthetic machine entries must carry `printer_model`, `printer_variant` and a
+matching vendor machine-model/variant record: `PresetBundle.cpp:7867–7898`
+rejects the entire vendor load otherwise. A manifest-name match is not proof of
+successful resolution. Reject resolver-load errors in the Native premises.
+With a valid synthetic vendor, the two-slot missing `enable_pre_heating` control
+inherits system `1` with either empty or nonempty difference metadata; an
+explicit authored `0` stays `0` with empty metadata. These are controls for the
+existing machine path, not a reason to change its implementation.
+
 Native observations may have typed envelopes while the public API has flat
 values. Decode the observation at that boundary while retaining complete vector
 length/order/value/type checks. A public core request using CLI policy is not an
