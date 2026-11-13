@@ -1,7 +1,8 @@
 import type { OptionMap } from "@ares-slicer/wasm";
 import { useEffect, useState } from "react";
 import { resetOverrides } from "../state/actions";
-import { presetSliceBlocker, presetValues } from "../state/presets";
+import { presetValues } from "../state/presetSlice";
+import { presetSliceBlocker } from "../state/presets";
 import { type ModelFile, type PresetSelection, useApp } from "../state/store";
 
 type Fetched = { file: ModelFile; selection: PresetSelection } & ({ values: OptionMap } | { error: string });

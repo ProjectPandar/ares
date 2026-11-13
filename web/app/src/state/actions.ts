@@ -2,7 +2,8 @@ import type { OptionValue, SliceResult, SlicingStatus } from "@ares-slicer/wasm"
 import { moveThumb, switchOneLayer } from "../preview/layerRange";
 import { loadArrangeSettings } from "./arrange";
 import { saveConfig } from "./persistence";
-import { installVendors, overrideTokens, presetSliceBlocker, selectPrinter, sessionRestored, sliceWithPresets, updateCompatible } from "./presets";
+import { installVendors, presetSliceBlocker, selectPrinter, sessionRestored, updateCompatible } from "./presets";
+import { overrideTokens, sliceWithPresets } from "./presetSlice";
 import { catalogJson, FROM_PROJECT } from "./projectPresets";
 import { stlSessionOpened } from "./stlSession";
 import { updatePrinterPanel } from "./printer";

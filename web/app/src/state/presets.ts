@@ -1,13 +1,12 @@
-import type { ConfigOverrides, CurrentPrinter, FilamentSlotState, InstalledPrinters, OptionMap, OptionValue, ParsedPresetBundle, PlaterSession, PresetCatalog, ProfileSliceOptions, ProjectSettings, Scene, SliceResult, SlicingStatus } from "@ares-slicer/wasm";
+import type { CurrentPrinter, FilamentSlotState, InstalledPrinters, ParsedPresetBundle, PlaterSession, PresetCatalog, ProjectSettings, Scene } from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig, storedConfigExists } from "./persistence";
-import { extruderOverrides, selectionExtruders } from "./extruders";
+import { selectionExtruders } from "./extruders";
 import { printerBedType, updatePrinterPanel } from "./printer";
 import { catalogJson } from "./projectPresets";
 import { slicer } from "./slicer";
-import { type ModelFile, type PresetSelection, useApp } from "./store";
-import { decodeOptions } from "./typedSettings";
+import { type PresetSelection, useApp } from "./store";
 
 /**
  * PresetBundle::ORCA_FILAMENT_LIBRARY: always installed and loaded before the
