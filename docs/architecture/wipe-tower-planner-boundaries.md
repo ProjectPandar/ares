@@ -67,9 +67,21 @@ synchronizing a Klipper interface cooldown; disabling non-Klipper waits; and
 losing the placeholder newline so a move bypasses tower-coordinate processing.
 Record the pre-implementation failures before changing production code.
 
-Acceptance requires all 48 affected cases plus directed controls to pass under
-`parity-250.env` and `parity-seeded-250.env`, `cargo fmt --check`, and
-`cargo clippy --workspace --all-targets -- -D warnings`. Keep repeatable input,
-Native/Ares outputs, comparison results and command receipts outside the source
-tree. Commit the specification first, additional tests second when needed, and
-the production port last. No full-suite baseline rerun is required.
+The independent upstream commit `39408fa1f274c70a84ff16cfbe3279be1ab10ae9`
+adds `[restore_layer_z_before_toolchange]` in
+`WipeTower::toolchange_Change` and `WipeTower2::toolchange_Change`, with values
+provided by `WipeTowerIntegration::append_tcr` and `append_tcr2`. Its empty
+expansion contributes a line even when no height restoration is needed. Keep
+that missing behavior visible in the unchanged whole-output assertions; do not
+imitate it with blank-line padding. The complete layer-Z restoration belongs to
+a separate source rewrite, not this planner-boundary slice.
+
+Standalone acceptance requires the directed synchronization and line-termination
+contracts to pass under `parity-250.env` and `parity-seeded-250.env`,
+`cargo fmt --check`, and `cargo clippy --workspace --all-targets -- -D warnings`.
+Run all 48 affected whole-output cases unchanged in both modes and report any
+layer-Z dependency differences separately. All 48 must pass with both upstream
+rewrites combined. Keep repeatable input, Native/Ares outputs, comparison results
+and command receipts outside the source tree. Commit the specification first,
+additional tests second when needed, and the production port last. No full-suite
+baseline rerun is required.
