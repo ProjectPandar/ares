@@ -1,0 +1,90 @@
+{
+  "imports": [],
+  "vendors": [
+    {
+      "files": {
+        "filament-base.json": {
+          "from": "system",
+          "instantiation": "false",
+          "name": "Acme filament base",
+          "type": "filament"
+        },
+        "filament.json": {
+          "filament_diameter": [
+            "1.75"
+          ],
+          "filament_id": "AF000",
+          "from": "system",
+          "inherits": "Acme filament base",
+          "instantiation": "true",
+          "name": "Acme PLA",
+          "type": "filament"
+        },
+        "machine.json": {
+          "from": "system",
+          "instantiation": "true",
+          "name": "Acme A1 0.4 nozzle",
+          "nozzle_diameter": [
+            "0.4"
+          ],
+          "printable_area": [
+            "0x0",
+            "256x0",
+            "256x256",
+            "0x256"
+          ],
+          "printer_model": "A1",
+          "printer_variant": "0.4",
+          "type": "machine"
+        },
+        "model.json": {
+          "model_id": "A1",
+          "name": "A1",
+          "nozzle_diameter": "0.4",
+          "printer_technology": "FFF",
+          "type": "machine_model"
+        },
+        "process.json": {
+          "from": "system",
+          "instantiation": "true",
+          "layer_height": "0.2",
+          "name": "0.20mm Standard @A1",
+          "type": "process"
+        }
+      },
+      "id": "Acme",
+      "index": {
+        "filament_list": [
+          {
+            "name": "Acme filament base",
+            "sub_path": "filament-base.json"
+          },
+          {
+            "name": "Acme PLA",
+            "sub_path": "filament.json"
+          }
+        ],
+        "machine_list": [
+          {
+            "name": "Acme A1 0.4 nozzle",
+            "sub_path": "machine.json"
+          }
+        ],
+        "machine_model_list": [
+          {
+            "name": "A1",
+            "sub_path": "model.json"
+          }
+        ],
+        "name": "Acme",
+        "process_list": [
+          {
+            "name": "0.20mm Standard @A1",
+            "sub_path": "process.json"
+          }
+        ],
+        "version": "01.00.00.00"
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "compatible_printers": [
+    "Acme A1 0.4 nozzle"
+  ],
+  "from": "system",
+  "instantiation": "true",
+  "layer_height": "0.2",
+  "name": "0.20mm Standard @A1",
+  "type": "process"
+}
