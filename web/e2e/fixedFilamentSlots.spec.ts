@@ -26,9 +26,27 @@ test("U1 has four fixed filament slots and edits them directly", async ({ page }
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await expect(page.locator(".filament-row")).toHaveCount(1);
   await page.screenshot({ path: `${artifacts}/bbl-fresh-one-slot.png` });
+  // A model item takes the current printer's variant (PresetBundle::get_similar_printer_preset,
+  // PresetBundle.cpp:5322-5354). The U1 filaments of OrcaSlicer 2.4.2 fit only its 0.4 nozzle.
+  await page.getByRole("combobox", { name: "Nozzle diameter", exact: true }).selectOption("0.4");
+  await expect(printer).toHaveAttribute("title", "Bambu Lab X1 Carbon 0.4 nozzle", { timeout: 60_000 });
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  await printer.click();
+  await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
+  await expect(printer).toHaveAttribute("title", "Snapmaker U1 (0.4 nozzle)", { timeout: 60_000 });
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  // The 2.4.2 U1 model lists no default_materials, so no U1 filament is installed with the printer
+  // (PresetBundle::load_installed_filaments, PresetBundle.cpp:3757-3812): install one, then select
+  // the U1 again so its remembered slots take it.
+  await page.getByRole("button", { name: "Filament 1 preset", exact: true }).click();
+  await page.getByRole("option", { name: "Add/Remove filaments" }).click();
+  const install = page.getByRole("dialog", { name: "Filament selection" });
+  await install.getByRole("group", { name: "Filaments" }).getByRole("checkbox", { name: "Snapmaker PLA", exact: true }).check({ timeout: 60_000 });
+  await install.getByRole("button", { name: "Done" }).click();
   await printer.click();
   await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  await expect(page.getByRole("button", { name: "Filament 4 preset", exact: true })).toHaveText(/\S/);
   await expect(page.locator(".filament-row")).toHaveCount(4);
   await expect(page.getByRole("button", { name: /^(Add filament|Delete filament|Flushing volumes)$/ })).toHaveCount(0);
   const filaments = await page.getByRole("button", { name: /^Filament \d+ preset$/ }).allTextContents();
@@ -64,13 +82,20 @@ test("U1 has four fixed filament slots and edits them directly", async ({ page }
   await page.getByRole("link", { name: "Prepare", exact: true }).click();
   await printer.click();
   await page.getByRole("option", { name: "Bambu Lab X1 Carbon", exact: true }).click();
+  // remember_printer_config, on by default (AppConfig.cpp:544-545, Tab.cpp:7740-7742): the X1 Carbon
+  // gets back its own one-slot selection (PresetBundle::update_selections, PresetBundle.cpp:3914-3940),
+  // which already meets its minimum; the U1's four slots are not carried over.
+  await expect(printer).toHaveAttribute("title", "Bambu Lab X1 Carbon 0.4 nozzle", { timeout: 60_000 });
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
-  // The hardware rule is a minimum, not a truncation of an existing selection.
-  await expect(page.locator(".filament-row")).toHaveCount(4);
-  await page.screenshot({ path: `${artifacts}/bbl-retained-slots.png` });
+  await expect(page.locator(".filament-row")).toHaveCount(1);
+  await page.screenshot({ path: `${artifacts}/bbl-remembered-slots.png` });
+  // The reload reads the stored selection, so it waits for the switch to store it.
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("ares.config")!).printer)).toBe("Bambu Lab X1 Carbon 0.4 nozzle");
   await page.reload();
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
-  await expect(page.locator(".filament-row")).toHaveCount(4, { timeout: 60_000 });
+  await expect(printer).toHaveAttribute("title", "Bambu Lab X1 Carbon 0.4 nozzle", { timeout: 60_000 });
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  await expect(page.locator(".filament-row")).toHaveCount(1);
   expect(errors).toEqual([]);
-  writeFileSync(`${artifacts}/browser-result.json`, JSON.stringify({ printer: "Snapmaker U1", slots: 4, filaments, sliced: true, densities, bblFreshSlots: 1, bblRetainedSlots: 4, restoredSlots: 4, errors }, null, 2));
+  writeFileSync(`${artifacts}/browser-result.json`, JSON.stringify({ printer: "Snapmaker U1 (0.4 nozzle)", slots: 4, filaments, sliced: true, densities, bblFreshSlots: 1, bblRememberedSlots: 1, restoredSlots: 1, errors }, null, 2));
 });
