@@ -129,7 +129,8 @@ recreate them after every restart or context reset.
   - how it is verified.
 
   Then `hc send` the worker a short message that points at the brief.
-- Give each worker a disjoint CPU range and, for browser tests, its own preview port.
+- Give each worker a disjoint CPU range and, for browser tests, its own preview port. Exploration-only
+  workers (investigation, no test suites or full builds) get no dedicated CPUs and run unpinned.
 - To launch a dynamic worker, write its task brief, then run:
   ```sh
   hc run --bg --outlive-parent --name workerN --cwd <main checkout> pi --model magpie/zero-ai-coding-gpt/gpt-6.1-sol \
