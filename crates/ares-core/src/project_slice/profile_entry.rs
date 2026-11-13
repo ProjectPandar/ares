@@ -53,24 +53,31 @@ fn load_with_profile_preparation(
         load_names: profile.load_names,
         retained_refresh: profile.retained_refresh,
     };
-    match crate::InputFormat::detect(project.bytes) {
-        crate::InputFormat::ThreeMf => Project::from_3mf_with_profiles(
-            project.bytes,
-            selected,
-            project.overrides,
-            (project.plate, project.edits),
-            upward_report,
-        ),
-        _ => Project::from_stl_with_profiles(
-            project.bytes,
-            profile.filename,
-            selected,
-            project.overrides,
-        )
-        .map(|(mut loaded, preparation)| {
-            loaded.apply_plater_edits(project.edits);
-            (loaded, preparation)
-        }),
+    match project.input {
+        super::ProjectInput::Model(model) => model
+            .with_stl_profiles(selected, project.overrides)
+            .map(|(mut loaded, preparation)| {
+                loaded.apply_plater_edits(project.edits);
+                (loaded, preparation)
+            }),
+        super::ProjectInput::Bytes(bytes)
+            if crate::InputFormat::detect(bytes) == crate::InputFormat::ThreeMf =>
+        {
+            Project::from_3mf_with_profiles(
+                bytes,
+                selected,
+                project.overrides,
+                (project.plate, project.edits),
+                upward_report,
+            )
+        }
+        super::ProjectInput::Bytes(bytes) => {
+            Project::from_stl_with_profiles(bytes, profile.filename, selected, project.overrides)
+                .map(|(mut loaded, preparation)| {
+                    loaded.apply_plater_edits(project.edits);
+                    (loaded, preparation)
+                })
+        }
     }
 }
 

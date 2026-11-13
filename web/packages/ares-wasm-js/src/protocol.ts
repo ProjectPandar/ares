@@ -57,6 +57,9 @@ export type WorkerRequest =
   | { id: number; kind: "catalogFree"; catalogId: number }
   | { id: number; kind: "platerCreate"; sessionId: number; input: Uint8Array; filename: string }
   | { id: number; kind: "platerCreateWithProfiles"; sessionId: number; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }
+  | { id: number; kind: "platerCreateFromStlFiles"; sessionId: number; inputs: Uint8Array[]; batch: string }
+  | { id: number; kind: "platerCreateFromStlFilesWithProfiles"; sessionId: number; inputs: Uint8Array[]; batch: string; catalog: string; selection: string; options: string }
+  | { id: number; kind: "platerProfileSettings"; sessionId: number; catalog: string; selection: string; options: string }
   | { id: number; kind: "platerScene"; sessionId: number }
   | { id: number; kind: "platerInvalidValues"; sessionId: number }
   | { id: number; kind: "platerEdit"; sessionId: number; edit: PlaterEdit }

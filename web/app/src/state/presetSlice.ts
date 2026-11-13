@@ -56,6 +56,7 @@ export async function sliceWithPresets(file: ModelFile, scene: Scene, selection:
   };
   const request = { ...options, overrides: await overrideTokens({ ...overrides, ...project }) };
   const { plater } = useApp.getState();
+  if (file.kind === "stl-batch") return plater!.sliceWithProfiles(catalog, profiles, request, onStatus);
   return plater
     ? plater.sliceWithProfiles(catalog, profiles, request, onStatus)
     : slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, request);
@@ -67,7 +68,9 @@ export async function sliceWithPresets(file: ModelFile, scene: Scene, selection:
  */
 export async function presetValues(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<OptionMap> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
-  const settings = await slicer.profileSettings(file.bytes, file.name, catalog, profiles, options);
+  const settings = file.kind === "stl-batch"
+    ? await useApp.getState().plater!.profileSettings(catalog, profiles, options)
+    : await slicer.profileSettings(file.bytes, file.name, catalog, profiles, options);
   return { ...settings, ...(await decodeOptions(useApp.getState().configDefs!, settings)) };
 }
 
@@ -77,5 +80,7 @@ export async function presetValues(file: ModelFile, scene: Scene, selection: Pre
  */
 export async function placedScene(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
-  return slicer.placementScene(file.bytes, file.name, catalog, profiles, options);
+  return file.kind === "stl-batch"
+    ? useApp.getState().plater!.scene()
+    : slicer.placementScene(file.bytes, file.name, catalog, profiles, options);
 }

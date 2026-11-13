@@ -14,7 +14,12 @@ use crate::scene::{self, SceneInstance, ScenePlate};
 use crate::{SceneData, SliceOutput};
 
 mod snapshot;
+mod stl_files;
 mod transform;
+
+pub use stl_files::{
+    create_plater_session_from_stl_files, create_plater_session_from_stl_files_with_profiles,
+};
 
 pub use snapshot::PlaterSnapshot;
 

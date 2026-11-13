@@ -4,6 +4,7 @@ import { exportGcode, importFiles, selectObject, slicePlate } from "../state/act
 import { useApp } from "../state/store";
 import { cmdDown, isShortcut } from "./keys";
 import { LoadWarning } from "./LoadWarning";
+import { MultipartDialog } from "./MultipartDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { StatusBar } from "./StatusBar";
 import { TabBar, TitleBar } from "./TopBar";
@@ -16,6 +17,7 @@ export function Shell() {
   const theme = useApp((state) => state.theme);
   const engine = useApp((state) => state.engine);
   const wizard = useApp((state) => state.wizard);
+  const stlImport = useApp((state) => state.stlImport);
   const [dragging, setDragging] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const importInput = useRef<HTMLInputElement>(null);
@@ -77,6 +79,7 @@ export function Shell() {
         {dragging && <div className="drop-overlay" data-testid="drop-overlay">Drop a 3MF project or STL model to import</div>}
       </main>
       <StatusBar />
+      {stlImport && <MultipartDialog files={stlImport} onClose={() => useApp.setState({ stlImport: null })} />}
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       {wizard && (
         <Suspense>

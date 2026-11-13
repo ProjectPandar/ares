@@ -179,6 +179,14 @@ file, and that a subsequent session move/instance-copy edit is applied once.
 An input error must not return a partial batch. Single-file 3MF/STL behavior
 continues to pass its existing checks.
 
+Browser slicing uses a printer, process and filament selected through the real
+preset controls before STL import. It does not add a default-config slice path,
+change the existing missing-printer blocker or bypass upstream validation.
+Unsupported positive-Z objects with Auto-Drop off retain their placement and
+can reject slicing for an empty first layer (`GCode.cpp:2390–2401`); browser
+slice-success checks use printable inputs, while model comparisons separately
+cover positive and negative Z.
+
 Playwright on port **4184**, never 4174, must cover:
 
 1. Select two STLs, see the exact question and checked Auto-Drop, answer Yes,
@@ -200,8 +208,16 @@ Run formatting, strict locked workspace/all-target Clippy, Rust checks through
 Browser execution is separate from WASM compilation. The model logic remains
 memory-only and portable to WASM browsers, Windows, macOS and Linux.
 
-## Adjacent behavior not included
+## Deferred behavior
 
+- STL mesh repair in `TriangleMesh::ReadSTLFile`, reached through
+  `Format/STL.cpp:24`, and `TriangleMesh.cpp:162–202`:
+  `trianglemesh_repair_on_import`, `stl_fix_normal_directions`,
+  `stl_fix_normal_values` and `stl_calculate_volume`. The existing Ares STL
+  reader preserves inward-facing facets that Native reverses. Multipart
+  comparisons use explicitly outward-wound inputs, with identical complete
+  bytes supplied to both implementations; this slice does not establish mesh
+  repair parity.
 - `Model::looks_like_multipart_object` at `Model.cpp:898–915`, and the
   single-file question at `Plater.cpp:9957–9959`: multiple objects from one
   archive are a different entry. Do not add an unused heuristic just to name it.
