@@ -274,7 +274,9 @@ The boundary is `GCodeProcessorResult` through `libvgcode::convert` in
 `LibVGCodeWrapper.cpp`, then the extracted `ViewerImpl::update_color_ranges`,
 `get_vertex_color` and palette methods plus real `ColorRange`/`Layers` data.
 `extract-segment-colors.mjs`, `segment-colors-oracle.hpp` and `segment-colors.nix`
-with `procgcode.nix` retain that source-kernel boundary. This is not full Native
+retain that source-kernel boundary: the recipe applies `procgcode.patch` and
+`segment-colors.patch` to the checked 40ecc66f7 source and builds on its 2.5.0 build
+recipe, both given through the environment. This is not the whole Native
 viewer or OpenGL execution, nor a new Rust viewer or slicing pipeline.
 
 Regenerate the release extraction before building. Keep vertex order, position
