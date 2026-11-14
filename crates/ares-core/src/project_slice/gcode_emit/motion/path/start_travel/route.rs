@@ -5,32 +5,60 @@ use crate::{
     project_slice::gcode_emit::motion::{EmitState, LayerGeometry, arc},
 };
 
-/// Plan the travel route (detour waypoints plus the destination), routing
-/// through the avoid-crossing boundary when armed (`GCode.cpp:7415-7434`).
+/// Initial planning conditions (`GCode.cpp:10570–10578`, OrcaSlicer 2.5.0).
 pub(super) fn plan_route(
     state: &mut EmitState,
     geometry: &LayerGeometry<'_>,
     first_x: f64,
     first_y: f64,
 ) -> Result<Vec<arc::Point>, SliceError> {
-    // Upstream gates routing on `is_current_position_clear()`
-    // (`GCode.cpp:7420`).
-    let route_gate = state.positioned;
-    // The one-shot disable is armed at the END of the skirt/brim emission
-    // (`GCode.cpp:4448-4450`, `:4498-4500`) and cleared immediately after
-    // the first planning slot (`reset_once_modifiers`,
-    // `GCode.cpp:7429-7431`) — BEFORE the retraction branch, so the
-    // post-wipe re-plan (`GCode.cpp:7444-7452`) routes with the disable
-    // already cleared.
-    let avoid_disabled = state.avoid_crossing_disabled_once;
-    // `GCode::travel_to` starts its polyline at last_pos(), not the writer's
-    // inward-move endpoint (GCode.cpp:7356–7362).
+    let avoid = state.options.reduce_crossing_wall
+        && state.positioned
+        && !state.avoid_crossing_disabled_once;
+    route_from_cursor(
+        state,
+        geometry,
+        arc::Point {
+            x: first_x,
+            y: first_y,
+        },
+        avoid,
+    )
+}
+
+/// Post-retraction planning (`GCode.cpp:10605–10611`, OrcaSlicer 2.5.0)
+/// does not repeat the initial writer-position or one-shot-disable conditions.
+pub(super) fn replan_after_retract(
+    state: &mut EmitState,
+    geometry: &LayerGeometry<'_>,
+    first_x: f64,
+    first_y: f64,
+) -> Result<Vec<arc::Point>, SliceError> {
+    let avoid = state.options.reduce_crossing_wall;
+    route_from_cursor(
+        state,
+        geometry,
+        arc::Point {
+            x: first_x,
+            y: first_y,
+        },
+        avoid,
+    )
+}
+
+fn route_from_cursor(
+    state: &mut EmitState,
+    geometry: &LayerGeometry<'_>,
+    end: arc::Point,
+    avoid: bool,
+) -> Result<Vec<arc::Point>, SliceError> {
+    // Plan from the scaled generator cursor, not the inward writer endpoint.
     let cursor = crate::project_slice::gcode_emit::motion::local_cursor(state, *geometry);
     let start = arc::Point {
         x: geometry.scale.unscale(cursor.x()) + state.offset.0,
         y: geometry.scale.unscale(cursor.y()) + state.offset.1,
     };
-    let mut route = if state.options.reduce_crossing_wall && route_gate && !avoid_disabled {
+    let mut route = if avoid {
         if state.avoid_boundary.is_none() {
             state.avoid_boundary = Some(std::rc::Rc::new(
                 avoid_crossing::build_boundary(geometry).map_err(|error| {
@@ -41,14 +69,11 @@ pub(super) fn plan_route(
         avoid_crossing::route(
             avoid_crossing::Request {
                 start,
-                end: arc::Point {
-                    x: first_x,
-                    y: first_y,
-                },
+                end,
                 geometry: *geometry,
                 offset: state.offset,
                 origin: state.origin,
-                // `AvoidCrossingPerimeters.cpp:1237`:
+                // `AvoidCrossingPerimeters.cpp:1259–1262`, OrcaSlicer 2.5.0:
                 // `m_use_external_mp || m_use_external_mp_once`.
                 use_external: state.use_external_mp || state.use_external_mp_once,
                 max_detour: state.options.max_travel_detour_distance,
@@ -63,10 +88,7 @@ pub(super) fn plan_route(
     } else {
         Vec::new()
     };
-    route.push(arc::Point {
-        x: first_x,
-        y: first_y,
-    });
+    route.push(end);
     Ok(route)
 }
 

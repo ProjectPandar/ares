@@ -66,15 +66,15 @@ pub(super) fn decide(
         && state.extruder.retracted
         && state.lifted_amount == 0.0
         && state.pending_lift.is_none();
-    // A wipe that moved the head re-plans the route from the wipe's end
-    // (`GCode.cpp:7436-7443`).
+    // `GCode.cpp:10600–10605`, OrcaSlicer 2.5.0: compare last_pos(),
+    // not the emitted writer coordinates, across retraction.
     let mut wipe_then_replan = |output: &mut Vec<u8>,
                                 state: &mut EmitState,
                                 emit: fn(&mut Vec<u8>, &mut EmitState)|
      -> Result<(), crate::SliceError> {
-        let head_before = (state.x, state.y);
+        let last_pos_before = state.last_scaled_position;
         emit(output, state);
-        if (state.x, state.y) != head_before {
+        if state.last_scaled_position != last_pos_before {
             replan(state)?;
         }
         Ok(())

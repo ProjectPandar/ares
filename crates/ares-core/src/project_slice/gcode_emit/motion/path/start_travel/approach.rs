@@ -6,7 +6,7 @@ mod waypoints;
 
 use super::dispatch;
 use super::retract;
-use super::route::{plan_route, polyline_length_scaled};
+use super::route::{plan_route, polyline_length_scaled, replan_after_retract};
 use crate::project_slice::gcode_emit::motion::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, travel,
 };
@@ -174,16 +174,18 @@ pub(super) fn emit_needs_travel(
                 destination_feature: feature,
             },
             &mut |state| {
-                // `GCode.cpp:7446-7451`: restore `use_external_mp_once`
-                // for the re-plan call when the first slot used it, and
-                // clear it again right after.
-                if used_external_mp_once {
+                // `GCode.cpp:10607–10614`, OrcaSlicer 2.5.0: restore the
+                // external one-shot only for the second perimeter call.
+                let restore_external = state.options.reduce_crossing_wall && used_external_mp_once;
+                if restore_external {
                     state.use_external_mp_once = true;
                 }
-                route = plan_route(state, &geometry_ref, first_x, first_y)?;
-                if used_external_mp_once {
+                let replanned = replan_after_retract(state, &geometry_ref, first_x, first_y);
+                if restore_external {
+                    state.avoid_crossing_disabled_once = false;
                     state.use_external_mp_once = false;
                 }
+                route = replanned?;
                 Ok(())
             },
         )?;
