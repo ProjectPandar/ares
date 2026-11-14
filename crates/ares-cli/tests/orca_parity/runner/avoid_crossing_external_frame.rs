@@ -1,10 +1,9 @@
-//! `AvoidCrossingPerimeters.cpp:1216-1229` merge-points `init_boundary`
-//! pads the boundary/grid bbox by `bbox.radius()`; `:1262-1268` rebuild the
-//! external boundary when an endpoint leaves that bbox; `:1237-1240` route
-//! external travels in the `gcodegen.origin()` frame (`scaled_origin`),
-//! not the emission offset frame. With `reduce_crossing_wall=1`, detour 0,
-//! by-layer X1C two-object stock, the post-wipe object-switch travel must
-//! route around the cube hole (4 travel moves), matching Native exactly.
+//! `GCode.cpp:10595-10617` at OrcaSlicer 2.5.0
+//! `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`: when wiping changes
+//! `last_pos()`, replan perimeter avoidance from the new start independently
+//! of the initial writer-position condition. Preserve the external one-shot
+//! modifier for that second call, then consume it. This unchanged two-object
+//! X1 Carbon project compares the complete Native, API, and CLI streams.
 
 #[test]
 fn x1c_reduce_detour0_object_switch_travel() {
@@ -12,9 +11,9 @@ fn x1c_reduce_detour0_object_switch_travel() {
         (
             "avoid-crossing-external-frame",
             &[
-                "AvoidCrossingPerimeters.cpp:1216-1229:init_boundary-merge-points-bbox-radius-pad",
-                "AvoidCrossingPerimeters.cpp:1262-1268:external-bbox-contains-rebuild-gate",
-                "AvoidCrossingPerimeters.cpp:1237-1240:scaled-origin-planning-frame",
+                "GCode.cpp:10595-10605:post-retraction-last-pos-and-direct-travel",
+                "GCode.cpp:10606-10616:second-perimeter-planning-and-external-once",
+                "AvoidCrossingPerimeters.cpp:1255-1325:travel_to",
             ],
         ),
         "x1c-detour0",
