@@ -79,34 +79,42 @@ aliases that the upstream enum-name parser does not accept.
 - Preserve explicitly selected plate types and all temperature vectors,
   filament indexing, temperature formulas, and custom-start suppression.
 - A preset hint and a project's current bed selection are different values.
-  Resolve missing caller bed selections from the hint and model identifier;
-  do not inject a fixed Cool Plate fallback in the byte-oriented slicing API.
-  Preserve explicit project selections and registered CLI configuration.
+  GUI callers initialize from the hint and model identifier. The byte-oriented
+  API uses the registered Cool Plate default when the current-bed key is absent
+  (`PrintConfig.cpp:1449–1467`), not the GUI hint resolver. Preserve explicit
+  project selections and registered CLI configuration.
 - Core logic remains byte-oriented and platform-neutral; caller adapters own
   resource acquisition and retained UI settings.
 
 ## Caller initialization
 
-`Plater.cpp:1991–2010,2512–2535` restores a printer's stored current bed type or
-resolves its printer default. A caller's missing current bed selection,
-`DefaultPlate`, or empty byte-option selection must resolve before temperature
-vector lookup. Typed project preparation handles an in-memory project Default
-marker after caller overrides; it is not persisted as plate metadata.
+At the pinned release, `PresetBundle.cpp:4048` (`load_selections`) and
+`Plater.cpp:3876–3908` (`Sidebar::update_presets`) initialize GUI selections
+through `get_default_bed_type`. The browser caller retains that initialization
+through the core resolver; see `web-default-bed-type-resolution-250.md`.
 
-The Rust entry selectors are
-`options/bed_temperature.rs::SliceOptions::curr_bed_type` for raw byte options
-and `project/effective_config/phases.rs::prepared_source` for typed project
-overrides. These adapters remain compatibility shells around the cited
-printer-selection semantics, not an independent bed-selection policy.
+`OrcaSlicer.cpp:7993–8001` inherits the global current bed when a plate has
+`btDefault`; it does not resolve a global Default marker through the printer
+hint. Therefore `project/effective_config/phases.rs::prepared_source` must not
+rewrite an explicitly supplied global `DefaultPlate`. The validated project
+API returns `curr_bed_type Default Plate has no first-layer temperature`.
+Native slicing with this global sentinel has undefined behavior (observed exit
+139), which is not ported or re-executed as a parity oracle.
 
-Callers with a catalog pass the looked-up `PrinterModelInfo.model_id`. Core
-entry points without a catalog pass an empty model identifier, matching
-`get_printer_type` without a preset bundle. Consequently a no-catalog caller
-with no default-bed hint selects High Temp even if its printer name describes
-BL-P001, BL-P002, or C13; a name is not model metadata. The registered
-`curr_bed_type` default remains Cool Plate (`PrintConfig.cpp`, `btPC`). Only a
-missing selection or Default marker enters default-hint resolution; concrete
-project and caller selections remain unchanged.
+Likewise `options/bed_temperature.rs::SliceOptions::curr_bed_type` preserves
+explicit raw values, including empty and Default strings, so temperature-key
+validation rejects them rather than inventing a concrete selection. An absent
+option (`None`) uses the registered Cool Plate default (`PrintConfig.cpp:1449–1467`),
+restoring the baseline behavior rather than resolving a printer hint.
+
+GUI callers with a catalog pass the looked-up `PrinterModelInfo.model_id`.
+An explicit resolver call without catalog metadata passes an empty model
+identifier, matching `get_printer_type` without a preset bundle; a printer name
+is not model metadata. The generic slicing paths do not call this resolver.
+The registered `curr_bed_type` default remains Cool Plate
+(`PrintConfig.cpp:1449–1467`, `btPC`). An explicit global Default marker does not
+enter default-hint resolution; concrete project and caller selections remain
+unchanged.
 
 ## Public contract checks and failure modes
 
@@ -118,10 +126,11 @@ and subsequent-layer commands. Also cover present empty, unrecognized, and
 space-padded bed values over a High Temp project: all select Cool Plate, while
 the exact `SuperTack Plate` alias selects Supertack. Retain complete outputs
 independently of the labelled temperature comparison. Test Default inheritance and concrete
-selection preservation through `ProjectBedType::resolve`. Exercise missing,
-empty, and Default caller selections through the byte API and an in-memory
-Default project override through the validated project API. Assert both
-initial-layer and subsequent-layer commands without a temperature fallback.
+selection preservation through `ProjectBedType::resolve`. Exercise missing caller selections through the byte API with differing printer
+hints and assert the registered Cool Plate temperatures in every case. Empty and Default byte selections must return the same
+invalid-value error as the baseline; an in-memory global Default project
+override must return the exact validation error above. Concrete selections
+still assert initial-layer and subsequent-layer commands without a fallback.
 
 Exercise `DefaultBedType::resolve` through the public type and through printer
 options loaded from unchanged 2.5.0 Snapmaker U1 profile bytes. Cover enum names,
