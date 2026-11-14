@@ -58,9 +58,10 @@ async function openWithPresets(page: Page) {
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets", exact: true });
-  await wizard.getByRole("checkbox", { name: PRESETS.vendor, exact: true }).check();
-  await wizard.getByRole("button", { name: "Done", exact: true }).click();
+  const wizard = page.getByRole("dialog");
+  await wizard.getByRole("button", { name: PRESETS.vendor, exact: true }).click();
+  await wizard.getByRole("checkbox", { name: PRESETS.printer, exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm", exact: true }).click();
   await choose(page, "mouse", "Printer preset", "System presets", PRESETS.printer);
   await choose(page, "mouse", "Process preset", "System presets", PRESETS.process);
   await choose(page, "mouse", "Filament 1 preset", "System presets", PRESETS.filament);
