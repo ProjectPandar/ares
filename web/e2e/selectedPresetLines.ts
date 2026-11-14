@@ -8,6 +8,10 @@ import { type NativeSelection, nativeSelection, presetSelectProbe } from "./pres
  *   presets (PresetBundle.cpp:5818-5820);
  * - `filament_plugin_config_overrides`: a scalar filament option, taken from the first filament preset
  *   (PresetBundle.cpp:5726-5735); the plater's presets hold it, a project config may not;
+ * - `pellet_flow_coefficient`: a filament option the plater's project config always holds, loaded over
+ *   FullPrintConfig::defaults() (Plater.cpp:9463); the GUI slices full_config(false) (Plater.cpp:11442), which
+ *   Print::apply keeps as full_print_config (PrintApply.cpp:1677) and GCode::append_full_config prints
+ *   (GCode.cpp:8272-8382), while a CLI-route slice of a project without it does not print it;
  * - `Printer`, `Profile`: start G-code that prints `[printer_preset]` and `[print_preset]`, the selected names
  *   (PrintApply.cpp:1660-1662).
  */
@@ -16,6 +20,7 @@ export const SELECTED_PRESET_KEYS = [
   "print_settings_id",
   "filament_settings_id",
   "filament_plugin_config_overrides",
+  "pellet_flow_coefficient",
   "Printer",
   "Profile",
 ] as const;
@@ -31,6 +36,7 @@ function selectedValues(selection: NativeSelection): Record<SelectedPresetKey, s
     print_settings_id: selection.process.selected.name,
     filament_settings_id: selection.filament_presets.map((name) => JSON.stringify(name)).join(";"),
     filament_plugin_config_overrides: selection.filament.edited.config.filament_plugin_config_overrides?.serialized,
+    pellet_flow_coefficient: (JSON.parse(selection.full_fff_config) as { pellet_flow_coefficient?: string[] }).pellet_flow_coefficient?.join(","),
     Printer: selection.printer.selected.name,
     Profile: selection.process.selected.name,
   };
@@ -65,7 +71,7 @@ export function withSelectedPresets(reference: string, selection: NativeSelectio
   for (const key of ["Printer", "Profile"] as const) {
     for (const [index, line] of lines.entries()) if (line.startsWith(`; ${key} : `)) lines[index] = `; ${key} : ${values[key]}`;
   }
-  for (const key of ["printer_settings_id", "print_settings_id", "filament_settings_id", "filament_plugin_config_overrides"] as const) {
+  for (const key of ["printer_settings_id", "print_settings_id", "filament_settings_id", "filament_plugin_config_overrides", "pellet_flow_coefficient"] as const) {
     const start = lines.indexOf("; CONFIG_BLOCK_START");
     const end = lines.indexOf("; CONFIG_BLOCK_END");
     const block = lines.slice(start + 1, end);

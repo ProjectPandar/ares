@@ -28,6 +28,8 @@ export interface NativeSelection {
   filament: NativeCollection;
   filament_presets: string[];
   project_config: Record<string, { serialized: string }>;
+  /** The project config the plater slices and saves: full_fff_config(false) as save_to_json writes it. */
+  full_fff_config: string;
 }
 
 /** The preset-select probe, or null where CI does not provision it. */
