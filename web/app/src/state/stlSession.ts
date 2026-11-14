@@ -1,6 +1,7 @@
 import type { PlaterSession, Scene } from "@ares-slicer/wasm";
 import { loadArrangeSettings } from "./arrange";
-import { type CatalogSources, installVendors, profileRequest } from "./presets";
+import { installVendors } from "./catalog";
+import { type CatalogSources, profileRequest } from "./presets";
 import { slicer } from "./slicer";
 import { invalidatedSlices, type ModelFile, type PresetSelection, useApp } from "./store";
 

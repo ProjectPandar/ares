@@ -1,7 +1,8 @@
 /** The plater printer panel: plate type and nozzle (Sidebar::update_presets printer branch). */
 import { firstString } from "../sidebar/options";
 import { setOverride } from "./actions";
-import { saveSelection, presetCatalog, selectPrinter } from "./presets";
+import { presetCatalog } from "./catalog";
+import { saveSelection, selectPrinter } from "./presets";
 import { accordBedType, bedTypeOptions, defaultBedType, diameterString, PANEL_KEYS, type PrinterPanel, printerPanel, showsBedTypes } from "./printerPanel";
 import { invalidatedSlices, useApp } from "./store";
 

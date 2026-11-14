@@ -4,7 +4,7 @@ pub(super) mod preset;
 
 use std::collections::BTreeMap;
 
-use super::{Placement, catalog::Catalog};
+use super::{Placement, project_selection::LoadedCatalog};
 use crate::{
     ConfigOverrides, Project, ProjectSettings, SliceError,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
@@ -78,7 +78,7 @@ pub(super) enum ProjectPresetPolicy {
 
 #[derive(Clone, Copy)]
 pub(crate) struct ProjectPresetRefresh<'a> {
-    pub(super) catalog: &'a Catalog,
+    pub(super) catalog: &'a LoadedCatalog,
     pub(super) policy: ProjectPresetPolicy,
     pub(super) filename: &'a str,
     pub(super) placement: Placement,
@@ -157,7 +157,7 @@ impl ProjectPresetRefresh<'_> {
             }
             ProjectPresetPolicy::Cli { uptodate } => {
                 let mut raw = preset::refresh(
-                    self.catalog,
+                    &self.catalog.catalog,
                     &project.documents().project_settings_raw,
                     uptodate,
                 )?;

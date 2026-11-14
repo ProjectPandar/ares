@@ -1,6 +1,6 @@
 import type { OptionMap, ProjectSettings } from "@ares-slicer/wasm";
 import { useEffect, useRef, useState } from "react";
-import { presetCatalog } from "../state/presets";
+import { presetCatalog } from "../state/catalog";
 import type { LayoutGroup, LayoutPage } from "./layoutTypes";
 import { useApp } from "../state/store";
 import { decodeOptions, tabValues } from "../state/typedSettings";

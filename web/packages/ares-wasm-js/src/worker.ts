@@ -8,6 +8,7 @@ import init, {
   encodeConfigValue,
   filterCompatiblePresets,
   guideModels,
+  loadPresetBundle,
   loadScene,
   optionColors,
   optionTypes,
@@ -159,6 +160,9 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [JSON.parse(parsePresetBundle(request.input, request.filename)), []];
     case "filterCompatiblePresets":
       return [JSON.parse(filterCompatiblePresets(request.catalog, request.printer, request.process)), []];
+    case "loadPresetBundle":
+      loadPresetBundle(request.catalog);
+      return [undefined, []];
     case "catalogCreate":
       catalogs.set(request.catalogId, new PresetCatalog());
       return [undefined, []];

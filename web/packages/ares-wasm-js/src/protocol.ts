@@ -37,6 +37,7 @@ export type WorkerRequest =
   | { id: number; kind: "sliceStl"; input: Uint8Array; options: string }
   | { id: number; kind: "parsePresetBundle"; input: Uint8Array; filename: string }
   | { id: number; kind: "filterCompatiblePresets"; catalog: string; printer: string; process: string | undefined }
+  | { id: number; kind: "loadPresetBundle"; catalog: string }
   | { id: number; kind: "catalogCreate"; catalogId: number }
   | { id: number; kind: "catalogAddVendor"; catalogId: number; input: Uint8Array }
   | { id: number; kind: "catalogAddImport"; catalogId: number; input: Uint8Array; filename: string }

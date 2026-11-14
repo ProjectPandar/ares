@@ -1,19 +1,19 @@
 mod collection;
 mod config;
 mod external;
+mod loaded;
 mod typed;
 mod variants;
 
-use super::{
-    catalog::Catalog,
-    project_refresh::preset::{dirty_keys, strings},
-};
+use super::project_refresh::preset::{dirty_keys, strings};
 use crate::{
     ProfileKind, Project, SliceError,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 pub use collection::{PresetCollectionState, PresetOutcome, PresetRecord};
 pub use config::PresetConfig;
+pub use loaded::load_preset_bundle;
+pub(crate) use loaded::{LoadedCatalog, loaded_catalog};
 use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
@@ -25,7 +25,7 @@ pub struct PresetSelection {
 
 // PresetBundle.cpp:6158-6365: ordinary FFF metadata split and single-filament Always.
 pub(super) fn refresh(
-    catalog: &Catalog,
+    catalog: &LoadedCatalog,
     project: &Project,
     filename: &str,
 ) -> Result<(ProjectSettingsRaw, PresetSelection), SliceError> {
@@ -88,7 +88,7 @@ pub(super) fn refresh(
                 &[]
             },
         );
-        let mut collection = collection::Collection::load(catalog, kind)?;
+        let mut collection = catalog.collection(kind)?.clone();
         let mut protected = dirty_keys(&differences, slot)?;
         protected.extend(
             [

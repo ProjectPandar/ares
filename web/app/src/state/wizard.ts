@@ -1,6 +1,7 @@
 import type { GuideFilament, GuideModel, InstalledPrinters } from "@ares-slicer/wasm";
 import { saveConfig, storedConfig } from "./persistence";
-import { FILAMENT_LIBRARY, presetCatalog, selectFilament, selectPrinter, updateInstalledFilaments, updateSystemPrinters } from "./presets";
+import { presetCatalog } from "./catalog";
+import { FILAMENT_LIBRARY, selectFilament, selectPrinter, updateInstalledFilaments, updateSystemPrinters } from "./presets";
 import { slicer } from "./slicer";
 import { installedVendors, useApp } from "./store";
 
