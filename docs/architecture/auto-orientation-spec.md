@@ -42,8 +42,16 @@ input unchanged. Project/instance adaptation must preserve the source's
 transformation order, part filtering, instance aggregation, rotation origin,
 mirrors and bed placement. In particular, the CLI source scores
 `ModelObject::mesh()`, including transformed instances; it does not orient each
-part or instance independently. Applying a single-instance result must follow
-the cited instance overload rather than silently adopting object semantics.
+part or instance independently. `TriangleMesh::merge` / `its_merge`
+(`TriangleMesh.cpp:422–425,1448–1458`) copy vertices and indices but not face
+properties. Consequently this merged-object adapter scores normal faces;
+appearance weighting remains active for direct mesh inputs carrying properties.
+The volume and instance mesh transforms also retain triangle indices under
+reflection: both use the default `fix_left_handed=false`
+(`TriangleMesh.hpp:121–122`, `Model.cpp:1697,3184–3186`). Do not flip reflected
+facets in this scoring adapter; that would change upstream normal directions.
+Applying a single-instance result must follow the cited instance overload
+rather than silently adopting object semantics.
 
 All computation must run in browser WASM, Windows, macOS and Linux. No native
 Qhull/Eigen dependency, C++ execution, filesystem access, terminal output or
@@ -56,7 +64,7 @@ scaffold to extend with a different heuristic. Existing
 `geometry/convex_hull.rs` computes a two-dimensional hull and cannot stand in
 for the required three-dimensional mesh. Opaque `ProjectMesh::face_properties`
 remain available; their storage is a compatibility representation of upstream
-`FaceProperty`, not evidence that orientation is already implemented.
+`FaceProperty`; it does not implement orientation.
 
 ## Algorithm contract
 
@@ -206,6 +214,12 @@ adding arrangement, centering, scaling or a default rotation. Reuse existing
 explicit catalog/preset routes for equivalent slicing settings. CLI filesystem
 and argument handling stay outside core.
 
+The Ares-only STL `--options` path is a temporary compatibility shell, not
+the Native project/preset lifecycle. Reject `--orient 1` on that path instead
+of silently ignoring the action or adding a second model-action adapter.
+STL orientation uses `--load-settings` or `--project-preset-catalog`; default
+and zero leave the existing `--options` path unchanged.
+
 ## Included and deferred
 
 Included: the complete active AutoOrienter algorithm and both scoring modes;
@@ -235,9 +249,9 @@ change product code, fixtures or tests as part of this specification commit.
 | Mesh/control family | Behavior it must distinguish |
 | --- | --- |
 | Asymmetric wedge and non-convex overhang assembly | A real non-identity choice, mesh versus hull normal candidates, and applied bed placement |
-| Identical geometry without a property, with an empty property, and with normal-face data | Normal-face equivalence and retained face association |
-| Same asymmetric mesh with selected triangles carrying valid `eExteriorAppearance` data | Appearance weighting; select a case where Native changes the chosen rotation, not merely a printed cost |
-| Same appearance type with different valid serialized property-area values | Geometric facet area is used, rather than the stored annotation area |
+| Identical direct-core geometry without a property, with an empty property, and with normal-face data | Core normal-face equivalence and retained face association; no Native comparison |
+| Same direct-core asymmetric mesh with selected triangles carrying valid `eExteriorAppearance` data | Core appearance weighting changes the rotation predicted by upstream formulas; no Native comparison |
+| Same direct-core appearance type with different valid serialized property-area values | Core uses geometric facet area rather than stored annotation area; no Native comparison |
 | Symmetric solids and many equal-area face directions (Ares only) | Stable insertion-order ties, reproducibility and worker-count invariance; no Native equality or inequality assertion |
 | Near quantization, duplicate-normal, bottom-height and scoring thresholds | Exact float casts, relative duplicate tests and epsilon comparisons |
 | Multi-part objects, rotated/scaled/mirrored instances and several independent objects | Source part filtering, transform order, object aggregation and result association |
@@ -248,7 +262,11 @@ For each CLI-reachable positive case, run the pinned Native CLI with `--orient
 orientation operation using its retained orientation output and an
 output-changing control; argument presence is insufficient. Synthetic BBS 3MFs
 with and without appearance data are positive action witnesses, not assumed
-no-ops. Record actual object IDs and outcomes for copy/assembly controls; an
+no-ops. Both CLI adapters discard those properties during object-mesh merging;
+CLI byte comparisons must not exercise appearance weighting. Direct-mesh
+appearance is tested only through the public core API, with formula-derived
+expectations and explicitly no Native comparison. A separate Native API
+comparison for that branch is deferred. Record actual object IDs and outcomes for copy/assembly controls; an
 unmapped new ID is a disabled control, not an appearance witness.
 
 Compare the complete ordered G-code emitted after the action through Native,
@@ -257,7 +275,7 @@ Do not strip configuration blocks, progress commands, whitespace, line order,
 or orientation-dependent geometry. Retain complete oriented model/transform
 output when exposed by the Native CLI as well; compare the resulting geometry
 and rotation, not only the rounded `best:` stdout vector. Native stdout is
-supporting evidence and is not a matrix oracle.
+diagnostic output, not a matrix oracle.
 
 Run both established Native modes with equivalent inputs and presets. Repeat
 single-worker and four-worker execution inside CPUs16–19, keeping build jobs
@@ -272,8 +290,68 @@ The Native CLI calls the raw-mesh/default-parameter overload, not the whole
 cooling context are deferred comparison modes; do not add a Native comparison
 entry or CLI flags for them. CLI output comparisons do not establish coverage
 of those parameters. First write the CLI default/zero/one failing witnesses,
-then implement the source operation and expand the approved cases one at a time.
+then implement the source operation and expand the comparison cases one at a time.
 
-Implementation requires formatting, workspace all-target Clippy, WASM
-compilation and Native E2E evidence. This specification makes no runtime or
-orientation-parity claim.
+The core appearance fixture uses vertices `(0,0,-5)`, `(11,0,-5)`,
+`(1,7,-5)`, `(18,3,-4)` and outward faces `021`, `013`, `123`, `203`.
+Their areas are `38.5`, `11√10/2`, `√6390/2`, `√15179/2`.
+With default raw-mesh parameters, `computeOverhang` and `target_function`
+(`Orient.cpp:402–510`) select face `203`: build direction
+`(7,-1,-123)/√15179`. Marking face `013` as exterior appearance multiplies
+its support area by `1+3`, increasing that placement's overhang cost above
+face `123` placement. The selected direction becomes
+`(-7,-10,79)/√6390`. Changing only the stored property area cannot change
+these results. The core-only E2E retains inputs, hashes and rotations, and
+checks analytic directions within the float-normal rounding bound; this is
+not a Native tolerance or a Native parity claim.
+
+The same unannotated direct-core fixture exercises class cooling with a
+60-degree overhang context (the raw overload's `ascent=-0.5`). After the
+selected rotation, face `013` has normal approximately
+`(-0.14237,-0.29589,-0.94455)`. Its weighted horizontal projection has a unique
+sampled maximum at 244 degrees. With machine direction `(1,0,0)`, the class
+returns that sample; with machine direction `(-0.6,-0.8,0)`, the projection
+difference is below the upstream absolute threshold of 1, so the machine
+direction is retained. This is a core-only formula check, with no Native
+comparison.
+
+### Application and import coverage
+
+CLI-reachable coverage includes a truncated asymmetric tetrahedron with
+coplanar triangulated faces, a non-convex disconnected mesh, anisotropic scale
+and reflection on both the component/volume and build-item/instance frames,
+multiple model-part volumes, multiple instances, and independent objects.
+Compare complete outputs in official and seeded modes, including successful
+orientation-disabled controls. Exercise saved BBS input with both implicit
+selection and explicit plate 1, including an unselected object's plate
+membership, and fresh STL through the existing loaded-preset route. The
+anisotropically transformed asymmetric-frustum fixtures are upright controls:
+assert that enabled and disabled Native outputs agree, then compare both
+complete Ares outputs. They are not positive rotation witnesses. The reflected
+volume tetrahedron is a non-identity witness for the source's unchanged facet
+winding. Positive rotation fixtures must be sliceable both before and after
+orientation.
+
+Fresh-STL presets are flattened from `OrcaSlicer/resources/profiles` through
+the existing loaded-settings test helper. Both modes use the same presets,
+with a centered rectangular printable area so raw and rotated coordinates
+remain in bounds under `--arrange 0`. These comparisons do not exercise
+stock-printer bounds or arrangement. Compare Native, CLI and repeated
+public-core requests in disabled/enabled/disabled order without modifying the
+borrowed input.
+
+The CLI application at `OrcaSlicer.cpp:5271–5288` calls only the
+`orient(ModelObject*)` overload. It cannot select the instance-only overload
+at `Orient.cpp:638–648`. Preservation of offset, scale, reflection, other
+instances and the volume frame uses a core-only public-API check, with no
+Native comparison. Compare a
+non-identity instance rotation against the source's premultiplication rule
+(`Model.hpp:1483–1487`), not the object's Euler-add/center/drop behavior.
+This core test does not claim a Native API comparison. The public slicing
+routes do not combine in-memory plater edits with orientation: edited-profile
+sources always set orientation false, and orientation requests have no edit
+transport. Do not add a test-only API for that unreachable combination.
+Explicit plate preparation must retain applied orientation through import
+rematerialization. Repeated public slicing must not mutate input bytes or
+replay stale orientation state.
+
