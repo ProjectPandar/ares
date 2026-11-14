@@ -202,3 +202,23 @@ async fn project_local_filament_takes_the_option_defaults_the_project_lacks() {
         assert_eq!(value, super::support::wire(key, &plater[key]), "{key}");
     }
 }
+
+// full_fff_config erases compatible_printers_condition (PresetBundle.cpp:5790-5794), so the
+// plater's project config lacks it even where the 3MF stores it.
+#[tokio::test]
+async fn project_config_drops_the_stored_compatible_printers_condition() {
+    let mut settings = input::settings("Missing Process", "0.2");
+    settings["compatible_printers_condition"] = json!("");
+    let Some(case) = Case::new("selection-erased-printers-condition", settings) else {
+        return;
+    };
+    let native = &case.native["projects"][0]["result"];
+    let plater: Value = serde_json::from_str(native["full_fff_config"].as_str().unwrap()).unwrap();
+    // Native premise: the plater's config lacks the key the project stores.
+    assert_eq!(plater.get("compatible_printers_condition"), None);
+    let view = case
+        .api()
+        .await
+        .expect("valid Always request must load the project");
+    assert_eq!(view["settings"].get("compatible_printers_condition"), None);
+}
