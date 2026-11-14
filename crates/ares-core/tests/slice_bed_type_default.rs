@@ -1,14 +1,14 @@
 use ares_core::SliceOptions;
 use serde_json::json;
 
-// Preset.cpp:1140–1175: no catalog model identifier means the unknown-model branch.
+// PrintConfig.cpp:1449–1467: the registered current-bed default is Cool Plate.
 #[tokio::test]
-async fn byte_slice_resolves_a_missing_current_bed_from_the_printer_hint() {
+async fn byte_slice_uses_registered_cool_plate_for_a_missing_current_bed() {
     for (current, hint, initial, ordinary) in [
-        (None, "Textured PEI Plate", 55, 51),
-        (None, "4", 55, 51),
-        (None, "", 45, 41),
-        (None, "invalid", 45, 41),
+        (None, "Textured PEI Plate", 35, 31),
+        (None, "4", 35, 31),
+        (None, "", 35, 31),
+        (None, "invalid", 35, 31),
         (Some("Cool Plate"), "Textured PEI Plate", 35, 31),
     ] {
         let mut values = json!({
