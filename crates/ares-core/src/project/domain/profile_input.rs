@@ -11,7 +11,6 @@ use super::{
 };
 use crate::{
     SliceError,
-    options::ProjectSettingsBuilder,
     project::{
         filament_sequence::FilamentSequences,
         model_settings::ModelSettings,
