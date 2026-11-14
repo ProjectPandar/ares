@@ -9,6 +9,7 @@ mod current_plate;
 mod delete_object;
 mod edits;
 mod eigen;
+mod initial_plate;
 mod instances;
 mod min_sphere;
 mod mirror;
@@ -27,6 +28,7 @@ mod transformation;
 
 pub use arrange_job::{ArrangeScope, ArrangeSettings};
 pub use edits::PlaterEdits;
+pub(crate) use initial_plate::initialize_slice_plates;
 pub use scale::ScaleEdit;
 pub use session::{PlaterPlate, PlaterSession};
 pub use slice::{PlaterSlice, slice_plater_plate, slice_plater_with_profiles};
