@@ -170,7 +170,8 @@ recreate them after every restart or context reset.
 For each RR, check:
 - **History.**
   - The three-dot diff `git diff main...tip` and every commit message.
-  - Base ancestry: `git merge-base --is-ancestor main tip`, or the agreed base.
+  - Base ancestry: `git merge-base --is-ancestor main tip`, or the agreed base (a pending integration tip or a
+    `history/b<N>` tag of a landed batch).
 - **Author and trailer.** The author is `5aaee9 <7685264+5aaee9@users.noreply.github.com>`, and each commit has exactly one trailer,
   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - **Hygiene.** Grep the messages and the diff, docs included. Each commit must be clean on its own. Flag any of:
@@ -213,10 +214,19 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
      decision.
 4. COORD verifies the exact tip over the whole range: fast-forward, trailers, hygiene and clippy. A hygiene fix to
    an accepted commit is a rewrite that needs the user's approval; the rewritten tip may differ from the tested tip
-   only in the cleaned files, and the range-diff must show only the rewritten commits. Then COORD ff-merges main and pushes main to
-   origin (never force).
+   only in the cleaned files, and the range-diff must show only the rewritten commits.
+5. COORD lands the batch as one squash commit on main:
+   - Push a tag `history/b<N>` at the tested tip, so the original commits stay reachable for per-commit bisect.
+   - Create the commit with `git commit-tree <tip>^{tree} -p main`. Its tree must equal the tested tip's tree
+     (`git rev-parse <tip>^{tree}`); nothing is re-tested because the bytes are identical.
+   - Message: a title summarising the batch, then one `- <subject>` line per original commit
+     (`git log --reverse --format='- %s' main..<tip>`), then the single trailer. No batch numbers or other internal
+     labels; the author is the usual one.
+   - Fast-forward main to that commit and push main to origin (never force).
    - Pushing main deploys the web app to Cloudflare Pages.
    - Other branches only build and test.
+6. Branches built on commits of a squashed batch move onto main with `git rebase --onto main <tested tip>`; the
+   trees are identical, so this applies only the branch's own commits.
 
 ## Standing rules
 
