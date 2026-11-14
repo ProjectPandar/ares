@@ -94,7 +94,7 @@ impl Catalog {
             .collect::<Result<Vec<_>, SliceError>>()?;
         super::cli_metadata::filament_conditions(&mut raw, &filaments);
         // File-slot lookup keys are not exported preset names.
-        let source_selection = if self.direct_imports {
+        let source_selection = if self.direct_imports && !selection.filaments().is_empty() {
             Cow::Owned(ProfileSelection::new_partial(
                 selection.process().map(str::to_owned),
                 selection.machine().map(str::to_owned),
