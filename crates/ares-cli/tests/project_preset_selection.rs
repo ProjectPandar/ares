@@ -14,6 +14,8 @@ mod lookup;
 mod metadata;
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
+#[path = "project_preset_selection/points_groups.rs"]
+mod points_groups;
 #[path = "project_preset_selection/support.rs"]
 mod support;
 #[path = "project_preset_selection/system.rs"]
