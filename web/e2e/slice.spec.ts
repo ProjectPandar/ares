@@ -8,6 +8,7 @@ import { test } from "./failureDiagnostics";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
+import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
 import { oracleMoves } from "./oracleMoves";
 import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
@@ -144,8 +145,14 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   expect(text.match(/^;LAYER_CHANGE$/gm)?.length).toBe(50);
   expect(text).not.toMatch(/^G[0-3] .*\b(?:NaN|inf)\b/m);
 
-  const native = nativeGcode(project, "1");
-  expect(sha256(gcode), "browser G-code must match native ares-cli bytes").toBe(sha256(native));
+  const selection = openedSelection(project, `${artifacts}slice-selection/`);
+  if (selection) {
+    const expected = withSelectedPresets(nativeGcode(project, "1").toString("utf8"), selection);
+    writeFileSync(`${artifacts}expected.gcode`, expected);
+    expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(sha256(Buffer.from(expected)));
+  } else {
+    test.info().annotations.push({ type: "skip", description: "ARES_ORCA_PRESET_SELECT_BIN is unset: the ares-cli byte comparison needs the plater's selected presets and did not run" });
+  }
 
   await page.getByRole("link", { name: "Preview" }).click();
   await expect(page).toHaveURL(/#\/preview$/);
@@ -191,7 +198,8 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
     await checkToolPosition(page, moves, 0, `${artifacts}project-edit/`);
   }
   if (orca) {
-    const nativeEdited = orcaEditedGcode(project, { layer_height: "0.12" });
+    if (!selection) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the project-edit comparison needs the plater's selected presets");
+    const nativeEdited = withSelectedPresets(orcaEditedGcode(project, { layer_height: "0.12" }), selection);
     writeFileSync(`${artifacts}project-edit/result.json`, `${JSON.stringify({
       oracle: "official OrcaSlicer 2.5.0 on the project with the edit as typed CLI options",
       evidence: "ordered_bytes_generator_only",

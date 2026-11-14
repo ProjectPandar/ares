@@ -6,6 +6,7 @@ import type { Page } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
+import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 
@@ -108,11 +109,16 @@ export function guiExport(fixture: string, plates: OraclePlate[], towers: Oracle
 /** `orcaPlate`'s copy of the oracle G-code of `plate` of `project` on `leg`. */
 const oracleGcode = (project: string, plate: number, leg: "official" | "seeded") => `${project.replace(/\.3mf$/, "")}-plate_${plate}-${leg}.gcode`;
 
-/** Orca slicing plate `plate` of `project`: official, or the seeded replay with seed 0 as the browser slices. */
-export function orcaPlate(project: string, plate: number, leg: "official" | "seeded"): string | null {
+/**
+ * Orca slicing plate `plate` of `project`: official, or the seeded replay with seed 0 as the browser slices. With
+ * `opened`, the 3MF the app opened, the lines its preset selection decides are the probe's (selectedPresetLines.ts).
+ */
+export function orcaPlate(project: string, plate: number, leg: "official" | "seeded", opened?: string): string | null {
   const official = oraclePath("ORCA_APPDIR", "the official plater oracle", "an extraction of the official OrcaSlicer AppImage, see scripts/orca-parity.sh");
   const replay = oraclePath("ORCA_REPLAY_BIN", "the seeded plater oracle", "the seed-replay OrcaSlicer, see scripts/orca-seeded-parity.sh");
   if (!(leg === "official" ? official : replay)) return null;
+  const selection = opened === undefined ? undefined : openedSelection(opened, `${project.replace(/\.3mf$/, "")}-plate_${plate}-${leg}-selection/`);
+  if (selection === null) throw new Error(`ARES_ORCA_PRESET_SELECT_BIN is unset while the ${leg} plater oracle is set: the comparison needs the plater's selected presets`);
   const work = `${mkdtempSync(`${tmpdir()}/ares-web-plater-${leg}-`)}/`;
   // The replay stays on this run's first allowed CPU.
   const cpu = /^Cpus_allowed_list:\s*(\d+)/m.exec(readFileSync("/proc/self/status", "utf8"))![1];
@@ -124,7 +130,8 @@ export function orcaPlate(project: string, plate: number, leg: "official" | "see
   });
   const gcode = readFileSync(`${work}plate_${plate}.gcode`, "utf8");
   writeFileSync(oracleGcode(project, plate, leg), gcode);
-  return normalize(gcode, "OrcaSlicer");
+  const native = normalize(gcode, "OrcaSlicer");
+  return selection ? withSelectedPresets(native, selection) : native;
 }
 
 /**

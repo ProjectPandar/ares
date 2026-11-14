@@ -25,6 +25,7 @@ export interface NativeCollection {
 export interface NativeSelection {
   process: NativeCollection;
   printer: NativeCollection;
+  filament: NativeCollection;
   filament_presets: string[];
   project_config: Record<string, { serialized: string }>;
 }
