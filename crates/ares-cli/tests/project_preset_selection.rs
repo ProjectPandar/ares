@@ -8,6 +8,8 @@ mod existing;
 mod filament_composition;
 #[path = "project_preset_selection/input.rs"]
 mod input;
+#[path = "project_preset_selection/loaded_filament_sync.rs"]
+mod loaded_filament_sync;
 #[path = "project_preset_selection/local.rs"]
 mod local;
 #[path = "project_preset_selection/lookup.rs"]
