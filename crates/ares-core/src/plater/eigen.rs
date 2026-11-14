@@ -135,6 +135,63 @@ pub(super) fn rotation_transform(rotation: [f64; 3]) -> Transform3d {
     rotation_matrix_transform(q.to_rotation_matrix())
 }
 
+/// `Geometry::rotation_from_two_vectors` (`Geometry.cpp:416-424`) and
+/// Eigen `Quaternion::setFromTwoVectors` / `AngleAxis::operator=`.
+pub(super) fn rotation_from_two_vectors(
+    from: [f64; 3],
+    to: [f64; 3],
+) -> ([f64; 3], f64, [[f64; 3]; 3]) {
+    let norm = |a: [f64; 3]| (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]).sqrt();
+    let from_norm = norm(from);
+    let to_norm = norm(to);
+    let a = from.map(|v| v / from_norm);
+    let b = to.map(|v| v / to_norm);
+    let c = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    let q = if c < -1. + 1e-12 {
+        let (_, _, v) = crate::geometry::jacobi_svd([a, b, [0.; 3]]);
+        let w2 = (1. + c.max(-1.)) * 0.5;
+        let scale = (1. - w2).sqrt();
+        Quaternion {
+            x: v[0][2] * scale,
+            y: v[1][2] * scale,
+            z: v[2][2] * scale,
+            w: w2.sqrt(),
+        }
+    } else {
+        let axis = [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+        ];
+        let s = ((1. + c) * 2.).sqrt();
+        let inverse = 1. / s;
+        Quaternion {
+            x: axis[0] * inverse,
+            y: axis[1] * inverse,
+            z: axis[2] * inverse,
+            w: s * 0.5,
+        }
+    };
+    let matrix = q.to_rotation_matrix();
+    let q = Quaternion::from_rotation_matrix(matrix);
+    let n = norm([q.x, q.y, q.z]);
+    let (axis, angle) = if n == 0. {
+        ([1., 0., 0.], 0.)
+    } else {
+        let divisor = if q.w < 0. { -n } else { n };
+        (
+            [q.x / divisor, q.y / divisor, q.z / divisor],
+            2. * n.atan2(q.w.abs()),
+        )
+    };
+    (axis, angle, matrix)
+}
+
+pub(super) fn angle_axis_euler(angle: f64, axis: [f64; 3]) -> [f64; 3] {
+    let angles = euler_angles_210(Quaternion::from_angle_axis(angle, axis).to_rotation_matrix());
+    [angles[2], angles[1], angles[0]]
+}
+
 /// `Geometry::scale_transform(const Vec3d&)` (`Geometry.cpp:377-392`).
 pub(super) fn scale_transform(scale: [f64; 3]) -> Transform3d {
     let mut rows = *Transform3d::IDENTITY.as_matrix();

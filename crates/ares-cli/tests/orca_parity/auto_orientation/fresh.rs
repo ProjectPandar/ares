@@ -116,6 +116,8 @@ async fn fresh_stl_loaded_presets_apply_orientation_like_native() {
             input.as_bytes(),
             ares_core::LoadSettingsSliceRequest {
                 filename: "fresh.stl",
+                catalog_json: None,
+                uptodate: false,
                 settings: &files[..2],
                 filaments: &files[2..],
                 plate: None,
