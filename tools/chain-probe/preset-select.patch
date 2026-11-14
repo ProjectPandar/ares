@@ -18,9 +18,14 @@
 +        PresetSelectProbe::materialized.push_back({
 +            {"type", static_cast<int>(m_type)}, {"original_name", original_name},
 +            {"config", PresetSelectProbe::config(cfg)}});
+--- a/src/slic3r/GUI/Plater.cpp
++++ b/src/slic3r/GUI/Plater.cpp
+@@ -8905 +8905 @@
+-static void sync_loaded_project_filament_config(DynamicConfig& proj_cfg)
++void sync_loaded_project_filament_config(DynamicConfig& proj_cfg)
 --- /dev/null
 +++ b/src/PresetSelectProbe.hpp
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,252 @@
 +#ifndef ARES_PRESET_SELECT_PROBE_HPP
 +#define ARES_PRESET_SELECT_PROBE_HPP
 +
@@ -29,6 +34,7 @@
 +#include "libslic3r/Utils.hpp"
 +#include "libslic3r_version.h"
 +#include "nlohmann/json.hpp"
++#include <algorithm>
 +#include <boost/algorithm/string/predicate.hpp>
 +#include <cstdio>
 +#include <cstdlib>
@@ -36,6 +42,11 @@
 +#include <iostream>
 +#include <sstream>
 +#include <stdexcept>
++
++namespace Slic3r::GUI {
++// Plater.cpp:8905-8959, which the plater runs on the loaded project config (Plater.cpp:9755).
++void sync_loaded_project_filament_config(DynamicConfig &proj_cfg);
++} // namespace Slic3r::GUI
 +
 +namespace Slic3r::PresetSelectProbe {
 +using Json = nlohmann::json;
@@ -93,6 +104,118 @@
 +            {"full_fff_config", full_fff_config(value)}};
 +}
 +
++// WebGuideDialog.cpp:1053-1094: the printer model GuideFrame::apply_config prefers in a vendor bundle.
++inline std::string preferred_printer_model(PresetBundle &presets, const AppConfig::VendorMap &enabled_vendors,
++                                           const AppConfig::VendorMap &old_enabled_vendors,
++                                           const std::string &bundle_name, std::string &variant)
++{
++    const auto config = enabled_vendors.find(bundle_name);
++    if (config == enabled_vendors.end())
++        return std::string();
++    const VendorProfile &printer_profile = presets.vendors[bundle_name];
++    for (const auto &model_it : config->second) {
++        if (model_it.second.size() > 0) {
++            variant = *model_it.second.begin();
++            if (model_it.second.size() > 1) {
++                if (printer_profile.models.size() > 0) {
++                    const VendorProfile::PrinterModel &printer_model = *std::find_if(
++                        printer_profile.models.begin(), printer_profile.models.end(),
++                        [id = model_it.first](auto &m) { return m.id == id; });
++                    for (auto &vt : printer_model.variants) {
++                        if (std::find(model_it.second.begin(), model_it.second.end(), vt.name) != model_it.second.end()) {
++                            variant = vt.name;
++                            break;
++                        }
++                    }
++                } else if (variant != PresetBundle::ORCA_DEFAULT_PRINTER_VARIANT) {
++                    if (std::find(model_it.second.begin(), model_it.second.end(), PresetBundle::ORCA_DEFAULT_PRINTER_VARIANT) != model_it.second.end())
++                        variant = PresetBundle::ORCA_DEFAULT_PRINTER_VARIANT;
++                }
++            }
++            const auto config_old = old_enabled_vendors.find(bundle_name);
++            if (config_old == old_enabled_vendors.end())
++                return model_it.first;
++            const auto model_it_old = config_old->second.find(model_it.first);
++            if (model_it_old == config_old->second.end())
++                return model_it.first;
++            else if (model_it_old->second != model_it.second) {
++                for (const auto &var : model_it.second)
++                    if (model_it_old->second.find(var) == model_it_old->second.end()) {
++                        variant = var;
++                        return model_it.first;
++                    }
++            }
++        }
++    }
++    if (!variant.empty())
++        variant.clear();
++    return std::string();
++}
++
++// GuideFrame::run (WebGuideDialog.cpp:1223) and GuideFrame::apply_config (WebGuideDialog.cpp:1005-1205) confirmed
++// with `added` checked ({vendor: {model: [variant]}}) besides the installed models; the filament section stays
++// the app's (GuideFrame::SaveProfileData, WebGuideDialog.cpp:1693-1695).
++inline void wizard(PresetBundle &presets, AppConfig &app, const Json &added)
++{
++    presets.export_selections(app);
++    const AppConfig::VendorMap old_enabled_vendors = app.vendors();
++    AppConfig::VendorMap enabled_vendors = old_enabled_vendors;
++    for (auto vendor = added.begin(); vendor != added.end(); ++vendor)
++        for (auto model = vendor.value().begin(); model != vendor.value().end(); ++model)
++            for (const Json &variant : model.value())
++                enabled_vendors[vendor.key()][model.key()].insert(variant.get<std::string>());
++    const auto enabled_filaments = app.has_section(AppConfig::SECTION_FILAMENTS) ?
++                                       app.get_section(AppConfig::SECTION_FILAMENTS) :
++                                       std::map<std::string, std::string>();
++    std::string preferred_variant;
++    std::string preferred_model = preferred_printer_model(presets, enabled_vendors, old_enabled_vendors,
++                                                          PresetBundle::ORCA_DEFAULT_BUNDLE, preferred_variant);
++    if (preferred_model.empty())
++        for (const auto &bundle : enabled_vendors) {
++            if (bundle.first == PresetBundle::ORCA_DEFAULT_BUNDLE)
++                continue;
++            preferred_model = preferred_printer_model(presets, enabled_vendors, old_enabled_vendors, bundle.first,
++                                                      preferred_variant);
++            if (!preferred_model.empty())
++                break;
++        }
++    if (!presets.apply_vendor_config(enabled_vendors, enabled_filaments, &app, true, preferred_model,
++                                     preferred_variant))
++        throw std::runtime_error("apply_vendor_config failed");
++}
++
++// A pick in a sidebar combo after the load: the collection selection of Tab::select_preset (Tab.cpp:7701-7714)
++// for the printer and the process; PresetBundle::set_filament_preset for a filament slot
++// (Plater::priv::on_select_preset), and the tab's selection for a single filament.
++inline void select(PresetBundle &presets, const Json &selection)
++{
++    if (selection.contains("printer")) {
++        presets.printers.select_preset_by_name(selection.at("printer").get<std::string>(), false);
++        presets.update_compatible(PresetSelectCompatibleType::Always, PresetSelectCompatibleType::Always);
++    }
++    if (selection.contains("process")) {
++        presets.prints.select_preset_by_name(selection.at("process").get<std::string>(), false);
++        presets.update_compatible(PresetSelectCompatibleType::Never, PresetSelectCompatibleType::Always);
++    }
++    if (selection.contains("filaments")) {
++        size_t slot = 0;
++        for (const Json &name : selection.at("filaments"))
++            presets.set_filament_preset(slot++, name.get<std::string>());
++        if (presets.filament_presets.size() == 1)
++            presets.filaments.select_preset_by_name(presets.filament_presets.front(), false);
++    }
++}
++
++// A sidebar edit of the process after the picks: ConfigOptionsGroup::on_change_OG writes the value into the tab's
++// config, the edited preset (OptionsGroup.cpp:694-730, Tab.cpp:775); the option group's callback then runs
++// Tab::update_dirty (Tab.cpp:9711-9718, 1601-1613), which updates the collection's dirty state (Preset.cpp:4072).
++inline void edit_process(PresetBundle &presets, const Json &edit)
++{
++    for (auto option = edit.begin(); option != edit.end(); ++option)
++        presets.prints.get_edited_preset().config.set_deserialize_strict(option.key(), option.value().get<std::string>());
++    presets.prints.update_dirty();
++}
++
 +inline int run(const char *request_path)
 +{
 +    try {
@@ -109,6 +232,8 @@
 +            throw std::runtime_error(errors);
 +        Json result = {{"upstream", "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19"},
 +                       {"before", bundle(presets)}, {"projects", Json::array()}};
++        if (request.contains("resources_directory"))
++            set_resources_dir(request.at("resources_directory").get<std::string>());
 +        active = true;
 +        for (const Json &project : request.at("projects")) {
 +            DynamicPrintConfig combined = DynamicPrintConfig::full_print_config();
@@ -121,9 +246,20 @@
 +            materialized = Json::array();
 +            presets.load_config_model(filename, std::move(combined),
 +                                      Semver(project.at("version").get<std::string>()));
-+            result["projects"].push_back({{"filename", filename}, {"imported", imported},
-+                                          {"materialized", materialized},
-+                                          {"result", bundle(presets)}});
++            GUI::sync_loaded_project_filament_config(presets.project_config);
++            Json record = {{"filename", filename}, {"imported", imported},
++                           {"materialized", materialized}};
++            if (project.contains("wizard") || project.contains("select") || project.contains("process_edit")) {
++                record["opened"] = bundle(presets);
++                if (project.contains("wizard"))
++                    wizard(presets, app, project.at("wizard"));
++                if (project.contains("select"))
++                    select(presets, project.at("select"));
++                if (project.contains("process_edit"))
++                    edit_process(presets, project.at("process_edit"));
++            }
++            record["result"] = bundle(presets);
++            result["projects"].push_back(std::move(record));
 +        }
 +        const std::string output_path = request.at("output").get<std::string>();
 +        FILE *output = std::fopen(output_path.c_str(), "wx");
