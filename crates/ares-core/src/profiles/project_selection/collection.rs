@@ -53,6 +53,7 @@ pub struct PresetCollectionState {
     pub records: Vec<PresetRecord>,
 }
 
+#[derive(Clone)]
 pub(super) struct Collection {
     pub(super) kind: ProfileKind,
     pub(super) records: Vec<PresetRecord>,

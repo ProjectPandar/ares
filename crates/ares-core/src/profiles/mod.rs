@@ -14,6 +14,7 @@ pub(crate) use project_refresh::{
 };
 pub use project_selection::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
+    load_preset_bundle,
 };
 
 mod filament_slots;

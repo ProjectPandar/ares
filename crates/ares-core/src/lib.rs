@@ -203,6 +203,7 @@ pub use profiles::{
 };
 pub use profiles::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
+    load_preset_bundle,
 };
 pub use profiles::{
     slice_cli_with_profiles_validated, slice_with_profiles_processed_validated,

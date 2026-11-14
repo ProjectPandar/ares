@@ -3,7 +3,6 @@ use crate::{
     GenerationMetadata, SliceError, SlicerContext,
     profiles::{
         ProjectPresetPolicy,
-        catalog::Catalog,
         load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_project_load_settings},
     },
     project_slice::{ProfileInput, ProjectInput, ProjectSource, slice_source},
@@ -67,7 +66,9 @@ fn with_load_settings_source<T>(
         filaments,
     };
     let (composed, load_names) = compose_project_load_settings(input, &request)?;
-    let catalog = catalog_json.map(Catalog::from_json).transpose()?;
+    let catalog = catalog_json
+        .map(crate::profiles::project_selection::loaded_catalog)
+        .transpose()?;
     // `OrcaSlicer.cpp:1682-1690`: the embedded `post_process` check lives
     // in the 3MF load block, so the composite entry validates 3MF inputs
     // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.
