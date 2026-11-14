@@ -82,7 +82,7 @@ fn gcode_writer_and_do_export_real_records_reject_33_mutations() {
         (
             "statistics",
             "; filament used [mm] = 262.34\n",
-            "; estimated printing time (normal mode) = 8m 55s\n",
+            "; estimated printing time (normal mode) = 8m 54s\n",
             "; filament used [mm] = 262.35\n",
         ),
     ] {
