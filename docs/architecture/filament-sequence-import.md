@@ -39,13 +39,12 @@ changes, dynamic nozzle mapping, sequence-driven tool ordering, and unrelated
 these documents privately rather than exposing an editable sequence API.
 Upstream undefined numeric conversions are not reproduced.
 
-When model settings are absent, CLI plate reconstruction is deferred:
-`OrcaSlicer.cpp:5617` calls `PartPlateList::reload_all_objects`;
+When model settings are absent, CLI plate reconstruction is a separate
+source slice, described in [Initial project plate](initial-project-plate.md):
 `src/slic3r/GUI/PartPlate.cpp:5979-5985` initializes the first plate and
-`:7490-7515` assigns intersecting build instances to it. Ares imports the
-geometry without plate metadata but an explicit slice of plate 1 currently
-reports `project has no plate 1`. Import success is verified independently
-of that adjacent slicing behavior.
+`:7490-7515` assigns intersecting build instances to it. Archive import
+continues to expose geometry without invented plate metadata; slicing
+initializes its own plate list before selecting plate 1.
 
 When project settings are absent, the validated slicing API must preserve
 `Print::validate`'s relative-extrusion diagnostic (`Print.cpp:2743-2765`).
