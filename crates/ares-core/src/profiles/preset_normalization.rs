@@ -2,9 +2,9 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    SliceError, SliceOptions,
+    ProfileKind, SliceError, SliceOptions,
     options::{OrcaBool, json_deserialize, registry},
-    project::raw_settings::ProjectSettingsRaw,
+    project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
 // Preset.cpp:338-350: replace a whole nil vector against the unchanged parent/default
@@ -104,4 +104,57 @@ pub(super) fn normalize_machine(raw: &mut ProjectSettingsRaw) -> Result<bool, Sl
         }
     }
     Ok(true)
+}
+
+// Preset::normalize (Preset.cpp:555-599) on each preset PresetCollection::load_presets loads (:1947).
+pub(super) fn normalize(raw: &mut ProjectSettingsRaw, kind: ProfileKind) -> Result<(), SliceError> {
+    match kind {
+        ProfileKind::Machine => normalize_machine(raw).map(drop),
+        ProfileKind::Filament => normalize_filament(raw),
+        ProfileKind::Process => Ok(()),
+    }
+}
+
+// Preset.cpp:576-598: a loaded filament preset keeps one value per filament (its
+// `filament_diameter` count) in every filament vector but the variant, dev and compatibility ones.
+fn normalize_filament(raw: &mut ProjectSettingsRaw) -> Result<(), SliceError> {
+    let Some(size) = raw.get("filament_diameter").map(RawConfigValue::len) else {
+        return Ok(());
+    };
+    for key in super::project_refresh::keys::names(ProfileKind::Filament) {
+        if matches!(key, "compatible_prints" | "compatible_printers")
+            || registry::filament_options_with_variant().contains(&key)
+            || super::project_refresh::dev_key(key)
+            || !crate::option_definition(key)
+                .is_some_and(|definition| super::project_refresh::is_vector(definition.kind))
+        {
+            continue;
+        }
+        let Some(RawConfigValue::List(values)) = raw.get(key) else {
+            continue;
+        };
+        if values.len() == size {
+            continue;
+        }
+        let mut values = values.clone();
+        // Config.hpp:687-716: extend with the vector's own first value, or the default's.
+        let fill = match values.first() {
+            Some(first) => first.clone(),
+            None => match super::project_refresh::keys::default_value(key)? {
+                Some(RawConfigValue::List(defaults)) => defaults[0].clone(),
+                default => unreachable!("{key} has a vector default: {default:?}"),
+            },
+        };
+        values.resize(size, fill);
+        raw.insert(key.to_owned(), RawConfigValue::List(values));
+    }
+    if let Some(RawConfigValue::List(names)) = raw.get("filament_settings_id") {
+        let mut names = names.clone();
+        names.resize(size, RawConfigValue::Text(String::new()));
+        raw.insert(
+            "filament_settings_id".to_owned(),
+            RawConfigValue::List(names),
+        );
+    }
+    Ok(())
 }

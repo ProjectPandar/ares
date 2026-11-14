@@ -1,6 +1,7 @@
 mod filament;
 pub(in crate::profiles) mod keys;
 pub(super) mod preset;
+pub(in crate::profiles) use filament::{dev_key, is_vector};
 
 use std::collections::BTreeMap;
 

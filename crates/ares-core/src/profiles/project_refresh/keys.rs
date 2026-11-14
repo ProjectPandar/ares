@@ -6,7 +6,7 @@ mod process_last;
 use crate::project::raw_settings::RawConfigValue;
 use crate::{OptionValueKind, ProfileKind, SliceError, option_definition};
 
-pub(super) fn names(kind: ProfileKind) -> impl Iterator<Item = &'static str> {
+pub(in crate::profiles) fn names(kind: ProfileKind) -> impl Iterator<Item = &'static str> {
     let (first, last) = match kind {
         ProfileKind::Process => (process_first::KEYS, process_last::KEYS),
         ProfileKind::Machine => (machine::KEYS, &[][..]),
