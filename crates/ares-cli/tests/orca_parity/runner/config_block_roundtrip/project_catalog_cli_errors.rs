@@ -8,13 +8,36 @@ fn project_catalog_cli_uptodate_requires_explicit_catalog() {
 
 #[test]
 fn project_catalog_cli_replacement_modes_are_exclusive() {
+    for conflicting in ["--load-filaments", "--resources-dir"] {
+        let error = rejected(&[
+            "--project-preset-catalog",
+            "missing-catalog.json",
+            conflicting,
+            "conflicting-input",
+        ]);
+        assert!(
+            error.contains("cannot be used with")
+                && error.contains("--project-preset-catalog")
+                && error.contains(conflicting),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn project_catalog_cli_load_settings_reaches_preset_file_loading() {
+    let catalog = repo_root().join("tests/profiles/filament-gcode-slots/catalog.json");
     let error = rejected(&[
         "--project-preset-catalog",
-        "missing-catalog.json",
+        catalog.to_str().unwrap(),
         "--load-settings",
-        "machine.json",
+        "missing-machine.json",
     ]);
-    assert!(error.contains("cannot be used with"), "{error}");
+    assert!(
+        error.contains(r#"Loading setting file \"missing-machine.json\" failed:"#),
+        "{error}"
+    );
+    assert!(!error.contains("cannot be used with"), "{error}");
 }
 
 #[test]
