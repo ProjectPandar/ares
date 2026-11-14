@@ -35,8 +35,22 @@ pub(crate) fn default_value(key: &str) -> Result<Option<RawConfigValue>, SliceEr
     } else {
         definition.default_wire_value
     };
+    parsed(key, definition.kind, wire).map(Some)
+}
+
+/// The value `FullPrintConfig::defaults()` holds for `key`, the option default; None outside it.
+pub(in crate::profiles) fn full_config_value(
+    key: &str,
+) -> Result<Option<RawConfigValue>, SliceError> {
+    option_definition(key)
+        .filter(|definition| definition.full_config_default)
+        .map(|definition| parsed(key, definition.kind, definition.default_wire_value))
+        .transpose()
+}
+
+fn parsed(key: &str, kind: OptionValueKind, wire: &str) -> Result<RawConfigValue, SliceError> {
     use OptionValueKind as K;
-    let value = match definition.kind {
+    Ok(match kind {
         K::Strings => RawConfigValue::List(
             crate::options::unescape_strings_cstyle(wire)
                 .map_err(SliceError::InvalidInput)?
@@ -83,8 +97,7 @@ pub(crate) fn default_value(key: &str) -> Result<Option<RawConfigValue>, SliceEr
         K::Float | K::FloatOrPercent | K::Percent | K::Int | K::Bool | K::Enum | K::Point => {
             RawConfigValue::Text(wire.to_owned())
         }
-    };
-    Ok(Some(value))
+    })
 }
 
 /// `is_filament_extruder_override_key` (`PrintConfig.cpp:130-139`) over

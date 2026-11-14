@@ -1,6 +1,11 @@
+use std::borrow::Cow;
+
 use serde::Serialize;
 
-use super::super::project_refresh::preset::strings;
+use super::super::project_refresh::{
+    keys::full_config_value,
+    preset::{connection, strings},
+};
 use super::typed::Typed;
 use crate::{
     ProfileKind, SliceError,
@@ -18,6 +23,21 @@ impl PresetConfig {
         let mut config = Self(raw);
         config.set_string(super::collection::identity(kind), String::new());
         Ok(config)
+    }
+
+    // Preset::load_external_config (Preset.cpp:1091-1105): every key but the connection ones.
+    pub(super) fn apply_project(&mut self, project: &ProjectSettingsRaw) -> Result<(), SliceError> {
+        let keys = self
+            .0
+            .entries()
+            .map(|(key, _)| key.clone())
+            .collect::<Vec<_>>();
+        for key in keys.into_iter().filter(|key| !connection(key)) {
+            if let Some(value) = project_value(project, &key)? {
+                self.0.insert(key, value.into_owned());
+            }
+        }
+        Ok(())
     }
 
     pub(super) fn string(&self, key: &str) -> String {
@@ -159,4 +179,16 @@ fn ignored(key: &str) -> bool {
             | "default_sla_print_profile"
             | "default_sla_material_profile"
     )
+}
+
+/// `key` of the project config the presets load from: the plater loads the 3MF over
+/// `FullPrintConfig::defaults()` (Plater.cpp:9463), so an option the 3MF lacks holds its default.
+pub(super) fn project_value<'a>(
+    project: &'a ProjectSettingsRaw,
+    key: &str,
+) -> Result<Option<Cow<'a, RawConfigValue>>, SliceError> {
+    Ok(match project.get(key) {
+        Some(value) => Some(Cow::Borrowed(value)),
+        None => full_config_value(key)?.map(Cow::Owned),
+    })
 }
