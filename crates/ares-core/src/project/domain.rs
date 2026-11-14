@@ -1,3 +1,4 @@
+mod auto_orient;
 mod documents;
 mod layer_height_profile;
 mod mesh;

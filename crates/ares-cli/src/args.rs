@@ -27,6 +27,9 @@ pub(crate) struct SliceArgs {
     /// 1-based plate number to slice for multi-plate 3MF projects
     #[arg(long)]
     pub(crate) plate: Option<u32>,
+    /// Orient model objects: 0 disables, 1 forces, other integers retain automatic eligibility
+    #[arg(long, default_value_t = 0, allow_hyphen_values = true)]
+    pub(crate) orient: i32,
     /// Resource root containing profiles/BBL/machine_full (default: resources beside the executable)
     #[arg(long)]
     pub(crate) resources_dir: Option<PathBuf>,
