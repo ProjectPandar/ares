@@ -1,68 +1,40 @@
 --- a/src/OrcaSlicer.cpp
 +++ b/src/OrcaSlicer.cpp
-@@ -80,6 +80,7 @@
- #endif
- 
- #include "nlohmann/json.hpp"
+@@ -82,0 +83,1 @@
 +#include "PresetSelectProbe.hpp"
- 
- #include <boost/algorithm/string/predicate.hpp>
- #include <boost/filesystem.hpp>
-@@ -1198,6 +1199,8 @@
- 
- int CLI::run(int argc, char **argv)
- {
+@@ -1200,0 +1202,2 @@
 +    if (const char *request = std::getenv("ARES_PRESET_SELECT_REQUEST"))
 +        return Slic3r::PresetSelectProbe::run(request);
-     // Mark the main thread for the debugger and for runtime checks.
-     set_current_thread_name("orcaslicer_main");
-     // Save the thread ID of the main thread.
-@@ -8194,6 +8197,9 @@
-     }
- #endif
- 
+@@ -8196,0 +8200,3 @@
 +    if (const char *test_resources = std::getenv("ARES_ORCA_RESOURCES_DIR"))
 +        path_resources = test_resources;
 +
-     set_resources_dir(path_resources.string());
-     set_var_dir((path_resources / "images").string());
-     set_local_dir((path_resources / "i18n").string());
 --- a/src/libslic3r/Preset.cpp
 +++ b/src/libslic3r/Preset.cpp
-@@ -30,6 +30,7 @@
- #include "Exception.hpp"
- #include "Preset.hpp"
- #include "PresetBundle.hpp"
+@@ -32,0 +33,1 @@
 +#include "../PresetSelectProbe.hpp"
- #include "AppConfig.hpp"
- #include "LocalesUtils.hpp"
- #include "ParallelResolve.hpp"
-@@ -3067,6 +3068,10 @@
-             }
-             return nullptr;
-         }, &keys);
+@@ -3069,0 +3071,4 @@
 +    if (PresetSelectProbe::active)
 +        PresetSelectProbe::materialized.push_back({
 +            {"type", static_cast<int>(m_type)}, {"original_name", original_name},
 +            {"config", PresetSelectProbe::config(cfg)}});
-     std::string                 &inherits = Preset::inherits(cfg);
- 
-     //BBS: add config related logs
 --- /dev/null
 +++ b/src/PresetSelectProbe.hpp
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,121 @@
 +#ifndef ARES_PRESET_SELECT_PROBE_HPP
 +#define ARES_PRESET_SELECT_PROBE_HPP
 +
 +#include "libslic3r/AppConfig.hpp"
 +#include "libslic3r/PresetBundle.hpp"
 +#include "libslic3r/Utils.hpp"
++#include "libslic3r_version.h"
 +#include "nlohmann/json.hpp"
 +#include <boost/algorithm/string/predicate.hpp>
 +#include <cstdio>
 +#include <cstdlib>
 +#include <fstream>
 +#include <iostream>
++#include <sstream>
 +#include <stdexcept>
 +
 +namespace Slic3r::PresetSelectProbe {
@@ -102,13 +74,23 @@
 +            {"dirty_options", value.current_dirty_options()}, {"records", records}};
 +}
 +
++// PresetBundle.cpp:5470-5482; Config.cpp:1557-1605; bbs_3mf.cpp:8199-8204.
++inline std::string full_fff_config(const PresetBundle &value)
++{
++    const DynamicPrintConfig cfg = value.full_config_secure();
++    std::ostringstream result;
++    cfg.save_to_json(result, "project_settings", "project", SLIC3R_VERSION);
++    return result.str();
++}
++
 +inline Json bundle(const PresetBundle &value)
 +{
 +    return {{"process", collection(value.prints)},
 +            {"printer", collection(value.printers)},
 +            {"filament", collection(value.filaments)},
 +            {"filament_presets", value.filament_presets},
-+            {"project_config", config(value.project_config)}};
++            {"project_config", config(value.project_config)},
++            {"full_fff_config", full_fff_config(value)}};
 +}
 +
 +inline int run(const char *request_path)
