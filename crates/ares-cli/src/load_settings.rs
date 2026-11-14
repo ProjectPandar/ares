@@ -69,6 +69,13 @@ pub(super) async fn slice(
     {
         Ok(gcode) => gcode,
         Err(error) => {
+            crate::failure::slicing::check(
+                args,
+                &sliced_plate,
+                &input_file,
+                input,
+                &sliced_plate.upward_machines,
+            )?;
             let failure = slice_error_to_failure(
                 error,
                 &args.output,
@@ -86,6 +93,13 @@ pub(super) async fn slice(
             return Err(failure);
         }
     };
+    crate::failure::slicing::check(
+        args,
+        &sliced_plate,
+        &input_file,
+        input,
+        &sliced_plate.upward_machines,
+    )?;
     fs::write(&args.output, gcode)?;
     report_success(
         &input_file,
