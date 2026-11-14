@@ -176,3 +176,40 @@ test("H2D keeps its paired nozzle controls when switching the printer diameter",
   await expect(page.getByRole("combobox", { name: "Plate type", exact: true })).toBeVisible();
   await page.screenshot({ path: `${artifacts}/h2d-paired-nozzles.png` });
 });
+
+test("U1 shows a customized first nozzle instead of the unchanged mixed variant", async ({ page }) => {
+  mkdirSync(artifacts, { recursive: true });
+  const name = "U1 customized first nozzle";
+  const preset = `${artifacts}/customized-u1.json`;
+  writeFileSync(preset, JSON.stringify({
+    type: "machine", name, from: "user", inherits: "Snapmaker U1 (0.4+0.6 nozzle)",
+    version: readJson(`${profiles}/Snapmaker.json`).version, printer_settings_id: name,
+    nozzle_diameter: ["0.6", "0.4", "0.6", "0.6"],
+  }));
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
+  await page.getByTestId("import-input").setInputFiles(cube);
+  await expect(page.getByTestId("status")).toHaveText("Ready to slice");
+  await printer(page).click();
+  await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Snapmaker models", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
+  await printer(page).click();
+  await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  const variant = page.getByRole("combobox", { name: "Variant", exact: true });
+  await variant.selectOption("0.4+0.6");
+  await expect(printer(page)).toHaveAttribute("title", "Snapmaker U1 (0.4+0.6 nozzle)", { timeout: 60_000 });
+  await expect(variant).toHaveValue("0.4+0.6");
+  await page.getByTestId("preset-import-input").setInputFiles(preset);
+  await printer(page).click();
+  await page.getByRole("listbox", { name: "Printer preset", exact: true })
+    .getByRole("group", { name: "User presets", exact: true }).getByRole("option", { name, exact: true }).click();
+  await expect(printer(page)).toHaveAttribute("title", name, { timeout: 60_000 });
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  await expect(variant).toHaveValue("0.6");
+  await expect(variant.locator("option:checked")).toHaveText("0.6 mm");
+  await page.screenshot({ path: `${artifacts}/customized-u1.png` });
+});
