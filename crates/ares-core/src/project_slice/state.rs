@@ -82,6 +82,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         &crate::ConfigOverrides,
     )>,
 ) -> Result<ProjectSliceState, SliceError> {
+    let project = crate::plater::initialize_slice_plates(project);
     let project = crate::plater::fit_slice_wipe_tower(project, plate)?;
     let mut project = project.select_plate(plate)?;
     let plate_id = project.first_plate_id();
