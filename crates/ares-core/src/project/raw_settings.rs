@@ -45,6 +45,10 @@ impl ProjectSettingsRaw {
         self.0.insert(key, value);
     }
 
+    pub(crate) fn remove(&mut self, key: &str) {
+        self.0.remove(key);
+    }
+
     /// Applies the shared upstream deserializer normalizations for the
     /// 3MF embedded raw: empty strings on vector-kind options become
     /// empty vectors (`ConfigOptionStrings::deserialize`,

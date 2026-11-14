@@ -140,6 +140,8 @@ pub(super) fn refresh(
         filament: filament_states[0].clone(),
     };
     let mut result = raw.clone();
+    // full_fff_config erases it (PresetBundle.cpp:5790-5794).
+    result.remove("compatible_printers_condition");
     for state in [&selection.process, &selection.printer] {
         for (key, value) in state.edited.config.0.entries() {
             if matches!(
