@@ -140,6 +140,8 @@ recreate them after every restart or context reset.
 ## Slice workflow (worker side)
 
 1. Create a new worktree under `$WORKTREES` from the base COORD names, on the worker's own branch.
+   - Link `OrcaSlicer` in the worktree root to the upstream checkout; the Orca probe builds read it there.
+   - Give each worktree its own `CARGO_TARGET_DIR`, so concurrent builds do not lock or overwrite each other.
 2. Commit in this order:
    1. the spec in `docs/architecture/`;
    2. a failing test;
@@ -171,7 +173,7 @@ For each RR, check:
   - Base ancestry: `git merge-base --is-ancestor main tip`, or the agreed base.
 - **Author and trailer.** The author is `5aaee9 <7685264+5aaee9@users.noreply.github.com>`, and each commit has exactly one trailer,
   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- **Hygiene.** Grep the messages and the diff. Each commit must be clean on its own. Flag any of:
+- **Hygiene.** Grep the messages and the diff, docs included. Each commit must be clean on its own. Flag any of:
   - worker and batch labels, COORD, coordinator;
   - RR, RED, GREEN, FULL, STOP, gate, queued;
   - approved, review, pending, frozen, qualify/qualification, integrated, evidence;
@@ -194,14 +196,24 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
    - runs fmt, clippy --all-targets and the wasm32 check;
    - pushes an integration ref.
 
+   Before the FULL, W5 runs the non-parity gate once: the workspace tests outside the parity suite, plus the web
+   static checks. Any failure there stops the batch.
+
    After COORD's go, W5 runs the dual FULL: official and seeded, pinned by `pin-runner.sh`, on the batch CPUs given in the ledger.
+   The web full runs against the pinned Orca release resources, with the seeded replay CPU (`ORCA_REPLAY_CPU`) inside
+   the browser phase's CPU range.
 3. COORD compares the results with the previous baseline:
    - zero PASS→FAIL is required;
    - new tests must pass;
    - no rerun to change an outcome.
 
    Failures are attributed by chain (bisect).
-4. COORD verifies the exact tip: fast-forward, trailers, hygiene and clippy. Then COORD ff-merges main and pushes main to
+   - A case whose Native output differs between repeated Native runs on the same input is Native nondeterminism. It
+     is not counted as an Ares PASS→FAIL, but only with the repeated Native outputs as proof, and only by COORD's
+     decision.
+4. COORD verifies the exact tip over the whole range: fast-forward, trailers, hygiene and clippy. A hygiene fix to
+   an accepted commit is a rewrite that needs the user's approval; the rewritten tip may differ from the tested tip
+   only in the cleaned files, and the range-diff must show only the rewritten commits. Then COORD ff-merges main and pushes main to
    origin (never force).
    - Pushing main deploys the web app to Cloudflare Pages.
    - Other branches only build and test.
@@ -222,4 +234,6 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
   - Output must not depend on core count.
   - Upstream undefined behaviour is not ported.
 - **Approval.** Destructive or outward-facing actions need the user's approval.
+- **Archives.** A helper that writes into shared archives or caches prints its argv in a dry run first; check the
+  order of the output and input arguments before the real run.
 - **Reporting.** Report to the user briefly, in Chinese.
