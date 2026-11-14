@@ -32,6 +32,14 @@ export interface NativeSelection {
   full_fff_config: string;
 }
 
+/** The plater session after the project opens, as the probe replays it. */
+export interface SessionSteps {
+  wizard?: Record<string, Record<string, string[]>>;
+  select?: { printer?: string; process?: string; filaments?: string[] };
+  /** Process options the sidebar edits, serialized. */
+  process_edit?: Record<string, string>;
+}
+
 /** The preset-select probe, or null where CI does not provision it. */
 export const presetSelectProbe = () =>
   oraclePath("ARES_ORCA_PRESET_SELECT_BIN", "the preset-select probe", "tools/chain-probe/preset-select.patch built at 40ecc66f7");
@@ -56,11 +64,13 @@ function serialized(config: Record<string, string | string[]>) {
 
 /**
  * PresetBundle::load_config_model (PresetBundle.hpp:590-591) as Plater.cpp:9622 calls it when the plater
- * opens the 3MF `project`, run by the preset-select probe in `directory`. The system presets are those of
- * `vendors` and of the two bundles the GUI always installs, Custom and OrcaFilamentLibrary
- * (PresetUpdater.cpp:1063-1067).
+ * opens the 3MF `project`, and sync_loaded_project_filament_config after it (Plater.cpp:9755), run by the
+ * preset-select probe in `directory`. The system presets are those of `vendors` and of the two bundles the GUI
+ * always installs, Custom and OrcaFilamentLibrary (PresetUpdater.cpp:1063-1067). `steps` follow the load: the
+ * GuideFrame wizard confirmed with `wizard` checked ({vendor: {model: [variant]}}), the sidebar picks `select`, then
+ * the sidebar process edits `process_edit`.
  */
-export function nativeSelection(probe: string, directory: string, project: string, vendors: string[]): NativeSelection {
+export function nativeSelection(probe: string, directory: string, project: string, vendors: string[], steps: SessionSteps = {}): NativeSelection {
   rmSync(directory, { recursive: true, force: true });
   const system = `${directory}data/system/`;
   mkdirSync(system, { recursive: true });
@@ -74,7 +84,13 @@ export function nativeSelection(probe: string, directory: string, project: strin
   const version = (/<metadata name="OrcaSlicer">([^<]+)/.exec(model) ?? /<metadata name="Application">[^<]*-([^<-]+)/.exec(model))![1];
   const { options, unknown } = serialized(JSON.parse(strFromU8(entries[PROJECT_CONFIG])));
   writeFileSync(`${directory}unknown-keys.json`, JSON.stringify(unknown));
-  const request = { data_directory: `${directory}data`, projects: [{ filename: basename(project), version, options }], output: `${directory}native.json` };
+  const request = {
+    data_directory: `${directory}data`,
+    // The wizard installs a vendor bundle from the resources (PresetBundle.cpp:1979-1984).
+    ...(steps.wizard ? { resources_directory: `${orca}resources` } : {}),
+    projects: [{ filename: basename(project), version, options, ...steps }],
+    output: `${directory}native.json`,
+  };
   writeFileSync(`${directory}request.json`, JSON.stringify(request, null, 2));
   execFileSync(probe, { cwd: directory, env: { ...process.env, ARES_PRESET_SELECT_REQUEST: `${directory}request.json` }, stdio: ["ignore", "pipe", "pipe"] });
   return JSON.parse(readFileSync(`${directory}native.json`, "utf8")).projects[0].result;

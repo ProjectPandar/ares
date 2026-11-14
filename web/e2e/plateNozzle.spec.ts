@@ -7,6 +7,8 @@ import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
+import { platerExport } from "./platerExport";
+import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const profiles = `${process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`}/resources/profiles/`;
@@ -110,6 +112,8 @@ function lineDiff(a: string, b: string) {
 
 test("plate type and nozzle offer the selected printer's options and reach the slice", async ({ page }) => {
   const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
+  const probe = presetSelectProbe();
+  if (orca && !probe) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the comparison needs the plater export");
   test.setTimeout(400_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -170,12 +174,13 @@ test("plate type and nozzle offer the selected printer's options and reach the s
   await page.getByTestId("import-input").setInputFiles(edited);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   expect(normalize(web, "Ares"), "the plate edit equals the edited project").toBe(normalize(await sliceAndExport(page, "edited.gcode"), "Ares"));
-  // Official OrcaSlicer on the edited project: the header and bed temperatures agree. Other lines
-  // are recorded: ares-core does not yet emit the bed-temperature branch of the X1C
+  // Official OrcaSlicer on the plater export after the plate edit (BBL and LH installed): the header and bed
+  // temperatures agree. Other lines are recorded: ares-core does not yet emit the bed-temperature branch of the X1C
   // filament_start_gcode (`M106 P3 S150` at a 55 °C bed) on either path.
   let orcaDiff: ReturnType<typeof lineDiff> | null = null;
   if (orca) {
-    const native = orcaGcode(edited);
+    const selection = nativeSelection(probe!, `${artifacts}selection/`, PROJECT, ["BBL", "LH"]);
+    const native = orcaGcode(platerExport(selection, PROJECT, `${artifacts}plater-export.3mf`, { curr_bed_type: BED_TYPE }));
     const pick = (gcode: string) => gcode.split("\n").filter((line) => /^; curr_bed_type = |^M1[49]0 /.test(line));
     expect(pick(normalize(web, "Ares"))).toEqual(pick(native));
     orcaDiff = lineDiff(native, normalize(web, "Ares"));
