@@ -12,6 +12,8 @@ import { type NativeSelection, nativeSelection, presetSelectProbe } from "./pres
  *   FullPrintConfig::defaults() (Plater.cpp:9463); the GUI slices full_config(false) (Plater.cpp:11442), which
  *   Print::apply keeps as full_print_config (PrintApply.cpp:1677) and GCode::append_full_config prints
  *   (GCode.cpp:8272-8382), while a CLI-route slice of a project without it does not print it;
+ * - `filament_multi_colour`: the plater's project config holds it after sync_loaded_project_filament_config
+ *   (Plater.cpp:8905-8959, 9755), so the GUI prints it; a CLI-route slice prints only what the 3MF stores;
  * - `Printer`, `Profile`: start G-code that prints `[printer_preset]` and `[print_preset]`, the selected names
  *   (PrintApply.cpp:1660-1662).
  */
@@ -21,22 +23,52 @@ export const SELECTED_PRESET_KEYS = [
   "filament_settings_id",
   "filament_plugin_config_overrides",
   "pellet_flow_coefficient",
+  "filament_multi_colour",
   "Printer",
   "Profile",
 ] as const;
 
+/** ConfigOptionStrings::serialize, escape_strings_cstyle (Config.cpp:99-147). */
+function cstyle(values: string[]) {
+  return values.map((value) => {
+    const quote = (values.length === 1 && value === "") || /[ \t;\\"\r\n]/.test(value);
+    return quote ? `"${value.replace(/[\\"]/g, "\\$&").replace(/\r/g, "\\r").replace(/\n/g, "\\n")}"` : value;
+  }).join(";");
+}
+
 type SelectedPresetKey = (typeof SELECTED_PRESET_KEYS)[number];
+
+/**
+ * The config line of `key` in the G-code `lines` set to `value`: replaced, or inserted at its sorted place in the
+ * config block; removed when `value` is undefined.
+ */
+export function setConfigLine(lines: string[], key: string, value: string | undefined) {
+  const start = lines.indexOf("; CONFIG_BLOCK_START");
+  const end = lines.indexOf("; CONFIG_BLOCK_END");
+  const block = lines.slice(start + 1, end);
+  const at = block.findIndex((line) => line.startsWith(`; ${key} = `));
+  if (value === undefined) {
+    if (at >= 0) lines.splice(start + 1 + at, 1);
+  } else if (at >= 0) {
+    lines[start + 1 + at] = `; ${key} = ${value}`;
+  } else {
+    const after = block.findIndex((line) => /^; (\S+) = /.exec(line)![1] > key);
+    lines.splice(start + 1 + (after < 0 ? block.length : after), 0, `; ${key} = ${value}`);
+  }
+}
 
 /** The value of each key under `selection`; `undefined` where the selected presets do not hold the option. */
 function selectedValues(selection: NativeSelection): Record<SelectedPresetKey, string | undefined> {
   // Native premise: the filament collection's selection is the first filament, whose edited copy find_preset returns.
   expect(selection.filament.selected.name, "Native selects the first filament").toBe(selection.filament_presets[0]);
+  const plater = JSON.parse(selection.full_fff_config) as { pellet_flow_coefficient?: string[]; filament_multi_colour?: string[] };
   return {
     printer_settings_id: selection.printer.selected.name,
     print_settings_id: selection.process.selected.name,
     filament_settings_id: selection.filament_presets.map((name) => JSON.stringify(name)).join(";"),
     filament_plugin_config_overrides: selection.filament.edited.config.filament_plugin_config_overrides?.serialized,
-    pellet_flow_coefficient: (JSON.parse(selection.full_fff_config) as { pellet_flow_coefficient?: string[] }).pellet_flow_coefficient?.join(","),
+    pellet_flow_coefficient: plater.pellet_flow_coefficient?.join(","),
+    filament_multi_colour: plater.filament_multi_colour && cstyle(plater.filament_multi_colour),
     Printer: selection.printer.selected.name,
     Profile: selection.process.selected.name,
   };
@@ -71,22 +103,8 @@ export function withSelectedPresets(reference: string, selection: NativeSelectio
   for (const key of ["Printer", "Profile"] as const) {
     for (const [index, line] of lines.entries()) if (line.startsWith(`; ${key} : `)) lines[index] = `; ${key} : ${values[key]}`;
   }
-  for (const key of ["printer_settings_id", "print_settings_id", "filament_settings_id", "filament_plugin_config_overrides", "pellet_flow_coefficient"] as const) {
-    const start = lines.indexOf("; CONFIG_BLOCK_START");
-    const end = lines.indexOf("; CONFIG_BLOCK_END");
-    const block = lines.slice(start + 1, end);
-    const value = values[key];
-    const at = block.findIndex((line) => line.startsWith(`; ${key} = `));
-    if (value === undefined) {
-      if (at >= 0) lines.splice(start + 1 + at, 1);
-      continue;
-    }
-    if (at >= 0) {
-      lines[start + 1 + at] = `; ${key} = ${value}`;
-      continue;
-    }
-    const after = block.findIndex((line) => /^; (\S+) = /.exec(line)![1] > key);
-    lines.splice(start + 1 + (after < 0 ? block.length : after), 0, `; ${key} = ${value}`);
+  for (const key of ["printer_settings_id", "print_settings_id", "filament_settings_id", "filament_plugin_config_overrides", "pellet_flow_coefficient", "filament_multi_colour"] as const) {
+    setConfigLine(lines, key, values[key]);
   }
   const start = lines.indexOf("; CONFIG_BLOCK_START");
   const erased = lines.findIndex((line, index) => index > start && line.startsWith("; compatible_printers_condition = "));
