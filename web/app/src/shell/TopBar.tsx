@@ -1,14 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { type RefObject, useRef } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import { exportAllGcode, exportGcode, importFile, setTheme, sliceAllPlates, slicePlate } from "../state/actions";
 import { importPresetFiles, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
 
 /** BBLTopbar: file actions and the project title. */
-export function TitleBar({ importInput: input, onShortcuts }: {
+export function TitleBar({ importInput: input, onShortcuts, onAbout }: {
   importInput: RefObject<HTMLInputElement | null>;
   onShortcuts: () => void;
+  onAbout: () => void;
 }) {
   const { theme, engine, file, loadingFile } = useApp();
   const presetInput = useRef<HTMLInputElement>(null);
@@ -43,14 +44,50 @@ export function TitleBar({ importInput: input, onShortcuts }: {
       </div>
       <span className="titlebar-title">{file ? `${file.name} - Ares` : "Ares"}</span>
       <div className="titlebar-right">
-        <button className="bar-button" title="Keyboard Shortcuts (?)" aria-label="Keyboard Shortcuts"
-          onClick={onShortcuts}>?</button>
+        <HelpMenu onShortcuts={onShortcuts} onAbout={onAbout} />
         <button className="bar-button" title={theme === "dark" ? "Light theme" : "Dark theme"}
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
       </div>
     </header>
+  );
+}
+
+/**
+ * MainFrame::generate_help_menu (MainFrame.cpp:2903-2966) in the top bar's drop-down (:3683), as far
+ * as ported: Keyboard Shortcuts (:2907-2909) and About (:2958-2963). Closes on a pick, Escape or a
+ * click elsewhere.
+ */
+function HelpMenu({ onShortcuts, onAbout }: { onShortcuts: () => void; onAbout: () => void }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: Event) => {
+      if (event instanceof KeyboardEvent ? event.key === "Escape" : !root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [open]);
+  const pick = (action: () => void) => () => {
+    setOpen(false);
+    action();
+  };
+  return (
+    <div ref={root} className="help-menu">
+      <button className="bar-button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>Help</button>
+      {open && (
+        <div className="context-menu" role="menu" aria-label="Help">
+          <button type="button" role="menuitem" onClick={pick(onShortcuts)}>Keyboard Shortcuts</button>
+          <button type="button" role="menuitem" onClick={pick(onAbout)}>About Ares</button>
+        </div>
+      )}
+    </div>
   );
 }
 

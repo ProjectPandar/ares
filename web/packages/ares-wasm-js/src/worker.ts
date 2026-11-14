@@ -11,6 +11,7 @@ import init, {
   loadScene,
   optionColors,
   optionTypes,
+  orcaSlicerVersion,
   parsePresetBundle,
   placementScene,
   printConfigDef,
@@ -133,6 +134,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       const definition: PrintConfigDef = JSON.parse(new TextDecoder().decode(printConfigDef()));
       return [definition, []];
     }
+    case "orcaSlicerVersion":
+      return [orcaSlicerVersion(), []];
     case "loadScene":
       return sceneResult(loadScene(request.input));
     case "placementScene": {

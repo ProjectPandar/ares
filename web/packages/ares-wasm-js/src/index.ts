@@ -66,6 +66,12 @@ export class AresSlicer {
     return (await this.#call({ kind: "printConfigDef" })) as PrintConfigDef;
   }
 
+  /** The OrcaSlicer release whose behaviour the engine ports, such as `"2.5.0"`. */
+  async orcaSlicerVersion(): Promise<string> {
+    await this.#ready;
+    return (await this.#call({ kind: "orcaSlicerVersion" })) as string;
+  }
+
   /** Loads a 3MF project or STL model into plater scene data. */
   async loadScene(input: Uint8Array): Promise<Scene> {
     await this.#ready;

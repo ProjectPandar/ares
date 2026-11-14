@@ -2,6 +2,7 @@ import { Outlet, useRouter } from "@tanstack/react-router";
 import { type DragEvent, lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { exportGcode, importFiles, selectObject, slicePlate } from "../state/actions";
 import { useApp } from "../state/store";
+import { AboutDialog } from "./AboutDialog";
 import { cmdDown, isShortcut } from "./keys";
 import { LoadWarning } from "./LoadWarning";
 import { ShortcutsDialog } from "./ShortcutsDialog";
@@ -18,6 +19,7 @@ export function Shell() {
   const wizard = useApp((state) => state.wizard);
   const [dragging, setDragging] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const importInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
   // Layout effect: CSS theme variables must be live before the viewport reads them.
@@ -55,7 +57,7 @@ export function Shell() {
 
   return (
     <div className="shell">
-      <TitleBar importInput={importInput} onShortcuts={() => setShortcutsOpen(true)} />
+      <TitleBar importInput={importInput} onShortcuts={() => setShortcutsOpen(true)} onAbout={() => setAboutOpen(true)} />
       <TabBar />
       <main className="workspace" data-testid="workspace"
         onDragOver={(event) => {
@@ -78,6 +80,7 @@ export function Shell() {
       </main>
       <StatusBar />
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
       {wizard && (
         <Suspense>
           <SetupWizard key={wizard} firstRun={wizard === "first-run"} onClose={() => useApp.setState({ wizard: null })} />
