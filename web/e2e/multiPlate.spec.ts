@@ -47,7 +47,7 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   const compare = (label: string, gcode: string, oracle: string, plate: number) => {
     results[label] = {};
     for (const leg of legs) {
-      const native = orcaPlate(oracle, plate, leg);
+      const native = orcaPlate(oracle, plate, leg, project);
       results[label][leg] = native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL";
     }
   };

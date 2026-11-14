@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/import/", import.meta.url));
@@ -155,7 +156,14 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   const gcode = readFileSync(gcodePath);
   const nativePath = `${artifacts}native.gcode`;
   execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", nativePath, prisms]);
-  expect(sha256(gcode), "browser G-code must match native ares-cli bytes").toBe(sha256(readFileSync(nativePath)));
+  const selection = openedSelection(prisms, `${artifacts}selection/`);
+  if (selection) {
+    const expected = withSelectedPresets(readFileSync(nativePath, "utf8"), selection);
+    writeFileSync(`${artifacts}expected.gcode`, expected);
+    expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(sha256(Buffer.from(expected)));
+  } else {
+    test.info().annotations.push({ type: "skip", description: "ARES_ORCA_PRESET_SELECT_BIN is unset: the ares-cli byte comparison needs the plater's selected presets and did not run" });
+  }
 
   // Preview opens fitted to the objects.
   await page.getByRole("link", { name: "Preview" }).click();

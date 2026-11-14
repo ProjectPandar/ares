@@ -62,7 +62,7 @@ test("Scale to build volume fills the printable height on the plate centre, and 
   writeFileSync(oracle, guiExport(FIXTURE, [
     { source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([fitted], [110, 110, 100 * s]) }] },
   ], await probedTowers(page)));
-  const legs = { official: orcaPlate(oracle, 1, "official"), seeded: orcaPlate(oracle, 1, "seeded") };
+  const legs = { official: orcaPlate(oracle, 1, "official", project), seeded: orcaPlate(oracle, 1, "seeded", project) };
   const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
