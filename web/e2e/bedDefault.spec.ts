@@ -23,12 +23,15 @@ test("U1 initializes Textured PEI and exports Native first-layer bed temperature
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   await combo("Printer preset").click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Snapmaker", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog");
+  await wizard.getByRole("button", { name: "Snapmaker", exact: true }).click();
+  await wizard.getByRole("checkbox", { name: "Snapmaker U1", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await combo("Printer preset").click();
   await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
+  // ConfigWizard.cpp:2500–2524 picks the first installed variant (U1: 0.2).
+  await page.getByRole("combobox", { name: "Variant", exact: true }).selectOption("0.4");
   await expect(combo("Printer preset")).toHaveAttribute("title", "Snapmaker U1 (0.4 nozzle)");
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   const plate = page.getByRole("combobox", { name: "Plate type", exact: true });
@@ -114,9 +117,10 @@ test("a hidden plate combo still initializes a concrete printer bed", async ({ p
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)", exact: true }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "LH", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done", exact: true }).click();
+  const wizard = page.getByRole("dialog");
+  await wizard.getByRole("button", { name: "LH", exact: true }).click();
+  await wizard.getByRole("checkbox", { name: "LH Stinger", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm", exact: true }).click();
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "LH Stinger", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
@@ -145,9 +149,10 @@ test("supported remembered beds win and unsupported remembered beds use the firs
   const printer = page.getByRole("button", { name: "Printer preset", exact: true });
   await printer.click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)", exact: true }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Snapmaker", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done", exact: true }).click();
+  const wizard = page.getByRole("dialog");
+  await wizard.getByRole("button", { name: "Snapmaker", exact: true }).click();
+  await wizard.getByRole("checkbox", { name: "Snapmaker U1", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm", exact: true }).click();
   await printer.click();
   await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
