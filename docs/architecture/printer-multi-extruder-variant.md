@@ -32,8 +32,13 @@ The U1 model's `resources/profiles/Snapmaker/machine/Snapmaker U1.json` lists
 `web/app/src/sidebar/PlateNozzle.tsx` exposes the variant box for non-Bambu
 multi-extruder printers using the existing select styling. Single-extruder
 printers keep their nozzle selector; Bambu dual printers keep their existing
-left/right controls. `web/app/src/state/printerPanel.ts` chooses the machine's
-variant for this box. `web/app/src/state/printer.ts` retains the selected
+left/right controls. `web/app/src/state/printerPanel.ts` ports
+`update_extruder_diameter` (`Plater.cpp:4075-4100`) for every tool: retain a named
+variant only when its leading run of digits and dots equals that tool's
+formatted diameter and the variant occurs in the model's variants. Otherwise
+select the tool's diameter, filling an empty first option or appending that
+diameter when absent. Customizing tool 0 of `0.4+0.6` to 0.6 therefore selects
+`0.6`, not the preset's unchanged variant. `web/app/src/state/printer.ts` retains the selected
 variant using the upstream distinction between a variant and tool diameters.
 
 The existing browser panel is a compatibility shell around these upstream
@@ -58,6 +63,9 @@ A hidden selector prevents switching. Selecting an individual diameter instead
 of `printer_variant` misrepresents mixed presets. Editing a single diameter
 instead of selecting the machine preset would leave other machine settings
 stale. Retaining a named variant by diameter alone can keep the wrong preset.
+Retaining a variant after its tool's diameter changes misrepresents that tool.
+A browser case imports the U1 mixed preset with tool 0 customized to 0.6 and
+checks that the variant box selects 0.6.
 A plate selector could be absent, empty, or fail to reach slice configuration.
 
 A browser test selects U1, switches through `0.2`, `0.4+0.6`, and `0.8`, checks
