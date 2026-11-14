@@ -11,7 +11,7 @@ fn x1c_reduce_detour0_object_switch_travel() {
         (
             "avoid-crossing-external-frame",
             &[
-                "GCode.cpp:10595-10605:post-retraction-last-pos-and-direct-travel",
+                "GCode.cpp:10600-10606:post-retraction-last-pos-and-direct-travel",
                 "GCode.cpp:10606-10616:second-perimeter-planning-and-external-once",
                 "AvoidCrossingPerimeters.cpp:1255-1325:travel_to",
             ],

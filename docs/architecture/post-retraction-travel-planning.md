@@ -8,7 +8,7 @@ This is a Rust rewrite of OrcaSlicer 2.5.0 commit
 
 - Lines 10569–10580 condition the initial perimeter planning on the current
   writer position being clear and the one-shot disable being absent.
-- Lines 10587–10588 consume the initial one-shot modifiers.
+- Line 10591 consumes the initial one-shot modifiers.
 - Lines 10595–10617 compare `last_pos()` before and after retraction, replace
   the travel with the new-start direct path when it moved, and invoke
   `AvoidCrossingPerimeters::travel_to` again when perimeter avoidance and a
