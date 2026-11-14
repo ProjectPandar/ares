@@ -31,10 +31,20 @@ function nativePresets() {
       }
     }
   }
-  return { datadir, leaves };
+  // fdm_U1.json printable_area: 0.5x1 .. 270.5x271; the browser centers the STL here.
+  const centered = readFileSync(cube);
+  for (let facet = 84; facet < centered.length; facet += 50) {
+    for (let vertex = facet + 12; vertex < facet + 48; vertex += 12) {
+      centered.writeFloatLE(centered.readFloatLE(vertex) + 135.5, vertex);
+      centered.writeFloatLE(centered.readFloatLE(vertex + 4) + 136, vertex + 4);
+    }
+  }
+  const input = `${artifacts}/cube10.stl`;
+  writeFileSync(input, centered);
+  return { datadir, leaves, input };
 }
 
-function nativeSlice(selection: Selection, variant: string, presets: ReturnType<typeof nativePresets>) {
+function nativeSlice(selection: Selection, variant: string, presets: ReturnType<typeof nativePresets>, bridgeLineWidth: string) {
   const output = `${artifacts}/native-${variant}`;
   mkdirSync(output, { recursive: true });
   const leaf = (kind: string, name: string) => presets.leaves.get(`${kind}:${name}`)!;
@@ -44,8 +54,8 @@ function nativeSlice(selection: Selection, variant: string, presets: ReturnType<
     "--datadir", presets.datadir,
     "--load-settings", [leaf("machine", selection.printer), leaf("process", selection.process)].join(";"),
     "--load-filaments", selection.filaments.map((name) => leaf("filament", name)).join(";"),
-    "--curr-bed-type", selection.bedType,
-    "--arrange", "0", "--slice", "0", "--outputdir", output, cube,
+    "--curr-bed-type", selection.bedType, "--bridge-line-width", bridgeLineWidth,
+    "--arrange", "0", "--slice", "0", "--outputdir", output, presets.input,
   ], { cwd: artifacts, stdio: ["ignore", "pipe", "pipe"] });
   return readFileSync(`${output}/plate_1.gcode`, "utf8");
 }
@@ -82,6 +92,8 @@ test("U1 machine variants and plate type reach the selected preset slice", async
   await expect(variant.locator("option")).toHaveText(["0.2 mm", "0.4 mm", "0.4+0.6 mm", "0.6 mm", "0.8 mm"]);
   await variant.selectOption("0.4");
   await expect(printer(page)).toHaveAttribute("title", "Snapmaker U1 (0.4 nozzle)", { timeout: 60_000 });
+  await expect(variant).toHaveValue("0.4");
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 
   const presets = nativePresets();
   const records = [];
@@ -101,10 +113,19 @@ test("U1 machine variants and plate type reach the selected preset slice", async
     await expect(plate).toHaveValue(bedType);
     await expect.poll(async () => (await selectedPresets(page)).bedType).toBe(bedType);
     const selection = await selectedPresets(page);
+    // The mixed preset's automatic bridge width exceeds its smaller nozzle in the native CLI.
+    const bridgeLineWidth = value === "0.4+0.6" ? "0.4" : "100%";
+    await page.getByRole("slider", { name: "Settings mode", exact: true }).focus();
+    await page.keyboard.press("End");
+    await page.getByRole("tab", { name: "Quality", exact: true }).click();
+    const width = page.getByRole("textbox", { name: "bridge_line_width", exact: true });
+    await width.fill(bridgeLineWidth);
+    await width.press("Enter");
     await page.screenshot({ path: `${artifacts}/variant-${value}.png` });
     await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
     await page.getByRole("button", { name: "Slice plate", exact: true }).click();
-    await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
+    await expect(page.getByTestId("status")).toHaveText(/^(Slice complete|Slicing failed)/, { timeout: 240_000 });
+    await expect(page.getByTestId("status")).toContainText("Slice complete");
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: "Export G-code file", exact: true }).click();
     const path = `${artifacts}/variant-${value}.gcode`;
@@ -113,9 +134,9 @@ test("U1 machine variants and plate type reach the selected preset slice", async
     expect(gcode).toContain(`; nozzle_diameter = ${diameters}\n`);
     expect(gcode).toContain(`; curr_bed_type = ${bedType}\n`);
     expect(gcode).toContain(`; printer_settings_id = ${selection.printer}\n`);
-    const native = nativeSlice(selection, value, presets);
+    const native = nativeSlice(selection, value, presets, bridgeLineWidth);
     expect(selectionConfig(gcode)).toEqual(selectionConfig(native));
-    records.push({ variant: value, diameters, selection, config: selectionConfig(gcode) });
+    records.push({ variant: value, diameters, selection, bridgeLineWidth, config: selectionConfig(gcode) });
     await page.getByRole("link", { name: "Prepare", exact: true }).click();
   }
   await page.reload();
@@ -124,4 +145,34 @@ test("U1 machine variants and plate type reach the selected preset slice", async
   await expect(page.getByRole("combobox", { name: "Plate type", exact: true })).toHaveValue("High Temp Plate");
   expect(errors).toEqual([]);
   writeFileSync(`${artifacts}/result.json`, `${JSON.stringify({ records, errors }, null, 2)}\n`);
+});
+
+test("H2D keeps its paired nozzle controls when switching the printer diameter", async ({ page }) => {
+  mkdirSync(artifacts, { recursive: true });
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
+  await printer(page).click();
+  await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
+  await printer(page).click();
+  await page.getByRole("option", { name: "Bambu Lab H2D", exact: true }).click();
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  const left = page.getByRole("combobox", { name: "Left Nozzle diameter", exact: true });
+  const right = page.getByRole("combobox", { name: "Right Nozzle diameter", exact: true });
+  await expect(left).toBeVisible();
+  await expect(right).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Variant", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Nozzle diameter", exact: true })).toHaveCount(0);
+  const diameter = await left.inputValue() === "0.6" ? "0.4" : "0.6";
+  await left.selectOption(diameter);
+  const question = page.getByRole("dialog", { name: "Switch diameter" });
+  await question.getByRole("button", { name: `Left nozzle: ${diameter}mm`, exact: true }).click();
+  await expect(printer(page)).toHaveAttribute("title", `Bambu Lab H2D ${diameter} nozzle`, { timeout: 60_000 });
+  await expect(left).toHaveValue(diameter);
+  await expect(right).toHaveValue(diameter);
+  await expect(page.getByRole("combobox", { name: "Plate type", exact: true })).toBeVisible();
+  await page.screenshot({ path: `${artifacts}/h2d-paired-nozzles.png` });
 });

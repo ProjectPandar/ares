@@ -64,7 +64,12 @@ A browser test selects U1, switches through `0.2`, `0.4+0.6`, and `0.8`, checks
 the selected printer and variant, slices a cube, and checks the complete nozzle
 vector in G-code. It changes plate type, verifies persisted slice configuration
 and G-code, and compares the nozzle and plate configuration with OrcaSlicer
-CLI slices using those machine presets through `--load-settings`. Screenshots,
-selection records, and exported G-code provide repeatable artifacts. Existing
+CLI slices using those machine presets through `--load-settings`. Both sides
+receive the same explicit user bridge-width edit: 0.4 mm for the mixed variant,
+100% otherwise. This avoids the native CLI's rejection of the mixed preset's
+automatic 0.6 mm bridge width against its smaller 0.4 mm nozzle. The browser
+currently accepts that unedited mixed preset; matching `Print::validate` for
+that case is outside this selector change. Product code does not change widths.
+Screenshots, selection records, and exported G-code provide repeatable artifacts. Existing
 single-nozzle, Bambu dual-nozzle, and fixed-filament-slot browser scenarios
 exercise the unchanged controls.

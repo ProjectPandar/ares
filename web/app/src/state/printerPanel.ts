@@ -83,12 +83,14 @@ export function diameterString(diameter: string): string {
 }
 
 /**
- * update_extruder_diameter (Plater.cpp:2651-2671): the model's printer variants, the extruder's
- * current diameter filling an empty first entry or appended when missing.
+ * Sidebar::update_presets (Plater.cpp:4086-4140): the model's printer variants. Non-Bambu
+ * multi-extruder machines prefer their named variant; tool controls use their own diameter.
  */
 export function nozzleOptions(panel: PrinterPanel, extruder: number): { options: string[]; selected: string } {
   const options = [...panel.info.nozzle_diameters];
-  const selected = panel.nozzleDiameters[extruder] === undefined ? "" : diameterString(panel.nozzleDiameters[extruder]);
+  const diameter = panel.nozzleDiameters[extruder] === undefined ? "" : diameterString(panel.nozzleDiameters[extruder]);
+  const selected = !panel.bbl && panel.nozzleDiameters.length > 1 && options.includes(panel.printerVariant)
+    ? panel.printerVariant : diameter;
   if ((options[0] ?? "") === "" && selected !== "") options[0] = selected;
   if (selected !== "" && !options.includes(selected)) options.push(selected);
   return { options: options.filter((option) => option !== ""), selected };
