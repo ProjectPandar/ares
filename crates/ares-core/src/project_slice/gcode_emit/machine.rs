@@ -155,13 +155,17 @@ pub(super) fn append_second_layer_transition(
         .iter()
         .flat_map(|values| values.0.iter().map(|value| value.0))
         .collect();
-    // `get_highest_bed_temperature` / first-filament selection
-    // (`GCode.cpp:4817-4822`). `GCodeWriter::set_bed_temperature` skips the
-    // write when unchanged from its zero-initialized cache
-    // (`GCodeWriter.cpp:170-175`).
+    // GCode.cpp:5532-5541,6958-6964: ordinary temperatures still use the
+    // first-layer-used filament set, not the entire configured palette.
     let bed_temp = match settings.printer.gcode.bed_temperature_formula {
         crate::BedTemperatureFormula::FirstFilament => temps.first().copied().unwrap_or(0),
-        crate::BedTemperatureFormula::HighestTemp => temps.iter().copied().max().unwrap_or(0),
+        crate::BedTemperatureFormula::HighestTemp => state
+            .initial_filaments
+            .first_layer_tools()
+            .iter()
+            .filter_map(|&tool| temps.get(tool).or_else(|| temps.first()))
+            .copied()
+            .fold(0, i32::max),
     };
     // `GCodeWriter::set_bed_temperature` (`GCodeWriter.cpp:168-175`)
     // refreshes the writer cache on every changed value, so the next
