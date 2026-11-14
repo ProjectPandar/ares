@@ -179,7 +179,7 @@ fn vector(value: &RawConfigValue) -> Vec<RawConfigValue> {
     }
 }
 
-fn is_vector(kind: crate::OptionValueKind) -> bool {
+pub(in crate::profiles) fn is_vector(kind: crate::OptionValueKind) -> bool {
     use crate::OptionValueKind as K;
     matches!(
         kind,
@@ -200,7 +200,7 @@ fn is_vector(kind: crate::OptionValueKind) -> bool {
     )
 }
 
-fn dev_key(key: &str) -> bool {
+pub(in crate::profiles) fn dev_key(key: &str) -> bool {
     DEV_KEYS.contains(&key)
 }
 

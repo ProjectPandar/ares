@@ -378,9 +378,7 @@ fn load_config(
     // PresetCollection::load_presets pads each loaded preset's variant vectors
     // (Preset.cpp:1930, 1944; extend_default_config_length, :313-370).
     super::super::preset_normalization::extend_default_config_length(&mut config.0)?;
-    if kind == ProfileKind::Machine {
-        super::super::preset_normalization::normalize_machine(&mut config.0)?;
-    }
+    super::super::preset_normalization::normalize(&mut config.0, kind)?;
     Ok((config, filament_id))
 }
 
