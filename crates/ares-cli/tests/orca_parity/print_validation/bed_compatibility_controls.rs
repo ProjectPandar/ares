@@ -235,7 +235,9 @@ fn print_bed_compat_stl_adapter_keeps_bed_vector_and_activation() {
 }
 
 #[test]
-fn print_bed_compat_pure_processing_remains_unvalidated_frozen_bytes() {
+fn print_bed_compat_pure_processing_remains_unvalidated() {
+    // Print.cpp:2779-2809 rejects this ordinary-zero configuration during validation;
+    // bed_compatibility::print_bed_compat_original_cool_zero_rejects_before_processing covers it.
     let fields = json!({"cool_plate_temp":["0"]});
     let overrides = ConfigOverrides::from_json(fields.to_string().as_bytes()).unwrap();
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -250,17 +252,31 @@ fn print_bed_compat_pure_processing_remains_unvalidated_frozen_bytes() {
             SlicerContext::new(0),
         ))
         .unwrap();
-    let actual = super::sha256(&gcode);
+    // GCode.cpp:4016-4028,5525-5530 selects the initial-layer temperature for startup.
+    // The fixture retains cool_plate_temp_initial_layer=["45"] despite ordinary zero.
+    let startup = std::str::from_utf8(&gcode)
+        .unwrap()
+        .split_once(";LAYER_CHANGE\n")
+        .unwrap()
+        .0;
+    let startup_bed_commands: Vec<_> = startup
+        .lines()
+        .map(|line| line.split(';').next().unwrap().trim())
+        .filter(|line| matches!(line.split_ascii_whitespace().next(), Some("M140" | "M190")))
+        .collect();
     let directory = super::evidence_directory("print-bed-pure-");
     std::fs::write(directory.join("ares.gcode"), &gcode).unwrap();
     std::fs::write(
         directory.join("result.json"),
-        serde_json::to_vec_pretty(&json!({"overrides":fields,"sha256":actual,"bytes":gcode.len()}))
-            .unwrap(),
+        serde_json::to_vec_pretty(&json!({
+            "overrides":fields,"startup_bed_commands":startup_bed_commands,"bytes":gcode.len(),
+        }))
+        .unwrap(),
     )
     .unwrap();
     assert_eq!(
-        actual, "71d496647da663a597b7f0de76371db43bfce7cf9e0e8789c92e1d0b24206076",
+        startup_bed_commands,
+        ["M140 S45", "M190 S45"],
         "{directory:?}"
     );
 }
