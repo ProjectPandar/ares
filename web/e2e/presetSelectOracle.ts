@@ -34,7 +34,10 @@ export interface NativeSelection {
 export const presetSelectProbe = () =>
   oraclePath("ARES_ORCA_PRESET_SELECT_BIN", "the preset-select probe", "tools/chain-probe/preset-select.patch built at 40ecc66f7");
 
-/** The project config as upstream serializes it (ConfigOptionStrings quoted and `;`-joined, other vectors `,`-joined). */
+/**
+ * The project config as ConfigBase::load_from_json reads its JSON arrays (Config.cpp:1032-1052): ConfigOptionStrings
+ * quoted and `;`-joined, ConfigOptionPointsGroups `#`-joined, other vectors `,`-joined.
+ */
 function serialized(config: Record<string, string | string[]>) {
   const defs = nativeConfigDef(repositoryRoot);
   const unknown: string[] = [];
@@ -42,7 +45,9 @@ function serialized(config: Record<string, string | string[]>) {
   for (const [key, value] of Object.entries(config)) {
     const def = defs.get(key);
     if (!def) unknown.push(key);
-    else options[key] = typeof value === "string" ? value : value.map((item) => (def.type === "strings" ? JSON.stringify(item) : item)).join(def.type === "strings" ? ";" : ",");
+    else if (typeof value === "string") options[key] = value;
+    else if (def.type === "strings") options[key] = value.map((item) => JSON.stringify(item)).join(";");
+    else options[key] = value.join(def.type === "points_groups" ? "#" : ",");
   }
   return { options, unknown };
 }
