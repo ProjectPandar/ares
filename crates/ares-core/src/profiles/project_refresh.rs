@@ -129,6 +129,11 @@ pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, Slic
 }
 
 impl ProjectPresetRefresh<'_> {
+    /// The plater's selection when it opens a project (`Plater.cpp:9622`), not a CLI path.
+    pub(crate) fn is_plater(self) -> bool {
+        matches!(self.policy, ProjectPresetPolicy::Always)
+    }
+
     pub(crate) fn load(
         self,
         input: &[u8],

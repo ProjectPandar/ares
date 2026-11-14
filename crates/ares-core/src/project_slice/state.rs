@@ -43,8 +43,13 @@ pub(super) fn prepare_project_source(
         super::validated::validate_post_process(&project)?;
     }
     // `OrcaSlicer.cpp:2653-2654`: the plain-3MF compatible-printers gate
-    // fires after load and before parameter validation.
-    super::compatibility::reject_incompatible_process(&project.documents().project_settings_raw)?;
+    // fires after load and before parameter validation. It belongs to the
+    // CLI main (`:2575-2620`); the plater's selection has no such check.
+    if !source.refresh.is_some_and(|refresh| refresh.is_plater()) {
+        super::compatibility::reject_incompatible_process(
+            &project.documents().project_settings_raw,
+        )?;
+    }
     // OrcaSlicer.cpp:3005 commits the report before validate(true):4272–4278.
     // Earlier load/post-process/compatibility failures do not reach this snapshot.
     if let Some(upward) = source.upward {
