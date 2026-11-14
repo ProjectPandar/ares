@@ -3,6 +3,8 @@
 use super::{object::ObjectLabels, raft_schedule};
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
+mod empty_layers;
+
 const EPSILON: f64 = 1e-4;
 
 #[derive(Clone, Copy)]
@@ -15,6 +17,7 @@ pub(in crate::project_slice::gcode_emit) struct LayerToPrint {
 }
 
 pub(in crate::project_slice::gcode_emit) struct Schedule {
+    pub(in crate::project_slice::gcode_emit) warnings: Vec<crate::PrintWarning>,
     pub(in crate::project_slice::gcode_emit) tool_ordering:
         super::super::tool_ordering::ToolOrdering,
     pub(in crate::project_slice::gcode_emit) merged: Vec<(f64, LayerToPrint)>,
@@ -242,6 +245,13 @@ pub(in crate::project_slice::gcode_emit) fn build(
             ));
         }
     }
+    let warnings = empty_layers::collect(
+        &merged,
+        traversal,
+        (objects, support),
+        raft.as_ref(),
+        &object_options,
+    );
     // Native grouping compares against the group's minimum, not its previous Z.
     let mut begin = 0;
     while begin < merged.len() {
@@ -310,6 +320,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         })?;
     tool_ordering.assign_custom_gcodes(traversal);
     Ok(Schedule {
+        warnings,
         tower,
         tool_ordering,
         merged,

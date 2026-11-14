@@ -30,6 +30,8 @@ pub(super) struct FamilyFailure {
     upward_machines: Vec<String>,
     #[cfg(target_os = "linux")]
     warnings: Vec<crate::result_json::CliWarning>,
+    #[cfg(target_os = "linux")]
+    critical_warning: Option<String>,
     stderr: String,
     #[cfg(target_os = "linux")]
     output: PathBuf,
@@ -52,6 +54,8 @@ impl CliFailure {
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            critical_warning: None,
             stderr: format!("No such file: {}\n", input.display()),
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
@@ -105,6 +109,7 @@ impl CliFailure {
 }
 
 mod report;
+pub(crate) mod slicing;
 
 /// The stderr lines of `cli_report_config_substitutions` (`OrcaSlicer.cpp:525-527`).
 pub(super) fn substitution_warnings(
@@ -120,18 +125,6 @@ pub(super) fn substitution_warnings(
             )
         })
         .collect()
-}
-
-impl From<io::Error> for CliFailure {
-    fn from(error: io::Error) -> Self {
-        Self::Legacy(Box::new(error))
-    }
-}
-
-impl From<serde_json::Error> for CliFailure {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Legacy(Box::new(error))
-    }
 }
 
 /// Exhaustive variant → CLI code mapping (`Utils.hpp:24-59`). The four
@@ -165,6 +158,8 @@ pub(super) fn slice_error_to_failure(
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            critical_warning: None,
             stderr,
             #[cfg(target_os = "linux")]
             output: output.to_owned(),

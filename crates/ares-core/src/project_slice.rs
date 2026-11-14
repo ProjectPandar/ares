@@ -214,14 +214,14 @@ pub(crate) fn slice_source(
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
     let mut filled = fill_entities::prepare(prepared)?;
     contour_z::prepare(&mut filled, &mut context);
-    let warnings = match support_material::check_necessity(&filled, &mut context) {
+    let mut warnings = match support_material::check_necessity(&filled, &mut context) {
         Ok(warnings) => warnings,
         Err(error) => {
             fill_entities::dispose(filled);
             return Err(error);
         }
     };
-    if let Some(sliced_plate) = sliced_plate {
+    if let Some(sliced_plate) = sliced_plate.as_deref_mut() {
         // CLI:7150-7160 records warnings before export; a later error keeps them.
         sliced_plate.warnings.clone_from(&warnings);
     }
@@ -238,8 +238,17 @@ pub(crate) fn slice_source(
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
-    let mut output =
-        consume_post_island_print_order(ordered, metadata, record_moves, &mut context)?;
+    let output = consume_post_island_print_order(
+        ordered,
+        metadata,
+        record_moves,
+        &mut context,
+        &mut warnings,
+    );
+    if let Some(sliced_plate) = sliced_plate {
+        sliced_plate.warnings.clone_from(&warnings);
+    }
+    let mut output = output?;
     output.warnings = warnings;
     Ok(output)
 }
@@ -289,6 +298,7 @@ fn consume_post_island_print_order(
     metadata: GenerationMetadata,
     record_moves: bool,
     context: &mut crate::SlicerContext,
+    warnings: &mut Vec<crate::PrintWarning>,
 ) -> Result<ProcessedGCode, SliceError> {
     // `Print.cpp:3540-3550` detects auto-lift overhangs per object (`PrintObject.cpp:940`; Ares runs
     // the detection in `AutoLift::prepare`), then makes the skirt and brim (`Print.cpp:3638`).
@@ -296,7 +306,7 @@ fn consume_post_island_print_order(
         context.set_status(71, format_args!("Detect overhangs for auto-lift"), 0);
     }
     context.set_status(70, format_args!("Generating skirt & brim"), 0);
-    let mut output = gcode_emit::emit(&mut prepared, metadata, record_moves, context)?;
+    let mut output = gcode_emit::emit(&mut prepared, metadata, record_moves, context, warnings)?;
     output.result.apply_filament_config(prepared.filament());
     island_print_order::dispose(prepared);
     Ok(output)

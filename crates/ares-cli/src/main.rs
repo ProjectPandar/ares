@@ -143,6 +143,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         {
             Ok(gcode) => gcode,
             Err(error) => {
+                failure::slicing::check(&args, &sliced_plate, &input_file, &input, &[])?;
                 let failure = slice_error_to_failure(
                     error,
                     &args.output,
@@ -159,6 +160,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 return Err(failure);
             }
         };
+        failure::slicing::check(&args, &sliced_plate, &input_file, &input, &[])?;
         fs::write(&args.output, gcode)?;
         report_success(
             &input_file,
@@ -207,6 +209,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(processed) => processed,
                         Err(error) => {
+                            failure::slicing::check(
+                                &args,
+                                &sliced_plate,
+                                &input_file,
+                                &input,
+                                &upward_report,
+                            )?;
                             let failure = slice_error_to_failure(
                                 error,
                                 &args.output,
@@ -223,6 +232,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             return Err(failure);
                         }
                     };
+                    failure::slicing::check(
+                        &args,
+                        &sliced_plate,
+                        &input_file,
+                        &input,
+                        &upward_report,
+                    )?;
                     fs::write(path, moves_csv::format(&processed.result))?;
                     processed.gcode
                 }
@@ -243,6 +259,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     {
                         Ok(processed) => processed.gcode,
                         Err(error) => {
+                            failure::slicing::check(
+                                &args,
+                                &sliced_plate,
+                                &input_file,
+                                &input,
+                                &upward_report,
+                            )?;
                             let failure = slice_error_to_failure(
                                 error,
                                 &args.output,
@@ -261,6 +284,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     }
                 }
             };
+            failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
             fs::write(&args.output, gcode)?;
             report_success(
                 &input_file,

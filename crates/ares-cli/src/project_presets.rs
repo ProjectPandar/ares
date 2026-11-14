@@ -85,6 +85,13 @@ pub(super) async fn slice(
     {
         Ok(processed) => processed,
         Err(error) => {
+            crate::failure::slicing::check(
+                args,
+                &sliced_plate,
+                &input_file,
+                input,
+                &upward_report,
+            )?;
             let failure = slice_error_to_failure(
                 error,
                 &args.output,
@@ -99,6 +106,7 @@ pub(super) async fn slice(
             return Err(failure);
         }
     };
+    crate::failure::slicing::check(args, &sliced_plate, &input_file, input, &upward_report)?;
     if let Some(path) = &args.dump_moves {
         fs::write(path, crate::moves_csv::format(&processed.result))?;
     }

@@ -1,5 +1,17 @@
 use super::*;
 
+impl From<io::Error> for CliFailure {
+    fn from(error: io::Error) -> Self {
+        Self::Legacy(Box::new(error))
+    }
+}
+
+impl From<serde_json::Error> for CliFailure {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Legacy(Box::new(error))
+    }
+}
+
 #[cfg(target_os = "linux")]
 impl CliFailure {
     pub(crate) fn with_slicing_warnings(
@@ -31,6 +43,14 @@ impl FamilyFailure {
     /// `record_exit_reson` with the family's fields (`OrcaSlicer.cpp:535-586`).
     #[cfg(target_os = "linux")]
     fn record_exit_reason(&self) -> Result<(), serde_json::Error> {
+        let sliced_plates =
+            self.critical_warning
+                .as_ref()
+                .map(|message| crate::result_json::SlicedPlateEntry {
+                    id: self.plate_index,
+                    triangle_count: 0,
+                    warning_message: message.clone(),
+                });
         crate::result_json::ResultJson {
             return_code: self.return_code,
             error_string: self.error_string,
@@ -39,7 +59,7 @@ impl FamilyFailure {
             wall_loops: self.wall_loops,
             sparse_infill_density: self.sparse_infill_density,
             upward_machines: &self.upward_machines,
-            sliced_plates: &[],
+            sliced_plates: sliced_plates.as_slice(),
             warnings: &self.warnings,
         }
         .write(&self.output)
