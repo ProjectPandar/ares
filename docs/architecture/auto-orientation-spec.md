@@ -47,7 +47,8 @@ the cited instance overload rather than silently adopting object semantics.
 
 All computation must run in browser WASM, Windows, macOS and Linux. No native
 Qhull/Eigen dependency, C++ execution, filesystem access, terminal output or
-renderer dependency belongs in core. Do not add a candidate crate or a second
+renderer dependency belongs in core. Implement deterministic Quickhull in
+geometry without adding a dependency. Do not add a candidate crate or a second
 orientation service. Native comparison belongs only to the test adapter.
 
 Existing plater transforms remain the application boundary, not an orientation
@@ -75,13 +76,14 @@ and actual, rather than quantized, normals used for scoring.
 
 Follow `TriangleMesh::convex_hull_3d` and `its_convex_hull`: the Native wrapper
 calls Qhull with `Qt`, collects triangulated facets, maps vertices, and corrects
-winding using the hull's outward normal. A Rust hull must reproduce the
-observable triangulation, winding and normal-candidate effects of that
-boundary. PCA, a bounding box, a two-dimensional projection, or an
-uncited replacement placement heuristic is not equivalent. There is no
-existing core three-dimensional hull backend to assume reusable; choosing a
-portable Rust backend and proving its equivalence is a dependency prerequisite,
-not permission to invoke Native code or add a fallback.
+winding using the hull's outward normal. Implement deterministic Quickhull
+with triangulated facets and outward normals in core geometry. Scoring uses
+quantized normal-group area sums and the actual normal of the largest facet
+in each group. Different triangulation of a coplanar face preserves these
+quantities apart from floating-point noise; complete Native output witnesses
+must establish observable agreement without relaxing the comparator. Preserve
+facet winding and candidate selection effects. Do not substitute PCA, a bounding
+box, a two-dimensional projection or Native execution.
 
 `process`, `area_cumulation_accurate`, `add_supplements` and
 `remove_duplicates` at134–205,281–344 must preserve:
@@ -161,21 +163,19 @@ completion order cannot select an orientation.
   buckets, area-ranked top-ten/top-fourteen cutoffs, duplicate retention,
   score-ranked selection, and cooling sampling. Fixed arithmetic alone is not
   sufficient.
-- Native uses `VecHash`, `std::unordered_map` traversal and score-only
-  `std::sort` comparators. These do not specify a portable tie order. Do not
-  claim that Rust's randomized map, stable sort, or an invented lexicographic
-  tie-break reproduces Native. Establish the pinned producer's observable
-  equal-area/equal-score behavior before implementing a compatible,
-  deterministic ordering. Preserve its upright-preference scan separately.
-- Equal-cost and near-epsilon fixtures must demonstrate both reproducibility
-  and Native agreement. If Native itself selects different rotations under
-  equivalent runs, retain those results and resolve that boundary before
-  choosing a rule; do not hide it by comparing only scores or hull extents.
+- Native `unordered_map` traversal and equal-key `std::sort` ordering are
+  library implementation details, not libslic3r semantics to reverse-engineer.
+  Preserve first insertion order for normal groups and candidates, rank group
+  areas stably, and sort candidate scores stably. Preserve the source's
+  upright-preference scan separately. The decision is recorded in
+  `ard-auto-orientation-determinism.md`.
+- Native comparison meshes must be asymmetric with no ranking/selection tie.
+  Symmetric and tied inputs assert only Ares reproducibility and worker-count
+  invariance; they must not assert equality or inequality against Native.
+  Near-epsilon non-tied witnesses retain complete output comparison.
 
-The three-dimensional hull backend and order-sensitive ties need explicit
-implementation evidence. This spec does not assert they are solved or approve
-an arbitrary Rust sorting policy. Portable arithmetic must be checked on the
-four supported targets; differing output requires diagnosis, not a wider
+Portable arithmetic must be checked on the four supported targets; differing
+output on Native comparison witnesses requires diagnosis, not a wider
 whole-output comparator tolerance.
 
 ## CLI action and saved transforms
@@ -186,14 +186,19 @@ requests orientation, and other integers leave the source automatic decision
 unchanged; do not restrict this to a boolean or invent a new auto decision.
 An absent action must preserve existing saved-transform slicing behavior.
 
-Eligibility is source state, not just the parsed number. BBS 3MF loading at
-`OrcaSlicer.cpp:1770–1772` inserts `false` for loaded object IDs. The action at
-4983/4994 also uses `map::insert`, which does not overwrite an existing entry.
-Consequently, `--orient 1` does not by itself prove that a BBS project was
-oriented. Preserve this pin's observable behavior, including the distinction
-between that project and a newly imported mesh. Do not repair Native's action
-semantics while porting them. Actual application at5271–5288 uses the resulting
-map, calls `orientation::orient(ModelObject*)`, then clears eligibility.
+Eligibility is keyed by current object ID. The apparent BBS-load insert(false)
+at `OrcaSlicer.cpp:1769–1773` is inside a block comment and does not execute.
+The map starts empty, so the action's insert at4983/4994 also works for BBS
+projects: zero inserts false, one inserts true, other values leave it unchanged.
+The apparent transfer to copied IDs at4039–4051 is commented out too. At5275,
+`operator[]` inserts false for any current ID without an entry. Track actual
+object IDs across copy/assembly rather than inheriting an orientation flag
+without a source write. Assembly at4911–4972 can create a new object; copy at
+5004–5026 delegates duplication/arrangement, so distinguish new objects from
+new instances and check whether the action precedes or follows that change.
+Native runtime behavior is authoritative for these action-order controls.
+Actual application at5271–5288 calls `orientation::orient(ModelObject*)` for
+true entries and then clears eligibility.
 
 Perform action adaptation before the existing slice request consumes the
 model. Retain Native volume/instance application and `ensure_on_bed`, without
@@ -213,7 +218,10 @@ Deferred: browser buttons, web-state transport and viewer integration; GUI jobs,
 selection menus, progress presentation and cancellation UI; the standalone
 `orient_for_cooling` action; arrangement, nesting, new bed fitting and unrelated
 model repair; new orientation heuristics or configurable weight presets;
-malformed face-property compatibility. Existing saved-transform project slicing
+malformed face-property compatibility; CLI switches and Native API comparisons
+for nondefault orientation parameters and cooling modes, which Native CLI does
+not expose. The core algorithm retains those paths, without claiming CLI
+coverage of them. Existing saved-transform project slicing
 is not redefined. No filesystem discovery or legacy fallback is added to core.
 
 ## Native comparison E2E plan
@@ -230,7 +238,7 @@ change product code, fixtures or tests as part of this specification commit.
 | Identical geometry without a property, with an empty property, and with normal-face data | Normal-face equivalence and retained face association |
 | Same asymmetric mesh with selected triangles carrying valid `eExteriorAppearance` data | Appearance weighting; select a case where Native changes the chosen rotation, not merely a printed cost |
 | Same appearance type with different valid serialized property-area values | Geometric facet area is used, rather than the stored annotation area |
-| Symmetric solids and many equal-area face directions | Equal-score/upright behavior, normal-group cutoff ties and hash/sort sensitivity |
+| Symmetric solids and many equal-area face directions (Ares only) | Stable insertion-order ties, reproducibility and worker-count invariance; no Native equality or inequality assertion |
 | Near quantization, duplicate-normal, bottom-height and scoring thresholds | Exact float casts, relative duplicate tests and epsilon comparisons |
 | Multi-part objects, rotated/scaled/mirrored instances and several independent objects | Source part filtering, transform order, object aggregation and result association |
 | Fresh import versus saved BBS project, with absent action and `--orient 0`, `1` and another integer | Actual Native action eligibility, disabled/automatic controls and saved-transform preservation |
@@ -238,10 +246,10 @@ change product code, fixtures or tests as part of this specification commit.
 For each CLI-reachable positive case, run the pinned Native CLI with `--orient
 1` and an equivalent catalog-backed Ares invocation. Prove Native reached the
 orientation operation using its retained orientation output and an
-output-changing control; argument presence is insufficient. A synthetic 3MF
-carrying appearance data must also satisfy that eligibility proof. If its
-project classification suppresses the action, retain the result as a disabled
-control, not as a successful appearance witness.
+output-changing control; argument presence is insufficient. Synthetic BBS 3MFs
+with and without appearance data are positive action witnesses, not assumed
+no-ops. Record actual object IDs and outcomes for copy/assembly controls; an
+unmapped new ID is a disabled control, not an appearance witness.
 
 Compare the complete ordered G-code emitted after the action through Native,
 core API and Ares CLI. Only the existing generated-by normalization is allowed.
@@ -260,17 +268,12 @@ differences, exit status and a machine-verifiable manifest. Include Windows,
 macOS, Linux and browser-WASM API checks without adding a browser button.
 
 The Native CLI calls the raw-mesh/default-parameter overload, not the whole
-`OrientMesh` API. It cannot establish coverage of nondefault `min_volume`,
-per-mesh overhang settings or class cooling context. Before tests for those
-inputs are written, obtain approval for a Native comparison entry at the
-existing `orientation::orient(OrientMeshs, ..., OrientParams)` boundary. That
-entry must preserve the pinned implementation and expose complete rotation
-results; it must not replace or modify the canonical CLI producers. Those API
-comparisons supplement, never replace, the required complete CLI streams.
-Until such comparisons exist, do not claim the complete algorithm verified.
+`OrientMesh` API. Nondefault `min_volume`, per-mesh overhang settings and class
+cooling context are deferred comparison modes; do not add a Native comparison
+entry or CLI flags for them. CLI output comparisons do not establish coverage
+of those parameters. First write the CLI default/zero/one failing witnesses,
+then implement the source operation and expand the approved cases one at a time.
 
-Review must resolve the portable three-dimensional hull dependency, Native tie
-ordering and the additional Native API comparison entry before tests begin.
-Subsequent implementation requires formatting, workspace all-target Clippy,
-WASM compilation and Native E2E evidence. A documentation-only review makes no
-runtime or orientation-parity claim.
+Implementation requires formatting, workspace all-target Clippy, WASM
+compilation and Native E2E evidence. This specification makes no runtime or
+orientation-parity claim.
