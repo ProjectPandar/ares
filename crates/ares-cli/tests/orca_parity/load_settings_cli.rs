@@ -9,9 +9,12 @@ use std::{fs, path::Path};
 
 use serde_json::{Map, Value};
 
-fn preset_files(directory: &Path, vendor_name: &str, printer: &str) -> Vec<String> {
-    let profiles_root = crate::runner::repo_root().join("OrcaSlicer/resources/profiles");
-    let profiles = crate::presets::VendorProfiles::load(&profiles_root, vendor_name).unwrap();
+pub(crate) fn preset_files(directory: &Path, vendor_name: &str, printer: &str) -> Vec<String> {
+    let profiles = crate::presets::VendorProfiles::load(
+        &crate::runner::repo_root().join("OrcaSlicer/resources/profiles"),
+        vendor_name,
+    )
+    .unwrap();
     let selected = crate::select_printer(&profiles, vendor_name, printer).unwrap();
     let mut paths = Vec::new();
     let mut write = |kind: &str, filename: &str, mut fields: Map<String, Value>| {

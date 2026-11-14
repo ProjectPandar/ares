@@ -96,6 +96,7 @@ async fn profile_overlay_default_gcodes() {
     let ares = ares_core::slice_with_load_settings(
         input,
         LoadSettingsSliceRequest {
+            orient: false,
             filename: "input.3mf",
             settings: &settings,
             filaments: &filaments,

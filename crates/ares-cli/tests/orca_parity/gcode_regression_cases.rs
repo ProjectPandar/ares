@@ -21,6 +21,8 @@ mod ironing_equivalent_span;
 #[path = "medial_endpoint_zero.rs"]
 mod medial_endpoint_zero;
 
+#[path = "auto_orientation.rs"]
+mod auto_orientation;
 #[path = "mk4_curl_lifecycle.rs"]
 mod mk4_curl_lifecycle;
 #[path = "project_face_property.rs"]

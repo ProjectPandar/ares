@@ -41,6 +41,7 @@ pub(in crate::runner) fn slice_flattened(
         .block_on(ares_core::slice_with_load_settings(
             input,
             LoadSettingsSliceRequest {
+                orient: false,
                 filename,
                 settings: &settings,
                 filaments: &filaments,

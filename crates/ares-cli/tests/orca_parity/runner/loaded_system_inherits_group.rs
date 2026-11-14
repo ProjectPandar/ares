@@ -120,6 +120,7 @@ fn check(case: &str, repeat: u8) -> Recorded {
         .block_on(ares_core::slice_with_load_settings(
             &input,
             LoadSettingsSliceRequest {
+                orient: false,
                 filename: "single.3mf",
                 settings: &settings,
                 filaments: &filaments,
