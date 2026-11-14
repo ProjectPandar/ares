@@ -177,6 +177,17 @@ pub(super) fn refresh(
             .map(|state| state.selected.name.clone())
             .collect::<Vec<_>>(),
     );
+    // sync_loaded_project_filament_config (Plater.cpp:8927-8937), which the plater runs on the
+    // loaded project config (Plater.cpp:9755).
+    let colours = strings(raw, "filament_colour");
+    let mut multi = strings(raw, "filament_multi_colour");
+    multi.resize(colours.len(), String::new());
+    for (entry, colour) in multi.iter_mut().zip(&colours) {
+        if entry.split(' ').next() != Some(colour.as_str()) {
+            entry.clone_from(colour);
+        }
+    }
+    result.insert_strings("filament_multi_colour", &multi);
     Ok((result, selection))
 }
 
