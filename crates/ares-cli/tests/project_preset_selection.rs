@@ -4,6 +4,8 @@ mod application;
 mod differences;
 #[path = "project_preset_selection/existing.rs"]
 mod existing;
+#[path = "project_preset_selection/filament_composition.rs"]
+mod filament_composition;
 #[path = "project_preset_selection/input.rs"]
 mod input;
 #[path = "project_preset_selection/local.rs"]
