@@ -122,12 +122,13 @@ export interface ProfileSelection {
 }
 
 /**
- * The project's own presets in place of selected ones: each key the project lacks comes from its
- * system preset in the catalog, or the option default when the catalog does not hold it
- * (OrcaSlicer.cpp:3167-3200).
+ * The presets the plater selects when it opens the project: `PresetBundle::load_config_model` with
+ * `LoadAndSelect::Always` (Plater.cpp:9622, PresetBundle.cpp:6158-6430) loads the project config into
+ * the catalog's collections and selects an existing or project-local preset for each.
  */
 export interface ProjectPresetSelection {
   from_project: true;
+  load_and_select: "always";
 }
 
 /** A status of a running slice (`PrintBase::SlicingStatus`): its progress and the current stage. */

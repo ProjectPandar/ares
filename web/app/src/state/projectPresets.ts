@@ -8,9 +8,5 @@ export async function catalogJson({ vendors, presetImports }: CatalogSources): P
   return JSON.stringify({ vendors: loaded, imports: presetImports });
 }
 
-/**
- * The "Project presets" selection: the project's own presets, each key it lacks taken from its
- * system preset in the catalog (OrcaSlicer.cpp:3167-3200, PresetBundle::load_config_file_config).
- * A system preset of a vendor that is not installed keeps the project's values.
- */
-export const FROM_PROJECT: ProjectPresetSelection = { from_project: true };
+/** The "Project presets" selection: the presets the plater selects when it opens the project. */
+export const FROM_PROJECT: ProjectPresetSelection = { from_project: true, load_and_select: "always" };
