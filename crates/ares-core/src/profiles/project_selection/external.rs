@@ -78,11 +78,11 @@ pub(super) fn load_external_filaments(
     for filament in 0..filament_count {
         let mut config = PresetConfig(defaults.clone());
         for (key, _default) in defaults.entries() {
-            let Some(value) = source.get(key) else {
+            let Some(value) = super::config::project_value(source, key)? else {
                 continue;
             };
-            let RawConfigValue::List(values) = value else {
-                config.0.insert(key.clone(), value.clone());
+            let RawConfigValue::List(values) = value.as_ref() else {
+                config.0.insert(key.clone(), value.into_owned());
                 continue;
             };
             if matches!(key.as_str(), "compatible_printers" | "compatible_prints") {
@@ -102,10 +102,15 @@ pub(super) fn load_external_filaments(
                     .min(values.len());
                 RawConfigValue::List(values[start..end].to_vec())
             } else {
-                values.get(filament).cloned().map_or_else(
-                    || RawConfigValue::List(Vec::new()),
-                    |value| RawConfigValue::List(vec![value]),
-                )
+                // ConfigOptionVector::get_at (Config.hpp:676-680).
+                values
+                    .get(filament)
+                    .or(values.first())
+                    .cloned()
+                    .map_or_else(
+                        || RawConfigValue::List(Vec::new()),
+                        |value| RawConfigValue::List(vec![value]),
+                    )
             };
             config.0.insert(key.clone(), values);
         }

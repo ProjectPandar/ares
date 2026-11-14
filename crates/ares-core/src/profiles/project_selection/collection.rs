@@ -142,11 +142,7 @@ impl Collection {
         protected: &std::collections::BTreeSet<String>,
     ) -> Result<PresetConfig, SliceError> {
         let mut config = PresetConfig::defaults(self.kind)?;
-        for (key, value) in project.entries() {
-            if config.0.contains_key(key) && !connection(key) {
-                config.0.insert(key.clone(), value.clone());
-            }
-        }
+        config.apply_project(project)?;
         let parent = config.string("inherits");
         let base = if parent.is_empty() {
             self.find(&config.string(identity(self.kind)))
