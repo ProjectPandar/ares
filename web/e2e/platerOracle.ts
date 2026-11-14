@@ -111,7 +111,9 @@ const oracleGcode = (project: string, plate: number, leg: "official" | "seeded")
 
 /**
  * Orca slicing plate `plate` of `project`: official, or the seeded replay with seed 0 as the browser slices. With
- * `opened`, the 3MF the app opened, the lines its preset selection decides are the probe's (selectedPresetLines.ts).
+ * `opened`, the 3MF the app opened, the lines its preset selection decides are the probe's (selectedPresetLines.ts):
+ * the plater's export of these first-run projects names project-local presets, which the Native CLI rejects with
+ * -17 (OrcaSlicer.cpp:2575-2620).
  */
 export function orcaPlate(project: string, plate: number, leg: "official" | "seeded", opened?: string): string | null {
   const official = oraclePath("ORCA_APPDIR", "the official plater oracle", "an extraction of the official OrcaSlicer AppImage, see scripts/orca-parity.sh");
