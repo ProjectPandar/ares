@@ -156,7 +156,7 @@ whether `dualExtruder.spec.ts` then needs the GUI reference is decided by its re
    The CLI-route specs compare every line outside the listed keys byte for byte, and the
    listed lines exactly with the probe's selection.
 
-## Commits and acceptance
+## Commit order and checks
 
 1. `docs(web)`: this document.
 2. `test(web)`: `web/e2e/presetSelectOracle.ts` and `web/e2e/projectPresetSelection.spec.ts`,
