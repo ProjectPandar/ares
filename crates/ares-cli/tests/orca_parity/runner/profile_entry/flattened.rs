@@ -42,6 +42,8 @@ pub(in crate::runner) fn slice_flattened(
             input,
             LoadSettingsSliceRequest {
                 filename,
+                catalog_json: None,
+                uptodate: false,
                 settings: &settings,
                 filaments: &filaments,
                 plate: None,

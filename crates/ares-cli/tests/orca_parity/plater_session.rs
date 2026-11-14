@@ -249,7 +249,7 @@ fn drop_deleted_objects(text: &str, session: &PlaterSession) -> String {
 
 /// The project as the GUI exports the session; other entries are unchanged.
 fn export(session: &PlaterSession) -> Vec<u8> {
-    rewrite_archive(session.input(), |name, text| match name {
+    rewrite_archive(session.input().unwrap(), |name, text| match name {
         "3D/3dmodel.model" => Some(drop_deleted_objects(&rewrite_build(text, session), session)),
         "Metadata/project_settings.config" => Some(rewrite_tower_positions(text, session)),
         "Metadata/model_settings.config" => Some(drop_deleted_objects(

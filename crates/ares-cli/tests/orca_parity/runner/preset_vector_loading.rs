@@ -1,4 +1,7 @@
 //! ConfigBase::load_from_json accepts RH3D's original scalar coStrings value.
+#[path = "preset_vector_loading/nil_completion.rs"]
+mod nil_completion;
+
 use std::fs;
 
 use ares_core::{

@@ -31,10 +31,10 @@ pub(super) struct ProjectSliceState {
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let (mut project, preparation) = match source.refresh {
-        Some(refresh) => refresh.load(source.bytes, source.overrides, source.validate_print)?,
-        None => crate::project::load_project_with_preparation(source.bytes, source.overrides)?,
-    };
+    let (mut project, preparation) =
+        source
+            .input
+            .load(source.overrides, source.refresh, source.validate_print)?;
     project.apply_plater_edits(source.edits);
     if let Some(refresh) = source.refresh {
         refresh.place(&mut project);
@@ -59,8 +59,10 @@ pub(super) fn prepare_project_source(
             source.validate_print,
         )?;
     }
-    let filament_count = project.cli_filament_count();
-    project.initialize_cli_loaded_project_config(filament_count);
+    if matches!(source.input, super::ProjectInput::Bytes(_)) {
+        let filament_count = project.cli_filament_count();
+        project.initialize_cli_loaded_project_config(filament_count);
+    }
     prepare_loaded_project_slice_with_validation(
         project,
         source.plate,

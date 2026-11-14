@@ -11,6 +11,7 @@ pub(super) fn refresh(
     catalog: &Catalog,
     project: &ProjectSettingsRaw,
     uptodate: bool,
+    selected: Option<&crate::ProjectSettings>,
 ) -> Result<ProjectSettingsRaw, SliceError> {
     let names = strings(project, "filament_settings_id");
     let inherited = strings(project, "inherits_group");
@@ -18,10 +19,24 @@ pub(super) fn refresh(
     let refresh_unlisted = uptodate || dirty.iter().any(|entry| !entry.is_empty());
     let mut result = project.clone();
     // CLI:3167–3200: machine and process refresh, not replacement selection.
-    for (kind, key, slot) in [
-        (ProfileKind::Machine, "printer_settings_id", names.len() + 1),
-        (ProfileKind::Process, "print_settings_id", 0),
+    let supplied = selected.map(|selected| &selected.project.preset);
+    for (kind, key, slot, replaced) in [
+        (
+            ProfileKind::Machine,
+            "printer_settings_id",
+            names.len() + 1,
+            supplied.is_some_and(|p| !p.printer_settings_id.0.is_empty()),
+        ),
+        (
+            ProfileKind::Process,
+            "print_settings_id",
+            0,
+            supplied.is_some_and(|p| !p.print_settings_id.0.is_empty()),
+        ),
     ] {
+        if replaced {
+            continue;
+        }
         let identity = strings(project, key);
         let name = identity.first().map(String::as_str).unwrap_or("");
         let name = system_name(name, &inherited, slot);
@@ -40,6 +55,12 @@ pub(super) fn refresh(
             }
             result.insert(key.clone(), value.clone());
         }
+    }
+    // CLI:2295,2793: a supplied named machine skips retained filament refresh.
+    if supplied.is_some_and(|p| {
+        !p.printer_settings_id.0.is_empty() || !p.filament_settings_id.0.is_empty()
+    }) {
+        return Ok(result);
     }
     let filaments = names
         .iter()
@@ -107,7 +128,7 @@ pub(super) fn system_name<'a>(name: &'a str, inherited: &'a [String], slot: usiz
         .unwrap_or(name)
 }
 
-pub(super) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<String> {
+pub(in crate::profiles) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<String> {
     let Some(value) = raw.get(key) else {
         return Vec::new();
     };
@@ -124,7 +145,10 @@ pub(super) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<String> {
     }
 }
 
-pub(super) fn dirty_keys(dirty: &[String], slot: usize) -> Result<BTreeSet<String>, SliceError> {
+pub(in crate::profiles) fn dirty_keys(
+    dirty: &[String],
+    slot: usize,
+) -> Result<BTreeSet<String>, SliceError> {
     let token = dirty.get(slot).map(String::as_str).unwrap_or("");
     let mut keys = crate::options::unescape_strings_cstyle(token)
         .map_err(SliceError::InvalidInput)?
@@ -156,7 +180,7 @@ pub(super) fn bookkeeping(key: &str) -> bool {
     )
 }
 
-pub(super) fn connection(key: &str) -> bool {
+pub(in crate::profiles) fn connection(key: &str) -> bool {
     matches!(
         key,
         "print_host"

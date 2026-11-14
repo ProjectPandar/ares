@@ -3,7 +3,9 @@
 
 use std::collections::HashMap;
 
-pub(super) fn index_stl_vertices(model: &crate::Model) -> (Vec<[f32; 3]>, Vec<[u32; 3]>) {
+pub(in crate::project::domain) fn index_stl_vertices(
+    model: &crate::Model,
+) -> (Vec<[f32; 3]>, Vec<[u32; 3]>) {
     let mut vertices = Vec::new();
     let mut index = HashMap::new();
     let mut triangles = Vec::with_capacity(model.triangles().len());

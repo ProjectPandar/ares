@@ -83,7 +83,9 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     { name: "a.stl", bytes: readFileSync(cube) },
     { name: "b.stl", bytes: readFileSync(cube) },
   ]);
-  await expect(status).toHaveText("Import failed: drop one 3MF or STL file at a time");
+  await expect(page.getByRole("dialog", { name: "An object with multiple parts was detected", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   // STL by drag-drop.
   await dropFiles(page, [{ name: "cube10.stl", bytes: readFileSync(cube) }]);

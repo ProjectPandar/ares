@@ -32,9 +32,8 @@ impl ProfileSelection {
     /// A load-settings selection: `None` machine/process marks the kind
     /// as not loaded — it contributes no overlay and the embedded config
     /// of that kind is retained (`OrcaSlicer.cpp:2009-2106` arms run per
-    /// loaded file only). Filament lists are never partial in the
-    /// load-settings entry (a settings-only list stays rejected until its
-    /// own RED covers it).
+    /// loaded file only). Without embedded project state a filament
+    /// selection is required.
     pub fn new_partial(
         process: Option<impl Into<String>>,
         machine: Option<impl Into<String>>,
@@ -57,6 +56,32 @@ impl ProfileSelection {
             process,
             machine,
             filaments,
+        })
+    }
+
+    pub(super) fn machine_for_project(
+        machine: String,
+        embedded: &crate::project::raw_settings::ProjectSettingsRaw,
+    ) -> Result<Self, SliceError> {
+        use crate::project::raw_settings::RawConfigValue;
+        let nonempty_name = |value: &RawConfigValue| matches!(value, RawConfigValue::Text(name) if !name.is_empty());
+        let process = embedded
+            .get("print_settings_id")
+            .and_then(|value| value.element(0))
+            .is_some_and(nonempty_name);
+        let filaments = embedded.get("filament_settings_id").is_some_and(|value| {
+            value.len() > 0
+                && (0..value.len()).all(|index| nonempty_name(value.element(index).unwrap()))
+        });
+        if machine.is_empty() || !process || !filaments {
+            return Err(SliceError::InvalidInput(
+                "machine-only settings require an embedded process and filaments".to_owned(),
+            ));
+        }
+        Ok(Self {
+            process: None,
+            machine: Some(machine),
+            filaments: Vec::new(),
         })
     }
 
@@ -166,7 +191,11 @@ pub(super) fn compose_resolved_profiles(
         filament_options.push(options);
     }
 
-    let (filament, variant_cardinalities) = compose_filaments(filament_options);
+    let (filament, variant_cardinalities) = if filament_options.is_empty() {
+        (crate::FilamentOptions::default(), Vec::new())
+    } else {
+        compose_filaments(filament_options)
+    };
     let metadata = ProfileGroupMetadata::from_profiles(
         &process_metadata,
         &filament_metadata,

@@ -1,6 +1,7 @@
 mod args;
 mod compatible_machine;
 mod failure;
+mod load_settings;
 mod moves_csv;
 mod project_presets;
 #[cfg(target_os = "linux")]
@@ -83,7 +84,9 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     if args.progress {
         context.set_status_callback(&mut print_status);
     }
-    if let Some(catalog) = &args.project_preset_catalog {
+    if let Some(catalog) = &args.project_preset_catalog
+        && args.load_settings.is_none()
+    {
         return project_presets::slice(&args, catalog, &input, &overrides, context).await;
     }
     let load_settings = args
@@ -97,82 +100,14 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .map(split_native_list)
         .unwrap_or_default();
     if !load_settings.is_empty() || !load_filaments.is_empty() {
-        let filename = args
-            .input
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
-        // `OrcaSlicer.cpp:1682-1690`: the 3MF load block admits the
-        // project before `:1953-2024` reads the preset files — probe the
-        // admission first so the embedded `-19` gate wins over the
-        // adapter's missing-file `-5`.
-        if let Err(error) = ares_core::validate_load_settings_input(&input) {
-            return Err(slice_error_to_failure(
-                error,
-                &args.output,
-                #[cfg(target_os = "linux")]
-                args.plate.unwrap_or(1),
-            ));
-        }
-        let settings = read_preset_files(&load_settings)?;
-        let filaments = read_preset_files(&load_filaments)?;
-        let settings = settings
-            .iter()
-            .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
-            .collect::<Vec<_>>();
-        let filaments = filaments
-            .iter()
-            .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
-            .collect::<Vec<_>>();
-        let mut sliced_plate = ares_core::SlicedPlate::default();
-        let gcode = match ares_core::slice_with_load_settings(
+        return load_settings::slice(
+            &args,
             &input,
-            ares_core::LoadSettingsSliceRequest {
-                filename,
-                settings: &settings,
-                filaments: &filaments,
-                plate: args.plate,
-                overrides: &overrides,
-                placement: ares_core::Placement::None,
-                sliced_plate: &mut sliced_plate,
-            },
-            ares_core::GenerationMetadata::default(),
+            &overrides,
+            (&load_settings, &load_filaments),
             context,
         )
-        .await
-        {
-            Ok(gcode) => gcode,
-            Err(error) => {
-                let failure = slice_error_to_failure(
-                    error,
-                    &args.output,
-                    #[cfg(target_os = "linux")]
-                    // The request above selects args.plate; CLI :5681-5690
-                    // selects that same one-based plate (default first), and
-                    // :5723/:433 records index+1 for the -50 result.
-                    args.plate.unwrap_or(1),
-                )
-                .with_config_substitutions(&input_file, substitutions(&input));
-                #[cfg(target_os = "linux")]
-                let failure =
-                    failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
-                return Err(failure);
-            }
-        };
-        fs::write(&args.output, gcode)?;
-        report_success(
-            &input_file,
-            substitutions(&input),
-            #[cfg(target_os = "linux")]
-            result_json::Success {
-                output: &args.output,
-                plate: args.plate.unwrap_or(1),
-                plate_index: args.plate.unwrap_or(0),
-                sliced_plate,
-                upward_machines: &[],
-            },
-        );
-        return Ok(());
+        .await;
     }
     let output = match extension {
         Some(extension) if extension == "3mf" => {

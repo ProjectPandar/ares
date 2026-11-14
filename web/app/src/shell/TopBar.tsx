@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { type RefObject, useRef } from "react";
-import { exportAllGcode, exportGcode, importFile, setTheme, sliceAllPlates, slicePlate } from "../state/actions";
+import { exportAllGcode, exportGcode, importFiles, setTheme, sliceAllPlates, slicePlate } from "../state/actions";
 import { importPresetFiles, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
@@ -23,10 +23,9 @@ export function TitleBar({ importInput: input, onShortcuts }: {
           disabled={engine !== "ready" || loadingFile}>
           <OrcaIcon name="topbar_open" /> <span>Import</span>
         </button>
-        <input ref={input} type="file" accept=".3mf,.stl" hidden data-testid="import-input"
+        <input ref={input} type="file" accept=".3mf,.stl" multiple hidden data-testid="import-input"
           onChange={(event) => {
-            const picked = event.target.files?.[0];
-            if (picked) void importFile(picked);
+            importFiles([...(event.target.files ?? [])]);
             event.target.value = "";
           }} />
         {/* MainFrame::load_config_file (File > Import > Import Configs). */}

@@ -1,8 +1,7 @@
 /// <reference lib="webworker" />
 import init, {
-  PlaterSession,
+  type PlaterSession,
   type PlaterSnapshot,
-  createPlaterSessionWithProfiles,
   PresetCatalog,
   decodeConfigValue,
   encodeConfigValue,
@@ -29,6 +28,7 @@ import { applyEdit } from "./platerEdit.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ActualSpeedProfile, ColorRange, MovesSlider, MovesView, SliceResult, Toolpaths, ViewColors, ViewRange } from "./toolpaths.js";
 import type { Scene } from "./types.js";
+import { handlePlaterSource } from "./workerPlaterSource.js";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -207,13 +207,11 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       catalogs.delete(request.catalogId);
       return [undefined, []];
     case "platerCreate":
-      sessions.set(request.sessionId, new PlaterSession(request.input, request.filename));
-      return [undefined, []];
-    case "platerCreateWithProfiles": {
-      const { sessionId, input, filename, catalog, selection, options } = request;
-      sessions.set(sessionId, await createPlaterSessionWithProfiles(input, filename, catalog, selection, options));
-      return [undefined, []];
-    }
+    case "platerCreateWithProfiles":
+    case "platerCreateFromStlFiles":
+    case "platerCreateFromStlFilesWithProfiles":
+    case "platerProfileSettings":
+      return [await handlePlaterSource(request, sessions), []];
     case "platerScene":
       return sceneResult(sessions.get(request.sessionId)!.scene());
     case "platerInvalidValues":
