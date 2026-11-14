@@ -101,7 +101,7 @@ fn optional_project_metadata_entries_may_be_absent() {
 }
 
 #[tokio::test]
-async fn optional_sequence_metadata_slices_like_native() {
+async fn optional_project_metadata_slices_like_native() {
     let Some(bin) = native_environment::binary("ARES_ORCA_BIN") else {
         return;
     };
@@ -128,6 +128,11 @@ async fn optional_sequence_metadata_slices_like_native() {
         ),
         ("nonobject", None, Some(r#"{"plate_1":false}"#)),
         ("absent-sequences", Some(SEQUENCES), None),
+        (
+            "absent-model-settings",
+            Some("Metadata/model_settings.config"),
+            None,
+        ),
         (
             "absent-project-settings",
             Some("Metadata/project_settings.config"),
