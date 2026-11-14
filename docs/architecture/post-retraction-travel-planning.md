@@ -31,6 +31,12 @@ writer-position condition to the post-retraction call as well.
    upstream `last_pos()`, rather than deciding from rounded emitted coordinates.
    Rebuild the travel from the updated cursor when it changed. The existing
    `LayerGeometry` supplies the layer context for this Rust call boundary.
+   Upstream also requires `m_layer != nullptr` at `GCode.cpp:10606` because
+   belt-brim apron emission has no `Layer`. Ares has no belt-brim apron or
+   other layerless path into this planner. Both `LayerGeometry` constructors
+   in `layers/entry.rs` serve scheduled object, support, or raft layers,
+   including their skirt, brim, and tower travel. The required geometry
+   argument therefore carries the layer-present precondition here.
 3. Restore the saved external one-shot modifier only around the second
    perimeter-planning call, then consume both one-shot modifiers as upstream
    does. Leave no restored modifier behind when Rust returns a routing error.
