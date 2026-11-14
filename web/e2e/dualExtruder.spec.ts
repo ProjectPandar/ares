@@ -7,7 +7,7 @@ import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { platerExport } from "./platerExport";
+import { platerExport, withoutCliGroups } from "./platerExport";
 import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -106,7 +106,8 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   // reference is therefore the 3MF the plater saves after the edits, sliced by OrcaSlicer.
   if (orca) {
     const selection = nativeSelection(probe!, `${artifacts}selection/`, legal, ["BBL"]);
-    expect(normalize(web, "Ares"), "the sidebar edits slice as the plater export").toBe(orcaGcode(platerExport(selection, legal, `${artifacts}edited.3mf`, EDITS)));
+    const native = withoutCliGroups(orcaGcode(platerExport(selection, legal, `${artifacts}edited.3mf`, EDITS)), selection);
+    expect(normalize(web, "Ares"), "the sidebar edits slice as the plater export").toBe(native);
   }
 
   // Different diameters cannot print together: the question picks one for both nozzles; Cancel keeps both.
