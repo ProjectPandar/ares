@@ -2,16 +2,16 @@ use ares_core::{ConfigOverrides, GenerationMetadata, SliceOptions, SlicerContext
 use serde_json::json;
 
 #[tokio::test]
-async fn byte_slice_initializes_a_default_current_bed() {
-    check_byte_current("Default Plate", "byte-default.gcode").await;
+async fn byte_slice_rejects_a_default_current_bed() {
+    check_byte_current("Default Plate").await;
 }
 
 #[tokio::test]
-async fn byte_slice_initializes_an_empty_current_bed() {
-    check_byte_current("", "byte-empty.gcode").await;
+async fn byte_slice_rejects_an_empty_current_bed() {
+    check_byte_current("").await;
 }
 
-async fn check_byte_current(current: &str, artifact: &str) {
+async fn check_byte_current(current: &str) {
     let options: SliceOptions = serde_json::from_value(json!({
         "curr_bed_type": current,
         "default_bed_type": "Textured PEI Plate",
@@ -24,16 +24,17 @@ async fn check_byte_current(current: &str, artifact: &str) {
         "machine_start_gcode": "M140 S[bed_temperature_initial_layer_single]\nM190 S[bed_temperature_initial_layer_single]"
     }))
     .unwrap();
-    let gcode = ares_core::slice(include_bytes!("../../../tests/parity/cube10.stl"), options)
-        .await
-        .unwrap();
-    check_commands(&gcode, 55, 51, artifact);
+    let result =
+        ares_core::slice(include_bytes!("../../../tests/parity/cube10.stl"), options).await;
+    assert!(
+        matches!(result, Err(ares_core::SliceError::InvalidInput(ref message)) if message == "curr_bed_type has an invalid value"),
+        "{current:?}: {result:?}"
+    );
 }
 
-// Plater.cpp:1991–2010,2512–2535; Preset.cpp:1034–1048,1140–1175.
-// This changes a caller's project selection, never persisted plate metadata.
+// OrcaSlicer.cpp:7993–8001 inherits plate defaults, not global sentinels.
 #[tokio::test]
-async fn project_initializes_default_before_reading_bed_temperatures() {
+async fn project_rejects_global_default_and_preserves_concrete_bed() {
     for (index, (current, hint, initial, ordinary)) in [
         ("Default Plate", "Textured PEI Plate", 61, 59),
         ("Default Plate", "", 55, 50),
@@ -47,21 +48,33 @@ async fn project_initializes_default_before_reading_bed_temperatures() {
             &serde_json::to_vec(&json!({
                 "curr_bed_type": current,
                 "default_bed_type": hint,
-                "printer_model": "BL-P001"
+                "printer_model": "BL-P001",
+                "support_multi_bed_types": "1"
             }))
             .unwrap(),
         )
         .unwrap();
-        let gcode = ares_core::slice_project_plate_validated(
+        let result = ares_core::slice_project_plate_validated(
             include_bytes!("../../../tests/parity/bed-type-selection/omitted.3mf"),
             GenerationMetadata::default(),
             Some(1),
             &overrides,
             SlicerContext::new(0),
         )
-        .await
-        .unwrap();
-        check_commands(&gcode, initial, ordinary, &format!("project-{index}.gcode"));
+        .await;
+        if current == "Default Plate" {
+            assert!(
+                matches!(result, Err(ares_core::SliceError::Validate { ref message, .. }) if message == "curr_bed_type Default Plate has no first-layer temperature"),
+                "{hint:?}: {result:?}"
+            );
+        } else {
+            check_commands(
+                &result.unwrap(),
+                initial,
+                ordinary,
+                &format!("project-{index}.gcode"),
+            );
+        }
     }
 }
 
