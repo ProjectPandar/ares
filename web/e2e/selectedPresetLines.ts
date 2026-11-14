@@ -49,7 +49,15 @@ export function openedSelection(opened: string, directory: string): NativeSelect
  * `reference`, a CLI-route slice of the 3MF the browser opened, with the lines of SELECTED_PRESET_KEYS set from
  * `selection`, the preset-select probe's result for that 3MF: a config line the selected presets hold is replaced,
  * or inserted at its sorted place in the config block; one they lack is removed. A start G-code line is replaced
- * where the reference has it. Every other byte is the reference's.
+ * where the reference has it. The `compatible_printers_condition` line is removed: the Native CLI keeps the key a
+ * 3MF stores, while the GUI's project config, full_fff_config, erases it (PresetBundle.cpp:5790-5794); this models
+ * the GUI's config in the reference. Every other byte is the reference's.
+ *
+ * The plater's own export is no reference here: the projects this serves open with no vendor installed besides
+ * Custom, so the plater selects project-local presets "<name>(<file>.3mf)", and the Native CLI rejects their export
+ * with CLI_PROCESS_NOT_COMPATIBLE, -17 (OrcaSlicer.cpp:2575-2620): the process lists the system printer name, not
+ * the project-local one. Those presets hold the project's own config, so the CLI slice of the opened 3MF is the
+ * closest reference.
  */
 export function withSelectedPresets(reference: string, selection: NativeSelection): string {
   const values = selectedValues(selection);
@@ -74,5 +82,8 @@ export function withSelectedPresets(reference: string, selection: NativeSelectio
     const after = block.findIndex((line) => /^; (\S+) = /.exec(line)![1] > key);
     lines.splice(start + 1 + (after < 0 ? block.length : after), 0, `; ${key} = ${value}`);
   }
+  const start = lines.indexOf("; CONFIG_BLOCK_START");
+  const erased = lines.findIndex((line, index) => index > start && line.startsWith("; compatible_printers_condition = "));
+  if (erased >= 0) lines.splice(erased, 1);
   return lines.join("\n");
 }
