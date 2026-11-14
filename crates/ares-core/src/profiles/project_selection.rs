@@ -15,7 +15,6 @@ use crate::{
 pub use collection::{PresetCollectionState, PresetOutcome, PresetRecord};
 pub use config::PresetConfig;
 use serde::Serialize;
-use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct PresetSelection {
@@ -159,31 +158,7 @@ pub(super) fn refresh(
             result.insert(key.clone(), value.clone());
         }
     }
-    let mut filament_values = BTreeMap::new();
-    for state in &filament_states {
-        for (key, value) in state.edited.config.0.entries() {
-            if matches!(
-                key.as_str(),
-                "inherits"
-                    | "compatible_printers"
-                    | "compatible_prints"
-                    | "compatible_printers_condition"
-                    | "compatible_prints_condition"
-                    | "filament_self_index"
-                    | "filament_extruder_variant"
-                    | "filament_map"
-            ) {
-                continue;
-            }
-            if matches!(value, RawConfigValue::List(_)) {
-                continue;
-            }
-            filament_values.insert(key.clone(), value.clone());
-        }
-    }
-    for (key, value) in filament_values {
-        result.insert(key, value);
-    }
+    compose_filaments(&mut result, &filament_states);
     for (kind, state) in [
         (ProfileKind::Process, &selection.process),
         (ProfileKind::Machine, &selection.printer),
@@ -201,4 +176,74 @@ pub(super) fn refresh(
             .collect::<Vec<_>>(),
     );
     Ok((result, selection))
+}
+
+// PresetBundle::full_fff_config(false) (PresetBundle.cpp:5621-5774), the project config the
+// plater saves (full_config_secure, Plater.cpp:19779): each filament is find_preset(name, true),
+// the edited copy for the selected preset; scalars come from the first filament, vectors are
+// appended in filament order, filament_self_index numbers each filament's variants, and
+// filament_ids are the presets' filament_id (5636, 5679, 5821).
+fn compose_filaments(result: &mut ProjectSettingsRaw, states: &[PresetCollectionState]) {
+    let selected = &states[0];
+    let presets = states
+        .iter()
+        .map(|state| {
+            if state.selected.name == selected.selected.name {
+                &selected.edited
+            } else {
+                selected
+                    .records
+                    .iter()
+                    .find(|record| record.name == state.selected.name)
+                    .expect("loaded filament preset")
+            }
+        })
+        .collect::<Vec<_>>();
+    let list = |preset: &PresetRecord, key: &str| match preset.config.0.get(key) {
+        Some(RawConfigValue::List(values)) => values.clone(),
+        _ => Vec::new(),
+    };
+    for (key, value) in presets[0].config.0.entries() {
+        if matches!(
+            key.as_str(),
+            "inherits"
+                | "compatible_printers"
+                | "compatible_prints"
+                | "compatible_printers_condition"
+                | "compatible_prints_condition"
+                | "different_settings_to_system"
+                | "filament_settings_id"
+                | "filament_self_index"
+                | "filament_map"
+        ) {
+            continue;
+        }
+        let value = match value {
+            RawConfigValue::List(_) => RawConfigValue::List(
+                presets
+                    .iter()
+                    .flat_map(|preset| list(preset, key))
+                    .collect(),
+            ),
+            value => value.clone(),
+        };
+        result.insert(key.clone(), value);
+    }
+    result.insert_strings(
+        "filament_self_index",
+        &presets
+            .iter()
+            .enumerate()
+            .flat_map(|(index, preset)| {
+                vec![(index + 1).to_string(); list(preset, "filament_extruder_variant").len()]
+            })
+            .collect::<Vec<_>>(),
+    );
+    result.insert_strings(
+        "filament_ids",
+        &presets
+            .iter()
+            .map(|preset| preset.filament_id.clone())
+            .collect::<Vec<_>>(),
+    );
 }
