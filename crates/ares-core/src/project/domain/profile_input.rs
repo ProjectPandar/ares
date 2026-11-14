@@ -90,7 +90,7 @@ impl Project {
                 &self.settings.printer.remaining.upward_compatible_machine.0,
             );
         }
-        // OrcaSlicer.cpp:2815-2818 resizes both CLI bookkeeping vectors
+        // OrcaSlicer.cpp:3202-3205 resizes both CLI bookkeeping vectors
         // on m_print_config to filament_count + 2 before the preset sync
         // and GCode::append_full_config serialize them (`std::vector::
         // resize` semantics: grow with empty strings, truncate longer
