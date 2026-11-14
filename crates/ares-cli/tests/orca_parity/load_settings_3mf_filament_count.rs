@@ -170,6 +170,8 @@ async fn run_case(empty: bool, count: usize) {
         &input,
         LoadSettingsSliceRequest {
             filename: "input.3mf",
+            catalog_json: None,
+            uptodate: false,
             settings: &settings,
             filaments: &filaments,
             plate: None,

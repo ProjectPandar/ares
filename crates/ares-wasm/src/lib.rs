@@ -15,7 +15,10 @@ mod status;
 
 pub use colors::{option_colors, role_colors, view_types};
 pub use moves::{SliceOutput, VertexBuffers, option_types};
-pub use plater::{PlaterSession, PlaterSnapshot, create_plater_session_with_profiles};
+pub use plater::{
+    PlaterSession, PlaterSnapshot, create_plater_session_from_stl_files,
+    create_plater_session_from_stl_files_with_profiles, create_plater_session_with_profiles,
+};
 pub use raw_moves::MoveBuffers;
 
 use ares_core::{GenerationMetadata, SliceError, SliceOptions};

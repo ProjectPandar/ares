@@ -1,3 +1,13 @@
+export interface StlFile {
+  name: string;
+  bytes: Uint8Array;
+}
+
+export interface StlImportOptions {
+  asMultipart: boolean;
+  autoDrop: boolean;
+}
+
 /** Ares scene data returned by `loadScene` (GLCanvas3D volumes, 3DBed plate source). */
 export type VolumeType =
   | "ModelPart"

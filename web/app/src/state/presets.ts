@@ -313,7 +313,7 @@ export function selectFilament(slot: number, filament: string) {
 export function presetSliceBlocker(selection: PresetSelection, scene: Scene): string | null {
   // An STL is centered like one model loaded on an empty plate (Plater.cpp:7149-7160); with more
   // objects OrcaSlicer looks for empty cells instead, which is not ported yet.
-  if (scene.format === "stl" && scene.objects.length !== 1) {
+  if (scene.format === "stl" && scene.objects.length !== 1 && useApp.getState().file?.kind !== "stl-batch") {
     return "Placing more than one STL object on the plate needs arrange, which is not ported yet";
   }
   if (!selection.process) return "Select a process preset to slice";

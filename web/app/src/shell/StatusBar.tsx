@@ -35,7 +35,7 @@ export function StatusBar() {
         {progress && <progress className="slice-progress" data-testid="slice-progress" max={100} value={progress.percent} />}
       </span>
       <span className="status-right">
-        {file && <span>{file.name} · {formatBytes(file.bytes.length)}</span>}
+        {file && <span>{file.name} · {formatBytes(file.kind === "single" ? file.bytes.length : file.files.reduce((total, input) => total + input.bytes.length, 0))}</span>}
         <span className={`engine-dot ${engine}`} title={`WASM engine: ${engine}`} />
         <span>WASM worker</span>
       </span>

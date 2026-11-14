@@ -1,0 +1,154 @@
+--- a/src/OrcaSlicer.cpp
++++ b/src/OrcaSlicer.cpp
+@@ -80,6 +80,7 @@
+ #endif
+ 
+ #include "nlohmann/json.hpp"
++#include "PresetSelectProbe.hpp"
+ 
+ #include <boost/algorithm/string/predicate.hpp>
+ #include <boost/filesystem.hpp>
+@@ -1198,6 +1199,8 @@
+ 
+ int CLI::run(int argc, char **argv)
+ {
++    if (const char *request = std::getenv("ARES_PRESET_SELECT_REQUEST"))
++        return Slic3r::PresetSelectProbe::run(request);
+     // Mark the main thread for the debugger and for runtime checks.
+     set_current_thread_name("orcaslicer_main");
+     // Save the thread ID of the main thread.
+--- a/src/libslic3r/Preset.cpp
++++ b/src/libslic3r/Preset.cpp
+@@ -30,6 +30,7 @@
+ #include "Exception.hpp"
+ #include "Preset.hpp"
+ #include "PresetBundle.hpp"
++#include "../PresetSelectProbe.hpp"
+ #include "AppConfig.hpp"
+ #include "LocalesUtils.hpp"
+ #include "ParallelResolve.hpp"
+@@ -3067,6 +3068,10 @@
+             }
+             return nullptr;
+         }, &keys);
++    if (PresetSelectProbe::active)
++        PresetSelectProbe::materialized.push_back({
++            {"type", static_cast<int>(m_type)}, {"original_name", original_name},
++            {"config", PresetSelectProbe::config(cfg)}});
+     std::string                 &inherits = Preset::inherits(cfg);
+ 
+     //BBS: add config related logs
+--- /dev/null
++++ b/src/PresetSelectProbe.hpp
+@@ -0,0 +1,111 @@
++#ifndef ARES_PRESET_SELECT_PROBE_HPP
++#define ARES_PRESET_SELECT_PROBE_HPP
++
++#include "libslic3r/AppConfig.hpp"
++#include "libslic3r/PresetBundle.hpp"
++#include "libslic3r/Utils.hpp"
++#include "nlohmann/json.hpp"
++#include <boost/algorithm/string/predicate.hpp>
++#include <cstdio>
++#include <cstdlib>
++#include <fstream>
++#include <iostream>
++#include <stdexcept>
++
++namespace Slic3r::PresetSelectProbe {
++using Json = nlohmann::json;
++inline bool active = false;
++inline Json materialized = Json::array();
++
++inline Json config(const DynamicPrintConfig &value)
++{
++    Json result = Json::object();
++    for (const auto &key : value.keys()) {
++        const ConfigOption &option = *value.option(key);
++        result[key] = {{"type", static_cast<int>(option.type())},
++                       {"serialized", option.serialize()}};
++    }
++    return result;
++}
++
++inline Json preset(const Preset &value)
++{
++    return {{"name", value.name}, {"system", value.is_system},
++            {"default", value.is_default}, {"external", value.is_external},
++            {"project_local", value.is_project_embedded},
++            {"visible", value.is_visible}, {"dirty", value.is_dirty},
++            {"filament_id", value.filament_id}, {"version", value.version.to_string()},
++            {"renamed_from", value.renamed_from}, {"config", config(value.config)}};
++}
++
++inline Json collection(const PresetCollection &value)
++{
++    Json records = Json::array();
++    for (const Preset &entry : value.get_presets())
++        records.push_back(preset(entry));
++    return {{"selected", preset(value.get_selected_preset())},
++            {"edited", preset(value.get_edited_preset())},
++            {"dirty", value.current_is_dirty()},
++            {"dirty_options", value.current_dirty_options()}, {"records", records}};
++}
++
++inline Json bundle(const PresetBundle &value)
++{
++    return {{"process", collection(value.prints)},
++            {"printer", collection(value.printers)},
++            {"filament", collection(value.filaments)},
++            {"filament_presets", value.filament_presets},
++            {"project_config", config(value.project_config)}};
++}
++
++inline int run(const char *request_path)
++{
++    try {
++        std::ifstream input(request_path);
++        Json request;
++        input >> request;
++        set_data_dir(request.at("data_directory").get<std::string>());
++        AppConfig app;
++        PresetBundle presets;
++        std::string errors;
++        presets.load_presets(app, ForwardCompatibilitySubstitutionRule::Disable,
++                             PresetBundle::PresetPreferences(), &errors, true);
++        if (!errors.empty())
++            throw std::runtime_error(errors);
++        Json result = {{"upstream", "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19"},
++                       {"before", bundle(presets)}, {"projects", Json::array()}};
++        active = true;
++        for (const Json &project : request.at("projects")) {
++            DynamicPrintConfig combined = DynamicPrintConfig::full_print_config();
++            for (auto it = project.at("options").begin(); it != project.at("options").end(); ++it)
++                combined.set_deserialize_strict(it.key(), it.value().get<std::string>());
++            const std::string filename = project.at("filename").get<std::string>();
++            if (!boost::algorithm::iends_with(filename, ".3mf"))
++                throw std::runtime_error("preset-select probe requires a 3MF filename");
++            if (combined.option<ConfigOptionStrings>("filament_colour")->size() != 1)
++                throw std::runtime_error("preset-select probe requires one filament");
++            const Json imported = config(combined);
++            materialized = Json::array();
++            presets.load_config_model(filename, std::move(combined),
++                                      Semver(project.at("version").get<std::string>()));
++            result["projects"].push_back({{"filename", filename}, {"imported", imported},
++                                          {"materialized", materialized},
++                                          {"result", bundle(presets)}});
++        }
++        const std::string output_path = request.at("output").get<std::string>();
++        FILE *output = std::fopen(output_path.c_str(), "wx");
++        if (output == nullptr)
++            throw std::runtime_error("cannot create preset-select output");
++        const std::string bytes = result.dump(2) + "\n";
++        const size_t written = std::fwrite(bytes.data(), 1, bytes.size(), output);
++        const int closed = std::fclose(output);
++        if (written != bytes.size() || closed != 0)
++            throw std::runtime_error("cannot write preset-select output");
++        return 0;
++    } catch (const std::exception &error) {
++        std::cerr << "preset-select: " << error.what() << '\n';
++        return 1;
++    }
++}
++} // namespace Slic3r::PresetSelectProbe
++#endif

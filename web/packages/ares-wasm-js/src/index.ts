@@ -3,7 +3,7 @@ import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ConfigValue, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene, SlicingStatus } from "./types.js";
+import type { CompatiblePresets, ConfigValue, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
@@ -223,6 +223,34 @@ export class AresSlicer {
     return new PlaterSession((body, onStatus) => this.#call(body, onStatus), sessionId);
   }
 
+  /** Loads every named STL through the core's multipart load policy. */
+  async createPlaterSessionFromStlFiles(files: readonly StlFile[], choices: StlImportOptions): Promise<PlaterSession> {
+    await this.#ready;
+    const sessionId = this.#nextSessionId++;
+    await this.#call({
+      kind: "platerCreateFromStlFiles", sessionId,
+      inputs: files.map(({ bytes }) => bytes.slice()),
+      batch: JSON.stringify({ names: files.map(({ name }) => name), ...choices }),
+    });
+    return new PlaterSession((body, onStatus) => this.#call(body, onStatus), sessionId);
+  }
+
+  /** Loads the complete STL batch onto the selected printer's bed. */
+  async createPlaterSessionFromStlFilesWithProfiles(
+    files: readonly StlFile[], choices: StlImportOptions, catalogJson: string,
+    selection: ProfileSelection, options: ProfileSliceOptions,
+  ): Promise<PlaterSession> {
+    await this.#ready;
+    const sessionId = this.#nextSessionId++;
+    await this.#call({
+      kind: "platerCreateFromStlFilesWithProfiles", sessionId,
+      inputs: files.map(({ bytes }) => bytes.slice()),
+      batch: JSON.stringify({ names: files.map(({ name }) => name), ...choices }),
+      catalog: catalogJson, selection: JSON.stringify(selection), options: JSON.stringify(options),
+    });
+    return new PlaterSession((body, onStatus) => this.#call(body, onStatus), sessionId);
+  }
+
   /**
    * Selectable processes and filaments of the catalog compatible with the
    * `printer` preset, and filaments also with the `process` preset when given
@@ -328,7 +356,7 @@ export class AresSlicer {
   #call(body: RequestBody, onStatus?: (status: SlicingStatus) => void): Promise<unknown> {
     const id = this.#nextId++;
     const request = { ...body, id } as WorkerRequest;
-    const transfer = "input" in request ? [request.input.buffer] : [];
+    const transfer = "inputs" in request ? request.inputs.map((input) => input.buffer) : "input" in request ? [request.input.buffer] : [];
     return new Promise((resolve, reject) => {
       this.#pending.set(id, { resolve, reject, onStatus });
       this.#worker.postMessage(request, transfer);

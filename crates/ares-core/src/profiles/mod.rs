@@ -1,13 +1,19 @@
 mod catalog;
 pub(crate) mod compatible;
 mod composition;
-mod entry;
+pub(crate) mod entry;
+mod settings;
+pub use settings::{ProfileSettings, profile_settings};
 mod import;
 mod load_settings;
 mod preset_normalization;
 mod project_refresh;
+mod project_selection;
 pub(crate) use project_refresh::{
-    ProjectPresetRefresh, apply_retained_preset_defaults, preset_owns_option,
+    ProjectPresetPolicy, ProjectPresetRefresh, apply_retained_preset_defaults, preset_owns_option,
+};
+pub use project_selection::{
+    PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
 };
 
 mod filament_slots;
@@ -26,10 +32,9 @@ pub use composition::{
 };
 pub(crate) use entry::with_edited_profile_source;
 pub use entry::{
-    CliProfileSliceRequest, LoadSettingsSliceRequest, Placement, ProfileSettings,
-    ProfileSliceRequest, profile_placed_project, profile_settings,
-    slice_cli_with_profiles_validated, slice_with_load_settings, slice_with_profiles,
-    slice_with_profiles_processed, slice_with_profiles_processed_validated,
+    CliProfileSliceRequest, LoadSettingsSliceRequest, Placement, ProfileSliceRequest,
+    profile_placed_project, slice_cli_with_profiles_validated, slice_with_load_settings,
+    slice_with_profiles, slice_with_profiles_processed, slice_with_profiles_processed_validated,
     slice_with_profiles_validated, validate_load_settings_input, validate_with_profiles,
 };
 pub use fragment::{ProfileFragment, ProfileKind, merge_profile_fragments};

@@ -31,7 +31,7 @@ pub async fn slice_plater_plate(
     let edits = session.edits();
     slice_source(
         ProjectSource {
-            bytes: session.input(),
+            input: session.source(),
             plate: slice.plate,
             profile: None,
             refresh: None,
@@ -59,7 +59,7 @@ pub async fn slice_plater_with_profiles(
 ) -> Result<ProcessedGCode, SliceError> {
     request.placement = crate::Placement::None;
     let edits = session.edits();
-    crate::profiles::with_edited_profile_source(session.input(), request, &edits, |mut source| {
+    crate::profiles::with_edited_profile_source(session.source(), request, &edits, |mut source| {
         source.validate_print = validate_print;
         source.validate_config = false;
         if let Some(profile) = &mut source.profile {

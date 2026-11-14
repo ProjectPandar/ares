@@ -1,4 +1,4 @@
-import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, FilamentSlotState, InstalledPrinters, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, Toolpaths } from "@ares-slicer/wasm";
+import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, FilamentSlotState, InstalledPrinters, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, StlFile, StlImportOptions, Toolpaths } from "@ares-slicer/wasm";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
@@ -45,7 +45,9 @@ export interface PreviewView {
 }
 
 /** Presets picked outside the project's embedded ones (PresetBundle selections). */
-export type ModelFile = { name: string; bytes: Uint8Array };
+export type ModelFile =
+  | { kind: "single"; name: string; bytes: Uint8Array }
+  | { kind: "stl-batch"; name: string; files: StlFile[]; choices: StlImportOptions };
 
 export interface PresetSelection {
   printer: string;
@@ -95,6 +97,7 @@ export interface AppState {
   typedSettings: TypedSettings | null;
   loadingFile: boolean;
   loadError?: string;
+  stlImport: File[] | null;
   /** The warning notification of a loaded project's invalid values (Plater.cpp:9466-9481). */
   loadWarning?: string;
   selectedObject: number | null;
@@ -156,6 +159,7 @@ export const useApp = create<AppState>(() => ({
   plateSlices: {},
   typedSettings: null,
   loadingFile: false,
+  stlImport: null,
   selectedObject: null,
   selectedInstance: null,
   overrides: {},

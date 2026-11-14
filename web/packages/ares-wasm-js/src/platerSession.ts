@@ -1,7 +1,7 @@
 import type { PresetCatalog } from "./presetCatalog.js";
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
-import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, ProfileSelection, ProfileSliceOptions, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
+import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, OptionMap, ProfileSelection, ProfileSliceOptions, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
 
 type Call = (body: RequestBody, onStatus?: (status: SlicingStatus) => void) => Promise<unknown>;
 type Vec3 = [number, number, number];
@@ -36,6 +36,12 @@ export class PlaterSession {
    */
   async invalidValues(): Promise<Record<string, string>> {
     return (await this.#call({ kind: "platerInvalidValues", sessionId: this.#sessionId })) as Record<string, string>;
+  }
+
+  /** Selected-profile settings composed from the session's complete original model. */
+  async profileSettings(catalog: string, selection: ProfileSelection, options: ProfileSliceOptions): Promise<OptionMap> {
+    return (await this.#call({ kind: "platerProfileSettings", sessionId: this.#sessionId, catalog,
+      selection: JSON.stringify(selection), options: JSON.stringify(options) })) as OptionMap;
   }
 
   /**

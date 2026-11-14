@@ -1,6 +1,6 @@
 mod filament;
-mod keys;
-mod preset;
+pub(in crate::profiles) mod keys;
+pub(super) mod preset;
 
 use std::collections::BTreeMap;
 
@@ -71,19 +71,31 @@ pub(crate) fn apply_retained_preset_defaults(
 }
 
 #[derive(Clone, Copy)]
+pub(crate) enum ProjectPresetPolicy {
+    Cli { uptodate: bool },
+    Always,
+}
+
+#[derive(Clone, Copy)]
 pub(crate) struct ProjectPresetRefresh<'a> {
     pub(super) catalog: &'a Catalog,
-    pub(super) uptodate: bool,
+    pub(super) policy: ProjectPresetPolicy,
+    pub(super) filename: &'a str,
     pub(super) placement: Placement,
 }
 
-pub(super) fn selection(input: &str) -> Result<Option<bool>, SliceError> {
+pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, SliceError> {
     #[derive(serde::Deserialize)]
     #[serde(deny_unknown_fields)]
     struct Derived {
         from_project: bool,
-        #[serde(default)]
-        uptodate: bool,
+        uptodate: Option<bool>,
+        load_and_select: Option<LoadAndSelect>,
+    }
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "snake_case")]
+    enum LoadAndSelect {
+        Always,
     }
     let fields: std::collections::BTreeMap<String, crate::project::raw_settings::RawConfigValue> =
         serde_json::from_str(input).map_err(|error| {
@@ -102,10 +114,33 @@ pub(super) fn selection(input: &str) -> Result<Option<bool>, SliceError> {
             "from_project must be true".to_owned(),
         ));
     }
-    Ok(Some(derived.uptodate))
+    let policy = match (derived.load_and_select, derived.uptodate) {
+        (Some(LoadAndSelect::Always), None) => ProjectPresetPolicy::Always,
+        (None, uptodate) => ProjectPresetPolicy::Cli {
+            uptodate: uptodate.unwrap_or(false),
+        },
+        (Some(_), Some(_)) => {
+            return Err(SliceError::InvalidInput(
+                "uptodate and load_and_select are exclusive".to_owned(),
+            ));
+        }
+    };
+    Ok(Some(policy))
 }
 
 impl ProjectPresetRefresh<'_> {
+    pub(crate) fn retained(
+        self,
+        raw: &ProjectSettingsRaw,
+        selected: &ProjectSettings,
+    ) -> Result<ProjectSettingsRaw, SliceError> {
+        let uptodate = match self.policy {
+            ProjectPresetPolicy::Cli { uptodate } => uptodate,
+            ProjectPresetPolicy::Always => false,
+        };
+        preset::refresh(self.catalog, raw, uptodate, Some(selected))
+    }
+
     pub(crate) fn load(
         self,
         input: &[u8],
@@ -121,15 +156,25 @@ impl ProjectPresetRefresh<'_> {
         if validate {
             crate::project_slice::validate_post_process(&project)?;
         }
-        let mut raw = preset::refresh(
-            self.catalog,
-            &project.documents().project_settings_raw,
-            self.uptodate,
-        )?;
-        // CLI:3167-3200 fills initially missing keys from the resolved system
-        // preset before collection defaults can obscure their absence.
-        apply_retained_preset_defaults(&mut raw, None)?;
-        project.apply_project_preset_refresh(raw, overrides)?;
+        match self.policy {
+            ProjectPresetPolicy::Always => {
+                let (raw, selection) =
+                    super::project_selection::refresh(self.catalog, &project, self.filename)?;
+                project.apply_project_preset_selection(raw, selection, overrides)?;
+            }
+            ProjectPresetPolicy::Cli { uptodate } => {
+                let mut raw = preset::refresh(
+                    self.catalog,
+                    &project.documents().project_settings_raw,
+                    uptodate,
+                    None,
+                )?;
+                // CLI:3167-3200 fills initially missing keys from the resolved system
+                // preset before collection defaults can obscure their absence.
+                apply_retained_preset_defaults(&mut raw, None)?;
+                project.apply_project_preset_refresh(raw, overrides)?;
+            }
+        }
         Ok((project, preparation.for_overrides(overrides)))
     }
 
