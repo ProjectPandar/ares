@@ -2,7 +2,13 @@ use super::compare;
 
 #[tokio::test]
 async fn stock_validation_01() {
-    compare("Anycubic", "Anycubic Kobra S1 Max 0.25 nozzle", "filament_flush_temp: nil not in range [0, 1500]\nretraction_distances_when_cut: 0 not in range [10, 18]", true).await;
+    compare(
+        "Anycubic",
+        "Anycubic Kobra S1 Max 0.25 nozzle",
+        "retraction_distances_when_cut: 0 not in range [10, 18]",
+        true,
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -18,12 +24,24 @@ async fn stock_validation_02() {
 
 #[tokio::test]
 async fn stock_validation_03() {
-    compare("Anycubic", "Anycubic Kobra S1 Max 0.6 nozzle", "filament_flush_temp: nil not in range [0, 1500]\nretraction_distances_when_cut: 0 not in range [10, 18]", true).await;
+    compare(
+        "Anycubic",
+        "Anycubic Kobra S1 Max 0.6 nozzle",
+        "retraction_distances_when_cut: 0 not in range [10, 18]",
+        true,
+    )
+    .await;
 }
 
 #[tokio::test]
 async fn stock_validation_04() {
-    compare("Anycubic", "Anycubic Kobra S1 Max 0.8 nozzle", "filament_flush_temp: nil not in range [0, 1500]\nretraction_distances_when_cut: 0 not in range [10, 18]", true).await;
+    compare(
+        "Anycubic",
+        "Anycubic Kobra S1 Max 0.8 nozzle",
+        "retraction_distances_when_cut: 0 not in range [10, 18]",
+        true,
+    )
+    .await;
 }
 
 #[tokio::test]

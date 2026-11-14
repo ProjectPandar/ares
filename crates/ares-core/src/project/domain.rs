@@ -1,6 +1,7 @@
 mod documents;
 mod layer_height_profile;
 mod mesh;
+mod multipart;
 mod placement;
 mod shared_mesh;
 mod sharing;

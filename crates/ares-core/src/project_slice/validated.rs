@@ -53,7 +53,7 @@ pub async fn slice_cli_project_plate_validated(
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
-            bytes: input.as_ref(),
+            input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
             plate,
             profile: None,
             refresh: None,
@@ -80,7 +80,7 @@ pub async fn slice_project_plate_validated(
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
-            bytes: input.as_ref(),
+            input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
             plate,
             profile: None,
             refresh: None,
@@ -108,7 +108,7 @@ pub async fn slice_project_plate_processed_validated(
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
-            bytes: input.as_ref(),
+            input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
             plate,
             profile: None,
             refresh: None,

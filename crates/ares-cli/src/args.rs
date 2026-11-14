@@ -17,7 +17,7 @@ pub(crate) enum Commands {
 #[derive(Parser)]
 pub(crate) struct SliceArgs {
     /// Complete preset catalog supplied explicitly for project-derived refresh
-    #[arg(long, conflicts_with_all = ["load_settings", "load_filaments", "resources_dir"])]
+    #[arg(long, conflicts_with_all = ["load_filaments", "resources_dir"])]
     pub(crate) project_preset_catalog: Option<PathBuf>,
     /// Refresh unlisted project values from the supplied system presets
     #[arg(long, requires = "project_preset_catalog")]

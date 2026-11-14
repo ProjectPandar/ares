@@ -2,10 +2,11 @@
 
 mod mapped_prime_tower;
 mod stl;
+mod stl_settings;
+mod three_mf;
 
 use super::{
-    Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
-    ProjectVolumeType, Transform3d,
+    Project, ProjectInstance, ProjectModel, ProjectObject, Transform3d,
     documents::{PlateMetadata, ProjectDocuments},
 };
 use crate::{
@@ -116,137 +117,6 @@ impl Project {
             strings.resize(filament_count + 2, String::new());
             raw.insert_strings(key, &strings);
         }
-    }
-
-    /// 3MF selected-profile entry (`OrcaSlicer.cpp:1624-1640` loads the
-    /// embedded config as the full-config base; `:2750-2812 update_full_config`
-    /// overlays every key the loaded presets supply and keeps the rest).
-    ///
-    /// `settings` is the selected profile's fully composed config; `profile_raw`
-    /// is the chain-expanded presence view and `filament_raws` carries one
-    /// merged raw per selected filament for the `:3301` per-slot `set_at`
-    /// overlay. Upstream indexes `different_settings_to_system` and
-    /// `inherits_group` by `filament_count` (`:2817-2818`). A zero embedded
-    /// count takes the loaded count (`:2528-2529`); a nonzero embedded count
-    /// still bounds the number of selected filaments.
-    pub(crate) fn from_3mf_with_profiles(
-        input: &[u8],
-        profile: SelectedProfile<'_>,
-        overrides: &crate::ConfigOverrides,
-        plate: Option<u32>,
-        edits: &crate::plater::PlaterEdits,
-    ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
-        let SelectedProfile {
-            settings,
-            profile_raw,
-            filament_raws,
-            validate_print,
-        } = profile;
-        let (mut project, preparation) = crate::project::load_project_for_profiles(input)?;
-        project.apply_plater_edits(edits);
-        let preparation = preparation.for_overrides(overrides);
-        let embedded_raw = project.documents.project_settings_raw.clone();
-        // O5: the CLI composite entry checks the **embedded**
-        // post_process before the profile overlay (`OrcaSlicer.cpp:1682-1690`).
-        if profile.validate_print {
-            crate::project_slice::validate_post_process(&project)?;
-        }
-
-        let selected = settings.project.preset.filament_settings_id.0.len();
-        let embedded_count = project
-            .settings()
-            .project
-            .preset
-            .filament_settings_id
-            .0
-            .len();
-        // OrcaSlicer.cpp:2528-2529 uses the loaded count only for zero.
-        let filament_count = if embedded_count == 0 {
-            selected
-        } else {
-            embedded_count
-        };
-        if filament_count == 0 {
-            return Err(SliceError::InvalidInput(
-                "project embeds no filament selection".to_owned(),
-            ));
-        }
-        if selected > filament_count {
-            return Err(SliceError::InvalidInput(format!(
-                "selection has {selected} filaments but the project embeds {embedded_count}"
-            )));
-        }
-
-        let switch = machine_switch(&embedded_raw, settings, project.documents.bbl_family_3mf);
-        let mut merge_base = embedded_raw.clone();
-        crate::profiles::apply_retained_preset_defaults(&mut merge_base, Some(settings))?;
-        let mut merged = merged_profile_raw(
-            &embedded_raw,
-            merge_base,
-            &SelectedProfile {
-                settings,
-                profile_raw,
-                filament_raws,
-                validate_print,
-            },
-            OverlayContext {
-                selected,
-                embedded_count: filament_count,
-                machine_switch: switch,
-            },
-        )?;
-        // M854 edit order: user overrides apply last (`Config.cpp:461`).
-        overrides.apply(&mut merged)?;
-        mapped_prime_tower::disable_after_mapping(&mut merged, settings, overrides);
-        // `set_deserialize`/`handle_legacy` runs on every option token the
-        // merged config carries — embedded base and profile overlay alike
-        // (`Config.cpp:577-579`) — so the raw view is post-legacy before the
-        // typed builder and the `is_value_valid` loop see it.
-        merged.handle_legacy();
-        // The typed build mirrors upstream's fully parsed `m_print_config`:
-        // the bed classification reads it exactly like `opt_float(
-        // "printable_height")`/`opt<ConfigOptionPoints>(
-        // "printable_area")` over the fully parsed config
-        // (`OrcaSlicer.cpp:3711,3708`), `PrintConfigDef` defaults included.
-        // Config application copies parsed values (OrcaSlicer.cpp:3152–3159),
-        // without repeating the JSON-load composite (Config.cpp:1151–1154).
-        let mut resolved = crate::options::json_deserialize::deserialize_config_values(
-            merged.clone().into_object(),
-        )
-        .map_err(|error| {
-            SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
-        })?
-        .resolve();
-        // OrcaSlicer.cpp:1640 chooses importer membership before placement.
-        project.prepare_import_scope(plate);
-        // `shrink_to_new_bed` (`OrcaSlicer.cpp:3766-3796`): a BBL-family 3mf
-        // re-centers onto the loaded machine's bed — the embedded bed being
-        // smaller sets `shrink = 1`, and every instance plus the wipe tower
-        // shifts by the bed-center delta (`:3958-4053 translate_models`).
-        let offset = project
-            .documents
-            .bbl_family_3mf
-            .then(|| {
-                shrink_to_new_bed_offset(&embedded_raw, &resolved, project.instances_world_bbox())
-            })
-            .flatten();
-        if let Some(offset) = offset {
-            project.translate_all_instances(offset);
-            shift_wipe_tower(&mut merged, offset);
-            // The shifted wipe tower reaches the typed view too.
-            resolved = crate::options::json_deserialize::deserialize_config_values(
-                merged.clone().into_object(),
-            )
-            .map_err(|error| {
-                SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
-            })?
-            .resolve();
-        }
-
-        project.settings = resolved;
-        project.documents.project_settings_raw = merged;
-        project.initialize_cli_loaded_project_config(filament_count);
-        Ok((project, preparation))
     }
 }
 
@@ -385,4 +255,4 @@ mod stl_mesh;
 
 pub(crate) use overlay::SelectedProfile;
 use overlay::{OverlayContext, machine_switch, merged_profile_raw};
-use stl_mesh::index_stl_vertices;
+pub(super) use stl_mesh::index_stl_vertices;

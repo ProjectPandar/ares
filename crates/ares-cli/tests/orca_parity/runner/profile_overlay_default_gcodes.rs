@@ -97,6 +97,8 @@ async fn profile_overlay_default_gcodes() {
         input,
         LoadSettingsSliceRequest {
             filename: "input.3mf",
+            catalog_json: None,
+            uptodate: false,
             settings: &settings,
             filaments: &filaments,
             plate: None,
