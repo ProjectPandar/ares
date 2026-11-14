@@ -1,9 +1,6 @@
 use super::{
-    super::{
-        catalog::Catalog,
-        project_refresh::preset::{dirty_keys, strings},
-    },
-    PresetConfig, collection,
+    super::project_refresh::preset::{dirty_keys, strings},
+    LoadedCatalog, PresetConfig, collection,
 };
 use crate::{
     ProfileKind, SliceError,
@@ -11,7 +8,7 @@ use crate::{
 };
 
 pub(super) struct ExternalFilamentArgs<'a> {
-    pub(super) catalog: &'a Catalog,
+    pub(super) catalog: &'a LoadedCatalog,
     pub(super) source: &'a ProjectSettingsRaw,
     pub(super) filament_ids: &'a [String],
     pub(super) inherited: &'a [String],
@@ -154,7 +151,7 @@ pub(super) fn load_external_filaments(
         configs.push(config);
     }
 
-    let mut collection = collection::Collection::load(catalog, ProfileKind::Filament)?;
+    let mut collection = catalog.collection(ProfileKind::Filament)?.clone();
     let mut states = Vec::with_capacity(filament_count);
     for filament in (0..filament_count).rev() {
         let mut protected = dirty_keys(differences, filament + 1)?;

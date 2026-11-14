@@ -276,6 +276,15 @@ export class AresSlicer {
   }
 
   /**
+   * Loads the presets of `catalogJson` (the `sliceWithProfiles` catalog) once, as OrcaSlicer loads its
+   * `PresetBundle` at startup and after the wizard; a later project load with the same catalog reuses them.
+   */
+  async loadPresetBundle(catalogJson: string): Promise<void> {
+    await this.#ready;
+    await this.#call({ kind: "loadPresetBundle", catalog: catalogJson });
+  }
+
+  /**
    * Decodes `[key, serialized]` entries, each a value in `ConfigOption::serialize()` form as
    * 3MF projects and presets store it (e.g. `"1"` for a bool, `"0x0"` for a point), into typed
    * values in one round trip. A vector key decodes its comma-joined elements to an array.

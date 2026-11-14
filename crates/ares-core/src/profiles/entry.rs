@@ -3,7 +3,7 @@ use crate::{
     project_slice::{ProfileInput, ProjectSource, slice_source},
 };
 
-use super::catalog::{Catalog, selection};
+use super::catalog::selection;
 mod load_settings;
 pub use load_settings::{LoadSettingsSliceRequest, slice_with_load_settings};
 
@@ -262,7 +262,7 @@ pub(crate) fn with_edited_profile_source<T>(
             "model filename is required".to_owned(),
         ));
     }
-    let catalog = Catalog::from_json(catalog_json)?;
+    let catalog = super::project_selection::loaded_catalog(catalog_json)?;
     if let Some(policy) = super::project_refresh::selection(selection_json)? {
         return body(ProjectSource {
             input,
@@ -284,7 +284,7 @@ pub(crate) fn with_edited_profile_source<T>(
         });
     }
     let selection = selection(selection_json)?;
-    let composed = catalog.compose(&selection)?;
+    let composed = catalog.catalog.compose(&selection)?;
     body(ProjectSource {
         input,
         plate,
