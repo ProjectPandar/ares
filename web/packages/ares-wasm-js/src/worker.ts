@@ -10,6 +10,7 @@ import init, {
   loadScene,
   optionColors,
   optionTypes,
+  orcaSlicerVersion,
   parsePresetBundle,
   placementScene,
   printConfigDef,
@@ -135,6 +136,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [definition, []];
     }
     case "resolveDefaultBedType": return [resolveDefaultBedType(request.hint, request.modelId), []];
+    case "orcaSlicerVersion":
+      return [orcaSlicerVersion(), []];
     case "loadScene":
       return sceneResult(loadScene(request.input));
     case "placementScene": {
