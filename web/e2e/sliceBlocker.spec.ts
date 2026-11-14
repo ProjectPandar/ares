@@ -9,6 +9,10 @@ const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/slice-blocker/", import.meta.url));
 // Two filaments; the tests rewrite its project config.
 const FIXTURE = `${repositoryRoot}tests/parity/bbl-jerk-tail-precision/stock-control.3mf`;
+// The fixture lists two filament_self_index entries for its three filament_extruder_variant entries, which
+// PresetBundle::load_config_file_config rejects as an invalid configuration file (PresetBundle.cpp:6246-6255), so
+// the plater could not open it. The copies list one per variant, as tests/parity/bbl-type1-tower/two-categories.3mf does.
+const OPENABLE = { filament_self_index: ["1", "2", "1"] };
 const A1M_FILAMENTS = ["Bambu PLA Basic @BBL A1M", "Bambu PLA Matte @BBL A1M"];
 const H2D = "Bambu Lab H2D 0.4 nozzle";
 const A1M = "Bambu Lab A1 mini 0.4 nozzle";
@@ -19,7 +23,7 @@ const combo = (page: Page, name: string) => page.getByRole("button", { name, exa
 function project(name: string, edit: Record<string, unknown>) {
   const entries = unzipSync(readFileSync(FIXTURE));
   const config = "Metadata/project_settings.config";
-  entries[config] = strToU8(JSON.stringify({ ...JSON.parse(strFromU8(entries[config])), ...edit }));
+  entries[config] = strToU8(JSON.stringify({ ...JSON.parse(strFromU8(entries[config])), ...OPENABLE, ...edit }));
   writeFileSync(`${artifacts}${name}`, zipSync(entries));
   return `${artifacts}${name}`;
 }

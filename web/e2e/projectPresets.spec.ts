@@ -1,8 +1,8 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { strFromU8, unzipSync } from "fflate";
 import { expect, type Page } from "@playwright/test";
 import { FIRST_RUN_CONFIG, test } from "./failureDiagnostics";
+import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/project-presets/", import.meta.url));
@@ -14,9 +14,15 @@ const storedPrinter = (page: Page) =>
   page.evaluate(() => (JSON.parse(localStorage.getItem("ares.config")!) as { printer: string | null }).printer);
 
 test("opening a project selects its presets, and a model file keeps the selected printer", async ({ page }) => {
+  const probe = presetSelectProbe();
+  if (!probe) test.skip();
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
+  // The first-run config installs no Snapmaker printer.
+  const native = nativeSelection(probe!, `${artifacts}native/`, PROJECT, []);
+  const printer = native.printer.selected.name;
+  const processPreset = native.process.selected.name;
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
@@ -31,15 +37,14 @@ test("opening a project selects its presets, and a model file keeps the selected
   expect(await storedPrinter(page)).toBe(FIRST_RUN_CONFIG.printer);
 
   // A project's config becomes the current presets (PresetBundle::load_config_model,
-  // Plater.cpp:9623): every combo shows its Project presets entry.
+  // Plater.cpp:9622): every combo shows the preset it selects as its Project presets entry.
   await page.getByTestId("import-input").setInputFiles(PROJECT);
   await expect(status).toHaveText("Ready to slice");
-  const project = JSON.parse(strFromU8(unzipSync(readFileSync(PROJECT))["Metadata/project_settings.config"])) as Record<string, string>;
-  await expect(combo(page, "Printer preset")).toHaveText(project.printer_settings_id);
-  await expect(combo(page, "Process preset")).toHaveText(project.print_settings_id);
+  await expect(combo(page, "Printer preset")).toHaveText(printer);
+  await expect(combo(page, "Process preset")).toHaveText(processPreset);
   await combo(page, "Printer preset").click();
   await expect(page.getByRole("listbox", { name: "Printer preset", exact: true }).getByRole("group", { name: "Project presets" })
-    .getByRole("option", { selected: true })).toHaveText(project.printer_settings_id);
+    .getByRole("option", { selected: true })).toHaveText(printer);
   await page.keyboard.press("Escape");
   expect(await storedPrinter(page)).toBeNull();
   await page.screenshot({ path: `${artifacts}project-presets.png` });
@@ -48,6 +53,6 @@ test("opening a project selects its presets, and a model file keeps the selected
   await expect(status).toContainText("Slice complete", { timeout: 240_000 });
   await page.screenshot({ path: `${artifacts}sliced.png` });
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ printer: project.printer_settings_id, process: project.print_settings_id }, null, 2)}\n`);
+  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ printer, process: processPreset }, null, 2)}\n`);
   expect(errors).toEqual([]);
 });
