@@ -1,5 +1,8 @@
 # `filament_multi_colour` in a selected-preset slice
 
+Reversed by `2026-11-15-loaded-project-filament-multi-colour.md`: the reference is the plater,
+whose project config always holds the key after a project opens (Plater.cpp:8905-8959, 9755).
+
 A browser slice with selected system presets writes `; filament_multi_colour = ` into the
 G-code config block. The OrcaSlicer CLI `--load-settings` slice of the same project omits
 that line. Citations refer to OrcaSlicer 2.5.0 (`40ecc66f7`), `src/libslic3r` unless noted.
