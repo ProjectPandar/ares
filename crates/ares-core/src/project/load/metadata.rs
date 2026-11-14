@@ -4,7 +4,6 @@ use crate::{SliceError, Transform3d};
 
 use super::super::{
     domain::PlateMetadata,
-    filament_sequence::FilamentSequences,
     model_settings::{Metadata, ModelSettings},
     plate::PlateJson,
 };
@@ -75,28 +74,6 @@ pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceErro
         loaded_labels,
         object_settings,
     })
-}
-
-pub(super) fn validate_filament_plates(
-    metadata: &MetadataIndex,
-    sequences: &FilamentSequences,
-) -> Result<(), SliceError> {
-    let expected = metadata
-        .plates
-        .iter()
-        .map(PlateMetadata::id)
-        .collect::<BTreeSet<_>>();
-    let actual = sequences
-        .0
-        .keys()
-        .map(|plate_id| plate_id.get())
-        .collect::<BTreeSet<_>>();
-    if actual != expected {
-        return Err(invalid(
-            "filament sequence plates do not match model settings plates",
-        ));
-    }
-    Ok(())
 }
 
 pub(super) fn validate_plate_document(document: &PlateJson) -> Result<(), SliceError> {
