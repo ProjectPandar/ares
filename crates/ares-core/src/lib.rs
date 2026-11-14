@@ -79,7 +79,7 @@ mod options;
 mod perimeters;
 mod pipeline;
 mod planning;
-mod plater;
+pub mod plater;
 mod print;
 mod print_apply;
 mod print_paths;
@@ -98,6 +98,7 @@ use std::fmt;
 
 pub use bridges::BridgeOptions;
 pub use brims::{BrimOptions, BrimPath, BrimType, LayerBrims, generate_brims};
+pub use geometry::{ConvexHull3d, convex_hull_3d};
 
 pub(crate) use contours::stitch_printable;
 pub use contours::{Contour, LayerContours, stitch_layer_slices};

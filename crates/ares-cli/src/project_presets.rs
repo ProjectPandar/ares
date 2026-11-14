@@ -69,6 +69,7 @@ pub(super) async fn slice(
     let processed = match ares_core::slice_cli_with_profiles_validated(
         input,
         ares_core::CliProfileSliceRequest {
+            orient: args.orient == 1,
             profile: request,
             record_moves: args.dump_moves.is_some(),
             sliced_plate: &mut sliced_plate,

@@ -3,6 +3,12 @@
 //! (`PartPlateList`) and per-plate slicing of the edited model. See
 //! `docs/architecture/web-plater-move-rotate-arrange.md`.
 
+mod auto_orient;
+pub(crate) use auto_orient::apply_cli_orientation;
+pub use auto_orient::{
+    CoolingOrientation, OrientMesh, OrientParams, Orientation, auto_orient, auto_orient_mesh,
+};
+pub use auto_orient::{auto_orient_instance, auto_orient_object};
 mod arrange_job;
 mod arrange_settings;
 mod current_plate;
@@ -21,7 +27,7 @@ mod session;
 mod slice;
 mod slice_tower_fit;
 mod snapshot;
-mod transformation;
+pub(crate) mod transformation;
 
 pub use arrange_job::{ArrangeScope, ArrangeSettings};
 pub use edits::PlaterEdits;

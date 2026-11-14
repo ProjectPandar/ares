@@ -4,7 +4,8 @@ use crate::{
 };
 
 use super::catalog::{Catalog, selection};
-use super::load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_load_settings};
+mod load_settings;
+pub use load_settings::{LoadSettingsSliceRequest, slice_with_load_settings};
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
 /// transform (`OrcaSlicer.cpp:4376-4392`): bed-center placement plus the
@@ -72,8 +73,14 @@ pub async fn slice_with_profiles_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_validated_profile_source(input, request, metadata, (false, None, None), context)
-        .map(|output| output.gcode)
+    slice_validated_profile_source(
+        input,
+        request,
+        metadata,
+        (false, false, None, None),
+        context,
+    )
+    .map(|output| output.gcode)
 }
 
 pub async fn slice_with_profiles_processed_validated(
@@ -82,12 +89,13 @@ pub async fn slice_with_profiles_processed_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
-    slice_validated_profile_source(input, request, metadata, (true, None, None), context)
+    slice_validated_profile_source(input, request, metadata, (true, false, None, None), context)
 }
 
 /// Selected profiles and the CLI's processing/report outputs.
 pub struct CliProfileSliceRequest<'a> {
     pub profile: ProfileSliceRequest<'a>,
+    pub orient: bool,
     pub record_moves: bool,
     pub sliced_plate: &'a mut crate::SlicedPlate,
     pub upward: crate::CliUpwardMachine<'a>,
@@ -103,6 +111,7 @@ pub async fn slice_cli_with_profiles_validated(
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     let CliProfileSliceRequest {
         profile,
+        orient,
         record_moves,
         sliced_plate,
         upward,
@@ -112,7 +121,7 @@ pub async fn slice_cli_with_profiles_validated(
         input,
         profile,
         metadata,
-        (record_moves, Some(sliced_plate), Some(upward)),
+        (record_moves, orient, Some(sliced_plate), Some(upward)),
         context,
     )
 }
@@ -121,7 +130,8 @@ fn slice_validated_profile_source(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    (record_moves, sliced_plate, upward): (
+    (record_moves, orient, sliced_plate, upward): (
+        bool,
         bool,
         Option<&mut crate::SlicedPlate>,
         Option<crate::CliUpwardMachine<'_>>,
@@ -131,6 +141,7 @@ fn slice_validated_profile_source(
     request.overrides.validate_cli_config()?;
     with_profile_source(input.as_ref(), request, |source| {
         let mut source = ProjectSource {
+            orient,
             sliced_plate,
             upward,
             ..source
@@ -233,86 +244,6 @@ pub async fn profile_settings(
     })
 }
 
-/// Model identity and preset files supplied by the native
-/// `--load-settings`/`--load-filaments` CLI lists.
-#[derive(Debug)]
-pub struct LoadSettingsSliceRequest<'a> {
-    pub filename: &'a str,
-    pub settings: &'a [LoadSettingsFile<'a>],
-    pub filaments: &'a [LoadSettingsFile<'a>],
-    pub plate: Option<u32>,
-    pub overrides: &'a crate::ConfigOverrides,
-    pub placement: Placement,
-    /// Filled with the plate's success report values (`crate::SlicedPlate`).
-    pub sliced_plate: &'a mut crate::SlicedPlate,
-}
-
-/// Slices through the project Print lifecycle with the loaded preset
-/// files composed by the same single merge as the profile entry
-/// (`OrcaSlicer.cpp:1953-3495`).
-pub async fn slice_with_load_settings(
-    input: impl AsRef<[u8]>,
-    request: LoadSettingsSliceRequest<'_>,
-    metadata: GenerationMetadata,
-    context: SlicerContext<'_>,
-) -> Result<Vec<u8>, SliceError> {
-    with_load_settings_source(input.as_ref(), request, |source| {
-        slice_source(source, metadata, false, context)
-    })
-    .map(|processed| processed.gcode)
-}
-
-fn with_load_settings_source<T>(
-    input: &[u8],
-    request: LoadSettingsSliceRequest<'_>,
-    body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
-) -> Result<T, SliceError> {
-    let LoadSettingsSliceRequest {
-        filename,
-        settings,
-        filaments,
-        plate,
-        overrides,
-        placement,
-        sliced_plate,
-    } = request;
-    if filename.is_empty() {
-        return Err(SliceError::InvalidInput(
-            "model filename is required".to_owned(),
-        ));
-    }
-    let request = LoadSettingsRequest {
-        settings,
-        filaments,
-    };
-    let load_names = super::load_settings::load_settings_preset_names(&request)?;
-    let composed = compose_load_settings(&request)?;
-    // `OrcaSlicer.cpp:1682-1690`: the embedded `post_process` check lives
-    // in the 3MF load block, so the composite entry validates 3MF inputs
-    // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.
-    let validate_print = crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf;
-    body(ProjectSource {
-        bytes: input,
-        plate,
-        profile: Some(ProfileInput {
-            filename,
-            composed: &composed.profile,
-            raw: &composed.raw,
-            filament_raws: &composed.filament_raws,
-            load_names: Some(&load_names),
-            placement,
-            validate_print,
-        }),
-        refresh: None,
-        overrides,
-        validate_print,
-        validate_config: true,
-        upward: None,
-        sliced_plate: Some(sliced_plate),
-        edits: &crate::plater::NO_EDITS,
-    })
-}
-
 /// Composes the request and runs `body` on the resulting source; both the
 /// slice entries and the settings view share this single compose path.
 fn with_profile_source<T>(
@@ -357,6 +288,7 @@ pub(crate) fn with_edited_profile_source<T>(
             overrides,
             validate_print: false,
             validate_config: true,
+            orient: false,
             upward: None,
             sliced_plate: None,
             edits,
@@ -380,6 +312,7 @@ pub(crate) fn with_edited_profile_source<T>(
         overrides,
         validate_print: false,
         validate_config: true,
+        orient: false,
         upward: None,
         sliced_plate: None,
         edits,
