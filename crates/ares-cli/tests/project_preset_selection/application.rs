@@ -138,6 +138,15 @@ async fn multifilament_selection_modes_keep_loaded_names_for_modified_slots() {
     let Some(case) = Case::with_catalog("selection-modes", settings, catalog) else {
         return;
     };
+    let native = &case.native["projects"][0]["result"];
+    assert_eq!(
+        native["filament_presets"],
+        json!([
+            "Loaded Filament A",
+            "Loaded Filament A",
+            "Loaded Filament B"
+        ])
+    );
     let view = case
         .api()
         .await
@@ -150,9 +159,11 @@ async fn multifilament_selection_modes_keep_loaded_names_for_modified_slots() {
             "Loaded Filament B"
         ])
     );
+    // full_fff_config takes each filament's values from its loaded preset
+    // (PresetBundle.cpp:5658-5661, 5738-5757), not from the project's vector.
     assert_eq!(
         view["settings"]["filament_flow_ratio"],
-        json!(["0.91", "0.92", "0.94"])
+        json!(["0.91", "0.91", "0.93"])
     );
 }
 
