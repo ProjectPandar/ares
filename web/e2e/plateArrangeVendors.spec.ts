@@ -9,6 +9,16 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/arrange-vendors/",
 const X2D = "tests/parity/generated-printer-ids/input.3mf";
 const PROJECT = "Metadata/project_settings.config";
 /**
+ * The project lists `keys` in the printer slot of different_settings_to_system, as a user edit of the printer:
+ * the plater keeps them when it selects the installed system printer (PresetBundle::project_different_keys,
+ * PresetBundle.cpp:5520-5532); unlisted values are refreshed from it.
+ */
+const printerEdits = (keys: string[]): Edit => [
+  PROJECT,
+  "\"different_settings_to_system\": [\n    \"\",\n    \"\",\n    \"\",\n    \"\"\n  ]",
+  `"different_settings_to_system": [\n    "",\n    "",\n    "",\n    "${keys.join(";")}"\n  ]`,
+];
+/**
  * PerExtruder mode with a full-height volume over the whole bed for extruder 2 only, and one area for
  * both nozzles (the arrange of several nozzles' shared area is not ported; the vendor test reads only
  * `printer_model`).
@@ -24,6 +34,7 @@ const EDITS: Edit[] = [
     "\"extruder_printable_area\": [\n    \"0x0,256x0,256x256,0x256\",\n    \"20.5x0,256x0,256x256,20.5x256\"\n  ]",
     "\"extruder_printable_area\": []",
   ],
+  printerEdits(["bed_exclude_volume_mode", "extruder_bed_exclude_volumes", "extruder_printable_area"]),
 ];
 
 async function systemPrinters(page: Page) {
@@ -104,6 +115,7 @@ test("the arrange keeps a first-layer-scanning Bambu Lab printer's calibration r
   writeFileSync(project, editedProject(X2D, [
     ["3D/3dmodel.model", "transform=\"1 0 0 0 1 0 0 0 1 138.25 128 5\"", "transform=\"1 0 0 0 23 0 0 0 1 138.25 128 5\""],
     [PROJECT, "\"scan_first_layer\": \"0\"", "\"scan_first_layer\": \"1\""],
+    printerEdits(["scan_first_layer"]),
   ]));
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
