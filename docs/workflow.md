@@ -170,8 +170,8 @@ recreate them after every restart or context reset.
 For each RR, check:
 - **History.**
   - The three-dot diff `git diff main...tip` and every commit message.
-  - Base ancestry: `git merge-base --is-ancestor main tip`, or the agreed base (a pending integration tip or a
-    `history/b<N>` tag of a landed batch).
+  - Base ancestry: `git merge-base --is-ancestor main tip`, or the agreed base (a pending integration tip). A
+    branch still based on the unsquashed commits of a landed batch is rebased first (step 6 of the batch rules).
 - **Author and trailer.** The author is `5aaee9 <7685264+5aaee9@users.noreply.github.com>`, and each commit has exactly one trailer,
   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - **Hygiene.** Grep the messages and the diff, docs included. Each commit must be clean on its own. Flag any of:
@@ -219,7 +219,7 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
    an accepted commit is a rewrite that needs the user's approval; the rewritten tip may differ from the tested tip
    only in the cleaned files, and the range-diff must show only the rewritten commits.
 5. COORD lands the batch with one squash commit per chain, in stack order, plus the release commit:
-   - Push a tag `history/b<N>` at the tested tip, so the original commits stay reachable for per-commit bisect.
+   - No tag keeps the unsquashed commits; record the tested tip and each chain's `<end>` in the ledger.
    - A chain is one accepted RR line; a follow-up stacked right after its chain (such as a test fix) belongs to that
      chain's commit.
    - For each chain, take the stacked commit that ends it (`<end>`) and create
