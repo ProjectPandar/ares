@@ -65,7 +65,7 @@ test("the plate menu's Delete All empties the plate, and the other plate slices 
 
   const oracle = `${artifacts}without-plate-two-cube.3mf`;
   writeFileSync(oracle, withoutPlateTwoCube());
-  const legs = { official: orcaPlate(oracle, 1, "official"), seeded: orcaPlate(oracle, 1, "seeded") };
+  const legs = { official: orcaPlate(oracle, 1, "official", `${repositoryRoot}${FIXTURE}`), seeded: orcaPlate(oracle, 1, "seeded", `${repositoryRoot}${FIXTURE}`) };
   const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({

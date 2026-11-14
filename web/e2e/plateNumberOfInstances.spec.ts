@@ -42,7 +42,7 @@ test("\"Set number of instances\" reaches the count, and the copies slice like O
 
   const oracle = `${artifacts}two-copies.3mf`;
   writeFileSync(oracle, cubeWithTwoCopies());
-  const legs = { official: orcaPlate(oracle, 1, "official"), seeded: orcaPlate(oracle, 1, "seeded") };
+  const legs = { official: orcaPlate(oracle, 1, "official", `${repositoryRoot}${CUBE_FIXTURE}`), seeded: orcaPlate(oracle, 1, "seeded", `${repositoryRoot}${CUBE_FIXTURE}`) };
   const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
