@@ -12,7 +12,7 @@ use serde_json::{Map, Value};
 #[path = "load_settings_cli/machine_only.rs"]
 mod machine_only;
 
-fn preset_files(directory: &Path, vendor_name: &str, printer: &str) -> Vec<String> {
+pub(crate) fn preset_files(directory: &Path, vendor_name: &str, printer: &str) -> Vec<String> {
     let profiles_root = crate::runner::repo_root().join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, vendor_name).unwrap();
     let selected = crate::select_printer(&profiles, vendor_name, printer).unwrap();
