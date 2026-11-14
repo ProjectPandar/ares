@@ -131,6 +131,12 @@ pub fn print_config_def() -> Vec<u8> {
     ares_core::print_config_def_json().to_vec()
 }
 
+/// The OrcaSlicer release whose behaviour the core ports (`ORCA_SLICER_COMPATIBILITY_VERSION`).
+#[wasm_bindgen(js_name = orcaSlicerVersion)]
+pub fn orca_slicer_version() -> String {
+    ares_core::ORCA_SLICER_COMPATIBILITY_VERSION.to_owned()
+}
+
 /// Decodes a `ConfigOption::serialize()`-form string (as stored in 3MF /
 /// presets) for option `key` into typed JSON text. Nullable `nil` elements
 /// decode to `null`. Throws on unknown key or a malformed value.
