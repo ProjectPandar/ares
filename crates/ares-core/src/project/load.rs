@@ -63,10 +63,7 @@ pub fn project_config_substitutions(
     input: impl AsRef<[u8]>,
 ) -> Result<Vec<ConfigSubstitution>, SliceError> {
     let mut archive = ProjectArchive::open(input.as_ref(), ArchiveLimits::PROJECT)?;
-    let mut raw: ProjectSettingsRaw =
-        serde_json::from_slice(&read(&mut archive, PROJECT_SETTINGS_PATH)?).map_err(|error| {
-            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
-        })?;
+    let mut raw = read_project_settings(&mut archive)?;
     raw.drop_invalid_wire_scalars();
     raw.handle_legacy();
     Ok(raw.normalize_embedded_wire_substitutions())
@@ -137,18 +134,23 @@ fn load_project_raw(
 
     let graph = graph::load(&mut archive, &content_types, &archive_paths, root_model)?;
 
-    let model_settings: ModelSettings =
-        read_xml(&mut archive, MODEL_SETTINGS_PATH, XmlRole::ModelSettings)?;
+    let model_settings: ModelSettings = read_optional(&mut archive, MODEL_SETTINGS_PATH)?
+        .map(|bytes| deserialize_xml(&bytes, XmlRole::ModelSettings))
+        .transpose()?
+        .unwrap_or_default();
     validate_plate_previews(&model_settings, &content_types, &archive_paths)?;
     content_types.validate_png_entries(&mut archive)?;
-    let slice_info: SliceInfo = read_xml(&mut archive, SLICE_INFO_PATH, XmlRole::SliceInfo)?;
-    let filament_sequences: FilamentSequences = read_json(
-        &mut archive,
-        FILAMENT_SEQUENCE_PATH,
-        JsonRole::FilamentSequences,
-    )?;
+    let slice_info: SliceInfo = read_optional(&mut archive, SLICE_INFO_PATH)?
+        .map(|bytes| deserialize_xml(&bytes, XmlRole::SliceInfo))
+        .transpose()?
+        .unwrap_or_default();
     let metadata = metadata::index(&model_settings)?;
-    metadata::validate_filament_plates(&metadata, &filament_sequences)?;
+    let filament_sequences = read_optional(&mut archive, FILAMENT_SEQUENCE_PATH)?
+        .map(|bytes| {
+            FilamentSequences::read(&bytes, metadata.plates.iter().map(|plate| plate.id()))
+        })
+        .transpose()?
+        .unwrap_or_default();
 
     let mut plate_documents = Vec::with_capacity(metadata.plates.len());
     for plate in &metadata.plates {
@@ -161,11 +163,7 @@ fn load_project_raw(
             plate_documents.push(document);
         }
     }
-    let settings_bytes = read(&mut archive, PROJECT_SETTINGS_PATH)?;
-    let mut project_settings_raw: ProjectSettingsRaw = serde_json::from_slice(&settings_bytes)
-        .map_err(|error| {
-            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
-        })?;
+    let mut project_settings_raw = read_project_settings(&mut archive)?;
     // `load_from_json`'s type dispatch runs before any per-key
     // deserialization: non-string/non-array JSON scalars never reach
     // `set_deserialize` and the key keeps its default (`Config.cpp:905-990`).
@@ -259,6 +257,31 @@ fn load_project_raw(
     );
     project.plates_custom_gcodes = plates_custom_gcodes;
     Ok((project, preparation))
+}
+
+fn read_project_settings(
+    archive: &mut ProjectArchive<'_>,
+) -> Result<ProjectSettingsRaw, SliceError> {
+    read_optional(archive, PROJECT_SETTINGS_PATH)?
+        .map(|bytes| {
+            serde_json::from_slice(&bytes).map_err(|error| {
+                SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
+            })
+        })
+        .transpose()
+        .map(Option::unwrap_or_default)
+}
+
+fn read_optional(
+    archive: &mut ProjectArchive<'_>,
+    path: &str,
+) -> Result<Option<Vec<u8>>, SliceError> {
+    let path = PackagePath::entry(path.as_bytes())?;
+    if archive.paths().any(|entry| entry == &path) {
+        archive.read(&path).map(Some)
+    } else {
+        Ok(None)
+    }
 }
 
 fn read(archive: &mut ProjectArchive<'_>, path: &str) -> Result<Vec<u8>, SliceError> {
