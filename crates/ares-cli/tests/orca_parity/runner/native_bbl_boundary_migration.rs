@@ -7,8 +7,10 @@
 //! Only generated-by normalization is permitted; slice_case owns Native/cache
 //! receipts and the shared required/optional dependency policy.
 
-use super::{ExportedCase, OrcaRunner, cache_identity, repo_root};
-use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
+use super::{
+    ExportedCase, OrcaRunner, application::slice_project_plate, cache_identity, repo_root,
+};
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use std::fs;
 
 async fn check(fixture: &str) {

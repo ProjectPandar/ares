@@ -6,8 +6,10 @@
 //! retain inputs/configuration and check role/temperature controls on both streams.
 //! OrcaRunner owns required/optional dependency policy and slice_case caching.
 
-use super::{ExportedCase, OrcaRunner, cache_identity, repo_root};
-use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
+use super::{
+    ExportedCase, OrcaRunner, application::slice_project_plate, cache_identity, repo_root,
+};
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use std::fs;
 
 async fn check(fixture: &str, controls: fn(&str)) {
