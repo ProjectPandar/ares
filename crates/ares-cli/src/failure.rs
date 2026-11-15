@@ -127,7 +127,7 @@ impl CliFailure {
         match self {
             Self::Family(failure) => failure.flush_and_exit(),
             Self::Legacy(error) => {
-                eprintln!("Error: {error:?}");
+                eprintln!("Error: {error}");
                 std::process::exit(1);
             }
         }
