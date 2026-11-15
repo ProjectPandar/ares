@@ -14,7 +14,7 @@ pub(super) fn update_print_estimated_stats(
     settings: &ProjectSettings,
 ) -> PrintStatistics {
     let filament = &settings.filament.gcode;
-    let normal_print_time = f64::from(statistics.normal_time);
+    let normal_print_time = statistics.normal_time;
     let mut total = PrintStatistics::default();
     for (id, &volume) in statistics.total_volumes_per_extruder.iter().enumerate() {
         total.total_extruded_volume += volume;

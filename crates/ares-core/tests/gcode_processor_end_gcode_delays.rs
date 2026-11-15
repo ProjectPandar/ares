@@ -20,18 +20,18 @@ fn end_gcode_skips_m400_dwells_but_preserves_g4_and_resets_for_next_input() {
                 "G4 S7\n",
                 "G4 P2000\n",
             ),
-            12.0_f32,
+            12.0_f64,
         ),
-        ("fresh_unmarked_m400", "M400 S3\nM400 P1000\n", 4.0_f32),
+        ("fresh_unmarked_m400", "M400 S3\nM400 P1000\n", 4.0_f64),
         (
             "wrong_tag",
             "; MACHINE_END_GCODE_START_extra\nM400 S3\nM400 P1000\n",
-            4.0_f32,
+            4.0_f64,
         ),
         (
             "g4_after_end_tag",
             "; MACHINE_END_GCODE_START\nG4 S7\nG4 P2000\n",
-            9.0_f32,
+            9.0_f64,
         ),
     ];
     let results = cases.map(|(name, input, expected)| {

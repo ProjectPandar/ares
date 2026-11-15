@@ -23,7 +23,7 @@ async fn estimation_json_carries_exact_footer_inputs() {
         ("totalUsedFilament", totals.total_used_filament),
         ("totalWeight", totals.total_weight),
         ("totalCost", totals.total_cost),
-        ("time", f64::from(times.normal_time)),
+        ("time", times.normal_time),
         ("prepareTime", f64::from(times.normal_prepare_time)),
     ];
     let output = SliceOutput::from_processed(processed.clone());
