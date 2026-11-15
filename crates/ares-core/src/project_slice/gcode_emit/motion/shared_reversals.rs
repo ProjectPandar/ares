@@ -1,16 +1,10 @@
-//! Shared-entity reversal carryover for chained emission
-//! (`GCode.cpp:6164,6201` / `ShortestPath.cpp:1040-1052`).
+//! Support reversal carryover and print-object sharing.
+//! Infill instead uses call-local copies (`GCode.cpp:8974–9008`).
 
 use super::state::{EmitState, LayerGeometry};
 
-/// `chain_and_reorder_extrusion_entities` runs over the pointer vector into
-/// the PrintObject's layer entities and reverses chosen entities IN PLACE
-/// (`ShortestPath.cpp:1040-1052`), so instances emitted later in the same
-/// layer observe the mutated orientations. Ares re-runs fill per instance,
-/// so the orientation state is carried explicitly: keyed by
-/// `(source_object_index, layer id)` with a positional entity index inside
-/// the per-`(object, layer)` chained-emission sequence (structurally
-/// identical across instances of one source object).
+/// The existing support ledger retains orientation state per PrintObject
+/// and layer. Its ownership rewrite is separate from the infill port.
 /// Raft layers are separate upstream `Layer` entity sets: their ledger keys
 /// must not collide with the object layer keys of the same source object.
 /// Upstream layer entity set a shared-reversal ledger is keyed by: object
@@ -45,13 +39,11 @@ pub(in crate::project_slice::gcode_emit) struct EmissionPhase<'a> {
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct SharedEntityReversals {
-    infill: std::collections::BTreeMap<((usize, usize), SharedLayerId), Vec<bool>>,
     support: std::collections::BTreeMap<((usize, usize), SharedLayerId), Vec<bool>>,
     /// `(last scope, cursor)` per ledger — the cursor resets whenever
     /// emission moves to another print object's layer pass (any of the
     /// session, representative, or layer changing) and otherwise advances
     /// over that pass's chained entities.
-    infill_cursor: (Option<ReversalScope>, usize),
     support_cursor: (Option<ReversalScope>, usize),
 }
 
@@ -92,24 +84,6 @@ impl SharedEntityReversals {
             }
         }
         cursor.1 = base + entities.len();
-    }
-
-    pub(in crate::project_slice::gcode_emit) fn chain_infill<
-        T: crate::project_slice::perimeters::classic::shortest_path::ChainEntity,
-    >(
-        &mut self,
-        scope: ReversalScope,
-        entities: &mut Vec<T>,
-        start: crate::geometry::Point,
-        scale: crate::geometry::CoordinateScale,
-    ) {
-        Self::chain(
-            &mut self.infill,
-            &mut self.infill_cursor,
-            scope,
-            entities,
-            (start, scale),
-        );
     }
 
     pub(in crate::project_slice::gcode_emit) fn chain_support<

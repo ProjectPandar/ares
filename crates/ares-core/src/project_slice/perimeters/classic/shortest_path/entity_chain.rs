@@ -6,6 +6,7 @@ use crate::{
         perimeters::classic::gap_extrusion::GapFillEntity,
     },
 };
+use std::borrow::Cow;
 
 pub(in crate::project_slice) trait ChainEntity {
     fn first_point(&self) -> Point;
@@ -25,6 +26,25 @@ pub(in crate::project_slice) fn chain_and_reorder_entities<T: ChainEntity>(
     let _ = chain_and_reorder_entities_flips(entities, Some(start_near), scale);
 }
 
+/// Const chaining with call-local reversed copies (`ShortestPath.cpp:1513–1528`).
+pub(in crate::project_slice) fn chain_and_reorder_entities_const<T: ChainEntity + Clone>(
+    entities: &[T],
+    start_near: Point,
+    scale: crate::geometry::CoordinateScale,
+) -> impl Iterator<Item = Cow<'_, T>> {
+    entity_chain(entities, Some(start_near), Some(scale))
+        .into_iter()
+        .map(move |(index, reverse)| {
+            if reverse {
+                let mut entity = entities[index].clone();
+                entity.reverse();
+                Cow::Owned(entity)
+            } else {
+                Cow::Borrowed(&entities[index])
+            }
+        })
+}
+
 pub(in crate::project_slice) fn chain_and_reorder_entities_with_optional_start<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Option<Point>,
@@ -32,10 +52,8 @@ pub(in crate::project_slice) fn chain_and_reorder_entities_with_optional_start<T
     let _ = reorder_entities_flips(entities, start_near, None);
 }
 
-/// Chains and improves in place, reporting the reversal decision per
-/// ORIGINAL entity index (`ShortestPath.cpp:1429–1462`). Upstream
-/// `GCode.cpp:8952,9021` applies these to the SHARED layer entities, so the
-/// reversals persist into later islands/instances of the same source object.
+/// Mutable chaining with reversal decisions per original entity index
+/// (`ShortestPath.cpp:1490–1511`).
 pub(in crate::project_slice) fn chain_and_reorder_entities_flips<T: ChainEntity>(
     entities: &mut Vec<T>,
     start_near: Option<Point>,
@@ -44,11 +62,11 @@ pub(in crate::project_slice) fn chain_and_reorder_entities_flips<T: ChainEntity>
     reorder_entities_flips(entities, start_near, Some(scale))
 }
 
-fn reorder_entities_flips<T: ChainEntity>(
-    entities: &mut Vec<T>,
+fn entity_chain<T: ChainEntity>(
+    entities: &[T],
     start_near: Option<Point>,
     improve: Option<crate::geometry::CoordinateScale>,
-) -> Vec<bool> {
+) -> Vec<(usize, bool)> {
     let endpoints = entities
         .iter()
         .map(|entity| {
@@ -80,6 +98,15 @@ fn reorder_entities_flips<T: ChainEntity>(
             1e-4 / scale.factor(),
         );
     }
+    chain
+}
+
+fn reorder_entities_flips<T: ChainEntity>(
+    entities: &mut Vec<T>,
+    start_near: Option<Point>,
+    improve: Option<crate::geometry::CoordinateScale>,
+) -> Vec<bool> {
+    let chain = entity_chain(entities, start_near, improve);
     let mut source = std::mem::take(entities)
         .into_iter()
         .map(Some)
@@ -114,17 +141,6 @@ impl FillExtrusionCollection {
             entity.reverse();
         }
         self.entities.reverse();
-    }
-
-    pub(in crate::project_slice) fn chained_path_from(
-        mut self,
-        start_near: Point,
-        scale: crate::geometry::CoordinateScale,
-    ) -> Self {
-        if !self.no_sort {
-            chain_and_reorder_entities(&mut self.entities, start_near, scale);
-        }
-        self
     }
 }
 
