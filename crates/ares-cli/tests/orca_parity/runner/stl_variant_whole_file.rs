@@ -118,6 +118,16 @@ async fn stl_variant_whole_file_matches_native() {
     .unwrap();
     let native = std::fs::read_to_string(output.join("plate_1.gcode")).unwrap();
     let ares = String::from_utf8_lossy(&ares).into_owned();
+    assert_eq!(
+        native
+            .lines()
+            .find(|line| line.starts_with("; slow_down_min_speed = "))
+            .unwrap(),
+        ares.lines()
+            .find(|line| line.starts_with("; slow_down_min_speed = "))
+            .unwrap(),
+        "ordinary filament options use the first source value per loaded slot"
+    );
     let (native_normalized, ares_normalized) = (normalized(&native), normalized(&ares));
     assert_eq!(
         native_normalized,
