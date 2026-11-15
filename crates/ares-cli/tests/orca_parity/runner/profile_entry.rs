@@ -31,6 +31,8 @@ mod plater_stl_session;
 #[path = "profile_cli_preflight.rs"]
 mod profile_cli_preflight;
 
+#[path = "catalog_user_defaults.rs"]
+mod catalog_user_defaults;
 #[path = "preset_scalar_array_slice.rs"]
 mod preset_scalar_array_slice;
 #[path = "preset_scalar_loading.rs"]
