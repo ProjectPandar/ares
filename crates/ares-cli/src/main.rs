@@ -114,6 +114,11 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             let metadata = ares_core::GenerationMetadata::default();
             let (source, machine_full) =
                 compatible_machine::load(&input, args.resources_dir.as_deref())?;
+            let system_catalog = args
+                .resources_dir
+                .as_deref()
+                .map(project_presets::load_resources_catalog)
+                .transpose()?;
             let mut upward_report = Vec::new();
             let mut sliced_plate = ares_core::SlicedPlate::default();
             let upward = ares_core::CliUpwardMachine {
@@ -126,7 +131,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             // This byte API slices one view; its default is that first plate.
             let gcode = match &args.dump_moves {
                 Some(path) => {
-                    let processed = match ares_core::slice_cli_project_plate_validated(
+                    let processed = match ares_core::slice_cli_project_plate_validated_with_catalog(
                         &input,
                         ares_core::CliProjectSliceRequest {
                             plate: args.plate,
@@ -136,6 +141,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             sliced_plate: &mut sliced_plate,
                         },
                         metadata,
+                        system_catalog.as_ref(),
                         context,
                     )
                     .await
@@ -162,7 +168,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     processed.gcode
                 }
                 None => {
-                    match ares_core::slice_cli_project_plate_validated(
+                    match ares_core::slice_cli_project_plate_validated_with_catalog(
                         &input,
                         ares_core::CliProjectSliceRequest {
                             plate: args.plate,
@@ -172,6 +178,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             sliced_plate: &mut sliced_plate,
                         },
                         metadata,
+                        system_catalog.as_ref(),
                         context,
                     )
                     .await

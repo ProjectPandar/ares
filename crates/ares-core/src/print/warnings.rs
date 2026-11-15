@@ -9,6 +9,7 @@ pub enum WarningLevel {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SlicingNotificationType {
     NeedSupportOn = 2,
+    UnresolvedSystemPreset = 3,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

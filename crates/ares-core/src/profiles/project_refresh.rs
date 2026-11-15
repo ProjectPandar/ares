@@ -84,6 +84,24 @@ pub(crate) struct ProjectPresetRefresh<'a> {
     pub(super) placement: Placement,
 }
 
+pub(super) fn direct_refresh(
+    catalog: &Catalog,
+    raw: &ProjectSettingsRaw,
+) -> Result<(ProjectSettingsRaw, Vec<String>), SliceError> {
+    let names = preset::strings(raw, "filament_settings_id");
+    let inherited = preset::strings(raw, "inherits_group");
+    let mut unresolved = Vec::new();
+    for (slot, name) in names.iter().enumerate() {
+        let name = preset::system_name(name, &inherited, slot + 1);
+        if !name.is_empty()
+            && preset::system_config(catalog, super::ProfileKind::Filament, name)?.is_none()
+        {
+            unresolved.push(name.to_owned());
+        }
+    }
+    Ok((preset::refresh(catalog, raw, false, None)?, unresolved))
+}
+
 pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, SliceError> {
     #[derive(serde::Deserialize)]
     #[serde(deny_unknown_fields)]

@@ -97,7 +97,7 @@ impl CliFailure {
         match self {
             Self::Family(failure) => failure.flush_and_exit(),
             Self::Legacy(error) => {
-                eprintln!("Error: {error:?}");
+                eprintln!("Error: {error}");
                 std::process::exit(1);
             }
         }
@@ -391,6 +391,7 @@ pub(super) fn slice_error_to_failure(
             )
         }
         SliceError::EmptyInput
+        | SliceError::MissingSystemPresetBundle
         | SliceError::InvalidInput(_)
         | SliceError::ProjectSlicingIncomplete
         | SliceError::UnsupportedProjectFeature(_) => CliFailure::Legacy(Box::new(error)),

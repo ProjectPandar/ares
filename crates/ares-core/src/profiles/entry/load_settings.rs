@@ -93,6 +93,7 @@ fn with_load_settings_source<T>(
             validate_print,
         }),
         refresh: None,
+        system_catalog: None,
         overrides,
         validate_print,
         validate_config: true,

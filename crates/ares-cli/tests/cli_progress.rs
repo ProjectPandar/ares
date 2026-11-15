@@ -8,6 +8,9 @@ use std::{fs, path::Path, process::Output};
 fn run(input: &Path, output: &Path, progress: bool) -> Output {
     let mut command = assert_cmd::cargo::cargo_bin_cmd!("ares");
     command.arg("slice");
+    command
+        .arg("--resources-dir")
+        .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../OrcaSlicer/resources"));
     if progress {
         command.arg("--progress");
     }
@@ -30,12 +33,14 @@ fn core_statuses(project: &[u8]) -> Vec<String> {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap();
+    let catalog = ares_core::PresetCatalogHandle::new();
     runtime
-        .block_on(ares_core::slice_project_plate(
+        .block_on(ares_core::slice_project_plate_with_catalog(
             project,
             ares_core::GenerationMetadata::default(),
             None,
             &ares_core::ConfigOverrides::default(),
+            Some(&catalog),
             context,
         ))
         .unwrap();

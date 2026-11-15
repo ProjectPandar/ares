@@ -7,6 +7,7 @@ pub(crate) struct ProjectSource<'a> {
     pub(crate) plate: Option<u32>,
     pub(crate) profile: Option<ProfileInput<'a>>,
     pub(crate) refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
+    pub(crate) system_catalog: Option<&'a crate::PresetCatalogHandle>,
     /// User option overrides (M854); empty for the unedited document.
     pub(crate) overrides: &'a ConfigOverrides,
     /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
@@ -70,10 +71,13 @@ pub(crate) enum ProjectInput<'a> {
 }
 
 impl ProjectInput<'_> {
+    #[allow(clippy::excessive_nesting, clippy::too_many_arguments)]
     pub(crate) fn load(
         self,
         overrides: &ConfigOverrides,
         refresh: Option<crate::profiles::ProjectPresetRefresh<'_>>,
+        system_catalog: Option<&crate::PresetCatalogHandle>,
+        mut warnings: Option<&mut SlicedPlate>,
         validate_print: bool,
     ) -> Result<
         (
@@ -83,10 +87,32 @@ impl ProjectInput<'_> {
         crate::SliceError,
     > {
         match self {
-            Self::Bytes(bytes) => match refresh {
-                Some(refresh) => refresh.load(bytes, overrides, validate_print),
-                None => crate::project::load_project_with_preparation(bytes, overrides),
-            },
+            Self::Bytes(bytes) => {
+                let (mut project, preparation) = match refresh {
+                    Some(refresh) => refresh.load(bytes, overrides, validate_print)?,
+                    None => crate::project::load_project_with_preparation(bytes, overrides)?,
+                };
+                if project.documents().bbl_family_3mf && refresh.is_none() {
+                    let Some(system_catalog) = system_catalog else {
+                        return Err(crate::SliceError::MissingSystemPresetBundle);
+                    };
+                    let (raw, unresolved) =
+                        system_catalog.refresh_direct(&project.documents().project_settings_raw)?;
+                    if let Some(warnings) = warnings.as_mut() {
+                        warnings.warnings.extend(unresolved.into_iter().map(|name| {
+                            crate::PrintWarning {
+                                level: crate::WarningLevel::NonCritical,
+                                message_type: crate::SlicingNotificationType::UnresolvedSystemPreset,
+                                message: format!(
+                                    "system filament preset {name} was not resolved; its slot keeps its values"
+                                ),
+                            }
+                        }));
+                    }
+                    project.apply_project_preset_refresh(raw, overrides)?;
+                }
+                Ok((project, preparation))
+            }
             Self::Model(model) => {
                 if refresh.is_some() {
                     return Err(crate::SliceError::InvalidInput(
@@ -127,6 +153,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             plate: None,
             profile: None,
             refresh: None,
+            system_catalog: None,
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             validate_config: true,
@@ -146,6 +173,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             plate: None,
             profile: None,
             refresh: None,
+            system_catalog: None,
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             validate_config: true,

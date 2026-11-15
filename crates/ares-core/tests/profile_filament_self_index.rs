@@ -2,6 +2,75 @@
 mod fixture;
 
 #[tokio::test]
+async fn direct_bbl_project_without_catalog_returns_missing_bundle_error() {
+    let input = include_bytes!("../../../tests/parity/orca_cli_ender3.3mf");
+    let result = ares_core::slice_project_plate(
+        input,
+        ares_core::GenerationMetadata::deterministic(2026, 11, 15, 0, 0, 0),
+        Some(1),
+        &ares_core::ConfigOverrides::default(),
+        ares_core::SlicerContext::new(0),
+    )
+    .await;
+    assert!(
+        result.is_err(),
+        "direct BBL projects require a system preset bundle"
+    );
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("system preset bundle")
+    );
+}
+
+#[tokio::test]
+async fn direct_bbl_project_with_catalog_slices_successfully() {
+    let input = include_bytes!("../../../tests/parity/orca_cli_ender3.3mf");
+    let catalog = ares_core::PresetCatalogHandle::new();
+    ares_core::slice_project_plate_with_catalog(
+        input,
+        ares_core::GenerationMetadata::deterministic(2026, 11, 15, 0, 0, 0),
+        Some(1),
+        &ares_core::ConfigOverrides::default(),
+        Some(&catalog),
+        ares_core::SlicerContext::new(0),
+    )
+    .await
+    .expect("a supplied system bundle permits direct BBL slicing");
+}
+
+#[tokio::test]
+async fn direct_bbl_missing_filament_preset_warns_and_keeps_slot() {
+    let input = include_bytes!("../../../tests/parity/orca_cli_ender3.3mf");
+    let catalog = ares_core::PresetCatalogHandle::new();
+    let mut upward_report = Vec::new();
+    let mut sliced_plate = ares_core::SlicedPlate::default();
+    ares_core::slice_cli_project_plate_validated_with_catalog(
+        input,
+        ares_core::CliProjectSliceRequest {
+            plate: Some(1),
+            overrides: &ares_core::ConfigOverrides::default(),
+            record_moves: false,
+            upward: ares_core::CliUpwardMachine {
+                source: None,
+                input: ares_core::UpwardMachineInput::Embedded,
+                report: &mut upward_report,
+            },
+            sliced_plate: &mut sliced_plate,
+        },
+        ares_core::GenerationMetadata::deterministic(2026, 11, 15, 0, 0, 0),
+        Some(&catalog),
+        ares_core::SlicerContext::new(0),
+    )
+    .await
+    .expect("missing system filament presets preserve the direct project slot");
+    assert!(sliced_plate.warnings.iter().any(|warning| {
+        warning.message_type == ares_core::SlicingNotificationType::UnresolvedSystemPreset
+    }));
+}
+
+#[tokio::test]
 async fn profile_slice_switch_to_four_tools_reuses_first_self_index_for_missing_variant_ids() {
     let (input, catalog, selection) = fixture::inputs();
     // The printer switch's normalizeFilamentSlots supplies four per-nozzle matrices.

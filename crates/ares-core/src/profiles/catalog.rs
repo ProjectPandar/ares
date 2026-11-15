@@ -132,6 +132,13 @@ impl PresetCatalogHandle {
 
     /// An Orca preset JSON or `.orca_*`/`.zip` import, reusing the bundle
     /// importer (`PresetBundle.cpp:1304-1549`).
+    pub(crate) fn refresh_direct(
+        &self,
+        raw: &ProjectSettingsRaw,
+    ) -> Result<(ProjectSettingsRaw, Vec<String>), SliceError> {
+        super::project_refresh::direct_refresh(&self.catalog, raw)
+    }
+
     pub fn add_import(&mut self, input: &[u8], filename: &str) -> Result<(), SliceError> {
         for document in super::import::parse_import_documents(input, filename)? {
             self.catalog.push_import(document)?;

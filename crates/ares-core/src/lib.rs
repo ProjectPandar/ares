@@ -216,9 +216,13 @@ pub use project::{
 };
 pub use project_slice::{
     CliProjectSliceRequest, CliUpwardMachine, SlicedPlate, slice_cli_project_plate_validated,
-    slice_project_plate_processed_validated, slice_project_plate_validated,
+    slice_cli_project_plate_validated_with_catalog, slice_project_plate_processed_validated,
+    slice_project_plate_validated,
 };
-pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
+pub use project_slice::{
+    slice_project, slice_project_plate, slice_project_plate_processed,
+    slice_project_plate_processed_with_catalog, slice_project_plate_with_catalog,
+};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use slicer_context::{SlicerContext, SlicingStatus};
@@ -258,6 +262,8 @@ impl InputFormat {
 #[derive(Debug, PartialEq)]
 pub enum SliceError {
     EmptyInput,
+    /// Direct BBL/Orca 3MF slicing requires the caller to provide system presets.
+    MissingSystemPresetBundle,
     InvalidInput(String),
     /// Resolved non-FFF technology (`OrcaSlicer.cpp:3619,3627-3633`).
     InvalidPrinterTechnology,
@@ -334,6 +340,9 @@ impl fmt::Display for SliceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
+            Self::MissingSystemPresetBundle => {
+                f.write_str("direct BBL/Orca 3MF slicing requires a system preset bundle")
+            }
             Self::InvalidInput(message) => f.write_str(message),
             Self::InvalidPrinterTechnology => f.write_str("invalid printer_technology"),
             Self::PostProcessNotSupported => {
