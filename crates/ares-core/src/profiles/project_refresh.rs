@@ -1,4 +1,5 @@
 mod filament;
+pub(crate) use filament::loaded_filament_ordinary_values;
 pub(in crate::profiles) mod keys;
 pub(super) mod preset;
 

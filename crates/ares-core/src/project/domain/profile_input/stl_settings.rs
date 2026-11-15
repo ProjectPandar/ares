@@ -18,6 +18,8 @@ pub(super) fn compose(
     // STL --load-settings is not the BBL 3MF filament-mapping branch
     // (OrcaSlicer.cpp:2275–2277); apply user edits to the composed profile.
     let mut raw = profile.profile_raw.clone();
+    let ordinary = crate::profiles::loaded_filament_ordinary_values(profile.filament_raws)?;
+    raw.extend_raw(&ordinary);
     // CLI preset identities are injected after loading settings
     // (OrcaSlicer.cpp:2048,2088,3152–3158,3175–3180), before
     // command-line overrides (:3613–3615). Use the same composed data
@@ -61,6 +63,11 @@ pub(super) fn compose(
         // view (`Config.cpp:577-579` normalizes every loaded preset at
         // compose, before any overlay).
         let mut settings = profile.settings.clone();
+        let (_, _, ordinary, _) =
+            crate::options::json_deserialize::deserialize_config_values(ordinary.into_object())
+                .map_err(SliceError::InvalidInput)?
+                .into_profile_parts();
+        ordinary.apply_present(&mut settings.filament);
         // CLI:4250-4259 adds a missing static default once, not once per
         // loaded filament. Typed composition must not invent raw members.
         settings
