@@ -62,6 +62,16 @@ the five dynamic preset fields belong to a preset_source group rather than
 per-filament numeric vector normalization. Plugin overrides are scalar strings,
 not string vectors. Existing project/preset metadata is not duplicated.
 
+The public filament option map retains these fields, but G-code full-config
+collection must not flatten filament compatibility predicates into bare scalar
+keys. `OrcaSlicer.cpp:3715–3729` routes them into
+`compatible_machine_expression_group` and `compatible_process_expression_group`;
+the bare `compatible_printers_condition` retains the loaded process value.
+`PresetBundle.cpp:5580,5628–5629,5791–5794,5836–5837` separately collects preset
+conditions, erases the colliding scalar keys, and writes the expression groups.
+The legacy name `compatible_printers_condition_cummulative` is translated to
+`compatible_machine_expression_group`, not a second scalar field.
+
 ### Printer
 
 Twenty-one fields have no typed value:
