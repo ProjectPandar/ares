@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect } from "@playwright/test";
-import { strToU8, unzipSync, zipSync } from "fflate";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { type NativeSelection, PROJECT_CONFIG } from "./presetSelectOracle";
 
 /** The groups full_fff_config stores only when some entry is non-empty (PresetBundle.cpp:5826-5838). */
@@ -14,6 +14,20 @@ const GROUPS = ["compatible_machine_expression_group", "compatible_process_expre
 export function platerExport(selection: NativeSelection, opened: string, out: string, edit: Record<string, unknown> = {}) {
   const entries = unzipSync(readFileSync(opened));
   entries[PROJECT_CONFIG] = strToU8(JSON.stringify({ ...JSON.parse(selection.full_fff_config), ...edit }));
+  writeFileSync(out, zipSync(entries));
+  return out;
+}
+
+/**
+ * The opened 3MF `opened` saved to `out` with the session `selection`'s curr_bed_type, a project option
+ * (PresetBundle.cpp:134) that full_fff_config takes from the project config (PresetBundle.cpp:5542). Picking the
+ * presets runs load_selections, which sets it to the selected printer's saved or default bed type
+ * (PresetBundle.cpp:4046-4055, Preset.cpp:1140-1171) over the one the 3MF stores, which a CLI-route slice keeps.
+ */
+export function withPlaterBedType(selection: NativeSelection, opened: string, out: string) {
+  const entries = unzipSync(readFileSync(opened));
+  const { curr_bed_type } = JSON.parse(selection.full_fff_config) as { curr_bed_type: string };
+  entries[PROJECT_CONFIG] = strToU8(JSON.stringify({ ...JSON.parse(strFromU8(entries[PROJECT_CONFIG])), curr_bed_type }));
   writeFileSync(out, zipSync(entries));
   return out;
 }

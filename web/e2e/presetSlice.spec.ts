@@ -6,6 +6,7 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
+import { withPlaterBedType } from "./platerExport";
 import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 import { setConfigLine, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
@@ -149,9 +150,12 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   });
   const inputs = JSON.parse(readFileSync(`${work}native-profile-inputs.json`, "utf8")) as { datadir: string; settings: string[]; filaments: string[] };
   const loadPresets = ["--datadir", inputs.datadir, "--load-settings", inputs.settings.join(";"), "--load-filaments", inputs.filaments.join(";")];
+  // The session's picks run load_selections, which replaces the 3MF's curr_bed_type with the selected printer's
+  // (PresetBundle.cpp:4046-4055, Preset.cpp:1140-1171); the 3MF references slice with the session's.
+  const platerBed = withPlaterBedType(session, `${work}profile-entry.3mf`, `${work}profile-entry-plater-bed.3mf`);
   mkdirSync(`${work}selected-system-reference`);
   execFileSync(launcher, [
-    ...loadPresets, "--slice", "0", "--outputdir", `${work}selected-system-reference`, `${work}profile-entry.3mf`,
+    ...loadPresets, "--slice", "0", "--outputdir", `${work}selected-system-reference`, platerBed,
   ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${work}selected-system-reference`, `${artifacts}native/selected-system-reference`, { recursive: true });
   const native = withSelectedPresets(normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
@@ -171,7 +175,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   mkdirSync(`${work}override-reference`);
   execFileSync(launcher, [
     ...loadPresets, "--layer-height", String(EDIT.value),
-    "--slice", "0", "--outputdir", `${work}override-reference`, `${work}profile-entry.3mf`,
+    "--slice", "0", "--outputdir", `${work}override-reference`, platerBed,
   ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${work}override-reference`, `${artifacts}native/override-reference`, { recursive: true });
   const nativeEdited = withSelectedPresets(normalize(readFileSync(`${work}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
