@@ -1,0 +1,10 @@
+{
+  "upstream_commit": "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+  "upstream_directory": "resources/profiles/Snapmaker/machine",
+  "sha256": {
+    "Snapmaker U1 (0.4 nozzle).json": "c58a35c0fcd11e3f6a1f1e820e02ba141507b3baa073c2bb4f1e8217d8585181",
+    "fdm_U1.json": "68fb56b1bb9173eb454f0e1d21298ccc97c90996488687d17d1b685667e3a72a",
+    "fdm_klipper.json": "2d2f1949c2d91e603d764ef9a61ae370def5a4b5529d1a87643dd763e6d6b4b5",
+    "fdm_toolchanger.json": "2f9af06e9d4d0c7c87885ed375ea3425a88797eda064143a7a12281cba8f20b9"
+  }
+}
