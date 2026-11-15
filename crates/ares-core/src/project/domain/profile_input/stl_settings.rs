@@ -1,6 +1,4 @@
-use super::{
-    ProjectSettingsBuilder, ProjectSettingsRaw, RawConfigValue, SelectedProfile, SliceError,
-};
+use super::{ProjectSettingsRaw, RawConfigValue, SelectedProfile, SliceError};
 
 pub(super) fn compose(
     profile: SelectedProfile<'_>,
@@ -76,7 +74,7 @@ pub(super) fn compose(
         // the typed settings rebuild.
         merged.handle_legacy();
         (
-            crate::options::json_deserialize::deserialize_preset_config::<ProjectSettingsBuilder>(
+            crate::options::json_deserialize::deserialize_config_values(
                 merged.clone().into_object(),
             )
             .map_err(|error| {
