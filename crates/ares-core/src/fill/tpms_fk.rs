@@ -159,6 +159,12 @@ pub(crate) fn fill_tpmsfk_surface(
     polylines = super::multiline_offset::apply(polylines, params.multiline, params.spacing, scale)?;
     let clip = boundary_polygons(&rotated);
     polylines = intersection_open_polylines(&polylines, &clip)?;
+    polylines = super::join_close_ends::join_close_ends(
+        polylines,
+        EPSILON / scale.factor(),
+        true,
+        EPSILON / scale.factor(),
+    );
     let minimum_length = 0.8 * params.spacing / scale.factor();
     polylines.retain(|p| polyline_length(p) >= minimum_length);
     if polylines.is_empty() {
