@@ -63,6 +63,43 @@ pub(super) fn complete_process_variants(raw: &mut ProjectSettingsRaw) -> Result<
     Ok(())
 }
 
+// Preset.cpp:375-389 pads inherited vectors; roots use the full extension at1944.
+pub(super) fn complete_machine_variants(
+    raw: &mut ProjectSettingsRaw,
+    inherited: bool,
+) -> Result<(), SliceError> {
+    let mut printer = ProjectSettingsRaw::default();
+    printer.extend(
+        raw.entries()
+            .filter(|(key, _)| {
+                key.as_str() == "nozzle_diameter"
+                    || registry::printer_options_with_variant_1().contains(&key.as_str())
+                    || registry::printer_options_with_variant_2().contains(&key.as_str())
+            })
+            .map(|(key, value)| (key.clone(), value.clone())),
+    );
+    let options =
+        json_deserialize::deserialize_preset_config::<SliceOptions>(printer.into_object())
+            .map_err(SliceError::InvalidInput)?;
+    if inherited
+        && options
+            .values()
+            .get("printer_extruder_variant")
+            .and_then(Value::as_array)
+            .is_none_or(Vec::is_empty)
+    {
+        return Ok(());
+    }
+    for (key, value) in options.extended_preset_variants()? {
+        let source = options.values()[&key].as_array().unwrap();
+        let target = value.as_array().unwrap();
+        if !inherited || (!source.is_empty() && target.len() > source.len()) {
+            raw.insert(key, serde_json::from_value(value).unwrap());
+        }
+    }
+    Ok(())
+}
+
 // Preset.cpp:535-541 runs once on the completed machine preset, not each parent.
 pub(super) fn normalize_machine(raw: &mut ProjectSettingsRaw) -> Result<bool, SliceError> {
     let mut input = ProjectSettingsRaw::default();

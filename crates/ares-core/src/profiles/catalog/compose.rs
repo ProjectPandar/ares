@@ -221,9 +221,20 @@ impl Catalog {
             };
             **options = process.resolve();
         }
+        if kind == ProfileKind::Machine && !self.direct_imports && self.is_user_scope(position) {
+            super::super::preset_normalization::complete_machine_variants(
+                raw,
+                self.document(position)
+                    .inherits
+                    .as_deref()
+                    .is_some_and(|parent| !parent.is_empty()),
+            )?;
+        }
         if kind == ProfileKind::Machine
             && !self.direct_imports
-            && (super::super::preset_normalization::normalize_machine(raw)? || completed_vendor)
+            && (super::super::preset_normalization::normalize_machine(raw)?
+                || completed_vendor
+                || self.is_user_scope(position))
         {
             let (printer, _, _, project) =
                 crate::options::json_deserialize::deserialize_config_values(
