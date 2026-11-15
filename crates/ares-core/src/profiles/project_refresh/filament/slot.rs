@@ -57,16 +57,7 @@ pub(super) fn apply(
             result.insert(group.to_owned(), RawConfigValue::List(values));
             continue;
         }
-        if [
-            "compatible_prints",
-            "compatible_printers",
-            "model_id",
-            "dev_model_name",
-            "filament_settings_id",
-        ]
-        .contains(&key.as_str())
-            || dev_key(key)
-        {
+        if super::SKIPPED_BY_SET_AT.contains(&key.as_str()) || dev_key(key) {
             continue;
         }
         let Some(definition) = crate::option_definition(key) else {
