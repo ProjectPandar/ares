@@ -15,7 +15,8 @@ pub(in crate::project_slice) use chain::{
 };
 
 pub(in crate::project_slice) use entity_chain::{
-    ChainEntity, chain_and_reorder_entities_flips, chain_and_reorder_entities_with_optional_start,
+    ChainEntity, chain_and_reorder_entities, chain_and_reorder_entities_const,
+    chain_and_reorder_entities_flips, chain_and_reorder_entities_with_optional_start,
     reorder_thick_polylines,
 };
 pub(crate) use polyline_chain::chain_polylines;

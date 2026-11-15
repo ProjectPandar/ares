@@ -12,6 +12,9 @@ use crate::{
             IslandPrintEntity, OrderedExtrusionLayer,
             visits::{self, InstanceVisit},
         },
+        perimeters::classic::shortest_path::{
+            chain_and_reorder_entities, chain_and_reorder_entities_const,
+        },
     },
 };
 
@@ -42,7 +45,7 @@ where
         &mut crate::FloatOrPercent,
     ) -> (f64, bool, super::super::small_area::Gate),
 {
-    let super::shared_reversals::EmissionPhase { geometry, reversal } = phase;
+    let geometry = phase.geometry;
     let mut interlude_emitted = false;
     let order = visits::island_order(
         layer,
@@ -91,20 +94,14 @@ where
         if !interlude_emitted && has_infill {
             interlude_emitted = before_first_infill(output, state)?;
         }
-        for (&id, region) in &mut regions {
+        for (&id, region) in &regions {
             if region.infills.is_empty() {
                 continue;
             }
             let (density, _, gate) =
                 options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
-            emit_infills(
-                output,
-                &mut region.infills,
-                super::shared_reversals::EmissionPhase { geometry, reversal },
-                state,
-                density,
-            )?;
+            emit_infills(output, &region.infills, geometry, state, density)?;
         }
         emit_perimeters(
             output,
@@ -120,20 +117,14 @@ where
             state,
             &options_for_region,
         )?;
-        for (&id, region) in &mut regions {
+        for (&id, region) in &regions {
             if region.ironing.is_empty() {
                 continue;
             }
             let (density, _, gate) =
                 options_for_region(id, &mut state.options, &mut state.current_seam_gap);
             state.small_area_gate = gate;
-            emit_infills(
-                output,
-                &mut region.ironing,
-                super::shared_reversals::EmissionPhase { geometry, reversal },
-                state,
-                density,
-            )?;
+            emit_infills(output, &region.ironing, geometry, state, density)?;
         }
     }
     Ok(interlude_emitted)
@@ -208,41 +199,42 @@ where
 
 fn emit_infills(
     output: &mut Vec<u8>,
-    entities: &mut Vec<IslandPrintEntity>,
-    phase: super::shared_reversals::EmissionPhase<'_>,
+    entities: &[IslandPrintEntity],
+    geometry: LayerGeometry<'_>,
     state: &mut EmitState,
     sparse_density: f64,
 ) -> Result<(), SliceError> {
     if entities.is_empty() {
         return Ok(());
     }
-    // GCode.cpp:6163/7635-7636 applies the current emitted region's density.
+    // GCode.cpp:8988 applies the current emitted region's density.
     state.options.has_sparse_infill = sparse_density > 0.0;
-    // GCode.cpp:6164 runs chain_and_reorder_extrusion_entities over the
-    // shared layer entities: reversals persist to later islands/instances
-    // of the same source object (also covers the ironing pass above and
-    // `extrude_support`, GCode.cpp:6201).
-    let geometry = phase.geometry;
-    state.shared_reversals.chain_infill(
-        phase.reversal,
-        entities,
-        local_cursor(state, geometry),
-        geometry.scale,
-    );
-    for entity in entities.drain(..) {
-        match entity {
+    // GCode.cpp:8990–9000: borrow source entities, own reversals, and
+    // order collection children only in a call-local copy.
+    for mut entity in
+        chain_and_reorder_entities_const(entities, local_cursor(state, geometry), geometry.scale)
+    {
+        match entity.as_ref() {
             IslandPrintEntity::Fill(entity) => {
-                emit_fill_entity(output, &entity, geometry, state)?;
+                emit_fill_entity(output, entity, geometry, state)?;
             }
-            IslandPrintEntity::FillCollection(collection) => {
-                let collection =
-                    collection.chained_path_from(local_cursor(state, geometry), geometry.scale);
+            IslandPrintEntity::FillCollection(_) => {
+                let IslandPrintEntity::FillCollection(collection) = entity.to_mut() else {
+                    unreachable!("entity remains a fill collection")
+                };
+                if !collection.no_sort {
+                    chain_and_reorder_entities(
+                        &mut collection.entities,
+                        local_cursor(state, geometry),
+                        geometry.scale,
+                    );
+                }
                 for entity in &collection.entities {
                     emit_fill_entity(output, entity, geometry, state)?;
                 }
             }
             IslandPrintEntity::Thin(entity) => {
-                emit_variable_width_entity(output, &entity, geometry, state)?;
+                emit_variable_width_entity(output, entity, geometry, state)?;
             }
             IslandPrintEntity::Perimeter(_) => {
                 unreachable!("infill phase contains only infill entities")
