@@ -4,6 +4,7 @@ mod composition;
 pub(crate) mod entry;
 mod settings;
 pub use settings::{ProfileSettings, profile_settings};
+mod full_fff_config;
 mod import;
 mod load_settings;
 mod preset_normalization;
