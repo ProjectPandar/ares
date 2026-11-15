@@ -95,6 +95,7 @@ async fn exported_project_metadata_matches_native_whole_file() {
     )
     .await
     .unwrap();
+    std::fs::write(directory.join("ares.gcode"), &ares).unwrap();
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
