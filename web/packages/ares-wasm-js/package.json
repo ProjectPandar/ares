@@ -25,7 +25,8 @@
   "files": [
     "dist",
     "!dist/wasm",
-    "!dist/platerEdit.d.ts"
+    "!dist/platerEdit.d.ts",
+    "!dist/workerPlaterSource.d.ts"
   ],
   "exports": {
     ".": {
