@@ -19,7 +19,7 @@ import gdb
 ROOT = Path(os.environ["ARES_ROLE_ORACLE_OUTPUT"])
 BINARY = Path(os.environ["ARES_PROCGCODE_NATIVE_BIN"])
 SHA = os.environ["ARES_PROCGCODE_NATIVE_SHA256"]
-assert os.environ["ARES_PROCGCODE_UPSTREAM_REV"] == "345efec64c7b95a05ce5cf96df0dde66a158835c"
+assert os.environ["ARES_PROCGCODE_UPSTREAM_REV"] == "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19"
 assert hashlib.sha256(BINARY.read_bytes()).hexdigest() == SHA
 ROOT.mkdir(parents=True)
 SOURCE = Path(os.environ["ARES_ROLE_ORACLE_INPUT"]).resolve()
