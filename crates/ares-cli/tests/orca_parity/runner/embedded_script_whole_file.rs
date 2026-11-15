@@ -127,6 +127,7 @@ async fn embedded_script_case(stripped: bool) -> Option<(String, String)> {
     )
     .await
     .unwrap();
+    std::fs::write(directory.join("ares.gcode"), &ares).unwrap();
     let runner = OrcaRunner::from_env().unwrap()?;
     let path = |file: &str| directory.join(file).to_str().unwrap().to_owned();
     let output = directory.join("native");
