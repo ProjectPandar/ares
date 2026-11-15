@@ -7,43 +7,68 @@ import type { ViewportColors } from "./Viewport";
  * the current plate's outline in the accent colour, and each plate's index above its top-left
  * corner (`m_plate_idx_icon`, PartPlate::render_icons, PartPlate.cpp:1106-1207). The Bed3D origin axes stay at the first plate's origin.
  */
-export function buildPlates(shape: BedShape, origins: readonly (readonly [number, number])[], current: number, colors: ViewportColors): THREE.Group {
+export function buildPlates(shape: BedShape, origins: readonly (readonly [number, number])[], current: number, materials: PlateMaterials): THREE.Group {
   const group = new THREE.Group();
   const xs = shape.polygon.map(([x]) => x);
   const ys = shape.polygon.map(([, y]) => y);
   const labelSize = 0.08 * Math.max(...xs) - 0.08 * Math.min(...xs);
   origins.forEach(([x, y], index) => {
-    const outline = origins.length > 1 && index === current ? colors.current : colors.outline;
-    const plate = buildBed(shape, { ...colors, outline });
+    const outline = origins.length > 1 && index === current ? materials.current : materials.outline;
+    const plate = buildBed(shape, materials, outline);
     if (origins.length > 1) {
-      const label = buildLabel(String(index + 1), outline, labelSize);
+      const label = buildLabel(String(index + 1), outline.color.getHex(), labelSize);
       label.position.set(Math.min(...xs) + labelSize / 2, Math.max(...ys) + labelSize * 0.7, 0);
       plate.add(label);
     }
     plate.position.set(x, y, 0);
     group.add(plate);
   });
-  group.add(buildAxes(0.1 * Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), shape.height)));
+  group.add(buildAxes(0.1 * Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), shape.height), materials.axes));
   return group;
 }
 
+/** The materials every plate draws with. */
+export interface PlateMaterials {
+  bed: THREE.MeshBasicMaterial;
+  gridMinor: THREE.LineBasicMaterial;
+  gridMajor: THREE.LineBasicMaterial;
+  outline: THREE.LineBasicMaterial;
+  current: THREE.LineBasicMaterial;
+  axes: THREE.MeshBasicMaterial[];
+}
+
 /**
- * The colours of plates `buildPlates` built, set on their own materials and label canvases. A colour-mode
- * change keeps the bed and plate models and only stores `m_is_dark` (GLCanvas3D::on_change_color_mode,
+ * Built once per viewport and kept across plate rebuilds, as the bed and plates draw with the shader they
+ * look up by name (Bed3D::render_default, 3DBed.cpp:820; PartPlate::render, PartPlate.cpp:5334) and
+ * GLShadersManager::init compiles once (GLShadersManager.cpp:22); a new shape resets geometry only.
+ */
+export function plateMaterials(colors: ViewportColors): PlateMaterials {
+  return {
+    bed: new THREE.MeshBasicMaterial({ color: colors.bed, side: THREE.DoubleSide }),
+    gridMinor: new THREE.LineBasicMaterial({ color: colors.gridMinor }),
+    gridMajor: new THREE.LineBasicMaterial({ color: colors.gridMajor }),
+    outline: new THREE.LineBasicMaterial({ color: colors.outline }),
+    current: new THREE.LineBasicMaterial({ color: colors.current }),
+    axes: AXIS_COLORS.map((color) => new THREE.MeshBasicMaterial({ color })),
+  };
+}
+
+/**
+ * The theme colours, set on the plate materials and the label canvases of the plates `buildPlates` built. A
+ * colour-mode change keeps the bed and plate models and only stores `m_is_dark` (GLCanvas3D::on_change_color_mode,
  * GLCanvas3D.cpp:1787; Bed3D, 3DBed.cpp:387-390; PartPlateList, PartPlate.hpp:1059), so no shader compiles.
  */
-export function recolorPlates(group: THREE.Group, current: number, colors: ViewportColors) {
-  const plates = group.children.slice(0, -1);
-  const paint = (node: THREE.Object3D, color: number) => ((node as THREE.Mesh).material as THREE.MeshBasicMaterial).color.setHex(color);
-  plates.forEach((plate, index) => {
-    const outline = plates.length > 1 && index === current ? colors.current : colors.outline;
-    const [surface, minor, major, loop, label] = plate.children;
-    paint(surface, colors.bed);
-    paint(minor, colors.gridMinor);
-    paint(major, colors.gridMajor);
-    paint(loop, outline);
+export function recolorPlates(group: THREE.Group, current: number, materials: PlateMaterials, colors: ViewportColors) {
+  materials.bed.color.setHex(colors.bed);
+  materials.gridMinor.color.setHex(colors.gridMinor);
+  materials.gridMajor.color.setHex(colors.gridMajor);
+  materials.outline.color.setHex(colors.outline);
+  materials.current.color.setHex(colors.current);
+  // Index labels are drawn only with more than one plate.
+  group.children.slice(0, -1).forEach((plate, index) => {
+    const label = plate.children[4];
     if (label instanceof THREE.Sprite) {
-      drawLabel(label.material.map!.image as HTMLCanvasElement, String(index + 1), outline);
+      drawLabel(label.material.map!.image as HTMLCanvasElement, String(index + 1), index === current ? colors.current : colors.outline);
       label.material.map!.needsUpdate = true;
     }
   });
@@ -70,12 +95,12 @@ function buildLabel(text: string, color: number, size: number) {
 }
 
 /** Plate surface, 10 mm grid with 50 mm major lines and outline. */
-function buildBed({ polygon }: BedShape, colors: ViewportColors): THREE.Group {
+function buildBed({ polygon }: BedShape, materials: PlateMaterials, outlineMaterial: THREE.LineBasicMaterial): THREE.Group {
   const group = new THREE.Group();
   const shape = new THREE.Shape(polygon.map(([x, y]) => new THREE.Vector2(x, y)));
   const surface = new THREE.Mesh(
     new THREE.ShapeGeometry(shape),
-    new THREE.MeshBasicMaterial({ color: colors.bed, side: THREE.DoubleSide }),
+    materials.bed,
   );
   surface.position.z = -0.05;
   group.add(surface);
@@ -91,16 +116,16 @@ function buildBed({ polygon }: BedShape, colors: ViewportColors): THREE.Group {
   for (let y = Math.ceil(minY / 10) * 10; y <= maxY; y += 10) {
     (y % 50 === 0 ? major : minor).push(minX, y, 0, maxX, y, 0);
   }
-  const lines = (points: number[], color: number) => {
+  const lines = (points: number[], material: THREE.LineBasicMaterial) => {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
-    return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color }));
+    return new THREE.LineSegments(geometry, material);
   };
-  group.add(lines(minor, colors.gridMinor), lines(major, colors.gridMajor));
+  group.add(lines(minor, materials.gridMinor), lines(major, materials.gridMajor));
 
   const outline = new THREE.LineLoop(
     new THREE.BufferGeometry().setFromPoints(polygon.map(([x, y]) => new THREE.Vector3(x, y, 0.01))),
-    new THREE.LineBasicMaterial({ color: colors.outline }),
+    outlineMaterial,
   );
   group.add(outline);
   return group;
@@ -110,13 +135,13 @@ function buildBed({ polygon }: BedShape, colors: ViewportColors): THREE.Group {
 const AXIS_COLORS = [0xff3c5b, 0x64c818, 0x2f88e9];
 
 /** Bed3D::Axes::render: flat-shaded cylinders (radius length / 75) at the bed origin. */
-function buildAxes(length: number) {
+function buildAxes(length: number, materials: THREE.MeshBasicMaterial[]) {
   const axes = new THREE.Group();
   const stem = new THREE.CylinderGeometry(length / 75, length / 75, length, 16).translate(0, length / 2, 0);
   // Cylinder runs along +Y; rotate it onto +X, +Y and +Z.
   const rotations = [new THREE.Euler(0, 0, -Math.PI / 2), new THREE.Euler(), new THREE.Euler(Math.PI / 2, 0, 0)];
   rotations.forEach((rotation, axis) => {
-    const mesh = new THREE.Mesh(stem, new THREE.MeshBasicMaterial({ color: AXIS_COLORS[axis] }));
+    const mesh = new THREE.Mesh(stem, materials[axis]);
     mesh.rotation.copy(rotation);
     axes.add(mesh);
   });
