@@ -21,13 +21,15 @@ interface Native {
 
 /**
  * `plate_1.print_statistics.json` of tools/chain-probe/print-statistics.nix,
- * pinned to one CPU with the seeded reference's seed like
- * `OrcaRunner::print_statistics_reference`. Written to target/, never the repo.
+ * pinned to the one CPU `ORCA_REPLAY_CPU` names with the seeded reference's seed like
+ * `OrcaRunner::print_statistics_reference` (scripts/orca-seeded-parity.sh). Written to target/, never the repo.
  */
 function native(bin: string, name: string): Native {
   const directory = `${artifacts}/${name}`;
+  const cpu = process.env.ORCA_REPLAY_CPU;
+  if (!cpu || !/^\d+$/.test(cpu)) throw new Error(`ORCA_REPLAY_CPU=${cpu ?? "(unset)"} must name the one CPU the Native probe runs on`);
   mkdirSync(directory, { recursive: true });
-  const run = spawnSync("taskset", ["-c", "0", bin, "--slice", "0", "--outputdir", directory, `${root}tests/parity/summary/${name}.3mf`], {
+  const run = spawnSync("taskset", ["-c", cpu, bin, "--slice", "0", "--outputdir", directory, `${root}tests/parity/summary/${name}.3mf`], {
     env: { ...process.env, ORCA_REPLAY_SEED: "0" }, encoding: "utf8", timeout: 290_000, killSignal: "SIGKILL",
   });
   writeFileSync(`${directory}/native.log`, `${run.stdout}\n${run.stderr}`);
