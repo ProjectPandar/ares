@@ -67,13 +67,16 @@ export function diameterString(diameter: string): string {
 }
 
 /**
- * update_extruder_diameter (Plater.cpp:2651-2671): the model's printer variants, the extruder's
- * current diameter filling an empty first entry or appended when missing.
+ * update_extruder_diameter (Plater.cpp:4075-4100): retain a listed variant while its numeric
+ * prefix matches the tool's diameter; otherwise select that diameter and include it in the list.
  */
 export function nozzleOptions(panel: PrinterPanel, extruder: number): { options: string[]; selected: string } {
   const options = [...panel.info.nozzle_diameters];
-  const selected = panel.nozzleDiameters[extruder] === undefined ? "" : diameterString(panel.nozzleDiameters[extruder]);
-  if ((options[0] ?? "") === "" && selected !== "") options[0] = selected;
-  if (selected !== "" && !options.includes(selected)) options.push(selected);
+  const diameter = panel.nozzleDiameters[extruder] === undefined ? "" : diameterString(panel.nozzleDiameters[extruder]);
+  const prefix = panel.printerVariant.match(/^[0-9.]*/)![0];
+  const keepVariant = prefix === diameter && options.includes(panel.printerVariant);
+  const selected = keepVariant ? panel.printerVariant : diameter;
+  if ((options[0] ?? "") === "" && diameter !== "") options[0] = diameter;
+  if (diameter !== "" && !options.includes(diameter)) options.push(diameter);
   return { options: options.filter((option) => option !== ""), selected };
 }

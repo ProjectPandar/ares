@@ -295,7 +295,7 @@ fn scalar(value: &Value) -> String {
     }
 }
 
-fn wire(key: &str, value: &Value) -> String {
+pub fn wire(key: &str, value: &Value) -> String {
     match value {
         // ConfigBase::load_from_json (Config.cpp:1032-1052): strings are quoted and
         // ';'-joined, points groups '#'-joined, other vectors ','-joined.

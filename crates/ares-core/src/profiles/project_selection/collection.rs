@@ -374,6 +374,9 @@ fn load_config(
         .0
         .normalize_wire_vector_shapes()
         .map_err(SliceError::InvalidInput)?;
+    // PresetCollection::load_presets pads each loaded preset's variant vectors
+    // (Preset.cpp:1930, 1944; extend_default_config_length, :313-370).
+    super::super::preset_normalization::extend_default_config_length(&mut config.0)?;
     if kind == ProfileKind::Machine {
         super::super::preset_normalization::normalize_machine(&mut config.0)?;
     }

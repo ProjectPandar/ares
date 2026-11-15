@@ -57,13 +57,15 @@ export function selectBedType(bedType: string) {
 }
 
 /**
- * Sidebar::priv::switch_diameter (Plater.cpp:1243-1300): another diameter selects the printer of
- * the same model with that variant (PresetBundle::get_similar_printer_preset); without one the
- * configuration is incompatible. Both nozzles of a dual printer take the chosen diameter, as one
- * print cannot mix them.
+ * Sidebar::priv::switch_diameter_to (Plater.cpp:1908-1944): select the same model's requested
+ * variant through PresetBundle::get_similar_printer_preset, retaining an already-selected variant
+ * unless Bambu tool diameters differ.
  */
 export async function selectDiameter(panel: PrinterPanel, diameter: string) {
-  if (panel.nozzleDiameters.every((value) => diameterString(value) === diameter)) return;
+  const nozzlesApart = panel.bbl && panel.nozzleDiameters.length > 1
+    && panel.nozzleDiameters.some((value) => diameterString(value) !== diameter);
+  if (panel.printerVariant === diameter && !nozzlesApart) return;
+  if (panel.printerVariant === "" && diameterString(panel.nozzleDiameters[0]) === diameter) return;
   const { presetSelection: selection, scene } = useApp.getState();
   const current = {
     name: selection?.printer ?? firstString(scene?.settings?.printer, "printer_settings_id") ?? firstString(scene?.settings?.project, "printer_settings_id") ?? "",
