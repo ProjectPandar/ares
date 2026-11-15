@@ -1,13 +1,12 @@
 import { type Scene, type Toolpaths, VERTEX_VALUES, type VolumeType } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { buildPlates, type PlateMaterials, plateMaterials, recolorPlates } from "./bed";
-import { disposeGeometries, disposeTree } from "./dispose";
+import { buildPlates } from "./bed";
+import { disposeTree } from "./dispose";
 import { type GizmoMode, Gizmos } from "./gizmos";
 import { attachInstanceDrag, type DragHit, type EditHandlers, type InstanceRef } from "./instanceDrag";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
-import { buildInstances, ModelMaterials } from "./models";
 import { buildOptionMarkers } from "./optionMarkers";
 import { buildToolMarker, placeToolMarker } from "./toolMarker";
 import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, segmentColorsProbe, segmentGeometryProbe, segmentSizesProbe, type ToolpathFilter } from "./toolpathMesh";
@@ -23,6 +22,16 @@ export interface ViewportColors {
   /** The current plate's outline and index. */
   current: number;
 }
+
+const SELECTED = new THREE.Color(0xffa040);
+
+// GLVolume::render colours for non-part volumes (3DScene.cpp).
+const VOLUME_STYLE: Record<Exclude<VolumeType, "ModelPart">, [number, number]> = {
+  NegativeVolume: [0x606060, 0.45],
+  ParameterModifier: [0xffff00, 0.25],
+  SupportEnforcer: [0x4d80ff, 0.45],
+  SupportBlocker: [0xff4d4d, 0.45],
+};
 
 /**
  * Three.js plater canvas: bed (3DBed) plus object instances (GLVolumes),
@@ -45,9 +54,7 @@ export class Viewport {
   /** Plate grid origins (PartPlateList::compute_origin) and the current plate's index. */
   #plateOrigins: readonly (readonly [number, number])[] = [[0, 0]];
   #currentPlate = 0;
-  /** The plate and instance materials, kept across rebuilds so their shader programs stay compiled. */
-  readonly #plateMaterials: PlateMaterials;
-  readonly #modelMaterials = new ModelMaterials();
+  #colors: ViewportColors;
   /** Delivers the render after the requesting task; `#dirty` while one is queued. */
   readonly #renderTask = new MessageChannel();
   #dirty = false;
@@ -65,7 +72,7 @@ export class Viewport {
   onOrbit?: () => void;
 
   constructor(readonly container: HTMLElement, colors: ViewportColors) {
-    this.#plateMaterials = plateMaterials(colors);
+    this.#colors = colors;
     this.#renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     // Phones report 2.6-3; above 2 the extra pixels cost fill rate without a visible gain.
     this.#renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -111,9 +118,9 @@ export class Viewport {
   }
 
   setColors(colors: ViewportColors) {
+    this.#colors = colors;
     this.#scene.background = new THREE.Color(colors.background);
-    recolorPlates(this.#bed, this.#currentPlate, this.#plateMaterials, colors);
-    this.render();
+    this.setBed(this.#bedShape, this.#plateOrigins, this.#currentPlate);
   }
 
   /** The bed shape at every plate origin; toolpaths and plate zoom follow the current plate. */
@@ -122,8 +129,8 @@ export class Viewport {
     this.#plateOrigins = origins;
     this.#currentPlate = current;
     this.#scene.remove(this.#bed);
-    disposeGeometries(this.#bed);
-    this.#bed = buildPlates(shape, origins, current, this.#plateMaterials);
+    disposeTree(this.#bed);
+    this.#bed = buildPlates(shape, origins, current, this.#colors);
     this.#scene.add(this.#bed);
     this.container.dataset.plates = JSON.stringify({ origins, current });
     this.#placeToolpaths();
@@ -143,12 +150,53 @@ export class Viewport {
 
   setScene(scene: Scene | null, filamentColour: string) {
     if (scene && scene.positions === this.#positions && this.#moveInstances(scene)) return;
-    disposeGeometries(this.#models);
+    disposeTree(this.#models);
     this.#models.clear();
     this.#positions = scene?.positions ?? null;
-    this.#modelMaterials.setFilament(filamentColour);
     if (scene) {
-      for (const group of buildInstances(scene, this.#modelMaterials)) this.#models.add(group);
+      for (const [objectIndex, object] of scene.objects.entries()) {
+        const geometries = object.volumes.map((volume) => {
+          const geometry = new THREE.BufferGeometry();
+          const start = volume.vertexOffset * 3;
+          geometry.setAttribute(
+            "position",
+            new THREE.BufferAttribute(scene.positions.subarray(start, start + volume.vertexCount * 3), 3),
+          );
+          geometry.setIndex(new THREE.BufferAttribute(
+            scene.indices.subarray(volume.indexOffset, volume.indexOffset + volume.indexCount), 1,
+          ));
+          return { volume, geometry };
+        });
+        for (const [instanceIndex, instance] of object.instances.entries()) {
+          const group = new THREE.Group();
+          group.matrixAutoUpdate = false;
+          group.matrix.fromArray(instance.matrix);
+          group.userData.objectId = object.id;
+          group.userData.ref = { object: objectIndex, instance: instanceIndex } satisfies InstanceRef;
+          for (const { volume, geometry } of geometries) {
+            const [color, opacity] = volume.type === "ModelPart"
+              ? [new THREE.Color(filamentColour).getHex(), 1]
+              : VOLUME_STYLE[volume.type];
+            const material = new THREE.MeshStandardMaterial({
+              color,
+              opacity,
+              transparent: opacity < 1,
+              depthWrite: opacity === 1,
+              flatShading: true,
+              roughness: 0.75,
+              metalness: 0.05,
+              side: THREE.DoubleSide,
+            });
+            material.userData.baseColor = color;
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.matrixAutoUpdate = false;
+            mesh.matrix.fromArray(volume.matrix);
+            mesh.userData.objectId = object.id;
+            group.add(mesh);
+          }
+          this.#models.add(group);
+        }
+      }
     }
     this.#models.updateMatrixWorld(true);
     this.setSelected(this.#selected);
@@ -194,7 +242,10 @@ export class Viewport {
     this.#selected = objectId;
     this.#placeGizmo();
     this.#models.traverse((node) => {
-      if (node instanceof THREE.Mesh) node.material = this.#modelMaterials.get(node.userData.volumeType as VolumeType, node.userData.objectId === objectId);
+      if (!(node instanceof THREE.Mesh)) return;
+      const material = node.material as THREE.MeshStandardMaterial;
+      const base = new THREE.Color(material.userData.baseColor as number);
+      material.color.copy(node.userData.objectId === objectId ? base.lerp(SELECTED, 0.65) : base);
     });
     this.render();
   }
@@ -315,10 +366,8 @@ export class Viewport {
     this.#renderTask.port1.close();
     this.#resize.disconnect();
     this.#controls.dispose();
-    disposeGeometries(this.#models);
-    disposeGeometries(this.#bed);
-    this.#modelMaterials.dispose();
-    Object.values(this.#plateMaterials).flat().forEach((material) => material.dispose());
+    disposeTree(this.#models);
+    disposeTree(this.#bed);
     disposeTree(this.#toolMarker);
     this.#gizmos.dispose();
     if (this.#toolpaths) disposeTree(this.#toolpaths);
