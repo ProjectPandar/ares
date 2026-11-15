@@ -19,7 +19,13 @@ export const FIRST_RUN_CONFIG = {
   // Custom/machine/fdm_klipper_common.json:230-232); apply_vendor_config keeps it as it is checked (:2079-2095).
   // The print is update_compatible's PreferedPrintProfileMatch pick (PresetBundle.cpp:8635-8639): the printer's
   // default_print_profile (Custom/machine/fdm_klipper_common.json:233).
-  printers: { "MyKlipper 0.4 nozzle": { filaments: ["Generic PLA @System"], process: "0.20mm Standard @MyKlipper" } },
+  // The bed type is load_selections' pick for a printer without a saved one (PresetBundle.cpp:4046-4054):
+  // get_default_bed_type finds no default_bed_type in the MyKlipper presets (default "", PrintConfig.cpp:1475) and a
+  // printer type other than the BBL models, so btPEI (Preset.cpp:1140-1171), "High Temp Plate" (PrintConfig.cpp:611);
+  // export_selections stores it per printer (PresetBundle.cpp:4255).
+  printers: {
+    "MyKlipper 0.4 nozzle": { filaments: ["Generic PLA @System"], process: "0.20mm Standard @MyKlipper", bedType: "High Temp Plate" },
+  },
   // The model's default_materials (Custom/machine/Generic Klipper Printer.json), checked by save_userguide_models.
   installedFilaments: [
     "Generic ABS @System", "Generic ASA @System", "Generic PA @System", "Generic PA-CF @System", "Generic PC @System",

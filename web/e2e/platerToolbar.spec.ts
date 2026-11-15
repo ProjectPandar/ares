@@ -234,9 +234,10 @@ test("the Prepare toolbar follows GLToolbar and GLGizmosManager and runs its ite
   await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(async () => (await plates(page)).origins.length).toBe(2);
 
-  // "Add" opens the import file picker.
+  // "Add" opens the import file picker: on_action_add runs add_file (Plater.cpp:13559-13566, 19001-19005), whose
+  // import_model dialog takes several files (wxFD_MULTIPLE, GUI_App.cpp:5296-5305).
   const [chooser] = await Promise.all([page.waitForEvent("filechooser"), mainButton(page, "Add").click()]);
-  expect(chooser.isMultiple()).toBe(false);
+  expect(chooser.isMultiple()).toBe(true);
   await chooser.setFiles(`${repositoryRoot}${CUBE}`);
   await expect.poll(async () => (await plates(page)).origins, { timeout: 60_000 }).toHaveLength(1);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
