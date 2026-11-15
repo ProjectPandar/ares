@@ -51,6 +51,18 @@ pub(super) fn extend_default_config_length(raw: &mut ProjectSettingsRaw) -> Resu
     Ok(())
 }
 
+pub(super) fn complete_process_variants(raw: &mut ProjectSettingsRaw) -> Result<(), SliceError> {
+    let mut process = ProjectSettingsRaw::default();
+    process.extend(
+        raw.entries()
+            .filter(|(key, _)| registry::print_options_with_variant().contains(&key.as_str()))
+            .map(|(key, value)| (key.clone(), value.clone())),
+    );
+    extend_default_config_length(&mut process)?;
+    raw.extend_raw(&process);
+    Ok(())
+}
+
 // Preset.cpp:535-541 runs once on the completed machine preset, not each parent.
 pub(super) fn normalize_machine(raw: &mut ProjectSettingsRaw) -> Result<bool, SliceError> {
     let mut input = ProjectSettingsRaw::default();

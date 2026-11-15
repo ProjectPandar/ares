@@ -218,6 +218,19 @@ impl Catalog {
         } else {
             merge_profile_fragments(&fragments, kind, name)?
         };
+        if kind == ProfileKind::Process && !self.direct_imports && self.is_user_scope(position) {
+            // Preset.cpp:1925–1944: user process completion precedes CLI variant selection.
+            super::super::preset_normalization::complete_process_variants(raw)?;
+            let (_, process, _, _) = crate::options::json_deserialize::deserialize_config_values(
+                raw.clone().into_object(),
+            )
+            .map_err(SliceError::InvalidInput)?
+            .into_profile_parts();
+            let MergedProfile::Process { options, .. } = &mut merged else {
+                unreachable!("process selection has a process payload")
+            };
+            **options = process.resolve();
+        }
         if kind == ProfileKind::Machine
             && !self.direct_imports
             && (super::super::preset_normalization::normalize_machine(raw)? || completed_vendor)
