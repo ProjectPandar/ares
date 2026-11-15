@@ -47,7 +47,32 @@ fn ascii_high_bit_name_before_body_probe_preserves_import() {
 
 #[test]
 fn ascii_count_bytes_exceeding_wasm32_length_preserve_import() {
-    let input = ascii("synthetic", &tetrahedron(200.0));
+    let vertices = [
+        [0.0, 0.0, 0.0],
+        [200.0, 0.0, 0.0],
+        [200.0, 200.0, 0.0],
+        [0.0, 200.0, 0.0],
+        [0.0, 0.0, 200.0],
+        [200.0, 0.0, 200.0],
+        [200.0, 200.0, 200.0],
+        [0.0, 200.0, 200.0],
+    ];
+    let facets = [
+        [0, 2, 1],
+        [0, 3, 2],
+        [4, 5, 6],
+        [4, 6, 7],
+        [0, 1, 5],
+        [0, 5, 4],
+        [1, 2, 6],
+        [1, 6, 5],
+        [2, 3, 7],
+        [2, 7, 6],
+        [3, 0, 4],
+        [3, 4, 7],
+    ]
+    .map(|face| face.map(|index| vertices[index]));
+    let input = ascii("synthetic", &facets);
     let count = u32::from_le_bytes(input[80..84].try_into().unwrap());
     assert!(84 + u64::from(count) * 50 > u64::from(u32::MAX));
     compare_import("ascii-large-pseudo-count", input, true);
