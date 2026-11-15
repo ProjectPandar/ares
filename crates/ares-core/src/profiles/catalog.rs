@@ -130,6 +130,14 @@ impl PresetCatalogHandle {
         self.catalog.push_vendor(vendor)
     }
 
+    /// CLI:2793–2817 refreshes resolvable system filaments without compacting slots.
+    pub(crate) fn refresh_direct(
+        &self,
+        raw: &ProjectSettingsRaw,
+    ) -> Result<ProjectSettingsRaw, SliceError> {
+        super::project_refresh::direct_refresh(&self.catalog, raw)
+    }
+
     /// An Orca preset JSON or `.orca_*`/`.zip` import, reusing the bundle
     /// importer (`PresetBundle.cpp:1304-1549`).
     pub fn add_import(&mut self, input: &[u8], filename: &str) -> Result<(), SliceError> {

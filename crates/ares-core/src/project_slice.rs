@@ -49,7 +49,8 @@ pub use source::{CliUpwardMachine, SlicedPlate};
 pub(crate) use validated::validate_post_process;
 pub use validated::{
     CliProjectSliceRequest, slice_cli_project_plate_validated,
-    slice_project_plate_processed_validated, slice_project_plate_validated,
+    slice_cli_project_plate_validated_with_catalog, slice_project_plate_processed_validated,
+    slice_project_plate_validated,
 };
 
 /// Loads the project for a selected-profile request without slicing it —
@@ -59,7 +60,13 @@ pub(crate) fn load_profile_project(source: &ProjectSource<'_>) -> Result<Project
     if let Some(refresh) = source.refresh {
         return source
             .input
-            .load(source.overrides, Some(refresh), source.validate_print)
+            .load(
+                source.overrides,
+                Some(refresh),
+                source.system_catalog,
+                None,
+                source.validate_print,
+            )
             .map(|(project, _)| project);
     }
     let Some(profile) = source.profile else {
@@ -116,12 +123,23 @@ pub async fn slice_project_plate(
     overrides: &ConfigOverrides,
     context: crate::SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
+    slice_project_plate_with_catalog(project, metadata, (plate, overrides), None, context).await
+}
+
+pub async fn slice_project_plate_with_catalog(
+    project: impl AsRef<[u8]>,
+    metadata: GenerationMetadata,
+    (plate, overrides): (Option<u32>, &ConfigOverrides),
+    system_catalog: Option<&crate::PresetCatalogHandle>,
+    context: crate::SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
     slice_source(
         ProjectSource {
             input: crate::project_slice::ProjectInput::Bytes(project.as_ref()),
             plate,
             profile: None,
             refresh: None,
+            system_catalog,
             overrides,
             validate_print: false,
             validate_config: true,
@@ -146,12 +164,24 @@ pub async fn slice_project_plate_processed(
     overrides: &ConfigOverrides,
     context: crate::SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
+    slice_project_plate_processed_with_catalog(project, metadata, (plate, overrides), None, context)
+        .await
+}
+
+pub async fn slice_project_plate_processed_with_catalog(
+    project: impl AsRef<[u8]>,
+    metadata: GenerationMetadata,
+    (plate, overrides): (Option<u32>, &ConfigOverrides),
+    system_catalog: Option<&crate::PresetCatalogHandle>,
+    context: crate::SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
     slice_source(
         ProjectSource {
             input: crate::project_slice::ProjectInput::Bytes(project.as_ref()),
             plate,
             profile: None,
             refresh: None,
+            system_catalog,
             overrides,
             validate_print: false,
             validate_config: true,
