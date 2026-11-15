@@ -125,3 +125,4 @@ a { color: var(--accent-ink); }
 .notification.warning { border-left: 4px solid var(--warning); }
 .notification p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .notification-close { flex: none; border: 0; background: none; color: var(--text-dim); cursor: pointer; padding: 0 2px; }
+.engine-crash-message { white-space: pre-wrap; margin: 0 16px; }

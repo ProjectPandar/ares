@@ -5,6 +5,7 @@ import { useApp } from "../state/store";
 import { cmdDown, isShortcut } from "./keys";
 import { LoadWarning } from "./LoadWarning";
 import { MultipartDialog } from "./MultipartDialog";
+import { EngineCrashDialog } from "./EngineCrashDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { StatusBar } from "./StatusBar";
 import { TabBar, TitleBar } from "./TopBar";
@@ -81,6 +82,7 @@ export function Shell() {
       <StatusBar />
       {stlImport && <MultipartDialog files={stlImport} onClose={() => useApp.setState({ stlImport: null })} />}
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <EngineCrashDialog />
       {wizard && (
         <Suspense>
           <SetupWizard key={wizard} firstRun={wizard === "first-run"} onClose={() => useApp.setState({ wizard: null })} />

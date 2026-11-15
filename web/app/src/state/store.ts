@@ -73,6 +73,8 @@ export interface AppState {
   theme: Theme;
   engine: "loading" | "ready" | "error";
   engineError?: string;
+  /** The HardCrash text of a trapped engine, which fails every later call. */
+  engineCrash?: string;
   /** `PrintConfigDef` by key, loaded with the engine. */
   configDefs: ReadonlyMap<string, ConfigOptionDef>;
   /** Settings mode (GUI_App `get_mode` / `save_mode`). */

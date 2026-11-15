@@ -104,7 +104,7 @@ export const checks = [
   assert<Equal<SelectablePrinter, { vendor: string; name: string; printer_model: string; printer_variant: string }>>(),
   assert<Equal<ReturnType<PresetCatalog["free"]>, Promise<void>>>(),
   assert<Equal<ReturnType<AresSlicer["ready"]>, Promise<void>>>(),
-  assert<Equal<AresSlicerOptions, { worker: Worker; wasmUrl: string | URL }>>(),
+  assert<Equal<AresSlicerOptions, { worker: Worker; wasmUrl: string | URL; onCrash?: (message: string) => void }>>(),
   assert<Equal<SliceResult, { gcode: Uint8Array<ArrayBuffer>; toolpaths: Toolpaths | null }>>(),
   assert<Equal<Scene["format"], "3mf" | "stl">>(),
   assert<Equal<Scene["positions"], Float32Array<ArrayBuffer>>>(),

@@ -5,7 +5,7 @@
  * record or import entry that does not match its schema is deleted.
  */
 import type { InstalledPrinters } from "@ares-slicer/wasm";
-import type { Theme, ViewMode } from "./store";
+import type { ModelFile, Theme, ViewMode } from "./store";
 
 const CONFIG_KEY = "ares.config";
 const VERSION = 1;
@@ -175,4 +175,42 @@ export async function deleteImport(key: IDBValidKey) {
   transaction.objectStore(IMPORTS).delete(key);
   await done(transaction);
   db.close();
+}
+
+/** The file and printer an engine restart reopens (engineRecovery.ts). */
+export interface RecoveryRecord {
+  file: ModelFile;
+  printer: string | null;
+}
+
+const RECOVERY_DB = "ares-recovery";
+const RECOVERY = "recovery";
+
+function openRecoveryDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(RECOVERY_DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(RECOVERY);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error!);
+  });
+}
+
+export async function saveRecovery(record: RecoveryRecord) {
+  const db = await openRecoveryDb();
+  const transaction = db.transaction(RECOVERY, "readwrite");
+  transaction.objectStore(RECOVERY).put(record, 0);
+  await done(transaction);
+  db.close();
+}
+
+/** The recovery record, deleted in the same transaction that reads it: user files are never kept. */
+export async function takeRecovery(): Promise<RecoveryRecord | undefined> {
+  const db = await openRecoveryDb();
+  const transaction = db.transaction(RECOVERY, "readwrite");
+  const store = transaction.objectStore(RECOVERY);
+  const read = store.get(0);
+  store.delete(0);
+  await done(transaction);
+  db.close();
+  return read.result as RecoveryRecord | undefined;
 }
