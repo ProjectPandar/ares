@@ -106,12 +106,24 @@ impl Catalog {
         } else {
             Cow::Borrowed(selection)
         };
-        let composed = compose_resolved_profiles(
+        let mut composed = compose_resolved_profiles(
             &source_selection,
             machine,
             process,
             filaments,
             runtime.resolve(),
+        );
+        // OrcaSlicer.cpp:2250–2255,3616–3622: loaded identity is authored,
+        // even when the resolved system preset inherits a nonempty ID.
+        composed.settings.project.gcode.filament_ids = crate::OrcaStrings(
+            selection
+                .filaments()
+                .iter()
+                .map(|name| {
+                    let position = self.selectable[&(ProfileKind::Filament, name.clone())];
+                    super::document_text(self.document(position), "filament_id")
+                })
+                .collect(),
         );
         if let Some(group) = composed.metadata().inherits_group() {
             raw.insert_strings("inherits_group", group);
