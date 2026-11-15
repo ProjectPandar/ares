@@ -82,6 +82,7 @@ async fn stl_variant_whole_file_matches_native() {
     )
     .await
     .unwrap();
+    std::fs::write(directory.join("ares.gcode"), &ares).unwrap();
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
