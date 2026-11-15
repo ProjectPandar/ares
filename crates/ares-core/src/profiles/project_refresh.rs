@@ -88,6 +88,13 @@ pub(crate) struct ProjectPresetRefresh<'a> {
     pub(super) placement: Placement,
 }
 
+pub(super) fn direct_refresh(
+    catalog: &Catalog,
+    raw: &ProjectSettingsRaw,
+) -> Result<ProjectSettingsRaw, SliceError> {
+    preset::refresh(catalog, raw, false, None)
+}
+
 pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, SliceError> {
     #[derive(serde::Deserialize)]
     #[serde(deny_unknown_fields)]
