@@ -42,7 +42,7 @@ pub(super) fn emit(
     (properties, path_overhang_fan_active): (PathProperties<'_>, bool),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) {
+) -> Result<(), crate::SliceError> {
     let points = properties.contour.unwrap();
     fan::update_for_constant_path(output, properties, path_overhang_fan_active, state);
     for (pair, end) in points.windows(2).zip(&xy[1..]) {
@@ -60,6 +60,16 @@ pub(super) fn emit(
             properties,
             state,
         );
+        // GCode.cpp:10118: the farthest-point check after each z-contoured line.
+        crate::project_slice::gcode_emit::layers::farthest::check_and_insert(
+            output,
+            state,
+            (
+                geometry.scale.unscale(pair[1].x) + state.origin.0,
+                geometry.scale.unscale(pair[1].y) + state.origin.1,
+            ),
+            geometry.timelapse_context,
+        )?;
     }
     output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = points
@@ -70,6 +80,7 @@ pub(super) fn emit(
             y: geometry.scale.unscale(p.y),
         })
         .collect();
+    Ok(())
 }
 
 pub(super) fn segment(

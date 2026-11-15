@@ -79,7 +79,9 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
 }
 
 pub(super) fn defer_layer_retraction(state: &mut EmitState) {
-    if state.options.retract_when_changing_layer && state.positioned {
+    // GCode.cpp:8466: change_layer retracts whether or not an in-layer snapshot left the
+    // writer position unclear.
+    if state.options.retract_when_changing_layer {
         state.pending_layer_retract = true;
     }
 }
