@@ -32,6 +32,7 @@ import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ActualSpeedProfile, ColorRange, MovesSlider, MovesView, SliceResult, Toolpaths, ViewColors, ViewRange } from "./toolpaths.js";
 import type { Scene } from "./types.js";
 import { handlePlaterSource } from "./workerPlaterSource.js";
+import { crash, trapped } from "./workerCrash.js";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -360,6 +361,10 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
 }
 
 self.onmessage = async ({ data: request }: MessageEvent<WorkerRequest>) => {
+  if (crash !== undefined) {
+    self.postMessage({ id: request.id, ok: false, error: crash } satisfies WorkerResponse);
+    return;
+  }
   let response: WorkerResponse;
   let transfer: Transferable[] = [];
   try {
@@ -367,6 +372,7 @@ self.onmessage = async ({ data: request }: MessageEvent<WorkerRequest>) => {
     response = { id: request.id, ok: true, value };
     transfer = buffers;
   } catch (error) {
+    if (trapped(error)) return;
     response = { id: request.id, ok: false, error: String(error) };
   }
   self.postMessage(response, transfer);

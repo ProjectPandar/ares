@@ -8,6 +8,7 @@ import { catalogJson, FROM_PROJECT } from "./projectPresets";
 import { stlSessionOpened } from "./stlSession";
 import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
+import { recoverSession } from "./engineRecovery";
 import { decodeSettings } from "./typedSettings";
 import { DEFAULT_PREVIEW, invalidatedSlices, type PreviewView, type SlicedPlate, type Theme, type Thumb, useApp, type ViewMode } from "./store";
 
@@ -22,7 +23,10 @@ const configDefs = slicer.printConfigDef().then(({ options }) => {
 // presets.ts evaluates after this module (it imports printer.ts, which imports this one), so the
 // restore promise is read once the definitions arrive.
 configDefs.then(() => sessionRestored).then(
-  () => useApp.setState({ engine: "ready" }),
+  () => {
+    useApp.setState({ engine: "ready" });
+    void recoverSession();
+  },
   (error: Error) => useApp.setState({ engine: "error", engineError: error.message }),
 );
 
