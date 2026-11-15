@@ -34,6 +34,32 @@ pub(super) struct FamilyFailure {
 }
 
 impl CliFailure {
+    /// `CLI_CONFIG_FILE_ERROR`: global configuration admission before plate selection.
+    pub(super) fn config_file_error(
+        #[cfg(target_os = "linux")] output: &Path,
+        stderr: String,
+    ) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -5,
+            #[cfg(target_os = "linux")]
+            plate_index: 0,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "The input preset file is invalid and can not be parsed.",
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            stderr,
+            #[cfg(target_os = "linux")]
+            output: output.to_owned(),
+        }))
+    }
+
     pub(super) fn missing_input(input: &Path, #[cfg(target_os = "linux")] output: &Path) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -3,

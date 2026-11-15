@@ -39,6 +39,11 @@ pub(crate) fn slice_error_to_failure(
         }))
     };
     match error {
+        SliceError::FilamentSupportPaletteMismatch { .. } => CliFailure::config_file_error(
+            #[cfg(target_os = "linux")]
+            output,
+            String::new(),
+        ),
         SliceError::InvalidPrinterTechnology => family(
             -7,
             #[cfg(target_os = "linux")]

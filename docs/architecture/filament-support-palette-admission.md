@@ -14,7 +14,7 @@ This is an adapter slice around the existing Rust rewrite of upstream flush-matr
 
 `ares-core::options::flush_matrix` already detects this mismatch. Replace only that occurrence of generic `SliceError::InvalidInput` with `SliceError::FilamentSupportPaletteMismatch`, carrying support and palette counts. Its Display retains the existing count detail for API consumers.
 
-`ares-cli::failure::slice_error_to_failure` maps only this source-specific variant to the existing Family reporting mechanism with signed code -5, empty stderr, plate index zero, zero slicing metadata, and the upstream generic reason. POSIX exposes status251; result.json retains -5. Non-Linux stdout and return behavior remain owned by the existing adapter.
+`ares-cli::failure::CliFailure::config_file_error` provides a reusable Family -5 report constructor: the upstream generic reason, plate index zero, zero slicing metadata, and caller-supplied stderr. It does not classify errors. `slice_error_to_failure` maps only this source-specific variant to that constructor with empty stderr. POSIX exposes status251; result.json retains -5. Non-Linux stdout and return behavior remain owned by the existing adapter.
 
 The core remains platform-neutral: no process exit, filesystem access, or terminal reporting. Other InvalidInput and I/O errors do not acquire this mapping. Any module extraction needed for the file-size limit preserves the existing function path and behavior.
 
