@@ -13,7 +13,6 @@ use super::super::{
 
 declare_option_group! {
     pub struct ProcessGCodeSourceOptions, ProcessGCodeSourceOptionsBuilder {
-        high_precision_gcode => "high_precision_gcode": OrcaBool = OrcaBool(false),
         enable_arc_fitting => "enable_arc_fitting": ArcFittingMode = ArcFittingMode::Disabled,
         enable_pre_heating => "enable_pre_heating": OrcaBool = OrcaBool(false),
         enable_wrapping_detection => "enable_wrapping_detection": OrcaBool = OrcaBool(false),
@@ -39,8 +38,7 @@ declare_option_group! {
 }
 
 impl ProcessGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 19] = [
-        "high_precision_gcode",
+    pub const DECLARATION_ORDER: [&'static str; 18] = [
         "enable_arc_fitting",
         "enable_pre_heating",
         "enable_wrapping_detection",

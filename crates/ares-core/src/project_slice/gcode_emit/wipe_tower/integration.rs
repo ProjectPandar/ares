@@ -1,6 +1,6 @@
 //! `GCode.hpp::WipeTowerIntegration` and `GCode.cpp:1497–1534` Type2 cursor.
 use super::{Data, filament::at};
-use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
+use crate::ProjectSettings;
 use std::rc::Rc;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -59,13 +59,11 @@ impl Integration {
     }
     pub(in crate::project_slice::gcode_emit) fn new(
         data: Data,
-        traversal: &PreparedPostClassicTraversal,
-        used_filaments: &[usize],
+        settings: &ProjectSettings,
         center_no_tower: [f64; 2],
         priming_overlap: bool,
+        position: [f64; 2],
     ) -> Self {
-        let settings = &traversal.resolved.views.full;
-        let position = super::plate_position(traversal);
         let project = &settings.project.print;
         Self {
             position: position.map(|value| value as f32),
@@ -97,15 +95,13 @@ impl Integration {
                 Priming::Clear
             },
             center_no_tower,
-            no_sparse: super::sparse_layers_skipped(settings),
+            no_sparse: settings.process.gcode.wipe_tower_no_sparse_layers.0,
             layer: None,
             change: 0,
             first_print: true,
             extra_wall: settings.process.print.timelapse_type
                 == crate::ProcessTimelapseType::Smooth
-                || (settings.process.gcode.enable_wrapping_detection.0
-                    && settings.printer.gcode.wrapping_exclude_area.0.len() > 2
-                    && used_filaments.len() <= 1),
+                || settings.process.gcode.enable_wrapping_detection.0,
             last_z: settings.printer.remaining.z_offset.0,
             data: Rc::new(data),
         }

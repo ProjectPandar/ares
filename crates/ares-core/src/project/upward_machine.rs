@@ -172,8 +172,7 @@ fn validate_source(profile: &crate::profiles::ProfileFragment) -> Result<(), Sli
 }
 
 fn fields(json: &[u8]) -> Result<MachineFields, SliceError> {
-    let raw: ProjectSettingsRaw = serde_json::from_slice(crate::profiles::without_utf8_bom(json))
-        .map_err(|error| {
+    let raw: ProjectSettingsRaw = serde_json::from_slice(json).map_err(|error| {
         SliceError::InvalidInput(format!("invalid machine source JSON: {error}"))
     })?;
     let mut selected = ProjectSettingsRaw::default();

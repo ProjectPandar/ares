@@ -4,8 +4,8 @@ use std::{
     process::Command,
 };
 
-const UPSTREAM: &str = "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19";
-const PROFILES_TREE: &str = "356aeec67e6eb11b0a756c48da789aa6c5f6c19a";
+const UPSTREAM: &str = "345efec64c7b95a05ce5cf96df0dde66a158835c";
+const PROFILES_TREE: &str = "1a0b4442f231034b13984b227ac5e15e23b92541";
 
 pub(super) fn from_env() -> (PathBuf, Value) {
     let resources = PathBuf::from(
@@ -49,7 +49,7 @@ pub(super) fn from_env() -> (PathBuf, Value) {
     let provenance = json!({
         "schema": "ares-parity-profile-input-v1",
         "binding": "ARES_PARITY_PROFILE_RESOURCES_DIR",
-        "upstream_tag": "v2.5.0",
+        "upstream_tag": "v2.5.0-beta",
         "upstream_commit": UPSTREAM,
         "profiles_tree": tree,
         "resources_dir": resources,

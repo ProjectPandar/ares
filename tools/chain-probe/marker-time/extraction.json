@@ -1,5 +1,5 @@
 {
-  "upstreamRevision": "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
     "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"

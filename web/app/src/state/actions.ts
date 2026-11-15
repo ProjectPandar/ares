@@ -4,7 +4,6 @@ import { loadArrangeSettings } from "./arrange";
 import { saveConfig } from "./persistence";
 import { installVendors, presetSliceBlocker, selectPrinter, sessionRestored, updateCompatible } from "./presets";
 import { overrideTokens, sliceWithPresets } from "./presetSlice";
-import { catalogJson, FROM_PROJECT } from "./projectPresets";
 import { stlSessionOpened } from "./stlSession";
 import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
@@ -56,11 +55,8 @@ export async function importFile(file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   useApp.setState({ loadingFile: true, loadError: undefined, loadWarning: undefined });
   try {
-    // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure)
-    // and its presets filled from the installed system presets.
-    const plater = /\.3mf$/i.test(file.name)
-      ? await slicer.createPlaterSessionWithProfiles(bytes, file.name, await catalogJson(useApp.getState()), FROM_PROJECT, { seed: 0, placement: "none" })
-      : null;
+    // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure).
+    const plater = /\.3mf$/i.test(file.name) ? await slicer.createPlaterSession(bytes, file.name) : null;
     if (plater) await installVendors(plater);
     const scene = plater ? await plater.scene() : await slicer.loadScene(bytes);
     const loadWarning = plater ? invalidValuesWarning(await plater.invalidValues()) : undefined;
@@ -148,7 +144,7 @@ async function slicePlates(indices: number[]) {
         : file.kind === "stl-batch"
           ? await plater!.slice(plate, await overrideTokens(overrides), onStatus)
           : plater
-          ? await plater.sliceWithProfiles(await catalogJson(useApp.getState()), FROM_PROJECT, { plate, seed: 0, placement: "none", overrides: await overrideTokens(overrides) }, onStatus)
+          ? await plater.slice(plate, await overrideTokens(overrides), onStatus)
           : await slicer.sliceStl(file.bytes);
       if (useApp.getState().file !== file) return;
       setSliceResult(result, performance.now() - startedAt);

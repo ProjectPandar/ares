@@ -55,10 +55,10 @@ pub(in crate::project_slice::gcode_emit) fn travel_to(
 ) -> Result<(), crate::SliceError> {
     state.use_external_mp_once = true;
     for [x, y] in route(state)? {
-        path::tower_travel(output, state, (x, y), geometry, None)?;
+        path::tower_travel(output, state, (x, y), geometry)?;
     }
     let point = object_point(point, state, geometry.scale);
-    path::tower_travel(output, state, point, geometry, None)?;
+    path::tower_travel(output, state, point, geometry)?;
     travel::unlift(output, state);
     travel::unretract(output, state);
     Ok(())
@@ -77,14 +77,13 @@ pub(in crate::project_slice::gcode_emit) fn entry_travel(
     state.use_external_mp_once = true;
     let mut travel = Vec::new();
     for [x, y] in route(state)? {
-        path::tower_travel(&mut travel, state, (x, y), geometry, None)?;
+        path::tower_travel(&mut travel, state, (x, y), geometry)?;
     }
     path::tower_travel(
         &mut travel,
         state,
         (destination[0], destination[1]),
         geometry,
-        None,
     )?;
     if !travel.is_empty() && !travel.ends_with(b"\n") {
         travel.push(b'\n');
@@ -214,20 +213,19 @@ pub(in crate::project_slice::gcode_emit) fn type1_retract(
     travel::retract_for_type1(output, state, toolchange);
 }
 
-/// `GCode.cpp:1231–1250`: nozzle-change start travel can stay at compacted tower Z.
+/// `GCode.cpp:824`: nozzle-change start move — grid of the transformed
+/// `Vec2f` via `wipe_tower_point_to_object_point`.
 pub(in crate::project_slice::gcode_emit) fn type1_travel(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     point: [f32; 2],
     geometry: LayerGeometry<'_>,
-    target_z: Option<f64>,
 ) -> Result<(), crate::SliceError> {
     path::tower_travel(
         output,
         state,
         object_point(point, state, geometry.scale),
         geometry,
-        target_z,
     )
 }
 
@@ -252,7 +250,7 @@ pub(in crate::project_slice::gcode_emit) fn type1_travel_scaled(
     point: [i64; 2],
     geometry: LayerGeometry<'_>,
 ) -> Result<(), crate::SliceError> {
-    path::tower_travel(output, state, (point[0], point[1]), geometry, None)
+    path::tower_travel(output, state, (point[0], point[1]), geometry)
 }
 
 pub(in crate::project_slice::gcode_emit) fn type1_unretract(

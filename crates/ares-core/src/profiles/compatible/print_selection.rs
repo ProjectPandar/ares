@@ -36,9 +36,10 @@ impl PreferedPrint {
 }
 
 /// `current` while it is a compatible print of `printer`, else the compatible print that
-/// matches best, the first in collection order on a tie, or the initialized collection default.
-/// A `current` that is not a loaded print stands for that default print, which every collection
-/// selects first (`Preset.cpp:1739`): no alias, and its initialized layer height.
+/// matches best, the first in collection order on a tie, or `None` where upstream falls back to
+/// the "- default -" print. A `current` that is not a loaded print stands for that default
+/// print, which every collection selects first (`Preset.cpp:1739`): no alias, and the
+/// `PrintConfigDef` layer height.
 pub(in crate::profiles) fn compatible_print(
     catalog: &Catalog,
     printer: &str,
@@ -50,9 +51,6 @@ pub(in crate::profiles) fn compatible_print(
     let current = current.and_then(|name| {
         selectable_without_missing_parent(catalog, ProfileKind::Process, name).ok()
     });
-    if let Some(position) = current.filter(|position| catalog.is_default(*position)) {
-        return Ok(Some(catalog.document(position).name.clone()));
-    }
     let printer_values = catalog.resolved_values(printer_position, &["default_print_profile"])?;
     let prefered = PreferedPrint {
         alias: match current {
@@ -61,7 +59,7 @@ pub(in crate::profiles) fn compatible_print(
         },
         layer_height: match current {
             Some(position) => layer_height(catalog, position)?,
-            None => layer_height(catalog, catalog.default_position(ProfileKind::Process))?,
+            None => default_layer_height()?,
         },
         default_print_profile: text(&printer_values["default_print_profile"]).to_owned(),
     };
@@ -86,12 +84,7 @@ pub(in crate::profiles) fn compatible_print(
             best = Some((quality, candidate.name));
         }
     }
-    Ok(Some(best.map(|(_, name)| name).unwrap_or_else(|| {
-        catalog
-            .document(catalog.default_position(ProfileKind::Process))
-            .name
-            .clone()
-    })))
+    Ok(best.map(|(_, name)| name))
 }
 
 /// A system print's alias is `Candidate`'s; a user print keeps its whole bare name
@@ -111,6 +104,12 @@ fn print_alias(catalog: &Catalog, position: usize, candidate: &Candidate) -> Str
 
 fn layer_height(catalog: &Catalog, position: usize) -> Result<f64, SliceError> {
     number(&catalog.resolved_values(position, &["layer_height"])?["layer_height"])
+}
+
+fn default_layer_height() -> Result<f64, SliceError> {
+    let definition = crate::options::registry::option_definition("layer_height")
+        .ok_or_else(|| invalid("unknown option 'layer_height'"))?;
+    number(&RawConfigValue::Text(definition.default_value.to_owned()))
 }
 
 fn number(value: &RawConfigValue) -> Result<f64, SliceError> {

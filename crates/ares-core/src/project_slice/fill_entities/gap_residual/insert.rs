@@ -1,10 +1,7 @@
 use crate::{
     SliceError,
-    geometry::{CoordinateScale, Line, LineDistanceTree, Point, ThickPolyline},
-    project_slice::perimeters::{
-        classic::{gap_extrusion::GapFillEntity, materialize::Point3},
-        types::Flow,
-    },
+    geometry::{CoordinateScale, Point, ThickPolyline},
+    project_slice::perimeters::{classic::gap_extrusion::GapFillEntity, types::Flow},
 };
 
 use super::FillExtrusionEntity;
@@ -17,7 +14,7 @@ struct Item {
     reversed: bool,
 }
 
-// FillBase.cpp:232-337: fixed-order gap insertion, before variable_width.
+// FillBase.cpp:232-302: fixed-order gap insertion, before variable_width.
 pub(super) fn append(
     gaps: &[ThickPolyline],
     flow: Flow,
@@ -27,7 +24,6 @@ pub(super) fn append(
     if entities.is_empty() {
         return super::append_polylines(gaps, flow, scale, entities);
     }
-    let last_owner = bordering_entities(gaps, flow.scaled_spacing(scale) as f64, entities);
     let mut items = Vec::with_capacity(entities.len() + gaps.len());
     items.extend(entities.iter().map(entity_item));
     let mut appended = items.clone();
@@ -38,7 +34,7 @@ pub(super) fn append(
             gap: Some(index),
             reversed: false,
         });
-        let (slot, item) = insertion(gap, index, &items, last_owner[index]);
+        let (slot, item) = insertion(gap, index, &items);
         items.insert(slot, item);
     }
     if travel(&appended, gaps) <= travel(&items, gaps) {
@@ -62,12 +58,7 @@ pub(super) fn append(
     Ok(())
 }
 
-fn insertion(
-    gap: &ThickPolyline,
-    index: usize,
-    items: &[Item],
-    last_owner: Option<usize>,
-) -> (usize, Item) {
+fn insertion(gap: &ThickPolyline, index: usize, items: &[Item]) -> (usize, Item) {
     let mut best = f64::MAX;
     let mut best_slot = 0;
     let mut best_item = Item {
@@ -76,14 +67,7 @@ fn insertion(
         gap: Some(0),
         reversed: false,
     };
-    let mut extrusions_before = 0;
     for slot in 0..=items.len() {
-        if slot > 0 && items[slot - 1].gap.is_none() {
-            extrusions_before += 1;
-        }
-        if last_owner.is_some_and(|owner| extrusions_before <= owner) {
-            continue;
-        }
         let prev = slot.checked_sub(1).map(|i| items[i].exit);
         let next = items.get(slot).map(|item| item.entry);
         let mut consider = |entry, exit, reversed| {
@@ -152,68 +136,6 @@ fn distance(a: Point, b: Point) -> f64 {
     let x = (b.x() - a.x()) as f64;
     let y = (b.y() - a.y()) as f64;
     (x * x + y * y).sqrt()
-}
-
-// FillBase.cpp:255-282: sample raw gaps against the original fill's line index.
-fn bordering_entities(
-    gaps: &[ThickPolyline],
-    spacing: f64,
-    entities: &[FillExtrusionEntity],
-) -> Vec<Option<usize>> {
-    let mut lines = Vec::new();
-    let mut owners = Vec::new();
-    for (index, entity) in entities.iter().enumerate() {
-        let mut append = |points: &[Point3]| {
-            for pair in points.windows(2) {
-                lines.push(Line::new(
-                    Point::new(pair[0].x, pair[0].y),
-                    Point::new(pair[1].x, pair[1].y),
-                ));
-                owners.push(index);
-            }
-        };
-        match entity {
-            FillExtrusionEntity::Path(path) | FillExtrusionEntity::Oriented(path) => {
-                append(&path.polyline.points);
-            }
-            FillExtrusionEntity::VariableWidth(GapFillEntity::Path(path)) => {
-                append(&path.polyline.points);
-            }
-            FillExtrusionEntity::VariableWidth(GapFillEntity::Loop(paths)) => {
-                for path in paths {
-                    append(&path.polyline.points);
-                }
-            }
-        }
-    }
-    let tree = LineDistanceTree::new(&lines);
-    let mut after = vec![None; gaps.len()];
-    for (index, gap) in gaps.iter().enumerate() {
-        let Some(maximum_width) = gap.width.iter().copied().reduce(f64::max) else {
-            continue;
-        };
-        let radius = 0.5 * maximum_width + spacing;
-        for pair in gap.points.windows(2) {
-            let a = [pair[0].x() as f64, pair[0].y() as f64];
-            let delta = [pair[1].x() as f64 - a[0], pair[1].y() as f64 - a[1]];
-            let length = (delta[0] * delta[0] + delta[1] * delta[1]).sqrt();
-            let steps = ((length / (0.5 * spacing)).ceil() as usize).max(1);
-            for sample in 0..=steps {
-                let fraction = sample as f64 / steps as f64;
-                let point = Point::new(
-                    (a[0] + fraction * delta[0]) as i64,
-                    (a[1] + fraction * delta[1]) as i64,
-                );
-                after[index] = after[index].max(
-                    tree.all_lines_in_radius(point, radius)
-                        .into_iter()
-                        .map(|line| owners[line])
-                        .max(),
-                );
-            }
-        }
-    }
-    after
 }
 
 fn entity_item(entity: &FillExtrusionEntity) -> Item {

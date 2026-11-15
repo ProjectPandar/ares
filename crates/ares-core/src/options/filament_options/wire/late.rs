@@ -122,9 +122,5 @@ where
         "volumetric_speed_coefficients",
         &value.gcode.volumetric_speed_coefficients,
     )?;
-    map.serialize_entry(
-        "initial_layer_fan_speed",
-        &value.print.initial_layer_fan_speed,
-    )?;
     Ok(())
 }

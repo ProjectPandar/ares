@@ -1,6 +1,6 @@
 import type { ConfigOverrides, OptionMap, OptionValue, ParsedPresetBundle, ProfileSliceOptions, Scene, SliceResult, SlicingStatus } from "@ares-slicer/wasm";
 import { extruderOverrides } from "./extruders";
-import { catalogJson } from "./projectPresets";
+import { FILAMENT_LIBRARY } from "./presets";
 import { slicer } from "./slicer";
 import { type ModelFile, type PresetSelection, useApp } from "./store";
 import { decodeOptions } from "./typedSettings";
@@ -9,8 +9,10 @@ import { decodeOptions } from "./typedSettings";
 export type CatalogSources = { vendors: readonly string[]; presetImports: readonly ParsedPresetBundle[] };
 
 /** The `sliceWithProfiles` / `profileSettings` arguments of a complete selection. */
-export async function profileRequest(scene: Scene, { printer, process, filaments, filamentProject }: PresetSelection, sources: CatalogSources, plate = scene.plates[0]?.id) {
-  const catalog = await catalogJson(sources);
+export async function profileRequest(scene: Scene, { printer, process, filaments, filamentProject }: PresetSelection, { vendors, presetImports }: CatalogSources, plate = scene.plates[0]?.id) {
+  const { loadVendor } = await import("@ares-slicer/profiles");
+  const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
+  const catalog = JSON.stringify({ vendors: loaded, imports: presetImports });
   const options: ProfileSliceOptions = {
     plate,
     seed: 0,

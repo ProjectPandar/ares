@@ -22,20 +22,7 @@ pub(crate) fn collect_config_entries(
     let active_count = Some(settings.filament.gcode.filament_diameter.0.len());
     append_group(&settings.printer, &mut entries, active_count)?;
     append_group(&settings.process, &mut entries, active_count)?;
-    // OrcaSlicer.cpp:3715-3729 routes filament predicates into expression groups;
-    // the applied raw config retains the process's bare condition.
-    entries.extend(
-        settings
-            .filament
-            .serialize(GroupSerializer { active_count })?
-            .into_iter()
-            .filter(|entry| {
-                !matches!(
-                    entry.key.as_str(),
-                    "compatible_printers_condition" | "compatible_prints_condition"
-                )
-            }),
-    );
+    append_group(&settings.filament, &mut entries, active_count)?;
     append_group(&settings.project, &mut entries, active_count)?;
     finish(entries)
 }

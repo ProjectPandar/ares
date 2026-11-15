@@ -2,6 +2,15 @@ use super::super::repo_root;
 use serde_json::json;
 
 #[test]
+fn project_refresh_requires_a_supplied_named_preset() {
+    let error = request(json!({"from_project": true}));
+    assert!(
+        error.contains("Bambu Lab A1 0.4 nozzle"),
+        "missing-preset error must identify the requested machine: {error}"
+    );
+}
+
+#[test]
 fn project_refresh_and_explicit_selection_are_exclusive() {
     let error = request(json!({
         "from_project": true, "machine": "machine", "process": "process", "filaments": ["filament"]

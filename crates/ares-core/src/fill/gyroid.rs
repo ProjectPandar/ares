@@ -160,12 +160,6 @@ fn fill_component(
     clip.push(contour);
     clip.extend(holes);
     polylines = intersection_open_polylines(&polylines, &clip)?;
-    polylines = super::join_close_ends::join_close_ends(
-        polylines,
-        EPSILON / scale.factor(),
-        true,
-        EPSILON / scale.factor(),
-    );
     let minimum_length = 0.8 * params.spacing / scale.factor();
     polylines.retain(|polyline| polyline_length(polyline) >= minimum_length);
     if polylines.is_empty() {

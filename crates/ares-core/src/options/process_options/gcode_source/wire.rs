@@ -7,7 +7,7 @@ impl Serialize for ProcessGCodeSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(19))?;
+        let mut map = serializer.serialize_map(Some(18))?;
         map.serialize_entry("accel_to_decel_enable", &self.accel_to_decel_enable)?;
         map.serialize_entry("accel_to_decel_factor", &self.accel_to_decel_factor)?;
         map.serialize_entry("enable_arc_fitting", &self.enable_arc_fitting)?;
@@ -53,7 +53,6 @@ impl Serialize for ProcessGCodeSourceOptions {
             "wipe_tower_no_sparse_layers",
             &self.wipe_tower_no_sparse_layers,
         )?;
-        map.serialize_entry("high_precision_gcode", &self.high_precision_gcode)?;
         map.end()
     }
 }

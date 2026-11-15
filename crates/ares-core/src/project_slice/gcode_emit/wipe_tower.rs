@@ -34,13 +34,6 @@ mod unload;
 mod wipe;
 mod writer;
 
-/// `GCode/WipeTower.cpp:53–57`: effective sparse-skipping eligibility.
-pub(super) fn sparse_layers_skipped(settings: &crate::ProjectSettings) -> bool {
-    settings.process.gcode.wipe_tower_no_sparse_layers.0
-        && settings.process.print.timelapse_type != crate::ProcessTimelapseType::Smooth
-        && !settings.process.gcode.enable_wrapping_detection.0
-}
-
 /// `wipe_tower_x.get_at(plate_idx)`, `wipe_tower_y.get_at(plate_idx)`: the sliced plate's stored
 /// tower position (`GCode.cpp:7270`, `GCode/WipeTower2.cpp:1046` at v2.5.0-beta `345efec64`);
 /// `get_at` takes entry 0 past the end.

@@ -7,7 +7,7 @@ impl Serialize for ProcessRegionSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(171))?;
+        let mut map = serializer.serialize_map(Some(159))?;
         map.serialize_entry(
             "align_infill_direction_to_model",
             &self.align_infill_direction_to_model,
@@ -262,30 +262,6 @@ impl Serialize for ProcessRegionSourceOptions {
         map.serialize_entry(
             "zaa_minimize_perimeter_height",
             &self.zaa_minimize_perimeter_height,
-        )?;
-        map.serialize_entry(
-            "hole_to_polyhole_max_edges",
-            &self.hole_to_polyhole_max_edges,
-        )?;
-        map.serialize_entry("top_surface_fill_order", &self.top_surface_fill_order)?;
-        map.serialize_entry("bottom_surface_fill_order", &self.bottom_surface_fill_order)?;
-        map.serialize_entry("top_layer_direction", &self.top_layer_direction)?;
-        map.serialize_entry("bottom_layer_direction", &self.bottom_layer_direction)?;
-        map.serialize_entry("center_of_surface_pattern", &self.center_of_surface_pattern)?;
-        map.serialize_entry("adaptive_infill_mode", &self.adaptive_infill_mode)?;
-        map.serialize_entry(
-            "adaptive_infill_interior_density",
-            &self.adaptive_infill_interior_density,
-        )?;
-        map.serialize_entry("adaptive_infill_gradient", &self.adaptive_infill_gradient)?;
-        map.serialize_entry("separated_infills", &self.separated_infills)?;
-        map.serialize_entry(
-            "small_support_perimeter_speed",
-            &self.small_support_perimeter_speed,
-        )?;
-        map.serialize_entry(
-            "small_support_perimeter_threshold",
-            &self.small_support_perimeter_threshold,
         )?;
         map.end()
     }

@@ -253,7 +253,6 @@ impl MoveRecorder {
             self.extrusion_geometry(delta, delta_xyz, end[2], linear);
             self.correct_options_z();
         }
-        let mut end = end;
         if let Some(seam) = seam {
             // `set_end_position(0.5f * (new_pos + first) + m_z_offset * UnitZ)`
             // then `store_move_vertex(Seam)` subtracts `m_z_offset` again.
@@ -265,11 +264,6 @@ impl MoveRecorder {
                 [start, [f64::from(seam[0]), f64::from(seam[1]), z, end[3]]],
                 delta[3],
             );
-            // `set_end_position(curr_pos)` restores the end from a Vec3f
-            // (`:5717`, `:5726`), so this move's vertex sees an f32 end XYZ.
-            for axis in &mut end[..3] {
-                *axis = f64::from(*axis as f32);
-            }
         }
         self.store(source, move_type, [start, end], delta[3]);
     }

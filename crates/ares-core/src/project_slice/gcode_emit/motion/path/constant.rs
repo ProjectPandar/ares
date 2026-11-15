@@ -138,14 +138,6 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
                 state.x = arc_segment.end.x;
                 state.y = arc_segment.end.y;
                 state.wipe_start = Some(arc_segment.end);
-                // GCode.cpp:10174: the farthest-point check at the fitted arc end.
-                let (x, y) = local_points[endpoint];
-                crate::project_slice::gcode_emit::layers::farthest::check_and_insert(
-                    output,
-                    state,
-                    (x + state.origin.0, y + state.origin.1),
-                    timelapse_context,
-                )?;
             }
             arc::Segment::Arc(_) => {}
         }

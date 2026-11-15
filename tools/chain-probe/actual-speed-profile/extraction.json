@@ -1,5 +1,5 @@
 {
-  "upstreamRevision": "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
     "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"
@@ -13,10 +13,10 @@
   "upstream": [
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "fe0ebd3443b0dbe2996cf27f624918e26dddc6e06f070d072fe4037151009966",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        2591,
-        2661
+        2632,
+        2702
       ],
       "excerptSha256": "a8570b751b81173d6dd6365f43db9db31d7448adb8b823f090068f56d86c8c57"
     }
@@ -24,6 +24,6 @@
   "files": {
     "kernel.upstream.hpp": "a8570b751b81173d6dd6365f43db9db31d7448adb8b823f090068f56d86c8c57",
     "kernel.hpp": "9b8e05fa36dc9c75266c06ebd19cc9776ffa485acd28df8b10364956974ab4b2",
-    "kernel.diff": "3c4b91ece00253bd62b33ac36dcfcea6b3f34aae3098b110711b054f33171cdb"
+    "kernel.diff": "0ff8df7da2292fef3e391b8db0cac67b9d0298c84bcce78f0ab35dc67ea1e826"
   }
 }

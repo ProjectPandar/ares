@@ -73,12 +73,12 @@ fn sequential_print_needs_the_full_clearance_for_one_tall_object_among_short_one
     assert_floor(&params, &items, 30);
 }
 
-/// Full `MAX_OUTER_NOZZLE_DIAMETER` (4 mm), `40ecc66f7` `Arrange.cpp:169`.
+/// Half `MAX_OUTER_NOZZLE_DIAMETER` (4 mm).
 #[test]
 fn sequential_print_keeps_only_the_nozzle_width_floor_for_objects_the_nozzle_clears() {
     let mut params = seq_print_params(0, 0.0);
     let items = floored(1.25, 1.25, &mut params);
-    assert_floor(&params, &items, 4);
+    assert_floor(&params, &items, 2);
 }
 
 #[test]

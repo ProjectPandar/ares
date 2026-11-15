@@ -1,5 +1,5 @@
-//! `Arrange.cpp`'s entry at `345efec64`, with `remove_items_outside_bin`
-//! (`40ecc66f7:1110-1124`).
+//! `Arrange.cpp`'s entry (`:356-414` `fill_config`, `:1092-1172` `remove_large_items` and
+//! `_arrange`, `:1221-1316` `process_arrangeable` and `arrange` at `345efec64`).
 
 use super::arranger::{Arranger, ObjectiveParams};
 use super::nest::geometry::NBox;
@@ -86,16 +86,8 @@ pub(super) fn arrange(
         item.inflate(scaled(params, -2.0 * EPSILON));
     }
     let bin = to_nestbin(bed);
-    // Arrange.cpp:1110-1124: retain fixed items that reach into or touch the bin bounds.
-    let bin_bounds = bin.bounding_box();
-    fixed.retain(|item| {
-        let bounds = item.bounding_box();
-        item.is_virt_object
-            || (bounds.max.x() >= bin_bounds.min.x()
-                && bounds.min.x() <= bin_bounds.max.x()
-                && bounds.max.y() >= bin_bounds.min.y()
-                && bounds.min.y() <= bin_bounds.max.y())
-    });
+    // remove_large_items: a fixed part that does not fit the bed is ignored.
+    fixed.retain(|item| item.is_virt_object || bin.contains(item.transformed_shape()));
     let (config, regions) = fill_config(&bin, params);
     let objective = ObjectiveParams {
         is_seq_print: params.is_seq_print,

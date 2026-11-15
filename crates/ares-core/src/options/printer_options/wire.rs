@@ -1,5 +1,3 @@
-mod remaining;
-
 use serde::{Serialize, Serializer, ser::SerializeMap};
 
 use super::PrinterOptions;
@@ -9,7 +7,7 @@ impl Serialize for PrinterOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(168))?;
+        let mut map = serializer.serialize_map(Some(147))?;
         map.serialize_entry(
             "adaptive_bed_mesh_margin",
             &self.remaining.adaptive_bed_mesh_margin,
@@ -346,7 +344,6 @@ impl Serialize for PrinterOptions {
         map.serialize_entry("wrapping_exclude_area", &self.gcode.wrapping_exclude_area)?;
         map.serialize_entry("z_hop_types", &self.gcode.z_hop_types)?;
         map.serialize_entry("z_offset", &self.remaining.z_offset)?;
-        remaining::serialize_entries(&mut map, &self.remaining)?;
         map.end()
     }
 }

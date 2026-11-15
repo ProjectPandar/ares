@@ -21,14 +21,7 @@ impl Catalog {
         kind: ProfileKind,
         name: &str,
     ) -> Option<usize> {
-        // Preset.cpp:3894-3909: ordinary suffix lookup precedes the default prefix.
-        self.selectable
-            .get(&(kind, name.to_owned()))
-            .copied()
-            .or_else(|| {
-                let position = self.default_position(kind);
-                (self.document(position).name == name).then_some(position)
-            })
+        self.selectable.get(&(kind, name.to_owned())).copied()
     }
 
     pub(in crate::profiles) fn selectable_positions(&self, kind: ProfileKind) -> Vec<usize> {
@@ -49,10 +42,6 @@ impl Catalog {
         self.records[position].scope == Scope::User
     }
 
-    pub(in crate::profiles) fn is_default(&self, position: usize) -> bool {
-        self.records[position].scope == Scope::Default
-    }
-
     /// The record's own `inherits` value (`Preset::inherits` reads the stored
     /// option; `Preset.hpp:320-321`).
     pub(in crate::profiles) fn leaf_inherits(&self, position: usize) -> Option<String> {
@@ -67,7 +56,7 @@ impl Catalog {
     pub(in crate::profiles) fn vendor_name(&self, position: usize) -> &str {
         match self.records[position].scope {
             Scope::Vendor(index) => &self.vendor_names[index],
-            Scope::Default | Scope::User => "",
+            Scope::User => "",
         }
     }
 

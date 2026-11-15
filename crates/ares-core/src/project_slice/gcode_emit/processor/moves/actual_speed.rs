@@ -149,8 +149,7 @@ fn split_position(prev: [f32; 3], curr: [f32; 3], t: f32) -> Option<[f32; 3]> {
 
 /// The vertex at fraction `t` of `prev → curr`, unless it coincides with
 /// either end. Only a same-type predecessor interpolates the extrusion
-/// attributes (`:509-520`); `fan_speed` stays the current move's (2.5.0
-/// `GCodeProcessor.cpp:688`, `:719`).
+/// attributes (`:509-520`).
 fn actual_vertex(
     prev: &MoveVertex,
     curr: &MoveVertex,
@@ -165,6 +164,7 @@ fn actual_vertex(
         delta_extruder: mix(prev.delta_extruder, curr.delta_extruder),
         width: mix(prev.width, curr.width),
         height: mix(prev.height, curr.height),
+        fan_speed: mix(prev.fan_speed, curr.fan_speed),
         temperature: mix(prev.temperature, curr.temperature),
         actual_feedrate,
         time: 0.0,

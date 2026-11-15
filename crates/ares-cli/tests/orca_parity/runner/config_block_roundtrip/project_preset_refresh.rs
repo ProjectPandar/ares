@@ -178,7 +178,7 @@ fn check(label: &str, authored: bool, dirty: bool, uptodate: bool, expected: [&s
     }
 }
 
-pub(super) fn replace_settings(input: &[u8], settings: &serde_json::Map<String, Value>) -> Vec<u8> {
+fn replace_settings(input: &[u8], settings: &serde_json::Map<String, Value>) -> Vec<u8> {
     let mut archive = zip::ZipArchive::new(Cursor::new(input)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..archive.len() {

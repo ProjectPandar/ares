@@ -1,6 +1,3 @@
-#[path = "definition_defaults/preset_catalog.rs"]
-mod preset_catalog;
-
 use super::super::{
     OrcaRunner, cache_identity,
     command::{self, Limits},

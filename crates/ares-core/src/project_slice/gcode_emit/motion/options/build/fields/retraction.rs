@@ -32,9 +32,9 @@ pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime:
     // Wipe::calculateWipeRetractionLengths reads config_index() (GCode.cpp:584).
     options.retraction_during_wipe_speed = float(&gcode.retraction_speed, filament);
     options.z_hop = float(&gcode.z_hop, filament);
-    options.retract_lift_above = float(&gcode.retract_lift_above, filament);
-    options.retract_lift_below = float(&gcode.retract_lift_below, filament);
-    options.retract_lift_enforce = at(&gcode.retract_lift_enforce.0, filament)
+    options.retract_lift_above = float(&gcode.retract_lift_above, *physical);
+    options.retract_lift_below = float(&gcode.retract_lift_below, *physical);
+    options.retract_lift_enforce = at(&gcode.retract_lift_enforce.0, *physical)
         .copied()
         .unwrap_or_default();
     options.z_hop_type = at(&gcode.z_hop_types.0, filament)
@@ -48,7 +48,7 @@ pub(super) fn apply(options: &mut MotionOptions, prelude: &Prelude<'_>, runtime:
     options.wipe = at(&print.wipe.0, filament).is_some_and(|value| value.0);
     options.wipe_distance = float(&print.wipe_distance, filament);
     options.retraction_minimum_travel = float(&print.retraction_minimum_travel, filament);
-    options.short_travel_distance = float(&print.retraction_minimum_travel, filament);
+    options.short_travel_distance = float(&print.retraction_minimum_travel, *physical);
     options.retract_when_changing_layer =
         at(&print.retract_when_changing_layer.0, filament).is_some_and(|value| value.0);
 }

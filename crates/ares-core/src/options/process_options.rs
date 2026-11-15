@@ -20,15 +20,14 @@ pub use object_source::{
 pub(crate) use print_source::ProcessPrintSourceOptionsBuilder;
 pub use print_source::{
     ProcessDraftShield, ProcessPrintOrder, ProcessPrintSequence, ProcessPrintSourceOptions,
-    ProcessSkirtType, ProcessTimelapseType, ProcessToolChangeOrdering, ProcessWipeTowerWallType,
+    ProcessSkirtType, ProcessTimelapseType, ProcessWipeTowerWallType,
 };
 pub(crate) use region_source::ProcessRegionSourceOptionsBuilder;
 pub use region_source::{
-    ProcessAdaptiveInfillGradient, ProcessAdaptiveInfillMode, ProcessCenterOfSurfacePattern,
     ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
     ProcessFuzzySkinType, ProcessIroningType, ProcessNoiseType, ProcessRegionSourceOptions,
-    ProcessSeamScarfType, ProcessSurfaceFillOrder, ProcessTopSurfaceExpansionDirection,
-    ProcessWallDirection, ProcessWallSequence,
+    ProcessSeamScarfType, ProcessTopSurfaceExpansionDirection, ProcessWallDirection,
+    ProcessWallSequence,
 };
 
 use super::{OrcaFloat, option_group::OverlayOptionGroup};

@@ -113,7 +113,7 @@ impl<'a> Generator<'a> {
     }
 
     pub(super) fn finish_result(&mut self, writer: Writer, tool: usize) -> Result {
-        if !super::super::sparse_layers_skipped(self.settings)
+        if !self.settings.process.gcode.wipe_tower_no_sparse_layers.0
             || self.plan.layers[self.index]
                 .changes
                 .iter()

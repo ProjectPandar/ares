@@ -7,7 +7,7 @@ impl Serialize for ProcessObjectSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(130))?;
+        let mut map = serializer.serialize_map(Some(127))?;
         map.serialize_entry("bridge_acceleration", &self.bridge_acceleration)?;
         map.serialize_entry("bridge_no_support", &self.bridge_no_support)?;
         map.serialize_entry(
@@ -249,9 +249,6 @@ impl Serialize for ProcessObjectSourceOptions {
         map.serialize_entry("wall_transition_length", &self.wall_transition_length)?;
         map.serialize_entry("xy_contour_compensation", &self.xy_contour_compensation)?;
         map.serialize_entry("xy_hole_compensation", &self.xy_hole_compensation)?;
-        map.serialize_entry("leading_brim_length", &self.leading_brim_length)?;
-        map.serialize_entry("extra_brim_width", &self.extra_brim_width)?;
-        map.serialize_entry("brim_ears_outer_only", &self.brim_ears_outer_only)?;
         map.end()
     }
 }

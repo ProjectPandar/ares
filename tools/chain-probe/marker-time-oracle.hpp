@@ -112,7 +112,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* path)
     }
     const nlohmann::json data = {
         {"oracle", "native source-kernel (not full Viewer execution)"},
-        {"upstream", "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19"},
+        {"upstream", "345efec64c7b95a05ce5cf96df0dde66a158835c"},
         {"vertices", records(input.vertices)}, {"synthetic", records(synthetic)}, {"formats", formats}
     };
     std::ofstream out(path);

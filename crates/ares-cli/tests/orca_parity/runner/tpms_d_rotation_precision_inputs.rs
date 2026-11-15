@@ -30,11 +30,7 @@ const FIXED: [(&str, &str); 24] = [
 ];
 
 pub(super) fn reference(runner: &OrcaRunner, label: &str, case: Case) -> ParityCase {
-    let root = std::path::PathBuf::from(
-        std::env::var_os("ARES_PARITY_PROFILE_RESOURCES_DIR")
-            .expect("ARES_PARITY_PROFILE_RESOURCES_DIR is required"),
-    )
-    .join("profiles");
+    let root = repo_root().join("OrcaSlicer/resources/profiles");
     let profiles = VendorProfiles::load(&root, "Creality").unwrap();
     let selection =
         crate::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();

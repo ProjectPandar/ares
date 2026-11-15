@@ -1,5 +1,5 @@
 {
-  "upstreamRevision": "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
     "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"
@@ -20,7 +20,7 @@
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
       "lines": "208-226",
-      "fileSha256": "fe0ebd3443b0dbe2996cf27f624918e26dddc6e06f070d072fe4037151009966",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "excerptSha256": "8ad5d415399f0385d1b9f287a4214f68d4d46c36cc7373e45a6583798b3c3e49"
     },
     {
@@ -31,14 +31,14 @@
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "lines": "5413-5418",
-      "fileSha256": "fe0ebd3443b0dbe2996cf27f624918e26dddc6e06f070d072fe4037151009966",
+      "lines": "5454-5459",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "excerptSha256": "56840faabdcb0d2dcd1fa0fc7218001aacdd8ab631d90836de4376256bccd58e"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "lines": "5439-5471",
-      "fileSha256": "fe0ebd3443b0dbe2996cf27f624918e26dddc6e06f070d072fe4037151009966",
+      "lines": "5480-5512",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "excerptSha256": "586714929df4513102092e528e89160d6e121900a9c723e5238933242ec43828"
     }
   ],

@@ -9,8 +9,6 @@ use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 
-#[path = "printer_physical_identity/farthest_timelapse_paths.rs"]
-mod farthest_timelapse_paths;
 #[path = "printer_physical_identity/input.rs"]
 mod input;
 #[path = "printer_physical_identity/picker_context.rs"]

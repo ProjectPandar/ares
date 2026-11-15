@@ -29,7 +29,6 @@ export type PlaterEdit =
 export type WorkerRequest =
   | { id: number; kind: "init"; wasmUrl: string }
   | { id: number; kind: "printConfigDef" }
-  | { id: number; kind: "resolveDefaultBedType"; hint: string; modelId: string }
   | { id: number; kind: "loadScene"; input: Uint8Array }
   | { id: number; kind: "sliceProject"; input: Uint8Array; plate: number | undefined; overrides: string }
   | { id: number; kind: "sliceWithProfiles"; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }
