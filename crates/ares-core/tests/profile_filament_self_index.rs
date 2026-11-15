@@ -43,7 +43,7 @@ async fn profile_slice_switch_to_four_tools_reuses_first_self_index_for_missing_
     assert!(
         gcode
             .lines()
-            .any(|line| line == "; filament_self_index = 1,3,1,1"),
-        "indices 0 and 2 retain their IDs; indices 4 and 6 reuse the first ID (Config.hpp:676-680)"
+            .any(|line| line == "; filament_self_index = 1,2,3,4"),
+        "CLI variant refresh layout appends each filament's complete variant segment and rebuilds self_index from the selected variant counts (OrcaSlicer.cpp:3510-3545, 3639-3701, 3753-3759, 3823-3845)"
     );
 }
