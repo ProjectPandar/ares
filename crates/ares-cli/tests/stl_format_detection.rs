@@ -199,13 +199,14 @@ fn compare_import(case: &str, input: Vec<u8>, admitted: bool) {
 }
 
 fn raw_binary_facets(input: &[u8]) -> Vec<Facet> {
-    assert_eq!(input.len(), 84 + input[84..].len() / 50 * 50);
+    let (records, remainder) = input[84..].as_chunks::<50>();
+    assert!(remainder.is_empty());
     assert_eq!(
-        input[84..].len() / 50,
+        records.len(),
         u32::from_le_bytes(input[80..84].try_into().unwrap()) as usize
     );
-    input[84..]
-        .chunks_exact(50)
+    records
+        .iter()
         .map(|record| {
             std::array::from_fn(|vertex| {
                 std::array::from_fn(|axis| {
