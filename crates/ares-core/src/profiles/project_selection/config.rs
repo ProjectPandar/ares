@@ -14,7 +14,7 @@ use crate::{
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(transparent)]
-pub struct PresetConfig(pub(super) ProjectSettingsRaw);
+pub struct PresetConfig(pub(in crate::profiles) ProjectSettingsRaw);
 
 impl PresetConfig {
     pub(super) fn defaults(kind: ProfileKind) -> Result<Self, SliceError> {
