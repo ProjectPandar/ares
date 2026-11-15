@@ -134,7 +134,13 @@ test("a hidden plate combo still initializes a concrete printer bed", async ({ p
     config.printers[config.printer].bedType = "Cool Plate";
     localStorage.setItem("ares.config", JSON.stringify(config));
   });
+  const { printer } = await state();
   await page.reload();
+  // GUI_App startup loads the preset bundle (GUI_App.cpp:3723) before load_selections selects the stored
+  // printer (PresetBundle.cpp:2723); the printer's bed is set when that selection ends. The combo shows the
+  // printer as the selection starts, and the filtering state until it ends.
+  await expect(page.getByRole("button", { name: "Printer preset", exact: true })).toHaveAttribute("title", printer, { timeout: 60_000 });
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await expect.poll(async () => (await state()).bedType).toBe("High Temp Plate");
   writeFileSync(`${artifacts}hidden-combo-stored.json`, JSON.stringify(await state(), null, 2));
 });
